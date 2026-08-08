@@ -204,6 +204,94 @@ object PlayTalk {
     }
 
     /**
+     * **Was er von sich aus sagt, wenn man ihn anspricht - und was er dazu anbietet.**
+     *
+     * Der erste Entwurf legte dem Nutzer eine Liste aus sechs Fragen vor. Das war ein Menue, kein
+     * Gespraech: Sechs gleich aussehende Zeilen verlangen eine Auswahl, bevor irgendetwas gesagt
+     * wurde, und die Frage "was will ich eigentlich wissen?" muss der Nutzer sich dann selbst
+     * beantworten. Wer jemanden anspricht, erwartet aber, dass der andere ANFAENGT.
+     *
+     * Deshalb hier die Umkehrung: EINE Aussage, die zur Lage passt, und hoechstens zwei Angebote
+     * dazu. Was gesagt wird, richtet sich nach Dringlichkeit - ein leerer Vorrat ohne Geld geht
+     * jeder Statistik vor, und eine offene Gewohnheit geht einem Vorschlag vor, der noch gar keine
+     * ist.
+     *
+     * **Als eigene, reine Funktion und nicht in der Oberflaeche verteilt**, weil sie eine
+     * inhaltliche Entscheidung trifft ("worueber redet er zuerst?") und keine gestalterische.
+     * Solche Entscheidungen gehoeren an eine Stelle, an der man sie nachlesen und pruefen kann.
+     */
+    enum class Headline {
+        /** Vorrat leer und kein Geld - die dringendste Lage im Spiel. */
+        BROKE,
+        /** Vorrat leer, Geld da. */
+        SHOPPING,
+        /** Heute noch offene Gewohnheiten. */
+        OPEN_TOPICS,
+        /** Heute ist noch nichts geschehen. */
+        NOTHING_TODAY,
+        /** Alles erledigt, was man sich vorgenommen hat. */
+        ALL_DONE,
+        /** Es gibt noch gar keinen Plan. */
+        NO_PLAN,
+        /** Nichts Dringendes - dann erzaehlt er einfach, wie der Tag lief. */
+        SMALL_TALK
+    }
+
+    /** Ein Angebot unter der Aussage - hoechstens zwei davon. */
+    sealed interface Offer {
+        /** Ihn um etwas bitten; er geht sofort los. */
+        data class Ask(val topic: AnimationType) : Offer
+        /** Eine Gewohnheit anlegen, die es noch nicht gibt. */
+        data class Add(val topic: AnimationType) : Offer
+        /** Den vollstaendigen Plan zeigen. */
+        data object ShowPlan : Offer
+        /** Die Rueckschau auf die Woche. */
+        data object ShowWeek : Offer
+    }
+
+    data class Focus(val headline: Headline, val offers: List<Offer>)
+
+    /** Hoechstens so viele Angebote - darueber wird aus dem Gespraech wieder eine Liste. */
+    private const val MAX_OFFERS = 2
+
+    fun focus(knowledge: Knowledge): Focus {
+        val game = knowledge.game
+        val offers = mutableListOf<Offer>()
+
+        val headline = when {
+            // Im Spiel hat seine eigene Lage Vorrang: Sie erklaert, was gleich zu sehen ist.
+            game != null && game.brokeAndHungry -> {
+                offers += Offer.Ask(AnimationType.WORK)
+                Headline.BROKE
+            }
+            game != null && game.pantryEmpty -> {
+                offers += Offer.Ask(AnimationType.DRINK)
+                Headline.SHOPPING
+            }
+            !knowledge.hasPlan -> Headline.NO_PLAN
+            knowledge.steering.isNotEmpty() -> {
+                // Nur die erste offene Gewohnheit als Bitte - alle aufzulisten waere wieder die
+                // Liste, die hier gerade abgeschafft wird.
+                knowledge.steering.firstOrNull()?.let { offers += Offer.Ask(it) }
+                Headline.OPEN_TOPICS
+            }
+            knowledge.fedToday == 0 -> Headline.NOTHING_TODAY
+            knowledge.goalsTotal > 0 -> Headline.ALL_DONE
+            else -> Headline.SMALL_TALK
+        }
+
+        // Aufgefuellt wird nur, wenn noch Platz ist, und in dieser Reihenfolge: erst ein
+        // Vorschlag (er bringt etwas Neues), dann der Plan, dann die Woche.
+        if (offers.size < MAX_OFFERS) {
+            nextSuggestion(knowledge)?.let { offers += Offer.Add(it) }
+        }
+        if (offers.size < MAX_OFFERS && knowledge.hasPlan) offers += Offer.ShowPlan
+        if (offers.size < MAX_OFFERS && knowledge.week.total > 0) offers += Offer.ShowWeek
+
+        return Focus(headline, offers.take(MAX_OFFERS))
+    }
+
+    /**
      * Der Vorschlag, den der Avatar von sich aus macht - hoechstens einer.
      *
      * **Einer, nicht fuenf.** Eine Liste von Vorschlaegen ist eine Liste von Vorwuerfen; ein

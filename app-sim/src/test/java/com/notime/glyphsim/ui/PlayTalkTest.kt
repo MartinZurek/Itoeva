@@ -2,6 +2,7 @@ package com.notime.glyphsim.ui
 
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
+import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayWallet
@@ -248,5 +249,114 @@ class PlayTalkTest {
         val fine = PlayTalk.Game(level = 3, xp = 120, coins = 0, pantry = PlayPantry.FULL)
         assertTrue(!fine.pantryEmpty)
         assertTrue("ohne Hunger ist auch kein Geld noetig", !fine.brokeAndHungry)
+    }
+
+    // ---- Was er von sich aus sagt ----
+
+    private fun known(
+        plan: List<PlayTalk.PlanEntry> = emptyList(),
+        fedToday: Int = 0,
+        steering: Set<AnimationType> = emptySet(),
+        missing: List<AnimationType> = emptyList(),
+        week: PlayTalk.Week = PlayTalk.Week(0, 0, 1, 0),
+        game: PlayTalk.Game? = null
+    ) = PlayTalk.Knowledge(plan, fedToday, steering, missing, week, game)
+
+    /** Eine Erinnerung, damit `hasPlan` stimmt - der Inhalt spielt hier keine Rolle. */
+    private fun somePlan(goal: Int = 1, done: Int = 0) = listOf(
+        PlayTalk.PlanEntry(
+            reminder = GlyphReminder(
+                id = 1, label = "Test", animationType = AnimationType.DRINK,
+                daysOfWeekMask = PlayTalk.EVERY_DAY_MASK,
+                startMinuteOfDay = 8 * 60, endMinuteOfDay = 20 * 60,
+                intervalMinutes = 60, dailyGoal = goal
+            ),
+            doneToday = done
+        )
+    )
+
+    @Test
+    fun `hoechstens zwei Angebote - sonst ist es wieder ein Menue`() {
+        // Der Grund, warum es diese Funktion ueberhaupt gibt: Sechs gleich aussehende Zeilen
+        // sahen aus wie ein Menue. Waechst die Zahl je wieder, ist genau das zurueck.
+        val everything = known(
+            plan = somePlan(goal = 3, done = 0),
+            fedToday = 5,
+            steering = setOf(AnimationType.MOVE, AnimationType.DRINK, AnimationType.BOOK),
+            missing = listOf(AnimationType.FOCUS, AnimationType.MINDFULNESS),
+            week = PlayTalk.Week(total = 20, activeDays = 4, daysSoFar = 5, bestDay = 8),
+            game = PlayTalk.Game(level = 3, xp = 120, coins = 0, pantry = 0)
+        )
+        assertTrue(
+            "zu viele Angebote: ${PlayTalk.focus(everything).offers.size}",
+            PlayTalk.focus(everything).offers.size <= 2
+        )
+    }
+
+    @Test
+    fun `die dringendste Lage kommt zuerst`() {
+        // Mittellos und hungrig geht jeder Statistik vor - es erklaert, was gleich zu sehen ist.
+        val broke = known(
+            plan = somePlan(),
+            steering = setOf(AnimationType.MOVE),
+            game = PlayTalk.Game(level = 1, xp = 0, coins = 0, pantry = 0)
+        )
+        val focus = PlayTalk.focus(broke)
+        assertEquals(PlayTalk.Headline.BROKE, focus.headline)
+        assertEquals(
+            "Bei leerem Beutel muss die Arbeit das erste Angebot sein",
+            PlayTalk.Offer.Ask(AnimationType.WORK), focus.offers.first()
+        )
+    }
+
+    @Test
+    fun `eine offene Gewohnheit wird zur Bitte, nicht zur Aufzaehlung`() {
+        val open = known(
+            plan = somePlan(),
+            steering = setOf(AnimationType.MOVE, AnimationType.DRINK, AnimationType.BOOK)
+        )
+        val focus = PlayTalk.focus(open)
+        assertEquals(PlayTalk.Headline.OPEN_TOPICS, focus.headline)
+        val asks = focus.offers.filterIsInstance<PlayTalk.Offer.Ask>()
+        assertEquals("Nur EINE Bitte, sonst ist die Liste wieder da", 1, asks.size)
+    }
+
+    @Test
+    fun `ohne Plan bietet er nichts an, was einen Plan voraussetzt`() {
+        // Ein "Zeig mir den Plan", wenn es keinen gibt, waere eine Zeile, die ins Leere fuehrt.
+        val fresh = known()
+        val focus = PlayTalk.focus(fresh)
+        assertEquals(PlayTalk.Headline.NO_PLAN, focus.headline)
+        assertTrue(
+            "ohne Plan darf der Plan nicht angeboten werden",
+            focus.offers.none { it is PlayTalk.Offer.ShowPlan }
+        )
+    }
+
+    @Test
+    fun `eine leere Woche wird nicht angeboten`() {
+        val quiet = known(plan = somePlan(goal = 0), fedToday = 0)
+        assertTrue(
+            "eine Woche ohne einen einzigen Eintrag ist keine Rueckschau wert",
+            PlayTalk.focus(quiet).offers.none { it is PlayTalk.Offer.ShowWeek }
+        )
+    }
+
+    @Test
+    fun `jede Lage bekommt eine Aussage - keine bleibt stumm`() {
+        // Faellt eine Kombination durch alle Zweige, staende das Feld leer da. Deshalb hier
+        // einmal quer durch die Faelle.
+        val cases = listOf(
+            known(),
+            known(plan = somePlan()),
+            known(plan = somePlan(), fedToday = 3),
+            known(plan = somePlan(goal = 1, done = 1), fedToday = 1),
+            known(plan = somePlan(goal = 0), fedToday = 2),
+            known(plan = somePlan(), game = PlayTalk.Game(1, 0, 5, 3)),
+            known(plan = somePlan(), game = PlayTalk.Game(1, 0, 0, 0))
+        )
+        for (case in cases) {
+            assertTrue("keine Aussage fuer $case", PlayTalk.focus(case).headline != null)
+        }
     }
 }

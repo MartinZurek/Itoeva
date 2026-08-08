@@ -31,18 +31,28 @@ import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.AvatarSpecies
 
 /**
- * **Das Gespraech mit dem Avatar** - vorgegebene Fragen, echte Auskuenfte (siehe [PlayTalk]).
+ * **Das Gespraech mit dem Avatar** - er sagt etwas, man kann darauf eingehen (siehe [PlayTalk]).
  *
- * **Warum feste Fragen und kein Eingabefeld.** Ein Eingabefeld verspricht, dass alles gefragt
- * werden darf, und bricht dieses Versprechen bei der zweiten Frage. Vier Fragen, die er
- * VOLLSTAENDIG beantworten kann, wirken dagegen wie ein Wesen mit einem klaren, kleinen
- * Verstand - und das ist genau, was er ist. Nebenbei ist es die einzige Fassung, die ohne
- * Netzverbindung, ohne laufende Kosten und ohne dass Daten das Geraet verlassen funktioniert.
+ * **Er faengt an, statt zu fragen.** Der erste Entwurf legte sechs Fragen nebeneinander; das sah
+ * aus wie ein Menue und war auch eines - der Nutzer musste sich erst selbst ueberlegen, was er
+ * wissen will, bevor irgendetwas gesagt wurde. Jetzt steht oben EINE Aussage, die zur Lage passt,
+ * und darunter hoechstens zwei Angebote (siehe [PlayTalk.focus]). Wer jemanden anspricht,
+ * erwartet, dass der andere anfaengt.
+ *
+ * **Kein Eingabefeld.** Ein Eingabefeld verspricht, dass alles gefragt werden darf, und bricht
+ * dieses Versprechen bei der zweiten Frage. Ein Wesen, das wenig sagt und dabei nichts Falsches,
+ * wirkt wie jemand mit einem klaren, kleinen Verstand - und das ist genau, was er ist. Nebenbei
+ * ist es die einzige Fassung, die ohne Netzverbindung, ohne laufende Kosten und ohne dass Daten
+ * das Geraet verlassen funktioniert.
  *
  * **Bewusst kein Material-Dialog.** Der Play-Modus ist eine schwarze Flaeche mit einer Pixelwelt;
  * eine helle Karte mit Schlagschatten darauf sieht aus, als haette sich das Betriebssystem
  * eingemischt. Stattdessen ein dunkles Feld in derselben warmweissen Schrift, in der auch die
  * Uhr leuchtet.
+ *
+ * **Der lange Bericht steht woanders.** Wer den vollstaendigen Ueberblick will - heute, Woche,
+ * ganzer Plan -, bekommt ihn auf dem Startbildschirm ueber denselben Avatar (siehe
+ * AvatarAssistant). Hier draussen in der Welt zaehlt, was gerade dran ist.
  */
 private val INK = Color(0xFFF3F1EA)
 private val INK_DIM = Color(0xFF8F8B82)
@@ -88,19 +98,20 @@ fun PlayTalkPanel(
         } else {
             val current = asked
             if (current == null) {
-                // Die Begruessung steht nur ueber der Fragenliste, nicht ueber jeder Antwort:
-                // Ein Wesen, das sich nach jeder Auskunft erneut begruesst, klingt wie ein
-                // Automat, der neu gestartet wurde.
-                Text(stringResource(voice.greeting), color = INK, size = 15)
-                for (question in Question.entries) {
-                    // Vorschlaege nur anbieten, wenn es tatsaechlich etwas vorzuschlagen gibt -
-                    // eine Frage, auf die "nichts" die Antwort ist, ist eine leere Zeile.
-                    if (question == Question.SUGGEST &&
-                        PlayTalk.nextSuggestion(knowledge) == null
-                    ) continue
-                    // Nach dem Spielstand laesst sich nur fragen, wenn es ein Spiel gibt.
-                    if (question == Question.GAME && knowledge.game == null) continue
-                    QuestionLine(stringResource(question.labelRes)) { asked = question }
+                // **Er faengt an.** Eine Aussage, die zur Lage passt, und hoechstens zwei
+                // Angebote - siehe PlayTalk.focus fuer die Reihenfolge. Vorher standen hier sechs
+                // gleich aussehende Fragen; das war ein Menue und verlangte vom Nutzer, sich
+                // zuerst selbst zu ueberlegen, was er wissen will.
+                val focus = remember(knowledge) { PlayTalk.focus(knowledge) }
+                Headline(focus.headline, knowledge, voice)
+                for (offer in focus.offers) {
+                    OfferLine(
+                        offer = offer,
+                        justAdded = justAdded,
+                        onAsk = onAsk,
+                        onAdd = { topic -> justAdded = topic; onAddReminder(topic) },
+                        onShow = { asked = it }
+                    )
                 }
             } else {
                 Answer(
@@ -129,20 +140,111 @@ fun PlayTalkPanel(
 }
 
 /**
- * Die Fragen. Vier, und in dieser Reihenfolge: erst was war, dann was geplant ist, dann was ihn
- * heute umtreibt, dann - nur falls es etwas gibt - sein eigener Vorschlag.
+ * Die zwei Auskuenfte, die man sich noch ansehen kann, wenn man ueber die Aussage hinaus etwas
+ * wissen will. Alles Uebrige sagt er von selbst (siehe [PlayTalk.focus]).
  */
 private enum class Question(val labelRes: Int) {
-    /**
-     * **Nur im Spielmodus** - und die erste Frage, weil sie dort die dringendste ist. Wer zusieht,
-     * will als erstes wissen, warum er gerade tut, was er tut; Vorrat und Geld beantworten das.
-     */
-    GAME(R.string.talk_q_game),
-    TODAY(R.string.talk_q_today),
     WEEK(R.string.talk_q_week),
-    PLAN(R.string.talk_q_plan),
-    STEERING(R.string.talk_q_steering),
-    SUGGEST(R.string.talk_q_suggest)
+    PLAN(R.string.talk_q_plan)
+}
+
+/**
+ * Was er von sich aus sagt - eine einzige Zeile, dazu bei Bedarf eine leise Ergaenzung.
+ *
+ * Die Ergaenzung steht bewusst gedimmt darunter statt als zweiter Satz daneben: Sie ist der
+ * Grund, nicht die Nachricht. "Vorrat leer" ist die Nachricht; "dann muss ich erst arbeiten"
+ * erklaert sie.
+ */
+@Composable
+private fun Headline(
+    headline: PlayTalk.Headline,
+    knowledge: PlayTalk.Knowledge,
+    voice: PlayVoice
+) {
+    when (headline) {
+        PlayTalk.Headline.BROKE -> {
+            Text(stringResource(R.string.talk_a_game_broke), color = INK, size = 15)
+            knowledge.game?.let {
+                Text(
+                    stringResource(R.string.talk_a_game_purse, it.coins, it.pantry),
+                    color = INK_DIM, size = 13
+                )
+            }
+        }
+        PlayTalk.Headline.SHOPPING -> {
+            Text(stringResource(R.string.talk_a_game_shopping), color = INK, size = 15)
+            knowledge.game?.let {
+                Text(
+                    stringResource(R.string.talk_a_game_purse, it.coins, it.pantry),
+                    color = INK_DIM, size = 13
+                )
+            }
+        }
+        PlayTalk.Headline.OPEN_TOPICS -> {
+            val open = knowledge.steering.map { stringResource(it.labelRes) }
+            Text(
+                stringResource(R.string.talk_a_steering) + " " + open.joinToString(", "),
+                color = INK, size = 15
+            )
+            Text(stringResource(R.string.talk_a_steering_hint), color = INK_DIM, size = 13)
+        }
+        PlayTalk.Headline.NOTHING_TODAY ->
+            Text(stringResource(voice.emptyDay), color = INK, size = 15)
+        PlayTalk.Headline.ALL_DONE ->
+            Text(stringResource(voice.allDone), color = INK, size = 15)
+        PlayTalk.Headline.NO_PLAN ->
+            Text(stringResource(R.string.talk_a_plan_empty), color = INK, size = 15)
+        PlayTalk.Headline.SMALL_TALK -> {
+            Text(stringResource(voice.greeting), color = INK, size = 15)
+            if (knowledge.fedToday > 0) {
+                Text(
+                    stringResource(R.string.talk_a_today, knowledge.fedToday),
+                    color = INK_DIM, size = 13
+                )
+            }
+        }
+    }
+}
+
+/** Ein Angebot als antippbare Zeile - Bitte, Anlegen oder Nachschlagen. */
+@Composable
+private fun OfferLine(
+    offer: PlayTalk.Offer,
+    justAdded: AnimationType?,
+    onAsk: (AnimationType) -> Unit,
+    onAdd: (AnimationType) -> Unit,
+    onShow: (Question) -> Unit
+) {
+    when (offer) {
+        is PlayTalk.Offer.Ask -> {
+            val label = when (offer.topic) {
+                AnimationType.WORK -> stringResource(R.string.talk_ask_work)
+                AnimationType.DRINK -> stringResource(R.string.talk_ask_shop)
+                else -> stringResource(
+                    R.string.talk_ask_now, stringResource(offer.topic.labelRes)
+                )
+            }
+            QuestionLine(label) { onAsk(offer.topic) }
+        }
+        is PlayTalk.Offer.Add -> {
+            if (justAdded == offer.topic) {
+                Text(
+                    stringResource(
+                        R.string.talk_a_suggest_added, stringResource(offer.topic.labelRes)
+                    ),
+                    color = INK_DIM, size = 13
+                )
+            } else {
+                QuestionLine(
+                    stringResource(R.string.talk_a_suggest, stringResource(offer.topic.labelRes))
+                ) { onAdd(offer.topic) }
+            }
+        }
+        PlayTalk.Offer.ShowPlan ->
+            QuestionLine(stringResource(R.string.talk_q_plan)) { onShow(Question.PLAN) }
+        PlayTalk.Offer.ShowWeek ->
+            QuestionLine(stringResource(R.string.talk_q_week)) { onShow(Question.WEEK) }
+    }
 }
 
 @Composable
@@ -156,78 +258,6 @@ private fun Answer(
     onAsk: (AnimationType) -> Unit
 ) {
     when (question) {
-        Question.GAME -> {
-            val game = knowledge.game
-            if (game == null) {
-                Text(stringResource(R.string.talk_a_game_off), color = INK, size = 15)
-            } else {
-                Text(
-                    stringResource(R.string.talk_a_game_level, game.level, game.xp),
-                    color = INK, size = 15
-                )
-                Text(
-                    stringResource(R.string.talk_a_game_purse, game.coins, game.pantry),
-                    color = INK, size = 14
-                )
-                // **Die eigentliche Aussage dieser Frage.** Nicht die Zahlen, sondern was sie
-                // fuer den naechsten Gang bedeuten: Ein leerer Vorrat schickt ihn in den Laden,
-                // fehlt dazu das Geld, muss er erst arbeiten. Wer das gelesen hat, sieht kein
-                // zufaelliges Herumlaufen mehr, sondern jemanden mit einem Problem.
-                Text(
-                    stringResource(
-                        when {
-                            game.brokeAndHungry -> R.string.talk_a_game_broke
-                            game.pantryEmpty -> R.string.talk_a_game_shopping
-                            else -> R.string.talk_a_game_fine
-                        }
-                    ),
-                    color = INK_DIM, size = 13
-                )
-                // Der Vorrat ist leer und Geld ist da: Dann kann man ihn losschicken. Fehlt auch
-                // das Geld, waere die Bitte eine Zumutung - dann bleibt nur die Arbeit.
-                when {
-                    game.brokeAndHungry ->
-                        QuestionLine(stringResource(R.string.talk_ask_work)) {
-                            onAsk(AnimationType.WORK)
-                        }
-                    game.pantryEmpty ->
-                        QuestionLine(stringResource(R.string.talk_ask_shop)) {
-                            onAsk(AnimationType.DRINK)
-                        }
-                    else ->
-                        QuestionLine(stringResource(R.string.talk_ask_walk)) {
-                            onAsk(AnimationType.MOVE)
-                        }
-                }
-            }
-        }
-
-        Question.TODAY -> {
-            if (!knowledge.hasPlan) {
-                Text(stringResource(R.string.talk_a_today_noplan), color = INK, size = 15)
-            } else if (knowledge.fedToday == 0) {
-                // In SEINER Stimme: Ein leerer Tag ist der Moment, in dem es am meisten darauf
-                // ankommt, WIE es gesagt wird. Wyrmling fragt, ob man anfangen will; Gloop sagt,
-                // es sei kein Stress. Die Tatsache ist dieselbe.
-                Text(stringResource(voice.emptyDay), color = INK, size = 15)
-            } else {
-                Text(
-                    stringResource(R.string.talk_a_today, knowledge.fedToday),
-                    color = INK, size = 15
-                )
-                if (knowledge.goalsTotal > 0) {
-                    Text(
-                        stringResource(
-                            R.string.talk_a_today_goals,
-                            knowledge.goalsReached,
-                            knowledge.goalsTotal
-                        ),
-                        color = INK_DIM, size = 13
-                    )
-                }
-            }
-        }
-
         Question.WEEK -> {
             val week = knowledge.week
             if (week.total == 0) {
@@ -286,66 +316,6 @@ private fun Answer(
             }
         }
 
-        Question.STEERING -> {
-            // **Die Frage, wegen der das Ganze existiert.** Was hier steht, ist keine Auskunft
-            // ueber die Vergangenheit, sondern eine Ansage ueber das, was gleich zu sehen sein
-            // wird: Offene Themen heben ihre Gewichtung an (siehe PlayHabitSignal), er greift
-            // also von sich aus oefter danach. Wer das gelesen hat, sieht ihm anschliessend beim
-            // Einloesen zu.
-            if (knowledge.steering.isEmpty()) {
-                Text(
-                    stringResource(
-                        // "Nichts hat ein Tagesziel" ist eine sachliche Auskunft und bleibt
-                        // neutral; "alles erledigt" ist ein Moment, der ihm gehoert.
-                        if (knowledge.goalsTotal == 0) R.string.talk_a_steering_nogoals
-                        else voice.allDone
-                    ),
-                    color = INK, size = 15
-                )
-            } else {
-                Text(stringResource(R.string.talk_a_steering), color = INK, size = 15)
-                Text(stringResource(R.string.talk_a_steering_hint), color = INK_DIM, size = 13)
-                // **Hier wird aus dem Bericht ein Gegenueber.** Bis zu dieser Zeile sagt er nur,
-                // wie es steht; ab ihr darf man ihn bitten - und er geht sofort los. Dass die
-                // offenen Themen einzeln antippbar sind statt als blosse Aufzaehlung dazustehen,
-                // ist der ganze Unterschied.
-                for (topic in knowledge.steering) {
-                    QuestionLine(
-                        stringResource(R.string.talk_ask_now, stringResource(topic.labelRes))
-                    ) { onAsk(topic) }
-                }
-            }
-        }
-
-        Question.SUGGEST -> {
-            val topic = PlayTalk.nextSuggestion(knowledge)
-            if (topic == null) {
-                Text(stringResource(R.string.talk_a_suggest_none), color = INK, size = 15)
-            } else if (justAdded == topic) {
-                Text(
-                    stringResource(R.string.talk_a_suggest_added, stringResource(topic.labelRes)),
-                    color = INK, size = 15
-                )
-                Text(stringResource(R.string.talk_a_suggest_added_hint), color = INK_DIM, size = 13)
-            } else {
-                Text(stringResource(voice.offering), color = INK_DIM, size = 13)
-                Text(
-                    stringResource(R.string.talk_a_suggest, stringResource(topic.labelRes)),
-                    color = INK, size = 15
-                )
-                val preset = PlayTalk.presetFor(topic)
-                Text(
-                    stringResource(
-                        R.string.talk_a_suggest_detail,
-                        formatMinuteOfDay(preset.startMinuteOfDay),
-                        formatMinuteOfDay(preset.endMinuteOfDay),
-                        preset.dailyGoal
-                    ),
-                    color = INK_DIM, size = 13
-                )
-                QuestionLine(stringResource(R.string.talk_a_suggest_accept)) { onAddReminder(topic) }
-            }
-        }
     }
 }
 
