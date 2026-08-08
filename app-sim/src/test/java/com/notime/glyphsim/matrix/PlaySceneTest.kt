@@ -37,7 +37,9 @@ class PlaySceneTest {
             PlayScene.forTopic(topic)
         }
         assertEquals(PlayScene.Place.BEDROOM, PlayScene.forTopic(AnimationType.SLEEP))
-        assertEquals(PlayScene.Place.WORK, PlayScene.forTopic(AnimationType.WORK))
+        // Arbeiten faengt auf der STRASSE an - der Arbeitsweg gehoert dazu, und der Ablauf geht
+        // von dort in den Arbeitsraum hinein (siehe PlayRoutines.allFor(WORK)).
+        assertEquals(PlayScene.Place.STREET, PlayScene.forTopic(AnimationType.WORK))
         assertEquals(PlayScene.Place.DESK, PlayScene.forTopic(AnimationType.FOCUS))
         assertEquals(PlayScene.Place.BATH, PlayScene.forTopic(AnimationType.MEDICINE))
         assertEquals(PlayScene.Place.KITCHEN, PlayScene.forTopic(AnimationType.DRINK))

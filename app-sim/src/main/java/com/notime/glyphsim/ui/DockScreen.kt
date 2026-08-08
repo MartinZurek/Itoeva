@@ -897,7 +897,10 @@ fun DockScreen(
             // gewuerfelt, ob sie ueberhaupt stattfindet, und wie hoch der Mond steht - so sieht
             // nicht jede Nacht gleich aus.
             LaunchedEffect(renderedPlace, scenePhase / 40) {
-                val isParkNight = renderedPlace == PlayScene.Place.PARK &&
+                // Ueberall unter freiem Himmel, nicht nur im Park: Seit es Strasse und Wald gibt,
+                // waere ein Mond, den es nur ueber einem einzigen der drei Orte gibt, willkuerlich
+                // - der Mond steht am Himmel, und der ist ueber allen dreien derselbe.
+                val isParkNight = PlayScene.isOutdoors(renderedPlace) &&
                     PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT
                 if (isParkNight && !moonMode) {
                     if (Random.nextFloat() < MOON_SCENE_CHANCE) {

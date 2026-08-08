@@ -251,9 +251,12 @@ object PlayRoutines {
                     RoutineStep.Linger(1_500L)
                 )
             ),
-            // Einkaufen: der erste Ablauf, der ueber mehrere Raeume geht.
+            // Einkaufen: der erste Ablauf, der ueber mehrere Raeume geht - und seit es die
+            // Strasse gibt, fuehrt er auch dorthin, wo ein Einkauf tatsaechlich entlanggeht.
             PlayRoutine(
                 listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.66f),
                     RoutineStep.GoToPlace(PlayScene.Place.SHOP),
                     RoutineStep.GoTo(PlayScene.Station.RACK),
                     RoutineStep.Take(PlayEffects.Carried.FOOD),
@@ -303,25 +306,41 @@ object PlayRoutines {
             )
         )
 
-        // ---- Arbeiten: an den Schreibtisch ----
+        // ---- Arbeiten: ueber die Strasse hin, arbeiten, ueber die Strasse zurueck ----
+        //
+        // Der Ablauf beginnt DRAUSSEN (siehe PlayScene.forTopic) - der Arbeitsweg ist der
+        // einzige Teil eines Arbeitstages, der unter freiem Himmel stattfindet, und er fehlte
+        // vorher vollstaendig. Zwei Schritte auf der Strasse genuegen dafuer: Sie machen aus
+        // "ist jetzt bei der Arbeit" ein "geht zur Arbeit".
         AnimationType.WORK -> listOf(
             PlayRoutine(
                 listOf(
+                    RoutineStep.Stroll(0.72f),
+                    RoutineStep.GoToPlace(PlayScene.Place.WORK),
                     RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
                     RoutineStep.Act(AnimationType.WORK),
                     RoutineStep.Linger(3_000L),
                     RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
                     RoutineStep.Act(AnimationType.WORK),
-                    RoutineStep.Linger(2_000L)
+                    RoutineStep.Linger(2_000L),
+                    // Feierabend: derselbe Weg zurueck. Ohne ihn bliebe die Figur bis zur
+                    // naechsten Regung im Buero stehen, und der Arbeitstag haette kein Ende.
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.16f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.YAWN)
                 )
             ),
             PlayRoutine(
                 listOf(
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+                    RoutineStep.Stroll(0.78f),
+                    RoutineStep.GoToPlace(PlayScene.Place.WORK),
                     RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
                     RoutineStep.Act(AnimationType.WORK),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
                     RoutineStep.Linger(2_500L),
-                    RoutineStep.Stir(AvatarAnimations.Fidget.YAWN)
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.20f)
                 )
             )
         )
@@ -346,7 +365,13 @@ object PlayRoutines {
             )
         )
 
-        // ---- Im Park: spazieren, Sport, auf der Bank ausruhen ----
+        // ---- Draussen: spazieren, Sport, in den Wald, ueber die Strasse ----
+        //
+        // **Der Grossteil der Abwechslung dieses Wesens steckt hier.** Alle uebrigen Themen sind
+        // an ein Zimmer gebunden - man kocht in der Kueche und schlaeft im Schlafzimmer, da gibt
+        // es wenig zu variieren. Draussen dagegen ist der ORT selbst waehlbar, und ein Gang durch
+        // den Wald erzaehlt etwas voellig anderes als eine Runde um den Block, obwohl beide aus
+        // denselben Schritten bestehen.
         AnimationType.MOVE -> listOf(
             // Sport: quer durch den Park und zurueck, mit Bewegung an beiden Enden.
             PlayRoutine(
@@ -370,6 +395,52 @@ object PlayRoutines {
                     RoutineStep.Rise,
                     RoutineStep.Stroll(0.75f),
                     RoutineStep.Act(AnimationType.MOVE)
+                )
+            ),
+            // Der WALDSPAZIERGANG - ueber die Strasse hinaus, bis der Park hinter einem liegt.
+            //
+            // Die drei Orte hintereinander sind hier die eigentliche Aussage: Erst dadurch, dass
+            // man an etwas VORBEIKOMMT, wird aus einem Weg eine Strecke. Am Stamm im Wald sitzen
+            // heisst dann auch wirklich, angekommen zu sein.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.70f),
+                    RoutineStep.GoToPlace(PlayScene.Place.FOREST),
+                    RoutineStep.Stroll(0.30f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.GoTo(PlayScene.Station.BENCH),
+                    RoutineStep.Occupy(PlayScene.Station.BENCH),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Rise,
+                    RoutineStep.Stroll(0.84f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
+                )
+            ),
+            // Nur in den Wald und dort umherstreifen - ohne Ziel, das ist der Punkt.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.FOREST),
+                    RoutineStep.Stroll(0.18f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Stroll(0.76f),
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Stroll(0.40f),
+                    RoutineStep.Linger(2_000L)
+                )
+            ),
+            // Eine Runde um den Block: Strasse, Bank, zurueck. Der kurze Ablauf fuer zwischendurch.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.24f),
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.GoTo(PlayScene.Station.BENCH),
+                    RoutineStep.Occupy(PlayScene.Station.BENCH),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Rise,
+                    RoutineStep.Stroll(0.88f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND)
                 )
             )
         )

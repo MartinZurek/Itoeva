@@ -138,7 +138,7 @@ object PlayAmbientActivity {
      */
     private fun weightsFor(phase: DayPhase): Map<AnimationType, Int> = when (phase) {
         DayPhase.MORNING -> mapOf(
-            AnimationType.MOVE to 4,
+            AnimationType.MOVE to 5,
             AnimationType.GENERAL to 3,
             AnimationType.DRINK to 3,
             AnimationType.FOCUS to 2,
@@ -148,14 +148,20 @@ object PlayAmbientActivity {
             AnimationType.WORK to 3,
             AnimationType.FOCUS to 3,
             AnimationType.DRINK to 3,
-            AnimationType.MOVE to 2,
+            AnimationType.MOVE to 3,
             AnimationType.GENERAL to 2,
             AnimationType.BOOK to 1,
             AnimationType.CREATIVITY to 1
         )
         DayPhase.EVENING -> mapOf(
             AnimationType.REST to 3,
-            AnimationType.LOVE to 3,
+            AnimationType.LOVE to 2,
+            // **Der Abendspaziergang.** Vorher stand hier gar kein MOVE, und damit war der Abend
+            // vollstaendig drinnen - dabei ist es die Tageszeit, zu der jemand tatsaechlich noch
+            // einmal vor die Tuer geht. Zusammen mit dem Licht in den Fenstern (siehe
+            // PlayScene.litWindows) ist das die schoenste Szene, die diese Welt zu bieten hat,
+            // und sie kam bis dahin nie vor.
+            AnimationType.MOVE to 4,
             AnimationType.BOOK to 2,
             AnimationType.CREATIVITY to 2,
             AnimationType.MINDFULNESS to 2,

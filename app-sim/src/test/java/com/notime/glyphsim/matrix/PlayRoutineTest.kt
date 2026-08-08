@@ -229,4 +229,63 @@ class PlayRoutineTest {
             }
         }
     }
+
+    @Test
+    fun `der Avatar kommt regelmaessig nach draussen`() {
+        // **Die Pruefung zu einer gemeldeten Beobachtung:** Beim Zusehen im Zeitraffer spielte
+        // sich praktisch alles in Zimmern ab. Das war kein Fehler in einer einzelnen Zeile,
+        // sondern die Summe vieler Gewichte - und genau so etwas faellt beim Lesen des Codes
+        // niemals auf, weil jede einzelne Stelle fuer sich vernuenftig aussieht.
+        //
+        // Gezaehlt wird deshalb das ERGEBNIS: Wie oft fuehrt eine autonome Regung unter freien
+        // Himmel? Die Nacht ist ausgenommen - wer nachts schlaeft, gehoert ins Bett.
+        val daytime = listOf(
+            PlayAmbientActivity.DayPhase.MORNING,
+            PlayAmbientActivity.DayPhase.MIDDAY,
+            PlayAmbientActivity.DayPhase.EVENING
+        )
+        for (phase in daytime) {
+            var outside = 0
+            val draws = 600
+            repeat(draws) {
+                val topic = PlayAmbientActivity.nextTopic(phase)
+                // Der TATSAECHLICH gewuerfelte Ablauf, nicht alle moeglichen: Sonst zaehlte ein
+                // Thema schon dann als "draussen", wenn irgendeine seiner Varianten hinausfuehrt -
+                // und die Zahl sagte nichts mehr darueber aus, was man beim Zusehen wirklich sieht.
+                val routine = PlayRoutines.forTopic(topic)
+                val visited = routine.steps.filterIsInstance<RoutineStep.GoToPlace>()
+                    .map { it.place } + PlayScene.forTopic(topic)
+                if (visited.any { PlayScene.isOutdoors(it) }) outside++
+            }
+            val share = outside.toFloat() / draws
+            assertTrue(
+                "In der Phase $phase fuehren nur ${(share * 100).toInt()} % der Regungen nach " +
+                    "draussen - diese Welt besteht dann fast nur aus Zimmern.",
+                share >= 0.20f
+            )
+        }
+    }
+
+    @Test
+    fun `jeder Ort draussen wird tatsaechlich aufgesucht`() {
+        // Eine Kulisse, die niemand betritt, ist Aufwand ohne Wirkung. Geprueft wird deshalb,
+        // dass jeder Ort unter freiem Himmel in mindestens einem Ablauf vorkommt - entweder als
+        // Startort einer Taetigkeit oder als Ziel eines Ortswechsels.
+        val reachable = buildSet {
+            for (topic in AnimationType.entries) {
+                add(PlayScene.forTopic(topic))
+                for (routine in PlayRoutines.allFor(topic)) {
+                    for (step in routine.steps) {
+                        if (step is RoutineStep.GoToPlace) add(step.place)
+                    }
+                }
+            }
+        }
+        for (place in PlayScene.Place.entries.filter { PlayScene.isOutdoors(it) }) {
+            assertTrue(
+                "$place kommt in keinem Ablauf vor - die Kulisse waere nie zu sehen",
+                place in reachable
+            )
+        }
+    }
 }
