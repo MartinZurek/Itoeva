@@ -1854,7 +1854,7 @@ fun DockScreen(
                 Box(modifier = Modifier.pointerInput(Unit) { detectTapGestures {} }) {
                     PlayTalkPanel(
                         knowledge = talkKnowledge,
-                        speciesLabel = stringResource(species.labelRes),
+                        species = species,
                         onAddReminder = { topic -> onAddHabit(topic); talkRefresh++ },
                         onOpenReminders = { talkOpen = false; onOpenReminders() },
                         onDismiss = { talkOpen = false }

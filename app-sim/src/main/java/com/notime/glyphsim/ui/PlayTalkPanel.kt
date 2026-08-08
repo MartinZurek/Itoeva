@@ -21,11 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.R
+import com.notime.glyphsim.matrix.AvatarSpecies
 
 /**
  * **Das Gespraech mit dem Avatar** - vorgegebene Fragen, echte Auskuenfte (siehe [PlayTalk]).
@@ -48,7 +51,7 @@ private val PANEL = Color(0xF00A0A0A)
 @Composable
 fun PlayTalkPanel(
     knowledge: PlayTalk.Knowledge?,
-    speciesLabel: String,
+    species: AvatarSpecies,
     onAddReminder: (AnimationType) -> Unit,
     onOpenReminders: () -> Unit,
     onDismiss: () -> Unit,
@@ -58,6 +61,7 @@ fun PlayTalkPanel(
     var asked by remember { mutableStateOf<Question?>(null) }
     // Was gerade angelegt wurde, damit der Vorschlag danach nicht unveraendert dasteht.
     var justAdded by remember { mutableStateOf<AnimationType?>(null) }
+    val voice = remember(species) { PlayVoice.forSpecies(species) }
 
     Column(
         modifier = modifier
@@ -68,13 +72,17 @@ fun PlayTalkPanel(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(speciesLabel, color = INK_DIM, size = 12, weight = FontWeight.Medium)
+        Text(stringResource(species.labelRes), color = INK_DIM, size = 12, weight = FontWeight.Medium)
 
         if (knowledge == null) {
             Text(stringResource(R.string.talk_loading), color = INK_DIM, size = 14)
         } else {
             val current = asked
             if (current == null) {
+                // Die Begruessung steht nur ueber der Fragenliste, nicht ueber jeder Antwort:
+                // Ein Wesen, das sich nach jeder Auskunft erneut begruesst, klingt wie ein
+                // Automat, der neu gestartet wurde.
+                Text(stringResource(voice.greeting), color = INK, size = 15)
                 for (question in Question.entries) {
                     // Vorschlaege nur anbieten, wenn es tatsaechlich etwas vorzuschlagen gibt -
                     // eine Frage, auf die "nichts" die Antwort ist, ist eine leere Zeile.
@@ -87,6 +95,7 @@ fun PlayTalkPanel(
                 Answer(
                     question = current,
                     knowledge = knowledge,
+                    voice = voice,
                     justAdded = justAdded,
                     onAddReminder = { topic ->
                         justAdded = topic
@@ -99,7 +108,7 @@ fun PlayTalkPanel(
         }
 
         Text(
-            stringResource(R.string.talk_close),
+            stringResource(voice.farewell),
             color = INK_DIM,
             size = 13,
             modifier = Modifier
@@ -116,6 +125,7 @@ fun PlayTalkPanel(
  */
 private enum class Question(val labelRes: Int) {
     TODAY(R.string.talk_q_today),
+    WEEK(R.string.talk_q_week),
     PLAN(R.string.talk_q_plan),
     STEERING(R.string.talk_q_steering),
     SUGGEST(R.string.talk_q_suggest)
@@ -125,6 +135,7 @@ private enum class Question(val labelRes: Int) {
 private fun Answer(
     question: Question,
     knowledge: PlayTalk.Knowledge,
+    voice: PlayVoice,
     justAdded: AnimationType?,
     onAddReminder: (AnimationType) -> Unit,
     onOpenReminders: () -> Unit
@@ -134,7 +145,10 @@ private fun Answer(
             if (!knowledge.hasPlan) {
                 Text(stringResource(R.string.talk_a_today_noplan), color = INK, size = 15)
             } else if (knowledge.fedToday == 0) {
-                Text(stringResource(R.string.talk_a_today_nothing), color = INK, size = 15)
+                // In SEINER Stimme: Ein leerer Tag ist der Moment, in dem es am meisten darauf
+                // ankommt, WIE es gesagt wird. Wyrmling fragt, ob man anfangen will; Gloop sagt,
+                // es sei kein Stress. Die Tatsache ist dieselbe.
+                Text(stringResource(voice.emptyDay), color = INK, size = 15)
             } else {
                 Text(
                     stringResource(R.string.talk_a_today, knowledge.fedToday),
@@ -147,6 +161,30 @@ private fun Answer(
                             knowledge.goalsReached,
                             knowledge.goalsTotal
                         ),
+                        color = INK_DIM, size = 13
+                    )
+                }
+            }
+        }
+
+        Question.WEEK -> {
+            val week = knowledge.week
+            if (week.total == 0) {
+                Text(stringResource(R.string.talk_a_week_empty), color = INK, size = 15)
+            } else {
+                Text(
+                    stringResource(
+                        R.string.talk_a_week, week.total, week.activeDays, week.daysSoFar
+                    ),
+                    color = INK, size = 15
+                )
+                if (week.activeDays >= week.daysSoFar) {
+                    // Das Lob nur, wenn es auch stimmt - und dann ohne Zahl davor, damit es sich
+                    // wie eine Bemerkung liest und nicht wie eine Auswertung.
+                    Text(stringResource(R.string.talk_a_week_every_day), color = INK_DIM, size = 13)
+                } else if (week.bestDay > 0) {
+                    Text(
+                        stringResource(R.string.talk_a_week_best, week.bestDay),
                         color = INK_DIM, size = 13
                     )
                 }
@@ -196,8 +234,10 @@ private fun Answer(
             if (knowledge.steering.isEmpty()) {
                 Text(
                     stringResource(
+                        // "Nichts hat ein Tagesziel" ist eine sachliche Auskunft und bleibt
+                        // neutral; "alles erledigt" ist ein Moment, der ihm gehoert.
                         if (knowledge.goalsTotal == 0) R.string.talk_a_steering_nogoals
-                        else R.string.talk_a_steering_done
+                        else voice.allDone
                     ),
                     color = INK, size = 15
                 )
@@ -221,6 +261,7 @@ private fun Answer(
                 )
                 Text(stringResource(R.string.talk_a_suggest_added_hint), color = INK_DIM, size = 13)
             } else {
+                Text(stringResource(voice.offering), color = INK_DIM, size = 13)
                 Text(
                     stringResource(R.string.talk_a_suggest, stringResource(topic.labelRes)),
                     color = INK, size = 15
@@ -263,6 +304,17 @@ private fun QuestionLine(label: String, onClick: () -> Unit) {
 /**
  * Schrift in EINER Form fuer das ganze Feld - ohne MaterialTheme, das im Play-Modus gar nicht
  * gesetzt ist und dessen Farben hier auch nicht passen wuerden.
+ *
+ * **Warum dicktengleich und nicht wirklich Pixel.** Naheliegend waere der vorhandene Zeichensatz
+ * dieser Welt gewesen ([com.notime.glyphsim.matrix.PixelFont]) - der kennt aber nur Ziffern und
+ * ist fuer ein 13x13-Feld gebaut. Ein vollstaendiger Pixel-Zeichensatz mit Umlauten und
+ * Satzzeichen waere eine Schriftdatei, also ein Gestaltungsprojekt fuer sich; und in Fliesstext
+ * gesetzt liest sich echte Pixelschrift bei diesen Groessen deutlich muehsamer, gerade fuer Augen,
+ * die es ohnehin schwer haben.
+ *
+ * Dicktengleiche Schrift mit etwas Laufweite trifft denselben Ton - technisch, ruhig, zur
+ * Pixelwelt gehoerig - und bleibt vollstaendig lesbar. Das ist hier kein Notbehelf, sondern der
+ * bessere Tausch: Der Charakter dieses Feldes soll aus dem kommen, was darin steht.
  */
 @Composable
 private fun Text(
@@ -276,8 +328,12 @@ private fun Text(
         text = text,
         color = color,
         fontSize = size.sp,
-        lineHeight = (size * 1.4f).sp,
+        lineHeight = (size * 1.5f).sp,
         fontWeight = weight,
+        fontFamily = FontFamily.Monospace,
+        // Etwas Luft zwischen den Zeichen: Genau das laesst dicktengleiche Schrift nach Anzeige
+        // aussehen statt nach Quelltext.
+        letterSpacing = 0.06.em,
         modifier = modifier
     )
 }

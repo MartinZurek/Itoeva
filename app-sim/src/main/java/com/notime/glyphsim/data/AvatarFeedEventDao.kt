@@ -160,6 +160,23 @@ interface AvatarFeedEventDao {
     suspend fun countTriggeredSince(profileId: String, sinceEpochMillis: Long): Int
 
     /**
+     * Die ZEITPUNKTE der beantworteten Erinnerungen - fuer die Rueckschau ueber mehrere Tage
+     * (siehe [com.notime.glyphsim.ui.PlayTalk]).
+     *
+     * Bewusst die rohen Zeitpunkte statt einer Gruppierung nach Tag in SQL: SQLites Datums-
+     * funktionen rechnen in UTC, sofern man ihnen nicht ausdruecklich etwas anderes sagt. Ein
+     * Tag ist aber das, was der Nutzer in SEINER Zeitzone als Tag erlebt - was um 23 Uhr
+     * geschieht, gehoert zu diesem Tag und nicht zum naechsten. Diese Grenze wird deshalb dort
+     * gezogen, wo die Zeitzone ohnehin bekannt ist, und nicht in der Abfrage.
+     */
+    @Query(
+        "SELECT epochMillis FROM avatar_feed_events " +
+            "WHERE profileId = :profileId AND epochMillis >= :sinceEpochMillis " +
+            "AND fedAtMillis IS NOT NULL ORDER BY epochMillis"
+    )
+    suspend fun fedTimestampsSince(profileId: String, sinceEpochMillis: Long): List<Long>
+
+    /**
      * Haelt fest, dass auf eine Ausloesung reagiert wurde. Bewusst ueber die Zeilen-ID statt
      * ueber die Erinnerung: dieselbe Erinnerung loest immer wieder aus, gemeint ist aber genau
      * dieses eine Auftreten.

@@ -397,4 +397,48 @@
     <string name="talk_a_suggest_added_hint">You\'ll see it in my day from now on.</string>
     <string name="talk_a_suggest_none">Nothing comes to mind. You\'ve thought of everything.</string>
     <string name="a11y_talk_to_avatar">Talk to your companion</string>
+
+    <!-- Die Stimme der sechs Kreaturen im Gespraech (siehe PlayVoice) -->
+    <string name="voice_puffling_greeting">Oh, hello! What would you like to know?</string>
+    <string name="voice_puffling_empty">Nothing yet today – but there is still so much day left!</string>
+    <string name="voice_puffling_done">All of it done! I am really rather proud of you.</string>
+    <string name="voice_puffling_offer">Ooh, I thought of something!</string>
+    <string name="voice_puffling_bye">Off I go then!</string>
+
+    <string name="voice_starlet_greeting">There you are. Ask me anything.</string>
+    <string name="voice_starlet_empty">Nothing yet today. That is quite all right.</string>
+    <string name="voice_starlet_done">Everything is done. You may rest now.</string>
+    <string name="voice_starlet_offer">Only if you would like to…</string>
+    <string name="voice_starlet_bye">I will be right here.</string>
+
+    <string name="voice_wyrmling_greeting">Right! What do you need?</string>
+    <string name="voice_wyrmling_empty">Nothing yet. Shall we make a start?</string>
+    <string name="voice_wyrmling_done">All done. That is how it is done!</string>
+    <string name="voice_wyrmling_offer">One idea:</string>
+    <string name="voice_wyrmling_bye">Onwards!</string>
+
+    <string name="voice_fennec_greeting">I am listening.</string>
+    <string name="voice_fennec_empty">Nothing so far today. I will keep watch.</string>
+    <string name="voice_fennec_done">Everything you set out to do is done.</string>
+    <string name="voice_fennec_offer">A thought, if you want it:</string>
+    <string name="voice_fennec_bye">I am keeping an eye on things.</string>
+
+    <string name="voice_gloop_greeting">Mmh? Oh – go on then, ask.</string>
+    <string name="voice_gloop_empty">Nothing yet today. No rush, honestly.</string>
+    <string name="voice_gloop_done">All done. Now we can properly do nothing.</string>
+    <string name="voice_gloop_offer">Just an idea, take it or leave it:</string>
+    <string name="voice_gloop_bye">See you in a bit.</string>
+
+    <string name="voice_hootlet_greeting">Ask.</string>
+    <string name="voice_hootlet_empty">Nothing today so far. A day is long.</string>
+    <string name="voice_hootlet_done">Done. Well judged.</string>
+    <string name="voice_hootlet_offer">One observation:</string>
+    <string name="voice_hootlet_bye">I am watching.</string>
+
+    <!-- Rueckschau auf die Woche -->
+    <string name="talk_q_week">How has the week been?</string>
+    <string name="talk_a_week">%1$d things over %2$d of %3$d days this week.</string>
+    <string name="talk_a_week_best">Your best day had %1$d.</string>
+    <string name="talk_a_week_empty">Nothing this week yet. It has only just begun.</string>
+    <string name="talk_a_week_every_day">Every single day so far. That is quite something.</string>
 </resources>

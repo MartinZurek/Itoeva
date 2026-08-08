@@ -2,6 +2,9 @@ package com.notime.glyphsim.ui
 
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
+import com.notime.glyphsim.matrix.AvatarSpecies
+import java.time.LocalDate
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -73,7 +76,8 @@ class PlayTalkTest {
     @Test
     fun `vorgeschlagen wird nur, was noch fehlt - und hoechstens eines`() {
         val nothingMissing = PlayTalk.Knowledge(
-            plan = emptyList(), fedToday = 0, steering = emptySet(), missing = emptyList()
+            plan = emptyList(), fedToday = 0, steering = emptySet(), missing = emptyList(),
+            week = PlayTalk.Week(0, 0, 1, 0)
         )
         assertNull(
             "Ohne Luecke darf er nichts vorschlagen - sonst wird aus dem Angebot eine Ermahnung",
@@ -82,7 +86,8 @@ class PlayTalkTest {
 
         val twoMissing = PlayTalk.Knowledge(
             plan = emptyList(), fedToday = 0, steering = emptySet(),
-            missing = listOf(AnimationType.MOVE, AnimationType.DRINK)
+            missing = listOf(AnimationType.MOVE, AnimationType.DRINK),
+            week = PlayTalk.Week(0, 0, 1, 0)
         )
         assertEquals(AnimationType.MOVE, PlayTalk.nextSuggestion(twoMissing))
     }
@@ -99,6 +104,112 @@ class PlayTalkTest {
                 "$topic fuehrt zu keinem Ablauf, in dem sich etwas bewegt",
                 routines.any { it.steps.size > 1 }
             )
+        }
+    }
+
+    // ---- Rueckschau auf die Woche ----
+
+    private val zone: ZoneId = ZoneId.of("Europe/Berlin")
+
+    /** Ein Zeitpunkt an einem bestimmten Tag zu einer bestimmten Stunde. */
+    private fun at(date: LocalDate, hour: Int): Long =
+        date.atTime(hour, 0).atZone(zone).toInstant().toEpochMilli()
+
+    @Test
+    fun `die Woche zaehlt Tage, nicht Ereignisse`() {
+        // Mittwoch: Die Woche hat bisher drei Tage, nicht sieben. Wer am Mittwoch fragt, soll
+        // nicht lesen "an 2 von 7 Tagen" und sich fuer vier Tage schaemen, die es noch gar
+        // nicht gibt.
+        val wednesday = LocalDate.of(2026, 8, 5)
+        val monday = LocalDate.of(2026, 8, 3)
+
+        val week = PlayTalk.summariseWeek(
+            listOf(at(monday, 9), at(monday, 18), at(wednesday, 8)),
+            today = wednesday, zone = zone
+        )
+
+        assertEquals("drei Ereignisse", 3, week.total)
+        assertEquals("an zwei Tagen", 2, week.activeDays)
+        assertEquals("Montag bis Mittwoch sind drei Tage", 3, week.daysSoFar)
+        assertEquals("der Montag war der beste Tag", 2, week.bestDay)
+    }
+
+    @Test
+    fun `mehrere Ereignisse am selben Abend sind EIN Tag`() {
+        val friday = LocalDate.of(2026, 8, 7)
+        val week = PlayTalk.summariseWeek(
+            List(5) { at(friday, 20) }, today = friday, zone = zone
+        )
+        assertEquals(5, week.total)
+        assertEquals("fuenfmal am selben Abend bleibt ein Tag", 1, week.activeDays)
+    }
+
+    @Test
+    fun `kurz vor Mitternacht gehoert noch zum selben Tag`() {
+        // Die Falle, wegen der die Tagesgrenze in der Zeitzone des Nutzers gezogen wird und nicht
+        // in SQL: In UTC gerechnet fiele 23 Uhr deutscher Zeit bereits auf den Folgetag, und die
+        // Woche haette stillschweigend einen Tag zu viel.
+        val tuesday = LocalDate.of(2026, 8, 4)
+        val week = PlayTalk.summariseWeek(
+            listOf(at(tuesday, 9), at(tuesday, 23)), today = tuesday, zone = zone
+        )
+        assertEquals("ein Tag, nicht zwei", 1, week.activeDays)
+    }
+
+    @Test
+    fun `am Montag hat die Woche genau einen Tag`() {
+        val monday = LocalDate.of(2026, 8, 3)
+        val week = PlayTalk.summariseWeek(listOf(at(monday, 10)), today = monday, zone = zone)
+        assertEquals(1, week.daysSoFar)
+        assertEquals(1, week.activeDays)
+    }
+
+    @Test
+    fun `eine leere Woche meldet Nullen statt zu stolpern`() {
+        val sunday = LocalDate.of(2026, 8, 9)
+        val week = PlayTalk.summariseWeek(emptyList(), today = sunday, zone = zone)
+        assertEquals(0, week.total)
+        assertEquals(0, week.activeDays)
+        assertEquals(0, week.bestDay)
+        assertEquals("Montag bis Sonntag sind sieben Tage", 7, week.daysSoFar)
+    }
+
+    // ---- Die Stimme der sechs Kreaturen ----
+
+    @Test
+    fun `jede Kreatur hat ihre eigene Stimme`() {
+        // Sechs Stimmen, die versehentlich auf dieselben Texte zeigen, waeren schlimmer als gar
+        // keine: Der Aufwand waere da, die Wirkung nicht, und niemand wuerde es bemerken.
+        val voices = AvatarSpecies.entries.map { PlayVoice.forSpecies(it) }
+        assertEquals(
+            "zwei Kreaturen begruessen mit demselben Text",
+            AvatarSpecies.entries.size, voices.map { it.greeting }.toSet().size
+        )
+        assertEquals(
+            "zwei Kreaturen troesten mit demselben Text",
+            AvatarSpecies.entries.size, voices.map { it.emptyDay }.toSet().size
+        )
+        assertEquals(
+            "zwei Kreaturen freuen sich mit demselben Text",
+            AvatarSpecies.entries.size, voices.map { it.allDone }.toSet().size
+        )
+    }
+
+    @Test
+    fun `keine Stimme laesst eine Zeile offen`() {
+        // Eine nicht gesetzte Ressourcen-Nummer waere 0 und faellt erst beim Anzeigen auf - dann
+        // aber mit einem Absturz mitten im Gespraech.
+        for (species in AvatarSpecies.entries) {
+            val voice = PlayVoice.forSpecies(species)
+            for ((name, res) in listOf(
+                "greeting" to voice.greeting,
+                "emptyDay" to voice.emptyDay,
+                "allDone" to voice.allDone,
+                "offering" to voice.offering,
+                "farewell" to voice.farewell
+            )) {
+                assertTrue("$species hat keinen Text fuer $name", res != 0)
+            }
         }
     }
 }

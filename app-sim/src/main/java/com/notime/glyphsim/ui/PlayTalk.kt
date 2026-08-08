@@ -5,6 +5,12 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphsim.data.AppDatabase
+import java.time.DayOfWeek
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
 
 /**
  * **Was der Avatar auf eine Frage antworten kann - und zwar ohne eine Zeile Text zu erfinden.**
@@ -45,6 +51,25 @@ object PlayTalk {
      * nacheinander, und Antworten, die sich zwischendurch widersprechen ("drei erledigt" / "nichts
      * erledigt"), waeren schlimmer als eine Sekunde Wartezeit am Anfang.
      */
+    /**
+     * Die Rueckschau ueber die laufende Woche.
+     *
+     * **Bewusst nur drei Zahlen, und keine davon ist eine Quote.** Eine Prozentangabe ueber eine
+     * Woche liest sich wie ein Zeugnis, und ein Begleiter, der Zeugnisse ausstellt, ist kein
+     * Begleiter mehr. "An vier von sieben Tagen war etwas" sagt dasselbe, ohne zu bewerten - und
+     * [bestDay] gibt es ueberhaupt nur, damit die Rueckschau etwas Gutes zu berichten hat.
+     */
+    data class Week(
+        /** Wie oft in dieser Woche insgesamt reagiert wurde. */
+        val total: Int,
+        /** An wievielen Tagen der Woche ueberhaupt etwas geschah. */
+        val activeDays: Int,
+        /** Wieviele Tage die Woche bisher hat - Montag zaehlt als ein Tag, nicht als sieben. */
+        val daysSoFar: Int,
+        /** Die hoechste Tageszahl der Woche. */
+        val bestDay: Int
+    )
+
     data class Knowledge(
         val plan: List<PlanEntry>,
         /** Wie oft heute insgesamt reagiert wurde. */
@@ -52,11 +77,37 @@ object PlayTalk {
         /** Themen, die heute noch offen sind und deshalb seinen Tag mitbestimmen. */
         val steering: Set<AnimationType>,
         /** Themen, fuer die es noch gar keine Erinnerung gibt - daraus entstehen die Vorschlaege. */
-        val missing: List<AnimationType>
+        val missing: List<AnimationType>,
+        /** Die laufende Woche - siehe [Week]. */
+        val week: Week
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
         val hasPlan: Boolean get() = plan.isNotEmpty()
+    }
+
+    /**
+     * Verteilt Zeitpunkte auf Kalendertage und verdichtet sie zur Wochen-Rueckschau.
+     *
+     * Ausgelagert und ohne Datenbank, damit sich genau die Faelle pruefen lassen, die sonst
+     * niemand von Hand nachstellt: eine Woche, die erst am Mittwoch anfaengt; zwei Ereignisse am
+     * selben Abend; ein Ereignis kurz vor Mitternacht.
+     */
+    fun summariseWeek(
+        timestamps: List<Long>,
+        today: LocalDate = LocalDate.now(),
+        zone: ZoneId = ZoneId.systemDefault()
+    ): Week {
+        val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val perDay = timestamps.groupingBy {
+            Instant.ofEpochMilli(it).atZone(zone).toLocalDate()
+        }.eachCount()
+        return Week(
+            total = timestamps.size,
+            activeDays = perDay.count { (day, count) -> count > 0 && !day.isBefore(weekStart) },
+            daysSoFar = (ChronoUnit.DAYS.between(weekStart, today).toInt() + 1).coerceIn(1, 7),
+            bestDay = perDay.values.maxOrNull() ?: 0
+        )
     }
 
     /**
@@ -92,11 +143,17 @@ object PlayTalk {
         val plan = reminders.map { PlanEntry(it, fedByReminder[it.id] ?: 0) }
         val covered = reminders.map { it.animationType }.toSet()
 
+        val weekStart = FeedStatsPeriod.WEEK.startMillis()
+        val week = summariseWeek(
+            db.avatarFeedEventDao().fedTimestampsSince(profileId, weekStart)
+        )
+
         return Knowledge(
             plan = plan,
             fedToday = fedByReminder.values.sum(),
             steering = PlayHabitSignal.underfulfilledTopics(context, profileId),
-            missing = SUGGESTABLE.filterNot { it in covered }
+            missing = SUGGESTABLE.filterNot { it in covered },
+            week = week
         )
     }
 
