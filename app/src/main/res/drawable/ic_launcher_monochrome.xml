@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Themed-Icon-Variante (Android 13+, "Icon zu Systemfarbe passen"): gleiches
+    Dot-Matrix-Uhr-Motiv wie ic_launcher_foreground.xml, aber als einfarbige Maske -
+    das System faerbt sie zur Laufzeit mit der Nutzer-Akzentfarbe ein, daher hier
+    bewusst eine einzige Fuellfarbe fuer alle Punkte inkl. des sonst roten Akzent-Punkts.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M50,24 A4,4 0 1,0 58,24 A4,4 0 1,0 50,24 Z
+            M65,28 A4,4 0 1,0 73,28 A4,4 0 1,0 65,28 Z
+            M76,39 A4,4 0 1,0 84,39 A4,4 0 1,0 76,39 Z
+            M80,54 A4,4 0 1,0 88,54 A4,4 0 1,0 80,54 Z
+            M76,69 A4,4 0 1,0 84,69 A4,4 0 1,0 76,69 Z
+            M65,80 A4,4 0 1,0 73,80 A4,4 0 1,0 65,80 Z
+            M50,84 A4,4 0 1,0 58,84 A4,4 0 1,0 50,84 Z
+            M35,80 A4,4 0 1,0 43,80 A4,4 0 1,0 35,80 Z
+            M24,69 A4,4 0 1,0 32,69 A4,4 0 1,0 24,69 Z
+            M20,54 A4,4 0 1,0 28,54 A4,4 0 1,0 20,54 Z
+            M24,39 A4,4 0 1,0 32,39 A4,4 0 1,0 24,39 Z
+            M35,28 A4,4 0 1,0 43,28 A4,4 0 1,0 35,28 Z
+            M45.8,49.8 A4,4 0 1,0 53.8,49.8 A4,4 0 1,0 45.8,49.8 Z
+            M42.9,46.9 A4,4 0 1,0 50.9,46.9 A4,4 0 1,0 42.9,46.9 Z
+            M40.1,44.1 A4,4 0 1,0 48.1,44.1 A4,4 0 1,0 40.1,44.1 Z
+            M55.7,48.3 A4,4 0 1,0 63.7,48.3 A4,4 0 1,0 55.7,48.3 Z
+            M59.9,44.1 A4,4 0 1,0 67.9,44.1 A4,4 0 1,0 59.9,44.1 Z
+            M64.1,39.9 A4,4 0 1,0 72.1,39.9 A4,4 0 1,0 64.1,39.9 Z
+            M67,37 A4,4 0 1,0 75,37 A4,4 0 1,0 67,37 Z
+            M47.5,54 A6.5,6.5 0 1,0 60.5,54 A6.5,6.5 0 1,0 47.5,54 Z" />
+</vector>

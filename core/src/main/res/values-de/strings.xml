@@ -1,0 +1,14 @@
+<resources>
+    <string name="animation_focus">Fokus</string>
+    <string name="animation_drink">Trinken</string>
+    <string name="animation_move">Bewegen</string>
+    <string name="animation_general">Allgemein</string>
+    <string name="animation_rest">Pause</string>
+    <string name="animation_work">Arbeit</string>
+    <string name="animation_mindfulness">Achtsamkeit</string>
+    <string name="animation_love">Liebe</string>
+    <string name="animation_sleep">Schlaf</string>
+    <string name="animation_medicine">Medizin</string>
+    <string name="animation_book">Lesen</string>
+    <string name="animation_creativity">Kreativität</string>
+</resources>

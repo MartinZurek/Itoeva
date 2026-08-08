@@ -1,0 +1,387 @@
+package com.notime.glyphsim.matrix
+
+import com.notime.glyphcore.data.AnimationType
+import kotlin.random.Random
+
+/**
+ * Ein einzelner Schritt in einem Tagesablauf - siehe [PlayRoutine].
+ */
+sealed interface RoutineStep {
+
+    /** Zu einem benannten Platz gehen (siehe [PlayScene.Station]). */
+    data class GoTo(val station: PlayScene.Station) : RoutineStep
+
+    /**
+     * Zu einer freien Stelle gehen, angegeben als Bruchteil der Bildschirmbreite - fuers
+     * Umherlaufen dort, wo es nichts zu benutzen gibt (draussen).
+     */
+    data class Stroll(val anchorX: Float) : RoutineStep
+
+    /**
+     * Den Platz, an dem die Figur gerade steht, tatsaechlich BENUTZEN: sich ins Bett legen, sich
+     * in den Sessel setzen. Sie rueckt dabei auf den Benutzungsplatz der Requisite, und deren
+     * vordere Teile (Decke, Sitzkante) legen sich ueber sie - siehe [PlayScene.buildFront].
+     */
+    data class Occupy(val station: PlayScene.Station) : RoutineStep
+
+    /** Wieder aufstehen: zurueck auf den Boden, Verdeckung endet. */
+    data object Rise : RoutineStep
+
+    /** Eine Handlung ausfuehren - greift auf die vorhandene Reaktions-Bibliothek zurueck. */
+    data class Act(val topic: AnimationType) : RoutineStep
+
+    /** Eine Alltagsregung einschieben. */
+    data class Stir(val fidget: AvatarAnimations.Fidget) : RoutineStep
+
+    /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
+    data class Linger(val millis: Long) : RoutineStep
+
+    /**
+     * Einen Gegenstand schalten - derzeit die Stehlampe (siehe [PlayScene.build]).
+     *
+     * Der erste Schritt, der die WELT veraendert statt nur die Figur. Alle uebrigen bewegen oder
+     * animieren sie; dieser hinterlaesst etwas, das auch dann noch da ist, wenn sie weitergeht.
+     */
+    data class Switch(val device: PlayScene.Station, val on: Boolean) : RoutineStep
+
+    /**
+     * Einen Gegenstand AN SICH NEHMEN - er wird ab jetzt sichtbar mitgetragen, bis [Drop] kommt
+     * (siehe [PlayEffects.carriedCells]).
+     *
+     * Zusammen mit dem Aufblitzen im Moment des Zugriffs ist das die Antwort auf die Frage, die
+     * man sich beim Zuschauen sonst staendig stellt: Was hat er da eigentlich vor? Ein Buch in der
+     * Hand auf dem Weg zum Sessel beantwortet sie, ohne dass irgendwo Text stehen muesste.
+     */
+    data class Take(val item: PlayEffects.Carried) : RoutineStep
+
+    /** Das Getragene wieder ablegen. */
+    data object Drop : RoutineStep
+
+    /**
+     * MITTEN im Ablauf in einen anderen Raum wechseln - durch die Tuer (siehe moveToPlace in
+     * DockScreen).
+     *
+     * Damit wird ein Vorhaben moeglich, das sich ueber mehrere Zimmer erstreckt: einkaufen gehen,
+     * mit dem Eingekauften nach Hause kommen, es dort essen. Vorher legte der Ort vor dem Ablauf
+     * fest, wo alles stattfindet - eine Besorgung liess sich so gar nicht erzaehlen.
+     */
+    data class GoToPlace(val place: PlayScene.Place) : RoutineStep
+}
+
+/**
+ * Was der Avatar an einem Ort TUT - als Folge von Schritten statt als eine einzelne Animation.
+ *
+ * **Warum das der entscheidende Unterschied ist.** Bis hierher spielte der Avatar eine Reaktion
+ * NEBEN einem Moebelstueck ab: Er stand am Bett und machte Schlafbewegungen, aber er legte sich
+ * nie hinein. Das ist der Abstand zwischen einer Figur vor einer Kulisse und einem Bewohner. Was
+ * gefehlt hat, waren nicht mehr Animationen - es war eine Ebene dazwischen, auf der eine
+ * Taetigkeit aus mehreren Schritten mit Wegen dazwischen besteht.
+ *
+ * Ein Ablauf wie "sich etwas zu essen machen" ist genau das: zum Regal gehen, etwas herunterholen,
+ * damit zum Tisch gehen, zubereiten, essen. Fuenf Schritte, drei davon Wege - und erst dadurch
+ * entsteht der Eindruck von Absicht statt von Zufallsbewegung.
+ *
+ * **Alles Vorhandene wird wiederverwendet.** [RoutineStep.Act] greift auf dieselben
+ * Reaktions-Sequenzen zurueck, die auch eine gefuetterte Erinnerung zeigt
+ * ([AvatarAnimations.reactionFor]); [RoutineStep.GoTo] benutzt denselben Geh-Zyklus wie bisher.
+ * Neu ist allein die Verkettung - deshalb ist dieser Schritt so klein, obwohl er so viel aendert.
+ *
+ * **Erweiterbar gedacht.** Neue Taetigkeiten entstehen als neue Schrittfolgen, ohne dass an der
+ * Kulisse, den Reaktionen oder der Ablaufsteuerung etwas anzufassen waere. Wer einen Platz
+ * hinzufuegt, traegt ihn in [PlayScene.Station] ein und kann ihn sofort in Ablaeufen benutzen.
+ */
+data class PlayRoutine(val steps: List<RoutineStep>)
+
+object PlayRoutines {
+
+    /**
+     * Waehlt einen Ablauf zum Thema. Ein Thema hat oft MEHRERE moegliche Ablaeufe - das ist die
+     * Stelle, an der sich Abwechslung am billigsten erzeugen laesst: dieselbe Absicht
+     * ("etwas trinken") an unterschiedlichen Tagen anders ausgefuehrt.
+     */
+    /**
+     * Waehlt einen Ablauf zum Thema.
+     *
+     * [needsShopping] ist der eine Fall, in dem NICHT gewuerfelt wird: Ist der Vorrat leer (siehe
+     * [PlayPantry]), muss der Ablauf ueber den Laden fuehren. Damit hat zum ersten Mal ein Zustand
+     * der Welt Vorrang vor dem Zufall - der Avatar geht einkaufen, WEIL nichts mehr da ist, und
+     * nicht, weil die Wuerfel es so wollten.
+     */
+    fun forTopic(topic: AnimationType, needsShopping: Boolean = false): PlayRoutine {
+        val options = allFor(topic)
+        if (needsShopping) {
+            options.firstOrNull { routine ->
+                routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP }
+            }?.let { return it }
+        }
+        // Umgekehrt: Solange etwas da ist, faellt der Einkauf weg - sonst liefe er auch mit vollem
+        // Kuehlschrank jedes zweite Mal in den Laden.
+        val everyday = options.filterNot { routine ->
+            routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP }
+        }
+        val pool = everyday.ifEmpty { options }
+        return pool[Random.nextInt(pool.size)]
+    }
+
+    /**
+     * ALLE Ablaeufe zu einem Thema - oeffentlich, weil sich sonst nicht pruefen laesst, dass jeder
+     * Ablauf nur Plaetze anspricht, die es an seinem Ort tatsaechlich gibt (siehe
+     * PlayRoutineTest). Ein Ablauf, der ins Leere greift, wuerde sonst stillschweigend einen
+     * Schritt ueberspringen - der Avatar bliebe einfach stehen, ohne dass irgendwo ein Fehler
+     * auftaucht.
+     */
+    fun allFor(topic: AnimationType): List<PlayRoutine> = when (topic) {
+
+        // ---- Schlafen: hingehen, hineinlegen, liegen bleiben ----
+        AnimationType.SLEEP -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.BED),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.YAWN),
+                    RoutineStep.Occupy(PlayScene.Station.BED),
+                    RoutineStep.Act(AnimationType.SLEEP),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Rise
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.BED),
+                    RoutineStep.Occupy(PlayScene.Station.BED),
+                    RoutineStep.Linger(6_000L),
+                    RoutineStep.Rise,
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
+                )
+            )
+        )
+
+        // ---- Ausruhen: aufs Sofa, Fernseher an ----
+        AnimationType.REST -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.TV),
+                    RoutineStep.Switch(PlayScene.Station.TV, on = true),
+                    RoutineStep.GoTo(PlayScene.Station.SEAT),
+                    RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Act(AnimationType.REST),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Rise,
+                    RoutineStep.GoTo(PlayScene.Station.TV),
+                    RoutineStep.Switch(PlayScene.Station.TV, on = false)
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.SEAT),
+                    RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Act(AnimationType.REST),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.YAWN),
+                    RoutineStep.Rise
+                )
+            )
+        )
+
+        AnimationType.BOOK -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.LAMP),
+                    RoutineStep.Switch(PlayScene.Station.LAMP, on = true),
+                    RoutineStep.GoTo(PlayScene.Station.BOOKSHELF),
+                    RoutineStep.Take(PlayEffects.Carried.BOOK),
+                    RoutineStep.GoTo(PlayScene.Station.SEAT),
+                    RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Act(AnimationType.BOOK),
+                    RoutineStep.Linger(3_500L),
+                    RoutineStep.Rise,
+                    RoutineStep.GoTo(PlayScene.Station.BOOKSHELF),
+                    RoutineStep.Drop,                                    // stellt es zurueck
+                    RoutineStep.GoTo(PlayScene.Station.LAMP),
+                    RoutineStep.Switch(PlayScene.Station.LAMP, on = false)
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.BOOKSHELF),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Take(PlayEffects.Carried.BOOK),
+                    RoutineStep.GoTo(PlayScene.Station.SEAT),
+                    RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Act(AnimationType.BOOK),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Rise,
+                    RoutineStep.Drop
+                )
+            )
+        )
+
+        AnimationType.MINDFULNESS -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.SEAT),
+                    RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Act(AnimationType.MINDFULNESS),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Rise
+                )
+            )
+        )
+
+        AnimationType.LOVE -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.SEAT),
+                    RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Act(AnimationType.LOVE),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Rise
+                )
+            )
+        )
+
+        // ---- Sich etwas holen: Kuehlschrank, dann Tisch. Der Weg dazwischen IST die Handlung. ----
+        AnimationType.DRINK -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.FRIDGE),
+                    RoutineStep.Take(PlayEffects.Carried.FOOD),
+                    RoutineStep.GoTo(PlayScene.Station.TABLE),
+                    RoutineStep.Drop,
+                    RoutineStep.Act(topic),
+                    RoutineStep.Linger(1_500L)
+                )
+            ),
+            // Einkaufen: der erste Ablauf, der ueber mehrere Raeume geht.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.SHOP),
+                    RoutineStep.GoTo(PlayScene.Station.RACK),
+                    RoutineStep.Take(PlayEffects.Carried.FOOD),
+                    RoutineStep.GoTo(PlayScene.Station.CHECKOUT),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),  // bezahlt
+                    RoutineStep.GoToPlace(PlayScene.Place.KITCHEN),
+                    RoutineStep.GoTo(PlayScene.Station.FRIDGE),
+                    RoutineStep.Drop,                                       // raeumt ein
+                    RoutineStep.GoTo(PlayScene.Station.TABLE),
+                    RoutineStep.Act(AnimationType.DRINK)
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.FRIDGE),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),  // sucht
+                    RoutineStep.Take(PlayEffects.Carried.CUP),
+                    RoutineStep.GoTo(PlayScene.Station.TABLE),
+                    RoutineStep.Act(topic),
+                    RoutineStep.Drop,
+                    RoutineStep.GoTo(PlayScene.Station.FRIDGE),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)       // raeumt weg
+                )
+            )
+        )
+
+        // ---- Koerperpflege: ins Bad ----
+        AnimationType.MEDICINE -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.BASIN),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE),      // waescht sich
+                    RoutineStep.GoTo(PlayScene.Station.TUB),
+                    RoutineStep.Occupy(PlayScene.Station.TUB),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Rise,
+                    RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE)       // schuettelt sich trocken
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.BASIN),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Act(AnimationType.MEDICINE),
+                    RoutineStep.Linger(1_500L)
+                )
+            )
+        )
+
+        // ---- Arbeiten: an den Schreibtisch ----
+        AnimationType.WORK -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
+                    RoutineStep.Act(AnimationType.WORK),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+                    RoutineStep.Act(AnimationType.WORK),
+                    RoutineStep.Linger(2_000L)
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
+                    RoutineStep.Act(AnimationType.WORK),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.YAWN)
+                )
+            )
+        )
+
+        AnimationType.FOCUS -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.DESK),
+                    RoutineStep.Act(topic),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+                    RoutineStep.Act(topic)
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.DESK),
+                    RoutineStep.Act(topic),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(2_000L)
+                )
+            )
+        )
+
+        // ---- Im Park: spazieren, Sport, auf der Bank ausruhen ----
+        AnimationType.MOVE -> listOf(
+            // Sport: quer durch den Park und zurueck, mit Bewegung an beiden Enden.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Stroll(0.12f),
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Stroll(0.80f),
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Stroll(0.45f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE)
+                )
+            ),
+            // Spaziergang mit Pause auf der Bank.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Stroll(0.16f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.GoTo(PlayScene.Station.BENCH),
+                    RoutineStep.Occupy(PlayScene.Station.BENCH),
+                    RoutineStep.Linger(3_500L),
+                    RoutineStep.Rise,
+                    RoutineStep.Stroll(0.75f),
+                    RoutineStep.Act(AnimationType.MOVE)
+                )
+            )
+        )
+
+        // ---- Ohne eigenen Ablauf: an Ort und Stelle, wie bisher ----
+        AnimationType.GENERAL, AnimationType.CREATIVITY -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Act(topic),
+                    RoutineStep.Linger(1_200L)
+                )
+            )
+        )
+    }
+}

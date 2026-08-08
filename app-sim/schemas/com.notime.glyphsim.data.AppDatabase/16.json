@@ -1,0 +1,224 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 16,
+    "identityHash": "63c8823d4909846de8b0af80994831e0",
+    "entities": [
+      {
+        "tableName": "glyph_reminders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `label` TEXT NOT NULL, `animationType` TEXT NOT NULL, `libraryAnimationId` INTEGER, `daysOfWeekMask` INTEGER NOT NULL, `startMinuteOfDay` INTEGER NOT NULL, `endMinuteOfDay` INTEGER NOT NULL, `intervalMinutes` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `profileId` TEXT NOT NULL, `openDurationSeconds` INTEGER NOT NULL, `dailyGoal` INTEGER NOT NULL, `nextTriggerEpochMillis` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "animationType",
+            "columnName": "animationType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "libraryAnimationId",
+            "columnName": "libraryAnimationId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "daysOfWeekMask",
+            "columnName": "daysOfWeekMask",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startMinuteOfDay",
+            "columnName": "startMinuteOfDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endMinuteOfDay",
+            "columnName": "endMinuteOfDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "intervalMinutes",
+            "columnName": "intervalMinutes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "profileId",
+            "columnName": "profileId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "openDurationSeconds",
+            "columnName": "openDurationSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dailyGoal",
+            "columnName": "dailyGoal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextTriggerEpochMillis",
+            "columnName": "nextTriggerEpochMillis",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "library_animations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `label` TEXT NOT NULL, `emoji` TEXT NOT NULL, `framesData` TEXT NOT NULL, `isSelected` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emoji",
+            "columnName": "emoji",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "framesData",
+            "columnName": "framesData",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSelected",
+            "columnName": "isSelected",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "builtin_animation_selection",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`animationType` TEXT NOT NULL, `isSelected` INTEGER NOT NULL, PRIMARY KEY(`animationType`))",
+        "fields": [
+          {
+            "fieldPath": "animationType",
+            "columnName": "animationType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSelected",
+            "columnName": "isSelected",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "animationType"
+          ]
+        }
+      },
+      {
+        "tableName": "avatar_feed_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `reminderId` INTEGER NOT NULL, `animationType` TEXT, `epochMillis` INTEGER NOT NULL, `profileId` TEXT NOT NULL, `libraryAnimationLabel` TEXT, `fedAtMillis` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reminderId",
+            "columnName": "reminderId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "animationType",
+            "columnName": "animationType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "epochMillis",
+            "columnName": "epochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "profileId",
+            "columnName": "profileId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "libraryAnimationLabel",
+            "columnName": "libraryAnimationLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fedAtMillis",
+            "columnName": "fedAtMillis",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '63c8823d4909846de8b0af80994831e0')"
+    ]
+  }
+}

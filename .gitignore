@@ -1,0 +1,23 @@
+# ---- Build-Ergebnisse ----
+# Werden bei jedem Bauen neu erzeugt und sind zusammen hunderte Megabyte gross.
+build/
+.gradle/
+.cxx/
+.externalNativeBuild/
+
+# ---- Maschinenspezifisch ----
+# Enthaelt den SDK-Pfad DIESES Rechners und gehoert deshalb niemandem sonst.
+local.properties
+
+# ---- Fertige App-Pakete ----
+# Ergebnisse, keine Quellen. Sie liegen hier nur zum Weitergeben.
+*.apk
+*.aab
+
+# ---- Entwicklungsumgebung ----
+.idea/
+*.iml
+.DS_Store
+
+# Zwischenergebnisse des Kotlin-Compilers
+.kotlin/

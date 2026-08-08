@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Freigabe fuer die aufgenommenen Filme. Nur der Unterordner "clips" im app-eigenen
+  Datenbereich ist freigegeben - nicht der gesamte Speicher der App. Weiter gefasst waere es
+  bequemer und zugleich die Art von Nachlaessigkeit, mit der Apps ungewollt Daten preisgeben.
+-->
+<paths>
+    <files-path name="clips" path="clips/" />
+</paths>

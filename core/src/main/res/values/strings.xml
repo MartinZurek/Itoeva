@@ -1,0 +1,20 @@
+<resources>
+    <!--
+      Bezeichnungen der fest eingebauten Animationstypen. Sie liegen im gemeinsamen Kern, weil
+      beide Apps denselben Satz verwenden - der Aufzaehlungs-Eintrag selbst traegt nur noch die
+      Ressourcen-ID (siehe data/AnimationType.kt), damit sich die Namen uebersetzen lassen,
+      ohne dass die in der Datenbank gespeicherten Enum-Namen sich aendern.
+    -->
+    <string name="animation_focus">Focus</string>
+    <string name="animation_drink">Drink</string>
+    <string name="animation_move">Move</string>
+    <string name="animation_general">General</string>
+    <string name="animation_rest">Rest</string>
+    <string name="animation_work">Work</string>
+    <string name="animation_mindfulness">Mindfulness</string>
+    <string name="animation_love">Love</string>
+    <string name="animation_sleep">Sleep</string>
+    <string name="animation_medicine">Medicine</string>
+    <string name="animation_book">Reading</string>
+    <string name="animation_creativity">Creativity</string>
+</resources>

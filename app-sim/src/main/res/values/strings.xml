@@ -1,0 +1,362 @@
+<resources>
+    <!--
+      Standardsprache der App ist Englisch (siehe ui/LanguagePrefs.kt). Diese Datei ist die
+      Rueckfallebene fuer jedes Geraet; values-de/strings.xml enthaelt die deutsche Fassung.
+      Die App folgt bewusst NICHT der Systemsprache - Deutsch erscheint nur, wenn es in den
+      Einstellungen ausdruecklich gewaehlt wurde.
+    -->
+    <string name="app_name">Tama</string>
+    <string name="widget_clock_description">Glyph matrix clock</string>
+
+    <!-- Allgemeine Aktionen -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_done">Done</string>
+    <string name="action_ok">OK</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_new">New</string>
+    <string name="action_more">More</string>
+
+    <!-- Startbildschirm -->
+    <string name="home_title">Tama</string>
+    <string name="home_reminders">📋 Reminders</string>
+
+    <!-- Fuetter-Statistik -->
+    <string name="stats_meals_today_one">meal today</string>
+    <string name="stats_meals_today_other">meals today</string>
+    <string name="stats_subtitle">Care log</string>
+    <string name="stats_meals_one">meal</string>
+    <string name="stats_meals_other">meals</string>
+    <string name="stats_period_today">Today</string>
+    <string name="stats_period_week">This week</string>
+    <string name="stats_period_month">This month</string>
+    <string name="stats_period_all">All time</string>
+    <string name="stats_breakdown_title">What you took care of</string>
+    <string name="stats_triggered_count">%1$d triggered</string>
+    <string name="stats_goals_title">Daily goals today – %1$d of %2$d reached</string>
+    <string name="stats_strip_empty">Nothing yet today</string>
+    <string name="stats_empty">Nothing here yet – react to a reminder to feed %1$s.</string>
+    <string name="stats_unknown">Unknown</string>
+    <string name="stats_reset">Reset care log</string>
+    <string name="stats_reset_confirm">Delete the whole care log of %1$s? The other avatars stay untouched.</string>
+    <string name="stats_rhythm_over">You\'ve been going well beyond the goal for \"%1$s\" every day this week – feel free to raise the goal or ease off the nudges under Reminders.</string>
+    <string name="stats_rhythm_under">\"%1$s\" has been slipping most days this week – might be worth an easier goal or a different time under Reminders.</string>
+    <string name="stats_goals_today_note">Always today\'s numbers, whichever range you pick above.</string>
+    <string name="stats_mood_disabled">I\'m not tracking mood right now – turn it on in Settings if you\'d like me to reflect how today\'s going.</string>
+    <string name="stats_mood_no_goals">None of your reminders have a daily goal yet, so there\'s nothing for me to reflect today. Add one under Reminders if you\'d like that connection.</string>
+    <string name="stats_mood_happy">I\'m doing great today – you\'re keeping up with what you set out to do.</string>
+    <string name="stats_mood_content">I\'m doing fine today – a solid part of your goals are on track.</string>
+    <string name="stats_mood_hungry">I\'ve got a bit less energy today – a couple of goals could use some attention.</string>
+    <string name="stats_mood_sad">I\'m running low on energy today – most goals are still open. No pressure though, tomorrow starts fresh.</string>
+    <string name="stats_avatar_tip_1">Nudging often doesn\'t hurt your goal – only how many times you actually respond counts.</string>
+    <string name="stats_avatar_tip_2">You can look through everything I know any time – just tap me on the home screen.</string>
+    <string name="stats_avatar_tip_3">Goals reset fresh every midnight, no matter how yesterday went.</string>
+
+    <!-- Einstellungen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_clock_design">Clock design</string>
+    <string name="settings_avatar">Avatar</string>
+    <string name="settings_avatar_hint">Each avatar has its own set of reminders.</string>
+    <string name="settings_mood">Mood affects behaviour</string>
+    <string name="settings_mood_hint">The avatar moves more sluggishly when reminders with a daily goal go unanswered – reminders left at “No goal” never affect this. Needs a few triggered reminders before anything changes – off while testing.</string>
+    <string name="settings_crash_title">Crash report</string>
+    <string name="settings_crash_hint">The app closed unexpectedly last time. The report stays on your device – you can send it to the developer.</string>
+    <string name="settings_crash_share">Share report</string>
+    <string name="settings_display">Display</string>
+    <string name="settings_allow_rotation">Allow rotation</string>
+    <string name="settings_allow_rotation_hint">Off by default – the round clock gains nothing in landscape. When on, the system’s auto-rotate setting still applies.</string>
+    <string name="settings_dock_brightness">Dock brightness</string>
+    <string name="settings_dock_brightness_explainer">Runs at the normal system brightness by default, just like the widget. Optionally, a fixed dimmed brightness can be forced instead.</string>
+    <string name="settings_use_custom_brightness">Use custom brightness</string>
+
+    <!-- Uhr-Designs -->
+    <string name="clock_style_classic">Classic</string>
+    <string name="clock_style_classic_desc">Large, bold digits – fills the matrix the most.</string>
+    <string name="clock_style_compact">Compact</string>
+    <string name="clock_style_compact_desc">Slightly smaller digits with visible space to the round edge.</string>
+    <string name="clock_style_minimal">Minimal</string>
+    <string name="clock_style_minimal_desc">Thinner digits without a leading zero, lots of space, dimmed.</string>
+    <string name="clock_style_ring">Ring</string>
+    <string name="clock_style_ring_desc">Small digits in the centre, surrounded by a travelling minute ring.</string>
+
+    <!-- Avatare (Namen bleiben unuebersetzt, nur die Beschreibungen wechseln) -->
+    <string name="avatar_puffling">Puffling</string>
+    <string name="avatar_puffling_desc">Round with big ears and a tail – the classic, playful creature.</string>
+    <string name="avatar_puffling_personality">The curious optimist – loves small progress and gets excited about every little thing.</string>
+    <string name="avatar_puffling_tagline">Small steps take you further.</string>
+    <string name="avatar_starlet">Starlet</string>
+    <string name="avatar_starlet_desc">Anime/kawaii: oversized head with huge eyes and a star tuft.</string>
+    <string name="avatar_starlet_personality">The friendly dreamer – warm, calm and hopeful, a reminder to be kind to yourself.</string>
+    <string name="avatar_starlet_tagline">You don\'t have to be perfect today.</string>
+    <string name="avatar_wyrmling">Wyrmling</string>
+    <string name="avatar_wyrmling_desc">Fantasy: a small dragon with wings, a horn and a tail tip.</string>
+    <string name="avatar_wyrmling_personality">The little motivator – bold, upbeat and full of energy, but never frantic.</string>
+    <string name="avatar_wyrmling_tagline">Let\'s go. Just one small step.</string>
+    <string name="avatar_fennec">Fennec</string>
+    <string name="avatar_fennec_desc">A bit more realistic: slimmer silhouette with pointed ears and a snout.</string>
+    <string name="avatar_fennec_personality">The calm guardian – composed, attentive and reliable, reminding you without ever nagging.</string>
+    <string name="avatar_fennec_tagline">I look out for your habits.</string>
+    <string name="avatar_gloop">Gloop</string>
+    <string name="avatar_gloop_desc">Fantasy slime: one big central eye, no headgear, no legs.</string>
+    <string name="avatar_gloop_personality">The unwinder – laid-back, a little chaotic and charming, a reminder that it\'s okay to slow down.</string>
+    <string name="avatar_gloop_tagline">Everything\'s allowed to go slowly too.</string>
+    <string name="avatar_hootlet">Hootlet</string>
+    <string name="avatar_hootlet_desc">Anime owl: feather ears, small wing stubs and a beak instead of a mouth.</string>
+    <string name="avatar_hootlet_personality">The wise observer – quiet, patient and perceptive, watching more than it speaks.</string>
+    <string name="avatar_hootlet_tagline">Calm brings clarity.</string>
+
+    <!-- Vorstellungs-Clip (siehe AvatarClips) -->
+    <string name="clip_puffling_line_1">Hi.</string>
+    <string name="clip_puffling_line_2">I\'m your little companion.</string>
+    <string name="clip_puffling_line_3">I don\'t want to interrupt you.</string>
+    <string name="clip_puffling_line_4">I only nudge you gently,</string>
+    <string name="clip_puffling_line_5">when you\'re looking at your screen anyway.</string>
+    <string name="clip_puffling_line_6">I help you with small habits.</string>
+    <!-- Ueberleitung zur Gewohnheiten-Montage, bei jedem Avatar dieselbe: erklaert die zwei
+         Punkte, die sich rein visuell nicht von selbst erklaeren (eigene Animation je
+         Gewohnheit, frei waehlbare Haeufigkeit). -->
+    <string name="clip_montage_intro_1">Every habit gets its own little animation.</string>
+    <string name="clip_montage_intro_2">And you decide how often you\'re reminded.</string>
+    <!-- Je eine kurze Zeile pro Gewohnheit, gesprochen vom Avatar waehrend die echte
+         Erinnerungsanimation auf der Uhr laeuft (siehe AvatarClips.montageLineFor). Absichtlich
+         kein blosser Typ-Name: der steht schon als Animation daneben. -->
+    <string name="clip_habit_focus">One thing at a time.</string>
+    <string name="clip_habit_drink">A sip of water?</string>
+    <string name="clip_habit_move">Stretch your legs a bit.</string>
+    <string name="clip_habit_general">Just a small nudge.</string>
+    <string name="clip_habit_rest">Take a breather.</string>
+    <string name="clip_habit_work">Back to it, gently.</string>
+    <string name="clip_habit_mindfulness">Breathe. That\'s all.</string>
+    <string name="clip_habit_love">Be kind to yourself.</string>
+    <string name="clip_habit_sleep">Time to wind down.</string>
+    <string name="clip_habit_medicine">Don\'t forget your meds.</string>
+    <string name="clip_habit_book">A few pages?</string>
+    <string name="clip_habit_creativity">Make something small.</string>
+    <string name="clip_starlet_line_1">Hi.</string>
+    <string name="clip_starlet_line_2">I\'m Starlet.</string>
+    <string name="clip_starlet_line_3">I like quiet moments.</string>
+    <string name="clip_starlet_line_4">Sometimes I remind you gently,</string>
+    <string name="clip_starlet_line_5">to breathe, and be kind to yourself.</string>
+    <string name="clip_starlet_line_6">That\'s enough.</string>
+    <string name="clip_wyrmling_line_1">Hey!</string>
+    <string name="clip_wyrmling_line_2">I\'m Wyrmling.</string>
+    <string name="clip_wyrmling_line_3">I love moving around.</string>
+    <string name="clip_wyrmling_line_4">Sometimes I nudge you,</string>
+    <string name="clip_wyrmling_line_5">just to move a little.</string>
+    <string name="clip_wyrmling_line_6">Ready?</string>
+    <string name="clip_fennec_line_1">Hi.</string>
+    <string name="clip_fennec_line_2">I\'m Fennec.</string>
+    <string name="clip_fennec_line_3">I keep an eye on your habits.</string>
+    <string name="clip_fennec_line_4">Sometimes I remind you gently,</string>
+    <string name="clip_fennec_line_5">to drink some water.</string>
+    <string name="clip_fennec_line_6">I\'ve got you.</string>
+    <string name="clip_gloop_line_1">Hey.</string>
+    <string name="clip_gloop_line_2">I\'m Gloop.</string>
+    <string name="clip_gloop_line_3">I take things slow.</string>
+    <string name="clip_gloop_line_4">Sometimes I remind you,</string>
+    <string name="clip_gloop_line_5">that resting is okay too.</string>
+    <string name="clip_gloop_line_6">No rush.</string>
+    <string name="clip_hootlet_line_1">Hi.</string>
+    <string name="clip_hootlet_line_2">I\'m Hootlet.</string>
+    <string name="clip_hootlet_line_3">I watch more than I speak.</string>
+    <string name="clip_hootlet_line_4">Sometimes I remind you quietly,</string>
+    <string name="clip_hootlet_line_5">to focus on one thing at a time.</string>
+    <string name="clip_hootlet_line_6">Stillness helps.</string>
+    <string name="clip_play">▶ Play my clip</string>
+
+    <!-- Erinnerungen -->
+    <string name="reminders_title">Reminders · %1$s</string>
+    <string name="reminders_empty_title">No reminders yet</string>
+    <string name="reminders_empty_hint">Create a reminder, e.g. “Drink some water”.</string>
+    <string name="reminders_empty_action">Create first reminder</string>
+    <string name="reminder_new">New reminder</string>
+    <string name="reminder_edit">Edit reminder</string>
+    <string name="reminder_delete">Delete reminder</string>
+    <string name="reminder_really_delete">Really delete?</string>
+    <string name="reminder_really_delete_action">Really delete</string>
+    <string name="reminder_label_hint">Label, e.g. “Drink some water”</string>
+    <string name="reminder_animation">Animation</string>
+    <string name="reminder_animation_more">More animations</string>
+    <string name="reminder_play_preview">Play preview</string>
+    <string name="reminder_days">Days of week</string>
+    <string name="reminder_days_every">Every day</string>
+    <string name="reminder_days_none">no reminders</string>
+    <string name="reminder_time_window">Time window</string>
+    <string name="reminder_from">From %1$s</string>
+    <string name="reminder_to">To %1$s</string>
+    <string name="reminder_window_past_midnight">Window goes past midnight (ends the next day).</string>
+    <string name="reminder_window_same_time">Start and end time must be different.</string>
+    <string name="reminder_interval">Interval</string>
+    <string name="reminder_daily_goal">Daily goal</string>
+    <string name="reminder_daily_goal_explainer">How often you actually want to do this per day – separate from how often you get nudged. Without a goal this reminder just nudges and never counts against your avatar.</string>
+    <string name="reminder_daily_goal_none">No goal</string>
+    <string name="reminder_daily_goal_times">%1$d×</string>
+    <string name="reminder_interval_minutes">%1$d min</string>
+    <string name="reminder_open_duration">Stays open for</string>
+    <string name="reminder_open_duration_explainer">How long the animation keeps running if nobody reacts – capped at your interval above, so it\'s never still showing once the next nudge is due. Feeding the avatar in dock mode always stops it immediately, whatever this is set to.</string>
+    <string name="reminder_open_duration_cap">Home screen and widget cap this at 1 min – there is no avatar to feed there. The full duration applies in dock mode.</string>
+    <string name="reminder_summary">%1$s · every %2$d min</string>
+    <string name="reminder_open_label">open %1$s</string>
+
+    <!-- Erinnerungen von einem anderen Avatar uebernehmen -->
+    <string name="reminders_copy">Copy</string>
+    <string name="reminders_copy_title">Copy reminders</string>
+    <string name="reminders_copy_explainer">Copies another avatar\'s set of reminders to %1$s. The source avatar stays unchanged.</string>
+    <string name="reminders_copy_append">Add to existing</string>
+    <string name="reminders_copy_replace">Replace existing</string>
+    <string name="reminders_copy_append_hint">The copies are added to the existing ones.</string>
+    <string name="reminders_copy_replace_hint">The reminders of %1$s will be deleted.</string>
+    <string name="reminders_copy_current">current avatar</string>
+    <string name="reminders_copy_count_one">reminder</string>
+    <string name="reminders_copy_count_other">reminders</string>
+
+    <!-- Kollisionen -->
+
+    <!-- Animations-Bibliothek -->
+    <string name="library_title">Animation library</string>
+    <string name="library_explainer">Tap the checkmark to add an animation to the picker when creating a reminder, or tap the plus to put it back. That includes the 12 built-in ones – pick as few or as many as you want.</string>
+    <string name="library_add">Add to picker</string>
+    <string name="library_remove">Remove from picker</string>
+    <string name="library_full">Picker is full – remove an animation before adding another one</string>
+    <string name="onboarding_tap_me">Hi! Tap me – I\'ll show you around.</string>
+    <string name="onboarding_tap_clock">Tap the clock any time for a full bedside display – uses more battery while it\'s on.</string>
+    <string name="assistant_greeting">Hey! What can I do for you?</string>
+    <string name="assistant_menu_intro">❓  Explain how this works</string>
+    <string name="assistant_menu_setup">💬  Set something up together</string>
+    <string name="assistant_menu_settings">⚙️  Settings</string>
+    <string name="home_play_on">▶ Play</string>
+    <string name="home_play_off">■ Play off</string>
+    <string name="clip_signature_intro">And a few things that are just mine.</string>
+    <string name="playmode_intro_title">Play mode</string>
+    <string name="playmode_intro_1">Want to play? Then I take over the reminders for a while.</string>
+    <string name="playmode_intro_2">Your own reminders rest meanwhile – they come back the moment you switch play off. Nothing of yours is lost.</string>
+    <string name="playmode_intro_3">Instead I show up on my own, at random moments that fit who I am. Feed me the same way as always: drag the clock onto me.</string>
+    <string name="playmode_intro_4">Every feed earns XP and I level up. Everything else stays as you know it – clock, dock, widget.</string>
+    <string name="playmode_start">Start play mode</string>
+    <string name="playmode_level_label">Level %1$d · %2$d XP</string>
+    <string name="playmode_level_up">Look at that – I just reached level %1$d!</string>
+    <string name="assistant_intro_1">I live on your clock. When a reminder is due, I show up next to it.</string>
+    <string name="assistant_intro_2">Drag the clock onto me to feed me – that\'s how you tell me you did the thing.</string>
+    <string name="assistant_intro_3">A reminder can nudge you often without being a hundred separate jobs. What counts is your daily goal: do it 4 times and 4 of 4 is done.</string>
+    <string name="assistant_intro_4">Tap my meal counter at the top to see how your day is going.</string>
+    <string name="assistant_intro_5">One more thing: my mood only ever shifts because of reminders that carry a daily goal. Leave one at “No goal” and it\'s just a gentle nudge – it can\'t make me happier or gloomier.</string>
+    <string name="assistant_setup_what">What would you like to do regularly?</string>
+    <string name="assistant_setup_how_often_goal">How often a day do you actually want to do it?</string>
+    <string name="assistant_setup_when">When should I watch out for you?</string>
+    <string name="assistant_setup_nudge">And how often may I nudge you in that window? Nudging often costs you nothing – only your daily goal counts.</string>
+    <string name="assistant_setup_summary">So: %1$s, %2$d× a day, %3$s, and I\'ll nudge you every %4$d min. Shall I set that up?</string>
+    <string name="assistant_setup_confirm">Yes, set it up</string>
+    <string name="assistant_setup_saved">Done! You\'ll find it under Reminders – you can change everything there.</string>
+    <string name="assistant_window_all_day">All day</string>
+    <string name="assistant_window_morning">Morning (8–12)</string>
+    <string name="assistant_window_workday">Working hours (9–17)</string>
+    <string name="assistant_window_evening">Evening (18–22)</string>
+    <string name="assistant_setup_what_more">Anything else you\'d like to set up?</string>
+    <string name="assistant_setup_another">Yes, one more</string>
+    <string name="assistant_recommended">%1$s ★</string>
+    <string name="rhythm_frequent">This one lives on repetition – many small times a day work well, and I may nudge you often.</string>
+    <string name="rhythm_spaced">A few times a day is plenty here – what matters is the gap in between, not the number.</string>
+    <string name="rhythm_rare">Better rarely and in peace. Pushing you would defeat the purpose.</string>
+    <string name="rhythm_critical">This one shouldn\'t slip through. I\'ll nudge you closely so you don\'t miss it.</string>
+    <string name="rhythm_once">Once is the whole point here – I\'ll just make sure you don\'t forget.</string>
+    <string name="rhythm_flexible">No fixed pattern here – pick whatever suits you.</string>
+    <string name="assistant_menu_import">🤖  Set up via ChatGPT or Claude</string>
+    <string name="import_title">Import from an AI chat</string>
+    <string name="import_step_1">1. Copy this prompt and paste it into ChatGPT, Claude or any other assistant – or share it there directly. Talk about your goals there.</string>
+    <string name="import_copy_prompt">Copy prompt</string>
+    <string name="import_share_prompt">Share prompt</string>
+    <string name="import_step_2">2. Paste the answer back here.</string>
+    <string name="import_paste_hint">Paste the AI\'s answer</string>
+    <string name="import_parse_failed">Couldn\'t find a configuration in there. Make sure the JSON block is included.</string>
+    <string name="import_parse_failed_link">That looks like a shared link, not the assistant\'s actual reply – Claude\'s and ChatGPT\'s share button often only sends a link to the whole conversation, not its text. Open the conversation, copy the assistant\'s final message instead, and paste that here.</string>
+    <string name="import_preview_line">%1$s · %2$s–%3$s · nudge every %4$d min</string>
+    <string name="import_preview_goal_times">%1$d× a day</string>
+    <string name="import_confirm">Create %1$d</string>
+    <string name="import_saved">Created %1$d reminders. You can change everything under Reminders.</string>
+    <string name="import_prompt_library_intro">If any of these already-created custom animations fits better than a standard topic, use it instead by setting "libraryAnimation" to its exact name below (keep "topic" set too, so a sensible daily rhythm can still be estimated):</string>
+    <string name="import_prompt_template">Help me set up reminders for the app Tama. Ask me about my goals and daily routine, then output ONLY this JSON block at the end:\n\n{\n  "reminders": [\n    {\n      "label": "Drink water",\n      "topic": "DRINK",\n      "dailyGoal": 8,\n      "intervalMinutes": 45,\n      "start": "08:00",\n      "end": "20:00",\n      "days": ["MO","TU","WE","TH","FR","SA","SU"]\n    }\n  ]\n}\n\nAllowed values — anything else will be snapped to the nearest one:
+- topic: DRINK, MOVE, REST, FOCUS, WORK, MINDFULNESS, LOVE, SLEEP, MEDICINE, BOOK, CREATIVITY, GENERAL
+- dailyGoal: 1, 2, 3, 4, 5, 6, 8, 10 or 12 — or 0 if I don\'t want a fixed daily target for this one, just a nudge
+- intervalMinutes: 1, 5, 10, 15, 20, 30, 45, 60, 90 or 120
+- start/end: "HH:MM" in 24-hour format
+- days: MO, TU, WE, TH, FR, SA, SU (omit for every day)\n\nImportant: dailyGoal is how often I actually want to DO the thing per day — use 0 when there\'s no fixed target and this should just be a gentle nudge that\'s never scored. intervalMinutes is how often the app nudges me. These are independent — nudging often is not a downside, only the daily goal is scored. Pick a rhythm that fits the topic: drinking suits many small times, sport a few times a day, sleep once.</string>
+
+    <!-- Avatar-Assistent: FAQ -->
+    <string name="assistant_menu_faq">📖  Questions about how I work</string>
+    <string name="faq_intro">Ask me about anything – I\'ve grouped it by topic.</string>
+    <string name="faq_category_reminders">Reminders &amp; timing</string>
+    <string name="faq_category_alarms">Overlaps &amp; missed reminders</string>
+    <string name="faq_category_animations">Animations</string>
+    <string name="faq_category_avatar">Me &amp; feeding</string>
+    <string name="faq_category_display">Display &amp; battery</string>
+    <string name="faq_q_dock_mode">What happens when I tap the clock?</string>
+    <string name="faq_a_dock_mode">It switches to a full-screen bedside display – handy on a nightstand, but the screen stays continuously on while it\'s active, which uses noticeably more battery than usual. Tap anywhere to leave it again.</string>
+    <string name="faq_q_reminder_structure">How is a reminder actually built?</string>
+    <string name="faq_a_reminder_structure">Every reminder has four parts: what to do, a time window (like 8am–8pm), how often I nudge you inside that window, and – optionally – a daily goal. The nudges themselves don\'t count toward anything; only how many times you actually feed me inside your goal does.</string>
+    <string name="faq_q_interval">What\'s the difference between the interval and the daily goal?</string>
+    <string name="faq_a_interval">The interval is just how often I tap you on the shoulder – it can be as tight as every minute. The daily goal is what actually counts: set it to 4 and 4 of 4 is done, no matter how many extra nudges I gave you in between.</string>
+    <string name="faq_q_window">What does the time window do?</string>
+    <string name="faq_a_window">I only nudge you inside that window, e.g. 9am–5pm. Outside it, that reminder stays completely quiet, even once its interval would technically be due again.</string>
+    <string name="faq_q_open_duration_limit">Why are my \"open duration\" choices limited?</string>
+    <string name="faq_a_open_duration_limit">They only go up to the reminder\'s own interval – one that nudges you every minute can only stay open up to a minute. That way it can never still be sitting there once its own next nudge is due.</string>
+    <string name="faq_q_overlap">What happens when two reminders are due at the same moment?</string>
+    <string name="faq_a_overlap">I show them one after another instead of merging them or moving either one to a different time – whichever has the shorter interval goes first. You\'ll see them appear back-to-back rather than exactly on their own schedule.</string>
+    <string name="faq_q_open_duration">What happens if I don\'t feed a reminder right away?</string>
+    <string name="faq_a_open_duration">It stays open for as long as its \"open duration\" says – never longer than its own interval. While it\'s open and unfed, though, I don\'t check on any OTHER reminders at all, so it can still hold up whatever else is due until you respond or it times out.</string>
+    <string name="faq_q_missed">Can a reminder just… not show up?</string>
+    <string name="faq_a_missed">Yes, on purpose. If I was busy with another open reminder and your reminder\'s moment slipped more than about 90 seconds into the past by the time I got back to it, I won\'t show it late – I quietly line it up for its next slot instead. Showing something noticeably late felt worse than skipping it once. A reminder with a long interval and a long open duration is the most likely one to cause this for a more frequent reminder waiting behind it.</string>
+    <string name="faq_q_repeat">Can the same reminder nudge me twice in a row?</string>
+    <string name="faq_a_repeat">No – I never show the same reminder again before its own interval has fully passed, even if something tries to trigger it early.</string>
+    <string name="faq_q_screen_off">Why didn\'t I get a nudge even though nothing seemed to be blocking it?</string>
+    <string name="faq_a_screen_off">I only nudge you while your screen is on. If it\'s off right when one\'s due, I skip that occurrence instead of saving it for later – same reasoning as above: better honest than stale.</string>
+    <string name="faq_q_animation_length">How long does an animation actually play?</string>
+    <string name="faq_a_animation_length">Exactly as long as its open duration says – a quick 8-second flash by default, or longer if you\'ve set that. Feeding me always ends it early, whatever the setting.</string>
+    <string name="faq_q_animation_library">Can I use my own animation instead of the built-in ones?</string>
+    <string name="faq_a_animation_library">Yes – pick one from the animation library when creating or editing a reminder. A library animation is shown instead of the topic\'s default one.</string>
+    <string name="faq_q_feeding">How do I actually respond to a reminder?</string>
+    <string name="faq_a_feeding">Drag the clock onto me, or use the feed gesture – that\'s how you tell me you did the thing.</string>
+    <string name="faq_q_mood">Does every reminder affect your mood?</string>
+    <string name="faq_a_mood">Only if you\'ve turned that on – it\'s off by default (Settings → Mood affects behaviour), so trying the app out never feels like managing anyone\'s feelings. Switched on, only reminders with an actual daily goal count; leave one at \"No goal\" and it stays a pure nudge either way.</string>
+    <string name="faq_q_species">What happens to my reminders if I switch avatar?</string>
+    <string name="faq_a_species">Each avatar keeps its own set of reminders. Switching avatar switches which set is active – the others are still there, just paused, waiting for you to switch back.</string>
+
+    <!-- Screenreader-Beschreibungen (TalkBack) fuer die selbstgezeichneten Canvas-Ansichten -->
+    <string name="a11y_clock_time">Clock, %1$s</string>
+    <string name="a11y_clock_reminder">Reminder animation: %1$s</string>
+    <string name="a11y_reminder_generic">Reminder</string>
+    <string name="a11y_avatar_state">%1$s, mood: %2$s</string>
+    <string name="a11y_mood_neutral">neutral</string>
+    <string name="a11y_mood_happy">happy</string>
+    <string name="a11y_mood_content">content</string>
+    <string name="a11y_mood_hungry">a bit sluggish</string>
+    <string name="a11y_mood_sad">very sluggish</string>
+    <string name="a11y_feed_action">Feed</string>
+    <string name="a11y_avatar_waiting">%1$s is waiting to be fed</string>
+    <string name="settings_timelapse">Time lapse (test)</string>
+    <string name="settings_timelapse_hint">Runs a full day in about four minutes so every scene and time of day can be seen quickly. For trying things out only – turn off for normal use.</string>
+    <string name="a11y_visitor">%1$s is passing by</string>
+    <string name="a11y_clock_moon">Moon</string>
+    <string name="playmode_status">Level %1$d · %2$d XP · %3$d coins · %4$d meals</string>
+    <string name="settings_clip">Record a clip</string>
+    <string name="settings_clip_hint">Renders a short portrait video of your avatar in its world and lets you share it. Silent on purpose – social apps replace the sound anyway.</string>
+    <string name="settings_clip_working">Rendering…</string>
+    <string name="settings_clip_failed">This device could not create the video.</string>
+    <string name="settings_clip_share">Share clip</string>
+    <string name="settings_clip_enable">Clip recording in Play Mode</string>
+    <string name="settings_clip_enable_hint">Shows a record button in the top right of Play Mode. Clips are collected in the library below.</string>
+    <string name="settings_clip_library">Clip library</string>
+    <string name="settings_clip_library_hint">%1$d recorded</string>
+    <string name="settings_clip_library_empty">Nothing recorded yet</string>
+    <string name="clip_save_gallery">Save to gallery</string>
+    <string name="clip_saved_gallery">Saved to gallery</string>
+    <string name="clip_delete">Delete</string>
+    <string name="a11y_record_clip">Record clip</string>
+    <string name="clip_recording">Recording…</string>
+    <string name="settings_timelapse_off">Off</string>
+    <string name="settings_timelapse_fast">Fast</string>
+    <string name="settings_timelapse_turbo">Turbo</string>
+    <string name="settings_timelapse_speeds">Off = real time · Fast = one day in 4 min · Turbo = one day in 45 s. Turbo is for checking that every place and routine shows up – work and shopping only appear after several full cycles.</string>
+</resources>

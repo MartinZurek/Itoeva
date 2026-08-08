@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Glyphminder</string>
+    <string name="toy_name_clock">Glyphminder</string>
+    <string name="toy_summary_clock">Shows the time and flashes at your configured reminder times</string>
+</resources>

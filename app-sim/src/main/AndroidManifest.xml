@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      KEIN SCHEDULE_EXACT_ALARM (und erst recht kein USE_EXACT_ALARM) - bewusst, nach Pruefung
+      beider Varianten. Begruendung ausfuehrlich in PLAY_STORE.md, kurz:
+
+      Exakte Alarme existieren fuer den Fall "das Geraet doest, soll aber trotzdem auf die Minute
+      genau aufwachen". Genau den braucht diese App nicht: sie zeigt Erinnerungen rein visuell auf
+      Dock, Startbildschirm und Widget. Alle drei sind nur bei eingeschaltetem Display sichtbar -
+      und solange das Display an ist, greift Doze ohnehin nicht, ungefaehre Alarme kommen dann
+      punktgenug. Bei dunklem Schirm loest der ReminderAlarmReceiver bewusst gar nichts aus.
+
+      Damit entfaellt das Permissions-Declaration-Formular samt Video und das Risiko, dass die
+      Veroeffentlichung daran haengt. Der :app-Nachbar (Glyph-Matrix auf der Geraetrueckseite,
+      auch bei dunklem Display sichtbar) deklariert die Berechtigung weiterhin - dort ist sie
+      begruendet.
+
+      ReminderScheduler in :core braucht dafuer keine Aenderung: canScheduleExact() meldet ohne
+      diesen Eintrag ab API 31 von selbst false und der Scheduler nimmt setAndAllowWhileIdle.
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:name=".GlyphSimApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <!--
+          Startwert Hochformat; freigeben laesst sich das Drehen in den Einstellungen
+          (ui/OrientationPrefs.kt setzt dann zur Laufzeit FULL_USER, das zusaetzlich der
+          Drehsperre des Systems folgt).
+
+          `configChanges` ist dabei das Entscheidende und gilt unabhaengig vom Schalter: ohne den
+          Eintrag baut Android die Activity bei jeder Drehung komplett neu auf. Eine laufende
+          Erinnerungs-Animation und eine gerade gespielte Avatar-Reaktion leben nur im Zustand der
+          Komposition und waeren damit mitten im Ablauf verschwunden; auch die gezogene Position
+          der Dock-Uhr muesste neu ermittelt werden. Mit dieser Angabe bleibt die Activity
+          bestehen und Compose ordnet lediglich neu an - die Animation laeuft durch.
+        -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!--
+              Tama als Ziel der Teilen-Funktion: aus ChatGPT/Claude laesst sich die Antwort damit
+              direkt herueberreichen, statt sie von Hand zu kopieren und einzufuegen.
+
+              `singleTask` gehoert dazu: ohne das legte jedes Teilen eine zweite Instanz im Stapel
+              der sendenden App an - man haette Tama danach doppelt offen, und die geteilte
+              Antwort landete in einer anderen Instanz als der bereits laufenden. So kommt sie
+              ueber onNewIntent in der bestehenden an.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".reminder.ReminderAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Plant die Alarme neu, wenn das System sie verworfen hat (Reboot, App-Update) oder
+             ihre Zeitpunkte nicht mehr stimmen (Zeit-/Zeitzonenwechsel) - siehe BootReceiver.kt.
+             MY_PACKAGE_REPLACED fehlte hier lange: nach jedem App-Update feuerte dadurch keine
+             Erinnerung mehr, bis die App von Hand geoeffnet wurde. -->
+        <receiver
+            android:name=".reminder.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Rundes Home-Screen-Widget mit der simulierten Glyph-Matrix-Uhr, siehe
+             widget/GlyphClockWidgetProvider.kt -->
+        <receiver
+            android:name=".widget.GlyphClockWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glyph_widget_info" />
+        </receiver>
+
+
+        <!--
+          Ermoeglicht das Weiterreichen der aufgenommenen Filme an andere Apps. Ohne einen solchen
+          Anbieter duerfte eine fremde App die Datei nicht oeffnen - direkte Dateipfade nach
+          aussen zu geben ist seit Android 7 nicht mehr erlaubt.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.clips"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/clip_paths" />
+        </provider>
+    </application>
+
+</manifest>

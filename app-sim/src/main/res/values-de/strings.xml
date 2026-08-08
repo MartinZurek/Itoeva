@@ -1,0 +1,353 @@
+<resources>
+    <!--
+      Deutsche Fassung. Erscheint NUR, wenn Deutsch in den Einstellungen ausdruecklich gewaehlt
+      wurde - die App folgt bewusst nicht der Systemsprache (siehe ui/LanguagePrefs.kt).
+      Der Produktname "Tama" bleibt unuebersetzt, ebenso die Avatar-Namen.
+    -->
+    <string name="widget_clock_description">Glyph-Matrix-Uhr</string>
+
+    <!-- Allgemeine Aktionen -->
+    <string name="action_back">Zurück</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_save">Speichern</string>
+    <string name="action_done">Fertig</string>
+    <string name="action_ok">OK</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="action_new">Neu</string>
+    <string name="action_more">Mehr</string>
+
+    <!-- Startbildschirm -->
+    <string name="home_reminders">📋 Erinnerungen</string>
+
+    <!-- Fuetter-Statistik -->
+    <string name="stats_meals_today_one">Mahlzeit heute</string>
+    <string name="stats_meals_today_other">Mahlzeiten heute</string>
+    <string name="stats_subtitle">Pflegebuch</string>
+    <string name="stats_meals_one">Mahlzeit</string>
+    <string name="stats_meals_other">Mahlzeiten</string>
+    <string name="stats_period_today">Heute</string>
+    <string name="stats_period_week">Diese Woche</string>
+    <string name="stats_period_month">Dieser Monat</string>
+    <string name="stats_period_all">Seit Beginn</string>
+    <string name="stats_breakdown_title">Worum du dich gekümmert hast</string>
+    <string name="stats_triggered_count">%1$d ausgelöst</string>
+    <string name="stats_goals_title">Tagesziele heute – %1$d von %2$d erreicht</string>
+    <string name="stats_strip_empty">Heute noch nichts</string>
+    <string name="stats_empty">Noch nichts hier – reagiere auf eine Erinnerung, um %1$s zu füttern.</string>
+    <string name="stats_unknown">Unbekannt</string>
+    <string name="stats_reset">Pflegebuch zurücksetzen</string>
+    <string name="stats_reset_confirm">Das ganze Pflegebuch von %1$s löschen? Die anderen Avatare bleiben unberührt.</string>
+    <string name="stats_rhythm_over">Bei "%1$s" liegst du diese Woche jeden Tag deutlich über dem Ziel – du kannst das Ziel gern anheben oder unter Erinnerungen seltener anstupsen lassen.</string>
+    <string name="stats_rhythm_under">"%1$s" hast du diese Woche an den meisten Tagen verpasst – vielleicht lohnt sich ein leichteres Ziel oder eine andere Zeit unter Erinnerungen.</string>
+    <string name="stats_goals_today_note">Immer die heutigen Zahlen, egal welchen Zeitraum du oben wählst.</string>
+    <string name="stats_mood_disabled">Ich verfolge gerade keine Stimmung – schalte das in den Einstellungen ein, wenn ich widerspiegeln soll, wie dein Tag läuft.</string>
+    <string name="stats_mood_no_goals">Keine deiner Erinnerungen hat bisher ein Tagesziel, also gibt es heute nichts, das sich in mir widerspiegelt. Leg eins unter Erinnerungen an, wenn du diese Verbindung willst.</string>
+    <string name="stats_mood_happy">Mir geht\'s heute richtig gut – du hältst dich an das, was du dir vorgenommen hast.</string>
+    <string name="stats_mood_content">Mir geht\'s heute gut – ein guter Teil deiner Ziele ist auf Kurs.</string>
+    <string name="stats_mood_hungry">Ich hab heute etwas weniger Energie – ein paar Ziele könnten Aufmerksamkeit gebrauchen.</string>
+    <string name="stats_mood_sad">Meine Energie ist heute ziemlich niedrig – die meisten Ziele sind noch offen. Aber ganz ohne Druck, morgen fängt neu an.</string>
+    <string name="stats_avatar_tip_1">Häufiges Anstupsen schadet deinem Ziel nicht – gezählt wird nur, wie oft du wirklich reagierst.</string>
+    <string name="stats_avatar_tip_2">Du kannst dir jederzeit alles ansehen, was ich weiß – tipp mich einfach auf dem Startbildschirm an.</string>
+    <string name="stats_avatar_tip_3">Ziele setzen sich jede Mitternacht neu zurück, egal wie gestern lief.</string>
+
+    <!-- Einstellungen -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_clock_design">Uhr-Design</string>
+    <string name="settings_avatar">Avatar</string>
+    <string name="settings_avatar_hint">Jeder Avatar hat seinen eigenen Satz Erinnerungen.</string>
+    <string name="settings_mood">Stimmung wirkt aufs Verhalten</string>
+    <string name="settings_mood_hint">Der Avatar bewegt sich träger, wenn Erinnerungen mit einem Tagesziel unbeantwortet bleiben – Erinnerungen bei „Kein Ziel“ wirken sich nie darauf aus. Braucht einige ausgelöste Erinnerungen, bevor sich etwas ändert – zum Testen besser aus.</string>
+    <string name="settings_crash_title">Absturzbericht</string>
+    <string name="settings_crash_hint">Die App hat sich zuletzt unerwartet beendet. Der Bericht bleibt auf deinem Gerät – du kannst ihn an den Entwickler schicken.</string>
+    <string name="settings_crash_share">Bericht teilen</string>
+    <string name="settings_display">Bildschirm</string>
+    <string name="settings_allow_rotation">Drehen erlauben</string>
+    <string name="settings_allow_rotation_hint">Standardmäßig aus – die runde Uhr gewinnt im Querformat nichts. Wenn an, gilt zusätzlich weiterhin die Drehsperre des Systems.</string>
+    <string name="settings_dock_brightness">Dock-Helligkeit</string>
+    <string name="settings_dock_brightness_explainer">Läuft standardmäßig mit der normalen Systemhelligkeit, genau wie das Widget. Optional kann hier stattdessen eine feste, gedimmte Helligkeit erzwungen werden.</string>
+    <string name="settings_use_custom_brightness">Eigene Helligkeit verwenden</string>
+
+    <!-- Uhr-Designs -->
+    <string name="clock_style_classic">Klassisch</string>
+    <string name="clock_style_classic_desc">Große, kräftige Ziffern – füllt die Matrix am meisten aus.</string>
+    <string name="clock_style_compact">Kompakt</string>
+    <string name="clock_style_compact_desc">Etwas kleinere Ziffern mit sichtbarem Abstand zum runden Rand.</string>
+    <string name="clock_style_minimal">Minimal</string>
+    <string name="clock_style_minimal_desc">Dünnere Ziffern ohne führende Null, viel Freiraum, gedimmt.</string>
+    <string name="clock_style_ring">Ring</string>
+    <string name="clock_style_ring_desc">Kleine Ziffern in der Mitte, umgeben von einem wandernden Minuten-Ring.</string>
+
+    <!-- Avatare (Namen bleiben unuebersetzt) -->
+    <string name="avatar_puffling_desc">Rundlich mit großen Ohren und Schwanz – der Klassiker, kreaturenhaft-verspielt.</string>
+    <string name="avatar_puffling_personality">Der neugierige Optimist – liebt kleine Fortschritte und freut sich ehrlich über jede Kleinigkeit.</string>
+    <string name="avatar_puffling_tagline">Kleine Schritte bringen dich weiter.</string>
+    <string name="avatar_starlet_desc">Anime/Kawaii: überdimensionaler Kopf mit riesigen Augen und Stern-Zopf.</string>
+    <string name="avatar_starlet_personality">Die freundliche Träumerin – warmherzig, ruhig und hoffnungsvoll, eine Erinnerung, freundlich zu dir selbst zu sein.</string>
+    <string name="avatar_starlet_tagline">Du musst heute nicht perfekt sein.</string>
+    <string name="avatar_wyrmling_desc">Fantasy: kleiner Drache mit Flügeln, Stirnhorn und Schwanzspitze.</string>
+    <string name="avatar_wyrmling_personality">Der kleine Motivator – mutig, positiv und voller Energie, aber niemals hektisch.</string>
+    <string name="avatar_wyrmling_tagline">Los geht\'s. Nur ein kleiner Schritt.</string>
+    <string name="avatar_fennec_desc">Etwas realistischer: schlankere Silhouette mit spitzen Ohren und Schnauze.</string>
+    <string name="avatar_fennec_personality">Der ruhige Beschützer – gelassen, aufmerksam und verlässlich, er erinnert, ohne jemals zu nerven.</string>
+    <string name="avatar_fennec_tagline">Ich passe auf deine Gewohnheiten auf.</string>
+    <string name="avatar_gloop_desc">Fantasy-Schleim: ein großes zentrales Auge, kein Kopfschmuck, keine Beine.</string>
+    <string name="avatar_gloop_personality">Der Entschleuniger – gemütlich, etwas chaotisch und charmant, eine Erinnerung, dass alles auch langsam gehen darf.</string>
+    <string name="avatar_gloop_tagline">Alles darf auch langsam gehen.</string>
+    <string name="avatar_hootlet_desc">Anime-Eule: Federohren, kleine Flügel-Stummel und ein Schnabel statt Mund.</string>
+    <string name="avatar_hootlet_personality">Der weise Beobachter – still, geduldig und klug, er beobachtet mehr, als er spricht.</string>
+    <string name="avatar_hootlet_tagline">Ruhe bringt Klarheit.</string>
+
+    <!-- Vorstellungs-Clip (siehe AvatarClips) -->
+    <string name="clip_puffling_line_1">Hallo.</string>
+    <string name="clip_puffling_line_2">Ich bin dein kleiner Begleiter.</string>
+    <string name="clip_puffling_line_3">Ich möchte dich nicht unterbrechen.</string>
+    <string name="clip_puffling_line_4">Ich erinnere dich nur sanft,</string>
+    <string name="clip_puffling_line_5">wenn du ohnehin auf dein Display schaust.</string>
+    <string name="clip_puffling_line_6">Ich helfe dir bei kleinen Gewohnheiten.</string>
+    <!-- Ueberleitung zur Gewohnheiten-Montage, bei jedem Avatar dieselbe: erklaert die zwei
+         Punkte, die sich rein visuell nicht von selbst erklaeren (eigene Animation je
+         Gewohnheit, frei waehlbare Haeufigkeit). -->
+    <string name="clip_montage_intro_1">Jede Gewohnheit bekommt ihre eigene kleine Animation.</string>
+    <string name="clip_montage_intro_2">Und wie oft du erinnert wirst, entscheidest du.</string>
+    <!-- Je eine kurze Zeile pro Gewohnheit, gesprochen vom Avatar waehrend die echte
+         Erinnerungsanimation auf der Uhr laeuft (siehe AvatarClips.montageLineFor). Absichtlich
+         kein blosser Typ-Name: der steht schon als Animation daneben. -->
+    <string name="clip_habit_focus">Eins nach dem anderen.</string>
+    <string name="clip_habit_drink">Ein Schluck Wasser?</string>
+    <string name="clip_habit_move">Streck dich mal kurz.</string>
+    <string name="clip_habit_general">Nur ein kleiner Anstupser.</string>
+    <string name="clip_habit_rest">Kurz durchatmen.</string>
+    <string name="clip_habit_work">Sanft zurück an die Arbeit.</string>
+    <string name="clip_habit_mindfulness">Atmen. Mehr nicht.</string>
+    <string name="clip_habit_love">Sei nett zu dir.</string>
+    <string name="clip_habit_sleep">Zeit, runterzukommen.</string>
+    <string name="clip_habit_medicine">Denk an deine Tabletten.</string>
+    <string name="clip_habit_book">Ein paar Seiten?</string>
+    <string name="clip_habit_creativity">Mach etwas Kleines.</string>
+    <string name="clip_starlet_line_1">Hallo.</string>
+    <string name="clip_starlet_line_2">Ich bin Starlet.</string>
+    <string name="clip_starlet_line_3">Ich mag stille Momente.</string>
+    <string name="clip_starlet_line_4">Manchmal erinnere ich dich sanft,</string>
+    <string name="clip_starlet_line_5">durchzuatmen und freundlich zu dir selbst zu sein.</string>
+    <string name="clip_starlet_line_6">Das reicht schon.</string>
+    <string name="clip_wyrmling_line_1">Hey!</string>
+    <string name="clip_wyrmling_line_2">Ich bin Wyrmling.</string>
+    <string name="clip_wyrmling_line_3">Ich liebe Bewegung.</string>
+    <string name="clip_wyrmling_line_4">Manchmal stupse ich dich an,</string>
+    <string name="clip_wyrmling_line_5">dich einfach ein bisschen zu bewegen.</string>
+    <string name="clip_wyrmling_line_6">Bereit?</string>
+    <string name="clip_fennec_line_1">Hallo.</string>
+    <string name="clip_fennec_line_2">Ich bin Fennec.</string>
+    <string name="clip_fennec_line_3">Ich behalte deine Gewohnheiten im Blick.</string>
+    <string name="clip_fennec_line_4">Manchmal erinnere ich dich sanft,</string>
+    <string name="clip_fennec_line_5">etwas zu trinken.</string>
+    <string name="clip_fennec_line_6">Ich passe auf dich auf.</string>
+    <string name="clip_gloop_line_1">Hey.</string>
+    <string name="clip_gloop_line_2">Ich bin Gloop.</string>
+    <string name="clip_gloop_line_3">Ich lasse es langsam angehen.</string>
+    <string name="clip_gloop_line_4">Manchmal erinnere ich dich,</string>
+    <string name="clip_gloop_line_5">dass Ausruhen auch okay ist.</string>
+    <string name="clip_gloop_line_6">Keine Eile.</string>
+    <string name="clip_hootlet_line_1">Hallo.</string>
+    <string name="clip_hootlet_line_2">Ich bin Hootlet.</string>
+    <string name="clip_hootlet_line_3">Ich beobachte mehr, als ich spreche.</string>
+    <string name="clip_hootlet_line_4">Manchmal erinnere ich dich still,</string>
+    <string name="clip_hootlet_line_5">dich auf eine Sache zu konzentrieren.</string>
+    <string name="clip_hootlet_line_6">Ruhe hilft.</string>
+    <string name="clip_play">▶ Spiel meinen Clip</string>
+
+    <!-- Erinnerungen -->
+    <string name="reminders_title">Erinnerungen · %1$s</string>
+    <string name="reminders_empty_title">Noch keine Erinnerungen</string>
+    <string name="reminders_empty_hint">Lege eine Erinnerung an, z. B. „Trink was“.</string>
+    <string name="reminders_empty_action">Erste Erinnerung anlegen</string>
+    <string name="reminder_new">Neue Erinnerung</string>
+    <string name="reminder_edit">Erinnerung bearbeiten</string>
+    <string name="reminder_delete">Erinnerung löschen</string>
+    <string name="reminder_really_delete">Wirklich löschen?</string>
+    <string name="reminder_really_delete_action">Wirklich löschen</string>
+    <string name="reminder_label_hint">Bezeichnung, z. B. „Trink was“</string>
+    <string name="reminder_animation">Animation</string>
+    <string name="reminder_animation_more">Mehr Animationen</string>
+    <string name="reminder_play_preview">Vorschau abspielen</string>
+    <string name="reminder_days">Wochentage</string>
+    <string name="reminder_days_every">Täglich</string>
+    <string name="reminder_days_none">keine Erinnerungen</string>
+    <string name="reminder_time_window">Zeitfenster</string>
+    <string name="reminder_from">Ab %1$s</string>
+    <string name="reminder_to">Bis %1$s</string>
+    <string name="reminder_window_past_midnight">Fenster geht über Mitternacht (endet am Folgetag).</string>
+    <string name="reminder_window_same_time">Start- und Endzeit müssen sich unterscheiden.</string>
+    <string name="reminder_interval">Intervall</string>
+    <string name="reminder_daily_goal">Tagesziel</string>
+    <string name="reminder_daily_goal_explainer">Wie oft du das am Tag wirklich tun willst – unabhängig davon, wie oft du angestupst wirst. Ohne Ziel stupst diese Erinnerung nur an und zählt nie gegen deinen Avatar.</string>
+    <string name="reminder_daily_goal_none">Kein Ziel</string>
+    <string name="reminder_daily_goal_times">%1$d×</string>
+    <string name="reminder_interval_minutes">%1$d Min.</string>
+    <string name="reminder_open_duration">Bleibt offen für</string>
+    <string name="reminder_open_duration_explainer">Wie lange die Animation weiterläuft, wenn niemand reagiert – begrenzt auf dein Intervall oben, damit sie nie noch läuft, wenn der nächste Anstupser schon fällig ist. Den Avatar im Dock-Modus zu füttern beendet sie immer sofort, unabhängig von dieser Einstellung.</string>
+    <string name="reminder_open_duration_cap">Startbildschirm und Widget begrenzen das auf 1 Min. – dort gibt es keinen Avatar zum Füttern. Die volle Dauer gilt im Dock-Modus.</string>
+    <string name="reminder_summary">%1$s · alle %2$d Min.</string>
+    <string name="reminder_open_label">offen %1$s</string>
+
+    <!-- Erinnerungen von einem anderen Avatar uebernehmen -->
+    <string name="reminders_copy">Kopieren</string>
+    <string name="reminders_copy_title">Erinnerungen übernehmen</string>
+    <string name="reminders_copy_explainer">Kopiert den Erinnerungs-Satz eines anderen Avatars zu %1$s. Der Quell-Avatar bleibt unverändert.</string>
+    <string name="reminders_copy_append">Bestehende ergänzen</string>
+    <string name="reminders_copy_replace">Bestehende ersetzen</string>
+    <string name="reminders_copy_append_hint">Die Kopien kommen zu den bestehenden dazu.</string>
+    <string name="reminders_copy_replace_hint">Die Erinnerungen von %1$s werden gelöscht.</string>
+    <string name="reminders_copy_current">aktueller Avatar</string>
+    <string name="reminders_copy_count_one">Erinnerung</string>
+    <string name="reminders_copy_count_other">Erinnerungen</string>
+
+    <!-- Kollisionen -->
+
+    <!-- Animations-Bibliothek -->
+    <string name="library_title">Animations-Bibliothek</string>
+    <string name="library_explainer">Tippe auf das Häkchen, um eine Animation in die Auswahl beim Anlegen einer Erinnerung aufzunehmen, oder auf das Plus, um sie zurückzulegen. Das gilt auch für die 12 eingebauten – nimm so wenige oder so viele, wie du magst.</string>
+    <string name="library_add">Zur Auswahl hinzufügen</string>
+    <string name="library_remove">Aus der Auswahl entfernen</string>
+    <string name="library_full">Auswahl ist voll – entferne erst eine Animation, bevor du eine weitere hinzufügst</string>
+    <string name="onboarding_tap_me">Hi! Tipp mich an – ich zeig dir alles.</string>
+    <string name="onboarding_tap_clock">Tipp jederzeit auf die Uhr für eine volle Nachttisch-Anzeige – verbraucht dabei mehr Akku.</string>
+    <string name="assistant_greeting">Hey! Was kann ich für dich tun?</string>
+    <string name="assistant_menu_intro">❓  Erklär mir, wie das hier läuft</string>
+    <string name="assistant_menu_setup">💬  Lass uns was einrichten</string>
+    <string name="assistant_menu_settings">⚙️  Einstellungen</string>
+    <string name="home_play_on">▶ Spielen</string>
+    <string name="home_play_off">■ Spiel aus</string>
+    <string name="clip_signature_intro">Und ein paar Dinge, die nur mir gehören.</string>
+    <string name="playmode_intro_title">Spielmodus</string>
+    <string name="playmode_intro_1">Lust zu spielen? Dann übernehme ich eine Weile die Erinnerungen.</string>
+    <string name="playmode_intro_2">Deine eigenen ruhen so lange – sie sind sofort wieder da, wenn du das Spiel ausschaltest. Es geht nichts von dir verloren.</string>
+    <string name="playmode_intro_3">Stattdessen tauche ich von allein auf, zu zufälligen Momenten, die zu mir passen. Füttern wie gewohnt: die Uhr auf mich ziehen.</string>
+    <string name="playmode_intro_4">Jede Fütterung bringt XP, und ich steige im Level. Alles andere bleibt, wie du es kennst – Uhr, Dock, Widget.</string>
+    <string name="playmode_start">Spielmodus starten</string>
+    <string name="playmode_level_label">Level %1$d · %2$d XP</string>
+    <string name="playmode_level_up">Schau mal – ich bin gerade auf Level %1$d aufgestiegen!</string>
+    <string name="assistant_intro_1">Ich wohne auf deiner Uhr. Wird eine Erinnerung fällig, tauche ich daneben auf.</string>
+    <string name="assistant_intro_2">Zieh die Uhr auf mich, um mich zu füttern – so sagst du mir, dass du es getan hast.</string>
+    <string name="assistant_intro_3">Eine Erinnerung darf dich oft anstupsen, ohne gleich hundert Aufträge zu sein. Es zählt dein Tagesziel: viermal gemacht, und 4 von 4 stehen.</string>
+    <string name="assistant_intro_4">Tipp oben auf meine Mahlzeiten, dann siehst du, wie dein Tag läuft.</string>
+    <string name="assistant_intro_5">Noch etwas: Meine Stimmung ändert sich nur durch Erinnerungen mit einem festen Tagesziel. Lässt du eines bei „Kein Ziel“, bleibt es ein sanftes Anstupsen – ganz ohne Einfluss darauf, wie es mir geht.</string>
+    <string name="assistant_setup_what">Was möchtest du regelmäßig tun?</string>
+    <string name="assistant_setup_how_often_goal">Wie oft am Tag willst du es wirklich tun?</string>
+    <string name="assistant_setup_when">Wann soll ich für dich aufpassen?</string>
+    <string name="assistant_setup_nudge">Und wie oft darf ich dich in der Zeit anstupsen? Oft anzustupsen kostet dich nichts – gezählt wird nur dein Tagesziel.</string>
+    <string name="assistant_setup_summary">Also: %1$s, %2$d× am Tag, %3$s, und ich stupse dich alle %4$d Min. an. Soll ich das so einrichten?</string>
+    <string name="assistant_setup_confirm">Ja, richte das ein</string>
+    <string name="assistant_setup_saved">Erledigt! Du findest es unter Erinnerungen – dort kannst du alles ändern.</string>
+    <string name="assistant_window_all_day">Den ganzen Tag</string>
+    <string name="assistant_window_morning">Vormittags (8–12)</string>
+    <string name="assistant_window_workday">Arbeitszeit (9–17)</string>
+    <string name="assistant_window_evening">Abends (18–22)</string>
+    <string name="assistant_setup_what_more">Möchtest du noch etwas einrichten?</string>
+    <string name="assistant_setup_another">Ja, noch eins</string>
+    <string name="assistant_recommended">%1$s ★</string>
+    <string name="rhythm_frequent">Das lebt von der Wiederholung – viele kleine Male am Tag sind gut, und ich darf dich ruhig oft anstupsen.</string>
+    <string name="rhythm_spaced">Ein paar Mal am Tag reicht hier völlig – es zählt der Abstand dazwischen, nicht die Menge.</string>
+    <string name="rhythm_rare">Lieber selten und in Ruhe. Dich zu drängen wäre hier kontraproduktiv.</string>
+    <string name="rhythm_critical">Das sollte nicht untergehen. Ich stupse dich engmaschig an, damit du es nicht verpasst.</string>
+    <string name="rhythm_once">Einmal ist hier genau richtig – ich sorge nur dafür, dass du es nicht vergisst.</string>
+    <string name="rhythm_flexible">Hier gibt es kein festes Muster – nimm, was dir passt.</string>
+    <string name="assistant_menu_import">🤖  Mit ChatGPT oder Claude einrichten</string>
+    <string name="import_title">Aus einem KI-Gespräch übernehmen</string>
+    <string name="import_step_1">1. Kopiere diese Vorlage und füge sie in ChatGPT, Claude oder einen anderen Assistenten ein – oder teile sie dort direkt. Sprich dort über deine Ziele.</string>
+    <string name="import_copy_prompt">Vorlage kopieren</string>
+    <string name="import_share_prompt">Vorlage teilen</string>
+    <string name="import_step_2">2. Füge die Antwort hier wieder ein.</string>
+    <string name="import_paste_hint">Antwort der KI einfügen</string>
+    <string name="import_parse_failed">Darin war keine Konfiguration zu finden. Achte darauf, dass der JSON-Block mitkommt.</string>
+    <string name="import_parse_failed_link">Das sieht nach einem geteilten Link aus, nicht nach der eigentlichen Antwort des Assistenten – der Teilen-Button von Claude und ChatGPT verschickt oft nur einen Link zum ganzen Gespräch, nicht dessen Text. Öffne das Gespräch, kopiere stattdessen die letzte Nachricht des Assistenten und füge die hier ein.</string>
+    <string name="import_preview_line">%1$s · %2$s–%3$s · alle %4$d Min. anstupsen</string>
+    <string name="import_preview_goal_times">%1$d× am Tag</string>
+    <string name="import_confirm">%1$d anlegen</string>
+    <string name="import_saved">%1$d Erinnerungen angelegt. Unter Erinnerungen kannst du alles ändern.</string>
+    <string name="import_prompt_library_intro">Falls eine dieser bereits angelegten eigenen Animationen besser passt als ein Standard-Thema, nimm sie stattdessen, indem du "libraryAnimation" auf ihren exakten Namen unten setzt (behalte trotzdem ein passendes "topic" bei, damit sich ein sinnvoller Tagesrhythmus schätzen lässt):</string>
+    <string name="import_prompt_template">Hilf mir, Erinnerungen für die App Tama einzurichten. Frag mich nach meinen Zielen und meinem Tagesablauf und gib am Ende NUR diesen JSON-Block aus:\n\n{\n  "reminders": [\n    {\n      "label": "Wasser trinken",\n      "topic": "DRINK",\n      "dailyGoal": 8,\n      "intervalMinutes": 45,\n      "start": "08:00",\n      "end": "20:00",\n      "days": ["MO","TU","WE","TH","FR","SA","SU"]\n    }\n  ]\n}\n\nErlaubte Werte — alles andere wird auf den nächstliegenden gerundet:
+- topic: DRINK, MOVE, REST, FOCUS, WORK, MINDFULNESS, LOVE, SLEEP, MEDICINE, BOOK, CREATIVITY, GENERAL
+- dailyGoal: 1, 2, 3, 4, 5, 6, 8, 10 oder 12 — oder 0, wenn es dafür kein festes Tagesziel geben soll, nur ein Anstupsen
+- intervalMinutes: 1, 5, 10, 15, 20, 30, 45, 60, 90 oder 120
+- start/end: "HH:MM" im 24-Stunden-Format
+- days: MO, DI, MI, DO, FR, SA, SO (weglassen für täglich)\n\nWichtig: dailyGoal ist, wie oft ich die Sache am Tag wirklich TUN will — nimm 0, wenn es kein festes Ziel geben soll und das nur ein sanftes, nie gewertetes Anstupsen bleibt. intervalMinutes ist, wie oft die App mich anstupst. Beides ist unabhängig — häufiges Anstupsen ist kein Nachteil, gewertet wird nur das Tagesziel. Wähle einen Rhythmus, der zum Thema passt: Trinken verträgt viele kleine Male, Sport ein paar Mal am Tag, Schlafen einmal.</string>
+
+    <!-- Avatar-Assistent: FAQ -->
+    <string name="assistant_menu_faq">📖  Fragen dazu, wie ich funktioniere</string>
+    <string name="faq_intro">Frag mich alles Mögliche – ich hab\'s nach Themen sortiert.</string>
+    <string name="faq_category_reminders">Erinnerungen &amp; Timing</string>
+    <string name="faq_category_alarms">Überlappungen &amp; verpasste Erinnerungen</string>
+    <string name="faq_category_animations">Animationen</string>
+    <string name="faq_category_avatar">Ich &amp; das Füttern</string>
+    <string name="faq_category_display">Anzeige &amp; Akku</string>
+    <string name="faq_q_dock_mode">Was passiert, wenn ich auf die Uhr tippe?</string>
+    <string name="faq_a_dock_mode">Dann wechselt die App in eine Vollbild-Nachttisch-Anzeige – praktisch auf dem Nachttisch, aber der Bildschirm bleibt dabei durchgehend an, was spürbar mehr Akku braucht als sonst. Zum Verlassen einfach irgendwo antippen.</string>
+    <string name="faq_q_reminder_structure">Wie ist eine Erinnerung eigentlich aufgebaut?</string>
+    <string name="faq_a_reminder_structure">Jede Erinnerung hat vier Teile: was zu tun ist, ein Zeitfenster (z.B. 8–20 Uhr), wie oft ich dich darin anstupse, und optional ein Tagesziel. Die Anstupser selbst zählen für nichts – nur wie oft du innerhalb deines Ziels tatsächlich fütterst.</string>
+    <string name="faq_q_interval">Was ist der Unterschied zwischen Intervall und Tagesziel?</string>
+    <string name="faq_a_interval">Das Intervall ist nur, wie oft ich dich anstupse – das kann bis auf jede Minute eng sein. Das Tagesziel ist, was wirklich zählt: stellst du es auf 4, sind 4 von 4 erledigt, egal wie viele zusätzliche Anstupser dazwischen kamen.</string>
+    <string name="faq_q_window">Was macht das Zeitfenster?</string>
+    <string name="faq_a_window">Ich stupse dich nur innerhalb dieses Fensters an, z.B. 9–17 Uhr. Außerhalb bleibt die Erinnerung komplett still, auch wenn ihr Intervall rechnerisch wieder fällig wäre.</string>
+    <string name="faq_q_open_duration_limit">Warum ist meine Auswahl bei der "Anzeigedauer" begrenzt?</string>
+    <string name="faq_a_open_duration_limit">Sie reicht nur bis zum eigenen Intervall der Erinnerung – eine, die dich jede Minute anstupst, kann auch nur bis zu einer Minute offen bleiben. So sitzt sie nie noch da, wenn ihr eigener nächster Anstupser schon fällig ist.</string>
+    <string name="faq_q_overlap">Was passiert, wenn zwei Erinnerungen gleichzeitig fällig sind?</string>
+    <string name="faq_a_overlap">Ich zeige sie nacheinander, statt sie zusammenzulegen oder eine davon zeitlich zu verschieben – die mit dem kürzeren Intervall zuerst. Du siehst sie also kurz hintereinander statt exakt zu ihrer eigenen Zeit.</string>
+    <string name="faq_q_open_duration">Was passiert, wenn ich eine Erinnerung nicht sofort füttere?</string>
+    <string name="faq_a_open_duration">Sie bleibt so lange offen, wie ihre "Anzeigedauer" vorgibt – nie länger als ihr eigenes Intervall. Solange sie offen und ungefüttert ist, schau ich aber nach gar KEINER anderen Erinnerung mehr, sie kann also trotzdem alles Weitere aufhalten, bis du reagierst oder die Zeit abläuft.</string>
+    <string name="faq_q_missed">Kann eine Erinnerung einfach… nicht kommen?</string>
+    <string name="faq_a_missed">Ja, mit Absicht. War ich mit einer anderen offenen Erinnerung beschäftigt und dein Termin lag zum Zeitpunkt, als ich wieder nachsehen konnte, schon mehr als etwa 90 Sekunden zurück, zeige ich sie nicht mehr verspätet – ich plane sie still für den nächsten Slot neu ein. Etwas merklich zu spät zu zeigen fühlte sich schlechter an, als einmal auszusetzen. Am ehesten löst das eine Erinnerung mit langem Intervall UND langer Anzeigedauer aus, die einer häufigeren im Weg steht.</string>
+    <string name="faq_q_repeat">Kann mich dieselbe Erinnerung zweimal hintereinander anstupsen?</string>
+    <string name="faq_a_repeat">Nein – ich zeige dieselbe Erinnerung nie erneut, bevor ihr eigenes Intervall vollständig um ist, selbst wenn irgendwas versucht, sie vorzeitig auszulösen.</string>
+    <string name="faq_q_screen_off">Warum kam kein Anstupser, obwohl scheinbar nichts blockiert hat?</string>
+    <string name="faq_a_screen_off">Ich stupse dich nur an, während dein Bildschirm an ist. Ist er genau dann aus, wenn eine fällig wird, lasse ich diese eine Gelegenheit aus, statt sie aufzuheben – dieselbe Überlegung wie oben: lieber ehrlich als verspätet nachgereicht.</string>
+    <string name="faq_q_animation_length">Wie lange läuft eine Animation eigentlich?</string>
+    <string name="faq_a_animation_length">Genau so lange, wie ihre Anzeigedauer vorgibt – standardmäßig ein kurzes 8-Sekunden-Aufblinken, oder länger, wenn eingestellt. Füttern beendet sie immer vorzeitig, egal welche Einstellung.</string>
+    <string name="faq_q_animation_library">Kann ich statt der eingebauten eine eigene Animation nutzen?</string>
+    <string name="faq_a_animation_library">Ja – wähl beim Anlegen oder Bearbeiten einer Erinnerung eine aus der Animations-Bibliothek. Eine Bibliotheks-Animation wird dann statt der Standard-Animation des Themas gezeigt.</string>
+    <string name="faq_q_feeding">Wie reagiere ich eigentlich auf eine Erinnerung?</string>
+    <string name="faq_a_feeding">Zieh die Uhr auf mich, oder nutze die Fütter-Geste – so sagst du mir, dass du es getan hast.</string>
+    <string name="faq_q_mood">Beeinflusst jede Erinnerung deine Stimmung?</string>
+    <string name="faq_a_mood">Nur wenn du das eingeschaltet hast – standardmäßig ist es aus (Einstellungen → Stimmung beeinflusst Verhalten), damit sich Ausprobieren nie danach anfühlt, um Gefühle kümmern zu müssen. Eingeschaltet zählen nur Erinnerungen mit einem echten Tagesziel; bei "Kein Ziel" bleibt es so oder so ein reines Anstupsen.</string>
+    <string name="faq_q_species">Was passiert mit meinen Erinnerungen, wenn ich den Avatar wechsle?</string>
+    <string name="faq_a_species">Jeder Avatar behält seinen eigenen Satz Erinnerungen. Der Wechsel schaltet nur um, welcher Satz gerade aktiv ist – die anderen sind weiterhin da, nur pausiert, bis du zurückwechselst.</string>
+
+    <!-- Screenreader-Beschreibungen (TalkBack) fuer die selbstgezeichneten Canvas-Ansichten -->
+    <string name="a11y_clock_time">Uhr, %1$s</string>
+    <string name="a11y_clock_reminder">Erinnerungs-Animation: %1$s</string>
+    <string name="a11y_reminder_generic">Erinnerung</string>
+    <string name="a11y_avatar_state">%1$s, Stimmung: %2$s</string>
+    <string name="a11y_mood_neutral">neutral</string>
+    <string name="a11y_mood_happy">fröhlich</string>
+    <string name="a11y_mood_content">zufrieden</string>
+    <string name="a11y_mood_hungry">etwas träge</string>
+    <string name="a11y_mood_sad">sehr träge</string>
+    <string name="a11y_feed_action">Füttern</string>
+    <string name="a11y_avatar_waiting">%1$s wartet aufs Füttern</string>
+    <string name="settings_timelapse">Zeitraffer (Test)</string>
+    <string name="settings_timelapse_hint">Lässt einen ganzen Tag in etwa vier Minuten ablaufen, damit sich alle Szenen und Tageszeiten schnell ansehen lassen. Nur zum Ausprobieren – für den normalen Betrieb ausschalten.</string>
+    <string name="a11y_visitor">%1$s kommt vorbei</string>
+    <string name="a11y_clock_moon">Mond</string>
+    <string name="playmode_status">Level %1$d · %2$d XP · %3$d Münzen · %4$d Mahlzeiten</string>
+    <string name="settings_clip">Clip aufnehmen</string>
+    <string name="settings_clip_hint">Zeichnet ein kurzes Hochformat-Video deines Avatars in seiner Welt und lässt es dich teilen. Bewusst ohne Ton – soziale Apps ersetzen ihn ohnehin.</string>
+    <string name="settings_clip_working">Wird gezeichnet …</string>
+    <string name="settings_clip_failed">Dieses Gerät konnte das Video nicht erstellen.</string>
+    <string name="settings_clip_share">Clip teilen</string>
+    <string name="settings_clip_enable">Clip-Aufnahme im Play-Modus</string>
+    <string name="settings_clip_enable_hint">Blendet im Play-Modus oben rechts einen Aufnahmeknopf ein. Die Clips sammeln sich unten in der Bibliothek.</string>
+    <string name="settings_clip_library">Clip-Bibliothek</string>
+    <string name="settings_clip_library_hint">%1$d aufgenommen</string>
+    <string name="settings_clip_library_empty">Noch nichts aufgenommen</string>
+    <string name="clip_save_gallery">In Galerie speichern</string>
+    <string name="clip_saved_gallery">In Galerie gespeichert</string>
+    <string name="clip_delete">Löschen</string>
+    <string name="a11y_record_clip">Clip aufnehmen</string>
+    <string name="clip_recording">Nimmt auf …</string>
+    <string name="settings_timelapse_off">Aus</string>
+    <string name="settings_timelapse_fast">Schnell</string>
+    <string name="settings_timelapse_turbo">Turbo</string>
+    <string name="settings_timelapse_speeds">Aus = echte Zeit · Schnell = ein Tag in 4 Min · Turbo = ein Tag in 45 Sek. Turbo ist zum Prüfen, ob alle Orte und Abläufe vorkommen – Arbeit und Einkauf tauchen erst nach mehreren vollständigen Kreisläufen auf.</string>
+</resources>
