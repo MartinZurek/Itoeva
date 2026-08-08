@@ -143,13 +143,33 @@ object PlayScene {
         floorY: Int,
         species: AvatarSpecies = AvatarSpecies.PUFFLING
     ): SceneSpot? {
-        val placement = placementsFor(place, species).firstOrNull { it.station == station } ?: return null
+        // Ueber dieselbe Anordnung wie die Kulisse: Ist ein Moebel auf schmalem Bild ausgewichen
+        // (siehe [fitting]), muss die Aufsetzstelle mitwandern - sonst setzt sich die Figur neben
+        // den Sessel statt hinein.
+        val placement = fitting(placementsFor(place, species), widthCells, floorY)
+            .firstOrNull { it.station == station } ?: return null
         val spot = placement.prop.useSpot ?: return null
         return SceneSpot(
             centerX = originX(placement, widthCells) + spot.first,
             groundY = originY(placement, floorY) + spot.second
         )
     }
+
+    /**
+     * **Schmaler als so viele Spalten wird die Welt nie gezeichnet.**
+     *
+     * Wie viele Spalten zur Verfuegung stehen, ergibt sich aus Bildschirmbreite geteilt durch
+     * Zellgroesse - und die Zellgroesse haengt daran, wie gross der Nutzer seine Uhr gezogen hat.
+     * Auf einem kleinen Geraet mit weit aufgezogener Uhr blieben sonst rund dreissig Spalten, und
+     * in dreissig Spalten passen Sofa, Fernseher und Tuer schlicht nicht nebeneinander: 13 + 11 +
+     * 7 sind schon 31.
+     *
+     * Statt jedes Zimmer fuer diesen Extremfall zu verbiegen, verkleinert sich in dieser Lage die
+     * Zelle (siehe DockScreen) - die Figur wird ein wenig kleiner, das Zimmer bleibt vollstaendig.
+     * Das ist die richtige Reihenfolge: Lieber ein etwas kleinerer Bewohner in einer heilen
+     * Wohnung als ein grosser in einer, in der die Moebel ineinanderstecken.
+     */
+    const val MIN_SCENE_CELLS = 40
 
     /**
      * Wie hoch der Boden liegt - und damit, wie viel Himmel ueber der Szene steht.
@@ -185,12 +205,37 @@ object PlayScene {
         floorY: Int,
         species: AvatarSpecies = AvatarSpecies.PUFFLING
     ): List<Pair<Int, Int>> {
-        val placement = placementsFor(place, species).firstOrNull { it.station == station }
-            ?: return emptyList()
+        val placement = fitting(placementsFor(place, species), widthCells, floorY)
+            .firstOrNull { it.station == station } ?: return emptyList()
         val ox = originX(placement, widthCells)
         val oy = originY(placement, floorY)
         return placement.prop.art.map { (x, y) -> (ox + x) to (oy + y) }
     }
+
+    /**
+     * ALLE Requisiten eines Ortes mit den Zellen, die sie belegen - auch die ohne Station.
+     *
+     * Oeffentlich fuer die Kompositions-Pruefung, und zwar aus einem konkreten Anlass: Die
+     * Ueberschneidungs-Pruefung sah bisher nur Requisiten MIT Station und liess die Tuer
+     * ausdruecklich aus. Genau dort stand dann in jedem Arbeitsraum eine Lampe mitten im
+     * Tuerrahmen, und ein Fenster ragte hinein - unbemerkt, weil beide Beteiligten aus der
+     * Pruefung herausfielen. Was nicht angesehen wird, wird eben auch nicht gefunden.
+     *
+     * Die Beschriftung ist der Stationsname, sonst die laufende Nummer - sie dient nur dazu, in
+     * einer Fehlermeldung sagen zu koennen, WELCHE zwei Dinge ineinanderstehen.
+     */
+    fun propFootprints(
+        place: Place,
+        widthCells: Int,
+        floorY: Int,
+        species: AvatarSpecies = AvatarSpecies.PUFFLING
+    ): List<Pair<String, List<Pair<Int, Int>>>> =
+        fitting(placementsFor(place, species), widthCells, floorY).mapIndexed { index, placement ->
+            val ox = originX(placement, widthCells)
+            val oy = originY(placement, floorY)
+            val label = placement.station?.name ?: "Requisite $index"
+            label to placement.prop.art.map { (x, y) -> (ox + x) to (oy + y) }
+        }
 
     /** Ob diese Requisite zum Hineinlegen/Hineinsetzen gedacht ist - dort ist eine Ueberdeckung
      *  gewollt und wird von [buildFront] aufgeloest. */
@@ -239,7 +284,8 @@ object PlayScene {
         species: AvatarSpecies = AvatarSpecies.PUFFLING
     ): List<SceneCell> {
         if (station == null || widthCells <= 0 || floorY <= 0 || fade <= 0f) return emptyList()
-        val placement = placementsFor(place, species).firstOrNull { it.station == station } ?: return emptyList()
+        val placement = fitting(placementsFor(place, species), widthCells, floorY)
+            .firstOrNull { it.station == station } ?: return emptyList()
         if (placement.prop.frontArt.isEmpty()) return emptyList()
         val originX = originX(placement, widthCells)
         val originY = originY(placement, floorY)
@@ -379,7 +425,7 @@ object PlayScene {
         // ueberschreiben frueher gezeichnete.
         cells += groundDetail(place, widthCells, floorY)
 
-        for (placement in placementsFor(place, species)) {
+        for (placement in fitting(placementsFor(place, species), widthCells, floorY)) {
             val originX = originX(placement, widthCells)
             val originY = originY(placement, floorY)
             // Oberkanten heller als der Rest der Form - **der Unterschied zwischen einem Moebel
@@ -503,14 +549,142 @@ object PlayScene {
         val liftCells: Int = 0,
         val brightness: Int = FURNITURE,
         /** Unter welchem Namen ein Tagesablauf diesen Platz ansprechen kann, siehe [Station]. */
-        val station: Station? = null
+        val station: Station? = null,
+        /**
+         * Wieviele Spalten am rechten Rand fuer diese Requisite gesperrt sind - siehe [besideDoor].
+         * Die Verankerung rechnet dann nur noch mit der Flaeche links davon.
+         */
+        val keepClearRight: Int = 0,
+        /**
+         * Dasselbe am linken Rand - fuer Requisiten, die neben einem grossen Moebel stehen, das
+         * bei [anchorX] 0 verankert ist (Wanne, Kuehlschrank, Bett).
+         *
+         * Ohne das rutscht der Nachbar auf schmalen Bildern hinein: [anchorX] ist ein Bruchteil
+         * der GESAMTEN Breite, und wenn davon ein Drittel bereits von der Wanne belegt ist, liegt
+         * "bei zwei Dritteln" eben noch in der Wanne. Mit der Sperre bezieht sich der Bruchteil
+         * auf den Platz, der tatsaechlich frei ist - das Becken steht dann bei jeder Breite
+         * zwischen Wanne und Tuer statt mal daneben und mal darin.
+         */
+        val keepClearLeft: Int = 0,
+        /**
+         * Nachtraegliche Verschiebung, die [fitting] auf schmalen Bildern setzt, damit sich zwei
+         * Stationen nicht beruehren. In der Einrichtung selbst wird das nie angegeben.
+         */
+        val offsetX: Int = 0
     )
 
-    private fun originX(placement: Placement, widthCells: Int): Int =
-        ((widthCells - placement.prop.width).coerceAtLeast(0) * placement.anchorX).roundToInt()
+    /**
+     * **Die Tuer bekommt ihren Platz zugeteilt, statt ihn sich zu teilen.**
+     *
+     * Die Tuer steht immer ganz rechts ([Placement.anchorX] = 1). Weil [anchorX] ein Bruchteil des
+     * FREIEN Platzes ist, landet aber alles ab etwa 0,85 ebenfalls dort - eine Lampe bei 0,92 stand
+     * dadurch mitten im Tuerrahmen, und zwar in jeder Backstube, jeder Sternwarte und jeder
+     * Turnhalle gleichzeitig. Das war kein Vertippen an einer Stelle, sondern eine Luecke in der
+     * Anordnung: Nichts hinderte eine Requisite daran, sich dorthin zu stellen.
+     *
+     * Deshalb wird die Sperrzone hier einmal zentral vergeben, statt an sechs Arbeitsplaetzen
+     * einzeln Zahlen nachzujustieren - beim naechsten neuen Raum gilt sie von selbst mit.
+     */
+    private fun besideDoor(placements: List<Placement>): List<Placement> {
+        val reserved = DOOR.width + DOOR_MARGIN
+        return placements.map { if (it.prop === DOOR) it else it.copy(keepClearRight = reserved) } +
+            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
+    }
+
+    /** Luft zwischen Tuerrahmen und dem naechsten Moebel - ohne sie stossen beide aneinander. */
+    private const val DOOR_MARGIN = 2
+
+    private fun originX(placement: Placement, widthCells: Int): Int {
+        val left = placement.keepClearLeft
+        val right = widthCells - placement.keepClearRight
+        val span = (right - left).coerceAtLeast(placement.prop.width)
+        val x = left +
+            ((span - placement.prop.width).coerceAtLeast(0) * placement.anchorX).roundToInt() +
+            placement.offsetX
+        // Bei extremer Enge darf die Sperre die Requisite nicht aus dem Bild schieben.
+        return x.coerceIn(0, (widthCells - placement.prop.width).coerceAtLeast(0))
+    }
 
     private fun originY(placement: Placement, floorY: Int): Int =
         floorY - placement.prop.height - placement.liftCells
+
+    /**
+     * **Auf einem schmalen Bild faellt Beiwerk weg, statt sich zu ueberlagern.**
+     *
+     * Die Zahl der Spalten ist nicht frei waehlbar: Sie ergibt sich aus Bildschirmbreite geteilt
+     * durch Zellgroesse, und die Zellgroesse haengt daran, wie gross der Nutzer seine Uhr gezogen
+     * hat. Zwischen kleinem Geraet mit grosser Uhr und grossem Geraet mit kleiner Uhr liegt rund
+     * das Dreifache - ein Schlafzimmer, das bei 60 Spalten luftig steht, hat bei 30 schlicht nicht
+     * genug Wand fuer Bett UND Nachttisch.
+     *
+     * Zwei Antworten, je nachdem, worum es geht:
+     *
+     * **Beiwerk faellt weg.** Zwei ineinandergeschobene Moebel liest niemand mehr als Moebel, ein
+     * fehlender Nachttisch faellt dagegen gar nicht auf. Was keine Station traegt, weicht deshalb
+     * als erstes.
+     *
+     * **Stationen ruecken zusammen.** Weglassen kommt hier nicht in Frage - liefe die Figur zu
+     * einem Bett, das es auf diesem Geraet nicht gibt, waere das ein echter Fehler. Sie werden
+     * stattdessen von links nach rechts aufgereiht und notfalls ein Stueck nach rechts geschoben,
+     * bis sie sich nicht mehr beruehren. Das verschiebt die Einrichtung leicht gegenueber ihren
+     * gedachten Ankern, aber nur dort, wo die Anker ohnehin nicht mehr alle unterzubringen sind.
+     *
+     * Bleibt selbst danach eine Ueberschneidung, wird sie NICHT zugedeckt: Dann ist der Raum fuer
+     * dieses Bild schlicht zu voll eingerichtet, und SceneCompositionTest soll das melden.
+     */
+    private fun fitting(placements: List<Placement>, widthCells: Int, floorY: Int): List<Placement> {
+        if (widthCells <= 0) return placements
+        // Ueber Stellen-Nummern statt ueber die Objekte selbst: Zwei gleich eingerichtete
+        // Requisiten (zwei Pflanzen, zwei Regale) waeren als Werte nicht unterscheidbar.
+        val result = placements.toMutableList()
+        val dropped = HashSet<Int>()
+        val taken = HashSet<Pair<Int, Int>>()
+
+        fun cellsOf(placement: Placement): List<Pair<Int, Int>> {
+            val ox = originX(placement, widthCells)
+            val oy = originY(placement, floorY)
+            return placement.prop.art.map { (x, y) -> (ox + x) to (oy + y) }
+        }
+
+        // Die TUER ZUERST, dann die uebrigen Stationen von links nach rechts. Die Reihenfolge ist
+        // nicht beliebig: Die Tuer ist die einzige, die nicht ausweichen darf - kaeme sie zuletzt,
+        // koennte sie die anderen auch nicht mehr abhalten, und der Fernseher wiche geradewegs in
+        // den Tuerrahmen hinein.
+        val stations = placements.indices
+            .filter { placements[it].station != null }
+            .sortedWith(compareBy(
+                { if (placements[it].prop === DOOR) 0 else 1 },
+                { originX(placements[it], widthCells) }
+            ))
+
+        for (index in stations) {
+            val original = placements[index]
+            var placement = original
+            if (original.prop !== DOOR && cellsOf(original).any { it in taken }) {
+                // Abwechselnd nach rechts und nach links gesucht: Nur nach rechts zu schieben
+                // wuerde alles gegen die Tuer draengen, nur nach links gegen den Bildrand.
+                val room = (widthCells - original.prop.width).coerceAtLeast(0)
+                for (step in 1..room) {
+                    val right = original.copy(offsetX = step)
+                    if (cellsOf(right).none { it in taken }) { placement = right; break }
+                    val left = original.copy(offsetX = -step)
+                    if (cellsOf(left).none { it in taken }) { placement = left; break }
+                }
+            }
+            result[index] = placement
+            taken.addAll(cellsOf(placement))
+        }
+
+        // Danach das Beiwerk: Es bekommt, was uebrig ist, und faellt sonst weg.
+        for (index in placements.indices) {
+            if (placements[index].station != null) continue
+            val cells = cellsOf(placements[index])
+            if (cells.any { it in taken }) dropped.add(index) else taken.addAll(cells)
+        }
+
+        // In der urspruenglichen Reihenfolge zurueck: Sie bestimmt, was vor was gezeichnet wird.
+        return result.filterIndexed { index, _ -> index !in dropped }
+    }
 
     /**
      * **Nebenrequisiten stehen immer ganz am Rand** (anchorX 0 oder 1), die Hauptrequisite in der
@@ -533,51 +707,48 @@ object PlayScene {
         // was an seiner Wand haengt.
         Place.BEDROOM -> bedroomPlacements(species)
 
-        Place.BATH -> listOf(
+        Place.BATH -> besideDoor(listOf(
             Placement(bathFor(species), anchorX = 0f, station = Station.TUB),
-            Placement(BASIN, anchorX = 0.62f, station = Station.BASIN),
-            Placement(PICTURE, anchorX = 0.34f, liftCells = 11, brightness = BACKDROP),
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
+            // Rechts NEBEN der Wanne verankert, nicht bei einem Bruchteil des ganzen Raumes: Bei
+            // 30 Spalten (kleines Geraet, gross gezogene Uhr) stand das Becken sonst in der Wanne.
+            Placement(
+                BASIN, anchorX = 0.5f, station = Station.BASIN,
+                keepClearLeft = bathFor(species).width + 2
+            ),
+            Placement(PICTURE, anchorX = 0.34f, liftCells = 11, brightness = BACKDROP)
+        ))
         // Der Arbeitsplatz ist der EINZIGE Ort, dessen Einrichtung von der Spezies abhaengt -
         // siehe [workPlacements].
-        Place.WORK -> workPlacements(species) + listOf(
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
-        Place.DESK -> listOf(
+        Place.WORK -> besideDoor(workPlacements(species))
+        Place.DESK -> besideDoor(listOf(
             Placement(WINDOW, anchorX = 0f, liftCells = 8, brightness = BACKDROP),
             Placement(DESK, anchorX = 0.72f, station = Station.DESK),
-            Placement(BOOKS, anchorX = 0.86f),
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
-        Place.KITCHEN -> listOf(
+            Placement(BOOKS, anchorX = 0.86f)
+        ))
+        Place.KITCHEN -> besideDoor(listOf(
             Placement(FRIDGE, anchorX = 0f, station = Station.FRIDGE),
             Placement(SHELF, anchorX = 0.52f, liftCells = SHELF_LIFT, brightness = BACKDROP),
             Placement(COUNTER, anchorX = 0.50f),
-            Placement(diningFor(species), anchorX = 0.82f, station = Station.TABLE),
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
-        Place.NOOK -> listOf(
+            Placement(diningFor(species), anchorX = 0.82f, station = Station.TABLE)
+        ))
+        Place.NOOK -> besideDoor(listOf(
             Placement(seatFor(species), anchorX = 0.08f, station = Station.SEAT),
             Placement(PICTURE, anchorX = 0f, liftCells = 10, brightness = BACKDROP),
             Placement(BOOKSHELF, anchorX = 0.60f, station = Station.BOOKSHELF),
-            Placement(LAMP, anchorX = 0.80f, station = Station.LAMP),
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
-        Place.LIVING -> listOf(
+            Placement(LAMP, anchorX = 0.80f, station = Station.LAMP)
+        ))
+        Place.LIVING -> besideDoor(listOf(
             Placement(SOFA, anchorX = 0.02f, station = Station.SEAT),
             Placement(PICTURE, anchorX = 0.34f, liftCells = 11, brightness = BACKDROP),
             Placement(PLANT, anchorX = 0.62f),
-            Placement(TV, anchorX = 0.78f, station = Station.TV),
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
-        Place.SHOP -> listOf(
+            Placement(TV, anchorX = 0.78f, station = Station.TV)
+        ))
+        Place.SHOP -> besideDoor(listOf(
             Placement(RACK, anchorX = 0.04f, station = Station.RACK),
             Placement(RACK, anchorX = 0.34f),
             Placement(SHELF, anchorX = 0.66f, liftCells = SHELF_LIFT, brightness = BACKDROP),
-            Placement(CHECKOUT, anchorX = 0.72f, station = Station.CHECKOUT),
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
+            Placement(CHECKOUT, anchorX = 0.72f, station = Station.CHECKOUT)
+        ))
         Place.PARK -> listOf(
             Placement(TREE, anchorX = 0f),
             Placement(BENCH, anchorX = 0.55f, station = Station.BENCH),
@@ -750,9 +921,6 @@ object PlayScene {
      * dafuer sechs vollstaendige Raeume gezeichnet werden mussten.
      */
     private fun bedroomPlacements(species: AvatarSpecies): List<Placement> {
-        val common = listOf(
-            Placement(DOOR, anchorX = 1f, brightness = BACKDROP, station = Station.DOOR)
-        )
         val own = when (species) {
             AvatarSpecies.PUFFLING -> listOf(
                 Placement(BED, anchorX = 0.02f, station = Station.BED),
@@ -796,7 +964,7 @@ object PlayScene {
                 Placement(PLANT, anchorX = 0.62f)
             )
         }
-        return own + common
+        return besideDoor(own)
     }
 
     /**
@@ -1544,7 +1712,9 @@ object PlayScene {
         tvOn: Boolean,
         species: AvatarSpecies
     ): List<SceneCell> {
-        val placements = placementsFor(place, species)
+        // Dieselbe Auswahl wie beim Zeichnen: Ein Fenster, das auf schmalem Bild weggefallen ist,
+        // darf auch keinen Mond mehr bekommen.
+        val placements = fitting(placementsFor(place, species), widthCells, floorY)
         return when (place) {
             // Himmelskoerper im Fenster - wechselt mit der Tageszeit, damit die Kulisse
             // dieselbe Uhrzeit "kennt" wie der Tagesablauf des Avatars.

@@ -198,7 +198,14 @@ fun DockScreen(
         val worldAvatarSizeDp = (clockSizeDp * AVATAR_TO_CLOCK_RATIO)
             .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.DEFAULT_SIZE_DP)
         val worldAvatarPx = with(density) { worldAvatarSizeDp.dp.toPx() }
-        val sceneCellPx = worldAvatarPx / AvatarGeometry.SIZE
+        // Die Zelle wird notfalls kleiner, damit die Szene nie unter PlayScene.MIN_SCENE_CELLS
+        // Spalten faellt - sonst stehen auf einem kleinen Geraet mit gross gezogener Uhr Sofa,
+        // Fernseher und Tuer zwangslaeufig ineinander. Die Figur schrumpft dann ein wenig mit;
+        // das ist der guenstigere Tausch, siehe die Begruendung an der Konstanten.
+        val sceneCellPx = minOf(
+            worldAvatarPx / AvatarGeometry.SIZE,
+            if (maxWidthPx > 0f) maxWidthPx / PlayScene.MIN_SCENE_CELLS else Float.MAX_VALUE
+        )
         val sceneWidthCells = if (sceneCellPx > 0f) (maxWidthPx / sceneCellPx).toInt() else 0
         // Die Bodenhoehe haengt am ORT und an der Tageszeit (siehe PlayScene.floorFraction) und
         // wird weich nachgefuehrt: Beim Wechsel in den naechtlichen Park senkt sich der Horizont

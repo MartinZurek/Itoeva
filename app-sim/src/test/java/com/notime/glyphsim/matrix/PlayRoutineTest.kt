@@ -128,7 +128,11 @@ class PlayRoutineTest {
     fun `benutzte Plaetze liegen im Bild und ueber dem Boden`() {
         // Ueber mehrere Breiten, weil die Requisiten an Bruchteilen der Breite haengen: Ein Platz
         // ausserhalb des Bildes wuerde die Figur halb abschneiden.
-        for (w in listOf(24, 30, 46, 70)) {
+        //
+        // Ab PlayScene.MIN_SCENE_CELLS: Schmaler wird die Szene nicht mehr gezeichnet - dort
+        // verkleinert sich stattdessen die Zelle. Frueher stand hier 24, was einen Raum forderte,
+        // in den Sofa, Fernseher und Tuer rechnerisch gar nicht nebeneinanderpassen.
+        for (w in listOf(PlayScene.MIN_SCENE_CELLS, 46, 70, 96)) {
             for (species in AvatarSpecies.entries) {
                 for (place in PlayScene.Place.entries) {
                     for (station in PlayScene.stationsAt(place, species)) {

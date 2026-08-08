@@ -71,28 +71,35 @@ class SceneCompositionTest {
     }
 
     @Test
-    fun `Bodenmoebel stehen nicht ineinander`() {
-        // Nur was auf dem BODEN steht - ein Regal ueber dem Tisch ist gewollt und ueberlappt
-        // waagerecht selbstverstaendlich.
-        for (species in AvatarSpecies.entries) {
-            for (place in PlayScene.Place.entries) {
-                val onFloor = PlayScene.stationsAt(place, species)
-                    .filter { it != PlayScene.Station.DOOR }
-                    .mapNotNull { station ->
-                        val cells = PlayScene.propCellsAt(place, station, width, floorY, species)
-                        if (cells.isEmpty()) null else station to cells.toSet()
-                    }
-                for (i in onFloor.indices) {
-                    for (j in (i + 1) until onFloor.size) {
-                        val (aName, a) = onFloor[i]
-                        val (bName, b) = onFloor[j]
-                        val shared = a.count { it in b }
-                        assertTrue(
-                            "$aName und $bName stehen an $place ($species) ineinander " +
-                                "($shared gemeinsame Zellen).\n\n" +
-                                ScenePreview.render(place, species),
-                            shared == 0
-                        )
+    fun `keine zwei Requisiten stehen ineinander`() {
+        // Ueber ALLE Requisiten, nicht nur die mit Station und ausdruecklich EINSCHLIESSLICH der
+        // Tuer: Die vorherige Fassung liess beides aus und uebersah dadurch, dass in jedem
+        // Arbeitsraum die Lampe im Tuerrahmen stand.
+        //
+        // Auch ueber mehrere Breiten, denn die Verankerung ist ein Bruchteil der Szenenbreite -
+        // was auf einem breiten Bild nebeneinander steht, kann auf einem schmalen ineinander
+        // rutschen. Genau diese Abhaengigkeit macht die Anordnung mit blossem Auge unpruefbar.
+        // Ab der garantierten Mindestbreite aufwaerts - schmaler wird die Szene nicht gezeichnet,
+        // dafuer sorgt die Zellgroesse in DockScreen.
+        for (sceneWidth in intArrayOf(PlayScene.MIN_SCENE_CELLS, 46, width, 72, 96)) {
+            for (species in AvatarSpecies.entries) {
+                for (place in PlayScene.Place.entries) {
+                    val props = PlayScene.propFootprints(place, sceneWidth, floorY, species)
+                        .filter { it.second.isNotEmpty() }
+                        .map { it.first to it.second.toSet() }
+
+                    for (i in props.indices) {
+                        for (j in (i + 1) until props.size) {
+                            val (aName, a) = props[i]
+                            val (bName, b) = props[j]
+                            val shared = a.count { it in b }
+                            assertTrue(
+                                "$aName und $bName stehen an $place ($species) ineinander " +
+                                    "($shared gemeinsame Zellen, Breite $sceneWidth).\n\n" +
+                                    ScenePreview.render(place, species, width = sceneWidth),
+                                shared == 0
+                            )
+                        }
                     }
                 }
             }
