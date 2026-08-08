@@ -247,6 +247,8 @@ object PlayTalk {
         data object ShowPlan : Offer
         /** Die Rueckschau auf die Woche. */
         data object ShowWeek : Offer
+        /** "Was passiert hier eigentlich?" - die Erklaerung des Spielmodus. */
+        data object Explain : Offer
     }
 
     data class Focus(val headline: Headline, val offers: List<Offer>)
@@ -287,6 +289,14 @@ object PlayTalk {
         }
         if (offers.size < MAX_OFFERS && knowledge.hasPlan) offers += Offer.ShowPlan
         if (offers.size < MAX_OFFERS && knowledge.week.total > 0) offers += Offer.ShowWeek
+
+        // **Die Erklaerung ganz zuletzt und nur, wenn sonst nichts zu sagen war.**
+        //
+        // Wer schon eine Woche spielt, braucht nicht jedes Mal zu lesen, was dieser Modus ist -
+        // das waere die Art Hinweis, die man nach dem dritten Mal nicht mehr sieht. Wer dagegen
+        // gerade erst hier gelandet ist, hat naturgemaess weder Plan noch Woche noch offene
+        // Gewohnheiten, und genau dann steht sie da.
+        if (offers.isEmpty() && knowledge.game != null) offers += Offer.Explain
 
         return Focus(headline, offers.take(MAX_OFFERS))
     }

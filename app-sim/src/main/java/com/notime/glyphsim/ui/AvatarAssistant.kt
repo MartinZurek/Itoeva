@@ -297,23 +297,56 @@ private fun AssistantDay(species: AvatarSpecies, onBack: () -> Unit) {
 
 @Composable
 private fun AssistantIntro(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val mode = remember { AppMode.current(context) }
+
+    // **Zuerst der Modus, in dem man GERADE ist.**
+    //
+    // Die Erklaerung fing frueher mit "ich tauche auf, wenn eine Erinnerung faellig ist" an -
+    // ein Satz, der nur in einem der drei Modi stimmt. Wer im Spiel danach fragte, bekam etwas
+    // erklaert, das er vor sich gar nicht sah, und wer im Uhr-Modus fragte, wartete anschliessend
+    // vergeblich auf eine Erinnerung. Was erklaert wird, muss zu dem passen, was man vor sich
+    // hat; alles andere kommt danach.
+    Bubble(stringResource(currentModeExplanation(mode)))
+
     // Mehrere kurze Blasen statt eines Textblocks: so liest es sich als Erklaerung Schritt fuer
     // Schritt und nicht als Bedienungsanleitung.
     Bubble(stringResource(R.string.assistant_intro_1))
     Bubble(stringResource(R.string.assistant_intro_2))
     Bubble(stringResource(R.string.assistant_intro_3))
     Bubble(stringResource(R.string.assistant_intro_4))
+    Bubble(stringResource(R.string.assistant_intro_6))
     Bubble(stringResource(R.string.assistant_intro_5))
     Choice(stringResource(R.string.action_back), onBack)
 }
 
+/**
+ * Der Satz, mit dem er erklaert, wo man gerade ist.
+ *
+ * Fuer den Uhr-Modus bewusst der kuerzeste von allen: Dort gibt es nichts zu bedienen, und eine
+ * ausfuehrliche Erklaerung fuer "hier ist eine Uhr" waere selbst schon eine Stoerung. Er sagt nur
+ * das eine, was man tatsaechlich wissen muss - dass die Erinnerungen ruhen.
+ */
+private fun currentModeExplanation(mode: AppMode): Int = when (mode) {
+    AppMode.WATCH -> R.string.assistant_here_watch
+    AppMode.REMINDER -> R.string.assistant_here_reminder
+    AppMode.PLAY -> R.string.assistant_here_play
+}
+
 /** Themen-Gruppierung der FAQ-Eintraege, siehe [AssistantFaq]. */
 private enum class FaqCategory(val labelRes: Int) {
+    /**
+     * **Zuerst die Modi**, weil sie alles Weitere einordnen. Wer nicht weiss, dass es drei
+     * Betriebsarten gibt, liest jede andere Antwort mit der falschen Erwartung - "ich tauche auf,
+     * wenn eine Erinnerung faellig ist" stimmt eben nur in einem der drei.
+     */
+    MODES(R.string.faq_category_modes),
     REMINDERS(R.string.faq_category_reminders),
     ALARMS(R.string.faq_category_alarms),
     ANIMATIONS(R.string.faq_category_animations),
     AVATAR(R.string.faq_category_avatar),
-    DISPLAY(R.string.faq_category_display)
+    DISPLAY(R.string.faq_category_display),
+    CAPTURE(R.string.faq_category_capture)
 }
 
 private data class FaqEntry(val category: FaqCategory, val questionRes: Int, val answerRes: Int)
@@ -327,6 +360,11 @@ private data class FaqEntry(val category: FaqCategory, val questionRes: Int, val
  * vor einer scheinbar grundlos ausgebliebenen Erinnerung stehen.
  */
 private val faqEntries = listOf(
+    FaqEntry(FaqCategory.MODES, R.string.faq_q_modes, R.string.faq_a_modes),
+    FaqEntry(FaqCategory.MODES, R.string.faq_q_mode_watch, R.string.faq_a_mode_watch),
+    FaqEntry(FaqCategory.MODES, R.string.faq_q_mode_reminder, R.string.faq_a_mode_reminder),
+    FaqEntry(FaqCategory.MODES, R.string.faq_q_mode_play, R.string.faq_a_mode_play),
+    FaqEntry(FaqCategory.MODES, R.string.faq_q_mode_influence, R.string.faq_a_mode_influence),
     FaqEntry(FaqCategory.REMINDERS, R.string.faq_q_reminder_structure, R.string.faq_a_reminder_structure),
     FaqEntry(FaqCategory.REMINDERS, R.string.faq_q_interval, R.string.faq_a_interval),
     FaqEntry(FaqCategory.REMINDERS, R.string.faq_q_window, R.string.faq_a_window),
@@ -341,7 +379,11 @@ private val faqEntries = listOf(
     FaqEntry(FaqCategory.AVATAR, R.string.faq_q_feeding, R.string.faq_a_feeding),
     FaqEntry(FaqCategory.AVATAR, R.string.faq_q_mood, R.string.faq_a_mood),
     FaqEntry(FaqCategory.AVATAR, R.string.faq_q_species, R.string.faq_a_species),
-    FaqEntry(FaqCategory.DISPLAY, R.string.faq_q_dock_mode, R.string.faq_a_dock_mode)
+    FaqEntry(FaqCategory.AVATAR, R.string.faq_q_talk, R.string.faq_a_talk),
+    FaqEntry(FaqCategory.DISPLAY, R.string.faq_q_dock_mode, R.string.faq_a_dock_mode),
+    FaqEntry(FaqCategory.CAPTURE, R.string.faq_q_capture, R.string.faq_a_capture),
+    FaqEntry(FaqCategory.CAPTURE, R.string.faq_q_capture_where, R.string.faq_a_capture_where),
+    FaqEntry(FaqCategory.CAPTURE, R.string.faq_q_capture_sound, R.string.faq_a_capture_sound)
 )
 
 /**

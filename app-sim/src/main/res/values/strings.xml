@@ -25,8 +25,6 @@
     <string name="home_reminders">📋 Reminders</string>
 
     <!-- Fuetter-Statistik -->
-    <string name="stats_meals_today_one">meal today</string>
-    <string name="stats_meals_today_other">meals today</string>
     <string name="stats_subtitle">Care log</string>
     <string name="stats_meals_one">meal</string>
     <string name="stats_meals_other">meals</string>
@@ -37,7 +35,6 @@
     <string name="stats_breakdown_title">What you took care of</string>
     <string name="stats_triggered_count">%1$d triggered</string>
     <string name="stats_goals_title">Daily goals today – %1$d of %2$d reached</string>
-    <string name="stats_strip_empty">Nothing yet today</string>
     <string name="stats_empty">Nothing here yet – react to a reminder to feed %1$s.</string>
     <string name="stats_unknown">Unknown</string>
     <string name="stats_reset">Reset care log</string>
@@ -238,11 +235,12 @@
     <string name="playmode_start">Start play mode</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Look at that – I just reached level %1$d!</string>
-    <string name="assistant_intro_1">I live on your clock. When a reminder is due, I show up next to it.</string>
+    <string name="assistant_intro_1">I live on your clock. In Routine mode I turn up beside it whenever a reminder is due.</string>
     <string name="assistant_intro_2">Drag the clock onto me to feed me – that\'s how you tell me you did the thing.</string>
     <string name="assistant_intro_3">A reminder can nudge you often without being a hundred separate jobs. What counts is your daily goal: do it 4 times and 4 of 4 is done.</string>
-    <string name="assistant_intro_4">Tap my meal counter at the top to see how your day is going.</string>
+    <string name="assistant_intro_4">Tap me any time and I will tell you how your day is going – what you have looked after, what is still open.</string>
     <string name="assistant_intro_5">One more thing: my mood only ever shifts because of reminders that carry a daily goal. Leave one at “No goal” and it\'s just a gentle nudge – it can\'t make me happier or gloomier.</string>
+    <string name="assistant_intro_6">Top left you choose how I run: Clock, Routine or Play. In Play I am there all the time and live a day of my own.</string>
     <string name="assistant_setup_what">What would you like to do regularly?</string>
     <string name="assistant_setup_how_often_goal">How often a day do you actually want to do it?</string>
     <string name="assistant_setup_when">When should I watch out for you?</string>
@@ -293,7 +291,7 @@
     <string name="faq_category_avatar">Me &amp; feeding</string>
     <string name="faq_category_display">Display &amp; battery</string>
     <string name="faq_q_dock_mode">What happens when I tap the clock?</string>
-    <string name="faq_a_dock_mode">It switches to a full-screen bedside display – handy on a nightstand, but the screen stays continuously on while it\'s active, which uses noticeably more battery than usual. Tap anywhere to leave it again.</string>
+    <string name="faq_a_dock_mode">Then the app switches to a full-screen bedside display. Handy on a nightstand, but the screen stays on the whole time, which uses noticeably more battery. Tap anywhere to leave. What you see there depends on the mode: in Clock only the clock, in Routine I appear when a reminder is due, in Play I am there the whole time.</string>
     <string name="faq_q_reminder_structure">How is a reminder actually built?</string>
     <string name="faq_a_reminder_structure">Every reminder has four parts: what to do, a time window (like 8am–8pm), how often I nudge you inside that window, and – optionally – a daily goal. The nudges themselves don\'t count toward anything; only how many times you actually feed me inside your goal does.</string>
     <string name="faq_q_interval">What\'s the difference between the interval and the daily goal?</string>
@@ -340,23 +338,15 @@
     <string name="a11y_visitor">%1$s is passing by</string>
     <string name="a11y_clock_moon">Moon</string>
     <string name="playmode_status">Level %1$d · %2$d XP · %3$d coins · %4$d meals</string>
-    <string name="settings_clip">Record a clip</string>
-    <string name="settings_clip_hint">Renders a short portrait video of your avatar in its world and lets you share it. Silent on purpose – social apps replace the sound anyway.</string>
-    <string name="settings_clip_working">Rendering…</string>
-    <string name="settings_clip_failed">This device could not create the video.</string>
     <string name="settings_clip_share">Share clip</string>
-    <string name="settings_clip_enable">Clip recording in Play Mode</string>
-    <string name="settings_clip_enable_hint">Shows a record button in the top right of Play Mode. Clips are collected in the library below.</string>
-    <string name="settings_clip_library">Clip library</string>
-    <string name="settings_clip_library_hint">%1$d recorded</string>
-    <string name="settings_clip_library_empty">Nothing recorded yet</string>
+    <string name="settings_clip_enable">Recording in Play mode</string>
+    <string name="settings_clip_enable_hint">Shows a record button at the top right of Play mode.</string>
     <string name="clip_save_gallery">Save to gallery</string>
     <string name="clip_saved_gallery">Saved to gallery</string>
     <string name="clip_delete">Delete</string>
     <string name="a11y_record_clip">Record clip</string>
     <string name="a11y_snapshot">Take snapshot</string>
-    <string name="clip_recording">Recording…</string>
-    <string name="settings_clip_enable_snapshot">Also shows a snapshot button below it. Photos are collected alongside the clips.</string>
+    <string name="settings_clip_enable_snapshot">A snapshot button appears below it. Both collect under “Clips &amp; snapshots” below.</string>
     <string name="library_clips">Clips</string>
     <string name="library_snapshots">Snapshots</string>
     <string name="settings_library">Clips &amp; snapshots</string>
@@ -370,16 +360,11 @@
 
     <!-- Gespraech mit dem Avatar im Play-Modus (siehe PlayTalk) -->
     <string name="talk_loading">One moment…</string>
-    <string name="talk_close">Leave me to it</string>
     <string name="talk_back">Something else</string>
     <string name="talk_open_reminders">Open reminders</string>
-    <string name="talk_q_today">What have you done today?</string>
     <string name="talk_q_plan">What are we set up for?</string>
-    <string name="talk_q_steering">What are you watching out for?</string>
-    <string name="talk_q_suggest">Do you have a suggestion?</string>
     <string name="talk_a_today">You looked after %1$d things today.</string>
     <string name="talk_a_today_goals">%1$d of %2$d daily goals reached.</string>
-    <string name="talk_a_today_nothing">Nothing yet today. The day is still young.</string>
     <string name="talk_a_today_noplan">We haven\'t set anything up yet, so there\'s nothing to keep track of.</string>
     <string name="talk_a_plan">This is what we set out to do:</string>
     <string name="talk_a_plan_empty">Nothing set up yet. Whatever you add, I\'ll keep an eye on it.</string>
@@ -387,14 +372,11 @@
     <string name="talk_plan_nogoal">no goal</string>
     <string name="talk_a_steering">Still open today:</string>
     <string name="talk_a_steering_hint">So I\'ll be drawn to that more often for the rest of the day.</string>
-    <string name="talk_a_steering_done">Everything you set out to do is done. I\'m just pottering about.</string>
-    <string name="talk_a_steering_nogoals">Nothing has a daily goal yet, so nothing pulls at me. I go by the time of day.</string>
     <string name="talk_a_suggest">How about %1$s? We haven\'t got anything for that.</string>
     <string name="talk_a_suggest_detail">%1$s to %2$s, %3$d× a day. You can change all of it later.</string>
     <string name="talk_a_suggest_accept">Go on then, set it up</string>
     <string name="talk_a_suggest_added">Done – %1$s is on the list now.</string>
     <string name="talk_a_suggest_added_hint">You\'ll see it in my day from now on.</string>
-    <string name="talk_a_suggest_none">Nothing comes to mind. You\'ve thought of everything.</string>
     <string name="a11y_talk_to_avatar">Talk to your companion</string>
 
     <!-- Die Stimme der sechs Kreaturen im Gespraech (siehe PlayVoice) -->
@@ -442,23 +424,53 @@
     <string name="talk_a_week_every_day">Every single day so far. That is quite something.</string>
 
     <!-- Spielstand im Gespraech -->
-    <string name="talk_q_game">How are you getting on?</string>
     <string name="talk_a_game_level">Level %1$d, %2$d experience.</string>
     <string name="talk_a_game_purse">%1$d coins, %2$d meals in the larder.</string>
     <string name="talk_a_game_fine">Enough for now. I can take my time.</string>
     <string name="talk_a_game_shopping">The larder is empty – I will head to the shop.</string>
     <string name="talk_a_game_broke">Larder empty and no coins. I will have to work first.</string>
-    <string name="talk_a_game_off">We are not playing at the moment.</string>
 
     <!-- Ihn um etwas bitten (nur im Spielmodus) -->
     <string name="talk_ask_now">Go on then – %1$s</string>
     <string name="talk_ask_shop">Off you go to the shop</string>
     <string name="talk_ask_work">Off to work then</string>
-    <string name="talk_ask_walk">Go and stretch your legs</string>
 
     <!-- Die drei Modi -->
     <string name="mode_reminder">Routine</string>
     <string name="mode_play">Play</string>
     <string name="mode_watch">Clock</string>
     <string name="watch_only_note">Watch only – reminders are resting.</string>
+
+    <!-- Die drei Modi -->
+    <string name="faq_category_modes">The three modes</string>
+    <string name="faq_q_modes">What are Clock, Routine and Play?</string>
+    <string name="faq_a_modes">Three ways to run me, chosen top left. Clock: just the clock, nothing else. Routine: your own reminders – I show up when one is due. Play: I live in my own little world and go about my day. Each step to the right adds something.</string>
+    <string name="faq_q_mode_watch">What does Clock mode do?</string>
+    <string name="faq_a_mode_watch">The dock shows the clock and nothing else – no me, no rooms. Reminders rest while it is on, because there would be no way to answer them without me there. Switch back to Routine and they carry on as before.</string>
+    <string name="faq_q_mode_reminder">What does Routine mode do?</string>
+    <string name="faq_a_mode_reminder">Your own reminders run. When one is due I turn up next to the clock – drag the clock onto me to say you have done it. That is the mode this app was built around.</string>
+    <string name="faq_q_mode_play">What does Play mode do?</string>
+    <string name="faq_a_mode_play">I am there the whole time and live through a day of my own: I sleep, go to work, do the shopping, take a walk. Instead of your reminders, one is drawn at random – feeding it earns experience, coins and meals. Tap me and I will tell you how things stand.</string>
+    <string name="faq_q_mode_influence">Do my habits change what you do in Play mode?</string>
+    <string name="faq_a_mode_influence">Yes, and that is the point of it. Whatever you have set yourself and not yet done today pulls me towards it – I reach for that more often on my own. Tap me and I will tell you what I am watching out for.</string>
+
+    <!-- Aufnehmen -->
+    <string name="faq_category_capture">Clips &amp; snapshots</string>
+    <string name="faq_q_capture">How do I record something?</string>
+    <string name="faq_a_capture">Turn it on in Settings, then two buttons appear at the top right of Play mode: a circle for a film, a viewfinder for a single picture. Films run up to 90 seconds and you decide when to stop.</string>
+    <string name="faq_q_capture_where">Where do the recordings end up?</string>
+    <string name="faq_a_capture_where">In the collection under Settings, films and pictures together, newest first. From there you can share them or put them in your phone gallery – that step is deliberate, so nothing lands in your gallery unasked.</string>
+    <string name="faq_q_capture_sound">Why is there no sound?</string>
+    <string name="faq_a_capture_sound">On purpose. Social apps replace the sound anyway, and music would raise licensing questions that a small app should not have.</string>
+
+    <!-- Reden -->
+    <string name="faq_q_talk">What can you actually tell me?</string>
+    <string name="faq_a_talk">What is really there: what you have looked after today, how the week has gone, what you set yourself, and what is still open. I make nothing up – everything I say comes from your own data, and nothing leaves the phone for it.</string>
+
+    <!-- Wo bin ich gerade? -->
+    <string name="assistant_here_watch">Right now you are in Clock mode – the dock shows nothing but the clock, and reminders are resting. Pick Routine top left and they carry on.</string>
+    <string name="assistant_here_reminder">Right now you are in Routine mode: your own reminders are running. When one is due I turn up beside the clock – drag the clock onto me to say you have done it.</string>
+    <string name="assistant_here_play">Right now you are in Play mode: I am there the whole time and live a day of my own. Instead of your reminders, one is drawn at random – feeding it earns experience, coins and meals.</string>
+    <string name="talk_q_here">What is going on here?</string>
+    <string name="talk_a_here">I live here: I sleep, go to work, do the shopping, take a walk. Feed me and it earns experience, coins and a meal in the larder. Whatever you have set yourself and not yet done today pulls me towards it.</string>
 </resources>

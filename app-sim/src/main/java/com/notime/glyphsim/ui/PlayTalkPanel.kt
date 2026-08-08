@@ -145,7 +145,15 @@ fun PlayTalkPanel(
  */
 private enum class Question(val labelRes: Int) {
     WEEK(R.string.talk_q_week),
-    PLAN(R.string.talk_q_plan)
+    PLAN(R.string.talk_q_plan),
+    /**
+     * **Was hier eigentlich passiert.** Der Spielmodus erklaert sich nicht von selbst: Ein Wesen,
+     * das umherlaeuft, arbeitet und einkauft, sieht huebsch aus, aber ohne einen Satz dazu bleibt
+     * offen, was das mit einem selbst zu tun hat. Erklaert wird deshalb GENAU dieser Modus - im
+     * Alltag-Modus gaebe es hier gar kein Wesen zum Antippen, und im Uhr-Modus soll es keines
+     * geben.
+     */
+    HERE(R.string.talk_q_here)
 }
 
 /**
@@ -227,23 +235,62 @@ private fun OfferLine(
             QuestionLine(label) { onAsk(offer.topic) }
         }
         is PlayTalk.Offer.Add -> {
-            if (justAdded == offer.topic) {
-                Text(
-                    stringResource(
-                        R.string.talk_a_suggest_added, stringResource(offer.topic.labelRes)
-                    ),
-                    color = INK_DIM, size = 13
-                )
-            } else {
-                QuestionLine(
+            // **In ZWEI Schritten, nicht in einem.**
+            //
+            // Beim Umbau auf die kurze Fassung war das kurzzeitig ein einziger Griff: Antippen
+            // legte sofort eine Erinnerung an. Das ist genau die Art stiller Nebenwirkung, die
+            // man einer App nie verzeiht - die Zeile las sich wie eine Frage ("Wie waere es mit
+            // Bewegung?") und richtete in Wahrheit etwas ein, das anschliessend jeden Tag
+            // anstupst, ohne dass man je gesehen haette, wann und wie oft.
+            //
+            // Jetzt klappt sie erst auf und zeigt, was entstehen wuerde; angelegt wird es erst
+            // durch eine zweite, eindeutige Zeile.
+            var expanded by remember(offer.topic) { mutableStateOf(false) }
+            when {
+                justAdded == offer.topic -> {
+                    Text(
+                        stringResource(
+                            R.string.talk_a_suggest_added, stringResource(offer.topic.labelRes)
+                        ),
+                        color = INK_DIM, size = 13
+                    )
+                    Text(
+                        stringResource(R.string.talk_a_suggest_added_hint),
+                        color = INK_DIM, size = 13
+                    )
+                }
+                expanded -> {
+                    Text(
+                        stringResource(
+                            R.string.talk_a_suggest, stringResource(offer.topic.labelRes)
+                        ),
+                        color = INK, size = 15
+                    )
+                    val preset = PlayTalk.presetFor(offer.topic)
+                    Text(
+                        stringResource(
+                            R.string.talk_a_suggest_detail,
+                            formatMinuteOfDay(preset.startMinuteOfDay),
+                            formatMinuteOfDay(preset.endMinuteOfDay),
+                            preset.dailyGoal
+                        ),
+                        color = INK_DIM, size = 13
+                    )
+                    QuestionLine(stringResource(R.string.talk_a_suggest_accept)) {
+                        onAdd(offer.topic)
+                    }
+                }
+                else -> QuestionLine(
                     stringResource(R.string.talk_a_suggest, stringResource(offer.topic.labelRes))
-                ) { onAdd(offer.topic) }
+                ) { expanded = true }
             }
         }
         PlayTalk.Offer.ShowPlan ->
             QuestionLine(stringResource(R.string.talk_q_plan)) { onShow(Question.PLAN) }
         PlayTalk.Offer.ShowWeek ->
             QuestionLine(stringResource(R.string.talk_q_week)) { onShow(Question.WEEK) }
+        PlayTalk.Offer.Explain ->
+            QuestionLine(stringResource(R.string.talk_q_here)) { onShow(Question.HERE) }
     }
 }
 
@@ -258,6 +305,10 @@ private fun Answer(
     onAsk: (AnimationType) -> Unit
 ) {
     when (question) {
+        Question.HERE -> {
+            Text(stringResource(R.string.talk_a_here), color = INK, size = 15)
+        }
+
         Question.WEEK -> {
             val week = knowledge.week
             if (week.total == 0) {

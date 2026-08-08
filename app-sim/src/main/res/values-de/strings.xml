@@ -22,8 +22,6 @@
     <string name="home_reminders">📋 Erinnerungen</string>
 
     <!-- Fuetter-Statistik -->
-    <string name="stats_meals_today_one">Mahlzeit heute</string>
-    <string name="stats_meals_today_other">Mahlzeiten heute</string>
     <string name="stats_subtitle">Pflegebuch</string>
     <string name="stats_meals_one">Mahlzeit</string>
     <string name="stats_meals_other">Mahlzeiten</string>
@@ -34,7 +32,6 @@
     <string name="stats_breakdown_title">Worum du dich gekümmert hast</string>
     <string name="stats_triggered_count">%1$d ausgelöst</string>
     <string name="stats_goals_title">Tagesziele heute – %1$d von %2$d erreicht</string>
-    <string name="stats_strip_empty">Heute noch nichts</string>
     <string name="stats_empty">Noch nichts hier – reagiere auf eine Erinnerung, um %1$s zu füttern.</string>
     <string name="stats_unknown">Unbekannt</string>
     <string name="stats_reset">Pflegebuch zurücksetzen</string>
@@ -229,11 +226,12 @@
     <string name="playmode_start">Spielmodus starten</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Schau mal – ich bin gerade auf Level %1$d aufgestiegen!</string>
-    <string name="assistant_intro_1">Ich wohne auf deiner Uhr. Wird eine Erinnerung fällig, tauche ich daneben auf.</string>
+    <string name="assistant_intro_1">Ich wohne auf deiner Uhr. Im Alltag-Modus tauche ich daneben auf, sobald eine Erinnerung fällig ist.</string>
     <string name="assistant_intro_2">Zieh die Uhr auf mich, um mich zu füttern – so sagst du mir, dass du es getan hast.</string>
     <string name="assistant_intro_3">Eine Erinnerung darf dich oft anstupsen, ohne gleich hundert Aufträge zu sein. Es zählt dein Tagesziel: viermal gemacht, und 4 von 4 stehen.</string>
-    <string name="assistant_intro_4">Tipp oben auf meine Mahlzeiten, dann siehst du, wie dein Tag läuft.</string>
+    <string name="assistant_intro_4">Tipp mich jederzeit an, dann erzähle ich dir, wie dein Tag läuft – worum du dich gekümmert hast und was noch offen ist.</string>
     <string name="assistant_intro_5">Noch etwas: Meine Stimmung ändert sich nur durch Erinnerungen mit einem festen Tagesziel. Lässt du eines bei „Kein Ziel“, bleibt es ein sanftes Anstupsen – ganz ohne Einfluss darauf, wie es mir geht.</string>
+    <string name="assistant_intro_6">Oben links wählst du, wie ich laufe: Uhr, Alltag oder Spiel. Im Spiel bin ich die ganze Zeit da und lebe einen eigenen Tag.</string>
     <string name="assistant_setup_what">Was möchtest du regelmäßig tun?</string>
     <string name="assistant_setup_how_often_goal">Wie oft am Tag willst du es wirklich tun?</string>
     <string name="assistant_setup_when">Wann soll ich für dich aufpassen?</string>
@@ -284,7 +282,7 @@
     <string name="faq_category_avatar">Ich &amp; das Füttern</string>
     <string name="faq_category_display">Anzeige &amp; Akku</string>
     <string name="faq_q_dock_mode">Was passiert, wenn ich auf die Uhr tippe?</string>
-    <string name="faq_a_dock_mode">Dann wechselt die App in eine Vollbild-Nachttisch-Anzeige – praktisch auf dem Nachttisch, aber der Bildschirm bleibt dabei durchgehend an, was spürbar mehr Akku braucht als sonst. Zum Verlassen einfach irgendwo antippen.</string>
+    <string name="faq_a_dock_mode">Dann wechselt die App in eine Vollbild-Nachttisch-Anzeige – praktisch auf dem Nachttisch, aber der Bildschirm bleibt durchgehend an, was spürbar mehr Akku braucht. Zum Verlassen einfach irgendwo antippen. Was du dort siehst, hängt vom Modus ab: bei Uhr nur die Uhr, bei Alltag tauche ich auf, wenn eine Erinnerung fällig ist, und im Spiel bin ich die ganze Zeit da.</string>
     <string name="faq_q_reminder_structure">Wie ist eine Erinnerung eigentlich aufgebaut?</string>
     <string name="faq_a_reminder_structure">Jede Erinnerung hat vier Teile: was zu tun ist, ein Zeitfenster (z.B. 8–20 Uhr), wie oft ich dich darin anstupse, und optional ein Tagesziel. Die Anstupser selbst zählen für nichts – nur wie oft du innerhalb deines Ziels tatsächlich fütterst.</string>
     <string name="faq_q_interval">Was ist der Unterschied zwischen Intervall und Tagesziel?</string>
@@ -331,23 +329,15 @@
     <string name="a11y_visitor">%1$s kommt vorbei</string>
     <string name="a11y_clock_moon">Mond</string>
     <string name="playmode_status">Level %1$d · %2$d XP · %3$d Münzen · %4$d Mahlzeiten</string>
-    <string name="settings_clip">Clip aufnehmen</string>
-    <string name="settings_clip_hint">Zeichnet ein kurzes Hochformat-Video deines Avatars in seiner Welt und lässt es dich teilen. Bewusst ohne Ton – soziale Apps ersetzen ihn ohnehin.</string>
-    <string name="settings_clip_working">Wird gezeichnet …</string>
-    <string name="settings_clip_failed">Dieses Gerät konnte das Video nicht erstellen.</string>
     <string name="settings_clip_share">Clip teilen</string>
-    <string name="settings_clip_enable">Clip-Aufnahme im Play-Modus</string>
-    <string name="settings_clip_enable_hint">Blendet im Play-Modus oben rechts einen Aufnahmeknopf ein. Die Clips sammeln sich unten in der Bibliothek.</string>
-    <string name="settings_clip_library">Clip-Bibliothek</string>
-    <string name="settings_clip_library_hint">%1$d aufgenommen</string>
-    <string name="settings_clip_library_empty">Noch nichts aufgenommen</string>
+    <string name="settings_clip_enable">Aufnehmen im Spiel-Modus</string>
+    <string name="settings_clip_enable_hint">Blendet im Spiel-Modus oben rechts einen Aufnahmeknopf ein.</string>
     <string name="clip_save_gallery">In Galerie speichern</string>
     <string name="clip_saved_gallery">In Galerie gespeichert</string>
     <string name="clip_delete">Löschen</string>
     <string name="a11y_record_clip">Clip aufnehmen</string>
     <string name="a11y_snapshot">Schnappschuss aufnehmen</string>
-    <string name="clip_recording">Nimmt auf …</string>
-    <string name="settings_clip_enable_snapshot">Darunter erscheint zusätzlich ein Knopf für Schnappschüsse. Die Bilder sammeln sich zusammen mit den Clips.</string>
+    <string name="settings_clip_enable_snapshot">Darunter erscheint ein Knopf für Schnappschüsse. Beides sammelt sich unten unter „Clips &amp; Schnappschüsse“.</string>
     <string name="library_clips">Clips</string>
     <string name="library_snapshots">Schnappschüsse</string>
     <string name="settings_library">Clips &amp; Schnappschüsse</string>
@@ -361,16 +351,11 @@
 
     <!-- Gespraech mit dem Avatar im Play-Modus (siehe PlayTalk) -->
     <string name="talk_loading">Einen Moment …</string>
-    <string name="talk_close">Lass mich mal machen</string>
     <string name="talk_back">Etwas anderes</string>
     <string name="talk_open_reminders">Erinnerungen öffnen</string>
-    <string name="talk_q_today">Was hast du heute gemacht?</string>
     <string name="talk_q_plan">Was haben wir uns vorgenommen?</string>
-    <string name="talk_q_steering">Worauf achtest du gerade?</string>
-    <string name="talk_q_suggest">Hast du einen Vorschlag?</string>
     <string name="talk_a_today">Um %1$d Sachen hast du dich heute gekümmert.</string>
     <string name="talk_a_today_goals">%1$d von %2$d Tageszielen erreicht.</string>
-    <string name="talk_a_today_nothing">Heute noch nichts. Der Tag ist ja noch jung.</string>
     <string name="talk_a_today_noplan">Wir haben noch nichts eingerichtet, da gibt es auch nichts mitzuzählen.</string>
     <string name="talk_a_plan">Das haben wir uns vorgenommen:</string>
     <string name="talk_a_plan_empty">Noch nichts eingerichtet. Was du anlegst, behalte ich im Auge.</string>
@@ -378,14 +363,11 @@
     <string name="talk_plan_nogoal">kein Ziel</string>
     <string name="talk_a_steering">Heute noch offen:</string>
     <string name="talk_a_steering_hint">Danach zieht es mich den Rest des Tages öfter.</string>
-    <string name="talk_a_steering_done">Alles erledigt, was du dir vorgenommen hast. Ich trödele nur herum.</string>
-    <string name="talk_a_steering_nogoals">Noch hat nichts ein Tagesziel, also zieht mich auch nichts. Ich gehe nach der Tageszeit.</string>
     <string name="talk_a_suggest">Wie wäre es mit %1$s? Dafür haben wir noch nichts.</string>
     <string name="talk_a_suggest_detail">%1$s bis %2$s, %3$d× am Tag. Kannst du alles später ändern.</string>
     <string name="talk_a_suggest_accept">Na gut, richte es ein</string>
     <string name="talk_a_suggest_added">Fertig – %1$s steht jetzt auf der Liste.</string>
     <string name="talk_a_suggest_added_hint">Das siehst du ab jetzt auch in meinem Tag.</string>
-    <string name="talk_a_suggest_none">Mir fällt nichts ein. Du hast an alles gedacht.</string>
     <string name="a11y_talk_to_avatar">Mit dem Begleiter sprechen</string>
 
     <!-- Die Stimme der sechs Kreaturen im Gespraech (siehe PlayVoice) -->
@@ -433,23 +415,53 @@
     <string name="talk_a_week_every_day">Jeden einzelnen Tag bisher. Das ist schon was.</string>
 
     <!-- Spielstand im Gespraech -->
-    <string name="talk_q_game">Wie kommst du voran?</string>
     <string name="talk_a_game_level">Stufe %1$d, %2$d Erfahrung.</string>
     <string name="talk_a_game_purse">%1$d Münzen, %2$d Mahlzeiten im Vorrat.</string>
     <string name="talk_a_game_fine">Reicht erst mal. Ich kann es ruhig angehen.</string>
     <string name="talk_a_game_shopping">Der Vorrat ist leer – ich gehe einkaufen.</string>
     <string name="talk_a_game_broke">Vorrat leer und kein Geld. Ich muss erst arbeiten.</string>
-    <string name="talk_a_game_off">Wir spielen gerade nicht.</string>
 
     <!-- Ihn um etwas bitten (nur im Spielmodus) -->
     <string name="talk_ask_now">Dann mach doch – %1$s</string>
     <string name="talk_ask_shop">Dann geh einkaufen</string>
     <string name="talk_ask_work">Dann geh arbeiten</string>
-    <string name="talk_ask_walk">Geh mal eine Runde raus</string>
 
     <!-- Die drei Modi -->
     <string name="mode_reminder">Alltag</string>
     <string name="mode_play">Spiel</string>
     <string name="mode_watch">Uhr</string>
     <string name="watch_only_note">Nur Uhr – Erinnerungen ruhen.</string>
+
+    <!-- Die drei Modi -->
+    <string name="faq_category_modes">Die drei Modi</string>
+    <string name="faq_q_modes">Was sind Uhr, Alltag und Spiel?</string>
+    <string name="faq_a_modes">Drei Arten, mich laufen zu lassen – oben links wählbar. Uhr: nur die Uhr, sonst nichts. Alltag: deine eigenen Erinnerungen, ich tauche auf, wenn eine fällig ist. Spiel: ich lebe in meiner kleinen Welt und gehe meinem Tag nach. Jeder Schritt nach rechts fügt etwas hinzu.</string>
+    <string name="faq_q_mode_watch">Was macht der Uhr-Modus?</string>
+    <string name="faq_a_mode_watch">Das Dock zeigt nur die Uhr – kein Ich, keine Zimmer. Erinnerungen ruhen dabei, weil es ohne mich gar keinen Weg gäbe, sie zu beantworten. Zurück auf Alltag, und sie laufen weiter wie vorher.</string>
+    <string name="faq_q_mode_reminder">Was macht der Alltag-Modus?</string>
+    <string name="faq_a_mode_reminder">Deine eigenen Erinnerungen laufen. Wird eine fällig, tauche ich neben der Uhr auf – zieh die Uhr auf mich, um mir zu sagen, dass du es getan hast. Das ist der Modus, für den diese App gebaut wurde.</string>
+    <string name="faq_q_mode_play">Was macht der Spiel-Modus?</string>
+    <string name="faq_a_mode_play">Ich bin die ganze Zeit da und lebe einen eigenen Tag: schlafen, arbeiten, einkaufen, spazieren. Statt deiner Erinnerungen wird eine ausgewürfelt – fütterst du sie, gibt das Erfahrung, Münzen und Mahlzeiten. Tipp mich an, dann erzähle ich, wie es steht.</string>
+    <string name="faq_q_mode_influence">Beeinflussen meine Gewohnheiten, was du im Spiel tust?</string>
+    <string name="faq_a_mode_influence">Ja, und darum geht es dabei. Was du dir vorgenommen und heute noch nicht geschafft hast, zieht mich – ich greife von selbst öfter danach. Tipp mich an, dann sage ich dir, worauf ich gerade achte.</string>
+
+    <!-- Aufnehmen -->
+    <string name="faq_category_capture">Clips &amp; Schnappschüsse</string>
+    <string name="faq_q_capture">Wie nehme ich etwas auf?</string>
+    <string name="faq_a_capture">In den Einstellungen freischalten, dann erscheinen im Spiel oben rechts zwei Knöpfe: ein Kreis für einen Film, ein Sucher für ein einzelnes Bild. Filme laufen bis zu 90 Sekunden, und du entscheidest, wann Schluss ist.</string>
+    <string name="faq_q_capture_where">Wo landen die Aufnahmen?</string>
+    <string name="faq_a_capture_where">In der Sammlung unter Einstellungen, Filme und Bilder gemischt, neueste zuerst. Von dort kannst du sie teilen oder in die Galerie deines Handys legen – das ist ein eigener Schritt, damit nichts ungefragt in deiner Galerie landet.</string>
+    <string name="faq_q_capture_sound">Warum ist kein Ton drauf?</string>
+    <string name="faq_a_capture_sound">Mit Absicht. Soziale Apps ersetzen den Ton ohnehin, und Musik brächte Lizenzfragen mit sich, die eine kleine App nicht haben sollte.</string>
+
+    <!-- Reden -->
+    <string name="faq_q_talk">Was kannst du mir eigentlich erzählen?</string>
+    <string name="faq_a_talk">Was wirklich da ist: worum du dich heute gekümmert hast, wie die Woche lief, was du dir vorgenommen hast und was noch offen ist. Ich denke mir nichts aus – alles kommt aus deinen eigenen Daten, und dafür verlässt nichts das Handy.</string>
+
+    <!-- Wo bin ich gerade? -->
+    <string name="assistant_here_watch">Du bist gerade im Uhr-Modus – das Dock zeigt nur die Uhr, und die Erinnerungen ruhen. Wähl oben links Alltag, dann laufen sie weiter.</string>
+    <string name="assistant_here_reminder">Du bist gerade im Alltag-Modus: Deine eigenen Erinnerungen laufen. Wird eine fällig, tauche ich neben der Uhr auf – zieh die Uhr auf mich, um mir zu sagen, dass du es getan hast.</string>
+    <string name="assistant_here_play">Du bist gerade im Spiel-Modus: Ich bin die ganze Zeit da und lebe einen eigenen Tag. Statt deiner Erinnerungen wird eine ausgewürfelt – fütterst du sie, gibt das Erfahrung, Münzen und Mahlzeiten.</string>
+    <string name="talk_q_here">Was passiert hier eigentlich?</string>
+    <string name="talk_a_here">Hier wohne ich: schlafen, arbeiten, einkaufen, spazieren. Fütterst du mich, gibt das Erfahrung, Münzen und eine Mahlzeit im Vorrat. Und was du dir vorgenommen und heute noch nicht geschafft hast, zieht mich dorthin.</string>
 </resources>
