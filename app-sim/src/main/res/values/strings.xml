@@ -457,8 +457,8 @@
     <string name="talk_ask_walk">Go and stretch your legs</string>
 
     <!-- Die drei Modi -->
-    <string name="mode_reminder">Reminders</string>
+    <string name="mode_reminder">Routine</string>
     <string name="mode_play">Play</string>
-    <string name="mode_watch">Watch only</string>
+    <string name="mode_watch">Clock</string>
     <string name="watch_only_note">Watch only – reminders are resting.</string>
 </resources>

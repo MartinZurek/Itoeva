@@ -67,17 +67,22 @@ object WatchModePrefs {
  * Kombination, die der Nutzer je zu Gesicht bekommt.
  */
 enum class AppMode(val labelRes: Int) {
+    /**
+     * Nur die Uhr.
+     *
+     * **Die Reihenfolge dieser drei ist die Reihenfolge in der Auswahl** und laeuft von der
+     * ruhigsten zur lebhaftesten Fassung der App: erst nur eine Uhr, dann eine Uhr mit den
+     * eigenen Gewohnheiten, dann ein Wesen, das seinen eigenen Tag lebt. So gelesen erklaert die
+     * Leiste sich selbst - jeder Schritt nach rechts fuegt etwas hinzu, statt etwas anderes zu
+     * sein.
+     */
+    WATCH(com.notime.glyphsim.R.string.mode_watch),
+
     /** Der Normalbetrieb: eigene Erinnerungen, Avatar erscheint, wenn eine faellig ist. */
     REMINDER(com.notime.glyphsim.R.string.mode_reminder),
 
     /** Das Spiel: der Avatar lebt dauerhaft in seiner Welt. */
-    PLAY(com.notime.glyphsim.R.string.mode_play),
-
-    /** Nur die Uhr. */
-    WATCH(com.notime.glyphsim.R.string.mode_watch);
-
-    /** Der naechste Modus beim Antippen - reihum. */
-    fun next(): AppMode = entries[(ordinal + 1) % entries.size]
+    PLAY(com.notime.glyphsim.R.string.mode_play);
 
     companion object {
         fun current(context: Context): AppMode = when {

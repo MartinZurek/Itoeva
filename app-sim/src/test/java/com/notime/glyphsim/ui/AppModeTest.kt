@@ -5,46 +5,40 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Prueft das Umschalten zwischen den drei Modi.
+ * Prueft die drei Modi, zwischen denen sich der Nutzer entscheidet.
  *
  * **Warum das eine eigene Pruefung wert ist.** Nach aussen gibt es genau EINEN Modus, gespeichert
  * wird er aber in ZWEI getrennten Schaltern (Spiel im Kern, "nur Uhr" in der Oberflaeche - siehe
  * [WatchModePrefs]). Aus zwei Schaltern lassen sich vier Zustaende bilden, von denen nur drei
  * gueltig sind; der vierte - Spiel UND nur Uhr zugleich - waere ein Widerspruch, den niemand
  * bemerkt, weil beide Seiten fuer sich plausibel aussehen.
- *
- * Der Reihum-Wechsel wird mitgeprueft, weil ein Modus, der sich beim Durchtippen ueberspringen
- * laesst, praktisch nicht erreichbar waere.
  */
 class AppModeTest {
 
     @Test
-    fun `reihum werden alle drei Modi erreicht und keiner uebersprungen`() {
-        val seen = mutableListOf(AppMode.REMINDER)
-        var mode = AppMode.REMINDER
-        repeat(AppMode.entries.size - 1) {
-            mode = mode.next()
-            seen += mode
-        }
+    fun `jeder Modus hat eine eigene Beschriftung`() {
+        // Zwei Modi mit demselben Text waeren in der Auswahl nicht auseinanderzuhalten - und
+        // nebeneinander stehend faellt es doppelt auf.
+        val labels = AppMode.entries.map { it.labelRes }
+        assertEquals("zwei Modi teilen sich einen Text", AppMode.entries.size, labels.toSet().size)
+        assertTrue("ein Modus hat gar keinen Text", labels.none { it == 0 })
+    }
+
+    @Test
+    fun `die Auswahl laeuft von der ruhigsten zur lebhaftesten Fassung`() {
+        // Die Reihenfolge ist keine Laune: Sie ist der Grund, warum die Leiste sich selbst
+        // erklaert - jeder Schritt nach rechts fuegt etwas hinzu. Wird sie umgestellt, geht diese
+        // Lesart verloren, ohne dass irgendetwas kaputt aussieht.
         assertEquals(
-            "Beim Durchtippen muss jeder Modus genau einmal vorkommen",
-            AppMode.entries.toSet(), seen.toSet()
+            listOf(AppMode.WATCH, AppMode.REMINDER, AppMode.PLAY),
+            AppMode.entries.toList()
         )
     }
 
     @Test
-    fun `nach einer vollen Runde ist man wieder am Anfang`() {
-        var mode = AppMode.REMINDER
-        repeat(AppMode.entries.size) { mode = mode.next() }
-        assertEquals(AppMode.REMINDER, mode)
-    }
-
-    @Test
-    fun `jeder Modus hat eine eigene Beschriftung`() {
-        // Zwei Modi mit demselben Text waeren nicht auseinanderzuhalten - und der Knopf nennt
-        // ausschliesslich den aktuellen Modus, es gibt also keinen zweiten Anhaltspunkt.
-        val labels = AppMode.entries.map { it.labelRes }
-        assertEquals("zwei Modi teilen sich einen Text", AppMode.entries.size, labels.toSet().size)
-        assertTrue("ein Modus hat gar keinen Text", labels.none { it == 0 })
+    fun `es gibt genau drei Modi`() {
+        // Ein vierter wuerde die Leiste sprengen (siehe ModeSelector in HomeScreen) - das soll
+        // dann eine bewusste Entscheidung sein und kein Nebeneffekt.
+        assertEquals(3, AppMode.entries.size)
     }
 }

@@ -448,8 +448,8 @@
     <string name="talk_ask_walk">Geh mal eine Runde raus</string>
 
     <!-- Die drei Modi -->
-    <string name="mode_reminder">Erinnerungen</string>
+    <string name="mode_reminder">Alltag</string>
     <string name="mode_play">Spiel</string>
-    <string name="mode_watch">Nur Uhr</string>
+    <string name="mode_watch">Uhr</string>
     <string name="watch_only_note">Nur Uhr – Erinnerungen ruhen.</string>
 </resources>

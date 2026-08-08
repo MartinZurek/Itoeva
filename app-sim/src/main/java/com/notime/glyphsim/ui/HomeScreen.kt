@@ -427,44 +427,29 @@ fun HomeScreen(
                     // Leiste stehen nur noch zwei Textknoepfe, und die volle Hoehe waere ein
                     // leerer Balken ueber der Uhr.
                     expandedHeight = 40.dp,
-                    title = {},
-                    actions = {
-                        // **Der Modus-Schalter.** Bewusst hier neben "Erinnerungen" und nicht im
-                        // Avatar-Menue versteckt: Er bestimmt, WELCHE Erinnerungen ueberhaupt
-                        // kommen - und im Fall von "Nur Uhr", ob ueberhaupt welche kommen. Er muss
-                        // jederzeit sichtbar sein, damit man nie im Unklaren ist, in welchem Modus
-                        // die App gerade laeuft.
-                        //
-                        // **Reihum statt drei Knoepfe nebeneinander.** Seit es einen dritten Modus
-                        // gibt, passte ein Schalter mit zwei Beschriftungen nicht mehr. Drei
-                        // Knoepfe waeren die naheliegende Loesung und die falsche: Sie fuellten die
-                        // Leiste, obwohl zwei davon immer nur dastuenden. Ein Knopf, der den
-                        // AKTUELLEN Modus nennt, beantwortet stattdessen die Frage, die man
-                        // tatsaechlich hat ("wo bin ich gerade?"), und wechselt beim Antippen.
-                        TextButton(
-                            onClick = {
-                                val next = appMode.next()
-                                // Beim ersten Mal ins Spiel erst erklaeren, eingeschaltet wird dann
-                                // im Dialog - sonst aendert sich unvermittelt, was die App tut.
-                                if (next == AppMode.PLAY && !PlayModePrefs.hasSeenIntro(context)) {
+                    // **Die Modus-Auswahl steht LINKS, wo frueher der Tagesstand stand.**
+                    //
+                    // Sie gehoert nicht zu den Aktionen rechts: Eine Aktion tut etwas und ist
+                    // danach vorbei, diese Auswahl dagegen sagt dauerhaft, in welchem Zustand die
+                    // App ist. Links gelesen zu werden, bevor man irgendetwas antippt, ist genau
+                    // richtig fuer eine Angabe, die alles Weitere einordnet.
+                    title = {
+                        ModeSelector(
+                            current = appMode,
+                            onSelect = { mode ->
+                                // Beim ersten Mal ins Spiel erst erklaeren, eingeschaltet wird
+                                // dann im Dialog - sonst aendert sich unvermittelt, was die App
+                                // tut.
+                                if (mode == AppMode.PLAY && !PlayModePrefs.hasSeenIntro(context)) {
                                     showPlayIntro = true
                                 } else {
-                                    AppMode.set(context, next)
-                                    appMode = next
+                                    AppMode.set(context, mode)
+                                    appMode = mode
                                 }
                             }
-                        ) {
-                            Text(
-                                stringResource(appMode.labelRes),
-                                color = when (appMode) {
-                                    AppMode.PLAY -> Color(0xFF7FD1A6)
-                                    // Gedaempft, nicht farbig: "Nur Uhr" ist der stillste der drei
-                                    // Modi, und das darf man ihm ansehen.
-                                    AppMode.WATCH -> Color(0xFF8F8B82)
-                                    AppMode.REMINDER -> Color(0xFFE8E4DA)
-                                }
-                            )
-                        }
+                        )
+                    },
+                    actions = {
                         // "Dock an" ist entfallen: das Antippen der Uhr fuehrt bereits dorthin, ein
                         // zweiter Weg zum selben Ziel kostete nur Platz.
                         //
@@ -782,6 +767,48 @@ fun HomeScreen(
 }
 
 
+
+
+/**
+ * **Die drei Modi nebeneinander - man WAEHLT einen aus, statt durchzutippen.**
+ *
+ * Die erste Fassung war ein einzelner Knopf, der den aktuellen Modus nannte und beim Antippen
+ * reihum wechselte. Das war kompakt und in einem Punkt falsch: Man konnte sich nichts aussuchen.
+ * Wer von "Nur Uhr" ins Spiel wollte, musste erst durch die Erinnerungen hindurch - und wer die
+ * App neu hatte, erfuhr nie, dass es ueberhaupt drei gibt. Ein Zustand, den man nicht sehen kann,
+ * laesst sich auch nicht verstehen.
+ *
+ * **Ohne Rahmen und ohne Knopfform.** Drei umrandete Schaltflaechen waeren ueber einer schwarzen
+ * Flaeche mit einer leuchtenden Uhr drei helle Kaesten - genau die Art Bedienelement, die dieser
+ * Bildschirm sonst vermeidet. Der gewaehlte Modus ist schlicht hell und die anderen sind
+ * gedaempft; das genuegt, um ihn zu erkennen, und bleibt ruhig.
+ */
+@Composable
+private fun ModeSelector(current: AppMode, onSelect: (AppMode) -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        for (mode in AppMode.entries) {
+            val selected = mode == current
+            Text(
+                stringResource(mode.labelRes),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = when {
+                    // Das Spiel bekommt seine eigene Farbe, sobald es laeuft - es ist der einzige
+                    // Modus, der die App spuerbar veraendert, und das darf man sehen.
+                    selected && mode == AppMode.PLAY -> Color(0xFF7FD1A6)
+                    selected -> Color(0xFFE8E4DA)
+                    else -> Color(0xFF6E6A63)
+                },
+                modifier = Modifier
+                    .clickable(enabled = !selected) { onSelect(mode) }
+                    .padding(vertical = 6.dp)
+            )
+        }
+    }
+}
 
 /**
  * Wahrscheinlichkeit, dass das Umkreisen-Easter-Egg (eine Umdrehung) die seltene "Rocket"-
