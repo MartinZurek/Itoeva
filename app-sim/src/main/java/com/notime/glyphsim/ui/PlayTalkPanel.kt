@@ -107,15 +107,12 @@ fun PlayTalkPanel(
             }
         }
 
-        Text(
-            stringResource(voice.farewell),
-            color = INK_DIM,
-            size = 13,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onDismiss() }
-                .padding(top = 4.dp)
-        )
+        // Mit demselben Winkel wie jede andere antippbare Zeile. Ohne ihn stand hier nur noch
+        // "Bis gleich." - ein Satz, der sich wie Text liest und nicht wie ein Knopf. Die
+        // arteigene Verabschiedung war ein Gewinn fuer den Charakter und ein Verlust fuer die
+        // Bedienbarkeit; beides geht zusammen, sobald ein Zeichen sagt, dass man darauf tippen
+        // kann. In diesem Feld gilt: Was mit "›" beginnt, laesst sich antippen - ausnahmslos.
+        QuestionLine(stringResource(voice.farewell)) { onDismiss() }
     }
 }
 

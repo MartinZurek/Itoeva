@@ -225,6 +225,7 @@
     <string name="onboarding_tap_me">Hi! Tap me – I\'ll show you around.</string>
     <string name="onboarding_tap_clock">Tap the clock any time for a full bedside display – uses more battery while it\'s on.</string>
     <string name="assistant_greeting">Hey! What can I do for you?</string>
+    <string name="assistant_menu_day">How is my day going?</string>
     <string name="assistant_menu_intro">❓  Explain how this works</string>
     <string name="assistant_menu_setup">💬  Set something up together</string>
     <string name="assistant_menu_settings">⚙️  Settings</string>

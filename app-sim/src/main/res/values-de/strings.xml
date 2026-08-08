@@ -216,6 +216,7 @@
     <string name="onboarding_tap_me">Hi! Tipp mich an – ich zeig dir alles.</string>
     <string name="onboarding_tap_clock">Tipp jederzeit auf die Uhr für eine volle Nachttisch-Anzeige – verbraucht dabei mehr Akku.</string>
     <string name="assistant_greeting">Hey! Was kann ich für dich tun?</string>
+    <string name="assistant_menu_day">Wie läuft mein Tag?</string>
     <string name="assistant_menu_intro">❓  Erklär mir, wie das hier läuft</string>
     <string name="assistant_menu_setup">💬  Lass uns was einrichten</string>
     <string name="assistant_menu_settings">⚙️  Einstellungen</string>

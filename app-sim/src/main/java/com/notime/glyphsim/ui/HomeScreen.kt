@@ -24,13 +24,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -463,11 +459,16 @@ fun HomeScreen(
                         }
                         // "Dock an" ist entfallen: das Antippen der Uhr fuehrt bereits dorthin, ein
                         // zweiter Weg zum selben Ziel kostete nur Platz.
+                        //
+                        // Aus demselben Grund ist das ZAHNRAD entfallen. Der Avatar ist der
+                        // Einstieg in Einfuehrung, gefuehrtes Einrichten, Import UND Einstellungen
+                        // - der einmalige Hinweis unter ihm sagt genau das. Ein zweiter Weg
+                        // daneben nahm dieser Rolle die Eindeutigkeit: Wer das Zahnrad sah,
+                        // brauchte den Avatar nie anzutippen und fand die Haelfte der App nicht.
+                        // Uebrig bleiben in der Leiste nur die beiden Dinge, die der Avatar NICHT
+                        // kann: den Spielmodus umschalten und die Erinnerungsliste oeffnen.
                         TextButton(onClick = onOpenReminders) {
                             Text(stringResource(R.string.home_reminders))
-                        }
-                        IconButton(onClick = { showSettings = true }) {
-                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.action_settings))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(

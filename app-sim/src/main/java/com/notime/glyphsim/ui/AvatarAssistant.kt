@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,8 @@ import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import java.time.DayOfWeek
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** Dunkle Flaechen - dieselbe Welt wie Startbildschirm und Pflegebuch. */
 private val SHEET_BG = Color(0xFF101012)
@@ -48,7 +51,7 @@ private val TEXT_PRIMARY = Color(0xFFF1EEE6)
 private val TEXT_MUTED = Color(0xFF9A968E)
 
 /** Was der Avatar-Assistent gerade zeigt. */
-enum class AssistantScreen { MENU, INTRO, SETUP, IMPORT, FAQ }
+enum class AssistantScreen { MENU, DAY, INTRO, SETUP, IMPORT, FAQ }
 
 /**
  * Der Avatar als Einstieg statt als blosser Schalter.
@@ -104,12 +107,17 @@ fun AvatarAssistantDialog(
             ) {
                 when (screen) {
                     AssistantScreen.MENU -> AssistantMenu(
+                        onDay = { screen = AssistantScreen.DAY },
                         onIntro = { screen = AssistantScreen.INTRO },
                         onSetup = { screen = AssistantScreen.SETUP },
                         onImport = { screen = AssistantScreen.IMPORT },
                         onFaq = { screen = AssistantScreen.FAQ },
                         onSettings = onOpenSettings,
                         onPlayClip = onPlayClip
+                    )
+                    AssistantScreen.DAY -> AssistantDay(
+                        species = species,
+                        onBack = { screen = AssistantScreen.MENU }
                     )
                     AssistantScreen.INTRO -> AssistantIntro(onBack = { screen = AssistantScreen.MENU })
                     AssistantScreen.SETUP -> AssistantSetup(
@@ -161,6 +169,7 @@ private fun Choice(text: String, onClick: () -> Unit) {
 
 @Composable
 private fun AssistantMenu(
+    onDay: () -> Unit,
     onIntro: () -> Unit,
     onSetup: () -> Unit,
     onImport: () -> Unit,
@@ -172,12 +181,98 @@ private fun AssistantMenu(
     // Startbildschirms: Er bestimmt, welche Erinnerungen ueberhaupt kommen, und muss deshalb
     // jederzeit sichtbar sein statt zwei Ebenen tief in einem Menue zu liegen.
     Bubble(stringResource(R.string.assistant_greeting))
+    // **ZUERST der Tag, dann die Verwaltung.** Bis hierhin bedeutete dasselbe Antippen derselben
+    // Figur auf den beiden Bildschirmen etwas voellig Verschiedenes: im Play-Modus ein Gespraech
+    // ueber den heutigen Tag, hier ein Menue aus Anleitung, Import und Einstellungen. Wer den
+    // Avatar antippt, will aber in beiden Faellen dasselbe - mit ihm reden.
+    //
+    // Die Fragen sind dieselben wie im Play-Modus und beziehen ihre Antworten aus derselben
+    // Quelle (siehe PlayTalk); nur die Umgebung wechselt, weil ein heller Dialog auf dem
+    // Startbildschirm richtig ist und auf der schwarzen Spielflaeche falsch waere.
+    Choice(stringResource(R.string.assistant_menu_day), onDay)
     Choice(stringResource(R.string.assistant_menu_intro), onIntro)
     Choice(stringResource(R.string.assistant_menu_setup), onSetup)
     Choice(stringResource(R.string.assistant_menu_import), onImport)
     Choice(stringResource(R.string.assistant_menu_faq), onFaq)
     onPlayClip?.let { Choice(stringResource(R.string.clip_play), it) }
     Choice(stringResource(R.string.assistant_menu_settings), onSettings)
+}
+
+/**
+ * **Derselbe Tagesbericht wie im Play-Modus**, nur in Sprechblasen statt auf schwarzem Grund.
+ *
+ * Die Zahlen kommen aus [PlayTalk], die Formulierungen aus [PlayVoice] - beides unveraendert
+ * geteilt. Was sich unterscheidet, ist ausschliesslich die Umgebung: Der Startbildschirm ist ein
+ * heller Dialog mit Sprechblasen, die Spielflaeche ist schwarz. Dieselbe Auskunft in der jeweils
+ * passenden Form zu zeigen ist Konsequenz; sie zweimal zu FORMULIEREN waere die Art von Kopie,
+ * bei der nach dem dritten Umbau die eine Haelfte etwas anderes sagt als die andere.
+ *
+ * Bewusst OHNE Vorschlag zum Anlegen: Der Startbildschirm hat mit "Erinnerungen" und dem
+ * gefuehrten Einrichten bereits zwei Wege dorthin, und ein dritter waere genau die Redundanz, die
+ * hier gerade abgebaut wird. Im Play-Modus gibt es diese Wege nicht - dort ist der Vorschlag der
+ * einzige, und deshalb steht er nur dort.
+ */
+@Composable
+private fun AssistantDay(species: AvatarSpecies, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val voice = remember(species) { PlayVoice.forSpecies(species) }
+    var knowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
+
+    LaunchedEffect(species) {
+        knowledge = withContext(Dispatchers.IO) {
+            PlayTalk.gather(context, AvatarSpeciesPrefs.profileId(species))
+        }
+    }
+
+    val current = knowledge
+    if (current == null) {
+        Bubble(stringResource(R.string.talk_loading))
+    } else {
+        // Heute
+        if (!current.hasPlan) {
+            Bubble(stringResource(R.string.talk_a_today_noplan))
+        } else if (current.fedToday == 0) {
+            Bubble(stringResource(voice.emptyDay))
+        } else {
+            Bubble(
+                stringResource(R.string.talk_a_today, current.fedToday) +
+                    if (current.goalsTotal > 0) {
+                        "\n" + stringResource(
+                            R.string.talk_a_today_goals, current.goalsReached, current.goalsTotal
+                        )
+                    } else ""
+            )
+        }
+
+        // Die Woche
+        val week = current.week
+        if (week.total > 0) {
+            Bubble(
+                stringResource(R.string.talk_a_week, week.total, week.activeDays, week.daysSoFar) +
+                    if (week.activeDays >= week.daysSoFar) {
+                        "\n" + stringResource(R.string.talk_a_week_every_day)
+                    } else if (week.bestDay > 0) {
+                        "\n" + stringResource(R.string.talk_a_week_best, week.bestDay)
+                    } else ""
+            )
+        }
+
+        // Worauf er heute achtet - der Punkt, an dem der Bericht in sein Verhalten uebergeht.
+        if (current.steering.isNotEmpty()) {
+            // Die Namen VORHER einsammeln: stringResource laesst sich nur in einer
+            // Composable-Umgebung aufrufen, und `joinToString` reicht seine Funktion nicht
+            // eingebettet weiter. `map` dagegen schon.
+            val open = current.steering.map { stringResource(it.labelRes) }
+            Bubble(
+                stringResource(R.string.talk_a_steering) + "\n" +
+                    open.joinToString("\n") { "· $it" } +
+                    "\n" + stringResource(R.string.talk_a_steering_hint)
+            )
+        } else if (current.goalsTotal > 0) {
+            Bubble(stringResource(voice.allDone))
+        }
+    }
+    Choice(stringResource(R.string.action_back), onBack)
 }
 
 @Composable
