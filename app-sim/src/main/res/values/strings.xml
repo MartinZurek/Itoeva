@@ -368,4 +368,33 @@
     <string name="settings_timelapse_fast">Fast</string>
     <string name="settings_timelapse_turbo">Turbo</string>
     <string name="settings_timelapse_speeds">Off = real time · Fast = one day in 4 min · Turbo = one day in 45 s. Turbo is for checking that every place and routine shows up – work and shopping only appear after several full cycles.</string>
+
+    <!-- Gespraech mit dem Avatar im Play-Modus (siehe PlayTalk) -->
+    <string name="talk_loading">One moment…</string>
+    <string name="talk_close">Leave me to it</string>
+    <string name="talk_back">Something else</string>
+    <string name="talk_open_reminders">Open reminders</string>
+    <string name="talk_q_today">What have you done today?</string>
+    <string name="talk_q_plan">What are we set up for?</string>
+    <string name="talk_q_steering">What are you watching out for?</string>
+    <string name="talk_q_suggest">Do you have a suggestion?</string>
+    <string name="talk_a_today">You looked after %1$d things today.</string>
+    <string name="talk_a_today_goals">%1$d of %2$d daily goals reached.</string>
+    <string name="talk_a_today_nothing">Nothing yet today. The day is still young.</string>
+    <string name="talk_a_today_noplan">We haven\'t set anything up yet, so there\'s nothing to keep track of.</string>
+    <string name="talk_a_plan">This is what we set out to do:</string>
+    <string name="talk_a_plan_empty">Nothing set up yet. Whatever you add, I\'ll keep an eye on it.</string>
+    <string name="talk_plan_done">done</string>
+    <string name="talk_plan_nogoal">no goal</string>
+    <string name="talk_a_steering">Still open today:</string>
+    <string name="talk_a_steering_hint">So I\'ll be drawn to that more often for the rest of the day.</string>
+    <string name="talk_a_steering_done">Everything you set out to do is done. I\'m just pottering about.</string>
+    <string name="talk_a_steering_nogoals">Nothing has a daily goal yet, so nothing pulls at me. I go by the time of day.</string>
+    <string name="talk_a_suggest">How about %1$s? We haven\'t got anything for that.</string>
+    <string name="talk_a_suggest_detail">%1$s to %2$s, %3$d× a day. You can change all of it later.</string>
+    <string name="talk_a_suggest_accept">Go on then, set it up</string>
+    <string name="talk_a_suggest_added">Done – %1$s is on the list now.</string>
+    <string name="talk_a_suggest_added_hint">You\'ll see it in my day from now on.</string>
+    <string name="talk_a_suggest_none">Nothing comes to mind. You\'ve thought of everything.</string>
+    <string name="a11y_talk_to_avatar">Talk to your companion</string>
 </resources>

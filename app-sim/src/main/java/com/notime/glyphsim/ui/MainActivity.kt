@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
@@ -149,7 +150,30 @@ class MainActivity : ComponentActivity() {
                     // herueberreicht, will das Ergebnis sehen und nicht auf einem schwarzen
                     // Uhrenbildschirm landen.
                     if (dockEnabled && shared == null) {
-                        DockScreen(playMode = playActive == true, onExit = { setDockMode(false) })
+                        // Der ViewModel wird hier NUR fuer das Anlegen aus dem Gespraech heraus
+                        // geholt (siehe PlayTalk). Der Dock-Bildschirm selbst kommt weiterhin
+                        // ohne aus - er zeigt eine Welt und verwaltet keine Erinnerungen.
+                        val reminderViewModel: GlyphReminderViewModel = viewModel()
+                        DockScreen(
+                            playMode = playActive == true,
+                            onExit = { setDockMode(false) },
+                            onAddHabit = { topic ->
+                                val preset = PlayTalk.presetFor(topic)
+                                reminderViewModel.addReminder(
+                                    label = getString(topic.labelRes),
+                                    animationChoice = AnimationChoice.BuiltIn(topic),
+                                    daysOfWeekMask = PlayTalk.EVERY_DAY_MASK,
+                                    startMinuteOfDay = preset.startMinuteOfDay,
+                                    endMinuteOfDay = preset.endMinuteOfDay,
+                                    intervalMinutes = preset.intervalMinutes,
+                                    dailyGoal = preset.dailyGoal
+                                )
+                            },
+                            onOpenReminders = {
+                                setDockMode(false)
+                                screen = Screen.REMINDERS
+                            }
+                        )
                     } else {
                         when (screen) {
                             Screen.HOME -> HomeScreen(

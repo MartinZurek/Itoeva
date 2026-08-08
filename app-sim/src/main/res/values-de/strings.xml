@@ -359,4 +359,33 @@
     <string name="settings_timelapse_fast">Schnell</string>
     <string name="settings_timelapse_turbo">Turbo</string>
     <string name="settings_timelapse_speeds">Aus = echte Zeit · Schnell = ein Tag in 4 Min · Turbo = ein Tag in 45 Sek. Turbo ist zum Prüfen, ob alle Orte und Abläufe vorkommen – Arbeit und Einkauf tauchen erst nach mehreren vollständigen Kreisläufen auf.</string>
+
+    <!-- Gespraech mit dem Avatar im Play-Modus (siehe PlayTalk) -->
+    <string name="talk_loading">Einen Moment …</string>
+    <string name="talk_close">Lass mich mal machen</string>
+    <string name="talk_back">Etwas anderes</string>
+    <string name="talk_open_reminders">Erinnerungen öffnen</string>
+    <string name="talk_q_today">Was hast du heute gemacht?</string>
+    <string name="talk_q_plan">Was haben wir uns vorgenommen?</string>
+    <string name="talk_q_steering">Worauf achtest du gerade?</string>
+    <string name="talk_q_suggest">Hast du einen Vorschlag?</string>
+    <string name="talk_a_today">Um %1$d Sachen hast du dich heute gekümmert.</string>
+    <string name="talk_a_today_goals">%1$d von %2$d Tageszielen erreicht.</string>
+    <string name="talk_a_today_nothing">Heute noch nichts. Der Tag ist ja noch jung.</string>
+    <string name="talk_a_today_noplan">Wir haben noch nichts eingerichtet, da gibt es auch nichts mitzuzählen.</string>
+    <string name="talk_a_plan">Das haben wir uns vorgenommen:</string>
+    <string name="talk_a_plan_empty">Noch nichts eingerichtet. Was du anlegst, behalte ich im Auge.</string>
+    <string name="talk_plan_done">erledigt</string>
+    <string name="talk_plan_nogoal">kein Ziel</string>
+    <string name="talk_a_steering">Heute noch offen:</string>
+    <string name="talk_a_steering_hint">Danach zieht es mich den Rest des Tages öfter.</string>
+    <string name="talk_a_steering_done">Alles erledigt, was du dir vorgenommen hast. Ich trödele nur herum.</string>
+    <string name="talk_a_steering_nogoals">Noch hat nichts ein Tagesziel, also zieht mich auch nichts. Ich gehe nach der Tageszeit.</string>
+    <string name="talk_a_suggest">Wie wäre es mit %1$s? Dafür haben wir noch nichts.</string>
+    <string name="talk_a_suggest_detail">%1$s bis %2$s, %3$d× am Tag. Kannst du alles später ändern.</string>
+    <string name="talk_a_suggest_accept">Na gut, richte es ein</string>
+    <string name="talk_a_suggest_added">Fertig – %1$s steht jetzt auf der Liste.</string>
+    <string name="talk_a_suggest_added_hint">Das siehst du ab jetzt auch in meinem Tag.</string>
+    <string name="talk_a_suggest_none">Mir fällt nichts ein. Du hast an alles gedacht.</string>
+    <string name="a11y_talk_to_avatar">Mit dem Begleiter sprechen</string>
 </resources>

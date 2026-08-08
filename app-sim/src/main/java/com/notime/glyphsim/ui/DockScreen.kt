@@ -132,7 +132,18 @@ fun DockScreen(
      * bei jeder kuenftigen Aenderung mitgepflegt werden muesste. Unterschiedlich ist allein die
      * Fortschrittsanzeige.
      */
-    playMode: Boolean = false
+    playMode: Boolean = false,
+    /**
+     * Legt aus dem Gespraech heraus eine Gewohnheit an (siehe [PlayTalk.presetFor]).
+     *
+     * Als Rueckruf und nicht hier erledigt: Eine Erinnerung anzulegen heisst, sie auch zu PLANEN
+     * ([com.notime.glyphcore.reminder.ReminderScheduler]), und das gehoert zum
+     * [GlyphReminderViewModel], der die Erinnerungen ohnehin verwaltet. Der Dock-Bildschirm zeigt
+     * eine Welt; er sollte nicht nebenbei anfangen, Wecker zu stellen.
+     */
+    onAddHabit: (AnimationType) -> Unit = {},
+    /** Wechselt zur Erinnerungsliste - aus dem Gespraech heraus verlinkt. */
+    onOpenReminders: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -274,6 +285,12 @@ fun DockScreen(
         // uebernaehme das zweite nur die noch laufende Wartezeit des ersten.
         var snapshotFlash by remember { mutableStateOf(false) }
         var snapshotCount by remember { mutableStateOf(0) }
+        // Das Gespraech: offen/zu, und was er dabei weiss (siehe PlayTalk). Beim Oeffnen EINMAL
+        // geholt, damit die Antworten untereinander nicht auseinanderlaufen; der Zaehler erzwingt
+        // ein Nachladen, nachdem gerade eine Erinnerung angelegt wurde.
+        var talkOpen by remember { mutableStateOf(false) }
+        var talkRefresh by remember { mutableStateOf(0) }
+        var talkKnowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
         var clipSeconds by remember { mutableIntStateOf(0) }
         var clipEncoding by remember { mutableFloatStateOf(-1f) }
         var clipResult by remember { mutableStateOf<java.io.File?>(null) }
@@ -1716,6 +1733,20 @@ fun DockScreen(
                     .width(current.sizeDp.dp)
                     .height(current.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
                     .offset { IntOffset(current.offset.x.roundToInt(), current.offset.y.roundToInt()) }
+                    // **Antippen im Play-Modus oeffnet das Gespraech** (siehe PlayTalkPanel).
+                    //
+                    // Nur dort und nur, wenn keine Erinnerung offen ist: Steht eine an, ist das
+                    // Antippen bereits mit dem Fuettern belegt, und ein Wesen, das im selben
+                    // Moment auf zwei Arten auf denselben Griff reagiert, ist unberechenbar.
+                    .then(
+                        if (playMode && current.occurrenceId == null) {
+                            Modifier.pointerInput(Unit) {
+                                detectTapGestures(onTap = { talkOpen = true })
+                            }
+                        } else {
+                            Modifier
+                        }
+                    )
                     // Fuettern ist sonst nur per Ziehen der Uhr auf den Avatar moeglich - siehe
                     // HomeScreen fuer dieselbe TalkBack-Zusatzaktion. Nur anbieten, solange auch
                     // wirklich etwas zu fuettern da ist (occurrenceId != null).
@@ -1794,6 +1825,41 @@ fun DockScreen(
                     cellPx = sceneCellPx,
                     modifier = Modifier.fillMaxSize()
                 )
+            }
+        }
+
+        // ---- Das Gespraech (siehe PlayTalk / PlayTalkPanel) ----
+        //
+        // Es liegt ueber allem und faengt die Gesten ab: Solange es offen ist, laeuft die Welt zwar
+        // weiter (der Avatar geht seinen Tag weiter), aber ein Griff daneben soll nicht versehentlich
+        // die Uhr verschieben.
+        if (talkOpen) {
+            LaunchedEffect(talkOpen, talkRefresh) {
+                talkKnowledge = null
+                val species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
+                talkKnowledge = withContext(Dispatchers.IO) {
+                    PlayTalk.gather(context, AvatarSpeciesPrefs.profileId(species))
+                }
+            }
+            val species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0xB3000000))
+                    .pointerInput(Unit) { detectTapGestures(onTap = { talkOpen = false }) },
+                contentAlignment = Alignment.Center
+            ) {
+                // Eigenes pointerInput auf dem Feld selbst: Ohne das schloesse jeder Tipp auf eine
+                // Frage zugleich das Gespraech, weil der Griff bis zur Flaeche darunter durchfiele.
+                Box(modifier = Modifier.pointerInput(Unit) { detectTapGestures {} }) {
+                    PlayTalkPanel(
+                        knowledge = talkKnowledge,
+                        speciesLabel = stringResource(species.labelRes),
+                        onAddReminder = { topic -> onAddHabit(topic); talkRefresh++ },
+                        onOpenReminders = { talkOpen = false; onOpenReminders() },
+                        onDismiss = { talkOpen = false }
+                    )
+                }
             }
         }
 
