@@ -403,34 +403,29 @@ fun HomeScreen(
         }
     }
 
-    val mealEntries = rememberMealEntries(currentSpecies, playMode = playActive == true)
-
     Scaffold(
         containerColor = Color.Black,
         topBar = {
             Column {
                 TopAppBar(
-                    // Statt des blossen App-Namens steht hier jetzt der Tagesstand: welche
-                    // Erinnerungen heute schon beantwortet wurden, und wo ein Tagesziel gesetzt ist
-                    // auch wie weit es erfuellt ist. Der Name sagte nichts, was man nicht ohnehin
-                    // wuesste - dieser Platz ist die einzige Stelle, an der der Stand dauerhaft
-                    // sichtbar sein kann, ohne dem Avatar unten Raum wegzunehmen.
+                    // **Der Tagesstand steht hier NICHT mehr.**
                     //
-                    // Feste, niedrigere Inhaltshoehe (statt der M3-Standardhoehe von 64dp): der
-                    // Inhalt (eine einzeilige Chip-Reihe) ist viel kuerzer als das, und mittig
-                    // zentriert liess das eine grosse Luecke zur [MealOverflowRow] darunter
-                    // entstehen. expandedHeight statt Modifier.height: Letzteres legt die
-                    // GESAMThoehe inklusive Status-Bar-Inset fest, wodurch dem Inhalt darunter
-                    // nichts mehr blieb und die Zeile ganz verschwand. Bei 40dp bleibt das
-                    // Zahnrad-Symbol (24dp) unbeschnitten - nur seine Antippflaeche wird etwas
-                    // kleiner als die vollen 48dp.
+                    // Er stand hier, weil dies die einzige Stelle war, an der er dauerhaft
+                    // sichtbar sein konnte. Genau das war der Fehler: Diese App ist inzwischen so
+                    // gebaut, dass man den Begleiter FRAGT und er antwortet - der Streifen war der
+                    // letzte Rest der aelteren Bauweise "alles ist immer zu sehen". Beides
+                    // nebeneinander heisst, dass dieselbe Auskunft an zwei Stellen steht und dem
+                    // Antippen des Avatars seinen Sinn nimmt: Wer den Stand schon oben liest,
+                    // fragt nicht mehr nach.
+                    //
+                    // Dazu kam, dass der Streifen ueber beide Modi dasselbe zeigte, obwohl Spiel
+                    // und Normalbetrieb voellig verschiedene Zahlen fuehren (siehe PlayTalk).
+                    //
+                    // Feste, niedrigere Inhaltshoehe (statt der M3-Standardhoehe von 64dp): In der
+                    // Leiste stehen nur noch zwei Textknoepfe, und die volle Hoehe waere ein
+                    // leerer Balken ueber der Uhr.
                     expandedHeight = 40.dp,
-                    title = {
-                        MealStrip(
-                            entries = mealEntries.take(MAX_STRIP_ENTRIES_TOP),
-                            onClick = { showStats = true }
-                        )
-                    },
+                    title = {},
                     actions = {
                         // Spielmodus an/aus. Bewusst hier neben "Erinnerungen" und nicht im
                         // Avatar-Menue versteckt: Es ist der Schalter, der bestimmt, WELCHE
@@ -477,17 +472,8 @@ fun HomeScreen(
                         actionIconContentColor = Color(0xFFE8E4DA)
                     )
                 )
-                val overflowMealEntries = mealEntries.drop(MAX_STRIP_ENTRIES_TOP)
-                if (overflowMealEntries.isNotEmpty()) {
-                    MealOverflowRow(
-                        entries = overflowMealEntries,
-                        onClick = { showStats = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Black)
-                            .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 6.dp)
-                    )
-                }
+                // Die Ueberlaufzeile ist mit dem Streifen entfallen - sie war nur dessen
+                // Fortsetzung fuer den Fall, dass mehr Erinnerungen als Platz da waren.
             }
         }
     ) { padding ->
@@ -781,158 +767,7 @@ fun HomeScreen(
     }
 }
 
-/**
- * Ermittelt den Tagesstand: je Erinnerung, auf die heute reagiert wurde, ihr Symbol und die
- * Anzahl - bei gesetztem Tagesziel als "erreicht/Ziel".
- *
- * Von der Anzeige getrennt (siehe [MealStrip]/[MealOverflowRow]), weil bei vielen aktiven
- * Zielen nicht mehr alles in die Kopfzeile passt und der Rest in einer zweiten Zeile
- * darunter weitergeht - beide brauchen dieselbe Liste, nur unterschiedlich aufgeteilt.
- *
- * Zeigt bewusst nur, was heute schon passiert ist - eine Liste aller Erinnerungen mit lauter
- * Nullen waere eine Mahnung, keine Auskunft.
- *
- * **Spielmodus und Normalbetrieb fuehren getrennt Buch** ([playMode]): Frueher stand hier beides
- * vermischt, also die eigenen Tagesziele neben zufaelligen Spiel-Fuetterungen - eine Zeile, die
- * dadurch weder ueber das eine noch ueber das andere Auskunft gab. Jetzt zeigt die Leiste immer
- * genau den Modus, in dem man gerade ist, und wechselt mit ihm.
- */
-@Composable
-private fun rememberMealEntries(species: AvatarSpecies, playMode: Boolean): List<MealEntry> {
-    val context = LocalContext.current
-    val db = remember { AppDatabase.getInstance(context) }
-    val profileId = remember(species) { AvatarSpeciesPrefs.profileId(species) }
-    val todayStart = FeedStatsPeriod.TODAY.startMillis()
 
-    if (playMode) return rememberPlayMealEntries(db, profileId, todayStart)
-
-    val reminders by remember(profileId) {
-        db.glyphReminderDao().observeForProfile(profileId)
-    }.collectAsState(initial = emptyList())
-    val fedToday by remember(profileId, todayStart) {
-        db.avatarFeedEventDao().observeFedPerReminderSince(profileId, todayStart, isPlayMode = false)
-    }.collectAsState(initial = emptyList())
-
-    return remember(reminders, fedToday) {
-        val fedByReminder = fedToday.associate { it.reminderId to it.count }
-        reminders
-            // Die Spiel-Zeile gehoert nicht in den Normalbetrieb - sie ist keine Erinnerung des
-            // Nutzers (siehe GlyphReminderViewModel.reminders).
-            .filter { it.enabled && !it.isPlayMode }
-            .mapNotNull { reminder ->
-                val fed = fedByReminder[reminder.id] ?: 0
-                // Ohne Reaktion und ohne Ziel gibt es nichts zu berichten.
-                if (fed == 0 && reminder.dailyGoal == 0) return@mapNotNull null
-                MealEntry(
-                    emoji = animationVisuals[reminder.animationType]?.emoji ?: "✨",
-                    fed = fed,
-                    goal = reminder.dailyGoal
-                )
-            }
-    }
-}
-
-/**
- * Der Tagesstand im Spielmodus: nach THEMA gruppiert statt nach Erinnerung, weil es dort nur eine
- * einzige Erinnerungs-Zeile mit wechselndem Thema gibt (siehe
- * [com.notime.glyphsim.data.AvatarFeedEventDao.observePlayFedPerTypeSince]).
- *
- * Ohne Tagesziele: Das Spiel gibt keine vor - gezeigt wird schlicht, was der Avatar heute schon
- * bekommen hat.
- */
-@Composable
-private fun rememberPlayMealEntries(
-    db: AppDatabase,
-    profileId: String,
-    todayStart: Long
-): List<MealEntry> {
-    val fedToday by remember(profileId, todayStart) {
-        db.avatarFeedEventDao().observePlayFedPerTypeSince(profileId, todayStart)
-    }.collectAsState(initial = emptyList())
-
-    return remember(fedToday) {
-        fedToday.map { row ->
-            MealEntry(
-                emoji = animationVisuals[row.animationType]?.emoji ?: "✨",
-                fed = row.count,
-                goal = 0
-            )
-        }
-    }
-}
-
-@Composable
-private fun MealChip(entry: MealEntry) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(entry.emoji, style = MaterialTheme.typography.bodyMedium)
-        Text(
-            if (entry.goal > 0) "${entry.fed.coerceAtMost(entry.goal)}/${entry.goal}" else "${entry.fed}",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            // Erreichtes Ziel gruen - derselbe Hinweis wie in der Auswertung.
-            color = if (entry.goal > 0 && entry.fed >= entry.goal) {
-                Color(0xFF63C88A)
-            } else {
-                Color(0xFFE8E4DA)
-            }
-        )
-    }
-}
-
-/**
- * Tagesstand in der Kopfzeile - ersetzt die frueher unter dem Avatar stehende Zaehlkarte. Der
- * Platz dort wird gebraucht: der Avatar soll sich bewegen koennen (die Rocket-Reaktion fliegt
- * quer ueber den Bildschirm), und eine reine Gesamtzahl sagte ohnehin weniger als die
- * Aufschluesselung nach Erinnerung.
- *
- * Zeigt nur die ersten [MAX_STRIP_ENTRIES_TOP] Eintraege - alles darueber hinaus laeuft in
- * [MealOverflowRow] weiter, direkt unter der Kopfzeile. Antippen oeffnet die vollstaendige
- * Auswertung.
- */
-@Composable
-private fun MealStrip(entries: List<MealEntry>, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier.clickable(onClick = onClick),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (entries.isEmpty()) {
-            Text(
-                stringResource(R.string.stats_strip_empty),
-                style = MaterialTheme.typography.labelMedium,
-                color = Color(0xFF9A968E)
-            )
-        } else {
-            entries.forEach { entry -> MealChip(entry) }
-        }
-    }
-}
-
-/**
- * Fortsetzung von [MealStrip]: alles, was in der Kopfzeile neben "Erinnerungen"-Button und
- * Zahnrad nicht mehr nebeneinander passt, laeuft hier in einer zweiten Zeile weiter - als
- * FlowRow, damit auch eine dritte Zeile entstuende, sollten es noch mehr Ziele werden.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun MealOverflowRow(entries: List<MealEntry>, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    FlowRow(
-        modifier = modifier.clickable(onClick = onClick),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        entries.forEach { entry -> MealChip(entry) }
-    }
-}
-
-private data class MealEntry(val emoji: String, val fed: Int, val goal: Int)
-
-/** So viele passen zuverlaessig neben "Erinnerungen"-Button und Zahnrad in die Kopfzeile - der
- *  Rest geht in [MealOverflowRow] darunter weiter. */
-private const val MAX_STRIP_ENTRIES_TOP = 4
 
 /**
  * Wahrscheinlichkeit, dass das Umkreisen-Easter-Egg (eine Umdrehung) die seltene "Rocket"-

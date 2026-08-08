@@ -442,4 +442,19 @@
     <string name="talk_a_week_best">Your best day had %1$d.</string>
     <string name="talk_a_week_empty">Nothing this week yet. It has only just begun.</string>
     <string name="talk_a_week_every_day">Every single day so far. That is quite something.</string>
+
+    <!-- Spielstand im Gespraech -->
+    <string name="talk_q_game">How are you getting on?</string>
+    <string name="talk_a_game_level">Level %1$d, %2$d experience.</string>
+    <string name="talk_a_game_purse">%1$d coins, %2$d meals in the larder.</string>
+    <string name="talk_a_game_fine">Enough for now. I can take my time.</string>
+    <string name="talk_a_game_shopping">The larder is empty – I will head to the shop.</string>
+    <string name="talk_a_game_broke">Larder empty and no coins. I will have to work first.</string>
+    <string name="talk_a_game_off">We are not playing at the moment.</string>
+
+    <!-- Ihn um etwas bitten (nur im Spielmodus) -->
+    <string name="talk_ask_now">Go on then – %1$s</string>
+    <string name="talk_ask_shop">Off you go to the shop</string>
+    <string name="talk_ask_work">Off to work then</string>
+    <string name="talk_ask_walk">Go and stretch your legs</string>
 </resources>

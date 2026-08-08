@@ -291,6 +291,8 @@ fun DockScreen(
         var talkOpen by remember { mutableStateOf(false) }
         var talkRefresh by remember { mutableStateOf(0) }
         var talkKnowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
+        // Worum er gerade gebeten wurde - siehe die Regungs-Schleife weiter unten.
+        var requestedTopic by remember { mutableStateOf<AnimationType?>(null) }
         var clipSeconds by remember { mutableIntStateOf(0) }
         var clipEncoding by remember { mutableFloatStateOf(-1f) }
         var clipResult by remember { mutableStateOf<java.io.File?>(null) }
@@ -1249,8 +1251,34 @@ fun DockScreen(
         // Erinnerung wird beantwortet, kein XP), aber PERFORM zeigt einen an die Tageszeit
         // gekoppelten Tagesablauf: siehe PlayAmbientActivity fuer die Themen-/Tagesphasen-Logik.
         if (playMode) {
-            LaunchedEffect(avatar?.species) {
+            // **[requestedTopic] gehoert bewusst in den SCHLUESSEL dieser Schleife.**
+            //
+            // Eine Bitte aus dem Gespraech ("dann mach das doch jetzt") soll sofort wirken und
+            // nicht erst, wenn die naechste Pause abgelaufen ist - die kann Minuten dauern. Weil
+            // eine Aenderung am Schluessel die laufende Coroutine abbricht und neu startet, hoert
+            // er im selben Moment auf, was er gerade tat, und beginnt das Erbetene. Genau so
+            // verhaelt sich jemand, den man anspricht.
+            //
+            // Ein zweiter, nebenher laufender Anstoss waere die Alternative gewesen und die
+            // schlechtere: Zwei Ablaeufe gleichzeitig schieben dieselbe Figur an zwei Orte.
+            LaunchedEffect(avatar?.species, requestedTopic) {
                 val species = avatar?.species ?: return@LaunchedEffect
+
+                requestedTopic?.let { topic ->
+                    moveToPlace(PlayScene.forTopic(topic), species)
+                    runRoutine(
+                        PlayRoutines.forTopic(
+                            topic = topic,
+                            needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context)
+                        ),
+                        species
+                    )
+                    // Zuruecksetzen startet die Schleife ein letztes Mal - dann ohne Bitte, und
+                    // von da an laeuft wieder der gewoehnliche Tagesablauf.
+                    requestedTopic = null
+                    return@LaunchedEffect
+                }
+
                 while (isActive) {
                     delay(PlayAmbientActivity.nextPauseMillis())
                     val current = avatar
@@ -1838,7 +1866,11 @@ fun DockScreen(
                 talkKnowledge = null
                 val species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
                 talkKnowledge = withContext(Dispatchers.IO) {
-                    PlayTalk.gather(context, AvatarSpeciesPrefs.profileId(species))
+                    // Mit Spielstand: Dieses Feld gibt es nur im Spielmodus, also ist die Frage
+                    // nach Stufe, Geld und Vorrat hier immer sinnvoll.
+                    PlayTalk.gather(
+                        context, AvatarSpeciesPrefs.profileId(species), includeGame = true
+                    )
                 }
             }
             val species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
@@ -1857,6 +1889,8 @@ fun DockScreen(
                         species = species,
                         onAddReminder = { topic -> onAddHabit(topic); talkRefresh++ },
                         onOpenReminders = { talkOpen = false; onOpenReminders() },
+                        // Bitten schliesst das Gespraech - man will ja sehen, was er tut.
+                        onAsk = { topic -> talkOpen = false; requestedTopic = topic },
                         onDismiss = { talkOpen = false }
                     )
                 }

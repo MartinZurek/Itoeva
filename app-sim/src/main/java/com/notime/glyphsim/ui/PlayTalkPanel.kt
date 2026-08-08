@@ -54,6 +54,15 @@ fun PlayTalkPanel(
     species: AvatarSpecies,
     onAddReminder: (AnimationType) -> Unit,
     onOpenReminders: () -> Unit,
+    /**
+     * **Ihn um etwas BITTEN** - der Unterschied zwischen einer Auskunft und einem Gegenueber.
+     *
+     * Alles andere in diesem Feld ist Bericht: Er sagt, wie es steht. Hier darf man ihm etwas
+     * sagen, und er tut es unmittelbar (siehe requestedTopic in DockScreen). Deshalb gibt es das
+     * nur im Spielmodus - dort ist eine Welt da, in der er es ausfuehren KANN. Auf dem
+     * Startbildschirm gaebe es nichts zu sehen, und die Bitte verpuffte.
+     */
+    onAsk: (AnimationType) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -89,6 +98,8 @@ fun PlayTalkPanel(
                     if (question == Question.SUGGEST &&
                         PlayTalk.nextSuggestion(knowledge) == null
                     ) continue
+                    // Nach dem Spielstand laesst sich nur fragen, wenn es ein Spiel gibt.
+                    if (question == Question.GAME && knowledge.game == null) continue
                     QuestionLine(stringResource(question.labelRes)) { asked = question }
                 }
             } else {
@@ -101,7 +112,8 @@ fun PlayTalkPanel(
                         justAdded = topic
                         onAddReminder(topic)
                     },
-                    onOpenReminders = onOpenReminders
+                    onOpenReminders = onOpenReminders,
+                    onAsk = onAsk
                 )
                 QuestionLine(stringResource(R.string.talk_back)) { asked = null }
             }
@@ -121,6 +133,11 @@ fun PlayTalkPanel(
  * heute umtreibt, dann - nur falls es etwas gibt - sein eigener Vorschlag.
  */
 private enum class Question(val labelRes: Int) {
+    /**
+     * **Nur im Spielmodus** - und die erste Frage, weil sie dort die dringendste ist. Wer zusieht,
+     * will als erstes wissen, warum er gerade tut, was er tut; Vorrat und Geld beantworten das.
+     */
+    GAME(R.string.talk_q_game),
     TODAY(R.string.talk_q_today),
     WEEK(R.string.talk_q_week),
     PLAN(R.string.talk_q_plan),
@@ -135,9 +152,56 @@ private fun Answer(
     voice: PlayVoice,
     justAdded: AnimationType?,
     onAddReminder: (AnimationType) -> Unit,
-    onOpenReminders: () -> Unit
+    onOpenReminders: () -> Unit,
+    onAsk: (AnimationType) -> Unit
 ) {
     when (question) {
+        Question.GAME -> {
+            val game = knowledge.game
+            if (game == null) {
+                Text(stringResource(R.string.talk_a_game_off), color = INK, size = 15)
+            } else {
+                Text(
+                    stringResource(R.string.talk_a_game_level, game.level, game.xp),
+                    color = INK, size = 15
+                )
+                Text(
+                    stringResource(R.string.talk_a_game_purse, game.coins, game.pantry),
+                    color = INK, size = 14
+                )
+                // **Die eigentliche Aussage dieser Frage.** Nicht die Zahlen, sondern was sie
+                // fuer den naechsten Gang bedeuten: Ein leerer Vorrat schickt ihn in den Laden,
+                // fehlt dazu das Geld, muss er erst arbeiten. Wer das gelesen hat, sieht kein
+                // zufaelliges Herumlaufen mehr, sondern jemanden mit einem Problem.
+                Text(
+                    stringResource(
+                        when {
+                            game.brokeAndHungry -> R.string.talk_a_game_broke
+                            game.pantryEmpty -> R.string.talk_a_game_shopping
+                            else -> R.string.talk_a_game_fine
+                        }
+                    ),
+                    color = INK_DIM, size = 13
+                )
+                // Der Vorrat ist leer und Geld ist da: Dann kann man ihn losschicken. Fehlt auch
+                // das Geld, waere die Bitte eine Zumutung - dann bleibt nur die Arbeit.
+                when {
+                    game.brokeAndHungry ->
+                        QuestionLine(stringResource(R.string.talk_ask_work)) {
+                            onAsk(AnimationType.WORK)
+                        }
+                    game.pantryEmpty ->
+                        QuestionLine(stringResource(R.string.talk_ask_shop)) {
+                            onAsk(AnimationType.DRINK)
+                        }
+                    else ->
+                        QuestionLine(stringResource(R.string.talk_ask_walk)) {
+                            onAsk(AnimationType.MOVE)
+                        }
+                }
+            }
+        }
+
         Question.TODAY -> {
             if (!knowledge.hasPlan) {
                 Text(stringResource(R.string.talk_a_today_noplan), color = INK, size = 15)
@@ -240,10 +304,16 @@ private fun Answer(
                 )
             } else {
                 Text(stringResource(R.string.talk_a_steering), color = INK, size = 15)
-                for (topic in knowledge.steering) {
-                    Text("· " + stringResource(topic.labelRes), color = INK, size = 14)
-                }
                 Text(stringResource(R.string.talk_a_steering_hint), color = INK_DIM, size = 13)
+                // **Hier wird aus dem Bericht ein Gegenueber.** Bis zu dieser Zeile sagt er nur,
+                // wie es steht; ab ihr darf man ihn bitten - und er geht sofort los. Dass die
+                // offenen Themen einzeln antippbar sind statt als blosse Aufzaehlung dazustehen,
+                // ist der ganze Unterschied.
+                for (topic in knowledge.steering) {
+                    QuestionLine(
+                        stringResource(R.string.talk_ask_now, stringResource(topic.labelRes))
+                    ) { onAsk(topic) }
+                }
             }
         }
 

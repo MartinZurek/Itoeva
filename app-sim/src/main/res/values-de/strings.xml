@@ -433,4 +433,19 @@
     <string name="talk_a_week_best">Dein bester Tag hatte %1$d.</string>
     <string name="talk_a_week_empty">Diese Woche noch nichts. Sie fängt ja gerade erst an.</string>
     <string name="talk_a_week_every_day">Jeden einzelnen Tag bisher. Das ist schon was.</string>
+
+    <!-- Spielstand im Gespraech -->
+    <string name="talk_q_game">Wie kommst du voran?</string>
+    <string name="talk_a_game_level">Stufe %1$d, %2$d Erfahrung.</string>
+    <string name="talk_a_game_purse">%1$d Münzen, %2$d Mahlzeiten im Vorrat.</string>
+    <string name="talk_a_game_fine">Reicht erst mal. Ich kann es ruhig angehen.</string>
+    <string name="talk_a_game_shopping">Der Vorrat ist leer – ich gehe einkaufen.</string>
+    <string name="talk_a_game_broke">Vorrat leer und kein Geld. Ich muss erst arbeiten.</string>
+    <string name="talk_a_game_off">Wir spielen gerade nicht.</string>
+
+    <!-- Ihn um etwas bitten (nur im Spielmodus) -->
+    <string name="talk_ask_now">Dann mach doch – %1$s</string>
+    <string name="talk_ask_shop">Dann geh einkaufen</string>
+    <string name="talk_ask_work">Dann geh arbeiten</string>
+    <string name="talk_ask_walk">Geh mal eine Runde raus</string>
 </resources>

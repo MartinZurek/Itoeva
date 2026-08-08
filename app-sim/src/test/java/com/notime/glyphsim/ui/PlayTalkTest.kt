@@ -3,6 +3,8 @@ package com.notime.glyphsim.ui
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.PlayPantry
+import com.notime.glyphsim.matrix.PlayWallet
 import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
@@ -211,5 +213,40 @@ class PlayTalkTest {
                 assertTrue("$species hat keinen Text fuer $name", res != 0)
             }
         }
+    }
+
+    // ---- Spielstand: die Zahlen, die nur im Spiel etwas bedeuten ----
+
+    private fun knowledge(game: PlayTalk.Game?) = PlayTalk.Knowledge(
+        plan = emptyList(), fedToday = 0, steering = emptySet(), missing = emptyList(),
+        week = PlayTalk.Week(0, 0, 1, 0), game = game
+    )
+
+    @Test
+    fun `ohne Spiel gibt es keinen Spielstand`() {
+        // Der Normalbetrieb fuehrt weder Stufe noch Muenzen. Eine 0 anzuzeigen waere schlimmer
+        // als nichts: Sie sieht aus wie ein Ergebnis, obwohl gar nicht gespielt wird.
+        assertNull(knowledge(null).game)
+    }
+
+    @Test
+    fun `leerer Vorrat mit Geld heisst einkaufen, ohne Geld heisst arbeiten`() {
+        // Diese Unterscheidung ist der Grund, warum der Spielstand ueberhaupt erklaert wird: Sie
+        // sagt voraus, was er als naechstes tut. Steht sie falsch herum, schickt das Gespraech
+        // ihn in den Laden, obwohl er dort nichts bezahlen kann - und er kaeme mit leeren Haenden
+        // zurueck.
+        val canShop = PlayTalk.Game(level = 1, xp = 0, coins = PlayWallet.GROCERY_COST, pantry = 0)
+        assertTrue("leerer Vorrat wird nicht erkannt", canShop.pantryEmpty)
+        assertTrue("mit genug Geld ist er nicht mittellos", !canShop.brokeAndHungry)
+
+        val broke = PlayTalk.Game(level = 1, xp = 0, coins = PlayWallet.GROCERY_COST - 1, pantry = 0)
+        assertTrue("mittellos und hungrig wird nicht erkannt", broke.brokeAndHungry)
+    }
+
+    @Test
+    fun `voller Vorrat ist nie ein Notfall`() {
+        val fine = PlayTalk.Game(level = 3, xp = 120, coins = 0, pantry = PlayPantry.FULL)
+        assertTrue(!fine.pantryEmpty)
+        assertTrue("ohne Hunger ist auch kein Geld noetig", !fine.brokeAndHungry)
     }
 }

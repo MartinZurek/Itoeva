@@ -216,11 +216,16 @@ private fun AssistantMenu(
 private fun AssistantDay(species: AvatarSpecies, onBack: () -> Unit) {
     val context = LocalContext.current
     val voice = remember(species) { PlayVoice.forSpecies(species) }
+    // Welcher Modus gerade laeuft, entscheidet, WELCHE Zahlen ueberhaupt etwas bedeuten - im
+    // Spiel seine (Stufe, Geld, Vorrat), sonst deine (Ziele, Woche). Siehe PlayTalk.Game.
+    val playing = remember { PlayModePrefs.isActive(context) }
     var knowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
 
-    LaunchedEffect(species) {
+    LaunchedEffect(species, playing) {
         knowledge = withContext(Dispatchers.IO) {
-            PlayTalk.gather(context, AvatarSpeciesPrefs.profileId(species))
+            PlayTalk.gather(
+                context, AvatarSpeciesPrefs.profileId(species), includeGame = playing
+            )
         }
     }
 
@@ -228,6 +233,21 @@ private fun AssistantDay(species: AvatarSpecies, onBack: () -> Unit) {
     if (current == null) {
         Bubble(stringResource(R.string.talk_loading))
     } else {
+        // Im Spiel zuerst der Spielstand - dort ist er die Auskunft, auf die es ankommt.
+        current.game?.let { game ->
+            Bubble(
+                stringResource(R.string.talk_a_game_level, game.level, game.xp) + "\n" +
+                    stringResource(R.string.talk_a_game_purse, game.coins, game.pantry) + "\n" +
+                    stringResource(
+                        when {
+                            game.brokeAndHungry -> R.string.talk_a_game_broke
+                            game.pantryEmpty -> R.string.talk_a_game_shopping
+                            else -> R.string.talk_a_game_fine
+                        }
+                    )
+            )
+        }
+
         // Heute
         if (!current.hasPlan) {
             Bubble(stringResource(R.string.talk_a_today_noplan))

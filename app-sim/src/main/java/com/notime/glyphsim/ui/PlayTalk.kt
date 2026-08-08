@@ -5,6 +5,8 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphsim.data.AppDatabase
+import com.notime.glyphsim.matrix.PlayPantry
+import com.notime.glyphsim.matrix.PlayWallet
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -70,6 +72,28 @@ object PlayTalk {
         val bestDay: Int
     )
 
+    /**
+     * Der Spielstand - nur im Spielmodus ueberhaupt gefuellt.
+     *
+     * **Warum die beiden Modi verschiedene Zahlen brauchen.** Im Normalbetrieb geht es um DICH:
+     * deine Gewohnheiten, deine Tagesziele, deine Woche. Im Spiel geht es um IHN: wie weit er
+     * gekommen ist, was er verdient hat, ob noch etwas zu essen da ist. Dieselben Zahlen fuer
+     * beides zu zeigen war die eigentliche Unstimmigkeit - der Streifen am oberen Rand tat genau
+     * das und blieb in beiden Modi derselbe, obwohl sie voellig Verschiedenes bedeuten.
+     *
+     * Und im Spiel sind diese Zahlen keine Auswertung, sondern eine ERKLAERUNG: Wer sieht, dass
+     * der Vorrat leer ist, versteht, warum er gleich in den Laden geht.
+     */
+    data class Game(
+        val level: Int,
+        val xp: Int,
+        val coins: Int,
+        val pantry: Int
+    ) {
+        val pantryEmpty: Boolean get() = pantry <= 0
+        val brokeAndHungry: Boolean get() = pantryEmpty && coins < PlayWallet.GROCERY_COST
+    }
+
     data class Knowledge(
         val plan: List<PlanEntry>,
         /** Wie oft heute insgesamt reagiert wurde. */
@@ -79,7 +103,9 @@ object PlayTalk {
         /** Themen, fuer die es noch gar keine Erinnerung gibt - daraus entstehen die Vorschlaege. */
         val missing: List<AnimationType>,
         /** Die laufende Woche - siehe [Week]. */
-        val week: Week
+        val week: Week,
+        /** Der Spielstand, oder `null` im Normalbetrieb - siehe [Game]. */
+        val game: Game? = null
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
@@ -126,7 +152,12 @@ object PlayTalk {
         AnimationType.BOOK
     )
 
-    suspend fun gather(context: Context, profileId: String): Knowledge {
+    suspend fun gather(
+        context: Context,
+        profileId: String,
+        /** Im Spielmodus kommt der Spielstand dazu - siehe [Game]. */
+        includeGame: Boolean = false
+    ): Knowledge {
         val db = AppDatabase.getInstance(context)
         val since = FeedStatsPeriod.TODAY.startMillis()
 
@@ -148,12 +179,27 @@ object PlayTalk {
             db.avatarFeedEventDao().fedTimestampsSince(profileId, weekStart)
         )
 
+        val game = if (includeGame) {
+            // Die Erfahrung steht in der Datenbank, Geld und Vorrat in den Einstellungen - beides
+            // hier zusammengefuehrt, damit das Gespraech nur EINE Quelle kennt.
+            val xp = db.avatarPlayStateDao().getForProfile(profileId)?.xp ?: 0
+            Game(
+                level = PlayModeXp.levelFor(xp),
+                xp = xp,
+                coins = PlayWallet.coins(context),
+                pantry = PlayPantry.level(context)
+            )
+        } else {
+            null
+        }
+
         return Knowledge(
             plan = plan,
             fedToday = fedByReminder.values.sum(),
             steering = PlayHabitSignal.underfulfilledTopics(context, profileId),
             missing = SUGGESTABLE.filterNot { it in covered },
-            week = week
+            week = week,
+            game = game
         )
     }
 
