@@ -28,4 +28,21 @@ class ScenePreviewTool {
         ScenePreview.dumpAll(target)
         println("Szenen-Vorschau geschrieben: ${target.absolutePath}")
     }
+
+    /**
+     * Dasselbe im QUERFORMAT - die Breite, bei der gemeldet wurde, dass alles auseinandersteht.
+     * Ein eigener Knopf, weil sich die Anordnung dort anders verhaelt (siehe
+     * PlayScene.MAX_ROOM_CELLS) und man beides nebeneinander sehen koennen muss.
+     */
+    @Test
+    fun dumpLandscape() {
+        val out = StringBuilder()
+        for (place in PlayScene.Place.entries) {
+            out.append(ScenePreview.render(place, AvatarSpecies.PUFFLING, width = 84))
+            out.append(System.lineSeparator())
+        }
+        val target = File(System.getProperty("java.io.tmpdir"), "scene_landscape.txt")
+        target.writeText(out.toString())
+        println("Querformat geschrieben: ${target.absolutePath}")
+    }
 }

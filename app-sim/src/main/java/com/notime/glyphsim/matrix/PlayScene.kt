@@ -203,6 +203,45 @@ object PlayScene {
     const val MIN_SCENE_CELLS = 40
 
     /**
+     * **So breit wird ein ZIMMER hoechstens - egal, wie breit das Bild ist.**
+     *
+     * Gemeldet als "im Querformat steht alles sehr weit auseinander", und genau so war es: Die
+     * Verankerung ist ein Bruchteil der verfuegbaren Breite. Im Hochformat sind das rund vierzig
+     * Spalten, quer gedreht ueber achtzig - dieselbe Einrichtung zieht sich dann auf die doppelte
+     * Strecke, und zwischen Bett und Nachttisch klafft ein halber Bildschirm. Kein einzelner Wert
+     * ist dabei falsch; es ist die Vorschrift selbst, die bei ungewohnten Massen auseinanderlaeuft.
+     *
+     * Die Antwort ist nicht, jede Zahl fuer das Querformat noch einmal zu bestimmen, sondern
+     * anzuerkennen, dass ein Zimmer eine GROESSE hat: Ein Schlafzimmer wird nicht doppelt so
+     * gross, weil man das Telefon dreht. Ueber diese Breite hinaus waechst der Raum nicht mehr
+     * mit, sondern steht mittig - Boden und Decke laufen weiter durchs ganze Bild, sodass es kein
+     * Kaesteln gibt, aber die Einrichtung bleibt beieinander.
+     *
+     * Der Wert liegt bewusst nah am Hochformat: Diese Zimmer sind FUER diese Breite eingerichtet
+     * worden, jede Anordnung ist bei etwa vierzig bis sechzig Spalten geprueft.
+     */
+    const val MAX_ROOM_CELLS = 60
+
+    /** Wie breit das Zimmer bei dieser Bildbreite ist - siehe [MAX_ROOM_CELLS]. */
+    fun roomWidth(widthCells: Int): Int = widthCells.coerceAtMost(MAX_ROOM_CELLS)
+
+    /**
+     * Rechnet eine Verankerung IM ZIMMER auf einen Bruchteil des ganzen BILDES um.
+     *
+     * Gebraucht ueberall dort, wo sich nicht die Kulisse, sondern die Figur an einem Bruchteil
+     * ausrichtet - ihr Ruheplatz und das Umherlaufen (siehe [RoutineStep.Stroll]). Ohne diese
+     * Umrechnung liefe sie im Querformat quer ueber den Bildschirm, waehrend ihre Moebel in der
+     * Mitte stuenden: Sie waere staendig woanders als ihre Welt.
+     */
+    fun screenFraction(roomAnchor: Float, widthCells: Int): Float {
+        if (widthCells <= 0) return roomAnchor
+        val room = roomWidth(widthCells)
+        if (room >= widthCells) return roomAnchor
+        val shift = (widthCells - room) / 2f
+        return ((shift + room * roomAnchor.coerceIn(0f, 1f)) / widthCells).coerceIn(0f, 1f)
+    }
+
+    /**
      * Wie hoch der Boden liegt - und damit, wie viel Himmel ueber der Szene steht.
      *
      * **Der Streifen ist nicht mehr ueberall gleich hoch.** Drinnen sitzt der Boden tief, das
@@ -656,10 +695,13 @@ object PlayScene {
     private const val DOOR_MARGIN = 2
 
     private fun originX(placement: Placement, widthCells: Int): Int {
+        // Die Einrichtung steht im ZIMMER, nicht auf dem ganzen Bild - siehe [roomWidth].
+        val room = roomWidth(widthCells)
+        val shift = (widthCells - room) / 2
         val left = placement.keepClearLeft
-        val right = widthCells - placement.keepClearRight
+        val right = room - placement.keepClearRight
         val span = (right - left).coerceAtLeast(placement.prop.width)
-        val x = left +
+        val x = shift + left +
             ((span - placement.prop.width).coerceAtLeast(0) * placement.anchorX).roundToInt() +
             placement.offsetX
         // Bei extremer Enge darf die Sperre die Requisite nicht aus dem Bild schieben.
@@ -895,8 +937,13 @@ object PlayScene {
     }
 
     private fun rugAt(widthCells: Int, floorY: Int, from: Float, to: Float): List<SceneCell> {
-        val start = (widthCells * from).roundToInt()
-        val end = (widthCells * to).roundToInt().coerceAtMost(widthCells - 1)
+        // Im ZIMMER verankert wie die Moebel (siehe [roomWidth]) - ein Teppich, der sich im
+        // Querformat auf die doppelte Laenge zieht, waehrend Bett und Nachttisch beieinander
+        // bleiben, ist kein Teppich mehr, sondern ein Laufsteg.
+        val room = roomWidth(widthCells)
+        val shift = (widthCells - room) / 2
+        val start = shift + (room * from).roundToInt()
+        val end = (shift + (room * to).roundToInt()).coerceAtMost(widthCells - 1)
         if (end <= start) return emptyList()
         return (start..end).map { x ->
             // Fransen an den beiden Enden etwas heller als die Flaeche dazwischen.
@@ -2037,17 +2084,33 @@ object PlayScene {
                     // einem eigenen Takt. Im Gleichtakt blinkend saehen sie aus wie eine
                     // Leuchtreklame; unabhaengig voneinander wie ein Nachthimmel.
                     val sky = (floorY * 0.62f).toInt()
+                    // **Der Himmel nutzt die GANZE Breite** - anders als das Zimmer darunter, das
+                    // eine feste Groesse hat (siehe [MAX_ROOM_CELLS]). Genau umgekehrt: Ein
+                    // Schlafzimmer wird nicht groesser, weil man das Telefon dreht, ein Himmel
+                    // schon. Er ist das einzige an dieser Welt, das keine Kanten hat.
+                    //
+                    // Die Sterne haengen deshalb an Bruchteilen der Breite statt an gezaehlten
+                    // Spalten. Vorher waren es feste Abstaende ab einem Fuenftel - im Querformat
+                    // draengte sich das Sternbild dadurch in der linken Bildhaelfte zusammen und
+                    // liess rechts den halben Himmel leer.
+                    fun at(fraction: Float): Int =
+                        (widthCells * fraction).toInt().coerceIn(0, widthCells - 1)
                     listOf(
                         // Die vier hellen bilden ein wiedererkennbares Muster - erst dadurch wird
-                        // aus verstreuten Punkten ein Sternbild.
-                        SceneCell(widthCells / 5, sky, twinkleOf(phase, 4, HIGHLIGHT), isLight = true),
-                        SceneCell(widthCells / 5 + 5, sky - 4, twinkleOf(phase, 6, GLOW), isLight = true),
-                        SceneCell(widthCells / 5 + 11, sky - 3, twinkleOf(phase, 5, GLOW), isLight = true),
-                        SceneCell(widthCells / 5 + 15, sky + 2, twinkleOf(phase, 7, GLOW), isLight = true),
-                        // ... die uebrigen streuen lockerer und schwaecher.
-                        SceneCell(widthCells * 3 / 4, sky - 7, twinkleOf(phase, 9, GLOW / 2), isLight = true),
-                        SceneCell(widthCells * 2 / 3, sky + 6, twinkleOf(phase, 11, GLOW / 2), isLight = true),
-                        SceneCell(widthCells - 6, sky + 3, twinkleOf(phase, 13, GLOW / 2), isLight = true)
+                        // aus verstreuten Punkten ein Sternbild. Ihre Abstaende zueinander bleiben
+                        // anteilig gleich, damit es bei jeder Breite DASSELBE Sternbild ist.
+                        SceneCell(at(0.20f), sky, twinkleOf(phase, 4, HIGHLIGHT), isLight = true),
+                        SceneCell(at(0.31f), sky - 4, twinkleOf(phase, 6, GLOW), isLight = true),
+                        SceneCell(at(0.44f), sky - 3, twinkleOf(phase, 5, GLOW), isLight = true),
+                        SceneCell(at(0.53f), sky + 2, twinkleOf(phase, 7, GLOW), isLight = true),
+                        // ... die uebrigen streuen lockerer und schwaecher ueber den Rest.
+                        SceneCell(at(0.68f), sky - 7, twinkleOf(phase, 9, GLOW / 2), isLight = true),
+                        SceneCell(at(0.79f), sky + 6, twinkleOf(phase, 11, GLOW / 2), isLight = true),
+                        SceneCell(at(0.91f), sky + 3, twinkleOf(phase, 13, GLOW / 2), isLight = true),
+                        // Zwei zusaetzliche ganz aussen: Sie fallen im Hochformat kaum auf und
+                        // fuellen im Querformat genau die Ecken, die sonst leer blieben.
+                        SceneCell(at(0.06f), sky - 6, twinkleOf(phase, 17, GLOW / 2), isLight = true),
+                        SceneCell(at(0.97f), sky - 5, twinkleOf(phase, 19, GLOW / 2), isLight = true)
                     )
                 } else {
                     // Bewusst breiter und heller als der erste Entwurf (drei Zellen auf

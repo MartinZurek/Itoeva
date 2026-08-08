@@ -497,7 +497,7 @@ fun DockScreen(
             activeStation = null
             if (walkAvatarTo(
                     avatarSpot(
-                        PlayScene.avatarAnchorX(target),
+                        PlayScene.screenFraction(PlayScene.avatarAnchorX(target), sceneWidthCells),
                         with(density) { (avatar?.sizeDp ?: worldAvatarSizeDp).dp.toPx() },
                         maxWidthPx, floorYPx, species
                     )
@@ -558,7 +558,13 @@ fun DockScreen(
 
                     is RoutineStep.Stroll -> {
                         activeStation = null
-                        val destination = avatarSpot(step.anchorX, avatarPx, maxWidthPx, floorYPx, species)
+                        // Ueber das ZIMMER umgerechnet, nicht ueber das ganze Bild: Im
+                        // Querformat liefe sie sonst quer ueber den Bildschirm, waehrend ihre
+                        // Moebel in der Mitte stehen (siehe PlayScene.screenFraction).
+                        val destination = avatarSpot(
+                            PlayScene.screenFraction(step.anchorX, sceneWidthCells),
+                            avatarPx, maxWidthPx, floorYPx, species
+                        )
                         if (walkAvatarTo(destination)) startAvatarIdleLoop(species, mood)
                     }
 
@@ -883,7 +889,9 @@ fun DockScreen(
             // es ueberhaupt einen Boden.
             val species = AvatarSpeciesPrefs.get(context)
             val spawnOffset = avatarSpot(
-                anchorX = PlayScene.avatarAnchorX(currentPlace),
+                anchorX = PlayScene.screenFraction(
+                    PlayScene.avatarAnchorX(currentPlace), sceneWidthCells
+                ),
                 avatarPx = worldAvatarPx,
                 maxWidthPx = maxWidthPx,
                 floorYPx = floorYPx,
@@ -1021,11 +1029,18 @@ fun DockScreen(
                     if (Random.nextFloat() < MOON_SCENE_CHANCE) {
                         savedClockOffset = clockOffset
                         moonMode = true
-                        val clockPx = with(density) { clockSizeDp.dp.toPx() }
+                        // Mit der GROESSE des Mondes gerechnet, nicht mit der der Uhr: Er ist
+                        // waehrend der Szene groesser (siehe MOON_SCALE), und mit dem kleineren
+                        // Wert gerechnet ragte er rechts aus dem Bild.
+                        val clockPx = with(density) { clockSizeDp.dp.toPx() } * MOON_SCALE
+                        // **Ueber die ganze Breite.** Vorher stieg er nur zwischen 0,14 und 0,64
+                        // auf - die rechte Bildhaelfte bekam nie einen Mond, und im Querformat
+                        // stand er hartnaeckig links. Ein Himmel, der jede Nacht dieselbe Haelfte
+                        // benutzt, ist kein Himmel.
                         val target = Offset(
-                            x = ((maxWidthPx - clockPx) * (0.14f + Random.nextFloat() * 0.5f))
+                            x = ((maxWidthPx - clockPx) * (0.04f + Random.nextFloat() * 0.92f))
                                 .coerceAtLeast(0f),
-                            y = (maxHeightPx * (0.06f + Random.nextFloat() * 0.12f))
+                            y = (maxHeightPx * (0.05f + Random.nextFloat() * 0.14f))
                                 .coerceAtLeast(0f)
                         )
                         val from = clockOffset
@@ -1417,8 +1432,11 @@ fun DockScreen(
                             // Nur ein kleiner Ausschlag um seinen Platz herum: groesser gewaehlt,
                             // und er wandert bei schmalem Bild in Fenster oder Regal hinein
                             // (siehe die Geometrie-Begruendung in PlayScene.placementsFor).
-                            val anchor = (PlayScene.avatarAnchorX(currentPlace) + Random.nextFloat() * 0.16f - 0.08f)
-                                .coerceIn(0.02f, 0.98f)
+                            val anchor = PlayScene.screenFraction(
+                                (PlayScene.avatarAnchorX(currentPlace) +
+                                    Random.nextFloat() * 0.16f - 0.08f).coerceIn(0.02f, 0.98f),
+                                sceneWidthCells
+                            )
                             val destination = avatarSpot(
                                 anchorX = anchor,
                                 avatarPx = with(density) { current.sizeDp.dp.toPx() },
@@ -1610,11 +1628,17 @@ fun DockScreen(
                 val now = LocalTime.now()
                 stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
             }
+            // Der Mond waechst weich auf seine Groesse - im selben Zug, in dem er aufsteigt.
+            val moonScale by animateFloatAsState(
+                targetValue = if (moonMode) MOON_SCALE else 1f,
+                animationSpec = tween(MOON_RISE_MS, easing = FastOutSlowInEasing),
+                label = "moon"
+            )
             SimulatedMatrixView(
                 frame = frame,
                 contentDescription = clockContentDescription,
                 modifier = Modifier
-                    .size(clockSizeDp.dp)
+                    .size((clockSizeDp * moonScale).dp)
                     // driftOffset ist die rein optische Burn-in-Verschiebung und wird nur hier
                     // draufgerechnet - Kollisionspruefung und Speicherung nutzen weiter clockOffset,
                     // damit sich weder das Fuettern noch die gemerkte Position dadurch aendert.
@@ -2201,6 +2225,16 @@ private const val DOOR_STEP_MS = 420
 
 /** Wie oft die Mond-Szene ueberhaupt stattfindet - eine Ausnahme, die jedes Mal kaeme, waere
  *  keine mehr. */
+/**
+ * Wie viel groesser der Mond waehrend seiner Szene ist als die Uhr sonst.
+ *
+ * Er IST dieselbe Matrix - nur eben als Mond gezeichnet (siehe MoonFrame). In gleicher Groesse wie
+ * eine Uhr wirkte er wie eine verschobene Uhr; erst spuerbar groesser wird daraus ein Himmelskoerper.
+ * Nicht mehr als das Anderthalbfache: Darueber wird aus der Sichel eine Scheibe, die den halben
+ * Bildschirm fuellt, und die Weite, um die es in dieser Szene geht, ist wieder dahin.
+ */
+private const val MOON_SCALE = 1.5f
+
 private const val MOON_SCENE_CHANCE = 0.6f
 
 /** Aufstieg und Rueckkehr der Uhr. */

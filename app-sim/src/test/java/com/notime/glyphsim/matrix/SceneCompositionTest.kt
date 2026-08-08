@@ -175,4 +175,69 @@ class SceneCompositionTest {
 
     /** Und so viel von der Figur darf im Ruhezustand in Moebeln stecken. */
     private val MAX_AVATAR_IN_FURNITURE = 0.30f
+
+    @Test
+    fun `auf breiten Bildern bleibt die Einrichtung beieinander`() {
+        // **Gemeldet als "im Querformat steht alles sehr weit auseinander".** Die Verankerung ist
+        // ein Bruchteil der Breite; quer gedreht verdoppelt sich die Strecke, und zwischen Bett
+        // und Nachttisch klafft ein halber Bildschirm. Kein einzelner Wert ist dabei falsch - es
+        // ist die Vorschrift, die bei ungewohnten Massen auseinanderlaeuft, und genau so etwas
+        // faellt beim Lesen des Codes nie auf.
+        //
+        // Geprueft wird die Folge, nicht die Ursache: Wie weit liegen linkeste und rechteste
+        // Requisite auseinander? Ueber die Zimmerbreite hinaus darf das nicht gehen.
+        for (sceneWidth in intArrayOf(72, 84, 96, 120)) {
+            for (species in AvatarSpecies.entries) {
+                for (place in PlayScene.Place.entries) {
+                    val cells = PlayScene.propFootprints(place, sceneWidth, floorY, species)
+                        .flatMap { it.second }
+                    if (cells.isEmpty()) continue
+                    val extent = cells.maxOf { it.first } - cells.minOf { it.first } + 1
+                    assertTrue(
+                        "$place ($species) zieht sich bei Breite $sceneWidth ueber $extent " +
+                            "Spalten - ein Zimmer ist hoechstens ${PlayScene.MAX_ROOM_CELLS} " +
+                            "breit." + System.lineSeparator() +
+                            ScenePreview.render(place, species, width = sceneWidth),
+                        extent <= PlayScene.MAX_ROOM_CELLS
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `das Zimmer steht mittig, nicht am Rand`() {
+        // An der ABBILDUNG geprueft, nicht an den Requisiten: Der erste Versuch mass den Abstand
+        // der aeussersten Moebel und schlug bei der Strasse an - dort sind die Hausfassaden
+        // Hintergrund und aus der Pruefung ausgenommen (siehe Placement.behind), uebrig blieben
+        // Bank und Laterne, und die stehen naturgemaess nicht symmetrisch. Gemessen wurde also
+        // etwas anderes als gemeint.
+        //
+        // Die Aussage lautet: Was im Zimmer ganz links sitzt, ist vom linken Bildrand genauso
+        // weit entfernt wie das ganz rechte vom rechten.
+        for (sceneWidth in intArrayOf(72, 96, 120)) {
+            val left = PlayScene.screenFraction(0f, sceneWidth)
+            val right = PlayScene.screenFraction(1f, sceneWidth)
+            assertTrue(
+                "Bei Breite $sceneWidth sitzt das Zimmer nicht mittig: links $left, rechts $right",
+                kotlin.math.abs(left - (1f - right)) < 0.02f
+            )
+        }
+    }
+
+    @Test
+    fun `auf schmalen Bildern nutzt das Zimmer die volle Breite`() {
+        // Die Gegenprobe: Die Deckelung darf nur GROSSE Bilder betreffen. Wuerde sie auch im
+        // Hochformat greifen, verschenkte sie Platz, den diese Zimmer dringend brauchen.
+        for (sceneWidth in intArrayOf(PlayScene.MIN_SCENE_CELLS, 46, 54, PlayScene.MAX_ROOM_CELLS)) {
+            assertTrue(
+                "Bei Breite $sceneWidth wird das Zimmer unnoetig eingeengt",
+                PlayScene.roomWidth(sceneWidth) == sceneWidth
+            )
+            assertTrue(
+                "Bei Breite $sceneWidth wird die Verankerung unnoetig verschoben",
+                PlayScene.screenFraction(0.25f, sceneWidth) == 0.25f
+            )
+        }
+    }
 }
