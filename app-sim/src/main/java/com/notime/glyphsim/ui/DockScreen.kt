@@ -48,6 +48,7 @@ import com.notime.glyphcore.data.ReminderOpenDuration
 import kotlinx.coroutines.flow.onSubscription
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
+import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.groundRow
 import com.notime.glyphsim.matrix.AvatarMood
@@ -203,6 +204,38 @@ fun DockScreen(
 
         val maxWidthPx = with(density) { maxWidth.toPx() }
         val maxHeightPx = with(density) { maxHeight.toPx() }
+
+        // **Auch die Uhr muss beim Drehen mitkommen.**
+        //
+        // Ihre Position steht in Pixeln und wird beim ersten Aufbau einmal aus dem gemerkten
+        // Bruchteil gerechnet. Dreht man das Geraet, tauschen Breite und Hoehe die Rollen - der
+        // Pixelwert bleibt aber stehen. Im Querformat lag die Uhr dadurch unter dem unteren Rand,
+        // und schlimmer: Das verzoegerte Sichern rechnete den alten Pixelwert gegen die NEUEN
+        // Masse zurueck und schrieb damit eine falsche Position fest. Der Fehler ueberlebte also
+        // das Zurueckdrehen.
+        //
+        // Hier wird derselbe Bruchteil auf die neuen Masse angewandt: Die Uhr bleibt anteilig
+        // dort, wo der Nutzer sie hingelegt hat. Ohne Verzoegerung, damit dieser Effekt sicher
+        // vor dem Sichern laeuft.
+        var lastClockBoundX by remember { mutableStateOf(initialMaxXPx) }
+        var lastClockBoundY by remember { mutableStateOf(initialMaxYPx) }
+        LaunchedEffect(maxWidthPx, maxHeightPx, clockSizeDp) {
+            val clockPx = with(density) { clockSizeDp.dp.toPx() }
+            val boundX = (maxWidthPx - clockPx).coerceAtLeast(0f)
+            val boundY = (maxHeightPx - clockPx).coerceAtLeast(0f)
+            val previousX = lastClockBoundX
+            val previousY = lastClockBoundY
+            lastClockBoundX = boundX
+            lastClockBoundY = boundY
+
+            // Waehrend der Mond-Szene steht die Uhr am Himmel und nicht dort, wo der Nutzer sie
+            // haben will - dieselbe Ruecksicht wie beim Sichern.
+            if (moonMode) return@LaunchedEffect
+
+            val fractionX = if (previousX > 0f) (clockOffset.x / previousX).coerceIn(0f, 1f) else 0.5f
+            val fractionY = if (previousY > 0f) (clockOffset.y / previousY).coerceIn(0f, 1f) else 0.5f
+            clockOffset = Offset(boundX * fractionX, boundY * fractionY)
+        }
 
         // Ort und dargestellter Ort - stehen VOR der Geometrie, weil die Bodenhoehe vom Ort
         // abhaengt (siehe PlayScene.floorFraction).
@@ -489,15 +522,8 @@ fun DockScreen(
             val mood = AvatarMoodSnapshot.forSpecies(context, species)
 
             /** Setzt die Figur so, dass sie mit [centerX]/[groundY] (Szenenzellen) zusammenfaellt. */
-            fun spotToOffset(spot: PlayScene.SceneSpot, avatarPx: Float): Offset {
-                val cell = avatarPx / AvatarGeometry.SIZE
-                val groundRow = AvatarBodies.forSpecies(species).groundRow()
-                return Offset(
-                    x = (spot.centerX * cell - avatarPx / 2f)
-                        .coerceIn(0f, (maxWidthPx - avatarPx).coerceAtLeast(0f)),
-                    y = ((spot.groundY + 1) * cell - (groundRow + 1) * cell).coerceAtLeast(0f)
-                )
-            }
+            fun spotToOffset(spot: PlayScene.SceneSpot, avatarPx: Float): Offset =
+                stationOffset(spot, avatarPx, maxWidthPx, species)
 
             try {
             for (step in routine.steps) {
@@ -874,6 +900,61 @@ fun DockScreen(
                 offset = spawnOffset,
                 sizeDp = worldAvatarSizeDp,
                 frame = AvatarAnimations.idleSequence(species, mood).frames.first()
+            )
+        }
+
+        // ---- Die Welt hat ihre Groesse geaendert ----
+        //
+        // **Ein Fehler, der sich als "der Avatar haengt in der Luft" zeigte.** Seine Position
+        // liegt in PIXELN fest, einmal beim Hinstellen aus der damaligen Bodenhoehe gerechnet.
+        // Boden, Zellgroesse und Szenenbreite haengen dagegen an der Uhrgroesse und an den
+        // Bildschirmmassen - zieht man die Uhr groesser oder dreht das Geraet, wandert der Boden,
+        // und die Figur bleibt, wo sie war. Dazu behielt sie ihre alte Groesse, waehrend die
+        // Kulisse mitwuchs: Genau das sah aus, als zoome die Landschaft unter ihr weg.
+        //
+        // Ausdruecklich NICHT auf [floorYPx] hoerend, obwohl es naheliegt: Der Boden wandert bei
+        // jedem Ortswechsel weich nach (siehe floorFraction), und ein Effekt, der darauf
+        // anspringt, riebe sich an jeder laufenden Geh-Animation. Umgestellt wird nur, was der
+        // NUTZER umstellt - Uhrgroesse und Bildschirmmasse.
+        var lastAvatarPx by remember { mutableStateOf(0f) }
+        var lastWidthPx by remember { mutableStateOf(0f) }
+        LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx) {
+            val current = avatar
+            val previousAvatarPx = lastAvatarPx
+            val previousWidthPx = lastWidthPx
+            lastAvatarPx = worldAvatarPx
+            lastWidthPx = maxWidthPx
+
+            // Beim allerersten Durchlauf gibt es noch keine vorherige Geometrie - dann ist auch
+            // nichts umzustellen, die Figur wird ohnehin gleich frisch hingestellt.
+            if (!playMode || current == null || previousAvatarPx <= 0f || previousWidthPx <= 0f) {
+                return@LaunchedEffect
+            }
+
+            val station = occupiedStation
+            val next = if (station != null) {
+                // Wer im Bett liegt, muss danach im NEUEN Bett liegen - die Requisiten sind
+                // mitgewandert, ihre Aufsetzstelle ebenso.
+                PlayScene.stationSpot(
+                    renderedPlace, station, sceneWidthCells, floorYCells, current.species
+                )?.let { spot ->
+                    stationOffset(spot, worldAvatarPx, maxWidthPx, current.species)
+                }
+            } else {
+                // Sonst bleibt die WAAGERECHTE Stelle erhalten, an der sie stand - als Bruchteil
+                // gerechnet, und zwar mit den ALTEN Massen. Mit den neuen gerechnet spraenge sie
+                // beim Drehen quer durchs Bild.
+                val fraction = AvatarFooting.fractionOf(
+                    current.offset.x, previousAvatarPx, previousWidthPx
+                )
+                avatarSpot(fraction, worldAvatarPx, maxWidthPx, floorYPx, current.species)
+            }
+
+            avatar = current.copy(
+                // Die Groesse MUSS mitgehen: Sie stammt aus der Uhrgroesse, und eine Figur, die
+                // als einzige nicht mitwaechst, gehoert sichtbar nicht mehr in ihre Welt.
+                sizeDp = worldAvatarSizeDp,
+                offset = next ?: current.offset
             )
         }
 
@@ -2179,11 +2260,34 @@ private fun avatarSpot(
     floorYPx: Float,
     species: AvatarSpecies
 ): Offset {
-    val boundX = (maxWidthPx - avatarPx).coerceAtLeast(0f)
-    val cellPx = avatarPx / AvatarGeometry.SIZE
     val groundRow = AvatarBodies.forSpecies(species).groundRow()
-    val y = (floorYPx - (groundRow + 1) * cellPx).coerceAtLeast(0f)
-    return Offset(boundX * anchorX.coerceIn(0f, 1f), y)
+    return Offset(
+        AvatarFooting.leftFor(anchorX, avatarPx, maxWidthPx),
+        AvatarFooting.topFor(floorYPx, avatarPx, groundRow)
+    )
+}
+
+/**
+ * Setzt die Figur auf die Aufsetzstelle einer Requisite - dieselbe Rechnung wie `spotToOffset`
+ * innerhalb eines Ablaufs, hier aber ohne dessen Umgebung.
+ *
+ * Doppelt vorhanden zu sein waere schlecht; die Fassung dort sitzt allerdings in einer Funktion,
+ * die Spezies und Bildbreite bereits kennt, waehrend sie hier hereingereicht werden muessen. Die
+ * gemeinsame Regel steht im Kommentar an beiden Stellen: Die Figur setzt mit ihrer Fussreihe auf
+ * der Zeile auf, die die Requisite als Boden angibt.
+ */
+private fun stationOffset(
+    spot: PlayScene.SceneSpot,
+    avatarPx: Float,
+    maxWidthPx: Float,
+    species: AvatarSpecies
+): Offset {
+    val groundRow = AvatarBodies.forSpecies(species).groundRow()
+    val cell = avatarPx / AvatarGeometry.SIZE
+    return Offset(
+        x = AvatarFooting.leftForCenter(spot.centerX, avatarPx, maxWidthPx),
+        y = AvatarFooting.topFor((spot.groundY + 1) * cell, avatarPx, groundRow)
+    )
 }
 
 /** Wie lange das Absenken/Anheben des Horizonts dauert - langsam genug, dass man die Weite
