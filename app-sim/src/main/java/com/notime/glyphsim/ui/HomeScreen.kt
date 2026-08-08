@@ -81,6 +81,7 @@ import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.PlayClipRecorder
+import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
 import com.notime.glyphsim.matrix.ClockFrameSim
 import com.notime.glyphsim.matrix.ClockStyle
@@ -987,7 +988,15 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
     var clipEnabled by remember { mutableStateOf(ClipPrefs.isEnabled(context)) }
     var showClipLibrary by remember { mutableStateOf(false) }
     var clipRefresh by remember { mutableStateOf(0) }
-    val clips = remember(clipRefresh) { PlayClipRecorder.library(context) }
+    // Filme und Schnappschuesse zusammen, neueste zuerst - siehe ClipLibraryDialog dazu, warum
+    // sie nicht getrennt aufgefuehrt werden.
+    val clips = remember(clipRefresh) {
+        (PlayClipRecorder.library(context) + PlaySnapshot.library(context))
+            .sortedByDescending { it.lastModified() }
+    }
+    val snapshotCountInLibrary = remember(clips) {
+        clips.count { it.extension.equals("png", true) }
+    }
     var crashReport by remember { mutableStateOf(CrashLog.read(context)) }
     var rotationAllowed by remember { mutableStateOf(OrientationPrefs.isRotationAllowed(context)) }
     var selectedStyle by remember { mutableStateOf(ClockStylePrefs.get(context)) }
@@ -1104,7 +1113,8 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(stringResource(R.string.settings_clip_enable))
                             Text(
-                                stringResource(R.string.settings_clip_enable_hint),
+                                stringResource(R.string.settings_clip_enable_hint) + " " +
+                                    stringResource(R.string.settings_clip_enable_snapshot),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1123,10 +1133,14 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.settings_clip_library))
+                            Text(stringResource(R.string.settings_library))
                             Text(
-                                if (clips.isEmpty()) stringResource(R.string.settings_clip_library_empty)
-                                else stringResource(R.string.settings_clip_library_hint, clips.size),
+                                if (clips.isEmpty()) stringResource(R.string.settings_library_empty)
+                                else stringResource(
+                                    R.string.settings_library_hint,
+                                    clips.size - snapshotCountInLibrary,
+                                    snapshotCountInLibrary
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1134,7 +1148,7 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                         TextButton(
                             enabled = clips.isNotEmpty(),
                             onClick = { showClipLibrary = true }
-                        ) { Text(stringResource(R.string.settings_clip_library)) }
+                        ) { Text(stringResource(R.string.action_open)) }
                     }
 
                     // Testschalter: laesst den Tagesablauf im Zeitraffer laufen, damit sich alle
@@ -1376,10 +1390,17 @@ private fun ClockStyleRow(style: ClockStyle, selected: Boolean, onClick: () -> U
 }
 
 /**
- * Die gesammelten Filme: teilen, in die Galerie legen, loeschen.
+ * Die Sammlung: Filme und Schnappschuesse - teilen, in die Galerie legen, loeschen.
  *
- * Bewusst eine schlichte Liste ohne Vorschaubilder. Ein Standbild aus einem Film, der ohnehin nur
- * wenige Sekunden dauert, sagt kaum etwas - der Zeitpunkt der Aufnahme ordnet ihn besser ein.
+ * **Beides in EINER Liste, nach Aufnahmezeit gemischt.** Zwei getrennte Listen waeren die
+ * naheliegende Aufteilung und die falsche: Wer etwas sucht, erinnert sich daran, WANN er es
+ * aufgenommen hat, nicht daran, ob er dabei den oberen oder den unteren Knopf gedrueckt hat. Ein
+ * kleines Kennzeichen an der Zeile sagt, worum es sich handelt - das genuegt.
+ *
+ * Bewusst ohne Vorschaubilder. Bei den Filmen sagt ein Standbild aus wenigen Sekunden kaum etwas;
+ * bei den Schnappschuessen waere eine Vorschau zwar aussagekraeftig, aber dann muesste die Liste
+ * beim Oeffnen Dutzende Bilder in voller Aufloesung laden - fuer einen Einstellungsdialog eine
+ * unangemessene Last.
  */
 @Composable
 private fun ClipLibraryDialog(
@@ -1394,26 +1415,35 @@ private fun ClipLibraryDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) }
         },
-        title = { Text(stringResource(R.string.settings_clip_library)) },
+        title = { Text(stringResource(R.string.settings_library)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 if (clips.isEmpty()) {
-                    Text(stringResource(R.string.settings_clip_library_empty))
+                    Text(stringResource(R.string.settings_library_empty))
                 }
                 clips.forEach { file ->
+                    val isPicture = file.extension.equals("png", true)
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            java.text.DateFormat.getDateTimeInstance(
-                                java.text.DateFormat.SHORT, java.text.DateFormat.SHORT
-                            ).format(java.util.Date(file.lastModified())),
+                            stringResource(
+                                if (isPicture) R.string.library_snapshots else R.string.library_clips
+                            ) + " · " +
+                                java.text.DateFormat.getDateTimeInstance(
+                                    java.text.DateFormat.SHORT, java.text.DateFormat.SHORT
+                                ).format(java.util.Date(file.lastModified())),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             TextButton(onClick = { shareClip(context, file) }) {
-                                Text(stringResource(R.string.settings_clip_share))
+                                Text(
+                                    stringResource(
+                                        if (isPicture) R.string.snapshot_share
+                                        else R.string.settings_clip_share
+                                    )
+                                )
                             }
                             if (ClipGallery.isSupported) {
                                 TextButton(onClick = {
@@ -1453,7 +1483,9 @@ private fun shareClip(context: android.content.Context, file: java.io.File) {
     context.startActivity(
         Intent.createChooser(
             Intent(Intent.ACTION_SEND).apply {
-                type = "video/mp4"
+                // Der Typ muss zum Inhalt passen: Mit "video/mp4" an einem Bild bieten viele
+                // Apps das Teilen gar nicht erst an oder nehmen die Datei kommentarlos nicht an.
+                type = if (file.extension.equals("png", true)) "image/png" else "video/mp4"
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             },

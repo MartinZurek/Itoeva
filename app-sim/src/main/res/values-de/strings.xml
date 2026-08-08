@@ -11,6 +11,7 @@
     <string name="action_cancel">Abbrechen</string>
     <string name="action_save">Speichern</string>
     <string name="action_done">Fertig</string>
+    <string name="action_open">Öffnen</string>
     <string name="action_ok">OK</string>
     <string name="action_delete">Löschen</string>
     <string name="action_settings">Einstellungen</string>
@@ -345,7 +346,15 @@
     <string name="clip_saved_gallery">In Galerie gespeichert</string>
     <string name="clip_delete">Löschen</string>
     <string name="a11y_record_clip">Clip aufnehmen</string>
+    <string name="a11y_snapshot">Schnappschuss aufnehmen</string>
     <string name="clip_recording">Nimmt auf …</string>
+    <string name="settings_clip_enable_snapshot">Darunter erscheint zusätzlich ein Knopf für Schnappschüsse. Die Bilder sammeln sich zusammen mit den Clips.</string>
+    <string name="library_clips">Clips</string>
+    <string name="library_snapshots">Schnappschüsse</string>
+    <string name="settings_library">Clips &amp; Schnappschüsse</string>
+    <string name="settings_library_hint">%1$d Clips · %2$d Schnappschüsse</string>
+    <string name="settings_library_empty">Noch nichts aufgenommen</string>
+    <string name="snapshot_share">Bild teilen</string>
     <string name="settings_timelapse_off">Aus</string>
     <string name="settings_timelapse_fast">Schnell</string>
     <string name="settings_timelapse_turbo">Turbo</string>

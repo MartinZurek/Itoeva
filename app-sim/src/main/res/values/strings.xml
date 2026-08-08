@@ -13,6 +13,7 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_save">Save</string>
     <string name="action_done">Done</string>
+    <string name="action_open">Open</string>
     <string name="action_ok">OK</string>
     <string name="action_delete">Delete</string>
     <string name="action_settings">Settings</string>
@@ -354,7 +355,15 @@
     <string name="clip_saved_gallery">Saved to gallery</string>
     <string name="clip_delete">Delete</string>
     <string name="a11y_record_clip">Record clip</string>
+    <string name="a11y_snapshot">Take snapshot</string>
     <string name="clip_recording">Recording…</string>
+    <string name="settings_clip_enable_snapshot">Also shows a snapshot button below it. Photos are collected alongside the clips.</string>
+    <string name="library_clips">Clips</string>
+    <string name="library_snapshots">Snapshots</string>
+    <string name="settings_library">Clips &amp; snapshots</string>
+    <string name="settings_library_hint">%1$d clips · %2$d snapshots</string>
+    <string name="settings_library_empty">Nothing captured yet</string>
+    <string name="snapshot_share">Share picture</string>
     <string name="settings_timelapse_off">Off</string>
     <string name="settings_timelapse_fast">Fast</string>
     <string name="settings_timelapse_turbo">Turbo</string>

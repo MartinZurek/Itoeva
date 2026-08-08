@@ -61,6 +61,7 @@ import androidx.compose.ui.semantics.contentDescription
 import kotlinx.coroutines.withContext
 import com.notime.glyphsim.matrix.PlayClipRenderer
 import com.notime.glyphsim.matrix.PlayClipRecorder
+import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayPantry
@@ -268,6 +269,11 @@ fun DockScreen(
         var economyTick by remember { mutableIntStateOf(0) }
         // Laufende Aufnahme: null = keine. Der Fortschritt gilt fuers Zusammenrechnen DANACH.
         var clipSession by remember { mutableStateOf<PlayClipRecorder.Session?>(null) }
+        // Das kurze Aufhellen nach einem Schnappschuss. Der Zaehler daneben ist noetig, damit auch
+        // zwei rasch aufeinanderfolgende Bilder je ein eigenes Blinken bekommen - ohne ihn
+        // uebernaehme das zweite nur die noch laufende Wartezeit des ersten.
+        var snapshotFlash by remember { mutableStateOf(false) }
+        var snapshotCount by remember { mutableStateOf(0) }
         var clipSeconds by remember { mutableIntStateOf(0) }
         var clipEncoding by remember { mutableFloatStateOf(-1f) }
         var clipResult by remember { mutableStateOf<java.io.File?>(null) }
@@ -1331,40 +1337,47 @@ fun DockScreen(
             }
         }
 
-        // Der Mitschnitt: Nimmt regelmaessig auf, was gerade zu sehen ist - Kulisse, Figur, Uhr,
-        // Getragenes, Gast. Festgehalten werden nur Beschreibungen, keine Bilder (siehe
+        // Was gerade zu sehen ist, als Beschreibung - Kulisse, Figur, Uhr, Getragenes, Gast.
+        //
+        // An EINER Stelle, weil sie zweimal gebraucht wird: Der Film sammelt sie fuenfzehnmal je
+        // Sekunde, der Schnappschuss genau einmal. Beide muessen dasselbe festhalten, sonst zeigte
+        // ein Bild aus der Sammlung etwas anderes als ein Film derselben Szene.
+        fun describeScreen(): PlayClipRenderer.Frame? {
+            val current = avatar ?: return null
+            if (sceneCellPx <= 0f) return null
+            val avatarPx = with(density) { current.sizeDp.dp.toPx() }
+            val boundX = (maxWidthPx - avatarPx).coerceAtLeast(1f)
+            val clockPx = with(density) { clockSizeDp.dp.toPx() }
+            return PlayClipRenderer.Frame(
+                place = renderedPlace,
+                species = current.species,
+                dayPhase = PlayAmbientActivity.currentDayPhase(),
+                avatarFrame = current.frame,
+                avatarAnchorX = (current.offset.x / boundX).coerceIn(0f, 1f),
+                scenePhase = scenePhase,
+                station = occupiedStation ?: activeStation,
+                lampOn = lampOn,
+                tvOn = tvOn,
+                clockFrame = if (current.fed) null else frame,
+                clockLeftFraction = (clockOffset.x / maxWidthPx).coerceIn(0f, 1f),
+                clockTopFraction = (clockOffset.y / maxHeightPx).coerceIn(0f, 1f),
+                clockSizeFraction = (clockPx / maxWidthPx).coerceIn(0.05f, 1f),
+                carried = carried,
+                visitorFrame = visitor?.frame,
+                visitorSpecies = visitor?.species,
+                visitorAnchorX = visitor?.let {
+                    (it.offset.x / boundX).coerceIn(0f, 1f)
+                } ?: 0f
+            )
+        }
+
+        // Der Mitschnitt. Festgehalten werden nur Beschreibungen, keine Bilder (siehe
         // PlayClipRecorder.Session), deshalb kostet eine lange Aufnahme kaum Speicher.
         LaunchedEffect(clipSession) {
             val session = clipSession ?: return@LaunchedEffect
             while (isActive && !session.isFull) {
-                val current = avatar
-                if (current != null && sceneCellPx > 0f) {
-                    val avatarPx = with(density) { current.sizeDp.dp.toPx() }
-                    val boundX = (maxWidthPx - avatarPx).coerceAtLeast(1f)
-                    val clockPx = with(density) { clockSizeDp.dp.toPx() }
-                    session.add(
-                        PlayClipRenderer.Frame(
-                            place = renderedPlace,
-                            species = current.species,
-                            dayPhase = PlayAmbientActivity.currentDayPhase(),
-                            avatarFrame = current.frame,
-                            avatarAnchorX = (current.offset.x / boundX).coerceIn(0f, 1f),
-                            scenePhase = scenePhase,
-                            station = occupiedStation ?: activeStation,
-                            lampOn = lampOn,
-                            tvOn = tvOn,
-                            clockFrame = if (avatar?.fed == true) null else frame,
-                            clockLeftFraction = (clockOffset.x / maxWidthPx).coerceIn(0f, 1f),
-                            clockTopFraction = (clockOffset.y / maxHeightPx).coerceIn(0f, 1f),
-                            clockSizeFraction = (clockPx / maxWidthPx).coerceIn(0.05f, 1f),
-                            carried = carried,
-                            visitorFrame = visitor?.frame,
-                            visitorSpecies = visitor?.species,
-                            visitorAnchorX = visitor?.let {
-                                (it.offset.x / boundX).coerceIn(0f, 1f)
-                            } ?: 0f
-                        )
-                    )
+                describeScreen()?.let {
+                    session.add(it)
                     clipSeconds = session.seconds
                 }
                 delay(PlayClipRecorder.SAMPLE_INTERVAL_MS)
@@ -1621,6 +1634,57 @@ fun DockScreen(
                         .padding(top = 64.dp, end = 20.dp)
                 )
             }
+
+            // Der Schnappschuss - UNTER dem Aufnahmeknopf, nicht daneben.
+            //
+            // Beide gehoeren zusammen und sollen als Paar lesbar sein; nebeneinander waeren sie
+            // aber zwei gleichrangige Knoepfe in der Ecke, und man muesste jedes Mal kurz
+            // nachdenken, welcher welcher ist. Untereinander bleibt die Ecke ruhig, und der
+            // Daumen findet den zweiten blind. Waehrend eine Aufnahme zusammengerechnet wird,
+            // verschwindet er: Der Zeichner ist dann beschaeftigt.
+            if (clipEncoding < 0f) {
+                val snapshotLabel = stringResource(R.string.a11y_snapshot)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 68.dp, end = 20.dp)
+                        .size(40.dp)
+                        .semantics { contentDescription = snapshotLabel }
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                val described = describeScreen() ?: return@detectTapGestures
+                                scope.launch {
+                                    // Zeichnen und Schreiben abseits des Bildschirm-Fadens: Ein
+                                    // Bild in voller Aufloesung zu erzeugen dauert lange genug,
+                                    // dass die Figur sonst sichtbar stockte - ausgerechnet in dem
+                                    // Moment, den man festhalten wollte.
+                                    val file = withContext(Dispatchers.Default) {
+                                        PlaySnapshot.capture(context, described)
+                                    }
+                                    if (file != null) {
+                                        snapshotFlash = true
+                                        snapshotCount++
+                                    }
+                                }
+                            })
+                        }
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val r = size.minDimension / 2f
+                        // Ein Kamerasucher: Rahmen mit Linse. Bewusst NICHT derselbe Kreis wie
+                        // beim Film - zwei gleich aussehende Knoepfe uebereinander waeren die
+                        // schlechteste aller Anordnungen.
+                        drawRect(
+                            color = Color(0xFF6E6A63),
+                            topLeft = Offset(center.x - r * 0.85f, center.y - r * 0.62f),
+                            size = androidx.compose.ui.geometry.Size(r * 1.7f, r * 1.24f),
+                            style = Stroke(width = r * 0.16f)
+                        )
+                        drawCircle(color = Color(0xFF8A8A8A), radius = r * 0.34f)
+                    }
+                }
+            }
+
         }
 
         avatar?.takeIf { !avatarHidden }?.let { current ->
@@ -1729,6 +1793,24 @@ fun DockScreen(
                 )
             }
         }
+
+        // Kurzes Aufhellen als Bestaetigung fuer einen Schnappschuss - dieselbe Rueckmeldung wie
+        // bei jeder Kamera. Ohne sie bliebe voellig offen, ob der Griff etwas bewirkt hat: Das
+        // Bild wandert in die Sammlung, und auf dem Bildschirm aendert sich sonst nichts.
+        //
+        // ALLERLETZT, nach Figur, vorderer Kulisse und Effekten: Ein Aufblitzen, das die Figur
+        // ausspart, saehe aus wie ein Zeichenfehler statt wie ein Ausloeser.
+        if (snapshotFlash) {
+            LaunchedEffect(snapshotCount) {
+                delay(SNAPSHOT_FLASH_MS)
+                snapshotFlash = false
+            }
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0x33FFFFFF))
+            )
+        }
     }
 }
 
@@ -1784,6 +1866,10 @@ private fun isColliding(clockOffset: Offset, clockSizePx: Float, avatarOffset: O
  * gaengiger Geraete. Groesser gewaehlt, und eine ueberschneidungsfreie Platzierung ist auf
  * schmalen Displays rechnerisch unmoeglich - unabhaengig davon, wie gut man danach sucht.
  */
+/** Wie lange das Bild nach einem Schnappschuss aufhellt - lang genug, um es zu bemerken, kurz
+ *  genug, um nicht als Fehler zu wirken. */
+private const val SNAPSHOT_FLASH_MS = 140L
+
 private const val AVATAR_TO_CLOCK_RATIO = 0.62f
 
 private const val OVERLAP_INSET = 0.15f

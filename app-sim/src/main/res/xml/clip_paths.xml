@@ -6,4 +6,5 @@
 -->
 <paths>
     <files-path name="clips" path="clips/" />
+    <files-path name="shots" path="shots/" />
 </paths>

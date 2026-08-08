@@ -30,28 +30,44 @@ object ClipGallery {
 
     private const val ALBUM = "Tama"
 
-    /** Kopiert [file] in die Galerie. Gibt zurueck, ob es geklappt hat. */
+    /**
+     * Kopiert [file] in die Galerie. Gibt zurueck, ob es geklappt hat.
+     *
+     * Film oder Bild wird an der Endung erkannt und landet entsprechend unter `Movies` oder
+     * `Pictures` - eine Galerie sortiert danach, und ein Standbild zwischen den Filmen zu
+     * hinterlegen waere genau die Art von Unordnung, die man spaeter nicht mehr aufraeumt.
+     */
     fun save(context: Context, file: File): Boolean {
         if (!isSupported || !file.exists()) return false
+        val isImage = file.extension.equals("png", ignoreCase = true)
+        val collection = if (isImage) {
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        } else {
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        }
         return try {
             val values = ContentValues().apply {
-                put(MediaStore.Video.Media.DISPLAY_NAME, file.name)
-                put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
-                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/$ALBUM")
+                // Die Spaltennamen sind fuer Bild und Film dieselben Zeichenketten (beide erben
+                // von MediaStore.MediaColumns); nur die Sammlung und der Zielordner wechseln.
+                put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+                put(MediaStore.MediaColumns.MIME_TYPE, if (isImage) "image/png" else "video/mp4")
+                put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    if (isImage) "Pictures/$ALBUM" else "Movies/$ALBUM"
+                )
                 // Solange dieses Kennzeichen gesetzt ist, sehen andere Apps die Datei nicht -
                 // sonst taucht sie in der Galerie auf, waehrend sie noch halb geschrieben ist.
-                put(MediaStore.Video.Media.IS_PENDING, 1)
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
             val resolver = context.contentResolver
-            val uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
-                ?: return false
+            val uri = resolver.insert(collection, values) ?: return false
 
             resolver.openOutputStream(uri)?.use { out ->
                 file.inputStream().use { input -> input.copyTo(out) }
             } ?: return false
 
             values.clear()
-            values.put(MediaStore.Video.Media.IS_PENDING, 0)
+            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
             true
         } catch (t: Throwable) {
