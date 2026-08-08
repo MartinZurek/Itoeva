@@ -27,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.matrix.PlayTimeLapse
+import com.notime.glyphsim.matrix.PlayWeather
 import com.notime.glyphsim.reminder.ReminderTrigger
 import com.notime.glyphsim.ui.theme.GlyphSimTheme
 import kotlinx.coroutines.delay
@@ -120,6 +121,8 @@ class MainActivity : ComponentActivity() {
         // Testschalter aus den Einstellungen uebernehmen - PlayTimeLapse haelt seinen Zustand im
         // Speicher, damit die beschleunigte Uhr im Zeichenpfad ohne Dateizugriff auskommt.
         PlayTimeLapse.restore(this)
+        // Dasselbe fuer das festgehaltene Wetter (siehe PlayWeather).
+        PlayWeather.restore(this)
 
         sharedText.value = extractSharedText(intent)
 

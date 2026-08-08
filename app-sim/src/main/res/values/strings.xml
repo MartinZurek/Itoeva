@@ -473,4 +473,12 @@
     <string name="assistant_here_play">Right now you are in Play mode: I am there the whole time and live a day of my own. Instead of your reminders, one is drawn at random – feeding it earns experience, coins and meals.</string>
     <string name="talk_q_here">What is going on here?</string>
     <string name="talk_a_here">I live here: I sleep, go to work, do the shopping, take a walk. Feed me and it earns experience, coins and a meal in the larder. Whatever you have set yourself and not yet done today pulls me towards it.</string>
+
+    <!-- Wetter (Testschalter, siehe PlayWeather) -->
+    <string name="settings_weather">Weather</string>
+    <string name="settings_weather_today">Today</string>
+    <string name="settings_weather_clear">Clear</string>
+    <string name="settings_weather_rain">Rain</string>
+    <string name="settings_weather_snow">Snow</string>
+    <string name="settings_weather_hint">Normally the day decides – rain on roughly one day in five, snow only in winter. Hold one here to see how it looks. Visible outdoors, and through the window from indoors.</string>
 </resources>

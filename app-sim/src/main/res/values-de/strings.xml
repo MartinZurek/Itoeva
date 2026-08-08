@@ -464,4 +464,12 @@
     <string name="assistant_here_play">Du bist gerade im Spiel-Modus: Ich bin die ganze Zeit da und lebe einen eigenen Tag. Statt deiner Erinnerungen wird eine ausgewürfelt – fütterst du sie, gibt das Erfahrung, Münzen und Mahlzeiten.</string>
     <string name="talk_q_here">Was passiert hier eigentlich?</string>
     <string name="talk_a_here">Hier wohne ich: schlafen, arbeiten, einkaufen, spazieren. Fütterst du mich, gibt das Erfahrung, Münzen und eine Mahlzeit im Vorrat. Und was du dir vorgenommen und heute noch nicht geschafft hast, zieht mich dorthin.</string>
+
+    <!-- Wetter (Testschalter, siehe PlayWeather) -->
+    <string name="settings_weather">Wetter</string>
+    <string name="settings_weather_today">Heute</string>
+    <string name="settings_weather_clear">Klar</string>
+    <string name="settings_weather_rain">Regen</string>
+    <string name="settings_weather_snow">Schnee</string>
+    <string name="settings_weather_hint">Normalerweise entscheidet der Tag – Regen an knapp jedem fünften, Schnee nur im Winter. Hier lässt sich eines festhalten, um es anzusehen. Sichtbar draußen und von drinnen durchs Fenster.</string>
 </resources>

@@ -79,6 +79,7 @@ import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
+import com.notime.glyphsim.matrix.PlayWeather
 import com.notime.glyphsim.matrix.ClockFrameSim
 import com.notime.glyphsim.matrix.ClockStyle
 import com.notime.glyphsim.matrix.MatrixAnimator
@@ -861,6 +862,7 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
     var selectedLanguage by remember { mutableStateOf(LanguagePrefs.get(context)) }
     var moodEnabled by remember { mutableStateOf(MoodPrefs.isEnabled(context)) }
     var lapseSpeed by remember { mutableStateOf(PlayTimeLapse.speed()) }
+    var forcedWeather by remember { mutableStateOf(PlayWeather.forcedOrNull()) }
     // Aufnahme laeuft / fertige Datei / Fehlschlag - drei Zustaende, mehr braucht es nicht.
     var clipEnabled by remember { mutableStateOf(ClipPrefs.isEnabled(context)) }
     var showClipLibrary by remember { mutableStateOf(false) }
@@ -1066,6 +1068,46 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                     }
                     Text(
                         stringResource(R.string.settings_timelapse_speeds),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    // Wetter festhalten - aus demselben Grund wie der Zeitraffer: Regen faellt an
+                    // knapp jedem fuenften Tag und Schnee nur im Winter. Ohne diesen Schalter
+                    // liesse sich nicht beurteilen, ob es gut aussieht.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.settings_weather))
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                            listOf(
+                                null to R.string.settings_weather_today,
+                                PlayWeather.CLEAR to R.string.settings_weather_clear,
+                                PlayWeather.RAIN to R.string.settings_weather_rain,
+                                PlayWeather.SNOW to R.string.settings_weather_snow
+                            ).forEach { (value, label) ->
+                                TextButton(onClick = {
+                                    forcedWeather = value
+                                    PlayWeather.force(context, value)
+                                }) {
+                                    Text(
+                                        stringResource(label),
+                                        color = if (forcedWeather == value) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Text(
+                        stringResource(R.string.settings_weather_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -553,6 +553,10 @@ object PlayScene {
 
         cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species)
         cells += housePet(place, phase, widthCells, floorY)
+        cells += weather(
+            place, fitting(placementsFor(place, species), widthCells, floorY),
+            phase, widthCells, floorY
+        )
 
         // Materie folgt der Tageszeit, Licht nicht (siehe [SceneCell.isLight]).
         val roomFactor = atmosphere(dayPhase) * fade
@@ -1840,6 +1844,103 @@ object PlayScene {
             SceneCell(ox + 3, oy + 1, GLOW / 2, isLight = true)
         ) + lightPool(ox + 2, floorY, radius = 6, peak = GLOW - 500)
     }
+
+    /**
+     * **Regen und Schnee** - draussen ueber die ganze Breite, drinnen im Fensterausschnitt.
+     *
+     * Der schoenste Teil ist der zweite: Regen, den man vom Sessel aus durchs Fenster sieht.
+     * Deshalb wird hier nicht "wenn draussen" gefragt, sondern "wo ist Himmel zu sehen" - im Park
+     * ist das der ganze obere Bildteil, in der Leseecke ein Rechteck von sieben mal sechs Zellen.
+     * Dass beides derselbe Regen ist, macht aus zwei Kulissen einen Ort.
+     *
+     * **Regen faellt schnell und schraeg, Schnee langsam und senkrecht.** Das ist der ganze
+     * Unterschied in der Darstellung, und er genuegt: Bei dieser Aufloesung erkennt man Wetter
+     * nicht an der Form eines Tropfens, sondern an seinem Verhalten.
+     *
+     * Die Tropfen stehen auf [STRUCTURE], also ganz unten in der Helligkeitsstaffelung - Wetter
+     * liegt VOR allem und wuerde bei jeder hoeheren Stufe das Bild uebernehmen. Man soll es
+     * bemerken, ohne hinzusehen, und nicht dabei zusehen muessen.
+     */
+    private fun weather(
+        place: Place,
+        placements: List<Placement>,
+        phase: Int,
+        widthCells: Int,
+        floorY: Int
+    ): List<SceneCell> {
+        val today = PlayWeather.current()
+        if (!today.isFalling || widthCells <= 0) return emptyList()
+
+        // Wo Himmel zu sehen ist: draussen alles oberhalb des Bodens, drinnen das Fenster.
+        val (left, right, top, bottom) = if (isOutdoors(place)) {
+            Rect(0, widthCells - 1, 0, floorY - 1)
+        } else {
+            val window = placements.firstOrNull { it.prop === WINDOW } ?: return emptyList()
+            val ox = originX(window, widthCells)
+            val oy = originY(window, floorY)
+            // Nur die OEFFNUNG, nicht der Rahmen - Regen vor dem Mauerwerk waere Regen im Zimmer.
+            Rect(ox + 1, ox + window.prop.width - 2, oy + 1, oy + window.prop.height - 2)
+        }
+        if (right < left || bottom < top) return emptyList()
+
+        val height = bottom - top + 1
+        val snow = today == PlayWeather.SNOW
+        // **Ein Fenster ist kein Himmel.** Die Dichte richtet sich nach der Flaeche: In einem
+        // Ausschnitt von fuenf mal vier Zellen fuellte dieselbe Menge Tropfen wie draussen das
+        // ganze Fenster und liess es zugefroren aussehen. Ein paar wenige genuegen dort - man
+        // sieht ohnehin nur einen Ausschnitt des Schauers.
+        val tight = height < 8
+        val spacing = if (tight) 2 else 3
+        val speed = if (snow) 1 else 3
+        // MEHRERE je Spalte, nicht einer. Der erste Entwurf setzte einen Tropfen alle vier
+        // Spalten, jeden auf einer anderen Hoehe - das las sich als verstreute Punkte, nicht als
+        // Regen. Erst wenn in derselben Spalte mehrere untereinander haengen, entsteht ein
+        // Schauer statt eines Sternenhimmels.
+        val perColumn = when {
+            tight -> 1
+            snow -> 3
+            else -> 3
+        }
+
+        return (left..right).filter { (it - left) % spacing == 0 }.flatMap { x ->
+            // Jede Spalte auf einem eigenen Versatz, sonst faellt alles in einer Reihe - ein
+            // Vorhang statt eines Schauers.
+            //
+            // Durchmischt statt linear: Ein einfaches Vielfaches der Spaltennummer ergab ein
+            // sauberes Diagonalgitter - bei Regen faellt das nicht auf, weil er ohnehin schraeg
+            // zieht, aber Schnee sah dadurch aus wie ein gedrucktes Muster statt wie Schneefall.
+            val offset = ((x * 7) xor (x * x * 13)) % height
+            (0 until perColumn).flatMap { n ->
+                val fallen = (beat(phase, 1) * speed + offset + n * height / perColumn) % height
+                // Regen zieht schraeg: Je tiefer der Tropfen, desto weiter ist er nach links
+                // gewandert. Schnee faellt senkrecht und schwankt nur.
+                val drift = if (snow) ((fallen / 3) % 2) else -(fallen / 4)
+                val cx = x + drift
+                // **Regen als kurzer Strich, Schnee als einzelnes Korn.** Bei dieser Aufloesung
+                // gibt es keine Tropfenform - was Regen von Schnee unterscheidet, ist die SPUR:
+                // Ein zwei Zellen langer Strich liest sich als etwas, das faellt, ein einzelner
+                // Punkt als etwas, das schwebt. Damit reicht dieselbe Rechnung fuer beides.
+                val length = if (snow) 1 else 2
+                (0 until length).mapNotNull { d ->
+                    val cy = top + fallen + d
+                    if (cx < left || cx > right || cy > bottom) null
+                    else SceneCell(
+                        cx, cy,
+                        when {
+                            snow -> FURNITURE
+                            // Der Kopf des Strichs heller als sein Schweif - das gibt ihm eine
+                            // Richtung, und Regen ohne Richtung ist Nebel.
+                            d == 0 -> STRUCTURE * 2
+                            else -> STRUCTURE
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    /** Der Ausschnitt, in dem Wetter zu sehen ist - draussen das Bild, drinnen das Fenster. */
+    private data class Rect(val left: Int, val right: Int, val top: Int, val bottom: Int)
 
     /**
      * **Abends gehen in den Haeusern die Lichter an.**

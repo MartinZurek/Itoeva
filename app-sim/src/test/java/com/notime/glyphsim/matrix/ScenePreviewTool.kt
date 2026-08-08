@@ -34,6 +34,24 @@ class ScenePreviewTool {
      * Ein eigener Knopf, weil sich die Anordnung dort anders verhaelt (siehe
      * PlayScene.MAX_ROOM_CELLS) und man beides nebeneinander sehen koennen muss.
      */
+    /** Regen und Schnee - draussen und durchs Fenster gesehen. */
+    @Test
+    fun dumpWeather() {
+        val out = StringBuilder()
+        for (weather in listOf(PlayWeather.RAIN, PlayWeather.SNOW)) {
+            PlayWeather.forceForPreview(weather)
+            for (place in listOf(PlayScene.Place.PARK, PlayScene.Place.NOOK, PlayScene.Place.BEDROOM)) {
+                out.append(weather.name).append(":").append(System.lineSeparator())
+                out.append(ScenePreview.render(place, AvatarSpecies.HOOTLET))
+                out.append(System.lineSeparator())
+            }
+        }
+        PlayWeather.forceForPreview(null)
+        val target = File(System.getProperty("java.io.tmpdir"), "scene_weather.txt")
+        target.writeText(out.toString())
+        println("Wetter geschrieben: ${target.absolutePath}")
+    }
+
     @Test
     fun dumpLandscape() {
         val out = StringBuilder()
