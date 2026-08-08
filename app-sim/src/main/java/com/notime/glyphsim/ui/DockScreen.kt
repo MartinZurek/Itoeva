@@ -134,6 +134,14 @@ fun DockScreen(
      */
     playMode: Boolean = false,
     /**
+     * **Nur die Uhr** - kein Wesen, keine Wohnung, keine Erinnerung (siehe [WatchModePrefs]).
+     *
+     * Als eigener Wert und nicht als "playMode = false": Der Normalbetrieb zeigt das Wesen sehr
+     * wohl, sobald eine Erinnerung faellig ist. Hier bleibt der Bildschirm unter allen Umstaenden
+     * bei der Uhr - das ist der ganze Zweck.
+     */
+    watchOnly: Boolean = false,
+    /**
      * Legt aus dem Gespraech heraus eine Gewohnheit an (siehe [PlayTalk.presetFor]).
      *
      * Als Rueckruf und nicht hier erledigt: Eine Erinnerung anzulegen heisst, sie auch zu PLANEN
@@ -874,15 +882,22 @@ fun DockScreen(
         // Klassendoku oben). Verlaesst man den Play-Modus, waehrend der Avatar nur ambient idlet
         // (keine offene Erinnerung, keine laufende Fuetter-Reaktion), verschwindet er wieder -
         // der normale Dock-Modus soll ungestoert bleiben, wie er es immer war.
-        LaunchedEffect(playMode) {
-            if (playMode) {
-                if (avatar == null) {
-                    avatar = spawnAmbientAvatar()
+        LaunchedEffect(playMode, watchOnly) {
+            when {
+                // "Nur Uhr" raeumt IMMER ab, auch mitten in einer offenen Erinnerung. Sonst
+                // bliebe beim Umschalten genau die Figur stehen, die man gerade loswerden
+                // wollte - und sie bliebe stehen, bis ihre Erinnerung ablaeuft.
+                watchOnly -> {
+                    avatarIdleJob?.cancel()
+                    occupiedStation = null
+                    avatar = null
                 }
-            } else if (avatar?.occurrenceId == null && avatar?.fed != true) {
-                avatarIdleJob?.cancel()
-                occupiedStation = null
-                avatar = null
+                playMode -> if (avatar == null) avatar = spawnAmbientAvatar()
+                avatar?.occurrenceId == null && avatar?.fed != true -> {
+                    avatarIdleJob?.cancel()
+                    occupiedStation = null
+                    avatar = null
+                }
             }
         }
 
@@ -1014,7 +1029,12 @@ fun DockScreen(
         //
         // Uebersetzt wird die Restdauer, nicht die volle: die Erinnerung soll hier zum selben
         // Zeitpunkt enden wie ueberall sonst. "Nonstop" bleibt "Nonstop".
-        LaunchedEffect(Unit) {
+        // In "Nur Uhr" wird hier gar nicht erst zugehoert. Eine Erinnerung wird im Dock
+        // beantwortet, indem man die Uhr auf das Wesen zieht - ohne Wesen gaebe es keinen Weg
+        // dazu, sie liefe ab und zaehlte anschliessend als verpasst. Ein Modus, der still
+        // Fehlschlaege ins Pflegebuch schreibt, waere schlimmer als einer, der nichts tut.
+        LaunchedEffect(watchOnly) {
+            if (watchOnly) return@LaunchedEffect
             ReminderAnimationBus.events.onSubscription {
                 val open = OpenReminderLookup.find(
                     context,
@@ -1546,6 +1566,23 @@ fun DockScreen(
                             )
                         }
                     }
+            )
+        }
+
+        // **Ein leiser Hinweis, dass Erinnerungen gerade ruhen.**
+        //
+        // Ohne ihn waere "Nur Uhr" ein Modus, in dem die App still aufhoert zu tun, wofuer man sie
+        // installiert hat - und wer ihn abends einschaltet und morgens vergisst, wundert sich
+        // tagelang, warum nichts mehr kommt. So gedaempft wie moeglich, damit er eine
+        // Nachttisch-Uhr nicht stoert, aber vorhanden: Eine Funktion abzuschalten darf nie
+        // unsichtbar sein.
+        if (watchOnly) {
+            Text(
+                stringResource(R.string.watch_only_note),
+                color = Color(0xFF3A3833),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp)
             )
         }
 

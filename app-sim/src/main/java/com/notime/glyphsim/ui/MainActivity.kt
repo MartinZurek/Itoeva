@@ -139,6 +139,9 @@ class MainActivity : ComponentActivity() {
                     // aus; im Spiel kommt im Dock lediglich die Level-Anzeige dazu.
                     val playActive by PlayModePrefs.active(this@MainActivity)
                         .collectAsState(initial = PlayModePrefs.isActive(this@MainActivity))
+                    // "Nur Uhr" hat Vorrang vor allem anderen - siehe WatchModePrefs.
+                    val watchOnly by WatchModePrefs.enabled(this@MainActivity)
+                        .collectAsState(initial = WatchModePrefs.isEnabled(this@MainActivity))
 
                     fun setDockMode(enabled: Boolean) {
                         dockEnabled = enabled
@@ -155,7 +158,8 @@ class MainActivity : ComponentActivity() {
                         // ohne aus - er zeigt eine Welt und verwaltet keine Erinnerungen.
                         val reminderViewModel: GlyphReminderViewModel = viewModel()
                         DockScreen(
-                            playMode = playActive == true,
+                            playMode = playActive == true && watchOnly != true,
+                            watchOnly = watchOnly == true,
                             onExit = { setDockMode(false) },
                             onAddHabit = { topic ->
                                 val preset = PlayTalk.presetFor(topic)

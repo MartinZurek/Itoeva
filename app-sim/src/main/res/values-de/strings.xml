@@ -220,8 +220,6 @@
     <string name="assistant_menu_intro">❓  Erklär mir, wie das hier läuft</string>
     <string name="assistant_menu_setup">💬  Lass uns was einrichten</string>
     <string name="assistant_menu_settings">⚙️  Einstellungen</string>
-    <string name="home_play_on">▶ Spielen</string>
-    <string name="home_play_off">■ Spiel aus</string>
     <string name="clip_signature_intro">Und ein paar Dinge, die nur mir gehören.</string>
     <string name="playmode_intro_title">Spielmodus</string>
     <string name="playmode_intro_1">Lust zu spielen? Dann übernehme ich eine Weile die Erinnerungen.</string>
@@ -448,4 +446,10 @@
     <string name="talk_ask_shop">Dann geh einkaufen</string>
     <string name="talk_ask_work">Dann geh arbeiten</string>
     <string name="talk_ask_walk">Geh mal eine Runde raus</string>
+
+    <!-- Die drei Modi -->
+    <string name="mode_reminder">Erinnerungen</string>
+    <string name="mode_play">Spiel</string>
+    <string name="mode_watch">Nur Uhr</string>
+    <string name="watch_only_note">Nur Uhr – Erinnerungen ruhen.</string>
 </resources>

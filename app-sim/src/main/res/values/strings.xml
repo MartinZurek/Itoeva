@@ -229,8 +229,6 @@
     <string name="assistant_menu_intro">❓  Explain how this works</string>
     <string name="assistant_menu_setup">💬  Set something up together</string>
     <string name="assistant_menu_settings">⚙️  Settings</string>
-    <string name="home_play_on">▶ Play</string>
-    <string name="home_play_off">■ Play off</string>
     <string name="clip_signature_intro">And a few things that are just mine.</string>
     <string name="playmode_intro_title">Play mode</string>
     <string name="playmode_intro_1">Want to play? Then I take over the reminders for a while.</string>
@@ -457,4 +455,10 @@
     <string name="talk_ask_shop">Off you go to the shop</string>
     <string name="talk_ask_work">Off to work then</string>
     <string name="talk_ask_walk">Go and stretch your legs</string>
+
+    <!-- Die drei Modi -->
+    <string name="mode_reminder">Reminders</string>
+    <string name="mode_play">Play</string>
+    <string name="mode_watch">Watch only</string>
+    <string name="watch_only_note">Watch only – reminders are resting.</string>
 </resources>

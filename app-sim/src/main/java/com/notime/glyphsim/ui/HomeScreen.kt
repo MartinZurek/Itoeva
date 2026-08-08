@@ -187,6 +187,8 @@ fun HomeScreen(
     // Spielmodus-Schalter oben in der Leiste. Beim allerersten Einschalten erklaert der Avatar
     // zunaechst, was sich dadurch aendert (siehe PlayModeIntroDialog).
     val playActive by PlayModePrefs.active(context).collectAsState(initial = PlayModePrefs.isActive(context))
+    // Der Modus, wie der Nutzer ihn sieht - aus beiden Schaltern zusammengesetzt (siehe AppMode).
+    var appMode by remember { mutableStateOf(AppMode.current(context)) }
     val playState by playViewModel.state.collectAsState()
     var showPlayIntro by remember { mutableStateOf(false) }
 
@@ -427,29 +429,40 @@ fun HomeScreen(
                     expandedHeight = 40.dp,
                     title = {},
                     actions = {
-                        // Spielmodus an/aus. Bewusst hier neben "Erinnerungen" und nicht im
-                        // Avatar-Menue versteckt: Es ist der Schalter, der bestimmt, WELCHE
-                        // Erinnerungen ueberhaupt kommen - er gehoert an dieselbe Stelle wie sie
-                        // und muss jederzeit sichtbar sein, damit man nie im Unklaren ist, in
-                        // welchem der beiden Modi die App gerade laeuft.
+                        // **Der Modus-Schalter.** Bewusst hier neben "Erinnerungen" und nicht im
+                        // Avatar-Menue versteckt: Er bestimmt, WELCHE Erinnerungen ueberhaupt
+                        // kommen - und im Fall von "Nur Uhr", ob ueberhaupt welche kommen. Er muss
+                        // jederzeit sichtbar sein, damit man nie im Unklaren ist, in welchem Modus
+                        // die App gerade laeuft.
+                        //
+                        // **Reihum statt drei Knoepfe nebeneinander.** Seit es einen dritten Modus
+                        // gibt, passte ein Schalter mit zwei Beschriftungen nicht mehr. Drei
+                        // Knoepfe waeren die naheliegende Loesung und die falsche: Sie fuellten die
+                        // Leiste, obwohl zwei davon immer nur dastuenden. Ein Knopf, der den
+                        // AKTUELLEN Modus nennt, beantwortet stattdessen die Frage, die man
+                        // tatsaechlich hat ("wo bin ich gerade?"), und wechselt beim Antippen.
                         TextButton(
                             onClick = {
-                                if (playActive == true) {
-                                    playViewModel.setActive(false)
-                                } else if (PlayModePrefs.hasSeenIntro(context)) {
-                                    playViewModel.setActive(true)
-                                } else {
-                                    // Beim ersten Mal erst erklaeren, eingeschaltet wird dann im
-                                    // Dialog - sonst aendert sich unvermittelt, was die App tut.
+                                val next = appMode.next()
+                                // Beim ersten Mal ins Spiel erst erklaeren, eingeschaltet wird dann
+                                // im Dialog - sonst aendert sich unvermittelt, was die App tut.
+                                if (next == AppMode.PLAY && !PlayModePrefs.hasSeenIntro(context)) {
                                     showPlayIntro = true
+                                } else {
+                                    AppMode.set(context, next)
+                                    appMode = next
                                 }
                             }
                         ) {
                             Text(
-                                stringResource(
-                                    if (playActive == true) R.string.home_play_off else R.string.home_play_on
-                                ),
-                                color = if (playActive == true) Color(0xFF7FD1A6) else Color(0xFFE8E4DA)
+                                stringResource(appMode.labelRes),
+                                color = when (appMode) {
+                                    AppMode.PLAY -> Color(0xFF7FD1A6)
+                                    // Gedaempft, nicht farbig: "Nur Uhr" ist der stillste der drei
+                                    // Modi, und das darf man ihm ansehen.
+                                    AppMode.WATCH -> Color(0xFF8F8B82)
+                                    AppMode.REMINDER -> Color(0xFFE8E4DA)
+                                }
                             )
                         }
                         // "Dock an" ist entfallen: das Antippen der Uhr fuehrt bereits dorthin, ein
@@ -710,7 +723,8 @@ fun HomeScreen(
             onStart = {
                 PlayModePrefs.markIntroSeen(context)
                 showPlayIntro = false
-                playViewModel.setActive(true)
+                AppMode.set(context, AppMode.PLAY)
+                appMode = AppMode.PLAY
             },
             onDismiss = { showPlayIntro = false }
         )
