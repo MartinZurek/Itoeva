@@ -512,7 +512,7 @@ object PlayScene {
         // Requisiten aufsetzen. Zeichnete man es danach, stanzte ein Grasbueschel dem Baumstamm
         // und dem Strauch eine dunklere Kerbe in die Silhouette - spaeter gezeichnete Zellen
         // ueberschreiben frueher gezeichnete.
-        cells += groundDetail(place, widthCells, floorY)
+        cells += groundDetail(place, widthCells, floorY, species)
 
         for (placement in fitting(placementsFor(place, species), widthCells, floorY)) {
             val originX = originX(placement, widthCells)
@@ -858,13 +858,8 @@ object PlayScene {
             Placement(SHELF, anchorX = 0.66f, liftCells = SHELF_LIFT, brightness = BACKDROP),
             Placement(CHECKOUT, anchorX = 0.72f, station = Station.CHECKOUT)
         ))
-        Place.PARK -> listOf(
-            Placement(TREE, anchorX = 0f),
-            Placement(BENCH, anchorX = 0.55f, station = Station.BENCH),
-            Placement(BUSH, anchorX = 0.70f),
-            Placement(LAMPPOST, anchorX = 0.80f, station = Station.LAMP),
-            Placement(TREE, anchorX = 1f)
-        )
+        // **Das Draussen, das IHM gehoert** - siehe [habitatPlacements].
+        Place.PARK -> habitatPlacements(species)
 
         // Die STRASSE: Haeuser als Hintergrund, davor Laterne und Bank.
         //
@@ -908,10 +903,18 @@ object PlayScene {
      * Halm an derselben Stelle. Zufaellig gestreutes Gras wuerde bei jedem Bild neu wachsen und
      * flimmern - eine Wiese muss stillstehen duerfen.
      */
-    private fun groundDetail(place: Place, widthCells: Int, floorY: Int): List<SceneCell> = when (place) {
-        Place.PARK -> (0 until widthCells)
-            .filter { it % 7 == 3 || it % 11 == 5 }
-            .map { SceneCell(it, floorY - 1, STRUCTURE) }
+    private fun groundDetail(
+        place: Place,
+        widthCells: Int,
+        floorY: Int,
+        species: AvatarSpecies
+    ): List<SceneCell> = when (place) {
+        // **Der Boden gehoert zum Lebensraum** und wechselt mit ihm (siehe [habitatPlacements]).
+        //
+        // Ohne das saehe die Savanne aus wie eine Wiese mit Akazien und der Sumpf wie eine Wiese
+        // mit Schilf. Was eine Landschaft ausmacht, ist zur Haelfte das, worauf man steht - und
+        // es ist der billigste Teil davon: eine einzige Zeile ueber der Bodenlinie.
+        Place.PARK -> habitatGround(species, widthCells, floorY)
 
         // Wald: DICHTERES Bodenkraut als im Park, und zweizeilig. Der Unterschied zwischen einer
         // gepflegten Wiese und einem Waldboden liegt genau darin, dass man den Boden nicht mehr
@@ -938,6 +941,57 @@ object PlayScene {
         Place.LIVING -> rugAt(widthCells, floorY, from = 0.22f, to = 0.62f)
         Place.BEDROOM -> rugAt(widthCells, floorY, from = 0.40f, to = 0.72f)
         else -> emptyList()
+    }
+
+    /**
+     * Der Bewuchs bzw. Untergrund je Lebensraum - eine Zeile ueber der Bodenlinie.
+     *
+     * Aus der Position gerechnet und nicht gewuerfelt, wie bei allem Beiwerk hier: So steht bei
+     * jedem Neuzeichnen derselbe Halm an derselben Stelle. Zufaellig gestreuter Boden wuechse bei
+     * jedem Bild neu und flimmerte.
+     */
+    private fun habitatGround(
+        species: AvatarSpecies,
+        widthCells: Int,
+        floorY: Int
+    ): List<SceneCell> = when (species) {
+        // Gemaehte Wiese: einzelne Halme, weit auseinander.
+        AvatarSpecies.PUFFLING -> (0 until widthCells)
+            .filter { it % 7 == 3 || it % 11 == 5 }
+            .map { SceneCell(it, floorY - 1, STRUCTURE) }
+
+        // Blumenwiese: BUESCHEL mit Luecken dazwischen, dafuer hoch. Eine Wiese, die man nicht
+        // maeht, waechst nicht gleichmaessig - und ein fast geschlossener Teppich sah dem
+        // Waldboden zum Verwechseln aehnlich.
+        AvatarSpecies.STARLET -> (0 until widthCells).flatMap { x ->
+            buildList {
+                if (x % 5 == 1 || x % 5 == 2) add(SceneCell(x, floorY - 1, STRUCTURE))
+                if (x % 5 == 1) add(SceneCell(x, floorY - 2, STRUCTURE))
+            }
+        }
+
+        // Geroell: einzelne Steine, unregelmaessig - kein Bewuchs.
+        AvatarSpecies.WYRMLING -> (0 until widthCells)
+            .filter { (it * it) % 13 < 3 }
+            .map { SceneCell(it, floorY - 1, (STRUCTURE * 1.5f).roundToInt()) }
+
+        // Sand: lange, flache Rippel AUF der Bodenlinie statt Halmen darueber. Ein Boden, aus
+        // dem nichts herauswaechst, ist genau das, was eine Wueste ausmacht.
+        AvatarSpecies.FENNEC -> (0 until widthCells)
+            .filter { (it / 3) % 3 == 0 }
+            .map { SceneCell(it, floorY, (STRUCTURE * 1.4f).roundToInt()) }
+
+        // Wasser: eine durchgehende, hellere Linie mit Wellen - der einzige Boden, der glaenzt.
+        AvatarSpecies.GLOOP -> (0 until widthCells).map { x ->
+            val wave = if ((x / 2) % 3 == 0) 1 else 0
+            SceneCell(x, floorY - wave, (STRUCTURE * (1.3f + wave * 0.5f)).roundToInt())
+        }
+
+        // Waldboden: DICHT und flach - Laub und Nadeln, aus denen nichts herausragt. Genau
+        // umgekehrt zur Wiese, die hoch und in Buescheln waechst.
+        AvatarSpecies.HOOTLET -> (0 until widthCells)
+            .filter { it % 3 != 2 }
+            .map { SceneCell(it, floorY - 1, STRUCTURE) }
     }
 
     private fun rugAt(widthCells: Int, floorY: Int, from: Float, to: Float): List<SceneCell> {
@@ -1119,6 +1173,80 @@ object PlayScene {
         useSpot = 6 to 2
     )
 
+    // ---- Draussen: die Lebensraeume ----
+    //
+    // **Fuenf neue Formen fuer sechs Landschaften** - der Rest kommt aus dem, was schon da ist
+    // (Baum, Fichte, Strauch, Stamm, Pflanze). Das ist dasselbe Vorgehen wie bei den
+    // Arbeitsplaetzen: Eine andere ZUSAMMENSTELLUNG bekannter Teile ergibt bereits einen
+    // erkennbar anderen Ort, und nur was wirklich fehlt, wird neu gezeichnet.
+    //
+    // Was fehlte, war jeweils die eine Form, an der man eine Landschaft SOFORT erkennt: die
+    // flache Krone der Akazie, der Findling, die Felsnadel, das Schilf, die hohe Blume. Ohne sie
+    // waeren Savanne und Gebirge nur zwei verschieden angeordnete Baumreihen.
+
+    /**
+     * Findling - rund, gedrungen, liegt einfach da. Fuer Gebirge und Savanne.
+     *
+     * Zugleich die Sitzgelegenheit dieser beiden Landschaften: Eine Parkbank im Gebirge waere
+     * absurd, ein Stein zum Draufsetzen ist es nicht. Wie bei Bank und Stamm legt sich seine
+     * vordere Woelbung ueber die Beine des Sitzenden - dieselbe Verdeckung, die ueberall in
+     * dieser Welt eine eigene Sitzhaltung erspart.
+     */
+    private val ROCK = Prop(
+        width = 7, height = 4,
+        art = hLine(2, 4, 0) + hLine(1, 5, 1) + hLine(0, 6, 2) + hLine(0, 6, 3),
+        frontArt = hLine(0, 6, 2) + hLine(0, 6, 3),
+        useSpot = 3 to 1
+    )
+
+    /**
+     * Felsnadel - hoch, schmal, oben spitz.
+     *
+     * Der Gegenpol zum Findling: Aus einer runden und einer steilen Form zusammen liest sich ein
+     * Gebirge. Aus zwei gleichen wuerde eine Steinsammlung.
+     */
+    private val CRAG = Prop(
+        width = 7, height = 13,
+        art = listOf(3 to 0, 3 to 1, 2 to 2, 3 to 2, 4 to 2) +
+            hLine(2, 4, 3) + hLine(1, 5, 4) + hLine(1, 5, 5) +
+            hLine(1, 5, 6) + hLine(0, 6, 7) + hLine(0, 6, 8) +
+            hLine(0, 6, 9) + hLine(0, 6, 10) + hLine(0, 6, 11) + hLine(0, 6, 12)
+    )
+
+    /**
+     * Akazie - flache, breite Krone auf hohem, duennem Stamm.
+     *
+     * Die eine Form, an der man eine Savanne erkennt, noch bevor man den Sand sieht. Genau
+     * umgekehrt gebaut wie der Laubbaum: dort eine runde Krone auf kurzem Stamm, hier ein
+     * Schirm auf einem Stiel.
+     */
+    private val ACACIA = Prop(
+        width = 13, height = 12,
+        art = hLine(3, 9, 0) + hLine(1, 11, 1) + hLine(0, 12, 2) +
+            listOf(6 to 3, 6 to 4, 6 to 5, 6 to 6, 6 to 7, 6 to 8, 6 to 9, 6 to 10, 6 to 11,
+                5 to 11, 7 to 11)
+    )
+
+    /** Schilf - ein paar Halme unterschiedlicher Hoehe. Fuer den Sumpf. */
+    private val REEDS = Prop(
+        width = 7, height = 8,
+        art = listOf(0 to 3, 0 to 4, 0 to 5, 0 to 6, 0 to 7) +
+            listOf(2 to 0, 2 to 1, 2 to 2, 2 to 3, 2 to 4, 2 to 5, 2 to 6, 2 to 7) +
+            listOf(4 to 2, 4 to 3, 4 to 4, 4 to 5, 4 to 6, 4 to 7) +
+            listOf(6 to 5, 6 to 6, 6 to 7) +
+            // Kolben an den beiden hohen Halmen - erst dadurch ist es Schilf und nicht Gras.
+            listOf(1 to 0, 3 to 0, 1 to 1, 3 to 1, 3 to 2, 5 to 2, 5 to 3)
+    )
+
+    /** Hohe Blume - Stiel mit Bluetenkopf. Fuer die Blumenwiese. */
+    private val FLOWER = Prop(
+        width = 5, height = 9,
+        art = listOf(1 to 0, 2 to 0, 3 to 0, 0 to 1, 4 to 1, 1 to 2, 2 to 2, 3 to 2) +
+            listOf(2 to 3, 2 to 4, 2 to 5, 2 to 6, 2 to 7, 2 to 8) +
+            // Ein Blatt auf halber Hoehe, sonst ist es ein Nagel mit Kopf.
+            listOf(0 to 5, 1 to 5)
+    )
+
     // ---- Draussen: Strasse ----
 
     /**
@@ -1212,6 +1340,100 @@ object PlayScene {
             )
         }
         return besideDoor(own)
+    }
+
+    /**
+     * **Jede Kreatur hat ihre eigene Landschaft.**
+     *
+     * Bis hierhin teilten sich alle sechs denselben Park. Das war der letzte Ort, an dem sie sich
+     * nur durch ihre Silhouette unterschieden - und ausgerechnet der Ort, an dem sie am meisten
+     * Zeit draussen verbringen. Ein Wesen mit Fluegeln, eines aus Schleim und ein Wuestenfuchs
+     * gehoeren nicht auf dieselbe Rasenflaeche; sie sind verschieden GEBAUT, und ihre Umgebung
+     * sollte das beantworten.
+     *
+     * **Abgeleitet aus Koerper UND Charakter**, nicht ausgewuerfelt: Wyrmling hat Fluegel und ist
+     * der Antreiber, also Felsen, die man erklimmen kann. Fennec ist ein Wuestenfuchs, also
+     * Savanne. Gloop ist weich und langsam, also Sumpf. Hootlet beobachtet und sieht nachts,
+     * also hoher Wald. Starlet traeumt, also eine Blumenwiese. Puffling behaelt den Park - als
+     * Einstiegsfigur ist das Vertraute bei ihr richtig.
+     *
+     * **Die Strasse bleibt fuer alle dieselbe.** Wenn jeder sein eigenes Draussen hat, braucht es
+     * einen Ort, an dem man sich trotzdem begegnet - sonst waeren sechs Welten nebeneinander
+     * statt einer mit sechs Bewohnern.
+     *
+     * Jeder Lebensraum braucht eine Sitzgelegenheit unter [Station.BENCH]: Alle Spazier-Ablaeufe
+     * steuern sie an (siehe [PlayRoutines]), und ohne sie liefe die Haelfte davon ins Leere. Wie
+     * sie aussieht, ist dagegen frei - Bank, Stamm oder Findling.
+     */
+    private fun habitatPlacements(species: AvatarSpecies): List<Placement> = when (species) {
+        // PARK - der Klassiker. Als Einstiegsfigur bekommt Puffling das Vertraute: gemaehte
+        // Wiese, Bank, Laterne. Wer die App zum ersten Mal oeffnet, soll nicht erst eine
+        // Landschaft deuten muessen.
+        AvatarSpecies.PUFFLING -> listOf(
+            Placement(TREE, anchorX = 0f),
+            Placement(BENCH, anchorX = 0.55f, station = Station.BENCH),
+            Placement(BUSH, anchorX = 0.72f),
+            Placement(LAMPPOST, anchorX = 0.86f, station = Station.LAMP),
+            Placement(TREE, anchorX = 1f)
+        )
+
+        // BLUMENWIESE - "Du musst heute nicht perfekt sein." Hohe Blumen, die ueber ihr
+        // zusammenschlagen, und ein umgestuerzter Stamm zum Hineinlegen. Nichts hier ist
+        // gepflegt; es waechst einfach.
+        AvatarSpecies.STARLET -> listOf(
+            Placement(TREE, anchorX = 1f, brightness = BACKDROP, behind = true),
+            Placement(FLOWER, anchorX = 0f),
+            Placement(FLOWER, anchorX = 0.14f),
+            Placement(LOG, anchorX = 0.52f, station = Station.BENCH),
+            Placement(FLOWER, anchorX = 0.88f),
+            // 0,34 und nicht 0,74: Dort stand er fast genau da, wo im Park der Strauch steht -
+            // zwei Landschaften, die sich ein Detail an derselben Stelle teilen, wirken beim
+            // Umschalten wie dieselbe mit anderer Figur.
+            Placement(BUSH, anchorX = 0.34f)
+        )
+
+        // GEBIRGE - "Los geht's. Nur ein kleiner Schritt." Ein Drache mit Fluegeln gehoert dorthin,
+        // wo es hinaufgeht. Felsnadel und Findling zusammen, weil eine runde und eine steile Form
+        // erst gemeinsam ein Gebirge ergeben.
+        AvatarSpecies.WYRMLING -> listOf(
+            Placement(CRAG, anchorX = 0.94f, brightness = BACKDROP, behind = true),
+            Placement(CRAG, anchorX = 0f),
+            Placement(ROCK, anchorX = 0.50f, station = Station.BENCH),
+            Placement(ROCK, anchorX = 0.74f),
+            Placement(PINE, anchorX = 0.26f, brightness = BACKDROP, behind = true)
+        )
+
+        // SAVANNE - ein Wuestenfuchs in seiner eigenen Landschaft. Die Akazie traegt die Szene
+        // ganz allein: An ihrer flachen Krone erkennt man sie, bevor man den Sand sieht.
+        AvatarSpecies.FENNEC -> listOf(
+            Placement(ACACIA, anchorX = 0.04f),
+            Placement(ROCK, anchorX = 0.46f, station = Station.BENCH),
+            Placement(BUSH, anchorX = 0.66f),
+            Placement(ACACIA, anchorX = 1f, brightness = BACKDROP, behind = true)
+        )
+
+        // SUMPF - "Alles darf auch langsam gehen." Weich, warm, ohne Kanten; Schilf statt Baeumen.
+        // Der einzige Lebensraum, in dem nichts aufragt - das passt zu einem Wesen, das selbst
+        // keine feste Form hat.
+        AvatarSpecies.GLOOP -> listOf(
+            Placement(REEDS, anchorX = 0f),
+            Placement(REEDS, anchorX = 0.18f),
+            Placement(LOG, anchorX = 0.50f, station = Station.BENCH),
+            Placement(REEDS, anchorX = 0.80f),
+            Placement(REEDS, anchorX = 1f, brightness = BACKDROP, behind = true),
+            Placement(BUSH, anchorX = 0.68f)
+        )
+
+        // HOHER WALD - "Ruhe bringt Klarheit." Eine Eule sitzt hoch und sieht nachts. Fichten
+        // dicht an dicht, dazwischen ein alter Baum; kein kuenstliches Licht.
+        AvatarSpecies.HOOTLET -> listOf(
+            Placement(OLDTREE, anchorX = 0.38f, brightness = BACKDROP, behind = true),
+            Placement(PINE, anchorX = 0f),
+            Placement(PINE, anchorX = 0.20f, brightness = BACKDROP, behind = true),
+            Placement(LOG, anchorX = 0.68f, station = Station.BENCH),
+            Placement(PINE, anchorX = 1f),
+            Placement(BUSH, anchorX = 0.80f)
+        )
     }
 
     /**

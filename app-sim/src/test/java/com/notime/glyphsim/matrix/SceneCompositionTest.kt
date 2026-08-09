@@ -240,4 +240,71 @@ class SceneCompositionTest {
             )
         }
     }
+
+    @Test
+    fun `jede Kreatur hat ihre eigene Landschaft`() {
+        // **Der Zweck der ganzen Arbeit, als Zahl.** Sechs Lebensraeume, die sich am Ende doch
+        // aehneln, waeren viel Aufwand fuer nichts - und beim Bauen faellt das kaum auf, weil man
+        // immer nur einen davon vor sich hat. Verglichen werden deshalb die tatsaechlich
+        // gezeichneten Zellen, paarweise.
+        // OHNE die Bodenlinie selbst: Sie ist der Horizont und ueber alle Landschaften hinweg
+        // absichtlich dieselbe (sie laeuft durchs ganze Bild, damit kein Kasten entsteht). Sie
+        // mitzuzaehlen verwaesserte jeden Vergleich - zwei voellig verschiedene Landschaften
+        // haetten allein dadurch schon die halbe Flaeche gemeinsam.
+        val drawn = AvatarSpecies.entries.associateWith { species ->
+            PlayScene.build(
+                PlayScene.Place.PARK, 0, width, floorY,
+                PlayAmbientActivity.DayPhase.MIDDAY, species = species
+            ).filter { it.y < floorY }.map { it.x to it.y }.toSet()
+        }
+
+        for (a in AvatarSpecies.entries) {
+            for (b in AvatarSpecies.entries) {
+                if (a.ordinal >= b.ordinal) continue
+                val cellsA = drawn.getValue(a)
+                val cellsB = drawn.getValue(b)
+                val shared = cellsA.count { it in cellsB }
+                val overlap = shared.toFloat() / minOf(cellsA.size, cellsB.size)
+                assertTrue(
+                    "Die Landschaften von $a und $b stimmen zu ${(overlap * 100).toInt()} % " +
+                        "ueberein - dann ist es dieselbe Landschaft mit anderer Figur." +
+                        System.lineSeparator() +
+                        ScenePreview.render(PlayScene.Place.PARK, a) +
+                        ScenePreview.render(PlayScene.Place.PARK, b),
+                    overlap < 0.6f
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `jeder Lebensraum bietet etwas zum Sitzen`() {
+        // Alle Spazier-Ablaeufe steuern Station.BENCH an (siehe PlayRoutines). Fehlt sie in einem
+        // Lebensraum, laeuft dort die Haelfte davon ins Leere - ohne Absturz und ohne Warnung,
+        // die Figur bliebe einfach stehen.
+        for (species in AvatarSpecies.entries) {
+            assertTrue(
+                "$species hat draussen nichts zum Sitzen",
+                PlayScene.Station.BENCH in PlayScene.stationsAt(PlayScene.Place.PARK, species)
+            )
+        }
+    }
+
+    @Test
+    fun `der Boden gehoert zur Landschaft`() {
+        // Sand, Wasser und Wiese muessen sich unterscheiden - sonst saehe die Savanne aus wie
+        // eine Wiese mit Akazien. Geprueft an der untersten Zeile, in der Bewuchs bzw. Untergrund
+        // liegt, und zwar OHNE die Requisiten darueber.
+        val ground = AvatarSpecies.entries.associateWith { species ->
+            PlayScene.build(
+                PlayScene.Place.PARK, 0, width, floorY,
+                PlayAmbientActivity.DayPhase.MIDDAY, species = species
+            ).filter { it.y >= floorY - 1 }.map { it.x to it.y }.toSet()
+        }
+        val distinct = ground.values.toSet()
+        assertTrue(
+            "Von sechs Landschaften haben nur ${distinct.size} einen eigenen Boden",
+            distinct.size >= 4
+        )
+    }
 }
