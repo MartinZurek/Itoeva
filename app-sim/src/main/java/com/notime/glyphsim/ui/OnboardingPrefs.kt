@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 
 /**
  * Merkt sich, ob der Nutzer den Avatar schon einmal angetippt hat.
@@ -12,15 +14,12 @@ import android.content.Context
  * Weg, deshalb verschwindet er nach der ersten Beruehrung dauerhaft.
  */
 object OnboardingPrefs {
-    private const val PREFS_NAME = "onboarding_prefs"
-    private const val KEY_TAPPED_AVATAR = "tapped_avatar"
-    private const val KEY_TAPPED_CLOCK = "tapped_clock"
 
     fun hasTappedAvatar(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_TAPPED_AVATAR, false)
+        SettingsStore.read(context, SettingsCatalog.TappedAvatar)
 
     fun markAvatarTapped(context: Context) {
-        prefs(context).edit().putBoolean(KEY_TAPPED_AVATAR, true).apply()
+        SettingsStore.write(context, SettingsCatalog.TappedAvatar, true)
     }
 
     /**
@@ -30,12 +29,10 @@ object OnboardingPrefs {
      * beim ersten zufaelligen Antippen der Uhr.
      */
     fun hasTappedClock(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_TAPPED_CLOCK, false)
+        SettingsStore.read(context, SettingsCatalog.TappedClock)
 
     fun markClockTapped(context: Context) {
-        prefs(context).edit().putBoolean(KEY_TAPPED_CLOCK, true).apply()
+        SettingsStore.write(context, SettingsCatalog.TappedClock, true)
     }
 
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }

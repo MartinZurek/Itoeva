@@ -3,22 +3,31 @@ package com.notime.glyphsim.ui
 import android.content.Context
 import android.content.SharedPreferences
 import com.notime.glyphsim.matrix.ClockStyle
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 
 /** Persistiert das vom Nutzer gewaehlte Ziffernblatt-Design (siehe [ClockStyle]), Standard CLASSIC. */
 object ClockStylePrefs {
-    private const val PREFS_NAME = "clock_style_prefs"
-    private const val KEY_STYLE = "style"
-
-    fun get(context: Context): ClockStyle {
-        val name = prefs(context).getString(KEY_STYLE, null) ?: return ClockStyle.CLASSIC
-        return runCatching { ClockStyle.valueOf(name) }.getOrDefault(ClockStyle.CLASSIC)
-    }
+    fun get(context: Context): ClockStyle =
+        toStyle(SettingsStore.read(context, SettingsCatalog.ClockStyle))
 
     fun set(context: Context, style: ClockStyle) {
-        prefs(context).edit().putString(KEY_STYLE, style.name).apply()
+        SettingsStore.write(context, SettingsCatalog.ClockStyle, style.name)
+    }
+
+    /**
+     * Der Stil steht als Zeichenkette in den Einstellungen. Ein Name, den es nicht mehr gibt -
+     * nach einem Rueckbau oder einer alten Installation -, faellt still auf CLASSIC zurueck statt
+     * eine Ausnahme zu werfen: ein unbekanntes Ziffernblatt ist kein Grund, die Uhr nicht
+     * anzuzeigen.
+     */
+    private fun toStyle(name: String?): ClockStyle {
+        if (name == null) return ClockStyle.CLASSIC
+        return runCatching { ClockStyle.valueOf(name) }.getOrDefault(ClockStyle.CLASSIC)
     }
 
     /**
@@ -31,16 +40,6 @@ object ClockStylePrefs {
      * [awaitClose] meldet den Listener wieder ab, sobald der Collector endet (Screen verlassen) -
      * sonst haengt er am Application-weiten SharedPreferences-Objekt und leckt.
      */
-    fun observe(context: Context): Flow<ClockStyle> = callbackFlow {
-        val preferences = prefs(context)
-        trySend(get(context))
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == KEY_STYLE || key == null) trySend(get(context))
-        }
-        preferences.registerOnSharedPreferenceChangeListener(listener)
-        awaitClose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
-    }
-
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    fun observe(context: Context): Flow<ClockStyle> =
+        SettingsStore.observe(context, SettingsCatalog.ClockStyle).map(::toStyle)
 }

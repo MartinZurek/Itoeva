@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 
 /**
  * Ob die Stimmung des Avatars sein Verhalten beeinflusst (siehe
@@ -13,16 +15,12 @@ import android.content.Context
  * ist der Zusammenhang dagegen klar, und beim Testen einzelner Animationen stoert sie nicht.
  */
 object MoodPrefs {
-    private const val PREFS_NAME = "mood_prefs"
-    private const val KEY_ENABLED = "mood_enabled"
-
+    // Ablageort und Schluessel stehen jetzt gebuendelt in SettingsCatalog - die oeffentliche
+    // Schnittstelle hier bleibt unveraendert, damit keine der Aufrufstellen angefasst werden muss.
     fun isEnabled(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_ENABLED, false)
+        SettingsStore.read(context, SettingsCatalog.MoodEnabled)
 
     fun setEnabled(context: Context, enabled: Boolean) {
-        prefs(context).edit().putBoolean(KEY_ENABLED, enabled).apply()
+        SettingsStore.write(context, SettingsCatalog.MoodEnabled, enabled)
     }
-
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }

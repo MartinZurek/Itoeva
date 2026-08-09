@@ -3,6 +3,8 @@ package com.notime.glyphsim.ui
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 
 /**
  * Ob sich die App mitdrehen darf, wenn das Geraet gedreht wird.
@@ -13,14 +15,11 @@ import android.content.pm.ActivityInfo
  * Systemeinstellung: bei gesperrter automatischer Drehung bleibt es auch dann beim Hochformat.
  */
 object OrientationPrefs {
-    private const val PREFS_NAME = "orientation_prefs"
-    private const val KEY_ALLOW_ROTATION = "allow_rotation"
-
     fun isRotationAllowed(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_ALLOW_ROTATION, false)
+        SettingsStore.read(context, SettingsCatalog.AllowRotation)
 
     fun setRotationAllowed(context: Context, allowed: Boolean) {
-        prefs(context).edit().putBoolean(KEY_ALLOW_ROTATION, allowed).apply()
+        SettingsStore.write(context, SettingsCatalog.AllowRotation, allowed)
     }
 
     /**
@@ -39,6 +38,4 @@ object OrientationPrefs {
         }
     }
 
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }

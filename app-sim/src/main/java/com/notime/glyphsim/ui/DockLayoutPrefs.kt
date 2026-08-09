@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 
 /**
  * Persistiert Position (als Bruchteil 0..1 der verfuegbaren Flaeche, damit sie bei
@@ -33,22 +35,23 @@ object DockLayoutPrefs {
     private const val DEFAULT_FRACTION = 0.5f
 
     fun getSizeDp(context: Context): Float =
-        prefs(context).getFloat(KEY_SIZE_DP, DEFAULT_SIZE_DP)
+        SettingsStore.read(context, SettingsCatalog.DockSizeDp)
 
     fun getOffsetFraction(context: Context): Pair<Float, Float> {
-        val p = prefs(context)
-        return p.getFloat(KEY_OFFSET_FRACTION_X, DEFAULT_FRACTION) to
-            p.getFloat(KEY_OFFSET_FRACTION_Y, DEFAULT_FRACTION)
+        return SettingsStore.read(context, SettingsCatalog.DockOffsetFractionX) to
+            SettingsStore.read(context, SettingsCatalog.DockOffsetFractionY)
     }
 
+    /**
+     * Groesse und Position gehoeren zusammen und wandern in EINEM Vorgang in die Ablage - sonst
+     * kann ein Beobachter den Zwischenstand sehen und die Uhr springt zweimal.
+     */
     fun save(context: Context, sizeDp: Float, offsetFractionX: Float, offsetFractionY: Float) {
-        prefs(context).edit()
-            .putFloat(KEY_SIZE_DP, sizeDp)
-            .putFloat(KEY_OFFSET_FRACTION_X, offsetFractionX)
-            .putFloat(KEY_OFFSET_FRACTION_Y, offsetFractionY)
-            .apply()
+        SettingsStore.writeFloats(
+            context,
+            SettingsCatalog.DockSizeDp to sizeDp,
+            SettingsCatalog.DockOffsetFractionX to offsetFractionX,
+            SettingsCatalog.DockOffsetFractionY to offsetFractionY
+        )
     }
-
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }

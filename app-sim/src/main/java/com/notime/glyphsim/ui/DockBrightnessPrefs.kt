@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 
 /**
  * Optionale, manuell gesetzte Helligkeit fuer den Dock-Modus. Standardmaessig
@@ -10,24 +12,19 @@ import android.content.Context
  * einschaltet, wird [brightness] als Fenster-Override angewendet.
  */
 object DockBrightnessPrefs {
-    private const val PREFS_NAME = "dock_brightness_prefs"
-    private const val KEY_OVERRIDE_ENABLED = "override_enabled"
-    private const val KEY_BRIGHTNESS = "brightness"
-    private const val DEFAULT_BRIGHTNESS = 0.3f
-
     fun isOverrideEnabled(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_OVERRIDE_ENABLED, false)
+        SettingsStore.read(context, SettingsCatalog.DockBrightnessOverride)
 
     fun getBrightness(context: Context): Float =
-        prefs(context).getFloat(KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
+        SettingsStore.read(context, SettingsCatalog.DockBrightness)
 
+    /**
+     * Schalter und Wert gehoeren zusammen und werden deshalb gemeinsam geschrieben - sonst kann
+     * ein Beobachter den Zwischenstand sehen (Schalter schon an, Helligkeit noch alt) und die
+     * Anzeige springt zweimal.
+     */
     fun setOverride(context: Context, enabled: Boolean, brightness: Float) {
-        prefs(context).edit()
-            .putBoolean(KEY_OVERRIDE_ENABLED, enabled)
-            .putFloat(KEY_BRIGHTNESS, brightness)
-            .apply()
+        SettingsStore.write(context, SettingsCatalog.DockBrightnessOverride, enabled)
+        SettingsStore.write(context, SettingsCatalog.DockBrightness, brightness)
     }
-
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }

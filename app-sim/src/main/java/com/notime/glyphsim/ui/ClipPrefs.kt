@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 
 /**
  * Ob die Aufnahme-Schaltflaeche im Play-Modus ueberhaupt erscheint.
@@ -11,16 +13,13 @@ import android.content.Context
  * behalten ihren ungestoerten Bildschirm.
  */
 object ClipPrefs {
-    private const val PREFS = "clip_prefs"
-    private const val KEY_ENABLED = "recording_enabled"
 
+    // Ablageort und Schluessel: siehe SettingsCatalog.
     fun isEnabled(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_ENABLED, false)
+        SettingsStore.read(context, SettingsCatalog.ClipRecordingEnabled)
 
     fun setEnabled(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_ENABLED, value).apply()
+        SettingsStore.write(context, SettingsCatalog.ClipRecordingEnabled, value)
     }
 
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 }

@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
 
 /**
  * Merkt sich, ob der manuelle "Dock-Modus" (Bildschirm bleibt an, zeigt die Uhr
@@ -8,16 +10,12 @@ import android.content.Context
  * er nach einem Neustart der App wiederhergestellt wird.
  */
 object DockModePrefs {
-    private const val PREFS_NAME = "dock_mode_prefs"
-    private const val KEY_ENABLED = "dock_mode_enabled"
-
+    // Ablageort und Schluessel stehen jetzt gebuendelt in SettingsCatalog - die oeffentliche
+    // Schnittstelle hier bleibt unveraendert, damit keine der Aufrufstellen angefasst werden muss.
     fun isEnabled(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_ENABLED, false)
+        SettingsStore.read(context, SettingsCatalog.DockModeEnabled)
 
     fun setEnabled(context: Context, enabled: Boolean) {
-        prefs(context).edit().putBoolean(KEY_ENABLED, enabled).apply()
+        SettingsStore.write(context, SettingsCatalog.DockModeEnabled, enabled)
     }
-
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }
