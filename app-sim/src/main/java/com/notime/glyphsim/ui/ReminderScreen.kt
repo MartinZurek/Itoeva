@@ -56,6 +56,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -121,7 +122,7 @@ private val emptyFrame = IntArray(MatrixGeometry.SIZE * MatrixGeometry.SIZE)
  * aber weiter gemerkt" bleiben - er wuerde ueber dem Bibliotheks-Screen schweben) und
  * beim Zurueckkommen mit exakt diesem Stand neu geoeffnet, statt leer.
  */
-private data class ReminderDraft(
+internal data class ReminderDraft(
     val label: String,
     val animationChoice: AnimationChoice,
     val selectedDays: Set<DayOfWeek>,
@@ -139,7 +140,7 @@ fun ReminderScreen(
     initialEditReminderId: Long? = null,
     viewModel: GlyphReminderViewModel = viewModel()
 ) {
-    var showLibrary by remember { mutableStateOf(false) }
+    var showLibrary by rememberSaveable { mutableStateOf(false) }
     val reminders by viewModel.reminders.collectAsStateWithLifecycle()
     val activeSpecies by viewModel.activeSpecies.collectAsStateWithLifecycle()
     val libraryAnimations by viewModel.libraryAnimations.collectAsStateWithLifecycle()
@@ -149,23 +150,48 @@ fun ReminderScreen(
         .filter { it.isSelected }
         .mapNotNull { runCatching { AnimationType.valueOf(it.animationType) }.getOrNull() }
         .toSet()
-    var showAddDialog by remember { mutableStateOf(false) }
-    var editingReminder by remember { mutableStateOf<GlyphReminder?>(null) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    /*
+     * Die Id statt der Erinnerung selbst - aus zwei Gruenden.
+     *
+     * Erstens laesst sich eine Id in ein Bundle schreiben und ueberlebt damit den Neuaufbau der
+     * Activity und den Prozesstod; ein GlyphReminder-Objekt nicht.
+     *
+     * Zweitens war das festgehaltene Objekt ein stiller Fehler: es blieb auf dem Stand des
+     * Antippens stehen. Aenderte sich die Erinnerung waehrenddessen anderswo - der Watchdog
+     * schreibt `nextTriggerEpochMillis`, der Spielmodus wuerfelt Thema und Intervall neu -,
+     * bearbeitete der Dialog weiter den alten Stand und schriebe ihn beim Speichern zurueck.
+     * Ueber die Id wird bei jedem Neuzeichnen die aktuelle Zeile aufgeloest.
+     */
+    var editingReminderId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val editingReminder = editingReminderId?.let { id -> reminders.firstOrNull { it.id == id } }
     // reminders laedt asynchron aus der DB, ist beim ersten Composen also noch leer - deshalb
     // erst zugreifen, sobald die gesuchte Id tatsaechlich auftaucht, statt einmalig beim Start.
     // "consumed" verhindert, dass ein spaeteres Aktualisieren der Liste (z.B. nach dem Speichern)
     // denselben Dialog ein zweites Mal aufreisst.
-    var initialEditConsumed by remember { mutableStateOf(false) }
+    var initialEditConsumed by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(reminders, initialEditReminderId) {
         if (!initialEditConsumed && initialEditReminderId != null) {
             reminders.find { it.id == initialEditReminderId }?.let {
-                editingReminder = it
+                editingReminderId = it.id
                 initialEditConsumed = true
             }
         }
     }
-    var addDraft by remember { mutableStateOf<ReminderDraft?>(null) }
-    var editDraft by remember { mutableStateOf<ReminderDraft?>(null) }
+    /*
+     * Die halb fertigen Eingaben ueberleben jetzt den Neuaufbau der Activity und den Prozesstod -
+     * bis hierher waren sie bei der Rueckkehr aus einer anderen App weg. Die Uebersetzung ins
+     * Bundle steht in ReminderDraftSaver.kt.
+     *
+     * `nullable` braucht den Saver ausdruecklich: rememberSaveable kann sonst nicht unterscheiden,
+     * ob nichts gespeichert war oder ob der gespeicherte Wert null lautete.
+     */
+    var addDraft by rememberSaveable(stateSaver = ReminderDraftSaver) {
+        mutableStateOf<ReminderDraft?>(null)
+    }
+    var editDraft by rememberSaveable(stateSaver = ReminderDraftSaver) {
+        mutableStateOf<ReminderDraft?>(null)
+    }
     var showCopyDialog by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -215,7 +241,7 @@ fun ReminderScreen(
                         ReminderCard(
                             reminder = reminder,
                             choice = reminder.animationChoice(libraryAnimations),
-                            onClick = { editingReminder = reminder },
+                            onClick = { editingReminderId = reminder.id },
                             onToggle = { enabled -> viewModel.setEnabled(reminder, enabled) }
                         )
                     }
@@ -250,7 +276,7 @@ fun ReminderScreen(
             builtInTypes = selectedBuiltInTypes,
             resolveFrames = viewModel::framesFor,
             onManageLibrary = { draft -> editDraft = draft; showLibrary = true },
-            onDismiss = { editingReminder = null; editDraft = null },
+            onDismiss = { editingReminderId = null; editDraft = null },
             onSave = { label, choice, days, start, end, interval, openDuration, goal ->
                 val (animationType, libraryAnimationId) = choice.toStorage()
                 viewModel.updateReminder(
@@ -266,12 +292,12 @@ fun ReminderScreen(
                         dailyGoal = goal
                     )
                 )
-                editingReminder = null
+                editingReminderId = null
                 editDraft = null
             },
             onDelete = {
                 viewModel.deleteReminder(reminder)
-                editingReminder = null
+                editingReminderId = null
                 editDraft = null
             }
         )
@@ -629,25 +655,25 @@ private fun ReminderDialog(
     ) -> Unit,
     onDelete: (() -> Unit)?
 ) {
-    var label by remember { mutableStateOf(initialDraft?.label ?: initial?.label ?: "") }
+    var label by rememberSaveable { mutableStateOf(initialDraft?.label ?: initial?.label ?: "") }
     val defaultChoice = builtInTypes.firstOrNull()?.let { AnimationChoice.BuiltIn(it) }
         ?: libraryAnimations.firstOrNull()?.let { AnimationChoice.Library(it.id, it.label, it.emoji) }
         ?: AnimationChoice.BuiltIn(AnimationType.GENERAL)
-    var animationChoice by remember {
+    var animationChoice by rememberSaveable(stateSaver = AnimationChoiceSaver) {
         mutableStateOf(initialDraft?.animationChoice ?: initial?.animationChoice(libraryAnimations) ?: defaultChoice)
     }
-    var selectedDays by remember {
+    var selectedDays by rememberSaveable(stateSaver = DaysOfWeekSaver) {
         mutableStateOf(
             initialDraft?.selectedDays
                 ?: initial?.let { DaysOfWeekMask.toSet(it.daysOfWeekMask) }
                 ?: emptySet()
         )
     }
-    var startMinute by remember { mutableStateOf(initialDraft?.startMinute ?: initial?.startMinuteOfDay ?: 9 * 60) }
-    var endMinute by remember { mutableStateOf(initialDraft?.endMinute ?: initial?.endMinuteOfDay ?: 18 * 60) }
-    var interval by remember { mutableStateOf(initialDraft?.interval ?: initial?.intervalMinutes ?: 15) }
-    var dailyGoal by remember { mutableStateOf(initial?.dailyGoal ?: NO_GOAL) }
-    var openDuration by remember {
+    var startMinute by rememberSaveable { mutableStateOf(initialDraft?.startMinute ?: initial?.startMinuteOfDay ?: 9 * 60) }
+    var endMinute by rememberSaveable { mutableStateOf(initialDraft?.endMinute ?: initial?.endMinuteOfDay ?: 18 * 60) }
+    var interval by rememberSaveable { mutableStateOf(initialDraft?.interval ?: initial?.intervalMinutes ?: 15) }
+    var dailyGoal by rememberSaveable { mutableStateOf(initial?.dailyGoal ?: NO_GOAL) }
+    var openDuration by rememberSaveable {
         mutableStateOf(initial?.openDurationSeconds ?: ReminderOpenDuration.DEFAULT_SECONDS)
     }
     // Eine Offen-Dauer laenger als das eigene Intervall wuerde die Erinnerung noch zeigen,

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
@@ -129,11 +130,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             GlyphSimTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    var screen by remember { mutableStateOf(Screen.HOME) }
+                    // rememberSaveable: der gewaehlte Bildschirm ueberlebt den Neuaufbau der
+                    // Activity und den Prozesstod. Vorher landete jeder, der aus dem Hintergrund
+                    // zurueckkam, wieder auf dem Startbildschirm - auch mitten aus der
+                    // Erinnerungsliste heraus. Screen ist ein Enum und damit ohne eigenen Saver
+                    // bundle-faehig.
+                    var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
                     // Nur fuer das Tapthrough vom Rhythmus-Kommentar im Pflegebuch (siehe
                     // FeedStatsDialog) gesetzt - der normale Weg ueber onOpenReminders laesst es
                     // auf null, dann oeffnet ReminderScreen keinen Bearbeiten-Dialog von selbst.
-                    var editReminderId by remember { mutableStateOf<Long?>(null) }
+                    var editReminderId by rememberSaveable { mutableStateOf<Long?>(null) }
                     var dockEnabled by remember { mutableStateOf(DockModePrefs.isEnabled(this@MainActivity)) }
                     val shared by sharedText
                     // Nur fuer die Fortschritts-Anzeige im Dock-Modus - der Spielmodus ist KEIN

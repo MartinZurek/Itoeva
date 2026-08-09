@@ -66,6 +66,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -123,7 +124,7 @@ private val emptyFrame = IntArray(MatrixGeometry.SIZE * MatrixGeometry.SIZE)
  * aber weiter gemerkt" bleiben - er wuerde ueber dem Bibliotheks-Screen schweben) und
  * beim Zurueckkommen mit exakt diesem Stand neu geoeffnet, statt leer.
  */
-private data class ReminderDraft(
+internal data class ReminderDraft(
     val label: String,
     val animationChoice: AnimationChoice,
     val selectedDays: Set<DayOfWeek>,
@@ -135,7 +136,7 @@ private data class ReminderDraft(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
-    var showLibrary by remember { mutableStateOf(false) }
+    var showLibrary by rememberSaveable { mutableStateOf(false) }
     val reminders by viewModel.reminders.collectAsStateWithLifecycle()
     val libraryAnimations by viewModel.libraryAnimations.collectAsStateWithLifecycle()
     val selectedLibraryAnimations = libraryAnimations.filter { it.isSelected }
@@ -144,10 +145,35 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
         .filter { it.isSelected }
         .mapNotNull { runCatching { AnimationType.valueOf(it.animationType) }.getOrNull() }
         .toSet()
-    var showAddDialog by remember { mutableStateOf(false) }
-    var editingReminder by remember { mutableStateOf<GlyphReminder?>(null) }
-    var addDraft by remember { mutableStateOf<ReminderDraft?>(null) }
-    var editDraft by remember { mutableStateOf<ReminderDraft?>(null) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    /*
+     * Die Id statt der Erinnerung selbst - aus zwei Gruenden.
+     *
+     * Erstens laesst sich eine Id in ein Bundle schreiben und ueberlebt damit den Neuaufbau der
+     * Activity und den Prozesstod; ein GlyphReminder-Objekt nicht.
+     *
+     * Zweitens war das festgehaltene Objekt ein stiller Fehler: es blieb auf dem Stand des
+     * Antippens stehen. Aenderte sich die Erinnerung waehrenddessen anderswo - der Watchdog
+     * schreibt `nextTriggerEpochMillis`, der Spielmodus wuerfelt Thema und Intervall neu -,
+     * bearbeitete der Dialog weiter den alten Stand und schriebe ihn beim Speichern zurueck.
+     * Ueber die Id wird bei jedem Neuzeichnen die aktuelle Zeile aufgeloest.
+     */
+    var editingReminderId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val editingReminder = editingReminderId?.let { id -> reminders.firstOrNull { it.id == id } }
+    /*
+     * Die halb fertigen Eingaben ueberleben jetzt den Neuaufbau der Activity und den Prozesstod -
+     * bis hierher waren sie bei der Rueckkehr aus einer anderen App weg. Die Uebersetzung ins
+     * Bundle steht in ReminderDraftSaver.kt.
+     *
+     * `nullable` braucht den Saver ausdruecklich: rememberSaveable kann sonst nicht unterscheiden,
+     * ob nichts gespeichert war oder ob der gespeicherte Wert null lautete.
+     */
+    var addDraft by rememberSaveable(stateSaver = ReminderDraftSaver) {
+        mutableStateOf<ReminderDraft?>(null)
+    }
+    var editDraft by rememberSaveable(stateSaver = ReminderDraftSaver) {
+        mutableStateOf<ReminderDraft?>(null)
+    }
     val context = LocalContext.current
     var exactAlarmsAllowed by remember { mutableStateOf(viewModel.canScheduleExactAlarms()) }
     var notificationsAllowed by remember { mutableStateOf(hasNotificationPermission(context)) }
@@ -245,7 +271,7 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
                         ReminderCard(
                             reminder = reminder,
                             choice = reminder.animationChoice(libraryAnimations),
-                            onClick = { editingReminder = reminder },
+                            onClick = { editingReminderId = reminder.id },
                             onToggle = { enabled -> viewModel.setEnabled(reminder, enabled) }
                         )
                     }
@@ -280,7 +306,7 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
             builtInTypes = selectedBuiltInTypes,
             resolveFrames = viewModel::framesFor,
             onManageLibrary = { draft -> editDraft = draft; showLibrary = true },
-            onDismiss = { editingReminder = null; editDraft = null },
+            onDismiss = { editingReminderId = null; editDraft = null },
             onSave = { label, choice, days, start, end, interval ->
                 val (animationType, libraryAnimationId) = choice.toStorage()
                 viewModel.updateReminder(
@@ -294,12 +320,12 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
                         intervalMinutes = interval
                     )
                 )
-                editingReminder = null
+                editingReminderId = null
                 editDraft = null
             },
             onDelete = {
                 viewModel.deleteReminder(reminder)
-                editingReminder = null
+                editingReminderId = null
                 editDraft = null
             }
         )
@@ -767,24 +793,24 @@ private fun ReminderDialog(
     ) -> Unit,
     onDelete: (() -> Unit)?
 ) {
-    var label by remember { mutableStateOf(initialDraft?.label ?: initial?.label ?: "") }
+    var label by rememberSaveable { mutableStateOf(initialDraft?.label ?: initial?.label ?: "") }
     val defaultChoice = builtInTypes.firstOrNull()?.let { AnimationChoice.BuiltIn(it) }
         ?: libraryAnimations.firstOrNull()?.let { AnimationChoice.Library(it.id, it.label, it.emoji) }
         ?: AnimationChoice.BuiltIn(AnimationType.GENERAL)
-    var animationChoice by remember {
+    var animationChoice by rememberSaveable(stateSaver = AnimationChoiceSaver) {
         mutableStateOf(initialDraft?.animationChoice ?: initial?.animationChoice(libraryAnimations) ?: defaultChoice)
     }
     var previewChoice by remember { mutableStateOf<AnimationChoice?>(null) }
-    var selectedDays by remember {
+    var selectedDays by rememberSaveable(stateSaver = DaysOfWeekSaver) {
         mutableStateOf(
             initialDraft?.selectedDays
                 ?: initial?.let { DaysOfWeekMask.toSet(it.daysOfWeekMask) }
                 ?: emptySet()
         )
     }
-    var startMinute by remember { mutableStateOf(initialDraft?.startMinute ?: initial?.startMinuteOfDay ?: 9 * 60) }
-    var endMinute by remember { mutableStateOf(initialDraft?.endMinute ?: initial?.endMinuteOfDay ?: 18 * 60) }
-    var interval by remember { mutableStateOf(initialDraft?.interval ?: initial?.intervalMinutes ?: 15) }
+    var startMinute by rememberSaveable { mutableStateOf(initialDraft?.startMinute ?: initial?.startMinuteOfDay ?: 9 * 60) }
+    var endMinute by rememberSaveable { mutableStateOf(initialDraft?.endMinute ?: initial?.endMinuteOfDay ?: 18 * 60) }
+    var interval by rememberSaveable { mutableStateOf(initialDraft?.interval ?: initial?.intervalMinutes ?: 15) }
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
