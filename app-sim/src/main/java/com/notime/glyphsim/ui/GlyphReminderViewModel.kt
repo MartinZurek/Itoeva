@@ -4,23 +4,24 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.notime.glyphcore.data.AnimationType
-import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphcore.data.BuiltInAnimationRepository
 import com.notime.glyphcore.data.BuiltInAnimationSelection
 import com.notime.glyphcore.data.GlyphReminder
-import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphcore.data.GlyphReminderRepository
 import com.notime.glyphcore.data.LibraryAnimation
 import com.notime.glyphcore.data.LibraryAnimationRepository
+import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphcore.data.ReminderOpenDuration
+import com.notime.glyphcore.reminder.ReminderScheduler
+import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.ReminderAnimations
-import com.notime.glyphcore.reminder.ReminderScheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -69,6 +70,33 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
     /** On/Off-Status je fest eingebautem [AnimationType] (siehe BuiltInAnimationSelection.kt). */
     val builtInSelections: StateFlow<List<BuiltInAnimationSelection>> = builtInRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * Der Zustand des Bildschirms als EIN unveraenderlicher Wert - siehe [ReminderUiState] fuer
+     * die Begruendung.
+     *
+     * Die vier Fluesse darueber bleiben vorerst bestehen: der Bibliotheks-Bildschirm und der
+     * Assistent greifen noch einzeln darauf zu. Sie werden mit deren Umbau eingezogen; bis dahin
+     * speisen sich beide Wege aus denselben Quellen, koennen also nicht auseinanderlaufen.
+     *
+     * `combine` statt vier getrennter Beobachtungen: der Bildschirm bekommt damit immer einen in
+     * sich stimmigen Stand und nie eine Mischung aus altem und neuem.
+     */
+    val uiState: StateFlow<ReminderUiState> =
+        combine(
+            reminders,
+            activeSpecies,
+            libraryAnimations,
+            builtInSelections
+        ) { reminders, species, library, builtIn ->
+            ReminderUiState(
+                reminders = reminders,
+                species = species,
+                libraryAnimations = library,
+                builtInSelections = builtIn,
+                loaded = true
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReminderUiState())
 
     private val libraryFullEvents = Channel<Unit>(Channel.CONFLATED)
 

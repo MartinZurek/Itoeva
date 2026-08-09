@@ -149,15 +149,18 @@ fun ReminderScreen(
     viewModel: GlyphReminderViewModel = viewModel()
 ) {
     var showLibrary by rememberSaveable { mutableStateOf(false) }
-    val reminders by viewModel.reminders.collectAsStateWithLifecycle()
-    val activeSpecies by viewModel.activeSpecies.collectAsStateWithLifecycle()
-    val libraryAnimations by viewModel.libraryAnimations.collectAsStateWithLifecycle()
-    val selectedLibraryAnimations = libraryAnimations.filter { it.isSelected }
-    val builtInSelections by viewModel.builtInSelections.collectAsStateWithLifecycle()
-    val selectedBuiltInTypes = builtInSelections
-        .filter { it.isSelected }
-        .mapNotNull { runCatching { AnimationType.valueOf(it.animationType) }.getOrNull() }
-        .toSet()
+    /*
+     * EIN Zustand statt vier Fluessen (Phase 3.1). Die Ableitungen - welche Animationen
+     * ausgewaehlt sind, ob der Leer-Zustand gilt - stehen jetzt in ReminderUiState und nicht mehr
+     * hier: sie gehoeren zur Datenschicht, nicht zur Darstellung, und sind dort ohne Geraet
+     * pruefbar (siehe ReminderUiStateTest).
+     */
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val reminders = state.reminders
+    val activeSpecies = state.species
+    val libraryAnimations = state.libraryAnimations
+    val selectedLibraryAnimations = state.selectedLibraryAnimations
+    val selectedBuiltInTypes = state.selectedBuiltInTypes
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
     /*
      * Die Id statt der Erinnerung selbst - aus zwei Gruenden.
