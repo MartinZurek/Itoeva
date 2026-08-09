@@ -2,6 +2,7 @@ package com.notime.glyphsim.data
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
@@ -16,6 +17,20 @@ interface AvatarPlayStateDao {
 
     @Insert
     suspend fun insert(state: AvatarPlayState)
+
+    /**
+     * Legt den Spielstand an, falls es fuer dieses Profil noch keinen gibt - und laesst einen
+     * bestehenden unangetastet.
+     *
+     * `IGNORE` statt `REPLACE`: `profileId` ist der Primaerschluessel, `REPLACE` wuerde die
+     * vorhandene Zeile loeschen und neu anlegen. Damit waeren XP, Level und Startzeitpunkt weg -
+     * genau der Fortschritt, der einen Moduswechsel ueberdauern soll.
+     *
+     * Ersetzt ein Nachsehen-dann-Anlegen im ViewModel. Die Bedingung steht damit dort, wo sie
+     * ohnehin schon galt: im Primaerschluessel der Tabelle.
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(state: AvatarPlayState)
 
     /** Atomarer Zuwachs statt Lesen-Aendern-Schreiben - zwei gleichzeitige Fuetterungen duerfen
      *  sich nicht gegenseitig ueberschreiben. */

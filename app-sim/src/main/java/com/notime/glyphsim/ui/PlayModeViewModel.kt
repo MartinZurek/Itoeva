@@ -86,16 +86,16 @@ class PlayModeViewModel(application: Application) : AndroidViewModel(application
             val species = AvatarSpeciesPrefs.get(application)
             val profileId = AvatarSpeciesPrefs.profileId(species)
 
-            if (active) ensurePlayReminder(application, species, profileId)
+            val playReminderId = if (active) ensurePlayReminder(application, species, profileId) else null
 
             // Erst den Modus setzen, dann neu planen - rescheduleAll fragt PlayModeState ab und
             // muss dabei schon den NEUEN Stand sehen.
             PlayModePrefs.setActive(application, active)
             ReminderScheduler.rescheduleAll(application)
 
-            if (active) {
-                playReminderId(profileId)?.let { pullFirstTriggerForward(it) }
-            }
+            // Die Id kommt aus dem Anlegen selbst, statt sie danach noch einmal zu suchen - das
+            // zweite Nachschlagen konnte eine andere Zeile finden als die gerade angelegte.
+            playReminderId?.let { pullFirstTriggerForward(it) }
         }
     }
 
@@ -108,35 +108,32 @@ class PlayModeViewModel(application: Application) : AndroidViewModel(application
         application: Application,
         species: AvatarSpecies,
         profileId: String
-    ) {
-        val existing = reminderDao.getAllForProfile(profileId).firstOrNull { it.isPlayMode }
-        if (existing != null) {
-            if (!existing.enabled) reminderDao.update(existing.copy(enabled = true))
-        } else {
-            reminderDao.insert(
-                GlyphReminder(
-                    label = application.getString(species.signatureTopic.labelRes),
-                    animationType = species.signatureTopic,
-                    daysOfWeekMask = DaysOfWeekMask.toMask(DayOfWeek.entries.toSet()),
-                    startMinuteOfDay = 0,
-                    endMinuteOfDay = 23 * 60 + 59,
-                    intervalMinutes = ReminderRhythm.forType(species.signatureTopic).suggestedInterval,
-                    enabled = true,
-                    profileId = profileId,
-                    dailyGoal = NO_GOAL,
-                    isPlayMode = true
-                )
+    ): Long {
+        // Anlegen-falls-nicht-vorhanden liegt in einer Transaktion im DAO. Vorher stand hier ein
+        // Nachsehen und danach ein Anlegen: zweimal schnell hintereinander auf den Schalter
+        // getippt, und beide Durchlaeufe sahen "gibt es noch nicht" - der Avatar haette zwei
+        // Spiel-Erinnerungen gehabt, die unabhaengig voneinander weiterwuerfeln. Siehe
+        // GlyphReminderDao.insertPlayReminderIfAbsent.
+        val reminder = reminderDao.insertPlayReminderIfAbsent(
+            profileId,
+            GlyphReminder(
+                label = application.getString(species.signatureTopic.labelRes),
+                animationType = species.signatureTopic,
+                daysOfWeekMask = DaysOfWeekMask.toMask(DayOfWeek.entries.toSet()),
+                startMinuteOfDay = 0,
+                endMinuteOfDay = 23 * 60 + 59,
+                intervalMinutes = ReminderRhythm.forType(species.signatureTopic).suggestedInterval,
+                enabled = true,
+                profileId = profileId,
+                dailyGoal = NO_GOAL,
+                isPlayMode = true
             )
-        }
-        if (playStateDao.getForProfile(profileId) == null) {
-            playStateDao.insert(
-                AvatarPlayState(profileId = profileId, startedAtMillis = System.currentTimeMillis())
-            )
-        }
+        )
+        playStateDao.insertIfAbsent(
+            AvatarPlayState(profileId = profileId, startedAtMillis = System.currentTimeMillis())
+        )
+        return reminder.id
     }
-
-    private suspend fun playReminderId(profileId: String): Long? =
-        reminderDao.getAllForProfile(profileId).firstOrNull { it.isPlayMode }?.id
 
     /**
      * Zieht die erste Auftauchen auf die naechste volle Minute vor.

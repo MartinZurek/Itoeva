@@ -29,10 +29,8 @@ class GlyphReminderRepository(private val dao: GlyphReminderDao) {
      * startet damit nicht mit einer leeren Liste, sondern mit denselben Voreinstellungen wie
      * das erste.
      */
-    suspend fun seedIfEmpty(profileId: String): List<GlyphReminder> {
-        if (dao.countForProfile(profileId) > 0) return emptyList()
-        return DefaultReminders.ALL.map { add(it.copy(profileId = profileId)) }
-    }
+    suspend fun seedIfEmpty(profileId: String): List<GlyphReminder> =
+        dao.seedIfEmpty(profileId, DefaultReminders.ALL)
 
     /**
      * Kopiert alle Erinnerungen von [fromProfileId] nach [toProfileId] und gibt die neuen
@@ -57,16 +55,13 @@ class GlyphReminderRepository(private val dao: GlyphReminderDao) {
         fromProfileId: String,
         toProfileId: String,
         replace: Boolean
-    ): List<GlyphReminder> {
-        if (fromProfileId == toProfileId) return emptyList()
-        val source = dao.getAll().filter { it.profileId == fromProfileId && !it.isPlayMode }
-        if (replace) {
-            dao.getAll()
-                .filter { it.profileId == toProfileId && !it.isPlayMode }
-                .forEach { dao.delete(it) }
-        }
-        return source.map {
-            add(it.copy(id = 0, profileId = toProfileId, nextTriggerEpochMillis = null))
-        }
-    }
+    ): List<GlyphReminder> = dao.copyProfile(fromProfileId, toProfileId, replace)
+
+    /**
+     * Stellt die Play-Mode-Erinnerung eines Profils sicher (anlegen oder wieder aktivieren) und
+     * gibt sie zurueck. Hoechstens eine je Profil - die Begruendung und warum das eine Transaktion
+     * sein muss, steht bei [GlyphReminderDao.insertPlayReminderIfAbsent].
+     */
+    suspend fun ensurePlayReminder(profileId: String, template: GlyphReminder): GlyphReminder =
+        dao.insertPlayReminderIfAbsent(profileId, template)
 }

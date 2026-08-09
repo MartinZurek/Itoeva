@@ -90,31 +90,25 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
 
     fun setLibraryAnimationSelected(id: Long, selected: Boolean) {
         viewModelScope.launch {
-            if (selected && !canSelectMore()) {
-                libraryFullEvents.trySend(Unit)
-                return@launch
-            }
-            libraryRepository.setSelected(id, selected)
+            val accepted = libraryRepository.setSelected(id, selected, MAX_ANIMATIONS_IN_PICKER)
+            if (!accepted) libraryFullEvents.trySend(Unit)
         }
     }
 
     fun setBuiltInAnimationSelected(type: AnimationType, selected: Boolean) {
         viewModelScope.launch {
-            if (selected && !canSelectMore()) {
-                libraryFullEvents.trySend(Unit)
-                return@launch
-            }
-            builtInRepository.setSelected(type, selected)
+            val accepted = builtInRepository.setSelected(type, selected, MAX_ANIMATIONS_IN_PICKER)
+            if (!accepted) libraryFullEvents.trySend(Unit)
         }
     }
 
-    /**
-     * Gesamt-Obergrenze fuer den Animations-Picker: fest eingebaute Typen und Bibliotheks-
-     * Animationen teilen sich denselben Topf aus [MAX_ANIMATIONS_IN_PICKER] Plaetzen - beide
-     * Quellen sind gleichermassen an/abwaehlbar (siehe LibraryScreen.kt).
+    /*
+     * Die Obergrenze pruefte hier frueher ein eigenes `canSelectMore()`: erst beide Quellen
+     * zaehlen, dann schreiben. Zwischen Zaehlen und Schreiben kann sich der Stand aendern - zwei
+     * schnell hintereinander angetippte Kacheln sahen beide "noch Platz" und belegten denselben
+     * letzten. Jetzt entscheidet die Datenbank in derselben Anweisung, in der sie schreibt, und
+     * meldet zurueck, ob sie angenommen hat (siehe LibraryAnimationDao.selectIfWithinLimit).
      */
-    private suspend fun canSelectMore(): Boolean =
-        builtInRepository.countSelected() + libraryRepository.countSelected() < MAX_ANIMATIONS_IN_PICKER
 
     /** Loest eine [AnimationChoice] in abspielbare Frames auf, z.B. fuer die Live-Vorschau. */
     suspend fun framesFor(choice: AnimationChoice): List<IntArray> = when (choice) {

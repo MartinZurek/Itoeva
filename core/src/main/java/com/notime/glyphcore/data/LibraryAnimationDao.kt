@@ -19,11 +19,42 @@ interface LibraryAnimationDao {
     @Query("SELECT COUNT(*) FROM library_animations WHERE isSelected = 1")
     suspend fun countSelected(): Int
 
+    /** Gibt die vergebenen Ids zurueck, damit der Aufrufer die neuen Zeilen direkt ansprechen kann. */
     @Insert
-    suspend fun insertAll(animations: List<LibraryAnimation>)
+    suspend fun insertAll(animations: List<LibraryAnimation>): List<Long>
+
+    @Query("SELECT isSelected FROM library_animations WHERE id = :id")
+    suspend fun isSelected(id: Long): Boolean?
 
     @Query("UPDATE library_animations SET isSelected = :selected WHERE id = :id")
     suspend fun setSelected(id: Long, selected: Boolean)
+
+    /**
+     * Waehlt eine Animation aus - aber nur, wenn dadurch die Gesamt-Obergrenze des Pickers nicht
+     * ueberschritten wird. Rueckgabe: Anzahl geaenderter Zeilen, also 1 = angenommen, 0 = abgelehnt.
+     *
+     * **Warum als eine einzige Anweisung.** Die Pruefung lief vorher im ViewModel: erst beide
+     * Tabellen zaehlen, dann schreiben. Zwischen Zaehlen und Schreiben kann sich der Stand
+     * aendern - zwei schnell hintereinander angetippte Kacheln sahen beide "noch Platz" und
+     * belegten denselben letzten. Hier entscheidet die Datenbank beim Schreiben selbst; ein
+     * Zwischenraum, in dem sich etwas aendern koennte, existiert nicht.
+     *
+     * `isSelected = 0` in der Bedingung ist kein Detail: ohne das zaehlte ein erneutes Auswaehlen
+     * einer bereits ausgewaehlten Animation gegen das Limit und wuerde am Rand abgelehnt.
+     *
+     * Die Summe geht ueber BEIDE Quellen, weil fest eingebaute Typen und Bibliotheks-Animationen
+     * sich denselben Topf teilen (siehe `GlyphReminderViewModel.MAX_ANIMATIONS_IN_PICKER`).
+     */
+    @Query(
+        """
+        UPDATE library_animations SET isSelected = 1
+        WHERE id = :id AND isSelected = 0 AND (
+            (SELECT COUNT(*) FROM library_animations WHERE isSelected = 1) +
+            (SELECT COUNT(*) FROM builtin_animation_selection WHERE isSelected = 1)
+        ) < :limit
+        """
+    )
+    suspend fun selectIfWithinLimit(id: Long, limit: Int): Int
 
     /** Alle Labels - Grundlage dafuer, mitgelieferte Animationen wiederzuerkennen. */
     @Query("SELECT label FROM library_animations")

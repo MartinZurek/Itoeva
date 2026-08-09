@@ -32,7 +32,23 @@ class LibraryAnimationRepository(private val dao: LibraryAnimationDao) {
             .forEach { dao.updateArtwork(it.label, it.framesData, it.emoji) }
     }
 
-    suspend fun setSelected(id: Long, selected: Boolean) = dao.setSelected(id, selected)
+    /**
+     * Waehlt aus bzw. ab. Beim AUSWAEHLEN entscheidet die Datenbank in derselben Anweisung, ob
+     * noch Platz im Picker ist - `false` heisst abgelehnt, weil [limit] erreicht war. Abwaehlen
+     * gelingt immer. Siehe [LibraryAnimationDao.selectIfWithinLimit].
+     */
+    suspend fun setSelected(id: Long, selected: Boolean, limit: Int): Boolean {
+        if (!selected) {
+            dao.setSelected(id, false)
+            return true
+        }
+        if (dao.selectIfWithinLimit(id, limit) > 0) return true
+        // Keine Zeile geaendert heisst nicht zwingend "abgelehnt": es kann auch sein, dass die
+        // Animation laengst ausgewaehlt war (die Abfrage klammert solche Zeilen bewusst aus, sonst
+        // zaehlten sie ein zweites Mal gegen die Obergrenze). Der gewuenschte Zustand ist dann
+        // erreicht - dem Nutzer hier "Picker voll" zu melden, waere schlicht falsch.
+        return dao.isSelected(id) == true
+    }
 
     /** Anzahl aktuell im Picker ausgewaehlter Bibliotheks-Animationen (fuer die Gesamt-Obergrenze, siehe ViewModel). */
     suspend fun countSelected(): Int = dao.countSelected()
