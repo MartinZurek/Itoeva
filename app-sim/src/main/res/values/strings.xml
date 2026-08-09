@@ -64,7 +64,7 @@
     <string name="settings_mood">Mood affects behaviour</string>
     <string name="settings_mood_hint">The avatar moves more sluggishly when reminders with a daily goal go unanswered – reminders left at “No goal” never affect this. Needs a few triggered reminders before anything changes – off while testing.</string>
     <string name="settings_crash_title">Crash report</string>
-    <string name="settings_crash_hint">The app closed unexpectedly last time. The report stays on your device – you can send it to the developer.</string>
+    <string name="settings_crash_hint">The app closed unexpectedly last time. The report never leaves your device on its own: it is left out of cloud backup, and it goes away when you delete it here or uninstall the app. Sharing it with the developer is your choice.</string>
     <string name="settings_crash_share">Share report</string>
     <string name="settings_display">Display</string>
     <string name="settings_allow_rotation">Allow rotation</string>

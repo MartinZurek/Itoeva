@@ -66,6 +66,44 @@ object ReminderImport {
      */
     private const val MAX_LABEL_LENGTH = ReminderValidation.MAX_LABEL_LENGTH
 
+    /**
+     * Obergrenzen fuer das, was von aussen hereinkommt.
+     *
+     * **Warum ueberhaupt Grenzen.** Die Activity ist `exported` und nimmt Teilen-Absichten von
+     * JEDER App auf dem Geraet entgegen (siehe Manifest). Was hier ankommt, ist damit nicht
+     * "eine KI-Antwort", sondern beliebiger Text aus beliebiger Quelle - versehentlich (jemand
+     * teilt ein ganzes E-Book) wie absichtlich. Ohne Grenzen haengt die Zahl der Klammern und
+     * Eintraege allein am Absender.
+     *
+     * Die Werte sind bewusst grosszuegig: eine echte Antwort mit einem Dutzend Erinnerungen liegt
+     * bei wenigen tausend Zeichen. Sie sollen Unfug abfangen, nicht den normalen Fall streifen.
+     */
+    /** Alles darueber wird abgeschnitten - siehe [begrenzeEingabe]. */
+    const val MAX_INPUT_CHARS = 20_000
+
+    /** Mehr Erinnerungen auf einmal anzulegen ergibt keinen Sinn und fuellt nur die Liste. */
+    const val MAX_REMINDERS = 25
+
+    /** Schutz vor einem StackOverflowError im rekursiven JSON-Leser, siehe [extractJson]. */
+    const val MAX_JSON_DEPTH = 32
+
+    /**
+     * Was beim Begrenzen der Eingabe herauskam - [gekuerzt] sagt, ob dem Nutzer etwas
+     * vorzuenthalten war.
+     *
+     * Bewusst mit Rueckmeldung statt still: Text abzuschneiden und so zu tun, als sei nichts
+     * gewesen, waere die schlechteste Variante - der Nutzer sucht dann nach Erinnerungen, die
+     * er geteilt hat und die nirgends auftauchen.
+     */
+    data class BegrenzteEingabe(val text: String, val gekuerzt: Boolean)
+
+    fun begrenzeEingabe(text: String): BegrenzteEingabe =
+        if (text.length <= MAX_INPUT_CHARS) {
+            BegrenzteEingabe(text, gekuerzt = false)
+        } else {
+            BegrenzteEingabe(text.take(MAX_INPUT_CHARS), gekuerzt = true)
+        }
+
     private val ALL_DAYS = DaysOfWeekMask.toMask(DayOfWeek.entries.toSet())
 
     private val DAY_ALIASES: Map<String, DayOfWeek> = mapOf(
@@ -92,7 +130,14 @@ object ReminderImport {
         var depth = 0
         for (i in start until text.length) {
             when (text[i]) {
-                '{' -> depth++
+                '{' -> {
+                    depth++
+                    // Tief verschachtelte Klammern bringen spaeter den JSON-Leser in Not: er
+                    // arbeitet rekursiv, und genuegend Ebenen erzeugen einen StackOverflowError.
+                    // Eine echte Antwort kommt mit einer Handvoll aus; alles darueber ist kein
+                    // Ausschnitt, den es zu retten lohnt.
+                    if (depth > MAX_JSON_DEPTH) return null
+                }
                 '}' -> {
                     depth--
                     if (depth == 0) return text.substring(start, i + 1)

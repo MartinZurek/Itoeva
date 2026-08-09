@@ -100,6 +100,15 @@ Seither ist festgelegt, was mitdarf (`res/xml/backup_rules.xml` und
 | Standbilder (`shots/`) | nein |
 | Absturzbericht (`last-crash.txt`) | nein |
 
+**Zum Absturzbericht im Einzelnen.** Er entsteht nur bei einem Absturz, enthält Version,
+Zeitpunkt, Gerätemodell, Android-Version und den Stacktrace, und ist auf 64 KB gekappt (eine
+Endlosrekursion erzeugt sonst Tausende gleichförmiger Zeilen). Er verlässt das Gerät **von allein
+nie**: nicht über die Sicherung (siehe Tabelle), nicht über das Netz — die App hat keinen
+Netzwerkcode. Weitergeben kann ihn nur der Nutzer selbst über „Bericht teilen" in den
+Einstellungen; direkt daneben steht „Löschen". Beim Deinstallieren geht er mit dem App-Speicher
+weg. Genau das sagt der Hinweistext in den Einstellungen dem Nutzer auch — vorher stand dort nur
+der halbe Satz „bleibt auf deinem Gerät".
+
 Warum überhaupt sichern statt `allowBackup="false"`: Ohne Sicherung verliert ein Gerätewechsel
 sämtliche Erinnerungen und die komplette Fütterungshistorie. Das ist der Stand, an dem Nutzer
 hängen — und der einzige, dessen Verlust wirklich weh tut.

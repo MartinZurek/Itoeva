@@ -58,7 +58,7 @@
     <string name="settings_mood">Stimmung wirkt aufs Verhalten</string>
     <string name="settings_mood_hint">Der Avatar bewegt sich träger, wenn Erinnerungen mit einem Tagesziel unbeantwortet bleiben – Erinnerungen bei „Kein Ziel“ wirken sich nie darauf aus. Braucht einige ausgelöste Erinnerungen, bevor sich etwas ändert – zum Testen besser aus.</string>
     <string name="settings_crash_title">Absturzbericht</string>
-    <string name="settings_crash_hint">Die App hat sich zuletzt unerwartet beendet. Der Bericht bleibt auf deinem Gerät – du kannst ihn an den Entwickler schicken.</string>
+    <string name="settings_crash_hint">Die App hat sich zuletzt unerwartet beendet. Der Bericht verlässt dein Gerät von allein nicht: er bleibt aus der Cloud-Sicherung heraus und ist weg, sobald du ihn hier löschst oder die App deinstallierst. Ob du ihn dem Entwickler schickst, entscheidest du.</string>
     <string name="settings_crash_share">Bericht teilen</string>
     <string name="settings_display">Bildschirm</string>
     <string name="settings_allow_rotation">Drehen erlauben</string>

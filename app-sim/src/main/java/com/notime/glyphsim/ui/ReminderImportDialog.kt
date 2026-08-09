@@ -267,11 +267,15 @@ private fun shareText(context: Context, text: String) {
  * Einzelne unbrauchbare Eintraege werden uebersprungen, statt den ganzen Import zu verwerfen.
  */
 private fun parseReminders(text: String, libraryAnimations: List<LibraryAnimation>): List<SanitizedReminder> {
-    val json = ReminderImport.extractJson(text) ?: return emptyList()
+    // Erst begrenzen, dann suchen: die Activity nimmt Teilen-Absichten von jeder App entgegen,
+    // die Laenge des Textes bestimmt also der Absender. Siehe ReminderImport.begrenzeEingabe.
+    val begrenzt = ReminderImport.begrenzeEingabe(text)
+    val json = ReminderImport.extractJson(begrenzt.text) ?: return emptyList()
     return try {
         val root = JSONObject(json)
         val array = root.optJSONArray("reminders") ?: return emptyList()
-        (0 until array.length()).mapNotNull { index ->
+        // Nur die ersten MAX_REMINDERS - alles darueber ist kein Import mehr, sondern eine Flut.
+        (0 until minOf(array.length(), ReminderImport.MAX_REMINDERS)).mapNotNull { index ->
             val item = array.optJSONObject(index) ?: return@mapNotNull null
             val days = item.optJSONArray("days")?.let { list ->
                 (0 until list.length()).mapNotNull { list.optString(it).takeIf(String::isNotBlank) }
