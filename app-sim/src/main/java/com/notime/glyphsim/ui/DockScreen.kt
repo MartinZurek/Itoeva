@@ -217,20 +217,38 @@ fun DockScreen(
         // Hier wird derselbe Bruchteil auf die neuen Masse angewandt: Die Uhr bleibt anteilig
         // dort, wo der Nutzer sie hingelegt hat. Ohne Verzoegerung, damit dieser Effekt sicher
         // vor dem Sichern laeuft.
-        var lastClockBoundX by remember { mutableStateOf(initialMaxXPx) }
-        var lastClockBoundY by remember { mutableStateOf(initialMaxYPx) }
-        LaunchedEffect(maxWidthPx, maxHeightPx, clockSizeDp) {
-            val clockPx = with(density) { clockSizeDp.dp.toPx() }
-            val boundX = (maxWidthPx - clockPx).coerceAtLeast(0f)
-            val boundY = (maxHeightPx - clockPx).coerceAtLeast(0f)
-            val previousX = lastClockBoundX
-            val previousY = lastClockBoundY
-            lastClockBoundX = boundX
-            lastClockBoundY = boundY
+        //
+        // **Ausschliesslich auf die BILDSCHIRMMASSE hoerend - und das ist entscheidend.**
+        //
+        // Die erste Fassung hoerte auch auf die Uhrgroesse, und damit war das Ziehen der Uhr
+        // kaputt: Die Zieh-Geste erkennt Verschieben und Zoomen zusammen und schreibt bei JEDER
+        // Bewegung eine neue Uhrgroesse - beim reinen Verschieben zwar praktisch dieselbe, aber
+        // eben eine neue. Dieser Effekt lief dadurch waehrend des Ziehens staendig mit und setzte
+        // die Uhr auf ihren alten Bruchteil zurueck. Sie liess sich noch ein Stueck bewegen und
+        // wurde sofort zurueckgezogen - von aussen genau das, was gemeldet wurde: eine Grenze,
+        // die man nicht ueberschreiten kann, und ein Avatar, den man nicht mehr fuettern konnte.
+        //
+        // Die Uhrgroesse braucht diesen Effekt auch gar nicht: Die Geste klemmt beim Zoomen
+        // bereits selbst gegen die neuen Grenzen.
+        var lastScreenWidthPx by remember { mutableStateOf(0f) }
+        var lastScreenHeightPx by remember { mutableStateOf(0f) }
+        LaunchedEffect(maxWidthPx, maxHeightPx) {
+            val previousWidth = lastScreenWidthPx
+            val previousHeight = lastScreenHeightPx
+            lastScreenWidthPx = maxWidthPx
+            lastScreenHeightPx = maxHeightPx
 
             // Waehrend der Mond-Szene steht die Uhr am Himmel und nicht dort, wo der Nutzer sie
             // haben will - dieselbe Ruecksicht wie beim Sichern.
-            if (moonMode) return@LaunchedEffect
+            if (moonMode || previousWidth <= 0f || previousHeight <= 0f) return@LaunchedEffect
+
+            // Mit der AKTUELLEN Uhrgroesse gegen die ALTEN Bildschirmmasse zurueckgerechnet: Es
+            // hat sich ja nur das Bild gedreht, nicht die Uhr.
+            val clockPx = with(density) { clockSizeDp.dp.toPx() }
+            val previousX = (previousWidth - clockPx).coerceAtLeast(0f)
+            val previousY = (previousHeight - clockPx).coerceAtLeast(0f)
+            val boundX = (maxWidthPx - clockPx).coerceAtLeast(0f)
+            val boundY = (maxHeightPx - clockPx).coerceAtLeast(0f)
 
             val fractionX = if (previousX > 0f) (clockOffset.x / previousX).coerceIn(0f, 1f) else 0.5f
             val fractionY = if (previousY > 0f) (clockOffset.y / previousY).coerceIn(0f, 1f) else 0.5f
@@ -924,9 +942,16 @@ fun DockScreen(
         // jedem Ortswechsel weich nach (siehe floorFraction), und ein Effekt, der darauf
         // anspringt, riebe sich an jeder laufenden Geh-Animation. Umgestellt wird nur, was der
         // NUTZER umstellt - Uhrgroesse und Bildschirmmasse.
+        // Auf GERUNDETE Avatargroesse hoerend, nicht auf den genauen Wert. Sie leitet sich aus der
+        // Uhrgroesse ab, und die schreibt die Zieh-Geste bei jeder Bewegung neu - beim reinen
+        // Verschieben um Bruchteile eines Punktes. Auf den genauen Wert gehoert, liefe dieser
+        // Effekt waehrend des Ziehens staendig mit und setzte die Figur bei jedem Bild neu auf den
+        // Boden; mitten in einem Gang haette sie dabei angehalten. Gerundet bleibt er still,
+        // solange sich nichts Sichtbares aendert.
+        val avatarSizeStep = worldAvatarSizeDp.roundToInt()
         var lastAvatarPx by remember { mutableStateOf(0f) }
         var lastWidthPx by remember { mutableStateOf(0f) }
-        LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx) {
+        LaunchedEffect(avatarSizeStep, maxWidthPx, maxHeightPx) {
             val current = avatar
             val previousAvatarPx = lastAvatarPx
             val previousWidthPx = lastWidthPx
@@ -1661,7 +1686,15 @@ fun DockScreen(
                         detectTransformGestures(panZoomLock = false) { _, pan, zoom, _ ->
                             val newSize = (clockSizeDp * zoom)
                                 .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.MAX_SIZE_DP)
-                            clockSizeDp = newSize
+                            // Nur schreiben, wenn sich wirklich etwas aendert. Beim reinen
+                            // Verschieben liefert die Geste ein Zoom von fast genau 1, also eine
+                            // Groesse, die sich in der zehnten Nachkommastelle unterscheidet -
+                            // sichtbar ist das nichts, aber jede Zuweisung stoesst alles an, was
+                            // an der Uhrgroesse haengt. Genau daraus entstand die "Grenze", ueber
+                            // die sich die Uhr nicht schieben liess.
+                            if (kotlin.math.abs(newSize - clockSizeDp) > 0.05f) {
+                                clockSizeDp = newSize
+                            }
                             val clockPxNow = with(density) { newSize.dp.toPx() }
                             val boundX = (with(density) { maxWidth.toPx() } - clockPxNow).coerceAtLeast(0f)
                             val boundY = (with(density) { maxHeight.toPx() } - clockPxNow).coerceAtLeast(0f)
