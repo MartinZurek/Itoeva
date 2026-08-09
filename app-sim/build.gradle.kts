@@ -335,6 +335,10 @@ dependencies {
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    // Compose-Tests, siehe androidTest/.../ReminderScreenTest.kt
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }
 
 // Siehe :app/build.gradle.kts fuer die Begruendung (Kopie der fertigen Debug-APK ins

@@ -223,7 +223,14 @@ fun ReminderScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 text = { Text(stringResource(R.string.action_new)) },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                // Die Beschriftung des Knopfes erreicht den zusammengefuehrten Semantik-Knoten
+                // nicht - er traegt nur Role=Button und sonst nichts, ein Screenreader liest dort
+                // also blosses "Schaltflaeche" vor. Aufgefallen beim Aufbau der Compose-Tests, die
+                // ihn ueber genau diese Semantik suchen und nicht fanden. Die Beschreibung am
+                // Symbol schliesst die Luecke.
+                icon = {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_new))
+                },
                 onClick = { showAddDialog = true }
             )
         }

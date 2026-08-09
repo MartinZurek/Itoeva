@@ -234,7 +234,9 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 text = { Text("New") },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                // Siehe :app-sim - ohne Beschreibung bleibt der Knopf fuer einen Screenreader
+                // unbenannt, weil die Beschriftung den zusammengefuehrten Knoten nicht erreicht.
+                icon = { Icon(Icons.Default.Add, contentDescription = "New") },
                 onClick = { showAddDialog = true }
             )
         }

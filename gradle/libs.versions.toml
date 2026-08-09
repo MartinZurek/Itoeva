@@ -35,6 +35,13 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestJunit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+# Compose-Tests: findet Knoten ueber ihre Semantik (das, was auch TalkBack vorliest) statt ueber
+# View-Ids, und bringt StateRestorationTester fuer den Nachweis mit, dass Zustand einen Neuaufbau
+# ueberlebt. Version kommt aus der Compose-BOM.
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+# Liefert die Activity, in der die Tests komponieren - gehoert in debugImplementation, sonst
+# findet createComposeRule zur Laufzeit keine Activity im Manifest.
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 # Regelmaessiger Selbstheilungslauf der Alarmkette (siehe core/reminder/ReminderWatchdogWorker).
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
