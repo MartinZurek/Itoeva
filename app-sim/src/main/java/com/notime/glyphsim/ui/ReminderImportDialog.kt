@@ -38,11 +38,6 @@ import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphsim.R
 import org.json.JSONObject
 
-private val SHEET_BG = Color(0xFF101012)
-private val ROW_BG = Color(0xFF1A1A1D)
-private val TEXT_PRIMARY = Color(0xFFF1EEE6)
-private val TEXT_MUTED = Color(0xFF9A968E)
-
 /**
  * Import aus einem KI-Gespraech: Vorlage kopieren, Antwort einfuegen, Vorschau bestaetigen.
  *
@@ -103,9 +98,9 @@ fun ReminderImportDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SHEET_BG,
-        titleContentColor = TEXT_PRIMARY,
-        textContentColor = TEXT_PRIMARY,
+        containerColor = DialogPalette.SheetBackground,
+        titleContentColor = DialogPalette.TextPrimary,
+        textContentColor = DialogPalette.TextPrimary,
         title = { Text(stringResource(R.string.import_title)) },
         text = {
             Column(
@@ -123,7 +118,7 @@ fun ReminderImportDialog(
                     Text(
                         stringResource(R.string.import_step_1),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TEXT_MUTED
+                        color = DialogPalette.TextMuted
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { copyToClipboard(context, promptTemplate) }) {
@@ -139,7 +134,7 @@ fun ReminderImportDialog(
                     Text(
                         stringResource(R.string.import_step_2),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TEXT_MUTED
+                        color = DialogPalette.TextMuted
                     )
                 }
                 OutlinedTextField(
@@ -180,7 +175,7 @@ fun ReminderImportDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(ROW_BG)
+                            .background(DialogPalette.RowBackground)
                             .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
@@ -204,7 +199,7 @@ fun ReminderImportDialog(
                                 reminder.intervalMinutes
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TEXT_MUTED
+                            color = DialogPalette.TextMuted
                         )
                         // Zurechtgerueckte Werte werden ausgewiesen statt still uebernommen -
                         // sonst legte die App etwas an, das der Nutzer so nie bestaetigt hat.

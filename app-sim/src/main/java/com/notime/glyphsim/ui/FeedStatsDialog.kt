@@ -54,10 +54,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /** Dunkle Flaechen des Dialogs - dieselbe Welt wie der schwarze Startbildschirm. */
-private val SHEET_BG = Color(0xFF101012)
-private val ROW_BG = Color(0xFF1A1A1D)
-private val TEXT_PRIMARY = Color(0xFFF1EEE6)
-private val TEXT_MUTED = Color(0xFF9A968E)
 
 /**
  * Pflegebuch eines Avatars: wie oft im gewaehlten Zeitraum auf Erinnerungen reagiert wurde, und
@@ -177,9 +173,9 @@ fun FeedStatsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SHEET_BG,
-        titleContentColor = TEXT_PRIMARY,
-        textContentColor = TEXT_PRIMARY,
+        containerColor = DialogPalette.SheetBackground,
+        titleContentColor = DialogPalette.TextPrimary,
+        textContentColor = DialogPalette.TextPrimary,
         // Avatar und Name standen hier zusaetzlich zur AvatarCommentarySection ganz unten -
         // dieselbe Figur zweimal im selben Dialog. Wessen Buch das ist, zeigt jetzt allein die
         // Figur dort unten (die Spezies IST das Profil, siehe AvatarSpeciesPrefs - ein Blick
@@ -222,7 +218,7 @@ fun FeedStatsDialog(
                         Text(
                             stringResource(R.string.stats_goals_title, reached, goalRows.size),
                             style = MaterialTheme.typography.labelLarge,
-                            color = TEXT_MUTED
+                            color = DialogPalette.TextMuted
                         )
                         // Klarstellung, weil das hier IMMER "heute" ist, unabhaengig vom
                         // Zeitraum-Umschalter oben drueber - ohne den Hinweis wirkte das wie ein
@@ -230,7 +226,7 @@ fun FeedStatsDialog(
                         Text(
                             stringResource(R.string.stats_goals_today_note),
                             style = MaterialTheme.typography.labelSmall,
-                            color = TEXT_MUTED
+                            color = DialogPalette.TextMuted
                         )
                         goalRows.forEach { GoalRowView(it) }
                     }
@@ -240,14 +236,14 @@ fun FeedStatsDialog(
                     Text(
                         stringResource(R.string.stats_empty, stringResource(species.labelRes)),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TEXT_MUTED
+                        color = DialogPalette.TextMuted
                     )
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             stringResource(R.string.stats_breakdown_title),
                             style = MaterialTheme.typography.labelLarge,
-                            color = TEXT_MUTED
+                            color = DialogPalette.TextMuted
                         )
                         val maxCount = breakdown.maxOf { it.count }.coerceAtLeast(1)
                         breakdown.forEach { row ->
@@ -293,7 +289,7 @@ fun FeedStatsDialog(
                         onClick = { confirmReset = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(stringResource(R.string.stats_reset), color = TEXT_MUTED)
+                        Text(stringResource(R.string.stats_reset), color = DialogPalette.TextMuted)
                     }
                 }
             }
@@ -358,7 +354,7 @@ private fun AvatarCommentarySection(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(ROW_BG)
+            .background(DialogPalette.RowBackground)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -366,28 +362,37 @@ private fun AvatarCommentarySection(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.Top
         ) {
-            AvatarSpriteView(
-                frame = avatarFrame,
-                showBackground = false,
+            // Der Avatar ist antippbar (er gibt dann einen Hinweis). Sichtbar bleibt er 40 dp
+            // gross; die Trefferflaeche waechst auf die von Android geforderten 48 dp, ohne dass
+            // sich am Bild etwas aendert - hier ist der Platz dafuer da, anders als bei den
+            // sieben Wochentagskacheln nebeneinander (siehe ReminderScreen).
+            Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                         onClick = ::onAvatarTap
-                    )
-            )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                AvatarSpriteView(
+                    frame = avatarFrame,
+                    showBackground = false,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     stringResource(moodTextRes),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TEXT_PRIMARY
+                    color = DialogPalette.TextPrimary
                 )
                 tipIndex?.let { index ->
                     Text(
                         stringResource(TAP_TIPS[index]),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TEXT_MUTED
+                        color = DialogPalette.TextMuted
                     )
                 }
             }
@@ -412,10 +417,10 @@ private fun AvatarCommentarySection(
                 Text(
                     stringResource(textRes, suggestion.label),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TEXT_PRIMARY,
+                    color = DialogPalette.TextPrimary,
                     modifier = Modifier.weight(1f)
                 )
-                Text("›", style = MaterialTheme.typography.titleMedium, color = TEXT_MUTED)
+                Text("›", style = MaterialTheme.typography.titleMedium, color = DialogPalette.TextMuted)
             }
         }
     }
@@ -439,7 +444,7 @@ private fun GoalRowView(row: GoalRow) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(ROW_BG)
+            .background(DialogPalette.RowBackground)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -452,7 +457,7 @@ private fun GoalRowView(row: GoalRow) {
             Text(
                 row.label,
                 style = MaterialTheme.typography.bodyLarge,
-                color = TEXT_PRIMARY,
+                color = DialogPalette.TextPrimary,
                 maxLines = 1,
                 modifier = Modifier.weight(1f)
             )
@@ -499,7 +504,7 @@ private fun HeroCount(total: Int) {
             total.toString(),
             fontSize = 52.sp,
             fontWeight = FontWeight.Light,
-            color = TEXT_PRIMARY
+            color = DialogPalette.TextPrimary
         )
         Text(
             " " + if (total == 1) {
@@ -508,7 +513,7 @@ private fun HeroCount(total: Int) {
                 stringResource(R.string.stats_meals_other)
             },
             style = MaterialTheme.typography.titleMedium,
-            color = TEXT_MUTED,
+            color = DialogPalette.TextMuted,
             modifier = Modifier.padding(bottom = 10.dp)
         )
     }
@@ -540,7 +545,7 @@ private fun BreakdownRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(ROW_BG)
+            .background(DialogPalette.RowBackground)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -562,7 +567,7 @@ private fun BreakdownRow(
                 Text(
                     label,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TEXT_PRIMARY,
+                    color = DialogPalette.TextPrimary,
                     maxLines = 1
                 )
                 // Bewusst NUR die Zahl der Ausloesungen, keine Quote: eine Erinnerung im
@@ -572,7 +577,7 @@ private fun BreakdownRow(
                 Text(
                     stringResource(R.string.stats_triggered_count, row.triggered),
                     style = MaterialTheme.typography.labelSmall,
-                    color = TEXT_MUTED
+                    color = DialogPalette.TextMuted
                 )
             }
             Text(

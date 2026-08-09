@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -746,9 +747,12 @@ private fun DayPicker(
         val locale = LocalConfiguration.current.locales[0]
         DayOfWeek.entries.forEach { day ->
             val isSelected = day in selected
+            // Trefferflaeche und sichtbarer Kreis getrennt, damit das Ziel 48 dp erreicht, ohne
+            // dass sieben Kacheln die Dialogbreite sprengen - siehe :app-sim fuer die Rechnung.
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .weight(1f)
+                    .heightIn(min = 48.dp)
                     // Schalter statt Knopf, und mit ausgeschriebenem Namen - siehe :app-sim
                     // fuer die ausfuehrliche Begruendung (die Kuerzel "T" und "S" sind doppeldeutig).
                     .toggleable(
@@ -756,19 +760,25 @@ private fun DayPicker(
                         role = Role.Checkbox,
                         onValueChange = { onToggle(day) }
                     )
-                    .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, locale) }
-                    .background(
-                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                        CircleShape
-                    ),
+                    .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, locale) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    dayLabels.getValue(day),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        dayLabels.getValue(day),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

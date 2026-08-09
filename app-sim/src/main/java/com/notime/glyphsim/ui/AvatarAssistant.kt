@@ -45,10 +45,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Dunkle Flaechen - dieselbe Welt wie Startbildschirm und Pflegebuch. */
-private val SHEET_BG = Color(0xFF101012)
-private val BUBBLE_BG = Color(0xFF1E1E22)
-private val TEXT_PRIMARY = Color(0xFFF1EEE6)
-private val TEXT_MUTED = Color(0xFF9A968E)
 
 /** Was der Avatar-Assistent gerade zeigt. */
 enum class AssistantScreen { MENU, DAY, INTRO, SETUP, IMPORT, FAQ }
@@ -80,9 +76,9 @@ fun AvatarAssistantDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SHEET_BG,
-        titleContentColor = TEXT_PRIMARY,
-        textContentColor = TEXT_PRIMARY,
+        containerColor = DialogPalette.SheetBackground,
+        titleContentColor = DialogPalette.TextPrimary,
+        textContentColor = DialogPalette.TextPrimary,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -142,11 +138,11 @@ private fun Bubble(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyLarge,
-        color = TEXT_PRIMARY,
+        color = DialogPalette.TextPrimary,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp))
-            .background(BUBBLE_BG)
+            .background(DialogPalette.BubbleBackground)
             .padding(horizontal = 14.dp, vertical = 12.dp)
     )
 }
@@ -157,7 +153,7 @@ private fun Choice(text: String, onClick: () -> Unit) {
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,
-        color = TEXT_PRIMARY,
+        color = DialogPalette.TextPrimary,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))

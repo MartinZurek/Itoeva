@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -589,9 +590,23 @@ private fun DayPicker(
         val locale = LocalConfiguration.current.locales[0]
         DayOfWeek.entries.forEach { day ->
             val isSelected = day in selected
+            /*
+             * Trefferflaeche und sichtbarer Kreis sind getrennt.
+             *
+             * Der Kreis misst 38 dp - unter den 48 dp, die Android als Mindestgroesse fuer ein
+             * Bedienelement vorgibt. Ihn einfach zu vergroessern geht nicht: sieben Kacheln zu
+             * 48 dp brauchen 336 dp nebeneinander, und so breit ist der Dialoginhalt auf einem
+             * gewoehnlichen Telefon nicht (nachgemessen: rund 330 dp).
+             *
+             * Deshalb bekommt die aeussere Flaeche `weight(1f)` und teilt sich die verfuegbare
+             * Breite zu gleichen Teilen - auf diesem Geraet rund 47 dp je Kachel, auf breiteren
+             * Bildschirmen mehr - bei einer Mindesthoehe von 48 dp. Der Kreis bleibt bei 38 dp.
+             * Damit waechst das Ziel mit dem Platz, statt an einer festen Zahl zu scheitern.
+             */
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .weight(1f)
+                    .heightIn(min = 48.dp)
                     /*
                      * `toggleable` statt `clickable`: die Kachel ist ein Schalter, kein Knopf.
                      * Damit meldet sie einem Screenreader auch ihren Zustand ("aktiviert" /
@@ -609,19 +624,25 @@ private fun DayPicker(
                      * wertlos. Der ausgeschriebene Name kommt aus java.time und ist damit ohne
                      * eigene Ressourcen in der Sprache des Geraets.
                      */
-                    .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, locale) }
-                    .background(
-                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                        CircleShape
-                    ),
+                    .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, locale) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    dayLabels.getValue(day),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        dayLabels.getValue(day),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

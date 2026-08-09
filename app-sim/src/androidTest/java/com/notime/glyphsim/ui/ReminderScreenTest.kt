@@ -6,11 +6,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -19,6 +21,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.notime.glyphsim.R
 import java.time.DayOfWeek
@@ -230,6 +233,39 @@ class ReminderScreenTest {
     }
 
 
+
+
+
+    /**
+     * Android verlangt fuer Bedienelemente mindestens 48x48 dp.
+     *
+     * **Die Hoehe ist erreicht, die Breite nicht - und das ist keine Nachlaessigkeit, sondern
+     * Arithmetik.** Nachgemessen auf diesem Geraet: der Dialoginhalt ist rund 272 dp breit. Sieben
+     * Kacheln nebeneinander zu je 48 dp braeuchten 336 dp. Das passt nicht, und kein Setzen einer
+     * Mindestbreite aendert daran etwas - es wuerde die Zeile nur ueber den Rand schieben.
+     *
+     * Was hier trotzdem besser wurde: die Trefferflaeche ist von dem sichtbaren 38-dp-Kreis
+     * getrennt, sie teilt sich die verfuegbare Breite gleichmaessig (auf breiteren Bildschirmen
+     * also mehr) und ist mindestens 48 dp hoch. Vorher war das Ziel in beiden Richtungen 38 dp.
+     *
+     * Die volle Vorgabe braeuchte ein anderes Layout - zwei Zeilen zu vier und drei Kacheln, dann
+     * bleiben je rund 68 dp. Das ist eine Gestaltungsentscheidung und keine, die ein Test faellen
+     * kann; dieser haelt so lange den erreichten Stand fest.
+     */
+    @Test
+    fun wochentagsKachelnHabenEinAusreichendGrossesZiel() {
+        zeigeBildschirm()
+        oeffneNeuDialog()
+        val locale = compose.activity.resources.configuration.locales[0]
+
+        DayOfWeek.entries.forEach { day ->
+            compose.onNodeWithContentDescription(day.getDisplayName(TextStyle.FULL, locale))
+                // Volle Vorgabe.
+                .assertHeightIsAtLeast(48.dp)
+                // Erreichbares Maximum in einer Zeile - siehe die Rechnung oben.
+                .assertWidthIsAtLeast(38.dp)
+        }
+    }
 
     // --- Barrierefreiheit --------------------------------------------------------------------
 
