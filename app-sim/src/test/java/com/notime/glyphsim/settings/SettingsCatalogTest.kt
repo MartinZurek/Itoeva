@@ -111,6 +111,25 @@ class SettingsCatalogTest {
         pruefe(SettingsCatalog.PlayModeIntroSeen, "play_mode_prefs", "intro_seen")
     }
 
+    // --- Die Welt des Wesens ----------------------------------------------------------------------
+
+    /**
+     * Diese vier werden noch direkt von ihren Objekten gelesen; der Katalog dokumentiert ihren
+     * Ablageort (Phase 1d). Gerade weil sie NICHT ueber den Store laufen, ist dieser Test der
+     * einzige Ort, an dem eine Umbenennung auffiele.
+     */
+    @Test
+    fun `die Spielwelt-Eintraege liegen an ihren historischen Orten`() {
+        pruefe(SettingsCatalog.PlayCoins, "play_wallet", "coins")
+        pruefe(SettingsCatalog.PlayPantryLevel, "play_pantry", "level")
+        pruefe(SettingsCatalog.PlayForcedWeather, "play_weather", "forced")
+        pruefe(SettingsCatalog.PlayTimeLapseSpeed, "play_time_lapse", "speed")
+
+        // Die Vorgaben stammen aus PlayWallet.INITIAL bzw. PlayPantry.FULL.
+        assertEquals(2, SettingsCatalog.PlayCoins.default)
+        assertEquals(3, SettingsCatalog.PlayPantryLevel.default)
+    }
+
     // --- Der Katalog als Ganzes -------------------------------------------------------------------
 
     /**
@@ -140,7 +159,9 @@ class SettingsCatalogTest {
             SettingsCatalog.DockSizeDp, SettingsCatalog.DockOffsetFractionX, SettingsCatalog.DockOffsetFractionY,
             SettingsCatalog.AvatarSpecies, SettingsCatalog.MoodEnabled, SettingsCatalog.ActiveProfileId,
             SettingsCatalog.ClipRecordingEnabled,
-            SettingsCatalog.TappedAvatar, SettingsCatalog.TappedClock, SettingsCatalog.PlayModeIntroSeen
+            SettingsCatalog.TappedAvatar, SettingsCatalog.TappedClock, SettingsCatalog.PlayModeIntroSeen,
+            SettingsCatalog.PlayCoins, SettingsCatalog.PlayPantryLevel,
+            SettingsCatalog.PlayForcedWeather, SettingsCatalog.PlayTimeLapseSpeed
         )
         einzeln.forEach {
             assertTrue("Fehlt in SettingsCatalog.all: ${it.file}/${it.key}", it in SettingsCatalog.all)

@@ -48,6 +48,9 @@ object SettingsStore {
     fun read(context: Context, setting: Setting.Float): Float =
         prefs(context, setting.file).getFloat(setting.key, setting.default)
 
+    fun read(context: Context, setting: Setting.Int): Int =
+        prefs(context, setting.file).getInt(setting.key, setting.default)
+
     fun read(context: Context, setting: Setting.OptionalString): String? =
         prefs(context, setting.file).getString(setting.key, setting.default)
 
@@ -59,6 +62,10 @@ object SettingsStore {
 
     fun write(context: Context, setting: Setting.Float, value: Float) {
         prefs(context, setting.file).edit().putFloat(setting.key, value).apply()
+    }
+
+    fun write(context: Context, setting: Setting.Int, value: Int) {
+        prefs(context, setting.file).edit().putInt(setting.key, value).apply()
     }
 
     fun write(context: Context, setting: Setting.OptionalString, value: String?) {

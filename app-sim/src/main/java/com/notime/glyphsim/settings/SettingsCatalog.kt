@@ -53,6 +53,12 @@ sealed interface Setting<T> {
         override val default: kotlin.Float
     ) : Setting<kotlin.Float>
 
+    data class Int(
+        override val file: String,
+        override val key: String,
+        override val default: kotlin.Int
+    ) : Setting<kotlin.Int>
+
     /**
      * Zeichenketten mit `null` als Vorgabe: "noch nie gesetzt" ist bei Aufzaehlungen eine eigene
      * Aussage und nicht dasselbe wie "steht auf dem ersten Wert" (siehe AvatarSpeciesPrefs, wo
@@ -123,6 +129,30 @@ object SettingsCatalog {
     val TappedClock = Setting.Bool("onboarding_prefs", "tapped_clock", default = false)
     val PlayModeIntroSeen = Setting.Bool("play_mode_prefs", "intro_seen", default = false)
 
+    // --- Die Welt des Wesens --------------------------------------------------------------------
+
+    /*
+     * Diese vier werden von ihren Objekten noch DIREKT gelesen, nicht ueber den Store - sie stehen
+     * hier als Dokumentation ihres Ablageorts (Phase 1d: "document current persistence keys").
+     *
+     * Das ist Absicht: Phase 1 soll kein Verhalten aendern, und das Durchreichen waere eine
+     * Aenderung ohne Gegenwert an dieser Stelle. Der Katalog ist trotzdem der richtige Ort dafuer -
+     * er ist die einzige Liste, die vollstaendig sein WILL, und SettingsCatalogTest haelt jeden
+     * dieser Namen fest. Wer die Ablage umbaut, findet sie hier statt in vier Dateien.
+     */
+
+    /** Muenzen des Wesens (siehe PlayWallet) - Weltverhalten, keine Waehrung fuer den Nutzer. */
+    val PlayCoins = Setting.Int("play_wallet", "coins", default = 2)
+
+    /** Vorrat im Kuehlschrank (siehe PlayPantry), 0..3. */
+    val PlayPantryLevel = Setting.Int("play_pantry", "level", default = 3)
+
+    /** Festgehaltenes Wetter - null heisst "richtet sich nach der Zeit". */
+    val PlayForcedWeather = Setting.OptionalString("play_weather", "forced")
+
+    /** Testschalter fuer die beschleunigte Uhr - null heisst aus. */
+    val PlayTimeLapseSpeed = Setting.OptionalString("play_time_lapse", "speed")
+
     /** Alle Eintraege - Grundlage fuer [SettingsCatalogTest] und kuenftige Migrationen. */
     val all: List<Setting<*>> = listOf(
         DockModeEnabled, WatchOnly, PlayModeActive,
@@ -131,6 +161,15 @@ object SettingsCatalog {
         DockSizeDp, DockOffsetFractionX, DockOffsetFractionY,
         AvatarSpecies, MoodEnabled, ActiveProfileId,
         ClipRecordingEnabled,
-        TappedAvatar, TappedClock, PlayModeIntroSeen
+        TappedAvatar, TappedClock, PlayModeIntroSeen,
+        PlayCoins, PlayPantryLevel, PlayForcedWeather, PlayTimeLapseSpeed
     )
+
+    /**
+     * Nicht im Katalog, weil sie keinen festen Schluessel haben: `rhythm_suggestion_prefs` legt je
+     * Erinnerung und Art einen eigenen Eintrag an (`key(reminderId, kind)`). Eine Familie
+     * dynamischer Schluessel laesst sich nicht als Liste fuehren - sie ist in der
+     * Persistenz-Landkarte im README beschrieben.
+     */
+    const val DYNAMIC_RHYTHM_SUGGESTION_FILE = "rhythm_suggestion_prefs"
 }

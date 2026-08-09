@@ -555,6 +555,64 @@ Unter Windows/PowerShell, falls `JAVA_HOME` nicht gesetzt ist:
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 ```
 
+## Persistenz-Landkarte
+
+Aufgenommen in Phase 1d des Produktumbaus, weil jede der geplanten Änderungen (gemeinsamer
+Routinen-Satz, Pausen statt Modi, Kapitel statt Level) an genau diesen Ablagen hängt. **Datei- und
+Schlüsselnamen sind der einzige Bezug zu dem, was auf Geräten liegt** — eine Umbenennung setzt die
+Einstellung stillschweigend zurück. `SettingsCatalogTest` hält jeden Namen fest.
+
+### Room
+
+Zwei getrennte Datenbanken, beide auf Version 19. Der gemeinsame Kern liefert die Entities, die
+`@Database`-Klasse bleibt pro App (siehe „Module").
+
+| Tabelle | In | Schlüssel | Bemerkung |
+|---|---|---|---|
+| `glyph_reminders` | beide | `id` (auto) | `profileId` bindet an den Avatar, `isPlayMode` markiert die eine vom Spielmodus verwaltete Zeile |
+| `library_animations` | beide | `id` (auto) | Abgleich der mitgelieferten über `label` |
+| `builtin_animation_selection` | beide | `animationType` | An/Aus je eingebautem Typ |
+| `avatar_feed_events` | nur `:app-sim` | `id` (auto) | Entsteht beim **Auslösen**; `fedAtMillis` erst bei Reaktion |
+| `avatar_play_state` | nur `:app-sim` | `profileId` | `xp`, `lastSeenLevel`, `startedAtMillis` |
+
+Beziehungen bestehen **ohne Fremdschlüssel**: `avatar_feed_events.reminderId` zeigt auf
+`glyph_reminders.id`, `profileId` verbindet Erinnerungen, Ereignisse und Spielstand. Eine gelöschte
+Erinnerung lässt ihre Ereignisse also stehen — gewollt, das Pflegebuch soll nicht rückwirkend
+schrumpfen.
+
+### SharedPreferences
+
+Sechzehn Einträge in dreizehn Dateien, vollständig in
+`app-sim/.../settings/SettingsCatalog.kt`. Acht laufen bereits über `SettingsStore`, die übrigen
+lesen noch direkt — der Katalog dokumentiert sie trotzdem.
+
+Zwei Besonderheiten:
+
+- **`play_mode_state`** liegt als einzige im gemeinsamen Kern. Alarm-Empfänger und Planer müssen
+  sie aus kalt gestarteten Prozessen lesen, in denen die App-Oberfläche nie lief.
+- **`rhythm_suggestion_prefs`** steht *nicht* im Katalog: sie legt je Erinnerung und Art einen
+  eigenen Schlüssel an (`key(reminderId, kind)`). Eine Familie dynamischer Schlüssel lässt sich
+  nicht als Liste führen.
+
+### Prozessweite Zwischenspeicher — Vorsicht
+
+Drei Objekte halten ihren Wert zusätzlich in einem `MutableStateFlow`, der beim ersten Lesen
+befüllt und **nie wieder aufgefrischt** wird: `PlayModePrefs`, `WatchModePrefs`,
+`AvatarSpeciesPrefs`.
+
+Wer am Objekt vorbei direkt in die Ablage schreibt — etwa über `PlayModeState` aus dem Kern —,
+ändert die Datei, aber nicht das, was die Oberfläche anzeigt. Heute fällt das nicht auf, weil nur
+ein Weg schreibt; beim Einführen des Pausen-Zustands wäre es ein Fehler, den niemand sucht.
+Festgehalten in `ModeTransitionCharacterizationTest`.
+
+### Dateien im App-Speicher
+
+| Pfad | Inhalt | In der Sicherung? |
+|---|---|---|
+| `files/clips/` | Aufgenommene Filme (`.mp4`), unfertige als `.part` | nein |
+| `files/shots/` | Standbilder (`.png`) | nein |
+| `files/last-crash.txt` | Letzter Absturzbericht, auf 64 KB gekappt | nein |
+
 ## Prüfen
 
 Ein Befehl deckt alles ab, was ohne angeschlossenes Gerät prüfbar ist:
