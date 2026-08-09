@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dasselbe wie backup_rules.xml, nur fuer Android 12 und neuer - dort loeste
+  `dataExtractionRules` das aeltere `fullBackupContent` ab. **Die Begruendung steht vollstaendig
+  in backup_rules.xml**; wer hier etwas aendert, muss es dort ebenso tun, sonst haengt das
+  Verhalten von der Android-Version des Nutzers ab.
+
+  Neu gegenueber der alten Datei ist die Trennung zweier Faelle, die vorher zusammenfielen:
+
+  - `<cloud-backup>` - die Sicherung im Google-Konto. Sie liegt auf fremden Servern.
+  - `<device-transfer>` - das direkte Uebertragen auf ein neues Geraet beim Einrichten. Hier
+    verlassen die Daten nie das Geraetepaar.
+
+  Beide bekommen hier bewusst **dieselbe** Liste. Man koennte fuer den Geraetewechsel grosszuegiger
+  sein (die Filme wandern dabei nicht in eine Cloud), aber die Zusage an den Nutzer lautet
+  schlicht "Aufnahmen und Absturzberichte werden nicht automatisch weitergereicht" - und eine
+  Zusage mit Ausnahmen ist keine.
+-->
+<data-extraction-rules>
+
+    <cloud-backup>
+        <include domain="database" path="glyphsim.db" />
+        <include domain="database" path="glyphsim.db-wal" />
+        <include domain="sharedpref" path="." />
+    </cloud-backup>
+
+    <device-transfer>
+        <include domain="database" path="glyphsim.db" />
+        <include domain="database" path="glyphsim.db-wal" />
+        <include domain="sharedpref" path="." />
+    </device-transfer>
+
+</data-extraction-rules>

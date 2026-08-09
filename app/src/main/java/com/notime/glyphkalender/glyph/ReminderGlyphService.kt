@@ -95,9 +95,15 @@ class ReminderGlyphService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_DISMISS) {
-            Log.d(TAG, "\"Beenden\"-Button in der Benachrichtigung angetippt - verwerfe Warteschlange (${queue.size})")
+            Log.d(TAG, "\"Beenden\" angetippt - verwerfe Warteschlange (${queue.size})")
             dismissRequested = true
             queue.clear()
+            // Ein Beenden-Wunsch kann diesen Dienst auch ERST STARTEN: sowohl der PendingIntent
+            // der Benachrichtigung als auch ReminderPlayback.dismiss() richten sich an den Dienst,
+            // und Android startet ihn dafuer notfalls neu. Das passiert im Rennen zwischen "letzter
+            // Frame gespielt" und "Nutzer tippt Stop". Ohne das Folgende bliebe eine solche Instanz
+            // ohne laufenden Auftrag stehen, bis das System sie irgendwann einsammelt.
+            if (playerJob?.isActive != true) stopSelf()
             return START_NOT_STICKY
         }
 
@@ -212,11 +218,19 @@ class ReminderGlyphService : Service() {
                 }
 
                 dismissRequested = false
-                updateNotification(mergedTitles.joinToString(" · "), queue.size)
+                val shownTitle = mergedTitles.joinToString(" · ")
+                updateNotification(shownTitle, queue.size)
+                // Zweiter, von Benachrichtigungen unabhaengiger Weg zum Beenden - noetig,
+                // sobald POST_NOTIFICATIONS abgelehnt ist und die Benachrichtigung samt ihrem
+                // "Beenden"-Button gar nicht erst erscheint. Siehe ReminderPlayback.
+                ReminderPlayback.started(shownTitle)
                 runCatchingPlayAnimation(gmm, first)
             }
         } finally {
             GlyphMatrixConnection.markAnimationStopped()
+            // Ins finally, damit der Hinweis in der App nicht stehen bleibt, wenn das Abspielen
+            // mit einem Fehler abbricht - er boete sonst ein Beenden fuer laengst Vorbeigegangenes an.
+            ReminderPlayback.finished()
         }
 
         Log.d(TAG, "Warteschlange leer, beende Service")
@@ -359,7 +373,8 @@ class ReminderGlyphService : Service() {
         const val EXTRA_ANIMATION_TYPE = "extra_animation_type"
         const val EXTRA_LIBRARY_ANIMATION_ID = "extra_library_animation_id"
         const val EXTRA_INTERVAL_MINUTES = "extra_interval_minutes"
-        private const val ACTION_DISMISS = "com.notime.glyphkalender.action.DISMISS_REMINDER"
+        /** Oeffentlich, weil [ReminderPlayback.dismiss] denselben Weg aus der App heraus nutzt. */
+        const val ACTION_DISMISS = "com.notime.glyphkalender.action.DISMISS_REMINDER"
         private const val CHANNEL_ID = "glyph_reminders"
         private const val NOTIF_ID = 42
         private const val FRAME_DELAY_MS = 260L

@@ -12,7 +12,6 @@ import com.notime.glyphcore.data.GlyphReminderRepository
 import com.notime.glyphcore.data.LibraryAnimation
 import com.notime.glyphcore.data.LibraryAnimationRepository
 import com.notime.glyphkalender.glyph.ReminderAnimations
-import com.notime.glyphcore.reminder.CollisionPrefs
 import com.notime.glyphcore.reminder.ActiveProfilePrefs
 import com.notime.glyphcore.reminder.ReminderScheduler
 import kotlinx.coroutines.channels.Channel
@@ -136,21 +135,6 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun canScheduleExactAlarms(): Boolean = ReminderScheduler.canScheduleExact(getApplication())
-
-    fun collisionMode(): CollisionPrefs.CollisionMode = CollisionPrefs.getMode(getApplication())
-
-    fun spreadGapMinutes(): Int = CollisionPrefs.getSpreadGapMinutes(getApplication())
-
-    /** Aenderung wirkt sofort auf bereits gesetzte Alarme, nicht erst beim naechsten Fire. */
-    fun setCollisionMode(mode: CollisionPrefs.CollisionMode) {
-        CollisionPrefs.setMode(getApplication(), mode)
-        viewModelScope.launch { ReminderScheduler.rescheduleAll(getApplication()) }
-    }
-
-    fun setSpreadGapMinutes(minutes: Int) {
-        CollisionPrefs.setSpreadGapMinutes(getApplication(), minutes)
-        viewModelScope.launch { ReminderScheduler.rescheduleAll(getApplication()) }
-    }
 
     companion object {
         const val MAX_ANIMATIONS_IN_PICKER = 16

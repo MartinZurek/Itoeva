@@ -1,7 +1,15 @@
 package com.notime.glyphkalender.ui
 
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,7 +38,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,9 +54,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -77,9 +81,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.notime.glyphkalender.glyph.ReminderPlayback
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
@@ -87,7 +94,6 @@ import com.notime.glyphcore.data.LibraryAnimation
 import com.notime.glyphkalender.matrix.MatrixGeometry
 import com.notime.glyphkalender.matrix.MatrixPreviewView
 import com.notime.glyphkalender.matrix.PreviewAnimator
-import com.notime.glyphcore.reminder.CollisionPrefs
 import java.time.DayOfWeek
 
 private val dayLabels: Map<DayOfWeek, String> = mapOf(
@@ -142,21 +148,51 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
     var editingReminder by remember { mutableStateOf<GlyphReminder?>(null) }
     var addDraft by remember { mutableStateOf<ReminderDraft?>(null) }
     var editDraft by remember { mutableStateOf<ReminderDraft?>(null) }
-    var showSettings by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var exactAlarmsAllowed by remember { mutableStateOf(viewModel.canScheduleExactAlarms()) }
+    var notificationsAllowed by remember { mutableStateOf(hasNotificationPermission(context)) }
+    val nowPlaying by ReminderPlayback.nowPlaying.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    /*
+     * Nach der Rueckkehr aus den Systemeinstellungen kann sich beides geaendert haben, ohne dass
+     * die App etwas davon mitbekommt - deshalb bei jedem ON_RESUME neu nachsehen statt einmal
+     * beim Aufbau. Sonst behauptet der Hinweis weiter, die Berechtigung fehle, obwohl der Nutzer
+     * sie gerade erteilt hat.
+     */
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 exactAlarmsAllowed = viewModel.canScheduleExactAlarms()
+                notificationsAllowed = hasNotificationPermission(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+
+    /*
+     * Der Systemdialog erscheint nur, solange der Nutzer nicht endgueltig abgelehnt hat. Danach
+     * kommt der Aufruf sofort mit "abgelehnt" zurueck, ohne dass irgendetwas zu sehen war - ein
+     * Knopf, der nichts tut. In genau diesem Fall bleibt nur der Umweg ueber die
+     * Systemeinstellungen, und der wird hier gegangen.
+     *
+     * Unterscheiden lassen sich die beiden Faelle an `shouldShowRequestPermissionRationale`: nach
+     * einer endgueltigen Ablehnung ist es false.
+     */
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        notificationsAllowed = granted
+        val activity = context.findActivity()
+        if (!granted && activity != null &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(activity, POST_NOTIFICATIONS)
+        ) {
+            context.openAppNotificationSettings()
+        }
+    }
+    val requestNotifications = { permissionLauncher.launch(POST_NOTIFICATIONS) }
 
     if (showLibrary) {
         LibraryScreen(onBack = { showLibrary = false }, viewModel = viewModel)
@@ -166,11 +202,6 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
         topBar = {
             LargeTopAppBar(
                 title = { Text("Reminders") },
-                actions = {
-                    IconButton(onClick = { showSettings = true }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -186,6 +217,19 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
             if (!exactAlarmsAllowed) {
                 ExactAlarmBanner(
                     onClick = { context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)) }
+                )
+            }
+
+            if (!notificationsAllowed) {
+                NotificationPermissionBanner(onClick = requestNotifications)
+            }
+
+            // Steht ueber der Liste, solange wirklich etwas laeuft - der von der
+            // Benachrichtigung unabhaengige Weg zum Beenden (siehe ReminderPlayback).
+            nowPlaying?.let { title ->
+                NowPlayingBanner(
+                    title = title,
+                    onStop = { ReminderPlayback.dismiss(context) }
                 )
             }
 
@@ -262,15 +306,6 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
     }
     }
 
-    if (showSettings) {
-        SettingsDialog(
-            initialMode = viewModel.collisionMode(),
-            initialGapMinutes = viewModel.spreadGapMinutes(),
-            onModeChange = { viewModel.setCollisionMode(it) },
-            onGapChange = { viewModel.setSpreadGapMinutes(it) },
-            onDismiss = { showSettings = false }
-        )
-    }
 }
 
 @Composable
@@ -300,6 +335,112 @@ private fun EmptyState(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             Text("Create first reminder")
+        }
+    }
+}
+
+/** `POST_NOTIFICATIONS` ist seit Android 13 eine Laufzeitberechtigung; minSdk ist hier 34. */
+private const val POST_NOTIFICATIONS = Manifest.permission.POST_NOTIFICATIONS
+
+private fun hasNotificationPermission(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(context, POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+/**
+ * Die Activity hinter einem Compose-Context.
+ *
+ * `LocalContext` ist in Compose nicht zwingend die Activity selbst, sondern kann ein
+ * [ContextWrapper] darum sein - deshalb die Schleife statt einer Umwandlung, die je nach
+ * Aufrufort still fehlschlaegt.
+ */
+private fun Context.findActivity(): Activity? {
+    var current: Context? = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
+}
+
+/** Direkt zu den Benachrichtigungseinstellungen dieser App, nicht in die allgemeine Liste. */
+private fun Context.openAppNotificationSettings() {
+    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+    // Sollte ein Hersteller diese Ansicht nicht anbieten, lieber auf die App-Detailseite
+    // ausweichen als den Nutzer mit einer ActivityNotFoundException stehen zu lassen.
+    val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        .setData(Uri.fromParts("package", packageName, null))
+    runCatching { startActivity(intent) }.onFailure { runCatching { startActivity(fallback) } }
+}
+
+/**
+ * Hinweis auf die fehlende Benachrichtigungsberechtigung.
+ *
+ * **Warum ein Hinweis und nicht sofort der Systemdialog beim Start.** Der Systemdialog erklaert
+ * nichts - er fragt. Wer nicht weiss, wofuer die Berechtigung gebraucht wird, lehnt ab, und beim
+ * zweiten Mal fragt Android gar nicht mehr. Der Grund steht deshalb hier, sichtbar und dauerhaft,
+ * und der Dialog kommt erst auf Antippen.
+ *
+ * Der Grund ist auch ein konkreter: ohne Benachrichtigung fehlt der "Beenden"-Knopf zur laufenden
+ * Erinnerung. Die Erinnerungen selbst erscheinen weiterhin - sie laufen ueber die Glyph-Matrix,
+ * nicht ueber Benachrichtigungen. Genau das sagt der Text, damit niemand eine Berechtigung
+ * erteilt, weil er sonst Funktionsverlust befuerchtet, den es nicht gibt.
+ */
+@Composable
+private fun NotificationPermissionBanner(onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(16.dp, 16.dp, 16.dp, 0.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.Notifications,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Notifications are off. Reminders still play on the Glyph Matrix – but the " +
+                    "\"Stop\" button that ends one early lives in a notification. Tap to allow.",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+    }
+}
+
+/**
+ * Sichtbar, solange eine Erinnerung laeuft - mit demselben "Beenden" wie in der Benachrichtigung.
+ *
+ * Das ist der Weg, der auch ohne Benachrichtigungsberechtigung bleibt. Er ersetzt sie nicht
+ * vollstaendig (man muss die App dafuer offen haben), aber er sorgt dafuer, dass es ueberhaupt
+ * einen gibt - vorher war die Benachrichtigung der einzige.
+ */
+@Composable
+private fun NowPlayingBanner(title: String, onStop: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(16.dp, 16.dp, 16.dp, 0.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.PlayArrow,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Playing: $title",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            TextButton(onClick = onStop) { Text("Stop") }
         }
     }
 }
@@ -827,79 +968,18 @@ private fun ReminderDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SettingsDialog(
-    initialMode: CollisionPrefs.CollisionMode,
-    initialGapMinutes: Int,
-    onModeChange: (CollisionPrefs.CollisionMode) -> Unit,
-    onGapChange: (Int) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var mode by remember { mutableStateOf(initialMode) }
-    var gapMinutes by remember { mutableStateOf(initialGapMinutes) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Settings") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                SectionLabel("When reminders overlap")
-                Text(
-                    "If multiple reminders fall on the same time (e.g. with the same " +
-                        "interval), the Glyph Matrix can still only show one animation at a time.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = mode == CollisionPrefs.CollisionMode.IMMEDIATE,
-                        onClick = {
-                            mode = CollisionPrefs.CollisionMode.IMMEDIATE
-                            onModeChange(mode)
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(0, 2)
-                    ) { Text("Back-to-back") }
-                    SegmentedButton(
-                        selected = mode == CollisionPrefs.CollisionMode.SPREAD,
-                        onClick = {
-                            mode = CollisionPrefs.CollisionMode.SPREAD
-                            onModeChange(mode)
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(1, 2)
-                    ) { Text("Spread out") }
-                }
-                if (mode == CollisionPrefs.CollisionMode.IMMEDIATE) {
-                    Text(
-                        "Colliding reminders play right after each other " +
-                            "(identical types in a row are merged into one).",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    Text(
-                        "Colliding reminders are automatically spread apart by the chosen " +
-                            "gap when scheduled, instead of playing back-to-back in a chain.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CollisionPrefs.SPREAD_GAP_OPTIONS.forEach { minutes ->
-                            FilterChip(
-                                selected = gapMinutes == minutes,
-                                onClick = {
-                                    gapMinutes = minutes
-                                    onGapChange(minutes)
-                                },
-                                label = { Text("$minutes min") }
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Done") }
-        }
-    )
-}
+// Hier stand bis zuletzt ein "Settings"-Dialog mit genau einer Einstellung: wie mit mehreren
+// gleichzeitig faelligen Erinnerungen umzugehen sei ("Back-to-back" vs. "Spread out").
+//
+// Er ist ersatzlos entfallen, weil er den Nutzer angelogen hat. Das Auseinanderziehen
+// kollidierender Erinnerungen wurde im Planer abgeschafft - es rueckte sie von dem Zeitpunkt weg,
+// fuer den sie gestellt waren (aus "alle fuenf Minuten" wurde faktisch "alle acht"). An seine
+// Stelle trat eine feste Reihenfolge beim Ausloesen, ohne einen Zeitpunkt anzutasten. Der Schalter
+// blieb stehen, schrieb weiter Werte in die Einstellungen - und niemand las sie mehr.
+//
+// Ein Schalter, der sichtbar umspringt und nichts bewirkt, ist schlimmer als kein Schalter: er
+// laesst den Nutzer glauben, er haette das Verhalten geaendert. Die zugehoerige `CollisionPrefs`
+// im :core-Modul ist mitentfallen.
+//
+// Die Begruendung im Planer selbst steht in ReminderScheduler.kt, die Reihenfolge beim Ausloesen
+// in ReminderTrigger.firePending (:app-sim).

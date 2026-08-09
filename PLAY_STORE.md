@@ -77,8 +77,43 @@ Geprüft am Code, nicht behauptet:
   `WebView` — nichts.
 - **Keine Fremd-SDKs.** Die Abhängigkeiten sind ausschliesslich AndroidX (Compose, Room,
   WorkManager, Lifecycle) und Kotlin-Coroutines. Kein Analytics, kein Crashlytics, keine Werbung.
-- **Alles bleibt lokal**: Erinnerungen und Fütterungen in der Room-Datenbank, Einstellungen in
-  SharedPreferences. Beides im App-eigenen Speicher, beides beim Deinstallieren weg.
+- **Kein eigener Datenversand**: Erinnerungen und Fütterungen liegen in der Room-Datenbank,
+  Einstellungen in SharedPreferences — beides im App-eigenen Speicher. Die App selbst schickt
+  nichts davon irgendwohin.
+
+### Die eine Ausnahme: Androids eigene Sicherung
+
+Hier stand früher „alles bleibt lokal". Das war zu einfach — und mit `allowBackup="true"` und
+*ohne* Regelwerk sogar falsch: Android sicherte damit **den kompletten App-Speicher** ins
+Google-Konto, einschliesslich der aufgenommenen Filme und des Absturzberichts. Genau das
+widersprach der Zusage in `CrashLog.kt`, der Bericht verlasse das Gerät nur, wenn der Nutzer ihn
+selbst weitergibt.
+
+Seither ist festgelegt, was mitdarf (`res/xml/backup_rules.xml` und
+`res/xml/data_extraction_rules.xml` — Positivliste, alles Ungenannte bleibt draussen):
+
+| | In der Sicherung |
+|---|---|
+| Erinnerungen, Pflegebuch (Room, inkl. WAL-Datei) | **ja** |
+| Einstellungen (SharedPreferences) | **ja** |
+| Aufgenommene Filme (`clips/`) | nein |
+| Standbilder (`shots/`) | nein |
+| Absturzbericht (`last-crash.txt`) | nein |
+
+Warum überhaupt sichern statt `allowBackup="false"`: Ohne Sicherung verliert ein Gerätewechsel
+sämtliche Erinnerungen und die komplette Fütterungshistorie. Das ist der Stand, an dem Nutzer
+hängen — und der einzige, dessen Verlust wirklich weh tut.
+
+**Was das fürs Formular heisst.** Die Antworten oben bleiben **Nein**: Auto Backup landet in der
+Google-Drive-Ablage *des Nutzers*, verschlüsselt, und ist für uns als Entwickler nicht
+zugänglich — nach Googles Auslegung ist das keine Erhebung durch die App. *Vor dem Einreichen
+gegen die dann gültige Data-Safety-Hilfe gegenprüfen*, das ist eine Auslegungsfrage und keine
+Tatsache des Codes.
+
+Ehrlicher formuliert lautet die Aussage an den Nutzer also nicht mehr „nichts verlässt je das
+Gerät", sondern: **die App sendet nichts; Erinnerungen und Einstellungen können über Androids
+eigene Sicherung im Google-Konto des Nutzers landen; Aufnahmen und Absturzberichte nie.** Wer
+Datenschutztexte schreibt, nimmt diesen Satz und nicht den alten.
 
 ### Zwei Stellen, die man falsch einschätzen könnte
 

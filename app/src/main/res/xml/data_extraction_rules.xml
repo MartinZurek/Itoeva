@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sicherungs-Politik von :app (Glyph Kalender). Ausfuehrliche Begruendung in
+  app-sim/src/main/res/xml/backup_rules.xml - hier gilt sie sinngemaess.
+
+  Kurz: Mitgesichert werden Erinnerungen (Room) und Einstellungen. Alles Ungenannte bleibt
+  draussen, es ist also eine Positivliste. Die WAL-Datei gehoert dazu, weil zuletzt geschriebene
+  Aenderungen sonst fehlen; die -shm-Datei nicht, weil SQLite sie selbst neu anlegt.
+
+  **Kein Gegenstueck fuer Android 11 und aelter noetig.** Das aeltere `fullBackupContent` greift nur
+  bis Android 11; dieses Modul setzt `minSdk` 34 (das Glyph Matrix SDK verlangt API 34) und laeuft
+  dort also nie. Bei :app-sim (minSdk 26) ist das anders - dort gibt es beide Dateien.
+
+  Dieses Modul nimmt keine Filme auf und schreibt keinen Absturzbericht in den Dateibereich; die
+  entsprechenden Ausschluesse aus :app-sim haetten hier nichts zu tun. Kaeme so etwas dazu, gehoert
+  es geprueft, bevor es stillschweigend mitgesichert wird.
+-->
+<data-extraction-rules>
+
+    <cloud-backup>
+        <include domain="database" path="glyphkalender.db" />
+        <include domain="database" path="glyphkalender.db-wal" />
+        <include domain="sharedpref" path="." />
+    </cloud-backup>
+
+    <device-transfer>
+        <include domain="database" path="glyphkalender.db" />
+        <include domain="database" path="glyphkalender.db-wal" />
+        <include domain="sharedpref" path="." />
+    </device-transfer>
+
+</data-extraction-rules>

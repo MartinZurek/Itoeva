@@ -44,7 +44,7 @@ Drei Gradle-Module:
 
 - **`:core`** (`com.notime.glyphcore`) – gemeinsame Datenschicht und Alarmplanung: Room-Entities
   (`GlyphReminder`, `LibraryAnimation`, …), DAOs, Repositories, `FrameCodec`/`FrameCrossfade`,
-  `CollisionPrefs`, `ReminderScheduler`. **Bewusst ohne UI und ohne Darstellung.**
+  `ReminderScheduler`. **Bewusst ohne UI und ohne Darstellung.**
 - **`:app`** (`com.notime.glyphkalender`) – die echte Hardware-App: registriert den Glyph Toy und
   gibt Erinnerungen auf der Glyph Matrix des Nothing Phone (4a) Pro aus.
 - **`:app-sim`** (`com.notime.glyphsim`) – Simulator ohne Nothing-Hardware, inzwischen mit
@@ -84,20 +84,20 @@ Standardprofil. `AvatarSpeciesPrefs` in `:app-sim` hält beide Seiten synchron.
   `GlyphMatrixManager` gerade besteht (siehe "Bekannte Einschränkung" unten)
 - `data/` – Room-DB: `GlyphReminder` (Entity: Bezeichnung, `AnimationType`,
   Wochentags-Bitmaske `daysOfWeekMask`, `startMinuteOfDay`/`endMinuteOfDay`,
-  `intervalMinutes`, `enabled`, `nextTriggerEpochMillis` - letzteres nur zur
-  Kollisionserkennung zwischen Erinnerungen, siehe "Erinnerungs-Pipeline" unten),
+  `intervalMinutes`, `enabled`, `nextTriggerEpochMillis` - letzteres merkt sich den
+  geplanten nächsten Zeitpunkt und ist die Grundlage für den Watchdog und die
+  Auslöse-Reihenfolge, siehe "Erinnerungs-Pipeline" unten),
   `AnimationType` (Enum, 13 Typen - siehe "Erinnerungs-Pipeline" unten fuer die volle
   Liste), `DaysOfWeekMask` (Bitmaske <-> `Set<DayOfWeek>`-Konvertierung),
   `GlyphReminderDao`, `GlyphReminderRepository`, `AppDatabase`
 - `ui/GlyphReminderViewModel.kt` – lädt/speichert Erinnerungen (StateFlow aus der
-  DB), stößt bei jeder Änderung `ReminderScheduler.schedule`/`cancel` an, liest/setzt
-  die `CollisionPrefs`-Einstellung (siehe unten)
+  DB), stößt bei jeder Änderung `ReminderScheduler.schedule`/`cancel` an
 - `ui/ReminderScreen.kt` – Compose-UI: Liste aller Erinnerungen (Bezeichnung,
   Animationsname, aktive Wochentage, Zeitfenster, Intervall, Ein/Aus-Switch),
   FAB zum Anlegen, Tap auf eine Karte öffnet den Bearbeiten-Dialog (Bezeichnung,
   Animationstyp mit Test-Button je Typ, Wochentags-Chips, Start-/Endzeit-Picker,
-  Intervall-Dropdown, Löschen mit Rückfrage), Zahnrad-Icon oben öffnet den
-  Einstellungen-Dialog (Kollisionsverhalten, siehe unten)
+  Intervall-Dropdown, Löschen mit Rückfrage). Kein Einstellungen-Dialog mehr — er enthielt
+  nur das Kollisionsverhalten und ist mit ihm entfallen (siehe unten).
 - `MainActivity.kt` – zeigt `ReminderScreen`, ruft einmalig
   `ReminderScheduler.rescheduleAll` als Sicherheitsnetz auf
 
@@ -134,21 +134,19 @@ die passende Systemseite.
   `cancel()` entfernt ihn wieder, `rescheduleAll()` plant alle aktivierten
   Erinnerungen neu (nach Reboot bzw. als Sicherheitsnetz beim App-Start).
 
-  **Kollisionsverhalten (einstellbar)**: `reminder/CollisionPrefs.kt` speichert
-  (SharedPreferences), wie mehrere Erinnerungen behandelt werden, die auf denselben
-  oder einen sehr nahen Zeitpunkt fallen wuerden (z.B. mehrere mit 5-Minuten-
-  Intervall) - einstellbar über das Zahnrad-Icon in `ReminderScreen`:
-  - `IMMEDIATE` (Standard): keine Aenderung am Scheduling, die Kollision passiert wie
-    gehabt und wird von der Warteschlange in `ReminderGlyphService` abgefangen
-    (direkt hintereinander abspielen, siehe unten).
-  - `SPREAD`: `schedule()` prueft den natuerlichen naechsten Slot einer Erinnerung
-    gegen `nextTriggerEpochMillis` aller anderen aktivierten Erinnerungen (die
-    dieses Feld bei jedem `schedule()`-Aufruf selbst aktuell halten) und verschiebt
-    ihn bei einer Kollision um den eingestellten Abstand (2/3/5 Min., Funktion
-    `spreadIfColliding()`, auf `MAX_SPREAD_SHIFTS` = 20 Versuche begrenzt) - dadurch
-    tauchen kollidierende Erinnerungen zeitlich getrennt auf, statt in einer Kette
-    direkt hintereinander. Eine Aenderung der Einstellung stößt sofort ein
-    `rescheduleAll()` an, damit sie auch auf bereits gesetzte Alarme wirkt.
+  **Kollisionsverhalten: der Slot wird nie verschoben.** Fallen mehrere Erinnerungen auf
+  denselben Moment (z.B. mehrere mit 5-Minuten-Intervall), feuern sie alle zu ihrer echten
+  Zeit — nur nacheinander. Die Reihenfolge bestimmt das Intervall: kurze zuerst, längere
+  direkt danach, bei Gleichstand die ID (siehe `ReminderTrigger.firePending` in `:app-sim`,
+  bzw. die Warteschlange in `ReminderGlyphService` bei `:app`).
+
+  Es gab dafür einmal eine Einstellung („Spread out", `CollisionPrefs`), die kollidierende
+  Erinnerungen zeitlich auseinanderzog. **Beides ist gelöscht.** Das Verschieben löste die
+  Kollision zwar auf, aber um den Preis, dass eine Erinnerung nicht mehr dann kam, wofür sie
+  gestellt war — aus „alle fünf Minuten" wurde faktisch „alle acht". Der Schalter blieb danach
+  noch eine Weile in der Oberfläche stehen und schrieb Werte, die niemand mehr las: er sprang
+  sichtbar um und bewirkte nichts. Genau deshalb ist er weg — ein Schalter, der lügt, ist
+  schlimmer als kein Schalter.
 - `reminder/ReminderAlarmReceiver.kt` – vom `AlarmManager` geweckt, lädt die
   aktuelle `GlyphReminder`-Definition frisch aus der DB (damit eine
   zwischenzeitliche Bearbeitung berücksichtigt wird), startet
@@ -200,6 +198,19 @@ die passende Systemseite.
   startet dabei nicht neu, sondern ruft `onStartCommand()` der bereits laufenden Instanz
   erneut auf) bricht die aktuell laufende Animation ab (`dismissRequested`-Flag, von
   `playAnimation()` pro Frame geprueft) UND verwirft die restliche Warteschlange.
+
+  **Der Notification-Button ist nicht mehr der einzige Weg dorthin.** Seit Android 13 ist
+  `POST_NOTIFICATIONS` eine Laufzeitberechtigung, und ohne sie zeigt Android auch die
+  Benachrichtigung eines Vordergrunddienstes nicht an — der Dienst läuft dann, ist aber unsichtbar
+  und nicht zu beenden. `glyph/ReminderPlayback.kt` (Prozess-Singleton wie
+  `GlyphMatrixConnection` daneben) veröffentlicht deshalb, *was gerade läuft*; `ReminderScreen`
+  zeigt daraufhin ein Banner mit demselben „Stop" und schickt dasselbe `ACTION_DISMISS`.
+  Dazu erklärt ein zweites Banner die fehlende Berechtigung, **bevor** der Systemdialog kommt
+  (er selbst erklärt nichts, und beim zweiten Ablehnen fragt Android nie wieder) — inklusive des
+  wichtigen Teils: die Erinnerungen laufen über die Matrix und erscheinen weiterhin, fehlen tut
+  nur der Beenden-Knopf. Wer endgültig abgelehnt hat, wird auf Antippen in die
+  Systemeinstellungen geführt, statt auf einen Knopf zu drücken, der nichts mehr tut.
+
   `runCatchingPlayAnimation()` faengt unerwartete Fehler in `playAnimation()` ab
   und springt im Fehlerfall trotzdem zur Uhrzeit, statt die Matrix haengen zu lassen.
   `onTimeout()`-Override als Backstop fuer das harte 3-Minuten-Limit von `shortService`

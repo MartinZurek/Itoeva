@@ -120,8 +120,9 @@ object ReminderScheduler {
             return
         }
 
-        // Frueher konnte hier eine Kollisionsbehandlung (CollisionPrefs.SPREAD) den Zeitpunkt
-        // verschieben, wenn eine andere Erinnerung nahe daran lag. Das ist ersatzlos entfallen:
+        // Frueher konnte hier eine Kollisionsbehandlung ("Spread out", inzwischen samt der
+        // Einstellung `CollisionPrefs` geloescht) den Zeitpunkt verschieben, wenn eine andere
+        // Erinnerung nahe daran lag. Das ist ersatzlos entfallen:
         // Verschieben loeste die Kollision zwar auf, aber um den Preis, dass eine Erinnerung
         // nicht mehr dann kam, wofuer sie gestellt war - aus "alle fuenf Minuten" wurde faktisch
         // "alle acht". Treffen jetzt mehrere auf denselben Moment, feuern sie alle zu ihrer

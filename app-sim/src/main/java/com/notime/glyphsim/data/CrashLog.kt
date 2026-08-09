@@ -24,6 +24,12 @@ import java.util.Locale
  * waehrend der Entwicklung, bei einer per Datei installierten Testfassung oder bei Testern. Genau
  * dort fehlte zuletzt der Stacktrace, um einen gemeldeten Absturz ueberhaupt einordnen zu
  * koennen. Diese Datei schliesst diese Luecke - ohne dass irgendetwas das Geraet verlaesst.
+ *
+ * **Und das gilt auch fuer Androids eigene Sicherung.** Diese Zusage war eine Zeit lang nicht
+ * gedeckt: mit `allowBackup="true"` und ohne Regelwerk wanderte der Bericht samt Geraetemodell und
+ * Stacktrace ins Google-Konto. `res/xml/backup_rules.xml` und `res/xml/data_extraction_rules.xml`
+ * schliessen ihn seither aus (Positivliste - der Dateibereich der App ist gar nicht erst
+ * aufgefuehrt). Wer den Ablageort dieser Datei aendert, muss dort nachsehen.
  */
 object CrashLog {
 

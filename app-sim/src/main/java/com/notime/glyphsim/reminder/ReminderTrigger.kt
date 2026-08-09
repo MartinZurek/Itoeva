@@ -193,8 +193,9 @@ object ReminderTrigger {
 
 
             // Fallen mehrere auf denselben Moment, entscheidet das Intervall die Reihenfolge:
-            // kurze zuerst, laengere direkt danach. Frueher schob CollisionPrefs.SPREAD
-            // kollidierende Erinnerungen zeitlich auseinander - das verschob sie aber weg von
+            // kurze zuerst, laengere direkt danach. Frueher schob eine Einstellung "Spread out"
+            // (inzwischen samt `CollisionPrefs` geloescht) kollidierende Erinnerungen zeitlich
+            // auseinander - das verschob sie aber weg von
             // dem Zeitpunkt, fuer den sie gestellt waren, und machte aus einer 5-Minuten-
             // Erinnerung faktisch eine 8-Minuten-Erinnerung. Die Reihenfolge loest dasselbe
             // Problem, ohne einen einzigen Slot zu verschieben: eine Erinnerung, die alle fuenf

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Was in eine Sicherung (Google-Konto-Backup, Geraetewechsel) mitwandern darf - fuer Android 11
+  und aelter. Ab Android 12 gilt stattdessen data_extraction_rules.xml; **beide Dateien muessen
+  dieselbe Politik ausdruecken**, sonst haengt das Verhalten von der Android-Version ab.
+
+  ## Die Regel
+
+  Mitgesichert werden **Erinnerungen und Einstellungen** - das ist der Stand, dessen Verlust beim
+  Geraetewechsel wirklich weh taete: die eingerichteten Erinnerungen und das Pflegebuch des Avatars.
+
+  Nicht mitgesichert wird alles, was im Dateibereich der App liegt:
+
+  - **Aufgenommene Filme (`clips/`) und Standbilder (`shots/`)** - Aufnahmen, die der Nutzer
+    gemacht hat. Sie koennen gross werden, und sie in eine Cloud-Sicherung zu schieben ist eine
+    Entscheidung, die niemand getroffen hat. Wer sie behalten will, teilt sie bewusst nach aussen.
+  - **`last-crash.txt`** - der letzte Absturzbericht mit Stacktrace, Geraetemodell und
+    Android-Version. Er existiert ausdruecklich unter der Zusage, dass er das Geraet nur verlaesst,
+    wenn der Nutzer ihn selbst weitergibt (siehe data/CrashLog.kt). Eine automatische Sicherung
+    waere genau der Bruch dieser Zusage.
+
+  ## Warum eine Positivliste
+
+  Es steht hier, was mitdarf - nicht, was nicht mitdarf. Alles Ungenannte bleibt draussen. Damit
+  ist eine kuenftig neu angelegte Datei im Dateibereich per Voreinstellung **nicht** in der
+  Sicherung, statt es stillschweigend zu sein. Bei einer Ausschlussliste waere es umgekehrt, und
+  der Fehler faellt dann niemandem auf.
+
+  ## Die WAL-Datei gehoert dazu
+
+  Room laeuft im WAL-Modus: frisch geschriebene Aenderungen stehen zunaechst NUR in
+  `glyphsim.db-wal` und wandern erst spaeter in die eigentliche Datenbankdatei. Wuerde man nur
+  `glyphsim.db` sichern, fehlte nach dem Wiederherstellen genau das, was zuletzt passiert ist -
+  moeglicherweise Wochen an Pflegebuch. Beide gehoeren zusammen gesichert.
+
+  `glyphsim.db-shm` fehlt bewusst: das ist ein reiner Arbeitsindex, den SQLite bei Bedarf neu
+  anlegt. Eine mitgeschleppte alte Fassung waere schlimmer als keine.
+-->
+<full-backup-content>
+
+    <include domain="database" path="glyphsim.db" />
+    <include domain="database" path="glyphsim.db-wal" />
+
+    <!-- Der ganze Bereich, damit eine spaeter hinzukommende Einstellungsdatei nicht
+         versehentlich aus der Sicherung faellt. -->
+    <include domain="sharedpref" path="." />
+
+</full-backup-content>
