@@ -116,8 +116,14 @@ object AvatarAnimations {
         prop: List<Pair<Int, Int>> = emptyList(),
         propFollows: Boolean = false
     ): List<Pair<Int, Int>> {
-        val holes = eyeHoles + mouthHoles
-        val silhouette = (body.silhouette - holes) + body.accessory
+        // Augen und Mund wandern bei verformbaren Koerpern mit (siehe AvatarBody.holeShiftFor) -
+        // sonst sitzt das Gesicht am falschen Ende, sobald sich die Form aendert.
+        val holeShift = body.holeShiftFor(accentPhase)
+        val holes = (eyeHoles + mouthHoles).map { (x, y) -> x to (y + holeShift) }.toSet()
+        // Ueber silhouetteFor statt direkt ueber silhouette: Ein verformbarer Koerper (GLOOP)
+        // rechnet seine Form aus der Bewegungsphase; fuer alle anderen ist es dieselbe feste
+        // Silhouette wie zuvor.
+        val silhouette = (body.silhouetteFor(accentPhase) - holes) + body.accessory
         val shifted = silhouette.map { (x, y) -> (x + dx) to (y + dy) }
         val feetShifted = body.feet(feetSpread).map { (x, y) -> (x + dx) to (y + dy) }
         val tailShifted = body.tail(tailWag).map { (x, y) -> (x + dx) to (y + dy) }
@@ -257,11 +263,21 @@ object AvatarAnimations {
 
             AvatarSpecies.GLOOP -> listOf(
                 creatureFrame(body).beat(800L),
-                // Quellen und Zusammenziehen sind hier die Atmung selbst. Bewusst mit langen
-                // Standzeiten: schnelles Quetschen sieht nach Zittern aus, langsames nach Masse.
-                creatureFrame(body, accentPhase = 1).beat(420L),
+                // **Quellen und Zusammenziehen SIND hier die Atmung** - er hat weder Brustkorb
+                // noch Schultern, an denen sich ein Atemzug zeigen koennte, dafuer eine Form, die
+                // nachgibt.
+                //
+                // Ueber ZWEI Stufen statt einer, und mit Zwischenschritt in beide Richtungen:
+                // Ein Sprung von der Ruhe direkt in die volle Quetschung liest sich als Ruck.
+                // Weiches Material bewegt sich weich, und das entsteht ausschliesslich aus den
+                // Zwischenlagen - nicht aus laengeren Standzeiten.
+                creatureFrame(body, accentPhase = 1).beat(260L),
+                creatureFrame(body, accentPhase = 2).beat(420L),
+                creatureFrame(body, accentPhase = 1).beat(260L),
                 creatureFrame(body).beat(500L),
-                creatureFrame(body, accentPhase = -1).beat(420L),
+                creatureFrame(body, accentPhase = -1).beat(260L),
+                creatureFrame(body, accentPhase = -2).beat(420L),
+                creatureFrame(body, accentPhase = -1).beat(260L),
                 creatureFrame(body).beat(700L),
                 creatureFrame(body, eyeHoles = body.eyesHalf).beat(IDLE_LID_MS),
                 creatureFrame(body, eyeHoles = body.eyesClosed).beat(360L),
@@ -440,10 +456,15 @@ object AvatarAnimations {
                     creatureFrame(body, dy = -2, feetSpread = 1, accentPhase = -1, mouthHoles = body.mouthOpen).beat(SETTLE_MS)
                 )
                 // Kann nicht huepfen - quillt stattdessen auf und schwappt zur Seite.
+                // **Anlauf durch Zusammendruecken, dann Strecken** - so springt Gummi.
+                // Der ausgestreckte Fortsatz bei Phase -3 ist der Hoehepunkt: Er hat keine Arme,
+                // die er hochreissen koennte, also quillt ein Stueck Koerper heraus.
                 AvatarSpecies.GLOOP -> listOf(
-                    creatureFrame(body, accentPhase = 1, dy = -1, mouthHoles = body.mouthOpen).beat(FAST_MS),
-                    creatureFrame(body, accentPhase = 1, dx = 2, dy = -1, mouthHoles = body.mouthOpen).beat(BEAT_MS),
-                    creatureFrame(body, accentPhase = -1, dx = -1).beat(SETTLE_MS)
+                    creatureFrame(body, accentPhase = 2, mouthHoles = body.mouthOpen).beat(FAST_MS),
+                    creatureFrame(body, accentPhase = -2, dy = -1, mouthHoles = body.mouthOpen).beat(FAST_MS),
+                    creatureFrame(body, accentPhase = -3, dy = -1, mouthHoles = body.mouthOpen).beat(BEAT_MS),
+                    creatureFrame(body, accentPhase = 1).beat(FAST_MS),
+                    creatureFrame(body).beat(SETTLE_MS)
                 )
                 // Plustert sich auf und wippt bedaechtig.
                 AvatarSpecies.HOOTLET -> listOf(
@@ -474,9 +495,12 @@ object AvatarAnimations {
                     creatureFrame(body, eyeHoles = body.eyesClosed, accentPhase = -1, dy = 1).beat(SETTLE_MS)
                 )
                 // Sackt in sich zusammen und wabbelt aus.
+                // Sackt in sich zusammen und bleibt breit liegen - fuer einen Schleim ist
+                // Ausruhen keine Haltung, sondern das Aufgeben jeder Haltung.
                 AvatarSpecies.GLOOP -> listOf(
-                    creatureFrame(body, eyeHoles = body.eyesHalf, accentPhase = -1, dy = 1).beat(SLOW_MS),
-                    creatureFrame(body, eyeHoles = body.eyesClosed, accentPhase = 1).beat(SETTLE_MS)
+                    creatureFrame(body, eyeHoles = body.eyesHalf, accentPhase = 1).beat(SLOW_MS),
+                    creatureFrame(body, eyeHoles = body.eyesClosed, accentPhase = 2).beat(SLOW_MS),
+                    creatureFrame(body, eyeHoles = body.eyesClosed, accentPhase = 3).beat(SETTLE_MS)
                 )
                 // Langsames Doppelblinzeln wie eine Eule.
                 AvatarSpecies.HOOTLET -> listOf(

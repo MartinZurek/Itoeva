@@ -38,8 +38,15 @@ object GloopShape {
     private const val REST_RX = 4.0f
     private const val REST_RY = 4.5f
 
-    /** Wieviel eine Stufe Verformung ausmacht. */
-    private const val STEP = 0.16f
+    /**
+     * Wieviel eine Stufe Verformung ausmacht.
+     *
+     * 0,13 und nicht mehr: Bei 0,16 wurde er auf der staerksten Streckung so hoch, dass sein
+     * Scheitel oben aus dem Raster lief und abgeschnitten dastand - aus dem Tropfen wurde ein
+     * Balken mit flachem Deckel. Weil die Flaeche gleich bleibt, waechst die Hoehe beim Schmalen
+     * ueberproportional; die aeusserste Stufe bestimmt deshalb, wie stark eine einzelne sein darf.
+     */
+    private const val STEP = 0.13f
 
     /**
      * Der Koerper bei einer bestimmten Verformung.
@@ -71,6 +78,31 @@ object GloopShape {
         return cells
     }
 
+    /** Anteilige Hoehe, auf der das Auge sitzt - in Ruhe ergibt das genau Zeile 9. */
+    private const val EYE_FRACTION = 0.38f
+
+    /** Die Zeile, in der das Auge bei dieser Verformung liegt. */
+    private fun eyeRow(squash: Int): Int {
+        val cells = body(squash)
+        val top = cells.minOfOrNull { it.second } ?: return 9
+        val height = BOTTOM_ROW - top + 1
+        return top + (height * EYE_FRACTION).roundToInt()
+    }
+
+    /**
+     * **Um wieviele Zeilen Auge und Mund mitwandern muessen.**
+     *
+     * Der Fehler, den das behebt, war beim ersten Ansehen sofort da: Der Koerper zog sich in die
+     * Hoehe, Auge und Mund blieben auf ihren festen Zeilen stehen - und sassen dadurch am unteren
+     * Rand eines Wesens, dessen Gesicht in der Mitte sein sollte. Bei den anderen fuenf Kreaturen
+     * stellt sich diese Frage nicht, weil deren Koerper ihre Form behalten.
+     *
+     * Zurueckgegeben wird die Verschiebung, nicht die Position: So bleibt das Blinzeln
+     * unveraendert (offen, halb, geschlossen sind weiterhin dieselben Punktmengen, nur eben
+     * versetzt), statt fuer jede Stufe eigene Augensaetze zu brauchen.
+     */
+    fun holeShift(squash: Int): Int = eyeRow(squash) - eyeRow(0)
+
     /**
      * Ein ausgestreckter Fortsatz - Gloops Ersatz fuer einen Arm.
      *
@@ -81,18 +113,26 @@ object GloopShape {
      * [extent] ist die Laenge in Zellen, [toRight] die Richtung. Der Fortsatz wird nach aussen hin
      * duenner: Ein gleichbleibend dicker Balken saehe aus wie ein angeklebtes Brett.
      */
-    fun reach(extent: Int, toRight: Boolean = true, row: Int = 10): List<Pair<Int, Int>> {
+    fun reach(extent: Int, toRight: Boolean = true, squash: Int = 0): List<Pair<Int, Int>> {
         if (extent <= 0) return emptyList()
-        val cells = ArrayList<Pair<Int, Int>>(extent * 2)
+        val cells = body(squash)
+        // **Am tatsaechlichen Rand des Koerpers ansetzen, nicht an einer festen Spalte.**
+        // Mit einer festen Spalte hing der Fortsatz bei gestrecktem Koerper frei in der Luft -
+        // ein Arm, der seinen Besitzer nicht beruehrt, ist kein Arm.
+        val row = (eyeRow(squash) + 1).coerceAtMost(BOTTOM_ROW - 1)
+        val onRow = cells.filter { it.second == row }
+        val edge = (if (toRight) onRow.maxOfOrNull { it.first } else onRow.minOfOrNull { it.first })
+            ?: return emptyList()
+
+        val out = ArrayList<Pair<Int, Int>>(extent * 2)
         for (step in 1..extent) {
-            val x = if (toRight) (CENTER_X + REST_RX - 1 + step).roundToInt()
-            else (CENTER_X - REST_RX + 1 - step).roundToInt()
+            val x = if (toRight) edge + step else edge - step
             if (x !in 0 until AvatarGeometry.SIZE) continue
-            cells += x to row
+            out += x to row
             // Die erste Haelfte bleibt zwei Zellen dick, danach laeuft er spitz aus.
-            if (step <= extent / 2) cells += x to (row + 1)
+            if (step <= extent / 2) out += x to (row + 1)
         }
-        return cells
+        return out
     }
 
     /**

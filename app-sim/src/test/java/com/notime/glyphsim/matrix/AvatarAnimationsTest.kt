@@ -556,31 +556,56 @@ class AvatarAnimationsTest {
     }
 
     /**
-     * Jede Spezies muss einen eigenen Bewegungs-Akzent haben (Ohren, Fluegel, Zopf, Quetschen).
+     * **Jede Spezies muss sich bei einer Bewegungsphase sichtbar veraendern.**
      *
      * Hintergrund: STARLET/GLOOP/HOOTLET haben keinen Schwanz, GLOOP zusaetzlich keine Fuesse.
      * Solange sich Bewegungen allein darauf stuetzten, wirkten deren Reaktionen systematisch
-     * matter als die von PUFFLING - messbar an deutlich weniger geaenderten Pixeln pro
-     * Uebergang. Der Akzent gleicht das aus und macht die Wahl der Grundform ueberhaupt erst
-     * spuerbar.
+     * matter als die von PUFFLING - messbar an deutlich weniger geaenderten Pixeln pro Uebergang.
+     *
+     * **Geprueft wird jetzt die WIRKUNG, nicht mehr das Mittel.** Die vorherige Fassung verlangte
+     * einen nicht leeren [AvatarBody.accent] - also genau das eine Mittel, mit dem das damals
+     * geloest war. Seit GLOOPs Koerper seine ganze Form aus der Phase rechnet (siehe
+     * [GloopShape]), braucht er bei kleinen Phasen gar keinen Akzent mehr: Es bewegt sich der
+     * Koerper selbst, und zwar staerker als jede Zusatzzelle es koennte. Der Test schlug an,
+     * obwohl die Sache besser geworden war - ein sicheres Zeichen dafuer, dass er das Falsche
+     * gemessen hat.
      */
     @Test
     fun everySpeciesHasAVisibleAccent() {
         for (species in AvatarSpecies.entries) {
             val body = AvatarBodies.forSpecies(species)
+            val rest = AvatarAnimations.creatureFrame(body).toSet()
+            val up = AvatarAnimations.creatureFrame(body, accentPhase = 1).toSet()
+            val down = AvatarAnimations.creatureFrame(body, accentPhase = -1).toSet()
+
             assertTrue(
-                "$species hat keinen Bewegungs-Akzent - bei fehlendem Schwanz/Fuessen bliebe " +
-                    "die Spezies bewegungsarm.",
-                body.accent(1).isNotEmpty() && body.accent(-1).isNotEmpty()
+                "$species veraendert sich bei Phase +1 nicht - die Spezies bliebe bewegungsarm.",
+                up != rest
             )
             assertTrue(
-                "$species: Akzent-Ruhelage (phase 0) muss leer sein, sonst haengt er dauerhaft im Bild.",
-                body.accent(0).isEmpty()
+                "$species veraendert sich bei Phase -1 nicht.",
+                down != rest
             )
             assertTrue(
-                "$species: Akzent-Phasen +1 und -1 sind identisch - er bewegt sich also nicht.",
-                body.accent(1).toSet() != body.accent(-1).toSet()
+                "$species: Phase +1 und -1 sehen gleich aus - es bewegt sich also nichts.",
+                up != down
             )
+        }
+    }
+
+    @Test
+    fun `nur GLOOP veraendert seine Form, die anderen behalten sie`() {
+        // Die Gegenprobe zur neuen Freiheit: Eine gerechnete Silhouette ist ein maechtiges
+        // Werkzeug und waere bei einem Koerper aus Fell und Knochen genau falsch. Rutscht sie je
+        // versehentlich auf eine andere Spezies, faellt das hier auf.
+        for (species in AvatarSpecies.entries) {
+            val body = AvatarBodies.forSpecies(species)
+            val deforms = body.silhouetteFor(2).toSet() != body.silhouetteFor(0).toSet()
+            if (species == AvatarSpecies.GLOOP) {
+                assertTrue("GLOOP verformt sich nicht mehr", deforms)
+            } else {
+                assertTrue("$species verformt plötzlich seinen Koerper", !deforms)
+            }
         }
     }
 

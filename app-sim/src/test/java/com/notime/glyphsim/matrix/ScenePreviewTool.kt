@@ -34,6 +34,28 @@ class ScenePreviewTool {
      * Ein eigener Knopf, weil sich die Anordnung dort anders verhaelt (siehe
      * PlayScene.MAX_ROOM_CELLS) und man beides nebeneinander sehen koennen muss.
      */
+    /** Gloops Verformung ueber alle Stufen - Ruhe, gequetscht, gestreckt. */
+    @Test
+    fun dumpGloop() {
+        val out = StringBuilder()
+        for (phase in -3..3) {
+            out.append("Phase ").append(phase).append(System.lineSeparator())
+            val body = AvatarBodies.forSpecies(AvatarSpecies.GLOOP)
+            val points = AvatarAnimations.creatureFrame(body, accentPhase = phase).toSet()
+            for (y in 0 until AvatarGeometry.HEIGHT) {
+                val row = StringBuilder()
+                for (x in 0 until AvatarGeometry.SIZE) {
+                    row.append(if ((x to y) in points) '#' else '.')
+                }
+                out.append(row).append(System.lineSeparator())
+            }
+            out.append(System.lineSeparator())
+        }
+        val target = File(System.getProperty("java.io.tmpdir"), "gloop.txt")
+        target.writeText(out.toString())
+        println("Gloop geschrieben: ${target.absolutePath}")
+    }
+
     /** Regen und Schnee - draussen und durchs Fenster gesehen. */
     @Test
     fun dumpWeather() {

@@ -47,7 +47,31 @@ data class AvatarBody(
      *
      * Wird wie [feet]/[tail] mit dem Koerper mitverschoben.
      */
-    val accent: (phase: Int) -> List<Pair<Int, Int>> = { emptyList() }
+    val accent: (phase: Int) -> List<Pair<Int, Int>> = { emptyList() },
+    /**
+     * **Eine Silhouette, die sich mit der Bewegung AENDERT** statt nur ergaenzt zu werden.
+     *
+     * [accent] kann ausschliesslich etwas hinzufuegen - ein Ohr, einen Fluegel, eine Ausbeulung.
+     * Fuer fuenf der sechs Kreaturen ist das genau richtig: Ein Koerper aus Fell und Knochen
+     * behaelt seine Form, es bewegen sich nur Teile davon.
+     *
+     * Ein Schleim nicht. Bei ihm nimmt Quetschen oben etwas WEG und setzt es seitlich wieder an,
+     * und das laesst sich mit Zusatzzellen grundsaetzlich nicht ausdruecken - genau deshalb hatte
+     * GLOOP bisher vier Zellen Ausbeulung und bewegte sich im Uebrigen wie ein Stein mit Auge.
+     * Deshalb darf eine Grundform hier ihre gesamte Silhouette aus der Bewegungsphase rechnen
+     * (siehe [GloopShape]).
+     *
+     * Voreinstellung ist die feste Silhouette - fuer alle anderen aendert sich nichts.
+     */
+    val silhouetteFor: (phase: Int) -> List<Pair<Int, Int>> = { silhouette },
+    /**
+     * Um wieviele Zeilen Augen und Mund bei dieser Bewegungsphase mitwandern.
+     *
+     * Nur fuer verformbare Koerper von null verschieden (siehe [silhouetteFor]): Aendert sich die
+     * Form, muss das Gesicht mit - sonst sitzt es am falschen Ende. Als VERSCHIEBUNG und nicht als
+     * Position, damit Blinzeln und Mundoeffnen unveraendert mit denselben Punktmengen arbeiten.
+     */
+    val holeShiftFor: (phase: Int) -> Int = { 0 }
 )
 
 /**
@@ -211,18 +235,13 @@ object AvatarBodies {
     )
 
     // ---- GLOOP: Fantasy-Schleim, ein grosses zentrales Auge, keine Beine/Ohren ----
+    //
+    // Als einziger Koerper GERECHNET statt gezeichnet - die Begruendung steht bei [GloopShape].
     private val gloop = AvatarBody(
-        silhouette = listOf(
-            7 to 6, 8 to 6,
-            6 to 7, 7 to 7, 8 to 7, 9 to 7,
-            5 to 8, 6 to 8, 7 to 8, 8 to 8, 9 to 8, 10 to 8,
-            4 to 9, 5 to 9, 6 to 9, 7 to 9, 8 to 9, 9 to 9, 10 to 9, 11 to 9,
-            4 to 10, 5 to 10, 6 to 10, 7 to 10, 8 to 10, 9 to 10, 10 to 10, 11 to 10,
-            4 to 11, 5 to 11, 6 to 11, 7 to 11, 8 to 11, 9 to 11, 10 to 11, 11 to 11,
-            5 to 12, 6 to 12, 7 to 12, 8 to 12, 9 to 12, 10 to 12,
-            6 to 13, 7 to 13, 8 to 13, 9 to 13,
-            7 to 14, 8 to 14
-        ),
+        // Die Ruhelage ist dieselbe Rechnung wie jede andere Stufe. Frueher stand hier eine
+        // handgeschriebene Punktliste; sobald die Form gerechnet wird, waeren das zwei Quellen
+        // fuer dieselbe Gestalt, und die zweite waere die, die niemand mehr nachzieht.
+        silhouette = GloopShape.body(0),
         accessory = emptyList(),
         eyesOpen = setOf(7 to 9, 8 to 9, 7 to 10, 8 to 10),
         eyesClosed = emptySet(),
@@ -232,17 +251,34 @@ object AvatarBodies {
         mouthOpen = setOf(6 to 12, 7 to 12, 8 to 12, 9 to 12),
         feet = noFeet,
         tail = noTail,
-        // Der einzige Koerper ganz OHNE Fuesse und Schwanz - ohne Akzent blieb hier bei jeder
-        // Bewegung, die sich nur darauf stuetzt, buchstaeblich alles stehen. Als Schleim passt
-        // Quetschen/Dehnen: Phase +1 quillt seitlich aus, Phase -1 zieht sich nach oben
-        // zusammen (Spitze oben, schmalere Flanken).
+        /**
+         * **Der Fortsatz** - was bei ihm einem Arm am naechsten kommt.
+         *
+         * Er hat keine Gliedmassen, und statt ihm welche anzuzeichnen quillt bei starker
+         * Streckung ein Stueck Koerper zur Seite heraus (siehe [GloopShape.reach]). Bei kleinen
+         * Phasen bleibt es beim blossen Quetschen - sonst waere jede Regung ein Ausgreifen.
+         *
+         * Beim staerksten Zusammendruecken loest sich stattdessen ein Tropfen vom Scheitel: Was
+         * seitlich herausgedrueckt wird, muss irgendwo hin.
+         */
         accent = { phase ->
             when {
-                phase > 0 -> listOf(3 to 10, 12 to 10, 3 to 11, 12 to 11)
-                phase < 0 -> listOf(7 to 5, 8 to 5)
+                phase <= -3 -> GloopShape.reach(extent = 3, toRight = true, squash = phase)
+                phase >= 3 -> GloopShape.bead(step = 1, squash = phase)
                 else -> emptyList()
             }
-        }
+        },
+        /**
+         * **Gloop ist der einzige, dessen ganze Form aus der Bewegung faellt.**
+         *
+         * Positive Phasen druecken ihn flach und breit, negative ziehen ihn hoch und schmal, und
+         * die Flaeche bleibt dabei gleich - daran erkennt man Gummi (siehe [GloopShape]). Vorher
+         * war er eine feste Silhouette mit vier Zellen Ausbeulung: die einzige Kreatur ohne
+         * Fuesse, ohne Schwanz und ohne Ohren, also die mit dem WENIGSTEN Bewegungsspielraum,
+         * obwohl sie als Schleim den groessten haben muesste.
+         */
+        silhouetteFor = { phase -> GloopShape.body(phase) },
+        holeShiftFor = { phase -> GloopShape.holeShift(phase) }
     )
 
     // ---- HOOTLET: Anime-Eule, Federohren, kleine Fluegel, Schnabel ----
