@@ -336,6 +336,9 @@ fun DockScreen(
         // Muenzen und Vorrat liegen in den Einstellungen, nicht im Compose-Zustand - eine Anzeige,
         // die sie nur einmal liest, bliebe fuer immer auf dem Startwert stehen. Dieser Zaehler
         // wird bei jeder Aenderung hochgesetzt und dient als Schluessel fuers Neulesen.
+        //
+        // Gelesen wird er jetzt vom Gespraech: Bezahlt der Avatar an der Kasse, waehrend das Feld
+        // offen steht, sollen Muenzen und Vorrat darin nicht auf dem alten Stand stehen bleiben.
         var economyTick by remember { mutableIntStateOf(0) }
         // Laufende Aufnahme: null = keine. Der Fortschritt gilt fuers Zusammenrechnen DANACH.
         var clipSession by remember { mutableStateOf<PlayClipRecorder.Session?>(null) }
@@ -1724,38 +1727,29 @@ fun DockScreen(
             )
         }
 
-        // Fortschritt im Spielmodus - bewusst klein und gedaempft, aber die EINZIGE Stelle, an der
-        // Level und XP zu sehen sind (im Startbildschirm stuenden sie nur im Weg).
+        // **Der Aufstieg - und sonst nichts mehr.**
         //
-        // **Unten und nicht oben:** Am oberen Rand lag die Zahl bei Geraeten mit Kamera-Ausschnitt
-        // teilweise darunter und war schlicht nicht lesbar. Der untere Rand ist davon auf jedem
-        // Geraet frei - im Dock-Modus sind die Systemleisten ohnehin ausgeblendet, es gibt dort
-        // also auch nichts, womit sie sich stossen koennte.
+        // Hier stand dauerhaft eine Zeile mit Stufe, Erfahrung, Muenzen und Vorrat. Sie war der
+        // letzte Ueberrest der Bauweise "alles ist immer zu sehen", genau wie der Tagesstand am
+        // oberen Rand des Startbildschirms, und sie hatte denselben Nachteil: Wer den Stand
+        // ohnehin dastehen sieht, fragt seinen Begleiter nicht mehr danach. Nachzulesen ist er
+        // jetzt im Gespraech (siehe PlayTalk.Offer.ShowGame), dort mit einem Balken statt mit
+        // Ziffern.
+        //
+        // Der AUFSTIEG bleibt: Er ist kein Zustand, sondern ein Ereignis. Etwas, das man erreicht
+        // hat, muss in dem Moment zu sehen sein, in dem es geschieht - es hinterher nachschlagen
+        // zu koennen ist kein Ersatz dafuer. Er zeigt sich kurz und verschwindet von selbst.
         if (playMode) {
             val playViewModel = androidx.lifecycle.viewmodel.compose.viewModel<PlayModeViewModel>()
             val playState by playViewModel.state.collectAsState()
-            Text(
-                if (playState.showLevelUp) {
-                    stringResource(R.string.playmode_level_up, playState.level)
-                } else {
-                    // Muenzen und Vorrat gehoeren hierher, nicht in eine eigene Anzeige: Sie
-                    // erklaeren, WARUM der Avatar gerade tut, was er tut. Wer sieht, dass der
-                    // Vorrat auf 0 steht, versteht den Gang in den Laden - und wer sieht, dass
-                    // auch das Geld fehlt, versteht den Gang zur Arbeit.
-                    stringResource(
-                        R.string.playmode_status,
-                        playState.level,
-                        playState.xp,
-                        remember(economyTick) { PlayWallet.coins(context) },
-                        remember(economyTick) { PlayPantry.level(context) }
-                    )
-                },
-                color = if (playState.showLevelUp) Color(0xFF7FD1A6) else Color(0xFF6E6A63),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp)
-            )
             if (playState.showLevelUp) {
+                Text(
+                    stringResource(R.string.playmode_level_up, playState.level),
+                    color = Color(0xFF7FD1A6),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp)
+                )
                 // Erst nach einem Moment bestaetigen, sonst waere der Glueckwunsch im selben
                 // Frame wieder verschwunden, in dem er erscheint.
                 LaunchedEffect(playState.level) {
@@ -2037,7 +2031,7 @@ fun DockScreen(
         // weiter (der Avatar geht seinen Tag weiter), aber ein Griff daneben soll nicht versehentlich
         // die Uhr verschieben.
         if (talkOpen) {
-            LaunchedEffect(talkOpen, talkRefresh) {
+            LaunchedEffect(talkOpen, talkRefresh, economyTick) {
                 talkKnowledge = null
                 val species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
                 talkKnowledge = withContext(Dispatchers.IO) {

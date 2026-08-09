@@ -359,4 +359,56 @@ class PlayTalkTest {
             assertTrue("keine Aussage fuer $case", PlayTalk.focus(case).headline != null)
         }
     }
+
+    @Test
+    fun `im Spiel ist der Spielstand immer erreichbar`() {
+        // **Genau das war verlorengegangen.** Beim Umbau auf die kurze Fassung tauchte der
+        // Spielstand nur noch auf, wenn der Vorrat leer war - wer einfach wissen wollte, wie weit
+        // sein Begleiter ist, fand es nirgends mehr, weil zugleich die Zeile am unteren Bildrand
+        // entfallen war. Gemeldet wurde es als "ich habe die Statistik nicht gefunden".
+        //
+        // Ueber viele Lagen geprueft, nicht nur ueber eine: Der Spielstand darf nicht daran
+        // haengen, ob zufaellig gerade etwas anderes dringender ist.
+        val cases = listOf(
+            PlayTalk.Game(level = 1, xp = 0, coins = 5, pantry = 3),
+            PlayTalk.Game(level = 4, xp = 180, coins = 0, pantry = 0),
+            PlayTalk.Game(level = 9, xp = 430, coins = 99, pantry = 1)
+        )
+        for (game in cases) {
+            for (steering in listOf(emptySet(), setOf(AnimationType.MOVE))) {
+                for (plan in listOf(emptyList(), somePlan())) {
+                    val focus = PlayTalk.focus(
+                        known(plan = plan, steering = steering, game = game)
+                    )
+                    assertTrue(
+                        "Bei $game / offen=$steering fehlt der Spielstand: ${focus.offers}",
+                        focus.offers.contains(PlayTalk.Offer.ShowGame)
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `ohne Spiel wird kein Spielstand angeboten`() {
+        val focus = PlayTalk.focus(known(plan = somePlan(), game = null))
+        assertTrue(
+            "Im Alltag gibt es weder Stufe noch Muenzen - das darf nicht angeboten werden",
+            focus.offers.none { it == PlayTalk.Offer.ShowGame }
+        )
+    }
+
+    @Test
+    fun `der Fortschritt zaehlt innerhalb der Stufe, nicht insgesamt`() {
+        // "430 Erfahrung" sagt niemandem etwas; erst der Anteil an der laufenden Stufe laesst
+        // sich als Balken zeichnen. Rechnet das falsch, stuende der Balken bei hohen Stufen
+        // dauerhaft voll.
+        val game = PlayTalk.Game(level = 9, xp = 430, coins = 0, pantry = 0)
+        assertEquals(30, game.xpInLevel)
+        assertEquals(50, game.xpPerLevel)
+        assertTrue("Fortschritt ausserhalb von 0..1", game.progress in 0f..1f)
+
+        val fresh = PlayTalk.Game(level = 1, xp = 0, coins = 0, pantry = 0)
+        assertEquals(0f, fresh.progress, 0.001f)
+    }
 }

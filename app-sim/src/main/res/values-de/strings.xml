@@ -328,7 +328,6 @@
     <string name="settings_timelapse_hint">Lässt einen ganzen Tag in etwa vier Minuten ablaufen, damit sich alle Szenen und Tageszeiten schnell ansehen lassen. Nur zum Ausprobieren – für den normalen Betrieb ausschalten.</string>
     <string name="a11y_visitor">%1$s kommt vorbei</string>
     <string name="a11y_clock_moon">Mond</string>
-    <string name="playmode_status">Level %1$d · %2$d XP · %3$d Münzen · %4$d Mahlzeiten</string>
     <string name="settings_clip_share">Clip teilen</string>
     <string name="settings_clip_enable">Aufnehmen im Spiel-Modus</string>
     <string name="settings_clip_enable_hint">Blendet im Spiel-Modus oben rechts einen Aufnahmeknopf ein.</string>
@@ -472,4 +471,12 @@
     <string name="settings_weather_rain">Regen</string>
     <string name="settings_weather_snow">Schnee</string>
     <string name="settings_weather_hint">Normalerweise entscheidet der Tag – Regen an knapp jedem fünften, Schnee nur im Winter. Hier lässt sich eines festhalten, um es anzusehen. Sichtbar draußen und von drinnen durchs Fenster.</string>
+
+    <!-- Spielstand im Gespraech -->
+    <string name="talk_q_game">Wie kommst du voran?</string>
+    <string name="talk_a_game_off">Wir spielen gerade nicht.</string>
+    <string name="talk_a_game_level_only">Stufe %1$d</string>
+    <string name="talk_a_game_next">%1$d von %2$d bis Stufe %3$d</string>
+    <string name="talk_game_coins">Münzen</string>
+    <string name="talk_game_pantry">Vorrat</string>
 </resources>

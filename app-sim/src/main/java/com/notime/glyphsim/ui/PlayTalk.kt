@@ -92,6 +92,17 @@ object PlayTalk {
     ) {
         val pantryEmpty: Boolean get() = pantry <= 0
         val brokeAndHungry: Boolean get() = pantryEmpty && coins < PlayWallet.GROCERY_COST
+
+        /**
+         * Wie weit er in der laufenden Stufe ist - nicht die Gesamt-Erfahrung.
+         *
+         * Eine Zahl wie "180 Erfahrung" sagt niemandem etwas; "30 von 50 bis zur naechsten Stufe"
+         * schon, und erst daraus laesst sich ein Balken zeichnen. Der Fortschritt ist das, was
+         * man sehen will - nicht die Summe.
+         */
+        val xpInLevel: Int get() = xp % PlayModeXp.XP_PER_LEVEL
+        val xpPerLevel: Int get() = PlayModeXp.XP_PER_LEVEL
+        val progress: Float get() = xpInLevel.toFloat() / xpPerLevel
     }
 
     data class Knowledge(
@@ -247,6 +258,8 @@ object PlayTalk {
         data object ShowPlan : Offer
         /** Die Rueckschau auf die Woche. */
         data object ShowWeek : Offer
+        /** Stufe, Erfahrung, Muenzen, Vorrat - der Spielstand. */
+        data object ShowGame : Offer
         /** "Was passiert hier eigentlich?" - die Erklaerung des Spielmodus. */
         data object Explain : Offer
     }
@@ -281,6 +294,16 @@ object PlayTalk {
             knowledge.goalsTotal > 0 -> Headline.ALL_DONE
             else -> Headline.SMALL_TALK
         }
+
+        // **Der Spielstand steht im Spiel immer zur Verfuegung** und kommt gleich nach einer
+        // dringenden Bitte.
+        //
+        // Er stand frueher dauerhaft am unteren Bildrand. Das war die alte Bauweise "alles ist
+        // immer zu sehen" - dieselbe, aus der auch der Tagesstand oben stammte. Beim Umbau auf
+        // die kurze Fassung fiel er dann ganz heraus: Er tauchte nur noch auf, wenn der Vorrat
+        // leer war. Wer einfach wissen wollte, wie weit sein Begleiter ist, fand es nirgends
+        // mehr - weder unten noch im Gespraech.
+        if (game != null && offers.size < MAX_OFFERS) offers += Offer.ShowGame
 
         // Aufgefuellt wird nur, wenn noch Platz ist, und in dieser Reihenfolge: erst ein
         // Vorschlag (er bringt etwas Neues), dann der Plan, dann die Woche.

@@ -5,7 +5,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -29,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.PlayPantry
+import kotlin.math.roundToInt
 
 /**
  * **Das Gespraech mit dem Avatar** - er sagt etwas, man kann darauf eingehen (siehe [PlayTalk]).
@@ -153,7 +159,9 @@ private enum class Question(val labelRes: Int) {
      * Alltag-Modus gaebe es hier gar kein Wesen zum Antippen, und im Uhr-Modus soll es keines
      * geben.
      */
-    HERE(R.string.talk_q_here)
+    HERE(R.string.talk_q_here),
+    /** Stufe, Erfahrung, Muenzen, Vorrat. */
+    GAME(R.string.talk_q_game)
 }
 
 /**
@@ -291,6 +299,8 @@ private fun OfferLine(
             QuestionLine(stringResource(R.string.talk_q_week)) { onShow(Question.WEEK) }
         PlayTalk.Offer.Explain ->
             QuestionLine(stringResource(R.string.talk_q_here)) { onShow(Question.HERE) }
+        PlayTalk.Offer.ShowGame ->
+            QuestionLine(stringResource(R.string.talk_q_game)) { onShow(Question.GAME) }
     }
 }
 
@@ -307,6 +317,56 @@ private fun Answer(
     when (question) {
         Question.HERE -> {
             Text(stringResource(R.string.talk_a_here), color = INK, size = 15)
+        }
+
+        Question.GAME -> {
+            val game = knowledge.game
+            if (game == null) {
+                Text(stringResource(R.string.talk_a_game_off), color = INK, size = 15)
+            } else {
+                Text(
+                    stringResource(R.string.talk_a_game_level_only, game.level),
+                    color = INK, size = 17, weight = FontWeight.SemiBold
+                )
+                // **Ein Balken statt einer Zahl.** "180 Erfahrung" sagt niemandem etwas; ein
+                // Balken, der sich sichtbar fuellt, beantwortet die eigentliche Frage - wie weit
+                // ist es noch? Aus denselben Zeichen gebaut, aus denen die Welt besteht.
+                Meter(game.progress)
+                Text(
+                    stringResource(
+                        R.string.talk_a_game_next, game.xpInLevel, game.xpPerLevel, game.level + 1
+                    ),
+                    color = INK_DIM, size = 13
+                )
+                Spacer(Modifier.height(2.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                    Column {
+                        Text(stringResource(R.string.talk_game_coins), color = INK_DIM, size = 12)
+                        Text("${game.coins}", color = INK, size = 15)
+                    }
+                    Column {
+                        Text(stringResource(R.string.talk_game_pantry), color = INK_DIM, size = 12)
+                        // Als Punkte statt als Zahl: Der Vorrat reicht von null bis drei, und
+                        // drei Punkte liest man schneller als eine Ziffer.
+                        Text(
+                            (0 until PlayPantry.FULL).joinToString(" ") {
+                                if (it < game.pantry) "●" else "○"
+                            },
+                            color = INK, size = 15
+                        )
+                    }
+                }
+                Text(
+                    stringResource(
+                        when {
+                            game.brokeAndHungry -> R.string.talk_a_game_broke
+                            game.pantryEmpty -> R.string.talk_a_game_shopping
+                            else -> R.string.talk_a_game_fine
+                        }
+                    ),
+                    color = INK_DIM, size = 13
+                )
+            }
         }
 
         Question.WEEK -> {
@@ -369,6 +429,32 @@ private fun Answer(
 
     }
 }
+
+/**
+ * Ein Fortschrittsbalken aus Bloecken - dieselbe Sprache wie die Welt daneben.
+ *
+ * Bewusst gestufte Bloecke und keine glatte Linie: Diese Welt besteht aus Zellen, und ein weich
+ * verlaufender Balken waere das einzige Element darin, das das nicht taete. Zehn Stufen genuegen -
+ * feiner abgelesen wird ohnehin nicht.
+ */
+@Composable
+private fun Meter(progress: Float) {
+    val filled = (progress.coerceIn(0f, 1f) * METER_STEPS).roundToInt()
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        repeat(METER_STEPS) { index ->
+            Box(
+                modifier = Modifier
+                    .size(width = 14.dp, height = 6.dp)
+                    .background(
+                        if (index < filled) INK else Color(0xFF2A2A28),
+                        RoundedCornerShape(1.dp)
+                    )
+            )
+        }
+    }
+}
+
+private const val METER_STEPS = 10
 
 /** Eigene Fassung statt der aus ReminderScreen - die ist dort dateiprivat, und eine Zeitangabe
  *  als zwei zweistellige Zahlen ist kein Wissen, das geteilt werden muesste. */

@@ -337,7 +337,6 @@
     <string name="settings_timelapse_hint">Runs a full day in about four minutes so every scene and time of day can be seen quickly. For trying things out only – turn off for normal use.</string>
     <string name="a11y_visitor">%1$s is passing by</string>
     <string name="a11y_clock_moon">Moon</string>
-    <string name="playmode_status">Level %1$d · %2$d XP · %3$d coins · %4$d meals</string>
     <string name="settings_clip_share">Share clip</string>
     <string name="settings_clip_enable">Recording in Play mode</string>
     <string name="settings_clip_enable_hint">Shows a record button at the top right of Play mode.</string>
@@ -481,4 +480,12 @@
     <string name="settings_weather_rain">Rain</string>
     <string name="settings_weather_snow">Snow</string>
     <string name="settings_weather_hint">Normally the day decides – rain on roughly one day in five, snow only in winter. Hold one here to see how it looks. Visible outdoors, and through the window from indoors.</string>
+
+    <!-- Spielstand im Gespraech -->
+    <string name="talk_q_game">How are you getting on?</string>
+    <string name="talk_a_game_off">We are not playing at the moment.</string>
+    <string name="talk_a_game_level_only">Level %1$d</string>
+    <string name="talk_a_game_next">%1$d of %2$d towards level %3$d</string>
+    <string name="talk_game_coins">Coins</string>
+    <string name="talk_game_pantry">Larder</string>
 </resources>
