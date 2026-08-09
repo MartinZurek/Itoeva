@@ -1,0 +1,66 @@
+<resources>
+    <!--
+      Deutsche Fassung. Diesen Ordner gab es bis Phase 5.3 gar nicht - das Modul war
+      ausschliesslich englisch, mit einer deutschen Benachrichtigung mittendrin.
+
+      Nicht uebersetzt und deshalb hier nicht aufgefuehrt: `app_name` und `toy_name_clock`
+      (Produktnamen, in values/strings.xml als translatable="false" gekennzeichnet).
+    -->
+    <string name="toy_summary_clock">Zeigt die Uhrzeit und blinkt zu deinen eingestellten Erinnerungszeiten</string>
+
+    <!-- Allgemeine Aktionen -->
+    <string name="action_new">Neu</string>
+    <string name="action_save">Speichern</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_ok">OK</string>
+    <string name="action_stop">Beenden</string>
+    <string name="action_more">Mehr</string>
+    <string name="action_back">Zurück</string>
+    <string name="action_delete_confirm">Wirklich löschen?</string>
+    <string name="action_delete">Erinnerung löschen</string>
+    <string name="action_delete_confirm_button">Wirklich löschen</string>
+
+    <!-- Erinnerungsliste -->
+    <string name="reminders_title">Erinnerungen</string>
+    <string name="reminders_empty_title">Noch keine Erinnerungen</string>
+    <string name="reminders_empty_hint">Leg eine Erinnerung an, zum Beispiel \"Trinken\" von 9:00 bis 18:00 alle 15 Minuten.</string>
+    <string name="reminders_empty_action">Erste Erinnerung anlegen</string>
+
+    <!-- Bearbeiten-Dialog -->
+    <string name="reminder_label_hint">Bezeichnung, z. B. \"Trinken\"</string>
+    <string name="section_animation">Animation</string>
+    <string name="section_days">Wochentage</string>
+    <string name="section_time_window">Zeitfenster</string>
+    <string name="section_interval">Intervall</string>
+    <string name="days_every_day">Jeden Tag</string>
+    <string name="play_preview">Vorschau abspielen</string>
+    <string name="more_animations">Weitere Animationen</string>
+    <string name="time_window_from">Ab %1$s</string>
+    <string name="time_window_to">Bis %1$s</string>
+    <string name="time_window_past_midnight">Das Fenster geht über Mitternacht (endet am nächsten Tag).</string>
+    <string name="time_window_same_time">Start- und Endzeit müssen sich unterscheiden.</string>
+    <plurals name="interval_minutes">
+        <item quantity="one">%1$d Min.</item>
+        <item quantity="other">%1$d Min.</item>
+    </plurals>
+
+    <!-- Hinweisbaender -->
+    <string name="banner_exact_alarms">Exakte Alarme sind nicht erlaubt – Animationen erscheinen dadurch nicht pünktlich. Zum Erlauben antippen.</string>
+    <string name="banner_notifications">Benachrichtigungen sind aus. Die Erinnerungen laufen weiterhin über die Glyph-Matrix – nur der \"Beenden\"-Knopf, der eine vorzeitig abbricht, steckt in einer Benachrichtigung. Zum Erlauben antippen.</string>
+    <string name="banner_now_playing">Läuft gerade: %1$s</string>
+
+    <!-- Animationsbibliothek -->
+    <string name="library_title">Animationsbibliothek</string>
+    <string name="library_hint">Tippe auf den Haken, um eine Animation beim Anlegen einer Erinnerung zur Auswahl hinzuzufügen, oder auf das Plus, um sie zurückzulegen. Das gilt auch für die 12 eingebauten – nimm so wenige oder so viele, wie du willst.</string>
+    <string name="library_add">Zur Auswahl hinzufügen</string>
+    <string name="library_remove">Aus der Auswahl entfernen</string>
+
+    <!-- Benachrichtigung des Vordergrunddienstes -->
+    <string name="notification_channel_reminders">Glyph-Erinnerungen</string>
+    <string name="notification_reminder_title">Glyph-Erinnerung</string>
+    <string name="notification_action_stop">Beenden</string>
+    <plurals name="notification_queued">
+        <item quantity="one">%1$s (+%2$d in der Warteschlange)</item>
+        <item quantity="other">%1$s (+%2$d in der Warteschlange)</item>
+    </plurals>
+</resources>

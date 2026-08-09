@@ -261,6 +261,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Der Paritaetstest der Zeichenketten ist reine Dateiarbeit und laeuft als JVM-Test.
+    testImplementation(libs.junit)
+
     // Migrationstests, siehe app-sim/build.gradle.kts:
     // ./gradlew :app:connectedDebugAndroidTest (braucht Geraet/Emulator)
     androidTestImplementation(libs.junit)

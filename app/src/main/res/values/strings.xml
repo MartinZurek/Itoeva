@@ -1,5 +1,85 @@
 <resources>
-    <string name="app_name">Glyphminder</string>
-    <string name="toy_name_clock">Glyphminder</string>
+    <!--
+      Standardsprache dieses Moduls ist Englisch, values-de/strings.xml enthaelt die deutsche
+      Fassung. Bis Phase 5.3 gab es hier nur drei Eintraege - der Rest stand als Literal im Code,
+      und die Benachrichtigung des Vordergrunddienstes war sogar deutsch, waehrend die Oberflaeche
+      englisch war. Uebersetzbar war davon nichts.
+
+      `StringResourceParityTest` prueft, dass zu jedem Eintrag hier auch einer in values-de steht.
+    -->
+
+    <!-- Produkt- und Toy-Namen, werden nicht uebersetzt. -->
+    <string name="app_name" translatable="false">Glyphminder</string>
+    <string name="toy_name_clock" translatable="false">Glyphminder</string>
     <string name="toy_summary_clock">Shows the time and flashes at your configured reminder times</string>
+
+    <!-- Allgemeine Aktionen -->
+    <string name="action_new">New</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_more">More</string>
+    <string name="action_back">Back</string>
+    <string name="action_delete_confirm">Really delete?</string>
+    <string name="action_delete">Delete reminder</string>
+    <string name="action_delete_confirm_button">Really delete</string>
+
+    <!-- Erinnerungsliste -->
+    <string name="reminders_title">Reminders</string>
+    <string name="reminders_empty_title">No reminders yet</string>
+    <string name="reminders_empty_hint">Create a reminder, e.g. \"Drink\" from 9:00 to 18:00 every 15 minutes.</string>
+    <string name="reminders_empty_action">Create first reminder</string>
+
+    <!-- Bearbeiten-Dialog -->
+    <string name="reminder_label_hint">Label, e.g. \"Drink\"</string>
+    <string name="section_animation">Animation</string>
+    <string name="section_days">Days of week</string>
+    <string name="section_time_window">Time window</string>
+    <string name="section_interval">Interval</string>
+    <string name="days_every_day">Every day</string>
+    <string name="play_preview">Play preview</string>
+    <string name="more_animations">More animations</string>
+    <!-- %1$s ist eine Uhrzeit im Format HH:MM. -->
+    <string name="time_window_from">From %1$s</string>
+    <string name="time_window_to">To %1$s</string>
+    <string name="time_window_past_midnight">Window goes past midnight (ends the next day).</string>
+    <string name="time_window_same_time">Start and end time must be different.</string>
+    <!--
+      Plural statt "%1$d min": im Deutschen wie im Englischen ist die Einheit hier zwar gleich,
+      aber die Auswahlliste enthaelt die 1, und "1 Minuten" waere falsch. Plurals loesen das je
+      Sprache nach deren eigenen Regeln.
+    -->
+    <plurals name="interval_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+
+    <!-- Hinweisbaender -->
+    <string name="banner_exact_alarms">Exact alarms aren\'t allowed – animations won\'t show up on time. Tap to enable.</string>
+    <string name="banner_notifications">Notifications are off. Reminders still play on the Glyph Matrix – but the \"Stop\" button that ends one early lives in a notification. Tap to allow.</string>
+    <!-- %1$s ist die Bezeichnung der gerade laufenden Erinnerung. -->
+    <string name="banner_now_playing">Playing: %1$s</string>
+
+    <!-- Animationsbibliothek -->
+    <string name="library_title">Animation library</string>
+    <string name="library_hint">Tap the checkmark to add an animation to the picker when creating a reminder, or tap the plus to put it back. That includes the 12 built-in ones - pick as few or as many as you want.</string>
+    <string name="library_add">Add to picker</string>
+    <string name="library_remove">Remove from picker</string>
+
+    <!--
+      Benachrichtigung des Vordergrunddienstes (siehe glyph/ReminderGlyphService).
+      Diese vier waren fest auf Deutsch verdrahtet, obwohl die uebrige App englisch ist.
+    -->
+    <string name="notification_channel_reminders">Glyph reminders</string>
+    <string name="notification_reminder_title">Glyph reminder</string>
+    <string name="notification_action_stop">Stop</string>
+    <!--
+      %1$s ist die Bezeichnung der laufenden Erinnerung, %2$d die Anzahl der wartenden.
+      Als Plural, weil "(+1 queued)" und "(+3 queued)" sich in anderen Sprachen unterscheiden.
+    -->
+    <plurals name="notification_queued">
+        <item quantity="one">%1$s (+%2$d queued)</item>
+        <item quantity="other">%1$s (+%2$d queued)</item>
+    </plurals>
 </resources>

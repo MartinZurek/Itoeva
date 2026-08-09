@@ -47,6 +47,7 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.FrameCodec
 import com.notime.glyphcore.data.FrameCrossfade
 import com.notime.glyphcore.data.LibraryAnimation
+import com.notime.glyphkalender.R
 import com.notime.glyphkalender.glyph.ReminderAnimations
 import com.notime.glyphkalender.matrix.MatrixGeometry
 import com.notime.glyphkalender.matrix.MatrixPreviewView
@@ -78,10 +79,10 @@ fun LibraryScreen(onBack: () -> Unit, viewModel: GlyphReminderViewModel = viewMo
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Animation library") },
+                title = { Text(stringResource(R.string.library_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -90,8 +91,7 @@ fun LibraryScreen(onBack: () -> Unit, viewModel: GlyphReminderViewModel = viewMo
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             Text(
-                "Tap the checkmark to add an animation to the picker when creating a reminder, or tap " +
-                    "the plus to put it back. That includes the 12 built-in ones - pick as few or as many as you want.",
+                stringResource(R.string.library_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(16.dp, 12.dp, 16.dp, 4.dp)
@@ -187,11 +187,11 @@ private fun AnimationLibraryCard(
             )
             if (isSelected) {
                 FilledIconButton(onClick = { onToggle(false) }) {
-                    Icon(Icons.Default.Check, contentDescription = "Remove from picker")
+                    Icon(Icons.Default.Check, contentDescription = stringResource(R.string.library_remove))
                 }
             } else {
                 FilledTonalIconButton(onClick = { onToggle(true) }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add to picker")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.library_add))
                 }
             }
         }

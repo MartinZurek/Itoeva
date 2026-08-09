@@ -338,7 +338,11 @@ class ReminderGlyphService : Service() {
         val manager = getSystemService(NotificationManager::class.java) ?: return
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Glyph-Erinnerungen", NotificationManager.IMPORTANCE_MIN)
+                NotificationChannel(
+                    CHANNEL_ID,
+                    getString(R.string.notification_channel_reminders),
+                    NotificationManager.IMPORTANCE_MIN
+                )
             )
         }
     }
@@ -356,14 +360,25 @@ class ReminderGlyphService : Service() {
             dismissIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val text = if (queuedAfter > 0) "$title (+$queuedAfter in Warteschlange)" else title
+        // Formatierte Ressource statt zusammengesetztem Text: die Reihenfolge von Titel und
+        // Anzahl ist nicht in jeder Sprache dieselbe, und "in Warteschlange" laesst sich nicht
+        // sinnvoll uebersetzen, wenn es als Bruchstueck im Code klebt.
+        val text = if (queuedAfter > 0) {
+            resources.getQuantityString(R.plurals.notification_queued, queuedAfter, title, queuedAfter)
+        } else {
+            title
+        }
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Glyph-Erinnerung")
+            .setContentTitle(getString(R.string.notification_reminder_title))
             .setContentText(text)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setOngoing(true)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Beenden", dismissPendingIntent)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.notification_action_stop),
+                dismissPendingIntent
+            )
             .build()
     }
 

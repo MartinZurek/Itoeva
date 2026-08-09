@@ -78,6 +78,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -98,6 +99,7 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphcore.data.LibraryAnimation
+import com.notime.glyphkalender.R
 import com.notime.glyphkalender.glyph.ReminderPlayback
 import com.notime.glyphkalender.matrix.MatrixGeometry
 import com.notime.glyphkalender.matrix.MatrixPreviewView
@@ -235,16 +237,16 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Reminders") },
+                title = { Text(stringResource(R.string.reminders_title)) },
                 scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                text = { Text("New") },
+                text = { Text(stringResource(R.string.action_new)) },
                 // Siehe :app-sim - ohne Beschreibung bleibt der Knopf fuer einen Screenreader
                 // unbenannt, weil die Beschriftung den zusammengefuehrten Knoten nicht erreicht.
-                icon = { Icon(Icons.Default.Add, contentDescription = "New") },
+                icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_new)) },
                 onClick = { showAddDialog = true }
             )
         }
@@ -354,13 +356,13 @@ private fun EmptyState(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
         Text("✨", fontSize = 48.sp)
         Spacer(Modifier.height(16.dp))
         Text(
-            "No reminders yet",
+            stringResource(R.string.reminders_empty_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Create a reminder, e.g. \"Drink\" from 9:00 to 18:00 every 15 minutes.",
+            stringResource(R.string.reminders_empty_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -370,7 +372,7 @@ private fun EmptyState(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
         OutlinedButton(onClick = onAddClick) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
-            Text("Create first reminder")
+            Text(stringResource(R.string.reminders_empty_action))
         }
     }
 }
@@ -438,8 +440,7 @@ private fun NotificationPermissionBanner(onClick: () -> Unit) {
             )
             Spacer(Modifier.width(10.dp))
             Text(
-                "Notifications are off. Reminders still play on the Glyph Matrix – but the " +
-                    "\"Stop\" button that ends one early lives in a notification. Tap to allow.",
+                stringResource(R.string.banner_notifications),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -471,12 +472,12 @@ private fun NowPlayingBanner(title: String, onStop: () -> Unit) {
             )
             Spacer(Modifier.width(10.dp))
             Text(
-                "Playing: $title",
+                stringResource(R.string.banner_now_playing, title),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            TextButton(onClick = onStop) { Text("Stop") }
+            TextButton(onClick = onStop) { Text(stringResource(R.string.action_stop)) }
         }
     }
 }
@@ -498,8 +499,7 @@ private fun ExactAlarmBanner(onClick: () -> Unit) {
             )
             Spacer(Modifier.width(10.dp))
             Text(
-                "Exact alarms aren't allowed – animations won't show up on time. " +
-                    "Tap to enable.",
+                stringResource(R.string.banner_exact_alarms),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -667,10 +667,10 @@ private fun AnimationPicker(
                         .border(2.dp, MaterialTheme.colorScheme.outline, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "More animations")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.more_animations))
                 }
                 Spacer(Modifier.height(4.dp))
-                Text("More", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                Text(stringResource(R.string.action_more), style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
         }
     }
@@ -804,7 +804,7 @@ private fun SelectAllDaysRow(
             checked = allSelected,
             onCheckedChange = { checked -> onSelectedChange(if (checked) allDays else emptySet()) }
         )
-        Text("Every day", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.days_every_day), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -863,7 +863,7 @@ private fun ReminderDialog(
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("Label, e.g. \"Drink\"") },
+                    label = { Text(stringResource(R.string.reminder_label_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -876,7 +876,7 @@ private fun ReminderDialog(
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SectionLabel("Animation")
+                    SectionLabel(stringResource(R.string.section_animation))
                     AnimationPicker(
                         selected = animationChoice,
                         builtInTypes = builtInTypes,
@@ -894,14 +894,14 @@ private fun ReminderDialog(
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Play preview")
+                        Text(stringResource(R.string.play_preview))
                     }
                 }
 
                 HorizontalDivider()
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SectionLabel("Days of week")
+                    SectionLabel(stringResource(R.string.section_days))
                     SelectAllDaysRow(selected = selectedDays, onSelectedChange = { selectedDays = it })
                     DayPicker(selected = selectedDays, onToggle = { day ->
                         selectedDays = if (day in selectedDays) selectedDays - day else selectedDays + day
@@ -911,28 +911,28 @@ private fun ReminderDialog(
                 HorizontalDivider()
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SectionLabel("Time window")
+                    SectionLabel(stringResource(R.string.section_time_window))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(onClick = { showStartPicker = true }, modifier = Modifier.weight(1f)) {
-                            Text("From ${formatMinuteOfDay(startMinute)}")
+                            Text(stringResource(R.string.time_window_from, formatMinuteOfDay(startMinute)))
                         }
                         OutlinedButton(onClick = { showEndPicker = true }, modifier = Modifier.weight(1f)) {
-                            Text("To ${formatMinuteOfDay(endMinute)}")
+                            Text(stringResource(R.string.time_window_to, formatMinuteOfDay(endMinute)))
                         }
                     }
                     if (endMinute <= startMinute) {
                         Text(
-                            "Window goes past midnight (ends the next day).",
+                            stringResource(R.string.time_window_past_midnight),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (startMinute == endMinute) {
                         Text(
-                            "Start and end time must be different.",
+                            stringResource(R.string.time_window_same_time),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -942,13 +942,13 @@ private fun ReminderDialog(
                 HorizontalDivider()
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SectionLabel("Interval")
+                    SectionLabel(stringResource(R.string.section_interval))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         intervalOptions.forEach { minutes ->
                             FilterChip(
                                 selected = interval == minutes,
                                 onClick = { interval = minutes },
-                                label = { Text("$minutes min") }
+                                label = { Text(pluralStringResource(R.plurals.interval_minutes, minutes, minutes)) }
                             )
                         }
                     }
@@ -958,7 +958,7 @@ private fun ReminderDialog(
                     HorizontalDivider()
                     if (confirmDelete) {
                         Text(
-                            "Really delete?",
+                            stringResource(R.string.action_delete_confirm),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -972,7 +972,12 @@ private fun ReminderDialog(
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(if (confirmDelete) "Really delete" else "Delete reminder")
+                        Text(
+                            stringResource(
+                                if (confirmDelete) R.string.action_delete_confirm_button
+                                else R.string.action_delete
+                            )
+                        )
                     }
                 }
             }
@@ -983,10 +988,10 @@ private fun ReminderDialog(
                 onClick = {
                     onSave(label.trim(), animationChoice, DaysOfWeekMask.toMask(selectedDays), startMinute, endMinute, interval)
                 }
-            ) { Text("Save") }
+            ) { Text(stringResource(R.string.action_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 
@@ -1002,9 +1007,9 @@ private fun ReminderDialog(
                 TextButton(onClick = {
                     startMinute = state.hour * 60 + state.minute
                     showStartPicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
-            dismissButton = { TextButton(onClick = { showStartPicker = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { showStartPicker = false }) { Text(stringResource(R.string.action_cancel)) } },
             text = { TimePicker(state = state) }
         )
     }
@@ -1021,9 +1026,9 @@ private fun ReminderDialog(
                 TextButton(onClick = {
                     endMinute = state.hour * 60 + state.minute
                     showEndPicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
-            dismissButton = { TextButton(onClick = { showEndPicker = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { showEndPicker = false }) { Text(stringResource(R.string.action_cancel)) } },
             text = { TimePicker(state = state) }
         )
     }
