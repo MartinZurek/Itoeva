@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -73,9 +74,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -96,6 +102,7 @@ import com.notime.glyphkalender.matrix.MatrixGeometry
 import com.notime.glyphkalender.matrix.MatrixPreviewView
 import com.notime.glyphkalender.matrix.PreviewAnimator
 import java.time.DayOfWeek
+import java.time.format.TextStyle
 
 private val dayLabels: Map<DayOfWeek, String> = mapOf(
     DayOfWeek.MONDAY to "Mo",
@@ -521,7 +528,15 @@ private fun AnimationAvatar(choice: AnimationChoice, size: Dp = 48.dp) {
 /** Small, non-interactive row of dots: shows at a glance which weekdays a reminder is active on. */
 @Composable
 private fun DayDots(activeDays: Set<DayOfWeek>, accentColor: Color, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    val locale = LocalConfiguration.current.locales[0]
+    // Eine Aussage statt sieben Buchstaben - siehe :app-sim.
+    val aktiveTage = DayOfWeek.entries
+        .filter { it in activeDays }
+        .joinToString { it.getDisplayName(TextStyle.FULL, locale) }
+    Row(
+        modifier = modifier.clearAndSetSemantics { contentDescription = aktiveTage },
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         DayOfWeek.entries.forEach { day ->
             val isActive = day in activeDays
             Box(
@@ -728,12 +743,20 @@ private fun DayPicker(
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        val locale = LocalConfiguration.current.locales[0]
         DayOfWeek.entries.forEach { day ->
             val isSelected = day in selected
             Box(
                 modifier = Modifier
                     .size(38.dp)
-                    .clickable { onToggle(day) }
+                    // Schalter statt Knopf, und mit ausgeschriebenem Namen - siehe :app-sim
+                    // fuer die ausfuehrliche Begruendung (die Kuerzel "T" und "S" sind doppeldeutig).
+                    .toggleable(
+                        value = isSelected,
+                        role = Role.Checkbox,
+                        onValueChange = { onToggle(day) }
+                    )
+                    .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, locale) }
                     .background(
                         if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         CircleShape

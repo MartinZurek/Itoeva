@@ -315,6 +315,7 @@
     <!-- Screenreader-Beschreibungen (TalkBack) fuer die selbstgezeichneten Canvas-Ansichten -->
     <string name="a11y_clock_time">Uhr, %1$s</string>
     <string name="a11y_clock_reminder">Erinnerungs-Animation: %1$s</string>
+    <string name="a11y_clock_open_dock">Dock-Modus öffnen</string>
     <string name="a11y_reminder_generic">Erinnerung</string>
     <string name="a11y_avatar_state">%1$s, Stimmung: %2$s</string>
     <string name="a11y_mood_neutral">neutral</string>

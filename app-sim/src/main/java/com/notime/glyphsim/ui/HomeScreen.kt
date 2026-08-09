@@ -59,7 +59,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -542,6 +545,16 @@ fun HomeScreen(
                         val now = LocalTime.now()
                         stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
                     }
+                    // Geste und Bedienungshilfen teilen sich denselben Ablauf - sonst
+                    // liefen sie irgendwann auseinander.
+                    val oeffneDockLabel = stringResource(R.string.a11y_clock_open_dock)
+                    val oeffneDock = {
+                        if (!clockTapped) {
+                            clockTapped = true
+                            OnboardingPrefs.markClockTapped(context)
+                        }
+                        onEnterDockMode()
+                    }
                     // Reihenfolge der Modifier ist wichtig: .offset VOR .onGloballyPositioned,
                     // damit die gemeldeten Bounds die gezogene Position enthalten - genau die
                     // braucht die Kollisionspruefung gegen den Avatar.
@@ -557,15 +570,22 @@ fun HomeScreen(
                             .offset { IntOffset(clockDrag.x.roundToInt(), clockDrag.y.roundToInt()) }
                             .onGloballyPositioned { clockBounds = it.boundsInRoot() }
                             .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = {
-                                        if (!clockTapped) {
-                                            clockTapped = true
-                                            OnboardingPrefs.markClockTapped(context)
-                                        }
-                                        onEnterDockMode()
-                                    }
-                                )
+                                detectTapGestures(onTap = { oeffneDock() })
+                            }
+                            /*
+                             * `detectTapGestures` ist reine Zeigerverarbeitung - fuer die
+                             * Bedienungshilfen existiert dieses Antippen schlicht nicht. Ein
+                             * Screenreader las die Uhr vor und bot nichts an, obwohl ein Tipp der
+                             * Weg in den Dock-Modus ist; mit Switch Access oder Tastatur war er
+                             * ueberhaupt nicht erreichbar.
+                             *
+                             * Die Aktion hier meldet genau dasselbe Verhalten an die Semantik.
+                             * Beschriftung statt blossem "Doppeltippen zum Aktivieren", damit
+                             * vorgelesen wird, WOHIN es fuehrt.
+                             */
+                            .semantics {
+                                role = Role.Button
+                                onClick(label = oeffneDockLabel) { oeffneDock(); true }
                             }
                             .pointerInput(Unit) {
                                 detectDragGestures(

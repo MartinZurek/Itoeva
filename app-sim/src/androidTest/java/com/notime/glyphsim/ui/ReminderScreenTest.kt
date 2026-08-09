@@ -3,20 +3,26 @@ package com.notime.glyphsim.ui
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.notime.glyphsim.R
-import org.junit.Assert.assertTrue
+import java.time.DayOfWeek
+import java.time.format.TextStyle
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -72,6 +78,18 @@ class ReminderScreenTest {
 
 
 
+    /**
+     * Loest die Klick-Aktion ueber die Semantik aus statt ueber einen eingespritzten Tipp.
+     *
+     * Genau diesen Weg gehen auch TalkBack und Switch Access - fuer eine Pruefung der
+     * Barrierefreiheit ist er also der richtige. Er ist hier zugleich der einzige, der
+     * funktioniert: der Dialog liegt in einem eigenen Fenster, und ein an Wurzelkoordinaten
+     * eingespritzter Tipp erreicht die Kacheln darin nicht (nachgemessen - der Zustand blieb
+     * unveraendert, obwohl der Knoten gefunden wurde).
+     */
+    private fun SemanticsNodeInteraction.klickeUeberSemantik() =
+        performSemanticsAction(SemanticsActions.OnClick)
+
     // --- Grundlegendes Verhalten -------------------------------------------------------------
 
     @Test
@@ -121,34 +139,6 @@ class ReminderScreenTest {
         compose.onNodeWithText(string(R.string.action_save)).assertIsNotEnabled()
     }
 
-    /**
-     * **Zweiter Fund dieser Suite, hier bewusst nur festgehalten statt behoben.**
-     *
-     * Die Wochentage stehen als einzelne Buchstaben auf den Kacheln: M, T, W, T, F, S, S. Zwei
-     * davon kommen doppelt vor - "T" fuer Dienstag und Donnerstag, "S" fuer Samstag und Sonntag -
-     * und sie tragen keine Beschreibung. Ein Screenreader liest also zweimal "T" vor, ohne dass
-     * sich die beiden auseinanderhalten liessen; und ein Test kann eine bestimmte Kachel aus
-     * demselben Grund nicht eindeutig ansprechen. Deshalb endet der Gutfall oben beim gesperrten
-     * Knopf.
-     *
-     * Die Behebung gehoert zu Phase 5.1/5.3: je Wochentag eine ausgeschriebene Beschreibung als
-     * uebersetzte Ressource. Dieser Test haelt den Zustand fest, damit er nicht in Vergessenheit
-     * geraet - er schlaegt fehl, sobald die Kacheln eindeutig werden, und ist dann durch einen
-     * echten Gutfall-Test zu ersetzen.
-     */
-    @Test
-    fun wochentagsKuerzelSindMehrdeutig() {
-        zeigeBildschirm()
-        oeffneNeuDialog()
-
-        // Mehr als ein Knoten mit "T": solange das so ist, laesst sich Dienstag nicht von
-        // Donnerstag unterscheiden - weder fuer TalkBack noch fuer einen Test.
-        val mitT = compose.onAllNodesWithText("T").fetchSemanticsNodes()
-        assertTrue(
-            "Erwartet mehrere mehrdeutige \"T\"-Kacheln, gefunden: ${mitT.size}",
-            mitT.size > 1
-        )
-    }
 
     // --- Zustand ueber einen Neuaufbau -------------------------------------------------------
 
@@ -191,6 +181,55 @@ class ReminderScreenTest {
 
         compose.onNodeWithText(string(R.string.reminder_label_hint)).assertIsDisplayed()
     }
+
+    /**
+     * Der Gutfall, der vorher nicht schreibbar war.
+     *
+     * Die Wochentagskacheln zeigen nur Kuerzel, und "T" wie "S" kommen doppelt vor - eine
+     * bestimmte Kachel liess sich dadurch weder von TalkBack noch von einem Test eindeutig
+     * ansprechen. Seit Phase 5.1 tragen sie den ausgeschriebenen Namen als Beschreibung; genau
+     * darueber greift dieser Test zu.
+     *
+     * Der Name kommt aus derselben Quelle wie in der Oberflaeche (java.time mit der Sprache des
+     * Geraets), nicht als Literal - sonst waere der Test an eine Sprache gebunden.
+     */
+    @Test
+    fun mitBezeichnungUndEinemWochentagLaesstSichSpeichern() {
+        zeigeBildschirm()
+        oeffneNeuDialog()
+
+        compose.onNodeWithText(string(R.string.reminder_label_hint)).performTextInput("Trink was")
+        val montag = DayOfWeek.MONDAY.getDisplayName(
+            TextStyle.FULL,
+            compose.activity.resources.configuration.locales[0]
+        )
+        compose.onNodeWithContentDescription(montag).klickeUeberSemantik()
+        compose.waitForIdle()
+
+        compose.onNodeWithText(string(R.string.action_save)).assertIsEnabled()
+    }
+
+    /**
+     * Die Kachel ist ein Schalter, kein Knopf: sie meldet ihren Zustand mit. Ohne das laese ein
+     * Screenreader zwar den Wochentag vor, aber nicht, ob er gerade aktiv ist - und genau das ist
+     * die Information, die die Kachel optisch traegt.
+     */
+    @Test
+    fun wochentagsKachelMeldetIhrenZustand() {
+        zeigeBildschirm()
+        oeffneNeuDialog()
+
+        val dienstag = DayOfWeek.TUESDAY.getDisplayName(
+            TextStyle.FULL,
+            compose.activity.resources.configuration.locales[0]
+        )
+        compose.onNodeWithContentDescription(dienstag).assertIsOff()
+        compose.onNodeWithContentDescription(dienstag).klickeUeberSemantik()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(dienstag).assertIsOn()
+    }
+
+
 
     // --- Barrierefreiheit --------------------------------------------------------------------
 

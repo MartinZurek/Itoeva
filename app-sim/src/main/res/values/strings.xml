@@ -327,6 +327,8 @@
     <!-- Screenreader-Beschreibungen (TalkBack) fuer die selbstgezeichneten Canvas-Ansichten -->
     <string name="a11y_clock_time">Clock, %1$s</string>
     <string name="a11y_clock_reminder">Reminder animation: %1$s</string>
+    <!-- Beschriftung der Zusatzaktion an der Uhr - siehe HomeScreen: das Antippen laeuft ueber pointerInput und waere sonst fuer TalkBack unsichtbar. -->
+    <string name="a11y_clock_open_dock">Open dock mode</string>
     <string name="a11y_reminder_generic">Reminder</string>
     <string name="a11y_avatar_state">%1$s, mood: %2$s</string>
     <string name="a11y_mood_neutral">neutral</string>
