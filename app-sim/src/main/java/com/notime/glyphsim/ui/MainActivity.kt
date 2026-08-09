@@ -12,19 +12,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.matrix.PlayTimeLapse
 import com.notime.glyphsim.matrix.PlayWeather
@@ -141,10 +141,10 @@ class MainActivity : ComponentActivity() {
                     // PlayModeState). Dock-Modus und Startbildschirm sehen in beiden Modi gleich
                     // aus; im Spiel kommt im Dock lediglich die Level-Anzeige dazu.
                     val playActive by PlayModePrefs.active(this@MainActivity)
-                        .collectAsState(initial = PlayModePrefs.isActive(this@MainActivity))
+                        .collectAsStateWithLifecycle(initialValue = PlayModePrefs.isActive(this@MainActivity))
                     // "Nur Uhr" hat Vorrang vor allem anderen - siehe WatchModePrefs.
                     val watchOnly by WatchModePrefs.enabled(this@MainActivity)
-                        .collectAsState(initial = WatchModePrefs.isEnabled(this@MainActivity))
+                        .collectAsStateWithLifecycle(initialValue = WatchModePrefs.isEnabled(this@MainActivity))
 
                     fun setDockMode(enabled: Boolean) {
                         dockEnabled = enabled

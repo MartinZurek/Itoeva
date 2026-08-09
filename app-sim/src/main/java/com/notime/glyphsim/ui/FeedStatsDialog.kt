@@ -27,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.data.FeedBreakdownRow
@@ -97,16 +97,16 @@ fun FeedStatsDialog(
     val since = remember(period) { period.startMillis() }
     val total by remember(profileId, since) {
         dao.observeCountSince(profileId, since)
-    }.collectAsState(initial = 0)
+    }.collectAsStateWithLifecycle(initialValue = 0)
     val breakdown by remember(profileId, since) {
         dao.observeBreakdownSince(profileId, since)
-    }.collectAsState(initial = emptyList())
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
 
     // Bibliotheks-Animationen speichern im Fuetter-Ereignis nur ihren Namen, das Emoji steht in
     // der Bibliothek. Statt dafuer eine Spalte zu duplizieren (die bei einer spaeter geaenderten
     // Bibliothek veralten wuerde), wird hier ueber den Namen nachgeschlagen.
     val libraryAnimations by remember { db.libraryAnimationDao().observeAll() }
-        .collectAsState(initial = emptyList())
+        .collectAsStateWithLifecycle(initialValue = emptyList())
     val emojiByLabel = remember(libraryAnimations) {
         libraryAnimations.associate { it.label to it.emoji }
     }
@@ -117,13 +117,13 @@ fun FeedStatsDialog(
     val todayStart = remember { FeedStatsPeriod.TODAY.startMillis() }
     val reminders by remember(profileId) {
         db.glyphReminderDao().observeForProfile(profileId)
-    }.collectAsState(initial = emptyList())
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
     // isPlayMode = false: Tagesziele gehoeren ausschliesslich den echten Erinnerungen. Was im
     // Spielmodus gefuettert wurde, ist ein Spielstand und darf ein Ziel weder erfuellen noch
     // beschoenigen (siehe AvatarFeedEvent.isPlayMode).
     val fedToday by remember(profileId, todayStart) {
         db.avatarFeedEventDao().observeFedPerReminderSince(profileId, todayStart, isPlayMode = false)
-    }.collectAsState(initial = emptyList())
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
     val goalRows = remember(reminders, fedToday) {
         val fedByReminder = fedToday.associate { it.reminderId to it.count }
         reminders
@@ -158,10 +158,10 @@ fun FeedStatsDialog(
     // Erinnerungen - Spielstand-Zahlen wuerden diesen Rat verfaelschen.
     val fedInRhythmWindow by remember(profileId, rhythmWindowStart) {
         db.avatarFeedEventDao().observeFedPerReminderSince(profileId, rhythmWindowStart, isPlayMode = false)
-    }.collectAsState(initial = emptyList())
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
     val firstOccurrencePerReminder by remember(profileId) {
         db.avatarFeedEventDao().observeFirstOccurrencePerReminder(profileId)
-    }.collectAsState(initial = emptyList())
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
     val rhythmSuggestion = remember(reminders, fedInRhythmWindow, firstOccurrencePerReminder) {
         findRhythmSuggestion(
             reminders = reminders,

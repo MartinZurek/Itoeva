@@ -53,7 +53,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,14 +70,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DAILY_GOAL_OPTIONS
 import com.notime.glyphcore.data.DaysOfWeekMask
-import com.notime.glyphcore.data.INTERVAL_OPTIONS
-import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphcore.data.GlyphReminder
+import com.notime.glyphcore.data.INTERVAL_OPTIONS
 import com.notime.glyphcore.data.LibraryAnimation
+import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.AvatarSpecies
@@ -140,11 +140,11 @@ fun ReminderScreen(
     viewModel: GlyphReminderViewModel = viewModel()
 ) {
     var showLibrary by remember { mutableStateOf(false) }
-    val reminders by viewModel.reminders.collectAsState()
-    val activeSpecies by viewModel.activeSpecies.collectAsState()
-    val libraryAnimations by viewModel.libraryAnimations.collectAsState()
+    val reminders by viewModel.reminders.collectAsStateWithLifecycle()
+    val activeSpecies by viewModel.activeSpecies.collectAsStateWithLifecycle()
+    val libraryAnimations by viewModel.libraryAnimations.collectAsStateWithLifecycle()
     val selectedLibraryAnimations = libraryAnimations.filter { it.isSelected }
-    val builtInSelections by viewModel.builtInSelections.collectAsState()
+    val builtInSelections by viewModel.builtInSelections.collectAsStateWithLifecycle()
     val selectedBuiltInTypes = builtInSelections
         .filter { it.isSelected }
         .mapNotNull { runCatching { AnimationType.valueOf(it.animationType) }.getOrNull() }

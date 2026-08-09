@@ -3,12 +3,12 @@ package com.notime.glyphsim.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notime.glyphsim.matrix.ClockFrameSim
 import java.time.LocalTime
 import kotlinx.coroutines.delay
@@ -33,7 +33,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun rememberClockFrame(paused: Boolean): State<IntArray> {
     val context = LocalContext.current
-    val style by ClockStylePrefs.observe(context).collectAsState(initial = ClockStylePrefs.get(context))
+    val style by ClockStylePrefs.observe(context).collectAsStateWithLifecycle(initialValue = ClockStylePrefs.get(context))
     val frameState = remember { mutableStateOf(ClockFrameSim.buildFrame(style = style)) }
 
     LaunchedEffect(style, paused) {

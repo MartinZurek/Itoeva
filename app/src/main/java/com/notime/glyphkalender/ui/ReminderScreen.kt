@@ -63,7 +63,6 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,12 +84,13 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.notime.glyphkalender.glyph.ReminderPlayback
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphcore.data.LibraryAnimation
+import com.notime.glyphkalender.glyph.ReminderPlayback
 import com.notime.glyphkalender.matrix.MatrixGeometry
 import com.notime.glyphkalender.matrix.MatrixPreviewView
 import com.notime.glyphkalender.matrix.PreviewAnimator
@@ -136,10 +136,10 @@ private data class ReminderDraft(
 @Composable
 fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
     var showLibrary by remember { mutableStateOf(false) }
-    val reminders by viewModel.reminders.collectAsState()
-    val libraryAnimations by viewModel.libraryAnimations.collectAsState()
+    val reminders by viewModel.reminders.collectAsStateWithLifecycle()
+    val libraryAnimations by viewModel.libraryAnimations.collectAsStateWithLifecycle()
     val selectedLibraryAnimations = libraryAnimations.filter { it.isSelected }
-    val builtInSelections by viewModel.builtInSelections.collectAsState()
+    val builtInSelections by viewModel.builtInSelections.collectAsStateWithLifecycle()
     val selectedBuiltInTypes = builtInSelections
         .filter { it.isSelected }
         .mapNotNull { runCatching { AnimationType.valueOf(it.animationType) }.getOrNull() }
@@ -151,7 +151,7 @@ fun ReminderScreen(viewModel: GlyphReminderViewModel = viewModel()) {
     val context = LocalContext.current
     var exactAlarmsAllowed by remember { mutableStateOf(viewModel.canScheduleExactAlarms()) }
     var notificationsAllowed by remember { mutableStateOf(hasNotificationPermission(context)) }
-    val nowPlaying by ReminderPlayback.nowPlaying.collectAsState()
+    val nowPlaying by ReminderPlayback.nowPlaying.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     /*

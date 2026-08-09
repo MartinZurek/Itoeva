@@ -1,25 +1,26 @@
 package com.notime.glyphsim.ui
 
+import android.os.SystemClock
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -32,51 +33,48 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AvatarFeedEvent
-import com.notime.glyphcore.data.ReminderOpenDuration
-import kotlinx.coroutines.flow.onSubscription
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
 import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
-import com.notime.glyphsim.matrix.groundRow
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.MoonFrame
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.semantics.contentDescription
-import kotlinx.coroutines.withContext
-import com.notime.glyphsim.matrix.PlayClipRenderer
-import com.notime.glyphsim.matrix.PlayClipRecorder
-import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayAmbientActivity
+import com.notime.glyphsim.matrix.PlayClipRecorder
+import com.notime.glyphsim.matrix.PlayClipRenderer
 import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayPantry
-import com.notime.glyphsim.matrix.PlayWallet
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.PlaySceneView
+import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
-import com.notime.glyphsim.matrix.RoutineStep
+import com.notime.glyphsim.matrix.PlayWallet
 import com.notime.glyphsim.matrix.ReminderAnimationBus
+import com.notime.glyphsim.matrix.RoutineStep
 import com.notime.glyphsim.matrix.SimulatedMatrixView
-import android.os.SystemClock
-import androidx.compose.ui.unit.Density
+import com.notime.glyphsim.matrix.groundRow
 import java.time.LocalTime
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -88,8 +86,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Reiner Dock-Bildschirm: nichts als schwarze Flaeche und die Uhr - Groesse und
@@ -1741,7 +1741,7 @@ fun DockScreen(
         // zu koennen ist kein Ersatz dafuer. Er zeigt sich kurz und verschwindet von selbst.
         if (playMode) {
             val playViewModel = androidx.lifecycle.viewmodel.compose.viewModel<PlayModeViewModel>()
-            val playState by playViewModel.state.collectAsState()
+            val playState by playViewModel.state.collectAsStateWithLifecycle()
             if (playState.showLevelUp) {
                 Text(
                     stringResource(R.string.playmode_level_up, playState.level),

@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.FrameCodec
@@ -64,8 +64,8 @@ import com.notime.glyphkalender.matrix.PreviewAnimator
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(onBack: () -> Unit, viewModel: GlyphReminderViewModel = viewModel()) {
-    val libraryAnimations by viewModel.libraryAnimations.collectAsState()
-    val builtInSelections by viewModel.builtInSelections.collectAsState()
+    val libraryAnimations by viewModel.libraryAnimations.collectAsStateWithLifecycle()
+    val builtInSelections by viewModel.builtInSelections.collectAsStateWithLifecycle()
     val builtInSelectedByType = builtInSelections.associate { it.animationType to it.isSelected }
     val snackbarHostState = remember { SnackbarHostState() }
 

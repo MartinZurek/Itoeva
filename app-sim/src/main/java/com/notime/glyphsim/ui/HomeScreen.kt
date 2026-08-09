@@ -10,11 +10,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,7 +39,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,26 +65,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.notime.glyphcore.data.GlyphReminderRepository
+import com.notime.glyphcore.data.ReminderOpenDuration
+import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.data.CrashLog
-import com.notime.glyphcore.data.GlyphReminderRepository
-import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarClip
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarSpriteView
+import com.notime.glyphsim.matrix.ClockFrameSim
+import com.notime.glyphsim.matrix.ClockStyle
+import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
 import com.notime.glyphsim.matrix.PlayWeather
-import com.notime.glyphsim.matrix.ClockFrameSim
-import com.notime.glyphsim.matrix.ClockStyle
-import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.SimulatedMatrixView
-import com.notime.glyphcore.reminder.ReminderScheduler
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
@@ -163,7 +163,7 @@ fun HomeScreen(
     val frame = animationFrame ?: clockFrame
     // Der gewaehlte Avatar wird beobachtet statt einmalig gelesen, damit die Anzeige unten
     // sofort umspringt, wenn im Einstellungs-Dialog ein anderer ausgewaehlt wird.
-    val species by AvatarSpeciesPrefs.selected(context).collectAsState()
+    val species by AvatarSpeciesPrefs.selected(context).collectAsStateWithLifecycle()
     val currentSpecies = species ?: AvatarSpecies.PUFFLING
 
     // Fuetter-Zustand: die Uhr laesst sich auf den Avatar schieben, genau wie im Dock-Modus.
@@ -187,10 +187,10 @@ fun HomeScreen(
     var isReacting by remember { mutableStateOf(false) }
     // Spielmodus-Schalter oben in der Leiste. Beim allerersten Einschalten erklaert der Avatar
     // zunaechst, was sich dadurch aendert (siehe PlayModeIntroDialog).
-    val playActive by PlayModePrefs.active(context).collectAsState(initial = PlayModePrefs.isActive(context))
+    val playActive by PlayModePrefs.active(context).collectAsStateWithLifecycle(initialValue = PlayModePrefs.isActive(context))
     // Der Modus, wie der Nutzer ihn sieht - aus beiden Schaltern zusammengesetzt (siehe AppMode).
     var appMode by remember { mutableStateOf(AppMode.current(context)) }
-    val playState by playViewModel.state.collectAsState()
+    val playState by playViewModel.state.collectAsStateWithLifecycle()
     var showPlayIntro by remember { mutableStateOf(false) }
 
     // Faellige Erinnerungen kommen ueber ReminderAnimationBus rein (siehe dort) und
