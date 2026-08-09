@@ -153,6 +153,82 @@ Das Formular ist **bei jedem Release erneut zu bestätigen**. Es muss angepasst 
 
 Alle drei standen in der Planung zur Diskussion; wer sie umsetzt, muss hier nachziehen.
 
+## Store-Text (Entwurf)
+
+Entstanden aus der Frage, ob Tama ein Habit Tracker sei. **Ist sie nicht — und soll sie
+ausdrücklich nicht sein.** Der Markt ist voll davon, und das Versprechen eines Trackers (abhaken,
+Serien, Erfüllungsquote, lückenloses Protokoll) widerspricht dem, was diese App tut.
+
+Das ist keine Meinung, sondern im Code nachweisbar:
+
+- `dailyGoal` steht standardmäßig auf `NO_GOAL` — eine neue Erinnerung ist ein Anstupser ohne Ziel.
+- Die Stimmungsmechanik ist standardmäßig **aus**, und Erinnerungen ohne Tagesziel wirken sich nie
+  darauf aus.
+- Es gibt **keine Serien**, nirgends im Code.
+- Bei dunklem Bildschirm löst die App bewusst nicht aus und zählt nichts — ein Tracker mit
+  gewollten Lücken wäre kaputt, hier ist es das Merkmal.
+
+**Deshalb: das Wort „Habit Tracker" gehört nicht in den Eintrag.** Wer die App darüber findet,
+sucht am zweiten Tag den Abhaken-Knopf, findet ihn nicht und schreibt eine Rezension darüber.
+
+### Kategorie
+
+**Lifestyle**, nicht Produktivität. Produktivität ist das Regal, in dem die Tracker stehen.
+
+### Kurzbeschreibung (max. 80 Zeichen)
+
+> Erinnerungen, die jemand bemerkt. Ohne Zählen, ohne Serien, ohne Druck.
+
+Englisch:
+
+> Reminders someone notices. No counting, no streaks, no pressure.
+
+### Vollständige Beschreibung
+
+> Tama erinnert dich – und merkt, ob du reagierst. Mehr nicht.
+>
+> Keine Häkchen. Keine Serien. Keine Prozentzahlen am Monatsende. Nichts, das dir vorrechnet, an
+> wie vielen Tagen du es nicht geschafft hast.
+>
+> Stattdessen lebt auf deinem Bildschirm ein kleines Wesen. Es zeigt die Uhrzeit, und wenn etwas
+> ansteht – trinken, aufstehen, kurz durchatmen –, wird es sichtbar. Du reagierst, indem du es
+> fütterst. Es merkt sich das. Und wenn du gerade nicht kannst, passiert nichts weiter.
+>
+> **Wo es erscheint**
+> Auf dem Startbildschirm, als Vollbild-Anzeige fürs Nachttischchen, und als rundes Widget auf
+> deinem Home-Screen. Immer nur dann sichtbar, wenn dein Bildschirm ohnehin an ist.
+>
+> **Sechs Wesen, sechs Charaktere**
+> Puffling, Starlet, Wyrmling, Fennec, Gloop und Hootlet – jedes mit eigener Art, eigener Stimme
+> und eigenem Satz Erinnerungen. Der ruhige Beobachter erinnert anders als der kleine Motivator.
+>
+> **Was du einstellst**
+> Bezeichnung, Wochentage, Zeitfenster, Abstand. Optional ein Tagesziel, wenn du eins willst –
+> ohne läuft es genauso. Eine kleine Bibliothek an Animationen liegt bei, du kannst eigene
+> hinzufügen.
+>
+> **Was bleibt, wo es ist**
+> Alles auf deinem Gerät. Kein Konto, keine Anmeldung, keine Werbung, keine Server. Die App hat
+> keinen Netzwerkcode – sie könnte gar nichts senden, selbst wenn sie wollte.
+>
+> Für alle, die es leid sind, dass ihre Vorsätze eine Tabelle brauchen.
+
+### Was bewusst nicht drinsteht
+
+- **„Habit Tracker", „Streak", „Statistik", „Analyse"** – setzt Erwartungen, die die App nicht bedient.
+- **„Produktivität", „Routine optimieren"** – falscher Ton für ein Produkt, dessen Kern das
+  Fehlen von Druck ist.
+- **Versprechen zur Pünktlichkeit** – ohne exakte Alarme kommen Erinnerungen ungefähr (siehe oben).
+  Nichts schreiben, was ein Nutzer als Zusage lesen könnte.
+
+### Vor dem Einreichen noch zu tun
+
+- Screenshots: Startbildschirm mit Wesen, Dock-Modus, Widget auf dem Home-Screen,
+  Erinnerungs-Dialog. Der Dock-Modus ist das eigenständigste Bild – gehört nach vorn.
+- Feature-Grafik (1024×500).
+- Datenschutzerklärung verlinken; Inhalt ergibt sich aus dem Data-Safety-Abschnitt oben.
+- Beschreibung auf Englisch spiegeln (die App startet auf Englisch).
+
 ## Weitere offene Punkte
 
 - **Upload-Keystore anlegen** — siehe `keystore.properties.example`. Sicher aufbewahren: geht er
