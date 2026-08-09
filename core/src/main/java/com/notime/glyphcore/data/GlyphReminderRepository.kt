@@ -10,12 +10,25 @@ class GlyphReminderRepository(private val dao: GlyphReminderDao) {
     fun observeForProfile(profileId: String): Flow<List<GlyphReminder>> =
         dao.observeForProfile(profileId)
 
+    /**
+     * Der Engpass, durch den jede neue Erinnerung muss - und damit die Stelle, an der sich
+     * zusichern laesst, dass nichts Ungueltiges in die Datenbank kommt.
+     *
+     * Siehe [ReminderValidation] fuer die Regeln und [InvalidReminderException] dafuer, warum
+     * hier abgebrochen und nicht zurechtgebogen wird.
+     */
     suspend fun add(reminder: GlyphReminder): GlyphReminder {
-        val id = dao.insert(reminder)
+        val id = dao.insert(reminder.validated())
         return reminder.copy(id = id)
     }
 
-    suspend fun update(reminder: GlyphReminder) = dao.update(reminder)
+    suspend fun update(reminder: GlyphReminder) = dao.update(reminder.validated())
+
+    private fun GlyphReminder.validated(): GlyphReminder {
+        val problems = ReminderValidation.validate(this)
+        if (problems.isNotEmpty()) throw InvalidReminderException(problems)
+        return this
+    }
 
     suspend fun delete(reminder: GlyphReminder) = dao.delete(reminder)
 
@@ -30,7 +43,10 @@ class GlyphReminderRepository(private val dao: GlyphReminderDao) {
      * das erste.
      */
     suspend fun seedIfEmpty(profileId: String): List<GlyphReminder> =
-        dao.seedIfEmpty(profileId, DefaultReminders.ALL)
+        // Die Vorgaben gehen an der Pruefung in add() vorbei, weil sie in einer Transaktion im
+        // DAO angelegt werden - deshalb hier ausdruecklich. Ein Tippfehler in DefaultReminders
+        // laege sonst in jedem neu angelegten Profil und in keinem Test.
+        dao.seedIfEmpty(profileId, DefaultReminders.ALL.map { it.copy(profileId = profileId).validated() })
 
     /**
      * Kopiert alle Erinnerungen von [fromProfileId] nach [toProfileId] und gibt die neuen
@@ -63,5 +79,8 @@ class GlyphReminderRepository(private val dao: GlyphReminderDao) {
      * sein muss, steht bei [GlyphReminderDao.insertPlayReminderIfAbsent].
      */
     suspend fun ensurePlayReminder(profileId: String, template: GlyphReminder): GlyphReminder =
-        dao.insertPlayReminderIfAbsent(profileId, template)
+        dao.insertPlayReminderIfAbsent(
+            profileId,
+            template.copy(profileId = profileId, isPlayMode = true).validated()
+        )
 }

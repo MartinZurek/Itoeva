@@ -6,6 +6,7 @@ import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.INTERVAL_OPTIONS
 import com.notime.glyphcore.data.LibraryAnimation
 import com.notime.glyphcore.data.NO_GOAL
+import com.notime.glyphcore.data.ReminderValidation
 import com.notime.glyphcore.data.snapToOption
 import java.time.DayOfWeek
 
@@ -59,8 +60,11 @@ data class SanitizedReminder(
  */
 object ReminderImport {
 
-    /** Genug fuer jede sinnvolle Bezeichnung, kurz genug, um Karten-/Vorschau-Layouts nicht zu sprengen. */
-    private const val MAX_LABEL_LENGTH = 40
+    /**
+     * Dieselbe Obergrenze wie fuer jede andere Erinnerung auch - frueher stand hier eine eigene
+     * Kopie der Zahl, die beim Aendern der einen Seite stillschweigend auseinandergelaufen waere.
+     */
+    private const val MAX_LABEL_LENGTH = ReminderValidation.MAX_LABEL_LENGTH
 
     private val ALL_DAYS = DaysOfWeekMask.toMask(DayOfWeek.entries.toSet())
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
+import com.notime.glyphcore.data.GlyphReminderRepository
 import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.data.AppDatabase
@@ -46,6 +47,11 @@ data class PlayModeUiState(
 class PlayModeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val reminderDao = AppDatabase.getInstance(application).glyphReminderDao()
+
+    // Ueber das Repository statt direkt ueber das DAO, damit die Spiel-Erinnerung derselben
+    // Pruefung unterliegt wie jede andere (siehe ReminderValidation) - sie entstand bisher als
+    // einzige voellig ungeprueft.
+    private val reminderRepository = GlyphReminderRepository(reminderDao)
     private val playStateDao = AppDatabase.getInstance(application).avatarPlayStateDao()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -114,7 +120,7 @@ class PlayModeViewModel(application: Application) : AndroidViewModel(application
         // getippt, und beide Durchlaeufe sahen "gibt es noch nicht" - der Avatar haette zwei
         // Spiel-Erinnerungen gehabt, die unabhaengig voneinander weiterwuerfeln. Siehe
         // GlyphReminderDao.insertPlayReminderIfAbsent.
-        val reminder = reminderDao.insertPlayReminderIfAbsent(
+        val reminder = reminderRepository.ensurePlayReminder(
             profileId,
             GlyphReminder(
                 label = application.getString(species.signatureTopic.labelRes),
