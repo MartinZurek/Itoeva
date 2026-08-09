@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Gemeinsame Lint-Regeln aller drei Module.
+
+  Bewusst EINE Datei im Projekt-Root statt je eine pro Modul: die Regeln beschreiben, was in
+  diesem Projekt als Fehler gilt, und das soll nicht davon abhaengen, in welchem Modul eine
+  Stelle zufaellig liegt. Eingebunden ueber `lint { lintConfig = ... }` in jedem Modul.
+
+  Grundsatz: Was hier steht, ist eine bewusste Ausnahme MIT Begruendung. Ein Eintrag ohne
+  Begruendung gehoert geloescht - sonst waechst die Datei zu einer Liste stillgelegter Pruefungen,
+  von denen niemand mehr weiss, warum sie stillgelegt wurden.
+-->
+<lint>
+
+    <!--
+      `local.properties` enthaelt den Android-SDK-Pfad DIESES Rechners und wird von Android Studio
+      selbst angelegt - unter Windows mit unmaskierten Backslashes, genau so, wie diese Pruefung es
+      bemaengelt. Die Datei steht in .gitignore, ist also nirgends sonst vorhanden und von uns auch
+      nicht zu korrigieren: die IDE schreibt sie beim naechsten Sync erneut.
+
+      Ohne diese Ausnahme scheitert `gradlew verify` auf jedem Windows-Rechner an einer Datei, die
+      gar nicht zum Projekt gehoert - die Pruefstufe waere damit von Anfang an unbenutzbar.
+      Die Pruefung bleibt fuer alle uebrigen .properties-Dateien aktiv.
+    -->
+    <issue id="PropertyEscape">
+        <ignore regexp="local\.properties" />
+    </issue>
+
+</lint>

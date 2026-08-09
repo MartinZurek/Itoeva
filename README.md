@@ -11,9 +11,13 @@ Matrix aufblinken lässt.
    `app/libs/glyphsdk.aar` ablegen (ohne diese Datei schlägt der Gradle-Sync fehl).
 2. Projekt in Android Studio öffnen, Gradle-Sync abwarten – `gradlew`/Wrapper sind
    bereits vorhanden (Gradle 8.13, siehe "Build & Installation" unten).
-3. **NothingKey**: Aktuell der öffentliche Test-Key (`"test"`) aus dem offiziellen
-   Demoprojekt in `AndroidManifest.xml`. Für einen Play-Store-Release muss ein
-   eigener Key über das Nothing Developer Programme beantragt werden.
+3. **NothingKey**: Hängt am Build-Typ und steht **nicht mehr im Manifest**. Debug- und
+   `releaseCheck`-Builds bekommen automatisch den öffentlichen Test-Key (`"test"`) aus dem
+   Demoprojekt — für die Entwicklung ist damit nichts einzurichten. Ein echter Release
+   braucht einen eigenen Key über das Nothing Developer Programme; er gehört als
+   `nothingKey=…` in die (nicht eingecheckte) `keystore.properties` oder in die
+   Umgebungsvariable `NOTHING_KEY`. Fehlt er, bricht `assembleRelease` ab, statt eine App
+   mit dunkler Matrix auszuliefern. Begründung in `app/build.gradle.kts`.
 4. **Geräte-Konstante**: `glyph/GlyphMatrixService.kt` registriert
    `Glyph.DEVICE_25111p` (Phone (4a) Pro, Glyph Matrix). Per Bytecode-Inspektion
    der AAR verifiziert – kleines "p" am Ende, nicht zu verwechseln mit
@@ -517,12 +521,74 @@ echte `Migration` in `data/AppDatabaseMigrations.kt`, bestehende Daten bleiben e
 wird das in `AppDatabaseMigrationTest` (instrumentiert, braucht ein Gerät:
 `./gradlew :app-sim:connectedDebugAndroidTest`).
 
-## Build & Installation
+## Werkzeugkette
 
-Lokal erfolgreich gebaut mit: JDK 21 (Android Studios gebündeltes JBR), Android SDK
-(Build-Tools 35, Platform 35), Gradle 8.13, AGP 8.13.1, Kotlin 2.2.20, Compose BOM
-2026.06.01, Room 2.8.4. `local.properties` (mit `sdk.dir`) ist bewusst nicht eingecheckt
-(steht in `.gitignore`) – beim ersten Öffnen in Android Studio legt die IDE sie automatisch an.
+| | Wert | Anmerkung |
+|---|---|---|
+| **JDK für den Build** | **mindestens 17** | AGP 8.13 lädt Klassen im Format 61. Der Wurzel-`build.gradle.kts` prüft das und bricht sonst mit Klartext ab statt mit einer `UnsupportedClassVersionError` aus dem Plugin-Ladevorgang. Hier tatsächlich benutzt: JDK 21, Android Studios gebündeltes JBR. |
+| **Bytecode-Ziel** | **Java 11** | `compileOptions`/`jvmTarget` in allen drei Modulen. Das ist etwas völlig anderes als die Zeile darüber: es richtet sich nach `minSdk` (26) und dem, was ART ohne aufwendiges Desugaring versteht — nicht nach dem JDK des Entwicklers. Die beiden Zahlen dürfen und sollen auseinanderliegen. |
+| Gradle | 8.13 | Wrapper ist eingecheckt, nichts zu installieren |
+| AGP | 8.13.1 | |
+| Kotlin / KSP | 2.2.20 | |
+| Compose BOM | 2026.06.01 | |
+| Room | 2.8.4 | |
+| `compileSdk` / `targetSdk` | 35 | |
+| `minSdk` | 26 (`:core`, `:app-sim`) · 34 (`:app`) | `:app` folgt dem Glyph Matrix SDK, das API 34 voraussetzt |
+
+`local.properties` (mit `sdk.dir`) ist bewusst nicht eingecheckt (steht in `.gitignore`) – beim
+ersten Öffnen in Android Studio legt die IDE sie automatisch an.
+
+Unter Windows/PowerShell, falls `JAVA_HOME` nicht gesetzt ist:
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+```
+
+## Prüfen
+
+Ein Befehl deckt alles ab, was ohne angeschlossenes Gerät prüfbar ist:
+
+```
+.\gradlew.bat verify
+```
+
+Dahinter stecken Unit-Tests, Lint und ein minifizierter Probe-Bau beider Apps (alle drei Module).
+**Die CI ruft genau diesen Task auf** — damit sind „was prüfe ich vor dem Einchecken" und „was
+prüft die CI" per Konstruktion dasselbe, statt zwei Listen, die auseinanderlaufen.
+
+Was dort bewusst *nicht* drin ist, weil es ein Gerät braucht:
+
+```
+.\gradlew.bat :app-sim:connectedDebugAndroidTest   # Room-Migrationen, echtes SQLite
+.\gradlew.bat :app:connectedDebugAndroidTest
+```
+
+### Die drei Release-Varianten auseinanderhalten
+
+| Aufruf | Ergebnis | Wofür |
+|---|---|---|
+| `assembleDebug` | Debug-signiert, nicht minifiziert | Entwickeln |
+| `assembleReleaseCheck` | **Debug**-signiert, **minifiziert** | R8 prüfen und auf dem Gerät durchspielen, ohne Upload-Schlüssel. Eigene `applicationId` (`…​.releasecheck`), lässt sich also parallel zur Debug-Fassung installieren. |
+| `assembleRelease` / `bundleRelease` | Release-signiert, minifiziert | Das echte Paket. **Scheitert absichtlich**, wenn Signaturdaten, Room-Schema-Export, Versionsangaben oder (bei `:app`) der NothingKey nicht stimmen — siehe `validateRelease`. |
+
+Früher lieferte `assembleRelease` ohne `keystore.properties` stillschweigend ein *unsigniertes*
+Paket: gleicher Ordner, gleicher Dateiname, wertlos, und man sieht es ihm nicht an. Genau das
+trennt `releaseCheck` jetzt sauber ab.
+
+Die Prüfung einzeln, ohne etwas zu bauen:
+
+```
+.\gradlew.bat :app-sim:validateRelease
+```
+
+### Vor dem Veröffentlichen
+
+`versionCode` und `versionName` stehen als benannte Werte oben in
+`app-sim/build.gradle.kts`. **`versionCode` muss bei jedem Upload höher sein als beim
+vorherigen** — der Play Store lehnt eine bereits verwendete Nummer ab, und nachträglich ändern
+lässt sie sich nicht. Der Rest der Store-Checkliste steht in `PLAY_STORE.md`.
+
+## Build & Installation
 
 Debug-APK selbst bauen (PowerShell, aus dem Projektordner):
 

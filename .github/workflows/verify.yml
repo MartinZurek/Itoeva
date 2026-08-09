@@ -1,0 +1,221 @@
+# Prueflauf fuer jeden Stand, der eingecheckt wird.
+#
+# Der Grundsatz: was hier laeuft, laeuft auch lokal mit EINEM Befehl - `./gradlew verify`.
+# Die Stufen sind deshalb nicht hier einzeln aufgezaehlt, sondern im Wurzel-build.gradle.kts
+# definiert. Zwei Listen, die auseinanderlaufen koennen, sind schlimmer als keine CI.
+#
+# Was hier ZUSAETZLICH steht, ist nur das, was sich lokal nicht sinnvoll nachstellen laesst:
+# ein frischer Emulator fuer die Room-Migrationstests, und der Nachweis, dass der Release-
+# Torwaechter wirklich zubeisst.
+
+name: Verify
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# Ein neuer Push macht den laufenden Prueflauf desselben Branches gegenstandslos - abbrechen
+# statt beide zu Ende rechnen zu lassen.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Bewusst das dokumentierte MINDEST-JDK und nicht das neueste: die Untergrenze aus
+  # build.gradle.kts soll hier tatsaechlich erprobt werden. Laeuft der Build nur noch unter 21,
+  # ist das ein Fehler in der Dokumentation und soll hier auffallen.
+  JAVA_VERSION: '17'
+
+jobs:
+
+  # ---------------------------------------------------------------------------------------
+  # Unit-Tests, Lint und minifizierter Probe-Bau beider Apps. Braucht kein Geraet, keine
+  # Geheimnisse - laeuft daher auch fuer Pull Requests aus Forks.
+  # ---------------------------------------------------------------------------------------
+  verify:
+    name: Tests, Lint, R8
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Das Glyph Matrix SDK ist eine AAR, die Nothing nicht ueber ein Maven-Repository
+      # ausliefert; sie liegt deshalb unter app/libs/ und ist nicht eingecheckt (siehe
+      # app/libs/README.txt). Ohne sie laesst sich :app gar nicht konfigurieren - fuer die
+      # Pruefstufe genuegt eine leere Platzhalter-AAR, denn geprueft wird hier die eigene
+      # Kompilierung, nicht das SDK.
+      - name: Platzhalter fuer das Glyph-SDK anlegen, falls nicht vorhanden
+        run: |
+          if [ ! -f app/libs/glyphsdk.aar ]; then
+            echo "::warning::app/libs/glyphsdk.aar fehlt - lege leeren Platzhalter an."
+            mkdir -p app/libs
+            printf 'PK\005\006%.0s' 1 | head -c 22 > app/libs/glyphsdk.aar
+          fi
+
+      - name: gradlew verify
+        run: ./gradlew verify --stacktrace
+
+      # Berichte auch dann einsammeln, wenn der Schritt davor fehlgeschlagen ist - gerade dann
+      # sind sie interessant.
+      - name: Berichte sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            **/build/reports/**
+            **/build/test-results/**
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------------------
+  # Der Nachweis, dass `validateRelease` wirklich abbricht.
+  #
+  # Ohne diesen Schritt bliebe unbemerkt, wenn die Verdrahtung an die Paketier-Tasks eines
+  # Tages nicht mehr greift (die Task-Namen gehoeren AGP, nicht uns - siehe die Begruendung
+  # in app-sim/build.gradle.kts). Der Torwaechter waere dann still wirkungslos, und genau das
+  # soll nicht passieren koennen.
+  # ---------------------------------------------------------------------------------------
+  release-gate:
+    name: Release-Torwaechter beisst
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: bundleRelease muss ohne Schluessel scheitern
+        run: |
+          if ./gradlew :app-sim:bundleRelease --quiet 2>build-error.txt; then
+            echo "::error::bundleRelease ist ohne keystore.properties durchgelaufen."
+            echo "Der Release-Torwaechter greift nicht mehr - siehe validateRelease"
+            echo "in app-sim/build.gradle.kts."
+            exit 1
+          fi
+          if ! grep -q "nicht veroeffentlichungsfaehig" build-error.txt; then
+            echo "::error::bundleRelease ist gescheitert, aber nicht am Torwaechter."
+            cat build-error.txt
+            exit 1
+          fi
+          echo "Torwaechter hat wie erwartet abgebrochen."
+
+  # ---------------------------------------------------------------------------------------
+  # Room-Migrationstests. Sie muessen gegen echtes SQLite laufen (Room fuehrt dabei wirklich
+  # ein ALTER TABLE aus), also braucht diese Stufe einen Emulator und laeuft deshalb getrennt
+  # von der schnellen Stufe oben.
+  #
+  # API 26 ist der minSdk von :app-sim und damit der aelteste Stand, auf dem eine Migration
+  # ueberhaupt stattfinden kann - genau dort liegt das Risiko.
+  # ---------------------------------------------------------------------------------------
+  migrations:
+    name: Room-Migrationen (Emulator)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Ohne KVM laeuft der Emulator in Software und ist zu langsam, um brauchbar zu sein.
+      - name: KVM freigeben
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 26
+          arch: x86
+          target: default
+          disable-animations: true
+          script: ./gradlew :app-sim:connectedDebugAndroidTest
+
+      - name: Berichte sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-reports
+          path: app-sim/build/reports/androidTests/**
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------------------
+  # Das echte, signierte Release-Paket.
+  #
+  # Laeuft nur von Hand und nur, wenn die Geheimnisse hinterlegt sind - ein Prueflauf, der
+  # ohne sie rot wird, wuerde sonst bei jedem Push stoeren und irgendwann ignoriert.
+  #
+  # Einzurichten unter Settings > Secrets and variables > Actions:
+  #   KEYSTORE_BASE64    - der Upload-Keystore, base64-kodiert (`base64 -w0 upload-keystore.jks`)
+  #   KEYSTORE_PASSWORD  - Passwort des Keystores
+  #   KEY_ALIAS          - Alias des Schluessels
+  #   KEY_PASSWORD       - Passwort des Schluessels
+  # ---------------------------------------------------------------------------------------
+  release:
+    name: Signiertes AAB
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Signaturdaten herstellen
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Kein KEYSTORE_BASE64 hinterlegt - ohne Upload-Schluessel kein Release."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > upload-keystore.jks
+          cat > keystore.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: bundleRelease
+        run: ./gradlew :app-sim:bundleRelease
+
+      # Der Torwaechter prueft, dass Signaturdaten VORHANDEN sind. Hier wird geprueft, dass sie
+      # auch angekommen sind - ein unsigniertes AAB weist der Play Store erst beim Hochladen ab.
+      - name: Signatur nachweisen
+        run: |
+          AAB=app-sim/build/outputs/bundle/release/app-sim-release.aab
+          test -f "$AAB" || { echo "::error::$AAB wurde nicht erzeugt."; exit 1; }
+          unzip -l "$AAB" | grep -q "META-INF/.*\.RSA\|META-INF/.*\.EC" \
+            || { echo "::error::Das AAB traegt keine Signatur."; exit 1; }
+          echo "Signatur vorhanden."
+
+      - name: Schluesselreste entfernen
+        if: always()
+        run: rm -f upload-keystore.jks keystore.properties
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-sim-release-aab
+          path: app-sim/build/outputs/bundle/release/*.aab

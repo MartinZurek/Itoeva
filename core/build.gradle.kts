@@ -32,6 +32,13 @@ android {
         buildConfig = true
     }
 
+    /** Siehe app-sim/build.gradle.kts fuer die Begruendung. */
+    lint {
+        lintConfig = rootProject.file("config/lint.xml")
+        abortOnError = true
+        warningsAsErrors = false
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

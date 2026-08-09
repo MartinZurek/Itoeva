@@ -5,7 +5,10 @@
       Die App folgt bewusst NICHT der Systemsprache - Deutsch erscheint nur, wenn es in den
       Einstellungen ausdruecklich gewaehlt wurde.
     -->
-    <string name="app_name">Tama</string>
+    <!-- Produktname, wird nicht uebersetzt - siehe Hinweis in values-de/strings.xml.
+         `translatable="false"` sagt das auch Lint, das sonst die fehlende deutsche Fassung
+         als Fehler meldet. -->
+    <string name="app_name" translatable="false">Tama</string>
     <string name="widget_clock_description">Glyph matrix clock</string>
 
     <!-- Allgemeine Aktionen -->
@@ -21,7 +24,7 @@
     <string name="action_more">More</string>
 
     <!-- Startbildschirm -->
-    <string name="home_title">Tama</string>
+    <string name="home_title" translatable="false">Tama</string>
     <string name="home_reminders">📋 Reminders</string>
 
     <!-- Fuetter-Statistik -->
@@ -81,27 +84,27 @@
     <string name="clock_style_ring_desc">Small digits in the centre, surrounded by a travelling minute ring.</string>
 
     <!-- Avatare (Namen bleiben unuebersetzt, nur die Beschreibungen wechseln) -->
-    <string name="avatar_puffling">Puffling</string>
+    <string name="avatar_puffling" translatable="false">Puffling</string>
     <string name="avatar_puffling_desc">Round with big ears and a tail – the classic, playful creature.</string>
     <string name="avatar_puffling_personality">The curious optimist – loves small progress and gets excited about every little thing.</string>
     <string name="avatar_puffling_tagline">Small steps take you further.</string>
-    <string name="avatar_starlet">Starlet</string>
+    <string name="avatar_starlet" translatable="false">Starlet</string>
     <string name="avatar_starlet_desc">Anime/kawaii: oversized head with huge eyes and a star tuft.</string>
     <string name="avatar_starlet_personality">The friendly dreamer – warm, calm and hopeful, a reminder to be kind to yourself.</string>
     <string name="avatar_starlet_tagline">You don\'t have to be perfect today.</string>
-    <string name="avatar_wyrmling">Wyrmling</string>
+    <string name="avatar_wyrmling" translatable="false">Wyrmling</string>
     <string name="avatar_wyrmling_desc">Fantasy: a small dragon with wings, a horn and a tail tip.</string>
     <string name="avatar_wyrmling_personality">The little motivator – bold, upbeat and full of energy, but never frantic.</string>
     <string name="avatar_wyrmling_tagline">Let\'s go. Just one small step.</string>
-    <string name="avatar_fennec">Fennec</string>
+    <string name="avatar_fennec" translatable="false">Fennec</string>
     <string name="avatar_fennec_desc">A bit more realistic: slimmer silhouette with pointed ears and a snout.</string>
     <string name="avatar_fennec_personality">The calm guardian – composed, attentive and reliable, reminding you without ever nagging.</string>
     <string name="avatar_fennec_tagline">I look out for your habits.</string>
-    <string name="avatar_gloop">Gloop</string>
+    <string name="avatar_gloop" translatable="false">Gloop</string>
     <string name="avatar_gloop_desc">Fantasy slime: one big central eye, no headgear, no legs.</string>
     <string name="avatar_gloop_personality">The unwinder – laid-back, a little chaotic and charming, a reminder that it\'s okay to slow down.</string>
     <string name="avatar_gloop_tagline">Everything\'s allowed to go slowly too.</string>
-    <string name="avatar_hootlet">Hootlet</string>
+    <string name="avatar_hootlet" translatable="false">Hootlet</string>
     <string name="avatar_hootlet_desc">Anime owl: feather ears, small wing stubs and a beak instead of a mouth.</string>
     <string name="avatar_hootlet_personality">The wise observer – quiet, patient and perceptive, watching more than it speaks.</string>
     <string name="avatar_hootlet_tagline">Calm brings clarity.</string>

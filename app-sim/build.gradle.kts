@@ -15,9 +15,20 @@ plugins {
  * niemals ins Repository - wer ihn hat, kann Updates unter deinem App-Namen veroeffentlichen,
  * und verlierst du ihn, laesst sich die App im Play Store nie wieder aktualisieren.
  *
- * Fehlt die Datei, bleibt der Release-Build unsigniert statt fehlzuschlagen: so laesst sich
- * jederzeit `assembleRelease` bauen und pruefen (etwa ob R8 etwas kaputtoptimiert), auch ohne
- * Zugriff auf den echten Schluessel.
+ * **Frueher blieb der Release-Build ohne diese Datei stillschweigend unsigniert.** Das war als
+ * Bequemlichkeit gedacht (R8 pruefen ohne Schluessel), hatte aber einen teuren Preis: `assembleRelease`
+ * lieferte in genau demselben Ordner, unter genau demselben Namen, mal ein veroeffentlichungsfaehiges
+ * und mal ein wertloses Paket - ohne dass man den Unterschied ansieht. Ein unsigniertes AAB laedt der
+ * Play Store zwar nicht hoch, aber der Fehler faellt dann erst nach dem Bauen und Hochladen auf.
+ *
+ * Beides ist jetzt getrennt:
+ *
+ * - `assembleRelease` / `bundleRelease` sind **offiziell** und scheitern ohne vollstaendige
+ *   Signaturdaten (siehe `validateRelease` unten).
+ * - Der Build-Typ **`releaseCheck`** uebernimmt die alte Rolle: dieselbe R8-Verkleinerung, aber
+ *   mit dem Debug-Schluessel signiert und unter eigenem Namen. Damit laesst sich weiter jederzeit
+ *   pruefen, ob R8 etwas kaputtoptimiert - ohne Zugriff auf den echten Schluessel und ohne dass
+ *   dabei je etwas entsteht, das man versehentlich fuer ein Release halten koennte.
  */
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties().apply {
@@ -25,7 +36,50 @@ val keystoreProperties = Properties().apply {
         keystorePropertiesFile.inputStream().use { load(it) }
     }
 }
-val hasSigningConfig = keystoreProperties.getProperty("storeFile") != null
+
+/** Die vier Eintraege, ohne die sich nicht signieren laesst. */
+val signingKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+
+/**
+ * Was an den Signaturdaten fehlt - eine leere Liste heisst "vollstaendig und plausibel".
+ *
+ * Geprueft wird bewusst mehr als nur die Existenz der Datei: eine aus der Vorlage kopierte, aber
+ * nie ausgefuellte `keystore.properties` ist der wahrscheinlichste Fehler ueberhaupt, und sie
+ * wuerde sonst als "vorhanden" durchgehen und den Build erst viel spaeter mit einer
+ * Keystore-Fehlermeldung aus dem Java-Unterbau abbrechen.
+ */
+val signingProblems: List<String> = buildList {
+    if (!keystorePropertiesFile.exists()) {
+        add("keystore.properties fehlt im Projekt-Root. Vorlage: keystore.properties.example")
+        return@buildList
+    }
+    signingKeys.forEach { key ->
+        val value = keystoreProperties.getProperty(key)
+        when {
+            value.isNullOrBlank() ->
+                add("keystore.properties: Eintrag '$key' fehlt oder ist leer.")
+            value.startsWith("DEIN_") ->
+                add("keystore.properties: Eintrag '$key' steht noch auf dem Platzhalter der Vorlage.")
+        }
+    }
+    keystoreProperties.getProperty("storeFile")?.takeIf { it.isNotBlank() }?.let { path ->
+        if (!rootProject.file(path).exists()) {
+            add("Der Schluesselspeicher '$path' existiert nicht (relativ zum Projekt-Root gesucht).")
+        }
+    }
+}
+val hasSigningConfig = signingProblems.isEmpty()
+
+/**
+ * Versionsangaben als benannte Werte statt direkt in `defaultConfig`, damit `validateRelease`
+ * unten dieselben Zahlen pruefen kann, die auch tatsaechlich ins Paket wandern.
+ *
+ * `versionCode` muss bei **jedem** Upload in den Play Store hoeher sein als beim vorherigen -
+ * der Store lehnt eine bereits verwendete Nummer ab, und nachtraeglich aendern laesst sie sich
+ * nicht. Die Zahl hier ist die einzige Quelle dafuer; siehe README, Abschnitt "Veroeffentlichen".
+ */
+val appVersionCode = 1
+val appVersionName = "1.0"
 
 android {
     namespace = "com.notime.glyphsim"
@@ -38,8 +92,8 @@ android {
         // vielen Geraeten laufen, daher deutlich niedrigerer minSdk.
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -69,6 +123,31 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+
+        /**
+         * Probe-Release: alles wie `release`, nur mit dem Debug-Schluessel.
+         *
+         * Dafuer da, R8 zu pruefen - Verkleinerung und Verschleierung koennen Dinge zerlegen, die
+         * im Debug-Bau tadellos laufen (reflektiv erzeugte Worker, ueber ihren Namen persistierte
+         * Enums, Room-Entities). Das faellt sonst erst dem Nutzer auf.
+         *
+         * Debug-signiert statt unsigniert, weil ein unsigniertes Paket sich nicht installieren
+         * laesst - und "baut durch" ist die schwaechere Aussage. Erst das Starten auf einem Geraet
+         * zeigt, ob R8 wirklich nichts weggeworfen hat, was zur Laufzeit gebraucht wird.
+         *
+         * `matchingFallbacks` ist noetig, weil :core diesen Build-Typ nicht kennt: ohne die Angabe
+         * findet Gradle keine passende Variante der Bibliothek und bricht die Aufloesung ab.
+         */
+        create("releaseCheck") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            signingConfig = signingConfigs.getByName("debug")
+            // Sonst haetten zwei verschiedene Pakete dieselbe applicationId und liessen sich nicht
+            // nebeneinander installieren - gerade beim Vergleichen "Debug laeuft, minifiziert nicht"
+            // will man aber beide gleichzeitig auf dem Geraet haben.
+            applicationIdSuffix = ".releasecheck"
+            versionNameSuffix = "-releasecheck"
+        }
     }
 
     compileOptions {
@@ -80,6 +159,22 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+
+    /**
+     * Lint laeuft als Teil von `gradlew verify` (siehe Wurzel-Build) und bricht bei Fehlern ab -
+     * das ist AGPs Voreinstellung und bleibt so.
+     *
+     * `warningsAsErrors` steht bewusst noch auf `false`: die Warnungen sind erst mit dieser
+     * Pruefstufe ueberhaupt sichtbar geworden und werden ueber die spaeteren Phasen abgearbeitet
+     * (Barrierefreiheit, Lokalisierung). Sie sofort scharfzuschalten hiesse, alles andere so lange
+     * anzuhalten. Sobald die Liste leer ist, gehoert der Schalter auf `true`, sonst sammeln sich
+     * neue Warnungen genauso unbemerkt an wie die alten.
+     */
+    lint {
+        lintConfig = rootProject.file("config/lint.xml")
+        abortOnError = true
+        warningsAsErrors = false
     }
 
     // Room-Migrationstests (siehe androidTest/.../AppDatabaseMigrationTest.kt) laden die
@@ -101,6 +196,84 @@ android {
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
+
+/**
+ * Torwaechter vor dem offiziellen Release-Paket.
+ *
+ * **Wogegen das schuetzt.** Jeder einzelne der hier geprueften Punkte hat gemeinsam, dass er den
+ * Build *nicht* zum Scheitern bringt, sondern still ein Paket erzeugt, mit dem etwas nicht stimmt.
+ * Genau solche Fehler faellt erst nach dem Hochladen auf - oder, im Fall des fehlenden
+ * Room-Schemas, erst Monate spaeter, wenn sich die naechste Migration nicht mehr schreiben laesst,
+ * weil der Ausgangsstand nirgends festgehalten wurde.
+ *
+ * Bewusst an die **Paketierung** gehaengt und nicht an `preReleaseBuild`: Unit-Tests der
+ * Release-Variante (`testReleaseUnitTest`) haengen ebenfalls am Kompilieren der Release-Variante.
+ * Wuerde die Pruefung dort ansetzen, liessen sich die Tests auf keinem Rechner mehr ausfuehren, der
+ * den Upload-Schluessel nicht hat - also auch nicht in der CI, wo sie am noetigsten sind.
+ */
+val validateRelease = tasks.register("validateRelease") {
+    group = "verification"
+    description = "Prueft Signaturdaten, Room-Schema-Export und Versionsangaben des Release-Pakets."
+
+    // Ausserhalb von doLast eingesammelt: im Ausfuehrungsteil darf nicht mehr auf das
+    // Project-Objekt zugegriffen werden (Configuration Cache).
+    val databaseSource = file("src/main/java/com/notime/glyphsim/data/AppDatabase.kt")
+    val schemaDir = file("schemas/com.notime.glyphsim.data.AppDatabase")
+    val problems = signingProblems
+    val versionCode = appVersionCode
+    val versionName = appVersionName
+
+    doLast {
+        val found = buildList {
+            addAll(problems)
+
+            // --- Room-Schema-Export ---------------------------------------------------------
+            // Die Version steht in der @Database-Annotation; der zugehoerige JSON-Export muss
+            // eingecheckt sein, sonst fehlt der naechsten Migration ihr Ausgangspunkt.
+            val annotation = databaseSource.readText()
+                .substringAfter("@Database(", "")
+                .substringBefore(")")
+            val declaredVersion = Regex("""version\s*=\s*(\d+)""").find(annotation)?.groupValues?.get(1)
+            when {
+                declaredVersion == null ->
+                    add("Aus ${databaseSource.name} liess sich keine @Database(version = ...) lesen.")
+                !schemaDir.resolve("$declaredVersion.json").exists() ->
+                    add(
+                        "Room-Schema $declaredVersion.json fehlt in ${schemaDir.relativeTo(rootDir)}. " +
+                            "Einmal bauen und die erzeugte Datei mit einchecken."
+                    )
+            }
+
+            // --- Versionsangaben ------------------------------------------------------------
+            if (versionCode < 1) {
+                add("versionCode muss positiv sein, ist aber $versionCode.")
+            }
+            if (!Regex("""\d+\.\d+(\.\d+)?""").matches(versionName)) {
+                add("versionName '$versionName' passt nicht auf das Schema major.minor[.patch].")
+            }
+        }
+
+        if (found.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Das Release-Paket ist so nicht veroeffentlichungsfaehig:")
+                    appendLine()
+                    found.forEach { appendLine("  - $it") }
+                    appendLine()
+                    appendLine("Nur R8 pruefen, ohne Schluessel? Dann stattdessen:")
+                    append("  ./gradlew :app-sim:assembleReleaseCheck")
+                }
+            )
+        }
+    }
+}
+
+// `matching` statt `named`: die Namen der Paketier-Tasks gehoeren AGP, und ein Tippfehler oder eine
+// Umbenennung in einer kuenftigen Version soll den Build nicht sofort zerlegen - sie soll die
+// Pruefung hoechstens nicht mehr finden. Deshalb steht in der CI zusaetzlich ein Lauf, der
+// `assembleRelease` ohne Schluessel erwartungsgemaess scheitern sieht.
+tasks.matching { it.name == "packageRelease" || it.name == "packageReleaseBundle" }
+    .configureEach { dependsOn(validateRelease) }
 
 dependencies {
     // Gemeinsame Datenschicht und Alarmplanung, geteilt mit :app - siehe core/build.gradle.kts

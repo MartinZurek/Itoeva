@@ -21,11 +21,14 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
-        <!-- Test-Key aus dem offiziellen Nothing SDK-Demoprojekt. Fuer einen Release
-             muss ein eigener Key ueber das Nothing Developer Programme beantragt werden. -->
+        <!-- Der Schluessel haengt am Build-Typ und wird beim Bauen eingesetzt, er steht bewusst
+             NICHT hier: Debug und releaseCheck bekommen den oeffentlichen Test-Key aus dem
+             Nothing-Demoprojekt, der echte Release den Produktivschluessel aus dem Nothing
+             Developer Programme. Herkunft und Begruendung in app/build.gradle.kts
+             (`productionNothingKey`). -->
         <meta-data
             android:name="NothingKey"
-            android:value="test" />
+            android:value="${nothingKey}" />
 
         <activity
             android:name=".MainActivity"
