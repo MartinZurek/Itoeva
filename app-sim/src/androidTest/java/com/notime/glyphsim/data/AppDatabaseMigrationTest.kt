@@ -213,6 +213,41 @@ class AppDatabaseMigrationTest {
         }
         migrated.close()
     }
+
+    /**
+     * 15 -> 16 fuegt `dailyGoal` hinzu - die letzte Einzelgrenze, fuer die es hier bisher keinen
+     * Test gab (13->14, 14->15 und 16->19 waren abgedeckt).
+     *
+     * Entscheidend ist der Standardwert. Die Spalte ist NOT NULL, bestehende Zeilen haben aber
+     * keinen Wert dafuer. Bekaemen sie irgendetwas anderes als 0
+     * ([com.notime.glyphcore.data.NO_GOAL]), traege jede Alt-Erinnerung ploetzlich ein Tagesziel,
+     * das nie jemand gesetzt hat - und wuerde damit ungefragt in die Stimmungsberechnung des
+     * Avatars eingehen. Nichts wuerde abstuerzen; der Avatar waere nur ohne Grund traurig.
+     */
+    @Test
+    fun migration15To16AddsDailyGoalWithNoGoalDefault() {
+        helper.createDatabase(TEST_DB, 15).apply {
+            execSQL(
+                """
+                INSERT INTO glyph_reminders
+                    (label, animationType, libraryAnimationId, daysOfWeekMask, startMinuteOfDay,
+                     endMinuteOfDay, intervalMinutes, enabled, profileId, openDurationSeconds,
+                     nextTriggerEpochMillis)
+                VALUES ('Ohne Ziel', 'DRINK', NULL, 31, 480, 1020, 30, 1, 'PUFFLING', 8, NULL)
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 16, true, *AppDatabaseMigrations.ALL)
+
+        migrated.query("SELECT label, dailyGoal FROM glyph_reminders").use { cursor ->
+            assertTrue("Die Alt-Erinnerung muss erhalten bleiben", cursor.moveToFirst())
+            assertTrue("Label muss unveraendert sein", cursor.getString(0) == "Ohne Ziel")
+            assertTrue("Alt-Erinnerungen duerfen kein Tagesziel geschenkt bekommen", cursor.getInt(1) == 0)
+        }
+        migrated.close()
+    }
 }
 
 /**

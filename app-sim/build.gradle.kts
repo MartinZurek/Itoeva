@@ -275,6 +275,35 @@ val validateRelease = tasks.register("validateRelease") {
 tasks.matching { it.name == "packageRelease" || it.name == "packageReleaseBundle" }
     .configureEach { dependsOn(validateRelease) }
 
+/**
+ * Haelt kotlinx-serialization in den Instrumentierungstests zusammen.
+ *
+ * **Das Problem.** Room 2.8.4 liest die exportierten Schema-JSONs mit kotlinx-serialization -
+ * `room-testing` zieht dafuer `kotlinx-serialization-json:1.8.1` herein. Gleichzeitig steht auf
+ * `kotlinx-serialization-core` eine `strictly 1.7.3`-Bedingung, die den Kern auf 1.7.3
+ * zurueckdrueckt. Damit laeuft JSON 1.8.1 gegen einen aelteren Kern.
+ *
+ * Zwischen beiden Staenden hat sich `GeneratedSerializer.typeParametersSerializers()` geaendert:
+ * in 1.8 hat die Methode eine Standardimplementierung bekommen, in 1.7.3 ist sie abstrakt. Der
+ * gegen 1.8 uebersetzte Code verlaesst sich auf die Standardimplementierung, findet sie im
+ * aelteren Kern nicht - und jeder Zugriff endet in einem `AbstractMethodError`.
+ *
+ * **Was das bedeutete.** Nicht "die Tests waren noch nicht gelaufen", sondern: **sie konnten gar
+ * nicht laufen.** Jeder Migrationstest scheiterte beim Laden des Schemas, noch bevor eine einzige
+ * Migration ausgefuehrt wurde. Aufgefallen ist es erst, als zum ersten Mal ueberhaupt ein Emulator
+ * da war - genau das ist der Preis von Tests, die nie jemand ausfuehrt.
+ *
+ * `force` und nicht einfach eine Versionsangabe: gegen ein `strictly` kommt ein gewoehnlicher
+ * Wunsch nicht an. Nur die Testkonfigurationen sind betroffen - im ausgelieferten Paket steckt
+ * kotlinx-serialization gar nicht.
+ */
+configurations.matching { it.name.contains("AndroidTest") }.configureEach {
+    resolutionStrategy {
+        force("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+        force("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.8.1")
+    }
+}
+
 dependencies {
     // Gemeinsame Datenschicht und Alarmplanung, geteilt mit :app - siehe core/build.gradle.kts
     implementation(project(":core"))

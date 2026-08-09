@@ -112,16 +112,31 @@ jobs:
           echo "Torwaechter hat wie erwartet abgebrochen."
 
   # ---------------------------------------------------------------------------------------
-  # Room-Migrationstests. Sie muessen gegen echtes SQLite laufen (Room fuehrt dabei wirklich
-  # ein ALTER TABLE aus), also braucht diese Stufe einen Emulator und laeuft deshalb getrennt
-  # von der schnellen Stufe oben.
+  # Instrumentierte Tests: Room-Migrationen und die Transaktionszusagen der DAOs. Sie muessen
+  # gegen echtes SQLite laufen (Room fuehrt dabei wirklich ein ALTER TABLE aus), brauchen also
+  # einen Emulator und laufen deshalb getrennt von der schnellen Stufe oben.
   #
-  # API 26 ist der minSdk von :app-sim und damit der aelteste Stand, auf dem eine Migration
-  # ueberhaupt stattfinden kann - genau dort liegt das Risiko.
+  # Zwei Laeufe, weil die Module verschiedene Untergrenzen haben:
+  #
+  # - **:app-sim auf API 26** - sein minSdk und damit der aelteste Stand, auf dem eine Migration
+  #   ueberhaupt stattfinden kann. Genau dort liegt das Risiko.
+  # - **:app auf API 35** - dieses Modul setzt minSdk 34 voraus (Glyph Matrix SDK), auf API 26
+  #   liesse es sich gar nicht installieren.
+  #
+  # `fail-fast: false`, damit ein Fehlschlag im einen Modul den anderen Lauf nicht abwuergt -
+  # bei Migrationen will man wissen, ob es beide trifft oder nur eines.
   # ---------------------------------------------------------------------------------------
   migrations:
-    name: Room-Migrationen (Emulator)
+    name: Instrumentiert (${{ matrix.module }}, API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - module: ':app-sim'
+            api-level: 26
+          - module: ':app'
+            api-level: 35
     steps:
       - uses: actions/checkout@v4
 
@@ -140,20 +155,28 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # :app braucht die SDK-AAR schon zum Konfigurieren - siehe die Begruendung im ersten Job.
+      - name: Platzhalter fuer das Glyph-SDK anlegen, falls nicht vorhanden
+        run: |
+          if [ ! -f app/libs/glyphsdk.aar ]; then
+            mkdir -p app/libs
+            printf 'PK\005\006%.0s' 1 | head -c 22 > app/libs/glyphsdk.aar
+          fi
+
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 26
-          arch: x86
-          target: default
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: aosp_atd
           disable-animations: true
-          script: ./gradlew :app-sim:connectedDebugAndroidTest
+          script: ./gradlew ${{ matrix.module }}:connectedDebugAndroidTest
 
       - name: Berichte sichern
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: migration-reports
-          path: app-sim/build/reports/androidTests/**
+          name: instrumented-reports-api${{ matrix.api-level }}
+          path: '**/build/reports/androidTests/**'
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------------------

@@ -570,9 +570,34 @@ prüft die CI" per Konstruktion dasselbe, statt zwei Listen, die auseinanderlauf
 Was dort bewusst *nicht* drin ist, weil es ein Gerät braucht:
 
 ```
-.\gradlew.bat :app-sim:connectedDebugAndroidTest   # Room-Migrationen, echtes SQLite
-.\gradlew.bat :app:connectedDebugAndroidTest
+.\gradlew.bat :app-sim:connectedDebugAndroidTest   # Room-Migrationen + DAO-Transaktionen
+.\gradlew.bat :app:connectedDebugAndroidTest       # Room-Migrationen
 ```
+
+**Emulator dafür anlegen** (einmalig; `:app` braucht API ≥ 34 wegen des Glyph Matrix SDK, `aosp_atd`
+ist das schlanke, für Testläufe gedachte Abbild):
+
+```powershell
+$sdk = "$env:LOCALAPPDATA\Android\Sdk"
+& "$sdk\cmdline-tools\latest\bin\sdkmanager.bat" "system-images;android-35;aosp_atd;x86_64"
+& "$sdk\cmdline-tools\latest\bin\avdmanager.bat" create avd -n tama-test `
+    -k "system-images;android-35;aosp_atd;x86_64" -d pixel_6
+& "$sdk\emulator\emulator.exe" -avd tama-test -no-window -no-audio -no-boot-anim
+```
+
+Zwei Stolpersteine, beide schon behoben, aber gut zu wissen:
+
+- **`--offline` funktioniert hier nicht.** Die Unified Test Platform lädt beim ersten Lauf eigene
+  Artefakte nach; mit `--offline` bricht der Task ab, bevor irgendetwas läuft.
+- **Schlägt der Gradle-Task mit „Failed to receive the UTP test results" fehl**, ohne dass ein Test
+  gelaufen ist, führt der direkte Weg schneller zum Ergebnis — und zu einer brauchbaren
+  Fehlermeldung:
+
+  ```
+  adb install -r -t app-sim\build\outputs\apk\debug\app-sim-debug.apk
+  adb install -r -t app-sim\build\outputs\apk\androidTest\debug\app-sim-debug-androidTest.apk
+  adb shell am instrument -w com.notime.glyphminderwatch.test/androidx.test.runner.AndroidJUnitRunner
+  ```
 
 ### Die drei Release-Varianten auseinanderhalten
 

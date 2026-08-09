@@ -23,16 +23,27 @@ object AppDatabaseMigrations {
     val PRE_BASELINE_VERSIONS: IntArray = (1 until BASELINE_VERSION).toList().toIntArray()
 
     /**
-     * 18 -> 19: `dailyGoal` an der Erinnerung.
+     * 18 -> 19: `dailyGoal` UND `isPlayMode` an der Erinnerung.
      *
-     * Die Spalte kommt aus dem gemeinsamen Kern ([com.notime.glyphcore.data.GlyphReminder]) und
-     * muss deshalb in BEIDEN Datenbanken angelegt werden, obwohl nur :app-sim die Stimmung des
-     * Avatars daraus ableitet - diese App kennt gar keine Avatare. Ohne die Spalte wuerde Room
-     * hier beim Oeffnen ueber ein abweichendes Schema stolpern.
+     * Beide Spalten kommen aus dem gemeinsamen Kern ([com.notime.glyphcore.data.GlyphReminder])
+     * und muessen deshalb in BEIDEN Datenbanken angelegt werden, obwohl nur :app-sim etwas mit
+     * ihnen anfaengt - diese App kennt weder Avatare noch einen Spielmodus. Room vergleicht beim
+     * Oeffnen aber das gesamte Schema, nicht nur die Spalten, die man tatsaechlich benutzt.
+     *
+     * **`isPlayMode` fehlte hier.** Die Spalte wurde im Kern fuer den Spielmodus von :app-sim
+     * eingefuehrt; dort zog die Migration 16 -> 17 sie mit, hier zog sie niemand nach. Das Schema
+     * 19 fuehrte sie trotzdem - Room erzeugt es aus der Entity, und die ist gemeinsam. Ergebnis:
+     * eine bestehende Installation auf Version 18 waere beim Update ueber ein abweichendes Schema
+     * gestolpert, und ein Fehlschlag beim Oeffnen der Datenbank ist ein Absturz beim Start.
+     *
+     * Aufgefallen ist das erst, als es fuer dieses Modul zum ersten Mal einen Migrationstest gab
+     * (siehe androidTest/.../AppDatabaseMigrationTest). Genau davor sollte er schuetzen: eine
+     * Aenderung im geteilten Kern trifft beide Datenbanken, und hier wurde sie uebersehen.
      */
     private val MIGRATION_18_19 = object : Migration(18, 19) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE glyph_reminders ADD COLUMN dailyGoal INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE glyph_reminders ADD COLUMN isPlayMode INTEGER NOT NULL DEFAULT 0")
         }
     }
 

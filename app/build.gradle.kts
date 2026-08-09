@@ -227,6 +227,18 @@ val validateRelease = tasks.register("validateRelease") {
 tasks.matching { it.name == "packageRelease" || it.name == "packageReleaseBundle" }
     .configureEach { dependsOn(validateRelease) }
 
+/**
+ * Haelt kotlinx-serialization in den Instrumentierungstests zusammen - ausfuehrliche Begruendung
+ * in app-sim/build.gradle.kts. Kurz: Room liest die Schema-JSONs damit, und ein zu alter Kern
+ * laesst jeden Migrationstest mit `AbstractMethodError` scheitern, bevor er ueberhaupt anfaengt.
+ */
+configurations.matching { it.name.contains("AndroidTest") }.configureEach {
+    resolutionStrategy {
+        force("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+        force("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.8.1")
+    }
+}
+
 dependencies {
     // Gemeinsame Datenschicht und Alarmplanung, geteilt mit :app-sim - siehe core/build.gradle.kts
     implementation(project(":core"))
