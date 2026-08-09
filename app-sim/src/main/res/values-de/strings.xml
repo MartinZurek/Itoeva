@@ -343,6 +343,8 @@
     <string name="settings_library">Clips &amp; Schnappschüsse</string>
     <string name="settings_library_hint">%1$d Clips · %2$d Schnappschüsse</string>
     <string name="settings_library_empty">Noch nichts aufgenommen</string>
+    <string name="library_storage_used">Aufnahmen belegen %1$s</string>
+    <string name="library_storage_full">Zu wenig freier Speicher für eine weitere Aufnahme. Lösche zuerst ein paar der folgenden.</string>
     <string name="snapshot_share">Bild teilen</string>
     <string name="settings_timelapse_off">Aus</string>
     <string name="settings_timelapse_fast">Schnell</string>

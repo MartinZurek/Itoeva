@@ -80,6 +80,7 @@ import com.notime.glyphsim.matrix.AvatarClip
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarSpriteView
+import com.notime.glyphsim.matrix.ClipStorage
 import com.notime.glyphsim.matrix.ClockFrameSim
 import com.notime.glyphsim.matrix.ClockStyle
 import com.notime.glyphsim.matrix.MatrixAnimator
@@ -1349,6 +1350,21 @@ private fun ClipLibraryDialog(
 ) {
     val context = LocalContext.current
     var savedTo by remember { mutableStateOf<String?>(null) }
+
+    /*
+     * Beim Oeffnen der Galerie Bruchstuecke abgebrochener Aufnahmen entfernen (Phase 6.1).
+     *
+     * Hier und nicht beim App-Start: an dieser Stelle ist es sichtbar folgenlos, und bis dahin
+     * belegt ein Bruchstueck nur Platz. Siehe PlayClipRecorder.cleanPartials.
+     */
+    LaunchedEffect(Unit) {
+        if (PlayClipRecorder.cleanPartials(context) > 0) onChanged()
+    }
+
+    val belegt = remember(clips) { ClipStorage.formatBytes(ClipStorage.usedBytes(clips)) }
+    // 90 Sekunden ist die laengstmoegliche Aufnahme (siehe PlayClipRecorder.MAX_SECONDS).
+    val platzKnapp = remember(clips) { !PlayClipRecorder.hasRoomForRecording(context, 90) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -1362,6 +1378,21 @@ private fun ClipLibraryDialog(
             ) {
                 if (clips.isEmpty()) {
                     Text(stringResource(R.string.settings_library_empty))
+                } else {
+                    // Belegter Platz - die App loescht nichts von allein, also muss der Nutzer
+                    // sehen koennen, worueber er entscheidet.
+                    Text(
+                        stringResource(R.string.library_storage_used, belegt),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (platzKnapp) {
+                    Text(
+                        stringResource(R.string.library_storage_full),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
                 clips.forEach { file ->
                     val isPicture = file.extension.equals("png", true)

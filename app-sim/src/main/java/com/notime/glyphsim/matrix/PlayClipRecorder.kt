@@ -73,16 +73,64 @@ object PlayClipRecorder {
     ): File? {
         val frames = session.snapshot()
         if (frames.isEmpty()) return null
-        val target = File(clipDir(context), "tama-${System.currentTimeMillis()}.mp4")
-        return ClipEncoder.encode(
+        if (!hasRoomForRecording(context, frames.size / FPS)) return null
+
+        /*
+         * Kodiert wird unter `.part` und erst bei Erfolg umbenannt.
+         *
+         * Damit ist eine Datei mit `.mp4` per Konstruktion vollstaendig. Vorher entstand die
+         * Zieldatei sofort und wuchs waehrend des Kodierens; brach es ab - Speicher voll, Prozess
+         * beendet, Codec-Fehler -, blieb ein kaputter Film in der Galerie stehen, den nichts als
+         * solchen erkannte.
+         */
+        val partial = File(clipDir(context), "tama-${System.currentTimeMillis()}.mp4${ClipStorage.PARTIAL_SUFFIX}")
+        val encoded = ClipEncoder.encode(
             frameCount = frames.size,
             width = PlayClipRenderer.DEFAULT_WIDTH,
             height = PlayClipRenderer.DEFAULT_HEIGHT,
-            target = target
+            target = partial
         ) { index, into ->
             PlayClipRenderer.renderInto(frames[index], into)
             onProgress((index + 1).toFloat() / frames.size)
+        } ?: run {
+            partial.delete()
+            return null
         }
+
+        val target = File(encoded.path.removeSuffix(ClipStorage.PARTIAL_SUFFIX))
+        return if (encoded.renameTo(target)) {
+            target
+        } else {
+            // Umbenennen scheitert im app-eigenen Bereich praktisch nie. Wenn doch, ist ein
+            // Bruchstueck stehenzulassen die schlechtere Wahl als gar kein Ergebnis.
+            partial.delete()
+            null
+        }
+    }
+
+    /**
+     * Ob eine Aufnahme dieser Laenge noch in den freien Speicher passt.
+     *
+     * Die Rechnung steht in [ClipStorage] und ist dort ohne Geraet geprueft; hier steht nur die
+     * Abfrage beim Dateisystem.
+     */
+    fun hasRoomForRecording(context: Context, seconds: Int): Boolean =
+        ClipStorage.hasRoomFor(seconds, clipDir(context).usableSpace)
+
+    /** Belegter Platz aller Aufnahmen - fuer die Anzeige in der Galerie. */
+    fun usedBytes(context: Context): Long = ClipStorage.usedBytes(library(context))
+
+    /**
+     * Entfernt Bruchstuecke aus abgebrochenen Aufnahmen.
+     *
+     * Beim Blick in die Galerie aufzuraeumen statt beim App-Start: dort ist es sichtbar folgenlos,
+     * und ein Bruchstueck schadet bis dahin nichts ausser Platz zu belegen.
+     */
+    fun cleanPartials(context: Context): Int {
+        val bruchstuecke = clipDir(context).listFiles()?.toList().orEmpty()
+            .let { ClipStorage.partialFiles(it) }
+        bruchstuecke.forEach { runCatching { it.delete() } }
+        return bruchstuecke.size
     }
 
     /**

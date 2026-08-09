@@ -356,6 +356,9 @@
     <string name="settings_library">Clips &amp; snapshots</string>
     <string name="settings_library_hint">%1$d clips · %2$d snapshots</string>
     <string name="settings_library_empty">Nothing captured yet</string>
+    <!-- %1$s ist der belegte Platz, etwa "1,4 GB". -->
+    <string name="library_storage_used">Recordings use %1$s</string>
+    <string name="library_storage_full">Not enough free space for another recording. Delete a few below first.</string>
     <string name="snapshot_share">Share picture</string>
     <string name="settings_timelapse_off">Off</string>
     <string name="settings_timelapse_fast">Fast</string>
