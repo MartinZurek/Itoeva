@@ -1,7 +1,6 @@
 package com.notime.glyphsim.matrix
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -51,7 +50,18 @@ fun SimulatedMatrixView(
     Canvas(
         modifier = modifier
             .aspectRatio(1f)
-            .then(if (showPuck) Modifier.background(Color.Black) else Modifier)
+            // **Kein quadratischer Hintergrund - der Puck ist rund.**
+            //
+            // Hier lag eine schwarze Flaeche ueber dem GANZEN Zeichenbereich, also auch ueber den
+            // vier Ecken ausserhalb des runden Gehaeuses. Solange das Dock nur aus Schwarz
+            // bestand, war das unsichtbar. Seit dahinter eine Wohnung liegt, schob die Uhr beim
+            // Ziehen ein schwarzes Rechteck vor Moebel und Figur her - man sah die Kanten eines
+            // Vierecks, das es gar nicht geben sollte.
+            //
+            // Ersatzlos: Der Puck-Kreis darunter wird ohnehin gefuellt gezeichnet, die Flaeche
+            // hat also nie etwas beigetragen ausser diesen Ecken. Auf hellen Karten (Bibliothek,
+            // Einstellungen) sieht das runde Geraet jetzt sogar richtiger aus als ein
+            // schwarzes Kaestchen.
             .then(
                 if (contentDescription != null) {
                     Modifier.semantics { this.contentDescription = contentDescription }
