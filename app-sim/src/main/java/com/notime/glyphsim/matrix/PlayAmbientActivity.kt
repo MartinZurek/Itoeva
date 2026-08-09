@@ -52,8 +52,8 @@ object PlayAmbientActivity {
      */
     enum class Action { FLOURISH, WANDER, PERFORM, FIDGET }
 
-    fun nextAction(): Action {
-        val roll = Random.nextInt(ACTION_WEIGHT_TOTAL)
+    fun nextAction(random: Random = Random): Action {
+        val roll = random.nextInt(ACTION_WEIGHT_TOTAL)
         var remaining = roll
         remaining -= ACTION_WEIGHT_PERFORM
         if (remaining < 0) return Action.PERFORM
@@ -71,7 +71,7 @@ object PlayAmbientActivity {
      * ist es RICHTIG - und genau solche kleinen Treffer sind es, die den Eindruck erzeugen, dass
      * da jemand einen Tag durchlebt statt Posen abzuspielen.
      */
-    fun nextFidget(phase: DayPhase = currentDayPhase()): AvatarAnimations.Fidget {
+    fun nextFidget(phase: DayPhase = currentDayPhase(), random: Random = Random): AvatarAnimations.Fidget {
         val weights = when (phase) {
             // Wachwerden: viel Strecken und Gaehnen.
             DayPhase.MORNING -> mapOf(
@@ -101,7 +101,7 @@ object PlayAmbientActivity {
             )
         }
         val total = weights.values.sum()
-        var roll = Random.nextInt(total)
+        var roll = random.nextInt(total)
         for ((fidget, weight) in weights) {
             roll -= weight
             if (roll < 0) return fidget
@@ -128,8 +128,9 @@ object PlayAmbientActivity {
      */
     fun nextTopic(
         phase: DayPhase = currentDayPhase(),
-        boostedTopics: Set<AnimationType> = emptySet()
-    ): AnimationType = pickWeighted(combinedWeights(phase, boostedTopics))
+        boostedTopics: Set<AnimationType> = emptySet(),
+        random: Random = Random
+    ): AnimationType = pickWeighted(combinedWeights(phase, boostedTopics), random)
 
     /**
      * Grob am ueblichen Tagesrhythmus orientiert, nicht an einer festen Uhrzeit-Tabelle mit
@@ -204,10 +205,10 @@ object PlayAmbientActivity {
     /** Dieselbe einfache Gewichts-Auswahl wie in PlayModeRoll.pickWeighted - hier dupliziert
      *  statt geteilt, weil die beiden Stellen unterschiedliche Dinge gewichten (Level-Stufe vs.
      *  Tagesphase) und rein zufaellig denselben Algorithmus verwenden. */
-    private fun pickWeighted(weights: Map<AnimationType, Int>): AnimationType {
+    private fun pickWeighted(weights: Map<AnimationType, Int>, random: Random = Random): AnimationType {
         val total = weights.values.sum()
         if (total <= 0) return AnimationType.GENERAL
-        var roll = Random.nextInt(total)
+        var roll = random.nextInt(total)
         for ((topic, weight) in weights) {
             roll -= weight
             if (roll < 0) return topic

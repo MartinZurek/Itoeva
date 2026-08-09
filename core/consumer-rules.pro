@@ -5,9 +5,9 @@
 # ---------------------------------------------------------------------------------------------
 # Enums, die als NAME persistiert werden
 # ---------------------------------------------------------------------------------------------
-# AnimationType landet ueber data/Converters.kt als String in der Datenbank, CollisionMode als
-# String in den SharedPreferences - beide werden mit valueOf() zurueckgelesen. Benennt R8 die
-# Konstanten um (aus GENERAL wird a), findet valueOf("GENERAL") sie nicht mehr.
+# AnimationType landet ueber data/Converters.kt als String in der Datenbank und wird mit
+# valueOf() zurueckgelesen. Benennt R8 die Konstanten um (aus GENERAL wird a), findet
+# valueOf("GENERAL") sie nicht mehr.
 #
 # Besonders heimtueckisch: beide Lesestellen fangen den Fehler mit runCatching{} ab und fallen
 # auf einen Standardwert zurueck. Es gaebe also keinen Absturz - die Erinnerungen wuerden nur
@@ -26,7 +26,13 @@
 # Datenbank und ueberlebt App-Updates). Wird die Klasse umbenannt oder wegoptimiert, findet
 # WorkManager sie nicht mehr - der Watchdog liefe nie wieder, ausgerechnet das Sicherheitsnetz
 # gegen stille Ausfaelle. Der Konstruktor muss mit erhalten bleiben, er wird reflektiv aufgerufen.
--keep class com.notime.glyphcore.reminder.ReminderWatchdogWorker {
+#
+# Bewusst eine Regel fuer ALLE Worker des Kerns statt einer je Klasse: hier stand vorher nur der
+# Watchdog namentlich, und der zweite Worker (ReminderRescheduleWorker, plant nach Reboot und
+# App-Update alles neu) waere ohne eigenen Eintrag stillschweigend durchs Raster gefallen. Der
+# Fehler haette sich ausschliesslich im Release gezeigt, und zwar als "nach einem Neustart kommen
+# keine Erinnerungen mehr" - also genau da, wo er am teuersten ist.
+-keep class com.notime.glyphcore.reminder.**Worker {
     <init>(android.content.Context, androidx.work.WorkerParameters);
 }
 

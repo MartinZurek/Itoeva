@@ -3,11 +3,8 @@ package com.notime.glyphsim.reminder
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.notime.glyphcore.reminder.ReminderScheduler
+import com.notime.glyphcore.reminder.ReminderRescheduleWorker
 import com.notime.glyphsim.widget.GlyphClockWidgetProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Plant alle aktivierten Erinnerungen neu, wenn das System die bestehenden Alarme verworfen hat
@@ -41,14 +38,15 @@ class BootReceiver : BroadcastReceiver() {
         if (!relevant) return
 
         val appContext = context.applicationContext
+
+        // Der Widget-Takt ist ein einzelner AlarmManager-Aufruf und darf hier bleiben.
         GlyphClockWidgetProvider.scheduleNextTick(appContext)
-        val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                ReminderScheduler.rescheduleAll(appContext)
-            } finally {
-                pendingResult.finish()
-            }
-        }
+
+        // Das Neuplanen selbst NICHT: es oeffnet die Datenbank (nach einem Update womoeglich mit
+        // Migration) und setzt einen Alarm je Erinnerung. Dafuer sind die rund zehn Sekunden eines
+        // Empfaengers auf einem gerade hochfahrenden Geraet keine sichere Annahme, und ein Abbruch
+        // mittendrin liesse einen Teil der Erinnerungen ohne Alarm zurueck, ohne dass es je
+        // jemand erneut versucht. Siehe ReminderRescheduleWorker.
+        ReminderRescheduleWorker.enqueue(appContext)
     }
 }

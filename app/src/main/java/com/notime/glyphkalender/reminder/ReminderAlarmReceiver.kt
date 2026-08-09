@@ -4,12 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.notime.glyphcore.reminder.ReceiverWork
+import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphkalender.data.AppDatabase
 import com.notime.glyphkalender.glyph.ReminderGlyphService
-import com.notime.glyphcore.reminder.ReminderScheduler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Wird vom AlarmManager fuer einen Erinnerungs-Slot ausgeloest. Laedt die aktuelle
@@ -23,30 +21,27 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         val reminderId = intent.getLongExtra(EXTRA_REMINDER_ID, -1L)
         if (reminderId == -1L) return
 
+        // Klein genug fuer den Empfaenger und zu zeitkritisch fuer einen Worker - aber mit
+        // Zeitbudget und Fehlerbehandlung, siehe ReceiverWork.
         val appContext = context.applicationContext
-        val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val dao = AppDatabase.getInstance(appContext).glyphReminderDao()
-                val reminder = dao.getById(reminderId)
-                if (reminder == null) {
-                    Log.d(TAG, "Erinnerung id=$reminderId nicht mehr vorhanden, ignoriere Alarm")
-                    return@launch
-                }
-                Log.d(TAG, "Alarm empfangen: \"${reminder.label}\" (id=$reminderId)")
-                if (reminder.enabled) {
-                    ReminderGlyphService.start(
-                        appContext,
-                        reminder.label,
-                        reminder.animationType,
-                        reminder.libraryAnimationId,
-                        reminder.intervalMinutes
-                    )
-                }
-                ReminderScheduler.schedule(appContext, reminder)
-            } finally {
-                pendingResult.finish()
+        ReceiverWork.runBounded(goAsync(), TAG) {
+            val dao = AppDatabase.getInstance(appContext).glyphReminderDao()
+            val reminder = dao.getById(reminderId)
+            if (reminder == null) {
+                Log.d(TAG, "Erinnerung id=$reminderId nicht mehr vorhanden, ignoriere Alarm")
+                return@runBounded
             }
+            Log.d(TAG, "Alarm empfangen: \"${reminder.label}\" (id=$reminderId)")
+            if (reminder.enabled) {
+                ReminderGlyphService.start(
+                    appContext,
+                    reminder.label,
+                    reminder.animationType,
+                    reminder.libraryAnimationId,
+                    reminder.intervalMinutes
+                )
+            }
+            ReminderScheduler.schedule(appContext, reminder)
         }
     }
 

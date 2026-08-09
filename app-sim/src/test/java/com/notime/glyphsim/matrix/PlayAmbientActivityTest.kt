@@ -5,6 +5,7 @@ import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.random.Random
 
 /**
  * Tests fuer die autonomen Zwischen-Regungen des Play-Modus ([PlayAmbientActivity]) - reine
@@ -48,14 +49,36 @@ class PlayAmbientActivityTest {
         }
     }
 
+    /**
+     * SLEEP hat nachts das Gewicht 5 von insgesamt 9 - erwartet werden also rund 278 von 500.
+     *
+     * **Warum mit festem Startwert.** Vorher zog der Test aus der globalen Zufallsquelle und
+     * verlangte mehr als 250 Treffer. Das liegt etwa zweieinhalb Standardabweichungen unter dem
+     * Erwartungswert, scheitert also ungefaehr bei einem von 160 Laeufen - selten genug, um lange
+     * unbemerkt zu bleiben, haeufig genug, um die CI regelmaessig ohne echten Anlass rot zu
+     * faerben. Genau das ist einmal passiert (249 von 500).
+     *
+     * Mit einem festen Startwert ist das Ergebnis reproduzierbar: der Test misst jetzt die
+     * Gewichtung und nicht mehr das Glueck des Tages. Mehrere Startwerte, damit die Aussage nicht
+     * an einem einzelnen guenstigen haengt.
+     */
     @Test
     fun `nachts ist SLEEP das mit Abstand haeufigste Thema`() {
-        val counts = (1..500)
-            .map { PlayAmbientActivity.nextTopic(PlayAmbientActivity.DayPhase.NIGHT) }
-            .groupingBy { it }
-            .eachCount()
-        val sleepCount = counts[AnimationType.SLEEP] ?: 0
-        assertTrue("SLEEP kam nachts nur $sleepCount von 500 Mal vor", sleepCount > 250)
+        for (seed in listOf(1, 42, 12345, 987654321)) {
+            val random = Random(seed)
+            val counts = (1..500)
+                .map { PlayAmbientActivity.nextTopic(PlayAmbientActivity.DayPhase.NIGHT, random = random) }
+                .groupingBy { it }
+                .eachCount()
+            val sleepCount = counts[AnimationType.SLEEP] ?: 0
+            val haeufigstes = counts.maxByOrNull { it.value }?.key
+
+            assertEquals("Startwert $seed: haeufigstes Thema", AnimationType.SLEEP, haeufigstes)
+            assertTrue(
+                "Startwert $seed: SLEEP kam nur $sleepCount von 500 Mal vor (erwartet rund 278)",
+                sleepCount > 230
+            )
+        }
     }
 
     @Test

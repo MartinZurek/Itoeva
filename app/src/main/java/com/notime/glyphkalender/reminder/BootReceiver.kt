@@ -3,11 +3,8 @@ package com.notime.glyphkalender.reminder
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.notime.glyphcore.reminder.ReminderScheduler
+import com.notime.glyphcore.reminder.ReminderRescheduleWorker
 import com.notime.glyphcore.reminder.ReminderWatchdogWorker
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Plant alle aktivierten Erinnerungen neu, wenn das System die bestehenden Alarme verworfen hat
@@ -26,14 +23,8 @@ class BootReceiver : BroadcastReceiver() {
         )
         if (!relevant) return
 
-        val appContext = context.applicationContext
-        val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                ReminderScheduler.rescheduleAll(appContext)
-            } finally {
-                pendingResult.finish()
-            }
-        }
+        // Nicht im Empfaenger erledigen, sondern einstellen - die Begruendung steht bei
+        // ReminderRescheduleWorker und gilt hier genauso.
+        ReminderRescheduleWorker.enqueue(context.applicationContext)
     }
 }
