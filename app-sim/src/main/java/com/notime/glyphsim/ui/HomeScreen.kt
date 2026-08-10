@@ -672,9 +672,10 @@ fun HomeScreen(
             // Der Startbildschirm ist der Ort zum Einrichten und Nachsehen, nicht die Spielflaeche
             // - eine Fortschrittszeile zwischen Uhr und Avatar war schlicht im Weg.
 
-            // Der gewaehlte Avatar - nicht nur Deko: er bestimmt, WELCHER Erinnerungs-Satz
-            // gerade gilt (jeder Avatar hat seinen eigenen), und er ist hier - wie im
-            // Dock-Modus - das Ziel der Fuetter-Geste.
+            // Der gewaehlte Avatar - nicht nur Deko: er ist hier, wie im Dock-Modus, das Ziel der
+            // Fuetter-Geste, und sein Pflegebuch entscheidet ueber Stimmung und Spielstand (siehe
+            // PresentCompanion). Auf die Erinnerungsliste hat er seit Phase 4b keinen Einfluss
+            // mehr - die gehoert dem Nutzer (siehe RoutineOwner).
             val feedActionLabel = stringResource(R.string.a11y_feed_action)
             AvatarSpriteView(
                 frame = avatarFrame,

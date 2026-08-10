@@ -85,6 +85,50 @@ class HelpTextsTest {
         assertEquals("Diese Texte gibt es nur auf Deutsch", emptyList<String>(), onlyGerman)
     }
 
+    /**
+     * **Kein erklaerender Text darf behaupten, ein Modus lege die eigenen Erinnerungen still.**
+     *
+     * Seit Phase 3 gilt: die Routinen des Nutzers laufen IMMER. Der Spielmodus legt eine
+     * gewuerfelte Zeile obendrauf, der Uhr-Modus zeigt sie im Dock nur nicht an - stillgelegt
+     * werden sie ausschliesslich durch die ausdrueckliche Pause (siehe `ReminderPause`), und die
+     * ist bewusst zeitlich begrenzt.
+     *
+     * Genau diese Aenderung hat sechs Texte nachtraeglich falsch gemacht, ohne dass irgendetwas
+     * aufgefallen waere: "Deine eigenen ruhen so lange", "Statt deiner Erinnerungen wird eine
+     * ausgewuerfelt", "Nur Uhr - Erinnerungen ruhen". Das ist keine Ungenauigkeit, sondern die
+     * gefaehrlichste Sorte falscher Hilfe: Wer ihr glaubt, schaltet in einen Modus und rechnet
+     * anschliessend NICHT mehr mit Erinnerungen, die trotzdem kommen - oder umgekehrt.
+     *
+     * Geprueft wird an den Formulierungen, die diese Behauptung aufstellen, nicht an einer
+     * Wortliste: "ruhen" allein ist harmlos ("Du darfst jetzt ruhen"), erst in Verbindung mit den
+     * Erinnerungen wird es eine Zusage. Die Pausen-Texte sind ausgenommen - dort stimmt es.
+     */
+    @Test
+    fun `kein Modus behauptet, die eigenen Erinnerungen stillzulegen`() {
+        val behauptungen = listOf(
+            Regex("""Erinnerungen ruhen"""),
+            Regex("""eigenen ruhen"""),
+            Regex("""[Ss]tatt deiner Erinnerungen"""),
+            Regex("""übernehme ich .{0,20}die Erinnerungen""")
+        )
+        val erklaerend = names(de).filter {
+            (it.startsWith("assistant_intro") || it.startsWith("assistant_here") ||
+                it.startsWith("faq_a_") || it.startsWith("playmode_intro") ||
+                it == "watch_only_note") && !it.startsWith("pause")
+        }
+
+        for (name in erklaerend) {
+            val text = valueOf(de, name) ?: continue
+            for (behauptung in behauptungen) {
+                assertTrue(
+                    "$name behauptet, ein Modus lege die eigenen Erinnerungen still " +
+                        "(\"${behauptung.pattern}\") - seit Phase 3 tut das nur noch die Pause",
+                    !behauptung.containsMatchIn(text)
+                )
+            }
+        }
+    }
+
     @Test
     fun `die Hilfe verweist nicht mehr auf entfernte Bedienelemente`() {
         // Namentlich die drei, die es nicht mehr gibt: der Tagesstand-Streifen am oberen Rand,

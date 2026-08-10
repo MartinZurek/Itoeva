@@ -60,7 +60,7 @@
     <string name="settings_language">Language</string>
     <string name="settings_clock_design">Clock design</string>
     <string name="settings_avatar">Avatar</string>
-    <string name="settings_avatar_hint">Each avatar has its own set of reminders.</string>
+    <string name="settings_avatar_hint">Your reminders stay the same whoever you pick. Only the care log starts fresh – a new companion wasn\'t there for any of it yet.</string>
     <string name="settings_mood">Mood affects behaviour</string>
     <string name="settings_mood_hint">The avatar moves more sluggishly when reminders with a daily goal go unanswered – reminders left at “No goal” never affect this. Needs a few triggered reminders before anything changes – off while testing.</string>
     <string name="settings_crash_title">Crash report</string>
@@ -227,9 +227,9 @@
     <string name="assistant_menu_settings">⚙️  Settings</string>
     <string name="clip_signature_intro">And a few things that are just mine.</string>
     <string name="playmode_intro_title">Play mode</string>
-    <string name="playmode_intro_1">Want to play? Then I take over the reminders for a while.</string>
-    <string name="playmode_intro_2">Your own reminders rest meanwhile – they come back the moment you switch play off. Nothing of yours is lost.</string>
-    <string name="playmode_intro_3">Instead I show up on my own, at random moments that fit who I am. Feed me the same way as always: drag the clock onto me.</string>
+    <string name="playmode_intro_1">Want to play? Then I am here the whole time and live a day of my own.</string>
+    <string name="playmode_intro_2">Your own reminders keep running the whole time – play does not switch anything of yours off.</string>
+    <string name="playmode_intro_3">On top of them I show up on my own, at random moments that fit who I am. Feed me the same way as always: drag the clock onto me.</string>
     <string name="playmode_intro_4">Every feed earns XP and I level up. Everything else stays as you know it – clock, dock, widget.</string>
     <string name="playmode_start">Start play mode</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
@@ -442,18 +442,18 @@
     <string name="mode_reminder">Routine</string>
     <string name="mode_play">Play</string>
     <string name="mode_watch">Clock</string>
-    <string name="watch_only_note">Watch only – reminders are resting.</string>
+    <string name="watch_only_note">Watch only – the dock stays plain. Reminders keep running.</string>
 
     <!-- Die drei Modi -->
     <string name="faq_category_modes">The three modes</string>
     <string name="faq_q_modes">What are Clock, Routine and Play?</string>
     <string name="faq_a_modes">Three ways to run me, chosen top left. Clock: just the clock, nothing else. Routine: your own reminders – I show up when one is due. Play: I live in my own little world and go about my day. Each step to the right adds something.</string>
     <string name="faq_q_mode_watch">What does Clock mode do?</string>
-    <string name="faq_a_mode_watch">The dock shows the clock and nothing else – no me, no rooms. Reminders rest while it is on, because there would be no way to answer them without me there. Switch back to Routine and they carry on as before.</string>
+    <string name="faq_a_mode_watch">The dock shows the clock and nothing else – no me, no rooms. Your reminders keep running; you will just not see them here, because without me there would be no way to answer them. On the home screen and in the widget they show up as usual. Switch back to Routine and I am in the dock again too.</string>
     <string name="faq_q_mode_reminder">What does Routine mode do?</string>
     <string name="faq_a_mode_reminder">Your own reminders run. When one is due I turn up next to the clock – drag the clock onto me to say you have done it. That is the mode this app was built around.</string>
     <string name="faq_q_mode_play">What does Play mode do?</string>
-    <string name="faq_a_mode_play">I am there the whole time and live through a day of my own: I sleep, go to work, do the shopping, take a walk. Instead of your reminders, one is drawn at random – feeding it earns experience, coins and meals. Tap me and I will tell you how things stand.</string>
+    <string name="faq_a_mode_play">I am there the whole time and live through a day of my own: I sleep, go to work, do the shopping, take a walk. Your own reminders keep running as always – on top of them one is drawn at random, and feeding that earns experience, coins and meals. Tap me and I will tell you how things stand.</string>
     <string name="faq_q_mode_influence">Do my habits change what you do in Play mode?</string>
     <string name="faq_a_mode_influence">Yes, and that is the point of it. Whatever you have set yourself and not yet done today pulls me towards it – I reach for that more often on my own. Tap me and I will tell you what I am watching out for.</string>
 
@@ -471,9 +471,9 @@
     <string name="faq_a_talk">What is really there: what you have looked after today, how the week has gone, what you set yourself, and what is still open. I make nothing up – everything I say comes from your own data, and nothing leaves the phone for it.</string>
 
     <!-- Wo bin ich gerade? -->
-    <string name="assistant_here_watch">Right now you are in Clock mode – the dock shows nothing but the clock, and reminders are resting. Pick Routine top left and they carry on.</string>
+    <string name="assistant_here_watch">Right now you are in Clock mode – the dock stays plain, just the clock. Your reminders keep running; you will still see them on the home screen and in the widget. Pick Routine top left and I turn up in the dock again too.</string>
     <string name="assistant_here_reminder">Right now you are in Routine mode: your own reminders are running. When one is due I turn up beside the clock – drag the clock onto me to say you have done it.</string>
-    <string name="assistant_here_play">Right now you are in Play mode: I am there the whole time and live a day of my own. Instead of your reminders, one is drawn at random – feeding it earns experience, coins and meals.</string>
+    <string name="assistant_here_play">Right now you are in Play mode: I am there the whole time and live a day of my own. Your own reminders keep running as always – on top of them I turn up by myself now and then, and feeding that earns experience, coins and meals.</string>
     <string name="talk_q_here">What is going on here?</string>
     <string name="talk_a_here">I live here: I sleep, go to work, do the shopping, take a walk. Feed me and it earns experience, coins and a meal in the larder. Whatever you have set yourself and not yet done today pulls me towards it.</string>
 

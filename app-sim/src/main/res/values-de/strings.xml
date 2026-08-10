@@ -54,7 +54,7 @@
     <string name="settings_language">Sprache</string>
     <string name="settings_clock_design">Uhr-Design</string>
     <string name="settings_avatar">Avatar</string>
-    <string name="settings_avatar_hint">Jeder Avatar hat seinen eigenen Satz Erinnerungen.</string>
+    <string name="settings_avatar_hint">Deine Erinnerungen bleiben dieselben, egal wen du wählst. Nur das Pflegebuch fängt neu an – ein neues Wesen war bei nichts davon dabei.</string>
     <string name="settings_mood">Stimmung wirkt aufs Verhalten</string>
     <string name="settings_mood_hint">Der Avatar bewegt sich träger, wenn Erinnerungen mit einem Tagesziel unbeantwortet bleiben – Erinnerungen bei „Kein Ziel“ wirken sich nie darauf aus. Braucht einige ausgelöste Erinnerungen, bevor sich etwas ändert – zum Testen besser aus.</string>
     <string name="settings_crash_title">Absturzbericht</string>
@@ -213,9 +213,9 @@
     <string name="assistant_menu_settings">⚙️  Einstellungen</string>
     <string name="clip_signature_intro">Und ein paar Dinge, die nur mir gehören.</string>
     <string name="playmode_intro_title">Spielmodus</string>
-    <string name="playmode_intro_1">Lust zu spielen? Dann übernehme ich eine Weile die Erinnerungen.</string>
-    <string name="playmode_intro_2">Deine eigenen ruhen so lange – sie sind sofort wieder da, wenn du das Spiel ausschaltest. Es geht nichts von dir verloren.</string>
-    <string name="playmode_intro_3">Stattdessen tauche ich von allein auf, zu zufälligen Momenten, die zu mir passen. Füttern wie gewohnt: die Uhr auf mich ziehen.</string>
+    <string name="playmode_intro_1">Lust zu spielen? Dann bin ich die ganze Zeit da und lebe einen eigenen Tag.</string>
+    <string name="playmode_intro_2">Deine eigenen Erinnerungen laufen die ganze Zeit weiter – das Spiel schaltet nichts von dir ab.</string>
+    <string name="playmode_intro_3">Zusätzlich tauche ich von allein auf, zu zufälligen Momenten, die zu mir passen. Füttern wie gewohnt: die Uhr auf mich ziehen.</string>
     <string name="playmode_intro_4">Jede Fütterung bringt XP, und ich steige im Level. Alles andere bleibt, wie du es kennst – Uhr, Dock, Widget.</string>
     <string name="playmode_start">Spielmodus starten</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
@@ -426,18 +426,18 @@
     <string name="mode_reminder">Alltag</string>
     <string name="mode_play">Spiel</string>
     <string name="mode_watch">Uhr</string>
-    <string name="watch_only_note">Nur Uhr – Erinnerungen ruhen.</string>
+    <string name="watch_only_note">Nur Uhr – das Dock bleibt schlicht. Erinnerungen laufen weiter.</string>
 
     <!-- Die drei Modi -->
     <string name="faq_category_modes">Die drei Modi</string>
     <string name="faq_q_modes">Was sind Uhr, Alltag und Spiel?</string>
     <string name="faq_a_modes">Drei Arten, mich laufen zu lassen – oben links wählbar. Uhr: nur die Uhr, sonst nichts. Alltag: deine eigenen Erinnerungen, ich tauche auf, wenn eine fällig ist. Spiel: ich lebe in meiner kleinen Welt und gehe meinem Tag nach. Jeder Schritt nach rechts fügt etwas hinzu.</string>
     <string name="faq_q_mode_watch">Was macht der Uhr-Modus?</string>
-    <string name="faq_a_mode_watch">Das Dock zeigt nur die Uhr – kein Ich, keine Zimmer. Erinnerungen ruhen dabei, weil es ohne mich gar keinen Weg gäbe, sie zu beantworten. Zurück auf Alltag, und sie laufen weiter wie vorher.</string>
+    <string name="faq_a_mode_watch">Das Dock zeigt nur die Uhr – kein Ich, keine Zimmer. Deine Erinnerungen laufen weiter; du siehst sie hier nur nicht, weil es ohne mich keinen Weg gäbe, sie zu beantworten. Auf dem Startbildschirm und im Widget tauchen sie wie gewohnt auf. Zurück auf Alltag, dann bin ich auch im Dock wieder da.</string>
     <string name="faq_q_mode_reminder">Was macht der Alltag-Modus?</string>
     <string name="faq_a_mode_reminder">Deine eigenen Erinnerungen laufen. Wird eine fällig, tauche ich neben der Uhr auf – zieh die Uhr auf mich, um mir zu sagen, dass du es getan hast. Das ist der Modus, für den diese App gebaut wurde.</string>
     <string name="faq_q_mode_play">Was macht der Spiel-Modus?</string>
-    <string name="faq_a_mode_play">Ich bin die ganze Zeit da und lebe einen eigenen Tag: schlafen, arbeiten, einkaufen, spazieren. Statt deiner Erinnerungen wird eine ausgewürfelt – fütterst du sie, gibt das Erfahrung, Münzen und Mahlzeiten. Tipp mich an, dann erzähle ich, wie es steht.</string>
+    <string name="faq_a_mode_play">Ich bin die ganze Zeit da und lebe einen eigenen Tag: schlafen, arbeiten, einkaufen, spazieren. Deine eigenen Erinnerungen laufen weiter wie immer – zusätzlich wird eine ausgewürfelt, und fütterst du die, gibt das Erfahrung, Münzen und Mahlzeiten. Tipp mich an, dann erzähle ich, wie es steht.</string>
     <string name="faq_q_mode_influence">Beeinflussen meine Gewohnheiten, was du im Spiel tust?</string>
     <string name="faq_a_mode_influence">Ja, und darum geht es dabei. Was du dir vorgenommen und heute noch nicht geschafft hast, zieht mich – ich greife von selbst öfter danach. Tipp mich an, dann sage ich dir, worauf ich gerade achte.</string>
 
@@ -455,9 +455,9 @@
     <string name="faq_a_talk">Was wirklich da ist: worum du dich heute gekümmert hast, wie die Woche lief, was du dir vorgenommen hast und was noch offen ist. Ich denke mir nichts aus – alles kommt aus deinen eigenen Daten, und dafür verlässt nichts das Handy.</string>
 
     <!-- Wo bin ich gerade? -->
-    <string name="assistant_here_watch">Du bist gerade im Uhr-Modus – das Dock zeigt nur die Uhr, und die Erinnerungen ruhen. Wähl oben links Alltag, dann laufen sie weiter.</string>
+    <string name="assistant_here_watch">Du bist gerade im Uhr-Modus – das Dock bleibt schlicht, nur die Uhr. Deine Erinnerungen laufen trotzdem weiter; auf dem Startbildschirm und im Widget siehst du sie. Wähl oben links Alltag, dann tauche ich auch im Dock wieder auf.</string>
     <string name="assistant_here_reminder">Du bist gerade im Alltag-Modus: Deine eigenen Erinnerungen laufen. Wird eine fällig, tauche ich neben der Uhr auf – zieh die Uhr auf mich, um mir zu sagen, dass du es getan hast.</string>
-    <string name="assistant_here_play">Du bist gerade im Spiel-Modus: Ich bin die ganze Zeit da und lebe einen eigenen Tag. Statt deiner Erinnerungen wird eine ausgewürfelt – fütterst du sie, gibt das Erfahrung, Münzen und Mahlzeiten.</string>
+    <string name="assistant_here_play">Du bist gerade im Spiel-Modus: Ich bin die ganze Zeit da und lebe einen eigenen Tag. Deine eigenen Erinnerungen laufen weiter wie immer – zusätzlich melde ich mich ab und zu von selbst, und dafür gibt es Erfahrung, Münzen und Mahlzeiten.</string>
     <string name="talk_q_here">Was passiert hier eigentlich?</string>
     <string name="talk_a_here">Hier wohne ich: schlafen, arbeiten, einkaufen, spazieren. Fütterst du mich, gibt das Erfahrung, Münzen und eine Mahlzeit im Vorrat. Und was du dir vorgenommen und heute noch nicht geschafft hast, zieht mich dorthin.</string>
 
