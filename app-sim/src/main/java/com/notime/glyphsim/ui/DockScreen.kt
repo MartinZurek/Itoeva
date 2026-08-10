@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -205,6 +206,11 @@ fun DockScreen(
         val maxWidthPx = with(density) { maxWidth.toPx() }
         val maxHeightPx = with(density) { maxHeight.toPx() }
 
+        // Fuer die Zieh-Geste der Uhr, die nur einmal startet und die Werte sonst einfrieren
+        // wuerde - siehe die ausfuehrliche Begruendung dort.
+        val currentWidthPx = rememberUpdatedState(maxWidthPx)
+        val currentHeightPx = rememberUpdatedState(maxHeightPx)
+
         // **Auch die Uhr muss beim Drehen mitkommen.**
         //
         // Ihre Position steht in Pixeln und wird beim ersten Aufbau einmal aus dem gemerkten
@@ -295,6 +301,8 @@ fun DockScreen(
         val floorYPx = floorYCells * sceneCellPx
 
         var avatar by remember { mutableStateOf<AvatarState?>(null) }
+        /** Ob gerade ein Gang laeuft - siehe das Nachfuehren des Bodens weiter unten. */
+        var avatarWalking by remember { mutableStateOf(false) }
         var clockAnimJob by remember { mutableStateOf<Job?>(null) }
         var avatarIdleJob by remember { mutableStateOf<Job?>(null) }
         // Rein optische Verschiebung waehrend langer Erinnerungen (Burn-in-Schutz, siehe unten) -
@@ -421,6 +429,10 @@ fun DockScreen(
                 return false
             }
             avatarIdleJob?.cancel()
+            // Waehrend eines Gangs darf niemand sonst die Figur versetzen - siehe das
+            // Nachfuehren des Bodens weiter unten.
+            avatarWalking = true
+            try {
             coroutineScope {
                 val gait = launch {
                     val walk = AvatarAnimations.walkSequence(current.species)
@@ -438,6 +450,9 @@ fun DockScreen(
                     avatar = avatar?.copy(offset = Offset(value, destination.y))
                 }
                 gait.cancel()
+            }
+            } finally {
+                avatarWalking = false
             }
             return true
         }
@@ -985,6 +1000,59 @@ fun DockScreen(
                 sizeDp = worldAvatarSizeDp,
                 offset = next ?: current.offset
             )
+        }
+
+        // ---- Der Horizont wandert weiter, nachdem die Figur schon steht ----
+        //
+        // **Der Fehler, der sich als "die Figur schwebt ueber der Landschaft" zeigte.**
+        //
+        // Die Bodenhoehe haengt am ORT und an der Tageszeit (siehe PlayScene.floorFraction) und
+        // wird ueber FLOOR_SHIFT_MS weich nachgefuehrt - drinnen 0.80, draussen nachts 0.93. Das
+        // sind bis zu dreizehn Prozent der Bildhoehe.
+        //
+        // Die Position der Figur steht dagegen in PIXELN und wird einmal berechnet, wenn ein
+        // Schritt beginnt. Beim Gang nach draussen faellt dieser Zeitpunkt mitten in die laufende
+        // Bodenbewegung: Sie taucht 600ms nach dem Ortswechsel wieder auf, der Boden ist dann
+        // erst zur Haelfte unten, und dort bleibt sie stehen. Der Rest der Bewegung findet ohne
+        // sie statt.
+        //
+        // Deshalb nur "manchmal": Von drinnen in den Laden aendert sich gar nichts (beide 0.80),
+        // von drinnen nach draussen am Abend oder nachts dagegen sehr viel. Wer tagsueber
+        // ausprobiert, sieht nichts.
+        //
+        // **Warum das die frueher ausgeschlossene Abhaengigkeit doch braucht.** Der Effekt fuer
+        // Groessenaenderungen weiter oben hoert ausdruecklich NICHT auf [floorYPx], mit der
+        // Begruendung, er wuerde sich an jeder laufenden Geh-Animation reiben. Das stimmt - und
+        // genau deshalb steht hier ein eigener, der die Bedingung mitbringt, die dort fehlte: Er
+        // ruehrt die Figur nur an, wenn sie NICHT geht. Waehrend eines Gangs schreibt die
+        // Animation die Position ohnehin Bild fuer Bild; danach setzt dieser Effekt sie wieder
+        // auf den Boden, und weil der Boden sich weich bewegt, sinkt sie mit ihm statt zu
+        // springen.
+        LaunchedEffect(floorYPx, avatarWalking, occupiedStation, renderedPlace) {
+            val current = avatar
+            if (!playMode || current == null || avatarWalking || floorYPx <= 0f) {
+                return@LaunchedEffect
+            }
+            val avatarPx = with(density) { current.sizeDp.dp.toPx() }
+            val station = occupiedStation
+            val next = if (station != null) {
+                // Wer auf einer Requisite sitzt, sitzt auch nach dem Nachfuehren dort - die
+                // Moebel haengen an denselben Bodenzellen.
+                PlayScene.stationSpot(
+                    renderedPlace, station, sceneWidthCells, floorYCells, current.species
+                )?.let { spot -> stationOffset(spot, avatarPx, maxWidthPx, current.species) }
+            } else {
+                // Waagerecht bleibt alles, wie es ist - es hat sich nur der Boden bewegt.
+                Offset(
+                    current.offset.x,
+                    AvatarFooting.topFor(
+                        floorYPx, avatarPx, AvatarBodies.forSpecies(current.species).groundRow()
+                    )
+                )
+            }
+            if (next != null && next != current.offset) {
+                avatar = current.copy(offset = next)
+            }
         }
 
         // Play-Modus-Einstieg/-Ausstieg: der Avatar ist hier - anders als im normalen Dock -
@@ -1675,12 +1743,22 @@ fun DockScreen(
                         detectTapGestures(onTap = { onExit() })
                     }
                     .pointerInput(Unit) {
-                        // maxWidth/maxHeight/density sind fuer die Lebensdauer dieses
-                        // Screens praktisch konstant (keine Rotation waehrend des
-                        // Andockens vorgesehen) - deshalb hier direkt verwendet statt
-                        // ueber rememberUpdatedState nachgezogen. clockSizeDp/clockOffset
-                        // sind State-gestuetzt und liefern beim Lesen/Schreiben immer den
-                        // aktuellen Wert, auch aus dieser einmalig gestarteten Coroutine.
+                        // **Die Bildschirmmasse muessen nachgezogen werden.**
+                        //
+                        // Hier stand: "fuer die Lebensdauer dieses Screens praktisch konstant
+                        // (keine Rotation waehrend des Andockens vorgesehen)". Die Annahme war
+                        // falsch - das Drehen ist eine Einstellung (siehe OrientationPrefs), und
+                        // im Dock-Modus liegt das Geraet gerade dann auf dem Tisch, wenn man es
+                        // dreht.
+                        //
+                        // `pointerInput(Unit)` startet genau einmal und schliesst die damaligen
+                        // Werte ein. Nach dem Drehen ins Querformat klemmte die Geste deshalb
+                        // weiter gegen die HOCHFORMAT-Breite: Die Uhr liess sich nur bis dorthin
+                        // schieben und blieb dann stehen, als waere der Bildschirm dort zu Ende.
+                        //
+                        // clockSizeDp/clockOffset waren nie betroffen - sie sind State-gestuetzt
+                        // und liefern beim Lesen immer den aktuellen Wert. Genau deshalb ist der
+                        // Fehler nur den Massen passiert, die als einfache Zahlen danebenstanden.
                         detectTransformGestures(panZoomLock = false) { _, pan, zoom, _ ->
                             val newSize = (clockSizeDp * zoom)
                                 .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.MAX_SIZE_DP)
@@ -1694,8 +1772,8 @@ fun DockScreen(
                                 clockSizeDp = newSize
                             }
                             val clockPxNow = with(density) { newSize.dp.toPx() }
-                            val boundX = (with(density) { maxWidth.toPx() } - clockPxNow).coerceAtLeast(0f)
-                            val boundY = (with(density) { maxHeight.toPx() } - clockPxNow).coerceAtLeast(0f)
+                            val boundX = (currentWidthPx.value - clockPxNow).coerceAtLeast(0f)
+                            val boundY = (currentHeightPx.value - clockPxNow).coerceAtLeast(0f)
                             clockOffset = Offset(
                                 (clockOffset.x + pan.x).coerceIn(0f, boundX),
                                 (clockOffset.y + pan.y).coerceIn(0f, boundY)
