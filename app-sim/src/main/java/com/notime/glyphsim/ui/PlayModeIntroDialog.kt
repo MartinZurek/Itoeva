@@ -50,9 +50,9 @@ fun PlayModeIntroDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = DialogPalette.SheetBackground,
-        titleContentColor = DialogPalette.TextPrimary,
-        textContentColor = DialogPalette.TextPrimary,
+        containerColor = TamaPalette.SheetBackground,
+        titleContentColor = TamaPalette.TextPrimary,
+        textContentColor = TamaPalette.TextPrimary,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -92,5 +92,5 @@ fun PlayModeIntroDialog(
 // mit dem Kommentar "Wie im Avatar-Assistenten" direkt darueber. Solange sich nichts aendert,
 // faellt das nicht auf; aendert jemand eine der beiden, sehen die Dialoge unterschiedlich aus,
 // ohne dass ein Test oder ein Blick ins Diff das zeigen wuerde. Dieselbe Begruendung wie bei
-// DialogPalette, nur eine Ebene hoeher: Sie sind jetzt dort `internal` und werden von hier
+// TamaPalette, nur eine Ebene hoeher: Sie sind jetzt dort `internal` und werden von hier
 // mitbenutzt.

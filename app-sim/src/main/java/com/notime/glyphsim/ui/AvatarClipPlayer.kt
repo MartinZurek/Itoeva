@@ -322,7 +322,7 @@ fun AvatarClipPlayer(clip: AvatarClip, onFinished: () -> Unit) {
                 if (textRes != null) {
                     Text(
                         text = stringResource(textRes),
-                        color = Color(0xFFF1EEE6),
+                        color = TamaPalette.TextPrimary,
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center
                     )
@@ -334,7 +334,7 @@ fun AvatarClipPlayer(clip: AvatarClip, onFinished: () -> Unit) {
             // weiterer Icon-Import fuer einen einzigen Knopf lohnt sich hier nicht.
             Text(
                 "✕",
-                color = Color(0xFF9A968E),
+                color = TamaPalette.TextMuted,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.TopEnd)

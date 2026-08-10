@@ -4,10 +4,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.notime.glyphsim.ui.TamaPalette
 
 /**
- * Feste dunkle Palette - dieselben Werte, die Startbildschirm, Pflegebuch und Assistent bereits
- * von Hand verwenden.
+ * Das Material-Theme der App - **einer der Abnehmer von [TamaPalette], nicht eine zweite Quelle.**
+ *
+ * Hier standen dieselben fuenf Werte ein zweites Mal, mit dem Kommentar "dieselben Werte, die
+ * Startbildschirm, Pflegebuch und Assistent bereits von Hand verwenden". Die Doppelung war also
+ * bekannt und blieb trotzdem stehen - vermutlich, weil die Sammlung `DialogPalette` hiess und
+ * damit nach etwas klang, das ein Theme nichts angeht. Sie heisst jetzt nach der App, und hier
+ * wird sie gelesen statt abgeschrieben.
  *
  * **Warum kein Dynamic Color mehr:** die Farben kamen bis eben aus dem Hintergrundbild des
  * Nutzers (Material You). Das ergab je nach Bild einen goldenen oder rosa Untergrund, auf dem
@@ -29,14 +35,12 @@ private val DarkColors = darkColorScheme(
     onSecondary = Color(0xFF2A303B),
     tertiary = Color(0xFFEAB8CD),
     onTertiary = Color(0xFF3D2430),
-    // Der Grund, auf dem die Matrix sitzt - praktisch schwarz, aber nicht ganz, damit sich
-    // Flaechen wie Karten und Dialoge minimal abheben koennen.
-    background = Color(0xFF0A0A0B),
-    onBackground = Color(0xFFF1EEE6),
-    surface = Color(0xFF101012),
-    onSurface = Color(0xFFF1EEE6),
-    surfaceVariant = Color(0xFF1A1A1D),
-    onSurfaceVariant = Color(0xFF9A968E),
+    background = TamaPalette.Background,
+    onBackground = TamaPalette.TextPrimary,
+    surface = TamaPalette.SheetBackground,
+    onSurface = TamaPalette.TextPrimary,
+    surfaceVariant = TamaPalette.RowBackground,
+    onSurfaceVariant = TamaPalette.TextMuted,
     outline = Color(0xFF3A3A40),
     error = Color(0xFFFF8A80),
     onError = Color(0xFF3A0906)

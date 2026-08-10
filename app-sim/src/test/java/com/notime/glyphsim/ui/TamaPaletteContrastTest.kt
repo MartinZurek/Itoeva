@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import androidx.compose.ui.graphics.Color
+import java.io.File
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.pow
@@ -23,7 +25,7 @@ import kotlin.math.pow
  * fett). AAA verlangt 7:1 bzw. 4,5:1. Geprueft wird hier gegen AA - das ist die Stufe, auf die
  * sich auch der Play Store und die gaengigen Pruefwerkzeuge beziehen.
  */
-class DialogPaletteContrastTest {
+class TamaPaletteContrastTest {
 
     /**
      * Relative Helligkeit nach WCAG. Die Kanaele werden erst linearisiert - der sRGB-Wert einer
@@ -70,8 +72,8 @@ class DialogPaletteContrastTest {
     fun `Lauftext auf dem Dialogblatt erfuellt AA`() {
         assertMindestens(
             "TextPrimary auf SheetBackground",
-            DialogPalette.TextPrimary,
-            DialogPalette.SheetBackground,
+            TamaPalette.TextPrimary,
+            TamaPalette.SheetBackground,
             AA_NORMAL
         )
     }
@@ -80,14 +82,14 @@ class DialogPaletteContrastTest {
     fun `Lauftext auf Zeilen und Sprechblasen erfuellt AA`() {
         assertMindestens(
             "TextPrimary auf RowBackground",
-            DialogPalette.TextPrimary,
-            DialogPalette.RowBackground,
+            TamaPalette.TextPrimary,
+            TamaPalette.RowBackground,
             AA_NORMAL
         )
         assertMindestens(
             "TextPrimary auf BubbleBackground",
-            DialogPalette.TextPrimary,
-            DialogPalette.BubbleBackground,
+            TamaPalette.TextPrimary,
+            TamaPalette.BubbleBackground,
             AA_NORMAL
         )
     }
@@ -101,20 +103,20 @@ class DialogPaletteContrastTest {
     fun `Nebentext erfuellt AA auf allen drei Untergruenden`() {
         assertMindestens(
             "TextMuted auf SheetBackground",
-            DialogPalette.TextMuted,
-            DialogPalette.SheetBackground,
+            TamaPalette.TextMuted,
+            TamaPalette.SheetBackground,
             AA_NORMAL
         )
         assertMindestens(
             "TextMuted auf RowBackground",
-            DialogPalette.TextMuted,
-            DialogPalette.RowBackground,
+            TamaPalette.TextMuted,
+            TamaPalette.RowBackground,
             AA_NORMAL
         )
         assertMindestens(
             "TextMuted auf BubbleBackground",
-            DialogPalette.TextMuted,
-            DialogPalette.BubbleBackground,
+            TamaPalette.TextMuted,
+            TamaPalette.BubbleBackground,
             AA_NORMAL
         )
     }
@@ -125,7 +127,7 @@ class DialogPaletteContrastTest {
      */
     @Test
     fun `Zeilen heben sich vom Blatt ab`() {
-        val wert = ratio(DialogPalette.RowBackground, DialogPalette.SheetBackground)
+        val wert = ratio(TamaPalette.RowBackground, TamaPalette.SheetBackground)
         // Bewusst KEINE AA-Schwelle: zwei benachbarte Dunkelgrautoene sollen sich unterscheiden
         // lassen, nicht kontrastieren. Der Test haelt nur fest, dass sie ueberhaupt verschieden
         // sind - waeren sie gleich, waere die Zeilengliederung unsichtbar.
@@ -139,14 +141,71 @@ class DialogPaletteContrastTest {
     @Test
     fun `Verhaeltnisse zum Nachlesen`() {
         val paare = listOf(
-            "TextPrimary  / Sheet " to ratio(DialogPalette.TextPrimary, DialogPalette.SheetBackground),
-            "TextPrimary  / Row   " to ratio(DialogPalette.TextPrimary, DialogPalette.RowBackground),
-            "TextPrimary  / Bubble" to ratio(DialogPalette.TextPrimary, DialogPalette.BubbleBackground),
-            "TextMuted    / Sheet " to ratio(DialogPalette.TextMuted, DialogPalette.SheetBackground),
-            "TextMuted    / Row   " to ratio(DialogPalette.TextMuted, DialogPalette.RowBackground),
-            "TextMuted    / Bubble" to ratio(DialogPalette.TextMuted, DialogPalette.BubbleBackground)
+            "TextPrimary  / Sheet " to ratio(TamaPalette.TextPrimary, TamaPalette.SheetBackground),
+            "TextPrimary  / Row   " to ratio(TamaPalette.TextPrimary, TamaPalette.RowBackground),
+            "TextPrimary  / Bubble" to ratio(TamaPalette.TextPrimary, TamaPalette.BubbleBackground),
+            "TextMuted    / Sheet " to ratio(TamaPalette.TextMuted, TamaPalette.SheetBackground),
+            "TextMuted    / Row   " to ratio(TamaPalette.TextMuted, TamaPalette.RowBackground),
+            "TextMuted    / Bubble" to ratio(TamaPalette.TextMuted, TamaPalette.BubbleBackground)
         )
         paare.forEach { (name, wert) -> println("Kontrast %s : %.2f:1".format(name, wert)) }
         assertTrue(paare.all { it.second >= AA_GROSS })
+    }
+
+    /**
+     * Die neuen Werte muessen dieselbe Schwelle halten wie die alten - sonst waere das
+     * Zusammenlegen ein Rueckschritt.
+     */
+    @Test
+    fun `auch Grund und Antwortzeile erfuellen AA`() {
+        assertMindestens(
+            "TextPrimary auf Background",
+            TamaPalette.TextPrimary,
+            TamaPalette.Background,
+            AA_NORMAL
+        )
+        assertMindestens(
+            "TextPrimary auf ChoiceBackground",
+            TamaPalette.TextPrimary,
+            TamaPalette.ChoiceBackground,
+            AA_NORMAL
+        )
+    }
+
+    /**
+     * **Kein zweiter Satz derselben Farben.**
+     *
+     * Genau daraus ist dieser Test entstanden: Die Werte standen wortgleich in fuenf Dateien,
+     * spaeter ein zweites Mal im Material-Theme - dort sogar mit dem Kommentar, dass es dieselben
+     * seien. Solange sie uebereinstimmen, faellt nichts auf; aendert jemand eine Seite, sehen die
+     * Bildschirme unterschiedlich aus, und weder ein Test noch ein Blick ins Diff zeigt es.
+     *
+     * Geprueft wird an den Quelltexten selbst, weil sich anders nicht feststellen laesst, ob
+     * jemand eine Farbe abgeschrieben statt referenziert hat. Ausgenommen ist die Palette selbst -
+     * dort MUESSEN die Werte stehen - und alles, was eine eigene Bedeutung hat: Themenfarben,
+     * Wetter, Spielwelt. Es geht um die Grundfarben der Oberflaeche, nicht um jede Farbe im Code.
+     */
+    @Test
+    fun `die Grundfarben stehen nur in der Palette`() {
+        val palette = File("src/main/java/com/notime/glyphsim/ui/TamaPalette.kt").readText()
+        val grundfarben = Regex("""Color\(0x[0-9A-Fa-f]{8}\)""")
+            .findAll(palette).map { it.value }.toSet()
+
+        val gefunden = mutableListOf<String>()
+        File("src/main/java/com/notime/glyphsim").walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .filterNot { it.name == "TamaPalette.kt" }
+            .forEach { datei ->
+                val text = datei.readText()
+                grundfarben.forEach { farbe ->
+                    if (text.contains(farbe)) gefunden += "${datei.name}: $farbe"
+                }
+            }
+
+        assertEquals(
+            "Diese Dateien schreiben eine Grundfarbe ab, statt TamaPalette zu benutzen",
+            emptyList<String>(),
+            gefunden.sorted()
+        )
     }
 }

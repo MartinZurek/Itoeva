@@ -510,7 +510,7 @@ fun HomeScreen(
                 Text(
                     stringResource(R.string.onboarding_tap_clock),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFF1EEE6),
+                    color = TamaPalette.TextPrimary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .clip(
@@ -519,7 +519,7 @@ fun HomeScreen(
                                 bottomEnd = 16.dp, bottomStart = 4.dp
                             )
                         )
-                        .background(Color(0xFF1E1E22))
+                        .background(TamaPalette.BubbleBackground)
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                 )
                 Spacer(Modifier.height(10.dp))
@@ -662,7 +662,7 @@ fun HomeScreen(
                 Text(
                     stringResource(R.string.onboarding_tap_me),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFF1EEE6),
+                    color = TamaPalette.TextPrimary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .clip(
@@ -671,7 +671,7 @@ fun HomeScreen(
                                 bottomEnd = 16.dp, bottomStart = 4.dp
                             )
                         )
-                        .background(Color(0xFF1E1E22))
+                        .background(TamaPalette.BubbleBackground)
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                 )
                 Spacer(Modifier.height(10.dp))

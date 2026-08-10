@@ -100,13 +100,13 @@ private fun MemoryRow(memory: Memory) {
             Text(
                 text = memory.describe(),
                 style = MaterialTheme.typography.bodyMedium,
-                color = DialogPalette.TextPrimary,
+                color = TamaPalette.TextPrimary,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = datum,
                 style = MaterialTheme.typography.bodySmall,
-                color = DialogPalette.TextMuted
+                color = TamaPalette.TextMuted
             )
         }
     }

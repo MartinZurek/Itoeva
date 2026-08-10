@@ -98,9 +98,9 @@ fun ReminderImportDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = DialogPalette.SheetBackground,
-        titleContentColor = DialogPalette.TextPrimary,
-        textContentColor = DialogPalette.TextPrimary,
+        containerColor = TamaPalette.SheetBackground,
+        titleContentColor = TamaPalette.TextPrimary,
+        textContentColor = TamaPalette.TextPrimary,
         title = { Text(stringResource(R.string.import_title)) },
         text = {
             Column(
@@ -118,7 +118,7 @@ fun ReminderImportDialog(
                     Text(
                         stringResource(R.string.import_step_1),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DialogPalette.TextMuted
+                        color = TamaPalette.TextMuted
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { copyToClipboard(context, promptTemplate) }) {
@@ -134,7 +134,7 @@ fun ReminderImportDialog(
                     Text(
                         stringResource(R.string.import_step_2),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DialogPalette.TextMuted
+                        color = TamaPalette.TextMuted
                     )
                 }
                 OutlinedTextField(
@@ -175,7 +175,7 @@ fun ReminderImportDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(DialogPalette.RowBackground)
+                            .background(TamaPalette.RowBackground)
                             .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
@@ -199,7 +199,7 @@ fun ReminderImportDialog(
                                 reminder.intervalMinutes
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = DialogPalette.TextMuted
+                            color = TamaPalette.TextMuted
                         )
                         // Zurechtgerueckte Werte werden ausgewiesen statt still uebernommen -
                         // sonst legte die App etwas an, das der Nutzer so nie bestaetigt hat.

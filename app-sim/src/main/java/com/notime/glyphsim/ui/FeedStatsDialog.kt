@@ -188,9 +188,9 @@ fun FeedStatsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = DialogPalette.SheetBackground,
-        titleContentColor = DialogPalette.TextPrimary,
-        textContentColor = DialogPalette.TextPrimary,
+        containerColor = TamaPalette.SheetBackground,
+        titleContentColor = TamaPalette.TextPrimary,
+        textContentColor = TamaPalette.TextPrimary,
         // Avatar und Name standen hier zusaetzlich zur AvatarCommentarySection ganz unten -
         // dieselbe Figur zweimal im selben Dialog. Wessen Buch das ist, zeigt jetzt allein die
         // Figur dort unten (die Spezies IST das Profil, siehe AvatarSpeciesPrefs - ein Blick
@@ -212,7 +212,7 @@ fun FeedStatsDialog(
                 Text(
                     stringResource(chapter.labelRes),
                     style = MaterialTheme.typography.bodySmall,
-                    color = DialogPalette.TextMuted
+                    color = TamaPalette.TextMuted
                 )
             }
         },
@@ -247,7 +247,7 @@ fun FeedStatsDialog(
                         Text(
                             stringResource(R.string.stats_goals_title, reached, goalRows.size),
                             style = MaterialTheme.typography.labelLarge,
-                            color = DialogPalette.TextMuted
+                            color = TamaPalette.TextMuted
                         )
                         // Klarstellung, weil das hier IMMER "heute" ist, unabhaengig vom
                         // Zeitraum-Umschalter oben drueber - ohne den Hinweis wirkte das wie ein
@@ -255,7 +255,7 @@ fun FeedStatsDialog(
                         Text(
                             stringResource(R.string.stats_goals_today_note),
                             style = MaterialTheme.typography.labelSmall,
-                            color = DialogPalette.TextMuted
+                            color = TamaPalette.TextMuted
                         )
                         goalRows.forEach { GoalRowView(it) }
                     }
@@ -265,14 +265,14 @@ fun FeedStatsDialog(
                     Text(
                         stringResource(R.string.stats_empty, stringResource(species.labelRes)),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DialogPalette.TextMuted
+                        color = TamaPalette.TextMuted
                     )
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             stringResource(R.string.stats_breakdown_title),
                             style = MaterialTheme.typography.labelLarge,
-                            color = DialogPalette.TextMuted
+                            color = TamaPalette.TextMuted
                         )
                         val maxCount = breakdown.maxOf { it.count }.coerceAtLeast(1)
                         breakdown.forEach { row ->
@@ -318,7 +318,7 @@ fun FeedStatsDialog(
                         onClick = { confirmReset = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(stringResource(R.string.stats_reset), color = DialogPalette.TextMuted)
+                        Text(stringResource(R.string.stats_reset), color = TamaPalette.TextMuted)
                     }
                 }
             }
@@ -383,7 +383,7 @@ private fun AvatarCommentarySection(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(DialogPalette.RowBackground)
+            .background(TamaPalette.RowBackground)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -415,13 +415,13 @@ private fun AvatarCommentarySection(
                 Text(
                     stringResource(moodTextRes),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DialogPalette.TextPrimary
+                    color = TamaPalette.TextPrimary
                 )
                 tipIndex?.let { index ->
                     Text(
                         stringResource(TAP_TIPS[index]),
                         style = MaterialTheme.typography.bodySmall,
-                        color = DialogPalette.TextMuted
+                        color = TamaPalette.TextMuted
                     )
                 }
             }
@@ -446,10 +446,10 @@ private fun AvatarCommentarySection(
                 Text(
                     stringResource(textRes, suggestion.label),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DialogPalette.TextPrimary,
+                    color = TamaPalette.TextPrimary,
                     modifier = Modifier.weight(1f)
                 )
-                Text("›", style = MaterialTheme.typography.titleMedium, color = DialogPalette.TextMuted)
+                Text("›", style = MaterialTheme.typography.titleMedium, color = TamaPalette.TextMuted)
             }
         }
     }
@@ -473,7 +473,7 @@ private fun GoalRowView(row: GoalRow) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(DialogPalette.RowBackground)
+            .background(TamaPalette.RowBackground)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -486,7 +486,7 @@ private fun GoalRowView(row: GoalRow) {
             Text(
                 row.label,
                 style = MaterialTheme.typography.bodyLarge,
-                color = DialogPalette.TextPrimary,
+                color = TamaPalette.TextPrimary,
                 maxLines = 1,
                 modifier = Modifier.weight(1f)
             )
@@ -533,7 +533,7 @@ private fun HeroCount(total: Int) {
             total.toString(),
             fontSize = 52.sp,
             fontWeight = FontWeight.Light,
-            color = DialogPalette.TextPrimary
+            color = TamaPalette.TextPrimary
         )
         Text(
             " " + if (total == 1) {
@@ -542,7 +542,7 @@ private fun HeroCount(total: Int) {
                 stringResource(R.string.stats_meals_other)
             },
             style = MaterialTheme.typography.titleMedium,
-            color = DialogPalette.TextMuted,
+            color = TamaPalette.TextMuted,
             modifier = Modifier.padding(bottom = 10.dp)
         )
     }
@@ -574,7 +574,7 @@ private fun BreakdownRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(DialogPalette.RowBackground)
+            .background(TamaPalette.RowBackground)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -596,7 +596,7 @@ private fun BreakdownRow(
                 Text(
                     label,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = DialogPalette.TextPrimary,
+                    color = TamaPalette.TextPrimary,
                     maxLines = 1
                 )
                 // Bewusst NUR die Zahl der Ausloesungen, keine Quote: eine Erinnerung im
@@ -606,7 +606,7 @@ private fun BreakdownRow(
                 Text(
                     stringResource(R.string.stats_triggered_count, row.triggered),
                     style = MaterialTheme.typography.labelSmall,
-                    color = DialogPalette.TextMuted
+                    color = TamaPalette.TextMuted
                 )
             }
             Text(

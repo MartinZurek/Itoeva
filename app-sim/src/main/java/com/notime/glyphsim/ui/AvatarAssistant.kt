@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -84,9 +85,9 @@ fun AvatarAssistantDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = DialogPalette.SheetBackground,
-        titleContentColor = DialogPalette.TextPrimary,
-        textContentColor = DialogPalette.TextPrimary,
+        containerColor = TamaPalette.SheetBackground,
+        titleContentColor = TamaPalette.TextPrimary,
+        textContentColor = TamaPalette.TextPrimary,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -154,33 +155,41 @@ fun AvatarAssistantDialog(
  * `internal` statt dateiprivat: Sie und [Choice] sind die gemeinsame Sprache aller
  * Assistenten-Abschnitte, und die liegen inzwischen in mehreren Dateien (siehe
  * [AssistantMemories]). Ein zweiter Nachbau anderswo waere derselbe Fehler wie fuenf Kopien
- * derselben Farbwerte - siehe DialogPalette.
+ * derselben Farbwerte - siehe TamaPalette.
  */
 @Composable
 internal fun Bubble(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyLarge,
-        color = DialogPalette.TextPrimary,
+        color = TamaPalette.TextPrimary,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp))
-            .background(DialogPalette.BubbleBackground)
+            .background(TamaPalette.BubbleBackground)
             .padding(horizontal = 14.dp, vertical = 12.dp)
     )
 }
 
-/** Eine antippbare Antwort - optisch als das, was der Nutzer sagen wuerde. Siehe [Bubble]. */
+/**
+ * Eine antippbare Antwort - optisch als das, was der Nutzer sagen wuerde. Siehe [Bubble].
+ *
+ * [MIN_TOUCH_TARGET_DP] ist keine Gestaltung, sondern eine Vorgabe der Bedienungshilfen. Aus
+ * Schriftgroesse und Innenabstand ergaben sich hier gut 44dp - knapp darunter, und das faellt
+ * niemandem auf, der es nicht misst. `defaultMinSize` hebt nur an, wo zu wenig ist, und laesst
+ * laengere, mehrzeilige Antworten unangetastet.
+ */
 @Composable
 internal fun Choice(text: String, onClick: () -> Unit) {
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,
-        color = DialogPalette.TextPrimary,
+        color = TamaPalette.TextPrimary,
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = MIN_TOUCH_TARGET_DP.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2A2A30))
+            .background(TamaPalette.ChoiceBackground)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 12.dp)
     )
