@@ -69,10 +69,30 @@ Beides wird in `Application.onCreate()` gesetzt (`GlyphKalenderApp` / `GlyphSimA
 einer Activity: Alarm- und Boot-Empfänger laufen auch in Prozessen, in denen nie eine Activity
 existiert hat.
 
-**Profile statt Avatare im Kern:** In `:app-sim` hat jeder Avatar seinen eigenen Satz
-Erinnerungen. Im Kern heißt das neutral „Profil" (`GlyphReminder.profileId`,
-`ActiveProfilePrefs`) – `:app` steuert die echte Matrix an, kennt keine Avatare und bleibt beim
-Standardprofil. `AvatarSpeciesPrefs` in `:app-sim` hält beide Seiten synchron.
+**Profile statt Avatare im Kern:** Erinnerungen gehören zu genau einem Profil
+(`GlyphReminder.profileId`, `ActiveProfilePrefs`). Beide Apps bleiben beim Standardprofil –
+`:app` steuert die echte Matrix an und kennt keine Avatare, und in `:app-sim` gehören die
+Routinen seit Phase 4b dem Nutzer statt dem Avatar (`ui/RoutineOwner.kt`).
+
+**Eine Id, zwei Bedeutungen – auseinandergehalten.** Bis dahin hatte jeder Avatar seinen eigenen
+Satz Erinnerungen, weil `AvatarSpeciesPrefs` den Avatarnamen als aktive Profil-Id in den Kern
+spiegelte. Damit beantwortete ein einziger Wert zwei verschiedene Fragen, und ein Avatarwechsel –
+äußerlich reine Personalisierung – tauschte die komplette Routinenliste aus. Seit Phase 4 stehen
+die beiden Fragen getrennt im Code:
+
+| Frage | Wer antwortet | Woran hängt es |
+|---|---|---|
+| Wem gehören die Routinen? | `ui/RoutineOwner.kt` | fester Wert, für die ganze App derselbe |
+| Wessen Pflegebuch, Stimmung, Spielstand? | `ui/PresentCompanion.kt` | das gerade gewählte Wesen |
+
+Die Regel in einem Satz: **die Routinen gehören dir, die Erinnerungen daran dem Wesen, mit dem du
+sie geteilt hast.** Ein Avatarwechsel lässt die Liste unberührt; das neue Wesen startet mit leerem
+Pflegebuch, weil es bei nichts davon dabei war.
+
+`GlyphSimApp` setzt `ActiveProfilePrefs` bei jedem Prozessstart auf das Standardprofil zurück.
+Planer und Watchdog lesen nicht `RoutineOwner`, sondern den Kern direkt – stünde dort noch ein
+Avatarname von früher, plante der Kern für ein leeres Profil und es käme nie wieder eine
+Erinnerung.
 
 ## Aufbau
 
@@ -367,7 +387,7 @@ eine echte `Migration`.
 
 ## Play Mode (`:app-sim`)
 
-Ein Spielmodus je Avatar: **der Nutzer richtet hier nichts ein.** Statt selbst gestellter
+**Der Nutzer richtet hier nichts ein.** Statt selbst gestellter
 Erinnerungen feuert eine einzelne, von der App verwaltete Erinnerung zu zufälligen Zeitpunkten,
 deren Thema und Intervall zum Charakter des jeweiligen Avatars passen. Gefüttert wird sie wie
 jede andere (Uhr auf den Avatar ziehen); jede Fütterung zahlt auf XP/Level ein, der Avatar
@@ -411,10 +431,11 @@ Spiel-Animationen auch im Widget und im Dock-Modus erscheinen und dort gefütter
 deshalb kein Zusatzaufwand, sondern ergibt sich von selbst.
 
 **Wo die Spiel-Erinnerung bewusst ausgeblendet wird**, weil sie keine Einstellung des Nutzers ist:
-in der bearbeitbaren Liste (`GlyphReminderViewModel.reminders`), bei den Zählungen für den
-Kopieren-Dialog und beim Kopieren selbst (`GlyphReminderRepository.copyProfile` überspringt sie in
-beide Richtungen – mitkopiert hätte das Zielprofil sonst zwei davon, die unabhängig voneinander
-weiterwürfeln).
+in der bearbeitbaren Liste (`GlyphReminderViewModel.reminders`) und beim Übertragen eines Satzes
+(`GlyphReminderRepository.copyProfile` überspringt sie in beide Richtungen – mitkopiert hätte das
+Zielprofil sonst zwei davon, die unabhängig voneinander weiterwürfeln). `copyProfile` war bis
+Phase 4b die Nutzerfunktion „Satz eines anderen Avatars übernehmen"; seit es nur noch einen Satz
+gibt, ist es das Werkzeug der Zusammenlegung in `AppDatabaseMigrations`.
 
 **Getrennte Buchführung.** `AvatarFeedEvent.isPlayMode` trennt Spiel- von Alltags-Fütterungen, und
 die Auswertungen fragen gezielt nach einem der beiden Sätze:
@@ -435,11 +456,11 @@ Einrichten und Nachsehen, nicht die Spielfläche.
 
 Die Umsetzung besteht aus drei Teilen:
 
-- **Markierung:** `GlyphReminder.isPlayMode` kennzeichnet die eine Zeile je Avatar-Profil. Sie
-  läuft immer mit `dailyGoal = NO_GOAL` und geht dadurch nie in die Stimmungsberechnung ein
+- **Markierung:** `GlyphReminder.isPlayMode` kennzeichnet die eine Zeile beim Routinen-Besitzer.
+  Sie läuft immer mit `dailyGoal = NO_GOAL` und geht dadurch nie in die Stimmungsberechnung ein
   (`AvatarMoodSnapshot` filtert ohnehin auf `dailyGoal > 0`) – der Spielmodus kann den Avatar
   also nicht trüben. `GlyphReminderDao.countForProfile` schließt sie aus, sonst hielte
-  `seedIfEmpty` einen frischen Avatar für schon eingerichtet und legte nie die
+  `seedIfEmpty` einen leeren Bestand für schon eingerichtet und legte nie die
   Standard-Erinnerungen an.
 - **Würfeln nach Spielplan:** `matrix/PlayGamePlan.kt` gibt je Avatar vor, was überhaupt in Frage
   kommt und wie wahrscheinlich es ist; `matrix/PlayModeRoll.kt` würfelt darin. Eingehängt über
@@ -470,7 +491,7 @@ Die Umsetzung besteht aus drei Teilen:
   liest sich nicht als seltener Charakter, sondern als kaputte Funktion; genau das war der erste
   Eindruck. Aus demselben Grund zieht `PlayModeViewModel.pullFirstTriggerForward` den allerersten
   Slot auf die nächste volle Minute vor, statt ihn auf dem regulären Raster liegen zu lassen.
-- **Fortschritt:** `AvatarPlayState` (eine Zeile je Profil: `xp`, `startedAtMillis`,
+- **Fortschritt:** `AvatarPlayState` (eine Zeile je Wesen: `xp`, `startedAtMillis`,
   `lastSeenLevel`). `ReminderTrigger.show()` schreibt `isPlayMode` ins `AvatarFeedEvent` mit,
   `AvatarFeeding.logFeedEvent()` vergibt daraufhin XP (`ui/PlayModeXp.kt`). Das Level wird
   **immer** aus `xp` abgeleitet und nie gespeichert, damit beide nicht auseinanderlaufen können;
@@ -564,21 +585,27 @@ Einstellung stillschweigend zurück. `SettingsCatalogTest` hält jeden Namen fes
 
 ### Room
 
-Zwei getrennte Datenbanken, beide auf Version 19. Der gemeinsame Kern liefert die Entities, die
+Zwei getrennte Datenbanken: `:app-sim` auf Version 20, `:app` auf 19. Der gemeinsame Kern liefert die Entities, die
 `@Database`-Klasse bleibt pro App (siehe „Module").
 
 | Tabelle | In | Schlüssel | Bemerkung |
 |---|---|---|---|
-| `glyph_reminders` | beide | `id` (auto) | `profileId` bindet an den Avatar, `isPlayMode` markiert die eine vom Spielmodus verwaltete Zeile |
+| `glyph_reminders` | beide | `id` (auto) | `profileId` ist in beiden Apps das Standardprofil (siehe `RoutineOwner`), `isPlayMode` markiert die eine vom Spielmodus verwaltete Zeile |
 | `library_animations` | beide | `id` (auto) | Abgleich der mitgelieferten über `label` |
 | `builtin_animation_selection` | beide | `animationType` | An/Aus je eingebautem Typ |
 | `avatar_feed_events` | nur `:app-sim` | `id` (auto) | Entsteht beim **Auslösen**; `fedAtMillis` erst bei Reaktion |
 | `avatar_play_state` | nur `:app-sim` | `profileId` | `xp`, `lastSeenLevel`, `startedAtMillis` |
 
 Beziehungen bestehen **ohne Fremdschlüssel**: `avatar_feed_events.reminderId` zeigt auf
-`glyph_reminders.id`, `profileId` verbindet Erinnerungen, Ereignisse und Spielstand. Eine gelöschte
-Erinnerung lässt ihre Ereignisse also stehen — gewollt, das Pflegebuch soll nicht rückwirkend
-schrumpfen.
+`glyph_reminders.id`. Eine gelöschte Erinnerung lässt ihre Ereignisse also stehen — gewollt, das
+Pflegebuch soll nicht rückwirkend schrumpfen.
+
+`profileId` bedeutet dabei **nicht überall dasselbe**: in `glyph_reminders` der Routinen-Besitzer
+(Standardprofil), in `avatar_feed_events` und `avatar_play_state` das Wesen. Die Migration 19 → 20
+hat die Routinen zusammengelegt und die Pflegebücher bewusst stehen lassen – dort bleiben deshalb
+Zeilen zurück, deren `reminderId` es nicht mehr gibt. „So oft hast du reagiert" stimmt weiterhin,
+nur der Titel dahinter ist nicht mehr auflösbar; die Alternative wäre gewesen, Geschichte zu
+löschen, um eine Verknüpfung zu retten.
 
 ### SharedPreferences
 

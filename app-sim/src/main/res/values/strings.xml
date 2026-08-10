@@ -184,7 +184,6 @@
     <string name="reminder_play_preview">Play preview</string>
     <string name="reminder_days">Days of week</string>
     <string name="reminder_days_every">Every day</string>
-    <string name="reminder_days_none">no reminders</string>
     <string name="reminder_time_window">Time window</string>
     <string name="reminder_from">From %1$s</string>
     <string name="reminder_to">To %1$s</string>
@@ -203,7 +202,6 @@
     <string name="reminder_open_label">open %1$s</string>
 
     <!-- Erinnerungen von einem anderen Avatar uebernehmen -->
-    <string name="reminders_copy">Copy</string>
     <!-- Pausen-Steuerung (Phase 3): der ehrliche Ersatz dafuer, dass frueher der Spielmodus die Erinnerungen nebenbei aussetzte. -->
     <string name="pause_action">Pause</string>
     <string name="pause_one_hour">For one hour</string>
@@ -211,15 +209,6 @@
     <!-- %1$s ist eine Uhrzeit, z. B. "15:20". -->
     <string name="pause_active">Reminders are paused until %1$s</string>
     <string name="pause_resume">Resume now</string>
-    <string name="reminders_copy_title">Copy reminders</string>
-    <string name="reminders_copy_explainer">Copies another avatar\'s set of reminders to %1$s. The source avatar stays unchanged.</string>
-    <string name="reminders_copy_append">Add to existing</string>
-    <string name="reminders_copy_replace">Replace existing</string>
-    <string name="reminders_copy_append_hint">The copies are added to the existing ones.</string>
-    <string name="reminders_copy_replace_hint">The reminders of %1$s will be deleted.</string>
-    <string name="reminders_copy_current">current avatar</string>
-    <string name="reminders_copy_count_one">reminder</string>
-    <string name="reminders_copy_count_other">reminders</string>
 
     <!-- Kollisionen -->
 

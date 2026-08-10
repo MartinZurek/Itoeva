@@ -23,15 +23,23 @@ import org.junit.runner.RunWith
 import java.time.DayOfWeek
 
 /**
- * **Charakterisierungstests fuer Avatarwechsel und Erinnerungsbesitz — Phase 1b.**
+ * **Avatarwechsel und Erinnerungsbesitz - vorher und nachher.**
  *
- * Halten fest, was heute gilt: **jeder Avatar hat seinen eigenen Satz Erinnerungen.** Die Profil-Id
- * im gemeinsamen Kern *ist* der Avatarname (`AvatarSpeciesPrefs.profileId(species) = species.name`),
- * beides ist damit untrennbar aneinander gebunden.
+ * Angelegt als Charakterisierungstest in Phase 1b: er hielt fest, dass jeder Avatar seinen eigenen
+ * Satz Erinnerungen hat und die Profil-Id im Kern der Avatarname IST. Das war Problem 3 der
+ * Produktanalyse - eine rein optische Personalisierung aenderte unerwartet die praktische
+ * Konfiguration.
  *
- * Genau diese Bindung loest Phase 4 auf - deshalb muss vorher festgeschrieben sein, was sie heute
- * bewirkt. Problem 3 der Produktanalyse lautet: eine rein optische Personalisierung aendert
- * unerwartet die praktische Konfiguration. Diese Tests zeigen, in welcher Form.
+ * Phase 4b hat diese Bindung aufgeloest. Die Tests sind deshalb umgeschrieben, und zwar
+ * absichtlich nicht geloescht: Wo vorher die alte Zusage stand, steht jetzt die neue, und in der
+ * Doku daneben, was sich geaendert hat. Ein Test, der beim Umbau angepasst werden MUSS, macht die
+ * Aenderung zu einer sichtbaren Entscheidung - genau dafuer war er da.
+ *
+ * ## Was jetzt gilt
+ *
+ * - Die Routinen gehoeren dem Nutzer ([RoutineOwner]), unter einer festen Profil-Id.
+ * - Das Wesen bestimmt Aussehen, Charakter - und sein Pflegebuch ([PresentCompanion]).
+ * - Der Avatarwechsel ruehrt die Erinnerungsliste nicht mehr an.
  *
  * ## Zwei Datenbanken
  *
@@ -71,143 +79,170 @@ class AvatarProfileCharacterizationTest {
         profileId = profileId
     )
 
-    // --- Die Kopplung Avatar <-> Profil --------------------------------------------------------
+    // --- Die aufgeloeste Kopplung --------------------------------------------------------------
 
     /**
-     * Die Profil-Id IST der Avatarname. Diese Gleichsetzung ist der Kern von Problem 3 - und die
-     * Stelle, die Phase 4 aufloest.
+     * **Der Kern des Umbaus.** Der Routinen-Besitzer ist fuer jedes Wesen derselbe.
+     *
+     * Vorher stand hier das Gegenteil: `dieProfilIdIstDerAvatarname` hielt fest, dass
+     * `AvatarSpeciesPrefs.profileId(species) == species.name` die Id ist, unter der Erinnerungen
+     * stehen. Diese Gleichsetzung gibt es weiterhin - sie beantwortet jetzt aber nur noch die
+     * Frage nach dem Pflegebuch (siehe unten), nicht mehr die nach den Erinnerungen.
      */
     @Test
-    fun dieProfilIdIstDerAvatarname() {
-        AvatarSpecies.entries.forEach { species ->
-            assertEquals(species.name, AvatarSpeciesPrefs.profileId(species))
+    fun derRoutinenBesitzerIstFuerAlleWesenDerselbe() {
+        val ids = AvatarSpecies.entries.map { species ->
+            AvatarSpeciesPrefs.set(context, species)
+            RoutineOwner.current(context)
         }
+
+        assertEquals(
+            "Ein Avatarwechsel darf den Routinen-Besitzer nicht mehr veraendern",
+            1,
+            ids.toSet().size
+        )
+        assertEquals(ActiveProfilePrefs.DEFAULT_PROFILE_ID, ids.first())
     }
 
     /**
-     * Der Kern kennt keine Avatare, nur Profile. Ein Avatarwechsel muss die aktive Profil-Id im
-     * Kern nachziehen - sonst planten Alarm-Empfaenger und Planer weiterhin fuer den alten.
+     * **Die Falle, die hier lauert.** Der gemeinsame Kern liest nicht [RoutineOwner], sondern
+     * [ActiveProfilePrefs] - Planer und Watchdog laufen aus kalt gestarteten Prozessen und kennen
+     * die Avatar-Schicht gar nicht.
+     *
+     * Vorher spiegelte [AvatarSpeciesPrefs] den Avatarnamen dorthin (`einAvatarwechselZiehtDie…`).
+     * Genau das darf jetzt nicht mehr passieren: stuende dort "GLOOP", waehrend die Erinnerungen
+     * unter dem Standardprofil liegen, plante der Kern fuer ein leeres Profil - es kaeme nie
+     * wieder eine Erinnerung, und niemand wuerde die Ursache in einem Einstellungswert suchen.
      */
     @Test
-    fun einAvatarwechselZiehtDieProfilIdImKernNach() {
+    fun einAvatarwechselRuehrtDieProfilIdImKernNichtMehrAn() {
+        ActiveProfilePrefs.set(context, ActiveProfilePrefs.DEFAULT_PROFILE_ID)
+
         AvatarSpeciesPrefs.set(context, AvatarSpecies.GLOOP)
-        assertEquals("GLOOP", ActiveProfilePrefs.get(context))
+        assertEquals(ActiveProfilePrefs.DEFAULT_PROFILE_ID, ActiveProfilePrefs.get(context))
 
         AvatarSpeciesPrefs.set(context, AvatarSpecies.FENNEC)
-        assertEquals("FENNEC", ActiveProfilePrefs.get(context))
-    }
-
-    // --- Erinnerungen gehoeren dem Avatar, nicht dem Nutzer ------------------------------------
-
-    /**
-     * **Das Kernverhalten, das Phase 4 aendern wird.**
-     *
-     * Erinnerungen sind an ihr Profil gebunden. Ein Avatarwechsel zeigt damit einen voellig
-     * anderen Satz - was der Nutzer als "meine Erinnerungen sind weg" erlebt, obwohl nichts
-     * geloescht wurde.
-     */
-    @Test
-    fun jederAvatarSiehtNurSeineEigenenErinnerungen() = runBlocking {
-        repository.add(reminder("Trinken", "PUFFLING"))
-        repository.add(reminder("Bewegen", "PUFFLING"))
-        repository.add(reminder("Lesen", "GLOOP"))
-
-        val puffling = repository.observeForProfile("PUFFLING").first()
-        val gloop = repository.observeForProfile("GLOOP").first()
-
-        assertEquals(setOf("Trinken", "Bewegen"), puffling.map { it.label }.toSet())
-        assertEquals(setOf("Lesen"), gloop.map { it.label }.toSet())
-    }
-
-    /**
-     * Ein frisch gewaehlter Avatar startet nicht leer, sondern bekommt die Vorgaben. Nach Phase 4
-     * gaebe es diesen Moment nicht mehr - der Nutzer haette einen Satz, der ihm gehoert.
-     */
-    @Test
-    fun einNeuerAvatarBekommtDieVorgaben() = runBlocking {
-        val angelegt = repository.seedIfEmpty("WYRMLING")
-
-        assertTrue("Ein frisches Profil muss Vorgaben bekommen", angelegt.isNotEmpty())
-        assertTrue("Die Vorgaben gehoeren dem neuen Profil", angelegt.all { it.profileId == "WYRMLING" })
-
-        // Ein zweiter Aufruf legt nichts nach - sonst verdoppelten sich die Vorgaben bei jedem
-        // Wechsel hin und zurueck.
-        assertTrue(repository.seedIfEmpty("WYRMLING").isEmpty())
-    }
-
-    /**
-     * Erinnerungen eines nicht gewaehlten Avatars bleiben bestehen - sie ruhen nur. Das ist der
-     * Grund, warum ein Wechsel zurueck alles wiederbringt, und die Grundlage jeder Migration in
-     * Phase 4: es gibt nichts zu retten, was nicht noch da waere.
-     */
-    @Test
-    fun dieErinnerungenEinesRuhendenAvatarsBleibenErhalten() = runBlocking {
-        repository.add(reminder("Trinken", "PUFFLING"))
-        repository.seedIfEmpty("GLOOP")
-
-        val pufflingDanach = repository.observeForProfile("PUFFLING").first()
+        AvatarSpeciesPrefs.get(context)
         assertEquals(
-            "Der Wechsel darf am ruhenden Profil nichts aendern",
-            listOf("Trinken"),
-            pufflingDanach.map { it.label }
+            "Auch das Lesen darf nichts mehr in den Kern spiegeln",
+            ActiveProfilePrefs.DEFAULT_PROFILE_ID,
+            ActiveProfilePrefs.get(context)
         )
     }
 
-    // --- Die Spiel-Zeile ist ebenfalls profilgebunden -------------------------------------------
-
     /**
-     * Jeder Avatar hat hoechstens EINE Spiel-Erinnerung, und sie gehoert ihm allein. Bei einer
-     * Zusammenlegung in Phase 4 muss entschieden sein, was mit mehreren davon geschieht - sie
-     * duerfen nicht nebeneinander bestehen bleiben, sonst wuerfeln zwei unabhaengig weiter.
+     * Die Zuordnung Wesen -> Profil-Id gibt es weiterhin, aber sie steht jetzt fuer das
+     * **Pflegebuch**: Fuetter-Ereignisse, Stimmung und Spielstand (siehe [PresentCompanion]).
      */
     @Test
-    fun jederAvatarHatHoechstensEineEigeneSpielZeile() = runBlocking {
+    fun dieAvatarIdBenenntJetztDasPflegebuch() {
+        AvatarSpecies.entries.forEach { species ->
+            AvatarSpeciesPrefs.set(context, species)
+            assertEquals(species.name, PresentCompanion.profileId(context))
+        }
+    }
+
+    // --- Erinnerungen gehoeren dem Nutzer ------------------------------------------------------
+
+    /**
+     * **Was der Nutzer davon merkt.** Alle Erinnerungen stehen unter einer Id, also sieht er nach
+     * einem Avatarwechsel dieselbe Liste.
+     *
+     * Vorher hiess dieser Test `jederAvatarSiehtNurSeineEigenenErinnerungen` und beschrieb genau
+     * das Gegenteil - "meine Erinnerungen sind weg", obwohl nichts geloescht wurde.
+     */
+    @Test
+    fun alleErinnerungenStehenUnterDemselbenBesitzer() = runBlocking {
+        val besitzer = RoutineOwner.current(context)
+        repository.add(reminder("Trinken", besitzer))
+        repository.add(reminder("Bewegen", besitzer))
+
+        AvatarSpeciesPrefs.set(context, AvatarSpecies.GLOOP)
+        val nachDemWechsel = repository.observeForProfile(RoutineOwner.current(context)).first()
+
+        assertEquals(
+            "Der Wechsel darf die Liste nicht veraendern",
+            setOf("Trinken", "Bewegen"),
+            nachDemWechsel.map { it.label }.toSet()
+        )
+    }
+
+    /**
+     * Die Vorgaben entstehen genau einmal - beim allerersten Start, nicht mehr bei jedem neuen
+     * Avatar. Frueher bekam jeder frisch gewaehlte Avatar einen eigenen Vorgabensatz; genau
+     * dadurch sammelten sich die Saetze an, die die Migration jetzt zusammenlegen muss.
+     */
+    @Test
+    fun dieVorgabenEntstehenNurEinmal() = runBlocking {
+        val besitzer = RoutineOwner.current(context)
+        val angelegt = repository.seedIfEmpty(besitzer)
+
+        assertTrue("Ein leerer Bestand muss Vorgaben bekommen", angelegt.isNotEmpty())
+        assertTrue("Die Vorgaben gehoeren dem Nutzer", angelegt.all { it.profileId == besitzer })
+        assertTrue("Ein zweiter Aufruf legt nichts nach", repository.seedIfEmpty(besitzer).isEmpty())
+    }
+
+    // --- Die Spiel-Zeile ------------------------------------------------------------------------
+
+    /**
+     * Es gibt genau EINE Spiel-Erinnerung, und sie gehoert dem Routinen-Besitzer. Ihr Inhalt
+     * richtet sich nach dem anwesenden Wesen (siehe `PlayModeRoll`), ihre Existenz nicht.
+     *
+     * Der Vorgaenger dieses Tests hielt fest, dass jeder Avatar eine eigene bekommt - genau die
+     * Zeilen, die `migration19To20KeepsExactlyOnePlayReminder` jetzt einsammelt.
+     */
+    @Test
+    fun esGibtGenauEineSpielZeile() = runBlocking {
+        val besitzer = RoutineOwner.current(context)
         val vorlage = reminder("Spiel", "egal").copy(isPlayMode = true)
 
-        val a = repository.ensurePlayReminder("PUFFLING", vorlage)
-        val b = repository.ensurePlayReminder("PUFFLING", vorlage)
-        val c = repository.ensurePlayReminder("GLOOP", vorlage)
+        val a = repository.ensurePlayReminder(besitzer, vorlage)
+        val b = repository.ensurePlayReminder(besitzer, vorlage)
 
         assertEquals("Zweimal anfordern darf nur eine Zeile ergeben", a.id, b.id)
-        assertTrue("Ein anderer Avatar bekommt eine eigene", a.id != c.id)
-        assertNotNull(db.glyphReminderDao().getPlayReminderForProfile("PUFFLING"))
-        assertNotNull(db.glyphReminderDao().getPlayReminderForProfile("GLOOP"))
+        assertNotNull(db.glyphReminderDao().getPlayReminderForProfile(besitzer))
     }
 
     /**
      * Die Spiel-Zeile taucht in der Liste des Nutzers nicht auf - sie ist keine Einstellung,
-     * sondern wird vom Spielmodus selbst verwaltet. Beim Zusammenlegen darf sie deshalb nicht wie
-     * eine Nutzer-Erinnerung behandelt werden.
+     * sondern wird vom Spielmodus selbst verwaltet.
      */
     @Test
     fun dieSpielZeileZaehltNichtAlsEigeneErinnerung() = runBlocking {
-        repository.ensurePlayReminder("HOOTLET", reminder("Spiel", "egal").copy(isPlayMode = true))
+        val besitzer = RoutineOwner.current(context)
+        repository.ensurePlayReminder(besitzer, reminder("Spiel", "egal").copy(isPlayMode = true))
 
-        val eigene = db.glyphReminderDao().getUserRemindersForProfile("HOOTLET")
-        assertTrue("Die Spiel-Zeile gehoert nicht zu den eigenen Erinnerungen", eigene.isEmpty())
-
-        // Und sie taeuscht die Vorgaben-Entscheidung nicht: das Profil gilt weiter als leer.
-        assertTrue(repository.seedIfEmpty("HOOTLET").isNotEmpty())
+        assertTrue(
+            "Die Spiel-Zeile gehoert nicht zu den eigenen Erinnerungen",
+            db.glyphReminderDao().getUserRemindersForProfile(besitzer).isEmpty()
+        )
+        // Und sie taeuscht die Vorgaben-Entscheidung nicht: der Bestand gilt weiter als leer.
+        assertTrue(repository.seedIfEmpty(besitzer).isNotEmpty())
     }
 
-    // --- Kopieren zwischen Avataren -------------------------------------------------------------
+    // --- Das Werkzeug der Zusammenlegung --------------------------------------------------------
 
     /**
-     * Der heutige Weg, einen Satz zu uebernehmen: bewusst und auf Wunsch. Phase 4 ersetzt ihn
-     * durch einen gemeinsamen Satz - der Test haelt fest, was dabei verlorenginge.
+     * `copyProfile` war bis Phase 4b die Nutzerfunktion "Satz eines anderen Avatars uebernehmen".
+     * Der Dialog dazu ist weg - es gibt nichts mehr zu uebernehmen. Die Funktion selbst bleibt,
+     * weil die Zusammenlegung in `AppDatabaseMigrations` genau sie braucht: einen Satz von einem
+     * Profil auf ein anderes bringen, transaktional, ohne die Spiel-Zeile mitzunehmen.
+     *
+     * Der Test bleibt deshalb auch stehen - er prueft jetzt ein Migrationswerkzeug statt einer
+     * Bedienfunktion.
      */
     @Test
-    fun einSatzLaesstSichBewusstUebernehmen() = runBlocking {
+    fun einSatzLaesstSichVollstaendigUebertragen() = runBlocking {
         repository.add(reminder("Trinken", "PUFFLING"))
         repository.add(reminder("Bewegen", "PUFFLING"))
         repository.ensurePlayReminder("PUFFLING", reminder("Spiel", "egal").copy(isPlayMode = true))
 
-        val kopien = repository.copyProfile("PUFFLING", "STARLET", replace = false)
+        val kopien = repository.copyProfile("PUFFLING", "default", replace = false)
 
         assertEquals(setOf("Trinken", "Bewegen"), kopien.map { it.label }.toSet())
         assertNull(
             "Die Spiel-Zeile darf nie mitkopiert werden",
-            db.glyphReminderDao().getPlayReminderForProfile("STARLET")
+            db.glyphReminderDao().getPlayReminderForProfile("default")
         )
     }
 }

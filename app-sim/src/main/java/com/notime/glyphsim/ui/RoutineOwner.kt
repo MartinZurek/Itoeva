@@ -1,6 +1,7 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphcore.reminder.ActiveProfilePrefs
 
 /**
  * Wem die Routinen gehoeren - **getrennt von der Frage, welches Wesen gerade da ist.**
@@ -19,32 +20,45 @@ import android.content.Context
  * Personalisierung, tauscht aber die komplette Routinenliste aus. Das ist Problem 3 der
  * Produktanalyse, und `AvatarProfileCharacterizationTest` misst es nach.
  *
- * ## Was diese Datei jetzt tut - und was noch nicht
+ * ## Die Aufloesung
  *
- * Sie benennt die erste Frage. Aufrufer, die "wem gehoeren die Routinen" meinen, fragen ab jetzt
- * hier; wer "welches Wesen" meint, fragt weiterhin [AvatarSpeciesPrefs]. Am Ergebnis aendert sich
- * **nichts**: [current] liefert vorerst genau die Avatar-Id, die auch bisher verwendet wurde.
+ * Seit Phase 4b-2 gibt es **einen einzigen Routinen-Besitzer**: den Nutzer. [current] liefert
+ * deshalb einen festen Wert und fragt niemanden mehr, welches Wesen gerade gewaehlt ist. Wer
+ * "welches Wesen" meint, fragt [PresentCompanion] beziehungsweise [AvatarSpeciesPrefs].
  *
- * Das ist Absicht. Erst wenn die beiden Bedeutungen im Code auseinandergehalten sind, ist der
- * eigentliche Schnitt eine Aenderung an EINER Funktion statt an zwanzig Aufrufstellen - und dann
- * laesst sich auch pruefen, ob wirklich nur das Beabsichtigte kippt.
+ * Ein Avatarwechsel ist damit wieder das, wonach er aussieht: eine Entscheidung ueber das Wesen,
+ * das einen begleitet - nicht ueber den Inhalt der Erinnerungsliste.
  *
- * ## Wohin es fuehrt
+ * ## Warum ausgerechnet das Standardprofil
  *
- * Danach liefert [current] einen festen Wert, und die Routinen gehoeren dem Nutzer statt dem
- * Wesen. Das :app-Modul arbeitet uebrigens schon immer so - es kennt keine Avatare und bleibt beim
- * Standardprofil. Insofern ist der Zielzustand kein neues Konzept, sondern das, was der Kern
- * ohnehin vorsieht.
+ * Der Wert ist kein neu erfundener: [ActiveProfilePrefs.DEFAULT_PROFILE_ID] ist der Ruhewert des
+ * gemeinsamen Kerns, und das :app-Modul arbeitet seit jeher genau so - es kennt keine Avatare und
+ * bleibt beim Standardprofil. Beide Apps sind damit im selben Zustand, statt dass eine davon eine
+ * Sonderregel mitfuehrt.
+ *
+ * Wichtig ist, dass der Kern dieselbe Antwort gibt: [com.notime.glyphcore.reminder.ReminderScheduler]
+ * und der Watchdog lesen nicht diese Datei, sondern [ActiveProfilePrefs] direkt. Deshalb schreibt
+ * [AvatarSpeciesPrefs] dort **nicht mehr** den Avatarnamen hinein, und
+ * [com.notime.glyphsim.GlyphSimApp] setzt den Wert bei jedem Prozessstart auf das Standardprofil
+ * zurueck - auch auf Geraeten, auf denen noch ein Avatarname von frueher darin steht. Liefen die
+ * beiden auseinander, plante der Kern fuer ein Profil ohne Erinnerungen, und es kaeme nie wieder
+ * eine.
+ *
+ * ## Der Umbau selbst
+ *
+ * Die Zusammenlegung der bestehenden Saetze ist eine echte Room-Migration
+ * (`AppDatabaseMigrations.MIGRATION_19_20`), keine Aufraeumaktion beim Start: sie laeuft genau
+ * einmal, in einer Transaktion, und ist ueber `MigrationTestHelper` pruefbar.
  */
 object RoutineOwner {
 
     /**
-     * Die Profil-Id, unter der die Routinen des Nutzers stehen.
+     * Die Profil-Id, unter der die Routinen des Nutzers stehen - **fuer die ganze App dieselbe.**
      *
-     * **Vorerst identisch mit dem gewaehlten Avatar** - siehe Klassendoku. Wer diesen Wert
-     * aendert, aendert damit, welche Erinnerungen eingeplant werden; das ist die ganze Wirkung
-     * und der Grund, warum sie an einer Stelle stehen soll.
+     * [context] bleibt im Aufruf, obwohl er nicht mehr gebraucht wird: die Aufrufer sollen nicht
+     * anfangen, den Wert als Konstante durchzureichen. Wenn hier je wieder etwas nachzuschlagen
+     * ist (mehrere Saetze, geteilte Haushalte), gehoert es an genau diese Stelle.
      */
-    fun current(context: Context): String =
-        AvatarSpeciesPrefs.profileId(AvatarSpeciesPrefs.get(context))
+    @Suppress("UNUSED_PARAMETER")
+    fun current(context: Context): String = ActiveProfilePrefs.DEFAULT_PROFILE_ID
 }

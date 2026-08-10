@@ -1,6 +1,7 @@
 package com.notime.glyphsim
 
 import android.app.Application
+import com.notime.glyphcore.reminder.ActiveProfilePrefs
 import com.notime.glyphcore.reminder.PlayModeState
 import com.notime.glyphcore.reminder.ReminderHost
 import com.notime.glyphcore.reminder.ReminderWatchdogWorker
@@ -39,6 +40,24 @@ class GlyphSimApp : Application() {
         // Vor [ReminderWatchdogWorker.enqueue] und vor jeder Activity: der Watchdog und der
         // Scheduler fragen den Modus ab und muessen den zurueckgesetzten Stand sehen.
         PlayModeState.setActive(this, false)
+
+        // **Es gibt genau einen Erinnerungs-Satz, und er gehoert dem Nutzer** (siehe
+        // ui/RoutineOwner). Der Kern liest das nicht dort, sondern in seinen eigenen
+        // Einstellungen - Planer und Watchdog laufen aus kalt gestarteten Prozessen und kennen
+        // die Avatar-Schicht gar nicht.
+        //
+        // Bis Phase 4b spiegelte AvatarSpeciesPrefs den Avatarnamen hierher. Auf Geraeten, die
+        // schon liefen, steht dort also noch "PUFFLING" oder "GLOOP", waehrend die Erinnerungen
+        // nach der Migration unter dem Standardprofil liegen. Ohne dieses Zuruecksetzen plante
+        // der Kern fuer ein Profil, in dem nichts mehr steht - es kaeme schlicht nie wieder eine
+        // Erinnerung, und niemand wuerde die Ursache in einem vergessenen Einstellungswert
+        // suchen.
+        //
+        // Bei jedem Start statt einmalig: das heilt sich damit selbst, egal auf welchem Weg der
+        // Wert je wieder verstellt wuerde. Vor [ReminderWatchdogWorker.enqueue] und vor jeder
+        // Activity, aus demselben Grund wie der Modus darueber.
+        ActiveProfilePrefs.set(this, ActiveProfilePrefs.DEFAULT_PROFILE_ID)
+
         // Faengt abgerissene Alarmketten auf - siehe ReminderWatchdog fuer die Ursachen.
         ReminderWatchdogWorker.enqueue(this)
     }

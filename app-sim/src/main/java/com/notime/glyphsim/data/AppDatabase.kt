@@ -29,7 +29,7 @@ import com.notime.glyphcore.data.LibraryAnimationDao
         AvatarFeedEvent::class,
         AvatarPlayState::class
     ],
-    version = 19,
+    version = 20,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -51,7 +51,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "glyphsim.db"
                 )
-                    .addMigrations(*AppDatabaseMigrations.ALL)
+                    .addMigrations(*AppDatabaseMigrations.all(context.applicationContext))
                     // NUR noch fuer die Staende vor der Baseline, nicht mehr pauschal fuer alles:
                     // vorher hat jede Schemaaenderung stillschweigend alle Nutzerdaten geloescht.
                     // Jetzt scheitert ein fehlender Migrationspfad ab Version 13 laut und

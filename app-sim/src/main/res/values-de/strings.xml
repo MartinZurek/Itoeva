@@ -172,7 +172,6 @@
     <string name="reminder_play_preview">Vorschau abspielen</string>
     <string name="reminder_days">Wochentage</string>
     <string name="reminder_days_every">Täglich</string>
-    <string name="reminder_days_none">keine Erinnerungen</string>
     <string name="reminder_time_window">Zeitfenster</string>
     <string name="reminder_from">Ab %1$s</string>
     <string name="reminder_to">Bis %1$s</string>
@@ -191,21 +190,11 @@
     <string name="reminder_open_label">offen %1$s</string>
 
     <!-- Erinnerungen von einem anderen Avatar uebernehmen -->
-    <string name="reminders_copy">Kopieren</string>
     <string name="pause_action">Pause</string>
     <string name="pause_one_hour">Eine Stunde</string>
     <string name="pause_until_tomorrow">Bis morgen</string>
     <string name="pause_active">Erinnerungen pausieren bis %1$s</string>
     <string name="pause_resume">Jetzt fortsetzen</string>
-    <string name="reminders_copy_title">Erinnerungen übernehmen</string>
-    <string name="reminders_copy_explainer">Kopiert den Erinnerungs-Satz eines anderen Avatars zu %1$s. Der Quell-Avatar bleibt unverändert.</string>
-    <string name="reminders_copy_append">Bestehende ergänzen</string>
-    <string name="reminders_copy_replace">Bestehende ersetzen</string>
-    <string name="reminders_copy_append_hint">Die Kopien kommen zu den bestehenden dazu.</string>
-    <string name="reminders_copy_replace_hint">Die Erinnerungen von %1$s werden gelöscht.</string>
-    <string name="reminders_copy_current">aktueller Avatar</string>
-    <string name="reminders_copy_count_one">Erinnerung</string>
-    <string name="reminders_copy_count_other">Erinnerungen</string>
 
     <!-- Kollisionen -->
 

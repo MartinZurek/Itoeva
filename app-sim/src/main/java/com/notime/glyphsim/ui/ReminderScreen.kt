@@ -222,7 +222,6 @@ fun ReminderScreen(
     var editDraft by rememberSaveable(stateSaver = ReminderDraftSaver) {
         mutableStateOf<ReminderDraft?>(null)
     }
-    var showCopyDialog by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     if (showLibrary) {
@@ -243,10 +242,10 @@ fun ReminderScreen(
                     }
                 },
                 actions = {
-                    // Erinnerungs-Satz eines anderen Avatars uebernehmen - ohne das muesste ein
-                    // eingerichteter Satz fuer jeden weiteren Avatar von Hand nachgebaut werden.
+                    // "Kopieren" stand hier bis Phase 4b daneben - der Satz eines anderen Avatars
+                    // liess sich uebernehmen. Es gibt nur noch einen Satz, also nichts mehr zu
+                    // uebernehmen (siehe RoutineOwner).
                     TextButton(onClick = { showPauseSheet = true }) { Text(stringResource(R.string.pause_action)) }
-                    TextButton(onClick = { showCopyDialog = true }) { Text(stringResource(R.string.reminders_copy)) }
                 },
                 scrollBehavior = scrollBehavior
             )
@@ -358,18 +357,6 @@ fun ReminderScreen(
                 showPauseSheet = false
             },
             onDismiss = { showPauseSheet = false }
-        )
-    }
-
-    if (showCopyDialog) {
-        CopyRemindersDialog(
-            activeSpecies = activeSpecies,
-            loadCounts = viewModel::reminderCountsBySpecies,
-            onCopy = { source, replace ->
-                viewModel.copyRemindersFrom(source, replace)
-                showCopyDialog = false
-            },
-            onDismiss = { showCopyDialog = false }
         )
     }
 
@@ -1078,110 +1065,6 @@ private fun ReminderDialog(
             text = { TimePicker(state = state) }
         )
     }
-}
-
-/**
- * Uebernimmt den Erinnerungs-Satz eines anderen Avatars.
- *
- * Zeigt bewusst die Anzahl je Avatar an: ohne sie waere nicht erkennbar, welcher Avatar
- * ueberhaupt etwas zu kopieren hat. Avatare ohne Erinnerungen und der aktive selbst sind
- * deaktiviert.
- */
-@Composable
-private fun CopyRemindersDialog(
-    activeSpecies: AvatarSpecies,
-    loadCounts: suspend () -> Map<AvatarSpecies, Int>,
-    onCopy: (source: AvatarSpecies, replace: Boolean) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var counts by remember { mutableStateOf<Map<AvatarSpecies, Int>>(emptyMap()) }
-    var selected by remember { mutableStateOf<AvatarSpecies?>(null) }
-    var replace by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { counts = loadCounts() }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.reminders_copy_title)) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Text(
-                    stringResource(R.string.reminders_copy_explainer, stringResource(activeSpecies.labelRes)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                AvatarSpecies.entries.forEach { species ->
-                    val count = counts[species] ?: 0
-                    val selectable = species != activeSpecies && count > 0
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable(enabled = selectable) { selected = species }
-                            .padding(8.dp)
-                            .alpha(if (selectable) 1f else 0.4f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        RadioButton(
-                            selected = selected == species,
-                            onClick = { selected = species },
-                            enabled = selectable
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(species.labelRes), style = MaterialTheme.typography.titleSmall)
-                            Text(
-                                when {
-                                    species == activeSpecies -> stringResource(R.string.reminders_copy_current)
-                                    count == 0 -> stringResource(R.string.reminder_days_none)
-                                    count == 1 -> "1 " + stringResource(R.string.reminders_copy_count_one)
-                                    else -> "$count " + stringResource(R.string.reminders_copy_count_other)
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-                HorizontalDivider()
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.reminders_copy_replace))
-                        Text(
-                            if (replace) {
-                                stringResource(
-                                    R.string.reminders_copy_replace_hint,
-                                    stringResource(activeSpecies.labelRes)
-                                )
-                            } else {
-                                stringResource(R.string.reminders_copy_append_hint)
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (replace) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
-                    Switch(checked = replace, onCheckedChange = { replace = it })
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = selected != null,
-                onClick = { selected?.let { onCopy(it, replace) } }
-            ) { Text(stringResource(R.string.reminders_copy)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
-    )
 }
 
 /**

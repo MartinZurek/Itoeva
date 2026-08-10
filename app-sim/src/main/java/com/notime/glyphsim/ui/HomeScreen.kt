@@ -69,11 +69,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.notime.glyphcore.data.GlyphReminderRepository
 import com.notime.glyphcore.data.ReminderOpenDuration
-import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.R
-import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.data.CrashLog
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarClip
@@ -1137,17 +1134,18 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                             species = species,
                             selected = species == selectedSpecies,
                             onClick = {
+                                // **Nur noch das Wesen.** Bis Phase 4b hing hier ein
+                                // Neu-Anlegen der Vorgaben und ein komplettes Umplanen aller
+                                // Alarme dran - der Wechsel tauschte ja den Erinnerungs-Satz
+                                // aus. Jetzt gehoeren die Routinen dem Nutzer (siehe
+                                // RoutineOwner), also gibt es an ihnen nichts zu tun: dieselben
+                                // Erinnerungen laufen weiter, nur begleitet von jemand anderem.
+                                //
+                                // Das Pflegebuch des neuen Wesens ist dagegen leer, und das ist
+                                // Absicht - es war bei nichts davon dabei (siehe
+                                // PresentCompanion).
                                 selectedSpecies = species
                                 AvatarSpeciesPrefs.set(context, species)
-                                // Alarme des vorherigen Avatars abbestellen, die des neuen
-                                // planen - sonst wuerden weiter die alten feuern.
-                                scope.launch {
-                                    AppDatabase.getInstance(context).let { db ->
-                                        GlyphReminderRepository(db.glyphReminderDao())
-                                            .seedIfEmpty(RoutineOwner.current(context))
-                                    }
-                                    ReminderScheduler.rescheduleAll(context)
-                                }
                             }
                         )
                     }

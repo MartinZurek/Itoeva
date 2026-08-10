@@ -1,7 +1,9 @@
 package com.notime.glyphsim.data
 
+import android.content.Context
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.notime.glyphcore.reminder.ActiveProfilePrefs
 
 /**
  * Migrationspfade der Tama-Datenbank.
@@ -132,9 +134,115 @@ object AppDatabaseMigrations {
         }
     }
 
-    /** Alle bekannten Migrationen, in [AppDatabase] registriert. */
-    val ALL: Array<Migration> = arrayOf(
+    /**
+     * 19 -> 20: **die Erinnerungen gehoeren ab jetzt dem Nutzer, nicht mehr dem Avatar.**
+     *
+     * Das Schema bleibt unveraendert - was sich aendert, sind die Daten. Trotzdem eine echte
+     * Migration und keine Aufraeumaktion beim App-Start: Room fuehrt sie genau einmal aus, in
+     * einer Transaktion, und `MigrationTestHelper` kann sie gegen eine echte Datenbank von
+     * Version 19 pruefen. Ein Start-Skript mit einem Merker in den Einstellungen haette beides
+     * nicht - und bei einem Abbruch mittendrin bliebe ein halb zusammengelegter Stand zurueck.
+     *
+     * ## Was passiert
+     *
+     * Ein Satz ueberlebt, alle anderen werden geloescht, und der ueberlebende wandert auf das
+     * Standardprofil ([com.notime.glyphcore.reminder.ActiveProfilePrefs.DEFAULT_PROFILE_ID]) -
+     * dieselbe Id, unter der das :app-Modul seit jeher arbeitet.
+     *
+     * **Welcher Satz ueberlebt** ([chooseSurvivingProfile]): der des zuletzt gewaehlten Avatars.
+     * Das ist der Satz, den der Nutzer zuletzt vor sich hatte, also der, den er als "seinen"
+     * kennt. Bewusst ohne Rueckfrage: eine Auswahlliste beim ersten Start nach dem Update muesste
+     * eine Frage stellen, die sich ohne Vorwissen ueber den Umbau nicht beantworten laesst.
+     *
+     * Hat ausgerechnet dieser Avatar keine eigenen Erinnerungen - etwa weil er gerade erst
+     * ausgewaehlt und noch nichts angelegt wurde -, gewinnt stattdessen der Satz mit den meisten
+     * Eintraegen. Ohne diese Ausweichregel koennte ein einziger Fehlgriff kurz vor dem Update
+     * jahrelang gepflegte Erinnerungen kosten. Bei Gleichstand entscheidet der Profilname, damit
+     * das Ergebnis reproduzierbar ist und nicht von der Zeilenreihenfolge abhaengt.
+     *
+     * ## Was ausdruecklich stehen bleibt
+     *
+     * Die Fuetter-Ereignisse (`avatar_feed_events`) werden **nicht** angefasst. Sie gehoeren dem
+     * Wesen, nicht der Routine (siehe [com.notime.glyphsim.ui.PresentCompanion]) - das Pflegebuch
+     * von Gloop bleibt bei Gloop, auch wenn seine Erinnerungen im gemeinsamen Satz aufgegangen
+     * sind. Dass dabei Zeilen zurueckbleiben, deren `reminderId` es nicht mehr gibt, ist gewollt:
+     * die Zahl "so oft hast du reagiert" stimmt weiterhin, nur der Titel dahinter ist nicht mehr
+     * aufloesbar. Die Alternative waere, Geschichte zu loeschen, um eine Verknuepfung zu retten.
+     *
+     * Ebenso unberuehrt bleibt `avatar_play_state` - der Spielstand ist das Konto des Wesens.
+     *
+     * ## Die Spiel-Zeile
+     *
+     * Sie wird wie jede andere Erinnerung behandelt: die des ueberlebenden Profils wandert mit,
+     * die uebrigen fallen weg. Ein Nachlegen ist nicht noetig - beim naechsten Einschalten des
+     * Spielmodus entsteht sie ohnehin neu (siehe ui/PlayModeViewModel.ensurePlayReminder), und
+     * ihr Inhalt wird bei jeder Neuplanung frisch gewuerfelt.
+     *
+     * [preferred] ist der zuletzt gewaehlte Avatar. Als Parameter statt als Nachschlagen in den
+     * Einstellungen, damit der Test jede Ausgangslage herstellen kann, ohne
+     * SharedPreferences-Dateien zu praeparieren.
+     */
+    internal fun migration19To20(preferred: String?): Migration = object : Migration(19, 20) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            val survivor = chooseSurvivingProfile(db, preferred) ?: return
+            db.execSQL("DELETE FROM glyph_reminders WHERE profileId <> ?", arrayOf(survivor))
+            db.execSQL(
+                "UPDATE glyph_reminders SET profileId = ?",
+                arrayOf(ActiveProfilePrefs.DEFAULT_PROFILE_ID)
+            )
+        }
+    }
+
+    /**
+     * Welcher Erinnerungs-Satz die Zusammenlegung ueberlebt - siehe [migration19To20].
+     *
+     * Gibt `null` zurueck, wenn es ueberhaupt keine Erinnerungen gibt; dann ist nichts zu tun.
+     *
+     * `isPlayMode = 0` bei der Zaehlung: die vom Spielmodus verwaltete Zeile ist keine Einstellung
+     * des Nutzers (siehe [com.notime.glyphcore.data.GlyphReminder.isPlayMode]). Zaehlte sie mit,
+     * koennte ein Avatar, mit dem einmal kurz gespielt wurde, einen tatsaechlich gepflegten Satz
+     * ausstechen.
+     *
+     * `internal`, damit `AppDatabaseMigrationTest` die Entscheidung einzeln pruefen kann - sie ist
+     * der einzige Teil dieser Migration, an dem sich ueberhaupt etwas falsch machen laesst.
+     */
+    internal fun chooseSurvivingProfile(db: SupportSQLiteDatabase, preferred: String?): String? {
+        fun userReminderCount(profileId: String): Int =
+            db.query(
+                "SELECT COUNT(*) FROM glyph_reminders WHERE profileId = ? AND isPlayMode = 0",
+                arrayOf(profileId)
+            ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+        if (preferred != null && userReminderCount(preferred) > 0) return preferred
+
+        // Der Satz mit den meisten Eintraegen; bei Gleichstand der alphabetisch erste, damit das
+        // Ergebnis nicht von der Zeilenreihenfolge abhaengt.
+        db.query(
+            "SELECT profileId FROM glyph_reminders WHERE isPlayMode = 0 " +
+                "GROUP BY profileId ORDER BY COUNT(*) DESC, profileId ASC LIMIT 1"
+        ).use { if (it.moveToFirst()) return it.getString(0) }
+
+        // Keine einzige echte Erinnerung - dann gibt es hoechstens noch Spiel-Zeilen. Die des
+        // bevorzugten Profils darf bleiben; ist auch das nicht gesetzt, bleibt irgendeine, und
+        // beim naechsten Spielstart wird sie ohnehin neu gewuerfelt.
+        if (preferred != null) return preferred
+        db.query("SELECT profileId FROM glyph_reminders LIMIT 1")
+            .use { if (it.moveToFirst()) return it.getString(0) }
+        return null
+    }
+
+    /**
+     * Alle bekannten Migrationen, in [AppDatabase] registriert.
+     *
+     * Braucht seit 19 -> 20 einen [Context]: welcher Avatar zuletzt gewaehlt war, steht in den
+     * Einstellungen und nicht in der Datenbank. Bewusst ueber [ActiveProfilePrefs] und nicht ueber
+     * `AvatarSpeciesPrefs` - die Datenschicht soll die Avatar-Schicht nicht kennen, und beide
+     * Werte waren bis zu diesem Umbau ohnehin identisch (siehe ui/AvatarSpeciesPrefs). Steht dort
+     * noch nichts, greift die Ausweichregel in [chooseSurvivingProfile].
+     */
+    fun all(context: Context): Array<Migration> = arrayOf(
         MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
-        MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19
+        MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19,
+        migration19To20(preferred = ActiveProfilePrefs.get(context))
     )
 }

@@ -1,9 +1,12 @@
 package com.notime.glyphsim.data
 
+import androidx.room.migration.Migration
 import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -82,7 +85,7 @@ class AppDatabaseMigrationTest {
             TEST_DB,
             CURRENT_VERSION,
             true,
-            *AppDatabaseMigrations.ALL
+            *MIGRATIONS
         )
 
         migrated.query("SELECT label FROM glyph_reminders").use { cursor ->
@@ -113,7 +116,7 @@ class AppDatabaseMigrationTest {
             close()
         }
 
-        val migrated = helper.runMigrationsAndValidate(TEST_DB, 14, true, *AppDatabaseMigrations.ALL)
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 14, true, *MIGRATIONS)
 
         migrated.query(
             "SELECT reminderId, animationType, profileId, libraryAnimationLabel FROM avatar_feed_events"
@@ -147,7 +150,7 @@ class AppDatabaseMigrationTest {
             close()
         }
 
-        val migrated = helper.runMigrationsAndValidate(TEST_DB, 15, true, *AppDatabaseMigrations.ALL)
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 15, true, *MIGRATIONS)
 
         migrated.query("SELECT epochMillis, fedAtMillis FROM avatar_feed_events").use { cursor ->
             assertTrue("Die Altzeile muss erhalten bleiben", cursor.moveToFirst())
@@ -192,7 +195,7 @@ class AppDatabaseMigrationTest {
             close()
         }
 
-        val migrated = helper.runMigrationsAndValidate(TEST_DB, 19, true, *AppDatabaseMigrations.ALL)
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 19, true, *MIGRATIONS)
 
         migrated.query("SELECT label, isPlayMode FROM glyph_reminders").use { cursor ->
             assertTrue("Die Altzeile muss erhalten bleiben", cursor.moveToFirst())
@@ -239,13 +242,193 @@ class AppDatabaseMigrationTest {
             close()
         }
 
-        val migrated = helper.runMigrationsAndValidate(TEST_DB, 16, true, *AppDatabaseMigrations.ALL)
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 16, true, *MIGRATIONS)
 
         migrated.query("SELECT label, dailyGoal FROM glyph_reminders").use { cursor ->
             assertTrue("Die Alt-Erinnerung muss erhalten bleiben", cursor.moveToFirst())
             assertTrue("Label muss unveraendert sein", cursor.getString(0) == "Ohne Ziel")
             assertTrue("Alt-Erinnerungen duerfen kein Tagesziel geschenkt bekommen", cursor.getInt(1) == 0)
         }
+        migrated.close()
+    }
+
+    // --- 19 -> 20: die Zusammenlegung ----------------------------------------------------------
+
+    /**
+     * Legt eine 19er-Datenbank an und fuellt sie.
+     *
+     * **In genau einem Aufruf**, weil `MigrationTestHelper.createDatabase` eine vorhandene Datei
+     * loescht - zweimal aufgerufen waere alles aus dem ersten Durchgang wieder weg, und die Tests
+     * liefen gruen gegen eine leere Datenbank.
+     */
+    private fun createVersion19(vararg statements: String) {
+        helper.createDatabase(TEST_DB, 19).apply {
+            statements.forEach { execSQL(it) }
+            close()
+        }
+    }
+
+    private fun reminderRow(profileId: String, label: String, isPlayMode: Int = 0) =
+        "INSERT INTO glyph_reminders (label, animationType, libraryAnimationId, daysOfWeekMask, " +
+            "startMinuteOfDay, endMinuteOfDay, intervalMinutes, enabled, profileId, " +
+            "openDurationSeconds, dailyGoal, isPlayMode, nextTriggerEpochMillis) VALUES " +
+            "('$label', 'GENERAL', NULL, 127, 540, 1080, 60, 1, '$profileId', 8, 0, $isPlayMode, NULL)"
+
+    private fun migrateTo20(preferred: String?): SupportSQLiteDatabase =
+        helper.runMigrationsAndValidate(
+            TEST_DB, 20, true, AppDatabaseMigrations.migration19To20(preferred)
+        )
+
+    /** Alle Zeilen einer Abfrage als Zeichenketten - macht die Erwartung im Test ablesbar. */
+    private fun rows(db: SupportSQLiteDatabase, query: String): List<List<String?>> =
+        db.query(query).use { c ->
+            buildList {
+                while (c.moveToNext()) {
+                    add((0 until c.columnCount).map { if (c.isNull(it)) null else c.getString(it) })
+                }
+            }
+        }
+
+    /**
+     * **Der Hauptfall.** Drei Avatare mit eigenen Saetzen, zuletzt gewaehlt war GLOOP: dessen Satz
+     * ueberlebt und steht danach unter dem Standardprofil. Die uebrigen sind weg.
+     *
+     * Dass hier wirklich geloescht wird, ist der unumkehrbare Teil des ganzen Umbaus - deshalb
+     * steht er als eigener Test da und nicht nur als Nebenbedingung eines anderen.
+     */
+    @Test
+    fun migration19To20KeepsOnlyTheLastSelectedProfilesSet() {
+        createVersion19(
+            reminderRow("PUFFLING", "Trinken"),
+            reminderRow("GLOOP", "Bewegen"),
+            reminderRow("FENNEC", "Lesen")
+        )
+
+        val migrated = migrateTo20(preferred = "GLOOP")
+
+        assertEquals(
+            listOf(listOf("default", "Bewegen")),
+            rows(migrated, "SELECT profileId, label FROM glyph_reminders ORDER BY label")
+        )
+        migrated.close()
+    }
+
+    /**
+     * **Die Ausweichregel.** War zuletzt ein Avatar gewaehlt, der noch gar keine eigenen
+     * Erinnerungen hat, gewinnt der groesste Satz statt eines leeren.
+     *
+     * Ohne diese Regel koennte ein einziger Fehlgriff kurz vor dem Update einen jahrelang
+     * gepflegten Satz kosten - und zwar endgueltig, weil die Migration nur einmal laeuft.
+     */
+    @Test
+    fun migration19To20FallsBackToTheLargestSetWhenTheSelectedOneIsEmpty() {
+        createVersion19(
+            reminderRow("PUFFLING", "Trinken"),
+            reminderRow("PUFFLING", "Bewegen"),
+            reminderRow("FENNEC", "Lesen")
+        )
+
+        val migrated = migrateTo20(preferred = "STARLET")
+
+        assertEquals(
+            listOf(listOf("default", "Bewegen"), listOf("default", "Trinken")),
+            rows(migrated, "SELECT profileId, label FROM glyph_reminders ORDER BY label")
+        )
+        migrated.close()
+    }
+
+    /**
+     * Das Pflegebuch bleibt unangetastet - **auch das der Wesen, deren Erinnerungen verschwinden.**
+     *
+     * Die Ereignisse gehoeren dem Wesen, nicht der Routine (siehe
+     * `com.notime.glyphsim.ui.PresentCompanion`). Dass dabei Zeilen zurueckbleiben, deren
+     * `reminderId` es nicht mehr gibt, ist gewollt: "so oft hast du reagiert" stimmt weiterhin,
+     * nur der Titel dahinter ist nicht mehr aufloesbar. Die Alternative waere, Geschichte zu
+     * loeschen, um eine Verknuepfung zu retten.
+     */
+    @Test
+    fun migration19To20LeavesTheCareLogAlone() {
+        createVersion19(
+            reminderRow("PUFFLING", "Trinken"),
+            reminderRow("GLOOP", "Bewegen"),
+            "INSERT INTO avatar_feed_events (reminderId, animationType, epochMillis, profileId, " +
+                "libraryAnimationLabel, fedAtMillis, isPlayMode) " +
+                "VALUES (2, 'GENERAL', 1700000000000, 'GLOOP', NULL, 1700000000000, 0)",
+            "INSERT INTO avatar_play_state (profileId, xp, startedAtMillis, lastSeenLevel) " +
+                "VALUES ('GLOOP', 40, 1700000000000, 2)"
+        )
+
+        val migrated = migrateTo20(preferred = "PUFFLING")
+
+        assertEquals(
+            "Das Fuetter-Ereignis muss bleiben und weiterhin GLOOP gehoeren",
+            listOf(listOf("GLOOP")),
+            rows(migrated, "SELECT profileId FROM avatar_feed_events")
+        )
+        assertEquals(
+            "Der Spielstand ist das Konto des Wesens und bleibt bei ihm",
+            listOf(listOf("40")),
+            rows(migrated, "SELECT xp FROM avatar_play_state WHERE profileId = 'GLOOP'")
+        )
+        migrated.close()
+    }
+
+    /**
+     * Die Spiel-Zeile wird behandelt wie jede andere Erinnerung: die des ueberlebenden Profils
+     * wandert mit, die uebrigen fallen weg. Bliebe je Avatar eine stehen, wuerfelten nach der
+     * Zusammenlegung mehrere unabhaengig voneinander weiter - und im Spielmodus kaemen mehrere
+     * Stupser gleichzeitig, ohne dass irgendwo stuende, warum.
+     */
+    @Test
+    fun migration19To20KeepsExactlyOnePlayReminder() {
+        createVersion19(
+            reminderRow("PUFFLING", "Trinken"),
+            reminderRow("PUFFLING", "Spiel", isPlayMode = 1),
+            reminderRow("GLOOP", "Spiel", isPlayMode = 1)
+        )
+
+        val migrated = migrateTo20(preferred = "PUFFLING")
+
+        assertEquals(
+            listOf(listOf("1")),
+            rows(migrated, "SELECT COUNT(*) FROM glyph_reminders WHERE isPlayMode = 1")
+        )
+        migrated.close()
+    }
+
+    /**
+     * Eine Spiel-Zeile darf einen echten Satz nicht ausstechen. Wurde mit GLOOP einmal kurz
+     * gespielt, ohne dort je eine Erinnerung anzulegen, gewinnt trotzdem PUFFLINGs gepflegter
+     * Satz - die vom Spielmodus verwaltete Zeile ist keine Einstellung des Nutzers.
+     */
+    @Test
+    fun migration19To20IgnoresPlayRemindersWhenChoosingTheSurvivor() {
+        createVersion19(
+            reminderRow("PUFFLING", "Trinken"),
+            reminderRow("GLOOP", "Spiel", isPlayMode = 1)
+        )
+
+        val migrated = migrateTo20(preferred = "GLOOP")
+
+        assertEquals(
+            listOf(listOf("Trinken")),
+            rows(migrated, "SELECT label FROM glyph_reminders WHERE isPlayMode = 0")
+        )
+        migrated.close()
+    }
+
+    /**
+     * Eine leere Datenbank ist kein Sonderfall, sondern der Normalfall bei einer frischen
+     * Installation, die nur zufaellig ueber diesen Pfad kommt - die Migration darf daran nicht
+     * scheitern.
+     */
+    @Test
+    fun migration19To20SurvivesAnEmptyDatabase() {
+        createVersion19()
+
+        val migrated = migrateTo20(preferred = "PUFFLING")
+
+        assertEquals(listOf(listOf("0")), rows(migrated, "SELECT COUNT(*) FROM glyph_reminders"))
         migrated.close()
     }
 }
@@ -256,4 +439,15 @@ class AppDatabaseMigrationTest {
  * Versionssprung mit erhoeht werden; [AppDatabaseMigrationTest.migratesFromBaselineToLatestKeepingData]
  * schlaegt sonst fehl, was genau der gewuenschte Stolperdraht ist.
  */
-private const val CURRENT_VERSION = 19
+private const val CURRENT_VERSION = 20
+
+/**
+ * Alle registrierten Migrationen, so wie die App sie verwendet.
+ *
+ * Seit 19 -> 20 brauchen sie einen Context: welcher Avatar zuletzt gewaehlt war, steht in den
+ * Einstellungen und nicht in der Datenbank (siehe [AppDatabaseMigrations.all]). Die Tests zur
+ * Zusammenlegung selbst umgehen das und setzen die Vorauswahl direkt - sie sollen nicht davon
+ * abhaengen, was auf dem Testgeraet gerade gespeichert ist.
+ */
+private val MIGRATIONS: Array<Migration>
+    get() = AppDatabaseMigrations.all(InstrumentationRegistry.getInstrumentation().targetContext)

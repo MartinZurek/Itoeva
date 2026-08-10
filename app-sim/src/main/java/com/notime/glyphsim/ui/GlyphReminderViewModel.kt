@@ -17,7 +17,6 @@ import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.ReminderAnimations
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +24,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -41,19 +38,17 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
         BuiltInAnimationRepository(AppDatabase.getInstance(application).builtInAnimationSelectionDao())
 
     /**
-     * Nur die Erinnerungen des gerade gewaehlten Avatars - jeder Avatar hat seinen eigenen
-     * Satz (im gemeinsamen Kern neutral als Profil modelliert, siehe [GlyphReminder.profileId]).
-     * flatMapLatest, damit ein Avatar-Wechsel im Einstellungs-Dialog die Liste sofort umschaltet,
-     * statt sie bis zum Neuaufbau des Screens auf dem alten Stand stehen zu lassen.
+     * Die Erinnerungen des Nutzers - **ein Satz, unabhaengig vom gewaehlten Wesen** (siehe
+     * [RoutineOwner]).
+     *
+     * Hier stand bis Phase 4b ein `flatMapLatest` auf die Avatar-Auswahl: jeder Avatar hatte
+     * seinen eigenen Satz, und ein Wechsel im Einstellungs-Dialog tauschte die Liste sofort aus.
+     * Das war die sichtbarste Auswirkung von Problem 3 - eine Entscheidung ueber das Aussehen
+     * liess die eigenen Erinnerungen verschwinden. Der Wechsel beruehrt diese Liste jetzt nicht
+     * mehr, also braucht sie auch keine Umschaltung.
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     val reminders: StateFlow<List<GlyphReminder>> =
-        AvatarSpeciesPrefs.selected(application)
-            .flatMapLatest { species ->
-                repository.observeForProfile(
-                    AvatarSpeciesPrefs.profileId(species ?: AvatarSpecies.PUFFLING)
-                )
-            }
+        repository.observeForProfile(RoutineOwner.current(application))
             // Die Spiel-Erinnerung gehoert nicht in diese Liste: Sie ist keine Einstellung des
             // Nutzers, sondern wird vom Spielmodus selbst verwaltet und bei jeder Neuplanung neu
             // gewuerfelt (siehe PlayModeViewModel/PlayModeRoll). Sichtbar waere sie hier nicht nur
@@ -155,11 +150,9 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             libraryRepository.seedOrRefresh()
             builtInRepository.seedIfEmpty()
-            // Voreingestellte Erinnerungen pro Avatar anlegen (siehe seedIfEmpty) und danach
-            // sicherstellen, dass wirklich nur die Alarme des aktiven Avatars stehen.
-            repository.seedIfEmpty(
-                RoutineOwner.current(getApplication())
-            )
+            // Voreingestellte Erinnerungen beim allerersten Start anlegen (siehe seedIfEmpty) und
+            // danach sicherstellen, dass wirklich nur die zulaessigen Alarme stehen.
+            repository.seedIfEmpty(RoutineOwner.current(getApplication()))
             ReminderScheduler.rescheduleAll(getApplication())
         }
     }
@@ -256,7 +249,7 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
                 endMinuteOfDay = endMinuteOfDay,
                 intervalMinutes = intervalMinutes,
                 enabled = true,
-                // Neue Erinnerungen gehoeren immer dem gerade gewaehlten Avatar.
+                // Neue Erinnerungen gehoeren dem Nutzer - siehe RoutineOwner.
                 profileId = RoutineOwner.current(getApplication()),
                 // Nochmal geklemmt statt dem Dialog blind zu vertrauen (siehe
                 // ReminderOpenDuration.coerceToInterval) - der KI-Import geht z.B. gar nicht
@@ -268,33 +261,13 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
         ReminderScheduler.schedule(getApplication(), saved)
     }
 
-    /**
-     * Uebernimmt den Erinnerungs-Satz eines anderen Avatars in den aktuellen. Jeder Avatar hat
-     * seinen eigenen Satz - ohne diese Moeglichkeit muesste ein sorgfaeltig eingerichteter Satz
-     * fuer jeden weiteren Avatar von Hand nachgebaut werden.
-     */
-    fun copyRemindersFrom(source: AvatarSpecies, replace: Boolean) {
-        viewModelScope.launch {
-            val target = AvatarSpeciesPrefs.get(getApplication())
-            repository.copyProfile(
-                fromProfileId = AvatarSpeciesPrefs.profileId(source),
-                toProfileId = AvatarSpeciesPrefs.profileId(target),
-                replace = replace
-            )
-            // Ueber rescheduleAll statt einzeln: beim Ersetzen muessen auch die Alarme der
-            // geloeschten Erinnerungen weg, nicht nur die neuen dazukommen.
-            ReminderScheduler.rescheduleAll(getApplication())
-        }
-    }
-
-    /** Wie viele Erinnerungen die einzelnen Avatare haben - fuer die Auswahl beim Kopieren.
-     *  Ohne die Spiel-Erinnerung, die hier nichts zu suchen hat (siehe [reminders]). */
-    suspend fun reminderCountsBySpecies(): Map<AvatarSpecies, Int> {
-        val all = repository.observeAll().first().filter { !it.isPlayMode }
-        return AvatarSpecies.entries.associateWith { species ->
-            all.count { it.profileId == AvatarSpeciesPrefs.profileId(species) }
-        }
-    }
+    // "Satz eines anderen Avatars uebernehmen" gab es hier bis Phase 4b (copyRemindersFrom /
+    // reminderCountsBySpecies, dazu ein Auswahl-Dialog im ReminderScreen). Die Funktion hat keinen
+    // Gegenstand mehr: Es gibt nur noch einen Satz, also nichts, wovon oder wohin man kopieren
+    // koennte. Sie war ohnehin nur das Pflaster fuer die Trennung, die es jetzt nicht mehr gibt.
+    //
+    // GlyphReminderRepository.copyProfile bleibt bestehen - es ist das Werkzeug, mit dem die
+    // Zusammenlegung selbst arbeitet (siehe AppDatabaseMigrations).
 
     fun updateReminder(reminder: GlyphReminder) {
         viewModelScope.launch {

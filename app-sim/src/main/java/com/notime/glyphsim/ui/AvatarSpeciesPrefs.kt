@@ -10,17 +10,26 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Persistiert den vom Nutzer gewaehlten Avatar (siehe [AvatarSpecies]), Standard PUFFLING.
  *
- * Zusaetzlich als [selected]-Flow beobachtbar: der Avatar bestimmt inzwischen nicht mehr nur
- * das Aussehen, sondern auch WELCHE Erinnerungen gelten - jeder Avatar hat seinen eigenen Satz.
- * Die Erinnerungs-Liste und die geplanten Alarme muessen daher sofort mitwechseln, wenn hier
- * umgeschaltet wird; ein reines SharedPreferences-Lesen beim Screen-Aufbau haette das nicht
- * mitbekommen.
+ * ## Was der Avatar bestimmt - und was seit Phase 4b nicht mehr
  *
- * **Bruecke zum gemeinsamen Kern:** dort heisst dasselbe Konzept neutral "Profil"
- * ([ActiveProfilePrefs]), weil das :app-Modul die echte Glyph-Matrix ansteuert und gar keine
- * Avatare kennt. Diese Klasse haelt beide Seiten synchron: der Avatar-Name IST die Profil-ID
- * ([profileId]). [set] schreibt deshalb immer beides - schriebe es nur die Avatar-Auswahl,
- * wuerde der Scheduler weiterhin die Erinnerungen des alten Profils einplanen.
+ * Er bestimmt, **wer da ist**: Aussehen, Charakter, Tagesablauf, Spielplan - und, ueber
+ * [profileId], wessen Pflegebuch, Stimmung und Spielstand gefuehrt werden (siehe
+ * [PresentCompanion]).
+ *
+ * Er bestimmt **nicht mehr, welche Erinnerungen gelten.** Bis Phase 4b hatte jeder Avatar seinen
+ * eigenen Satz, und diese Klasse hielt das durch, indem sie bei jedem Lesen und Schreiben den
+ * Avatarnamen als aktive Profil-Id in den Kern spiegelte ([ActiveProfilePrefs]). Genau das machte
+ * aus einer rein optischen Entscheidung einen kompletten Wechsel der Konfiguration - Problem 3 der
+ * Produktanalyse.
+ *
+ * Die Spiegelung ist deshalb weg. Der Kern bleibt beim Standardprofil, so wie im :app-Modul, und
+ * die Routinen gehoeren dem Nutzer (siehe [RoutineOwner]). Wer den Avatar wechselt, wechselt
+ * seither wirklich nur die Begleitung.
+ *
+ * ## Warum trotzdem ein Flow
+ *
+ * [selected] bleibt beobachtbar: An der Auswahl haengen weiterhin Anzeige, Stimmung und
+ * Spielstand, und die sollen ohne Neuaufbau des Bildschirms mitwechseln.
  */
 object AvatarSpeciesPrefs {
     private const val PREFS_NAME = "avatar_species_prefs"
@@ -28,7 +37,12 @@ object AvatarSpeciesPrefs {
 
     private val _selected = MutableStateFlow<AvatarSpecies?>(null)
 
-    /** Profil-ID des Avatars im gemeinsamen Kern (siehe [ActiveProfilePrefs]). */
+    /**
+     * Profil-Id **des Wesens** - der Schluessel seines Pflegebuchs, seiner Stimmung und seines
+     * Spielstands (siehe [PresentCompanion]).
+     *
+     * Nicht mehr die Id, unter der Erinnerungen stehen; das ist [RoutineOwner.current].
+     */
     fun profileId(species: AvatarSpecies): String = species.name
 
     fun get(context: Context): AvatarSpecies {
@@ -38,9 +52,6 @@ object AvatarSpeciesPrefs {
             ?.let { runCatching { AvatarSpecies.valueOf(it) }.getOrNull() }
             ?: AvatarSpecies.PUFFLING
         _selected.value = species
-        // Der Kern liest die aktive Profil-ID auch aus kalt gestarteten Prozessen (Alarm, Boot),
-        // in denen set() nie lief - hier nachziehen, damit beide Seiten uebereinstimmen.
-        ActiveProfilePrefs.set(context, profileId(species))
         return species
     }
 
@@ -55,7 +66,6 @@ object AvatarSpeciesPrefs {
 
     fun set(context: Context, species: AvatarSpecies) {
         prefs(context).edit().putString(KEY_SPECIES, species.name).apply()
-        ActiveProfilePrefs.set(context, profileId(species))
         _selected.value = species
     }
 
