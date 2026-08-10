@@ -30,6 +30,8 @@ import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.matrix.PlayTimeLapse
 import com.notime.glyphsim.matrix.PlayWeather
 import com.notime.glyphsim.reminder.ReminderTrigger
+import com.notime.glyphsim.state.Presentation
+import com.notime.glyphsim.state.TamaStateMapping
 import com.notime.glyphsim.ui.theme.GlyphSimTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -142,15 +144,29 @@ class MainActivity : ComponentActivity() {
                     var editReminderId by rememberSaveable { mutableStateOf<Long?>(null) }
                     var dockEnabled by remember { mutableStateOf(DockModePrefs.isEnabled(this@MainActivity)) }
                     val shared by sharedText
-                    // Nur fuer die Fortschritts-Anzeige im Dock-Modus - der Spielmodus ist KEIN
-                    // eigener Bildschirm, er aendert nur, welche Erinnerungen kommen (siehe
-                    // PlayModeState). Dock-Modus und Startbildschirm sehen in beiden Modi gleich
-                    // aus; im Spiel kommt im Dock lediglich die Level-Anzeige dazu.
                     val playActive by PlayModePrefs.active(this@MainActivity)
                         .collectAsStateWithLifecycle(initialValue = PlayModePrefs.isActive(this@MainActivity))
-                    // "Nur Uhr" hat Vorrang vor allem anderen - siehe WatchModePrefs.
                     val watchOnly by WatchModePrefs.enabled(this@MainActivity)
                         .collectAsStateWithLifecycle(initialValue = WatchModePrefs.isEnabled(this@MainActivity))
+
+                    /*
+                     * Die drei Schalter zu EINEM Zustand zusammengefasst (Phase 2).
+                     *
+                     * Der Gewinn ist nicht weniger Code, sondern eine Unterscheidung, die vorher
+                     * nur in Kommentaren stand: `presentation` sagt, WIE Tama gezeigt wird,
+                     * `world` sagt, WAS laeuft. Die Bedingungen weiter unten lesen sich damit als
+                     * das, was sie meinen - "ist das die Dock-Darstellung?" statt einer
+                     * Verknuepfung dreier Wahrheitswerte, deren Vorrangregeln man kennen muss.
+                     *
+                     * Die Zuordnung selbst liegt in TamaStateMapping und ist dort geprueft; hier
+                     * aendert sich nichts am Verhalten. Genau darum geht es: wenn Phase 3 den
+                     * Spielmodus aufloest, ist eine Stelle zu aendern statt dieser Bedingungen.
+                     */
+                    val state = TamaStateMapping.fromSwitches(
+                        watchOnly = watchOnly == true,
+                        playActive = playActive == true,
+                        dockEnabled = dockEnabled
+                    )
 
                     fun setDockMode(enabled: Boolean) {
                         dockEnabled = enabled
@@ -161,14 +177,15 @@ class MainActivity : ComponentActivity() {
                     // Geteilter Text hat Vorrang vor dem Dock-Modus: wer gerade etwas
                     // herueberreicht, will das Ergebnis sehen und nicht auf einem schwarzen
                     // Uhrenbildschirm landen.
-                    if (dockEnabled && shared == null) {
+                    // Geteilter Text hat weiterhin Vorrang vor der Dock-Darstellung.
+                    if (state.presentation == Presentation.DOCK && shared == null) {
                         // Der ViewModel wird hier NUR fuer das Anlegen aus dem Gespraech heraus
                         // geholt (siehe PlayTalk). Der Dock-Bildschirm selbst kommt weiterhin
                         // ohne aus - er zeigt eine Welt und verwaltet keine Erinnerungen.
                         val reminderViewModel: GlyphReminderViewModel = viewModel()
                         DockScreen(
-                            playMode = playActive == true && watchOnly != true,
-                            watchOnly = watchOnly == true,
+                            playMode = state.showsPlayProgress,
+                            watchOnly = state.clockOnly,
                             onExit = { setDockMode(false) },
                             onAddHabit = { topic ->
                                 val preset = PlayTalk.presetFor(topic)
