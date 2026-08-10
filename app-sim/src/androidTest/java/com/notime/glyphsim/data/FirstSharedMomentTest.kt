@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,14 +42,17 @@ class FirstSharedMomentTest {
     private suspend fun ereignis(
         profileId: String,
         epochMillis: Long,
-        beantwortet: Boolean
+        beantwortet: Boolean,
+        typ: AnimationType = AnimationType.DRINK,
+        spiel: Boolean = false
     ) = dao.insert(
         AvatarFeedEvent(
             reminderId = 1L,
-            animationType = AnimationType.DRINK,
+            animationType = typ,
             epochMillis = epochMillis,
             profileId = profileId,
-            fedAtMillis = if (beantwortet) epochMillis + 1000 else null
+            fedAtMillis = if (beantwortet) epochMillis + 1000 else null,
+            isPlayMode = spiel
         )
     )
 
@@ -87,6 +91,40 @@ class FirstSharedMomentTest {
         ereignis("GLOOP", 9_000L, beantwortet = true)
 
         assertEquals(1_000L, dao.firstAnsweredMillis("GLOOP"))
+    }
+
+    // --- Erste Male je Thema (Grundlage der Erinnerungen) ------------------------------------
+
+    /**
+     * Je Thema der frueheste beantwortete Moment - und nur beantwortete. Eine Ausloesung, auf die
+     * niemand reagiert hat, ist kein "erstes Mal".
+     */
+    @Test
+    fun jedesThemaBekommtSeinErstesMal() = runBlocking {
+        ereignis("GLOOP", 5_000L, beantwortet = true, typ = AnimationType.DRINK)
+        ereignis("GLOOP", 1_000L, beantwortet = true, typ = AnimationType.DRINK)
+        ereignis("GLOOP", 2_000L, beantwortet = false, typ = AnimationType.MOVE)
+        ereignis("GLOOP", 7_000L, beantwortet = true, typ = AnimationType.MOVE)
+
+        val ersteMale = dao.firstAnsweredPerTopic("GLOOP")
+            .associate { it.animationType to it.firstEpochMillis }
+
+        assertEquals(
+            mapOf(AnimationType.DRINK to 1_000L, AnimationType.MOVE to 7_000L),
+            ersteMale
+        )
+    }
+
+    /**
+     * **Spielmodus zaehlt nicht.** Dort wird das Thema gewuerfelt - "das erste Mal getrunken"
+     * waere der Zufall und nicht der Nutzer. Eine Erinnerung an etwas, das man gar nicht getan
+     * hat, ist schlimmer als gar keine.
+     */
+    @Test
+    fun gewuerfelteThemenAusDemSpielZaehlenNicht() = runBlocking {
+        ereignis("GLOOP", 1_000L, beantwortet = true, typ = AnimationType.BOOK, spiel = true)
+
+        assertTrue(dao.firstAnsweredPerTopic("GLOOP").isEmpty())
     }
 
     /**

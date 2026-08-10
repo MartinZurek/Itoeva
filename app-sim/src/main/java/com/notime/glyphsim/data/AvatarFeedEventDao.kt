@@ -33,6 +33,17 @@ data class ReminderFedCount(val reminderId: Long, val count: Int)
  *  [AvatarFeedEventDao.observePlayFedPerTypeSince]. */
 data class TypeFedCount(val animationType: AnimationType, val count: Int)
 
+/**
+ * Wann ein Thema zum ersten Mal beantwortet wurde - siehe
+ * [AvatarFeedEventDao.firstAnsweredPerTopic]. Genau eines von [animationType] und
+ * [libraryAnimationLabel] ist gesetzt.
+ */
+data class TopicFirstRow(
+    val animationType: AnimationType?,
+    val libraryAnimationLabel: String?,
+    val firstEpochMillis: Long
+)
+
 /** Erster jemals gespeicherter Zeitpunkt je Erinnerungs-ID, siehe [AvatarFeedEventDao.observeFirstOccurrencePerReminder]. */
 data class ReminderFirstOccurrence(val reminderId: Long, val firstEpochMillis: Long)
 
@@ -219,6 +230,27 @@ interface AvatarFeedEventDao {
             "WHERE profileId = :profileId AND fedAtMillis IS NOT NULL"
     )
     suspend fun firstAnsweredMillis(profileId: String): Long?
+
+    /**
+     * Wann jedes Thema zum ersten Mal beantwortet wurde - Grundlage der Erinnerungen (siehe
+     * [com.notime.glyphsim.matrix.buildMemories]).
+     *
+     * `isPlayMode = 0` ist hier wesentlich: Im Spielmodus wird das Thema gewuerfelt (siehe
+     * [com.notime.glyphsim.matrix.PlayModeRoll]). "Das erste Mal getrunken" waere dort der Zufall
+     * und nicht der Nutzer - und eine Erinnerung an etwas, das man gar nicht getan hat, ist
+     * schlimmer als gar keine.
+     *
+     * Gruppiert wird ueber beide Spalten zugleich, weil genau eine von ihnen gesetzt ist (siehe
+     * [AvatarFeedEvent]): eingebaute Themen tragen einen [AnimationType], Bibliotheks-Animationen
+     * ihren Namen.
+     */
+    @Query(
+        "SELECT animationType, libraryAnimationLabel, MIN(epochMillis) AS firstEpochMillis " +
+            "FROM avatar_feed_events " +
+            "WHERE profileId = :profileId AND fedAtMillis IS NOT NULL AND isPlayMode = 0 " +
+            "GROUP BY animationType, libraryAnimationLabel ORDER BY firstEpochMillis"
+    )
+    suspend fun firstAnsweredPerTopic(profileId: String): List<TopicFirstRow>
 
     /**
      * Erste jemals gespeicherte Ausloesung JE Erinnerung (beantwortet oder nicht) - Grundlage

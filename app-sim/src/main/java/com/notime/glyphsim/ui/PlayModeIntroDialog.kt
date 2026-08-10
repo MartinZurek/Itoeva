@@ -88,32 +88,9 @@ fun PlayModeIntroDialog(
     )
 }
 
-/** Wie im Avatar-Assistenten - eine Sprechblase des Avatars. */
-@Composable
-private fun Bubble(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.bodyLarge,
-        color = DialogPalette.TextPrimary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp))
-            .background(DialogPalette.BubbleBackground)
-            .padding(horizontal = 14.dp, vertical = 12.dp)
-    )
-}
-
-@Composable
-private fun Choice(text: String, onClick: () -> Unit) {
-    Text(
-        text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = DialogPalette.TextPrimary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2A2A30))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp)
-    )
-}
+// Bubble und Choice standen hier ein zweites Mal, wortgleich zu denen im Avatar-Assistenten -
+// mit dem Kommentar "Wie im Avatar-Assistenten" direkt darueber. Solange sich nichts aendert,
+// faellt das nicht auf; aendert jemand eine der beiden, sehen die Dialoge unterschiedlich aus,
+// ohne dass ein Test oder ein Blick ins Diff das zeigen wuerde. Dieselbe Begruendung wie bei
+// DialogPalette, nur eine Ebene hoeher: Sie sind jetzt dort `internal` und werden von hier
+// mitbenutzt.

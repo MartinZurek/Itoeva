@@ -47,7 +47,7 @@ import kotlinx.coroutines.withContext
 /** Dunkle Flaechen - dieselbe Welt wie Startbildschirm und Pflegebuch. */
 
 /** Was der Avatar-Assistent gerade zeigt. */
-enum class AssistantScreen { MENU, DAY, INTRO, SETUP, IMPORT, FAQ }
+enum class AssistantScreen { MENU, DAY, MEMORIES, INTRO, SETUP, IMPORT, FAQ }
 
 /**
  * Der Avatar als Einstieg statt als blosser Schalter.
@@ -112,6 +112,7 @@ fun AvatarAssistantDialog(
                 when (screen) {
                     AssistantScreen.MENU -> AssistantMenu(
                         onDay = { screen = AssistantScreen.DAY },
+                        onMemories = { screen = AssistantScreen.MEMORIES },
                         onIntro = { screen = AssistantScreen.INTRO },
                         onSetup = { screen = AssistantScreen.SETUP },
                         onImport = { screen = AssistantScreen.IMPORT },
@@ -120,6 +121,10 @@ fun AvatarAssistantDialog(
                         onPlayClip = onPlayClip
                     )
                     AssistantScreen.DAY -> AssistantDay(
+                        species = species,
+                        onBack = { screen = AssistantScreen.MENU }
+                    )
+                    AssistantScreen.MEMORIES -> AssistantMemories(
                         species = species,
                         onBack = { screen = AssistantScreen.MENU }
                     )
@@ -143,9 +148,16 @@ fun AvatarAssistantDialog(
     )
 }
 
-/** Eine Sprechblase des Avatars. */
+/**
+ * Eine Sprechblase des Avatars.
+ *
+ * `internal` statt dateiprivat: Sie und [Choice] sind die gemeinsame Sprache aller
+ * Assistenten-Abschnitte, und die liegen inzwischen in mehreren Dateien (siehe
+ * [AssistantMemories]). Ein zweiter Nachbau anderswo waere derselbe Fehler wie fuenf Kopien
+ * derselben Farbwerte - siehe DialogPalette.
+ */
 @Composable
-private fun Bubble(text: String) {
+internal fun Bubble(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyLarge,
@@ -158,9 +170,9 @@ private fun Bubble(text: String) {
     )
 }
 
-/** Eine antippbare Antwort - optisch als das, was der Nutzer sagen wuerde. */
+/** Eine antippbare Antwort - optisch als das, was der Nutzer sagen wuerde. Siehe [Bubble]. */
 @Composable
-private fun Choice(text: String, onClick: () -> Unit) {
+internal fun Choice(text: String, onClick: () -> Unit) {
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,
@@ -177,6 +189,7 @@ private fun Choice(text: String, onClick: () -> Unit) {
 @Composable
 private fun AssistantMenu(
     onDay: () -> Unit,
+    onMemories: () -> Unit,
     onIntro: () -> Unit,
     onSetup: () -> Unit,
     onImport: () -> Unit,
@@ -197,6 +210,9 @@ private fun AssistantMenu(
     // Quelle (siehe PlayTalk); nur die Umgebung wechselt, weil ein heller Dialog auf dem
     // Startbildschirm richtig ist und auf der schwarzen Spielflaeche falsch waere.
     Choice(stringResource(R.string.assistant_menu_day), onDay)
+    // Direkt nach dem heutigen Tag: beides sind Auskuenfte ueber euch, das eine ueber jetzt, das
+    // andere ueber vorher. Erst danach kommt die Verwaltung.
+    Choice(stringResource(R.string.assistant_menu_memories), onMemories)
     Choice(stringResource(R.string.assistant_menu_intro), onIntro)
     Choice(stringResource(R.string.assistant_menu_setup), onSetup)
     Choice(stringResource(R.string.assistant_menu_import), onImport)

@@ -220,6 +220,12 @@
     <string name="playmode_start">Spielmodus starten</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Schau mal – ich bin gerade auf Level %1$d aufgestiegen!</string>
+    <string name="assistant_menu_memories">🕰️  Woran ich mich erinnere</string>
+    <string name="memories_intro">Das haben wir bisher zusammen erlebt.</string>
+    <string name="memories_empty">Noch nichts – aber das kommt von selbst. Das Erste, worum du dich kümmerst, während ich da bin, ist der Anfang.</string>
+    <string name="memories_met">Der Tag, an dem wir uns kennengelernt haben</string>
+    <string name="memories_chapter">Ein neues Kapitel: %1$s</string>
+    <string name="memories_first_topic">Zum ersten Mal: %1$s</string>
     <string name="chapter_arrived">Gerade erst da</string>
     <string name="chapter_arrived_line">Wir kennen uns noch gar nicht. Ich schau erst mal zu.</string>
     <string name="chapter_settling">Wir gewöhnen uns aneinander</string>
