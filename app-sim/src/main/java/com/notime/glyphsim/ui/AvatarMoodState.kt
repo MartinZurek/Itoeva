@@ -10,7 +10,9 @@ import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.GoalProgress
+import com.notime.glyphsim.matrix.expectedByNow
 import com.notime.glyphsim.matrix.AvatarSpecies
+import java.time.LocalTime
 
 /**
  * Stimmung ausserhalb der Komposition ermitteln - der Dock-Modus braucht sie genau einmal beim
@@ -39,8 +41,24 @@ object AvatarMoodSnapshot {
             .countFedPerReminderSince(companionId, since)
             .associate { it.reminderId to it.count }
 
+        // Jede Erinnerung bringt ihr eigenes Zeitfenster mit - "6x zwischen 8 und 20 Uhr" heisst
+        // um 12 Uhr etwas anderes als um 19 Uhr. Ohne diese Anteiligkeit stand jeder Morgen bei
+        // null Prozent, und selbst ein puenktlich erledigter Tag machte das Wesen bis zum
+        // Nachmittag truebe (siehe expectedByNow).
+        val minuteOfDay = LocalTime.now().let { it.hour * 60 + it.minute }
         return AvatarMood.fromGoals(
-            goals.map { GoalProgress(goal = it.dailyGoal, achieved = fedByReminder[it.id] ?: 0) }
+            goals.map {
+                GoalProgress(
+                    goal = it.dailyGoal,
+                    achieved = fedByReminder[it.id] ?: 0,
+                    expected = expectedByNow(
+                        goal = it.dailyGoal,
+                        startMinuteOfDay = it.startMinuteOfDay,
+                        endMinuteOfDay = it.endMinuteOfDay,
+                        minuteOfDay = minuteOfDay
+                    )
+                )
+            }
         )
     }
 }

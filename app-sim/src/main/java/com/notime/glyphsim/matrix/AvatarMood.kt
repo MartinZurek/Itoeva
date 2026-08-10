@@ -43,8 +43,15 @@ enum class AvatarMood {
         fun fromGoals(progress: List<GoalProgress>): AvatarMood {
             val withGoal = progress.filter { it.goal > 0 }
             if (withGoal.isEmpty()) return NEUTRAL
-            val target = withGoal.sumOf { it.goal }
-            val reached = withGoal.sumOf { minOf(it.achieved, it.goal) }
+
+            // Gemessen wird gegen das, was bis JETZT anstand - nicht gegen den ganzen Tag.
+            val target = withGoal.sumOf { it.dueByNow }
+            val reached = withGoal.sumOf { minOf(it.achieved, it.dueByNow) }
+
+            // Noch nichts faellig. Wer trotzdem schon etwas getan hat, hat etwas Gutes getan -
+            // wer noch nichts getan hat, hat nichts versaeumt.
+            if (target <= 0) return if (withGoal.any { it.achieved > 0 }) HAPPY else NEUTRAL
+
             val rate = reached * 100 / target
             return when {
                 rate >= 80 -> HAPPY
@@ -65,5 +72,58 @@ enum class AvatarMood {
     }
 }
 
-/** Wie weit ein einzelnes Tagesziel erfuellt ist. */
-data class GoalProgress(val goal: Int, val achieved: Int)
+/**
+ * Wie weit ein einzelnes Tagesziel erfuellt ist - **und wie viel davon bis jetzt ueberhaupt
+ * anstand.**
+ *
+ * [expected] ist der Teil, der zum Bewertungszeitpunkt faellig war (siehe [expectedByNow]).
+ * Standardmaessig das ganze Ziel, also die Sicht am Tagesende.
+ */
+data class GoalProgress(val goal: Int, val achieved: Int, val expected: Int = goal) {
+    /** [expected], sicherheitshalber in den sinnvollen Bereich gezogen. */
+    val dueByNow: Int get() = expected.coerceIn(0, goal)
+}
+
+/**
+ * Wie viel eines Tagesziels zum Zeitpunkt [minuteOfDay] vernuenftigerweise schon getan sein
+ * konnte - anteilig am Zeitfenster der Erinnerung.
+ *
+ * ## Warum es das braucht
+ *
+ * Vorher wurde den ganzen Tag gegen das VOLLE Tagesziel gerechnet, ab Mitternacht. Damit stand
+ * jeder Morgen bei null Prozent, und selbst wer alles puenktlich tat, hatte bis in den Nachmittag
+ * hinein ein truebes Wesen. Ziel 6x trinken, Fenster 8-20 Uhr, stuendlich puenktlich getrunken:
+ *
+ *     07:00   0 von 6  ->    0%  ->  traurig
+ *     09:00   1 von 6  ->   16%  ->  traurig
+ *     12:00   2 von 6  ->   33%  ->  hungrig
+ *     15:00   3 von 6  ->   50%  ->  zufrieden
+ *     20:00   6 von 6  ->  100%  ->  gluecklich
+ *
+ * Das ist eine Bestrafung dafuer, dass der Tag noch nicht vorbei ist. Wer morgens die App
+ * oeffnet, sieht ein trauriges Wesen und hat noch gar nichts falsch gemacht - genau das
+ * Schuldgefuehl, das diese App ausdruecklich nicht erzeugen soll (siehe Klassendoku von
+ * [AvatarMood]).
+ *
+ * Anteilig gerechnet ist derselbe Tag durchgehend gut, und ein wirklich uebergangener Tag wird
+ * trotzdem noch als solcher sichtbar - nur eben abends und nicht schon beim Aufwachen.
+ *
+ * ## Die Regeln im Einzelnen
+ *
+ * Vor Fensterbeginn steht **nichts** an - dann gibt es auch nichts zu bewerten. Nach Fensterende
+ * steht das ganze Ziel an. Dazwischen wird abgerundet, also zugunsten des Nutzers: Wer bei "1,8
+ * faellig" eines geschafft hat, gilt als vollstaendig auf Kurs.
+ *
+ * Ein Fenster ohne Dauer (Ende nicht nach dem Anfang - moeglich, weil hier nichts validiert wird)
+ * gilt ab seinem Beginn als ganztaegig. Das ganze Ziel schon in derselben Minute zu erwarten,
+ * waere die haerteste denkbare Auslegung eines vermutlichen Eingabefehlers.
+ */
+fun expectedByNow(goal: Int, startMinuteOfDay: Int, endMinuteOfDay: Int, minuteOfDay: Int): Int {
+    if (goal <= 0) return 0
+    val end = if (endMinuteOfDay > startMinuteOfDay) endMinuteOfDay else END_OF_DAY_MINUTE
+    if (minuteOfDay <= startMinuteOfDay) return 0
+    if (minuteOfDay >= end) return goal
+    return goal * (minuteOfDay - startMinuteOfDay) / (end - startMinuteOfDay)
+}
+
+private const val END_OF_DAY_MINUTE = 23 * 60 + 59

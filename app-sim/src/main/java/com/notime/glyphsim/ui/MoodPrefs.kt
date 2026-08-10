@@ -8,11 +8,20 @@ import com.notime.glyphsim.settings.SettingsStore
  * Ob die Stimmung des Avatars sein Verhalten beeinflusst (siehe
  * [com.notime.glyphsim.matrix.AvatarMood]).
  *
- * **Standardmaessig aus.** Die Stimmung braucht mindestens drei ausgeloeste Erinnerungen
- * innerhalb von 24 Stunden, bevor sie ueberhaupt von NEUTRAL abweicht - beim Ausprobieren
- * einzelner Erinnerungen sieht man davon also nichts ausser einem unerklaerlich traegen Avatar,
- * sobald man ein paar Ausloesungen hat verstreichen lassen. Als bewusst eingeschaltete Funktion
- * ist der Zusammenhang dagegen klar, und beim Testen einzelner Animationen stoert sie nicht.
+ * **Standardmaessig aus.** Der Grund stand hier frueher falsch beschrieben ("braucht mindestens
+ * drei ausgeloeste Erinnerungen, bevor sie von NEUTRAL abweicht") - das galt fuer eine Rechnung,
+ * die es seit der Umstellung auf Tagesziele nicht mehr gibt. Tatsaechlich schlaegt die Stimmung
+ * sofort aus, sobald es ueberhaupt ein Tagesziel gibt.
+ *
+ * Der echte Grund ist ein anderer: Sie veraendert das Bewegungstempo des Wesens. Wer die App
+ * gerade einrichtet und einzelne Animationen ausprobiert, sieht dann einen traegen Avatar und
+ * haelt das fuer einen Fehler statt fuer eine Aussage. Als bewusst eingeschaltete Funktion ist
+ * der Zusammenhang dagegen klar.
+ *
+ * Seit die Stimmung anteilig gegen das rechnet, was bis jetzt anstand (siehe
+ * [com.notime.glyphsim.matrix.expectedByNow]), spraeche wenig dagegen, sie voreingestellt
+ * anzuschalten - vorher war sie den halben Tag lang truebe, auch bei einem puenktlich erledigten
+ * Tag. Das ist eine Produktentscheidung und bleibt bis auf Weiteres offen.
  */
 object MoodPrefs {
     // Ablageort und Schluessel stehen jetzt gebuendelt in SettingsCatalog - die oeffentliche

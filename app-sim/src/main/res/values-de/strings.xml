@@ -56,7 +56,7 @@
     <string name="settings_avatar">Avatar</string>
     <string name="settings_avatar_hint">Deine Erinnerungen bleiben dieselben, egal wen du wählst. Nur das Pflegebuch fängt neu an – ein neues Wesen war bei nichts davon dabei.</string>
     <string name="settings_mood">Stimmung wirkt aufs Verhalten</string>
-    <string name="settings_mood_hint">Der Avatar bewegt sich träger, wenn Erinnerungen mit einem Tagesziel unbeantwortet bleiben – Erinnerungen bei „Kein Ziel“ wirken sich nie darauf aus. Braucht einige ausgelöste Erinnerungen, bevor sich etwas ändert – zum Testen besser aus.</string>
+    <string name="settings_mood_hint">Das Wesen bewegt sich träger, wenn Erinnerungen mit einem Tagesziel unbeantwortet bleiben – Erinnerungen bei „Kein Ziel“ wirken sich nie darauf aus. Gerechnet wird gegen das, was bis jetzt anstand, nicht gegen den ganzen Tag – ein Morgen ist also nie ein schlechter Anfang.</string>
     <string name="settings_crash_title">Absturzbericht</string>
     <string name="settings_crash_hint">Die App hat sich zuletzt unerwartet beendet. Der Bericht verlässt dein Gerät von allein nicht: er bleibt aus der Cloud-Sicherung heraus und ist weg, sobald du ihn hier löschst oder die App deinstallierst. Ob du ihn dem Entwickler schickst, entscheidest du.</string>
     <string name="settings_crash_share">Bericht teilen</string>

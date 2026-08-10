@@ -63,6 +63,124 @@ class AvatarMoodTest {
         assertEquals(AvatarMood.HAPPY, AvatarMood.fromGoals(listOf(GoalProgress(goal = 100, achieved = 100))))
     }
 
+    // ---- Was bis JETZT anstand ----
+
+    /**
+     * **Der Fehler, den diese Rechnung behebt.**
+     *
+     * Ein voellig normaler Tag: sechsmal trinken zwischen 8 und 20 Uhr, puenktlich erledigt.
+     * Gerechnet gegen das volle Tagesziel ab Mitternacht war dieser Tag bis zum Nachmittag
+     * "traurig" oder "hungrig" - eine Bestrafung dafuer, dass der Tag noch nicht vorbei ist.
+     *
+     * Der Test faehrt genau diesen Tag ab. Gegen den frueheren Stand faellt er in den ersten
+     * beiden Zeilen durch.
+     */
+    @Test
+    fun `ein puenktlich erledigter Tag ist durchgehend gut`() {
+        val ziel = 6
+        val start = 8 * 60
+        val ende = 20 * 60
+
+        // (Uhrzeit in Minuten, wie oft bis dahin getrunken)
+        val tag = listOf(
+            7 * 60 to 0,
+            9 * 60 to 1,
+            12 * 60 to 2,
+            15 * 60 to 3,
+            18 * 60 to 4,
+            20 * 60 to 6
+        )
+
+        for ((minute, getan) in tag) {
+            val stimmung = AvatarMood.fromGoals(
+                listOf(
+                    GoalProgress(
+                        goal = ziel,
+                        achieved = getan,
+                        expected = expectedByNow(ziel, start, ende, minute)
+                    )
+                )
+            )
+            assertTrue(
+                "Um ${minute / 60} Uhr mit $getan von $ziel kam $stimmung heraus",
+                stimmung == AvatarMood.HAPPY || stimmung == AvatarMood.NEUTRAL
+            )
+        }
+    }
+
+    /**
+     * Vor dem Fenster steht nichts an - also gibt es nichts zu bewerten. Genau der Zustand beim
+     * Aufwachen, und der darf niemals truebe sein.
+     */
+    @Test
+    fun `vor dem Fenster steht nichts an`() {
+        assertEquals(0, expectedByNow(goal = 6, startMinuteOfDay = 8 * 60, endMinuteOfDay = 20 * 60, minuteOfDay = 7 * 60))
+        assertEquals(
+            AvatarMood.NEUTRAL,
+            AvatarMood.fromGoals(listOf(GoalProgress(goal = 6, achieved = 0, expected = 0)))
+        )
+    }
+
+    /** Wer etwas tut, bevor es faellig war, hat etwas Gutes getan - nicht "nichts Bewertbares". */
+    @Test
+    fun `frueher als noetig ist gut, nicht neutral`() {
+        assertEquals(
+            AvatarMood.HAPPY,
+            AvatarMood.fromGoals(listOf(GoalProgress(goal = 6, achieved = 2, expected = 0)))
+        )
+    }
+
+    /** Nach dem Fenster steht das ganze Ziel an - abends wird ein uebergangener Tag sichtbar. */
+    @Test
+    fun `nach dem Fenster zaehlt das volle Ziel`() {
+        assertEquals(6, expectedByNow(goal = 6, startMinuteOfDay = 8 * 60, endMinuteOfDay = 20 * 60, minuteOfDay = 21 * 60))
+        assertEquals(
+            AvatarMood.SAD,
+            AvatarMood.fromGoals(listOf(GoalProgress(goal = 6, achieved = 0, expected = 6)))
+        )
+    }
+
+    /** Dazwischen anteilig, und zwar abgerundet - also zugunsten des Nutzers. */
+    @Test
+    fun `im Fenster waechst die Erwartung anteilig und rundet ab`() {
+        val start = 8 * 60
+        val ende = 20 * 60
+        assertEquals(0, expectedByNow(6, start, ende, 9 * 60))
+        assertEquals(2, expectedByNow(6, start, ende, 12 * 60))
+        assertEquals(3, expectedByNow(6, start, ende, 15 * 60))
+        assertEquals(5, expectedByNow(6, start, ende, 18 * 60))
+    }
+
+    /** Die Erwartung waechst ueber den Tag nur, faellt nie - sonst waere sie nicht lesbar. */
+    @Test
+    fun `die Erwartung waechst monoton`() {
+        var vorher = 0
+        for (minute in 0..(24 * 60)) {
+            val jetzt = expectedByNow(goal = 6, startMinuteOfDay = 8 * 60, endMinuteOfDay = 20 * 60, minuteOfDay = minute)
+            assertTrue("Bei Minute $minute fiel die Erwartung von $vorher auf $jetzt", jetzt >= vorher)
+            vorher = jetzt
+        }
+        assertEquals(6, vorher)
+    }
+
+    /**
+     * Ein Fenster ohne Dauer ist vermutlich ein Eingabefehler. Es gilt dann ab seinem Beginn als
+     * ganztaegig - das ganze Ziel schon in derselben Minute zu erwarten waere die haerteste
+     * denkbare Auslegung.
+     */
+    @Test
+    fun `ein Fenster ohne Dauer gilt als ganztaegig`() {
+        assertEquals(0, expectedByNow(goal = 4, startMinuteOfDay = 600, endMinuteOfDay = 600, minuteOfDay = 600))
+        assertTrue(expectedByNow(goal = 4, startMinuteOfDay = 600, endMinuteOfDay = 600, minuteOfDay = 700) < 4)
+        assertEquals(4, expectedByNow(goal = 4, startMinuteOfDay = 600, endMinuteOfDay = 600, minuteOfDay = 23 * 60 + 59))
+    }
+
+    /** Ohne Ziel gibt es nichts zu erwarten - eine Erinnerung bleibt dann ein reiner Stupser. */
+    @Test
+    fun `ohne Ziel gibt es keine Erwartung`() {
+        assertEquals(0, expectedByNow(goal = 0, startMinuteOfDay = 0, endMinuteOfDay = 1439, minuteOfDay = 720))
+    }
+
     // ---- Wirkung auf die Ruhe-Schleife ----
 
     @Test

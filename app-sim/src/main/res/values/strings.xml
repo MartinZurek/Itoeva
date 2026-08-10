@@ -62,7 +62,7 @@
     <string name="settings_avatar">Avatar</string>
     <string name="settings_avatar_hint">Your reminders stay the same whoever you pick. Only the care log starts fresh – a new companion wasn\'t there for any of it yet.</string>
     <string name="settings_mood">Mood affects behaviour</string>
-    <string name="settings_mood_hint">The avatar moves more sluggishly when reminders with a daily goal go unanswered – reminders left at “No goal” never affect this. Needs a few triggered reminders before anything changes – off while testing.</string>
+    <string name="settings_mood_hint">The creature moves more slowly when reminders that carry a daily goal go unanswered – reminders set to “No goal” never affect it. Measured against what was due by now, not against the whole day, so a morning is never a bad start.</string>
     <string name="settings_crash_title">Crash report</string>
     <string name="settings_crash_hint">The app closed unexpectedly last time. The report never leaves your device on its own: it is left out of cloud backup, and it goes away when you delete it here or uninstall the app. Sharing it with the developer is your choice.</string>
     <string name="settings_crash_share">Share report</string>
