@@ -86,46 +86,58 @@ class HelpTextsTest {
     }
 
     /**
-     * **Kein erklaerender Text darf behaupten, ein Modus lege die eigenen Erinnerungen still.**
+     * **Genau die Modi, die wirklich still sind, duerfen das auch sagen.**
      *
-     * Seit Phase 3 gilt: die Routinen des Nutzers laufen IMMER. Der Spielmodus legt eine
-     * gewuerfelte Zeile obendrauf, der Uhr-Modus zeigt sie im Dock nur nicht an - stillgelegt
-     * werden sie ausschliesslich durch die ausdrueckliche Pause (siehe `ReminderPause`), und die
-     * ist bewusst zeitlich begrenzt.
+     * Ob eine Erinnerung kommt oder nicht, ist die Kernzusage dieser App - und der einzige Punkt,
+     * an dem ein falscher Satz echten Schaden anrichtet. Wer glaubt, seine Erinnerungen ruhten,
+     * rechnet nicht mehr mit ihnen und bekommt sie trotzdem; wer das Gegenteil glaubt, verlaesst
+     * sich auf etwas, das nicht kommt.
      *
-     * Genau diese Aenderung hat sechs Texte nachtraeglich falsch gemacht, ohne dass irgendetwas
-     * aufgefallen waere: "Deine eigenen ruhen so lange", "Statt deiner Erinnerungen wird eine
-     * ausgewuerfelt", "Nur Uhr - Erinnerungen ruhen". Das ist keine Ungenauigkeit, sondern die
-     * gefaehrlichste Sorte falscher Hilfe: Wer ihr glaubt, schaltet in einen Modus und rechnet
-     * anschliessend NICHT mehr mit Erinnerungen, die trotzdem kommen - oder umgekehrt.
+     * Der Stand nach Phase 5b:
      *
-     * Geprueft wird an den Formulierungen, die diese Behauptung aufstellen, nicht an einer
-     * Wortliste: "ruhen" allein ist harmlos ("Du darfst jetzt ruhen"), erst in Verbindung mit den
-     * Erinnerungen wird es eine Zusage. Die Pausen-Texte sind ausgenommen - dort stimmt es.
+     * - **Spielmodus**: die eigenen Routinen laufen weiter, die gewuerfelte Zeile kommt hinzu
+     *   (Phase 3). Ein Text, der hier "ruhen" oder "statt deiner Erinnerungen" sagt, ist falsch.
+     * - **Uhr-Modus**: wirklich still, es wird gar nichts ausgeloest (Phase 5b, [QuietModeState]).
+     *   Ein Text, der das VERSCHWEIGT, ist ebenso irrefuehrend - man wuerde stumme Stunden fuer
+     *   einen Fehler halten.
+     * - **Pause**: still, mit Ende (`ReminderPause`).
+     *
+     * Beide Richtungen werden geprueft. Als der Uhr-Modus noch nicht still war, hat genau die
+     * erste Haelfte dieser Pruefung acht falsche Texte gefunden; als er es wurde, haette ohne die
+     * zweite Haelfte niemand gemerkt, dass die Texte nun das Gegenteil verschweigen.
      */
     @Test
-    fun `kein Modus behauptet, die eigenen Erinnerungen stillzulegen`() {
-        val behauptungen = listOf(
+    fun `nur die wirklich stillen Modi behaupten Stille`() {
+        val stilleBehauptet = listOf(
             Regex("""Erinnerungen ruhen"""),
             Regex("""eigenen ruhen"""),
             Regex("""[Ss]tatt deiner Erinnerungen"""),
             Regex("""übernehme ich .{0,20}die Erinnerungen""")
         )
-        val erklaerend = names(de).filter {
-            (it.startsWith("assistant_intro") || it.startsWith("assistant_here") ||
-                it.startsWith("faq_a_") || it.startsWith("playmode_intro") ||
-                it == "watch_only_note") && !it.startsWith("pause")
-        }
 
-        for (name in erklaerend) {
+        // Der Spielmodus legt nichts stumm.
+        val spielTexte = names(de).filter {
+            it.startsWith("playmode_intro") || it == "assistant_here_play" || it == "faq_a_mode_play"
+        }
+        for (name in spielTexte) {
             val text = valueOf(de, name) ?: continue
-            for (behauptung in behauptungen) {
+            for (behauptung in stilleBehauptet) {
                 assertTrue(
-                    "$name behauptet, ein Modus lege die eigenen Erinnerungen still " +
-                        "(\"${behauptung.pattern}\") - seit Phase 3 tut das nur noch die Pause",
+                    "$name behauptet, der Spielmodus lege die eigenen Erinnerungen still " +
+                        "(\"${behauptung.pattern}\") - seit Phase 3 laufen sie weiter",
                     !behauptung.containsMatchIn(text)
                 )
             }
+        }
+
+        // Der Uhr-Modus tut es und muss es sagen.
+        for (name in listOf("watch_only_note", "assistant_here_watch", "faq_a_mode_watch")) {
+            val text = valueOf(de, name) ?: continue
+            assertTrue(
+                "$name muss sagen, dass im Uhr-Modus nichts kommt - sonst haelt man stumme " +
+                    "Stunden fuer einen Fehler (siehe QuietModeState)",
+                stilleBehauptet.any { it.containsMatchIn(text) }
+            )
         }
     }
 

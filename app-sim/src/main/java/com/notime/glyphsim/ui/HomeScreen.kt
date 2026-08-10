@@ -154,6 +154,11 @@ fun HomeScreen(
     // selbst braucht, nicht nur wissen muss, DASS er offen ist.
     var playingClip by remember { mutableStateOf<AvatarClip?>(null) }
     var avatarTapped by remember { mutableStateOf(OnboardingPrefs.hasTappedAvatar(context)) }
+    // Beim allerersten Start stellt sich das Wesen von selbst vor, statt darauf zu warten, dass
+    // jemand auf die Idee kommt, es anzutippen (siehe OnboardingPrefs.hasBeenGreeted). Der
+    // Zustand entscheidet zugleich, WOMIT der Assistent aufgeht: Begruessung und Einfuehrung
+    // statt Menue.
+    var greeting by remember { mutableStateOf(!OnboardingPrefs.hasBeenGreeted(context)) }
     var clockTapped by remember { mutableStateOf(OnboardingPrefs.hasTappedClock(context)) }
     var showStats by remember { mutableStateOf(false) }
     // Uhr-Frame und Animations-Frame getrennt (siehe rememberClockFrame / DockScreen): die Uhr
@@ -445,8 +450,12 @@ fun HomeScreen(
                                 if (mode == AppMode.PLAY && !PlayModePrefs.hasSeenIntro(context)) {
                                     showPlayIntro = true
                                 } else {
-                                    AppMode.set(context, mode)
                                     appMode = mode
+                                    // switchTo statt set: der Modus entscheidet mit, ob ueberhaupt
+                                    // Alarme stehen duerfen (siehe QuietModeState). Ohne das
+                                    // Nachziehen hoerte die App beim Verlassen des Uhr-Modus
+                                    // still auf zu erinnern.
+                                    scope.launch { AppMode.switchTo(context, mode) }
                                 }
                             }
                         )
@@ -728,21 +737,39 @@ fun HomeScreen(
             onStart = {
                 PlayModePrefs.markIntroSeen(context)
                 showPlayIntro = false
-                AppMode.set(context, AppMode.PLAY)
                 appMode = AppMode.PLAY
+                scope.launch { AppMode.switchTo(context, AppMode.PLAY) }
             },
             onDismiss = { showPlayIntro = false }
         )
     }
 
+    // Sofort beim Aufbau und nicht nach einer Verzoegerung: Ein Dialog, der erst nach ein paar
+    // Sekunden aufspringt, wirkt wie ein Fehler - der Nutzer hat dann schon angefangen, sich
+    // umzusehen. Der Merker wird hier gesetzt und nicht beim Schliessen: Wer wegtippt, hat sich
+    // entschieden; ein Gruss, der beim naechsten Start wiederkommt, ist keiner mehr.
+    LaunchedEffect(Unit) {
+        if (greeting) {
+            OnboardingPrefs.markGreeted(context)
+            showAssistant = true
+        }
+    }
+
     if (showAssistant) {
         AvatarAssistantDialog(
             species = currentSpecies,
+            startScreen = if (greeting) AssistantScreen.INTRO else AssistantScreen.MENU,
+            greeting = greeting,
             onOpenSettings = {
                 showAssistant = false
+                greeting = false
                 showSettings = true
             },
-            onDismiss = { showAssistant = false },
+            onDismiss = {
+                showAssistant = false
+                // Ab jetzt ist es das gewohnte Menue - die Begruessung gibt es genau einmal.
+                greeting = false
+            },
             onPlayClip = AvatarClips.forSpecies(currentSpecies)?.let { clip ->
                 {
                     showAssistant = false

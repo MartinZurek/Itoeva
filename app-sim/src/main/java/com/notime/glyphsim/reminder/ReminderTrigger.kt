@@ -7,6 +7,7 @@ import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphcore.data.LibraryAnimationRepository
 import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphcore.reminder.PlayModeState
+import com.notime.glyphcore.reminder.QuietModeState
 import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.data.AvatarFeedEvent
@@ -105,6 +106,13 @@ object ReminderTrigger {
                 ReminderScheduler.cancel(context, reminder)
                 return
             }
+            // Verspaeteter Alarm aus der Zeit vor dem Umschalten auf reine Anzeige. Wie beim
+            // Profilwechsel abbestellen statt neu planen - im Uhr-Modus soll gar nichts stehen.
+            if (QuietModeState.isActive(context)) {
+                Log.d(TAG, "Reine Anzeige - \"${reminder.label}\" wird nicht gezeigt")
+                ReminderScheduler.cancel(context, reminder)
+                return
+            }
             // Verspaeteter Alarm aus dem jeweils anderen Modus (siehe PlayModeState): Wer den
             // Spielmodus einschaltet, waehrend noch ein Alarm einer echten Erinnerung steht, soll
             // diese Erinnerung nicht trotzdem noch bekommen - und umgekehrt. Wie beim
@@ -166,6 +174,14 @@ object ReminderTrigger {
      */
     suspend fun firePending(context: Context) {
         mutex.withLock {
+            // Reine Anzeige: nichts ausloesen, nichts protokollieren (siehe QuietModeState).
+            //
+            // Der Planer stellt in diesem Modus ohnehin keine Alarme mehr, aber der Takt hier
+            // laeuft im Vordergrund weiter und wuerde jede faellige Erinnerung selbst zeigen -
+            // ausgerechnet im Dock, wo sie mangels Wesen niemand beantworten kann. Zwei Wege,
+            // zwei Sperren; die Zusage gilt nur, wenn beide sie kennen.
+            if (QuietModeState.isActive(context)) return
+
             val routineOwner = RoutineOwner.current(context)
             val dao = AppDatabase.getInstance(context).glyphReminderDao()
             val now = System.currentTimeMillis()

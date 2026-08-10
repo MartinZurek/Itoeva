@@ -104,6 +104,17 @@ object ReminderScheduler {
             return
         }
 
+        // Reine Anzeige, ohne Begleiter (siehe [QuietModeState]) - dann gibt es gar keinen Weg,
+        // eine Erinnerung zu beantworten. Sie erst auszuloesen und anschliessend als
+        // unbeantwortet zu protokollieren, waere ein Scheitern, das keines ist.
+        if (QuietModeState.isActive(context)) {
+            Log.d(
+                TAG,
+                "Kein Alarm fuer \"${reminder.label}\" (id=${reminder.id}): reine Anzeige"
+            )
+            return
+        }
+
         // Ausdrueckliche Pause des Nutzers (siehe [ReminderPause]). Sie gilt fuer alles - auch
         // fuer die Zeile des Wesens: wer Ruhe wollte, meinte Ruhe.
         //

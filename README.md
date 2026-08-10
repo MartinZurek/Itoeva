@@ -609,9 +609,13 @@ löschen, um eine Verknüpfung zu retten.
 
 ### SharedPreferences
 
-Sechzehn Einträge in dreizehn Dateien, vollständig in
-`app-sim/.../settings/SettingsCatalog.kt`. Acht laufen bereits über `SettingsStore`, die übrigen
+Achtzehn Einträge in fünfzehn Dateien, vollständig in
+`app-sim/.../settings/SettingsCatalog.kt`. Neun laufen bereits über `SettingsStore`, die übrigen
 lesen noch direkt — der Katalog dokumentiert sie trotzdem.
+
+Zwei davon spiegeln denselben Schalter in den gemeinsamen Kern, weil Planer und Alarm-Empfänger
+aus kalt gestarteten Prozessen lesen und die Avatar-Schicht dort nicht existiert: `play_mode_state`
+(welche Zeilen gelten) und `quiet_mode_state` (ob überhaupt etwas ausgelöst werden darf).
 
 Zwei Besonderheiten:
 

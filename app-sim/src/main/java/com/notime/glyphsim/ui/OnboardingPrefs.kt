@@ -15,6 +15,31 @@ import com.notime.glyphsim.settings.SettingsStore
  */
 object OnboardingPrefs {
 
+    /**
+     * Ob das Wesen sich schon einmal von selbst vorgestellt hat.
+     *
+     * **Warum es das ueberhaupt tut.** Der erste Start zeigte bisher eine Uhr, eine Kreatur und
+     * eine Sprechblase. Wer nicht auf die Idee kam, die Kreatur anzufassen, hat nie erfahren,
+     * worum es hier geht - und schon gar nicht das Wichtigste: dass hier nichts gezaehlt wird und
+     * es nichts aufrechtzuerhalten gibt. Eine App, deren Kernversprechen man nur durch Ausprobieren
+     * findet, hat es nicht gegeben.
+     *
+     * **Warum trotzdem kein Willkommens-Ablauf.** Die Einfuehrung gibt es schon, das Wesen haelt
+     * sie, und sie ist jederzeit wieder aufrufbar. Ein zweiter Erklaer-Ort davor waere eine zweite
+     * Quelle derselben Wahrheit - und die beiden liefen mit dem naechsten Umbau auseinander (siehe
+     * die acht Texte, die Phase 5a einsammeln musste). Also fuehrt dasselbe Wesen wie immer, nur
+     * ungefragt beim ersten Mal.
+     *
+     * Getrennt von [hasTappedAvatar]: die Begruessung laeuft von allein und darf den Hinweis
+     * darauf, dass man den Avatar auch selbst antippen kann, nicht ersetzen.
+     */
+    fun hasBeenGreeted(context: Context): Boolean =
+        SettingsStore.read(context, SettingsCatalog.Greeted)
+
+    fun markGreeted(context: Context) {
+        SettingsStore.write(context, SettingsCatalog.Greeted, true)
+    }
+
     fun hasTappedAvatar(context: Context): Boolean =
         SettingsStore.read(context, SettingsCatalog.TappedAvatar)
 

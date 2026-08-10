@@ -234,6 +234,8 @@
     <string name="playmode_start">Start play mode</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Look at that – I just reached level %1$d!</string>
+    <string name="assistant_greeting_1">Hi. I am just here – you look after a few small things for yourself, and I notice.</string>
+    <string name="assistant_greeting_2">No streaks, no scores, nothing to keep up. Skip a day and nothing happens; I am still here tomorrow.</string>
     <string name="assistant_intro_1">I live on your clock. In Routine mode I turn up beside it whenever a reminder is due.</string>
     <string name="assistant_intro_2">Drag the clock onto me to feed me – that\'s how you tell me you did the thing.</string>
     <string name="assistant_intro_3">A reminder can nudge you often without being a hundred separate jobs. What counts is your daily goal: do it 4 times and 4 of 4 is done.</string>
@@ -442,14 +444,14 @@
     <string name="mode_reminder">Routine</string>
     <string name="mode_play">Play</string>
     <string name="mode_watch">Clock</string>
-    <string name="watch_only_note">Watch only – the dock stays plain. Reminders keep running.</string>
+    <string name="watch_only_note">Watch only – reminders rest while this is on.</string>
 
     <!-- Die drei Modi -->
     <string name="faq_category_modes">The three modes</string>
     <string name="faq_q_modes">What are Clock, Routine and Play?</string>
     <string name="faq_a_modes">Three ways to run me, chosen top left. Clock: just the clock, nothing else. Routine: your own reminders – I show up when one is due. Play: I live in my own little world and go about my day. Each step to the right adds something.</string>
     <string name="faq_q_mode_watch">What does Clock mode do?</string>
-    <string name="faq_a_mode_watch">The dock shows the clock and nothing else – no me, no rooms. Your reminders keep running; you will just not see them here, because without me there would be no way to answer them. On the home screen and in the widget they show up as usual. Switch back to Routine and I am in the dock again too.</string>
+    <string name="faq_a_mode_watch">The dock shows the clock and nothing else – no me, no rooms. Reminders rest while it is on, and nothing is recorded either: without me there would be no way to answer them, so they would only pile up as things you supposedly skipped. Switch back to Routine and they carry on exactly where they were.</string>
     <string name="faq_q_mode_reminder">What does Routine mode do?</string>
     <string name="faq_a_mode_reminder">Your own reminders run. When one is due I turn up next to the clock – drag the clock onto me to say you have done it. That is the mode this app was built around.</string>
     <string name="faq_q_mode_play">What does Play mode do?</string>
@@ -471,7 +473,7 @@
     <string name="faq_a_talk">What is really there: what you have looked after today, how the week has gone, what you set yourself, and what is still open. I make nothing up – everything I say comes from your own data, and nothing leaves the phone for it.</string>
 
     <!-- Wo bin ich gerade? -->
-    <string name="assistant_here_watch">Right now you are in Clock mode – the dock stays plain, just the clock. Your reminders keep running; you will still see them on the home screen and in the widget. Pick Routine top left and I turn up in the dock again too.</string>
+    <string name="assistant_here_watch">Right now you are in Clock mode – just the clock, nothing else, and reminders rest. Pick Routine top left and they carry on where they were. Nothing is lost meanwhile; it simply stays quiet.</string>
     <string name="assistant_here_reminder">Right now you are in Routine mode: your own reminders are running. When one is due I turn up beside the clock – drag the clock onto me to say you have done it.</string>
     <string name="assistant_here_play">Right now you are in Play mode: I am there the whole time and live a day of my own. Your own reminders keep running as always – on top of them I turn up by myself now and then, and feeding that earns experience, coins and meals.</string>
     <string name="talk_q_here">What is going on here?</string>

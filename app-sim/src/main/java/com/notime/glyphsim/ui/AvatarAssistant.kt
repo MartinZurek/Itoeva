@@ -67,12 +67,20 @@ fun AvatarAssistantDialog(
     species: AvatarSpecies,
     onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
+    /**
+     * Womit der Assistent aufgeht. Standard ist das Menue - beim allerersten Start dagegen
+     * [AssistantScreen.INTRO], damit das Wesen sofort loslegt, statt eine Auswahl vorzulegen
+     * (siehe OnboardingPrefs.hasBeenGreeted).
+     */
+    startScreen: AssistantScreen = AssistantScreen.MENU,
+    /** Beim allerersten Mal stellt sich das Wesen zuerst vor - siehe [AssistantIntro]. */
+    greeting: Boolean = false,
     /** Nur gesetzt, wenn es fuer [species] tatsaechlich einen Clip gibt (siehe AvatarClips) -
      *  der Menuepunkt "Spiel meinen Clip" erscheint dann erst gar nicht, statt einen leeren
      *  oder kaputten Player zu zeigen. */
     onPlayClip: (() -> Unit)? = null
 ) {
-    var screen by remember { mutableStateOf(AssistantScreen.MENU) }
+    var screen by remember { mutableStateOf(startScreen) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -115,7 +123,10 @@ fun AvatarAssistantDialog(
                         species = species,
                         onBack = { screen = AssistantScreen.MENU }
                     )
-                    AssistantScreen.INTRO -> AssistantIntro(onBack = { screen = AssistantScreen.MENU })
+                    AssistantScreen.INTRO -> AssistantIntro(
+                        greeting = greeting,
+                        onBack = { screen = AssistantScreen.MENU }
+                    )
                     AssistantScreen.SETUP -> AssistantSetup(
                         onDone = onDismiss,
                         onBack = { screen = AssistantScreen.MENU }
@@ -292,9 +303,20 @@ private fun AssistantDay(species: AvatarSpecies, onBack: () -> Unit) {
 }
 
 @Composable
-private fun AssistantIntro(onBack: () -> Unit) {
+private fun AssistantIntro(greeting: Boolean = false, onBack: () -> Unit) {
     val context = LocalContext.current
     val mode = remember { AppMode.current(context) }
+
+    // **Beim allerersten Mal zuerst, worum es hier ueberhaupt geht.**
+    //
+    // Danach nicht mehr: Wer die Einfuehrung spaeter noch einmal aufruft, sucht eine Erklaerung
+    // und keine Begruessung. Der zweite Satz ist der wichtigste der ganzen App und stand bisher
+    // nirgends - dass hier nichts gezaehlt wird und es nichts aufrechtzuerhalten gibt. Wer das
+    // nicht weiss, liest jede Erinnerung als Forderung.
+    if (greeting) {
+        Bubble(stringResource(R.string.assistant_greeting_1))
+        Bubble(stringResource(R.string.assistant_greeting_2))
+    }
 
     // **Zuerst der Modus, in dem man GERADE ist.**
     //

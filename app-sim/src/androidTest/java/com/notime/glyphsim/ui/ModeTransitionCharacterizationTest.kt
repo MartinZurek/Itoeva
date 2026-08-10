@@ -6,6 +6,7 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphcore.reminder.PlayModeState
+import com.notime.glyphcore.reminder.QuietModeState
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -180,21 +181,48 @@ class ModeTransitionCharacterizationTest {
     }
 
     /**
-     * "Nur Uhr" verhaelt sich fuer die Planung wie der Normalbetrieb - der Modus wirkt nur auf die
-     * Anzeige, nicht auf `isPlayMode`.
+     * **Der Uhr-Modus ist wirklich still - seit Phase 5b.**
      *
-     * Das ueberrascht: nach aussen ist WATCH der ruhigste Modus, tatsaechlich laufen die echten
-     * Erinnerungen dabei weiter und werden nur nirgends gezeigt. Ob das so bleiben soll, ist eine
-     * Produktfrage (siehe offene Entscheidung 3) - hier steht nur, dass es heute so ist.
+     * Vorher stand hier das Gegenteil, als offene Frage vermerkt: WATCH wirkte nur auf die
+     * Anzeige, die echten Erinnerungen liefen weiter und wurden nur nirgends gezeigt. Der Schaden
+     * war unsichtbar, aber real - jede Ausloesung schrieb ihre Zeile ins Pflegebuch, obwohl es im
+     * Dock mangels Wesen gar keinen Weg gab, sie zu beantworten, und `RhythmSuggestion` schloss
+     * daraus auf eine chronisch verfehlte Routine.
+     *
+     * Zu pruefen ist [QuietModeState], nicht [PlayModeState]: der Modus entscheidet nicht mehr
+     * darueber, WELCHE Erinnerung passt, sondern ob ueberhaupt eine ausgeloest werden darf. Die
+     * beiden Fragen liegen bewusst an verschiedenen Stellen.
      */
     @Test
-    fun nurUhrLaesstDieEchtenErinnerungenWeiterlaufen() {
+    fun nurUhrLegtDieErinnerungenWirklichStill() {
         AppMode.set(context, AppMode.WATCH)
 
         assertTrue(
-            "Auch bei \"nur Uhr\" bleiben echte Erinnerungen eingeplant",
+            "Im Uhr-Modus darf gar nichts ausgeloest werden",
+            QuietModeState.isActive(context)
+        )
+        assertTrue(
+            "Die Erinnerung selbst bleibt gueltig - gesperrt wird das Ausloesen, nicht die Zeile",
             PlayModeState.matchesCurrentMode(context, echteErinnerung)
         )
+    }
+
+    /**
+     * Die Stille endet mit dem Modus, und zwar in beide Richtungen. Bliebe [QuietModeState] beim
+     * Verlassen stehen, hoerte die App still auf zu erinnern - der Nutzer haette nur eine Anzeige
+     * umgeschaltet und bekaeme nie wieder eine Erinnerung.
+     */
+    @Test
+    fun ausserhalbDesUhrModusIstNichtsStillgelegt() {
+        listOf(AppMode.REMINDER, AppMode.PLAY).forEach { modus ->
+            AppMode.set(context, AppMode.WATCH)
+            AppMode.set(context, modus)
+
+            assertFalse(
+                "Nach dem Wechsel zu $modus darf nichts mehr stillgelegt sein",
+                QuietModeState.isActive(context)
+            )
+        }
     }
 
     // --- Uebergaenge in beide Richtungen -------------------------------------------------------

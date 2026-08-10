@@ -89,6 +89,16 @@ object SettingsCatalog {
     val WatchOnly = Setting.Bool("watch_mode_prefs", "watch_only", default = false)
 
     /**
+     * Dieselbe Entscheidung, gespiegelt in den gemeinsamen Kern (siehe QuietModeState).
+     *
+     * Zwei Eintraege fuer einen Schalter, und das ist Absicht: [WatchOnly] ist die Anzeige-Seite
+     * (welcher Modus steht in der Auswahl), dieser hier die Planungs-Seite (darf ueberhaupt etwas
+     * ausgeloest werden). Der Planer laeuft aus kalt gestarteten Prozessen und kann die
+     * Avatar-Schicht nicht fragen. WatchModePrefs schreibt beide zugleich.
+     */
+    val QuietModeActive = Setting.Bool("quiet_mode_state", "quiet_mode_active", default = false)
+
+    /**
      * Spielmodus.
      *
      * Liegt als einzige in einer Datei des gemeinsamen Kerns (`play_mode_state`) statt in einer
@@ -125,6 +135,15 @@ object SettingsCatalog {
 
     // --- Erstkontakt ----------------------------------------------------------------------------
 
+    /**
+     * Ob das Wesen sich schon einmal von selbst vorgestellt hat.
+     *
+     * Getrennt von [TappedAvatar] gehalten, obwohl beide "Erstkontakt" heissen: [TappedAvatar]
+     * merkt sich, ob der Nutzer den Avatar SELBST angetippt hat, und steuert damit die
+     * Sprechblase "Tipp mich an". Die Begruessung laeuft von allein - sie darf den Hinweis
+     * darauf, dass man das auch selbst kann, nicht ersetzen.
+     */
+    val Greeted = Setting.Bool("onboarding_prefs", "greeted", default = false)
     val TappedAvatar = Setting.Bool("onboarding_prefs", "tapped_avatar", default = false)
     val TappedClock = Setting.Bool("onboarding_prefs", "tapped_clock", default = false)
     val PlayModeIntroSeen = Setting.Bool("play_mode_prefs", "intro_seen", default = false)
@@ -155,13 +174,13 @@ object SettingsCatalog {
 
     /** Alle Eintraege - Grundlage fuer [SettingsCatalogTest] und kuenftige Migrationen. */
     val all: List<Setting<*>> = listOf(
-        DockModeEnabled, WatchOnly, PlayModeActive,
+        DockModeEnabled, WatchOnly, QuietModeActive, PlayModeActive,
         ClockStyle, Language, AllowRotation,
         DockBrightnessOverride, DockBrightness,
         DockSizeDp, DockOffsetFractionX, DockOffsetFractionY,
         AvatarSpecies, MoodEnabled, ActiveProfileId,
         ClipRecordingEnabled,
-        TappedAvatar, TappedClock, PlayModeIntroSeen,
+        Greeted, TappedAvatar, TappedClock, PlayModeIntroSeen,
         PlayCoins, PlayPantryLevel, PlayForcedWeather, PlayTimeLapseSpeed
     )
 

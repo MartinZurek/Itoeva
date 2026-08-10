@@ -1,6 +1,8 @@
 package com.notime.glyphsim.ui
 
 import android.content.Context
+import com.notime.glyphcore.reminder.QuietModeState
+import com.notime.glyphcore.reminder.ReminderScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +23,12 @@ import kotlinx.coroutines.flow.asStateFlow
  * anschliessend ein Scheitern, das gar keines war. Lieber ausdruecklich still als heimlich
  * falsch.
  *
+ * **Dieser Absatz stand hier von Anfang an - umgesetzt war er nicht.** Unterdrueckt wurde nur die
+ * Anzeige im Dock; ausgeloest, protokolliert und im Widget abgespielt wurde weiterhin. Genau der
+ * beschriebene Schaden trat also ein, nur unsichtbar. Seit Phase 5b traegt der gemeinsame Kern
+ * den Zustand mit ([QuietModeState]) und sperrt beide Ausloese-Wege; [setEnabled] schreibt ihn
+ * deshalb immer mit - dieselbe Bruecke wie [AvatarSpeciesPrefs] sie frueher zum Profil hatte.
+ *
  * Getrennt von [PlayModePrefs] gehalten, statt beide in eine Drei-Wege-Einstellung zu giessen:
  * Der Spielmodus entscheidet, WELCHE Erinnerungen kommen, und diese Frage stellt sich hier gar
  * nicht mehr. Ihre Zusammenfuehrung zu den drei Modi, die der Nutzer sieht, macht [AppMode].
@@ -35,6 +43,10 @@ object WatchModePrefs {
         _enabled.value?.let { return it }
         val stored = prefs(context).getBoolean(KEY_ENABLED, false)
         _enabled.value = stored
+        // Der Kern liest den Zustand auch aus kalt gestarteten Prozessen (Alarm, Boot), in denen
+        // setEnabled nie lief - hier nachziehen, damit beide Seiten uebereinstimmen. Auf
+        // Geraeten, die vor Phase 5b liefen, ist der Wert im Kern noch gar nicht gesetzt.
+        QuietModeState.setActive(context, stored)
         return stored
     }
 
@@ -46,6 +58,7 @@ object WatchModePrefs {
 
     fun setEnabled(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean(KEY_ENABLED, value).apply()
+        QuietModeState.setActive(context, value)
         _enabled.value = value
     }
 
@@ -92,14 +105,38 @@ enum class AppMode(val labelRes: Int) {
         }
 
         /**
-         * Setzt beide Schalter so, dass genau dieser Modus herauskommt.
+         * Setzt beide Schalter so, dass genau dieser Modus herauskommt - **ohne die Alarme
+         * anzufassen.**
          *
          * Die Reihenfolge ist nicht beliebig: "Nur Uhr" wird zuerst abgeschaltet, damit beim
          * Wechsel ins Spiel nicht kurzzeitig beides zugleich gilt.
+         *
+         * Fuer die Oberflaeche ist das die falsche Funktion - dort gehoert [switchTo] hin. Diese
+         * hier bleibt oeffentlich, weil Tests den Modus setzen, ohne einen Planer zu haben.
          */
         fun set(context: Context, mode: AppMode) {
             WatchModePrefs.setEnabled(context, mode == WATCH)
             PlayModePrefs.setActive(context, mode == PLAY)
+        }
+
+        /**
+         * Der Moduswechsel, wie ihn die Oberflaeche braucht: umschalten **und** die Alarme
+         * nachziehen.
+         *
+         * **Warum das zusammengehoert.** Seit der Uhr-Modus wirklich still ist (siehe
+         * [com.notime.glyphcore.reminder.QuietModeState]), entscheidet der Modus darueber, ob
+         * ueberhaupt Alarme stehen duerfen. Wer nur umschaltet, hinterlaesst beim Wechsel IN den
+         * Uhr-Modus lauter Alarme, die dort nichts mehr zu suchen haben - und beim Wechsel HERAUS
+         * gar keine, bis zufaellig der Watchdog vorbeikommt. Letzteres ist der schlimmere Fall:
+         * die App hoerte still auf zu erinnern, und der Nutzer haette nur eine Anzeige
+         * umgeschaltet.
+         *
+         * `rescheduleAll` bestellt zuerst alles ab und stellt dann nur wieder ein, was im neuen
+         * Modus erlaubt ist - beide Richtungen also mit demselben Aufruf.
+         */
+        suspend fun switchTo(context: Context, mode: AppMode) {
+            set(context, mode)
+            ReminderScheduler.rescheduleAll(context)
         }
     }
 }

@@ -41,6 +41,8 @@ class SettingsCatalogTest {
     fun `Nur-Uhr liegt weiterhin an seinem historischen Ort`() {
         pruefe(SettingsCatalog.WatchOnly, "watch_mode_prefs", "watch_only")
         assertEquals(false, SettingsCatalog.WatchOnly.default)
+        pruefe(SettingsCatalog.QuietModeActive, "quiet_mode_state", "quiet_mode_active")
+        assertEquals(false, SettingsCatalog.QuietModeActive.default)
     }
 
     /**
@@ -106,6 +108,7 @@ class SettingsCatalogTest {
     @Test
     fun `Aufnahme und Erstkontakt liegen weiterhin an ihren historischen Orten`() {
         pruefe(SettingsCatalog.ClipRecordingEnabled, "clip_prefs", "recording_enabled")
+        pruefe(SettingsCatalog.Greeted, "onboarding_prefs", "greeted")
         pruefe(SettingsCatalog.TappedAvatar, "onboarding_prefs", "tapped_avatar")
         pruefe(SettingsCatalog.TappedClock, "onboarding_prefs", "tapped_clock")
         pruefe(SettingsCatalog.PlayModeIntroSeen, "play_mode_prefs", "intro_seen")
@@ -153,12 +156,14 @@ class SettingsCatalogTest {
     @Test
     fun `all enthaelt jede einzeln gepruefte Einstellung`() {
         val einzeln = listOf(
-            SettingsCatalog.DockModeEnabled, SettingsCatalog.WatchOnly, SettingsCatalog.PlayModeActive,
+            SettingsCatalog.DockModeEnabled, SettingsCatalog.WatchOnly,
+            SettingsCatalog.QuietModeActive, SettingsCatalog.PlayModeActive,
             SettingsCatalog.ClockStyle, SettingsCatalog.Language, SettingsCatalog.AllowRotation,
             SettingsCatalog.DockBrightnessOverride, SettingsCatalog.DockBrightness,
             SettingsCatalog.DockSizeDp, SettingsCatalog.DockOffsetFractionX, SettingsCatalog.DockOffsetFractionY,
             SettingsCatalog.AvatarSpecies, SettingsCatalog.MoodEnabled, SettingsCatalog.ActiveProfileId,
             SettingsCatalog.ClipRecordingEnabled,
+            SettingsCatalog.Greeted,
             SettingsCatalog.TappedAvatar, SettingsCatalog.TappedClock, SettingsCatalog.PlayModeIntroSeen,
             SettingsCatalog.PlayCoins, SettingsCatalog.PlayPantryLevel,
             SettingsCatalog.PlayForcedWeather, SettingsCatalog.PlayTimeLapseSpeed

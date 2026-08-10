@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.notime.glyphsim.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,6 +49,16 @@ class HomeScreenCharacterizationTest {
     private var geoeffneteErinnerungen = 0
     private var dockModusBetreten = 0
     private var zurBearbeitung = mutableListOf<Long>()
+
+    /**
+     * Die Begruessung beim allerersten Start (siehe [FirstRunGreetingTest]) wuerde sich sonst ueber
+     * den Bildschirm legen - und zwar nur beim ERSTEN Test, der ihn aufbaut. Ein Netz, dessen
+     * Maschen von der Testreihenfolge abhaengen, ist keines.
+     */
+    @Before
+    fun ueberspringeDieBegruessung() {
+        OnboardingPrefs.markGreeted(compose.activity)
+    }
 
     private fun zeigeBildschirm() {
         compose.setContent {
