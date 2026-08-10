@@ -1,6 +1,8 @@
 package com.notime.glyphcore.data
 
+import android.content.Context
 import com.notime.glyphcore.BuildConfig
+import com.notime.glyphcore.R
 import java.time.DayOfWeek
 
 /**
@@ -27,9 +29,9 @@ object DefaultReminders {
      * Was ein Nutzer bekommt: wache Stunden statt rund um die Uhr, und Abstaende, bei denen eine
      * Erinnerung noch etwas bedeutet.
      */
-    private fun releaseDefaults(): List<GlyphReminder> = listOf(
+    private fun releaseDefaults(drinkLabel: String, moveLabel: String): List<GlyphReminder> = listOf(
         GlyphReminder(
-            label = "Trink was",
+            label = drinkLabel,
             animationType = AnimationType.DRINK,
             daysOfWeekMask = ALL_DAYS,
             startMinuteOfDay = 8 * 60,
@@ -37,7 +39,7 @@ object DefaultReminders {
             intervalMinutes = 60
         ),
         GlyphReminder(
-            label = "Beweg dich",
+            label = moveLabel,
             animationType = AnimationType.MOVE,
             daysOfWeekMask = ALL_DAYS,
             startMinuteOfDay = 9 * 60,
@@ -88,6 +90,37 @@ object DefaultReminders {
      * Das ist folgenlos - [ALL] liefert dort ausschliesslich [releaseDefaults]. Als Funktionen
      * statt als Eigenschaften, damit der ungenutzte Satz nicht einmal gebaut wird.
      */
-    val ALL: List<GlyphReminder>
-        get() = if (BuildConfig.DEBUG) debugDefaults() else releaseDefaults()
+    /**
+     * Die Vorgaben in der Sprache des Geraets.
+     *
+     * **Warum ein Context statt einer Konstanten.** Die Beschriftungen standen als deutsche
+     * Zeichenketten im Code - ein englischsprachiger Nutzer bekam beim allerersten Start "Trink
+     * was" und "Beweg dich" zu lesen, also ausgerechnet als Erstes das Falsche. Aufgefallen ist
+     * das nie, weil hier nichts uebersetzt werden MUSS: `label` ist ein freier Text, den der
+     * Nutzer ohnehin aendern darf.
+     *
+     * Aufgeloest wird beim ANLEGEN, nicht bei der Anzeige. Der Text landet also in der Datenbank
+     * und bleibt stehen, wenn jemand spaeter die Sprache umstellt. Das ist Absicht: Sobald eine
+     * Erinnerung existiert, gehoert sie dem Nutzer - sie hinter seinem Ruecken umzubenennen waere
+     * schlimmer als eine Beschriftung in der falschen Sprache.
+     *
+     * Die Test-Erinnerungen bleiben fest verdrahtet: Sie erscheinen nur im Debug-Build und sind
+     * ein Werkzeug, kein Inhalt.
+     */
+    fun all(context: Context): List<GlyphReminder> = all(
+        drinkLabel = context.getString(R.string.default_reminder_drink),
+        moveLabel = context.getString(R.string.default_reminder_move)
+    )
+
+    /**
+     * Dieselben Vorgaben mit hereingereichten Beschriftungen - **ohne Android.**
+     *
+     * Die Beschriftung ist der einzige Teil, der eine Sprache hat; Zeiten, Wochentage und
+     * Abstaende sind reine Zahlen. Genau diese Zahlen prueft `ReminderValidationTest`, und der
+     * musste dafuer keinen Context bekommen. Dass die Aufteilung sich hier von selbst ergab, ist
+     * ein gutes Zeichen: Was uebersetzt werden muss, und was nur richtig sein muss, sind zwei
+     * verschiedene Dinge.
+     */
+    fun all(drinkLabel: String, moveLabel: String): List<GlyphReminder> =
+        if (BuildConfig.DEBUG) debugDefaults() else releaseDefaults(drinkLabel, moveLabel)
 }

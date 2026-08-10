@@ -1,5 +1,7 @@
 package com.notime.glyphcore.data
 
+import android.content.Context
+
 import kotlinx.coroutines.flow.Flow
 
 class GlyphReminderRepository(private val dao: GlyphReminderDao) {
@@ -37,16 +39,22 @@ class GlyphReminderRepository(private val dao: GlyphReminderDao) {
     suspend fun getById(id: Long): GlyphReminder? = dao.getById(id)
 
     /**
-     * Legt [DefaultReminders.ALL] fuer [profileId] an, aber nur solange dieses Profil noch gar
+     * Legt die Vorgaben (siehe [DefaultReminders.all]) fuer [profileId] an, aber nur solange dieses Profil noch gar
      * keine Erinnerungen hat. Bewusst pro Profil statt global: ein frisch ausgewaehltes Profil
      * startet damit nicht mit einer leeren Liste, sondern mit denselben Voreinstellungen wie
      * das erste.
      */
-    suspend fun seedIfEmpty(profileId: String): List<GlyphReminder> =
+    suspend fun seedIfEmpty(context: Context, profileId: String): List<GlyphReminder> =
         // Die Vorgaben gehen an der Pruefung in add() vorbei, weil sie in einer Transaktion im
         // DAO angelegt werden - deshalb hier ausdruecklich. Ein Tippfehler in DefaultReminders
         // laege sonst in jedem neu angelegten Profil und in keinem Test.
-        dao.seedIfEmpty(profileId, DefaultReminders.ALL.map { it.copy(profileId = profileId).validated() })
+        //
+        // Der Context ist fuer die Beschriftungen da: sie werden beim Anlegen in der Sprache des
+        // Geraets aufgeloest (siehe DefaultReminders.all).
+        dao.seedIfEmpty(
+            profileId,
+            DefaultReminders.all(context).map { it.copy(profileId = profileId).validated() }
+        )
 
     /**
      * Kopiert alle Erinnerungen von [fromProfileId] nach [toProfileId] und gibt die neuen

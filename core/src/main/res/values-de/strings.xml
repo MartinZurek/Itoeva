@@ -11,4 +11,7 @@
     <string name="animation_medicine">Medizin</string>
     <string name="animation_book">Lesen</string>
     <string name="animation_creativity">Kreativität</string>
+
+    <string name="default_reminder_drink">Trink was</string>
+    <string name="default_reminder_move">Beweg dich</string>
 </resources>

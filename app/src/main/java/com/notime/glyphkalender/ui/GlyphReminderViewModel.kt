@@ -51,7 +51,7 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
             builtInRepository.seedIfEmpty()
             // Diese App kennt keine Avatare/Profile - alle Erinnerungen liegen im Standardprofil
             // (siehe GlyphKalenderApp und core/reminder/ActiveProfilePrefs.kt).
-            repository.seedIfEmpty(ActiveProfilePrefs.DEFAULT_PROFILE_ID)
+            repository.seedIfEmpty(getApplication(), ActiveProfilePrefs.DEFAULT_PROFILE_ID)
                 .forEach { ReminderScheduler.schedule(getApplication(), it) }
         }
     }

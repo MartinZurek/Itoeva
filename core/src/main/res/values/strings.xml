@@ -17,4 +17,13 @@
     <string name="animation_medicine">Medicine</string>
     <string name="animation_book">Reading</string>
     <string name="animation_creativity">Creativity</string>
+
+    <!--
+      Beschriftungen der beim allerersten Start angelegten Erinnerungen (siehe
+      data/DefaultReminders.kt). Sie werden beim ANLEGEN aufgeloest und landen als Text in der
+      Datenbank - eine spaetere Sprachumstellung benennt bestehende Erinnerungen deshalb nicht um,
+      und das ist richtig so: Sobald der Nutzer sie einmal bearbeitet hat, gehoeren sie ihm.
+    -->
+    <string name="default_reminder_drink">Drink something</string>
+    <string name="default_reminder_move">Move a little</string>
 </resources>

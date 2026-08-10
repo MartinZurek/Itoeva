@@ -175,11 +175,11 @@ class AvatarProfileCharacterizationTest {
     @Test
     fun dieVorgabenEntstehenNurEinmal() = runBlocking {
         val besitzer = RoutineOwner.current(context)
-        val angelegt = repository.seedIfEmpty(besitzer)
+        val angelegt = repository.seedIfEmpty(context, besitzer)
 
         assertTrue("Ein leerer Bestand muss Vorgaben bekommen", angelegt.isNotEmpty())
         assertTrue("Die Vorgaben gehoeren dem Nutzer", angelegt.all { it.profileId == besitzer })
-        assertTrue("Ein zweiter Aufruf legt nichts nach", repository.seedIfEmpty(besitzer).isEmpty())
+        assertTrue("Ein zweiter Aufruf legt nichts nach", repository.seedIfEmpty(context, besitzer).isEmpty())
     }
 
     // --- Die Spiel-Zeile ------------------------------------------------------------------------
@@ -217,7 +217,7 @@ class AvatarProfileCharacterizationTest {
             db.glyphReminderDao().getUserRemindersForProfile(besitzer).isEmpty()
         )
         // Und sie taeuscht die Vorgaben-Entscheidung nicht: der Bestand gilt weiter als leer.
-        assertTrue(repository.seedIfEmpty(besitzer).isNotEmpty())
+        assertTrue(repository.seedIfEmpty(context, besitzer).isNotEmpty())
     }
 
     // --- Das Werkzeug der Zusammenlegung --------------------------------------------------------

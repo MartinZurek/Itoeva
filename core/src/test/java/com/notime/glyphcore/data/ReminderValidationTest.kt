@@ -184,7 +184,9 @@ class ReminderValidationTest {
      */
     @Test
     fun alleMitgeliefertenVorgabenSindGueltig() {
-        DefaultReminders.ALL.forEach { vorgabe ->
+        // Ueber die kontextfreie Fassung: geprueft werden Zeiten, Wochentage und Abstaende -
+        // die Beschriftung ist hier egal und braeuchte sonst ein Android-Geraet.
+        DefaultReminders.all(drinkLabel = "Trinken", moveLabel = "Bewegen").forEach { vorgabe ->
             val problems = ReminderValidation.validate(vorgabe.copy(profileId = "puffling"))
             assertEquals("\"${vorgabe.label}\": $problems", emptyList<ReminderValidation.Problem>(), problems)
         }

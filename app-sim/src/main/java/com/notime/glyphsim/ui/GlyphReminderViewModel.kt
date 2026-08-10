@@ -152,7 +152,7 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
             builtInRepository.seedIfEmpty()
             // Voreingestellte Erinnerungen beim allerersten Start anlegen (siehe seedIfEmpty) und
             // danach sicherstellen, dass wirklich nur die zulaessigen Alarme stehen.
-            repository.seedIfEmpty(RoutineOwner.current(getApplication()))
+            repository.seedIfEmpty(getApplication(), RoutineOwner.current(getApplication()))
             ReminderScheduler.rescheduleAll(getApplication())
         }
     }
