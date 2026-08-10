@@ -35,9 +35,29 @@ object PlayModeState {
         prefs(context).edit().putBoolean(KEY_ACTIVE, active).apply()
     }
 
-    /** Ob diese Erinnerung in den gerade laufenden Modus gehoert. */
+    /**
+     * Ob diese Erinnerung derzeit eingeplant werden soll.
+     *
+     * ## Was sich hier geaendert hat (Phase 3)
+     *
+     * Frueher stand hier `reminder.isPlayMode == isActive(context)` - eine Gleichheit, und damit
+     * ein Entweder-oder: war die Welt aktiv, fielen **die echten Erinnerungen des Nutzers aus der
+     * Planung**. Nicht geloescht, nicht abgeschaltet, sie kamen nur nicht mehr. Aus einer
+     * Anzeigeentscheidung wurde so das Aussetzen der Erinnerungsfunktion, ohne dass es irgendwo
+     * stand.
+     *
+     * Jetzt gilt: **die eigenen Routinen laufen immer.** Die vom Wesen selbst gewuerfelte Zeile
+     * kommt hinzu, wenn seine Welt aktiv ist - sie tritt nicht mehr an deren Stelle.
+     *
+     * Damit ist die Verbindung moeglich, um die es eigentlich geht: eine erfuellte Routine
+     * veraendert, was das Wesen von sich aus tut (siehe `PlayHabitSignal`), waehrend die Routine
+     * selbst weiterlaeuft. Vorher schlossen sich die beiden Haelften dieser Idee gegenseitig aus.
+     *
+     * Wer seine Erinnerungen wirklich stillstellen will, pausiert sie ausdruecklich - siehe
+     * [ReminderPause]. Das ist derselbe Wunsch, nur ehrlich benannt und mit einem Ende versehen.
+     */
     fun matchesCurrentMode(context: Context, reminder: GlyphReminder): Boolean =
-        reminder.isPlayMode == isActive(context)
+        if (reminder.isPlayMode) isActive(context) else true
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

@@ -93,13 +93,26 @@ object ReminderScheduler {
             return
         }
 
-        // Spielmodus und Normalbetrieb schliessen sich aus (siehe [PlayModeState]): laeuft das
-        // Spiel, ruhen die echten Erinnerungen - und umgekehrt.
+        // Die vom Wesen selbst gewuerfelte Zeile kommt nur, wenn seine Welt laeuft. Die eigenen
+        // Routinen laufen immer - seit Phase 3, siehe [PlayModeState.matchesCurrentMode].
         if (!PlayModeState.matchesCurrentMode(context, reminder)) {
             Log.d(
                 TAG,
-                "Kein Alarm fuer \"${reminder.label}\" (id=${reminder.id}): isPlayMode=" +
-                    "${reminder.isPlayMode}, Spielmodus aktiv=${PlayModeState.isActive(context)}"
+                "Kein Alarm fuer \"${reminder.label}\" (id=${reminder.id}): Spiel-Zeile, " +
+                    "aber die Welt ruht"
+            )
+            return
+        }
+
+        // Ausdrueckliche Pause des Nutzers (siehe [ReminderPause]). Sie gilt fuer alles - auch
+        // fuer die Zeile des Wesens: wer Ruhe wollte, meinte Ruhe.
+        //
+        // Bewusst kein eigener Wecker fuers Ende der Pause: der Watchdog sucht ohnehin nach
+        // Erinnerungen ohne Alarm und plant sie beim naechsten Lauf wieder ein.
+        ReminderPause.pausedUntil(context)?.let { until ->
+            Log.d(
+                TAG,
+                "Kein Alarm fuer \"${reminder.label}\" (id=${reminder.id}): pausiert bis $until"
             )
             return
         }

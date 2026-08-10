@@ -137,25 +137,30 @@ class ModeTransitionCharacterizationTest {
     // --- Die eigentliche Wirkung: welche Erinnerungen werden eingeplant? -----------------------
 
     /**
-     * **Das Kernverhalten, das Phase 3b aendern wird.**
+     * **Seit Phase 3 umgekehrt - und das ist der Kern des ganzen Umbaus.**
      *
-     * Der Planer beruecksichtigt ausschliesslich Erinnerungen, deren `isPlayMode` dem aktuellen
-     * Modus entspricht. Im Spielmodus heisst das: die echten Erinnerungen des Nutzers werden nicht
-     * mehr eingeplant. Sie sind nicht geloescht und nicht abgeschaltet - sie kommen nur nicht mehr.
+     * Frueher stand hier das Gegenteil: im Spielmodus fielen die echten Erinnerungen aus der
+     * Planung. Aus einer Anzeigeentscheidung wurde damit das Aussetzen der Erinnerungsfunktion,
+     * ohne dass es irgendwo stand (Problem 2 der Produktanalyse).
      *
-     * Genau das ist Problem 2 der Produktanalyse: eine Anzeigeeinstellung, die in Wahrheit die
-     * Erinnerungsfunktion aussetzt.
+     * Jetzt laufen die eigenen Routinen IMMER; die gewuerfelte Zeile des Wesens kommt hinzu,
+     * wenn seine Welt aktiv ist. Erst dadurch ist die Verbindung moeglich, um die es geht: eine
+     * erfuellte Routine veraendert, was das Wesen von sich aus tut, waehrend die Routine
+     * weiterlaeuft.
+     *
+     * Dass dieser Test sich beim Umbau aendern MUSSTE, war beabsichtigt - er hat die alte Zusage
+     * festgehalten, damit ihre Aufhebung eine sichtbare Entscheidung ist.
      */
     @Test
-    fun imSpielmodusWerdenEchteErinnerungenNichtEingeplant() {
+    fun dieEigenenRoutinenLaufenAuchWaehrendDieWeltLaeuft() {
         AppMode.set(context, AppMode.PLAY)
 
-        assertFalse(
-            "Im Spielmodus faellt die echte Erinnerung aus der Planung",
+        assertTrue(
+            "Die echte Erinnerung bleibt eingeplant, auch wenn die Welt laeuft",
             PlayModeState.matchesCurrentMode(context, echteErinnerung)
         )
         assertTrue(
-            "Im Spielmodus wird die Spiel-Zeile eingeplant",
+            "Die Zeile des Wesens kommt hinzu, solange seine Welt aktiv ist",
             PlayModeState.matchesCurrentMode(context, spielErinnerung)
         )
     }
@@ -208,9 +213,8 @@ class ModeTransitionCharacterizationTest {
                 AppMode.set(context, start)
 
                 assertEquals("$start -> $ziel -> $start", start, AppMode.current(context))
-                assertEquals(
-                    "$start -> $ziel -> $start: Planung der echten Erinnerung weicht ab",
-                    start != AppMode.PLAY,
+                assertTrue(
+                    "$start -> $ziel -> $start: die echte Erinnerung muss in JEDEM Modus geplant bleiben",
                     PlayModeState.matchesCurrentMode(context, echteErinnerung)
                 )
             }
