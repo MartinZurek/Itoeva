@@ -83,7 +83,12 @@ fun FeedStatsDialog(
     val scope = rememberCoroutineScope()
     val db = remember { AppDatabase.getInstance(context) }
     val dao = remember { db.avatarFeedEventDao() }
-    val profileId = remember(species) { AvatarSpeciesPrefs.profileId(species) }
+    // Zwei Besitzer, heute derselbe Wert (siehe RoutineOwner / PresentCompanion): die Zahlen
+    // stammen aus dem Pflegebuch des anwesenden Wesens, die Erinnerungen dahinter aus den
+    // Routinen des Nutzers. Getrennt gehalten, damit dieser Dialog nach dem Entkoppeln nicht
+    // stumm die Ziele eines Profils gegen die Fuetterungen eines anderen rechnet.
+    val companionId = remember(species) { AvatarSpeciesPrefs.profileId(species) }
+    val routineOwner = remember(species) { RoutineOwner.current(context) }
 
     var period by remember { mutableStateOf(FeedStatsPeriod.TODAY) }
     var confirmReset by remember { mutableStateOf(false) }
@@ -91,11 +96,11 @@ fun FeedStatsDialog(
     // Der Startzeitpunkt wird bei jedem Wechsel neu bestimmt statt einmal beim Oeffnen: bleibt
     // der Dialog ueber Mitternacht offen, zeigte er sonst weiter den alten Tag.
     val since = remember(period) { period.startMillis() }
-    val total by remember(profileId, since) {
-        dao.observeCountSince(profileId, since)
+    val total by remember(companionId, since) {
+        dao.observeCountSince(companionId, since)
     }.collectAsStateWithLifecycle(initialValue = 0)
-    val breakdown by remember(profileId, since) {
-        dao.observeBreakdownSince(profileId, since)
+    val breakdown by remember(companionId, since) {
+        dao.observeBreakdownSince(companionId, since)
     }.collectAsStateWithLifecycle(initialValue = emptyList())
 
     // Bibliotheks-Animationen speichern im Fuetter-Ereignis nur ihren Namen, das Emoji steht in
@@ -111,14 +116,14 @@ fun FeedStatsDialog(
     // um Mitternacht: "3 von 4" fuer einen ganzen Monat waere sinnlos. Der Zeitraum-Umschalter
     // bezieht sich auf die Mahlzeiten darunter.
     val todayStart = remember { FeedStatsPeriod.TODAY.startMillis() }
-    val reminders by remember(profileId) {
-        db.glyphReminderDao().observeForProfile(profileId)
+    val reminders by remember(routineOwner) {
+        db.glyphReminderDao().observeForProfile(routineOwner)
     }.collectAsStateWithLifecycle(initialValue = emptyList())
     // isPlayMode = false: Tagesziele gehoeren ausschliesslich den echten Erinnerungen. Was im
     // Spielmodus gefuettert wurde, ist ein Spielstand und darf ein Ziel weder erfuellen noch
     // beschoenigen (siehe AvatarFeedEvent.isPlayMode).
-    val fedToday by remember(profileId, todayStart) {
-        db.avatarFeedEventDao().observeFedPerReminderSince(profileId, todayStart, isPlayMode = false)
+    val fedToday by remember(companionId, todayStart) {
+        db.avatarFeedEventDao().observeFedPerReminderSince(companionId, todayStart, isPlayMode = false)
     }.collectAsStateWithLifecycle(initialValue = emptyList())
     val goalRows = remember(reminders, fedToday) {
         val fedByReminder = fedToday.associate { it.reminderId to it.count }
@@ -152,11 +157,11 @@ fun FeedStatsDialog(
     val rhythmWindowStart = remember { System.currentTimeMillis() - WINDOW_DAYS * 24L * 60 * 60 * 1000 }
     // Ebenfalls ohne Spielmodus: Der Rhythmus-Vorschlag raet zu Aenderungen an den EIGENEN
     // Erinnerungen - Spielstand-Zahlen wuerden diesen Rat verfaelschen.
-    val fedInRhythmWindow by remember(profileId, rhythmWindowStart) {
-        db.avatarFeedEventDao().observeFedPerReminderSince(profileId, rhythmWindowStart, isPlayMode = false)
+    val fedInRhythmWindow by remember(companionId, rhythmWindowStart) {
+        db.avatarFeedEventDao().observeFedPerReminderSince(companionId, rhythmWindowStart, isPlayMode = false)
     }.collectAsStateWithLifecycle(initialValue = emptyList())
-    val firstOccurrencePerReminder by remember(profileId) {
-        db.avatarFeedEventDao().observeFirstOccurrencePerReminder(profileId)
+    val firstOccurrencePerReminder by remember(companionId) {
+        db.avatarFeedEventDao().observeFirstOccurrencePerReminder(companionId)
     }.collectAsStateWithLifecycle(initialValue = emptyList())
     val rhythmSuggestion = remember(reminders, fedInRhythmWindow, firstOccurrencePerReminder) {
         findRhythmSuggestion(
@@ -278,7 +283,7 @@ fun FeedStatsDialog(
                             }
                             TextButton(
                                 onClick = {
-                                    scope.launch(Dispatchers.IO) { dao.deleteForProfile(profileId) }
+                                    scope.launch(Dispatchers.IO) { dao.deleteForProfile(companionId) }
                                     confirmReset = false
                                 }
                             ) { Text(stringResource(R.string.action_delete)) }

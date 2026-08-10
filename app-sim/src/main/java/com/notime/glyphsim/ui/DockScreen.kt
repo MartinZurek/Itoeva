@@ -1153,10 +1153,8 @@ fun DockScreen(
         LaunchedEffect(watchOnly) {
             if (watchOnly) return@LaunchedEffect
             ReminderAnimationBus.events.onSubscription {
-                val open = OpenReminderLookup.find(
-                    context,
-                    AvatarSpeciesPrefs.profileId(AvatarSpeciesPrefs.get(context))
-                ) ?: return@onSubscription
+                val open = OpenReminderLookup.find(context, PresentCompanion.profileId(context))
+                    ?: return@onSubscription
                 val remainingSeconds = if (open.remainingMillis == ReminderOpenDuration.UNTIL_FED.toLong()) {
                     ReminderOpenDuration.UNTIL_FED
                 } else {
@@ -1480,10 +1478,12 @@ fun DockScreen(
                             // hat (siehe PlayHabitSignal) - Fuettern wirkt sich dadurch sichtbar
                             // auf das aus, was der Avatar von sich aus tut, nicht nur auf seine
                             // Stimmung (AvatarMood).
-                            // Die offenen Routinen des NUTZERS gewichten, was das Wesen von
-                            // sich aus tut - deshalb der Routinen-Besitzer, nicht der Avatar.
-                            val profileId = RoutineOwner.current(context)
-                            val boostedTopics = PlayHabitSignal.underfulfilledTopics(context, profileId)
+                            // Die offenen Routinen des NUTZERS gewichten, was das Wesen von sich
+                            // aus tut. "Offen" heisst dabei: von DIESEM Wesen heute noch nicht
+                            // erlebt - deshalb geht hier das anwesende Wesen hinein, waehrend
+                            // PlayHabitSignal die Ziele selbst beim Routinen-Besitzer holt.
+                            val boostedTopics =
+                                PlayHabitSignal.underfulfilledTopics(context, PresentCompanion.profileId(context))
                             // Vorrang vor allem anderen: Ist nichts mehr da UND kein Geld fuer
                             // einen Einkauf, muss gearbeitet werden. Das ist die Stelle, an der
                             // die Welt den Zufall ueberstimmt - und der Grund, warum man ihm beim

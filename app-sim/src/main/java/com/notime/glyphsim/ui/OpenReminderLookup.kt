@@ -27,9 +27,14 @@ object OpenReminderLookup {
     /** Eine noch laufende Erinnerung samt der Restdauer, die von ihrer Anzeige uebrig ist. */
     data class OpenReminder(val event: ReminderAnimationEvent, val remainingMillis: Long)
 
-    suspend fun find(context: Context, profileId: String): OpenReminder? {
+    /**
+     * [companionProfileId] ist das anwesende Wesen: "offen" ist eine Frage an dessen Pflegebuch
+     * (siehe [PresentCompanion]), nicht an den Besitzer der Routinen - gefuettert wird schliesslich
+     * das Wesen, das gerade da ist.
+     */
+    suspend fun find(context: Context, companionProfileId: String): OpenReminder? {
         val db = AppDatabase.getInstance(context)
-        val occurrence = db.avatarFeedEventDao().latestUnfed(profileId) ?: return null
+        val occurrence = db.avatarFeedEventDao().latestUnfed(companionProfileId) ?: return null
         val reminder = db.glyphReminderDao().getById(occurrence.reminderId) ?: return null
         if (!reminder.enabled) return null
 

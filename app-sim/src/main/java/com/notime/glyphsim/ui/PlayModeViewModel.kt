@@ -90,9 +90,8 @@ class PlayModeViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val application = getApplication<Application>()
             val species = AvatarSpeciesPrefs.get(application)
-            val profileId = AvatarSpeciesPrefs.profileId(species)
 
-            val playReminderId = if (active) ensurePlayReminder(application, species, profileId) else null
+            val playReminderId = if (active) ensurePlayReminder(application, species) else null
 
             // Erst den Modus setzen, dann neu planen - rescheduleAll fragt PlayModeState ab und
             // muss dabei schon den NEUEN Stand sehen.
@@ -112,16 +111,25 @@ class PlayModeViewModel(application: Application) : AndroidViewModel(application
      */
     private suspend fun ensurePlayReminder(
         application: Application,
-        species: AvatarSpecies,
-        profileId: String
+        species: AvatarSpecies
     ): Long {
+        // Zwei Zeilen, zwei Besitzer. Die Spiel-Erinnerung ist eine ROUTINE - sie wird geplant,
+        // ausgeloest und storniert wie jede andere, also gehoert sie dem Routinen-Besitzer. Der
+        // Spielstand ist dagegen das Konto des WESENS und bleibt bei ihm.
+        //
+        // Solange beide dieselbe Id haben, ist das derselbe Aufruf; getrennt gefragt bleibt es
+        // nach dem Entkoppeln richtig - eine gemeinsame Spiel-Zeile, deren Inhalt sich am
+        // anwesenden Wesen orientiert (siehe PlayModeRoll), und ein Fortschritt je Wesen.
+        val routineOwner = RoutineOwner.current(application)
+        val companionId = AvatarSpeciesPrefs.profileId(species)
+
         // Anlegen-falls-nicht-vorhanden liegt in einer Transaktion im DAO. Vorher stand hier ein
         // Nachsehen und danach ein Anlegen: zweimal schnell hintereinander auf den Schalter
         // getippt, und beide Durchlaeufe sahen "gibt es noch nicht" - der Avatar haette zwei
         // Spiel-Erinnerungen gehabt, die unabhaengig voneinander weiterwuerfeln. Siehe
         // GlyphReminderDao.insertPlayReminderIfAbsent.
         val reminder = reminderRepository.ensurePlayReminder(
-            profileId,
+            routineOwner,
             GlyphReminder(
                 label = application.getString(species.signatureTopic.labelRes),
                 animationType = species.signatureTopic,
@@ -130,13 +138,13 @@ class PlayModeViewModel(application: Application) : AndroidViewModel(application
                 endMinuteOfDay = 23 * 60 + 59,
                 intervalMinutes = ReminderRhythm.forType(species.signatureTopic).suggestedInterval,
                 enabled = true,
-                profileId = profileId,
+                profileId = routineOwner,
                 dailyGoal = NO_GOAL,
                 isPlayMode = true
             )
         )
         playStateDao.insertIfAbsent(
-            AvatarPlayState(profileId = profileId, startedAtMillis = System.currentTimeMillis())
+            AvatarPlayState(profileId = companionId, startedAtMillis = System.currentTimeMillis())
         )
         return reminder.id
     }

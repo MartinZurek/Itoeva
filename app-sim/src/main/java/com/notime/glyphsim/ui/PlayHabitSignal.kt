@@ -19,19 +19,24 @@ import com.notime.glyphsim.data.AppDatabase
  */
 object PlayHabitSignal {
 
-    suspend fun underfulfilledTopics(context: Context, profileId: String): Set<AnimationType> {
+    /**
+     * [companionProfileId] ist das anwesende Wesen - sein Pflegebuch entscheidet, was heute schon
+     * erledigt ist. Die Ziele selbst kommen aus den Routinen des Nutzers ([RoutineOwner]); die
+     * beiden Besitzer werden bewusst getrennt gefragt, auch wenn sie heute denselben Wert haben.
+     */
+    suspend fun underfulfilledTopics(context: Context, companionProfileId: String): Set<AnimationType> {
         val db = AppDatabase.getInstance(context)
         val since = FeedStatsPeriod.TODAY.startMillis()
 
         // isPlayMode ausgeschlossen: die eine Spiel-Erinnerung hat ohnehin nie ein Tagesziel
         // (siehe PlayModeRoll), aber explizit statt implizit ist hier sicherer, falls sich das
         // je aendert - eine Spiel-Erinnerung darf sich nicht selbst verstaerken.
-        val goals = db.glyphReminderDao().getEnabledForProfile(profileId)
+        val goals = db.glyphReminderDao().getEnabledForProfile(RoutineOwner.current(context))
             .filter { it.dailyGoal > 0 && !it.isPlayMode }
         if (goals.isEmpty()) return emptySet()
 
         val fedByReminder = db.avatarFeedEventDao()
-            .countFedPerReminderSince(profileId, since)
+            .countFedPerReminderSince(companionProfileId, since)
             .associate { it.reminderId to it.count }
 
         return goals.asSequence()

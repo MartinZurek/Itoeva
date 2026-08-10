@@ -21,17 +21,22 @@ object AvatarMoodSnapshot {
     suspend fun forSpecies(context: Context, species: AvatarSpecies): AvatarMood {
         if (!MoodPrefs.isEnabled(context)) return AvatarMood.NEUTRAL
         val db = AppDatabase.getInstance(context)
-        val profileId = AvatarSpeciesPrefs.profileId(species)
+        // Zwei Quellen, zwei Besitzer: die Ziele stammen aus den Routinen des NUTZERS, das
+        // Erreichte aus dem Pflegebuch des anwesenden WESENS (siehe RoutineOwner /
+        // PresentCompanion). Heute derselbe Wert; getrennt gefragt, damit die Stimmung nach dem
+        // Entkoppeln das Richtige bedeutet - naemlich "wie hat DIESES Wesen den Tag erlebt".
+        val routineOwner = RoutineOwner.current(context)
+        val companionId = AvatarSpeciesPrefs.profileId(species)
         // Tagesgrenze statt gleitender 24 Stunden: ein Tagesziel endet um Mitternacht.
         val since = FeedStatsPeriod.TODAY.startMillis()
 
         // Nur Erinnerungen MIT Ziel zaehlen - reine Stupser ohne Vorgabe bleiben aussen vor und
         // koennen den Avatar daher nie truebe machen (siehe GlyphReminder.dailyGoal).
-        val goals = db.glyphReminderDao().getEnabledForProfile(profileId).filter { it.dailyGoal > 0 }
+        val goals = db.glyphReminderDao().getEnabledForProfile(routineOwner).filter { it.dailyGoal > 0 }
         if (goals.isEmpty()) return AvatarMood.NEUTRAL
 
         val fedByReminder = db.avatarFeedEventDao()
-            .countFedPerReminderSince(profileId, since)
+            .countFedPerReminderSince(companionId, since)
             .associate { it.reminderId to it.count }
 
         return AvatarMood.fromGoals(

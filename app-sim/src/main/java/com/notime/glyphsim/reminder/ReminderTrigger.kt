@@ -13,7 +13,8 @@ import com.notime.glyphsim.data.AvatarFeedEvent
 import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.ReminderAnimationEvent
 import com.notime.glyphsim.matrix.ReminderAnimations
-import com.notime.glyphsim.ui.AvatarSpeciesPrefs
+import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.ui.PresentCompanion
 import com.notime.glyphsim.ui.RoutineOwner
 import com.notime.glyphsim.widget.GlyphClockWidgetProvider
 import kotlinx.coroutines.sync.Mutex
@@ -145,7 +146,9 @@ object ReminderTrigger {
                 // "Nonstop"-Erinnerung durch Fuettern aufloesen. Hier kann die App geschlossen
                 // sein - ein unbegrenztes Blockieren wuerde alle weiteren Erinnerungen dauerhaft
                 // verschlucken. Nach der Deckelung laeuft es weiter, egal was offen ist.
-                hasOpenUnfedReminder(context, activeProfile, ALARM_BLOCK_CAP_SECONDS) ->
+                // Das Pflegebuch gehoert dem Wesen, nicht dem Routinen-Besitzer (siehe
+                // PresentCompanion) - "was ist gerade offen" ist eine Frage an dieses Buch.
+                hasOpenUnfedReminder(context, PresentCompanion.profileId(context), ALARM_BLOCK_CAP_SECONDS) ->
                     Log.d(TAG, "Andere Erinnerung noch offen - \"${reminder.label}\" uebersprungen")
                 else -> show(context, reminder)
             }
@@ -163,13 +166,13 @@ object ReminderTrigger {
      */
     suspend fun firePending(context: Context) {
         mutex.withLock {
-            val profileId = RoutineOwner.current(context)
+            val routineOwner = RoutineOwner.current(context)
             val dao = AppDatabase.getInstance(context).glyphReminderDao()
             val now = System.currentTimeMillis()
 
             // Nur der Satz des gerade laufenden Modus (siehe PlayModeState) - im Spielmodus
             // ausschliesslich die gewuerfelte Erinnerung, sonst ausschliesslich die echten.
-            val all = dao.getEnabledForProfile(profileId)
+            val all = dao.getEnabledForProfile(routineOwner)
                 .filter { PlayModeState.matchesCurrentMode(context, it) }
 
             // Erinnerungen ohne stehenden Alarm zuerst versorgen - siehe Doku oben.
@@ -192,7 +195,7 @@ object ReminderTrigger {
             // Erinnerung auf den Bus, und die ueberschrieb im HomeScreen genau die Erinnerung,
             // die man gerade fuettern wollte (siehe OpenReminderLookup, das sie aus der Datenbank
             // wiederherstellt). Das Fuettern ging dann auf ein anderes Auftreten - oder ins Leere.
-            if (hasOpenUnfedReminder(context, profileId)) return
+            if (hasOpenUnfedReminder(context, PresentCompanion.profileId(context))) return
 
 
             // Fallen mehrere auf denselben Moment, entscheidet das Intervall die Reihenfolge:
@@ -240,11 +243,11 @@ object ReminderTrigger {
      */
     private suspend fun hasOpenUnfedReminder(
         context: Context,
-        profileId: String,
+        companionProfileId: String,
         capSeconds: Int? = null
     ): Boolean {
         val db = AppDatabase.getInstance(context)
-        val occurrence = db.avatarFeedEventDao().latestUnfed(profileId) ?: return false
+        val occurrence = db.avatarFeedEventDao().latestUnfed(companionProfileId) ?: return false
         val reminder = db.glyphReminderDao().getById(occurrence.reminderId) ?: return false
         if (!reminder.enabled) return false
 
@@ -306,13 +309,12 @@ object ReminderTrigger {
         val occurrenceId = AppDatabase.getInstance(context)
             .avatarFeedEventDao()
             .insert(
-                AvatarFeedEvent(
-                    reminderId = reminder.id,
+                feedEventFor(
+                    reminder = reminder,
+                    companionProfileId = PresentCompanion.profileId(context),
                     animationType = animationType,
-                    epochMillis = System.currentTimeMillis(),
-                    profileId = reminder.profileId,
                     libraryAnimationLabel = resolved.libraryAnimationLabel,
-                    isPlayMode = reminder.isPlayMode
+                    nowMillis = System.currentTimeMillis()
                 )
             )
         GlyphClockWidgetProvider.playReminderAnimation(
@@ -332,6 +334,39 @@ object ReminderTrigger {
         )
         Log.d(TAG, "\"${reminder.label}\" (id=${reminder.id}) gezeigt")
     }
+
+    /**
+     * Der Eintrag ins Pflegebuch - **wer darin steht, ist die eine Entscheidung, um die es hier
+     * geht.**
+     *
+     * Bis eben stand hier `reminder.profileId`, also der Besitzer der Routine. Solange jedes Wesen
+     * seinen eigenen Satz Routinen hat, ist das dasselbe wie das anwesende Wesen - der Unterschied
+     * war unsichtbar. Sobald die Routinen dem Nutzer gehoeren, ist es das nicht mehr: dann landete
+     * jede Ausloesung unter dem gemeinsamen Profil, und "welches Wesen war dabei" waere nirgends
+     * mehr festgehalten. Statistik, Stimmung und Spielstand je Wesen liefen ins Leere.
+     *
+     * Deshalb traegt das Ereignis ab jetzt [companionProfileId]. Die Regel dahinter steht in
+     * [PresentCompanion]: die Routinen gehoeren dir, die Erinnerungen daran dem Wesen, mit dem du
+     * sie geteilt hast.
+     *
+     * Als eigene Funktion und nicht inline, weil sich genau diese Zuordnung ohne Geraet pruefen
+     * laesst - siehe `FeedEventOwnershipTest`. Inline waere sie nur ueber den kompletten
+     * Ausloese-Weg erreichbar gewesen, und der braucht Alarme, Bildschirmzustand und Datenbank.
+     */
+    internal fun feedEventFor(
+        reminder: GlyphReminder,
+        companionProfileId: String,
+        animationType: AnimationType?,
+        libraryAnimationLabel: String?,
+        nowMillis: Long
+    ): AvatarFeedEvent = AvatarFeedEvent(
+        reminderId = reminder.id,
+        animationType = animationType,
+        epochMillis = nowMillis,
+        profileId = companionProfileId,
+        libraryAnimationLabel = libraryAnimationLabel,
+        isPlayMode = reminder.isPlayMode
+    )
 
     /**
      * Ob der Bildschirm gerade an ist. `isInteractive` und nicht das veraltete `isScreenOn`:

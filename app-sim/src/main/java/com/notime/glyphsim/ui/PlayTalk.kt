@@ -163,9 +163,15 @@ object PlayTalk {
         AnimationType.BOOK
     )
 
+    /**
+     * [companionProfileId] ist das Wesen, das gerade spricht. Was es ueber den Tag WEISS, steht in
+     * seinem eigenen Pflegebuch und in seinem eigenen Spielstand; was du dir VORGENOMMEN hast,
+     * steht in deinen Routinen ([RoutineOwner]). Ein Wesen soll ueber Dinge reden koennen, die es
+     * miterlebt hat - und ueber Vorhaben, die dir gehoeren, auch wenn es neu ist.
+     */
     suspend fun gather(
         context: Context,
-        profileId: String,
+        companionProfileId: String,
         /** Im Spielmodus kommt der Spielstand dazu - siehe [Game]. */
         includeGame: Boolean = false
     ): Knowledge {
@@ -174,12 +180,12 @@ object PlayTalk {
 
         // isPlayMode ausgeschlossen: Die Spiel-Erinnerung ist ein technisches Hilfsmittel und
         // gehoert nicht in einen Plan, den sich jemand vorgenommen hat.
-        val reminders = db.glyphReminderDao().getEnabledForProfile(profileId)
+        val reminders = db.glyphReminderDao().getEnabledForProfile(RoutineOwner.current(context))
             .filterNot { it.isPlayMode }
             .sortedBy { it.startMinuteOfDay }
 
         val fedByReminder = db.avatarFeedEventDao()
-            .countFedPerReminderSince(profileId, since)
+            .countFedPerReminderSince(companionProfileId, since)
             .associate { it.reminderId to it.count }
 
         val plan = reminders.map { PlanEntry(it, fedByReminder[it.id] ?: 0) }
@@ -187,13 +193,13 @@ object PlayTalk {
 
         val weekStart = FeedStatsPeriod.WEEK.startMillis()
         val week = summariseWeek(
-            db.avatarFeedEventDao().fedTimestampsSince(profileId, weekStart)
+            db.avatarFeedEventDao().fedTimestampsSince(companionProfileId, weekStart)
         )
 
         val game = if (includeGame) {
             // Die Erfahrung steht in der Datenbank, Geld und Vorrat in den Einstellungen - beides
             // hier zusammengefuehrt, damit das Gespraech nur EINE Quelle kennt.
-            val xp = db.avatarPlayStateDao().getForProfile(profileId)?.xp ?: 0
+            val xp = db.avatarPlayStateDao().getForProfile(companionProfileId)?.xp ?: 0
             Game(
                 level = PlayModeXp.levelFor(xp),
                 xp = xp,
@@ -207,7 +213,7 @@ object PlayTalk {
         return Knowledge(
             plan = plan,
             fedToday = fedByReminder.values.sum(),
-            steering = PlayHabitSignal.underfulfilledTopics(context, profileId),
+            steering = PlayHabitSignal.underfulfilledTopics(context, companionProfileId),
             missing = SUGGESTABLE.filterNot { it in covered },
             week = week,
             game = game

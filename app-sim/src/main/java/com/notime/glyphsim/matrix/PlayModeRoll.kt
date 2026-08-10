@@ -5,7 +5,9 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphsim.data.AppDatabase
+import com.notime.glyphsim.ui.AvatarSpeciesPrefs
 import com.notime.glyphsim.ui.PlayModeXp
+import com.notime.glyphsim.ui.PresentCompanion
 import kotlin.random.Random
 
 /**
@@ -26,9 +28,17 @@ import kotlin.random.Random
 object PlayModeRoll {
 
     suspend fun reroll(context: Context, reminder: GlyphReminder): GlyphReminder {
-        val species = runCatching { AvatarSpecies.valueOf(reminder.profileId) }.getOrNull()
-            ?: AvatarSpecies.PUFFLING
-        val stage = PlayGamePlans.forSpecies(species).stageFor(currentLevel(context, reminder.profileId))
+        // **Das Wesen, nicht die Erinnerung.** Vorher stand hier
+        // `AvatarSpecies.valueOf(reminder.profileId)` - die Spezies wurde also aus dem
+        // Besitzer-Feld einer Routine zurueckgerechnet. Das ging nur gut, solange die Profil-Id
+        // der Avatarname IST; sobald die Routinen dem Nutzer gehoeren, faende das `runCatching`
+        // keine Spezies mehr und jedes Wesen wuerfelte still nach dem Plan von PUFFLING.
+        //
+        // Welchen Plan gewuerfelt wird und wie weit er fortgeschritten ist, sind ohnehin Fragen an
+        // das anwesende Wesen (siehe PresentCompanion) - so, wie der Spielstand selbst.
+        val species = AvatarSpeciesPrefs.get(context)
+        val companionId = PresentCompanion.profileId(context)
+        val stage = PlayGamePlans.forSpecies(species).stageFor(currentLevel(context, companionId))
         val topic = pickWeighted(stage.topicWeights)
         return reminder.copy(
             label = context.getString(topic.labelRes),
@@ -42,9 +52,9 @@ object PlayModeRoll {
         )
     }
 
-    private suspend fun currentLevel(context: Context, profileId: String): Int {
+    private suspend fun currentLevel(context: Context, companionProfileId: String): Int {
         val xp = AppDatabase.getInstance(context).avatarPlayStateDao()
-            .getForProfile(profileId)?.xp ?: 0
+            .getForProfile(companionProfileId)?.xp ?: 0
         return PlayModeXp.levelFor(xp)
     }
 
