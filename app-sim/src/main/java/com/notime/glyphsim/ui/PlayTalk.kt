@@ -5,6 +5,7 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphsim.data.AppDatabase
+import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayWallet
 import java.time.DayOfWeek
@@ -116,7 +117,16 @@ object PlayTalk {
         /** Die laufende Woche - siehe [Week]. */
         val week: Week,
         /** Der Spielstand, oder `null` im Normalbetrieb - siehe [Game]. */
-        val game: Game? = null
+        val game: Game? = null,
+        /**
+         * Wie weit ihr beide seid (siehe [CompanionChapter]).
+         *
+         * Steht bewusst NEBEN den Zahlen und nicht zwischen ihnen: Alles andere in dieser Klasse
+         * beschreibt, was heute oder diese Woche passiert ist. Das Kapitel beschreibt gar nichts
+         * davon - es haengt allein daran, wie lange ihr euch kennt, und laesst sich weder
+         * verbessern noch verlieren.
+         */
+        val chapter: CompanionChapter = CompanionChapter.ARRIVED
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
@@ -214,6 +224,10 @@ object PlayTalk {
             plan = plan,
             fedToday = fedByReminder.values.sum(),
             steering = PlayHabitSignal.underfulfilledTopics(context, companionProfileId),
+            chapter = CompanionChapter.chapterFor(
+                db.avatarFeedEventDao().firstAnsweredMillis(companionProfileId),
+                System.currentTimeMillis()
+            ),
             missing = SUGGESTABLE.filterNot { it in covered },
             week = week,
             game = game

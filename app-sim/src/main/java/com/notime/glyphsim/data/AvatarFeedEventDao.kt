@@ -202,14 +202,28 @@ interface AvatarFeedEventDao {
     )
     fun observeBreakdownSince(profileId: String, sinceEpochMillis: Long): Flow<List<FeedBreakdownRow>>
 
-    /** Zeitpunkt der ersten noch gespeicherten Fuetterung - Startpunkt der Angabe "seit Beginn". */
-    @Query("SELECT MIN(epochMillis) FROM avatar_feed_events WHERE profileId = :profileId")
-    fun observeFirstFeedMillis(profileId: String): Flow<Long?>
+    /**
+     * Der erste Moment, den ihr wirklich geteilt habt - Grundlage des Kapitels (siehe
+     * [com.notime.glyphsim.matrix.CompanionChapter]).
+     *
+     * `fedAtMillis IS NOT NULL` ist hier das Wesentliche: gezaehlt wird nicht, wann zum ersten Mal
+     * etwas ausgeloest hat, sondern wann zum ersten Mal jemand darauf reagiert hat. Eine
+     * Erinnerung, die im leeren Raum ablief, ist kein gemeinsamer Anfang.
+     *
+     * Sortiert wird nach [AvatarFeedEvent.epochMillis] und nicht nach dem Reaktionszeitpunkt: Der
+     * Moment, um den es geht, ist der, in dem etwas anstand - die Reaktion gehoert dazu, datiert
+     * ihn aber nicht.
+     */
+    @Query(
+        "SELECT MIN(epochMillis) FROM avatar_feed_events " +
+            "WHERE profileId = :profileId AND fedAtMillis IS NOT NULL"
+    )
+    suspend fun firstAnsweredMillis(profileId: String): Long?
 
     /**
      * Erste jemals gespeicherte Ausloesung JE Erinnerung (beantwortet oder nicht) - Grundlage
      * dafuer, wie lange es eine bestimmte Erinnerung ueberhaupt schon gibt. Bewusst getrennt von
-     * [observeFirstFeedMillis], das nur den Avatar insgesamt betrifft: eine gestern erst
+     * [observeFirstAnsweredMillis], das nur das Wesen insgesamt betrifft: eine gestern erst
      * angelegte Erinnerung in einem monatealten Profil braucht ihren EIGENEN Startpunkt, sonst
      * wirkte sie schon nach einem Tag faelschlich wie chronisch verpasst.
      */

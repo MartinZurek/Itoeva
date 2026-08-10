@@ -607,6 +607,27 @@ Zeilen zurück, deren `reminderId` es nicht mehr gibt. „So oft hast du reagier
 nur der Titel dahinter ist nicht mehr auflösbar; die Alternative wäre gewesen, Geschichte zu
 löschen, um eine Verknüpfung zu retten.
 
+### Kapitel
+
+`matrix/CompanionChapter.kt` — wie weit ihr beide seid. **Kein Fortschritt, den man erreicht:**
+kein Rang, keine Stufe, kein Balken, nichts freizuschalten und nichts zu verlieren.
+
+Das ist die Bedingung dafür, dass es überhaupt existieren darf. Hinge ein Kapitel von Leistung ab,
+wäre es eine Serie mit anderem Namen — wer zwei Tage aussetzt, fällt zurück. Die Signatur ist die
+Zusage: `chapterFor(firstSharedMomentMillis, nowMillis)` bekommt **nur zwei Zeitpunkte** und kann
+daher gar nicht bewerten, wie oft oder wie zuverlässig jemand etwas getan hat.
+
+Gerechnet wird ab dem ersten Moment, den ihr wirklich geteilt habt — der ersten **beantworteten**
+Erinnerung (`AvatarFeedEventDao.firstAnsweredMillis`), nicht ab der Installation und nicht ab der
+ersten Auslösung. Eine Erinnerung, die im leeren Raum ablief, ist kein gemeinsamer Anfang.
+
+Je Wesen, nicht je Nutzer: Ein frisch gewähltes Wesen fängt wieder bei „Gerade erst da" an,
+obwohl dieselben Routinen weiterlaufen. Das ist die sichtbarste Stelle, an der Phase 4b etwas
+bedeutet — die Routinen gehören dir, die gemeinsame Geschichte gehört ihm.
+
+Zu sehen als erste Sprechblase, wenn man das Wesen anspricht, und als Untertitel über dem
+Pflegebuch. Bewusst ohne Tageszahl: „seit 11 Tagen" wäre wieder etwas zum Vergleichen.
+
 ### SharedPreferences
 
 Achtzehn Einträge in fünfzehn Dateien, vollständig in

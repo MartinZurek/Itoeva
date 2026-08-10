@@ -48,10 +48,12 @@ import com.notime.glyphsim.data.FeedBreakdownRow
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Dunkle Flaechen des Dialogs - dieselbe Welt wie der schwarze Startbildschirm. */
 
@@ -89,6 +91,14 @@ fun FeedStatsDialog(
     // stumm die Ziele eines Profils gegen die Fuetterungen eines anderen rechnet.
     val companionId = remember(species) { AvatarSpeciesPrefs.profileId(species) }
     val routineOwner = remember(species) { RoutineOwner.current(context) }
+
+    // Das Kapitel wird beim Oeffnen einmal bestimmt und nicht beobachtet: es aendert sich
+    // hoechstens einmal in Tagen, ein Flow dafuer waere Aufwand ohne Wirkung.
+    var chapter by remember(companionId) { mutableStateOf(CompanionChapter.ARRIVED) }
+    LaunchedEffect(companionId) {
+        val ersterMoment = withContext(Dispatchers.IO) { dao.firstAnsweredMillis(companionId) }
+        chapter = CompanionChapter.chapterFor(ersterMoment, System.currentTimeMillis())
+    }
 
     var period by remember { mutableStateOf(FeedStatsPeriod.TODAY) }
     var confirmReset by remember { mutableStateOf(false) }
@@ -186,11 +196,25 @@ fun FeedStatsDialog(
         // Figur dort unten (die Spezies IST das Profil, siehe AvatarSpeciesPrefs - ein Blick
         // reicht). Titel bleibt deshalb einfacher, reiner Text.
         title = {
-            Text(
-                stringResource(R.string.stats_subtitle),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            Column {
+                Text(
+                    stringResource(R.string.stats_subtitle),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                // Das Kapitel als Untertitel (siehe CompanionChapter): Es beantwortet die Frage,
+                // die ueber diesem Buch steht - wessen Buch ist das, und seit wann? Ohne diese
+                // Einordnung liest sich eine kurze Liste wie ein magerer Ertrag statt wie der
+                // Anfang von etwas.
+                //
+                // Bewusst nur der Name und keine Tageszahl: "seit 11 Tagen" waere wieder eine
+                // Zahl, die man vergleichen kann.
+                Text(
+                    stringResource(chapter.labelRes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DialogPalette.TextMuted
+                )
+            }
         },
         text = {
             Column(

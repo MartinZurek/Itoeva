@@ -240,6 +240,13 @@ private fun AssistantDay(species: AvatarSpecies, onBack: () -> Unit) {
     if (current == null) {
         Bubble(stringResource(R.string.talk_loading))
     } else {
+        // **Zuerst das Kapitel** (siehe CompanionChapter) - vor allen Zahlen.
+        //
+        // Es ordnet ein, wie das Folgende gemeint ist: Wer seit zwei Tagen dabei ist, soll eine
+        // duenne Woche nicht als Versagen lesen. Und es ist die einzige Aussage hier, die nichts
+        // bewertet - sie haengt allein daran, wie lange ihr euch kennt.
+        Bubble(stringResource(current.chapter.lineRes))
+
         // Im Spiel zuerst der Spielstand - dort ist er die Auskunft, auf die es ankommt.
         current.game?.let { game ->
             Bubble(

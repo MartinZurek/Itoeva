@@ -220,6 +220,14 @@
     <string name="playmode_start">Spielmodus starten</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Schau mal – ich bin gerade auf Level %1$d aufgestiegen!</string>
+    <string name="chapter_arrived">Gerade erst da</string>
+    <string name="chapter_arrived_line">Wir kennen uns noch gar nicht. Ich schau erst mal zu.</string>
+    <string name="chapter_settling">Wir gewöhnen uns aneinander</string>
+    <string name="chapter_settling_line">Langsam bekomme ich ein Gefühl dafür, wie dein Tag aussieht.</string>
+    <string name="chapter_familiar">Vertraut</string>
+    <string name="chapter_familiar_line">Deinen Rhythmus kenne ich inzwischen ganz gut.</string>
+    <string name="chapter_longstanding">Schon eine Weile</string>
+    <string name="chapter_longstanding_line">Wir machen das jetzt schon eine ganze Weile zusammen.</string>
     <string name="assistant_greeting_1">Hi. Ich bin einfach da – du kümmerst dich um ein paar kleine Dinge für dich, und ich kriege das mit.</string>
     <string name="assistant_greeting_2">Keine Serien, keine Punkte, nichts, was man aufrechterhalten muss. Lässt du einen Tag aus, passiert nichts; ich bin morgen trotzdem da.</string>
     <string name="assistant_intro_1">Ich wohne auf deiner Uhr. Im Alltag-Modus tauche ich daneben auf, sobald eine Erinnerung fällig ist.</string>
