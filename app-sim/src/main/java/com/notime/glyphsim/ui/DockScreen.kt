@@ -681,24 +681,17 @@ fun DockScreen(
                         startAvatarIdleLoop(species, mood)
                     }
 
-                    RoutineStep.Drop -> {
-                        if (carried != null) {
-                            avatarIdleJob?.cancel()
-                            val put = AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.STRETCH)
-                            MatrixAnimator.playTimed(put.frames, put.holdsMs) { f ->
-                                avatar = avatar?.copy(frame = f)
-                            }
-                            flashAt(avatar)
-                            carried = null
-                            startAvatarIdleLoop(species, mood)
-                        }
-                    }
-
                     is RoutineStep.GoToPlace -> {
                         activeStation = null
                         moveToPlace(step.place, species)
                     }
 
+                    // Es gab diesen Zweig zweimal - einmal ohne das Auffuellen des Vorrats, und
+                    // zwar VOR diesem hier. Kotlin nimmt in einem `when` den ersten passenden
+                    // Zweig, der zweite war also toter Code: Der Avatar ging einkaufen, trug das
+                    // Essen nach Hause, legte es in der Kueche ab - und der Vorrat blieb leer.
+                    // Damit war ab dem ersten Aufbrauchen dauerhaft "kein Essen da", die Figur
+                    // musste endlos arbeiten und einkaufen, ohne dass es je etwas aenderte.
                     RoutineStep.Drop -> {
                         if (carried != null) {
                             // Wird der Einkauf zu Hause eingeraeumt, ist der Vorrat wieder voll.
