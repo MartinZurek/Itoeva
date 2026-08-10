@@ -124,7 +124,7 @@ object SettingsCatalog {
     val AvatarSpecies = Setting.OptionalString("avatar_species_prefs", "species")
 
     /** Ob die Stimmung des Avatars auf sein Verhalten wirkt. */
-    val MoodEnabled = Setting.Bool("mood_prefs", "mood_enabled", default = false)
+    val MoodEnabled = Setting.Bool("mood_prefs", "mood_enabled", default = true)
 
     /** Profil-Id im gemeinsamen Kern - dort neutral, hier ist es der Avatar. */
     val ActiveProfileId = Setting.OptionalString("reminder_profile_prefs", "active_profile_id")

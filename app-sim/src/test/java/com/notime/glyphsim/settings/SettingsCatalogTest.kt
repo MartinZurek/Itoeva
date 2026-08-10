@@ -90,6 +90,10 @@ class SettingsCatalogTest {
         pruefe(SettingsCatalog.AvatarSpecies, "avatar_species_prefs", "species")
         pruefe(SettingsCatalog.ActiveProfileId, "reminder_profile_prefs", "active_profile_id")
         pruefe(SettingsCatalog.MoodEnabled, "mood_prefs", "mood_enabled")
+        // Seit Phase 7 voreingestellt AN. Steht hier ausdruecklich, weil es eine
+        // Produktentscheidung ist und keine technische: die Stimmung ist die zentrale
+        // Rueckmeldung der App, und ohne Tagesziel bleibt sie ohnehin NEUTRAL (siehe MoodPrefs).
+        assertEquals(true, SettingsCatalog.MoodEnabled.default)
     }
 
     /**
