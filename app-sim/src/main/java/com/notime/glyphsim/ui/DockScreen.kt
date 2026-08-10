@@ -1487,7 +1487,9 @@ fun DockScreen(
                             // hat (siehe PlayHabitSignal) - Fuettern wirkt sich dadurch sichtbar
                             // auf das aus, was der Avatar von sich aus tut, nicht nur auf seine
                             // Stimmung (AvatarMood).
-                            val profileId = AvatarSpeciesPrefs.profileId(species)
+                            // Die offenen Routinen des NUTZERS gewichten, was das Wesen von
+                            // sich aus tut - deshalb der Routinen-Besitzer, nicht der Avatar.
+                            val profileId = RoutineOwner.current(context)
                             val boostedTopics = PlayHabitSignal.underfulfilledTopics(context, profileId)
                             // Vorrang vor allem anderen: Ist nichts mehr da UND kein Geld fuer
                             // einen Einkauf, muss gearbeitet werden. Das ist die Stelle, an der

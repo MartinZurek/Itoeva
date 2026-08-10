@@ -1144,7 +1144,7 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                                 scope.launch {
                                     AppDatabase.getInstance(context).let { db ->
                                         GlyphReminderRepository(db.glyphReminderDao())
-                                            .seedIfEmpty(AvatarSpeciesPrefs.profileId(species))
+                                            .seedIfEmpty(RoutineOwner.current(context))
                                     }
                                     ReminderScheduler.rescheduleAll(context)
                                 }

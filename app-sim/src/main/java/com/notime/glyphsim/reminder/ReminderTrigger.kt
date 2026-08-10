@@ -14,6 +14,7 @@ import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.ReminderAnimationEvent
 import com.notime.glyphsim.matrix.ReminderAnimations
 import com.notime.glyphsim.ui.AvatarSpeciesPrefs
+import com.notime.glyphsim.ui.RoutineOwner
 import com.notime.glyphsim.widget.GlyphClockWidgetProvider
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -92,10 +93,12 @@ object ReminderTrigger {
                 Log.d(TAG, "Erinnerung id=$reminderId nicht mehr vorhanden, ignoriere Alarm")
                 return
             }
-            // Verspaeteter Alarm eines inzwischen abgewaehlten Avatars: still verwerfen und auch
-            // NICHT neu planen - sonst haelt sich der Alarm eines nicht mehr aktiven Avatars
-            // selbst am Leben (siehe GlyphReminder.avatarSpecies).
-            val activeProfile = AvatarSpeciesPrefs.profileId(AvatarSpeciesPrefs.get(context))
+            // Verspaeteter Alarm eines Profils, dem die Routinen nicht mehr gehoeren: still
+            // verwerfen und auch NICHT neu planen - sonst hielte sich der Alarm selbst am Leben.
+            //
+            // `RoutineOwner` und nicht der Avatar: gemeint ist "wem gehoeren die Erinnerungen",
+            // nicht "welches Wesen ist gerade da". Heute derselbe Wert, siehe RoutineOwner.
+            val activeProfile = RoutineOwner.current(context)
             if (reminder.profileId != activeProfile) {
                 Log.d(TAG, "Erinnerung gehoert zu Profil ${reminder.profileId}, aktiv ist $activeProfile - ignoriere")
                 ReminderScheduler.cancel(context, reminder)
@@ -160,7 +163,7 @@ object ReminderTrigger {
      */
     suspend fun firePending(context: Context) {
         mutex.withLock {
-            val profileId = AvatarSpeciesPrefs.profileId(AvatarSpeciesPrefs.get(context))
+            val profileId = RoutineOwner.current(context)
             val dao = AppDatabase.getInstance(context).glyphReminderDao()
             val now = System.currentTimeMillis()
 

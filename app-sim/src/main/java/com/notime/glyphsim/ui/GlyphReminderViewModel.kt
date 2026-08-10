@@ -158,7 +158,7 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
             // Voreingestellte Erinnerungen pro Avatar anlegen (siehe seedIfEmpty) und danach
             // sicherstellen, dass wirklich nur die Alarme des aktiven Avatars stehen.
             repository.seedIfEmpty(
-                AvatarSpeciesPrefs.profileId(AvatarSpeciesPrefs.get(getApplication()))
+                RoutineOwner.current(getApplication())
             )
             ReminderScheduler.rescheduleAll(getApplication())
         }
@@ -257,7 +257,7 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
                 intervalMinutes = intervalMinutes,
                 enabled = true,
                 // Neue Erinnerungen gehoeren immer dem gerade gewaehlten Avatar.
-                profileId = AvatarSpeciesPrefs.profileId(AvatarSpeciesPrefs.get(getApplication())),
+                profileId = RoutineOwner.current(getApplication()),
                 // Nochmal geklemmt statt dem Dialog blind zu vertrauen (siehe
                 // ReminderOpenDuration.coerceToInterval) - der KI-Import geht z.B. gar nicht
                 // durch den Dialog, sondern direkt hierher.
