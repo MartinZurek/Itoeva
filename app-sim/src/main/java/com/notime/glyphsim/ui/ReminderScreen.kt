@@ -54,6 +54,7 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -78,6 +80,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.notime.glyphcore.data.AnimationType
@@ -88,6 +92,7 @@ import com.notime.glyphcore.data.INTERVAL_OPTIONS
 import com.notime.glyphcore.data.LibraryAnimation
 import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphcore.data.ReminderOpenDuration
+import com.notime.glyphcore.reminder.ReminderPause
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.MatrixAnimator
@@ -149,6 +154,20 @@ fun ReminderScreen(
     viewModel: GlyphReminderViewModel = viewModel()
 ) {
     var showLibrary by rememberSaveable { mutableStateOf(false) }
+    var showPauseSheet by rememberSaveable { mutableStateOf(false) }
+
+    /*
+     * Eine Pause endet durch Zeitablauf, nicht durch ein Ereignis - ohne dieses Nachsehen stuende
+     * der Hinweis noch da, obwohl sie laengst vorbei ist.
+     */
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshPauseState()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     /*
      * EIN Zustand statt vier Fluessen (Phase 3.1). Die Ableitungen - welche Animationen
      * ausgewaehlt sind, ob der Leer-Zustand gilt - stehen jetzt in ReminderUiState und nicht mehr
@@ -226,6 +245,7 @@ fun ReminderScreen(
                 actions = {
                     // Erinnerungs-Satz eines anderen Avatars uebernehmen - ohne das muesste ein
                     // eingerichteter Satz fuer jeden weiteren Avatar von Hand nachgebaut werden.
+                    TextButton(onClick = { showPauseSheet = true }) { Text(stringResource(R.string.pause_action)) }
                     TextButton(onClick = { showCopyDialog = true }) { Text(stringResource(R.string.reminders_copy)) }
                 },
                 scrollBehavior = scrollBehavior
@@ -247,6 +267,15 @@ fun ReminderScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            // Eine laufende Pause ist das Wichtigste, was die Liste ueber sich zu sagen hat -
+            // ohne Hinweis waere sie von "es steht gerade nichts an" nicht zu unterscheiden.
+            state.pausedUntil?.let { until ->
+                PauseBanner(
+                    until = until,
+                    onResume = { viewModel.resumeReminders() }
+                )
+            }
+
             if (reminders.isEmpty()) {
                 EmptyState(onAddClick = { showAddDialog = true }, modifier = Modifier.fillMaxSize())
             } else {
@@ -320,6 +349,16 @@ fun ReminderScreen(
             }
         )
     }
+    }
+
+    if (showPauseSheet) {
+        PauseChoiceDialog(
+            onChoose = {
+                viewModel.pauseReminders(it)
+                showPauseSheet = false
+            },
+            onDismiss = { showPauseSheet = false }
+        )
     }
 
     if (showCopyDialog) {
@@ -1145,3 +1184,67 @@ private fun CopyRemindersDialog(
     )
 }
 
+/**
+ * Hinweis, dass die Erinnerungen gerade ruhen - samt Weg zurueck.
+ *
+ * Bewusst auffaellig und bewusst mit Enddatum: eine Pause, die man vergisst, ist der haeufigste
+ * Weg, auf dem eine Erinnerungs-App still aufhoert zu erinnern. Der Nutzer soll jederzeit sehen,
+ * dass sie laeuft, und wie lange noch.
+ */
+@Composable
+private fun PauseBanner(until: Long, onResume: () -> Unit) {
+    val zeit = remember(until) {
+        java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
+            .format(java.util.Date(until))
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(16.dp, 12.dp, 16.dp, 0.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                stringResource(R.string.pause_active, zeit),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            TextButton(onClick = onResume) { Text(stringResource(R.string.pause_resume)) }
+        }
+    }
+}
+
+/**
+ * Die Auswahl, wie lange Ruhe sein soll.
+ *
+ * Nur zwei Dauern, beide kurz - siehe [ReminderPause] fuer die Begruendung. "Bis auf Weiteres"
+ * fehlt hier absichtlich und nicht aus Nachlaessigkeit.
+ */
+@Composable
+private fun PauseChoiceDialog(
+    onChoose: (ReminderPause.Duration) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pause_action)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(
+                    onClick = { onChoose(ReminderPause.Duration.ONE_HOUR) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(stringResource(R.string.pause_one_hour)) }
+                TextButton(
+                    onClick = { onChoose(ReminderPause.Duration.UNTIL_TOMORROW) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(stringResource(R.string.pause_until_tomorrow)) }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    )
+}

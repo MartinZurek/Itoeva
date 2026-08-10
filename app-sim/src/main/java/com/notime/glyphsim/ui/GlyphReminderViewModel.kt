@@ -12,6 +12,7 @@ import com.notime.glyphcore.data.LibraryAnimation
 import com.notime.glyphcore.data.LibraryAnimationRepository
 import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphcore.data.ReminderOpenDuration
+import com.notime.glyphcore.reminder.ReminderPause
 import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.AvatarSpecies
@@ -19,8 +20,10 @@ import com.notime.glyphsim.matrix.ReminderAnimations
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -71,6 +74,11 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
     val builtInSelections: StateFlow<List<BuiltInAnimationSelection>> = builtInRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _pausedUntil = MutableStateFlow(ReminderPause.pausedUntil(application))
+
+    /** Bis wann pausiert ist, oder null. Siehe [pauseReminders]. */
+    val pausedUntil: StateFlow<Long?> = _pausedUntil.asStateFlow()
+
     /**
      * Der Zustand des Bildschirms als EIN unveraenderlicher Wert - siehe [ReminderUiState] fuer
      * die Begruendung.
@@ -87,16 +95,56 @@ class GlyphReminderViewModel(application: Application) : AndroidViewModel(applic
             reminders,
             activeSpecies,
             libraryAnimations,
-            builtInSelections
-        ) { reminders, species, library, builtIn ->
+            builtInSelections,
+            pausedUntil
+        ) { reminders, species, library, builtIn, paused ->
             ReminderUiState(
                 reminders = reminders,
                 species = species,
                 libraryAnimations = library,
                 builtInSelections = builtIn,
-                loaded = true
+                loaded = true,
+                pausedUntil = paused
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReminderUiState())
+
+    /**
+     * Pausiert alle Erinnerungen fuer die gewaehlte Dauer.
+     *
+     * Das Neuplanen danach ist kein Beiwerk, sondern der eigentliche Wirkmechanismus: die Pause
+     * verhindert nur, dass NEUE Alarme gestellt werden. Bereits gesetzte blieben sonst stehen und
+     * feuerten waehrend der Pause weiter. `rescheduleAll` bestellt zuerst alles ab und stellt dann
+     * nur wieder ein, was erlaubt ist - waehrend einer Pause also nichts.
+     */
+    fun pauseReminders(duration: ReminderPause.Duration) {
+        viewModelScope.launch {
+            val application = getApplication<Application>()
+            val until = ReminderPause.endOf(duration, System.currentTimeMillis())
+            ReminderPause.pauseUntil(application, until)
+            _pausedUntil.value = until
+            ReminderScheduler.rescheduleAll(application)
+        }
+    }
+
+    /** Hebt eine laufende Pause sofort auf und plant alles wieder ein. */
+    fun resumeReminders() {
+        viewModelScope.launch {
+            val application = getApplication<Application>()
+            ReminderPause.resume(application)
+            _pausedUntil.value = null
+            ReminderScheduler.rescheduleAll(application)
+        }
+    }
+
+    /**
+     * Frischt den Pausen-Zustand auf - beim Zurueckkommen auf den Bildschirm aufzurufen.
+     *
+     * Eine Pause endet durch Zeitablauf, nicht durch ein Ereignis. Ohne dieses Nachsehen stuende
+     * der Hinweis noch da, obwohl die Pause laengst vorbei ist.
+     */
+    fun refreshPauseState() {
+        _pausedUntil.value = ReminderPause.pausedUntil(getApplication())
+    }
 
     private val libraryFullEvents = Channel<Unit>(Channel.CONFLATED)
 

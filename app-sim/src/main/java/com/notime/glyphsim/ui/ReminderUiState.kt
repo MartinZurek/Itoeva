@@ -56,8 +56,21 @@ data class ReminderUiState(
      * "Noch keine Erinnerungen", bevor die Liste eintraf. Ein Aufblitzen, das wie ein Datenverlust
      * aussieht.
      */
-    val loaded: Boolean = false
+    val loaded: Boolean = false,
+
+    /**
+     * Bis wann die Erinnerungen ausdruecklich pausiert sind, oder `null`.
+     *
+     * Gehoert in den Bildschirmzustand und nicht in eine eigene Abfrage: eine laufende Pause ist
+     * das Wichtigste, was die Liste ueber sich zu sagen hat - ohne sichtbaren Hinweis waere sie
+     * von "es kommt gerade nichts, weil nichts ansteht" nicht zu unterscheiden.
+     */
+    val pausedUntil: Long? = null
 ) {
+    /** Ob gerade pausiert ist - fuer den Hinweis ueber der Liste. */
+    val isPaused: Boolean
+        get() = pausedUntil != null
+
     /**
      * Die im Picker ausgewaehlten Bibliotheks-Animationen.
      *
