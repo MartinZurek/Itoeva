@@ -445,8 +445,38 @@ object PlayRoutines {
             )
         )
 
+        // ---- Etwas machen: in die eigene Ecke, ans Werkstueck, dranbleiben ----
+        //
+        // **Der Ablauf, der am wenigsten zum Ziel kommt, und das mit Absicht.** Alle uebrigen
+        // enden mit einem Ergebnis: Der Einkauf steht im Kuehlschrank, das Buch ist zurueck im
+        // Regal, die Arbeit ist getan. Hier wird zweimal angesetzt, einmal innegehalten und wieder
+        // weitergemacht - so sieht es aus, wenn jemand an etwas ARBEITET, das noch nicht fertig
+        // ist. Was genau, sagt die Werkstatt (siehe PlayScene.Home.craft): Der Drache schmiedet,
+        // der Schleim toepfert, der Wuestenfuchs graebt.
+        AnimationType.CREATIVITY -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.CRAFT),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),   // betrachtet es
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(1_500L)
+                )
+            ),
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.CRAFT),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),       // macht sich bereit
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE)          // schuettelt sich aus
+                )
+            )
+        )
+
         // ---- Ohne eigenen Ablauf: an Ort und Stelle, wie bisher ----
-        AnimationType.GENERAL, AnimationType.CREATIVITY -> listOf(
+        AnimationType.GENERAL -> listOf(
             PlayRoutine(
                 listOf(
                     RoutineStep.Act(topic),

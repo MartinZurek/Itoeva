@@ -46,6 +46,9 @@ class PlaySceneTest {
         assertEquals(PlayScene.Place.PARK, PlayScene.forTopic(AnimationType.MOVE))
         assertEquals(PlayScene.Place.LIVING, PlayScene.forTopic(AnimationType.REST))
         assertEquals(PlayScene.Place.NOOK, PlayScene.forTopic(AnimationType.BOOK))
+        // Etwas machen hat einen eigenen Ort - die Leseecke war der falsche: Dort gab es nichts,
+        // womit sich haette umgehen lassen.
+        assertEquals(PlayScene.Place.CRAFT, PlayScene.forTopic(AnimationType.CREATIVITY))
         // Ohne Thema (z.B. eine Bibliotheks-Animation) darf es keinen Absturz geben.
         assertEquals(PlayScene.Place.LIVING, PlayScene.forTopic(null))
     }

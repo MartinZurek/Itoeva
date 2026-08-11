@@ -293,7 +293,8 @@ class SceneCompositionTest {
             PlayScene.Place.KITCHEN,
             PlayScene.Place.BATH,
             PlayScene.Place.DESK,
-            PlayScene.Place.BEDROOM
+            PlayScene.Place.BEDROOM,
+            PlayScene.Place.CRAFT
         )
         for (place in rooms) {
             val furniture = AvatarSpecies.entries.associateWith { species ->

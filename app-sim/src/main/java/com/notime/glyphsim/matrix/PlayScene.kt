@@ -110,7 +110,13 @@ object PlayScene {
      * Der Wald ist das Gegenteil des Zuhauses und damit der einzige Ort, an dem "spazieren gehen"
      * mehr ist als "im Park hin und her laufen".
      */
-    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, PARK, SHOP, STREET, FOREST }
+    /**
+     * [CRAFT] ist der einzige Ort, den es NUR EINMAL gibt und der trotzdem bei jeder Kreatur ein
+     * anderer Ort ist: die eigene Ecke, in der sie ihrer Art nach etwas tut. Der Drache schmiedet,
+     * der Schleim toepfert, der Wuestenfuchs graebt, die Eule spielt. Es ist der Gegenentwurf zum
+     * Arbeitsplatz - dort geht sie einem BERUF nach, hier tut sie etwas, weil sie es ist.
+     */
+    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SHOP, STREET, FOREST }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
     private val Place.isIndoors: Boolean
@@ -144,7 +150,10 @@ object PlayScene {
         // Gegenteil dessen, wofuer man in den Wald geht, und ein Fremder zwischen den Baeumen
         // wirkt eher beunruhigend als belebt.
         Place.PARK, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET -> true
-        Place.BEDROOM, Place.BATH, Place.DESK, Place.KITCHEN, Place.NOOK, Place.FOREST -> false
+        // Die eigene Ecke ([Place.CRAFT]) ausdruecklich NICHT: Wer dort sitzt, hat sich
+        // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
+        Place.BEDROOM, Place.BATH, Place.DESK, Place.KITCHEN, Place.NOOK, Place.CRAFT,
+        Place.FOREST -> false
     }
 
     /**
@@ -158,7 +167,7 @@ object PlayScene {
      * Bett", und wo das Bett steht, weiss allein diese Datei. Genau daran haengt, ob sich die
      * Welt spaeter erweitern laesst, ohne dass die Ablaeufe brechen.
      */
-    enum class Station { BED, SEAT, DESK, TABLE, FRIDGE, BOOKSHELF, LAMP, TV, BENCH, DOOR, RACK, CHECKOUT, TUB, BASIN, WORKPLACE }
+    enum class Station { BED, SEAT, DESK, TABLE, FRIDGE, BOOKSHELF, LAMP, TV, BENCH, DOOR, RACK, CHECKOUT, TUB, BASIN, WORKPLACE, CRAFT }
 
     /** Aufloesung eines [Station] in Szenen-Zellen: waagerechte Mitte und Aufsetzzeile. */
     data class SceneSpot(val centerX: Int, val groundY: Int)
@@ -404,7 +413,11 @@ object PlayScene {
         // vorher landete beides in derselben Ecke, wodurch der halbe Tagesablauf am selben Ort
         // stattfand.
         AnimationType.REST, AnimationType.LOVE, AnimationType.GENERAL, null -> Place.LIVING
-        AnimationType.BOOK, AnimationType.CREATIVITY, AnimationType.MINDFULNESS -> Place.NOOK
+        AnimationType.BOOK, AnimationType.MINDFULNESS -> Place.NOOK
+        // **Etwas machen hat jetzt einen eigenen Ort.** Vorher fand es in der Leseecke statt,
+        // zwischen Buch und Stille - drei Themen an einem Platz, und ausgerechnet das taetigste
+        // davon hatte dort nichts, womit es haette umgehen koennen.
+        AnimationType.CREATIVITY -> Place.CRAFT
     }
 
     /**
@@ -419,6 +432,9 @@ object PlayScene {
         Place.KITCHEN -> 0.08f
         Place.NOOK -> 0.27f
         Place.LIVING -> 0.30f
+        // Rechts von der Werkbank: Die Figur arbeitet an ihr (useSpot links davon), steht in Ruhe
+        // aber daneben - sonst haette sie nie eine andere Haltung zu ihrem eigenen Werkstueck.
+        Place.CRAFT -> 0.42f
         Place.PARK -> 0.20f
         Place.SHOP -> 0.34f
         Place.BATH -> 0.42f
@@ -914,6 +930,17 @@ object PlayScene {
             Placement(home.shelf, anchorX = 0.60f, station = Station.BOOKSHELF),
             Placement(home.light, anchorX = 0.82f, station = Station.LAMP)
         ))
+        // **Die eigene Ecke.** Ein Raum aus vier Stuecken, von denen drei ohnehin schon ihr
+        // gehoeren (Wandschmuck, Leuchte, Kleinzeug) - das vierte ist die eigentliche Aussage.
+        Place.CRAFT -> besideDoor(listOf(
+            Placement(home.craft, anchorX = 0.10f, station = Station.CRAFT),
+            Placement(home.wall, anchorX = 0.5f, liftCells = 11, brightness = BACKDROP),
+            Placement(home.accent, anchorX = 0.60f),
+            // Die Leuchte ganz aussen, das Kleinzeug in die Mitte - und nicht umgekehrt. Beim
+            // ersten Entwurf stand die Figur an ihrem Ruheplatz genau IN der Leuchte und loeschte
+            // sie aus. Vor einem Krug zu stehen ist Tiefe, vor einer Lichtquelle ein Verlust.
+            Placement(home.light, anchorX = 0.94f)
+        ))
         Place.LIVING -> besideDoor(listOf(
             Placement(home.couch, anchorX = 0.02f, station = Station.SEAT),
             Placement(home.wall, anchorX = 0.34f, liftCells = 11, brightness = BACKDROP),
@@ -1009,6 +1036,7 @@ object PlayScene {
         // aussieht - genau das laesst sich hier mit drei Zellen Unterschied sagen.
         Place.LIVING -> indoorFloor(species, widthCells, floorY, from = 0.22f, to = 0.62f)
         Place.BEDROOM -> indoorFloor(species, widthCells, floorY, from = 0.40f, to = 0.72f)
+        Place.CRAFT -> indoorFloor(species, widthCells, floorY, from = 0.26f, to = 0.58f)
         else -> emptyList()
     }
 
@@ -2171,6 +2199,86 @@ object PlayScene {
     // Raum der ganzen Wohnung geblieben waere - Fenster und Schreibtisch machen zusammen zwei
     // Drittel davon aus, und beide waren fuer alle dieselben.
 
+    // ---- Die eigene Ecke: was diese Kreatur ihrer Art nach tut ----
+    //
+    // **Der Unterschied zum Arbeitsplatz ist der ganze Sinn dieses Ortes.** Dort geht sie einem
+    // BERUF nach - Sternwarte, Turnhalle, Backstube, gewaehlt aus ihrem Leitsatz. Hier tut sie
+    // etwas, weil sie ist, was sie ist: Ein Drache haemmert auf glühendes Eisen, ein Wesen ohne
+    // feste Form dreht Ton, ein Wuestenfuchs graebt, eine Eule spielt in der Nacht.
+    //
+    // Alle tragen [Station.CRAFT], damit derselbe Ablauf (siehe PlayRoutines zu CREATIVITY) bei
+    // jeder Kreatur aufgeht - was sie dort tut, unterscheidet sich, dass sie es tut, nicht.
+
+    /** PUFFLING - Werkbank mit Lochwand. Er baut aus dem, was ihm unterkommt. */
+    private val WORKBENCH = Prop(
+        width = 13, height = 11,
+        art = hLine(0, 12, 0) +                                   // Lochwand
+            listOf(2 to 1, 2 to 2, 4 to 1, 6 to 1, 6 to 2, 6 to 3, 9 to 1, 10 to 1) +
+            hLine(0, 12, 5) + hLine(0, 12, 6) +                   // Bankplatte
+            vLine(1, 7, 10) + vLine(11, 7, 10) +                  // Beine
+            hLine(1, 11, 8),                                      // Zwischenbrett
+        useSpot = -1 to 10
+    )
+
+    /** STARLET - Anzuchtkasten unter einer Glashaube. Sie zieht heran, was spaeter draussen steht. */
+    private val SEEDBED = Prop(
+        width = 13, height = 9,
+        art = hLine(2, 10, 0) + listOf(1 to 1, 11 to 1) +         // Haube
+            listOf(0 to 2, 12 to 2) + vLine(0, 3, 5) + vLine(12, 3, 5) +
+            listOf(3 to 4, 3 to 5, 6 to 3, 6 to 4, 6 to 5, 9 to 4, 9 to 5) +   // Setzlinge
+            hLine(0, 12, 6) + hLine(0, 12, 7) +                   // Kastenrand
+            listOf(1 to 8, 11 to 8),                              // Fuesse
+        useSpot = -1 to 8
+    )
+
+    /**
+     * WYRMLING - Esse mit Glutbett.
+     *
+     * Das Feuer ist ausgespart und wird von [ambient] gefuellt, wie jede leuchtende Flaeche in
+     * dieser Welt (siehe [Prop.screenArea]) - dadurch darf die Glut heller sein als das Mauerwerk
+     * um sie herum, statt eine weitere Silhouette zu sein.
+     */
+    private val FORGE = Prop(
+        width = 13, height = 10,
+        art = hLine(4, 8, 0) + listOf(3 to 1, 9 to 1) +           // Rauchfang
+            listOf(2 to 2, 10 to 2) + hLine(1, 11, 3) +           // Haube
+            vLine(0, 4, 9) + vLine(1, 4, 9) +                     // Wangen
+            vLine(11, 4, 9) + vLine(12, 4, 9) +
+            hLine(2, 10, 9),                                      // Sockel
+        useSpot = -2 to 9,
+        screenArea = hLine(3, 9, 8) + hLine(4, 8, 7) + listOf(6 to 6)
+    )
+
+    /** FENNEC - aufgegrabene Stelle mit einem freigelegten Krug. Buddeln ist artgerecht. */
+    private val DIGSPOT = Prop(
+        width = 13, height = 5,
+        art = listOf(1 to 2) + hLine(0, 3, 3) + hLine(0, 4, 4) +  // Aushub links
+            listOf(5 to 4, 6 to 4, 7 to 4) +                      // Grubensohle
+            rect(5, 1, 7, 2) +                                    // der Krug darin
+            listOf(11 to 2) + hLine(9, 12, 3) + hLine(8, 12, 4),  // Aushub rechts
+        useSpot = -2 to 4
+    )
+
+    /** GLOOP - Toepferscheibe. Ein Wesen ohne feste Form gibt anderem eine; besser passt nichts. */
+    private val POTTERY = Prop(
+        width = 9, height = 7,
+        art = hLine(2, 6, 0) + hLine(1, 7, 1) + hLine(2, 6, 2) +  // der Klumpen in Arbeit
+            hLine(0, 8, 3) +                                      // Scheibe
+            vLine(4, 4, 5) +                                      // Achse
+            hLine(2, 6, 6),                                       // Fussplatte
+        useSpot = -1 to 6
+    )
+
+    /** HOOTLET - Windharfe. Er ruft nachts; ein Instrument ist dasselbe mit anderen Mitteln. */
+    private val WINDHARP = Prop(
+        width = 11, height = 11,
+        art = vLine(0, 0, 9) +                                    // Saeule
+            listOf(1 to 0, 2 to 1, 3 to 2, 4 to 3, 5 to 4, 6 to 5, 7 to 6, 8 to 7) +   // Hals
+            vLine(2, 2, 8) + vLine(4, 4, 8) + vLine(6, 6, 8) +    // drei Saiten
+            hLine(0, 9, 9) + hLine(0, 9, 10),                     // Resonanzkoerper
+        useSpot = -1 to 10
+    )
+
     /** STARLET - schmales Pult, daneben waechst etwas ueber die Platte. */
     private val PLANTDESK = Prop(
         width = 12, height = 8,
@@ -2389,7 +2497,9 @@ object PlayScene {
         /** Was an der Wand haengt. */
         val wall: Prop,
         /** Das Kleinzeug, das in jedem ihrer Zimmer herumsteht. */
-        val accent: Prop
+        val accent: Prop,
+        /** Woran sie in ihrer eigenen Ecke arbeitet ([Station.CRAFT]). */
+        val craft: Prop
     )
 
     private fun homeOf(species: AvatarSpecies): Home = when (species) {
@@ -2399,27 +2509,27 @@ object PlayScene {
         AvatarSpecies.PUFFLING -> Home(
             couch = SOFA, screen = TV, seat = CHAIR, shelf = BOOKSHELF, light = LAMP,
             desk = DESK, bath = TUB, table = TABLE, larder = SHELF, counter = COUNTER,
-            wall = PICTURE, accent = PLANT
+            wall = PICTURE, accent = PLANT, craft = WORKBENCH
         )
         // Bei ihr waechst alles: Rankgeruest statt Bild, eine hohe Blume statt der Topfpflanze,
         // und das Licht ist Papier statt Lampenschirm.
         AvatarSpecies.STARLET -> Home(
             couch = SWINGSEAT, screen = TV, seat = POUF, shelf = PLANTSTAND, light = PAPERLANTERN,
             desk = PLANTDESK, bath = TUB, table = CROSSTABLE, larder = HERBS, counter = OPENCOUNTER,
-            wall = TRELLIS, accent = FLOWER
+            wall = TRELLIS, accent = FLOWER, craft = SEEDBED
         )
         // Stein, Feuer und Kisten. Kein einziges Polster - er thront, er lehnt sich nicht an.
         AvatarSpecies.WYRMLING -> Home(
             couch = STONESEAT, screen = FIREPIT, seat = LEDGE, shelf = HOARD, light = BRAZIER,
             desk = SLABDESK, bath = STONETUB, table = SLABTABLE, larder = HANGING, counter = COOKFIRE,
-            wall = TABLET, accent = CRATE
+            wall = TABLET, accent = CRATE, craft = FORGE
         )
         // Kissen, Krug, Laterne, Ofen: eine Hoehle, in der es warm ist. Dazu die Sanduhr an der
         // Wand und der Kartentisch - er ist der, der aufpasst.
         AvatarSpecies.FENNEC -> Home(
             couch = DIVAN, screen = STOVE, seat = CUSHIONS, shelf = BASKETS, light = LANTERN,
             desk = CHARTDESK, bath = SANDBATH, table = LOWROUND, larder = HERBS, counter = COOKFIRE,
-            wall = SANDGLASS, accent = JAR
+            wall = SANDGLASS, accent = JAR, craft = DIGSPOT
         )
         // ALLES niedrig - Bank, Regal, Tisch, Wanne, Schreibtisch, Arbeitsflaeche. Bei ihm ist
         // das keine Geschmacksfrage: Ohne Beine kommt er an nichts Hohes heran. In der Kueche
@@ -2428,14 +2538,14 @@ object PlayScene {
         AvatarSpecies.GLOOP -> Home(
             couch = FLOORSOFA, screen = TV, seat = CUSHION, shelf = LOWSHELF, light = GLOWCAP,
             desk = LOWDESK, bath = LOWTUB, table = LOWTABLE, larder = MOSS, counter = LOWCOUNTER,
-            wall = MOSS, accent = BOWL
+            wall = MOSS, accent = BOWL, craft = POTTERY
         )
         // Holz, Kerzen, Buecher, Sternkarte. Ein Vogel sitzt AUF Dingen, deshalb der Balken
         // statt des Sofas.
         AvatarSpecies.HOOTLET -> Home(
             couch = ROOST, screen = HEARTH, seat = PERCH, shelf = BOOKTOWER, light = CANDLES,
             desk = LECTERN, bath = BIRDBATH, table = STUMPTABLE, larder = SHELF, counter = COOKFIRE,
-            wall = STARMAP, accent = BOOKS
+            wall = STARMAP, accent = BOOKS, craft = WINDHARP
         )
     }
 
@@ -3168,6 +3278,23 @@ object PlayScene {
             // dunkler: Erst dass das Ausschalten etwas WEGNIMMT, macht den Schalter zu einem
             // Schalter statt zu einer Geste ohne Folgen.
             Place.NOOK -> standingLights(placements, widthCells, floorY, phase, lampOn)
+
+            // Die eigene Ecke: ihre Leuchte, dazu das Glutbett der Esse - die einzige Werkstatt,
+            // die selbst leuchtet. Gezeichnet wird, was die Requisite an leuchtender Flaeche
+            // mitbringt; wer keine hat, bekommt hier auch keine.
+            Place.CRAFT -> {
+                val lights = standingLights(placements, widthCells, floorY, phase, lampOn = true)
+                val work = placements.firstOrNull { it.station == Station.CRAFT } ?: return lights
+                if (work.prop.screenArea.isEmpty()) return lights
+                val ox = originX(work, widthCells)
+                val oy = originY(work, floorY)
+                // Langsamer als ein Bildschirm und ohne harten Wechsel: Glut atmet, sie flackert
+                // nicht.
+                val lit = if (beat(phase, LAMP_TICKS) % 4 < 2) GLOW else GLOW - 700
+                lights + work.prop.screenArea.map { (col, row) ->
+                    SceneCell(ox + col, oy + row, lit, isLight = true)
+                } + lightPool(ox + work.prop.width / 2, floorY, radius = 6, peak = lit - 900)
+            }
 
             // Draussen: eine Wolke zieht durchs Bild, nachts stattdessen Sterne.
             //
