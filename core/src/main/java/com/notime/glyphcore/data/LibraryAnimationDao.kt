@@ -13,6 +13,15 @@ interface LibraryAnimationDao {
     @Query("SELECT * FROM library_animations WHERE id = :id")
     suspend fun getById(id: Long): LibraryAnimation?
 
+    /**
+     * Alle Animationen als Liste - fuer alles, was einmalig auswaehlen statt dauerhaft zusehen
+     * will (siehe PlayModeRoll, das der Spiel-Erinnerung ihre Animation wuerfelt). [observeAll]
+     * waere dafuer das falsche Werkzeug: Ein Flow, den man fuer eine einzige Ziehung abonniert
+     * und sofort wieder verwirft, ist ein Abonnement ohne Leser.
+     */
+    @Query("SELECT * FROM library_animations ORDER BY sortOrder, id")
+    suspend fun getAll(): List<LibraryAnimation>
+
     @Query("SELECT COUNT(*) FROM library_animations")
     suspend fun count(): Int
 

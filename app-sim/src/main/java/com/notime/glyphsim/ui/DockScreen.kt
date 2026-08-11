@@ -303,6 +303,29 @@ fun DockScreen(
         var avatar by remember { mutableStateOf<AvatarState?>(null) }
         /** Ob gerade ein Gang laeuft - siehe das Nachfuehren des Bodens weiter unten. */
         var avatarWalking by remember { mutableStateOf(false) }
+        /** Wie oft die Figur schon hintereinander im selben Raum geblieben ist - siehe nextTopic. */
+        var stayedRounds by remember { mutableStateOf(0) }
+        /**
+         * Ob gerade ein Tagesablauf laeuft - siehe den Besuchstakt.
+         *
+         * Ein Besuch uebernimmt die Bilder der Figur (er laesst sie zuhoeren und antworten) und
+         * wuerde sich mit einem laufenden Ablauf um dieselbe Figur streiten: Sie ginge zum Bett,
+         * waehrend sie sich unterhaelt. Besuch kommt deshalb in den Pausen DAZWISCHEN - was
+         * ohnehin die ehrlichere Lesart ist.
+         */
+        var routineRunning by remember { mutableStateOf(false) }
+        /**
+         * Ob die Figur sich gerade HINEINSETZT oder aufsteht (siehe [RoutineStep.Occupy]).
+         *
+         * Dasselbe wie [avatarWalking], nur senkrecht - und aus demselben Grund noetig: Waehrend
+         * diese Bewegung laeuft, schreibt sie die Position Bild fuer Bild. Faehrt der Boden in
+         * genau diesem Moment nach (Ortswechsel nach draussen), zieht das Nachfuehren die Figur
+         * zurueck auf den Boden, waehrend die Bewegung sie hinaufschiebt - sichtbar als Zucken
+         * oder als Schweben auf halber Hoehe. Der Zustand [occupiedStation] taugt dafuer nicht:
+         * Er wird erst gesetzt, wenn die Bewegung fertig ist, und genau dazwischen liegt die
+         * Luecke.
+         */
+        var avatarSettling by remember { mutableStateOf(false) }
         var clockAnimJob by remember { mutableStateOf<Job?>(null) }
         var avatarIdleJob by remember { mutableStateOf<Job?>(null) }
         // Rein optische Verschiebung waehrend langer Erinnerungen (Burn-in-Schutz, siehe unten) -
@@ -485,6 +508,18 @@ fun DockScreen(
             if (target == currentPlace) return
             val hasDoorHere = PlayScene.Station.DOOR in PlayScene.stationsAt(currentPlace, species)
             val hasDoorThere = PlayScene.Station.DOOR in PlayScene.stationsAt(target, species)
+            // **Ob sich der BODEN mitbewegt** - siehe die Wartezeit weiter unten.
+            //
+            // Gemeldet als "im Park schwebt er in der Luft und setzt sich dann auf die Bank".
+            // Genau das war es: Der Boden liegt drinnen bei 0,80 der Hoehe und abends im Park bei
+            // 0,88, nachts bei 0,93 - er sinkt beim Hinausgehen also sichtbar ab, und zwar ueber
+            // FLOOR_SHIFT_MS. Der Ortswechsel wartete aber nur die Ueberblendung ab (rund halb so
+            // lange) und ging dann los. Die Figur lief und setzte sich damit auf einen Boden, den
+            // es an dieser Stelle noch gar nicht gab; sichtbar blieb sie in der Luft stehen, bis
+            // eine spaetere Bewegung sie wieder einfing.
+            val dayPhase = PlayAmbientActivity.currentDayPhase()
+            val floorMoves = PlayScene.floorFraction(currentPlace, dayPhase) !=
+                PlayScene.floorFraction(target, dayPhase)
 
             if (hasDoorHere) {
                 PlayScene.stationSpot(currentPlace, PlayScene.Station.DOOR, sceneWidthCells, floorYCells, species)
@@ -512,6 +547,14 @@ fun DockScreen(
             avatarHidden = true
             currentPlace = target
             delay((SCENE_FADE_OUT_MS + SCENE_FADE_IN_MS).toLong())
+            // Und beim Hinausgehen zusaetzlich warten, bis der Boden unten angekommen ist. Die
+            // Figur bleibt so lange im Tuerrahmen bzw. unsichtbar - man sieht den Horizont sinken,
+            // nicht eine Figur, die auf einen wandernden Boden zulaeuft. Nur wo sich der Boden
+            // ueberhaupt bewegt: Von Zimmer zu Zimmer ist er derselbe, dort waere jedes Warten
+            // ein toter Takt.
+            if (floorMoves) {
+                delay((FLOOR_SHIFT_MS - SCENE_FADE_OUT_MS - SCENE_FADE_IN_MS).coerceAtLeast(0).toLong())
+            }
 
             // Im neuen Raum an der Tuer wieder auftauchen und hereinkommen.
             avatar?.let { arriving ->
@@ -556,6 +599,7 @@ fun DockScreen(
          */
         suspend fun runRoutine(routine: PlayRoutine, species: AvatarSpecies) {
             val mood = AvatarMoodSnapshot.forSpecies(context, species)
+            routineRunning = true
 
             /** Setzt die Figur so, dass sie mit [centerX]/[groundY] (Szenenzellen) zusammenfaellt. */
             fun spotToOffset(spot: PlayScene.SceneSpot, avatarPx: Float): Offset =
@@ -622,13 +666,18 @@ fun DockScreen(
                         // eine Bewegung an Ort und Stelle.
                         val target = spotToOffset(spot, avatarPx)
                         val from = current.offset
-                        animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
-                            avatar = avatar?.copy(
-                                offset = Offset(
-                                    from.x + (target.x - from.x) * t,
-                                    from.y + (target.y - from.y) * t
+                        avatarSettling = true
+                        try {
+                            animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
+                                avatar = avatar?.copy(
+                                    offset = Offset(
+                                        from.x + (target.x - from.x) * t,
+                                        from.y + (target.y - from.y) * t
+                                    )
                                 )
-                            )
+                            }
+                        } finally {
+                            avatarSettling = false
                         }
                         occupiedStation = step.station
                     }
@@ -644,13 +693,18 @@ fun DockScreen(
                             species = species
                         )
                         val from = standing.offset
-                        animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
-                            avatar = avatar?.copy(
-                                offset = Offset(
-                                    from.x + (onFloor.x - from.x) * t,
-                                    from.y + (onFloor.y - from.y) * t
+                        avatarSettling = true
+                        try {
+                            animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
+                                avatar = avatar?.copy(
+                                    offset = Offset(
+                                        from.x + (onFloor.x - from.x) * t,
+                                        from.y + (onFloor.y - from.y) * t
+                                    )
                                 )
-                            )
+                            }
+                        } finally {
+                            avatarSettling = false
                         }
                     }
 
@@ -760,7 +814,9 @@ fun DockScreen(
                 // Bliebe die Figur dann als "benutzt gemeldet" stehen, laege die Bettdecke
                 // weiterhin ueber ihr, waehrend sie laengst woanders steht - und zwar so lange,
                 // bis zufaellig irgendein spaeterer Ablauf mit einem Rise endet.
+                routineRunning = false
                 occupiedStation = null
+                avatarSettling = false
                 // Dasselbe fuer Getragenes: Bricht der Ablauf zwischen Take und Drop ab, trueg
                 // die Figur das Buch sonst durch alle folgenden Szenen mit sich herum.
                 carried = null
@@ -1038,9 +1094,9 @@ fun DockScreen(
         // Animation die Position ohnehin Bild fuer Bild; danach setzt dieser Effekt sie wieder
         // auf den Boden, und weil der Boden sich weich bewegt, sinkt sie mit ihm statt zu
         // springen.
-        LaunchedEffect(floorYPx, avatarWalking, occupiedStation, renderedPlace) {
+        LaunchedEffect(floorYPx, avatarWalking, avatarSettling, occupiedStation, renderedPlace) {
             val current = avatar
-            if (!playMode || current == null || avatarWalking || floorYPx <= 0f) {
+            if (!playMode || current == null || avatarWalking || avatarSettling || floorYPx <= 0f) {
                 return@LaunchedEffect
             }
             val avatarPx = with(density) { current.sizeDp.dp.toPx() }
@@ -1102,16 +1158,34 @@ fun DockScreen(
 
             // Besuchstakt: deutlich seltener als die eigenen Regungen. Kaeme staendig jemand
             // vorbei, waere es keine Begegnung mehr, sondern Verkehr.
+            //
+            // **Gemeldet als "die Besuche sind ploetzlich weg" - und der Fehler steckte im
+            // Zeitpunkt der Pruefung.** Vorher wurde nach Ablauf der Wartezeit EINMAL nachgesehen,
+            // ob es gerade passt: Ist die Figur in einem Zimmer, in dem man niemanden trifft
+            // (Schlafzimmer, Bad, Kueche, Leseecke, Arbeitszimmer, eigene Ecke), oder sitzt sie
+            // gerade irgendwo drin, dann fiel der Besuch ersatzlos aus - und die naechste Chance
+            // kam erst anderthalb bis dreieinhalb Minuten spaeter. Ueber den Tag gerechnet passt
+            // nur etwa jeder zweite Augenblick, und wer sitzt, faellt zusaetzlich heraus; aus
+            // "alle zwei bis drei Minuten" wurden dadurch leicht zehn und mehr.
+            //
+            // Jetzt wird auf den passenden Augenblick GEWARTET statt ihn zu verpassen. Die
+            // Wartezeit zaehlt damit die Zeit, in der ein Besuch moeglich WAERE - und das ist
+            // auch die ehrlichere Lesart: Jemand kommt vorbei, wenn man draussen ist, nicht
+            // wenn die Uhr es sagt.
             LaunchedEffect(Unit) {
+                fun visitPossible(): Boolean {
+                    val current = avatar ?: return false
+                    return !current.fed && current.occurrenceId == null &&
+                        occupiedStation == null && !avatarHidden &&
+                        !routineRunning && !avatarWalking && !avatarSettling &&
+                        PlayScene.allowsVisitors(currentPlace)
+                }
                 while (isActive) {
                     delay((VISIT_INTERVAL_MS.random() * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(3_000L))
-                    val current = avatar
-                    if (current != null && !current.fed && current.occurrenceId == null &&
-                        occupiedStation == null && !avatarHidden &&
-                        PlayScene.allowsVisitors(currentPlace)
-                    ) {
-                        runVisit()
+                    while (isActive && !visitPossible()) {
+                        delay((VISIT_RETRY_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(250L))
                     }
+                    if (isActive) runVisit()
                 }
             }
 
@@ -1570,7 +1644,20 @@ fun DockScreen(
                             val topic = if (mustEarn) {
                                 AnimationType.WORK
                             } else {
-                                PlayAmbientActivity.nextTopic(boostedTopics = boostedTopics)
+                                // MIT dem jetzigen Ort: Die Figur bleibt dann eher, wo sie ist,
+                                // statt bei jeder Regung das Zimmer zu wechseln (siehe
+                                // PlayAmbientActivity.nextTopic).
+                                //
+                                // Aber nur BEGRENZT oft hintereinander. Ein Zuschlag ohne Ende
+                                // haette den umgekehrten Fehler erzeugt: Wer im Wohnzimmer sitzt,
+                                // bekommt dort dauernd Rueckenwind fuers Bleiben, und die Figur
+                                // kaeme kaum noch vor die Tuer - genau der Zustand, gegen den die
+                                // Strasse und der Wald angelegt wurden. Zwei-, dreimal verweilen
+                                // ist ein Aufenthalt, fuenfmal ist ein Hausarrest.
+                                PlayAmbientActivity.nextTopic(
+                                    boostedTopics = boostedTopics,
+                                    stayAt = currentPlace.takeIf { stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS }
+                                )
                             }
 
                             // Erst den Ort wechseln, dann HINGEHEN, dann handeln - in dieser
@@ -1586,6 +1673,7 @@ fun DockScreen(
                             // Coroutine), und waehrend er geht, blendet der alte Raum weg und der
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
                             val place = PlayScene.forTopic(topic)
+                            stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
                             moveToPlace(place, species)
 
                             // Nicht mehr EINE Animation, sondern ein mehrschrittiger Ablauf:
@@ -2376,6 +2464,10 @@ private const val SPEECH_DOT_MS = 190L
 
 /** Abstand zwischen zwei Besuchen. */
 private val VISIT_INTERVAL_MS = 90_000L..210_000L
+
+/** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
+private const val VISIT_RETRY_MS = 4_000L
+
 
 /** Wo an der Figur ein Zugriff aufblitzt - auf Handhoehe, seitlich vorn (16x16-Raster). */
 private const val FLASH_HAND_X = 12

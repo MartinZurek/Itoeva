@@ -129,8 +129,24 @@ object PlayAmbientActivity {
     fun nextTopic(
         phase: DayPhase = currentDayPhase(),
         boostedTopics: Set<AnimationType> = emptySet(),
+        /**
+         * Wo die Figur GERADE ist - Themen, die an diesen Ort gehoeren, werden bevorzugt.
+         *
+         * **Gemeldet als "er rennt immer nur von einem Raum in den naechsten".** Und so war es:
+         * Jede Regung wuerfelte ein Thema, jedes Thema hat seinen Ort, und zwischen zwei Regungen
+         * liegen wenige Sekunden - also wechselte die Figur im Schnitt alle zehn Sekunden das
+         * Zimmer. Sie war damit fast nur unterwegs; angekommen war sie nie. Ausgerechnet die
+         * Kulissen, an denen die meiste Arbeit haengt, sah man dadurch immer nur im
+         * Vorbeigehen.
+         *
+         * Der Zuschlag macht daraus ein Verweilen: Wer in der Kueche steht, trinkt dort eher noch
+         * etwas, als sofort ins Bad zu gehen. Bewusst nur ein Zuschlag und keine Sperre - ein
+         * Wesen, das den Raum erst wechselt, wenn der Wuerfel es erzwingt, waere genauso falsch,
+         * nur andersherum.
+         */
+        stayAt: PlayScene.Place? = null,
         random: Random = Random
-    ): AnimationType = pickWeighted(combinedWeights(phase, boostedTopics), random)
+    ): AnimationType = pickWeighted(combinedWeights(phase, boostedTopics, stayAt), random)
 
     /**
      * Grob am ueblichen Tagesrhythmus orientiert, nicht an einer festen Uhrzeit-Tabelle mit
@@ -191,13 +207,28 @@ object PlayAmbientActivity {
      * Zufallspool hebt - der eine Fall, den die Klassendoku ausdruecklich ausschliesst. Diese
      * Garantie soll unabhaengig davon gelten, was ein Aufrufer hier hineingibt.
      */
-    private fun combinedWeights(phase: DayPhase, boostedTopics: Set<AnimationType>): Map<AnimationType, Int> {
+    private fun combinedWeights(
+        phase: DayPhase,
+        boostedTopics: Set<AnimationType>,
+        stayAt: PlayScene.Place? = null
+    ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
-        if (relevantBoosts.isEmpty()) return base
+        if (relevantBoosts.isEmpty() && stayAt == null) return base
         val combined = base.toMutableMap()
         for (topic in relevantBoosts) {
             combined[topic] = (combined[topic] ?: 0) + HABIT_BOOST
+        }
+        if (stayAt != null) {
+            // NUR was ohnehin schon zur Tageszeit passt: Ein Thema, das in dieser Phase gar nicht
+            // vorkommt, soll nicht allein deshalb auftauchen, weil die Figur zufaellig im
+            // richtigen Zimmer steht - sonst schliefe sie mittags weiter, bloss weil sie im
+            // Schlafzimmer aufgewacht ist.
+            for (topic in base.keys) {
+                if (PlayScene.forTopic(topic) == stayAt) {
+                    combined[topic] = (combined[topic] ?: 0) + STAY_BONUS
+                }
+            }
         }
         return combined
     }
@@ -250,6 +281,26 @@ object PlayAmbientActivity {
     private val PAUSE_RANGE_MS = 6_000L..14_000L
 
     private const val HABIT_BOOST = 4
+
+    /**
+     * **So oft darf eine Regung am selben Ort bleiben**, bevor der Zuschlag fuers Verweilen
+     * aussetzt (der Aufrufer zaehlt mit, siehe DockScreen).
+     *
+     * Ohne diese Grenze haette das Verweilen den umgekehrten Fehler erzeugt: Wer im Wohnzimmer
+     * sitzt, bekommt dort dauernd Rueckenwind fuers Bleiben - und die Figur kaeme kaum noch vor
+     * die Tuer, also genau in den Zustand, gegen den Strasse und Wald ueberhaupt angelegt wurden.
+     * Zwei-, dreimal verweilen ist ein Aufenthalt, fuenfmal ist Hausarrest.
+     */
+    const val MAX_STAY_ROUNDS = 3
+
+    /**
+     * Zuschlag fuers Bleiben (siehe [nextTopic]).
+     *
+     * Vier, also genauso viel wie eine offene Gewohnheit wiegt: Das reicht, damit ein Zimmer
+     * mehrere Regungen lang gehalten wird, und es reicht nicht, um den Tagesablauf zu ueberstimmen
+     * - nachts geht die Figur weiterhin ins Bett, auch wenn sie in der Kueche steht.
+     */
+    private const val STAY_BONUS = 4
 
     private const val ACTION_WEIGHT_PERFORM = 5
     private const val ACTION_WEIGHT_FIDGET = 4

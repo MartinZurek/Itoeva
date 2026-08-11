@@ -3,6 +3,7 @@ package com.notime.glyphsim.matrix
 import android.content.Context
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.GlyphReminder
+import com.notime.glyphcore.data.LibraryAnimation
 import com.notime.glyphcore.data.NO_GOAL
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.ui.AvatarSpeciesPrefs
@@ -43,7 +44,7 @@ object PlayModeRoll {
         return reminder.copy(
             label = context.getString(topic.labelRes),
             animationType = topic,
-            libraryAnimationId = null,
+            libraryAnimationId = pickAnimation(context, species)?.id,
             intervalMinutes = stage.intervalMinutes.random(),
             daysOfWeekMask = ALL_DAYS_MASK,
             startMinuteOfDay = 0,
@@ -51,6 +52,64 @@ object PlayModeRoll {
             dailyGoal = NO_GOAL
         )
     }
+
+    /**
+     * **Welches BILD die Spiel-Erinnerung zeigt** - `null` heisst: die eingebaute Animation des
+     * Themas, wie bisher.
+     *
+     * Gemeldet als "im Play-Modus kommt fast immer dieselbe Glocke, und die Reaktion ist auch
+     * immer dieselbe". Beides stimmte, und beides hatte dieselbe Ursache: Hier stand
+     * `libraryAnimationId = null`, also kam ausschliesslich die Typ-Animation - zwoelf Bilder
+     * insgesamt, davon eines (GENERAL) am haeufigsten gewuerfelt. Die Bibliothek mit ihren
+     * sechsundzwanzig Grundmotiven und dreissig Charakter-Motiven (Rakete, Schnecke, Komet,
+     * Blitz, ...) blieb im Spiel unberuehrt, obwohl sie genau dafuer da ist.
+     *
+     * **Und es haengt mehr daran als das Bild.** Zu jedem der dreissig Charakter-Motive gehoert
+     * eine EIGENE Reaktion der Figur ([AvatarSignatureReactions]) - Gloop schwappt der Wolke
+     * hinterher, Wyrmling zuckt beim Blitz zusammen. Wer immer nur Typ-Animationen zeigt, bekommt
+     * auch immer nur die zwoelf Typ-Reaktionen zu sehen. Ein einziges Feld hat also den groessten
+     * Teil der vorhandenen Abwechslung ungenutzt gelassen.
+     *
+     * Die Gewichtung: meistens ein Motiv aus der Bibliothek, und darunter bevorzugt eines der
+     * fuenf, die DIESER Kreatur gehoeren - die Handschrift soll erkennbar bleiben. Die
+     * Typ-Animation faellt trotzdem nicht weg: Sie ist die einzige, die zeigt, worum es geht.
+     */
+    private suspend fun pickAnimation(context: Context, species: AvatarSpecies): LibraryAnimation? =
+        chooseMotif(
+            available = AppDatabase.getInstance(context).libraryAnimationDao().getAll(),
+            ownLabels = AvatarSignatureReactions.labelsFor(species).toSet()
+        )
+
+    /**
+     * Die Ziehung selbst - ohne Datenbank, damit sie sich pruefen laesst (siehe PlayModeRollTest).
+     *
+     * Eine leere Bibliothek ist ausdruecklich kein Fehlerfall: Beim allerersten Start ist noch
+     * nichts eingespielt (siehe LibraryAnimationRepository.seedOrRefresh), und dann gilt schlicht
+     * wieder, was vorher immer galt - es kommt die Animation des Themas.
+     */
+    internal fun chooseMotif(
+        available: List<LibraryAnimation>,
+        ownLabels: Set<String>,
+        random: Random = Random
+    ): LibraryAnimation? {
+        if (random.nextInt(100) < TYPE_ANIMATION_PERCENT) return null
+        if (available.isEmpty()) return null
+        val mine = available.filter { it.label in ownLabels }
+        val others = available.filter { it.label !in ownLabels }
+        val preferOwn = mine.isNotEmpty() &&
+            (others.isEmpty() || random.nextInt(100) < OWN_MOTIF_PERCENT)
+        return when {
+            preferOwn -> mine.random(random)
+            others.isNotEmpty() -> others.random(random)
+            else -> null
+        }
+    }
+
+    /** Wie oft die eingebaute Animation des Themas kommt statt eines Motivs aus der Bibliothek. */
+    private const val TYPE_ANIMATION_PERCENT = 30
+
+    /** Und wie oft es dann eines der fuenf eigenen Motive ist statt irgendeines. */
+    private const val OWN_MOTIF_PERCENT = 60
 
     private suspend fun currentLevel(context: Context, companionProfileId: String): Int {
         val xp = AppDatabase.getInstance(context).avatarPlayStateDao()

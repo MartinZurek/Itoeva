@@ -83,6 +83,20 @@ internal object AvatarSignatureReactions {
         "Eye", "Key", "Hourglass", "Scroll", "Puzzle"
     )
 
+    /** Wieviele dieser Motive auf jede Kreatur entfallen - die Liste ist danach geordnet. */
+    private const val PER_SPECIES = 5
+
+    /**
+     * Die fuenf Motive, die DIESER Kreatur gehoeren (siehe
+     * [com.notime.glyphcore.data.AvatarSignatureAnimations]).
+     *
+     * Aus der Reihenfolge von [labels] abgeleitet statt noch einmal aufgezaehlt: Zwei Listen
+     * derselben dreissig Namen wuerden beim naechsten neuen Motiv auseinanderlaufen, und zwar
+     * lautlos - die falsche Kreatur bekaeme das falsche Motiv, ohne dass irgendwo etwas bricht.
+     */
+    fun labelsFor(species: AvatarSpecies): List<String> =
+        labels.drop(species.ordinal * PER_SPECIES).take(PER_SPECIES)
+
     // ================= PUFFLING: der neugierige Optimist =================
 
     /** Blase schwebt heran, er stupst sie an - sie platzt, er freut sich ueber das Nichts. */
