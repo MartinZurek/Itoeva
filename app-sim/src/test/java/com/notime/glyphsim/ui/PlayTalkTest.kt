@@ -5,6 +5,10 @@ import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.PlayPantry
+import com.notime.glyphsim.matrix.PlayScene
+import com.notime.glyphsim.matrix.CompanionChapter
+import com.notime.glyphsim.matrix.PlayWeather
+import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayWallet
 import java.time.LocalDate
 import java.time.ZoneId
@@ -136,6 +140,65 @@ class PlayTalkTest {
             knowledge.steering,
             asked
         )
+    }
+
+    // ---- Was er von sich aus erzaehlt ----
+
+    private fun mood(
+        doing: PlayTalk.Doing? = null,
+        phase: PlayAmbientActivity.DayPhase =
+            PlayAmbientActivity.DayPhase.MIDDAY,
+        weather: PlayWeather =
+            PlayWeather.CLEAR,
+        lastVisitor: AvatarSpecies? = null,
+        chapter: CompanionChapter =
+            CompanionChapter.ARRIVED,
+        game: PlayTalk.Game? = null
+    ) = PlayTalk.Mood(doing, phase, weather, lastVisitor, chapter, game)
+
+    @Test
+    fun `er hat immer etwas zu erzaehlen`() {
+        // Ein Begleiter, der auf "wie geht's" gar nichts sagt, waere schlimmer als einer, der
+        // zugibt, dass nichts los ist. Deshalb ist die Liste nie leer - auch wenn die Welt
+        // gerade nichts hergibt.
+        val nothing = mood()
+        assertTrue(PlayTalk.remarksFor(nothing).isNotEmpty())
+        assertEquals(PlayTalk.Remark.QUIET, PlayTalk.remarkFor(nothing))
+    }
+
+    @Test
+    fun `er erzaehlt von dem, was gerade tatsaechlich ist`() {
+        // Jede Bemerkung haengt an einem Zustand der Welt. Umgekehrt heisst das: Was nicht der
+        // Fall ist, darf er auch nicht sagen - ein Wesen, das von Regen erzaehlt, waehrend die
+        // Sonne scheint, verliert genau die Glaubwuerdigkeit, von der dieses Gespraech lebt.
+        val rainy = mood(
+            doing = PlayTalk.Doing(PlayScene.Place.KITCHEN, AnimationType.DRINK),
+            weather = PlayWeather.RAIN,
+            lastVisitor = AvatarSpecies.GLOOP
+        )
+        val remarks = PlayTalk.remarksFor(rainy)
+        assertTrue("Der Regen kommt nicht vor", PlayTalk.Remark.RAIN in remarks)
+        assertTrue("Der Besuch kommt nicht vor", PlayTalk.Remark.VISITOR in remarks)
+        assertTrue("Was er tut, kommt nicht vor", PlayTalk.Remark.DOING in remarks)
+        assertTrue("Schnee, obwohl es regnet", PlayTalk.Remark.SNOW !in remarks)
+        assertTrue(
+            "Er erzaehlt vom Verdienst, obwohl es gar kein Spiel gibt",
+            PlayTalk.Remark.EARNED !in remarks
+        )
+    }
+
+    @Test
+    fun `die Verlegenheitsantwort kommt nur, wenn sonst nichts ist`() {
+        // Sonst kaeme ausgerechnet der einzige Satz, der nichts erzaehlt, genauso haeufig wie
+        // alles andere.
+        val busy = mood(
+            doing = PlayTalk.Doing(PlayScene.Place.PARK, AnimationType.MOVE),
+            weather = PlayWeather.SNOW,
+            lastVisitor = AvatarSpecies.FENNEC
+        )
+        val drawn = (0 until 20).map { PlayTalk.remarkFor(busy, it) }.toSet()
+        assertTrue("Die Verlegenheitsantwort verdraengt das Erzaehlen", PlayTalk.Remark.QUIET !in drawn)
+        assertTrue("Ueber mehrere Gespraeche kommt trotzdem immer dasselbe", drawn.size > 1)
     }
 
     @Test

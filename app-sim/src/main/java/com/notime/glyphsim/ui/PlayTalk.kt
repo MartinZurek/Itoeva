@@ -6,6 +6,9 @@ import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.CompanionChapter
+import com.notime.glyphsim.matrix.PlayWeather
+import com.notime.glyphsim.matrix.PlayAmbientActivity
+import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.PlayWallet
@@ -297,6 +300,106 @@ object PlayTalk {
      * aus dem Zustand der Welt statt aus einer Liste.
      */
     data class Doing(val place: PlayScene.Place, val topic: AnimationType?)
+
+    /**
+     * **Was er von sich aus erzaehlt** - der Teil des Gespraechs, der nicht von Zahlen handelt.
+     *
+     * Gemeldet als "die Gespraeche bleiben immer gleich". Der Grund war nicht die Menge an Text,
+     * sondern das Thema: Er sprach ueber die Woche, den Plan, die Stufe - alles Dinge, die sich
+     * beim naechsten Oeffnen kaum geaendert haben. Woran sich dagegen STAENDIG etwas aendert, ist
+     * die Welt, in der er gerade steht: Wetter, Tageszeit, wo er ist, wer vorbeikam, ob der
+     * Vorrat voll ist.
+     *
+     * **Keine dieser Bemerkungen ist erfunden.** Jede haengt an einem Zustand, den es ohnehin
+     * gibt, und ist damit ueberpruefbar wahr - dasselbe Versprechen wie beim Rest dieser Klasse
+     * (siehe Klassendoku): Er weiss wenig, aber was er sagt, stimmt. Der Unterschied zu den
+     * Zahlen ist nur, dass sich diese Wahrheiten staendig aendern.
+     */
+    enum class Remark {
+        /** Es regnet. */
+        RAIN,
+        /** Es schneit. */
+        SNOW,
+        /** Klarer Morgen. */
+        BRIGHT_MORNING,
+        /** Es wird Abend. */
+        EVENING,
+        /** Nacht. */
+        NIGHT,
+        /** Wo er gerade ist und was er dort tut. */
+        DOING,
+        /** Vorhin war jemand da. */
+        VISITOR,
+        /** Er hat gearbeitet und etwas verdient. */
+        EARNED,
+        /** Der Vorrat ist gut gefuellt. */
+        STOCKED,
+        /** Wie lange man sich schon kennt. */
+        TOGETHER,
+        /** Wenn sonst gerade nichts ist. */
+        QUIET
+    }
+
+    /**
+     * Der Zustand der Welt, ueber den er reden kann - alles Werte, die anderswo ohnehin gefuehrt
+     * werden.
+     */
+    data class Mood(
+        val doing: Doing?,
+        val phase: PlayAmbientActivity.DayPhase,
+        val weather: PlayWeather,
+        /** Wer zuletzt vorbeikam, oder `null`, wenn heute noch niemand da war. */
+        val lastVisitor: AvatarSpecies?,
+        val chapter: CompanionChapter,
+        val game: Game?
+    )
+
+    /**
+     * Alle Bemerkungen, die gerade ZUTREFFEN - in der Reihenfolge, in der sie sich lohnen.
+     *
+     * Vorn steht, was sich am haeufigsten aendert (wo er ist, wer da war, welches Wetter), hinten
+     * das Bestaendige (wie lange man sich kennt). [QUIET] steht ganz am Ende und nur, damit die
+     * Liste nie leer ist - ein Begleiter, der auf "wie geht's" gar nichts sagt, waere schlimmer
+     * als einer, der zugibt, dass nichts los ist.
+     */
+    fun remarksFor(mood: Mood): List<Remark> = buildList {
+        mood.doing?.let { add(Remark.DOING) }
+        mood.lastVisitor?.let { add(Remark.VISITOR) }
+        when (mood.weather) {
+            PlayWeather.RAIN -> add(Remark.RAIN)
+            PlayWeather.SNOW -> add(Remark.SNOW)
+            PlayWeather.CLEAR -> if (mood.phase == PlayAmbientActivity.DayPhase.MORNING) {
+                add(Remark.BRIGHT_MORNING)
+            }
+        }
+        when (mood.phase) {
+            PlayAmbientActivity.DayPhase.EVENING -> add(Remark.EVENING)
+            PlayAmbientActivity.DayPhase.NIGHT -> add(Remark.NIGHT)
+            else -> Unit
+        }
+        mood.game?.let { game ->
+            if (game.coins >= PlayWallet.GROCERY_COST) add(Remark.EARNED)
+            if (game.pantry >= PANTRY_COMFORTABLE) add(Remark.STOCKED)
+        }
+        if (mood.chapter != CompanionChapter.ARRIVED) add(Remark.TOGETHER)
+        add(Remark.QUIET)
+    }
+
+    /** Ab wieviel Vorrat er sich wohlfuehlt - siehe [Remark.STOCKED]. */
+    private const val PANTRY_COMFORTABLE = 3
+
+    /**
+     * Eine davon, ueber [rotation] gewaehlt.
+     *
+     * **Ohne [Remark.QUIET], solange es etwas anderes gibt.** Sonst kaeme ausgerechnet die
+     * Verlegenheitsantwort so haeufig wie alles andere - und die ist die einzige, die nichts
+     * erzaehlt.
+     */
+    fun remarkFor(mood: Mood, rotation: Int = 0): Remark {
+        val all = remarksFor(mood)
+        val worthSaying = all.filterNot { it == Remark.QUIET }.ifEmpty { all }
+        return worthSaying[rotation.mod(worthSaying.size)]
+    }
 
     data class Focus(val headline: Headline, val offers: List<Offer>)
 

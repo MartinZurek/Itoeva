@@ -531,4 +531,15 @@
     <string name="talk_place_shop">at the shop</string>
     <string name="talk_place_street">out on the street</string>
     <string name="talk_place_forest">in the forest</string>
+
+    <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. -->
+    <string name="remark_rain">It is raining outside. Sounds quite good at the window.</string>
+    <string name="remark_snow">It is snowing. I will stay close by today.</string>
+    <string name="remark_bright_morning">A clear morning. I have been outside already.</string>
+    <string name="remark_evening">It is getting dark. Time to switch on a light.</string>
+    <string name="remark_night">All quiet. I really should be asleep.</string>
+    <string name="remark_visitor">%1$s came by earlier. We had a short chat.</string>
+    <string name="remark_earned">I did some work. %1$d coins so far.</string>
+    <string name="remark_stocked">The larder is well filled. Nothing can go wrong.</string>
+    <string name="remark_quiet">Not much going on right now. That is fine too.</string>
 </resources>

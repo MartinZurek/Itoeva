@@ -68,6 +68,8 @@ import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayScene
+import com.notime.glyphsim.matrix.CompanionChapter
+import com.notime.glyphsim.matrix.PlayWeather
 import com.notime.glyphsim.matrix.PlaySceneView
 import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
@@ -317,6 +319,8 @@ fun DockScreen(
         var stayedRounds by remember { mutableStateOf(0) }
         /** Womit die Figur zuletzt beschaeftigt war - damit sie im Gespraech sagen kann, was sie tut. */
         var currentTopic by remember { mutableStateOf<AnimationType?>(null) }
+        /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
+        var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
         /**
          * Ob gerade ein Tagesablauf laeuft - siehe den Besuchstakt.
          *
@@ -892,6 +896,7 @@ fun DockScreen(
             val idle = AvatarAnimations.idleSequence(guestSpecies, mood)
 
             visitor = VisitorState(guestSpecies, Offset(startX, groundY), host.sizeDp, walk.frames.first())
+            lastVisitor = guestSpecies
 
             /** Laesst den Gast von seiner jetzigen Stelle nach [targetX] gehen. */
             suspend fun walkGuestTo(targetX: Float) = coroutineScope {
@@ -2279,6 +2284,18 @@ fun DockScreen(
                         // Was er GERADE tut - der einzige Teil des Gespraechs, der sich bei jedem
                         // Oeffnen aendert, ohne dass dafuer ein Text mehr noetig waere.
                         doing = if (playMode) PlayTalk.Doing(currentPlace, currentTopic) else null,
+                        mood = if (playMode) {
+                            PlayTalk.Mood(
+                                doing = PlayTalk.Doing(currentPlace, currentTopic),
+                                phase = PlayAmbientActivity.currentDayPhase(),
+                                weather = PlayWeather.current(),
+                                lastVisitor = lastVisitor,
+                                chapter = talkKnowledge?.chapter ?: CompanionChapter.ARRIVED,
+                                game = talkKnowledge?.game
+                            )
+                        } else {
+                            null
+                        },
                         onAddReminder = { topic -> onAddHabit(topic); talkRefresh++ },
                         onOpenReminders = { talkOpen = false; onOpenReminders() },
                         // Bitten schliesst das Gespraech - man will ja sehen, was er tut.

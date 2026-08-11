@@ -515,4 +515,16 @@
     <string name="talk_place_shop">im Laden</string>
     <string name="talk_place_street">auf der Straße</string>
     <string name="talk_place_forest">im Wald</string>
+
+    <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. Jeder Satz haengt an einem
+         Zustand der Welt, keiner ist erfunden. -->
+    <string name="remark_rain">Draußen regnet es. Am Fenster klingt das ganz gut.</string>
+    <string name="remark_snow">Es schneit. Ich bleibe heute lieber in der Nähe.</string>
+    <string name="remark_bright_morning">Klarer Morgen. Ich war schon einmal draußen.</string>
+    <string name="remark_evening">Es wird dunkel. Gleich mache ich Licht.</string>
+    <string name="remark_night">Alles still. Eigentlich sollte ich schlafen.</string>
+    <string name="remark_visitor">Vorhin war %1$s da. Wir haben kurz geredet.</string>
+    <string name="remark_earned">Ich war arbeiten. %1$d Münzen sind zusammengekommen.</string>
+    <string name="remark_stocked">Der Vorrat ist gut gefüllt. Es kann nichts passieren.</string>
+    <string name="remark_quiet">Viel ist gerade nicht los. Auch schön.</string>
 </resources>

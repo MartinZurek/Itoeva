@@ -244,11 +244,19 @@ class PlayRoutineTest {
             PlayAmbientActivity.DayPhase.MIDDAY,
             PlayAmbientActivity.DayPhase.EVENING
         )
+        // **Genug Ziehungen, damit die Zahl etwas bedeutet.** Mit sechshundert lag die Streuung bei
+        // rund anderthalb Prozentpunkten, waehrend der tatsaechliche Anteil abends nur drei ueber
+        // der Grenze liegt - der Test schlug dadurch gelegentlich an, ohne dass sich etwas
+        // geaendert hatte. Ein Test, der mal so und mal so ausgeht, ist schlimmer als keiner: Man
+        // gewoehnt sich an, ihn noch einmal laufen zu lassen, und uebersieht darueber den Tag, an
+        // dem er recht hat. Der feste Startwert nimmt die restliche Zufaelligkeit aus der
+        // Themenwahl; die Auswahl unter den Ablaeufen wuerfelt weiterhin und mittelt sich heraus.
+        val random = kotlin.random.Random(4)
         for (phase in daytime) {
             var outside = 0
-            val draws = 600
+            val draws = 6_000
             repeat(draws) {
-                val topic = PlayAmbientActivity.nextTopic(phase)
+                val topic = PlayAmbientActivity.nextTopic(phase, random = random)
                 // Der TATSAECHLICH gewuerfelte Ablauf, nicht alle moeglichen: Sonst zaehlte ein
                 // Thema schon dann als "draussen", wenn irgendeine seiner Varianten hinausfuehrt -
                 // und die Zahl sagte nichts mehr darueber aus, was man beim Zusehen wirklich sieht.

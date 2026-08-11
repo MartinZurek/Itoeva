@@ -72,6 +72,8 @@ fun PlayTalkPanel(
     species: AvatarSpecies,
     /** Was er gerade tut - siehe [PlayTalk.Doing]. */
     doing: PlayTalk.Doing? = null,
+    /** Der Zustand der Welt, ueber den er von sich aus etwas erzaehlt - siehe [PlayTalk.Mood]. */
+    mood: PlayTalk.Mood? = null,
     onAddReminder: (AnimationType) -> Unit,
     onOpenReminders: () -> Unit,
     /**
@@ -116,7 +118,15 @@ fun PlayTalkPanel(
                 // sich der Vorschlag nicht unter dem Finger aendern - beim naechsten Oeffnen
                 // dagegen schon (siehe PlayTalk.focus).
                 val focus = remember(knowledge) { PlayTalk.focus(knowledge, Random.nextInt(1_000)) }
+                // **Und eine Bemerkung von ihm selbst.** Sie steht UNTER der Lage und ueber den
+                // Angeboten: erst worum es geht, dann wie es ihm dabei geht, dann was man tun
+                // kann. Wie die Angebote wird sie je Gespraech einmal gezogen - sonst wechselte
+                // der Satz beim Lesen unter dem Finger.
+                val remark = remember(knowledge, mood) {
+                    mood?.let { PlayTalk.remarkFor(it, Random.nextInt(1_000)) }
+                }
                 Headline(focus.headline, knowledge, voice)
+                if (remark != null && mood != null) RemarkLine(remark, mood)
                 for (offer in focus.offers) {
                     OfferLine(
                         offer = offer,
@@ -310,6 +320,38 @@ private fun OfferLine(
         PlayTalk.Offer.ShowGame ->
             QuestionLine(stringResource(R.string.talk_q_game)) { onShow(Question.GAME) }
     }
+}
+
+/**
+ * Was er ungefragt von sich erzaehlt (siehe [PlayTalk.Remark]).
+ *
+ * Gedimmt wie die Ergaenzungen unter der Lage: Es ist kein Hinweis und keine Aufforderung,
+ * sondern das, was er nebenbei sagt. Wer es ueberliest, verpasst nichts - und genau deshalb
+ * darf es da stehen.
+ */
+@Composable
+private fun RemarkLine(remark: PlayTalk.Remark, mood: PlayTalk.Mood) {
+    val text = when (remark) {
+        PlayTalk.Remark.RAIN -> stringResource(R.string.remark_rain)
+        PlayTalk.Remark.SNOW -> stringResource(R.string.remark_snow)
+        PlayTalk.Remark.BRIGHT_MORNING -> stringResource(R.string.remark_bright_morning)
+        PlayTalk.Remark.EVENING -> stringResource(R.string.remark_evening)
+        PlayTalk.Remark.NIGHT -> stringResource(R.string.remark_night)
+        PlayTalk.Remark.DOING -> mood.doing?.let {
+            stringResource(R.string.talk_a_doing, stringResource(placeTextFor(it.place)))
+        }
+        PlayTalk.Remark.VISITOR -> mood.lastVisitor?.let {
+            stringResource(R.string.remark_visitor, stringResource(it.labelRes))
+        }
+        PlayTalk.Remark.EARNED -> mood.game?.let {
+            stringResource(R.string.remark_earned, it.coins)
+        }
+        PlayTalk.Remark.STOCKED -> stringResource(R.string.remark_stocked)
+        // Das Kapitel spricht mit seiner eigenen Stimme - dafuer gibt es die Zeile schon.
+        PlayTalk.Remark.TOGETHER -> stringResource(mood.chapter.lineRes)
+        PlayTalk.Remark.QUIET -> stringResource(R.string.remark_quiet)
+    } ?: return
+    Text(text, color = INK_DIM, size = 13)
 }
 
 /** Wie er den Ort nennt, an dem er gerade ist. */
