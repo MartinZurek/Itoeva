@@ -515,4 +515,20 @@
     <string name="talk_a_game_next">%1$d of %2$d towards level %3$d</string>
     <string name="talk_game_coins">Coins</string>
     <string name="talk_game_pantry">Larder</string>
+
+    <!-- Was er GERADE tut - siehe PlayTalk.Doing. Erste Person, weil er es selbst sagt. -->
+    <string name="talk_a_doing">Right now I am %1$s.</string>
+    <string name="talk_a_doing_why">And you set this for yourself today: %1$s is still open.</string>
+    <string name="talk_place_bedroom">in the bedroom</string>
+    <string name="talk_place_bath">in the bathroom</string>
+    <string name="talk_place_desk">at my desk</string>
+    <string name="talk_place_work">at work</string>
+    <string name="talk_place_kitchen">in the kitchen</string>
+    <string name="talk_place_nook">in my reading corner</string>
+    <string name="talk_place_living">in the living room</string>
+    <string name="talk_place_craft">in my own corner, making something</string>
+    <string name="talk_place_park">outside at my place</string>
+    <string name="talk_place_shop">at the shop</string>
+    <string name="talk_place_street">out on the street</string>
+    <string name="talk_place_forest">in the forest</string>
 </resources>

@@ -7,6 +7,7 @@ import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayPantry
+import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.PlayWallet
 import java.time.DayOfWeek
 import java.time.Instant
@@ -284,14 +285,39 @@ object PlayTalk {
         data object Explain : Offer
     }
 
+    /**
+     * **Was er GERADE tut** - Ort und Thema der laufenden Regung, oder `null`, wenn er noch nichts
+     * getan hat (oder der Play-Modus aus ist).
+     *
+     * Gemeldet als "die Gespraeche sagen immer dasselbe". Das lag nicht an zu wenig Text, sondern
+     * daran, WORUEBER er sprach: ueber Zahlen (Woche, Plan, Stufe) und ueber den Modus - also ueber
+     * lauter Dinge, die sich beim zweiten Hinsehen nicht geaendert haben. Das Naechstliegende
+     * fehlte: das, was gerade auf dem Bildschirm passiert. "Ich bin in der Kueche" ist bei jedem
+     * Oeffnen ein anderer Satz, ohne dass dafuer ein einziger Text mehr noetig waere - er kommt
+     * aus dem Zustand der Welt statt aus einer Liste.
+     */
+    data class Doing(val place: PlayScene.Place, val topic: AnimationType?)
+
     data class Focus(val headline: Headline, val offers: List<Offer>)
 
     /** Hoechstens so viele Angebote - darueber wird aus dem Gespraech wieder eine Liste. */
     private const val MAX_OFFERS = 2
 
-    fun focus(knowledge: Knowledge): Focus {
+    /**
+     * [rotation] verschiebt die Auswahl unter mehreren gleichrangigen Moeglichkeiten.
+     *
+     * **Gemeldet als "es bleibt immer bei demselben Vorschlag".** Und so war es: Unter den heute
+     * offenen Gewohnheiten wurde immer die ERSTE gebeten, unter den fehlenden immer die erste
+     * vorgeschlagen. Wer drei offene Themen hat, bekam trotzdem drei Tage lang denselben Satz -
+     * und ein Gegenueber, das sich wiederholt, hoert man nach dem dritten Mal nicht mehr.
+     *
+     * Die Reihenfolge selbst bleibt, wie sie war (siehe [suggestable]): Es wird nicht gewuerfelt,
+     * WAS wichtig ist, sondern nur, welches von mehreren gleich Wichtigen diesmal drankommt.
+     */
+    fun focus(knowledge: Knowledge, rotation: Int = 0): Focus {
         val game = knowledge.game
         val offers = mutableListOf<Offer>()
+        fun <T> List<T>.rotated(): T? = if (isEmpty()) null else this[rotation.mod(size)]
 
         val headline = when {
             // Im Spiel hat seine eigene Lage Vorrang: Sie erklaert, was gleich zu sehen ist.
@@ -307,7 +333,7 @@ object PlayTalk {
             knowledge.steering.isNotEmpty() -> {
                 // Nur die erste offene Gewohnheit als Bitte - alle aufzulisten waere wieder die
                 // Liste, die hier gerade abgeschafft wird.
-                knowledge.steering.firstOrNull()?.let { offers += Offer.Ask(it) }
+                knowledge.steering.toList().rotated()?.let { offers += Offer.Ask(it) }
                 Headline.OPEN_TOPICS
             }
             knowledge.fedToday == 0 -> Headline.NOTHING_TODAY
@@ -328,7 +354,7 @@ object PlayTalk {
         // Aufgefuellt wird nur, wenn noch Platz ist, und in dieser Reihenfolge: erst ein
         // Vorschlag (er bringt etwas Neues), dann der Plan, dann die Woche.
         if (offers.size < MAX_OFFERS) {
-            nextSuggestion(knowledge)?.let { offers += Offer.Add(it) }
+            nextSuggestion(knowledge, rotation)?.let { offers += Offer.Add(it) }
         }
         if (offers.size < MAX_OFFERS && knowledge.hasPlan) offers += Offer.ShowPlan
         if (offers.size < MAX_OFFERS && knowledge.week.total > 0) offers += Offer.ShowWeek
@@ -350,7 +376,8 @@ object PlayTalk {
      * **Einer, nicht fuenf.** Eine Liste von Vorschlaegen ist eine Liste von Vorwuerfen; ein
      * einzelner ist ein Angebot. Und er kommt nur, wenn es wirklich etwas anzubieten gibt.
      */
-    fun nextSuggestion(knowledge: Knowledge): AnimationType? = knowledge.missing.firstOrNull()
+    fun nextSuggestion(knowledge: Knowledge, rotation: Int = 0): AnimationType? =
+        knowledge.missing.let { if (it.isEmpty()) null else it[rotation.mod(it.size)] }
 
     /**
      * Voreinstellungen fuer eine so angelegte Erinnerung: Zeitfenster, Abstand und Tagesziel.

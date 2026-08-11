@@ -299,12 +299,24 @@ fun DockScreen(
             0
         }
         val floorYPx = floorYCells * sceneCellPx
+        /**
+         * Derselbe Wert, aber fuer laufende Bewegungen lesbar.
+         *
+         * **Warum das noetig ist.** Ein Gang laeuft ueber eine knappe Sekunde in einer Coroutine.
+         * Die hat den Boden beim Start eingefangen - und wenn er sich waehrenddessen bewegt (raus
+         * in den Park, wo er tiefer liegt), laeuft die Figur auf einer Hoehe weiter, die es nicht
+         * mehr gibt. Genau das war als "er schwebt in der Luft" gemeldet. [rememberUpdatedState]
+         * gibt der laufenden Bewegung den jeweils aktuellen Stand, ohne sie neu zu starten.
+         */
+        val floorYPxNow by rememberUpdatedState(floorYPx)
 
         var avatar by remember { mutableStateOf<AvatarState?>(null) }
         /** Ob gerade ein Gang laeuft - siehe das Nachfuehren des Bodens weiter unten. */
         var avatarWalking by remember { mutableStateOf(false) }
         /** Wie oft die Figur schon hintereinander im selben Raum geblieben ist - siehe nextTopic. */
         var stayedRounds by remember { mutableStateOf(0) }
+        /** Womit die Figur zuletzt beschaeftigt war - damit sie im Gespraech sagen kann, was sie tut. */
+        var currentTopic by remember { mutableStateOf<AnimationType?>(null) }
         /**
          * Ob gerade ein Tagesablauf laeuft - siehe den Besuchstakt.
          *
@@ -470,7 +482,24 @@ fun DockScreen(
                     targetValue = destination.x,
                     animationSpec = tween(walkDurationMs(distance, avatarPx), easing = FastOutSlowInEasing)
                 ) { value, _ ->
-                    avatar = avatar?.copy(offset = Offset(value, destination.y))
+                    // Die Hoehe wird NICHT mitanimiert, sondern Bild fuer Bild aus dem jetzigen
+                    // Boden geholt: Gegangen wird immer auf dem Boden, und der kann sich waehrend
+                    // des Gangs bewegen (siehe floorYPxNow). Vorher stand hier die beim Start
+                    // eingefangene Zielhoehe - die Figur lief dann auf altem Niveau weiter und
+                    // sprang am Ende nach unten.
+                    val walking = avatar
+                    if (walking != null) {
+                        avatar = walking.copy(
+                            offset = Offset(
+                                value,
+                                AvatarFooting.topFor(
+                                    floorYPxNow,
+                                    avatarPx,
+                                    AvatarBodies.forSpecies(walking.species).groundRow()
+                                )
+                            )
+                        )
+                    }
                 }
                 gait.cancel()
             }
@@ -1200,7 +1229,17 @@ fun DockScreen(
                     PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT
                 if (isParkNight && !moonMode) {
                     if (Random.nextFloat() < MOON_SCENE_CHANCE) {
-                        savedClockOffset = clockOffset
+                        // **Nur speichern, wenn nichts gespeichert IST.**
+                        //
+                        // Gemeldet als "die Mondszene passiert auch, wenn man im Raum ist - bei
+                        // mir im Geschaeft". Der Weg dorthin: Diese Wirkung wird alle paar
+                        // Sekunden neu ausgeloest (siehe die Schluessel), und eine laufende
+                        // Rueckkehr-Bewegung wird dabei abgebrochen. Danach stand die Uhr
+                        // irgendwo auf halbem Weg, und [savedClockOffset] war nie geleert. Beim
+                        // naechsten Mondaufgang ueberschrieb diese Zeile dann die vom Nutzer
+                        // gewaehlte Stelle mit einer Mondposition - die Uhr fand nicht mehr
+                        // zurueck und stand von da an auch in Zimmern oben in der Ecke.
+                        if (savedClockOffset == null) savedClockOffset = clockOffset
                         moonMode = true
                         // Mit der GROESSE des Mondes gerechnet, nicht mit der der Uhr: Er ist
                         // waehrend der Szene groesser (siehe MOON_SCALE), und mit dem kleineren
@@ -1231,13 +1270,22 @@ fun DockScreen(
                     moonMode = false
                     if (back != null) {
                         val from = clockOffset
-                        animate(0f, 1f, animationSpec = tween(MOON_RISE_MS, easing = FastOutSlowInEasing)) { t, _ ->
-                            clockOffset = Offset(
-                                from.x + (back.x - from.x) * t,
-                                from.y + (back.y - from.y) * t
-                            )
+                        // Im finally, weil diese Wirkung regelmaessig mitten in der Bewegung
+                        // abgebrochen wird (die Schluessel aendern sich alle paar Sekunden). Ohne
+                        // das blieb die Uhr auf halbem Weg stehen und galt weiterhin als
+                        // "unterwegs" - der Anfang der ganzen Verschiebung. Ein Sprung an die
+                        // richtige Stelle ist allemal besser als ein dauerhaft falscher Platz.
+                        try {
+                            animate(0f, 1f, animationSpec = tween(MOON_RISE_MS, easing = FastOutSlowInEasing)) { t, _ ->
+                                clockOffset = Offset(
+                                    from.x + (back.x - from.x) * t,
+                                    from.y + (back.y - from.y) * t
+                                )
+                            }
+                        } finally {
+                            clockOffset = back
+                            savedClockOffset = null
                         }
-                        savedClockOffset = null
                     }
                 }
             }
@@ -1673,6 +1721,7 @@ fun DockScreen(
                             // Coroutine), und waehrend er geht, blendet der alte Raum weg und der
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
                             val place = PlayScene.forTopic(topic)
+                            currentTopic = topic
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
                             moveToPlace(place, species)
 
@@ -2227,6 +2276,9 @@ fun DockScreen(
                     PlayTalkPanel(
                         knowledge = talkKnowledge,
                         species = species,
+                        // Was er GERADE tut - der einzige Teil des Gespraechs, der sich bei jedem
+                        // Oeffnen aendert, ohne dass dafuer ein Text mehr noetig waere.
+                        doing = if (playMode) PlayTalk.Doing(currentPlace, currentTopic) else null,
                         onAddReminder = { topic -> onAddHabit(topic); talkRefresh++ },
                         onOpenReminders = { talkOpen = false; onOpenReminders() },
                         // Bitten schliesst das Gespraech - man will ja sehen, was er tut.

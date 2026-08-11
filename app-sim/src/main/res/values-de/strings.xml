@@ -499,4 +499,20 @@
     <string name="talk_a_game_next">%1$d von %2$d bis Stufe %3$d</string>
     <string name="talk_game_coins">Münzen</string>
     <string name="talk_game_pantry">Vorrat</string>
+
+    <!-- Was er GERADE tut - siehe PlayTalk.Doing. Erste Person, weil er es selbst sagt. -->
+    <string name="talk_a_doing">Gerade bin ich %1$s.</string>
+    <string name="talk_a_doing_why">Und du hast dir das heute vorgenommen: %1$s steht noch offen.</string>
+    <string name="talk_place_bedroom">im Schlafzimmer</string>
+    <string name="talk_place_bath">im Bad</string>
+    <string name="talk_place_desk">am Schreibtisch</string>
+    <string name="talk_place_work">auf der Arbeit</string>
+    <string name="talk_place_kitchen">in der Küche</string>
+    <string name="talk_place_nook">in meiner Leseecke</string>
+    <string name="talk_place_living">im Wohnzimmer</string>
+    <string name="talk_place_craft">in meiner Ecke und mache etwas</string>
+    <string name="talk_place_park">draußen bei mir</string>
+    <string name="talk_place_shop">im Laden</string>
+    <string name="talk_place_street">auf der Straße</string>
+    <string name="talk_place_forest">im Wald</string>
 </resources>

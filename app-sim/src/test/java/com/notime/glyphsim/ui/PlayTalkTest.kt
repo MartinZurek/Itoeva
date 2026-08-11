@@ -96,6 +96,49 @@ class PlayTalkTest {
     }
 
     @Test
+    fun `bei mehreren Moeglichkeiten kommt nicht immer dieselbe`() {
+        // **Gemeldet als "es bleibt immer bei demselben Vorschlag".** Vorher wurde unter mehreren
+        // gleichrangigen Moeglichkeiten immer die erste genommen - wer drei offene Themen hat,
+        // bekam trotzdem tagelang denselben Satz zu lesen. Die Reihenfolge selbst bleibt: Es wird
+        // nicht gewuerfelt, WAS wichtig ist, sondern nur, welches von mehreren gleich Wichtigen
+        // diesmal drankommt.
+        val knowledge = PlayTalk.Knowledge(
+            plan = emptyList(), fedToday = 0, steering = emptySet(),
+            missing = listOf(AnimationType.MOVE, AnimationType.DRINK, AnimationType.BOOK),
+            week = PlayTalk.Week(0, 0, 1, 0)
+        )
+        val seen = (0 until 12).map { PlayTalk.nextSuggestion(knowledge, it) }.toSet()
+        assertEquals(
+            "Ueber mehrere Gespraeche hinweg kommen nicht alle offenen Moeglichkeiten dran",
+            knowledge.missing.toSet(),
+            seen
+        )
+        // Und eine negative Verschiebung darf nichts sprengen - Random.nextInt kann jede Zahl sein.
+        assertEquals(AnimationType.BOOK, PlayTalk.nextSuggestion(knowledge, -1))
+    }
+
+    @Test
+    fun `die Bitte wechselt unter den offenen Gewohnheiten`() {
+        val knowledge = PlayTalk.Knowledge(
+            plan = somePlan(goal = 2, done = 0),
+            fedToday = 0,
+            steering = setOf(AnimationType.DRINK, AnimationType.MOVE, AnimationType.FOCUS),
+            missing = emptyList(),
+            week = PlayTalk.Week(0, 0, 1, 0)
+        )
+        val asked = (0 until 12).mapNotNull { rotation ->
+            PlayTalk.focus(knowledge, rotation).offers
+                .filterIsInstance<PlayTalk.Offer.Ask>()
+                .firstOrNull()?.topic
+        }.toSet()
+        assertEquals(
+            "Er bittet immer um dasselbe, obwohl drei Themen offen sind",
+            knowledge.steering,
+            asked
+        )
+    }
+
+    @Test
     fun `vorgeschlagen wird nur, was der Avatar auch sichtbar tut`() {
         // Ein Vorschlag, der seinen Tagesablauf nicht veraendert, waere eine leere Zusage: Der
         // Nutzer legt etwas an, weil der Begleiter danach gefragt hat, und sieht anschliessend

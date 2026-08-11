@@ -34,6 +34,8 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.PlayPantry
+import com.notime.glyphsim.matrix.PlayScene
+import kotlin.random.Random
 import kotlin.math.roundToInt
 
 /**
@@ -68,6 +70,8 @@ private val PANEL = Color(0xF00A0A0A)
 fun PlayTalkPanel(
     knowledge: PlayTalk.Knowledge?,
     species: AvatarSpecies,
+    /** Was er gerade tut - siehe [PlayTalk.Doing]. */
+    doing: PlayTalk.Doing? = null,
     onAddReminder: (AnimationType) -> Unit,
     onOpenReminders: () -> Unit,
     /**
@@ -108,7 +112,10 @@ fun PlayTalkPanel(
                 // Angebote - siehe PlayTalk.focus fuer die Reihenfolge. Vorher standen hier sechs
                 // gleich aussehende Fragen; das war ein Menue und verlangte vom Nutzer, sich
                 // zuerst selbst zu ueberlegen, was er wissen will.
-                val focus = remember(knowledge) { PlayTalk.focus(knowledge) }
+                // Die Verschiebung wird je Gespraech EINMAL gezogen: Waehrend man liest, soll
+                // sich der Vorschlag nicht unter dem Finger aendern - beim naechsten Oeffnen
+                // dagegen schon (siehe PlayTalk.focus).
+                val focus = remember(knowledge) { PlayTalk.focus(knowledge, Random.nextInt(1_000)) }
                 Headline(focus.headline, knowledge, voice)
                 for (offer in focus.offers) {
                     OfferLine(
@@ -123,6 +130,7 @@ fun PlayTalkPanel(
                 Answer(
                     question = current,
                     knowledge = knowledge,
+                    doing = doing,
                     voice = voice,
                     justAdded = justAdded,
                     onAddReminder = { topic ->
@@ -304,10 +312,27 @@ private fun OfferLine(
     }
 }
 
+/** Wie er den Ort nennt, an dem er gerade ist. */
+private fun placeTextFor(place: PlayScene.Place): Int = when (place) {
+    PlayScene.Place.BEDROOM -> R.string.talk_place_bedroom
+    PlayScene.Place.BATH -> R.string.talk_place_bath
+    PlayScene.Place.DESK -> R.string.talk_place_desk
+    PlayScene.Place.WORK -> R.string.talk_place_work
+    PlayScene.Place.KITCHEN -> R.string.talk_place_kitchen
+    PlayScene.Place.NOOK -> R.string.talk_place_nook
+    PlayScene.Place.LIVING -> R.string.talk_place_living
+    PlayScene.Place.CRAFT -> R.string.talk_place_craft
+    PlayScene.Place.PARK -> R.string.talk_place_park
+    PlayScene.Place.SHOP -> R.string.talk_place_shop
+    PlayScene.Place.STREET -> R.string.talk_place_street
+    PlayScene.Place.FOREST -> R.string.talk_place_forest
+}
+
 @Composable
 private fun Answer(
     question: Question,
     knowledge: PlayTalk.Knowledge,
+    doing: PlayTalk.Doing?,
     voice: PlayVoice,
     justAdded: AnimationType?,
     onAddReminder: (AnimationType) -> Unit,
@@ -316,6 +341,24 @@ private fun Answer(
 ) {
     when (question) {
         Question.HERE -> {
+            // **Zuerst das Naechstliegende: was er GERADE tut.** Danach erst die Erklaerung des
+            // Modus - die ist beim zweiten Lesen bekannt, der erste Satz nie.
+            doing?.let { now ->
+                Text(
+                    stringResource(R.string.talk_a_doing, stringResource(placeTextFor(now.place))),
+                    color = INK,
+                    size = 15
+                )
+                // Und WARUM: Wenn das, was er gerade tut, zu einer heute noch offenen Gewohnheit
+                // gehoert, ist genau das die Ueberleitung von seinem Tag zu deinem.
+                now.topic?.takeIf { it in knowledge.steering }?.let { topic ->
+                    Text(
+                        stringResource(R.string.talk_a_doing_why, stringResource(topic.labelRes)),
+                        color = INK_DIM,
+                        size = 13
+                    )
+                }
+            }
             Text(stringResource(R.string.talk_a_here), color = INK, size = 15)
         }
 

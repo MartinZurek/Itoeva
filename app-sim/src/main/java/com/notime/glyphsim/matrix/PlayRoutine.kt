@@ -224,6 +224,22 @@ object PlayRoutines {
                     RoutineStep.Linger(3_000L),
                     RoutineStep.Rise
                 )
+            ),
+            // **Im Stehen innehalten - und das ist mehr als eine zweite Variante.**
+            //
+            // Gemeldet als "wenn ich ihn um Achtsamkeit bitte, geht er ins Bett und schlaeft
+            // kurz". Er ging in Wahrheit in die Leseecke und setzte sich; weil das Sitzmoebel ihn
+            // aber bis zum Hals verdeckt (siehe PlayScene.buildFront) und die Reaktion eine ruhige
+            // ist, sieht Sitzen mit geschlossenen Augen genauso aus wie Liegen. Wer stehen bleibt,
+            // atmet sichtbar - dieselbe Absicht, aber nicht mehr zu verwechseln.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Act(AnimationType.MINDFULNESS),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Act(AnimationType.MINDFULNESS),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
+                )
             )
         )
 
