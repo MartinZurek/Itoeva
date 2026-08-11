@@ -628,7 +628,39 @@ object PlayScene {
         /** Form waehrend der Benutzung - null heisst: sieht immer gleich aus. */
         val usedArt: List<Pair<Int, Int>>? = null,
         /** Leuchtende Teile, die erst beim Oeffnen sichtbar werden. */
-        val usedGlow: List<Pair<Int, Int>> = emptyList()
+        val usedGlow: List<Pair<Int, Int>> = emptyList(),
+        /**
+         * Wo bei einer LEUCHTE der Kern sitzt - in den lokalen Koordinaten der Requisite.
+         *
+         * **Warum das jetzt an der Requisite haengt und nicht mehr in [ambient].** Die
+         * Umgebungsanimation suchte ihre Lichtquelle bis hierher am Gegenstand selbst
+         * (`prop === LAMP`) und rechnete mit dessen Massen. Das ging genau so lange gut, wie ALLE
+         * gleich wohnten: Sobald der Drache eine Feuerschale und der Schleim einen Leuchtpilz
+         * bekommt, findet diese Abfrage nichts mehr - und die Leseecke bliebe fuer vier von sechs
+         * Kreaturen unbeleuchtet, ohne dass irgendwo ein Fehler auftauchte. Die Leuchte weiss
+         * jetzt selbst, wo ihr Licht sitzt; das Zimmer muss davon nichts wissen.
+         */
+        val lightAt: Pair<Int, Int>? = null,
+        /**
+         * Die leuchtende FLAECHE eines Geraets (Mattscheibe, Monitor, Feuerstelle) - als Umriss
+         * ausgespart gezeichnet und erst von [ambient] gefuellt, damit das Licht eine eigene
+         * Ebene bleibt und heller sein darf als das Geraet drumherum.
+         *
+         * Aus demselben Grund an der Requisite wie [lightAt]: Ein Kamin hat seine Flammen an
+         * anderer Stelle als ein Fernseher seine Mattscheibe.
+         */
+        val screenArea: List<Pair<Int, Int>> = emptyList(),
+        /**
+         * Wo auf einer Requisite das GEFAESS steht, ueber dem Dampf aufsteigt (siehe [ambient]).
+         *
+         * Aus demselben Anlass wie [lightAt] hier gelandet: Solange alle am selben Tisch assen,
+         * konnte die Umgebungsanimation mit festen Massen rechnen. Sechs verschiedene Tische
+         * koennen ihren Topf nicht alle an derselben Stelle tragen - und muessten es, wenn der
+         * Dampf weiter von aussen bestimmt wuerde. Dann waeren die Tische nur noch verschiedene
+         * Untergestelle unter derselben Platte, und genau das war der Grund, warum zwei Kuechen
+         * einander nicht loslassen wollten.
+         */
+        val vaporAt: Pair<Int, Int>? = null
     )
 
     /**
@@ -807,50 +839,86 @@ object PlayScene {
      * als Tiefe, eine Figur vor dem Fenster laesst das Fenster schlicht verschwinden.
      */
     /**
-     * Die Einrichtung eines Ortes. [species] wird nur am Arbeitsplatz ausgewertet - ueberall sonst
-     * wohnen alle Kreaturen gleich, nur ihr Beruf unterscheidet sie.
+     * Die Einrichtung eines Ortes.
+     *
+     * **Jeder WOHNRAUM haengt inzwischen an der Spezies** (siehe [Home]) - vorher waren es nur
+     * Schlafzimmer, Arbeitsplatz und das Draussen, und die uebrigen fuenf Zimmer sahen bei allen
+     * sechs Kreaturen bis auf die Zelle genau gleich aus. Die ANORDNUNG bleibt dabei ueberall
+     * dieselbe: Nur so ist gesichert, dass jeder Ablauf in jeder Wohnung aufgeht und dass eine
+     * Einrichtung, die bei einer Kreatur passt, auch bei den anderen nicht ineinandersteht.
+     *
+     * Geteilt bleiben Laden, Strasse und Wald. Das ist der Gegenpol und ebenso wichtig: Wenn
+     * jeder sein eigenes Zuhause hat, braucht es Orte, an denen alle dasselbe sehen - sonst waeren
+     * es sechs Welten nebeneinander statt einer mit sechs Bewohnern.
      */
-    private fun placementsFor(place: Place, species: AvatarSpecies = AvatarSpecies.PUFFLING): List<Placement> = when (place) {
-        // Das Schlafzimmer ist nach dem Arbeitsplatz der zweite Raum, der von der Spezies
-        // abhaengt - und der persoenlichste: Wie jemand schlaeft, sagt mehr ueber ihn als das,
-        // was an seiner Wand haengt.
+    private fun placementsFor(
+        place: Place,
+        species: AvatarSpecies = AvatarSpecies.PUFFLING
+    ): List<Placement> {
+        val home = homeOf(species)
+        return when (place) {
+        // Das Schlafzimmer ist der persoenlichste Raum: Wie jemand schlaeft, sagt mehr ueber ihn
+        // als das, was an seiner Wand haengt.
         Place.BEDROOM -> bedroomPlacements(species)
 
         Place.BATH -> besideDoor(listOf(
-            Placement(bathFor(species), anchorX = 0f, station = Station.TUB),
+            Placement(home.bath, anchorX = 0f, station = Station.TUB),
             // Rechts NEBEN der Wanne verankert, nicht bei einem Bruchteil des ganzen Raumes: Bei
             // 30 Spalten (kleines Geraet, gross gezogene Uhr) stand das Becken sonst in der Wanne.
             Placement(
                 BASIN, anchorX = 0.5f, station = Station.BASIN,
-                keepClearLeft = bathFor(species).width + 2
+                keepClearLeft = home.bath.width + 2
             ),
-            Placement(PICTURE, anchorX = 0.34f, liftCells = 11, brightness = BACKDROP)
+            Placement(home.wall, anchorX = 0.5f, liftCells = 11, brightness = BACKDROP),
+            // Ohne diese beiden bestuende das Bad aus Wanne und Becken - und weil das Becken bei
+            // allen dasselbe ist, waeren zwei Baeder zu drei Vierteln dasselbe Bild. Gerechnet
+            // wurde das: Wanne und Becken allein machten bei zwei Kreaturen bis zu 79 % derselben
+            // Zellen aus.
+            Placement(home.light, anchorX = 0.34f),
+            Placement(home.accent, anchorX = 0.9f)
         ))
-        // Der Arbeitsplatz ist der EINZIGE Ort, dessen Einrichtung von der Spezies abhaengt -
-        // siehe [workPlacements].
         Place.WORK -> besideDoor(workPlacements(species))
         Place.DESK -> besideDoor(listOf(
             Placement(WINDOW, anchorX = 0f, liftCells = 8, brightness = BACKDROP),
-            Placement(DESK, anchorX = 0.72f, station = Station.DESK),
-            Placement(BOOKS, anchorX = 0.86f)
+            // Die eigene Leuchte OHNE Station: Am Schreibtisch wird sie nicht geschaltet, sie
+            // brennt einfach. Nachts ist sie trotzdem das, was diesen Raum von den fuenf anderen
+            // Schreibtischen unterscheidet - Licht bleibt stehen, wenn der Raum zurueckweicht.
+            Placement(home.light, anchorX = 0.30f),
+            // Das Fenster ist in JEDEM Arbeitszimmer dasselbe - es ist der Blick nach draussen,
+            // und der gehoert dem Zimmer, nicht dem Bewohner (an ihm haengen Mond, Sonne und der
+            // Regen, den man von drinnen sieht). Dafuer haengt daneben, was sonst auch an seinen
+            // Waenden haengt.
+            Placement(home.wall, anchorX = 0.50f, liftCells = 11, brightness = BACKDROP),
+            Placement(home.desk, anchorX = 0.72f, station = Station.DESK),
+            Placement(home.accent, anchorX = 0.88f)
         ))
         Place.KITCHEN -> besideDoor(listOf(
+            // Der Kuehlschrank ist der eine Gegenstand, den hier alle teilen - ein Geraet ohne
+            // Charakter, und sechs verschiedene zu zeichnen waere Arbeit, die niemand bemerkt.
+            // Alles andere gehoert der Kreatur.
             Placement(FRIDGE, anchorX = 0f, station = Station.FRIDGE),
-            Placement(SHELF, anchorX = 0.52f, liftCells = SHELF_LIFT, brightness = BACKDROP),
-            Placement(COUNTER, anchorX = 0.50f),
-            Placement(diningFor(species), anchorX = 0.82f, station = Station.TABLE)
+            // **Die Anker sind neu verteilt, weil die Kuechenzeile bisher gar nicht zu sehen war.**
+            // Sie stand bei 0,50 und reichte damit bis in den Tisch hinein - und weil sie keine
+            // Station traegt, wich sie jedes Mal (siehe [fitting]): Das groesste Moebelstueck der
+            // Wohnung fiel bei ueblichen Bildbreiten stillschweigend weg, und uebrig blieb eine
+            // Kueche aus Kuehlschrank, Regal und Tisch. Jetzt hat jedes Stueck seinen Streifen:
+            // Kuehlschrank ganz links, Zeile daneben, Kleinzeug in der Luecke, Tisch rechts.
+            Placement(home.counter, anchorX = 0.24f),
+            Placement(home.larder, anchorX = 0.52f, liftCells = SHELF_LIFT, brightness = BACKDROP),
+            Placement(home.accent, anchorX = 0.62f),
+            Placement(home.table, anchorX = 0.94f, station = Station.TABLE)
         ))
         Place.NOOK -> besideDoor(listOf(
-            Placement(seatFor(species), anchorX = 0.08f, station = Station.SEAT),
-            Placement(PICTURE, anchorX = 0f, liftCells = 10, brightness = BACKDROP),
-            Placement(BOOKSHELF, anchorX = 0.60f, station = Station.BOOKSHELF),
-            Placement(LAMP, anchorX = 0.80f, station = Station.LAMP)
+            Placement(home.seat, anchorX = 0.08f, station = Station.SEAT),
+            Placement(home.wall, anchorX = 0f, liftCells = 10, brightness = BACKDROP),
+            Placement(home.shelf, anchorX = 0.60f, station = Station.BOOKSHELF),
+            Placement(home.light, anchorX = 0.82f, station = Station.LAMP)
         ))
         Place.LIVING -> besideDoor(listOf(
-            Placement(SOFA, anchorX = 0.02f, station = Station.SEAT),
-            Placement(PICTURE, anchorX = 0.34f, liftCells = 11, brightness = BACKDROP),
-            Placement(PLANT, anchorX = 0.62f),
-            Placement(TV, anchorX = 0.78f, station = Station.TV)
+            Placement(home.couch, anchorX = 0.02f, station = Station.SEAT),
+            Placement(home.wall, anchorX = 0.34f, liftCells = 11, brightness = BACKDROP),
+            Placement(home.accent, anchorX = 0.62f),
+            Placement(home.screen, anchorX = 0.78f, station = Station.TV)
         ))
         Place.SHOP -> besideDoor(listOf(
             Placement(RACK, anchorX = 0.04f, station = Station.RACK),
@@ -893,6 +961,7 @@ object PlayScene {
             Placement(LOG, anchorX = 0.58f, station = Station.BENCH),
             Placement(TREE, anchorX = 0.86f)
         )
+        }
     }
 
     /**
@@ -938,9 +1007,43 @@ object PlayScene {
         // Teppich: ein aufgehellter Abschnitt der Bodenlinie mit Fransen an den Enden. Auf einem
         // seitlich gesehenen Boden ist ein Teppich nichts anderes als ein Stueck Boden, das anders
         // aussieht - genau das laesst sich hier mit drei Zellen Unterschied sagen.
-        Place.LIVING -> rugAt(widthCells, floorY, from = 0.22f, to = 0.62f)
-        Place.BEDROOM -> rugAt(widthCells, floorY, from = 0.40f, to = 0.72f)
+        Place.LIVING -> indoorFloor(species, widthCells, floorY, from = 0.22f, to = 0.62f)
+        Place.BEDROOM -> indoorFloor(species, widthCells, floorY, from = 0.40f, to = 0.72f)
         else -> emptyList()
+    }
+
+    /**
+     * **Der Boden gehoert zur Wohnung wie zur Landschaft** (siehe [habitatGround]).
+     *
+     * Ein Teppich sagt "hier wohnt jemand, der einen Teppich hat" - und genau deshalb passt er
+     * nicht zu jedem. Drei Kreaturen bekommen stattdessen den Untergrund, auf dem sie ohnehin
+     * leben: Steinplatten, Dielen, feuchte Stellen. Es ist eine einzige Zeile im Bild und der
+     * billigste Unterschied zwischen zwei Zimmern, den es hier gibt.
+     */
+    private fun indoorFloor(
+        species: AvatarSpecies,
+        widthCells: Int,
+        floorY: Int,
+        from: Float,
+        to: Float
+    ): List<SceneCell> = when (species) {
+        AvatarSpecies.PUFFLING, AvatarSpecies.STARLET, AvatarSpecies.FENNEC ->
+            rugAt(widthCells, floorY, from, to)
+
+        // Steinplatten: breite Felder mit deutlichen Fugen. Zum Drachen gehoert kein Teppich.
+        AvatarSpecies.WYRMLING -> (0 until widthCells)
+            .filter { it % 6 == 0 }
+            .map { SceneCell(it, floorY, (STRUCTURE * 1.8f).roundToInt()) }
+
+        // Dielen: engere Fugen als beim Stein - schmaler heisst auf diesem Raster "aus Holz".
+        AvatarSpecies.HOOTLET -> (0 until widthCells)
+            .filter { it % 4 == 0 }
+            .map { SceneCell(it, floorY, (STRUCTURE * 1.5f).roundToInt()) }
+
+        // Feuchte Stellen, unregelmaessig verteilt. Wo er langgeht, bleibt etwas zurueck.
+        AvatarSpecies.GLOOP -> (0 until widthCells)
+            .filter { it % 5 == 2 || it % 7 == 4 }
+            .map { SceneCell(it, floorY, (STRUCTURE * 1.6f).roundToInt()) }
     }
 
     /**
@@ -1059,7 +1162,8 @@ object PlayScene {
             hLine(0, 11, 5) +              // Tischplatte
             vLine(1, 6, 7) + vLine(10, 6, 7),
         // Steht davor auf dem Boden (Zeile 7 ist die unterste des Moebels), leicht links versetzt.
-        useSpot = -1 to 7
+        useSpot = -1 to 7,
+        screenArea = rect(5, 1, 7, 2)
     )
 
     /** Tisch mit Kanne - der Dampf darueber kommt aus [ambient]. */
@@ -1068,7 +1172,8 @@ object PlayScene {
         art = rect(5, 0, 7, 2) + listOf(8 to 1) +  // Kanne mit Tuelle
             hLine(0, 10, 3) +                       // Tischplatte
             vLine(1, 4, 6) + vLine(9, 4, 6),
-        useSpot = -1 to 6
+        useSpot = -1 to 6,
+        vaporAt = 6 to 0
     )
 
     /** Haengeregal - haengt an der Wand, steht nicht auf dem Boden. */
@@ -1109,7 +1214,8 @@ object PlayScene {
             vLine(1, 2, 7) +                      // Staender
             hLine(0, 2, 8),                       // Fuss
         // Daneben, auf der linken Seite: rechts von der Lampe ist der Bildrand.
-        useSpot = -4 to 8
+        useSpot = -4 to 8,
+        lightAt = 1 to 2
     )
 
     /** Baum. */
@@ -1600,6 +1706,16 @@ object PlayScene {
         useSpot = 4 to 1
     )
 
+    /** WYRMLING - ausgehauener Steintrog. Eine Emailwanne mit Fuessen passt zu ihm so wenig wie
+     *  ein Teppich. */
+    private val STONETUB = Prop(
+        width = 11, height = 5,
+        art = vLine(0, 0, 3) + vLine(1, 0, 3) + vLine(9, 0, 3) + vLine(10, 0, 3) +
+            hLine(0, 10, 3) + hLine(1, 9, 4),
+        frontArt = rect(2, 1, 8, 3),
+        useSpot = 5 to 3
+    )
+
     /** GLOOP - flache Schale statt Wanne; er kaeme ueber keinen Wannenrand. */
     private val LOWTUB = Prop(
         width = 11, height = 3,
@@ -1614,22 +1730,63 @@ object PlayScene {
         art = rect(5, 0, 7, 0) +                                 // Schale darauf
             hLine(0, 10, 1) +                                    // Platte
             vLine(1, 2, 3) + vLine(9, 2, 3),
-        useSpot = -1 to 3
+        useSpot = -1 to 3,
+        vaporAt = 6 to 0
     )
 
-    /** Wo sich diese Spezies waescht. */
-    private fun bathFor(species: AvatarSpecies): Prop = when (species) {
-        AvatarSpecies.FENNEC -> SANDBATH
-        AvatarSpecies.HOOTLET -> BIRDBATH
-        AvatarSpecies.GLOOP -> LOWTUB
-        else -> TUB
-    }
+    // ---- Woran diese Kreatur isst ----
+    //
+    // Sechs Tische, und jeder traegt sein Gefaess woanders - moeglich geworden durch
+    // [Prop.vaporAt]. Solange der Dampf von aussen an einer festen Stelle gezeichnet wurde,
+    // MUSSTEN alle Tische ihren Topf dort haben, und damit blieben sie verschiedene Untergestelle
+    // unter derselben Platte.
 
-    /** Woran diese Spezies isst. */
-    private fun diningFor(species: AvatarSpecies): Prop = when (species) {
-        AvatarSpecies.GLOOP -> LOWTABLE
-        else -> TABLE
-    }
+    /** STARLET - schmale Platte auf gekreuzten Beinen, die Kanne links. */
+    private val CROSSTABLE = Prop(
+        width = 11, height = 7,
+        art = rect(1, 0, 3, 2) + listOf(4 to 1) +               // Kanne mit Tuelle
+            hLine(0, 10, 3) +                                   // Platte
+            listOf(1 to 4, 2 to 5, 3 to 6, 3 to 4, 1 to 6) +    // gekreuzte Beine links
+            listOf(7 to 4, 8 to 5, 9 to 6, 9 to 4, 7 to 6),     // und rechts
+        useSpot = -1 to 6,
+        vaporAt = 2 to 0
+    )
+
+    /** FENNEC - niedriger runder Tisch. Wer auf Kissen sitzt, isst nicht an einem hohen. */
+    private val LOWROUND = Prop(
+        width = 11, height = 5,
+        art = rect(7, 0, 9, 1) +                                // Topf rechts
+            hLine(0, 10, 2) + hLine(1, 9, 3) +                  // gewoelbte Platte
+            listOf(4 to 4, 6 to 4),                             // kurzer Fuss
+        useSpot = -1 to 4,
+        vaporAt = 8 to 0
+    )
+
+    /** HOOTLET - Tisch aus einem Baumstumpf. Im Wald nimmt man, was steht. */
+    private val STUMPTABLE = Prop(
+        width = 11, height = 7,
+        art = rect(2, 0, 4, 2) + listOf(5 to 1) +
+            hLine(0, 10, 3) + hLine(1, 9, 4) +                  // Schnittflaeche
+            rect(3, 5, 7, 6),                                   // dicker Stamm
+        useSpot = -1 to 6,
+        vaporAt = 3 to 0
+    )
+
+    /**
+     * WYRMLING - Steinplatte auf zwei Bloecken. Ein Drache isst nicht an einem Brett auf Beinen.
+     *
+     * Dieselben Massen wie [TABLE] und der Topf an derselben Stelle (x5..7, oberste Zeile): Der
+     * Dampf darueber kommt aus [ambient] und findet ihn dadurch bei jeder Kreatur, ohne dass die
+     * Umgebungsanimation die Tische auseinanderhalten muesste.
+     */
+    private val SLABTABLE = Prop(
+        width = 11, height = 7,
+        art = rect(7, 0, 9, 2) + listOf(6 to 1) +               // Kessel mit Tuelle
+            hLine(0, 10, 3) + hLine(0, 10, 4) +                 // dicke Platte
+            rect(1, 5, 2, 6) + rect(8, 5, 9, 6),                // zwei Steinbloecke
+        useSpot = -1 to 6,
+        vaporAt = 8 to 0
+    )
 
     // ---- Sitzplaetze je Spezies ----
     //
@@ -1686,14 +1843,600 @@ object PlayScene {
         useSpot = 5 to 2
     )
 
-    /** Der persoenliche Sitzplatz je Spezies - siehe oben. */
-    private fun seatFor(species: AvatarSpecies): Prop = when (species) {
-        AvatarSpecies.PUFFLING -> CHAIR
-        AvatarSpecies.HOOTLET -> PERCH
-        AvatarSpecies.GLOOP -> CUSHION
-        AvatarSpecies.STARLET -> POUF
-        AvatarSpecies.WYRMLING -> LEDGE
-        AvatarSpecies.FENNEC -> CUSHIONS
+    // ---- Der grosse Sitzplatz im Wohnzimmer ----
+    //
+    // Das Sofa war bewusst lange fuer alle dasselbe: Es ist das Moebel, auf dem man Gaeste
+    // empfaengt, und gemeinsame Einrichtung sagt etwas anderes aus als der eigene Lieblingsplatz.
+    // Dieses Argument traegt aber nur, solange alle ueberhaupt auf ein Sofa KOENNEN - und drei von
+    // sechs koennen es nicht: GLOOP hat keine Beine (er kaeme so wenig auf eine Sitzflaeche wie in
+    // eine hohe Wanne), HOOTLET ist ein Vogel und sitzt auf etwas statt in etwas, und ein Drache
+    // thront. Wo der Koerper widerspricht, geht der Koerper vor.
+
+    /** WYRMLING - Steinbank mit aufragender Lehnkante. Massiv wie alles, worauf er sich setzt. */
+    private val STONESEAT = Prop(
+        width = 13, height = 6,
+        art = rect(0, 0, 1, 3) +                                 // Lehnkante
+            rect(0, 3, 12, 4) +                                  // Sitzflaeche
+            listOf(1 to 5, 11 to 5),                             // Sockel
+        frontArt = rect(2, 3, 12, 4),
+        useSpot = 7 to 4
+    )
+
+    /**
+     * FENNEC - Polsterbank mit drei Kissenkuppen, ohne Lehne.
+     *
+     * Er BRAUCHT kein anderes Sitzmoebel als ein Sofa - ein Wuestenfuchs hat Beine und einen
+     * Ruecken. Er bekommt trotzdem eines, und das ist der Unterschied zwischen den beiden Sorten
+     * Eintrag in [Home]: Hier entscheidet nicht der Koerper, sondern dass sein Wohnzimmer sonst zu
+     * drei Vierteln dasselbe waere wie das des Einstiegs-Avatars. Zu ihm passt es ohnehin - in der
+     * Leseecke sitzt er auf einem Kissenberg, im Schlafzimmer liegt er in einem gepolsterten Bau.
+     */
+    private val DIVAN = Prop(
+        width = 13, height = 4,
+        art = listOf(1 to 0, 2 to 0, 5 to 0, 6 to 0, 9 to 0, 10 to 0) +   // Kissenkuppen
+            hLine(0, 12, 1) + hLine(0, 12, 2) +                           // Polsterflaeche
+            listOf(1 to 3, 11 to 3),                                      // Fuesse
+        frontArt = hLine(0, 12, 1) + hLine(0, 12, 2),
+        useSpot = 6 to 2
+    )
+
+    /** GLOOP - breite Polsterbank am Boden. Dieselbe Ueberlegung wie beim Bodenkissen, nur fuer zwei. */
+    private val FLOORSOFA = Prop(
+        width = 13, height = 3,
+        art = hLine(1, 11, 0) + hLine(0, 12, 1) + hLine(0, 12, 2),
+        frontArt = hLine(0, 12, 1) + hLine(0, 12, 2),
+        useSpot = 6 to 1
+    )
+
+    /**
+     * HOOTLET - Sitzbalken zwischen zwei Pfosten.
+     *
+     * Der Balken liegt drei Zellen ueber dem Boden und keinen Zoll hoeher. Dieselbe Grenze wie bei
+     * der Sitzstange in der Leseecke ([PERCH]): Die Figur reicht STEHEND schon fast bis zur Decke,
+     * und alles Erhoehte schiebt sie hindurch.
+     */
+    private val ROOST = Prop(
+        width = 13, height = 9,
+        art = vLine(0, 0, 8) + vLine(12, 0, 8) +                 // Pfosten
+            hLine(0, 12, 0) +                                    // Querbalken oben
+            listOf(1 to 1, 11 to 1) +                            // Verstrebung
+            hLine(0, 12, 6),                                     // Sitzbalken
+        frontArt = hLine(2, 12, 6),
+        useSpot = 6 to 6
+    )
+
+    /**
+     * STARLET - Haengeschaukel, an zwei langen Seilen von der Decke.
+     *
+     * **Die einzige Requisite, die OBEN beginnt.** Alles andere in dieser Welt steht auf dem
+     * Boden; die Seile laufen von der Zimmerdecke herunter (die Hoehe ist genau
+     * [CEILING_HEIGHT_CELLS]), und das macht die Silhouette auf den ersten Blick unverwechselbar -
+     * ohne dass ein einziger Sitz anders gezeichnet werden musste als die Sitzflaeche selbst.
+     *
+     * Zu ihr gehoert sie, weil sie in der Haengematte schlaeft: Wer nicht auf Moebeln liegt,
+     * sitzt auch nicht darauf.
+     */
+    private val SWINGSEAT = Prop(
+        width = 11, height = CEILING_HEIGHT_CELLS,
+        art = vLine(1, 0, 14) + vLine(9, 0, 14) +                // Seile bis zur Decke
+            hLine(0, 10, 15) + hLine(1, 9, 16),                  // Sitz mit Polster
+        frontArt = hLine(0, 10, 15) + hLine(1, 9, 16),
+        // Drei Zellen ueber dem Boden - dieselbe Hoehe wie Haengematte und Sitzstange, und die
+        // ist die Grenze: Hoeher stiesse die groesste Form durch die Decke.
+        useSpot = 5 to 15
+    )
+
+    /**
+     * **Feuerstelle - das Gegenstueck zum Fernseher.**
+     *
+     * Abends sitzt man um etwas herum, das leuchtet; welches Ding das ist, sagt mehr ueber einen
+     * Haushalt aus als jedes andere Moebelstueck. Drei dieser Kreaturen leben wild (Drache,
+     * Wuestenfuchs, Eule) - bei ihnen ist es ein Feuer, bei den uebrigen eine Mattscheibe. Beide
+     * haengen am selben Schalter ([Station.TV]): "Fernseher aus" und "Feuer runtergebrannt" sind
+     * dieselbe Geste, und deshalb musste dafuer kein einziger Ablauf geaendert werden.
+     *
+     * **Der Rauchfang ist der Grund, warum man ihn nicht mit dem Fernseher verwechselt.** Ein
+     * erster Entwurf war ein Rechteck derselben Groesse mit Flammen darin - im Bild waren die
+     * beiden dadurch fast deckungsgleich, und ein Wohnzimmer mit Kamin sah aus wie eines mit
+     * Fernseher. Die nach oben zulaufende Haube gibt ihm eine eigene Silhouette, noch bevor das
+     * erste Licht darin brennt.
+     */
+    private val HEARTH = Prop(
+        width = 11, height = 11,
+        art = hLine(4, 6, 0) + hLine(4, 6, 1) +                  // Schornstein
+            hLine(3, 7, 2) + hLine(2, 8, 3) + hLine(1, 9, 4) +   // Haube
+            hLine(0, 10, 5) +                                    // Sims
+            vLine(0, 6, 9) + vLine(1, 6, 9) +                    // Wangen
+            vLine(9, 6, 9) + vLine(10, 6, 9) +
+            hLine(2, 8, 10),                                     // Bodenplatte
+        useSpot = -6 to 10,
+        // Die Flammen laufen nach oben spitz zu - erst diese Form unterscheidet ein Feuer von
+        // einer beleuchteten Flaeche. Gefuellt wird sie von [ambient], deshalb ist sie hier
+        // ausgespart und nicht Teil der Silhouette.
+        screenArea = listOf(5 to 6) + hLine(4, 6, 7) + hLine(3, 7, 8) + hLine(2, 8, 9)
+    )
+
+    /**
+     * WYRMLING - Feuergrube: ein Steinring mit offenem Feuer darin, kniehoch.
+     *
+     * Der Drache bekommt KEINEN Kamin, obwohl das Feuer zu ihm gehoert wie zu keinem sonst. Ein
+     * Kamin ist ein Feuer, das jemand eingebaut hat - eine Feuergrube ist eines, um das herum man
+     * sich setzt. Nebenbei loest das ein Problem, das beim Vergleich der Zimmer auffiel: Kamin,
+     * Ofen und Fernseher stehen alle als hohes Ding an der Wand, und drei davon nebeneinander
+     * unterscheiden sich weniger, als sie sollten. Etwas Flaches am Boden dagegen unterscheidet
+     * sich von allen dreien auf den ersten Blick.
+     */
+    private val FIREPIT = Prop(
+        width = 11, height = 6,
+        art = listOf(0 to 3, 2 to 3, 8 to 3, 10 to 3) +          // aufragende Steine
+            hLine(0, 10, 4) + hLine(0, 10, 5),                   // Steinring
+        useSpot = -6 to 5,
+        screenArea = listOf(5 to 0) + hLine(4, 6, 1) + hLine(3, 7, 2) + hLine(3, 7, 3)
+    )
+
+    /**
+     * FENNEC - Kanonenofen mit Rohr.
+     *
+     * Der dritte Weg, abends etwas Leuchtendes im Zimmer zu haben - und noetig, weil er sonst
+     * denselben Kamin haette wie Drache und Eule. Zu ihm gehoert er, weil ein Ofen genau das tut,
+     * wofuer diese Figur steht: Er passt auf, dass es warm bleibt, ohne dass man ihn beachtet.
+     */
+    private val STOVE = Prop(
+        width = 9, height = 12,
+        art = vLine(4, 0, 2) +                                   // Ofenrohr
+            hLine(1, 7, 3) +                                     // Deckplatte
+            vLine(1, 4, 10) + vLine(7, 4, 10) +                  // Wangen
+            hLine(1, 7, 5) + hLine(1, 7, 10) +                   // Kanten ueber und unter der Tuer
+            listOf(0 to 11, 8 to 11),                            // Fuesse
+        useSpot = -5 to 11,
+        screenArea = rect(2, 6, 6, 9)
+    )
+
+    // ---- Leuchten je Spezies ----
+    //
+    // **Die Leuchte ist der wirksamste Unterschied zwischen zwei Zimmern**, und zwar aus einem
+    // rein technischen Grund: Nachts weicht der ganze Raum zurueck, das Licht aber nicht (siehe
+    // [SceneCell.isLight]). Was leuchtet, traegt die Szene dann allein - eine Feuerschale und ein
+    // Lampenschirm ergeben um drei Uhr nachts zwei voellig verschiedene Bilder, obwohl der Raum
+    // dahinter derselbe waere.
+    //
+    // Jede weiss ueber [Prop.lightAt] selbst, wo ihr Licht sitzt; [ambient] muss sie nicht kennen.
+
+    /** WYRMLING - Feuerschale auf drei Beinen. */
+    private val BRAZIER = Prop(
+        width = 7, height = 8,
+        art = hLine(1, 5, 1) + hLine(0, 6, 2) + hLine(1, 5, 3) +  // Schale
+            vLine(3, 4, 6) + hLine(1, 5, 7),                      // Fuss
+        useSpot = -4 to 7,
+        lightAt = 3 to 0
+    )
+
+    /** GLOOP - Leuchtpilz. Im Sumpf waechst das Licht, statt eingeschaltet zu werden. */
+    private val GLOWCAP = Prop(
+        width = 7, height = 7,
+        art = hLine(2, 4, 0) + hLine(1, 5, 1) + hLine(0, 6, 2) +  // Hut
+            vLine(3, 3, 5) + hLine(2, 4, 6),                      // Stiel
+        useSpot = -4 to 6,
+        lightAt = 3 to 3
+    )
+
+    /** HOOTLET - zwei Kerzen auf einem Staender. Kein elektrisches Licht, wie in seinem Wald. */
+    private val CANDLES = Prop(
+        width = 5, height = 10,
+        art = listOf(1 to 1, 3 to 1) +                            // Dochte
+            vLine(1, 2, 4) + vLine(3, 2, 4) +                     // Kerzen
+            hLine(1, 3, 5) +                                      // Teller
+            vLine(2, 6, 8) + hLine(1, 3, 9),                      // Staender
+        useSpot = -4 to 9,
+        lightAt = 2 to 0
+    )
+
+    /** FENNEC - Sturmlaterne auf einem Pfosten. Ein Licht, das auch draussen brennen wuerde. */
+    private val LANTERN = Prop(
+        width = 5, height = 11,
+        art = hLine(1, 3, 0) +                                    // Buegel
+            vLine(1, 1, 4) + vLine(3, 1, 4) + hLine(1, 3, 5) +    // Glaskorb
+            vLine(2, 6, 9) + hLine(1, 3, 10),                     // Pfosten
+        useSpot = -4 to 10,
+        lightAt = 2 to 2
+    )
+
+    /**
+     * STARLET - Papierlampion.
+     *
+     * Die einzige Leuchte als UMRISS statt als gefuellte Form, und das ist hier kein Rueckfall:
+     * Ein Lampion leuchtet von INNEN, die Huelle ist nur Papier davor. Waere sie gefuellt, saesse
+     * das Licht auf der Aussenseite - und aus dem Lampion wuerde eine Kugel mit einem hellen
+     * Punkt darauf.
+     */
+    private val PAPERLANTERN = Prop(
+        width = 7, height = 10,
+        art = hLine(2, 4, 0) + listOf(1 to 1, 5 to 1) +
+            listOf(0 to 2, 6 to 2) + listOf(0 to 3, 6 to 3) +
+            listOf(1 to 4, 5 to 4) + hLine(2, 4, 5) +
+            vLine(3, 6, 8) + hLine(1, 5, 9),                      // Staender
+        useSpot = -4 to 9,
+        lightAt = 3 to 3
+    )
+
+    // ---- Was man immer wieder hervorholt: das Regal je Spezies ----
+
+    /**
+     * WYRMLING - Hort: eine Truhe mit zwei Schriftrollen obenauf.
+     *
+     * Ein Drache stellt seine Buecher nicht ins Regal, er hortet sie. Wie beim Buecherschrank
+     * verschwindet beim Herausnehmen sichtbar etwas ([usedArt]) - sonst holte er etwas hervor,
+     * ohne dass die Quelle darauf antwortet.
+     */
+    private val HOARD = Prop(
+        width = 9, height = 8,
+        art = hLine(1, 3, 0) + hLine(5, 7, 0) +                   // Rollen obenauf
+            hLine(0, 8, 1) +                                      // Deckelkante
+            (rect(0, 2, 8, 7) - hLine(1, 7, 4)),                  // Truhe mit Fuge
+        useSpot = -5 to 7,
+        usedArt = hLine(1, 3, 0) + hLine(0, 8, 1) + (rect(0, 2, 8, 7) - hLine(1, 7, 4))
+    )
+
+    /**
+     * STARLET - Pflanzenregal: drei Boeden, auf denen etwas waechst statt steht.
+     *
+     * Sie liest auch, und ein Buecherregal waere nicht falsch - es waere nur dasselbe wie beim
+     * Einstiegs-Avatar, und dann bestuende ihre halbe Leseecke aus fremdem Mobiliar. Zu ihr
+     * gehoert es ohnehin: In ihrem Schlafzimmer stehen Pflanzen, an ihrer Wand rankt es, und
+     * arbeiten tut sie in einer Gaertnerei.
+     */
+    private val PLANTSTAND = Prop(
+        width = 9, height = 10,
+        art = hLine(0, 8, 3) + hLine(0, 8, 6) + hLine(0, 8, 9) +  // drei Boeden
+            vLine(0, 3, 9) + vLine(8, 3, 9) +                     // Wangen
+            listOf(2 to 0, 3 to 0, 2 to 1, 3 to 1, 2 to 2) +      // was oben drauf steht
+            listOf(5 to 1, 5 to 2, 6 to 2) +
+            listOf(2 to 4, 3 to 4, 2 to 5, 6 to 4, 6 to 5) +      // im mittleren Fach
+            listOf(3 to 7, 4 to 7, 3 to 8),                       // im unteren
+        useSpot = -5 to 9,
+        // Wie beim Buecherschrank verschwindet beim Herausnehmen sichtbar etwas.
+        usedArt = hLine(0, 8, 3) + hLine(0, 8, 6) + hLine(0, 8, 9) +
+            vLine(0, 3, 9) + vLine(8, 3, 9) +
+            listOf(2 to 0, 3 to 0, 2 to 1, 3 to 1, 2 to 2) +
+            listOf(5 to 1, 5 to 2, 6 to 2) +
+            listOf(6 to 4, 6 to 5) +
+            listOf(3 to 7, 4 to 7, 3 to 8)
+    )
+
+    /**
+     * FENNEC - drei gestapelte Koerbe.
+     *
+     * Wer in einem Bau wohnt, hat keine Regale, sondern Behaelter. Der oberste steht beim
+     * Herausnehmen offen ([usedArt]) - dieselbe Antwort der Quelle wie beim Buecherschrank.
+     */
+    private val BASKETS = Prop(
+        width = 9, height = 11,
+        art = hLine(1, 7, 0) + hLine(0, 8, 1) + hLine(0, 8, 3) +
+            vLine(0, 1, 3) + vLine(8, 1, 3) +
+            hLine(0, 8, 4) + hLine(0, 8, 7) + vLine(0, 4, 7) + vLine(8, 4, 7) +
+            hLine(0, 8, 8) + hLine(0, 8, 10) + vLine(0, 8, 10) + vLine(8, 8, 10) +
+            listOf(2 to 2, 6 to 2, 4 to 5, 2 to 9, 6 to 9),      // angedeutetes Geflecht
+        useSpot = -5 to 10,
+        usedArt = hLine(0, 8, 1) + hLine(0, 8, 3) +              // Deckel abgenommen
+            vLine(0, 1, 3) + vLine(8, 1, 3) +
+            hLine(0, 8, 4) + hLine(0, 8, 7) + vLine(0, 4, 7) + vLine(8, 4, 7) +
+            hLine(0, 8, 8) + hLine(0, 8, 10) + vLine(0, 8, 10) + vLine(8, 8, 10) +
+            listOf(2 to 2, 6 to 2, 4 to 5, 2 to 9, 6 to 9)
+    )
+
+    /**
+     * HOOTLET - Buecherturm: vier Baende uebereinander, jeder gegen den naechsten versetzt.
+     *
+     * Ein Regal haette er auch verdient - aber ein Stapel sagt etwas anderes aus als ein Schrank:
+     * Wer ordentlich einsortiert, hat die Buecher weggeraeumt; wer stapelt, ist noch dabei. Der
+     * Versatz von Band zu Band ist dabei das Entscheidende - buendig uebereinander waere es ein
+     * Klotz, versetzt ist es ein Stapel.
+     */
+    private val BOOKTOWER = Prop(
+        width = 7, height = 12,
+        art = (0..3).flatMap { book ->
+            val top = book * 3
+            val left = if (book % 2 == 0) 0 else 1
+            hLine(left, left + 5, top) + hLine(left, left + 5, top + 2) +
+                listOf(left to (top + 1), (left + 5) to (top + 1))
+        },
+        useSpot = -5 to 11,
+        // Der oberste Band ist heruntergenommen - der Stapel wird sichtbar kuerzer.
+        usedArt = (1..3).flatMap { book ->
+            val top = book * 3
+            val left = if (book % 2 == 0) 0 else 1
+            hLine(left, left + 5, top) + hLine(left, left + 5, top + 2) +
+                listOf(left to (top + 1), (left + 5) to (top + 1))
+        }
+    )
+
+    /** GLOOP - niedriges Bodenregal; an ein hohes kaeme er nicht heran. */
+    private val LOWSHELF = Prop(
+        width = 9, height = 5,
+        art = vLine(0, 0, 4) + vLine(8, 0, 4) +
+            hLine(0, 8, 0) + hLine(0, 8, 2) + hLine(0, 8, 4) +
+            listOf(2 to 1, 3 to 1, 5 to 1) +
+            listOf(2 to 3, 4 to 3, 5 to 3, 6 to 3),
+        useSpot = -5 to 4,
+        usedArt = vLine(0, 0, 4) + vLine(8, 0, 4) +
+            hLine(0, 8, 0) + hLine(0, 8, 2) + hLine(0, 8, 4) +
+            listOf(2 to 1, 3 to 1) +
+            listOf(2 to 3, 4 to 3, 5 to 3, 6 to 3)
+    )
+
+    // ---- Woran diese Kreatur zu Hause arbeitet ----
+    //
+    // Sechs Schreibtische, und jeder traegt sein eigenes Leuchtendes ([Prop.screenArea]): Monitor,
+    // Runentafel, Globus, Seekarte. Das war noetig, weil das Arbeitszimmer sonst der gleichfoermigste
+    // Raum der ganzen Wohnung geblieben waere - Fenster und Schreibtisch machen zusammen zwei
+    // Drittel davon aus, und beide waren fuer alle dieselben.
+
+    /** STARLET - schmales Pult, daneben waechst etwas ueber die Platte. */
+    private val PLANTDESK = Prop(
+        width = 12, height = 8,
+        art = listOf(0 to 2, 1 to 1, 1 to 2, 2 to 2, 1 to 3) +   // Trieb auf der Platte
+            hLine(4, 9, 0) + vLine(4, 1, 3) + vLine(9, 1, 3) + hLine(4, 9, 4) +   // Rahmen
+            hLine(0, 11, 5) +                                    // Platte
+            vLine(0, 6, 7) + vLine(11, 6, 7),                    // Wangen statt Beine
+        useSpot = -1 to 7,
+        screenArea = rect(5, 1, 8, 3)
+    )
+
+    /** WYRMLING - Steinblock, daran gelehnt eine Tafel mit gluehenden Zeichen. */
+    private val SLABDESK = Prop(
+        width = 12, height = 9,
+        art = hLine(2, 8, 0) + vLine(2, 1, 4) + vLine(8, 1, 4) + hLine(2, 8, 5) +  // Tafel
+            hLine(0, 11, 6) +                                    // Steinplatte
+            rect(1, 7, 3, 8) + rect(8, 7, 10, 8),                // zwei Bloecke
+        useSpot = -1 to 8,
+        screenArea = rect(3, 1, 7, 4)
+    )
+
+    /** FENNEC - Kartentisch mit Leuchte darueber. Wer aufpasst, hat den Ueberblick vor sich liegen. */
+    private val CHARTDESK = Prop(
+        width = 12, height = 8,
+        art = hLine(3, 8, 0) + listOf(5 to 1, 6 to 1) +          // Leuchte am Ausleger
+            vLine(3, 1, 2) +
+            hLine(0, 11, 3) + hLine(1, 10, 4) +                  // schraege Kartenflaeche
+            vLine(1, 5, 7) + vLine(10, 5, 7),
+        useSpot = -1 to 7,
+        screenArea = rect(4, 1, 7, 2)
+    )
+
+    /** HOOTLET - Lesepult mit Leuchtglobus. Dieselbe Hand, die in der Sternwarte arbeitet. */
+    private val LECTERN = Prop(
+        width = 11, height = 10,
+        art = hLine(1, 5, 0) + listOf(0 to 1, 6 to 1) +          // aufgeschlagenes Buch
+            hLine(0, 6, 2) +
+            listOf(7 to 1, 8 to 1, 9 to 1, 7 to 3, 8 to 3, 9 to 3) +   // Globusgestell
+            hLine(0, 10, 4) +                                    // Pultplatte
+            vLine(4, 5, 8) + hLine(2, 8, 9),                     // Mittelfuss
+        useSpot = -1 to 9,
+        screenArea = rect(7, 2, 9, 2) + listOf(8 to 1, 8 to 3)
+    )
+
+    /** GLOOP - niedriger Schreibtisch, die Scheibe flach aufgestellt. Siehe [LOWTABLE]. */
+    private val LOWDESK = Prop(
+        width = 12, height = 5,
+        art = hLine(3, 9, 0) + listOf(3 to 1, 3 to 2, 9 to 1, 9 to 2) +
+            hLine(0, 11, 3) +                                     // Platte
+            vLine(1, 4, 4) + vLine(10, 4, 4),
+        useSpot = -1 to 4,
+        screenArea = rect(4, 1, 8, 2)
+    )
+
+    // ---- Was an der Wand haengt ----
+    //
+    // Das billigste Stueck Persoenlichkeit im ganzen Entwurf: fuenf mal fuenf Zellen, die kein
+    // Ablauf je anfasst - und trotzdem der erste Unterschied, den man beim Hinsehen bemerkt.
+
+    /** STARLET - Rankgeruest. Bei ihr waechst auch drinnen etwas. */
+    private val TRELLIS = Prop(
+        width = 7, height = 6,
+        art = vLine(0, 0, 5) + vLine(3, 0, 5) + vLine(6, 0, 5) +
+            hLine(0, 6, 0) + hLine(0, 6, 3) +
+            listOf(1 to 1, 2 to 2, 4 to 4, 5 to 2)                // Ranken
+    )
+
+    /** WYRMLING - Ritzstein. Wer hortet, schreibt auch mit. */
+    private val TABLET = Prop(
+        width = 5, height = 5,
+        art = hLine(0, 4, 0) + hLine(0, 4, 4) + vLine(0, 1, 3) + vLine(4, 1, 3) +
+            listOf(1 to 1, 3 to 1, 2 to 2, 2 to 3)
+    )
+
+    /** HOOTLET - Sternkarte. Dieselbe Hand, die in der Sternwarte arbeitet. */
+    private val STARMAP = Prop(
+        width = 7, height = 5,
+        art = hLine(0, 6, 0) + hLine(0, 6, 4) + vLine(0, 1, 3) + vLine(6, 1, 3) +
+            listOf(2 to 1, 5 to 1, 4 to 2, 1 to 3, 3 to 3)
+    )
+
+    /**
+     * FENNEC - Sanduhr.
+     *
+     * Zuerst hing bei ihm ein Fenster an der Wand ("am Fenster haelt er Ausschau") - das ging in
+     * jedem Zimmer auf, nur nicht im Arbeitszimmer: Dort haengt ohnehin schon eines, und zwei
+     * Fenster in einem Raum, von denen nur eines einen Himmel zeigt, sehen nach Versehen aus. Eine
+     * Sanduhr trifft ihn ohnehin genauer: Er ist der, der auf die Gewohnheiten aufpasst.
+     */
+    private val SANDGLASS = Prop(
+        width = 5, height = 5,
+        art = hLine(0, 4, 0) + hLine(1, 3, 1) + listOf(2 to 2) + hLine(1, 3, 3) + hLine(0, 4, 4)
+    )
+
+    /** GLOOP - Moosfleck an der Wand. Er wischt ihn nicht weg; das ist der Punkt. */
+    private val MOSS = Prop(
+        width = 6, height = 3,
+        art = listOf(1 to 0, 2 to 0, 4 to 0) + hLine(0, 5, 1) +
+            listOf(0 to 2, 1 to 2, 3 to 2, 4 to 2, 5 to 2)
+    )
+
+    /**
+     * **Kochstelle: Dreibein mit Kessel ueber einem Steinring.**
+     *
+     * Das Gegenstueck zur Kuechenzeile - und der Grund, warum sich zwei Kuechen ueberhaupt
+     * unterscheiden koennen. Eine Zeile mit Spuele und Kochfeld ist mit sechzehn Zellen Breite
+     * das groesste Moebelstueck der ganzen Wohnung; solange alle dieselbe hatten, war die Haelfte
+     * jeder Kueche dieselbe Kueche, ganz gleich, was sonst darin stand. Drei Kreaturen leben wild
+     * genug, dass eine Einbaukueche bei ihnen ohnehin fehl am Platz war.
+     */
+    private val COOKFIRE = Prop(
+        width = 13, height = 8,
+        art = listOf(6 to 0) +                                    // Spitze des Dreibeins
+            listOf(5 to 1, 4 to 2, 4 to 3, 3 to 4, 3 to 5, 2 to 6, 2 to 7) +
+            listOf(7 to 1, 8 to 2, 8 to 3, 9 to 4, 9 to 5, 10 to 6, 10 to 7) +
+            rect(5, 3, 7, 5) + listOf(4 to 4) +                   // Kessel am Haken
+            hLine(3, 9, 7)                                        // Steinring am Boden
+    )
+
+    /** STARLET - offene Anrichte: Platte, darunter ein Brett voller Toepfe statt Schranktueren. */
+    private val OPENCOUNTER = Prop(
+        width = 13, height = 8,
+        art = hLine(0, 12, 0) +                                   // Arbeitsplatte
+            vLine(0, 1, 7) + vLine(12, 1, 7) +                    // Wangen
+            hLine(0, 12, 4) +                                     // Zwischenbrett
+            listOf(2 to 2, 3 to 2, 2 to 3, 6 to 3, 9 to 2, 9 to 3) +
+            listOf(3 to 5, 4 to 5, 8 to 5, 3 to 6, 8 to 6)
+    )
+
+    /** GLOOP - niedrige Arbeitsflaeche mit ausgespartem Becken. Siehe [LOWTABLE]. */
+    private val LOWCOUNTER = Prop(
+        width = 13, height = 4,
+        art = (hLine(0, 12, 0) - listOf(2 to 0, 3 to 0, 4 to 0)) +   // Platte, Becken ausgespart
+            listOf(2 to 1, 4 to 1) + hLine(2, 4, 2) +                // Beckenmulde
+            vLine(0, 1, 3) + vLine(12, 1, 3) + hLine(0, 12, 3)
+    )
+
+    /** STARLET - Kraeuterbuendel an einer Schnur. Sie trocknet, was sie gezogen hat. */
+    private val HERBS = Prop(
+        width = 7, height = 5,
+        art = hLine(0, 6, 0) +                                    // Schnur
+            vLine(1, 1, 4) + listOf(0 to 2, 2 to 2) +             // drei Buendel
+            vLine(4, 1, 3) + listOf(3 to 2, 5 to 2) +
+            vLine(6, 1, 2)
+    )
+
+    /** Aufgehaengte Vorraete - das Gegenstueck zum Haengeregal in einer Kueche ohne Schraenke. */
+    private val HANGING = Prop(
+        width = 8, height = 4,
+        art = hLine(0, 7, 0) +                                    // Stange
+            vLine(1, 1, 3) + vLine(3, 1, 2) + vLine(5, 1, 3) + listOf(6 to 1, 6 to 2)
+    )
+
+    // ---- Das Kleinzeug ----
+
+    /** WYRMLING - Kiste. */
+    private val CRATE = Prop(
+        width = 5, height = 4,
+        art = hLine(0, 4, 0) + hLine(0, 4, 3) + vLine(0, 1, 2) + vLine(4, 1, 2) +
+            listOf(1 to 1, 2 to 2, 3 to 1)
+    )
+
+    /** FENNEC - Vorratskrug. */
+    private val JAR = Prop(
+        width = 4, height = 5,
+        art = hLine(1, 2, 0) + hLine(0, 3, 1) + hLine(0, 3, 2) + hLine(0, 3, 3) + hLine(1, 2, 4)
+    )
+
+    /** GLOOP - Schalen, die herumstehen. Er raeumt sie nicht weg. */
+    private val BOWL = Prop(
+        width = 5, height = 3,
+        art = listOf(1 to 0, 2 to 0) + listOf(0 to 1, 4 to 1) + hLine(0, 4, 2)
+    )
+
+    /**
+     * **Wie diese Kreatur wohnt** - die eine Stelle, an der die ganze Wohnung beschrieben ist.
+     *
+     * Bis hierher waren nur Schlafzimmer, Arbeitsplatz und das Draussen artspezifisch. Alles
+     * uebrige - Wohnzimmer, Kueche, Leseecke, Bad, Schreibtisch - war fuer alle sechs Kreaturen
+     * bis auf die Zeile genau dasselbe Zimmer. Beim Wechsel des Avatars aenderte sich die Figur,
+     * und die Wohnung sah ihr ungeruehrt zu.
+     *
+     * **Nicht sechs Wohnungen gezeichnet, sondern EINE Handschrift je Kreatur.** Die Zimmer
+     * behalten ihre erprobte Anordnung (dieselben Anker, dieselben Plaetze, dieselben Ablaeufe);
+     * ausgetauscht wird, WAS dort steht. Ein Zimmer bleibt damit ein Zimmer, das man kennt, und
+     * ist trotzdem unverwechselbar seins. Wer eine siebte Kreatur ergaenzt, fuellt genau diese
+     * elf Felder aus - und hat eine vollstaendige Wohnung, ohne einen einzigen Raum anzufassen.
+     *
+     * Zwei Sorten Eintrag stecken hier nebeneinander, und der Unterschied ist wichtig:
+     * - Was der KOERPER erzwingt ([bath], [table], [couch], [desk], [shelf]) - GLOOP hat keine
+     *   Beine, HOOTLET ist ein Vogel. Das ist nicht verhandelbar.
+     * - Was der CHARAKTER nahelegt ([light], [wall], [accent], [screen]) - hier waere auch eine
+     *   andere Wahl vertretbar; sie muss nur zu dem passen, was die Figur sonst ausmacht.
+     */
+    private data class Home(
+        /** Wohnzimmer: der grosse Sitzplatz ([Station.SEAT]). */
+        val couch: Prop,
+        /** Wohnzimmer: das Leuchtende, um das man abends herumsitzt ([Station.TV]). */
+        val screen: Prop,
+        /** Leseecke: der persoenliche Sitzplatz ([Station.SEAT]). */
+        val seat: Prop,
+        /** Leseecke: wo das steht, was sie immer wieder hervorholt ([Station.BOOKSHELF]). */
+        val shelf: Prop,
+        /** Die Leuchte, die sie anmacht ([Station.LAMP]). */
+        val light: Prop,
+        /** Ihr Schreibtisch ([Station.DESK]). */
+        val desk: Prop,
+        /** Wo sie sich waescht ([Station.TUB]). */
+        val bath: Prop,
+        /** Woran sie isst ([Station.TABLE]). */
+        val table: Prop,
+        /** Was in der Kueche an der Wand haengt. */
+        val larder: Prop,
+        /** Woran sie kocht - Kuechenzeile, Kochstelle oder niedrige Arbeitsflaeche. */
+        val counter: Prop,
+        /** Was an der Wand haengt. */
+        val wall: Prop,
+        /** Das Kleinzeug, das in jedem ihrer Zimmer herumsteht. */
+        val accent: Prop
+    )
+
+    private fun homeOf(species: AvatarSpecies): Home = when (species) {
+        // Die Einstiegsfigur behaelt die gewohnte Wohnung - dieselbe Ueberlegung wie beim Park
+        // (siehe [habitatPlacements]): Wer die App zum ersten Mal oeffnet, soll nichts deuten
+        // muessen. Alle uebrigen Wohnungen sind gegen DIESE hier gebaut.
+        AvatarSpecies.PUFFLING -> Home(
+            couch = SOFA, screen = TV, seat = CHAIR, shelf = BOOKSHELF, light = LAMP,
+            desk = DESK, bath = TUB, table = TABLE, larder = SHELF, counter = COUNTER,
+            wall = PICTURE, accent = PLANT
+        )
+        // Bei ihr waechst alles: Rankgeruest statt Bild, eine hohe Blume statt der Topfpflanze,
+        // und das Licht ist Papier statt Lampenschirm.
+        AvatarSpecies.STARLET -> Home(
+            couch = SWINGSEAT, screen = TV, seat = POUF, shelf = PLANTSTAND, light = PAPERLANTERN,
+            desk = PLANTDESK, bath = TUB, table = CROSSTABLE, larder = HERBS, counter = OPENCOUNTER,
+            wall = TRELLIS, accent = FLOWER
+        )
+        // Stein, Feuer und Kisten. Kein einziges Polster - er thront, er lehnt sich nicht an.
+        AvatarSpecies.WYRMLING -> Home(
+            couch = STONESEAT, screen = FIREPIT, seat = LEDGE, shelf = HOARD, light = BRAZIER,
+            desk = SLABDESK, bath = STONETUB, table = SLABTABLE, larder = HANGING, counter = COOKFIRE,
+            wall = TABLET, accent = CRATE
+        )
+        // Kissen, Krug, Laterne, Ofen: eine Hoehle, in der es warm ist. Dazu die Sanduhr an der
+        // Wand und der Kartentisch - er ist der, der aufpasst.
+        AvatarSpecies.FENNEC -> Home(
+            couch = DIVAN, screen = STOVE, seat = CUSHIONS, shelf = BASKETS, light = LANTERN,
+            desk = CHARTDESK, bath = SANDBATH, table = LOWROUND, larder = HERBS, counter = COOKFIRE,
+            wall = SANDGLASS, accent = JAR
+        )
+        // ALLES niedrig - Bank, Regal, Tisch, Wanne, Schreibtisch, Arbeitsflaeche. Bei ihm ist
+        // das keine Geschmacksfrage: Ohne Beine kommt er an nichts Hohes heran. In der Kueche
+        // haengt deshalb auch kein Regal, sondern derselbe Moosfleck wie ueberall sonst - was er
+        // nicht erreichen kann, braucht er auch nicht aufzuhaengen.
+        AvatarSpecies.GLOOP -> Home(
+            couch = FLOORSOFA, screen = TV, seat = CUSHION, shelf = LOWSHELF, light = GLOWCAP,
+            desk = LOWDESK, bath = LOWTUB, table = LOWTABLE, larder = MOSS, counter = LOWCOUNTER,
+            wall = MOSS, accent = BOWL
+        )
+        // Holz, Kerzen, Buecher, Sternkarte. Ein Vogel sitzt AUF Dingen, deshalb der Balken
+        // statt des Sofas.
+        AvatarSpecies.HOOTLET -> Home(
+            couch = ROOST, screen = HEARTH, seat = PERCH, shelf = BOOKTOWER, light = CANDLES,
+            desk = LECTERN, bath = BIRDBATH, table = STUMPTABLE, larder = SHELF, counter = COOKFIRE,
+            wall = STARMAP, accent = BOOKS
+        )
     }
 
     // ---- Berufs-Requisiten ----
@@ -1938,7 +2681,8 @@ object PlayScene {
         width = 11, height = 9,
         art = hLine(0, 10, 0) + hLine(0, 10, 6) + vLine(0, 1, 5) + vLine(10, 1, 5) +
             listOf(5 to 7) + hLine(3, 7, 8),
-        useSpot = -6 to 8
+        useSpot = -6 to 8,
+        screenArea = rect(1, 1, 9, 5)
     )
 
     /** Topfpflanze. */
@@ -2038,6 +2782,44 @@ object PlayScene {
             val brightness = (peak * falloff * falloff).roundToInt()
             if (brightness <= 0) null else SceneCell(centerX + d, floorY, brightness, isLight = true)
         }
+
+    /**
+     * **Jede Leuchte im Raum, gleich welche** - Lampenschirm, Feuerschale, Leuchtpilz, Kerze,
+     * Laterne, Lampion.
+     *
+     * Vorher suchte die Umgebungsanimation in jedem Raum GENAU EINE bestimmte Requisite
+     * (`prop === LAMP`) und rechnete mit deren Massen. Das hielt genau so lange, wie alle gleich
+     * wohnten. Jetzt fragt sie nicht mehr nach dem Gegenstand, sondern nach der Eigenschaft
+     * ([Prop.lightAt]) - wer eine neue Leuchte zeichnet, traegt dort ein, wo ihr Kern sitzt, und
+     * bekommt Schein und Bodenlicht geschenkt.
+     *
+     * Der Schalter wirkt nur auf die Leuchte, die eine Station traegt: Was der Ablauf anfassen
+     * kann, geht aus; was bloss im Raum steht, brennt weiter.
+     */
+    private fun standingLights(
+        placements: List<Placement>,
+        widthCells: Int,
+        floorY: Int,
+        phase: Int,
+        lampOn: Boolean
+    ): List<SceneCell> = placements.flatMap { placement ->
+        val at = placement.prop.lightAt ?: return@flatMap emptyList()
+        if (placement.station == Station.LAMP && !lampOn) return@flatMap emptyList()
+        val cx = originX(placement, widthCells) + at.first
+        val cy = originY(placement, floorY) + at.second
+        // Der Takt haengt an der Position, damit zwei Leuchten im selben Bild nicht im Gleichschritt
+        // atmen - im Gleichtakt wirken sie wie ein Blinker, versetzt wie zwei Flammen.
+        val pulse = if (beat(phase + cx, LAMP_TICKS) % 4 < 2) GLOW else GLOW - 400
+        // Nach unten hin schwaecher werdend: Licht, das nur EINE Zeile breit unter dem Schirm
+        // sitzt, liest sich als weitere Silhouette, nicht als Schein.
+        listOf(
+            SceneCell(cx - 1, cy, pulse / 3, isLight = true),
+            // Der Kern der Leuchte ist das Glanzlicht des Zimmers.
+            SceneCell(cx, cy, HIGHLIGHT, isLight = true),
+            SceneCell(cx + 1, cy, pulse / 3, isLight = true),
+            SceneCell(cx, cy + 1, pulse / 2, isLight = true)
+        ) + lightPool(cx, floorY, radius = 5, peak = pulse)
+    }
 
     /** Kurzes Aufblitzen auf einem eigenen Vielfachen des Grundtakts - siehe [beat]. */
     private fun twinkleOf(phase: Int, everyTicks: Int, peak: Int): Int =
@@ -2342,34 +3124,42 @@ object PlayScene {
         return when (place) {
             // Himmelskoerper im Fenster - wechselt mit der Tageszeit, damit die Kulisse
             // dieselbe Uhrzeit "kennt" wie der Tagesablauf des Avatars.
-            Place.BEDROOM -> skyInWindow(placements, widthCells, floorY, dayPhase, phase)
+            Place.BEDROOM -> skyInWindow(placements, widthCells, floorY, dayPhase, phase) +
+                standingLights(placements, widthCells, floorY, phase, lampOn = true)
 
             // Fenster wie im Schlafzimmer, dazu die flackernde Mattscheibe: Der Monitor ist als
-            // leerer Rahmen gezeichnet ([DESK]) und wird erst hier gefuellt - dadurch ist das
-            // Licht eine eigene Ebene und kann heller sein als das Geraet drumherum.
+            // leerer Rahmen gezeichnet ([Prop.screenArea]) und wird erst hier gefuellt - dadurch
+            // ist das Licht eine eigene Ebene und kann heller sein als das Geraet drumherum.
             Place.DESK -> {
-                val sky = skyInWindow(placements, widthCells, floorY, dayPhase, phase)
-                val desk = placements.firstOrNull { it.prop === DESK } ?: return sky
+                val sky = skyInWindow(placements, widthCells, floorY, dayPhase, phase) +
+                    standingLights(placements, widthCells, floorY, phase, lampOn = true)
+                // Ueber die STATION statt ueber die Requisite: Welcher Schreibtisch dort steht,
+                // haengt an der Kreatur (siehe [Home]) - was ihn zum Schreibtisch macht, ist der
+                // Platz, den ein Ablauf ansteuern kann.
+                val desk = placements.firstOrNull { it.station == Station.DESK } ?: return sky
                 val ox = originX(desk, widthCells)
                 val oy = originY(desk, floorY)
                 // Zwei Helligkeiten im Wechsel statt an/aus: ein hart blinkender Bildschirm
                 // saehe nach Defekt aus, ein leicht atmender nach Betrieb.
                 val lit = if (beat(phase, SCREEN_TICKS) % 2 == 0) GLOW else GLOW - 550
-                val screen = (1..2).flatMap { row ->
-                    (5..7).map { col -> SceneCell(ox + col, oy + row, lit, isLight = true) }
+                val screen = desk.prop.screenArea.map { (col, row) ->
+                    SceneCell(ox + col, oy + row, lit, isLight = true)
                 }
                 sky + screen
             }
 
-            // Dampf steigt ueber der Kanne auf und loest sich oben auf.
+            // Dampf steigt ueber der Kanne auf und loest sich oben auf. Ueber die Station gesucht,
+            // damit auch die Steinplatte des Drachen und der niedrige Tisch des Schleims dampfen -
+            // beide tragen ihren Topf an derselben Stelle.
             Place.KITCHEN -> {
-                val table = placements.firstOrNull { it.prop === TABLE } ?: return emptyList()
-                val ox = originX(table, widthCells)
-                val oy = originY(table, floorY)
+                val table = placements.firstOrNull { it.station == Station.TABLE } ?: return emptyList()
+                val vapor = table.prop.vaporAt ?: return emptyList()
+                val ox = originX(table, widthCells) + vapor.first
+                val oy = originY(table, floorY) + vapor.second
                 val rise = beat(phase, STEAM_TICKS) % 3
                 listOf(
-                    SceneCell(ox + 6, oy - 1 - rise, GLOW - rise * 500, isLight = true),
-                    SceneCell(ox + 7, oy - 2 - rise, (GLOW - rise * 600).coerceAtLeast(0), isLight = true)
+                    SceneCell(ox, oy - 1 - rise, GLOW - rise * 500, isLight = true),
+                    SceneCell(ox + 1, oy - 2 - rise, (GLOW - rise * 600).coerceAtLeast(0), isLight = true)
                 )
             }
 
@@ -2377,22 +3167,7 @@ object PlayScene {
             // Ausgeschaltet bleibt allein die Silhouette stehen, und die Ecke wird spuerbar
             // dunkler: Erst dass das Ausschalten etwas WEGNIMMT, macht den Schalter zu einem
             // Schalter statt zu einer Geste ohne Folgen.
-            Place.NOOK -> {
-                if (!lampOn) return emptyList()
-                val lamp = placements.firstOrNull { it.prop === LAMP } ?: return emptyList()
-                val ox = originX(lamp, widthCells)
-                val oy = originY(lamp, floorY)
-                val pulse = if (beat(phase, LAMP_TICKS) % 4 < 2) GLOW else GLOW - 400
-                // Nach unten hin schwaecher werdend: Licht, das nur EINE Zeile breit unter dem
-                // Schirm sitzt, liest sich als weitere Silhouette, nicht als Schein.
-                listOf(
-                    SceneCell(ox, oy + 2, pulse / 3, isLight = true),
-                    // Der Kern der Lampe ist das Glanzlicht des Zimmers.
-                    SceneCell(ox + 1, oy + 2, HIGHLIGHT, isLight = true),
-                    SceneCell(ox + 2, oy + 2, pulse / 3, isLight = true),
-                    SceneCell(ox + 1, oy + 3, pulse / 2, isLight = true)
-                ) + lightPool(ox + 1, floorY, radius = 5, peak = pulse)
-            }
+            Place.NOOK -> standingLights(placements, widthCells, floorY, phase, lampOn)
 
             // Draussen: eine Wolke zieht durchs Bild, nachts stattdessen Sterne.
             //
@@ -2492,14 +3267,7 @@ object PlayScene {
                     }
                     return core + beam
                 }
-                val lamp = placements.firstOrNull { it.prop === LAMP } ?: return emptyList()
-                if (!lampOn) return emptyList()
-                val ox = originX(lamp, widthCells)
-                val oy = originY(lamp, floorY)
-                val pulse = if (beat(phase, LAMP_TICKS) % 4 < 2) GLOW else GLOW - 400
-                listOf(
-                    SceneCell(ox + 1, oy + 2, pulse, isLight = true)
-                ) + lightPool(ox + 1, floorY, radius = 5, peak = pulse)
+                standingLights(placements, widthCells, floorY, phase, lampOn)
             }
 
             // Laden: ein Leuchtschild ueber der Tuer, das im Wechsel an- und ausgeht. Ein
@@ -2512,10 +3280,13 @@ object PlayScene {
                 (0..3).map { SceneCell(x + it, signY, lit, isLight = true) }
             }
 
-            // Wohnzimmer: der Fernseher flimmert, und sein Licht faellt in den Raum.
+            // Wohnzimmer: der Fernseher flimmert, und sein Licht faellt in den Raum. Bei den drei
+            // wild lebenden Kreaturen ist es kein Fernseher, sondern ein Feuer (siehe [HEARTH]) -
+            // dieselbe Rechnung, andere Flaeche: Was leuchtet, sagt die Requisite selbst.
             Place.LIVING -> {
-                if (!tvOn) return emptyList()
-                val tv = placements.firstOrNull { it.prop === TV } ?: return emptyList()
+                val lights = standingLights(placements, widthCells, floorY, phase, lampOn = true)
+                if (!tvOn) return lights
+                val tv = placements.firstOrNull { it.station == Station.TV } ?: return lights
                 val ox = originX(tv, widthCells)
                 val oy = originY(tv, floorY)
                 // Drei Helligkeiten im Wechsel statt zwei: Ein Fernsehbild springt staerker als
@@ -2530,9 +3301,9 @@ object PlayScene {
                     1 -> GLOW - 1100
                     else -> GLOW - 800
                 }
-                (1..5).flatMap { row ->
-                    (1..9).map { col -> SceneCell(ox + col, oy + row, lit, isLight = true) }
-                } + lightPool(ox + 5, floorY, radius = 7, peak = lit - 600)
+                lights + tv.prop.screenArea.map { (col, row) ->
+                    SceneCell(ox + col, oy + row, lit, isLight = true)
+                } + lightPool(ox + tv.prop.width / 2, floorY, radius = 7, peak = lit - 600)
             }
         }
     }

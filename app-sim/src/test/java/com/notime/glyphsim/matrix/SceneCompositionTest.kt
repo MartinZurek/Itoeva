@@ -278,6 +278,77 @@ class SceneCompositionTest {
     }
 
     @Test
+    fun `jede Kreatur wohnt anders`() {
+        // **Das Gegenstueck zur Landschafts-Pruefung, und aus demselben Anlass.** Gemeldet wurde
+        // "sie sehen alle gleich aus" - und das stimmte: Wohnzimmer, Kueche, Leseecke, Bad und
+        // Schreibtisch waren fuer alle sechs Kreaturen bis auf die Zelle genau dieselben Raeume.
+        // Beim Bauen faellt das nicht auf, weil man immer nur eine Wohnung vor sich hat.
+        //
+        // Verglichen wird die EINRICHTUNG, nicht das gezeichnete Bild: Boden, Decke und Tuer sind
+        // ueberall dieselben und wuerden jeden Vergleich verwaessern - zwei voellig verschieden
+        // moeblierte Zimmer haetten allein dadurch schon die halbe Flaeche gemeinsam.
+        val rooms = listOf(
+            PlayScene.Place.LIVING,
+            PlayScene.Place.NOOK,
+            PlayScene.Place.KITCHEN,
+            PlayScene.Place.BATH,
+            PlayScene.Place.DESK,
+            PlayScene.Place.BEDROOM
+        )
+        for (place in rooms) {
+            val furniture = AvatarSpecies.entries.associateWith { species ->
+                PlayScene.propFootprints(place, width, floorY, species)
+                    .filterNot { it.first == PlayScene.Station.DOOR.name }
+                    .flatMap { it.second }
+                    .toSet()
+            }
+            for (a in AvatarSpecies.entries) {
+                for (b in AvatarSpecies.entries) {
+                    if (a.ordinal >= b.ordinal) continue
+                    val cellsA = furniture.getValue(a)
+                    val cellsB = furniture.getValue(b)
+                    if (cellsA.isEmpty() || cellsB.isEmpty()) continue
+                    val shared = cellsA.count { it in cellsB }
+                    // An BEIDEN Zimmern gemessen (gemeinsame Zellen geteilt durch alle Zellen der
+                    // beiden zusammen), nicht am kleineren von beiden wie bei den Landschaften.
+                    // Der Unterschied zaehlt hier: Wer sparsam eingerichtet ist - GLOOP hat nur
+                    // Bodenpolster, Moos und ein paar Schalen -, faellt sonst allein deshalb auf,
+                    // weil das eine Stueck, das er mit den anderen teilt, bei ihm einen groesseren
+                    // Anteil ausmacht. Gemessen werden soll aber, wie verschieden die beiden
+                    // Zimmer sind, nicht wie voll das kleinere ist.
+                    val overlap = shared.toFloat() / (cellsA.size + cellsB.size - shared)
+                    assertTrue(
+                        "$place ist bei $a und $b zu ${(overlap * 100).toInt()} % dieselbe " +
+                            "Einrichtung - dann ist es dieselbe Wohnung mit anderem Bewohner." +
+                            System.lineSeparator() +
+                            ScenePreview.render(place, a) + ScenePreview.render(place, b),
+                        overlap < MAX_SAME_FURNITURE
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Wie viel zwei Wohnungen im selben Raum gemeinsam haben duerfen.
+     *
+     * Bewusst nicht bei null: Kuehlschrank, Waschbecken und Kuechenzeile sind bei allen dieselben,
+     * und das soll auch so bleiben - es sind Gegenstaende ohne Charakter, und sechs verschiedene
+     * Waschbecken zu zeichnen waere Arbeit, die niemand bemerkt.
+     *
+     * **Und bewusst nicht schaerfer als das, was die Zahl hergibt.** Gezaehlt werden Zellen, nicht
+     * Gegenstaende - zwei ganz verschiedene Dinge an derselben Stelle (ein Pflanzenregal und eine
+     * Truhe, beide neun Zellen breit, beide am selben Anker) haben allein durch ihre Umrisse gut
+     * die Haelfte ihrer Zellen gemeinsam, ohne dass man sie im Bild verwechseln koennte. Beim
+     * Einrichten der sechs Wohnungen lagen solche Paare durchweg zwischen 50 und 67 %.
+     *
+     * Was diese Grenze dagegen zuverlaessig faengt, ist genau der Fall, um den es geht: dasselbe
+     * Moebelstueck in zwei Wohnungen. Ein geteiltes Sofa lag bei 76 %, eine geteilte Kuechenzeile
+     * bei 66 bis 91 %, zwei unveraendert gleiche Zimmer bei 100 %.
+     */
+    private val MAX_SAME_FURNITURE = 0.7f
+
+    @Test
     fun `jeder Lebensraum bietet etwas zum Sitzen`() {
         // Alle Spazier-Ablaeufe steuern Station.BENCH an (siehe PlayRoutines). Fehlt sie in einem
         // Lebensraum, laeuft dort die Haelfte davon ins Leere - ohne Absturz und ohne Warnung,

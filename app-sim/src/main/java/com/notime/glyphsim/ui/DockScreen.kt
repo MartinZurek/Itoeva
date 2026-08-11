@@ -569,8 +569,16 @@ fun DockScreen(
 
                 when (step) {
                     is RoutineStep.GoTo -> {
-                        val spot = PlayScene.stationSpot(currentPlace, step.station, sceneWidthCells, floorYCells)
-                            ?: continue
+                        // MIT der Spezies: Wo ein Platz liegt, haengt an der Einrichtung, und die
+                        // gehoert der Kreatur (siehe PlayScene.Home). Ohne diesen Wert rechnete
+                        // der Ablauf mit der Wohnung des Einstiegs-Avatars - die Figur lief zur
+                        // Stelle, an der bei PUFFLING das Bett steht, und legte sich dort neben
+                        // ihr eigenes. Unauffaellig, solange sich nur das Schlafzimmer
+                        // unterschied; mit sechs vollstaendigen Wohnungen waere es in jedem Raum
+                        // sichtbar geworden.
+                        val spot = PlayScene.stationSpot(
+                            currentPlace, step.station, sceneWidthCells, floorYCells, species
+                        ) ?: continue
                         // Zum Platz gehen, aber auf dem BODEN bleiben: das Hinaufsteigen ist ein
                         // eigener Schritt (Occupy) - sonst schwebte die Figur beim Hingehen
                         // bereits auf Matratzenhoehe heran.
@@ -605,8 +613,10 @@ fun DockScreen(
                     }
 
                     is RoutineStep.Occupy -> {
-                        val spot = PlayScene.stationSpot(currentPlace, step.station, sceneWidthCells, floorYCells)
-                            ?: continue
+                        // Ebenfalls mit der Spezies - siehe GoTo weiter oben.
+                        val spot = PlayScene.stationSpot(
+                            currentPlace, step.station, sceneWidthCells, floorYCells, species
+                        ) ?: continue
                         // Kurzes Hinauf statt Sprung: dieselbe weiche Bewegung wie beim Gehen,
                         // nur senkrecht - sich hinzulegen ist keine Ortsveraenderung, sondern
                         // eine Bewegung an Ort und Stelle.

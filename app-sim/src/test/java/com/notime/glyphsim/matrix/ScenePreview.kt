@@ -111,10 +111,13 @@ object ScenePreview {
                 }
             }
         }
-        for (place in PlayScene.Place.entries) {
-            out.append(
-                render(place, AvatarSpecies.PUFFLING, PlayAmbientActivity.DayPhase.NIGHT)
-            ).append('\n')
+        // Die Nacht fuer JEDE Kreatur, nicht nur fuer den Einstiegs-Avatar: Seit jede ihre eigene
+        // Leuchte hat (Feuerschale, Leuchtpilz, Kerzen, Laterne, Lampion), ist der Nachtblick der
+        // wichtigste von allen - dann weicht der Raum zurueck und nur das Licht bleibt stehen.
+        for (species in AvatarSpecies.entries) {
+            for (place in PlayScene.Place.entries) {
+                out.append(render(place, species, PlayAmbientActivity.DayPhase.NIGHT)).append('\n')
+            }
         }
         target.writeText(out.toString())
     }
