@@ -48,7 +48,7 @@ import kotlinx.coroutines.withContext
 /** Dunkle Flaechen - dieselbe Welt wie Startbildschirm und Pflegebuch. */
 
 /** Was der Avatar-Assistent gerade zeigt. */
-enum class AssistantScreen { MENU, DAY, MEMORIES, INTRO, SETUP, IMPORT, FAQ }
+enum class AssistantScreen { MENU, DAY, MEMORIES, INTRO, SETUP, IMPORT, EXPORT, FAQ }
 
 /**
  * Der Avatar als Einstieg statt als blosser Schalter.
@@ -117,6 +117,7 @@ fun AvatarAssistantDialog(
                         onIntro = { screen = AssistantScreen.INTRO },
                         onSetup = { screen = AssistantScreen.SETUP },
                         onImport = { screen = AssistantScreen.IMPORT },
+                        onExport = { screen = AssistantScreen.EXPORT },
                         onFaq = { screen = AssistantScreen.FAQ },
                         onSettings = onOpenSettings,
                         onPlayClip = onPlayClip
@@ -139,6 +140,7 @@ fun AvatarAssistantDialog(
                     )
                     AssistantScreen.IMPORT ->
                         ReminderImportDialog(onDismiss = { screen = AssistantScreen.MENU })
+                    AssistantScreen.EXPORT -> AssistantExport(onBack = { screen = AssistantScreen.MENU })
                     AssistantScreen.FAQ -> AssistantFaq(onBack = { screen = AssistantScreen.MENU })
                 }
             }
@@ -202,6 +204,7 @@ private fun AssistantMenu(
     onIntro: () -> Unit,
     onSetup: () -> Unit,
     onImport: () -> Unit,
+    onExport: () -> Unit,
     onFaq: () -> Unit,
     onSettings: () -> Unit,
     onPlayClip: (() -> Unit)?
@@ -225,6 +228,8 @@ private fun AssistantMenu(
     Choice(stringResource(R.string.assistant_menu_intro), onIntro)
     Choice(stringResource(R.string.assistant_menu_setup), onSetup)
     Choice(stringResource(R.string.assistant_menu_import), onImport)
+    // Direkt neben dem Import: Beides ist derselbe Vorgang, nur in die andere Richtung.
+    Choice(stringResource(R.string.assistant_menu_export), onExport)
     Choice(stringResource(R.string.assistant_menu_faq), onFaq)
     onPlayClip?.let { Choice(stringResource(R.string.clip_play), it) }
     Choice(stringResource(R.string.assistant_menu_settings), onSettings)

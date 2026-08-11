@@ -240,6 +240,13 @@
     <string name="memories_met">The day we met</string>
     <string name="memories_chapter">A new chapter: %1$s</string>
     <string name="memories_first_topic">The first time: %1$s</string>
+    <string name="assistant_menu_export">💾  Take my reminders with me</string>
+    <string name="export_intro">Here are your reminders as text. Keep it somewhere safe – you can paste it back in at any time, on this phone or another one.</string>
+    <string name="export_empty">There is nothing to take along yet – you have not set up any reminders.</string>
+    <string name="export_copy">Copy</string>
+    <string name="export_share">Share</string>
+    <string name="export_copied">Copied. Paste it wherever you like to keep it.</string>
+    <string name="export_scope">What goes along are your reminders. Not the care log, the mood or the level – those belong to me, and a new me was not there for any of it.</string>
     <string name="chapter_arrived">Just arrived</string>
     <string name="chapter_arrived_line">We do not know each other yet. I will just watch for a bit.</string>
     <string name="chapter_settling">Settling in</string>

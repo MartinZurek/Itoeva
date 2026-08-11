@@ -226,6 +226,13 @@
     <string name="memories_met">Der Tag, an dem wir uns kennengelernt haben</string>
     <string name="memories_chapter">Ein neues Kapitel: %1$s</string>
     <string name="memories_first_topic">Zum ersten Mal: %1$s</string>
+    <string name="assistant_menu_export">💾  Meine Erinnerungen mitnehmen</string>
+    <string name="export_intro">Hier sind deine Erinnerungen als Text. Heb ihn gut auf – du kannst ihn jederzeit wieder einfügen, auf diesem Telefon oder einem anderen.</string>
+    <string name="export_empty">Es gibt noch nichts mitzunehmen – du hast bisher keine Erinnerungen eingerichtet.</string>
+    <string name="export_copy">Kopieren</string>
+    <string name="export_share">Teilen</string>
+    <string name="export_copied">Kopiert. Füg ihn ein, wo du magst.</string>
+    <string name="export_scope">Mit gehen deine Erinnerungen. Nicht das Pflegebuch, die Stimmung oder der Spielstand – die gehören mir, und ein neues Ich war bei nichts davon dabei.</string>
     <string name="chapter_arrived">Gerade erst da</string>
     <string name="chapter_arrived_line">Wir kennen uns noch gar nicht. Ich schau erst mal zu.</string>
     <string name="chapter_settling">Wir gewöhnen uns aneinander</string>

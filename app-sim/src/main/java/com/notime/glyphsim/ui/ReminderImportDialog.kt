@@ -246,12 +246,14 @@ private fun looksLikeShareLink(text: String): Boolean {
     return (trimmed.startsWith("http://") || trimmed.startsWith("https://")) && !trimmed.contains("{")
 }
 
-private fun copyToClipboard(context: Context, text: String) {
+/** Auch vom Export benutzt - siehe AssistantExport. */
+internal fun copyToClipboard(context: Context, text: String) {
     val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
     clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Tama", text))
 }
 
-private fun shareText(context: Context, text: String) {
+/** Auch vom Export benutzt - siehe AssistantExport. */
+internal fun shareText(context: Context, text: String) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
@@ -266,7 +268,12 @@ private fun shareText(context: Context, text: String) {
  * Text aus der Zwischenablage, ein Absturz waere hier die schlechteste aller Reaktionen.
  * Einzelne unbrauchbare Eintraege werden uebersprungen, statt den ganzen Import zu verwerfen.
  */
-private fun parseReminders(text: String, libraryAnimations: List<LibraryAnimation>): List<SanitizedReminder> {
+/**
+ * `internal` statt dateiprivat, damit der Rundlauf pruefbar ist: Was [ReminderExport] schreibt,
+ * muss hier wieder herauskommen (siehe `ReminderExportRoundTripTest`). Ein Export, dessen
+ * Rueckweg niemand nachvollzieht, ist eine Datei und keine Sicherung.
+ */
+internal fun parseReminders(text: String, libraryAnimations: List<LibraryAnimation>): List<SanitizedReminder> {
     // Erst begrenzen, dann suchen: die Activity nimmt Teilen-Absichten von jeder App entgegen,
     // die Laenge des Textes bestimmt also der Absender. Siehe ReminderImport.begrenzeEingabe.
     val begrenzt = ReminderImport.begrenzeEingabe(text)
