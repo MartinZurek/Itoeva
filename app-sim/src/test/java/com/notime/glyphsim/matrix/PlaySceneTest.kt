@@ -3,6 +3,8 @@ package com.notime.glyphsim.matrix
 import com.notime.glyphcore.data.AnimationType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -15,6 +17,17 @@ import org.junit.Test
  * man erst am Geraet, bei einer bestimmten Bildschirmgroesse, mit etwas Glueck.
  */
 class PlaySceneTest {
+
+    /** Immer bei klarem Wetter - sonst haengt das Ergebnis am Kalender, siehe SceneCompositionTest. */
+    @Before
+    fun clearSky() {
+        PlayWeather.forceForPreview(PlayWeather.CLEAR)
+    }
+
+    @After
+    fun restoreSky() {
+        PlayWeather.forceForPreview(null)
+    }
 
     // Typische Werte: 16 Zellen Avatarhoehe bei ~7,4dp Zelle, Bildschirm 1080x2400.
     private val width = 54

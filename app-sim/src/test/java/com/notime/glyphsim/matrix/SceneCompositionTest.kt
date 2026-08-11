@@ -1,6 +1,8 @@
 package com.notime.glyphsim.matrix
 
+import org.junit.After
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -23,6 +25,28 @@ class SceneCompositionTest {
 
     private val width = ScenePreview.WIDTH
     private val floorY = ScenePreview.FLOOR_Y
+
+    /**
+     * **Immer bei klarem Wetter pruefen - sonst haengt das Ergebnis am Kalender.**
+     *
+     * Aufgefallen an einem Regentag: Die Pruefung "jede Kreatur hat ihre eigene Landschaft" schlug
+     * an, ohne dass sich eine Zeile geaendert hatte. Das Wetter wird aus dem Datum gerechnet (siehe
+     * PlayWeather.forDate), an knapp jedem fuenften Tag faellt Regen - und Regen faellt ueber alle
+     * sechs Landschaften gleich. Er machte damit aus zwei verschiedenen Gegenden zwei zu zwei
+     * Dritteln gleiche Bilder, und die Pruefung mass etwas, das sie gar nicht meint.
+     *
+     * Ein Test, der an einem Dienstag durchlaeuft und am Mittwoch nicht, ist schlimmer als kein
+     * Test - man gewoehnt sich an, ihn zu wiederholen.
+     */
+    @Before
+    fun clearSky() {
+        PlayWeather.forceForPreview(PlayWeather.CLEAR)
+    }
+
+    @After
+    fun restoreSky() {
+        PlayWeather.forceForPreview(null)
+    }
 
     /** Die Zellen, die der Koerper der Figur an einem Platz tatsaechlich belegt. */
     private fun avatarCellsAt(

@@ -152,6 +152,21 @@ object PlayRoutines {
                     RoutineStep.Rise,
                     RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
                 )
+            ),
+            // Nachts einmal aufstehen und wieder hineinlegen - der Ablauf, den man beim
+            // Zuschauen am ehesten wiedererkennt, weil ihn jeder kennt.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.BED),
+                    RoutineStep.Occupy(PlayScene.Station.BED),
+                    RoutineStep.Linger(3_500L),
+                    RoutineStep.Rise,
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Occupy(PlayScene.Station.BED),
+                    RoutineStep.Act(AnimationType.SLEEP),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Rise
+                )
             )
         )
 
@@ -251,6 +266,17 @@ object PlayRoutines {
                     RoutineStep.Act(AnimationType.LOVE),
                     RoutineStep.Linger(2_500L),
                     RoutineStep.Rise
+                )
+            ),
+            // Zu zweit vor dem Geraet - dieselbe Naehe, nur nicht im Sitzen erzaehlt.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.TV),
+                    RoutineStep.Switch(PlayScene.Station.TV, on = true),
+                    RoutineStep.Act(AnimationType.LOVE),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Switch(PlayScene.Station.TV, on = false)
                 )
             )
         )
@@ -378,6 +404,21 @@ object PlayRoutines {
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
                     RoutineStep.Linger(2_000L)
                 )
+            ),
+            // Mit Pause: aufstehen, einmal durchs Zimmer, zurueck an den Tisch. Wer eine Stunde
+            // sitzt, steht zwischendurch auf - und im Bild ist genau das der Unterschied
+            // zwischen Arbeiten und Dasitzen.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.DESK),
+                    RoutineStep.Act(topic),
+                    RoutineStep.Linger(2_000L),
+                    RoutineStep.Stroll(0.30f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+                    RoutineStep.GoTo(PlayScene.Station.DESK),
+                    RoutineStep.Act(topic),
+                    RoutineStep.Linger(1_500L)
+                )
             )
         )
 
@@ -491,12 +532,51 @@ object PlayRoutines {
             )
         )
 
-        // ---- Ohne eigenen Ablauf: an Ort und Stelle, wie bisher ----
+        // ---- Einfach da sein: der haeufigste Fall und lange der aermste ----
+        //
+        // **GENERAL hatte genau einen Ablauf: an Ort und Stelle eine Reaktion, fertig.** Das war
+        // vertretbar, solange es ein Rest-Thema war - im Spiel ist es aber das am haeufigsten
+        // gewuerfelte ueberhaupt (siehe PlayGamePlans), und es fuehrt ins Wohnzimmer, also in den
+        // Raum, in dem man ohnehin die meiste Zeit zusieht. Ausgerechnet dort tat er dann als
+        // einziges nichts. Vier Fassungen kosten keine neue Animation und keine neue Requisite -
+        // es sind Wege und Pausen zwischen dem, was es schon gibt.
         AnimationType.GENERAL -> listOf(
             PlayRoutine(
                 listOf(
                     RoutineStep.Act(topic),
                     RoutineStep.Linger(1_200L)
+                )
+            ),
+            // Sich kurz hinsetzen, ohne etwas dabei zu tun. Der unscheinbarste Ablauf von allen -
+            // und der, der am ehesten nach jemandem aussieht, der hier wohnt.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.SEAT),
+                    RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Rise
+                )
+            ),
+            // Einmal durchs Zimmer und wieder zurueck.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Stroll(0.68f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(1_500L),
+                    RoutineStep.Stroll(0.22f),
+                    RoutineStep.Act(topic)
+                )
+            ),
+            // Nach dem Rechten sehen: Licht an, kurz stehen bleiben, Licht wieder aus.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoTo(PlayScene.Station.TV),
+                    RoutineStep.Switch(PlayScene.Station.TV, on = true),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Switch(PlayScene.Station.TV, on = false),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
                 )
             )
         )
