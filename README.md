@@ -777,14 +777,14 @@ Versions-Wünsche, sondern echte Kompatibilitätsprobleme):
   Warteschlange in `ReminderGlyphService` sequenziell abgespielt (siehe
   "Erinnerungs-Pipeline" oben) statt sich gegenseitig abzubrechen - auf dem echten
   Gerät noch mit mehreren eng getakteten Erinnerungen (z.B. alle 5 Minuten) testen.
-- **Play Mode ist bisher nur kompiliert, nicht gelaufen** (siehe "Play Mode" oben). Auf einem
-  Gerät/Emulator noch durchspielen: umschalten, auf die erste Auslösung warten (soll innerhalb
-  einer Minute kommen), füttern, Level/XP über dem Avatar nachsehen. Vor allem aber den
-  **Moduswechsel in beide Richtungen** prüfen - dass im Spiel wirklich keine eigene Erinnerung mehr
-  kommt und dass nach dem Ausschalten alle eigenen wieder eingeplant sind (`adb logcat -s
-  ReminderScheduler`). Ebenso, dass die Spiel-Animation im Widget und im Dock-Modus ankommt und
-  dort gefüttert XP gibt. Die drei neuen Migrationen laufen im selben Zug mit
-  (`./gradlew :app-sim:connectedDebugAndroidTest`).
+- **Play Mode auf einem Gerät durchspielen**: umschalten, auf die erste Auslösung warten (soll
+  innerhalb einer Minute kommen), füttern, Level/XP über dem Avatar nachsehen. Ebenso, dass die
+  Spiel-Animation im Widget und im Dock-Modus ankommt und dort gefüttert XP gibt.
+
+  Hier stand: „prüfen, **dass im Spiel wirklich keine eigene Erinnerung mehr kommt**". Seit Phase 3
+  ist das Gegenteil richtig — die eigenen Routinen laufen immer, die gewürfelte Zeile kommt hinzu.
+  Zu prüfen ist also, dass im Spiel **beides** ankommt und dass nach dem Ausschalten nur die
+  gewürfelte Zeile verschwindet (`adb logcat -s ReminderScheduler`).
 - **Noch ungeprüft: was ein Moduswechsel mit einer gerade offenen Erinnerung macht.** Wird während
   einer laufenden Animation umgeschaltet, ist deren `AvatarFeedEvent` bereits geschrieben; ob sie
   sich danach noch sinnvoll füttern lässt (und ob das XP geben soll), ist nicht durchdacht.

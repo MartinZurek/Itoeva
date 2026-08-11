@@ -26,12 +26,16 @@ import android.content.Context
  * dem Wesen, mit dem du sie geteilt hast.** Ein Wechsel bedeutet dann nicht "meine Daten sind
  * weg", sondern "hier faengt jemand Neues an".
  *
- * ## Heute noch derselbe Wert
+ * ## Seit Phase 4b laufen die beiden auseinander
  *
- * Wie bei [RoutineOwner] aendert sich am Ergebnis vorerst **nichts** - beide liefern die Id des
- * gewaehlten Avatars. Erst wenn [RoutineOwner.current] einen festen Wert zurueckgibt, laufen sie
- * auseinander. Genau deshalb muss die Unterscheidung vorher im Code stehen: sonst waere sie beim
- * Umschalten eine Suche nach zwanzig Aufrufstellen statt eine Aenderung an einer.
+ * Hier stand bis zuletzt "beide liefern die Id des gewaehlten Avatars" - richtig fuer die
+ * Zwischenstufe, in der die Unterscheidung erst benannt wurde. Seit [RoutineOwner.current] einen
+ * festen Wert liefert, stimmt es nicht mehr: Die Routinen stehen unter dem Standardprofil, das
+ * Pflegebuch unter dem Namen des Wesens.
+ *
+ * Genau dieses Auseinanderlaufen war der Zweck der Uebung. Dass die Unterscheidung vorher im Code
+ * stand, hat den eigentlichen Schnitt zu einer Aenderung an EINER Funktion gemacht statt zu einer
+ * Suche nach zwanzig Aufrufstellen.
  */
 object PresentCompanion {
 
