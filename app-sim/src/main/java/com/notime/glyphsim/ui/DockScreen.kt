@@ -411,6 +411,8 @@ fun DockScreen(
         var talkRefresh by remember { mutableStateOf(0) }
         /** Zaehlt beantwortete/weggewischte Fragen - damit die naechste Frage sofort nachrueckt. */
         var askTick by remember { mutableStateOf(0) }
+        /** Ob er zu hoeren ist - im Gespraech umschaltbar, siehe PlaySound. */
+        var soundOn by remember { mutableStateOf(PlaySound.isEnabled(context)) }
         var talkKnowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
         /** Die Frage, die er im Gespraech stellt - siehe PlayTalk.pendingAsk. */
         val pendingAsk = remember(talkKnowledge, askTick) {
@@ -2411,6 +2413,25 @@ fun DockScreen(
                             PlayUserProfile.setIncludesWeekend(context, includes)
                             askTick++
                             talkRefresh++
+                        },
+                        soundOn = soundOn,
+                        // Bei jedem Oeffnen frisch nachgesehen: Ob Musik laeuft oder das Geraet
+                        // stumm ist, aendert sich, waehrend die App laeuft.
+                        soundSilentReason = remember(talkOpen, soundOn, askTick) {
+                            PlaySound.silentReason(context)
+                        },
+                        onToggleSound = { on ->
+                            PlaySound.setEnabled(context, on)
+                            soundOn = on
+                            // **Beim Einschalten sofort ein Ton.** Sonst tippt man auf "lass dich
+                            // hoeren" und es passiert nichts - und man weiss weder, ob der
+                            // Schalter gegriffen hat, noch wie er ueberhaupt klingt. Beim
+                            // Ausschalten waere derselbe Ton ein Widerspruch in sich.
+                            if (on) {
+                                avatar?.species?.let { species ->
+                                    PlaySound.play(context, species, PlayChime.Event.VISIT, scope)
+                                }
+                            }
                         },
                         onForget = {
                             PlayUserProfile.forget(context)

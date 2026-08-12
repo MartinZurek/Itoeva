@@ -66,6 +66,29 @@ object PlaySound {
             !deviceSilent
 
     /**
+     * **Warum er gerade nichts sagt, obwohl Ton eingeschaltet ist** - `null`, wenn nichts im Weg
+     * steht.
+     *
+     * **Der Fall, den die Bedingungen selbst erzeugen.** Wer im Gespraech auf "lass dich hoeren"
+     * tippt, waehrend es Nacht ist oder Musik laeuft, hoert nichts - und schliesst daraus, dass
+     * der Schalter kaputt ist. Genau dieser Schluss ist schlimmer als die Stille: Er trifft
+     * ausgerechnet den, der den Ton haben WOLLTE. Ein Halbsatz beseitigt ihn.
+     */
+    enum class Reason { NIGHT, OTHER_AUDIO, DEVICE_SILENT }
+
+    fun silentReason(context: Context): Reason? {
+        if (!isEnabled(context)) return null
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        return when {
+            PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT -> Reason.NIGHT
+            audio?.isMusicActive == true -> Reason.OTHER_AUDIO
+            audio?.ringerMode == AudioManager.RINGER_MODE_SILENT ||
+                audio?.ringerMode == AudioManager.RINGER_MODE_VIBRATE -> Reason.DEVICE_SILENT
+            else -> null
+        }
+    }
+
+    /**
      * Spielt das Motiv der Kreatur zu diesem Ereignis - oder eben nicht.
      *
      * [scope] kommt von aussen, damit der Ton mit dem Bildschirm verschwindet, der ihn ausgeloest

@@ -592,4 +592,11 @@
 
     <string name="settings_sound">Ton</string>
     <string name="settings_sound_hint">Ein kurzes Motiv, wenn du eine Erinnerung beantwortest, bei einem Levelaufstieg und bei Besuch. Jedes Wesen klingt anders. Nachts still, und nie über laufender Musik.</string>
+
+    <string name="talk_sound_on">Lass dich hören</string>
+    <string name="talk_sound_off">Sei mal still</string>
+
+    <string name="talk_sound_quiet_night">Nachts bleibe ich trotzdem still.</string>
+    <string name="talk_sound_quiet_audio">Gerade läuft etwas anderes – da halte ich mich raus.</string>
+    <string name="talk_sound_quiet_device">Dein Gerät ist stumm gestellt.</string>
 </resources>

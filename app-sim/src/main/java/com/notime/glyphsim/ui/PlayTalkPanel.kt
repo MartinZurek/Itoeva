@@ -104,6 +104,19 @@ fun PlayTalkPanel(
     onSkipAsk: () -> Unit = {},
     /** Alles vergessen, was der Nutzer ueber sich gesagt hat. */
     onForget: () -> Unit = {},
+    /**
+     * Ob er gerade zu hoeren ist, und der Schalter dazu (siehe [PlaySound]).
+     *
+     * **Warum das hier steht und nicht nur in den Einstellungen.** Ton stoert immer im selben
+     * Moment: waehrend man zusieht. Wer dafuer den Dock-Modus verlassen, in die Einstellungen
+     * gehen und wieder zurueckkommen muss, schaltet ihn beim ersten Mal ab und nie wieder an.
+     * Hier ist er einen Fingertipp von der Welt entfernt - und "sei mal still" ist ohnehin etwas,
+     * das man dem Wesen sagt und nicht einem Formular.
+     */
+    soundOn: Boolean = false,
+    onToggleSound: (Boolean) -> Unit = {},
+    /** Warum er gerade trotzdem still ist - siehe [PlaySound.silentReason]. */
+    soundSilentReason: PlaySound.Reason? = null,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -159,6 +172,31 @@ fun PlayTalkPanel(
                         onAsk = onAsk,
                         onAdd = { topic -> justAdded = topic; onAddReminder(topic) },
                         onShow = { asked = it }
+                    )
+                }
+                // Ganz unten und gedimmt: Es ist kein Angebot von ihm, sondern ein Handgriff des
+                // Nutzers - dieselbe Stellung wie "lieber nicht" unter einer Frage.
+                Text(
+                    text = stringResource(
+                        if (soundOn) R.string.talk_sound_off else R.string.talk_sound_on
+                    ),
+                    color = INK_DIM,
+                    size = 12,
+                    modifier = Modifier.clickable { onToggleSound(!soundOn) }
+                )
+                // Und warum er trotzdem still ist, falls etwas im Weg steht - sonst haelt genau
+                // der, der den Ton haben wollte, den Schalter fuer kaputt.
+                if (soundOn && soundSilentReason != null) {
+                    Text(
+                        text = stringResource(
+                            when (soundSilentReason) {
+                                PlaySound.Reason.NIGHT -> R.string.talk_sound_quiet_night
+                                PlaySound.Reason.OTHER_AUDIO -> R.string.talk_sound_quiet_audio
+                                PlaySound.Reason.DEVICE_SILENT -> R.string.talk_sound_quiet_device
+                            }
+                        ),
+                        color = INK_DIM,
+                        size = 11
                     )
                 }
             } else {

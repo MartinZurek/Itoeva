@@ -607,4 +607,11 @@
 
     <string name="settings_sound">Sound</string>
     <string name="settings_sound_hint">A short motif when you answer a reminder, on a level-up and when someone visits. Every creature sounds different. Silent at night, and never over music that is playing.</string>
+
+    <string name="talk_sound_on">Let me hear you</string>
+    <string name="talk_sound_off">Be quiet for now</string>
+
+    <string name="talk_sound_quiet_night">At night I stay quiet anyway.</string>
+    <string name="talk_sound_quiet_audio">Something else is playing right now – I will stay out of it.</string>
+    <string name="talk_sound_quiet_device">Your device is on silent.</string>
 </resources>
