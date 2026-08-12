@@ -113,6 +113,8 @@ fun PlayTalkPanel(
     onTell: (() -> Unit)? = null,
     /** Was er in diesem Gespraech schon erzaehlt hat - bleibt untereinander stehen. */
     told: List<Int> = emptyList(),
+    /** Ob spaeter noch etwas kommt, obwohl heute nichts mehr da ist - siehe [PlayLore.hasMoreEver]. */
+    moreToTellLater: Boolean = false,
     /**
      * Ob er gerade zu hoeren ist, und der Schalter dazu (siehe [PlaySound]).
      *
@@ -224,7 +226,8 @@ fun PlayTalkPanel(
                     onAdjust = onAdjust,
                     onForget = onForget,
                     onTell = onTell,
-                    told = told
+                    told = told,
+                    moreToTellLater = moreToTellLater
                 )
                 QuestionLine(stringResource(R.string.talk_back)) { asked = null }
             }
@@ -604,7 +607,8 @@ private fun Answer(
     onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit,
     onForget: () -> Unit,
     onTell: (() -> Unit)?,
-    told: List<Int>
+    told: List<Int>,
+    moreToTellLater: Boolean
 ) {
     when (question) {
         Question.HERE -> {
@@ -642,10 +646,19 @@ private fun Answer(
                         if (told.isEmpty()) R.string.talk_q_story else R.string.talk_q_story_more
                     )
                 ) { onTell() }
-                told.isEmpty() -> Text(
-                    stringResource(R.string.talk_a_story_end), color = INK, size = 15
+                // **"Heute nichts mehr" und "das war alles" sind zwei verschiedene Saetze**, und
+                // der Unterschied ist der ganze Sinn des Kalenders: Das eine ist eine Verabredung
+                // fuer morgen, das andere ein Abschluss.
+                moreToTellLater -> Text(
+                    stringResource(R.string.talk_a_story_tomorrow),
+                    color = if (told.isEmpty()) INK else INK_DIM,
+                    size = if (told.isEmpty()) 15 else 13
                 )
-                else -> Text(stringResource(R.string.talk_a_story_end), color = INK_DIM, size = 13)
+                else -> Text(
+                    stringResource(R.string.talk_a_story_end),
+                    color = if (told.isEmpty()) INK else INK_DIM,
+                    size = if (told.isEmpty()) 15 else 13
+                )
             }
         }
 

@@ -658,4 +658,5 @@
     <string name="talk_q_story_more">Erzähl weiter</string>
     <string name="talk_a_story_end">Mehr weiß ich im Moment nicht über mich. Frag mich später noch mal.</string>
     <string name="talk_a_story_again">Von vorn erzählen</string>
+    <string name="talk_a_story_tomorrow">Mehr fällt mir heute nicht ein. Frag mich morgen wieder.</string>
 </resources>

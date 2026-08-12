@@ -668,4 +668,5 @@
     <string name="talk_q_story_more">Tell me more</string>
     <string name="talk_a_story_end">That is all I know about myself right now. Ask me again later.</string>
     <string name="talk_a_story_again">Tell it from the start</string>
+    <string name="talk_a_story_tomorrow">That is all that comes to me today. Ask me again tomorrow.</string>
 </resources>

@@ -2423,6 +2423,11 @@ fun DockScreen(
                             talkRefresh++
                         },
                         told = toldNow,
+                        // Ob spaeter noch etwas kommt - siehe PlayLore: "heute nichts mehr" und
+                        // "das war alles" sind zwei verschiedene Auskuenfte.
+                        moreToTellLater = avatar?.species?.let {
+                            PlayLore.hasMoreEver(context, it)
+                        } == true,
                         onTell = avatar?.species?.takeIf { PlayLore.hasMore(context, it) }?.let { species ->
                             {
                                 PlayLore.nextPiece(context, species)?.let { piece ->
