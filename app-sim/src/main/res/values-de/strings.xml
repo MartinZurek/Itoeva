@@ -557,4 +557,19 @@
     <string name="talk_ask_time_evening">Abends</string>
     <string name="talk_ask_skip">Lieber nicht</string>
     <string name="talk_focus_noted">Du wolltest, dass ich auf %1$s achte. Mache ich.</string>
+
+    <!-- Was er beim Tun kurz ueber dem Kopf sagt - siehe PlaySpeech. Erste Person, ein Satz. -->
+    <string name="speech_sleep">Ich leg mich kurz hin.</string>
+    <string name="speech_rest">Kurz gar nichts tun.</string>
+    <string name="speech_book">Ich lese ein bisschen.</string>
+    <string name="speech_mindfulness">Einmal durchatmen.</string>
+    <string name="speech_love">Ich denk an dich.</string>
+    <string name="speech_drink">Ich hol mir was zu trinken.</string>
+    <string name="speech_medicine">Kurz frisch machen.</string>
+    <string name="speech_work">Ich geh zur Arbeit.</string>
+    <string name="speech_focus">Ich muss noch was fertig machen.</string>
+    <string name="speech_move">Ich geh eine Runde.</string>
+    <string name="speech_creativity">Ich mach an meinem Stück weiter.</string>
+    <string name="speech_general">Mal sehen, was so ist.</string>
+    <string name="speech_open_habit">Bei dir steht das heute auch noch offen.</string>
 </resources>

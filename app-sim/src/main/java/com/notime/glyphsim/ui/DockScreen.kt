@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +48,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.ReminderOpenDuration
@@ -323,6 +326,10 @@ fun DockScreen(
         var currentTopic by remember { mutableStateOf<AnimationType?>(null) }
         /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
         var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
+        /** Was er gerade ueber dem Kopf sagt (Text-Id), oder null - siehe PlaySpeech. */
+        var spokenLine by remember { mutableStateOf<Int?>(null) }
+        /** Ob dazu der Halbsatz zu einer heute offenen Gewohnheit gehoert. */
+        var spokenIsOpenHabit by remember { mutableStateOf(false) }
         /**
          * Ob gerade ein Tagesablauf laeuft - siehe den Besuchstakt.
          *
@@ -1748,6 +1755,13 @@ fun DockScreen(
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
                             val place = PlayScene.forTopic(topic)
                             currentTopic = topic
+                            // **Er sagt, was er vorhat** - selten, kurz und nie nachts (siehe
+                            // PlaySpeech). Das beantwortet die Frage, die man sich beim Zuschauen
+                            // ohnehin stellt, im selben Augenblick, in dem sie aufkommt.
+                            PlaySpeech.lineFor(topic, PlayAmbientActivity.currentDayPhase())?.let { line ->
+                                spokenIsOpenHabit = topic in boostedTopics
+                                spokenLine = line
+                            }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
                             moveToPlace(place, species)
 
@@ -2271,6 +2285,46 @@ fun DockScreen(
             }
         }
 
+        // **Sein Satz ueber dem Kopf** (siehe PlaySpeech).
+        //
+        // Ueber der Figur und unter dem Gespraech: Er gehoert zur Welt, nicht zur Bedienung -
+        // deshalb faengt er auch keine Gesten ab. Wer die Figur antippt, oeffnet weiterhin das
+        // Gespraech, auch wenn der Satz gerade darueber steht.
+        spokenLine?.let { line ->
+            avatar?.takeIf { playMode && !avatarHidden }?.let { current ->
+                val speechY = current.offset.y - with(density) { SPEECH_LIFT_DP.dp.toPx() }
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = SPEECH_MAX_WIDTH_DP.dp)
+                        .offset {
+                            IntOffset(
+                                current.offset.x.roundToInt(),
+                                speechY.roundToInt().coerceAtLeast(0)
+                            )
+                        }
+                ) {
+                    Text(
+                        text = stringResource(line),
+                        color = Color(0xFFF3F1EA),
+                        fontSize = 13.sp,
+                        lineHeight = 16.sp
+                    )
+                    if (spokenIsOpenHabit) {
+                        Text(
+                            text = stringResource(PlaySpeech.habitHint()),
+                            color = Color(0xFF8F8B82),
+                            fontSize = 11.sp,
+                            lineHeight = 14.sp
+                        )
+                    }
+                }
+            }
+            LaunchedEffect(line, spokenIsOpenHabit) {
+                delay((SPEECH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
+                spokenLine = null
+            }
+        }
+
         // ---- Das Gespraech (siehe PlayTalk / PlayTalkPanel) ----
         //
         // Es liegt ueber allem und faengt die Gesten ab: Solange es offen ist, laeuft die Welt zwar
@@ -2569,6 +2623,15 @@ private const val VISITOR_GAP = 1.15f
 /** Wortwechsel je Begegnung - drei reichen, damit es ein Gespraech ist; mehr wuerde den
  *  Besuch zur Szene aufblasen, die er nicht sein soll. */
 private const val CONVERSATION_TURNS = 3
+
+/** Wie lange sein Satz ueber dem Kopf stehen bleibt. */
+private const val SPEECH_HOLD_MS = 3_200L
+
+/** Wie weit ueber der Figur - hoch genug, dass er ihren Kopf nicht verdeckt. */
+private const val SPEECH_LIFT_DP = 22
+
+/** Und wie breit hoechstens: ein Satz, keine Spalte. */
+private const val SPEECH_MAX_WIDTH_DP = 210
 
 /** Takt, in dem die Sprechpunkte erscheinen. */
 private const val SPEECH_DOT_MS = 190L
