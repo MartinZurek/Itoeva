@@ -2392,6 +2392,16 @@ fun DockScreen(
                             askTick++
                             talkRefresh++
                         },
+                        onAnswerPurpose = { purpose ->
+                            PlayUserProfile.setPurpose(context, purpose)
+                            askTick++
+                            talkRefresh++
+                        },
+                        onAnswerWeekend = { includes ->
+                            PlayUserProfile.setIncludesWeekend(context, includes)
+                            askTick++
+                            talkRefresh++
+                        },
                         onSkipAsk = {
                             pendingAsk?.let { PlayUserProfile.markAsked(context, it) }
                             askTick++

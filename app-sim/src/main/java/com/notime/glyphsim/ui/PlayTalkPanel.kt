@@ -98,6 +98,8 @@ fun PlayTalkPanel(
     /** Die Antwort darauf: das gewaehlte Thema bzw. die gewaehlte Tageszeit. */
     onAnswerFocus: (AnimationType) -> Unit = {},
     onAnswerTime: (com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase) -> Unit = {},
+    onAnswerPurpose: (PlayTalk.Purpose) -> Unit = {},
+    onAnswerWeekend: (Boolean) -> Unit = {},
     /** Die Frage wegwischen, ohne zu antworten - sie kommt dann nicht wieder. */
     onSkipAsk: () -> Unit = {},
     onDismiss: () -> Unit,
@@ -146,7 +148,7 @@ fun PlayTalkPanel(
                 // Gespraech oeffnet, will zuerst wissen, wie es steht - erst danach ist Platz
                 // fuer eine Frage zurueck. Umgekehrt waere es ein Formular mit Begruessung.
                 if (ask != null) {
-                    AskLine(ask, onAnswerFocus, onAnswerTime, onSkipAsk)
+                    AskLine(ask, onAnswerFocus, onAnswerTime, onAnswerPurpose, onAnswerWeekend, onSkipAsk)
                 }
                 for (offer in focus.offers) {
                     OfferLine(
@@ -394,6 +396,8 @@ private fun AskLine(
     ask: PlayTalk.Ask,
     onAnswerFocus: (AnimationType) -> Unit,
     onAnswerTime: (com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase) -> Unit,
+    onAnswerPurpose: (PlayTalk.Purpose) -> Unit,
+    onAnswerWeekend: (Boolean) -> Unit,
     onSkip: () -> Unit
 ) {
     when (ask) {
@@ -415,6 +419,23 @@ private fun AskLine(
             QuestionLine(stringResource(R.string.talk_ask_time_evening)) {
                 onAnswerTime(com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase.EVENING)
             }
+        }
+        PlayTalk.Ask.PURPOSE -> {
+            Text(stringResource(R.string.talk_ask_purpose), color = INK, size = 15)
+            QuestionLine(stringResource(R.string.talk_ask_purpose_health)) {
+                onAnswerPurpose(PlayTalk.Purpose.HEALTH)
+            }
+            QuestionLine(stringResource(R.string.talk_ask_purpose_calm)) {
+                onAnswerPurpose(PlayTalk.Purpose.CALM)
+            }
+            QuestionLine(stringResource(R.string.talk_ask_purpose_structure)) {
+                onAnswerPurpose(PlayTalk.Purpose.STRUCTURE)
+            }
+        }
+        PlayTalk.Ask.WEEKEND -> {
+            Text(stringResource(R.string.talk_ask_weekend), color = INK, size = 15)
+            QuestionLine(stringResource(R.string.talk_ask_weekend_yes)) { onAnswerWeekend(true) }
+            QuestionLine(stringResource(R.string.talk_ask_weekend_no)) { onAnswerWeekend(false) }
         }
     }
     Text(

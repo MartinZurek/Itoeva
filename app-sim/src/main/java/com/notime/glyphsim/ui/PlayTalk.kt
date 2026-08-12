@@ -228,7 +228,56 @@ object PlayTalk {
         FOCUS,
 
         /** "Wann hast du am ehesten Zeit?" - verschiebt die Zeitfenster neuer Erinnerungen. */
-        TIME
+        TIME,
+
+        /**
+         * "Wozu brauchst du mich eigentlich?" - die einzige Frage, die nach dem GRUND fragt statt
+         * nach einer Einstellung.
+         *
+         * Sie aendert die Reihenfolge dessen, was er vorschlaegt (siehe [suggestableFor]): Wer
+         * sagt "damit ich zur Ruhe komme", bekommt nicht als erstes Bewegung angeboten. Damit ist
+         * auch sie folgenreich - sonst duerfte sie nicht gestellt werden.
+         */
+        PURPOSE,
+
+        /**
+         * "Auch am Wochenende?" - entscheidet ueber die Wochentage neuer Erinnerungen.
+         *
+         * Die unscheinbarste der vier und die mit der handfestesten Wirkung: Wer am Samstag um
+         * neun angestupst wird, obwohl er ausschlafen wollte, schaltet die App ab.
+         */
+        WEEKEND
+    }
+
+    /**
+     * **Wozu jemand einen Begleiter benutzt** - die Antwort auf [Ask.PURPOSE].
+     *
+     * Bewusst drei Moeglichkeiten und keine Freitextzeile: Drei kann er auseinanderhalten und in
+     * eine Reihenfolge uebersetzen. Ein Satz, den er nicht versteht, waere eine Umfrage.
+     */
+    enum class Purpose { HEALTH, CALM, STRUCTURE }
+
+    /**
+     * Was er in welcher Reihenfolge vorschlaegt - abhaengig davon, wozu der Nutzer ihn benutzt.
+     *
+     * Dieselben fuenf Themen wie immer (siehe [SUGGESTABLE]), nur anders sortiert. Keines faellt
+     * weg: Wer sich fuer Ruhe entschieden hat, darf trotzdem irgendwann Bewegung angeboten
+     * bekommen - nur eben nicht als erstes.
+     */
+    fun suggestableFor(purpose: Purpose?): List<AnimationType> = when (purpose) {
+        Purpose.HEALTH -> listOf(
+            AnimationType.DRINK, AnimationType.MOVE, AnimationType.FOCUS,
+            AnimationType.MINDFULNESS, AnimationType.BOOK
+        )
+        Purpose.CALM -> listOf(
+            AnimationType.MINDFULNESS, AnimationType.BOOK, AnimationType.DRINK,
+            AnimationType.MOVE, AnimationType.FOCUS
+        )
+        Purpose.STRUCTURE -> listOf(
+            AnimationType.FOCUS, AnimationType.MOVE, AnimationType.DRINK,
+            AnimationType.BOOK, AnimationType.MINDFULNESS
+        )
+        null -> SUGGESTABLE
     }
 
     /**
@@ -498,7 +547,7 @@ object PlayTalk {
                 db.avatarFeedEventDao().firstAnsweredMillis(companionProfileId),
                 System.currentTimeMillis()
             ),
-            missing = SUGGESTABLE.filterNot { it in covered },
+            missing = suggestableFor(PlayUserProfile.purpose(context)).filterNot { it in covered },
             week = week,
             game = game,
             // Ueber die ganze Woche, nicht ueber heute: Ein Rat zu einer Einstellung braucht
@@ -845,4 +894,15 @@ object PlayTalk {
      * Annahme, die still bricht, wenn sich an der Kodierung je etwas aendert.
      */
     val EVERY_DAY_MASK: Int = DaysOfWeekMask.toMask(java.time.DayOfWeek.entries.toSet())
+
+    /**
+     * Montag bis Freitag - fuer alle, die auf [Ask.WEEKEND] mit Nein geantwortet haben.
+     *
+     * Aus derselben Quelle gerechnet wie [EVERY_DAY_MASK] und aus demselben Grund: Wer hier eine
+     * 31 hinschriebe, haette sich auf eine Nummerierung festgelegt, die woanders bestimmt wird.
+     */
+    val WEEKDAYS_MASK: Int = DaysOfWeekMask.toMask(
+        java.time.DayOfWeek.entries.toSet() -
+            setOf(java.time.DayOfWeek.SATURDAY, java.time.DayOfWeek.SUNDAY)
+    )
 }

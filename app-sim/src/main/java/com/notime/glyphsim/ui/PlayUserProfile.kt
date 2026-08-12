@@ -32,6 +32,8 @@ object PlayUserProfile {
     private const val KEY_FOCUS = "focus_topic"
     private const val KEY_BUSY = "busy_phase"
     private const val KEY_ASKED = "asked"
+    private const val KEY_PURPOSE = "purpose"
+    private const val KEY_WEEKEND = "weekend"
 
     /** Worauf er besonders achten soll - `null`, solange nicht gefragt oder nicht beantwortet. */
     fun focusTopic(context: Context): AnimationType? =
@@ -70,6 +72,35 @@ object PlayUserProfile {
         val current = prefs(context).getStringSet(KEY_ASKED, emptySet()).orEmpty()
         prefs(context).edit().putStringSet(KEY_ASKED, current + ask.name).apply()
     }
+
+    /** Wozu der Nutzer ihn benutzt - bestimmt die Reihenfolge seiner Vorschlaege. */
+    fun purpose(context: Context): PlayTalk.Purpose? =
+        prefs(context).getString(KEY_PURPOSE, null)?.let { stored ->
+            runCatching { PlayTalk.Purpose.valueOf(stored) }.getOrNull()
+        }
+
+    fun setPurpose(context: Context, purpose: PlayTalk.Purpose) {
+        prefs(context).edit().putString(KEY_PURPOSE, purpose.name).apply()
+        markAsked(context, PlayTalk.Ask.PURPOSE)
+    }
+
+    /**
+     * Ob neue Erinnerungen auch am Wochenende gelten sollen.
+     *
+     * Standard ist ja - so war es immer, und wer nicht gefragt wurde, soll nichts anderes bekommen
+     * als bisher.
+     */
+    fun includesWeekend(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_WEEKEND, true)
+
+    fun setIncludesWeekend(context: Context, includes: Boolean) {
+        prefs(context).edit().putBoolean(KEY_WEEKEND, includes).apply()
+        markAsked(context, PlayTalk.Ask.WEEKEND)
+    }
+
+    /** Die Wochentage, mit denen eine neue Erinnerung angelegt wird. */
+    fun daysMask(context: Context): Int =
+        if (includesWeekend(context)) PlayTalk.EVERY_DAY_MASK else PlayTalk.WEEKDAYS_MASK
 
     /** Alles vergessen - fuer den Fall, dass sich jemand anders entscheidet. */
     fun forget(context: Context) {

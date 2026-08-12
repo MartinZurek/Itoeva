@@ -572,4 +572,12 @@
     <string name="speech_creativity">Ich mach an meinem Stück weiter.</string>
     <string name="speech_general">Mal sehen, was so ist.</string>
     <string name="speech_open_habit">Bei dir steht das heute auch noch offen.</string>
+
+    <string name="talk_ask_purpose">Und wozu brauchst du mich eigentlich?</string>
+    <string name="talk_ask_purpose_health">Damit ich gesünder lebe</string>
+    <string name="talk_ask_purpose_calm">Damit ich zur Ruhe komme</string>
+    <string name="talk_ask_purpose_structure">Damit mein Tag Struktur hat</string>
+    <string name="talk_ask_weekend">Soll ich dich auch am Wochenende erinnern?</string>
+    <string name="talk_ask_weekend_yes">Ja, jeden Tag</string>
+    <string name="talk_ask_weekend_no">Lieber nur werktags</string>
 </resources>

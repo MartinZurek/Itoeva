@@ -168,6 +168,45 @@ class PlayTalkTest {
     }
 
     @Test
+    fun `der genannte Zweck sortiert die Vorschlaege um`() {
+        // Wer sagt "damit ich zur Ruhe komme", soll nicht als erstes Bewegung angeboten bekommen.
+        // Weg faellt trotzdem nichts: Es ist eine Reihenfolge, keine Auswahl.
+        for (purpose in PlayTalk.Purpose.entries) {
+            val order = PlayTalk.suggestableFor(purpose)
+            assertEquals(
+                "$purpose laesst Themen weg oder erfindet welche",
+                PlayTalk.SUGGESTABLE.toSet(),
+                order.toSet()
+            )
+        }
+        assertEquals(
+            AnimationType.MINDFULNESS,
+            PlayTalk.suggestableFor(PlayTalk.Purpose.CALM).first()
+        )
+        assertEquals(
+            AnimationType.DRINK,
+            PlayTalk.suggestableFor(PlayTalk.Purpose.HEALTH).first()
+        )
+        assertEquals(
+            "Ohne Angabe muss alles bleiben, wie es war",
+            PlayTalk.SUGGESTABLE,
+            PlayTalk.suggestableFor(null)
+        )
+    }
+
+    @Test
+    fun `werktags heisst fuenf Tage, nicht sieben`() {
+        // Die Maske wird gerechnet und nicht hingeschrieben - eine handgeschriebene 31 waere eine
+        // Annahme ueber eine Nummerierung, die woanders bestimmt wird.
+        val weekdays = DaysOfWeekMask.toSet(PlayTalk.WEEKDAYS_MASK)
+        assertEquals(5, weekdays.size)
+        assertTrue(
+            "Das Wochenende ist noch drin",
+            weekdays.none { it == java.time.DayOfWeek.SATURDAY || it == java.time.DayOfWeek.SUNDAY }
+        )
+    }
+
+    @Test
     fun `die genannte Tageszeit verschiebt das Zeitfenster wirklich`() {
         // Die Bedingung, unter der eine Frage ueberhaupt gestellt werden darf: Die Antwort muss
         // sich auswirken. Sonst ist es eine Umfrage.

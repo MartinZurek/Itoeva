@@ -198,7 +198,10 @@ class MainActivity : ComponentActivity() {
                                 reminderViewModel.addReminder(
                                     label = getString(topic.labelRes),
                                     animationChoice = AnimationChoice.BuiltIn(topic),
-                                    daysOfWeekMask = PlayTalk.EVERY_DAY_MASK,
+                                    // Und mit den Wochentagen, die er erfragt hat: Wer am Samstag
+                                    // um neun angestupst wird, obwohl er ausschlafen wollte,
+                                    // schaltet die App ab.
+                                    daysOfWeekMask = PlayUserProfile.daysMask(this@MainActivity),
                                     startMinuteOfDay = preset.startMinuteOfDay,
                                     endMinuteOfDay = preset.endMinuteOfDay,
                                     intervalMinutes = preset.intervalMinutes,
