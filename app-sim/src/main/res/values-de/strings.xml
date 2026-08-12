@@ -580,4 +580,13 @@
     <string name="talk_ask_weekend">Soll ich dich auch am Wochenende erinnern?</string>
     <string name="talk_ask_weekend_yes">Ja, jeden Tag</string>
     <string name="talk_ask_weekend_no">Lieber nur werktags</string>
+
+    <string name="talk_q_profile">Was weißt du eigentlich über mich?</string>
+    <string name="talk_a_profile_intro">Das hast du mir gesagt:</string>
+    <string name="talk_a_profile_none">Bisher hast du mir nichts über dich gesagt.</string>
+    <string name="talk_a_profile_focus">Ich soll auf %1$s achten.</string>
+    <string name="talk_a_profile_time">Zeit hast du am ehesten: %1$s.</string>
+    <string name="talk_a_profile_purpose">Und wozu: %1$s.</string>
+    <string name="talk_a_profile_weekdays">Am Wochenende lasse ich dich in Ruhe.</string>
+    <string name="talk_a_profile_forget">Vergiss das wieder</string>
 </resources>

@@ -2402,6 +2402,11 @@ fun DockScreen(
                             askTick++
                             talkRefresh++
                         },
+                        onForget = {
+                            PlayUserProfile.forget(context)
+                            askTick++
+                            talkRefresh++
+                        },
                         onSkipAsk = {
                             pendingAsk?.let { PlayUserProfile.markAsked(context, it) }
                             askTick++

@@ -134,7 +134,9 @@ object PlayTalk {
         /** Was ihm an den bestehenden Erinnerungen auffaellt - siehe [adviceFor]. */
         val advice: List<Advice> = emptyList(),
         /** Serie, Vorwoche, Monat - siehe [History]. */
-        val history: History = History(0, 0, 0, 0)
+        val history: History = History(0, 0, 0, 0),
+        /** Was du ihm ueber dich gesagt hast - siehe [UserAnswers]. */
+        val answers: UserAnswers? = null
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
@@ -279,6 +281,24 @@ object PlayTalk {
         )
         null -> SUGGESTABLE
     }
+
+    /**
+     * **Was er ueber dich weiss** - die Antworten, die du ihm gegeben hast (siehe
+     * [PlayUserProfile]).
+     *
+     * Es gibt sie als eigenen Typ, damit er sie AUFSAGEN kann. Ein Begleiter, der Antworten
+     * sammelt und sie danach nur noch heimlich verwendet, ist ein Formular mit Augen; einer, der
+     * auf Nachfrage wiedergibt, was er sich gemerkt hat - und es auf Wunsch wieder vergisst -,
+     * ist ein Gegenueber.
+     */
+    data class UserAnswers(
+        val focusTopic: AnimationType?,
+        val busyPhase: PlayAmbientActivity.DayPhase?,
+        val purpose: Purpose?,
+        val includesWeekend: Boolean,
+        /** Ob ueberhaupt schon etwas beantwortet wurde. */
+        val anyGiven: Boolean
+    )
 
     /**
      * Die naechste Frage, die er stellen wuerde - `null`, wenn er alles gefragt hat.
@@ -553,6 +573,18 @@ object PlayTalk {
             // Ueber die ganze Woche, nicht ueber heute: Ein Rat zu einer Einstellung braucht
             // mehrere Tage, sonst raet er nach einem einzigen schlechten Vormittag.
             history = history,
+            // Was der Nutzer selbst gesagt hat - damit er es auf Nachfrage aufsagen und auf
+            // Wunsch wieder vergessen kann (siehe [UserAnswers]).
+            answers = UserAnswers(
+                focusTopic = PlayUserProfile.focusTopic(context),
+                busyPhase = PlayUserProfile.busyPhase(context),
+                purpose = PlayUserProfile.purpose(context),
+                includesWeekend = PlayUserProfile.includesWeekend(context),
+                anyGiven = PlayUserProfile.focusTopic(context) != null ||
+                    PlayUserProfile.busyPhase(context) != null ||
+                    PlayUserProfile.purpose(context) != null ||
+                    !PlayUserProfile.includesWeekend(context)
+            ),
             advice = adviceFor(
                 plan = plan,
                 occurrences = db.avatarFeedEventDao()
@@ -612,6 +644,8 @@ object PlayTalk {
         data object Explain : Offer
         /** "Passt das so?" - was ihm an den bestehenden Erinnerungen auffaellt. */
         data object ShowAdvice : Offer
+        /** "Was weisst du eigentlich ueber mich?" - und die Moeglichkeit, es zurueckzunehmen. */
+        data object ShowProfile : Offer
     }
 
     /**
@@ -801,6 +835,9 @@ object PlayTalk {
         if (offers.size < MAX_OFFERS) {
             nextSuggestion(knowledge, rotation)?.let { offers += Offer.Add(it) }
         }
+        // Was er ueber den Nutzer weiss, bietet er erst an, wenn es etwas zu sagen gibt - und
+        // hinter allem anderen: Es ist die Frage, die man einmal stellt, nicht jeden Tag.
+        if (offers.size < MAX_OFFERS && knowledge.answers?.anyGiven == true) offers += Offer.ShowProfile
         if (offers.size < MAX_OFFERS && knowledge.hasPlan) offers += Offer.ShowPlan
         if (offers.size < MAX_OFFERS && knowledge.week.total > 0) offers += Offer.ShowWeek
 

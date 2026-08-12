@@ -102,6 +102,8 @@ fun PlayTalkPanel(
     onAnswerWeekend: (Boolean) -> Unit = {},
     /** Die Frage wegwischen, ohne zu antworten - sie kommt dann nicht wieder. */
     onSkipAsk: () -> Unit = {},
+    /** Alles vergessen, was der Nutzer ueber sich gesagt hat. */
+    onForget: () -> Unit = {},
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -172,7 +174,8 @@ fun PlayTalkPanel(
                     },
                     onOpenReminders = onOpenReminders,
                     onAsk = onAsk,
-                    onAdjust = onAdjust
+                    onAdjust = onAdjust,
+                    onForget = onForget
                 )
                 QuestionLine(stringResource(R.string.talk_back)) { asked = null }
             }
@@ -203,6 +206,7 @@ private enum class Question(val labelRes: Int) {
      */
     HERE(R.string.talk_q_here),
     ADVICE(R.string.talk_q_advice),
+    PROFILE(R.string.talk_q_profile),
     /** Stufe, Erfahrung, Muenzen, Vorrat. */
     GAME(R.string.talk_q_game)
 }
@@ -346,6 +350,8 @@ private fun OfferLine(
             QuestionLine(stringResource(R.string.talk_q_game)) { onShow(Question.GAME) }
         PlayTalk.Offer.ShowAdvice ->
             QuestionLine(stringResource(R.string.talk_q_advice)) { onShow(Question.ADVICE) }
+        PlayTalk.Offer.ShowProfile ->
+            QuestionLine(stringResource(R.string.talk_q_profile)) { onShow(Question.PROFILE) }
     }
 }
 
@@ -502,6 +508,21 @@ private fun AdviceLine(
     }
 }
 
+/** Wie er die genannte Tageszeit nennt. */
+private fun timeTextFor(phase: com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase): Int =
+    when (phase) {
+        com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase.MORNING -> R.string.talk_ask_time_morning
+        com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase.MIDDAY -> R.string.talk_ask_time_midday
+        else -> R.string.talk_ask_time_evening
+    }
+
+/** Und wie den genannten Zweck. */
+private fun purposeTextFor(purpose: PlayTalk.Purpose): Int = when (purpose) {
+    PlayTalk.Purpose.HEALTH -> R.string.talk_ask_purpose_health
+    PlayTalk.Purpose.CALM -> R.string.talk_ask_purpose_calm
+    PlayTalk.Purpose.STRUCTURE -> R.string.talk_ask_purpose_structure
+}
+
 /** Wie er den Ort nennt, an dem er gerade ist. */
 private fun placeTextFor(place: PlayScene.Place): Int = when (place) {
     PlayScene.Place.BEDROOM -> R.string.talk_place_bedroom
@@ -528,7 +549,8 @@ private fun Answer(
     onAddReminder: (AnimationType) -> Unit,
     onOpenReminders: () -> Unit,
     onAsk: (AnimationType) -> Unit,
-    onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit
+    onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit,
+    onForget: () -> Unit
 ) {
     when (question) {
         Question.HERE -> {
@@ -551,6 +573,39 @@ private fun Answer(
                 }
             }
             Text(stringResource(R.string.talk_a_here), color = INK, size = 15)
+        }
+
+        Question.PROFILE -> {
+            val answers = knowledge.answers
+            if (answers == null || !answers.anyGiven) {
+                Text(stringResource(R.string.talk_a_profile_none), color = INK, size = 15)
+            } else {
+                Text(stringResource(R.string.talk_a_profile_intro), color = INK, size = 15)
+                answers.focusTopic?.let {
+                    Text(
+                        stringResource(R.string.talk_a_profile_focus, stringResource(it.labelRes)),
+                        color = INK_DIM, size = 13
+                    )
+                }
+                answers.busyPhase?.let {
+                    Text(
+                        stringResource(R.string.talk_a_profile_time, stringResource(timeTextFor(it))),
+                        color = INK_DIM, size = 13
+                    )
+                }
+                answers.purpose?.let {
+                    Text(
+                        stringResource(R.string.talk_a_profile_purpose, stringResource(purposeTextFor(it))),
+                        color = INK_DIM, size = 13
+                    )
+                }
+                if (!answers.includesWeekend) {
+                    Text(stringResource(R.string.talk_a_profile_weekdays), color = INK_DIM, size = 13)
+                }
+                // **Und der Weg zurueck.** Wer einmal geantwortet hat, soll sich nicht fuer immer
+                // festgelegt haben - sonst waere die Frage eine Falle gewesen.
+                QuestionLine(stringResource(R.string.talk_a_profile_forget)) { onForget() }
+            }
         }
 
         Question.ADVICE -> {
