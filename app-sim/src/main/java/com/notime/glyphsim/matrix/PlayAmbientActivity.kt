@@ -145,8 +145,19 @@ object PlayAmbientActivity {
          * nur andersherum.
          */
         stayAt: PlayScene.Place? = null,
+        /**
+         * Die NEIGUNG des Wesens - die Themen seines Entwicklungspfades (siehe
+         * [com.notime.glyphsim.ui.PlayPath]).
+         *
+         * **Das dritte Signal, und bewusst das schwaechste.** Eine offene Gewohnheit ist eine
+         * Aufgabe von heute; der Pfad ist eine Neigung, die ueber Wochen entstanden ist. Deshalb
+         * zaehlt er nur halb so viel: Er soll sich in der Haeufigkeit bemerkbar machen, ohne den
+         * Tagesablauf zu uebernehmen. Ein Wesen, das ausschliesslich tut, wozu es neigt, waere
+         * keine Figur mehr, sondern eine Einstellung.
+         */
+        leaning: Set<AnimationType> = emptySet(),
         random: Random = Random
-    ): AnimationType = pickWeighted(combinedWeights(phase, boostedTopics, stayAt), random)
+    ): AnimationType = pickWeighted(combinedWeights(phase, boostedTopics, stayAt, leaning), random)
 
     /**
      * Grob am ueblichen Tagesrhythmus orientiert, nicht an einer festen Uhrzeit-Tabelle mit
@@ -210,14 +221,20 @@ object PlayAmbientActivity {
     private fun combinedWeights(
         phase: DayPhase,
         boostedTopics: Set<AnimationType>,
-        stayAt: PlayScene.Place? = null
+        stayAt: PlayScene.Place? = null,
+        leaning: Set<AnimationType> = emptySet()
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
-        if (relevantBoosts.isEmpty() && stayAt == null) return base
+        if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty()) return base
         val combined = base.toMutableMap()
         for (topic in relevantBoosts) {
             combined[topic] = (combined[topic] ?: 0) + HABIT_BOOST
+        }
+        // Die Neigung wirkt nur auf das, was zur Tageszeit ohnehin vorkommt - aus demselben Grund
+        // wie beim Verweilen: Sie soll gewichten, nicht Themen erfinden.
+        for (topic in base.keys) {
+            if (topic in leaning) combined[topic] = (combined[topic] ?: 0) + LEANING_BONUS
         }
         if (stayAt != null) {
             // NUR was ohnehin schon zur Tageszeit passt: Ein Thema, das in dieser Phase gar nicht
@@ -301,6 +318,14 @@ object PlayAmbientActivity {
      * - nachts geht die Figur weiterhin ins Bett, auch wenn sie in der Kueche steht.
      */
     private const val STAY_BONUS = 4
+
+    /**
+     * Zuschlag fuer die Neigung - halb so viel wie eine offene Gewohnheit.
+     *
+     * Eine offene Gewohnheit ist eine Aufgabe von heute und darf drueckend wirken; eine Neigung
+     * ist gewachsen und darf nur faerben.
+     */
+    private const val LEANING_BONUS = 2
 
     private const val ACTION_WEIGHT_PERFORM = 5
     private const val ACTION_WEIGHT_FIDGET = 4

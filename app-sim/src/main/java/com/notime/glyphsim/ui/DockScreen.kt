@@ -411,6 +411,24 @@ fun DockScreen(
         var talkRefresh by remember { mutableStateOf(0) }
         /** Zaehlt beantwortete/weggewischte Fragen - damit die naechste Frage sofort nachrueckt. */
         var askTick by remember { mutableStateOf(0) }
+        /**
+         * Die Themen seines Entwicklungspfades (siehe PlayPath) - sie faerben, was er von sich aus
+         * tut.
+         *
+         * **Getrennt vom Gespraech geladen, und das ist keine Doppelung.** Der Pfad wirkt auf das
+         * Verhalten, also schon lange bevor jemand das Gespraech oeffnet - haenge er an
+         * [talkKnowledge], entwickelte sich das Wesen erst, nachdem man es danach gefragt hat.
+         * Nachgeladen wird, wenn sich am Spielstand etwas geruehrt hat.
+         */
+        var leaningTopics by remember { mutableStateOf(emptySet<AnimationType>()) }
+        LaunchedEffect(playMode, avatar?.species, economyTick) {
+            if (!playMode) return@LaunchedEffect
+            val development = withContext(Dispatchers.IO) {
+                PlayTalk.developmentNow(context, PresentCompanion.profileId(context))
+            }
+            leaningTopics = development.path?.topics.orEmpty()
+        }
+
         /** Ob er zu hoeren ist - im Gespraech umschaltbar, siehe PlaySound. */
         var soundOn by remember { mutableStateOf(PlaySound.isEnabled(context)) }
         /**
@@ -1754,7 +1772,12 @@ fun DockScreen(
                                 // ist ein Aufenthalt, fuenfmal ist ein Hausarrest.
                                 PlayAmbientActivity.nextTopic(
                                     boostedTopics = boostedTopics,
-                                    stayAt = currentPlace.takeIf { stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS }
+                                    stayAt = currentPlace.takeIf { stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS },
+                                    // **Und wohin er sich entwickelt hat** (siehe PlayPath): Der
+                                    // Pfad faerbt, was er von sich aus tut. Erst dadurch ist die
+                                    // Entwicklung etwas, das man SIEHT, statt etwas, das im
+                                    // Gespraech behauptet wird.
+                                    leaning = leaningTopics
                                 )
                             }
 

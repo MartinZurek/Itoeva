@@ -260,6 +260,7 @@ private enum class Question(val labelRes: Int) {
     ADVICE(R.string.talk_q_advice),
     PROFILE(R.string.talk_q_profile),
     STORY(R.string.talk_q_story),
+    PATH(R.string.talk_q_path),
     /** Stufe, Erfahrung, Muenzen, Vorrat. */
     GAME(R.string.talk_q_game)
 }
@@ -407,6 +408,8 @@ private fun OfferLine(
             QuestionLine(stringResource(R.string.talk_q_profile)) { onShow(Question.PROFILE) }
         PlayTalk.Offer.Tell ->
             QuestionLine(stringResource(R.string.talk_q_story)) { onShow(Question.STORY) }
+        PlayTalk.Offer.ShowPath ->
+            QuestionLine(stringResource(R.string.talk_q_path)) { onShow(Question.PATH) }
     }
 }
 
@@ -631,6 +634,47 @@ private fun Answer(
                 }
             }
             Text(stringResource(R.string.talk_a_here), color = INK, size = 15)
+        }
+
+        Question.PATH -> {
+            val development = knowledge.development
+            val path = development?.path
+            when {
+                development == null || !development.enoughData ->
+                    Text(stringResource(R.string.talk_a_path_none), color = INK, size = 15)
+                // **Vielseitig ist ein Ergebnis, kein Mangel** - deshalb ein eigener Satz und
+                // nicht derselbe wie "ich kenne dich noch nicht".
+                path == null ->
+                    Text(stringResource(R.string.talk_a_path_mixed), color = INK, size = 15)
+                else -> {
+                    Text(stringResource(path.labelRes), color = INK, size = 16, weight = FontWeight.Medium)
+                    Text(stringResource(path.descriptionRes), color = INK, size = 15)
+                    Text(
+                        stringResource(R.string.talk_a_path_stage, development.stage),
+                        color = INK_DIM, size = 13
+                    )
+                    // **Woran es liegt** - ohne diese Zeile waere die Entwicklung eine Zuschreibung
+                    // von aussen. Mit ihr ist sie nachvollziehbar und damit beeinflussbar.
+                    Text(
+                        stringResource(R.string.talk_a_path_because, development.sharePercent),
+                        color = INK_DIM, size = 13
+                    )
+                    // Was er auf den bisher erreichten Stufen zu sagen hat - alle, damit die
+                    // Entwicklung als Folge lesbar ist und nicht als Momentaufnahme.
+                    for (stage in 1..development.stage) {
+                        PlayPath.loreOf(path, stage)?.let {
+                            Text(stringResource(it), color = INK, size = 15)
+                        }
+                    }
+                    development.nextStageLevel?.let {
+                        Text(
+                            stringResource(R.string.talk_a_path_next, it),
+                            color = INK_DIM, size = 13
+                        )
+                    }
+                    Text(stringResource(R.string.talk_a_path_change), color = INK_DIM, size = 12)
+                }
+            }
         }
 
         Question.STORY -> {

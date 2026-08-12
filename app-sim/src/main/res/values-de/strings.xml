@@ -659,4 +659,41 @@
     <string name="talk_a_story_end">Mehr weiß ich im Moment nicht über mich. Frag mich später noch mal.</string>
     <string name="talk_a_story_again">Von vorn erzählen</string>
     <string name="talk_a_story_tomorrow">Mehr fällt mir heute nicht ein. Frag mich morgen wieder.</string>
+
+    <!-- ============ Die Entwicklung des Wesens (siehe PlayPath) ============
+         Vier Pfade, drei Stufen. Der Pfad kommt aus den beantworteten Gewohnheiten, die Stufe aus
+         der Erfahrung. Die Stufentexte sind die eigentliche Belohnung: Das Wesen bekommt etwas zu
+         sagen, das es vorher nicht sagen konnte. -->
+
+    <string name="path_wanderer">Der Aufbrecher</string>
+    <string name="path_wanderer_desc">Du bringst mich in Bewegung. Ich bin öfter draußen als drinnen.</string>
+    <string name="path_wanderer_1">Seit du mich losschickst, kenne ich den Weg zur Straße im Dunkeln.</string>
+    <string name="path_wanderer_2">Ich merke, wo ich schon war. Der Wald hinter der Straße ist nicht mehr fremd.</string>
+    <string name="path_wanderer_3">Ich gehe nicht mehr los, weil du es sagst. Ich gehe los, weil es Zeit ist.</string>
+
+    <string name="path_keeper">Der Fürsorgliche</string>
+    <string name="path_keeper_desc">Bei dir geht es ums Versorgen. Ich passe auf – auf mich und auf dich.</string>
+    <string name="path_keeper_1">Ich stelle mir inzwischen selbst etwas hin, bevor ich es brauche.</string>
+    <string name="path_keeper_2">Wenn du lange nichts von dir hörst, gehe ich trotzdem in die Küche. Für später.</string>
+    <string name="path_keeper_3">Ich merke inzwischen an dir, wenn ein Tag anstrengend war. Frag mich nicht, woran.</string>
+
+    <string name="path_dreamer">Der Stille</string>
+    <string name="path_dreamer_desc">Bei dir wird es ruhig. Ich sitze mehr, als ich laufe.</string>
+    <string name="path_dreamer_1">Ich bleibe länger sitzen, als ich vorhatte. Das ist neu.</string>
+    <string name="path_dreamer_2">Ich höre inzwischen den Regen, bevor ich ihn sehe.</string>
+    <string name="path_dreamer_3">Ich brauche nichts mehr, um irgendwo zu sein. Ich bin einfach da.</string>
+
+    <string name="path_maker">Der Macher</string>
+    <string name="path_maker_desc">Bei dir wird etwas fertig. Ich habe immer etwas vor.</string>
+    <string name="path_maker_1">In meiner Ecke liegt jetzt immer etwas Angefangenes.</string>
+    <string name="path_maker_2">Ich räume die Werkbank abends auf. Damit es morgen weitergeht.</string>
+    <string name="path_maker_3">Das erste Stück, das ich fertig bekommen habe, steht bei mir im Zimmer. Frag nicht, was es ist.</string>
+
+    <string name="talk_q_path">Wohin entwickelst du dich?</string>
+    <string name="talk_a_path_none">Dazu kann ich noch nichts sagen. Ich kenne dich noch nicht lang genug.</string>
+    <string name="talk_a_path_mixed">Du machst von allem etwas. Ich auch – ich lege mich nicht fest.</string>
+    <string name="talk_a_path_stage">Stufe %1$d von 3.</string>
+    <string name="talk_a_path_because">Das kommt von dir: %1$d von 100 Antworten gehen in diese Richtung.</string>
+    <string name="talk_a_path_next">Ab Stufe %1$d erzähle ich dir mehr davon.</string>
+    <string name="talk_a_path_change">Wenn sich das ändert, gehe ich mit. Nur nicht am selben Tag.</string>
 </resources>

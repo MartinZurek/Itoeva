@@ -138,11 +138,64 @@ object PlayTalk {
         /** Was du ihm ueber dich gesagt hast - siehe [UserAnswers]. */
         val answers: UserAnswers? = null,
         /** Ob er ueber sich selbst noch etwas zu erzaehlen hat - siehe [PlayLore]. */
-        val hasMoreToTell: Boolean = false
+        val hasMoreToTell: Boolean = false,
+        /** Wohin er sich entwickelt - siehe [Development]. */
+        val development: Development? = null
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
         val hasPlan: Boolean get() = plan.isNotEmpty()
+    }
+
+    /**
+     * **Nur die Entwicklung** - ohne den ganzen Rest der Auskunft.
+     *
+     * Noetig, weil der Pfad faerbt, was das Wesen von sich aus TUT (siehe DockScreen), und das
+     * schon, bevor jemand das Gespraech oeffnet. Die vollstaendige Auskunft dafuer zu laden waere
+     * die falsche Abkuerzung: Sie zieht Wochenrueckschau, Ratschlaege und Spielstand mit, von
+     * denen hier nichts gebraucht wird - und sie liefe bei jeder Regung mit.
+     */
+    suspend fun developmentNow(context: Context, companionProfileId: String): Development {
+        val db = AppDatabase.getInstance(context)
+        val reminders = db.glyphReminderDao().getEnabledForProfile(RoutineOwner.current(context))
+            .filterNot { it.isPlayMode }
+        val fedEver = db.avatarFeedEventDao()
+            .countFedPerReminderSince(companionProfileId, 0L)
+            .associate { it.reminderId to it.count }
+        val xp = db.avatarPlayStateDao().getForProfile(companionProfileId)?.xp ?: 0
+        return developmentOf(
+            plan = reminders.map { PlanEntry(it, 0) },
+            fedEver = fedEver,
+            level = PlayModeXp.levelFor(xp)
+        )
+    }
+
+    /**
+     * Verdichtet Antworten je Erinnerung zu Antworten je THEMA und leitet daraus den Pfad ab.
+     *
+     * Der Umweg ueber die Erinnerungen ist noetig, weil am Ereignis selbst nicht immer ein Thema
+     * steht: Zeigt eine Erinnerung eine Bibliotheks-Animation, bleibt das Feld dort leer (siehe
+     * ReminderTrigger). Die Erinnerung des Nutzers weiss ihr Thema dagegen immer - und sie ist
+     * ohnehin das, worum es hier geht: was er sich vorgenommen hat.
+     */
+    private fun developmentOf(
+        plan: List<PlanEntry>,
+        fedEver: Map<Long, Int>,
+        level: Int
+    ): Development {
+        val counts = mutableMapOf<AnimationType, Int>()
+        for (entry in plan) {
+            val type = entry.reminder.animationType ?: continue
+            counts[type] = (counts[type] ?: 0) + (fedEver[entry.reminder.id] ?: 0)
+        }
+        val path = PlayPath.pathFor(counts)
+        return Development(
+            path = path,
+            stage = PlayPath.stageFor(level),
+            sharePercent = path?.let { (PlayPath.shareOf(counts, it) * 100).toInt() } ?: 0,
+            enoughData = PlayPath.enoughData(counts),
+            nextStageLevel = PlayPath.nextStageLevel(level)
+        )
     }
 
     /**
@@ -215,6 +268,23 @@ object PlayTalk {
             override val changed: GlyphReminder? get() = null
         }
     }
+
+    /**
+     * **Wohin sich das Wesen entwickelt** (siehe [PlayPath]) - `null` im Normalbetrieb, wo es
+     * kein Spiel und damit keine Stufe gibt.
+     */
+    data class Development(
+        /** Der Pfad, oder `null`: dann sagt [enoughData], ob es an den Daten oder an der
+         *  Gleichmaessigkeit liegt. */
+        val path: PlayPath?,
+        val stage: Int,
+        /** Welchen Anteil der Pfad an allen Antworten hat, in Prozent. */
+        val sharePercent: Int,
+        /** Ob ueberhaupt genug beantwortet wurde. */
+        val enoughData: Boolean,
+        /** Die Stufe des Wesens, ab der die naechste Pfadstufe kommt - `null` am Ende. */
+        val nextStageLevel: Int?
+    )
 
     /**
      * **Was ER dich fragt** - der Teil des Gespraechs, in dem die Auskunft die Richtung wechselt.
@@ -532,6 +602,11 @@ object PlayTalk {
             .associate { it.reminderId to it.count }
 
         val plan = reminders.map { PlanEntry(it, fedByReminder[it.id] ?: 0) }
+        // **Ueber die GESAMTE Vergangenheit**, nicht ueber ein Fenster: Der Pfad soll langsam
+        // mitwandern, wenn sich die Gewohnheiten aendern, und nie springen (siehe PlayPath).
+        val fedEver = db.avatarFeedEventDao()
+            .countFedPerReminderSince(companionProfileId, 0L)
+            .associate { it.reminderId to it.count }
         val covered = reminders.map { it.animationType }.toSet()
 
         val weekStart = FeedStatsPeriod.WEEK.startMillis()
@@ -578,6 +653,7 @@ object PlayTalk {
             // Was der Nutzer selbst gesagt hat - damit er es auf Nachfrage aufsagen und auf
             // Wunsch wieder vergessen kann (siehe [UserAnswers]).
             hasMoreToTell = PlayLore.hasMore(context, AvatarSpeciesPrefs.get(context)),
+            development = if (includeGame) developmentOf(plan, fedEver, game?.level ?: 1) else null,
             answers = UserAnswers(
                 focusTopic = PlayUserProfile.focusTopic(context),
                 busyPhase = PlayUserProfile.busyPhase(context),
@@ -651,6 +727,8 @@ object PlayTalk {
         data object ShowProfile : Offer
         /** "Erzaehl mir etwas von dir" - siehe [PlayLore]. */
         data object Tell : Offer
+        /** "Wohin entwickelst du dich?" - siehe [PlayPath]. */
+        data object ShowPath : Offer
     }
 
     /**
@@ -839,6 +917,9 @@ object PlayTalk {
         // warum jemand nach dem dritten Tag noch einmal auf die Figur tippt. Ein Plan laesst sich
         // auch morgen ansehen.
         if (offers.size < MAX_OFFERS && knowledge.hasMoreToTell) offers += Offer.Tell
+        // Die Entwicklung gleich danach: Sie ist das, wofuer sich das Mitmachen lohnt, und
+        // sie ist die einzige Auskunft, die sich ueber Wochen aendert statt ueber Stunden.
+        if (offers.size < MAX_OFFERS && knowledge.development != null) offers += Offer.ShowPath
 
         // **Ein Rat zu etwas Bestehendem geht einem Vorschlag fuer etwas Neues vor.** Wer sein
         // Tagesziel seit einer Woche nicht erreicht, ist mit einer zusaetzlichen Gewohnheit nicht

@@ -669,4 +669,37 @@
     <string name="talk_a_story_end">That is all I know about myself right now. Ask me again later.</string>
     <string name="talk_a_story_again">Tell it from the start</string>
     <string name="talk_a_story_tomorrow">That is all that comes to me today. Ask me again tomorrow.</string>
+
+    <!-- Die Entwicklung des Wesens - siehe PlayPath. -->
+    <string name="path_wanderer">The One Who Sets Off</string>
+    <string name="path_wanderer_desc">You keep me moving. I am outside more than in.</string>
+    <string name="path_wanderer_1">Since you send me off, I know the way to the street in the dark.</string>
+    <string name="path_wanderer_2">I notice where I have already been. The forest behind the street is no longer strange.</string>
+    <string name="path_wanderer_3">I no longer set off because you say so. I set off because it is time.</string>
+
+    <string name="path_keeper">The Caretaker</string>
+    <string name="path_keeper_desc">With you it is about looking after things. I watch out – for me and for you.</string>
+    <string name="path_keeper_1">By now I put something out for myself before I need it.</string>
+    <string name="path_keeper_2">When I do not hear from you for a while, I go to the kitchen anyway. For later.</string>
+    <string name="path_keeper_3">By now I can tell when a day was hard on you. Do not ask me how.</string>
+
+    <string name="path_dreamer">The Quiet One</string>
+    <string name="path_dreamer_desc">With you things go quiet. I sit more than I walk.</string>
+    <string name="path_dreamer_1">I stay seated longer than I meant to. That is new.</string>
+    <string name="path_dreamer_2">By now I hear the rain before I see it.</string>
+    <string name="path_dreamer_3">I no longer need anything in order to be somewhere. I am simply there.</string>
+
+    <string name="path_maker">The Maker</string>
+    <string name="path_maker_desc">With you things get finished. I always have something on the go.</string>
+    <string name="path_maker_1">There is always something half-started in my corner now.</string>
+    <string name="path_maker_2">I tidy the workbench in the evening. So it can go on tomorrow.</string>
+    <string name="path_maker_3">The first piece I ever finished stands in my room. Do not ask what it is.</string>
+
+    <string name="talk_q_path">Where are you heading?</string>
+    <string name="talk_a_path_none">I cannot say yet. I do not know you well enough.</string>
+    <string name="talk_a_path_mixed">You do a bit of everything. So do I – I am not settling on one thing.</string>
+    <string name="talk_a_path_stage">Stage %1$d of 3.</string>
+    <string name="talk_a_path_because">That comes from you: %1$d out of 100 answers go that way.</string>
+    <string name="talk_a_path_next">From stage %1$d on I will tell you more about it.</string>
+    <string name="talk_a_path_change">If that changes, I will follow. Just not on the same day.</string>
 </resources>

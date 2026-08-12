@@ -186,6 +186,41 @@ class PlayVarietyTest {
     }
 
     @Test
+    fun `die Neigung faerbt, ohne den Tag zu uebernehmen`() {
+        // **Die Entwicklung muss man SEHEN**, sonst ist sie eine Behauptung im Gespraech. Sie darf
+        // aber auch nicht alles verdraengen: Ein Wesen, das ausschliesslich tut, wozu es neigt,
+        // waere keine Figur mehr, sondern eine Einstellung.
+        val phase = PlayAmbientActivity.DayPhase.MIDDAY
+        val leaning = setOf(AnimationType.MOVE, AnimationType.WORK)
+
+        fun shareOfLeaning(withLeaning: Boolean): Float {
+            val random = Random(31)
+            var hits = 0
+            val draws = 4_000
+            repeat(draws) {
+                val topic = PlayAmbientActivity.nextTopic(
+                    phase,
+                    leaning = if (withLeaning) leaning else emptySet(),
+                    random = random
+                )
+                if (topic in leaning) hits++
+            }
+            return hits.toFloat() / draws
+        }
+
+        val plain = shareOfLeaning(withLeaning = false)
+        val leaned = shareOfLeaning(withLeaning = true)
+        assertTrue(
+            "Die Neigung aendert nichts am Verhalten ($plain vs $leaned)",
+            leaned > plain * 1.2f
+        )
+        assertTrue(
+            "Die Neigung verdraengt alles andere ($leaned)",
+            leaned < 0.75f
+        )
+    }
+
+    @Test
     fun `das Verweilen erfindet keine Themen`() {
         // Ein Thema, das zur Tageszeit gar nicht vorkommt, darf nicht allein deshalb auftauchen,
         // weil die Figur zufaellig im passenden Zimmer steht - sonst schliefe sie mittags weiter,
