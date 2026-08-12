@@ -105,6 +105,15 @@ fun PlayTalkPanel(
     /** Alles vergessen, was der Nutzer ueber sich gesagt hat. */
     onForget: () -> Unit = {},
     /**
+     * Das naechste Stueck seiner Geschichte erzaehlen - `null`, wenn er alles gesagt hat.
+     *
+     * Als Rueckruf und nicht als Text, weil das Erzaehlen etwas VERAENDERT: Was einmal gesagt
+     * wurde, ist gesagt (siehe [PlayLore]).
+     */
+    onTell: (() -> Unit)? = null,
+    /** Was er in diesem Gespraech schon erzaehlt hat - bleibt untereinander stehen. */
+    told: List<Int> = emptyList(),
+    /**
      * Ob er gerade zu hoeren ist, und der Schalter dazu (siehe [PlaySound]).
      *
      * **Warum das hier steht und nicht nur in den Einstellungen.** Ton stoert immer im selben
@@ -213,7 +222,9 @@ fun PlayTalkPanel(
                     onOpenReminders = onOpenReminders,
                     onAsk = onAsk,
                     onAdjust = onAdjust,
-                    onForget = onForget
+                    onForget = onForget,
+                    onTell = onTell,
+                    told = told
                 )
                 QuestionLine(stringResource(R.string.talk_back)) { asked = null }
             }
@@ -245,6 +256,7 @@ private enum class Question(val labelRes: Int) {
     HERE(R.string.talk_q_here),
     ADVICE(R.string.talk_q_advice),
     PROFILE(R.string.talk_q_profile),
+    STORY(R.string.talk_q_story),
     /** Stufe, Erfahrung, Muenzen, Vorrat. */
     GAME(R.string.talk_q_game)
 }
@@ -390,6 +402,8 @@ private fun OfferLine(
             QuestionLine(stringResource(R.string.talk_q_advice)) { onShow(Question.ADVICE) }
         PlayTalk.Offer.ShowProfile ->
             QuestionLine(stringResource(R.string.talk_q_profile)) { onShow(Question.PROFILE) }
+        PlayTalk.Offer.Tell ->
+            QuestionLine(stringResource(R.string.talk_q_story)) { onShow(Question.STORY) }
     }
 }
 
@@ -588,7 +602,9 @@ private fun Answer(
     onOpenReminders: () -> Unit,
     onAsk: (AnimationType) -> Unit,
     onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit,
-    onForget: () -> Unit
+    onForget: () -> Unit,
+    onTell: (() -> Unit)?,
+    told: List<Int>
 ) {
     when (question) {
         Question.HERE -> {
@@ -611,6 +627,26 @@ private fun Answer(
                 }
             }
             Text(stringResource(R.string.talk_a_here), color = INK, size = 15)
+        }
+
+        Question.STORY -> {
+            // **Ein Stueck je Tippen, und es bleibt stehen.** Wer weiterhoeren will, tippt noch
+            // einmal - dann steht das naechste darunter, und man liest die Geschichte als Folge
+            // statt als Einzelsaetze, die einander ueberschreiben.
+            for (piece in told) {
+                Text(stringResource(piece), color = INK, size = 15)
+            }
+            when {
+                onTell != null -> QuestionLine(
+                    stringResource(
+                        if (told.isEmpty()) R.string.talk_q_story else R.string.talk_q_story_more
+                    )
+                ) { onTell() }
+                told.isEmpty() -> Text(
+                    stringResource(R.string.talk_a_story_end), color = INK, size = 15
+                )
+                else -> Text(stringResource(R.string.talk_a_story_end), color = INK_DIM, size = 13)
+            }
         }
 
         Question.PROFILE -> {

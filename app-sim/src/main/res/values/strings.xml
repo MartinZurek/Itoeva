@@ -614,4 +614,58 @@
     <string name="talk_sound_quiet_night">At night I stay quiet anyway.</string>
     <string name="talk_sound_quiet_audio">Something else is playing right now – I will stay out of it.</string>
     <string name="talk_sound_quiet_device">Your device is on silent.</string>
+
+    <!-- Die Geschichte der Wesen - siehe PlayLore. -->
+    <string name="lore_puffling_1">I am Puffling. I deliver parcels – and I keep taking detours, because there is always something new lying about.</string>
+    <string name="lore_puffling_2">My bed stands against the wall with the picture. I did not choose it, it was already hanging there. I like it anyway.</string>
+    <string name="lore_puffling_3">At my workbench I build things out of what is left over. Little of it ever gets finished. That is fine.</string>
+    <string name="lore_puffling_4">I have known Gloop the longest. He is slower than me – and when I am with him, so am I.</string>
+    <string name="lore_puffling_5">My park is mown and has a bench. Nothing special. But I know where everything is there.</string>
+    <string name="lore_puffling_6">Sometimes I set off and halfway there I forget where to. Then I sit on the bench until it comes back to me.</string>
+    <string name="lore_puffling_7">The forest starts behind the street. I rarely go in – not out of fear. It is so quiet that you can hear yourself.</string>
+
+    <string name="lore_starlet_1">I am Starlet. I raise plants. Some do not make it, and that is part of it.</string>
+    <string name="lore_starlet_2">I sleep in a hammock. When I turn over, half the room sways along.</string>
+    <string name="lore_starlet_3">Most of all I like sitting in my swing and watching nothing happen outside.</string>
+    <string name="lore_starlet_4">Hootlet and I hardly ever talk. Sometimes we just sit next to each other, and that is enough for both of us.</string>
+    <string name="lore_starlet_5">I mow nothing on my meadow. Everything may grow as it likes – including what nobody planted.</string>
+    <string name="lore_starlet_6">I often forget what I was looking for. Instead I find other things on the way.</string>
+    <string name="lore_starlet_7">On some nights the moon hangs low over the meadow. Then I stay outside longer than I meant to.</string>
+
+    <string name="lore_wyrmling_1">I am Wyrmling. In the gym I show people the first step. The second one they think of themselves.</string>
+    <string name="lore_wyrmling_2">I sleep in a nest of twigs. Next to it lies what I have collected. You may touch all of it.</string>
+    <string name="lore_wyrmling_3">At the forge I hammer glowing iron. Not always does something come of it. The noise helps regardless.</string>
+    <string name="lore_wyrmling_4">Fennec looks after everyone. I keep telling him to look after himself too. He does not listen.</string>
+    <string name="lore_wyrmling_5">Outside my place it only goes up. From up there everything looks doable – that is why I climb.</string>
+    <string name="lore_wyrmling_6">I talk loudly. Partly so nobody notices when I am unsure.</string>
+    <string name="lore_wyrmling_7">In the evening the lights come on in the houses along the street. I do not know who lives there. I like it anyway.</string>
+
+    <string name="lore_fennec_1">I am Fennec. I keep the beacon burning. Nobody notices when it works – that is the whole point.</string>
+    <string name="lore_fennec_2">I sleep in a den. Narrow, dark, warm. From inside you hear everything that passes outside.</string>
+    <string name="lore_fennec_3">I dig. Not to find something – I put things in places I will remember later.</string>
+    <string name="lore_fennec_4">Wyrmling is loud and means well. After he has been here, the room is emptier.</string>
+    <string name="lore_fennec_5">There is an acacia out in the savannah. You see it before you see the sand. I take my bearings from it.</string>
+    <string name="lore_fennec_6">I sleep badly when I do not know whether you are all right. That is why I ask.</string>
+    <string name="lore_fennec_7">The shop is closed at night. The lantern in front of it stays lit though. Somebody must have switched it on.</string>
+
+    <string name="lore_gloop_1">I am Gloop. In the bakery I wait until the dough is ready. There is no hurrying it.</string>
+    <string name="lore_gloop_2">I sleep in a hollow on the floor. I cannot get up high, and I do not miss anything.</string>
+    <string name="lore_gloop_3">I turn clay. I have no fixed shape myself – perhaps that is why I like giving one to something else.</string>
+    <string name="lore_gloop_4">Puffling comes by often and talks fast. I understand half of it. It is the good half.</string>
+    <string name="lore_gloop_5">Outside my place everything is soft. You sink in a little. You also come back out.</string>
+    <string name="lore_gloop_6">I do not tidy up. The bowls stay where I put them down. They are in nobody’s way.</string>
+    <string name="lore_gloop_7">When it rains you can hear it inside at the window. That is my favourite weather.</string>
+
+    <string name="lore_hootlet_1">I am Hootlet. At the observatory I note down what changes in the sky. Mostly nothing changes.</string>
+    <string name="lore_hootlet_2">I sleep in a hollow trunk. From there I can see the door without anybody seeing me.</string>
+    <string name="lore_hootlet_3">I play the wind harp. Talking is not my strength. This works better.</string>
+    <string name="lore_hootlet_4">Starlet sits down beside me sometimes. She asks nothing, and I have to explain nothing.</string>
+    <string name="lore_hootlet_5">My forest is not dark at night. You only have to keep still long enough for your eyes to notice.</string>
+    <string name="lore_hootlet_6">I know a lot and say little. Both come easily to me. One may be the reason for the other.</string>
+    <string name="lore_hootlet_7">There is a shooting star that comes rarely. I do not wait for it. I am simply always there when it comes.</string>
+
+    <string name="talk_q_story">Tell me something about yourself</string>
+    <string name="talk_q_story_more">Tell me more</string>
+    <string name="talk_a_story_end">That is all I know about myself right now. Ask me again later.</string>
+    <string name="talk_a_story_again">Tell it from the start</string>
 </resources>

@@ -136,7 +136,9 @@ object PlayTalk {
         /** Serie, Vorwoche, Monat - siehe [History]. */
         val history: History = History(0, 0, 0, 0),
         /** Was du ihm ueber dich gesagt hast - siehe [UserAnswers]. */
-        val answers: UserAnswers? = null
+        val answers: UserAnswers? = null,
+        /** Ob er ueber sich selbst noch etwas zu erzaehlen hat - siehe [PlayLore]. */
+        val hasMoreToTell: Boolean = false
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
@@ -575,6 +577,7 @@ object PlayTalk {
             history = history,
             // Was der Nutzer selbst gesagt hat - damit er es auf Nachfrage aufsagen und auf
             // Wunsch wieder vergessen kann (siehe [UserAnswers]).
+            hasMoreToTell = PlayLore.hasMore(context, AvatarSpeciesPrefs.get(context)),
             answers = UserAnswers(
                 focusTopic = PlayUserProfile.focusTopic(context),
                 busyPhase = PlayUserProfile.busyPhase(context),
@@ -646,6 +649,8 @@ object PlayTalk {
         data object ShowAdvice : Offer
         /** "Was weisst du eigentlich ueber mich?" - und die Moeglichkeit, es zurueckzunehmen. */
         data object ShowProfile : Offer
+        /** "Erzaehl mir etwas von dir" - siehe [PlayLore]. */
+        data object Tell : Offer
     }
 
     /**
@@ -828,6 +833,13 @@ object PlayTalk {
 
         // Aufgefuellt wird nur, wenn noch Platz ist, und in dieser Reihenfolge: erst ein
         // Vorschlag (er bringt etwas Neues), dann der Plan, dann die Woche.
+        // **Das Erzaehlen steht weit vorn - und zwar hinter allem, was DRINGEND ist, aber vor
+        // allem, was bloss nuetzlich ist.** Es ist das einzige Angebot, bei dem es nicht um den
+        // Nutzer und seine Gewohnheiten geht, sondern um das Wesen selbst; und es ist der Grund,
+        // warum jemand nach dem dritten Tag noch einmal auf die Figur tippt. Ein Plan laesst sich
+        // auch morgen ansehen.
+        if (offers.size < MAX_OFFERS && knowledge.hasMoreToTell) offers += Offer.Tell
+
         // **Ein Rat zu etwas Bestehendem geht einem Vorschlag fuer etwas Neues vor.** Wer sein
         // Tagesziel seit einer Woche nicht erreicht, ist mit einer zusaetzlichen Gewohnheit nicht
         // geholfen - das waere die Antwort "dann nimm dir noch mehr vor".

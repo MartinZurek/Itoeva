@@ -413,6 +413,14 @@ fun DockScreen(
         var askTick by remember { mutableStateOf(0) }
         /** Ob er zu hoeren ist - im Gespraech umschaltbar, siehe PlaySound. */
         var soundOn by remember { mutableStateOf(PlaySound.isEnabled(context)) }
+        /**
+         * Was er in DIESEM Gespraech schon von sich erzaehlt hat (siehe PlayLore).
+         *
+         * Im Bildschirm gehalten und nicht in den Einstellungen: Wieviel er insgesamt erzaehlt
+         * hat, gehoert dauerhaft gespeichert - was gerade untereinander steht, gehoert zu diesem
+         * einen Gespraech und faengt beim naechsten Oeffnen wieder leer an.
+         */
+        var toldNow by remember { mutableStateOf(listOf<Int>()) }
         var talkKnowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
         /** Die Frage, die er im Gespraech stellt - siehe PlayTalk.pendingAsk. */
         val pendingAsk = remember(talkKnowledge, askTick) {
@@ -2414,6 +2422,15 @@ fun DockScreen(
                             askTick++
                             talkRefresh++
                         },
+                        told = toldNow,
+                        onTell = avatar?.species?.takeIf { PlayLore.hasMore(context, it) }?.let { species ->
+                            {
+                                PlayLore.nextPiece(context, species)?.let { piece ->
+                                    toldNow = toldNow + piece
+                                    PlayLore.remember(context, species)
+                                }
+                            }
+                        },
                         soundOn = soundOn,
                         // Bei jedem Oeffnen frisch nachgesehen: Ob Musik laeuft oder das Geraet
                         // stumm ist, aendert sich, waehrend die App laeuft.
@@ -2442,7 +2459,7 @@ fun DockScreen(
                             pendingAsk?.let { PlayUserProfile.markAsked(context, it) }
                             askTick++
                         },
-                        onDismiss = { talkOpen = false }
+                        onDismiss = { talkOpen = false; toldNow = emptyList() }
                     )
                 }
             }
