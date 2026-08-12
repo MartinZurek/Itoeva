@@ -132,7 +132,9 @@ object PlayTalk {
          */
         val chapter: CompanionChapter = CompanionChapter.ARRIVED,
         /** Was ihm an den bestehenden Erinnerungen auffaellt - siehe [adviceFor]. */
-        val advice: List<Advice> = emptyList()
+        val advice: List<Advice> = emptyList(),
+        /** Serie, Vorwoche, Monat - siehe [History]. */
+        val history: History = History(0, 0, 0, 0)
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
@@ -287,6 +289,79 @@ object PlayTalk {
     private const val WINDOW_SLACK_HOURS = 4
 
     /**
+     * **Die laengere Rueckschau** - was sich ueber die Woche hinaus sagen laesst.
+     *
+     * Bewusst NEBEN [Week] und nicht darin: Die Woche ist die Auskunft auf "wie lief es", diese
+     * hier ist die Antwort auf "und sonst so". Wer nur wissen will, wie die Woche stand, soll
+     * nicht vier weitere Zahlen mitlesen muessen.
+     *
+     * **Und weiterhin keine Quote.** Auch ueber einen Monat gerechnet wird hier nichts bewertet -
+     * "an 18 von 30 Tagen war etwas" sagt alles, was zu sagen ist, ohne eine Note zu vergeben.
+     */
+    data class History(
+        /** Wie oft in der VORHERIGEN Woche reagiert wurde - der einzige Vergleich, den es gibt. */
+        val previousWeekTotal: Int,
+        /**
+         * Tage in Folge mit mindestens einer Reaktion, bis heute.
+         *
+         * **Der heutige Tag zaehlt nicht gegen die Serie, solange er noch laeuft.** Wer morgens um
+         * neun nachsieht, hat heute naturgemaess noch nichts getan - eine Serie, die dadurch auf
+         * null faellt, waere schlicht falsch und obendrein entmutigend. Gezaehlt wird deshalb ab
+         * gestern rueckwaerts, und der heutige Tag verlaengert sie, wenn schon etwas da ist.
+         */
+        val streakDays: Int,
+        /** Reaktionen der letzten dreissig Tage. */
+        val monthTotal: Int,
+        /** An wievielen dieser Tage ueberhaupt etwas geschah. */
+        val monthActiveDays: Int
+    ) {
+        /** Ob die laufende Woche besser steht als die vorherige - `null`, wenn es keine gab. */
+        fun betterThanLastWeek(thisWeek: Int): Boolean? =
+            if (previousWeekTotal <= 0) null else thisWeek > previousWeekTotal
+    }
+
+    /** Wie weit die lange Rueckschau zurueckreicht. */
+    const val HISTORY_DAYS = 30
+
+    /**
+     * Rechnet Serie, Vorwoche und Monat aus denselben Zeitpunkten, aus denen auch [summariseWeek]
+     * die Woche zieht.
+     *
+     * Eine eigene reine Funktion aus demselben Grund wie dort: Eine Serie ueber Tagesgrenzen
+     * hinweg ist genau die Art Rechnung, die von Hand nie richtig ausprobiert wird - man muesste
+     * dafuer drei Tage lang die App benutzen und dann einen Tag aussetzen.
+     */
+    fun summariseHistory(
+        timestamps: List<Long>,
+        today: LocalDate = LocalDate.now(),
+        zone: ZoneId = ZoneId.systemDefault()
+    ): History {
+        val perDay = timestamps.groupingBy {
+            Instant.ofEpochMilli(it).atZone(zone).toLocalDate()
+        }.eachCount()
+        val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val previousStart = weekStart.minusWeeks(1)
+        val monthStart = today.minusDays(HISTORY_DAYS - 1L)
+
+        var streak = 0
+        // Ab heute, falls heute schon etwas war - sonst ab gestern (siehe [History.streakDays]).
+        var cursor = if ((perDay[today] ?: 0) > 0) today else today.minusDays(1)
+        while ((perDay[cursor] ?: 0) > 0) {
+            streak++
+            cursor = cursor.minusDays(1)
+        }
+
+        return History(
+            previousWeekTotal = perDay.entries
+                .filter { !it.key.isBefore(previousStart) && it.key.isBefore(weekStart) }
+                .sumOf { it.value },
+            streakDays = streak,
+            monthTotal = perDay.entries.filter { !it.key.isBefore(monthStart) }.sumOf { it.value },
+            monthActiveDays = perDay.entries.count { !it.key.isBefore(monthStart) && it.value > 0 }
+        )
+    }
+
+    /**
      * Verteilt Zeitpunkte auf Kalendertage und verdichtet sie zur Wochen-Rueckschau.
      *
      * Ausgelagert und ohne Datenbank, damit sich genau die Faelle pruefen lassen, die sonst
@@ -355,9 +430,17 @@ object PlayTalk {
         val covered = reminders.map { it.animationType }.toSet()
 
         val weekStart = FeedStatsPeriod.WEEK.startMillis()
-        val week = summariseWeek(
-            db.avatarFeedEventDao().fedTimestampsSince(companionProfileId, weekStart)
-        )
+        // **Einmal die langen Zeitpunkte holen und zweimal auswerten.** Die Woche und die laengere
+        // Rueckschau aus zwei getrennten Abfragen zu ziehen waere die naheliegende Loesung und die
+        // falsche: Zwei Abfragen zu verschiedenen Zeitpunkten koennen sich widersprechen, und ein
+        // Begleiter, der "diese Woche 12" und gleich darauf "die Serie ist gerissen" sagt, hat sich
+        // gerade selbst widerlegt.
+        val historyStart = System.currentTimeMillis() -
+            HISTORY_DAYS * 24L * 60L * 60L * 1000L
+        val longTimestamps = db.avatarFeedEventDao()
+            .fedTimestampsSince(companionProfileId, minOf(historyStart, weekStart))
+        val week = summariseWeek(longTimestamps.filter { it >= weekStart })
+        val history = summariseHistory(longTimestamps)
 
         val game = if (includeGame) {
             // Die Erfahrung steht in der Datenbank, Geld und Vorrat in den Einstellungen - beides
@@ -386,6 +469,7 @@ object PlayTalk {
             game = game,
             // Ueber die ganze Woche, nicht ueber heute: Ein Rat zu einer Einstellung braucht
             // mehrere Tage, sonst raet er nach einem einzigen schlechten Vormittag.
+            history = history,
             advice = adviceFor(
                 plan = plan,
                 occurrences = db.avatarFeedEventDao()

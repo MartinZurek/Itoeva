@@ -542,4 +542,10 @@
     <string name="talk_advice_ignored_why">Vielleicht brauchst du sie nicht mehr. Ändern musst du das selbst – ich will dir nichts wegnehmen.</string>
     <string name="talk_advice_accept">Ja, mach das</string>
     <string name="talk_advice_taken">Erledigt.</string>
+
+    <!-- Die laengere Rueckschau - siehe PlayTalk.History. -->
+    <string name="talk_a_streak">%1$d Tage hintereinander war etwas.</string>
+    <string name="talk_a_week_better">Letzte Woche waren es %1$d – diese steht besser.</string>
+    <string name="talk_a_week_prev">Letzte Woche waren es %1$d.</string>
+    <string name="talk_a_month">In den letzten %3$d Tagen: %1$d Mal, an %2$d Tagen.</string>
 </resources>

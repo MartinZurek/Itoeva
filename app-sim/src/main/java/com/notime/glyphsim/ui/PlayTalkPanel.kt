@@ -557,6 +557,35 @@ private fun Answer(
                     )
                 }
             }
+            // **Danach erst das Laengere.** Die Woche ist die Antwort auf "wie lief es"; Serie,
+            // Vorwoche und Monat sind die Antwort auf "und sonst so". Wer nur das eine wissen
+            // will, soll das andere nicht mitlesen muessen - deshalb darunter und gedimmt.
+            val history = knowledge.history
+            if (history.streakDays > 1) {
+                Text(
+                    stringResource(R.string.talk_a_streak, history.streakDays),
+                    color = INK, size = 15
+                )
+            }
+            history.betterThanLastWeek(week.total)?.let { better ->
+                Text(
+                    if (better) {
+                        stringResource(R.string.talk_a_week_better, history.previousWeekTotal)
+                    } else {
+                        stringResource(R.string.talk_a_week_prev, history.previousWeekTotal)
+                    },
+                    color = INK_DIM, size = 13
+                )
+            }
+            if (history.monthActiveDays > 0) {
+                Text(
+                    stringResource(
+                        R.string.talk_a_month, history.monthTotal, history.monthActiveDays,
+                        PlayTalk.HISTORY_DAYS
+                    ),
+                    color = INK_DIM, size = 13
+                )
+            }
         }
 
         Question.PLAN -> {

@@ -142,6 +142,64 @@ class PlayTalkTest {
         )
     }
 
+    // ---- Die laengere Rueckschau ----
+
+    @Test
+    fun `der heutige Tag zaehlt nicht gegen die Serie, solange er laeuft`() {
+        // **Der Fall, der von Hand nie ausprobiert wird.** Wer morgens um neun nachsieht, hat
+        // heute naturgemaess noch nichts getan. Eine Serie, die dadurch auf null faellt, waere
+        // falsch und obendrein entmutigend - gerade dann, wenn jemand eine Woche durchgehalten
+        // hat.
+        val today = LocalDate.of(2026, 3, 10)
+        val threeDaysBefore = listOf(
+            at(today.minusDays(3), 9), at(today.minusDays(2), 9), at(today.minusDays(1), 9)
+        )
+        assertEquals(
+            3,
+            PlayTalk.summariseHistory(threeDaysBefore, today, zone).streakDays
+        )
+        // Und mit einem heutigen Eintrag verlaengert sie sich.
+        assertEquals(
+            4,
+            PlayTalk.summariseHistory(threeDaysBefore + at(today, 8), today, zone).streakDays
+        )
+    }
+
+    @Test
+    fun `eine Luecke beendet die Serie`() {
+        // Die Gegenprobe: Sonst waere die Serie keine Serie, sondern eine Gesamtzahl.
+        val today = LocalDate.of(2026, 3, 10)
+        val withGap = listOf(
+            at(today.minusDays(5), 9), at(today.minusDays(4), 9), at(today.minusDays(1), 9)
+        )
+        assertEquals(1, PlayTalk.summariseHistory(withGap, today, zone).streakDays)
+    }
+
+    @Test
+    fun `die Vorwoche zaehlt nur die Vorwoche`() {
+        // Dienstag: Die laufende Woche begann am Montag. Alles davor bis zum vorletzten Montag
+        // gehoert zur Vorwoche - und was noch frueher war, zu keiner von beiden.
+        val tuesday = LocalDate.of(2026, 3, 10)
+        val stamps = listOf(
+            at(tuesday, 9), at(tuesday.minusDays(1), 9),          // diese Woche
+            at(tuesday.minusDays(3), 9), at(tuesday.minusDays(5), 9),  // Vorwoche
+            at(tuesday.minusDays(20), 9)                          // laenger her
+        )
+        val history = PlayTalk.summariseHistory(stamps, tuesday, zone)
+        assertEquals(2, history.previousWeekTotal)
+        assertEquals("Der Monat zaehlt alles mit", 5, history.monthTotal)
+        assertEquals(5, history.monthActiveDays)
+    }
+
+    @Test
+    fun `ohne Vorwoche gibt es keinen Vergleich`() {
+        // Wer gerade erst angefangen hat, soll nicht lesen "letzte Woche waren es 0" - das ist
+        // formal richtig und als Satz eine Ohrfeige.
+        val today = LocalDate.of(2026, 3, 10)
+        val history = PlayTalk.summariseHistory(listOf(at(today, 9)), today, zone)
+        assertNull(history.betterThanLastWeek(1))
+    }
+
     // ---- Rat zu bestehenden Erinnerungen ----
 
     private val adviceZone: ZoneId = ZoneId.of("Europe/Berlin")
