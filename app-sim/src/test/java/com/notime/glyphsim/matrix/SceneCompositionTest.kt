@@ -1,5 +1,6 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphsim.ui.PlayPath
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -126,6 +127,102 @@ class SceneCompositionTest {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `jedes erworbene Stueck ist auch tatsaechlich zu sehen`() {
+        // **Der Fehler, der nicht weh tut und deshalb der schlimmste ist.** Ein Beiwerk, das mit
+        // etwas anderem kollidiert, wird lautlos weggelassen (siehe PlayScene.fitting) - kein
+        // Absturz, keine Warnung, das Zimmer sieht nur genauso aus wie vorher. Der Nutzer haette
+        // wochenlang auf eine Stufe hingearbeitet und bekaeme nichts zu sehen.
+        //
+        // Genau das ist beim ersten Versuch passiert: Die Erwerbungen rechneten ihren Anker gegen
+        // die volle Breite, die Moebel daneben gegen die Breite ohne Tuerzone - dieselbe Zahl
+        // bedeutete zwei verschiedene Stellen, und die Apparatur landete im Fernseher.
+        for (species in AvatarSpecies.entries) {
+            for (acquisition in PlayScene.Acquisition.entries) {
+                val without = PlayScene.build(
+                    acquisition.place, 0, width, floorY,
+                    PlayAmbientActivity.DayPhase.MIDDAY, species = species
+                ).map { it.x to it.y }.toSet()
+                val with = PlayScene.build(
+                    acquisition.place, 0, width, floorY,
+                    PlayAmbientActivity.DayPhase.MIDDAY, species = species,
+                    acquisitions = setOf(acquisition)
+                ).map { it.x to it.y }.toSet()
+
+                assertTrue(
+                    "$acquisition ist bei $species an ${acquisition.place} nicht zu sehen - " +
+                        "es faellt weg, weil es mit der Einrichtung kollidiert.\n\n" +
+                        ScenePreview.render(
+                            acquisition.place, species, showAvatar = false,
+                            acquisitions = setOf(acquisition)
+                        ),
+                    (with - without).size >= MIN_VISIBLE_CELLS
+                )
+            }
+        }
+    }
+
+    /** So viele Zellen muss ein erworbenes Stueck mindestens beisteuern, um zu zaehlen. */
+    private val MIN_VISIBLE_CELLS = 8
+
+    @Test
+    fun `auch das Angesammelte steht nicht in den Moebeln`() {
+        // **Der Fall, den es vorher nicht gab.** Was sich im Lauf der Entwicklung ansammelt
+        // (Rucksack, Werkzeugkiste, Haustier), kommt zu einer bereits fertig eingerichteten
+        // Wohnung DAZU - und zwar bei jeder der sechs Kreaturen, deren Zimmer verschieden voll
+        // sind. Ein Rucksack, der im Sofa steckt, faellt beim Bauen niemandem auf: Man sieht ihn
+        // erst, wenn man Wochen spaeter die Stufe erreicht.
+        //
+        // Geprueft wird mit dem VOLLEN Satz je Pfad, also dem Zustand nach Stufe drei.
+        for (sceneWidth in intArrayOf(PlayScene.MIN_SCENE_CELLS, 46, width, 72)) {
+            for (species in AvatarSpecies.entries) {
+                for (path in PlayPath.entries) {
+                    val owned = PlayPath.acquisitionsUpTo(path, 3)
+                    for (place in owned.map { it.place }.distinct()) {
+                        val props = PlayScene.propFootprints(place, sceneWidth, floorY, species, owned)
+                            .filter { it.second.isNotEmpty() }
+                            .map { it.first to it.second.toSet() }
+
+                        for (i in props.indices) {
+                            for (j in (i + 1) until props.size) {
+                                val (aName, a) = props[i]
+                                val (bName, b) = props[j]
+                                val shared = a.count { it in b }
+                                assertTrue(
+                                    "$aName und $bName stehen an $place ($species, $path) " +
+                                        "ineinander ($shared Zellen, Breite $sceneWidth).\n\n" +
+                                        ScenePreview.render(place, species, width = sceneWidth),
+                                    shared == 0
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `das Angesammelte setzt sauber auf dem Boden auf`() {
+        // Dieselbe Regel wie fuer alle Requisiten (siehe PlaySceneTest): Was auf dem Boden steht,
+        // endet genau eine Zelle darueber. Ein Rucksack, der einen Pixel ueber dem Boden schwebt,
+        // ist der Fehler, den man erst am Geraet sieht - und dann nur, wenn man genau hinsieht.
+        for (path in PlayPath.entries) {
+            val owned = PlayPath.acquisitionsUpTo(path, 3)
+            for (place in owned.map { it.place }.distinct()) {
+                val cells = PlayScene.build(
+                    place, 0, width, floorY, PlayAmbientActivity.DayPhase.MIDDAY,
+                    species = AvatarSpecies.PUFFLING, acquisitions = owned
+                ).filter { it.y < floorY }
+                assertTrue("$place zeichnet nichts", cells.isNotEmpty())
+                assertTrue(
+                    "$place ($path) zeichnet unterhalb des Bodens",
+                    cells.maxOf { it.y } == floorY - 1
+                )
             }
         }
     }

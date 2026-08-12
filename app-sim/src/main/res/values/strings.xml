@@ -702,4 +702,12 @@
     <string name="talk_a_path_because">That comes from you: %1$d out of 100 answers go that way.</string>
     <string name="talk_a_path_next">From stage %1$d on I will tell you more about it.</string>
     <string name="talk_a_path_change">If that changes, I will follow. Just not on the same day.</string>
+
+    <!-- Die Hobbys - siehe PlayPath. -->
+    <string name="hobby_wanderer">Collecting routes</string>
+    <string name="hobby_keeper">Looking after someone</string>
+    <string name="hobby_dreamer">Doing nothing, properly</string>
+    <string name="hobby_maker">Tinkering and building</string>
+    <string name="talk_a_path_hobby">What I picked up: %1$s.</string>
+    <string name="talk_a_path_things">Have a look around – there is more standing about than at the start.</string>
 </resources>

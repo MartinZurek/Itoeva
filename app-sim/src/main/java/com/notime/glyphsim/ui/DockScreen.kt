@@ -421,12 +421,26 @@ fun DockScreen(
          * Nachgeladen wird, wenn sich am Spielstand etwas geruehrt hat.
          */
         var leaningTopics by remember { mutableStateOf(emptySet<AnimationType>()) }
-        LaunchedEffect(playMode, avatar?.species, economyTick) {
+        /** Was sich im Lauf der Entwicklung in seiner Wohnung angesammelt hat - siehe PlayPath. */
+        var acquisitions by remember { mutableStateOf(emptySet<PlayScene.Acquisition>()) }
+        /**
+         * Zaehlt jede Fuetterung mit - der Ausloeser dafuer, die Entwicklung neu nachzusehen.
+         *
+         * Eine Fuetterung ist der einzige Weg zu neuer Erfahrung und damit zu einer neuen Stufe;
+         * haenge das Nachsehen nur am Wirtschafts-Zaehler (Geld, Vorrat), erschiene ein neu
+         * erworbenes Stueck erst beim naechsten Einkauf.
+         */
+        var fedCount by remember { mutableStateOf(0) }
+        // Auch auf die STUFE hoeren, nicht nur auf Geld und Vorrat: Ein Aufstieg ist genau der
+        // Moment, in dem ein neues Stueck dazukommt - haenge das nur am Wirtschafts-Zaehler,
+        // erschiene es erst beim naechsten Einkauf.
+        LaunchedEffect(playMode, avatar?.species, economyTick, fedCount) {
             if (!playMode) return@LaunchedEffect
             val development = withContext(Dispatchers.IO) {
                 PlayTalk.developmentNow(context, PresentCompanion.profileId(context))
             }
             leaningTopics = development.path?.topics.orEmpty()
+            acquisitions = PlayPath.acquisitionsUpTo(development.path, development.stage)
         }
 
         /** Ob er zu hoeren ist - im Gespraech umschaltbar, siehe PlaySound. */
@@ -1585,6 +1599,7 @@ fun DockScreen(
             // Sein Motiv als Rueckmeldung - nur, wenn Ton eingeschaltet ist, nicht nachts und
             // nicht ueber laufender Musik (siehe PlaySound).
             PlaySound.play(context, current.species, PlayChime.Event.FEED, scope)
+            fedCount++
             scope.launch {
                 try {
                     AvatarFeeding.playReaction(
@@ -1895,7 +1910,11 @@ fun DockScreen(
         if (playMode) {
             val sceneCells = remember(
                 renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value,
-                lampOn, tvOn, activeStation, avatar?.species
+                lampOn, tvOn, activeStation, avatar?.species,
+                // Sonst bliebe die Kulisse stehen, wie sie war, bis sich zufaellig etwas anderes
+                // aendert - und das neu erworbene Stueck taucht erst beim naechsten Ortswechsel
+                // auf statt in dem Moment, in dem es dazukommt.
+                acquisitions
             ) {
                 PlayScene.build(
                     place = renderedPlace,
@@ -1907,7 +1926,10 @@ fun DockScreen(
                     lampOn = lampOn,
                     tvOn = tvOn,
                     activeStation = activeStation,
-                    species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
+                    species = avatar?.species ?: AvatarSpeciesPrefs.get(context),
+                    // Was er sich im Lauf seiner Entwicklung zugelegt hat (siehe PlayPath) - der
+                    // Teil des Fortschritts, den man nicht liest, sondern sieht.
+                    acquisitions = acquisitions
                 )
             }
             PlaySceneView(

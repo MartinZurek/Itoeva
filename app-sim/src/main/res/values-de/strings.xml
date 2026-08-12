@@ -696,4 +696,12 @@
     <string name="talk_a_path_because">Das kommt von dir: %1$d von 100 Antworten gehen in diese Richtung.</string>
     <string name="talk_a_path_next">Ab Stufe %1$d erzähle ich dir mehr davon.</string>
     <string name="talk_a_path_change">Wenn sich das ändert, gehe ich mit. Nur nicht am selben Tag.</string>
+
+    <!-- Die Hobbys - was aus der Neigung geworden ist (siehe PlayPath). -->
+    <string name="hobby_wanderer">Wege sammeln</string>
+    <string name="hobby_keeper">Sich um jemanden kümmern</string>
+    <string name="hobby_dreamer">Nichts tun, aber richtig</string>
+    <string name="hobby_maker">Basteln und Bauen</string>
+    <string name="talk_a_path_hobby">Angefangen habe ich mit: %1$s.</string>
+    <string name="talk_a_path_things">Schau dich um – es steht jetzt mehr herum als am Anfang.</string>
 </resources>

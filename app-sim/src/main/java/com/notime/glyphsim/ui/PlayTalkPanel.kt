@@ -649,6 +649,11 @@ private fun Answer(
                 else -> {
                     Text(stringResource(path.labelRes), color = INK, size = 16, weight = FontWeight.Medium)
                     Text(stringResource(path.descriptionRes), color = INK, size = 15)
+                    // Das Hobby: der Name fuer das, was aus der Neigung geworden ist.
+                    Text(
+                        stringResource(R.string.talk_a_path_hobby, stringResource(path.hobbyRes)),
+                        color = INK, size = 15
+                    )
                     Text(
                         stringResource(R.string.talk_a_path_stage, development.stage),
                         color = INK_DIM, size = 13
@@ -665,6 +670,13 @@ private fun Answer(
                         PlayPath.loreOf(path, stage)?.let {
                             Text(stringResource(it), color = INK, size = 15)
                         }
+                    }
+                    // Und der Hinweis, dass man es SEHEN kann - sonst sucht niemand danach.
+                    if (development.stage >= 1) {
+                        Text(
+                            stringResource(R.string.talk_a_path_things),
+                            color = INK_DIM, size = 13
+                        )
                     }
                     development.nextStageLevel?.let {
                         Text(

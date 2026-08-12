@@ -74,6 +74,36 @@ class ScenePreviewTool {
         println("Wetter geschrieben: ${target.absolutePath}")
     }
 
+    /**
+     * **Wie sich die Wohnung fuellt** - dieselben drei Raeume auf Stufe 0, 1, 2 und 3.
+     *
+     * Der einzige Weg, das zu beurteilen, ohne wochenlang zu fuettern: Ob ein Rucksack neben dem
+     * Sessel gut aussieht, entscheidet sich im Bild und nicht in der Zahl.
+     */
+    @Test
+    fun dumpAcquisitions() {
+        val out = StringBuilder()
+        for (path in com.notime.glyphsim.ui.PlayPath.entries) {
+            for (stage in 0..3) {
+                val owned = com.notime.glyphsim.ui.PlayPath.acquisitionsUpTo(path, stage)
+                out.append("=== ").append(path).append(" / Stufe ").append(stage)
+                    .append(System.lineSeparator())
+                for (place in listOf(
+                    PlayScene.Place.CRAFT, PlayScene.Place.LIVING, PlayScene.Place.BEDROOM
+                )) {
+                    out.append(
+                        ScenePreview.render(
+                            place, AvatarSpecies.PUFFLING, acquisitions = owned, showAvatar = false
+                        )
+                    ).append(System.lineSeparator())
+                }
+            }
+        }
+        val target = File(System.getProperty("java.io.tmpdir"), "scene_acquisitions.txt")
+        target.writeText(out.toString())
+        println("Erwerbungen geschrieben: ${target.absolutePath}")
+    }
+
     @Test
     fun dumpLandscape() {
         val out = StringBuilder()

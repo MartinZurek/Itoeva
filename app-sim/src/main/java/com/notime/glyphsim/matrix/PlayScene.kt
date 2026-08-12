@@ -173,6 +173,74 @@ object PlayScene {
     data class SceneSpot(val centerX: Int, val groundY: Int)
 
     /**
+     * Die Form zu einer Erwerbung.
+     *
+     * Als Funktion und nicht als Feld am Enum: [Prop] ist eine interne Angelegenheit dieser Datei
+     * und soll es bleiben - ein oeffentliches Enum, das sie mit sich traegt, wuerde sie nach
+     * aussen tragen.
+     */
+    private fun propOf(acquisition: Acquisition): Prop = when (acquisition) {
+        Acquisition.BACKPACK -> PROP_BACKPACK
+        Acquisition.WALLMAP -> PROP_WALLMAP
+        Acquisition.SCOOTER -> PROP_SCOOTER
+        Acquisition.FEEDBOWL -> PROP_FEEDBOWL
+        Acquisition.PETBASKET -> PROP_PETBASKET
+        Acquisition.SLEEPING_PET -> PROP_SLEEPING_PET
+        Acquisition.BLANKET -> PROP_BLANKET
+        Acquisition.MOBILE -> PROP_MOBILE
+        Acquisition.STARJAR -> PROP_STARJAR
+        Acquisition.TOOLBOX -> PROP_TOOLBOX
+        Acquisition.CONTRAPTION -> PROP_CONTRAPTION
+        Acquisition.SIGNALRIG -> PROP_SIGNALRIG
+    }
+
+    /**
+     * **Was sich im Lauf der Zeit ANSAMMELT** - Dinge, die zur Wohnung dazukommen, weil das Wesen
+     * sich entwickelt hat (siehe [com.notime.glyphsim.ui.PlayPath]).
+     *
+     * **Der Unterschied zur uebrigen Einrichtung ist der Zeitpunkt.** Alles andere steht von
+     * Anfang an da: Es beschreibt, WER hier wohnt. Diese Dinge beschreiben, was seither passiert
+     * ist - ein Rucksack, weil er losgeht; eine Werkzeugkiste, weil er baut; ein Napf, weil er
+     * sich um etwas kuemmert. Ein Zimmer, das am ersten Tag genauso aussieht wie nach zwei
+     * Monaten, kann von diesen zwei Monaten nichts erzaehlen.
+     *
+     * **Verteilt auf drei Raeume, nicht gestapelt in einem.** Das erste Stueck steht in seiner
+     * eigenen Ecke (dort faengt ein Hobby an), das zweite im Wohnzimmer (dort zeigt man, was man
+     * macht), das dritte im Schlafzimmer (dort steht, was einem gehoert). Nebenbei loest das ein
+     * handfestes Problem: Drei zusaetzliche Gegenstaende in EINEM Zimmer waeren auf einem schmalen
+     * Bild nicht mehr unterzubringen.
+     */
+    enum class Acquisition(
+        val place: Place,
+        internal val anchorX: Float,
+        internal val liftCells: Int = 0
+    ) {
+        // ---- Der Aufbrecher: unterwegs sein ----
+        BACKPACK(Place.CRAFT, 0.44f),
+        // 0,72 und nicht 0,5: Dort haengt bereits der Wandschmuck der Wohnung (siehe [Home.wall]),
+        // und zwei Bilder an derselben Stelle heben einander auf - das zweite faellt weg.
+        // Eine Zelle hoeher als der uebrige Wandschmuck: Fennecs Ofen ist zwoelf Zellen hoch und
+        // reicht damit als einziges Geraet bis in die Reihe, in der sonst Bilder haengen.
+        WALLMAP(Place.LIVING, 0.72f, liftCells = 12),
+        SCOOTER(Place.BEDROOM, 0.58f),
+
+        // ---- Der Fuersorgliche: sich um etwas kuemmern ----
+        FEEDBOWL(Place.CRAFT, 0.44f),
+        PETBASKET(Place.LIVING, 0.46f),
+        SLEEPING_PET(Place.BEDROOM, 0.58f),
+
+        // ---- Der Stille: sammeln, was Ruhe gibt ----
+        BLANKET(Place.CRAFT, 0.44f),
+        MOBILE(Place.LIVING, 0.72f, liftCells = 12),
+        STARJAR(Place.BEDROOM, 0.58f),
+
+        // ---- Der Macher: Technik ----
+        TOOLBOX(Place.CRAFT, 0.44f),
+        CONTRAPTION(Place.LIVING, 0.46f),
+        SIGNALRIG(Place.BEDROOM, 0.58f)
+    }
+
+    /**
      * Wo die Figur steht, sitzt oder liegt, wenn sie [station] an diesem [place] benutzt -
      * `null`, wenn es den Platz hier nicht gibt (im Schlafzimmer gibt es keinen Schreibtisch).
      */
@@ -312,9 +380,10 @@ object PlayScene {
         place: Place,
         widthCells: Int,
         floorY: Int,
-        species: AvatarSpecies = AvatarSpecies.PUFFLING
+        species: AvatarSpecies = AvatarSpecies.PUFFLING,
+        acquisitions: Set<Acquisition> = emptySet()
     ): List<Pair<String, List<Pair<Int, Int>>>> =
-        fitting(placementsFor(place, species), widthCells, floorY)
+        fitting(placementsFor(place, species, acquisitions), widthCells, floorY)
             // OHNE den Hintergrund (siehe [Placement.behind]): Eine Laterne vor einer Hausfassade
             // ist keine Ueberschneidung, sondern der Zweck der Sache. Wuerde die Pruefung sie
             // melden, muesste man ihr die Tiefe wieder austreiben.
@@ -485,8 +554,12 @@ object PlayScene {
          * kam. Eine Tuer, die aufgeht, schliesst genau diese Luecke.
          */
         activeStation: Station? = null,
-        /** Nur der Arbeitsplatz ist speziesabhaengig eingerichtet - siehe [workPlacements]. */
-        species: AvatarSpecies = AvatarSpecies.PUFFLING
+        species: AvatarSpecies = AvatarSpecies.PUFFLING,
+        /**
+         * Was sich im Lauf der Zeit angesammelt hat (siehe [Acquisition]) - leer heisst: eine
+         * Wohnung wie am ersten Tag.
+         */
+        acquisitions: Set<Acquisition> = emptySet()
     ): List<SceneCell> {
         if (widthCells <= 0 || floorY <= 0 || fade <= 0f) return emptyList()
 
@@ -530,7 +603,7 @@ object PlayScene {
         // ueberschreiben frueher gezeichnete.
         cells += groundDetail(place, widthCells, floorY, species)
 
-        for (placement in fitting(placementsFor(place, species), widthCells, floorY)) {
+        for (placement in fitting(placementsFor(place, species, acquisitions), widthCells, floorY)) {
             val originX = originX(placement, widthCells)
             val originY = originY(placement, floorY)
             // Oberkanten heller als der Rest der Form - **der Unterschied zwischen einem Moebel
@@ -567,10 +640,10 @@ object PlayScene {
             }
         }
 
-        cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species)
+        cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species, acquisitions)
         cells += housePet(place, phase, widthCells, floorY)
         cells += weather(
-            place, fitting(placementsFor(place, species), widthCells, floorY),
+            place, fitting(placementsFor(place, species, acquisitions), widthCells, floorY),
             phase, widthCells, floorY
         )
 
@@ -869,9 +942,51 @@ object PlayScene {
      */
     private fun placementsFor(
         place: Place,
-        species: AvatarSpecies = AvatarSpecies.PUFFLING
+        species: AvatarSpecies = AvatarSpecies.PUFFLING,
+        acquisitions: Set<Acquisition> = emptySet()
     ): List<Placement> {
         val home = homeOf(species)
+        // **Angehaengt und nicht eingeflochten** - und damit als Letzte in der Reihenfolge, in der
+        // [fitting] Beiwerk verteilt. Das ist Absicht: Wird es eng, weicht das Neue und nicht die
+        // Einrichtung. Ein Zimmer, in dem der Rucksack den Sessel verdraengt, waere schlechter als
+        // eines ohne Rucksack.
+        val furnished = furnishing(place, home, species)
+        // **Dieselbe Sperrzone wie die Einrichtung** (siehe [besideDoor]) - und daran haengt mehr,
+        // als es aussieht: Die Verankerung ist ein Bruchteil des FREIEN Platzes. Ohne die Sperre
+        // rechnet ein neu erworbenes Stueck seinen Anker gegen die volle Breite, die Moebel
+        // daneben aber gegen die Breite ohne Tuerzone - dieselbe Zahl bedeutet dann zwei
+        // verschiedene Stellen. Beim ersten Versuch landete die Apparatur dadurch im Fernseher
+        // und fiel als Beiwerk lautlos weg: Der Nutzer haette eine Stufe erreicht und nichts
+        // gesehen.
+        val reserved = if (furnished.any { it.station == Station.DOOR }) DOOR.width + DOOR_MARGIN else 0
+        val gathered = acquisitions.filter { it.place == place }.map {
+            Placement(
+                propOf(it),
+                anchorX = it.anchorX,
+                liftCells = it.liftCells,
+                keepClearRight = reserved
+            )
+        }
+        // **Das Erworbene steht VOR dem Beiwerk in der Reihe** - und damit vor ihm beim Verteilen
+        // (siehe [fitting], das Beiwerk in Reihenfolge bedient und den Rest weglaesst).
+        //
+        // Die Bedeutung ist eine andere: Eine zweite Topfpflanze ist Ausstattung, der Roller im
+        // Schlafzimmer ist das Ergebnis von Wochen. Wird es eng, weicht die Pflanze. Umgekehrt
+        // waere der Nutzer wochenlang auf eine Stufe zugegangen und haette nichts gesehen, weil
+        // an der betreffenden Stelle zufaellig schon Grün stand.
+        //
+        // Die Stationen bleiben unangetastet ganz vorn: An sie geht die Figur heran, sie duerfen
+        // nie ausfallen.
+        return furnished.filter { it.station != null } +
+            gathered +
+            furnished.filter { it.station == null }
+    }
+
+    private fun furnishing(
+        place: Place,
+        home: Home,
+        species: AvatarSpecies
+    ): List<Placement> {
         return when (place) {
         // Das Schlafzimmer ist der persoenlichste Raum: Wie jemand schlaeft, sagt mehr ueber ihn
         // als das, was an seiner Wand haengt.
@@ -2795,6 +2910,125 @@ object PlayScene {
         screenArea = rect(1, 1, 9, 5)
     )
 
+    // ---- Was sich ansammelt (siehe [Acquisition]) ----
+    //
+    // **Zwoelf kleine Formen, von denen jeder Nutzer hoechstens drei zu sehen bekommt** - eine je
+    // Stufe seines Pfades. Das klingt nach Verschwendung und ist das Gegenteil: Gerade weil man
+    // nur den eigenen Weg sieht, ist das, was da steht, eine Aussage ueber DIESEN Verlauf und
+    // nicht Ausstattung, die ohnehin jeder bekommt.
+    //
+    // Alle bewusst klein (fuenf bis elf Zellen): Sie kommen zu einer fertig eingerichteten Wohnung
+    // DAZU und muessen zwischen dem Platz finden, was schon da steht.
+
+    /** Rucksack - das erste Stueck des Aufbrechers. */
+    private val PROP_BACKPACK = Prop(
+        width = 6, height = 7,
+        art = hLine(1, 4, 0) +                                   // Deckel
+            hLine(0, 5, 1) + rect(0, 2, 5, 5) +
+            listOf(2 to 3, 3 to 3) +                             // Riemen angedeutet
+            hLine(1, 4, 6)
+    )
+
+    /** Landkarte an der Wand - wer unterwegs ist, merkt sich, wo er war. */
+    private val PROP_WALLMAP = Prop(
+        width = 9, height = 6,
+        art = hLine(0, 8, 0) + hLine(0, 8, 5) + vLine(0, 1, 4) + vLine(8, 1, 4) +
+            // Eingezeichneter Weg quer durch - erst der macht aus dem Rechteck eine Karte.
+            listOf(1 to 3, 2 to 2, 3 to 2, 4 to 3, 5 to 3, 6 to 2, 7 to 1)
+    )
+
+    /** Tretroller - das Fortbewegungsmittel, das er sich irgendwann zulegt. */
+    private val PROP_SCOOTER = Prop(
+        width = 11, height = 9,
+        art = hLine(3, 6, 0) +                                   // Lenker
+            vLine(5, 1, 5) +                                     // Lenkstange
+            hLine(1, 9, 6) +                                     // Trittbrett
+            listOf(1 to 7, 2 to 8, 3 to 7) +                     // Vorderrad
+            listOf(7 to 7, 8 to 8, 9 to 7)                       // Hinterrad
+    )
+
+    /** Futternapf - das erste Stueck dessen, der sich kuemmert. */
+    private val PROP_FEEDBOWL = Prop(
+        width = 5, height = 3,
+        art = listOf(1 to 0, 3 to 0) + listOf(0 to 1, 4 to 1) + hLine(0, 4, 2)
+    )
+
+    /** Koerbchen - noch leer, aber es steht bereit. */
+    private val PROP_PETBASKET = Prop(
+        width = 9, height = 4,
+        art = listOf(0 to 0, 8 to 0) + hLine(0, 8, 1) +
+            hLine(0, 8, 2) + hLine(1, 7, 3)
+    )
+
+    /**
+     * Das Haustier - zusammengerollt und schlafend.
+     *
+     * **Nicht dasselbe wie das Tier, das durchs Bild huscht** ([housePet]): Das kommt vorbei und
+     * geht wieder, es gehoert niemandem. Dieses hier liegt im Schlafzimmer und bleibt. Der
+     * Unterschied ist genau der zwischen "hier laeuft etwas herum" und "ich habe jemanden".
+     */
+    private val PROP_SLEEPING_PET = Prop(
+        width = 9, height = 4,
+        art = hLine(2, 6, 0) + hLine(1, 7, 1) + hLine(0, 8, 2) +
+            // Schwanz, der sich um den Koerper legt - daran erkennt man ein schlafendes Tier.
+            hLine(0, 8, 3) + listOf(8 to 1)
+    )
+
+    /** Zusammengelegte Decke - das erste Stueck des Stillen. */
+    private val PROP_BLANKET = Prop(
+        width = 7, height = 3,
+        art = hLine(0, 6, 0) + hLine(0, 6, 1) + hLine(1, 5, 2)
+    )
+
+    /** Windspiel - haengt und bewegt sich, wenn die Tuer geht. */
+    private val PROP_MOBILE = Prop(
+        width = 7, height = 6,
+        art = hLine(1, 5, 0) +                                   // Traeger
+            vLine(1, 1, 3) + vLine(3, 1, 4) + vLine(5, 1, 2) +   // Faeden
+            listOf(1 to 4, 3 to 5, 5 to 3)                       // Anhaenger
+    )
+
+    /** Ein Glas mit Licht darin - das letzte Stueck des Stillen. */
+    private val PROP_STARJAR = Prop(
+        width = 5, height = 6,
+        art = hLine(1, 3, 0) + hLine(0, 4, 1) +
+            vLine(0, 2, 4) + vLine(4, 2, 4) + hLine(0, 4, 5),
+        lightAt = 2 to 3
+    )
+
+    /** Werkzeugkiste - das erste Stueck des Machers. */
+    private val PROP_TOOLBOX = Prop(
+        width = 7, height = 5,
+        art = listOf(3 to 0) + hLine(2, 4, 1) +                  // Griff
+            hLine(0, 6, 2) + rect(0, 3, 6, 4) - listOf(3 to 3)
+    )
+
+    /** Eine Apparatur mit Zahnrad - man sieht ihr nicht an, wozu sie gut ist. Das ist der Punkt. */
+    private val PROP_CONTRAPTION = Prop(
+        width = 9, height = 9,
+        art = hLine(2, 6, 0) +                                   // Zahnrad oben
+            listOf(1 to 1, 7 to 1) + listOf(1 to 2, 7 to 2) + hLine(2, 6, 3) +
+            vLine(4, 4, 5) +                                     // Achse
+            hLine(0, 8, 6) + rect(1, 7, 7, 8)                    // Sockel
+    )
+
+    /**
+     * Ein selbstgebautes Geraet mit Leuchtanzeige - das letzte Stueck des Machers.
+     *
+     * Das einzige der zwoelf, das LEUCHTET (siehe [Prop.lightAt] und [PROP_STARJAR] fuer das
+     * zweite): Nachts weicht der Raum zurueck und das Licht bleibt stehen - wer so weit gekommen
+     * ist, hat etwas gebaut, das man auch im Dunkeln sieht.
+     */
+    private val PROP_SIGNALRIG = Prop(
+        width = 9, height = 11,
+        art = vLine(4, 0, 2) + listOf(3 to 0, 5 to 0) +          // Antenne
+            hLine(0, 8, 3) +                                     // Deckplatte
+            vLine(0, 4, 9) + vLine(8, 4, 9) +                    // Gehaeuse
+            hLine(0, 8, 10) +
+            hLine(1, 7, 6),                                      // Kante ueber der Anzeige
+        lightAt = 4 to 8
+    )
+
     /** Topfpflanze. */
     private val PLANT = Prop(
         width = 4, height = 5,
@@ -3226,11 +3460,12 @@ object PlayScene {
         dayPhase: PlayAmbientActivity.DayPhase,
         lampOn: Boolean,
         tvOn: Boolean,
-        species: AvatarSpecies
+        species: AvatarSpecies,
+        acquisitions: Set<Acquisition> = emptySet()
     ): List<SceneCell> {
         // Dieselbe Auswahl wie beim Zeichnen: Ein Fenster, das auf schmalem Bild weggefallen ist,
         // darf auch keinen Mond mehr bekommen.
-        val placements = fitting(placementsFor(place, species), widthCells, floorY)
+        val placements = fitting(placementsFor(place, species, acquisitions), widthCells, floorY)
         return when (place) {
             // Himmelskoerper im Fenster - wechselt mit der Tageszeit, damit die Kulisse
             // dieselbe Uhrzeit "kennt" wie der Tagesablauf des Avatars.

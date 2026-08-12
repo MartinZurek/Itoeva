@@ -3,6 +3,7 @@ package com.notime.glyphsim.ui
 import androidx.annotation.StringRes
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.R
+import com.notime.glyphsim.matrix.PlayScene
 
 /**
  * **Wohin sich das Wesen entwickelt** - abgeleitet daraus, womit der Nutzer es fuettert.
@@ -37,30 +38,59 @@ enum class PlayPath(
     @StringRes val labelRes: Int,
     /** Was der Pfad ueber den Nutzer und sein Wesen sagt. */
     @StringRes val descriptionRes: Int,
+    /** Wie er sein Hobby nennt - das, was aus der Neigung geworden ist. */
+    @StringRes val hobbyRes: Int,
     /** Die Themen, die auf diesen Pfad einzahlen. */
-    val topics: Set<AnimationType>
+    val topics: Set<AnimationType>,
+    /**
+     * **Was er sich auf den drei Stufen zulegt** (siehe [PlayScene.Acquisition]).
+     *
+     * Der Teil der Entwicklung, den man nicht lesen muss, sondern SIEHT: Auf Stufe eins steht
+     * etwas Neues in seiner Ecke, auf Stufe zwei im Wohnzimmer, auf Stufe drei im Schlafzimmer.
+     * Ein Zimmer, das nach zwei Monaten aussieht wie am ersten Tag, kann von diesen zwei Monaten
+     * nichts erzaehlen - und ein Fortschritt, der nur als Zahl vorkommt, ist keiner.
+     */
+    val acquisitions: List<PlayScene.Acquisition>
 ) {
     /** Unterwegs sein: Bewegung und Arbeit. */
     WANDERER(
         R.string.path_wanderer,
         R.string.path_wanderer_desc,
-        setOf(AnimationType.MOVE, AnimationType.WORK)
+        R.string.hobby_wanderer,
+        setOf(AnimationType.MOVE, AnimationType.WORK),
+        listOf(
+            PlayScene.Acquisition.BACKPACK,
+            PlayScene.Acquisition.WALLMAP,
+            PlayScene.Acquisition.SCOOTER
+        )
     ),
 
     /** Fuer sich und andere sorgen: Trinken, Koerper, Naehe. */
     KEEPER(
         R.string.path_keeper,
         R.string.path_keeper_desc,
-        setOf(AnimationType.DRINK, AnimationType.MEDICINE, AnimationType.LOVE)
+        R.string.hobby_keeper,
+        setOf(AnimationType.DRINK, AnimationType.MEDICINE, AnimationType.LOVE),
+        listOf(
+            PlayScene.Acquisition.FEEDBOWL,
+            PlayScene.Acquisition.PETBASKET,
+            PlayScene.Acquisition.SLEEPING_PET
+        )
     ),
 
     /** Zur Ruhe kommen: Stille, Lesen, Ausruhen, Schlaf. */
     DREAMER(
         R.string.path_dreamer,
         R.string.path_dreamer_desc,
+        R.string.hobby_dreamer,
         setOf(
             AnimationType.MINDFULNESS, AnimationType.BOOK,
             AnimationType.REST, AnimationType.SLEEP
+        ),
+        listOf(
+            PlayScene.Acquisition.BLANKET,
+            PlayScene.Acquisition.MOBILE,
+            PlayScene.Acquisition.STARJAR
         )
     ),
 
@@ -68,7 +98,13 @@ enum class PlayPath(
     MAKER(
         R.string.path_maker,
         R.string.path_maker_desc,
-        setOf(AnimationType.FOCUS, AnimationType.CREATIVITY, AnimationType.GENERAL)
+        R.string.hobby_maker,
+        setOf(AnimationType.FOCUS, AnimationType.CREATIVITY, AnimationType.GENERAL),
+        listOf(
+            PlayScene.Acquisition.TOOLBOX,
+            PlayScene.Acquisition.CONTRAPTION,
+            PlayScene.Acquisition.SIGNALRIG
+        )
     );
 
     companion object {
@@ -140,6 +176,16 @@ enum class PlayPath(
             level < STAGE_3_LEVEL -> STAGE_3_LEVEL
             else -> null
         }
+
+        /**
+         * Was bis zu dieser Stufe zusammengekommen ist - alles Bisherige, nicht nur das Neueste.
+         *
+         * Erworbenes verschwindet nicht wieder: Wer den Rucksack hat, hat ihn auch dann noch, wenn
+         * die Landkarte dazukommt. Genau daraus entsteht der Eindruck eines Zimmers, das sich
+         * fuellt.
+         */
+        fun acquisitionsUpTo(path: PlayPath?, stage: Int): Set<PlayScene.Acquisition> =
+            path?.acquisitions?.take(stage.coerceIn(0, 3))?.toSet().orEmpty()
 
         private const val STAGE_1_LEVEL = 2
         private const val STAGE_2_LEVEL = 5

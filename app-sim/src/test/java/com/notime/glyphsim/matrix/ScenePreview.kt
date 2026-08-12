@@ -51,12 +51,14 @@ object ScenePreview {
         tvOn: Boolean = true,
         width: Int = WIDTH,
         floorY: Int = FLOOR_Y,
-        showAvatar: Boolean = true
+        showAvatar: Boolean = true,
+        /** Was sich angesammelt hat - siehe PlayScene.Acquisition. */
+        acquisitions: Set<PlayScene.Acquisition> = emptySet()
     ): String {
         val grid = Array(floorY + 3) { CharArray(width) { ' ' } }
 
         for (cell in PlayScene.build(
-            place, phase, width, floorY, dayPhase, 1f, lampOn, tvOn, station, species
+            place, phase, width, floorY, dayPhase, 1f, lampOn, tvOn, station, species, acquisitions
         )) {
             if (cell.y in grid.indices && cell.x in 0 until width) {
                 grid[cell.y][cell.x] = ramp(cell.brightness)
