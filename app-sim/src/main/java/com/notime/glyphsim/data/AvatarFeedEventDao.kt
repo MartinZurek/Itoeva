@@ -29,6 +29,17 @@ data class FeedBreakdownRow(
 /** Beantwortete Erinnerungen je Erinnerungs-ID in einem Zeitraum. */
 data class ReminderFedCount(val reminderId: Long, val count: Int)
 
+/**
+ * Eine einzelne Ausloesung, wie sie in der Tabelle steht - siehe
+ * [AvatarFeedEventDao.occurrencesSince].
+ */
+data class OccurrenceRow(
+    val reminderId: Long,
+    val epochMillis: Long,
+    /** Wann reagiert wurde, oder `null`, wenn die Ausloesung uebergangen wurde. */
+    val fedAtMillis: Long?
+)
+
 /** Beantwortete Erinnerungen je Thema - fuer den Spielmodus, siehe
  *  [AvatarFeedEventDao.observePlayFedPerTypeSince]. */
 data class TypeFedCount(val animationType: AnimationType, val count: Int)
@@ -186,6 +197,23 @@ interface AvatarFeedEventDao {
             "AND fedAtMillis IS NOT NULL ORDER BY epochMillis"
     )
     suspend fun fedTimestampsSince(profileId: String, sinceEpochMillis: Long): List<Long>
+
+    /**
+     * **Jede Ausloesung mit dem, was daraus wurde** - die Grundlage dafuer, dass der Begleiter zu
+     * einer Erinnerung etwas raten kann (siehe PlayTalk.adviceFor).
+     *
+     * Alle uebrigen Abfragen hier verdichten bereits beim Lesen: Sie zaehlen, summieren, gruppieren.
+     * Fuer einen Rat genuegt das nicht - "das Tagesziel ist zu hoch" laesst sich nur sagen, wenn
+     * man sieht, an WELCHEN Tagen wie oft reagiert wurde, und "das Zeitfenster liegt falsch" nur,
+     * wenn man die Uhrzeiten hat. Die Auswertung selbst passiert deshalb bewusst in Kotlin und
+     * nicht in SQL: Dort laesst sie sich mit erfundenen Wochen pruefen, ohne eine Datenbank.
+     */
+    @Query(
+        "SELECT reminderId, epochMillis, fedAtMillis FROM avatar_feed_events " +
+            "WHERE profileId = :profileId AND epochMillis >= :sinceEpochMillis " +
+            "ORDER BY epochMillis"
+    )
+    suspend fun occurrencesSince(profileId: String, sinceEpochMillis: Long): List<OccurrenceRow>
 
     /**
      * Haelt fest, dass auf eine Ausloesung reagiert wurde. Bewusst ueber die Zeilen-ID statt

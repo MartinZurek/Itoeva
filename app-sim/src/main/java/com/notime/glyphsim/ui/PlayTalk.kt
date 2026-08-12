@@ -130,12 +130,161 @@ object PlayTalk {
          * davon - es haengt allein daran, wie lange ihr euch kennt, und laesst sich weder
          * verbessern noch verlieren.
          */
-        val chapter: CompanionChapter = CompanionChapter.ARRIVED
+        val chapter: CompanionChapter = CompanionChapter.ARRIVED,
+        /** Was ihm an den bestehenden Erinnerungen auffaellt - siehe [adviceFor]. */
+        val advice: List<Advice> = emptyList()
     ) {
         val goalsTotal: Int get() = plan.count { it.hasGoal }
         val goalsReached: Int get() = plan.count { it.reached }
         val hasPlan: Boolean get() = plan.isNotEmpty()
     }
+
+    /**
+     * **Ein Rat zu einer Erinnerung, die es schon gibt.**
+     *
+     * Bis hierher konnte der Begleiter genau eine Sache vorschlagen: eine NEUE Gewohnheit
+     * anzulegen (siehe [Offer.Add]). Über das, was bereits eingerichtet ist, sagte er nie etwas -
+     * dabei liegt genau dort das Wissen, das nur er hat: Er sieht jede Ausloesung und jede
+     * Reaktion. Wer sich ein Tagesziel von sechs gesetzt hat und seit einer Woche bei zwei landet,
+     * hat kein Willensproblem, sondern eine Einstellung, die nicht passt. Das zu sagen ist der
+     * Unterschied zwischen einem Begleiter und einem Zaehlwerk.
+     *
+     * **Jeder Rat kommt mit einer fertigen Aenderung.** Ein Hinweis, der den Nutzer anschliessend
+     * in eine Maske mit acht Feldern schickt, ist keine Hilfe - er ist eine Hausaufgabe. Deshalb
+     * traegt jeder Fall bereits die geaenderte Erinnerung bei sich; annehmen ist ein Tippen.
+     */
+    sealed interface Advice {
+        val reminder: GlyphReminder
+
+        /** Wie die Erinnerung nach dem Rat aussaehe - oder `null`, wenn es nichts zu aendern gibt. */
+        val changed: GlyphReminder?
+
+        /**
+         * Das Tagesziel wird seit Tagen nicht erreicht, aber es wird durchaus reagiert.
+         *
+         * [typical] ist die Zahl, die tatsaechlich zusammenkommt - der ehrliche Vorschlag ist
+         * genau die, nicht eine erfundene Mitte.
+         */
+        data class LowerGoal(
+            override val reminder: GlyphReminder,
+            val typical: Int
+        ) : Advice {
+            override val changed: GlyphReminder get() = reminder.copy(dailyGoal = typical)
+        }
+
+        /** Das Ziel wird jeden Tag uebertroffen - es darf ruhig hoeher. */
+        data class RaiseGoal(
+            override val reminder: GlyphReminder,
+            val typical: Int
+        ) : Advice {
+            override val changed: GlyphReminder get() = reminder.copy(dailyGoal = typical)
+        }
+
+        /**
+         * Reagiert wird nur in einem Teil des Zeitfensters - der Rest stupst ins Leere.
+         *
+         * [fromHour]/[toHour] sind die Stunden, in denen tatsaechlich etwas passiert.
+         */
+        data class ShiftWindow(
+            override val reminder: GlyphReminder,
+            val fromHour: Int,
+            val toHour: Int
+        ) : Advice {
+            override val changed: GlyphReminder get() = reminder.copy(
+                startMinuteOfDay = fromHour * 60,
+                endMinuteOfDay = ((toHour + 1) * 60).coerceAtMost(24 * 60 - 1)
+            )
+        }
+
+        /**
+         * Die Erinnerung wird durchweg uebergangen.
+         *
+         * **Der einzige Rat ohne fertige Aenderung**, und das mit Absicht: Ob etwas weg soll, ist
+         * keine Rechenfrage. Er sagt, was er sieht, und ueberlaesst den Schluss dem Nutzer.
+         */
+        data class Ignored(
+            override val reminder: GlyphReminder,
+            val triggered: Int
+        ) : Advice {
+            override val changed: GlyphReminder? get() = null
+        }
+    }
+
+    /** Eine Ausloesung, wie sie in die Auswertung eingeht. */
+    data class Occurrence(val reminderId: Long, val epochMillis: Long, val fed: Boolean)
+
+    /**
+     * Wieviele Ausloesungen es mindestens braucht, bevor ueberhaupt geraten wird.
+     *
+     * **Der wichtigste Wert hier.** Ein Begleiter, der nach zwei Tagen anfaengt, Einstellungen
+     * umzuwerfen, ist zudringlich - und er hat schlicht nicht genug gesehen, um recht zu haben.
+     */
+    private const val MIN_OCCURRENCES = 6
+
+    /** Und so viele TAGE mit Reaktionen, bevor ueber ein Tagesziel geredet wird. */
+    private const val MIN_ACTIVE_DAYS = 3
+
+    /**
+     * Was ihm an den bestehenden Erinnerungen auffaellt - hoechstens einer je Erinnerung, in der
+     * Reihenfolge ihrer Dringlichkeit.
+     *
+     * Rein rechnerisch und ohne Datenbank, damit sich die Faelle mit erfundenen Wochen pruefen
+     * lassen: Genau hier entscheidet sich, ob ein Rat hilfreich oder anmassend ist, und das laesst
+     * sich nicht am Geraet ausprobieren - man muesste eine Woche lang echte Daten erzeugen.
+     */
+    fun adviceFor(
+        plan: List<PlanEntry>,
+        occurrences: List<Occurrence>,
+        zone: ZoneId = ZoneId.systemDefault()
+    ): List<Advice> {
+        val byReminder = occurrences.groupBy { it.reminderId }
+        return plan.mapNotNull { entry ->
+            val own = byReminder[entry.reminder.id].orEmpty()
+            if (own.size < MIN_OCCURRENCES) return@mapNotNull null
+            val fed = own.filter { it.fed }
+
+            // Uebergangen: die dringendste Beobachtung, weil hier gar nichts wirkt.
+            if (fed.isEmpty()) return@mapNotNull Advice.Ignored(entry.reminder, own.size)
+
+            val perDay = fed.groupingBy {
+                Instant.ofEpochMilli(it.epochMillis).atZone(zone).toLocalDate()
+            }.eachCount()
+            val activeDays = perDay.size
+            val typical = perDay.values.sorted()[perDay.size / 2]
+
+            if (activeDays < MIN_ACTIVE_DAYS) return@mapNotNull null
+            val reachedDays = if (entry.hasGoal) perDay.count { it.value >= entry.goal } else 0
+
+            // **Das unerreichbare Ziel geht dem zu weiten Fenster vor.** Beides kann gleichzeitig
+            // zutreffen, und die Reihenfolge ist eine inhaltliche Entscheidung: Ein Fenster, das
+            // zur Haelfte ins Leere stupst, kostet ein paar unbeachtete Anstupser. Ein Ziel, das
+            // nie aufgeht, laesst jemanden jeden Abend an sich selbst zweifeln - obwohl nur eine
+            // Zahl zu hoch steht.
+            if (entry.hasGoal && reachedDays == 0 && typical in 1 until entry.goal) {
+                return@mapNotNull Advice.LowerGoal(entry.reminder, typical)
+            }
+
+            // Zeitfenster: Reagiert wird nur in einem Teil davon.
+            val hours = fed.map { Instant.ofEpochMilli(it.epochMillis).atZone(zone).hour }
+            val fromHour = hours.min()
+            val toHour = hours.max()
+            val windowHours = (entry.reminder.endMinuteOfDay - entry.reminder.startMinuteOfDay) / 60
+            val usedHours = toHour - fromHour + 1
+            if (windowHours - usedHours >= WINDOW_SLACK_HOURS) {
+                return@mapNotNull Advice.ShiftWindow(entry.reminder, fromHour, toHour)
+            }
+
+            // Jeden Tag uebertroffen - das Ziel darf hoeher.
+            if (entry.hasGoal && reachedDays == activeDays && typical > entry.goal) {
+                Advice.RaiseGoal(entry.reminder, typical)
+            } else {
+                null
+            }
+        }
+    }
+
+    /** Ab wieviel ungenutzter Fensterbreite (in Stunden) er das Fenster anspricht. */
+    private const val WINDOW_SLACK_HOURS = 4
 
     /**
      * Verteilt Zeitpunkte auf Kalendertage und verdichtet sie zur Wochen-Rueckschau.
@@ -234,7 +383,15 @@ object PlayTalk {
             ),
             missing = SUGGESTABLE.filterNot { it in covered },
             week = week,
-            game = game
+            game = game,
+            // Ueber die ganze Woche, nicht ueber heute: Ein Rat zu einer Einstellung braucht
+            // mehrere Tage, sonst raet er nach einem einzigen schlechten Vormittag.
+            advice = adviceFor(
+                plan = plan,
+                occurrences = db.avatarFeedEventDao()
+                    .occurrencesSince(companionProfileId, weekStart)
+                    .map { Occurrence(it.reminderId, it.epochMillis, it.fedAtMillis != null) }
+            )
         )
     }
 
@@ -286,6 +443,8 @@ object PlayTalk {
         data object ShowGame : Offer
         /** "Was passiert hier eigentlich?" - die Erklaerung des Spielmodus. */
         data object Explain : Offer
+        /** "Passt das so?" - was ihm an den bestehenden Erinnerungen auffaellt. */
+        data object ShowAdvice : Offer
     }
 
     /**
@@ -456,6 +615,10 @@ object PlayTalk {
 
         // Aufgefuellt wird nur, wenn noch Platz ist, und in dieser Reihenfolge: erst ein
         // Vorschlag (er bringt etwas Neues), dann der Plan, dann die Woche.
+        // **Ein Rat zu etwas Bestehendem geht einem Vorschlag fuer etwas Neues vor.** Wer sein
+        // Tagesziel seit einer Woche nicht erreicht, ist mit einer zusaetzlichen Gewohnheit nicht
+        // geholfen - das waere die Antwort "dann nimm dir noch mehr vor".
+        if (offers.size < MAX_OFFERS && knowledge.advice.isNotEmpty()) offers += Offer.ShowAdvice
         if (offers.size < MAX_OFFERS) {
             nextSuggestion(knowledge, rotation)?.let { offers += Offer.Add(it) }
         }

@@ -154,6 +154,8 @@ fun DockScreen(
      * eine Welt; er sollte nicht nebenbei anfangen, Wecker zu stellen.
      */
     onAddHabit: (AnimationType) -> Unit = {},
+    /** Eine bestehende Erinnerung so aendern, wie der Begleiter es vorschlaegt. */
+    onAdjustHabit: (com.notime.glyphcore.data.GlyphReminder) -> Unit = {},
     /** Wechselt zur Erinnerungsliste - aus dem Gespraech heraus verlinkt. */
     onOpenReminders: () -> Unit = {}
 ) {
@@ -2300,6 +2302,9 @@ fun DockScreen(
                         onOpenReminders = { talkOpen = false; onOpenReminders() },
                         // Bitten schliesst das Gespraech - man will ja sehen, was er tut.
                         onAsk = { topic -> talkOpen = false; requestedTopic = topic },
+                        // Ein Rat wird sofort wirksam und das Gespraech bleibt offen: Man will
+                        // sehen, dass es angekommen ist, und danach weiterlesen.
+                        onAdjust = { reminder -> onAdjustHabit(reminder); talkRefresh++ },
                         onDismiss = { talkOpen = false }
                     )
                 }

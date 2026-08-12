@@ -142,6 +142,119 @@ class PlayTalkTest {
         )
     }
 
+    // ---- Rat zu bestehenden Erinnerungen ----
+
+    private val adviceZone: ZoneId = ZoneId.of("Europe/Berlin")
+
+    private fun reminder(
+        id: Long = 1,
+        label: String = "Trinken",
+        goal: Int = 0,
+        startHour: Int = 8,
+        endHour: Int = 20
+    ) = GlyphReminder(
+        id = id, label = label, animationType = AnimationType.DRINK,
+        daysOfWeekMask = PlayTalk.EVERY_DAY_MASK,
+        startMinuteOfDay = startHour * 60, endMinuteOfDay = endHour * 60,
+        intervalMinutes = 60, dailyGoal = goal
+    )
+
+    /** [perDay] Reaktionen an [days] aufeinanderfolgenden Tagen, jeweils ab [hour]. */
+    private fun occurrences(
+        reminderId: Long = 1,
+        days: Int,
+        perDay: Int,
+        hour: Int = 10,
+        fed: Boolean = true,
+        triggeredPerDay: Int = perDay
+    ): List<PlayTalk.Occurrence> {
+        val start = LocalDate.of(2026, 3, 2)
+        return (0 until days).flatMap { day ->
+            (0 until triggeredPerDay).map { n ->
+                val at = start.plusDays(day.toLong())
+                    .atTime((hour + n).coerceAtMost(23), 0)
+                    .atZone(adviceZone).toInstant().toEpochMilli()
+                PlayTalk.Occurrence(reminderId, at, fed && n < perDay)
+            }
+        }
+    }
+
+    @Test
+    fun `ohne genug Beobachtung raet er gar nichts`() {
+        // **Der wichtigste Fall.** Ein Begleiter, der nach zwei Tagen anfaengt, Einstellungen
+        // umzuwerfen, ist zudringlich - und er hat schlicht nicht genug gesehen, um recht zu
+        // haben. Lieber schweigt er eine Woche laenger.
+        val plan = listOf(PlayTalk.PlanEntry(reminder(goal = 6), doneToday = 1))
+        val thin = occurrences(days = 2, perDay = 1)
+        assertTrue(
+            "Er raet nach zwei Tagen",
+            PlayTalk.adviceFor(plan, thin, adviceZone).isEmpty()
+        )
+    }
+
+    @Test
+    fun `ein Ziel, das nie aufgeht, spricht er an`() {
+        val plan = listOf(PlayTalk.PlanEntry(reminder(goal = 6), doneToday = 2))
+        // Sieben Tage, jeden Tag zwei von sechs - das Ziel ist nicht zu schaffen.
+        val advice = PlayTalk.adviceFor(plan, occurrences(days = 7, perDay = 2), adviceZone)
+        val lower = advice.filterIsInstance<PlayTalk.Advice.LowerGoal>().singleOrNull()
+        assertTrue("Kein Rat zum Tagesziel: $advice", lower != null)
+        assertEquals("Er schlaegt nicht die Zahl vor, die tatsaechlich zusammenkommt", 2, lower!!.typical)
+        assertEquals(
+            "Die fertige Aenderung traegt das neue Ziel nicht",
+            2,
+            lower.changed?.dailyGoal
+        )
+    }
+
+    @Test
+    fun `was durchweg uebergangen wird, sagt er - aendert es aber nicht selbst`() {
+        // Ob etwas weg soll, ist keine Rechenfrage. Er sagt, was er sieht, und ueberlaesst den
+        // Schluss dem Nutzer - deshalb traegt gerade DIESER Rat keine fertige Aenderung.
+        val plan = listOf(PlayTalk.PlanEntry(reminder(goal = 2), doneToday = 0))
+        val ignored = occurrences(days = 4, perDay = 0, triggeredPerDay = 3, fed = false)
+        val advice = PlayTalk.adviceFor(plan, ignored, adviceZone)
+        val one = advice.singleOrNull()
+        assertTrue("Kein Befund zu einer uebergangenen Erinnerung: $advice", one is PlayTalk.Advice.Ignored)
+        assertNull("Er aendert ungefragt etwas", one!!.changed)
+    }
+
+    @Test
+    fun `ein Fenster, das zur Haelfte ins Leere stupst, schlaegt er enger vor`() {
+        val plan = listOf(PlayTalk.PlanEntry(reminder(goal = 0, startHour = 8, endHour = 20), doneToday = 1))
+        // Reagiert wird nur zwischen 18 und 19 Uhr, das Fenster geht aber von 8 bis 20.
+        val evening = occurrences(days = 5, perDay = 2, hour = 18)
+        val advice = PlayTalk.adviceFor(plan, evening, adviceZone)
+        val shift = advice.filterIsInstance<PlayTalk.Advice.ShiftWindow>().singleOrNull()
+        assertTrue("Kein Rat zum Zeitfenster: $advice", shift != null)
+        assertEquals(18, shift!!.fromHour)
+        assertEquals(19, shift.toHour)
+        assertEquals("Das neue Fenster beginnt nicht bei der ersten Reaktion", 18 * 60, shift.changed?.startMinuteOfDay)
+        assertEquals("Das neue Fenster endet nicht nach der letzten", 20 * 60, shift.changed?.endMinuteOfDay)
+    }
+
+    @Test
+    fun `ein passendes Fenster laesst er in Ruhe`() {
+        // Die Gegenprobe: Wer sein Fenster ausnutzt, soll keinen Rat bekommen. Ein Begleiter, der
+        // auch dann etwas zu verbessern findet, wenn alles passt, ist nur noch Geraeusch.
+        val plan = listOf(PlayTalk.PlanEntry(reminder(goal = 0, startHour = 8, endHour = 12), doneToday = 1))
+        val spread = occurrences(days = 5, perDay = 3, hour = 8)
+        assertTrue(
+            "Er raet, obwohl das Fenster passt",
+            PlayTalk.adviceFor(plan, spread, adviceZone).isEmpty()
+        )
+    }
+
+    @Test
+    fun `ein uebertroffenes Ziel darf hoeher`() {
+        val plan = listOf(PlayTalk.PlanEntry(reminder(goal = 2, startHour = 8, endHour = 14), doneToday = 4))
+        val plenty = occurrences(days = 5, perDay = 4, hour = 8)
+        val raise = PlayTalk.adviceFor(plan, plenty, adviceZone)
+            .filterIsInstance<PlayTalk.Advice.RaiseGoal>().singleOrNull()
+        assertTrue("Kein Rat zum Anheben", raise != null)
+        assertEquals(4, raise!!.typical)
+    }
+
     // ---- Was er von sich aus erzaehlt ----
 
     private fun mood(

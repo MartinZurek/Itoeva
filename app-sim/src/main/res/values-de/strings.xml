@@ -527,4 +527,19 @@
     <string name="remark_earned">Ich war arbeiten. %1$d Münzen sind zusammengekommen.</string>
     <string name="remark_stocked">Der Vorrat ist gut gefüllt. Es kann nichts passieren.</string>
     <string name="remark_quiet">Viel ist gerade nicht los. Auch schön.</string>
+
+    <!-- Rat zu bestehenden Erinnerungen - siehe PlayTalk.Advice. -->
+    <string name="talk_q_advice">Passt das so, wie du es eingestellt hast?</string>
+    <string name="talk_a_advice_intro">Mir ist etwas aufgefallen:</string>
+    <string name="talk_a_advice_none">An deinen Erinnerungen finde ich gerade nichts auszusetzen.</string>
+    <string name="talk_advice_lower">„%1$s“: Du hast dir %2$d am Tag vorgenommen, es werden meist %3$d.</string>
+    <string name="talk_advice_lower_why">Ein Ziel, das nie aufgeht, sagt mehr über die Einstellung als über dich.</string>
+    <string name="talk_advice_raise">„%1$s“: Du schaffst regelmäßig %2$d am Tag – mehr, als du dir vorgenommen hast.</string>
+    <string name="talk_advice_raise_why">Wenn du magst, setze ich das Ziel auf das, was du ohnehin tust.</string>
+    <string name="talk_advice_window">„%1$s“: Du reagierst fast nur zwischen %2$d und %3$d Uhr.</string>
+    <string name="talk_advice_window_why">Den Rest der Zeit stupse ich ins Leere. Ich kann das Fenster darauf legen.</string>
+    <string name="talk_advice_ignored">„%1$s“: %2$d Mal aufgetaucht, kein einziges Mal beantwortet.</string>
+    <string name="talk_advice_ignored_why">Vielleicht brauchst du sie nicht mehr. Ändern musst du das selbst – ich will dir nichts wegnehmen.</string>
+    <string name="talk_advice_accept">Ja, mach das</string>
+    <string name="talk_advice_taken">Erledigt.</string>
 </resources>

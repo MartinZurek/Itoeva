@@ -542,4 +542,19 @@
     <string name="remark_earned">I did some work. %1$d coins so far.</string>
     <string name="remark_stocked">The larder is well filled. Nothing can go wrong.</string>
     <string name="remark_quiet">Not much going on right now. That is fine too.</string>
+
+    <!-- Rat zu bestehenden Erinnerungen - siehe PlayTalk.Advice. -->
+    <string name="talk_q_advice">Are your settings still right?</string>
+    <string name="talk_a_advice_intro">Something I noticed:</string>
+    <string name="talk_a_advice_none">I cannot find anything wrong with your reminders right now.</string>
+    <string name="talk_advice_lower">"%1$s": you set %2$d a day, it usually ends up being %3$d.</string>
+    <string name="talk_advice_lower_why">A goal that never works out says more about the setting than about you.</string>
+    <string name="talk_advice_raise">"%1$s": you regularly manage %2$d a day - more than you set yourself.</string>
+    <string name="talk_advice_raise_why">If you like, I will set the goal to what you already do.</string>
+    <string name="talk_advice_window">"%1$s": you almost only respond between %2$d and %3$d.</string>
+    <string name="talk_advice_window_why">The rest of the time I nudge into the void. I can move the window there.</string>
+    <string name="talk_advice_ignored">"%1$s": showed up %2$d times, answered not once.</string>
+    <string name="talk_advice_ignored_why">Maybe you do not need it any more. That change is yours to make - I do not want to take anything away.</string>
+    <string name="talk_advice_accept">Yes, do that</string>
+    <string name="talk_advice_taken">Done.</string>
 </resources>

@@ -85,6 +85,14 @@ fun PlayTalkPanel(
      * Startbildschirm gaebe es nichts zu sehen, und die Bitte verpuffte.
      */
     onAsk: (AnimationType) -> Unit,
+    /**
+     * Eine bestehende Erinnerung so aendern, wie er es vorschlaegt (siehe [PlayTalk.Advice]).
+     *
+     * Bewusst dieselbe Bauart wie [onAddReminder]: Der Rat traegt die fertige Erinnerung schon bei
+     * sich, das Feld hier fuehrt sie nur nach draussen. Ein Hinweis, der den Nutzer anschliessend
+     * in eine Maske schickt, waere keine Hilfe, sondern eine Hausaufgabe.
+     */
+    onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit = {},
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -148,7 +156,8 @@ fun PlayTalkPanel(
                         onAddReminder(topic)
                     },
                     onOpenReminders = onOpenReminders,
-                    onAsk = onAsk
+                    onAsk = onAsk,
+                    onAdjust = onAdjust
                 )
                 QuestionLine(stringResource(R.string.talk_back)) { asked = null }
             }
@@ -178,6 +187,7 @@ private enum class Question(val labelRes: Int) {
      * geben.
      */
     HERE(R.string.talk_q_here),
+    ADVICE(R.string.talk_q_advice),
     /** Stufe, Erfahrung, Muenzen, Vorrat. */
     GAME(R.string.talk_q_game)
 }
@@ -319,6 +329,8 @@ private fun OfferLine(
             QuestionLine(stringResource(R.string.talk_q_here)) { onShow(Question.HERE) }
         PlayTalk.Offer.ShowGame ->
             QuestionLine(stringResource(R.string.talk_q_game)) { onShow(Question.GAME) }
+        PlayTalk.Offer.ShowAdvice ->
+            QuestionLine(stringResource(R.string.talk_q_advice)) { onShow(Question.ADVICE) }
     }
 }
 
@@ -354,6 +366,62 @@ private fun RemarkLine(remark: PlayTalk.Remark, mood: PlayTalk.Mood) {
     Text(text, color = INK_DIM, size = 13)
 }
 
+/**
+ * Ein Befund zu einer bestehenden Erinnerung, darunter die fertige Aenderung zum Annehmen.
+ *
+ * Der Befund steht in normaler Helligkeit, die Begruendung darunter gedimmt - dieselbe Staffelung
+ * wie bei der Lage oben: erst was ist, dann warum er es sagt.
+ */
+@Composable
+private fun AdviceLine(
+    advice: PlayTalk.Advice,
+    onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit
+) {
+    var taken by remember(advice) { mutableStateOf(false) }
+    val label = advice.reminder.label
+    when (advice) {
+        is PlayTalk.Advice.LowerGoal -> {
+            Text(
+                stringResource(R.string.talk_advice_lower, label, advice.reminder.dailyGoal, advice.typical),
+                color = INK, size = 15
+            )
+            Text(stringResource(R.string.talk_advice_lower_why), color = INK_DIM, size = 13)
+        }
+        is PlayTalk.Advice.RaiseGoal -> {
+            Text(
+                stringResource(R.string.talk_advice_raise, label, advice.typical),
+                color = INK, size = 15
+            )
+            Text(stringResource(R.string.talk_advice_raise_why), color = INK_DIM, size = 13)
+        }
+        is PlayTalk.Advice.ShiftWindow -> {
+            Text(
+                stringResource(R.string.talk_advice_window, label, advice.fromHour, advice.toHour + 1),
+                color = INK, size = 15
+            )
+            Text(stringResource(R.string.talk_advice_window_why), color = INK_DIM, size = 13)
+        }
+        is PlayTalk.Advice.Ignored -> {
+            Text(
+                stringResource(R.string.talk_advice_ignored, label, advice.triggered),
+                color = INK, size = 15
+            )
+            Text(stringResource(R.string.talk_advice_ignored_why), color = INK_DIM, size = 13)
+        }
+    }
+    val change = advice.changed
+    if (change != null) {
+        if (taken) {
+            Text(stringResource(R.string.talk_advice_taken), color = INK_DIM, size = 13)
+        } else {
+            QuestionLine(stringResource(R.string.talk_advice_accept)) {
+                taken = true
+                onAdjust(change)
+            }
+        }
+    }
+}
+
 /** Wie er den Ort nennt, an dem er gerade ist. */
 private fun placeTextFor(place: PlayScene.Place): Int = when (place) {
     PlayScene.Place.BEDROOM -> R.string.talk_place_bedroom
@@ -379,7 +447,8 @@ private fun Answer(
     justAdded: AnimationType?,
     onAddReminder: (AnimationType) -> Unit,
     onOpenReminders: () -> Unit,
-    onAsk: (AnimationType) -> Unit
+    onAsk: (AnimationType) -> Unit,
+    onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit
 ) {
     when (question) {
         Question.HERE -> {
@@ -402,6 +471,18 @@ private fun Answer(
                 }
             }
             Text(stringResource(R.string.talk_a_here), color = INK, size = 15)
+        }
+
+        Question.ADVICE -> {
+            if (knowledge.advice.isEmpty()) {
+                Text(stringResource(R.string.talk_a_advice_none), color = INK, size = 15)
+            } else {
+                Text(stringResource(R.string.talk_a_advice_intro), color = INK, size = 15)
+                for (advice in knowledge.advice) {
+                    AdviceLine(advice, onAdjust)
+                }
+            }
+            QuestionLine(stringResource(R.string.talk_open_reminders)) { onOpenReminders() }
         }
 
         Question.GAME -> {

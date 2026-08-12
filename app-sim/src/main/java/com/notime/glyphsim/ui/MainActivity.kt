@@ -199,6 +199,9 @@ class MainActivity : ComponentActivity() {
                                     dailyGoal = preset.dailyGoal
                                 )
                             },
+                            onAdjustHabit = { reminder ->
+                                reminderViewModel.updateReminder(reminder)
+                            },
                             onOpenReminders = {
                                 setDockMode(false)
                                 screen = Screen.REMINDERS
