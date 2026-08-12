@@ -70,6 +70,7 @@ import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
+import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayWeather
@@ -920,6 +921,9 @@ fun DockScreen(
 
             visitor = VisitorState(guestSpecies, Offset(startX, groundY), host.sizeDp, walk.frames.first())
             lastVisitor = guestSpecies
+            // Der Gast gruesst mit SEINEM Motiv, nicht mit dem des Bewohners - daran hoert man,
+            // dass jemand anderes da ist.
+            PlaySound.play(context, guestSpecies, PlayChime.Event.VISIT, scope)
 
             /** Laesst den Gast von seiner jetzigen Stelle nach [targetX] gehen. */
             suspend fun walkGuestTo(targetX: Float) = coroutineScope {
@@ -1550,6 +1554,9 @@ fun DockScreen(
             scope.launch(Dispatchers.IO) {
                 AvatarFeeding.logFeedEvent(context, current.occurrenceId)
             }
+            // Sein Motiv als Rueckmeldung - nur, wenn Ton eingeschaltet ist, nicht nachts und
+            // nicht ueber laufender Musik (siehe PlaySound).
+            PlaySound.play(context, current.species, PlayChime.Event.FEED, scope)
             scope.launch {
                 try {
                     AvatarFeeding.playReaction(
@@ -2013,6 +2020,9 @@ fun DockScreen(
                 // Erst nach einem Moment bestaetigen, sonst waere der Glueckwunsch im selben
                 // Frame wieder verschwunden, in dem er erscheint.
                 LaunchedEffect(playState.level) {
+                    avatar?.species?.let { species ->
+                        PlaySound.play(context, species, PlayChime.Event.LEVEL_UP, scope)
+                    }
                     delay(LEVEL_UP_MESSAGE_MS)
                     playViewModel.acknowledgeLevelUp()
                 }

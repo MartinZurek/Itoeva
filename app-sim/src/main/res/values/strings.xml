@@ -604,4 +604,7 @@
     <string name="talk_a_profile_purpose">And what for: %1$s.</string>
     <string name="talk_a_profile_weekdays">At weekends I leave you alone.</string>
     <string name="talk_a_profile_forget">Forget that again</string>
+
+    <string name="settings_sound">Sound</string>
+    <string name="settings_sound_hint">A short motif when you answer a reminder, on a level-up and when someone visits. Every creature sounds different. Silent at night, and never over music that is playing.</string>
 </resources>

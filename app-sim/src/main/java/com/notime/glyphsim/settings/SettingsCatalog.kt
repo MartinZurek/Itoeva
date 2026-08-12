@@ -126,6 +126,16 @@ object SettingsCatalog {
     /** Ob die Stimmung des Avatars auf sein Verhalten wirkt. */
     val MoodEnabled = Setting.Bool("mood_prefs", "mood_enabled", default = true)
 
+    /**
+     * Ob das Wesen zu hoeren ist (siehe [com.notime.glyphsim.ui.PlaySound]).
+     *
+     * **Standardmaessig AUS, und das ist die wichtigste Entscheidung an diesem Eintrag.** Diese
+     * App war bis dahin vollstaendig stumm; eine, die nach einem Update ungefragt Geraeusche
+     * macht, hat ihr Vertrauen verspielt, bevor der erste Ton zu Ende ist. Wer ihn will, schaltet
+     * ihn ein.
+     */
+    val SoundEnabled = Setting.Bool("sound_prefs", "sound_enabled", default = false)
+
     /** Profil-Id im gemeinsamen Kern - dort neutral, hier ist es der Avatar. */
     val ActiveProfileId = Setting.OptionalString("reminder_profile_prefs", "active_profile_id")
 
@@ -178,7 +188,7 @@ object SettingsCatalog {
         ClockStyle, Language, AllowRotation,
         DockBrightnessOverride, DockBrightness,
         DockSizeDp, DockOffsetFractionX, DockOffsetFractionY,
-        AvatarSpecies, MoodEnabled, ActiveProfileId,
+        AvatarSpecies, MoodEnabled, SoundEnabled, ActiveProfileId,
         ClipRecordingEnabled,
         Greeted, TappedAvatar, TappedClock, PlayModeIntroSeen,
         PlayCoins, PlayPantryLevel, PlayForcedWeather, PlayTimeLapseSpeed

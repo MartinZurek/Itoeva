@@ -907,6 +907,7 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     var selectedLanguage by remember { mutableStateOf(LanguagePrefs.get(context)) }
     var moodEnabled by remember { mutableStateOf(MoodPrefs.isEnabled(context)) }
+    var soundEnabled by remember { mutableStateOf(PlaySound.isEnabled(context)) }
     var lapseSpeed by remember { mutableStateOf(PlayTimeLapse.speed()) }
     var forcedWeather by remember { mutableStateOf(PlayWeather.forcedOrNull()) }
     // Aufnahme laeuft / fertige Datei / Fehlschlag - drei Zustaende, mehr braucht es nicht.
@@ -1025,6 +1026,29 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                             onCheckedChange = { enabled ->
                                 moodEnabled = enabled
                                 MoodPrefs.setEnabled(context, enabled)
+                            }
+                        )
+                    }
+                    // **Ton - standardmaessig aus.** Diese App war bis dahin vollstaendig stumm;
+                    // wer nichts eingeschaltet hat, hoert weiterhin nichts (siehe PlaySound).
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.settings_sound))
+                            Text(
+                                stringResource(R.string.settings_sound_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = soundEnabled,
+                            onCheckedChange = { enabled ->
+                                soundEnabled = enabled
+                                PlaySound.setEnabled(context, enabled)
                             }
                         )
                     }

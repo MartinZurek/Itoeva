@@ -94,6 +94,11 @@ class SettingsCatalogTest {
         // Produktentscheidung ist und keine technische: die Stimmung ist die zentrale
         // Rueckmeldung der App, und ohne Tagesziel bleibt sie ohnehin NEUTRAL (siehe MoodPrefs).
         assertEquals(true, SettingsCatalog.MoodEnabled.default)
+        pruefe(SettingsCatalog.SoundEnabled, "sound_prefs", "sound_enabled")
+        // **Und dieser hier ausdruecklich AUS.** Ebenfalls eine Produktentscheidung: Diese App
+        // war bis dahin vollstaendig stumm. Eine, die nach einem Update ungefragt Geraeusche
+        // macht, hat ihr Vertrauen verspielt, bevor der erste Ton zu Ende ist.
+        assertEquals(false, SettingsCatalog.SoundEnabled.default)
     }
 
     /**
@@ -165,7 +170,8 @@ class SettingsCatalogTest {
             SettingsCatalog.ClockStyle, SettingsCatalog.Language, SettingsCatalog.AllowRotation,
             SettingsCatalog.DockBrightnessOverride, SettingsCatalog.DockBrightness,
             SettingsCatalog.DockSizeDp, SettingsCatalog.DockOffsetFractionX, SettingsCatalog.DockOffsetFractionY,
-            SettingsCatalog.AvatarSpecies, SettingsCatalog.MoodEnabled, SettingsCatalog.ActiveProfileId,
+            SettingsCatalog.AvatarSpecies, SettingsCatalog.MoodEnabled, SettingsCatalog.SoundEnabled,
+            SettingsCatalog.ActiveProfileId,
             SettingsCatalog.ClipRecordingEnabled,
             SettingsCatalog.Greeted,
             SettingsCatalog.TappedAvatar, SettingsCatalog.TappedClock, SettingsCatalog.PlayModeIntroSeen,
