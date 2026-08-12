@@ -401,7 +401,21 @@ fun DockScreen(
         // ein Nachladen, nachdem gerade eine Erinnerung angelegt wurde.
         var talkOpen by remember { mutableStateOf(false) }
         var talkRefresh by remember { mutableStateOf(0) }
+        /** Zaehlt beantwortete/weggewischte Fragen - damit die naechste Frage sofort nachrueckt. */
+        var askTick by remember { mutableStateOf(0) }
         var talkKnowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
+        /** Die Frage, die er im Gespraech stellt - siehe PlayTalk.pendingAsk. */
+        val pendingAsk = remember(talkKnowledge, askTick) {
+            talkKnowledge?.let { known ->
+                PlayTalk.pendingAsk(
+                    knowledge = known,
+                    alreadyAsked = PlayTalk.Ask.entries
+                        .filter { PlayUserProfile.wasAsked(context, it) }
+                        .toSet()
+                )
+            }
+        }
+
         // Worum er gerade gebeten wurde - siehe die Regungs-Schleife weiter unten.
         var requestedTopic by remember { mutableStateOf<AnimationType?>(null) }
         var clipSeconds by remember { mutableIntStateOf(0) }
@@ -1689,8 +1703,13 @@ fun DockScreen(
                             // aus tut. "Offen" heisst dabei: von DIESEM Wesen heute noch nicht
                             // erlebt - deshalb geht hier das anwesende Wesen hinein, waehrend
                             // PlayHabitSignal die Ziele selbst beim Routinen-Besitzer holt.
+                            // **Und was der Nutzer selbst gesagt hat, zaehlt mit.** Wer auf die
+                            // Frage "worauf soll ich achten" geantwortet hat, sieht ihn danach
+                            // oefter genau das tun - das ist der ganze Unterschied zwischen einer
+                            // Antwort und einem Eintrag in einer Datei (siehe PlayUserProfile).
                             val boostedTopics =
-                                PlayHabitSignal.underfulfilledTopics(context, PresentCompanion.profileId(context))
+                                PlayHabitSignal.underfulfilledTopics(context, PresentCompanion.profileId(context)) +
+                                    setOfNotNull(PlayUserProfile.focusTopic(context))
                             // Vorrang vor allem anderen: Ist nichts mehr da UND kein Geld fuer
                             // einen Einkauf, muss gearbeitet werden. Das ist die Stelle, an der
                             // die Welt den Zufall ueberstimmt - und der Grund, warum man ihm beim
@@ -2292,6 +2311,7 @@ fun DockScreen(
                                 phase = PlayAmbientActivity.currentDayPhase(),
                                 weather = PlayWeather.current(),
                                 lastVisitor = lastVisitor,
+                                focusTopic = PlayUserProfile.focusTopic(context),
                                 chapter = talkKnowledge?.chapter ?: CompanionChapter.ARRIVED,
                                 game = talkKnowledge?.game
                             )
@@ -2305,6 +2325,23 @@ fun DockScreen(
                         // Ein Rat wird sofort wirksam und das Gespraech bleibt offen: Man will
                         // sehen, dass es angekommen ist, und danach weiterlesen.
                         onAdjust = { reminder -> onAdjustHabit(reminder); talkRefresh++ },
+                        // **Seine Frage an den Nutzer** - hoechstens eine je Gespraech, und nur,
+                        // wenn er ueberhaupt schon etwas ueber ihn weiss (siehe PlayTalk.pendingAsk).
+                        ask = pendingAsk,
+                        onAnswerFocus = { topic ->
+                            PlayUserProfile.setFocusTopic(context, topic)
+                            askTick++
+                            talkRefresh++
+                        },
+                        onAnswerTime = { phase ->
+                            PlayUserProfile.setBusyPhase(context, phase)
+                            askTick++
+                            talkRefresh++
+                        },
+                        onSkipAsk = {
+                            pendingAsk?.let { PlayUserProfile.markAsked(context, it) }
+                            askTick++
+                        },
                         onDismiss = { talkOpen = false }
                     )
                 }

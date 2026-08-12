@@ -142,6 +142,65 @@ class PlayTalkTest {
         )
     }
 
+    // ---- Was er den Nutzer fragt ----
+
+    @Test
+    fun `er fragt erst, wenn er ueberhaupt etwas ueber dich weiss`() {
+        // Beim allerersten Oeffnen kaeme "worauf soll ich achten" von jemandem, der einen noch
+        // gar nicht kennt - das liest sich wie ein Anmeldeformular, nicht wie eine Frage.
+        val fresh = known()
+        assertNull(PlayTalk.pendingAsk(fresh, emptySet()))
+
+        val settled = known(plan = somePlan())
+        assertEquals(PlayTalk.Ask.FOCUS, PlayTalk.pendingAsk(settled, emptySet()))
+    }
+
+    @Test
+    fun `eine gestellte Frage kommt nicht wieder`() {
+        // Gemerkt wird das FRAGEN, nicht nur das Antworten: Wer eine Frage weggewischt hat, soll
+        // sie nicht beim naechsten Oeffnen wieder vorfinden - das waere Draengeln.
+        val settled = known(plan = somePlan())
+        assertEquals(
+            PlayTalk.Ask.TIME,
+            PlayTalk.pendingAsk(settled, setOf(PlayTalk.Ask.FOCUS))
+        )
+        assertNull(PlayTalk.pendingAsk(settled, PlayTalk.Ask.entries.toSet()))
+    }
+
+    @Test
+    fun `die genannte Tageszeit verschiebt das Zeitfenster wirklich`() {
+        // Die Bedingung, unter der eine Frage ueberhaupt gestellt werden darf: Die Antwort muss
+        // sich auswirken. Sonst ist es eine Umfrage.
+        for (topic in PlayTalk.SUGGESTABLE) {
+            val evening = PlayTalk.presetFor(topic, PlayAmbientActivity.DayPhase.EVENING)
+            assertEquals("$topic beginnt nicht am Abend", 17 * 60, evening.startMinuteOfDay)
+            assertEquals("$topic endet nicht am Abend", 22 * 60, evening.endMinuteOfDay)
+            assertEquals(
+                "$topic: ohne Angabe darf sich nichts aendern",
+                PlayTalk.presetFor(topic),
+                PlayTalk.presetFor(topic, null)
+            )
+        }
+    }
+
+    @Test
+    fun `auch im engeren Fenster bleibt das Tagesziel erreichbar`() {
+        // **Der Fehler, den diese Verschiebung fast erzeugt haette.** Ein Fenster von fuenf
+        // Stunden mit einem Abstand von neunzig Minuten ergibt vier Anstupser - ein Tagesziel von
+        // sechs waere damit unmoeglich geworden, und zwar ausgerechnet, WEIL der Nutzer
+        // geantwortet hat.
+        for (phase in PlayAmbientActivity.DayPhase.entries) {
+            for (topic in PlayTalk.SUGGESTABLE) {
+                val preset = PlayTalk.presetFor(topic, phase)
+                val slots = (preset.endMinuteOfDay - preset.startMinuteOfDay) / preset.intervalMinutes + 1
+                assertTrue(
+                    "$topic in $phase: ${preset.dailyGoal} am Tag, aber nur $slots Anstupser",
+                    preset.dailyGoal <= slots
+                )
+            }
+        }
+    }
+
     // ---- Die laengere Rueckschau ----
 
     @Test
@@ -325,7 +384,7 @@ class PlayTalkTest {
         chapter: CompanionChapter =
             CompanionChapter.ARRIVED,
         game: PlayTalk.Game? = null
-    ) = PlayTalk.Mood(doing, phase, weather, lastVisitor, chapter, game)
+    ) = PlayTalk.Mood(doing, phase, weather, lastVisitor, focusTopic = null, chapter = chapter, game = game)
 
     @Test
     fun `er hat immer etwas zu erzaehlen`() {

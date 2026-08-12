@@ -548,4 +548,13 @@
     <string name="talk_a_week_better">Letzte Woche waren es %1$d – diese steht besser.</string>
     <string name="talk_a_week_prev">Letzte Woche waren es %1$d.</string>
     <string name="talk_a_month">In den letzten %3$d Tagen: %1$d Mal, an %2$d Tagen.</string>
+
+    <!-- Seine Fragen an den Nutzer - siehe PlayTalk.Ask. -->
+    <string name="talk_ask_focus">Darf ich dich etwas fragen? Worauf soll ich besonders achten?</string>
+    <string name="talk_ask_time">Und wann hast du am ehesten Zeit für so etwas?</string>
+    <string name="talk_ask_time_morning">Morgens</string>
+    <string name="talk_ask_time_midday">Tagsüber</string>
+    <string name="talk_ask_time_evening">Abends</string>
+    <string name="talk_ask_skip">Lieber nicht</string>
+    <string name="talk_focus_noted">Du wolltest, dass ich auf %1$s achte. Mache ich.</string>
 </resources>

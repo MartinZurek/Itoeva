@@ -212,6 +212,40 @@ object PlayTalk {
         }
     }
 
+    /**
+     * **Was ER dich fragt** - der Teil des Gespraechs, in dem die Auskunft die Richtung wechselt.
+     *
+     * Bis hierher lief alles in eine Richtung: Er berichtete, der Nutzer las. Ein Gegenueber ist
+     * aber jemand, der auch etwas wissen will. Zwei Fragen, und beide muessen sich AUSWIRKEN -
+     * eine Antwort, die folgenlos in einer Datei liegt, ist eine Umfrage, und eine Umfrage ist das
+     * Gegenteil eines Gespraechs (siehe [PlayUserProfile] fuer die Wirkung).
+     *
+     * Bewusst zwei und nicht zehn: Jede weitere waere eine Frage, deren Antwort nichts mehr
+     * aendert - und damit genau die Sorte Fragebogen, die man wegtippt.
+     */
+    enum class Ask {
+        /** "Worauf soll ich besonders achten?" - waehlbar sind Themen, die er sichtbar tut. */
+        FOCUS,
+
+        /** "Wann hast du am ehesten Zeit?" - verschiebt die Zeitfenster neuer Erinnerungen. */
+        TIME
+    }
+
+    /**
+     * Die naechste Frage, die er stellen wuerde - `null`, wenn er alles gefragt hat.
+     *
+     * **Er fragt erst, wenn er etwas ueber dich weiss.** Beim allerersten Oeffnen kaeme die Frage
+     * "worauf soll ich achten" von jemandem, der einen noch gar nicht kennt - das liest sich wie
+     * ein Anmeldeformular. Deshalb erst, wenn ein Plan da ist und die Woche etwas hergibt.
+     */
+    fun pendingAsk(
+        knowledge: Knowledge,
+        alreadyAsked: Set<Ask>
+    ): Ask? {
+        if (!knowledge.hasPlan) return null
+        return Ask.entries.firstOrNull { it !in alreadyAsked }
+    }
+
     /** Eine Ausloesung, wie sie in die Auswertung eingeht. */
     data class Occurrence(val reminderId: Long, val epochMillis: Long, val fed: Boolean)
 
@@ -579,6 +613,15 @@ object PlayTalk {
         STOCKED,
         /** Wie lange man sich schon kennt. */
         TOGETHER,
+        /**
+         * Woran er sich haelt, weil der Nutzer es ihm gesagt hat (siehe [PlayUserProfile]).
+         *
+         * **Der Satz, der aus einer Antwort ein Gespraech macht.** Eine Frage zu stellen und die
+         * Antwort danach nie wieder zu erwaehnen, waere schlimmer als gar nicht zu fragen: Es
+         * saehe aus, als habe er zugehoert und es sofort vergessen.
+         */
+        FOCUS,
+
         /** Wenn sonst gerade nichts ist. */
         QUIET
     }
@@ -593,6 +636,8 @@ object PlayTalk {
         val weather: PlayWeather,
         /** Wer zuletzt vorbeikam, oder `null`, wenn heute noch niemand da war. */
         val lastVisitor: AvatarSpecies?,
+        /** Worauf er achten soll, weil der Nutzer es gesagt hat - siehe [PlayUserProfile]. */
+        val focusTopic: AnimationType? = null,
         val chapter: CompanionChapter,
         val game: Game?
     )
@@ -624,6 +669,7 @@ object PlayTalk {
             if (game.coins >= PlayWallet.GROCERY_COST) add(Remark.EARNED)
             if (game.pantry >= PANTRY_COMFORTABLE) add(Remark.STOCKED)
         }
+        mood.focusTopic?.let { add(Remark.FOCUS) }
         if (mood.chapter != CompanionChapter.ARRIVED) add(Remark.TOGETHER)
         add(Remark.QUIET)
     }
@@ -744,6 +790,38 @@ object PlayTalk {
         val intervalMinutes: Int,
         val dailyGoal: Int
     )
+
+    /**
+     * [busyPhase] verschiebt das Zeitfenster dorthin, wo der Nutzer eigenen Angaben nach Zeit hat
+     * (siehe [PlayUserProfile]) - der sichtbare Nutzen davon, dass er gefragt hat.
+     *
+     * Verschoben wird nur das FENSTER, nicht das Ziel und nicht der Abstand: Wer abends Zeit hat,
+     * braucht kein anderes Pensum, sondern eine andere Uhrzeit.
+     */
+    fun presetFor(
+        topic: AnimationType,
+        busyPhase: PlayAmbientActivity.DayPhase?
+    ): Preset {
+        val base = presetFor(topic)
+        val window = windowFor(busyPhase) ?: return base
+        val (start, end) = window
+        // Der Abstand wird notfalls gestaucht, damit das Tagesziel im engeren Fenster erreichbar
+        // bleibt - sonst waere aus einer Auskunft ein unmoegliches Ziel geworden (siehe
+        // PlayTalkTest: "das Tagesziel ist im Zeitfenster ueberhaupt erreichbar").
+        val slots = base.dailyGoal.coerceAtLeast(1) * 4 / 3 + 1
+        val interval = ((end - start) / slots).coerceIn(15, base.intervalMinutes)
+        return base.copy(startMinuteOfDay = start, endMinuteOfDay = end, intervalMinutes = interval)
+    }
+
+    /** Das Zeitfenster zu einer Tageszeit - `null` heisst: keine Angabe, alles bleibt wie es ist. */
+    private fun windowFor(phase: PlayAmbientActivity.DayPhase?): Pair<Int, Int>? = when (phase) {
+        PlayAmbientActivity.DayPhase.MORNING -> 6 * 60 to 11 * 60
+        PlayAmbientActivity.DayPhase.MIDDAY -> 11 * 60 to 17 * 60
+        PlayAmbientActivity.DayPhase.EVENING -> 17 * 60 to 22 * 60
+        // Nachts fragt niemand nach einem Zeitfenster - und wer es doch angibt, bekommt den Abend.
+        PlayAmbientActivity.DayPhase.NIGHT -> 17 * 60 to 22 * 60
+        null -> null
+    }
 
     fun presetFor(topic: AnimationType): Preset = when (topic) {
         // Trinken: ueber den ganzen Tag verteilt, oft, kleines Ziel je Anstupser.

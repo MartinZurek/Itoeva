@@ -93,6 +93,13 @@ fun PlayTalkPanel(
      * in eine Maske schickt, waere keine Hilfe, sondern eine Hausaufgabe.
      */
     onAdjust: (com.notime.glyphcore.data.GlyphReminder) -> Unit = {},
+    /** Die Frage, die ER gerade stellt - siehe [PlayTalk.Ask]. */
+    ask: PlayTalk.Ask? = null,
+    /** Die Antwort darauf: das gewaehlte Thema bzw. die gewaehlte Tageszeit. */
+    onAnswerFocus: (AnimationType) -> Unit = {},
+    onAnswerTime: (com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase) -> Unit = {},
+    /** Die Frage wegwischen, ohne zu antworten - sie kommt dann nicht wieder. */
+    onSkipAsk: () -> Unit = {},
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -135,6 +142,12 @@ fun PlayTalkPanel(
                 }
                 Headline(focus.headline, knowledge, voice)
                 if (remark != null && mood != null) RemarkLine(remark, mood)
+                // **Seine eigene Frage steht UNTER seinen Angeboten**, nicht darueber. Wer das
+                // Gespraech oeffnet, will zuerst wissen, wie es steht - erst danach ist Platz
+                // fuer eine Frage zurueck. Umgekehrt waere es ein Formular mit Begruessung.
+                if (ask != null) {
+                    AskLine(ask, onAnswerFocus, onAnswerTime, onSkipAsk)
+                }
                 for (offer in focus.offers) {
                     OfferLine(
                         offer = offer,
@@ -359,11 +372,57 @@ private fun RemarkLine(remark: PlayTalk.Remark, mood: PlayTalk.Mood) {
             stringResource(R.string.remark_earned, it.coins)
         }
         PlayTalk.Remark.STOCKED -> stringResource(R.string.remark_stocked)
+        PlayTalk.Remark.FOCUS -> mood.focusTopic?.let {
+            stringResource(R.string.talk_focus_noted, stringResource(it.labelRes))
+        }
         // Das Kapitel spricht mit seiner eigenen Stimme - dafuer gibt es die Zeile schon.
         PlayTalk.Remark.TOGETHER -> stringResource(mood.chapter.lineRes)
         PlayTalk.Remark.QUIET -> stringResource(R.string.remark_quiet)
     } ?: return
     Text(text, color = INK_DIM, size = 13)
+}
+
+/**
+ * **Seine Frage an dich** - mit Antworten zum Antippen.
+ *
+ * Auswahl statt Eingabefeld: Eine Tastatur mitten in einem Gespraech mit einem Wesen, das sechzehn
+ * Zellen hoch ist, waere ein Bruch. Und eine Auswahl kann er anschliessend auch VERSTEHEN - freier
+ * Text waere eine Antwort, mit der er nichts anfangen kann, und damit wieder eine Umfrage.
+ */
+@Composable
+private fun AskLine(
+    ask: PlayTalk.Ask,
+    onAnswerFocus: (AnimationType) -> Unit,
+    onAnswerTime: (com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase) -> Unit,
+    onSkip: () -> Unit
+) {
+    when (ask) {
+        PlayTalk.Ask.FOCUS -> {
+            Text(stringResource(R.string.talk_ask_focus), color = INK, size = 15)
+            // Nur Themen, die er auch sichtbar tut - sonst waere die Antwort folgenlos.
+            for (topic in PlayTalk.SUGGESTABLE) {
+                QuestionLine(stringResource(topic.labelRes)) { onAnswerFocus(topic) }
+            }
+        }
+        PlayTalk.Ask.TIME -> {
+            Text(stringResource(R.string.talk_ask_time), color = INK, size = 15)
+            QuestionLine(stringResource(R.string.talk_ask_time_morning)) {
+                onAnswerTime(com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase.MORNING)
+            }
+            QuestionLine(stringResource(R.string.talk_ask_time_midday)) {
+                onAnswerTime(com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase.MIDDAY)
+            }
+            QuestionLine(stringResource(R.string.talk_ask_time_evening)) {
+                onAnswerTime(com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase.EVENING)
+            }
+        }
+    }
+    Text(
+        stringResource(R.string.talk_ask_skip),
+        color = INK_DIM,
+        size = 12,
+        modifier = Modifier.clickable { onSkip() }
+    )
 }
 
 /**

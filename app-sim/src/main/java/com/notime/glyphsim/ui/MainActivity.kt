@@ -188,7 +188,13 @@ class MainActivity : ComponentActivity() {
                             watchOnly = state.clockOnly,
                             onExit = { setDockMode(false) },
                             onAddHabit = { topic ->
-                                val preset = PlayTalk.presetFor(topic)
+                                // Mit der Tageszeit, die der Nutzer im Gespraech genannt hat -
+                                // siehe PlayUserProfile. Wer abends Zeit hat, bekommt keine
+                                // Erinnerung, die morgens um neun anfaengt.
+                                val preset = PlayTalk.presetFor(
+                                    topic,
+                                    PlayUserProfile.busyPhase(this@MainActivity)
+                                )
                                 reminderViewModel.addReminder(
                                     label = getString(topic.labelRes),
                                     animationChoice = AnimationChoice.BuiltIn(topic),
