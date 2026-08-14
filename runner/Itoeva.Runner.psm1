@@ -384,6 +384,24 @@ function Assert-ItoevaCandidateAnalysis {
     }
 }
 
+function Format-ItoevaEvolutionNumber {
+    [CmdletBinding()]
+    param([AllowNull()][Parameter(Mandatory)]$Value)
+
+    $text = if ($Value -is [IFormattable]) {
+        $Value.ToString($null, [Globalization.CultureInfo]::InvariantCulture)
+    } else {
+        [string]$Value
+    }
+    [decimal]$number = 0
+    $style = [Globalization.NumberStyles]::Float
+    if (-not [decimal]::TryParse($text, $style, [Globalization.CultureInfo]::InvariantCulture, [ref]$number) -or
+        $number -ne [decimal]::Truncate($number) -or $number -lt 1 -or $number -gt 999) {
+        throw "Ungueltige Evolutionsnummer: $Value"
+    }
+    return ([int]$number).ToString('D3', [Globalization.CultureInfo]::InvariantCulture)
+}
+
 function Get-ItoevaProposedTreeOid {
     [CmdletBinding()]
     param(
@@ -601,7 +619,7 @@ Export-ModuleMember -Function @(
     'New-ItoevaPushArguments', 'Test-ItoevaGate', 'Write-ItoevaAtomicJson',
     'Enter-ItoevaRunLock', 'Exit-ItoevaRunLock', 'Get-ItoevaDangerousGitConfig',
     'Get-ItoevaChangedPaths', 'Get-ItoevaSelectedTests', 'ConvertTo-ItoevaWindowsCommandLineArgument', 'New-ItoevaCmdShimCommand', 'Invoke-ItoevaProcessWithTimeout', 'Get-ItoevaProposedTreeOid', 'Get-ItoevaRemoteSha',
-    'Resolve-ItoevaCodexLauncher', 'New-ItoevaCodexArguments', 'Assert-ItoevaCandidateAnalysis',
+    'Resolve-ItoevaCodexLauncher', 'New-ItoevaCodexArguments', 'Assert-ItoevaCandidateAnalysis', 'Format-ItoevaEvolutionNumber',
     'Assert-ItoevaBaseUnchanged', 'Invoke-ItoevaConfiguredTests', 'Invoke-ItoevaCodexSession',
     'Publish-ItoevaEvolution'
 )

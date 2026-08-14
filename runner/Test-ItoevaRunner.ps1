@@ -100,6 +100,22 @@ Test-Case 'Analyse-Invariante wird unmittelbar nach dem Parsen geprueft' {
     $validationLine = [Array]::FindIndex($entry, [Predicate[string]]{ param($line) $line -match '^\s*Assert-ItoevaCandidateAnalysis\s+\$analysis\s*$' })
     Assert-True ($parseLine -ge 0 -and $validationLine -eq ($parseLine + 1)) 'Analyse-Invariante ist nicht unmittelbar nach dem Parsen verdrahtet.'
 }
+Test-Case 'Evolutionsnummern werden exakt dreistellig formatiert' {
+    Assert-True ((Format-ItoevaEvolutionNumber 1) -eq '001')
+    Assert-True ((Format-ItoevaEvolutionNumber 9) -eq '009')
+    Assert-True ((Format-ItoevaEvolutionNumber 10) -eq '010')
+    Assert-True ((Format-ItoevaEvolutionNumber 999) -eq '999')
+}
+Test-Case 'Double aus Measure-Object wird als Evolutionsnummer formatiert' {
+    $measured = (@(0) | Measure-Object -Maximum).Maximum + 1
+    Assert-True ($measured.GetType().FullName -eq 'System.Double')
+    Assert-True ((Format-ItoevaEvolutionNumber $measured) -eq '001')
+}
+Test-Case 'Ungueltige Evolutionsnummern werden fail-closed abgewiesen' {
+    foreach ($invalid in @('nichtnumerisch', 0, -1, 1.5, 1000, $null)) {
+        Assert-Throws { Format-ItoevaEvolutionNumber $invalid | Out-Null }
+    }
+}
 Test-Case 'vollständiges PASS öffnet Gate' {
     $sha='a'*40; $tree='b'*40; $hash='c'*64; $plan='d'*64
     $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash }

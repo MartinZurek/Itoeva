@@ -47,8 +47,7 @@ function Get-NextEvolutionNumber {
         if ($_ -match 'refs/heads/evolution/(\d{3})-') { $numbers += [int]$Matches[1] }
     }
     $next = if ($numbers.Count) { ($numbers | Measure-Object -Maximum).Maximum + 1 } else { 1 }
-    if ($next -gt 999) { throw 'Keine Evolutionsnummer verfügbar.' }
-    return '{0:D3}' -f $next
+    return Format-ItoevaEvolutionNumber $next
 }
 
 if ($Action -eq 'ValidateConfiguration') {
