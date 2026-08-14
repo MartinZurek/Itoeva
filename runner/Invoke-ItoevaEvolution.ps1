@@ -82,6 +82,7 @@ try {
     $analysisPrompt = (Get-Content -Raw (Join-Path $PSScriptRoot 'prompts\analyze.md')) + "`nBase-SHA: $baseSha"
     $implementer = Invoke-ItoevaCodexSession $Repository $analysisPrompt (Join-Path $PSScriptRoot 'schemas\candidate.schema.json') $analysisPath 'read-only' -TimeoutSeconds ([int]$config.agentExecution.sessionTimeoutSeconds)
     $analysis = Get-Content -Raw $analysisPath | ConvertFrom-Json
+    Assert-ItoevaCandidateAnalysis $analysis
     if ($analysis.baseSha -ne $baseSha) { throw 'Analyse ist nicht an den aktuellen Base-SHA gebunden.' }
     if ($analysis.status -eq 'NO_SAFE_EVOLUTION') { $state.status='NO_SAFE_EVOLUTION'; return }
     $eligible = @($analysis.candidates | Where-Object { $_.risk -eq 'LOW' -and -not $_.protectedArea -and -not $_.openDecision })

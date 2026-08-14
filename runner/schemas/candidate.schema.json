@@ -28,15 +28,5 @@
         }
       }
     }
-  },
-  "allOf": [
-    {
-      "if": { "properties": { "status": { "const": "CANDIDATES" } } },
-      "then": { "properties": { "candidates": { "minItems": 1 } } }
-    },
-    {
-      "if": { "properties": { "status": { "const": "NO_SAFE_EVOLUTION" } } },
-      "then": { "properties": { "candidates": { "maxItems": 0 } } }
-    }
-  ]
+  }
 }

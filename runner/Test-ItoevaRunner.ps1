@@ -77,6 +77,29 @@ Test-Case 'Planphase ist statisch read-only verdrahtet' {
     Assert-True ($entry -match 'Planphase hat den sauberen Base-Zustand verändert')
     Assert-True ($entry -match 'Planreview hat den sauberen Base-Zustand verändert')
 }
+Test-Case 'Candidate-Schema verwendet keine inkompatiblen Bedingungskonstruktionen' {
+    $schema = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'schemas\candidate.schema.json')
+    Assert-True (-not ($schema -match '"(?:allOf|if|then)"\s*:'))
+    $schema | ConvertFrom-Json | Out-Null
+}
+Test-Case 'CANDIDATES mit mindestens einem Kandidaten ist gueltig' {
+    Assert-ItoevaCandidateAnalysis ([pscustomobject]@{ status='CANDIDATES'; candidates=@([pscustomobject]@{ title='Test' }) })
+}
+Test-Case 'CANDIDATES mit leerer Liste wird fail-closed abgewiesen' {
+    Assert-Throws { Assert-ItoevaCandidateAnalysis ([pscustomobject]@{ status='CANDIDATES'; candidates=@() }) }
+}
+Test-Case 'NO_SAFE_EVOLUTION mit leerer Liste ist gueltig' {
+    Assert-ItoevaCandidateAnalysis ([pscustomobject]@{ status='NO_SAFE_EVOLUTION'; candidates=@() })
+}
+Test-Case 'NO_SAFE_EVOLUTION mit Kandidaten wird fail-closed abgewiesen' {
+    Assert-Throws { Assert-ItoevaCandidateAnalysis ([pscustomobject]@{ status='NO_SAFE_EVOLUTION'; candidates=@([pscustomobject]@{ title='Test' }) }) }
+}
+Test-Case 'Analyse-Invariante wird unmittelbar nach dem Parsen geprueft' {
+    $entry = @(Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1'))
+    $parseLine = [Array]::FindIndex($entry, [Predicate[string]]{ param($line) $line -match '\$analysis\s*=.*ConvertFrom-Json' })
+    $validationLine = [Array]::FindIndex($entry, [Predicate[string]]{ param($line) $line -match '^\s*Assert-ItoevaCandidateAnalysis\s+\$analysis\s*$' })
+    Assert-True ($parseLine -ge 0 -and $validationLine -eq ($parseLine + 1)) 'Analyse-Invariante ist nicht unmittelbar nach dem Parsen verdrahtet.'
+}
 Test-Case 'vollständiges PASS öffnet Gate' {
     $sha='a'*40; $tree='b'*40; $hash='c'*64; $plan='d'*64
     $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash }

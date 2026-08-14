@@ -368,6 +368,22 @@ function New-ItoevaCodexArguments {
     return @('-a', 'never', 'exec', '-C', $Repository, '-s', $Sandbox, '--output-schema', $SchemaPath, '--json', '-o', $OutputPath, '-')
 }
 
+function Assert-ItoevaCandidateAnalysis {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)]$Analysis)
+
+    $candidateCount = @($Analysis.candidates).Count
+    switch ([string]$Analysis.status) {
+        'CANDIDATES' {
+            if ($candidateCount -lt 1) { throw 'CANDIDATES erfordert mindestens einen Kandidaten.' }
+        }
+        'NO_SAFE_EVOLUTION' {
+            if ($candidateCount -ne 0) { throw 'NO_SAFE_EVOLUTION erfordert eine leere Kandidatenliste.' }
+        }
+        default { throw "Unbekannter Analyse-Status: $($Analysis.status)" }
+    }
+}
+
 function Get-ItoevaProposedTreeOid {
     [CmdletBinding()]
     param(
@@ -585,7 +601,7 @@ Export-ModuleMember -Function @(
     'New-ItoevaPushArguments', 'Test-ItoevaGate', 'Write-ItoevaAtomicJson',
     'Enter-ItoevaRunLock', 'Exit-ItoevaRunLock', 'Get-ItoevaDangerousGitConfig',
     'Get-ItoevaChangedPaths', 'Get-ItoevaSelectedTests', 'ConvertTo-ItoevaWindowsCommandLineArgument', 'New-ItoevaCmdShimCommand', 'Invoke-ItoevaProcessWithTimeout', 'Get-ItoevaProposedTreeOid', 'Get-ItoevaRemoteSha',
-    'Resolve-ItoevaCodexLauncher', 'New-ItoevaCodexArguments',
+    'Resolve-ItoevaCodexLauncher', 'New-ItoevaCodexArguments', 'Assert-ItoevaCandidateAnalysis',
     'Assert-ItoevaBaseUnchanged', 'Invoke-ItoevaConfiguredTests', 'Invoke-ItoevaCodexSession',
     'Publish-ItoevaEvolution'
 )
