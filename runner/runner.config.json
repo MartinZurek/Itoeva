@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "repository": {
+    "expectedOrigin": "https://github.com/MartinZurek/Itoeva.git",
+    "branchPattern": "^evolution/[0-9]{3}-[a-z0-9]+(?:-[a-z0-9]+)*-[0-9a-f]{32}$",
+    "maximumBranchLength": 100
+  },
+  "agentExecution": {
+    "enabled": false,
+    "maximumSessions": 2,
+    "maximumRepairCycles": 1,
+    "sessionTimeoutSeconds": 1800
+  },
+  "publication": {
+    "enabled": false,
+    "allowedRemote": "origin",
+    "allowedRefPrefix": "refs/heads/evolution/",
+    "commitMessagePrefix": "Evolution "
+  },
+  "git": {
+    "allowedCredentialHelpers": ["manager", "manager-core"],
+    "trustedHooksDirectory": "%LOCALAPPDATA%\\ItoevaEvolutionRunner\\trusted-empty-hooks"
+  },
+  "tests": {
+    "mandatory": [
+      { "id": "verify", "executable": ".\\gradlew.bat", "arguments": ["verify", "--stacktrace"] }
+    ],
+    "android": [
+      { "id": "app-sim-connected", "pathPrefixes": ["app-sim/", "core/"], "executable": ".\\gradlew.bat", "arguments": [":app-sim:connectedDebugAndroidTest", "--stacktrace"] },
+      { "id": "app-connected", "pathPrefixes": ["app/", "core/"], "executable": ".\\gradlew.bat", "arguments": [":app:connectedDebugAndroidTest", "--stacktrace"] }
+    ],
+    "androidAvd": "tama-test",
+    "androidSerial": "emulator-5554",
+    "androidSdk": "%LOCALAPPDATA%\\Android\\Sdk",
+    "javaHome": "C:\\Program Files\\Android\\Android Studio\\jbr",
+    "bootTimeoutSeconds": 180,
+    "testTimeoutSeconds": 1800
+  },
+  "scope": {
+    "forbiddenPathPrefixes": [
+      "runner/",
+      ".github/workflows/",
+      "gradle/",
+      "app/libs/"
+    ],
+    "forbiddenFileNames": [
+      "build.gradle.kts",
+      "settings.gradle.kts",
+      "gradle.properties",
+      "libs.versions.toml",
+      ".gitattributes",
+      ".gitmodules",
+      "gradlew",
+      "gradlew.bat",
+      "keystore.properties",
+      "google-services.json"
+    ],
+    "forbiddenExtensions": [
+      ".ps1", ".psm1", ".bat", ".cmd", ".sh", ".exe", ".dll", ".jar", ".aar", ".jks", ".keystore"
+    ]
+  },
+  "knownRisks": {
+    "mainRulesetEnforceable": false,
+    "mainRulesetNote": "Das private Ein-Personen-Repository kann das geplante main-Ruleset derzeit nicht erzwingen. Der Runner kompensiert lokal, aber dies ist keine serverseitige Sicherheitsgrenze.",
+    "sharedCredentialContext": true,
+    "branchCreationRaceAccepted": true
+  }
+}

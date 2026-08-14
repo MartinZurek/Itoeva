@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "baseSha", "planHash", "treeOid", "testManifestHash", "findings"],
+  "properties": {
+    "status": { "enum": ["PASS", "FAIL"] },
+    "baseSha": { "type": "string", "pattern": "^[0-9a-f]{40,64}$" },
+    "planHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "treeOid": { "type": "string", "pattern": "^[0-9a-f]{40,64}$" },
+    "testManifestHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "message"],
+        "properties": {
+          "severity": { "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNVERIFIED"] },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

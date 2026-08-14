@@ -1,0 +1,76 @@
+# Itoeva Autonomous Evolution Runner v0.1
+
+## Status
+
+Diese Infrastrukturversion ist standardmäßig **deaktiviert**. Sie enthält die State Machine für
+Analyse, Branch, Planreview, Implementierung, Tests, Final Review, Commit, Push und Report, führt
+aber ohne eine lokale Aktivierungsdatei außerhalb des Repositorys keinen Agenten aus, erstellt
+keinen Evolution-Branch und commitet oder pusht nichts.
+
+## Sicherheitsgrenzen
+
+Der Runner darf später ausschließlich neue `origin/evolution/*`-Branches erstellen. Direkte
+Arbeit auf `main`, Main-Push, Merge, Rebase, Force-Push, Release, Firebase, Play Store, Keystore
+und sonstige Produktionszugriffe sind verboten.
+
+Die pragmatische v0.1 läuft im selben Windows-Konto wie Git Credential Manager und lokale
+Builds. Sie schützt gegen Fehlbedienung und normale Agentenfehler, aber nicht gegen absichtlich
+kompromittierten Agenten- oder Gradle-Code. Deshalb sind Änderungen an Runner, Workflows,
+Build-/Dependency-Infrastruktur, ausführbaren Skripten und Produktionskonfiguration vom
+autonomen Scope ausgeschlossen.
+
+## Bekanntes Ruleset-Risiko
+
+Das geplante GitHub-Ruleset für `main` kann auf dem aktuellen privaten Repository/Plan nicht
+erzwungen werden. Dies ist für v0.1 ein ausdrücklich akzeptiertes Restrisiko, keine bestätigte
+serverseitige Schutzgrenze. Der Runner kompensiert lokal durch exakte Base-SHA-Prüfungen,
+festes `evolution/*`-Refspec und das Verbot jedes Main-, Force-, Merge- und Release-Befehls.
+
+`origin/main` wird beim Start sowie vor Branchanlage, Implementierung, Tests, Final Review,
+Commit und Push autoritativ geprüft. Bei einer Änderung bricht v0.1 ab; sie führt weder Rebase
+noch Merge durch. Eine spätere manuelle oder
+planbedingte Änderung der GitHub-Einstellungen wird ohne GitHub-API-Liveprüfung nicht erkannt.
+
+## Lokale Laufzeitdaten
+
+State, Locks, Logs, Reports und das vertrauenswürdige leere Hooks-Verzeichnis gehören unter
+`%LOCALAPPDATA%\ItoevaEvolutionRunner`, nicht in den Clone. Eine spätere Aktivierungsdatei dort
+muss die Standing Authorization für Commit und Push ausdrücklich einschalten; die eingecheckte
+Konfiguration bleibt fail-closed.
+
+Zu jedem finalen JSON-Report wird eine gleichnamige `.sha256`-Begleitdatei geschrieben. Sie dient
+der Integritätsprüfung, ist aber keine externe Signatur.
+
+## Aktuell erlaubte Befehle
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File runner\Invoke-ItoevaEvolution.ps1 `
+  -Action ValidateConfiguration
+
+powershell -NoProfile -ExecutionPolicy Bypass -File runner\Test-ItoevaRunner.ps1
+```
+
+`Preflight` ist für einen separaten sauberen Runner-Clone gedacht und schlägt in einem
+Entwicklungsclone mit uncommitteten Änderungen absichtlich fehl.
+
+## Vor dem ersten Dry-Run
+
+1. Vollständigen Infrastruktur-Diff reviewen und committen.
+2. Einen separaten lokalen Clone nur für den Runner anlegen.
+3. `%LOCALAPPDATA%\ItoevaEvolutionRunner` und ein leeres Hooks-Verzeichnis anlegen.
+4. Codex-Login und GCM-Zugriff im geplanten Task-Scheduler-Konto prüfen.
+5. Lokale Aktivierungsdatei nur mit `agentExecutionEnabled=true`, aber ohne Publication anlegen.
+6. Dry-Run mit Analyse, Planreview, Implementierung, Tests und Final Review ausführen.
+7. Dry-Run-Report und quarantänisierten Working Tree menschlich prüfen und bereinigen.
+8. Erst danach `publicationEnabled` und `standingAuthorizationEvolutionOnly` lokal aktivieren.
+
+Ein abgebrochener Lauf wird fail-closed als `QUARANTINED` markiert. v0.1 nimmt einen unbekannten
+Zwischenzustand nicht automatisch wieder auf; vor einem neuen Lauf muss ein Mensch Branch, HEAD,
+Index, Working Tree und State prüfen und den dedizierten Clone auf einen sauberen Base-Stand
+zurückführen. Damit wird kein unsicherer Zustand fortgesetzt, allerdings ist automatische
+Wiederaufnahme ein bewusst verbleibender Ausbaupunkt.
+
+## Nicht automatisch erzeugte Historie
+
+Ein Run-Report ist ein Vorschlag und noch keine angenommene Evolution History. Eine Datei unter
+`evolutions/` wird erst nach der menschlichen Merge-Entscheidung dauerhaft dokumentiert.

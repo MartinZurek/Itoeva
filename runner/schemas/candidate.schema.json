@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "baseSha", "candidates"],
+  "properties": {
+    "status": { "enum": ["CANDIDATES", "NO_SAFE_EVOLUTION"] },
+    "baseSha": { "type": "string", "pattern": "^[0-9a-f]{40,64}$" },
+    "candidates": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "slug", "class", "problem", "evidence", "playerBenefit", "paths", "tests", "risk", "protectedArea", "openDecision"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 40 },
+          "class": { "enum": ["CONTENT", "CODE"] },
+          "problem": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "playerBenefit": { "type": "string", "minLength": 1 },
+          "paths": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "tests": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "risk": { "enum": ["LOW", "MEDIUM", "HIGH"] },
+          "protectedArea": { "type": "boolean" },
+          "openDecision": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "CANDIDATES" } } },
+      "then": { "properties": { "candidates": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "NO_SAFE_EVOLUTION" } } },
+      "then": { "properties": { "candidates": { "maxItems": 0 } } }
+    }
+  ]
+}

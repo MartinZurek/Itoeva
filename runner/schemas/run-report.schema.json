@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["runId", "status", "branch", "baseSha", "commitSha", "remoteBranchSha", "originMainStartSha", "originMainPrePushSha", "originMainPostPushSha", "planReview", "finalReview", "planHash", "proposedTreeOid", "testManifestHash", "reviewerBindings", "tests", "unverified", "knownRisks"],
+  "properties": {
+    "runId": { "type": "string" },
+    "status": { "enum": ["PUSHED", "PUSHED_STALE_BASE", "DRY_RUN_PASS", "ABORTED", "QUARANTINED"] },
+    "branch": { "type": "string" },
+    "baseSha": { "type": "string" },
+    "commitSha": { "type": "string" },
+    "remoteBranchSha": { "type": "string" },
+    "originMainStartSha": { "type": "string" },
+    "originMainPrePushSha": { "type": "string" },
+    "originMainPostPushSha": { "type": "string" },
+    "planReview": { "enum": ["PASS", "FAIL"] },
+    "finalReview": { "enum": ["PASS", "FAIL"] },
+    "planHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "proposedTreeOid": { "type": "string" },
+    "testManifestHash": { "type": "string" },
+    "reviewerBindings": { "type": "object" },
+    "tests": { "type": "array", "items": { "type": "object" } },
+    "unverified": { "type": "array", "items": { "type": "string" } },
+    "knownRisks": { "type": "array", "items": { "type": "string" } }
+  }
+}
