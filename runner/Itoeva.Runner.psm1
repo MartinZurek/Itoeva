@@ -239,6 +239,46 @@ function Get-ItoevaSelectedTests {
     return $selected
 }
 
+function ConvertTo-ItoevaWindowsCommandLineArgument {
+    [CmdletBinding()]
+    param([AllowEmptyString()][Parameter(Mandatory)][string]$Value)
+
+    if ($Value.Length -gt 0 -and $Value -notmatch '[\s"]') { return $Value }
+    $quoted = [Text.StringBuilder]::new()
+    [void]$quoted.Append('"')
+    $backslashes = 0
+    foreach ($character in $Value.ToCharArray()) {
+        if ($character -eq '\') { $backslashes++; continue }
+        if ($character -eq '"') {
+            [void]$quoted.Append(('\' * (2 * $backslashes + 1)))
+            [void]$quoted.Append('"')
+            $backslashes = 0
+            continue
+        }
+        if ($backslashes) { [void]$quoted.Append(('\' * $backslashes)); $backslashes = 0 }
+        [void]$quoted.Append($character)
+    }
+    if ($backslashes) { [void]$quoted.Append(('\' * (2 * $backslashes))) }
+    [void]$quoted.Append('"')
+    return $quoted.ToString()
+}
+
+function New-ItoevaCmdShimCommand {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$BatchPath,
+        [string[]]$Arguments = @()
+    )
+
+    $values = @($BatchPath) + @($Arguments)
+    foreach ($value in $values) {
+        if ([string]::IsNullOrWhiteSpace($value) -or $value -match '["%!^&|<>\r\n]') {
+            throw "Wert kann nicht sicher an den codex.cmd-Fallback uebergeben werden: $value"
+        }
+    }
+    return (@($values | ForEach-Object { '"' + $_ + '"' }) -join ' ')
+}
+
 function Invoke-ItoevaProcessWithTimeout {
     [CmdletBinding()]
     param(
@@ -246,22 +286,35 @@ function Invoke-ItoevaProcessWithTimeout {
         [string[]]$Arguments = @(),
         [Parameter(Mandatory)][string]$WorkingDirectory,
         [Parameter(Mandatory)][int]$TimeoutSeconds,
-        [string]$StandardInputPath
+        [string]$StandardInputPath,
+        [string]$ValidatedWindowsArgumentString
     )
     $stdout = Join-Path ([IO.Path]::GetTempPath()) "itoeva-out-$([Guid]::NewGuid().ToString('N')).log"
     $stderr = Join-Path ([IO.Path]::GetTempPath()) "itoeva-err-$([Guid]::NewGuid().ToString('N')).log"
     try {
+        $processArguments = if ($ValidatedWindowsArgumentString) {
+            if ($env:OS -ne 'Windows_NT') { throw 'Vorvalidierte Windows-Argumente sind nur unter Windows erlaubt.' }
+            $ValidatedWindowsArgumentString
+        } elseif ($env:OS -eq 'Windows_NT') {
+            (@($Arguments | ForEach-Object { ConvertTo-ItoevaWindowsCommandLineArgument ([string]$_) }) -join ' ')
+        } else { $Arguments }
         $start = @{
-            FilePath=$Executable; ArgumentList=$Arguments; WorkingDirectory=$WorkingDirectory
+            FilePath=$Executable; ArgumentList=$processArguments; WorkingDirectory=$WorkingDirectory
             RedirectStandardOutput=$stdout; RedirectStandardError=$stderr; WindowStyle='Hidden'; PassThru=$true
         }
         if ($StandardInputPath) { $start.RedirectStandardInput = $StandardInputPath }
         $process = Start-Process @start
+        # Materialize the native handle before a very short-lived process can exit;
+        # otherwise Windows PowerShell 5.1 may expose an empty ExitCode.
+        $null = $process.Handle
         $finished = $process.WaitForExit($TimeoutSeconds * 1000)
         if (-not $finished) {
             & taskkill.exe /PID $process.Id /T /F 2>$null | Out-Null
             $process.WaitForExit()
+        } else {
+            $process.WaitForExit()
         }
+        $process.Refresh()
         $output = @()
         if (Test-Path $stdout) { $output += Get-Content -LiteralPath $stdout }
         if (Test-Path $stderr) { $output += Get-Content -LiteralPath $stderr }
@@ -269,6 +322,34 @@ function Invoke-ItoevaProcessWithTimeout {
     } finally {
         Remove-Item -LiteralPath $stdout,$stderr -Force -ErrorAction SilentlyContinue
     }
+}
+
+function Resolve-ItoevaCodexLauncher {
+    [CmdletBinding()]
+    param()
+
+    if ($env:OS -eq 'Windows_NT') {
+        $native = Get-Command codex.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($native) {
+            return [pscustomobject]@{ executable=$native.Source; prefixArguments=@(); kind='NATIVE_EXE' }
+        }
+
+        $batch = Get-Command codex.cmd -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($batch) {
+            $commandProcessor = (Get-Command cmd.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+            return [pscustomobject]@{
+                executable=$commandProcessor
+                batchPath=$batch.Source
+                prefixArguments=@()
+                kind='CMD_SHIM'
+            }
+        }
+
+        throw 'Weder eine native codex.exe noch ein ueber cmd.exe startbarer codex.cmd-Launcher wurde gefunden.'
+    }
+
+    $command = Get-Command codex -ErrorAction Stop
+    return [pscustomobject]@{ executable=$command.Source; prefixArguments=@(); kind='DIRECT' }
 }
 
 function Get-ItoevaProposedTreeOid {
@@ -381,13 +462,22 @@ function Invoke-ItoevaCodexSession {
     $promptPath = "$OutputPath.prompt.txt"
     [IO.File]::WriteAllText($promptPath, $Prompt, [Text.UTF8Encoding]::new($false))
     $arguments = if ($SessionId) {
-        @('exec', 'resume', '-c', "sandbox_mode=`"$Sandbox`"", $SessionId, '-', '--output-schema', $SchemaPath, '--json', '-o', $OutputPath)
+        @('exec', 'resume', '-c', "sandbox_mode=$Sandbox", $SessionId, '-', '--output-schema', $SchemaPath, '--json', '-o', $OutputPath)
     } else {
         @('exec', '-C', $Repository, '-s', $Sandbox, '-a', 'never', '--output-schema', $SchemaPath, '--json', '-o', $OutputPath, '-')
     }
-    $codexPath = (Get-Command codex -ErrorAction Stop).Source
-    $processResult = Invoke-ItoevaProcessWithTimeout -Executable $codexPath -Arguments $arguments `
-        -WorkingDirectory $Repository -TimeoutSeconds $TimeoutSeconds -StandardInputPath $promptPath
+    $launcher = Resolve-ItoevaCodexLauncher
+    $validatedWindowsArgumentString = $null
+    $processArguments = if ($launcher.kind -eq 'CMD_SHIM') {
+        $command = New-ItoevaCmdShimCommand -BatchPath $launcher.batchPath -Arguments $arguments
+        $validatedWindowsArgumentString = "/d /s /c `"$command`""
+        @()
+    } else {
+        @($launcher.prefixArguments) + @($arguments)
+    }
+    $processResult = Invoke-ItoevaProcessWithTimeout -Executable $launcher.executable -Arguments $processArguments `
+        -WorkingDirectory $Repository -TimeoutSeconds $TimeoutSeconds -StandardInputPath $promptPath `
+        -ValidatedWindowsArgumentString $validatedWindowsArgumentString
     [IO.File]::WriteAllText($eventPath, $processResult.output, [Text.UTF8Encoding]::new($false))
     if ($processResult.timedOut) { throw 'Codex-Sitzung hat ihr Zeitlimit überschritten.' }
     if ($processResult.exitCode -ne 0) { throw "Codex-Sitzung fehlgeschlagen, Exitcode $($processResult.exitCode)" }
@@ -481,7 +571,8 @@ Export-ModuleMember -Function @(
     'Get-ItoevaSha256', 'Test-ItoevaBranchName', 'Assert-ItoevaAllowedPaths',
     'New-ItoevaPushArguments', 'Test-ItoevaGate', 'Write-ItoevaAtomicJson',
     'Enter-ItoevaRunLock', 'Exit-ItoevaRunLock', 'Get-ItoevaDangerousGitConfig',
-    'Get-ItoevaChangedPaths', 'Get-ItoevaSelectedTests', 'Invoke-ItoevaProcessWithTimeout', 'Get-ItoevaProposedTreeOid', 'Get-ItoevaRemoteSha',
+    'Get-ItoevaChangedPaths', 'Get-ItoevaSelectedTests', 'ConvertTo-ItoevaWindowsCommandLineArgument', 'New-ItoevaCmdShimCommand', 'Invoke-ItoevaProcessWithTimeout', 'Get-ItoevaProposedTreeOid', 'Get-ItoevaRemoteSha',
+    'Resolve-ItoevaCodexLauncher',
     'Assert-ItoevaBaseUnchanged', 'Invoke-ItoevaConfiguredTests', 'Invoke-ItoevaCodexSession',
     'Publish-ItoevaEvolution'
 )

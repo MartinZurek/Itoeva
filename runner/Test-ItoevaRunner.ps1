@@ -93,6 +93,20 @@ Test-Case 'verändertes main schließt Gate' {
     Assert-True (-not (Test-ItoevaGate -Gate $gate))
 }
 
+Test-Case 'Windows-Prozessargumente werden sicher serialisiert' {
+    Assert-True ((ConvertTo-ItoevaWindowsCommandLineArgument '') -eq '""')
+    Assert-True ((ConvertTo-ItoevaWindowsCommandLineArgument 'plain') -eq 'plain')
+    Assert-True ((ConvertTo-ItoevaWindowsCommandLineArgument 'argument with spaces') -eq '"argument with spaces"')
+    Assert-True ((ConvertTo-ItoevaWindowsCommandLineArgument 'quoted"value') -eq '"quoted\"value"')
+}
+Test-Case 'CMD-Fallback lehnt Shell-Metazeichen fail-closed ab' {
+    foreach ($unsafe in @('a&b','a|b','a<b','a>b','a^b','%PATH%','a!b','a"b')) {
+        Assert-Throws { New-ItoevaCmdShimCommand -BatchPath 'C:\safe\codex.cmd' -Arguments @($unsafe) | Out-Null }
+    }
+    $command = New-ItoevaCmdShimCommand -BatchPath 'C:\safe path\codex.cmd' -Arguments @('argument with spaces','plain')
+    Assert-True ($command -eq '"C:\safe path\codex.cmd" "argument with spaces" "plain"')
+}
+
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) "itoeva-runner-test-$([Guid]::NewGuid().ToString('N'))"
 try {
     New-Item -ItemType Directory -Path $tempRoot | Out-Null
@@ -113,6 +127,86 @@ try {
             -Arguments @('-NoProfile','-Command','Start-Sleep -Seconds 5') -WorkingDirectory $tempRoot -TimeoutSeconds 1
         Assert-True ($result.timedOut)
         Assert-True ($result.exitCode -eq -1)
+    }
+    Test-Case 'Windows Codex-Aufloesung bevorzugt native EXE und ignoriert PS1' {
+        $launcherRoot = Join-Path $tempRoot 'native-launcher'
+        New-Item -ItemType Directory -Path $launcherRoot | Out-Null
+        Copy-Item -LiteralPath (Get-Command powershell.exe).Source -Destination (Join-Path $launcherRoot 'codex.exe')
+        [IO.File]::WriteAllText((Join-Path $launcherRoot 'codex.ps1'), "throw 'must not run'`n")
+        [IO.File]::WriteAllText((Join-Path $launcherRoot 'codex.cmd'), "@exit /b 99`r`n")
+        $oldPath = $env:PATH
+        try {
+            $env:PATH = "$launcherRoot;$oldPath"
+            $launcher = Resolve-ItoevaCodexLauncher
+            Assert-True ($launcher.kind -eq 'NATIVE_EXE')
+            Assert-True ([IO.Path]::GetFullPath($launcher.executable) -eq [IO.Path]::GetFullPath((Join-Path $launcherRoot 'codex.exe')))
+            Assert-True (@($launcher.prefixArguments).Count -eq 0)
+        } finally { $env:PATH = $oldPath }
+    }
+    Test-Case 'Windows Codex-Aufloesung startet PS1 niemals direkt' {
+        $launcherRoot = Join-Path $tempRoot 'ps1-only-launcher'
+        New-Item -ItemType Directory -Path $launcherRoot | Out-Null
+        [IO.File]::WriteAllText((Join-Path $launcherRoot 'codex.ps1'), "throw 'must not run'`n")
+        $oldPath = $env:PATH
+        try {
+            $system32 = [Environment]::GetFolderPath('System')
+            $env:PATH = "$launcherRoot;$system32"
+            Assert-Throws { Resolve-ItoevaCodexLauncher | Out-Null }
+        } finally { $env:PATH = $oldPath }
+    }
+    Test-Case 'Windows Codex-CMD-Fallback laeuft nur ueber cmd.exe' {
+        $launcherRoot = Join-Path $tempRoot 'cmd-launcher'
+        New-Item -ItemType Directory -Path $launcherRoot | Out-Null
+        [IO.File]::WriteAllText((Join-Path $launcherRoot 'codex.ps1'), "throw 'must not run'`n")
+        [IO.File]::WriteAllText((Join-Path $launcherRoot 'codex.cmd'), "@echo off`r`nset /p INPUT=`r`necho OUT:%~1:%INPUT%`r`necho ERR:%~2 1>&2`r`nexit /b %~3`r`n")
+        $stdin = Join-Path $launcherRoot 'stdin.txt'
+        [IO.File]::WriteAllText($stdin, 'hello stdin')
+        $oldPath = $env:PATH
+        try {
+            $system32 = [Environment]::GetFolderPath('System')
+            $env:PATH = "$launcherRoot;$system32"
+            $launcher = Resolve-ItoevaCodexLauncher
+            Assert-True ($launcher.kind -eq 'CMD_SHIM') "Unerwarteter Launcher: $($launcher.kind)"
+            Assert-True ([IO.Path]::GetFileName($launcher.executable) -eq 'cmd.exe') "Unerwartbares Executable: $($launcher.executable)"
+            Assert-True ($launcher.batchPath -match '(?i)codex\.cmd$') 'CMD-Launcher fehlt.'
+            Assert-True ($launcher.batchPath -notmatch '(?i)codex\.ps1') 'PS1 wurde als Launcher verwendet.'
+            $command = New-ItoevaCmdShimCommand $launcher.batchPath @('argument with spaces', 'stderr value', '7')
+            $cmdArguments = "/d /s /c `"$command`""
+            $result = Invoke-ItoevaProcessWithTimeout -Executable $launcher.executable `
+                -WorkingDirectory $launcherRoot -TimeoutSeconds 10 -StandardInputPath $stdin -ValidatedWindowsArgumentString $cmdArguments
+            Assert-True (-not $result.timedOut) 'CMD-Fallback lief in ein Timeout.'
+            Assert-True ($result.exitCode -eq 7) "Unerwarteter Exitcode $($result.exitCode). Ausgabe: $($result.output)"
+            Assert-True ($result.output -match 'OUT:argument with spaces:hello stdin') "stdout/stdin/Argumente fehlen: $($result.output)"
+            Assert-True ($result.output -match 'ERR:stderr value') "stderr fehlt: $($result.output)"
+        } finally { $env:PATH = $oldPath }
+    }
+    Test-Case 'CMD-Fallback-Timeout beendet den Kindprozessbaum' {
+        $launcherRoot = Join-Path $tempRoot 'cmd-timeout-launcher'
+        New-Item -ItemType Directory -Path $launcherRoot | Out-Null
+        $childPidPath = Join-Path $launcherRoot 'child.pid'
+        $batchPath = Join-Path $launcherRoot 'codex.cmd'
+        [IO.File]::WriteAllText($batchPath, "@echo off`r`nstart `"`" /b powershell.exe -NoProfile -Command `"[IO.File]::WriteAllText('$childPidPath',[string]`$PID); Start-Sleep -Seconds 30`"`r`nfor /l %%i in (1,1,50) do @if not exist `"$childPidPath`" @ping 127.0.0.1 -n 2 >nul`r`nping 127.0.0.1 -n 31 >nul`r`n")
+        $command = New-ItoevaCmdShimCommand $batchPath
+        $cmdArguments = "/d /s /c `"$command`""
+        $result = Invoke-ItoevaProcessWithTimeout -Executable (Get-Command cmd.exe).Source `
+            -WorkingDirectory $launcherRoot -TimeoutSeconds 3 -ValidatedWindowsArgumentString $cmdArguments
+        Assert-True ($result.timedOut)
+        Assert-True (Test-Path -LiteralPath $childPidPath) 'CMD-Kindprozess-PID wurde nicht geschrieben.'
+        $childPid = [int](Get-Content -Raw -LiteralPath $childPidPath)
+        Start-Sleep -Milliseconds 250
+        Assert-True (-not (Get-Process -Id $childPid -ErrorAction SilentlyContinue)) 'CMD-Kindprozess wurde nicht beendet.'
+    }
+    Test-Case 'Timeout beendet auch den Kindprozessbaum' {
+        $childPidPath = Join-Path $tempRoot 'child.pid'
+        $escapedPidPath = $childPidPath.Replace("'", "''")
+        $parentScript = "`$child = Start-Process powershell.exe -ArgumentList '-NoProfile','-Command','Start-Sleep -Seconds 30' -PassThru; [IO.File]::WriteAllText('$escapedPidPath', [string]`$child.Id); Start-Sleep -Seconds 30"
+        $result = Invoke-ItoevaProcessWithTimeout -Executable 'powershell.exe' `
+            -Arguments @('-NoProfile','-Command',$parentScript) -WorkingDirectory $tempRoot -TimeoutSeconds 2
+        Assert-True ($result.timedOut)
+        Assert-True (Test-Path -LiteralPath $childPidPath) 'Kindprozess-PID wurde nicht geschrieben.'
+        $childPid = [int](Get-Content -Raw -LiteralPath $childPidPath)
+        Start-Sleep -Milliseconds 250
+        Assert-True (-not (Get-Process -Id $childPid -ErrorAction SilentlyContinue)) 'Kindprozess wurde nicht beendet.'
     }
     Test-Case 'Proposed Tree enthält geänderte und neue Dateien' {
         $repo = Join-Path $tempRoot 'repo'
