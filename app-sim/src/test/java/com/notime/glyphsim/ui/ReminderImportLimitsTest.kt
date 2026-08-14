@@ -85,6 +85,14 @@ class ReminderImportLimitsTest {
         assertTrue(json.endsWith("}"))
     }
 
+    @Test
+    fun `Klammern in String zaehlen nicht zur Verschachtelungstiefe`() {
+        val klammern = "{".repeat(ReminderImport.MAX_JSON_DEPTH + 5)
+        val json = """{"label":"$klammern"}"""
+
+        assertEquals(json, ReminderImport.extractJson(json))
+    }
+
     /**
      * Wichtig fuer den Alltag: eine abgeschnittene Antwort (Klammern gehen nie auf null zurueck)
      * darf nicht in eine Endlosschleife oder einen Absturz laufen, sondern schlicht nichts finden.

@@ -50,6 +50,39 @@ class ReminderImportTest {
     }
 
     @Test
+    fun `schliessende Klammer in String beendet JSON nicht vorzeitig`() {
+        val answer = """{"reminders":[{"label":"Noch } offen","topic":"DRINK"}]} danach"""
+        assertEquals(
+            """{"reminders":[{"label":"Noch } offen","topic":"DRINK"}]}""",
+            ReminderImport.extractJson(answer)
+        )
+    }
+
+    @Test
+    fun `oeffnende Klammer in String erhoeht Tiefe nicht`() {
+        val answer = """{"reminders":[{"label":"Hier { beginnen"}]} danach"""
+        assertEquals(
+            """{"reminders":[{"label":"Hier { beginnen"}]}""",
+            ReminderImport.extractJson(answer)
+        )
+    }
+
+    @Test
+    fun `escapete Anfuehrungszeichen und Backslashes erhalten Stringzustand`() {
+        val answer = """{"label":"Pfad \\ und Zitat \"} bleibt im Text","topic":"BOOK"} danach"""
+        assertEquals(
+            """{"label":"Pfad \\ und Zitat \"} bleibt im Text","topic":"BOOK"}""",
+            ReminderImport.extractJson(answer)
+        )
+    }
+
+    @Test
+    fun `gerade Backslashanzahl laesst String am folgenden Anfuehrungszeichen enden`() {
+        val answer = """{"label":"Pfad \\\\"} danach"""
+        assertEquals("""{"label":"Pfad \\\\"}""", ReminderImport.extractJson(answer))
+    }
+
+    @Test
     fun `ohne JSON kommt null zurueck`() {
         assertNull(ReminderImport.extractJson("Ich habe leider kein Ergebnis fuer dich."))
     }

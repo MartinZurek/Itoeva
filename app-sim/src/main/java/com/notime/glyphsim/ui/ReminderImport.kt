@@ -128,8 +128,20 @@ object ReminderImport {
         val start = text.indexOf('{')
         if (start < 0) return null
         var depth = 0
+        var inString = false
+        var escaped = false
         for (i in start until text.length) {
-            when (text[i]) {
+            val character = text[i]
+            if (inString) {
+                when {
+                    escaped -> escaped = false
+                    character == '\\' -> escaped = true
+                    character == '"' -> inString = false
+                }
+                continue
+            }
+            when (character) {
+                '"' -> inString = true
                 '{' -> {
                     depth++
                     // Tief verschachtelte Klammern bringen spaeter den JSON-Leser in Not: er
