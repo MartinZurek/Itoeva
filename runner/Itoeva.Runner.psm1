@@ -833,7 +833,8 @@ function Invoke-ItoevaPublishDryRun {
     foreach ($artifact in @($planPath,$planReviewPath,$testsPath,$finalReviewPath)) { Assert-ItoevaRuntimePath $runtimeRoot $artifact | Out-Null; if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) { throw "Dry-Run-Artefakt fehlt: $artifact" } }
     if ((Get-ItoevaSha256 $planPath) -ne $planHash -or (Get-ItoevaSha256 $testsPath) -ne $testHash) { throw 'Plan- oder Testmanifest-Hash stimmt nicht.' }
     $plan=Get-Content -Raw -LiteralPath $planPath|ConvertFrom-Json; $planReview=Get-Content -Raw -LiteralPath $planReviewPath|ConvertFrom-Json
-    $tests=@(Get-Content -Raw -LiteralPath $testsPath|ConvertFrom-Json); $finalReview=Get-Content -Raw -LiteralPath $finalReviewPath|ConvertFrom-Json
+    $parsedTests=Get-Content -Raw -LiteralPath $testsPath|ConvertFrom-Json
+    $tests=@($parsedTests); $finalReview=Get-Content -Raw -LiteralPath $finalReviewPath|ConvertFrom-Json
     $stateEvidence=Initialize-ItoevaEvidenceSnapshot $statePath (Join-Path $runRoot 'state.dry-run.json') (-not $journal -or [string]$state.status -eq 'DRY_RUN_PASS')
     $planReviewEvidence=Initialize-ItoevaEvidenceSnapshot $planReviewPath (Join-Path $runRoot 'plan-review.dry-run.json') $true
     $finalReviewEvidence=Initialize-ItoevaEvidenceSnapshot $finalReviewPath (Join-Path $runRoot 'final-review.dry-run.json') $true

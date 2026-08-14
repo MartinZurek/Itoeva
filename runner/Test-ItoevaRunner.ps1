@@ -30,7 +30,7 @@ function Assert-Throws([scriptblock]$Body) {
     if (-not $thrown) { throw 'Erwartete Exception wurde nicht ausgelöst.' }
 }
 
-function New-PublishDryRunFixture([string]$Root, [string]$RunId) {
+function New-PublishDryRunFixture([string]$Root, [string]$RunId, $TestResults = $null) {
     $remote=Join-Path $Root 'remote.git'; $seed=Join-Path $Root 'seed'; $repository=Join-Path $Root 'repository'
     $runtime=Join-Path $Root 'runtime'; $hooks=Join-Path $Root 'hooks'; $runRoot=Join-Path $runtime "state\$RunId"; $reports=Join-Path $runtime 'reports'
     New-Item -ItemType Directory -Path $seed,$hooks,$runRoot,$reports | Out-Null
@@ -50,7 +50,9 @@ function New-PublishDryRunFixture([string]$Root, [string]$RunId) {
     $plan=[ordered]@{ status='PLANNED'; baseSha=$base; title='Publish dry run'; plan=@('change source'); paths=$paths; tests=@('verify') }
     $planPath=Join-Path $runRoot 'plan.json'; Write-ItoevaAtomicJson $plan $planPath; $planHash=Get-ItoevaSha256 $planPath
     Write-ItoevaAtomicJson ([ordered]@{ status='PASS'; baseSha=$base; planHash=$planHash; findings=@() }) (Join-Path $runRoot 'plan-review.json')
-    $tests=@([pscustomobject]@{ id='verify'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:00Z'; timedOut=$false; finishedAt='2026-01-01T00:00:01Z'; output='offline' })
+    $tests = if ($null -eq $TestResults) {
+        @([pscustomobject]@{ id='verify'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:00Z'; timedOut=$false; finishedAt='2026-01-01T00:00:01Z'; output='offline' })
+    } else { @($TestResults) }
     $testsPath=Join-Path $runRoot 'tests.json'; Write-ItoevaAtomicJson $tests $testsPath; $testHash=Get-ItoevaSha256 $testsPath
     Write-ItoevaAtomicJson ([ordered]@{ status='PASS'; baseSha=$base; planHash=$planHash; treeOid=$tree; testManifestHash=$testHash; findings=@() }) (Join-Path $runRoot 'final-review.json')
     Write-ItoevaAtomicJson ([ordered]@{ runId=$RunId; phase='COMPLETE'; baseSha=$base; branch=$branch; status='DRY_RUN_PASS' }) (Join-Path $runRoot 'state.json')
@@ -61,6 +63,13 @@ function New-PublishDryRunFixture([string]$Root, [string]$RunId) {
     $fixtureConfig.repository.expectedOrigin=$remote; $fixtureConfig.publication.enabled=$true
     $fixtureConfig|Add-Member -NotePropertyName runtimeRoot -NotePropertyValue $runtime -Force
     return [pscustomobject]@{ remote=$remote; seed=$seed; repository=$repository; runtime=$runtime; hooks=$hooks; runRoot=$runRoot; reportPath=$reportPath; runId=$RunId; base=$base; branch=$branch; tree=$tree; config=$fixtureConfig }
+}
+
+function Set-PublishFixtureReportTests($Fixture, $Tests) {
+    $report=Get-Content -Raw -LiteralPath $Fixture.reportPath|ConvertFrom-Json
+    $report.tests=@($Tests)
+    Write-ItoevaAtomicJson $report $Fixture.reportPath
+    [IO.File]::WriteAllText("$($Fixture.reportPath).sha256", (Get-ItoevaSha256 $Fixture.reportPath), [Text.UTF8Encoding]::new($false))
 }
 
 function Set-PublishFixtureResumePhase($Fixture, [string]$Phase, [bool]$RestoreDryRunReport) {
@@ -364,6 +373,71 @@ try {
         $phaseByRank=@{'1'='PREPARED';'2'='COMMITTED';'3'='PUSHED';'4'='REPORTED'}
         $phases=@(Get-ChildItem -LiteralPath (Join-Path $fixture.runRoot 'publish-journal') -Filter 'p.*.json' | ForEach-Object { if($_.Name -match '^p\.([1-4])\.'){ $phaseByRank[$Matches[1]] } } | Sort-Object)
         Assert-True (($phases -join ',') -eq 'COMMITTED,PREPARED,PUSHED,REPORTED') "Journalphasen fehlen: $($phases -join ',')"
+    }
+    Test-Case 'PublishDryRun normalisiert zwei Testergebnisse zu einem flachen Array' {
+        $testResults=@(
+            [pscustomobject]@{ id='verify'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:00Z'; timedOut=$false; finishedAt='2026-01-01T00:00:01Z'; output='offline verify' },
+            [pscustomobject]@{ id='connected'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:01Z'; timedOut=$false; finishedAt='2026-01-01T00:00:02Z'; output='offline connected' }
+        )
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-two-tests') ('d'*32) $testResults
+        $rawParsed=Get-Content -Raw -LiteralPath (Join-Path $fixture.runRoot 'tests.json')|ConvertFrom-Json
+        $tests=@($rawParsed)
+        Assert-True ($tests.Count -eq 2) 'Zwei Tests wurden nicht flach normalisiert.'
+        Assert-True ($tests[0] -isnot [System.Array]) 'Der konkrete System.Object[]-Regressionsfall besteht fort.'
+        $result=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+        Assert-True ($result.status -eq 'PUSHED') 'Identische Legacy-Arrays wurden nicht akzeptiert.'
+    }
+    Test-Case 'PublishDryRun normalisiert ein Testergebnis weiterhin korrekt' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-one-test') ('e'*32)
+        $rawParsed=Get-Content -Raw -LiteralPath (Join-Path $fixture.runRoot 'tests.json')|ConvertFrom-Json
+        $tests=@($rawParsed)
+        Assert-True ($tests.Count -eq 1 -and $tests[0].id -eq 'verify')
+    }
+    Test-Case 'PublishDryRun lehnt fehlende zusaetzliche oder vertauschte Tests ab' {
+        $testResults=@(
+            [pscustomobject]@{ id='verify'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:00Z'; timedOut=$false; finishedAt='2026-01-01T00:00:01Z'; output='one' },
+            [pscustomobject]@{ id='connected'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:01Z'; timedOut=$false; finishedAt='2026-01-01T00:00:02Z'; output='two' }
+        )
+        $variants=@(
+            [pscustomobject]@{name='missing';tests=@($testResults[0])},
+            [pscustomobject]@{name='additional';tests=@($testResults + [pscustomobject]@{ id='extra'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:02Z'; timedOut=$false; finishedAt='2026-01-01T00:00:03Z'; output='three' })},
+            [pscustomobject]@{name='reordered';tests=@($testResults[1],$testResults[0])}
+        )
+        $index=0
+        foreach($variant in $variants){
+            $fixture=New-PublishDryRunFixture (Join-Path $tempRoot "publish-tests-$($variant.name)") ((('{0:x}' -f ($index+1))*32).Substring(0,32)) $testResults
+            Set-PublishFixtureReportTests $fixture $variant.tests
+            Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null }
+            Assert-True (-not (Test-Path -LiteralPath (Join-Path $fixture.runRoot 'publish-journal'))) 'Mismatch erreichte PREPARED.'
+            $index++
+        }
+    }
+    Test-Case 'PublishDryRun lehnt manipulierte Testfelder ab' {
+        $baseTest=[pscustomobject]@{ id='verify'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:00Z'; timedOut=$false; finishedAt='2026-01-01T00:00:01Z'; output='offline' }
+        $mutations=@(
+            [pscustomobject]@{name='output';property='output';value='manipulated'},
+            [pscustomobject]@{name='exit-code';property='exitCode';value=1},
+            [pscustomobject]@{name='timeout';property='timedOut';value=$true},
+            [pscustomobject]@{name='status';property='status';value='FAIL'}
+        )
+        $index=0
+        foreach($mutation in $mutations){
+            $fixture=New-PublishDryRunFixture (Join-Path $tempRoot "publish-test-field-$($mutation.name)") ((('{0:x}' -f ($index+4))*32).Substring(0,32)) @($baseTest)
+            $changed=$baseTest.PSObject.Copy(); $changed.($mutation.property)=$mutation.value
+            Set-PublishFixtureReportTests $fixture @($changed)
+            Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null }
+            $index++
+        }
+    }
+    Test-Case 'Korrekter Legacy-Dry-Run erreicht PREPARED' {
+        $testResults=@(
+            [pscustomobject]@{ id='verify'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:00Z'; timedOut=$false; finishedAt='2026-01-01T00:00:01Z'; output='one' },
+            [pscustomobject]@{ id='connected'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:01Z'; timedOut=$false; finishedAt='2026-01-01T00:00:02Z'; output='two' }
+        )
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-legacy-prepared') ('f'*32) $testResults
+        Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null
+        $prepared=@(Get-ChildItem -LiteralPath (Join-Path $fixture.runRoot 'publish-journal') -Filter 'p.1.*.json' -File)
+        Assert-True ($prepared.Count -eq 1) 'Legacy-Dry-Run erreichte PREPARED nicht.'
     }
     Test-Case 'PublishDryRun lehnt manipulierten Report-Hash fail-closed ab' {
         $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-report-tamper') ('2'*32)
