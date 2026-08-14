@@ -27,8 +27,8 @@ import org.junit.runner.RunWith
  *
  * ```
  * Ausloesung  →  AvatarFeedEvent angelegt (unabhaengig von einer Reaktion)
- *             →  Nutzer fuettert  →  markFed setzt fedAtMillis
- *             →  NUR bei isPlayMode: XP
+ *             →  Nutzer fuettert  →  atomare Transaktion setzt fedAtMillis genau einmal
+ *             →  NUR bei isPlayMode und im selben Commit: XP
  *             →  Stimmung wird aus Tageszielen gerechnet (nicht gespeichert)
  * ```
  *
@@ -111,7 +111,7 @@ class FeedingChainCharacterizationTest {
         val erste = dao.insert(ereignis(reminderId = 1L))
         val zweite = dao.insert(ereignis(reminderId = 1L))
 
-        dao.markFed(erste, 1_700_000_000_000L)
+        assertEquals(1, dao.markFedIfUnfed(erste, 1_700_000_000_000L))
 
         assertEquals(1_700_000_000_000L, dao.getById(erste)?.fedAtMillis)
         assertNull(

@@ -33,9 +33,10 @@ interface AvatarPlayStateDao {
     suspend fun insertIfAbsent(state: AvatarPlayState)
 
     /** Atomarer Zuwachs statt Lesen-Aendern-Schreiben - zwei gleichzeitige Fuetterungen duerfen
-     *  sich nicht gegenseitig ueberschreiben. */
+     *  sich nicht gegenseitig ueberschreiben. Der Rueckgabewert ist die Zahl aktualisierter
+     *  Zeilen; die Fuetter-Transaktion verlangt fuer ein Play-Ereignis genau eine. */
     @Query("UPDATE avatar_play_state SET xp = xp + :amount WHERE profileId = :profileId")
-    suspend fun addXp(profileId: String, amount: Int)
+    suspend fun addXp(profileId: String, amount: Int): Int
 
     @Query("UPDATE avatar_play_state SET lastSeenLevel = :level WHERE profileId = :profileId")
     suspend fun setLastSeenLevel(profileId: String, level: Int)

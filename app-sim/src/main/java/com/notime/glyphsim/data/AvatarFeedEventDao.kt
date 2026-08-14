@@ -66,8 +66,8 @@ interface AvatarFeedEventDao {
     @Query("SELECT COUNT(*) FROM avatar_feed_events")
     suspend fun count(): Int
 
-    /** Eine einzelne Zeile per ID - [AvatarFeeding.logFeedEvent] laedt sie nach dem Fuettern
-     *  nach, um [isPlayMode] fuer die XP-Vergabe zu pruefen. */
+    /** Eine einzelne Zeile per ID - die atomare Fuetter-Transaktion laedt sie nach ihrem
+     *  bedingten Schreibzugriff, um [isPlayMode] und [profileId] fuer die XP-Vergabe zu lesen. */
     @Query("SELECT * FROM avatar_feed_events WHERE id = :id")
     suspend fun getById(id: Long): AvatarFeedEvent?
 
@@ -216,12 +216,19 @@ interface AvatarFeedEventDao {
     suspend fun occurrencesSince(profileId: String, sinceEpochMillis: Long): List<OccurrenceRow>
 
     /**
-     * Haelt fest, dass auf eine Ausloesung reagiert wurde. Bewusst ueber die Zeilen-ID statt
-     * ueber die Erinnerung: dieselbe Erinnerung loest immer wieder aus, gemeint ist aber genau
-     * dieses eine Auftreten.
+     * Haelt GENAU EINMAL fest, dass auf eine Ausloesung reagiert wurde.
+     *
+     * Bewusst ueber die Zeilen-ID statt ueber die Erinnerung: dieselbe Erinnerung loest immer
+     * wieder aus, gemeint ist aber genau dieses eine Auftreten. `fedAtMillis IS NULL` macht den
+     * Wechsel von offen zu beantwortet zum linearen Annahmepunkt der Fuetter-Transaktion: genau
+     * ein konkurrierender Aufruf aktualisiert eine Zeile, alle weiteren bekommen `0` zurueck.
+     * Zugleich bleibt der Zeitpunkt der ersten Reaktion erhalten.
      */
-    @Query("UPDATE avatar_feed_events SET fedAtMillis = :fedAtMillis WHERE id = :id")
-    suspend fun markFed(id: Long, fedAtMillis: Long)
+    @Query(
+        "UPDATE avatar_feed_events SET fedAtMillis = :fedAtMillis " +
+            "WHERE id = :id AND fedAtMillis IS NULL"
+    )
+    suspend fun markFedIfUnfed(id: Long, fedAtMillis: Long): Int
 
     /**
      * Aufschluesselung nach Animation fuer einen Zeitraum, haeufigste zuerst.

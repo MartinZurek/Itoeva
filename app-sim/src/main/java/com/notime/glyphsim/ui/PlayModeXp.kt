@@ -1,8 +1,5 @@
 package com.notime.glyphsim.ui
 
-import android.content.Context
-import com.notime.glyphsim.data.AppDatabase
-
 /**
  * XP/Level-Rechnung des Play Mode (siehe [PlayModeViewModel]). Das Level wird bewusst NICHT
  * gespeichert, sondern immer aus `xp` abgeleitet ([levelFor]) - dadurch kann es nie mit der
@@ -18,8 +15,4 @@ object PlayModeXp {
 
     fun levelFor(xp: Int): Int = 1 + xp / XP_PER_LEVEL
 
-    /** Vergibt XP fuer eine gefuetterte Play-Mode-Ausloesung - siehe [AvatarFeeding.logFeedEvent]. */
-    suspend fun award(context: Context, profileId: String) {
-        AppDatabase.getInstance(context).avatarPlayStateDao().addXp(profileId, XP_PER_FEED)
-    }
 }

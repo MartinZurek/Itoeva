@@ -2,6 +2,7 @@ package com.notime.glyphsim.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -174,6 +175,7 @@ fun HomeScreen(
 
     // Fuetter-Zustand: die Uhr laesst sich auf den Avatar schieben, genau wie im Dock-Modus.
     var activeReminder by remember { mutableStateOf<ActiveReminder?>(null) }
+    var feedingOccurrenceId by remember { mutableStateOf<Long?>(null) }
     var clockDrag by remember { mutableStateOf(Offset.Zero) }
     var avatarDrag by remember { mutableStateOf(Offset.Zero) }
     var clockBounds by remember { mutableStateOf(Rect.Zero) }
@@ -287,17 +289,34 @@ fun HomeScreen(
     // weiter unten) - per Drag laesst sich nicht sinnvoll fuer einen Screenreader bedienen.
     fun feedNow() {
         val current = activeReminder ?: return
-        activeReminder = null
-        clockAnimJob?.cancel()
-        isPlayingAnimation = false
-        animationFrame = null
-        isReacting = true
-
-        scope.launch(Dispatchers.IO) {
-            AvatarFeeding.logFeedEvent(context, current.occurrenceId)
-        }
+        if (feedingOccurrenceId == current.occurrenceId) return
+        feedingOccurrenceId = current.occurrenceId
         scope.launch {
+            var confirmedReactionStarted = false
             try {
+                val result = withContext(Dispatchers.IO) {
+                    AvatarFeeding.logFeedEvent(context, current.occurrenceId)
+                }
+                // Die Erinnerung kann waehrend der kurzen DB-Operation regulaer ausgelaufen oder
+                // durch eine neue ersetzt worden sein. Persistiert ist die Antwort trotzdem;
+                // eine Reaktion auf das falsche sichtbare Ereignis waere aber irrefuehrend.
+                if (activeReminder?.occurrenceId != current.occurrenceId) return@launch
+                if (!result.isUiSuccess()) {
+                    Log.w(HOME_TAG, "Stale feed occurrenceId=${current.occurrenceId}")
+                    activeReminder = null
+                    clockAnimJob?.cancel()
+                    isPlayingAnimation = false
+                    animationFrame = null
+                    return@launch
+                }
+
+                // Erst der bestaetigte DB-Erfolg darf die sichtbare Erfolgsreaktion ausloesen.
+                activeReminder = null
+                clockAnimJob?.cancel()
+                isPlayingAnimation = false
+                animationFrame = null
+                isReacting = true
+                confirmedReactionStarted = true
                 AvatarFeeding.playReaction(
                     species = currentSpecies,
                     animationType = current.animationType,
@@ -307,15 +326,24 @@ fun HomeScreen(
                     onFrame = { avatarFrame = it },
                     onOffset = { avatarDrag = it }
                 )
+            } catch (cancellation: kotlinx.coroutines.CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                // Die Transaktion hat Markierung und XP gemeinsam zurueckgerollt. Solange die
+                // Erinnerung noch offen ist, bleibt sie sichtbar und kann erneut versucht werden.
+                Log.e(HOME_TAG, "Feed transaction failed occurrenceId=${current.occurrenceId}", error)
             } finally {
                 // Zwingend im finally: isReacting blendet seit Neuestem die Uhr aus. Bliebe das
                 // Flag nach einem Abbruch (Spezies gewechselt, Fehler in der Reaktion) auf true
                 // stehen, waere die Uhr bis zum naechsten App-Start verschwunden - aus einem
                 // kurzen Aussetzer wuerde ein dauerhaft kaputter Startbildschirm.
-                moodRefresh++
-                avatarDrag = Offset.Zero
-                clockDrag = Offset.Zero
-                isReacting = false
+                if (confirmedReactionStarted) {
+                    moodRefresh++
+                    avatarDrag = Offset.Zero
+                    clockDrag = Offset.Zero
+                    isReacting = false
+                }
+                if (feedingOccurrenceId == current.occurrenceId) feedingOccurrenceId = null
             }
         }
     }
@@ -893,6 +921,7 @@ private fun reactionPaceFor(mood: AvatarMood): Float = when (mood) {
  *  kurz genug, um nicht wie eine Verzoegerung zu wirken, lang genug, um den ersten Moment der
  *  Freuden-Reaktion noch zu sehen, bevor der Dialog sie verdeckt. */
 private const val AVATAR_TAP_PEEK_MS = 320L
+private const val HOME_TAG = "HomeScreen"
 
 
 /**

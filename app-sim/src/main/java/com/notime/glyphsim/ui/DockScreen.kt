@@ -1,6 +1,7 @@
 package com.notime.glyphsim.ui
 
 import android.os.SystemClock
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
@@ -319,6 +320,7 @@ fun DockScreen(
         val floorYPxNow by rememberUpdatedState(floorYPx)
 
         var avatar by remember { mutableStateOf<AvatarState?>(null) }
+        var feedingOccurrenceId by remember { mutableStateOf<Long?>(null) }
         /** Ob gerade ein Gang laeuft - siehe das Nachfuehren des Bodens weiter unten. */
         var avatarWalking by remember { mutableStateOf(false) }
         /** Wie oft die Figur schon hintereinander im selben Raum geblieben ist - siehe nextTopic. */
@@ -1581,27 +1583,43 @@ fun DockScreen(
             // Modus der Normalzustand zwischen zwei Ausloesungen (der Avatar existiert dort
             // dauerhaft, siehe LaunchedEffect(playMode) oben).
             if (current.fed || current.occurrenceId == null) return
-            // Gefuettert wird immer frei stehend - eine Fuetter-Reaktion unter der Bettdecke waere
-            // zur Haelfte unsichtbar.
-            occupiedStation = null
-            avatar = current.copy(fed = true)
-            clockAnimJob?.cancel()
-            avatarIdleJob?.cancel()
-            isPlayingAnimation = false
-            animationFrame = null
-
-            // Fuetter-Logik geteilt mit dem Startbildschirm (siehe AvatarFeeding) - dort
-            // laesst sich die Uhr inzwischen genauso auf den Avatar schieben, beide sollen
-            // sich identisch verhalten.
-            scope.launch(Dispatchers.IO) {
-                AvatarFeeding.logFeedEvent(context, current.occurrenceId)
-            }
-            // Sein Motiv als Rueckmeldung - nur, wenn Ton eingeschaltet ist, nicht nachts und
-            // nicht ueber laufender Musik (siehe PlaySound).
-            PlaySound.play(context, current.species, PlayChime.Event.FEED, scope)
-            fedCount++
+            if (feedingOccurrenceId == current.occurrenceId) return
+            feedingOccurrenceId = current.occurrenceId
             scope.launch {
                 try {
+                    val result = withContext(Dispatchers.IO) {
+                        AvatarFeeding.logFeedEvent(context, current.occurrenceId)
+                    }
+                    if (avatar?.occurrenceId != current.occurrenceId) return@launch
+                    if (!result.isUiSuccess()) {
+                        Log.w(DOCK_TAG, "Stale feed occurrenceId=${current.occurrenceId}")
+                        clockAnimJob?.cancel()
+                        isPlayingAnimation = false
+                        animationFrame = null
+                        avatar = if (playMode) {
+                            avatar?.copy(
+                                reminderId = null,
+                                occurrenceId = null,
+                                animationType = null,
+                                libraryAnimationLabel = null
+                            )
+                        } else {
+                            null
+                        }
+                        return@launch
+                    }
+
+                    // Erst der bestaetigte DB-Erfolg darf Ton, Zaehler und Reaktion ausloesen.
+                    // Gefuettert wird immer frei stehend - unter der Bettdecke waere die Reaktion
+                    // zur Haelfte unsichtbar.
+                    occupiedStation = null
+                    avatar = current.copy(fed = true)
+                    clockAnimJob?.cancel()
+                    avatarIdleJob?.cancel()
+                    isPlayingAnimation = false
+                    animationFrame = null
+                    PlaySound.play(context, current.species, PlayChime.Event.FEED, scope)
+                    fedCount++
                     AvatarFeeding.playReaction(
                         species = current.species,
                         animationType = current.animationType,
@@ -1611,6 +1629,12 @@ fun DockScreen(
                         onFrame = { f -> avatar = avatar?.copy(frame = f) },
                         onOffset = { o -> avatar = avatar?.copy(offset = current.offset + o) }
                     )
+                } catch (cancellation: kotlinx.coroutines.CancellationException) {
+                    throw cancellation
+                } catch (error: Exception) {
+                    // Keine Erfolgsreaktion: die Room-Transaktion hat Markierung und XP gemeinsam
+                    // zurueckgerollt. Der noch offene Avatar bleibt fuer einen Retry stehen.
+                    Log.e(DOCK_TAG, "Feed transaction failed occurrenceId=${current.occurrenceId}", error)
                 } finally {
                     // Zwingend im finally: solange avatar.fed gesetzt ist, wird die Uhr
                     // ausgeblendet. Bliebe der Avatar nach einem Abbruch stehen, waere die
@@ -1623,7 +1647,7 @@ fun DockScreen(
                     // dieses finally sonst genau in dem kurzen Fenster laufen, in dem der
                     // Collector den Avatar bereits auf die naechste Erinnerung gesetzt hat, und
                     // wuerde sie faelschlich wieder loeschen.
-                    if (avatar?.occurrenceId == current.occurrenceId) {
+                    if (avatar?.fed == true && avatar?.occurrenceId == current.occurrenceId) {
                         if (playMode) {
                             // Der Avatar bleibt im Play-Modus stehen (an der Stelle, an die ihn
                             // die Reaktion zuletzt bewegt hat) statt wie im normalen Dock zu
@@ -1641,6 +1665,7 @@ fun DockScreen(
                             avatar = null
                         }
                     }
+                    if (feedingOccurrenceId == current.occurrenceId) feedingOccurrenceId = null
                 }
             }
         }
@@ -2831,6 +2856,7 @@ private const val SCENE_FADE_IN_MS = 380
 /** Wie lange der Glueckwunsch zum neuen Level stehen bleibt, bevor wieder der nuechterne Stand
  *  erscheint - lang genug zum Lesen, kurz genug, um nicht im Weg zu stehen. */
 private const val LEVEL_UP_MESSAGE_MS = 4_000L
+private const val DOCK_TAG = "DockScreen"
 
 /** Maximale Auslenkung der Burn-in-Drift. */
 private const val DRIFT_MAX_PX = 60f

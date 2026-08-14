@@ -8,9 +8,10 @@ import androidx.room.PrimaryKey
  * [profileId] (Avatar-Name, siehe ui/AvatarSpeciesPrefs), angelegt beim ersten "Spielmodus
  * starten".
  *
- * [xp] waechst mit jeder gefuetterten Play-Mode-Ausloesung (siehe ui/PlayModeXp.award), das
- * Level ergibt sich daraus ([com.notime.glyphsim.ui.PlayModeXp.levelFor]) statt selbst
- * gespeichert zu werden - so kann es nie mit [xp] auseinanderlaufen.
+ * [xp] waechst mit jeder erstmals gefuetterten Play-Mode-Ausloesung (siehe
+ * [AvatarFeedingRepository]), das Level ergibt sich daraus
+ * ([com.notime.glyphsim.ui.PlayModeXp.levelFor]) statt selbst gespeichert zu werden - so kann es
+ * nie mit [xp] auseinanderlaufen.
  *
  * [lastSeenLevel] haelt fest, bis zu welchem Level der Avatar dem Nutzer schon gratuliert hat
  * (siehe ui/AvatarAssistant.AssistantPlay) - ohne das wuerde die Glueckwunsch-Blase bei jedem

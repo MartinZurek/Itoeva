@@ -7,6 +7,8 @@ import androidx.compose.ui.geometry.Rect
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.data.AvatarFeedEvent
+import com.notime.glyphsim.data.AvatarFeedingRepository
+import com.notime.glyphsim.data.FeedCommitResult
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.MatrixAnimator
@@ -50,16 +52,19 @@ object AvatarFeeding {
      * Erinnerung dort sah, die App oeffnete und hier fuettert, hat sie beantwortet - sie darf
      * dann nicht weiterlaufen, als waere sie noch offen.
      */
-    suspend fun logFeedEvent(context: Context, occurrenceId: Long) {
-        val dao = AppDatabase.getInstance(context).avatarFeedEventDao()
-        dao.markFed(occurrenceId, System.currentTimeMillis())
-        GlyphClockWidgetProvider.stopReminderAnimation(context)
-        // Nur Play-Mode-Ausloesungen zahlen auf den Spielfortschritt ein (siehe PlayModeXp) -
-        // echte, vom Nutzer eingerichtete Erinnerungen bleiben davon unberuehrt.
-        val event = dao.getById(occurrenceId)
-        if (event?.isPlayMode == true) {
-            PlayModeXp.award(context, event.profileId)
+    suspend fun logFeedEvent(context: Context, occurrenceId: Long): FeedCommitResult {
+        val result = AvatarFeedingRepository(AppDatabase.getInstance(context)).feed(
+            occurrenceId = occurrenceId,
+            fedAtMillis = System.currentTimeMillis(),
+            xpPerFeed = PlayModeXp.XP_PER_FEED
+        )
+        // Widget/Ton/Reaktion koennen nicht Teil der SQLite-Transaktion sein. Ein erster Feed und
+        // ein Retry nach bereits erfolgtem Commit sind UI-seitig beide Erfolg; eine unbekannte ID
+        // dagegen nicht.
+        if (result.isUiSuccess()) {
+            GlyphClockWidgetProvider.stopReminderAnimation(context)
         }
+        return result
     }
 
     /**
@@ -128,3 +133,7 @@ object AvatarFeeding {
 
     private const val TAG = "AvatarFeeding"
 }
+
+/** Reine Entscheidung als gemeinsame, direkt testbare Grenze fuer Home und Dock. */
+internal fun FeedCommitResult.isUiSuccess(): Boolean =
+    this == FeedCommitResult.FIRST_FEED || this == FeedCommitResult.ALREADY_FED
