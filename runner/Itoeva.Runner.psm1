@@ -352,6 +352,22 @@ function Resolve-ItoevaCodexLauncher {
     return [pscustomobject]@{ executable=$command.Source; prefixArguments=@(); kind='DIRECT' }
 }
 
+function New-ItoevaCodexArguments {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Repository,
+        [Parameter(Mandatory)][string]$Sandbox,
+        [Parameter(Mandatory)][string]$SchemaPath,
+        [Parameter(Mandatory)][string]$OutputPath,
+        [string]$SessionId
+    )
+
+    if ($SessionId) {
+        return @('-a', 'never', 'exec', 'resume', '-c', "sandbox_mode=$Sandbox", $SessionId, '-', '--output-schema', $SchemaPath, '--json', '-o', $OutputPath)
+    }
+    return @('-a', 'never', 'exec', '-C', $Repository, '-s', $Sandbox, '--output-schema', $SchemaPath, '--json', '-o', $OutputPath, '-')
+}
+
 function Get-ItoevaProposedTreeOid {
     [CmdletBinding()]
     param(
@@ -461,11 +477,8 @@ function Invoke-ItoevaCodexSession {
     $eventPath = "$OutputPath.events.jsonl"
     $promptPath = "$OutputPath.prompt.txt"
     [IO.File]::WriteAllText($promptPath, $Prompt, [Text.UTF8Encoding]::new($false))
-    $arguments = if ($SessionId) {
-        @('exec', 'resume', '-c', "sandbox_mode=$Sandbox", $SessionId, '-', '--output-schema', $SchemaPath, '--json', '-o', $OutputPath)
-    } else {
-        @('exec', '-C', $Repository, '-s', $Sandbox, '-a', 'never', '--output-schema', $SchemaPath, '--json', '-o', $OutputPath, '-')
-    }
+    $arguments = New-ItoevaCodexArguments -Repository $Repository -Sandbox $Sandbox -SchemaPath $SchemaPath `
+        -OutputPath $OutputPath -SessionId $SessionId
     $launcher = Resolve-ItoevaCodexLauncher
     $validatedWindowsArgumentString = $null
     $processArguments = if ($launcher.kind -eq 'CMD_SHIM') {
@@ -572,7 +585,7 @@ Export-ModuleMember -Function @(
     'New-ItoevaPushArguments', 'Test-ItoevaGate', 'Write-ItoevaAtomicJson',
     'Enter-ItoevaRunLock', 'Exit-ItoevaRunLock', 'Get-ItoevaDangerousGitConfig',
     'Get-ItoevaChangedPaths', 'Get-ItoevaSelectedTests', 'ConvertTo-ItoevaWindowsCommandLineArgument', 'New-ItoevaCmdShimCommand', 'Invoke-ItoevaProcessWithTimeout', 'Get-ItoevaProposedTreeOid', 'Get-ItoevaRemoteSha',
-    'Resolve-ItoevaCodexLauncher',
+    'Resolve-ItoevaCodexLauncher', 'New-ItoevaCodexArguments',
     'Assert-ItoevaBaseUnchanged', 'Invoke-ItoevaConfiguredTests', 'Invoke-ItoevaCodexSession',
     'Publish-ItoevaEvolution'
 )

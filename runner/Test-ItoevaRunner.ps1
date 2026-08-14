@@ -106,6 +106,26 @@ Test-Case 'CMD-Fallback lehnt Shell-Metazeichen fail-closed ab' {
     $command = New-ItoevaCmdShimCommand -BatchPath 'C:\safe path\codex.cmd' -Arguments @('argument with spaces','plain')
     Assert-True ($command -eq '"C:\safe path\codex.cmd" "argument with spaces" "plain"')
 }
+Test-Case 'Codex-Argumente neuer Sitzungen haben globale Optionen vor exec' {
+    $arguments = @(New-ItoevaCodexArguments -Repository 'C:\repo path' -Sandbox 'read-only' `
+        -SchemaPath 'C:\schema path\candidate.json' -OutputPath 'C:\output path\analysis.json')
+    $expected = @('-a','never','exec','-C','C:\repo path','-s','read-only','--output-schema','C:\schema path\candidate.json','--json','-o','C:\output path\analysis.json','-')
+    Assert-True (($arguments -join "`n") -eq ($expected -join "`n")) "Unerwartete Argumente: $($arguments -join ' ')"
+}
+Test-Case 'Codex-Argumente fortgesetzter Sitzungen haben globale Optionen vor exec resume' {
+    $arguments = @(New-ItoevaCodexArguments -Repository 'C:\repo path' -Sandbox 'workspace-write' `
+        -SchemaPath 'C:\schema path\plan.json' -OutputPath 'C:\output path\plan.json' -SessionId 'session-123')
+    $expected = @('-a','never','exec','resume','-c','sandbox_mode=workspace-write','session-123','-','--output-schema','C:\schema path\plan.json','--json','-o','C:\output path\plan.json')
+    Assert-True (($arguments -join "`n") -eq ($expected -join "`n")) "Unerwartete Resume-Argumente: $($arguments -join ' ')"
+}
+Test-Case 'Codex-Argumente enthalten niemals exec vor -a never' {
+    $newArguments = @(New-ItoevaCodexArguments 'C:\repo' 'read-only' 'C:\schema.json' 'C:\output.json')
+    $resumeArguments = @(New-ItoevaCodexArguments 'C:\repo' 'workspace-write' 'C:\schema.json' 'C:\output.json' 'session-123')
+    foreach ($arguments in @($newArguments,$resumeArguments)) {
+        Assert-True ([Array]::IndexOf($arguments, '-a') -lt [Array]::IndexOf($arguments, 'exec')) "-a steht nicht vor exec: $($arguments -join ' ')"
+        Assert-True (($arguments -join ' ') -notmatch 'exec(?:\s+.*?)?\s+-a\s+never') "Unsichere Reihenfolge: $($arguments -join ' ')"
+    }
+}
 
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) "itoeva-runner-test-$([Guid]::NewGuid().ToString('N'))"
 try {
@@ -154,6 +174,28 @@ try {
             Assert-Throws { Resolve-ItoevaCodexLauncher | Out-Null }
         } finally { $env:PATH = $oldPath }
     }
+    Test-Case 'Native EXE erhaelt Codex-Argumente in exakter Reihenfolge' {
+        $launcherRoot = Join-Path $tempRoot 'native-argument-launcher'
+        New-Item -ItemType Directory -Path $launcherRoot | Out-Null
+        $sourcePath = Join-Path $launcherRoot 'ArgRecorder.cs'
+        $nativePath = Join-Path $launcherRoot 'codex.exe'
+        $source = 'using System; using System.Text; public static class ArgRecorder { public static int Main(string[] args) { foreach (string value in args) Console.WriteLine(Convert.ToBase64String(Encoding.UTF8.GetBytes(value))); return 0; } }'
+        [IO.File]::WriteAllText($sourcePath, $source, [Text.UTF8Encoding]::new($false))
+        $compiler = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'csc.exe'
+        & $compiler /nologo /target:exe "/out:$nativePath" $sourcePath
+        if ($LASTEXITCODE -ne 0) { throw 'Native EXE-Testdouble konnte nicht erstellt werden.' }
+        $oldPath = $env:PATH
+        try {
+            $system32 = [Environment]::GetFolderPath('System')
+            $env:PATH = "$launcherRoot;$system32"
+            $launcher = Resolve-ItoevaCodexLauncher
+            $arguments = @(New-ItoevaCodexArguments 'C:\repo path' 'read-only' 'C:\schema path\candidate.json' 'C:\output path\analysis.json')
+            $result = Invoke-ItoevaProcessWithTimeout -Executable $launcher.executable -Arguments $arguments -WorkingDirectory $launcherRoot -TimeoutSeconds 10
+            $actual = @($result.output -split "`r?`n" | Where-Object { $_ } | ForEach-Object { [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($_)) })
+            Assert-True ($result.exitCode -eq 0) "Native EXE-Testdouble schlug fehl: $($result.output)"
+            Assert-True (($actual -join "`n") -eq ($arguments -join "`n")) "Native Argumentreihenfolge abweichend: $($actual -join ' ')"
+        } finally { $env:PATH = $oldPath }
+    }
     Test-Case 'Windows Codex-CMD-Fallback laeuft nur ueber cmd.exe' {
         $launcherRoot = Join-Path $tempRoot 'cmd-launcher'
         New-Item -ItemType Directory -Path $launcherRoot | Out-Null
@@ -179,6 +221,20 @@ try {
             Assert-True ($result.output -match 'OUT:argument with spaces:hello stdin') "stdout/stdin/Argumente fehlen: $($result.output)"
             Assert-True ($result.output -match 'ERR:stderr value') "stderr fehlt: $($result.output)"
         } finally { $env:PATH = $oldPath }
+    }
+    Test-Case 'CMD-Fallback erhaelt dieselbe logische Codex-Argumentreihenfolge' {
+        $launcherRoot = Join-Path $tempRoot 'cmd-argument-launcher'
+        New-Item -ItemType Directory -Path $launcherRoot | Out-Null
+        $batchPath = Join-Path $launcherRoot 'codex.cmd'
+        [IO.File]::WriteAllText($batchPath, "@echo off`r`n:next`r`nif `"%~1`"==`"`" exit /b 0`r`necho ARG:%~1`r`nshift`r`ngoto next`r`n")
+        $arguments = @(New-ItoevaCodexArguments 'C:\repo path' 'read-only' 'C:\schema path\candidate.json' 'C:\output path\analysis.json')
+        $command = New-ItoevaCmdShimCommand $batchPath $arguments
+        $cmdArguments = "/d /s /c `"$command`""
+        $result = Invoke-ItoevaProcessWithTimeout -Executable (Get-Command cmd.exe).Source `
+            -WorkingDirectory $launcherRoot -TimeoutSeconds 10 -ValidatedWindowsArgumentString $cmdArguments
+        $actual = @($result.output -split "`r?`n" | Where-Object { $_ -match '^ARG:' } | ForEach-Object { $_.Substring(4) })
+        Assert-True ($result.exitCode -eq 0) "CMD-Argumenttest schlug fehl: $($result.output)"
+        Assert-True (($actual -join "`n") -eq ($arguments -join "`n")) "CMD-Argumentreihenfolge abweichend: $($actual -join ' ')"
     }
     Test-Case 'CMD-Fallback-Timeout beendet den Kindprozessbaum' {
         $launcherRoot = Join-Path $tempRoot 'cmd-timeout-launcher'
