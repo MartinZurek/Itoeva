@@ -72,6 +72,45 @@ class ReminderImportLimitsTest {
     }
 
     @Test
+    fun `uebermaessig verschachtelte Arrays werden abgelehnt`() {
+        val tief = "{\"a\":" +
+            "[".repeat(ReminderImport.MAX_JSON_DEPTH + 1) +
+            "1" +
+            "]".repeat(ReminderImport.MAX_JSON_DEPTH + 1) +
+            "}"
+
+        assertNull("Zu tiefe Arrays duerfen nicht durchgereicht werden", ReminderImport.extractJson(tief))
+    }
+
+    @Test
+    fun `gemischte Container sind bis zur Obergrenze erlaubt`() {
+        val openings = buildList {
+            repeat(ReminderImport.MAX_JSON_DEPTH) { depth ->
+                add(if (depth % 2 == 0) "{\"a\":" else "[")
+            }
+        }
+        val json = openings.joinToString("") + "1" +
+            openings.asReversed().joinToString("") { if (it == "[") "]" else "}" }
+
+        assertEquals(json, ReminderImport.extractJson(json))
+    }
+
+    @Test
+    fun `gemischte Container ueber der Obergrenze werden abgelehnt`() {
+        val tief = buildString {
+            repeat(ReminderImport.MAX_JSON_DEPTH + 1) { depth ->
+                append(if (depth % 2 == 0) "{\"a\":" else "[")
+            }
+            append("1")
+            repeat(ReminderImport.MAX_JSON_DEPTH + 1) { depth ->
+                append(if (depth % 2 == 0) "}" else "]")
+            }
+        }
+
+        assertNull(ReminderImport.extractJson(tief))
+    }
+
+    @Test
     fun `uebliche Verschachtelung geht weiterhin durch`() {
         val normal = """
             Hier bitte:
@@ -87,10 +126,16 @@ class ReminderImportLimitsTest {
 
     @Test
     fun `Klammern in String zaehlen nicht zur Verschachtelungstiefe`() {
-        val klammern = "{".repeat(ReminderImport.MAX_JSON_DEPTH + 5)
+        val klammern = "{[".repeat(ReminderImport.MAX_JSON_DEPTH + 5)
         val json = """{"label":"$klammern"}"""
 
         assertEquals(json, ReminderImport.extractJson(json))
+    }
+
+    @Test
+    fun `falsch gepaarte Container werden abgelehnt`() {
+        assertNull(ReminderImport.extractJson("{\"a\":[}]"))
+        assertNull(ReminderImport.extractJson("{\"a\":[1}"))
     }
 
     /**
