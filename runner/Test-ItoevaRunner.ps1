@@ -86,6 +86,53 @@ function Set-PublishFixtureResumePhase($Fixture, [string]$Phase, [bool]$RestoreD
     Write-ItoevaAtomicJson ([ordered]@{runId=$Fixture.runId;phase='COMPLETE';baseSha=$Fixture.base;branch=$Fixture.branch;status='DRY_RUN_PASS'}) (Join-Path $Fixture.runRoot 'state.json')
 }
 
+function New-RevalidateDryRunFixture([string]$Root, [string]$RunId, [bool]$Conflict = $false) {
+    $fixture=New-PublishDryRunFixture $Root $RunId
+    $sourceReportSnapshot="$($fixture.reportPath.Substring(0,$fixture.reportPath.Length-5)).dry-run.json"
+    [IO.File]::WriteAllBytes($sourceReportSnapshot,[IO.File]::ReadAllBytes($fixture.reportPath));[IO.File]::WriteAllText("$sourceReportSnapshot.sha256",(Get-ItoevaSha256 $sourceReportSnapshot),[Text.UTF8Encoding]::new($false))
+    foreach($name in @('state','plan-review','final-review')){
+        $source=Join-Path $fixture.runRoot "$name.json";$snapshot=Join-Path $fixture.runRoot "$name.dry-run.json"
+        [IO.File]::WriteAllBytes($snapshot,[IO.File]::ReadAllBytes($source));[IO.File]::WriteAllText("$snapshot.sha256",(Get-ItoevaSha256 $snapshot),[Text.UTF8Encoding]::new($false))
+    }
+    $evolved=Get-Content -Raw -LiteralPath (Join-Path $fixture.repository 'source.txt')
+    [IO.File]::WriteAllText((Join-Path $fixture.seed $(if($Conflict){'source.txt'}else{'main.txt'})), $(if($Conflict){"upstream`n"}else{"new main`n"}))
+    & git -C $fixture.seed add --all|Out-Null; & git -C $fixture.seed commit --quiet -m advance-main|Out-Null; & git -C $fixture.seed push --quiet origin HEAD:refs/heads/main|Out-Null
+    & git -C $fixture.repository restore --worktree -- source.txt|Out-Null
+    & git -C $fixture.repository fetch --quiet origin|Out-Null
+    & git -C $fixture.repository switch --quiet --detach refs/remotes/origin/main|Out-Null
+    & git -C $fixture.repository branch -f $fixture.branch refs/remotes/origin/main|Out-Null
+    & git -C $fixture.repository switch --quiet $fixture.branch|Out-Null
+    [IO.File]::WriteAllText((Join-Path $fixture.repository 'source.txt'),$evolved)
+    $fixture.config.agentExecution.enabled=$true; $fixture.config.publication.enabled=$false
+    $fixture.config.tests.android=@(); $fixture.config.tests.mandatory=@()
+    $fixture|Add-Member -NotePropertyName newBase -NotePropertyValue ((& git -C $fixture.repository rev-parse HEAD).Trim())
+    return $fixture
+}
+
+function New-RevalidateCodexDouble([string]$Root, [string]$MarkerPath) {
+    New-Item -ItemType Directory -Path $Root -Force|Out-Null
+    $sourcePath=Join-Path $Root 'RevalidateCodex.cs';$nativePath=Join-Path $Root 'codex.exe'
+    $source=@'
+using System;
+using System.IO;
+using System.Text.RegularExpressions;
+public static class RevalidateCodex {
+  static string Find(string text,string name){var m=Regex.Match(text,"(?m)^"+Regex.Escape(name)+@"\s*([0-9a-f]{40,64})\s*$");if(!m.Success)throw new Exception("missing "+name);return m.Groups[1].Value;}
+  public static int Main(string[] args){
+    string output=null;for(int i=0;i<args.Length-1;i++)if(args[i]=="-o")output=args[i+1];
+    var prompt=Console.In.ReadToEnd();var marker=Environment.GetEnvironmentVariable("ITOEVA_REVALIDATE_CODEX_MARKER");
+    File.AppendAllText(marker,string.Join("\t",args)+Environment.NewLine);
+    var json="{\"status\":\"PASS\",\"baseSha\":\""+Find(prompt,"Base:")+"\",\"planHash\":\""+Find(prompt,"Source-Plan-Hash:")+"\",\"treeOid\":\""+Find(prompt,"Tree:")+"\",\"testManifestHash\":\""+Find(prompt,"Testmanifest-Hash:")+"\",\"findings\":[]}";
+    File.WriteAllText(output,json);Console.WriteLine("{\"thread_id\":\"0123456789abcdef0123456789abcdef\"}");return 0;
+  }
+}
+'@
+    [IO.File]::WriteAllText($sourcePath,$source,[Text.UTF8Encoding]::new($false));$compiler=Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'csc.exe'
+    & $compiler /nologo /target:exe "/out:$nativePath" $sourcePath
+    if($LASTEXITCODE -ne 0){throw 'Revalidate-Codex-Testdouble konnte nicht erstellt werden.'}
+    return $nativePath
+}
+
 $validBranch = 'evolution/002-small-fix-0123456789abcdef0123456789abcdef'
 
 Test-Case 'gültiger Evolution-Branch' {
@@ -535,6 +582,86 @@ try {
         Assert-True ($process.exitCode -ne 0)
         Assert-True ($process.output -notmatch 'Agentenausf.hrung ist nicht autorisiert')
         Assert-True ($process.output -match 'Unerwartetes origin')
+    }
+    Test-Case 'RevalidateDryRun uebertraegt den Source-Diff exakt auf einen neuen Base' {
+        $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot 'revalidate-tree') ('1a'*16)
+        $paths=@('source.txt');$expected=Get-ItoevaExpectedRebasedTree $fixture.repository $fixture.base $fixture.tree $fixture.newBase $paths $fixture.runtime
+        $actual=Get-ItoevaProposedTreeOid $fixture.repository $fixture.newBase $paths
+        Assert-True ($expected -eq $actual) 'Exakt uebertragener Tree stimmt nicht mit dem Working Tree ueberein.'
+        [IO.File]::WriteAllText((Join-Path $fixture.repository 'source.txt'),"altered`n")
+        Assert-True ((Get-ItoevaProposedTreeOid $fixture.repository $fixture.newBase $paths) -ne $expected) 'Veraenderter Working Tree wurde nicht erkannt.'
+    }
+    Test-Case 'RevalidateDryRun lehnt Konflikt im selben Codebereich ab' {
+        $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot 'revalidate-conflict') ('1b'*16) $true
+        Assert-Throws { Get-ItoevaExpectedRebasedTree $fixture.repository $fixture.base $fixture.tree $fixture.newBase @('source.txt') $fixture.runtime | Out-Null }
+    }
+    Test-Case 'RevalidateDryRun lehnt manipulierte Source-Artefakte fail-closed ab' {
+        $cases=@(
+            [pscustomobject]@{name='report';relative='report'},[pscustomobject]@{name='state';relative='state.json'},
+            [pscustomobject]@{name='plan';relative='plan.json'},[pscustomobject]@{name='plan-review';relative='plan-review.json'},
+            [pscustomobject]@{name='tests';relative='tests.json'},[pscustomobject]@{name='final-review';relative='final-review.json'},
+            [pscustomobject]@{name='snapshot-sidecar';relative='plan-review.dry-run.json.sha256'}
+        )
+        $index=0
+        foreach($case in $cases){
+            $id=(('{0:x2}' -f (30+$index))*16).Substring(0,32);$fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot "revalidate-source-$($case.name)") $id
+            $target=if($case.relative -eq 'report'){$fixture.reportPath}else{Join-Path $fixture.runRoot $case.relative}
+            if($case.name -eq 'snapshot-sidecar'){[IO.File]::WriteAllText($target,('0'*64),[Text.UTF8Encoding]::new($false))}else{[IO.File]::AppendAllText($target,' ')}
+            Assert-Throws { Invoke-ItoevaRevalidateDryRun $fixture.repository $fixture.runId $fixture.config | Out-Null }
+            $newStates=@(Get-ChildItem -LiteralPath (Join-Path $fixture.runtime 'state') -Directory|Where-Object{$_.Name -ne $fixture.runId})
+            Assert-True ($newStates.Count -eq 0) "Manipulierte Source erzeugte einen neuen Run: $($case.name)"
+            $index++
+        }
+    }
+    Test-Case 'RevalidateDryRun erzeugt v2 PASS mit genau einem frischen Read-only-Final-Review' {
+        $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot 'revalidate-success') ('1d'*16)
+        $launcherRoot=Join-Path $tempRoot 'revalidate-codex';$codexMarker=Join-Path $launcherRoot 'codex.calls';$testMarker=Join-Path $launcherRoot 'tests.calls'
+        New-RevalidateCodexDouble $launcherRoot $codexMarker|Out-Null
+        $env:ITOEVA_REVALIDATE_CODEX_MARKER=$codexMarker;$oldPath=$env:PATH;$env:PATH="$launcherRoot;$oldPath"
+        $testCommand="[IO.File]::AppendAllText('$($testMarker.Replace("'","''"))','test'+[Environment]::NewLine); exit 0"
+        $fixture.config.tests.mandatory=@([pscustomobject]@{id='verify';executable='powershell.exe';arguments=@('-NoProfile','-Command',$testCommand)})
+        $sourceHashes=@{};foreach($name in @('state.json','plan.json','plan-review.json','tests.json','final-review.json')){$sourceHashes[$name]=Get-ItoevaSha256 (Join-Path $fixture.runRoot $name)}
+        $headBefore=(& git -C $fixture.repository rev-parse HEAD).Trim()
+        try{$result=Invoke-ItoevaRevalidateDryRun $fixture.repository $fixture.runId $fixture.config}
+        finally{$env:PATH=$oldPath;Remove-Item Env:ITOEVA_REVALIDATE_CODEX_MARKER -ErrorAction SilentlyContinue}
+        Assert-True ($result.status -eq 'DRY_RUN_PASS' -and $result.runId -ne $fixture.runId)
+        Assert-True ((& git -C $fixture.repository rev-parse HEAD).Trim() -eq $headBefore) 'RevalidateDryRun erzeugte einen Commit oder veraenderte HEAD.'
+        & git -C $fixture.repository diff --cached --quiet;Assert-True ($LASTEXITCODE -eq 0) 'RevalidateDryRun veraenderte den echten Index.'
+        Assert-True (@(Get-Content -LiteralPath $testMarker).Count -eq 1) 'Relevante Tests wurden nicht exakt einmal erneut ausgefuehrt.'
+        $calls=@(Get-Content -LiteralPath $codexMarker);Assert-True ($calls.Count -eq 1) 'Final Review wurde nicht exakt einmal frisch gestartet.'
+        Assert-True ($calls[0] -match '(?:^|\t)-s\tread-only(?:\t|$)' -and $calls[0] -notmatch '(?:^|\t)resume(?:\t|$)') 'Final Review war nicht frisch und read-only.'
+        $reportPath=Join-Path (Join-Path $fixture.runtime 'reports') "$($result.runId).json";$report=Read-ItoevaHashedJson $reportPath "$reportPath.sha256"
+        Assert-True ([int]$report.value.formatVersion -eq 2 -and $report.value.runKind -eq 'REVALIDATED_DRY_RUN' -and $report.value.status -eq 'DRY_RUN_PASS')
+        Assert-True ([string]$report.value.sourceBindings.sourceRunId -eq $fixture.runId)
+        foreach($name in $sourceHashes.Keys){Assert-True ((Get-ItoevaSha256 (Join-Path $fixture.runRoot $name)) -eq $sourceHashes[$name]) "Source-Artefakt veraendert: $name"}
+        foreach($evidence in @('report','state','tests','final-review')){Read-ItoevaHashedJson (Join-Path (Join-Path (Join-Path $fixture.runtime "state\$($result.runId)") 'source-evidence') "$evidence.json") (Join-Path (Join-Path (Join-Path $fixture.runtime "state\$($result.runId)") 'source-evidence') "$evidence.json.sha256")|Out-Null}
+
+        $fixture.config.publication.enabled=$true;$fixture.config.agentExecution.enabled=$false
+        $newRunRoot=Join-Path $fixture.runtime "state\$($result.runId)"
+        foreach($tamperPath in @((Join-Path $newRunRoot 'revalidation.json'),(Join-Path $newRunRoot 'source-evidence\report.json'))){
+            $originalBytes=[IO.File]::ReadAllBytes($tamperPath);[IO.File]::AppendAllText($tamperPath,' ')
+            Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $result.runId $fixture.config $fixture.hooks|Out-Null }
+            [IO.File]::WriteAllBytes($tamperPath,$originalBytes)
+        }
+        $published=Invoke-ItoevaPublishDryRun $fixture.repository $result.runId $fixture.config $fixture.hooks
+        Assert-True ($published.status -eq 'PUSHED') 'Version-2-Report war nicht PublishDryRun-kompatibel.'
+        Assert-True ((Get-ItoevaRemoteSha $fixture.repository 'origin' 'refs/heads/main') -eq $fixture.newBase) 'Version-2-Publish veraenderte main.'
+    }
+    Test-Case 'RevalidateDryRun quarantinisiert Testfehler vor dem Final Review' {
+        $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot 'revalidate-test-fail') ('1e'*16)
+        $fixture.config.tests.mandatory=@([pscustomobject]@{id='verify';executable='powershell.exe';arguments=@('-NoProfile','-Command','exit 7')})
+        Assert-Throws { Invoke-ItoevaRevalidateDryRun $fixture.repository $fixture.runId $fixture.config | Out-Null }
+        $newRun=Get-ChildItem -LiteralPath (Join-Path $fixture.runtime 'state') -Directory|Where-Object{$_.Name -ne $fixture.runId}|Select-Object -First 1
+        $state=Get-Content -Raw -LiteralPath (Join-Path $newRun.FullName 'state.json')|ConvertFrom-Json
+        Assert-True ($state.status -eq 'QUARANTINED' -and $state.phase -eq 'REVALIDATE_TEST')
+        Assert-True (-not(Test-Path -LiteralPath (Join-Path $newRun.FullName 'final-review.json'))) 'Final Review lief trotz Testfehler.'
+    }
+    Test-Case 'RevalidateDryRun ist statisch von Analyse Planung Implementierung und Publikation getrennt' {
+        $moduleSource=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'Itoeva.Runner.psm1');$start=$moduleSource.IndexOf('function Invoke-ItoevaRevalidateDryRun');$end=$moduleSource.IndexOf('function Invoke-ItoevaPublishDryRun',$start);$source=$moduleSource.Substring($start,$end-$start)
+        Assert-True (($source|Select-String -Pattern 'Invoke-ItoevaCodexSession' -AllMatches).Matches.Count -eq 1) 'RevalidateDryRun hat nicht exakt eine Agentensitzung.'
+        Assert-True ($source -notmatch 'Assert-ItoevaCandidateAnalysis|candidate\.schema|plan\.schema|implementation\.schema|Publish-ItoevaEvolution|Invoke-ItoevaPublishDryRun')
+        Assert-True ($source -notmatch '(?i)\bgit\s+-C\s+\$Repository\s+(commit|push|merge|rebase|reset|tag|checkout)\b')
+        $entry=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1');Assert-True ($entry -match "Action -eq 'RevalidateDryRun'")
     }
     Test-Case 'Proposed Tree enthält geänderte und neue Dateien' {
         $repo = Join-Path $tempRoot 'repo'

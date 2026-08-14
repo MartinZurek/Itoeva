@@ -561,6 +561,39 @@ function Write-ItoevaAtomicText {
     }
 }
 
+function Copy-ItoevaHashedEvidence {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$SourcePath,[Parameter(Mandatory)][string]$DestinationPath,[string]$ExpectedHash)
+    if (-not (Test-Path -LiteralPath $SourcePath -PathType Leaf)) { throw "Source-Evidence fehlt: $SourcePath" }
+    $sourceHash=Get-ItoevaSha256 $SourcePath
+    if ($ExpectedHash -and $sourceHash -ne $ExpectedHash) { throw "Source-Evidence-Hash stimmt nicht: $SourcePath" }
+    $directory=Split-Path -Parent $DestinationPath
+    if (-not (Test-Path -LiteralPath $directory)) { New-Item -ItemType Directory -Path $directory -Force | Out-Null }
+    $temporary="$DestinationPath.$([Guid]::NewGuid().ToString('N')).tmp"
+    try { [IO.File]::WriteAllBytes($temporary,[IO.File]::ReadAllBytes($SourcePath)); Move-Item -LiteralPath $temporary -Destination $DestinationPath }
+    finally { if(Test-Path -LiteralPath $temporary){Remove-Item -LiteralPath $temporary -Force} }
+    Write-ItoevaAtomicText "$DestinationPath.sha256" $sourceHash
+    return Read-ItoevaHashedJson $DestinationPath "$DestinationPath.sha256"
+}
+
+function Invoke-ItoevaGitProcess {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Repository,[Parameter(Mandatory)][string[]]$Arguments,[string]$IndexPath)
+    $git=Get-Command git.exe -CommandType Application -ErrorAction SilentlyContinue|Select-Object -First 1
+    if(-not $git){$git=Get-Command git -CommandType Application -ErrorAction Stop|Select-Object -First 1}
+    $all=@('-C',$Repository)+@($Arguments); $start=[Diagnostics.ProcessStartInfo]::new()
+    $start.FileName=$git.Source; $start.Arguments=(@($all|ForEach-Object{ConvertTo-ItoevaWindowsCommandLineArgument ([string]$_)}) -join ' ')
+    $start.WorkingDirectory=$Repository; $start.UseShellExecute=$false; $start.CreateNoWindow=$true
+    $start.RedirectStandardOutput=$true; $start.RedirectStandardError=$true
+    if($IndexPath){$start.EnvironmentVariables['GIT_INDEX_FILE']=$IndexPath}
+    $process=[Diagnostics.Process]::new(); $process.StartInfo=$start
+    try {
+        if(-not $process.Start()){throw 'Git-Prozess konnte nicht gestartet werden.'}
+        $stdoutTask=$process.StandardOutput.ReadToEndAsync(); $stderrTask=$process.StandardError.ReadToEndAsync(); $process.WaitForExit()
+        return [pscustomobject]@{exitCode=$process.ExitCode;stdout=$stdoutTask.Result;stderr=$stderrTask.Result}
+    } finally {$process.Dispose()}
+}
+
 function Get-ItoevaProposedTreeOid {
     [CmdletBinding()]
     param(
@@ -570,22 +603,44 @@ function Get-ItoevaProposedTreeOid {
     )
 
     $indexPath = Join-Path ([IO.Path]::GetTempPath()) "itoeva-index-$([Guid]::NewGuid().ToString('N'))"
-    $oldIndex = $env:GIT_INDEX_FILE
     try {
-        $env:GIT_INDEX_FILE = $indexPath
-        & git -C $Repository read-tree $BaseSha
-        if ($LASTEXITCODE -ne 0) { throw 'Temporärer Git-Index konnte nicht initialisiert werden.' }
-        & git -C $Repository add --all -- @AllowedPaths
-        if ($LASTEXITCODE -ne 0) { throw 'Proposed Tree konnte nicht aufgebaut werden.' }
-        $oid = (& git -C $Repository write-tree).Trim()
-        if ($LASTEXITCODE -ne 0 -or $oid -notmatch '^[0-9a-f]{40,64}$') {
+        $result=Invoke-ItoevaGitProcess $Repository @('read-tree',$BaseSha) $indexPath
+        if ($result.exitCode -ne 0) { throw 'Temporärer Git-Index konnte nicht initialisiert werden.' }
+        $result=Invoke-ItoevaGitProcess $Repository (@('add','--all','--')+@($AllowedPaths)) $indexPath
+        if ($result.exitCode -ne 0) { throw 'Proposed Tree konnte nicht aufgebaut werden.' }
+        $result=Invoke-ItoevaGitProcess $Repository @('write-tree') $indexPath; $oid=$result.stdout.Trim()
+        if ($result.exitCode -ne 0 -or $oid -notmatch '^[0-9a-f]{40,64}$') {
             throw 'Git Tree OID konnte nicht bestimmt werden.'
         }
         return $oid
     } finally {
-        $env:GIT_INDEX_FILE = $oldIndex
         if (Test-Path -LiteralPath $indexPath) { Remove-Item -LiteralPath $indexPath -Force }
     }
+}
+
+function Get-ItoevaExpectedRebasedTree {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Repository,[Parameter(Mandatory)][string]$SourceBaseSha,[Parameter(Mandatory)][string]$SourceTreeOid,[Parameter(Mandatory)][string]$NewBaseSha,[Parameter(Mandatory)][string[]]$Paths,[Parameter(Mandatory)][string]$RuntimeRoot)
+    foreach($object in @("$SourceBaseSha^{commit}","$SourceTreeOid^{tree}","$NewBaseSha^{commit}")){
+        $check=Invoke-ItoevaGitProcess $Repository @('cat-file','-e',$object)
+        if($check.exitCode -ne 0){throw "Git-Objekt fuer Revalidierung fehlt: $object"}
+    }
+    $tempRoot=Assert-ItoevaRuntimePath $RuntimeRoot (Join-Path $RuntimeRoot 'temp')
+    if(-not(Test-Path -LiteralPath $tempRoot)){New-Item -ItemType Directory -Path $tempRoot|Out-Null}
+    Assert-ItoevaRuntimePath $RuntimeRoot $tempRoot|Out-Null
+    $token=[Guid]::NewGuid().ToString('N'); $indexPath=Join-Path $tempRoot "revalidate-$token.index"; $patchPath=Join-Path $tempRoot "revalidate-$token.patch"
+    Assert-ItoevaRuntimePath $RuntimeRoot $indexPath|Out-Null; Assert-ItoevaRuntimePath $RuntimeRoot $patchPath|Out-Null
+    try {
+        $result=Invoke-ItoevaGitProcess $Repository (@('diff','--binary','--full-index',"--output=$patchPath",$SourceBaseSha,$SourceTreeOid,'--')+@($Paths))
+        if($result.exitCode -ne 0 -or -not(Test-Path -LiteralPath $patchPath -PathType Leaf)){throw 'Alter Evolution-Diff konnte nicht bytegenau erzeugt werden.'}
+        $result=Invoke-ItoevaGitProcess $Repository @('read-tree',$NewBaseSha) $indexPath
+        if($result.exitCode -ne 0){throw 'Isolierter Revalidierungsindex konnte nicht initialisiert werden.'}
+        $result=Invoke-ItoevaGitProcess $Repository @('apply','--cached','--whitespace=error-all',$patchPath) $indexPath
+        if($result.exitCode -ne 0){throw "Alter Evolution-Diff ist auf dem neuen Base nicht exakt anwendbar: $($result.stderr.Trim())"}
+        $result=Invoke-ItoevaGitProcess $Repository @('write-tree') $indexPath; $tree=$result.stdout.Trim()
+        if($result.exitCode -ne 0 -or $tree -notmatch '^[0-9a-f]{40,64}$'){throw 'Erwarteter rebasierter Tree konnte nicht erzeugt werden.'}
+        return $tree
+    } finally { foreach($path in @($indexPath,$patchPath)){if(Test-Path -LiteralPath $path){Remove-Item -LiteralPath $path -Force}} }
 }
 
 function Invoke-ItoevaConfiguredTests {
@@ -773,6 +828,113 @@ function Publish-ItoevaEvolution {
     }
 }
 
+function Assert-ItoevaRevalidationWorktree {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Repository,[Parameter(Mandatory)][string]$Branch,[Parameter(Mandatory)][string]$BaseSha,[Parameter(Mandatory)][string[]]$Paths,[Parameter(Mandatory)][string]$ExpectedTree)
+    if ((& git -C $Repository branch --show-current).Trim() -ne $Branch) { throw 'Revalidierungsbranch wurde verändert.' }
+    if ((& git -C $Repository rev-parse HEAD).Trim() -ne $BaseSha) { throw 'HEAD wurde während der Revalidierung verändert.' }
+    & git -C $Repository diff --cached --quiet
+    if($LASTEXITCODE -ne 0){throw 'Echter Git-Index ist während der Revalidierung nicht sauber.'}
+    $changed=@(Get-ItoevaChangedPaths $Repository)
+    if(($changed -join "`n") -ne (@($Paths|Sort-Object -Unique) -join "`n")){throw 'Working-Tree-Pfade weichen vom Source-Plan ab.'}
+    $tree=Get-ItoevaProposedTreeOid $Repository $BaseSha $Paths
+    if($tree -ne $ExpectedTree){throw 'Working Tree weicht vom erwarteten rebasierten Tree ab.'}
+    Assert-ItoevaBaseUnchanged $Repository $BaseSha|Out-Null
+    return $tree
+}
+
+function Invoke-ItoevaRevalidateDryRun {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Repository,[Parameter(Mandatory)][string]$SourceRunId,[Parameter(Mandatory)]$Config)
+    if(-not(Test-ItoevaRunId $SourceRunId)){throw 'Source-Run-ID muss aus exakt 32 hexadezimalen Kleinbuchstaben/Ziffern bestehen.'}
+    if(-not $Config.agentExecution.enabled){throw 'Agentenausführung ist nicht aktiviert.'}
+    if($Config.publication.enabled){throw 'Publikation muss für RevalidateDryRun deaktiviert bleiben.'}
+    $runtimeRoot=[IO.Path]::GetFullPath([string]$Config.runtimeRoot); $reportsRoot=Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $runtimeRoot 'reports')
+    $sourceRoot=Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $runtimeRoot "state\$SourceRunId")
+    $sourceReportPath=Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $reportsRoot "$SourceRunId.json")
+    $sourceLiveReportPath=$sourceReportPath
+    $sourceReportArtifact=Read-ItoevaHashedJson $sourceReportPath "$sourceReportPath.sha256"
+    $sourceReportSnapshot="$($sourceReportPath.Substring(0,$sourceReportPath.Length-5)).dry-run.json"
+    $snapshot=Read-ItoevaHashedJson $sourceReportSnapshot "$sourceReportSnapshot.sha256"
+    if($snapshot.hash -ne $sourceReportArtifact.hash){throw 'Source-Report stimmt nicht mit seinem historischen Dry-Run-Snapshot überein.'}
+    $sourceReportArtifact=$snapshot;$sourceReportPath=$sourceReportSnapshot
+    $sourceReport=$sourceReportArtifact.value
+    if([string]$sourceReport.runId -ne $SourceRunId -or [string]$sourceReport.status -ne 'DRY_RUN_PASS' -or -not[string]::IsNullOrEmpty([string]$sourceReport.commitSha) -or -not[string]::IsNullOrEmpty([string]$sourceReport.remoteBranchSha)){throw 'Source-Run ist kein unveröffentlichter DRY_RUN_PASS.'}
+    $journalPath=Join-Path $sourceRoot 'publish-journal'
+    if(Test-Path -LiteralPath $journalPath){if(@(Get-ChildItem -LiteralPath $journalPath -Force).Count){throw 'Source-Run besitzt bereits ein Publish-Journal.'}}
+    $sourcePaths=[ordered]@{state=(Join-Path $sourceRoot 'state.json');plan=(Join-Path $sourceRoot 'plan.json');planReview=(Join-Path $sourceRoot 'plan-review.json');tests=(Join-Path $sourceRoot 'tests.json');finalReview=(Join-Path $sourceRoot 'final-review.json')}
+    $sourceLivePaths=[ordered]@{state=$sourcePaths.state;plan=$sourcePaths.plan;planReview=$sourcePaths.planReview;tests=$sourcePaths.tests;finalReview=$sourcePaths.finalReview}
+    foreach($name in @('state','planReview','finalReview')){
+        $original=$sourcePaths[$name];$snapshot=Join-Path (Split-Path -Parent $original) "$([IO.Path]::GetFileNameWithoutExtension($original)).dry-run.json"
+        $snapshotArtifact=Read-ItoevaHashedJson $snapshot "$snapshot.sha256"
+        if(-not(Test-Path -LiteralPath $original -PathType Leaf) -or (Get-ItoevaSha256 $original) -ne $snapshotArtifact.hash){throw "Source-Artefakt stimmt nicht mit historischem Dry-Run-Snapshot überein: $name"}
+        $sourcePaths[$name]=$snapshot
+    }
+    foreach($path in $sourcePaths.Values){Assert-ItoevaRuntimePath $runtimeRoot $path|Out-Null;if(-not(Test-Path -LiteralPath $path -PathType Leaf)){throw "Source-Artefakt fehlt: $path"}}
+    $sourceState=Get-Content -Raw -LiteralPath $sourcePaths.state|ConvertFrom-Json; $sourcePlan=Get-Content -Raw -LiteralPath $sourcePaths.plan|ConvertFrom-Json
+    $sourcePlanReview=Get-Content -Raw -LiteralPath $sourcePaths.planReview|ConvertFrom-Json; $parsedSourceTests=Get-Content -Raw -LiteralPath $sourcePaths.tests|ConvertFrom-Json; $sourceTests=@($parsedSourceTests)
+    $sourceFinalReview=Get-Content -Raw -LiteralPath $sourcePaths.finalReview|ConvertFrom-Json
+    $sourceBase=[string]$sourceReport.baseSha; $sourceTree=[string]$sourceReport.proposedTreeOid; $sourcePlanHash=[string]$sourceReport.planHash; $sourceTestHash=[string]$sourceReport.testManifestHash
+    if([string]$sourceState.runId -ne $SourceRunId -or [string]$sourceState.phase -ne 'COMPLETE' -or [string]$sourceState.status -ne 'DRY_RUN_PASS' -or [string]$sourceState.baseSha -ne $sourceBase -or [string]$sourceState.branch -ne [string]$sourceReport.branch){throw 'Source-State ist nicht vollständig an den Report gebunden.'}
+    if((Get-ItoevaSha256 $sourcePaths.plan) -ne $sourcePlanHash -or (Get-ItoevaSha256 $sourcePaths.tests) -ne $sourceTestHash){throw 'Source-Plan- oder Testmanifest-Hash stimmt nicht.'}
+    if([string]$sourcePlan.status -ne 'PLANNED' -or [string]$sourcePlan.baseSha -ne $sourceBase -or [string]::IsNullOrWhiteSpace([string]$sourcePlan.title)){throw 'Source-Plan ist nicht revalidierbar.'}
+    if([string]$sourcePlanReview.status -ne 'PASS' -or [string]$sourcePlanReview.baseSha -ne $sourceBase -or [string]$sourcePlanReview.planHash -ne $sourcePlanHash){throw 'Source-Planreview ist nicht gebunden PASS.'}
+    if($sourceTests|Where-Object{$_.status -ne 'PASS'}){throw 'Source-Testmanifest enthält nicht-PASS Ergebnisse.'}
+    if([string]$sourceFinalReview.status -ne 'PASS' -or [string]$sourceFinalReview.baseSha -ne $sourceBase -or [string]$sourceFinalReview.planHash -ne $sourcePlanHash -or [string]$sourceFinalReview.treeOid -ne $sourceTree -or [string]$sourceFinalReview.testManifestHash -ne $sourceTestHash){throw 'Source-Final-Review ist nicht vollständig gebunden PASS.'}
+    if([string]$sourceReport.planReview -ne 'PASS' -or [string]$sourceReport.finalReview -ne 'PASS' -or [string]$sourceReport.reviewerBindings.baseSha -ne $sourceBase -or [string]$sourceReport.reviewerBindings.planHash -ne $sourcePlanHash -or [string]$sourceReport.reviewerBindings.treeOid -ne $sourceTree -or [string]$sourceReport.reviewerBindings.testManifestHash -ne $sourceTestHash){throw 'Source-Report-Gates sind nicht vollständig gebunden.'}
+    if((@($sourceReport.tests)|ConvertTo-Json -Depth 20 -Compress) -ne ($sourceTests|ConvertTo-Json -Depth 20 -Compress)){throw 'Source-Report-Tests stimmen nicht mit dem Testmanifest überein.'}
+    $paths=@($sourcePlan.paths|Sort-Object -Unique); Assert-ItoevaAllowedPaths $paths $Config
+
+    $origin=(& git -C $Repository remote get-url origin).Trim();if($origin -ne [string]$Config.repository.expectedOrigin){throw "Unerwartetes origin: $origin"}
+    $dangerous=@(Get-ItoevaDangerousGitConfig $Repository $Config);if($dangerous.Count){throw "Unsichere Git-Konfiguration: $($dangerous -join '; ')"}
+    & git -C $Repository fetch --prune origin|Out-Null;if($LASTEXITCODE -ne 0){throw 'Fetch für Revalidierung fehlgeschlagen.'}
+    $newBase=Get-ItoevaRemoteSha $Repository 'origin' 'refs/heads/main'; $tracking=(& git -C $Repository rev-parse refs/remotes/origin/main).Trim()
+    if($tracking -ne $newBase){throw 'Tracking-Ref origin/main ist nicht synchron.'}
+    $branch=[string]$sourceReport.branch;if(-not(Test-ItoevaBranchName $branch $Config)){throw 'Source-Evolution-Branch ist ungültig.'}
+    if((& git -C $Repository branch --show-current).Trim() -ne $branch -or (& git -C $Repository rev-parse HEAD).Trim() -ne $newBase){throw 'Aktueller Branch oder HEAD entspricht nicht dem Revalidierungszustand.'}
+    & git -C $Repository diff --cached --quiet;if($LASTEXITCODE -ne 0){throw 'Index muss vor Revalidierung sauber sein.'}
+    $changed=@(Get-ItoevaChangedPaths $Repository);if(($changed -join "`n") -ne ($paths -join "`n")){throw 'Aktuelle Pfade entsprechen nicht dem Source-Plan.'}
+    if(Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch"){throw 'Remote-Evolution-Branch existiert bereits.'}
+    $expectedTree=Get-ItoevaExpectedRebasedTree $Repository $sourceBase $sourceTree $newBase $paths $runtimeRoot
+    $currentTree=Get-ItoevaProposedTreeOid $Repository $newBase $paths;if($currentTree -ne $expectedTree){throw 'Aktueller Working Tree ist nicht der exakt übertragene Source-Diff.'}
+    & git -C $Repository diff-tree --check $newBase $currentTree;if($LASTEXITCODE -ne 0){throw 'Revalidierter Tree besteht diff-tree --check nicht.'}
+
+    $newRunId=[Guid]::NewGuid().ToString('N');$runRoot=Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $runtimeRoot "state\$newRunId");$statePath=Join-Path $runRoot 'state.json';$reportPath=Join-Path $reportsRoot "$newRunId.json"
+    $state=[ordered]@{runId=$newRunId;phase='REVALIDATE_TEST';baseSha=$newBase;branch=$branch;status='RUNNING';sourceRunId=$SourceRunId}
+    try {
+        Write-ItoevaAtomicJson $state $statePath;$evidenceRoot=Join-Path $runRoot 'source-evidence'
+        $reportEvidence=Copy-ItoevaHashedEvidence $sourceReportPath (Join-Path $evidenceRoot 'report.json') $sourceReportArtifact.hash
+        $stateEvidence=Copy-ItoevaHashedEvidence $sourcePaths.state (Join-Path $evidenceRoot 'state.json')
+        $planEvidence=Copy-ItoevaHashedEvidence $sourcePaths.plan (Join-Path $runRoot 'plan.json') $sourcePlanHash
+        $planReviewEvidence=Copy-ItoevaHashedEvidence $sourcePaths.planReview (Join-Path $runRoot 'plan-review.json')
+        $testsEvidence=Copy-ItoevaHashedEvidence $sourcePaths.tests (Join-Path $evidenceRoot 'tests.json') $sourceTestHash
+        $finalEvidence=Copy-ItoevaHashedEvidence $sourcePaths.finalReview (Join-Path $evidenceRoot 'final-review.json')
+        $revalidation=[ordered]@{sourceRunId=$SourceRunId;sourceReportSha256=$reportEvidence.hash;sourceStateSha256=$stateEvidence.hash;sourcePlanSha256=$planEvidence.hash;sourcePlanReviewSha256=$planReviewEvidence.hash;sourceTestsSha256=$testsEvidence.hash;sourceFinalReviewSha256=$finalEvidence.hash;sourceBaseSha=$sourceBase;sourceTreeOid=$sourceTree;newBaseSha=$newBase;branch=$branch;expectedRebasedTreeOid=$expectedTree;paths=$paths}
+        $revalidationPath=Join-Path $runRoot 'revalidation.json';Write-ItoevaAtomicJson $revalidation $revalidationPath;$revalidationHash=Get-ItoevaSha256 $revalidationPath;Write-ItoevaAtomicText "$revalidationPath.sha256" $revalidationHash
+        Assert-ItoevaRevalidationWorktree $Repository $branch $newBase $paths $expectedTree|Out-Null
+        $testResults=@(Invoke-ItoevaConfiguredTests $Repository $Config $paths);$testPath=Join-Path $runRoot 'tests.json';Write-ItoevaAtomicJson $testResults $testPath
+        if($testResults|Where-Object{$_.status -ne 'PASS'}){throw 'Revalidierungs-Pflichttest fehlgeschlagen.'};$testHash=Get-ItoevaSha256 $testPath
+        Assert-ItoevaRevalidationWorktree $Repository $branch $newBase $paths $expectedTree|Out-Null
+        $state.phase='REVALIDATE_FINAL_REVIEW';Write-ItoevaAtomicJson $state $statePath
+        $finalPath=Join-Path $runRoot 'final-review.json';$prompt=(Get-Content -Raw (Join-Path $PSScriptRoot 'prompts\review-final.md'))+"`nRevalidation Source-Run: $SourceRunId`nSource-Plan: $(Join-Path $runRoot 'plan.json')`nSource-Plan-Hash: $sourcePlanHash`nRevalidation-Provenienz: $revalidationPath`nBase: $newBase`nTree: $expectedTree`nTestmanifest-Pfad: $testPath`nTestmanifest-Hash: $testHash"
+        Invoke-ItoevaCodexSession $Repository $prompt (Join-Path $PSScriptRoot 'schemas\review.schema.json') $finalPath 'read-only' -TimeoutSeconds ([int]$Config.agentExecution.sessionTimeoutSeconds)|Out-Null
+        $final=Get-Content -Raw -LiteralPath $finalPath|ConvertFrom-Json
+        $gate=[pscustomobject]@{planReview='PASS';mandatoryTests='PASS';finalReview=$final.status;diffCheck='PASS';baseUnchanged=$true;baseSha=$newBase;proposedTreeOid=$expectedTree;testManifestHash=$testHash;planHash=$sourcePlanHash;reviewBaseSha=$final.baseSha;reviewPlanHash=$final.planHash;reviewTreeOid=$final.treeOid;reviewTestManifestHash=$final.testManifestHash}
+        if(-not(Test-ItoevaGate $gate)){throw 'Revalidiertes finales Gate ist nicht vollständig PASS und hashgebunden.'}
+        Assert-ItoevaRevalidationWorktree $Repository $branch $newBase $paths $expectedTree|Out-Null
+        $sourceBindings=[ordered]@{sourceRunId=$SourceRunId;sourceReportSha256=$reportEvidence.hash;sourceStateSha256=$stateEvidence.hash;sourcePlanSha256=$planEvidence.hash;sourcePlanReviewSha256=$planReviewEvidence.hash;sourceTestsSha256=$testsEvidence.hash;sourceFinalReviewSha256=$finalEvidence.hash;sourceBaseSha=$sourceBase;sourceTreeOid=$sourceTree;revalidationSha256=$revalidationHash}
+        $report=[ordered]@{formatVersion=2;runKind='REVALIDATED_DRY_RUN';runId=$newRunId;status='DRY_RUN_PASS';branch=$branch;baseSha=$newBase;commitSha='';remoteBranchSha='';originMainStartSha=$newBase;originMainPrePushSha=$newBase;originMainPostPushSha=$newBase;planReview='PASS';finalReview='PASS';proposedTreeOid=$expectedTree;testManifestHash=$testHash;planHash=$sourcePlanHash;reviewerBindings=[ordered]@{baseSha=$final.baseSha;planHash=$final.planHash;treeOid=$final.treeOid;testManifestHash=$final.testManifestHash};sourceBindings=$sourceBindings;tests=$testResults;unverified=@();knownRisks=@($Config.knownRisks.mainRulesetNote)}
+        foreach($pair in @(@($sourceReportPath,$reportEvidence.hash),@($sourcePaths.state,$stateEvidence.hash),@($sourcePaths.plan,$planEvidence.hash),@($sourcePaths.planReview,$planReviewEvidence.hash),@($sourcePaths.tests,$testsEvidence.hash),@($sourcePaths.finalReview,$finalEvidence.hash))){if((Get-ItoevaSha256 $pair[0]) -ne $pair[1]){throw 'Source-Artefakt wurde während der Revalidierung verändert.'}}
+        foreach($pair in @(@($sourceLiveReportPath,$reportEvidence.hash),@($sourceLivePaths.state,$stateEvidence.hash),@($sourceLivePaths.plan,$planEvidence.hash),@($sourceLivePaths.planReview,$planReviewEvidence.hash),@($sourceLivePaths.tests,$testsEvidence.hash),@($sourceLivePaths.finalReview,$finalEvidence.hash))){if((Get-ItoevaSha256 $pair[0]) -ne $pair[1]){throw 'Ursprüngliches Source-Artefakt wurde während der Revalidierung verändert.'}}
+        $state.phase='COMPLETE';$state.status='DRY_RUN_PASS';Write-ItoevaAtomicJson $state $statePath;Write-ItoevaAtomicJson $report $reportPath;Write-ItoevaAtomicText "$reportPath.sha256" (Get-ItoevaSha256 $reportPath)
+        return [pscustomobject]@{status='DRY_RUN_PASS';runId=$newRunId;sourceRunId=$SourceRunId;baseSha=$newBase;branch=$branch;proposedTreeOid=$expectedTree;reportPath=$reportPath}
+    } catch {
+        $state.status='QUARANTINED';$state['error']=$_.Exception.Message
+        foreach($path in @($reportPath,"$reportPath.sha256")){if($path -and (Test-Path -LiteralPath $path)){Remove-Item -LiteralPath $path -Force}}
+        if($statePath){Write-ItoevaAtomicJson $state $statePath};throw
+    }
+}
+
 function Invoke-ItoevaPublishDryRun {
     [CmdletBinding()]
     param(
@@ -835,11 +997,28 @@ function Invoke-ItoevaPublishDryRun {
     $plan=Get-Content -Raw -LiteralPath $planPath|ConvertFrom-Json; $planReview=Get-Content -Raw -LiteralPath $planReviewPath|ConvertFrom-Json
     $parsedTests=Get-Content -Raw -LiteralPath $testsPath|ConvertFrom-Json
     $tests=@($parsedTests); $finalReview=Get-Content -Raw -LiteralPath $finalReviewPath|ConvertFrom-Json
+    $isRevalidated=($report.PSObject.Properties.Name -contains 'formatVersion' -and [int]$report.formatVersion -eq 2 -and [string]$report.runKind -eq 'REVALIDATED_DRY_RUN')
+    if(($report.PSObject.Properties.Name -contains 'formatVersion') -and -not $isRevalidated){throw 'Unbekanntes Dry-Run-Reportformat.'}
+    if($isRevalidated){
+        $bindings=$report.sourceBindings
+        foreach($name in @('sourceRunId','sourceReportSha256','sourceStateSha256','sourcePlanSha256','sourcePlanReviewSha256','sourceTestsSha256','sourceFinalReviewSha256','sourceBaseSha','sourceTreeOid','revalidationSha256')){if(-not($bindings.PSObject.Properties.Name -contains $name)){throw "Revalidierungsbindung fehlt: $name"}}
+        if(-not(Test-ItoevaRunId ([string]$bindings.sourceRunId))){throw 'Revalidierungs-Source-Run-ID ist ungültig.'}
+        $revalidationArtifact=Read-ItoevaHashedJson (Join-Path $runRoot 'revalidation.json') (Join-Path $runRoot 'revalidation.json.sha256')
+        if($revalidationArtifact.hash -ne [string]$bindings.revalidationSha256){throw 'Revalidierungsattest stimmt nicht mit dem Report überein.'}
+        $rv=$revalidationArtifact.value
+        foreach($name in @('sourceRunId','sourceReportSha256','sourceStateSha256','sourcePlanSha256','sourcePlanReviewSha256','sourceTestsSha256','sourceFinalReviewSha256','sourceBaseSha','sourceTreeOid')){if([string]$rv.$name -ne [string]$bindings.$name){throw "Revalidierungsattest weicht ab: $name"}}
+        if([string]$rv.newBaseSha -ne $baseSha -or [string]$rv.branch -ne $branch -or [string]$rv.expectedRebasedTreeOid -ne $approvedTree){throw 'Revalidierungsattest ist nicht an Base, Branch und Tree gebunden.'}
+        $evidenceRoot=Join-Path $runRoot 'source-evidence'
+        $evidenceMap=[ordered]@{report='sourceReportSha256';state='sourceStateSha256';tests='sourceTestsSha256';'final-review'='sourceFinalReviewSha256'}
+        foreach($entry in $evidenceMap.GetEnumerator()){$artifact=Read-ItoevaHashedJson (Join-Path $evidenceRoot "$($entry.Key).json") (Join-Path $evidenceRoot "$($entry.Key).json.sha256");if($artifact.hash -ne [string]$bindings.($entry.Value)){throw "Source-Evidence stimmt nicht: $($entry.Key)"}}
+        if((Get-ItoevaSha256 $planPath) -ne [string]$bindings.sourcePlanSha256 -or (Get-ItoevaSha256 $planReviewPath) -ne [string]$bindings.sourcePlanReviewSha256){throw 'Source-Plan oder Source-Planreview wurde verändert.'}
+    }
     $stateEvidence=Initialize-ItoevaEvidenceSnapshot $statePath (Join-Path $runRoot 'state.dry-run.json') (-not $journal -or [string]$state.status -eq 'DRY_RUN_PASS')
     $planReviewEvidence=Initialize-ItoevaEvidenceSnapshot $planReviewPath (Join-Path $runRoot 'plan-review.dry-run.json') $true
     $finalReviewEvidence=Initialize-ItoevaEvidenceSnapshot $finalReviewPath (Join-Path $runRoot 'final-review.dry-run.json') $true
-    if ([string]$plan.status -ne 'PLANNED' -or [string]$plan.baseSha -ne $baseSha -or [string]::IsNullOrWhiteSpace([string]$plan.title)) { throw 'Plan ist nicht publishbar.' }
-    if ([string]$planReview.status -ne 'PASS' -or [string]$planReview.baseSha -ne $baseSha -or [string]$planReview.planHash -ne $planHash) { throw 'Planreview ist nicht gebunden PASS.' }
+    $planBase=if($isRevalidated){[string]$report.sourceBindings.sourceBaseSha}else{$baseSha}
+    if ([string]$plan.status -ne 'PLANNED' -or [string]$plan.baseSha -ne $planBase -or [string]::IsNullOrWhiteSpace([string]$plan.title)) { throw 'Plan ist nicht publishbar.' }
+    if ([string]$planReview.status -ne 'PASS' -or [string]$planReview.baseSha -ne $planBase -or [string]$planReview.planHash -ne $planHash) { throw 'Planreview ist nicht gebunden PASS.' }
     if ($tests | Where-Object { $_.status -ne 'PASS' }) { throw 'Testmanifest enthaelt nicht-PASS Ergebnisse.' }
     if ([string]$finalReview.status -ne 'PASS' -or [string]$finalReview.baseSha -ne $baseSha -or [string]$finalReview.planHash -ne $planHash -or [string]$finalReview.treeOid -ne $approvedTree -or [string]$finalReview.testManifestHash -ne $testHash) { throw 'Final Review ist nicht vollstaendig gebunden PASS.' }
     if ([string]$report.planReview -ne 'PASS' -or [string]$report.finalReview -ne 'PASS' -or [string]$report.reviewerBindings.baseSha -ne $baseSha -or [string]$report.reviewerBindings.planHash -ne $planHash -or [string]$report.reviewerBindings.treeOid -ne $approvedTree -or [string]$report.reviewerBindings.testManifestHash -ne $testHash) { throw 'Report-Gates oder Reviewer-Bindungen stimmen nicht.' }
@@ -930,5 +1109,6 @@ Export-ModuleMember -Function @(
     'Resolve-ItoevaCodexLauncher', 'New-ItoevaCodexArguments', 'Assert-ItoevaCandidateAnalysis', 'Format-ItoevaEvolutionNumber',
     'Assert-ItoevaBaseUnchanged', 'Invoke-ItoevaConfiguredTests', 'Invoke-ItoevaCodexSession',
     'Publish-ItoevaEvolution', 'Test-ItoevaRunId', 'Read-ItoevaHashedJson', 'Write-ItoevaPublishJournal',
-    'Get-ItoevaPublishJournal', 'Invoke-ItoevaPublishDryRun'
+    'Get-ItoevaPublishJournal', 'Invoke-ItoevaPublishDryRun', 'Invoke-ItoevaGitProcess',
+    'Get-ItoevaExpectedRebasedTree', 'Assert-ItoevaRevalidationWorktree', 'Invoke-ItoevaRevalidateDryRun'
 )

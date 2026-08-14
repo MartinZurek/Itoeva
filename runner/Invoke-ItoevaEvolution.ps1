@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('ValidateConfiguration', 'Preflight', 'DryRun', 'Run', 'PublishDryRun')]
+    [ValidateSet('ValidateConfiguration', 'Preflight', 'DryRun', 'Run', 'PublishDryRun', 'RevalidateDryRun')]
     [string]$Action = 'ValidateConfiguration',
     [string]$Repository,
     [string]$ActivationPath,
@@ -66,6 +66,20 @@ if ($Action -eq 'PublishDryRun') {
     try {
         $hooks = [Environment]::ExpandEnvironmentVariables([string]$config.git.trustedHooksDirectory)
         Invoke-ItoevaPublishDryRun -Repository $Repository -RunId $RunId -Config $config -TrustedHooksPath $hooks | ConvertTo-Json
+    } finally { Exit-ItoevaRunLock -Handle $lock -Path $lockPath }
+    exit 0
+}
+
+if ($Action -eq 'RevalidateDryRun') {
+    if (-not (Test-ItoevaRunId ([string]$RunId))) { throw 'RevalidateDryRun erfordert -RunId als 32-stellige Hex-ID eines alten Runs.' }
+    $activation = Read-Activation -NeedsPublication $false
+    $runtimeRoot = [Environment]::ExpandEnvironmentVariables([string]$activation.runtimeRoot)
+    $config | Add-Member -NotePropertyName runtimeRoot -NotePropertyValue $runtimeRoot -Force
+    $config.agentExecution.enabled = $true
+    $lockPath = Join-Path $runtimeRoot 'locks\runner.lock'
+    $lock = Enter-ItoevaRunLock -Path $lockPath
+    try {
+        Invoke-ItoevaRevalidateDryRun -Repository $Repository -SourceRunId $RunId -Config $config | ConvertTo-Json
     } finally { Exit-ItoevaRunLock -Handle $lock -Path $lockPath }
     exit 0
 }
