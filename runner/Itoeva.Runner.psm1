@@ -402,6 +402,165 @@ function Format-ItoevaEvolutionNumber {
     return ([int]$number).ToString('D3', [Globalization.CultureInfo]::InvariantCulture)
 }
 
+function Test-ItoevaRunId {
+    [CmdletBinding()]
+    param([AllowEmptyString()][Parameter(Mandatory)][string]$RunId)
+    return $RunId -cmatch '^[0-9a-f]{32}$'
+}
+
+function Get-ItoevaBytesSha256 {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][byte[]]$Bytes)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { return ([BitConverter]::ToString($sha.ComputeHash($Bytes))).Replace('-', '').ToLowerInvariant() }
+    finally { $sha.Dispose() }
+}
+
+function Read-ItoevaHashedJson {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$HashPath
+    )
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf) -or -not (Test-Path -LiteralPath $HashPath -PathType Leaf)) {
+        throw "Hashgebundenes JSON-Artefakt fehlt: $Path"
+    }
+    $expected = (Get-Content -Raw -LiteralPath $HashPath).Trim().ToLowerInvariant()
+    if ($expected -notmatch '^[0-9a-f]{64}$' -or (Get-ItoevaSha256 $Path) -ne $expected) {
+        throw "SHA-256 stimmt nicht: $Path"
+    }
+    $value = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json
+    return [pscustomobject]@{ value=$value; hash=$expected }
+}
+
+function Initialize-ItoevaEvidenceSnapshot {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$SourcePath,
+        [Parameter(Mandatory)][string]$SnapshotPath,
+        [bool]$RequireSourceMatch = $true
+    )
+    if (-not (Test-Path -LiteralPath $SourcePath -PathType Leaf)) { throw "Evidence-Artefakt fehlt: $SourcePath" }
+    $sourceHash=Get-ItoevaSha256 $SourcePath; $hashPath="$SnapshotPath.sha256"
+    if (Test-Path -LiteralPath $SnapshotPath) {
+        $snapshot=Read-ItoevaHashedJson $SnapshotPath $hashPath
+        if ($RequireSourceMatch -and $snapshot.hash -ne $sourceHash) { throw "Evidence-Artefakt wurde nach PREPARED veraendert: $SourcePath" }
+        return $snapshot
+    }
+    $temporary=Join-Path (Split-Path -Parent $SnapshotPath) "e.$([Guid]::NewGuid().ToString('N'))"
+    try {
+        [IO.File]::WriteAllBytes($temporary,[IO.File]::ReadAllBytes($SourcePath))
+        Move-Item -LiteralPath $temporary -Destination $SnapshotPath
+    } finally { if(Test-Path -LiteralPath $temporary){Remove-Item -LiteralPath $temporary -Force} }
+    Write-ItoevaAtomicText $hashPath $sourceHash
+    return Read-ItoevaHashedJson $SnapshotPath $hashPath
+}
+
+function Assert-ItoevaRuntimePath {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$RuntimeRoot,
+        [Parameter(Mandatory)][string]$Path
+    )
+    $root = [IO.Path]::GetFullPath($RuntimeRoot).TrimEnd('\') + '\'
+    $full = [IO.Path]::GetFullPath($Path)
+    if (-not $full.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) { throw "Runtime-Pfad liegt ausserhalb des Runtime-Roots: $full" }
+    if (Test-Path -LiteralPath $full) {
+        $target = Get-Item -LiteralPath $full -Force
+        if ($target.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse-Point im Runtime-Pfad ist nicht erlaubt: $full" }
+    }
+    $cursor = Split-Path -Parent $full
+    while ($cursor -and $cursor.StartsWith($root.TrimEnd('\'), [StringComparison]::OrdinalIgnoreCase)) {
+        if (Test-Path -LiteralPath $cursor) {
+            $item = Get-Item -LiteralPath $cursor -Force
+            if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse-Point im Runtime-Pfad ist nicht erlaubt: $cursor" }
+        }
+        if ($cursor.TrimEnd('\') -eq $root.TrimEnd('\')) { break }
+        $cursor = Split-Path -Parent $cursor
+    }
+    return $full
+}
+
+function Write-ItoevaPublishJournal {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$JournalRoot,
+        [Parameter(Mandatory)][ValidateSet('PREPARED','COMMITTED','PUSHED','REPORTED')][string]$Phase,
+        [Parameter(Mandatory)]$Record
+    )
+    New-Item -ItemType Directory -Path $JournalRoot -Force | Out-Null
+    $json = $Record | ConvertTo-Json -Depth 20 -Compress
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($json)
+    $hash = Get-ItoevaBytesSha256 $bytes
+    $rank = @{ PREPARED=1; COMMITTED=2; PUSHED=3; REPORTED=4 }
+    $path = Join-Path $JournalRoot "p.$($rank[$Phase]).$hash.json"
+    if (Test-Path -LiteralPath $path) {
+        if ((Get-ItoevaSha256 $path) -ne $hash) { throw "Publish-Journal ist beschaedigt: $path" }
+        return [pscustomobject]@{ path=$path; phase=$Phase; hash=$hash; record=(Get-Content -Raw -LiteralPath $path | ConvertFrom-Json) }
+    }
+    $temporary = Join-Path $JournalRoot "t.$([Guid]::NewGuid().ToString('N'))"
+    try {
+        [IO.File]::WriteAllBytes($temporary, $bytes)
+        Move-Item -LiteralPath $temporary -Destination $path
+    } finally {
+        if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
+    }
+    return [pscustomobject]@{ path=$path; phase=$Phase; hash=$hash; record=$Record }
+}
+
+function Get-ItoevaPublishJournal {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$JournalRoot)
+    if (-not (Test-Path -LiteralPath $JournalRoot -PathType Container)) { return $null }
+    $order = @{ PREPARED=1; COMMITTED=2; PUSHED=3; REPORTED=4 }
+    $records = @()
+    $phaseByRank = @{ '1'='PREPARED'; '2'='COMMITTED'; '3'='PUSHED'; '4'='REPORTED' }
+    foreach ($file in @(Get-ChildItem -LiteralPath $JournalRoot -Filter 'p.*.json' -File)) {
+        if ($file.Name -notmatch '^p\.([1-4])\.([0-9a-f]{64})\.json$') { throw "Unerwartete Publish-Journaldatei: $($file.Name)" }
+        $phase=$phaseByRank[$Matches[1]]; $hash=$Matches[2]
+        if ((Get-ItoevaSha256 $file.FullName) -ne $hash) { throw "Publish-Journal-Hash stimmt nicht: $($file.FullName)" }
+        $record = Get-Content -Raw -LiteralPath $file.FullName | ConvertFrom-Json
+        if ([string]$record.phase -ne $phase) { throw 'Publish-Journalphase stimmt nicht mit dem Dateinamen ueberein.' }
+        $records += [pscustomobject]@{ phase=$phase; rank=$order[$phase]; hash=$hash; record=$record }
+    }
+    if (-not $records.Count) { return $null }
+    foreach ($group in @($records | Group-Object phase)) { if ($group.Count -ne 1) { throw "Mehrdeutige Publish-Journalphase: $($group.Name)" } }
+    $sorted = @($records | Sort-Object rank)
+    if ($sorted[0].rank -ne 1 -or -not [string]::IsNullOrEmpty([string]$sorted[0].record.previousJournalHash) -or $sorted.Count -ne $sorted[-1].rank) {
+        throw 'Publish-Journal beginnt nicht mit einem eindeutigen PREPARED-Genesis-Eintrag.'
+    }
+    for ($index=1; $index -lt $sorted.Count; $index++) {
+        if ($sorted[$index].rank -ne ($sorted[$index-1].rank + 1) -or [string]$sorted[$index].record.previousJournalHash -ne $sorted[$index-1].hash) {
+            throw 'Publish-Journalkette ist unvollstaendig oder nicht hashgebunden.'
+        }
+    }
+    foreach($item in $sorted){
+        foreach($name in @('runId','dryRunReportSha256','stateEvidenceSha256','planReviewEvidenceSha256','finalReviewEvidenceSha256','branch','baseSha','proposedTreeOid','planHash','testManifestHash','title','allowedPaths')){
+            if(-not ($item.record.PSObject.Properties.Name -contains $name)){throw "Publish-Journalfeld fehlt in $($item.phase): $name"}
+        }
+        if($item.rank -ge 2 -and [string]$item.record.commitSha -notmatch '^[0-9a-f]{40,64}$'){throw "Commit-SHA fehlt in $($item.phase)."}
+        if($item.rank -ge 3 -and ([string]$item.record.remoteBranchSha -ne [string]$item.record.commitSha -or [string]::IsNullOrWhiteSpace([string]$item.record.publishedAt))){throw "Push-Bindung fehlt in $($item.phase)."}
+    }
+    return $sorted[-1]
+}
+
+function Write-ItoevaAtomicText {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [AllowEmptyString()][Parameter(Mandatory)][string]$Value
+    )
+    $directory = Split-Path -Parent $Path
+    if (-not (Test-Path -LiteralPath $directory)) { New-Item -ItemType Directory -Path $directory | Out-Null }
+    $temporary = "$Path.$([Guid]::NewGuid().ToString('N')).tmp"
+    try {
+        [IO.File]::WriteAllText($temporary, $Value, [Text.UTF8Encoding]::new($false))
+        Move-Item -LiteralPath $temporary -Destination $Path -Force
+    } finally {
+        if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
+    }
+}
+
 function Get-ItoevaProposedTreeOid {
     [CmdletBinding()]
     param(
@@ -614,6 +773,154 @@ function Publish-ItoevaEvolution {
     }
 }
 
+function Invoke-ItoevaPublishDryRun {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Repository,
+        [Parameter(Mandatory)][string]$RunId,
+        [Parameter(Mandatory)]$Config,
+        [Parameter(Mandatory)][string]$TrustedHooksPath
+    )
+    if (-not (Test-ItoevaRunId $RunId)) { throw 'Run-ID muss aus exakt 32 hexadezimalen Kleinbuchstaben/Ziffern bestehen.' }
+    if (-not $Config.publication.enabled) { throw 'Veroeffentlichung ist nicht aktiviert.' }
+    $runtimeRoot = [IO.Path]::GetFullPath([string]$Config.runtimeRoot)
+    $runRoot = Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $runtimeRoot "state\$RunId")
+    $reportsRoot = Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $runtimeRoot 'reports')
+    $statePath = Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $runRoot 'state.json')
+    $reportPath = Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $reportsRoot "$RunId.json")
+    $reportHashPath = Assert-ItoevaRuntimePath $runtimeRoot "$reportPath.sha256"
+    $snapshotPath = Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $reportsRoot "$RunId.dry-run.json")
+    $snapshotHashPath = Assert-ItoevaRuntimePath $runtimeRoot "$snapshotPath.sha256"
+    $journalRoot = Assert-ItoevaRuntimePath $runtimeRoot (Join-Path $runRoot 'publish-journal')
+    foreach ($required in @($runRoot,$reportsRoot)) { if (-not (Test-Path -LiteralPath $required -PathType Container)) { throw "Runtime-Verzeichnis fehlt: $required" } }
+
+    $journal = Get-ItoevaPublishJournal $journalRoot
+    if ($journal) {
+        $dryRunHash = [string]$journal.record.dryRunReportSha256
+        $snapshot = Read-ItoevaHashedJson $snapshotPath $snapshotHashPath
+        if ($snapshot.hash -ne $dryRunHash) { throw 'Dry-Run-Snapshot stimmt nicht mit dem Publish-Journal ueberein.' }
+        $report = $snapshot.value
+    } else {
+        $original = Read-ItoevaHashedJson $reportPath $reportHashPath
+        $dryRunHash = $original.hash
+        $report = $original.value
+        if (Test-Path -LiteralPath $snapshotPath) {
+            if ((Get-ItoevaSha256 $snapshotPath) -ne $dryRunHash) { throw 'Vorhandener Dry-Run-Snapshot stimmt nicht mit dem Originalreport ueberein.' }
+        } else {
+            $temporary = "$snapshotPath.$([Guid]::NewGuid().ToString('N')).tmp"
+            try {
+                [IO.File]::WriteAllBytes($temporary, [IO.File]::ReadAllBytes($reportPath))
+                Move-Item -LiteralPath $temporary -Destination $snapshotPath
+            } finally { if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force } }
+        }
+        Write-ItoevaAtomicText $snapshotHashPath $dryRunHash
+    }
+
+    $state = Get-Content -Raw -LiteralPath $statePath | ConvertFrom-Json
+    if ([string]$state.runId -ne $RunId -or [string]$report.runId -ne $RunId) { throw 'Run-ID in State oder Report stimmt nicht.' }
+    if ([string]$state.phase -ne 'COMPLETE') { throw 'Dry-Run ist nicht vollstaendig.' }
+    if (-not $journal -and ([string]$state.status -ne 'DRY_RUN_PASS' -or [string]$report.status -ne 'DRY_RUN_PASS')) { throw 'Run ist kein unveroeffentlichter DRY_RUN_PASS.' }
+    if ($journal -and $journal.phase -ne 'REPORTED' -and [string]$state.status -ne 'DRY_RUN_PASS') { throw 'Publish-Resume hat einen unerwarteten Run-State.' }
+    if (-not $journal -and (-not [string]::IsNullOrEmpty([string]$report.commitSha) -or -not [string]::IsNullOrEmpty([string]$report.remoteBranchSha))) { throw 'Dry-Run-Report enthaelt bereits Publish-SHAs.' }
+
+    $baseSha=[string]$report.baseSha; $branch=[string]$report.branch; $approvedTree=[string]$report.proposedTreeOid
+    $planHash=[string]$report.planHash; $testHash=[string]$report.testManifestHash
+    if ($baseSha -notmatch '^[0-9a-f]{40,64}$' -or $approvedTree -notmatch '^[0-9a-f]{40,64}$' -or $planHash -notmatch '^[0-9a-f]{64}$' -or $testHash -notmatch '^[0-9a-f]{64}$') { throw 'Dry-Run-Report enthaelt ungueltige Bindungswerte.' }
+    if (-not (Test-ItoevaBranchName $branch $Config)) { throw 'Dry-Run-Branch ist ungueltig.' }
+    if ([string]$state.baseSha -ne $baseSha -or [string]$state.branch -ne $branch) { throw 'Dry-Run-State stimmt nicht mit Base oder Branch des Reports ueberein.' }
+
+    $planPath=Join-Path $runRoot 'plan.json'; $planReviewPath=Join-Path $runRoot 'plan-review.json'; $testsPath=Join-Path $runRoot 'tests.json'; $finalReviewPath=Join-Path $runRoot 'final-review.json'
+    foreach ($artifact in @($planPath,$planReviewPath,$testsPath,$finalReviewPath)) { Assert-ItoevaRuntimePath $runtimeRoot $artifact | Out-Null; if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) { throw "Dry-Run-Artefakt fehlt: $artifact" } }
+    if ((Get-ItoevaSha256 $planPath) -ne $planHash -or (Get-ItoevaSha256 $testsPath) -ne $testHash) { throw 'Plan- oder Testmanifest-Hash stimmt nicht.' }
+    $plan=Get-Content -Raw -LiteralPath $planPath|ConvertFrom-Json; $planReview=Get-Content -Raw -LiteralPath $planReviewPath|ConvertFrom-Json
+    $tests=@(Get-Content -Raw -LiteralPath $testsPath|ConvertFrom-Json); $finalReview=Get-Content -Raw -LiteralPath $finalReviewPath|ConvertFrom-Json
+    $stateEvidence=Initialize-ItoevaEvidenceSnapshot $statePath (Join-Path $runRoot 'state.dry-run.json') (-not $journal -or [string]$state.status -eq 'DRY_RUN_PASS')
+    $planReviewEvidence=Initialize-ItoevaEvidenceSnapshot $planReviewPath (Join-Path $runRoot 'plan-review.dry-run.json') $true
+    $finalReviewEvidence=Initialize-ItoevaEvidenceSnapshot $finalReviewPath (Join-Path $runRoot 'final-review.dry-run.json') $true
+    if ([string]$plan.status -ne 'PLANNED' -or [string]$plan.baseSha -ne $baseSha -or [string]::IsNullOrWhiteSpace([string]$plan.title)) { throw 'Plan ist nicht publishbar.' }
+    if ([string]$planReview.status -ne 'PASS' -or [string]$planReview.baseSha -ne $baseSha -or [string]$planReview.planHash -ne $planHash) { throw 'Planreview ist nicht gebunden PASS.' }
+    if ($tests | Where-Object { $_.status -ne 'PASS' }) { throw 'Testmanifest enthaelt nicht-PASS Ergebnisse.' }
+    if ([string]$finalReview.status -ne 'PASS' -or [string]$finalReview.baseSha -ne $baseSha -or [string]$finalReview.planHash -ne $planHash -or [string]$finalReview.treeOid -ne $approvedTree -or [string]$finalReview.testManifestHash -ne $testHash) { throw 'Final Review ist nicht vollstaendig gebunden PASS.' }
+    if ([string]$report.planReview -ne 'PASS' -or [string]$report.finalReview -ne 'PASS' -or [string]$report.reviewerBindings.baseSha -ne $baseSha -or [string]$report.reviewerBindings.planHash -ne $planHash -or [string]$report.reviewerBindings.treeOid -ne $approvedTree -or [string]$report.reviewerBindings.testManifestHash -ne $testHash) { throw 'Report-Gates oder Reviewer-Bindungen stimmen nicht.' }
+    if ((@($report.tests)|ConvertTo-Json -Depth 20 -Compress) -ne ($tests|ConvertTo-Json -Depth 20 -Compress)) { throw 'Report-Tests stimmen nicht mit dem Testmanifest ueberein.' }
+    $allowedPaths=@($plan.paths|Sort-Object -Unique); Assert-ItoevaAllowedPaths $allowedPaths $Config
+    $gate=[pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$baseSha; proposedTreeOid=$approvedTree; testManifestHash=$testHash; planHash=$planHash; reviewBaseSha=$baseSha; reviewPlanHash=$planHash; reviewTreeOid=$approvedTree; reviewTestManifestHash=$testHash }
+    if (-not (Test-ItoevaGate $gate)) { throw 'Rekonstruiertes Publish-Gate ist nicht PASS.' }
+
+    $origin=(& git -C $Repository remote get-url origin).Trim(); if ($origin -ne [string]$Config.repository.expectedOrigin) { throw "Unerwartetes origin: $origin" }
+    $dangerous=@(Get-ItoevaDangerousGitConfig $Repository $Config); if ($dangerous.Count) { throw "Unsichere Git-Konfiguration: $($dangerous -join '; ')" }
+    if (-not (Test-Path -LiteralPath $TrustedHooksPath -PathType Container) -or @(Get-ChildItem -LiteralPath $TrustedHooksPath -Force).Count) { throw 'Trusted Hooks-Verzeichnis fehlt oder ist nicht leer.' }
+    if ((& git -C $Repository branch --show-current).Trim() -ne $branch) { throw 'Aktueller Branch entspricht nicht dem Dry-Run-Report.' }
+    Assert-ItoevaBaseUnchanged $Repository $baseSha | Out-Null
+
+    if (-not $journal) {
+        if ((& git -C $Repository rev-parse HEAD).Trim() -ne $baseSha) { throw 'HEAD entspricht vor Publish nicht dem Base-SHA.' }
+        & git -C $Repository diff --cached --quiet; if ($LASTEXITCODE -ne 0) { throw 'Index ist vor Publish nicht sauber.' }
+        $changed=@(Get-ItoevaChangedPaths $Repository); if (($changed -join "`n") -ne ($allowedPaths -join "`n")) { throw 'Working-Tree-Pfade entsprechen nicht dem Plan.' }
+        $tree=Get-ItoevaProposedTreeOid $Repository $baseSha $allowedPaths; if ($tree -ne $approvedTree) { throw 'Working Tree entspricht nicht dem freigegebenen Proposed Tree.' }
+        & git -C $Repository diff-tree --check $baseSha $tree; if ($LASTEXITCODE -ne 0) { throw 'Proposed Tree besteht diff-tree --check nicht.' }
+        if (Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch") { throw 'Remote-Evolution-Branch existiert bereits.' }
+        $prepared=[ordered]@{ phase='PREPARED'; previousJournalHash=''; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$plan.title; allowedPaths=$allowedPaths }
+        $journal=Write-ItoevaPublishJournal $journalRoot 'PREPARED' $prepared
+    } else {
+        foreach ($binding in @('runId','branch','baseSha','proposedTreeOid','planHash','testManifestHash')) {
+            $expectedValue = switch ($binding) { 'runId' {$RunId}; 'branch' {$branch}; 'baseSha' {$baseSha}; 'proposedTreeOid' {$approvedTree}; 'planHash' {$planHash}; 'testManifestHash' {$testHash} }
+            if ([string]$journal.record.$binding -ne $expectedValue) { throw "Publish-Journalbindung stimmt nicht: $binding" }
+        }
+        if ([string]$journal.record.dryRunReportSha256 -ne $dryRunHash -or (@($journal.record.allowedPaths) -join "`n") -ne ($allowedPaths -join "`n")) { throw 'Publish-Journal stimmt nicht mit Dry-Run-Belegen ueberein.' }
+        if ([string]$journal.record.stateEvidenceSha256 -ne $stateEvidence.hash -or [string]$journal.record.planReviewEvidenceSha256 -ne $planReviewEvidence.hash -or [string]$journal.record.finalReviewEvidenceSha256 -ne $finalReviewEvidence.hash) { throw 'Publish-Journal stimmt nicht mit den Evidence-Snapshots ueberein.' }
+    }
+
+    if ($journal.phase -eq 'PREPARED') {
+        $head=(& git -C $Repository rev-parse HEAD).Trim()
+        if ($head -eq $baseSha) {
+            & git -C $Repository diff --cached --quiet
+            if ($LASTEXITCODE -eq 0) { & git -C $Repository add -- @allowedPaths | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Explizites Staging fehlgeschlagen.' } }
+            else { & git -C $Repository diff --quiet; if ($LASTEXITCODE -ne 0) { throw 'Teilweise gestagter Resume-Zustand ist nicht eindeutig.' } }
+            if ((& git -C $Repository write-tree).Trim() -ne $approvedTree) { throw 'Staged Tree entspricht nicht dem freigegebenen Tree.' }
+            $number=($branch -split '[-/]')[1]; $message="$($Config.publication.commitMessagePrefix)$number`: $($journal.record.title)"
+            & git -C $Repository -c "core.hooksPath=$TrustedHooksPath" commit -m $message | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Publish-Commit fehlgeschlagen.' }
+            $head=(& git -C $Repository rev-parse HEAD).Trim()
+        }
+        $parent=(& git -C $Repository rev-parse "$head^").Trim(); $commitTree=(& git -C $Repository rev-parse "$head^{tree}").Trim()
+        if ($parent -ne $baseSha -or $commitTree -ne $approvedTree -or @(& git -C $Repository status --porcelain).Count) { throw 'Lokaler Publish-Commit ist nicht exakt an Base und Tree gebunden.' }
+        $committed=[ordered]@{ phase='COMMITTED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$head }
+        $journal=Write-ItoevaPublishJournal $journalRoot 'COMMITTED' $committed
+    }
+
+    if ($journal.phase -eq 'COMMITTED') {
+        $commitSha=[string]$journal.record.commitSha
+        if ((& git -C $Repository rev-parse HEAD).Trim() -ne $commitSha -or (& git -C $Repository rev-parse "$commitSha^").Trim() -ne $baseSha -or (& git -C $Repository rev-parse "$commitSha^{tree}").Trim() -ne $approvedTree) { throw 'Commit-Resume-Bindung ist ungueltig.' }
+        Assert-ItoevaBaseUnchanged $Repository $baseSha | Out-Null
+        $remoteSha=Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch"
+        if ($remoteSha -and $remoteSha -ne $commitSha) { throw 'Remote-Evolution-Branch zeigt auf einen fremden Commit.' }
+        if (-not $remoteSha) { $pushArgs=New-ItoevaPushArguments $branch $commitSha $Config; & git -C $Repository -c "core.hooksPath=$TrustedHooksPath" @pushArgs | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Evolution-Branch-Push fehlgeschlagen.' } }
+        $remoteSha=Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch"; if ($remoteSha -ne $commitSha) { throw 'Remote-SHA stimmt nicht mit Commit-SHA ueberein.' }
+        Assert-ItoevaBaseUnchanged $Repository $baseSha | Out-Null
+        $pushed=[ordered]@{ phase='PUSHED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$commitSha; remoteBranchSha=$remoteSha; publishedAt=[DateTimeOffset]::UtcNow.ToString('O') }
+        $journal=Write-ItoevaPublishJournal $journalRoot 'PUSHED' $pushed
+    }
+
+    if ($journal.phase -eq 'PUSHED') {
+        $commitSha=[string]$journal.record.commitSha; $remoteSha=Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch"
+        if ($remoteSha -ne $commitSha) { throw 'Remote-SHA ging vor Reportabschluss verloren oder wurde veraendert.' }
+        Assert-ItoevaBaseUnchanged $Repository $baseSha | Out-Null
+        foreach ($property in @{ status='PUSHED'; commitSha=$commitSha; remoteBranchSha=$remoteSha; originMainPrePushSha=$baseSha; originMainPostPushSha=$baseSha; dryRunReportSha256=$dryRunHash; publishedAt=[string]$journal.record.publishedAt }.GetEnumerator()) { $report | Add-Member -NotePropertyName $property.Key -NotePropertyValue $property.Value -Force }
+        $reportJson=$report|ConvertTo-Json -Depth 20; Write-ItoevaAtomicText $reportPath $reportJson; Write-ItoevaAtomicText $reportHashPath (Get-ItoevaSha256 $reportPath)
+        Read-ItoevaHashedJson $reportPath $reportHashPath | Out-Null
+        $reported=[ordered]@{ phase='REPORTED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$commitSha; remoteBranchSha=$remoteSha; publishedAt=[string]$journal.record.publishedAt }
+        $journal=Write-ItoevaPublishJournal $journalRoot 'REPORTED' $reported
+        $state.status='PUSHED'; Write-ItoevaAtomicJson $state $statePath
+    }
+
+    if ($journal.phase -ne 'REPORTED') { throw 'Publish-Journal erreichte nicht REPORTED.' }
+    $publishedReport=Read-ItoevaHashedJson $reportPath $reportHashPath
+    if ([string]$publishedReport.value.status -ne 'PUSHED' -or [string]$publishedReport.value.commitSha -ne [string]$journal.record.commitSha -or [string]$publishedReport.value.remoteBranchSha -ne [string]$journal.record.remoteBranchSha) { throw 'Finaler Publish-Report stimmt nicht mit dem Journal ueberein.' }
+    if ((Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch") -ne [string]$journal.record.commitSha) { throw 'Finaler Remote-Branch stimmt nicht mit dem Journal ueberein.' }
+    if ([string]$state.status -ne 'PUSHED') { $state.status='PUSHED'; Write-ItoevaAtomicJson $state $statePath }
+    return [pscustomobject]@{ status='PUSHED'; runId=$RunId; branch=$branch; commitSha=[string]$journal.record.commitSha; remoteBranchSha=[string]$journal.record.remoteBranchSha }
+}
+
 Export-ModuleMember -Function @(
     'Get-ItoevaSha256', 'Test-ItoevaBranchName', 'Assert-ItoevaAllowedPaths',
     'New-ItoevaPushArguments', 'Test-ItoevaGate', 'Write-ItoevaAtomicJson',
@@ -621,5 +928,6 @@ Export-ModuleMember -Function @(
     'Get-ItoevaChangedPaths', 'Get-ItoevaSelectedTests', 'ConvertTo-ItoevaWindowsCommandLineArgument', 'New-ItoevaCmdShimCommand', 'Invoke-ItoevaProcessWithTimeout', 'Get-ItoevaProposedTreeOid', 'Get-ItoevaRemoteSha',
     'Resolve-ItoevaCodexLauncher', 'New-ItoevaCodexArguments', 'Assert-ItoevaCandidateAnalysis', 'Format-ItoevaEvolutionNumber',
     'Assert-ItoevaBaseUnchanged', 'Invoke-ItoevaConfiguredTests', 'Invoke-ItoevaCodexSession',
-    'Publish-ItoevaEvolution'
+    'Publish-ItoevaEvolution', 'Test-ItoevaRunId', 'Read-ItoevaHashedJson', 'Write-ItoevaPublishJournal',
+    'Get-ItoevaPublishJournal', 'Invoke-ItoevaPublishDryRun'
 )

@@ -1,9 +1,10 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('ValidateConfiguration', 'Preflight', 'DryRun', 'Run')]
+    [ValidateSet('ValidateConfiguration', 'Preflight', 'DryRun', 'Run', 'PublishDryRun')]
     [string]$Action = 'ValidateConfiguration',
     [string]$Repository,
-    [string]$ActivationPath
+    [string]$ActivationPath,
+    [string]$RunId
 )
 
 Set-StrictMode -Version Latest
@@ -31,10 +32,9 @@ function Assert-Preflight {
 function Read-Activation([bool]$NeedsPublication) {
     if (-not $ActivationPath -or -not (Test-Path -LiteralPath $ActivationPath -PathType Leaf)) { throw 'Lokale Aktivierungsdatei fehlt.' }
     $value = Get-Content -Raw -LiteralPath $ActivationPath | ConvertFrom-Json
-    if (-not $value.agentExecutionEnabled) { throw 'Agentenausführung ist nicht autorisiert.' }
-    if ($NeedsPublication -and (-not $value.publicationEnabled -or -not $value.standingAuthorizationEvolutionOnly)) {
-        throw 'Evolution-Commit/-Push ist nicht autorisiert.'
-    }
+    if ($NeedsPublication) {
+        if (-not $value.publicationEnabled -or -not $value.standingAuthorizationEvolutionOnly) { throw 'Evolution-Commit/-Push ist nicht autorisiert.' }
+    } elseif (-not $value.agentExecutionEnabled) { throw 'Agentenausführung ist nicht autorisiert.' }
     return $value
 }
 
@@ -52,6 +52,21 @@ function Get-NextEvolutionNumber {
 
 if ($Action -eq 'ValidateConfiguration') {
     [ordered]@{ action=$Action; repository=$Repository; configuration='PASS'; agentExecution='DISABLED'; publication='DISABLED'; mainRuleset='RISK_ACCEPTED_NOT_ENFORCEABLE' } | ConvertTo-Json
+    exit 0
+}
+
+if ($Action -eq 'PublishDryRun') {
+    if (-not (Test-ItoevaRunId ([string]$RunId))) { throw 'PublishDryRun erfordert -RunId als 32-stellige Hex-ID.' }
+    $activation = Read-Activation -NeedsPublication $true
+    $runtimeRoot = [Environment]::ExpandEnvironmentVariables([string]$activation.runtimeRoot)
+    $config | Add-Member -NotePropertyName runtimeRoot -NotePropertyValue $runtimeRoot -Force
+    $config.publication.enabled = $true
+    $lockPath = Join-Path $runtimeRoot 'locks\runner.lock'
+    $lock = Enter-ItoevaRunLock -Path $lockPath
+    try {
+        $hooks = [Environment]::ExpandEnvironmentVariables([string]$config.git.trustedHooksDirectory)
+        Invoke-ItoevaPublishDryRun -Repository $Repository -RunId $RunId -Config $config -TrustedHooksPath $hooks | ConvertTo-Json
+    } finally { Exit-ItoevaRunLock -Handle $lock -Path $lockPath }
     exit 0
 }
 

@@ -30,6 +30,53 @@ function Assert-Throws([scriptblock]$Body) {
     if (-not $thrown) { throw 'Erwartete Exception wurde nicht ausgelöst.' }
 }
 
+function New-PublishDryRunFixture([string]$Root, [string]$RunId) {
+    $remote=Join-Path $Root 'remote.git'; $seed=Join-Path $Root 'seed'; $repository=Join-Path $Root 'repository'
+    $runtime=Join-Path $Root 'runtime'; $hooks=Join-Path $Root 'hooks'; $runRoot=Join-Path $runtime "state\$RunId"; $reports=Join-Path $runtime 'reports'
+    New-Item -ItemType Directory -Path $seed,$hooks,$runRoot,$reports | Out-Null
+    & git init --bare --quiet $remote
+    & git -C $seed init --quiet
+    & git -C $seed config user.name 'Itoeva Publish Test'
+    & git -C $seed config user.email 'publish-test@example.invalid'
+    [IO.File]::WriteAllText((Join-Path $seed 'source.txt'), "base`n")
+    & git -C $seed add -- source.txt; & git -C $seed commit --quiet -m baseline
+    & git -C $seed remote add origin $remote; & git -C $seed push --quiet origin HEAD:refs/heads/main
+    & git clone --quiet --branch main $remote $repository
+    & git -C $repository config user.name 'Itoeva Publish Test'; & git -C $repository config user.email 'publish-test@example.invalid'
+    $base=(& git -C $repository rev-parse HEAD).Trim(); $branch="evolution/002-publish-dry-run-$RunId"
+    & git -C $repository switch --quiet -c $branch $base
+    [IO.File]::WriteAllText((Join-Path $repository 'source.txt'), "evolved`n")
+    $paths=@('source.txt'); $tree=Get-ItoevaProposedTreeOid $repository $base $paths
+    $plan=[ordered]@{ status='PLANNED'; baseSha=$base; title='Publish dry run'; plan=@('change source'); paths=$paths; tests=@('verify') }
+    $planPath=Join-Path $runRoot 'plan.json'; Write-ItoevaAtomicJson $plan $planPath; $planHash=Get-ItoevaSha256 $planPath
+    Write-ItoevaAtomicJson ([ordered]@{ status='PASS'; baseSha=$base; planHash=$planHash; findings=@() }) (Join-Path $runRoot 'plan-review.json')
+    $tests=@([pscustomobject]@{ id='verify'; status='PASS'; exitCode=0; startedAt='2026-01-01T00:00:00Z'; timedOut=$false; finishedAt='2026-01-01T00:00:01Z'; output='offline' })
+    $testsPath=Join-Path $runRoot 'tests.json'; Write-ItoevaAtomicJson $tests $testsPath; $testHash=Get-ItoevaSha256 $testsPath
+    Write-ItoevaAtomicJson ([ordered]@{ status='PASS'; baseSha=$base; planHash=$planHash; treeOid=$tree; testManifestHash=$testHash; findings=@() }) (Join-Path $runRoot 'final-review.json')
+    Write-ItoevaAtomicJson ([ordered]@{ runId=$RunId; phase='COMPLETE'; baseSha=$base; branch=$branch; status='DRY_RUN_PASS' }) (Join-Path $runRoot 'state.json')
+    $report=[ordered]@{ runId=$RunId; status='DRY_RUN_PASS'; branch=$branch; baseSha=$base; commitSha=''; remoteBranchSha=''; originMainStartSha=$base; originMainPrePushSha=$base; originMainPostPushSha=$base; planReview='PASS'; finalReview='PASS'; proposedTreeOid=$tree; testManifestHash=$testHash; planHash=$planHash; reviewerBindings=[ordered]@{baseSha=$base;planHash=$planHash;treeOid=$tree;testManifestHash=$testHash}; tests=$tests; unverified=@(); knownRisks=@() }
+    $reportPath=Join-Path $reports "$RunId.json"; Write-ItoevaAtomicJson $report $reportPath
+    [IO.File]::WriteAllText("$reportPath.sha256", (Get-ItoevaSha256 $reportPath), [Text.UTF8Encoding]::new($false))
+    $fixtureConfig=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'runner.config.json')|ConvertFrom-Json
+    $fixtureConfig.repository.expectedOrigin=$remote; $fixtureConfig.publication.enabled=$true
+    $fixtureConfig|Add-Member -NotePropertyName runtimeRoot -NotePropertyValue $runtime -Force
+    return [pscustomobject]@{ remote=$remote; seed=$seed; repository=$repository; runtime=$runtime; hooks=$hooks; runRoot=$runRoot; reportPath=$reportPath; runId=$RunId; base=$base; branch=$branch; tree=$tree; config=$fixtureConfig }
+}
+
+function Set-PublishFixtureResumePhase($Fixture, [string]$Phase, [bool]$RestoreDryRunReport) {
+    $rank=@{PREPARED=1;COMMITTED=2;PUSHED=3;REPORTED=4}
+    $phaseByRank=@{'1'='PREPARED';'2'='COMMITTED';'3'='PUSHED';'4'='REPORTED'}
+    Get-ChildItem -LiteralPath (Join-Path $Fixture.runRoot 'publish-journal') -Filter 'p.*.json' -File | ForEach-Object {
+        if ($_.Name -match '^p\.([1-4])\.' -and $rank[$phaseByRank[$Matches[1]]] -gt $rank[$Phase]) { Remove-Item -LiteralPath $_.FullName -Force }
+    }
+    if ($RestoreDryRunReport) {
+        $snapshot="$($Fixture.reportPath.Substring(0,$Fixture.reportPath.Length-5)).dry-run.json"
+        [IO.File]::WriteAllBytes($Fixture.reportPath, [IO.File]::ReadAllBytes($snapshot))
+        [IO.File]::WriteAllText("$($Fixture.reportPath).sha256", (Get-ItoevaSha256 $Fixture.reportPath), [Text.UTF8Encoding]::new($false))
+    }
+    Write-ItoevaAtomicJson ([ordered]@{runId=$Fixture.runId;phase='COMPLETE';baseSha=$Fixture.base;branch=$Fixture.branch;status='DRY_RUN_PASS'}) (Join-Path $Fixture.runRoot 'state.json')
+}
+
 $validBranch = 'evolution/002-small-fix-0123456789abcdef0123456789abcdef'
 
 Test-Case 'gültiger Evolution-Branch' {
@@ -302,6 +349,118 @@ try {
         $childPid = [int](Get-Content -Raw -LiteralPath $childPidPath)
         Start-Sleep -Milliseconds 250
         Assert-True (-not (Get-Process -Id $childPid -ErrorAction SilentlyContinue)) 'Kindprozess wurde nicht beendet.'
+    }
+    Test-Case 'PublishDryRun publiziert nur den hashgebundenen Evolution-Tree' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-success') ('1'*32)
+        $result=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+        Assert-True ($result.status -eq 'PUSHED')
+        Assert-True ((Get-ItoevaRemoteSha $fixture.repository 'origin' "refs/heads/$($fixture.branch)") -eq $result.commitSha)
+        Assert-True ((Get-ItoevaRemoteSha $fixture.repository 'origin' 'refs/heads/main') -eq $fixture.base)
+        Assert-True ((& git -C $fixture.repository rev-parse "$($result.commitSha)^").Trim() -eq $fixture.base)
+        Assert-True ((& git -C $fixture.repository rev-parse "$($result.commitSha)^{tree}").Trim() -eq $fixture.tree)
+        $snapshot="$($fixture.reportPath.Substring(0,$fixture.reportPath.Length-5)).dry-run.json"
+        Assert-True (Test-Path -LiteralPath $snapshot)
+        Assert-True ((Get-ItoevaSha256 $snapshot) -eq (Get-Content -Raw -LiteralPath "$snapshot.sha256").Trim())
+        $phaseByRank=@{'1'='PREPARED';'2'='COMMITTED';'3'='PUSHED';'4'='REPORTED'}
+        $phases=@(Get-ChildItem -LiteralPath (Join-Path $fixture.runRoot 'publish-journal') -Filter 'p.*.json' | ForEach-Object { if($_.Name -match '^p\.([1-4])\.'){ $phaseByRank[$Matches[1]] } } | Sort-Object)
+        Assert-True (($phases -join ',') -eq 'COMMITTED,PREPARED,PUSHED,REPORTED') "Journalphasen fehlen: $($phases -join ',')"
+    }
+    Test-Case 'PublishDryRun lehnt manipulierten Report-Hash fail-closed ab' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-report-tamper') ('2'*32)
+        [IO.File]::AppendAllText($fixture.reportPath, ' ')
+        Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null }
+        Assert-True (-not (Get-ItoevaRemoteSha $fixture.repository 'origin' "refs/heads/$($fixture.branch)"))
+    }
+    Test-Case 'PublishDryRun lehnt falschen Working Tree fail-closed ab' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-tree-tamper') ('3'*32)
+        [IO.File]::WriteAllText((Join-Path $fixture.repository 'source.txt'), "different`n")
+        Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null }
+        Assert-True (-not (Get-ItoevaRemoteSha $fixture.repository 'origin' "refs/heads/$($fixture.branch)"))
+    }
+    Test-Case 'PublishDryRun lehnt veraendertes origin main fail-closed ab' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-main-moved') ('4'*32)
+        [IO.File]::WriteAllText((Join-Path $fixture.seed 'source.txt'), "moved main`n")
+        & git -C $fixture.seed add -- source.txt; & git -C $fixture.seed commit --quiet -m move-main; & git -C $fixture.seed push --quiet origin HEAD:refs/heads/main
+        Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null }
+        Assert-True (-not (Get-ItoevaRemoteSha $fixture.repository 'origin' "refs/heads/$($fixture.branch)"))
+    }
+    Test-Case 'PublishDryRun ist nach erfolgreichem Report idempotent' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-idempotent') ('5'*32)
+        $first=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+        $second=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+        Assert-True ($second.commitSha -eq $first.commitSha)
+        Assert-True ($second.remoteBranchSha -eq $first.remoteBranchSha)
+    }
+    Test-Case 'PublishDryRun resumed idempotent nach jeder Journalphase' {
+        $cases=@(
+            [pscustomobject]@{phase='PREPARED';id=('6'*32)},
+            [pscustomobject]@{phase='COMMITTED';id=('7'*32)},
+            [pscustomobject]@{phase='PUSHED';id=('8'*32)}
+        )
+        foreach($case in $cases){
+            $fixture=New-PublishDryRunFixture (Join-Path $tempRoot "publish-resume-$($case.phase)") $case.id
+            $first=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+            Set-PublishFixtureResumePhase $fixture $case.phase $true
+            $resumed=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+            Assert-True ($resumed.commitSha -eq $first.commitSha) "Resume $($case.phase) erzeugte einen anderen Commit."
+            Assert-True ($resumed.remoteBranchSha -eq $first.remoteBranchSha) "Resume $($case.phase) veraenderte den Remote-SHA."
+        }
+    }
+    Test-Case 'PublishDryRun repariert Report-Abbruch nach verifiziertem Push' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-report-resume') ('9'*32)
+        $first=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+        Set-PublishFixtureResumePhase $fixture 'PUSHED' $false
+        [IO.File]::WriteAllText("$($fixture.reportPath).sha256", '0'*64, [Text.UTF8Encoding]::new($false))
+        $resumed=Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks
+        Assert-True ($resumed.commitSha -eq $first.commitSha)
+        Assert-True ((Get-ItoevaSha256 $fixture.reportPath) -eq (Get-Content -Raw -LiteralPath "$($fixture.reportPath).sha256").Trim())
+        $state=Get-Content -Raw -LiteralPath (Join-Path $fixture.runRoot 'state.json')|ConvertFrom-Json
+        Assert-True ($state.status -eq 'PUSHED')
+    }
+    Test-Case 'PublishDryRun startet weder Codex noch konfigurierte Tests' {
+        $moduleSource=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'Itoeva.Runner.psm1')
+        $start=$moduleSource.IndexOf('function Invoke-ItoevaPublishDryRun')
+        $end=$moduleSource.IndexOf('Export-ModuleMember', $start)
+        $publishSource=$moduleSource.Substring($start, $end-$start)
+        Assert-True ($publishSource -notmatch 'Invoke-ItoevaCodexSession|Invoke-ItoevaConfiguredTests|gradlew')
+        $entrySource=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1')
+        Assert-True ($entrySource -match 'if \(\$Action -eq ''PublishDryRun''\)')
+    }
+    Test-Case 'PublishDryRun Run-ID ist strikt fail-closed' {
+        Assert-True (Test-ItoevaRunId ('a'*32))
+        foreach($invalid in @('../bad',('A'*32),('a'*31),('a'*33),'')){ Assert-True (-not (Test-ItoevaRunId $invalid)) }
+    }
+    Test-Case 'PublishDryRun lehnt Journal ohne PREPARED-Genesis ab' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-missing-genesis') ('a'*32)
+        Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null
+        $prepared=Get-ChildItem -LiteralPath (Join-Path $fixture.runRoot 'publish-journal') -Filter 'p.1.*.json' -File
+        Remove-Item -LiteralPath $prepared.FullName -Force
+        Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null }
+    }
+    Test-Case 'PublishDryRun bindet Review-Artefakte unveraenderlich' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-review-tamper') ('b'*32)
+        Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null
+        [IO.File]::AppendAllText((Join-Path $fixture.runRoot 'plan-review.json'),' ')
+        Assert-Throws { Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks | Out-Null }
+    }
+    Test-Case 'PublishDryRun CLI verlangt beide Publikationsflags aber keine Agentenfreigabe' {
+        $fixture=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-cli-flags') ('c'*32)
+        $entry=Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1'; $activation=Join-Path $fixture.runtime 'activation.json'
+        $cases=@(
+            [ordered]@{agentExecutionEnabled=$false;publicationEnabled=$false;standingAuthorizationEvolutionOnly=$true;runtimeRoot=$fixture.runtime},
+            [ordered]@{agentExecutionEnabled=$false;publicationEnabled=$true;standingAuthorizationEvolutionOnly=$false;runtimeRoot=$fixture.runtime}
+        )
+        foreach($case in $cases){
+            Write-ItoevaAtomicJson $case $activation
+            $process=Invoke-ItoevaProcessWithTimeout -Executable 'powershell.exe' -Arguments @('-NoProfile','-ExecutionPolicy','Bypass','-File',$entry,'-Action','PublishDryRun','-RunId',$fixture.runId,'-Repository',$fixture.repository,'-ActivationPath',$activation) -WorkingDirectory $fixture.repository -TimeoutSeconds 20
+            Assert-True ($process.exitCode -ne 0)
+            Assert-True ($process.output -match 'Commit/-Push ist nicht autorisiert')
+        }
+        Write-ItoevaAtomicJson ([ordered]@{agentExecutionEnabled=$false;publicationEnabled=$true;standingAuthorizationEvolutionOnly=$true;runtimeRoot=$fixture.runtime}) $activation
+        $process=Invoke-ItoevaProcessWithTimeout -Executable 'powershell.exe' -Arguments @('-NoProfile','-ExecutionPolicy','Bypass','-File',$entry,'-Action','PublishDryRun','-RunId',$fixture.runId,'-Repository',$fixture.repository,'-ActivationPath',$activation) -WorkingDirectory $fixture.repository -TimeoutSeconds 20
+        Assert-True ($process.exitCode -ne 0)
+        Assert-True ($process.output -notmatch 'Agentenausf.hrung ist nicht autorisiert')
+        Assert-True ($process.output -match 'Unerwartetes origin')
     }
     Test-Case 'Proposed Tree enthält geänderte und neue Dateien' {
         $repo = Join-Path $tempRoot 'repo'
