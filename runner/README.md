@@ -65,6 +65,19 @@ Konsolenausgabe liegt als UTF-8-Text unter `%LOCALAPPDATA%\ItoevaEvolutionRunner
 älter als 30 Tage sind, werden best effort entfernt. JSON-Reports und State-Dateien bleiben davon
 unberührt.
 
+Nach dem Lauf schreibt der Wrapper außerdem atomar
+`%LOCALAPPDATA%\ItoevaEvolutionRunner\reports\latest-summary.json`. Die Datei enthält nur
+allowlist-validierte Status-, Review-, Test-, Branch- und SHA-Angaben sowie den vollständigen
+Logpfad. Ein Report gilt nur zusammen mit passendem SHA-256-Sidecar und passendem `state.json` und
+`tests.json` als erfolgreich. Ein fehlender oder widersprüchlicher Report wird ausschließlich als
+`FAILED` beziehungsweise bei einem entsprechenden State als `QUARANTINED` zusammengefasst. Das
+gilt derzeit auch für `NO_SAFE_EVOLUTION`, wenn kein gehashter Report vorhanden ist. Parallele
+Wrapper serialisieren die Aktualisierung; der zuletzt abgeschlossene Lauf gewinnt.
+
+Eine spätere morgendliche Benachrichtigung sollte als separater Read-only-Task ausschließlich
+dieses Summary lesen, Schema und Alter prüfen und anhand `runId` plus `completedAt` deduplizieren.
+Mail-, Push- oder Chat-Transport bleibt dabei vom Runner und dessen Aktivierungsdaten getrennt.
+
 `Preflight` ist für einen separaten sauberen Runner-Clone gedacht und schlägt in einem
 Entwicklungsclone mit uncommitteten Änderungen absichtlich fehl.
 

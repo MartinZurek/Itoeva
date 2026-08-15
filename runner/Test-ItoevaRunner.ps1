@@ -669,13 +669,38 @@ try {
         $fakeRunner=Join-Path $wrapperRoot 'Invoke-ItoevaEvolution.ps1'
         $fake=@'
 param([string]$Action,[string]$Repository,[string]$ActivationPath,[string]$RunId)
+function Write-Json($value,[string]$path){$parent=Split-Path -Parent $path;New-Item -ItemType Directory -Path $parent -Force|Out-Null;[IO.File]::WriteAllText($path,($value|ConvertTo-Json -Depth 20),[Text.UTF8Encoding]::new($false))}
+function Get-Hash([string]$path){$sha=[Security.Cryptography.SHA256]::Create();try{return([BitConverter]::ToString($sha.ComputeHash([IO.File]::ReadAllBytes($path))).Replace('-','').ToLowerInvariant())}finally{$sha.Dispose()}}
+function Write-Run([string]$id,[string]$status,[string]$stateStatus=$status,[switch]$BadRemote,[switch]$BadTests,[switch]$NoReport,[switch]$BadHash,[switch]$BadTestHash,[switch]$BadBranch,[switch]$BadState,[switch]$BadFormat,[switch]$FloatFormat,[switch]$V2,[switch]$FailReview,[ValidateSet('','missing','additional','reordered','badtype')][string]$TestVariant=''){
+ $base=(('1'*40)-join '');$branch="evolution/001-summary-test-$id";$run=Join-Path $env:LOCALAPPDATA "ItoevaEvolutionRunner\state\$id";$reports=Join-Path $env:LOCALAPPDATA 'ItoevaEvolutionRunner\reports';New-Item -ItemType Directory -Path $run,$reports -Force|Out-Null
+ $state=[ordered]@{runId=$id;phase='COMPLETE';baseSha=$base;branch=$branch;status=$stateStatus};if($stateStatus -eq 'QUARANTINED'){$state.error='failed https://secret.invalid TOKEN=stateCredential'};Write-Json $state (Join-Path $run 'state.json')
+ if($NoReport){return}
+ $tests=@([pscustomobject]@{id='offline';status='PASS';exitCode=0;timedOut=$false;output='ok'},[pscustomobject]@{id='connected';status='PASS';exitCode=0;timedOut=$false;output='ok'});$testsPath=Join-Path $run 'tests.json';Write-Json $tests $testsPath;$testHash=Get-Hash $testsPath
+ $commit=(('2'*40)-join '');$tree=(('4'*40)-join '');$planHash=(('5'*64)-join '');$remote=if($BadRemote){(('3'*40)-join '')}else{$commit};$report=[ordered]@{runId=$id;status=$status;branch=$branch;baseSha=$base;commitSha=if($status -eq 'PUSHED'){$commit}else{''};remoteBranchSha=if($status -eq 'PUSHED'){$remote}else{''};planReview='PASS';finalReview='PASS';proposedTreeOid=$tree;planHash=$planHash;testManifestHash=$testHash;reviewerBindings=[ordered]@{baseSha=$base;planHash=$planHash;treeOid=$tree;testManifestHash=$testHash};tests=$tests}
+ if($status -eq 'NO_SAFE_EVOLUTION'){$report.branch='';$state.branch='';Write-Json $state (Join-Path $run 'state.json');$report.tests=@();$report.testManifestHash=''}
+ if($BadTests){$report.tests[0].output='tampered'}
+ if($TestVariant -eq 'missing'){$report.tests=@($tests[0])}
+ if($TestVariant -eq 'additional'){$report.tests=@($tests+[pscustomobject]@{id='extra';status='PASS';exitCode=0;timedOut=$false;output='extra'})}
+ if($TestVariant -eq 'reordered'){$report.tests=@($tests[1],$tests[0])}
+ if($TestVariant -eq 'badtype'){$tests[0].id=123;Write-Json $tests $testsPath;$testHash=Get-Hash $testsPath;$report.tests=$tests;$report.testManifestHash=$testHash;$report.reviewerBindings.testManifestHash=$testHash}
+ if($BadTestHash){$report.testManifestHash='0'*64;$report.reviewerBindings.testManifestHash='0'*64}
+ if($BadBranch){$report.branch='main';$state.branch='main';Write-Json $state (Join-Path $run 'state.json')}
+ if($BadState){$state.baseSha='6'*40;Write-Json $state (Join-Path $run 'state.json')}
+ if($FailReview){$report.finalReview='FAIL'}
+ if($BadFormat){$report.formatVersion=99;$report.runKind='UNKNOWN'}
+ if($V2){$sourceId=(('7'*32)-join '');$sourceHash=(('8'*64)-join '');$sourceOid=(('9'*40)-join '');$report.formatVersion=2;$report.runKind='REVALIDATED_DRY_RUN';$report.sourceBindings=[ordered]@{sourceRunId=$sourceId;sourceReportSha256=$sourceHash;sourceStateSha256=$sourceHash;sourcePlanSha256=$sourceHash;sourcePlanReviewSha256=$sourceHash;sourceTestsSha256=$sourceHash;sourceFinalReviewSha256=$sourceHash;revalidationSha256=$sourceHash;sourceBaseSha=$sourceOid;sourceTreeOid=$sourceOid}}
+ if($FloatFormat){$report.formatVersion=2.1}
+ $reportPath=Join-Path $reports "$id.json";Write-Json $report $reportPath;$sidecar=if($BadHash){'0'*64}else{Get-Hash $reportPath};[IO.File]::WriteAllText("$reportPath.sha256",$sidecar,[Text.UTF8Encoding]::new($false))
+}
 Write-Output "repo=$Repository"
 Write-Output "activation=$ActivationPath"
 [Console]::Error.WriteLine('stderr-output')
 switch($Action){
- 'DryRun' {New-Item -ItemType Directory -Path (Join-Path $env:LOCALAPPDATA 'ItoevaEvolutionRunner\state\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa') -Force|Out-Null; Write-Output 'dry-ok'; exit 0}
+ 'DryRun' {Write-Run ((('a'*32)-join '')) 'DRY_RUN_PASS'; Write-Output 'dry-ok'; exit 0}
  'Run' {New-Item -ItemType Directory -Path (Join-Path $env:LOCALAPPDATA 'ItoevaEvolutionRunner\state\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb') -Force|Out-Null;New-Item -ItemType Directory -Path (Join-Path $env:LOCALAPPDATA 'ItoevaEvolutionRunner\state\cccccccccccccccccccccccccccccccc') -Force|Out-Null;exit 0}
- 'PublishDryRun' {Write-Output 'publish-existing';exit 0}
+ 'PublishDryRun' {switch($RunId){(('d'*32)-join ''){Write-Run $RunId 'PUSHED' 'DRY_RUN_PASS'}(('e'*32)-join ''){Write-Run $RunId 'PUSHED' 'DRY_RUN_PASS' -BadRemote}(('f'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -BadTests}(('4'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -BadHash}(('5'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -BadTestHash}(('6'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -BadBranch}(('7'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -BadState}(('8'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -BadFormat}(('9'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -FailReview}(('0'*32)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -V2}(('a1'*16)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -TestVariant missing}(('a2'*16)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -TestVariant additional}(('a3'*16)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -TestVariant reordered}(('a4'*16)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -TestVariant badtype}(('a5'*16)-join ''){Write-Run $RunId 'DRY_RUN_PASS' 'DRY_RUN_PASS' -V2 -FloatFormat}};Write-Output 'publish-existing';exit 0}
+ 'ValidateConfiguration' {if($RunId -eq ((('1'*32)-join ''))){Write-Run $RunId 'NO_SAFE_EVOLUTION'}elseif($RunId -eq ((('2'*32)-join ''))){Write-Run $RunId 'NO_SAFE_EVOLUTION' 'NO_SAFE_EVOLUTION' -NoReport};exit 0}
+ 'RevalidateDryRun' {Write-Run $RunId 'QUARANTINED' 'QUARANTINED' -NoReport;exit 1}
  'Preflight' {Write-Output 'https://user:uriCredential@example.invalid Authorization: Bearer bearerCredential token=assignedCredential {"token":"jsonCredential"} AWS_SECRET_ACCESS_KEY=environmentCredential ghp_abcdefghijklmnopqrstuvwxyz1234 AKIA1234567890ABCDEF';[Console]::Out.Write('trailing-output');exit 7}
  default {exit 0}
 }
@@ -694,18 +719,37 @@ switch($Action){
             $hasRedaction=$text -match '\[REDACTED\]';$hasStderr=$text -match 'stderr-output';$hasTrailing=$text -match 'trailing-output'
             Assert-True ($hasRedaction -and $hasStderr -and $hasTrailing) "Output oder Redaction fehlt: redaction=$hasRedaction stderr=$hasStderr trailing=$hasTrailing"
             Assert-True (-not(Test-Path -LiteralPath $oldLog) -and (Test-Path -LiteralPath $recentLog)) '30-Tage-Rotation ist falsch.'
+            $summaryPath=Join-Path $local 'ItoevaEvolutionRunner\reports\latest-summary.json';$summary=[IO.File]::ReadAllText($summaryPath,[Text.UTF8Encoding]::new($false))|ConvertFrom-Json
+            Assert-True ($summary.status -eq 'FAILED' -and $null -eq $summary.runId -and $summary.logPath -eq $preflightLog.FullName) 'Fehlender Report wurde nicht fail-safe zusammengefasst.'
+            Assert-True (($summary|ConvertTo-Json -Depth 10) -notmatch 'secret activation|uriCredential|https?://|TOKEN=') 'Summary enthält sensible Daten oder URLs.'
 
             $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','DryRun','-Repository','C:\repo with spaces') $wrapperRoot 20
-            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.log').Count -eq 1) 'Neue Run-ID fehlt im Lognamen.'
+            Assert-True ($result.exitCode -eq 0);$dryLog=Get-ChildItem -LiteralPath $logRoot -Filter '*-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.log'|Select-Object -First 1;Assert-True ($null -ne $dryLog) 'Neue Run-ID fehlt im Lognamen.';$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json
+            Assert-True ($summary.status -eq 'DRY_RUN_PASS' -and $summary.testStatus -eq 'PASS' -and $summary.planReviewStatus -eq 'PASS' -and $summary.finalReviewStatus -eq 'PASS') "Gültiger Dry-Run wurde nicht übernommen: runId=$($summary.runId) reason=$($summary.errorReason) log=$($summary.logPath) dryLog=$([IO.File]::ReadAllText($dryLog.FullName))"
             $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','PublishDryRun','-RunId','dddddddddddddddddddddddddddddddd') $wrapperRoot 20
-            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-dddddddddddddddddddddddddddddddd.log').Count -eq 1) 'Bestehende Run-ID fehlt im Lognamen.'
+            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-dddddddddddddddddddddddddddddddd.log').Count -eq 1) 'Bestehende Run-ID fehlt im Lognamen.';$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json
+            Assert-True ($summary.status -eq 'PUSHED' -and $summary.commitSha -eq $summary.remoteBranchSha -and $summary.testStatus -eq 'PASS') 'PUSHED mit DRY_RUN_PASS-State wurde nicht akzeptiert.'
+            foreach($badId in @(((('e'*32)-join '')),((('f'*32)-join '')),((('4'*32)-join '')),((('5'*32)-join '')),((('6'*32)-join '')),((('7'*32)-join '')),((('8'*32)-join '')),((('9'*32)-join '')),((('a1'*16)-join '')),((('a2'*16)-join '')),((('a3'*16)-join '')),((('a4'*16)-join '')),((('a5'*16)-join '')))){$result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','PublishDryRun','-RunId',$badId) $wrapperRoot 20;$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json;Assert-True ($summary.status -eq 'FAILED') "Manipulierter Publish-Report $badId wurde akzeptiert."}
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','PublishDryRun','-RunId',((('0'*32)-join ''))) $wrapperRoot 20;$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json;Assert-True ($summary.status -eq 'DRY_RUN_PASS' -and $summary.testStatus -eq 'PASS') 'Gültiger V2-Revalidierungsreport wurde abgelehnt.'
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','ValidateConfiguration','-RunId',((('1'*32)-join ''))) $wrapperRoot 20;$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json;Assert-True ($summary.status -eq 'NO_SAFE_EVOLUTION') 'Gehashter NO_SAFE-Report wurde nicht akzeptiert.'
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','ValidateConfiguration','-RunId',((('2'*32)-join ''))) $wrapperRoot 20;$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json;Assert-True ($summary.status -eq 'FAILED') 'NO_SAFE ohne Report muss FAILED sein.'
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','RevalidateDryRun','-RunId',((('3'*32)-join '')),'-ActivationPath','C:\secret activation.json') $wrapperRoot 20;$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json
+            Assert-True ($result.exitCode -eq 1 -and $summary.status -eq 'QUARANTINED' -and $summary.errorReason -notmatch 'https?://|stateCredential|secret activation') 'QUARANTINED oder Redaction ist falsch.'
             $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','Run') $wrapperRoot 20
-            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-no-run-id.log').Count -ge 2) 'Mehrdeutige Run-ID muss no-run-id ergeben.'
+            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-no-run-id.log').Count -ge 2) 'Mehrdeutige Run-ID muss no-run-id ergeben.';$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json;Assert-True ($summary.status -eq 'FAILED' -and $null -eq $summary.runId) 'Mehrdeutiger State wurde fremd zugeordnet.'
+            Assert-True (@(Get-ChildItem (Split-Path $summaryPath) -Filter '.latest-summary.*.tmp').Count -eq 0) 'Summary-Tempdatei blieb zurück.'
+            $summaryHash=Get-ItoevaSha256 $summaryPath;$summaryLock=Join-Path (Split-Path $summaryPath) '.latest-summary.lock';$held=[IO.File]::Open($summaryLock,[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+            try{$result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','Preflight') $wrapperRoot 15}finally{$held.Dispose()}
+            Assert-True ($result.exitCode -eq 7 -and (Get-ItoevaSha256 $summaryPath) -eq $summaryHash) 'Summary-Lockfehler veränderte Child-Exitcode oder Summary.'
+            $junctionId=(('b1'*16)-join '');$outside=Join-Path $root 'outside-state';New-Item -ItemType Directory -Path $outside|Out-Null;$junction=Join-Path $local "ItoevaEvolutionRunner\state\$junctionId";New-Item -ItemType Junction -Path $junction -Target $outside|Out-Null
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','PublishDryRun','-RunId',$junctionId) $wrapperRoot 20;$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json;Assert-True ($result.exitCode -eq 0 -and $summary.status -eq 'FAILED') 'Reparse-State wurde nicht fail-safe abgewiesen.'
+            $future=[ordered]@{generatedAt='2099-01-01T00:00:00Z';completedAt='2099-01-01T00:00:00Z';runId='future';status='FAILED';logPath='future'};[IO.File]::WriteAllText($summaryPath,($future|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','Preflight') $wrapperRoot 20;$summary=Get-Content -Raw $summaryPath|ConvertFrom-Json;Assert-True ($summary.runId -eq 'future') 'Älterer Abschluss überschrieb eine neuere Summary.'
         } finally {$env:LOCALAPPDATA=$oldLocal}
         Assert-True ((Get-ItoevaSha256 (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1')) -eq $entryHash) 'Wrapper änderte den Runner.'
         Assert-True ((Get-ItoevaSha256 (Join-Path $PSScriptRoot 'Itoeva.Runner.psm1')) -eq $moduleHash) 'Wrapper änderte das Modul.'
         $source=Get-Content -Raw -LiteralPath $wrapperSource
-        Assert-True ($source -match 'ReparsePoint' -and $source -match 'FileMode\]::CreateNew' -and $source -match 'rotationCandidates = @\(\)' -and $source -notmatch 'Start-Process') 'Pfadschutz, fail-safe Rotation oder sichere Prozessausführung fehlt.'
+        Assert-True ($source -match 'ReparsePoint' -and $source -match 'FileMode\]::CreateNew' -and $source -match 'FileShare\]::None' -and $source -match 'rotationCandidates = @\(\)' -and $source -notmatch 'Start-Process|Invoke-ItoevaCodexSession|\bgit\b|gradle') 'Pfadschutz, Serialisierung oder Summary-Isolation fehlt.'
     }
     Test-Case 'Proposed Tree enthält geänderte und neue Dateien' {
         $repo = Join-Path $tempRoot 'repo'
