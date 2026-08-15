@@ -663,6 +663,50 @@ try {
         Assert-True ($source -notmatch '(?i)\bgit\s+-C\s+\$Repository\s+(commit|push|merge|rebase|reset|tag|checkout)\b')
         $entry=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1');Assert-True ($entry -match "Action -eq 'RevalidateDryRun'")
     }
+    Test-Case 'Scheduler-Wrapper protokolliert redigiert und erhaelt Exitcode Run-ID und Rotation' {
+        $root=Join-Path $tempRoot 'scheduled-wrapper';$wrapperRoot=Join-Path $root 'runner';$local=Join-Path $root 'local';New-Item -ItemType Directory -Path $wrapperRoot,$local|Out-Null
+        $wrapperSource=Join-Path $PSScriptRoot 'Invoke-ItoevaEvolutionScheduled.ps1';$wrapper=Join-Path $wrapperRoot 'Invoke-ItoevaEvolutionScheduled.ps1';Copy-Item -LiteralPath $wrapperSource -Destination $wrapper
+        $fakeRunner=Join-Path $wrapperRoot 'Invoke-ItoevaEvolution.ps1'
+        $fake=@'
+param([string]$Action,[string]$Repository,[string]$ActivationPath,[string]$RunId)
+Write-Output "repo=$Repository"
+Write-Output "activation=$ActivationPath"
+[Console]::Error.WriteLine('stderr-output')
+switch($Action){
+ 'DryRun' {New-Item -ItemType Directory -Path (Join-Path $env:LOCALAPPDATA 'ItoevaEvolutionRunner\state\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa') -Force|Out-Null; Write-Output 'dry-ok'; exit 0}
+ 'Run' {New-Item -ItemType Directory -Path (Join-Path $env:LOCALAPPDATA 'ItoevaEvolutionRunner\state\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb') -Force|Out-Null;New-Item -ItemType Directory -Path (Join-Path $env:LOCALAPPDATA 'ItoevaEvolutionRunner\state\cccccccccccccccccccccccccccccccc') -Force|Out-Null;exit 0}
+ 'PublishDryRun' {Write-Output 'publish-existing';exit 0}
+ 'Preflight' {Write-Output 'https://user:uriCredential@example.invalid Authorization: Bearer bearerCredential token=assignedCredential {"token":"jsonCredential"} AWS_SECRET_ACCESS_KEY=environmentCredential ghp_abcdefghijklmnopqrstuvwxyz1234 AKIA1234567890ABCDEF';[Console]::Out.Write('trailing-output');exit 7}
+ default {exit 0}
+}
+'@
+        [IO.File]::WriteAllText($fakeRunner,$fake,[Text.UTF8Encoding]::new($false))
+        $logRoot=Join-Path $local 'ItoevaEvolutionRunner\logs';New-Item -ItemType Directory -Path $logRoot -Force|Out-Null
+        $oldLog=Join-Path $logRoot 'old.log';$recentLog=Join-Path $logRoot 'recent.log';[IO.File]::WriteAllText($oldLog,'old');[IO.File]::WriteAllText($recentLog,'recent');(Get-Item $oldLog).LastWriteTimeUtc=[DateTime]::UtcNow.AddDays(-31)
+        $entryHash=Get-ItoevaSha256 (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1');$moduleHash=Get-ItoevaSha256 (Join-Path $PSScriptRoot 'Itoeva.Runner.psm1')
+        $oldLocal=$env:LOCALAPPDATA
+        try{
+            $env:LOCALAPPDATA=$local
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','Preflight','-Repository','C:\repo with spaces','-ActivationPath','C:\secret activation.json') $wrapperRoot 20
+            Assert-True ($result.exitCode -eq 7) "Wrapper verlor Exitcode: $($result.output)"
+            $preflightLog=Get-ChildItem -LiteralPath $logRoot -Filter '*-no-run-id.log'|Sort-Object LastWriteTime|Select-Object -Last 1;$text=[IO.File]::ReadAllText($preflightLog.FullName,[Text.UTF8Encoding]::new($false))
+            foreach($secret in @('uriCredential','bearerCredential','assignedCredential','jsonCredential','environmentCredential','ghp_abcdefghijklmnopqrstuvwxyz1234','AKIA1234567890ABCDEF','secret activation')){Assert-True ($text -notmatch [regex]::Escape($secret)) "Secret im Log: $secret"}
+            $hasRedaction=$text -match '\[REDACTED\]';$hasStderr=$text -match 'stderr-output';$hasTrailing=$text -match 'trailing-output'
+            Assert-True ($hasRedaction -and $hasStderr -and $hasTrailing) "Output oder Redaction fehlt: redaction=$hasRedaction stderr=$hasStderr trailing=$hasTrailing"
+            Assert-True (-not(Test-Path -LiteralPath $oldLog) -and (Test-Path -LiteralPath $recentLog)) '30-Tage-Rotation ist falsch.'
+
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','DryRun','-Repository','C:\repo with spaces') $wrapperRoot 20
+            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.log').Count -eq 1) 'Neue Run-ID fehlt im Lognamen.'
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','PublishDryRun','-RunId','dddddddddddddddddddddddddddddddd') $wrapperRoot 20
+            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-dddddddddddddddddddddddddddddddd.log').Count -eq 1) 'Bestehende Run-ID fehlt im Lognamen.'
+            $result=Invoke-ItoevaProcessWithTimeout 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',$wrapper,'-Action','Run') $wrapperRoot 20
+            Assert-True ($result.exitCode -eq 0);Assert-True (@(Get-ChildItem -LiteralPath $logRoot -Filter '*-no-run-id.log').Count -ge 2) 'Mehrdeutige Run-ID muss no-run-id ergeben.'
+        } finally {$env:LOCALAPPDATA=$oldLocal}
+        Assert-True ((Get-ItoevaSha256 (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1')) -eq $entryHash) 'Wrapper änderte den Runner.'
+        Assert-True ((Get-ItoevaSha256 (Join-Path $PSScriptRoot 'Itoeva.Runner.psm1')) -eq $moduleHash) 'Wrapper änderte das Modul.'
+        $source=Get-Content -Raw -LiteralPath $wrapperSource
+        Assert-True ($source -match 'ReparsePoint' -and $source -match 'FileMode\]::CreateNew' -and $source -match 'rotationCandidates = @\(\)' -and $source -notmatch 'Start-Process') 'Pfadschutz, fail-safe Rotation oder sichere Prozessausführung fehlt.'
+    }
     Test-Case 'Proposed Tree enthält geänderte und neue Dateien' {
         $repo = Join-Path $tempRoot 'repo'
         New-Item -ItemType Directory -Path $repo | Out-Null

@@ -50,6 +50,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File runner\Invoke-ItoevaEvolutio
 powershell -NoProfile -ExecutionPolicy Bypass -File runner\Test-ItoevaRunner.ps1
 ```
 
+## Windows Task Scheduler
+
+Geplante Läufe verwenden den Logging-Wrapper mit denselben Runner-Parametern:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File runner\Invoke-ItoevaEvolutionScheduled.ps1 `
+  -Action DryRun -Repository C:\ItoevaRunner `
+  -ActivationPath "$env:LOCALAPPDATA\ItoevaEvolutionRunner\activation.json"
+```
+
+Der Wrapper startet weiterhin ausschließlich `Invoke-ItoevaEvolution.ps1`. Seine redigierte
+Konsolenausgabe liegt als UTF-8-Text unter `%LOCALAPPDATA%\ItoevaEvolutionRunner\logs`; Logs, die
+älter als 30 Tage sind, werden best effort entfernt. JSON-Reports und State-Dateien bleiben davon
+unberührt.
+
 `Preflight` ist für einen separaten sauberen Runner-Clone gedacht und schlägt in einem
 Entwicklungsclone mit uncommitteten Änderungen absichtlich fehl.
 
