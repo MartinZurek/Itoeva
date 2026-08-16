@@ -46,7 +46,7 @@
   "scope": {
     "forbiddenPathPrefixes": [
       "runner/",
-      ".github/workflows/",
+      ".github/",
       "gradle/",
       "app/libs/"
     ],
