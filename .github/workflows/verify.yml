@@ -129,14 +129,24 @@ jobs:
   migrations:
     name: Instrumentiert (${{ matrix.module }}, API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
+    # Ein haengender Emulator wuerde sonst bis zum GitHub-Standard von sechs Stunden
+    # weiterlaufen und entsprechend Actions-Minuten verbrauchen. Ein gesunder Lauf bleibt
+    # deutlich darunter, auch mit dem langsameren API-26-Image.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Das Target gehoert in die Matrix, weil es nicht fuer beide Zeilen dasselbe sein
+          # kann: ATD-Images ("Automated Test Device") gibt es erst ab API 30. Fuer API 26
+          # ist "default" - reines AOSP ohne Google-Bestandteile - das naechstliegende
+          # verfuegbare Aequivalent zu aosp_atd.
           - module: ':app-sim'
             api-level: 26
+            target: default
           - module: ':app'
             api-level: 35
+            target: aosp_atd
     steps:
       - uses: actions/checkout@v4
 
@@ -167,7 +177,7 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
-          target: aosp_atd
+          target: ${{ matrix.target }}
           disable-animations: true
           script: ./gradlew ${{ matrix.module }}:connectedDebugAndroidTest
 
