@@ -1,0 +1,111 @@
+# Machbarkeitstest: laeuft die bestehende geraetefreie Pruefstufe auf einem GitHub-hosted
+# Ubuntu-Runner?
+#
+# Dieser Workflow beweist etwas und baut nichts Neues. Er ruft denselben einen Befehl auf, den
+# auch verify.yml und jeder Entwickler lokal benutzt - `./gradlew verify`. Die einzelnen Stufen
+# (Unit-Tests, Lint, minifizierter Probe-Bau) stehen bewusst NICHT hier, sondern bleiben im
+# Wurzel-build.gradle.kts definiert; zwei Listen, die auseinanderlaufen koennen, waeren schlimmer
+# als keine CI. Diese Begruendung stammt aus verify.yml und gilt hier unveraendert.
+#
+# Abgrenzung zu verify.yml: dort laufen zusaetzlich Emulator-Jobs (Room-Migrationen), der
+# Release-Torwaechter und ein signierter Release-Bau mit Secrets. Hier laeuft ausschliesslich die
+# geraete- und schluesselfreie Stufe, und ausschliesslich auf Knopfdruck. Faellt dieser Workflow
+# gruen aus, ist die Grundannahme belegt und die weiteren Stufen koennen einzeln nachgezogen
+# werden.
+#
+# Bewusst NICHT enthalten: Emulator/instrumentierte Tests, Zeitplan, Codex- oder Claude-Aufrufe,
+# Secrets, jede Form von Commit, Push, PR oder Release.
+
+name: CI-Machbarkeitstest
+
+# Nur von Hand. Kein push, kein pull_request, kein schedule - dieser Workflow soll nichts
+# auslosen, was nicht ausdruecklich angestossen wurde.
+on:
+  workflow_dispatch:
+
+# Schreibrechte werden gar nicht erst erteilt. Der Job kann damit auch bei einem Fehler im
+# Skript nichts am Repository veraendern.
+permissions:
+  contents: read
+
+# Zwei gleichzeitige Handstarts sind immer ein Versehen.
+concurrency:
+  group: ci-feasibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  feasibility:
+    name: Geraetefreie Pruefstufe (gradlew verify)
+    runs-on: ubuntu-latest
+
+    # Der kalte Erstlauf (Gradle-Distribution, Abhaengigkeiten, KSP, Lint, zweimal R8) ist der
+    # teuerste Fall. 60 Minuten lassen ihm Luft und beenden trotzdem alles, was haengt - der
+    # GitHub-Standard von 6 Stunden waere fuer eine Machbarkeitsprobe sinnlos teuer.
+    timeout-minutes: 60
+
+    steps:
+      # persist-credentials: false - der Job braucht den automatischen Token nicht, und ohne
+      # hinterlegte Zugangsdaten kann kein Schritt versehentlich pushen.
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # JDK 17, weil das Wurzel-build.gradle.kts genau das als Untergrenze erzwingt
+      # (`val requiredJdk = JavaVersion.VERSION_17`, AGP 8.13 laedt Klassenformat 61).
+      # Nicht zu verwechseln mit dem Bytecode-Ziel der Module: das steht auf Java 11 und
+      # richtet sich nach minSdk, nicht nach dem JDK des Builds.
+      - name: JDK 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Gradle-Caching ueber den GitHub-eigenen Actions-Cache. Braucht keine Secrets und keine
+      # Fremddienste, nur den ohnehin vorhandenen GitHub-Kontext.
+      - name: Gradle einrichten (mit Caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      # Kein `chmod +x ./gradlew` noetig: gradlew ist im Repository als 100755 eingecheckt,
+      # actions/checkout stellt das Ausfuehrbit auf dem Linux-Runner damit selbst her. Sollte
+      # der Modus dort je wieder auf 100644 rutschen (unter Windows faellt das nicht auf),
+      # scheitert der naechste Schritt sichtbar an "Permission denied" - genau das soll er dann
+      # auch, statt still umgangen zu werden.
+
+      # Reine Bestandsaufnahme. Bei einem Fehlschlag weiter unten steht damit im Protokoll,
+      # welche Werkzeugkette tatsaechlich gelaufen ist.
+      - name: Umgebung protokollieren
+        run: |
+          echo "::group::Java"
+          java -version
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "::endgroup::"
+          echo "::group::Android SDK"
+          echo "ANDROID_HOME=${ANDROID_HOME:-<nicht gesetzt>}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-<nicht gesetzt>}"
+          ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platforms" 2>/dev/null || echo "keine Plattformen gefunden"
+          echo "::endgroup::"
+          echo "::group::Gradle"
+          ./gradlew --version
+          echo "::endgroup::"
+        timeout-minutes: 10
+
+      # Derselbe eine Befehl wie lokal und in verify.yml. `verify` ist im Wurzel-build.gradle.kts
+      # definiert als: test + lint aller Module, dazu :app-sim:assembleReleaseCheck und
+      # :app:assembleReleaseCheck. Geraetetests (connectedDebugAndroidTest) sind dort
+      # ausdruecklich ausgenommen, ebenso der echte Release-Bau mit Schluesseln.
+      - name: gradlew verify
+        run: ./gradlew verify --stacktrace
+        timeout-minutes: 45
+
+      # Auch und gerade bei einem Fehlschlag einsammeln - dann sind die Berichte interessant.
+      - name: Berichte sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feasibility-reports
+          path: |
+            **/build/reports/**
+            **/build/test-results/**
+          if-no-files-found: ignore
+          retention-days: 7
