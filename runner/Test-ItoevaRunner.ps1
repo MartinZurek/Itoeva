@@ -33,6 +33,7 @@ function Assert-Throws([scriptblock]$Body) {
 function New-PublishDryRunFixture([string]$Root, [string]$RunId, $TestResults = $null) {
     $remote=Join-Path $Root 'remote.git'; $seed=Join-Path $Root 'seed'; $repository=Join-Path $Root 'repository'
     $runtime=Join-Path $Root 'runtime'; $hooks=Join-Path $Root 'hooks'; $runRoot=Join-Path $runtime "state\$RunId"; $reports=Join-Path $runtime 'reports'
+    $fixtureConfig=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'runner.config.json')|ConvertFrom-Json
     New-Item -ItemType Directory -Path $seed,$hooks,$runRoot,$reports | Out-Null
     & git init --bare --quiet $remote
     & git -C $seed init --quiet
@@ -47,7 +48,7 @@ function New-PublishDryRunFixture([string]$Root, [string]$RunId, $TestResults = 
     & git -C $repository switch --quiet -c $branch $base
     [IO.File]::WriteAllText((Join-Path $repository 'source.txt'), "evolved`n")
     $paths=@('source.txt'); $tree=Get-ItoevaProposedTreeOid $repository $base $paths
-    $plan=[ordered]@{ status='PLANNED'; baseSha=$base; title='Publish dry run'; plan=@('change source'); paths=$paths; tests=@('verify') }
+    $plan=[ordered]@{ status='PLANNED'; baseSha=$base; title='Small parser fix'; plan=@('adjust quoted-brace parsing'); paths=$paths; tests=@('verify') }
     $planPath=Join-Path $runRoot 'plan.json'; Write-ItoevaAtomicJson $plan $planPath; $planHash=Get-ItoevaSha256 $planPath
     Write-ItoevaAtomicJson ([ordered]@{ status='PASS'; baseSha=$base; planHash=$planHash; findings=@() }) (Join-Path $runRoot 'plan-review.json')
     $tests = if ($null -eq $TestResults) {
@@ -55,11 +56,13 @@ function New-PublishDryRunFixture([string]$Root, [string]$RunId, $TestResults = 
     } else { @($TestResults) }
     $testsPath=Join-Path $runRoot 'tests.json'; Write-ItoevaAtomicJson $tests $testsPath; $testHash=Get-ItoevaSha256 $testsPath
     Write-ItoevaAtomicJson ([ordered]@{ status='PASS'; baseSha=$base; planHash=$planHash; treeOid=$tree; testManifestHash=$testHash; findings=@() }) (Join-Path $runRoot 'final-review.json')
+    $claudeModel=Get-ItoevaClaudeReviewModel ([pscustomobject]$plan) $fixtureConfig
+    $claudeInput=Join-Path $runRoot 'claude-review-input';New-Item -ItemType Directory -Path $claudeInput|Out-Null;$claudePatchPath=Join-Path $claudeInput 'proposed.patch';[IO.File]::WriteAllText($claudePatchPath,'fixture patch',[Text.UTF8Encoding]::new($false));$claudePatchHash=Get-ItoevaSha256 $claudePatchPath;$claudeContextPath=Join-Path $claudeInput 'context.json';Write-ItoevaAtomicJson ([ordered]@{baseSha=$base;treeOid=$tree;planHash=$planHash;testManifestHash=$testHash;patchSha256=$claudePatchHash;reviewModel=$claudeModel;claudeCliVersion=[string]$fixtureConfig.claudeReview.pinnedCliVersion;claudeLauncherKind='NATIVE_EXE'}) $claudeContextPath;$claudeContextHash=Get-ItoevaSha256 $claudeContextPath
+    $claudeReviewPath=Join-Path $runRoot 'claude-final-review.json';Write-ItoevaAtomicJson ([ordered]@{status='PASS';findings=@();baseSha=$base;treeOid=$tree;testManifestHash=$testHash;contextHash=$claudeContextHash}) $claudeReviewPath;$claudeReviewHash=Get-ItoevaSha256 $claudeReviewPath
     Write-ItoevaAtomicJson ([ordered]@{ runId=$RunId; phase='COMPLETE'; baseSha=$base; branch=$branch; status='DRY_RUN_PASS' }) (Join-Path $runRoot 'state.json')
-    $report=[ordered]@{ runId=$RunId; status='DRY_RUN_PASS'; branch=$branch; baseSha=$base; commitSha=''; remoteBranchSha=''; originMainStartSha=$base; originMainPrePushSha=$base; originMainPostPushSha=$base; planReview='PASS'; finalReview='PASS'; proposedTreeOid=$tree; testManifestHash=$testHash; planHash=$planHash; reviewerBindings=[ordered]@{baseSha=$base;planHash=$planHash;treeOid=$tree;testManifestHash=$testHash}; tests=$tests; unverified=@(); knownRisks=@() }
+    $report=[ordered]@{ reviewGateVersion=2;runId=$RunId; status='DRY_RUN_PASS'; branch=$branch; baseSha=$base; commitSha=''; remoteBranchSha=''; originMainStartSha=$base; originMainPrePushSha=$base; originMainPostPushSha=$base; planReview='PASS'; finalReview='PASS';claudeFinalReview='PASS';claudeReviewModel=$claudeModel;claudeFinalReviewSha256=$claudeReviewHash;claudeReviewContextSha256=$claudeContextHash;claudeReviewPatchSha256=$claudePatchHash;claudeReviewerBindings=[ordered]@{baseSha=$base;treeOid=$tree;testManifestHash=$testHash;contextHash=$claudeContextHash}; proposedTreeOid=$tree; testManifestHash=$testHash; planHash=$planHash; reviewerBindings=[ordered]@{baseSha=$base;planHash=$planHash;treeOid=$tree;testManifestHash=$testHash}; tests=$tests; unverified=@(); knownRisks=@() }
     $reportPath=Join-Path $reports "$RunId.json"; Write-ItoevaAtomicJson $report $reportPath
     [IO.File]::WriteAllText("$reportPath.sha256", (Get-ItoevaSha256 $reportPath), [Text.UTF8Encoding]::new($false))
-    $fixtureConfig=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'runner.config.json')|ConvertFrom-Json
     $fixtureConfig.repository.expectedOrigin=$remote; $fixtureConfig.publication.enabled=$true
     $fixtureConfig|Add-Member -NotePropertyName runtimeRoot -NotePropertyValue $runtime -Force
     return [pscustomobject]@{ remote=$remote; seed=$seed; repository=$repository; runtime=$runtime; hooks=$hooks; runRoot=$runRoot; reportPath=$reportPath; runId=$RunId; base=$base; branch=$branch; tree=$tree; config=$fixtureConfig }
@@ -90,10 +93,12 @@ function New-RevalidateDryRunFixture([string]$Root, [string]$RunId, [bool]$Confl
     $fixture=New-PublishDryRunFixture $Root $RunId
     $sourceReportSnapshot="$($fixture.reportPath.Substring(0,$fixture.reportPath.Length-5)).dry-run.json"
     [IO.File]::WriteAllBytes($sourceReportSnapshot,[IO.File]::ReadAllBytes($fixture.reportPath));[IO.File]::WriteAllText("$sourceReportSnapshot.sha256",(Get-ItoevaSha256 $sourceReportSnapshot),[Text.UTF8Encoding]::new($false))
-    foreach($name in @('state','plan-review','final-review')){
+    foreach($name in @('state','plan-review','final-review','claude-final-review')){
         $source=Join-Path $fixture.runRoot "$name.json";$snapshot=Join-Path $fixture.runRoot "$name.dry-run.json"
         [IO.File]::WriteAllBytes($snapshot,[IO.File]::ReadAllBytes($source));[IO.File]::WriteAllText("$snapshot.sha256",(Get-ItoevaSha256 $snapshot),[Text.UTF8Encoding]::new($false))
     }
+    [IO.File]::WriteAllBytes((Join-Path $fixture.runRoot 'claude-context.dry-run.json'),[IO.File]::ReadAllBytes((Join-Path $fixture.runRoot 'claude-review-input\context.json')));[IO.File]::WriteAllText((Join-Path $fixture.runRoot 'claude-context.dry-run.json.sha256'),(Get-ItoevaSha256 (Join-Path $fixture.runRoot 'claude-context.dry-run.json')),[Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllBytes((Join-Path $fixture.runRoot 'claude-patch.dry-run.patch'),[IO.File]::ReadAllBytes((Join-Path $fixture.runRoot 'claude-review-input\proposed.patch')));[IO.File]::WriteAllText((Join-Path $fixture.runRoot 'claude-patch.dry-run.patch.sha256'),(Get-ItoevaSha256 (Join-Path $fixture.runRoot 'claude-patch.dry-run.patch')),[Text.UTF8Encoding]::new($false))
     $evolved=Get-Content -Raw -LiteralPath (Join-Path $fixture.repository 'source.txt')
     [IO.File]::WriteAllText((Join-Path $fixture.seed $(if($Conflict){'source.txt'}else{'main.txt'})), $(if($Conflict){"upstream`n"}else{"new main`n"}))
     & git -C $fixture.seed add --all|Out-Null; & git -C $fixture.seed commit --quiet -m advance-main|Out-Null; & git -C $fixture.seed push --quiet origin HEAD:refs/heads/main|Out-Null
@@ -107,6 +112,14 @@ function New-RevalidateDryRunFixture([string]$Root, [string]$RunId, [bool]$Confl
     $fixture.config.tests.android=@(); $fixture.config.tests.mandatory=@()
     $fixture|Add-Member -NotePropertyName newBase -NotePropertyValue ((& git -C $fixture.repository rev-parse HEAD).Trim())
     return $fixture
+}
+
+function Convert-RevalidateFixtureToLegacyV1($Fixture){
+    $report=Get-Content -Raw $Fixture.reportPath|ConvertFrom-Json
+    foreach($name in @('reviewGateVersion','claudeFinalReview','claudeReviewModel','claudeFinalReviewSha256','claudeReviewContextSha256','claudeReviewPatchSha256','claudeReviewerBindings')){$report.PSObject.Properties.Remove($name)}
+    Write-ItoevaAtomicJson $report $Fixture.reportPath;[IO.File]::WriteAllText("$($Fixture.reportPath).sha256",(Get-ItoevaSha256 $Fixture.reportPath),[Text.UTF8Encoding]::new($false))
+    $snapshot="$($Fixture.reportPath.Substring(0,$Fixture.reportPath.Length-5)).dry-run.json";[IO.File]::WriteAllBytes($snapshot,[IO.File]::ReadAllBytes($Fixture.reportPath));[IO.File]::WriteAllText("$snapshot.sha256",(Get-ItoevaSha256 $snapshot),[Text.UTF8Encoding]::new($false))
+    foreach($name in @('claude-final-review.dry-run.json','claude-final-review.dry-run.json.sha256','claude-context.dry-run.json','claude-context.dry-run.json.sha256','claude-patch.dry-run.patch','claude-patch.dry-run.patch.sha256')){Remove-Item -LiteralPath (Join-Path $Fixture.runRoot $name) -Force -ErrorAction SilentlyContinue}
 }
 
 function New-RevalidateCodexDouble([string]$Root, [string]$MarkerPath) {
@@ -130,7 +143,61 @@ public static class RevalidateCodex {
     [IO.File]::WriteAllText($sourcePath,$source,[Text.UTF8Encoding]::new($false));$compiler=Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'csc.exe'
     & $compiler /nologo /target:exe "/out:$nativePath" $sourcePath
     if($LASTEXITCODE -ne 0){throw 'Revalidate-Codex-Testdouble konnte nicht erstellt werden.'}
+    $claudeSourcePath=Join-Path $Root 'RevalidateClaude.cs';$claudePath=Join-Path $Root 'claude.exe'
+    $claudeSource=@'
+using System;
+using System.IO;
+using System.Text.RegularExpressions;
+[assembly: System.Reflection.AssemblyFileVersion("2.1.232.0")]
+public static class RevalidateClaude {
+ static string Find(string text,string name){var m=Regex.Match(text,"(?m)^"+Regex.Escape(name)+@"\s*([0-9a-f]{40,64})\s*$");if(!m.Success)throw new Exception("missing "+name);return m.Groups[1].Value;}
+ public static int Main(string[] args){
+  var prompt=Console.In.ReadToEnd();var marker=Environment.GetEnvironmentVariable("ITOEVA_REVALIDATE_CLAUDE_MARKER");
+  if(!string.IsNullOrEmpty(marker))File.AppendAllText(marker,string.Join("\t",args)+Environment.NewLine);
+  var mode=Environment.GetEnvironmentVariable("ITOEVA_TEST_CLAUDE_MODE");
+  if(mode=="limit"){Console.Error.WriteLine("fatal: Claude usage limit reached; anthropic_api_key: sk-ant-oat01-AAAABBBBCCCCDDDDEEEEFFFF");Console.WriteLine("{\"type\":\"result\",\"subtype\":\"error_usage_limit\",\"is_error\":true,\"result\":\"usage limit reached\"}");return 1;}
+  if(mode=="auth"){Console.Error.WriteLine("Invalid API key. Please run /login. authToken=abcdefghijklmnopqrstuvwxyz012345");Console.WriteLine("not json at all");return 1;}
+  if(mode=="prose"){Console.WriteLine("Ich habe den Patch geprueft, alles unauffaellig. api_key: sk-ant-SECRETSECRETSECRET");return 0;}
+  if(mode=="timeout"){System.Threading.Thread.Sleep(60000);return 0;}
+  var inner="{\"status\":\"PASS\",\"findings\":[],\"baseSha\":\""+Find(prompt,"Base:")+"\",\"treeOid\":\""+Find(prompt,"Tree:")+"\",\"testManifestHash\":\""+Find(prompt,"Testmanifest-Hash:")+"\",\"contextHash\":\""+Find(prompt,"Context-Hash:")+"\"}";
+  Console.WriteLine("{\"result\":"+inner+"}");return 0;
+ }
+}
+'@
+    [IO.File]::WriteAllText($claudeSourcePath,$claudeSource,[Text.UTF8Encoding]::new($false));& $compiler /nologo /target:exe "/out:$claudePath" $claudeSourcePath;if($LASTEXITCODE -ne 0){throw 'Revalidate-Claude-Testdouble konnte nicht erstellt werden.'}
     return $nativePath
+}
+
+function New-ClaudeVersionDouble([string]$Root, [string]$FileVersion) {
+    New-Item -ItemType Directory -Path $Root -Force|Out-Null
+    $sourcePath=Join-Path $Root 'ClaudeVersionDouble.cs';$exePath=Join-Path $Root 'claude.exe'
+    [IO.File]::WriteAllText($sourcePath,"[assembly:System.Reflection.AssemblyFileVersion(`"$FileVersion`")] public class ClaudeVersionDouble { public static int Main(){return 0;} }",[Text.UTF8Encoding]::new($false))
+    $compiler=Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'csc.exe'
+    & $compiler /nologo /target:exe "/out:$exePath" $sourcePath|Out-Null
+    if($LASTEXITCODE -ne 0){throw "Claude-Versionsdouble $FileVersion konnte nicht erstellt werden."}
+    return $exePath
+}
+
+# PATH ohne jede auffindbare Claude-CLI, aber mit allem anderen (git, taskkill, ...).
+function Get-PathWithoutClaude {
+    $names=@('claude.exe','claude.cmd','claude.bat','claude.ps1','claude')
+    $kept=@()
+    foreach($entry in @($env:PATH -split ';')){
+        if([string]::IsNullOrWhiteSpace($entry)){continue}
+        $hasClaude=$false
+        foreach($name in $names){
+            try{if(Test-Path -LiteralPath (Join-Path $entry.Trim() $name) -PathType Leaf){$hasClaude=$true;break}}catch{}
+        }
+        if(-not $hasClaude){$kept+=$entry}
+    }
+    return ($kept -join ';')
+}
+
+function Get-ClaudeDiagnosticsPath([string]$RuntimeRoot, [string]$ExcludeRunId) {
+    $stateRoot=Join-Path $RuntimeRoot 'state'
+    $found=@(Get-ChildItem -LiteralPath $stateRoot -Directory -ErrorAction SilentlyContinue|Where-Object{$_.Name -ne $ExcludeRunId}|ForEach-Object{Join-Path $_.FullName 'claude-final-review.diagnostics.json'}|Where-Object{Test-Path -LiteralPath $_ -PathType Leaf})
+    if($found.Count -ne 1){throw "Erwartet genau ein Diagnoseartefakt, gefunden: $($found.Count)"}
+    return $found[0]
 }
 
 $validBranch = 'evolution/002-small-fix-0123456789abcdef0123456789abcdef'
@@ -221,17 +288,17 @@ Test-Case 'Ungueltige Evolutionsnummern werden fail-closed abgewiesen' {
 }
 Test-Case 'vollständiges PASS öffnet Gate' {
     $sha='a'*40; $tree='b'*40; $hash='c'*64; $plan='d'*64
-    $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash }
+    $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS';claudeFinalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash;claudeReviewBaseSha=$sha;claudeReviewTreeOid=$tree;claudeReviewTestManifestHash=$hash;claudeReviewContextHash=$hash }
     Assert-True (Test-ItoevaGate -Gate $gate)
 }
 Test-Case 'Testfehler schließt Gate' {
     $sha='a'*40; $tree='b'*40; $hash='c'*64; $plan='d'*64
-    $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='FAIL'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash }
+    $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='FAIL'; finalReview='PASS';claudeFinalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash;claudeReviewBaseSha=$sha;claudeReviewTreeOid=$tree;claudeReviewTestManifestHash=$hash;claudeReviewContextHash=$hash }
     Assert-True (-not (Test-ItoevaGate -Gate $gate))
 }
 Test-Case 'verändertes main schließt Gate' {
     $sha='a'*40; $tree='b'*40; $hash='c'*64; $plan='d'*64
-    $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$false; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash }
+    $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS';claudeFinalReview='PASS'; diffCheck='PASS'; baseUnchanged=$false; baseSha=$sha; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$sha; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash;claudeReviewBaseSha=$sha;claudeReviewTreeOid=$tree;claudeReviewTestManifestHash=$hash;claudeReviewContextHash=$hash }
     Assert-True (-not (Test-ItoevaGate -Gate $gate))
 }
 
@@ -247,6 +314,130 @@ Test-Case 'CMD-Fallback lehnt Shell-Metazeichen fail-closed ab' {
     }
     $command = New-ItoevaCmdShimCommand -BatchPath 'C:\safe path\codex.cmd' -Arguments @('argument with spaces','plain')
     Assert-True ($command -eq '"C:\safe path\codex.cmd" "argument with spaces" "plain"')
+}
+Test-Case 'Claude-Envelope wird strikt aus Objekt String und einzelner Codefence gelesen' {
+    $base='a'*40;$tree='b'*40;$testHash='c'*64;$context='d'*64
+    $review=[ordered]@{status='PASS';findings=@();baseSha=$base;treeOid=$tree;testManifestHash=$testHash;contextHash=$context}|ConvertTo-Json -Compress
+    $fenced=('```json'+[Environment]::NewLine+$review+[Environment]::NewLine+'```')
+    foreach($result in @(("{`"result`":$review}"),(ConvertTo-Json @{result=$review} -Compress),(ConvertTo-Json @{result=$fenced} -Compress))){$parsed=ConvertFrom-ItoevaClaudeEnvelope $result;Assert-ItoevaClaudeReview $parsed.review $base $tree $testHash $context}
+    Assert-Throws{ConvertFrom-ItoevaClaudeEnvelope '{"is_error":true,"result":{}}'|Out-Null}
+    Assert-Throws{ConvertFrom-ItoevaClaudeEnvelope '{"result":"prose {\"status\":\"PASS\"}"}'|Out-Null}
+}
+Test-Case 'Claude-Review ist fail-closed bei FAIL Findings oder falscher Bindung' {
+    $base='a'*40;$tree='b'*40;$testHash='c'*64;$context='d'*64
+    Assert-Throws{Assert-ItoevaClaudeReview ([pscustomobject]@{status='FAIL';findings=@('finding');baseSha=$base;treeOid=$tree;testManifestHash=$testHash;contextHash=$context}) $base $tree $testHash $context}
+    Assert-Throws{Assert-ItoevaClaudeReview ([pscustomobject]@{status='PASS';findings=@('finding');baseSha=$base;treeOid=$tree;testManifestHash=$testHash;contextHash=$context}) $base $tree $testHash $context}
+    Assert-Throws{Assert-ItoevaClaudeReview ([pscustomobject]@{status='PASS';findings=@();baseSha=('e'*40);treeOid=$tree;testManifestHash=$testHash;contextHash=$context}) $base $tree $testHash $context}
+}
+Test-Case 'Claude-Launcher bevorzugt gepinnte native EXE und ignoriert PS1' {
+    $old=$env:PATH
+    $root=Join-Path ([IO.Path]::GetTempPath()) "itoeva-claude-launcher-$([Guid]::NewGuid().ToString('N'))";New-Item -ItemType Directory $root|Out-Null
+    try{
+        $exe=New-ClaudeVersionDouble $root '2.1.232.0'
+        [IO.File]::WriteAllText((Join-Path $root 'claude.ps1'),'throw "must not run"')
+        $env:PATH="$root;$old"
+        $launcher=Resolve-ItoevaClaudeLauncher
+        Assert-True ($launcher.kind-ceq'NATIVE_EXE'-and[IO.Path]::GetFullPath($launcher.executable)-eq[IO.Path]::GetFullPath($exe))
+        $badConfig=$config|ConvertTo-Json -Depth 20|ConvertFrom-Json;$badConfig.claudeReview.pinnedCliVersion='2.1.231'
+        Assert-Throws{Assert-ItoevaClaudeCapabilityPreflight $badConfig|Out-Null}
+        $legacyConfig=$config|ConvertTo-Json -Depth 20|ConvertFrom-Json;$legacyConfig.claudeReview.PSObject.Properties.Remove('pinnedCliVersion');$legacyConfig.claudeReview|Add-Member -NotePropertyName minimumCliVersion -NotePropertyValue '2.1.232'
+        Assert-Throws{Assert-ItoevaClaudeConfigPins $legacyConfig|Out-Null}
+    }
+    finally{$env:PATH=$old;Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue}
+}
+Test-Case 'Neue Claude-Reviews lehnen abweichende CLI-Version fail-closed ab' {
+    $old=$env:PATH
+    $root=Join-Path ([IO.Path]::GetTempPath()) "itoeva-claude-version-$([Guid]::NewGuid().ToString('N'))"
+    try{
+        New-ClaudeVersionDouble $root '2.1.231.0'|Out-Null
+        $env:PATH="$root;$(Get-PathWithoutClaude)"
+        Assert-Throws{Resolve-ItoevaClaudeLauncher|Out-Null}
+        Assert-Throws{Assert-ItoevaClaudeCapabilityPreflight $config|Out-Null}
+        # Reine Konfigurationspruefung bleibt davon unberuehrt und offline nutzbar.
+        Assert-True ((Assert-ItoevaClaudeConfigPins $config).pinnedCliVersion -ceq '2.1.232')
+    }
+    finally{$env:PATH=$old;Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue}
+}
+Test-Case 'Fehlende Claude-CLI blockiert nur neue Reviews, nicht die Offline-Pruefungen' {
+    $old=$env:PATH
+    try{
+        $env:PATH=Get-PathWithoutClaude
+        Assert-True (-not (Get-Command claude -ErrorAction SilentlyContinue)) 'Claude ist im Test noch auffindbar.'
+        Assert-Throws{Resolve-ItoevaClaudeLauncher|Out-Null}
+        Assert-Throws{Assert-ItoevaClaudeCapabilityPreflight $config|Out-Null}
+        Assert-True ((Get-ItoevaClaudeReviewModel ([pscustomobject]@{title='Small parser fix';plan=@('adjust quoted braces');paths=@('app/src/main/java/Parser.kt')}) $config)-ceq'claude-sonnet-5')
+    }
+    finally{$env:PATH=$old}
+}
+Test-Case 'Gespeicherte Claude-Provenienz wird offline gegen die Pins geprueft' {
+    $pins=Assert-ItoevaClaudeConfigPins $config
+    $good=[pscustomobject]@{reviewModel='claude-sonnet-5';claudeCliVersion='2.1.232.0';claudeLauncherKind='NATIVE_EXE'}
+    Assert-ItoevaClaudeStoredProvenance $good 'claude-sonnet-5' $pins
+    Assert-Throws{Assert-ItoevaClaudeStoredProvenance $good 'claude-opus-5' $pins}
+    Assert-Throws{Assert-ItoevaClaudeStoredProvenance ([pscustomobject]@{reviewModel='claude-sonnet-5';claudeCliVersion='2.1.231.0';claudeLauncherKind='NATIVE_EXE'}) 'claude-sonnet-5' $pins}
+    Assert-Throws{Assert-ItoevaClaudeStoredProvenance ([pscustomobject]@{reviewModel='claude-sonnet-5';claudeCliVersion='2.1.232.0';claudeLauncherKind='DIRECT'}) 'claude-sonnet-5' $pins}
+    Assert-Throws{Assert-ItoevaClaudeStoredProvenance ([pscustomobject]@{reviewModel='gpt-5';claudeCliVersion='2.1.232.0';claudeLauncherKind='NATIVE_EXE'}) 'gpt-5' $pins}
+    Assert-Throws{Assert-ItoevaClaudeStoredProvenance ([pscustomobject]@{baseSha='a'*40}) 'claude-sonnet-5' $pins}
+}
+Test-Case 'Diagnoseartefakte redigieren Secrets und begrenzen die Groesse' {
+    $secrets=@(
+        'ANTHROPIC_API_KEY=sk-ant-api03-AAAABBBBCCCCDDDD',
+        'authorization: Bearer abcdefghijklmnopqrstuvwxyz0123456789',
+        'jwt eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U',
+        'client_secret: hunter2hunter2hunter2',
+        'opaque '+('Ab3'*40)
+    )
+    $redacted=ConvertTo-ItoevaRedactedDiagnosticText (($secrets -join "`n"))
+    foreach($needle in @('sk-ant-api03','abcdefghijklmnopqrstuvwxyz0123456789','eyJhbGciOiJIUzI1NiJ9','hunter2hunter2hunter2',('Ab3'*40))){
+        Assert-True ($redacted -notmatch [regex]::Escape($needle)) "Secret wurde nicht redigiert: $needle"
+    }
+    # Hashes und OIDs bleiben als Diagnosewert erhalten.
+    $sha=('a'*64);Assert-True ((ConvertTo-ItoevaRedactedDiagnosticText "treeOid $sha") -match $sha) 'Hex-OID wurde faelschlich redigiert.'
+    Assert-True ((ConvertTo-ItoevaRedactedDiagnosticText ('x'*20000) 8192).Length -le 8192+16) 'Groessenlimit wurde nicht angewendet.'
+    Assert-True ((ConvertTo-ItoevaRedactedDiagnosticText '') -eq '')
+    $summary=New-ItoevaClaudeEnvelopeSummary '{"type":"result","subtype":"error_usage_limit","is_error":true,"result":"limit"}'
+    Assert-True ($summary.parsed -and $summary.subtype -eq 'error_usage_limit' -and $summary.resultKind -eq 'string')
+    Assert-True (-not (New-ItoevaClaudeEnvelopeSummary 'kein json').parsed)
+}
+Test-Case 'Claude wird pro normalem und Revalidate-Pfad genau einmal und nie in Publish aufgerufen' {
+    $entry=Get-Content -Raw (Join-Path $PSScriptRoot 'Invoke-ItoevaEvolution.ps1');$module=Get-Content -Raw (Join-Path $PSScriptRoot 'Itoeva.Runner.psm1')
+    Assert-True ([regex]::Matches($entry,'Invoke-ItoevaClaudeFinalReview').Count -eq 1)
+    $revalidate=[regex]::Match($module,'function Invoke-ItoevaRevalidateDryRun[\s\S]*?function Invoke-ItoevaPublishDryRun').Value;$publish=[regex]::Match($module,'function Invoke-ItoevaPublishDryRun[\s\S]*?Export-ModuleMember').Value
+    Assert-True ([regex]::Matches($revalidate,'Invoke-ItoevaClaudeFinalReview').Count -eq 1 -and [regex]::Matches($publish,'Invoke-ItoevaClaudeFinalReview').Count -eq 0)
+    # Genau ein Prozessaufruf, kein Retry-Schleifenkonstrukt.
+    $review=[regex]::Match($module,'function Invoke-ItoevaClaudeFinalReview[\s\S]*?\nfunction ').Value
+    Assert-True ([regex]::Matches($review,'Invoke-ItoevaProcessSeparated').Count -eq 1) 'Claude-Review enthaelt nicht exakt einen Prozessaufruf.'
+    # Kommentarzeilen entfernen: geprueft wird die Codestruktur, nicht der Fliesstext.
+    $reviewCode=(@($review -split "`n"|Where-Object{$_ -notmatch '^\s*#'}) -join "`n")
+    Assert-True ($reviewCode -notmatch '(?i)\b(retry|for\s*\(|while\s*\(|do\s*\{)') 'Claude-Review enthaelt eine Wiederholungsstruktur.'
+    # Publishing bleibt vollstaendig vom installierten CLI entkoppelt.
+    foreach($forbidden in @('Assert-ItoevaClaudeCapabilityPreflight','Resolve-ItoevaClaudeLauncher','Invoke-ItoevaProcessSeparated')){
+        Assert-True ([regex]::Matches($publish,[regex]::Escape($forbidden)).Count -eq 0) "PublishDryRun referenziert $forbidden."
+    }
+    $model=[regex]::Match($module,'function Get-ItoevaClaudeReviewModel[\s\S]*?\nfunction ').Value
+    Assert-True ($model -notmatch 'Assert-ItoevaClaudeCapabilityPreflight|Resolve-ItoevaClaudeLauncher') 'Modellregel haengt weiterhin am installierten CLI.'
+    $publishBranch=[regex]::Match($entry,"if \(\`$Action -eq 'PublishDryRun'\)[\s\S]*?\n}").Value
+    Assert-True ($publishBranch -notmatch 'Assert-ItoevaClaudeCapabilityPreflight') 'PublishDryRun-Zweig ruft den Capability-Preflight auf.'
+}
+Test-Case 'Claude-Risikoregel waehlt Sonnet standardmaessig und Opus nur fuer klare Hochrisikoklassen' {
+    $normal=[pscustomobject]@{title='Small parser fix';plan=@('adjust quoted braces');paths=@('app/src/main/java/Parser.kt')}
+    Assert-True ((Get-ItoevaClaudeReviewModel $normal $config)-ceq'claude-sonnet-5')
+    foreach($risk in @(
+        [pscustomobject]@{title='Data migration';plan=@('preserve data integrity');paths=@('app/src/main/java/Migration.kt')},
+        [pscustomobject]@{title='XP balancing';plan=@('change progression economy');paths=@('app/src/main/java/Progression.kt')},
+        [pscustomobject]@{title='Auth hardening';plan=@('security permissions');paths=@('app/src/main/java/Auth.kt')},
+        [pscustomobject]@{title='Runner gate';plan=@('publishing safety');paths=@('runner/Gate.ps1')},
+        [pscustomobject]@{title='Large change';plan=@('refactor');paths=@(1..8|ForEach-Object{"app/src/main/java/F$_.kt"})}
+    )){Assert-True ((Get-ItoevaClaudeReviewModel $risk $config)-ceq'claude-opus-5') "Opus-Regel griff nicht: $($risk.title)"}
+}
+Test-Case 'Claude-Prozess erbt keine API- oder Cloud-Authentifizierung und verwendet kein USD-Budgetargument' {
+    $names=@('ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN','ANTHROPIC_BASE_URL','CLAUDE_CODE_OAUTH_TOKEN','CLAUDE_CODE_USE_BEDROCK','CLAUDE_CODE_USE_VERTEX','CLAUDE_CODE_USE_FOUNDRY','AWS_ACCESS_KEY_ID','AWS_SECRET_ACCESS_KEY','AWS_SESSION_TOKEN','AWS_BEARER_TOKEN_BEDROCK','AWS_PROFILE','AWS_WEB_IDENTITY_TOKEN_FILE','GOOGLE_APPLICATION_CREDENTIALS','CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE','AZURE_CLIENT_SECRET','AZURE_TENANT_ID','FOUNDRY_API_KEY');$saved=@{};foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process');[Environment]::SetEnvironmentVariable($name,'secret','Process')}
+    try{$script='@("ANTHROPIC_API_KEY","ANTHROPIC_AUTH_TOKEN","ANTHROPIC_BASE_URL","CLAUDE_CODE_OAUTH_TOKEN","CLAUDE_CODE_USE_BEDROCK","CLAUDE_CODE_USE_VERTEX","CLAUDE_CODE_USE_FOUNDRY","AWS_ACCESS_KEY_ID","AWS_SECRET_ACCESS_KEY","AWS_SESSION_TOKEN","AWS_BEARER_TOKEN_BEDROCK","AWS_PROFILE","AWS_WEB_IDENTITY_TOKEN_FILE","GOOGLE_APPLICATION_CREDENTIALS","CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE","AZURE_CLIENT_SECRET","AZURE_TENANT_ID","FOUNDRY_API_KEY")|%{[Environment]::GetEnvironmentVariable($_,"Process")}'
+        $result=Invoke-ItoevaProcessSeparated 'powershell.exe' @('-NoProfile','-Command',$script) $PSScriptRoot 20
+        Assert-True ([string]::IsNullOrWhiteSpace($result.stdout)) 'Sensitive API-/Cloud-Umgebung wurde vererbt.'
+        foreach($name in $names){Assert-True ([Environment]::GetEnvironmentVariable($name,'Process')-eq'secret') 'Elternumgebung wurde nicht wiederhergestellt.'}
+        $module=Get-Content -Raw (Join-Path $PSScriptRoot 'Itoeva.Runner.psm1');Assert-True ($module-notmatch '--max-budget-usd|maxBudgetUsd')
+    }finally{foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
 }
 Test-Case 'Codex-Argumente neuer Sitzungen haben globale Optionen vor exec' {
     $arguments = @(New-ItoevaCodexArguments -Repository 'C:\repo path' -Sandbox 'read-only' `
@@ -613,23 +804,28 @@ try {
             $index++
         }
     }
+    Test-Case 'RevalidateDryRun lehnt unbekannte oder typfalsche Source-Gate-Version ab' {
+        foreach($bad in @(3,'2')){$fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot "revalidate-bad-gate-$bad") (([Guid]::NewGuid().ToString('N')));$report=Get-Content -Raw $fixture.reportPath|ConvertFrom-Json;$report.reviewGateVersion=$bad;Write-ItoevaAtomicJson $report $fixture.reportPath;[IO.File]::WriteAllText("$($fixture.reportPath).sha256",(Get-ItoevaSha256 $fixture.reportPath));$snapshot="$($fixture.reportPath.Substring(0,$fixture.reportPath.Length-5)).dry-run.json";[IO.File]::WriteAllBytes($snapshot,[IO.File]::ReadAllBytes($fixture.reportPath));[IO.File]::WriteAllText("$snapshot.sha256",(Get-ItoevaSha256 $snapshot));Assert-Throws{Invoke-ItoevaRevalidateDryRun $fixture.repository $fixture.runId $fixture.config|Out-Null}}
+    }
     Test-Case 'RevalidateDryRun erzeugt v2 PASS mit genau einem frischen Read-only-Final-Review' {
         $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot 'revalidate-success') ('1d'*16)
-        $launcherRoot=Join-Path $tempRoot 'revalidate-codex';$codexMarker=Join-Path $launcherRoot 'codex.calls';$testMarker=Join-Path $launcherRoot 'tests.calls'
+        $launcherRoot=Join-Path $tempRoot 'revalidate-codex';$codexMarker=Join-Path $launcherRoot 'codex.calls';$claudeMarker=Join-Path $launcherRoot 'claude.calls';$testMarker=Join-Path $launcherRoot 'tests.calls'
         New-RevalidateCodexDouble $launcherRoot $codexMarker|Out-Null
-        $env:ITOEVA_REVALIDATE_CODEX_MARKER=$codexMarker;$oldPath=$env:PATH;$env:PATH="$launcherRoot;$oldPath"
+        $env:ITOEVA_REVALIDATE_CODEX_MARKER=$codexMarker;$env:ITOEVA_REVALIDATE_CLAUDE_MARKER=$claudeMarker;$oldPath=$env:PATH;$env:PATH="$launcherRoot;$oldPath"
         $testCommand="[IO.File]::AppendAllText('$($testMarker.Replace("'","''"))','test'+[Environment]::NewLine); exit 0"
         $fixture.config.tests.mandatory=@([pscustomobject]@{id='verify';executable='powershell.exe';arguments=@('-NoProfile','-Command',$testCommand)})
         $sourceHashes=@{};foreach($name in @('state.json','plan.json','plan-review.json','tests.json','final-review.json')){$sourceHashes[$name]=Get-ItoevaSha256 (Join-Path $fixture.runRoot $name)}
         $headBefore=(& git -C $fixture.repository rev-parse HEAD).Trim()
         try{$result=Invoke-ItoevaRevalidateDryRun $fixture.repository $fixture.runId $fixture.config}
-        finally{$env:PATH=$oldPath;Remove-Item Env:ITOEVA_REVALIDATE_CODEX_MARKER -ErrorAction SilentlyContinue}
+        finally{$env:PATH=$oldPath;Remove-Item Env:ITOEVA_REVALIDATE_CODEX_MARKER,Env:ITOEVA_REVALIDATE_CLAUDE_MARKER -ErrorAction SilentlyContinue}
         Assert-True ($result.status -eq 'DRY_RUN_PASS' -and $result.runId -ne $fixture.runId)
         Assert-True ((& git -C $fixture.repository rev-parse HEAD).Trim() -eq $headBefore) 'RevalidateDryRun erzeugte einen Commit oder veraenderte HEAD.'
         & git -C $fixture.repository diff --cached --quiet;Assert-True ($LASTEXITCODE -eq 0) 'RevalidateDryRun veraenderte den echten Index.'
         Assert-True (@(Get-Content -LiteralPath $testMarker).Count -eq 1) 'Relevante Tests wurden nicht exakt einmal erneut ausgefuehrt.'
         $calls=@(Get-Content -LiteralPath $codexMarker);Assert-True ($calls.Count -eq 1) 'Final Review wurde nicht exakt einmal frisch gestartet.'
         Assert-True ($calls[0] -match '(?:^|\t)-s\tread-only(?:\t|$)' -and $calls[0] -notmatch '(?:^|\t)resume(?:\t|$)') 'Final Review war nicht frisch und read-only.'
+        $claudeCalls=@(Get-Content -LiteralPath $claudeMarker);Assert-True ($claudeCalls.Count -eq 1) 'Claude-Final-Review wurde nicht exakt einmal frisch gestartet.'
+        Assert-True ($claudeCalls[0] -match '(?:^|\t)--model\tclaude-sonnet-5(?:\t|$)' -and $claudeCalls[0] -match '(?:^|\t)--tools\tRead,Glob,Grep(?:\t|$)' -and $claudeCalls[0] -match '(?:^|\t)--safe-mode(?:\t|$)' -and $claudeCalls[0] -notmatch '(?i)(resume|opus|--max-budget-usd|Bash|Write|Edit|Web)') 'Claude-Aufruf war nicht frisch, gepinnt, subscription-basiert und read-only.'
         $reportPath=Join-Path (Join-Path $fixture.runtime 'reports') "$($result.runId).json";$report=Read-ItoevaHashedJson $reportPath "$reportPath.sha256"
         Assert-True ([int]$report.value.formatVersion -eq 2 -and $report.value.runKind -eq 'REVALIDATED_DRY_RUN' -and $report.value.status -eq 'DRY_RUN_PASS')
         Assert-True ([string]$report.value.sourceBindings.sourceRunId -eq $fixture.runId)
@@ -646,6 +842,101 @@ try {
         $published=Invoke-ItoevaPublishDryRun $fixture.repository $result.runId $fixture.config $fixture.hooks
         Assert-True ($published.status -eq 'PUSHED') 'Version-2-Report war nicht PublishDryRun-kompatibel.'
         Assert-True ((Get-ItoevaRemoteSha $fixture.repository 'origin' 'refs/heads/main') -eq $fixture.newBase) 'Version-2-Publish veraenderte main.'
+    }
+    Test-Case 'Legacy-v1-Source wird frisch doppelt reviewt und ist danach publishbar' {
+        $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot 'revalidate-legacy-v1') ('2f'*16);Convert-RevalidateFixtureToLegacyV1 $fixture
+        $launcherRoot=Join-Path $tempRoot 'revalidate-legacy-launchers';$codexMarker=Join-Path $launcherRoot 'codex.calls';$claudeMarker=Join-Path $launcherRoot 'claude.calls';New-RevalidateCodexDouble $launcherRoot $codexMarker|Out-Null
+        $env:ITOEVA_REVALIDATE_CODEX_MARKER=$codexMarker;$env:ITOEVA_REVALIDATE_CLAUDE_MARKER=$claudeMarker;$oldPath=$env:PATH;$env:PATH="$launcherRoot;$oldPath"
+        try{$result=Invoke-ItoevaRevalidateDryRun $fixture.repository $fixture.runId $fixture.config}finally{$env:PATH=$oldPath;Remove-Item Env:ITOEVA_REVALIDATE_CODEX_MARKER,Env:ITOEVA_REVALIDATE_CLAUDE_MARKER -ErrorAction SilentlyContinue}
+        $report=Read-ItoevaHashedJson (Join-Path $fixture.runtime "reports\$($result.runId).json") (Join-Path $fixture.runtime "reports\$($result.runId).json.sha256")
+        Assert-True ([int]$report.value.sourceBindings.sourceReviewGateVersion -eq 1 -and $report.value.claudeFinalReview -eq 'PASS')
+        $fixture.config.agentExecution.enabled=$false;$fixture.config.publication.enabled=$true;$published=Invoke-ItoevaPublishDryRun $fixture.repository $result.runId $fixture.config $fixture.hooks
+        Assert-True ($published.status-eq'PUSHED') 'Legacy-v1-Revalidierung war nicht publishbar.'
+    }
+    Test-Case 'PublishDryRun benoetigt weder installierte noch passende Claude-CLI' {
+        $oldPath=$env:PATH;$withoutClaude=Get-PathWithoutClaude
+        $fixtureA=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-without-claude') ('4a'*16)
+        try{
+            $env:PATH=$withoutClaude
+            Assert-True (-not (Get-Command claude -ErrorAction SilentlyContinue)) 'Claude ist im Test noch auffindbar.'
+            $publishedA=Invoke-ItoevaPublishDryRun $fixtureA.repository $fixtureA.runId $fixtureA.config $fixtureA.hooks
+            Assert-True ($publishedA.status -eq 'PUSHED') 'Publish scheiterte ohne installierte Claude-CLI.'
+        } finally { $env:PATH=$oldPath }
+        $fixtureB=New-PublishDryRunFixture (Join-Path $tempRoot 'publish-foreign-claude') ('4b'*16)
+        $versionRoot=Join-Path $tempRoot 'publish-foreign-claude-cli';New-ClaudeVersionDouble $versionRoot '9.9.9.9'|Out-Null
+        try{
+            $env:PATH="$versionRoot;$withoutClaude"
+            Assert-Throws{Assert-ItoevaClaudeCapabilityPreflight $fixtureB.config|Out-Null}
+            $publishedB=Invoke-ItoevaPublishDryRun $fixtureB.repository $fixtureB.runId $fixtureB.config $fixtureB.hooks
+            Assert-True ($publishedB.status -eq 'PUSHED') 'Publish scheiterte an einer fremden installierten Claude-CLI-Version.'
+        } finally { $env:PATH=$oldPath }
+    }
+    Test-Case 'PublishDryRun lehnt fehlende oder abweichende Claude-Provenienz ab' {
+        $cases=@(
+            [pscustomobject]@{name='missing';apply={param($ctx) $ctx.PSObject.Properties.Remove('claudeCliVersion')}}
+            [pscustomobject]@{name='version';apply={param($ctx) $ctx.claudeCliVersion='2.1.231.0'}}
+            [pscustomobject]@{name='model';apply={param($ctx) $ctx.reviewModel='claude-opus-5'}}
+            [pscustomobject]@{name='kind';apply={param($ctx) $ctx.claudeLauncherKind='DIRECT'}}
+        )
+        $index=0
+        foreach($case in $cases){
+            $id=(('{0:x2}' -f (80+$index))*16).Substring(0,32)
+            $fixture=New-PublishDryRunFixture (Join-Path $tempRoot "publish-provenance-$($case.name)") $id
+            $contextPath=Join-Path $fixture.runRoot 'claude-review-input\context.json'
+            $context=Get-Content -Raw -LiteralPath $contextPath|ConvertFrom-Json
+            & $case.apply $context
+            Write-ItoevaAtomicJson $context $contextPath;$contextHash=Get-ItoevaSha256 $contextPath
+            # Hashkette bewusst konsistent nachziehen, damit wirklich die Provenienz greift.
+            $reviewPath=Join-Path $fixture.runRoot 'claude-final-review.json'
+            $review=Get-Content -Raw -LiteralPath $reviewPath|ConvertFrom-Json;$review.contextHash=$contextHash;Write-ItoevaAtomicJson $review $reviewPath
+            $report=Get-Content -Raw -LiteralPath $fixture.reportPath|ConvertFrom-Json
+            $report.claudeReviewContextSha256=$contextHash;$report.claudeFinalReviewSha256=(Get-ItoevaSha256 $reviewPath);$report.claudeReviewerBindings.contextHash=$contextHash
+            Write-ItoevaAtomicJson $report $fixture.reportPath;[IO.File]::WriteAllText("$($fixture.reportPath).sha256",(Get-ItoevaSha256 $fixture.reportPath),[Text.UTF8Encoding]::new($false))
+            Assert-Throws{Invoke-ItoevaPublishDryRun $fixture.repository $fixture.runId $fixture.config $fixture.hooks|Out-Null}
+            Assert-True (-not (Get-ItoevaRemoteSha $fixture.repository 'origin' "refs/heads/$($fixture.branch)")) "Branch trotz Provenienzfehler gepusht: $($case.name)"
+            $index++
+        }
+    }
+    Test-Case 'Auth- Limit- Parse- und Timeoutfehler erzeugen redigierte Diagnoseartefakte' {
+        $cases=@(
+            [pscustomobject]@{name='limit';timeoutSeconds=1800}
+            [pscustomobject]@{name='auth';timeoutSeconds=1800}
+            [pscustomobject]@{name='prose';timeoutSeconds=1800}
+            [pscustomobject]@{name='timeout';timeoutSeconds=1}
+        )
+        $index=0
+        foreach($case in $cases){
+            $id=(('{0:x2}' -f (90+$index))*16).Substring(0,32)
+            $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot "claude-diagnostics-$($case.name)") $id
+            $launcherRoot=Join-Path $tempRoot "claude-diagnostics-launchers-$($case.name)";$codexMarker=Join-Path $launcherRoot 'codex.calls';$claudeMarker=Join-Path $launcherRoot 'claude.calls'
+            New-RevalidateCodexDouble $launcherRoot $codexMarker|Out-Null
+            $fixture.config.claudeReview.timeoutSeconds=$case.timeoutSeconds
+            $oldPath=$env:PATH
+            $env:ITOEVA_REVALIDATE_CODEX_MARKER=$codexMarker;$env:ITOEVA_REVALIDATE_CLAUDE_MARKER=$claudeMarker;$env:ITOEVA_TEST_CLAUDE_MODE=$case.name;$env:PATH="$launcherRoot;$oldPath"
+            try{Assert-Throws{Invoke-ItoevaRevalidateDryRun $fixture.repository $fixture.runId $fixture.config|Out-Null}}
+            finally{$env:PATH=$oldPath;Remove-Item Env:ITOEVA_REVALIDATE_CODEX_MARKER,Env:ITOEVA_REVALIDATE_CLAUDE_MARKER,Env:ITOEVA_TEST_CLAUDE_MODE -ErrorAction SilentlyContinue}
+
+            $diagnosticsPath=Get-ClaudeDiagnosticsPath $fixture.runtime $fixture.runId
+            $raw=Get-Content -Raw -LiteralPath $diagnosticsPath;$diagnostics=$raw|ConvertFrom-Json
+            Assert-True ((Get-ItoevaSha256 $diagnosticsPath) -eq (Get-Content -Raw -LiteralPath "$diagnosticsPath.sha256").Trim()) "Diagnose-Sidecar stimmt nicht: $($case.name)"
+            Assert-True ($diagnostics.stage -eq 'CLAUDE_FINAL_REVIEW' -and $diagnostics.model -ceq 'claude-sonnet-5' -and $diagnostics.claudeCliVersion -eq '2.1.232.0') "Diagnoseprovenienz fehlt: $($case.name)"
+            foreach($needle in @('sk-ant-','abcdefghijklmnopqrstuvwxyz012345')){Assert-True ($raw -notmatch [regex]::Escape($needle)) "Secret in Diagnose: $($case.name)/$needle"}
+            Assert-True ($raw.Length -lt 65536) "Diagnose ist nicht groessenbegrenzt: $($case.name)"
+            Assert-True (@(Get-Content -LiteralPath $claudeMarker).Count -eq 1) "Claude wurde nicht genau einmal aufgerufen: $($case.name)"
+
+            $newRun=@(Get-ChildItem -LiteralPath (Join-Path $fixture.runtime 'state') -Directory|Where-Object{$_.Name -ne $fixture.runId})[0]
+            $state=Get-Content -Raw -LiteralPath (Join-Path $newRun.FullName 'state.json')|ConvertFrom-Json
+            Assert-True ($state.status -eq 'QUARANTINED' -and $state.phase -eq 'REVALIDATE_CLAUDE_REVIEW') "Lauf blieb nicht fail-closed QUARANTINED: $($case.name)"
+            Assert-True (-not (Test-Path -LiteralPath (Join-Path $fixture.runtime "reports\$($newRun.Name).json"))) "Report trotz Fehler geschrieben: $($case.name)"
+            Assert-True (-not (Test-Path -LiteralPath (Join-Path $newRun.FullName 'claude-final-review.json'))) "Reviewartefakt trotz Fehler geschrieben: $($case.name)"
+
+            if($case.name -eq 'timeout'){Assert-True ([string]$diagnostics.timedOut -eq 'True') 'Timeout wurde nicht erfasst.'}
+            else{Assert-True ([string]$diagnostics.timedOut -eq 'False') "Falscher Timeoutstatus: $($case.name)"}
+            if($case.name -eq 'limit'){Assert-True ($diagnostics.envelopeSummary.parsed -and $diagnostics.envelopeSummary.subtype -eq 'error_usage_limit' -and [string]$diagnostics.exitCode -eq '1') 'Limit-Envelope wurde nicht zusammengefasst.'}
+            if($case.name -eq 'auth'){Assert-True ((-not $diagnostics.envelopeSummary.parsed) -and [string]$diagnostics.exitCode -eq '1') 'Authfehler wurde nicht erfasst.'}
+            if($case.name -eq 'prose'){Assert-True ((-not $diagnostics.envelopeSummary.parsed) -and [string]$diagnostics.exitCode -eq '0' -and $diagnostics.stdoutLength -gt 0) 'Parsefehler wurde nicht erfasst.'}
+            $index++
+        }
     }
     Test-Case 'RevalidateDryRun quarantinisiert Testfehler vor dem Final Review' {
         $fixture=New-RevalidateDryRunFixture (Join-Path $tempRoot 'revalidate-test-fail') ('1e'*16)
@@ -804,7 +1095,7 @@ switch($Action){
         $paths = @(Get-ItoevaChangedPaths $runnerRepo)
         $tree = Get-ItoevaProposedTreeOid $runnerRepo $base $paths
         $hash='c'*64; $plan='d'*64
-        $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$base; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$base; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash }
+        $gate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS';claudeFinalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$base; proposedTreeOid=$tree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$base; reviewPlanHash=$plan; reviewTreeOid=$tree; reviewTestManifestHash=$hash;claudeReviewBaseSha=$base;claudeReviewTreeOid=$tree;claudeReviewTestManifestHash=$hash;claudeReviewContextHash=$hash }
         $config.repository.expectedOrigin = $remote
         $config.publication.enabled = $true
         $published = Publish-ItoevaEvolution $runnerRepo $branch $base 'Fake publish' $paths $tree $gate $config $hooks
@@ -820,7 +1111,7 @@ switch($Action){
         [IO.File]::WriteAllText((Join-Path $collisionRepo 'source.txt'), "collision`n")
         $collisionPaths = @(Get-ItoevaChangedPaths $collisionRepo)
         $collisionTree = Get-ItoevaProposedTreeOid $collisionRepo $base $collisionPaths
-        $collisionGate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$base; proposedTreeOid=$collisionTree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$base; reviewPlanHash=$plan; reviewTreeOid=$collisionTree; reviewTestManifestHash=$hash }
+        $collisionGate = [pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS';claudeFinalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$base; proposedTreeOid=$collisionTree; testManifestHash=$hash; planHash=$plan; reviewBaseSha=$base; reviewPlanHash=$plan; reviewTreeOid=$collisionTree; reviewTestManifestHash=$hash;claudeReviewBaseSha=$base;claudeReviewTreeOid=$collisionTree;claudeReviewTestManifestHash=$hash;claudeReviewContextHash=$hash }
         Assert-Throws { Publish-ItoevaEvolution $collisionRepo $branch $base 'Collision' $collisionPaths $collisionTree $collisionGate $config $hooks | Out-Null }
 
         [IO.File]::WriteAllText((Join-Path $seed 'source.txt'), "new main`n")

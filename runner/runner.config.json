@@ -11,6 +11,13 @@
     "maximumRepairCycles": 1,
     "sessionTimeoutSeconds": 1800
   },
+  "claudeReview": {
+    "enabled": true,
+    "defaultModel": "claude-sonnet-5",
+    "highRiskModel": "claude-opus-5",
+    "pinnedCliVersion": "2.1.232",
+    "timeoutSeconds": 1800
+  },
   "publication": {
     "enabled": false,
     "allowedRemote": "origin",

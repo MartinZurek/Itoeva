@@ -83,10 +83,12 @@ function Test-ItoevaGate {
     [CmdletBinding()]
     param([Parameter(Mandatory)]$Gate)
 
+    foreach($requiredName in @('planReview','mandatoryTests','finalReview','claudeFinalReview','diffCheck','baseUnchanged','baseSha','proposedTreeOid','testManifestHash','planHash','reviewBaseSha','reviewPlanHash','reviewTreeOid','reviewTestManifestHash','claudeReviewBaseSha','claudeReviewTreeOid','claudeReviewTestManifestHash','claudeReviewContextHash')){if(-not($Gate.PSObject.Properties.Name -contains $requiredName)){return $false}}
     $requiredPasses = @(
         $Gate.planReview,
         $Gate.mandatoryTests,
         $Gate.finalReview,
+        $Gate.claudeFinalReview,
         $Gate.diffCheck
     )
     if ($requiredPasses | Where-Object { $_ -ne 'PASS' }) { return $false }
@@ -99,6 +101,10 @@ function Test-ItoevaGate {
     if ($Gate.reviewPlanHash -ne $Gate.planHash) { return $false }
     if ($Gate.reviewTreeOid -ne $Gate.proposedTreeOid) { return $false }
     if ($Gate.reviewTestManifestHash -ne $Gate.testManifestHash) { return $false }
+    if ($Gate.claudeReviewBaseSha -ne $Gate.baseSha) { return $false }
+    if ($Gate.claudeReviewTreeOid -ne $Gate.proposedTreeOid) { return $false }
+    if ($Gate.claudeReviewTestManifestHash -ne $Gate.testManifestHash) { return $false }
+    if ([string]$Gate.claudeReviewContextHash -notmatch '^[0-9a-f]{64}$') { return $false }
     return $true
 }
 
@@ -352,6 +358,233 @@ function Resolve-ItoevaCodexLauncher {
     return [pscustomobject]@{ executable=$command.Source; prefixArguments=@(); kind='DIRECT' }
 }
 
+$script:ItoevaClaudePinnedCliVersion='2.1.232'
+$script:ItoevaClaudeDefaultModel='claude-sonnet-5'
+$script:ItoevaClaudeHighRiskModel='claude-opus-5'
+
+function ConvertTo-ItoevaNormalizedVersion {
+    [CmdletBinding()]param([Parameter(Mandatory)][string]$Value)
+    $parsed=[version]$Value
+    return [version]::new($parsed.Major,[Math]::Max($parsed.Minor,0),[Math]::Max($parsed.Build,0),[Math]::Max($parsed.Revision,0))
+}
+
+# Reine Offline-Pruefung der eingecheckten Pins. Beruehrt bewusst keine installierte CLI,
+# damit PublishDryRun ohne Claude-Binary auskommt.
+function Assert-ItoevaClaudeConfigPins {
+    [CmdletBinding()]param([Parameter(Mandatory)]$Config)
+    if(-not($Config.PSObject.Properties.Name -contains 'claudeReview')){throw 'Claude-Reviewkonfiguration fehlt.'}
+    $section=$Config.claudeReview
+    foreach($name in @('enabled','defaultModel','highRiskModel','pinnedCliVersion','timeoutSeconds')){if(-not($section.PSObject.Properties.Name -contains $name)){throw "Claude-Reviewkonfiguration ist unvollstaendig: $name"}}
+    if(-not $section.enabled){throw 'Claude-Review ist nicht aktiviert.'}
+    if([string]$section.defaultModel -cne $script:ItoevaClaudeDefaultModel -or [string]$section.highRiskModel -cne $script:ItoevaClaudeHighRiskModel){throw 'Claude-v0.1-Modellpins sind nicht freigegeben.'}
+    if([string]$section.pinnedCliVersion -cne $script:ItoevaClaudePinnedCliVersion){throw 'Claude-v0.1-CLI-Versionspin ist nicht freigegeben.'}
+    return [pscustomobject]@{defaultModel=$script:ItoevaClaudeDefaultModel;highRiskModel=$script:ItoevaClaudeHighRiskModel;pinnedCliVersion=$script:ItoevaClaudePinnedCliVersion}
+}
+
+function Resolve-ItoevaClaudeLauncher {
+    [CmdletBinding()] param([string]$ExpectedVersion=$script:ItoevaClaudePinnedCliVersion)
+    if($env:OS -ne 'Windows_NT'){throw 'Claude-Final-Review ist ausschliesslich unter Windows mit gepinnter nativer CLI freigegeben.'}
+    $native=Get-Command claude.exe -CommandType Application -ErrorAction SilentlyContinue|Select-Object -First 1
+    if($native){$path=$native.Source}
+    else{
+        $batch=Get-Command claude.cmd -CommandType Application -ErrorAction SilentlyContinue|Select-Object -First 1
+        if(-not $batch){throw 'Keine native Claude-Code-EXE wurde gefunden.'}
+        $launcherLines=@(Get-Content -LiteralPath $batch.Source|Where-Object{$_ -match '^"%dp0%\\node_modules\\@anthropic-ai\\claude-code\\bin\\claude\.exe"\s+%\*$'})
+        if($launcherLines.Count -ne 1){throw 'claude.cmd entspricht nicht dem erwarteten fail-closed npm-Launcherformat.'}
+        $path=Join-Path (Split-Path -Parent $batch.Source) 'node_modules\@anthropic-ai\claude-code\bin\claude.exe'
+    }
+    if(-not(Test-Path -LiteralPath $path -PathType Leaf)){throw 'Native Claude-Code-EXE fehlt.'}
+    $fileVersion=[string](Get-Item -LiteralPath $path).VersionInfo.FileVersion
+    if([string]::IsNullOrWhiteSpace($fileVersion)){throw 'Claude-Code-EXE meldet keine Dateiversion.'}
+    $actual=ConvertTo-ItoevaNormalizedVersion $fileVersion;$expected=ConvertTo-ItoevaNormalizedVersion $ExpectedVersion
+    if($actual -ne $expected){throw "Nicht freigegebene Claude-Code-Version: $actual (gepinnt: $expected)"}
+    return [pscustomobject]@{executable=$path;prefixArguments=@();kind='NATIVE_EXE';version=$actual.ToString()}
+}
+
+# Nur fuer echte Claude-Aufrufe (DryRun/Run/Revalidate). PublishDryRun ruft das bewusst nie auf.
+function Assert-ItoevaClaudeCapabilityPreflight {
+    [CmdletBinding()]param([Parameter(Mandatory)]$Config)
+    $pins=Assert-ItoevaClaudeConfigPins $Config
+    $launcher=Resolve-ItoevaClaudeLauncher -ExpectedVersion $pins.pinnedCliVersion
+    if($launcher.kind -cne 'NATIVE_EXE' -or (ConvertTo-ItoevaNormalizedVersion $launcher.version) -ne (ConvertTo-ItoevaNormalizedVersion $pins.pinnedCliVersion)){throw 'Claude-v0.1-Capabilities sind nicht durch die freigegebene native CLI-Version belegt.'}
+    return $launcher
+}
+
+# Offline-Provenienzpruefung gespeicherter Evidence: vergleicht die im Kontext festgehaltene
+# Modell-/CLI-Herkunft gegen die eingecheckten Pins, nie gegen eine installierte Binary.
+function Assert-ItoevaClaudeStoredProvenance {
+    [CmdletBinding()]param([Parameter(Mandatory)]$Context,[Parameter(Mandatory)][string]$ReportModel,[Parameter(Mandatory)]$Pins)
+    foreach($name in @('reviewModel','claudeCliVersion','claudeLauncherKind')){if(-not($Context.PSObject.Properties.Name -contains $name)){throw "Claude-Kontext enthaelt keine Modell-/CLI-Provenienz: $name"}}
+    if([string]$Context.reviewModel -cne $ReportModel){throw 'Claude-Kontextmodell weicht vom Report ab.'}
+    if([string]$Context.reviewModel -cne $Pins.defaultModel -and [string]$Context.reviewModel -cne $Pins.highRiskModel){throw 'Claude-Kontextmodell ist nicht freigegeben.'}
+    if([string]$Context.claudeLauncherKind -cne 'NATIVE_EXE'){throw 'Claude-Provenienz weist keine gepinnte native CLI aus.'}
+    if((ConvertTo-ItoevaNormalizedVersion ([string]$Context.claudeCliVersion)) -ne (ConvertTo-ItoevaNormalizedVersion $Pins.pinnedCliVersion)){throw 'Claude-Provenienz weist eine nicht freigegebene CLI-Version aus.'}
+}
+
+function ConvertTo-ItoevaRedactedDiagnosticText {
+    [CmdletBinding()]param([Parameter(Mandatory)][AllowEmptyString()][AllowNull()][string]$Text,[int]$MaximumLength=8192)
+    if([string]::IsNullOrEmpty($Text)){return ''}
+    $value=$Text
+    $value=[regex]::Replace($value,'(?i)\bsk-[A-Za-z0-9_\-]{8,}','[REDACTED]')
+    $value=[regex]::Replace($value,'(?i)\b(bearer|basic)\s+[A-Za-z0-9_\-\.=+/]{8,}','${1} [REDACTED]')
+    $value=[regex]::Replace($value,'\beyJ[A-Za-z0-9_\-]{6,}\.[A-Za-z0-9_\-]{6,}(?:\.[A-Za-z0-9_\-]+)?','[REDACTED]')
+    $value=[regex]::Replace($value,'(?i)("?\b(?:api[_\-]?key|auth[_\-]?token|access[_\-]?token|refresh[_\-]?token|oauth[_\-]?token|id[_\-]?token|session[_\-]?key|client[_\-]?secret|secret|password|passwd|credentials?)\b"?\s*[:=]\s*"?)([^"\s,;}]{4,})','${1}[REDACTED]')
+    # Lange undurchsichtige Tokens redigieren, reine Hex-SHAs/OIDs aber als Diagnosewert erhalten.
+    $value=[regex]::Replace($value,'(?<![0-9A-Za-z_\-])(?![0-9a-fA-F]{40,64}(?![0-9A-Za-z_\-]))[A-Za-z0-9_\-]{64,}(?![0-9A-Za-z_\-])','[REDACTED]')
+    if($value.Length -gt $MaximumLength){$value=$value.Substring(0,$MaximumLength)+"`n[TRUNCATED]"}
+    return $value
+}
+
+function New-ItoevaClaudeEnvelopeSummary {
+    [CmdletBinding()]param([Parameter(Mandatory)][AllowEmptyString()][AllowNull()][string]$Stdout)
+    $summary=[ordered]@{parsed=$false;type='';subtype='';isError='';durationMs='';numTurns='';permissionDenialCount='';resultKind='';resultLength=''}
+    if([string]::IsNullOrWhiteSpace($Stdout)){return $summary}
+    try{$envelope=$Stdout|ConvertFrom-Json}catch{return $summary}
+    if($envelope -isnot [pscustomobject]){return $summary}
+    $summary.parsed=$true;$names=@($envelope.PSObject.Properties.Name)
+    foreach($pair in @(@('type','type'),@('subtype','subtype'),@('is_error','isError'),@('duration_ms','durationMs'),@('num_turns','numTurns'))){
+        if($pair[0] -in $names){$summary[$pair[1]]=[string]$envelope.($pair[0])}
+    }
+    if('permission_denials' -in $names){$summary.permissionDenialCount=[string]@($envelope.permission_denials).Count}
+    if('result' -in $names){
+        $inner=$envelope.result
+        $summary.resultKind=$(if($null -eq $inner){'null'}elseif($inner -is [string]){'string'}elseif($inner -is [pscustomobject]){'object'}else{$inner.GetType().Name})
+        $summary.resultLength=[string]$(if($inner -is [string]){$inner.Length}elseif($null -eq $inner){0}else{($inner|ConvertTo-Json -Depth 20 -Compress).Length})
+    }
+    return $summary
+}
+
+# Wird bei jedem echten Claude-Aufruf geschrieben, bevor irgendeine semantische Pruefung
+# fehlschlagen kann. Enthaelt ausschliesslich redigierte, laengenbegrenzte Auszuege.
+function Write-ItoevaClaudeDiagnostics {
+    [CmdletBinding()]param(
+        [Parameter(Mandatory)][string]$RunRoot,[Parameter(Mandatory)][string]$Stage,
+        [Parameter(Mandatory)][string]$Model,[Parameter(Mandatory)][AllowEmptyString()][string]$CliVersion,
+        $Result,[AllowEmptyString()][string]$LaunchError=''
+    )
+    $hasResult=$null -ne $Result
+    $stdout=$(if($hasResult){[string]$Result.stdout}else{''});$stderr=$(if($hasResult){[string]$Result.stderr}else{''})
+    $diagnostics=[ordered]@{
+        stage=$Stage;recordedAt=[DateTimeOffset]::UtcNow.ToString('O');model=$Model;claudeCliVersion=$CliVersion
+        launched=$hasResult;launchError=(ConvertTo-ItoevaRedactedDiagnosticText $LaunchError 1024)
+        exitCode=[string]$(if($hasResult){$Result.exitCode}else{''});timedOut=[string]$(if($hasResult){$Result.timedOut}else{''})
+        stdoutLength=$stdout.Length;stderrLength=$stderr.Length
+        stdoutTruncated=[string]$(if($hasResult -and ($Result.PSObject.Properties.Name -contains 'stdoutTruncated')){$Result.stdoutTruncated}else{''})
+        stderrTruncated=[string]$(if($hasResult -and ($Result.PSObject.Properties.Name -contains 'stderrTruncated')){$Result.stderrTruncated}else{''})
+        envelopeSummary=(New-ItoevaClaudeEnvelopeSummary $stdout)
+        stdoutExcerpt=(ConvertTo-ItoevaRedactedDiagnosticText $stdout 8192)
+        stderrExcerpt=(ConvertTo-ItoevaRedactedDiagnosticText $stderr 4096)
+    }
+    $path=Join-Path $RunRoot 'claude-final-review.diagnostics.json'
+    Write-ItoevaAtomicJson $diagnostics $path;$hash=Get-ItoevaSha256 $path;Write-ItoevaAtomicText "$path.sha256" $hash
+    return [pscustomobject]@{path=$path;hash=$hash}
+}
+
+function Get-ItoevaClaudeReviewModel {
+    [CmdletBinding()]param([Parameter(Mandatory)]$Plan,[Parameter(Mandatory)]$Config)
+    $pins=Assert-ItoevaClaudeConfigPins $Config
+    $paths=@($Plan.paths|ForEach-Object{([string]$_).Replace('\','/').ToLowerInvariant()}|Sort-Object -Unique)
+    $text=((@([string]$Plan.title)+@($Plan.plan|ForEach-Object{[string]$_})+$paths)-join "`n").ToLowerInvariant()
+    $riskPattern='(?i)(data\s*integrity|migration|schema\s*change|database|\bsql\b|progression|\bxp\b|economy|currency|reward|auth(?:entication|orization)?|security|credential|permission|runner|publish(?:ing)?|architecture|architectural)'
+    $components=@($paths|ForEach-Object{($_ -split '/')[0]}|Sort-Object -Unique)
+    $highRisk=($text-match$riskPattern)-or@($paths|Where-Object{$_ -match '^(runner|migrations?|database|auth|security|economy|progression)/'}).Count-gt0-or$paths.Count-ge8-or$components.Count-ge4
+    return $(if($highRisk){$pins.highRiskModel}else{$pins.defaultModel})
+}
+
+function Invoke-ItoevaProcessSeparated {
+    [CmdletBinding()] param([Parameter(Mandatory)][string]$Executable,[string[]]$Arguments=@(),[Parameter(Mandatory)][string]$WorkingDirectory,[Parameter(Mandatory)][int]$TimeoutSeconds,[string]$StandardInputPath,[string]$ValidatedWindowsArgumentString)
+    $processArguments=if($ValidatedWindowsArgumentString){$ValidatedWindowsArgumentString}else{@($Arguments|ForEach-Object{ConvertTo-ItoevaWindowsCommandLineArgument ([string]$_)})-join ' '}
+    $start=[Diagnostics.ProcessStartInfo]::new();$start.FileName=$Executable;$start.Arguments=$processArguments;$start.WorkingDirectory=$WorkingDirectory;$start.UseShellExecute=$false;$start.CreateNoWindow=$true;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true;$start.RedirectStandardInput=[bool]$StandardInputPath
+    foreach($name in @($start.EnvironmentVariables.Keys)){if([string]$name-match'(?i)^(ANTHROPIC_|CLAUDE_|CLAUDECODE|AWS_|AMAZON_|GOOGLE_|CLOUDSDK_|AZURE_|FOUNDRY_|VERTEX_)'){[void]$start.EnvironmentVariables.Remove([string]$name)}}
+    $process=[Diagnostics.Process]::new();$process.StartInfo=$start
+    try{
+        if(-not $process.Start()){throw 'Claude-Kindprozess konnte nicht gestartet werden.'}
+        $stdoutTask=$process.StandardOutput.ReadToEndAsync();$stderrTask=$process.StandardError.ReadToEndAsync()
+        if($StandardInputPath){$process.StandardInput.Write([IO.File]::ReadAllText($StandardInputPath));$process.StandardInput.Close()}
+        $finished=$process.WaitForExit($TimeoutSeconds*1000)
+        if(-not $finished){& taskkill.exe /PID $process.Id /T /F 2>$null|Out-Null;if(-not $process.WaitForExit(10000)){throw 'Claude-Prozessbaum endete nach taskkill nicht.'}}
+        $stdout=$stdoutTask.GetAwaiter().GetResult();$stderr=$stderrTask.GetAwaiter().GetResult()
+        # Groessenverletzungen werden hier gekappt und gemeldet statt geworfen, damit der Aufrufer
+        # zuerst Diagnoseartefakte schreiben und danach fail-closed abbrechen kann.
+        $stdoutTruncated=$false;$stderrTruncated=$false
+        if($stdout.Length-gt1048576){$stdout=$stdout.Substring(0,1048576);$stdoutTruncated=$true}
+        if($stderr.Length-gt262144){$stderr=$stderr.Substring(0,262144);$stderrTruncated=$true}
+        return [pscustomobject]@{exitCode=if($finished){$process.ExitCode}else{-1};timedOut=(-not $finished);stdout=$stdout;stderr=$stderr;stdoutTruncated=$stdoutTruncated;stderrTruncated=$stderrTruncated}
+    }finally{$process.Dispose()}
+}
+
+function ConvertFrom-ItoevaClaudeEnvelope {
+    [CmdletBinding()] param([Parameter(Mandatory)][string]$Text)
+    if($Text.Length -gt 1048576){throw 'Claude-Envelope überschreitet das Größenlimit.'}
+    try{$envelope=$Text|ConvertFrom-Json}catch{throw 'Claude-Envelope ist kein gültiges JSON.'}
+    if($envelope -isnot [pscustomobject] -or -not($envelope.PSObject.Properties.Name -contains 'result')){throw 'Claude-Envelope enthält kein result.'}
+    if(($envelope.PSObject.Properties.Name -contains 'is_error') -and $envelope.is_error){throw 'Claude-Envelope meldet einen Fehler.'}
+    if(($envelope.PSObject.Properties.Name -contains 'error') -and $null-ne $envelope.error){throw 'Claude-Envelope enthaelt einen Fehler.'}
+    if(($envelope.PSObject.Properties.Name -contains 'permission_denials') -and @($envelope.permission_denials).Count){throw 'Claude-Envelope meldet verweigerte Berechtigungen.'}
+    if(($envelope.PSObject.Properties.Name -contains 'subtype') -and [string]$envelope.subtype -match '(?i)error|limit|denied'){throw 'Claude-Envelope meldet keinen erfolgreichen Result-Typ.'}
+    $inner=$envelope.result
+    if($inner -is [string]){
+        $candidate=$inner.Trim();$match=[regex]::Match($candidate,'\A```(?:json)?\s*\r?\n(?<json>[\s\S]*?)\r?\n```\z',[Text.RegularExpressions.RegexOptions]::IgnoreCase)
+        if($candidate.StartsWith('```')){if(-not $match.Success){throw 'Claude-result enthält keine einzelne vollständige JSON-Codefence.'};$candidate=$match.Groups['json'].Value}
+        try{$inner=$candidate|ConvertFrom-Json}catch{throw 'Claude-result ist kein gültiges JSON.'}
+    }
+    if($inner -isnot [pscustomobject]){throw 'Claude-result ist kein JSON-Objekt.'}
+    return [pscustomobject]@{envelope=$envelope;review=$inner}
+}
+
+function Assert-ItoevaClaudeReview {
+    [CmdletBinding()] param([Parameter(Mandatory)]$Review,[Parameter(Mandatory)][string]$BaseSha,[Parameter(Mandatory)][string]$TreeOid,[Parameter(Mandatory)][string]$TestManifestHash,[Parameter(Mandatory)][string]$ContextHash)
+    $required=@('status','findings','baseSha','treeOid','testManifestHash','contextHash');foreach($name in $required){if(-not($Review.PSObject.Properties.Name -contains $name)){throw "Claude-Reviewfeld fehlt: $name"}}
+    if(@($Review.PSObject.Properties.Name|Where-Object{$_ -notin $required}).Count){throw 'Claude-Review enthaelt unbekannte Felder.'}
+    foreach($name in @('status','baseSha','treeOid','testManifestHash','contextHash')){if($Review.$name -isnot [string]){throw "Claude-Reviewfeld hat falschen Typ: $name"}}
+    if($Review.findings -isnot [array]){throw 'Claude-findings ist kein Array.'}
+    foreach($finding in @($Review.findings)){if($finding -isnot [pscustomobject]){throw 'Claude-Finding ist kein Objekt.'};$names=@($finding.PSObject.Properties.Name);if(@($names|Where-Object{$_ -notin @('severity','message','path')}).Count -or 'severity' -notin $names -or 'message' -notin $names -or $finding.severity -isnot [string] -or [string]$finding.severity -notin @('CRITICAL','HIGH','MEDIUM','LOW','UNVERIFIED') -or $finding.message -isnot [string] -or [string]::IsNullOrWhiteSpace($finding.message) -or ('path' -in $names -and $finding.path -isnot [string])){throw 'Claude-Finding ist strukturell ungueltig.'}}
+    if([string]$Review.status -notin @('PASS','FAIL') -or [string]$Review.baseSha -cne $BaseSha -or [string]$Review.treeOid -cne $TreeOid -or [string]$Review.testManifestHash -cne $TestManifestHash -or [string]$Review.contextHash -cne $ContextHash){throw 'Claude-Review ist nicht an Base, Tree, Tests und Kontext gebunden.'}
+    $findings=@($Review.findings);if([string]$Review.status -eq 'PASS' -and $findings.Count){throw 'Claude-PASS darf keine Findings enthalten.'}
+    if([string]$Review.status -ne 'PASS'){throw 'Claude-Final-Review ist FAIL.'}
+}
+
+function Invoke-ItoevaClaudeFinalReview {
+    [CmdletBinding()] param([Parameter(Mandatory)][string]$Repository,[Parameter(Mandatory)][string]$RunRoot,[Parameter(Mandatory)][string]$BaseSha,[Parameter(Mandatory)][string]$TreeOid,[Parameter(Mandatory)][string]$PlanHash,[Parameter(Mandatory)][string]$TestManifestHash,[Parameter(Mandatory)][string[]]$ChangedPaths,[Parameter(Mandatory)][string]$PlanPath,[Parameter(Mandatory)][string]$TestsPath,[Parameter(Mandatory)][string]$CodexReviewPath,[Parameter(Mandatory)][string]$Model,[Parameter(Mandatory)]$Config)
+    $pins=Assert-ItoevaClaudeConfigPins $Config;$launcher=Assert-ItoevaClaudeCapabilityPreflight $Config
+    $model=$Model;if($model -cne $pins.defaultModel -and $model -cne $pins.highRiskModel){throw 'Claude-Reviewmodell ist nicht explizit freigegeben.'}
+    $headBefore=(& git -C $Repository rev-parse HEAD).Trim();$indexBefore=(& git -C $Repository write-tree).Trim();$originBefore=Get-ItoevaRemoteSha $Repository;$treeBefore=Get-ItoevaProposedTreeOid $Repository $BaseSha $ChangedPaths
+    if($headBefore -ne $BaseSha -or $treeBefore -ne $TreeOid){throw 'Repositoryzustand stimmt vor Claude nicht mit Base und Proposed Tree ueberein.'}
+    $bundle=Assert-ItoevaRuntimePath ([IO.Path]::GetFullPath([string]$Config.runtimeRoot)) (Join-Path $RunRoot 'claude-review-input');New-Item -ItemType Directory -Path $bundle -Force|Out-Null
+    $copies=[ordered]@{plan=$PlanPath;tests=$TestsPath;codexReview=$CodexReviewPath};foreach($entry in $copies.GetEnumerator()){Copy-ItoevaHashedEvidence $entry.Value (Join-Path $bundle "$($entry.Key).json")|Out-Null}
+    $patchPath=Join-Path $bundle 'proposed.patch';$patch=(& git -C $Repository diff-tree --binary --no-ext-diff --no-textconv --root $BaseSha $TreeOid -- @ChangedPaths|Out-String);if($LASTEXITCODE -ne 0){throw 'Claude-Review-Patch konnte nicht aus den gebundenen Trees erzeugt werden.'};Write-ItoevaAtomicText $patchPath $patch;$patchHash=Get-ItoevaSha256 $patchPath
+    $context=[ordered]@{baseSha=$BaseSha;treeOid=$TreeOid;planHash=$PlanHash;testManifestHash=$TestManifestHash;changedPaths=@($ChangedPaths);patchSha256=$patchHash;planSha256=Get-ItoevaSha256 $PlanPath;testsSha256=Get-ItoevaSha256 $TestsPath;codexReviewSha256=Get-ItoevaSha256 $CodexReviewPath;reviewModel=$model;claudeCliVersion=$launcher.version;claudeLauncherKind=$launcher.kind}
+    $contextPath=Join-Path $bundle 'context.json';Write-ItoevaAtomicJson $context $contextPath;$contextHash=Get-ItoevaSha256 $contextPath;Write-ItoevaAtomicText "$contextPath.sha256" $contextHash
+    # Die CLI validiert --json-schema mit einem Validator, der die 2020-12-Meta-Schema-Referenz nicht
+    # aufloest. Die Deklaration wird daher nur fuer das Argument entfernt; die Datei behaelt sie.
+    $schemaPath=Join-Path $PSScriptRoot 'schemas\claude-review.schema.json';$schemaObject=Get-Content -Raw $schemaPath|ConvertFrom-Json
+    if($schemaObject.PSObject.Properties.Name -contains '$schema'){$schemaObject.PSObject.Properties.Remove('$schema')}
+    $schema=($schemaObject|ConvertTo-Json -Depth 20 -Compress);if($schema -match '\$schema'){throw 'Claude-Reviewschema enthaelt weiterhin eine nicht aufloesbare Meta-Schema-Referenz.'}
+    $mcpPath=Join-Path $bundle 'empty-mcp.json';Write-ItoevaAtomicText $mcpPath '{"mcpServers":{}}'
+    $promptPath=Join-Path $RunRoot 'claude-final-review.prompt.txt';$prompt=(Get-Content -Raw (Join-Path $PSScriptRoot 'prompts\review-final-claude.md'))+"`nContext: $contextPath`nBase: $BaseSha`nTree: $TreeOid`nTestmanifest-Hash: $TestManifestHash`nContext-Hash: $contextHash";Write-ItoevaAtomicText $promptPath $prompt
+    $claudeArguments=@('-p','--model',$model,'--permission-mode','plan','--tools','Read,Glob,Grep','--safe-mode','--disable-slash-commands','--strict-mcp-config','--mcp-config',$mcpPath,'--no-chrome','--no-session-persistence','--output-format','json','--json-schema',$schema,'--add-dir',$bundle)
+    $validated=$null;$processArgs=@($launcher.prefixArguments)+$claudeArguments
+    # Genau ein Aufruf pro Run/Revalidate, kein Retry, kein Fallback.
+    $result=$null;$launchError=''
+    try{$result=Invoke-ItoevaProcessSeparated $launcher.executable $processArgs $Repository ([int]$Config.claudeReview.timeoutSeconds) $promptPath $validated}
+    catch{$launchError=[string]$_.Exception.Message}
+    Write-ItoevaClaudeDiagnostics -RunRoot $RunRoot -Stage 'CLAUDE_FINAL_REVIEW' -Model $model -CliVersion $launcher.version -Result $result -LaunchError $launchError|Out-Null
+    if($launchError){throw "Claude-Final-Review konnte nicht ausgefuehrt werden: $launchError"}
+    if($result.timedOut){throw 'Claude-Final-Review hat das Zeitlimit ueberschritten.'}
+    if($result.stdoutTruncated -or $result.stderrTruncated){throw 'Claude-Ausgabe ueberschreitet das Groessenlimit.'}
+    if($result.exitCode -ne 0){throw "Claude-Final-Review nicht verfuegbar (Account-/Rate-Limit, Authentifizierung, Modell oder CLI), Exitcode $($result.exitCode)."}
+    $parsed=ConvertFrom-ItoevaClaudeEnvelope $result.stdout;$outputPath=Join-Path $RunRoot 'claude-final-review.json';Write-ItoevaAtomicJson $parsed.review $outputPath;Write-ItoevaAtomicText "$outputPath.sha256" (Get-ItoevaSha256 $outputPath)
+    $envelopePath=Join-Path $RunRoot 'claude-final-review-envelope.json';Write-ItoevaAtomicJson $parsed.envelope $envelopePath;Write-ItoevaAtomicText "$envelopePath.sha256" (Get-ItoevaSha256 $envelopePath)
+    Assert-ItoevaClaudeReview $parsed.review $BaseSha $TreeOid $TestManifestHash $contextHash
+    foreach($path in @($contextPath,$patchPath,$PlanPath,$TestsPath,$CodexReviewPath)){
+        if(-not(Test-Path $path)){throw 'Claude-Review-Evidence fehlt nach dem Aufruf.'}
+    }
+    if((Get-ItoevaSha256 $contextPath)-ne $contextHash -or (Get-ItoevaSha256 $patchPath)-ne $patchHash -or (Get-ItoevaSha256 $PlanPath)-ne $context.planSha256 -or (Get-ItoevaSha256 $TestsPath)-ne $context.testsSha256 -or (Get-ItoevaSha256 $CodexReviewPath)-ne $context.codexReviewSha256){throw 'Claude-Review-Evidence wurde waehrend des Aufrufs veraendert.'}
+    $headAfter=(& git -C $Repository rev-parse HEAD).Trim();$indexAfter=(& git -C $Repository write-tree).Trim();$originAfter=Get-ItoevaRemoteSha $Repository;$treeAfter=Get-ItoevaProposedTreeOid $Repository $BaseSha $ChangedPaths
+    if($headAfter-ne$headBefore -or $indexAfter-ne$indexBefore -or $originAfter-ne$originBefore -or $treeAfter-ne$TreeOid){throw 'Repository, Index, Base oder Proposed Tree wurde waehrend des Claude-Reviews veraendert.'}
+    return [pscustomobject]@{status='PASS';model=$model;cliVersion=$launcher.version;reviewPath=$outputPath;reviewHash=Get-ItoevaSha256 $outputPath;contextPath=$contextPath;contextHash=$contextHash;patchPath=$patchPath;patchHash=$patchHash;bindings=$parsed.review}
+}
+
 function New-ItoevaCodexArguments {
     [CmdletBinding()]
     param(
@@ -535,7 +768,7 @@ function Get-ItoevaPublishJournal {
         }
     }
     foreach($item in $sorted){
-        foreach($name in @('runId','dryRunReportSha256','stateEvidenceSha256','planReviewEvidenceSha256','finalReviewEvidenceSha256','branch','baseSha','proposedTreeOid','planHash','testManifestHash','title','allowedPaths')){
+        foreach($name in @('runId','dryRunReportSha256','stateEvidenceSha256','planReviewEvidenceSha256','finalReviewEvidenceSha256','claudeReviewEvidenceSha256','claudeContextEvidenceSha256','claudePatchEvidenceSha256','branch','baseSha','proposedTreeOid','planHash','testManifestHash','title','allowedPaths')){
             if(-not ($item.record.PSObject.Properties.Name -contains $name)){throw "Publish-Journalfeld fehlt in $($item.phase): $name"}
         }
         if($item.rank -ge 2 -and [string]$item.record.commitSha -notmatch '^[0-9a-f]{40,64}$'){throw "Commit-SHA fehlt in $($item.phase)."}
@@ -574,6 +807,14 @@ function Copy-ItoevaHashedEvidence {
     finally { if(Test-Path -LiteralPath $temporary){Remove-Item -LiteralPath $temporary -Force} }
     Write-ItoevaAtomicText "$DestinationPath.sha256" $sourceHash
     return Read-ItoevaHashedJson $DestinationPath "$DestinationPath.sha256"
+}
+
+function Copy-ItoevaHashedFileEvidence {
+    [CmdletBinding()]param([Parameter(Mandatory)][string]$SourcePath,[Parameter(Mandatory)][string]$DestinationPath)
+    $hash=Get-ItoevaSha256 $SourcePath;$sidecar="$DestinationPath.sha256"
+    if(Test-Path -LiteralPath $DestinationPath){if((Get-ItoevaSha256 $DestinationPath)-ne $hash -or -not(Test-Path $sidecar) -or ([IO.File]::ReadAllText($sidecar).Trim()-ne$hash)){throw 'Datei-Evidence stimmt nicht mit dem Snapshot ueberein.'}}
+    else{[IO.File]::WriteAllBytes($DestinationPath,[IO.File]::ReadAllBytes($SourcePath));Write-ItoevaAtomicText $sidecar $hash}
+    return [pscustomobject]@{path=$DestinationPath;hash=$hash}
 }
 
 function Invoke-ItoevaGitProcess {
@@ -875,6 +1116,19 @@ function Invoke-ItoevaRevalidateDryRun {
     $sourcePlanReview=Get-Content -Raw -LiteralPath $sourcePaths.planReview|ConvertFrom-Json; $parsedSourceTests=Get-Content -Raw -LiteralPath $sourcePaths.tests|ConvertFrom-Json; $sourceTests=@($parsedSourceTests)
     $sourceFinalReview=Get-Content -Raw -LiteralPath $sourcePaths.finalReview|ConvertFrom-Json
     $sourceBase=[string]$sourceReport.baseSha; $sourceTree=[string]$sourceReport.proposedTreeOid; $sourcePlanHash=[string]$sourceReport.planHash; $sourceTestHash=[string]$sourceReport.testManifestHash
+    $sourceClaudeEvidence=$null
+    if($sourceReport.PSObject.Properties.Name -contains 'reviewGateVersion'){if($sourceReport.reviewGateVersion -isnot [int] -or $sourceReport.reviewGateVersion -ne 2){throw 'Unbekannte oder typfalsche Source-Review-Gate-Version.'};$sourceReviewGateVersion=2}else{$sourceReviewGateVersion=1}
+    if($sourceReviewGateVersion -eq 2){
+        $claudeLive=Join-Path $sourceRoot 'claude-final-review.json';$contextLive=Join-Path $sourceRoot 'claude-review-input\context.json';$patchLive=Join-Path $sourceRoot 'claude-review-input\proposed.patch'
+        $claudeSnapshot=Join-Path $sourceRoot 'claude-final-review.dry-run.json';$contextSnapshot=Join-Path $sourceRoot 'claude-context.dry-run.json';$patchSnapshot=Join-Path $sourceRoot 'claude-patch.dry-run.patch'
+        foreach($pair in @(@($claudeLive,$claudeSnapshot),@($contextLive,$contextSnapshot),@($patchLive,$patchSnapshot))){if(-not(Test-Path $pair[0])-or-not(Test-Path $pair[1])-or-not(Test-Path "$($pair[1]).sha256")){throw 'Gate-v2-Source besitzt keine vollstaendige historische Claude-Evidence.'};$hash=(Get-Content -Raw "$($pair[1]).sha256").Trim();if((Get-ItoevaSha256 $pair[0])-ne$hash-or(Get-ItoevaSha256 $pair[1])-ne$hash){throw 'Gate-v2-Claude-Source-Evidence wurde veraendert.'}}
+        if((Get-ItoevaSha256 $claudeSnapshot)-ne[string]$sourceReport.claudeFinalReviewSha256-or(Get-ItoevaSha256 $contextSnapshot)-ne[string]$sourceReport.claudeReviewContextSha256-or(Get-ItoevaSha256 $patchSnapshot)-ne[string]$sourceReport.claudeReviewPatchSha256){throw 'Gate-v2-Claude-Source-Hashes stimmen nicht mit dem Report ueberein.'}
+        $sourceClaude=Get-Content -Raw $claudeSnapshot|ConvertFrom-Json;Assert-ItoevaClaudeReview $sourceClaude $sourceBase $sourceTree $sourceTestHash ([string]$sourceReport.claudeReviewContextSha256)
+        if([string]$sourceReport.claudeFinalReview-ne'PASS'-or[string]$sourceReport.claudeReviewModel-ne(Get-ItoevaClaudeReviewModel $sourcePlan $Config)){throw 'Gate-v2-Claude-Source-Gate ist nicht PASS oder verwendet das falsche Risikomodell.'}
+        $sourceClaudeContext=Get-Content -Raw $contextSnapshot|ConvertFrom-Json
+        Assert-ItoevaClaudeStoredProvenance $sourceClaudeContext ([string]$sourceReport.claudeReviewModel) (Assert-ItoevaClaudeConfigPins $Config)
+        $sourceClaudeEvidence=[ordered]@{review=$claudeSnapshot;context=$contextSnapshot;patch=$patchSnapshot}
+    }
     if([string]$sourceState.runId -ne $SourceRunId -or [string]$sourceState.phase -ne 'COMPLETE' -or [string]$sourceState.status -ne 'DRY_RUN_PASS' -or [string]$sourceState.baseSha -ne $sourceBase -or [string]$sourceState.branch -ne [string]$sourceReport.branch){throw 'Source-State ist nicht vollständig an den Report gebunden.'}
     if((Get-ItoevaSha256 $sourcePaths.plan) -ne $sourcePlanHash -or (Get-ItoevaSha256 $sourcePaths.tests) -ne $sourceTestHash){throw 'Source-Plan- oder Testmanifest-Hash stimmt nicht.'}
     if([string]$sourcePlan.status -ne 'PLANNED' -or [string]$sourcePlan.baseSha -ne $sourceBase -or [string]::IsNullOrWhiteSpace([string]$sourcePlan.title)){throw 'Source-Plan ist nicht revalidierbar.'}
@@ -909,7 +1163,10 @@ function Invoke-ItoevaRevalidateDryRun {
         $planReviewEvidence=Copy-ItoevaHashedEvidence $sourcePaths.planReview (Join-Path $runRoot 'plan-review.json')
         $testsEvidence=Copy-ItoevaHashedEvidence $sourcePaths.tests (Join-Path $evidenceRoot 'tests.json') $sourceTestHash
         $finalEvidence=Copy-ItoevaHashedEvidence $sourcePaths.finalReview (Join-Path $evidenceRoot 'final-review.json')
+        if($sourceClaudeEvidence){$sourceClaudeReviewEvidence=Copy-ItoevaHashedEvidence $sourceClaudeEvidence.review (Join-Path $evidenceRoot 'claude-final-review.json');$sourceClaudeContextEvidence=Copy-ItoevaHashedEvidence $sourceClaudeEvidence.context (Join-Path $evidenceRoot 'claude-context.json');$sourceClaudePatchEvidence=Copy-ItoevaHashedFileEvidence $sourceClaudeEvidence.patch (Join-Path $evidenceRoot 'claude-patch.patch')}
         $revalidation=[ordered]@{sourceRunId=$SourceRunId;sourceReportSha256=$reportEvidence.hash;sourceStateSha256=$stateEvidence.hash;sourcePlanSha256=$planEvidence.hash;sourcePlanReviewSha256=$planReviewEvidence.hash;sourceTestsSha256=$testsEvidence.hash;sourceFinalReviewSha256=$finalEvidence.hash;sourceBaseSha=$sourceBase;sourceTreeOid=$sourceTree;newBaseSha=$newBase;branch=$branch;expectedRebasedTreeOid=$expectedTree;paths=$paths}
+        $revalidation.sourceReviewGateVersion=$sourceReviewGateVersion
+        if($sourceClaudeEvidence){$revalidation.sourceClaudeReviewSha256=$sourceClaudeReviewEvidence.hash;$revalidation.sourceClaudeContextSha256=$sourceClaudeContextEvidence.hash;$revalidation.sourceClaudePatchSha256=$sourceClaudePatchEvidence.hash}
         $revalidationPath=Join-Path $runRoot 'revalidation.json';Write-ItoevaAtomicJson $revalidation $revalidationPath;$revalidationHash=Get-ItoevaSha256 $revalidationPath;Write-ItoevaAtomicText "$revalidationPath.sha256" $revalidationHash
         Assert-ItoevaRevalidationWorktree $Repository $branch $newBase $paths $expectedTree|Out-Null
         $testResults=@(Invoke-ItoevaConfiguredTests $Repository $Config $paths);$testPath=Join-Path $runRoot 'tests.json';Write-ItoevaAtomicJson $testResults $testPath
@@ -919,11 +1176,16 @@ function Invoke-ItoevaRevalidateDryRun {
         $finalPath=Join-Path $runRoot 'final-review.json';$prompt=(Get-Content -Raw (Join-Path $PSScriptRoot 'prompts\review-final.md'))+"`nRevalidation Source-Run: $SourceRunId`nSource-Plan: $(Join-Path $runRoot 'plan.json')`nSource-Plan-Hash: $sourcePlanHash`nRevalidation-Provenienz: $revalidationPath`nBase: $newBase`nTree: $expectedTree`nTestmanifest-Pfad: $testPath`nTestmanifest-Hash: $testHash"
         Invoke-ItoevaCodexSession $Repository $prompt (Join-Path $PSScriptRoot 'schemas\review.schema.json') $finalPath 'read-only' -TimeoutSeconds ([int]$Config.agentExecution.sessionTimeoutSeconds)|Out-Null
         $final=Get-Content -Raw -LiteralPath $finalPath|ConvertFrom-Json
-        $gate=[pscustomobject]@{planReview='PASS';mandatoryTests='PASS';finalReview=$final.status;diffCheck='PASS';baseUnchanged=$true;baseSha=$newBase;proposedTreeOid=$expectedTree;testManifestHash=$testHash;planHash=$sourcePlanHash;reviewBaseSha=$final.baseSha;reviewPlanHash=$final.planHash;reviewTreeOid=$final.treeOid;reviewTestManifestHash=$final.testManifestHash}
+        if($final.status -ne 'PASS' -or $final.baseSha -ne $newBase -or $final.planHash -ne $sourcePlanHash -or $final.treeOid -ne $expectedTree -or $final.testManifestHash -ne $testHash){throw 'Revalidiertes Codex-Final-Review ist nicht gebunden PASS.'}
+        $state.phase='REVALIDATE_CLAUDE_REVIEW';Write-ItoevaAtomicJson $state $statePath
+        $claudeModel=Get-ItoevaClaudeReviewModel $sourcePlan $Config
+        $claude=Invoke-ItoevaClaudeFinalReview -Repository $Repository -RunRoot $runRoot -BaseSha $newBase -TreeOid $expectedTree -PlanHash $sourcePlanHash -TestManifestHash $testHash -ChangedPaths $paths -PlanPath (Join-Path $runRoot 'plan.json') -TestsPath $testPath -CodexReviewPath $finalPath -Model $claudeModel -Config $Config
+        $gate=[pscustomobject]@{planReview='PASS';mandatoryTests='PASS';finalReview=$final.status;claudeFinalReview=$claude.status;diffCheck='PASS';baseUnchanged=$true;baseSha=$newBase;proposedTreeOid=$expectedTree;testManifestHash=$testHash;planHash=$sourcePlanHash;reviewBaseSha=$final.baseSha;reviewPlanHash=$final.planHash;reviewTreeOid=$final.treeOid;reviewTestManifestHash=$final.testManifestHash;claudeReviewBaseSha=$claude.bindings.baseSha;claudeReviewTreeOid=$claude.bindings.treeOid;claudeReviewTestManifestHash=$claude.bindings.testManifestHash;claudeReviewContextHash=$claude.contextHash}
         if(-not(Test-ItoevaGate $gate)){throw 'Revalidiertes finales Gate ist nicht vollständig PASS und hashgebunden.'}
         Assert-ItoevaRevalidationWorktree $Repository $branch $newBase $paths $expectedTree|Out-Null
-        $sourceBindings=[ordered]@{sourceRunId=$SourceRunId;sourceReportSha256=$reportEvidence.hash;sourceStateSha256=$stateEvidence.hash;sourcePlanSha256=$planEvidence.hash;sourcePlanReviewSha256=$planReviewEvidence.hash;sourceTestsSha256=$testsEvidence.hash;sourceFinalReviewSha256=$finalEvidence.hash;sourceBaseSha=$sourceBase;sourceTreeOid=$sourceTree;revalidationSha256=$revalidationHash}
-        $report=[ordered]@{formatVersion=2;runKind='REVALIDATED_DRY_RUN';runId=$newRunId;status='DRY_RUN_PASS';branch=$branch;baseSha=$newBase;commitSha='';remoteBranchSha='';originMainStartSha=$newBase;originMainPrePushSha=$newBase;originMainPostPushSha=$newBase;planReview='PASS';finalReview='PASS';proposedTreeOid=$expectedTree;testManifestHash=$testHash;planHash=$sourcePlanHash;reviewerBindings=[ordered]@{baseSha=$final.baseSha;planHash=$final.planHash;treeOid=$final.treeOid;testManifestHash=$final.testManifestHash};sourceBindings=$sourceBindings;tests=$testResults;unverified=@();knownRisks=@($Config.knownRisks.mainRulesetNote)}
+        $sourceBindings=[ordered]@{sourceRunId=$SourceRunId;sourceReviewGateVersion=$sourceReviewGateVersion;sourceReportSha256=$reportEvidence.hash;sourceStateSha256=$stateEvidence.hash;sourcePlanSha256=$planEvidence.hash;sourcePlanReviewSha256=$planReviewEvidence.hash;sourceTestsSha256=$testsEvidence.hash;sourceFinalReviewSha256=$finalEvidence.hash;sourceBaseSha=$sourceBase;sourceTreeOid=$sourceTree;revalidationSha256=$revalidationHash}
+        if($sourceClaudeEvidence){$sourceBindings.sourceClaudeReviewSha256=$sourceClaudeReviewEvidence.hash;$sourceBindings.sourceClaudeContextSha256=$sourceClaudeContextEvidence.hash;$sourceBindings.sourceClaudePatchSha256=$sourceClaudePatchEvidence.hash}
+        $report=[ordered]@{formatVersion=2;runKind='REVALIDATED_DRY_RUN';reviewGateVersion=2;runId=$newRunId;status='DRY_RUN_PASS';branch=$branch;baseSha=$newBase;commitSha='';remoteBranchSha='';originMainStartSha=$newBase;originMainPrePushSha=$newBase;originMainPostPushSha=$newBase;planReview='PASS';finalReview='PASS';claudeFinalReview='PASS';claudeReviewModel=$claude.model;claudeFinalReviewSha256=$claude.reviewHash;claudeReviewContextSha256=$claude.contextHash;claudeReviewPatchSha256=$claude.patchHash;proposedTreeOid=$expectedTree;testManifestHash=$testHash;planHash=$sourcePlanHash;reviewerBindings=[ordered]@{baseSha=$final.baseSha;planHash=$final.planHash;treeOid=$final.treeOid;testManifestHash=$final.testManifestHash};claudeReviewerBindings=[ordered]@{baseSha=$claude.bindings.baseSha;treeOid=$claude.bindings.treeOid;testManifestHash=$claude.bindings.testManifestHash;contextHash=$claude.bindings.contextHash};sourceBindings=$sourceBindings;tests=$testResults;unverified=@();knownRisks=@($Config.knownRisks.mainRulesetNote)}
         foreach($pair in @(@($sourceReportPath,$reportEvidence.hash),@($sourcePaths.state,$stateEvidence.hash),@($sourcePaths.plan,$planEvidence.hash),@($sourcePaths.planReview,$planReviewEvidence.hash),@($sourcePaths.tests,$testsEvidence.hash),@($sourcePaths.finalReview,$finalEvidence.hash))){if((Get-ItoevaSha256 $pair[0]) -ne $pair[1]){throw 'Source-Artefakt wurde während der Revalidierung verändert.'}}
         foreach($pair in @(@($sourceLiveReportPath,$reportEvidence.hash),@($sourceLivePaths.state,$stateEvidence.hash),@($sourceLivePaths.plan,$planEvidence.hash),@($sourceLivePaths.planReview,$planReviewEvidence.hash),@($sourceLivePaths.tests,$testsEvidence.hash),@($sourceLivePaths.finalReview,$finalEvidence.hash))){if((Get-ItoevaSha256 $pair[0]) -ne $pair[1]){throw 'Ursprüngliches Source-Artefakt wurde während der Revalidierung verändert.'}}
         $state.phase='COMPLETE';$state.status='DRY_RUN_PASS';Write-ItoevaAtomicJson $state $statePath;Write-ItoevaAtomicJson $report $reportPath;Write-ItoevaAtomicText "$reportPath.sha256" (Get-ItoevaSha256 $reportPath)
@@ -991,31 +1253,47 @@ function Invoke-ItoevaPublishDryRun {
     if (-not (Test-ItoevaBranchName $branch $Config)) { throw 'Dry-Run-Branch ist ungueltig.' }
     if ([string]$state.baseSha -ne $baseSha -or [string]$state.branch -ne $branch) { throw 'Dry-Run-State stimmt nicht mit Base oder Branch des Reports ueberein.' }
 
-    $planPath=Join-Path $runRoot 'plan.json'; $planReviewPath=Join-Path $runRoot 'plan-review.json'; $testsPath=Join-Path $runRoot 'tests.json'; $finalReviewPath=Join-Path $runRoot 'final-review.json'
-    foreach ($artifact in @($planPath,$planReviewPath,$testsPath,$finalReviewPath)) { Assert-ItoevaRuntimePath $runtimeRoot $artifact | Out-Null; if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) { throw "Dry-Run-Artefakt fehlt: $artifact" } }
+    if([int]$report.reviewGateVersion -ne 2 -or [string]$report.claudeFinalReview -ne 'PASS'){throw 'Dry-Run besitzt kein gültiges Claude-Doppelreview-Gate.'}
+    $claudePins=Assert-ItoevaClaudeConfigPins $Config
+    $planPath=Join-Path $runRoot 'plan.json'; $planReviewPath=Join-Path $runRoot 'plan-review.json'; $testsPath=Join-Path $runRoot 'tests.json'; $finalReviewPath=Join-Path $runRoot 'final-review.json';$claudeReviewPath=Join-Path $runRoot 'claude-final-review.json';$claudeContextPath=Join-Path $runRoot 'claude-review-input\context.json';$claudePatchPath=Join-Path $runRoot 'claude-review-input\proposed.patch'
+    foreach ($artifact in @($planPath,$planReviewPath,$testsPath,$finalReviewPath,$claudeReviewPath,$claudeContextPath,$claudePatchPath)) { Assert-ItoevaRuntimePath $runtimeRoot $artifact | Out-Null; if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) { throw "Dry-Run-Artefakt fehlt: $artifact" } }
+    if((Get-ItoevaSha256 $claudeReviewPath) -ne [string]$report.claudeFinalReviewSha256 -or (Get-ItoevaSha256 $claudeContextPath) -ne [string]$report.claudeReviewContextSha256 -or (Get-ItoevaSha256 $claudePatchPath) -ne [string]$report.claudeReviewPatchSha256){throw 'Claude-Review-, Kontext- oder Patch-Hash stimmt nicht.'}
+    $claudeContext=Get-Content -Raw $claudeContextPath|ConvertFrom-Json
+    if([string]$claudeContext.baseSha-ne$baseSha-or[string]$claudeContext.treeOid-ne$approvedTree-or[string]$claudeContext.planHash-ne$planHash-or[string]$claudeContext.testManifestHash-ne$testHash-or[string]$claudeContext.patchSha256-ne[string]$report.claudeReviewPatchSha256){throw 'Claude-Kontext ist nicht semantisch an Report und Patch gebunden.'}
+    $claudeReview=Get-Content -Raw $claudeReviewPath|ConvertFrom-Json;Assert-ItoevaClaudeReview $claudeReview $baseSha $approvedTree $testHash ([string]$report.claudeReviewContextSha256)
+    foreach($name in @('baseSha','treeOid','testManifestHash','contextHash')){if([string]$report.claudeReviewerBindings.$name-ne[string]$claudeReview.$name){throw "Claude-Reviewerbindung im Report weicht ab: $name"}}
+    # Publishing startet Claude nie und darf keine installierte Binary voraussetzen: die Modell-/CLI-
+    # Provenienz wird ausschliesslich aus der gespeicherten, hashgebundenen Evidence belegt.
+    Assert-ItoevaClaudeStoredProvenance $claudeContext ([string]$report.claudeReviewModel) $claudePins
     if ((Get-ItoevaSha256 $planPath) -ne $planHash -or (Get-ItoevaSha256 $testsPath) -ne $testHash) { throw 'Plan- oder Testmanifest-Hash stimmt nicht.' }
     $plan=Get-Content -Raw -LiteralPath $planPath|ConvertFrom-Json; $planReview=Get-Content -Raw -LiteralPath $planReviewPath|ConvertFrom-Json
+    if([string]$report.claudeReviewModel-ne(Get-ItoevaClaudeReviewModel $plan $Config)){throw 'Claude-Reviewmodell stimmt nicht mit der gebundenen Risikoregel überein.'}
     $parsedTests=Get-Content -Raw -LiteralPath $testsPath|ConvertFrom-Json
     $tests=@($parsedTests); $finalReview=Get-Content -Raw -LiteralPath $finalReviewPath|ConvertFrom-Json
     $isRevalidated=($report.PSObject.Properties.Name -contains 'formatVersion' -and [int]$report.formatVersion -eq 2 -and [string]$report.runKind -eq 'REVALIDATED_DRY_RUN')
     if(($report.PSObject.Properties.Name -contains 'formatVersion') -and -not $isRevalidated){throw 'Unbekanntes Dry-Run-Reportformat.'}
     if($isRevalidated){
         $bindings=$report.sourceBindings
-        foreach($name in @('sourceRunId','sourceReportSha256','sourceStateSha256','sourcePlanSha256','sourcePlanReviewSha256','sourceTestsSha256','sourceFinalReviewSha256','sourceBaseSha','sourceTreeOid','revalidationSha256')){if(-not($bindings.PSObject.Properties.Name -contains $name)){throw "Revalidierungsbindung fehlt: $name"}}
+        foreach($name in @('sourceRunId','sourceReviewGateVersion','sourceReportSha256','sourceStateSha256','sourcePlanSha256','sourcePlanReviewSha256','sourceTestsSha256','sourceFinalReviewSha256','sourceBaseSha','sourceTreeOid','revalidationSha256')){if(-not($bindings.PSObject.Properties.Name -contains $name)){throw "Revalidierungsbindung fehlt: $name"}}
+        if($bindings.sourceReviewGateVersion -isnot [int] -or $bindings.sourceReviewGateVersion -notin @(1,2)){throw 'Unbekannte oder typfalsche Source-Review-Gate-Version.'};$sourceGate=$bindings.sourceReviewGateVersion;if($sourceGate -eq 2){foreach($name in @('sourceClaudeReviewSha256','sourceClaudeContextSha256','sourceClaudePatchSha256')){if(-not($bindings.PSObject.Properties.Name -contains $name)){throw "Gate-v2-Revalidierungsbindung fehlt: $name"}}}
         if(-not(Test-ItoevaRunId ([string]$bindings.sourceRunId))){throw 'Revalidierungs-Source-Run-ID ist ungültig.'}
         $revalidationArtifact=Read-ItoevaHashedJson (Join-Path $runRoot 'revalidation.json') (Join-Path $runRoot 'revalidation.json.sha256')
         if($revalidationArtifact.hash -ne [string]$bindings.revalidationSha256){throw 'Revalidierungsattest stimmt nicht mit dem Report überein.'}
         $rv=$revalidationArtifact.value
-        foreach($name in @('sourceRunId','sourceReportSha256','sourceStateSha256','sourcePlanSha256','sourcePlanReviewSha256','sourceTestsSha256','sourceFinalReviewSha256','sourceBaseSha','sourceTreeOid')){if([string]$rv.$name -ne [string]$bindings.$name){throw "Revalidierungsattest weicht ab: $name"}}
+        $bindingNames=@('sourceRunId','sourceReviewGateVersion','sourceReportSha256','sourceStateSha256','sourcePlanSha256','sourcePlanReviewSha256','sourceTestsSha256','sourceFinalReviewSha256','sourceBaseSha','sourceTreeOid');if($sourceGate-eq2){$bindingNames+=@('sourceClaudeReviewSha256','sourceClaudeContextSha256','sourceClaudePatchSha256')};foreach($name in $bindingNames){if([string]$rv.$name -ne [string]$bindings.$name){throw "Revalidierungsattest weicht ab: $name"}}
         if([string]$rv.newBaseSha -ne $baseSha -or [string]$rv.branch -ne $branch -or [string]$rv.expectedRebasedTreeOid -ne $approvedTree){throw 'Revalidierungsattest ist nicht an Base, Branch und Tree gebunden.'}
         $evidenceRoot=Join-Path $runRoot 'source-evidence'
-        $evidenceMap=[ordered]@{report='sourceReportSha256';state='sourceStateSha256';tests='sourceTestsSha256';'final-review'='sourceFinalReviewSha256'}
+        $evidenceMap=[ordered]@{report='sourceReportSha256';state='sourceStateSha256';tests='sourceTestsSha256';'final-review'='sourceFinalReviewSha256'};if($sourceGate-eq2){$evidenceMap['claude-final-review']='sourceClaudeReviewSha256';$evidenceMap['claude-context']='sourceClaudeContextSha256'}
         foreach($entry in $evidenceMap.GetEnumerator()){$artifact=Read-ItoevaHashedJson (Join-Path $evidenceRoot "$($entry.Key).json") (Join-Path $evidenceRoot "$($entry.Key).json.sha256");if($artifact.hash -ne [string]$bindings.($entry.Value)){throw "Source-Evidence stimmt nicht: $($entry.Key)"}}
+        if($sourceGate-eq2 -and ((Get-ItoevaSha256 (Join-Path $evidenceRoot 'claude-patch.patch'))-ne[string]$bindings.sourceClaudePatchSha256-or(Get-Content -Raw (Join-Path $evidenceRoot 'claude-patch.patch.sha256')).Trim()-ne[string]$bindings.sourceClaudePatchSha256)){throw 'Source-Claude-Patch-Evidence stimmt nicht.'}
         if((Get-ItoevaSha256 $planPath) -ne [string]$bindings.sourcePlanSha256 -or (Get-ItoevaSha256 $planReviewPath) -ne [string]$bindings.sourcePlanReviewSha256){throw 'Source-Plan oder Source-Planreview wurde verändert.'}
     }
     $stateEvidence=Initialize-ItoevaEvidenceSnapshot $statePath (Join-Path $runRoot 'state.dry-run.json') (-not $journal -or [string]$state.status -eq 'DRY_RUN_PASS')
     $planReviewEvidence=Initialize-ItoevaEvidenceSnapshot $planReviewPath (Join-Path $runRoot 'plan-review.dry-run.json') $true
     $finalReviewEvidence=Initialize-ItoevaEvidenceSnapshot $finalReviewPath (Join-Path $runRoot 'final-review.dry-run.json') $true
+    $claudeReviewEvidence=Initialize-ItoevaEvidenceSnapshot $claudeReviewPath (Join-Path $runRoot 'claude-final-review.dry-run.json') $true
+    $claudeContextEvidence=Initialize-ItoevaEvidenceSnapshot $claudeContextPath (Join-Path $runRoot 'claude-context.dry-run.json') $true
+    $claudePatchEvidence=Copy-ItoevaHashedFileEvidence $claudePatchPath (Join-Path $runRoot 'claude-patch.dry-run.patch')
     $planBase=if($isRevalidated){[string]$report.sourceBindings.sourceBaseSha}else{$baseSha}
     if ([string]$plan.status -ne 'PLANNED' -or [string]$plan.baseSha -ne $planBase -or [string]::IsNullOrWhiteSpace([string]$plan.title)) { throw 'Plan ist nicht publishbar.' }
     if ([string]$planReview.status -ne 'PASS' -or [string]$planReview.baseSha -ne $planBase -or [string]$planReview.planHash -ne $planHash) { throw 'Planreview ist nicht gebunden PASS.' }
@@ -1024,7 +1302,7 @@ function Invoke-ItoevaPublishDryRun {
     if ([string]$report.planReview -ne 'PASS' -or [string]$report.finalReview -ne 'PASS' -or [string]$report.reviewerBindings.baseSha -ne $baseSha -or [string]$report.reviewerBindings.planHash -ne $planHash -or [string]$report.reviewerBindings.treeOid -ne $approvedTree -or [string]$report.reviewerBindings.testManifestHash -ne $testHash) { throw 'Report-Gates oder Reviewer-Bindungen stimmen nicht.' }
     if ((@($report.tests)|ConvertTo-Json -Depth 20 -Compress) -ne ($tests|ConvertTo-Json -Depth 20 -Compress)) { throw 'Report-Tests stimmen nicht mit dem Testmanifest ueberein.' }
     $allowedPaths=@($plan.paths|Sort-Object -Unique); Assert-ItoevaAllowedPaths $allowedPaths $Config
-    $gate=[pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$baseSha; proposedTreeOid=$approvedTree; testManifestHash=$testHash; planHash=$planHash; reviewBaseSha=$baseSha; reviewPlanHash=$planHash; reviewTreeOid=$approvedTree; reviewTestManifestHash=$testHash }
+    $gate=[pscustomobject]@{ planReview='PASS'; mandatoryTests='PASS'; finalReview='PASS';claudeFinalReview='PASS'; diffCheck='PASS'; baseUnchanged=$true; baseSha=$baseSha; proposedTreeOid=$approvedTree; testManifestHash=$testHash; planHash=$planHash; reviewBaseSha=$baseSha; reviewPlanHash=$planHash; reviewTreeOid=$approvedTree; reviewTestManifestHash=$testHash;claudeReviewBaseSha=$claudeReview.baseSha;claudeReviewTreeOid=$claudeReview.treeOid;claudeReviewTestManifestHash=$claudeReview.testManifestHash;claudeReviewContextHash=$claudeReview.contextHash }
     if (-not (Test-ItoevaGate $gate)) { throw 'Rekonstruiertes Publish-Gate ist nicht PASS.' }
 
     $origin=(& git -C $Repository remote get-url origin).Trim(); if ($origin -ne [string]$Config.repository.expectedOrigin) { throw "Unerwartetes origin: $origin" }
@@ -1040,7 +1318,7 @@ function Invoke-ItoevaPublishDryRun {
         $tree=Get-ItoevaProposedTreeOid $Repository $baseSha $allowedPaths; if ($tree -ne $approvedTree) { throw 'Working Tree entspricht nicht dem freigegebenen Proposed Tree.' }
         & git -C $Repository diff-tree --check $baseSha $tree; if ($LASTEXITCODE -ne 0) { throw 'Proposed Tree besteht diff-tree --check nicht.' }
         if (Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch") { throw 'Remote-Evolution-Branch existiert bereits.' }
-        $prepared=[ordered]@{ phase='PREPARED'; previousJournalHash=''; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$plan.title; allowedPaths=$allowedPaths }
+        $prepared=[ordered]@{ phase='PREPARED'; previousJournalHash=''; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash;claudeReviewEvidenceSha256=$claudeReviewEvidence.hash;claudeContextEvidenceSha256=$claudeContextEvidence.hash;claudePatchEvidenceSha256=$claudePatchEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$plan.title; allowedPaths=$allowedPaths }
         $journal=Write-ItoevaPublishJournal $journalRoot 'PREPARED' $prepared
     } else {
         foreach ($binding in @('runId','branch','baseSha','proposedTreeOid','planHash','testManifestHash')) {
@@ -1048,7 +1326,7 @@ function Invoke-ItoevaPublishDryRun {
             if ([string]$journal.record.$binding -ne $expectedValue) { throw "Publish-Journalbindung stimmt nicht: $binding" }
         }
         if ([string]$journal.record.dryRunReportSha256 -ne $dryRunHash -or (@($journal.record.allowedPaths) -join "`n") -ne ($allowedPaths -join "`n")) { throw 'Publish-Journal stimmt nicht mit Dry-Run-Belegen ueberein.' }
-        if ([string]$journal.record.stateEvidenceSha256 -ne $stateEvidence.hash -or [string]$journal.record.planReviewEvidenceSha256 -ne $planReviewEvidence.hash -or [string]$journal.record.finalReviewEvidenceSha256 -ne $finalReviewEvidence.hash) { throw 'Publish-Journal stimmt nicht mit den Evidence-Snapshots ueberein.' }
+        if ([string]$journal.record.stateEvidenceSha256 -ne $stateEvidence.hash -or [string]$journal.record.planReviewEvidenceSha256 -ne $planReviewEvidence.hash -or [string]$journal.record.finalReviewEvidenceSha256 -ne $finalReviewEvidence.hash -or [string]$journal.record.claudeReviewEvidenceSha256 -ne $claudeReviewEvidence.hash -or [string]$journal.record.claudeContextEvidenceSha256 -ne $claudeContextEvidence.hash -or [string]$journal.record.claudePatchEvidenceSha256 -ne $claudePatchEvidence.hash) { throw 'Publish-Journal stimmt nicht mit den Evidence-Snapshots ueberein.' }
     }
 
     if ($journal.phase -eq 'PREPARED') {
@@ -1064,7 +1342,7 @@ function Invoke-ItoevaPublishDryRun {
         }
         $parent=(& git -C $Repository rev-parse "$head^").Trim(); $commitTree=(& git -C $Repository rev-parse "$head^{tree}").Trim()
         if ($parent -ne $baseSha -or $commitTree -ne $approvedTree -or @(& git -C $Repository status --porcelain).Count) { throw 'Lokaler Publish-Commit ist nicht exakt an Base und Tree gebunden.' }
-        $committed=[ordered]@{ phase='COMMITTED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$head }
+        $committed=[ordered]@{ phase='COMMITTED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash;claudeReviewEvidenceSha256=$claudeReviewEvidence.hash;claudeContextEvidenceSha256=$claudeContextEvidence.hash;claudePatchEvidenceSha256=$claudePatchEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$head }
         $journal=Write-ItoevaPublishJournal $journalRoot 'COMMITTED' $committed
     }
 
@@ -1077,7 +1355,7 @@ function Invoke-ItoevaPublishDryRun {
         if (-not $remoteSha) { $pushArgs=New-ItoevaPushArguments $branch $commitSha $Config; & git -C $Repository -c "core.hooksPath=$TrustedHooksPath" @pushArgs | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Evolution-Branch-Push fehlgeschlagen.' } }
         $remoteSha=Get-ItoevaRemoteSha $Repository 'origin' "refs/heads/$branch"; if ($remoteSha -ne $commitSha) { throw 'Remote-SHA stimmt nicht mit Commit-SHA ueberein.' }
         Assert-ItoevaBaseUnchanged $Repository $baseSha | Out-Null
-        $pushed=[ordered]@{ phase='PUSHED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$commitSha; remoteBranchSha=$remoteSha; publishedAt=[DateTimeOffset]::UtcNow.ToString('O') }
+        $pushed=[ordered]@{ phase='PUSHED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash;claudeReviewEvidenceSha256=$claudeReviewEvidence.hash;claudeContextEvidenceSha256=$claudeContextEvidence.hash;claudePatchEvidenceSha256=$claudePatchEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$commitSha; remoteBranchSha=$remoteSha; publishedAt=[DateTimeOffset]::UtcNow.ToString('O') }
         $journal=Write-ItoevaPublishJournal $journalRoot 'PUSHED' $pushed
     }
 
@@ -1088,7 +1366,7 @@ function Invoke-ItoevaPublishDryRun {
         foreach ($property in @{ status='PUSHED'; commitSha=$commitSha; remoteBranchSha=$remoteSha; originMainPrePushSha=$baseSha; originMainPostPushSha=$baseSha; dryRunReportSha256=$dryRunHash; publishedAt=[string]$journal.record.publishedAt }.GetEnumerator()) { $report | Add-Member -NotePropertyName $property.Key -NotePropertyValue $property.Value -Force }
         $reportJson=$report|ConvertTo-Json -Depth 20; Write-ItoevaAtomicText $reportPath $reportJson; Write-ItoevaAtomicText $reportHashPath (Get-ItoevaSha256 $reportPath)
         Read-ItoevaHashedJson $reportPath $reportHashPath | Out-Null
-        $reported=[ordered]@{ phase='REPORTED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$commitSha; remoteBranchSha=$remoteSha; publishedAt=[string]$journal.record.publishedAt }
+        $reported=[ordered]@{ phase='REPORTED'; previousJournalHash=$journal.hash; runId=$RunId; dryRunReportSha256=$dryRunHash; stateEvidenceSha256=$stateEvidence.hash; planReviewEvidenceSha256=$planReviewEvidence.hash; finalReviewEvidenceSha256=$finalReviewEvidence.hash;claudeReviewEvidenceSha256=$claudeReviewEvidence.hash;claudeContextEvidenceSha256=$claudeContextEvidence.hash;claudePatchEvidenceSha256=$claudePatchEvidence.hash; branch=$branch; baseSha=$baseSha; proposedTreeOid=$approvedTree; planHash=$planHash; testManifestHash=$testHash; title=[string]$journal.record.title; allowedPaths=$allowedPaths; commitSha=$commitSha; remoteBranchSha=$remoteSha; publishedAt=[string]$journal.record.publishedAt }
         $journal=Write-ItoevaPublishJournal $journalRoot 'REPORTED' $reported
         $state.status='PUSHED'; Write-ItoevaAtomicJson $state $statePath
     }
@@ -1110,5 +1388,7 @@ Export-ModuleMember -Function @(
     'Assert-ItoevaBaseUnchanged', 'Invoke-ItoevaConfiguredTests', 'Invoke-ItoevaCodexSession',
     'Publish-ItoevaEvolution', 'Test-ItoevaRunId', 'Read-ItoevaHashedJson', 'Write-ItoevaPublishJournal',
     'Get-ItoevaPublishJournal', 'Invoke-ItoevaPublishDryRun', 'Invoke-ItoevaGitProcess',
-    'Get-ItoevaExpectedRebasedTree', 'Assert-ItoevaRevalidationWorktree', 'Invoke-ItoevaRevalidateDryRun'
+    'Get-ItoevaExpectedRebasedTree', 'Assert-ItoevaRevalidationWorktree', 'Invoke-ItoevaRevalidateDryRun',
+    'Resolve-ItoevaClaudeLauncher','Assert-ItoevaClaudeCapabilityPreflight','Get-ItoevaClaudeReviewModel','Invoke-ItoevaProcessSeparated','ConvertFrom-ItoevaClaudeEnvelope','Assert-ItoevaClaudeReview','Invoke-ItoevaClaudeFinalReview',
+    'ConvertTo-ItoevaNormalizedVersion','Assert-ItoevaClaudeConfigPins','Assert-ItoevaClaudeStoredProvenance','ConvertTo-ItoevaRedactedDiagnosticText','New-ItoevaClaudeEnvelopeSummary','Write-ItoevaClaudeDiagnostics'
 )

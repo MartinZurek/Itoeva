@@ -17,6 +17,7 @@ if ($config.schemaVersion -ne 1) { throw 'Unbekannte Runner-Konfigurationsversio
 if ($config.agentExecution.enabled -or $config.publication.enabled) { throw 'Eingecheckte Aktivierungsflags müssen false sein.' }
 
 function Assert-Preflight {
+    Assert-ItoevaClaudeCapabilityPreflight $config | Out-Null
     $origin = (& git -C $Repository remote get-url origin).Trim()
     if ($LASTEXITCODE -ne 0 -or $origin -ne $config.repository.expectedOrigin) { throw "Unerwartetes origin: $origin" }
     if (@(& git -C $Repository status --porcelain).Count -ne 0) { throw 'Runner-Clone ist nicht sauber.' }
@@ -76,6 +77,7 @@ if ($Action -eq 'RevalidateDryRun') {
     $runtimeRoot = [Environment]::ExpandEnvironmentVariables([string]$activation.runtimeRoot)
     $config | Add-Member -NotePropertyName runtimeRoot -NotePropertyValue $runtimeRoot -Force
     $config.agentExecution.enabled = $true
+    Assert-ItoevaClaudeCapabilityPreflight $config | Out-Null
     $lockPath = Join-Path $runtimeRoot 'locks\runner.lock'
     $lock = Enter-ItoevaRunLock -Path $lockPath
     try {
@@ -180,10 +182,15 @@ try {
     $finalPrompt = (Get-Content -Raw (Join-Path $PSScriptRoot 'prompts\review-final.md')) + "`nBase: $baseSha`nPlan-Pfad: $planPath`nPlan-Hash: $planHash`nTree: $treeOid`nTestmanifest-Pfad: $testManifestPath`nTestmanifest-Hash: $testManifestHash"
     Invoke-ItoevaCodexSession $Repository $finalPrompt (Join-Path $PSScriptRoot 'schemas\review.schema.json') $finalReviewPath 'read-only' $reviewer.sessionId -TimeoutSeconds ([int]$config.agentExecution.sessionTimeoutSeconds) | Out-Null
     $finalReview = Get-Content -Raw $finalReviewPath | ConvertFrom-Json
+    if($finalReview.status -ne 'PASS' -or $finalReview.baseSha -ne $baseSha -or $finalReview.planHash -ne $planHash -or $finalReview.treeOid -ne $treeOid -or $finalReview.testManifestHash -ne $testManifestHash){throw 'Codex-Final-Review ist nicht vollständig PASS und gebunden.'}
+    $state.phase='CLAUDE_FINAL_REVIEW';Write-ItoevaAtomicJson $state $statePath
+    $claudeModel=Get-ItoevaClaudeReviewModel $plan $config
+    $claudeReview=Invoke-ItoevaClaudeFinalReview -Repository $Repository -RunRoot $runRoot -BaseSha $baseSha -TreeOid $treeOid -PlanHash $planHash -TestManifestHash $testManifestHash -ChangedPaths $changedPaths -PlanPath $planPath -TestsPath $testManifestPath -CodexReviewPath $finalReviewPath -Model $claudeModel -Config $config
     $gate = [pscustomobject]@{
-        planReview=$planReview.status; mandatoryTests='PASS'; finalReview=$finalReview.status; diffCheck='PASS'; baseUnchanged=$true
+        planReview=$planReview.status; mandatoryTests='PASS'; finalReview=$finalReview.status; claudeFinalReview=$claudeReview.status; diffCheck='PASS'; baseUnchanged=$true
         baseSha=$baseSha; planHash=$planHash; proposedTreeOid=$treeOid; testManifestHash=$testManifestHash
         reviewBaseSha=$finalReview.baseSha; reviewPlanHash=$finalReview.planHash; reviewTreeOid=$finalReview.treeOid; reviewTestManifestHash=$finalReview.testManifestHash
+        claudeReviewBaseSha=$claudeReview.bindings.baseSha;claudeReviewTreeOid=$claudeReview.bindings.treeOid;claudeReviewTestManifestHash=$claudeReview.bindings.testManifestHash;claudeReviewContextHash=$claudeReview.contextHash
     }
     if (-not (Test-ItoevaGate $gate)) { throw 'Finales Gate ist nicht PASS und hashgebunden.' }
 
@@ -198,8 +205,9 @@ try {
         runId=$runId; status=$state.status; branch=$branch; baseSha=$baseSha
         commitSha=if ($publication) {$publication.commitSha} else {''}; remoteBranchSha=if ($publication) {$publication.remoteBranchSha} else {''}
         originMainStartSha=$baseSha; originMainPrePushSha=$baseSha; originMainPostPushSha=if ($publication) {$publication.originMainPostPushSha} else {(Get-ItoevaRemoteSha $Repository)}
-        planReview=$planReview.status; finalReview=$finalReview.status; proposedTreeOid=$treeOid; testManifestHash=$testManifestHash
+        reviewGateVersion=2;planReview=$planReview.status; finalReview=$finalReview.status;claudeFinalReview=$claudeReview.status;claudeReviewModel=$claudeReview.model;claudeFinalReviewSha256=$claudeReview.reviewHash;claudeReviewContextSha256=$claudeReview.contextHash;claudeReviewPatchSha256=$claudeReview.patchHash; proposedTreeOid=$treeOid; testManifestHash=$testManifestHash
         planHash=$planHash; reviewerBindings=[ordered]@{ baseSha=$finalReview.baseSha; planHash=$finalReview.planHash; treeOid=$finalReview.treeOid; testManifestHash=$finalReview.testManifestHash }
+        claudeReviewerBindings=[ordered]@{baseSha=$claudeReview.bindings.baseSha;treeOid=$claudeReview.bindings.treeOid;testManifestHash=$claudeReview.bindings.testManifestHash;contextHash=$claudeReview.bindings.contextHash}
         tests=$testResults; unverified=@(); knownRisks=@($config.knownRisks.mainRulesetNote)
     }
     Write-ItoevaAtomicJson $report $reportPath

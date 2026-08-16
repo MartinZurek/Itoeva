@@ -102,3 +102,49 @@ Wiederaufnahme ein bewusst verbleibender Ausbaupunkt.
 
 Ein Run-Report ist ein Vorschlag und noch keine angenommene Evolution History. Eine Datei unter
 `evolutions/` wird erst nach der menschlichen Merge-Entscheidung dauerhaft dokumentiert.
+
+## Unabhängiges Claude-Final-Review
+
+Jeder neue Dry-Run und jede Revalidierung benötigt zusätzlich zum Codex-Final-Review genau ein
+frisches Claude-Code-Final-Review. Claude Code verwendet die bestehende interaktive Anmeldung des
+Monatsplans; API-Key, separates Token-Guthaben und `--max-budget-usd` werden nicht verwendet.
+
+v0.1 pinnt standardmäßig `claude-sonnet-5`. Ausschließlich bei einer deterministisch erkannten
+Hochrisikoklasse wird `claude-opus-5` gewählt: Datenintegrität oder Migrationen, Progression/XP/
+Ökonomie, Auth/Security, Runner-/Publishing-Sicherheitslogik oder eine größere Architekturänderung
+(mindestens acht geänderte Pfade oder mindestens vier Top-Level-Komponenten). Normale UI-, Parser-,
+Text-, Test- und kleine Bugfix-Evolutionen bleiben bei Sonnet. Es gibt keinen automatischen
+Modellwechsel, Retry oder Fallback.
+Claude wird mit Safe Mode, Plan-Berechtigungen und ausschließlich `Read,Glob,Grep` aufgerufen;
+Session-Resume, Bash, Schreiben, Web, MCP, Plugins und Agenten sind ausgeschlossen. Das Ergebnis
+wird an Base-SHA, Proposed-Tree-OID, Testmanifest-Hash und einen gehashten Review-Kontext gebunden.
+Nur zwei PASS-Reviews erlauben einen Dry-Run-PASS beziehungsweise eine Veröffentlichung.
+
+Timeout, Account-/Rate-Limit, unparsebarer Output, FAIL oder abweichende Bindungen quarantänisieren
+den Lauf ohne Codex-only-Fallback. Ein dadurch quarantänisierter Erstlauf ist nicht mit
+`RevalidateDryRun` wiederaufnehmbar; dafür ist ein neuer vollständiger Lauf erforderlich.
+
+### CLI-Versionspin und Publishing-Entkopplung
+
+`claudeReview.pinnedCliVersion` ist ein exakter Pin: ein neues Claude-Review läuft ausschließlich
+mit genau dieser nativen CLI-Version. Eine abweichende oder fehlende Installation bricht
+`Preflight`, `DryRun`, `Run` und `RevalidateDryRun` fail-closed ab.
+
+`PublishDryRun` ist davon vollständig entkoppelt. Es startet Claude nicht, löst keinen Launcher auf
+und benötigt keine installierte Claude-Binary. Stattdessen belegt es die Herkunft ausschließlich aus
+der gespeicherten, hashgebundenen Evidence: `claude-review-input/context.json` hält `reviewModel`,
+`claudeCliVersion` und `claudeLauncherKind` des ursprünglichen Reviews fest und geht über den
+Kontext-Hash in Review, Report und Publish-Journal ein. Beim Publizieren wird diese Provenienz gegen
+die eingecheckten Pins geprüft — nie gegen eine lokal installierte Version. Ein CLI-Update blockiert
+daher neue Reviews, aber nie die Veröffentlichung eines bereits freigegebenen Dry-Runs.
+
+### Diagnoseartefakte
+
+Jeder echte Claude-Aufruf schreibt `claude-final-review.diagnostics.json` (plus `.sha256`) in den
+Run-Root, und zwar unmittelbar nach Prozessende — vor Timeout-, Exitcode- und Parseprüfung. Damit
+sind Rate-/Usage-Limit, Auth-Fehler, Timeout und unparsebarer Output forensisch nachvollziehbar,
+statt einen blinden Abbruch zu hinterlassen. Die Datei enthält Stage, Modell, CLI-Version, Exitcode,
+Timeoutflag, eine Envelope-Zusammenfassung sowie redigierte und längenbegrenzte stdout-/stderr-
+Auszüge (8 KiB bzw. 4 KiB). API-Keys, Bearer-Token, JWTs, Secret-/Passwortfelder und lange
+undurchsichtige Tokens werden vor dem Schreiben ersetzt; Hex-SHAs und Tree-OIDs bleiben als
+Diagnosewert erhalten. Die Diagnose ist ein reines Forensikartefakt und kein Gate-Eingang.
