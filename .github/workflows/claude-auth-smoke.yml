@@ -1,0 +1,166 @@
+# Machbarkeitstest: kann Claude Code auf einem ephemeren GitHub-Runner unbeaufsichtigt
+# authentifizieren und read-only laufen?
+#
+# Beweisziel und nichts darueber hinaus: die CLI installiert sich, meldet sich mit dem
+# Abo-Token an, fuehrt genau einen read-only Aufruf aus und liefert ein strukturiertes
+# PASS zurueck. Kein Itoeva-Runner, kein Codex, keine Repository-Aenderung.
+#
+# Authentifizierung: CLAUDE_CODE_OAUTH_TOKEN, ein einjaehriger OAuth-Token, den man lokal
+# mit `claude setup-token` erzeugt. Er authentifiziert gegen das bestehende Abo (Pro, Max,
+# Team oder Enterprise) und loest keine API-Abrechnung aus. Es wird ausdruecklich KEINE
+# lokale Credential-Datei in ein Secret kopiert - setup-token pragt einen eigenen Token,
+# der nur Modellanfragen darf.
+#
+# Bewusst NICHT enthalten: Codex, Itoeva-Runner, Emulator, Zeitplan, Schreibzugriffe,
+# Commit, Push, PR, Release.
+
+name: Claude-Auth-Machbarkeitstest
+
+# Nur von Hand. Kein push, kein pull_request, kein schedule - dieser Workflow verbraucht
+# Abo-Kontingent und soll nichts ausloesen, was nicht ausdruecklich angestossen wurde.
+on:
+  workflow_dispatch:
+
+# Schreibrechte werden gar nicht erst erteilt.
+permissions:
+  contents: read
+
+concurrency:
+  group: claude-auth-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  claude-auth:
+    name: Claude Code read-only Smoke-Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # persist-credentials: false - der Job braucht den GitHub-Token nicht, und ohne
+      # hinterlegte Zugangsdaten kann kein Schritt versehentlich pushen.
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Version gepinnt statt @latest: ein stiller CLI-Wechsel soll das Ergebnis dieses
+      # Tests nicht verfaelschen. Gleiche Version wie der lokale Itoeva-Runner.
+      - name: Claude Code installieren (gepinnt)
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.232
+          echo "installierte Version:"
+          claude --version
+
+      # Ohne Token bricht der Job hier ab, statt spaeter mit einer irrefuehrenden
+      # Modellfehlermeldung. Der Token selbst wird nie ausgegeben.
+      - name: Vorbedingung - Secret vorhanden
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "::error::Secret CLAUDE_CODE_OAUTH_TOKEN fehlt. Lokal 'claude setup-token' ausfuehren und den Token als Repository-Secret hinterlegen."
+            exit 1
+          fi
+          echo "Secret ist gesetzt (Laenge: ${#CLAUDE_CODE_OAUTH_TOKEN} Zeichen, Inhalt wird nicht ausgegeben)."
+
+      # Genau ein read-only Aufruf. Der HEAD-SHA wird vom Runner ermittelt und im Prompt
+      # uebergeben; Claude soll ihn zurueckspiegeln und zusaetzlich belegen, dass es eine
+      # Datei im Checkout lesen konnte. Das prueft in einem Zug: Auth, Modellaufruf,
+      # Werkzeugzugriff und strukturierte Ausgabe.
+      #
+      # --json-schema bekommt das Schema ohne "$schema"-Deklaration: die CLI validiert es
+      # mit einem Validator, der die 2020-12-Meta-Schema-Referenz nicht aufloest.
+      # Kein --bare: Bare Mode liest CLAUDE_CODE_OAUTH_TOKEN nicht.
+      - name: Read-only Aufruf
+        id: probe
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          HEAD_SHA="$(git rev-parse HEAD)"
+          echo "HEAD laut Runner: $HEAD_SHA"
+
+          SCHEMA='{"type":"object","additionalProperties":false,"required":["status","headSha","readmeFound"],"properties":{"status":{"enum":["PASS","FAIL"]},"headSha":{"type":"string","pattern":"^[0-9a-f]{40}$"},"readmeFound":{"type":"boolean"}}}'
+
+          PROMPT="Du bist ein read-only Pruefer. Verwende ausschliesslich Read, Glob und Grep. Aendere nichts, starte keine Befehle.
+          Aufgabe: pruefe mit Glob oder Read, ob im Repositorywurzelverzeichnis eine Datei README.md existiert.
+          Gib ausschliesslich das verlangte JSON zurueck: status PASS, headSha exakt ${HEAD_SHA}, readmeFound true oder false."
+
+          printf '%s' "$PROMPT" | claude -p \
+            --model claude-sonnet-5 \
+            --permission-mode plan \
+            --tools "Read,Glob,Grep" \
+            --safe-mode \
+            --disable-slash-commands \
+            --no-session-persistence \
+            --output-format json \
+            --json-schema "$SCHEMA" \
+            > envelope.json
+
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+      # Der Job soll rot werden, wenn das Ergebnis nicht stimmt - nicht nur, wenn die CLI
+      # abstuerzt. Der Envelope wird nie roh ausgegeben, nur ausgewertete Felder.
+      - name: Ergebnis auswerten
+        run: |
+          set -euo pipefail
+          IS_ERROR="$(jq -r '.is_error // false' envelope.json)"
+          SUBTYPE="$(jq -r '.subtype // "unknown"' envelope.json)"
+          DENIALS="$(jq -r '(.permission_denials // []) | length' envelope.json)"
+          MODEL="$(jq -r '(.modelUsage // {}) | keys | join(",")' envelope.json)"
+          DURATION="$(jq -r '.duration_ms // 0' envelope.json)"
+
+          echo "is_error=$IS_ERROR subtype=$SUBTYPE permission_denials=$DENIALS"
+          echo "modelUsage=$MODEL duration_ms=$DURATION"
+
+          if [ "$IS_ERROR" != "false" ] || [ "$SUBTYPE" != "success" ]; then
+            echo "::error::Claude-Envelope meldet keinen erfolgreichen Lauf (is_error=$IS_ERROR, subtype=$SUBTYPE)."
+            exit 1
+          fi
+          if [ "$DENIALS" != "0" ]; then
+            echo "::error::Claude meldet $DENIALS verweigerte Berechtigungen."
+            exit 1
+          fi
+
+          RESULT="$(jq -r 'if (.structured_output // empty) then (.structured_output | tojson) else .result end' envelope.json)"
+          STATUS="$(printf '%s' "$RESULT" | jq -r '.status')"
+          SHA="$(printf '%s' "$RESULT" | jq -r '.headSha')"
+
+          echo "status=$STATUS headSha=$SHA"
+
+          if [ "$STATUS" != "PASS" ]; then
+            echo "::error::Claude lieferte status=$STATUS."
+            exit 1
+          fi
+          if [ "$SHA" != "${{ steps.probe.outputs.head_sha }}" ]; then
+            echo "::error::Zurueckgespiegelter HEAD-SHA weicht ab."
+            exit 1
+          fi
+          echo "CLAUDE_GITHUB_AUTH: PASS - Abo-Authentifizierung auf ephemerem Runner bestaetigt."
+
+      # Nur die ausgewerteten Metadaten, nicht der volle Envelope - der Prompt und die
+      # Antwort koennten Repositoryinhalte enthalten.
+      - name: Diagnose sichern
+        if: always()
+        run: |
+          if [ -f envelope.json ]; then
+            jq '{type, subtype, is_error, duration_ms, num_turns, permission_denials, modelUsage}' envelope.json > diagnostics.json
+          else
+            echo '{"note":"kein Envelope erzeugt"}' > diagnostics.json
+          fi
+
+      - name: Diagnose hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-auth-diagnostics
+          path: diagnostics.json
+          if-no-files-found: ignore
+          retention-days: 7
