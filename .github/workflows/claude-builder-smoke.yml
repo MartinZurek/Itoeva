@@ -1,0 +1,275 @@
+# Machbarkeitstest 2 von 2: kann Claude Code auf einem ephemeren GitHub-Runner
+# SCHREIBEND und unbeaufsichtigt arbeiten?
+#
+# Test 1 (claude-auth-smoke.yml) hat die read-only Haelfte belegt: Abo-Auth ueber
+# CLAUDE_CODE_OAUTH_TOKEN, --permission-mode plan, Tools Read,Glob,Grep. Offen blieb
+# die Frage, die ueber ClaudePrimaryRun entscheidet: laeuft eine Session mit
+# --permission-mode acceptEdits und Edit, Write und Bash headless durch, ohne auf
+# eine Bestaetigung zu warten und ohne dass Werkzeuge verweigert werden?
+#
+# Beweisziel und nichts darueber hinaus. Der Job darf NICHT pushen: permissions ist
+# contents: read und der Checkout laeuft ohne persistierte Zugangsdaten, es liegt
+# also gar kein Git-Credential herum, das die Bash-Sitzung missbrauchen koennte.
+# Es wird nichts committet, nichts gepusht, kein Branch angelegt. Die Aenderungen
+# leben nur im ephemeren Runner und sterben mit ihm.
+#
+# Bewusst NICHT enthalten: Commit, Push, Branch, Codex, Itoeva-Runner, Gradle,
+# Emulator, Zeitplan, Release.
+
+name: Claude-Builder-Machbarkeitstest
+
+# Nur von Hand. Der Lauf verbraucht Abo-Kontingent.
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Modell fuer die Builder-Session
+        type: choice
+        options: [claude-sonnet-5, claude-opus-5]
+        default: claude-sonnet-5
+
+# Schreibrechte werden gar nicht erst erteilt. Selbst wenn die Builder-Session es
+# versuchte, gibt es kein Token, mit dem sie pushen koennte.
+permissions:
+  contents: read
+
+concurrency:
+  group: claude-builder-smoke
+  cancel-in-progress: false
+
+jobs:
+  builder-smoke:
+    name: Claude Code schreibender Smoke-Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Claude Code installieren (gepinnt)
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.232
+          claude --version
+
+      - name: Vorbedingung - Secret vorhanden
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "::error::Secret CLAUDE_CODE_OAUTH_TOKEN fehlt."
+            exit 1
+          fi
+          echo "Secret ist gesetzt (Laenge: ${#CLAUDE_CODE_OAUTH_TOKEN}, Inhalt wird nicht ausgegeben)."
+
+      # Zielpfade deterministisch vom Runner bestimmen, nicht vom Modell waehlen
+      # lassen - nur so sind die Zusicherungen danach exakt pruefbar.
+      - name: Ziele festlegen und Ausgangszustand sichern
+        id: setup
+        run: |
+          set -euo pipefail
+          BASE="$(git rev-parse HEAD)"
+          TARGET="$(git ls-files -- app-sim/src/main/java | grep '\.kt$' | head -1)"
+          if [ -z "$TARGET" ]; then
+            echo "::error::Keine Kotlin-Datei unter app-sim/src/main/java gefunden."
+            exit 1
+          fi
+          MARKER="app-sim/BUILDER_SMOKE_MARKER.md"
+          if [ -e "$MARKER" ]; then
+            echo "::error::$MARKER existiert bereits - der Test wuerde eine echte Datei ueberschreiben."
+            exit 1
+          fi
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Working Tree ist vor dem Lauf nicht sauber."
+            exit 1
+          fi
+          echo "base=$BASE"     >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "marker=$MARKER" >> "$GITHUB_OUTPUT"
+          echo "Base:   $BASE"
+          echo "Ziel:   $TARGET"
+          echo "Marker: $MARKER"
+
+      # Die eigentliche offene Frage. --permission-mode acceptEdits mit den drei
+      # Schreib-/Ausfuehrungswerkzeugen. Wird ein Werkzeug verweigert, taucht das in
+      # permission_denials auf; wartet die Session auf eine Bestaetigung, laeuft der
+      # Schritt in sein Zeitlimit. Beides ist ein verwertbares Ergebnis.
+      #
+      # --json-schema ohne "$schema"-Deklaration: die CLI loest die 2020-12-Meta-
+      # Schema-Referenz nicht auf. Kein --bare: Bare Mode liest den OAuth-Token nicht.
+      - name: Builder-Session (schreibend)
+        id: builder
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          BASE='${{ steps.setup.outputs.base }}'
+          TARGET='${{ steps.setup.outputs.target }}'
+          MARKER='${{ steps.setup.outputs.marker }}'
+          TAG="builder smoke ${{ github.run_id }}"
+
+          echo '{"mcpServers":{}}' > empty-mcp.json
+
+          SCHEMA='{"type":"object","additionalProperties":false,"required":["status","editedFile","createdFile","bashWorked","headSha"],"properties":{"status":{"enum":["DONE","BLOCKED"]},"editedFile":{"type":"string"},"createdFile":{"type":"string"},"bashWorked":{"type":"boolean"},"headSha":{"type":"string","pattern":"^[0-9a-f]{40}$"}}}'
+
+          PROMPT="Du bist ein Builder in einem unbeaufsichtigten CI-Lauf. Niemand kann dir antworten - stelle keine Rueckfragen, warte auf keine Bestaetigung.
+
+          Fuehre genau diese vier Schritte aus, nicht mehr:
+          1. Ermittle mit Bash den aktuellen Commit: git rev-parse HEAD
+          2. Lies die Datei ${TARGET}
+          3. Haenge mit Edit genau eine Zeile an das Ende von ${TARGET} an: // ${TAG}
+          4. Erzeuge mit Write die neue Datei ${MARKER} mit genau einer Zeile Inhalt: ${TAG}
+
+          Aendere keine anderen Dateien. Committe nichts, pushe nichts, lege keinen Branch an, aendere keine Git-Konfiguration.
+
+          Gib danach ausschliesslich das verlangte JSON zurueck: status DONE wenn alle vier Schritte gelangen, sonst BLOCKED; editedFile ${TARGET}; createdFile ${MARKER}; bashWorked true wenn Schritt 1 gelang; headSha der in Schritt 1 ermittelte Commit."
+
+          printf '%s' "$PROMPT" | claude -p \
+            --model '${{ inputs.model }}' \
+            --permission-mode acceptEdits \
+            --tools "Read,Glob,Grep,Edit,Write,Bash" \
+            --safe-mode \
+            --disable-slash-commands \
+            --strict-mcp-config \
+            --mcp-config empty-mcp.json \
+            --no-session-persistence \
+            --max-turns 15 \
+            --output-format json \
+            --json-schema "$SCHEMA" \
+            > envelope.json
+
+      # Diagnose VOR jeder semantischen Pruefung - ein Abbruch danach soll nicht
+      # forensisch blind sein. Der Runner ist gleich weg.
+      - name: Diagnose sichern
+        if: always()
+        run: |
+          if [ -f envelope.json ]; then
+            jq '{type, subtype, is_error, duration_ms, num_turns, permission_denials, modelUsage, stop_reason}' \
+              envelope.json > diagnostics.json
+          else
+            echo '{"note":"kein Envelope erzeugt - Session brach vor der Ausgabe ab"}' > diagnostics.json
+          fi
+          cat diagnostics.json
+
+      - name: Envelope auswerten
+        run: |
+          set -euo pipefail
+          IS_ERROR="$(jq -r '.is_error // false' envelope.json)"
+          SUBTYPE="$(jq -r '.subtype // "unknown"' envelope.json)"
+          DENIALS="$(jq -r '(.permission_denials // []) | length' envelope.json)"
+          TURNS="$(jq -r '.num_turns // 0' envelope.json)"
+
+          echo "is_error=$IS_ERROR subtype=$SUBTYPE num_turns=$TURNS permission_denials=$DENIALS"
+
+          if [ "$DENIALS" != "0" ]; then
+            echo "::error::$DENIALS Werkzeug(e) verweigert - acceptEdits deckt die Builder-Werkzeuge nicht ab."
+            jq -r '.permission_denials' envelope.json
+            exit 1
+          fi
+          if [ "$IS_ERROR" != "false" ] || [ "$SUBTYPE" != "success" ]; then
+            echo "::error::Session nicht erfolgreich (is_error=$IS_ERROR, subtype=$SUBTYPE)."
+            exit 1
+          fi
+
+          RESULT="$(jq -r 'if (.structured_output // empty) then (.structured_output | tojson) else .result end' envelope.json)"
+          STATUS="$(printf '%s' "$RESULT" | jq -r '.status')"
+          BASH_OK="$(printf '%s' "$RESULT" | jq -r '.bashWorked')"
+          SHA="$(printf '%s' "$RESULT" | jq -r '.headSha')"
+          echo "status=$STATUS bashWorked=$BASH_OK headSha=$SHA"
+
+          [ "$STATUS"  = "DONE" ] || { echo "::error::Builder meldet status=$STATUS."; exit 1; }
+          [ "$BASH_OK" = "true" ] || { echo "::error::Bash hat laut Builder nicht funktioniert."; exit 1; }
+          [ "$SHA" = '${{ steps.setup.outputs.base }}' ] || { echo "::error::Bash lieferte einen abweichenden HEAD-SHA."; exit 1; }
+
+      # Das Modell darf berichten was es will - gezaehlt wird der Working Tree.
+      - name: Werkzeugwirkung am Working Tree pruefen
+        run: |
+          set -euo pipefail
+          TARGET='${{ steps.setup.outputs.target }}'
+          MARKER='${{ steps.setup.outputs.marker }}'
+          TAG="builder smoke ${{ github.run_id }}"
+
+          echo "--- git status ---"
+          git status --porcelain
+
+          MODIFIED="$(git diff --name-only)"
+          UNTRACKED="$(git ls-files --others --exclude-standard)"
+
+          [ "$MODIFIED"  = "$TARGET" ] || { echo "::error::Erwartet genau eine geaenderte Datei ($TARGET), gefunden: [$MODIFIED]"; exit 1; }
+          [ "$UNTRACKED" = "$MARKER" ] || { echo "::error::Erwartet genau eine neue Datei ($MARKER), gefunden: [$UNTRACKED]"; exit 1; }
+
+          ADDED="$(git diff --numstat -- "$TARGET" | cut -f1)"
+          [ "${ADDED:-0}" -le 3 ] || { echo "::error::$ADDED hinzugefuegte Zeilen - erwartet hoechstens 3."; exit 1; }
+          git diff -- "$TARGET" | grep -q -- "$TAG" || { echo "::error::Marker im Diff nicht gefunden."; exit 1; }
+          grep -q -- "$TAG" "$MARKER" || { echo "::error::Marker in der neuen Datei nicht gefunden."; exit 1; }
+
+          echo "Edit wirkte auf $TARGET, Write erzeugte $MARKER, Bash lieferte den korrekten HEAD."
+
+      # Dieselben Gates, die ClaudePrimaryRun spaeter vor Commit und Push braucht.
+      # Die Allowlist wird aus runner/runner.config.json gelesen, nicht im YAML
+      # dupliziert - zwei Listen, die auseinanderlaufen koennen, waeren schlimmer
+      # als keine Pruefung.
+      - name: Git-Gates proben (Allowlist, Tree-OID, Sauberkeit)
+        run: |
+          set -euo pipefail
+          BASE='${{ steps.setup.outputs.base }}'
+          CFG=runner/runner.config.json
+
+          CHANGED="$( { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u )"
+          echo "Geaenderte Pfade:"; printf '  %s\n' $CHANGED
+
+          for p in $CHANGED; do
+            case "$p" in
+              /*|*..*|*:*) echo "::error::Unsicherer Pfad: $p"; exit 1 ;;
+            esac
+            while read -r pref; do
+              [ -z "$pref" ] && continue
+              case "$p" in "$pref"*) echo "::error::Verbotenes Praefix '$pref': $p"; exit 1 ;; esac
+            done < <(jq -r '.scope.forbiddenPathPrefixes[]' "$CFG")
+            base_name="${p##*/}"
+            jq -e --arg n "$base_name" '.scope.forbiddenFileNames | index($n)' "$CFG" >/dev/null \
+              && { echo "::error::Verbotener Dateiname: $p"; exit 1; } || true
+            ext=".${base_name##*.}"
+            jq -e --arg e "$ext" '.scope.forbiddenExtensions | index($e)' "$CFG" >/dev/null \
+              && { echo "::error::Verbotene Endung '$ext': $p"; exit 1; } || true
+          done
+          echo "Allowlist: alle Pfade zulaessig."
+
+          # Proposed Tree ueber einen temporaeren Index - der echte Index bleibt unberuehrt
+          IDX="$(mktemp)"
+          GIT_INDEX_FILE="$IDX" git read-tree "$BASE"
+          GIT_INDEX_FILE="$IDX" git add -- $CHANGED
+          TREE="$(GIT_INDEX_FILE="$IDX" git write-tree)"
+          rm -f "$IDX"
+          echo "Proposed Tree OID: $TREE"
+          [ "$TREE" != "$(git rev-parse "$BASE^{tree}")" ] || { echo "::error::Tree unveraendert - es wurde nichts geaendert."; exit 1; }
+
+          git diff-tree --check "$BASE" "$TREE"
+          echo "diff-tree --check: sauber."
+
+          git diff --cached --quiet || { echo "::error::Der echte Index wurde veraendert."; exit 1; }
+          [ "$(git rev-parse HEAD)" = "$BASE" ] || { echo "::error::HEAD wurde veraendert."; exit 1; }
+          [ "$(git rev-list --count "$BASE"..HEAD)" = "0" ] || { echo "::error::Es wurde committet."; exit 1; }
+          echo "Kein Commit, kein Indexeingriff, HEAD unveraendert."
+
+      - name: Ergebnis
+        run: |
+          echo "CLAUDE_BUILDER_GITHUB: PASS - schreibende Session laeuft headless mit Abo-Auth durch."
+
+      - name: Diagnose hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-builder-diagnostics
+          path: diagnostics.json
+          if-no-files-found: ignore
+          retention-days: 7
