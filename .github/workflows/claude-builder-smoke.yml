@@ -91,12 +91,15 @@ jobs:
             echo "::error::Working Tree ist vor dem Lauf nicht sauber."
             exit 1
           fi
-          echo "base=$BASE"     >> "$GITHUB_OUTPUT"
-          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
-          echo "marker=$MARKER" >> "$GITHUB_OUTPUT"
-          echo "Base:   $BASE"
-          echo "Ziel:   $TARGET"
-          echo "Marker: $MARKER"
+          INDEX_TREE="$(git write-tree)"
+          echo "base=$BASE"             >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET"         >> "$GITHUB_OUTPUT"
+          echo "marker=$MARKER"         >> "$GITHUB_OUTPUT"
+          echo "index_tree=$INDEX_TREE" >> "$GITHUB_OUTPUT"
+          echo "HEAD vorher:       $BASE"
+          echo "Index-Tree vorher: $INDEX_TREE"
+          echo "Ziel:              $TARGET"
+          echo "Marker:            $MARKER"
 
       # Die eigentliche offene Frage. --permission-mode acceptEdits mit den drei
       # Schreib-/Ausfuehrungswerkzeugen. Wird ein Werkzeug verweigert, taucht das in
@@ -117,7 +120,9 @@ jobs:
           MARKER='${{ steps.setup.outputs.marker }}'
           TAG="builder smoke ${{ github.run_id }}"
 
-          echo '{"mcpServers":{}}' > empty-mcp.json
+          # Alle workflow-eigenen Arbeitsdateien liegen ausserhalb des Repositorys,
+          # damit der Working Tree ausschliesslich Modelleingriffe enthaelt.
+          echo '{"mcpServers":{}}' > "$RUNNER_TEMP/empty-mcp.json"
 
           SCHEMA='{"type":"object","additionalProperties":false,"required":["status","editedFile","createdFile","bashWorked","headSha"],"properties":{"status":{"enum":["DONE","BLOCKED"]},"editedFile":{"type":"string"},"createdFile":{"type":"string"},"bashWorked":{"type":"boolean"},"headSha":{"type":"string","pattern":"^[0-9a-f]{40}$"}}}'
 
@@ -140,39 +145,40 @@ jobs:
             --safe-mode \
             --disable-slash-commands \
             --strict-mcp-config \
-            --mcp-config empty-mcp.json \
+            --mcp-config "$RUNNER_TEMP/empty-mcp.json" \
             --no-session-persistence \
             --max-turns 15 \
             --output-format json \
             --json-schema "$SCHEMA" \
-            > envelope.json
+            > "$RUNNER_TEMP/envelope.json"
 
       # Diagnose VOR jeder semantischen Pruefung - ein Abbruch danach soll nicht
       # forensisch blind sein. Der Runner ist gleich weg.
       - name: Diagnose sichern
         if: always()
         run: |
-          if [ -f envelope.json ]; then
+          if [ -f "$RUNNER_TEMP/envelope.json" ]; then
             jq '{type, subtype, is_error, duration_ms, num_turns, permission_denials, modelUsage, stop_reason}' \
-              envelope.json > diagnostics.json
+              "$RUNNER_TEMP/envelope.json" > "$RUNNER_TEMP/diagnostics.json"
           else
-            echo '{"note":"kein Envelope erzeugt - Session brach vor der Ausgabe ab"}' > diagnostics.json
+            echo '{"note":"kein Envelope erzeugt - Session brach vor der Ausgabe ab"}' > "$RUNNER_TEMP/diagnostics.json"
           fi
-          cat diagnostics.json
+          cat "$RUNNER_TEMP/diagnostics.json"
 
       - name: Envelope auswerten
         run: |
           set -euo pipefail
-          IS_ERROR="$(jq -r '.is_error // false' envelope.json)"
-          SUBTYPE="$(jq -r '.subtype // "unknown"' envelope.json)"
-          DENIALS="$(jq -r '(.permission_denials // []) | length' envelope.json)"
-          TURNS="$(jq -r '.num_turns // 0' envelope.json)"
+          ENV_JSON="$RUNNER_TEMP/envelope.json"
+          IS_ERROR="$(jq -r '.is_error // false' "$ENV_JSON")"
+          SUBTYPE="$(jq -r '.subtype // "unknown"' "$ENV_JSON")"
+          DENIALS="$(jq -r '(.permission_denials // []) | length' "$ENV_JSON")"
+          TURNS="$(jq -r '.num_turns // 0' "$ENV_JSON")"
 
           echo "is_error=$IS_ERROR subtype=$SUBTYPE num_turns=$TURNS permission_denials=$DENIALS"
 
           if [ "$DENIALS" != "0" ]; then
             echo "::error::$DENIALS Werkzeug(e) verweigert - acceptEdits deckt die Builder-Werkzeuge nicht ab."
-            jq -r '.permission_denials' envelope.json
+            jq -r '.permission_denials' "$ENV_JSON"
             exit 1
           fi
           if [ "$IS_ERROR" != "false" ] || [ "$SUBTYPE" != "success" ]; then
@@ -180,7 +186,7 @@ jobs:
             exit 1
           fi
 
-          RESULT="$(jq -r 'if (.structured_output // empty) then (.structured_output | tojson) else .result end' envelope.json)"
+          RESULT="$(jq -r 'if (.structured_output // empty) then (.structured_output | tojson) else .result end' "$ENV_JSON")"
           STATUS="$(printf '%s' "$RESULT" | jq -r '.status')"
           BASH_OK="$(printf '%s' "$RESULT" | jq -r '.bashWorked')"
           SHA="$(printf '%s' "$RESULT" | jq -r '.headSha')"
@@ -222,6 +228,7 @@ jobs:
         run: |
           set -euo pipefail
           BASE='${{ steps.setup.outputs.base }}'
+          INDEX_BEFORE='${{ steps.setup.outputs.index_tree }}'
           CFG=runner/runner.config.json
 
           CHANGED="$( { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u )"
@@ -244,22 +251,36 @@ jobs:
           done
           echo "Allowlist: alle Pfade zulaessig."
 
-          # Proposed Tree ueber einen temporaeren Index - der echte Index bleibt unberuehrt
-          IDX="$(mktemp)"
+          # Proposed Tree ueber einen temporaeren Index in $RUNNER_TEMP - ausserhalb
+          # des Repositorys, und der echte Index bleibt unberuehrt.
+          IDX="$RUNNER_TEMP/proposed.index"
+          rm -f "$IDX"
           GIT_INDEX_FILE="$IDX" git read-tree "$BASE"
           GIT_INDEX_FILE="$IDX" git add -- $CHANGED
           TREE="$(GIT_INDEX_FILE="$IDX" git write-tree)"
           rm -f "$IDX"
+          BASE_TREE="$(git rev-parse "$BASE^{tree}")"
+          echo "Base Tree OID:     $BASE_TREE"
           echo "Proposed Tree OID: $TREE"
-          [ "$TREE" != "$(git rev-parse "$BASE^{tree}")" ] || { echo "::error::Tree unveraendert - es wurde nichts geaendert."; exit 1; }
+          [ "$TREE" != "$BASE_TREE" ] || { echo "::error::Tree unveraendert - es wurde nichts geaendert."; exit 1; }
 
           git diff-tree --check "$BASE" "$TREE"
-          echo "diff-tree --check: sauber."
+          echo "diff-tree --check: PASS"
 
-          git diff --cached --quiet || { echo "::error::Der echte Index wurde veraendert."; exit 1; }
-          [ "$(git rev-parse HEAD)" = "$BASE" ] || { echo "::error::HEAD wurde veraendert."; exit 1; }
-          [ "$(git rev-list --count "$BASE"..HEAD)" = "0" ] || { echo "::error::Es wurde committet."; exit 1; }
-          echo "Kein Commit, kein Indexeingriff, HEAD unveraendert."
+          HEAD_AFTER="$(git rev-parse HEAD)"
+          INDEX_AFTER="$(git write-tree)"
+          COMMITS="$(git rev-list --count "$BASE"..HEAD)"
+          echo "HEAD vorher:        $BASE"
+          echo "HEAD nachher:       $HEAD_AFTER"
+          echo "Index-Tree vorher:  $INDEX_BEFORE"
+          echo "Index-Tree nachher: $INDEX_AFTER"
+          echo "Neue Commits:       $COMMITS"
+
+          [ "$HEAD_AFTER"  = "$BASE" ]         || { echo "::error::HEAD wurde veraendert ($BASE -> $HEAD_AFTER)."; exit 1; }
+          [ "$INDEX_AFTER" = "$INDEX_BEFORE" ] || { echo "::error::Der echte Index wurde veraendert ($INDEX_BEFORE -> $INDEX_AFTER)."; exit 1; }
+          [ "$COMMITS" = "0" ]                 || { echo "::error::$COMMITS neue Commits entstanden."; exit 1; }
+          git diff --cached --quiet            || { echo "::error::Es liegen gestagte Aenderungen vor."; exit 1; }
+          echo "HEAD unveraendert, echter Index unveraendert, null neue Commits."
 
       - name: Ergebnis
         run: |
@@ -270,6 +291,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: claude-builder-diagnostics
-          path: diagnostics.json
+          path: ${{ runner.temp }}/diagnostics.json
           if-no-files-found: ignore
           retention-days: 7
