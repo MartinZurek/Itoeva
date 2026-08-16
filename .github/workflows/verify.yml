@@ -37,6 +37,11 @@ jobs:
   verify:
     name: Tests, Lint, R8
     runs-on: ubuntu-latest
+    # Gemessen in Lauf #20: 16,6 min bei weitgehend kaltem Gradle-Cache. 40 Minuten lassen
+    # reichlich Reserve fuer langsamere Runner, wachsende Testmengen und einen Lauf ganz ohne
+    # Cache - und begrenzen einen Haenger trotzdem auf ein Elftel des GitHub-Standards von
+    # sechs Stunden.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -86,6 +91,10 @@ jobs:
   release-gate:
     name: Release-Torwaechter beisst
     runs-on: ubuntu-latest
+    # Gemessen: 0,9 min in Lauf #20, 3,4 min in Lauf #19 mit kaltem Cache. Der Job soll am
+    # Torwaechter scheitern, bevor R8 ueberhaupt anlaeuft, bleibt also kurz. 15 Minuten sind
+    # das Vierfache des schlechtesten beobachteten Werts.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -205,6 +214,11 @@ jobs:
     name: Signiertes AAB
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # Bewusst grosszuegig: dieser Job lief noch nie durch, es gibt also keinen Messwert. Er
+    # baut ein vollstaendiges signiertes AAB samt R8; zum Vergleich schaffte verify beide
+    # assembleReleaseCheck plus alle Tests und Lint in 16,6 min. 30 Minuten sollten reichen
+    # und deckeln den Fehlerfall trotzdem.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
