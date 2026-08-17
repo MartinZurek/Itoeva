@@ -200,7 +200,74 @@ jobs:
       # authentifiziert und damit aussagekraeftig ist.
 
       # -----------------------------------------------------------------------------------
+      # REPOSITORYZUSTAND ALS DATEN
+      #
+      # Der Builder hat kein Bash. Alles, was sich nur mit Git ermitteln laesst - Basiscommit,
+      # Base Tree, Commit-Betreff, Modulliste, Verzeichnisumriss - wird deshalb hier
+      # deterministisch vom Workflow erzeugt und ihm als Text mitgegeben. Was sich im
+      # Dateisystem nachsehen laesst, findet er selbst mit Read, Glob und Grep.
+      #
+      # Deterministisch heisst: dieselben Eingaben ergeben denselben Block. Kein Modell ist
+      # daran beteiligt, und der Block steht vollstaendig im Log.
+      # -----------------------------------------------------------------------------------
+      - name: Repositoryzustand fuer den Builder erzeugen
+        id: facts
+        run: |
+          set -euo pipefail
+          BASE='${{ steps.freeze.outputs.base }}'
+          BASE_TREE='${{ steps.freeze.outputs.base_tree }}'
+          CFG="$RUNNER_TEMP/scope-prompt.json"
+          git show "$BASE:runner/runner.config.json" > "$CFG"
+
+          F="$RUNNER_TEMP/repo-facts.txt"
+          {
+            echo "Repository:      ${{ github.repository }}"
+            echo "Branch:          main"
+            echo "Basiscommit:     $BASE"
+            echo "Base Tree OID:   $BASE_TREE"
+            echo "Commit-Betreff:  $(git log -1 --format=%s "$BASE")"
+            echo "Commit-Datum:    $(git log -1 --format=%cI "$BASE")"
+            echo
+            echo "Gradle-Module (aus settings.gradle.kts):"
+            git show "$BASE:settings.gradle.kts" | sed -n 's/^include(\"\(.*\)\").*/  \1/p'
+            echo
+            echo "Verzeichnisse auf oberster Ebene:"
+            git ls-tree --name-only "$BASE" | sed 's/^/  /'
+            echo
+            echo "Verbotene Pfadpraefixe: $(jq -r '.scope.forbiddenPathPrefixes | join(", ")' "$CFG")"
+            echo "Verbotene Dateinamen:   $(jq -r '.scope.forbiddenFileNames    | join(", ")' "$CFG")"
+            echo "Verbotene Endungen:     $(jq -r '.scope.forbiddenExtensions   | join(", ")' "$CFG")"
+            echo
+            echo "Verifikation nach deiner Sitzung, ausgefuehrt vom Workflow, nicht von dir:"
+            echo "  - ./gradlew verify (Unit-Tests, Lint und minifizierter Probebau beider Apps)"
+            echo "  - :app-sim:connectedDebugAndroidTest auf einem API-26-Emulator,"
+            echo "    falls du etwas unterhalb von app-sim/ oder core/ aenderst"
+            echo "  - :app:connectedDebugAndroidTest auf einem API-35-Emulator,"
+            echo "    falls du etwas unterhalb von app/ oder core/ aenderst"
+          } > "$F"
+
+          echo "--- Repositoryzustand, der in den Builder-Prompt geht ---"
+          cat "$F"
+
+      # -----------------------------------------------------------------------------------
       # BUILDER-SESSION
+      #
+      # Werkzeuge: Read, Glob, Grep, Edit, Write - ausdruecklich KEIN Bash.
+      #
+      # Warum: Lauf 1 (31979290655) scheiterte genau daran. Bash stand in der Allowlist,
+      # gleichzeitig war --safe-mode aktiv, und die Aufgabe verlangte das Ausfuehren des
+      # Builds. Der Sandkasten wies zwoelf Bash-Kommandos ab - python3, awk, bc,
+      # Bash-Arithmetik, find und vor allem ./gradlew - und das Modell verbrauchte 36 von
+      # 40 Turns mit Umgehungsversuchen statt mit der Aufgabe. Der Builder-Smoke-Test hatte
+      # das nicht aufgedeckt, weil dort als einziger Bash-Befehl `git rev-parse HEAD` lief,
+      # ein lesender Befehl, den --safe-mode durchlaesst.
+      #
+      # Die Konsequenz ist nicht, den Sandkasten zu lockern, sondern die Arbeitsteilung
+      # klarzuziehen: der Builder schreibt Code, die Verifikation ist deterministisch und
+      # gehoert dem Workflow. Ein Modell, das seine eigene Aenderung selbst gruen testet,
+      # waere ohnehin ein schwaecherer Nachweis als `gradlew verify` in Schritt 15. Alles,
+      # was der Builder ohne Shell nicht ermitteln kann, bekommt er vorher als Daten
+      # (Schritt "Repositoryzustand fuer den Builder erzeugen").
       #
       # Der Token wird nach der Z2-Analyse zugefuehrt: er steht nur ganz kurz in der
       # Step-Umgebung, wandert mit umask 077 in eine Datei unter $RUNNER_TEMP, wird als
@@ -217,7 +284,10 @@ jobs:
       #
       # Das ist Defense-in-Depth, keine Garantie: ueber sudo bleibt /proc/<pid>/fd/3
       # erreichbar. Die tragende Grenze ist und bleibt die Job-Trennung - dieser Job
-      # kann nicht pushen.
+      # kann nicht pushen. Seit dem Wegfall von Bash hat ohnehin weder der Builder noch
+      # der Reviewer ueberhaupt eine Shell, mit der sich das versuchen liesse; die
+      # FD-Massnahme bleibt trotzdem, weil sie nichts kostet und die Annahme "kein Bash"
+      # nicht die einzige Stuetze sein soll.
       # -----------------------------------------------------------------------------------
       - name: Builder-Session (schreibend, frische Sitzung)
         id: builder
@@ -228,17 +298,9 @@ jobs:
         run: |
           set -euo pipefail
           BASE='${{ steps.freeze.outputs.base }}'
+          FACTS="$(cat "$RUNNER_TEMP/repo-facts.txt")"
 
           echo '{"mcpServers":{}}' > "$RUNNER_TEMP/empty-mcp.json"
-
-          # Auch hier aus dem Basiscommit, damit im Prompt garantiert die echte Schranke
-          # steht und nicht eine, die schon jemand verschoben hat.
-          CFG="$RUNNER_TEMP/scope-prompt.json"
-          git show "$BASE:runner/runner.config.json" > "$CFG"
-
-          PREFIXES="$(jq -r '.scope.forbiddenPathPrefixes | join(", ")' "$CFG")"
-          NAMES="$(jq    -r '.scope.forbiddenFileNames    | join(", ")' "$CFG")"
-          EXTS="$(jq     -r '.scope.forbiddenExtensions   | join(", ")' "$CFG")"
 
           SCHEMA='{"type":"object","additionalProperties":false,"required":["status","summary","changedFiles","headSha"],"properties":{"status":{"enum":["DONE","BLOCKED"]},"summary":{"type":"string","minLength":10,"maxLength":300},"changedFiles":{"type":"array","items":{"type":"string"},"minItems":1},"headSha":{"type":"string","pattern":"^[0-9a-f]{40}$"},"notes":{"type":"string"}}}'
 
@@ -247,10 +309,25 @@ jobs:
           Aufgabe:
           ${TASK}
 
+          Wie du arbeitest. Du hast genau vier Werkzeuggruppen: Read, Glob und Grep zum Lesen,
+          Edit und Write zum Aendern. Eine Shell hast du NICHT, und das ist Absicht:
+          - Starte keine Builds. Kein gradlew, kein Gradle, kein Maven.
+          - Starte keine Tests. Auch nicht einzelne.
+          - Versuche keine Shell- oder Git-Kommandos. Es gibt kein Bash-Werkzeug; jeder
+            Versuch, eines zu benutzen, wird abgewiesen und laesst den Lauf fail-closed
+            abbrechen. Suche auch nicht nach Umwegen.
+          - Arbeite ausschliesslich anhand des unten angegebenen Repositoryzustands und
+            dessen, was du dir mit Read, Glob und Grep selbst ansiehst.
+          - Die Verifikation uebernimmt anschliessend der Workflow, nicht du. Du musst deine
+            Aenderung nicht selbst nachweisen und sollst es auch nicht versuchen. Schreibe
+            den Code so, dass er ohne deine eigene Probe korrekt ist.
+
+          Repositoryzustand (vom Workflow ermittelt, verlaesslich):
+          ${FACTS}
+
           Harte Grenzen. Ein Verstoss laesst den gesamten Lauf fail-closed abbrechen:
-          - Verbotene Pfadpraefixe: ${PREFIXES}
-          - Verbotene Dateinamen:   ${NAMES}
-          - Verbotene Endungen:     ${EXTS}
+          - Halte dich an die oben genannten verbotenen Pfadpraefixe, Dateinamen und
+            Endungen.
           - Aendere nichts unterhalb von .github/ und nichts unterhalb von runner/. Du darfst
             deine eigenen Workflow-, Prompt- oder Runner-Grenzen weder lesend umgehen noch
             schreibend verschieben.
@@ -260,8 +337,6 @@ jobs:
           - Der Code muss uebersetzen und die bestehenden Tests bestehen. Du darfst Tests
             ergaenzen, aber keinen bestehenden Test abschwaechen oder entfernen, damit dein
             Stand gruen wird.
-
-          Der Basiscommit ist ${BASE}.
 
           Gib danach ausschliesslich das verlangte JSON zurueck: status DONE wenn die Aufgabe
           vollstaendig umgesetzt ist, sonst BLOCKED; summary eine Zeile fuer die Commit-
@@ -290,7 +365,7 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3 claude -p \
             --model '${{ inputs.model }}' \
             --permission-mode acceptEdits \
-            --tools "Read,Glob,Grep,Edit,Write,Bash" \
+            --tools "Read,Glob,Grep,Edit,Write" \
             --safe-mode \
             --disable-slash-commands \
             --strict-mcp-config \
@@ -346,10 +421,19 @@ jobs:
             exit 1
           fi
 
-          # Allowlist statt Denylist: nur ein sauber beendeter Zug gilt. max_tokens,
-          # tool_use, refusal und alles Unbekannte sind fail-closed.
+          # Allowlist statt Denylist: alles Unbekannte ist fail-closed. Die Aufgabe dieses
+          # Gates sind max_tokens (abgeschnittene Ausgabe), refusal und kuenftige Werte.
+          #
+          # tool_use steht bewusst DRIN. Gemessen mit CLI 2.1.232 (runner/Test-Claude
+          # PrimaryRunBuilderTools.ps1 -Live): eine vollstaendig erfolgreiche Sitzung -
+          # null Verweigerungen, Datei korrekt angelegt, 6 von 20 Turns - meldet ebenfalls
+          # stop_reason=tool_use. Grund ist --json-schema: die strukturierte Ausgabe kommt
+          # ueber einen erzwungenen Tool-Call, der letzte Zug endet daher immer so. Das
+          # Feld trennt hier also NICHT Erfolg von Misserfolg; die urspruengliche Allowlist
+          # ohne tool_use haette jede Sitzung abgewiesen. Was Lauf 31979290655 tatsaechlich
+          # gefangen hat, waren permission_denials und num_turns - die bleiben scharf.
           case "$STOP" in
-            end_turn|stop_sequence|null|"") ;;
+            end_turn|stop_sequence|tool_use|null|"") ;;
             *) echo "::error::Unzulaessiges stop_reason=$STOP - Sitzung nicht sauber beendet."; exit 1 ;;
           esac
 
@@ -710,8 +794,9 @@ jobs:
             echo "::error::Turn-Budget des Reviewers erschoepft ($TURNS von $REVIEWER_MAX_TURNS)."
             exit 1
           fi
+          # tool_use zugelassen aus demselben gemessenen Grund wie beim Builder.
           case "$STOP" in
-            end_turn|stop_sequence|null|"") ;;
+            end_turn|stop_sequence|tool_use|null|"") ;;
             *) echo "::error::Unzulaessiges stop_reason=$STOP."; exit 1 ;;
           esac
 
