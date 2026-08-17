@@ -178,6 +178,137 @@ Test-That "Allowlist laesst eine normale Testdatei durch" `
 Test-That 'Allowlist wird im Workflow aus dem Basiscommit gelesen' `
     ($workflow -match 'git show "\$BASE:runner/runner\.config\.json"')
 
+Write-Host ''
+Write-Host '=== FUNKTIONAL: Aufgabentext erreicht GITHUB_OUTPUT unversehrt ==='
+
+# **Der Regressionsfall.** Lauf 32019367972 (workflow_dispatch) brach im preflight ab,
+# nachdem die Vorentscheidung bereits GO gemeldet hatte:
+#
+#   Auftrag aus der Eingabe uebernommen (1035 Bytes).
+#   CLAUDE_PRIMARY_PREFLIGHT: GO (MANUAL_INPUT)
+#   ##[error]Invalid value. Matching delimiter not found 'ITOEVA_TASK_EOF_0d5f'
+#
+# $TASKFILE entsteht im manuellen Zweig mit printf '%s' und endet deshalb NICHT auf einem
+# Zeilenumbruch - die Endmarke klebte an der letzten Aufgabenzeile. Der Zeitplan-Pfad war nie
+# betroffen, weil backlog-select.sh mit printf("%s\n", body) schreibt; genau deshalb blieb der
+# Fehler bis zum ersten manuellen Lauf nach Einfuehrung des preflight-Jobs unentdeckt. Ein
+# rein struktureller Test haette ihn ebenfalls nicht gefunden: das YAML war gueltig, nur das
+# Ergebnis war es nicht.
+#
+# Geprueft wird deshalb der ECHTE Block, aus dem Workflow herausgeschnitten und ausgefuehrt -
+# keine Kopie, die stillschweigend auseinanderlaufen koennte.
+
+$delim = 'ITOEVA_TASK_EOF_0d5f'
+$blockMatch = [regex]::Match(
+    $workflow,
+    '(?s)\{\s*\n\s*echo "task<<ITOEVA_TASK_EOF_0d5f".*?\}\s*>>\s*"\$GITHUB_OUTPUT"')
+Test-That 'Output-Block laesst sich aus dem Workflow herausschneiden' $blockMatch.Success
+
+function Invoke-TaskOutputBlock {
+    # Fuehrt den herausgeschnittenen Block mit einem vorgegebenen $TASKFILE aus und liefert
+    # zurueck, was dabei woertlich in $GITHUB_OUTPUT landet. Bytes statt Text, damit ein
+    # fehlender Zeilenumbruch am Ende nicht schon beim Schreiben der Vorlage verlorengeht.
+    param([string]$Block, [byte[]]$TaskBytes)
+    $dir = Join-Path ([IO.Path]::GetTempPath()) ("itoeva-out-" + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    $taskFile = Join-Path $dir 'task'
+    $outFile  = Join-Path $dir 'github_output'
+    $scriptFile = Join-Path $dir 'block.sh'
+    $errFile  = Join-Path $dir 'err.txt'
+    [IO.File]::WriteAllBytes($taskFile, $TaskBytes)
+    [IO.File]::WriteAllBytes($outFile, [byte[]]@())
+    [IO.File]::WriteAllText($scriptFile, ("set -eu`n" + ($Block -replace "`r`n", "`n") + "`n"),
+        (New-Object Text.UTF8Encoding($false)))
+    $sf = $scriptFile -replace '\\', '/'
+    $tf = $taskFile   -replace '\\', '/'
+    $of = $outFile    -replace '\\', '/'
+    $ef = $errFile    -replace '\\', '/'
+    & $bash -c "TASKFILE='$tf' GITHUB_OUTPUT='$of' sh '$sf' 2>'$ef'" | Out-Null
+    $code = $LASTEXITCODE
+    [pscustomobject]@{
+        Code   = $code
+        Raw    = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($outFile))
+        Stderr = [string](Get-Content -Raw -LiteralPath $errFile -ErrorAction SilentlyContinue)
+    }
+}
+
+function Get-HeredocValue {
+    # Liest den Wert so aus, wie GitHub es tut: alles zwischen der Kopfzeile "name<<marke"
+    # und einer Zeile, die AUSSCHLIESSLICH aus der Marke besteht. Steht die Marke nicht auf
+    # einer eigenen Zeile, gibt es keinen Wert - $null ist genau der beobachtete Fehlerfall.
+    param([string]$Raw, [string]$Name, [string]$Delim)
+    $lines = $Raw -split "`n"
+    $start = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -eq ("{0}<<{1}" -f $Name, $Delim)) { $start = $i; break }
+    }
+    if ($start -lt 0) { return $null }
+    $acc = @()
+    for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -eq $Delim) { return ($acc -join "`n") }
+        $acc += $lines[$i]
+    }
+    return $null
+}
+
+if ($blockMatch.Success) {
+    $block = $blockMatch.Value
+    $utf8  = New-Object Text.UTF8Encoding($false)
+
+    # Die drei Formen, in denen ein Aufgabentext hier ankommen kann. Fall 1 ist woertlich die
+    # Gestalt, an der Lauf 32019367972 zerbrach: eine einzige Zeile ohne Abschluss, wie sie
+    # das einzeilige workflow_dispatch-Formular und ein API-Dispatch beide liefern.
+    $faelle = @(
+        @{ Name     = 'einzeiliger manueller Input ohne abschliessenden Newline'
+           Bytes    = $utf8.GetBytes('Ergaenze robuste JVM-Unit-Tests fuer matrix/PlayGamePlan.kt. Stufen muessen streng aufsteigend und ohne doppelte fromLevel sein.')
+           Erwartet = 'Ergaenze robuste JVM-Unit-Tests fuer matrix/PlayGamePlan.kt. Stufen muessen streng aufsteigend und ohne doppelte fromLevel sein.'
+           Angehaengt = $true },
+        @{ Name     = 'mehrzeiliger Input ohne abschliessenden Newline'
+           Bytes    = $utf8.GetBytes("Zeile eins der Aufgabe.`nZeile zwei der Aufgabe.`nZeile drei ohne Abschluss.")
+           Erwartet = "Zeile eins der Aufgabe.`nZeile zwei der Aufgabe.`nZeile drei ohne Abschluss."
+           Angehaengt = $true },
+        # Der Zeitplan-Pfad. Seine Semantik darf sich NICHT aendern: GitHub schluckt den einen
+        # abschliessenden Umbruch, und genau so war es immer schon.
+        @{ Name     = 'Input mit bereits vorhandenem abschliessenden Newline'
+           Bytes    = $utf8.GetBytes("Zeile eins der Aufgabe.`nZeile zwei der Aufgabe.`n")
+           Erwartet = "Zeile eins der Aufgabe.`nZeile zwei der Aufgabe."
+           Angehaengt = $false },
+        # Letztes Byte gehoert zu einem mehrbyteigen Zeichen (hier "ae" als U+00E4, C3 A4).
+        # Deutsche Auftraege enden regelmaessig auf einem Umlaut; wuerde die Erkennung auf
+        # Zeichen statt auf Bytes bauen, faende sie hier nichts und schoebe keinen Umbruch nach.
+        @{ Name     = 'Input endet auf einem mehrbyteigen Zeichen, ohne Newline'
+           Bytes    = [byte[]]@(0x4C, 0x61, 0x75, 0x66, 0x20, 0xC3, 0xA4)
+           Erwartet = [Text.Encoding]::UTF8.GetString([byte[]]@(0x4C, 0x61, 0x75, 0x66, 0x20, 0xC3, 0xA4))
+           Angehaengt = $true }
+    )
+
+    foreach ($fall in $faelle) {
+        $r = Invoke-TaskOutputBlock -Block $block -TaskBytes $fall.Bytes
+        Test-That ("{0}: Block laeuft fehlerfrei" -f $fall.Name) ($r.Code -eq 0) "code=$($r.Code) $($r.Stderr)"
+
+        # Der eigentliche Befund: eine Zeile, die nur aus der Endmarke besteht.
+        $eigeneZeile = (($r.Raw -split "`n") -contains $delim)
+        Test-That ("{0}: Endmarke steht auf einer eigenen Zeile" -f $fall.Name) $eigeneZeile `
+            ("Rohausgabe endet auf: " + ($r.Raw.Substring([Math]::Max(0, $r.Raw.Length - 60)) -replace "`n", '\n'))
+
+        $wert = Get-HeredocValue -Raw $r.Raw -Name 'task' -Delim $delim
+        Test-That ("{0}: GitHub kann den Wert ueberhaupt lesen" -f $fall.Name) ($null -ne $wert)
+        Test-That ("{0}: Aufgabentext kommt unveraendert an" -f $fall.Name) ($wert -ceq $fall.Erwartet) `
+            ("erhalten=" + ($wert -replace "`n", '\n'))
+
+        # Genau EIN Umbruch - nicht keiner (der Fehler) und nicht zwei (das haenge an jeden
+        # Zeitplan-Auftrag eine Leerzeile und veraenderte damit den Aufgabentext).
+        Test-That ("{0}: kein zusaetzlicher Leerraum vor der Endmarke" -f $fall.Name) `
+            (-not ($r.Raw -like ("*`n`n{0}*" -f $delim)))
+
+        # Gegenprobe zur Absicht: nachgeschoben wird nur, wo wirklich nichts da war.
+        $roh = [Text.Encoding]::UTF8.GetString($fall.Bytes)
+        $erwarteteRohform = ("task<<{0}`n{1}{2}{0}`n" -f $delim, $roh, $(if ($fall.Angehaengt) { "`n" } else { '' }))
+        Test-That ("{0}: Rohausgabe hat exakt die erwartete Gestalt" -f $fall.Name) `
+            ($r.Raw -ceq $erwarteteRohform)
+    }
+}
+
 # =========================================================================================
 Write-Host ''
 Write-Host '=== STRUKTURELL: Ausloeser und Vorentscheidung ==='
@@ -233,6 +364,8 @@ Test-That 'manueller Lauf verwendet die Eingabe' `
     ($preflight -match "EVENT.*=.*workflow_dispatch")
 Test-That 'leerer Auftrag bricht fail-closed ab' `
     ($preflight -match 'Leerer Auftrag im manuellen Lauf')
+Test-That 'Endmarke wird notfalls auf eine eigene Zeile gezwungen' `
+    ($preflight -match 'if \[ -n "\$\(tail -c1 "\$TASKFILE"\)" \]; then echo ""; fi')
 Test-That 'Zeitplan-Lauf zieht die Aufgabe aus dem Backlog' `
     ($preflight -match 'runner/backlog-select\.sh evolutions/BACKLOG\.md')
 Test-That 'evolve bekommt Aufgabe und Modelle aus preflight' `

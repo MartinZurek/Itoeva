@@ -212,6 +212,22 @@ jobs:
             {
               echo "task<<ITOEVA_TASK_EOF_0d5f"
               cat "$TASKFILE"
+              # Die Endmarke MUSS auf einer eigenen Zeile stehen, sonst weist GitHub den
+              # gesamten Output ab ("Invalid value. Matching delimiter not found").
+              #
+              # Genau daran scheiterte jeder manuelle Lauf: Oben entsteht $TASKFILE mit
+              # printf '%s' und endet daher NICHT auf einem Zeilenumbruch - die Endmarke
+              # klebte an der letzten Aufgabenzeile. Der Zeitplan-Pfad war nie betroffen,
+              # weil backlog-select.sh mit printf("%s\n", body) schreibt; deshalb fiel es
+              # bis zum ersten manuellen Lauf nach Einfuehrung des preflight-Jobs nicht auf.
+              #
+              # Nachgeschoben wird nur, wenn wirklich keiner da ist - eine bedingungslose
+              # Leerzeile haenge sonst an jeden Zeitplan-Auftrag eine zusaetzliche an und
+              # aenderte den Aufgabentext. $(...) entfernt abschliessende Zeilenumbrueche,
+              # `tail -c1` ist also genau dann nicht leer, wenn die Datei NICHT auf einem
+              # endet. Bewusst ein if und keine UND-Liste: deren Status 1 waere unter
+              # set -e eine Stolperfalle.
+              if [ -n "$(tail -c1 "$TASKFILE")" ]; then echo ""; fi
               echo "ITOEVA_TASK_EOF_0d5f"
             } >> "$GITHUB_OUTPUT"
           else
