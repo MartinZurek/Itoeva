@@ -431,6 +431,78 @@ Test-That 'PR-Abfrage des Waechters ist lesend' `
     ($preflight -match '(?s)curl -fsS.{0,200}\$API/pulls\?state=open')
 
 Write-Host ''
+Write-Host '=== STRUKTURELL: Diagnosepaket ist keine Publish-Evidence ==='
+
+# Lauf 32020621278 hinterliess ausser dem Joblog nichts - kein Diff, kein Builder-Summary,
+# kein Urteil. Das Diagnosepaket schliesst diese Luecke, DARF dabei aber unter keinen
+# Umstaenden zu einer zweiten Quelle werden, aus der sich ein Push speisen koennte.
+Test-That 'Diagnosepaket entsteht nur bei einem Fehlschlag' `
+    ($evolve -match '(?s)- name: Diagnosepaket bei Fehlschlag schnueren.*?if: failure\(\)')
+# `if: failure()` sieht nur die vorangegangenen Schritte. Stuenden die beiden Forensik-
+# Schritte irgendwo in der Mitte, bliebe ein Fehlschlag danach - Commit, Bundle, Uebergabe -
+# wieder spurlos. Sie muessen die LETZTEN beiden Schritte von evolve sein.
+$evolveSteps = [regex]::Matches($evolve, '(?m)^      - name: (.+)$') | ForEach-Object { $_.Groups[1].Value.Trim() }
+Test-That 'die Forensik-Schritte stehen ganz am Ende von evolve' `
+    (($evolveSteps.Count -ge 2) -and
+     ($evolveSteps[-2] -eq 'Diagnosepaket bei Fehlschlag schnueren') -and
+     ($evolveSteps[-1] -eq 'Diagnosepaket hochladen')) `
+    ("letzte Schritte: " + (($evolveSteps | Select-Object -Last 3) -join ' | '))
+Test-That 'sie stehen damit hinter Commit, Bundle und Uebergabepaket' `
+    (($evolve.IndexOf('- name: Diagnosepaket bei Fehlschlag schnueren') -gt $evolve.IndexOf('- name: Commit-Objekt und Bundle erzeugen')) -and
+     ($evolve.IndexOf('- name: Diagnosepaket bei Fehlschlag schnueren') -gt $evolve.IndexOf('- name: Uebergabepaket hochladen')))
+Test-That 'Diagnosepaket-Upload laeuft nur bei einem Fehlschlag' `
+    ($evolve -match '(?s)- name: Diagnosepaket hochladen.*?if: failure\(\)')
+Test-That 'Diagnosepaket traegt einen anderen Artefaktnamen als das Uebergabepaket' `
+    (($evolve -match 'name: claude-primary-forensics') -and ($evolve -match 'name: claude-primary-handoff'))
+# Der eigentliche Riegel: publish LAEDT genau ein Artefakt, und zwar das Uebergabepaket.
+# Bewusst auf den download-artifact-Schritt eingegrenzt - publish laedt eines herunter und
+# legt danach sein eigenes Evidence-Artefakt ab; ein blosses Zaehlen aller Namen zaehlte
+# dieses mit und ginge am Punkt vorbei.
+$downloads = [regex]::Matches($publish, '(?s)uses: actions/download-artifact@v4.*?name: (claude-primary-[\w-]+)')
+Test-That 'publish laedt genau ein Artefakt herunter' `
+    ((([regex]::Matches($publish, 'uses: actions/download-artifact@')).Count -eq 1) -and ($downloads.Count -eq 1))
+Test-That 'und zwar ausschliesslich das Uebergabepaket' `
+    (($downloads.Count -eq 1) -and ($downloads[0].Groups[1].Value -eq 'claude-primary-handoff')) `
+    $(if ($downloads.Count -eq 1) { $downloads[0].Groups[1].Value })
+Test-That 'Diagnosepaket kollidiert mit keinem Artefaktnamen von publish' `
+    (($evolve -match 'name: claude-primary-forensics') -and
+     ([regex]::Matches($publish, 'name: claude-primary-forensics')).Count -eq 0)
+Test-That 'publish kennt das Diagnosepaket ueberhaupt nicht' ($publish -notmatch 'forensics')
+Test-That 'Diagnosepaket weist Bundle und evidence.json zur Laufzeit ab' `
+    ($evolve -match 'for verboten in evolution\.bundle evidence\.json')
+Test-That 'Diagnosepaket ist als nicht publizierbar ausgewiesen' `
+    (($evolve -match 'NICHT PUBLIZIERBAR') -and ($evolve -match 'publishable:false'))
+
+# Reihenfolge: aus einem roten Review kann nichts entstehen, weil Commit und Bundle erst
+# danach kommen - und publish haengt ohnehin an `needs: evolve`.
+$idxReview  = $workflow.IndexOf('- name: Reviewer-Envelope auswerten')
+$idxCommit  = $workflow.IndexOf('- name: Commit-Objekt und Bundle erzeugen')
+$idxHandoff = $workflow.IndexOf('name: claude-primary-handoff')
+Test-That 'Commit und Bundle entstehen erst nach der Reviewer-Auswertung' `
+    (($idxReview -gt 0) -and ($idxCommit -gt $idxReview)) "review=$idxReview commit=$idxCommit"
+Test-That 'das Uebergabepaket entsteht erst nach Commit und Bundle' `
+    ($idxHandoff -gt $idxCommit) "handoff=$idxHandoff commit=$idxCommit"
+
+Write-Host ''
+Write-Host '=== STRUKTURELL: Turn-Zahl ist kein Abbruchgrund mehr (Reviewer) ==='
+
+# Der Befund aus Lauf 32020621278. Die funktionale Gegenprobe steht in
+# Test-ClaudePrimaryRunReviewerGate.ps1; hier nur der Riegel gegen einen Rueckfall.
+Test-That 'Reviewer bricht nicht mehr bei num_turns ab' `
+    ($workflow -notmatch 'TURNS" -ge "\$REVIEWER_MAX_TURNS"\s*\];\s*then\s*\n\s*echo "::error')
+Test-That 'die Turn-Zahl des Reviewers ist nur noch ein Hinweis' `
+    ($evolve -match '(?s)TURNS" -ge "\$REVIEWER_MAX_TURNS.*?::notice::')
+Test-That 'Urteil wird vor der Turn-Diagnose ausgelesen' `
+    ($evolve.IndexOf('VERDICT="$(printf') -lt $evolve.IndexOf('$REVIEWER_MAX_TURNS. Rein diagnostisch'))
+Test-That '--max-turns bleibt als Schutzparameter gesetzt' `
+    ($evolve -match '--max-turns "\$REVIEWER_MAX_TURNS"')
+Test-That 'das Reviewer-Budget wurde auf einen realistischen Wert angehoben' `
+    ($workflow -match "REVIEWER_MAX_TURNS: '(3[2-9]|40)'")
+# Der Builder ist ausdruecklich NICHT angefasst worden.
+Test-That 'Builder-Turn-Gate bleibt unveraendert' `
+    ($workflow -match 'TURNS" -ge "\$BUILDER_MAX_TURNS')
+
+Write-Host ''
 Write-Host ('=' * 70)
 if ($script:Failures.Count -eq 0) {
     Write-Host 'CLAUDE_PRIMARY_SCHEDULE: PASS'

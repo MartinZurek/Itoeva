@@ -65,7 +65,10 @@ env:
   CLAUDE_CLI_VERSION: '2.1.232'
   JAVA_VERSION: '17'
   BUILDER_MAX_TURNS: '40'
-  REVIEWER_MAX_TURNS: '20'
+  # Schutzparameter gegen eine entgleisende Sitzung, KEIN Erfolgskriterium - siehe die
+  # ausfuehrliche Begruendung am Schritt "Reviewer-Envelope auswerten". 20 war zu knapp
+  # bemessen: Lauf 32020621278 lieferte ein vollstaendiges Review und meldete dabei 24 Turns.
+  REVIEWER_MAX_TURNS: '32'
   # Groesser als das laesst sich in einem Prompt nicht mehr serioes reviewen. Fail-closed
   # statt einen Reviewer auf einen abgeschnittenen Diff blicken zu lassen.
   MAX_DIFF_BYTES: '200000'
@@ -972,11 +975,44 @@ jobs:
           fi
           cat "$RUNNER_TEMP/reviewer-diagnostics.json"
 
+      # -----------------------------------------------------------------------------------
+      # REVIEWER-GATE
+      #
+      # **num_turns ist ein Diagnosewert, kein Erfolgskriterium.** Lauf 32020621278 hat das
+      # vorgefuehrt: Der Reviewer lief mit --max-turns 20, die CLI meldete danach
+      #
+      #   is_error=false subtype=success stop_reason=tool_use denials=0 num_turns=24
+      #
+      # und lieferte eine vollstaendige, schemakonforme Review-Ausgabe. Die alte Reihenfolge
+      # brach trotzdem bei num_turns >= 20 ab - VOR dem Auslesen von verdict. Das Urteil war
+      # damit unwiederbringlich weg: nicht einmal im Log stand, ob der Reviewer zugestimmt
+      # oder abgelehnt hatte. Ein gruener Lauf scheiterte an einer Zahl, die die CLI selbst
+      # oberhalb des Limits meldet, das sie bekommen hat.
+      #
+      # In 2.1.232 zaehlt num_turns also nicht dasselbe, was --max-turns begrenzt. Die Zahl
+      # taugt daher NICHT als Beweis einer abgebrochenen Sitzung - und ein Beweis war sie nie
+      # noetig, denn eine wirklich erschoepfte Sitzung meldet das im subtype
+      # (error_max_turns), nicht in num_turns. Genau dort wird jetzt fail-closed geprueft.
+      #
+      # Deshalb die neue Reihenfolge: erst die harten Envelope-Vorbedingungen, dann die
+      # strukturierte Ausgabe vollstaendig gegen das Schema pruefen, dann das Urteil - und
+      # ERST DANACH die Turn-Zahl, rein als Hinweis ohne Abbruch.
+      #
+      # --max-turns bleibt als Schutz gegen eine entgleisende Sitzung bestehen; es begrenzt
+      # den Lauf, statt ihn im Nachhinein zu bewerten.
+      #
+      # Unveraendert fail-closed: is_error, jeder subtype ausser success (dazu gehoeren alle
+      # Fehler-, Limit- und Abbruchvarianten), jede verweigerte Berechtigung, ein unbekanntes
+      # oder unvollstaendiges stop_reason (max_tokens, refusal), eine fehlende oder nicht
+      # parsebare strukturierte Ausgabe, ein Schemaverstoss, ein abweichender Basiscommit und
+      # natuerlich ein REJECT.
+      # -----------------------------------------------------------------------------------
       - name: Reviewer-Envelope auswerten
         run: |
           set -euo pipefail
           E="$RUNNER_TEMP/reviewer-envelope.json"
           BASE='${{ steps.freeze.outputs.base }}'
+          V="$RUNNER_TEMP/reviewer-verdict.json"
 
           IS_ERROR="$(jq -r '.is_error // false'                   "$E")"
           SUBTYPE="$(jq  -r '.subtype // "unknown"'                "$E")"
@@ -985,29 +1021,72 @@ jobs:
           STOP="$(jq     -r '.stop_reason // "null"'               "$E")"
           echo "is_error=$IS_ERROR subtype=$SUBTYPE num_turns=$TURNS stop_reason=$STOP denials=$DENIALS"
 
+          # --- 1) Harte Envelope-Vorbedingungen ----------------------------------------
+          # Alles hier ist unabhaengig vom Inhalt der Antwort und bleibt unveraendert scharf.
           [ "$IS_ERROR" = "false" ]  || { echo "::error::Reviewer-Envelope meldet is_error=$IS_ERROR."; exit 1; }
+          # success ist eine Allowlist von genau einem Wert: error_max_turns,
+          # error_during_execution und jede kuenftige Fehlervariante fallen hier durch. DAS
+          # ist die belastbare Meldung einer erschoepften oder abgebrochenen Sitzung.
           [ "$SUBTYPE" = "success" ] || { echo "::error::Reviewer-Session nicht erfolgreich (subtype=$SUBTYPE)."; exit 1; }
-          [ "$DENIALS" = "0" ]       || { echo "::error::$DENIALS Werkzeug(e) verweigert."; exit 1; }
-          if [ "$TURNS" -ge "$REVIEWER_MAX_TURNS" ]; then
-            echo "::error::Turn-Budget des Reviewers erschoepft ($TURNS von $REVIEWER_MAX_TURNS)."
-            exit 1
-          fi
-          # tool_use zugelassen aus demselben gemessenen Grund wie beim Builder.
+          [ "$DENIALS" = "0" ]       || { echo "::error::$DENIALS Werkzeug(e) verweigert."; jq -r '.permission_denials' "$E"; exit 1; }
+          # tool_use ist bei --json-schema der NORMALE Abschluss: die strukturierte Ausgabe
+          # kommt ueber einen erzwungenen Tool-Call. max_tokens (abgeschnittene Ausgabe),
+          # refusal und alles Unbekannte sind dagegen unvollstaendige Abschluesse.
           case "$STOP" in
             end_turn|stop_sequence|tool_use|null|"") ;;
-            *) echo "::error::Unzulaessiges stop_reason=$STOP."; exit 1 ;;
+            *) echo "::error::Unzulaessiges oder unvollstaendiges stop_reason=$STOP."; exit 1 ;;
           esac
 
-          RESULT="$(jq -r 'if (.structured_output // empty) then (.structured_output | tojson) else .result end' "$E")"
+          # --- 2) Strukturierte Ausgabe herausloesen und gegen das Schema pruefen -------
+          # Fuer die Auswertung zaehlt ausschliesslich die strukturierte Ausgabe. Fehlt sie,
+          # bleibt RESULT leer und faellt unten durch die Typpruefung - fail-closed.
+          RESULT="$(jq -c '.structured_output // empty' "$E")"
+          # Fuer die FORENSIK zusaetzlich der Freitext, falls gar nichts Strukturiertes kam.
+          # Bewusst ein eigener Ausdruck: `if (.structured_output // empty) then A else B end`
+          # liefert in jq NICHTS, sobald structured_output fehlt - `empty` sind null Ergebnisse,
+          # und damit faellt das ganze if weg, der else-Zweig eingeschlossen. Dieser Ausdruck
+          # stand vorher an der auswertenden Stelle; sein .result-Zweig konnte also nie greifen.
+          # Gedeckelt, weil hier bei einem Fehlschlag Fliesstext stehen kann.
+          jq -r 'if (.structured_output != null) then (.structured_output | tojson) else (.result // "") end' "$E" \
+            | head -c 4000 > "$V" || true
+
+          if ! printf '%s' "$RESULT" | jq -e 'type == "object"' >/dev/null 2>&1; then
+            echo "::error::Reviewer lieferte keine parsebare strukturierte Ausgabe."
+            exit 1
+          fi
+          # Jede Bindung, die das Schema zusichert, einzeln nachgehalten - eine fehlende oder
+          # falsch typisierte Bindung ist ein unvollstaendiges Review, kein Formfehler.
+          printf '%s' "$RESULT" | jq -e '
+            (has("verdict") and has("baseSha") and has("riskLevel") and has("reasons"))
+            and (.verdict   | . == "APPROVE" or . == "REJECT")
+            and (.baseSha   | type == "string" and test("^[0-9a-f]{40}$"))
+            and (.riskLevel | . == "low" or . == "medium" or . == "high")
+            and (.reasons   | type == "array" and length >= 1 and all(type == "string"))
+            and ((.scopeViolations // []) | type == "array" and all(type == "string"))
+          ' >/dev/null || {
+            echo "::error::Strukturierte Reviewer-Ausgabe verletzt das Schema oder laesst Bindungen offen."
+            printf '%s' "$RESULT" | head -c 600
+            exit 1; }
+
           VERDICT="$(printf '%s' "$RESULT" | jq -r '.verdict')"
           RSHA="$(printf   '%s' "$RESULT" | jq -r '.baseSha')"
           RISK="$(printf   '%s' "$RESULT" | jq -r '.riskLevel')"
           echo "verdict=$VERDICT baseSha=$RSHA riskLevel=$RISK"
           printf '%s' "$RESULT" | jq -r '.reasons[]' | sed 's/^/  - /'
+          printf '%s' "$RESULT" > "$V"
 
-          [ "$RSHA" = "$BASE" ]    || { echo "::error::Reviewer nennt abweichenden Basiscommit."; exit 1; }
+          [ "$RSHA" = "$BASE" ] || { echo "::error::Reviewer nennt abweichenden Basiscommit ($RSHA statt $BASE)."; exit 1; }
+
+          # --- 3) Turn-Zahl, rein diagnostisch -----------------------------------------
+          # Steht bewusst NACH der vollstaendigen Auswertung: ein gueltiges Urteil liegt vor,
+          # also gibt es nichts mehr zu verwerfen. Kein exit - siehe Kopfkommentar.
+          if [ "$TURNS" -ge "$REVIEWER_MAX_TURNS" ]; then
+            echo "::notice::Reviewer meldet $TURNS Turns bei einem Budget von $REVIEWER_MAX_TURNS. Rein diagnostisch - die Sitzung hat ein vollstaendiges, schemakonformes Urteil geliefert."
+          fi
+
+          # --- 4) Das Urteil selbst ----------------------------------------------------
           [ "$VERDICT" = "APPROVE" ] || {
-            echo "::error::Reviewer lehnt ab (verdict=$VERDICT)."
+            echo "::error::Reviewer lehnt ab (verdict=$VERDICT, riskLevel=$RISK)."
             printf '%s' "$RESULT" | jq -r '(.scopeViolations // [])[]' | sed 's/^/  Verstoss: /'
             exit 1; }
           echo "Reviewer: APPROVE"
@@ -1144,6 +1223,107 @@ jobs:
           echo "  Tree:   ${{ steps.gates.outputs.tree }}"
           echo "  Commit: ${{ steps.commit.outputs.commit }}"
           echo "  Branch: ${{ steps.commit.outputs.branch }}"
+
+      # -----------------------------------------------------------------------------------
+      # FORENSIK BEI EINEM FEHLSCHLAG
+      #
+      # Lauf 32020621278 hinterliess ausser dem Joblog nichts: kein Uebergabepaket (der
+      # Schritt lief nicht mehr), kein Diff, kein Builder-Summary - und damit auch nicht die
+      # Fehlermeldung, die der Builder laut Auftrag dort haette hinterlegen sollen. Die
+      # gesamte Arbeit einer Sitzung war weg, weil ein Gate danach ansprang.
+      #
+      # Dieses Paket ist ausdruecklich KEINE Publish-Evidence und kann auch keine werden:
+      #   - anderer Artefaktname als das Uebergabepaket; publish laedt ausschliesslich
+      #     "claude-primary-handoff" und wuerde dieses hier nie zu Gesicht bekommen
+      #   - es enthaelt weder evolution.bundle noch evidence.json - ohne Bundle gibt es
+      #     nichts zu pushen, ohne evidence.json nichts nachzurechnen; beides wird unten
+      #     ausdruecklich nachgeprueft
+      #   - publish haengt an `needs: evolve`; ein roter evolve-Job laesst publish gar nicht
+      #     erst starten. Das ist die tragende Grenze, der Rest ist Guertel und Hosentraeger.
+      #
+      # **Ganz am Ende der Schrittliste, und das ist keine Kosmetik.** `if: failure()` sieht
+      # nur die VORANGEGANGENEN Schritte. Stuenden diese beiden - wie zuerst gebaut - direkt
+      # hinter der Reviewer-Auswertung, bliebe ein Fehlschlag in "Reviewer hat nichts
+      # veraendert", beim Commit, beim Bundle oder beim Uebergabepaket wieder ohne jede Spur
+      # ausser dem Joblog. Genau die Luecke, die dieses Paket schliessen soll.
+      #
+      # Die Testberichte liegen bereits im eigenen Artefakt "claude-primary-test-reports"
+      # (Schritt mit if: always()) und werden hier nicht verdoppelt.
+      #
+      # Die Diagnosen sind redigiert: sie enthalten nur Metadaten (subtype, Turns, Dauer,
+      # Verbrauch), nie Prompt oder Transkript. Vom Reviewer wird allein das schemabegrenzte
+      # Urteil uebernommen, nicht der Envelope.
+      # -----------------------------------------------------------------------------------
+      - name: Diagnosepaket bei Fehlschlag schnueren
+        id: forensics
+        if: failure()
+        run: |
+          set -euo pipefail
+          F="$RUNNER_TEMP/forensics"
+          rm -rf "$F"; mkdir -p "$F"
+
+          cat > "$F/README-FORENSIK.txt" <<'MARKER'
+          NICHT PUBLIZIERBAR - REINES DIAGNOSEPAKET
+
+          Dieses Artefakt entsteht nur, wenn der evolve-Job fehlgeschlagen ist. Es dient
+          ausschliesslich der Fehlersuche und ist KEINE Publish-Evidence:
+
+            - Es enthaelt kein evolution.bundle und keine evidence.json.
+            - Der publish-Job laedt ausschliesslich das Artefakt "claude-primary-handoff"
+              und haengt an "needs: evolve" - bei rotem evolve laeuft er ueberhaupt nicht.
+            - Aus diesem Paket laesst sich kein Commit und kein Branch herstellen.
+
+          Die Testberichte des Laufs liegen im Artefakt "claude-primary-test-reports".
+          MARKER
+
+          # Jede Quelle einzeln abgesichert: der Fehlschlag kann an jeder Stelle passiert
+          # sein, entsprechend fehlt mal dieses, mal jenes.
+          [ -f "$RUNNER_TEMP/summary.txt" ]                  && cp "$RUNNER_TEMP/summary.txt"                  "$F/builder-summary.txt"       || echo "(kein Builder-Summary - Sitzung kam nicht so weit)"     > "$F/builder-summary.txt"
+          [ -f "$RUNNER_TEMP/proposed.diff" ]                && cp "$RUNNER_TEMP/proposed.diff"                "$F/proposed.diff"             || echo "(kein Diff - Git-Gates kamen nicht so weit)"            > "$F/proposed.diff"
+          [ -f "$RUNNER_TEMP/changed.txt" ]                  && cp "$RUNNER_TEMP/changed.txt"                  "$F/changed.txt"               || echo "(keine Dateiliste)"                                     > "$F/changed.txt"
+          [ -f "$RUNNER_TEMP/builder-diagnostics.json" ]     && cp "$RUNNER_TEMP/builder-diagnostics.json"     "$F/builder-diagnostics.json"  || echo '{"note":"keine Builder-Diagnose"}'                      > "$F/builder-diagnostics.json"
+          [ -f "$RUNNER_TEMP/reviewer-diagnostics.json" ]    && cp "$RUNNER_TEMP/reviewer-diagnostics.json"    "$F/reviewer-diagnostics.json" || echo '{"note":"keine Reviewer-Diagnose"}'                     > "$F/reviewer-diagnostics.json"
+          [ -f "$RUNNER_TEMP/reviewer-verdict.json" ]        && cp "$RUNNER_TEMP/reviewer-verdict.json"        "$F/reviewer-verdict.json"     || echo '{"note":"kein Reviewer-Urteil ausgelesen"}'              > "$F/reviewer-verdict.json"
+
+          jq -n \
+            --arg base   '${{ steps.freeze.outputs.base }}' \
+            --arg tree   '${{ steps.gates.outputs.tree }}' \
+            --arg branch '${{ steps.freeze.outputs.branch }}' \
+            --arg repo   '${{ github.repository }}' \
+            --arg run    '${{ github.run_id }}' \
+            --arg att    '${{ github.run_attempt }}' \
+            --arg trig   '${{ github.event_name }}' \
+            --arg task   '${{ needs.preflight.outputs.task_id }}' \
+            --arg bm     '${{ needs.preflight.outputs.model }}' \
+            --arg rm     '${{ needs.preflight.outputs.review_model }}' \
+            '{publishable:false, kind:"diagnostics-only", repository:$repo, runId:$run,
+              runAttempt:$att, trigger:$trig, taskId:$task, baseSha:$base,
+              proposedTreeOid:(if $tree == "" then null else $tree end),
+              intendedBranch:$branch, pushed:false,
+              claude:{builderModel:$bm, reviewerModel:$rm},
+              note:"Kein Bundle, keine evidence.json - aus diesem Paket entsteht nichts."}' \
+            > "$F/forensics-metadata.json"
+
+          # Gegenprobe statt Zusicherung: haette sich hier je etwas Publish-Faehiges
+          # eingeschlichen, waere der Unterschied zum Uebergabepaket nur noch der Name.
+          for verboten in evolution.bundle evidence.json; do
+            if [ -e "$F/$verboten" ]; then
+              echo "::error::Diagnosepaket enthaelt $verboten - es waere nicht mehr von einer Publish-Evidence zu unterscheiden."
+              exit 1
+            fi
+          done
+
+          echo "Diagnosepaket:"; ls -l "$F"
+
+      - name: Diagnosepaket hochladen
+        if: failure() && steps.forensics.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-primary-forensics
+          path: ${{ runner.temp }}/forensics/
+          if-no-files-found: error
+          retention-days: 7
+
 
   # =========================================================================================
   # JOB 2 - publish: eigene VM, Schreibrecht, kein Modell-Token, kein Claude, keine Tests.
