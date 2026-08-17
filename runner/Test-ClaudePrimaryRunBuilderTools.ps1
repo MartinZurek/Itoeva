@@ -122,8 +122,24 @@ Write-Host '=== Statisch: Envelope-Gates bleiben scharf ==='
 
 Test-That 'Jede verweigerte Berechtigung bricht ab' `
     ($workflow -match '\[ "\$DENIALS" = "0" \]')
-Test-That 'Turn-Erschoepfung bricht ab' `
-    ($workflow -match 'TURNS" -ge "\$BUILDER_MAX_TURNS')
+# Frueher stand hier "Turn-Erschoepfung bricht ab" und pruefte auf den Vergleich
+# `TURNS -ge BUILDER_MAX_TURNS`. Dieser Vergleich existiert weiterhin, ist aber nur noch
+# ein Hinweis: In CLI 2.1.232 meldet num_turns Werte oberhalb des uebergebenen --max-turns
+# (24 bei 20, nachgewiesen in Lauf 32020621278) und taugt deshalb nicht als Nachweis einer
+# abgebrochenen Sitzung. Die Zusicherung haette den Namen behalten und still weiter bestanden -
+# der Vergleich steht ja noch da -, waehrend sie das Gegenteil dessen sichert, was sie sagt.
+#
+# Auf den Builder-Schritt eingegrenzt, nicht auf die ganze Datei: `.*?::notice::` ueber den
+# gesamten Workflow findet sonst den Hinweis des REVIEWERS und bestaende auch dann, wenn der
+# Builder wieder hart abbraeche. Genau das ist beim Gegenprobe-Lauf aufgefallen.
+$builderStep = [regex]::Match($workflow, '(?s)- name: Builder-Envelope auswerten.*?\n      [-#]').Value
+Test-That 'Builder-Schritt laesst sich eingrenzen' ($builderStep.Length -gt 0)
+Test-That 'echte Turn-Erschoepfung bricht ab (ueber den subtype)' `
+    ($builderStep -match '\[ "\$SUBTYPE" = "success" \]')
+Test-That 'die Turn-Zahl des Builders ist nur noch ein Hinweis' `
+    ($builderStep -match '(?s)TURNS" -ge "\$BUILDER_MAX_TURNS.*?::notice::')
+Test-That 'der Builder bricht nicht mehr an der Turn-Zahl ab' `
+    ($builderStep -notmatch '(?s)TURNS" -ge "\$BUILDER_MAX_TURNS[^\n]*\n\s*echo "::error')
 # tool_use MUSS in der Allowlist stehen: mit --json-schema endet auch eine vollstaendig
 # erfolgreiche Sitzung so (siehe Live-Teil unten). Ohne diesen Wert wiese das Gate jede
 # Builder-Sitzung ab. Fehlt er wieder, ist das ein Regressionsfehler.

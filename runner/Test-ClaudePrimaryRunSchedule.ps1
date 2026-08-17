@@ -498,9 +498,20 @@ Test-That '--max-turns bleibt als Schutzparameter gesetzt' `
     ($evolve -match '--max-turns "\$REVIEWER_MAX_TURNS"')
 Test-That 'das Reviewer-Budget wurde auf einen realistischen Wert angehoben' `
     ($workflow -match "REVIEWER_MAX_TURNS: '(3[2-9]|40)'")
-# Der Builder ist ausdruecklich NICHT angefasst worden.
-Test-That 'Builder-Turn-Gate bleibt unveraendert' `
-    ($workflow -match 'TURNS" -ge "\$BUILDER_MAX_TURNS')
+# Diese Zusicherung war die Scope-Schranke, solange der Builder bewusst unangetastet blieb.
+# Inzwischen ist derselbe Defekt auch dort behoben, also sichert sie das Gegenteil: beide
+# Gates muessen dieselbe Semantik tragen. Waere sie unveraendert geblieben, haette sie still
+# weiter bestanden - der Vergleich steht ja noch da - und dabei das Falsche behauptet.
+#
+# Auf den Builder-Schritt eingegrenzt: `.*?::notice::` ueber den ganzen evolve-Job findet
+# sonst den Hinweis des Reviewers und bestaende auch bei wieder hart abbrechendem Builder.
+$builderStep = [regex]::Match($evolve, '(?s)- name: Builder-Envelope auswerten.*?\n      [-#]').Value
+Test-That 'auch der Builder wertet die Turn-Zahl nur noch diagnostisch aus' `
+    (($builderStep.Length -gt 0) -and ($builderStep -match '(?s)TURNS" -ge "\$BUILDER_MAX_TURNS.*?::notice::'))
+Test-That 'im Builder-Schritt steht kein Abbruch mehr an der Turn-Zahl' `
+    ($builderStep -notmatch '(?s)TURNS" -ge "\$BUILDER_MAX_TURNS[^\n]*\n\s*echo "::error')
+Test-That 'beide Gates lesen ihr Ergebnis vor der Turn-Diagnose' `
+    (([regex]::Matches($evolve, '(?s)jq -c ''\.structured_output // empty''.*?::notice::')).Count -eq 2)
 
 Write-Host ''
 Write-Host ('=' * 70)

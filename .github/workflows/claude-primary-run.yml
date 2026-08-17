@@ -597,11 +597,34 @@ jobs:
           fi
           cat "$RUNNER_TEMP/builder-diagnostics.json"
 
+      # -----------------------------------------------------------------------------------
+      # BUILDER-GATE
+      #
+      # Dieselbe Semantik wie im Reviewer-Gate, aus demselben Grund - die ausfuehrliche
+      # Herleitung steht dort. Kurz: In CLI 2.1.232 zaehlt num_turns nicht dasselbe, was
+      # --max-turns begrenzt. Lauf 32020621278 meldete 24 Turns bei einem Budget von 20 und
+      # lieferte dabei ein vollstaendiges, schemakonformes Ergebnis. Die Zahl taugt damit
+      # nicht als Nachweis einer abgebrochenen Sitzung; hier fiel es bisher nur deshalb nicht
+      # auf, weil das Budget mit 40 grosszuegiger ist als die 20 des Reviewers.
+      #
+      # Eine wirklich erschoepfte Sitzung meldet das im subtype (error_max_turns) - genau
+      # dort wird weiterhin fail-closed geprueft.
+      #
+      # **Lauf 31979290655 faengt das unveraendert.** Was diesen Lauf auffliegen liess, waren
+      # die zwoelf abgewiesenen Bash-Kommandos, also permission_denials; seine 36 von 40
+      # Turns lagen ohnehin unter der Grenze und haben nie gegriffen. Das Gate, das damals
+      # gewirkt hat, bleibt unangetastet scharf.
+      #
+      # Reihenfolge: harte Envelope-Vorbedingungen, dann die strukturierte Ausgabe vollstaendig
+      # gegen das Schema pruefen, dann die Bindungen und das Ergebnis - und ERST DANACH die
+      # Turn-Zahl, rein als Hinweis ohne Abbruch.
+      # -----------------------------------------------------------------------------------
       - name: Builder-Envelope auswerten
         run: |
           set -euo pipefail
           E="$RUNNER_TEMP/builder-envelope.json"
           BASE='${{ steps.freeze.outputs.base }}'
+          R="$RUNNER_TEMP/builder-result.json"
 
           IS_ERROR="$(jq -r '.is_error // false'                  "$E")"
           SUBTYPE="$(jq  -r '.subtype // "unknown"'               "$E")"
@@ -611,16 +634,12 @@ jobs:
 
           echo "is_error=$IS_ERROR subtype=$SUBTYPE num_turns=$TURNS stop_reason=$STOP denials=$DENIALS"
 
+          # --- 1) Harte Envelope-Vorbedingungen ----------------------------------------
           [ "$IS_ERROR" = "false" ] || { echo "::error::Builder-Envelope meldet is_error=$IS_ERROR."; exit 1; }
+          # success ist eine Allowlist von genau einem Wert: error_max_turns,
+          # error_during_execution und jede kuenftige Fehlervariante fallen hier durch.
           [ "$SUBTYPE" = "success" ] || { echo "::error::Builder-Session nicht erfolgreich (subtype=$SUBTYPE)."; exit 1; }
           [ "$DENIALS" = "0" ] || { echo "::error::$DENIALS Werkzeug(e) verweigert."; jq -r '.permission_denials' "$E"; exit 1; }
-
-          # Turn-Erschoepfung ist eine unvollstaendige Sitzung, kein Erfolg - auch dann,
-          # wenn die CLI daneben subtype success meldet.
-          if [ "$TURNS" -ge "$BUILDER_MAX_TURNS" ]; then
-            echo "::error::Turn-Budget erschoepft ($TURNS von $BUILDER_MAX_TURNS) - Sitzung unvollstaendig."
-            exit 1
-          fi
 
           # Allowlist statt Denylist: alles Unbekannte ist fail-closed. Die Aufgabe dieses
           # Gates sind max_tokens (abgeschnittene Ausgabe), refusal und kuenftige Werte.
@@ -631,21 +650,65 @@ jobs:
           # stop_reason=tool_use. Grund ist --json-schema: die strukturierte Ausgabe kommt
           # ueber einen erzwungenen Tool-Call, der letzte Zug endet daher immer so. Das
           # Feld trennt hier also NICHT Erfolg von Misserfolg; die urspruengliche Allowlist
-          # ohne tool_use haette jede Sitzung abgewiesen. Was Lauf 31979290655 tatsaechlich
-          # gefangen hat, waren permission_denials und num_turns - die bleiben scharf.
+          # ohne tool_use haette jede Sitzung abgewiesen.
           case "$STOP" in
             end_turn|stop_sequence|tool_use|null|"") ;;
-            *) echo "::error::Unzulaessiges stop_reason=$STOP - Sitzung nicht sauber beendet."; exit 1 ;;
+            *) echo "::error::Unzulaessiges oder unvollstaendiges stop_reason=$STOP."; exit 1 ;;
           esac
 
-          RESULT="$(jq -r 'if (.structured_output // empty) then (.structured_output | tojson) else .result end' "$E")"
-          STATUS="$(printf '%s' "$RESULT" | jq -r '.status')"
-          SUMMARY="$(printf '%s' "$RESULT" | jq -r '.summary')"
-          SHA="$(printf '%s' "$RESULT" | jq -r '.headSha')"
+          # --- 2) Strukturierte Ausgabe herausloesen und gegen das Schema pruefen -------
+          # **Fuer die Erfolgsentscheidung zaehlt AUSSCHLIESSLICH structured_output.** Fehlt
+          # sie, bleibt RESULT leer und faellt unten durch die Typpruefung - fail-closed.
+          # .result ist hier ausdruecklich KEIN Fallback: es ist Freitext des Modells, den
+          # niemand gegen das Schema geprueft hat, und aus ihm darf kein "DONE" erwachsen.
+          RESULT="$(jq -c '.structured_output // empty' "$E")"
+          # Fuer die DIAGNOSE dagegen wird .result mitgenommen - dort steht im Zweifel, woran
+          # es lag. Bewusst ein eigener Ausdruck: `if (.structured_output // empty) then A
+          # else B end` liefert in jq NICHTS, sobald structured_output fehlt - `empty` sind
+          # null Ergebnisse, und damit faellt das ganze if weg, der else-Zweig eingeschlossen.
+          # Genau so stand es vorher an der auswertenden Stelle; sein .result-Zweig war tot,
+          # und ein fehlendes structured_output meldete irrefuehrend "Builder meldet status=".
+          jq -r 'if (.structured_output != null) then (.structured_output | tojson) else (.result // "") end' "$E" \
+            | head -c 4000 > "$R" || true
 
+          if ! printf '%s' "$RESULT" | jq -e 'type == "object"' >/dev/null 2>&1; then
+            echo "::error::Builder lieferte keine parsebare strukturierte Ausgabe."
+            exit 1
+          fi
+          # Jede Bindung, die das Schema des Aufrufs zusichert, einzeln nachgehalten.
+          printf '%s' "$RESULT" | jq -e '
+            (has("status") and has("summary") and has("changedFiles") and has("headSha"))
+            and (.status       | . == "DONE" or . == "BLOCKED")
+            and (.summary      | type == "string" and length >= 10 and length <= 300)
+            and (.changedFiles | type == "array" and length >= 1 and all(type == "string"))
+            and (.headSha      | type == "string" and test("^[0-9a-f]{40}$"))
+            and ((.notes // "") | type == "string")
+          ' >/dev/null || {
+            echo "::error::Strukturierte Builder-Ausgabe verletzt das Schema oder laesst Bindungen offen."
+            printf '%s' "$RESULT" | head -c 600
+            exit 1; }
+
+          STATUS="$(printf  '%s' "$RESULT" | jq -r '.status')"
+          SUMMARY="$(printf '%s' "$RESULT" | jq -r '.summary')"
+          SHA="$(printf     '%s' "$RESULT" | jq -r '.headSha')"
           echo "status=$STATUS headSha=$SHA"
-          [ "$STATUS" = "DONE" ] || { echo "::error::Builder meldet status=$STATUS."; exit 1; }
+          printf '%s' "$RESULT" | jq -r '.changedFiles[]' | sed 's/^/  gemeldet: /'
+          printf '%s' "$RESULT" > "$R"
+
           [ "$SHA" = "$BASE" ] || { echo "::error::Builder meldet abweichenden Basiscommit ($SHA statt $BASE)."; exit 1; }
+
+          # --- 3) Turn-Zahl, rein diagnostisch -----------------------------------------
+          # Steht bewusst NACH der vollstaendigen Auswertung: ein gueltiges, schemakonformes
+          # Ergebnis liegt vor, also gibt es nichts mehr zu verwerfen. Kein exit.
+          if [ "$TURNS" -ge "$BUILDER_MAX_TURNS" ]; then
+            echo "::notice::Builder meldet $TURNS Turns bei einem Budget von $BUILDER_MAX_TURNS. Rein diagnostisch - die Sitzung hat ein vollstaendiges, schemakonformes Ergebnis geliefert."
+          fi
+
+          # --- 4) Das Ergebnis selbst ---------------------------------------------------
+          [ "$STATUS" = "DONE" ] || {
+            echo "::error::Builder meldet status=$STATUS."
+            printf '%s' "$RESULT" | jq -r '.notes // empty' | sed 's/^/  Hinweis: /'
+            exit 1; }
 
           printf '%s' "$SUMMARY" > "$RUNNER_TEMP/summary.txt"
           echo "Builder-Envelope: PASS"
@@ -1282,6 +1345,10 @@ jobs:
           [ -f "$RUNNER_TEMP/proposed.diff" ]                && cp "$RUNNER_TEMP/proposed.diff"                "$F/proposed.diff"             || echo "(kein Diff - Git-Gates kamen nicht so weit)"            > "$F/proposed.diff"
           [ -f "$RUNNER_TEMP/changed.txt" ]                  && cp "$RUNNER_TEMP/changed.txt"                  "$F/changed.txt"               || echo "(keine Dateiliste)"                                     > "$F/changed.txt"
           [ -f "$RUNNER_TEMP/builder-diagnostics.json" ]     && cp "$RUNNER_TEMP/builder-diagnostics.json"     "$F/builder-diagnostics.json"  || echo '{"note":"keine Builder-Diagnose"}'                      > "$F/builder-diagnostics.json"
+          # Das Builder-Ergebnis, sobald es ueberhaupt herausgeloest werden konnte: summary.txt
+          # entsteht erst ganz am Ende des Gates und fehlt deshalb genau dann, wenn der Builder
+          # selbst durchgefallen ist - also wenn man am dringendsten wissen will, was er sagte.
+          [ -f "$RUNNER_TEMP/builder-result.json" ]          && cp "$RUNNER_TEMP/builder-result.json"          "$F/builder-result.json"       || echo '{"note":"kein Builder-Ergebnis ausgelesen"}'             > "$F/builder-result.json"
           [ -f "$RUNNER_TEMP/reviewer-diagnostics.json" ]    && cp "$RUNNER_TEMP/reviewer-diagnostics.json"    "$F/reviewer-diagnostics.json" || echo '{"note":"keine Reviewer-Diagnose"}'                     > "$F/reviewer-diagnostics.json"
           [ -f "$RUNNER_TEMP/reviewer-verdict.json" ]        && cp "$RUNNER_TEMP/reviewer-verdict.json"        "$F/reviewer-verdict.json"     || echo '{"note":"kein Reviewer-Urteil ausgelesen"}'              > "$F/reviewer-verdict.json"
 
