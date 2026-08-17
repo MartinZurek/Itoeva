@@ -318,7 +318,20 @@ Test-That 'workflow_dispatch bleibt vollstaendig erhalten' `
      ($workflow -match '(?m)^      model:') -and ($workflow -match '(?m)^      review_model:'))
 Test-That 'genau ein schedule-Eintrag' `
     (([regex]::Matches($workflow, "(?m)^\s+- cron:")).Count -eq 1)
-Test-That 'schedule steht auf 17 4 * * *' ($workflow -match "cron: '17 4 \* \* \*'")
+# Umgestellt von taeglich 04:17 auf alle drei Stunden im Tagfenster, nachdem Lauf
+# 32041086900 als erster vollstaendig gruen durchlief. Traegt der Waechter nicht mehr,
+# waeren das sechs teure Laeufe am Tag statt einem je gemergter Evolution - deshalb steht
+# die Waechter-Pruefung weiter unten und muss zusammen mit dieser Zeile bestehen bleiben.
+Test-That 'schedule steht auf alle drei Stunden im Tagfenster' `
+    ($workflow -match "cron: '17 3-18/3 \* \* \*'")
+# Nicht zur vollen Stunde: GitHub ueberbucht diese Slots und laesst Laeufe dort ausfallen.
+Test-That 'schedule feuert nicht zur vollen Stunde' `
+    ($workflow -notmatch "(?m)^\s+- cron: '0 ")
+# Das Fenster ist der Kostendeckel: jede uebersprungene Ausloesung kostet rund eine
+# abgerechnete Minute, auch bei leerem Backlog. Ein voller */3-Takt waere ein Drittel mehr
+# Grundlast fuer Slots, deren Ergebnis bis zum Morgen ohnehin liegen bliebe.
+Test-That 'schedule laeuft nicht rund um die Uhr' `
+    ($workflow -notmatch "(?m)^\s+- cron: '\d+ \*/")
 Test-That 'Concurrency unveraendert' `
     (($workflow -match 'group: claude-primary-run') -and ($workflow -match 'cancel-in-progress: false'))
 

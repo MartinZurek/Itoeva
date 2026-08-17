@@ -41,15 +41,36 @@ on:
         options: [claude-opus-5, claude-sonnet-5]
         default: claude-opus-5
 
-  # Taeglich 04:17 UTC. Nicht zur vollen Stunde, weil GitHub diese Cron-Slots stark
-  # ueberbucht und Laeufe dort verzoegert oder ausfallen. 04:17 UTC ist 06:17 MESZ - das
-  # Ergebnis liegt vor Arbeitsbeginn vor - und 21:17 PDT / 00:17 EDT, also ausserhalb der
-  # US-Geschaeftszeit mit entsprechend geringer Runner-Konkurrenz. Zugleich die Tageszeit
-  # mit der geringsten Wahrscheinlichkeit, mit der eigenen Claude-Nutzung ins selbe
-  # Kontingentfenster zu geraten; ein Rate-Limit haette mangels Retry einen verlorenen Tag
-  # zur Folge.
+  # Alle drei Stunden im Tagfenster: 03:17, 06:17, 09:17, 12:17, 15:17, 18:17 UTC
+  # (05:17 bis 20:17 MESZ). Sechs Gelegenheiten statt der acht eines vollen */3-Taktes.
+  #
+  # **Warum ueberhaupt haeufiger als taeglich.** Taeglich 04:17 hiess: ein Fehlversuch
+  # kostete einen ganzen Tag. Es gibt bewusst keinen Retry, und Lauf 32037870856 hat
+  # gezeigt, dass ein Lauf auch ohne eigenes Verschulden ausfallen kann - GitHub lieferte
+  # 429/503 beim Download einer Action, bevor auch nur der Checkout lief. Die naechste
+  # Gelegenheit faengt so einen Ausfall nach drei Stunden auf statt am Folgetag. Umgestellt
+  # erst nach dem ersten vollstaendig gruenen Durchlauf (Lauf 32041086900, PR #2).
+  #
+  # **Warum ein Fenster und nicht rund um die Uhr.** Der Takt kostet auch dann etwas, wenn
+  # nichts zu tun ist: jede uebersprungene Ausloesung ist rund eine abgerechnete Minute.
+  # Nachts entstuende dabei nichts Nutzbares - eine Evolution, die um 00:17 fertig wird,
+  # liegt bis zum Aufstehen ohnehin unangetastet herum, und der 03:17-Slot liefert dasselbe
+  # Ergebnis rechtzeitig vor Arbeitsbeginn. Zwei Slots weniger sind rund ein Viertel
+  # weniger Grundlast bei gleichem praktischem Nutzen.
+  #
+  # **Warum das nicht sechs Laeufe am Tag bedeutet.** Der Waechter im preflight-Job
+  # ueberspringt frueh und kostenlos, solange eine Evolution offen ist - also ein
+  # claude-evolution/*-Branch nicht in main enthalten oder ein PR daraus offen ist. Da jede
+  # Evolution auf einen menschlichen Merge wartet, ist der Normalfall genau ein
+  # vollstaendiger Lauf je gemergter Evolution; die uebrigen Ausloesungen enden nach
+  # Sekunden mit SKIPPED_PENDING_EVOLUTION, ohne Claude, ohne Java, ohne Emulator. Ein
+  # leerer Backlog endet ebenso frueh mit SKIPPED_EMPTY_BACKLOG.
+  #
+  # **Warum nicht zur vollen Stunde.** GitHub ueberbucht die Cron-Slots zur vollen Stunde
+  # stark; Laeufe werden dort verzoegert oder fallen aus. Die 17 aus dem vorherigen Takt
+  # bleibt deshalb erhalten.
   schedule:
-    - cron: '17 4 * * *'
+    - cron: '17 3-18/3 * * *'
 
 # Standardmaessig gar keine Rechte. Jeder Job erteilt sich einzeln genau das, was er
 # braucht - und evolve braucht kein Schreibrecht.
