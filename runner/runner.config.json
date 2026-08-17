@@ -51,6 +51,7 @@
       "app/libs/"
     ],
     "forbiddenFileNames": [
+      "BACKLOG.md",
       "build.gradle.kts",
       "settings.gradle.kts",
       "gradle.properties",

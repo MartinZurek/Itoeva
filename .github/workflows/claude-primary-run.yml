@@ -41,6 +41,16 @@ on:
         options: [claude-opus-5, claude-sonnet-5]
         default: claude-opus-5
 
+  # Taeglich 04:17 UTC. Nicht zur vollen Stunde, weil GitHub diese Cron-Slots stark
+  # ueberbucht und Laeufe dort verzoegert oder ausfallen. 04:17 UTC ist 06:17 MESZ - das
+  # Ergebnis liegt vor Arbeitsbeginn vor - und 21:17 PDT / 00:17 EDT, also ausserhalb der
+  # US-Geschaeftszeit mit entsprechend geringer Runner-Konkurrenz. Zugleich die Tageszeit
+  # mit der geringsten Wahrscheinlichkeit, mit der eigenen Claude-Nutzung ins selbe
+  # Kontingentfenster zu geraten; ein Rate-Limit haette mangels Retry einen verlorenen Tag
+  # zur Folge.
+  schedule:
+    - cron: '17 4 * * *'
+
 # Standardmaessig gar keine Rechte. Jeder Job erteilt sich einzeln genau das, was er
 # braucht - und evolve braucht kein Schreibrecht.
 permissions: {}
@@ -63,11 +73,176 @@ env:
 jobs:
 
   # =========================================================================================
+  # JOB 0 - preflight: entscheiden, OB gearbeitet wird und WOMIT.
+  #
+  # Eigener Job aus zwei Gruenden:
+  #
+  # 1. Er braucht ein GITHUB_TOKEN, um nach laufenden Evolutionen zu sehen. Dieses Token hat
+  #    in der Builder-VM nichts verloren - Jobs sind getrennte Maschinen, also bleibt es hier.
+  # 2. Wird uebersprungen, laeuft evolve gar nicht erst an. Damit kostet ein Ueberspringen
+  #    weder eine Claude-Sitzung noch Java, Gradle oder einen Emulator - das ist strukturell
+  #    garantiert und nicht bloss eine Frage der Schrittreihenfolge.
+  #
+  # Kein Claude, kein Abo-Token, keine Schreibrechte.
+  # =========================================================================================
+  preflight:
+    name: Auftrag bestimmen
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    timeout-minutes: 5
+
+    outputs:
+      decision: ${{ steps.decide.outputs.decision }}
+      reason: ${{ steps.decide.outputs.reason }}
+      task_id: ${{ steps.decide.outputs.task_id }}
+      task: ${{ steps.decide.outputs.task }}
+      model: ${{ steps.decide.outputs.model }}
+      review_model: ${{ steps.decide.outputs.review_model }}
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          ref: main
+
+      - name: Auftrag bestimmen
+        id: decide
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IN_TASK: ${{ inputs.task }}
+          IN_MODEL: ${{ inputs.model }}
+          IN_REVIEW_MODEL: ${{ inputs.review_model }}
+        run: |
+          set -euo pipefail
+          EVENT='${{ github.event_name }}'
+          API="https://api.github.com/repos/${{ github.repository }}"
+          echo "Ereignis: $EVENT"
+
+          # --- Modelle normalisieren -------------------------------------------------------
+          # Bei einem schedule-Lauf ist der inputs-Kontext leer; die in workflow_dispatch
+          # hinterlegten Vorgaben greifen dort NICHT. Ohne diese Fallbacks stuende
+          # --model '' in der Kommandozeile.
+          MODEL="${IN_MODEL:-}";        [ -n "$MODEL" ]  || MODEL='claude-sonnet-5'
+          RMODEL="${IN_REVIEW_MODEL:-}"; [ -n "$RMODEL" ] || RMODEL='claude-opus-5'
+          # Allowlist statt blossem Durchreichen - ein Modellname geht ungeprueft in eine
+          # Kommandozeile.
+          case "$MODEL"  in claude-sonnet-5|claude-opus-5) ;; *) echo "::error::Unzulaessiges Builder-Modell: $MODEL";  exit 1 ;; esac
+          case "$RMODEL" in claude-sonnet-5|claude-opus-5) ;; *) echo "::error::Unzulaessiges Reviewer-Modell: $RMODEL"; exit 1 ;; esac
+          echo "Builder-Modell: $MODEL, Reviewer-Modell: $RMODEL"
+
+          TASKFILE="$RUNNER_TEMP/backlog/task"
+          DECISION=""; REASON=""; TASK_ID=""
+
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            # --- Manueller Lauf: der Mensch hat entschieden, der Waechter greift nicht. ----
+            printf '%s' "${IN_TASK:-}" > "$RUNNER_TEMP/manual-task"
+            mkdir -p "$RUNNER_TEMP/backlog"
+            cp "$RUNNER_TEMP/manual-task" "$TASKFILE"
+            if [ -z "$(tr -d '[:space:]' < "$TASKFILE")" ]; then
+              echo "::error::Leerer Auftrag im manuellen Lauf - fail-closed vor jedem Claude-Aufruf."
+              exit 1
+            fi
+            DECISION=GO; REASON=MANUAL_INPUT; TASK_ID=manual
+            echo "Auftrag aus der Eingabe uebernommen ($(wc -c < "$TASKFILE") Bytes)."
+
+          else
+            # --- Zeitplan-Lauf: erst der Waechter, dann das Backlog. ----------------------
+            # Ein Branch zaehlt nur als laufende Evolution, solange er NICHT in main
+            # enthalten ist. Branches werden bewusst nie geloescht; wuerde schon ihre blosse
+            # Existenz blockieren, stuende der Zeitplan nach der ersten Evolution fuer immer.
+            PENDING=""
+            REFS="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
+                      "$API/git/matching-refs/heads/claude-evolution" | jq -r '.[].ref // empty')"
+            for ref in $REFS; do
+              br="${ref#refs/heads/}"
+              st="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
+                      "$API/compare/main...${br}" | jq -r '.status')"
+              echo "  Branch $br: $st"
+              case "$st" in
+                identical|behind) ;;                       # vollstaendig in main enthalten
+                *) PENDING="${PENDING}${br} (nicht in main: $st)\n" ;;
+              esac
+            done
+            OPEN_PRS="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
+                          "$API/pulls?state=open&per_page=100" \
+                        | jq -r '.[] | select(.head.ref | startswith("claude-evolution/")) | "PR #\(.number) aus \(.head.ref)"')"
+            [ -n "$OPEN_PRS" ] && PENDING="${PENDING}${OPEN_PRS}\n" || true
+
+            if [ -n "$PENDING" ]; then
+              DECISION=SKIP; REASON=SKIPPED_PENDING_EVOLUTION
+              echo "Es ist bereits eine Evolution unterwegs:"
+              # printf '%b' statt printf "$PENDING": der Inhalt ist Text, kein Formatstring.
+              printf '%b' "$PENDING" | sed 's/^/  /'
+            else
+              set +e
+              sh runner/backlog-select.sh evolutions/BACKLOG.md "$RUNNER_TEMP/backlog"
+              RC=$?
+              set -e
+              case "$RC" in
+                0) DECISION=GO;   REASON=BACKLOG_ENTRY; TASK_ID="$(cat "$RUNNER_TEMP/backlog/id")"
+                   echo "Backlog-Eintrag $TASK_ID: $(cat "$RUNNER_TEMP/backlog/title")" ;;
+                2) DECISION=SKIP; REASON=SKIPPED_EMPTY_BACKLOG
+                   echo "Backlog enthaelt keinen offenen Eintrag - nichts zu tun." ;;
+                *) echo "::error::Backlog nicht verwertbar (Exitcode $RC) - fail-closed vor jedem Claude-Aufruf."
+                   exit 1 ;;
+              esac
+            fi
+          fi
+
+          # --- Ergebnis festschreiben ------------------------------------------------------
+          {
+            echo "decision=$DECISION"
+            echo "reason=$REASON"
+            echo "task_id=$TASK_ID"
+            echo "model=$MODEL"
+            echo "review_model=$RMODEL"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$DECISION" = "GO" ]; then
+            # Enthielte der Aufgabentext die Trennmarke, liesse sich ueber den Job-Output
+            # beliebiger weiterer Inhalt einschleusen. Fail-closed statt Abschneiden.
+            if grep -qF 'ITOEVA_TASK_EOF_0d5f' "$TASKFILE"; then
+              echo "::error::Aufgabentext enthaelt die reservierte Trennmarke."
+              exit 1
+            fi
+            {
+              echo "task<<ITOEVA_TASK_EOF_0d5f"
+              cat "$TASKFILE"
+              echo "ITOEVA_TASK_EOF_0d5f"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "task=" >> "$GITHUB_OUTPUT"
+          fi
+
+          {
+            echo "### ClaudePrimaryRun - Vorentscheidung"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Ereignis | \`$EVENT\` |"
+            echo "| Entscheidung | **$DECISION** |"
+            echo "| Grund | \`$REASON\` |"
+            echo "| Aufgabe | \`${TASK_ID:-–}\` |"
+            echo "| Builder-Modell | \`$MODEL\` |"
+            echo "| Reviewer-Modell | \`$RMODEL\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "CLAUDE_PRIMARY_PREFLIGHT: $DECISION ($REASON)"
+
+  # =========================================================================================
   # JOB 1 - evolve: bauen, pruefen, begutachten. Ohne jede Moeglichkeit zu pushen.
   # =========================================================================================
   evolve:
     name: Builder, Tests, Reviewer
     runs-on: ubuntu-latest
+    needs: preflight
+    # Kein GO heisst: dieser Job startet nicht. Damit kann bei SKIPPED_PENDING_EVOLUTION und
+    # SKIPPED_EMPTY_BACKLOG strukturell kein Claude-Aufruf und kein Test stattfinden.
+    if: needs.preflight.outputs.decision == 'GO'
     permissions:
       contents: read
     # Grosszuegig, weil beide Emulator-Suiten drinstecken koennen: verify ~17 min (gemessen
@@ -293,12 +468,19 @@ jobs:
         id: builder
         env:
           ITOEVA_OAUTH_SECRET: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          TASK: ${{ inputs.task }}
+          TASK: ${{ needs.preflight.outputs.task }}
         timeout-minutes: 40
         run: |
           set -euo pipefail
           BASE='${{ steps.freeze.outputs.base }}'
           FACTS="$(cat "$RUNNER_TEMP/repo-facts.txt")"
+
+          # Doppelter Boden: preflight prueft das bereits, aber ein leerer Auftrag darf unter
+          # keinen Umstaenden eine Modellsitzung kosten.
+          if [ -z "$(printf '%s' "${TASK:-}" | tr -d '[:space:]')" ]; then
+            echo "::error::Leerer Auftrag im Builder-Schritt - fail-closed vor dem Claude-Aufruf."
+            exit 1
+          fi
 
           echo '{"mcpServers":{}}' > "$RUNNER_TEMP/empty-mcp.json"
 
@@ -363,7 +545,7 @@ jobs:
           set +e
           printf '%s' "$PROMPT" | \
           CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3 claude -p \
-            --model '${{ inputs.model }}' \
+            --model '${{ needs.preflight.outputs.model }}' \
             --permission-mode acceptEdits \
             --tools "Read,Glob,Grep,Edit,Write" \
             --safe-mode \
@@ -674,7 +856,7 @@ jobs:
         id: reviewer
         env:
           ITOEVA_OAUTH_SECRET: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          TASK: ${{ inputs.task }}
+          TASK: ${{ needs.preflight.outputs.task }}
         timeout-minutes: 25
         run: |
           set -euo pipefail
@@ -743,7 +925,7 @@ jobs:
           set +e
           printf '%s' "$PROMPT" | \
           CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3 claude -p \
-            --model '${{ inputs.review_model }}' \
+            --model '${{ needs.preflight.outputs.review_model }}' \
             --permission-mode plan \
             --tools "Read,Glob,Grep" \
             --safe-mode \
@@ -853,14 +1035,16 @@ jobs:
           BRANCH='${{ steps.freeze.outputs.branch }}'
           SUMMARY="$(cat "$RUNNER_TEMP/summary.txt")"
 
-          MSG="$(printf '%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n' \
+          MSG="$(printf '%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
             "ClaudePrimaryRun: ${SUMMARY}" \
             "Erzeugt von .github/workflows/claude-primary-run.yml. Builder und Reviewer liefen in getrennten Sitzungen; alle Tests waren gruen." \
             "Itoeva-Base-Sha: ${BASE}" \
             "Itoeva-Tree-Oid: ${TREE}" \
             "Itoeva-Run-Id: ${{ github.run_id }}/${{ github.run_attempt }}" \
-            "Itoeva-Builder-Model: ${{ inputs.model }}" \
-            "Itoeva-Reviewer-Model: ${{ inputs.review_model }}")"
+            "Itoeva-Trigger: ${{ github.event_name }}" \
+            "Itoeva-Task-Id: ${{ needs.preflight.outputs.task_id }}" \
+            "Itoeva-Builder-Model: ${{ needs.preflight.outputs.model }}" \
+            "Itoeva-Reviewer-Model: ${{ needs.preflight.outputs.review_model }}")"
 
           COMMIT="$(git commit-tree "$TREE" -p "$BASE" -m "$MSG")"
           echo "Commit: $COMMIT"
@@ -893,13 +1077,16 @@ jobs:
             --arg builderEnv "$BUILDER_SHA" --arg reviewerEnv "$REVIEWER_SHA" \
             --arg diff "$DIFF_SHA" --arg changed "$CHANGED_SHA" \
             --arg cli "$CLAUDE_CLI_VERSION" \
-            --arg bm '${{ inputs.model }}' --arg rm '${{ inputs.review_model }}' \
+            --arg bm '${{ needs.preflight.outputs.model }}' --arg rm '${{ needs.preflight.outputs.review_model }}' \
+            --arg taskid '${{ needs.preflight.outputs.task_id }}' \
+            --arg reason '${{ needs.preflight.outputs.reason }}' \
             --arg repo '${{ github.repository }}' \
             --arg run '${{ github.run_id }}' --arg attempt '${{ github.run_attempt }}' \
             --arg sim '${{ steps.gates.outputs.need_sim }}' \
             --arg app '${{ steps.gates.outputs.need_app }}' \
             --rawfile paths "$RUNNER_TEMP/changed.txt" \
             '{schemaVersion:1, repository:$repo, runId:$run, runAttempt:$attempt,
+              trigger:"${{ github.event_name }}", taskId:$taskid, taskSource:$reason,
               baseSha:$base, proposedTreeOid:$tree, commitSha:$commit, targetBranch:$branch,
               changedPaths:($paths|rtrimstr("\n")|split("\n")),
               hashes:{bundle:$bundle, builderEnvelope:$builderEnv, reviewerEnvelope:$reviewerEnv,
