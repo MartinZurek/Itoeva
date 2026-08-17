@@ -76,10 +76,23 @@ val hasSigningConfig = signingProblems.isEmpty()
  *
  * `versionCode` muss bei **jedem** Upload in den Play Store hoeher sein als beim vorherigen -
  * der Store lehnt eine bereits verwendete Nummer ab, und nachtraeglich aendern laesst sie sich
- * nicht. Die Zahl hier ist die einzige Quelle dafuer; siehe README, Abschnitt "Veroeffentlichen".
+ * nicht. Siehe README, Abschnitt "Veroeffentlichen".
+ *
+ * **Zwei Quellen, mit Absicht.** Ohne Angabe gelten die Werte hier; ein lokal gebautes Paket
+ * sieht damit aus wie bisher. Die Auslieferung ueber `.github/workflows/deliver-apk.yml`
+ * uebersteuert sie dagegen bei jedem Lauf ueber `-PitoevaVersionCode`/`-PitoevaVersionName`,
+ * weil dort aus demselben Quelltext fortlaufend neue Pakete entstehen: Ohne aufsteigende Nummer
+ * liesse sich am Telefon nicht mehr ablesen, welcher Stand gerade installiert ist - jedes Update
+ * hiesse weiterhin "1.0".
+ *
+ * Ein unbrauchbarer Wert bricht ab, statt still auf den Standard zurueckzufallen. Eine
+ * zurueckgefallene Versionsnummer faellt sonst erst auf dem Geraet auf, und dort als
+ * Downgrade, das sich gar nicht erst installieren laesst.
  */
-val appVersionCode = 1
-val appVersionName = "1.0"
+val appVersionCode: Int = providers.gradleProperty("itoevaVersionCode").orNull
+    ?.let { it.toIntOrNull() ?: error("itoevaVersionCode ist keine ganze Zahl: '$it'") }
+    ?: 1
+val appVersionName: String = providers.gradleProperty("itoevaVersionName").orNull ?: "1.0"
 
 android {
     namespace = "com.notime.glyphsim"
