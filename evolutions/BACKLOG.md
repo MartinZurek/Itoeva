@@ -7,9 +7,20 @@ nicht aendern: `BACKLOG.md` steht in `runner/runner.config.json` unter
 `scope.forbiddenFileNames`, und die Allowlist wird beim Lauf aus dem Basiscommit gelesen,
 nicht aus dem Arbeitsstand.
 
-Ein Eintrag gilt erst als erledigt, wenn ein Mensch ihn hier bewusst auf `done` setzt -
-typischerweise nachdem der zugehoerige Pull Request gemerged wurde. Der Workflow selbst
-aendert diese Datei nie.
+Ein Eintrag gilt als erledigt, sobald der zugehoerige Pull Request gemerged ist. Den
+Statuswechsel auf `done` traegt der Lauf selbst in den Evolutions-Branch ein (Schritt
+"Backlog-Status im Branch nachziehen" in `claude-primary-run.yml`); wirksam wird er damit
+genau in dem Moment, in dem ein Mensch den Branch merged. Wird der Branch verworfen,
+erreicht der Statuswechsel `main` nie und der Eintrag bleibt offen - es ist also weiterhin
+ein Mensch, der ueber "erledigt" entscheidet, nur ohne den leicht zu vergessenden
+Handgriff danach.
+
+Auf `main` schreibt der Workflow diese Datei nie, und der Builder erreicht sie ueberhaupt
+nicht: der Statuscommit entsteht im `publish`-Job, in dem kein Modellcode laeuft, aus der
+im `preflight`-Job ermittelten ID.
+
+Bleibt ein erledigter Eintrag versehentlich auf `open`, waehlt der naechste Zeitplan-Lauf
+ihn erneut - genau das ist mit ITO-0001 zweimal passiert.
 
 ## Format
 

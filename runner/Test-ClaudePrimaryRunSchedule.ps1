@@ -340,7 +340,13 @@ Test-That 'preflight hat nur Leserechte' `
     ($workflow -match '(?ms)^  preflight:.*?permissions:\s*\n\s+contents: read\s*\n\s+pull-requests: read')
 Test-That 'evolve haengt an preflight'     ($workflow -match '(?m)^    needs: preflight')
 Test-That 'evolve laeuft nur bei GO'       ($workflow -match "if: needs\.preflight\.outputs\.decision == 'GO'")
-Test-That 'publish haengt weiterhin an evolve' ($workflow -match '(?m)^    needs: evolve')
+# publish haengt an beiden Jobs: an evolve wegen des Uebergabepakets, an preflight wegen
+# task_id. Die ID MUSS aus preflight kommen - dort lief kein Modellcode. Kaeme sie aus dem
+# Uebergabepaket, koennte der Builder bestimmen, welcher Backlog-Eintrag als erledigt gilt.
+Test-That 'publish haengt an evolve und preflight' `
+    ($workflow -match '(?m)^    needs: \[preflight, evolve\]')
+Test-That 'die Backlog-ID stammt aus preflight, nicht aus dem Uebergabepaket' `
+    (($publishRoh = $workflow.Substring($workflow.IndexOf("`n  publish:"))) -match 'TASK_ID: \$\{\{ needs\.preflight\.outputs\.task_id \}\}')
 
 Write-Host ''
 Write-Host '=== STRUKTURELL: kein Claude-Aufruf ohne GO ==='
@@ -429,8 +435,22 @@ Test-That 'Git-Gates unveraendert' `
      ($evolve -match 'git commit-tree') -and ($evolve -match 'git bundle create'))
 Test-That 'kein Force, Tag, Release, Merge, Rebase' `
     ($code -notmatch '--force|--force-with-lease|git tag|gh release|git merge |git rebase ')
-Test-That 'genau ein Push auf claude-evolution/' `
-    ((([regex]::Matches($code, 'git push')).Count -eq 1) -and ($publish -match 'refs/heads/\$\{BRANCH\}'))
+# Seit dem Backlog-Statuswechsel sind es zwei Pushes: der gepruefte Evolutions-Commit und
+# der Statuscommit, den der Workflow selbst daraufsetzt. Gezaehlt allein wuerde hier nichts
+# mehr sichern - deshalb wird jedes Push-Ziel einzeln herausgezogen und geprueft. Ein Push,
+# der sich der Zaehlung entzieht (etwa als `git -C ... push`), faellt damit ebenfalls auf.
+$pushZiele = [regex]::Matches($code, 'git push origin "([^"]+)"') | ForEach-Object { $_.Groups[1].Value }
+Test-That 'genau zwei Pushes, beide auf claude-evolution/' `
+    ((([regex]::Matches($code, 'git push')).Count -eq 2) -and
+     ($pushZiele.Count -eq 2) -and
+     (@($pushZiele | Where-Object { $_ -match 'refs/heads/\$\{BRANCH\}$' }).Count -eq 2)) `
+    ("Ziele: " + ($pushZiele -join ' | '))
+Test-That 'kein Push-Ziel beruehrt main' `
+    (@($pushZiele | Where-Object { $_ -match 'main' }).Count -eq 0)
+Test-That 'der Statuscommit sitzt nachweislich auf dem geprueften Commit' `
+    ($publish -match "rev-parse 'HEAD\^'")
+Test-That 'der Statuscommit aendert genau eine Zeile in genau einer Datei' `
+    ($publish -match "1\\t1\\tevolutions/BACKLOG\.md")
 # Die Waechter-Abfrage liest offene PRs (GET auf /pulls) - das ist erlaubt und noetig.
 # Verboten ist das Anlegen, Mergen und Loeschen; danach wird gezielt gesucht.
 Test-That 'kein Auto-PR' `
