@@ -68,7 +68,7 @@ Pruefe zusaetzlich, dass alle vier Werte voll deckend sind, also der Alpha-Kanal
 
 Aendere keinen Produktionscode. Halte dich an den bestehenden Teststil des Moduls (JUnit 4, `org.junit.Assert`, deutschsprachige Backtick-Testnamen), siehe `MatrixGeometryTest.kt` als Vorbild.
 
-## [open] ITO-0003 - Unit-Tests fuer ClockRing
+## [done] ITO-0003 - Unit-Tests fuer ClockRing
 Ergaenze eine JVM-Unit-Testdatei `app-sim/src/test/java/com/notime/glyphsim/matrix/ClockRingTest.kt` fuer das bisher ungetestete Objekt `ClockRing` aus `app-sim/src/main/java/com/notime/glyphsim/matrix/ClockRing.kt`.
 
 `ClockRing.perimeterCells` liefert den aeussersten Ring aktiver Zellen, im Uhrzeigersinn ab "12 Uhr" sortiert. Getestet werden soll die zugesicherte Ordnung und Vollstaendigkeit, nicht die Winkelformel selbst.
