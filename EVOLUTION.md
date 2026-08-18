@@ -1,6 +1,9 @@
 # Itoeva Evolution Protocol
 
-Version: 0.1
+Version: 0.2 - seit 2026-08-18 mit einer engen, im Abschnitt "Character Evolution" →
+"Erzählerische Autonomie" beschriebenen Ausnahme: Welt und Beziehungen der sechs Wesen dürfen
+seitdem ohne vorherige menschliche Freigabe der kreativen Richtung weiterentwickelt werden. Der
+übrige Ablauf (Branch, zweiter Agent als Reviewer, PR, menschlicher Merge) bleibt unverändert.
 
 Dieses Dokument legt fest, wie Itoeva weiterentwickelt werden darf, ohne die heute im Repository
 erkennbare Identität, bereits getroffene Produktentscheidungen oder nachweisbares Verhalten
@@ -138,9 +141,21 @@ werden:
 Sieg-/Niederlage-Struktur. Eine solche Struktur darf nicht ohne bewusste Entscheidung eingeführt
 werden.
 
-**OPEN DECISION:** Ob und welche neuen Fähigkeiten, Silhouetten, Animationen oder echten
-Reminder-Funktionen durch Fortschritt freigeschaltet werden sollen, ist nicht entschieden. Der
-aktuelle Stand schaltet solche Inhalte nicht frei.
+**Korrektur (2026-08-18):** Der vorherige Wortlaut dieses Punktes ("Der aktuelle Stand schaltet
+solche Inhalte nicht frei") war sachlich falsch. `PlayScene.kt` (`enum class Acquisition`,
+`PlayPath`) schaltet bereits heute Wohnungsgegenstände nach Fortschrittspfad frei - vier Pfade
+(Aufbrecher, Fürsorglicher, Stiller, Macher) zu je drei Gegenständen, vollständig belegt. Diese
+Mechanik ist entschieden, gebaut und getestet (`SceneCompositionTest`, u. a. `jedes erworbene
+Stück ist auch tatsächlich zu sehen`); sie ist keine `OPEN DECISION` mehr.
+
+**OPEN DECISION:** Was NICHT entschieden ist: neue Fortschrittspfade oder eine vierte Stufe je
+bestehendem Pfad (das ist Balancing/Ökonomie, siehe unten), neue Avatar-Fähigkeiten oder
+-Silhouetten, echte Reminder-Funktionen durch Fortschritt, sowie ein eigenständiges
+Fertigkeiten-/Skillbaum-System im Sinne von Rollenspiel-Talentbäumen (Nutzeridee vom
+2026-08-18, siehe Evolution History) - Letzteres wäre eine neue Spielstruktur mit eigener
+Balancing-, UI- und Fortschrittslogik und damit eine Entscheidung mit größerer Tragweite als die
+bisher freigegebenen Inhaltsergänzungen. Eine solche Struktur darf nicht ohne bewusste
+menschliche Entscheidung eingeführt werden.
 
 **OPEN DECISION:** Eine größere lineare Handlung oder Quest-Struktur ist nicht belegt. Die
 vorhandene Story ist episodisches Worldbuilding.
@@ -164,7 +179,10 @@ Zur Klasse **CONTENT** gehören:
 CONTENT darf später nach erfolgreichen automatisierten Prüfungen über einen schnelleren
 Veröffentlichungsweg laufen. Die Einstufung erlaubt keine neuen Produktentscheidungen: Änderungen
 außerhalb bereits freigegebener Grenzen, Eingriffe in geschützte Bereiche und strategisch offene
-Fragen benötigen weiterhin eine ausdrückliche Review und Entscheidung.
+Fragen benötigen weiterhin eine ausdrückliche Review und Entscheidung. **Ausgenommen davon** sind
+ausschließlich die unter "Character Evolution" → "Erzählerische Autonomie" benannten Punkte
+(weitere Beziehungen, weitere Lore-Stücke) - dort ist die kreative Richtung bereits entschieden,
+Review und Tests bleiben trotzdem verpflichtend.
 
 ### CODE
 
@@ -221,7 +239,10 @@ Evolution ohne gesonderte Review und ausdrückliche Entscheidung semantisch ver�
 - XP-Vergabe ausschließlich für beantwortete Spiel-Ereignisse.
 - Berechnung des Levels aus XP statt paralleler Speicherung.
 - Ausschluss von `MEDICINE` aus zufälligen Spielplänen.
-- Lore-Texte, Charakterpersönlichkeiten, Beziehungen und Signaturthemen.
+- Lore-Texte, Charakterpersönlichkeiten, Beziehungen und Signaturthemen. **Teilausnahme seit
+  2026-08-18:** neue Lore-Stücke und neue Beziehungen dürfen ergänzt werden, siehe "Character
+  Evolution" → "Erzählerische Autonomie". Bestehende Texte, die drei etablierten Beziehungen und
+  die sechs Persönlichkeiten bleiben unverändert geschützt.
 - Datenschutz-, Netzwerk- und Store-Versprechen.
 - Paketnamen, Application IDs, Signatur-/Keystore-Konfiguration und Releasevarianten.
 - Hardware-spezifische Glyph-SDK-Integration und Gerätekennungen.
@@ -265,10 +286,42 @@ Build-, Migrations- oder Abhängigkeitsprozess entstehen.
 - Ein neu gewähltes Wesen beginnt seine eigene Beziehungsgeschichte, ohne die Routinen des
   Nutzers zurückzusetzen.
 
-**OPEN DECISION:** Weitere direkte Beziehungen zwischen den sechs Wesen sind nicht festgelegt.
+### Erzählerische Autonomie (entschieden 2026-08-18)
 
-**OPEN DECISION:** Es ist nicht entschieden, ob Lore über die vorhandenen sieben Teile je Wesen
-hinaus erweitert oder in eine übergreifende Handlung überführt wird.
+Die beiden vorherigen `OPEN DECISION`-Punkte dieses Abschnitts sind nicht mehr offen. Entschieden
+vom Produktverantwortlichen: Der automatisierte Evolutionslauf darf Welt und Beziehungen der
+sechs Wesen eigenständig weiterentwickeln, ohne vor der einzelnen Änderung eine menschliche
+Freigabe der kreativen Richtung einzuholen. Begründung: Ergebnisse sind über den üblichen Weg
+(eigener Branch, Review durch einen zweiten Agenten, PR, menschlicher Merge) jederzeit prüfbar und
+mit einem gewöhnlichen Revert genauso rücknehmbar wie jede andere Evolution - eine falsche
+kreative Entscheidung kostet also keine Vorabprüfung wert, weil die Nachprüfung genauso wirksam
+ist. Am Ablauf selbst ändert diese Entscheidung nichts, nur an der einen Rückfrage davor.
+
+**Ohne Rückfrage erlaubt:**
+
+- **Weitere Beziehungen** zwischen den sechs Wesen, zusätzlich zu Puffling–Gloop, Wyrmling–Fennec
+  und Starlet–Hootlet. Diese drei bleiben bestehen und werden durch keine neue Beziehung ersetzt
+  oder abgeschwächt - Ergänzung, nicht Austausch.
+- **Weitere Lore-Stücke** über die bestehenden sieben je Wesen hinaus, als Fortsetzung des
+  bisherigen episodischen Erzählens. Erhöht sich die Anzahl, ist das eine CODE-Evolution:
+  `PlayLore.PIECES` sowie die neuen Textressourcen aller sechs Wesen müssen in derselben Evolution
+  zusammen ergänzt werden (`values/strings.xml` und `values-de/strings.xml`, beide Sprachen
+  inhaltlich gleich) - sonst hat ein Wesen mehr zu erzählen als ein anderes, und genau das prüft
+  `PlayLoreTest` bereits automatisiert.
+
+**Weiterhin `OPEN DECISION`, also weiterhin mit ausdrücklicher menschlicher Entscheidung:**
+
+- Eine größere lineare Handlung, ein Quest-Ziel oder ein Sieg-/Niederlage-Zustand - daran ändert
+  diese Freigabe nichts, siehe die entsprechenden `OPEN DECISION`-Punkte unter "Evolution Goals".
+- Neue Fähigkeiten, Silhouetten oder Animationen, die durch Fortschritt freigeschaltet werden.
+- Alles, was Produktidentität, Datenschema, Persistenzverträge oder andere in "Protected Areas"
+  gelistete Bereiche berührt.
+
+Jede so entstandene Änderung bleibt an die übrigen Regeln dieses Abschnitts gebunden - Stimme und
+Persönlichkeit der Figuren, Widerspruchsfreiheit zu bestehenden Orten und Ereignissen, keine
+Aussage über den Nutzer ohne Datenbeleg - und wird in der Evolution History wie jede andere
+Evolution dokumentiert, zusätzlich ausdrücklich als **autonome kreative Entscheidung**
+gekennzeichnet.
 
 ## Gameplay Evolution – Regeln für Balancing, Progression und Game Loop
 
@@ -480,6 +533,62 @@ sein:
 
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
+
+### 2026-08-18 - Erzählerische Autonomie freigegeben
+
+- **Version:** Protokoll 0.1 → 0.2. Kein Rücksetzweg im technischen Sinn nötig - eine
+  Protokolländerung betrifft keine Nutzerdaten; Rücknahme ist ein gewöhnlicher Revert dieses
+  Commits.
+- **Ausgangsproblem:** Zwei `OPEN DECISION`-Punkte unter "Character Evolution" → "Beziehung"
+  verhinderten, dass der automatisierte Evolutionslauf Welt oder Beziehungen der sechs Wesen
+  überhaupt weiterentwickelt - jede Erweiterung hätte vorab eine menschliche Entscheidung
+  gebraucht, obwohl das Ergebnis über Branch, Review und PR ohnehin prüfbar und per Revert
+  rücknehmbar gewesen wäre.
+- **Evidenzklassifikation:** `OPEN DECISION` (jetzt entschieden, siehe unten).
+- **Getroffene Produktentscheidung:** Weitere Beziehungen zwischen den sechs Wesen und weitere
+  Lore-Stücke über die bestehenden sieben hinaus dürfen ohne vorherige Rückfrage zur kreativen
+  Richtung entstehen; der bestehende Ablauf (Branch, zweiter Agent, PR, menschlicher Merge) bleibt
+  Pflicht. Verworfene Alternative: dieselbe Freigabe auch für Spielziel/Quest-Struktur oder
+  freischaltbare Fähigkeiten zu erteilen - verworfen, weil beides tiefer in Balancing bzw.
+  Pixel-Art-Gestaltung eingreift und die automatisierte Prüfung dafür (noch) nicht ausreicht.
+- **Betroffene Module/Texte:** `EVOLUTION.md` selbst; vorbereitend `evolutions/BACKLOG.md` um
+  ITO-0004 und ITO-0005 ergänzt, damit die Freigabe nicht folgenlos bleibt.
+- **Änderungen an Charakter/Story:** keine inhaltliche Änderung durch diesen Eintrag selbst -
+  reine Prozessänderung. Die drei bestehenden Beziehungen und alle 42 vorhandenen Lore-Texte
+  bleiben unverändert.
+- **Migrationsauswirkungen:** keine - keine Datenbank, keine Preference-Schlüssel betroffen.
+- **Getestet:** nicht zutreffend, reine Dokumentation.
+- **Neu entstandene offene Punkte:** keine. Weiterhin offen bleiben Spielziel/Quest-Struktur,
+  Fortschritts-Freischaltungen sowie alle übrigen zuvor schon offenen Punkte.
+
+### 2026-08-18 - Sachkorrektur Fortschritts-Freischaltung, Skillbaum-Idee festgehalten
+
+- **Version:** Protokoll bleibt 0.2, keine neue Versionsnummer - reine Sachkorrektur eines
+  bestehenden `OPEN DECISION`-Punktes plus Ergänzung, keine neue Freigabe.
+- **Ausgangsproblem:** Der bisherige Wortlaut unter "Evolution Goals" behauptete, der aktuelle
+  Stand schalte keine Inhalte durch Fortschritt frei. Das war falsch: `PlayScene.kt`
+  (`enum class Acquisition`, `PlayPath`) tut das bereits produktiv - vier Pfade zu je drei
+  Wohnungsgegenständen, vollständig belegt und durch `SceneCompositionTest` abgesichert.
+- **Evidenzklassifikation:** Tatsachenfehler in bestehender Dokumentation, kein `OPEN DECISION`.
+- **Getroffene Korrektur:** Der Abschnitt beschreibt jetzt den tatsächlichen Stand (Acquisition
+  ist entschieden und gebaut) und grenzt ihn scharf von dem ab, was weiterhin offen ist: neue
+  Fortschrittspfade, eine vierte Stufe je Pfad, neue Fähigkeiten/Silhouetten, echte
+  Reminder-Freischaltungen. Keine Code- oder Verhaltensänderung, nur Dokumentation.
+- **Nutzerwunsch festgehalten, nicht umgesetzt:** Der Nutzer brachte die Idee eines
+  Skillbaums für die Avatare ein (Rollenspiel-Talentbaum-artig). Bewusst NICHT in dieselbe
+  Kategorie wie ITO-0004/0005/0006/0007/0008 eingeordnet: Ein Skillbaum wäre eine neue
+  Spielstruktur mit eigener Balancing-, UI- und Fortschrittslogik, kein einzelner Inhalt
+  innerhalb eines bereits entschiedenen Rahmens. Bleibt `OPEN DECISION`, siehe "Evolution Goals".
+- **Betroffene Module/Texte:** `EVOLUTION.md` selbst; vorbereitend `evolutions/BACKLOG.md` um
+  ITO-0007 (Wald-Beiwerk) und ITO-0008 (zuletzt erzähltes Lore-Stück bleibt sichtbar) ergänzt -
+  beide unter bereits entschiedenem Rahmen (Szenenvielfalt bzw. reine Leseanzeige bestehender
+  Werte), keine neue Produktentscheidung.
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine.
+- **Getestet:** nicht zutreffend, reine Dokumentation; ITO-0007/ITO-0008 tragen ihre eigenen
+  Testanforderungen im Aufgabentext.
+- **Neu entstandene offene Punkte:** Skillbaum/Talentbaum-System ausdrücklich als `OPEN DECISION`
+  vermerkt (siehe oben) - nicht neu im Sinne des Prinzips, sondern erstmals benannt.
 
 ### Initialer Erkenntnisstand
 
