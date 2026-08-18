@@ -5,6 +5,10 @@
 # Telefon aendert sich dadurch nichts am Ablauf - Drive-App oeffnen, Datei antippen,
 # "Aktualisieren". Nur das lokale Bauen davor entfaellt.
 #
+# Der Drive-Teil laesst sich nachreichen: Solange der Zugang dafuer nicht hinterlegt ist,
+# baut und signiert der Lauf trotzdem und legt die fertige APK als Artefakt ab. Damit ist
+# der Weg schon nutzbar, bevor das Google-Service-Konto existiert - siehe unten.
+#
 # Der Grundsatz, an dem alles haengt: **dieselbe Signatur wie die bereits installierte App.**
 # Android laesst ein Update nur zu, wenn das Zertifikat uebereinstimmt; sonst bleibt nur
 # Deinstallieren - und weil Itoeva ausschliesslich lokal speichert, waeren Pflegebuch,
@@ -22,20 +26,27 @@
 # und einen Drive-Zugang. Beides gehoert in einen Workflow, den weder ein Pull Request noch ein
 # Fork ausloesen kann - deshalb unten ausschliesslich `push` auf `main` und `workflow_dispatch`.
 #
-# Einzurichten unter Settings > Secrets and variables > Actions:
+# Einzurichten unter Settings > Secrets and variables > Actions. Die vier Werte zerfallen in
+# zwei Gruppen, und die zweite darf nachgereicht werden:
 #
-#   Secrets:
-#     DEBUG_KEYSTORE_BASE64   - %USERPROFILE%\.android\debug.keystore, base64-kodiert:
+# ZWINGEND - ohne sie bricht der Lauf ab, weil sonst eine APK entstuende, die sich auf dem
+# Telefon nicht installieren laesst:
+#
+#   Secret   DEBUG_KEYSTORE_BASE64   - %USERPROFILE%\.android\debug.keystore, base64-kodiert:
 #         [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.android\debug.keystore"))
-#     GDRIVE_SA_JSON          - Schluessel-JSON eines Google-Service-Kontos. Diesem Konto wird
-#                               NUR die eine Datei Tama-debug.apk freigegeben (Bearbeiter),
-#                               nicht der Ordner darum herum.
-#   Variables:
-#     EXPECTED_SIGNER_SHA256  - Fingerabdruck des Debug-Schluessels, aus:
+#   Variable EXPECTED_SIGNER_SHA256  - Fingerabdruck des Debug-Schluessels, aus:
 #         keytool -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" \
 #                 -storepass android -alias androiddebugkey
 #         Schreibweise egal - Doppelpunkte und Gross-/Kleinschreibung werden unten normalisiert.
-#     GDRIVE_APK_FILE_ID      - Datei-Id der bestehenden Tama-debug.apk in Drive. Bewusst die
+#
+# NACHREICHBAR - fehlen sie, wird nur die Drive-Ablieferung uebersprungen; die APK liegt dann
+# als Artefakt des Laufs bereit, und der Lauf bleibt gruen (Begruendung am Schritt
+# "Drive-Zugang pruefen"). Sind sie gesetzt, ist die Ablieferung Pflicht:
+#
+#   Secret   GDRIVE_SA_JSON          - Schluessel-JSON eines Google-Service-Kontos. Diesem Konto wird
+#                               NUR die eine Datei Tama-debug.apk freigegeben (Bearbeiter),
+#                               nicht der Ordner darum herum.
+#   Variable GDRIVE_APK_FILE_ID      - Datei-Id der bestehenden Tama-debug.apk in Drive. Bewusst die
 #                               BESTEHENDE Datei aktualisieren statt eine neue anzulegen: nur so
 #                               bleiben Name, Link und Eigentuemer gleich, und das Telefon findet
 #                               die Datei am gewohnten Platz.
@@ -248,6 +259,44 @@ jobs:
           retention-days: 14
 
       # -----------------------------------------------------------------------------------
+      # Ist der Drive-Weg ueberhaupt schon eingerichtet?
+      #
+      # **Nicht eingerichtet ist kein Fehler.** Der Wert dieses Laufs - eine gebaute, gegen
+      # den erwarteten Schluessel geprueft signierte APK - steht an dieser Stelle bereits als
+      # Artefakt bereit. Wuerde der Lauf mangels Google-Zugang trotzdem rot enden, stuende bei
+      # jedem Merge ein roter Haken auf main, der nichts ueber die Software aussagt. Genau
+      # diese Falle ist der Grund, warum der release-Job in verify.yml nur von Hand laeuft:
+      # ein Pruefzeichen, das dauerhaft rot ist, wird nach kurzer Zeit nicht mehr gelesen.
+      #
+      # **Uebersprungen wird nur der unkonfigurierte Fall.** Sind beide Werte da, ist die
+      # Ablieferung Pflicht: ein abgelaufener Zugang, eine zurueckgenommene Freigabe oder ein
+      # Fehler bei Google lassen den Lauf weiterhin scheitern. Sonst wuerde stillschweigend
+      # eine veraltete Datei auf dem Telefon liegenbleiben.
+      #
+      # Warum ueber einen Ausgabewert und nicht direkt in `if:`: Der `secrets`-Kontext steht
+      # in Schrittbedingungen nicht zur Verfuegung. Geprueft wird deshalb hier, und nach
+      # aussen geht nur "ja" oder "nein" - der Inhalt des Geheimnisses nirgends.
+      # -----------------------------------------------------------------------------------
+      - name: Drive-Zugang pruefen
+        id: drive
+        env:
+          SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${SA_JSON}" ] && [ -n "${FILE_ID}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Drive-Zugang eingerichtet - die APK wird abgeliefert."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            fehlt=""
+            [ -n "${SA_JSON}" ] || fehlt="Secret GDRIVE_SA_JSON"
+            [ -n "${FILE_ID}" ] || fehlt="${fehlt:+$fehlt und }Variable GDRIVE_APK_FILE_ID"
+            echo "::notice::Drive-Ablieferung uebersprungen - es fehlt: ${fehlt}."
+            echo "::notice::Die fertige APK liegt als Artefakt dieses Laufs bereit."
+          fi
+
+      # -----------------------------------------------------------------------------------
       # Ablieferung: die BESTEHENDE Drive-Datei ueberschreiben.
       #
       # `files.update` statt `files.create` - dadurch bleiben Datei-Id, Name, Link und
@@ -261,6 +310,7 @@ jobs:
       # -----------------------------------------------------------------------------------
       - name: Google-Zugang herstellen
         id: gcloud
+        if: steps.drive.outputs.configured == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GDRIVE_SA_JSON }}
@@ -268,6 +318,7 @@ jobs:
           access_token_scopes: https://www.googleapis.com/auth/drive
 
       - name: APK nach Drive legen
+        if: steps.drive.outputs.configured == 'true'
         env:
           TOKEN: ${{ steps.gcloud.outputs.access_token }}
           FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
@@ -275,11 +326,6 @@ jobs:
           SHA: ${{ steps.version.outputs.sha }}
         run: |
           set -euo pipefail
-          if [ -z "${FILE_ID}" ]; then
-            echo "::error::Variable GDRIVE_APK_FILE_ID fehlt - unklar, welche Datei zu"
-            echo "::error::aktualisieren ist. Bewusst kein Anlegen einer neuen Datei."
-            exit 1
-          fi
           APK=app-sim/build/outputs/apk/debug/app-sim-debug.apk
 
           # Inhalt ersetzen.

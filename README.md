@@ -775,6 +775,17 @@ könnten sich dann nicht einmal gegenseitig aktualisieren.
 `-PitoevaVersionName`, Voreinstellung unverändert), damit sich in den App-Infos ablesen lässt,
 welcher Stand installiert ist. Nötige Secrets und Variablen stehen im Kopf des Workflows.
 
+**Der Drive-Teil ist nachreichbar.** Ohne hinterlegten Google-Zugang baut und signiert der Lauf
+trotzdem und legt die APK als Artefakt ab — er bleibt dabei grün und meldet als Notiz, was fehlt.
+Der Weg ist damit schon benutzbar, bevor das Service-Konto existiert; die Ablieferung schaltet
+sich in dem Moment zu, in dem die beiden Werte gesetzt sind. Ein dauerhaft roter Haken auf `main`
+wäre die schlechtere Alternative: er sagt nichts über die Software und wird nach kurzer Zeit nicht
+mehr gelesen — dieselbe Überlegung, aus der der `release`-Job in `verify.yml` nur von Hand läuft.
+
+Das gilt ausdrücklich **nur für den nicht eingerichteten Zustand**. Sind beide Werte gesetzt, ist
+die Ablieferung Pflicht, und ein abgelaufener Zugang oder eine zurückgenommene Freigabe lassen den
+Lauf scheitern — sonst bliebe stillschweigend eine veraltete Datei auf dem Telefon liegen.
+
 **Was das für den Play Store bedeutet:** Ein debug-signiertes Paket nimmt Google nicht an. Für
 eine Veröffentlichung braucht es weiterhin den Upload-Schlüssel und `bundleRelease` – und der
 Wechsel dorthin kostet auf dem eigenen Telefon dann die einmalige Deinstallation, die dieser Weg
