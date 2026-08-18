@@ -164,6 +164,75 @@ jobs:
             exit 1
           fi
 
+          # Wo AGP den Debug-Schluessel sucht, haengt an der Version: mal
+          # ANDROID_USER_HOME, mal ANDROID_SDK_HOME, sonst user.home + /.android.
+          # Ist keine davon gesetzt, greift zwar der Standard - aber "greift der
+          # Standard" ist eine Annahme, und faellt sie falsch aus, erzeugt AGP
+          # stillschweigend einen NEUEN Schluessel, statt zu klagen. Das faellt dann
+          # erst am Signaturnachweis auf, und dort sieht es aus wie ein falsches
+          # Secret. Beide Zeiger deshalb ausdruecklich auf dieselbe Datei.
+          {
+            echo "ANDROID_USER_HOME=$HOME/.android"
+            echo "ANDROID_SDK_HOME=$HOME"
+          } >> "$GITHUB_ENV"
+
+      # -----------------------------------------------------------------------------------
+      # Passen die beiden hinterlegten Werte ueberhaupt zueinander?
+      #
+      # Der Nachweis nach dem Bau (unten) beantwortet nur, ob die fertige APK den erwarteten
+      # Schluessel traegt - nicht, WORAN es lag, wenn nicht. Zwei ganz verschiedene Ursachen
+      # sehen dort gleich aus:
+      #
+      #   1. Secret und Variable gehoeren nicht zusammen - der hinterlegte Schluessel ist ein
+      #      anderer als der, auf den EXPECTED_SIGNER_SHA256 zeigt. Dann ist nichts am Bau
+      #      falsch, sondern an der Einrichtung.
+      #   2. Der Schluessel stimmt, aber AGP hat ihn nicht benutzt und sich einen eigenen
+      #      erzeugt. Dann liegt der Fehler in diesem Workflow.
+      #
+      # Dieser Schritt trennt beides, und zwar in Sekunden statt nach drei Minuten Bauzeit.
+      # Der Fingerabdruck eines Zertifikats ist kein Geheimnis - er darf im Log stehen, das
+      # Schluesselmaterial selbst nicht.
+      # -----------------------------------------------------------------------------------
+      - name: Hinterlegten Schluessel gegen die Erwartung pruefen
+        env:
+          EXPECTED: ${{ vars.EXPECTED_SIGNER_SHA256 }}
+        run: |
+          set -euo pipefail
+          WANT="$(printf '%s' "${EXPECTED:-}" | tr -d ':' | tr 'A-Z' 'a-z')"
+          if [ -z "$WANT" ]; then
+            echo "::error::Variable EXPECTED_SIGNER_SHA256 ist nicht gesetzt."
+            exit 1
+          fi
+          # Ein von AGP erzeugter Debug-Schluessel hat immer diesen Alias und dieses Passwort.
+          if ! LIST="$(keytool -list -v \
+                        -keystore "$HOME/.android/debug.keystore" \
+                        -storepass android -alias androiddebugkey 2>&1)"; then
+            echo "::error::Der hinterlegte Schluesselspeicher liess sich nicht lesen."
+            echo "::error::Erwartet wird ein Debug-Keystore mit Alias 'androiddebugkey' und"
+            echo "::error::Passwort 'android'. Ist in DEBUG_KEYSTORE_BASE64 wirklich"
+            echo "::error::%USERPROFILE%\\.android\\debug.keystore hinterlegt?"
+            exit 1
+          fi
+          HAVE="$(awk 'tolower($0) ~ /^[[:space:]]*sha256:/ {
+                         gsub(/:/, "", $2); print tolower($2); exit
+                       }' <<< "$LIST")"
+          if [ -z "$HAVE" ]; then
+            echo "::error::Aus dem Schluesselspeicher liess sich kein SHA-256 lesen."
+            exit 1
+          fi
+          echo "Hinterlegter Schluessel (SHA-256): $HAVE"
+          if [ "$HAVE" != "$WANT" ]; then
+            echo "::error::Secret und Variable gehoeren nicht zusammen."
+            echo "::error::  DEBUG_KEYSTORE_BASE64 enthaelt den Schluessel $HAVE"
+            echo "::error::  EXPECTED_SIGNER_SHA256 zeigt dagegen auf $WANT"
+            echo "::error::Beide muessen aus DERSELBEN Datei stammen - und zwar aus der, mit der"
+            echo "::error::die auf dem Telefon installierte App signiert wurde. Zu pruefen mit:"
+            echo "::error::  keytool -list -v -keystore \"\$env:USERPROFILE\\.android\\debug.keystore\" \\"
+            echo "::error::          -storepass android -alias androiddebugkey"
+            exit 1
+          fi
+          echo "Schluessel und Erwartung stimmen ueberein - der Bau kann beginnen."
+
       - name: assembleDebug
         run: >
           ./gradlew :app-sim:assembleDebug
@@ -222,6 +291,12 @@ jobs:
             echo "::error::Fremde Signatur - erwartet war $WANT."
             echo "::error::Diese APK waere kein Update der installierten App, sondern verlangte"
             echo "::error::eine Deinstallation. Nicht ausgeliefert."
+            echo "::error::"
+            echo "::error::Der hinterlegte Schluessel passte weiter oben noch zur Erwartung - der"
+            echo "::error::Fehler liegt also NICHT an den Secrets, sondern daran, dass AGP beim"
+            echo "::error::Bauen einen anderen Schluessel benutzt hat als den unter"
+            echo "::error::\$HOME/.android/debug.keystore hinterlegten. Dort ansetzen, nicht an"
+            echo "::error::der Einrichtung."
             exit 1
           fi
           echo "Signatur stimmt mit der installierten App ueberein."
