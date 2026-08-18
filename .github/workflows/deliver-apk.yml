@@ -164,6 +164,18 @@ jobs:
             exit 1
           fi
 
+          # Wo AGP den Debug-Schluessel sucht, haengt an der Version: mal
+          # ANDROID_USER_HOME, mal ANDROID_SDK_HOME, sonst user.home + /.android.
+          # Ist keine davon gesetzt, greift zwar der Standard - aber "greift der
+          # Standard" ist eine Annahme, und faellt sie falsch aus, erzeugt AGP
+          # stillschweigend einen NEUEN Schluessel, statt zu klagen. Das faellt dann
+          # erst am Signaturnachweis auf, und dort sieht es aus wie ein falsches
+          # Secret. Beide Zeiger deshalb ausdruecklich auf dieselbe Datei.
+          {
+            echo "ANDROID_USER_HOME=$HOME/.android"
+            echo "ANDROID_SDK_HOME=$HOME"
+          } >> "$GITHUB_ENV"
+
       # -----------------------------------------------------------------------------------
       # Passen die beiden hinterlegten Werte ueberhaupt zueinander?
       #
