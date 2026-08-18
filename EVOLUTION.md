@@ -141,9 +141,21 @@ werden:
 Sieg-/Niederlage-Struktur. Eine solche Struktur darf nicht ohne bewusste Entscheidung eingeführt
 werden.
 
-**OPEN DECISION:** Ob und welche neuen Fähigkeiten, Silhouetten, Animationen oder echten
-Reminder-Funktionen durch Fortschritt freigeschaltet werden sollen, ist nicht entschieden. Der
-aktuelle Stand schaltet solche Inhalte nicht frei.
+**Korrektur (2026-08-18):** Der vorherige Wortlaut dieses Punktes ("Der aktuelle Stand schaltet
+solche Inhalte nicht frei") war sachlich falsch. `PlayScene.kt` (`enum class Acquisition`,
+`PlayPath`) schaltet bereits heute Wohnungsgegenstände nach Fortschrittspfad frei - vier Pfade
+(Aufbrecher, Fürsorglicher, Stiller, Macher) zu je drei Gegenständen, vollständig belegt. Diese
+Mechanik ist entschieden, gebaut und getestet (`SceneCompositionTest`, u. a. `jedes erworbene
+Stück ist auch tatsächlich zu sehen`); sie ist keine `OPEN DECISION` mehr.
+
+**OPEN DECISION:** Was NICHT entschieden ist: neue Fortschrittspfade oder eine vierte Stufe je
+bestehendem Pfad (das ist Balancing/Ökonomie, siehe unten), neue Avatar-Fähigkeiten oder
+-Silhouetten, echte Reminder-Funktionen durch Fortschritt, sowie ein eigenständiges
+Fertigkeiten-/Skillbaum-System im Sinne von Rollenspiel-Talentbäumen (Nutzeridee vom
+2026-08-18, siehe Evolution History) - Letzteres wäre eine neue Spielstruktur mit eigener
+Balancing-, UI- und Fortschrittslogik und damit eine Entscheidung mit größerer Tragweite als die
+bisher freigegebenen Inhaltsergänzungen. Eine solche Struktur darf nicht ohne bewusste
+menschliche Entscheidung eingeführt werden.
 
 **OPEN DECISION:** Eine größere lineare Handlung oder Quest-Struktur ist nicht belegt. Die
 vorhandene Story ist episodisches Worldbuilding.
@@ -548,6 +560,35 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Getestet:** nicht zutreffend, reine Dokumentation.
 - **Neu entstandene offene Punkte:** keine. Weiterhin offen bleiben Spielziel/Quest-Struktur,
   Fortschritts-Freischaltungen sowie alle übrigen zuvor schon offenen Punkte.
+
+### 2026-08-18 - Sachkorrektur Fortschritts-Freischaltung, Skillbaum-Idee festgehalten
+
+- **Version:** Protokoll bleibt 0.2, keine neue Versionsnummer - reine Sachkorrektur eines
+  bestehenden `OPEN DECISION`-Punktes plus Ergänzung, keine neue Freigabe.
+- **Ausgangsproblem:** Der bisherige Wortlaut unter "Evolution Goals" behauptete, der aktuelle
+  Stand schalte keine Inhalte durch Fortschritt frei. Das war falsch: `PlayScene.kt`
+  (`enum class Acquisition`, `PlayPath`) tut das bereits produktiv - vier Pfade zu je drei
+  Wohnungsgegenständen, vollständig belegt und durch `SceneCompositionTest` abgesichert.
+- **Evidenzklassifikation:** Tatsachenfehler in bestehender Dokumentation, kein `OPEN DECISION`.
+- **Getroffene Korrektur:** Der Abschnitt beschreibt jetzt den tatsächlichen Stand (Acquisition
+  ist entschieden und gebaut) und grenzt ihn scharf von dem ab, was weiterhin offen ist: neue
+  Fortschrittspfade, eine vierte Stufe je Pfad, neue Fähigkeiten/Silhouetten, echte
+  Reminder-Freischaltungen. Keine Code- oder Verhaltensänderung, nur Dokumentation.
+- **Nutzerwunsch festgehalten, nicht umgesetzt:** Der Nutzer brachte die Idee eines
+  Skillbaums für die Avatare ein (Rollenspiel-Talentbaum-artig). Bewusst NICHT in dieselbe
+  Kategorie wie ITO-0004/0005/0006/0007/0008 eingeordnet: Ein Skillbaum wäre eine neue
+  Spielstruktur mit eigener Balancing-, UI- und Fortschrittslogik, kein einzelner Inhalt
+  innerhalb eines bereits entschiedenen Rahmens. Bleibt `OPEN DECISION`, siehe "Evolution Goals".
+- **Betroffene Module/Texte:** `EVOLUTION.md` selbst; vorbereitend `evolutions/BACKLOG.md` um
+  ITO-0007 (Wald-Beiwerk) und ITO-0008 (zuletzt erzähltes Lore-Stück bleibt sichtbar) ergänzt -
+  beide unter bereits entschiedenem Rahmen (Szenenvielfalt bzw. reine Leseanzeige bestehender
+  Werte), keine neue Produktentscheidung.
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine.
+- **Getestet:** nicht zutreffend, reine Dokumentation; ITO-0007/ITO-0008 tragen ihre eigenen
+  Testanforderungen im Aufgabentext.
+- **Neu entstandene offene Punkte:** Skillbaum/Talentbaum-System ausdrücklich als `OPEN DECISION`
+  vermerkt (siehe oben) - nicht neu im Sinne des Prinzips, sondern erstmals benannt.
 
 ### Initialer Erkenntnisstand
 

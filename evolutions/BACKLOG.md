@@ -190,6 +190,81 @@ Animation. `LibraryAnimationFitTest` muss fuer die neue Animation ebenso gruen s
 bestehenden 26 (der Test iteriert automatisch ueber `DefaultLibraryAnimations.seed()`, keine
 Testaenderung noetig).
 
+## [open] ITO-0007 - Ein weiteres Beiwerk-Requisit im Wald ergaenzen
+Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt (Vielfalt der Szenen) - keine
+`OPEN DECISION` betroffen, keine Rueckfrage noetig. Neues Requisit + ein Placement-Eintrag, kein
+neuer Mechanismus: keine neue Station, keine Aenderung an `Acquisition`/`PlayPath` (die
+progressionsgebundenen Zimmererweiterungen bleiben `OPEN DECISION` und sind NICHT Teil dieser
+Aufgabe).
+
+**Ort:** `app-sim/src/main/java/com/notime/glyphsim/matrix/PlayScene.kt`, `Place.FOREST` in
+`furnishing()`. Der Wald ist der von "Natur" ausdruecklich gemeinte, artenaermste geteilte
+Aussenort: aktuell sechs Placements (`OLDTREE`, `PINE` zweimal, `BUSH`, `LOG`, `TREE`), belegte
+`anchorX`-Werte 0.34, 1, 0, 0.28, 0.58, 0.86.
+
+**Aufgabe:** Genau EIN neues privates `Prop` in derselben Datei ergaenzen (Wahl frei, z. B.
+Pilzgruppe, Farn, Laubhaufen, moosbewachsener Stumpf - solange es als Bodenbewuchs/Unterholz
+liest und keine der in `habitatPlacements()` bereits vergebenen Landschaftsformen dupliziert:
+`ROCK`, `CRAG`, `ACACIA`, `REEDS`, `FLOWER` sind belegt). Format wie `BUSH`/`TREE`: `Prop(width,
+height, art = hLine(...)+ vLine(...))` - siehe `BUSH` (Zeile ~1372) als Vorbild fuer eine flache
+Silhouette. Richtwert Hoehe <= 4, damit es als Unterholz und nicht als weiterer Baum wirkt.
+
+Das neue Prop als zusaetzliches `Placement(<NEUES_PROP>, anchorX = <freier Wert zwischen 0 und
+1, ungleich den sechs belegten>)` OHNE `station` in die Liste unter `Place.FOREST` einfuegen -
+Beiwerk wie `BUSH`, keine neue Station, kein `behind = true` (das ist den beiden Hintergrundbaeumen
+vorbehalten).
+
+**Bedingungen:**
+- Keine Aenderung an anderen `Place`-Zweigen, an `Acquisition`, an `Station`, an `groundDetail()`
+  oder `habitatPlacements()`.
+- Kein bestehendes Prop, keine bestehende `anchorX`, kein bestehender `sortOrder`/Wert veraendern.
+- `SceneCompositionTest` muss unveraendert gruen bleiben, insbesondere `keine zwei Requisiten
+  stehen ineinander`, `niemand ragt durch die Zimmerdecke`, `an jedem Ort bleibt Platz zum
+  Stehen`, `auf schmalen Bildern nutzt das Zimmer die volle Breite`. Der Test iteriert automatisch
+  ueber alle Orte/Spezies, keine Testaenderung noetig - `fitting()` laesst ueberzaehliges Beiwerk
+  auf schmalen Bildern ohnehin automatisch wegfallen, das neue Requisit darf dafuer ausgelegt
+  sein zu verschwinden, nicht zu ueberlappen.
+
+## [open] ITO-0008 - Zuletzt erzaehltes Lore-Stueck bleibt beim Wiederoeffnen sichtbar
+UX-Verbesserung am bestehenden Gespraech, rein additive Leseanzeige: keine neue Ablage, kein
+neuer Mechanismus, keine Aenderung an Fortschritt oder Kalender. `PlayLore.heard()`,
+`available()`, `PIECES`, `unlockedBy()` bleiben unangetastet - deshalb keine `OPEN DECISION`
+betroffen.
+
+**Ausgangslage:** `PlayLore.heard(context, species)` liefert bereits, wie viele Stuecke erzaehlt
+sind; `PlayLore.story(species)` liefert sie in Reihenfolge. Das zuletzt erzaehlte Stueck ist damit
+rein rechnerisch `story(species).getOrNull(heard(context, species) - 1)` - ohne neue
+SharedPreferences-Ablage.
+
+**Luecke:** In `app-sim/src/main/java/com/notime/glyphsim/ui/DockScreen.kt` wird `toldNow`
+(Zeile ~457, `var toldNow by remember { mutableStateOf(listOf<Int>()) }`) bei `onDismiss` auf
+`emptyList()` zurueckgesetzt (Zeile ~2537). Wer das Gespraechsfenster schliesst und neu oeffnet
+(Tap-Handler bei Zeile ~2291, `talkOpen = true`), sieht nichts mehr von dem, was zuletzt erzaehlt
+wurde - auch dann nicht, wenn fuer heute nichts Neues mehr da ist (`onTell == null`,
+`moreToTellLater`-Hinweis).
+
+**Umsetzung:**
+1. In `app-sim/src/main/java/com/notime/glyphsim/ui/PlayLore.kt`: neue oeffentliche Funktion
+   `@StringRes fun lastToldPiece(context: Context, species: AvatarSpecies): Int?` ergaenzen - `null`
+   wenn `heard(context, species) == 0`, sonst `story(species).getOrNull(heard(context, species) -
+   1)`. Reiner Lesezugriff auf bestehende Werte, kein Schreibzugriff, keine neue Ablage.
+2. In `DockScreen.kt`: an der Stelle, an der `talkOpen` auf `true` gesetzt wird (Zeile ~2291), VOR
+   oder beim Oeffnen `toldNow` so setzen, dass es - nur falls `toldNow` gerade leer ist UND
+   `PlayLore.lastToldPiece(context, species)` nicht `null` ist - mit `listOf(lastToldPiece)` startet
+   statt mit `emptyList()`. Wird tatsaechlich neu erzaehlt (`onTell`), haengt sich das neue Stueck
+   wie bisher an (Zeile ~2504, `toldNow = toldNow + piece`).
+3. Keine Aenderung an `onDismiss`, `heard()`, `remember()`, `forget()`, `available()`, `hasMore()`,
+   `hasMoreEver()`, `PIECES`, `unlockedBy()`, `nextPiece()`.
+
+**Bedingungen:**
+- Wurde noch NIE erzaehlt (`heard() == 0`), bleibt das Verhalten exakt wie bisher (leeres
+  Gespraechsfenster ohne Lore-Text).
+- `app-sim/src/test/java/com/notime/glyphsim/ui/PlayLoreTest.kt` muss unveraendert gruen bleiben;
+  ergaenze dort einen neuen Testfall im bestehenden Stil (JUnit 4, deutschsprachiger
+  Backtick-Testname) fuer `lastToldPiece`: `null` vor dem ersten Erzaehlen, und nach einem Aufruf
+  von `remember()` liefert `lastToldPiece` genau das Stueck an Index `heard() - 1` aus `story()`.
+- Keine Aenderung an Kalenderlogik, keine neue SharedPreferences-Datei oder -Key.
+
 ## [done] ITO-0003 - Unit-Tests fuer ClockRing
 Ergaenze eine JVM-Unit-Testdatei `app-sim/src/test/java/com/notime/glyphsim/matrix/ClockRingTest.kt` fuer das bisher ungetestete Objekt `ClockRing` aus `app-sim/src/main/java/com/notime/glyphsim/matrix/ClockRing.kt`.
 
