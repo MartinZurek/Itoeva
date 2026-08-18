@@ -144,6 +144,52 @@ kein Ausrufezeichen, keine Aussage ueber den Nutzer.
 Aenderung. Keine Aenderung an `PlayLoreTest.kt` - der bestehende Test muss unveraendert gruen
 bleiben und ist bewusst so geschrieben, dass er acht Stuecke ohne Anpassung akzeptiert.
 
+## [open] ITO-0006 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen
+Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt ("Vielfalt von Ambient-Aktivitaeten,
+Routinen, Szenen, Reaktionen und charaktergerechten Dialogen") - keine `OPEN DECISION` betroffen,
+keine Rueckfrage noetig. CONTENT-Evolution (reine Punktdaten, kein neuer Mechanismus).
+
+`core/src/main/java/com/notime/glyphcore/data/DefaultLibraryAnimations.kt` sagt in seiner
+eigenen Klassendoku bereits: "26 Beispiel-Animationen ... bevor weitere 30-40 dazukommen." Diese
+Aufgabe ist ein einzelner Schritt in genau diese schon dokumentierte Richtung - keine neue
+Entscheidung, sondern die Fortsetzung einer bereits getroffenen.
+
+**Aufgabe:** Ergaenze GENAU EINE neue allgemeine Animation (keine charakterspezifische - die
+liegen in `AvatarSignatureAnimations.kt` und sind nicht Teil dieser Aufgabe). Thema deiner Wahl,
+passend zu einem Alltags- oder Erinnerungsthema (siehe die 26 vorhandenen Labels in
+`general()` als Anhaltspunkt fuer den Rahmen: Star, Wave, Rain, Music, Battery, Dog, Cat, Gift,
+Football, Fitness, Robot, Trophy, Plant, Target, Airplane, Cake, Idea, Mail, ...). Vermeide ein
+Thema, das einem bestehenden Label zu nahekommt.
+
+**Technische Form** (siehe `starFrames()`/`waveFrames()` in derselben Datei als Vorbild):
+- Eine private Funktion `private fun <name>Frames(): List<List<Pair<Int, Int>>>` - eine
+  Punktliste je Frame, Koordinaten im 13x13-Raster (Zentrum bei 6,6).
+- Registrierung als neuer Eintrag in der Liste in `general()`: `LibraryAnimation(label = "...",
+  emoji = "...", framesData = FrameCodec.encode(<name>Frames()), sortOrder = 26)` - 26 ist der
+  naechste freie Wert nach dem bisher hoechsten (25).
+- Mindestens 4-6 Frames mit ZWEI erkennbaren Bewegungen, nicht nur einem pulsierenden Element -
+  das war laut Klassendoku ein Kritikpunkt an frueheren Entwuerfen (siehe `starFrames()`: Strahlen
+  pulsieren UND ein Twinkle-Punkt wandert reihum; `waveFrames()`: Sinus-Schwell UND ein
+  Schaum-Punkt an jedem Wellenkamm).
+
+**Drei dokumentierte Fallen, die `LibraryAnimationFitTest` automatisiert prueft und die den Lauf
+rot werden lassen, wenn sie zutreffen** (siehe die KDoc dieser Testdatei fuer die volle
+Begruendung):
+1. Die Matrix ist rund - nur der einbeschriebene Kreis (`MatrixGeometry.isActive`) wird
+   angezeigt, die vier Ecken des 13x13-Quadrats existieren nicht. Genau das ist "TAMA" passiert,
+   das seine Buchstaben in die Ecken gesetzt hatte. Hoechstens 15 % der Punkte ueber alle Frames
+   duerfen ausserhalb liegen.
+2. Keine wilden Koordinaten - alle Punkte muessen im Bereich -4 bis 17 bleiben (etwas ueber den
+   Rand hinaus ist als Gestaltungsmittel erlaubt, z. B. eine Rakete, die aus dem Bild steigt).
+3. Punkte auf einer Linie oder gefuellte Flaechen koennen das Motiv unkenntlich machen (siehe
+   `EVOLUTION.md`/README zu den Signatur-Animationen) - bevorzuge Umrisse und versetzte Punkte
+   gegenueber vollstaendig gefuellten Formen.
+
+Aendere keine andere Datei, keine bestehende Animation, keinen `sortOrder`-Wert einer bestehenden
+Animation. `LibraryAnimationFitTest` muss fuer die neue Animation ebenso gruen sein wie fuer die
+bestehenden 26 (der Test iteriert automatisch ueber `DefaultLibraryAnimations.seed()`, keine
+Testaenderung noetig).
+
 ## [done] ITO-0003 - Unit-Tests fuer ClockRing
 Ergaenze eine JVM-Unit-Testdatei `app-sim/src/test/java/com/notime/glyphsim/matrix/ClockRingTest.kt` fuer das bisher ungetestete Objekt `ClockRing` aus `app-sim/src/main/java/com/notime/glyphsim/matrix/ClockRing.kt`.
 
