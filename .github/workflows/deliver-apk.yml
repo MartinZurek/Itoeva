@@ -1,0 +1,347 @@
+# Auslieferung aufs Telefon.
+#
+# Was hier passiert: Nach jedem Merge nach `main` entsteht eine frische Tama-APK, und die
+# eine Datei `Tama-debug.apk` im Google-Drive-Ordner wird damit ueberschrieben. Auf dem
+# Telefon aendert sich dadurch nichts am Ablauf - Drive-App oeffnen, Datei antippen,
+# "Aktualisieren". Nur das lokale Bauen davor entfaellt.
+#
+# Der Drive-Teil laesst sich nachreichen: Solange der Zugang dafuer nicht hinterlegt ist,
+# baut und signiert der Lauf trotzdem und legt die fertige APK als Artefakt ab. Damit ist
+# der Weg schon nutzbar, bevor das Google-Service-Konto existiert - siehe unten.
+#
+# Der Grundsatz, an dem alles haengt: **dieselbe Signatur wie die bereits installierte App.**
+# Android laesst ein Update nur zu, wenn das Zertifikat uebereinstimmt; sonst bleibt nur
+# Deinstallieren - und weil Itoeva ausschliesslich lokal speichert, waeren Pflegebuch,
+# Beziehungskapitel und Spielstand damit weg. Deshalb wird hier mit demselben
+# Debug-Schluessel signiert, der auch auf dem Entwicklungsrechner benutzt wird (als Secret
+# hinterlegt), und deshalb prueft der Schritt "Signatur nachweisen" jedes Mal nach, dass
+# wirklich er es war.
+#
+# Warum nicht der Debug-Schluessel des Runners: Fehlt die Datei, erzeugt AGP sich stillschweigend
+# einen NEUEN, zufaelligen Schluessel - bei jedem Lauf einen anderen. Zwei aufeinanderfolgende
+# CI-Pakete koennten sich dann nicht einmal gegenseitig updaten. Ein Auslieferungsweg ohne
+# hinterlegten Schluessel ist deshalb nicht "unsicherer", sondern schlicht funktionslos.
+#
+# Warum eine eigene Datei statt eines Jobs in verify.yml: Dieser Lauf sieht Schluesselmaterial
+# und einen Drive-Zugang. Beides gehoert in einen Workflow, den weder ein Pull Request noch ein
+# Fork ausloesen kann - deshalb unten ausschliesslich `push` auf `main` und `workflow_dispatch`.
+#
+# Einzurichten unter Settings > Secrets and variables > Actions. Die vier Werte zerfallen in
+# zwei Gruppen, und die zweite darf nachgereicht werden:
+#
+# ZWINGEND - ohne sie bricht der Lauf ab, weil sonst eine APK entstuende, die sich auf dem
+# Telefon nicht installieren laesst:
+#
+#   Secret   DEBUG_KEYSTORE_BASE64   - %USERPROFILE%\.android\debug.keystore, base64-kodiert:
+#         [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.android\debug.keystore"))
+#   Variable EXPECTED_SIGNER_SHA256  - Fingerabdruck des Debug-Schluessels, aus:
+#         keytool -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" \
+#                 -storepass android -alias androiddebugkey
+#         Schreibweise egal - Doppelpunkte und Gross-/Kleinschreibung werden unten normalisiert.
+#
+# NACHREICHBAR - fehlen sie, wird nur die Drive-Ablieferung uebersprungen; die APK liegt dann
+# als Artefakt des Laufs bereit, und der Lauf bleibt gruen (Begruendung am Schritt
+# "Drive-Zugang pruefen"). Sind sie gesetzt, ist die Ablieferung Pflicht:
+#
+#   Secret   GDRIVE_SA_JSON          - Schluessel-JSON eines Google-Service-Kontos. Diesem Konto wird
+#                               NUR die eine Datei Tama-debug.apk freigegeben (Bearbeiter),
+#                               nicht der Ordner darum herum.
+#   Variable GDRIVE_APK_FILE_ID      - Datei-Id der bestehenden Tama-debug.apk in Drive. Bewusst die
+#                               BESTEHENDE Datei aktualisieren statt eine neue anzulegen: nur so
+#                               bleiben Name, Link und Eigentuemer gleich, und das Telefon findet
+#                               die Datei am gewohnten Platz.
+
+name: Deliver APK
+
+on:
+  push:
+    branches: [main]
+    # Eine reine Dokumentationsaenderung aendert nichts an der App - dafuer muss kein
+    # Paket gebaut und keine Actions-Minute ausgegeben werden.
+    paths-ignore:
+      - '**/*.md'
+  workflow_dispatch:
+
+# Standardmaessig gar keine Rechte, wie in claude-primary-run.yml. Dieser Workflow liest nur;
+# geschrieben wird ausserhalb von GitHub, naemlich in Drive.
+permissions: {}
+
+# Kein cancel-in-progress, aus demselben Grund wie in claude-primary-run.yml: Am Ende dieses
+# Laufs steht eine Ablieferung nach aussen. Zwei Laeufe warten lieber aufeinander - sie
+# arbeiten die Warteschlange in der Reihenfolge ab, in der die Staende entstanden sind, und
+# der neuere schreibt zuletzt.
+concurrency:
+  group: deliver-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Dieselbe Untergrenze wie in verify.yml - was ausgeliefert wird, soll unter demselben JDK
+  # entstanden sein, unter dem auch geprueft wird.
+  JAVA_VERSION: '17'
+
+jobs:
+
+  deliver:
+    name: Tama-APK bauen und nach Drive legen
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # Referenz: verify schafft Unit-Tests, Lint und zwei minifizierte Probe-Baue in 16,6 min
+    # (Lauf #20). Hier laeuft nur ein unminifizierter Debug-Bau eines Moduls, also deutlich
+    # weniger. 25 Minuten deckeln trotzdem jeden Haenger.
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Die vollstaendige Historie, weil der versionCode unten aus der Commit-Anzahl
+          # entsteht. Das Repository ist rund 1,5 MB gross, das kostet nichts.
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      # Nur lesend: Dieser Job traegt Schluesselmaterial und soll den Cache, aus dem sich
+      # anschliessend jeder andere Lauf bedient, nicht beschreiben koennen.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      # -----------------------------------------------------------------------------------
+      # Die Version.
+      #
+      # Die Commit-Anzahl auf main statt github.run_number: sie waechst mit der Geschichte des
+      # Projekts, ist ohne jeden gespeicherten Zustand reproduzierbar und ueberlebt es, wenn
+      # dieser Workflow eines Tages umbenannt oder neu angelegt wird (run_number faengt dann
+      # wieder bei 1 an - und ein sinkender versionCode ist fuer Android ein Downgrade, das
+      # sich nicht mehr installieren laesst).
+      #
+      # Der Dateiname in Drive bleibt bewusst konstant. Die Eindeutigkeit steckt im Paket:
+      # versionName erscheint in den App-Infos des Telefons, dort ist der Stand ablesbar.
+      # -----------------------------------------------------------------------------------
+      - name: Version bestimmen
+        id: version
+        run: |
+          set -euo pipefail
+          CODE="$(git rev-list --count HEAD)"
+          if [ "$CODE" -lt 1 ]; then
+            echo "::error::versionCode $CODE ist unbrauchbar - wurde flach geklont?"
+            exit 1
+          fi
+          SHA="$(git rev-parse --short=7 HEAD)"
+          {
+            echo "code=$CODE"
+            echo "name=1.0.$CODE"
+            echo "sha=$SHA"
+            echo "archive=itoeva-dev-$(date -u +%Y%m%d)-$SHA.apk"
+          } >> "$GITHUB_OUTPUT"
+          echo "versionCode $CODE, versionName 1.0.$CODE, Stand $SHA"
+
+      # -----------------------------------------------------------------------------------
+      # Der Schluessel.
+      #
+      # An genau den Ort, an dem AGP seinen Debug-Schluessel erwartet - damit greift die
+      # eingebaute debug-Signaturkonfiguration unveraendert, ohne Passwoerter im Workflow
+      # (der Debug-Keystore benutzt die festen Standardwerte android/androiddebugkey).
+      # -----------------------------------------------------------------------------------
+      - name: Debug-Schluessel einsetzen
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail   # bewusst kein -x: aus diesem Schritt gehoert nichts ins Log
+          if [ -z "${DEBUG_KEYSTORE_BASE64}" ]; then
+            echo "::error::Secret DEBUG_KEYSTORE_BASE64 fehlt. Ohne den Schluessel des"
+            echo "::error::Entwicklungsrechners waere das Paket kein Update der installierten App."
+            exit 1
+          fi
+          mkdir -p "$HOME/.android"
+          umask 077
+          printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+          if [ ! -s "$HOME/.android/debug.keystore" ]; then
+            echo "::error::DEBUG_KEYSTORE_BASE64 liess sich nicht dekodieren."
+            exit 1
+          fi
+
+      - name: assembleDebug
+        run: >
+          ./gradlew :app-sim:assembleDebug
+          -PitoevaVersionCode=${{ steps.version.outputs.code }}
+          -PitoevaVersionName=${{ steps.version.outputs.name }}
+          --stacktrace
+
+      # -----------------------------------------------------------------------------------
+      # Der eigentliche Torwaechter dieses Workflows.
+      #
+      # Dass ueberhaupt signiert wurde, sagt noch nichts - entscheidend ist, mit WELCHEM
+      # Zertifikat. Stimmt es nicht mit dem der installierten App ueberein, liesse sich die
+      # Datei auf dem Telefon nicht installieren, und das faellt sonst erst dort auf.
+      #
+      # apksigner statt keytool: bei minSdk 26 signiert AGP ohne v1-/JAR-Signatur, es gibt
+      # also kein META-INF/*.RSA, an dem sich das ablesen liesse.
+      # -----------------------------------------------------------------------------------
+      - name: Signatur nachweisen
+        env:
+          EXPECTED: ${{ vars.EXPECTED_SIGNER_SHA256 }}
+        run: |
+          set -euo pipefail
+          APK=app-sim/build/outputs/apk/debug/app-sim-debug.apk
+          if [ ! -f "$APK" ]; then
+            echo "::error::$APK wurde nicht erzeugt."
+            exit 1
+          fi
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          APKSIGNER="$(ls -1 "$SDK"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)"
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner nicht gefunden - Signatur nicht pruefbar, Abbruch."
+            exit 1
+          fi
+          # Erst einsammeln, dann auswerten - und die Auswertung ohne Pipe. `... | head -1`
+          # wuerde den Erzeuger per SIGPIPE abwuergen, sobald mehr als eine Zeile passt (v2
+          # und v3 liefern je eine), und unter `pipefail` gaelte der Schritt dann als
+          # gescheitert, obwohl alles in Ordnung war.
+          CERTS="$("$APKSIGNER" verify --print-certs "$APK")"
+          FOUND="$(awk 'tolower($0) ~ /certificate sha-256 digest/ {
+                          gsub(/:/, "", $NF); print tolower($NF); exit
+                        }' <<< "$CERTS")"
+          if [ -z "$FOUND" ]; then
+            echo "::error::Aus der APK liess sich kein Signaturzertifikat lesen."
+            exit 1
+          fi
+          echo "Signatur der APK (SHA-256): $FOUND"
+          # Normalisiert vergleichen: keytool schreibt GROSS mit Doppelpunkten, apksigner
+          # klein ohne - beide Schreibweisen sollen als Variable durchgehen.
+          WANT="$(printf '%s' "${EXPECTED:-}" | tr -d ':' | tr 'A-Z' 'a-z')"
+          if [ -z "$WANT" ]; then
+            echo "::error::Variable EXPECTED_SIGNER_SHA256 ist nicht gesetzt."
+            echo "::error::Passt der Wert oben zum Schluessel deines Rechners, trage ihn dort ein."
+            exit 1
+          fi
+          if [ "$FOUND" != "$WANT" ]; then
+            echo "::error::Fremde Signatur - erwartet war $WANT."
+            echo "::error::Diese APK waere kein Update der installierten App, sondern verlangte"
+            echo "::error::eine Deinstallation. Nicht ausgeliefert."
+            exit 1
+          fi
+          echo "Signatur stimmt mit der installierten App ueberein."
+
+      - name: Schluesselreste entfernen
+        if: always()
+        run: rm -f "$HOME/.android/debug.keystore"
+
+      # -----------------------------------------------------------------------------------
+      # Erst sichern, dann ausliefern.
+      #
+      # Bewusst in dieser Reihenfolge: Scheitert der Drive-Teil - abgelaufener Zugang,
+      # zurueckgenommene Freigabe, Google-Stoerung -, waere sonst auch das fertig gebaute und
+      # gepruefte Paket verloren, und es muesste allein wegen eines Zugangsproblems neu
+      # gebaut werden. So liegt es in jedem Fall abholbereit.
+      #
+      # Der Pfad ist bewusst eng gefasst: nur diese eine Datei, kein `**/build/**`. Dort
+      # liegen Zwischenstaende, die in einem Artefakt nichts zu suchen haben.
+      #
+      # 14 Tage statt der ueblichen 90: Ein privates Repository bezahlt Artefaktspeicher, und
+      # jede APK wiegt rund 15 MB. Zweck ist die Rueckfallebene auf den vorherigen Stand -
+      # in Drive liegt immer nur der neueste -, nicht ein Archiv.
+      # -----------------------------------------------------------------------------------
+      - name: Paket als Rueckfallebene sichern
+        run: |
+          mkdir -p dist
+          cp app-sim/build/outputs/apk/debug/app-sim-debug.apk \
+             "dist/${{ steps.version.outputs.archive }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: itoeva-apk-${{ steps.version.outputs.name }}
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      # -----------------------------------------------------------------------------------
+      # Ist der Drive-Weg ueberhaupt schon eingerichtet?
+      #
+      # **Nicht eingerichtet ist kein Fehler.** Der Wert dieses Laufs - eine gebaute, gegen
+      # den erwarteten Schluessel geprueft signierte APK - steht an dieser Stelle bereits als
+      # Artefakt bereit. Wuerde der Lauf mangels Google-Zugang trotzdem rot enden, stuende bei
+      # jedem Merge ein roter Haken auf main, der nichts ueber die Software aussagt. Genau
+      # diese Falle ist der Grund, warum der release-Job in verify.yml nur von Hand laeuft:
+      # ein Pruefzeichen, das dauerhaft rot ist, wird nach kurzer Zeit nicht mehr gelesen.
+      #
+      # **Uebersprungen wird nur der unkonfigurierte Fall.** Sind beide Werte da, ist die
+      # Ablieferung Pflicht: ein abgelaufener Zugang, eine zurueckgenommene Freigabe oder ein
+      # Fehler bei Google lassen den Lauf weiterhin scheitern. Sonst wuerde stillschweigend
+      # eine veraltete Datei auf dem Telefon liegenbleiben.
+      #
+      # Warum ueber einen Ausgabewert und nicht direkt in `if:`: Der `secrets`-Kontext steht
+      # in Schrittbedingungen nicht zur Verfuegung. Geprueft wird deshalb hier, und nach
+      # aussen geht nur "ja" oder "nein" - der Inhalt des Geheimnisses nirgends.
+      # -----------------------------------------------------------------------------------
+      - name: Drive-Zugang pruefen
+        id: drive
+        env:
+          SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${SA_JSON}" ] && [ -n "${FILE_ID}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Drive-Zugang eingerichtet - die APK wird abgeliefert."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            fehlt=""
+            [ -n "${SA_JSON}" ] || fehlt="Secret GDRIVE_SA_JSON"
+            [ -n "${FILE_ID}" ] || fehlt="${fehlt:+$fehlt und }Variable GDRIVE_APK_FILE_ID"
+            echo "::notice::Drive-Ablieferung uebersprungen - es fehlt: ${fehlt}."
+            echo "::notice::Die fertige APK liegt als Artefakt dieses Laufs bereit."
+          fi
+
+      # -----------------------------------------------------------------------------------
+      # Ablieferung: die BESTEHENDE Drive-Datei ueberschreiben.
+      #
+      # `files.update` statt `files.create` - dadurch bleiben Datei-Id, Name, Link und
+      # Eigentuemer unveraendert. Eine neue Datei haette jedes Mal einen neuen Link, laege
+      # dem Service-Konto zur Last statt dem eigenen Drive, und auf dem Telefon staenden mit
+      # der Zeit ein Dutzend gleichnamiger Dateien nebeneinander.
+      #
+      # Der Zugang gilt nur fuer das, was dem Service-Konto ausdruecklich freigegeben wurde -
+      # also die eine APK. Der Ordner darum herum enthaelt das ganze Projekt und bleibt fuer
+      # den Automaten unsichtbar.
+      # -----------------------------------------------------------------------------------
+      - name: Google-Zugang herstellen
+        id: gcloud
+        if: steps.drive.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GDRIVE_SA_JSON }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive
+
+      - name: APK nach Drive legen
+        if: steps.drive.outputs.configured == 'true'
+        env:
+          TOKEN: ${{ steps.gcloud.outputs.access_token }}
+          FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
+          VERSION: ${{ steps.version.outputs.name }}
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          set -euo pipefail
+          APK=app-sim/build/outputs/apk/debug/app-sim-debug.apk
+
+          # Inhalt ersetzen.
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @"$APK" \
+            "https://www.googleapis.com/upload/drive/v3/files/${FILE_ID}?uploadType=media&supportsAllDrives=true" \
+            -o /dev/null
+
+          # Beschreibung nachziehen, damit in Drive sichtbar ist, welcher Stand dort liegt.
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"description\":\"Itoeva ${VERSION} (${SHA}), gebaut von deliver-apk.yml, Lauf ${GITHUB_RUN_ID}\"}" \
+            "https://www.googleapis.com/drive/v3/files/${FILE_ID}?supportsAllDrives=true" \
+            -o /dev/null
+
+          echo "Tama-debug.apk in Drive aktualisiert: ${VERSION} (${SHA})"

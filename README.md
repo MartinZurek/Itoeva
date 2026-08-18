@@ -752,6 +752,45 @@ sofort installierbar, kein Release-Key nötig).
   antippen – dafür einmalig "Installation aus unbekannten Quellen" für den jeweiligen
   Dateimanager/Browser erlauben.
 
+### Auslieferung aufs Telefon ohne lokalen Bau
+
+`.github/workflows/deliver-apk.yml` nimmt den zweiten Weg von oben und automatisiert ihn: Nach
+jedem Merge nach `main` baut GitHub `:app-sim:assembleDebug` und **überschreibt die bestehende
+Datei `Tama-debug.apk` im Drive-Ordner**. Auf dem Telefon bleibt alles wie gewohnt – Drive-App,
+antippen, "Aktualisieren"; nur das Bauen davor entfällt. Eine reine Dokumentationsänderung löst
+keinen Lauf aus.
+
+**Die ganze Konstruktion hängt an einem Punkt: derselben Signatur.** Android aktualisiert eine
+installierte App nur, wenn das Zertifikat übereinstimmt – sonst bliebe nur Deinstallieren, und
+weil Itoeva ausschliesslich lokal speichert, wären Pflegebuch, Beziehungskapitel und Spielstand
+damit weg. Der Workflow signiert deshalb mit demselben Debug-Schlüssel wie dieser Rechner (als
+Secret hinterlegt) und weist die Signatur vor dem Hochladen gegen `EXPECTED_SIGNER_SHA256` nach.
+Er liefert lieber nichts aus, als ein Paket, das sich auf dem Telefon nicht installieren lässt.
+
+Ein Debug-Schlüssel des Runners taugt dafür nicht: Fehlt die Datei, erzeugt AGP stillschweigend
+einen neuen, zufälligen – bei jedem Lauf einen anderen. Zwei aufeinanderfolgende CI-Pakete
+könnten sich dann nicht einmal gegenseitig aktualisieren.
+
+`versionCode` und `versionName` kommen dabei aus dem Lauf (`-PitoevaVersionCode` /
+`-PitoevaVersionName`, Voreinstellung unverändert), damit sich in den App-Infos ablesen lässt,
+welcher Stand installiert ist. Nötige Secrets und Variablen stehen im Kopf des Workflows.
+
+**Der Drive-Teil ist nachreichbar.** Ohne hinterlegten Google-Zugang baut und signiert der Lauf
+trotzdem und legt die APK als Artefakt ab — er bleibt dabei grün und meldet als Notiz, was fehlt.
+Der Weg ist damit schon benutzbar, bevor das Service-Konto existiert; die Ablieferung schaltet
+sich in dem Moment zu, in dem die beiden Werte gesetzt sind. Ein dauerhaft roter Haken auf `main`
+wäre die schlechtere Alternative: er sagt nichts über die Software und wird nach kurzer Zeit nicht
+mehr gelesen — dieselbe Überlegung, aus der der `release`-Job in `verify.yml` nur von Hand läuft.
+
+Das gilt ausdrücklich **nur für den nicht eingerichteten Zustand**. Sind beide Werte gesetzt, ist
+die Ablieferung Pflicht, und ein abgelaufener Zugang oder eine zurückgenommene Freigabe lassen den
+Lauf scheitern — sonst bliebe stillschweigend eine veraltete Datei auf dem Telefon liegen.
+
+**Was das für den Play Store bedeutet:** Ein debug-signiertes Paket nimmt Google nicht an. Für
+eine Veröffentlichung braucht es weiterhin den Upload-Schlüssel und `bundleRelease` – und der
+Wechsel dorthin kostet auf dem eigenen Telefon dann die einmalige Deinstallation, die dieser Weg
+bis dahin vermeidet.
+
 Beim ersten Durchlauf hier mussten drei reale Fehler behoben werden (nicht nur
 Versions-Wünsche, sondern echte Kompatibilitätsprobleme):
 - Room 2.6.1 + aktuelles Kotlin/KSP: `unexpected jvm signature V` beim Annotation-Processing

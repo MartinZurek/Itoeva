@@ -14,6 +14,15 @@ local.properties
 *.apk
 *.aab
 
+# ---- Signaturmaterial ----
+# Der Schluesselspeicher und die Zugangsdaten dazu. Wer sie hat, kann Updates unter deinem
+# Namen auf fremde Geraete schieben - sie gehoeren in einen Passwortmanager und in die
+# GitHub Secrets, niemals in die Historie. Die Vorlage `keystore.properties.example` bleibt
+# eingecheckt; sie enthaelt nur Platzhalter.
+keystore.properties
+*.jks
+*.keystore
+
 # ---- Entwicklungsumgebung ----
 .idea/
 *.iml
