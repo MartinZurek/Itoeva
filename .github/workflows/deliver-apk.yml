@@ -383,19 +383,43 @@ jobs:
       # also die eine APK. Der Ordner darum herum enthaelt das ganze Projekt und bleibt fuer
       # den Automaten unsichtbar.
       # -----------------------------------------------------------------------------------
-      - name: Google-Zugang herstellen
-        id: gcloud
+      # Das Zugriffstoken holt sich der Schluessel selbst - siehe runner/gdrive-jwt.sh fuer
+      # die Begruendung, warum hier nicht google-github-actions/auth steht.
+      - name: Zugriffstoken holen
+        id: token
         if: steps.drive.outputs.configured == 'true'
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GDRIVE_SA_JSON }}
-          token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/drive
+        env:
+          SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          TMP="$(mktemp -d)"
+          # Auch bei einem Fehlschlag: der Schluessel liegt keine Sekunde laenger als noetig
+          # im Dateisystem des Runners.
+          trap 'rm -rf "$TMP"' EXIT
+          printf '%s' "$SA_JSON" > "$TMP/sa.json"
+
+          JWT="$(sh runner/gdrive-jwt.sh "$TMP/sa.json" https://www.googleapis.com/auth/drive)"
+
+          # --fail-with-body, damit bei 4xx Googles Fehlertext im Log steht und nicht nur ein
+          # nackter Exitcode - sonst faengt die Fehlersuche wieder bei null an.
+          ANTWORT="$(curl --fail-with-body -sS -X POST https://oauth2.googleapis.com/token \
+                       --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
+                       --data-urlencode "assertion=${JWT}")"
+
+          TOKEN="$(printf '%s' "$ANTWORT" | jq -r '.access_token // empty')"
+          [ -n "$TOKEN" ] || { echo "::error::Der OAuth-Endpunkt lieferte kein access_token."; exit 1; }
+
+          # Maskieren, BEVOR der Wert zum Ausgabewert wird: sonst stuende er lesbar in der
+          # Fehlermeldung eines nachfolgenden Schritts.
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+          echo "Token geholt, gueltig eine Stunde."
 
       - name: APK nach Drive legen
         if: steps.drive.outputs.configured == 'true'
         env:
-          TOKEN: ${{ steps.gcloud.outputs.access_token }}
+          TOKEN: ${{ steps.token.outputs.token }}
           FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
           VERSION: ${{ steps.version.outputs.name }}
           SHA: ${{ steps.version.outputs.sha }}
