@@ -125,9 +125,23 @@ jobs:
         id: version
         run: |
           set -euo pipefail
+          # Zuerst die Voraussetzung, dann die Zahl. Ohne `fetch-depth: 0` im Checkout oben
+          # liefert actions/checkout einen flachen Klon, und `git rev-list --count` zaehlt
+          # dann nur die eine geholte Ebene - versionCode 1. Das ist der unangenehmste
+          # Fehlerfall ueberhaupt, weil er NICHT auffaellt: der Lauf bliebe gruen, die APK
+          # entstuende, und erst das Telefon verweigerte sie Wochen spaeter als Downgrade.
+          # Deshalb hier hart abbrechen, statt eine unbrauchbare Nummer weiterzureichen.
+          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+            echo "::error::Flacher Klon - die Commit-Anzahl waere zu niedrig und ergaebe eine"
+            echo "::error::Versionsnummer, die Android als Downgrade ablehnt. Im Checkout-Schritt"
+            echo "::error::oben muss 'fetch-depth: 0' stehen."
+            exit 1
+          fi
           CODE="$(git rev-list --count HEAD)"
+          # Nicht als Ersatz fuer die Pruefung darueber gedacht, sondern als letzter Riegel
+          # gegen alles, woran hier sonst noch nicht gedacht wurde.
           if [ "$CODE" -lt 1 ]; then
-            echo "::error::versionCode $CODE ist unbrauchbar - wurde flach geklont?"
+            echo "::error::versionCode $CODE ist unbrauchbar."
             exit 1
           fi
           SHA="$(git rev-parse --short=7 HEAD)"
