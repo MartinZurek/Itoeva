@@ -32,7 +32,7 @@ so gut abgegrenzt sein, dass ein unbeaufsichtigter Lauf daraus arbeiten kann, oh
 zu stellen - einschliesslich der Erwartungswerte, die der Builder ohne Shell nicht selbst
 ausrechnen kann.
 
-## [open] ITO-0001 - KDoc von MatrixCellSizing berichtigen
+## [done] ITO-0001 - KDoc von MatrixCellSizing berichtigen
 Berichtige die sachlich falsche Aussage in der KDoc von `app-sim/src/main/java/com/notime/glyphsim/matrix/MatrixCellSizing.kt`, Zeilen 5 bis 9.
 
 Dort steht, die Mittelpunkte der aeussersten LED-Reihe laegen "exakt auf dem Puck-Radius" (6.5). Das stimmt nicht. Unabhaengig nachgerechnet: die groesste vorkommende Distanz einer aktiven Zelle zur Rastermitte betraegt `sqrt(41)`, also rund 6.403 (etwa bei Zelle (2,1)); die aeusserste vollstaendige Reihe liegt bei Abstand 6.0. Ein Wert von exakt 6.5 kommt nirgends vor.
