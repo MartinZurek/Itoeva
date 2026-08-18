@@ -1422,7 +1422,9 @@ jobs:
   # =========================================================================================
   publish:
     name: Evidence pruefen und Branch pushen
-    needs: evolve
+    # preflight steht hier wegen task_id: die ID muss aus dem Job kommen, in dem KEIN
+    # Modellcode lief - nicht aus dem Uebergabepaket, das durch den evolve-Job ging.
+    needs: [preflight, evolve]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1619,6 +1621,100 @@ jobs:
           echo "  Commit: $COMMIT"
           echo "  main unveraendert auf $BASE"
           echo "Kein Merge, kein PR, keine Freigabe - der Branch wartet auf menschliche Pruefung."
+
+      # ---------------------------------------------------------------------------------
+      # Der erledigte Backlog-Eintrag wird auf `done` gesetzt - im BRANCH, nicht auf main.
+      #
+      # Ohne diesen Schritt bleibt der Eintrag offen, und `backlog-select.sh` waehlt beim
+      # naechsten Zeitplan-Lauf denselben obersten offenen Eintrag erneut. Genau das ist
+      # mit ITO-0001 zweimal passiert (PR #3 und #5): dieselbe KDoc-Stelle dreimal
+      # umformuliert, je rund 20 Minuten Laufzeit fuer einen Stand, der schon in main war.
+      #
+      # Warum im Branch und nicht auf main: erledigt ist eine Aufgabe erst, wenn ein Mensch
+      # den Pull Request merged. Faehrt der Status im Branch mit, tritt er GENAU dann in
+      # Kraft - und wird der Branch verworfen, erreicht er main nie und der Eintrag bleibt
+      # offen. Niemand muss etwas zuruecknehmen.
+      #
+      # Warum das dem Modell trotzdem keine Selbstfreigabe gibt: die ID stammt aus dem
+      # preflight-Job (backlog-select.sh, kein Modellcode), der Dateiinhalt aus dem bereits
+      # gegen die Allowlist geprueften Commit, und geaendert wird genau ein Statuswort.
+      # BACKLOG.md bleibt fuer den Builder in `scope.forbiddenFileNames` gesperrt; dass er
+      # sie nicht angefasst hat, wird unten noch einmal am Ergebnis nachgewiesen.
+      #
+      # Der Schritt laeuft NACH "Remote-Stand nachweisen": die Aussage "der gepruefte
+      # Commit steht unveraendert auf dem Branch" ist damit belegt, bevor hier ueberhaupt
+      # etwas dazukommt.
+      # ---------------------------------------------------------------------------------
+      - name: Backlog-Status im Branch nachziehen
+        # Nur fuer Zeitplan-Laeufe aus dem Backlog. Ein manueller Lauf traegt task_id=manual
+        # und hat keinen Eintrag, der zu schliessen waere.
+        if: startsWith(needs.preflight.outputs.task_id, 'ITO-')
+        env:
+          TASK_ID: ${{ needs.preflight.outputs.task_id }}
+        run: |
+          set -euo pipefail
+          BRANCH='${{ steps.verify.outputs.branch }}'
+          COMMIT='${{ steps.verify.outputs.commit }}'
+          BASE='${{ steps.verify.outputs.base }}'
+
+          # Form der ID pruefen, bevor sie in ein sed-Muster geht.
+          echo "$TASK_ID" | grep -qE '^ITO-[0-9]{4}$' || {
+            echo "::error::Unplausible Aufgaben-ID: $TASK_ID"; exit 1; }
+
+          # Die Allowlist-Pruefung oben schliesst eine Aenderung an BACKLOG.md bereits aus.
+          # Hier wird sie am fertigen Commit nachgewiesen, weil der naechste Schritt darauf
+          # aufsetzt: gesetzt wird der Status auf genau dem Stand, den preflight gelesen hat.
+          git diff --quiet "$BASE" "$COMMIT" -- evolutions/BACKLOG.md || {
+            echo "::error::Der Evolutions-Commit veraendert BACKLOG.md."; exit 1; }
+
+          # Eigener Arbeitsbaum - der ausgecheckte main-Stand dieses Jobs bleibt unberuehrt.
+          W="$RUNNER_TEMP/backlog-flip"
+          git worktree add --detach "$W" "$COMMIT" >/dev/null
+
+          sed -i "s|^## \[open\] ${TASK_ID} - |## [done] ${TASK_ID} - |" "$W/evolutions/BACKLOG.md"
+
+          # Keine Aenderung heisst: der Eintrag stand nicht auf [open], etwa weil ein Mensch
+          # ihn bereits gesetzt hat. Kein Grund fuer einen roten Lauf - der Branch ist
+          # gepusht und die Evolution steht.
+          if git -C "$W" diff --quiet; then
+            echo "::warning::$TASK_ID stand nicht auf [open] - Status bleibt unveraendert."
+            git worktree remove "$W"
+            exit 0
+          fi
+
+          # Genau eine Datei, genau eine Zeile hin und eine her. Alles andere waere ein
+          # Fehler im Muster oben und wird nicht gepusht.
+          NUMSTAT="$(git -C "$W" diff --numstat)"
+          echo "Aenderung: $NUMSTAT"
+          [ "$NUMSTAT" = "$(printf '1\t1\tevolutions/BACKLOG.md')" ] || {
+            echo "::error::Unerwartete Aenderung am Backlog."; git -C "$W" diff; exit 1; }
+
+          git -C "$W" \
+            -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -q -am "${TASK_ID} auf done setzen (ClaudePrimaryRun ${{ github.run_id }})"
+
+          FLIP="$(git -C "$W" rev-parse HEAD)"
+          [ "$(git -C "$W" rev-parse 'HEAD^')" = "$COMMIT" ] || {
+            echo "::error::Der Status-Commit sitzt nicht auf $COMMIT."; exit 1; }
+
+          # Fast-forward auf denselben Branch, weiterhin ohne --force und ohne Refspec auf main.
+          # Bewusst als ausgeschriebenes `git push` in einer Subshell statt `git -C "$W" push`:
+          # der Strukturtest zaehlt Vorkommen von "git push", und ein Push, den er nicht sieht,
+          # waere genau die Art Luecke, die diese Pruefung verhindern soll.
+          ( cd "$W" && git push origin "HEAD:refs/heads/${BRANCH}" )
+
+          REMOTE_SHA="$(git ls-remote origin "refs/heads/${BRANCH}" | cut -f1)"
+          [ "$REMOTE_SHA" = "$FLIP" ] || {
+            echo "::error::Remote-SHA weicht ab ($REMOTE_SHA statt $FLIP)."; exit 1; }
+          REMOTE_MAIN="$(git ls-remote origin refs/heads/main | cut -f1)"
+          [ "$REMOTE_MAIN" = "$BASE" ] || {
+            echo "::error::origin/main hat sich veraendert ($REMOTE_MAIN statt $BASE)."; exit 1; }
+
+          git worktree remove "$W"
+          echo "CLAUDE_PRIMARY_BACKLOG_FLIP: PASS"
+          echo "  $TASK_ID -> done, Commit $FLIP auf $BRANCH"
+          echo "  Wirksam wird der Status erst mit dem Merge des Pull Requests."
 
       - name: Uebergabe-Diagnose hochladen
         if: always()

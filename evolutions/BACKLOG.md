@@ -7,9 +7,20 @@ nicht aendern: `BACKLOG.md` steht in `runner/runner.config.json` unter
 `scope.forbiddenFileNames`, und die Allowlist wird beim Lauf aus dem Basiscommit gelesen,
 nicht aus dem Arbeitsstand.
 
-Ein Eintrag gilt erst als erledigt, wenn ein Mensch ihn hier bewusst auf `done` setzt -
-typischerweise nachdem der zugehoerige Pull Request gemerged wurde. Der Workflow selbst
-aendert diese Datei nie.
+Ein Eintrag gilt als erledigt, sobald der zugehoerige Pull Request gemerged ist. Den
+Statuswechsel auf `done` traegt der Lauf selbst in den Evolutions-Branch ein (Schritt
+"Backlog-Status im Branch nachziehen" in `claude-primary-run.yml`); wirksam wird er damit
+genau in dem Moment, in dem ein Mensch den Branch merged. Wird der Branch verworfen,
+erreicht der Statuswechsel `main` nie und der Eintrag bleibt offen - es ist also weiterhin
+ein Mensch, der ueber "erledigt" entscheidet, nur ohne den leicht zu vergessenden
+Handgriff danach.
+
+Auf `main` schreibt der Workflow diese Datei nie, und der Builder erreicht sie ueberhaupt
+nicht: der Statuscommit entsteht im `publish`-Job, in dem kein Modellcode laeuft, aus der
+im `preflight`-Job ermittelten ID.
+
+Bleibt ein erledigter Eintrag versehentlich auf `open`, waehlt der naechste Zeitplan-Lauf
+ihn erneut - genau das ist mit ITO-0001 zweimal passiert.
 
 ## Format
 
@@ -32,7 +43,7 @@ so gut abgegrenzt sein, dass ein unbeaufsichtigter Lauf daraus arbeiten kann, oh
 zu stellen - einschliesslich der Erwartungswerte, die der Builder ohne Shell nicht selbst
 ausrechnen kann.
 
-## [open] ITO-0001 - KDoc von MatrixCellSizing berichtigen
+## [done] ITO-0001 - KDoc von MatrixCellSizing berichtigen
 Berichtige die sachlich falsche Aussage in der KDoc von `app-sim/src/main/java/com/notime/glyphsim/matrix/MatrixCellSizing.kt`, Zeilen 5 bis 9.
 
 Dort steht, die Mittelpunkte der aeussersten LED-Reihe laegen "exakt auf dem Puck-Radius" (6.5). Das stimmt nicht. Unabhaengig nachgerechnet: die groesste vorkommende Distanz einer aktiven Zelle zur Rastermitte betraegt `sqrt(41)`, also rund 6.403 (etwa bei Zelle (2,1)); die aeusserste vollstaendige Reihe liegt bei Abstand 6.0. Ein Wert von exakt 6.5 kommt nirgends vor.
