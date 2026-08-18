@@ -52,7 +52,7 @@ Die Skalierung selbst ist richtig und darf nicht geaendert werden: `EFFECTIVE_GR
 
 Aendere ausschliesslich den Kommentartext. Kein Code, keine Konstanten, keine Signaturen, keine anderen Dateien. Die bestehenden Tests in `app-sim/src/test/java/com/notime/glyphsim/matrix/MatrixCellSizingTest.kt` und `MatrixGeometryTest.kt` muessen unveraendert gruen bleiben.
 
-## [open] ITO-0002 - Unit-Tests fuer MatrixColors
+## [done] ITO-0002 - Unit-Tests fuer MatrixColors
 Ergaenze eine JVM-Unit-Testdatei `app-sim/src/test/java/com/notime/glyphsim/matrix/MatrixColorsTest.kt` fuer das bisher ungetestete Objekt `MatrixColors` aus `app-sim/src/main/java/com/notime/glyphsim/matrix/MatrixColors.kt`.
 
 `MatrixColors` haelt vier ARGB-Konstanten, die zwischen der Compose-Ansicht und dem Widget-Bitmap-Renderer geteilt werden - genau deshalb ist ein unbeabsichtigtes Verschieben dieser Werte eine sichtbare Regression.
