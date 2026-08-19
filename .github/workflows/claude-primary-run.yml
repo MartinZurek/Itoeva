@@ -876,6 +876,27 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # **Diagnose statt Vermutung.** Die Regel oben setzt nur BERECHTIGUNGEN auf ein
+      # bestehendes /dev/kvm - existiert das Geraet auf diesem Runner gar nicht (statt nur
+      # gesperrt zu sein), laeuft der Schritt trotzdem klaglos durch, und genau das war beim
+      # Boot-Timeout in Lauf 32214099699 unklar: ohne diese Ausgabe war nicht zu unterscheiden,
+      # ob KVM fehlte oder aus einem anderen Grund nichts hochkam. Bewusst ohne set -e und ohne
+      # eigenes if-Gate am Erfolg - das hier ist Beweismaterial fuer den naechsten Fehlschlag,
+      # kein weiterer Grund, den Job scheitern zu lassen.
+      - name: KVM-Verfuegbarkeit protokollieren
+        if: steps.gates.outputs.need_sim == 'true' || steps.gates.outputs.need_app == 'true'
+        continue-on-error: true
+        run: |
+          echo "CPU-Virtualisierungsflags (vmx/svm) in /proc/cpuinfo:"
+          grep -cE 'vmx|svm' /proc/cpuinfo || echo "0 - kein Hardware-Virtualisierungs-Flag gefunden"
+          echo
+          if [ -e /dev/kvm ]; then
+            echo "/dev/kvm vorhanden:"
+            ls -la /dev/kvm
+          else
+            echo "/dev/kvm existiert NICHT auf diesem Runner - das waere die eigentliche Ursache eines Boot-Timeouts, nicht behebbar durch Berechtigungen."
+          fi
+
       # Dieselbe Aufteilung wie in verify.yml: :app-sim auf seinem minSdk 26, :app auf
       # API 35 (minSdk 34 wegen des Glyph Matrix SDK). ATD-Images gibt es erst ab API 30,
       # fuer API 26 ist "default" das naechstliegende Aequivalent.
