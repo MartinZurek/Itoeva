@@ -16,7 +16,9 @@ Exakte Alarme lösen genau ein Problem: *„das Gerät döst, soll aber trotzdem
 aufwachen."* Das braucht Tama nicht. Erinnerungen erscheinen rein visuell — auf Dock,
 Startbildschirm und Home-Screen-Widget. Alle drei sind nur bei **eingeschaltetem Display**
 sichtbar, und solange das Display an ist, greift Doze ohnehin nicht; ungefähre Alarme kommen dann
-nah genug am gewünschten Zeitpunkt.
+nah genug am gewünschten Zeitpunkt — "nah" heisst hier bis zu etwa einer Minute Versatz, siehe
+unten, nicht garantiert punktgenau. Für ein grobes Zeitfenster wie eine Erinnerung fällt das nicht
+auf.
 
 Konsequent zu Ende gedacht heisst das: Bei dunklem Bildschirm löst `ReminderAlarmReceiver` gar
 nichts erst aus — keine Animation und **kein Eintrag in der Auswertung**. Eine Auslösung, die
@@ -47,7 +49,13 @@ Berechtigung verschwände also gar nicht aus dem Manifest.
 | ab 30 min | Praktisch unbeeinträchtigt |
 
 Der minütliche Tick des Widgets (`GlyphClockWidgetProvider.scheduleNextTick`) läuft ebenfalls
-ungefähr. Sichtbar ist das Widget nur bei eingeschaltetem Display — dann greift Doze nicht.
+ungefähr. Sichtbar ist das Widget nur bei eingeschaltetem Display — dann greift Doze nicht, aber
+Android fasst `setAndAllowWhileIdle`-Alarme trotzdem mit anderen zusammen (Batching). Aus einem
+Nutzerbericht bestätigt: Die Widget-Uhr kann dadurch sichtbar bis zu etwa einer Minute hinter der
+tatsächlichen Zeit liegen, während die Uhr in der App (In-Process-Coroutine ohne AlarmManager,
+siehe `ui/ClockTick.kt`) nahezu exakt bleibt. Beide lesen dieselbe System-Uhrzeit und -Zeitzone
+des Geräts — der Versatz ist ein Zustellungsdetail des Widget-Alarms, kein Zeitzonen- oder
+Synchronisationsproblem. Bewusst hingenommen statt behoben, siehe Abwägung oben.
 
 ### Der `:app`-Nachbar ist davon nicht betroffen
 

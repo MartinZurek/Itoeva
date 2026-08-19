@@ -9,8 +9,13 @@
       Exakte Alarme existieren fuer den Fall "das Geraet doest, soll aber trotzdem auf die Minute
       genau aufwachen". Genau den braucht diese App nicht: sie zeigt Erinnerungen rein visuell auf
       Dock, Startbildschirm und Widget. Alle drei sind nur bei eingeschaltetem Display sichtbar -
-      und solange das Display an ist, greift Doze ohnehin nicht, ungefaehre Alarme kommen dann
-      punktgenug. Bei dunklem Schirm loest der ReminderAlarmReceiver bewusst gar nichts aus.
+      und solange das Display an ist, greift Doze ohnehin nicht. Ungefaehre Alarme kommen dann
+      MEIST nah am vollen Minutenwechsel, aber nicht garantiert punktgenau: Android fasst auch
+      ausserhalb von Doze setAndAllowWhileIdle-Alarme mit anderen zusammen (Batching), was die
+      Widget-Uhr sichtbar bis zu etwa einer Minute hinter der App-Uhr zeigen kann (siehe
+      widget/GlyphClockWidgetProvider.kt). Fuer die Uhrzeitanzeige ist das hingenommen; bei
+      Erinnerungen, die ohnehin nur ein grobes Zeitfenster treffen muessen, faellt es nicht auf.
+      Bei dunklem Schirm loest der ReminderAlarmReceiver bewusst gar nichts aus.
 
       Damit entfaellt das Permissions-Declaration-Formular samt Video und das Risiko, dass die
       Veroeffentlichung daran haengt. Der :app-Nachbar (Glyph-Matrix auf der Geraetrueckseite,
