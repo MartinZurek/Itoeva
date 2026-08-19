@@ -879,8 +879,33 @@ jobs:
       # Dieselbe Aufteilung wie in verify.yml: :app-sim auf seinem minSdk 26, :app auf
       # API 35 (minSdk 34 wegen des Glyph Matrix SDK). ATD-Images gibt es erst ab API 30,
       # fuer API 26 ist "default" das naechstliegende Aequivalent.
-      - name: Instrumentiert :app-sim (API 26)
+      #
+      # **Je zwei Versuche statt einem.** Ein Emulator-Boot-Timeout wirft hier nicht nur
+      # einen Testlauf weg, sondern die bereits fertige Builder-Entscheidung dieser Sitzung
+      # gleich mit - der naechste Cron-Slot startet eine VOELLIG NEUE Builder-Sitzung, die
+      # ein anderes Beziehungspaar oder einen anderen Satz waehlen kann. Beobachtet am Lauf
+      # 32214099699 (2026-08-19): Builder und `gradlew verify` gruen, dann "adb: device
+      # 'emulator-5554' not found" ueber zehn Minuten bis zum Timeout - kein einziger Test
+      # ist gelaufen. Der zweite Versuch faengt genau diesen Fall ab, ohne die Builder-
+      # Sitzung zu wiederholen: Bei einem inhaltlichen Testfehlschlag (kein Boot-Problem)
+      # scheitert Versuch 2 ebenso zuverlaessig wie Versuch 1 und der Job bleibt rot, wie
+      # bisher.
+      - name: Instrumentiert :app-sim (API 26) - Versuch 1
+        id: sim_test_1
         if: steps.gates.outputs.need_sim == 'true'
+        timeout-minutes: 35
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 26
+          arch: x86_64
+          target: default
+          disable-animations: true
+          script: ./gradlew :app-sim:connectedDebugAndroidTest --stacktrace
+
+      - name: Instrumentiert :app-sim (API 26) - Versuch 2
+        id: sim_test_2
+        if: steps.gates.outputs.need_sim == 'true' && steps.sim_test_1.outcome == 'failure'
         timeout-minutes: 35
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -890,8 +915,22 @@ jobs:
           disable-animations: true
           script: ./gradlew :app-sim:connectedDebugAndroidTest --stacktrace
 
-      - name: Instrumentiert :app (API 35)
+      - name: Instrumentiert :app (API 35) - Versuch 1
+        id: app_test_1
         if: steps.gates.outputs.need_app == 'true'
+        timeout-minutes: 35
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: aosp_atd
+          disable-animations: true
+          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+
+      - name: Instrumentiert :app (API 35) - Versuch 2
+        id: app_test_2
+        if: steps.gates.outputs.need_app == 'true' && steps.app_test_1.outcome == 'failure'
         timeout-minutes: 35
         uses: reactivecircus/android-emulator-runner@v2
         with:
