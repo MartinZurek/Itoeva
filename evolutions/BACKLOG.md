@@ -144,7 +144,7 @@ kein Ausrufezeichen, keine Aussage ueber den Nutzer.
 Aenderung. Keine Aenderung an `PlayLoreTest.kt` - der bestehende Test muss unveraendert gruen
 bleiben und ist bewusst so geschrieben, dass er acht Stuecke ohne Anpassung akzeptiert.
 
-## [open] ITO-0009 - Noch eine weitere Beziehung zwischen zwei Wesen ergaenzen
+## [done] ITO-0009 - Noch eine weitere Beziehung zwischen zwei Wesen ergaenzen
 Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
 (Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (umgesetzt in PR #14:
 Puffling erwaehnt Starlet in `lore_puffling_6`). CONTENT-Evolution, keine Konstanten- oder
