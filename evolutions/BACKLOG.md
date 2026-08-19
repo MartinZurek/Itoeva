@@ -101,7 +101,7 @@ Bedingungen, die nicht verhandelbar sind:
 - `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
   Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
 
-## [open] ITO-0005 - Ein achtes Lore-Stueck je Wesen ergaenzen
+## [done] ITO-0005 - Ein achtes Lore-Stueck je Wesen ergaenzen
 Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
 (Entscheidung vom 2026-08-18): weitere Lore-Stuecke ueber die bestehenden sieben hinaus duerfen
 ohne Rueckfrage zur kreativen Richtung ergaenzt werden - als CODE-Evolution, weil dabei
