@@ -68,7 +68,7 @@ Pruefe zusaetzlich, dass alle vier Werte voll deckend sind, also der Alpha-Kanal
 
 Aendere keinen Produktionscode. Halte dich an den bestehenden Teststil des Moduls (JUnit 4, `org.junit.Assert`, deutschsprachige Backtick-Testnamen), siehe `MatrixGeometryTest.kt` als Vorbild.
 
-## [open] ITO-0004 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen
+## [done] ITO-0004 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen
 Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
 (Entscheidung vom 2026-08-18): weitere Beziehungen zwischen den sechs Wesen duerfen ohne
 Rueckfrage zur kreativen Richtung ergaenzt werden. CONTENT-Evolution, keine Konstanten- oder
