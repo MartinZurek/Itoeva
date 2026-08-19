@@ -144,6 +144,42 @@ kein Ausrufezeichen, keine Aussage ueber den Nutzer.
 Aenderung. Keine Aenderung an `PlayLoreTest.kt` - der bestehende Test muss unveraendert gruen
 bleiben und ist bewusst so geschrieben, dass er acht Stuecke ohne Anpassung akzeptiert.
 
+## [open] ITO-0009 - Noch eine weitere Beziehung zwischen zwei Wesen ergaenzen
+Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
+(Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (umgesetzt in PR #14:
+Puffling erwaehnt Starlet in `lore_puffling_6`). CONTENT-Evolution, keine Konstanten- oder
+Codeaenderung.
+
+Seit ITO-0005 hat jedes Wesen acht Lore-Stuecke (`PlayLore.PIECES = 8`) - die Ankerzeile fuer den
+neuen Satz darf deshalb Stueck 6, 7 ODER 8 sein, nicht mehr nur 6/7.
+
+Waehle GENAU EIN Wesen-Paar (A, B) aus den sechs Wesen (Puffling, Starlet, Wyrmling, Fennec,
+Gloop, Hootlet), zwischen denen noch KEIN Satz in den bestehenden Lore-Texten eine Verbindung
+herstellt. Bereits verbunden und NICHT erneut zu waehlen: Puffling-Gloop, Wyrmling-Fennec,
+Starlet-Hootlet (die drei Hauptbeziehungen) sowie Puffling-Starlet (ergaenzt durch ITO-0004).
+Jedes andere Paar ist erlaubt, deine Wahl.
+
+Ergaenze in `app-sim/src/main/res/values-de/strings.xml` UND `app-sim/src/main/res/values/strings.xml`
+(Deutsch und Englisch, inhaltlich gleich) an GENAU EINER Stelle einen zusaetzlichen Satz: an
+`lore_<A>_6`, `lore_<A>_7` ODER `lore_<A>_8` (ein Stueck deiner Wahl, bei EINEM der beiden
+gewaehlten Wesen) - angehaengt an den bestehenden Text derselben Zeile, nicht als neue Zeile und
+nicht als Ersatz des Bestehenden. Der neue Satz muss Wesen B beim Namen nennen und in der Stimme
+von Wesen A geschrieben sein, ein bis zwei kurze Saetze, keine Ausrufezeichen, kein pathetischer
+Ton - siehe die vorhandenen Stuecke aller sechs Wesen in denselben Dateien als Vorbild.
+
+Bedingungen, die nicht verhandelbar sind:
+- Keine bestehende Zeile darf geloescht, umbenannt oder inhaltlich veraendert werden - nur die
+  eine gewaehlte Zeile bekommt einen angehaengten Satz.
+- Der neue Satz darf keinem bestehenden Fakt in irgendeinem der 48 Lore-Stuecke widersprechen
+  (Orte, Ereignisse, andere Beziehungen, einschliesslich der in ITO-0004 ergaenzten
+  Puffling-Starlet-Verbindung). Bei Zweifel: Wesen B nur beilaeufig erwaehnen, keine neue
+  Tatsachenbehauptung ueber B aufstellen, die B's eigene Lore-Stuecke nicht schon stuetzen.
+- Keine andere Datei aendern, insbesondere nicht `PlayLore.kt` oder `PlayLoreTest.kt` - beide
+  pruefen nur Struktur (Anzahl, Eindeutigkeit), keine Wortlaute, und muessen unveraendert gruen
+  bleiben.
+- `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
+  Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
+
 ## [open] ITO-0006 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen
 Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt ("Vielfalt von Ambient-Aktivitaeten,
 Routinen, Szenen, Reaktionen und charaktergerechten Dialogen") - keine `OPEN DECISION` betroffen,
