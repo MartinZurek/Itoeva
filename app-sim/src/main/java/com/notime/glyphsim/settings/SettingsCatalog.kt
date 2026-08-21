@@ -158,6 +158,9 @@ object SettingsCatalog {
     val TappedClock = Setting.Bool("onboarding_prefs", "tapped_clock", default = false)
     val PlayModeIntroSeen = Setting.Bool("play_mode_prefs", "intro_seen", default = false)
 
+    /** Ob schon einmal eine Aktion in einen Speicherplatz abgelegt wurde (siehe ui/ActionSlots.kt). */
+    val UsedActionSlot = Setting.Bool("onboarding_prefs", "used_action_slot", default = false)
+
     // --- Die Welt des Wesens --------------------------------------------------------------------
 
     /*
@@ -190,7 +193,7 @@ object SettingsCatalog {
         DockSizeDp, DockOffsetFractionX, DockOffsetFractionY,
         AvatarSpecies, MoodEnabled, SoundEnabled, ActiveProfileId,
         ClipRecordingEnabled,
-        Greeted, TappedAvatar, TappedClock, PlayModeIntroSeen,
+        Greeted, TappedAvatar, TappedClock, PlayModeIntroSeen, UsedActionSlot,
         PlayCoins, PlayPantryLevel, PlayForcedWeather, PlayTimeLapseSpeed
     )
 
