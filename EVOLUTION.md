@@ -662,6 +662,33 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Neu entstandene offene Punkte:** optimale Slot-Anzahl, Kontextboni, Kombinationen und
   zeitabhängige Situationen bleiben offen und dürfen nicht aus diesem MVP abgeleitet werden.
 
+### 2026-08-22 - Automatisches Ablegen ausgelaufener Erinnerungen in Speicherplätze wieder entfernt
+
+- **Version:** Protokoll bleibt 0.2, reine Verhaltenskorrektur einer bereits gemergten
+  Produktentscheidung - keine neue Freigabe unter "Character Evolution".
+- **Ausgangsproblem:** PR #20 (Speicherplätze) führte bewusst ein: läuft eine Erinnerung ab, ohne
+  dass darauf reagiert wurde, wandert sie automatisch in den ersten freien Speicherplatz statt
+  verloren zu gehen. Der Nutzer hat dieses automatische Verhalten nach Ausprobieren ausdrücklich
+  abgelehnt: "kein automatisches Auffüllen".
+- **Evidenzklassifikation:** `FACT` (direkte Nutzeräußerung, per Rückfrage auf den Umfang
+  bestätigt: überall, nicht nur im gerade neu gebauten Spielmodus-Bildschirm).
+- **Getroffene Korrektur:** Automatisches Ablegen vollständig entfernt, sowohl in
+  `HomeScreen.kt` (`archiveActiveReminderIfExpired()` umbenannt zu `clearExpiredReminder()`, tut
+  jetzt nur noch, was der Name sagt) als auch in `DockScreen.kt` (dort erst mit demselben PR
+  eingeführt, das die Speicherplätze auf den Spielmodus-Bildschirm portiert hat, und im selben
+  Zug wieder entfernt, bevor es gemergt war). Eine ausgelaufene, unbeantwortete Erinnerung ist
+  damit wieder wie vor PR #20 verloren. Speicherplätze füllen sich seitdem ausschließlich durch
+  die bewusste Zieh-Geste (Uhr auf einen freien Platz), nie von selbst.
+- **Betroffene Module/Texte:** `app-sim/src/main/java/com/notime/glyphsim/ui/HomeScreen.kt`,
+  `app-sim/src/main/java/com/notime/glyphsim/ui/DockScreen.kt`.
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine - `ActionSlotStore` (SharedPreferences) und `avatar_feed_events`
+  bleiben in ihrer Struktur unverändert, nur ein Schreibpfad entfällt.
+- **Getestet:** nicht per Emulator nachvollzogen (kein Android SDK in dieser Sitzung verfügbar,
+  siehe Architecture.md/NextTasks.md zur Testlücke bei den Speicherplätzen) - über CI geprüft.
+- **Neu entstandene offene Punkte:** keine neuen. Die bereits als Future Backlog vermerkte
+  Testlücke bei den Speicherplätzen (NT-018/NT-019/NT-025) besteht unverändert fort.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.

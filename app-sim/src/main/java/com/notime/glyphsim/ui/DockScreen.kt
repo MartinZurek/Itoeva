@@ -337,12 +337,6 @@ fun DockScreen(
         var slots by remember(actionSlotProfileId) {
             mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
         }
-        // Wie [currentWidthPx]/[currentHeightPx] oben: der Erinnerungs-Collector (LaunchedEffect
-        // weiter unten) startet nur einmal und wuerde sonst beim Archivieren einer ausgelaufenen
-        // Erinnerung am WESEN DES ALLERERSTEN BILDSCHIRMAUFBAUS haengen bleiben, statt am gerade
-        // gewaehlten - derselbe Fehler, der in HomeScreen.kt als Codex-Befund auf PR #20 gefunden
-        // und dort per rememberUpdatedState behoben wurde (siehe PR #26).
-        val latestActionSlotProfileId by rememberUpdatedState(actionSlotProfileId)
 
         // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
         // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
@@ -1589,46 +1583,14 @@ fun DockScreen(
                 // hat (die setzt fed=true und cancelt beide Jobs selbst).
                 if (avatar?.fed != true) {
                     if (playMode) {
-                        // Zieht die ausgelaufene, unbeantwortete Erinnerung zuerst in einen freien
-                        // Speicherplatz statt sie ersatzlos zu verwerfen - dasselbe Verhalten wie
-                        // HomeScreens archiveActiveReminderIfExpired(). Ueber die aktualisierte
-                        // Profil-ID statt der bei Sitzungsstart eingefrorenen: dieser Collector
-                        // startet nur einmal (siehe LaunchedEffect(watchOnly) oben) und wuerde bei
-                        // einem Wesenswechsel sonst am ALTEN Wesen archivieren.
-                        val expiring = avatar
-                        val profileId = latestActionSlotProfileId
-                        val currentSlots = if (profileId == actionSlotProfileId) {
-                            slots
-                        } else {
-                            ActionSlotStore.read(context, profileId)
-                        }
-                        val freeIndex = if (expiring?.occurrenceId != null) {
-                            currentSlots.indexOfFirst { it == null }
-                        } else {
-                            -1
-                        }
-                        if (expiring != null && expiring.reminderId != null &&
-                            expiring.occurrenceId != null && freeIndex >= 0
-                        ) {
-                            val saved = SavedAction(
-                                reminderId = expiring.reminderId,
-                                occurrenceId = expiring.occurrenceId,
-                                animationType = expiring.animationType,
-                                libraryAnimationLabel = expiring.libraryAnimationLabel,
-                                frames = expiring.frames.ifEmpty { listOf(expiring.frame) }
-                            )
-                            ActionSlotStore.write(context, profileId, freeIndex, saved)
-                            if (profileId == actionSlotProfileId) {
-                                slots = slots.toMutableList().also { it[freeIndex] = saved }
-                            }
-                            if (!OnboardingPrefs.hasUsedActionSlot(context)) {
-                                OnboardingPrefs.markActionSlotUsed(context)
-                            }
-                        }
-                        // Anders als im normalen Dock verschwindet der Avatar hier nicht - nur
-                        // die Verknuepfung zur ausgelaufenen Erinnerung faellt weg, seine Idle-
-                        // Schleife (siehe oben, unangetastet seit dem Play-Modus-Einstieg bzw.
-                        // der letzten Verknuepfung) laeuft einfach weiter.
+                        // Kein automatisches Ablegen in einen Speicherplatz - die ausgelaufene,
+                        // unbeantwortete Erinnerung ist damit verloren, wie schon vor den
+                        // Speicherplaetzen. Die bleiben ausschliesslich der bewussten Zieh-Geste
+                        // vorbehalten (siehe saveToSlot). Anders als im normalen Dock verschwindet
+                        // der Avatar hier nicht - nur die Verknuepfung zur ausgelaufenen
+                        // Erinnerung faellt weg, seine Idle-Schleife (siehe oben, unangetastet
+                        // seit dem Play-Modus-Einstieg bzw. der letzten Verknuepfung) laeuft
+                        // einfach weiter.
                         avatar = avatar?.copy(
                             reminderId = null,
                             occurrenceId = null,

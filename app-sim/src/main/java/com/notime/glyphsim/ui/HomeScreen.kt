@@ -46,7 +46,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -207,9 +206,6 @@ fun HomeScreen(
     val playActive by PlayModePrefs.active(context).collectAsStateWithLifecycle(initialValue = PlayModePrefs.isActive(context))
     // Der Modus, wie der Nutzer ihn sieht - aus beiden Schaltern zusammengesetzt (siehe AppMode).
     var appMode by remember { mutableStateOf(AppMode.current(context)) }
-    // Die Bus-Coroutine lebt laenger als eine einzelne Composition. Ohne UpdatedState wuerde sie
-    // beim Auslaufen einer Erinnerung den Modus vom ersten Bildschirmaufbau verwenden.
-    val latestAppMode by rememberUpdatedState(appMode)
     val playState by playViewModel.state.collectAsStateWithLifecycle()
     var showPlayIntro by remember { mutableStateOf(false) }
 
@@ -222,39 +218,15 @@ fun HomeScreen(
         mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
     }
     val slotBounds = remember { mutableStateListOf(*Array(ACTION_SLOT_COUNT) { Rect.Zero }) }
-    // Wie latestAppMode oben: der Bus-Collector (LaunchedEffect(Unit) weiter unten) laeuft seit
-    // dem allerersten Bildschirmaufbau und haelt seinen eigenen Funktionsabschluss sonst an DEM
-    // damaligen Wesen fest. Ohne UpdatedState landete eine nach einem Wesenswechsel ablaufende
-    // Erinnerung im Speicherplatz-Speicher des VORHERIGEN Wesens - unsichtbar fuer das jetzt
-    // gewaehlte, aber als scheinbar nutzbare Aktion beim naechsten Besuch des alten wieder da.
-    val latestActionSlotProfileId by rememberUpdatedState(actionSlotProfileId)
 
     /**
-     * Laeuft eine Erinnerung aus, ohne dass darauf reagiert wurde: frueher war sie damit
-     * unwiderruflich weg. Jetzt zieht sie stattdessen automatisch in den ersten freien
-     * Speicherplatz - nur wenn alle vier belegt sind, bleibt es beim alten Verhalten, weil dafuer
-     * schlicht kein Platz ist. Kein Fuettern, keine DB-Schreibung: die Ausloesung steht bereits in
-     * `avatar_feed_events` und bleibt unbeantwortet, bis der Platz tatsaechlich gefuettert wird.
+     * Laeuft eine Erinnerung aus, ohne dass darauf reagiert wurde: sie ist damit unwiderruflich
+     * weg, wie schon vor den Speicherplaetzen. Bewusst KEIN automatisches Ablegen in einen freien
+     * Platz - Speicherplaetze fuellen sich ausschliesslich durch eine bewusste Zieh-Geste
+     * (siehe saveToSlot), nie von selbst.
      */
-    fun archiveActiveReminderIfExpired() {
-        val current = activeReminder ?: return
-        val profileId = latestActionSlotProfileId
-        // Stimmt das aktuelle Wesen noch mit dem dieser Funktionsinstanz ueberein, ist `slots`
-        // frisch und darf direkt benutzt werden; sonst gehoert `slots` zu einem laengst
-        // verlassenen Wesen und wird frisch vom dauerhaften Speicher gelesen, statt den falschen
-        // In-Memory-Stand weiterzuschreiben.
-        val currentSlots = if (profileId == actionSlotProfileId) slots else ActionSlotStore.read(context, profileId)
-        val freeIndex = if (latestAppMode == AppMode.PLAY) currentSlots.indexOfFirst { it == null } else -1
-        if (freeIndex >= 0) {
-            val saved = current.toSavedAction()
-            ActionSlotStore.write(context, profileId, freeIndex, saved)
-            if (profileId == actionSlotProfileId) {
-                slots = slots.toMutableList().also { it[freeIndex] = saved }
-            }
-            if (!OnboardingPrefs.hasUsedActionSlot(context)) {
-                OnboardingPrefs.markActionSlotUsed(context)
-            }
-        }
+    fun clearExpiredReminder() {
+        if (activeReminder == null) return
         activeReminder = null
         isPlayingAnimation = false
         animationFrame = null
@@ -290,7 +262,7 @@ fun HomeScreen(
             }
         }
         clockAnimJob?.join()
-        archiveActiveReminderIfExpired()
+        clearExpiredReminder()
     }
 
     LaunchedEffect(Unit) {
@@ -315,9 +287,9 @@ fun HomeScreen(
             }
             clockAnimJob?.join()
             // Ausgelaufen, ohne dass gefuettert wurde (Fuettern setzt activeReminder selbst
-            // auf null und cancelt diesen Job) - zieht dann automatisch in einen freien
-            // Speicherplatz statt verloren zu gehen (siehe archiveActiveReminderIfExpired).
-            archiveActiveReminderIfExpired()
+            // auf null und cancelt diesen Job) - sie ist damit verloren, kein automatisches
+            // Ablegen in einen Speicherplatz (siehe clearExpiredReminder).
+            clearExpiredReminder()
         }
     }
 
