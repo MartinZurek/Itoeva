@@ -31,11 +31,91 @@ env:
 jobs:
 
   # ---------------------------------------------------------------------------------------
+  # **Was ist ueberhaupt betroffen?** Ein billiger Vorlauf (unter einer Minute), der den
+  # teuren Jobs erspart, fuer eine reine Textaenderung anzuspringen.
+  #
+  # Anlass war handfest: Am 21.08.2026 war das Actions-Kontingent des Monats aufgebraucht und
+  # die Evolutionskette stand zwoelf Laeufe lang still. Nachgerechnet an den Job-Laufzeiten
+  # kostete EIN Prueflauf rund 26 Minuten (GitHub rundet jeden Job einzeln auf volle Minuten
+  # auf, auch parallele) - und weil dieser Workflow an `pull_request` UND an `push` haengt,
+  # fielen sie je Evolution zweimal an. Aufgaben wie ITO-0004 oder ITO-0009 aendern aber nur
+  # einen Satz in zwei strings.xml, und Backlog-Pflege aendert ueberhaupt nur Markdown.
+  #
+  # **Warum kein `paths-ignore` am Trigger.** Dann liefe der Workflow gar nicht und die Checks
+  # verschwaenden aus dem Pull Request. Ueber `if` bleiben sie sichtbar und enden als
+  # "skipped" - so, wie es "Signiertes AAB" bei jedem PR ohnehin schon tut.
+  #
+  # **Im Zweifel wird geprueft.** Laesst sich der Vergleichsstand nicht bestimmen (erster Push
+  # eines Branches, Force-Push, `workflow_dispatch`), gilt alles als betroffen. Ein
+  # ueberfluessiger Prueflauf kostet Minuten, ein uebersprungener kostet die Zusicherung.
+  # ---------------------------------------------------------------------------------------
+  changes:
+    name: Betroffene Bereiche bestimmen
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app_code: ${{ steps.filter.outputs.app_code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Beide Enden des Vergleichs muessen im Klon liegen, nicht nur die Spitze.
+          fetch-depth: 0
+
+      - id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          BASE=""; HEAD=""
+          case "$EVENT" in
+            pull_request) BASE="$PR_BASE";    HEAD="$PR_HEAD" ;;
+            push)         BASE="$PUSH_BEFORE"; HEAD="$PUSH_AFTER" ;;
+          esac
+
+          # Der Nullhash steht fuer "es gab vorher nichts" (neuer Branch); ein leerer Wert
+          # fuer einen Anlass ohne Vergleichspunkt (workflow_dispatch).
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$BASE^{commit}" 2>/dev/null \
+             || ! git cat-file -e "$HEAD^{commit}" 2>/dev/null; then
+            echo "Kein brauchbarer Vergleichsstand ($EVENT, base='$BASE') - es wird alles geprueft."
+            echo "app_code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # `--no-renames`, weil `git diff --name-only` eine erkannte Umbenennung nur mit dem
+          # ZIELPFAD auflistet. Wanderte eine .kt-Datei nach docs/ oder store/, saehe der
+          # Filter darin eine reine Dokumentationsaenderung und liesse alle Pruefungen aus -
+          # obwohl Quellcode verschwunden ist. Ohne Rename-Erkennung erscheinen beide Seiten
+          # als Loeschung und Neuanlage, und die Quellseite schlaegt korrekt an.
+          CHANGED="$(git diff --no-renames --name-only "$BASE" "$HEAD")"
+          echo "Geaenderte Dateien:"; printf '  %s\n' $CHANGED
+
+          # Was NICHT in die App gebaut wird. Alles Uebrige gilt als App-Code - eine
+          # Positivliste muesste man bei jeder neuen Dateiart nachziehen und waere genau dann
+          # falsch, wenn es darauf ankommt.
+          REST="$(printf '%s\n' "$CHANGED" | grep -vE '(\.md$|^evolutions/|^store/|^\.gitignore$|^LICENSE)' || true)"
+
+          if [ -n "$(printf '%s' "$REST" | tr -d '[:space:]')" ]; then
+            echo "App-Code betroffen:"; printf '  %s\n' $REST
+            echo "app_code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nur Text/Doku/Backlog - die teuren Jobs werden uebersprungen."
+            echo "app_code=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ---------------------------------------------------------------------------------------
   # Unit-Tests, Lint und minifizierter Probe-Bau beider Apps. Braucht kein Geraet, keine
   # Geheimnisse - laeuft daher auch fuer Pull Requests aus Forks.
   # ---------------------------------------------------------------------------------------
   verify:
     name: Tests, Lint, R8
+    needs: changes
+    if: needs.changes.outputs.app_code == 'true'
     runs-on: ubuntu-latest
     # Gemessen in Lauf #20: 16,6 min bei weitgehend kaltem Gradle-Cache. 40 Minuten lassen
     # reichlich Reserve fuer langsamere Runner, wachsende Testmengen und einen Lauf ganz ohne
@@ -90,6 +170,11 @@ jobs:
   # ---------------------------------------------------------------------------------------
   release-gate:
     name: Release-Torwaechter beisst
+    needs: changes
+    # Auch dieser Job haengt am Vorlauf, obwohl er mit rund einer Minute der billigste ist:
+    # Eine Aenderung an einer Markdown-Datei kann die Verdrahtung des Torwaechters nicht
+    # loesen, und ein Job, der nichts pruefen kann, sollte nicht laufen.
+    if: needs.changes.outputs.app_code == 'true'
     runs-on: ubuntu-latest
     # Gemessen: 0,9 min in Lauf #20, 3,4 min in Lauf #19 mit kaltem Cache. Der Job soll am
     # Torwaechter scheitern, bevor R8 ueberhaupt anlaeuft, bleibt also kurz. 15 Minuten sind
@@ -135,8 +220,23 @@ jobs:
   # `fail-fast: false`, damit ein Fehlschlag im einen Modul den anderen Lauf nicht abwuergt -
   # bei Migrationen will man wissen, ob es beide trifft oder nur eines.
   # ---------------------------------------------------------------------------------------
+  #
+  # **Diese Laeufe beim Push zu sparen waere der teuerste Fehler gewesen.** Ein erster Entwurf
+  # dieses Sparlaufs uebersprang sie bei `push` mit dem Argument, der Pull Request habe
+  # denselben Baum bereits gegen die Merge-Vorschau geprueft. Das stimmt nur, solange der Pull
+  # Request auf dem aktuellen Stand von main sitzt - und genau das war hier schon nicht der
+  # Fall: PR #16 wurde gegen 97bbbf4 geprueft, aber gegen d48ce3a gemergt, weil PR #15 zwoelf
+  # Sekunden vorher hineinging. Der dabei entstandene Baum hat nie ein Emulator gesehen.
+  #
+  # Was hier auf dem Spiel steht, ist nicht ein roter Haken, sondern der Spielstand auf fremden
+  # Geraeten: Itoeva speichert ausschliesslich lokal, eine kaputte Room-Migration nimmt
+  # Pflegebuch, Beziehungskapitel und Fortschritt mit. Dagegen sind elf gesparte Minuten kein
+  # Argument. Der Pfadfilter oben greift weiterhin - eine reine Textaenderung startet auch
+  # hier keinen Emulator.
   migrations:
     name: Instrumentiert (${{ matrix.module }}, API ${{ matrix.api-level }})
+    needs: changes
+    if: needs.changes.outputs.app_code == 'true'
     runs-on: ubuntu-latest
     # Ein haengender Emulator wuerde sonst bis zum GitHub-Standard von sechs Stunden
     # weiterlaufen und entsprechend Actions-Minuten verbrauchen. Ein gesunder Lauf bleibt
