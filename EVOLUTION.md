@@ -590,6 +590,57 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Neu entstandene offene Punkte:** Skillbaum/Talentbaum-System ausdrücklich als `OPEN DECISION`
   vermerkt (siehe oben) - nicht neu im Sinne des Prinzips, sondern erstmals benannt.
 
+### 2026-08-22 - Actions-Kontingent, öffentliches Repository, Kosten-Gate und Prozessdokumentation
+
+- **Version:** Protokoll bleibt 0.2, keine neue Freigabe unter "Character Evolution" - reine
+  Prozess- und Historien-Ergänzung.
+- **Ausgangsproblem:** Am 19.-21.08. stand die Evolutionskette zwölf Läufe lang still, weil das
+  monatliche GitHub-Actions-Kontingent des damals privaten Repositorys erschöpft war (Jobs
+  starben jeweils nach zwei Sekunden ohne ausgeführten Schritt, ohne Logs). Nachgerechnet an den
+  Job-Laufzeiten kostete `verify.yml` zusätzlich strukturell zu viel: Auslösung an sowohl
+  `pull_request` als auch `push` ohne Pfad-Filter bedeutete ~52 Minuten je Evolution, auch bei
+  reinen Text-/Backlog-Änderungen ohne App-Code-Bezug.
+- **Evidenzklassifikation:** `FACT` (Kontingent-Erschöpfung durch den Nutzer bestätigt,
+  Kostenrechnung anhand realer historischer Job-Laufzeiten nachvollzogen).
+- **Getroffene Entscheidung:** Repository von privat auf öffentlich umgestellt - eine bewusste
+  menschliche Entscheidung außerhalb dieses Protokolls, kein automatisierter Schritt (öffentliche
+  Repositories haben unbegrenzte GitHub-Actions-Minuten auf Standard-Runnern; Rücknahme jederzeit
+  möglich). Zusätzlich, unabhängig davon: PR #21 fügt `verify.yml` einen vorgeschalteten
+  "Betroffene Bereiche bestimmen"-Job hinzu, der reine Text-/Backlog-Änderungen an den teuren
+  Jobs (Emulator-Tests, Lint/R8) vorbeischleust, ohne die Checks aus der PR-Ansicht verschwinden
+  zu lassen (bewusst `if:`/Skip statt `paths-ignore`, damit sie sichtbar bleiben). Eine externe
+  Bot-Review (Codex) fand vor dem Merge zwei reale Probleme an diesem PR, beide angenommen und
+  behoben: (1) `git diff --name-only` erkennt Umbenennungen nicht korrekt und hätte verschobenen
+  App-Code fälschlich als reine Dokumentation eingestuft - behoben mit `--no-renames`; (2) ein
+  ursprünglich geplanter Verzicht auf Emulator-Tests beim `push`-Event war unsicher, weil der
+  tatsächliche Merge-Baum vom zuletzt per PR geprüften Baum abweichen kann, sobald zwischenzeitlich
+  ein anderer PR gemerged wurde - nachweislich bereits bei PR #16 so geschehen. Diese Optimierung
+  wurde vor dem Merge zurückgenommen.
+- **Betroffene Module/Texte:** `.github/workflows/verify.yml`; neu `Vision.md`,
+  `Architecture.md`, `NextTasks.md`, `AgentGuide.md` als begleitende, dauerhafte
+  Prozessdokumentation neben diesem Protokoll.
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine.
+- **Getestet:** `verify.yml`-Änderung mangels verfügbarer CI-Minuten zunächst gegen sieben reale
+  Merge-Commits der bisherigen Historie simuliert; nach Wiederherstellung der Minuten durch einen
+  echten CI-Lauf auf PR #21 bestätigt (alle Jobs grün, inklusive beider Emulator-Matrizen).
+- **Gelernte Lektion:** Ein mehrfach täglich laufender automatisierter Prozess ist gegen ein
+  knappes CI-Kontingent nicht von selbst stabil - Kostenwächter (Pfad-Filterung,
+  Zweitrigger-Vermeidung) sind keine optionale Politur, sondern Voraussetzung für die
+  Zuverlässigkeit der Pipeline selbst. Sicherheitsrelevante Repository-Einstellungen (hier:
+  Sichtbarkeitswechsel) über die mobile GitHub-Weboberfläche zu ändern erwies sich als
+  unzuverlässig (404-Fehler nach korrekter Eingabe der Bestätigung); `gh repo edit --visibility
+  public --accept-visibility-change-consequences` über die GitHub CLI war der zuverlässige Weg
+  und sollte für vergleichbare Fälle bevorzugt werden.
+- **Neu entstandene offene Punkte:** Ob `runner/` (PowerShell-/Windows-Task-Scheduler-basierte
+  Automatisierung, laut eigenem `runner/README.md` standardmäßig deaktiviert und nirgends sonst
+  referenziert) noch gebraucht wird oder von `claude-primary-run.yml` vollständig abgelöst wurde,
+  ist ungeklärt (siehe Architecture.md). Ob sich die Duplizierung zwischen
+  `app/ui/ReminderScreen.kt` und `app-sim/ui/ReminderScreen.kt` bzw. den beiden
+  `ReminderAnimations.kt`-Dateien verlustfrei nach `core` oder ein gemeinsames UI-Modul heben
+  lässt, ist ebenfalls ungeklärt - siehe NextTasks.md für den zugehörigen, bewusst kleinen
+  Rechercheauftrag.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.
