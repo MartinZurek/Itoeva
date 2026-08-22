@@ -531,6 +531,13 @@ jobs:
           Aufgabe:
           ${TASK}
 
+          Bevor du mit eigener Erkundung beginnst: lies AgentGuide.md vollstaendig (kurz) und
+          befolge die dortige Minimal-Startsequenz sowie die Regeln, wann zusaetzlich Vision.md,
+          Architecture.md, EVOLUTION.md oder NextTasks.md noetig sind. Fuer die meisten Aufgaben
+          reicht AgentGuide.md plus CLAUDE.md plus der eine betroffene Backlog-Eintrag - lies die
+          anderen Dokumente nicht routinemaessig vollstaendig mit, sondern nur nach den dort
+          beschriebenen Kriterien und dann gezielt nur den relevanten Abschnitt.
+
           Wie du arbeitest. Du hast genau vier Werkzeuggruppen: Read, Glob und Grep zum Lesen,
           Edit und Write zum Aendern. Eine Shell hast du NICHT, und das ist Absicht:
           - Starte keine Builds. Kein gradlew, kein Gradle, kein Maven.
@@ -1065,6 +1072,10 @@ jobs:
           - Wurden Tests abgeschwaecht, uebersprungen oder entfernt, damit der Stand gruen wird?
           - Liegt eine Aenderung ausserhalb dessen, was der Auftrag verlangt?
           - Gibt es Sicherheits-, Datenverlust- oder Migrationsrisiken?
+          - Beruehrt sie einen der Punkte unter AgentGuide.md, Abschnitt \"Was niemals ohne
+            menschliche Freigabe veraendert werden darf\", oder EVOLUTION.md, Abschnitte
+            \"Non-Negotiable Design Principles\"/\"Protected Areas\"? Falls unklar, dort gezielt
+            nachlesen statt zu raten - nicht die ganze EVOLUTION.md, nur diese Abschnitte.
 
           Du darfst die geaenderten Dateien mit Read, Glob und Grep im Arbeitsstand ansehen.
 
