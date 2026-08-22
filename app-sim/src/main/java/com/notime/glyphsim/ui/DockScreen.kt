@@ -24,7 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -1696,6 +1696,19 @@ fun DockScreen(
                             )
                             val mood = AvatarMoodSnapshot.forSpecies(context, current.species)
                             startAvatarIdleLoop(current.species, mood)
+                            // Eine ECHTE Erinnerung darf dasselbe bewirken wie eine Bitte im
+                            // Gespraech (siehe onAsk/requestedTopic weiter unten): das Wesen geht
+                            // danach an den zum Thema passenden Ort ([PlayScene.forTopic]) und
+                            // fuehrt dort dessen Tagesablauf-Routine aus ([PlayRoutines.forTopic]),
+                            // statt einfach an der Stelle der Reaktion idle stehen zu bleiben.
+                            // Reaktion selbst bleibt unberuehrt (laeuft VOR diesem Zweig, frei
+                            // stehend und unverdeckt) - erst DANACH beginnt der Ortswechsel. Die
+                            // Tageszeit wirkt dabei bereits mit: [moveToPlace] und die Routine
+                            // selbst richten sich nach der aktuellen Tagesphase (siehe
+                            // PlayAmbientActivity.currentDayPhase), dieselbe Logik wie beim
+                            // autonomen Tagesablauf. Nur bei einem festen [AnimationType] moeglich
+                            // - eine Bibliotheks-Animation ohne Thema kennt keinen Ort.
+                            current.animationType?.let { requestedTopic = it }
                         } else {
                             avatar = null
                         }
@@ -2573,12 +2586,12 @@ fun DockScreen(
                         modifier = Modifier
                             .size(with(density) { slotSizePx.toDp() })
                             .offset { IntOffset(dragOffset.x.roundToInt(), dragOffset.y.roundToInt()) }
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(CircleShape)
                             .background(if (saved != null) TamaPalette.BubbleBackground else TamaPalette.RowBackground)
                             .border(
                                 width = 1.dp,
                                 color = TamaPalette.TextMuted.copy(alpha = if (saved != null) 0f else 0.35f),
-                                shape = RoundedCornerShape(14.dp)
+                                shape = CircleShape
                             )
                             .then(
                                 if (saved != null) {
