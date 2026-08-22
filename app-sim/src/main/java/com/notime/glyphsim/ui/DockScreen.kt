@@ -10,10 +10,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -2560,14 +2559,15 @@ fun DockScreen(
 
         // ---- Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt) ----
         //
-        // Fest positioniert wie die Kulisse selbst, nicht ziehbar wie Uhr und Avatar - dieselbe
-        // Absicht wie in HomeScreen: die Welt bleibt unveraendert, unabhaengig davon, wie viele
-        // Plaetze belegt sind. Anwenden geschieht hier per Antippen statt per Ziehen: der Avatar
-        // bewegt sich im Spielmodus animiert durch die Kulisse (siehe moveToPlace) statt an einer
-        // festen Bildschirmstelle zu stehen, eine fortlaufende Kollisionspruefung waehrend einer
-        // Zieh-Geste gegen dieses bewegliche Ziel haette eine eigene, gesondert zu pruefende
-        // Nachfuehr-Logik gebraucht. Ablegen bleibt Ziehen (die Uhr steht still, waehrend man sie
-        // zieht) - siehe LaunchedEffect(clockOffset) oben.
+        // Die Plaetze selbst stehen fest wie die Kulisse - nur ihr INHALT laesst sich ziehen, auf
+        // den Avatar. Die Kollisionspruefung folgt dabei nicht nur der Zieh-Geste (dragOffset),
+        // sondern auch der AKTUELLEN Avatar-Position (avatar?.offset als zweiter Schluessel des
+        // LaunchedEffect unten) - der Avatar bewegt sich im Spielmodus animiert durch die Kulisse
+        // (siehe moveToPlace) statt an fester Bildschirmstelle zu stehen, waere er nicht mit
+        // einbezogen, traefe ein Ziehen auf ein Ziel, das sich waehrenddessen schon weiterbewegt
+        // hat. Fuer TalkBack bleibt zusaetzlich die Zusatzaktion "Anwenden" - Ziehen laesst sich
+        // fuer einen Screenreader nicht sinnvoll bedienen, dasselbe Muster wie beim Fuettern per
+        // Uhr-Ziehen weiter oben.
         if (playMode) {
             Column(
                 modifier = Modifier
@@ -2588,9 +2588,29 @@ fun DockScreen(
                         stringResource(R.string.a11y_action_slot_empty, index + 1)
                     }
                     val applyLabel = stringResource(R.string.a11y_action_slot_apply)
+
+                    // Ueber den Belegungs-Schluessel neu erzeugt: sobald dieser Platz frei wird
+                    // (gefuettert) oder neu belegt wird, beginnt die Verschiebung wieder bei Null -
+                    // sonst haenge die naechste Aktion an diesem Platz an der Position der vorigen
+                    // (dasselbe Muster wie ActionSlot in ActionSlots.kt).
+                    var dragOffset by remember(saved?.occurrenceId) { mutableStateOf(Offset.Zero) }
+
+                    LaunchedEffect(dragOffset, avatar?.offset, avatar?.sizeDp) {
+                        val current = avatar
+                        if (saved == null || current == null || dragOffset == Offset.Zero) {
+                            return@LaunchedEffect
+                        }
+                        val avatarPx = with(density) { current.sizeDp.dp.toPx() }
+                        val slotAbsolute = slotOffsetPx(index) + dragOffset
+                        if (isColliding(slotAbsolute, slotSizePx, current.offset, avatarPx)) {
+                            feedFromSlot(index)
+                        }
+                    }
+
                     Box(
                         modifier = Modifier
                             .size(with(density) { slotSizePx.toDp() })
+                            .offset { IntOffset(dragOffset.x.roundToInt(), dragOffset.y.roundToInt()) }
                             .clip(RoundedCornerShape(14.dp))
                             .background(if (saved != null) TamaPalette.BubbleBackground else TamaPalette.RowBackground)
                             .border(
@@ -2600,11 +2620,30 @@ fun DockScreen(
                             )
                             .then(
                                 if (saved != null) {
-                                    Modifier.clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = { feedFromSlot(index) }
-                                    )
+                                    Modifier.pointerInput(saved.occurrenceId) {
+                                        detectDragGestures(
+                                            onDrag = { change, amount ->
+                                                change.consume()
+                                                dragOffset += amount
+                                            },
+                                            onDragEnd = {
+                                                // Ueberschneidet sich der Platz gerade mit dem
+                                                // Avatar, laeuft das Fuettern bereits (siehe
+                                                // LaunchedEffect oben) - dann NICHT zurueckschnappen,
+                                                // der Platz verschwindet gleich ohnehin.
+                                                val current = avatar
+                                                val stillOverlapping = current != null &&
+                                                    isColliding(
+                                                        slotOffsetPx(index) + dragOffset,
+                                                        slotSizePx,
+                                                        current.offset,
+                                                        with(density) { current.sizeDp.dp.toPx() }
+                                                    )
+                                                if (!stillOverlapping) dragOffset = Offset.Zero
+                                            },
+                                            onDragCancel = { dragOffset = Offset.Zero }
+                                        )
+                                    }
                                 } else {
                                     Modifier
                                 }
