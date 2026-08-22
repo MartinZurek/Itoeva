@@ -1123,16 +1123,20 @@ object PlayScene {
         )
 
         // Die STADT: dichter bebaut als die Strasse und mit ZWEI Laternen belebter - derselbe
-        // Weg, nur groesser und voller. Nur die erste Laterne traegt die Station: eine zweite
-        // Bank oder Laterne ist Kulisse, kein zweiter Platz zum Ansteuern.
+        // Weg, nur groesser und voller. Bank und (tragende) Laterne stehen an denselben
+        // Bruchteilen wie auf der Strasse: Der Ruheplatz der Figur liegt dort ebenfalls bei
+        // 0,08 (siehe [avatarAnchorX]), und genau dieser Abstand ist bereits geprueft
+        // (SceneCompositionTest, "an jedem Ort bleibt Platz zum Stehen") - naeher heran haette
+        // die Figur im Sitzen der Bank gestanden. Nur die erste Laterne traegt die Station: eine
+        // zweite Bank oder Laterne ist Kulisse, kein zweiter Platz zum Ansteuern.
         Place.CITY -> listOf(
             Placement(HOUSE, anchorX = 0.02f, brightness = BACKDROP, behind = true),
             Placement(HOUSE_LOW, anchorX = 0.30f, brightness = BACKDROP, behind = true),
             Placement(HOUSE, anchorX = 0.58f, brightness = BACKDROP, behind = true),
             Placement(HOUSE_LOW, anchorX = 0.86f, brightness = BACKDROP, behind = true),
-            Placement(BENCH, anchorX = 0.20f, station = Station.BENCH),
-            Placement(LAMPPOST, anchorX = 0.46f, station = Station.LAMP),
-            Placement(LAMPPOST, anchorX = 0.72f)
+            Placement(BENCH, anchorX = 0.52f, station = Station.BENCH),
+            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP),
+            Placement(LAMPPOST, anchorX = 0.94f)
         )
         }
     }
