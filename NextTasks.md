@@ -24,6 +24,11 @@ Lore, siehe EVOLUTION.md) sind von dieser Regel ausdrücklich **nicht** betroffe
 Format je Aufgabe: **Rang - ID** - Aufgabe. *Hebel:* warum das gerade jetzt am meisten bringt.
 *Erfolgskriterium.* (Abhängigkeit; Aufwand)
 
+**Vor jeder Aufgabe aus dem Bereich Tokenverbrauch (NT-045 bis NT-050 unten):** erst empirisch
+feststellen, was tatsächlich in den Modellkontext gelangt, nicht von Dateigröße oder vermuteter
+Quelle ausgehen - siehe AgentGuide.md, Stilregeln, und das Beispiel in Architecture.md (frühere
+NT-043-Annahme, korrigiert in PR #23).
+
 1. **NT-045** - Erledigte (`[done]`)-Einträge aus `evolutions/BACKLOG.md` (25 KB) nach einer
    gewissen Zeit in ein Archiv (`BACKLOG-ARCHIVE.md`) auslagern. *Hebel: die Datei wächst mit
    jeder Evolution weiter und wird sonst bei jedem Lauf komplett mitgeladen.* *Umgesetzt oder
