@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -147,12 +147,12 @@ private fun ActionSlot(
                 bounds = it.boundsInRoot()
                 onBoundsChanged(bounds)
             }
-            .clip(RoundedCornerShape(14.dp))
+            .clip(CircleShape)
             .background(if (saved != null) TamaPalette.BubbleBackground else TamaPalette.RowBackground)
             .border(
                 width = 1.dp,
                 color = TamaPalette.TextMuted.copy(alpha = if (saved != null) 0f else 0.35f),
-                shape = RoundedCornerShape(14.dp)
+                shape = CircleShape
             )
             .then(
                 if (saved != null) {

@@ -647,11 +647,12 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Ausgangsproblem:** Eine laufende Erinnerung ließ sich nur sofort anwenden. Der Nutzer wollte
   Aktionen sichtbar für später aufheben und bewusst zwischen sofortigem Einsatz und Speichern
   wählen können.
-- **Getroffene Entscheidung:** Der Simulator zeigt vorläufig vier Slots. Eine Aktion lässt sich
-  dort ablegen und später über dieselbe Fütter-Pipeline einsetzen; unbeantwortet auslaufende
-  Aktionen belegen den ersten freien Platz. Die Belegung bleibt je Wesen über App-Neustarts
-  erhalten. Vier ist eine MVP-Hypothese, keine Festlegung der langfristigen Slot-Anzahl; deren
-  Validierung bleibt NT-053.
+- **Getroffene Entscheidung:** Der Simulator zeigt im Modus „Spiel“ vorläufig vier runde, rechts
+  oberhalb der Umgebungswelt angeordnete Slots; außerhalb dieses Modus sind Anzeige und
+  Speicheraktionen nicht aktiv. Eine Aktion lässt sich dort ablegen und später über dieselbe
+  Fütter-Pipeline einsetzen; unbeantwortet auslaufende Aktionen belegen im Spiel den ersten freien
+  Platz. Die Belegung bleibt je Wesen über App-Neustarts erhalten. Vier ist eine MVP-Hypothese,
+  keine Festlegung der langfristigen Slot-Anzahl; deren Validierung bleibt NT-053.
 - **Betroffene Module/Texte:** `app-sim`-Startbildschirm, neue Slot-UI und lokaler Slot-Speicher,
   Onboarding-/Barrierefreiheitstexte; `:app` und Dock-Modus bleiben unverändert.
 - **Migrationsauswirkungen:** keine Room-Migration; maximal vier kleine, profilgetrennte

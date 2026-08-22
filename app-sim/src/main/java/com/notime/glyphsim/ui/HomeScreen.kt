@@ -46,6 +46,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -206,6 +207,9 @@ fun HomeScreen(
     val playActive by PlayModePrefs.active(context).collectAsStateWithLifecycle(initialValue = PlayModePrefs.isActive(context))
     // Der Modus, wie der Nutzer ihn sieht - aus beiden Schaltern zusammengesetzt (siehe AppMode).
     var appMode by remember { mutableStateOf(AppMode.current(context)) }
+    // Die Bus-Coroutine lebt laenger als eine einzelne Composition. Ohne UpdatedState wuerde sie
+    // beim Auslaufen einer Erinnerung den Modus vom ersten Bildschirmaufbau verwenden.
+    val latestAppMode by rememberUpdatedState(appMode)
     val playState by playViewModel.state.collectAsStateWithLifecycle()
     var showPlayIntro by remember { mutableStateOf(false) }
 
@@ -228,7 +232,7 @@ fun HomeScreen(
      */
     fun archiveActiveReminderIfExpired() {
         val current = activeReminder ?: return
-        val freeIndex = slots.indexOfFirst { it == null }
+        val freeIndex = if (latestAppMode == AppMode.PLAY) slots.indexOfFirst { it == null } else -1
         if (freeIndex >= 0) {
             val saved = current.toSavedAction()
             ActionSlotStore.write(context, actionSlotProfileId, freeIndex, saved)
@@ -452,6 +456,7 @@ fun HomeScreen(
             feedNow()
             return@LaunchedEffect
         }
+        if (appMode != AppMode.PLAY) return@LaunchedEffect
         val freeSlotIndex = slotBounds.indexOfFirst { bounds ->
             AvatarFeeding.overlaps(clockBounds, bounds)
         }
@@ -703,7 +708,7 @@ fun HomeScreen(
                     // Wie [feedActionLabel] weiter unten am Avatar: Ziehen laesst sich fuer einen
                     // Screenreader nicht sinnvoll bedienen, deshalb bekommt jeder FREIE
                     // Speicherplatz hier eine eigene Zusatzaktion, solange eine Erinnerung wartet.
-                    val slotSaveActions = if (activeReminder != null) {
+                    val slotSaveActions = if (activeReminder != null && appMode == AppMode.PLAY) {
                         slots.mapIndexedNotNull { index, saved ->
                             if (saved == null) {
                                 index to stringResource(R.string.a11y_clock_save_to_slot, index + 1)
@@ -887,39 +892,44 @@ fun HomeScreen(
 
         }
 
-            // Vier feste Speicherplaetze rechts, vertikal zentriert (siehe ActionSlotsColumn) -
+            // Vier feste Speicherplaetze nur im Spielmodus, rechts und etwas oberhalb der Mitte
+            // (siehe ActionSlotsColumn) -
             // eine eigene, ueberlagernde Spalte statt Teil des zentrierten Ablaufs oben: die Welt
             // (Uhr, Avatar) bleibt dadurch unveraendert mittig, unabhaengig davon, wie viele
-            // Plaetze gerade belegt sind.
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Einmaliger Hinweis, solange noch nie etwas abgelegt wurde UND gerade nichts
-                // belegt ist - sonst erklaert er etwas, das laengst benutzt wird oder gerade
-                // sichtbar vorgemacht wird.
-                if (!OnboardingPrefs.hasUsedActionSlot(context) && slots.all { it == null }) {
-                    Text(
-                        stringResource(R.string.onboarding_action_slots),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TamaPalette.TextPrimary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .widthIn(max = 120.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(TamaPalette.BubbleBackground)
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
+            // Plaetze gerade belegt sind. Die Verschiebung nach oben haelt die Slots aus der
+            // Umgebungswelt heraus.
+            if (appMode == AppMode.PLAY) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .offset(y = (-48).dp)
+                        .padding(end = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Einmaliger Hinweis, solange noch nie etwas abgelegt wurde UND gerade nichts
+                    // belegt ist - sonst erklaert er etwas, das laengst benutzt wird oder gerade
+                    // sichtbar vorgemacht wird.
+                    if (!OnboardingPrefs.hasUsedActionSlot(context) && slots.all { it == null }) {
+                        Text(
+                            stringResource(R.string.onboarding_action_slots),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TamaPalette.TextPrimary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .widthIn(max = 120.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(TamaPalette.BubbleBackground)
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    ActionSlotsColumn(
+                        slots = slots,
+                        avatarBounds = avatarBounds,
+                        onBoundsChanged = { index, bounds -> slotBounds[index] = bounds },
+                        onDropOnAvatar = { feedFromSlot(it) }
                     )
-                    Spacer(Modifier.height(8.dp))
                 }
-                ActionSlotsColumn(
-                    slots = slots,
-                    avatarBounds = avatarBounds,
-                    onBoundsChanged = { index, bounds -> slotBounds[index] = bounds },
-                    onDropOnAvatar = { feedFromSlot(it) }
-                )
             }
         }
     }
