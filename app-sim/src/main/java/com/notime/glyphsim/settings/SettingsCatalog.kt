@@ -204,4 +204,7 @@ object SettingsCatalog {
      * Persistenz-Landkarte im README beschrieben.
      */
     const val DYNAMIC_RHYTHM_SUGGESTION_FILE = "rhythm_suggestion_prefs"
+
+    /** Je Wesen und Position ein dynamischer Snapshot, siehe `ui/ActionSlotStore`. */
+    const val DYNAMIC_ACTION_SLOT_FILE = "action_slots"
 }

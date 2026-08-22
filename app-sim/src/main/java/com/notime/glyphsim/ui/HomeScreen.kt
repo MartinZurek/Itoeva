@@ -213,7 +213,10 @@ fun HomeScreen(
     // auf den Avatar hierher gezogen wird, und bleibt liegen, bis sie von hier aus gefuettert
     // wird. `slotBounds` haelt ihre aktuellen Bildschirm-Grenzen fuer dieselbe Kollisionspruefung,
     // die auch Uhr und Avatar benutzen (siehe AvatarFeeding.overlaps).
-    var slots by remember { mutableStateOf<List<SavedAction?>>(List(ACTION_SLOT_COUNT) { null }) }
+    val actionSlotProfileId = AvatarSpeciesPrefs.profileId(currentSpecies)
+    var slots by remember(actionSlotProfileId) {
+        mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
+    }
     val slotBounds = remember { mutableStateListOf(*Array(ACTION_SLOT_COUNT) { Rect.Zero }) }
 
     /**
@@ -227,7 +230,12 @@ fun HomeScreen(
         val current = activeReminder ?: return
         val freeIndex = slots.indexOfFirst { it == null }
         if (freeIndex >= 0) {
-            slots = slots.toMutableList().also { it[freeIndex] = current.toSavedAction() }
+            val saved = current.toSavedAction()
+            ActionSlotStore.write(context, actionSlotProfileId, freeIndex, saved)
+            slots = slots.toMutableList().also { it[freeIndex] = saved }
+            if (!OnboardingPrefs.hasUsedActionSlot(context)) {
+                OnboardingPrefs.markActionSlotUsed(context)
+            }
         }
         activeReminder = null
         isPlayingAnimation = false
@@ -404,6 +412,7 @@ fun HomeScreen(
             libraryAnimationLabel = saved.libraryAnimationLabel,
             isStillRelevant = { slots.getOrNull(index)?.occurrenceId == saved.occurrenceId },
             onConsumed = {
+                ActionSlotStore.write(context, actionSlotProfileId, index, null)
                 slots = slots.toMutableList().also { it[index] = null }
             }
         )
@@ -417,7 +426,9 @@ fun HomeScreen(
     fun saveToSlot(index: Int) {
         val current = activeReminder ?: return
         if (slots.getOrNull(index) != null) return
-        slots = slots.toMutableList().also { it[index] = current.toSavedAction() }
+        val saved = current.toSavedAction()
+        ActionSlotStore.write(context, actionSlotProfileId, index, saved)
+        slots = slots.toMutableList().also { it[index] = saved }
         activeReminder = null
         clockAnimJob?.cancel()
         isPlayingAnimation = false
