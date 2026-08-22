@@ -9,8 +9,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -321,6 +327,33 @@ fun DockScreen(
 
         var avatar by remember { mutableStateOf<AvatarState?>(null) }
         var feedingOccurrenceId by remember { mutableStateOf<Long?>(null) }
+
+        // Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt/ActionSlotStore.kt) -
+        // dieselbe Mechanik wie in HomeScreen, hier auf DockScreens eigenes Koordinatensystem
+        // (Pixel-Offsets statt onGloballyPositioned/Rect) und Avatar-Modell (AvatarState statt
+        // ActiveReminder) uebertragen. profileId folgt demselben Ad-hoc-Muster wie andernorts in
+        // dieser Datei (siehe z. B. weiter unten bei PlayWallet/PlayPantry): avatar?.species, falls
+        // schon vorhanden, sonst der gespeicherte Auswahlwert.
+        val actionSlotProfileId = AvatarSpeciesPrefs.profileId(avatar?.species ?: AvatarSpeciesPrefs.get(context))
+        var slots by remember(actionSlotProfileId) {
+            mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
+        }
+        // Wie [currentWidthPx]/[currentHeightPx] oben: der Erinnerungs-Collector (LaunchedEffect
+        // weiter unten) startet nur einmal und wuerde sonst beim Archivieren einer ausgelaufenen
+        // Erinnerung am WESEN DES ALLERERSTEN BILDSCHIRMAUFBAUS haengen bleiben, statt am gerade
+        // gewaehlten - derselbe Fehler, der in HomeScreen.kt als Codex-Befund auf PR #20 gefunden
+        // und dort per rememberUpdatedState behoben wurde (siehe PR #26).
+        val latestActionSlotProfileId by rememberUpdatedState(actionSlotProfileId)
+
+        // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
+        // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
+        val slotSizePx = with(density) { 56.dp.toPx() }
+        val slotGapPx = with(density) { 14.dp.toPx() }
+        val slotsRightMarginPx = with(density) { 8.dp.toPx() }
+        val slotsTotalHeightPx = ACTION_SLOT_COUNT * slotSizePx + (ACTION_SLOT_COUNT - 1) * slotGapPx
+        val slotsTopPx = ((maxHeightPx - slotsTotalHeightPx) / 2f).coerceAtLeast(0f)
+        val slotsXPx = (maxWidthPx - slotSizePx - slotsRightMarginPx).coerceAtLeast(0f)
+        fun slotOffsetPx(index: Int) = Offset(slotsXPx, slotsTopPx + index * (slotSizePx + slotGapPx))
         /** Ob gerade ein Gang laeuft - siehe das Nachfuehren des Bodens weiter unten. */
         var avatarWalking by remember { mutableStateOf(false) }
         /** Wie oft die Figur schon hintereinander im selben Raum geblieben ist - siehe nextTopic. */
@@ -1081,7 +1114,8 @@ fun DockScreen(
             reminderId: Long? = null,
             occurrenceId: Long? = null,
             animationType: AnimationType? = null,
-            libraryAnimationLabel: String? = null
+            libraryAnimationLabel: String? = null,
+            frames: List<IntArray> = emptyList()
         ): AvatarState {
             // Auf dem Boden der Kulisse statt an zufaelliger Stelle im Schwarzen: sobald ein Raum
             // gezeichnet wird, ist eine frei schwebende Figur der eine Fehler, den man sofort
@@ -1107,7 +1141,8 @@ fun DockScreen(
                 species = species,
                 offset = spawnOffset,
                 sizeDp = worldAvatarSizeDp,
-                frame = AvatarAnimations.idleSequence(species, mood).frames.first()
+                frame = AvatarAnimations.idleSequence(species, mood).frames.first(),
+                frames = frames
             )
         }
 
@@ -1460,7 +1495,8 @@ fun DockScreen(
                             reminderId = event.reminderId,
                             occurrenceId = event.occurrenceId,
                             animationType = event.animationType,
-                            libraryAnimationLabel = event.libraryAnimationLabel
+                            libraryAnimationLabel = event.libraryAnimationLabel,
+                            frames = event.frames
                         )
                     } else {
                         // Randfall: die Spawn-Effekt-Coroutine oben ist noch nicht durchgelaufen,
@@ -1471,7 +1507,8 @@ fun DockScreen(
                             reminderId = event.reminderId,
                             occurrenceId = event.occurrenceId,
                             animationType = event.animationType,
-                            libraryAnimationLabel = event.libraryAnimationLabel
+                            libraryAnimationLabel = event.libraryAnimationLabel,
+                            frames = event.frames
                         )
                     }
                 } else {
@@ -1553,6 +1590,42 @@ fun DockScreen(
                 // hat (die setzt fed=true und cancelt beide Jobs selbst).
                 if (avatar?.fed != true) {
                     if (playMode) {
+                        // Zieht die ausgelaufene, unbeantwortete Erinnerung zuerst in einen freien
+                        // Speicherplatz statt sie ersatzlos zu verwerfen - dasselbe Verhalten wie
+                        // HomeScreens archiveActiveReminderIfExpired(). Ueber die aktualisierte
+                        // Profil-ID statt der bei Sitzungsstart eingefrorenen: dieser Collector
+                        // startet nur einmal (siehe LaunchedEffect(watchOnly) oben) und wuerde bei
+                        // einem Wesenswechsel sonst am ALTEN Wesen archivieren.
+                        val expiring = avatar
+                        val profileId = latestActionSlotProfileId
+                        val currentSlots = if (profileId == actionSlotProfileId) {
+                            slots
+                        } else {
+                            ActionSlotStore.read(context, profileId)
+                        }
+                        val freeIndex = if (expiring?.occurrenceId != null) {
+                            currentSlots.indexOfFirst { it == null }
+                        } else {
+                            -1
+                        }
+                        if (expiring != null && expiring.reminderId != null &&
+                            expiring.occurrenceId != null && freeIndex >= 0
+                        ) {
+                            val saved = SavedAction(
+                                reminderId = expiring.reminderId,
+                                occurrenceId = expiring.occurrenceId,
+                                animationType = expiring.animationType,
+                                libraryAnimationLabel = expiring.libraryAnimationLabel,
+                                frames = expiring.frames.ifEmpty { listOf(expiring.frame) }
+                            )
+                            ActionSlotStore.write(context, profileId, freeIndex, saved)
+                            if (profileId == actionSlotProfileId) {
+                                slots = slots.toMutableList().also { it[freeIndex] = saved }
+                            }
+                            if (!OnboardingPrefs.hasUsedActionSlot(context)) {
+                                OnboardingPrefs.markActionSlotUsed(context)
+                            }
+                        }
                         // Anders als im normalen Dock verschwindet der Avatar hier nicht - nur
                         // die Verknuepfung zur ausgelaufenen Erinnerung faellt weg, seine Idle-
                         // Schleife (siehe oben, unangetastet seit dem Play-Modus-Einstieg bzw.
@@ -1561,7 +1634,8 @@ fun DockScreen(
                             reminderId = null,
                             occurrenceId = null,
                             animationType = null,
-                            libraryAnimationLabel = null
+                            libraryAnimationLabel = null,
+                            frames = emptyList()
                         )
                     } else {
                         // Avatar verschwindet ungetrackt.
@@ -1670,6 +1744,66 @@ fun DockScreen(
             }
         }
 
+        /**
+         * Legt die gerade mit dem Avatar verknuepfte, noch unbeantwortete Erinnerung in
+         * Speicherplatz [index] ab, statt sie zu fuettern - Gegenstueck zu [feedAvatarNow]. Der
+         * Avatar behaelt seine Idle-Schleife und Position, verliert nur die Verknuepfung zur
+         * Erinnerung (dieselbe Kopie wie im "ausgelaufen, ohne gefuettert zu werden"-Zweig unten).
+         */
+        fun saveToSlot(index: Int) {
+            val current = avatar ?: return
+            if (current.occurrenceId == null || current.fed) return
+            if (slots.getOrNull(index) != null) return
+            val reminderId = current.reminderId ?: return
+            val saved = SavedAction(
+                reminderId = reminderId,
+                occurrenceId = current.occurrenceId,
+                animationType = current.animationType,
+                libraryAnimationLabel = current.libraryAnimationLabel,
+                frames = current.frames.ifEmpty { listOf(current.frame) }
+            )
+            ActionSlotStore.write(context, actionSlotProfileId, index, saved)
+            slots = slots.toMutableList().also { it[index] = saved }
+            clockAnimJob?.cancel()
+            isPlayingAnimation = false
+            animationFrame = null
+            avatar = current.copy(
+                reminderId = null,
+                occurrenceId = null,
+                animationType = null,
+                libraryAnimationLabel = null,
+                frames = emptyList()
+            )
+            if (!OnboardingPrefs.hasUsedActionSlot(context)) {
+                OnboardingPrefs.markActionSlotUsed(context)
+            }
+        }
+
+        /**
+         * Wendet eine zuvor abgelegte Aktion aus Speicherplatz [index] auf den Avatar an, indem
+         * sie ihm kurz "verknuepft" wird und danach exakt derselbe Weg wie [feedAvatarNow] laeuft -
+         * dieselbe DB-Schreibung, dieselbe Reaktion, dasselbe Aufraeumen danach. Nur erreichbar,
+         * wenn der Avatar gerade KEINE eigene offene Erinnerung traegt: sonst wuerde deren
+         * Verknuepfung hier verloren gehen, ohne dass sie je beantwortet oder archiviert wurde.
+         */
+        fun feedFromSlot(index: Int) {
+            val saved = slots.getOrNull(index) ?: return
+            val current = avatar ?: return
+            if (feedingOccurrenceId != null) return
+            if (current.occurrenceId != null && !current.fed) return
+            avatar = current.copy(
+                reminderId = saved.reminderId,
+                occurrenceId = saved.occurrenceId,
+                animationType = saved.animationType,
+                libraryAnimationLabel = saved.libraryAnimationLabel,
+                fed = false,
+                frames = saved.frames
+            )
+            ActionSlotStore.write(context, actionSlotProfileId, index, null)
+            slots = slots.toMutableList().also { it[index] = null }
+            feedAvatarNow()
+        }
+
         // Laeuft bei jeder Aenderung von clockOffset neu an, also auch mitten in einer
         // laufenden Drag-Geste (nicht erst am Gesten-Ende) - dadurch wird die Kollision
         // erkannt, sobald sich Uhr und Avatar beim Ziehen beruehren.
@@ -1680,6 +1814,15 @@ fun DockScreen(
             val avatarPx = with(density) { current.sizeDp.dp.toPx() }
             if (isColliding(clockOffset, clockPx, current.offset, avatarPx)) {
                 feedAvatarNow()
+                return@LaunchedEffect
+            }
+            if (!playMode) return@LaunchedEffect
+            val freeSlotIndex = (0 until ACTION_SLOT_COUNT).firstOrNull { index ->
+                slots.getOrNull(index) == null &&
+                    isColliding(clockOffset, clockPx, slotOffsetPx(index), slotSizePx)
+            }
+            if (freeSlotIndex != null) {
+                saveToSlot(freeSlotIndex)
             }
         }
 
@@ -2415,6 +2558,79 @@ fun DockScreen(
             }
         }
 
+        // ---- Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt) ----
+        //
+        // Fest positioniert wie die Kulisse selbst, nicht ziehbar wie Uhr und Avatar - dieselbe
+        // Absicht wie in HomeScreen: die Welt bleibt unveraendert, unabhaengig davon, wie viele
+        // Plaetze belegt sind. Anwenden geschieht hier per Antippen statt per Ziehen: der Avatar
+        // bewegt sich im Spielmodus animiert durch die Kulisse (siehe moveToPlace) statt an einer
+        // festen Bildschirmstelle zu stehen, eine fortlaufende Kollisionspruefung waehrend einer
+        // Zieh-Geste gegen dieses bewegliche Ziel haette eine eigene, gesondert zu pruefende
+        // Nachfuehr-Logik gebraucht. Ablegen bleibt Ziehen (die Uhr steht still, waehrend man sie
+        // zieht) - siehe LaunchedEffect(clockOffset) oben.
+        if (playMode) {
+            Column(
+                modifier = Modifier
+                    .offset { IntOffset(slotsXPx.roundToInt(), slotsTopPx.roundToInt()) },
+                verticalArrangement = Arrangement.spacedBy(with(density) { slotGapPx.toDp() })
+            ) {
+                repeat(ACTION_SLOT_COUNT) { index ->
+                    val saved = slots.getOrNull(index)
+                    val slotLabel = if (saved != null) {
+                        val topicLabel = saved.libraryAnimationLabel
+                            ?: saved.animationType?.let { stringResource(it.labelRes) }
+                        stringResource(
+                            R.string.a11y_action_slot_filled,
+                            index + 1,
+                            topicLabel ?: stringResource(R.string.a11y_reminder_generic)
+                        )
+                    } else {
+                        stringResource(R.string.a11y_action_slot_empty, index + 1)
+                    }
+                    val applyLabel = stringResource(R.string.a11y_action_slot_apply)
+                    Box(
+                        modifier = Modifier
+                            .size(with(density) { slotSizePx.toDp() })
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (saved != null) TamaPalette.BubbleBackground else TamaPalette.RowBackground)
+                            .border(
+                                width = 1.dp,
+                                color = TamaPalette.TextMuted.copy(alpha = if (saved != null) 0f else 0.35f),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .then(
+                                if (saved != null) {
+                                    Modifier.clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = { feedFromSlot(index) }
+                                    )
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .semantics {
+                                contentDescription = slotLabel
+                                if (saved != null) {
+                                    customActions = listOf(
+                                        CustomAccessibilityAction(applyLabel) { feedFromSlot(index); true }
+                                    )
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (saved != null) {
+                            SimulatedMatrixView(
+                                frame = saved.frames.firstOrNull() ?: IntArray(0),
+                                showPuck = false,
+                                modifier = Modifier.fillMaxSize().padding(8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // ---- Das Gespraech (siehe PlayTalk / PlayTalkPanel) ----
         //
         // Es liegt ueber allem und faengt die Gesten ab: Solange es offen ist, laeuft die Welt zwar
@@ -2581,7 +2797,15 @@ private data class AvatarState(
     val offset: Offset,
     val sizeDp: Float,
     val frame: IntArray,
-    val fed: Boolean = false
+    val fed: Boolean = false,
+    /**
+     * Die volle Frame-Liste der gerade laufenden Erinnerungs-Animation - nur befuellt, waehrend
+     * [occurrenceId] gesetzt ist. Wird ausschliesslich fuer die Vorschau gebraucht, falls diese
+     * Ausloesung statt gefuettert in einen Speicherplatz gezogen wird (siehe [SavedAction],
+     * ActionSlots.kt). [frame] allein reicht dafuer nicht - das ist nur das gerade sichtbare
+     * Einzelbild und wechselt staendig.
+     */
+    val frames: List<IntArray> = emptyList()
 )
 
 /**
