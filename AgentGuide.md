@@ -9,6 +9,38 @@ Arbeitspakete, [CLAUDE.md](CLAUDE.md) für die knappen Arbeitsweise-Regeln diese
 **Bei Widerspruch gilt EVOLUTION.md.** Es ist das einzige Dokument mit dem Anspruch, ein
 verbindliches Protokoll zu sein - alle anderen hier sind Orientierung.
 
+## Minimal-Startsequenz
+
+Für eine normale Aufgabe müssen NICHT alle fünf Dokumente vollständig gelesen werden. Diese Liste
+ist bewusst kurz gehalten, damit sie das auch bleibt:
+
+1. **Dieses Dokument (`AgentGuide.md`) vollständig** - kurz, ist der Router zu allem Weiteren.
+2. **`CLAUDE.md` vollständig** - zehn Zeilen, grundlegende Arbeitsweise-Regeln.
+3. **Die eine konkrete Aufgabe**, nicht die ganze Quelle drumherum:
+   - Aus `evolutions/BACKLOG.md`: nur den einen betroffenen `## [open] ITO-NNNN`-Eintrag lesen,
+     nicht die Datei linear von oben.
+   - Aus `NextTasks.md`: nur die Top-15-Liste, nicht den Future Backlog - außer die gewählte
+     Aufgabe stammt explizit von dort.
+4. **Alles Weitere nur nach den Regeln im nächsten Abschnitt** - nicht routinemäßig "sicherheits-
+   halber" mitlesen. Ungezielt der ganze Satz an Dokumenten kostet bei jedem Lauf Kontext, ohne
+   dass er meistens gebraucht wird.
+
+## Wann zusätzlich welches Dokument lesen
+
+- **Vision.md**: nur wenn die Aufgabe Produkterlebnis, UX, Ton/Sprache eines Charakters,
+  Spielmechanik oder eine mögliche Grundsatzentscheidung berührt. Für rein technische Aufgaben
+  (CI, Tests, Refactoring ohne Verhaltensänderung) nicht nötig.
+- **Architecture.md**: nur wenn die Aufgabe Modulgrenzen, Datenfluss oder eine der dort gelisteten
+  großen/duplizierten Dateien betrifft. Zuerst das Inhaltsverzeichnis am Dateianfang prüfen und
+  gezielt nur den relevanten Abschnitt lesen, nicht die ganze Datei von oben nach unten.
+- **EVOLUTION.md**: die Abschnitte "Non-Negotiable Design Principles" und "Protected Areas" nur
+  bei Unsicherheit, ob die Aufgabe eine Grundsatzentscheidung berührt. Den Abschnitt
+  "Erzählerische Autonomie", wenn es um neue Beziehungen/Lore geht. Die volle "Evolution
+  History" nur, wenn ein neuer Historieneintrag geschrieben werden muss - dann reichen die
+  letzten ein bis zwei Einträge als Formatvorlage, nicht die gesamte Historie.
+- **NextTasks.md**: nur wenn die aktuelle Aufgabe selbst eine Prozessverbesserung ist, nicht bei
+  normalen Content-/Feature-Evolutionen aus `BACKLOG.md`.
+
 ## Projektziel
 
 Itoeva ist eine lokale Android-Erinnerungsapp mit einem begleitenden Wesen, das nicht bestraft,
@@ -66,9 +98,10 @@ des dort beschriebenen Rahmens.
 
 ## Wie Agenten vorgehen sollen
 
-1. **Vor jeder Änderung:** `git status` prüfen (siehe CLAUDE.md), betroffenes Modul in
-   Architecture.md nachschlagen, prüfen ob ein `OPEN DECISION`- oder Protected-Area-Punkt aus
-   EVOLUTION.md berührt wird.
+1. **Vor jeder Änderung:** Minimal-Startsequenz oben durchlaufen, `git status` prüfen (siehe
+   CLAUDE.md), dann nur bei tatsächlichem Bedarf (siehe "Wann zusätzlich welches Dokument
+   lesen") das betroffene Modul in Architecture.md nachschlagen bzw. prüfen, ob ein
+   `OPEN DECISION`- oder Protected-Area-Punkt aus EVOLUTION.md berührt wird.
 2. **Aufgabe wählen:** aus `evolutions/BACKLOG.md` (automatisierte Pipeline) oder NextTasks.md
    (Prozessverbesserung) - nicht die "eine Regel über allen anderen" aus NextTasks.md
    ignorieren, wenn keine explizite anderslautende Anweisung vorliegt.

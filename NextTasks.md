@@ -1,9 +1,14 @@
 # NextTasks.md
 
-Priorisierte, unabhängige Arbeitspakete für Itoeva - jedes einzeln in 30-90 Minuten erledigbar,
-mit klarem Erfolgskriterium und (wo vorhanden) Abhängigkeit zu einem anderen Eintrag. Grundlage
-ist die Analyse in [Architecture.md](Architecture.md); der Rahmen dafür steht in
+Priorisierte, unabhängige Arbeitspakete für Itoeva. Diese Datei enthält **maximal 15 aktuell
+relevante Aufgaben**, geordnet nach tatsächlichem Hebel für Entwicklungsgeschwindigkeit und
+Token-/Actions-Effizienz - alles Weitere steht kompakt im [Future Backlog](#future-backlog) unten.
+Grundlage ist die Analyse in [Architecture.md](Architecture.md); der Rahmen dafür steht in
 [Vision.md](Vision.md) und [AgentGuide.md](AgentGuide.md).
+
+**Wann diese Datei lesen:** nur wenn die aktuelle Aufgabe eine Prozessverbesserung ist, nicht bei
+normalen Content-/Feature-Evolutionen aus `evolutions/BACKLOG.md` (siehe AgentGuide.md, Abschnitt
+"Minimal-Startsequenz").
 
 ## Die eine Regel über allen anderen
 
@@ -12,180 +17,122 @@ Agentenfreundlichkeit und Tokenverbrauch der Entwicklung selbst spürbar besser 
 betrifft neue Systeme (Skillbaum, Quest-Struktur, neue Fortschrittspfade) - nicht bereits
 begonnene, klar abgegrenzte Arbeit wie PR #20 (Speicherplätze), die zu Ende gebracht werden darf.
 Inhaltliche Ergänzungen im Rahmen der bestehenden "Erzählerischen Autonomie" (weitere Beziehungen/
-Lore, siehe EVOLUTION.md) sind von dieser Regel ausdrücklich **nicht** betroffen - sie sind klein,
-unabhängig und bereits erlaubt.
+Lore, siehe EVOLUTION.md) sind von dieser Regel ausdrücklich **nicht** betroffen.
 
-Reihenfolge-Empfehlung: **A (Build/CI) vor B (Tests) vor C (Agentenfreundlichkeit) vor D
-(Tokenverbrauch)**, weil spätere Kategorien von einem stabilen, gut getesteten Repository stärker
-profitieren. Innerhalb einer Kategorie sind die Aufgaben weitgehend unabhängig und können parallel
-von mehreren Evolutionsläufen bearbeitet werden, sofern keine Abhängigkeit vermerkt ist.
+## Top 15 - nach Hebel geordnet
 
-Format je Aufgabe: **ID** - Aufgabe. *Erfolgskriterium.* (Abhängigkeit; Aufwand)
+Format je Aufgabe: **Rang - ID** - Aufgabe. *Hebel:* warum das gerade jetzt am meisten bringt.
+*Erfolgskriterium.* (Abhängigkeit; Aufwand)
 
-## A. Build-Prozess & GitHub Actions verbessern
+1. **NT-043** - Prompt-Anteile aus `claude-primary-run.yml` (1786 Zeilen, größte Datei im
+   Repository) identifizieren und nach dem Muster von `runner/prompts/*.md` in separate, bei
+   Bedarf geladene Dateien auslagern. *Hebel: größte Einzelquelle für Tokenverbrauch, wirkt bei
+   JEDEM der 3x täglichen Läufe.* *Gemessener Anteil dokumentiert, mind. eine Auslagerung
+   testweise umgesetzt.* (keine; 90 min)
+2. **NT-044** - Die in AgentGuide.md neu definierte Minimal-Lesesequenz und die
+   Dokument-Lese-Regeln tatsächlich in die Builder-/Reviewer-Prompts von `claude-primary-run.yml`
+   übernehmen, statt weiterhin pauschal ganze Dateien (`README.md`, `EVOLUTION.md`) zu laden.
+   *Hebel: verwandelt eine bereits definierte Regel in echte Tokenersparnis pro Lauf.* *Prompt
+   verweist nachweislich auf die neuen Regeln, gemessener Unterschied im Prompt-Umfang
+   dokumentiert.* (AgentGuide.md-Regeln bereits vorhanden; 60 min)
+3. **NT-045** - Erledigte (`[done]`)-Einträge aus `evolutions/BACKLOG.md` (25 KB) nach einer
+   gewissen Zeit in ein Archiv (`BACKLOG-ARCHIVE.md`) auslagern. *Hebel: die Datei wächst mit
+   jeder Evolution weiter und wird sonst bei jedem Lauf komplett mitgeladen.* *Umgesetzt oder
+   bewusst verworfen mit Begründung.* (keine; 60 min)
+4. **NT-051** - Prüfen, ob sich der "Betroffene Bereiche bestimmen"-Job aus `verify.yml` (PR #21)
+   auch für die Builder-Session eignet, um ihr vorab zu sagen, welche Bereiche für die aktuelle
+   Aufgabe relevant sind, statt das gesamte Repository zu scannen. *Hebel: spart Scan-Overhead bei
+   jedem einzelnen Lauf, Muster hat sich in PR #21/#22 bereits bewährt.* *Machbarkeit bewertet,
+   ggf. prototypisch umgesetzt.* (keine; 90 min)
+5. **NT-046** - Prüfen, ob die Reviewer-Session denselben vollen Kontext wie die Builder-Session
+   bekommt, obwohl sie nur den Diff bewerten muss. *Hebel: zweite Session pro Lauf, doppelter
+   Effekt jeder Einsparung.* *Gemessene Tokenersparnis pro Lauf.* (keine; 60 min)
+6. **NT-047** - Standard-Modellwahl (`model`/`review_model` in `claude-primary-run.yml`) gegen
+   Aufgabentyp prüfen - läuft standardmäßig ein teureres Modell für einfache Aufgaben (z. B. reine
+   Lore-Ergänzung)? *Hebel: direkter Kostenhebel unabhängig vom Tokenumfang.* *Standardwahl
+   begründet dokumentiert oder angepasst.* (keine; 45 min)
+7. **NT-005** - Gradle-Abhängigkeits-Caching in `verify.yml`/`claude-primary-run.yml` prüfen und
+   ggf. einrichten. *Hebel: beschleunigt JEDEN CI-Lauf, unabhängig vom Änderungstyp.* *Gemessene
+   Laufzeitverkürzung eines typischen Jobs dokumentiert.* (keine; 60 min)
+8. **NT-004** - Timeout-Werte aller Jobs in `verify.yml` prüfen/ergänzen, nicht nur beim
+   `changes`-Job. *Hebel: ein hängender Job ohne Timeout kann überproportional viel Zeit
+   verbrauchen, geringer Aufwand.* *Jeder Job hat einen begründeten `timeout-minutes`-Wert.*
+   (keine; 30 min)
+9. **NT-006** - `deliver-apk.yml` denselben Pfad-Filter wie `verify.yml` (PR #21) spendieren,
+   falls es aktuell auch bei reinen Doku-Merges läuft (wie diesem PR gerade). *Hebel: analoger,
+   bereits bewiesener Effekt wie bei `verify.yml`.* *Job überspringt sich nachweislich bei
+   Text-only-Änderungen.* (PR #21 als Vorlage; 45 min)
+10. **NT-002** - Klären, ob `runner/` (PowerShell/Windows-Task-Scheduler) noch gebraucht wird oder
+    von `claude-primary-run.yml` abgelöst ist. *Hebel: beendet doppelte Pflege und Verwirrung -
+    jeder Agent, der beide Systeme prüft, verliert dabei Zeit und Kontext.* *Entscheidung in
+    Architecture.md nachgetragen; falls obsolet, per PR entfernt (menschliche Freigabe nötig,
+    Protected Area).* (keine; 60 min)
+11. **NT-029** - `README.md` (829 Zeilen) in einen kurzen Einstieg plus themenspezifische Dateien
+    aufteilen (z. B. `docs/persistence.md`, `docs/release-process.md`). *Hebel: senkt strukturell
+    die Kontextgröße, die für eine "normale Aufgabe" laut AgentGuide.md nötig ist.* *`README.md`
+    unter 300 Zeilen, alle Inhalte weiterhin auffindbar, keine toten Links.* (keine; 90 min)
+12. **NT-030** - Kurze Zuständigkeits-Notiz je Gradle-Modul ergänzen ("was gehört hierher, was
+    nicht") für `core`, `app`, `app-sim`. *Hebel: Agent kann Modul-Zugehörigkeit ohne Volltextsuche
+    klären.* *Drei Dateien, je unter 50 Zeilen.* (keine; 60 min)
+13. **NT-009** - Tatsächliche Flaky-Rate des Emulator-Jobs über die letzten 20 Läufe auswerten
+    (Retry+KVM-Diagnose existiert bereits). *Hebel: weniger Retries bedeuten schnelleren
+    PR-Turnaround.* *Kennzahl dokumentiert, Schwelle bei Bedarf angepasst.* (keine; 60 min)
+14. **NT-003** - Prüfen, ob `claude-auth-smoke.yml`/`claude-builder-smoke.yml`
+    (Machbarkeitstests) nach dem produktiven Einsatz von `claude-primary-run.yml` noch gebraucht
+    werden. *Hebel: räumt ungenutzte Läufe/Dateien auf, geringer Aufwand.* *Workflows begründet
+    behalten oder entfernt.* (keine; 45 min)
+15. **NT-050** - Durchschnittlichen Tokenverbrauch je Evolutionslauf der letzten 10 Läufe als
+    Baseline dokumentieren. *Hebel: ohne Vorher-Wert lässt sich die Wirkung von NT-043 bis NT-047
+    nicht belegen - Messinstrument für den gesamten Fokusbereich.* *Baseline-Zahl mit Quelle in
+    Architecture.md oder EVOLUTION.md dokumentiert.* (keine; 45 min)
 
-- **NT-001** - Acht leere Stimmungs-/Prozent-Dateien im Wurzelverzeichnis entfernen (`0%`, `16%`,
-  `33%`, `50%`, `100%`, `gluecklich`, `hungrig`, `traurig`, `zufrieden`), Reste eines
-  fehlgeschlagenen Shell-Kommandos. *`git rm`, Commit, `git status` sauber, kein Code verweist
-  darauf.* (keine; 30 min)
-- **NT-002** - Klären, ob `runner/` (PowerShell/Windows-Task-Scheduler) noch gebraucht wird oder
-  von `claude-primary-run.yml` abgelöst ist. *Entscheidung in Architecture.md nachgetragen; falls
-  obsolet, per PR entfernt (menschliche Freigabe nötig, Protected Area).* (keine; 60 min)
-- **NT-003** - Prüfen, ob `claude-auth-smoke.yml`/`claude-builder-smoke.yml`
-  (Machbarkeitstests) nach dem produktiven Einsatz von `claude-primary-run.yml` noch gebraucht
-  werden. *Workflows begründet behalten oder entfernt.* (keine; 45 min)
-- **NT-004** - Timeout-Werte aller Jobs in `verify.yml` prüfen/ergänzen, nicht nur beim
-  `changes`-Job. *Jeder Job hat einen begründeten `timeout-minutes`-Wert.* (keine; 30 min)
-- **NT-005** - Gradle-Abhängigkeits-Caching in `verify.yml`/`claude-primary-run.yml` prüfen und
-  ggf. einrichten. *Gemessene Laufzeitverkürzung eines typischen Jobs dokumentiert.* (keine; 60 min)
-- **NT-006** - `deliver-apk.yml` denselben Pfad-Filter wie `verify.yml` (PR #21) spendieren, falls
-  es aktuell auch bei reinen Doku-Merges läuft. *Job überspringt sich nachweislich bei
-  Text-only-Änderungen.* (keine, PR #21 als Vorlage; 45 min)
-- **NT-007** - Durchschnittliche Minutenkosten eines `claude-primary-run.yml`-`evolve`-Jobs über
-  die letzten 10 Läufe per Actions-API ermitteln. *Zahl mit Beleg in Architecture.md
-  nachgetragen.* (keine; 45 min)
-- **NT-008** - API-Level-Wahl der Emulator-Matrix (`:app` API 35, `:app-sim` API 26) gegen
-  `minSdk`/`targetSdk` im Projekt prüfen. *Begründung dokumentiert oder Matrix angepasst.*
-  (keine; 45 min)
-- **NT-009** - Tatsächliche Flaky-Rate des Emulator-Jobs über die letzten 20 Läufe auswerten
-  (Retry+KVM-Diagnose existiert bereits). *Kennzahl dokumentiert, Schwelle bei Bedarf angepasst.*
-  (keine; 60 min)
-- **NT-010** - `PLAY_STORE.md`-Signierungs-Doku gegen den tatsächlichen `release`-Job in
-  `verify.yml` abgleichen. *Abweichungen gefunden+behoben oder Übereinstimmung bestätigt.*
-  (keine; 45 min)
-- **NT-011** - Kleinen Selbsttest für `runner/backlog-select.sh` ergänzen (mind. ein bekannter
-  Fehlerfall: fehlender Status, doppelte ID). *Test schlägt bei simuliertem Fehlerfall sichtbar
-  an.* (keine; 60 min)
-- **NT-012** - Prüfen, ob `verify.yml` und `claude-primary-run.yml` konsistent dieselbe
-  Gradle-/AGP-Version aus `gradle/libs.versions.toml` annehmen. *Bestätigt oder Abweichung
-  behoben.* (keine; 30 min)
-- **NT-013** - Actions-Minutenverbrauch der letzten 30 Tage nach Workflow aufschlüsseln und als
-  Tabelle in Architecture.md ergänzen. *Tabelle mit Quelle/Datum vorhanden.* (keine; 60 min)
-- **NT-014** - Aktuellen Stand von Branch Protection/Required Checks auf `main` nach dem Wechsel
-  zu public prüfen (`runner/README.md` nennt das für privat als nicht erzwingbar). *Stand
-  bestätigt und dokumentiert.* (keine; 30 min)
+## Future Backlog
 
-## B. Automatisierte Tests ausbauen
+Kompakt, ohne volle Erfolgskriterien - wichtig, aber aktuell nicht unter den 15 mit dem größten
+Hebel auf Geschwindigkeit/Effizienz. Wird eine dieser Aufgaben durch veränderte Umstände
+hebelstärker als eine Top-15-Aufgabe, rückt sie beim nächsten Pflegedurchlauf nach (siehe unten).
 
-- **NT-015** - Erste Characterization-Test-Datei für `DockScreen.kt` (2925 Zeilen, bisher ohne
-  eigene Testdatei vom Umfang von `HomeScreenCharacterizationTest.kt`) für die Kernabläufe (Zeit
-  anzeigen, Zoom/Pan, Fütter-Kollision). *Mind. 3 Kernpfade abgedeckt, grün in CI.* (keine; 90 min)
-- **NT-016** - Erste Compose-Testfälle für `app/ui/ReminderScreen.kt` (bisher nur
-  `StringResourceParityTest`), analog zu `app-sim/ReminderScreenTest.kt`. *Mind. 3 Testfälle,
-  grün.* (keine; 90 min)
-- **NT-017** - Migrationstest so erweitern, dass er über ALLE exportierten Schema-Versionen
-  iteriert statt nur die neueste zu prüfen, für `app` und `app-sim`. *Test schlägt nachweislich
-  fehl, wenn ein Schema-Sprung ohne passende Migration simuliert wird.* (keine; 90 min)
-- **NT-018** - Automatisierten Test für "alle vier Speicherplätze belegt, Erinnerung läuft
-  ungenutzt aus" ergänzen (in PR #20 nur als manueller Testplan-Schritt vorhanden). *Test ersetzt
-  den manuellen Schritt.* (PR #20 gemerged; 60 min)
-- **NT-019** - Test für die TalkBack-Zusatzaktionen der Speicherplätze
-  (`a11y_action_slot_*`-Strings) ergänzen. *Test prüft Vorhandensein und Wirkung der
-  Custom-Accessibility-Actions.* (PR #20 gemerged; 60 min)
-- **NT-020** - Prüfen, ob jede der sechs Spezies in `AvatarAnimations.kt` einen eigenen benannten
-  Testfall hat, nicht nur eine gemeinsame `AvatarAnimationsTest.kt`. *Lücke identifiziert und für
-  fehlende Spezies geschlossen.* (keine; 60 min)
-- **NT-021** - Prüfen, ob jeder der vier `PlayPath`-Fortschrittspfade einen eigenen Testfall in
-  `PlaySceneTest.kt`/`SceneCompositionTest.kt` hat. *Lücken dokumentiert oder geschlossen.*
-  (keine; 60 min)
-- **NT-022** - Mindestens einen Golden-/Snapshot-Test für eine gerenderte `PlayScene.kt`-Szene
-  ergänzen (bisher nur Struktur-, keine visuelle Prüfung erkennbar). *Test existiert und schlägt
-  bei absichtlicher Änderung sichtbar an.* (keine; 90 min)
-- **NT-023** - Prüfen, ob `ReminderWatchdogWorker` (core) einen echten WorkManager-
-  Instrumentierungstest hat, nicht nur reine Logiktests. *Lücke bestätigt oder geschlossen.*
-  (keine; 60 min)
-- **NT-024** - `StringResourceParityTest`-Familie (core/app/app-sim) um einen Vergleich der
-  Platzhalter-Reihenfolge (`%1$s`, `%2$d`) zwischen `values/` und `values-de/` erweitern.
-  *Mit einem absichtlich kaputten Testfall verifiziert.* (keine; 60 min)
-- **NT-025** - Unit-Test für `archiveActiveReminderIfExpired()` (PR #20) inkl. Randfall "alle vier
-  Plätze belegt" auf Logik-Ebene statt nur UI-Ebene ergänzen. (PR #20 gemerged; 60 min)
-- **NT-026** - Langsamste Testklassen per `--profile` messen, Top-5-Liste als
-  Parallelisierungs-Kandidaten dokumentieren. *Liste vorhanden.* (keine; 45 min)
-- **NT-027** - Property-based-Test für `PlayGamePlan` ergänzen: über viele zufällige Seeds prüfen,
-  dass zufällige Spielpläne nie Medizin enthalten (laut EVOLUTION.md Pflichtregel). *Test läuft
-  mit z. B. 1000 Seeds durch.* (keine; 60 min)
-- **NT-028** - `ReminderSchedulerTimeZoneTest` um einen Fall für Zeitzonenwechsel WÄHREND einer
-  bereits laufenden Erinnerung ergänzen (nicht nur beim Planen). *Lücke bestätigt oder Test
-  ergänzt.* (keine; 60 min)
+**Build/CI, weitere:** NT-001 Leere Stimmungsdateien im Root entfernen · NT-007 Ø-Minutenkosten
+eines `evolve`-Jobs ermitteln · NT-008 API-Level-Matrix gegen minSdk/targetSdk prüfen · NT-010
+PLAY_STORE.md-Signierungsdoku gegen `release`-Job abgleichen · NT-011 Selbsttest für
+`backlog-select.sh` · NT-012 Gradle/AGP-Versionskonsistenz zwischen Workflows · NT-013
+Actions-Minuten der letzten 30 Tage je Workflow aufschlüsseln · NT-014 Branch-Protection-Stand
+nach Public-Wechsel prüfen.
 
-## C. Entwicklung agentenfreundlicher machen
+**Tests ausbauen (alle zurückgestellt, nicht unwichtig - siehe Hinweis unten):** NT-015
+Characterization-Tests für `DockScreen.kt` · NT-016 Compose-Tests für `app/ui/ReminderScreen.kt`
+· NT-017 Migrationstest über alle Schema-Versionen · NT-018 Test "alle 4 Speicherplätze belegt"
+(PR #20) · NT-019 Test TalkBack-Zusatzaktionen Speicherplätze (PR #20) · NT-020
+Spezies-Testabdeckung `AvatarAnimationsTest` · NT-021 `PlayPath`-Testabdeckung `PlaySceneTest` ·
+NT-022 Golden-/Snapshot-Test für eine `PlayScene`-Szene · NT-023 Instrumentierungstest
+`ReminderWatchdogWorker` · NT-024 Platzhalter-Konsistenz in `StringResourceParityTest` · NT-025
+Unit-Test `archiveActiveReminderIfExpired()` (PR #20) · NT-026 Langsamste Testklassen per
+`--profile` ermitteln · NT-027 Property-Test `PlayGamePlan` schließt Medizin aus · NT-028
+Zeitzonenwechsel während laufender Erinnerung.
 
-- **NT-029** - `README.md` (829 Zeilen) in einen kurzen Einstieg plus themenspezifische Dateien
-  aufteilen (z. B. `docs/persistence.md`, `docs/release-process.md`). *`README.md` unter 300
-  Zeilen, alle Inhalte weiterhin auffindbar, keine toten Links.* (keine; 90 min)
-- **NT-030** - Kurze Zuständigkeits-Notiz je Gradle-Modul ergänzen ("was gehört hierher, was
-  nicht") für `core`, `app`, `app-sim`. *Drei Dateien, je unter 50 Zeilen.* (keine; 60 min)
-- **NT-031** - `PlayScene.kt` nach Verantwortungsbereich aufteilen (z. B. Requisiten-Katalog von
-  Aufbaulogik trennen), reine Verschiebung ohne Verhaltensänderung. *Teil-Dateien < 1000 Zeilen,
-  alle bestehenden Tests weiterhin grün.* (keine; 90 min)
-- **NT-032** - `DockScreen.kt` analog aufteilen (z. B. Gesten-/Zoom-Logik von Rendering trennen).
-  *Wie NT-031.* (keine; 90 min)
-- **NT-033** - Dokumentieren, warum `:app-sim` eine zweite, von `core` unabhängige Room-Datenbank
-  führt. *Begründung in `AppDatabase.kt`-Kommentar und/oder Architecture.md.* (keine; 45 min)
-- **NT-034** - Recherche (ohne Verschiebung): wie viel von `app/ui/ReminderScreen.kt` und
-  `app-sim/ui/ReminderScreen.kt` ist tatsächlich identisch genug für `core` oder ein gemeinsames
-  Modul? *Klare Ja/Nein/Teilweise-Antwort mit Beispielen in Architecture.md.* (keine; 60 min)
-- **NT-035** - Dieselbe Recherche für `app/glyph/ReminderAnimations.kt` vs.
-  `app-sim/matrix/ReminderAnimations.kt`. *Wie NT-034.* (keine; 45 min)
-- **NT-036** - `SettingsCatalog.kt` auf durchgängige Zweck-Kommentare je Eintrag prüfen (Vorbild:
-  `UsedActionSlot`). *Jeder Eintrag hat einen Kommentar oder ist offensichtlich
-  selbsterklärend.* (keine; 45 min)
-- **NT-037** - Prüfen, ob `AgentGuide.md` als alleinige Agenten-Kurzreferenz ausreicht oder ein
-  zusätzlicher Standard-Dateiname sinnvoll ist, falls künftig auch andere Tools als Claude Code
-  hier arbeiten. *Bewusste Entscheidung dokumentiert.* (keine; 30 min)
-- **NT-038** - `runner/schemas/*.json` gegen das tatsächliche Prompt-Format in
-  `claude-primary-run.yml` abgleichen, mögliche Verwaisung feststellen. (NT-002; 45 min)
-- **NT-039** - Nach jeder größeren Änderung an Vision/Architecture/EVOLUTION/NextTasks/AgentGuide:
-  gegenseitige Querverweise auf Korrektheit prüfen. *Alle Verweise stimmen.* (keine,
-  wiederkehrend; 30 min)
-- **NT-040** - `evolutions/001-idempotent-xp.md` gegen das aktuelle `BACKLOG.md`-Format prüfen -
-  behalten, archivieren oder umformatieren? *Entscheidung dokumentiert.* (keine; 30 min)
-- **NT-041** - Kommentardichte/-stil in `PlayScene.kt`, `DockScreen.kt`, `HomeScreen.kt`
-  stichprobenhaft gegen die Stilregeln in AgentGuide.md prüfen - diese Dateien werden am
-  häufigsten von Agenten verändert. *Stichprobenergebnis dokumentiert, Lücken geschlossen.*
-  (keine; 60 min)
-- **NT-042** - Fehlende `@Preview`-Compose-Previews für die wichtigsten Bildschirme
-  (`HomeScreen`, `DockScreen`) ergänzen - verkürzt die Einschätzungszeit für UI-Änderungen ohne
-  vollen App-Build. *Lückenliste erstellt, mind. für HomeScreen/DockScreen ergänzt.* (keine; 90 min)
+**Agentenfreundlichkeit, weitere:** NT-031 `PlayScene.kt` aufteilen · NT-032 `DockScreen.kt`
+aufteilen · NT-033 Zweite Room-Datenbank in `app-sim` begründen · NT-034 Recherche
+`ReminderScreen`-Duplikat hebbar? · NT-035 Recherche `ReminderAnimations`-Duplikat hebbar? ·
+NT-036 Zweck-Kommentare `SettingsCatalog.kt` vervollständigen · NT-037 `AgentGuide.md` vs.
+Standard-Dateiname klären · NT-038 `runner/schemas/*.json` gegen `claude-primary-run.yml`
+abgleichen · NT-039 Querverweise zwischen Doku-Dateien prüfen (wiederkehrend) · NT-040
+`evolutions/001-idempotent-xp.md` gegen Backlog-Format prüfen · NT-041 Kommentarstil in den drei
+größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für HomeScreen/DockScreen.
 
-## D. Tokenverbrauch senken
+**Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
+Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
+Wiederkehrende Datei-Header-Boilerplate prüfen.
 
-- **NT-043** - Prompt-Anteile in `claude-primary-run.yml` (1786 Zeilen) identifizieren und nach
-  dem Muster von `runner/prompts/*.md` in separate, bei Bedarf geladene Dateien auslagern.
-  *Gemessener Anteil dokumentiert, mind. eine Auslagerung testweise umgesetzt.* (keine; 90 min)
-- **NT-044** - Prüfen, ob die Builder-Session bei jedem Lauf das komplette `README.md`/
-  `EVOLUTION.md` laden muss oder ein kompakterer Auszug reicht. *Gemessener Unterschied im
-  Prompt-Umfang, Empfehlung dokumentiert.* (NT-029 hilft direkt; 60 min)
-- **NT-045** - Erledigte (`[done]`)-Einträge aus `evolutions/BACKLOG.md` (25 KB) nach einer
-  gewissen Zeit in ein Archiv (`BACKLOG-ARCHIVE.md`) auslagern, damit nicht bei jedem Lauf die
-  komplette Historie geladen wird. *Umgesetzt oder bewusst verworfen mit Begründung.* (keine; 60 min)
-- **NT-046** - Prüfen, ob die Reviewer-Session denselben vollen Kontext wie die Builder-Session
-  bekommt, obwohl sie nur den Diff bewerten muss. *Gemessene Tokenersparnis pro Lauf.* (keine; 60 min)
-- **NT-047** - Standard-Modellwahl (`model`/`review_model` in `claude-primary-run.yml`) gegen
-  Aufgabentyp prüfen - läuft standardmäßig ein teureres Modell für einfache Aufgaben (z. B. reine
-  Lore-Ergänzung)? *Standardwahl begründet dokumentiert oder angepasst.* (keine; 45 min)
-- **NT-048** - `runner/prompts/*.md` gegen die tatsächlichen Prompts in `claude-primary-run.yml`
-  auf Redundanz prüfen (zwei parallele Automatisierungswege, siehe Architecture.md). *Redundanz
-  bestätigt/aufgelöst.* (NT-002; 45 min)
-- **NT-049** - Für wiederkehrende, mechanische Backlog-Aufgaben (z. B. "ein weiteres Lore-Stück
-  ergänzen") ein kompakteres, strukturierteres Aufgabenformat in `BACKLOG.md` prototypisch
-  erproben. *Ein Beispiel-Eintrag im neuen Format erstellt, Größenvergleich dokumentiert.*
-  (keine; 60 min)
-- **NT-050** - Durchschnittlichen Tokenverbrauch je Evolutionslauf der letzten 10 Läufe als
-  Baseline in Architecture.md/EVOLUTION.md festhalten, als Vergleichswert für NT-043 bis NT-049.
-  *Baseline-Zahl mit Quelle dokumentiert.* (keine; 45 min)
-- **NT-051** - Prüfen, ob sich der "Betroffene Bereiche bestimmen"-Job aus `verify.yml` (PR #21)
-  auch für die Builder-Session eignet, um ihr vorab zu sagen, welche Bereiche für die aktuelle
-  Aufgabe relevant sind, statt das gesamte Repository zu scannen. *Machbarkeit bewertet, ggf.
-  prototypisch umgesetzt.* (keine; 90 min)
-- **NT-052** - Wiederkehrende Datei-Header-Boilerplate (falls vorhanden) auf unnötige
-  Wiederholung über viele Dateien hinweg prüfen - summiert sich bei einem Volltext-Scan durch
-  einen Agenten. *Bestand geprüft, ggf. vereinheitlicht.* (keine; 30 min)
+**Hinweis zu den zurückgestellten Tests (NT-015 bis NT-028):** Diese Aufgaben sind nicht
+unwichtig - sie betreffen Korrektheit und Datensicherheit (siehe Vision.md: kein Cloud-Backup),
+nicht Geschwindigkeit/Effizienz. Sie folgen der Top-15-Liste, sobald deren wichtigste Punkte
+erledigt sind, statt hier um denselben Hebel-Maßstab zu konkurrieren, der für sie nicht das
+richtige Kriterium ist.
 
 ## Pflege dieser Liste
 
-Erledigte Aufgaben werden nicht gelöscht, sondern mit `[erledigt]` markiert und dürfen nach einer
-Weile in ein Archiv wandern (siehe NT-045-Muster) - dieselbe Logik wie bei
-`evolutions/BACKLOG.md`. Neue Aufgaben, die während der Arbeit an einer bestehenden entdeckt
-werden, gehören mit fortlaufender ID an das Ende der jeweiligen Kategorie, nicht dazwischen -
-bestehende IDs bleiben damit stabile Referenzen.
+IDs bleiben stabile Referenzen, auch nach dem Verschieben zwischen Top 15 und Future Backlog.
+Wird eine Top-15-Aufgabe erledigt, rückt die höchste noch offene Future-Backlog-Aufgabe nach dem
+Hebel-Maßstab oben in die Top 15 nach - die Liste bleibt dadurch dauerhaft auf maximal 15
+Einträge begrenzt. Neue Aufgaben, die während der Arbeit entdeckt werden, kommen mit
+fortlaufender neuer ID (ab NT-053) direkt in den Future Backlog, nicht ungeprüft in die Top 15.

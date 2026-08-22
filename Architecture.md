@@ -10,6 +10,23 @@ Stand dieser Analyse: 2026-08-22, per Zeilenzählung und Struktur-Scan des Repos
 `claude/itoevo-latest-updates-xvzr8b` (Basis `main`@`74fe7eb`). Zahlen verändern sich mit jeder
 Evolution - als Größenordnung und zur Priorisierung sind sie trotzdem brauchbar.
 
+## Diese Datei nicht linear lesen
+
+Diese Datei ist eine Nachschlage-Landkarte, kein Fließtext, der komplett gelesen werden muss.
+Laut AgentGuide.md ist sie ohnehin nur bei Aufgaben relevant, die Modulgrenzen, Datenfluss oder
+eine der unten gelisteten großen/duplizierten Dateien betreffen - dann gezielt nur den passenden
+Abschnitt öffnen:
+
+| Abschnitt | Lesen, wenn die Aufgabe... |
+|---|---|
+| [Module](#module) | ...eine Modul-Zugehörigkeit klären muss (`core`/`app`/`app-sim`). |
+| [Datenfluss: Erinnerungen](#datenfluss-erinnerungen-die-kerninteraktion) | ...die Auslöse-/Zieh-/Fütter-Kette betrifft. |
+| [Die Evolution-Pipeline](#die-evolution-pipeline-wie-dieses-repository-selbst-arbeitet) | ...den Automations-Prozess selbst (Workflows, `runner/`) betrifft. |
+| [Größte Dateien](#größte-dateien-kandidaten-für-aufteilung) | ...eine der großen Dateien ändert oder eine Aufteilung plant. |
+| [Duplizierte Logik](#duplizierte-logik) | ...Code in `app` UND `app-sim` gleichzeitig betrifft. |
+| [Technische Schulden](#technische-schulden-repository-hygiene) | ...eine NextTasks.md-Aufgabe aus dem Bereich Hygiene/Cleanup umsetzt. |
+| [Mögliche zukünftige Modularisierung](#mögliche-zukünftige-modularisierung) | ...eine größere Umstrukturierung plant (selten). |
+
 ## Module
 
 Drei Gradle-Module, ein gemeinsamer Kern:

@@ -9,6 +9,11 @@ Wo dieses Dokument etwas als Prinzip festschreibt, ist es durch heutigen Code od
 belegt - siehe die Verweise. Wo etwas noch offen ist, steht ausdrücklich **OPEN DECISION** statt
 einer stillschweigenden Annahme, im selben Sinn wie in EVOLUTION.md.
 
+**Wann diese Datei lesen:** laut AgentGuide.md nur bei Aufgaben, die Produkterlebnis, UX,
+Charakter-Ton oder Spielmechanik berühren - nicht bei rein technischen Aufgaben. Am häufigsten
+gebraucht: der Abschnitt "Die Erfahrung, die nicht verhandelbar ist" - der reicht für die meisten
+Fälle, in denen nur geprüft werden muss, ob eine geplante Änderung ein Prinzip verletzt.
+
 ## Was Itoeva ist
 
 Itoeva ist eine lokale, Android-basierte Erinnerungsanwendung mit einem kleinen begleitenden
