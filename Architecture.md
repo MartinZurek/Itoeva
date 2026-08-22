@@ -143,6 +143,17 @@ Zwei parallele, unterschiedlich weit entwickelte Automatisierungswege existieren
    Zweck, die vom GitHub-Actions-Weg überholt wurde. **Ungeklärt, ob noch gebraucht** - siehe
    NextTasks.md.
 
+**Wichtig für Tokenverbrauch-Aufgaben (NT-045 bis NT-047):** Die Dateigröße von
+`claude-primary-run.yml` ist kein verlässlicher Indikator für Tokenverbrauch. Nur der eigentliche
+`PROMPT`-Text in den Schritten "Builder-Session" und "Reviewer-Session" (je ca. 35-45 Zeilen,
+zuzüglich interpolierter Aufgabe/Repo-Fakten/Diff) geht als Kontext an das Modell. Der große Rest
+der 1786 Zeilen ist reine Bash-/Workflow-Orchestrierung (Token-Dateideskriptor-Handling,
+Git-Gates, Hash-Nachrechnung, Diagnose-Uploads), die den Modellkontext nie erreicht - Kürzen
+dieser Orchestrierung spart Actions-Laufzeit, aber keine Tokens. Seit 2026-08-22 verweisen beide
+Prompts explizit auf `AgentGuide.md`s Minimal-Startsequenz, damit die eigene Read/Glob/Grep-
+Erkundung der Sessions nicht routinemäßig ganze Dokumente lädt - das war der tatsächliche Hebel,
+nicht die Dateigröße der Workflow-YAML selbst.
+
 `evolutions/BACKLOG.md` ist die Aufgaben-Warteschlange dieser Pipeline (Format: `## [status]
 ITO-NNNN - Titel`, Status `open`/`done`, Statuswechsel wird ausschließlich vom `publish`-Job auf
 `main` geschrieben). `EVOLUTION.md` ist ihr Regelwerk plus datiertes Entscheidungsprotokoll.

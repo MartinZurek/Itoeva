@@ -71,6 +71,13 @@ der bestehenden "Erzählerischen Autonomie" (Beziehungen, Lore) sind davon ausge
   ein unsauberer Room-Migrationsschritt Nutzerdaten unwiederbringlich kaputt. Jede
   Schema-Änderung braucht eine echte `Migration`, keinen `fallbackToDestructiveMigration`, und
   einen zugehörigen Test.
+- **Keine Optimierung aufgrund einer vermuteten Tokenquelle.** Vor jeder Token-, Kontext- oder
+  Performance-Optimierung erst empirisch feststellen, was tatsächlich in den Modellkontext gelangt
+  - nicht von Dateigröße, Dateiname oder Vermutung ausgehen. Konkretes Beispiel: NT-043 nahm an,
+  die 1786-Zeilen-`claude-primary-run.yml` sei "die größte Tokenquelle" - tatsächlich gehen nur die
+  ~35-45 Zeilen der beiden `PROMPT`-Blöcke je Lauf an das Modell, der Rest ist Bash-Orchestrierung,
+  die den Modellkontext nie erreicht (siehe Architecture.md, Abschnitt "Die Evolution-Pipeline",
+  und PR #23). Eine Auslagerung nach der falschen Annahme hätte nichts gespart.
 - **Kleine, unabhängige Schritte statt große Sprünge.** Eine Evolution pro Lauf, ein PR pro
   Evolution - Grundprinzip der aktiven Pipeline (`claude-primary-run.yml`), gilt sinngemäß auch
   für manuell angestoßene Arbeit.
