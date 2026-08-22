@@ -384,6 +384,23 @@ object PlayRoutines {
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
                     RoutineStep.Stroll(0.20f)
                 )
+            ),
+            // Derselbe Arbeitsweg, nur durch die STADT statt ueber die Strasse - hin UND zurueck
+            // durch denselben Ort, damit der Feierabend am selben Platz endet, an dem der Tag
+            // begann (siehe die Begruendung beim ersten Ablauf oben).
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.CITY),
+                    RoutineStep.Stroll(0.68f),
+                    RoutineStep.GoToPlace(PlayScene.Place.WORK),
+                    RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
+                    RoutineStep.Act(AnimationType.WORK),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+                    RoutineStep.Act(AnimationType.WORK),
+                    RoutineStep.GoToPlace(PlayScene.Place.CITY),
+                    RoutineStep.Stroll(0.24f)
+                )
             )
         )
 
@@ -498,6 +515,23 @@ object PlayRoutines {
                     RoutineStep.Rise,
                     RoutineStep.Stroll(0.88f),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+                )
+            ),
+            // Spaziergang zur WIESE - ueber die Strasse hinaus, wie der Waldspaziergang oben,
+            // nur zu dessen offenerem Gegenstueck: keine Baeume, nur Weite und eine Bank in der
+            // Mitte zum Verweilen.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.60f),
+                    RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Stroll(0.35f),
+                    RoutineStep.GoTo(PlayScene.Station.BENCH),
+                    RoutineStep.Occupy(PlayScene.Station.BENCH),
+                    RoutineStep.Linger(3_500L),
+                    RoutineStep.Rise,
+                    RoutineStep.Act(AnimationType.MOVE)
                 )
             )
         )
