@@ -222,6 +222,12 @@ fun HomeScreen(
         mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
     }
     val slotBounds = remember { mutableStateListOf(*Array(ACTION_SLOT_COUNT) { Rect.Zero }) }
+    // Wie latestAppMode oben: der Bus-Collector (LaunchedEffect(Unit) weiter unten) laeuft seit
+    // dem allerersten Bildschirmaufbau und haelt seinen eigenen Funktionsabschluss sonst an DEM
+    // damaligen Wesen fest. Ohne UpdatedState landete eine nach einem Wesenswechsel ablaufende
+    // Erinnerung im Speicherplatz-Speicher des VORHERIGEN Wesens - unsichtbar fuer das jetzt
+    // gewaehlte, aber als scheinbar nutzbare Aktion beim naechsten Besuch des alten wieder da.
+    val latestActionSlotProfileId by rememberUpdatedState(actionSlotProfileId)
 
     /**
      * Laeuft eine Erinnerung aus, ohne dass darauf reagiert wurde: frueher war sie damit
@@ -232,11 +238,19 @@ fun HomeScreen(
      */
     fun archiveActiveReminderIfExpired() {
         val current = activeReminder ?: return
-        val freeIndex = if (latestAppMode == AppMode.PLAY) slots.indexOfFirst { it == null } else -1
+        val profileId = latestActionSlotProfileId
+        // Stimmt das aktuelle Wesen noch mit dem dieser Funktionsinstanz ueberein, ist `slots`
+        // frisch und darf direkt benutzt werden; sonst gehoert `slots` zu einem laengst
+        // verlassenen Wesen und wird frisch vom dauerhaften Speicher gelesen, statt den falschen
+        // In-Memory-Stand weiterzuschreiben.
+        val currentSlots = if (profileId == actionSlotProfileId) slots else ActionSlotStore.read(context, profileId)
+        val freeIndex = if (latestAppMode == AppMode.PLAY) currentSlots.indexOfFirst { it == null } else -1
         if (freeIndex >= 0) {
             val saved = current.toSavedAction()
-            ActionSlotStore.write(context, actionSlotProfileId, freeIndex, saved)
-            slots = slots.toMutableList().also { it[freeIndex] = saved }
+            ActionSlotStore.write(context, profileId, freeIndex, saved)
+            if (profileId == actionSlotProfileId) {
+                slots = slots.toMutableList().also { it[freeIndex] = saved }
+            }
             if (!OnboardingPrefs.hasUsedActionSlot(context)) {
                 OnboardingPrefs.markActionSlotUsed(context)
             }
@@ -335,7 +349,12 @@ fun HomeScreen(
         isStillRelevant: () -> Boolean,
         onConsumed: () -> Unit
     ) {
-        if (feedingOccurrenceId == occurrenceId) return
+        // Nicht nur dieselbe occurrenceId abweisen, sondern JEDE laufende Fuetterung: zwei
+        // verschiedene Ausloesungen gleichzeitig zuzulassen liesse ihre Coroutinen nebenlaeufig
+        // auf avatarFrame/avatarDrag/isReacting schreiben - wer zuerst fertig ist, wuerde
+        // isReacting vorzeitig zuruecksetzen und die Idle-Animation mitten in der noch laufenden
+        // zweiten Reaktion neu starten.
+        if (feedingOccurrenceId != null) return
         feedingOccurrenceId = occurrenceId
         scope.launch {
             var confirmedReactionStarted = false
@@ -1011,7 +1030,11 @@ fun HomeScreen(
             onEditReminder = { reminderId ->
                 showStats = false
                 onOpenReminderForEdit(reminderId)
-            }
+            },
+            // ActionSlotStore wurde geleert (siehe FeedStatsDialog) - der eigene In-Memory-Stand
+            // hier ist aber nur an einen Wesenswechsel gekoppelt (siehe remember(actionSlotProfileId)
+            // oben) und muss deshalb hier ausdruecklich nachgezogen werden.
+            onCareLogReset = { slots = ActionSlotStore.read(context, actionSlotProfileId) }
         )
     }
 }

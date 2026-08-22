@@ -29,6 +29,20 @@ internal object ActionSlotStore {
         }.apply()
     }
 
+    /**
+     * Leert alle Speicherplaetze eines Wesens - fuer den "Pflegebuch zuruecksetzen"-Pfad in
+     * [FeedStatsDialog]: der loescht dort saemtliche `avatar_feed_events`-Zeilen des Wesens, auf
+     * die ein belegter Platz per `occurrenceId` verweist. Ohne diesen Aufruf bliebe der Platz
+     * sichtbar belegt, liesse sich aber nicht mehr fuettern - `AvatarFeeding.logFeedEvent` faende
+     * das Ereignis nicht mehr und der Platz verschwaende beim Versuch stillschweigend, ohne
+     * Reaktion.
+     */
+    fun clear(context: Context, profileId: String) {
+        prefs(context).edit().apply {
+            repeat(ACTION_SLOT_COUNT) { index -> remove(key(profileId, index)) }
+        }.apply()
+    }
+
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(
             SettingsCatalog.DYNAMIC_ACTION_SLOT_FILE,
