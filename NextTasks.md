@@ -83,10 +83,12 @@ NT-043-Annahme, korrigiert in PR #23).
     *Hebel: Geschwister-Messinstrument zu NT-050, aber für Actions-Zeit statt Tokens - ohne diese
     Zahl bleibt unklar, welcher Workflow tatsächlich die meiste Zeit kostet.* *Tabelle mit
     Quelle/Datum in Architecture.md ergänzt.* (keine; 60 min)
-15. **NT-001** - Acht leere Stimmungs-/Prozent-Dateien im Wurzelverzeichnis entfernen (`0%`,
-    `16%`, `33%`, `50%`, `100%`, `gluecklich`, `hungrig`, `traurig`, `zufrieden`). *Hebel: gering,
-    aber praktisch aufwandsfrei und räumt echtes Repository-Rauschen weg, das jeder Volltext-Scan
-    mitschleppt.* *`git rm`, Commit, `git status` sauber, kein Code verweist darauf.* (keine; 30 min)
+15. **NT-053** - Animations-/Habit-Slots vor jedem Gameplay-Code als strategische Mechanik
+    spezifizieren und mit Nutzern oder einem schlanken Prototyp validieren: Auswahlwirkung,
+    Sichtbarkeit/mentale Präsenz und die Entscheidung "jetzt einsetzen oder für später aufheben?".
+    *Hebel: verhindert, dass Slot-Anzahl oder Umsetzung festgeschrieben werden, bevor der
+    Kernnutzen belegt ist.* *Validierte Mechanikbeschreibung mit offenen Entscheidungen und
+    klaren Kriterien für einen späteren Implementierungs-PR.* (Vision.md; 90 min)
 
 ## Future Backlog
 
@@ -98,7 +100,7 @@ hebelstärker als eine Top-15-Aufgabe, rückt sie beim nächsten Pflegedurchlauf
 API-Level-Matrix gegen minSdk/targetSdk prüfen · NT-010 PLAY_STORE.md-Signierungsdoku gegen
 `release`-Job abgleichen · NT-011 Selbsttest für `backlog-select.sh` · NT-012 Gradle/AGP-
 Versionskonsistenz zwischen Workflows · NT-014 Branch-Protection-Stand nach Public-Wechsel
-prüfen.
+prüfen · NT-001 acht leere Stimmungs-/Prozent-Dateien im Wurzelverzeichnis entfernen.
 
 **Tests ausbauen (alle zurückgestellt, nicht unwichtig - siehe Hinweis unten):** NT-015
 Characterization-Tests für `DockScreen.kt` · NT-016 Compose-Tests für `app/ui/ReminderScreen.kt`

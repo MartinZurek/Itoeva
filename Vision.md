@@ -96,6 +96,13 @@ Kollisionslogik und den bestehenden Reaktionsanimationen auf, statt eigene Paral
 zu schaffen. Das ist nicht nur Code-Hygiene - es hält die Interaktionssprache der App konsistent:
 Ziehen bedeutet in Itoeva immer dasselbe.
 
+**Animations-/Habit-Slots schaffen strategische Auswahl.** Eine begrenzte Zahl sichtbarer Slots
+soll den Nutzer planen lassen: Gespeicherte Animationen oder Habits bleiben präsent und damit
+mental verfügbar; die Kernentscheidung lautet "jetzt einsetzen oder für später aufheben?".
+Kontextboni, Kombinationen und zeitabhängige Situationen dürfen später darauf aufbauen. Konkrete
+Slot-Anzahl und Umsetzung bleiben **OPEN DECISION** und werden vor Gameplay-Code erst spezifiziert
+und validiert (siehe NT-053 in NextTasks.md).
+
 **Deutsch als Erstsprache des Codes.** Kommentare, Commit-Nachrichten, interne Dokumentation und
 das primäre `values-de/strings.xml` sind Deutsch; `values/strings.xml` (Englisch) wird
 mitgepflegt, ist aber die Zweitsprache. Agenten, die an diesem Repository arbeiten, sollten sich
