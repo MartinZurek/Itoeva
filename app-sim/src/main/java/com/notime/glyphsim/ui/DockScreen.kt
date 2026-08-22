@@ -1314,7 +1314,10 @@ fun DockScreen(
                         PlayScene.allowsVisitors(currentPlace)
                 }
                 while (isActive) {
-                    delay((VISIT_INTERVAL_MS.random() * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(3_000L))
+                    delay(
+                        (visitIntervalFor(currentPlace).random() * PlayTimeLapse.paceFactor())
+                            .toLong().coerceAtLeast(3_000L)
+                    )
                     while (isActive && !visitPossible()) {
                         delay((VISIT_RETRY_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(250L))
                     }
@@ -3015,8 +3018,21 @@ private const val SPEECH_DOT_MS = 190L
 /** Abstand zwischen zwei Besuchen. */
 private val VISIT_INTERVAL_MS = 90_000L..210_000L
 
+/**
+ * Deutlich kuerzerer Abstand fuer die belebten Orte (Strasse, Stadt): Auf einem Weg begegnet man
+ * einander haeufiger als beim Ausruhen im Park oder beim Einkaufen - grob ein Drittel des
+ * sonstigen Takts statt alle anderthalb bis dreieinhalb Minuten.
+ */
+private val VISIT_INTERVAL_MS_BUSY = 30_000L..70_000L
+
 /** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
 private const val VISIT_RETRY_MS = 4_000L
+
+/** Welcher Besuchstakt an diesem Ort gilt - siehe [VISIT_INTERVAL_MS_BUSY]. */
+private fun visitIntervalFor(place: PlayScene.Place): LongRange = when (place) {
+    PlayScene.Place.STREET, PlayScene.Place.CITY -> VISIT_INTERVAL_MS_BUSY
+    else -> VISIT_INTERVAL_MS
+}
 
 
 /** Wo an der Figur ein Zugriff aufblitzt - auf Handhoehe, seitlich vorn (16x16-Raster). */

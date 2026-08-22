@@ -536,6 +536,8 @@
     <string name="talk_place_shop">at the shop</string>
     <string name="talk_place_street">out on the street</string>
     <string name="talk_place_forest">in the forest</string>
+    <string name="talk_place_meadow">out in the meadow</string>
+    <string name="talk_place_city">in the city</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. -->
     <string name="remark_rain">It is raining outside. Sounds quite good at the window.</string>

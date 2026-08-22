@@ -116,7 +116,7 @@ object PlayScene {
      * der Schleim toepfert, der Wuestenfuchs graebt, die Eule spielt. Es ist der Gegenentwurf zum
      * Arbeitsplatz - dort geht sie einem BERUF nach, hier tut sie etwas, weil sie es ist.
      */
-    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SHOP, STREET, FOREST }
+    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SHOP, STREET, FOREST, MEADOW, CITY }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
     private val Place.isIndoors: Boolean
@@ -131,7 +131,8 @@ object PlayScene {
      * Sterne und Mond, ohne an vier Stellen nachzuziehen.
      */
     fun isOutdoors(place: Place): Boolean =
-        place == Place.PARK || place == Place.STREET || place == Place.FOREST
+        place == Place.PARK || place == Place.STREET || place == Place.FOREST ||
+            place == Place.MEADOW || place == Place.CITY
 
     /**
      * Ob an diesem Ort ueberhaupt jemand vorbeikommen kann (siehe runVisit in DockScreen).
@@ -149,11 +150,15 @@ object PlayScene {
         // etwas zu bedeuten haette. Im WALD dagegen NICHT - dort jemandem zu begegnen ist das
         // Gegenteil dessen, wofuer man in den Wald geht, und ein Fremder zwischen den Baeumen
         // wirkt eher beunruhigend als belebt.
-        Place.PARK, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET -> true
+        // Die STADT gehoert dazu wie die Strasse - ein Platz, an dem Leute ohnehin unterwegs sind.
+        Place.PARK, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY -> true
         // Die eigene Ecke ([Place.CRAFT]) ausdruecklich NICHT: Wer dort sitzt, hat sich
         // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
+        //
+        // Die WIESE genauso wenig wie der Wald: eine stille Freiflaeche zum Ausspannen, kein
+        // Treffpunkt - dafuer gibt es bereits Park und Stadt.
         Place.BEDROOM, Place.BATH, Place.DESK, Place.KITCHEN, Place.NOOK, Place.CRAFT,
-        Place.FOREST -> false
+        Place.FOREST, Place.MEADOW -> false
     }
 
     /**
@@ -512,6 +517,10 @@ object PlayScene {
         // unterwegs, und ein Anfang am Rand macht daraus eine Strecke statt einer Buehne.
         Place.STREET -> 0.08f
         Place.FOREST -> 0.06f
+        // Wie der Park: eine offene Flaeche, kein Durchgang - die Figur darf mittig stehen.
+        Place.MEADOW -> 0.20f
+        // Wie die Strasse, aus demselben Grund: auch die Stadt ist ein Weg, kein Aufenthaltsort.
+        Place.CITY -> 0.08f
     }
 
     /**
@@ -1103,6 +1112,28 @@ object PlayScene {
             Placement(LOG, anchorX = 0.58f, station = Station.BENCH),
             Placement(TREE, anchorX = 0.86f)
         )
+
+        // Die WIESE: eine offene Freiflaeche, sparsam bestanden - das Gegenteil des dichten
+        // Waldes und ruhiger als der Park, der ihm gehoert (siehe [habitatPlacements]). Nur ein
+        // Baum am Rand, etwas Gebuesch, eine Bank in der Mitte zum Verweilen.
+        Place.MEADOW -> listOf(
+            Placement(BUSH, anchorX = 0.10f, brightness = BACKDROP, behind = true),
+            Placement(TREE, anchorX = 0.92f, brightness = BACKDROP, behind = true),
+            Placement(BENCH, anchorX = 0.50f, station = Station.BENCH)
+        )
+
+        // Die STADT: dichter bebaut als die Strasse und mit ZWEI Laternen belebter - derselbe
+        // Weg, nur groesser und voller. Nur die erste Laterne traegt die Station: eine zweite
+        // Bank oder Laterne ist Kulisse, kein zweiter Platz zum Ansteuern.
+        Place.CITY -> listOf(
+            Placement(HOUSE, anchorX = 0.02f, brightness = BACKDROP, behind = true),
+            Placement(HOUSE_LOW, anchorX = 0.30f, brightness = BACKDROP, behind = true),
+            Placement(HOUSE, anchorX = 0.58f, brightness = BACKDROP, behind = true),
+            Placement(HOUSE_LOW, anchorX = 0.86f, brightness = BACKDROP, behind = true),
+            Placement(BENCH, anchorX = 0.20f, station = Station.BENCH),
+            Placement(LAMPPOST, anchorX = 0.46f, station = Station.LAMP),
+            Placement(LAMPPOST, anchorX = 0.72f)
+        )
         }
     }
 
@@ -1152,6 +1183,18 @@ object PlayScene {
         Place.LIVING -> indoorFloor(species, widthCells, floorY, from = 0.22f, to = 0.62f)
         Place.BEDROOM -> indoorFloor(species, widthCells, floorY, from = 0.40f, to = 0.72f)
         Place.CRAFT -> indoorFloor(species, widthCells, floorY, from = 0.26f, to = 0.58f)
+
+        // Wiese: LOCKERES Gras, einzeilig - lichter als der Waldboden und ohne dessen zweite
+        // Reihe. Eine gepflegte Freiflaeche, keine Wildnis.
+        Place.MEADOW -> (0 until widthCells)
+            .filter { it % 3 == 0 || it % 5 == 2 }
+            .map { SceneCell(it, floorY - 1, STRUCTURE) }
+
+        // Stadt: dasselbe Pflaster wie die Strasse, nur dichter - das macht den Unterschied
+        // zwischen einem Weg und einem Platz.
+        Place.CITY -> (0 until widthCells)
+            .filter { it % 3 == 0 }
+            .map { SceneCell(it, floorY, (STRUCTURE * 1.4f).roundToInt()) }
         else -> emptyList()
     }
 
@@ -3314,7 +3357,9 @@ object PlayScene {
         dayPhase: PlayAmbientActivity.DayPhase,
         phase: Int
     ): List<SceneCell> {
-        if (place != Place.STREET) return emptyList()
+        // Die Stadt hat dieselben Fassaden wie die Strasse (siehe [furnishing]) und geht abends
+        // genauso an.
+        if (place != Place.STREET && place != Place.CITY) return emptyList()
         val night = dayPhase == PlayAmbientActivity.DayPhase.NIGHT
         if (!night && dayPhase != PlayAmbientActivity.DayPhase.EVENING) return emptyList()
 
@@ -3533,10 +3578,10 @@ object PlayScene {
 
             // Draussen: eine Wolke zieht durchs Bild, nachts stattdessen Sterne.
             //
-            // Alle drei Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
-            // WETTER, nicht zum Ort. Zwei getrennt gepflegte Himmel waeren die sicherste Art,
-            // dass ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
-            Place.PARK, Place.STREET, Place.FOREST -> {
+            // Alle fuenf Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
+            // WETTER, nicht zum Ort. Getrennt gepflegte Himmel waeren die sicherste Art, dass
+            // ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
+            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
                     // Nachts steht der Boden tief (siehe [floorFraction]) und darueber ist Platz
