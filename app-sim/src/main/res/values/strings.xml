@@ -220,6 +220,7 @@
     <string name="library_full">Picker is full – remove an animation before adding another one</string>
     <string name="onboarding_tap_me">Hi! Tap me – I\'ll show you around.</string>
     <string name="onboarding_tap_clock">Tap the clock any time for a full bedside display – uses more battery while it\'s on.</string>
+    <string name="onboarding_action_slots">Drag an action from the clock onto one of these slots to save it for later.</string>
     <string name="assistant_greeting">Hey! What can I do for you?</string>
     <string name="assistant_menu_day">How is my day going?</string>
     <string name="assistant_menu_intro">❓  Explain how this works</string>
@@ -357,6 +358,10 @@
     <string name="a11y_mood_sad">very sluggish</string>
     <string name="a11y_feed_action">Feed</string>
     <string name="a11y_avatar_waiting">%1$s is waiting to be fed</string>
+    <string name="a11y_action_slot_empty">Save slot %1$d, empty</string>
+    <string name="a11y_action_slot_filled">Save slot %1$d: %2$s</string>
+    <string name="a11y_action_slot_apply">Apply to companion</string>
+    <string name="a11y_clock_save_to_slot">Save to slot %1$d</string>
     <string name="settings_timelapse">Time lapse (test)</string>
     <string name="settings_timelapse_hint">Runs a full day in about four minutes so every scene and time of day can be seen quickly. For trying things out only – turn off for normal use.</string>
     <string name="a11y_visitor">%1$s is passing by</string>

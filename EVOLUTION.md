@@ -641,6 +641,26 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   lässt, ist ebenfalls ungeklärt - siehe NextTasks.md für den zugehörigen, bewusst kleinen
   Rechercheauftrag.
 
+### 2026-08-22 - Persistente Aktions-Slots als überprüfbarer MVP
+
+- **Version:** Protokoll bleibt 0.2; menschlich freigegebener, rücknehmbarer Gameplay-MVP.
+- **Ausgangsproblem:** Eine laufende Erinnerung ließ sich nur sofort anwenden. Der Nutzer wollte
+  Aktionen sichtbar für später aufheben und bewusst zwischen sofortigem Einsatz und Speichern
+  wählen können.
+- **Getroffene Entscheidung:** Der Simulator zeigt vorläufig vier Slots. Eine Aktion lässt sich
+  dort ablegen und später über dieselbe Fütter-Pipeline einsetzen; unbeantwortet auslaufende
+  Aktionen belegen den ersten freien Platz. Die Belegung bleibt je Wesen über App-Neustarts
+  erhalten. Vier ist eine MVP-Hypothese, keine Festlegung der langfristigen Slot-Anzahl; deren
+  Validierung bleibt NT-053.
+- **Betroffene Module/Texte:** `app-sim`-Startbildschirm, neue Slot-UI und lokaler Slot-Speicher,
+  Onboarding-/Barrierefreiheitstexte; `:app` und Dock-Modus bleiben unverändert.
+- **Migrationsauswirkungen:** keine Room-Migration; maximal vier kleine, profilgetrennte
+  UI-Snapshots liegen in der privaten Preference-Datei `action_slots`.
+- **Getestet:** `:app-sim:compileDebugKotlin` und `:app-sim:testDebugUnitTest`; CI deckt Lint,
+  R8 und beide Emulator-Matrizen ab.
+- **Neu entstandene offene Punkte:** optimale Slot-Anzahl, Kontextboni, Kombinationen und
+  zeitabhängige Situationen bleiben offen und dürfen nicht aus diesem MVP abgeleitet werden.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.

@@ -206,6 +206,7 @@
     <string name="library_full">Auswahl ist voll – entferne erst eine Animation, bevor du eine weitere hinzufügst</string>
     <string name="onboarding_tap_me">Hi! Tipp mich an – ich zeig dir alles.</string>
     <string name="onboarding_tap_clock">Tipp jederzeit auf die Uhr für eine volle Nachttisch-Anzeige – verbraucht dabei mehr Akku.</string>
+    <string name="onboarding_action_slots">Zieh eine Aktion von der Uhr auf einen dieser Plätze, um sie für später aufzuheben.</string>
     <string name="assistant_greeting">Hey! Was kann ich für dich tun?</string>
     <string name="assistant_menu_day">Wie läuft mein Tag?</string>
     <string name="assistant_menu_intro">❓  Erklär mir, wie das hier läuft</string>
@@ -342,6 +343,10 @@
     <string name="a11y_mood_sad">sehr träge</string>
     <string name="a11y_feed_action">Füttern</string>
     <string name="a11y_avatar_waiting">%1$s wartet aufs Füttern</string>
+    <string name="a11y_action_slot_empty">Speicherplatz %1$d, leer</string>
+    <string name="a11y_action_slot_filled">Speicherplatz %1$d: %2$s</string>
+    <string name="a11y_action_slot_apply">Auf das Wesen anwenden</string>
+    <string name="a11y_clock_save_to_slot">In Speicherplatz %1$d ablegen</string>
     <string name="settings_timelapse">Zeitraffer (Test)</string>
     <string name="settings_timelapse_hint">Lässt einen ganzen Tag in etwa vier Minuten ablaufen, damit sich alle Szenen und Tageszeiten schnell ansehen lassen. Nur zum Ausprobieren – für den normalen Betrieb ausschalten.</string>
     <string name="a11y_visitor">%1$s kommt vorbei</string>
