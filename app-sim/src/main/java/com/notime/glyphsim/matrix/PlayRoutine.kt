@@ -33,6 +33,9 @@ sealed interface RoutineStep {
     /** Eine Alltagsregung einschieben. */
     data class Stir(val fidget: AvatarAnimations.Fidget) : RoutineStep
 
+    /** Eine Phase der mehrstufigen Drachen-Szene sichtbar machen. */
+    data class Kite(val phase: PlayEffects.KitePhase) : RoutineStep
+
     /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
     data class Linger(val millis: Long) : RoutineStep
 
@@ -107,7 +110,11 @@ object PlayRoutines {
      * der Welt Vorrang vor dem Zufall - der Avatar geht einkaufen, WEIL nichts mehr da ist, und
      * nicht, weil die Wuerfel es so wollten.
      */
-    fun forTopic(topic: AnimationType, needsShopping: Boolean = false): PlayRoutine {
+    fun forTopic(
+        topic: AnimationType,
+        needsShopping: Boolean = false,
+        random: Random = Random
+    ): PlayRoutine {
         val options = allFor(topic)
         if (needsShopping) {
             options.firstOrNull { routine ->
@@ -120,8 +127,17 @@ object PlayRoutines {
             routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP }
         }
         val pool = everyday.ifEmpty { options }
-        return pool[Random.nextInt(pool.size)]
+        // MOVE hatte bisher fast nur Wege als Inhalt. Die erste richtige Park-Beschaeftigung soll
+        // oft genug sichtbar sein, um den neuen Standard zu praegen, ohne jeden Spaziergang zu
+        // ersetzen.
+        if (topic == AnimationType.MOVE && random.nextInt(100) < KITE_CHANCE_PERCENT) {
+            pool.firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
+                ?.let { return it }
+        }
+        return pool[random.nextInt(pool.size)]
     }
+
+    private const val KITE_CHANCE_PERCENT = 55
 
     /**
      * ALLE Ablaeufe zu einem Thema - oeffentlich, weil sich sonst nicht pruefen laesst, dass jeder
@@ -447,6 +463,22 @@ object PlayRoutines {
         // den Wald erzaehlt etwas voellig anderes als eine Runde um den Block, obwohl beide aus
         // denselben Schritten bestehen.
         AnimationType.MOVE -> listOf(
+            // Drachensteigen: wenig Weg, lange erkennbare Beschaeftigung am selben Ort.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Stroll(0.36f),
+                    RoutineStep.Kite(PlayEffects.KitePhase.PREPARE),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Kite(PlayEffects.KitePhase.LAUNCH),
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Kite(PlayEffects.KitePhase.FLY),
+                    RoutineStep.Linger(28_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(12_000L),
+                    RoutineStep.Kite(PlayEffects.KitePhase.LAND),
+                    RoutineStep.Linger(2_500L)
+                )
+            ),
             // Sport: quer durch den Park und zurueck, mit Bewegung an beiden Enden.
             PlayRoutine(
                 listOf(

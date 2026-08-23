@@ -1,6 +1,7 @@
 package com.notime.glyphsim.matrix
 
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 /**
  * Was der Avatar TRAEGT und was aufblitzt, wenn er etwas ANFASST - die beiden Ebenen, die aus
@@ -21,6 +22,72 @@ object PlayEffects {
     /** Was sich tragen laesst. Bewusst wenige, klar unterscheidbare Formen - auf drei mal drei
      *  Zellen ist alles darueber hinaus nicht mehr auseinanderzuhalten. */
     enum class Carried { BOOK, FOOD, CUP }
+
+    /** Lesbare Phasen einer Drachen-Szene: auspacken, hochziehen, fliegen, einholen. */
+    enum class KitePhase { PREPARE, LAUNCH, FLY, LAND }
+
+    /**
+     * Drachen, Schnur und Schweif als gemeinsame Szene vor dem Avatar.
+     *
+     * Nicht als einzelnes Sprite am Koerper: Erst die lange Schnur verbindet die Figur sichtbar
+     * mit dem Gegenstand im Himmel. In [KitePhase.FLY] reagiert er langsam auf [scenePhase], ohne
+     * dass die Figur dafuer durch den Park laufen muss.
+     */
+    fun kiteCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: KitePhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val handX = (avatarCellX + 12).coerceIn(0, (widthCells - 1).coerceAtLeast(0))
+        val handY = avatarCellY + AvatarGeometry.HEADROOM + 9
+        val sway = if (phase == KitePhase.FLY) sin(scenePhase * 0.32).roundToInt() * 2 else 0
+        val rawCenterX = when (phase) {
+            KitePhase.PREPARE -> handX + 4
+            KitePhase.LAUNCH -> handX + 10
+            KitePhase.FLY -> handX + 15 + sway
+            KitePhase.LAND -> handX + 7
+        }
+        val centerX = rawCenterX.coerceIn(3, (widthCells - 4).coerceAtLeast(3))
+        val centerY = when (phase) {
+            KitePhase.PREPARE -> handY + 3
+            KitePhase.LAUNCH -> handY - 13
+            KitePhase.FLY -> (handY - 30 - kotlin.math.abs(sway)).coerceAtLeast(4)
+            KitePhase.LAND -> handY - 7
+        }
+
+        val result = mutableListOf<SceneCell>()
+        if (phase != KitePhase.PREPARE) {
+            // Eine duenne diagonale Schnur; gleichmaessige Stichproben reichen auf dem Zellraster.
+            val steps = kotlin.math.max(kotlin.math.abs(centerX - handX), kotlin.math.abs(centerY - handY))
+                .coerceAtLeast(1)
+            for (i in 0..steps step 2) {
+                val t = i.toFloat() / steps
+                result += SceneCell(
+                    x = (handX + (centerX - handX) * t).roundToInt(),
+                    y = (handY + (centerY - handY) * t).roundToInt(),
+                    brightness = PlayScene.FURNITURE
+                )
+            }
+        }
+
+        val kite = listOf(
+            0 to -2,
+            -1 to -1, 0 to -1, 1 to -1,
+            -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
+            -1 to 1, 0 to 1, 1 to 1,
+            0 to 2
+        )
+        for ((dx, dy) in kite) {
+            result += SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
+        }
+        // Der geknickte Schweif macht die Raute auch in Bewegung eindeutig als Drachen lesbar.
+        result += SceneCell(centerX + 1, centerY + 3, PlayScene.FURNITURE)
+        result += SceneCell(centerX, centerY + 4, PlayScene.FURNITURE)
+        result += SceneCell(centerX + 1, centerY + 5, PlayScene.FURNITURE)
+        return result.distinctBy { it.x to it.y }
+    }
 
     /**
      * Der getragene Gegenstand, gezeichnet auf Hoehe der Haende und leicht seitlich versetzt.

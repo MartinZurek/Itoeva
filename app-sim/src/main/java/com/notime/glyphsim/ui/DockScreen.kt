@@ -407,6 +407,8 @@ fun DockScreen(
         // PlayEffects. Beides zusammen beantwortet beim Zuschauen die Frage "was hat er vor?",
         // die eine blosse Bewegung offenlaesst.
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
+        /** Sichtbare Phase der langen Drachen-Szene; null ausserhalb dieses Ablaufs. */
+        var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
@@ -890,6 +892,29 @@ fun DockScreen(
                         startAvatarIdleLoop(species, mood)
                     }
 
+                    is RoutineStep.Kite -> {
+                        kitePhase = step.phase
+                        // Auspacken und Einholen bekommen eine erkennbare Koerperbewegung. Der
+                        // lange Flug selbst bleibt ruhig; dort bewegt der Wind den Drachen.
+                        if (step.phase == PlayEffects.KitePhase.PREPARE ||
+                            step.phase == PlayEffects.KitePhase.LAND
+                        ) {
+                            avatarIdleJob?.cancel()
+                            val handling = AvatarAnimations.fidgetSequence(
+                                species,
+                                if (step.phase == PlayEffects.KitePhase.PREPARE) {
+                                    AvatarAnimations.Fidget.STRETCH
+                                } else {
+                                    AvatarAnimations.Fidget.LOOK_AROUND
+                                }
+                            )
+                            MatrixAnimator.playTimed(handling.frames, handling.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
+                            startAvatarIdleLoop(species, mood)
+                        }
+                    }
+
                     // Verweilen ist vergehende ZEIT und wird im Zeitraffer entsprechend gekuerzt -
                     // sonst haetten die Pausen zwischen den Regungen ein anderes Tempo als die
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
@@ -972,6 +997,7 @@ fun DockScreen(
                 // Dasselbe fuer Getragenes: Bricht der Ablauf zwischen Take und Drop ab, trueg
                 // die Figur das Buch sonst durch alle folgenden Szenen mit sich herum.
                 carried = null
+                kitePhase = null
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
                 // Matratzenhoehe und damit sichtbar in der Luft. Bewusst ohne Animation gesetzt,
@@ -2445,6 +2471,18 @@ fun DockScreen(
                             item = item,
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt()
+                        )
+                    )
+                }
+                val kite = kitePhase
+                if (current != null && kite != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.kiteCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = kite,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
                         )
                     )
                 }

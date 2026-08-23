@@ -106,6 +106,22 @@ class PlayRoutineTest {
     }
 
     @Test
+    fun `Drachensteigen ist eine lange vollstaendige Parkaktivitaet`() {
+        val kiteRoutine = PlayRoutines.allFor(AnimationType.MOVE)
+            .firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
+        assertNotNull("MOVE hat keine Drachen-Aktivitaet", kiteRoutine)
+
+        val phases = kiteRoutine!!.steps.filterIsInstance<RoutineStep.Kite>().map { it.phase }
+        assertTrue(phases == PlayEffects.KitePhase.entries)
+        val visibleMillis = kiteRoutine.steps.filterIsInstance<RoutineStep.Linger>().sumOf { it.millis }
+        assertTrue("Der Drachen ist nur ${visibleMillis}ms zu sehen", visibleMillis >= 40_000L)
+        assertTrue(
+            "Die Drachen-Aktivitaet laeuft unnoetig durch mehrere Orte",
+            kiteRoutine.steps.none { it is RoutineStep.GoToPlace }
+        )
+    }
+
+    @Test
     fun `jeder Platz laesst sich tatsaechlich aufsuchen`() {
         // stationSpot muss fuer jeden ausgewiesenen Platz einen Ort liefern - sonst fehlt der
         // Requisite ihr useSpot und der Ablauf liefe wieder ins Leere.
