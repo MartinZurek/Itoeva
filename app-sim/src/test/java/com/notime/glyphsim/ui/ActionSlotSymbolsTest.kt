@@ -43,6 +43,23 @@ class ActionSlotSymbolsTest {
     }
 
     @Test
+    fun `Buch zeigt zwei breite Seiten statt zweier schmaler Striche`() {
+        val symbol = ActionSlotSymbols.frameFor(action(type = AnimationType.BOOK))
+
+        // Aussenkanten beider Seiten, Mittelsteg und die gemeinsame untere Buchkante.
+        assertTrue(symbol[5 * MatrixGeometry.SIZE + 2] > 0)
+        assertTrue(symbol[5 * MatrixGeometry.SIZE + 6] > 0)
+        assertTrue(symbol[5 * MatrixGeometry.SIZE + 10] > 0)
+        assertTrue(symbol[9 * MatrixGeometry.SIZE + 4] > 0)
+        assertTrue(symbol[9 * MatrixGeometry.SIZE + 8] > 0)
+        // Das Motiv nutzt sichtbar mehr Breite als Hoehe und liest sich dadurch als offenes Buch.
+        val lit = symbol.indices.filter { symbol[it] > 0 }
+        val xs = lit.map { it % MatrixGeometry.SIZE }
+        val ys = lit.map { it / MatrixGeometry.SIZE }
+        assertTrue((xs.max() - xs.min()) > (ys.max() - ys.min()))
+    }
+
+    @Test
     fun `Rocket zeigt eine Rakete und nicht den ersten Bibliotheksframe`() {
         val arbitrarySnapshot = IntArray(MatrixGeometry.SIZE * MatrixGeometry.SIZE).also { it[0] = 1 }
         val symbol = ActionSlotSymbols.frameFor(

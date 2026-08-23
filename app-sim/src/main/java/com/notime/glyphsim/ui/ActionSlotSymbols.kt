@@ -2,6 +2,7 @@ package com.notime.glyphsim.ui
 
 import com.notime.glyphsim.matrix.MatrixGeometry
 import com.notime.glyphsim.matrix.ReminderAnimations
+import com.notime.glyphcore.data.AnimationType
 
 /**
  * Ein ruhiges, erkennbares Symbol fuer den Inhalt eines Aktions-Speicherplatzes.
@@ -20,6 +21,11 @@ internal object ActionSlotSymbols {
             return rocketFrame()
         }
         action.animationType?.let { type ->
+            // Der vollste Frame der laufenden Buchanimation ist fuer Bewegung gut, als kleines
+            // ruhendes Slot-Symbol aber zu schmal: Buchruecken und Seiten sehen dort wie "II"
+            // aus. Der Speicherplatz braucht stattdessen die klare Silhouette eines aufgeklappten
+            // Buchs.
+            if (type == AnimationType.BOOK) return bookFrame()
             return mostComplete(ReminderAnimations.framesFor(type))
         }
         return mostComplete(action.frames)
@@ -49,6 +55,22 @@ internal object ActionSlotSymbols {
             5 to 9, 7 to 9,
             6 to 10,
             6 to 11
+        )
+    )
+
+    /** Breites, aufgeklapptes Buch mit Mittelsteg und je einer sichtbaren Zeile pro Seite. */
+    private fun bookFrame(): IntArray = pointsFrame(
+        listOf(
+            3 to 2, 4 to 2, 5 to 3, 7 to 3, 8 to 2, 9 to 2,
+            2 to 3, 6 to 3, 10 to 3,
+            2 to 4, 4 to 4, 6 to 4, 8 to 4, 10 to 4,
+            2 to 5, 6 to 5, 10 to 5,
+            2 to 6, 4 to 6, 6 to 6, 8 to 6, 10 to 6,
+            2 to 7, 6 to 7, 10 to 7,
+            2 to 8, 3 to 8, 4 to 8, 5 to 8,
+            6 to 8,
+            7 to 8, 8 to 8, 9 to 8, 10 to 8,
+            4 to 9, 5 to 9, 6 to 9, 7 to 9, 8 to 9
         )
     )
 
