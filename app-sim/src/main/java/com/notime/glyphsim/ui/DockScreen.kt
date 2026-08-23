@@ -2638,7 +2638,7 @@ fun DockScreen(
                     ) {
                         if (saved != null) {
                             SimulatedMatrixView(
-                                frame = saved.frames.firstOrNull() ?: IntArray(0),
+                                frame = ActionSlotSymbols.frameFor(saved),
                                 showPuck = false,
                                 modifier = Modifier.fillMaxSize().padding(8.dp)
                             )
