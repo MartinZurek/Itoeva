@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -56,6 +57,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.R
@@ -277,8 +281,12 @@ fun DockScreen(
 
         // Ort und dargestellter Ort stehen vor der Geometrie, die beide fuer den Szenenaufbau
         // benoetigt.
-        var currentPlace by remember { mutableStateOf(PlayScene.Place.NOOK) }
-        var renderedPlace by remember { mutableStateOf(PlayScene.Place.NOOK) }
+        val presenceProfileId = PresentCompanion.profileId(context)
+        val initialPresence = remember(presenceProfileId) {
+            PlayPresence.entry(context, presenceProfileId)
+        }
+        var currentPlace by remember(presenceProfileId) { mutableStateOf(initialPresence.place) }
+        var renderedPlace by remember(presenceProfileId) { mutableStateOf(initialPresence.place) }
 
         // ---- Geometrie der Lebenswelt (nur Play-Modus, siehe PlayScene) ----
         //
@@ -346,7 +354,9 @@ fun DockScreen(
         /** Wie oft die Figur schon hintereinander im selben Raum geblieben ist - siehe nextTopic. */
         var stayedRounds by remember { mutableStateOf(0) }
         /** Womit die Figur zuletzt beschaeftigt war - damit sie im Gespraech sagen kann, was sie tut. */
-        var currentTopic by remember { mutableStateOf<AnimationType?>(null) }
+        var currentTopic by remember(presenceProfileId) {
+            mutableStateOf<AnimationType?>(initialPresence.topic)
+        }
         /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
         var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
         /** Was er gerade ueber dem Kopf sagt (Text-Id), oder null - siehe PlaySpeech. */
@@ -489,7 +499,50 @@ fun DockScreen(
         }
 
         // Worum er gerade gebeten wurde - siehe die Regungs-Schleife weiter unten.
-        var requestedTopic by remember { mutableStateOf<AnimationType?>(null) }
+        var requestedTopic by remember(presenceProfileId) {
+            mutableStateOf<AnimationType?>(initialPresence.topic)
+        }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        var leftPlayAtMillis by remember { mutableStateOf<Long?>(null) }
+        DisposableEffect(lifecycleOwner, playMode, presenceProfileId) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_STOP -> if (playMode) {
+                        val now = System.currentTimeMillis()
+                        currentTopic?.let { topic ->
+                            PlayPresence.save(context, presenceProfileId, currentPlace, topic, now)
+                        }
+                        leftPlayAtMillis = now
+                    }
+                    Lifecycle.Event.ON_START -> {
+                        val leftAt = leftPlayAtMillis
+                        if (playMode && leftAt != null &&
+                            System.currentTimeMillis() - leftAt > PlayPresence.SHORT_RETURN_MS
+                        ) {
+                            val topic = PlayPresence.topicFor(java.time.LocalDateTime.now())
+                            val place = PlayScene.forTopic(topic)
+                            currentPlace = place
+                            renderedPlace = place
+                            currentTopic = topic
+                            requestedTopic = topic
+                        }
+                        leftPlayAtMillis = null
+                    }
+                    else -> Unit
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
+        // Der letzte glaubhafte Zustand wird bei jeder Aenderung gespeichert; ON_STOP oben setzt
+        // den Zeitstempel exakt auf den Moment des Weggehens. So laesst sich eine kurze Rueckkehr
+        // von einem langen Fortsein unterscheiden, ohne Ablaufschritte nachzusimulieren.
+        LaunchedEffect(playMode, presenceProfileId, currentPlace, currentTopic) {
+            if (!playMode) return@LaunchedEffect
+            currentTopic?.let { topic ->
+                PlayPresence.save(context, presenceProfileId, currentPlace, topic)
+            }
+        }
         var clipSeconds by remember { mutableIntStateOf(0) }
         var clipEncoding by remember { mutableFloatStateOf(-1f) }
         var clipResult by remember { mutableStateOf<java.io.File?>(null) }
@@ -1186,7 +1239,15 @@ fun DockScreen(
                     occupiedStation = null
                     avatar = null
                 }
-                playMode -> if (avatar == null) avatar = spawnAmbientAvatar()
+                playMode -> if (avatar == null) {
+                    avatar = spawnAmbientAvatar()
+                    // Beim Umschalten aus dem Spiel wurde ein laufender Ablauf sauber beendet.
+                    // Beim Zurueckkehren wird seine Absicht wieder aufgenommen, statt einen neuen
+                    // Zufall zu wuerfeln.
+                    if (requestedTopic == null) {
+                        requestedTopic = currentTopic ?: PlayPresence.topicFor(java.time.LocalDateTime.now())
+                    }
+                }
                 avatar?.occurrenceId == null && avatar?.fed != true -> {
                     avatarIdleJob?.cancel()
                     occupiedStation = null

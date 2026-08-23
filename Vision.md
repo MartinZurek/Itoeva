@@ -3,7 +3,8 @@
 Langfristige Vision, Design-Philosophie und Kernprinzipien von Itoeva. Dieses Dokument beschreibt
 das *Warum* und das *Was darf nie verloren gehen* - nicht das *Wie*. Technische Details gehören in
 [Architecture.md](Architecture.md), einzelne Entscheidungen mit Datum und Begründung in
-[EVOLUTION.md](EVOLUTION.md), konkrete Arbeitspakete in [NextTasks.md](NextTasks.md).
+[EVOLUTION.md](EVOLUTION.md), konkrete Arbeitspakete in [NextTasks.md](NextTasks.md) und der
+fachliche Entwicklungsrahmen des Avatarlebens in [Tagesablauf.md](Tagesablauf.md).
 
 Wo dieses Dokument etwas als Prinzip festschreibt, ist es durch heutigen Code oder Produkttext
 belegt - siehe die Verweise. Wo etwas noch offen ist, steht ausdrücklich **OPEN DECISION** statt
