@@ -92,45 +92,22 @@ class AvatarFootingTest {
 
     @Test
     fun `ueber der Bildkante bleibt die Figur sichtbar`() {
-        // Wenn der Boden sehr hoch liegt (Wald, siehe PlayScene.floorFraction) und die Figur
-        // gross gezogen ist, waere der rechnerische Platz oberhalb des Bildes.
+        // Auch bei ungueltigen oder zukuenftigen Sonderhoehen darf die Figur nicht verschwinden.
         val top = AvatarFooting.topFor(floorPx = 50f, avatarPx = 640f, groundRow = 18)
         assertTrue("die Figur wuerde ueber den oberen Rand hinausgeschoben", top >= 0f)
     }
 
-    /**
-     * **Wie weit die Figur danebenliegt, wenn der Boden zum falschen Zeitpunkt abgelesen wird.**
-     *
-     * Der Boden haengt am Ort und an der Tageszeit (siehe [PlayScene.floorFraction]) und wird beim
-     * Ortswechsel weich nachgefuehrt. Die Position der Figur steht dagegen in Pixeln und wird
-     * einmal berechnet, wenn ein Schritt beginnt - beim Gang nach draussen faellt dieser Zeitpunkt
-     * mitten in die laufende Bodenbewegung.
-     *
-     * Dieser Test prueft nicht das Nachfuehren selbst; das steckt in einem Compose-Effekt im
-     * Dock-Bildschirm und ist ohne Geraet nicht erreichbar. Er haelt fest, **warum es das
-     * ueberhaupt braucht**: Der Unterschied zwischen drinnen und draussen-nachts ist gross genug,
-     * um die Figur sichtbar in der Luft stehen zu lassen. Wuerde jemand die Bodenhoehen einander
-     * angleichen, faellt dieser Test - und dann darf der Effekt auch wieder weg.
-     */
     @Test
-    fun `zwischen drinnen und draussen bei Nacht liegen Welten`() {
-        val hoehePx = 2000f
-        val drinnen = PlayScene.floorFraction(
-            PlayScene.Place.NOOK, PlayAmbientActivity.DayPhase.NIGHT
-        )
-        val draussen = PlayScene.floorFraction(
-            PlayScene.Place.PARK, PlayAmbientActivity.DayPhase.NIGHT
-        )
-
-        val avatarPx = 200f
-        val obenDrinnen = AvatarFooting.topFor(hoehePx * drinnen, avatarPx, groundRow = 15)
-        val obenDraussen = AvatarFooting.topFor(hoehePx * draussen, avatarPx, groundRow = 15)
-
-        val abstand = kotlin.math.abs(obenDraussen - obenDrinnen)
-        assertTrue(
-            "Der Bodenunterschied betraegt nur ${abstand}px - dann braeuchte es das Nachfuehren " +
-                "im Dock-Bildschirm nicht mehr",
-            abstand > avatarPx / 2f
-        )
+    fun `alle Orte und Tageszeiten teilen dieselbe Bodenlinie`() {
+        for (place in PlayScene.Place.entries) {
+            for (dayPhase in PlayAmbientActivity.DayPhase.entries) {
+                assertEquals(
+                    "$place verschiebt den Boden bei $dayPhase",
+                    0.80f,
+                    PlayScene.floorFraction(place, dayPhase),
+                    0f
+                )
+            }
+        }
     }
 }

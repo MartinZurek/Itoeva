@@ -324,27 +324,16 @@ object PlayScene {
     }
 
     /**
-     * Wie hoch der Boden liegt - und damit, wie viel Himmel ueber der Szene steht.
+     * Gemeinsame Bodenlinie der ganzen Spielwelt.
      *
-     * **Der Streifen ist nicht mehr ueberall gleich hoch.** Drinnen sitzt der Boden tief, das
-     * Zimmer ist ein schmales Band am unteren Rand und laesst der Uhr den Platz darueber. Nachts
-     * im Park rutscht er weit nach unten: Die Figur wird klein, und der Himmel nimmt fast den
-     * ganzen Bildschirm ein.
-     *
-     * Das ist derselbe Kniff, mit dem Filme eine Weite herstellen - nicht mehr zeichnen, sondern
-     * den Horizont senken. Es kostet keine einzige zusaetzliche Requisite und macht aus einer
-     * naechtlichen Parkszene etwas, das man ansieht, statt etwas, an dem man vorbeischaut.
+     * Orte und Tageszeiten duerfen die Kulisse veraendern, aber nicht unbemerkt die Ebene, auf
+     * der die Figur steht. Abweichende Hoehen gehoeren spaeter in eine ausdruecklich geplante
+     * Mechanik, etwa eine Treppe oder einen Huegel, die Avatar und Umgebung gemeinsam bewegt.
      */
-    fun floorFraction(place: Place, dayPhase: PlayAmbientActivity.DayPhase): Float = when {
-        // Der Wald hat den HOECHSTEN Horizont von allen Orten draussen - und das ist genau
-        // umgekehrt zur Weite des Parks. Im Wald sieht man keinen Himmel; die Baeume stehen dicht
-        // und nah. Ein tief gelegter Horizont wuerde daraus eine Lichtung machen.
-        place == Place.FOREST -> 0.78f
-        place.isIndoors -> 0.80f
-        dayPhase == PlayAmbientActivity.DayPhase.NIGHT -> 0.93f
-        dayPhase == PlayAmbientActivity.DayPhase.EVENING -> 0.88f
-        else -> 0.80f
-    }
+    fun floorFraction(
+        @Suppress("UNUSED_PARAMETER") place: Place,
+        @Suppress("UNUSED_PARAMETER") dayPhase: PlayAmbientActivity.DayPhase
+    ): Float = 0.80f
 
     /**
      * Die Zellen GENAU EINER Requisite - fuer die Kompositions-Pruefungen (siehe ScenePreview und
@@ -3485,9 +3474,8 @@ object PlayScene {
     /**
      * Eine Sternschnuppe zieht selten schraeg durch den Nachthimmel.
      *
-     * **Warum gerade hier.** Nachts im Park sinkt der Horizont und der Himmel nimmt fast den
-     * ganzen Bildschirm ein (siehe [floorFraction]) - eine grosse leere Flaeche, die bisher nur
-     * ein paar stehende Sterne trug. Ein Ereignis, das quer hindurchzieht und wieder weg ist,
+     * **Warum gerade hier.** Nachts ist der Himmel ueber dem Park eine grosse ruhige Flaeche, die
+     * bisher nur ein paar stehende Sterne trug. Ein Ereignis, das quer hindurchzieht und wieder weg ist,
      * nutzt genau diese Weite. Und weil es SELTEN kommt (in etwa einem Sechstel der Zeit),
      * belohnt es das Zuschauen, statt zur Kulisse zu werden.
      */
@@ -3644,8 +3632,8 @@ object PlayScene {
             Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
-                    // Nachts steht der Boden tief (siehe [floorFraction]) und darueber ist Platz
-                    // fuer einen richtigen Himmel: ein Sternbild aus sieben Sternen, jeder auf
+                    // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:
+                    // ein Sternbild aus sieben Sternen, jeder auf
                     // einem eigenen Takt. Im Gleichtakt blinkend saehen sie aus wie eine
                     // Leuchtreklame; unabhaengig voneinander wie ein Nachthimmel.
                     val sky = (floorY * 0.62f).toInt()
