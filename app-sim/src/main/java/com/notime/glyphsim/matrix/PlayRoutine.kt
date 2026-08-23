@@ -36,6 +36,9 @@ sealed interface RoutineStep {
     /** Eine Phase der mehrstufigen Drachen-Szene sichtbar machen. */
     data class Kite(val phase: PlayEffects.KitePhase) : RoutineStep
 
+    /** Eine Phase der Fussball-Szene; TRICK wird erst nach dem Lernen verwendet. */
+    data class Football(val phase: PlayEffects.FootballPhase) : RoutineStep
+
     /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
     data class Linger(val millis: Long) : RoutineStep
 
@@ -113,6 +116,7 @@ object PlayRoutines {
     fun forTopic(
         topic: AnimationType,
         needsShopping: Boolean = false,
+        footballTrickLearned: Boolean = false,
         random: Random = Random
     ): PlayRoutine {
         val options = allFor(topic)
@@ -124,7 +128,8 @@ object PlayRoutines {
         // Umgekehrt: Solange etwas da ist, faellt der Einkauf weg - sonst liefe er auch mit vollem
         // Kuehlschrank jedes zweite Mal in den Laden.
         val everyday = options.filterNot { routine ->
-            routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP }
+            routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP } ||
+                routine.steps.any { it is RoutineStep.Kite || it is RoutineStep.Football }
         }
         val pool = everyday.ifEmpty { options }
         // MOVE hatte bisher fast nur Wege als Inhalt. Die erste richtige Park-Beschaeftigung soll
@@ -134,10 +139,31 @@ object PlayRoutines {
             pool.firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
                 ?.let { return it }
         }
+        if (topic == AnimationType.MOVE && random.nextInt(100) < FOOTBALL_CHANCE_PERCENT) {
+            return footballRoutine(footballTrickLearned)
+        }
         return pool[random.nextInt(pool.size)]
     }
 
     private const val KITE_CHANCE_PERCENT = 55
+    private const val FOOTBALL_CHANCE_PERCENT = 65
+
+    fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(
+        buildList {
+            add(RoutineStep.GoToPlace(PlayScene.Place.SPORT))
+            add(RoutineStep.Stroll(0.30f))
+            add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
+            add(RoutineStep.Linger(12_000L))
+            add(RoutineStep.Football(PlayEffects.FootballPhase.AIM))
+            add(RoutineStep.Linger(4_000L))
+            if (trickLearned) {
+                add(RoutineStep.Football(PlayEffects.FootballPhase.TRICK))
+                add(RoutineStep.Linger(5_000L))
+            }
+            add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
+            add(RoutineStep.Linger(8_000L))
+        }
+    )
 
     /**
      * ALLE Ablaeufe zu einem Thema - oeffentlich, weil sich sonst nicht pruefen laesst, dass jeder
@@ -565,7 +591,9 @@ object PlayRoutines {
                     RoutineStep.Rise,
                     RoutineStep.Act(AnimationType.MOVE)
                 )
-            )
+            ),
+            // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
+            footballRoutine(trickLearned = false)
         )
 
         // ---- Etwas machen: in die eigene Ecke, ans Werkstueck, dranbleiben ----

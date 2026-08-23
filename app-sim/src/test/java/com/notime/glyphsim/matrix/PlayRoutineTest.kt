@@ -122,6 +122,23 @@ class PlayRoutineTest {
     }
 
     @Test
+    fun `Fussball findet auf dem Sportplatz statt und gelernter Trick wird Standard`() {
+        val basic = PlayRoutines.footballRoutine(trickLearned = false)
+        val learned = PlayRoutines.footballRoutine(trickLearned = true)
+
+        assertTrue(basic.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SPORT
+        })
+        assertTrue(basic.steps.filterIsInstance<RoutineStep.Football>().none {
+            it.phase == PlayEffects.FootballPhase.TRICK
+        })
+        assertTrue(learned.steps.filterIsInstance<RoutineStep.Football>().any {
+            it.phase == PlayEffects.FootballPhase.TRICK
+        })
+        assertTrue(PlayScene.allowsVisitors(PlayScene.Place.SPORT))
+    }
+
+    @Test
     fun `jeder Platz laesst sich tatsaechlich aufsuchen`() {
         // stationSpot muss fuer jeden ausgewiesenen Platz einen Ort liefern - sonst fehlt der
         // Requisite ihr useSpot und der Ablauf liefe wieder ins Leere.

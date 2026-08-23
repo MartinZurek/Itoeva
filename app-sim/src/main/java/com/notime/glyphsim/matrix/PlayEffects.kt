@@ -26,6 +26,40 @@ object PlayEffects {
     /** Lesbare Phasen einer Drachen-Szene: auspacken, hochziehen, fliegen, einholen. */
     enum class KitePhase { PREPARE, LAUNCH, FLY, LAND }
 
+    /** Ballkontrolle, Schuss und der spaeter erlernbare Spezialtrick. */
+    enum class FootballPhase { DRIBBLE, AIM, KICK, TRICK }
+
+    fun footballCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: FootballPhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val direction = if ((scenePhase / 5) % 2 == 0) 1 else -1
+        val centerX = when (phase) {
+            FootballPhase.DRIBBLE -> avatarCellX + 15 + direction * 2
+            FootballPhase.AIM -> avatarCellX + 17
+            FootballPhase.KICK -> avatarCellX + 23
+            FootballPhase.TRICK -> avatarCellX + 12 + direction * 4
+        }.coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+        val centerY = when (phase) {
+            FootballPhase.DRIBBLE, FootballPhase.AIM -> groundY - 1
+            FootballPhase.KICK -> groundY - 7
+            FootballPhase.TRICK -> groundY - 13
+        }
+        return listOf(
+            0 to -2,
+            -1 to -1, 0 to -1, 1 to -1,
+            -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
+            -1 to 1, 0 to 1, 1 to 1,
+            0 to 2
+        ).map { (dx, dy) ->
+            SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
+        }
+    }
+
     /**
      * Drachen, Schnur und Schweif als gemeinsame Szene vor dem Avatar.
      *
