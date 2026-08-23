@@ -47,9 +47,9 @@ internal const val ACTION_SLOT_COUNT = 4
 /**
  * Eine Aktion, die der Spieler von der Uhr in einen Speicherplatz gezogen hat, statt sie sofort
  * auf den Avatar anzuwenden (siehe [HomeScreen]s `saveToSlot`). Sie bleibt hier liegen, bis sie
- * von dort aus gefuettert wird - [frames] dient dabei nur der Vorschau im Platz selbst; welche
- * Reaktion das Fuettern spaeter zeigt, entscheidet [AvatarFeeding.playReaction] unabhaengig davon
- * ueber [animationType]/[libraryAnimationLabel].
+ * von dort aus gefuettert wird. [frames] bewahrt die eigentliche Bibliotheksanimation fuer das
+ * spaetere Fuettern; die Vorschau im Platz selbst kommt aus [ActionSlotSymbols] und ist dadurch
+ * ein stabiles Motiv statt eines zufaelligen Animations-Zwischenbilds.
  */
 internal data class SavedAction(
     val reminderId: Long,
@@ -189,7 +189,7 @@ private fun ActionSlot(
     ) {
         if (saved != null) {
             SimulatedMatrixView(
-                frame = saved.frames.firstOrNull() ?: IntArray(0),
+                frame = ActionSlotSymbols.frameFor(saved),
                 showPuck = false,
                 modifier = Modifier
                     .fillMaxSize()
