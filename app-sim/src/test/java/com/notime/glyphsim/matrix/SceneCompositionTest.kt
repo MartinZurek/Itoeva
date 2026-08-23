@@ -154,6 +154,25 @@ class SceneCompositionTest {
     }
 
     @Test
+    fun `der Laden besteht aus drei klar getrennten Funktionsbereichen`() {
+        // Eine Auslage, ein Wandregal, eine Kasse. Ein zweites Bodenregal machte den schmalen
+        // Laden zu einer unlesbaren Mischung aus fast identischen Gittern.
+        for (sceneWidth in intArrayOf(PlayScene.MIN_SCENE_CELLS, 46, width, 72)) {
+            val visible = PlayScene.propFootprints(
+                PlayScene.Place.SHOP, sceneWidth, floorY
+            ).filter { it.second.isNotEmpty() }
+            // Hinzu kommt die Tuer, die propFootprints absichtlich ebenfalls mitzaehlt.
+            assertTrue(
+                "Der Laden hat bei Breite $sceneWidth ${visible.size} statt vier sichtbare " +
+                    "Bereiche.\n\n" + ScenePreview.render(
+                        PlayScene.Place.SHOP, width = sceneWidth, showAvatar = false
+                    ),
+                visible.size == 4
+            )
+        }
+    }
+
+    @Test
     fun `jedes erworbene Stueck ist auch tatsaechlich zu sehen`() {
         // **Der Fehler, der nicht weh tut und deshalb der schlimmste ist.** Ein Beiwerk, das mit
         // etwas anderem kollidiert, wird lautlos weggelassen (siehe PlayScene.fitting) - kein

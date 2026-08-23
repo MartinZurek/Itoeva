@@ -1062,9 +1062,13 @@ object PlayScene {
         ))
         Place.SHOP -> besideDoor(listOf(
             Placement(RACK, anchorX = 0.04f, station = Station.RACK),
-            Placement(RACK, anchorX = 0.34f),
-            Placement(SHELF, anchorX = 0.66f, liftCells = SHELF_LIFT, brightness = BACKDROP),
-            Placement(CHECKOUT, anchorX = 0.72f, station = Station.CHECKOUT)
+            // Eine einzige Auslage genuegt. Zwei fast gleiche Regale plus Wandregal und Kasse
+            // machten aus dem Laden auf einem schmalen Telefon einen dichten Moebelblock, in dem
+            // keine Funktion mehr einzeln lesbar war. Das Wandregal fuellt die Mitte, ohne eine
+            // zweite Boden-Silhouette vorzutäuschen; die Kasse bekommt rechts ihren eigenen
+            // klaren Bereich.
+            Placement(SHELF, anchorX = 0.48f, liftCells = SHELF_LIFT, brightness = BACKDROP),
+            Placement(CHECKOUT, anchorX = 0.90f, station = Station.CHECKOUT)
         ))
         // **Das Draussen, das IHM gehoert** - siehe [habitatPlacements].
         Place.PARK -> habitatPlacements(species)
