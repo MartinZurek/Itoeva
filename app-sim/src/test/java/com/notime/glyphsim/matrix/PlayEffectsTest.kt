@@ -7,6 +7,16 @@ import org.junit.Test
 class PlayEffectsTest {
 
     @Test
+    fun `Fussball bleibt sichtbar und der Trick hebt ihn deutlich an`() {
+        val dribble = PlayEffects.footballCells(8, 20, PlayEffects.FootballPhase.DRIBBLE, 0, 48)
+        val trick = PlayEffects.footballCells(8, 20, PlayEffects.FootballPhase.TRICK, 0, 48)
+
+        assertTrue(dribble.size >= 9)
+        assertTrue(trick.minOf { it.y } < dribble.minOf { it.y } - 5)
+        assertTrue((dribble + trick).all { it.x in 0 until 48 })
+    }
+
+    @Test
     fun `fliegender Drache hat Koerper Schweif und gespannte Schnur`() {
         val cells = PlayEffects.kiteCells(
             avatarCellX = 12,

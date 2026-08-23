@@ -592,6 +592,7 @@ private fun placeTextFor(place: PlayScene.Place): Int = when (place) {
     PlayScene.Place.LIVING -> R.string.talk_place_living
     PlayScene.Place.CRAFT -> R.string.talk_place_craft
     PlayScene.Place.PARK -> R.string.talk_place_park
+    PlayScene.Place.SPORT -> R.string.talk_place_sport
     PlayScene.Place.SHOP -> R.string.talk_place_shop
     PlayScene.Place.STREET -> R.string.talk_place_street
     PlayScene.Place.FOREST -> R.string.talk_place_forest

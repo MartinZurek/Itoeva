@@ -116,7 +116,7 @@ object PlayScene {
      * der Schleim toepfert, der Wuestenfuchs graebt, die Eule spielt. Es ist der Gegenentwurf zum
      * Arbeitsplatz - dort geht sie einem BERUF nach, hier tut sie etwas, weil sie es ist.
      */
-    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SHOP, STREET, FOREST, MEADOW, CITY }
+    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SPORT, SHOP, STREET, FOREST, MEADOW, CITY }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
     private val Place.isIndoors: Boolean
@@ -131,7 +131,7 @@ object PlayScene {
      * Sterne und Mond, ohne an vier Stellen nachzuziehen.
      */
     fun isOutdoors(place: Place): Boolean =
-        place == Place.PARK || place == Place.STREET || place == Place.FOREST ||
+        place == Place.PARK || place == Place.SPORT || place == Place.STREET || place == Place.FOREST ||
             place == Place.MEADOW || place == Place.CITY
 
     /**
@@ -151,7 +151,7 @@ object PlayScene {
         // Gegenteil dessen, wofuer man in den Wald geht, und ein Fremder zwischen den Baeumen
         // wirkt eher beunruhigend als belebt.
         // Die STADT gehoert dazu wie die Strasse - ein Platz, an dem Leute ohnehin unterwegs sind.
-        Place.PARK, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY -> true
+        Place.PARK, Place.SPORT, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY -> true
         // Die eigene Ecke ([Place.CRAFT]) ausdruecklich NICHT: Wer dort sitzt, hat sich
         // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
         //
@@ -499,6 +499,7 @@ object PlayScene {
         // aber daneben - sonst haette sie nie eine andere Haltung zu ihrem eigenen Werkstueck.
         Place.CRAFT -> 0.42f
         Place.PARK -> 0.20f
+        Place.SPORT -> 0.20f
         Place.SHOP -> 0.34f
         Place.BATH -> 0.42f
         Place.WORK -> 0.20f
@@ -1072,6 +1073,11 @@ object PlayScene {
         ))
         // **Das Draussen, das IHM gehoert** - siehe [habitatPlacements].
         Place.PARK -> habitatPlacements(species)
+        Place.SPORT -> listOf(
+            Placement(FOOTBALL_GOAL, anchorX = 0f, brightness = BACKDROP, behind = true),
+            Placement(FOOTBALL_GOAL, anchorX = 1f, brightness = BACKDROP, behind = true),
+            Placement(FENCE, anchorX = 0.50f, brightness = BACKDROP, behind = true)
+        )
 
         // Die STRASSE: Haeuser als Hintergrund, davor Laterne und Bank.
         //
@@ -1161,6 +1167,16 @@ object PlayScene {
         // mit Schilf. Was eine Landschaft ausmacht, ist zur Haelfte das, worauf man steht - und
         // es ist der billigste Teil davon: eine einzige Zeile ueber der Bodenlinie.
         Place.PARK -> habitatGround(species, widthCells, floorY)
+        Place.SPORT -> (0 until widthCells).flatMap { x ->
+            buildList {
+                // Seitenlinie und kurze Mittelmarkierung unterscheiden den Platz von einer Wiese.
+                if (x % 2 == 0) add(SceneCell(x, floorY - 1, STRUCTURE))
+                if (x == widthCells / 2) {
+                    add(SceneCell(x, floorY - 2, STRUCTURE))
+                    add(SceneCell(x, floorY - 3, STRUCTURE))
+                }
+            }
+        }
 
         // Wald: DICHTERES Bodenkraut als im Park, und zweizeilig. Der Unterschied zwischen einer
         // gepflegten Wiese und einem Waldboden liegt genau darin, dass man den Boden nicht mehr
@@ -1605,6 +1621,14 @@ object PlayScene {
     )
 
     /** Niedriger Holzzaun; die offene Mitte laesst die Wiese weiterhin weit wirken. */
+    private val FOOTBALL_GOAL = Prop(
+        width = 13,
+        height = 9,
+        art = hLine(0, 12, 0) + vLine(0, 1, 8) + vLine(12, 1, 8) +
+            (2..10 step 2).flatMap { x -> vLine(x, 2, 8) } +
+            (2..8 step 2).flatMap { y -> hLine(1, 11, y) }
+    )
+
     private val FENCE = Prop(
         width = 11, height = 5,
         art = vLine(1, 0, 4) + vLine(9, 0, 4) + hLine(0, 10, 1) + hLine(0, 10, 3)
@@ -3633,7 +3657,7 @@ object PlayScene {
             // Alle fuenf Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
             // WETTER, nicht zum Ort. Getrennt gepflegte Himmel waeren die sicherste Art, dass
             // ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
-            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY -> {
+            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
                     // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:

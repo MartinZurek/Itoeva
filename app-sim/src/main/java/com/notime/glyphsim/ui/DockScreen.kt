@@ -84,6 +84,7 @@ import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayWeather
+import com.notime.glyphsim.matrix.PlayFootballSkill
 import com.notime.glyphsim.matrix.PlaySceneView
 import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
@@ -409,6 +410,8 @@ fun DockScreen(
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
         /** Sichtbare Phase der langen Drachen-Szene; null ausserhalb dieses Ablaufs. */
         var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
+        /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
+        var footballPhase by remember { mutableStateOf<PlayEffects.FootballPhase?>(null) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
@@ -915,6 +918,16 @@ fun DockScreen(
                         }
                     }
 
+                    is RoutineStep.Football -> {
+                        footballPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
                     // Verweilen ist vergehende ZEIT und wird im Zeitraffer entsprechend gekuerzt -
                     // sonst haetten die Pausen zwischen den Regungen ein anderes Tempo als die
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
@@ -998,6 +1011,7 @@ fun DockScreen(
                 // die Figur das Buch sonst durch alle folgenden Szenen mit sich herum.
                 carried = null
                 kitePhase = null
+                footballPhase = null
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
                 // Matratzenhoehe und damit sichtbar in der Luft. Bewusst ohne Animation gesetzt,
@@ -1655,6 +1669,13 @@ fun DockScreen(
                     // Gefuettert wird immer frei stehend - unter der Bettdecke waere die Reaktion
                     // zur Haelfte unsichtbar.
                     occupiedStation = null
+                    if (currentPlace == PlayScene.Place.SPORT && footballPhase != null &&
+                        PlayFootballSkill.isFootballAnimation(
+                            current.animationType, current.libraryAnimationLabel
+                        )
+                    ) {
+                        PlayFootballSkill.learn(context, presenceProfileId)
+                    }
                     avatar = current.copy(fed = true)
                     clockAnimJob?.cancel()
                     avatarIdleJob?.cancel()
@@ -1831,7 +1852,8 @@ fun DockScreen(
                     runRoutine(
                         PlayRoutines.forTopic(
                             topic = topic,
-                            needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context)
+                            needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                            footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
                         ),
                         species
                     )
@@ -1976,7 +1998,8 @@ fun DockScreen(
                             runRoutine(
                                 PlayRoutines.forTopic(
                                     topic = topic,
-                                    needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context)
+                                    needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                                    footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
                                 ),
                                 species
                             )
@@ -2481,6 +2504,18 @@ fun DockScreen(
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             phase = kite,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val football = footballPhase
+                if (current != null && football != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.footballCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = football,
                             scenePhase = scenePhase,
                             widthCells = sceneWidthCells
                         )
