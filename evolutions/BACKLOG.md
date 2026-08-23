@@ -180,7 +180,7 @@ Bedingungen, die nicht verhandelbar sind:
 - `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
   Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
 
-## [open] ITO-0010 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (dritte Runde)
+## [done] ITO-0010 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (dritte Runde)
 Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
 (Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (PR #14:
 Puffling-Starlet) und ITO-0009 (PR #18: Wyrmling-Hootlet). CONTENT-Evolution, keine
