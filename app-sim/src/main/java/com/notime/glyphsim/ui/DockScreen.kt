@@ -275,8 +275,8 @@ fun DockScreen(
             clockOffset = Offset(boundX * fractionX, boundY * fractionY)
         }
 
-        // Ort und dargestellter Ort - stehen VOR der Geometrie, weil die Bodenhoehe vom Ort
-        // abhaengt (siehe PlayScene.floorFraction).
+        // Ort und dargestellter Ort stehen vor der Geometrie, die beide fuer den Szenenaufbau
+        // benoetigt.
         var currentPlace by remember { mutableStateOf(PlayScene.Place.NOOK) }
         var renderedPlace by remember { mutableStateOf(PlayScene.Place.NOOK) }
 
@@ -298,15 +298,9 @@ fun DockScreen(
             if (maxWidthPx > 0f) maxWidthPx / PlayScene.MIN_SCENE_CELLS else Float.MAX_VALUE
         )
         val sceneWidthCells = if (sceneCellPx > 0f) (maxWidthPx / sceneCellPx).toInt() else 0
-        // Die Bodenhoehe haengt am ORT und an der Tageszeit (siehe PlayScene.floorFraction) und
-        // wird weich nachgefuehrt: Beim Wechsel in den naechtlichen Park senkt sich der Horizont
-        // sichtbar ab, statt zu springen - genau diese Bewegung erzeugt die Weite.
-        val targetFloorFraction = PlayScene.floorFraction(renderedPlace, PlayAmbientActivity.currentDayPhase())
-        val floorFraction by animateFloatAsState(
-            targetValue = targetFloorFraction,
-            animationSpec = tween(FLOOR_SHIFT_MS),
-            label = "floor"
-        )
+        // Alle Orte teilen dieselbe Ebene. Ein Ortswechsel darf die Welt nicht unter der Figur
+        // anheben oder absenken; geplante Hoehenwege brauchen spaeter eine eigene Mechanik.
+        val floorFraction = PlayScene.floorFraction(renderedPlace, PlayAmbientActivity.currentDayPhase())
         val floorYCells = if (sceneCellPx > 0f) {
             (maxHeightPx * floorFraction / sceneCellPx).toInt()
         } else {
@@ -635,19 +629,6 @@ fun DockScreen(
             if (target == currentPlace) return
             val hasDoorHere = PlayScene.Station.DOOR in PlayScene.stationsAt(currentPlace, species)
             val hasDoorThere = PlayScene.Station.DOOR in PlayScene.stationsAt(target, species)
-            // **Ob sich der BODEN mitbewegt** - siehe die Wartezeit weiter unten.
-            //
-            // Gemeldet als "im Park schwebt er in der Luft und setzt sich dann auf die Bank".
-            // Genau das war es: Der Boden liegt drinnen bei 0,80 der Hoehe und abends im Park bei
-            // 0,88, nachts bei 0,93 - er sinkt beim Hinausgehen also sichtbar ab, und zwar ueber
-            // FLOOR_SHIFT_MS. Der Ortswechsel wartete aber nur die Ueberblendung ab (rund halb so
-            // lange) und ging dann los. Die Figur lief und setzte sich damit auf einen Boden, den
-            // es an dieser Stelle noch gar nicht gab; sichtbar blieb sie in der Luft stehen, bis
-            // eine spaetere Bewegung sie wieder einfing.
-            val dayPhase = PlayAmbientActivity.currentDayPhase()
-            val floorMoves = PlayScene.floorFraction(currentPlace, dayPhase) !=
-                PlayScene.floorFraction(target, dayPhase)
-
             if (hasDoorHere) {
                 PlayScene.stationSpot(currentPlace, PlayScene.Station.DOOR, sceneWidthCells, floorYCells, species)
                     ?.let { spot ->
@@ -674,15 +655,6 @@ fun DockScreen(
             avatarHidden = true
             currentPlace = target
             delay((SCENE_FADE_OUT_MS + SCENE_FADE_IN_MS).toLong())
-            // Und beim Hinausgehen zusaetzlich warten, bis der Boden unten angekommen ist. Die
-            // Figur bleibt so lange im Tuerrahmen bzw. unsichtbar - man sieht den Horizont sinken,
-            // nicht eine Figur, die auf einen wandernden Boden zulaeuft. Nur wo sich der Boden
-            // ueberhaupt bewegt: Von Zimmer zu Zimmer ist er derselbe, dort waere jedes Warten
-            // ein toter Takt.
-            if (floorMoves) {
-                delay((FLOOR_SHIFT_MS - SCENE_FADE_OUT_MS - SCENE_FADE_IN_MS).coerceAtLeast(0).toLong())
-            }
-
             // Im neuen Raum an der Tuer wieder auftauchen und hereinkommen.
             avatar?.let { arriving ->
                 val px = with(density) { arriving.sizeDp.dp.toPx() }
@@ -1148,10 +1120,8 @@ fun DockScreen(
         // und die Figur bleibt, wo sie war. Dazu behielt sie ihre alte Groesse, waehrend die
         // Kulisse mitwuchs: Genau das sah aus, als zoome die Landschaft unter ihr weg.
         //
-        // Ausdruecklich NICHT auf [floorYPx] hoerend, obwohl es naheliegt: Der Boden wandert bei
-        // jedem Ortswechsel weich nach (siehe floorFraction), und ein Effekt, der darauf
-        // anspringt, riebe sich an jeder laufenden Geh-Animation. Umgestellt wird nur, was der
-        // NUTZER umstellt - Uhrgroesse und Bildschirmmasse.
+        // [floorYPx] bleibt bei Ortswechseln stabil. Umgestellt wird hier nur, was der NUTZER
+        // veraendert - Uhrgroesse und Bildschirmmasse.
         // Auf GERUNDETE Avatargroesse hoerend, nicht auf den genauen Wert. Sie leitet sich aus der
         // Uhrgroesse ab, und die schreibt die Zieh-Geste bei jeder Bewegung neu - beim reinen
         // Verschieben um Bruchteile eines Punktes. Auf den genauen Wert gehoert, liefe dieser
@@ -1199,59 +1169,6 @@ fun DockScreen(
                 sizeDp = worldAvatarSizeDp,
                 offset = next ?: current.offset
             )
-        }
-
-        // ---- Der Horizont wandert weiter, nachdem die Figur schon steht ----
-        //
-        // **Der Fehler, der sich als "die Figur schwebt ueber der Landschaft" zeigte.**
-        //
-        // Die Bodenhoehe haengt am ORT und an der Tageszeit (siehe PlayScene.floorFraction) und
-        // wird ueber FLOOR_SHIFT_MS weich nachgefuehrt - drinnen 0.80, draussen nachts 0.93. Das
-        // sind bis zu dreizehn Prozent der Bildhoehe.
-        //
-        // Die Position der Figur steht dagegen in PIXELN und wird einmal berechnet, wenn ein
-        // Schritt beginnt. Beim Gang nach draussen faellt dieser Zeitpunkt mitten in die laufende
-        // Bodenbewegung: Sie taucht 600ms nach dem Ortswechsel wieder auf, der Boden ist dann
-        // erst zur Haelfte unten, und dort bleibt sie stehen. Der Rest der Bewegung findet ohne
-        // sie statt.
-        //
-        // Deshalb nur "manchmal": Von drinnen in den Laden aendert sich gar nichts (beide 0.80),
-        // von drinnen nach draussen am Abend oder nachts dagegen sehr viel. Wer tagsueber
-        // ausprobiert, sieht nichts.
-        //
-        // **Warum das die frueher ausgeschlossene Abhaengigkeit doch braucht.** Der Effekt fuer
-        // Groessenaenderungen weiter oben hoert ausdruecklich NICHT auf [floorYPx], mit der
-        // Begruendung, er wuerde sich an jeder laufenden Geh-Animation reiben. Das stimmt - und
-        // genau deshalb steht hier ein eigener, der die Bedingung mitbringt, die dort fehlte: Er
-        // ruehrt die Figur nur an, wenn sie NICHT geht. Waehrend eines Gangs schreibt die
-        // Animation die Position ohnehin Bild fuer Bild; danach setzt dieser Effekt sie wieder
-        // auf den Boden, und weil der Boden sich weich bewegt, sinkt sie mit ihm statt zu
-        // springen.
-        LaunchedEffect(floorYPx, avatarWalking, avatarSettling, occupiedStation, renderedPlace) {
-            val current = avatar
-            if (!playMode || current == null || avatarWalking || avatarSettling || floorYPx <= 0f) {
-                return@LaunchedEffect
-            }
-            val avatarPx = with(density) { current.sizeDp.dp.toPx() }
-            val station = occupiedStation
-            val next = if (station != null) {
-                // Wer auf einer Requisite sitzt, sitzt auch nach dem Nachfuehren dort - die
-                // Moebel haengen an denselben Bodenzellen.
-                PlayScene.stationSpot(
-                    renderedPlace, station, sceneWidthCells, floorYCells, current.species
-                )?.let { spot -> stationOffset(spot, avatarPx, maxWidthPx, current.species) }
-            } else {
-                // Waagerecht bleibt alles, wie es ist - es hat sich nur der Boden bewegt.
-                Offset(
-                    current.offset.x,
-                    AvatarFooting.topFor(
-                        floorYPx, avatarPx, AvatarBodies.forSpecies(current.species).groundRow()
-                    )
-                )
-            }
-            if (next != null && next != current.offset) {
-                avatar = current.copy(offset = next)
-            }
         }
 
         // Play-Modus-Einstieg/-Ausstieg: der Avatar ist hier - anders als im normalen Dock -
@@ -3091,10 +3008,6 @@ private fun stationOffset(
         y = AvatarFooting.topFor((spot.groundY + 1) * cell, avatarPx, groundRow)
     )
 }
-
-/** Wie lange das Absenken/Anheben des Horizonts dauert - langsam genug, dass man die Weite
- *  entstehen SIEHT, statt sie nur vorzufinden. */
-private const val FLOOR_SHIFT_MS = 1200
 
 /**
  * GRUNDtakt der Umgebungsanimation - jedes Detail nimmt sich daraus sein eigenes Vielfaches
