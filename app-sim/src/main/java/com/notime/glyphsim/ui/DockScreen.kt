@@ -412,6 +412,8 @@ fun DockScreen(
         var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
         /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
         var footballPhase by remember { mutableStateOf<PlayEffects.FootballPhase?>(null) }
+        /** Sichtbare Phase der Angel-Szene am Teich; null ausserhalb dieses Ablaufs. */
+        var fishingPhase by remember { mutableStateOf<PlayEffects.FishingPhase?>(null) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
@@ -928,6 +930,30 @@ fun DockScreen(
                         startAvatarIdleLoop(species, mood)
                     }
 
+                    is RoutineStep.Fishing -> {
+                        fishingPhase = step.phase
+                        // Nur beim Auswerfen und beim Anschlagen eine eigene Koerperbewegung -
+                        // beim Warten bleibt die Figur ruhig stehen, damit WAIT tatsaechlich nach
+                        // Warten aussieht und nicht wie eine weitere Aktion.
+                        if (step.phase == PlayEffects.FishingPhase.CAST ||
+                            step.phase == PlayEffects.FishingPhase.CATCH
+                        ) {
+                            avatarIdleJob?.cancel()
+                            val motion = AvatarAnimations.fidgetSequence(
+                                species,
+                                if (step.phase == PlayEffects.FishingPhase.CAST) {
+                                    AvatarAnimations.Fidget.STRETCH
+                                } else {
+                                    AvatarAnimations.Fidget.LOOK_AROUND
+                                }
+                            )
+                            MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
+                            startAvatarIdleLoop(species, mood)
+                        }
+                    }
+
                     // Verweilen ist vergehende ZEIT und wird im Zeitraffer entsprechend gekuerzt -
                     // sonst haetten die Pausen zwischen den Regungen ein anderes Tempo als die
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
@@ -1012,6 +1038,7 @@ fun DockScreen(
                 carried = null
                 kitePhase = null
                 footballPhase = null
+                fishingPhase = null
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
                 // Matratzenhoehe und damit sichtbar in der Luft. Bewusst ohne Animation gesetzt,
@@ -2516,6 +2543,18 @@ fun DockScreen(
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             phase = football,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val fishing = fishingPhase
+                if (current != null && fishing != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.fishingCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = fishing,
                             scenePhase = scenePhase,
                             widthCells = sceneWidthCells
                         )

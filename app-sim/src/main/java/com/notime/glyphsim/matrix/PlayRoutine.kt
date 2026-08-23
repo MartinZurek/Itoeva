@@ -39,6 +39,9 @@ sealed interface RoutineStep {
     /** Eine Phase der Fussball-Szene; TRICK wird erst nach dem Lernen verwendet. */
     data class Football(val phase: PlayEffects.FootballPhase) : RoutineStep
 
+    /** Eine Phase der Angel-Szene am Teich. */
+    data class Fishing(val phase: PlayEffects.FishingPhase) : RoutineStep
+
     /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
     data class Linger(val millis: Long) : RoutineStep
 
@@ -129,7 +132,9 @@ object PlayRoutines {
         // Kuehlschrank jedes zweite Mal in den Laden.
         val everyday = options.filterNot { routine ->
             routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP } ||
-                routine.steps.any { it is RoutineStep.Kite || it is RoutineStep.Football }
+                routine.steps.any {
+                    it is RoutineStep.Kite || it is RoutineStep.Football || it is RoutineStep.Fishing
+                }
         }
         val pool = everyday.ifEmpty { options }
         // MOVE hatte bisher fast nur Wege als Inhalt. Die erste richtige Park-Beschaeftigung soll
@@ -142,11 +147,17 @@ object PlayRoutines {
         if (topic == AnimationType.MOVE && random.nextInt(100) < FOOTBALL_CHANCE_PERCENT) {
             return footballRoutine(footballTrickLearned)
         }
+        // Dritte eigene Aussenaktivitaet, seltener als die beiden anderen - sonst wirkt der Teich
+        // wie ein Pflichttermin statt wie eine von mehreren Moeglichkeiten.
+        if (topic == AnimationType.MOVE && random.nextInt(100) < FISHING_CHANCE_PERCENT) {
+            return fishingRoutine()
+        }
         return pool[random.nextInt(pool.size)]
     }
 
     private const val KITE_CHANCE_PERCENT = 55
     private const val FOOTBALL_CHANCE_PERCENT = 65
+    private const val FISHING_CHANCE_PERCENT = 40
 
     fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(
         buildList {
@@ -163,6 +174,21 @@ object PlayRoutines {
             add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
             add(RoutineStep.Linger(8_000L))
         }
+    )
+
+    /** Angeln am Teich: auswerfen, lange warten, dann der Fang - ruhiger Gegenpol zu Fussball. */
+    fun fishingRoutine(): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(PlayScene.Place.POND),
+            RoutineStep.Stroll(0.30f),
+            RoutineStep.Fishing(PlayEffects.FishingPhase.CAST),
+            RoutineStep.Linger(3_000L),
+            RoutineStep.Fishing(PlayEffects.FishingPhase.WAIT),
+            RoutineStep.Linger(22_000L),
+            RoutineStep.Fishing(PlayEffects.FishingPhase.CATCH),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+        )
     )
 
     /**
@@ -593,7 +619,9 @@ object PlayRoutines {
                 )
             ),
             // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
-            footballRoutine(trickLearned = false)
+            footballRoutine(trickLearned = false),
+            // Eigener Teich, ruhiger Gegenpol zum Sportplatz - siehe fishingRoutine().
+            fishingRoutine()
         )
 
         // ---- Etwas machen: in die eigene Ecke, ans Werkstueck, dranbleiben ----
@@ -622,6 +650,37 @@ object PlayRoutines {
                     RoutineStep.Act(AnimationType.CREATIVITY),
                     RoutineStep.Linger(3_000L),
                     RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE)          // schuettelt sich aus
+                )
+            ),
+            // Musizieren im Park: das Handwerkszeug wird diesmal MITGENOMMEN statt an einem
+            // festen Platz benutzt - dieselbe Reaktions-Animation, nur unterwegs statt an der
+            // Werkbank, mit der Gitarre sichtbar in der Hand (siehe PlayEffects.Carried.GUITAR).
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Take(PlayEffects.Carried.GUITAR),
+                    RoutineStep.GoToPlace(PlayScene.Place.PARK),
+                    RoutineStep.Stroll(0.40f),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(6_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Drop
+                )
+            ),
+            // Staffelei mit hinaus auf die Wiese - dasselbe Prinzip, ein anderes Motiv: das Bild
+            // entsteht draussen statt in der eigenen Ecke.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Take(PlayEffects.Carried.EASEL),
+                    RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
+                    RoutineStep.Stroll(0.55f),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(5_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Drop
                 )
             )
         )

@@ -689,6 +689,49 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Neu entstandene offene Punkte:** keine neuen. Die bereits als Future Backlog vermerkte
   Testlücke bei den Speicherplätzen (NT-018/NT-019/NT-025) besteht unverändert fort.
 
+### 2026-08-23 - Drei weitere Freizeit-Beschäftigungen: Angeln, Musizieren, Malen
+
+- **Version:** Protokoll bleibt 0.2; Gameplay-Erweiterung nach demselben, bereits etablierten
+  Muster wie Drachensteigen (PR #32) und Fußball (PR #36).
+- **Ausgangsproblem:** Nutzerwunsch, weitere "Doings" wie Drachensteigen und Fußball zu ergänzen.
+  Rückfrage ergab: nicht diese beiden selbst (schon vorhanden), sondern weitere Beschäftigungen
+  in ihrem Stil. Nutzer wählte "Angeln am Teich" als erste und "gleich mehrere (2-3)" als Umfang,
+  mit kreativer Freiheit bei der Ausgestaltung.
+- **Getroffene Entscheidung:**
+  - **Angeln am Teich** - vollständig neuer Ort `Place.POND` (Schilf und ein Steg-Pfosten als
+    Hintergrund, kein Kollisionsrisiko dank `behind = true`, wie beim Sportplatz), neue
+    dreiphasige Szene (`FishingPhase.CAST/WAIT/CATCH`) analog zu Drache/Fußball, in
+    `AnimationType.MOVE` mit 40 % Wahrscheinlichkeit eingehängt (Drache 55 %, Fußball 65 %,
+    bewusst niedriger, damit der Teich eine von mehreren Möglichkeiten bleibt, kein Pflichttermin).
+  - **Musizieren im Park** und **Malen auf der Wiese** - bewusst NICHT als weitere eigene Orte mit
+    neuer Einrichtung gebaut (Kollisionsrisiko beim Einfügen in bereits bestückte Räume ohne
+    lokale Kompilierbarkeit, siehe unten), sondern als neue `PlayEffects.Carried`-Gegenstände
+    (Gitarre, Staffelei) in zwei zusätzlichen `AnimationType.CREATIVITY`-Abläufen, die den
+    bestehenden Park bzw. die bestehende Wiese aufsuchen - dieselbe Reaktionsanimation, nur
+    unterwegs statt an der Werkbank.
+- **Betroffene Module:** `PlayScene.kt` (neuer Ort POND, zwei neue Hintergrund-Requisiten),
+  `PlayEffects.kt` (neue `FishingPhase`, `fishingCells()`, zwei neue `Carried`-Einträge),
+  `PlayRoutine.kt` (neuer `RoutineStep.Fishing`, `fishingRoutine()`, zwei neue CREATIVITY-Abläufe),
+  `DockScreen.kt` (Phasenzustand, Dispatch, Aufräumen, Rendering-Merge für die Angel-Szene -
+  Musizieren/Malen brauchen dort keine Änderung, da `Take`/`Drop`/`carriedCells()` bereits generisch
+  über jeden `Carried`-Wert arbeiten), `PlayRoutineTest.kt` (neuer Test analog zum
+  Fußball-/Drachen-Test).
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine.
+- **Getestet:** nicht lokal kompiliert - kein Android SDK und kein Zugriff auf das Gradle-Plugin-
+  Repository in dieser Umgebung (`com.android.application` ließ sich nicht auflösen). Stattdessen:
+  Architektur vollständig über einen Recherche-Durchlauf kartiert (alle `when(place)`-Dispatchpunkte
+  gezielt gegengeprüft, nicht nur die anfangs gefundenen), jede neue Stelle gegen das bestehende
+  Drache-/Fußball-Vorbild abgeglichen, Klammern-/Klammern-Bilanz aller geänderten Dateien geprüft.
+  CI ist hier die eigentliche Verifikation.
+- **Neu entstandene offene Punkte:** Beim Lesen des bestehenden Codes aufgefallen (nicht behoben,
+  da außerhalb dieser Aufgabe): Der `KITE_CHANCE_PERCENT`-Zweig in `PlayRoutines.forTopic()` sucht
+  die Drachen-Routine über `pool.firstOrNull { it is RoutineStep.Kite }` - `pool` schließt Drachen-
+  Routinen aber vorher bereits aus (`everyday`-Filter), wodurch dieser Zweig die Drachen-Routine
+  vermutlich nie tatsächlich zurückgibt. Fußball und die neue Angel-Routine umgehen das, indem sie
+  bei Treffer direkt die jeweilige Funktion zurückgeben statt über `pool` zu suchen. Verdient eine
+  eigene, gezielte Prüfung und ggf. Korrektur.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.

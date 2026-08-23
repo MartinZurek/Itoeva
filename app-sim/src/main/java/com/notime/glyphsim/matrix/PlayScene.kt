@@ -116,7 +116,7 @@ object PlayScene {
      * der Schleim toepfert, der Wuestenfuchs graebt, die Eule spielt. Es ist der Gegenentwurf zum
      * Arbeitsplatz - dort geht sie einem BERUF nach, hier tut sie etwas, weil sie es ist.
      */
-    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SPORT, SHOP, STREET, FOREST, MEADOW, CITY }
+    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SPORT, POND, SHOP, STREET, FOREST, MEADOW, CITY }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
     private val Place.isIndoors: Boolean
@@ -131,8 +131,8 @@ object PlayScene {
      * Sterne und Mond, ohne an vier Stellen nachzuziehen.
      */
     fun isOutdoors(place: Place): Boolean =
-        place == Place.PARK || place == Place.SPORT || place == Place.STREET || place == Place.FOREST ||
-            place == Place.MEADOW || place == Place.CITY
+        place == Place.PARK || place == Place.SPORT || place == Place.POND || place == Place.STREET ||
+            place == Place.FOREST || place == Place.MEADOW || place == Place.CITY
 
     /**
      * Ob an diesem Ort ueberhaupt jemand vorbeikommen kann (siehe runVisit in DockScreen).
@@ -156,9 +156,10 @@ object PlayScene {
         // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
         //
         // Die WIESE genauso wenig wie der Wald: eine stille Freiflaeche zum Ausspannen, kein
-        // Treffpunkt - dafuer gibt es bereits Park und Stadt.
+        // Treffpunkt - dafuer gibt es bereits Park und Stadt. Der TEICH aus demselben Grund: ein
+        // Angelplatz zum Ausspannen, keine Begegnungsstaette.
         Place.BEDROOM, Place.BATH, Place.DESK, Place.KITCHEN, Place.NOOK, Place.CRAFT,
-        Place.FOREST, Place.MEADOW -> false
+        Place.FOREST, Place.MEADOW, Place.POND -> false
     }
 
     /**
@@ -500,6 +501,8 @@ object PlayScene {
         Place.CRAFT -> 0.42f
         Place.PARK -> 0.20f
         Place.SPORT -> 0.20f
+        // Am Ufer, nicht mittendrin - die Rute wirft ohnehin nach vorn ins Wasser hinein.
+        Place.POND -> 0.24f
         Place.SHOP -> 0.34f
         Place.BATH -> 0.42f
         Place.WORK -> 0.20f
@@ -1078,6 +1081,14 @@ object PlayScene {
             Placement(FOOTBALL_GOAL, anchorX = 1f, brightness = BACKDROP, behind = true),
             Placement(FENCE, anchorX = 0.50f, brightness = BACKDROP, behind = true)
         )
+        // Der TEICH: Schilf an beiden Raendern, ein einzelner Steg-Pfosten dazwischen - alles
+        // Hintergrund, weil die eigentliche Handlung ohnehin vor der Figur im Wasser stattfindet
+        // (siehe PlayEffects.fishingCells), nicht in der Einrichtung selbst.
+        Place.POND -> listOf(
+            Placement(CATTAILS, anchorX = 0.08f, brightness = BACKDROP, behind = true),
+            Placement(POND_POST, anchorX = 0.44f, brightness = BACKDROP, behind = true),
+            Placement(CATTAILS, anchorX = 0.90f, brightness = BACKDROP, behind = true)
+        )
 
         // Die STRASSE: Haeuser als Hintergrund, davor Laterne und Bank.
         //
@@ -1175,6 +1186,14 @@ object PlayScene {
                     add(SceneCell(x, floorY - 2, STRUCTURE))
                     add(SceneCell(x, floorY - 3, STRUCTURE))
                 }
+            }
+        }
+        // Teich: kurze, versetzte Wellenlinien statt Rasenhalme - Wasser bewegt sich, eine Wiese
+        // steht still.
+        Place.POND -> (0 until widthCells).flatMap { x ->
+            buildList {
+                if ((x + 1) % 4 == 0) add(SceneCell(x, floorY - 1, STRUCTURE))
+                if ((x + 3) % 6 == 0) add(SceneCell(x, floorY - 2, (STRUCTURE * 0.7f).roundToInt()))
             }
         }
 
@@ -1632,6 +1651,19 @@ object PlayScene {
     private val FENCE = Prop(
         width = 11, height = 5,
         art = vLine(1, 0, 4) + vLine(9, 0, 4) + hLine(0, 10, 1) + hLine(0, 10, 3)
+    )
+
+    /** Schilf am Ufer: drei Halme unterschiedlicher Hoehe, der mittlere mit verdicktem Kolben. */
+    private val CATTAILS = Prop(
+        width = 5, height = 7,
+        art = vLine(0, 3, 6) + vLine(2, 0, 6) + vLine(4, 2, 6) +
+            listOf(1 to 0, 2 to 0, 1 to 1, 2 to 1)
+    )
+
+    /** Ein einzelner Steg-Pfosten mit Quersteg, halb im Wasser. */
+    private val POND_POST = Prop(
+        width = 3, height = 6,
+        art = vLine(1, 0, 5) + hLine(0, 2, 1)
     )
 
     /** Zwei Pilze unterschiedlicher Groesse statt einer symmetrischen Doppelung. */
@@ -3657,7 +3689,7 @@ object PlayScene {
             // Alle fuenf Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
             // WETTER, nicht zum Ort. Getrennt gepflegte Himmel waeren die sicherste Art, dass
             // ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
-            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT -> {
+            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
                     // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:

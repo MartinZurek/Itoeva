@@ -139,6 +139,20 @@ class PlayRoutineTest {
     }
 
     @Test
+    fun `Angeln findet am Teich statt und durchlaeuft alle Phasen der Reihe nach`() {
+        val routine = PlayRoutines.fishingRoutine()
+
+        assertTrue(routine.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.POND
+        })
+        val phases = routine.steps.filterIsInstance<RoutineStep.Fishing>().map { it.phase }
+        assertTrue(phases == PlayEffects.FishingPhase.entries)
+        assertTrue(PlayScene.isOutdoors(PlayScene.Place.POND))
+        // Ruhiger Gegenpol zu Fussball: kein Publikum am Ufer.
+        assertTrue(!PlayScene.allowsVisitors(PlayScene.Place.POND))
+    }
+
+    @Test
     fun `jeder Platz laesst sich tatsaechlich aufsuchen`() {
         // stationSpot muss fuer jeden ausgewiesenen Platz einen Ort liefern - sonst fehlt der
         // Requisite ihr useSpot und der Ablauf liefe wieder ins Leere.
