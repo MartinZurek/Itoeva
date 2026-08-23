@@ -267,13 +267,10 @@ object PlayAmbientActivity {
     /**
      * Wartezeit bis zur naechsten Regung.
      *
-     * Anfangs 20-45s - das liess den Avatar zwischen zwei Regungen minutenlang unveraendert
-     * idlen und damit eher "gelegentlich unterbrochen" als "die ganze Zeit mit etwas beschaeftigt"
-     * wirken, obwohl genau das der Anspruch an den Play-Modus ist (lebender Organismus, nicht nur
-     * ein Sprite, das ab und zu zuckt). Jetzt kurz genug, dass zwischen zwei Regungen nur wenige
-     * Atemzuege der artspezifischen Idle-Schleife liegen ([AvatarAnimations.idleSequence] traegt
-     * weiterhin die eigentliche Ruhe-Note), aber nicht so kurz, dass Regungen einander ueberholen
-     * oder wie Flackern wirken.
+     * Kurze Abstaende von 6-14s machten aus dem Tagesablauf eine Demonstrationsschleife: Die Figur
+     * war fast staendig unterwegs oder begann schon die naechste Sache. 18-36s lassen eine Szene
+     * erst als Aufenthalt lesbar werden. Laengere Routinen tragen ihre eigene Zeit und werden
+     * deshalb nicht durch kuenstlich kurze Zwischenpausen verdichtet.
      */
     fun nextPauseMillis(phase: DayPhase = currentDayPhase()): Long =
         (PAUSE_RANGE_MS.random() * restfulness(phase) * PlayTimeLapse.paceFactor())
@@ -295,7 +292,7 @@ object PlayAmbientActivity {
         DayPhase.NIGHT -> 3.2f
     }
 
-    private val PAUSE_RANGE_MS = 6_000L..14_000L
+    private val PAUSE_RANGE_MS = 18_000L..36_000L
 
     private const val HABIT_BOOST = 4
 
@@ -306,18 +303,18 @@ object PlayAmbientActivity {
      * Ohne diese Grenze haette das Verweilen den umgekehrten Fehler erzeugt: Wer im Wohnzimmer
      * sitzt, bekommt dort dauernd Rueckenwind fuers Bleiben - und die Figur kaeme kaum noch vor
      * die Tuer, also genau in den Zustand, gegen den Strasse und Wald ueberhaupt angelegt wurden.
-     * Zwei-, dreimal verweilen ist ein Aufenthalt, fuenfmal ist Hausarrest.
+     * Mehrere Regungen lang verweilen ist ein Aufenthalt; danach faellt der Zuschlag weg und ein
+     * Ortswechsel wird wieder wahrscheinlicher.
      */
-    const val MAX_STAY_ROUNDS = 3
+    const val MAX_STAY_ROUNDS = 5
 
     /**
      * Zuschlag fuers Bleiben (siehe [nextTopic]).
      *
-     * Vier, also genauso viel wie eine offene Gewohnheit wiegt: Das reicht, damit ein Zimmer
-     * mehrere Regungen lang gehalten wird, und es reicht nicht, um den Tagesablauf zu ueberstimmen
-     * - nachts geht die Figur weiterhin ins Bett, auch wenn sie in der Kueche steht.
+     * Fuenf gibt dem aktuellen Ort zusaetzliches Gewicht, erfindet aber keine unpassenden Themen:
+     * nachts geht die Figur weiterhin ins Bett, auch wenn sie zuvor in der Kueche stand.
      */
-    private const val STAY_BONUS = 4
+    private const val STAY_BONUS = 5
 
     /**
      * Zuschlag fuer die Neigung - halb so viel wie eine offene Gewohnheit.
@@ -327,9 +324,9 @@ object PlayAmbientActivity {
      */
     private const val LEANING_BONUS = 2
 
-    private const val ACTION_WEIGHT_PERFORM = 5
-    private const val ACTION_WEIGHT_FIDGET = 4
-    private const val ACTION_WEIGHT_WANDER = 3
+    private const val ACTION_WEIGHT_PERFORM = 7
+    private const val ACTION_WEIGHT_FIDGET = 5
+    private const val ACTION_WEIGHT_WANDER = 1
 
     /**
      * Die grosse Freuden-Reaktion ist bewusst die SELTENSTE.
