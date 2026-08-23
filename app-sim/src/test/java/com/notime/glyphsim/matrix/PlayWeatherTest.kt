@@ -93,6 +93,16 @@ class PlayWeatherTest {
     }
 
     @Test
+    fun `im fensterlosen Laden bleibt das Wetter vollstaendig draussen`() {
+        // Dieser konkrete Raum ist visuell besonders empfindlich: Tropfen zwischen Regal und
+        // Kasse lesen sich nicht als Blick nach draussen, sondern wie eine zweite, daruebergelegte
+        // Kulisse. Deshalb hier eine harte Gleichheit statt nur der allgemeinen Dichte-Grenze.
+        val dry = cellsWith(PlayScene.Place.SHOP, PlayWeather.CLEAR)
+        val wet = cellsWith(PlayScene.Place.SHOP, PlayWeather.RAIN)
+        assertEquals("Im Laden wird Regen ueber die Einrichtung gezeichnet", dry, wet)
+    }
+
+    @Test
     fun `drinnen bleibt der Regen ueber dem Boden`() {
         // Ein Tropfen auf Bodenhoehe waere eine Pfuetze im Wohnzimmer.
         for (place in PlayScene.Place.entries.filterNot { PlayScene.isOutdoors(it) }) {
