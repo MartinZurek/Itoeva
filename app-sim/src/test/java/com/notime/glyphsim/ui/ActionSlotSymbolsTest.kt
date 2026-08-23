@@ -36,10 +36,11 @@ class ActionSlotSymbolsTest {
         )
 
         assertFalse(symbol.contentEquals(arbitrarySnapshot))
-        // Glasboden und beide Seiten des kanonischen Trink-Motivs.
-        assertTrue(symbol[9 * MatrixGeometry.SIZE + 6] > 0)
-        assertTrue(symbol[6 * MatrixGeometry.SIZE + 4] > 0)
+        // Becherboden, beide Seiten und Henkel des festen Slot-Piktogramms.
+        assertTrue(symbol[8 * MatrixGeometry.SIZE + 6] > 0)
+        assertTrue(symbol[6 * MatrixGeometry.SIZE + 3] > 0)
         assertTrue(symbol[6 * MatrixGeometry.SIZE + 8] > 0)
+        assertTrue(symbol[6 * MatrixGeometry.SIZE + 10] > 0)
     }
 
     @Test
@@ -57,6 +58,29 @@ class ActionSlotSymbolsTest {
         val xs = lit.map { it % MatrixGeometry.SIZE }
         val ys = lit.map { it / MatrixGeometry.SIZE }
         assertTrue((xs.max() - xs.min()) > (ys.max() - ys.min()))
+    }
+
+    @Test
+    fun `problematische Animationsframes werden durch eindeutige Piktogramme ersetzt`() {
+        val focus = ActionSlotSymbols.frameFor(action(type = AnimationType.FOCUS))
+        assertTrue(focus[6 * MatrixGeometry.SIZE + 6] > 0) // Mittelpunkt der Zielscheibe
+        assertTrue(focus[2 * MatrixGeometry.SIZE + 6] > 0) // oberer Ring
+
+        val drink = ActionSlotSymbols.frameFor(action(type = AnimationType.DRINK))
+        assertTrue(drink[5 * MatrixGeometry.SIZE + 3] > 0)  // Becher links
+        assertTrue(drink[5 * MatrixGeometry.SIZE + 10] > 0) // Henkel
+
+        val work = ActionSlotSymbols.frameFor(action(type = AnimationType.WORK))
+        assertTrue(work[2 * MatrixGeometry.SIZE + 6] > 0) // Griff
+        assertTrue(work[9 * MatrixGeometry.SIZE + 6] > 0) // Kofferboden
+
+        val sleep = ActionSlotSymbols.frameFor(action(type = AnimationType.SLEEP))
+        assertTrue(sleep[2 * MatrixGeometry.SIZE + 8] > 0) // Z
+        assertTrue(sleep[9 * MatrixGeometry.SIZE + 6] > 0) // Bett
+
+        val creativity = ActionSlotSymbols.frameFor(action(type = AnimationType.CREATIVITY))
+        assertTrue(creativity[5 * MatrixGeometry.SIZE + 6] > 0)  // Lichtkern
+        assertTrue(creativity[10 * MatrixGeometry.SIZE + 6] > 0) // Fassung
     }
 
     @Test
