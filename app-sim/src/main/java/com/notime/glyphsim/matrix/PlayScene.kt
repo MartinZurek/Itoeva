@@ -1090,10 +1090,12 @@ object PlayScene {
             Placement(HOUSE, anchorX = 0.02f, brightness = BACKDROP, behind = true),
             Placement(HOUSE_LOW, anchorX = 0.44f, brightness = BACKDROP, behind = true),
             Placement(HOUSE, anchorX = 1f, brightness = BACKDROP, behind = true),
+            Placement(MAILBOX, anchorX = 0.30f),
             Placement(BENCH, anchorX = 0.52f, station = Station.BENCH),
             // 0,74 und nicht weiter rechts: Bei 0,84 stand die Laterne vollstaendig IN der
             // rechten Fassade. Vor einem Haus zu stehen ist richtig, darin zu verschwinden nicht.
-            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP)
+            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP),
+            Placement(STREET_SIGN, anchorX = 0.96f)
         )
 
         // Der WALD: drei verschiedene Baeume, ein umgestuerzter Stamm zum Sitzen, Unterholz.
@@ -1119,7 +1121,10 @@ object PlayScene {
         Place.MEADOW -> listOf(
             Placement(BUSH, anchorX = 0.10f, brightness = BACKDROP, behind = true),
             Placement(TREE, anchorX = 0.92f, brightness = BACKDROP, behind = true),
-            Placement(BENCH, anchorX = 0.50f, station = Station.BENCH)
+            Placement(FENCE, anchorX = 0.02f),
+            Placement(BENCH, anchorX = 0.50f, station = Station.BENCH),
+            Placement(WILD_TUFT, anchorX = 0.70f),
+            Placement(MUSHROOMS, anchorX = 0.84f)
         )
 
         // Die STADT: dichter bebaut als die Strasse und mit ZWEI Laternen belebter - derselbe
@@ -1134,6 +1139,8 @@ object PlayScene {
             Placement(HOUSE_LOW, anchorX = 0.30f, brightness = BACKDROP, behind = true),
             Placement(HOUSE, anchorX = 0.58f, brightness = BACKDROP, behind = true),
             Placement(HOUSE_LOW, anchorX = 0.86f, brightness = BACKDROP, behind = true),
+            Placement(MAILBOX, anchorX = 0.20f),
+            Placement(WASTE_BASKET, anchorX = 0.34f),
             Placement(BENCH, anchorX = 0.52f, station = Station.BENCH),
             Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP),
             Placement(LAMPPOST, anchorX = 0.94f)
@@ -1573,6 +1580,55 @@ object PlayScene {
             hLine(1, 9, 6) +
             vLine(2, 2, 5) + vLine(4, 2, 5) + vLine(7, 2, 5) + vLine(9, 2, 5) +
             vLine(4, 8, 11) + vLine(7, 8, 11) + hLine(4, 7, 8)
+    )
+
+    // ---- Draussen: kleines Stadt- und Naturbeiwerk ----
+    //
+    // Die Silhouetten sind fuer Itoevas Seitenansicht neu gezeichnet, orientieren sich aber an
+    // den CC0-Formideen des Urizen Onebit Tilesets (Modern/Basic):
+    // https://github.com/vurmux/urizen/tree/master/urizen/data/tilesets
+    // Keine Tilesheets werden ausgeliefert; die wenigen gesetzten Zellen bleiben native Props.
+
+    /** Briefkasten auf einem einzelnen Pfosten - klein genug, um Kulisse statt Station zu sein. */
+    private val MAILBOX = Prop(
+        width = 6, height = 7,
+        art = hLine(1, 4, 0) + listOf(0 to 1, 5 to 1) + hLine(0, 5, 2) +
+            vLine(0, 1, 3) + vLine(5, 1, 3) + listOf(4 to 1) +
+            vLine(3, 3, 6) + hLine(2, 4, 6)
+    )
+
+    /** Wegweiser mit zwei verschieden langen Armen; dadurch kein zweiter Laternenmast. */
+    private val STREET_SIGN = Prop(
+        width = 7, height = 9,
+        art = hLine(1, 6, 0) + listOf(6 to 1) + hLine(0, 5, 2) + listOf(0 to 3) +
+            vLine(3, 3, 8) + hLine(2, 4, 8)
+    )
+
+    /** Offener Abfallkorb mit Latten - keine geschlossene Flaeche im ohnehin dichten Stadtbild. */
+    private val WASTE_BASKET = Prop(
+        width = 5, height = 6,
+        art = hLine(0, 4, 0) + hLine(0, 4, 5) +
+            vLine(0, 1, 4) + vLine(2, 1, 4) + vLine(4, 1, 4)
+    )
+
+    /** Niedriger Holzzaun; die offene Mitte laesst die Wiese weiterhin weit wirken. */
+    private val FENCE = Prop(
+        width = 11, height = 5,
+        art = vLine(1, 0, 4) + vLine(9, 0, 4) + hLine(0, 10, 1) + hLine(0, 10, 3)
+    )
+
+    /** Zwei Pilze unterschiedlicher Groesse statt einer symmetrischen Doppelung. */
+    private val MUSHROOMS = Prop(
+        width = 7, height = 5,
+        art = hLine(0, 3, 1) + listOf(1 to 0, 2 to 0) + vLine(2, 2, 4) +
+            hLine(4, 6, 2) + listOf(5 to 1) + vLine(5, 3, 4)
+    )
+
+    /** Kleiner Wildwuchs aus Gras und einer einzelnen Bluete. */
+    private val WILD_TUFT = Prop(
+        width = 7, height = 5,
+        art = listOf(0 to 3, 1 to 2, 2 to 3, 3 to 1, 4 to 3, 5 to 2, 6 to 3) +
+            hLine(0, 6, 4) + listOf(3 to 0)
     )
 
     /** Fenster mit Sprossenkreuz - die einzige Requisite als Umriss statt als Silhouette:
