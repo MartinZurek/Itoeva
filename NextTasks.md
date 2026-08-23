@@ -120,7 +120,9 @@ NT-036 Zweck-Kommentare `SettingsCatalog.kt` vervollständigen · NT-037 `AgentG
 Standard-Dateiname klären · NT-038 `runner/schemas/*.json` gegen `claude-primary-run.yml`
 abgleichen · NT-039 Querverweise zwischen Doku-Dateien prüfen (wiederkehrend) · NT-040
 `evolutions/001-idempotent-xp.md` gegen Backlog-Format prüfen · NT-041 Kommentarstil in den drei
-größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für HomeScreen/DockScreen.
+größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für HomeScreen/DockScreen ·
+NT-054 Skills, Level und Jahreszeiten als gewichtete Erweiterungen des in `Tagesablauf.md`
+definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay-Code entsteht.
 
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
@@ -138,4 +140,4 @@ IDs bleiben stabile Referenzen, auch nach dem Verschieben zwischen Top 15 und Fu
 Wird eine Top-15-Aufgabe erledigt, rückt die höchste noch offene Future-Backlog-Aufgabe nach dem
 Hebel-Maßstab oben in die Top 15 nach - die Liste bleibt dadurch dauerhaft auf maximal 15
 Einträge begrenzt. Neue Aufgaben, die während der Arbeit entdeckt werden, kommen mit
-fortlaufender neuer ID (ab NT-053) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
+fortlaufender neuer ID (ab NT-054) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
