@@ -237,8 +237,12 @@ Thema, das einem bestehenden Label zu nahekommt.
 - Eine private Funktion `private fun <name>Frames(): List<List<Pair<Int, Int>>>` - eine
   Punktliste je Frame, Koordinaten im 13x13-Raster (Zentrum bei 6,6).
 - Registrierung als neuer Eintrag in der Liste in `general()`: `LibraryAnimation(label = "...",
-  emoji = "...", framesData = FrameCodec.encode(<name>Frames()), sortOrder = 26)` - 26 ist der
-  naechste freie Wert nach dem bisher hoechsten (25).
+  emoji = "...", framesData = FrameCodec.encode(<name>Frames()), sortOrder = 56)`. NICHT 26: dieser
+  Wert ist zwar der naechste freie in `DefaultLibraryAnimations.kt` selbst (hoechster bisheriger
+  Wert 25), kollidiert aber mit `AvatarSignatureAnimations.kt` - dort reserviert
+  `SORT_OFFSET = 26` denselben Zahlenraum fuer die 30 charakterspezifischen Animationen (6 Spezies
+  a 5 Stueck, siehe `seed()` dort), belegt also 26..55. 56 ist der erste Wert, der in KEINER der
+  beiden Dateien vorkommt.
 - Mindestens 4-6 Frames mit ZWEI erkennbaren Bewegungen, nicht nur einem pulsierenden Element -
   das war laut Klassendoku ein Kritikpunkt an frueheren Entwuerfen (siehe `starFrames()`: Strahlen
   pulsieren UND ein Twinkle-Punkt wandert reihum; `waveFrames()`: Sinus-Schwell UND ein
