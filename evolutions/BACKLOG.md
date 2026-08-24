@@ -261,6 +261,15 @@ Begruendung):
    `EVOLUTION.md`/README zu den Signatur-Animationen) - bevorzuge Umrisse und versetzte Punkte
    gegenueber vollstaendig gefuellten Formen.
 
+**Zusaetzlich Pflichtteil der Aufgabe, NICHT optional:** Die Klassendoku VON DERSELBEN DATEI nennt
+an zwei Stellen die alte Anzahl und muss auf den neuen Stand gebracht werden - sonst widerspricht
+die Doku dem Code, den sie beschreibt:
+- Zeile 9: "26 Beispiel-Animationen" -> "27 Beispiel-Animationen".
+- Zeile 27: "Die 26 allgemeinen Animationen plus die 30 charakterspezifischen" -> "Die 27
+  allgemeinen Animationen plus die 30 charakterspezifischen".
+Beides steht bereits im Umfang dieser Aufgabe (dieselbe Datei, keine neue Entscheidung) und ist
+keine "andere Datei" im Sinne der folgenden Einschraenkung.
+
 Aendere keine andere Datei, keine bestehende Animation, keinen `sortOrder`-Wert einer bestehenden
 Animation. `LibraryAnimationFitTest` muss fuer die neue Animation ebenso gruen sein wie fuer die
 bestehenden 26 (der Test iteriert automatisch ueber `DefaultLibraryAnimations.seed()`, keine
