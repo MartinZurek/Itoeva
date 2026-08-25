@@ -12,6 +12,7 @@ import com.notime.glyphsim.data.FeedCommitResult
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.MatrixAnimator
+import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.widget.GlyphClockWidgetProvider
 
 /**
@@ -76,8 +77,7 @@ object AvatarFeeding {
      */
     suspend fun playReaction(
         species: AvatarSpecies,
-        animationType: AnimationType?,
-        libraryAnimationLabel: String?,
+        trigger: ReactionTrigger,
         screenWidthPx: Float,
         screenHeightPx: Float,
         onFrame: (IntArray) -> Unit,
@@ -88,7 +88,7 @@ object AvatarFeeding {
         // im Hintergrund weiter, obwohl niemand mehr zusieht.
         try {
             playReactionInternal(
-                species, animationType, libraryAnimationLabel,
+                species, trigger,
                 screenWidthPx, screenHeightPx, onFrame, onOffset
             )
         } catch (cancellation: kotlinx.coroutines.CancellationException) {
@@ -97,14 +97,13 @@ object AvatarFeeding {
             // Eine fehlerhafte Animation darf hoechstens ihre eigene Reaktion kosten, nicht die
             // ganze App. Der Avatar verschwindet dann einfach, statt dass ein Absturzdialog
             // erscheint - der Aufrufer raeumt in seinem finally ohnehin auf.
-            Log.e(TAG, "Reaktion fehlgeschlagen (species=$species, type=$animationType, library=$libraryAnimationLabel)", e)
+            Log.e(TAG, "Reaktion fehlgeschlagen (species=$species, trigger=$trigger)", e)
         }
     }
 
     private suspend fun playReactionInternal(
         species: AvatarSpecies,
-        animationType: AnimationType?,
-        libraryAnimationLabel: String?,
+        trigger: ReactionTrigger,
         screenWidthPx: Float,
         screenHeightPx: Float,
         onFrame: (IntArray) -> Unit,
@@ -112,12 +111,12 @@ object AvatarFeeding {
     ) {
         // playTimed statt eines festen Takts: jede Reaktion bringt ihren eigenen Rhythmus mit
         // (schneller Einsatz, langsames Ausklingen, Nachklang am Ende) - siehe AvatarAnimations.
-        val reaction = AvatarAnimations.reactionFor(species, animationType, libraryAnimationLabel)
+        val reaction = AvatarAnimations.reactionFor(species, trigger)
         if (reaction.frames.isEmpty()) {
-            Log.w(TAG, "Reaktion ohne Frames (species=$species, library=$libraryAnimationLabel)")
+            Log.w(TAG, "Reaktion ohne Frames (species=$species, trigger=$trigger)")
             return
         }
-        val flightOffsets = AvatarAnimations.flightOffsetsFor(libraryAnimationLabel)
+        val flightOffsets = AvatarAnimations.flightOffsetsFor(trigger)
         if (flightOffsets.isEmpty()) {
             MatrixAnimator.playTimed(reaction.frames, reaction.holdsMs, onFrame)
             return

@@ -27,8 +27,16 @@ object DefaultLibraryAnimations {
      * Die 26 allgemeinen Animationen plus die 30 charakterspezifischen der sechs Avatare
      * ([AvatarSignatureAnimations]). Beide Saetze liegen in derselben Bibliothek und sind gleich
      * verwendbar - unterschiedlich ist nur, wofuer sie entworfen wurden.
+     *
+     * Die Zuordnung zum Animations-Baum ([LibraryAnimation.nodeId]) passiert hier an EINER Stelle
+     * fuer beide Saetze, statt sie an 56 einzelne Eintraege zu schreiben: Der Baum kennt die
+     * Zuordnung ohnehin ([AnimationTree.nodeIdFor]), und eine zweite, von Hand gepflegte Kopie
+     * daneben koennte nur auseinanderlaufen. Ein Eintrag ohne passenden Knoten bekaeme `null` -
+     * dass es den nicht gibt, bewacht `AnimationTreeTest`.
      */
-    fun seed(): List<LibraryAnimation> = general() + AvatarSignatureAnimations.seed()
+    fun seed(): List<LibraryAnimation> =
+        (general() + AvatarSignatureAnimations.seed())
+            .map { it.copy(nodeId = AnimationTree.nodeIdFor(it.label)) }
 
     private fun general(): List<LibraryAnimation> = listOf(
         LibraryAnimation(label = "Star", emoji = "⭐", framesData = FrameCodec.encode(starFrames()), sortOrder = 0),

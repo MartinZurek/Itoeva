@@ -29,7 +29,7 @@ import com.notime.glyphcore.data.LibraryAnimationDao
         AvatarFeedEvent::class,
         AvatarPlayState::class
     ],
-    version = 20,
+    version = 22,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

@@ -16,6 +16,7 @@ import com.notime.glyphsim.matrix.ClipBeat
 import com.notime.glyphsim.matrix.ClockCue
 import com.notime.glyphsim.matrix.ClockMotion
 import com.notime.glyphsim.matrix.MatrixAnimator
+import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.matrix.ReminderAnimations
 
 /**
@@ -239,7 +240,7 @@ object AvatarClips {
     ): List<ClipBeat> {
         val frames = signatureFrames(label)
         val holds = List(frames.size) { MatrixAnimator.CLOCK_FRAME_DELAY_MS }
-        val reaction = AvatarAnimations.reactionFor(species, null, label)
+        val reaction = AvatarAnimations.reactionFor(species, ReactionTrigger.of(null, label))
         return wave(
             idle = idle,
             clockFrames = frames,
@@ -525,8 +526,9 @@ object AvatarClips {
 
     private fun pufflingClip(): AvatarClip {
         val idle = AvatarAnimations.idleSequence(AvatarSpecies.PUFFLING, AvatarMood.NEUTRAL)
-        val rocket = AvatarAnimations.reactionFor(AvatarSpecies.PUFFLING, null, "Rocket")
-        val rocketFlight = AvatarAnimations.flightOffsetsFor("Rocket")
+        val rocketTrigger = ReactionTrigger.of(null, "Rocket")
+        val rocket = AvatarAnimations.reactionFor(AvatarSpecies.PUFFLING, rocketTrigger)
+        val rocketFlight = AvatarAnimations.flightOffsetsFor(rocketTrigger)
 
         // Dieselbe Erinnerungsanimation, die auch im echten Betrieb auf der Uhr laeuft (Puffling
         // = GENERAL, siehe AvatarSpecies.signatureTopic) - kein eigens fuer den Clip gebautes

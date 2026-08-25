@@ -40,10 +40,10 @@ class AvatarAnimationsTest {
             for (type in AnimationType.entries) {
                 cases += ReactionCase(species, type.name, AvatarAnimations.reactionFramesFor(species, type))
             }
-            cases += ReactionCase(species, "GENERIC", AvatarAnimations.reactionFramesFor(species, null))
-            cases += ReactionCase(species, "ROCKET", AvatarAnimations.reactionFramesFor(species, null, "Rocket"))
+            cases += ReactionCase(species, "GENERIC", AvatarAnimations.reactionFramesFor(species, ReactionTrigger.None))
+            cases += ReactionCase(species, "ROCKET", AvatarAnimations.reactionFramesFor(species, ReactionTrigger.of(null, "Rocket")))
             for (label in AvatarSignatureReactions.labels) {
-                cases += ReactionCase(species, label, AvatarAnimations.reactionFramesFor(species, null, label))
+                cases += ReactionCase(species, label, AvatarAnimations.reactionFramesFor(species, ReactionTrigger.of(null, label)))
             }
         }
         return cases
@@ -352,7 +352,7 @@ class AvatarAnimationsTest {
      */
     @Test
     fun rocketFlightPathMatchesKeyframeCount() {
-        val frames = AvatarAnimations.reactionFramesFor(AvatarSpecies.PUFFLING, null, "Rocket")
+        val frames = AvatarAnimations.reactionFramesFor(AvatarSpecies.PUFFLING, ReactionTrigger.of(null, "Rocket"))
         assertEquals(
             "Flugbahn und Keyframes der Rocket-Reaktion muessen gleich lang sein",
             frames.size,

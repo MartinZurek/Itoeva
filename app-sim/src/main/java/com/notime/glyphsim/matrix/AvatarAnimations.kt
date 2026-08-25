@@ -1,5 +1,6 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationTree
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.FrameCrossfade
 
@@ -340,32 +341,43 @@ object AvatarAnimations {
      * direkt auf `label == "Rocket"` ab; mit mehreren solchen Reaktionen gehoert die Entscheidung
      * hierher, wo auch die Keyframes liegen.
      */
-    fun flightOffsetsFor(libraryAnimationLabel: String?): List<Pair<Float, Float>> =
-        when (libraryAnimationLabel) {
-            "Rocket" -> rocketFlightOffsets()
+    fun flightOffsetsFor(trigger: ReactionTrigger): List<Pair<Float, Float>> =
+        when ((trigger as? ReactionTrigger.Node)?.nodeId) {
+            ROCKET_NODE -> rocketFlightOffsets()
             else -> emptyList()
         }
 
+    /** Der Knoten der Rakete - die einzige Reaktion, die ihr eigenes Raster verlaesst. */
+    private const val ROCKET_NODE = "aufbruch/reisen/rocket"
+
+    /**
+     * [trigger] beschreibt den Anlass vollstaendig - siehe [ReactionTrigger] dazu, warum das ein
+     * eigener Typ ist und nicht zwei nullbare Werte nebeneinander.
+     */
     fun reactionFor(
         species: AvatarSpecies,
-        type: AnimationType?,
-        libraryAnimationLabel: String? = null
+        trigger: ReactionTrigger
     ): AvatarSequence {
         val body = AvatarBodies.forSpecies(species)
-        val signature = libraryAnimationLabel?.let { AvatarSignatureReactions.forLabel(it, body) }
-        val beats = if (libraryAnimationLabel == "Rocket") {
+        val nodeId = (trigger as? ReactionTrigger.Node)?.nodeId
+        // Nicht mehr der blosse Name, sondern der Pfad im Baum von unten nach oben - siehe
+        // [AvatarReactions]. Fuer die 30 motiveigenen Antworten aendert das nichts; ein Blatt ohne
+        // eigene Antwort kann die seines Elternknotens erben, sobald es dort eine gibt.
+        val signature = AvatarReactions.forNode(nodeId, body)
+        val beats = if (nodeId == ROCKET_NODE) {
             rocketReactionKeyframes(body)
         } else if (signature != null) {
             // Die 30 charakterspezifischen Animationen haben je eine eigene Antwort - siehe
             // [AvatarSignatureReactions]. mergeRepeats wie unten, weil auch hier zwei benachbarte
             // Posen zufaellig zusammenfallen koennen.
             signature.mergeRepeats()
-        } else if (libraryAnimationLabel != null) {
+        } else if (trigger is ReactionTrigger.Node || trigger is ReactionTrigger.Untracked) {
             // Bibliotheks-Animationen ohne eigene Choreografie bekommen die spezies-typische
             // Freuden-Reaktion statt der generischen - dadurch faellt "TAMA" bei Gloop anders
             // aus als bei Fennec, obwohl beide dieselbe Erinnerung ausgeloest hat.
             speciesFlourish(species, body)
         } else {
+            val type = (trigger as? ReactionTrigger.Topic)?.type
             val story = when (type) {
                 AnimationType.DRINK -> drinkKeyframes(body)
                 AnimationType.MOVE -> moveKeyframes(body)
@@ -512,8 +524,19 @@ object AvatarAnimations {
         }
 
     /** Nur die Frames - fuer Aufrufer/Pruefungen, die das Timing nicht brauchen. */
-    fun reactionFramesFor(species: AvatarSpecies, type: AnimationType?, libraryAnimationLabel: String? = null): List<IntArray> =
-        reactionFor(species, type, libraryAnimationLabel).frames
+    fun reactionFramesFor(species: AvatarSpecies, trigger: ReactionTrigger): List<IntArray> =
+        reactionFor(species, trigger).frames
+
+    /**
+     * Bequemlichkeit fuer die zahlreichen Stellen, die schlicht "die Reaktion auf dieses Thema"
+     * meinen - Clips, Vorschauen, Pruefungen. Spart dort ein `ReactionTrigger.Topic(...)`, ohne
+     * die Unterscheidung aufzuweichen: Ein Thema ist immer ein Thema.
+     */
+    fun reactionFor(species: AvatarSpecies, type: AnimationType): AvatarSequence =
+        reactionFor(species, ReactionTrigger.Topic(type))
+
+    fun reactionFramesFor(species: AvatarSpecies, type: AnimationType): List<IntArray> =
+        reactionFor(species, ReactionTrigger.Topic(type)).frames
 
     /**
      * Kurze, artspezifische Freuden-Reaktion ohne Bezug zu einer bestimmten Erinnerung - fuer ein

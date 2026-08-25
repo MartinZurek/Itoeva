@@ -26,4 +26,38 @@
     -->
     <string name="default_reminder_drink">Drink something</string>
     <string name="default_reminder_move">Move a little</string>
+
+    <!--
+      Namen der Gruppen und Untergruppen des Animations-Baums (siehe data/AnimationTree.kt).
+      Nur die Stufen 1 und 2 stehen hier: Ihre Namen entstehen erst mit dem Baum und gibt es
+      nirgends sonst. Blaetter tragen den Namen ihres Motivs und brauchen deshalb keinen zweiten,
+      der davon abweichen koennte.
+    -->
+    <string name="node_sport">Sport &amp; Movement</string>
+    <string name="node_sport_ballsport">Ball Sports</string>
+    <string name="node_sport_kraft">Strength &amp; Stamina</string>
+    <string name="node_koerper">Body &amp; Care</string>
+    <string name="node_koerper_trinken">Drinking</string>
+    <string name="node_koerper_essen">Eating</string>
+    <string name="node_ruhe">Rest &amp; Sleep</string>
+    <string name="node_ruhe_schlafen">Sleeping</string>
+    <string name="node_ruhe_pause">Taking a Break</string>
+    <string name="node_achtsamkeit">Mindfulness</string>
+    <string name="node_achtsamkeit_atmen">Breathing</string>
+    <string name="node_achtsamkeit_beobachten">Watching</string>
+    <string name="node_arbeit">Work &amp; Focus</string>
+    <string name="node_arbeit_geraet">At the Screen</string>
+    <string name="node_arbeit_erledigen">Getting Things Done</string>
+    <string name="node_lernen">Learning &amp; Insight</string>
+    <string name="node_lernen_lesen">Reading</string>
+    <string name="node_lernen_knobeln">Puzzling</string>
+    <string name="node_kreativ">Creativity</string>
+    <string name="node_kreativ_musik">Music</string>
+    <string name="node_kreativ_bauen">Making &amp; Painting</string>
+    <string name="node_naehe">Closeness</string>
+    <string name="node_naehe_freunde">Friends &amp; Family</string>
+    <string name="node_naehe_tiere">Animals</string>
+    <string name="node_aufbruch">Setting Out</string>
+    <string name="node_aufbruch_reisen">Travel</string>
+    <string name="node_aufbruch_feiern">Celebrating</string>
 </resources>

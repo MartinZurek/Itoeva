@@ -1,5 +1,7 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationMotif
+import com.notime.glyphcore.data.AnimationTree
 import com.notime.glyphsim.matrix.AvatarAnimations.BEAT_MS
 import com.notime.glyphsim.matrix.AvatarAnimations.Beat
 import com.notime.glyphsim.matrix.AvatarAnimations.FAST_MS
@@ -29,6 +31,24 @@ import com.notime.glyphsim.matrix.AvatarAnimations.SLOW_MS
  * Spezies auch nach einer Verschiebung noch Platz, ohne dass sich Motiv und Koerper ueberlagern.
  */
 internal object AvatarSignatureReactions {
+
+    /**
+     * Der Ablauf fuer einen Knoten des Animations-Baums - der Weg, den [AvatarReactions] geht.
+     *
+     * **Warum das ueber das Motiv laeuft und nicht ueber eine zweite Liste mit 30 Pfaden.** Welcher
+     * Knoten welches Motiv traegt, weiss [AnimationTree] bereits. Die Pfade hier noch einmal
+     * hinzuschreiben hiesse, dieselbe Zuordnung ein zweites Mal zu pflegen - und beim naechsten
+     * Umhaengen eines Motivs im Baum zeigte diese Kopie stillschweigend weiter auf den alten Ort.
+     * Der Knoten wird deshalb nach seinem Motiv gefragt, und die Weiche unten bleibt, wie sie war:
+     * nach dem Namen der Animation, nach dem die Choreografie auch benannt ist.
+     *
+     * Knoten ohne Motiv (noch nicht gezeichnet, siehe [AnimationTree.pendingArtwork]) und
+     * eingebaute Typen ergeben `null` - fuer sie gibt es hier nichts.
+     */
+    fun forNode(nodeId: String, body: AvatarBody): List<Beat>? {
+        val motif = AnimationTree.motifFor(nodeId) as? AnimationMotif.Library ?: return null
+        return forLabel(motif.label, body)
+    }
 
     /** null = kein eigener Ablauf hinterlegt, der Aufrufer nimmt seinen bisherigen Weg. */
     fun forLabel(label: String, body: AvatarBody): List<Beat>? = with(AvatarAnimations) {

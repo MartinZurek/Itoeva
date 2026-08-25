@@ -3,6 +3,8 @@ package com.notime.glyphsim.reminder
 import android.content.Context
 import android.os.PowerManager
 import android.util.Log
+import com.notime.glyphcore.data.AnimationTree
+import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.GlyphReminder
 import com.notime.glyphcore.data.LibraryAnimationRepository
 import com.notime.glyphcore.data.ReminderOpenDuration
@@ -14,7 +16,6 @@ import com.notime.glyphsim.data.AvatarFeedEvent
 import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.ReminderAnimationEvent
 import com.notime.glyphsim.matrix.ReminderAnimations
-import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.ui.PresentCompanion
 import com.notime.glyphsim.ui.RoutineOwner
 import com.notime.glyphsim.widget.GlyphClockWidgetProvider
@@ -381,7 +382,12 @@ object ReminderTrigger {
         epochMillis = nowMillis,
         profileId = companionProfileId,
         libraryAnimationLabel = libraryAnimationLabel,
-        isPlayMode = reminder.isPlayMode
+        isPlayMode = reminder.isPlayMode,
+        // Gleich beim Anlegen mitgeschrieben statt spaeter nachgerechnet - siehe
+        // [AvatarFeedEvent.nodeId]. Bleibt null fuer selbstgezeichnete Animationen und fuer
+        // MEDICINE, das ausserhalb des Baums steht.
+        nodeId = libraryAnimationLabel?.let { AnimationTree.nodeIdFor(it) }
+            ?: animationType?.let { AnimationTree.nodeIdFor(it) }
     )
 
     /**

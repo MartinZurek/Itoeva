@@ -61,6 +61,7 @@ import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.MoonFrame
@@ -1622,8 +1623,7 @@ fun DockScreen(
                     fedCount++
                     AvatarFeeding.playReaction(
                         species = current.species,
-                        animationType = current.animationType,
-                        libraryAnimationLabel = current.libraryAnimationLabel,
+                        trigger = ReactionTrigger.of(current.animationType, current.libraryAnimationLabel),
                         screenWidthPx = maxWidthPx,
                         screenHeightPx = maxHeightPx,
                         onFrame = { f -> avatar = avatar?.copy(frame = f) },

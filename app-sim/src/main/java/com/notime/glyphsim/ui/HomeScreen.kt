@@ -77,6 +77,7 @@ import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarClip
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.ClipStorage
 import com.notime.glyphsim.matrix.ClockFrameSim
@@ -319,8 +320,7 @@ fun HomeScreen(
                 confirmedReactionStarted = true
                 AvatarFeeding.playReaction(
                     species = currentSpecies,
-                    animationType = current.animationType,
-                    libraryAnimationLabel = current.libraryAnimationLabel,
+                    trigger = ReactionTrigger.of(current.animationType, current.libraryAnimationLabel),
                     screenWidthPx = screenWidthPx,
                     screenHeightPx = screenHeightPx,
                     onFrame = { avatarFrame = it },
@@ -388,8 +388,7 @@ fun HomeScreen(
                 if (useRocket) {
                     AvatarFeeding.playReaction(
                         species = currentSpecies,
-                        animationType = null,
-                        libraryAnimationLabel = "Rocket",
+                        trigger = ReactionTrigger.of(null, "Rocket"),
                         screenWidthPx = screenWidthPx,
                         screenHeightPx = screenHeightPx,
                         onFrame = { avatarFrame = it },

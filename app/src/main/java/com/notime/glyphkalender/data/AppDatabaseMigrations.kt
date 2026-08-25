@@ -2,6 +2,7 @@ package com.notime.glyphkalender.data
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.notime.glyphcore.data.LibraryAnimationNodeIds
 
 /**
  * Migrationspfade der Glyphminder-Datenbank. Gleiches Vorgehen und dieselbe Begruendung wie in
@@ -47,6 +48,28 @@ object AppDatabaseMigrations {
         }
     }
 
+    /**
+     * 19 -> 20: `nodeId` an der Bibliotheks-Animation
+     * ([com.notime.glyphcore.data.LibraryAnimation]) - der Knoten im Animations-Baum, zu dem sie
+     * gehoert (siehe [com.notime.glyphcore.data.AnimationTree] und SKILLBAUM.md).
+     *
+     * **Wieder eine Spalte aus dem gemeinsamen Kern, die diese App selbst nicht braucht.** Der
+     * Animations-Baum gehoert zum Avatar-Spiel und damit zu :app-sim; hier gibt es weder Avatar
+     * noch Skillbaum. Room vergleicht beim Oeffnen aber das ganze Schema - genau der Fall, der bei
+     * `isPlayMode` einmal uebersehen wurde (siehe [MIGRATION_18_19]). Diesmal mitgezogen.
+     *
+     * Der Nachtrag der Werte laeuft ueber [com.notime.glyphcore.data.LibraryAnimationNodeIds] und
+     * ist damit dieselbe Logik, die auch :app-sim benutzt. Er ist hier nicht sinnlos: Beide Apps
+     * spielen dieselben Bibliotheks-Animationen ab, und eine spaeter zugeordnete Animation soll in
+     * beiden Datenbanken denselben Knoten tragen.
+     */
+    private val MIGRATION_19_20 = object : Migration(19, 20) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE library_animations ADD COLUMN nodeId TEXT")
+            LibraryAnimationNodeIds.backfill(db)
+        }
+    }
+
     /** Alle bekannten Migrationen, in [AppDatabase] registriert. */
-    val ALL: Array<Migration> = arrayOf(MIGRATION_18_19)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_18_19, MIGRATION_19_20)
 }

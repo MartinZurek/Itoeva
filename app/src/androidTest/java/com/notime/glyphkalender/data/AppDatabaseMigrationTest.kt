@@ -32,7 +32,7 @@ class AppDatabaseMigrationTest {
 
     private companion object {
         const val TEST_DB = "glyphkalender-migration-test.db"
-        const val CURRENT_VERSION = 19
+        const val CURRENT_VERSION = 20
     }
 
     @get:Rule
@@ -134,6 +134,55 @@ class AppDatabaseMigrationTest {
             assertEquals("Alt-Erinnerungen duerfen kein Tagesziel geschenkt bekommen", 0, cursor.getInt(1))
             assertEquals("Alt-Erinnerungen gehoeren dem Nutzer, nicht dem Spielmodus", 0, cursor.getInt(2))
             assertEquals("Der geplante Zeitpunkt muss unveraendert bleiben", 1700000000000L, cursor.getLong(3))
+        }
+        migrated.close()
+    }
+
+    /**
+     * 19 -> 20 fuegt `nodeId` an der Bibliotheks-Animation hinzu und traegt die Zuordnung zum
+     * Animations-Baum fuer die bekannten Motive nach.
+     *
+     * **Wieder eine Spalte aus dem gemeinsamen Kern, die diese App selbst nicht braucht** - genau
+     * die Sorte Aenderung, die bei `isPlayMode` einmal uebersehen wurde (siehe Test darueber).
+     *
+     * Geprueft werden beide Faelle, die sich unterscheiden muessen: Ein bekanntes Motiv bekommt
+     * seinen Knoten, eine selbstgezeichnete Animation bleibt `null`. Bekaeme auch sie einen Wert,
+     * waere sie stillschweigend irgendwo im Baum einsortiert, wo sie inhaltlich nicht hingehoert -
+     * und niemand koennte sie spaeter noch als "nicht zugeordnet" finden.
+     */
+    @Test
+    fun migration19To20AddsNodeIdAndBackfillsKnownMotifs() {
+        helper.createDatabase(TEST_DB, 19).apply {
+            execSQL(
+                """
+                INSERT INTO library_animations (label, emoji, framesData, isSelected, sortOrder)
+                VALUES ('Basketball', '🏀', '0,0', 1, 15),
+                       ('Mein Kringel', '🌀', '1,1', 0, 99)
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 20, true, *AppDatabaseMigrations.ALL)
+
+        migrated.query(
+            "SELECT label, nodeId, sortOrder FROM library_animations ORDER BY sortOrder"
+        ).use { cursor ->
+            assertTrue("Basketball muss erhalten bleiben", cursor.moveToFirst())
+            assertEquals("Basketball", cursor.getString(0))
+            assertEquals(
+                "Ein bekanntes Motiv muss seinen Knoten im Baum bekommen",
+                "sport/ballsport/basketball",
+                cursor.getString(1)
+            )
+            assertEquals("Die Sortierung darf sich nicht verschieben", 15, cursor.getInt(2))
+
+            assertTrue("Die selbstgezeichnete Animation muss erhalten bleiben", cursor.moveToNext())
+            assertEquals("Mein Kringel", cursor.getString(0))
+            assertTrue(
+                "Eine selbstgezeichnete Animation gehoert zu keinem Knoten und muss null bleiben",
+                cursor.isNull(1)
+            )
         }
         migrated.close()
     }
