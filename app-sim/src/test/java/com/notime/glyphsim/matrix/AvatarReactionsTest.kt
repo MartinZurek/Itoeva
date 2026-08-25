@@ -1,8 +1,10 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationMotif
 import com.notime.glyphcore.data.AnimationTree
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -53,31 +55,61 @@ class AvatarReactionsTest {
      */
     @Test
     fun `eine motiveigene Antwort wird nicht nach unten vererbt`() {
-        assertNotNull(
-            "Scroll sitzt auf lernen/lesen und hat dort eine Antwort",
-            AvatarReactions.forNode("lernen/lesen", body)
-        )
-        assertNull(
-            "idea darf Scrolls Schriftrolle nicht erben - es hat sein eigenes Motiv",
-            AvatarReactions.forNode("lernen/lesen/idea", body)
+        val scroll = AvatarSignatureReactions.forNode("lernen/lesen", body)
+        assertNotNull("Scroll sitzt auf lernen/lesen und hat dort eine Antwort", scroll)
+
+        val idea = AvatarReactions.forNode("lernen/lesen/idea", body)
+        assertNotNull("Seit P9 erbt idea die Gruppen-Antwort von lernen/lesen", idea)
+        assertNotEquals(
+            "idea darf Scrolls Schriftrolle nicht erben - die Requisite gehoert dem Motiv",
+            scroll,
+            idea
         )
     }
 
     /**
-     * Solange es keine Gruppen-Antworten gibt, darf KEIN Knoten etwas erben. Schlaegt das fehl,
-     * ohne dass jemand bewusst eine Gruppen-Antwort hinterlegt hat, vererbt sich wieder eine
-     * motiveigene Choreografie nach unten.
+     * **Seit P9 erbt jedes Blatt.** Vorher war die Gruppen-Weiche leer, und dieser Test hielt fest,
+     * dass niemand etwas erbt; jetzt haelt er die Gegenrichtung fest: Kein Knoten steht mehr ohne
+     * Antwort da.
+     *
+     * Ohne diese Zusicherung faellt ein Blatt still auf die generische Freuden-Reaktion zurueck -
+     * es passiert also etwas, es passt nur nicht, und genau das faellt beim Zuschauen nicht auf.
      */
     @Test
-    fun `heute erbt kein Knoten eine Antwort von weiter oben`() {
-        val erbend = AnimationTree.nodes
-            .filter { AvatarSignatureReactions.forNode(it.id, body) == null }
-            .filter { AvatarReactions.forNode(it.id, body) != null }
+    fun `jeder Knoten des Baums hat eine Antwort`() {
+        val ohneAntwort = AnimationTree.nodes
+            // Die elf Knoten mit eingebautem Typ spielen die ausgespielte Handlung ihres Themas;
+            // die liegt in AvatarAnimations und nicht hier (siehe AvatarReactions.groupAnswer).
+            .filterNot { it.motif is AnimationMotif.Builtin }
+            .filter { AvatarReactions.forNode(it.id, body) == null }
             .map { it.id }
+        assertEquals("Diese Knoten haben keine Antwort", emptyList<String>(), ohneAntwort)
+    }
+
+    /**
+     * **Die Idea-Regel, verallgemeinert.**
+     *
+     * Der Einzelfall darueber pruefte `idea` unter Scroll. Dieselbe Falle gibt es ueberall dort, wo
+     * eine Untergruppe ein eigenes Motiv traegt: Butterfly auf `achtsamkeit/beobachten`, Cloud auf
+     * `ruhe/schlafen`, Puzzle auf `lernen/knobeln`. Wuerde deren Antwort nach unten durchschlagen,
+     * traege der Avatar die Requisite des Elternmotivs zu einem ganz anderen Motiv auf dem Glyph.
+     *
+     * Geprueft wird jedes Blatt ohne eigene Antwort, dessen Elternknoten eine hat.
+     */
+    @Test
+    fun `kein Blatt erbt die Motiv-Antwort seines Elternknotens`() {
+        val betroffen = AnimationTree.nodes
+            .filter { it.depth == 3 && AvatarSignatureReactions.forNode(it.id, body) == null }
+            .mapNotNull { blatt ->
+                val elternAntwort = blatt.parentId
+                    ?.let { AvatarSignatureReactions.forNode(it, body) }
+                    ?: return@mapNotNull null
+                if (AvatarReactions.forNode(blatt.id, body) == elternAntwort) blatt.id else null
+            }
         assertEquals(
-            "Diese Knoten erben eine Antwort, obwohl sie keine eigene haben",
+            "Diese Blaetter erben die Requisite ihres Elternmotivs",
             emptyList<String>(),
-            erbend
+            betroffen
         )
     }
 

@@ -518,13 +518,47 @@ x=2…10.
 
 ### P9 — Choreografien
 
-Laufend, nach Bedarf. Der Fallback aus P2 sorgt dafür, dass hier nichts blockiert.
+- [x] Eigene Reaktion für jede der 18 Untergruppen (`AvatarReactions.groupAnswer`)
+- [x] Keine verlässt sich auf Schwanz oder Füße — die hat nicht jede Spezies
+- [x] Knoten mit eingebautem Typ spielen die Handlung ihres Themas
+- [ ] Einlagen für einzelne Stufe-3-Knoten — **bewusst offen gelassen, siehe unten**
 
-- [ ] Eigene Reaktion für jede der 18 Untergruppen
-- [ ] Einlagen für die Stufe-3-Knoten mit echtem Gag (~12 von 40)
-- [ ] Keine Choreografie darf sich auf Schwanz oder Füße verlassen (hat nicht jede Spezies)
+**Erledigt am 2026-08-26.** 548 Tests grün, Lint grün, APK baut.
+
+### Zwei Dinge, die erst beim Bauen auffielen
+
+**Ein Knoten mit eingebautem Typ bekam die falsche Antwort.** `sport` trägt das Motiv `MOVE`, aber
+beim Ziehen aus der Leiste kam nur die generische Freuden-Reaktion — die ausgespielte
+Bewegungs-Handlung, die es längst gibt, wurde nie erreicht. Betrifft elf Knoten: die neun
+Hauptgruppen plus `ruhe/pause` (REST) und `arbeit/erledigen` (FOCUS). Eine Zeile in
+`reactionFor`, große Wirkung.
+
+**`drop(1)` war zu viel.** Der Rückfall übersprang den Knoten selbst in der Annahme, er sei beim
+Motiv-Schritt schon dran gewesen — der fragt aber nur die *Motiv*-Antworten ab. Eine Untergruppe
+fand dadurch ihre eigene Gruppen-Antwort nicht: Wer „Ballsport" zog, bekam die generische Reaktion,
+während jedes Blatt darunter die richtige bekam. `AvatarReactionsTest` fängt das jetzt.
+
+### Warum die Gruppen-Antworten requisitenfrei sind
+
+Sie werden nach unten vererbt. Hätte „Ballsport" einen Ball in der Hand, läge der auch dann da,
+wenn gerade ein **Pokal** gezogen wurde. Gearbeitet wird deshalb nur mit dem, was jede Spezies hat
+und was zu jedem Blatt darunter passt: Verschiebung, Haltung, Blick, Mund, Timing. **Das Motiv auf
+dem Glyph trägt die Genauigkeit, der Körper die Energie.**
+
+### Was offen bleibt — und warum das in Ordnung ist
+
+Einzelne Einlagen für Stufe-3-Knoten („Dribbling" mit eigenem Trick statt der Ballsport-Bewegung)
+sind **nicht** gebaut. Sie blockieren nichts: Dank des Rückfalls hat jeder der 79 Knoten eine
+passende Antwort, und jede spätere Choreografie macht sie nur genauer, ohne dass ein Aufrufer sich
+ändert. Der Platz dafür ist `AvatarSignatureReactions` — dort landen motiveigene Antworten, die
+**nicht** vererbt werden.
+
+Messbar: 37 Motive haben durch P9 eine passendere Antwort bekommen, vorher war es überall dieselbe
+Freuden-Reaktion. Die 30 Charakter-Motive, die Themen, Rocket und selbstgezeichnete Animationen
+sind unverändert geblieben.
 
 ---
+
 
 ## Offene Punkte
 
@@ -542,6 +576,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
 | 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
+| 2026-08-26 | P9 | Achtzehn Gruppen-Antworten in `AvatarReactions.groupAnswer`, requisitenfrei weil vererbt. Zwei Fehler dabei gefunden: Knoten mit eingebautem Typ bekamen die generische statt der Themen-Handlung, und `drop(1)` liess eine Untergruppe ihre eigene Antwort nicht finden. 37 Motive haben jetzt eine passendere Reaktion; die 30 Charakter-Motive unveraendert. **Damit ist der Umbau durch.** Offen: Einlagen fuer einzelne Blaetter (blockiert nichts) und die Geraetepruefung. |
 | 2026-08-25 | P7+P8 | Vorschau-Werkzeug (`AnimationPreviewTest` → `core/build/preview/`) und alle 12 fehlenden Motive gezeichnet (`SkillTreeAnimations`). `pendingArtwork()` ist leer, jeder Knoten erreichbar. 547 Tests grün. **Für P9:** ab hier fehlen nur noch Choreografien — `AvatarReactions.groupAnswer` ist die leere Weiche dafür, und sie muss requisitenfrei bleiben (siehe Vererbungsregel bei P2). **Merken:** die Matrix ist RUND, bei y=11 nur x=2…10 nutzbar. |
 | 2026-08-25 | P6 | Stufe 3 läuft: `AvatarActivity` + `AvatarActivityBus` (5 Minuten Lebensdauer) + `AvatarActivityPlans`. Einlage auf passende Tätigkeit schiebt sich ein, auf unpassende kommt erst der Wechsel. 18 neue Tests. **Abweichung:** `RoutineStep.Flourish` bewusst nicht gebaut — begründet im P6-Abschnitt. **Für P7/P8:** ab hier ist alle Mechanik fertig, es fehlt nur noch Pixelarbeit. Erste Adresse ist der Teller für `koerper/essen`, weil daran drei Knoten hängen. |
 | 2026-08-25 | P5 | Zieh-Leiste unter dem Avatar + Baumbildschirm als Dialog. Ein Zug aus der Leiste gibt **kein XP** und schreibt kein Fütter-Ereignis (sonst speist sich die Neigung aus sich selbst). Logik in `SkillTreeRows` (8 Tests), Compose bleibt dünn. **Für P6:** `playFromBar` in `HomeScreen` ist die Stelle, an der Stufe 3 später eine laufende Tätigkeit braucht statt einer einmaligen Reaktion. Lint ist scharf — `FlowOperatorInvokedInComposition` hat zugeschlagen, Flows in Composables gehören in `remember`. |

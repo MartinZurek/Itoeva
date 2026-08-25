@@ -1,5 +1,6 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationMotif
 import com.notime.glyphcore.data.AnimationTree
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.FrameCrossfade
@@ -364,6 +365,19 @@ object AvatarAnimations {
         // [AvatarReactions]. Fuer die 30 motiveigenen Antworten aendert das nichts; ein Blatt ohne
         // eigene Antwort kann die seines Elternknotens erben, sobald es dort eine gibt.
         val signature = AvatarReactions.forNode(nodeId, body)
+
+        /**
+         * Das Thema hinter dem Anlass.
+         *
+         * **Ein Knoten, der einen eingebauten Typ traegt, verhaelt sich wie dieses Thema.** Elf
+         * Knoten tun das: die neun Hauptgruppen sowie `ruhe/pause` (REST) und `arbeit/erledigen`
+         * (FOCUS). Ohne diese Zeile bekam ein aus der Leiste gezogenes "Sport" die generische
+         * Freuden-Reaktion, obwohl es fuer genau dieses Thema eine ausgespielte Handlung gibt -
+         * der Avatar freute sich also, statt sich zu bewegen.
+         */
+        val type = (trigger as? ReactionTrigger.Topic)?.type
+            ?: nodeId?.let { (AnimationTree.motifFor(it) as? AnimationMotif.Builtin)?.type }
+
         val beats = if (nodeId == ROCKET_NODE) {
             rocketReactionKeyframes(body)
         } else if (signature != null) {
@@ -371,13 +385,14 @@ object AvatarAnimations {
             // [AvatarSignatureReactions]. mergeRepeats wie unten, weil auch hier zwei benachbarte
             // Posen zufaellig zusammenfallen koennen.
             signature.mergeRepeats()
-        } else if (trigger is ReactionTrigger.Node || trigger is ReactionTrigger.Untracked) {
+        } else if (type == null &&
+            (trigger is ReactionTrigger.Node || trigger is ReactionTrigger.Untracked)
+        ) {
             // Bibliotheks-Animationen ohne eigene Choreografie bekommen die spezies-typische
             // Freuden-Reaktion statt der generischen - dadurch faellt "TAMA" bei Gloop anders
             // aus als bei Fennec, obwohl beide dieselbe Erinnerung ausgeloest hat.
             speciesFlourish(species, body)
         } else {
-            val type = (trigger as? ReactionTrigger.Topic)?.type
             val story = when (type) {
                 AnimationType.DRINK -> drinkKeyframes(body)
                 AnimationType.MOVE -> moveKeyframes(body)
