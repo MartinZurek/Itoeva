@@ -1122,7 +1122,8 @@ object PlayScene {
             Placement(PINE, anchorX = 0f),
             Placement(BUSH, anchorX = 0.28f),
             Placement(LOG, anchorX = 0.58f, station = Station.BENCH),
-            Placement(TREE, anchorX = 0.86f)
+            Placement(TREE, anchorX = 0.86f),
+            Placement(FERN, anchorX = 0.14f)
         )
 
         // Die WIESE: eine offene Freiflaeche, sparsam bestanden - das Gegenteil des dichten
@@ -1502,6 +1503,12 @@ object PlayScene {
         // Sitzflaeche vor dem Sitzenden, wie bei Bank und Sessel.
         frontArt = hLine(3, 12, 2),
         useSpot = 6 to 2
+    )
+
+    /** Farn - niedriger Bodenbewuchs zwischen den Baeumen, flacher noch als der Strauch. */
+    private val FERN = Prop(
+        width = 5, height = 4,
+        art = listOf(1 to 0, 3 to 0) + hLine(0, 4, 1) + hLine(1, 3, 2) + listOf(2 to 3)
     )
 
     // ---- Draussen: die Lebensraeume ----
