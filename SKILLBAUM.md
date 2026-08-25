@@ -46,7 +46,7 @@ fängt an. Sie durchsucht nicht noch einmal den Code nach Dingen, die unten scho
   Profil und Antwortzeitpunkt mit — auch die unbeantworteten.
 - **Reaktionen sind parametrisch.** `creatureFrame(...)` baut jedes Bild aus dem Körper der
   Spezies. Neue Reaktion = Liste von Beats, kein neuer Sprite, gilt sofort für alle sechs Spezies.
-- **Es gibt ZWEI Datenbanken.** `:app-sim` (jetzt Version 22) und `:app` (jetzt Version 20), beide
+- **Es gibt ZWEI Datenbanken.** `:app-sim` (jetzt Version 23) und `:app` (jetzt Version 20), beide
   mit `exportSchema = true`. **Jede Änderung an einer Entity in `:core` trifft beide** — Room
   vergleicht beim Öffnen das ganze Schema, nicht nur die benutzten Spalten. Wer nur eine Seite
   migriert, baut einen Absturz beim Start der anderen App. Das ist in diesem Repo schon einmal
@@ -76,7 +76,7 @@ fängt an. Sie durchsucht nicht noch einmal den Code nach Dingen, die unten scho
 | `app-sim/…/data/AvatarFeedEvent.kt` | 24 ff. | Entity mit `animationType`, `libraryAnimationLabel`, `fedAtMillis` |
 | `app-sim/…/data/AvatarPlayState.kt` | ganz | `xp`, `lastSeenLevel` |
 | `app-sim/…/ui/PlayModeXp.kt` | 18 gesamt | `levelFor`, `XP_PER_FEED`, `XP_PER_LEVEL` |
-| `app-sim/…/data/AppDatabase.kt` | 25–42 | Entities + `version = 22` |
+| `app-sim/…/data/AppDatabase.kt` | 25–42 | Entities + `version = 23` |
 | `app-sim/…/data/AppDatabaseMigrations.kt` | **110–135** | Muster: Spalte hinzufügen (17→18), neue Tabelle (18→19) |
 | `app/…/data/AppDatabase.kt` | 27–36 | Die **zweite** Datenbank, `version = 20` |
 | `app/…/data/AppDatabaseMigrations.kt` | ganz (75 Z.) | Klein. `ALL`-Array am Ende. |
@@ -343,15 +343,32 @@ Baum. `ReactionTriggerTest` prüft für alle sechs Spezies, dass es trotzdem sei
 **Öffnen:** `AvatarPlayState.kt`, `PlayModeXp.kt`, `AvatarFeedEvent.kt` 24 ff.
 **Nicht öffnen:** Kein Bildschirm. Dieses Paket ist reine Logik.
 
-- [ ] Entity `AvatarUnlockedNode(profileId, nodeId, unlockedAtMillis)` + DAO, DB 22 → 23
-- [ ] Beim ersten Start je Profil die 9 Stufe-1-Knoten freischalten
-- [ ] `BranchAffinity`: Neigung je Hauptgruppe aus `avatar_feed_events`, nach Aktualität gewichtet
-- [ ] Nur beantwortete Auslösungen zählen (`fedAtMillis != null`)
-- [ ] `UnlockOffer`: Grenze bestimmen (Kinder freigeschalteter Knoten), Angebot 2 + 1 bauen
-- [ ] Test gegen erfundenes Log: einseitig, leer, und „alles gleich oft"
-- [ ] Test: der Querschläger kommt nie aus dem stärksten Zweig
+- [x] Entity `AvatarUnlockedNode(profileId, nodeId, unlockedAtMillis)` + DAO, DB 22 → 23
+- [x] Beim ersten Start je Profil die 9 Stufe-1-Knoten freischalten (`ensureSeeded`)
+- [x] `BranchAffinity`: Neigung je Hauptgruppe, Halbwertszeit 14 Tage
+- [x] Nur beantwortete Auslösungen zählen (`fedAtMillis IS NOT NULL`)
+- [x] `UnlockOffers`: Grenze + Angebot 2 + 1
+- [x] MEDICINE steht nicht im Baum, kann also nicht angeboten werden — bewacht
+- [x] Tests gegen erfundenes Log: einseitig, leer, alles gleich, alles offen
+- [x] Test: der Querschläger kommt nie aus dem stärksten Zweig
 
 **Prüfen:** `gradlew.bat :app-sim:testDebugUnitTest`
+
+**Erledigt am 2026-08-25.** 21 neue Tests, 518 gesamt grün, Fingerabdruck unverändert.
+Alles Neue liegt im Paket `app-sim/…/skilltree/`.
+
+### Zwei Regeln, die beim Bauen dazugekommen sind
+
+**Ungezeichnete Knoten werden nie angeboten.** Ein Eintrag in der Zieh-Leiste, der beim Ziehen
+nichts zeigt, wäre eine leere Belohnung — schlimmer als gar keine. Nebenwirkung: `koerper/essen`
+ist die einzige Untergruppe ohne Motiv, und solange das so ist, hängen auch ihre beiden Blätter
+(`plant`, `battery`) fest. **Das löst sich mit P8**, sobald der Teller gezeichnet ist.
+`UnlockOfferTest` hält die Liste der unerreichbaren Knoten exakt fest — wächst sie, fällt es auf.
+
+**Ohne Historie wird der Schwerpunkt gewürfelt.** Stehen alle neun Zweige auf 0.0, gibt es keinen
+stärksten — immer denselben zu nehmen wäre eine Behauptung über den Nutzer, die nichts deckt. Die
+Rangfolge selbst (`BranchAffinity.ranked`) bleibt deterministisch; gewürfelt wird nur in
+`UnlockOffers.build` über einen übergebenen `Random`, damit Tests reproduzierbar bleiben.
 
 ---
 
@@ -453,6 +470,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
 | 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
+| 2026-08-25 | P4 | Freischaltung steht: `AvatarUnlockedNode` (DB 23), `BranchAffinity` (Halbwertszeit 14 Tage, nur beantwortete Auslösungen), `UnlockOffers` (2+1), `AvatarUnlockRepository` — alles im neuen Paket `skilltree/`. 21 neue Tests. **Für P5:** `observeUnlockedNodes(profileId)` liefert der Zieh-Leiste einen Flow, `ReactionTrigger.ofNode(nodeId)` ist der fertige Weg von dort zur Reaktion. In der Leiste nur Knoten mit Motiv zeigen. |
 | 2026-08-25 | P3 | `ReactionTrigger` ersetzt die zwei nullbaren Werte (Topic/Node/Untracked/None) — Begründung im P3-Abschnitt. `AvatarFeedEvent.nodeId` gefüllt für **beide** Quellen, DB `:app-sim` 22. 497 Tests grün, APK baut. **Für P4:** Neigung kann direkt `GROUP BY nodeId` auf `avatar_feed_events` rechnen, Altdaten sind nachgetragen; `fedAtMillis IS NOT NULL` filtert die beantworteten. **Gelöst:** der `G:\Meine Ablage`-Baufehler kam von einem alten Gradle-Daemon — `gradlew --stop` genügt, Details bei den Prüfbefehlen. Seither bauen beide APKs und `:core:test`. |
 | 2026-08-25 | P2 | Auflösung läuft über den Baum: `AvatarReactions.forNode` + `AvatarSignatureReactions.forNode`. Alle 69 Fingerabdrücke unverändert (`app-sim/src/test/reaction-fingerprint.txt` — **vor** dem Umbau erzeugt, nie „anpassen"). 490 Tests grün. **Für P9 wichtig:** motiveigene Antworten werden NICHT nach unten vererbt, nur Gruppen-Antworten aus `AvatarReactions.groupAnswer` — Begründung im Abschnitt „Die Vererbungsregel". **Für P3:** Signatur von `reactionFor` steht noch auf `libraryAnimationLabel`, Aufrufliste ist in P3 eingetragen. |
 | 2026-08-25 | P1 | `nodeId` an `LibraryAnimation`; `:app-sim` auf 21, **`:app` auf 20** (die Entity liegt in `:core` und trifft beide Datenbanken — war im Plan nicht vorgesehen). Nachtrag über `LibraryAnimationNodeIds.backfill` in `:core`, von beiden Migrationen benutzt. 483 Tests grün. **Für P2:** `AnimationTree.fallbackChain(id)` ist fertig und getestet — der Dispatch muss sie nur noch benutzen. Achtung, `:app` hat eine eigene `ReminderAnimations.kt`; sie kennt keinen Baum und soll ihn auch nicht kennen. |

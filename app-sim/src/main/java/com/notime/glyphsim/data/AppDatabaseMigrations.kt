@@ -300,10 +300,31 @@ object AppDatabaseMigrations {
         }
     }
 
+    /**
+     * 22 -> 23: neue Tabelle [AvatarUnlockedNode] - welche Knoten des Animations-Baums ein Avatar
+     * freigeschaltet hat (SKILLBAUM.md, Paket P4).
+     *
+     * Reines Anlegen einer neuen, anfangs leeren Tabelle; keine bestehenden Daten betroffen. Die
+     * neun Hauptgruppen werden NICHT hier eingetragen, sondern beim ersten Zugriff je Profil
+     * ([AvatarUnlockRepository.ensureSeeded]): Welche Profile es gibt, steht nicht in der
+     * Datenbank, sondern haengt am gewaehlten Avatar - eine Migration muesste sie raten.
+     */
+    private val MIGRATION_22_23 = object : Migration(22, 23) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS avatar_unlocked_nodes (" +
+                    "profileId TEXT NOT NULL, " +
+                    "nodeId TEXT NOT NULL, " +
+                    "unlockedAtMillis INTEGER NOT NULL, " +
+                    "PRIMARY KEY(profileId, nodeId))"
+            )
+        }
+    }
+
     fun all(context: Context): Array<Migration> = arrayOf(
         MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
         MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19,
         migration19To20(preferred = ActiveProfilePrefs.get(context)),
-        MIGRATION_20_21, MIGRATION_21_22
+        MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23
     )
 }

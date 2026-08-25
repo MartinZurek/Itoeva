@@ -27,9 +27,10 @@ import com.notime.glyphcore.data.LibraryAnimationDao
         LibraryAnimation::class,
         BuiltInAnimationSelection::class,
         AvatarFeedEvent::class,
-        AvatarPlayState::class
+        AvatarPlayState::class,
+        AvatarUnlockedNode::class
     ],
-    version = 22,
+    version = 23,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -39,6 +40,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun builtInAnimationSelectionDao(): BuiltInAnimationSelectionDao
     abstract fun avatarFeedEventDao(): AvatarFeedEventDao
     abstract fun avatarPlayStateDao(): AvatarPlayStateDao
+    abstract fun avatarUnlockedNodeDao(): AvatarUnlockedNodeDao
 
     companion object {
         @Volatile

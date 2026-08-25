@@ -513,6 +513,53 @@ class AppDatabaseMigrationTest {
         )
         migrated.close()
     }
+
+    /**
+     * 22 -> 23: neue Tabelle [AvatarUnlockedNode] fuer den Skillbaum (SKILLBAUM.md, P4).
+     *
+     * Reines Anlegen, keine bestehenden Daten betroffen - geprueft wird deshalb beides: dass die
+     * Tabelle da ist und benutzbar, und dass die Fuetter-Historie den Versionswechsel unveraendert
+     * uebersteht. Ein Freischalt-Stand darf nichts kosten, was der Nutzer vorher hatte.
+     *
+     * Der zusammengesetzte Primaerschluessel ist die eigentliche Zusicherung: Derselbe Knoten darf
+     * fuer dasselbe Profil nicht zweimal offen sein, sonst zaehlte die Oberflaeche ihn doppelt.
+     */
+    @Test
+    fun migration22To23AddsUnlockTableWithoutTouchingHistory() {
+        helper.createDatabase(TEST_DB, 22).apply {
+            execSQL(
+                """
+                INSERT INTO avatar_feed_events
+                    (reminderId, animationType, epochMillis, profileId, libraryAnimationLabel,
+                     fedAtMillis, isPlayMode, nodeId)
+                VALUES (9, 'MOVE', 1700000000009, 'GLOOP', NULL, 1700000000010, 0, 'sport')
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 23, true, *MIGRATIONS)
+
+        assertEquals(
+            listOf(listOf("9", "sport", "1700000000010")),
+            rows(migrated, "SELECT reminderId, nodeId, fedAtMillis FROM avatar_feed_events")
+        )
+
+        migrated.execSQL(
+            "INSERT INTO avatar_unlocked_nodes (profileId, nodeId, unlockedAtMillis) " +
+                "VALUES ('GLOOP', 'sport', 1700000000000)"
+        )
+        // Zweiter Versuch mit demselben Paar: Der Primaerschluessel muss ihn abweisen.
+        migrated.execSQL(
+            "INSERT OR IGNORE INTO avatar_unlocked_nodes (profileId, nodeId, unlockedAtMillis) " +
+                "VALUES ('GLOOP', 'sport', 1799999999999)"
+        )
+        assertEquals(
+            listOf(listOf("GLOOP", "sport", "1700000000000")),
+            rows(migrated, "SELECT profileId, nodeId, unlockedAtMillis FROM avatar_unlocked_nodes")
+        )
+        migrated.close()
+    }
 }
 
 /**
@@ -521,7 +568,7 @@ class AppDatabaseMigrationTest {
  * Versionssprung mit erhoeht werden; [AppDatabaseMigrationTest.migratesFromBaselineToLatestKeepingData]
  * schlaegt sonst fehl, was genau der gewuenschte Stolperdraht ist.
  */
-private const val CURRENT_VERSION = 22
+private const val CURRENT_VERSION = 23
 
 /**
  * Alle registrierten Migrationen, so wie die App sie verwendet.
