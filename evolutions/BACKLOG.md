@@ -216,7 +216,7 @@ Bedingungen, die nicht verhandelbar sind:
 - `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
   Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
 
-## [open] ITO-0006 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen
+## [done] ITO-0006 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen
 Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt ("Vielfalt von Ambient-Aktivitaeten,
 Routinen, Szenen, Reaktionen und charaktergerechten Dialogen") - keine `OPEN DECISION` betroffen,
 keine Rueckfrage noetig. CONTENT-Evolution (reine Punktdaten, kein neuer Mechanismus).
