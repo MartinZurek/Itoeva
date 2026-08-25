@@ -350,6 +350,102 @@ wurde - auch dann nicht, wenn fuer heute nichts Neues mehr da ist (`onTell == nu
   von `remember()` liefert `lastToldPiece` genau das Stueck an Index `heard() - 1` aus `story()`.
 - Keine Aenderung an Kalenderlogik, keine neue SharedPreferences-Datei oder -Key.
 
+## [open] ITO-0011 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (vierte Runde)
+Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
+(Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (PR #14: Puffling-Starlet),
+ITO-0009 (PR #18: Wyrmling-Hootlet) und ITO-0010 (PR #29: Fennec-Gloop). CONTENT-Evolution, keine
+Konstanten- oder Codeaenderung.
+
+Seit ITO-0005 hat jedes Wesen acht Lore-Stuecke (`PlayLore.PIECES = 8`) - die Ankerzeile fuer
+den neuen Satz darf Stueck 6, 7 ODER 8 sein.
+
+Waehle GENAU EIN Wesen-Paar (A, B) aus den sechs Wesen (Puffling, Starlet, Wyrmling, Fennec,
+Gloop, Hootlet), zwischen denen noch KEIN Satz in den bestehenden Lore-Texten eine Verbindung
+herstellt. Bereits verbunden und NICHT erneut zu waehlen: Puffling-Gloop, Wyrmling-Fennec,
+Starlet-Hootlet (die drei Hauptbeziehungen), Puffling-Starlet (ITO-0004), Wyrmling-Hootlet
+(ITO-0009) sowie Fennec-Gloop (ITO-0010). Jedes andere Paar ist erlaubt, deine Wahl - neun Paare
+stehen noch offen (z. B. Puffling-Wyrmling, Puffling-Fennec, Puffling-Hootlet, Starlet-Wyrmling,
+Starlet-Fennec, Starlet-Gloop, Wyrmling-Gloop, Fennec-Hootlet, Gloop-Hootlet).
+
+Ergaenze in `app-sim/src/main/res/values-de/strings.xml` UND `app-sim/src/main/res/values/strings.xml`
+(Deutsch und Englisch, inhaltlich gleich) an GENAU EINER Stelle einen zusaetzlichen Satz: an
+`lore_<A>_6`, `lore_<A>_7` ODER `lore_<A>_8` (ein Stueck deiner Wahl, bei EINEM der beiden
+gewaehlten Wesen) - angehaengt an den bestehenden Text derselben Zeile, nicht als neue Zeile und
+nicht als Ersatz des Bestehenden. Der neue Satz muss Wesen B beim Namen nennen und in der Stimme
+von Wesen A geschrieben sein, ein bis zwei kurze Saetze, keine Ausrufezeichen, kein pathetischer
+Ton - siehe die vorhandenen Stuecke aller sechs Wesen in denselben Dateien als Vorbild.
+
+Bedingungen, die nicht verhandelbar sind:
+- Keine bestehende Zeile darf geloescht, umbenannt oder inhaltlich veraendert werden - nur die
+  eine gewaehlte Zeile bekommt einen angehaengten Satz.
+- Der neue Satz darf keinem bestehenden Fakt in irgendeinem der 48 Lore-Stuecke widersprechen
+  (Orte, Ereignisse, andere Beziehungen, einschliesslich der in ITO-0004, ITO-0009 und ITO-0010
+  ergaenzten Verbindungen). Bei Zweifel: Wesen B nur beilaeufig erwaehnen, keine neue
+  Tatsachenbehauptung ueber B aufstellen, die B's eigene Lore-Stuecke nicht schon stuetzen.
+- Keine andere Datei aendern, insbesondere nicht `PlayLore.kt` oder `PlayLoreTest.kt` - beide
+  pruefen nur Struktur (Anzahl, Eindeutigkeit), keine Wortlaute, und muessen unveraendert gruen
+  bleiben.
+- `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
+  Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
+
+## [open] ITO-0012 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen (zweite Runde)
+Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt ("Vielfalt von Ambient-Aktivitaeten,
+Routinen, Szenen, Reaktionen und charaktergerechten Dialogen") - keine `OPEN DECISION` betroffen,
+keine Rueckfrage noetig. CONTENT-Evolution (reine Punktdaten, kein neuer Mechanismus). Setzt auf
+ITO-0006 (PR #40: "Clock") auf, ist aber davon unabhaengig umsetzbar.
+
+`core/src/main/java/com/notime/glyphcore/data/DefaultLibraryAnimations.kt` enthaelt inzwischen 27
+allgemeine Animationen (`sortOrder` 0..25 plus 56 fuer "Clock", siehe `general()`). Diese Aufgabe
+ist ein weiterer einzelner Schritt in dieselbe, bereits dokumentierte Richtung.
+
+**Aufgabe:** Ergaenze GENAU EINE neue allgemeine Animation (keine charakterspezifische - die
+liegen in `AvatarSignatureAnimations.kt` und sind nicht Teil dieser Aufgabe). Thema deiner Wahl,
+passend zu einem Alltags- oder Erinnerungsthema (siehe die vorhandenen Labels in `general()` als
+Anhaltspunkt fuer den Rahmen: Star, Wave, Rain, Music, Battery, Dog, Cat, Gift, Football, Fitness,
+Robot, Trophy, Plant, Target, Airplane, Cake, Idea, Mail, Clock, ...). Vermeide ein Thema, das
+einem bestehenden Label zu nahekommt.
+
+**Technische Form** (siehe `starFrames()`/`waveFrames()`/`alarmClockFrames()` in derselben Datei
+als Vorbild):
+- Eine private Funktion `private fun <name>Frames(): List<List<Pair<Int, Int>>>` - eine
+  Punktliste je Frame, Koordinaten im 13x13-Raster (Zentrum bei 6,6).
+- Registrierung als neuer Eintrag in der Liste in `general()`: `LibraryAnimation(label = "...",
+  emoji = "...", framesData = FrameCodec.encode(<name>Frames()), sortOrder = 57)`. NICHT 26: dieser
+  Zahlenraum (26..55) ist durch `AvatarSignatureAnimations.kt` (`SORT_OFFSET = 26`, 30
+  charakterspezifische Animationen) belegt. 57 ist der erste Wert, der weder dort noch in dieser
+  Datei (hoechster bisheriger Wert hier: 56, "Clock") bereits vorkommt.
+- Mindestens 4-6 Frames mit ZWEI erkennbaren Bewegungen, nicht nur einem pulsierenden Element -
+  das war laut Klassendoku ein Kritikpunkt an frueheren Entwuerfen (siehe `starFrames()`: Strahlen
+  pulsieren UND ein Twinkle-Punkt wandert reihum; `alarmClockFrames()`: Minutenzeiger dreht UND
+  die Glocken wackeln abwechselnd).
+
+**Drei dokumentierte Fallen, die `LibraryAnimationFitTest` automatisiert prueft und die den Lauf
+rot werden lassen, wenn sie zutreffen** (siehe die KDoc dieser Testdatei fuer die volle
+Begruendung):
+1. Die Matrix ist rund - nur der einbeschriebene Kreis (`MatrixGeometry.isActive`) wird
+   angezeigt, die vier Ecken des 13x13-Quadrats existieren nicht. Genau das ist "TAMA" passiert,
+   das seine Buchstaben in die Ecken gesetzt hatte. Hoechstens 15 % der Punkte ueber alle Frames
+   duerfen ausserhalb liegen.
+2. Keine wilden Koordinaten - alle Punkte muessen im Bereich -4 bis 17 bleiben (etwas ueber den
+   Rand hinaus ist als Gestaltungsmittel erlaubt, z. B. eine Rakete, die aus dem Bild steigt).
+3. Punkte auf einer Linie oder gefuellte Flaechen koennen das Motiv unkenntlich machen (siehe
+   `EVOLUTION.md`/README zu den Signatur-Animationen) - bevorzuge Umrisse und versetzte Punkte
+   gegenueber vollstaendig gefuellten Formen.
+
+**Zusaetzlich Pflichtteil der Aufgabe, NICHT optional:** Die Klassendoku VON DERSELBEN DATEI nennt
+an zwei Stellen die alte Anzahl und muss auf den neuen Stand gebracht werden - sonst widerspricht
+die Doku dem Code, den sie beschreibt:
+- Zeile 9: "27 Beispiel-Animationen" -> "28 Beispiel-Animationen".
+- Zeile 27: "Die 27 allgemeinen Animationen plus die 30 charakterspezifischen" -> "Die 28
+  allgemeinen Animationen plus die 30 charakterspezifischen".
+Beides steht bereits im Umfang dieser Aufgabe (dieselbe Datei, keine neue Entscheidung) und ist
+keine "andere Datei" im Sinne der folgenden Einschraenkung.
+
+Aendere keine andere Datei, keine bestehende Animation, keinen `sortOrder`-Wert einer bestehenden
+Animation. `LibraryAnimationFitTest` muss fuer die neue Animation ebenso gruen sein wie fuer die
+bestehenden 27 (der Test iteriert automatisch ueber `DefaultLibraryAnimations.seed()`, keine
+Testaenderung noetig).
+
 ## [done] ITO-0003 - Unit-Tests fuer ClockRing
 Ergaenze eine JVM-Unit-Testdatei `app-sim/src/test/java/com/notime/glyphsim/matrix/ClockRingTest.kt` fuer das bisher ungetestete Objekt `ClockRing` aus `app-sim/src/main/java/com/notime/glyphsim/matrix/ClockRing.kt`.
 
