@@ -66,16 +66,18 @@ class UnlockOfferTest {
     }
 
     /**
-     * Die Nebenwirkung der Regel darueber, bewusst festgehalten: `koerper/essen` hat noch kein
-     * Motiv, und solange das so ist, sind auch seine Blaetter unerreichbar - die Grenze waechst ja
-     * nur durch freigeschaltete Knoten.
+     * **Jeder Knoten des Baums ist erreichbar.**
      *
-     * Waechst diese Liste unbemerkt, faellt der Baum still auseinander. Schrumpft sie, ist etwas
-     * gezeichnet worden (SKILLBAUM.md, P8) und der Test gehoert angepasst.
+     * Bis P8 war das nicht so: `koerper/essen` hatte kein Motiv, konnte deshalb nicht
+     * freigeschaltet werden - und damit hingen auch seine beiden Blaetter fest, weil die Grenze
+     * nur durch freigeschaltete Knoten waechst. Dieser Test hielt die Liste der unerreichbaren
+     * Knoten fest; jetzt haelt er fest, dass sie leer ist.
+     *
+     * Waechst sie wieder, ist ein Knoten ohne Motiv dazugekommen und hat einen ganzen Ast
+     * abgeschnitten - ein Fehler, den man der Oberflaeche nicht ansieht.
      */
     @Test
-    fun `unerreichbar sind genau die ungezeichneten Knoten und die Blaetter unter essen`() {
-        // Die Grenze so lange ausweiten, bis nichts Neues mehr dazukommt.
+    fun `jeder Knoten ist ueber die Grenze erreichbar`() {
         var offen = start
         while (true) {
             val neu = UnlockOffers.frontier(offen).map { it.id }
@@ -83,16 +85,10 @@ class UnlockOfferTest {
             offen = offen + neu
         }
 
-        val unerreichbar = (AnimationTree.nodes.map { it.id }.toSet() - offen).sorted()
-        val ungezeichnet = AnimationTree.pendingArtwork().map { it.id }
-        // `koerper/essen` hat kein Motiv und kann deshalb nicht freigeschaltet werden - damit
-        // bleiben auch seine beiden gezeichneten Blaetter haengen. Loest sich mit P8 von selbst.
-        val erwartet = (ungezeichnet + "koerper/essen/plant" + "koerper/essen/battery").sorted()
-
         assertEquals(
-            "Die Liste unerreichbarer Knoten hat sich geaendert - siehe SKILLBAUM.md, P8",
-            erwartet,
-            unerreichbar
+            "Diese Knoten lassen sich nie freischalten - siehe SKILLBAUM.md, P8",
+            emptyList<String>(),
+            (AnimationTree.nodes.map { it.id }.toSet() - offen).sorted()
         )
     }
 

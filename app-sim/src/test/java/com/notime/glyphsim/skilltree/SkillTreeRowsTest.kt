@@ -44,27 +44,31 @@ class SkillTreeRowsTest {
     }
 
     /**
-     * Ein ungezeichneter Knoten ist NIE "als Naechstes dran", auch wenn sein Elternknoten offen
-     * ist - er kann gar nicht angeboten werden. Wuerde er als AVAILABLE erscheinen, warteten
-     * Nutzer auf eine Freischaltung, die nie kommt.
+     * **Seit P8 ist der Baum vollstaendig gezeichnet** - es gibt derzeit keinen Knoten im Zustand
+     * [NodeState.PENDING_ART] mehr.
+     *
+     * Der Zustand bleibt trotzdem, und dieser Test auch: Er bewacht jetzt die Gegenrichtung. Kommt
+     * ein neuer Knoten ohne Motiv dazu, faellt er hier auf, statt in der Zieh-Leiste zu landen und
+     * beim Ziehen nichts zu zeigen.
      */
     @Test
-    fun `ein ungezeichneter Knoten ist nie als Naechstes dran`() {
-        val offen = start + "sport/ballsport"
-        assertEquals(NodeState.AVAILABLE, stateOf("sport/ballsport/basketball", offen))
-        assertEquals(NodeState.PENDING_ART, stateOf("sport/ballsport/dribbling", offen))
+    fun `derzeit wartet kein Knoten auf eine Zeichnung`() {
+        val wartend = SkillTreeRows.build(start)
+            .filter { it.state == NodeState.PENDING_ART }
+            .map { it.node.id }
+        assertEquals("Diese Knoten haben kein Motiv - siehe SKILLBAUM.md, P8", emptyList<String>(), wartend)
     }
 
+    /**
+     * Die Regel dahinter, unabhaengig vom aktuellen Bestand: Ein Knoten ohne Motiv ist nie "als
+     * Naechstes dran", auch wenn sein Elternknoten offen ist - er kann gar nicht angeboten werden.
+     * Wuerde er als AVAILABLE erscheinen, warteten Nutzer auf eine Freischaltung, die nie kommt.
+     */
     @Test
-    fun `alle ungezeichneten Knoten tragen denselben Zustand`() {
-        val rows = SkillTreeRows.build(start)
-        val ungezeichnet = AnimationTree.pendingArtwork().map { it.id }.toSet()
-        assertEquals(
-            "Diese ungezeichneten Knoten haben einen anderen Zustand bekommen",
-            emptyList<String>(),
-            rows.filter { it.node.id in ungezeichnet && it.state != NodeState.PENDING_ART }
-                .map { it.node.id }
-        )
+    fun `ein Blatt mit Motiv rueckt nach, sobald seine Untergruppe offen ist`() {
+        val offen = start + "sport/ballsport"
+        assertEquals(NodeState.AVAILABLE, stateOf("sport/ballsport/basketball", offen))
+        assertEquals(NodeState.AVAILABLE, stateOf("sport/ballsport/dribbling", offen))
     }
 
     @Test

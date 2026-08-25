@@ -173,16 +173,19 @@ class AnimationTreeTest {
     }
 
     /**
-     * Die Zahl steht fest im Test, damit sie beim Zeichnen sichtbar faellt (siehe SKILLBAUM.md,
-     * Paket P8). Waechst sie unbemerkt, fuellt sich der Baum mit Knoten, die beim Ziehen nichts
-     * zeigen.
+     * **Der Baum ist vollstaendig gezeichnet.**
+     *
+     * Bis Paket P8 warteten zwoelf Knoten auf ihr Motiv; dieser Test hielt die Zahl fest, damit sie
+     * nicht unbemerkt waechst. Jetzt steht sie auf null - und die Pruefung bleibt trotzdem, denn
+     * jetzt bewacht sie die Gegenrichtung: Ein neuer Knoten ohne Motiv faellt sofort auf, statt
+     * still in der Zieh-Leiste zu landen und beim Ziehen nichts zu zeigen.
      */
     @Test
-    fun `zwoelf Knoten warten noch auf ihre Zeichnung`() {
+    fun `kein Knoten wartet mehr auf eine Zeichnung`() {
         assertEquals(
-            AnimationTree.pendingArtwork().map { it.id }.sorted().toString(),
-            12,
-            AnimationTree.pendingArtwork().size
+            "Diese Knoten haben kein Motiv - siehe SKILLBAUM.md, P8",
+            emptyList<String>(),
+            AnimationTree.pendingArtwork().map { it.id }.sorted()
         )
     }
 

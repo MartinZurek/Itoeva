@@ -35,7 +35,7 @@ object DefaultLibraryAnimations {
      * dass es den nicht gibt, bewacht `AnimationTreeTest`.
      */
     fun seed(): List<LibraryAnimation> =
-        (general() + AvatarSignatureAnimations.seed())
+        (general() + AvatarSignatureAnimations.seed() + SkillTreeAnimations.seed())
             .map { it.copy(nodeId = AnimationTree.nodeIdFor(it.label)) }
 
     private fun general(): List<LibraryAnimation> = listOf(

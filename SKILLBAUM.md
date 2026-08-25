@@ -454,39 +454,67 @@ Weltsimulation müsste sie nur in ihre eigenen Schritte übersetzen.
 
 ### P7 — Werkzeug für Pixelarbeit
 
-**Vor P8 erledigen.** Ohne Bildkontrolle ist jede Pixelarbeit Blindflug und kostet ein Vielfaches.
+- [x] Vorschau-Werkzeug: `core/…/AnimationPreviewTest.kt` schreibt Kontaktbögen nach
+      `core/build/preview/` — ein PNG je Motiv, plus `_neu-1..3.png` als Sammelbögen
+- [x] Eingecheckt, als Test statt als Skript
 
-- [ ] Vorschau-Werkzeug wiederherstellen (das in `DefaultLibraryAnimations` erwähnte `render.py`
-      liegt nicht im Repo)
-- [ ] Diesmal einchecken, mit kurzer Notiz in der README
-- [ ] Es muss aus `framesData` vergrößerte Bitmaps erzeugen, Blattweise und als Kontaktbogen
+```
+gradlew.bat :core:testDebugUnitTest --tests "*AnimationPreviewTest*"
+```
+
+**Warum als Test:** läuft mit `:core:test` ohnehin mit, braucht keine Zusatzwerkzeuge und prüft
+gleich mit, was sich *maschinell* prüfen lässt (Frames außerhalb des Rasters, leere Frames, zu
+wenige Frames). Was das Auge entscheiden muss, liegt danach als PNG daneben. Das PNG wird von Hand
+geschrieben — `java.awt`/`javax.imageio` gibt es im Android-Unittest nicht, `Deflater` und `CRC32`
+schon.
+
+**Beim ersten Lauf zwei Altlasten gefunden**, beide als Absicht bestätigt und jetzt namentlich als
+Ausnahme hinterlegt: `Rocket` fliegt oben aus dem Raster (das Abschneiden *ist* der Start), `TAMA`
+hat leere Frames zwischen den Buchstaben.
 
 ---
 
 ### P8 — Die 12 neuen Motive
 
-**Öffnen:** `DefaultLibraryAnimations.kt` 61 ff. als Vorlage für Frame-Aufbau — **eine** Funktion
-genügt als Muster, nicht alle 26.
+- [x] Alle zwölf gezeichnet: `core/…/SkillTreeAnimations.kt`
+- [x] In den Baum gehängt — **`pendingArtwork()` ist jetzt leer**
+- [x] Vier Stolperdrähte aus P0/P4/P5 haben gefeuert und sind auf die Gegenrichtung umgestellt
 
-Reihenfolge nach Entscheidung 4 und danach nach Nutzen:
+| Knoten | Motiv | |
+|---|---|---|
+| `koerper/essen` | 🍽️ Plate | Gabel geht hinunter, der Berg wird kleiner |
+| `naehe/freunde/besuch` | 🚪 Visit | jemand kommt herein und winkt |
+| `naehe/freunde/anrufen` | 📞 Call | Hörer wackelt, Wellen laufen hinaus |
+| `sport/ballsport/dribbling` | 🤾 Dribble | Ball federt, Hand geht mit, Seitenwechsel |
+| `sport/ballsport/schuss` | 🥅 Shot | Ball ins Tor, Netz gibt nach |
+| `sport/kraft-ausdauer/heben` | 💪 Lift | Hantel hoch, Stange biegt sich oben |
+| `arbeit/geraet/pause-machen` | ⏸️ Breather | Balken halten an, Dampf steigt |
+| `lernen/lesen/notizen` | 📝 Notes | Zeile für Zeile, Stift läuft voraus |
+| `kreativ/musik/singen` | 🎤 Sing | Mikrofon, Ton geht hinaus, Fuß wippt |
+| `aufbruch/reisen/karte` | 🗺️ Map | gefaltete Karte, Route läuft entlang |
+| `aufbruch/feiern/konfetti` | 🎊 Confetti | Schnipsel rieseln und treiben |
+| `aufbruch/feiern/kerzen` | 🕯️ Candles | drei Kerzen flackern und gehen aus |
 
-- [ ] Requisiten-Bibliothek zuerst: Ball, Hantel, Pinsel, Note, Koffer, Teller, Telefon
-- [ ] Requisiten in den oberen Zeilen halten (y ≤ 4), damit sie bei jeder Spezies passen
-- [ ] Bewegungs-Vorlagen: hüpfen, kreisen, aufsteigen-verblassen
-- [ ] `naehe/freunde`: ✎ Besuch, ✎ Anrufen
-- [ ] `koerper/essen`: ✎ Teller
-- [ ] `aufbruch/feiern`: ✎ Konfetti, ✎ Kerzen
-- [ ] `sport/ballsport`: ✎ Dribbling, ✎ Schuss
-- [ ] `sport/kraft-ausdauer`: ✎ Heben
-- [ ] `arbeit/geraet`: ✎ Pause machen
-- [ ] `lernen/lesen`: ✎ Notizen
-- [ ] `kreativ/musik`: ✎ Singen
-- [ ] `aufbruch/reisen`: ✎ Karte
+**Erledigt am 2026-08-25.** 547 Tests grün, Lint grün, beide APKs bauen.
 
-**Prüfen:** Je Motiv vergrößerte Bitmaps ansehen. Jede Animation braucht eine zweite erkennbare
-Bewegung, nicht nur ein pulsierendes Element.
+### Was das Zeichnen gelehrt hat
+
+**ASCII statt Koordinatenlisten.** Die vorhandenen Motive stehen als `listOf(5 to 4, 6 to 4, …)`
+im Code — kompakt, aber man sieht der Zeile nicht an, was sie zeichnet. `sprite(4, 6, "#####")`
+liest sich wie das, was es ist.
+
+**Drei Motive mussten neu gezeichnet werden**, nachdem der Kontaktbogen sie zeigte. Am deutlichsten
+`Besuch`: Der erste Entwurf hatte ein Türblatt, das nach links schrumpfte — auf 13×13 liest sich
+das als ineinandergeschachtelte Ringe, nicht als Tür. Ohne Blatt, dafür mit einer Figur, die
+hereinkommt, ist es sofort klar. Genau dafür war P7 da.
+
+**Die Matrix ist rund, nicht quadratisch.** `LibraryAnimationFitTest` (gab es längst) hat
+zugeschlagen: Dribblings Bodenlinie über die volle Breite lag zu 38 % außerhalb des Ausschnitts.
+In den untersten Zeilen ist deutlich weniger Platz, als das Raster vermuten lässt — bei y=11 nur
+x=2…10.
 
 ---
+
 
 ### P9 — Choreografien
 
@@ -514,6 +542,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
 | 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
+| 2026-08-25 | P7+P8 | Vorschau-Werkzeug (`AnimationPreviewTest` → `core/build/preview/`) und alle 12 fehlenden Motive gezeichnet (`SkillTreeAnimations`). `pendingArtwork()` ist leer, jeder Knoten erreichbar. 547 Tests grün. **Für P9:** ab hier fehlen nur noch Choreografien — `AvatarReactions.groupAnswer` ist die leere Weiche dafür, und sie muss requisitenfrei bleiben (siehe Vererbungsregel bei P2). **Merken:** die Matrix ist RUND, bei y=11 nur x=2…10 nutzbar. |
 | 2026-08-25 | P6 | Stufe 3 läuft: `AvatarActivity` + `AvatarActivityBus` (5 Minuten Lebensdauer) + `AvatarActivityPlans`. Einlage auf passende Tätigkeit schiebt sich ein, auf unpassende kommt erst der Wechsel. 18 neue Tests. **Abweichung:** `RoutineStep.Flourish` bewusst nicht gebaut — begründet im P6-Abschnitt. **Für P7/P8:** ab hier ist alle Mechanik fertig, es fehlt nur noch Pixelarbeit. Erste Adresse ist der Teller für `koerper/essen`, weil daran drei Knoten hängen. |
 | 2026-08-25 | P5 | Zieh-Leiste unter dem Avatar + Baumbildschirm als Dialog. Ein Zug aus der Leiste gibt **kein XP** und schreibt kein Fütter-Ereignis (sonst speist sich die Neigung aus sich selbst). Logik in `SkillTreeRows` (8 Tests), Compose bleibt dünn. **Für P6:** `playFromBar` in `HomeScreen` ist die Stelle, an der Stufe 3 später eine laufende Tätigkeit braucht statt einer einmaligen Reaktion. Lint ist scharf — `FlowOperatorInvokedInComposition` hat zugeschlagen, Flows in Composables gehören in `remember`. |
 | 2026-08-25 | P4 | Freischaltung steht: `AvatarUnlockedNode` (DB 23), `BranchAffinity` (Halbwertszeit 14 Tage, nur beantwortete Auslösungen), `UnlockOffers` (2+1), `AvatarUnlockRepository` — alles im neuen Paket `skilltree/`. 21 neue Tests. **Für P5:** `observeUnlockedNodes(profileId)` liefert der Zieh-Leiste einen Flow, `ReactionTrigger.ofNode(nodeId)` ist der fertige Weg von dort zur Reaktion. In der Leiste nur Knoten mit Motiv zeigen. |
