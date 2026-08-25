@@ -78,6 +78,8 @@ import com.notime.glyphsim.matrix.AvatarClip
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.ReactionTrigger
+import com.notime.glyphsim.skilltree.AvatarActivityBus
+import com.notime.glyphsim.skilltree.AvatarActivityPlans
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.ClipStorage
 import com.notime.glyphsim.matrix.ClockFrameSim
@@ -298,20 +300,32 @@ fun HomeScreen(
      * Erinnerung - er ist ein Spielzug. Wuerde er in `avatar_feed_events` landen, faelschte er
      * genau die Statistik, aus der die Neigung des Skillbaums gerechnet wird: Der Baum wuerde sich
      * dann aus sich selbst speisen statt aus dem, was der Nutzer tatsaechlich im Alltag tut.
+     *
+     * **Was abgespielt wird, entscheidet [AvatarActivityPlans]** und nicht diese Stelle: Eine
+     * Einlage der Stufe 3 braucht eine laufende Beschaeftigung, in der sie stattfinden kann, und
+     * bringt sonst erst den Wechsel dorthin mit. Die Schritte laufen ohne Pause hintereinander -
+     * dazwischen die Ruhelage zu zeigen wuerde aus einer Bewegung zwei machen.
      */
     fun playFromBar(node: com.notime.glyphcore.data.AnimationNode) {
         if (isReacting || activeReminder != null) return
+        val now = System.currentTimeMillis()
+        val plan = AvatarActivityPlans.planFor(AvatarActivityBus.currentIfFresh(now), node)
         isReacting = true
         scope.launch {
             try {
-                AvatarFeeding.playReaction(
-                    species = currentSpecies,
-                    trigger = ReactionTrigger.ofNode(node.id),
-                    screenWidthPx = screenWidthPx,
-                    screenHeightPx = screenHeightPx,
-                    onFrame = { avatarFrame = it },
-                    onOffset = { avatarDrag = it }
-                )
+                for (step in plan.steps) {
+                    AvatarFeeding.playReaction(
+                        species = currentSpecies,
+                        trigger = ReactionTrigger.ofNode(step.nodeId),
+                        screenWidthPx = screenWidthPx,
+                        screenHeightPx = screenHeightPx,
+                        onFrame = { avatarFrame = it },
+                        onOffset = { avatarDrag = it }
+                    )
+                }
+                // Erst nach dem Abspielen: Bricht die Wiedergabe ab (Bildschirm verlassen), soll
+                // nicht eine Beschaeftigung stehen bleiben, die nie zu sehen war.
+                AvatarActivityBus.set(plan.resultingActivity, System.currentTimeMillis())
             } finally {
                 avatarDrag = Offset.Zero
                 isReacting = false

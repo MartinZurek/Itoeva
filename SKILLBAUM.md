@@ -409,19 +409,46 @@ Zwei Zieh-Ziele nebeneinander wären nur verwirrend.
 ### P6 — Laufende Tätigkeit (Stufe 3)
 
 **Öffnen:** `PlayRoutine.kt` 95–135, `PlayScene.kt` nur 119 und 170.
-**Nicht öffnen:** Die Abläufe ab `PlayRoutine.kt:136` — es kommt ein Schritt dazu, die
-vorhandenen ändern sich nicht.
+**Nicht öffnen:** Die Abläufe ab `PlayRoutine.kt:136`.
 
-- [ ] `AvatarActivity(nodeId, seitMillis)` als beobachtbarer Zustand neben der Stimmung
-- [ ] Tätigkeits-Knoten setzen ihn, statt einmalig abzuspielen
-- [ ] `RoutineStep.Flourish(nodeId)` ergänzen
-- [ ] Passende Tätigkeit: einschieben, Tätigkeit läuft danach weiter
-- [ ] Unpassende Tätigkeit: erst Wechsel zur Stufe-2-Tätigkeit, dann Einlage — als eine Bewegung
-- [ ] Test: Einlage beendet die passende Tätigkeit nicht
-- [ ] Test: unpassende erzeugt genau einen Wechsel, kein Flackern
-- [ ] `PlayRoutineTest`: jeder Flourish-Knoten hat eine erreichbare Eltern-Tätigkeit
+- [x] `AvatarActivity(nodeId, sinceMillis)` als beobachtbarer Zustand (`AvatarActivityBus`)
+- [x] Tätigkeits-Knoten setzen ihn, statt einmalig abzuspielen
+- [x] Passende Tätigkeit: einschieben, Tätigkeit läuft danach weiter
+- [x] Unpassende Tätigkeit: erst Wechsel zur Stufe-2-Tätigkeit, dann Einlage — in einem Zug
+- [x] Test: Einlage beendet die passende Tätigkeit nicht
+- [x] Test: kein Plan enthält mehr als einen Wechsel, kein Flackern
+- [x] Test: jede Einlage hängt unter einer echten Tätigkeit
+- [ ] ~~`RoutineStep.Flourish(nodeId)`~~ — **nicht gemacht, siehe unten**
 
 **Prüfen:** `gradlew.bat :app-sim:testDebugUnitTest`
+
+**Erledigt am 2026-08-25.** 18 neue Tests, 544 gesamt grün, Lint grün, APK baut, Fingerabdruck
+unverändert. Auf dem Gerät noch nicht gegengeprüft.
+
+### Die Regel
+
+| Gezogen | Läuft gerade | Was passiert |
+|---|---|---|
+| Tätigkeit (Stufe 1/2) | egal | Er fängt sie an |
+| Einlage (Stufe 3) | ihr Elternknoten | nur die Einlage — **die Tätigkeit läuft weiter** |
+| Einlage | etwas anderes | erst Wechsel zur Eltern-Tätigkeit, dann die Einlage |
+
+**Passend heißt: genau der Elternknoten.** Wer allgemein „Sport" macht und ein Dribbling bekommt,
+wechselt zu Ballsport — für einen Trick braucht es einen Ball, und „Sport" ist noch keiner.
+
+Die Tätigkeit **läuft nach 5 Minuten ab**. Ohne Verfall gälte er noch Stunden später als „spielt
+Ball", und eine Einlage wäre die Antwort auf etwas längst Vergangenes.
+
+### Warum `RoutineStep.Flourish` nicht gebaut wurde
+
+`RoutineStep` gehört zur **Weltsimulation** — den Abläufen, in denen der Avatar im Dock-Modus zu
+Stationen läuft (`PlayRoutine`, `PlayScene`). Der Zieh-Pfad benutzt davon nichts: Er spielt
+Reaktionen direkt ab. Ein `Flourish`-Schritt dort hätte also nicht Stufe 3 zum Laufen gebracht,
+sondern die Zieh-Leiste an die Weltsimulation angeschlossen — **das ist ein eigenes Paket**, kein
+Teil von „Stufe 3 funktioniert".
+
+Wer es später baut: `AvatarActivityPlans.planFor` liefert bereits die Schrittfolge; die
+Weltsimulation müsste sie nur in ihre eigenen Schritte übersetzen.
 
 ---
 
@@ -487,6 +514,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
 | 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
+| 2026-08-25 | P6 | Stufe 3 läuft: `AvatarActivity` + `AvatarActivityBus` (5 Minuten Lebensdauer) + `AvatarActivityPlans`. Einlage auf passende Tätigkeit schiebt sich ein, auf unpassende kommt erst der Wechsel. 18 neue Tests. **Abweichung:** `RoutineStep.Flourish` bewusst nicht gebaut — begründet im P6-Abschnitt. **Für P7/P8:** ab hier ist alle Mechanik fertig, es fehlt nur noch Pixelarbeit. Erste Adresse ist der Teller für `koerper/essen`, weil daran drei Knoten hängen. |
 | 2026-08-25 | P5 | Zieh-Leiste unter dem Avatar + Baumbildschirm als Dialog. Ein Zug aus der Leiste gibt **kein XP** und schreibt kein Fütter-Ereignis (sonst speist sich die Neigung aus sich selbst). Logik in `SkillTreeRows` (8 Tests), Compose bleibt dünn. **Für P6:** `playFromBar` in `HomeScreen` ist die Stelle, an der Stufe 3 später eine laufende Tätigkeit braucht statt einer einmaligen Reaktion. Lint ist scharf — `FlowOperatorInvokedInComposition` hat zugeschlagen, Flows in Composables gehören in `remember`. |
 | 2026-08-25 | P4 | Freischaltung steht: `AvatarUnlockedNode` (DB 23), `BranchAffinity` (Halbwertszeit 14 Tage, nur beantwortete Auslösungen), `UnlockOffers` (2+1), `AvatarUnlockRepository` — alles im neuen Paket `skilltree/`. 21 neue Tests. **Für P5:** `observeUnlockedNodes(profileId)` liefert der Zieh-Leiste einen Flow, `ReactionTrigger.ofNode(nodeId)` ist der fertige Weg von dort zur Reaktion. In der Leiste nur Knoten mit Motiv zeigen. |
 | 2026-08-25 | P3 | `ReactionTrigger` ersetzt die zwei nullbaren Werte (Topic/Node/Untracked/None) — Begründung im P3-Abschnitt. `AvatarFeedEvent.nodeId` gefüllt für **beide** Quellen, DB `:app-sim` 22. 497 Tests grün, APK baut. **Für P4:** Neigung kann direkt `GROUP BY nodeId` auf `avatar_feed_events` rechnen, Altdaten sind nachgetragen; `fedAtMillis IS NOT NULL` filtert die beantworteten. **Gelöst:** der `G:\Meine Ablage`-Baufehler kam von einem alten Gradle-Daemon — `gradlew --stop` genügt, Details bei den Prüfbefehlen. Seither bauen beide APKs und `:core:test`. |
