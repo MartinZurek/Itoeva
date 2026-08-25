@@ -1,0 +1,459 @@
+# Skillbaum: Umbau der Animationen
+
+Arbeitsliste für den Umbau vom flachen Bestand (68 Motive) zu einem dreistufigen Baum, in dem
+jede auf den Avatar gezogene Animation eine passende Reaktion auslöst und neue Zweige über Level
+freigeschaltet werden.
+
+**Diese Datei ist die maßgebliche Quelle und steht für sich.** Es gibt zwei bebilderte Fassungen
+davon — [Bestandsaufnahme](https://claude.ai/code/artifact/72c09cf7-645d-4c7b-abe8-7b10b4408859)
+und [Umbauplan](https://claude.ai/code/artifact/c782d88e-e80f-4722-bad5-3408a64e8ba9) — die sind
+aber nur zum Ansehen und nur mit dem Konto von Martin erreichbar. Zum Arbeiten wird nichts davon
+gebraucht; alles Nötige steht hier.
+
+---
+
+## So arbeiten wir
+
+**Dieses Dokument ersetzt die Erkundung.** Alles, was einmal herausgefunden wurde, steht hier —
+Zeilennummern, Zuordnungen, Prüfbefehle. Eine neue Sitzung liest den Kopf bis „Arbeitspakete" und
+fängt an. Sie durchsucht nicht noch einmal den Code nach Dingen, die unten schon stehen.
+
+1. **Nie eine ganze Datei öffnen, für die unten ein Zeilenbereich steht.** Die Anker im nächsten
+   Abschnitt sind geprüft. `PlayScene.kt` hat 3.672 Zeilen, gebraucht werden davon zwei Enums.
+2. **Ein Arbeitspaket ist eine Sitzung.** Jedes Paket nennt, was zu öffnen ist, was ausdrücklich
+   nicht, und womit geprüft wird. Kein Paket braucht ein anderes offen.
+3. **Prüfen per Test oder Grep, nicht per Lesen.** Ob ein Umbau stimmt, beantwortet ein Testlauf
+   in Sekunden — eine Datei erneut zu lesen beantwortet es nicht.
+4. **Pakete sind nach Datei gebündelt.** Wer `AvatarAnimations.kt` öffnet, erledigt in derselben
+   Sitzung alles, was dort ansteht.
+5. **Am Ende jeder Sitzung:** Haken setzen, und wenn sich eine Zeilennummer verschoben hat, den
+   Anker unten korrigieren. Ein falscher Anker kostet die nächste Sitzung mehr als das Nachtragen.
+6. **Das Journal unten fortschreiben.** Zwei Zeilen je Sitzung. Das ist billiger als ein `git log`
+   zu lesen und zu deuten.
+
+---
+
+## Kontext-Anker
+
+### Bereits festgestellt — nicht neu herleiten
+
+- Der Bestand sind **68 Motive**: 12 `AnimationType`, 26 allgemeine, 30 charakterspezifische.
+- **MEDICINE bleibt außerhalb des Baums.** Es ist eine reine Erinnerungsfunktion und darf nie
+  Spiel-Knoten sein (Regel steht schon in `PlayGamePlan`). Damit sind **67 Motive** einzusortieren.
+- **Das Ziehen auf den Avatar existiert.** Kollisionsprüfung läuft während der Geste.
+- **XP/Level existiert.** Level wird aus `xp` abgeleitet, nicht gespeichert.
+- **Das Nutzungs-Log existiert.** `avatar_feed_events` schreibt jede Auslösung mit Thema,
+  Profil und Antwortzeitpunkt mit — auch die unbeantworteten.
+- **Reaktionen sind parametrisch.** `creatureFrame(...)` baut jedes Bild aus dem Körper der
+  Spezies. Neue Reaktion = Liste von Beats, kein neuer Sprite, gilt sofort für alle sechs Spezies.
+- **Es gibt ZWEI Datenbanken.** `:app-sim` (jetzt Version 22) und `:app` (jetzt Version 20), beide
+  mit `exportSchema = true`. **Jede Änderung an einer Entity in `:core` trifft beide** — Room
+  vergleicht beim Öffnen das ganze Schema, nicht nur die benutzten Spalten. Wer nur eine Seite
+  migriert, baut einen Absturz beim Start der anderen App. Das ist in diesem Repo schon einmal
+  passiert (`isPlayMode`, siehe KDoc von `MIGRATION_18_19` in `:app`).
+  Betroffen sind alle Entities aus `:core`: `GlyphReminder`, `LibraryAnimation`,
+  `BuiltInAnimationSelection`. Nicht betroffen: `AvatarFeedEvent` und `AvatarPlayState` — die
+  liegen in `:app-sim` und gibt es in `:app` gar nicht.
+- Module: `:core` (gemeinsame Datenschicht), `:app` (Glyphkalender), `:app-sim` (Avatar-App).
+
+### Ankerpunkte
+
+| Datei | Zeilen | Was dort steht — nur diesen Bereich öffnen |
+|---|---|---|
+| `core/…/data/AnimationType.kt` | 27 gesamt | Die 12 Typen. Ganz lesbar. |
+| `core/…/data/LibraryAnimation.kt` | 22 gesamt | Entity. Ganz lesbar. Hier fehlt `nodeId`. |
+| `core/…/data/DefaultLibraryAnimations.kt` | **33–60** | Die 26 Labels. Ab 61 nur Frame-Mathematik — nicht nötig. |
+| `core/…/data/AvatarSignatureAnimations.kt` | **36–100** | Die 30 Einträge je Avatar. Ab 101 nur Zeichenhilfen. |
+| `app-sim/…/matrix/AvatarAnimations.kt` | **107–130** | `creatureFrame` — Signatur der Parametrisierung |
+| | **329–430** | `flightOffsetsFor`, `reactionFor`, `finishMoodFor` — der Dispatch |
+| | 583–648 | `Fidget` + `fidgetSequence` |
+| | 1196 ff. | `speciesFlourish` |
+| `app-sim/…/matrix/AvatarSignatureReactions.kt` | **34–100** | `forLabel` — die 30er-Weiche. Ab 101 die Choreografien. |
+| `app-sim/…/ui/AvatarFeeding.kt` | 35, 77 | `overlaps`, `playReaction` |
+| `app-sim/…/ui/HomeScreen.kt` | **178–360** | Zustand, `feedNow` (290), Kollision (356) |
+| | 600–700 | Uhr-Sprite, Zieh-Geste, Easter Egg |
+| `app-sim/…/ui/DockScreen.kt` | **1580–1640** | `logFeedEvent` (1591), `playReaction` (1623) |
+| `app-sim/…/data/AvatarFeedEvent.kt` | 24 ff. | Entity mit `animationType`, `libraryAnimationLabel`, `fedAtMillis` |
+| `app-sim/…/data/AvatarPlayState.kt` | ganz | `xp`, `lastSeenLevel` |
+| `app-sim/…/ui/PlayModeXp.kt` | 18 gesamt | `levelFor`, `XP_PER_FEED`, `XP_PER_LEVEL` |
+| `app-sim/…/data/AppDatabase.kt` | 25–42 | Entities + `version = 22` |
+| `app-sim/…/data/AppDatabaseMigrations.kt` | **110–135** | Muster: Spalte hinzufügen (17→18), neue Tabelle (18→19) |
+| `app/…/data/AppDatabase.kt` | 27–36 | Die **zweite** Datenbank, `version = 20` |
+| `app/…/data/AppDatabaseMigrations.kt` | ganz (75 Z.) | Klein. `ALL`-Array am Ende. |
+| `core/…/data/LibraryAnimationNodeIds.kt` | ganz (37 Z.) | Nachtrag der `nodeId`, von beiden Migrationen benutzt |
+| `app-sim/…/matrix/PlayRoutine.kt` | 95–135 | `PlayRoutines.forTopic`, `allFor`. Ab 136 die Abläufe. |
+| `app-sim/…/matrix/PlayScene.kt` | **119, 170** | Nur die beiden Enums `Place` und `Station` |
+| `app-sim/…/matrix/PlayGamePlan.kt` | 49–60 | `stageFor`, `forSpecies` |
+| `app-sim/…/matrix/PlayAmbientActivity.kt` | 53, 115 | `Action`, `DayPhase` |
+
+### Diese Dateien nie ganz öffnen
+
+| Datei | Zeilen | Warum sie trotzdem auftaucht |
+|---|---|---|
+| `PlayScene.kt` | 3.672 | Nur zwei Enums werden gebraucht (119, 170) |
+| `DockScreen.kt` | 2.925 | Nur der Fütterpfad (1580–1640) |
+| `HomeScreen.kt` | 1.544 | Nur zwei Bereiche (178–360, 600–700) |
+| `AvatarAnimations.kt` | 1.285 | Vier benannte Bereiche, siehe oben |
+| `AvatarSignatureAnimations.kt` | 848 | Nur die Einträge (36–100) |
+| `DefaultLibraryAnimations.kt` | 743 | Nur die Labels (33–60) |
+| `PlayTalk.kt`, `ReminderScreen.kt`, `AvatarClips.kt` | groß | Für Phase 0–4 irrelevant |
+
+### Prüfbefehle
+
+**`JAVA_HOME` ist nicht gesetzt.** Ohne diese Zeile bricht jeder Gradle-Aufruf sofort ab:
+
+```
+export JAVA_HOME="C:/Program Files/Android/Android Studio/jbr"   # Bash
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"   # PowerShell
+```
+
+```
+gradlew.bat :core:test                  # Katalog, Zuordnung, Typen
+gradlew.bat :app-sim:testDebugUnitTest  # Reaktionen, Freischaltung, Abläufe
+gradlew.bat :app-sim:assembleDebug      # baut die APK
+```
+
+### Wenn ein Build an einem `G:\Meine Ablage`-Pfad scheitert
+
+```
+gradlew.bat --stop
+```
+
+**Das ist die ganze Lösung.** Ursache war ein langlebiger Gradle-**Daemon**, der noch ein
+Dateisystem-Abbild aus der Zeit vor dem Umzug (siehe UMZUG.md) im Speicher hielt und KSP deshalb
+Quelldateien unter `G:\Meine Ablage\Notime\…` meldete, während das Projekt längst unter `C:\Notime`
+liegt — daher „this and base files have different roots".
+
+Der Pfad steht **nirgends auf der Platte**: Weder `grep` über das Projekt noch über
+`~/.gradle/caches` findet ihn, und `C:\Notime` ist auch kein Junction. Wer ihn sucht, sucht
+vergeblich — deshalb steht das hier. Seit dem Daemon-Neustart laufen `:core:test`,
+`:app:assembleDebug` und `:app-sim:assembleDebug` alle durch.
+
+Vorhandene Wächter, die den Umbau absichern — bei rotem Testlauf zuerst hier nachsehen:
+`AvatarAnimationsTest`, `FeedingChainCharacterizationTest`, `HomeScreenCharacterizationTest`,
+`AvatarSignatureAnimationsTest`, `LibraryAnimationFitTest`, `PlayRoutineTest`,
+`AppDatabaseMigrationTest`.
+
+---
+
+## Getroffene Entscheidungen
+
+Verbindlich für alle Pakete. Wer eine ändert, muss die betroffenen Pakete neu bewerten.
+
+1. **Freischaltung gilt nur für das Spiel.** Der Baum steuert ausschließlich die Zieh-Leiste. Die
+   Bibliothek für echte Erinnerungen bleibt vollständig offen — ein Spielfortschritt darf nie eine
+   Erinnerung sperren.
+2. **Freischalt-Angebot: 2 + 1.** Zwei Kandidaten aus dem stärksten Zweig, dazu ein Querschläger
+   aus einem anderen.
+3. **Cake wird Kopf von `aufbruch/feiern`.** `koerper/essen` bekommt ein neues Motiv (Teller).
+4. **`naehe` wird zuerst gezeichnet.** Einzige Gruppe ohne Charakter-Motiv.
+5. **Katalog und Zuordnung nach `:core`.** Choreografien und Zustand bleiben in `:app-sim`.
+
+---
+
+## Die vollständige Zuordnung
+
+**Diese Tabelle ist das Ergebnis der Bestandsaufnahme und wird nicht neu hergeleitet.** Sie ist die
+Vorlage für Paket 0. `←` heißt vorhandenes Motiv, `✎` heißt neu zu zeichnen.
+
+Pfadschema: `hauptgruppe/untergruppe/blatt`, ASCII, keine Umlaute.
+
+| Stufe 1 (Kopf) | Stufe 2 (Kopf) | Stufe 3 |
+|---|---|---|
+| `sport` ← MOVE | `ballsport` ← Football | Basketball, Trophy, ✎ Dribbling, ✎ Schuss |
+| | `kraft-ausdauer` ← Fitness | Summit, Ladder, Flag, ✎ Heben |
+| `koerper` ← DRINK | `trinken` ← Wave | Drip, Puddle, Rain |
+| | `essen` ← ✎ Teller | Plant, Battery |
+| `ruhe` ← SLEEP | `schlafen` ← Cloud | Balloon, Turtle, Snail |
+| | `pause` ← REST | Candle, Lantern, Nest |
+| `achtsamkeit` ← MINDFULNESS | `atmen` ← Breathe | Feather, Anchor |
+| | `beobachten` ← Butterfly | Bubble, Constellation, Eye |
+| `arbeit` ← WORK | `geraet` ← Robot | Stocks, TAMA, ✎ Pause machen |
+| | `erledigen` ← FOCUS | Check, Target, Hourglass, Shield, Lighthouse |
+| `lernen` ← BOOK | `lesen` ← Scroll | Idea, ✎ Notizen |
+| | `knobeln` ← Puzzle | Key, Compass |
+| `kreativ` ← CREATIVITY | `musik` ← Music | Drum, Bolt, ✎ Singen |
+| | `bauen-malen` ← Star | Fire, Kite |
+| `naehe` ← LOVE | `freunde` ← Mail | Gift, ✎ Besuch, ✎ Anrufen |
+| | `tiere` ← Dog | Cat, Pet, Paw |
+| `aufbruch` ← GENERAL | `reisen` ← Airplane | Rocket, Comet, ✎ Karte |
+| | `feiern` ← Cake | ✎ Konfetti, ✎ Kerzen |
+
+**Bilanz:** 9 Köpfe Stufe 1 (alle vorhandene Typen) + 18 Köpfe Stufe 2 (17 vorhanden, 1 neu) +
+52 Blätter (41 vorhanden, 11 neu) = **79 Knoten.** Alle 67 baumfähigen Motive sind untergebracht,
+**12 Knoten warten noch auf ihre Zeichnung.** MEDICINE steht bewusst außerhalb.
+
+---
+
+## Arbeitspakete
+
+### P0 — Katalog anlegen
+
+**Öffnen:** `AnimationType.kt` (ganz), `LibraryAnimation.kt` (ganz), die Zuordnungstabelle oben.
+**Nicht öffnen:** `DefaultLibraryAnimations.kt` und `AvatarSignatureAnimations.kt` — die Labels
+stehen vollständig in der Tabelle oben.
+
+- [x] `core/…/data/AnimationNode.kt`: Pfad-Id, Titel, Emoji, Art (`ACTIVITY` / `FLOURISH`)
+- [x] `core/…/data/AnimationTree.kt`: die 27 Knoten aus Spalte 1 und 2 der Tabelle
+- [x] Blätter aus Spalte 3 ergänzen, die `✎`-Einträge zunächst ohne Motiv anlegen
+- [x] `AnimationTree.nodeIdFor(label: String)` — Zuordnung für alle 67 Motive
+- [x] MEDICINE ausdrücklich ausschließen, mit Begründung als Kommentar
+- [x] `core/…/AnimationTreeTest.kt`: jeder Pfad auflösbar, jedes Motiv genau ein Knoten, jeder
+      Knoten höchstens ein Motiv, jede Untergruppe mindestens zwei Blätter
+- [x] 27 Zeichenketten für die Namen der Stufen 1 und 2, Englisch und Deutsch
+
+**Prüfen:** `gradlew.bat :core:testDebugUnitTest` — **App bleibt unverändert, kein `:app-sim` nötig.**
+
+**Erledigt am 2026-08-25.** 19 Tests, alle grün. Blattnamen kommen bewusst vom Motiv und haben
+keine eigene Zeichenkette — eine zweite Bezeichnung daneben könnte nur auseinanderlaufen. Die 12
+ungezeichneten Blätter bekommen ihren Namen zusammen mit ihrer Zeichnung in P8.
+
+---
+
+### P1 — Datenbank
+
+**Öffnen:** beide `AppDatabase.kt`, beide `AppDatabaseMigrations.kt`, beide `AppDatabaseMigrationTest.kt`.
+**Nicht öffnen:** Sonst nichts.
+
+- [x] `nodeId TEXT` auf `LibraryAnimation`, nullable (für selbstgezeichnete)
+- [x] `core/…/LibraryAnimationNodeIds.kt`: Nachtrag aus `AnimationTree`, von beiden Modulen benutzt
+- [x] `DefaultLibraryAnimations.seed()` setzt `nodeId` gleich mit — an einer Stelle für alle 56
+- [x] `:app-sim` `MIGRATION_20_21`, Version 21, Schema `app-sim/schemas/…/21.json`
+- [x] `:app` `MIGRATION_19_20`, Version 20, Schema `app/schemas/…/20.json`
+- [x] Beide `AppDatabaseMigrationTest` erweitert, beide `CURRENT_VERSION` erhöht
+
+**Prüfen:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, dazu
+`gradlew.bat :app-sim:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin` — die
+Migrationstests sind instrumentiert und brauchen zum Laufen ein Gerät; übersetzen lassen sie sich
+ohne.
+
+**Erledigt am 2026-08-25.** 483 Tests, alle grün; beide androidTest-Quellen übersetzen.
+
+> **Korrektur an diesem Paket:** Es war nur für `:app-sim` geplant. `LibraryAnimation` liegt aber
+> in `:core` und wird von beiden Apps benutzt — `:app` brauchte dieselbe Spalte und eine eigene
+> Migration 19→20, sonst wäre es beim nächsten Update am Öffnen der Datenbank abgestürzt. Siehe
+> den neuen Punkt „Es gibt ZWEI Datenbanken" oben; **P3 und P4 müssen das mitdenken.**
+
+---
+
+### P2 — Reaktion über den Pfad
+
+Das teuerste Paket. Alles, was `AvatarAnimations.kt` betrifft, passiert hier in einer Sitzung.
+
+**Öffnen:** `AvatarAnimations.kt` 107–130 und 329–430, `AvatarSignatureReactions.kt` 34–100.
+**Nicht öffnen:** Die Choreografien ab `AvatarSignatureReactions.kt:101` — sie ändern sich nicht,
+nur ihr Schlüssel.
+
+- [x] `AvatarReactions.forNode(nodeId, body)` — läuft den Pfad von hinten nach vorn
+- [x] `AvatarSignatureReactions.forNode` — Schlüssel ist der Knoten, Weiche bleibt labelbasiert
+- [x] Charakterisierungstest **vor** dem Umbau erzeugt: `app-sim/src/test/reaction-fingerprint.txt`
+- [x] Rocket-Sonderfall erhalten: `flightOffsetsFor` greift auf `aufbruch/reisen/rocket`
+- [x] `AvatarReactionsTest` — nagelt die Vererbungsregel fest
+- [x] Geprüft: **alle 9 Stufe-1-Gruppen haben bereits eine Choreografie** (über ihren eingebauten
+      Typ: MOVE, DRINK, SLEEP, MINDFULNESS, WORK, BOOK, CREATIVITY, LOVE, GENERAL). P9 muss sie
+      nicht erfinden, sondern nur requisitenfrei machen und als Gruppen-Antwort eintragen.
+
+**Prüfen:** `gradlew.bat :app-sim:testDebugUnitTest`. Rot heißt hier immer: eine Bildfolge hat
+sich verändert. Nicht den Test anpassen — die Ursache suchen.
+
+**Erledigt am 2026-08-25.** 490 Tests, alle grün; alle 69 Fingerabdrücke unverändert.
+
+> **Abweichung:** `reactionFor` behält `libraryAnimationLabel` als Parameter und löst den Knoten
+> intern auf. Grund: `nodeId == null` bedeutet zweierlei — „keine Bibliotheks-Animation" und
+> „selbstgezeichnet, noch nicht zugeordnet". Beide müssen unterschiedlich behandelt werden
+> (Themen-Handlung vs. Freuden-Reaktion), das Label trägt diese Unterscheidung noch. **Die
+> Signatur wechselt in P3**, wenn `AvatarFeedEvent` den Knoten selbst mitbringt.
+
+### Die Vererbungsregel — für P9 wichtig
+
+Der erste Entwurf ließ den Rückfall einfach über alle Choreografien laufen. Das veränderte genau
+ein Motiv, und dieser Fall ist die Regel:
+
+**Idea** hängt unter `lernen/lesen`, und dieser Knoten trägt das Motiv *Scroll*. Idea erbte damit
+Scrolls Choreografie — „der Blick wandert zeilenweise, dann: verstanden". Vom Takt her passt das
+zur Glühbirne sogar gut. Nur hält der Avatar dabei eine **Schriftrolle**: Die Requisite gehört zu
+Scroll, nicht zu der Stelle im Baum, an der Scroll zufällig sitzt.
+
+Daraus zwei Sorten Antwort:
+
+| Sorte | Gilt für | Requisite |
+|---|---|---|
+| **Motiveigen** (die 30) | nur ihren eigenen Knoten | die des Motivs — deshalb nicht vererbbar |
+| **Gruppen-Antwort** (P9) | alles darunter | muss requisitenfrei sein |
+
+`AvatarReactions.groupAnswer` ist die leere Weiche, in die P9 einträgt. Sie ist bewusst leer:
+Eine der 30 vorhandenen Choreografien dort einzuhängen, nur damit der Rückfall „etwas tut", würde
+genau den Idea-Fehler einbauen. `AvatarReactionsTest` bewacht beides.
+
+---
+
+### P3 — Aufrufer nachziehen
+
+**Öffnen:** `AvatarFeeding.kt` 35 und 77, `HomeScreen.kt` 178–360, `DockScreen.kt` 1580–1640.
+**Nicht öffnen:** Den Rest beider Bildschirme.
+
+**Vollständige Aufrufliste** (Stand nach P2 — nicht neu suchen):
+
+| Datei | Zeile | Aufruf |
+|---|---|---|
+| `AvatarFeeding.kt` | 115, 120 | `reactionFor`, `flightOffsetsFor` |
+| `AvatarClips.kt` | 125, 242, 393, 528, 529, 604 | `reactionFor` ×5, `flightOffsetsFor` ×1 |
+| `DockScreen.kt` | 826 | `reactionFor(species, step.topic)` |
+| `AvatarAnimations.kt` | 516 | `reactionFramesFor` → delegiert |
+| `PlayModeRoll.kt` | 80 | `labelsFor(species)` — **bleibt labelbasiert**, andere Frage |
+
+- [x] `ReactionTrigger` eingeführt — löst die Mehrdeutigkeit, die P2 blockiert hatte
+- [x] `AvatarFeeding.playReaction` nimmt `trigger` statt zweier nullbarer Werte
+- [x] `reactionFor` / `flightOffsetsFor` / `reactionFramesFor` auf `ReactionTrigger`
+- [x] Alle 11 Aufrufstellen umgestellt
+- [x] `AvatarFeedEvent` bekommt `nodeId` — DB 21 → 22, **nur `:app-sim`** (`:app` bleibt auf 20)
+- [x] `ReminderTrigger.feedEventFor` schreibt den Knoten gleich mit
+- [x] Altdaten nachgetragen, aus **beiden** Quellen; MEDICINE bleibt `null`
+- [x] `ReactionTriggerTest`, Migrationstest 21→22, `FeedEventOwnershipTest` erweitert
+
+**Prüfen:** `gradlew.bat :app-sim:testDebugUnitTest`, dann einmal `assembleDebug` und auf dem
+Gerät füttern.
+
+**Erledigt am 2026-08-25.** 497 Tests grün, alle 70 Fingerabdrücke unverändert, APK baut.
+Auf dem Gerät noch nicht gegengeprüft.
+
+### `ReactionTrigger` statt zweier nullbarer Werte
+
+Der in P2 zurückgestellte Punkt. Ein Knoten allein kann vier Fälle nicht auseinanderhalten, die
+sich unterschiedlich verhalten müssen:
+
+| Fall | Reaktion |
+|---|---|
+| `Topic(type)` — eingebaute Erinnerung | Handlung zum Thema |
+| `Node(nodeId)` — Animation im Baum | eigene oder geerbte Choreografie |
+| `Untracked` — selbstgezeichnet, kein Knoten | arteigene Freuden-Reaktion |
+| `None` — Antippen, Easter Egg | generisch |
+
+Als `nodeId: String?` wären der dritte und vierte Fall identisch gewesen (`null`) — und das hätte
+jede selbstgezeichnete Animation still um ihre Reaktion gebracht. **`ReactionTrigger.of(type, label)`
+ist der einzige Ort, an dem aus Datenbankspalten ein Anlass wird.**
+
+**MEDICINE** läuft über `Topic` und damit an jedem Knoten vorbei — es steht ja bewusst nicht im
+Baum. `ReactionTriggerTest` prüft für alle sechs Spezies, dass es trotzdem seine Reaktion bekommt.
+
+---
+
+### P4 — Besitz und Freischaltung
+
+**Öffnen:** `AvatarPlayState.kt`, `PlayModeXp.kt`, `AvatarFeedEvent.kt` 24 ff.
+**Nicht öffnen:** Kein Bildschirm. Dieses Paket ist reine Logik.
+
+- [ ] Entity `AvatarUnlockedNode(profileId, nodeId, unlockedAtMillis)` + DAO, DB 22 → 23
+- [ ] Beim ersten Start je Profil die 9 Stufe-1-Knoten freischalten
+- [ ] `BranchAffinity`: Neigung je Hauptgruppe aus `avatar_feed_events`, nach Aktualität gewichtet
+- [ ] Nur beantwortete Auslösungen zählen (`fedAtMillis != null`)
+- [ ] `UnlockOffer`: Grenze bestimmen (Kinder freigeschalteter Knoten), Angebot 2 + 1 bauen
+- [ ] Test gegen erfundenes Log: einseitig, leer, und „alles gleich oft"
+- [ ] Test: der Querschläger kommt nie aus dem stärksten Zweig
+
+**Prüfen:** `gradlew.bat :app-sim:testDebugUnitTest`
+
+---
+
+### P5 — Zieh-Leiste und Baumbildschirm
+
+**Öffnen:** `HomeScreen.kt` 600–700 (Zieh-Geste als Vorlage).
+**Nicht öffnen:** `DockScreen.kt` — die Leiste kommt zuerst nur auf den Startbildschirm.
+
+- [ ] Leiste am unteren Rand mit den freigeschalteten Knoten, nach Hauptgruppe gruppiert
+- [ ] Ziehen aus der Leiste auf den Avatar — `overlaps` und `playReaction` bleiben unverändert
+- [ ] Die Uhr behält ihre Rolle für echte Erinnerungen; die Leiste ist zusätzlich
+- [ ] Kreis-Easter-Egg darf durch das Ziehen aus der Leiste nicht ausgelöst werden
+- [ ] Baumbildschirm: offen / Grenze / gesperrt, mit Fortschritt zum nächsten Level
+- [ ] Bedienungshilfen: Zieh-Ziel per Semantik erreichbar (Muster: Uhr in `HomeScreen`)
+
+**Prüfen:** Auf dem Gerät, mindestens zwei Spezies.
+
+---
+
+### P6 — Laufende Tätigkeit (Stufe 3)
+
+**Öffnen:** `PlayRoutine.kt` 95–135, `PlayScene.kt` nur 119 und 170.
+**Nicht öffnen:** Die Abläufe ab `PlayRoutine.kt:136` — es kommt ein Schritt dazu, die
+vorhandenen ändern sich nicht.
+
+- [ ] `AvatarActivity(nodeId, seitMillis)` als beobachtbarer Zustand neben der Stimmung
+- [ ] Tätigkeits-Knoten setzen ihn, statt einmalig abzuspielen
+- [ ] `RoutineStep.Flourish(nodeId)` ergänzen
+- [ ] Passende Tätigkeit: einschieben, Tätigkeit läuft danach weiter
+- [ ] Unpassende Tätigkeit: erst Wechsel zur Stufe-2-Tätigkeit, dann Einlage — als eine Bewegung
+- [ ] Test: Einlage beendet die passende Tätigkeit nicht
+- [ ] Test: unpassende erzeugt genau einen Wechsel, kein Flackern
+- [ ] `PlayRoutineTest`: jeder Flourish-Knoten hat eine erreichbare Eltern-Tätigkeit
+
+**Prüfen:** `gradlew.bat :app-sim:testDebugUnitTest`
+
+---
+
+### P7 — Werkzeug für Pixelarbeit
+
+**Vor P8 erledigen.** Ohne Bildkontrolle ist jede Pixelarbeit Blindflug und kostet ein Vielfaches.
+
+- [ ] Vorschau-Werkzeug wiederherstellen (das in `DefaultLibraryAnimations` erwähnte `render.py`
+      liegt nicht im Repo)
+- [ ] Diesmal einchecken, mit kurzer Notiz in der README
+- [ ] Es muss aus `framesData` vergrößerte Bitmaps erzeugen, Blattweise und als Kontaktbogen
+
+---
+
+### P8 — Die 12 neuen Motive
+
+**Öffnen:** `DefaultLibraryAnimations.kt` 61 ff. als Vorlage für Frame-Aufbau — **eine** Funktion
+genügt als Muster, nicht alle 26.
+
+Reihenfolge nach Entscheidung 4 und danach nach Nutzen:
+
+- [ ] Requisiten-Bibliothek zuerst: Ball, Hantel, Pinsel, Note, Koffer, Teller, Telefon
+- [ ] Requisiten in den oberen Zeilen halten (y ≤ 4), damit sie bei jeder Spezies passen
+- [ ] Bewegungs-Vorlagen: hüpfen, kreisen, aufsteigen-verblassen
+- [ ] `naehe/freunde`: ✎ Besuch, ✎ Anrufen
+- [ ] `koerper/essen`: ✎ Teller
+- [ ] `aufbruch/feiern`: ✎ Konfetti, ✎ Kerzen
+- [ ] `sport/ballsport`: ✎ Dribbling, ✎ Schuss
+- [ ] `sport/kraft-ausdauer`: ✎ Heben
+- [ ] `arbeit/geraet`: ✎ Pause machen
+- [ ] `lernen/lesen`: ✎ Notizen
+- [ ] `kreativ/musik`: ✎ Singen
+- [ ] `aufbruch/reisen`: ✎ Karte
+
+**Prüfen:** Je Motiv vergrößerte Bitmaps ansehen. Jede Animation braucht eine zweite erkennbare
+Bewegung, nicht nur ein pulsierendes Element.
+
+---
+
+### P9 — Choreografien
+
+Laufend, nach Bedarf. Der Fallback aus P2 sorgt dafür, dass hier nichts blockiert.
+
+- [ ] Eigene Reaktion für jede der 18 Untergruppen
+- [ ] Einlagen für die Stufe-3-Knoten mit echtem Gag (~12 von 40)
+- [ ] Keine Choreografie darf sich auf Schwanz oder Füße verlassen (hat nicht jede Spezies)
+
+---
+
+## Offene Punkte
+
+- [ ] Selbstgezeichnete Animationen der Nutzer: Auffang-Knoten je Hauptgruppe, Zuordnung später
+      von Hand?
+- [ ] Braucht die Zieh-Leiste eine Abklingzeit? Sonst füttert man im Sekundentakt.
+- [ ] Zählen Fütterungen aus der Leiste XP? Dann beschleunigt der Baum sich selbst — bewusst
+      entscheiden, nicht nebenbei.
+
+---
+
+## Journal
+
+Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen muss.
+
+| Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
+|---|---|---|
+| 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
+| 2026-08-25 | P3 | `ReactionTrigger` ersetzt die zwei nullbaren Werte (Topic/Node/Untracked/None) — Begründung im P3-Abschnitt. `AvatarFeedEvent.nodeId` gefüllt für **beide** Quellen, DB `:app-sim` 22. 497 Tests grün, APK baut. **Für P4:** Neigung kann direkt `GROUP BY nodeId` auf `avatar_feed_events` rechnen, Altdaten sind nachgetragen; `fedAtMillis IS NOT NULL` filtert die beantworteten. **Gelöst:** der `G:\Meine Ablage`-Baufehler kam von einem alten Gradle-Daemon — `gradlew --stop` genügt, Details bei den Prüfbefehlen. Seither bauen beide APKs und `:core:test`. |
+| 2026-08-25 | P2 | Auflösung läuft über den Baum: `AvatarReactions.forNode` + `AvatarSignatureReactions.forNode`. Alle 69 Fingerabdrücke unverändert (`app-sim/src/test/reaction-fingerprint.txt` — **vor** dem Umbau erzeugt, nie „anpassen"). 490 Tests grün. **Für P9 wichtig:** motiveigene Antworten werden NICHT nach unten vererbt, nur Gruppen-Antworten aus `AvatarReactions.groupAnswer` — Begründung im Abschnitt „Die Vererbungsregel". **Für P3:** Signatur von `reactionFor` steht noch auf `libraryAnimationLabel`, Aufrufliste ist in P3 eingetragen. |
+| 2026-08-25 | P1 | `nodeId` an `LibraryAnimation`; `:app-sim` auf 21, **`:app` auf 20** (die Entity liegt in `:core` und trifft beide Datenbanken — war im Plan nicht vorgesehen). Nachtrag über `LibraryAnimationNodeIds.backfill` in `:core`, von beiden Migrationen benutzt. 483 Tests grün. **Für P2:** `AnimationTree.fallbackChain(id)` ist fertig und getestet — der Dispatch muss sie nur noch benutzen. Achtung, `:app` hat eine eigene `ReminderAnimations.kt`; sie kennt keinen Baum und soll ihn auch nicht kennen. |
+| 2026-08-25 | P0 | Katalog steht: `AnimationNode`, `AnimationMotif`, `AnimationTree` (79 Knoten) + 27 Zeichenketten EN/DE + `AnimationTreeTest` (19 Tests, grün). **Für P1:** `AnimationTree.nodeIdFor(label)` und `nodeIdFor(type)` liefern die Migrations-Zuordnung fertig — nichts nachschlagen. `fallbackChain(id)` steht bereit für P2. Bilanz in der Tabelle oben korrigiert (52 Blätter, nicht 40). |
