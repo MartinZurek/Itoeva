@@ -710,4 +710,18 @@
     <string name="hobby_maker">Tinkering and building</string>
     <string name="talk_a_path_hobby">What I picked up: %1$s.</string>
     <string name="talk_a_path_things">Have a look around – there is more standing about than at the start.</string>
+
+    <!-- Skillbaum: Zieh-Leiste und Baumbildschirm (siehe SKILLBAUM.md). -->
+    <string name="skill_bar_title">Your animations</string>
+    <string name="skill_bar_hint">Drag one onto your companion</string>
+    <string name="skill_bar_empty">Nothing unlocked yet</string>
+    <string name="a11y_skill_drag">%1$s — drag onto your companion, or use this action</string>
+    <string name="a11y_skill_play">Show %1$s</string>
+    <string name="skill_tree_title">Skill tree</string>
+    <string name="skill_tree_progress">%1$d of %2$d open</string>
+    <string name="skill_tree_state_available">next up</string>
+    <string name="skill_tree_state_locked">locked</string>
+    <string name="skill_tree_state_pending">not drawn yet</string>
+    <string name="skill_tree_level">Level %1$d · %2$d XP to the next unlock</string>
+    <string name="skill_tree_close">Close</string>
 </resources>

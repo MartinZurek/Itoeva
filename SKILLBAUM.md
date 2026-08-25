@@ -377,14 +377,32 @@ Rangfolge selbst (`BranchAffinity.ranked`) bleibt deterministisch; gewürfelt wi
 **Öffnen:** `HomeScreen.kt` 600–700 (Zieh-Geste als Vorlage).
 **Nicht öffnen:** `DockScreen.kt` — die Leiste kommt zuerst nur auf den Startbildschirm.
 
-- [ ] Leiste am unteren Rand mit den freigeschalteten Knoten, nach Hauptgruppe gruppiert
-- [ ] Ziehen aus der Leiste auf den Avatar — `overlaps` und `playReaction` bleiben unverändert
-- [ ] Die Uhr behält ihre Rolle für echte Erinnerungen; die Leiste ist zusätzlich
-- [ ] Kreis-Easter-Egg darf durch das Ziehen aus der Leiste nicht ausgelöst werden
-- [ ] Baumbildschirm: offen / Grenze / gesperrt, mit Fortschritt zum nächsten Level
-- [ ] Bedienungshilfen: Zieh-Ziel per Semantik erreichbar (Muster: Uhr in `HomeScreen`)
+- [x] Leiste am unteren Rand mit den freigeschalteten Knoten
+- [x] Ziehen aus der Leiste auf den Avatar — `overlaps` und `playReaction` unverändert
+- [x] Die Uhr behält ihre Rolle für echte Erinnerungen; die Leiste ist zusätzlich
+- [x] Kreis-Easter-Egg kann aus der Leiste nicht ausgelöst werden (Winkelverfolgung sitzt
+      ausschließlich im Zieh-Handler der Uhr — gilt durch Konstruktion)
+- [x] Baumbildschirm: offen / als Nächstes / gesperrt / noch nicht gezeichnet, mit Level und
+      XP-Rest sowie Fortschritt je Hauptgruppe
+- [x] Bedienungshilfen: Zusatzaktion je Eintrag, zusammenhängende Vorlesetexte im Baum
+- [x] 12 neue Zeichenketten EN/DE, Paritätstest grün
 
-**Prüfen:** Auf dem Gerät, mindestens zwei Spezies.
+**Prüfen:** Auf dem Gerät, mindestens zwei Spezies. **Steht noch aus.**
+
+**Erledigt am 2026-08-25.** 8 neue Tests (`SkillTreeRowsTest`), 526 gesamt grün, Lint grün,
+APK baut. Neue Dateien: `skilltree/SkillTreeRows.kt`, `ui/SkillDragBar.kt`,
+`ui/SkillTreeScreen.kt`, `ui/SkillTreeDialog.kt`, `ui/SkillTreeState.kt`.
+
+### Die Entscheidung, die hier fiel
+
+**Ein Zug aus der Leiste schreibt kein Fütter-Ereignis und gibt kein XP.** Er beantwortet keine
+Erinnerung, sondern ist ein Spielzug. Landete er in `avatar_feed_events`, fälschte er genau die
+Statistik, aus der P4 die Neigung rechnet — **der Baum würde sich aus sich selbst speisen** statt
+aus dem, was im Alltag wirklich passiert. Damit ist auch der offene Punkt „Zählen Fütterungen aus
+der Leiste XP?" beantwortet: nein.
+
+Die Leiste ist abgeblendet, solange eine echte Erinnerung wartet — dann gehört die Geste der Uhr.
+Zwei Zieh-Ziele nebeneinander wären nur verwirrend.
 
 ---
 
@@ -458,8 +476,7 @@ Laufend, nach Bedarf. Der Fallback aus P2 sorgt dafür, dass hier nichts blockie
 - [ ] Selbstgezeichnete Animationen der Nutzer: Auffang-Knoten je Hauptgruppe, Zuordnung später
       von Hand?
 - [ ] Braucht die Zieh-Leiste eine Abklingzeit? Sonst füttert man im Sekundentakt.
-- [ ] Zählen Fütterungen aus der Leiste XP? Dann beschleunigt der Baum sich selbst — bewusst
-      entscheiden, nicht nebenbei.
+- [x] ~~Zählen Fütterungen aus der Leiste XP?~~ **Nein** — entschieden in P5, Begründung dort.
 
 ---
 
@@ -470,6 +487,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
 | 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
+| 2026-08-25 | P5 | Zieh-Leiste unter dem Avatar + Baumbildschirm als Dialog. Ein Zug aus der Leiste gibt **kein XP** und schreibt kein Fütter-Ereignis (sonst speist sich die Neigung aus sich selbst). Logik in `SkillTreeRows` (8 Tests), Compose bleibt dünn. **Für P6:** `playFromBar` in `HomeScreen` ist die Stelle, an der Stufe 3 später eine laufende Tätigkeit braucht statt einer einmaligen Reaktion. Lint ist scharf — `FlowOperatorInvokedInComposition` hat zugeschlagen, Flows in Composables gehören in `remember`. |
 | 2026-08-25 | P4 | Freischaltung steht: `AvatarUnlockedNode` (DB 23), `BranchAffinity` (Halbwertszeit 14 Tage, nur beantwortete Auslösungen), `UnlockOffers` (2+1), `AvatarUnlockRepository` — alles im neuen Paket `skilltree/`. 21 neue Tests. **Für P5:** `observeUnlockedNodes(profileId)` liefert der Zieh-Leiste einen Flow, `ReactionTrigger.ofNode(nodeId)` ist der fertige Weg von dort zur Reaktion. In der Leiste nur Knoten mit Motiv zeigen. |
 | 2026-08-25 | P3 | `ReactionTrigger` ersetzt die zwei nullbaren Werte (Topic/Node/Untracked/None) — Begründung im P3-Abschnitt. `AvatarFeedEvent.nodeId` gefüllt für **beide** Quellen, DB `:app-sim` 22. 497 Tests grün, APK baut. **Für P4:** Neigung kann direkt `GROUP BY nodeId` auf `avatar_feed_events` rechnen, Altdaten sind nachgetragen; `fedAtMillis IS NOT NULL` filtert die beantworteten. **Gelöst:** der `G:\Meine Ablage`-Baufehler kam von einem alten Gradle-Daemon — `gradlew --stop` genügt, Details bei den Prüfbefehlen. Seither bauen beide APKs und `:core:test`. |
 | 2026-08-25 | P2 | Auflösung läuft über den Baum: `AvatarReactions.forNode` + `AvatarSignatureReactions.forNode`. Alle 69 Fingerabdrücke unverändert (`app-sim/src/test/reaction-fingerprint.txt` — **vor** dem Umbau erzeugt, nie „anpassen"). 490 Tests grün. **Für P9 wichtig:** motiveigene Antworten werden NICHT nach unten vererbt, nur Gruppen-Antworten aus `AvatarReactions.groupAnswer` — Begründung im Abschnitt „Die Vererbungsregel". **Für P3:** Signatur von `reactionFor` steht noch auf `libraryAnimationLabel`, Aufrufliste ist in P3 eingetragen. |

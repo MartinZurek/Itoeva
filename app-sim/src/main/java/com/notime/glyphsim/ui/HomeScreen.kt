@@ -285,6 +285,40 @@ fun HomeScreen(
         }
     }
 
+    // ---- Skillbaum: die freigeschalteten Animationen und die Leiste darunter ----
+    // Beobachtet, damit die Leiste in dem Moment mitwaechst, in dem etwas freigeschaltet wird.
+    val companionProfileId = remember(currentSpecies) { AvatarSpeciesPrefs.profileId(currentSpecies) }
+    val unlockedNodes = rememberUnlockedNodes(context, companionProfileId)
+    var showSkillTree by remember { mutableStateOf(false) }
+
+    /**
+     * Eine Animation aus der Leiste auf den Avatar gezogen.
+     *
+     * **Bewusst ohne Fuetter-Ereignis und ohne XP.** Ein Zug aus der Leiste beantwortet keine
+     * Erinnerung - er ist ein Spielzug. Wuerde er in `avatar_feed_events` landen, faelschte er
+     * genau die Statistik, aus der die Neigung des Skillbaums gerechnet wird: Der Baum wuerde sich
+     * dann aus sich selbst speisen statt aus dem, was der Nutzer tatsaechlich im Alltag tut.
+     */
+    fun playFromBar(node: com.notime.glyphcore.data.AnimationNode) {
+        if (isReacting || activeReminder != null) return
+        isReacting = true
+        scope.launch {
+            try {
+                AvatarFeeding.playReaction(
+                    species = currentSpecies,
+                    trigger = ReactionTrigger.ofNode(node.id),
+                    screenWidthPx = screenWidthPx,
+                    screenHeightPx = screenHeightPx,
+                    onFrame = { avatarFrame = it },
+                    onOffset = { avatarDrag = it }
+                )
+            } finally {
+                avatarDrag = Offset.Zero
+                isReacting = false
+            }
+        }
+    }
+
     // Herausgeloest, damit dieselbe Logik sowohl von der Drag-Kollision unten als auch von der
     // TalkBack-Zusatzaktion "Fuettern" am Avatar ausgeloest werden kann (siehe AvatarSpriteView
     // weiter unten) - per Drag laesst sich nicht sinnvoll fuer einen Screenreader bedienen.
@@ -755,6 +789,19 @@ fun HomeScreen(
                     )
             )
 
+            Spacer(Modifier.height(18.dp))
+
+            // Die Leiste steht UNTER dem Avatar, nicht daneben: Gezogen wird nach oben auf die
+            // Figur, und dieser Weg soll frei sein. Waehrend einer wartenden Erinnerung ist sie
+            // abgeblendet - dann gehoert die Geste der Uhr, und zwei Zieh-Ziele nebeneinander
+            // waeren nur verwirrend.
+            SkillDragBar(
+                nodes = unlockedNodes,
+                avatarBounds = avatarBounds,
+                enabled = !isReacting && activeReminder == null,
+                onDrop = { node -> playFromBar(node) },
+                onOpenTree = { showSkillTree = true }
+            )
         }
     }
 
@@ -825,6 +872,13 @@ fun HomeScreen(
         ReminderImportDialog(
             initialText = sharedImportText,
             onDismiss = onSharedImportHandled
+        )
+    }
+
+    if (showSkillTree) {
+        SkillTreeDialog(
+            unlocked = unlockedNodes.map { it.id }.toSet(),
+            onDismiss = { showSkillTree = false }
         )
     }
 

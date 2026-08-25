@@ -704,4 +704,17 @@
     <string name="hobby_maker">Basteln und Bauen</string>
     <string name="talk_a_path_hobby">Angefangen habe ich mit: %1$s.</string>
     <string name="talk_a_path_things">Schau dich um – es steht jetzt mehr herum als am Anfang.</string>
+
+    <string name="skill_bar_title">Deine Animationen</string>
+    <string name="skill_bar_hint">Zieh eine auf deinen Begleiter</string>
+    <string name="skill_bar_empty">Noch nichts freigeschaltet</string>
+    <string name="a11y_skill_drag">%1$s — auf den Begleiter ziehen, oder diese Aktion benutzen</string>
+    <string name="a11y_skill_play">%1$s zeigen</string>
+    <string name="skill_tree_title">Fähigkeitenbaum</string>
+    <string name="skill_tree_progress">%1$d von %2$d offen</string>
+    <string name="skill_tree_state_available">als Nächstes</string>
+    <string name="skill_tree_state_locked">gesperrt</string>
+    <string name="skill_tree_state_pending">noch nicht gezeichnet</string>
+    <string name="skill_tree_level">Level %1$d · noch %2$d XP bis zur nächsten Freischaltung</string>
+    <string name="skill_tree_close">Schließen</string>
 </resources>
