@@ -5,8 +5,7 @@ import kotlin.math.sqrt
 /**
  * Die Uhr als MONDSICHEL - fuer die naechtliche Park-Szene (siehe ui/DockScreen.kt).
  *
- * **Der Gedanke dahinter.** Nachts im Park senkt sich der Horizont und der Himmel nimmt fast den
- * ganzen Bildschirm ein (siehe [PlayScene.floorFraction]). Darueber schwebt dann ein runder,
+ * **Der Gedanke dahinter.** Ueber der festen Bodenlinie schwebt nachts im Park ein runder,
  * leuchtender Puck - der als Uhr gedacht ist, in diesem Bild aber ohnehin wie ein Himmelskoerper
  * aussieht. Statt gegen diesen Eindruck anzuarbeiten, nimmt die Szene ihn auf: Dieselbe Scheibe
  * zeigt fuer die Dauer der Szene keine Ziffern, sondern eine Sichel, und wandert nach oben.

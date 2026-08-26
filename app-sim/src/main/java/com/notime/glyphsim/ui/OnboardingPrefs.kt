@@ -60,4 +60,16 @@ object OnboardingPrefs {
         SettingsStore.write(context, SettingsCatalog.TappedClock, true)
     }
 
+    /**
+     * Wie [hasTappedClock], nur fuer die vier Speicherplaetze rechts (siehe ActionSlots.kt): ohne
+     * einen einmaligen Hinweis sieht man den leeren Plaetzen nicht an, dass sich eine Aktion von
+     * der Uhr dorthin ziehen laesst statt nur auf den Avatar.
+     */
+    fun hasUsedActionSlot(context: Context): Boolean =
+        SettingsStore.read(context, SettingsCatalog.UsedActionSlot)
+
+    fun markActionSlotUsed(context: Context) {
+        SettingsStore.write(context, SettingsCatalog.UsedActionSlot, true)
+    }
+
 }

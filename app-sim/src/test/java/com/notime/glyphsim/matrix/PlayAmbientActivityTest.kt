@@ -105,11 +105,20 @@ class PlayAmbientActivityTest {
     }
 
     @Test
+    fun `reines Umherlaufen bleibt eine seltene Zwischenregung`() {
+        val random = Random(23)
+        val wander = (1..1_000).count {
+            PlayAmbientActivity.nextAction(random) == PlayAmbientActivity.Action.WANDER
+        }
+        assertTrue("WANDER kam $wander von 1000 Mal vor", wander < 100)
+    }
+
+    @Test
     fun `Pausen bleiben im vorgesehenen Rahmen`() {
         repeat(200) {
             val pause = PlayAmbientActivity.nextPauseMillis(PlayAmbientActivity.DayPhase.MIDDAY)
-            assertTrue("Pause $pause zu kurz", pause >= 6_000L)
-            assertTrue("Pause $pause zu lang", pause <= 14_000L)
+            assertTrue("Pause $pause zu kurz", pause >= 18_000L)
+            assertTrue("Pause $pause zu lang", pause <= 36_000L)
         }
     }
 

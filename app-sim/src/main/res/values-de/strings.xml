@@ -206,6 +206,7 @@
     <string name="library_full">Auswahl ist voll – entferne erst eine Animation, bevor du eine weitere hinzufügst</string>
     <string name="onboarding_tap_me">Hi! Tipp mich an – ich zeig dir alles.</string>
     <string name="onboarding_tap_clock">Tipp jederzeit auf die Uhr für eine volle Nachttisch-Anzeige – verbraucht dabei mehr Akku.</string>
+    <string name="onboarding_action_slots">Zieh eine Aktion von der Uhr auf einen dieser Plätze, um sie für später aufzuheben.</string>
     <string name="assistant_greeting">Hey! Was kann ich für dich tun?</string>
     <string name="assistant_menu_day">Wie läuft mein Tag?</string>
     <string name="assistant_menu_intro">❓  Erklär mir, wie das hier läuft</string>
@@ -342,6 +343,10 @@
     <string name="a11y_mood_sad">sehr träge</string>
     <string name="a11y_feed_action">Füttern</string>
     <string name="a11y_avatar_waiting">%1$s wartet aufs Füttern</string>
+    <string name="a11y_action_slot_empty">Speicherplatz %1$d, leer</string>
+    <string name="a11y_action_slot_filled">Speicherplatz %1$d: %2$s</string>
+    <string name="a11y_action_slot_apply">Auf das Wesen anwenden</string>
+    <string name="a11y_clock_save_to_slot">In Speicherplatz %1$d ablegen</string>
     <string name="settings_timelapse">Zeitraffer (Test)</string>
     <string name="settings_timelapse_hint">Lässt einen ganzen Tag in etwa vier Minuten ablaufen, damit sich alle Szenen und Tageszeiten schnell ansehen lassen. Nur zum Ausprobieren – für den normalen Betrieb ausschalten.</string>
     <string name="a11y_visitor">%1$s kommt vorbei</string>
@@ -512,9 +517,13 @@
     <string name="talk_place_living">im Wohnzimmer</string>
     <string name="talk_place_craft">in meiner Ecke und mache etwas</string>
     <string name="talk_place_park">draußen bei mir</string>
+    <string name="talk_place_sport">auf dem Sportplatz</string>
+    <string name="talk_place_pond">am Teich</string>
     <string name="talk_place_shop">im Laden</string>
     <string name="talk_place_street">auf der Straße</string>
     <string name="talk_place_forest">im Wald</string>
+    <string name="talk_place_meadow">auf der Wiese</string>
+    <string name="talk_place_city">in der Stadt</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. Jeder Satz haengt an einem
          Zustand der Welt, keiner ist erfunden. -->
@@ -611,8 +620,9 @@
     <string name="lore_puffling_3">An meiner Werkbank baue ich Sachen aus dem, was übrig bleibt. Fertig wird selten etwas. Das ist in Ordnung.</string>
     <string name="lore_puffling_4">Gloop kenne ich am längsten. Er ist langsamer als ich – und wenn ich bei ihm bin, werde ich es auch.</string>
     <string name="lore_puffling_5">Mein Park ist gemäht und hat eine Bank. Nichts Besonderes. Aber ich weiß dort, wo alles ist.</string>
-    <string name="lore_puffling_6">Manchmal laufe ich los und weiß auf halbem Weg nicht mehr, wohin. Dann setze ich mich auf die Bank, bis es mir wieder einfällt.</string>
+    <string name="lore_puffling_6">Manchmal laufe ich los und weiß auf halbem Weg nicht mehr, wohin. Dann setze ich mich auf die Bank, bis es mir wieder einfällt. Starlet hat mich dort einmal gefunden. Sie hat nicht gefragt, warum, sondern sich einfach dazugesetzt, bis es mir wieder einfiel.</string>
     <string name="lore_puffling_7">Hinter der Straße fängt der Wald an. Ich gehe selten hinein – nicht aus Angst. Da ist es so still, dass man sich selbst hört.</string>
+    <string name="lore_puffling_8">Neulich habe ich vor einer fremden Tür kurz gewartet, nur weil davor ein Kastanienhaufen lag, den ich zählen wollte. Am Ende waren es einundzwanzig. Die Lieferung kam trotzdem pünktlich an.</string>
 
     <string name="lore_starlet_1">Ich bin Starlet. Ich ziehe Pflanzen groß. Manche schaffen es nicht, und das gehört dazu.</string>
     <string name="lore_starlet_2">Ich schlafe in einer Hängematte. Wenn ich mich drehe, schaukelt das halbe Zimmer mit.</string>
@@ -621,6 +631,7 @@
     <string name="lore_starlet_5">Auf meiner Wiese mähe ich nichts. Alles darf wachsen, wie es will – auch das, was niemand gepflanzt hat.</string>
     <string name="lore_starlet_6">Ich vergesse oft, wonach ich gesucht habe. Dafür finde ich unterwegs anderes.</string>
     <string name="lore_starlet_7">In manchen Nächten hängt der Mond tief über der Wiese. Dann bleibe ich länger draußen, als ich vorhatte.</string>
+    <string name="lore_starlet_8">Gestern habe ich eine Weile einer Schnecke zugesehen, wie sie über das Blumenbeet wanderte. Sie kam nicht weit, aber sie hatte es auch nicht eilig.</string>
 
     <string name="lore_wyrmling_1">Ich bin Wyrmling. In der Turnhalle zeige ich Leuten den ersten Schritt. Der zweite fällt ihnen dann selbst ein.</string>
     <string name="lore_wyrmling_2">Ich schlafe in einem Nest aus Zweigen. Daneben liegt, was ich gesammelt habe. Anfassen darfst du alles.</string>
@@ -628,7 +639,8 @@
     <string name="lore_wyrmling_4">Fennec passt auf alle auf. Ich sage ihm dauernd, er soll auch mal auf sich aufpassen. Er hört nicht zu.</string>
     <string name="lore_wyrmling_5">Bei mir draußen geht es nur hinauf. Von oben sieht alles machbar aus – deshalb gehe ich hoch.</string>
     <string name="lore_wyrmling_6">Ich rede laut. Auch, damit man mir nicht anmerkt, wenn ich unsicher bin.</string>
-    <string name="lore_wyrmling_7">Abends gehen auf der Straße in den Häusern die Lichter an. Ich weiß nicht, wer da wohnt. Ich mag es trotzdem.</string>
+    <string name="lore_wyrmling_7">Abends gehen auf der Straße in den Häusern die Lichter an. Ich weiß nicht, wer da wohnt. Ich mag es trotzdem. Ein Licht weiter oben ist aber kein Haus – das ist Hootlet, in der Sternwarte.</string>
+    <string name="lore_wyrmling_8">Heute Morgen habe ich die Matten in der Turnhalle neu gestapelt, einfach weil der alte Stapel schief stand. Verlangt hat das niemand. Sah aber gleich besser aus.</string>
 
     <string name="lore_fennec_1">Ich bin Fennec. Ich halte das Leuchtfeuer am Brennen. Niemand bemerkt es, wenn es funktioniert – das ist der Sinn der Sache.</string>
     <string name="lore_fennec_2">Ich schlafe in einem Bau. Eng, dunkel, warm. Von drinnen hört man alles, was draußen vorbeigeht.</string>
@@ -637,6 +649,7 @@
     <string name="lore_fennec_5">In der Savanne steht eine Akazie. Man sieht sie, bevor man den Sand sieht. Nach der richte ich mich.</string>
     <string name="lore_fennec_6">Ich schlafe schlecht, wenn ich nicht weiß, ob es dir gut geht. Deshalb frage ich.</string>
     <string name="lore_fennec_7">Der Laden hat nachts zu. Die Laterne davor brennt aber weiter. Irgendjemand muss sie ja angemacht haben.</string>
+    <string name="lore_fennec_8">Am Leuchtfeuer habe ich heute den Docht ausgetauscht, obwohl der alte noch eine Weile gehalten hätte. Lieber vorher als mittendrin. Gloop hätte den alten wohl brennen lassen, bis er von selbst ausging.</string>
 
     <string name="lore_gloop_1">Ich bin Gloop. In der Backstube warte ich, bis der Teig so weit ist. Beschleunigen geht nicht.</string>
     <string name="lore_gloop_2">Ich schlafe in einer Mulde am Boden. Hoch komme ich nicht, und ich vermisse nichts.</string>
@@ -645,6 +658,7 @@
     <string name="lore_gloop_5">Bei mir draußen ist alles weich. Man versinkt ein bisschen. Man kommt auch wieder heraus.</string>
     <string name="lore_gloop_6">Ich räume nicht auf. Die Schalen stehen da, wo ich sie abgestellt habe. Sie stören ja niemanden.</string>
     <string name="lore_gloop_7">Wenn es regnet, hört man es drinnen am Fenster. Das ist mein liebstes Wetter.</string>
+    <string name="lore_gloop_8">Mir ist heute ein Klumpen Ton von der Töpferscheibe geflogen und an der Decke kleben geblieben. Ich lasse ihn erst mal hängen. Vielleicht fällt er von selbst wieder runter.</string>
 
     <string name="lore_hootlet_1">Ich bin Hootlet. In der Sternwarte notiere ich, was sich am Himmel ändert. Meistens ändert sich nichts.</string>
     <string name="lore_hootlet_2">Ich schlafe in einem hohlen Stamm. Von dort sehe ich die Tür, ohne dass mich jemand sieht.</string>
@@ -653,6 +667,7 @@
     <string name="lore_hootlet_5">Mein Wald ist nachts nicht dunkel. Man muss nur lange genug stillhalten, bis die Augen es merken.</string>
     <string name="lore_hootlet_6">Ich weiß viel und sage wenig. Beides fällt mir leicht. Das eine ist vielleicht der Grund für das andere.</string>
     <string name="lore_hootlet_7">Es gibt eine Sternschnuppe, die selten kommt. Ich warte nicht auf sie. Ich bin nur immer da, wenn sie kommt.</string>
+    <string name="lore_hootlet_8">Heute war der Himmel bedeckt. Nichts zu notieren. Ich bin trotzdem geblieben.</string>
 
     <string name="talk_q_story">Erzähl mir etwas von dir</string>
     <string name="talk_q_story_more">Erzähl weiter</string>

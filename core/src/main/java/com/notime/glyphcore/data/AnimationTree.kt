@@ -109,6 +109,11 @@ object AnimationTree {
         leaf("arbeit/erledigen/check", "✅", "Check")
         leaf("arbeit/erledigen/target", "🎯", "Target")
         leaf("arbeit/erledigen/hourglass", "⏳", "Hourglass")
+        // Der Wecker kam spaeter dazu (ein ClaudePrimaryRun-Lauf hat ihn auf main ergaenzt) und
+        // musste einsortiert werden, weil jedes Motiv genau einen Knoten braucht. Hierher, weil er
+        // dasselbe sagt wie die Sanduhr daneben: die Zeit laeuft. Bewusst NICHT nach "ruhe" - ein
+        // Wecker beendet den Schlaf, er gehoert nicht zu ihm.
+        leaf("arbeit/erledigen/wecker", "⏰", "Clock")
         leaf("arbeit/erledigen/shield", "🛡️", "Shield")
         leaf("arbeit/erledigen/lighthouse", "🗼", "Lighthouse")
 

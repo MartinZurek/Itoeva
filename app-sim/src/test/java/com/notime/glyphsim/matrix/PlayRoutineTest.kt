@@ -106,6 +106,53 @@ class PlayRoutineTest {
     }
 
     @Test
+    fun `Drachensteigen ist eine lange vollstaendige Parkaktivitaet`() {
+        val kiteRoutine = PlayRoutines.allFor(AnimationType.MOVE)
+            .firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
+        assertNotNull("MOVE hat keine Drachen-Aktivitaet", kiteRoutine)
+
+        val phases = kiteRoutine!!.steps.filterIsInstance<RoutineStep.Kite>().map { it.phase }
+        assertTrue(phases == PlayEffects.KitePhase.entries)
+        val visibleMillis = kiteRoutine.steps.filterIsInstance<RoutineStep.Linger>().sumOf { it.millis }
+        assertTrue("Der Drachen ist nur ${visibleMillis}ms zu sehen", visibleMillis >= 40_000L)
+        assertTrue(
+            "Die Drachen-Aktivitaet laeuft unnoetig durch mehrere Orte",
+            kiteRoutine.steps.none { it is RoutineStep.GoToPlace }
+        )
+    }
+
+    @Test
+    fun `Fussball findet auf dem Sportplatz statt und gelernter Trick wird Standard`() {
+        val basic = PlayRoutines.footballRoutine(trickLearned = false)
+        val learned = PlayRoutines.footballRoutine(trickLearned = true)
+
+        assertTrue(basic.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SPORT
+        })
+        assertTrue(basic.steps.filterIsInstance<RoutineStep.Football>().none {
+            it.phase == PlayEffects.FootballPhase.TRICK
+        })
+        assertTrue(learned.steps.filterIsInstance<RoutineStep.Football>().any {
+            it.phase == PlayEffects.FootballPhase.TRICK
+        })
+        assertTrue(PlayScene.allowsVisitors(PlayScene.Place.SPORT))
+    }
+
+    @Test
+    fun `Angeln findet am Teich statt und durchlaeuft alle Phasen der Reihe nach`() {
+        val routine = PlayRoutines.fishingRoutine()
+
+        assertTrue(routine.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.POND
+        })
+        val phases = routine.steps.filterIsInstance<RoutineStep.Fishing>().map { it.phase }
+        assertTrue(phases == PlayEffects.FishingPhase.entries)
+        assertTrue(PlayScene.isOutdoors(PlayScene.Place.POND))
+        // Ruhiger Gegenpol zu Fussball: kein Publikum am Ufer.
+        assertTrue(!PlayScene.allowsVisitors(PlayScene.Place.POND))
+    }
+
+    @Test
     fun `jeder Platz laesst sich tatsaechlich aufsuchen`() {
         // stationSpot muss fuer jeden ausgewiesenen Platz einen Ort liefern - sonst fehlt der
         // Requisite ihr useSpot und der Ablauf liefe wieder ins Leere.

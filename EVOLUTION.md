@@ -1,6 +1,9 @@
 # Itoeva Evolution Protocol
 
-Version: 0.1
+Version: 0.2 - seit 2026-08-18 mit einer engen, im Abschnitt "Character Evolution" →
+"Erzählerische Autonomie" beschriebenen Ausnahme: Welt und Beziehungen der sechs Wesen dürfen
+seitdem ohne vorherige menschliche Freigabe der kreativen Richtung weiterentwickelt werden. Der
+übrige Ablauf (Branch, zweiter Agent als Reviewer, PR, menschlicher Merge) bleibt unverändert.
 
 Dieses Dokument legt fest, wie Itoeva weiterentwickelt werden darf, ohne die heute im Repository
 erkennbare Identität, bereits getroffene Produktentscheidungen oder nachweisbares Verhalten
@@ -138,9 +141,21 @@ werden:
 Sieg-/Niederlage-Struktur. Eine solche Struktur darf nicht ohne bewusste Entscheidung eingeführt
 werden.
 
-**OPEN DECISION:** Ob und welche neuen Fähigkeiten, Silhouetten, Animationen oder echten
-Reminder-Funktionen durch Fortschritt freigeschaltet werden sollen, ist nicht entschieden. Der
-aktuelle Stand schaltet solche Inhalte nicht frei.
+**Korrektur (2026-08-18):** Der vorherige Wortlaut dieses Punktes ("Der aktuelle Stand schaltet
+solche Inhalte nicht frei") war sachlich falsch. `PlayScene.kt` (`enum class Acquisition`,
+`PlayPath`) schaltet bereits heute Wohnungsgegenstände nach Fortschrittspfad frei - vier Pfade
+(Aufbrecher, Fürsorglicher, Stiller, Macher) zu je drei Gegenständen, vollständig belegt. Diese
+Mechanik ist entschieden, gebaut und getestet (`SceneCompositionTest`, u. a. `jedes erworbene
+Stück ist auch tatsächlich zu sehen`); sie ist keine `OPEN DECISION` mehr.
+
+**OPEN DECISION:** Was NICHT entschieden ist: neue Fortschrittspfade oder eine vierte Stufe je
+bestehendem Pfad (das ist Balancing/Ökonomie, siehe unten), neue Avatar-Fähigkeiten oder
+-Silhouetten, echte Reminder-Funktionen durch Fortschritt, sowie ein eigenständiges
+Fertigkeiten-/Skillbaum-System im Sinne von Rollenspiel-Talentbäumen (Nutzeridee vom
+2026-08-18, siehe Evolution History) - Letzteres wäre eine neue Spielstruktur mit eigener
+Balancing-, UI- und Fortschrittslogik und damit eine Entscheidung mit größerer Tragweite als die
+bisher freigegebenen Inhaltsergänzungen. Eine solche Struktur darf nicht ohne bewusste
+menschliche Entscheidung eingeführt werden.
 
 **OPEN DECISION:** Eine größere lineare Handlung oder Quest-Struktur ist nicht belegt. Die
 vorhandene Story ist episodisches Worldbuilding.
@@ -164,7 +179,10 @@ Zur Klasse **CONTENT** gehören:
 CONTENT darf später nach erfolgreichen automatisierten Prüfungen über einen schnelleren
 Veröffentlichungsweg laufen. Die Einstufung erlaubt keine neuen Produktentscheidungen: Änderungen
 außerhalb bereits freigegebener Grenzen, Eingriffe in geschützte Bereiche und strategisch offene
-Fragen benötigen weiterhin eine ausdrückliche Review und Entscheidung.
+Fragen benötigen weiterhin eine ausdrückliche Review und Entscheidung. **Ausgenommen davon** sind
+ausschließlich die unter "Character Evolution" → "Erzählerische Autonomie" benannten Punkte
+(weitere Beziehungen, weitere Lore-Stücke) - dort ist die kreative Richtung bereits entschieden,
+Review und Tests bleiben trotzdem verpflichtend.
 
 ### CODE
 
@@ -221,7 +239,10 @@ Evolution ohne gesonderte Review und ausdrückliche Entscheidung semantisch ver�
 - XP-Vergabe ausschließlich für beantwortete Spiel-Ereignisse.
 - Berechnung des Levels aus XP statt paralleler Speicherung.
 - Ausschluss von `MEDICINE` aus zufälligen Spielplänen.
-- Lore-Texte, Charakterpersönlichkeiten, Beziehungen und Signaturthemen.
+- Lore-Texte, Charakterpersönlichkeiten, Beziehungen und Signaturthemen. **Teilausnahme seit
+  2026-08-18:** neue Lore-Stücke und neue Beziehungen dürfen ergänzt werden, siehe "Character
+  Evolution" → "Erzählerische Autonomie". Bestehende Texte, die drei etablierten Beziehungen und
+  die sechs Persönlichkeiten bleiben unverändert geschützt.
 - Datenschutz-, Netzwerk- und Store-Versprechen.
 - Paketnamen, Application IDs, Signatur-/Keystore-Konfiguration und Releasevarianten.
 - Hardware-spezifische Glyph-SDK-Integration und Gerätekennungen.
@@ -265,10 +286,42 @@ Build-, Migrations- oder Abhängigkeitsprozess entstehen.
 - Ein neu gewähltes Wesen beginnt seine eigene Beziehungsgeschichte, ohne die Routinen des
   Nutzers zurückzusetzen.
 
-**OPEN DECISION:** Weitere direkte Beziehungen zwischen den sechs Wesen sind nicht festgelegt.
+### Erzählerische Autonomie (entschieden 2026-08-18)
 
-**OPEN DECISION:** Es ist nicht entschieden, ob Lore über die vorhandenen sieben Teile je Wesen
-hinaus erweitert oder in eine übergreifende Handlung überführt wird.
+Die beiden vorherigen `OPEN DECISION`-Punkte dieses Abschnitts sind nicht mehr offen. Entschieden
+vom Produktverantwortlichen: Der automatisierte Evolutionslauf darf Welt und Beziehungen der
+sechs Wesen eigenständig weiterentwickeln, ohne vor der einzelnen Änderung eine menschliche
+Freigabe der kreativen Richtung einzuholen. Begründung: Ergebnisse sind über den üblichen Weg
+(eigener Branch, Review durch einen zweiten Agenten, PR, menschlicher Merge) jederzeit prüfbar und
+mit einem gewöhnlichen Revert genauso rücknehmbar wie jede andere Evolution - eine falsche
+kreative Entscheidung kostet also keine Vorabprüfung wert, weil die Nachprüfung genauso wirksam
+ist. Am Ablauf selbst ändert diese Entscheidung nichts, nur an der einen Rückfrage davor.
+
+**Ohne Rückfrage erlaubt:**
+
+- **Weitere Beziehungen** zwischen den sechs Wesen, zusätzlich zu Puffling–Gloop, Wyrmling–Fennec
+  und Starlet–Hootlet. Diese drei bleiben bestehen und werden durch keine neue Beziehung ersetzt
+  oder abgeschwächt - Ergänzung, nicht Austausch.
+- **Weitere Lore-Stücke** über die bestehenden sieben je Wesen hinaus, als Fortsetzung des
+  bisherigen episodischen Erzählens. Erhöht sich die Anzahl, ist das eine CODE-Evolution:
+  `PlayLore.PIECES` sowie die neuen Textressourcen aller sechs Wesen müssen in derselben Evolution
+  zusammen ergänzt werden (`values/strings.xml` und `values-de/strings.xml`, beide Sprachen
+  inhaltlich gleich) - sonst hat ein Wesen mehr zu erzählen als ein anderes, und genau das prüft
+  `PlayLoreTest` bereits automatisiert.
+
+**Weiterhin `OPEN DECISION`, also weiterhin mit ausdrücklicher menschlicher Entscheidung:**
+
+- Eine größere lineare Handlung, ein Quest-Ziel oder ein Sieg-/Niederlage-Zustand - daran ändert
+  diese Freigabe nichts, siehe die entsprechenden `OPEN DECISION`-Punkte unter "Evolution Goals".
+- Neue Fähigkeiten, Silhouetten oder Animationen, die durch Fortschritt freigeschaltet werden.
+- Alles, was Produktidentität, Datenschema, Persistenzverträge oder andere in "Protected Areas"
+  gelistete Bereiche berührt.
+
+Jede so entstandene Änderung bleibt an die übrigen Regeln dieses Abschnitts gebunden - Stimme und
+Persönlichkeit der Figuren, Widerspruchsfreiheit zu bestehenden Orten und Ereignissen, keine
+Aussage über den Nutzer ohne Datenbeleg - und wird in der Evolution History wie jede andere
+Evolution dokumentiert, zusätzlich ausdrücklich als **autonome kreative Entscheidung**
+gekennzeichnet.
 
 ## Gameplay Evolution – Regeln für Balancing, Progression und Game Loop
 
@@ -480,6 +533,204 @@ sein:
 
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
+
+### 2026-08-18 - Erzählerische Autonomie freigegeben
+
+- **Version:** Protokoll 0.1 → 0.2. Kein Rücksetzweg im technischen Sinn nötig - eine
+  Protokolländerung betrifft keine Nutzerdaten; Rücknahme ist ein gewöhnlicher Revert dieses
+  Commits.
+- **Ausgangsproblem:** Zwei `OPEN DECISION`-Punkte unter "Character Evolution" → "Beziehung"
+  verhinderten, dass der automatisierte Evolutionslauf Welt oder Beziehungen der sechs Wesen
+  überhaupt weiterentwickelt - jede Erweiterung hätte vorab eine menschliche Entscheidung
+  gebraucht, obwohl das Ergebnis über Branch, Review und PR ohnehin prüfbar und per Revert
+  rücknehmbar gewesen wäre.
+- **Evidenzklassifikation:** `OPEN DECISION` (jetzt entschieden, siehe unten).
+- **Getroffene Produktentscheidung:** Weitere Beziehungen zwischen den sechs Wesen und weitere
+  Lore-Stücke über die bestehenden sieben hinaus dürfen ohne vorherige Rückfrage zur kreativen
+  Richtung entstehen; der bestehende Ablauf (Branch, zweiter Agent, PR, menschlicher Merge) bleibt
+  Pflicht. Verworfene Alternative: dieselbe Freigabe auch für Spielziel/Quest-Struktur oder
+  freischaltbare Fähigkeiten zu erteilen - verworfen, weil beides tiefer in Balancing bzw.
+  Pixel-Art-Gestaltung eingreift und die automatisierte Prüfung dafür (noch) nicht ausreicht.
+- **Betroffene Module/Texte:** `EVOLUTION.md` selbst; vorbereitend `evolutions/BACKLOG.md` um
+  ITO-0004 und ITO-0005 ergänzt, damit die Freigabe nicht folgenlos bleibt.
+- **Änderungen an Charakter/Story:** keine inhaltliche Änderung durch diesen Eintrag selbst -
+  reine Prozessänderung. Die drei bestehenden Beziehungen und alle 42 vorhandenen Lore-Texte
+  bleiben unverändert.
+- **Migrationsauswirkungen:** keine - keine Datenbank, keine Preference-Schlüssel betroffen.
+- **Getestet:** nicht zutreffend, reine Dokumentation.
+- **Neu entstandene offene Punkte:** keine. Weiterhin offen bleiben Spielziel/Quest-Struktur,
+  Fortschritts-Freischaltungen sowie alle übrigen zuvor schon offenen Punkte.
+
+### 2026-08-18 - Sachkorrektur Fortschritts-Freischaltung, Skillbaum-Idee festgehalten
+
+- **Version:** Protokoll bleibt 0.2, keine neue Versionsnummer - reine Sachkorrektur eines
+  bestehenden `OPEN DECISION`-Punktes plus Ergänzung, keine neue Freigabe.
+- **Ausgangsproblem:** Der bisherige Wortlaut unter "Evolution Goals" behauptete, der aktuelle
+  Stand schalte keine Inhalte durch Fortschritt frei. Das war falsch: `PlayScene.kt`
+  (`enum class Acquisition`, `PlayPath`) tut das bereits produktiv - vier Pfade zu je drei
+  Wohnungsgegenständen, vollständig belegt und durch `SceneCompositionTest` abgesichert.
+- **Evidenzklassifikation:** Tatsachenfehler in bestehender Dokumentation, kein `OPEN DECISION`.
+- **Getroffene Korrektur:** Der Abschnitt beschreibt jetzt den tatsächlichen Stand (Acquisition
+  ist entschieden und gebaut) und grenzt ihn scharf von dem ab, was weiterhin offen ist: neue
+  Fortschrittspfade, eine vierte Stufe je Pfad, neue Fähigkeiten/Silhouetten, echte
+  Reminder-Freischaltungen. Keine Code- oder Verhaltensänderung, nur Dokumentation.
+- **Nutzerwunsch festgehalten, nicht umgesetzt:** Der Nutzer brachte die Idee eines
+  Skillbaums für die Avatare ein (Rollenspiel-Talentbaum-artig). Bewusst NICHT in dieselbe
+  Kategorie wie ITO-0004/0005/0006/0007/0008 eingeordnet: Ein Skillbaum wäre eine neue
+  Spielstruktur mit eigener Balancing-, UI- und Fortschrittslogik, kein einzelner Inhalt
+  innerhalb eines bereits entschiedenen Rahmens. Bleibt `OPEN DECISION`, siehe "Evolution Goals".
+- **Betroffene Module/Texte:** `EVOLUTION.md` selbst; vorbereitend `evolutions/BACKLOG.md` um
+  ITO-0007 (Wald-Beiwerk) und ITO-0008 (zuletzt erzähltes Lore-Stück bleibt sichtbar) ergänzt -
+  beide unter bereits entschiedenem Rahmen (Szenenvielfalt bzw. reine Leseanzeige bestehender
+  Werte), keine neue Produktentscheidung.
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine.
+- **Getestet:** nicht zutreffend, reine Dokumentation; ITO-0007/ITO-0008 tragen ihre eigenen
+  Testanforderungen im Aufgabentext.
+- **Neu entstandene offene Punkte:** Skillbaum/Talentbaum-System ausdrücklich als `OPEN DECISION`
+  vermerkt (siehe oben) - nicht neu im Sinne des Prinzips, sondern erstmals benannt.
+
+### 2026-08-22 - Actions-Kontingent, öffentliches Repository, Kosten-Gate und Prozessdokumentation
+
+- **Version:** Protokoll bleibt 0.2, keine neue Freigabe unter "Character Evolution" - reine
+  Prozess- und Historien-Ergänzung.
+- **Ausgangsproblem:** Am 19.-21.08. stand die Evolutionskette zwölf Läufe lang still, weil das
+  monatliche GitHub-Actions-Kontingent des damals privaten Repositorys erschöpft war (Jobs
+  starben jeweils nach zwei Sekunden ohne ausgeführten Schritt, ohne Logs). Nachgerechnet an den
+  Job-Laufzeiten kostete `verify.yml` zusätzlich strukturell zu viel: Auslösung an sowohl
+  `pull_request` als auch `push` ohne Pfad-Filter bedeutete ~52 Minuten je Evolution, auch bei
+  reinen Text-/Backlog-Änderungen ohne App-Code-Bezug.
+- **Evidenzklassifikation:** `FACT` (Kontingent-Erschöpfung durch den Nutzer bestätigt,
+  Kostenrechnung anhand realer historischer Job-Laufzeiten nachvollzogen).
+- **Getroffene Entscheidung:** Repository von privat auf öffentlich umgestellt - eine bewusste
+  menschliche Entscheidung außerhalb dieses Protokolls, kein automatisierter Schritt (öffentliche
+  Repositories haben unbegrenzte GitHub-Actions-Minuten auf Standard-Runnern; Rücknahme jederzeit
+  möglich). Zusätzlich, unabhängig davon: PR #21 fügt `verify.yml` einen vorgeschalteten
+  "Betroffene Bereiche bestimmen"-Job hinzu, der reine Text-/Backlog-Änderungen an den teuren
+  Jobs (Emulator-Tests, Lint/R8) vorbeischleust, ohne die Checks aus der PR-Ansicht verschwinden
+  zu lassen (bewusst `if:`/Skip statt `paths-ignore`, damit sie sichtbar bleiben). Eine externe
+  Bot-Review (Codex) fand vor dem Merge zwei reale Probleme an diesem PR, beide angenommen und
+  behoben: (1) `git diff --name-only` erkennt Umbenennungen nicht korrekt und hätte verschobenen
+  App-Code fälschlich als reine Dokumentation eingestuft - behoben mit `--no-renames`; (2) ein
+  ursprünglich geplanter Verzicht auf Emulator-Tests beim `push`-Event war unsicher, weil der
+  tatsächliche Merge-Baum vom zuletzt per PR geprüften Baum abweichen kann, sobald zwischenzeitlich
+  ein anderer PR gemerged wurde - nachweislich bereits bei PR #16 so geschehen. Diese Optimierung
+  wurde vor dem Merge zurückgenommen.
+- **Betroffene Module/Texte:** `.github/workflows/verify.yml`; neu `Vision.md`,
+  `Architecture.md`, `NextTasks.md`, `AgentGuide.md` als begleitende, dauerhafte
+  Prozessdokumentation neben diesem Protokoll.
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine.
+- **Getestet:** `verify.yml`-Änderung mangels verfügbarer CI-Minuten zunächst gegen sieben reale
+  Merge-Commits der bisherigen Historie simuliert; nach Wiederherstellung der Minuten durch einen
+  echten CI-Lauf auf PR #21 bestätigt (alle Jobs grün, inklusive beider Emulator-Matrizen).
+- **Gelernte Lektion:** Ein mehrfach täglich laufender automatisierter Prozess ist gegen ein
+  knappes CI-Kontingent nicht von selbst stabil - Kostenwächter (Pfad-Filterung,
+  Zweitrigger-Vermeidung) sind keine optionale Politur, sondern Voraussetzung für die
+  Zuverlässigkeit der Pipeline selbst. Sicherheitsrelevante Repository-Einstellungen (hier:
+  Sichtbarkeitswechsel) über die mobile GitHub-Weboberfläche zu ändern erwies sich als
+  unzuverlässig (404-Fehler nach korrekter Eingabe der Bestätigung); `gh repo edit --visibility
+  public --accept-visibility-change-consequences` über die GitHub CLI war der zuverlässige Weg
+  und sollte für vergleichbare Fälle bevorzugt werden.
+- **Neu entstandene offene Punkte:** Ob `runner/` (PowerShell-/Windows-Task-Scheduler-basierte
+  Automatisierung, laut eigenem `runner/README.md` standardmäßig deaktiviert und nirgends sonst
+  referenziert) noch gebraucht wird oder von `claude-primary-run.yml` vollständig abgelöst wurde,
+  ist ungeklärt (siehe Architecture.md). Ob sich die Duplizierung zwischen
+  `app/ui/ReminderScreen.kt` und `app-sim/ui/ReminderScreen.kt` bzw. den beiden
+  `ReminderAnimations.kt`-Dateien verlustfrei nach `core` oder ein gemeinsames UI-Modul heben
+  lässt, ist ebenfalls ungeklärt - siehe NextTasks.md für den zugehörigen, bewusst kleinen
+  Rechercheauftrag.
+
+### 2026-08-22 - Persistente Aktions-Slots als überprüfbarer MVP
+
+- **Version:** Protokoll bleibt 0.2; menschlich freigegebener, rücknehmbarer Gameplay-MVP.
+- **Ausgangsproblem:** Eine laufende Erinnerung ließ sich nur sofort anwenden. Der Nutzer wollte
+  Aktionen sichtbar für später aufheben und bewusst zwischen sofortigem Einsatz und Speichern
+  wählen können.
+- **Getroffene Entscheidung:** Der Simulator zeigt im Modus „Spiel“ vorläufig vier runde, rechts
+  oberhalb der Umgebungswelt angeordnete Slots; außerhalb dieses Modus sind Anzeige und
+  Speicheraktionen nicht aktiv. Eine Aktion lässt sich dort ablegen und später über dieselbe
+  Fütter-Pipeline einsetzen; unbeantwortet auslaufende Aktionen belegen im Spiel den ersten freien
+  Platz. Die Belegung bleibt je Wesen über App-Neustarts erhalten. Vier ist eine MVP-Hypothese,
+  keine Festlegung der langfristigen Slot-Anzahl; deren Validierung bleibt NT-053.
+- **Betroffene Module/Texte:** `app-sim`-Startbildschirm, neue Slot-UI und lokaler Slot-Speicher,
+  Onboarding-/Barrierefreiheitstexte; `:app` und Dock-Modus bleiben unverändert.
+- **Migrationsauswirkungen:** keine Room-Migration; maximal vier kleine, profilgetrennte
+  UI-Snapshots liegen in der privaten Preference-Datei `action_slots`.
+- **Getestet:** `:app-sim:compileDebugKotlin` und `:app-sim:testDebugUnitTest`; CI deckt Lint,
+  R8 und beide Emulator-Matrizen ab.
+- **Neu entstandene offene Punkte:** optimale Slot-Anzahl, Kontextboni, Kombinationen und
+  zeitabhängige Situationen bleiben offen und dürfen nicht aus diesem MVP abgeleitet werden.
+
+### 2026-08-22 - Automatisches Ablegen ausgelaufener Erinnerungen in Speicherplätze wieder entfernt
+
+- **Version:** Protokoll bleibt 0.2, reine Verhaltenskorrektur einer bereits gemergten
+  Produktentscheidung - keine neue Freigabe unter "Character Evolution".
+- **Ausgangsproblem:** PR #20 (Speicherplätze) führte bewusst ein: läuft eine Erinnerung ab, ohne
+  dass darauf reagiert wurde, wandert sie automatisch in den ersten freien Speicherplatz statt
+  verloren zu gehen. Der Nutzer hat dieses automatische Verhalten nach Ausprobieren ausdrücklich
+  abgelehnt: "kein automatisches Auffüllen".
+- **Evidenzklassifikation:** `FACT` (direkte Nutzeräußerung, per Rückfrage auf den Umfang
+  bestätigt: überall, nicht nur im gerade neu gebauten Spielmodus-Bildschirm).
+- **Getroffene Korrektur:** Automatisches Ablegen vollständig entfernt, sowohl in
+  `HomeScreen.kt` (`archiveActiveReminderIfExpired()` umbenannt zu `clearExpiredReminder()`, tut
+  jetzt nur noch, was der Name sagt) als auch in `DockScreen.kt` (dort erst mit demselben PR
+  eingeführt, das die Speicherplätze auf den Spielmodus-Bildschirm portiert hat, und im selben
+  Zug wieder entfernt, bevor es gemergt war). Eine ausgelaufene, unbeantwortete Erinnerung ist
+  damit wieder wie vor PR #20 verloren. Speicherplätze füllen sich seitdem ausschließlich durch
+  die bewusste Zieh-Geste (Uhr auf einen freien Platz), nie von selbst.
+- **Betroffene Module/Texte:** `app-sim/src/main/java/com/notime/glyphsim/ui/HomeScreen.kt`,
+  `app-sim/src/main/java/com/notime/glyphsim/ui/DockScreen.kt`.
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine - `ActionSlotStore` (SharedPreferences) und `avatar_feed_events`
+  bleiben in ihrer Struktur unverändert, nur ein Schreibpfad entfällt.
+- **Getestet:** nicht per Emulator nachvollzogen (kein Android SDK in dieser Sitzung verfügbar,
+  siehe Architecture.md/NextTasks.md zur Testlücke bei den Speicherplätzen) - über CI geprüft.
+- **Neu entstandene offene Punkte:** keine neuen. Die bereits als Future Backlog vermerkte
+  Testlücke bei den Speicherplätzen (NT-018/NT-019/NT-025) besteht unverändert fort.
+
+### 2026-08-23 - Drei weitere Freizeit-Beschäftigungen: Angeln, Musizieren, Malen
+
+- **Version:** Protokoll bleibt 0.2; Gameplay-Erweiterung nach demselben, bereits etablierten
+  Muster wie Drachensteigen (PR #32) und Fußball (PR #36).
+- **Ausgangsproblem:** Nutzerwunsch, weitere "Doings" wie Drachensteigen und Fußball zu ergänzen.
+  Rückfrage ergab: nicht diese beiden selbst (schon vorhanden), sondern weitere Beschäftigungen
+  in ihrem Stil. Nutzer wählte "Angeln am Teich" als erste und "gleich mehrere (2-3)" als Umfang,
+  mit kreativer Freiheit bei der Ausgestaltung.
+- **Getroffene Entscheidung:**
+  - **Angeln am Teich** - vollständig neuer Ort `Place.POND` (Schilf und ein Steg-Pfosten als
+    Hintergrund, kein Kollisionsrisiko dank `behind = true`, wie beim Sportplatz), neue
+    dreiphasige Szene (`FishingPhase.CAST/WAIT/CATCH`) analog zu Drache/Fußball, in
+    `AnimationType.MOVE` mit 40 % Wahrscheinlichkeit eingehängt (Drache 55 %, Fußball 65 %,
+    bewusst niedriger, damit der Teich eine von mehreren Möglichkeiten bleibt, kein Pflichttermin).
+  - **Musizieren im Park** und **Malen auf der Wiese** - bewusst NICHT als weitere eigene Orte mit
+    neuer Einrichtung gebaut (Kollisionsrisiko beim Einfügen in bereits bestückte Räume ohne
+    lokale Kompilierbarkeit, siehe unten), sondern als neue `PlayEffects.Carried`-Gegenstände
+    (Gitarre, Staffelei) in zwei zusätzlichen `AnimationType.CREATIVITY`-Abläufen, die den
+    bestehenden Park bzw. die bestehende Wiese aufsuchen - dieselbe Reaktionsanimation, nur
+    unterwegs statt an der Werkbank.
+- **Betroffene Module:** `PlayScene.kt` (neuer Ort POND, zwei neue Hintergrund-Requisiten),
+  `PlayEffects.kt` (neue `FishingPhase`, `fishingCells()`, zwei neue `Carried`-Einträge),
+  `PlayRoutine.kt` (neuer `RoutineStep.Fishing`, `fishingRoutine()`, zwei neue CREATIVITY-Abläufe),
+  `DockScreen.kt` (Phasenzustand, Dispatch, Aufräumen, Rendering-Merge für die Angel-Szene -
+  Musizieren/Malen brauchen dort keine Änderung, da `Take`/`Drop`/`carriedCells()` bereits generisch
+  über jeden `Carried`-Wert arbeiten), `PlayRoutineTest.kt` (neuer Test analog zum
+  Fußball-/Drachen-Test).
+- **Änderungen an Charakter/Story:** keine.
+- **Migrationsauswirkungen:** keine.
+- **Getestet:** nicht lokal kompiliert - kein Android SDK und kein Zugriff auf das Gradle-Plugin-
+  Repository in dieser Umgebung (`com.android.application` ließ sich nicht auflösen). Stattdessen:
+  Architektur vollständig über einen Recherche-Durchlauf kartiert (alle `when(place)`-Dispatchpunkte
+  gezielt gegengeprüft, nicht nur die anfangs gefundenen), jede neue Stelle gegen das bestehende
+  Drache-/Fußball-Vorbild abgeglichen, Klammern-/Klammern-Bilanz aller geänderten Dateien geprüft.
+  CI ist hier die eigentliche Verifikation.
+- **Neu entstandene offene Punkte:** Beim Lesen des bestehenden Codes aufgefallen (nicht behoben,
+  da außerhalb dieser Aufgabe): Der `KITE_CHANCE_PERCENT`-Zweig in `PlayRoutines.forTopic()` sucht
+  die Drachen-Routine über `pool.firstOrNull { it is RoutineStep.Kite }` - `pool` schließt Drachen-
+  Routinen aber vorher bereits aus (`everyday`-Filter), wodurch dieser Zweig die Drachen-Routine
+  vermutlich nie tatsächlich zurückgibt. Fußball und die neue Angel-Routine umgehen das, indem sie
+  bei Treffer direkt die jeweilige Funktion zurückgeben statt über `pool` zu suchen. Verdient eine
+  eigene, gezielte Prüfung und ggf. Korrektur.
 
 ### Initialer Erkenntnisstand
 

@@ -9,8 +9,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,8 +24,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -35,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -51,6 +57,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.R
@@ -76,6 +85,7 @@ import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayWeather
+import com.notime.glyphsim.matrix.PlayFootballSkill
 import com.notime.glyphsim.matrix.PlaySceneView
 import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
@@ -271,10 +281,14 @@ fun DockScreen(
             clockOffset = Offset(boundX * fractionX, boundY * fractionY)
         }
 
-        // Ort und dargestellter Ort - stehen VOR der Geometrie, weil die Bodenhoehe vom Ort
-        // abhaengt (siehe PlayScene.floorFraction).
-        var currentPlace by remember { mutableStateOf(PlayScene.Place.NOOK) }
-        var renderedPlace by remember { mutableStateOf(PlayScene.Place.NOOK) }
+        // Ort und dargestellter Ort stehen vor der Geometrie, die beide fuer den Szenenaufbau
+        // benoetigt.
+        val presenceProfileId = PresentCompanion.profileId(context)
+        val initialPresence = remember(presenceProfileId) {
+            PlayPresence.entry(context, presenceProfileId)
+        }
+        var currentPlace by remember(presenceProfileId) { mutableStateOf(initialPresence.place) }
+        var renderedPlace by remember(presenceProfileId) { mutableStateOf(initialPresence.place) }
 
         // ---- Geometrie der Lebenswelt (nur Play-Modus, siehe PlayScene) ----
         //
@@ -294,15 +308,9 @@ fun DockScreen(
             if (maxWidthPx > 0f) maxWidthPx / PlayScene.MIN_SCENE_CELLS else Float.MAX_VALUE
         )
         val sceneWidthCells = if (sceneCellPx > 0f) (maxWidthPx / sceneCellPx).toInt() else 0
-        // Die Bodenhoehe haengt am ORT und an der Tageszeit (siehe PlayScene.floorFraction) und
-        // wird weich nachgefuehrt: Beim Wechsel in den naechtlichen Park senkt sich der Horizont
-        // sichtbar ab, statt zu springen - genau diese Bewegung erzeugt die Weite.
-        val targetFloorFraction = PlayScene.floorFraction(renderedPlace, PlayAmbientActivity.currentDayPhase())
-        val floorFraction by animateFloatAsState(
-            targetValue = targetFloorFraction,
-            animationSpec = tween(FLOOR_SHIFT_MS),
-            label = "floor"
-        )
+        // Alle Orte teilen dieselbe Ebene. Ein Ortswechsel darf die Welt nicht unter der Figur
+        // anheben oder absenken; geplante Hoehenwege brauchen spaeter eine eigene Mechanik.
+        val floorFraction = PlayScene.floorFraction(renderedPlace, PlayAmbientActivity.currentDayPhase())
         val floorYCells = if (sceneCellPx > 0f) {
             (maxHeightPx * floorFraction / sceneCellPx).toInt()
         } else {
@@ -322,12 +330,35 @@ fun DockScreen(
 
         var avatar by remember { mutableStateOf<AvatarState?>(null) }
         var feedingOccurrenceId by remember { mutableStateOf<Long?>(null) }
+
+        // Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt/ActionSlotStore.kt) -
+        // dieselbe Mechanik wie in HomeScreen, hier auf DockScreens eigenes Koordinatensystem
+        // (Pixel-Offsets statt onGloballyPositioned/Rect) und Avatar-Modell (AvatarState statt
+        // ActiveReminder) uebertragen. profileId folgt demselben Ad-hoc-Muster wie andernorts in
+        // dieser Datei (siehe z. B. weiter unten bei PlayWallet/PlayPantry): avatar?.species, falls
+        // schon vorhanden, sonst der gespeicherte Auswahlwert.
+        val actionSlotProfileId = AvatarSpeciesPrefs.profileId(avatar?.species ?: AvatarSpeciesPrefs.get(context))
+        var slots by remember(actionSlotProfileId) {
+            mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
+        }
+
+        // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
+        // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
+        val slotSizePx = with(density) { 56.dp.toPx() }
+        val slotGapPx = with(density) { 14.dp.toPx() }
+        val slotsRightMarginPx = with(density) { 8.dp.toPx() }
+        val slotsTotalHeightPx = ACTION_SLOT_COUNT * slotSizePx + (ACTION_SLOT_COUNT - 1) * slotGapPx
+        val slotsTopPx = ((maxHeightPx - slotsTotalHeightPx) / 2f).coerceAtLeast(0f)
+        val slotsXPx = (maxWidthPx - slotSizePx - slotsRightMarginPx).coerceAtLeast(0f)
+        fun slotOffsetPx(index: Int) = Offset(slotsXPx, slotsTopPx + index * (slotSizePx + slotGapPx))
         /** Ob gerade ein Gang laeuft - siehe das Nachfuehren des Bodens weiter unten. */
         var avatarWalking by remember { mutableStateOf(false) }
         /** Wie oft die Figur schon hintereinander im selben Raum geblieben ist - siehe nextTopic. */
         var stayedRounds by remember { mutableStateOf(0) }
         /** Womit die Figur zuletzt beschaeftigt war - damit sie im Gespraech sagen kann, was sie tut. */
-        var currentTopic by remember { mutableStateOf<AnimationType?>(null) }
+        var currentTopic by remember(presenceProfileId) {
+            mutableStateOf<AnimationType?>(initialPresence.topic)
+        }
         /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
         var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
         /** Was er gerade ueber dem Kopf sagt (Text-Id), oder null - siehe PlaySpeech. */
@@ -378,6 +409,12 @@ fun DockScreen(
         // PlayEffects. Beides zusammen beantwortet beim Zuschauen die Frage "was hat er vor?",
         // die eine blosse Bewegung offenlaesst.
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
+        /** Sichtbare Phase der langen Drachen-Szene; null ausserhalb dieses Ablaufs. */
+        var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
+        /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
+        var footballPhase by remember { mutableStateOf<PlayEffects.FootballPhase?>(null) }
+        /** Sichtbare Phase der Angel-Szene am Teich; null ausserhalb dieses Ablaufs. */
+        var fishingPhase by remember { mutableStateOf<PlayEffects.FishingPhase?>(null) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
@@ -470,7 +507,50 @@ fun DockScreen(
         }
 
         // Worum er gerade gebeten wurde - siehe die Regungs-Schleife weiter unten.
-        var requestedTopic by remember { mutableStateOf<AnimationType?>(null) }
+        var requestedTopic by remember(presenceProfileId) {
+            mutableStateOf<AnimationType?>(initialPresence.topic)
+        }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        var leftPlayAtMillis by remember { mutableStateOf<Long?>(null) }
+        DisposableEffect(lifecycleOwner, playMode, presenceProfileId) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_STOP -> if (playMode) {
+                        val now = System.currentTimeMillis()
+                        currentTopic?.let { topic ->
+                            PlayPresence.save(context, presenceProfileId, currentPlace, topic, now)
+                        }
+                        leftPlayAtMillis = now
+                    }
+                    Lifecycle.Event.ON_START -> {
+                        val leftAt = leftPlayAtMillis
+                        if (playMode && leftAt != null &&
+                            System.currentTimeMillis() - leftAt > PlayPresence.SHORT_RETURN_MS
+                        ) {
+                            val topic = PlayPresence.topicFor(java.time.LocalDateTime.now())
+                            val place = PlayScene.forTopic(topic)
+                            currentPlace = place
+                            renderedPlace = place
+                            currentTopic = topic
+                            requestedTopic = topic
+                        }
+                        leftPlayAtMillis = null
+                    }
+                    else -> Unit
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
+        // Der letzte glaubhafte Zustand wird bei jeder Aenderung gespeichert; ON_STOP oben setzt
+        // den Zeitstempel exakt auf den Moment des Weggehens. So laesst sich eine kurze Rueckkehr
+        // von einem langen Fortsein unterscheiden, ohne Ablaufschritte nachzusimulieren.
+        LaunchedEffect(playMode, presenceProfileId, currentPlace, currentTopic) {
+            if (!playMode) return@LaunchedEffect
+            currentTopic?.let { topic ->
+                PlayPresence.save(context, presenceProfileId, currentPlace, topic)
+            }
+        }
         var clipSeconds by remember { mutableIntStateOf(0) }
         var clipEncoding by remember { mutableFloatStateOf(-1f) }
         var clipResult by remember { mutableStateOf<java.io.File?>(null) }
@@ -610,19 +690,6 @@ fun DockScreen(
             if (target == currentPlace) return
             val hasDoorHere = PlayScene.Station.DOOR in PlayScene.stationsAt(currentPlace, species)
             val hasDoorThere = PlayScene.Station.DOOR in PlayScene.stationsAt(target, species)
-            // **Ob sich der BODEN mitbewegt** - siehe die Wartezeit weiter unten.
-            //
-            // Gemeldet als "im Park schwebt er in der Luft und setzt sich dann auf die Bank".
-            // Genau das war es: Der Boden liegt drinnen bei 0,80 der Hoehe und abends im Park bei
-            // 0,88, nachts bei 0,93 - er sinkt beim Hinausgehen also sichtbar ab, und zwar ueber
-            // FLOOR_SHIFT_MS. Der Ortswechsel wartete aber nur die Ueberblendung ab (rund halb so
-            // lange) und ging dann los. Die Figur lief und setzte sich damit auf einen Boden, den
-            // es an dieser Stelle noch gar nicht gab; sichtbar blieb sie in der Luft stehen, bis
-            // eine spaetere Bewegung sie wieder einfing.
-            val dayPhase = PlayAmbientActivity.currentDayPhase()
-            val floorMoves = PlayScene.floorFraction(currentPlace, dayPhase) !=
-                PlayScene.floorFraction(target, dayPhase)
-
             if (hasDoorHere) {
                 PlayScene.stationSpot(currentPlace, PlayScene.Station.DOOR, sceneWidthCells, floorYCells, species)
                     ?.let { spot ->
@@ -649,15 +716,6 @@ fun DockScreen(
             avatarHidden = true
             currentPlace = target
             delay((SCENE_FADE_OUT_MS + SCENE_FADE_IN_MS).toLong())
-            // Und beim Hinausgehen zusaetzlich warten, bis der Boden unten angekommen ist. Die
-            // Figur bleibt so lange im Tuerrahmen bzw. unsichtbar - man sieht den Horizont sinken,
-            // nicht eine Figur, die auf einen wandernden Boden zulaeuft. Nur wo sich der Boden
-            // ueberhaupt bewegt: Von Zimmer zu Zimmer ist er derselbe, dort waere jedes Warten
-            // ein toter Takt.
-            if (floorMoves) {
-                delay((FLOOR_SHIFT_MS - SCENE_FADE_OUT_MS - SCENE_FADE_IN_MS).coerceAtLeast(0).toLong())
-            }
-
             // Im neuen Raum an der Tuer wieder auftauchen und hereinkommen.
             avatar?.let { arriving ->
                 val px = with(density) { arriving.sizeDp.dp.toPx() }
@@ -840,6 +898,63 @@ fun DockScreen(
                         startAvatarIdleLoop(species, mood)
                     }
 
+                    is RoutineStep.Kite -> {
+                        kitePhase = step.phase
+                        // Auspacken und Einholen bekommen eine erkennbare Koerperbewegung. Der
+                        // lange Flug selbst bleibt ruhig; dort bewegt der Wind den Drachen.
+                        if (step.phase == PlayEffects.KitePhase.PREPARE ||
+                            step.phase == PlayEffects.KitePhase.LAND
+                        ) {
+                            avatarIdleJob?.cancel()
+                            val handling = AvatarAnimations.fidgetSequence(
+                                species,
+                                if (step.phase == PlayEffects.KitePhase.PREPARE) {
+                                    AvatarAnimations.Fidget.STRETCH
+                                } else {
+                                    AvatarAnimations.Fidget.LOOK_AROUND
+                                }
+                            )
+                            MatrixAnimator.playTimed(handling.frames, handling.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
+                            startAvatarIdleLoop(species, mood)
+                        }
+                    }
+
+                    is RoutineStep.Football -> {
+                        footballPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Fishing -> {
+                        fishingPhase = step.phase
+                        // Nur beim Auswerfen und beim Anschlagen eine eigene Koerperbewegung -
+                        // beim Warten bleibt die Figur ruhig stehen, damit WAIT tatsaechlich nach
+                        // Warten aussieht und nicht wie eine weitere Aktion.
+                        if (step.phase == PlayEffects.FishingPhase.CAST ||
+                            step.phase == PlayEffects.FishingPhase.CATCH
+                        ) {
+                            avatarIdleJob?.cancel()
+                            val motion = AvatarAnimations.fidgetSequence(
+                                species,
+                                if (step.phase == PlayEffects.FishingPhase.CAST) {
+                                    AvatarAnimations.Fidget.STRETCH
+                                } else {
+                                    AvatarAnimations.Fidget.LOOK_AROUND
+                                }
+                            )
+                            MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
+                            startAvatarIdleLoop(species, mood)
+                        }
+                    }
+
                     // Verweilen ist vergehende ZEIT und wird im Zeitraffer entsprechend gekuerzt -
                     // sonst haetten die Pausen zwischen den Regungen ein anderes Tempo als die
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
@@ -922,6 +1037,9 @@ fun DockScreen(
                 // Dasselbe fuer Getragenes: Bricht der Ablauf zwischen Take und Drop ab, trueg
                 // die Figur das Buch sonst durch alle folgenden Szenen mit sich herum.
                 carried = null
+                kitePhase = null
+                footballPhase = null
+                fishingPhase = null
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
                 // Matratzenhoehe und damit sichtbar in der Luft. Bewusst ohne Animation gesetzt,
@@ -1082,7 +1200,8 @@ fun DockScreen(
             reminderId: Long? = null,
             occurrenceId: Long? = null,
             animationType: AnimationType? = null,
-            libraryAnimationLabel: String? = null
+            libraryAnimationLabel: String? = null,
+            frames: List<IntArray> = emptyList()
         ): AvatarState {
             // Auf dem Boden der Kulisse statt an zufaelliger Stelle im Schwarzen: sobald ein Raum
             // gezeichnet wird, ist eine frei schwebende Figur der eine Fehler, den man sofort
@@ -1108,7 +1227,8 @@ fun DockScreen(
                 species = species,
                 offset = spawnOffset,
                 sizeDp = worldAvatarSizeDp,
-                frame = AvatarAnimations.idleSequence(species, mood).frames.first()
+                frame = AvatarAnimations.idleSequence(species, mood).frames.first(),
+                frames = frames
             )
         }
 
@@ -1121,10 +1241,8 @@ fun DockScreen(
         // und die Figur bleibt, wo sie war. Dazu behielt sie ihre alte Groesse, waehrend die
         // Kulisse mitwuchs: Genau das sah aus, als zoome die Landschaft unter ihr weg.
         //
-        // Ausdruecklich NICHT auf [floorYPx] hoerend, obwohl es naheliegt: Der Boden wandert bei
-        // jedem Ortswechsel weich nach (siehe floorFraction), und ein Effekt, der darauf
-        // anspringt, riebe sich an jeder laufenden Geh-Animation. Umgestellt wird nur, was der
-        // NUTZER umstellt - Uhrgroesse und Bildschirmmasse.
+        // [floorYPx] bleibt bei Ortswechseln stabil. Umgestellt wird hier nur, was der NUTZER
+        // veraendert - Uhrgroesse und Bildschirmmasse.
         // Auf GERUNDETE Avatargroesse hoerend, nicht auf den genauen Wert. Sie leitet sich aus der
         // Uhrgroesse ab, und die schreibt die Zieh-Geste bei jeder Bewegung neu - beim reinen
         // Verschieben um Bruchteile eines Punktes. Auf den genauen Wert gehoert, liefe dieser
@@ -1174,59 +1292,6 @@ fun DockScreen(
             )
         }
 
-        // ---- Der Horizont wandert weiter, nachdem die Figur schon steht ----
-        //
-        // **Der Fehler, der sich als "die Figur schwebt ueber der Landschaft" zeigte.**
-        //
-        // Die Bodenhoehe haengt am ORT und an der Tageszeit (siehe PlayScene.floorFraction) und
-        // wird ueber FLOOR_SHIFT_MS weich nachgefuehrt - drinnen 0.80, draussen nachts 0.93. Das
-        // sind bis zu dreizehn Prozent der Bildhoehe.
-        //
-        // Die Position der Figur steht dagegen in PIXELN und wird einmal berechnet, wenn ein
-        // Schritt beginnt. Beim Gang nach draussen faellt dieser Zeitpunkt mitten in die laufende
-        // Bodenbewegung: Sie taucht 600ms nach dem Ortswechsel wieder auf, der Boden ist dann
-        // erst zur Haelfte unten, und dort bleibt sie stehen. Der Rest der Bewegung findet ohne
-        // sie statt.
-        //
-        // Deshalb nur "manchmal": Von drinnen in den Laden aendert sich gar nichts (beide 0.80),
-        // von drinnen nach draussen am Abend oder nachts dagegen sehr viel. Wer tagsueber
-        // ausprobiert, sieht nichts.
-        //
-        // **Warum das die frueher ausgeschlossene Abhaengigkeit doch braucht.** Der Effekt fuer
-        // Groessenaenderungen weiter oben hoert ausdruecklich NICHT auf [floorYPx], mit der
-        // Begruendung, er wuerde sich an jeder laufenden Geh-Animation reiben. Das stimmt - und
-        // genau deshalb steht hier ein eigener, der die Bedingung mitbringt, die dort fehlte: Er
-        // ruehrt die Figur nur an, wenn sie NICHT geht. Waehrend eines Gangs schreibt die
-        // Animation die Position ohnehin Bild fuer Bild; danach setzt dieser Effekt sie wieder
-        // auf den Boden, und weil der Boden sich weich bewegt, sinkt sie mit ihm statt zu
-        // springen.
-        LaunchedEffect(floorYPx, avatarWalking, avatarSettling, occupiedStation, renderedPlace) {
-            val current = avatar
-            if (!playMode || current == null || avatarWalking || avatarSettling || floorYPx <= 0f) {
-                return@LaunchedEffect
-            }
-            val avatarPx = with(density) { current.sizeDp.dp.toPx() }
-            val station = occupiedStation
-            val next = if (station != null) {
-                // Wer auf einer Requisite sitzt, sitzt auch nach dem Nachfuehren dort - die
-                // Moebel haengen an denselben Bodenzellen.
-                PlayScene.stationSpot(
-                    renderedPlace, station, sceneWidthCells, floorYCells, current.species
-                )?.let { spot -> stationOffset(spot, avatarPx, maxWidthPx, current.species) }
-            } else {
-                // Waagerecht bleibt alles, wie es ist - es hat sich nur der Boden bewegt.
-                Offset(
-                    current.offset.x,
-                    AvatarFooting.topFor(
-                        floorYPx, avatarPx, AvatarBodies.forSpecies(current.species).groundRow()
-                    )
-                )
-            }
-            if (next != null && next != current.offset) {
-                avatar = current.copy(offset = next)
-            }
-        }
-
         // Play-Modus-Einstieg/-Ausstieg: der Avatar ist hier - anders als im normalen Dock -
         // dauerhaft sichtbar, nicht nur waehrend eine Erinnerungs-Animation laeuft (siehe
         // Klassendoku oben). Verlaesst man den Play-Modus, waehrend der Avatar nur ambient idlet
@@ -1242,7 +1307,15 @@ fun DockScreen(
                     occupiedStation = null
                     avatar = null
                 }
-                playMode -> if (avatar == null) avatar = spawnAmbientAvatar()
+                playMode -> if (avatar == null) {
+                    avatar = spawnAmbientAvatar()
+                    // Beim Umschalten aus dem Spiel wurde ein laufender Ablauf sauber beendet.
+                    // Beim Zurueckkehren wird seine Absicht wieder aufgenommen, statt einen neuen
+                    // Zufall zu wuerfeln.
+                    if (requestedTopic == null) {
+                        requestedTopic = currentTopic ?: PlayPresence.topicFor(java.time.LocalDateTime.now())
+                    }
+                }
                 avatar?.occurrenceId == null && avatar?.fed != true -> {
                     avatarIdleJob?.cancel()
                     occupiedStation = null
@@ -1287,7 +1360,10 @@ fun DockScreen(
                         PlayScene.allowsVisitors(currentPlace)
                 }
                 while (isActive) {
-                    delay((VISIT_INTERVAL_MS.random() * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(3_000L))
+                    delay(
+                        (visitIntervalFor(currentPlace).random() * PlayTimeLapse.paceFactor())
+                            .toLong().coerceAtLeast(3_000L)
+                    )
                     while (isActive && !visitPossible()) {
                         delay((VISIT_RETRY_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(250L))
                     }
@@ -1461,7 +1537,8 @@ fun DockScreen(
                             reminderId = event.reminderId,
                             occurrenceId = event.occurrenceId,
                             animationType = event.animationType,
-                            libraryAnimationLabel = event.libraryAnimationLabel
+                            libraryAnimationLabel = event.libraryAnimationLabel,
+                            frames = event.frames
                         )
                     } else {
                         // Randfall: die Spawn-Effekt-Coroutine oben ist noch nicht durchgelaufen,
@@ -1472,7 +1549,8 @@ fun DockScreen(
                             reminderId = event.reminderId,
                             occurrenceId = event.occurrenceId,
                             animationType = event.animationType,
-                            libraryAnimationLabel = event.libraryAnimationLabel
+                            libraryAnimationLabel = event.libraryAnimationLabel,
+                            frames = event.frames
                         )
                     }
                 } else {
@@ -1554,15 +1632,20 @@ fun DockScreen(
                 // hat (die setzt fed=true und cancelt beide Jobs selbst).
                 if (avatar?.fed != true) {
                     if (playMode) {
-                        // Anders als im normalen Dock verschwindet der Avatar hier nicht - nur
-                        // die Verknuepfung zur ausgelaufenen Erinnerung faellt weg, seine Idle-
-                        // Schleife (siehe oben, unangetastet seit dem Play-Modus-Einstieg bzw.
-                        // der letzten Verknuepfung) laeuft einfach weiter.
+                        // Kein automatisches Ablegen in einen Speicherplatz - die ausgelaufene,
+                        // unbeantwortete Erinnerung ist damit verloren, wie schon vor den
+                        // Speicherplaetzen. Die bleiben ausschliesslich der bewussten Zieh-Geste
+                        // vorbehalten (siehe saveToSlot). Anders als im normalen Dock verschwindet
+                        // der Avatar hier nicht - nur die Verknuepfung zur ausgelaufenen
+                        // Erinnerung faellt weg, seine Idle-Schleife (siehe oben, unangetastet
+                        // seit dem Play-Modus-Einstieg bzw. der letzten Verknuepfung) laeuft
+                        // einfach weiter.
                         avatar = avatar?.copy(
                             reminderId = null,
                             occurrenceId = null,
                             animationType = null,
-                            libraryAnimationLabel = null
+                            libraryAnimationLabel = null,
+                            frames = emptyList()
                         )
                     } else {
                         // Avatar verschwindet ungetrackt.
@@ -1614,6 +1697,13 @@ fun DockScreen(
                     // Gefuettert wird immer frei stehend - unter der Bettdecke waere die Reaktion
                     // zur Haelfte unsichtbar.
                     occupiedStation = null
+                    if (currentPlace == PlayScene.Place.SPORT && footballPhase != null &&
+                        PlayFootballSkill.isFootballAnimation(
+                            current.animationType, current.libraryAnimationLabel
+                        )
+                    ) {
+                        PlayFootballSkill.learn(context, presenceProfileId)
+                    }
                     avatar = current.copy(fed = true)
                     clockAnimJob?.cancel()
                     avatarIdleJob?.cancel()
@@ -1661,6 +1751,19 @@ fun DockScreen(
                             )
                             val mood = AvatarMoodSnapshot.forSpecies(context, current.species)
                             startAvatarIdleLoop(current.species, mood)
+                            // Eine ECHTE Erinnerung darf dasselbe bewirken wie eine Bitte im
+                            // Gespraech (siehe onAsk/requestedTopic weiter unten): das Wesen geht
+                            // danach an den zum Thema passenden Ort ([PlayScene.forTopic]) und
+                            // fuehrt dort dessen Tagesablauf-Routine aus ([PlayRoutines.forTopic]),
+                            // statt einfach an der Stelle der Reaktion idle stehen zu bleiben.
+                            // Reaktion selbst bleibt unberuehrt (laeuft VOR diesem Zweig, frei
+                            // stehend und unverdeckt) - erst DANACH beginnt der Ortswechsel. Die
+                            // Tageszeit wirkt dabei bereits mit: [moveToPlace] und die Routine
+                            // selbst richten sich nach der aktuellen Tagesphase (siehe
+                            // PlayAmbientActivity.currentDayPhase), dieselbe Logik wie beim
+                            // autonomen Tagesablauf. Nur bei einem festen [AnimationType] moeglich
+                            // - eine Bibliotheks-Animation ohne Thema kennt keinen Ort.
+                            current.animationType?.let { requestedTopic = it }
                         } else {
                             avatar = null
                         }
@@ -1668,6 +1771,66 @@ fun DockScreen(
                     if (feedingOccurrenceId == current.occurrenceId) feedingOccurrenceId = null
                 }
             }
+        }
+
+        /**
+         * Legt die gerade mit dem Avatar verknuepfte, noch unbeantwortete Erinnerung in
+         * Speicherplatz [index] ab, statt sie zu fuettern - Gegenstueck zu [feedAvatarNow]. Der
+         * Avatar behaelt seine Idle-Schleife und Position, verliert nur die Verknuepfung zur
+         * Erinnerung (dieselbe Kopie wie im "ausgelaufen, ohne gefuettert zu werden"-Zweig unten).
+         */
+        fun saveToSlot(index: Int) {
+            val current = avatar ?: return
+            if (current.occurrenceId == null || current.fed) return
+            if (slots.getOrNull(index) != null) return
+            val reminderId = current.reminderId ?: return
+            val saved = SavedAction(
+                reminderId = reminderId,
+                occurrenceId = current.occurrenceId,
+                animationType = current.animationType,
+                libraryAnimationLabel = current.libraryAnimationLabel,
+                frames = current.frames.ifEmpty { listOf(current.frame) }
+            )
+            ActionSlotStore.write(context, actionSlotProfileId, index, saved)
+            slots = slots.toMutableList().also { it[index] = saved }
+            clockAnimJob?.cancel()
+            isPlayingAnimation = false
+            animationFrame = null
+            avatar = current.copy(
+                reminderId = null,
+                occurrenceId = null,
+                animationType = null,
+                libraryAnimationLabel = null,
+                frames = emptyList()
+            )
+            if (!OnboardingPrefs.hasUsedActionSlot(context)) {
+                OnboardingPrefs.markActionSlotUsed(context)
+            }
+        }
+
+        /**
+         * Wendet eine zuvor abgelegte Aktion aus Speicherplatz [index] auf den Avatar an, indem
+         * sie ihm kurz "verknuepft" wird und danach exakt derselbe Weg wie [feedAvatarNow] laeuft -
+         * dieselbe DB-Schreibung, dieselbe Reaktion, dasselbe Aufraeumen danach. Nur erreichbar,
+         * wenn der Avatar gerade KEINE eigene offene Erinnerung traegt: sonst wuerde deren
+         * Verknuepfung hier verloren gehen, ohne dass sie je beantwortet oder archiviert wurde.
+         */
+        fun feedFromSlot(index: Int) {
+            val saved = slots.getOrNull(index) ?: return
+            val current = avatar ?: return
+            if (feedingOccurrenceId != null) return
+            if (current.occurrenceId != null && !current.fed) return
+            avatar = current.copy(
+                reminderId = saved.reminderId,
+                occurrenceId = saved.occurrenceId,
+                animationType = saved.animationType,
+                libraryAnimationLabel = saved.libraryAnimationLabel,
+                fed = false,
+                frames = saved.frames
+            )
+            ActionSlotStore.write(context, actionSlotProfileId, index, null)
+            slots = slots.toMutableList().also { it[index] = null }
+            feedAvatarNow()
         }
 
         // Laeuft bei jeder Aenderung von clockOffset neu an, also auch mitten in einer
@@ -1680,6 +1843,15 @@ fun DockScreen(
             val avatarPx = with(density) { current.sizeDp.dp.toPx() }
             if (isColliding(clockOffset, clockPx, current.offset, avatarPx)) {
                 feedAvatarNow()
+                return@LaunchedEffect
+            }
+            if (!playMode) return@LaunchedEffect
+            val freeSlotIndex = (0 until ACTION_SLOT_COUNT).firstOrNull { index ->
+                slots.getOrNull(index) == null &&
+                    isColliding(clockOffset, clockPx, slotOffsetPx(index), slotSizePx)
+            }
+            if (freeSlotIndex != null) {
+                saveToSlot(freeSlotIndex)
             }
         }
 
@@ -1707,7 +1879,8 @@ fun DockScreen(
                     runRoutine(
                         PlayRoutines.forTopic(
                             topic = topic,
-                            needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context)
+                            needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                            footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
                         ),
                         species
                     )
@@ -1852,7 +2025,8 @@ fun DockScreen(
                             runRoutine(
                                 PlayRoutines.forTopic(
                                     topic = topic,
-                                    needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context)
+                                    needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                                    footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
                                 ),
                                 species
                             )
@@ -2350,6 +2524,42 @@ fun DockScreen(
                         )
                     )
                 }
+                val kite = kitePhase
+                if (current != null && kite != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.kiteCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = kite,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val football = footballPhase
+                if (current != null && football != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.footballCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = football,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val fishing = fishingPhase
+                if (current != null && fishing != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.fishingCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = fishing,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
                 sparkAt?.let { spot ->
                     addAll(PlayEffects.sparkCells(spot.centerX, spot.groundY, sparkProgress.value))
                 }
@@ -2412,6 +2622,119 @@ fun DockScreen(
             LaunchedEffect(line, spokenIsOpenHabit) {
                 delay((SPEECH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
                 spokenLine = null
+            }
+        }
+
+        // ---- Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt) ----
+        //
+        // Die Plaetze selbst stehen fest wie die Kulisse - nur ihr INHALT laesst sich ziehen, auf
+        // den Avatar. Die Kollisionspruefung folgt dabei nicht nur der Zieh-Geste (dragOffset),
+        // sondern auch der AKTUELLEN Avatar-Position (avatar?.offset als zweiter Schluessel des
+        // LaunchedEffect unten) - der Avatar bewegt sich im Spielmodus animiert durch die Kulisse
+        // (siehe moveToPlace) statt an fester Bildschirmstelle zu stehen, waere er nicht mit
+        // einbezogen, traefe ein Ziehen auf ein Ziel, das sich waehrenddessen schon weiterbewegt
+        // hat. Fuer TalkBack bleibt zusaetzlich die Zusatzaktion "Anwenden" - Ziehen laesst sich
+        // fuer einen Screenreader nicht sinnvoll bedienen, dasselbe Muster wie beim Fuettern per
+        // Uhr-Ziehen weiter oben.
+        if (playMode) {
+            Column(
+                modifier = Modifier
+                    .offset { IntOffset(slotsXPx.roundToInt(), slotsTopPx.roundToInt()) },
+                verticalArrangement = Arrangement.spacedBy(with(density) { slotGapPx.toDp() })
+            ) {
+                repeat(ACTION_SLOT_COUNT) { index ->
+                    val saved = slots.getOrNull(index)
+                    val slotLabel = if (saved != null) {
+                        val topicLabel = saved.libraryAnimationLabel
+                            ?: saved.animationType?.let { stringResource(it.labelRes) }
+                        stringResource(
+                            R.string.a11y_action_slot_filled,
+                            index + 1,
+                            topicLabel ?: stringResource(R.string.a11y_reminder_generic)
+                        )
+                    } else {
+                        stringResource(R.string.a11y_action_slot_empty, index + 1)
+                    }
+                    val applyLabel = stringResource(R.string.a11y_action_slot_apply)
+
+                    // Ueber den Belegungs-Schluessel neu erzeugt: sobald dieser Platz frei wird
+                    // (gefuettert) oder neu belegt wird, beginnt die Verschiebung wieder bei Null -
+                    // sonst haenge die naechste Aktion an diesem Platz an der Position der vorigen
+                    // (dasselbe Muster wie ActionSlot in ActionSlots.kt).
+                    var dragOffset by remember(saved?.occurrenceId) { mutableStateOf(Offset.Zero) }
+
+                    LaunchedEffect(dragOffset, avatar?.offset, avatar?.sizeDp) {
+                        val current = avatar
+                        if (saved == null || current == null || dragOffset == Offset.Zero) {
+                            return@LaunchedEffect
+                        }
+                        val avatarPx = with(density) { current.sizeDp.dp.toPx() }
+                        val slotAbsolute = slotOffsetPx(index) + dragOffset
+                        if (isColliding(slotAbsolute, slotSizePx, current.offset, avatarPx)) {
+                            feedFromSlot(index)
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(with(density) { slotSizePx.toDp() })
+                            .offset { IntOffset(dragOffset.x.roundToInt(), dragOffset.y.roundToInt()) }
+                            .clip(CircleShape)
+                            .background(if (saved != null) TamaPalette.BubbleBackground else TamaPalette.RowBackground)
+                            .border(
+                                width = 1.dp,
+                                color = TamaPalette.TextMuted.copy(alpha = if (saved != null) 0f else 0.35f),
+                                shape = CircleShape
+                            )
+                            .then(
+                                if (saved != null) {
+                                    Modifier.pointerInput(saved.occurrenceId) {
+                                        detectDragGestures(
+                                            onDrag = { change, amount ->
+                                                change.consume()
+                                                dragOffset += amount
+                                            },
+                                            onDragEnd = {
+                                                // Ueberschneidet sich der Platz gerade mit dem
+                                                // Avatar, laeuft das Fuettern bereits (siehe
+                                                // LaunchedEffect oben) - dann NICHT zurueckschnappen,
+                                                // der Platz verschwindet gleich ohnehin.
+                                                val current = avatar
+                                                val stillOverlapping = current != null &&
+                                                    isColliding(
+                                                        slotOffsetPx(index) + dragOffset,
+                                                        slotSizePx,
+                                                        current.offset,
+                                                        with(density) { current.sizeDp.dp.toPx() }
+                                                    )
+                                                if (!stillOverlapping) dragOffset = Offset.Zero
+                                            },
+                                            onDragCancel = { dragOffset = Offset.Zero }
+                                        )
+                                    }
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .semantics {
+                                contentDescription = slotLabel
+                                if (saved != null) {
+                                    customActions = listOf(
+                                        CustomAccessibilityAction(applyLabel) { feedFromSlot(index); true }
+                                    )
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (saved != null) {
+                            SimulatedMatrixView(
+                                frame = ActionSlotSymbols.frameFor(saved),
+                                showPuck = false,
+                                modifier = Modifier.fillMaxSize().padding(8.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -2581,7 +2904,15 @@ private data class AvatarState(
     val offset: Offset,
     val sizeDp: Float,
     val frame: IntArray,
-    val fed: Boolean = false
+    val fed: Boolean = false,
+    /**
+     * Die volle Frame-Liste der gerade laufenden Erinnerungs-Animation - nur befuellt, waehrend
+     * [occurrenceId] gesetzt ist. Wird ausschliesslich fuer die Vorschau gebraucht, falls diese
+     * Ausloesung statt gefuettert in einen Speicherplatz gezogen wird (siehe [SavedAction],
+     * ActionSlots.kt). [frame] allein reicht dafuer nicht - das ist nur das gerade sichtbare
+     * Einzelbild und wechselt staendig.
+     */
+    val frames: List<IntArray> = emptyList()
 )
 
 /**
@@ -2777,8 +3108,21 @@ private const val SPEECH_DOT_MS = 190L
 /** Abstand zwischen zwei Besuchen. */
 private val VISIT_INTERVAL_MS = 90_000L..210_000L
 
+/**
+ * Deutlich kuerzerer Abstand fuer die belebten Orte (Strasse, Stadt): Auf einem Weg begegnet man
+ * einander haeufiger als beim Ausruhen im Park oder beim Einkaufen - grob ein Drittel des
+ * sonstigen Takts statt alle anderthalb bis dreieinhalb Minuten.
+ */
+private val VISIT_INTERVAL_MS_BUSY = 30_000L..70_000L
+
 /** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
 private const val VISIT_RETRY_MS = 4_000L
+
+/** Welcher Besuchstakt an diesem Ort gilt - siehe [VISIT_INTERVAL_MS_BUSY]. */
+private fun visitIntervalFor(place: PlayScene.Place): LongRange = when (place) {
+    PlayScene.Place.STREET, PlayScene.Place.CITY -> VISIT_INTERVAL_MS_BUSY
+    else -> VISIT_INTERVAL_MS
+}
 
 
 /** Wo an der Figur ein Zugriff aufblitzt - auf Handhoehe, seitlich vorn (16x16-Raster). */
@@ -2837,10 +3181,6 @@ private fun stationOffset(
         y = AvatarFooting.topFor((spot.groundY + 1) * cell, avatarPx, groundRow)
     )
 }
-
-/** Wie lange das Absenken/Anheben des Horizonts dauert - langsam genug, dass man die Weite
- *  entstehen SIEHT, statt sie nur vorzufinden. */
-private const val FLOOR_SHIFT_MS = 1200
 
 /**
  * GRUNDtakt der Umgebungsanimation - jedes Detail nimmt sich daraus sein eigenes Vielfaches

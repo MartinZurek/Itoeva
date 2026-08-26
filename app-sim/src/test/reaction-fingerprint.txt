@@ -27,6 +27,7 @@ LIB:Candle=8e0190174b5c
 LIB:Candles=46bc73675024
 LIB:Cat=e50015bc9cfa
 LIB:Check=6cd82fb8df47
+LIB:Clock=6cd82fb8df47
 LIB:Cloud=b609ea8a9530
 LIB:Comet=3b601af38952
 LIB:Compass=136730f0c677

@@ -33,6 +33,15 @@ sealed interface RoutineStep {
     /** Eine Alltagsregung einschieben. */
     data class Stir(val fidget: AvatarAnimations.Fidget) : RoutineStep
 
+    /** Eine Phase der mehrstufigen Drachen-Szene sichtbar machen. */
+    data class Kite(val phase: PlayEffects.KitePhase) : RoutineStep
+
+    /** Eine Phase der Fussball-Szene; TRICK wird erst nach dem Lernen verwendet. */
+    data class Football(val phase: PlayEffects.FootballPhase) : RoutineStep
+
+    /** Eine Phase der Angel-Szene am Teich. */
+    data class Fishing(val phase: PlayEffects.FishingPhase) : RoutineStep
+
     /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
     data class Linger(val millis: Long) : RoutineStep
 
@@ -107,7 +116,12 @@ object PlayRoutines {
      * der Welt Vorrang vor dem Zufall - der Avatar geht einkaufen, WEIL nichts mehr da ist, und
      * nicht, weil die Wuerfel es so wollten.
      */
-    fun forTopic(topic: AnimationType, needsShopping: Boolean = false): PlayRoutine {
+    fun forTopic(
+        topic: AnimationType,
+        needsShopping: Boolean = false,
+        footballTrickLearned: Boolean = false,
+        random: Random = Random
+    ): PlayRoutine {
         val options = allFor(topic)
         if (needsShopping) {
             options.firstOrNull { routine ->
@@ -117,11 +131,65 @@ object PlayRoutines {
         // Umgekehrt: Solange etwas da ist, faellt der Einkauf weg - sonst liefe er auch mit vollem
         // Kuehlschrank jedes zweite Mal in den Laden.
         val everyday = options.filterNot { routine ->
-            routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP }
+            routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP } ||
+                routine.steps.any {
+                    it is RoutineStep.Kite || it is RoutineStep.Football || it is RoutineStep.Fishing
+                }
         }
         val pool = everyday.ifEmpty { options }
-        return pool[Random.nextInt(pool.size)]
+        // MOVE hatte bisher fast nur Wege als Inhalt. Die erste richtige Park-Beschaeftigung soll
+        // oft genug sichtbar sein, um den neuen Standard zu praegen, ohne jeden Spaziergang zu
+        // ersetzen.
+        if (topic == AnimationType.MOVE && random.nextInt(100) < KITE_CHANCE_PERCENT) {
+            pool.firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
+                ?.let { return it }
+        }
+        if (topic == AnimationType.MOVE && random.nextInt(100) < FOOTBALL_CHANCE_PERCENT) {
+            return footballRoutine(footballTrickLearned)
+        }
+        // Dritte eigene Aussenaktivitaet, seltener als die beiden anderen - sonst wirkt der Teich
+        // wie ein Pflichttermin statt wie eine von mehreren Moeglichkeiten.
+        if (topic == AnimationType.MOVE && random.nextInt(100) < FISHING_CHANCE_PERCENT) {
+            return fishingRoutine()
+        }
+        return pool[random.nextInt(pool.size)]
     }
+
+    private const val KITE_CHANCE_PERCENT = 55
+    private const val FOOTBALL_CHANCE_PERCENT = 65
+    private const val FISHING_CHANCE_PERCENT = 40
+
+    fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(
+        buildList {
+            add(RoutineStep.GoToPlace(PlayScene.Place.SPORT))
+            add(RoutineStep.Stroll(0.30f))
+            add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
+            add(RoutineStep.Linger(12_000L))
+            add(RoutineStep.Football(PlayEffects.FootballPhase.AIM))
+            add(RoutineStep.Linger(4_000L))
+            if (trickLearned) {
+                add(RoutineStep.Football(PlayEffects.FootballPhase.TRICK))
+                add(RoutineStep.Linger(5_000L))
+            }
+            add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
+            add(RoutineStep.Linger(8_000L))
+        }
+    )
+
+    /** Angeln am Teich: auswerfen, lange warten, dann der Fang - ruhiger Gegenpol zu Fussball. */
+    fun fishingRoutine(): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(PlayScene.Place.POND),
+            RoutineStep.Stroll(0.30f),
+            RoutineStep.Fishing(PlayEffects.FishingPhase.CAST),
+            RoutineStep.Linger(3_000L),
+            RoutineStep.Fishing(PlayEffects.FishingPhase.WAIT),
+            RoutineStep.Linger(22_000L),
+            RoutineStep.Fishing(PlayEffects.FishingPhase.CATCH),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+        )
+    )
 
     /**
      * ALLE Ablaeufe zu einem Thema - oeffentlich, weil sich sonst nicht pruefen laesst, dass jeder
@@ -384,6 +452,23 @@ object PlayRoutines {
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
                     RoutineStep.Stroll(0.20f)
                 )
+            ),
+            // Derselbe Arbeitsweg, nur durch die STADT statt ueber die Strasse - hin UND zurueck
+            // durch denselben Ort, damit der Feierabend am selben Platz endet, an dem der Tag
+            // begann (siehe die Begruendung beim ersten Ablauf oben).
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.CITY),
+                    RoutineStep.Stroll(0.68f),
+                    RoutineStep.GoToPlace(PlayScene.Place.WORK),
+                    RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
+                    RoutineStep.Act(AnimationType.WORK),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+                    RoutineStep.Act(AnimationType.WORK),
+                    RoutineStep.GoToPlace(PlayScene.Place.CITY),
+                    RoutineStep.Stroll(0.24f)
+                )
             )
         )
 
@@ -430,6 +515,22 @@ object PlayRoutines {
         // den Wald erzaehlt etwas voellig anderes als eine Runde um den Block, obwohl beide aus
         // denselben Schritten bestehen.
         AnimationType.MOVE -> listOf(
+            // Drachensteigen: wenig Weg, lange erkennbare Beschaeftigung am selben Ort.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Stroll(0.36f),
+                    RoutineStep.Kite(PlayEffects.KitePhase.PREPARE),
+                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Kite(PlayEffects.KitePhase.LAUNCH),
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Kite(PlayEffects.KitePhase.FLY),
+                    RoutineStep.Linger(28_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(12_000L),
+                    RoutineStep.Kite(PlayEffects.KitePhase.LAND),
+                    RoutineStep.Linger(2_500L)
+                )
+            ),
             // Sport: quer durch den Park und zurueck, mit Bewegung an beiden Enden.
             PlayRoutine(
                 listOf(
@@ -499,7 +600,28 @@ object PlayRoutines {
                     RoutineStep.Stroll(0.88f),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND)
                 )
-            )
+            ),
+            // Spaziergang zur WIESE - ueber die Strasse hinaus, wie der Waldspaziergang oben,
+            // nur zu dessen offenerem Gegenstueck: keine Baeume, nur Weite und eine Bank in der
+            // Mitte zum Verweilen.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.60f),
+                    RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Stroll(0.35f),
+                    RoutineStep.GoTo(PlayScene.Station.BENCH),
+                    RoutineStep.Occupy(PlayScene.Station.BENCH),
+                    RoutineStep.Linger(3_500L),
+                    RoutineStep.Rise,
+                    RoutineStep.Act(AnimationType.MOVE)
+                )
+            ),
+            // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
+            footballRoutine(trickLearned = false),
+            // Eigener Teich, ruhiger Gegenpol zum Sportplatz - siehe fishingRoutine().
+            fishingRoutine()
         )
 
         // ---- Etwas machen: in die eigene Ecke, ans Werkstueck, dranbleiben ----
@@ -528,6 +650,37 @@ object PlayRoutines {
                     RoutineStep.Act(AnimationType.CREATIVITY),
                     RoutineStep.Linger(3_000L),
                     RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE)          // schuettelt sich aus
+                )
+            ),
+            // Musizieren im Park: das Handwerkszeug wird diesmal MITGENOMMEN statt an einem
+            // festen Platz benutzt - dieselbe Reaktions-Animation, nur unterwegs statt an der
+            // Werkbank, mit der Gitarre sichtbar in der Hand (siehe PlayEffects.Carried.GUITAR).
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Take(PlayEffects.Carried.GUITAR),
+                    RoutineStep.GoToPlace(PlayScene.Place.PARK),
+                    RoutineStep.Stroll(0.40f),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(6_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Drop
+                )
+            ),
+            // Staffelei mit hinaus auf die Wiese - dasselbe Prinzip, ein anderes Motiv: das Bild
+            // entsteht draussen statt in der eigenen Ecke.
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Take(PlayEffects.Carried.EASEL),
+                    RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
+                    RoutineStep.Stroll(0.55f),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(5_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Drop
                 )
             )
         )

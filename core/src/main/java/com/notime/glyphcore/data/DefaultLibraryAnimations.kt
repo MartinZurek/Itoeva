@@ -6,7 +6,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * Startbefuellung der Animations-Bibliothek: 26 Beispiel-Animationen als reine
+ * Startbefuellung der Animations-Bibliothek: 27 Beispiel-Animationen als reine
  * Punktdaten (kein Kotlin-Rendering-Code noetig) - beweist das Datenmodell und gibt
  * sofort etwas zum Ausprobieren, bevor weitere 30-40 dazukommen. Wird einmalig von
  * [LibraryAnimationRepository.seedIfEmpty] eingespielt. 1:1 uebernommen aus dem
@@ -24,7 +24,7 @@ import kotlin.math.sin
 object DefaultLibraryAnimations {
 
     /**
-     * Die 26 allgemeinen Animationen plus die 30 charakterspezifischen der sechs Avatare
+     * Die 27 allgemeinen Animationen plus die 30 charakterspezifischen der sechs Avatare
      * ([AvatarSignatureAnimations]). Beide Saetze liegen in derselben Bibliothek und sind gleich
      * verwendbar - unterschiedlich ist nur, wofuer sie entworfen wurden.
      *
@@ -64,7 +64,8 @@ object DefaultLibraryAnimations {
         LibraryAnimation(label = "Airplane", emoji = "✈️", framesData = FrameCodec.encode(airplaneFrames()), sortOrder = 22),
         LibraryAnimation(label = "Cake", emoji = "🎂", framesData = FrameCodec.encode(cakeFrames()), sortOrder = 23),
         LibraryAnimation(label = "Idea", emoji = "💡", framesData = FrameCodec.encode(lightbulbFrames()), sortOrder = 24),
-        LibraryAnimation(label = "Mail", emoji = "✉️", framesData = FrameCodec.encode(envelopeFrames()), sortOrder = 25)
+        LibraryAnimation(label = "Mail", emoji = "✉️", framesData = FrameCodec.encode(envelopeFrames()), sortOrder = 25),
+        LibraryAnimation(label = "Clock", emoji = "⏰", framesData = FrameCodec.encode(alarmClockFrames()), sortOrder = 56)
     )
 
     /** Sparkle-Strahlen pulsieren klein->gross, dazu ein Twinkle-Punkt der reihum an den vier Ecken aufblitzt. */
@@ -792,5 +793,27 @@ object DefaultLibraryAnimations {
             body + flap,
             body + flap
         )
+    }
+
+    /** Weckerzifferblatt und Fuesse stehen fest, der Minutenzeiger dreht einmal rundherum (Ticken), waehrend die beiden Glocken abwechselnd nach aussen wackeln (Klingeln) - zwei getrennte Bewegungen statt nur einer. */
+    private fun alarmClockFrames(): List<List<Pair<Int, Int>>> {
+        val cx = 6
+        val cy = 6
+        val face = circlePoints(cx, cy, radius = 4, steps = 16)
+        val feet = listOf(5 to 11, 7 to 11, 5 to 12, 7 to 12)
+        val hourHand = listOf(cx to cy, 6 to 5, 6 to 4)
+        val topKnob = listOf(6 to 0)
+
+        fun minuteHand(angleDeg: Double): List<Pair<Int, Int>> {
+            val rad = angleDeg * PI / 180
+            return (1..3).map { r -> (cx + (r * cos(rad)).roundToInt()) to (cy + (r * sin(rad)).roundToInt()) }
+        }
+
+        fun bells(ringing: Boolean) = if (ringing) listOf(3 to 1, 9 to 1) else listOf(4 to 1, 8 to 1)
+
+        val angles = listOf(0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0)
+        return angles.mapIndexed { i, angle ->
+            face + feet + hourHand + topKnob + minuteHand(angle) + bells(i % 2 == 0)
+        }
     }
 }

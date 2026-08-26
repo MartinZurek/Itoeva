@@ -79,7 +79,14 @@ fun FeedStatsDialog(
     onDismiss: () -> Unit,
     /** Tapthrough vom Rhythmus-Kommentar (siehe [RhythmSuggestion]) direkt in den
      *  Bearbeiten-Dialog der betroffenen Erinnerung. */
-    onEditReminder: (reminderId: Long) -> Unit
+    onEditReminder: (reminderId: Long) -> Unit,
+    /**
+     * Ruft [HomeScreen]s eigenen In-Memory-Stand der Speicherplaetze nach einem Zuruecksetzen
+     * frisch ab. `ActionSlotStore` wird hier zwar geleert, aber [HomeScreen] haelt seine `slots`
+     * in einem eigenen, nur beim Wesenswechsel neu gelesenen State - ohne diesen Aufruf bliebe
+     * dort weiter der alte, jetzt verwaiste Stand sichtbar.
+     */
+    onCareLogReset: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -308,6 +315,12 @@ fun FeedStatsDialog(
                             TextButton(
                                 onClick = {
                                     scope.launch(Dispatchers.IO) { dao.deleteForProfile(companionId) }
+                                    // Belegte Speicherplaetze verweisen per occurrenceId auf genau
+                                    // die Zeilen, die die Zeile oben gerade loescht - ohne das hier
+                                    // bliebe ein Platz sichtbar belegt, liesse sich aber nicht mehr
+                                    // fuettern (siehe ActionSlotStore.clear).
+                                    ActionSlotStore.clear(context, companionId)
+                                    onCareLogReset()
                                     confirmReset = false
                                 }
                             ) { Text(stringResource(R.string.action_delete)) }

@@ -8,7 +8,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 /**
- * **Die Geschichte des Wesens und seiner Welt** - in sieben Stuecken, die man sich erzaehlen
+ * **Die Geschichte des Wesens und seiner Welt** - in acht Stuecken, die man sich erzaehlen
  * laesst, eines nach dem anderen.
  *
  * **Der eine Ort, an dem er etwas sagt, das nicht aus Daten kommt.** Alles Uebrige in diesem
@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit
  * **Warum es das ueberhaupt braucht.** Die sechs Kreaturen hatten bisher einen Charakter, aber
  * keine Geschichte: eine Silhouette, eine Wohnung, einen Beruf, eine Landschaft - lauter
  * Eigenschaften, kein Leben. Man konnte ihnen zusehen und sie unterscheiden, aber nichts ueber
- * sie erfahren. Sieben kurze Stuecke aendern das, ohne dass eine einzige Zeile Spiellogik
+ * sie erfahren. Acht kurze Stuecke aendern das, ohne dass eine einzige Zeile Spiellogik
  * dazukommt.
  *
  * **Aufbau je Wesen** - die Reihenfolge ist die eines Kennenlernens und nicht beliebig:
@@ -33,6 +33,7 @@ import java.time.temporal.ChronoUnit
  * 5. Wie es bei ihm draussen aussieht
  * 6. Etwas, das er sonst nicht sagt
  * 7. Etwas ueber die gemeinsame Welt
+ * 8. Ein gewoehnlicher Moment danach, wenn das Kennenlernen schon vorbei ist
  *
  * **Die vierte Stelle haelt die Welt zusammen.** Jedes Wesen erzaehlt dort von EINEM anderen -
  * Puffling von Gloop, Gloop von Puffling, Wyrmling von Fennec, Fennec von Wyrmling, Starlet von
@@ -44,7 +45,7 @@ import java.time.temporal.ChronoUnit
  *
  * Ein erster Entwurf gab alles sofort frei, mit dem Argument, ein Zeitschloss sei ein
  * Belohnungsplan. Das Argument war nicht falsch, es hat nur den Gegenstand verfehlt: Eine
- * Geschichte, die man in drei Minuten leerliest, ist danach leer - und diese sieben Stuecke sind
+ * Geschichte, die man in drei Minuten leerliest, ist danach leer - und diese acht Stuecke sind
  * gerade das, was dem Wesen ueber Wochen hinweg etwas zu sagen gibt. Wer jemanden kennenlernt,
  * erfaehrt auch nicht alles am ersten Abend.
  *
@@ -65,7 +66,7 @@ object PlayLore {
     private const val PREFS = "play_lore"
 
     /** Wieviele Stuecke jedes Wesen zu erzaehlen hat. */
-    const val PIECES = 7
+    const val PIECES = 8
 
     private const val KEY_FIRST_DAY = "first_day_"
 
@@ -110,32 +111,32 @@ object PlayLore {
         AvatarSpecies.PUFFLING -> listOf(
             R.string.lore_puffling_1, R.string.lore_puffling_2, R.string.lore_puffling_3,
             R.string.lore_puffling_4, R.string.lore_puffling_5, R.string.lore_puffling_6,
-            R.string.lore_puffling_7
+            R.string.lore_puffling_7, R.string.lore_puffling_8
         )
         AvatarSpecies.STARLET -> listOf(
             R.string.lore_starlet_1, R.string.lore_starlet_2, R.string.lore_starlet_3,
             R.string.lore_starlet_4, R.string.lore_starlet_5, R.string.lore_starlet_6,
-            R.string.lore_starlet_7
+            R.string.lore_starlet_7, R.string.lore_starlet_8
         )
         AvatarSpecies.WYRMLING -> listOf(
             R.string.lore_wyrmling_1, R.string.lore_wyrmling_2, R.string.lore_wyrmling_3,
             R.string.lore_wyrmling_4, R.string.lore_wyrmling_5, R.string.lore_wyrmling_6,
-            R.string.lore_wyrmling_7
+            R.string.lore_wyrmling_7, R.string.lore_wyrmling_8
         )
         AvatarSpecies.FENNEC -> listOf(
             R.string.lore_fennec_1, R.string.lore_fennec_2, R.string.lore_fennec_3,
             R.string.lore_fennec_4, R.string.lore_fennec_5, R.string.lore_fennec_6,
-            R.string.lore_fennec_7
+            R.string.lore_fennec_7, R.string.lore_fennec_8
         )
         AvatarSpecies.GLOOP -> listOf(
             R.string.lore_gloop_1, R.string.lore_gloop_2, R.string.lore_gloop_3,
             R.string.lore_gloop_4, R.string.lore_gloop_5, R.string.lore_gloop_6,
-            R.string.lore_gloop_7
+            R.string.lore_gloop_7, R.string.lore_gloop_8
         )
         AvatarSpecies.HOOTLET -> listOf(
             R.string.lore_hootlet_1, R.string.lore_hootlet_2, R.string.lore_hootlet_3,
             R.string.lore_hootlet_4, R.string.lore_hootlet_5, R.string.lore_hootlet_6,
-            R.string.lore_hootlet_7
+            R.string.lore_hootlet_7, R.string.lore_hootlet_8
         )
     }
 
