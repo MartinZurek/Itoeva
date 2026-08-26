@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.zip.CRC32
 import java.util.zip.Deflater
+import kotlin.math.sqrt
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -39,6 +40,25 @@ class AnimationPreviewTest {
     private val dark = intArrayOf(0x0A, 0x0A, 0x0B)
     private val gridLine = intArrayOf(0x24, 0x24, 0x2A)
 
+    /** Zellen ausserhalb des runden Ausschnitts - sie existieren auf dem Geraet gar nicht. */
+    private val totalerRand = intArrayOf(0x16, 0x10, 0x10)
+
+    /**
+     * Liegt die Zelle im runden Ausschnitt der echten Matrix?
+     *
+     * Dieselbe Geometrie wie `MatrixGeometry.isActive` in den App-Modulen - Kreis mit Radius 6,5 um
+     * die Rastermitte. Die Doppelung ist hier Absicht: [ReminderFrameGrid] haelt bewusst nur die
+     * Kantenlaenge, weil der Ausschnitt Sache der App-Module ist. Ein Kontaktbogen, der das
+     * Quadrat zeigt, luegt aber ueber das Ergebnis - genau daran ist "Football" gescheitert, dessen
+     * Tor mit dem rechten Pfosten auf der Kante des Kreises sass und dort seine Ecke verlor.
+     */
+    private fun imAusschnitt(x: Int, y: Int): Boolean {
+        val mitte = (size - 1) / 2.0
+        val dx = x - mitte
+        val dy = y - mitte
+        return sqrt(dx * dx + dy * dy) <= size / 2.0
+    }
+
     /**
      * Zeichnet alle Frames einer Animation nebeneinander, in Abspielreihenfolge.
      *
@@ -63,6 +83,12 @@ class AnimationPreviewTest {
         frames.forEachIndexed { index, frame ->
             val ox = gap + index * (frameSize + gap)
             val oy = gap
+            for (gy in 0 until size) for (gx in 0 until size) {
+                if (imAusschnitt(gx, gy)) continue
+                for (dy in 1 until cell) for (dx in 1 until cell) {
+                    set(ox + gx * cell + dx, oy + gy * cell + dy, totalerRand)
+                }
+            }
             for (i in 0..size) {
                 for (t in 0..frameSize) {
                     set(ox + i * cell, oy + t, gridLine)
@@ -140,6 +166,15 @@ class AnimationPreviewTest {
      * herausgestellt - die Ausnahmen stehen hier namentlich, damit sie eine Entscheidung bleiben
      * und nicht zu einer stillschweigend gelockerten Regel werden.
      */
+    /**
+     * Unterhalb dieser mittleren Zellzahl ist ein Motiv kein Bild mehr, sondern Streusel.
+     *
+     * Bewusst als Mittelwert und nicht je Frame: Ein einzelner duenner Frame ist oft Absicht - ein
+     * Funke, ein Tropfen, ein Blinzeln. Erst wenn die ganze Animation duenn bleibt, fehlt ihr die
+     * Substanz.
+     */
+    private val MIN_ZELLEN_IM_MITTEL = 6.0
+
     private val ausnahmen = mapOf(
         "Rocket" to "fliegt oben aus dem Raster hinaus - das Abschneiden IST der Start",
         "TAMA" to "leere Frames trennen die Buchstaben, sonst verschwaemmen sie ineinander"
@@ -148,9 +183,15 @@ class AnimationPreviewTest {
     /**
      * Schreibt die Boegen und prueft dabei, was sich ohne Auge pruefen laesst.
      *
-     * Die drei Zusicherungen sind nicht theoretisch: Ein Punkt ausserhalb des Rasters verschwindet
-     * beim Abspielen stillschweigend, ein leerer Frame ist ein Aussetzer mitten in der Bewegung,
-     * und eine Animation aus zwei Bildern ist keine Bewegung, sondern ein Blinken.
+     * Die Zusicherungen sind nicht theoretisch: Ein Punkt ausserhalb des Rasters verschwindet beim
+     * Abspielen stillschweigend, ein leerer Frame ist ein Aussetzer mitten in der Bewegung, und
+     * eine Animation aus zwei Bildern ist keine Bewegung, sondern ein Blinken.
+     *
+     * **Die Dichte kam spaeter dazu.** "Konfetti" liess seine Schnipsel oberhalb des Rasters
+     * starten und hereinfallen; weil `sprite` alles ausserhalb still verwirft, bestand der erste
+     * Frame aus EINEM Punkt. Kein leerer Frame, also fiel es hier nicht auf - auf dem Geraet sah
+     * es aus, als sei die Matrix kaputt. Der Schnitt bei [MIN_ZELLEN_IM_MITTEL] trennt diesen Fall
+     * sauber vom naechstduennen gesunden Motiv ("Comet", 7,7 Zellen im Mittel).
      */
     @Test
     fun `alle Animationen werden als Kontaktbogen geschrieben`() {
@@ -164,6 +205,11 @@ class AnimationPreviewTest {
             if (frames.size < 4) fehler += "${animation.label}: nur ${frames.size} Frames"
             if (!darfAbweichen && frames.any { it.isEmpty() }) {
                 fehler += "${animation.label}: leerer Frame"
+            }
+            val imMittel = frames.sumOf { it.size }.toDouble() / frames.size.coerceAtLeast(1)
+            if (!darfAbweichen && imMittel < MIN_ZELLEN_IM_MITTEL) {
+                fehler += "${animation.label}: nur %.1f Zellen im Mittel - zu duenn zum Erkennen"
+                    .format(imMittel)
             }
             val ausserhalb = frames.flatten().filterNot { (x, y) ->
                 x in 0 until size && y in 0 until size
@@ -220,6 +266,12 @@ class AnimationPreviewTest {
             val oyBase = gap + row * zeilenHoehe
             frames.forEachIndexed { col, frame ->
                 val ox = gap + col * (frameSize + gap)
+                for (gy in 0 until size) for (gx in 0 until size) {
+                    if (imAusschnitt(gx, gy)) continue
+                    for (dy in 1 until cell) for (dx in 1 until cell) {
+                        set(ox + gx * cell + dx, oyBase + gy * cell + dy, totalerRand)
+                    }
+                }
                 for (i in 0..size) {
                     for (t in 0..frameSize) {
                         set(ox + i * cell, oyBase + t, gridLine)

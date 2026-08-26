@@ -59,24 +59,6 @@ object SkillTreeAnimations {
         }
     }
 
-    // ================= Zeichenhilfe =================
-
-    /**
-     * Setzt ein kleines Bild mit seiner linken oberen Ecke auf ([x], [y]).
-     *
-     * `#` ist eine leuchtende Zelle, alles andere bleibt dunkel. Punkte ausserhalb des Rasters
-     * fallen still weg - das ist gewollt, damit ein Motiv am Rand ein- und ausfahren kann, ohne
-     * dass jede Position von Hand beschnitten werden muss.
-     */
-    private fun sprite(x: Int, y: Int, vararg rows: String): List<Pair<Int, Int>> =
-        rows.flatMapIndexed { dy, row ->
-            row.mapIndexedNotNull { dx, c ->
-                if (c == '#') (x + dx) to (y + dy) else null
-            }
-        }.filter { (px, py) -> px in 0 until SIZE && py in 0 until SIZE }
-
-    private val SIZE = ReminderFrameGrid.SIZE
-
     // ================= koerper/essen: Teller =================
 
     /** Ein Teller, der leer gegessen wird - die Gabel geht hinunter, der Berg wird kleiner. */
@@ -378,20 +360,42 @@ object SkillTreeAnimations {
 
     // ================= aufbruch/feiern: Konfetti =================
 
-    /** Schnipsel rieseln herunter und treiben dabei zur Seite. */
+    /**
+     * Schnipsel rieseln herunter und taumeln dabei zur Seite.
+     *
+     * Der erste Entwurf liess die Schnipsel oberhalb des Rasters starten (`y = -9`) und nach unten
+     * einwandern. Weil [sprite] alles ausserhalb des Rasters still verwirft, war der erste Frame
+     * **ein einziger Punkt** und der zweite hatte zwei - auf dem Geraet sieht das aus, als sei die
+     * Matrix kaputt, und erst am Ende der Schleife wird es Konfetti.
+     *
+     * Deshalb faellt hier nichts herein: Jede Spalte ist immer besetzt, die Schnipsel laufen unten
+     * heraus und oben wieder herein. So ist jeder Frame gleich dicht (rund 17 Zellen), auch der
+     * erste.
+     *
+     * Die Zeilenbereiche je Spalte sind kein Zierrat, sondern der runde Ausschnitt: In Spalte 2
+     * gibt es nur `y = 2..10`, in der Mitte die vollen `0..12`. Ohne diese Grenzen faellt ein
+     * Drittel der Schnipsel ins Nichts.
+     */
     private fun confettiFrames(): List<List<Pair<Int, Int>>> {
-        // Jeder Schnipsel hat eine eigene Startzeile und eine eigene Drift - fielen alle gleich,
-        // saehe es aus wie ein Vorhang statt wie Konfetti.
-        val pieces = listOf(
-            Triple(1, 0, 1), Triple(4, -3, -1), Triple(7, -1, 1),
-            Triple(10, -5, -1), Triple(2, -7, 1), Triple(9, -9, -1)
+        /** Spalte samt der Zeilen, die dort im runden Ausschnitt liegen. */
+        val columns = listOf(
+            Triple(2, 2, 10), Triple(3, 1, 11), Triple(4, 0, 12),
+            Triple(5, 0, 12), Triple(6, 0, 12), Triple(7, 0, 12),
+            Triple(8, 0, 12), Triple(9, 1, 11), Triple(10, 2, 10)
         )
+        // Startzeile und Fallgeschwindigkeit je Spalte. Fielen alle gleich schnell und gleich
+        // hoch, saehe es aus wie ein Vorhang statt wie Konfetti.
+        val phases = listOf(0, 7, 3, 10, 5, 1, 8, 4, 11)
+        val speeds = listOf(2, 3, 2, 3, 2, 3, 2, 3, 2)
 
-        return (0 until 7).map { step ->
-            pieces.flatMap { (x, start, drift) ->
-                val y = start + step * 2
-                val shifted = x + drift * ((step / 2) % 3)
-                sprite(shifted, y, "#")
+        return (0 until 8).map { step ->
+            columns.flatMapIndexed { index, (x, top, bottom) ->
+                val span = bottom - top + 1
+                val y = top + (phases[index] + step * speeds[index]) % span
+                // Zweite Zelle schraeg darueber: ein einzelner Punkt liest sich als Staub, erst
+                // das Paar taumelt. Die Seite wechselt, damit das Schnipsel sich dreht.
+                val drift = if ((index + step) % 2 == 0) 1 else -1
+                sprite(x, y, "#") + if (y - 1 >= top) sprite(x + drift, y - 1, "#") else emptyList()
             }
         }
     }

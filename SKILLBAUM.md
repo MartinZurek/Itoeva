@@ -560,11 +560,41 @@ sind unverändert geblieben.
 ---
 
 
+### P10 — Lesbarkeit der Motive
+
+- [x] `Football` neu: Geste statt Aufbau (Figur, Ausholen, Treffer, Ball fliegt hinaus)
+- [x] `Confetti` neu: jede Spalte immer besetzt, rund 17 Zellen je Frame statt 3,9
+- [x] Kontaktbogen zeigt den **runden** Ausschnitt statt des Quadrats
+- [x] `AnimationPreviewTest` prueft die mittlere Zellzahl (`MIN_ZELLEN_IM_MITTEL = 6.0`)
+- [x] `sprite` einmal in `core/…/FrameSprite.kt` statt zweimal privat
+- [ ] Vier weitere Auffaellige ansehen und entscheiden (siehe unten)
+
+**Prüfen:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, dann die Bögen in
+`core/build/preview/` ansehen.
+
+**Erledigt am 2026-08-26.** 548 Tests grün, Lint grün, beide APKs bauen.
+
+### Warum beide Fehler durch alle Wächter kamen
+
+`LibraryAnimationFitTest` prüft gegen den runden Ausschnitt, aber erst ab **15 %** — Footballs Tor
+verlor nur seine obere Ecke und blieb darunter. `AnimationPreviewTest` prüfte auf *leere* Frames;
+Konfettis erster Frame hatte **einen** Punkt und war damit nicht leer. Und der Kontaktbogen, das
+Werkzeug fürs Auge, zeichnete das **Quadrat** — die einzige Darstellung, in der Footballs Tor
+vollständig aussieht.
+
+Die Lehre steht schon in P8 („die Matrix ist RUND"), aber sie stand nur im Text. Jetzt steht sie
+im Bild.
+
+---
+
 ## Offene Punkte
 
 - [ ] Selbstgezeichnete Animationen der Nutzer: Auffang-Knoten je Hauptgruppe, Zuordnung später
       von Hand?
 - [ ] Braucht die Zieh-Leiste eine Abklingzeit? Sonst füttert man im Sekundentakt.
+- [ ] Restliche Auffaelligkeiten aus der Motiv-Pruefung (siehe P10): `Lighthouse` 11 % beschnitten,
+      `Rain`/`Paw`/`Rocket` je 9 %, `Comet` duenn. Alle vier sind lesbar - erst ansehen, dann
+      entscheiden, nicht blind nachbessern.
 - [x] ~~Zählen Fütterungen aus der Leiste XP?~~ **Nein** — entschieden in P5, Begründung dort.
 
 ---
@@ -576,6 +606,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
 | 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
+| 2026-08-26 | P10 | **Football und Konfetti neu gezeichnet.** Football zeigte ein Tor am rechten Rand, dessen Pfosten auf der Kante des runden Ausschnitts sass und mit dem Ball verschmolz - jetzt eine Geste: Figur, Bein holt aus, trifft, Ball fliegt hinaus und rollt zurueck. Konfetti startete oberhalb des Rasters und hatte deshalb **einen einzigen Punkt** im ersten Frame; jetzt sind alle Spalten immer besetzt. Beide Luecken lagen im Werkzeug und sind geschlossen: der Kontaktbogen zeigt jetzt den RUNDEN Ausschnitt (vorher das Quadrat - er log ueber das Ergebnis), und `AnimationPreviewTest` prueft die mittlere Zellzahl (`MIN_ZELLEN_IM_MITTEL`). `sprite` liegt jetzt in `core/.../FrameSprite.kt` und wird von beiden Katalogen benutzt. 548 Tests gruen, Lint gruen, beide APKs bauen. **Fuer die naechste Sitzung:** Auf dem Geraet ist immer noch nichts davon gegengeprueft. |
 | 2026-08-26 | P9 | Achtzehn Gruppen-Antworten in `AvatarReactions.groupAnswer`, requisitenfrei weil vererbt. Zwei Fehler dabei gefunden: Knoten mit eingebautem Typ bekamen die generische statt der Themen-Handlung, und `drop(1)` liess eine Untergruppe ihre eigene Antwort nicht finden. 37 Motive haben jetzt eine passendere Reaktion; die 30 Charakter-Motive unveraendert. **Damit ist der Umbau durch.** Offen: Einlagen fuer einzelne Blaetter (blockiert nichts) und die Geraetepruefung. |
 | 2026-08-25 | P7+P8 | Vorschau-Werkzeug (`AnimationPreviewTest` → `core/build/preview/`) und alle 12 fehlenden Motive gezeichnet (`SkillTreeAnimations`). `pendingArtwork()` ist leer, jeder Knoten erreichbar. 547 Tests grün. **Für P9:** ab hier fehlen nur noch Choreografien — `AvatarReactions.groupAnswer` ist die leere Weiche dafür, und sie muss requisitenfrei bleiben (siehe Vererbungsregel bei P2). **Merken:** die Matrix ist RUND, bei y=11 nur x=2…10 nutzbar. |
 | 2026-08-25 | P6 | Stufe 3 läuft: `AvatarActivity` + `AvatarActivityBus` (5 Minuten Lebensdauer) + `AvatarActivityPlans`. Einlage auf passende Tätigkeit schiebt sich ein, auf unpassende kommt erst der Wechsel. 18 neue Tests. **Abweichung:** `RoutineStep.Flourish` bewusst nicht gebaut — begründet im P6-Abschnitt. **Für P7/P8:** ab hier ist alle Mechanik fertig, es fehlt nur noch Pixelarbeit. Erste Adresse ist der Teller für `koerper/essen`, weil daran drei Knoten hängen. |

@@ -478,22 +478,67 @@ object DefaultLibraryAnimations {
 
     private fun ball(cx: Int, cy: Int) = listOf(cx to cy, (cx - 1) to cy, (cx + 1) to cy, cx to (cy - 1), cx to (cy + 1))
 
-    /** Ball springt/rollt zum Tor, verschwindet im Netz - Netz-Ripple beim Treffer. */
+    /**
+     * **Ein Spieler schiesst den Ball weg** - das Motiv fuer die Untergruppe `sport/ballsport`.
+     *
+     * Der erste Entwurf zeigte einen Ball, der in ein Tor am rechten Rand rollt. Das war aus drei
+     * Gruenden nicht zu erkennen:
+     *
+     * 1. Das Tor sass mit seinem rechten Pfosten auf `x = 12` und damit auf der Kante des runden
+     *    Ausschnitts - seine obere Ecke fiel weg, es blieb ein einseitig offener Rahmen.
+     * 2. Ball und Pfosten waren beide einen Punkt breit und gleich hell. Sobald der Ball das Tor
+     *    erreichte, verschmolz er damit; die letzten vier von neun Frames waren ein Rechteck, das
+     *    sich fuellt.
+     * 3. Es war ausserdem dasselbe Motiv wie [SkillTreeAnimations] `Shot`, das unter diesem Knoten
+     *    als Blatt haengt - und die schlechtere Fassung davon.
+     *
+     * Deshalb jetzt eine Geste statt eines Aufbaus: eine Figur links, ein deutlich runder Ball
+     * rechts, das Bein holt aus, trifft, zieht nach. Der Ball verlaesst das Bild nach rechts oben
+     * und rollt am Boden wieder herein, damit die Schleife ohne Sprung zurueckfindet.
+     *
+     * Der Ball ist mit fuenf Zellen Durchmesser bewusst gross: kleiner bleibt von einer Kugel auf
+     * diesem Raster nur ein Kreuz uebrig. Ein Muster traegt er nicht - bei dieser Groesse frisst
+     * jeder dunkle Flicken die runde Silhouette auf, und dann ist es weder Ball noch Fussball.
+     */
     private fun footballFrames(): List<List<Pair<Int, Int>>> {
-        val goal = listOf(
-            9 to 3, 10 to 3, 11 to 3, 12 to 3,
-            9 to 4, 9 to 5, 9 to 6, 9 to 7, 9 to 8,
-            12 to 4, 12 to 5, 12 to 6, 12 to 7, 12 to 8
-        )
-        val netSmall = listOf(10 to 5, 11 to 6)
-        val netBig = listOf(10 to 5, 11 to 5, 10 to 6, 11 to 6, 10 to 7, 11 to 7)
+        /** Kopf, Schultern, Rumpf. Das Bein kommt je Pose dazu. */
+        fun torso() = sprite(4, 0, "#") + sprite(3, 1, "###") + sprite(4, 2, "#")
 
-        val positions = listOf(1 to 10, 3 to 10, 5 to 9, 7 to 7, 9 to 8, 10 to 7)
-        val frames = positions.map { (x, y) -> ball(x, y) + goal }.toMutableList()
-        frames += ball(11, 6) + goal + netSmall
-        frames += ball(11, 6) + goal + netBig
-        frames += goal + netSmall
-        return frames
+        /**
+         * Der Boden reicht NICHT ueber die volle Breite - die Matrix ist rund, in der untersten
+         * Zeile gibt es nur `x = 2..10` (dieselbe Falle wie beim Dribbling, siehe SKILLBAUM.md).
+         */
+        fun pitch() = sprite(2, 11, "#########")
+
+        fun ball(cx: Int, cy: Int) = sprite(
+            cx - 2, cy - 2,
+            ".###.",
+            "#####",
+            "#####",
+            "#####",
+            ".###."
+        )
+
+        val stand = sprite(4, 3, "#", "#", "#", "#", "#", "#", "#", "###")
+        val windUp = sprite(0, 3, "....#", "...##", "...#.", "..##.", ".##..", "###..")
+        val strike = sprite(4, 3, "#......", "##.....", ".#.....", ".##....", "..#....", "...#...", "...####")
+        val followThrough = sprite(4, 3, "#........", ".#.......", "..#......", "...###...", ".....####")
+        val recover = sprite(4, 3, "#....", "#....", "##...", ".#...", ".#...", ".##..", "..#..", "..###")
+
+        fun frame(leg: List<Pair<Int, Int>>, ballAt: Pair<Int, Int>) =
+            torso() + leg + pitch() + ball(ballAt.first, ballAt.second)
+
+        val rest = 9 to 8
+        return listOf(
+            frame(stand, rest),
+            frame(windUp, rest),
+            frame(strike, rest),
+            frame(followThrough, 10 to 6),
+            frame(followThrough, 12 to 4),
+            frame(recover, 12 to 8),
+            frame(stand, rest),
+            frame(stand, rest)
+        )
     }
 
     /** Ball fliegt im Bogen in den Korb, Netz swisht beim Durchgang. */
