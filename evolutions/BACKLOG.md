@@ -275,7 +275,7 @@ Animation. `LibraryAnimationFitTest` muss fuer die neue Animation ebenso gruen s
 bestehenden 26 (der Test iteriert automatisch ueber `DefaultLibraryAnimations.seed()`, keine
 Testaenderung noetig).
 
-## [open] ITO-0007 - Ein weiteres Beiwerk-Requisit im Wald ergaenzen
+## [done] ITO-0007 - Ein weiteres Beiwerk-Requisit im Wald ergaenzen
 Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt (Vielfalt der Szenen) - keine
 `OPEN DECISION` betroffen, keine Rueckfrage noetig. Neues Requisit + ein Placement-Eintrag, kein
 neuer Mechanismus: keine neue Station, keine Aenderung an `Acquisition`/`PlayPath` (die
