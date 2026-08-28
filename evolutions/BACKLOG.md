@@ -446,6 +446,53 @@ Animation. `LibraryAnimationFitTest` muss fuer die neue Animation ebenso gruen s
 bestehenden 27 (der Test iteriert automatisch ueber `DefaultLibraryAnimations.seed()`, keine
 Testaenderung noetig).
 
+## [open] ITO-0013 - Ein weiteres Beiwerk-Requisit auf der Wiese ergaenzen
+Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt (Vielfalt der Szenen) - keine
+`OPEN DECISION` betroffen, keine Rueckfrage noetig. Analog zu ITO-0007 (PR #44, Wald-Farn): genau
+ein neues privates `Prop`, kein neuer Mechanismus, keine neue Station.
+
+**Lehre aus ITO-0007:** Dort legte ein zu naiv gewaehlter `anchorX`-Wert (0.14) das neue
+Requisit direkt in den Ruheplatz des Avatars (`avatarAnchorX(FOREST) = 0.06`) - die
+Standardgestalt ueberzeichnete dort einen Grossteil der neuen Zellen (Codex-Fund auf PR #44),
+und bei der kleinsten geprueften Breite (`MIN_SCENE_CELLS = 40`) gab es zwischen den bestehenden
+Requisiten ohnehin keine freie Luecke. Diese Aufgabe verlangt deshalb ausdruecklich, den
+gewaehlten `anchorX`-Wert VOR dem Commit gegen genau diese zwei Dinge selbst durchzurechnen.
+
+**Ort:** `app-sim/src/main/java/com/notime/glyphsim/matrix/PlayScene.kt`, `Place.MEADOW` in
+`furnishing()` (Zeile ~1140). Aktuell: `BUSH` (anchorX 0.10, `behind = true`), `TREE` (0.92,
+`behind = true`), `FENCE` (0.02), `BENCH` (0.50, Station `BENCH`), `WILD_TUFT` (0.70),
+`MUSHROOMS` (0.84). `avatarAnchorX(Place.MEADOW) = 0.20` (Funktion `avatarAnchorX`, Zeile ~505).
+
+**Aufgabe:** Genau EIN neues privates `Prop` in derselben Datei ergaenzen (Wahl frei, z. B.
+Butterblumen, ein einzelner Stein, ein Grasbuendel - solange es als niedriger
+Bodenbewuchs/Beiwerk liest, Richtwert Hoehe <= 4, und keine der in `habitatPlacements()` bereits
+vergebenen Landschaftsformen dupliziert: `ROCK`, `CRAG`, `ACACIA`, `REEDS`, `FLOWER` sind belegt,
+ebenso die Namen `WILD_TUFT`/`MUSHROOMS`). Format wie `WILD_TUFT`/`MUSHROOMS` als Vorbild.
+
+Das neue Prop als zusaetzliches `Placement(<NEUES_PROP>, anchorX = <Wert>)` OHNE `station` und
+OHNE `behind = true` in die Liste unter `Place.MEADOW` einfuegen.
+
+**Pflicht vor dem Commit:** Rechne `originX` (Formel in `originX()`, Zeile ~824: `shift + left +
+round((span - width) * anchorX)`, mit `left = right = 0` fuer ein Placement ohne
+`keepClearLeft`/`keepClearRight`) fuer den gewaehlten `anchorX`-Wert UND fuer FENCE/BENCH/
+WILD_TUFT/MUSHROOMS von Hand fuer jede der von `SceneCompositionTest` gepruef­ten Breiten durch:
+`PlayScene.MIN_SCENE_CELLS` (40), 46, `ScenePreview.WIDTH` (54); 72 und 96 sind wegen
+`MAX_ROOM_CELLS = 60` fuer die Raumbreite mit 60 identisch. Der belegte Zellbereich
+`[originX, originX + width)` des neuen Props darf sich bei KEINER dieser Breiten mit
+FENCE/BENCH/WILD_TUFT/MUSHROOMS ueberschneiden, und sollte mit deutlichem Sicherheitsabstand vom
+Avatar-Ruheplatz (`avatarAnchorX(Place.MEADOW) = 0.20`) entfernt bleiben - im Zweifel eher naeher
+an FENCE (0.02) oder zwischen BENCH (0.50) und WILD_TUFT (0.70) planen als in Avatar-Naehe.
+
+**Bedingungen:**
+- Keine Aenderung an anderen `Place`-Zweigen, an `Acquisition`, an `Station`, an `groundDetail()`
+  oder `habitatPlacements()`.
+- Kein bestehendes Prop, keine bestehende `anchorX` veraendern.
+- `SceneCompositionTest` muss unveraendert gruen bleiben, insbesondere `keine zwei Requisiten
+  stehen ineinander` (`propFootprints` schliesst `behind = true`-Requisiten bewusst aus dem
+  Vergleich aus - BUSH/TREE sind davon also nicht betroffen) und `an jedem Ort bleibt Platz zum
+  Stehen`. Der Test iteriert automatisch ueber alle Orte/Spezies/Breiten, keine Testaenderung
+  noetig.
+
 ## [done] ITO-0003 - Unit-Tests fuer ClockRing
 Ergaenze eine JVM-Unit-Testdatei `app-sim/src/test/java/com/notime/glyphsim/matrix/ClockRingTest.kt` fuer das bisher ungetestete Objekt `ClockRing` aus `app-sim/src/main/java/com/notime/glyphsim/matrix/ClockRing.kt`.
 
