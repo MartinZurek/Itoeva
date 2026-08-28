@@ -489,7 +489,9 @@ fun DockScreen(
          *
          * Im Bildschirm gehalten und nicht in den Einstellungen: Wieviel er insgesamt erzaehlt
          * hat, gehoert dauerhaft gespeichert - was gerade untereinander steht, gehoert zu diesem
-         * einen Gespraech und faengt beim naechsten Oeffnen wieder leer an.
+         * einen Gespraech. Beim Schliessen wird geleert; beim Wiedereroeffnen (siehe Tap-Handler
+         * auf dem Avatar) steht das zuletzt erzaehlte Stueck erneut da, damit "nichts Neues mehr
+         * da" nicht wie ein leeres Fenster aussieht - reiner Lesezugriff auf [PlayLore.heard].
          */
         var toldNow by remember { mutableStateOf(listOf<Int>()) }
         var talkKnowledge by remember { mutableStateOf<PlayTalk.Knowledge?>(null) }
@@ -2462,7 +2464,17 @@ fun DockScreen(
                     .then(
                         if (playMode && current.occurrenceId == null) {
                             Modifier.pointerInput(Unit) {
-                                detectTapGestures(onTap = { talkOpen = true })
+                                detectTapGestures(onTap = {
+                                    // Beim Wiedereroeffnen zeigen, was zuletzt erzaehlt wurde -
+                                    // nur solange in DIESEM Gespraech noch nichts stand, sonst
+                                    // wuerde ein frisch erzaehltes Stueck verdoppelt erscheinen.
+                                    if (toldNow.isEmpty()) {
+                                        PlayLore.lastToldPiece(context, current.species)?.let {
+                                            toldNow = listOf(it)
+                                        }
+                                    }
+                                    talkOpen = true
+                                })
                             }
                         } else {
                             Modifier
