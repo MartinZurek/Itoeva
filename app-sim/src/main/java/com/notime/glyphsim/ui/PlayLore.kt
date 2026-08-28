@@ -160,6 +160,20 @@ object PlayLore {
     }
 
     /**
+     * Das zuletzt erzaehlte Stueck - `null`, solange noch nie erzaehlt wurde.
+     *
+     * Reine Rechnung aus [heard] und [story], keine eigene Ablage: Nur dafuer gedacht, ein
+     * frisch wiedereroeffnetes Gespraech nicht leerer aussehen zu lassen, als der Fortschritt es
+     * ist.
+     */
+    @StringRes
+    fun lastToldPiece(context: Context, species: AvatarSpecies): Int? {
+        val index = heard(context, species)
+        if (index == 0) return null
+        return story(species).getOrNull(index - 1)
+    }
+
+    /**
      * Haelt fest, dass ein Stueck erzaehlt wurde - und beim ersten Mal, wann das war.
      *
      * Der Tag des ersten Erzaehlens ist der Anker fuer alles Weitere (siehe [unlockedBy]). Er wird

@@ -310,7 +310,7 @@ vorbehalten).
   auf schmalen Bildern ohnehin automatisch wegfallen, das neue Requisit darf dafuer ausgelegt
   sein zu verschwinden, nicht zu ueberlappen.
 
-## [open] ITO-0008 - Zuletzt erzaehltes Lore-Stueck bleibt beim Wiederoeffnen sichtbar
+## [done] ITO-0008 - Zuletzt erzaehltes Lore-Stueck bleibt beim Wiederoeffnen sichtbar
 UX-Verbesserung am bestehenden Gespraech, rein additive Leseanzeige: keine neue Ablage, kein
 neuer Mechanismus, keine Aenderung an Fortschritt oder Kalender. `PlayLore.heard()`,
 `available()`, `PIECES`, `unlockedBy()` bleiben unangetastet - deshalb keine `OPEN DECISION`
