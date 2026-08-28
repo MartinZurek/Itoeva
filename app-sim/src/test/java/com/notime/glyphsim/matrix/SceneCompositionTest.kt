@@ -154,20 +154,20 @@ class SceneCompositionTest {
     }
 
     @Test
-    fun `der Laden besteht aus drei klar getrennten Funktionsbereichen`() {
-        // Eine Auslage, ein Wandregal, eine Kasse. Ein zweites Bodenregal machte den schmalen
-        // Laden zu einer unlesbaren Mischung aus fast identischen Gittern.
+    fun `der Laden besteht aus zwei klar getrennten Funktionsbereichen`() {
+        // Eine Auslage und eine Kasse. Schon das zusaetzliche Wandregal verband beide auf dem
+        // schmalen Raster wieder zu einem dichten Moebelblock.
         for (sceneWidth in intArrayOf(PlayScene.MIN_SCENE_CELLS, 46, width, 72)) {
             val visible = PlayScene.propFootprints(
                 PlayScene.Place.SHOP, sceneWidth, floorY
             ).filter { it.second.isNotEmpty() }
             // Hinzu kommt die Tuer, die propFootprints absichtlich ebenfalls mitzaehlt.
             assertTrue(
-                "Der Laden hat bei Breite $sceneWidth ${visible.size} statt vier sichtbare " +
+                "Der Laden hat bei Breite $sceneWidth ${visible.size} statt drei sichtbare " +
                     "Bereiche.\n\n" + ScenePreview.render(
                         PlayScene.Place.SHOP, width = sceneWidth, showAvatar = false
                     ),
-                visible.size == 4
+                visible.size == 3
             )
         }
     }

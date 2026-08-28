@@ -1065,20 +1065,18 @@ object PlayScene {
             Placement(home.screen, anchorX = 0.78f, station = Station.TV)
         ))
         Place.SHOP -> besideDoor(listOf(
-            Placement(RACK, anchorX = 0.04f, station = Station.RACK),
-            // Eine einzige Auslage genuegt. Zwei fast gleiche Regale plus Wandregal und Kasse
-            // machten aus dem Laden auf einem schmalen Telefon einen dichten Moebelblock, in dem
-            // keine Funktion mehr einzeln lesbar war. Das Wandregal fuellt die Mitte, ohne eine
-            // zweite Boden-Silhouette vorzutäuschen; die Kasse bekommt rechts ihren eigenen
-            // klaren Bereich.
-            Placement(SHELF, anchorX = 0.48f, liftCells = SHELF_LIFT, brightness = BACKDROP),
+            // Zwei Silhouetten genuegen, um den Laden zu erzaehlen: Ware links, Bezahlen rechts.
+            // Das zusaetzliche Wandregal fuellte zwar die Mitte, verband Warenregal und Kasse
+            // optisch aber zu einem einzigen Moebelblock. Die freie Mitte gehoert jetzt wieder
+            // der Figur und macht auch auf schmalen Telefonen beide Funktionen lesbar.
+            Placement(RACK, anchorX = 0.08f, station = Station.RACK),
             Placement(CHECKOUT, anchorX = 0.90f, station = Station.CHECKOUT)
         ))
         // **Das Draussen, das IHM gehoert** - siehe [habitatPlacements].
         Place.PARK -> habitatPlacements(species)
         Place.SPORT -> listOf(
-            Placement(FOOTBALL_GOAL, anchorX = 0f, brightness = BACKDROP, behind = true),
-            Placement(FOOTBALL_GOAL, anchorX = 1f, brightness = BACKDROP, behind = true),
+            // Neutraler Platz: Tor, Korb oder Hantel kommen erst mit der laufenden Aktivitaet.
+            // Dauerhafte Fussballtore machten Basketball und Krafttraining zu falschen Szenen.
             Placement(FENCE, anchorX = 0.50f, brightness = BACKDROP, behind = true)
         )
         // Der TEICH: Schilf an beiden Raendern, ein einzelner Steg-Pfosten dazwischen - alles
@@ -1637,15 +1635,6 @@ object PlayScene {
         width = 5, height = 6,
         art = hLine(0, 4, 0) + hLine(0, 4, 5) +
             vLine(0, 1, 4) + vLine(2, 1, 4) + vLine(4, 1, 4)
-    )
-
-    /** Niedriger Holzzaun; die offene Mitte laesst die Wiese weiterhin weit wirken. */
-    private val FOOTBALL_GOAL = Prop(
-        width = 13,
-        height = 9,
-        art = hLine(0, 12, 0) + vLine(0, 1, 8) + vLine(12, 1, 8) +
-            (2..10 step 2).flatMap { x -> vLine(x, 2, 8) } +
-            (2..8 step 2).flatMap { y -> hLine(1, 11, y) }
     )
 
     private val FENCE = Prop(
@@ -2912,18 +2901,18 @@ object PlayScene {
     )
 
     /**
-     * Warenregal im Laden - vier Boeden mit Waren darauf. Bewusst hoeher und schmaler gegliedert
+     * Warenregal im Laden - drei Boeden mit Waren darauf. Bewusst hoeher und schmaler gegliedert
      * als der Buecherschrank, damit die beiden Silhouetten nicht zu verwechseln sind: Im Regal
-     * liegen die Waren FLACH auf den Boeden, im Schrank stehen die Buecher senkrecht.
+     * liegen die Waren FLACH auf den Boeden, im Schrank stehen die Buecher senkrecht. Die vierte
+     * Etage war auf dem kleinen Raster kein zusaetzliches Detail, sondern nur mehr Gitter.
      */
     private val RACK = Prop(
-        width = 9, height = 12,
-        art = hLine(0, 8, 0) + hLine(0, 8, 4) + hLine(0, 8, 8) + hLine(0, 8, 11) +
-            vLine(0, 0, 11) + vLine(8, 0, 11) +
+        width = 9, height = 10,
+        art = hLine(0, 8, 0) + hLine(0, 8, 4) + hLine(0, 8, 9) +
+            vLine(0, 0, 9) + vLine(8, 0, 9) +
             listOf(2 to 3, 3 to 3, 5 to 3, 6 to 3) +
-            listOf(1 to 7, 2 to 7, 4 to 7, 6 to 7, 7 to 7) +
-            listOf(2 to 10, 3 to 10, 5 to 10),
-        useSpot = 12 to 11,
+            listOf(1 to 8, 2 to 8, 4 to 8, 6 to 8, 7 to 8),
+        useSpot = 12 to 9,
         usedGlow = listOf(2 to 3, 3 to 3, 5 to 3, 6 to 3)
     )
 

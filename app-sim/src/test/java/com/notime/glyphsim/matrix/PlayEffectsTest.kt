@@ -17,6 +17,30 @@ class PlayEffectsTest {
     }
 
     @Test
+    fun `Basketball prellt und landet sichtbar im Korb`() {
+        val low = PlayEffects.basketballCells(
+            8, 20, PlayEffects.BasketballPhase.DRIBBLE, 0, 48
+        )
+        val high = PlayEffects.basketballCells(
+            8, 20, PlayEffects.BasketballPhase.SHOOT, 0, 48
+        )
+        val score = PlayEffects.basketballCells(
+            8, 20, PlayEffects.BasketballPhase.SCORE, 0, 48
+        )
+        assertTrue(high.minOf { it.y } < low.minOf { it.y })
+        assertTrue(score.size >= 20)
+        assertTrue((low + high + score).all { it.x in 0 until 48 })
+    }
+
+    @Test
+    fun `Hantel wandert beim Heben deutlich ueber den Kopf`() {
+        val warm = PlayEffects.trainingCells(12, 20, PlayEffects.TrainingPhase.WARM_UP, 0)
+        val lift = PlayEffects.trainingCells(12, 20, PlayEffects.TrainingPhase.LIFT, 0)
+        assertTrue(lift.minOf { it.y } < warm.minOf { it.y } - 10)
+        assertTrue(lift.size >= 20)
+    }
+
+    @Test
     fun `fliegender Drache hat Koerper Schweif und gespannte Schnur`() {
         val cells = PlayEffects.kiteCells(
             avatarCellX = 12,

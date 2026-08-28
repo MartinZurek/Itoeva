@@ -29,6 +29,12 @@ object PlayEffects {
     /** Ballkontrolle, Schuss und der spaeter erlernbare Spezialtrick. */
     enum class FootballPhase { DRIBBLE, AIM, KICK, TRICK }
 
+    /** Basketball vom Prellen bis zum Treffer. */
+    enum class BasketballPhase { DRIBBLE, AIM, SHOOT, SCORE }
+
+    /** Krafttraining mit einer Hantel. */
+    enum class TrainingPhase { WARM_UP, LIFT, REST }
+
     /** Werfen, Warten und der Fang - die drei sichtbaren Phasen einer Angel-Szene am Teich. */
     enum class FishingPhase { CAST, WAIT, CATCH }
 
@@ -52,7 +58,7 @@ object PlayEffects {
             FootballPhase.KICK -> groundY - 7
             FootballPhase.TRICK -> groundY - 13
         }
-        return listOf(
+        val ball = listOf(
             0 to -2,
             -1 to -1, 0 to -1, 1 to -1,
             -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
@@ -61,6 +67,87 @@ object PlayEffects {
         ).map { (dx, dy) ->
             SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
         }
+        val goalRight = widthCells - 3
+        val goalLeft = (goalRight - 12).coerceAtLeast(0)
+        val goalTop = groundY - 9
+        val goal = buildList {
+            for (x in goalLeft..goalRight) add(SceneCell(x, goalTop, PlayScene.BACKDROP))
+            for (y in goalTop..groundY) {
+                add(SceneCell(goalLeft, y, PlayScene.BACKDROP))
+                add(SceneCell(goalRight, y, PlayScene.BACKDROP))
+            }
+            for (x in goalLeft + 2 until goalRight step 2) {
+                for (y in goalTop + 2 until groundY step 2) {
+                    add(SceneCell(x, y, PlayScene.BACKDROP))
+                }
+            }
+        }
+        return (goal + ball).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+    }
+
+    fun basketballCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: BasketballPhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val hoopX = (widthCells - 8).coerceAtLeast(10)
+        val hoopY = groundY - 15
+        val bob = if ((scenePhase / 4) % 2 == 0) 0 else 4
+        val ballX = when (phase) {
+            BasketballPhase.DRIBBLE -> avatarCellX + 15
+            BasketballPhase.AIM -> avatarCellX + 11
+            BasketballPhase.SHOOT -> (avatarCellX + hoopX) / 2
+            BasketballPhase.SCORE -> hoopX - 2
+        }.coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+        val ballY = when (phase) {
+            BasketballPhase.DRIBBLE -> groundY - 2 - bob
+            BasketballPhase.AIM -> groundY - 11
+            BasketballPhase.SHOOT -> hoopY - 5
+            BasketballPhase.SCORE -> hoopY + 2
+        }
+        val ball = listOf(0 to -1, -1 to 0, 0 to 0, 1 to 0, 0 to 1).map { (dx, dy) ->
+            SceneCell(ballX + dx, ballY + dy, PlayScene.GLOW - 250, isLight = true)
+        }
+        // Der Korb wird nur fuer Basketball eingeblendet. Fussball und Training behalten damit
+        // denselben freien Platz statt dauerhaft vor einer falschen Requisite stattzufinden.
+        val hoop = buildList {
+            for (y in hoopY - 5..groundY) add(SceneCell(hoopX + 4, y, PlayScene.FURNITURE))
+            for (x in hoopX..hoopX + 4) add(SceneCell(x, hoopY - 5, PlayScene.FURNITURE))
+            for (x in hoopX - 3..hoopX + 1) {
+                add(SceneCell(x, hoopY, PlayScene.GLOW - 400, isLight = true))
+            }
+            add(SceneCell(hoopX - 2, hoopY + 1, PlayScene.FURNITURE))
+            add(SceneCell(hoopX, hoopY + 1, PlayScene.FURNITURE))
+        }
+        return (hoop + ball).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+    }
+
+    fun trainingCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: TrainingPhase,
+        scenePhase: Int
+    ): List<SceneCell> {
+        val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val pulse = if ((scenePhase / 5) % 2 == 0) 0 else 1
+        val centerX = avatarCellX + 8
+        val centerY = when (phase) {
+            TrainingPhase.WARM_UP -> groundY - 3 - pulse
+            TrainingPhase.LIFT -> groundY - 17 - pulse
+            TrainingPhase.REST -> groundY - 2
+        }
+        return buildList {
+            for (x in centerX - 6..centerX + 6) {
+                add(SceneCell(x, centerY, PlayScene.FURNITURE))
+            }
+            for (dy in -2..2) {
+                add(SceneCell(centerX - 7, centerY + dy, PlayScene.GLOW - 350, isLight = true))
+                add(SceneCell(centerX + 7, centerY + dy, PlayScene.GLOW - 350, isLight = true))
+            }
+        }.distinctBy { it.x to it.y }
     }
 
     /**

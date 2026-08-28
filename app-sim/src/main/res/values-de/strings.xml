@@ -217,10 +217,15 @@
     <string name="playmode_intro_1">Lust zu spielen? Dann bin ich die ganze Zeit da und lebe einen eigenen Tag.</string>
     <string name="playmode_intro_2">Deine eigenen Erinnerungen laufen die ganze Zeit weiter – das Spiel schaltet nichts von dir ab.</string>
     <string name="playmode_intro_3">Zusätzlich tauche ich von allein auf, zu zufälligen Momenten, die zu mir passen. Füttern wie gewohnt: die Uhr auf mich ziehen.</string>
-    <string name="playmode_intro_4">Jede Fütterung bringt XP, und ich steige im Level. Alles andere bleibt, wie du es kennst – Uhr, Dock, Widget.</string>
+    <string name="playmode_intro_4">Jede Fütterung bringt XP. Ab Level 2 wählst du bei jedem Aufstieg eine neue Animation für meinen Fähigkeitenbaum. Alles andere bleibt, wie du es kennst – Uhr, Dock, Widget.</string>
     <string name="playmode_start">Spielmodus starten</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Schau mal – ich bin gerade auf Level %1$d aufgestiegen!</string>
+    <string name="level_unlock_title">Level %1$d – neue Animation</string>
+    <string name="level_unlock_intro">Wähle eine Animation. Sie erscheint danach im Fähigkeitenbaum und in deiner Zieh-Leiste.</string>
+    <string name="level_unlock_focused">Passt zu dem, was du zuletzt oft gemacht hast</string>
+    <string name="level_unlock_wildcard">Oder etwas aus einem anderen Zweig</string>
+    <string name="level_unlock_remaining">Noch %1$d Freischaltungen aus früheren Leveln</string>
     <string name="assistant_menu_memories">🕰️  Woran ich mich erinnere</string>
     <string name="memories_intro">Das haben wir bisher zusammen erlebt.</string>
     <string name="memories_empty">Noch nichts – aber das kommt von selbst. Das Erste, worum du dich kümmerst, während ich da bin, ist der Anfang.</string>

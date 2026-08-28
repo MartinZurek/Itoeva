@@ -261,18 +261,26 @@ object AvatarSignatureAnimations {
     /** Komet zieht diagonal durchs Bild, der Schweif wird laenger und loest sich am Ende in Funken auf. */
     private fun cometFrames(): List<List<Pair<Int, Int>>> {
         fun comet(hx: Int, hy: Int, tailLength: Int): List<Pair<Int, Int>> {
-            val head = listOf(hx to hy, hx + 1 to hy, hx to hy + 1, hx + 1 to hy + 1)
+            // Eine kleine Raute statt eines 2x2-Blocks: klarer Kopf und genug Masse, damit der
+            // Komet auf dem runden Display nicht wie eine duenne diagonale Linie wirkt.
+            val head = listOf(
+                hx to hy - 1, hx - 1 to hy, hx to hy, hx + 1 to hy, hx to hy + 1
+            )
             val tail = (1..tailLength).flatMap { k ->
-                listOf((hx - k) to (hy - k), (hx - k) to (hy - k + 1))
+                listOf(
+                    (hx - k) to (hy - k),
+                    (hx - k - 1) to (hy - k),
+                    (hx - k) to (hy - k + 1)
+                )
             }
             return head + tail
         }
         return listOf(
-            clip(comet(2, 2, 1)),
-            clip(comet(4, 4, 2)),
-            clip(comet(6, 6, 3)),
-            clip(comet(8, 8, 4)),
-            clip(comet(10, 10, 4)),
+            clip(comet(3, 2, 1)),
+            clip(comet(4, 3, 2)),
+            clip(comet(6, 5, 3)),
+            clip(comet(8, 7, 4)),
+            clip(comet(9, 9, 4)),
             // Aufloesen: nur noch versprengte Funken entlang der Bahn.
             clip(listOf(11 to 11, 8 to 8, 5 to 5, 2 to 2)),
             clip(listOf(9 to 9, 4 to 4))
@@ -496,16 +504,16 @@ object AvatarSignatureAnimations {
         val tower = listOf(
             5 to 5, 6 to 5, 7 to 5,
             5 to 6, 7 to 6, 5 to 7, 7 to 7, 4 to 8, 8 to 8, 4 to 9, 8 to 9,
-            4 to 10, 8 to 10, 3 to 11, 9 to 11, 3 to 12, 4 to 12, 5 to 12, 6 to 12, 7 to 12, 8 to 12, 9 to 12
+            4 to 10, 8 to 10, 3 to 11, 4 to 11, 5 to 11, 6 to 11, 7 to 11, 8 to 11, 9 to 11
         )
         val lamp = listOf(6 to 4, 6 to 3)
         fun beam(angleDeg: Double): List<Pair<Int, Int>> {
             val rad = angleDeg * PI / 180.0
-            val ex = (6 + 6 * cos(rad)).roundToInt()
-            val ey = (3 + 6 * sin(rad)).roundToInt()
+            val ex = (6 + 5 * cos(rad)).roundToInt()
+            val ey = (3 + 5 * sin(rad)).roundToInt()
             val spread = line(6, 3, ex, ey)
-            val ex2 = (6 + 6 * cos(rad + 0.35)).roundToInt()
-            val ey2 = (3 + 6 * sin(rad + 0.35)).roundToInt()
+            val ex2 = (6 + 5 * cos(rad + 0.35)).roundToInt()
+            val ey2 = (3 + 5 * sin(rad + 0.35)).roundToInt()
             return spread + line(6, 3, ex2, ey2)
         }
         return listOf(200.0, 225.0, 250.0, 290.0, 315.0, 340.0).map { angle ->
@@ -520,7 +528,9 @@ object AvatarSignatureAnimations {
             cx to cy, cx + 1 to cy, cx to cy + 1, cx + 1 to cy + 1,
             cx - 1 to cy - 1, cx + 1 to cy - 2, cx + 2 to cy - 1
         )
-        val trail = listOf(paw(1, 10), paw(4, 8), paw(6, 5), paw(9, 3))
+        // Einen Schritt von den Ecken eingerueckt: Die alten ersten und letzten Zehen lagen im
+        // abgeschnittenen Rand des runden Displays.
+        val trail = listOf(paw(2, 9), paw(4, 7), paw(7, 5), paw(9, 3))
         return listOf(
             clip(trail[0]),
             clip(trail[0] + trail[1]),

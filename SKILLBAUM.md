@@ -567,7 +567,7 @@ sind unverändert geblieben.
 - [x] Kontaktbogen zeigt den **runden** Ausschnitt statt des Quadrats
 - [x] `AnimationPreviewTest` prueft die mittlere Zellzahl (`MIN_ZELLEN_IM_MITTEL = 6.0`)
 - [x] `sprite` einmal in `core/…/FrameSprite.kt` statt zweimal privat
-- [ ] Vier weitere Auffaellige ansehen und entscheiden (siehe unten)
+- [x] Fuenf weitere Auffaellige angesehen und verbessert (siehe unten)
 
 **Prüfen:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, dann die Bögen in
 `core/build/preview/` ansehen.
@@ -592,9 +592,9 @@ im Bild.
 - [ ] Selbstgezeichnete Animationen der Nutzer: Auffang-Knoten je Hauptgruppe, Zuordnung später
       von Hand?
 - [ ] Braucht die Zieh-Leiste eine Abklingzeit? Sonst füttert man im Sekundentakt.
-- [ ] Restliche Auffaelligkeiten aus der Motiv-Pruefung (siehe P10): `Lighthouse` 11 % beschnitten,
-      `Rain`/`Paw`/`Rocket` je 9 %, `Comet` duenn. Alle vier sind lesbar - erst ansehen, dann
-      entscheiden, nicht blind nachbessern.
+- [x] Restliche Auffaelligkeiten aus der Motiv-Pruefung (P10): `Lighthouse`, `Rain`, `Paw`,
+      `Rocket` und `Comet` in der runden Vorschau geprueft und gezielt verbessert. Strahlen,
+      Tropfen und Spur bleiben aus den abgeschnittenen Ecken; Rakete und Komet sind voller lesbar.
 - [x] ~~Zählen Fütterungen aus der Leiste XP?~~ **Nein** — entschieden in P5, Begründung dort.
 
 ---
@@ -605,6 +605,9 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-08-28 | Welt-Sport | **Basketball und Krafttraining als vollstaendige Welt-Aktivitaeten.** Basketball durchlaeuft Dribbling, Zielen, Wurf und Treffer; Korb und Ball werden nur waehrend dieses Ablaufs gezeichnet. Krafttraining zeigt Aufwaermen, Heben ueber den Kopf und Erholung mit sichtbarer Hantel. Auch das Fussballtor ist jetzt dynamisch: Der Sportplatz selbst bleibt neutral und traegt nur Zaun und Linien, damit keine falsche Requisite in eine andere Sportart hineinragt. Drachen, Fussball, Basketball, Training und Angeln werden aus einer gemeinsamen Liste gleichberechtigt gezogen; zuvor bevorzugten nacheinander ausgefuehrte Prozentwuerfe immer die zuerst gepruefte Aktivitaet. Fuenf neue Tests sichern Phasen, Orte, Effekte und Erreichbarkeit aller Spezialaktivitaeten. |
+| 2026-08-28 | Level-Freischaltung | **Der fehlende Anschluss zwischen Level und Skillbaum steht.** Level 1 startet nur mit den neun Hauptgruppen; ab Level 2 verdient jeder Aufstieg genau einen neuen Knoten. Der nicht wegklickbare Dialog zeigt das vorhandene 2+1-Angebot und speichert die Wahl sofort, danach wachsen Baum und Zieh-Leiste ueber ihren bestehenden Flow mit. Die Schuld wird aus `Level - 1` minus bereits gewaehlten Nicht-Wurzel-Knoten berechnet: Ein beendeter Dialog geht nicht verloren, und bestehende Spielstaende holen alle fehlenden Wahlen nacheinander nach. Vier neue Regeltests. |
+| 2026-08-28 | P10 + Laden | **Die fuenf restlichen auffaelligen Motive verbessert:** Lighthouse hat einen kuerzeren Strahl und einen voll sichtbaren Sockel, Rain vier klare innere Tropfenbahnen, Paw eine eingerueckte Spur, Rocket einen voll sichtbaren Start und Comet einen kraeftigeren Kopf und Schweif. Der Laden ist von Warenregal + Wandregal + Kasse auf Warenregal + Kasse reduziert; das Regal selbst hat nur noch drei statt vier dicht gestapelter Boeden. Die freie Mitte gehoert wieder der Figur. Core- und App-Sim-Unit-Tests gruen; Vorschauen visuell geprueft. |
 | 2026-08-25 | — | Bestandsaufnahme und Plan erstellt, Zuordnung aller 67 Motive festgelegt. Noch kein Code geändert. |
 | 2026-08-26 | Merge | **`main` ist im Zweig.** Der Zweig war am 18.08. abgezweigt, main 70 Commits weiter. Nur `HomeScreen.kt` kollidierte: main hat `feedNow` zu einem gemeinsamen `feedOccurrence` mit zwei Aufrufern umgebaut (Uhr und Aktions-Speicherplatz) - uebernommen, `playFromBar` steht daneben, `playReaction` geht ueber den `ReactionTrigger`. **Ein 69. Motiv war dazugekommen:** `Clock` (Wecker), von einem ClaudePrimaryRun-Lauf auf main ergaenzt. Haengt jetzt unter `arbeit/erledigen` neben der Sanduhr; ohne Knoten waere `AnimationTreeTest` umgefallen. `ReactionFingerprintTest` meldete nur *neu*, nichts *veraendert* - die 70 bestehenden Fingerabdruecke sind gleich geblieben. **Zum ersten Mal instrumentiert gegengeprueft:** Verify-Lauf 32988149012, `:app` API 35 und `:app-sim` API 26 beide gruen - damit sind auch die Migrationstests aus P1/P3/P4 wirklich gelaufen. Der rote Job dort (`Signiertes AAB`) scheitert an einem nie hinterlegten `KEYSTORE_BASE64` und laeuft nur bei `workflow_dispatch`. **Naechster Schritt:** PR #43 zeigt jetzt auf `main` und ist MERGEABLE; ein Merge loest `deliver-apk.yml` aus und ueberschreibt `Tama-debug.apk` in Drive. PR #42 ist dadurch gegenstandslos. |
 | 2026-08-26 | P10 | **Football und Konfetti neu gezeichnet.** Football zeigte ein Tor am rechten Rand, dessen Pfosten auf der Kante des runden Ausschnitts sass und mit dem Ball verschmolz - jetzt eine Geste: Figur, Bein holt aus, trifft, Ball fliegt hinaus und rollt zurueck. Konfetti startete oberhalb des Rasters und hatte deshalb **einen einzigen Punkt** im ersten Frame; jetzt sind alle Spalten immer besetzt. Beide Luecken lagen im Werkzeug und sind geschlossen: der Kontaktbogen zeigt jetzt den RUNDEN Ausschnitt (vorher das Quadrat - er log ueber das Ergebnis), und `AnimationPreviewTest` prueft die mittlere Zellzahl (`MIN_ZELLEN_IM_MITTEL`). `sprite` liegt jetzt in `core/.../FrameSprite.kt` und wird von beiden Katalogen benutzt. 548 Tests gruen, Lint gruen, beide APKs bauen. **Fuer die naechste Sitzung:** Auf dem Geraet ist immer noch nichts davon gegengeprueft. |

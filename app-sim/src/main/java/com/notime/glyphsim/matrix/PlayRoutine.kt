@@ -39,6 +39,12 @@ sealed interface RoutineStep {
     /** Eine Phase der Fussball-Szene; TRICK wird erst nach dem Lernen verwendet. */
     data class Football(val phase: PlayEffects.FootballPhase) : RoutineStep
 
+    /** Eine Phase der Basketball-Szene: prellen, zielen, werfen, treffen. */
+    data class Basketball(val phase: PlayEffects.BasketballPhase) : RoutineStep
+
+    /** Eine Phase des Krafttrainings auf dem Sportplatz. */
+    data class Training(val phase: PlayEffects.TrainingPhase) : RoutineStep
+
     /** Eine Phase der Angel-Szene am Teich. */
     data class Fishing(val phase: PlayEffects.FishingPhase) : RoutineStep
 
@@ -130,34 +136,36 @@ object PlayRoutines {
         }
         // Umgekehrt: Solange etwas da ist, faellt der Einkauf weg - sonst liefe er auch mit vollem
         // Kuehlschrank jedes zweite Mal in den Laden.
+        val special = options.filter { routine ->
+            routine.steps.any {
+                it is RoutineStep.Kite || it is RoutineStep.Football ||
+                    it is RoutineStep.Basketball || it is RoutineStep.Training ||
+                    it is RoutineStep.Fishing
+            }
+        }
         val everyday = options.filterNot { routine ->
-            routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP } ||
-                routine.steps.any {
-                    it is RoutineStep.Kite || it is RoutineStep.Football || it is RoutineStep.Fishing
-                }
+            routine in special || routine.steps.any {
+                it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP
+            }
         }
         val pool = everyday.ifEmpty { options }
-        // MOVE hatte bisher fast nur Wege als Inhalt. Die erste richtige Park-Beschaeftigung soll
-        // oft genug sichtbar sein, um den neuen Standard zu praegen, ohne jeden Spaziergang zu
-        // ersetzen.
-        if (topic == AnimationType.MOVE && random.nextInt(100) < KITE_CHANCE_PERCENT) {
-            pool.firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
-                ?.let { return it }
-        }
-        if (topic == AnimationType.MOVE && random.nextInt(100) < FOOTBALL_CHANCE_PERCENT) {
-            return footballRoutine(footballTrickLearned)
-        }
-        // Dritte eigene Aussenaktivitaet, seltener als die beiden anderen - sonst wirkt der Teich
-        // wie ein Pflichttermin statt wie eine von mehreren Moeglichkeiten.
-        if (topic == AnimationType.MOVE && random.nextInt(100) < FISHING_CHANCE_PERCENT) {
-            return fishingRoutine()
+        // Eine gemeinsame Ziehung statt nacheinander ausgefuehrter Prozentpruefungen: Sonst wird
+        // jede spaeter eingetragene Sportart automatisch seltener als die davor. Basketball,
+        // Fussball, Training, Drachen und Angeln sind hier gleichberechtigt.
+        if (topic == AnimationType.MOVE && special.isNotEmpty() &&
+            random.nextInt(100) < SPECIAL_ACTIVITY_CHANCE_PERCENT
+        ) {
+            val chosen = special.random(random)
+            return if (chosen.steps.any { it is RoutineStep.Football }) {
+                footballRoutine(footballTrickLearned)
+            } else {
+                chosen
+            }
         }
         return pool[random.nextInt(pool.size)]
     }
 
-    private const val KITE_CHANCE_PERCENT = 55
-    private const val FOOTBALL_CHANCE_PERCENT = 65
-    private const val FISHING_CHANCE_PERCENT = 40
+    private const val SPECIAL_ACTIVITY_CHANCE_PERCENT = 70
 
     fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(
         buildList {
@@ -174,6 +182,34 @@ object PlayRoutines {
             add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
             add(RoutineStep.Linger(8_000L))
         }
+    )
+
+    fun basketballRoutine(): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(PlayScene.Place.SPORT),
+            RoutineStep.Stroll(0.32f),
+            RoutineStep.Basketball(PlayEffects.BasketballPhase.DRIBBLE),
+            RoutineStep.Linger(8_000L),
+            RoutineStep.Basketball(PlayEffects.BasketballPhase.AIM),
+            RoutineStep.Linger(3_000L),
+            RoutineStep.Basketball(PlayEffects.BasketballPhase.SHOOT),
+            RoutineStep.Linger(3_500L),
+            RoutineStep.Basketball(PlayEffects.BasketballPhase.SCORE),
+            RoutineStep.Linger(6_000L)
+        )
+    )
+
+    fun trainingRoutine(): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(PlayScene.Place.SPORT),
+            RoutineStep.Stroll(0.42f),
+            RoutineStep.Training(PlayEffects.TrainingPhase.WARM_UP),
+            RoutineStep.Linger(4_000L),
+            RoutineStep.Training(PlayEffects.TrainingPhase.LIFT),
+            RoutineStep.Linger(7_000L),
+            RoutineStep.Training(PlayEffects.TrainingPhase.REST),
+            RoutineStep.Linger(5_000L)
+        )
     )
 
     /** Angeln am Teich: auswerfen, lange warten, dann der Fang - ruhiger Gegenpol zu Fussball. */
@@ -620,6 +656,10 @@ object PlayRoutines {
             ),
             // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
             footballRoutine(trickLearned = false),
+            // Korb und Ball erscheinen nur fuer diesen Ablauf; der Platz bleibt sonst offen.
+            basketballRoutine(),
+            // Kraft und Ausdauer als zweiter Ast des Sports, mit sichtbarer Hantel.
+            trainingRoutine(),
             // Eigener Teich, ruhiger Gegenpol zum Sportplatz - siehe fishingRoutine().
             fishingRoutine()
         )

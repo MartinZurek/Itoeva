@@ -231,10 +231,15 @@
     <string name="playmode_intro_1">Want to play? Then I am here the whole time and live a day of my own.</string>
     <string name="playmode_intro_2">Your own reminders keep running the whole time – play does not switch anything of yours off.</string>
     <string name="playmode_intro_3">On top of them I show up on my own, at random moments that fit who I am. Feed me the same way as always: drag the clock onto me.</string>
-    <string name="playmode_intro_4">Every feed earns XP and I level up. Everything else stays as you know it – clock, dock, widget.</string>
+    <string name="playmode_intro_4">Every feed earns XP. From level 2 onward, each level-up lets you choose a new animation for my skill tree. Everything else stays as you know it – clock, dock, widget.</string>
     <string name="playmode_start">Start play mode</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Look at that – I just reached level %1$d!</string>
+    <string name="level_unlock_title">Level %1$d – new animation</string>
+    <string name="level_unlock_intro">Choose an animation. It will then appear in the skill tree and your drag bar.</string>
+    <string name="level_unlock_focused">Fits what you have been doing lately</string>
+    <string name="level_unlock_wildcard">Or something from another branch</string>
+    <string name="level_unlock_remaining">%1$d unlocks from earlier levels remaining</string>
     <string name="assistant_menu_memories">🕰️  What I remember</string>
     <string name="memories_intro">Here is what we have already been through together.</string>
     <string name="memories_empty">Nothing yet – but that comes on its own. The first thing you look after while I am here is the beginning.</string>

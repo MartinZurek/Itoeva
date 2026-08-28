@@ -413,6 +413,10 @@ fun DockScreen(
         var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
         /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
         var footballPhase by remember { mutableStateOf<PlayEffects.FootballPhase?>(null) }
+        /** Sichtbare Basketballphase; Korb und Ball existieren nur solange sie gesetzt ist. */
+        var basketballPhase by remember { mutableStateOf<PlayEffects.BasketballPhase?>(null) }
+        /** Sichtbare Krafttrainingsphase mit Hantel. */
+        var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
         /** Sichtbare Phase der Angel-Szene am Teich; null ausserhalb dieses Ablaufs. */
         var fishingPhase by remember { mutableStateOf<PlayEffects.FishingPhase?>(null) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
@@ -931,6 +935,30 @@ fun DockScreen(
                         startAvatarIdleLoop(species, mood)
                     }
 
+                    is RoutineStep.Basketball -> {
+                        basketballPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Training -> {
+                        trainingPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val movement = if (step.phase == PlayEffects.TrainingPhase.REST) {
+                            AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.STRETCH)
+                        } else {
+                            AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                        }
+                        MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
                     is RoutineStep.Fishing -> {
                         fishingPhase = step.phase
                         // Nur beim Auswerfen und beim Anschlagen eine eigene Koerperbewegung -
@@ -1039,6 +1067,8 @@ fun DockScreen(
                 carried = null
                 kitePhase = null
                 footballPhase = null
+                basketballPhase = null
+                trainingPhase = null
                 fishingPhase = null
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
@@ -2259,7 +2289,8 @@ fun DockScreen(
         //
         // Der AUFSTIEG bleibt: Er ist kein Zustand, sondern ein Ereignis. Etwas, das man erreicht
         // hat, muss in dem Moment zu sehen sein, in dem es geschieht - es hinterher nachschlagen
-        // zu koennen ist kein Ersatz dafuer. Er zeigt sich kurz und verschwindet von selbst.
+        // zu koennen ist kein Ersatz dafuer. Er bleibt bis zur anschliessenden Animationswahl
+        // stehen; erst dann ist der Aufstieg als Ganzes abgeschlossen.
         if (playMode) {
             val playViewModel = androidx.lifecycle.viewmodel.compose.viewModel<PlayModeViewModel>()
             val playState by playViewModel.state.collectAsStateWithLifecycle()
@@ -2277,9 +2308,14 @@ fun DockScreen(
                     avatar?.species?.let { species ->
                         PlaySound.play(context, species, PlayChime.Event.LEVEL_UP, scope)
                     }
-                    delay(LEVEL_UP_MESSAGE_MS)
-                    playViewModel.acknowledgeLevelUp()
                 }
+            }
+            if (playState.started) {
+                LevelUnlockDialog(
+                    profileId = AvatarSpeciesPrefs.profileId(playState.species),
+                    level = playState.level,
+                    onAllChosen = playViewModel::acknowledgeLevelUp
+                )
             }
         }
 
@@ -2545,6 +2581,29 @@ fun DockScreen(
                             phase = football,
                             scenePhase = scenePhase,
                             widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val basketball = basketballPhase
+                if (current != null && basketball != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.basketballCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = basketball,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val training = trainingPhase
+                if (current != null && training != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.trainingCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = training,
+                            scenePhase = scenePhase
                         )
                     )
                 }
@@ -3193,9 +3252,6 @@ private const val SCENE_PHASE_TICK_MS = 200L
 private const val SCENE_FADE_OUT_MS = 220
 private const val SCENE_FADE_IN_MS = 380
 
-/** Wie lange der Glueckwunsch zum neuen Level stehen bleibt, bevor wieder der nuechterne Stand
- *  erscheint - lang genug zum Lesen, kurz genug, um nicht im Weg zu stehen. */
-private const val LEVEL_UP_MESSAGE_MS = 4_000L
 private const val DOCK_TAG = "DockScreen"
 
 /** Maximale Auslenkung der Burn-in-Drift. */

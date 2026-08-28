@@ -139,6 +139,47 @@ class PlayRoutineTest {
     }
 
     @Test
+    fun `Basketball findet auf dem Sportplatz statt und durchlaeuft alle Phasen`() {
+        val routine = PlayRoutines.basketballRoutine()
+        assertTrue(routine.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SPORT
+        })
+        assertTrue(
+            routine.steps.filterIsInstance<RoutineStep.Basketball>().map { it.phase } ==
+                PlayEffects.BasketballPhase.entries
+        )
+    }
+
+    @Test
+    fun `Krafttraining findet auf dem Sportplatz statt und hebt die Hantel`() {
+        val routine = PlayRoutines.trainingRoutine()
+        assertTrue(routine.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SPORT
+        })
+        assertTrue(
+            routine.steps.filterIsInstance<RoutineStep.Training>().map { it.phase } ==
+                PlayEffects.TrainingPhase.entries
+        )
+    }
+
+    @Test
+    fun `alle besonderen Bewegungsaktivitaeten werden tatsaechlich gezogen`() {
+        val seen = mutableSetOf<String>()
+        val random = kotlin.random.Random(27)
+        repeat(2_000) {
+            val routine = PlayRoutines.forTopic(AnimationType.MOVE, random = random)
+            when {
+                routine.steps.any { it is RoutineStep.Kite } -> seen += "kite"
+                routine.steps.any { it is RoutineStep.Football } -> seen += "football"
+                routine.steps.any { it is RoutineStep.Basketball } -> seen += "basketball"
+                routine.steps.any { it is RoutineStep.Training } -> seen += "training"
+                routine.steps.any { it is RoutineStep.Fishing } -> seen += "fishing"
+            }
+        }
+        assertTrue(seen == setOf("kite", "football", "basketball", "training", "fishing"))
+    }
+
+    @Test
     fun `Angeln findet am Teich statt und durchlaeuft alle Phasen der Reihe nach`() {
         val routine = PlayRoutines.fishingRoutine()
 

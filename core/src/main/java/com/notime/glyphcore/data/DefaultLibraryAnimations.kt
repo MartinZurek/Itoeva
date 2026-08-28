@@ -144,13 +144,15 @@ object DefaultLibraryAnimations {
         val canopy = listOf(4 to 4, 5 to 3, 6 to 3, 7 to 3, 8 to 4, 3 to 5, 9 to 5, 6 to 4)
         val handle = listOf(6 to 5, 6 to 6, 6 to 7, 5 to 8, 5 to 9)
         val base = canopy + handle
-        val dropCols = listOf(0, 2, 10, 12, 1, 11)
+        // Nicht auf x=0/12: Dort schneidet der runde Bildschirm schon ab der halben Hoehe ab.
+        // Vier klar fallende Bahnen lesen sich ruhiger als sechs halb sichtbare Randtropfen.
+        val dropCols = listOf(2, 4, 8, 10)
         val phases = listOf(0, 5, 2, 8, 10, 4)
         return (0 until 12).map { t ->
             val pts = base.toMutableList()
             dropCols.forEachIndexed { i, x ->
                 val y = (t + phases[i]) % 13
-                if (y <= 11) pts += x to y
+                if (y in 1..11) pts += x to y
             }
             pts
         }
@@ -244,14 +246,14 @@ object DefaultLibraryAnimations {
         val starsC = listOf(1 to 1, 1 to 3, 11 to 2, 10 to 9, 2 to 10)
 
         return listOf(
-            digitThree() + rocket(8) + starsA,
-            digitTwo() + rocket(8) + starsB,
-            digitOne() + rocket(8) + starsA,
-            rocket(8) + flame(8, 2) + starsB,
-            rocket(6) + flame(6, 3) + starsA,
+            digitThree() + rocket(6) + starsA,
+            digitTwo() + rocket(6) + starsB,
+            digitOne() + rocket(6) + starsA,
+            rocket(6) + flame(6, 2) + starsB,
+            rocket(5) + flame(5, 3) + starsA,
             rocket(3) + flame(3, 3) + starsB,
-            rocket(0) + flame(0, 2) + starsA,
-            rocket(-3) + flame(-3, 1) + starsB,
+            rocket(1) + flame(1, 2) + starsA,
+            rocket(-2) + flame(-2, 1) + starsB,
             starsC
         )
     }
