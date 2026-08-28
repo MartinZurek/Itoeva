@@ -57,39 +57,171 @@ object PlayEffects {
         scenePhase: Int,
         widthCells: Int
     ): List<SceneCell> {
-        val pulse = (scenePhase / 3) % 3
-        val ox = avatarCellX + 12
-        val oy = avatarCellY + AvatarGeometry.HEADROOM + 4
-        val points: List<Pair<Int, Int>> = when (topic) {
-            AnimationType.SLEEP -> listOf(0 to 7, 1 to 6, 2 to 6, 0 to 5, 1 to 4, 2 to 4) +
-                listOf(5 to 3, 6 to 2, 7 to 2, 5 to 1, 6 to 0, 7 to 0)
-            AnimationType.REST -> listOf(0 to 5, 1 to 5, 2 to 5, 3 to 5, 0 to 6, 3 to 6,
-                0 to 7, 1 to 7, 2 to 7, 3 to 7, 4 to 6) + listOf(1 to (3 - pulse), 3 to (2 - pulse))
-            AnimationType.BOOK -> listOf(0 to 3, 1 to 2, 2 to 3, 3 to 2, 4 to 3,
-                0 to 4, 1 to 4, 2 to 5, 3 to 4, 4 to 4, 2 to 4)
-            AnimationType.MINDFULNESS -> listOf(-pulse to 4, pulse to 4, 0 to 4,
-                -2 - pulse to 4, 2 + pulse to 4, 0 to 2, 0 to 6)
-            AnimationType.LOVE -> listOf(0 to 2, 1 to 1, 2 to 2, 3 to 1, 4 to 2,
-                0 to 3, 1 to 4, 2 to 5, 3 to 4, 4 to 3)
-            AnimationType.DRINK -> listOf(0 to 3, 1 to 3, 2 to 3, 0 to 4, 2 to 4,
-                0 to 5, 1 to 5, 2 to 5, 3 to 4) + listOf(1 to (1 - pulse))
-            AnimationType.MEDICINE -> listOf(0 to 2, 1 to 1, 2 to 0, 3 to 0, 4 to 1,
-                4 to 2, 3 to 3, 2 to 4, 1 to 4, 0 to 3, 2 to 2)
-            AnimationType.WORK -> listOf(0 to 1, 1 to 1, 2 to 1, 3 to 1, 4 to 1,
-                0 to 2, 4 to 2, 0 to 3, 1 to 3, 2 to 3, 3 to 3, 4 to 3,
-                1 to 4, 2 to 4, 3 to 4, (1 + pulse) to 2)
-            AnimationType.FOCUS -> (-3..3).map { it to 3 } + (-3..3).map { 0 to (it + 3) } +
-                listOf(-2 to 1, 2 to 1, -2 to 5, 2 to 5)
-            AnimationType.MOVE -> listOf((pulse - 1) to 1, 0 to 2, 1 to 3, 0 to 4,
-                -1 to 5, 1 to 5, -2 to 6, 2 to 6)
-            AnimationType.CREATIVITY -> listOf(0 to 3, 1 to 2, 2 to 2, 3 to 3,
-                3 to 4, 2 to 5, 1 to 5, 0 to 4, 1 to 3, 2 to 4, 4 to (2 - pulse))
-            AnimationType.GENERAL -> listOf(0 to 3, 2 to 3, 4 to 3,
-                pulse to 1, pulse to 5)
+        val beat = (scenePhase / 3) % 4
+        val useRight = avatarCellX + AvatarGeometry.SIZE + 18 < widthCells
+        val direction = if (useRight) 1 else -1
+        val ox = if (useRight) avatarCellX + AvatarGeometry.SIZE + 2 else avatarCellX - 3
+        val oy = avatarCellY + AvatarGeometry.HEADROOM + 2
+        val bright = PlayScene.GLOW - 180
+        val mid = PlayScene.GLOW - 520
+        val dim = PlayScene.FURNITURE
+        val cells = mutableListOf<SceneCell>()
+        fun cell(x: Int, y: Int, level: Int = bright, light: Boolean = true) {
+            cells += SceneCell(ox + direction * x, oy + y, level, light)
         }
-        return points.map { (x, y) ->
-            SceneCell(ox + x, oy + y, PlayScene.GLOW - 300, isLight = true)
-        }.filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+        fun line(x1: Int, y1: Int, x2: Int, y2: Int, level: Int = mid) {
+            val steps = maxOf(kotlin.math.abs(x2 - x1), kotlin.math.abs(y2 - y1)).coerceAtLeast(1)
+            for (i in 0..steps) cell(
+                x1 + (x2 - x1) * i / steps,
+                y1 + (y2 - y1) * i / steps,
+                level
+            )
+        }
+        fun box(left: Int, top: Int, right: Int, bottom: Int, level: Int = dim) {
+            line(left, top, right, top, level)
+            line(left, bottom, right, bottom, level)
+            line(left, top, left, bottom, level)
+            line(right, top, right, bottom, level)
+        }
+        when (topic) {
+            AnimationType.SLEEP -> {
+                // Mond plus drei versetzt aufsteigende Z: ein lesbares Nachtbild, kein Buchstabe.
+                for (y in 0..8) for (x in 0..8) {
+                    val d = (x - 4) * (x - 4) + (y - 4) * (y - 4)
+                    if (d in 10..20 && !(x < 4 && y in 2..6)) cell(x + 5, y - 2, mid)
+                }
+                for (i in 0..2) {
+                    val x = 1 + i * 5
+                    val y = 12 - i * 5 - beat
+                    line(x, y, x + 3, y, bright)
+                    line(x + 3, y, x, y + 3, bright)
+                    line(x, y + 3, x + 3, y + 3, bright)
+                }
+            }
+            AnimationType.REST -> {
+                // Grosse Tasse mit sichtbarem Henkel und wanderndem Dampf.
+                box(1, 7, 10, 15)
+                line(2, 15, 9, 15, bright)
+                box(10, 9, 14, 13, mid)
+                line(0, 17, 14, 17, dim)
+                for (x in listOf(3, 7, 10)) {
+                    cell(x + beat % 2, 4 - (beat + x) % 3, mid)
+                    cell(x, 2 - (beat + x) % 2, mid)
+                }
+            }
+            AnimationType.BOOK -> {
+                // Zwei grosse Seiten, Ruecken, Textzeilen und eine sichtbar umblaetternde Ecke.
+                line(0, 6, 7, 4, dim); line(7, 4, 14, 6, dim)
+                line(0, 6, 0, 15, dim); line(14, 6, 14, 15, dim)
+                line(0, 15, 7, 17, bright); line(7, 17, 14, 15, bright)
+                line(7, 4, 7, 17, mid)
+                for (y in listOf(8, 11, 14)) {
+                    line(2, y, 5, y, mid); line(9, y, 12, y, mid)
+                }
+                line(13 - beat, 5 + beat, 13, 8, bright)
+            }
+            AnimationType.MINDFULNESS -> {
+                // Atemwellen wachsen um einen ruhigen Mittelpunkt.
+                cell(5, 9, bright)
+                for (radius in 3..(5 + beat)) {
+                    cell(5 - radius, 9, mid); cell(5 + radius, 9, mid)
+                    cell(5, 9 - radius, mid); cell(5, 9 + radius, mid)
+                    if (radius >= 5) {
+                        cell(5 - radius + 1, 9 - radius + 2, dim)
+                        cell(5 + radius - 1, 9 - radius + 2, dim)
+                        cell(5 - radius + 1, 9 + radius - 2, dim)
+                        cell(5 + radius - 1, 9 + radius - 2, dim)
+                    }
+                }
+            }
+            AnimationType.LOVE -> {
+                // Ein grosses schlagendes Herz mit zwei kleinen Satelliten.
+                val swell = beat % 2
+                val heart = listOf(
+                    1 to 2, 2 to 1, 3 to 1, 4 to 2, 5 to 1, 6 to 1, 7 to 2,
+                    0 to 3, 8 to 3, 0 to 4, 8 to 4, 1 to 5, 7 to 5,
+                    2 to 6, 6 to 6, 3 to 7, 5 to 7, 4 to 8
+                )
+                heart.forEach { (x, y) -> cell(x + 3, y + 3 - swell, bright) }
+                cell(1, 4 - beat, mid); cell(15, 7 - (beat + 2) % 4, mid)
+                line(3, 16, 13, 16, dim)
+            }
+            AnimationType.DRINK -> {
+                // Karaffe schenkt sichtbar in ein grosses Glas; Pegel und Tropfen bewegen sich.
+                box(7, 7, 14, 16)
+                for (y in (13 - beat)..15) line(8, y, 13, y, mid)
+                line(1, 3, 5, 5, dim); line(1, 3, 0, 9, dim); line(0, 9, 5, 11, dim)
+                line(5, 5, 5, 11, dim)
+                for (y in 6..(10 + beat)) cell(6, y, bright)
+                cell(6, 12 + beat % 2, bright)
+            }
+            AnimationType.MEDICINE -> {
+                // Verbandskasten als Kontext, davor eine zweifarbige grosse Kapsel.
+                box(1, 3, 14, 16)
+                line(5, 7, 10, 7, bright); line(7, 5, 7, 10, bright)
+                line(3, 14, 6, 11, mid); line(6, 11, 11, 16, mid)
+                line(3, 15, 7, 11, bright); line(7, 11, 12, 16, dim)
+                cell(13, 1 - beat % 2, mid)
+            }
+            AnimationType.WORK -> {
+                // Grosser Laptop mit Codezeilen, wanderndem Cursor und Tastatur.
+                box(0, 2, 15, 12)
+                for ((row, length) in listOf(5 to 8, 7 to 11, 9 to 6)) {
+                    line(2, row, length, row, mid)
+                }
+                cell(3 + beat * 3, 10, bright)
+                line(3, 13, 12, 13, dim); line(1, 16, 14, 16, bright)
+                for (x in 3..12 step 2) cell(x, 15, mid)
+            }
+            AnimationType.FOCUS -> {
+                // Zielscheibe mit drei Ringen; der Punkt wandert zur Mitte und trifft.
+                val cx = 8; val cy = 9
+                for (r in listOf(3, 6, 8)) {
+                    cell(cx - r, cy, dim); cell(cx + r, cy, dim)
+                    cell(cx, cy - r, dim); cell(cx, cy + r, dim)
+                    cell(cx - r + 1, cy - r + 1, mid); cell(cx + r - 1, cy - r + 1, mid)
+                    cell(cx - r + 1, cy + r - 1, mid); cell(cx + r - 1, cy + r - 1, mid)
+                }
+                line(0, cy, 16, cy, mid); line(cx, 1, cx, 17, mid)
+                cell(14 - beat * 2, 3 + beat * 2, bright)
+                if (beat == 3) for (d in -1..1) { cell(cx + d, cy, bright); cell(cx, cy + d, bright) }
+            }
+            AnimationType.MOVE -> {
+                // Zwei grosse versetzte Fussabdruecke plus vorbeiziehende Tempolinien.
+                val shift = beat * 2
+                for (i in 0..1) {
+                    val x = 4 + i * 7 - shift % 4
+                    val y = 5 + i * 6
+                    box(x, y, x + 3, y + 6, if (i == beat % 2) bright else mid)
+                    cell(x - 1, y - 2, mid); cell(x + 1, y - 3, mid); cell(x + 3, y - 2, mid)
+                }
+                line(0, 2 + beat, 6, 2 + beat, dim)
+                line(9, 16 - beat, 16, 16 - beat, dim)
+            }
+            AnimationType.CREATIVITY -> {
+                // Palette mit Loch, Pinsel und wechselndem Funkenschauer.
+                val palette = listOf(3 to 3, 5 to 2, 8 to 2, 11 to 4, 12 to 7, 10 to 10,
+                    7 to 11, 3 to 10, 1 to 7, 1 to 5)
+                for (i in palette.indices) {
+                    val a = palette[i]; val b = palette[(i + 1) % palette.size]
+                    line(a.first, a.second, b.first, b.second, dim)
+                }
+                for ((x, y) in listOf(4 to 5, 8 to 4, 10 to 7, 6 to 9)) cell(x, y, bright)
+                line(10, 13, 16, 1, bright); line(9, 13, 11, 14, mid)
+                cell(14, 4 - beat, mid); cell(2, 2 - beat % 2, mid)
+            }
+            AnimationType.GENERAL -> {
+                // Klarer Sternausbruch statt unbestimmter Punkte: kurzer lebendiger Alltagsmoment.
+                val cx = 8; val cy = 9; val radius = 4 + beat
+                for ((dx, dy) in listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1,
+                    1 to 1, -1 to 1, 1 to -1, -1 to -1)) {
+                    line(cx + dx * 2, cy + dy * 2, cx + dx * radius, cy + dy * radius, mid)
+                }
+                box(cx - 2, cy - 2, cx + 2, cy + 2, bright)
+                cell(cx, cy, bright)
+            }
+        }
+        return cells.filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
     }
 
     fun footballCells(
@@ -112,14 +244,24 @@ object PlayEffects {
             FootballPhase.KICK -> groundY - 7
             FootballPhase.TRICK -> groundY - 13
         }
-        val ball = listOf(
-            0 to -2,
-            -1 to -1, 0 to -1, 1 to -1,
-            -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
-            -1 to 1, 0 to 1, 1 to 1,
-            0 to 2
-        ).map { (dx, dy) ->
-            SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
+        val ball = buildList {
+            val shape = listOf(
+                -1 to -3, 0 to -3, 1 to -3,
+                -2 to -2, 2 to -2,
+                -3 to -1, 3 to -1, -3 to 0, 3 to 0, -3 to 1, 3 to 1,
+                -2 to 2, 2 to 2, -1 to 3, 0 to 3, 1 to 3
+            )
+            shape.forEach { (dx, dy) ->
+                add(SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 180, true))
+            }
+            // Fuenfecke und Naehte verhindern, dass der Ball wie ein heller Kreis aussieht.
+            add(SceneCell(centerX, centerY, PlayScene.FURNITURE))
+            for ((dx, dy) in listOf(-2 to -1, 2 to -1, -1 to 2, 1 to 2)) {
+                add(SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 650, true))
+            }
+            if (phase == FootballPhase.KICK || phase == FootballPhase.TRICK) {
+                for (i in 1..4) add(SceneCell(centerX - i * 2, centerY + i / 2, PlayScene.BACKDROP))
+            }
         }
         val goalRight = widthCells - 3
         val goalLeft = (goalRight - 12).coerceAtLeast(0)
@@ -162,8 +304,20 @@ object PlayEffects {
             BasketballPhase.SHOOT -> hoopY - 5
             BasketballPhase.SCORE -> hoopY + 2
         }
-        val ball = listOf(0 to -1, -1 to 0, 0 to 0, 1 to 0, 0 to 1).map { (dx, dy) ->
-            SceneCell(ballX + dx, ballY + dy, PlayScene.GLOW - 250, isLight = true)
+        val ball = buildList {
+            for ((dx, dy) in listOf(
+                -1 to -3, 0 to -3, 1 to -3, -2 to -2, 2 to -2,
+                -3 to -1, 3 to -1, -3 to 0, 3 to 0, -3 to 1, 3 to 1,
+                -2 to 2, 2 to 2, -1 to 3, 0 to 3, 1 to 3
+            )) add(SceneCell(ballX + dx, ballY + dy, PlayScene.GLOW - 180, true))
+            // Kreuznaehte als typische Basketballstruktur.
+            for (d in -2..2) {
+                add(SceneCell(ballX + d, ballY, PlayScene.GLOW - 650, true))
+                add(SceneCell(ballX, ballY + d, PlayScene.GLOW - 650, true))
+            }
+            if (phase == BasketballPhase.SHOOT) {
+                for (i in 1..5) add(SceneCell(ballX - i * 2, ballY + i, PlayScene.BACKDROP))
+            }
         }
         // Der Korb wird nur fuer Basketball eingeblendet. Fussball und Training behalten damit
         // denselben freien Platz statt dauerhaft vor einer falschen Requisite stattzufinden.
@@ -173,8 +327,12 @@ object PlayEffects {
             for (x in hoopX - 3..hoopX + 1) {
                 add(SceneCell(x, hoopY, PlayScene.GLOW - 400, isLight = true))
             }
-            add(SceneCell(hoopX - 2, hoopY + 1, PlayScene.FURNITURE))
-            add(SceneCell(hoopX, hoopY + 1, PlayScene.FURNITURE))
+            for (dy in 1..5) {
+                val inset = dy / 3
+                add(SceneCell(hoopX - 3 + inset, hoopY + dy, PlayScene.FURNITURE))
+                add(SceneCell(hoopX + 1 - inset, hoopY + dy, PlayScene.FURNITURE))
+                if (dy % 2 == 0) add(SceneCell(hoopX - 1, hoopY + dy, PlayScene.BACKDROP))
+            }
         }
         return (hoop + ball).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
     }
@@ -194,12 +352,27 @@ object PlayEffects {
             TrainingPhase.REST -> groundY - 2
         }
         return buildList {
+            // Trainingsmatte und Markierungen verankern die Hantel als Sportgeraet.
+            for (x in centerX - 10..centerX + 10) {
+                add(SceneCell(x, groundY + 1, PlayScene.BACKDROP))
+            }
             for (x in centerX - 6..centerX + 6) {
                 add(SceneCell(x, centerY, PlayScene.FURNITURE))
             }
             for (dy in -2..2) {
                 add(SceneCell(centerX - 7, centerY + dy, PlayScene.GLOW - 350, isLight = true))
                 add(SceneCell(centerX + 7, centerY + dy, PlayScene.GLOW - 350, isLight = true))
+            }
+            if (phase == TrainingPhase.LIFT) {
+                for (dy in 3..8 step 2) {
+                    add(SceneCell(centerX - 9, centerY + dy + pulse, PlayScene.GLOW - 650, true))
+                    add(SceneCell(centerX + 9, centerY + dy + pulse, PlayScene.GLOW - 650, true))
+                }
+            } else if (phase == TrainingPhase.REST) {
+                // Flasche neben der Matte: klarer Abschluss statt liegengelassener Hantel.
+                for (y in groundY - 5..groundY) add(SceneCell(centerX + 10, y, PlayScene.GLOW - 500, true))
+                add(SceneCell(centerX + 9, groundY - 4, PlayScene.GLOW - 500, true))
+                add(SceneCell(centerX + 11, groundY - 4, PlayScene.GLOW - 500, true))
             }
         }.distinctBy { it.x to it.y }
     }
@@ -211,28 +384,38 @@ object PlayEffects {
         scenePhase: Int,
         widthCells: Int
     ): List<SceneCell> {
-        val ox = avatarCellX + 11
-        val oy = avatarCellY + AvatarGeometry.HEADROOM + 7
-        val guitar = listOf(
-            3 to -4, 3 to -3, 3 to -2, 2 to -1,
-            0 to 0, 1 to -1, 2 to 0, 3 to 0, 4 to 0,
-            0 to 1, 1 to 2, 2 to 2, 3 to 2, 4 to 1
-        )
+        val useRight = avatarCellX + 34 < widthCells
+        val direction = if (useRight) 1 else -1
+        val ox = if (useRight) avatarCellX + 11 else avatarCellX + 5
+        val oy = avatarCellY + AvatarGeometry.HEADROOM + 2
+        val guitar = buildList {
+            // Grosser Korpus mit Schallloch, langer Hals und Kopfplatte.
+            for (y in 7..14) for (x in 0..8) {
+                val d = (x - 4) * (x - 4) + (y - 10) * (y - 10)
+                if (d in 8..22) add(x to y)
+            }
+            for (y in 0..8) add(7 to y)
+            add(6 to 0); add(8 to 0); add(4 to 10)
+        }
         val count = when (phase) {
             MusicPhase.TUNE -> 1
             MusicPhase.PLAY -> 3
             MusicPhase.FINALE -> 5
         }
-        val drift = scenePhase % 5
+        val drift = (scenePhase / 2) % 6
         val notes = (0 until count).flatMap { i ->
-            val x = ox + 7 + i * 3
-            val y = oy - 2 - i * 3 - if (phase == MusicPhase.PLAY) drift / 2 else 0
-            listOf(x to y, x to y - 1, x + 1 to y - 2)
+            val x = 12 + i * 4
+            val y = 9 - i * 3 - if (phase != MusicPhase.TUNE) drift else 0
+            listOf(x to y, x to y - 1, x to y - 2, x + 1 to y - 3, x + 2 to y - 3)
         }
-        return (
-            guitar.map { (x, y) -> SceneCell(ox + x, oy + y, PlayScene.FURNITURE) } +
-                notes.map { (x, y) -> SceneCell(x, y, PlayScene.GLOW - 250, isLight = true) }
-            ).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+        val stage = (-2..24).map { x -> x to 17 }
+        return (guitar.map { (x, y) ->
+            SceneCell(ox + direction * x, oy + y, PlayScene.FURNITURE)
+        } + notes.map { (x, y) ->
+            SceneCell(ox + direction * x, oy + y, PlayScene.GLOW - 180, isLight = true)
+        } + stage.map { (x, y) ->
+            SceneCell(ox + direction * x, oy + y, PlayScene.BACKDROP)
+        }).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
     }
 
     fun paintingCells(
@@ -242,39 +425,51 @@ object PlayEffects {
         scenePhase: Int,
         widthCells: Int
     ): List<SceneCell> {
-        val ox = avatarCellX + 15
-        val oy = avatarCellY + AvatarGeometry.HEADROOM + 1
+        val useRight = avatarCellX + 35 < widthCells
+        val direction = if (useRight) 1 else -1
+        val ox = if (useRight) avatarCellX + 17 else avatarCellX - 2
+        val oy = avatarCellY + AvatarGeometry.HEADROOM - 1
         val frame = buildList {
-            for (x in 0..8) {
+            for (x in 0..13) {
                 add(x to 0)
-                add(x to 8)
+                add(x to 13)
             }
-            for (y in 0..8) {
+            for (y in 0..13) {
                 add(0 to y)
-                add(8 to y)
+                add(13 to y)
             }
-            add(2 to 9)
-            add(6 to 9)
-            add(1 to 10)
-            add(7 to 10)
+            for (x in 2..11) add(x to 15)
+            add(3 to 14); add(10 to 14); add(2 to 16); add(11 to 16)
         }
         val progress = when (phase) {
-            PaintingPhase.SKETCH -> 3
-            PaintingPhase.PAINT -> 6
-            PaintingPhase.REVEAL -> 8
+            PaintingPhase.SKETCH -> 5
+            PaintingPhase.PAINT -> 9
+            PaintingPhase.REVEAL -> 12
         }
         val picture = buildList {
-            for (row in 2..progress) {
-                val width = 1 + ((row + scenePhase / 4) % 5)
-                for (x in 2..(2 + width).coerceAtMost(7)) add(x to row)
+            // Ein erkennbares Landschaftsbild entsteht: Sonne, Bergsilhouette, Wiese.
+            if (progress >= 5) {
+                add(10 to 3); add(9 to 3); add(10 to 2)
+                for (x in 2..6) add(x to (10 - kotlin.math.abs(x - 4)))
+            }
+            if (progress >= 9) {
+                for (x in 1..12) add(x to (11 - (x % 3)))
+                for (x in 2..11 step 2) add(x to 12)
+            }
+            if (progress >= 12) {
+                for (x in 1..12) add(x to 11)
+                for (x in 1..12) if ((x + scenePhase / 4) % 3 != 0) add(x to 12)
             }
         }
-        return (
-            frame.map { (x, y) -> SceneCell(ox + x, oy + y, PlayScene.FURNITURE) } +
-                picture.map { (x, y) ->
-                    SceneCell(ox + x, oy + y, PlayScene.GLOW - 350, isLight = true)
-                }
-            ).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+        val brushY = 5 + (scenePhase / 2) % 7
+        val brush = (0..6).map { i -> (16 - i / 2) to (brushY + i) }
+        return (frame.map { (x, y) ->
+            SceneCell(ox + direction * x, oy + y, PlayScene.FURNITURE)
+        } + picture.map { (x, y) ->
+            SceneCell(ox + direction * x, oy + y, PlayScene.GLOW - 280, isLight = true)
+        } + brush.map { (x, y) ->
+            SceneCell(ox + direction * x, oy + y, PlayScene.GLOW - 120, isLight = true)
+        }).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
     }
 
     /**
@@ -324,12 +519,24 @@ object PlayEffects {
         if (phase == FishingPhase.CATCH) {
             // Der Fisch: ein kleiner Umriss direkt ueber dem Schwimmer, gerade aus dem Wasser
             // gezogen statt darauf zu treiben.
-            val fish = listOf(-1 to 0, 0 to 0, 1 to 0, 2 to -1, 0 to 1, 1 to 1)
+            val fish = listOf(
+                -4 to 0, -3 to -1, -3 to 1, -2 to -2, -2 to 2,
+                -1 to -2, 0 to -2, 1 to -1, 2 to 0, 1 to 1,
+                0 to 2, -1 to 2, 0 to 0
+            )
             for ((dx, dy) in fish) {
-                result += SceneCell(bobberX + dx, bobberY + dy - 2, PlayScene.GLOW - 250, isLight = true)
+                result += SceneCell(bobberX + dx, bobberY + dy - 4, PlayScene.GLOW - 180, isLight = true)
             }
+            result += SceneCell(bobberX + 1, bobberY - 5, PlayScene.FURNITURE)
         } else {
-            result += SceneCell(bobberX, bobberY, PlayScene.GLOW - 250, isLight = true)
+            result += SceneCell(bobberX, bobberY, PlayScene.GLOW - 180, isLight = true)
+            // Wellenringe reagieren sichtbar auf den Schwimmer.
+            val spread = 2 + kotlin.math.abs(bob)
+            for (dx in -spread..spread) {
+                if (kotlin.math.abs(dx) >= spread - 1) {
+                    result += SceneCell(bobberX + dx, bobberY + 2, PlayScene.BACKDROP)
+                }
+            }
         }
         return result.distinctBy { it.x to it.y }
     }
@@ -357,7 +564,7 @@ object PlayEffects {
             KitePhase.FLY -> handX + 15 + sway
             KitePhase.LAND -> handX + 7
         }
-        val centerX = rawCenterX.coerceIn(3, (widthCells - 4).coerceAtLeast(3))
+        val centerX = rawCenterX.coerceIn(4, (widthCells - 5).coerceAtLeast(4))
         val centerY = when (phase) {
             KitePhase.PREPARE -> handY + 3
             KitePhase.LAUNCH -> handY - 13
@@ -381,19 +588,25 @@ object PlayEffects {
         }
 
         val kite = listOf(
-            0 to -2,
-            -1 to -1, 0 to -1, 1 to -1,
-            -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
-            -1 to 1, 0 to 1, 1 to 1,
-            0 to 2
+            0 to -4,
+            -1 to -3, 0 to -3, 1 to -3,
+            -2 to -2, -1 to -2, 0 to -2, 1 to -2, 2 to -2,
+            -3 to -1, -2 to -1, -1 to -1, 0 to -1, 1 to -1, 2 to -1, 3 to -1,
+            -4 to 0, -3 to 0, -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0, 3 to 0, 4 to 0,
+            -3 to 1, -2 to 1, -1 to 1, 0 to 1, 1 to 1, 2 to 1, 3 to 1,
+            -2 to 2, -1 to 2, 0 to 2, 1 to 2, 2 to 2,
+            -1 to 3, 0 to 3, 1 to 3,
+            0 to 4
         )
         for ((dx, dy) in kite) {
             result += SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
         }
         // Der geknickte Schweif macht die Raute auch in Bewegung eindeutig als Drachen lesbar.
-        result += SceneCell(centerX + 1, centerY + 3, PlayScene.FURNITURE)
-        result += SceneCell(centerX, centerY + 4, PlayScene.FURNITURE)
         result += SceneCell(centerX + 1, centerY + 5, PlayScene.FURNITURE)
+        result += SceneCell(centerX - 1, centerY + 6, PlayScene.FURNITURE)
+        result += SceneCell(centerX + 1, centerY + 7, PlayScene.FURNITURE)
+        result += SceneCell(centerX - 1, centerY + 8, PlayScene.FURNITURE)
+        result += SceneCell(centerX + 1, centerY + 9, PlayScene.FURNITURE)
         return result.distinctBy { it.x to it.y }
     }
 

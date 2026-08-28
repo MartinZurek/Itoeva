@@ -13,10 +13,20 @@ class PlayEffectsTest {
         val motifs = AnimationType.entries.map { topic ->
             PlayEffects.activityCells(topic, 8, 20, 4, 48).also { cells ->
                 assertTrue("$topic hat kein Weltmotiv", cells.isNotEmpty())
+                assertTrue("$topic ist als Silhouette zu klein", cells.size >= 18)
                 assertTrue("$topic verlaesst das Spielfeld", cells.all { it.x in 0 until 48 })
             }.map { it.x to it.y }.toSet()
         }
         assertEquals(AnimationType.entries.size, motifs.distinct().size)
+    }
+
+    @Test
+    fun `Weltmotive veraendern ihren Zustand sichtbar`() {
+        for (topic in AnimationType.entries) {
+            val first = PlayEffects.activityCells(topic, 8, 20, 0, 48).map { it.x to it.y }.toSet()
+            val later = PlayEffects.activityCells(topic, 8, 20, 9, 48).map { it.x to it.y }.toSet()
+            assertNotEquals("$topic bleibt trotz laufender Szene statisch", first, later)
+        }
     }
 
     @Test

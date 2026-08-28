@@ -52,6 +52,8 @@ object ScenePreview {
         width: Int = WIDTH,
         floorY: Int = FLOOR_Y,
         showAvatar: Boolean = true,
+        /** Zusaetzliche Handlungseffekte, zuletzt wie auf dem Bildschirm gezeichnet. */
+        overlay: List<SceneCell> = emptyList(),
         /** Was sich angesammelt hat - siehe PlayScene.Acquisition. */
         acquisitions: Set<PlayScene.Acquisition> = emptySet()
     ): String {
@@ -86,6 +88,10 @@ object ScenePreview {
                     if (cell.y in grid.indices && cell.x in 0 until width) grid[cell.y][cell.x] = 'X'
                 }
             }
+        }
+
+        for (cell in overlay) {
+            if (cell.y in grid.indices && cell.x in 0 until width) grid[cell.y][cell.x] = '*'
         }
 
         val header = buildString {

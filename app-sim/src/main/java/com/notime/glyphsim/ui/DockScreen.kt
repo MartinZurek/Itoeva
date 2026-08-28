@@ -777,6 +777,11 @@ fun DockScreen(
 
             try {
             for (step in routine.steps) {
+                // Das Motiv bleibt waehrend eines anschliessenden Linger sichtbar. Erst wenn eine
+                // andere Handlung beginnt, ist die kleine Szene wirklich vorbei.
+                if (step !is RoutineStep.Act && step !is RoutineStep.Linger) {
+                    activeActivity = null
+                }
                 val current = avatar ?: return
                 if (current.fed || current.occurrenceId != null) return   // echte Erinnerung hat Vorrang
                 val avatarPx = with(density) { current.sizeDp.dp.toPx() }
@@ -894,12 +899,8 @@ fun DockScreen(
                         avatarIdleJob?.cancel()
                         delay(ARRIVAL_SETTLE_MS)
                         val performance = AvatarAnimations.reactionFor(species, step.topic)
-                        try {
-                            MatrixAnimator.playTimed(performance.frames, performance.holdsMs) { f ->
-                                avatar = avatar?.copy(frame = f)
-                            }
-                        } finally {
-                            activeActivity = null
+                        MatrixAnimator.playTimed(performance.frames, performance.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
                         }
                         startAvatarIdleLoop(species, mood)
                     }
