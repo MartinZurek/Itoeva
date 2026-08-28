@@ -45,6 +45,12 @@ sealed interface RoutineStep {
     /** Eine Phase des Krafttrainings auf dem Sportplatz. */
     data class Training(val phase: PlayEffects.TrainingPhase) : RoutineStep
 
+    /** Eine Phase des Musizierens mit Gitarre und sichtbaren Noten. */
+    data class Music(val phase: PlayEffects.MusicPhase) : RoutineStep
+
+    /** Eine Phase des Malens; das Bild entsteht Schritt fuer Schritt. */
+    data class Painting(val phase: PlayEffects.PaintingPhase) : RoutineStep
+
     /** Eine Phase der Angel-Szene am Teich. */
     data class Fishing(val phase: PlayEffects.FishingPhase) : RoutineStep
 
@@ -692,35 +698,31 @@ object PlayRoutines {
                     RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE)          // schuettelt sich aus
                 )
             ),
-            // Musizieren im Park: das Handwerkszeug wird diesmal MITGENOMMEN statt an einem
-            // festen Platz benutzt - dieselbe Reaktions-Animation, nur unterwegs statt an der
-            // Werkbank, mit der Gitarre sichtbar in der Hand (siehe PlayEffects.Carried.GUITAR).
+            // Musizieren im Park: Stimmen, Spielen, Abschluss - Gitarre und Noten sind Teil der
+            // Szene statt eines winzigen getragenen Symbols.
             PlayRoutine(
                 listOf(
-                    RoutineStep.Take(PlayEffects.Carried.GUITAR),
                     RoutineStep.GoToPlace(PlayScene.Place.PARK),
                     RoutineStep.Stroll(0.40f),
-                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Music(PlayEffects.MusicPhase.TUNE),
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Music(PlayEffects.MusicPhase.PLAY),
                     RoutineStep.Linger(6_000L),
-                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
-                    RoutineStep.Act(AnimationType.CREATIVITY),
-                    RoutineStep.Linger(4_000L),
-                    RoutineStep.Drop
+                    RoutineStep.Music(PlayEffects.MusicPhase.FINALE),
+                    RoutineStep.Linger(4_000L)
                 )
             ),
-            // Staffelei mit hinaus auf die Wiese - dasselbe Prinzip, ein anderes Motiv: das Bild
-            // entsteht draussen statt in der eigenen Ecke.
+            // Staffelei auf der Wiese: Erst Skizze, dann Flaeche, dann das fertige Bild zeigen.
             PlayRoutine(
                 listOf(
-                    RoutineStep.Take(PlayEffects.Carried.EASEL),
                     RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
                     RoutineStep.Stroll(0.55f),
-                    RoutineStep.Act(AnimationType.CREATIVITY),
+                    RoutineStep.Painting(PlayEffects.PaintingPhase.SKETCH),
+                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Painting(PlayEffects.PaintingPhase.PAINT),
                     RoutineStep.Linger(5_000L),
-                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
-                    RoutineStep.Act(AnimationType.CREATIVITY),
-                    RoutineStep.Linger(3_000L),
-                    RoutineStep.Drop
+                    RoutineStep.Painting(PlayEffects.PaintingPhase.REVEAL),
+                    RoutineStep.Linger(4_000L)
                 )
             )
         )

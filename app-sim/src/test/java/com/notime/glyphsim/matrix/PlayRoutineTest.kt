@@ -163,6 +163,27 @@ class PlayRoutineTest {
     }
 
     @Test
+    fun `Kreativitaet enthaelt vollstaendige Musik und Malablaeufe`() {
+        val routines = PlayRoutines.allFor(AnimationType.CREATIVITY)
+        val music = routines.first { it.steps.any { step -> step is RoutineStep.Music } }
+        val painting = routines.first { it.steps.any { step -> step is RoutineStep.Painting } }
+        assertTrue(
+            music.steps.filterIsInstance<RoutineStep.Music>().map { it.phase } ==
+                PlayEffects.MusicPhase.entries
+        )
+        assertTrue(
+            painting.steps.filterIsInstance<RoutineStep.Painting>().map { it.phase } ==
+                PlayEffects.PaintingPhase.entries
+        )
+        assertTrue(music.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.PARK
+        })
+        assertTrue(painting.steps.any {
+            it is RoutineStep.GoToPlace && it.place == PlayScene.Place.MEADOW
+        })
+    }
+
+    @Test
     fun `alle besonderen Bewegungsaktivitaeten werden tatsaechlich gezogen`() {
         val seen = mutableSetOf<String>()
         val random = kotlin.random.Random(27)

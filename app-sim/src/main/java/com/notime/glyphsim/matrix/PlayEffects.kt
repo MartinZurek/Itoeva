@@ -1,5 +1,6 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationType
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
@@ -35,8 +36,61 @@ object PlayEffects {
     /** Krafttraining mit einer Hantel. */
     enum class TrainingPhase { WARM_UP, LIFT, REST }
 
+    /** Gitarre stimmen, spielen und mit einem Akkord enden. */
+    enum class MusicPhase { TUNE, PLAY, FINALE }
+
+    /** Ein Bild von der Skizze bis zur fertigen Leinwand. */
+    enum class PaintingPhase { SKETCH, PAINT, REVEAL }
+
     /** Werfen, Warten und der Fang - die drei sichtbaren Phasen einer Angel-Szene am Teich. */
     enum class FishingPhase { CAST, WAIT, CATCH }
+
+    /**
+     * Ein kleines, bewegtes Weltzeichen fuer jede Haupttaetigkeit. Die Koerperanimation allein
+     * kann auf dem groben Raster nicht erklaeren, ob die Figur gerade liest, trinkt oder arbeitet;
+     * das jeweilige Motiv macht den laufenden [RoutineStep.Act] ohne Text eindeutig.
+     */
+    fun activityCells(
+        topic: AnimationType,
+        avatarCellX: Int,
+        avatarCellY: Int,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val pulse = (scenePhase / 3) % 3
+        val ox = avatarCellX + 12
+        val oy = avatarCellY + AvatarGeometry.HEADROOM + 4
+        val points: List<Pair<Int, Int>> = when (topic) {
+            AnimationType.SLEEP -> listOf(0 to 7, 1 to 6, 2 to 6, 0 to 5, 1 to 4, 2 to 4) +
+                listOf(5 to 3, 6 to 2, 7 to 2, 5 to 1, 6 to 0, 7 to 0)
+            AnimationType.REST -> listOf(0 to 5, 1 to 5, 2 to 5, 3 to 5, 0 to 6, 3 to 6,
+                0 to 7, 1 to 7, 2 to 7, 3 to 7, 4 to 6) + listOf(1 to (3 - pulse), 3 to (2 - pulse))
+            AnimationType.BOOK -> listOf(0 to 3, 1 to 2, 2 to 3, 3 to 2, 4 to 3,
+                0 to 4, 1 to 4, 2 to 5, 3 to 4, 4 to 4, 2 to 4)
+            AnimationType.MINDFULNESS -> listOf(-pulse to 4, pulse to 4, 0 to 4,
+                -2 - pulse to 4, 2 + pulse to 4, 0 to 2, 0 to 6)
+            AnimationType.LOVE -> listOf(0 to 2, 1 to 1, 2 to 2, 3 to 1, 4 to 2,
+                0 to 3, 1 to 4, 2 to 5, 3 to 4, 4 to 3)
+            AnimationType.DRINK -> listOf(0 to 3, 1 to 3, 2 to 3, 0 to 4, 2 to 4,
+                0 to 5, 1 to 5, 2 to 5, 3 to 4) + listOf(1 to (1 - pulse))
+            AnimationType.MEDICINE -> listOf(0 to 2, 1 to 1, 2 to 0, 3 to 0, 4 to 1,
+                4 to 2, 3 to 3, 2 to 4, 1 to 4, 0 to 3, 2 to 2)
+            AnimationType.WORK -> listOf(0 to 1, 1 to 1, 2 to 1, 3 to 1, 4 to 1,
+                0 to 2, 4 to 2, 0 to 3, 1 to 3, 2 to 3, 3 to 3, 4 to 3,
+                1 to 4, 2 to 4, 3 to 4, (1 + pulse) to 2)
+            AnimationType.FOCUS -> (-3..3).map { it to 3 } + (-3..3).map { 0 to (it + 3) } +
+                listOf(-2 to 1, 2 to 1, -2 to 5, 2 to 5)
+            AnimationType.MOVE -> listOf((pulse - 1) to 1, 0 to 2, 1 to 3, 0 to 4,
+                -1 to 5, 1 to 5, -2 to 6, 2 to 6)
+            AnimationType.CREATIVITY -> listOf(0 to 3, 1 to 2, 2 to 2, 3 to 3,
+                3 to 4, 2 to 5, 1 to 5, 0 to 4, 1 to 3, 2 to 4, 4 to (2 - pulse))
+            AnimationType.GENERAL -> listOf(0 to 3, 2 to 3, 4 to 3,
+                pulse to 1, pulse to 5)
+        }
+        return points.map { (x, y) ->
+            SceneCell(ox + x, oy + y, PlayScene.GLOW - 300, isLight = true)
+        }.filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+    }
 
     fun footballCells(
         avatarCellX: Int,
@@ -148,6 +202,79 @@ object PlayEffects {
                 add(SceneCell(centerX + 7, centerY + dy, PlayScene.GLOW - 350, isLight = true))
             }
         }.distinctBy { it.x to it.y }
+    }
+
+    fun musicCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: MusicPhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val ox = avatarCellX + 11
+        val oy = avatarCellY + AvatarGeometry.HEADROOM + 7
+        val guitar = listOf(
+            3 to -4, 3 to -3, 3 to -2, 2 to -1,
+            0 to 0, 1 to -1, 2 to 0, 3 to 0, 4 to 0,
+            0 to 1, 1 to 2, 2 to 2, 3 to 2, 4 to 1
+        )
+        val count = when (phase) {
+            MusicPhase.TUNE -> 1
+            MusicPhase.PLAY -> 3
+            MusicPhase.FINALE -> 5
+        }
+        val drift = scenePhase % 5
+        val notes = (0 until count).flatMap { i ->
+            val x = ox + 7 + i * 3
+            val y = oy - 2 - i * 3 - if (phase == MusicPhase.PLAY) drift / 2 else 0
+            listOf(x to y, x to y - 1, x + 1 to y - 2)
+        }
+        return (
+            guitar.map { (x, y) -> SceneCell(ox + x, oy + y, PlayScene.FURNITURE) } +
+                notes.map { (x, y) -> SceneCell(x, y, PlayScene.GLOW - 250, isLight = true) }
+            ).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+    }
+
+    fun paintingCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: PaintingPhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val ox = avatarCellX + 15
+        val oy = avatarCellY + AvatarGeometry.HEADROOM + 1
+        val frame = buildList {
+            for (x in 0..8) {
+                add(x to 0)
+                add(x to 8)
+            }
+            for (y in 0..8) {
+                add(0 to y)
+                add(8 to y)
+            }
+            add(2 to 9)
+            add(6 to 9)
+            add(1 to 10)
+            add(7 to 10)
+        }
+        val progress = when (phase) {
+            PaintingPhase.SKETCH -> 3
+            PaintingPhase.PAINT -> 6
+            PaintingPhase.REVEAL -> 8
+        }
+        val picture = buildList {
+            for (row in 2..progress) {
+                val width = 1 + ((row + scenePhase / 4) % 5)
+                for (x in 2..(2 + width).coerceAtMost(7)) add(x to row)
+            }
+        }
+        return (
+            frame.map { (x, y) -> SceneCell(ox + x, oy + y, PlayScene.FURNITURE) } +
+                picture.map { (x, y) ->
+                    SceneCell(ox + x, oy + y, PlayScene.GLOW - 350, isLight = true)
+                }
+            ).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
     }
 
     /**

@@ -1,10 +1,23 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationType
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PlayEffectsTest {
+
+    @Test
+    fun `jede Haupttaetigkeit hat ein eigenes begrenztes Weltmotiv`() {
+        val motifs = AnimationType.entries.map { topic ->
+            PlayEffects.activityCells(topic, 8, 20, 4, 48).also { cells ->
+                assertTrue("$topic hat kein Weltmotiv", cells.isNotEmpty())
+                assertTrue("$topic verlaesst das Spielfeld", cells.all { it.x in 0 until 48 })
+            }.map { it.x to it.y }.toSet()
+        }
+        assertEquals(AnimationType.entries.size, motifs.distinct().size)
+    }
 
     @Test
     fun `Fussball bleibt sichtbar und der Trick hebt ihn deutlich an`() {
@@ -38,6 +51,22 @@ class PlayEffectsTest {
         val lift = PlayEffects.trainingCells(12, 20, PlayEffects.TrainingPhase.LIFT, 0)
         assertTrue(lift.minOf { it.y } < warm.minOf { it.y } - 10)
         assertTrue(lift.size >= 20)
+    }
+
+    @Test
+    fun `Musik bekommt vom Stimmen bis zum Finale mehr sichtbare Noten`() {
+        val tune = PlayEffects.musicCells(8, 20, PlayEffects.MusicPhase.TUNE, 0, 48)
+        val finale = PlayEffects.musicCells(8, 20, PlayEffects.MusicPhase.FINALE, 0, 48)
+        assertTrue(finale.size > tune.size + 8)
+        assertTrue(finale.all { it.x in 0 until 48 })
+    }
+
+    @Test
+    fun `Gemaelde waechst von der Skizze bis zur fertigen Leinwand`() {
+        val sketch = PlayEffects.paintingCells(8, 20, PlayEffects.PaintingPhase.SKETCH, 0, 48)
+        val reveal = PlayEffects.paintingCells(8, 20, PlayEffects.PaintingPhase.REVEAL, 0, 48)
+        assertTrue(reveal.size > sketch.size)
+        assertTrue(reveal.all { it.x in 0 until 48 })
     }
 
     @Test

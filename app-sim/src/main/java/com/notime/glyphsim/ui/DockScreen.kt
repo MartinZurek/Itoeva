@@ -409,6 +409,8 @@ fun DockScreen(
         // PlayEffects. Beides zusammen beantwortet beim Zuschauen die Frage "was hat er vor?",
         // die eine blosse Bewegung offenlaesst.
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
+        /** Das eigene Weltmotiv des gerade laufenden allgemeinen Handlungsschritts. */
+        var activeActivity by remember { mutableStateOf<AnimationType?>(null) }
         /** Sichtbare Phase der langen Drachen-Szene; null ausserhalb dieses Ablaufs. */
         var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
         /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
@@ -417,6 +419,10 @@ fun DockScreen(
         var basketballPhase by remember { mutableStateOf<PlayEffects.BasketballPhase?>(null) }
         /** Sichtbare Krafttrainingsphase mit Hantel. */
         var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
+        /** Sichtbare Musikphase mit Gitarre und Noten. */
+        var musicPhase by remember { mutableStateOf<PlayEffects.MusicPhase?>(null) }
+        /** Sichtbare Malphase mit wachsendem Bild. */
+        var paintingPhase by remember { mutableStateOf<PlayEffects.PaintingPhase?>(null) }
         /** Sichtbare Phase der Angel-Szene am Teich; null ausserhalb dieses Ablaufs. */
         var fishingPhase by remember { mutableStateOf<PlayEffects.FishingPhase?>(null) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
@@ -873,6 +879,7 @@ fun DockScreen(
                     }
 
                     is RoutineStep.Act -> {
+                        activeActivity = step.topic
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
                         if (step.topic == AnimationType.DRINK) {
@@ -887,8 +894,12 @@ fun DockScreen(
                         avatarIdleJob?.cancel()
                         delay(ARRIVAL_SETTLE_MS)
                         val performance = AvatarAnimations.reactionFor(species, step.topic)
-                        MatrixAnimator.playTimed(performance.frames, performance.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
+                        try {
+                            MatrixAnimator.playTimed(performance.frames, performance.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
+                        } finally {
+                            activeActivity = null
                         }
                         startAvatarIdleLoop(species, mood)
                     }
@@ -954,6 +965,30 @@ fun DockScreen(
                             AvatarAnimations.reactionFor(species, AnimationType.MOVE)
                         }
                         MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Music -> {
+                        musicPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = AvatarAnimations.reactionFor(species, AnimationType.CREATIVITY)
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Painting -> {
+                        paintingPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = if (step.phase == PlayEffects.PaintingPhase.REVEAL) {
+                            AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.LOOK_AROUND)
+                        } else {
+                            AvatarAnimations.reactionFor(species, AnimationType.CREATIVITY)
+                        }
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
                             avatar = avatar?.copy(frame = f)
                         }
                         startAvatarIdleLoop(species, mood)
@@ -1069,6 +1104,9 @@ fun DockScreen(
                 footballPhase = null
                 basketballPhase = null
                 trainingPhase = null
+                activeActivity = null
+                musicPhase = null
+                paintingPhase = null
                 fishingPhase = null
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
@@ -2596,6 +2634,18 @@ fun DockScreen(
                         )
                     )
                 }
+                val activity = activeActivity
+                if (current != null && activity != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.activityCells(
+                            topic = activity,
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
                 val training = trainingPhase
                 if (current != null && training != null && !avatarHidden && sceneCellPx > 0f) {
                     addAll(
@@ -2604,6 +2654,30 @@ fun DockScreen(
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             phase = training,
                             scenePhase = scenePhase
+                        )
+                    )
+                }
+                val music = musicPhase
+                if (current != null && music != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.musicCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = music,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val painting = paintingPhase
+                if (current != null && painting != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.paintingCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = painting,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
                         )
                     )
                 }
