@@ -21,6 +21,14 @@ import java.io.File
  * Die Helligkeitsstufen sind bewusst als unterschiedlich "dichte" Zeichen gewaehlt, damit sich
  * die Tiefenstaffelung (Boden schwach, Moebel mittel, Licht hell) beim Ueberfliegen ablesen
  * laesst - genau darum geht es beim Beurteilen einer Szene.
+ *
+ * **Warum ZWEI Ansichten.** Lange zeichnete dieses Werkzeug jede Effektzelle als `*` und die
+ * Figur als `A` - unabhaengig davon, wie hell sie wirklich waren. Damit war ausgerechnet die
+ * Information weg, an der Lesbarkeit haengt: ob sich ein Motiv vom Moebel dahinter ueberhaupt
+ * abhebt. Ein Bogen, der jede Requisite gleich hell zeigt, bescheinigt jedem Entwurf Trennung,
+ * die er gar nicht hat. Darum steht jetzt zuerst das VERBUNDBILD - alles durch dieselbe Rampe,
+ * so wie es das Auge trifft - und darunter die EBENENKARTE, die nur noch die Herkunft nennt.
+ * Beurteilt wird oben, zugeordnet wird unten.
  */
 object ScenePreview {
 
@@ -33,7 +41,9 @@ object ScenePreview {
         brightness >= 1100 -> '+'
         brightness >= 700 -> '='
         brightness >= 400 -> '-'
-        brightness > 0 -> '.'
+        // Die ausgesparte Zelle (PlayInk.VOID) ist deckend schwarz gemalt, aber eben SCHWARZ -
+        // sie muss hier als Dunkelheit erscheinen, sonst sieht der Bogen eine Trennung als Flaeche.
+        brightness > 60 -> '.'
         else -> ' '
     }
 
@@ -58,13 +68,21 @@ object ScenePreview {
         acquisitions: Set<PlayScene.Acquisition> = emptySet()
     ): String {
         val grid = Array(floorY + 3) { CharArray(width) { ' ' } }
+        val layer = Array(floorY + 3) { CharArray(width) { ' ' } }
+
+        // Eine einzige Schreibstelle fuer alle Ebenen: das Bild bekommt die WIRKLICHE Helligkeit,
+        // die Ebenenkarte daneben nur die Herkunft. Solange beides in derselben Funktion passiert,
+        // koennen die zwei Ansichten nicht auseinanderlaufen.
+        fun put(x: Int, y: Int, brightness: Int, mark: Char) {
+            if (y !in grid.indices || x !in 0 until width) return
+            grid[y][x] = ramp(brightness)
+            layer[y][x] = if (brightness <= 0) ' ' else mark
+        }
 
         for (cell in PlayScene.build(
             place, phase, width, floorY, dayPhase, 1f, lampOn, tvOn, station, species, acquisitions
         )) {
-            if (cell.y in grid.indices && cell.x in 0 until width) {
-                grid[cell.y][cell.x] = ramp(cell.brightness)
-            }
+            put(cell.x, cell.y, cell.brightness, '.')
         }
 
         if (showAvatar) {
@@ -76,22 +94,21 @@ object ScenePreview {
             val frame = AvatarAnimations.idlePose(species)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
-                    if (frame[y * AvatarGeometry.SIZE + x] <= 0) continue
-                    val gy = originY + y
-                    val gx = originX + x
-                    if (gy in grid.indices && gx in 0 until width) grid[gy][gx] = 'A'
+                    val lit = frame[y * AvatarGeometry.SIZE + x]
+                    if (lit <= 0) continue
+                    put(originX + x, originY + y, lit, 'A')
                 }
             }
             // Vordere Ebene ZULETZT - sie liegt auch im Bild vor der Figur.
             if (station != null) {
                 for (cell in PlayScene.buildFront(place, station, width, floorY, dayPhase, 1f, species)) {
-                    if (cell.y in grid.indices && cell.x in 0 until width) grid[cell.y][cell.x] = 'X'
+                    put(cell.x, cell.y, cell.brightness, 'X')
                 }
             }
         }
 
         for (cell in overlay) {
-            if (cell.y in grid.indices && cell.x in 0 until width) grid[cell.y][cell.x] = '*'
+            put(cell.x, cell.y, cell.brightness, '*')
         }
 
         val header = buildString {
@@ -100,8 +117,11 @@ object ScenePreview {
             append(" / ").append(dayPhase)
             if (station != null) append(" / an ").append(station)
         }
-        return header + "\n" + grid.joinToString("\n") { String(it).trimEnd() } +
-            "\n   A=Figur  X=davor  @#+=- von hell nach dunkel\n"
+        val picture = grid.joinToString("\n") { String(it).trimEnd() }
+        val map = layer.joinToString("\n") { String(it).trimEnd() }
+        return header + "\n" + picture +
+            "\n   [Bild]    @#+=-. hell nach dunkel - SO trifft es das Auge\n" + map +
+            "\n   [Ebenen]  .=Kulisse  A=Figur  X=davor  *=Effekt\n"
     }
 
     /**

@@ -20,6 +20,14 @@ import kotlin.math.sin
  */
 object PlayEffects {
 
+    /**
+     * Die Breite, mit der beim Seitenwechsel gerechnet wird - die des breitesten Motivs.
+     *
+     * Bewusst nicht die des jeweiligen Motivs: Ein Motiv, das waehrend seines Ablaufs waechst,
+     * wuerde sonst mitten in der Bewegung von rechts nach links springen.
+     */
+    private const val MOTIF_WIDTH = 13
+
     /** Was sich tragen laesst. Bewusst wenige, klar unterscheidbare Formen - auf drei mal drei
      *  Zellen ist alles darueber hinaus nicht mehr auseinanderzuhalten. */
     enum class Carried { BOOK, FOOD, CUP, GUITAR, EASEL }
@@ -46,9 +54,20 @@ object PlayEffects {
     enum class FishingPhase { CAST, WAIT, CATCH }
 
     /**
-     * Ein kleines, bewegtes Weltzeichen fuer jede Haupttaetigkeit. Die Koerperanimation allein
-     * kann auf dem groben Raster nicht erklaeren, ob die Figur gerade liest, trinkt oder arbeitet;
-     * das jeweilige Motiv macht den laufenden [RoutineStep.Act] ohne Text eindeutig.
+     * Ein kleines, bewegtes Weltzeichen fuer jede Haupttaetigkeit.
+     *
+     * **Es ist kein Symbol neben der Figur, sondern ein Gegenstand in ihrer Welt.** Der
+     * Unterschied ist nicht Groesse, sondern Zugehoerigkeit: Der Gegenstand steht in derselben
+     * Tonwertordnung wie die Kulisse ([PlayInk]), bekommt sein Licht aus derselben Richtung,
+     * wirft einen Schatten auf denselben Boden und ist mit einer schwarzen Kante aus dem
+     * Hintergrund freigestellt. Erst das macht aus einem hellen Fleck ein Ding.
+     *
+     * **Warum die Motive kleiner geworden sind.** Die vorige Fassung zeichnete bis zu 18 Zellen
+     * breite Requisiten - breiter als die Figur selbst. Auf dem Kontaktbogen war die Folge nicht
+     * Deutlichkeit, sondern das Gegenteil: Das Motiv lief durch die halbe Kulisse, ueberdeckte
+     * Moebel, kreuzte den Bodenstrich und lief unten aus der Welt heraus. Ein Gegenstand wird
+     * nicht dadurch erkennbar, dass er gross ist, sondern dadurch, dass er eine geschlossene
+     * Silhouette hat und ringsum Luft.
      */
     fun activityCells(
         topic: AnimationType,
@@ -57,171 +76,364 @@ object PlayEffects {
         scenePhase: Int,
         widthCells: Int
     ): List<SceneCell> {
+        // Dieselbe Herleitung des Bodens wie bei den grossen Szenen weiter unten - die unterste
+        // Koerperzeile der Figur IST die Standlinie.
+        val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val floorY = groundY + 1
         val beat = (scenePhase / 3) % 4
-        val useRight = avatarCellX + AvatarGeometry.SIZE + 18 < widthCells
+
+        // Zur rechten Seite, solange das ganze Motiv dort Platz hat - sonst gespiegelt nach links.
+        // Gemessen wird mit der groessten vorkommenden Motivbreite, nicht mit der jeweiligen:
+        // sonst spraenge ein Motiv beim Wachsen mitten im Ablauf auf die andere Seite.
+        val useRight = avatarCellX + AvatarGeometry.SIZE + 2 + MOTIF_WIDTH <= widthCells
         val direction = if (useRight) 1 else -1
         val ox = if (useRight) avatarCellX + AvatarGeometry.SIZE + 2 else avatarCellX - 3
-        val oy = avatarCellY + AvatarGeometry.HEADROOM + 2
-        val bright = PlayScene.GLOW - 180
-        val mid = PlayScene.GLOW - 520
-        val dim = PlayScene.FURNITURE
-        val cells = mutableListOf<SceneCell>()
-        fun cell(x: Int, y: Int, level: Int = bright, light: Boolean = true) {
-            cells += SceneCell(ox + direction * x, oy + y, level, light)
-        }
-        fun line(x1: Int, y1: Int, x2: Int, y2: Int, level: Int = mid) {
-            val steps = maxOf(kotlin.math.abs(x2 - x1), kotlin.math.abs(y2 - y1)).coerceAtLeast(1)
-            for (i in 0..steps) cell(
-                x1 + (x2 - x1) * i / steps,
-                y1 + (y2 - y1) * i / steps,
-                level
-            )
-        }
-        fun box(left: Int, top: Int, right: Int, bottom: Int, level: Int = dim) {
-            line(left, top, right, top, level)
-            line(left, bottom, right, bottom, level)
-            line(left, top, left, bottom, level)
-            line(right, top, right, bottom, level)
-        }
-        when (topic) {
+
+        /** Eine Zeichenflaeche, deren unterste Zeile [lift] Zellen ueber dem Boden liegt. */
+        fun place(height: Int, lift: Int = 0) =
+            PlayInk.Sketch(ox, groundY - height + 1 - lift, direction, widthCells, floorY)
+
+        return when (topic) {
             AnimationType.SLEEP -> {
-                // Mond plus drei versetzt aufsteigende Z: ein lesbares Nachtbild, kein Buchstabe.
-                for (y in 0..8) for (x in 0..8) {
-                    val d = (x - 4) * (x - 4) + (y - 4) * (y - 4)
-                    if (d in 10..20 && !(x < 4 && y in 2..6)) cell(x + 5, y - 2, mid)
-                }
+                // Sichel und aufsteigende Z. Der Mond wird freigestellt, die Z ausdruecklich
+                // NICHT: Sie sind kein Gegenstand, sondern ein Laut - eine schwarze Kante um sie
+                // herum machte harte Aufkleber daraus.
+                val moon = place(height = 6, lift = 9)
+                moon.art(
+                    6, 0,
+                    " ###",
+                    "##  ",
+                    "##  ",
+                    "##  ",
+                    "##  ",
+                    " ###"
+                )
+                moon.spark(7, 1)
+                // Die Z steigen LINKS neben dem Mond auf, nicht durch ihn hindurch: Zwei
+                // luftige Zeichen, die sich ueberlagern, ergeben keins von beiden.
+                val breath = place(height = 13, lift = 3)
                 for (i in 0..2) {
-                    val x = 1 + i * 5
-                    val y = 12 - i * 5 - beat
-                    line(x, y, x + 3, y, bright)
-                    line(x + 3, y, x, y + 3, bright)
-                    line(x, y + 3, x + 3, y + 3, bright)
+                    val drift = (beat + i) % 2
+                    val y = 9 - i * 4 - drift
+                    val level = if (i == beat % 3) PlayInk.SPARK else PlayInk.EDGE
+                    breath.stamp(drift, y, level, "###", "  #", " # ", "###")
                 }
+                moon.render(grounded = false) + breath.render(carve = false)
             }
+
             AnimationType.REST -> {
-                // Grosse Tasse mit sichtbarem Henkel und wanderndem Dampf.
-                box(1, 7, 10, 15)
-                line(2, 15, 9, 15, bright)
-                box(10, 9, 14, 13, mid)
-                line(0, 17, 14, 17, dim)
-                for (x in listOf(3, 7, 10)) {
-                    cell(x + beat % 2, 4 - (beat + x) % 3, mid)
-                    cell(x, 2 - (beat + x) % 2, mid)
-                }
-            }
-            AnimationType.BOOK -> {
-                // Zwei grosse Seiten, Ruecken, Textzeilen und eine sichtbar umblaetternde Ecke.
-                line(0, 6, 7, 4, dim); line(7, 4, 14, 6, dim)
-                line(0, 6, 0, 15, dim); line(14, 6, 14, 15, dim)
-                line(0, 15, 7, 17, bright); line(7, 17, 14, 15, bright)
-                line(7, 4, 7, 17, mid)
-                for (y in listOf(8, 11, 14)) {
-                    line(2, y, 5, y, mid); line(9, y, 12, y, mid)
-                }
-                line(13 - beat, 5 + beat, 13, 8, bright)
-            }
-            AnimationType.MINDFULNESS -> {
-                // Atemwellen wachsen um einen ruhigen Mittelpunkt.
-                cell(5, 9, bright)
-                for (radius in 3..(5 + beat)) {
-                    cell(5 - radius, 9, mid); cell(5 + radius, 9, mid)
-                    cell(5, 9 - radius, mid); cell(5, 9 + radius, mid)
-                    if (radius >= 5) {
-                        cell(5 - radius + 1, 9 - radius + 2, dim)
-                        cell(5 + radius - 1, 9 - radius + 2, dim)
-                        cell(5 - radius + 1, 9 + radius - 2, dim)
-                        cell(5 + radius - 1, 9 + radius - 2, dim)
+                // Tasse mit Henkel, dazu Dampf, der nach oben duenner wird.
+                val cup = place(height = 7)
+                cup.art(
+                    0, 0,
+                    "######   ",
+                    "#++++#   ",
+                    "#++++####",
+                    "#++++#  #",
+                    "#++++####",
+                    "#++++#   ",
+                    " ####    "
+                )
+                cup.spark(1, 1)
+                val steam = place(height = 6, lift = 7)
+                for (i in 0..2) {
+                    val x = 1 + i * 2
+                    val sway = ((beat + i) % 3) - 1
+                    val level = if (i == 1) PlayInk.EDGE else PlayInk.DETAIL
+                    for (y in 0..4) {
+                        steam.dot(x + if ((y + beat) % 2 == 0) sway else 0, 5 - y, level)
                     }
                 }
+                cup.render(grounded = true) + steam.render(carve = false)
             }
-            AnimationType.LOVE -> {
-                // Ein grosses schlagendes Herz mit zwei kleinen Satelliten.
-                val swell = beat % 2
-                val heart = listOf(
-                    1 to 2, 2 to 1, 3 to 1, 4 to 2, 5 to 1, 6 to 1, 7 to 2,
-                    0 to 3, 8 to 3, 0 to 4, 8 to 4, 1 to 5, 7 to 5,
-                    2 to 6, 6 to 6, 3 to 7, 5 to 7, 4 to 8
+
+            AnimationType.BOOK -> {
+                // Aufgeschlagenes Buch: zwei Seiten, ein Ruecken, Zeilen als Binnenzeichnung -
+                // und eine Ecke, die sich hebt. Die Zeilen liegen auf DETAIL, damit sie die
+                // Silhouette nicht zerschneiden.
+                val book = place(height = 7)
+                book.art(
+                    0, 0,
+                    " ###     ### ",
+                    "#####   #####",
+                    "#+++##+##+++#",
+                    "#+++##+##+++#",
+                    "#+++##+##+++#",
+                    "#####################".take(13),
+                    " ########### "
                 )
-                heart.forEach { (x, y) -> cell(x + 3, y + 3 - swell, bright) }
-                cell(1, 4 - beat, mid); cell(15, 7 - (beat + 2) % 4, mid)
-                line(3, 16, 13, 16, dim)
+                // Die umblaetternde Seite hebt sich UEBER die Oberkante des Buches. Zeichnete
+                // man sie innerhalb der Seiten, aenderte sich nur die Binnenzeichnung - und ein
+                // Buch, dessen Umriss sich nie ruehrt, blaettert aus der Ferne nicht um.
+                val turn = beat % 4
+                for (i in 0 until turn) book.dot(6 + i, -1 - i, PlayInk.BODY)
+                book.render(grounded = true)
             }
+
+            AnimationType.MINDFULNESS -> {
+                // Atemringe um einen ruhigen Kern. Nichts davon ist Materie, also keine
+                // Freistellung und kein Schatten - es soll durch die Welt hindurchscheinen.
+                val rings = place(height = 13, lift = 3)
+                val cx = 6
+                val cy = 6
+                val open = PlayInk.swing(scenePhase, 12)
+                rings.spark(cx, cy)
+                for (step in 0..2) {
+                    val r = 2 + step * 2 + (open * 2).toInt()
+                    if (r > 6) continue
+                    // Als Licht gezeichnet, nicht als Materie: Atem hat keinen Umriss, also
+                    // trennt er sich ueber die Helligkeit. Auf DETAIL laege er genau dort, wo
+                    // auch Regale und Moebel liegen, und verschwaende vor ihnen.
+                    val level = PlayInk.EDGE
+                    for (i in 0 until r) {
+                        rings.dot(cx + r - i, cy - i, level)
+                        rings.dot(cx - i, cy - r + i, level)
+                        rings.dot(cx - r + i, cy + i, level)
+                        rings.dot(cx + i, cy + r - i, level)
+                    }
+                }
+                rings.render(carve = false)
+            }
+
+            AnimationType.LOVE -> {
+                // Ein Herz, das wirklich schlaegt: zwei Takte gross, zwei klein, und die
+                // Bodenlinie darunter bleibt frei, damit es schwebt.
+                val big = beat % 2 == 0
+                val heart = place(height = if (big) 8 else 7, lift = if (big) 5 else 6)
+                if (big) {
+                    heart.art(
+                        0, 0,
+                        " ##   ## ",
+                        "#########",
+                        "#########",
+                        "#########",
+                        " ####### ",
+                        "  #####  ",
+                        "   ###   ",
+                        "    #    "
+                    )
+                } else {
+                    heart.art(
+                        1, 0,
+                        " #   #  ",
+                        "####### ",
+                        "####### ",
+                        " ##### ",
+                        "  ###  ",
+                        "   #   "
+                    )
+                }
+                heart.spark(2, 1)
+                heart.render()
+            }
+
             AnimationType.DRINK -> {
-                // Karaffe schenkt sichtbar in ein grosses Glas; Pegel und Tropfen bewegen sich.
-                box(7, 7, 14, 16)
-                for (y in (13 - beat)..15) line(8, y, 13, y, mid)
-                line(1, 3, 5, 5, dim); line(1, 3, 0, 9, dim); line(0, 9, 5, 11, dim)
-                line(5, 5, 5, 11, dim)
-                for (y in 6..(10 + beat)) cell(6, y, bright)
-                cell(6, 12 + beat % 2, bright)
+                // Glas mit steigendem Pegel und einem Tropfen, der von oben nachfaellt.
+                val glass = place(height = 8)
+                glass.art(
+                    0, 0,
+                    "#    #",
+                    "#    #",
+                    "#    #",
+                    "#    #",
+                    "#    #",
+                    "#    #",
+                    " #  # ",
+                    " #### "
+                )
+                // Nur bis Zeile 5: darunter zieht sich das Glas zusammen, und eine volle Zeile
+                // dort loeschte genau die Verjuengung, an der man ein Glas erkennt.
+                val level = 1 + beat
+                for (y in (6 - level).coerceAtLeast(1)..5) glass.line(1, y, 4, y, PlayInk.DETAIL)
+                glass.spark(1, 1)
+                val drop = place(height = 4, lift = 9)
+                drop.dot(2, beat, PlayInk.SPARK)
+                drop.dot(2, beat + 1, PlayInk.EDGE)
+                glass.render(grounded = true) + drop.render(carve = false)
             }
+
             AnimationType.MEDICINE -> {
-                // Verbandskasten als Kontext, davor eine zweifarbige grosse Kapsel.
-                box(1, 3, 14, 16)
-                line(5, 7, 10, 7, bright); line(7, 5, 7, 10, bright)
-                line(3, 14, 6, 11, mid); line(6, 11, 11, 16, mid)
-                line(3, 15, 7, 11, bright); line(7, 11, 12, 16, dim)
-                cell(13, 1 - beat % 2, mid)
+                // Kapsel, quer, mit sichtbarer Trennnaht und einem wandernden Glanzpunkt.
+                // Die Kapsel hebt und senkt sich. Ein Glanzpunkt allein genuegt nicht: Er liegt
+                // INNERHALB der Silhouette, und was sich nur dort aendert, bewegt nichts.
+                val bob = (PlayInk.swing(scenePhase, 12) * 2).toInt()
+                val pill = place(height = 5, lift = 6 + bob)
+                pill.art(
+                    0, 0,
+                    " ###### ",
+                    "#+++####",
+                    "#+++####",
+                    "#+++####",
+                    " ###### "
+                )
+                // Ueber alle vier Takte, nicht ueber drei: Sonst steht der Glanzpunkt im
+                // ersten und im letzten Takt an derselben Stelle und die Kapsel wirkt tot.
+                pill.spark(1 + beat, 1)
+                pill.render()
             }
+
             AnimationType.WORK -> {
-                // Grosser Laptop mit Codezeilen, wanderndem Cursor und Tastatur.
-                box(0, 2, 15, 12)
-                for ((row, length) in listOf(5 to 8, 7 to 11, 9 to 6)) {
-                    line(2, row, length, row, mid)
+                // Aufgeklappter Rechner: Mattscheibe mit Zeilen, blinkender Schreibmarke und
+                // einer Tastatur, die als eigene Flaeche darunter liegt.
+                val laptop = place(height = 8)
+                laptop.art(
+                    0, 0,
+                    "##########",
+                    "#++++++++#",
+                    "#++++++++#",
+                    "#++++++++#",
+                    "#++++++++#",
+                    "##########",
+                    "##########",
+                    " ######## "
+                )
+                for ((row, len) in listOf(2 to 5, 3 to 7)) {
+                    laptop.line(2, row, 1 + len, row, PlayInk.DETAIL)
                 }
-                cell(3 + beat * 3, 10, bright)
-                line(3, 13, 12, 13, dim); line(1, 16, 14, 16, bright)
-                for (x in 3..12 step 2) cell(x, 15, mid)
-            }
-            AnimationType.FOCUS -> {
-                // Zielscheibe mit drei Ringen; der Punkt wandert zur Mitte und trifft.
-                val cx = 8; val cy = 9
-                for (r in listOf(3, 6, 8)) {
-                    cell(cx - r, cy, dim); cell(cx + r, cy, dim)
-                    cell(cx, cy - r, dim); cell(cx, cy + r, dim)
-                    cell(cx - r + 1, cy - r + 1, mid); cell(cx + r - 1, cy - r + 1, mid)
-                    cell(cx - r + 1, cy + r - 1, mid); cell(cx + r - 1, cy + r - 1, mid)
-                }
-                line(0, cy, 16, cy, mid); line(cx, 1, cx, 17, mid)
-                cell(14 - beat * 2, 3 + beat * 2, bright)
-                if (beat == 3) for (d in -1..1) { cell(cx + d, cy, bright); cell(cx, cy + d, bright) }
-            }
-            AnimationType.MOVE -> {
-                // Zwei grosse versetzte Fussabdruecke plus vorbeiziehende Tempolinien.
-                val shift = beat * 2
+                // Die unterste Zeile waechst, die Schreibmarke steht an ihrem Ende: geschrieben
+                // wird gerade jetzt.
+                val typed = 2 + beat
+                laptop.line(2, 4, 1 + typed, 4, PlayInk.DETAIL)
+                laptop.spark(2 + typed, 4)
+                // Ein Zeichen, das den Umriss VERLAESST. Alles, was sich nur innerhalb der
+                // Mattscheibe aendert, laesst die Silhouette unberuehrt - und eine Silhouette,
+                // die sich nie ruehrt, wirkt aus zwei Metern Abstand wie ein Standbild, egal wie
+                // fleissig es darin blinkt.
+                val signal = place(height = 4, lift = 8)
                 for (i in 0..1) {
-                    val x = 4 + i * 7 - shift % 4
-                    val y = 5 + i * 6
-                    box(x, y, x + 3, y + 6, if (i == beat % 2) bright else mid)
-                    cell(x - 1, y - 2, mid); cell(x + 1, y - 3, mid); cell(x + 3, y - 2, mid)
+                    val step = (beat + i * 2) % 4
+                    if (step > 2) continue
+                    signal.dot(3 + i * 3, 2 - step, if (step == 0) PlayInk.SPARK else PlayInk.EDGE)
                 }
-                line(0, 2 + beat, 6, 2 + beat, dim)
-                line(9, 16 - beat, 16, 16 - beat, dim)
+                laptop.render(grounded = true) + signal.render(carve = false)
             }
+
+            AnimationType.FOCUS -> {
+                // Zielscheibe auf einem Fuss; der Pfeil kommt von aussen und steckt im vierten
+                // Takt in der Mitte. Anlauf und Treffer statt gleichmaessigem Wandern.
+                val target = place(height = 11)
+                val cx = 5
+                val cy = 4
+                // Aussen Material, innen Binnenzeichnung: Zwei Ringe auf derselben Stufe
+                // verschmelzen zu einer gefuellten Raute, sobald ein Pfeil sie kreuzt.
+                for ((ring, r) in listOf(4, 2).withIndex()) {
+                    val level = if (ring == 0) PlayInk.BODY else PlayInk.DETAIL
+                    for (i in 0 until r) {
+                        target.dot(cx + r - i, cy - i, level)
+                        target.dot(cx - i, cy - r + i, level)
+                        target.dot(cx - r + i, cy + i, level)
+                        target.dot(cx + i, cy + r - i, level)
+                    }
+                }
+                target.art(
+                    cx - 1, cy - 1,
+                    "###",
+                    "###",
+                    "###"
+                )
+                target.line(cx, cy + 5, cx, 10, PlayInk.BODY)
+                target.line(cx - 2, 10, cx + 2, 10, PlayInk.BODY)
+                if (beat == 3) {
+                    // Der Treffer: Der Pfeil ist weg, in der Mitte steht der Funke.
+                    target.spark(cx, cy)
+                } else {
+                    // Anflug von aussen, immer mit Abstand zum aeusseren Ring - ein Pfeil, der
+                    // die Scheibe schon beruehrt, hat nichts mehr vor.
+                    val travel = 7 - beat * 2
+                    target.line(cx + travel, cy - travel, cx + travel + 2, cy - travel - 2)
+                    target.spark(cx + travel, cy - travel)
+                }
+                target.render(grounded = true)
+            }
+
+            AnimationType.MOVE -> {
+                // Zwei Abdruecke auf dem Boden: der frische hell, der vorige schon verblassend.
+                // Dazu zwei Tempolinien, die NICHT freigestellt werden - sie sind Luftzug.
+                // Der Boden zieht vorbei, nicht die Figur: Die Abdruecke wandern Takt fuer Takt
+                // nach hinten aus dem Bild. Zuvor wechselten sie nur die Helligkeit an fester
+                // Stelle - das liest sich als Flackern, nicht als Gehen.
+                val steps = place(height = 5)
+                for (i in 0..2) {
+                    val x = 1 + i * 4 - beat
+                    if (x < 0) continue
+                    val y = if (i % 2 == 0) 0 else 2
+                    val level = if (i == 2) PlayInk.BODY else PlayInk.DETAIL
+                    steps.stamp(x, y, level, "###", "###", " ##")
+                }
+                val wind = place(height = 6, lift = 5)
+                for (i in 0..1) {
+                    val y = 1 + i * 3
+                    val from = (beat - i).coerceAtLeast(0)
+                    wind.line(from, y, from + 3, y, PlayInk.DETAIL)
+                }
+                steps.render(carve = true) + wind.render(carve = false)
+            }
+
             AnimationType.CREATIVITY -> {
-                // Palette mit Loch, Pinsel und wechselndem Funkenschauer.
-                val palette = listOf(3 to 3, 5 to 2, 8 to 2, 11 to 4, 12 to 7, 10 to 10,
-                    7 to 11, 3 to 10, 1 to 7, 1 to 5)
-                for (i in palette.indices) {
-                    val a = palette[i]; val b = palette[(i + 1) % palette.size]
-                    line(a.first, a.second, b.first, b.second, dim)
+                // Palette mit Daumenloch und Farbklecksen, dazu ein Pinsel, der sie beruehrt.
+                val palette = place(height = 9, lift = 2)
+                palette.art(
+                    0, 0,
+                    " ######## ",
+                    "##########",
+                    "###    ###",
+                    "###    ###",
+                    "##########",
+                    " ######## ",
+                    "  ######  "
+                )
+                for ((i, spot) in listOf(2 to 1, 6 to 1, 8 to 3, 3 to 5).withIndex()) {
+                    palette.dot(spot.first, spot.second, PlayInk.DETAIL)
                 }
-                for ((x, y) in listOf(4 to 5, 8 to 4, 10 to 7, 6 to 9)) cell(x, y, bright)
-                line(10, 13, 16, 1, bright); line(9, 13, 11, 14, mid)
-                cell(14, 4 - beat, mid); cell(2, 2 - beat % 2, mid)
+                // Der leuchtende Klecks wandert, statt nur die Stufe zu wechseln: Eine reine
+                // Helligkeitsaenderung an fester Stelle liest sich als Flackern, nicht als Tun.
+                val wet = listOf(2 to 1, 6 to 1, 8 to 3, 3 to 5)[beat]
+                palette.spark(wet.first, wet.second)
+                // Der Pinsel liegt AUF der Palette und wandert darueber - vorher zeigte er nach
+                // unten aus dem Motiv heraus und wurde am Boden abgeschnitten.
+                // Schrittweite 12 - genau eine volle Taktfolge, damit Pinsel und Klecks
+                // denselben Atem haben.
+                val stroke = PlayInk.swing(scenePhase, 12)
+                val brushX = 2 + (stroke * 4).toInt()
+                // Der Pinsel ragt ueber die Palette hinaus - innerhalb ihrer Flaeche waere er
+                // nur eine andere Farbe auf demselben Umriss.
+                palette.line(brushX, 1, brushX + 2, -2)
+                palette.spark(brushX + 2, -2)
+                palette.render(grounded = false)
             }
+
             AnimationType.GENERAL -> {
-                // Klarer Sternausbruch statt unbestimmter Punkte: kurzer lebendiger Alltagsmoment.
-                val cx = 8; val cy = 9; val radius = 4 + beat
-                for ((dx, dy) in listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1,
-                    1 to 1, -1 to 1, 1 to -1, -1 to -1)) {
-                    line(cx + dx * 2, cy + dy * 2, cx + dx * radius, cy + dy * radius, mid)
+                // Ein Funke, der aufblitzt und wieder zusammenfaellt - der kleine Alltagsmoment.
+                // Ohne Freistellung: Licht hat keine Kante.
+                // Hoch genug, dass der Funke ueber der Sitzgruppe steht: Ein Lichtzeichen ohne
+                // Freistellung braucht freien Grund, sonst liest man beides als ein Muster.
+                val burst = place(height = 9, lift = 6)
+                val cx = 4
+                val cy = 4
+                // Hoechstens drei Zellen weit. Eine groessere Reichweite fuellte den halben Raum
+                // mit Licht, das heller ist als jede Lampe darin - und nahm damit der Figur die
+                // Aufmerksamkeit, statt einen kleinen Moment zu setzen.
+                val reach = 1 + (PlayInk.swing(scenePhase, 12) * 3).toInt()
+                burst.spark(cx, cy)
+                for ((dx, dy) in listOf(
+                    1 to 0, -1 to 0, 0 to 1, 0 to -1, 1 to 1, -1 to 1, 1 to -1, -1 to -1
+                )) {
+                    // Die Diagonalen bleiben kuerzer als die Achsen - ein Stern mit vier langen
+                    // und vier kurzen Strahlen liest sich als Funkeln, acht gleich lange als Rad.
+                    val arme = if (dx != 0 && dy != 0) 1 else reach
+                    // Ab dem ersten Ring, nicht ab dem zweiten: Sonst steht im engsten Takt
+                    // nur der Kern da, und ein einzelner Punkt ist kein Funke, sondern Staub.
+                    for (r in 1..arme + 1) {
+                        burst.dot(
+                            cx + dx * r,
+                            cy + dy * r,
+                            if (r <= arme) PlayInk.EDGE else PlayInk.DETAIL
+                        )
+                    }
                 }
-                box(cx - 2, cy - 2, cx + 2, cy + 2, bright)
-                cell(cx, cy, bright)
+                burst.render(carve = false)
             }
         }
-        return cells.filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
     }
 
     fun footballCells(
@@ -619,24 +831,35 @@ object PlayEffects {
      * Bauch, wo der Gegenstand von der Silhouette verschluckt wuerde.
      */
     fun carriedCells(item: Carried, avatarCellX: Int, avatarCellY: Int): List<SceneCell> {
-        val ox = avatarCellX + CARRY_OFFSET_X
-        val oy = avatarCellY + CARRY_OFFSET_Y
-        return artFor(item).map { (x, y) ->
-            SceneCell(ox + x, oy + y, PlayScene.GLOW - 400, isLight = true)
-        }
+        val sketch = PlayInk.Sketch(
+            originX = avatarCellX + CARRY_OFFSET_X,
+            originY = avatarCellY + CARRY_OFFSET_Y,
+            direction = 1,
+            widthCells = UNBOUNDED,
+            floorY = UNBOUNDED
+        )
+        artFor(sketch, item)
+        // Freistellung ist hier KEIN Feinschliff, sondern die ganze Sache: Der getragene
+        // Gegenstand liegt vor dem Koerper, und der Koerper leuchtet mit voller Helligkeit.
+        // Ohne den schwarzen Ring ringsum liegt ein Ding mittlerer Helligkeit auf einer helleren
+        // Flaeche - und ist damit nicht dunkler oder heller als sie, sondern schlicht nicht da.
+        return sketch.render(carve = true)
     }
 
-    private fun artFor(item: Carried): List<Pair<Int, Int>> = when (item) {
-        // Buch: geschlossener Block mit angedeutetem Ruecken.
-        Carried.BOOK -> listOf(0 to 0, 1 to 0, 2 to 0, 0 to 1, 2 to 1, 0 to 2, 1 to 2, 2 to 2)
-        // Schale mit Inhalt.
-        Carried.FOOD -> listOf(0 to 0, 2 to 0, 0 to 1, 1 to 1, 2 to 1, 1 to 2)
-        // Becher mit Henkel.
-        Carried.CUP -> listOf(0 to 0, 1 to 0, 0 to 1, 1 to 1, 2 to 1, 0 to 2, 1 to 2)
-        // Gitarre: schmaler Hals oben, runder Korpus darunter.
-        Carried.GUITAR -> listOf(1 to -1, 1 to 0, 0 to 1, 1 to 1, 2 to 1, 0 to 2, 1 to 2, 2 to 2)
-        // Staffelei: Dreibein mit aufgespannter Leinwand obenauf.
-        Carried.EASEL -> listOf(0 to 0, 1 to 0, 2 to 0, 1 to 1, 0 to 2, 2 to 2)
+    private fun artFor(s: PlayInk.Sketch, item: Carried) = when (item) {
+        // Buch: geschlossener Deckel mit abgesetztem Ruecken links.
+        Carried.BOOK -> s.art(0, 0, "###", "##+", "##+", "###")
+        // Schale mit Inhalt und einem Glanzpunkt darauf.
+        Carried.FOOD -> {
+            s.art(0, 0, "#  #", "####", " ## ")
+            s.spark(2, 0)
+        }
+        // Becher: Koerper links, Henkel rechts angesetzt.
+        Carried.CUP -> s.art(0, 0, "###", "#+##", "#+ #", "###")
+        // Gitarre: schmaler Hals oben, Korpus mit Schallloch darunter.
+        Carried.GUITAR -> s.art(0, -1, " # ", " # ", "###", "#+#", "###")
+        // Staffelei: aufgespannte Leinwand ueber einem Dreibein.
+        Carried.EASEL -> s.art(0, 0, "####", "#++#", "####", "# # ")
     }
 
     /**
@@ -693,6 +916,10 @@ object PlayEffects {
 
     /** Wie lange ein Blitz dauert - lang genug, um ihn zu bemerken, kurz genug, um nicht zu stoeren. */
     const val SPARK_DURATION_MS = 520
+
+    /** Kein Rand: Der getragene Gegenstand haengt an der Figur und wird mit ihr beschnitten,
+     *  nicht an der Spielfeldkante. */
+    private const val UNBOUNDED = Int.MAX_VALUE
 
     private const val CARRY_OFFSET_X = 11
     // Im hohen Raster: 9 Zeilen unter der Figur plus deren Kopffreiheit (siehe AvatarGeometry).
