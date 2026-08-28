@@ -127,7 +127,7 @@ jobs:
 
     steps:
       - name: Repository auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 1
@@ -343,14 +343,14 @@ jobs:
       # in diesem Job kein Git-Credential herum. fetch-depth: 0, weil aus einem shallow
       # Klon kein Bundle erzeugt werden kann.
       - name: Repository auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 0
           ref: main
 
       - name: Node einrichten
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
 
@@ -846,12 +846,12 @@ jobs:
       # -----------------------------------------------------------------------------------
       # TESTS auf genau dem Stand, der spaeter committet wird.
       # -----------------------------------------------------------------------------------
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       # Das Glyph Matrix SDK ist nicht eingecheckt (siehe app/libs/README.txt); ohne
       # Platzhalter laesst sich :app nicht einmal konfigurieren. app/libs/ ist NICHT
@@ -970,7 +970,7 @@ jobs:
 
       - name: Testberichte sichern
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: claude-primary-test-reports
           path: |
@@ -1364,7 +1364,7 @@ jobs:
       # Die Envelopes selbst gehen NICHT ins Uebergabepaket - sie enthalten Prompt und
       # Modellantwort und damit Repositoryinhalte. Nur die ausgewerteten Metadaten.
       - name: Uebergabepaket hochladen
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: claude-primary-handoff
           path: ${{ runner.temp }}/handoff/
@@ -1476,7 +1476,7 @@ jobs:
 
       - name: Diagnosepaket hochladen
         if: failure() && steps.forensics.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: claude-primary-forensics
           path: ${{ runner.temp }}/forensics/
@@ -1506,13 +1506,13 @@ jobs:
       # Zugangsdaten bleiben persistiert - dieser Job soll pushen duerfen, und hier laeuft
       # kein Modellcode, der sie missbrauchen koennte.
       - name: Repository auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: main
 
       - name: Uebergabepaket laden
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: claude-primary-handoff
           path: handoff-download
@@ -1789,7 +1789,7 @@ jobs:
 
       - name: Uebergabe-Diagnose hochladen
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: claude-primary-publish-evidence
           path: ${{ runner.temp }}/handoff/evidence.json
