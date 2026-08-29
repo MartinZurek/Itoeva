@@ -148,26 +148,32 @@ object PlayEffects {
             }
 
             AnimationType.BOOK -> {
-                // Aufgeschlagenes Buch: ZWEI GETRENNTE Seiten mit echter Luecke am Ruecken statt
-                // einer durchgehenden Silhouette - nur eine Luecke liest sich aus der Distanz als
-                // "zwei Haelften", eine einzige zusammenhaengende Flaeche dagegen als ein Klotz.
-                // Die Zeilen aus abwechselndem BODY/DETAIL sind Text-Andeutung, keine Fuellung.
+                // Aufgeschlagenes Buch: ZWEI HOHLE Seiten (nur der Rahmen auf BODY, keine
+                // gefuellte Flaeche) mit einer Textzeile, die pro Takt dazukommt - dieselbe Idee
+                // wie bei der Schriftrolle (AvatarSignatureAnimations.scrollFrames): "es passiert
+                // gerade etwas mit dem Text" liest sich ueberzeugender als jede Silhouette allein,
+                // und eine leere, gefuellte Flaeche wirkt aus der Distanz nur wie ein Klotz.
                 val book = place(height = 6)
                 book.art(
                     0, 0,
                     "  ###   ###  ",
                     " ##### ##### ",
-                    " #+#+# #+#+# ",
-                    " ##### ##### ",
-                    " #+#+# #+#+# ",
+                    " #   # #   # ",
+                    " #   # #   # ",
+                    " #   # #   # ",
                     " ##### ##### "
                 )
+                for (line in 0 until beat) {
+                    val y = 2 + line
+                    book.line(2, y, 4, y, PlayInk.DETAIL)
+                    book.line(8, y, 10, y, PlayInk.DETAIL)
+                }
                 // Die umblaetternde Seite hebt sich UEBER die Oberkante des Buches, genau an der
-                // Luecke. Zeichnete man sie innerhalb der Seiten, aenderte sich nur die
-                // Binnenzeichnung - und ein Buch, dessen Umriss sich nie ruehrt, blaettert aus der
-                // Ferne nicht um.
-                val turn = beat % 4
-                for (i in 0 until turn) book.dot(6 + i, -1 - i, PlayInk.BODY)
+                // Luecke - im letzten Takt, wenn auch die letzte Zeile steht.
+                if (beat == 3) {
+                    book.dot(6, -1, PlayInk.BODY)
+                    book.dot(7, -2, PlayInk.BODY)
+                }
                 book.render(grounded = true)
             }
 
@@ -458,15 +464,26 @@ object PlayEffects {
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
         val floorY = groundY + 1
         val direction = if ((scenePhase / 5) % 2 == 0) 1 else -1
+
+        // VOR der Ballposition berechnet, nicht danach: Der Schuss muss wissen, wohin er trifft.
+        val goalRight = widthCells - 3
+        val goalLeft = (goalRight - 12).coerceAtLeast(0)
+        val goalTop = groundY - 9
+
         val centerX = when (phase) {
             FootballPhase.DRIBBLE -> avatarCellX + 15 + direction * 2
             FootballPhase.AIM -> avatarCellX + 17
-            FootballPhase.KICK -> avatarCellX + 23
+            // Vorher avatarCellX + 23, unabhaengig vom Tor - traf es nur zufaellig, wenn die
+            // Figur genau richtig stand, und lag sonst davor oder daneben. Jetzt wie beim
+            // Basketballkorb: die Zielposition selbst entscheidet, nicht der Abstand zur Figur.
+            FootballPhase.KICK -> (goalLeft + goalRight) / 2
             FootballPhase.TRICK -> avatarCellX + 12 + direction * 4
         }.coerceIn(2, (widthCells - 3).coerceAtLeast(2))
         val centerY = when (phase) {
             FootballPhase.DRIBBLE, FootballPhase.AIM -> groundY - 1
-            FootballPhase.KICK -> groundY - 7
+            // Sichtbar INNERHALB des Tors, nicht nur auf seiner Anflughoehe - sonst haengt der
+            // Ball vor der Torlinie in der Luft, statt drin zu liegen.
+            FootballPhase.KICK -> goalTop + 5
             FootballPhase.TRICK -> groundY - 13
         }
 
@@ -491,9 +508,6 @@ object PlayEffects {
             for (i in 1..4) trail.dot(-i * 2, i / 2, PlayInk.DETAIL)
         }
 
-        val goalRight = widthCells - 3
-        val goalLeft = (goalRight - 12).coerceAtLeast(0)
-        val goalTop = groundY - 9
         val goal = PlayInk.Sketch(goalLeft, goalTop, 1, widthCells, floorY)
         goal.box(0, 0, goalRight - goalLeft, groundY - goalTop, PlayInk.BODY)
         for (x in 2 until (goalRight - goalLeft) step 2) {
