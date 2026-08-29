@@ -927,8 +927,19 @@ object PlayTalk {
             else -> Headline.SMALL_TALK
         }
 
-        // **Der Spielstand steht im Spiel immer zur Verfuegung** und kommt gleich nach einer
-        // dringenden Bitte.
+        // **Nachahmen kommt gleich nach einer dringenden Bitte - noch VOR dem Spielstand.**
+        //
+        // Gemeldet als "das sehe ich nicht": Im Spielmodus sind `game` und `development` so gut
+        // wie IMMER gesetzt (siehe [gather], `includeGame = true` in DockScreen). Stand dieser
+        // Vorschlag - wie in der ersten Fassung - erst hinter `Offer.ShowGame` und `Offer.ShowPath`,
+        // waren die zwei erlaubten Plaetze in der Praxis fast immer schon durch die beiden belegt,
+        // bevor die Pruefung ueberhaupt erreicht wurde. Das Nachahmen ist aber der Anlass, aus dem
+        // heraus jemand gerade JETZT auf die Figur tippt ("was macht er da eigentlich") - es muss
+        // vor allem stehen, was bloss nuetzlich, aber nicht gerade sichtbar ist.
+        val mirrored = doing?.topic?.takeIf { it in knowledge.missing }
+        if (mirrored != null && offers.size < MAX_OFFERS) offers += Offer.Add(mirrored)
+
+        // **Der Spielstand steht im Spiel immer zur Verfuegung.**
         //
         // Er stand frueher dauerhaft am unteren Bildrand. Das war die alte Bauweise "alles ist
         // immer zu sehen" - dieselbe, aus der auch der Tagesstand oben stammte. Beim Umbau auf
@@ -953,14 +964,11 @@ object PlayTalk {
         // Tagesziel seit einer Woche nicht erreicht, ist mit einer zusaetzlichen Gewohnheit nicht
         // geholfen - das waere die Antwort "dann nimm dir noch mehr vor".
         if (offers.size < MAX_OFFERS && knowledge.advice.isNotEmpty()) offers += Offer.ShowAdvice
-        if (offers.size < MAX_OFFERS) {
-            // **Nachahmen vor Vorschlagen.** Tut er gerade etwas, das der Nutzer selbst noch gar
-            // nicht als Gewohnheit hat, ist das der bessere Anlass als eine durchrotierte
-            // Standardauswahl - der Nutzer SIEHT gerade, was er ihm vorschlaegt, statt es nur zu
-            // lesen. Trifft das nicht zu (er tut nichts Vorschlagbares, oder es gibt dafuer schon
-            // eine Erinnerung), bleibt es bei der bisherigen Rotation.
-            val mirrored = doing?.topic?.takeIf { it in knowledge.missing }
-            (mirrored ?: nextSuggestion(knowledge, rotation))?.let { offers += Offer.Add(it) }
+        // Kein Nachahmen zur Hand (er tut gerade nichts Vorschlagbares, oder es gibt dafuer schon
+        // eine Erinnerung) - dann bei der bisherigen, durchrotierten Auswahl. Nie beides: ein
+        // zweiter Add-Vorschlag waere wieder die Liste, die [nextSuggestion] gerade vermeidet.
+        if (mirrored == null && offers.size < MAX_OFFERS) {
+            nextSuggestion(knowledge, rotation)?.let { offers += Offer.Add(it) }
         }
         // Was er ueber den Nutzer weiss, bietet er erst an, wenn es etwas zu sagen gibt - und
         // hinter allem anderen: Es ist die Frage, die man einmal stellt, nicht jeden Tag.

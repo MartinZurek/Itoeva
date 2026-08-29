@@ -747,6 +747,29 @@ class PlayTalkTest {
     }
 
     @Test
+    fun `das Nachahmen darf nicht hinter Spielstand und Entwicklung verschwinden`() {
+        // Regression: Im Spielmodus sind `game` und `development` so gut wie immer gesetzt (siehe
+        // PlayTalk.gather, includeGame = true in DockScreen) und fuellten beide erlaubten Plaetze,
+        // bevor die Nachahm-Pruefung ueberhaupt erreicht wurde - der Mechanismus fuer sich genommen
+        // war richtig, aber in der echten App praktisch nie sichtbar.
+        val knowledge = known(
+            plan = somePlan(),
+            missing = listOf(AnimationType.MOVE),
+            game = PlayTalk.Game(level = 2, xp = 30, coins = 5, pantry = 2)
+        ).copy(
+            development = PlayTalk.Development(
+                path = null, stage = 0, sharePercent = 0, enoughData = false, nextStageLevel = 5
+            )
+        )
+        val doing = PlayTalk.Doing(PlayScene.Place.PARK, AnimationType.MOVE)
+        val focus = PlayTalk.focus(knowledge, rotation = 0, doing = doing)
+        assertTrue(
+            "das Nachahmen fehlt - Spielstand/Entwicklung haben beide Plaetze belegt",
+            focus.offers.any { it is PlayTalk.Offer.Add && it.topic == AnimationType.MOVE }
+        )
+    }
+
+    @Test
     fun `ohne Plan bietet er nichts an, was einen Plan voraussetzt`() {
         // Ein "Zeig mir den Plan", wenn es keinen gibt, waere eine Zeile, die ins Leere fuehrt.
         val fresh = known()
