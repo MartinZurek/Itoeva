@@ -1605,6 +1605,22 @@ object PlayScene {
             vLine(5, 12, 16) + vLine(8, 12, 16) + hLine(5, 8, 12)
     )
 
+    /**
+     * Zweites, niedrigeres Haus - eine Strasse aus lauter gleichen Fassaden ist eine Tapete.
+     *
+     * Auf [Place.STREET] nicht mehr verwendet (siehe dessen Kommentar), auf [Place.CITY]
+     * weiterhin - dort sorgt gerade der Wechsel zwischen [HOUSE] und diesem hier fuer die
+     * Reihe unterschiedlich hoher Fassaden, die eine Stadt von einer einzelnen Strasse
+     * unterscheidet.
+     */
+    private val HOUSE_LOW = Prop(
+        width = 11, height = 12,
+        art = hLine(0, 10, 0) + vLine(0, 1, 11) + vLine(10, 1, 11) +
+            hLine(1, 9, 6) +
+            vLine(2, 2, 5) + vLine(4, 2, 5) + vLine(7, 2, 5) + vLine(9, 2, 5) +
+            vLine(4, 8, 11) + vLine(7, 8, 11) + hLine(4, 7, 8)
+    )
+
     // ---- Draussen: kleines Stadt- und Naturbeiwerk ----
     //
     // Die Silhouetten sind fuer Itoevas Seitenansicht neu gezeichnet, orientieren sich aber an
