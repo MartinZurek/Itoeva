@@ -58,12 +58,6 @@ data class TopicFirstRow(
 /** Erster jemals gespeicherter Zeitpunkt je Erinnerungs-ID, siehe [AvatarFeedEventDao.observeFirstOccurrencePerReminder]. */
 data class ReminderFirstOccurrence(val reminderId: Long, val firstEpochMillis: Long)
 
-/**
- * Eine beantwortete Ausloesung mit ihrem Knoten - die Grundlage der Neigungsrechnung des
- * Skillbaums (siehe [com.notime.glyphsim.skilltree.BranchAffinity]).
- */
-data class AnsweredNodeRow(val nodeId: String, val fedAtMillis: Long)
-
 @Dao
 interface AvatarFeedEventDao {
     @Insert
@@ -310,25 +304,6 @@ interface AvatarFeedEventDao {
      * Setzt die Statistik EINES Avatars zurueck. Bewusst nur dessen Zeilen: die Avatare sind
      * voneinander unabhaengig, ein Zuruecksetzen soll nicht die Historie der anderen mitnehmen.
      */
-    /**
-     * Die beantworteten Ausloesungen eines Avatars, die zu einem Knoten gehoeren - juengste
-     * zuerst, gedeckelt auf [limit].
-     *
-     * `fedAtMillis IS NOT NULL` ist die eigentliche Bedingung: Eine uebergangene Erinnerung sagt
-     * nichts ueber Interesse aus. `nodeId IS NOT NULL` schliesst selbstgezeichnete Animationen und
-     * MEDICINE aus, die zu keinem Zweig gehoeren.
-     *
-     * Der Deckel haelt die Rechnung unabhaengig von der Laenge der Historie: Aeltere Antworten
-     * waeren durch die Halbwertszeit ohnehin fast gewichtslos (siehe
-     * [com.notime.glyphsim.skilltree.BranchAffinity]), wuerden aber jede Abfrage teurer machen.
-     */
-    @Query(
-        "SELECT nodeId, fedAtMillis FROM avatar_feed_events " +
-            "WHERE profileId = :profileId AND fedAtMillis IS NOT NULL AND nodeId IS NOT NULL " +
-            "ORDER BY fedAtMillis DESC LIMIT :limit"
-    )
-    suspend fun answeredNodes(profileId: String, limit: Int): List<AnsweredNodeRow>
-
     @Query("DELETE FROM avatar_feed_events WHERE profileId = :profileId")
     suspend fun deleteForProfile(profileId: String)
 }

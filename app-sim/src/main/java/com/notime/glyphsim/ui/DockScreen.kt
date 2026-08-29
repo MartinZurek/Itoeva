@@ -2328,8 +2328,13 @@ fun DockScreen(
         //
         // Der AUFSTIEG bleibt: Er ist kein Zustand, sondern ein Ereignis. Etwas, das man erreicht
         // hat, muss in dem Moment zu sehen sein, in dem es geschieht - es hinterher nachschlagen
-        // zu koennen ist kein Ersatz dafuer. Er bleibt bis zur anschliessenden Animationswahl
-        // stehen; erst dann ist der Aufstieg als Ganzes abgeschlossen.
+        // zu koennen ist kein Ersatz dafuer.
+        //
+        // Der verdiente Skillpunkt haengt daran NICHT mehr: Frueher blieb der Glueckwunsch stehen,
+        // bis ein erzwungener Dialog die Wahl abgenommen hatte (`LevelUnlockDialog`). Freischalten
+        // ist jetzt ein Spielzug auf dem Wander-Brett (`SkillTreeScreen`, SKILLBAUM.md P11), den der
+        // Spieler jederzeit selbst macht - der Glueckwunsch bestaetigt sich deshalb von selbst nach
+        // einem Moment, statt auf eine Wahl zu warten, die vielleicht erst viel spaeter kommt.
         if (playMode) {
             val playViewModel = androidx.lifecycle.viewmodel.compose.viewModel<PlayModeViewModel>()
             val playState by playViewModel.state.collectAsStateWithLifecycle()
@@ -2347,14 +2352,9 @@ fun DockScreen(
                     avatar?.species?.let { species ->
                         PlaySound.play(context, species, PlayChime.Event.LEVEL_UP, scope)
                     }
+                    delay(LEVEL_UP_BANNER_MS)
+                    playViewModel.acknowledgeLevelUp()
                 }
-            }
-            if (playState.started) {
-                LevelUnlockDialog(
-                    profileId = AvatarSpeciesPrefs.profileId(playState.species),
-                    level = playState.level,
-                    onAllChosen = playViewModel::acknowledgeLevelUp
-                )
             }
         }
 
@@ -3077,6 +3077,11 @@ private fun isColliding(clockOffset: Offset, clockSizePx: Float, avatarOffset: O
  * gaengiger Geraete. Groesser gewaehlt, und eine ueberschneidungsfreie Platzierung ist auf
  * schmalen Displays rechnerisch unmoeglich - unabhaengig davon, wie gut man danach sucht.
  */
+/** Wie lange der Levelaufstiegs-Glueckwunsch stehen bleibt, bevor er sich selbst bestaetigt - lang
+ *  genug zum Lesen, ohne auf eine Wahl zu warten, die der Spieler vielleicht erst auf dem
+ *  Wander-Brett und viel spaeter trifft. */
+private const val LEVEL_UP_BANNER_MS = 3_200L
+
 /** Wie lange das Bild nach einem Schnappschuss aufhellt - lang genug, um es zu bemerken, kurz
  *  genug, um nicht als Fehler zu wirken. */
 private const val SNAPSHOT_FLASH_MS = 140L

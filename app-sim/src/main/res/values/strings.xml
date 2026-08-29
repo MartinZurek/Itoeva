@@ -235,11 +235,6 @@
     <string name="playmode_start">Start play mode</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Look at that – I just reached level %1$d!</string>
-    <string name="level_unlock_title">Level %1$d – new animation</string>
-    <string name="level_unlock_intro">Choose an animation. It will then appear in the skill tree and your drag bar.</string>
-    <string name="level_unlock_focused">Fits what you have been doing lately</string>
-    <string name="level_unlock_wildcard">Or something from another branch</string>
-    <string name="level_unlock_remaining">%1$d unlocks from earlier levels remaining</string>
     <string name="assistant_menu_memories">🕰️  What I remember</string>
     <string name="memories_intro">Here is what we have already been through together.</string>
     <string name="memories_empty">Nothing yet – but that comes on its own. The first thing you look after while I am here is the beginning.</string>
@@ -738,7 +733,7 @@
     <string name="a11y_skill_drag">%1$s — drag onto your companion, or use this action</string>
     <string name="a11y_skill_play">Show %1$s</string>
     <string name="skill_tree_title">Skill tree</string>
-    <string name="skill_tree_progress">%1$d of %2$d open</string>
+    <string name="skill_tree_points_available">⭐ %1$d to spend</string>
     <string name="skill_tree_state_available">next up</string>
     <string name="skill_tree_state_locked">locked</string>
     <string name="skill_tree_state_pending">not drawn yet</string>

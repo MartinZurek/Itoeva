@@ -143,11 +143,20 @@ Verbindlich für alle Pakete. Wer eine ändert, muss die betroffenen Pakete neu 
 1. **Freischaltung gilt nur für das Spiel.** Der Baum steuert ausschließlich die Zieh-Leiste. Die
    Bibliothek für echte Erinnerungen bleibt vollständig offen — ein Spielfortschritt darf nie eine
    Erinnerung sperren.
-2. **Freischalt-Angebot: 2 + 1.** Zwei Kandidaten aus dem stärksten Zweig, dazu ein Querschläger
-   aus einem anderen.
+2. ~~**Freischalt-Angebot: 2 + 1.**~~ **Ersetzt in P11.** Der Spieler wählt jetzt selbst auf dem
+   Wander-Brett, kein algorithmisches Angebot mehr — siehe P11 für die Begründung.
 3. **Cake wird Kopf von `aufbruch/feiern`.** `koerper/essen` bekommt ein neues Motiv (Teller).
 4. **`naehe` wird zuerst gezeichnet.** Einzige Gruppe ohne Charakter-Motiv.
 5. **Katalog und Zuordnung nach `:core`.** Choreografien und Zustand bleiben in `:app-sim`.
+6. **Freischaltung ist ab P11 manuell, nicht mehr algorithmisch.** Jeder Levelaufstieg gibt einen
+   Skillpunkt; der Spieler tippt selbst einen erreichbaren Nachbarknoten auf dem Brett an, statt
+   ein 2+1-Angebot vorgesetzt zu bekommen (Entscheidung vom 2026-08-29, auf Nutzerwunsch — ein
+   Skillbaum wie in Diablo 2 / dem Sphere Grid aus Final Fantasy X, den man selbst begeht).
+7. **Keine Ränge pro Knoten.** Ein Knoten bleibt einfach freigeschaltet/gesperrt, kein
+   Mehrfach-Investment wie Diablo 2s Skill-Ränge (Entscheidung vom 2026-08-29 — hält das
+   Datenmodell und die DB unverändert).
+8. **Das Brett ersetzt die Liste, es kommt nicht zusätzlich dazu.** Es gibt nur eine
+   Skillbaum-Oberfläche (Entscheidung vom 2026-08-29).
 
 ---
 
@@ -587,11 +596,56 @@ im Bild.
 
 ---
 
+### P11 — Wander-Brett: manuelle Freischaltung
+
+Ersetzt die Liste (`SkillTreeScreen.kt`) und den erzwungenen 2+1-Dialog (`LevelUnlockDialog.kt`)
+durch ein raeumliches Brett, auf dem der Spieler selbst zum naechsten Knoten geht — Vorbild:
+Diablo 2, das Sphere Grid aus Final Fantasy X. Auf Nutzerwunsch, siehe Entscheidungen 6-8 oben.
+
+- [x] `AnimationTreeLayout` (`:core`): tiefenunabhaengiges Node-Link-Layout, jede Wurzel eine
+      eigene Spur. Getestet u. a. mit einem eigens gebauten fuenfstufigen Baum — der Beleg, dass
+      eine sechste oder siebte Ebene ohne Codeaenderung funktionieren wuerde.
+- [x] Alte Automatik entfernt: `BranchAffinity`, `UnlockOffer`-Datenklasse + `UnlockOffers.build`,
+      `AvatarUnlockRepository.offerFor`, `LevelUnlockDialog`, die dafuer noetige DAO-Abfrage
+      `AvatarFeedEventDao.answeredNodes`/`AnsweredNodeRow`. `UnlockOffers.frontier`/
+      `.startingNodes` und `SkillTreeRows`/`NodeState` (Zustandsrechnung) blieben unangetastet —
+      das Brett zeichnet nur, was vorher schon berechnet wurde.
+- [x] `SkillTreeScreen.kt` neu: pan-/zoombares `Canvas` fuer Kanten + Knoten-Chips ueber
+      `Modifier.transformable`/`graphicsLayer`. Tippbar nur, was `NodeState.AVAILABLE` ist UND
+      noch ein Skillpunkt uebrig ist (`LevelUnlocks.due`).
+- [x] `SkillTreeDialog.kt` liest den Freischalt-Stand jetzt selbst aus dem Repository (voller
+      Stand statt der motiv-gefilterten Zieh-Leisten-Teilmenge) und sperrt Doppel-Taps waehrend
+      ein `unlock`-Aufruf laeuft.
+- [x] `DockScreen.kt`: der erzwungene Dialog ist weg. Der Levelaufstiegs-Glueckwunsch bestaetigt
+      sich nach `LEVEL_UP_BANNER_MS` (3,2 s) von selbst, statt auf eine abgeschlossene Wahl zu
+      warten, die jetzt erst viel spaeter auf dem Brett passieren kann.
+- [x] Strings: `level_unlock_*` (5) und `skill_tree_progress` (unbenutzt seit die Listenansicht
+      weg ist) entfernt, `skill_tree_points_available` ergaenzt — EN/DE synchron gehalten.
+
+**Bewusst nicht Teil dieser Runde:**
+- Raenge pro Knoten (Entscheidung 7).
+- Aenderungen am Bauminhalt selbst (welches Motiv wo haengt).
+- Neue DB-Entities/-Migrationen — keine noetig, `AvatarUnlockedNode` und `unlock()` gab es schon.
+
+**Prüfen:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, danach das Brett auf
+dem Geraet/Emulator ansehen — Pan/Zoom-Gesten (`Modifier.transformable`) und die feste
+`DpSize`-Berechnung des Bretts (`boardSize` in `SkillTreeScreen.kt`) sind neue Technik in diesem
+Projekt und liessen sich hier mangels Netzzugriff nicht gegenpruefen (siehe Journal).
+
+---
+
 ## Offene Punkte
 
 - [ ] Selbstgezeichnete Animationen der Nutzer: Auffang-Knoten je Hauptgruppe, Zuordnung später
       von Hand?
 - [ ] Braucht die Zieh-Leiste eine Abklingzeit? Sonst füttert man im Sekundentakt.
+- [ ] **Aus P11:** Gruppennamen als schwebende Beschriftung ueber jeder Wurzel-Spur auf dem Brett —
+      bewusst zurueckgestellt, um die Layout-Mathematik in dieser Sitzung nicht ungeprueft weiter
+      zu verschachteln. Die Wurzel-Chips selbst tragen ihr Emoji schon, der Name kommt derzeit nur
+      ueber die Bedienungshilfen-Beschreibung an.
+- [ ] **Aus P11:** Auf dem Geraet gegenpruefen, ob `Modifier.transformable` sich mit den
+      Chip-`clickable`-Handlern vertraegt wie angenommen (Taps sollen trotz Pan/Zoom-Erkennung auf
+      dem Elternelement ankommen) — ungeprueft mangels Netzzugriff, siehe Journal.
 - [x] Restliche Auffaelligkeiten aus der Motiv-Pruefung (P10): `Lighthouse`, `Rain`, `Paw`,
       `Rocket` und `Comet` in der runden Vorschau geprueft und gezielt verbessert. Strahlen,
       Tropfen und Spur bleiben aus den abgeschnittenen Ecken; Rakete und Komet sind voller lesbar.
@@ -605,6 +659,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-08-29 | P11 — Wander-Brett | **Freischaltung ist jetzt manuell: der Spieler wandert selbst ueber ein raeumliches Brett statt einen 2+1-Dialog vorgesetzt zu bekommen** — Nutzerwunsch, Vorbild Diablo 2 / das Sphere Grid aus Final Fantasy X. Kernfund: `AnimationNode.depth`/`.parentId` waren schon rein pfadbasiert (aus dem `/`-getrennten Pfad berechnet), der Baum war also schon vor dieser Sitzung beliebig tief — nur die Oberflaeche (eine Liste) und die Freischalt-Mechanik (Algorithmus) waren es nicht. Neu: `AnimationTreeLayout` (`:core`) rechnet jedem Knoten eine Brett-Position aus, tiefenunabhaengig (Test mit einem eigens gebauten fuenfstufigen Baum als Beleg). `SkillTreeScreen.kt` ist jetzt ein pan-/zoombares `Canvas`+Chip-Brett (`Modifier.transformable`/`graphicsLayer`, `boardX`/`boardY`-Hilfsfunktionen) statt einer `LazyColumn`; `SkillTreeRows`/`NodeState` (Zustandsrechnung) und `UnlockOffers.frontier`/`.startingNodes` (die "erreichbaren Nachbarn") blieben dabei komplett unangetastet, nur wie sie gezeichnet werden aenderte sich. Entfernt, weil nur die alte Automatik bediente: `BranchAffinity`, `UnlockOffer`+`UnlockOffers.build`, `AvatarUnlockRepository.offerFor`, `LevelUnlockDialog`, `AvatarFeedEventDao.answeredNodes`/`AnsweredNodeRow`. `DockScreen.kt`: der Levelaufstiegs-Glueckwunsch wartet nicht mehr auf eine abgeschlossene Wahl, sondern bestaetigt sich nach `LEVEL_UP_BANNER_MS` (3,2 s) von selbst — die Wahl kann jetzt jederzeit spaeter auf dem Brett passieren. Keine DB-Migration noetig, `AvatarUnlockedNode`/`unlock()` gab es schon. **Nicht gegengeprueft:** `dl.google.com` bleibt in dieser Umgebung gesperrt (siehe letzte Sitzung), kein Gradle-Lauf moeglich — Logik von Hand durchgerechnet, aber `Modifier.transformable` in Kombination mit Chip-`clickable` (ob Taps trotz Pan/Zoom-Erkennung ankommen) und die `boardSize`-Layoutrechnung sind neue Technik in diesem Projekt und real ungeprueft. **Fuer die naechste Sitzung:** Zuerst `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest` auf einer Maschine mit Netzzugriff, dann das Brett auf dem Geraet ansehen (Pan/Zoom, Taps, Lesbarkeit bei 79 Knoten). Offene Politur: Gruppennamen als Beschriftung ueber den Wurzel-Spuren (siehe "Offene Punkte"). |
 | 2026-08-29 | Phasen-Szenen auf PlayInk | **Die sieben grossen Mehrphasen-Szenen sind jetzt auf PlayInk umgestellt** - genau der Punkt, den die vorige Sitzung offen liess. `footballCells`, `basketballCells`, `trainingCells`, `musicCells`, `paintingCells`, `fishingCells` und `kiteCells` rechneten ihre Helligkeiten bisher alle selbst aus (`PlayScene.GLOW - 180` und aehnliche Ad-hoc-Werte); jetzt zeichnen sie ueber `PlayInk.Sketch` wie die zwoelf Weltmotive: Material auf BODY mit automatischer Kantenlicht-Berechnung, Binnenzeichnung auf DETAIL, ein Glanzpunkt als SPARK, und Freistellung nur dort, wo tatsaechlich ein Gegenstand gemeint ist (Ball, Hantel, Gitarre, Bild-Rahmen, Angelrute, Drachen) - Klaenge, Noten, Wellenringe und das gemalte Bild bleiben bewusst Licht ohne Kante. Die Bewegungslogik selbst (Positionen, Phasen, `sway`/`bob`/`drift`) ist unveraendert geblieben, nur wie daraus Zellen werden. Neuer Test `auch die grossen Phasen-Szenen benutzen nur den Zeichenkasten` in `PlayInkTest` prueft alle sieben Szenen ueber alle Phasen und mehrere `scenePhase`-Werte gegen `PlayInk.LEVELS` - dieselbe Regel, die vorher nur `everyMotif` durchlief. Die bestehenden `PlayEffectsTest`-Faelle (Ballhoehe, Notenzahl, Bildwachstum, Drachenschnur) sind von Hand gegen die neuen Koordinatenrechnungen durchgerechnet, nicht nur gelesen. **Nicht gegengeprueft:** `dl.google.com` ist in dieser Umgebung gesperrt (Proxy-Policy), das Android Gradle Plugin laesst sich deshalb nicht aufloesen - weder `:core:testDebugUnitTest` noch `:app-sim:testDebugUnitTest` noch der Kontaktbogen liefen hier. **Fuer die naechste Sitzung:** Als Erstes `gradlew.bat :app-sim:testDebugUnitTest` auf einer Maschine mit Netzzugriff laufen lassen und den Kontaktbogen fuer alle sieben Szenen ansehen, bevor weitere Pixelarbeit folgt - siehe die Warnung zu Footballs Tor und Konfetti weiter oben, dieselbe Kategorie Fehler ist hier ungeprueft moeglich. |
 | 2026-08-29 | Zeichenkasten | **Die Requisiten-Ebene hat jetzt ein Regelwerk statt zwoelf Einzelentscheidungen: PlayInk.** Vorher rechnete sich jedes Motiv seine Helligkeit selbst aus (GLOW - 180 und aehnlich) und landete damit zufaellig genau dort, wo auch die Kulisse liegt - das Buch war so hell wie das Regal dahinter, das es beruehrte. Neu sind eine eigene Tonwertstufe fuer Material (BODY, zwischen FURNITURE und GLOW), Kantenlicht immer von oben links (vom Werkzeug gesetzt, nicht vom Motiv gezeichnet), eine deckend schwarze Aussparung (VOID) rings um jede Silhouette und ein Bodenschatten unter allem, was steht. **Die Kernregel:** Materie trennt sich durch die KANTE, Licht durch HELLIGKEIT (ab EDGE) - Materiegewicht ohne Aussparung ist verboten, das ist genau der Fleck. Alle zwoelf Weltmotive und die fuenf getragenen Gegenstaende sind darauf umgestellt und deutlich kleiner geworden (hoechstens 13 statt 18 Zellen breit); Groesse war nie das Problem, fehlende Luft ringsum schon. **Zwei Werkzeugluecken geschlossen:** Der Kontaktbogen zeigte jede Effektzelle als flaches Sternchen und die Figur als blosses A - er warf also ausgerechnet die Helligkeit weg, an der Lesbarkeit haengt, und bescheinigte jedem Entwurf eine Trennung, die er nicht hatte. Jetzt steht zuerst das Verbundbild (alles durch dieselbe Rampe) und darunter die Ebenenkarte. Ausserdem zeigt er fuenf Takte statt einem. **Dabei aufgefallen:** sechs Motive aenderten sich zwar, aber nur INNERHALB ihrer Silhouette (blinkende Schreibmarke, Glanzpunkt auf der Kapsel, umblaetternde Seite zwischen den Seiten) - aus zwei Metern Abstand ein Standbild. Sie bewegen jetzt ihren Umriss. Neuer PlayInkTest haelt die Regeln fest: keine erfundenen Helligkeiten, Material ueber der Moebelstufe, nichts unter dem Boden, und die Trennungsregel. 510 Tests gruen, Lint gruen, beide APKs bauen. **Fuer die naechste Sitzung:** Die sieben grossen Phasen-Szenen (Drachen, Fussball, Basketball, Training, Musik, Malen, Angeln) rechnen ihre Helligkeiten NOCH IMMER selbst aus und sind nicht auf PlayInk umgestellt - das ist die naechste Adresse, und der Test dafuer steht schon. |
 | 2026-08-28 | Welt-Look | **Die Weltanimationen wurden nach einer Game-Design-Lesbarkeitspruefung neu inszeniert.** Die zwoelf Hauptmotive sind keine drei bis fuenf Zellen grossen Icons mehr, sondern grosse Requisiten mit Kontur, Binnenzeichnung, Bodenbezug und Bewegung: unter anderem offenes Buch mit umblaetternder Seite, Karaffe mit steigendem Glaspegel, Laptop mit Code und Cursor, Zielscheibe mit Treffpunkt, Palette mit Pinsel sowie Mond und aufsteigende Schlafzeichen. Fuss- und Basketball haben nun grosse Baelle mit Naehten, Flugspuren und ausgearbeitetem Netz; Training besitzt Matte, Bewegungsakzente und Trinkflasche, Angeln Wasserreaktion und einen klaren Fang, der Drachen eine tragfaehige Silhouette, Musik Buehne und grosse Gitarre, Malen eine wachsende Landschaft samt bewegtem Pinsel. Handlungsmotive bleiben jetzt auch waehrend der anschliessenden Szenenpause sichtbar. Ein eigener ASCII-Kontaktbogen zeigt Effekte zusammen mit Figur und Raum; Tests erzwingen Mindestgroesse, Bewegung, Eigenstaendigkeit und Randbegrenzung. |

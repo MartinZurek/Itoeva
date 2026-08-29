@@ -221,11 +221,6 @@
     <string name="playmode_start">Spielmodus starten</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Schau mal – ich bin gerade auf Level %1$d aufgestiegen!</string>
-    <string name="level_unlock_title">Level %1$d – neue Animation</string>
-    <string name="level_unlock_intro">Wähle eine Animation. Sie erscheint danach im Fähigkeitenbaum und in deiner Zieh-Leiste.</string>
-    <string name="level_unlock_focused">Passt zu dem, was du zuletzt oft gemacht hast</string>
-    <string name="level_unlock_wildcard">Oder etwas aus einem anderen Zweig</string>
-    <string name="level_unlock_remaining">Noch %1$d Freischaltungen aus früheren Leveln</string>
     <string name="assistant_menu_memories">🕰️  Woran ich mich erinnere</string>
     <string name="memories_intro">Das haben wir bisher zusammen erlebt.</string>
     <string name="memories_empty">Noch nichts – aber das kommt von selbst. Das Erste, worum du dich kümmerst, während ich da bin, ist der Anfang.</string>
@@ -731,7 +726,7 @@
     <string name="a11y_skill_drag">%1$s — auf den Begleiter ziehen, oder diese Aktion benutzen</string>
     <string name="a11y_skill_play">%1$s zeigen</string>
     <string name="skill_tree_title">Fähigkeitenbaum</string>
-    <string name="skill_tree_progress">%1$d von %2$d offen</string>
+    <string name="skill_tree_points_available">⭐ %1$d übrig</string>
     <string name="skill_tree_state_available">als Nächstes</string>
     <string name="skill_tree_state_locked">gesperrt</string>
     <string name="skill_tree_state_pending">noch nicht gezeichnet</string>

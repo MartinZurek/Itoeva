@@ -1056,10 +1056,7 @@ fun HomeScreen(
     }
 
     if (showSkillTree) {
-        SkillTreeDialog(
-            unlocked = unlockedNodes.map { it.id }.toSet(),
-            onDismiss = { showSkillTree = false }
-        )
+        SkillTreeDialog(onDismiss = { showSkillTree = false })
     }
 
     if (showStats) {

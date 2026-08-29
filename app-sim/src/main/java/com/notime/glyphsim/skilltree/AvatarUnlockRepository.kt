@@ -2,28 +2,17 @@ package com.notime.glyphsim.skilltree
 
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.data.AvatarUnlockedNode
-import kotlin.random.Random
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onStart
 
 /**
  * Der Freischalt-Stand eines Avatars: was ist offen, was steht als Naechstes zur Wahl.
  *
- * Bindeglied zwischen der reinen Rechnung ([BranchAffinity], [UnlockOffers]) und der Datenbank.
- * Die Rechnung selbst kennt weder Room noch Profile - sie laesst sich damit gegen eine erfundene
- * Historie pruefen, ohne dass ein Geraet noetig waere, und genau dort liegen die Regeln, an denen
- * sich etwas falsch machen laesst.
+ * Bindeglied zwischen der reinen Rechnung ([UnlockOffers]) und der Datenbank. Die Rechnung selbst
+ * kennt weder Room noch Profile - sie laesst sich damit ohne Geraet pruefen, und genau dort liegen
+ * die Regeln, an denen sich etwas falsch machen laesst.
  */
 class AvatarUnlockRepository(private val database: AppDatabase) {
-
-    /**
-     * Wieviele der juengsten Antworten in die Neigung eingehen.
-     *
-     * 500 ist grosszuegig gewaehlt: Bei einer Halbwertszeit von zwei Wochen ist alles darueber
-     * hinaus praktisch gewichtslos, und die Abfrage bleibt unabhaengig davon, ob jemand die App
-     * seit einem Monat oder seit drei Jahren benutzt.
-     */
-    private val historyLimit = 500
 
     /**
      * Legt die neun Hauptgruppen an, falls dieses Profil noch gar nichts offen hat.
@@ -53,44 +42,21 @@ class AvatarUnlockRepository(private val database: AppDatabase) {
      * Fuer die Zieh-Leiste (Paket P5) - sie soll mitwachsen, sobald etwas dazukommt.
      *
      * Saet beim ersten Sammeln selbst nach: Ein Aufrufer, der vor dem ersten Levelaufstieg
-     * beobachtet (und `offerFor` deshalb noch nie lief), saehe sonst dauerhaft ein leeres
-     * Profil statt der neun Startknoten. `ensureSeeded` ist idempotent, ein zusaetzlicher
-     * Aufruf von aussen bleibt also folgenlos.
+     * beobachtet (und noch nie freigeschaltet hat), saehe sonst dauerhaft ein leeres Profil statt
+     * der neun Startknoten. `ensureSeeded` ist idempotent, ein zusaetzlicher Aufruf von aussen
+     * bleibt also folgenlos.
      */
     fun observeUnlockedNodes(profileId: String): Flow<List<String>> =
         database.avatarUnlockedNodeDao().observeNodeIdsFor(profileId)
             .onStart { ensureSeeded(profileId, System.currentTimeMillis()) }
 
     /**
-     * Das Angebot zum aktuellen Stand - zwei aus dem staerksten Zweig, einer von woanders.
-     *
-     * Ein leeres Angebot ([UnlockOffer.isEmpty]) heisst: Es gibt nichts mehr freizuschalten, was
-     * schon gezeichnet ist. Der Aufrufer soll dann nichts anbieten statt eine leere Auswahl zu
-     * zeigen.
-     */
-    suspend fun offerFor(
-        profileId: String,
-        nowMillis: Long,
-        random: Random = Random
-    ): UnlockOffer {
-        ensureSeeded(profileId, nowMillis)
-        val answers = database.avatarFeedEventDao()
-            .answeredNodes(profileId, historyLimit)
-            .map { BranchAffinity.Answer(nodeId = it.nodeId, fedAtMillis = it.fedAtMillis) }
-        return UnlockOffers.build(
-            unlocked = unlockedNodes(profileId),
-            answers = answers,
-            nowMillis = nowMillis,
-            random = random
-        )
-    }
-
-    /**
      * Schaltet die Wahl des Nutzers frei.
      *
-     * Ohne Pruefung, ob der Knoten wirklich im Angebot stand: Der Aufrufer hat ihn von dort, und
-     * eine zweite Pruefung waere eine Kopie derselben Regel an einer Stelle, an der sie
-     * auseinanderlaufen kann. Was hier ankommt, wird offen.
+     * Ohne Pruefung, ob der Knoten wirklich antippbar (Grenze + Punkt uebrig) war: Das Brett
+     * prueft das bereits, bevor es diesen Aufruf ausloest, und eine zweite Pruefung hier waere eine
+     * Kopie derselben Regel an einer Stelle, an der sie auseinanderlaufen kann. Was hier ankommt,
+     * wird offen.
      */
     suspend fun unlock(profileId: String, nodeId: String, nowMillis: Long) {
         database.avatarUnlockedNodeDao().insertIfAbsent(
