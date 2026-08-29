@@ -687,6 +687,53 @@ mit Ausrichtung wurde bewusst NICHT verwendet, weil dafuer keine Vorbildstelle i
 - stattdessen eine Box mit `contentAlignment = Alignment.Center` um eine schlichte `Row`, beides
 zweifelsfrei belegt. Trotzdem: auf dem Geraet noch nicht gesehen.
 
+**~~Ersetzt in P13.~~** Auf dem Handy getestet, Nutzer-Feedback verwarf das Prinzip: Antippen
+einer Hauptgruppe sprang dorthin und nahm dabei die Ansicht auf alles andere weg - genau das
+fuehlte sich falsch an. Ersatz: ein Akkordeon, das an Ort und Stelle auf- und zuklappt, siehe P13.
+
+---
+
+### P13 — Akkordeon: aufklappen statt hinspringen
+
+Auf Nutzerwunsch, nachdem P12 auf dem Handy getestet war: **"Ich will, dass der Baum sich ganz
+aufklappen laesst, nicht, dass man automatisch immer auf einen Branche da weiter skipt... sodass
+man den gesamten Baum aufklappen kann und dann den auch sieht, aber natuerlich auch wieder
+zurueckklappen kann."** P12s `openId`-Fokus loeste genau das falsch: eine Gruppe antippen sprang
+dorthin und blendete den Rest aus. Hier bleibt jede geoeffnete Zeile stehen, egal wie viele
+gleichzeitig offen sind.
+
+- [x] `SkillTreeScreen.kt` erneut neu: `expanded: Set<String>` statt `openId: String?` - jede
+      Zeile mit Kindern klappt beim Antippen ihre Kinder direkt darunter auf/zu, **mehrere
+      gleichzeitig**, keine schliesst die andere. `visibleRows()` laeuft den Baum tiefensortiert
+      ab und gibt nur ein, was ein offener Vorfahr freigibt - eine flache Liste fuer eine
+      einfache `LazyColumn`, keine verschachtelte Compose-Struktur noetig.
+- [x] **"Alles aufklappen"/"Alles einklappen"** oben als ein Knopf (`branchIds` = alle Knoten mit
+      Kindern; `allOpen` prueft `expanded.containsAll(branchIds)`) - zeigt in einem Schritt den
+      kompletten Baum fuer die volle Uebersicht, klappt genauso in einem Schritt wieder zu.
+- [x] Zugeklappte Zeilen mit einem freischaltbaren Nachkommen bekommen einen kleinen Punkt
+      (`hasAvailableDescendant`, rekursiv) - man sieht "hier gibt es was zu holen", ohne erst
+      hineinklappen zu muessen.
+- [x] Einrueckung nach `AnimationNode.depth` direkt (`INDENT_STEP * (row.node.depth - 1)`,
+      `Dp * Int` - gegen `DockScreen.kt`s `sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE`
+      abgeglichen, nicht die unbelegte Gegenrichtung `Int * Dp`) - eine vierte Ebene braeuchte
+      hier keine Codeaenderung, dieselbe Zusage wie in P11/P12.
+- [x] Brotkrumen-Pfad (`SkillTreeBreadcrumb`), `OverviewGrid`, `BranchFan`, `HubChip` aus P12
+      entfernt - es gibt keine "aktuelle Ebene" mehr, die einen Pfad braeuchte.
+- [x] `skill_tree_overview` (P12, Brotkrumen-Beschriftung) entfernt, ungenutzt seit der Pfad weg
+      ist; `skill_tree_expand_all`/`skill_tree_collapse_all` neu, EN/DE synchron.
+
+**Bewusst nicht Teil dieser Runde:**
+- Ein raeumliches Brett im FFX-Sphere-Grid-Stil (Nutzer nannte es "noch besser waere natuerlich",
+  aber ausdruecklich als Kuer, nicht als Bedingung fuer diese Runde) - `AnimationTreeLayout`
+  (`:core`) bleibt dafuer unbenutzt im Code liegen, siehe "Offene Punkte".
+- Eine Wachstums-/Aufklapp-Animation der einzelnen Zeilen (`animateContentSize` o. ae.) - die
+  Liste blendet neu sichtbare Zeilen einfach ein, kein eigener Bewegungseffekt.
+
+**Prüfen:** Wie bei P11/P12 kein Gradle-Lauf moeglich (Netzzugriff gesperrt). Klammern/Klauseln
+von Hand nachgezaehlt (41 `{`/`}`, 127 `(`/`)`, ausgeglichen). Auf dem Geraet noch nicht gesehen -
+insbesondere, ob das Aufklappen mehrerer Hauptgruppen gleichzeitig bei 79 Knoten noch uebersichtlich
+bleibt, oder ob "Alles aufklappen" auf einem schmalen Telefon zu einer sehr langen Liste fuehrt.
+
 ---
 
 ## Offene Punkte
@@ -705,6 +752,13 @@ zweifelsfrei belegt. Trotzdem: auf dem Geraet noch nicht gesehen.
 - [ ] **Aus P12:** `AnimationTreeLayout` (`:core`) ist seit dieser Runde ungenutzt - im Code
       belassen fuer eine moegliche Kartenansicht, aber im Auge behalten, ob sie tatsaechlich
       irgendwann gebraucht wird oder eher Altlast bleibt.
+- [ ] **Aus P13:** Ein raeumliches Brett im Stil des Sphere Grid aus Final Fantasy X - vom Nutzer
+      ausdruecklich als Kuer genannt ("noch besser waere natuerlich"), nicht als Bedingung. Das
+      Akkordeon aus P13 erfuellt die eigentliche Anforderung (auf-/zuklappbar, volle Uebersicht
+      moeglich); ein FFX-artiges Brett waere eine eigene, groessere Design-Runde, die
+      `AnimationTreeLayout` endlich einen Abnehmer gaebe.
+- [ ] **Aus P13:** Auf dem Geraet gegenpruefen, ob "Alles aufklappen" bei allen 79 Knoten auf
+      einem schmalen Telefon noch scrollbar/uebersichtlich bleibt.
 - [x] Restliche Auffaelligkeiten aus der Motiv-Pruefung (P10): `Lighthouse`, `Rain`, `Paw`,
       `Rocket` und `Comet` in der runden Vorschau geprueft und gezielt verbessert. Strahlen,
       Tropfen und Spur bleiben aus den abgeschnittenen Ecken; Rakete und Komet sind voller lesbar.
@@ -718,6 +772,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-08-29 | P13 — Akkordeon | **Nutzer-Korrektur nach dem P12-Test: das Ebene-fuer-Ebene-Springen war nicht gemeint.** Zitat: "Ich will, dass der Baum sich ganz aufklappen laesst, nicht, dass man automatisch immer auf einen Branche da weiter skipt... sodass man den gesamten Baum aufklappen kann und dann den auch sieht, aber natuerlich auch wieder zurueckklappen kann." `SkillTreeScreen.kt` erneut neu: `expanded: Set<String>` ersetzt `openId: String?` - jede Zeile mit Kindern klappt ihre Kinder direkt darunter auf/zu, beliebig viele gleichzeitig, nichts verschwindet dabei. `visibleRows()` laeuft den Baum tiefensortiert ab und flacht ihn fuer eine simple `LazyColumn` ab. Ein "Alles aufklappen"/"Alles einklappen"-Knopf oben zeigt in einem Schritt den kompletten Baum (volle Uebersicht) und klappt genauso in einem Schritt wieder zu. Zugeklappte Zeilen mit einem freischaltbaren Nachkommen bekommen einen kleinen Punkt, damit man nicht erst hineinklappen muss, um zu wissen, dass dort was wartet. P12s Brotkrumen-Pfad/`OverviewGrid`/`BranchFan`/`HubChip` sind komplett raus - es gibt keine "aktuelle Ebene" mehr. `skill_tree_overview` (P12) entfernt, `skill_tree_expand_all`/`skill_tree_collapse_all` neu (EN/DE synchron). Der Nutzer nannte ein FFX-Sphere-Grid-artiges raeumliches Brett als Kuer ("noch besser waere natuerlich") - bewusst NICHT in dieser Runde gebaut, siehe "Offene Punkte"; `AnimationTreeLayout` (`:core`) bleibt dafuer weiterhin ungenutzt liegen. **Nicht gegengeprueft:** wie immer kein Netzzugriff, kein Gradle-Lauf; Klammernzaehlung von Hand (41/41 geschweift, 127/127 rund) statt Compiler. **Fuer die naechste Sitzung:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, dann auf dem Geraet pruefen, ob "Alles aufklappen" bei 79 Knoten auf einem schmalen Telefon noch uebersichtlich bleibt - und ob der Nutzer nach diesem Akkordeon das FFX-Brett wirklich noch will oder das hier schon reicht. |
 | 2026-08-29 | P12 — Ebene fuer Ebene | **Nutzer-Feedback nach dem ersten echten Test auf dem Handy: das Brett aus P11 zeigte alle 79 Knoten auf einmal, das fuehlte sich als "Riesenflaeche" an statt als "nur das, was man sehen will".** `SkillTreeScreen.kt` klappt den Baum jetzt wie einen Ordnerbaum auf: `openId: String?` ist der einzige Navigationszustand, `null` zeigt die neun Hauptgruppen als Kacheln, ein gesetzter Wert zeigt genau einen Kopf mit seinen Kindern darunter, per gemessenen Positionen (`onGloballyPositioned`/`boundsInRoot`) verbunden statt per selbst gerechneter Geometrie — `AnimationTreeLayout` wird dafuer nicht mehr gebraucht, bleibt aber im Code fuer eine moegliche spaetere Kartenansicht. Ein Brotkrumen-Pfad oben ist zugleich die einzige Zurueck-Navigation. `SkillTreeRows.progressFor` (seit P11 ungenutzt) zeigt jetzt "3 von 7 offen" auf jeder Hauptgruppen-Kachel - `skill_tree_progress` dafuer wieder ergaenzt. **Lehre aus dem Kompilierfehler weiter oben mitgenommen:** jede neu verwendete Compose-API diesmal einzeln gegen eine bereits funktionierende Aufrufstelle im Projekt abgeglichen (`Crossfade` gegen `AvatarClipPlayer.kt`, `boundsInRoot` gegen `SkillDragBar.kt`, `mutableStateMapOf` gegen `mutableStateListOf` in `HomeScreen.kt`, `matchParentSize` gegen `DockScreen.kt`), und eine Arrangement.spacedBy-Ueberladung ohne Vorbild im Projekt bewusst durch eine belegte Box+Row-Kombination ersetzt. **Nicht gegengeprueft:** weiterhin kein Netzzugriff, kein Gradle-Lauf, nichts davon auf einem Geraet gesehen. **Fuer die naechste Sitzung:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, dann das Brett auf dem Geraet ansehen - insbesondere den sechs-Kinder-Zweig (`arbeit/erledigen`) auf einem schmalen Telefon, und ob sich das Antippen/die Brotkrumen-Navigation gut anfuehlt. Offene Politur: eine echte Wachstums-Animation beim Aufklappen (siehe "Offene Punkte"). |
 | 2026-08-29 | P11-Nachbesserung | **CI fing einen echten Kompilierfehler in `SkillTreeScreen.kt`** (Push direkt nach P11, vor jeder Geraetepruefung): `graphicsLayer` faelschlich unter `androidx.compose.ui.draw` importiert (richtig: `androidx.compose.ui.graphics`, siehe `AvatarClipPlayer.kt`), dazu fehlten `getValue`/`setValue` fuer die `by remember`-Delegates (`scale`, `pan`) - ohne sie loest Kotlin nicht das eigentlich gemeinte `State`, sondern eine irrefuehrende Ambiguitaet zwischen `kotlin.getValue`/`kotlin.collections.getValue`. Beides in einem Folge-Commit behoben, seither lief die gesamte PR #43 gruen durch (Unit-Tests, beide Instrumentierungslaeufe, Lint, APK-Auslieferung). **Fuer kuenftige Sitzungen ohne Netzzugriff:** neue Compose-APIs im Zweifel gegen eine bereits im Projekt vorhandene Aufrufstelle abgleichen statt aus der Erinnerung zu vertrauen - genau das hat P12 danach befolgt. |
 | 2026-08-29 | P11 — Wander-Brett | **Freischaltung ist jetzt manuell: der Spieler wandert selbst ueber ein raeumliches Brett statt einen 2+1-Dialog vorgesetzt zu bekommen** — Nutzerwunsch, Vorbild Diablo 2 / das Sphere Grid aus Final Fantasy X. Kernfund: `AnimationNode.depth`/`.parentId` waren schon rein pfadbasiert (aus dem `/`-getrennten Pfad berechnet), der Baum war also schon vor dieser Sitzung beliebig tief — nur die Oberflaeche (eine Liste) und die Freischalt-Mechanik (Algorithmus) waren es nicht. Neu: `AnimationTreeLayout` (`:core`) rechnet jedem Knoten eine Brett-Position aus, tiefenunabhaengig (Test mit einem eigens gebauten fuenfstufigen Baum als Beleg). `SkillTreeScreen.kt` ist jetzt ein pan-/zoombares `Canvas`+Chip-Brett (`Modifier.transformable`/`graphicsLayer`, `boardX`/`boardY`-Hilfsfunktionen) statt einer `LazyColumn`; `SkillTreeRows`/`NodeState` (Zustandsrechnung) und `UnlockOffers.frontier`/`.startingNodes` (die "erreichbaren Nachbarn") blieben dabei komplett unangetastet, nur wie sie gezeichnet werden aenderte sich. Entfernt, weil nur die alte Automatik bediente: `BranchAffinity`, `UnlockOffer`+`UnlockOffers.build`, `AvatarUnlockRepository.offerFor`, `LevelUnlockDialog`, `AvatarFeedEventDao.answeredNodes`/`AnsweredNodeRow`. `DockScreen.kt`: der Levelaufstiegs-Glueckwunsch wartet nicht mehr auf eine abgeschlossene Wahl, sondern bestaetigt sich nach `LEVEL_UP_BANNER_MS` (3,2 s) von selbst — die Wahl kann jetzt jederzeit spaeter auf dem Brett passieren. Keine DB-Migration noetig, `AvatarUnlockedNode`/`unlock()` gab es schon. **Nicht gegengeprueft:** `dl.google.com` bleibt in dieser Umgebung gesperrt (siehe letzte Sitzung), kein Gradle-Lauf moeglich — Logik von Hand durchgerechnet, aber `Modifier.transformable` in Kombination mit Chip-`clickable` (ob Taps trotz Pan/Zoom-Erkennung ankommen) und die `boardSize`-Layoutrechnung sind neue Technik in diesem Projekt und real ungeprueft. **Fuer die naechste Sitzung:** Zuerst `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest` auf einer Maschine mit Netzzugriff, dann das Brett auf dem Geraet ansehen (Pan/Zoom, Taps, Lesbarkeit bei 79 Knoten). Offene Politur: Gruppennamen als Beschriftung ueber den Wurzel-Spuren (siehe "Offene Punkte"). |

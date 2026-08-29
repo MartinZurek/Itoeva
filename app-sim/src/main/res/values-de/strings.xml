@@ -726,7 +726,6 @@
     <string name="a11y_skill_drag">%1$s — auf den Begleiter ziehen, oder diese Aktion benutzen</string>
     <string name="a11y_skill_play">%1$s zeigen</string>
     <string name="skill_tree_title">Fähigkeitenbaum</string>
-    <string name="skill_tree_overview">Übersicht</string>
     <string name="skill_tree_progress">%1$d von %2$d offen</string>
     <string name="skill_tree_points_available">⭐ %1$d übrig</string>
     <string name="skill_tree_state_available">als Nächstes</string>
@@ -734,4 +733,6 @@
     <string name="skill_tree_state_pending">noch nicht gezeichnet</string>
     <string name="skill_tree_level">Level %1$d · noch %2$d XP bis zur nächsten Freischaltung</string>
     <string name="skill_tree_close">Schließen</string>
+    <string name="skill_tree_expand_all">Alles aufklappen</string>
+    <string name="skill_tree_collapse_all">Alles einklappen</string>
 </resources>
