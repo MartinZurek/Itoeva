@@ -543,7 +543,11 @@ object PlayEffects {
             BasketballPhase.DRIBBLE -> groundY - 2 - bob
             BasketballPhase.AIM -> groundY - 11
             BasketballPhase.SHOOT -> hoopY - 5
-            BasketballPhase.SCORE -> hoopY + 2
+            // Deutlich UNTER dem Netz, nicht mittendrin: Bei hoopY+2 lag der Ball noch im Netz-
+            // Punktmuster und verschmolz optisch mit Ring und Netz zu einem einzigen Klumpen -
+            // "getroffen" war so nicht zu erkennen. Erst unterhalb des Netzes liest sich die
+            // Szene als "durchgefallen und faellt heraus".
+            BasketballPhase.SCORE -> hoopY + 9
         }
 
         // Kreuznaehte als typische Basketballstruktur, auf DETAIL statt die Silhouette zu
@@ -684,7 +688,9 @@ object PlayEffects {
         for (i in 0 until count) {
             val x = 12 + i * 4
             val y = 9 - i * 3 - if (phase != MusicPhase.TUNE) drift else 0
-            for ((dx, dy) in listOf(0 to 0, 0 to -1, 0 to -2, 1 to -3, 2 to -3)) {
+            // Runder Notenkopf (2x2) mit Hals, statt eines duennen Zickzacks - der vorige
+            // Ein-Zellen-Pfad las sich aus der Distanz eher als Kritzel denn als Note.
+            for ((dx, dy) in listOf(0 to 0, 1 to 0, 0 to 1, 1 to 1, 1 to -1, 1 to -2, 1 to -3)) {
                 notes.dot(x + dx, y + dy, PlayInk.EDGE)
             }
         }
