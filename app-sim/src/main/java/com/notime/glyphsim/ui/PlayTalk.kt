@@ -4,6 +4,7 @@ import android.content.Context
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
+import com.notime.glyphcore.data.INTERVAL_OPTIONS
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayWeather
@@ -1030,7 +1031,19 @@ object PlayTalk {
         // bleibt - sonst waere aus einer Auskunft ein unmoegliches Ziel geworden (siehe
         // PlayTalkTest: "das Tagesziel ist im Zeitfenster ueberhaupt erreichbar").
         val slots = base.dailyGoal.coerceAtLeast(1) * 4 / 3 + 1
-        val interval = ((end - start) / slots).coerceIn(15, base.intervalMinutes)
+        val rawInterval = ((end - start) / slots).coerceIn(15, base.intervalMinutes)
+        // **Abgestuerzt statt gestaucht.** `rawInterval` ist das Ergebnis einer Division und
+        // trifft dadurch fast nie einen der festen Werte, aus denen der Bearbeiten-Dialog waehlt
+        // (com.notime.glyphcore.data.INTERVAL_OPTIONS) - ReminderValidation verlangt genau das
+        // aber von jeder NICHT vom Spielmodus gewuerfelten Erinnerung (siehe dort,
+        // "IntervalNotSelectable"). Ungeprueft flog `GlyphReminderRepository.add` deshalb mit
+        // einer InvalidReminderException, sobald jemand ueber das Gespraech UND mit beantworteter
+        // Tageszeit-Frage eine Erinnerung anlegte - unkatastrophal wirkend im Code, aber
+        // uncatched in einer viewModelScope-Coroutine, also ein kompletter App-Absturz.
+        // Abrunden auf den naechstkleineren erlaubten Wert haelt das Tagesziel mindestens so
+        // erreichbar wie mit dem unrunden Zwischenwert - ein kuerzerer Abstand kann nur mehr
+        // Anstupser im Fenster unterbringen, nie weniger.
+        val interval = INTERVAL_OPTIONS.filter { it <= rawInterval }.maxOrNull() ?: INTERVAL_OPTIONS.min()
         return base.copy(startMinuteOfDay = start, endMinuteOfDay = end, intervalMinutes = interval)
     }
 

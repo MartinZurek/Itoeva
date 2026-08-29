@@ -3,6 +3,7 @@ package com.notime.glyphsim.ui
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
+import com.notime.glyphcore.data.ReminderValidation
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayScene
@@ -235,6 +236,38 @@ class PlayTalkTest {
                 assertTrue(
                     "$topic in $phase: ${preset.dailyGoal} am Tag, aber nur $slots Anstupser",
                     preset.dailyGoal <= slots
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `ein aus dem Gespraech angelegtes Preset laesst sich tatsaechlich speichern`() {
+        // Regression: Auf einem echten Geraet crashte die App komplett - "Intervall 40 min steht
+        // nicht in INTERVAL_OPTIONS" aus GlyphReminderRepository.add, uncatched in der Coroutine
+        // von GlyphReminderViewModel.addReminder. `rawInterval` war eine Divisionszahl (Fenster
+        // durch Slot-Anzahl) und traf so gut wie nie einen der festen Werte, aus denen der
+        // Bearbeiten-Dialog waehlt - genau die Erinnerung, die MainActivity.onAddHabit aus einem
+        // Preset baut, ist aber KEINE Spielmodus-Zeile und wird deshalb streng gegen
+        // ReminderValidation geprueft. Dieser Test baut denselben Weg nach: Preset -> GlyphReminder
+        // -> ReminderValidation, fuer jede Kombination aus vorschlagbarem Thema und Tageszeit.
+        for (phase in PlayAmbientActivity.DayPhase.entries + listOf(null)) {
+            for (topic in PlayTalk.SUGGESTABLE) {
+                val preset = PlayTalk.presetFor(topic, phase)
+                val reminder = GlyphReminder(
+                    label = "Test",
+                    animationType = topic,
+                    daysOfWeekMask = PlayTalk.EVERY_DAY_MASK,
+                    startMinuteOfDay = preset.startMinuteOfDay,
+                    endMinuteOfDay = preset.endMinuteOfDay,
+                    intervalMinutes = preset.intervalMinutes,
+                    dailyGoal = preset.dailyGoal
+                )
+                val problems = ReminderValidation.validate(reminder)
+                assertTrue(
+                    "$topic in $phase nicht speicherbar: " +
+                        problems.joinToString { it.message },
+                    problems.isEmpty()
                 )
             }
         }
