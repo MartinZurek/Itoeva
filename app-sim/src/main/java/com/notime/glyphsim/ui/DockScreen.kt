@@ -841,6 +841,16 @@ fun DockScreen(
                         // eine Bewegung an Ort und Stelle.
                         val target = spotToOffset(spot, avatarPx)
                         val from = current.offset
+                        // **Schon VOR dem Hinauf, nicht erst danach.** Gemeldet als "der Avatar
+                        // geht durchs Bett" - und genau das war es: [occupiedStation] stand bisher
+                        // erst NACH der Animation, die vordere Ebene mit der Bettdecke (siehe
+                        // weiter unten, "als einziges NACH dem Avatar gezeichnet") blieb also
+                        // waehrend der ganzen Aufstiegsbewegung aus. Die stehende Figur wanderte
+                        // dadurch sichtbar UND UNVERDECKT vom Boden ins Kopfteil/die Matratze
+                        // hinein, bevor am Ziel ploetzlich die Decke erschien. Jetzt steht die
+                        // Decke schon beim ersten Frame der Bewegung - sie deckt zu, waehrend die
+                        // Figur sich hineinlegt, nicht erst danach.
+                        occupiedStation = step.station
                         avatarSettling = true
                         try {
                             animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
@@ -854,11 +864,9 @@ fun DockScreen(
                         } finally {
                             avatarSettling = false
                         }
-                        occupiedStation = step.station
                     }
 
                     RoutineStep.Rise -> {
-                        occupiedStation = null
                         val standing = avatar ?: return
                         val onFloor = avatarSpot(
                             anchorX = (standing.offset.x / (maxWidthPx - avatarPx).coerceAtLeast(1f)).coerceIn(0f, 1f),
@@ -881,6 +889,11 @@ fun DockScreen(
                         } finally {
                             avatarSettling = false
                         }
+                        // **Erst NACH dem Hinunter, nicht schon davor** - das spiegelbildliche
+                        // Gegenstueck zu [RoutineStep.Occupy] oben: Solange die Figur noch aus dem
+                        // Bett heraussteigt, deckt die Decke sie weiter zu, statt schon auf dem
+                        // ersten Frame zu verschwinden und die Bewegung durchs Kopfteil freizulegen.
+                        occupiedStation = null
                     }
 
                     is RoutineStep.Act -> {
