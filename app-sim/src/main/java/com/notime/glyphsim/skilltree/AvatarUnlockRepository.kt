@@ -4,6 +4,7 @@ import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.data.AvatarUnlockedNode
 import kotlin.random.Random
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onStart
 
 /**
  * Der Freischalt-Stand eines Avatars: was ist offen, was steht als Naechstes zur Wahl.
@@ -48,9 +49,17 @@ class AvatarUnlockRepository(private val database: AppDatabase) {
     suspend fun unlockedNodes(profileId: String): Set<String> =
         database.avatarUnlockedNodeDao().nodeIdsFor(profileId).toSet()
 
-    /** Fuer die Zieh-Leiste (Paket P5) - sie soll mitwachsen, sobald etwas dazukommt. */
+    /**
+     * Fuer die Zieh-Leiste (Paket P5) - sie soll mitwachsen, sobald etwas dazukommt.
+     *
+     * Saet beim ersten Sammeln selbst nach: Ein Aufrufer, der vor dem ersten Levelaufstieg
+     * beobachtet (und `offerFor` deshalb noch nie lief), saehe sonst dauerhaft ein leeres
+     * Profil statt der neun Startknoten. `ensureSeeded` ist idempotent, ein zusaetzlicher
+     * Aufruf von aussen bleibt also folgenlos.
+     */
     fun observeUnlockedNodes(profileId: String): Flow<List<String>> =
         database.avatarUnlockedNodeDao().observeNodeIdsFor(profileId)
+            .onStart { ensureSeeded(profileId, System.currentTimeMillis()) }
 
     /**
      * Das Angebot zum aktuellen Stand - zwei aus dem staerksten Zweig, einer von woanders.
