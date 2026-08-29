@@ -160,15 +160,22 @@ fun PlayTalkPanel(
                 // Die Verschiebung wird je Gespraech EINMAL gezogen: Waehrend man liest, soll
                 // sich der Vorschlag nicht unter dem Finger aendern - beim naechsten Oeffnen
                 // dagegen schon (siehe PlayTalk.focus).
-                val focus = remember(knowledge) { PlayTalk.focus(knowledge, Random.nextInt(1_000)) }
-                // **Und eine Bemerkung von ihm selbst.** Sie steht UNTER der Lage und ueber den
-                // Angeboten: erst worum es geht, dann wie es ihm dabei geht, dann was man tun
-                // kann. Wie die Angebote wird sie je Gespraech einmal gezogen - sonst wechselte
-                // der Satz beim Lesen unter dem Finger.
-                val remark = remember(knowledge, mood) {
-                    mood?.let { PlayTalk.remarkFor(it, Random.nextInt(1_000)) }
+                val focus = remember(knowledge, doing) {
+                    PlayTalk.focus(knowledge, Random.nextInt(1_000), doing)
                 }
-                Headline(focus.headline, knowledge, voice)
+                // **Zuerst, unbedingt und ohne zu wuerfeln: was er GERADE tut.** Frueher stand das
+                // im selben Lostopf wie Regen, Besuch und Verdienst (siehe PlayTalk.remarkFor) und
+                // verschwand dadurch im Schnitt in drei von vier Gespraechen. Es ist aber der
+                // einzige Satz, der sich bei jedem Oeffnen von selbst aendert - der Anfang des
+                // Erzaehlens, nicht eine Bemerkung nebenbei.
+                mood?.doing?.let { now -> DoingLine(now, knowledge) }
+                // **Und danach, gedimmt, das Nebenbei** - Wetter, Besuch, wie lange man sich kennt.
+                // Wie die Angebote wird es je Gespraech einmal gezogen, jetzt aber OHNE das, was
+                // gerade oben schon steht (siehe PlayTalk.secondaryRemarkFor).
+                val remark = remember(knowledge, mood) {
+                    mood?.let { PlayTalk.secondaryRemarkFor(it, Random.nextInt(1_000)) }
+                }
+                Headline(focus.headline, knowledge, voice, mood)
                 if (remark != null && mood != null) RemarkLine(remark, mood)
                 // **Seine eigene Frage steht UNTER seinen Angeboten**, nicht darueber. Wer das
                 // Gespraech oeffnet, will zuerst wissen, wie es steht - erst danach ist Platz
@@ -180,6 +187,7 @@ fun PlayTalkPanel(
                     OfferLine(
                         offer = offer,
                         justAdded = justAdded,
+                        doing = mood?.doing,
                         onAsk = onAsk,
                         onAdd = { topic -> justAdded = topic; onAddReminder(topic) },
                         onShow = { asked = it }
@@ -276,7 +284,8 @@ private enum class Question(val labelRes: Int) {
 private fun Headline(
     headline: PlayTalk.Headline,
     knowledge: PlayTalk.Knowledge,
-    voice: PlayVoice
+    voice: PlayVoice,
+    mood: PlayTalk.Mood? = null
 ) {
     when (headline) {
         PlayTalk.Headline.BROKE -> {
@@ -299,8 +308,16 @@ private fun Headline(
         }
         PlayTalk.Headline.OPEN_TOPICS -> {
             val open = knowledge.steering.map { stringResource(it.labelRes) }
+            // **Abends ist "noch offen" die falsche Zeitform.** Mittags ist es eine Auskunft ueber
+            // den bisherigen Tag; abends ist genau dieselbe Liste ein VORHABEN fuer die verbleibende
+            // Zeit - und ist damit der Satz, der die Symbole erklaert, die gleich noch auftauchen.
+            val introRes = if (mood?.phase == com.notime.glyphsim.matrix.PlayAmbientActivity.DayPhase.EVENING) {
+                R.string.talk_a_steering_evening
+            } else {
+                R.string.talk_a_steering
+            }
             Text(
-                stringResource(R.string.talk_a_steering) + " " + open.joinToString(", "),
+                stringResource(introRes) + " " + open.joinToString(", "),
                 color = INK, size = 15
             )
             Text(stringResource(R.string.talk_a_steering_hint), color = INK_DIM, size = 13)
@@ -328,6 +345,8 @@ private fun Headline(
 private fun OfferLine(
     offer: PlayTalk.Offer,
     justAdded: AnimationType?,
+    /** Was er gerade tut - entscheidet nur ueber den WORTLAUT eines Offer.Add, siehe dort. */
+    doing: PlayTalk.Doing?,
     onAsk: (AnimationType) -> Unit,
     onAdd: (AnimationType) -> Unit,
     onShow: (Question) -> Unit
@@ -355,6 +374,15 @@ private fun OfferLine(
             // Jetzt klappt sie erst auf und zeigt, was entstehen wuerde; angelegt wird es erst
             // durch eine zweite, eindeutige Zeile.
             var expanded by remember(offer.topic) { mutableStateOf(false) }
+            // **Nachgeahmt statt vorgeschlagen.** Trifft dieses Angebot genau das, was gerade vor
+            // einem auf dem Bildschirm passiert (siehe PlayTalk.focus: doing.topic in missing),
+            // ist es keine Idee aus der Rotation mehr, sondern die Einladung, das Gesehene
+            // nachzumachen - und das braucht einen anderen Satz als "wie waere es mit...".
+            val mirrorLabelRes = if (offer.topic == doing?.topic) {
+                R.string.talk_a_suggest_mirror
+            } else {
+                R.string.talk_a_suggest
+            }
             when {
                 justAdded == offer.topic -> {
                     Text(
@@ -370,9 +398,7 @@ private fun OfferLine(
                 }
                 expanded -> {
                     Text(
-                        stringResource(
-                            R.string.talk_a_suggest, stringResource(offer.topic.labelRes)
-                        ),
+                        stringResource(mirrorLabelRes, stringResource(offer.topic.labelRes)),
                         color = INK, size = 15
                     )
                     val preset = PlayTalk.presetFor(offer.topic)
@@ -390,7 +416,7 @@ private fun OfferLine(
                     }
                 }
                 else -> QuestionLine(
-                    stringResource(R.string.talk_a_suggest, stringResource(offer.topic.labelRes))
+                    stringResource(mirrorLabelRes, stringResource(offer.topic.labelRes))
                 ) { expanded = true }
             }
         }
@@ -410,6 +436,30 @@ private fun OfferLine(
             QuestionLine(stringResource(R.string.talk_q_story)) { onShow(Question.STORY) }
         PlayTalk.Offer.ShowPath ->
             QuestionLine(stringResource(R.string.talk_q_path)) { onShow(Question.PATH) }
+    }
+}
+
+/**
+ * **Der Satz, mit dem er anfaengt: was er gerade tut, und - wenn es dazugehoert - warum.**
+ *
+ * Gemeldet als "es steht nur 'geh doch lesen' da, ohne dass klar wird, warum". Der Vorschlag zum
+ * Handeln (siehe [OfferLine], `Offer.Ask`) kam bisher OHNE diese Zeile davor: Der Nutzer sah eine
+ * Aufforderung, aber nie die Erzaehlung, aus der sie folgt. Jetzt steht zuerst da, WAS er tut -
+ * in normaler Helligkeit, weil das die eigentliche Auskunft ist -, und direkt darunter, gedimmt
+ * als Begruendung, ob das zu etwas gehoert, das der Nutzer sich fuer heute vorgenommen hat. Erst
+ * danach folgen Lage und Angebote weiter unten.
+ */
+@Composable
+private fun DoingLine(doing: PlayTalk.Doing, knowledge: PlayTalk.Knowledge) {
+    Text(
+        stringResource(R.string.talk_a_doing, stringResource(placeTextFor(doing.place))),
+        color = INK, size = 15
+    )
+    doing.topic?.takeIf { it in knowledge.steering }?.let { topic ->
+        Text(
+            stringResource(R.string.talk_a_doing_why, stringResource(topic.labelRes)),
+            color = INK_DIM, size = 13
+        )
     }
 }
 

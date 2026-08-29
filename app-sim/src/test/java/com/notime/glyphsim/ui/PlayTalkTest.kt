@@ -471,6 +471,29 @@ class PlayTalkTest {
     }
 
     @Test
+    fun `secondaryRemarkFor laesst DOING aus - es steht schon prominent daneben`() {
+        // DOING bekommt jetzt eine eigene, unbedingte Zeile in PlayTalkPanel (siehe DoingLine) -
+        // die rotierende Zweitbemerkung darunter darf denselben Satz nicht noch einmal ziehen.
+        val busy = mood(
+            doing = PlayTalk.Doing(PlayScene.Place.KITCHEN, AnimationType.DRINK),
+            weather = PlayWeather.RAIN,
+            lastVisitor = AvatarSpecies.GLOOP
+        )
+        val drawn = (0 until 20).map { PlayTalk.secondaryRemarkFor(busy, it) }
+        assertTrue("DOING taucht trotzdem in der zweiten Zeile auf", drawn.none { it == PlayTalk.Remark.DOING })
+        assertTrue("es gibt trotzdem noch etwas zu sagen", drawn.any { it != null })
+    }
+
+    @Test
+    fun `secondaryRemarkFor bleibt still, wenn es neben dem Tun nichts zu sagen gibt`() {
+        val onlyDoing = mood(doing = PlayTalk.Doing(PlayScene.Place.KITCHEN, AnimationType.DRINK))
+        assertNull(
+            "eine leere Zweitbemerkung ist keine, die auf QUIET zurueckfaellt",
+            PlayTalk.secondaryRemarkFor(onlyDoing)
+        )
+    }
+
+    @Test
     fun `vorgeschlagen wird nur, was der Avatar auch sichtbar tut`() {
         // Ein Vorschlag, der seinen Tagesablauf nicht veraendert, waere eine leere Zusage: Der
         // Nutzer legt etwas an, weil der Begleiter danach gefragt hat, und sieht anschliessend
@@ -694,6 +717,33 @@ class PlayTalkTest {
         assertEquals(PlayTalk.Headline.OPEN_TOPICS, focus.headline)
         val asks = focus.offers.filterIsInstance<PlayTalk.Offer.Ask>()
         assertEquals("Nur EINE Bitte, sonst ist die Liste wieder da", 1, asks.size)
+    }
+
+    @Test
+    fun `was er gerade tut wird bevorzugt vorgeschlagen, wenn es noch keine Gewohnheit dafuer gibt`() {
+        // Der Nachahm-Fall: Der Nutzer sieht die laufende Taetigkeit UND den passenden Vorschlag
+        // dazu - nicht irgendeine durchrotierte Standardauswahl, die zufaellig etwas anderes trifft.
+        val knowledge = known(
+            plan = somePlan(),
+            missing = listOf(AnimationType.FOCUS, AnimationType.MINDFULNESS, AnimationType.MOVE)
+        )
+        val doing = PlayTalk.Doing(PlayScene.Place.PARK, AnimationType.MOVE)
+        val focus = PlayTalk.focus(knowledge, rotation = 0, doing = doing)
+        val add = focus.offers.filterIsInstance<PlayTalk.Offer.Add>().single()
+        assertEquals(AnimationType.MOVE, add.topic)
+    }
+
+    @Test
+    fun `tut er etwas, das er schon als Gewohnheit hat, bleibt es bei der Rotation`() {
+        val knowledge = known(
+            plan = somePlan(),
+            missing = listOf(AnimationType.FOCUS, AnimationType.MINDFULNESS)
+        )
+        // DRINK ist NICHT in missing - der Vorschlag darf sich also nicht danach richten.
+        val doing = PlayTalk.Doing(PlayScene.Place.KITCHEN, AnimationType.DRINK)
+        val focus = PlayTalk.focus(knowledge, rotation = 0, doing = doing)
+        val add = focus.offers.filterIsInstance<PlayTalk.Offer.Add>().single()
+        assertEquals(AnimationType.FOCUS, add.topic)
     }
 
     @Test

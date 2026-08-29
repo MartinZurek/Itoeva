@@ -404,8 +404,10 @@
     <string name="talk_plan_done">done</string>
     <string name="talk_plan_nogoal">no goal</string>
     <string name="talk_a_steering">Still open today:</string>
+    <string name="talk_a_steering_evening">For tonight I still want to:</string>
     <string name="talk_a_steering_hint">So I\'ll be drawn to that more often for the rest of the day.</string>
     <string name="talk_a_suggest">How about %1$s? We haven\'t got anything for that.</string>
+    <string name="talk_a_suggest_mirror">I\'m doing %1$s right now – want that for yourself too?</string>
     <string name="talk_a_suggest_detail">%1$s to %2$s, %3$d× a day. You can change all of it later.</string>
     <string name="talk_a_suggest_accept">Go on then, set it up</string>
     <string name="talk_a_suggest_added">Done – %1$s is on the list now.</string>

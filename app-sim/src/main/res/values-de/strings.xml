@@ -388,8 +388,10 @@
     <string name="talk_plan_done">erledigt</string>
     <string name="talk_plan_nogoal">kein Ziel</string>
     <string name="talk_a_steering">Heute noch offen:</string>
+    <string name="talk_a_steering_evening">Für heute Abend hab ich noch vor:</string>
     <string name="talk_a_steering_hint">Danach zieht es mich den Rest des Tages öfter.</string>
     <string name="talk_a_suggest">Wie wäre es mit %1$s? Dafür haben wir noch nichts.</string>
+    <string name="talk_a_suggest_mirror">%1$s mache ich gerade – auch was für dich?</string>
     <string name="talk_a_suggest_detail">%1$s bis %2$s, %3$d× am Tag. Kannst du alles später ändern.</string>
     <string name="talk_a_suggest_accept">Na gut, richte es ein</string>
     <string name="talk_a_suggest_added">Fertig – %1$s steht jetzt auf der Liste.</string>
