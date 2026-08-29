@@ -148,32 +148,30 @@ object PlayEffects {
             }
 
             AnimationType.BOOK -> {
-                // Aufgeschlagenes Buch: ZWEI HOHLE Seiten (nur der Rahmen auf BODY, keine
-                // gefuellte Flaeche) mit einer Textzeile, die pro Takt dazukommt - dieselbe Idee
-                // wie bei der Schriftrolle (AvatarSignatureAnimations.scrollFrames): "es passiert
-                // gerade etwas mit dem Text" liest sich ueberzeugender als jede Silhouette allein,
-                // und eine leere, gefuellte Flaeche wirkt aus der Distanz nur wie ein Klotz.
+                // Aufgeschlagenes Buch als WEDGE, nicht als Rechteck: zwei Seiten faechern sich
+                // ueber schraege Linien vom Ruecken nach unten-aussen auf. Die Vorgaenger-Fassung
+                // (zwei parallele Rahmen mit geradem Spalt dazwischen) las sich als zwei Steine
+                // nebeneinander - erst echte Diagonalen ergeben die Rundung, an der man ein
+                // aufgeschlagenes Buch erkennt.
                 val book = place(height = 6)
-                book.art(
-                    0, 0,
-                    "  ###   ###  ",
-                    " ##### ##### ",
-                    " #   # #   # ",
-                    " #   # #   # ",
-                    " #   # #   # ",
-                    " ##### ##### "
-                )
+                book.line(6, 0, 1, 3, PlayInk.BODY)
+                book.line(6, 0, 11, 3, PlayInk.BODY)
+                book.line(1, 3, 2, 5, PlayInk.BODY)
+                book.line(11, 3, 10, 5, PlayInk.BODY)
+                book.line(2, 5, 6, 5, PlayInk.BODY)
+                book.line(6, 5, 10, 5, PlayInk.BODY)
+                // Der Ruecken: Material wie der Rest, aber mit einem Lichtakzent obendrauf -
+                // derselbe Kniff wie das Glanzlicht am Avatar selbst, nicht die ganze Flaeche hell.
+                book.line(6, 0, 6, 5, PlayInk.BODY)
+                book.spark(6, 1)
+                // Textzeilen kommen weiterhin Takt fuer Takt dazu - siehe scrollFrames in
+                // AvatarSignatureAnimations, dasselbe Prinzip einer progressiven Enthuellung.
                 for (line in 0 until beat) {
                     val y = 2 + line
                     book.line(2, y, 4, y, PlayInk.DETAIL)
                     book.line(8, y, 10, y, PlayInk.DETAIL)
                 }
-                // Die umblaetternde Seite hebt sich UEBER die Oberkante des Buches, genau an der
-                // Luecke - im letzten Takt, wenn auch die letzte Zeile steht.
-                if (beat == 3) {
-                    book.dot(6, -1, PlayInk.BODY)
-                    book.dot(7, -2, PlayInk.BODY)
-                }
+                if (beat == 3) book.spark(6, 5)
                 book.render(grounded = true)
             }
 
