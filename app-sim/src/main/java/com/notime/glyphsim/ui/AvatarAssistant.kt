@@ -431,6 +431,7 @@ private val faqEntries = listOf(
     FaqEntry(FaqCategory.ALARMS, R.string.faq_q_screen_off, R.string.faq_a_screen_off),
     FaqEntry(FaqCategory.ANIMATIONS, R.string.faq_q_animation_length, R.string.faq_a_animation_length),
     FaqEntry(FaqCategory.ANIMATIONS, R.string.faq_q_animation_library, R.string.faq_a_animation_library),
+    FaqEntry(FaqCategory.ANIMATIONS, R.string.faq_q_skill_tree, R.string.faq_a_skill_tree),
     FaqEntry(FaqCategory.AVATAR, R.string.faq_q_feeding, R.string.faq_a_feeding),
     FaqEntry(FaqCategory.AVATAR, R.string.faq_q_mood, R.string.faq_a_mood),
     FaqEntry(FaqCategory.AVATAR, R.string.faq_q_species, R.string.faq_a_species),

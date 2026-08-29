@@ -72,4 +72,19 @@ object OnboardingPrefs {
         SettingsStore.write(context, SettingsCatalog.UsedActionSlot, true)
     }
 
+    /**
+     * Ob der Hinweis auf dem Baumbildschirm schon einmal zu sehen war (siehe SkillTreeDialog.kt).
+     *
+     * Noetig geworden, weil "auf einen hervorgehobenen Knoten tippen, um ihn freizuschalten"
+     * sich der Oberflaeche selbst nicht ansieht - anders als beim Avatar oder der Uhr gibt es
+     * hier keine Geste, auf die man von allein kommt, wenn man einen Skillpunkt uebrig hat und
+     * nicht weiss, wo er hingehoert.
+     */
+    fun hasSeenSkillTreeHint(context: Context): Boolean =
+        SettingsStore.read(context, SettingsCatalog.SkillTreeHintSeen)
+
+    fun markSkillTreeHintSeen(context: Context) {
+        SettingsStore.write(context, SettingsCatalog.SkillTreeHintSeen, true)
+    }
+
 }

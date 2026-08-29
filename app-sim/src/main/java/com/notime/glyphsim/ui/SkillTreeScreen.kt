@@ -74,7 +74,10 @@ fun SkillTreeScreen(
     xpToNextLevel: Int,
     onUnlock: (String) -> Unit,
     onClose: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Ob der einmalige Erklaer-Hinweis steht - siehe [OnboardingPrefs.hasSeenSkillTreeHint]. */
+    showHint: Boolean = false,
+    onDismissHint: () -> Unit = {}
 ) {
     val rows = remember(unlocked) { SkillTreeRows.build(unlocked) }
     val pointsRemaining = remember(level, unlocked) { LevelUnlocks.due(level, unlocked) }
@@ -84,11 +87,17 @@ fun SkillTreeScreen(
 
     val visible = remember(rows, expanded) { visibleRows(rows, expanded) }
 
+    // Freischalten geht vor Aufklappen: Ein Knoten kann BEIDES sein - eine Untergruppe mit
+    // eigenen Kindern UND selbst gerade dran (ihr Elternknoten ist ja schon offen). Stand die
+    // Aufklapp-Pruefung zuerst, liess sich ein solcher Knoten NIE freischalten - Antippen klappte
+    // ihn immer nur auf, der Stern blieb liegen. Nach dem Freischalten steht der naechste Tipp auf
+    // denselben Knoten wieder fuer das Aufklappen zur Verfuegung, weil sein Zustand dann UNLOCKED
+    // ist und dieser Zweig hier nicht mehr greift.
     fun tap(row: SkillTreeRow) {
-        if (rows.hasChildren(row.node.id)) {
-            expanded = if (row.node.id in expanded) expanded - row.node.id else expanded + row.node.id
-        } else if (row.state == NodeState.AVAILABLE && pointsRemaining > 0) {
+        if (row.state == NodeState.AVAILABLE && pointsRemaining > 0) {
             onUnlock(row.node.id)
+        } else if (rows.hasChildren(row.node.id)) {
+            expanded = if (row.node.id in expanded) expanded - row.node.id else expanded + row.node.id
         }
     }
 
@@ -120,6 +129,30 @@ fun SkillTreeScreen(
             TextButton(onClick = onClose) { Text(stringResource(R.string.skill_tree_close)) }
         }
 
+        // Einmaliger Erklaer-Hinweis: "wie setze ich einen Stern ein" sieht man der Oberflaeche
+        // sonst nicht an, anders als bei Avatar oder Uhr gibt es hier keine Geste, auf die man
+        // von selbst kommt. Verschwindet dauerhaft nach dem ersten "OK" (siehe OnboardingPrefs).
+        if (showHint) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(TamaPalette.BubbleBackground)
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    stringResource(R.string.skill_tree_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TamaPalette.TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(8.dp))
+                TextButton(onClick = onDismissHint) { Text(stringResource(R.string.action_ok)) }
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.End
@@ -147,7 +180,15 @@ fun SkillTreeScreen(
                     isExpanded = row.node.id in expanded,
                     hasAvailableDescendant = hasChildren && row.node.id !in expanded &&
                         hasAvailableDescendant(rows, row.node.id),
-                    progress = if (hasChildren) SkillTreeRows.progressFor(row.node.id, unlocked) else null,
+                    // Nur fuer bereits FREIGESCHALTETE Zweige: Ein Knoten, der selbst erst noch
+                    // freizuschalten waere, hat gar keine freigeschalteten Kinder - "0 von 3
+                    // offen" stuende dort immer und verdeckte genau das "als Naechstes", das zum
+                    // Tippen einlaedt.
+                    progress = if (hasChildren && row.state == NodeState.UNLOCKED) {
+                        SkillTreeRows.progressFor(row.node.id, unlocked)
+                    } else {
+                        null
+                    },
                     interactive = hasChildren || (row.state == NodeState.AVAILABLE && pointsRemaining > 0),
                     onClick = { tap(row) }
                 )

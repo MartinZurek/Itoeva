@@ -60,6 +60,10 @@ fun SkillTreeDialog(
     // freischalten, weil der aktualisierte Bestand erst NACH der Datenbankschreibung ankommt.
     var busy by remember { mutableStateOf(false) }
 
+    // Einmaliger Hinweis, wie ein Skillpunkt eingesetzt wird - verschwindet dauerhaft nach dem
+    // ersten "OK" (siehe OnboardingPrefs.hasSeenSkillTreeHint).
+    var showHint by remember { mutableStateOf(!OnboardingPrefs.hasSeenSkillTreeHint(context)) }
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         SkillTreeScreen(
             unlocked = unlocked.toSet(),
@@ -79,7 +83,12 @@ fun SkillTreeDialog(
                 .fillMaxWidth(0.94f)
                 .fillMaxHeight(0.86f)
                 .clip(RoundedCornerShape(20.dp))
-                .background(TamaPalette.Background)
+                .background(TamaPalette.Background),
+            showHint = showHint,
+            onDismissHint = {
+                showHint = false
+                OnboardingPrefs.markSkillTreeHintSeen(context)
+            }
         )
     }
 }
