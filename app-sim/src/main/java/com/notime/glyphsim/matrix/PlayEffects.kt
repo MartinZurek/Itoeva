@@ -444,6 +444,7 @@ object PlayEffects {
         widthCells: Int
     ): List<SceneCell> {
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val floorY = groundY + 1
         val direction = if ((scenePhase / 5) % 2 == 0) 1 else -1
         val centerX = when (phase) {
             FootballPhase.DRIBBLE -> avatarCellX + 15 + direction * 2
@@ -456,41 +457,42 @@ object PlayEffects {
             FootballPhase.KICK -> groundY - 7
             FootballPhase.TRICK -> groundY - 13
         }
-        val ball = buildList {
-            val shape = listOf(
-                -1 to -3, 0 to -3, 1 to -3,
-                -2 to -2, 2 to -2,
-                -3 to -1, 3 to -1, -3 to 0, 3 to 0, -3 to 1, 3 to 1,
-                -2 to 2, 2 to 2, -1 to 3, 0 to 3, 1 to 3
-            )
-            shape.forEach { (dx, dy) ->
-                add(SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 180, true))
-            }
-            // Fuenfecke und Naehte verhindern, dass der Ball wie ein heller Kreis aussieht.
-            add(SceneCell(centerX, centerY, PlayScene.FURNITURE))
-            for ((dx, dy) in listOf(-2 to -1, 2 to -1, -1 to 2, 1 to 2)) {
-                add(SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 650, true))
-            }
-            if (phase == FootballPhase.KICK || phase == FootballPhase.TRICK) {
-                for (i in 1..4) add(SceneCell(centerX - i * 2, centerY + i / 2, PlayScene.BACKDROP))
-            }
+
+        // Der Ball: Fuenfecke und Naehte auf DETAIL verhindern, dass er wie ein heller Kreis
+        // aussieht, statt wie ein Ball mit Struktur.
+        val ball = PlayInk.Sketch(centerX - 2, centerY - 3, 1, widthCells, floorY)
+        ball.art(
+            0, 0,
+            " ### ",
+            "##+##",
+            "#+++#",
+            "#+++#",
+            "##+##",
+            " ### "
+        )
+        ball.spark(2, 1)
+
+        // Beim Schuss und beim Trick zieht der Ball eine Spur hinter sich her - Luftzug, kein
+        // Material, also nicht freigestellt.
+        val trail = PlayInk.Sketch(centerX, centerY, 1, widthCells, floorY)
+        if (phase == FootballPhase.KICK || phase == FootballPhase.TRICK) {
+            for (i in 1..4) trail.dot(-i * 2, i / 2, PlayInk.DETAIL)
         }
+
         val goalRight = widthCells - 3
         val goalLeft = (goalRight - 12).coerceAtLeast(0)
         val goalTop = groundY - 9
-        val goal = buildList {
-            for (x in goalLeft..goalRight) add(SceneCell(x, goalTop, PlayScene.BACKDROP))
-            for (y in goalTop..groundY) {
-                add(SceneCell(goalLeft, y, PlayScene.BACKDROP))
-                add(SceneCell(goalRight, y, PlayScene.BACKDROP))
-            }
-            for (x in goalLeft + 2 until goalRight step 2) {
-                for (y in goalTop + 2 until groundY step 2) {
-                    add(SceneCell(x, y, PlayScene.BACKDROP))
-                }
+        val goal = PlayInk.Sketch(goalLeft, goalTop, 1, widthCells, floorY)
+        goal.box(0, 0, goalRight - goalLeft, groundY - goalTop, PlayInk.BODY)
+        for (x in 2 until (goalRight - goalLeft) step 2) {
+            for (y in 2 until (groundY - goalTop) step 2) {
+                goal.dot(x, y, PlayInk.DETAIL)
             }
         }
-        return (goal + ball).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+
+        return (goal.render(grounded = false) + ball.render(grounded = false) + trail.render(carve = false))
+            .filter { it.x in 0 until widthCells }
+            .distinctBy { it.x to it.y }
     }
 
     fun basketballCells(
@@ -501,6 +503,7 @@ object PlayEffects {
         widthCells: Int
     ): List<SceneCell> {
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val floorY = groundY + 1
         val hoopX = (widthCells - 8).coerceAtLeast(10)
         val hoopY = groundY - 15
         val bob = if ((scenePhase / 4) % 2 == 0) 0 else 4
@@ -516,37 +519,45 @@ object PlayEffects {
             BasketballPhase.SHOOT -> hoopY - 5
             BasketballPhase.SCORE -> hoopY + 2
         }
-        val ball = buildList {
-            for ((dx, dy) in listOf(
-                -1 to -3, 0 to -3, 1 to -3, -2 to -2, 2 to -2,
-                -3 to -1, 3 to -1, -3 to 0, 3 to 0, -3 to 1, 3 to 1,
-                -2 to 2, 2 to 2, -1 to 3, 0 to 3, 1 to 3
-            )) add(SceneCell(ballX + dx, ballY + dy, PlayScene.GLOW - 180, true))
-            // Kreuznaehte als typische Basketballstruktur.
-            for (d in -2..2) {
-                add(SceneCell(ballX + d, ballY, PlayScene.GLOW - 650, true))
-                add(SceneCell(ballX, ballY + d, PlayScene.GLOW - 650, true))
-            }
-            if (phase == BasketballPhase.SHOOT) {
-                for (i in 1..5) add(SceneCell(ballX - i * 2, ballY + i, PlayScene.BACKDROP))
-            }
+
+        // Kreuznaehte als typische Basketballstruktur, auf DETAIL statt die Silhouette zu
+        // zerschneiden.
+        val ball = PlayInk.Sketch(ballX - 2, ballY - 3, 1, widthCells, floorY)
+        ball.art(
+            0, 0,
+            " ### ",
+            "#+#+#",
+            "#####",
+            "+###+",
+            "#####",
+            "#+#+#",
+            " ### "
+        )
+        ball.spark(1, 1)
+
+        val trail = PlayInk.Sketch(ballX, ballY, 1, widthCells, floorY)
+        if (phase == BasketballPhase.SHOOT) {
+            for (i in 1..5) trail.dot(-i * 2, i, PlayInk.DETAIL)
         }
+
         // Der Korb wird nur fuer Basketball eingeblendet. Fussball und Training behalten damit
         // denselben freien Platz statt dauerhaft vor einer falschen Requisite stattzufinden.
-        val hoop = buildList {
-            for (y in hoopY - 5..groundY) add(SceneCell(hoopX + 4, y, PlayScene.FURNITURE))
-            for (x in hoopX..hoopX + 4) add(SceneCell(x, hoopY - 5, PlayScene.FURNITURE))
-            for (x in hoopX - 3..hoopX + 1) {
-                add(SceneCell(x, hoopY, PlayScene.GLOW - 400, isLight = true))
-            }
-            for (dy in 1..5) {
-                val inset = dy / 3
-                add(SceneCell(hoopX - 3 + inset, hoopY + dy, PlayScene.FURNITURE))
-                add(SceneCell(hoopX + 1 - inset, hoopY + dy, PlayScene.FURNITURE))
-                if (dy % 2 == 0) add(SceneCell(hoopX - 1, hoopY + dy, PlayScene.BACKDROP))
-            }
+        val hoop = PlayInk.Sketch(hoopX, hoopY - 5, 1, widthCells, floorY)
+        hoop.line(4, 0, 4, groundY - (hoopY - 5), PlayInk.BODY)
+        hoop.box(0, 0, 4, 2, PlayInk.BODY)
+        hoop.line(-3, 5, 1, 5, PlayInk.BODY)
+        hoop.spark(-3, 5)
+        for (dy in 1..5) {
+            val localY = 5 + dy
+            val inset = dy / 3
+            hoop.dot(-3 + inset, localY, PlayInk.DETAIL)
+            hoop.dot(1 - inset, localY, PlayInk.DETAIL)
+            if (dy % 2 == 0) hoop.dot(-1, localY, PlayInk.DETAIL)
         }
-        return (hoop + ball).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+
+        return (hoop.render(grounded = false) + ball.render(grounded = false) + trail.render(carve = false))
+            .filter { it.x in 0 until widthCells }
+            .distinctBy { it.x to it.y }
     }
 
     fun trainingCells(
@@ -556,6 +567,7 @@ object PlayEffects {
         scenePhase: Int
     ): List<SceneCell> {
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val floorY = groundY + 1
         val pulse = if ((scenePhase / 5) % 2 == 0) 0 else 1
         val centerX = avatarCellX + 8
         val centerY = when (phase) {
@@ -563,30 +575,45 @@ object PlayEffects {
             TrainingPhase.LIFT -> groundY - 17 - pulse
             TrainingPhase.REST -> groundY - 2
         }
-        return buildList {
-            // Trainingsmatte und Markierungen verankern die Hantel als Sportgeraet.
-            for (x in centerX - 10..centerX + 10) {
-                add(SceneCell(x, groundY + 1, PlayScene.BACKDROP))
+
+        // Trainingsmatte: flache Bodenzeichnung, bewusst ohne Freistellung - sie liegt FLACH
+        // auf dem Boden, nicht davor.
+        val mat = PlayInk.Sketch(centerX, groundY + 1, 1, UNBOUNDED, floorY)
+        mat.line(-10, 0, 10, 0, PlayInk.DETAIL)
+
+        val bar = PlayInk.Sketch(centerX, centerY, 1, UNBOUNDED, floorY)
+        bar.line(-6, 0, 6, 0, PlayInk.BODY)
+        for (side in listOf(-7, 7)) {
+            bar.box(side - 1, -2, side + 1, 2, PlayInk.BODY)
+        }
+        if (phase == TrainingPhase.LIFT) {
+            // Eine zweite, groessere Scheibe aussen: die Hantel ist jetzt voll beladen.
+            for (side in listOf(-9, 9)) {
+                bar.box(side - 1, -4, side + 1, 4, PlayInk.BODY)
             }
-            for (x in centerX - 6..centerX + 6) {
-                add(SceneCell(x, centerY, PlayScene.FURNITURE))
-            }
-            for (dy in -2..2) {
-                add(SceneCell(centerX - 7, centerY + dy, PlayScene.GLOW - 350, isLight = true))
-                add(SceneCell(centerX + 7, centerY + dy, PlayScene.GLOW - 350, isLight = true))
-            }
-            if (phase == TrainingPhase.LIFT) {
-                for (dy in 3..8 step 2) {
-                    add(SceneCell(centerX - 9, centerY + dy + pulse, PlayScene.GLOW - 650, true))
-                    add(SceneCell(centerX + 9, centerY + dy + pulse, PlayScene.GLOW - 650, true))
-                }
-            } else if (phase == TrainingPhase.REST) {
-                // Flasche neben der Matte: klarer Abschluss statt liegengelassener Hantel.
-                for (y in groundY - 5..groundY) add(SceneCell(centerX + 10, y, PlayScene.GLOW - 500, true))
-                add(SceneCell(centerX + 9, groundY - 4, PlayScene.GLOW - 500, true))
-                add(SceneCell(centerX + 11, groundY - 4, PlayScene.GLOW - 500, true))
-            }
-        }.distinctBy { it.x to it.y }
+            bar.spark(0, 0)
+        }
+
+        val extra = if (phase == TrainingPhase.REST) {
+            // Flasche neben der Matte: klarer Abschluss statt liegengelassener Hantel.
+            val bottle = PlayInk.Sketch(centerX + 10, groundY - 5, 1, UNBOUNDED, floorY)
+            bottle.art(
+                0, 0,
+                " ## ",
+                " ## ",
+                "####",
+                "#++#",
+                "#++#",
+                "####"
+            )
+            bottle.spark(1, 2)
+            bottle.render(grounded = true)
+        } else {
+            emptyList()
+        }
+
+        return (mat.render(carve = false) + bar.render(grounded = false) + extra)
+            .distinctBy { it.x to it.y }
     }
 
     fun musicCells(
@@ -600,34 +627,48 @@ object PlayEffects {
         val direction = if (useRight) 1 else -1
         val ox = if (useRight) avatarCellX + 11 else avatarCellX + 5
         val oy = avatarCellY + AvatarGeometry.HEADROOM + 2
-        val guitar = buildList {
-            // Grosser Korpus mit Schallloch, langer Hals und Kopfplatte.
-            for (y in 7..14) for (x in 0..8) {
-                val d = (x - 4) * (x - 4) + (y - 10) * (y - 10)
-                if (d in 8..22) add(x to y)
-            }
-            for (y in 0..8) add(7 to y)
-            add(6 to 0); add(8 to 0); add(4 to 10)
-        }
+
+        // Kopfplatte, Hals und ein gerundeter Korpus mit Schallloch als Binnenzeichnung.
+        val guitar = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
+        guitar.dot(2, -3, PlayInk.BODY)
+        guitar.dot(4, -3, PlayInk.BODY)
+        guitar.line(3, -3, 3, -1, PlayInk.BODY)
+        guitar.art(
+            0, 0,
+            "   ##   ",
+            "   ##   ",
+            "  #++#  ",
+            " #++++# ",
+            "#++++++#",
+            "#++++++#",
+            " #++++# ",
+            "  #++#  "
+        )
+        guitar.spark(3, 4)
+
         val count = when (phase) {
             MusicPhase.TUNE -> 1
             MusicPhase.PLAY -> 3
             MusicPhase.FINALE -> 5
         }
         val drift = (scenePhase / 2) % 6
-        val notes = (0 until count).flatMap { i ->
+        // Noten sind Klang, kein Gegenstand: Sie trennen sich ueber Helligkeit, nicht ueber
+        // eine schwarze Kante.
+        val notes = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
+        for (i in 0 until count) {
             val x = 12 + i * 4
             val y = 9 - i * 3 - if (phase != MusicPhase.TUNE) drift else 0
-            listOf(x to y, x to y - 1, x to y - 2, x + 1 to y - 3, x + 2 to y - 3)
+            for ((dx, dy) in listOf(0 to 0, 0 to -1, 0 to -2, 1 to -3, 2 to -3)) {
+                notes.dot(x + dx, y + dy, PlayInk.EDGE)
+            }
         }
-        val stage = (-2..24).map { x -> x to 17 }
-        return (guitar.map { (x, y) ->
-            SceneCell(ox + direction * x, oy + y, PlayScene.FURNITURE)
-        } + notes.map { (x, y) ->
-            SceneCell(ox + direction * x, oy + y, PlayScene.GLOW - 180, isLight = true)
-        } + stage.map { (x, y) ->
-            SceneCell(ox + direction * x, oy + y, PlayScene.BACKDROP)
-        }).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+
+        val stage = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
+        stage.line(-2, 17, 24, 17, PlayInk.DETAIL)
+
+        return (guitar.render(grounded = false) + notes.render(carve = false) + stage.render(carve = false))
+            .filter { it.x in 0 until widthCells }
+            .distinctBy { it.x to it.y }
     }
 
     fun paintingCells(
@@ -641,47 +682,52 @@ object PlayEffects {
         val direction = if (useRight) 1 else -1
         val ox = if (useRight) avatarCellX + 17 else avatarCellX - 2
         val oy = avatarCellY + AvatarGeometry.HEADROOM - 1
-        val frame = buildList {
-            for (x in 0..13) {
-                add(x to 0)
-                add(x to 13)
-            }
-            for (y in 0..13) {
-                add(0 to y)
-                add(13 to y)
-            }
-            for (x in 2..11) add(x to 15)
-            add(3 to 14); add(10 to 14); add(2 to 16); add(11 to 16)
-        }
+
+        val frame = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
+        frame.box(0, 0, 13, 13, PlayInk.BODY)
+        frame.line(2, 15, 11, 15, PlayInk.BODY)
+        frame.line(3, 14, 3, 15, PlayInk.BODY)
+        frame.line(10, 14, 10, 15, PlayInk.BODY)
+        frame.dot(2, 16, PlayInk.BODY)
+        frame.dot(11, 16, PlayInk.BODY)
+
         val progress = when (phase) {
             PaintingPhase.SKETCH -> 5
             PaintingPhase.PAINT -> 9
             PaintingPhase.REVEAL -> 12
         }
-        val picture = buildList {
-            // Ein erkennbares Landschaftsbild entsteht: Sonne, Bergsilhouette, Wiese.
-            if (progress >= 5) {
-                add(10 to 3); add(9 to 3); add(10 to 2)
-                for (x in 2..6) add(x to (10 - kotlin.math.abs(x - 4)))
-            }
-            if (progress >= 9) {
-                for (x in 1..12) add(x to (11 - (x % 3)))
-                for (x in 2..11 step 2) add(x to 12)
-            }
-            if (progress >= 12) {
-                for (x in 1..12) add(x to 11)
-                for (x in 1..12) if ((x + scenePhase / 4) % 3 != 0) add(x to 12)
-            }
+        // Das Bild ist gemaltes Licht auf der Leinwand, kein Gegenstand - es trennt sich ueber
+        // Helligkeit von der Kulisse, nicht ueber eine Aussparung.
+        val picture = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
+        if (progress >= 5) {
+            // Sonne und Bergsilhouette.
+            picture.dot(10, 3, PlayInk.EDGE)
+            picture.dot(9, 3, PlayInk.EDGE)
+            picture.dot(10, 2, PlayInk.EDGE)
+            for (x in 2..6) picture.dot(x, 10 - kotlin.math.abs(x - 4), PlayInk.EDGE)
         }
+        if (progress >= 9) {
+            // Die Wiese darunter.
+            for (x in 1..12) picture.dot(x, 11 - (x % 3), PlayInk.EDGE)
+            for (x in 2..11 step 2) picture.dot(x, 12, PlayInk.EDGE)
+        }
+        if (progress >= 12) {
+            // Fertige Leinwand: durchgehender Bodenstrich, mit flackernder Textur darunter.
+            for (x in 1..12) picture.dot(x, 11, PlayInk.EDGE)
+            for (x in 1..12) if ((x + scenePhase / 4) % 3 != 0) picture.dot(x, 12, PlayInk.EDGE)
+        }
+
         val brushY = 5 + (scenePhase / 2) % 7
-        val brush = (0..6).map { i -> (16 - i / 2) to (brushY + i) }
-        return (frame.map { (x, y) ->
-            SceneCell(ox + direction * x, oy + y, PlayScene.FURNITURE)
-        } + picture.map { (x, y) ->
-            SceneCell(ox + direction * x, oy + y, PlayScene.GLOW - 280, isLight = true)
-        } + brush.map { (x, y) ->
-            SceneCell(ox + direction * x, oy + y, PlayScene.GLOW - 120, isLight = true)
-        }).filter { it.x in 0 until widthCells }.distinctBy { it.x to it.y }
+        val brush = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
+        for (i in 0..6) brush.dot(16 - i / 2, brushY + i, PlayInk.BODY)
+        brush.spark(16, brushY)
+
+        return (
+            frame.render(grounded = false) + picture.render(carve = false) +
+                brush.render(grounded = false)
+            )
+            .filter { it.x in 0 until widthCells }
+            .distinctBy { it.x to it.y }
     }
 
     /**
@@ -711,46 +757,56 @@ object PlayEffects {
             FishingPhase.CATCH -> handY - 1
         }
 
-        val result = mutableListOf<SceneCell>()
         // Die Rute: ein kurzer schraeger Strich von der Hand nach vorn-oben.
-        result += SceneCell(handX, handY, PlayScene.FURNITURE)
-        result += SceneCell(handX + 1, handY - 1, PlayScene.FURNITURE)
-        result += SceneCell(tipX, tipY, PlayScene.FURNITURE)
+        val rod = PlayInk.Sketch(handX, handY, 1, widthCells, UNBOUNDED)
+        rod.dot(0, 0, PlayInk.BODY)
+        rod.dot(1, -1, PlayInk.BODY)
+        rod.dot(tipX - handX, tipY - handY, PlayInk.BODY)
+
         // Die Schnur von der Rutenspitze zum Schwimmer - gleichmaessige Stichproben wie beim
-        // Drachen, auf dem Zellraster reicht das fuer eine erkennbare Linie.
+        // Drachen, auf dem Zellraster reicht das fuer eine erkennbare Linie. Kein Gegenstand,
+        // also keine Freistellung.
+        val line = PlayInk.Sketch(tipX, tipY, 1, widthCells, UNBOUNDED)
         val steps = kotlin.math.max(kotlin.math.abs(bobberX - tipX), kotlin.math.abs(bobberY - tipY))
             .coerceAtLeast(1)
         for (i in 0..steps step 2) {
             val t = i.toFloat() / steps
-            result += SceneCell(
-                x = (tipX + (bobberX - tipX) * t).roundToInt(),
-                y = (tipY + (bobberY - tipY) * t).roundToInt(),
-                brightness = PlayScene.FURNITURE
+            line.dot(
+                ((bobberX - tipX) * t).roundToInt(),
+                ((bobberY - tipY) * t).roundToInt(),
+                PlayInk.DETAIL
             )
         }
+
+        val water = PlayInk.Sketch(bobberX, bobberY, 1, widthCells, UNBOUNDED)
         if (phase == FishingPhase.CATCH) {
             // Der Fisch: ein kleiner Umriss direkt ueber dem Schwimmer, gerade aus dem Wasser
             // gezogen statt darauf zu treiben.
-            val fish = listOf(
-                -4 to 0, -3 to -1, -3 to 1, -2 to -2, -2 to 2,
-                -1 to -2, 0 to -2, 1 to -1, 2 to 0, 1 to 1,
-                0 to 2, -1 to 2, 0 to 0
+            water.art(
+                -4, -6,
+                "  ###  ",
+                " ##+## ",
+                "##+++##",
+                "#+++++#",
+                "##+++##",
+                " ##+## ",
+                "  ###  "
             )
-            for ((dx, dy) in fish) {
-                result += SceneCell(bobberX + dx, bobberY + dy - 4, PlayScene.GLOW - 180, isLight = true)
-            }
-            result += SceneCell(bobberX + 1, bobberY - 5, PlayScene.FURNITURE)
+            water.spark(-1, -4)
         } else {
-            result += SceneCell(bobberX, bobberY, PlayScene.GLOW - 180, isLight = true)
+            // Der Schwimmer ist reiner Lichtpunkt auf dem Wasser, kein Gegenstand.
+            water.spark(0, 0)
             // Wellenringe reagieren sichtbar auf den Schwimmer.
             val spread = 2 + kotlin.math.abs(bob)
             for (dx in -spread..spread) {
-                if (kotlin.math.abs(dx) >= spread - 1) {
-                    result += SceneCell(bobberX + dx, bobberY + 2, PlayScene.BACKDROP)
-                }
+                if (kotlin.math.abs(dx) >= spread - 1) water.dot(dx, 2, PlayInk.EDGE)
             }
         }
-        return result.distinctBy { it.x to it.y }
+
+        return (
+            rod.render(grounded = false) + line.render(carve = false) +
+                water.render(carve = phase == FishingPhase.CATCH)
+            ).distinctBy { it.x to it.y }
     }
 
     /**
@@ -784,42 +840,45 @@ object PlayEffects {
             KitePhase.LAND -> handY - 7
         }
 
-        val result = mutableListOf<SceneCell>()
+        // Eine duenne diagonale Schnur; gleichmaessige Stichproben reichen auf dem Zellraster.
+        // Kein Gegenstand, also keine Freistellung.
+        val string = PlayInk.Sketch(handX, handY, 1, widthCells, UNBOUNDED)
         if (phase != KitePhase.PREPARE) {
-            // Eine duenne diagonale Schnur; gleichmaessige Stichproben reichen auf dem Zellraster.
             val steps = kotlin.math.max(kotlin.math.abs(centerX - handX), kotlin.math.abs(centerY - handY))
                 .coerceAtLeast(1)
             for (i in 0..steps step 2) {
                 val t = i.toFloat() / steps
-                result += SceneCell(
-                    x = (handX + (centerX - handX) * t).roundToInt(),
-                    y = (handY + (centerY - handY) * t).roundToInt(),
-                    brightness = PlayScene.FURNITURE
+                string.dot(
+                    ((centerX - handX) * t).roundToInt(),
+                    ((centerY - handY) * t).roundToInt(),
+                    PlayInk.DETAIL
                 )
             }
         }
 
-        val kite = listOf(
-            0 to -4,
-            -1 to -3, 0 to -3, 1 to -3,
-            -2 to -2, -1 to -2, 0 to -2, 1 to -2, 2 to -2,
-            -3 to -1, -2 to -1, -1 to -1, 0 to -1, 1 to -1, 2 to -1, 3 to -1,
-            -4 to 0, -3 to 0, -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0, 3 to 0, 4 to 0,
-            -3 to 1, -2 to 1, -1 to 1, 0 to 1, 1 to 1, 2 to 1, 3 to 1,
-            -2 to 2, -1 to 2, 0 to 2, 1 to 2, 2 to 2,
-            -1 to 3, 0 to 3, 1 to 3,
-            0 to 4
+        // Der Drachen selbst: eine Raute mit Kreuzstreben, dazu der geknickte Schweif, der ihn
+        // auch in Bewegung eindeutig als Drachen lesbar macht.
+        val kite = PlayInk.Sketch(centerX, centerY, 1, widthCells, UNBOUNDED)
+        kite.art(
+            -3, -4,
+            "  ###  ",
+            " ##+## ",
+            "#######",
+            "#######",
+            "#######",
+            " ##### ",
+            "  ###  "
         )
-        for ((dx, dy) in kite) {
-            result += SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
-        }
-        // Der geknickte Schweif macht die Raute auch in Bewegung eindeutig als Drachen lesbar.
-        result += SceneCell(centerX + 1, centerY + 5, PlayScene.FURNITURE)
-        result += SceneCell(centerX - 1, centerY + 6, PlayScene.FURNITURE)
-        result += SceneCell(centerX + 1, centerY + 7, PlayScene.FURNITURE)
-        result += SceneCell(centerX - 1, centerY + 8, PlayScene.FURNITURE)
-        result += SceneCell(centerX + 1, centerY + 9, PlayScene.FURNITURE)
-        return result.distinctBy { it.x to it.y }
+        kite.spark(0, -3)
+        kite.dot(1, 5, PlayInk.BODY)
+        kite.dot(-1, 6, PlayInk.BODY)
+        kite.dot(1, 7, PlayInk.BODY)
+        kite.dot(-1, 8, PlayInk.BODY)
+        kite.dot(1, 9, PlayInk.BODY)
+
+        return (string.render(carve = false) + kite.render(grounded = false))
+            .filter { it.x in 0 until widthCells }
+            .distinctBy { it.x to it.y }
     }
 
     /**

@@ -117,6 +117,80 @@ class PlayInkTest {
         }
     }
 
+    /**
+     * Die sieben grossen Mehrphasen-Szenen (Drachen, Fussball, Basketball, Training, Musik,
+     * Malen, Angeln) rechneten ihre Helligkeiten bislang selbst aus - jede mit einer eigenen
+     * Formel wie `GLOW - 180`. Seit ihrer Umstellung auf [PlayInk] gilt fuer sie dieselbe Regel
+     * wie fuer die kleinen Weltmotive in [everyMotif]: Genau die Freiheit, sich eine eigene Stufe
+     * auszudenken, hat den Look vorher wieder auseinanderlaufen lassen.
+     */
+    @Test
+    fun `auch die grossen Phasen-Szenen benutzen nur den Zeichenkasten`() {
+        fun assertOnlyInk(name: String, cells: List<SceneCell>) {
+            val fremd = cells.map { it.brightness }.filterNot { it in PlayInk.LEVELS }.distinct()
+            assertTrue(
+                "$name benutzt Stufen ausserhalb des Zeichenkastens: $fremd",
+                fremd.isEmpty()
+            )
+        }
+        for (phase in PlayEffects.FootballPhase.entries) {
+            for (scenePhase in 0..10) {
+                assertOnlyInk(
+                    "Fussball/$phase/$scenePhase",
+                    PlayEffects.footballCells(avatarX, avatarY, phase, scenePhase, width)
+                )
+            }
+        }
+        for (phase in PlayEffects.BasketballPhase.entries) {
+            for (scenePhase in 0..10) {
+                assertOnlyInk(
+                    "Basketball/$phase/$scenePhase",
+                    PlayEffects.basketballCells(avatarX, avatarY, phase, scenePhase, width)
+                )
+            }
+        }
+        for (phase in PlayEffects.TrainingPhase.entries) {
+            for (scenePhase in 0..10) {
+                assertOnlyInk(
+                    "Training/$phase/$scenePhase",
+                    PlayEffects.trainingCells(avatarX, avatarY, phase, scenePhase)
+                )
+            }
+        }
+        for (phase in PlayEffects.MusicPhase.entries) {
+            for (scenePhase in 0..10) {
+                assertOnlyInk(
+                    "Musik/$phase/$scenePhase",
+                    PlayEffects.musicCells(avatarX, avatarY, phase, scenePhase, width)
+                )
+            }
+        }
+        for (phase in PlayEffects.PaintingPhase.entries) {
+            for (scenePhase in 0..10) {
+                assertOnlyInk(
+                    "Malen/$phase/$scenePhase",
+                    PlayEffects.paintingCells(avatarX, avatarY, phase, scenePhase, width)
+                )
+            }
+        }
+        for (phase in PlayEffects.FishingPhase.entries) {
+            for (scenePhase in 0..10) {
+                assertOnlyInk(
+                    "Angeln/$phase/$scenePhase",
+                    PlayEffects.fishingCells(avatarX, avatarY, phase, scenePhase, width)
+                )
+            }
+        }
+        for (phase in PlayEffects.KitePhase.entries) {
+            for (scenePhase in 0..10) {
+                assertOnlyInk(
+                    "Drachen/$phase/$scenePhase",
+                    PlayEffects.kiteCells(avatarX, avatarY, phase, scenePhase, width)
+                )
+            }
+        }
+    }
+
     @Test
     fun `die Bewegungskurven bleiben in ihren Grenzen`() {
         for (phase in 0..40) {
