@@ -137,7 +137,7 @@ class SceneCompositionTest {
         // zaehlt diese Pruefung genau den Vordergrund: benutzbare Stationen plus das neue kleine
         // Beiwerk. Auf einem normalen Hochformat darf fitting davon nichts still verwerfen.
         val expectedForegroundProps = mapOf(
-            PlayScene.Place.STREET to 4, // Briefkasten, Bank, Laterne, Wegweiser
+            PlayScene.Place.STREET to 3, // Briefkasten, Bank, Laterne
             PlayScene.Place.CITY to 5,   // Briefkasten, Abfallkorb, Bank, zwei Laternen
             PlayScene.Place.MEADOW to 4  // Zaun, Bank, Wildwuchs, Pilze
         )

@@ -1088,7 +1088,15 @@ object PlayScene {
             Placement(CATTAILS, anchorX = 0.90f, brightness = BACKDROP, behind = true)
         )
 
-        // Die STRASSE: Haeuser als Hintergrund, davor Laterne und Bank.
+        // Die STRASSE: zwei Haeuser als Hintergrund MIT Luecke dazwischen, davor Briefkasten,
+        // Bank und Laterne.
+        //
+        // **Vorher stand hier ein drittes Haus in der Mitte plus ein Wegweiser rechts** - beides
+        // gestrichen, aus demselben Grund wie beim Laden (siehe [Place.SHOP]): Auf dem Raster
+        // deckten drei Fassaden praktisch die gesamte Bildbreite ab, und die vier Vordergrund-
+        // Stuecke standen dazwischen nur noch 2 bis 4 Zellen auseinander - technisch keine
+        // Ueberschneidung, aber ein Bild ohne jede Luft. Zwei Haeuser MIT sichtbarer Luecke
+        // dazwischen lesen sich als Strasse, drei ohne Luecke als eine einzige Fassadenwand.
         //
         // Die Fassaden stehen auf BACKDROP, also deutlich dunkler als alles davor. Das ist hier
         // nicht nur Staffelung, sondern die ganze Aussage: Sie sind Umgebung, nicht Gegenstand -
@@ -1096,14 +1104,12 @@ object PlayScene {
         // Moebel-Helligkeit gezeichnet uebernaehmen sie sofort das Bild.
         Place.STREET -> listOf(
             Placement(HOUSE, anchorX = 0.02f, brightness = BACKDROP, behind = true),
-            Placement(HOUSE_LOW, anchorX = 0.44f, brightness = BACKDROP, behind = true),
             Placement(HOUSE, anchorX = 1f, brightness = BACKDROP, behind = true),
             Placement(MAILBOX, anchorX = 0.30f),
             Placement(BENCH, anchorX = 0.52f, station = Station.BENCH),
             // 0,74 und nicht weiter rechts: Bei 0,84 stand die Laterne vollstaendig IN der
             // rechten Fassade. Vor einem Haus zu stehen ist richtig, darin zu verschwinden nicht.
-            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP),
-            Placement(STREET_SIGN, anchorX = 0.96f)
+            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP)
         )
 
         // Der WALD: drei verschiedene Baeume, ein umgestuerzter Stamm zum Sitzen, Unterholz.
@@ -1599,15 +1605,6 @@ object PlayScene {
             vLine(5, 12, 16) + vLine(8, 12, 16) + hLine(5, 8, 12)
     )
 
-    /** Zweites, niedrigeres Haus - eine Strasse aus lauter gleichen Fassaden ist eine Tapete. */
-    private val HOUSE_LOW = Prop(
-        width = 11, height = 12,
-        art = hLine(0, 10, 0) + vLine(0, 1, 11) + vLine(10, 1, 11) +
-            hLine(1, 9, 6) +
-            vLine(2, 2, 5) + vLine(4, 2, 5) + vLine(7, 2, 5) + vLine(9, 2, 5) +
-            vLine(4, 8, 11) + vLine(7, 8, 11) + hLine(4, 7, 8)
-    )
-
     // ---- Draussen: kleines Stadt- und Naturbeiwerk ----
     //
     // Die Silhouetten sind fuer Itoevas Seitenansicht neu gezeichnet, orientieren sich aber an
@@ -1621,13 +1618,6 @@ object PlayScene {
         art = hLine(1, 4, 0) + listOf(0 to 1, 5 to 1) + hLine(0, 5, 2) +
             vLine(0, 1, 3) + vLine(5, 1, 3) + listOf(4 to 1) +
             vLine(3, 3, 6) + hLine(2, 4, 6)
-    )
-
-    /** Wegweiser mit zwei verschieden langen Armen; dadurch kein zweiter Laternenmast. */
-    private val STREET_SIGN = Prop(
-        width = 7, height = 9,
-        art = hLine(1, 6, 0) + listOf(6 to 1) + hLine(0, 5, 2) + listOf(0 to 3) +
-            vLine(3, 3, 8) + hLine(2, 4, 8)
     )
 
     /** Offener Abfallkorb mit Latten - keine geschlossene Flaeche im ohnehin dichten Stadtbild. */
