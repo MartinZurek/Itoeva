@@ -148,23 +148,24 @@ object PlayEffects {
             }
 
             AnimationType.BOOK -> {
-                // Aufgeschlagenes Buch: zwei Seiten, ein Ruecken, Zeilen als Binnenzeichnung -
-                // und eine Ecke, die sich hebt. Die Zeilen liegen auf DETAIL, damit sie die
-                // Silhouette nicht zerschneiden.
-                val book = place(height = 7)
+                // Aufgeschlagenes Buch: ZWEI GETRENNTE Seiten mit echter Luecke am Ruecken statt
+                // einer durchgehenden Silhouette - nur eine Luecke liest sich aus der Distanz als
+                // "zwei Haelften", eine einzige zusammenhaengende Flaeche dagegen als ein Klotz.
+                // Die Zeilen aus abwechselndem BODY/DETAIL sind Text-Andeutung, keine Fuellung.
+                val book = place(height = 6)
                 book.art(
                     0, 0,
-                    " ###     ### ",
-                    "#####   #####",
-                    "#+++##+##+++#",
-                    "#+++##+##+++#",
-                    "#+++##+##+++#",
-                    "#####################".take(13),
-                    " ########### "
+                    "  ###   ###  ",
+                    " ##### ##### ",
+                    " #+#+# #+#+# ",
+                    " ##### ##### ",
+                    " #+#+# #+#+# ",
+                    " ##### ##### "
                 )
-                // Die umblaetternde Seite hebt sich UEBER die Oberkante des Buches. Zeichnete
-                // man sie innerhalb der Seiten, aenderte sich nur die Binnenzeichnung - und ein
-                // Buch, dessen Umriss sich nie ruehrt, blaettert aus der Ferne nicht um.
+                // Die umblaetternde Seite hebt sich UEBER die Oberkante des Buches, genau an der
+                // Luecke. Zeichnete man sie innerhalb der Seiten, aenderte sich nur die
+                // Binnenzeichnung - und ein Buch, dessen Umriss sich nie ruehrt, blaettert aus der
+                // Ferne nicht um.
                 val turn = beat % 4
                 for (i in 0 until turn) book.dot(6 + i, -1 - i, PlayInk.BODY)
                 book.render(grounded = true)
@@ -228,7 +229,10 @@ object PlayEffects {
             }
 
             AnimationType.DRINK -> {
-                // Glas mit steigendem Pegel und einem Tropfen, der von oben nachfaellt.
+                // Glas mit steigendem Pegel und einem Tropfen, der sichtbar bis zum Rand faellt
+                // und dort spritzt. Der Tropfen liegt in DENSELBEN lokalen Koordinaten wie das
+                // Glas (nicht in einem eigenen, weit darueber schwebenden Sketch) - sonst haengt
+                // er sichtbar in der Luft, ohne dass er je etwas beruehrt.
                 val glass = place(height = 8)
                 glass.art(
                     0, 0,
@@ -246,10 +250,18 @@ object PlayEffects {
                 val level = 1 + beat
                 for (y in (6 - level).coerceAtLeast(1)..5) glass.line(1, y, 4, y, PlayInk.DETAIL)
                 glass.spark(1, 1)
-                val drop = place(height = 4, lift = 9)
-                drop.dot(2, beat, PlayInk.SPARK)
-                drop.dot(2, beat + 1, PlayInk.EDGE)
-                glass.render(grounded = true) + drop.render(carve = false)
+                // Der Tropfen naehert sich ueber die vier Takte dem Rand (y=-4 bis y=-1) und
+                // spritzt im letzten Takt sichtbar auf - erst das macht aus "ein Punkt schwebt"
+                // ein "etwas faellt und trifft".
+                val dropY = -4 + beat
+                glass.dot(2, dropY, PlayInk.SPARK)
+                glass.dot(2, dropY + 1, PlayInk.EDGE)
+                if (beat == 3) {
+                    glass.dot(1, 0, PlayInk.EDGE)
+                    glass.dot(3, 0, PlayInk.EDGE)
+                    glass.spark(2, 0)
+                }
+                glass.render(grounded = true)
             }
 
             AnimationType.MEDICINE -> {

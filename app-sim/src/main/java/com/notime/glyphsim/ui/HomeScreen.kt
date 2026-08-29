@@ -80,8 +80,6 @@ import com.notime.glyphsim.matrix.AvatarClip
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.ReactionTrigger
-import com.notime.glyphsim.skilltree.AvatarActivityBus
-import com.notime.glyphsim.skilltree.AvatarActivityPlans
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.ClipStorage
 import com.notime.glyphsim.matrix.ClockFrameSim
@@ -311,51 +309,8 @@ fun HomeScreen(
         }
     }
 
-    // ---- Skillbaum: die freigeschalteten Animationen und die Leiste darunter ----
-    // Beobachtet, damit die Leiste in dem Moment mitwaechst, in dem etwas freigeschaltet wird.
-    val companionProfileId = remember(currentSpecies) { AvatarSpeciesPrefs.profileId(currentSpecies) }
-    val unlockedNodes = rememberUnlockedNodes(context, companionProfileId)
+    // ---- Skillbaum: nur noch der Weg zum Baumbildschirm, keine Zieh-Leiste mehr darunter ----
     var showSkillTree by remember { mutableStateOf(false) }
-
-    /**
-     * Eine Animation aus der Leiste auf den Avatar gezogen.
-     *
-     * **Bewusst ohne Fuetter-Ereignis und ohne XP.** Ein Zug aus der Leiste beantwortet keine
-     * Erinnerung - er ist ein Spielzug. Wuerde er in `avatar_feed_events` landen, faelschte er
-     * genau die Statistik, aus der die Neigung des Skillbaums gerechnet wird: Der Baum wuerde sich
-     * dann aus sich selbst speisen statt aus dem, was der Nutzer tatsaechlich im Alltag tut.
-     *
-     * **Was abgespielt wird, entscheidet [AvatarActivityPlans]** und nicht diese Stelle: Eine
-     * Einlage der Stufe 3 braucht eine laufende Beschaeftigung, in der sie stattfinden kann, und
-     * bringt sonst erst den Wechsel dorthin mit. Die Schritte laufen ohne Pause hintereinander -
-     * dazwischen die Ruhelage zu zeigen wuerde aus einer Bewegung zwei machen.
-     */
-    fun playFromBar(node: com.notime.glyphcore.data.AnimationNode) {
-        if (isReacting || activeReminder != null) return
-        val now = System.currentTimeMillis()
-        val plan = AvatarActivityPlans.planFor(AvatarActivityBus.currentIfFresh(now), node)
-        isReacting = true
-        scope.launch {
-            try {
-                for (step in plan.steps) {
-                    AvatarFeeding.playReaction(
-                        species = currentSpecies,
-                        trigger = ReactionTrigger.ofNode(step.nodeId),
-                        screenWidthPx = screenWidthPx,
-                        screenHeightPx = screenHeightPx,
-                        onFrame = { avatarFrame = it },
-                        onOffset = { avatarDrag = it }
-                    )
-                }
-                // Erst nach dem Abspielen: Bricht die Wiedergabe ab (Bildschirm verlassen), soll
-                // nicht eine Beschaeftigung stehen bleiben, die nie zu sehen war.
-                AvatarActivityBus.set(plan.resultingActivity, System.currentTimeMillis())
-            } finally {
-                avatarDrag = Offset.Zero
-                isReacting = false
-            }
-        }
-    }
 
     // Gemeinsamer Kern von feedNow (Uhr -> Avatar) und feedFromSlot (Speicherplatz -> Avatar):
     // beide beenden eine Ausloesung auf dieselbe Weise, nur woher sie kommt und was danach
@@ -930,17 +885,15 @@ fun HomeScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            // Die Leiste steht UNTER dem Avatar, nicht daneben: Gezogen wird nach oben auf die
-            // Figur, und dieser Weg soll frei sein. Waehrend einer wartenden Erinnerung ist sie
-            // abgeblendet - dann gehoert die Geste der Uhr, und zwei Zieh-Ziele nebeneinander
-            // waeren nur verwirrend.
-            SkillDragBar(
-                nodes = unlockedNodes,
-                avatarBounds = avatarBounds,
-                enabled = !isReacting && activeReminder == null,
-                onDrop = { node -> playFromBar(node) },
-                onOpenTree = { showSkillTree = true }
-            )
+            // Der Weg zum Baumbildschirm bleibt, auch ohne die Zieh-Leiste darunter - sonst waere
+            // der Skillbaum von hier aus gar nicht mehr erreichbar.
+            TextButton(onClick = { showSkillTree = true }) {
+                Text(
+                    stringResource(R.string.skill_tree_title),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TamaPalette.TextMuted
+                )
+            }
         }
 
             // Vier feste Speicherplaetze nur im Spielmodus, rechts und etwas oberhalb der Mitte

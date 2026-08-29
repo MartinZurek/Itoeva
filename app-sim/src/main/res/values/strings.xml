@@ -726,12 +726,7 @@
     <string name="talk_a_path_hobby">What I picked up: %1$s.</string>
     <string name="talk_a_path_things">Have a look around – there is more standing about than at the start.</string>
 
-    <!-- Skillbaum: Zieh-Leiste und Baumbildschirm (siehe SKILLBAUM.md). -->
-    <string name="skill_bar_title">Your animations</string>
-    <string name="skill_bar_hint">Drag one onto your companion</string>
-    <string name="skill_bar_empty">Nothing unlocked yet</string>
-    <string name="a11y_skill_drag">%1$s — drag onto your companion, or use this action</string>
-    <string name="a11y_skill_play">Show %1$s</string>
+    <!-- Skillbaum: Baumbildschirm (siehe SKILLBAUM.md). -->
     <string name="skill_tree_title">Skill tree</string>
     <string name="skill_tree_progress">%1$d of %2$d open</string>
     <string name="skill_tree_points_available">⭐ %1$d to spend</string>
