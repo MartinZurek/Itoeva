@@ -610,9 +610,11 @@ Diablo 2, das Sphere Grid aus Final Fantasy X. Auf Nutzerwunsch, siehe Entscheid
       `AvatarFeedEventDao.answeredNodes`/`AnsweredNodeRow`. `UnlockOffers.frontier`/
       `.startingNodes` und `SkillTreeRows`/`NodeState` (Zustandsrechnung) blieben unangetastet —
       das Brett zeichnet nur, was vorher schon berechnet wurde.
-- [x] `SkillTreeScreen.kt` neu: pan-/zoombares `Canvas` fuer Kanten + Knoten-Chips ueber
-      `Modifier.transformable`/`graphicsLayer`. Tippbar nur, was `NodeState.AVAILABLE` ist UND
-      noch ein Skillpunkt uebrig ist (`LevelUnlocks.due`).
+- [x] ~~`SkillTreeScreen.kt` neu: pan-/zoombares `Canvas` fuer Kanten + Knoten-Chips ueber
+      `Modifier.transformable`/`graphicsLayer`.~~ **Ersetzt in P12** durch eine Ebene-fuer-Ebene-
+      Ansicht — das freie Brett zeigte alle 79 Knoten auf einmal und verlangte Pan/Zoom nur fuer
+      die Uebersicht. Tippbar bleibt weiterhin nur, was `NodeState.AVAILABLE` ist UND noch ein
+      Skillpunkt uebrig ist (`LevelUnlocks.due`) — das aendert P12 nicht.
 - [x] `SkillTreeDialog.kt` liest den Freischalt-Stand jetzt selbst aus dem Repository (voller
       Stand statt der motiv-gefilterten Zieh-Leisten-Teilmenge) und sperrt Doppel-Taps waehrend
       ein `unlock`-Aufruf laeuft.
@@ -628,9 +630,62 @@ Diablo 2, das Sphere Grid aus Final Fantasy X. Auf Nutzerwunsch, siehe Entscheid
 - Neue DB-Entities/-Migrationen — keine noetig, `AvatarUnlockedNode` und `unlock()` gab es schon.
 
 **Prüfen:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, danach das Brett auf
-dem Geraet/Emulator ansehen — Pan/Zoom-Gesten (`Modifier.transformable`) und die feste
-`DpSize`-Berechnung des Bretts (`boardSize` in `SkillTreeScreen.kt`) sind neue Technik in diesem
-Projekt und liessen sich hier mangels Netzzugriff nicht gegenpruefen (siehe Journal).
+dem Geraet/Emulator ansehen. Ergebnis dieser Pruefung: ein echter Kompilierfehler in
+`SkillTreeScreen.kt` (falsches `graphicsLayer`-Paket, fehlende `getValue`/`setValue`-Imports fuer
+die `by remember`-Delegates) — behoben in einem Folge-Commit, seither gruen (siehe Journal). Das
+pan-/zoombare Brett selbst ist damit P12 gewichen, bevor es auf dem Geraet gegengeprueft wurde.
+
+---
+
+### P12 — Ebene fuer Ebene statt Gesamtansicht
+
+Auf Nutzerwunsch, nachdem P11 auf dem Handy getestet war: **"Es war tatsächlich nur das, was man
+sehen will."** Das freie Brett aus P11 zeigte von Anfang an alle 79 Knoten - fuer eine Antwort auf
+"was kommt als Naechstes" musste man sich trotzdem erst durch eine grosse Flaeche zurechtfinden.
+Diese Runde klappt den Baum stattdessen wie einen Ordnerbaum auf: **eine Ebene nach der anderen.**
+
+- [x] `SkillTreeScreen.kt` erneut neu: `openId: String?` als einziger Navigationszustand - `null`
+      zeigt die neun Hauptgruppen als Kacheln (`OverviewGrid`), ein gesetzter Wert zeigt genau
+      diesen einen Knoten als Kopf (`HubChip`) mit seinen Kindern darunter (`BranchFan`), durch
+      Linien verbunden. Antippen eines Kindes MIT eigenen Kindern oeffnet es (`openId` wechselt);
+      ein Blatt ohne Kinder schaltet frei, wenn es `AVAILABLE` ist und ein Punkt uebrig ist.
+- [x] Ob ein Knoten Kinder hat, wird aus dem Bestand selbst gelesen (`rows.hasChildren`, private
+      Erweiterung auf `List<SkillTreeRow>`) — keine Tiefenannahme im Code, dieselbe Zusage wie
+      schon in P11.
+- [x] Brotkrumen-Pfad (`SkillTreeBreadcrumb`) oben: "Übersicht › Sport › Ballsport", jede Station
+      einzeln antippbar - das ist zugleich die einzige "Zurueck"-Navigation, kein separater Knopf.
+- [x] Verbindungslinien zwischen Kopf und Kindern nutzen tatsaechlich GEMESSENE Positionen
+      (`onGloballyPositioned` + `boundsInRoot()`, dasselbe Muster wie `SkillDragBar.kt`s
+      `restingBounds`) statt selbst gerechneter Geometrie — dadurch ist `AnimationTreeLayout`
+      hier nicht mehr noetig (bleibt aber im Code, siehe unten).
+- [x] `SkillTreeRows.progressFor` (bisher ungenutzt) zeigt jetzt "3 von 7 offen" auf jeder
+      Hauptgruppen-Kachel - `skill_tree_progress` dafuer wieder ergaenzt (in P11 entfernt, weil
+      es damals nichts mehr benutzte).
+- [x] Neue Zeichenkette `skill_tree_overview` fuer die erste Brotkrumen-Station.
+- [x] Ein sanfter Farbwechsel (`Crossfade`, 220 ms, dasselbe Muster wie in `AvatarClipPlayer.kt`)
+      beim Wechsel zwischen Ebenen statt eines harten Sprungs.
+
+**Bewusst nicht Teil dieser Runde:**
+- `AnimationTreeLayout` (`:core`) bleibt im Code, wird aber von der Oberflaeche nicht mehr
+  benutzt - fuer eine moegliche spaetere "Gesamtuebersicht"-Ansicht (Kartensymbol o. ae.) bewusst
+  nicht geloescht, dort waere sie sofort wieder brauchbar.
+- Eine ausgewachsene "Aufklapp"-Animation (Knoten wachsen sichtbar aus dem Kopf heraus) - nur ein
+  Farbwechsel zwischen den Ebenen, keine Skalier-/Wachs-Animation der einzelnen Chips. Wuerde
+  `AnimatedVisibility`/`animateContentSize` brauchen, beides ohne Vorbild in diesem Projekt und
+  deshalb bewusst zurueckgestellt, um nicht zwei ungeprüfte Compose-Muster in einer Sitzung
+  einzufuehren.
+- Eine zweite Zeile fuer Zweige mit mehr als vier Kindern wird automatisch umgebrochen
+  (`children.chunked(4)`), aber nicht eigens auf schmalen Geraeten nachgemessen.
+
+**Prüfen:** Wie bei P11 kein Gradle-Lauf moeglich (Netzzugriff gesperrt). Diesmal jede neu
+verwendete Compose-API einzeln gegen bereits im Projekt vorhandene, funktionierende Aufrufstellen
+abgeglichen, statt sie aus der Erinnerung zu vertrauen (`Crossfade` gegen `AvatarClipPlayer.kt`,
+`boundsInRoot`/`onGloballyPositioned` gegen `SkillDragBar.kt`/`HomeScreen.kt`,
+`mutableStateMapOf` gegen `mutableStateListOf` in `HomeScreen.kt`, `matchParentSize` gegen
+`DockScreen.kt`) - eine Lehre aus dem Kompilierfehler in P11. Eine Arrangement.spacedBy-Ueberladung
+mit Ausrichtung wurde bewusst NICHT verwendet, weil dafuer keine Vorbildstelle im Projekt existierte
+- stattdessen eine Box mit `contentAlignment = Alignment.Center` um eine schlichte `Row`, beides
+zweifelsfrei belegt. Trotzdem: auf dem Geraet noch nicht gesehen.
 
 ---
 
@@ -639,13 +694,17 @@ Projekt und liessen sich hier mangels Netzzugriff nicht gegenpruefen (siehe Jour
 - [ ] Selbstgezeichnete Animationen der Nutzer: Auffang-Knoten je Hauptgruppe, Zuordnung später
       von Hand?
 - [ ] Braucht die Zieh-Leiste eine Abklingzeit? Sonst füttert man im Sekundentakt.
-- [ ] **Aus P11:** Gruppennamen als schwebende Beschriftung ueber jeder Wurzel-Spur auf dem Brett —
-      bewusst zurueckgestellt, um die Layout-Mathematik in dieser Sitzung nicht ungeprueft weiter
-      zu verschachteln. Die Wurzel-Chips selbst tragen ihr Emoji schon, der Name kommt derzeit nur
-      ueber die Bedienungshilfen-Beschreibung an.
-- [ ] **Aus P11:** Auf dem Geraet gegenpruefen, ob `Modifier.transformable` sich mit den
-      Chip-`clickable`-Handlern vertraegt wie angenommen (Taps sollen trotz Pan/Zoom-Erkennung auf
-      dem Elternelement ankommen) — ungeprueft mangels Netzzugriff, siehe Journal.
+- [x] ~~Aus P11: Gruppennamen als schwebende Beschriftung ueber jeder Wurzel-Spur auf dem Brett~~
+      **gegenstandslos** — P12 ersetzt das freie Brett durch Kacheln mit vollem Textnamen.
+- [x] ~~Aus P11: `Modifier.transformable` gegen Chip-`clickable` auf dem Geraet pruefen~~
+      **gegenstandslos** — P12 hat kein Pan/Zoom mehr, die Frage stellt sich nicht mehr.
+- [ ] **Aus P12:** Eine echte "Aufklapp"-Animation (Kinder wachsen sichtbar aus dem Kopf, statt nur
+      einzublenden) — bewusst zurueckgestellt, siehe Begruendung dort.
+- [ ] **Aus P12:** Auf dem Geraet gegenpruefen, ob ein Zweig mit sechs Kindern (`arbeit/erledigen`,
+      der einzige mit sechs) auf einem schmalen Telefon wirklich zweizeilig sauber umbricht.
+- [ ] **Aus P12:** `AnimationTreeLayout` (`:core`) ist seit dieser Runde ungenutzt - im Code
+      belassen fuer eine moegliche Kartenansicht, aber im Auge behalten, ob sie tatsaechlich
+      irgendwann gebraucht wird oder eher Altlast bleibt.
 - [x] Restliche Auffaelligkeiten aus der Motiv-Pruefung (P10): `Lighthouse`, `Rain`, `Paw`,
       `Rocket` und `Comet` in der runden Vorschau geprueft und gezielt verbessert. Strahlen,
       Tropfen und Spur bleiben aus den abgeschnittenen Ecken; Rakete und Komet sind voller lesbar.
@@ -659,6 +718,8 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-08-29 | P12 — Ebene fuer Ebene | **Nutzer-Feedback nach dem ersten echten Test auf dem Handy: das Brett aus P11 zeigte alle 79 Knoten auf einmal, das fuehlte sich als "Riesenflaeche" an statt als "nur das, was man sehen will".** `SkillTreeScreen.kt` klappt den Baum jetzt wie einen Ordnerbaum auf: `openId: String?` ist der einzige Navigationszustand, `null` zeigt die neun Hauptgruppen als Kacheln, ein gesetzter Wert zeigt genau einen Kopf mit seinen Kindern darunter, per gemessenen Positionen (`onGloballyPositioned`/`boundsInRoot`) verbunden statt per selbst gerechneter Geometrie — `AnimationTreeLayout` wird dafuer nicht mehr gebraucht, bleibt aber im Code fuer eine moegliche spaetere Kartenansicht. Ein Brotkrumen-Pfad oben ist zugleich die einzige Zurueck-Navigation. `SkillTreeRows.progressFor` (seit P11 ungenutzt) zeigt jetzt "3 von 7 offen" auf jeder Hauptgruppen-Kachel - `skill_tree_progress` dafuer wieder ergaenzt. **Lehre aus dem Kompilierfehler weiter oben mitgenommen:** jede neu verwendete Compose-API diesmal einzeln gegen eine bereits funktionierende Aufrufstelle im Projekt abgeglichen (`Crossfade` gegen `AvatarClipPlayer.kt`, `boundsInRoot` gegen `SkillDragBar.kt`, `mutableStateMapOf` gegen `mutableStateListOf` in `HomeScreen.kt`, `matchParentSize` gegen `DockScreen.kt`), und eine Arrangement.spacedBy-Ueberladung ohne Vorbild im Projekt bewusst durch eine belegte Box+Row-Kombination ersetzt. **Nicht gegengeprueft:** weiterhin kein Netzzugriff, kein Gradle-Lauf, nichts davon auf einem Geraet gesehen. **Fuer die naechste Sitzung:** `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest`, dann das Brett auf dem Geraet ansehen - insbesondere den sechs-Kinder-Zweig (`arbeit/erledigen`) auf einem schmalen Telefon, und ob sich das Antippen/die Brotkrumen-Navigation gut anfuehlt. Offene Politur: eine echte Wachstums-Animation beim Aufklappen (siehe "Offene Punkte"). |
+| 2026-08-29 | P11-Nachbesserung | **CI fing einen echten Kompilierfehler in `SkillTreeScreen.kt`** (Push direkt nach P11, vor jeder Geraetepruefung): `graphicsLayer` faelschlich unter `androidx.compose.ui.draw` importiert (richtig: `androidx.compose.ui.graphics`, siehe `AvatarClipPlayer.kt`), dazu fehlten `getValue`/`setValue` fuer die `by remember`-Delegates (`scale`, `pan`) - ohne sie loest Kotlin nicht das eigentlich gemeinte `State`, sondern eine irrefuehrende Ambiguitaet zwischen `kotlin.getValue`/`kotlin.collections.getValue`. Beides in einem Folge-Commit behoben, seither lief die gesamte PR #43 gruen durch (Unit-Tests, beide Instrumentierungslaeufe, Lint, APK-Auslieferung). **Fuer kuenftige Sitzungen ohne Netzzugriff:** neue Compose-APIs im Zweifel gegen eine bereits im Projekt vorhandene Aufrufstelle abgleichen statt aus der Erinnerung zu vertrauen - genau das hat P12 danach befolgt. |
 | 2026-08-29 | P11 — Wander-Brett | **Freischaltung ist jetzt manuell: der Spieler wandert selbst ueber ein raeumliches Brett statt einen 2+1-Dialog vorgesetzt zu bekommen** — Nutzerwunsch, Vorbild Diablo 2 / das Sphere Grid aus Final Fantasy X. Kernfund: `AnimationNode.depth`/`.parentId` waren schon rein pfadbasiert (aus dem `/`-getrennten Pfad berechnet), der Baum war also schon vor dieser Sitzung beliebig tief — nur die Oberflaeche (eine Liste) und die Freischalt-Mechanik (Algorithmus) waren es nicht. Neu: `AnimationTreeLayout` (`:core`) rechnet jedem Knoten eine Brett-Position aus, tiefenunabhaengig (Test mit einem eigens gebauten fuenfstufigen Baum als Beleg). `SkillTreeScreen.kt` ist jetzt ein pan-/zoombares `Canvas`+Chip-Brett (`Modifier.transformable`/`graphicsLayer`, `boardX`/`boardY`-Hilfsfunktionen) statt einer `LazyColumn`; `SkillTreeRows`/`NodeState` (Zustandsrechnung) und `UnlockOffers.frontier`/`.startingNodes` (die "erreichbaren Nachbarn") blieben dabei komplett unangetastet, nur wie sie gezeichnet werden aenderte sich. Entfernt, weil nur die alte Automatik bediente: `BranchAffinity`, `UnlockOffer`+`UnlockOffers.build`, `AvatarUnlockRepository.offerFor`, `LevelUnlockDialog`, `AvatarFeedEventDao.answeredNodes`/`AnsweredNodeRow`. `DockScreen.kt`: der Levelaufstiegs-Glueckwunsch wartet nicht mehr auf eine abgeschlossene Wahl, sondern bestaetigt sich nach `LEVEL_UP_BANNER_MS` (3,2 s) von selbst — die Wahl kann jetzt jederzeit spaeter auf dem Brett passieren. Keine DB-Migration noetig, `AvatarUnlockedNode`/`unlock()` gab es schon. **Nicht gegengeprueft:** `dl.google.com` bleibt in dieser Umgebung gesperrt (siehe letzte Sitzung), kein Gradle-Lauf moeglich — Logik von Hand durchgerechnet, aber `Modifier.transformable` in Kombination mit Chip-`clickable` (ob Taps trotz Pan/Zoom-Erkennung ankommen) und die `boardSize`-Layoutrechnung sind neue Technik in diesem Projekt und real ungeprueft. **Fuer die naechste Sitzung:** Zuerst `gradlew.bat :core:testDebugUnitTest :app-sim:testDebugUnitTest` auf einer Maschine mit Netzzugriff, dann das Brett auf dem Geraet ansehen (Pan/Zoom, Taps, Lesbarkeit bei 79 Knoten). Offene Politur: Gruppennamen als Beschriftung ueber den Wurzel-Spuren (siehe "Offene Punkte"). |
 | 2026-08-29 | Phasen-Szenen auf PlayInk | **Die sieben grossen Mehrphasen-Szenen sind jetzt auf PlayInk umgestellt** - genau der Punkt, den die vorige Sitzung offen liess. `footballCells`, `basketballCells`, `trainingCells`, `musicCells`, `paintingCells`, `fishingCells` und `kiteCells` rechneten ihre Helligkeiten bisher alle selbst aus (`PlayScene.GLOW - 180` und aehnliche Ad-hoc-Werte); jetzt zeichnen sie ueber `PlayInk.Sketch` wie die zwoelf Weltmotive: Material auf BODY mit automatischer Kantenlicht-Berechnung, Binnenzeichnung auf DETAIL, ein Glanzpunkt als SPARK, und Freistellung nur dort, wo tatsaechlich ein Gegenstand gemeint ist (Ball, Hantel, Gitarre, Bild-Rahmen, Angelrute, Drachen) - Klaenge, Noten, Wellenringe und das gemalte Bild bleiben bewusst Licht ohne Kante. Die Bewegungslogik selbst (Positionen, Phasen, `sway`/`bob`/`drift`) ist unveraendert geblieben, nur wie daraus Zellen werden. Neuer Test `auch die grossen Phasen-Szenen benutzen nur den Zeichenkasten` in `PlayInkTest` prueft alle sieben Szenen ueber alle Phasen und mehrere `scenePhase`-Werte gegen `PlayInk.LEVELS` - dieselbe Regel, die vorher nur `everyMotif` durchlief. Die bestehenden `PlayEffectsTest`-Faelle (Ballhoehe, Notenzahl, Bildwachstum, Drachenschnur) sind von Hand gegen die neuen Koordinatenrechnungen durchgerechnet, nicht nur gelesen. **Nicht gegengeprueft:** `dl.google.com` ist in dieser Umgebung gesperrt (Proxy-Policy), das Android Gradle Plugin laesst sich deshalb nicht aufloesen - weder `:core:testDebugUnitTest` noch `:app-sim:testDebugUnitTest` noch der Kontaktbogen liefen hier. **Fuer die naechste Sitzung:** Als Erstes `gradlew.bat :app-sim:testDebugUnitTest` auf einer Maschine mit Netzzugriff laufen lassen und den Kontaktbogen fuer alle sieben Szenen ansehen, bevor weitere Pixelarbeit folgt - siehe die Warnung zu Footballs Tor und Konfetti weiter oben, dieselbe Kategorie Fehler ist hier ungeprueft moeglich. |
 | 2026-08-29 | Zeichenkasten | **Die Requisiten-Ebene hat jetzt ein Regelwerk statt zwoelf Einzelentscheidungen: PlayInk.** Vorher rechnete sich jedes Motiv seine Helligkeit selbst aus (GLOW - 180 und aehnlich) und landete damit zufaellig genau dort, wo auch die Kulisse liegt - das Buch war so hell wie das Regal dahinter, das es beruehrte. Neu sind eine eigene Tonwertstufe fuer Material (BODY, zwischen FURNITURE und GLOW), Kantenlicht immer von oben links (vom Werkzeug gesetzt, nicht vom Motiv gezeichnet), eine deckend schwarze Aussparung (VOID) rings um jede Silhouette und ein Bodenschatten unter allem, was steht. **Die Kernregel:** Materie trennt sich durch die KANTE, Licht durch HELLIGKEIT (ab EDGE) - Materiegewicht ohne Aussparung ist verboten, das ist genau der Fleck. Alle zwoelf Weltmotive und die fuenf getragenen Gegenstaende sind darauf umgestellt und deutlich kleiner geworden (hoechstens 13 statt 18 Zellen breit); Groesse war nie das Problem, fehlende Luft ringsum schon. **Zwei Werkzeugluecken geschlossen:** Der Kontaktbogen zeigte jede Effektzelle als flaches Sternchen und die Figur als blosses A - er warf also ausgerechnet die Helligkeit weg, an der Lesbarkeit haengt, und bescheinigte jedem Entwurf eine Trennung, die er nicht hatte. Jetzt steht zuerst das Verbundbild (alles durch dieselbe Rampe) und darunter die Ebenenkarte. Ausserdem zeigt er fuenf Takte statt einem. **Dabei aufgefallen:** sechs Motive aenderten sich zwar, aber nur INNERHALB ihrer Silhouette (blinkende Schreibmarke, Glanzpunkt auf der Kapsel, umblaetternde Seite zwischen den Seiten) - aus zwei Metern Abstand ein Standbild. Sie bewegen jetzt ihren Umriss. Neuer PlayInkTest haelt die Regeln fest: keine erfundenen Helligkeiten, Material ueber der Moebelstufe, nichts unter dem Boden, und die Trennungsregel. 510 Tests gruen, Lint gruen, beide APKs bauen. **Fuer die naechste Sitzung:** Die sieben grossen Phasen-Szenen (Drachen, Fussball, Basketball, Training, Musik, Malen, Angeln) rechnen ihre Helligkeiten NOCH IMMER selbst aus und sind nicht auf PlayInk umgestellt - das ist die naechste Adresse, und der Test dafuer steht schon. |

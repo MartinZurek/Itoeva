@@ -726,6 +726,8 @@
     <string name="a11y_skill_drag">%1$s — auf den Begleiter ziehen, oder diese Aktion benutzen</string>
     <string name="a11y_skill_play">%1$s zeigen</string>
     <string name="skill_tree_title">Fähigkeitenbaum</string>
+    <string name="skill_tree_overview">Übersicht</string>
+    <string name="skill_tree_progress">%1$d von %2$d offen</string>
     <string name="skill_tree_points_available">⭐ %1$d übrig</string>
     <string name="skill_tree_state_available">als Nächstes</string>
     <string name="skill_tree_state_locked">gesperrt</string>

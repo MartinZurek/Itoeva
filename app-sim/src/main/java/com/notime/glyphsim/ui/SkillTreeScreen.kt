@@ -1,24 +1,29 @@
 package com.notime.glyphsim.ui
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,16 +32,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.notime.glyphcore.data.AnimationTreeLayout
 import com.notime.glyphsim.R
 import com.notime.glyphsim.skilltree.LevelUnlocks
 import com.notime.glyphsim.skilltree.NodeState
@@ -44,20 +47,29 @@ import com.notime.glyphsim.skilltree.SkillTreeRow
 import com.notime.glyphsim.skilltree.SkillTreeRows
 
 /**
- * **Das Wander-Brett** - der Skillbaum als raeumliches Netz aus Knoten und Verbindungslinien statt
- * als Liste. Vorbild: der Skillbaum aus Diablo 2, das Sphere Grid aus Final Fantasy X.
+ * **Der Baum zum Begehen** - eine Ebene nach der anderen, statt der ganzen Flaeche auf einmal.
  *
- * **Freischalten ist ab hier eine Wahl, keine Automatik.** Jeder Levelaufstieg gibt einen
- * Skillpunkt ([LevelUnlocks.due]); der Spieler tippt selbst auf einen erreichbaren Nachbarknoten
- * ([NodeState.AVAILABLE], siehe [SkillTreeRows]) statt ein algorithmisches Angebot vorgesetzt zu
- * bekommen (die fruehere `LevelUnlockDialog`/`UnlockOffers.build`-Automatik, siehe SKILLBAUM.md P11).
+ * Die erste Fassung zeigte alle 79 Knoten gleichzeitig auf einem pan- und zoombaren Brett - das
+ * Vorbild (Diablo 2, das Sphere Grid aus Final Fantasy X) zeigt so etwas auch, aber dort fuehrt ein
+ * ganzer Bildschirm zu nichts anderem hin. Hier musste man sich die Uebersicht erst erarbeiten,
+ * bevor man ueberhaupt etwas antippen konnte. Diese Fassung klappt den Baum stattdessen auf:
+ *
+ * - **Oben** stehen nur die neun Hauptgruppen, als Kacheln mit Fortschritt.
+ * - **Antippen einer Gruppe** oeffnet sie - ihre Kinder erscheinen als Knoten um einen Kopf herum,
+ *   mit Verbindungslinien dazwischen. Der Rest des Baums ist in diesem Moment nicht zu sehen, weil
+ *   er gerade nicht die Frage ist, die man sich stellt.
+ * - **Ein Brotkrumen-Pfad** oben fuehrt zurueck, jede Stufe einzeln antippbar.
+ *
+ * **Freischalten ist eine Wahl, keine Automatik.** Jeder Levelaufstieg gibt einen Skillpunkt
+ * ([LevelUnlocks.due]); der Spieler tippt selbst auf einen erreichbaren Nachbarknoten
+ * ([NodeState.AVAILABLE]) statt ein algorithmisches Angebot vorgesetzt zu bekommen.
  *
  * Die Zuordnung Knoten -> Zustand bleibt vollstaendig in [SkillTreeRows] (siehe `SkillTreeRowsTest`)
- * - hier aendert sich nur, WIE sie gezeichnet wird: als Positionsraster ([AnimationTreeLayout])
- * statt als eingerueckte Liste, pan- und zoombar wie ein Kartenausschnitt.
+ * - hier aendert sich nur, WIE sie gezeichnet wird.
  *
- * Tiefenunabhaengig: [AnimationTreeLayout] rechnet jede Ebene aus, keine Annahme "genau drei
- * Stufen" steckt hier oder dort im Code.
+ * Tiefenunabhaengig: Ob ein Knoten Kinder hat, wird aus dem Bestand selbst gelesen
+ * ([List.hasChildren]), keine Annahme "genau drei Stufen" steckt hier irgendwo im Code - eine
+ * vierte Ebene liesse sich einfach in denselben Kopf-und-Kinder-Bildschirm weiter hineintippen.
  */
 @Composable
 fun SkillTreeScreen(
@@ -69,42 +81,16 @@ fun SkillTreeScreen(
     modifier: Modifier = Modifier
 ) {
     val rows = remember(unlocked) { SkillTreeRows.build(unlocked) }
-    val positions = remember { AnimationTreeLayout.compute() }
+    val byId = remember(rows) { rows.associateBy { it.node.id } }
     val pointsRemaining = remember(level, unlocked) { LevelUnlocks.due(level, unlocked) }
+    var openId by remember { mutableStateOf<String?>(null) }
 
-    var scale by remember { mutableStateOf(1f) }
-    var pan by remember { mutableStateOf(Offset.Zero) }
-    val transformState = rememberTransformableState { zoomChange, panChange, _ ->
-        scale = (scale * zoomChange).coerceIn(MIN_SCALE, MAX_SCALE)
-        pan += panChange
-    }
-
-    // Einmal in Pixel umgerechnete Mittelpunkte, nur fuer die Kanten - die Knoten selbst bleiben
-    // in Dp und wandern ueber Modifier.offset, das braucht keine Umrechnung.
-    val density = LocalDensity.current
-    val nodeCenters: Map<String, Offset> = remember(positions, density) {
-        with(density) {
-            positions.mapValues { (_, pos) ->
-                Offset(
-                    x = (boardX(pos.x) + NODE_SIZE / 2).toPx(),
-                    y = (boardY(pos.y) + NODE_SIZE / 2).toPx()
-                )
-            }
+    fun tap(row: SkillTreeRow) {
+        if (rows.hasChildren(row.node.id)) {
+            openId = row.node.id
+        } else if (row.state == NodeState.AVAILABLE && pointsRemaining > 0) {
+            onUnlock(row.node.id)
         }
-    }
-    val stateById = remember(rows) { rows.associate { it.node.id to it.state } }
-
-    // Die tatsaechliche Ausdehnung des Bretts - explizit statt erraten. Ohne feste Groesse haette
-    // die innere Box nichts, woran sich ihre eigene Groesse bemessen liesse (alle Kinder haengen
-    // per Modifier.offset daneben, nicht ineinander), und das Canvas fuer die Kanten waere null
-    // Pixel hoch.
-    val boardSize = remember(positions) {
-        val maxX = positions.values.maxOfOrNull { it.x } ?: 0f
-        val maxY = positions.values.maxOfOrNull { it.y } ?: 0
-        DpSize(
-            width = boardX(maxX) + NODE_SIZE + BOARD_PADDING,
-            height = boardY(maxY) + NODE_SIZE + BOARD_PADDING
-        )
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -135,66 +121,240 @@ fun SkillTreeScreen(
             TextButton(onClick = onClose) { Text(stringResource(R.string.skill_tree_close)) }
         }
 
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .transformable(transformState)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(boardSize)
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = pan.x,
-                        translationY = pan.y,
-                        // Von der Ecke aus skalieren/verschieben, nicht von der Mitte - sonst
-                        // springt das Brett beim ersten Zoomen, weil sich der Ursprung mitverschiebt.
-                        transformOrigin = TransformOrigin(0f, 0f)
-                    )
-            ) {
-                Canvas(modifier = Modifier.size(boardSize)) {
-                    for (row in rows) {
-                        val parentId = row.node.parentId ?: continue
-                        val from = nodeCenters[parentId] ?: continue
-                        val to = nodeCenters[row.node.id] ?: continue
-                        // Ein hell gezeichneter Kante ist der Weg, den man schon gegangen ist -
-                        // beide Enden muessen dafuer offen sein, nicht nur eines.
-                        val begangen = stateById[parentId] == NodeState.UNLOCKED &&
-                            row.state == NodeState.UNLOCKED
-                        drawLine(
-                            color = if (begangen) TamaPalette.TextPrimary else TamaPalette.TextMuted,
-                            start = from,
-                            end = to,
-                            alpha = if (begangen) 0.9f else 0.22f,
-                            strokeWidth = 3f
-                        )
-                    }
-                }
+        SkillTreeBreadcrumb(openId = openId, byId = byId, onJump = { openId = it })
 
-                for (row in rows) {
-                    val pos = positions[row.node.id] ?: continue
-                    NodeChip(
-                        row = row,
-                        tappable = row.state == NodeState.AVAILABLE && pointsRemaining > 0,
-                        onUnlock = onUnlock,
-                        modifier = Modifier.offset(x = boardX(pos.x), y = boardY(pos.y))
+        Crossfade(
+            targetState = openId,
+            animationSpec = tween(BRANCH_FADE_MS),
+            label = "skill-tree-level",
+            modifier = Modifier.weight(1f).fillMaxWidth()
+        ) { id ->
+            val visible = rows.filter { it.node.parentId == id }
+            val hub = id?.let(byId::get)
+            if (hub == null) {
+                OverviewGrid(roots = visible, unlocked = unlocked, onTap = ::tap)
+            } else {
+                BranchFan(
+                    hub = hub,
+                    children = visible,
+                    rows = rows,
+                    pointsRemaining = pointsRemaining,
+                    onTap = ::tap
+                )
+            }
+        }
+    }
+}
+
+private fun List<SkillTreeRow>.hasChildren(id: String): Boolean = any { it.node.parentId == id }
+
+private fun stateColor(state: NodeState): Color = when (state) {
+    NodeState.UNLOCKED -> TamaPalette.BubbleBackground
+    NodeState.AVAILABLE -> TamaPalette.ChoiceBackground
+    NodeState.LOCKED, NodeState.PENDING_ART -> TamaPalette.Background
+}
+
+/** Der Pfad von der Uebersicht zum gerade geoeffneten Knoten, jede Station einzeln antippbar. */
+@Composable
+private fun SkillTreeBreadcrumb(
+    openId: String?,
+    byId: Map<String, SkillTreeRow>,
+    onJump: (String?) -> Unit
+) {
+    val chain = remember(openId, byId) {
+        generateSequence(openId) { byId[it]?.node?.parentId }.toList().reversed()
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            stringResource(R.string.skill_tree_overview),
+            style = MaterialTheme.typography.labelMedium,
+            color = if (openId == null) TamaPalette.TextPrimary else TamaPalette.TextMuted,
+            modifier = Modifier.clickable { onJump(null) }.padding(vertical = 6.dp)
+        )
+        for (id in chain) {
+            val node = byId[id]?.node ?: continue
+            Text(" › ", style = MaterialTheme.typography.labelMedium, color = TamaPalette.TextMuted)
+            Text(
+                node.rememberTitle(),
+                style = MaterialTheme.typography.labelMedium,
+                color = if (id == openId) TamaPalette.TextPrimary else TamaPalette.TextMuted,
+                modifier = Modifier.clickable { onJump(id) }.padding(vertical = 6.dp)
+            )
+        }
+    }
+}
+
+/** Die oberste Ebene: die neun Hauptgruppen als Kacheln, drei je Zeile. */
+@Composable
+private fun OverviewGrid(
+    roots: List<SkillTreeRow>,
+    unlocked: Set<String>,
+    onTap: (SkillTreeRow) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        for (chunk in roots.chunked(3)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                for (root in chunk) {
+                    RootTile(
+                        row = root,
+                        progress = SkillTreeRows.progressFor(root.node.id, unlocked),
+                        onClick = { onTap(root) },
+                        modifier = Modifier.weight(1f)
                     )
+                }
+                repeat(3 - chunk.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RootTile(
+    row: SkillTreeRow,
+    progress: Pair<Int, Int>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val title = row.node.rememberTitle()
+    val progressLabel = stringResource(R.string.skill_tree_progress, progress.first, progress.second)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(TamaPalette.BubbleBackground)
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp, horizontal = 4.dp)
+            .clearAndSetSemantics { contentDescription = "$title, $progressLabel" }
+    ) {
+        Box(
+            modifier = Modifier.size(56.dp).clip(CircleShape).background(TamaPalette.ChoiceBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(row.node.emoji, style = MaterialTheme.typography.headlineSmall)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.labelMedium,
+            color = TamaPalette.TextPrimary,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(progressLabel, style = MaterialTheme.typography.labelSmall, color = TamaPalette.TextMuted)
+    }
+}
+
+/**
+ * Eine geoeffnete Gruppe: ihr Kopf oben, ihre Kinder darunter, verbunden durch Linien zu den
+ * tatsaechlich gemessenen Mittelpunkten (siehe [onGloballyPositioned]/[boundsInRoot]) - so muss
+ * hier keine Baumgeometrie nachgerechnet werden, das macht Compose beim Platzieren ohnehin schon.
+ */
+@Composable
+private fun BranchFan(
+    hub: SkillTreeRow,
+    children: List<SkillTreeRow>,
+    rows: List<SkillTreeRow>,
+    pointsRemaining: Int,
+    onTap: (SkillTreeRow) -> Unit
+) {
+    var canvasOrigin by remember(hub.node.id) { mutableStateOf(Offset.Zero) }
+    var hubCenter by remember(hub.node.id) { mutableStateOf<Offset?>(null) }
+    val childCenters = remember(hub.node.id) { mutableStateMapOf<String, Offset>() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { canvasOrigin = it.boundsInRoot().topLeft }
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val hc = hubCenter ?: return@Canvas
+            for (child in children) {
+                val cc = childCenters[child.node.id] ?: continue
+                val begangen = hub.state == NodeState.UNLOCKED &&
+                    child.state != NodeState.LOCKED && child.state != NodeState.PENDING_ART
+                drawLine(
+                    color = if (begangen) TamaPalette.TextPrimary else TamaPalette.TextMuted,
+                    start = hc,
+                    end = cc,
+                    alpha = if (begangen) 0.55f else 0.2f,
+                    strokeWidth = 3f
+                )
+            }
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(top = 22.dp)
+        ) {
+            HubChip(
+                row = hub,
+                modifier = Modifier.onGloballyPositioned {
+                    hubCenter = it.boundsInRoot().center - canvasOrigin
+                }
+            )
+            Spacer(Modifier.height(30.dp))
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+            ) {
+                for (chunk in children.chunked(4)) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            for (child in chunk) {
+                                val childHasChildren = rows.hasChildren(child.node.id)
+                                val interactive = childHasChildren ||
+                                    (child.state == NodeState.AVAILABLE && pointsRemaining > 0)
+                                ChildChip(
+                                    row = child,
+                                    hasChildren = childHasChildren,
+                                    interactive = interactive,
+                                    onClick = { onTap(child) },
+                                    modifier = Modifier.onGloballyPositioned {
+                                        childCenters[child.node.id] = it.boundsInRoot().center - canvasOrigin
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-private fun boardX(x: Float): Dp = NODE_SPACING_X * x + BOARD_PADDING
-private fun boardY(y: Int): Dp = NODE_SPACING_Y * y.toFloat() + BOARD_PADDING
+/** Der Kopf der geoeffneten Gruppe - Emoji und Name nebeneinander statt als kleiner Kreis, er
+ *  steht schliesslich allein da und darf sich das leisten. */
+@Composable
+private fun HubChip(row: SkillTreeRow, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clip(RoundedCornerShape(22.dp))
+            .background(stateColor(row.state))
+            .padding(horizontal = 18.dp, vertical = 12.dp)
+    ) {
+        Text(row.node.emoji, style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.width(10.dp))
+        Text(row.node.rememberTitle(), style = MaterialTheme.typography.titleMedium, color = TamaPalette.TextPrimary)
+    }
+}
 
 @Composable
-private fun NodeChip(
+private fun ChildChip(
     row: SkillTreeRow,
-    tappable: Boolean,
-    onUnlock: (String) -> Unit,
+    hasChildren: Boolean,
+    interactive: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val title = row.node.rememberTitle()
@@ -204,36 +364,41 @@ private fun NodeChip(
         NodeState.LOCKED -> stringResource(R.string.skill_tree_state_locked)
         NodeState.PENDING_ART -> stringResource(R.string.skill_tree_state_pending)
     }
-    val background = when (row.state) {
-        NodeState.UNLOCKED -> TamaPalette.BubbleBackground
-        NodeState.AVAILABLE -> TamaPalette.ChoiceBackground
-        NodeState.LOCKED, NodeState.PENDING_ART -> TamaPalette.Background
-    }
-    // Nur gesperrte/ungezeichnete Knoten treten zurueck - ein AVAILABLE-Knoten ohne Punkt darf
-    // trotzdem voll sichtbar bleiben, sonst sieht er aus wie gesperrt statt wie "fast erreichbar".
     val dimmed = row.state == NodeState.LOCKED || row.state == NodeState.PENDING_ART
 
-    Box(
-        modifier = modifier
-            .size(NODE_SIZE)
-            .clip(CircleShape)
-            .background(background)
-            .let { base -> if (tappable) base.clickable { onUnlock(row.node.id) } else base }
-            .alpha(if (dimmed) 0.4f else 1f)
-            // Ein Screenreader soll "Basketball, als Naechstes dran" lesen, keine zwei getrennten
-            // Textbausteine - dasselbe Muster wie zuvor in der Listenansicht.
-            .clearAndSetSemantics {
-                contentDescription = listOfNotNull(title, stateLabel).joinToString(", ")
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(row.node.emoji, style = MaterialTheme.typography.titleMedium)
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(CHILD_COLUMN_WIDTH)) {
+        Box(
+            modifier = modifier
+                .size(CHILD_SIZE)
+                .clip(CircleShape)
+                .background(stateColor(row.state))
+                .let { base -> if (interactive) base.clickable(onClick = onClick) else base }
+                .alpha(if (dimmed) 0.45f else 1f)
+                // Ein Screenreader soll "Basketball, als Naechstes dran" lesen, keine zwei
+                // getrennten Textbausteine.
+                .clearAndSetSemantics {
+                    contentDescription = listOfNotNull(title, stateLabel).joinToString(", ")
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(row.node.emoji, style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (dimmed) TamaPalette.TextMuted else TamaPalette.TextPrimary,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+        // Kein eigenes Wort dafuer - der Pfeil allein sagt "hier geht es weiter", genau wie eine
+        // Verzeichnis-Kachel im Dateimanager.
+        if (hasChildren) {
+            Text("›", style = MaterialTheme.typography.labelSmall, color = TamaPalette.TextMuted)
+        }
     }
 }
 
-private val NODE_SIZE = 44.dp
-private val NODE_SPACING_X = 64.dp
-private val NODE_SPACING_Y = 96.dp
-private val BOARD_PADDING = 40.dp
-private const val MIN_SCALE = 0.5f
-private const val MAX_SCALE = 2.5f
+private const val BRANCH_FADE_MS = 220
+private val CHILD_SIZE = 48.dp
+private val CHILD_COLUMN_WIDTH = 76.dp

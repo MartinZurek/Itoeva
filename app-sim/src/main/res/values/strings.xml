@@ -733,6 +733,8 @@
     <string name="a11y_skill_drag">%1$s — drag onto your companion, or use this action</string>
     <string name="a11y_skill_play">Show %1$s</string>
     <string name="skill_tree_title">Skill tree</string>
+    <string name="skill_tree_overview">Overview</string>
+    <string name="skill_tree_progress">%1$d of %2$d open</string>
     <string name="skill_tree_points_available">⭐ %1$d to spend</string>
     <string name="skill_tree_state_available">next up</string>
     <string name="skill_tree_state_locked">locked</string>
