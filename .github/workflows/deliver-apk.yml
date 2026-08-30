@@ -53,13 +53,27 @@
 
 name: Deliver APK
 
+# -------------------------------------------------------------------------------------------
+# PAUSIERT (siehe Chat vom 2026-08-30): Der automatische `push`-Trigger ist unten auskommentiert,
+# solange parallel am Skillbaum-Branch (skillbaum/freischaltung, aufbauend auf
+# skillbaum/katalog-und-reaktionen, PR #42/#43) getestet wird. Grund: beide Branches teilen
+# sich dieselbe Drive-Datei und dasselbe Telefon; der versionCode aus `git rev-list --count`
+# ist auf dem laenger laufenden Skillbaum-Branch hoeher, wodurch main automatisch als
+# "Downgrade" erscheint und Android die Installation verweigert (Deinstallieren noetig) -
+# und main enthaelt den Skillbaum ohnehin noch nicht.
+#
+# Wieder aktivieren, sobald #42/#43 in main gelandet sind: den `push`-Block unten
+# einkommentieren. Bis dahin liefert ausschliesslich `workflow_dispatch` auf dem jeweils
+# gewuenschten Branch aus - main-Merges der taeglichen Evolutionen laufen unveraendert
+# weiter, nur die Drive-Ablieferung dafuer pausiert.
+# -------------------------------------------------------------------------------------------
 on:
-  push:
-    branches: [main]
-    # Eine reine Dokumentationsaenderung aendert nichts an der App - dafuer muss kein
-    # Paket gebaut und keine Actions-Minute ausgegeben werden.
-    paths-ignore:
-      - '**/*.md'
+  # push:
+  #   branches: [main]
+  #   # Eine reine Dokumentationsaenderung aendert nichts an der App - dafuer muss kein
+  #   # Paket gebaut und keine Actions-Minute ausgegeben werden.
+  #   paths-ignore:
+  #     - '**/*.md'
   workflow_dispatch:
 
 # Standardmaessig gar keine Rechte, wie in claude-primary-run.yml. Dieser Workflow liest nur;
