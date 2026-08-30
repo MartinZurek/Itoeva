@@ -493,6 +493,44 @@ an FENCE (0.02) oder zwischen BENCH (0.50) und WILD_TUFT (0.70) planen als in Av
   Stehen`. Der Test iteriert automatisch ueber alle Orte/Spezies/Breiten, keine Testaenderung
   noetig.
 
+## [open] ITO-0014 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (fuenfte Runde)
+Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
+(Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (PR #14: Puffling-Starlet),
+ITO-0009 (PR #18: Wyrmling-Hootlet), ITO-0010 (PR #29: Fennec-Gloop) und ITO-0011 (PR #47:
+Puffling-Wyrmling). CONTENT-Evolution, keine Konstanten- oder Codeaenderung.
+
+Seit ITO-0005 hat jedes Wesen acht Lore-Stuecke (`PlayLore.PIECES = 8`) - die Ankerzeile fuer
+den neuen Satz darf Stueck 6, 7 ODER 8 sein.
+
+Waehle GENAU EIN Wesen-Paar (A, B) aus den sechs Wesen (Puffling, Starlet, Wyrmling, Fennec,
+Gloop, Hootlet), zwischen denen noch KEIN Satz in den bestehenden Lore-Texten eine Verbindung
+herstellt. Bereits verbunden und NICHT erneut zu waehlen: Puffling-Gloop, Wyrmling-Fennec,
+Starlet-Hootlet (die drei Hauptbeziehungen), Puffling-Starlet (ITO-0004), Wyrmling-Hootlet
+(ITO-0009), Fennec-Gloop (ITO-0010) sowie Puffling-Wyrmling (ITO-0011). Jedes andere Paar ist
+erlaubt, deine Wahl - acht Paare stehen noch offen (Puffling-Fennec, Puffling-Hootlet,
+Starlet-Wyrmling, Starlet-Fennec, Starlet-Gloop, Wyrmling-Gloop, Fennec-Hootlet, Gloop-Hootlet).
+
+Ergaenze in `app-sim/src/main/res/values-de/strings.xml` UND `app-sim/src/main/res/values/strings.xml`
+(Deutsch und Englisch, inhaltlich gleich) an GENAU EINER Stelle einen zusaetzlichen Satz: an
+`lore_<A>_6`, `lore_<A>_7` ODER `lore_<A>_8` (ein Stueck deiner Wahl, bei EINEM der beiden
+gewaehlten Wesen) - angehaengt an den bestehenden Text derselben Zeile, nicht als neue Zeile und
+nicht als Ersatz des Bestehenden. Der neue Satz muss Wesen B beim Namen nennen und in der Stimme
+von Wesen A geschrieben sein, ein bis zwei kurze Saetze, keine Ausrufezeichen, kein pathetischer
+Ton - siehe die vorhandenen Stuecke aller sechs Wesen in denselben Dateien als Vorbild.
+
+Bedingungen, die nicht verhandelbar sind:
+- Keine bestehende Zeile darf geloescht, umbenannt oder inhaltlich veraendert werden - nur die
+  eine gewaehlte Zeile bekommt einen angehaengten Satz.
+- Der neue Satz darf keinem bestehenden Fakt in irgendeinem der 48 Lore-Stuecke widersprechen
+  (Orte, Ereignisse, andere Beziehungen, einschliesslich der in ITO-0004, ITO-0009, ITO-0010 und
+  ITO-0011 ergaenzten Verbindungen). Bei Zweifel: Wesen B nur beilaeufig erwaehnen, keine neue
+  Tatsachenbehauptung ueber B aufstellen, die B's eigene Lore-Stuecke nicht schon stuetzen.
+- Keine andere Datei aendern, insbesondere nicht `PlayLore.kt` oder `PlayLoreTest.kt` - beide
+  pruefen nur Struktur (Anzahl, Eindeutigkeit), keine Wortlaute, und muessen unveraendert gruen
+  bleiben.
+- `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
+  Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
+
 ## [done] ITO-0003 - Unit-Tests fuer ClockRing
 Ergaenze eine JVM-Unit-Testdatei `app-sim/src/test/java/com/notime/glyphsim/matrix/ClockRingTest.kt` fuer das bisher ungetestete Objekt `ClockRing` aus `app-sim/src/main/java/com/notime/glyphsim/matrix/ClockRing.kt`.
 
