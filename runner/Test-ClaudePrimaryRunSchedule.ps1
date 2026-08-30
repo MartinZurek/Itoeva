@@ -452,9 +452,15 @@ Test-That 'der Statuscommit sitzt nachweislich auf dem geprueften Commit' `
 Test-That 'der Statuscommit aendert genau eine Zeile in genau einer Datei' `
     ($publish -match "1\\t1\\tevolutions/BACKLOG\.md")
 # Die Waechter-Abfrage liest offene PRs (GET auf /pulls) - das ist erlaubt und noetig.
-# Verboten ist das Anlegen, Mergen und Loeschen; danach wird gezielt gesucht.
-Test-That 'kein Auto-PR' `
-    (($code -notmatch 'gh pr create') -and ($code -notmatch "-X\s+POST[^\n]*\/pulls"))
+# Das Anlegen ist seitdem ebenfalls erlaubt (siehe publish, Schritt "Pull Request
+# eroeffnen") - ohne PR blieb der gepushte Branch fuer den Waechter unsichtbar
+# unterscheidbar von einem bereits geprueften, was die Pipeline mehrfach tagelang lahmlegte
+# (PR #40, #44, #47). Verboten bleiben Mergen und Loeschen sowie jeder direkte API-Zugriff
+# auf /pulls ausserhalb von `gh pr create` - danach wird gezielt gesucht.
+Test-That 'genau eine PR-Eroeffnung, ohne Auto-Merge-Flags, kein direkter API-Zugriff' `
+    ((([regex]::Matches($code, 'gh pr create')).Count -eq 1) -and
+     ($code -notmatch 'gh pr create[^\n]*--(merge|admin|auto)') -and
+     ($code -notmatch "-X\s+POST[^\n]*\/pulls"))
 Test-That 'kein Auto-Merge' `
     (($code -notmatch 'gh pr merge') -and ($code -notmatch '/merges') -and ($code -notmatch '/pulls/[^\n]*merge'))
 Test-That 'kein Branch-Loeschen' `
