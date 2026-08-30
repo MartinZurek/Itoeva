@@ -754,11 +754,18 @@ sofort installierbar, kein Release-Key nötig).
 
 ### Auslieferung aufs Telefon ohne lokalen Bau
 
-`.github/workflows/deliver-apk.yml` nimmt den zweiten Weg von oben und automatisiert ihn: Nach
-jedem Merge nach `main` baut GitHub `:app-sim:assembleDebug` und **überschreibt die bestehende
-Datei `Tama-debug.apk` im Drive-Ordner**. Auf dem Telefon bleibt alles wie gewohnt – Drive-App,
-antippen, "Aktualisieren"; nur das Bauen davor entfällt. Eine reine Dokumentationsänderung löst
-keinen Lauf aus.
+`.github/workflows/deliver-apk.yml` nimmt den zweiten Weg von oben und automatisiert ihn: Im
+Regelbetrieb baut GitHub nach jedem Merge nach `main` `:app-sim:assembleDebug` und
+**überschreibt die bestehende Datei `Tama-debug.apk` im Drive-Ordner**. Auf dem Telefon bleibt
+alles wie gewohnt – Drive-App, antippen, "Aktualisieren"; nur das Bauen davor entfällt. Eine
+reine Dokumentationsänderung löst keinen Lauf aus.
+
+**Zur Zeit pausiert:** Der `push`-Trigger im Workflow ist auskommentiert, solange parallel an
+einem Feature-Branch mit höherem `versionCode` getestet wird (sonst erscheint jede `main`-
+Auslieferung als Downgrade, den Android nicht installiert). Ein Merge nach `main` baut und
+liefert deshalb bis auf Weiteres NICHT automatisch aus - nur ein gezielter
+`workflow_dispatch`-Lauf auf dem gewünschten Branch tut das. Siehe die Kommentare im Workflow
+für die Bedingung zum Wiederaktivieren.
 
 **Die ganze Konstruktion hängt an einem Punkt: derselben Signatur.** Android aktualisiert eine
 installierte App nur, wenn das Zertifikat übereinstimmt – sonst bliebe nur Deinstallieren, und
