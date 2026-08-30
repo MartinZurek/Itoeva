@@ -1,9 +1,14 @@
 # Auslieferung aufs Telefon.
 #
-# Was hier passiert: Nach jedem Merge nach `main` entsteht eine frische Tama-APK, und die
-# eine Datei `Tama-debug.apk` im Google-Drive-Ordner wird damit ueberschrieben. Auf dem
-# Telefon aendert sich dadurch nichts am Ablauf - Drive-App oeffnen, Datei antippen,
-# "Aktualisieren". Nur das lokale Bauen davor entfaellt.
+# **PAUSIERT (siehe `on:` weiter unten fuer den Grund und die Bedingung zum Wiederaktivieren):**
+# Der `push`-Trigger ist zur Zeit auskommentiert. Ein Merge nach `main` baut und liefert
+# dadurch NICHT mehr automatisch aus - nur ein gezielter `workflow_dispatch`-Lauf tut das.
+#
+# Was hier im Regelbetrieb passiert (sobald der `push`-Trigger wieder aktiv ist): Nach jedem
+# Merge nach `main` entsteht eine frische Tama-APK, und die eine Datei `Tama-debug.apk` im
+# Google-Drive-Ordner wird damit ueberschrieben. Auf dem Telefon aendert sich dadurch nichts
+# am Ablauf - Drive-App oeffnen, Datei antippen, "Aktualisieren". Nur das lokale Bauen davor
+# entfaellt.
 #
 # Der Drive-Teil laesst sich nachreichen: Solange der Zugang dafuer nicht hinterlegt ist,
 # baut und signiert der Lauf trotzdem und legt die fertige APK als Artefakt ab. Damit ist
