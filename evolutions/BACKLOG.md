@@ -405,6 +405,17 @@ Anhaltspunkt fuer den Rahmen: Star, Wave, Rain, Music, Battery, Dog, Cat, Gift, 
 Robot, Trophy, Plant, Target, Airplane, Cake, Idea, Mail, Clock, ...). Vermeide ein Thema, das
 einem bestehenden Label zu nahekommt.
 
+**Zweite, GETRENNTE Kollisionsflaeche - nicht nur `general()` pruefen:** Ausser den
+Bibliotheks-Labels gibt es die 12 fest eingebauten Erinnerungs-Animationen aus `enum class
+AnimationType` (`core/src/main/java/com/notime/glyphcore/data/AnimationType.kt`), die im selben
+Erinnerungs-Bildschirm neben den Bibliotheksanimationen zur Auswahl stehen: FOCUS 🎯, DRINK 💧,
+MOVE 🏃, GENERAL 🔔, REST ☕, WORK 💻, MINDFULNESS 🧘, LOVE ❤️, SLEEP 🌙, MEDICINE 💊, BOOK 📖,
+CREATIVITY 🎨 (Emoji-Zuordnung siehe `AnimationVisuals.kt` in `app-sim` und `app`). Ein
+fruehstuecksbezogener "Kaffeetasse mit Dampf"-Entwurf wurde deshalb bereits dreimal vom Reviewer
+abgelehnt (Laeufe 71-73 auf Commit `12b535e`): Emoji ☕ und Thema (Dampf/Ruhepause) dupliziert REST
+nahezu 1:1. Waehle daher ein Thema, das WEDER einem `general()`-Label NOCH einem dieser 12 Typen
+(weder Emoji noch offensichtliches Bildmotiv) zu nahekommt.
+
 **Technische Form** (siehe `starFrames()`/`waveFrames()`/`alarmClockFrames()` in derselben Datei
 als Vorbild):
 - Eine private Funktion `private fun <name>Frames(): List<List<Pair<Int, Int>>>` - eine
