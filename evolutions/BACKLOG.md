@@ -350,7 +350,7 @@ wurde - auch dann nicht, wenn fuer heute nichts Neues mehr da ist (`onTell == nu
   von `remember()` liefert `lastToldPiece` genau das Stueck an Index `heard() - 1` aus `story()`.
 - Keine Aenderung an Kalenderlogik, keine neue SharedPreferences-Datei oder -Key.
 
-## [open] ITO-0011 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (vierte Runde)
+## [done] ITO-0011 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (vierte Runde)
 Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
 (Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (PR #14: Puffling-Starlet),
 ITO-0009 (PR #18: Wyrmling-Hootlet) und ITO-0010 (PR #29: Fennec-Gloop). CONTENT-Evolution, keine
