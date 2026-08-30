@@ -1499,6 +1499,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     timeout-minutes: 15
 
     steps:
@@ -1691,7 +1692,7 @@ jobs:
           echo "  Branch: $BRANCH"
           echo "  Commit: $COMMIT"
           echo "  main unveraendert auf $BASE"
-          echo "Kein Merge, kein PR, keine Freigabe - der Branch wartet auf menschliche Pruefung."
+          echo "Kein Merge, keine Freigabe - der Branch wartet auf menschliche Pruefung."
 
       # ---------------------------------------------------------------------------------
       # Der erledigte Backlog-Eintrag wird auf `done` gesetzt - im BRANCH, nicht auf main.
@@ -1786,6 +1787,42 @@ jobs:
           echo "CLAUDE_PRIMARY_BACKLOG_FLIP: PASS"
           echo "  $TASK_ID -> done, Commit $FLIP auf $BRANCH"
           echo "  Wirksam wird der Status erst mit dem Merge des Pull Requests."
+
+      # -----------------------------------------------------------------------------------
+      # Pull Request eroeffnen - der einzige Schritt, der ueber gh statt ueber git spricht.
+      #
+      # Ohne diesen Schritt blieb der gepushte Branch ein Branch ohne PR, und dessen blosse
+      # Existenz reicht dem Waechter oben ("Es ist bereits eine Evolution unterwegs"), um
+      # jeden weiteren Zeitplan-Lauf zu ueberspringen - bis jemand von Hand einen Pull
+      # Request nachreicht. Genau das ist mehrfach tagelang unbemerkt geblieben (siehe PR
+      # #40, #44, #47).
+      #
+      # Was sich dadurch NICHT aendert: Titel, Kommentar und `git log` nennen weiterhin nur
+      # den bereits geprueften Commit - dieser Schritt liest den Text nur aus, er erzeugt
+      # keinen neuen. Gemergt wird weiterhin ausschliesslich von Hand.
+      # -----------------------------------------------------------------------------------
+      - name: Pull Request eroeffnen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH='${{ steps.verify.outputs.branch }}'
+          COMMIT='${{ steps.verify.outputs.commit }}'
+          TASK_ID='${{ needs.preflight.outputs.task_id }}'
+
+          SUBJECT="$(git log -1 --format=%s "$COMMIT")"
+          TITLE="${SUBJECT#ClaudePrimaryRun: }"
+          if echo "$TASK_ID" | grep -qE '^ITO-[0-9]{4}$'; then
+            TITLE="$TITLE ($TASK_ID)"
+          fi
+
+          BODY="$(printf '%s\n\n%s\n\n%s\n' \
+            "Automatisch eroeffnet von \`claude-primary-run.yml\` (Lauf [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})), nachdem Builder, Tests und Reviewer bereits vollstaendig gruen durchgelaufen sind." \
+            "$(git log -1 --format=%b "$COMMIT")" \
+            "Kein Merge, keine Freigabe - dieser Pull Request wartet weiterhin auf menschliche Pruefung. Diese PR-CI ist zusaetzlich zur bereits im Lauf ausgefuehrten Pruefung.")"
+
+          gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
+          echo "CLAUDE_PRIMARY_PR: PASS"
 
       - name: Uebergabe-Diagnose hochladen
         if: always()
