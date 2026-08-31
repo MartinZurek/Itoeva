@@ -416,6 +416,20 @@ abgelehnt (Laeufe 71-73 auf Commit `12b535e`): Emoji ☕ und Thema (Dampf/Ruhepa
 nahezu 1:1. Waehle daher ein Thema, das WEDER einem `general()`-Label NOCH einem dieser 12 Typen
 (weder Emoji noch offensichtliches Bildmotiv) zu nahekommt.
 
+**Dritte, ebenfalls GETRENNTE Kollisionsflaeche - diesmal automatisiert als Testfehler, nicht erst
+als Reviewer-Ablehnung:** `AvatarSignatureAnimationsTest.labelsAreUniqueAndDoNotClashWithTheGeneralSet`
+(`core/src/test/java/com/notime/glyphcore/data/AvatarSignatureAnimationsTest.kt`) vergleicht ALLE
+Labels aus `DefaultLibraryAnimations.seed()` - das ist laut Quelltext (Zeile 31) exakt
+`general() + AvatarSignatureAnimations.seed()` - auf Duplikate. Ein neues `general()`-Label, das
+zufaellig einem der 30 charakterspezifischen Labels in `AvatarSignatureAnimations.kt` gleicht,
+lässt deshalb schon `./gradlew verify` (Task `:core:testDebugUnitTest`) rot werden, bevor der
+Reviewer ueberhaupt drankommt - genau das ist Lauf 75 (2026-08-31, Commit `8c60e439`) passiert. Die
+30 belegten Labels: Bubble, Butterfly, Kite, Snail, Compass, Comet, Lantern, Feather,
+Constellation, Candle, Bolt, Summit, Ladder, Drum, Flag, Shield, Lighthouse, Paw, Nest, Anchor,
+Turtle, Cloud, Drip, Puddle, Balloon, Eye, Key, Hourglass, Scroll, Puzzle. Das gewaehlte Label
+muss also gegen DREI getrennte Listen geprueft werden: die `general()`-Labels oben, die 12
+`AnimationType`-Werte, und diese 30 hier - nicht nur gegen eine davon.
+
 **Technische Form** (siehe `starFrames()`/`waveFrames()`/`alarmClockFrames()` in derselben Datei
 als Vorbild):
 - Eine private Funktion `private fun <name>Frames(): List<List<Pair<Int, Int>>>` - eine
