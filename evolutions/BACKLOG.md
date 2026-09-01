@@ -457,6 +457,22 @@ Begruendung):
    `EVOLUTION.md`/README zu den Signatur-Animationen) - bevorzuge Umrisse und versetzte Punkte
    gegenueber vollstaendig gefuellten Formen.
 
+**Vierte Falle, NICHT automatisiert pruefbar - zweimal in Folge (Laeufe 74 und 76) der
+tatsaechliche Ablehnungsgrund, jeweils ohne jede Kollision:** Ein Motiv, das eine Form INNERHALB
+eines selbst erfundenen Gehaeuses/Rahmens zeigt (z. B. eine Linse in einer Kamera, ein Zeiger in
+einem Ziffernblatt), braucht mehr als "sieht ungefaehr richtig aus". Berechne fuer JEDEN
+verwendeten Radius/jede verwendete Groesse die tatsaechlichen Randkoordinaten (z. B. das Ergebnis
+von `circlePoints()` nach `roundToInt`) explizit und vergleiche sie Zahl fuer Zahl gegen die
+selbst gewaehlten Gehaeusegrenzen, BEVOR du den Frame uebernimmst - nicht nur fuer den groessten
+oder kleinsten Wert, sondern fuer jeden einzelnen in der Sequenz. Lauf 74 hatte eine Linse, die
+bei radius=3 unterhalb der Gehaeuse-Unterkante lag; Lauf 76 hatte einen Iris-Ring, der bei
+mehreren Radien ueber die Rechteck-Gehaeusegrenzen hinausragte, UND einen Blitzpunkt zu nah an
+der Iris, wodurch die geforderten zwei erkennbaren Bewegungen optisch verschmolzen. Beides waren
+vermeidbare Rechenfehler, keine Kollisionen. Findest du kein Motiv, dessen Geometrie du sauber
+gegenrechnen kannst, waehle stattdessen ein freistehendes Motiv OHNE selbst erfundenes Gehaeuse
+(wie `starFrames()`/`waveFrames()`/`batteryFrames()`) - das ist einfacher richtig zu bekommen als
+Form-in-Form.
+
 **Zusaetzlich Pflichtteil der Aufgabe, NICHT optional:** Die Klassendoku VON DERSELBEN DATEI nennt
 an zwei Stellen die alte Anzahl und muss auf den neuen Stand gebracht werden - sonst widerspricht
 die Doku dem Code, den sie beschreibt:
