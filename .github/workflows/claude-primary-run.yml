@@ -531,6 +531,13 @@ jobs:
           Aufgabe:
           ${TASK}
 
+          Bevor du mit eigener Erkundung beginnst: lies AgentGuide.md vollstaendig (kurz) und
+          befolge die dortige Minimal-Startsequenz sowie die Regeln, wann zusaetzlich Vision.md,
+          Architecture.md, EVOLUTION.md oder NextTasks.md noetig sind. Fuer die meisten Aufgaben
+          reicht AgentGuide.md plus CLAUDE.md plus der eine betroffene Backlog-Eintrag - lies die
+          anderen Dokumente nicht routinemaessig vollstaendig mit, sondern nur nach den dort
+          beschriebenen Kriterien und dann gezielt nur den relevanten Abschnitt.
+
           Wie du arbeitest. Du hast genau vier Werkzeuggruppen: Read, Glob und Grep zum Lesen,
           Edit und Write zum Aendern. Eine Shell hast du NICHT, und das ist Absicht:
           - Starte keine Builds. Kein gradlew, kein Gradle, kein Maven.
@@ -876,11 +883,57 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # **Diagnose statt Vermutung.** Die Regel oben setzt nur BERECHTIGUNGEN auf ein
+      # bestehendes /dev/kvm - existiert das Geraet auf diesem Runner gar nicht (statt nur
+      # gesperrt zu sein), laeuft der Schritt trotzdem klaglos durch, und genau das war beim
+      # Boot-Timeout in Lauf 32214099699 unklar: ohne diese Ausgabe war nicht zu unterscheiden,
+      # ob KVM fehlte oder aus einem anderen Grund nichts hochkam. Bewusst ohne set -e und ohne
+      # eigenes if-Gate am Erfolg - das hier ist Beweismaterial fuer den naechsten Fehlschlag,
+      # kein weiterer Grund, den Job scheitern zu lassen.
+      - name: KVM-Verfuegbarkeit protokollieren
+        if: steps.gates.outputs.need_sim == 'true' || steps.gates.outputs.need_app == 'true'
+        continue-on-error: true
+        run: |
+          echo "CPU-Virtualisierungsflags (vmx/svm) in /proc/cpuinfo:"
+          grep -cE 'vmx|svm' /proc/cpuinfo || echo "0 - kein Hardware-Virtualisierungs-Flag gefunden"
+          echo
+          if [ -e /dev/kvm ]; then
+            echo "/dev/kvm vorhanden:"
+            ls -la /dev/kvm
+          else
+            echo "/dev/kvm existiert NICHT auf diesem Runner - das waere die eigentliche Ursache eines Boot-Timeouts, nicht behebbar durch Berechtigungen."
+          fi
+
       # Dieselbe Aufteilung wie in verify.yml: :app-sim auf seinem minSdk 26, :app auf
       # API 35 (minSdk 34 wegen des Glyph Matrix SDK). ATD-Images gibt es erst ab API 30,
       # fuer API 26 ist "default" das naechstliegende Aequivalent.
-      - name: Instrumentiert :app-sim (API 26)
+      #
+      # **Je zwei Versuche statt einem.** Ein Emulator-Boot-Timeout wirft hier nicht nur
+      # einen Testlauf weg, sondern die bereits fertige Builder-Entscheidung dieser Sitzung
+      # gleich mit - der naechste Cron-Slot startet eine VOELLIG NEUE Builder-Sitzung, die
+      # ein anderes Beziehungspaar oder einen anderen Satz waehlen kann. Beobachtet am Lauf
+      # 32214099699 (2026-08-19): Builder und `gradlew verify` gruen, dann "adb: device
+      # 'emulator-5554' not found" ueber zehn Minuten bis zum Timeout - kein einziger Test
+      # ist gelaufen. Der zweite Versuch faengt genau diesen Fall ab, ohne die Builder-
+      # Sitzung zu wiederholen: Bei einem inhaltlichen Testfehlschlag (kein Boot-Problem)
+      # scheitert Versuch 2 ebenso zuverlaessig wie Versuch 1 und der Job bleibt rot, wie
+      # bisher.
+      - name: Instrumentiert :app-sim (API 26) - Versuch 1
+        id: sim_test_1
         if: steps.gates.outputs.need_sim == 'true'
+        timeout-minutes: 35
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 26
+          arch: x86_64
+          target: default
+          disable-animations: true
+          script: ./gradlew :app-sim:connectedDebugAndroidTest --stacktrace
+
+      - name: Instrumentiert :app-sim (API 26) - Versuch 2
+        id: sim_test_2
+        if: steps.gates.outputs.need_sim == 'true' && steps.sim_test_1.outcome == 'failure'
         timeout-minutes: 35
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -890,8 +943,22 @@ jobs:
           disable-animations: true
           script: ./gradlew :app-sim:connectedDebugAndroidTest --stacktrace
 
-      - name: Instrumentiert :app (API 35)
+      - name: Instrumentiert :app (API 35) - Versuch 1
+        id: app_test_1
         if: steps.gates.outputs.need_app == 'true'
+        timeout-minutes: 35
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: aosp_atd
+          disable-animations: true
+          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+
+      - name: Instrumentiert :app (API 35) - Versuch 2
+        id: app_test_2
+        if: steps.gates.outputs.need_app == 'true' && steps.app_test_1.outcome == 'failure'
         timeout-minutes: 35
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -1005,6 +1072,10 @@ jobs:
           - Wurden Tests abgeschwaecht, uebersprungen oder entfernt, damit der Stand gruen wird?
           - Liegt eine Aenderung ausserhalb dessen, was der Auftrag verlangt?
           - Gibt es Sicherheits-, Datenverlust- oder Migrationsrisiken?
+          - Beruehrt sie einen der Punkte unter AgentGuide.md, Abschnitt \"Was niemals ohne
+            menschliche Freigabe veraendert werden darf\", oder EVOLUTION.md, Abschnitte
+            \"Non-Negotiable Design Principles\"/\"Protected Areas\"? Falls unklar, dort gezielt
+            nachlesen statt zu raten - nicht die ganze EVOLUTION.md, nur diese Abschnitte.
 
           Du darfst die geaenderten Dateien mit Read, Glob und Grep im Arbeitsstand ansehen.
 
@@ -1428,6 +1499,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     timeout-minutes: 15
 
     steps:
@@ -1620,7 +1692,7 @@ jobs:
           echo "  Branch: $BRANCH"
           echo "  Commit: $COMMIT"
           echo "  main unveraendert auf $BASE"
-          echo "Kein Merge, kein PR, keine Freigabe - der Branch wartet auf menschliche Pruefung."
+          echo "Kein Merge, keine Freigabe - der Branch wartet auf menschliche Pruefung."
 
       # ---------------------------------------------------------------------------------
       # Der erledigte Backlog-Eintrag wird auf `done` gesetzt - im BRANCH, nicht auf main.
@@ -1715,6 +1787,42 @@ jobs:
           echo "CLAUDE_PRIMARY_BACKLOG_FLIP: PASS"
           echo "  $TASK_ID -> done, Commit $FLIP auf $BRANCH"
           echo "  Wirksam wird der Status erst mit dem Merge des Pull Requests."
+
+      # -----------------------------------------------------------------------------------
+      # Pull Request eroeffnen - der einzige Schritt, der ueber gh statt ueber git spricht.
+      #
+      # Ohne diesen Schritt blieb der gepushte Branch ein Branch ohne PR, und dessen blosse
+      # Existenz reicht dem Waechter oben ("Es ist bereits eine Evolution unterwegs"), um
+      # jeden weiteren Zeitplan-Lauf zu ueberspringen - bis jemand von Hand einen Pull
+      # Request nachreicht. Genau das ist mehrfach tagelang unbemerkt geblieben (siehe PR
+      # #40, #44, #47).
+      #
+      # Was sich dadurch NICHT aendert: Titel, Kommentar und `git log` nennen weiterhin nur
+      # den bereits geprueften Commit - dieser Schritt liest den Text nur aus, er erzeugt
+      # keinen neuen. Gemergt wird weiterhin ausschliesslich von Hand.
+      # -----------------------------------------------------------------------------------
+      - name: Pull Request eroeffnen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH='${{ steps.verify.outputs.branch }}'
+          COMMIT='${{ steps.verify.outputs.commit }}'
+          TASK_ID='${{ needs.preflight.outputs.task_id }}'
+
+          SUBJECT="$(git log -1 --format=%s "$COMMIT")"
+          TITLE="${SUBJECT#ClaudePrimaryRun: }"
+          if echo "$TASK_ID" | grep -qE '^ITO-[0-9]{4}$'; then
+            TITLE="$TITLE ($TASK_ID)"
+          fi
+
+          BODY="$(printf '%s\n\n%s\n\n%s\n' \
+            "Automatisch eroeffnet von \`claude-primary-run.yml\` (Lauf [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})), nachdem Builder, Tests und Reviewer bereits vollstaendig gruen durchgelaufen sind." \
+            "$(git log -1 --format=%b "$COMMIT")" \
+            "Kein Merge, keine Freigabe - dieser Pull Request wartet weiterhin auf menschliche Pruefung. Diese PR-CI ist zusaetzlich zur bereits im Lauf ausgefuehrten Pruefung.")"
+
+          gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
+          echo "CLAUDE_PRIMARY_PR: PASS"
 
       - name: Uebergabe-Diagnose hochladen
         if: always()

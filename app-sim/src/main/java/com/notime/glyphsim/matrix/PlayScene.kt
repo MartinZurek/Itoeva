@@ -116,7 +116,7 @@ object PlayScene {
      * der Schleim toepfert, der Wuestenfuchs graebt, die Eule spielt. Es ist der Gegenentwurf zum
      * Arbeitsplatz - dort geht sie einem BERUF nach, hier tut sie etwas, weil sie es ist.
      */
-    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SHOP, STREET, FOREST }
+    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SPORT, POND, SHOP, STREET, FOREST, MEADOW, CITY }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
     private val Place.isIndoors: Boolean
@@ -131,7 +131,8 @@ object PlayScene {
      * Sterne und Mond, ohne an vier Stellen nachzuziehen.
      */
     fun isOutdoors(place: Place): Boolean =
-        place == Place.PARK || place == Place.STREET || place == Place.FOREST
+        place == Place.PARK || place == Place.SPORT || place == Place.POND || place == Place.STREET ||
+            place == Place.FOREST || place == Place.MEADOW || place == Place.CITY
 
     /**
      * Ob an diesem Ort ueberhaupt jemand vorbeikommen kann (siehe runVisit in DockScreen).
@@ -149,11 +150,16 @@ object PlayScene {
         // etwas zu bedeuten haette. Im WALD dagegen NICHT - dort jemandem zu begegnen ist das
         // Gegenteil dessen, wofuer man in den Wald geht, und ein Fremder zwischen den Baeumen
         // wirkt eher beunruhigend als belebt.
-        Place.PARK, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET -> true
+        // Die STADT gehoert dazu wie die Strasse - ein Platz, an dem Leute ohnehin unterwegs sind.
+        Place.PARK, Place.SPORT, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY -> true
         // Die eigene Ecke ([Place.CRAFT]) ausdruecklich NICHT: Wer dort sitzt, hat sich
         // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
+        //
+        // Die WIESE genauso wenig wie der Wald: eine stille Freiflaeche zum Ausspannen, kein
+        // Treffpunkt - dafuer gibt es bereits Park und Stadt. Der TEICH aus demselben Grund: ein
+        // Angelplatz zum Ausspannen, keine Begegnungsstaette.
         Place.BEDROOM, Place.BATH, Place.DESK, Place.KITCHEN, Place.NOOK, Place.CRAFT,
-        Place.FOREST -> false
+        Place.FOREST, Place.MEADOW, Place.POND -> false
     }
 
     /**
@@ -319,27 +325,16 @@ object PlayScene {
     }
 
     /**
-     * Wie hoch der Boden liegt - und damit, wie viel Himmel ueber der Szene steht.
+     * Gemeinsame Bodenlinie der ganzen Spielwelt.
      *
-     * **Der Streifen ist nicht mehr ueberall gleich hoch.** Drinnen sitzt der Boden tief, das
-     * Zimmer ist ein schmales Band am unteren Rand und laesst der Uhr den Platz darueber. Nachts
-     * im Park rutscht er weit nach unten: Die Figur wird klein, und der Himmel nimmt fast den
-     * ganzen Bildschirm ein.
-     *
-     * Das ist derselbe Kniff, mit dem Filme eine Weite herstellen - nicht mehr zeichnen, sondern
-     * den Horizont senken. Es kostet keine einzige zusaetzliche Requisite und macht aus einer
-     * naechtlichen Parkszene etwas, das man ansieht, statt etwas, an dem man vorbeischaut.
+     * Orte und Tageszeiten duerfen die Kulisse veraendern, aber nicht unbemerkt die Ebene, auf
+     * der die Figur steht. Abweichende Hoehen gehoeren spaeter in eine ausdruecklich geplante
+     * Mechanik, etwa eine Treppe oder einen Huegel, die Avatar und Umgebung gemeinsam bewegt.
      */
-    fun floorFraction(place: Place, dayPhase: PlayAmbientActivity.DayPhase): Float = when {
-        // Der Wald hat den HOECHSTEN Horizont von allen Orten draussen - und das ist genau
-        // umgekehrt zur Weite des Parks. Im Wald sieht man keinen Himmel; die Baeume stehen dicht
-        // und nah. Ein tief gelegter Horizont wuerde daraus eine Lichtung machen.
-        place == Place.FOREST -> 0.78f
-        place.isIndoors -> 0.80f
-        dayPhase == PlayAmbientActivity.DayPhase.NIGHT -> 0.93f
-        dayPhase == PlayAmbientActivity.DayPhase.EVENING -> 0.88f
-        else -> 0.80f
-    }
+    fun floorFraction(
+        @Suppress("UNUSED_PARAMETER") place: Place,
+        @Suppress("UNUSED_PARAMETER") dayPhase: PlayAmbientActivity.DayPhase
+    ): Float = 0.80f
 
     /**
      * Die Zellen GENAU EINER Requisite - fuer die Kompositions-Pruefungen (siehe ScenePreview und
@@ -505,6 +500,9 @@ object PlayScene {
         // aber daneben - sonst haette sie nie eine andere Haltung zu ihrem eigenen Werkstueck.
         Place.CRAFT -> 0.42f
         Place.PARK -> 0.20f
+        Place.SPORT -> 0.20f
+        // Am Ufer, nicht mittendrin - die Rute wirft ohnehin nach vorn ins Wasser hinein.
+        Place.POND -> 0.24f
         Place.SHOP -> 0.34f
         Place.BATH -> 0.42f
         Place.WORK -> 0.20f
@@ -512,6 +510,10 @@ object PlayScene {
         // unterwegs, und ein Anfang am Rand macht daraus eine Strecke statt einer Buehne.
         Place.STREET -> 0.08f
         Place.FOREST -> 0.06f
+        // Wie der Park: eine offene Flaeche, kein Durchgang - die Figur darf mittig stehen.
+        Place.MEADOW -> 0.20f
+        // Wie die Strasse, aus demselben Grund: auch die Stadt ist ein Weg, kein Aufenthaltsort.
+        Place.CITY -> 0.08f
     }
 
     /**
@@ -1064,12 +1066,29 @@ object PlayScene {
         ))
         Place.SHOP -> besideDoor(listOf(
             Placement(RACK, anchorX = 0.04f, station = Station.RACK),
-            Placement(RACK, anchorX = 0.34f),
-            Placement(SHELF, anchorX = 0.66f, liftCells = SHELF_LIFT, brightness = BACKDROP),
-            Placement(CHECKOUT, anchorX = 0.72f, station = Station.CHECKOUT)
+            // Eine einzige Auslage genuegt. Zwei fast gleiche Regale plus Wandregal und Kasse
+            // machten aus dem Laden auf einem schmalen Telefon einen dichten Moebelblock, in dem
+            // keine Funktion mehr einzeln lesbar war. Das Wandregal fuellt die Mitte, ohne eine
+            // zweite Boden-Silhouette vorzutäuschen; die Kasse bekommt rechts ihren eigenen
+            // klaren Bereich.
+            Placement(SHELF, anchorX = 0.48f, liftCells = SHELF_LIFT, brightness = BACKDROP),
+            Placement(CHECKOUT, anchorX = 0.90f, station = Station.CHECKOUT)
         ))
         // **Das Draussen, das IHM gehoert** - siehe [habitatPlacements].
         Place.PARK -> habitatPlacements(species)
+        Place.SPORT -> listOf(
+            Placement(FOOTBALL_GOAL, anchorX = 0f, brightness = BACKDROP, behind = true),
+            Placement(FOOTBALL_GOAL, anchorX = 1f, brightness = BACKDROP, behind = true),
+            Placement(FENCE, anchorX = 0.50f, brightness = BACKDROP, behind = true)
+        )
+        // Der TEICH: Schilf an beiden Raendern, ein einzelner Steg-Pfosten dazwischen - alles
+        // Hintergrund, weil die eigentliche Handlung ohnehin vor der Figur im Wasser stattfindet
+        // (siehe PlayEffects.fishingCells), nicht in der Einrichtung selbst.
+        Place.POND -> listOf(
+            Placement(CATTAILS, anchorX = 0.08f, brightness = BACKDROP, behind = true),
+            Placement(POND_POST, anchorX = 0.44f, brightness = BACKDROP, behind = true),
+            Placement(CATTAILS, anchorX = 0.90f, brightness = BACKDROP, behind = true)
+        )
 
         // Die STRASSE: Haeuser als Hintergrund, davor Laterne und Bank.
         //
@@ -1081,10 +1100,12 @@ object PlayScene {
             Placement(HOUSE, anchorX = 0.02f, brightness = BACKDROP, behind = true),
             Placement(HOUSE_LOW, anchorX = 0.44f, brightness = BACKDROP, behind = true),
             Placement(HOUSE, anchorX = 1f, brightness = BACKDROP, behind = true),
+            Placement(MAILBOX, anchorX = 0.30f),
             Placement(BENCH, anchorX = 0.52f, station = Station.BENCH),
             // 0,74 und nicht weiter rechts: Bei 0,84 stand die Laterne vollstaendig IN der
             // rechten Fassade. Vor einem Haus zu stehen ist richtig, darin zu verschwinden nicht.
-            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP)
+            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP),
+            Placement(STREET_SIGN, anchorX = 0.96f)
         )
 
         // Der WALD: drei verschiedene Baeume, ein umgestuerzter Stamm zum Sitzen, Unterholz.
@@ -1101,7 +1122,47 @@ object PlayScene {
             Placement(PINE, anchorX = 0f),
             Placement(BUSH, anchorX = 0.28f),
             Placement(LOG, anchorX = 0.58f, station = Station.BENCH),
-            Placement(TREE, anchorX = 0.86f)
+            Placement(TREE, anchorX = 0.86f),
+            // 1,0 statt naeher am linken Rand: Bei 0,14 lag der Farn im Ruheplatz des Avatars
+            // (avatarAnchorX(FOREST) = 0,06) - die Standardgestalt ueberzeichnete dort einen
+            // Grossteil seiner Zellen. Der Wald hat sonst keine freie Luecke von 5 Zellen Breite:
+            // PINE/BUSH/LOG/TREE liegen bei der kleinsten geprueften Breite (MIN_SCENE_CELLS=40)
+            // bereits luckenlos aneinander (siehe SceneCompositionTest). Erst rechts von TREE
+            // bleibt bei jeder geprueften Breite (40/46/54/60) Platz - dort ueberschneidet sich
+            // der Farn nur mit dem Hintergrund-PINE (anchorX 1f, behind=true), was gewollt ist,
+            // nicht mit einer weiteren Vordergrund-Requisite.
+            Placement(FERN, anchorX = 1f)
+        )
+
+        // Die WIESE: eine offene Freiflaeche, sparsam bestanden - das Gegenteil des dichten
+        // Waldes und ruhiger als der Park, der ihm gehoert (siehe [habitatPlacements]). Nur ein
+        // Baum am Rand, etwas Gebuesch, eine Bank in der Mitte zum Verweilen.
+        Place.MEADOW -> listOf(
+            Placement(BUSH, anchorX = 0.10f, brightness = BACKDROP, behind = true),
+            Placement(TREE, anchorX = 0.92f, brightness = BACKDROP, behind = true),
+            Placement(FENCE, anchorX = 0.02f),
+            Placement(BENCH, anchorX = 0.50f, station = Station.BENCH),
+            Placement(WILD_TUFT, anchorX = 0.70f),
+            Placement(MUSHROOMS, anchorX = 0.84f)
+        )
+
+        // Die STADT: dichter bebaut als die Strasse und mit ZWEI Laternen belebter - derselbe
+        // Weg, nur groesser und voller. Bank und (tragende) Laterne stehen an denselben
+        // Bruchteilen wie auf der Strasse: Der Ruheplatz der Figur liegt dort ebenfalls bei
+        // 0,08 (siehe [avatarAnchorX]), und genau dieser Abstand ist bereits geprueft
+        // (SceneCompositionTest, "an jedem Ort bleibt Platz zum Stehen") - naeher heran haette
+        // die Figur im Sitzen der Bank gestanden. Nur die erste Laterne traegt die Station: eine
+        // zweite Bank oder Laterne ist Kulisse, kein zweiter Platz zum Ansteuern.
+        Place.CITY -> listOf(
+            Placement(HOUSE, anchorX = 0.02f, brightness = BACKDROP, behind = true),
+            Placement(HOUSE_LOW, anchorX = 0.30f, brightness = BACKDROP, behind = true),
+            Placement(HOUSE, anchorX = 0.58f, brightness = BACKDROP, behind = true),
+            Placement(HOUSE_LOW, anchorX = 0.86f, brightness = BACKDROP, behind = true),
+            Placement(MAILBOX, anchorX = 0.20f),
+            Placement(WASTE_BASKET, anchorX = 0.34f),
+            Placement(BENCH, anchorX = 0.52f, station = Station.BENCH),
+            Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP),
+            Placement(LAMPPOST, anchorX = 0.94f)
         )
         }
     }
@@ -1126,6 +1187,24 @@ object PlayScene {
         // mit Schilf. Was eine Landschaft ausmacht, ist zur Haelfte das, worauf man steht - und
         // es ist der billigste Teil davon: eine einzige Zeile ueber der Bodenlinie.
         Place.PARK -> habitatGround(species, widthCells, floorY)
+        Place.SPORT -> (0 until widthCells).flatMap { x ->
+            buildList {
+                // Seitenlinie und kurze Mittelmarkierung unterscheiden den Platz von einer Wiese.
+                if (x % 2 == 0) add(SceneCell(x, floorY - 1, STRUCTURE))
+                if (x == widthCells / 2) {
+                    add(SceneCell(x, floorY - 2, STRUCTURE))
+                    add(SceneCell(x, floorY - 3, STRUCTURE))
+                }
+            }
+        }
+        // Teich: kurze, versetzte Wellenlinien statt Rasenhalme - Wasser bewegt sich, eine Wiese
+        // steht still.
+        Place.POND -> (0 until widthCells).flatMap { x ->
+            buildList {
+                if ((x + 1) % 4 == 0) add(SceneCell(x, floorY - 1, STRUCTURE))
+                if ((x + 3) % 6 == 0) add(SceneCell(x, floorY - 2, (STRUCTURE * 0.7f).roundToInt()))
+            }
+        }
 
         // Wald: DICHTERES Bodenkraut als im Park, und zweizeilig. Der Unterschied zwischen einer
         // gepflegten Wiese und einem Waldboden liegt genau darin, dass man den Boden nicht mehr
@@ -1152,6 +1231,18 @@ object PlayScene {
         Place.LIVING -> indoorFloor(species, widthCells, floorY, from = 0.22f, to = 0.62f)
         Place.BEDROOM -> indoorFloor(species, widthCells, floorY, from = 0.40f, to = 0.72f)
         Place.CRAFT -> indoorFloor(species, widthCells, floorY, from = 0.26f, to = 0.58f)
+
+        // Wiese: LOCKERES Gras, einzeilig - lichter als der Waldboden und ohne dessen zweite
+        // Reihe. Eine gepflegte Freiflaeche, keine Wildnis.
+        Place.MEADOW -> (0 until widthCells)
+            .filter { it % 3 == 0 || it % 5 == 2 }
+            .map { SceneCell(it, floorY - 1, STRUCTURE) }
+
+        // Stadt: dasselbe Pflaster wie die Strasse, nur dichter - das macht den Unterschied
+        // zwischen einem Weg und einem Platz.
+        Place.CITY -> (0 until widthCells)
+            .filter { it % 3 == 0 }
+            .map { SceneCell(it, floorY, (STRUCTURE * 1.4f).roundToInt()) }
         else -> emptyList()
     }
 
@@ -1422,6 +1513,12 @@ object PlayScene {
         useSpot = 6 to 2
     )
 
+    /** Farn - niedriger Bodenbewuchs zwischen den Baeumen, flacher noch als der Strauch. */
+    private val FERN = Prop(
+        width = 5, height = 4,
+        art = listOf(1 to 0, 3 to 0) + hLine(0, 4, 1) + hLine(1, 3, 2) + listOf(2 to 3)
+    )
+
     // ---- Draussen: die Lebensraeume ----
     //
     // **Fuenf neue Formen fuer sechs Landschaften** - der Rest kommt aus dem, was schon da ist
@@ -1526,6 +1623,76 @@ object PlayScene {
             hLine(1, 9, 6) +
             vLine(2, 2, 5) + vLine(4, 2, 5) + vLine(7, 2, 5) + vLine(9, 2, 5) +
             vLine(4, 8, 11) + vLine(7, 8, 11) + hLine(4, 7, 8)
+    )
+
+    // ---- Draussen: kleines Stadt- und Naturbeiwerk ----
+    //
+    // Die Silhouetten sind fuer Itoevas Seitenansicht neu gezeichnet, orientieren sich aber an
+    // den CC0-Formideen des Urizen Onebit Tilesets (Modern/Basic):
+    // https://github.com/vurmux/urizen/tree/master/urizen/data/tilesets
+    // Keine Tilesheets werden ausgeliefert; die wenigen gesetzten Zellen bleiben native Props.
+
+    /** Briefkasten auf einem einzelnen Pfosten - klein genug, um Kulisse statt Station zu sein. */
+    private val MAILBOX = Prop(
+        width = 6, height = 7,
+        art = hLine(1, 4, 0) + listOf(0 to 1, 5 to 1) + hLine(0, 5, 2) +
+            vLine(0, 1, 3) + vLine(5, 1, 3) + listOf(4 to 1) +
+            vLine(3, 3, 6) + hLine(2, 4, 6)
+    )
+
+    /** Wegweiser mit zwei verschieden langen Armen; dadurch kein zweiter Laternenmast. */
+    private val STREET_SIGN = Prop(
+        width = 7, height = 9,
+        art = hLine(1, 6, 0) + listOf(6 to 1) + hLine(0, 5, 2) + listOf(0 to 3) +
+            vLine(3, 3, 8) + hLine(2, 4, 8)
+    )
+
+    /** Offener Abfallkorb mit Latten - keine geschlossene Flaeche im ohnehin dichten Stadtbild. */
+    private val WASTE_BASKET = Prop(
+        width = 5, height = 6,
+        art = hLine(0, 4, 0) + hLine(0, 4, 5) +
+            vLine(0, 1, 4) + vLine(2, 1, 4) + vLine(4, 1, 4)
+    )
+
+    /** Niedriger Holzzaun; die offene Mitte laesst die Wiese weiterhin weit wirken. */
+    private val FOOTBALL_GOAL = Prop(
+        width = 13,
+        height = 9,
+        art = hLine(0, 12, 0) + vLine(0, 1, 8) + vLine(12, 1, 8) +
+            (2..10 step 2).flatMap { x -> vLine(x, 2, 8) } +
+            (2..8 step 2).flatMap { y -> hLine(1, 11, y) }
+    )
+
+    private val FENCE = Prop(
+        width = 11, height = 5,
+        art = vLine(1, 0, 4) + vLine(9, 0, 4) + hLine(0, 10, 1) + hLine(0, 10, 3)
+    )
+
+    /** Schilf am Ufer: drei Halme unterschiedlicher Hoehe, der mittlere mit verdicktem Kolben. */
+    private val CATTAILS = Prop(
+        width = 5, height = 7,
+        art = vLine(0, 3, 6) + vLine(2, 0, 6) + vLine(4, 2, 6) +
+            listOf(1 to 0, 2 to 0, 1 to 1, 2 to 1)
+    )
+
+    /** Ein einzelner Steg-Pfosten mit Quersteg, halb im Wasser. */
+    private val POND_POST = Prop(
+        width = 3, height = 6,
+        art = vLine(1, 0, 5) + hLine(0, 2, 1)
+    )
+
+    /** Zwei Pilze unterschiedlicher Groesse statt einer symmetrischen Doppelung. */
+    private val MUSHROOMS = Prop(
+        width = 7, height = 5,
+        art = hLine(0, 3, 1) + listOf(1 to 0, 2 to 0) + vLine(2, 2, 4) +
+            hLine(4, 6, 2) + listOf(5 to 1) + vLine(5, 3, 4)
+    )
+
+    /** Kleiner Wildwuchs aus Gras und einer einzelnen Bluete. */
+    private val WILD_TUFT = Prop(
+        width = 7, height = 5,
+        art = listOf(0 to 3, 1 to 2, 2 to 3, 3 to 1, 4 to 3, 5 to 2, 6 to 3) +
+            hLine(0, 6, 4) + listOf(3 to 0)
     )
 
     /** Fenster mit Sprossenkreuz - die einzige Requisite als Umriss statt als Silhouette:
@@ -3314,7 +3481,9 @@ object PlayScene {
         dayPhase: PlayAmbientActivity.DayPhase,
         phase: Int
     ): List<SceneCell> {
-        if (place != Place.STREET) return emptyList()
+        // Die Stadt hat dieselben Fassaden wie die Strasse (siehe [furnishing]) und geht abends
+        // genauso an.
+        if (place != Place.STREET && place != Place.CITY) return emptyList()
         val night = dayPhase == PlayAmbientActivity.DayPhase.NIGHT
         if (!night && dayPhase != PlayAmbientActivity.DayPhase.EVENING) return emptyList()
 
@@ -3380,9 +3549,8 @@ object PlayScene {
     /**
      * Eine Sternschnuppe zieht selten schraeg durch den Nachthimmel.
      *
-     * **Warum gerade hier.** Nachts im Park sinkt der Horizont und der Himmel nimmt fast den
-     * ganzen Bildschirm ein (siehe [floorFraction]) - eine grosse leere Flaeche, die bisher nur
-     * ein paar stehende Sterne trug. Ein Ereignis, das quer hindurchzieht und wieder weg ist,
+     * **Warum gerade hier.** Nachts ist der Himmel ueber dem Park eine grosse ruhige Flaeche, die
+     * bisher nur ein paar stehende Sterne trug. Ein Ereignis, das quer hindurchzieht und wieder weg ist,
      * nutzt genau diese Weite. Und weil es SELTEN kommt (in etwa einem Sechstel der Zeit),
      * belohnt es das Zuschauen, statt zur Kulisse zu werden.
      */
@@ -3533,14 +3701,14 @@ object PlayScene {
 
             // Draussen: eine Wolke zieht durchs Bild, nachts stattdessen Sterne.
             //
-            // Alle drei Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
-            // WETTER, nicht zum Ort. Zwei getrennt gepflegte Himmel waeren die sicherste Art,
-            // dass ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
-            Place.PARK, Place.STREET, Place.FOREST -> {
+            // Alle fuenf Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
+            // WETTER, nicht zum Ort. Getrennt gepflegte Himmel waeren die sicherste Art, dass
+            // ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
+            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
-                    // Nachts steht der Boden tief (siehe [floorFraction]) und darueber ist Platz
-                    // fuer einen richtigen Himmel: ein Sternbild aus sieben Sternen, jeder auf
+                    // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:
+                    // ein Sternbild aus sieben Sternen, jeder auf
                     // einem eigenen Takt. Im Gleichtakt blinkend saehen sie aus wie eine
                     // Leuchtreklame; unabhaengig voneinander wie ein Nachthimmel.
                     val sky = (floorY * 0.62f).toInt()

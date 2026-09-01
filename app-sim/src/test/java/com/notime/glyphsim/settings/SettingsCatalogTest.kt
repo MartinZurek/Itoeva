@@ -121,6 +121,7 @@ class SettingsCatalogTest {
         pruefe(SettingsCatalog.TappedAvatar, "onboarding_prefs", "tapped_avatar")
         pruefe(SettingsCatalog.TappedClock, "onboarding_prefs", "tapped_clock")
         pruefe(SettingsCatalog.PlayModeIntroSeen, "play_mode_prefs", "intro_seen")
+        pruefe(SettingsCatalog.UsedActionSlot, "onboarding_prefs", "used_action_slot")
     }
 
     // --- Die Welt des Wesens ----------------------------------------------------------------------
@@ -175,6 +176,7 @@ class SettingsCatalogTest {
             SettingsCatalog.ClipRecordingEnabled,
             SettingsCatalog.Greeted,
             SettingsCatalog.TappedAvatar, SettingsCatalog.TappedClock, SettingsCatalog.PlayModeIntroSeen,
+            SettingsCatalog.UsedActionSlot,
             SettingsCatalog.PlayCoins, SettingsCatalog.PlayPantryLevel,
             SettingsCatalog.PlayForcedWeather, SettingsCatalog.PlayTimeLapseSpeed
         )

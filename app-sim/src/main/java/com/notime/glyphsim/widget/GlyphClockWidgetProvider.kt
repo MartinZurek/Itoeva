@@ -213,8 +213,13 @@ class GlyphClockWidgetProvider : AppWidgetProvider() {
                 } else {
                     // Der Regelfall seit dem Verzicht auf SCHEDULE_EXACT_ALARM (Begruendung im
                     // Manifest): die Uhr tickt ungefaehr statt minutengenau. Sichtbar ist das
-                    // Widget ohnehin nur bei eingeschaltetem Display - und dann greift Doze
-                    // nicht, der Tick kommt also nah am vollen Minutenwechsel.
+                    // Widget ohnehin nur bei eingeschaltetem Display, und dann greift Doze nicht -
+                    // das schliesst aber Verspaetung nicht aus. Auch ausserhalb von Doze fasst
+                    // Android setAndAllowWhileIdle-Alarme mit anderen zusammen (Batching), und das
+                    // kann durchaus an die 60 Sekunden ausmachen (aus einem Nutzerbericht bekannt:
+                    // Widget-Uhr bis zu einer Minute hinter der App-Uhr, die als In-Process-
+                    // Coroutine ohne diesen Umweg laeuft, siehe ui/ClockTick.kt). "Nah am vollen
+                    // Minutenwechsel" gilt also im Mittel, nicht als Garantie.
                     Log.d(TAG, "Widget-Tick laeuft ungefaehr (keine Exact-Alarm-Berechtigung)")
                     manager.setAndAllowWhileIdle(AlarmManager.RTC, nextMinute, pendingIntent)
                 }

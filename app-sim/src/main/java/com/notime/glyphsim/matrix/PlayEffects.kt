@@ -1,6 +1,7 @@
 package com.notime.glyphsim.matrix
 
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 /**
  * Was der Avatar TRAEGT und was aufblitzt, wenn er etwas ANFASST - die beiden Ebenen, die aus
@@ -20,7 +21,167 @@ object PlayEffects {
 
     /** Was sich tragen laesst. Bewusst wenige, klar unterscheidbare Formen - auf drei mal drei
      *  Zellen ist alles darueber hinaus nicht mehr auseinanderzuhalten. */
-    enum class Carried { BOOK, FOOD, CUP }
+    enum class Carried { BOOK, FOOD, CUP, GUITAR, EASEL }
+
+    /** Lesbare Phasen einer Drachen-Szene: auspacken, hochziehen, fliegen, einholen. */
+    enum class KitePhase { PREPARE, LAUNCH, FLY, LAND }
+
+    /** Ballkontrolle, Schuss und der spaeter erlernbare Spezialtrick. */
+    enum class FootballPhase { DRIBBLE, AIM, KICK, TRICK }
+
+    /** Werfen, Warten und der Fang - die drei sichtbaren Phasen einer Angel-Szene am Teich. */
+    enum class FishingPhase { CAST, WAIT, CATCH }
+
+    fun footballCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: FootballPhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val direction = if ((scenePhase / 5) % 2 == 0) 1 else -1
+        val centerX = when (phase) {
+            FootballPhase.DRIBBLE -> avatarCellX + 15 + direction * 2
+            FootballPhase.AIM -> avatarCellX + 17
+            FootballPhase.KICK -> avatarCellX + 23
+            FootballPhase.TRICK -> avatarCellX + 12 + direction * 4
+        }.coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+        val centerY = when (phase) {
+            FootballPhase.DRIBBLE, FootballPhase.AIM -> groundY - 1
+            FootballPhase.KICK -> groundY - 7
+            FootballPhase.TRICK -> groundY - 13
+        }
+        return listOf(
+            0 to -2,
+            -1 to -1, 0 to -1, 1 to -1,
+            -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
+            -1 to 1, 0 to 1, 1 to 1,
+            0 to 2
+        ).map { (dx, dy) ->
+            SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
+        }
+    }
+
+    /**
+     * Angel, Schnur und der Fang - eine eigene kleine Szene vor der Figur, am Wasser.
+     *
+     * Wie bei Drache und Fussball macht erst die Schnur, die bis zum Schwimmer im Wasser reicht,
+     * aus "steht am Ufer" ein "angelt": Ohne sie waere die Rute allein nur ein Stock in der Hand.
+     */
+    fun fishingCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: FishingPhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val handX = (avatarCellX + 10).coerceIn(0, (widthCells - 1).coerceAtLeast(0))
+        val handY = avatarCellY + AvatarGeometry.HEADROOM + 6
+        val tipX = handX + 2
+        val tipY = handY - 2
+        // In der Wartephase treibt der Schwimmer leicht auf und ab - sonst liesse sich WAIT auf
+        // dem Standbild nicht von CAST unterscheiden.
+        val bob = if (phase == FishingPhase.WAIT) sin(scenePhase * 0.24).roundToInt() else 0
+        val bobberX = (handX + 6).coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+        val bobberY = when (phase) {
+            FishingPhase.CAST -> handY - 2
+            FishingPhase.WAIT -> handY + 4 + bob
+            FishingPhase.CATCH -> handY - 1
+        }
+
+        val result = mutableListOf<SceneCell>()
+        // Die Rute: ein kurzer schraeger Strich von der Hand nach vorn-oben.
+        result += SceneCell(handX, handY, PlayScene.FURNITURE)
+        result += SceneCell(handX + 1, handY - 1, PlayScene.FURNITURE)
+        result += SceneCell(tipX, tipY, PlayScene.FURNITURE)
+        // Die Schnur von der Rutenspitze zum Schwimmer - gleichmaessige Stichproben wie beim
+        // Drachen, auf dem Zellraster reicht das fuer eine erkennbare Linie.
+        val steps = kotlin.math.max(kotlin.math.abs(bobberX - tipX), kotlin.math.abs(bobberY - tipY))
+            .coerceAtLeast(1)
+        for (i in 0..steps step 2) {
+            val t = i.toFloat() / steps
+            result += SceneCell(
+                x = (tipX + (bobberX - tipX) * t).roundToInt(),
+                y = (tipY + (bobberY - tipY) * t).roundToInt(),
+                brightness = PlayScene.FURNITURE
+            )
+        }
+        if (phase == FishingPhase.CATCH) {
+            // Der Fisch: ein kleiner Umriss direkt ueber dem Schwimmer, gerade aus dem Wasser
+            // gezogen statt darauf zu treiben.
+            val fish = listOf(-1 to 0, 0 to 0, 1 to 0, 2 to -1, 0 to 1, 1 to 1)
+            for ((dx, dy) in fish) {
+                result += SceneCell(bobberX + dx, bobberY + dy - 2, PlayScene.GLOW - 250, isLight = true)
+            }
+        } else {
+            result += SceneCell(bobberX, bobberY, PlayScene.GLOW - 250, isLight = true)
+        }
+        return result.distinctBy { it.x to it.y }
+    }
+
+    /**
+     * Drachen, Schnur und Schweif als gemeinsame Szene vor dem Avatar.
+     *
+     * Nicht als einzelnes Sprite am Koerper: Erst die lange Schnur verbindet die Figur sichtbar
+     * mit dem Gegenstand im Himmel. In [KitePhase.FLY] reagiert er langsam auf [scenePhase], ohne
+     * dass die Figur dafuer durch den Park laufen muss.
+     */
+    fun kiteCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: KitePhase,
+        scenePhase: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val handX = (avatarCellX + 12).coerceIn(0, (widthCells - 1).coerceAtLeast(0))
+        val handY = avatarCellY + AvatarGeometry.HEADROOM + 9
+        val sway = if (phase == KitePhase.FLY) sin(scenePhase * 0.32).roundToInt() * 2 else 0
+        val rawCenterX = when (phase) {
+            KitePhase.PREPARE -> handX + 4
+            KitePhase.LAUNCH -> handX + 10
+            KitePhase.FLY -> handX + 15 + sway
+            KitePhase.LAND -> handX + 7
+        }
+        val centerX = rawCenterX.coerceIn(3, (widthCells - 4).coerceAtLeast(3))
+        val centerY = when (phase) {
+            KitePhase.PREPARE -> handY + 3
+            KitePhase.LAUNCH -> handY - 13
+            KitePhase.FLY -> (handY - 30 - kotlin.math.abs(sway)).coerceAtLeast(4)
+            KitePhase.LAND -> handY - 7
+        }
+
+        val result = mutableListOf<SceneCell>()
+        if (phase != KitePhase.PREPARE) {
+            // Eine duenne diagonale Schnur; gleichmaessige Stichproben reichen auf dem Zellraster.
+            val steps = kotlin.math.max(kotlin.math.abs(centerX - handX), kotlin.math.abs(centerY - handY))
+                .coerceAtLeast(1)
+            for (i in 0..steps step 2) {
+                val t = i.toFloat() / steps
+                result += SceneCell(
+                    x = (handX + (centerX - handX) * t).roundToInt(),
+                    y = (handY + (centerY - handY) * t).roundToInt(),
+                    brightness = PlayScene.FURNITURE
+                )
+            }
+        }
+
+        val kite = listOf(
+            0 to -2,
+            -1 to -1, 0 to -1, 1 to -1,
+            -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
+            -1 to 1, 0 to 1, 1 to 1,
+            0 to 2
+        )
+        for ((dx, dy) in kite) {
+            result += SceneCell(centerX + dx, centerY + dy, PlayScene.GLOW - 250, isLight = true)
+        }
+        // Der geknickte Schweif macht die Raute auch in Bewegung eindeutig als Drachen lesbar.
+        result += SceneCell(centerX + 1, centerY + 3, PlayScene.FURNITURE)
+        result += SceneCell(centerX, centerY + 4, PlayScene.FURNITURE)
+        result += SceneCell(centerX + 1, centerY + 5, PlayScene.FURNITURE)
+        return result.distinctBy { it.x to it.y }
+    }
 
     /**
      * Der getragene Gegenstand, gezeichnet auf Hoehe der Haende und leicht seitlich versetzt.
@@ -45,6 +206,10 @@ object PlayEffects {
         Carried.FOOD -> listOf(0 to 0, 2 to 0, 0 to 1, 1 to 1, 2 to 1, 1 to 2)
         // Becher mit Henkel.
         Carried.CUP -> listOf(0 to 0, 1 to 0, 0 to 1, 1 to 1, 2 to 1, 0 to 2, 1 to 2)
+        // Gitarre: schmaler Hals oben, runder Korpus darunter.
+        Carried.GUITAR -> listOf(1 to -1, 1 to 0, 0 to 1, 1 to 1, 2 to 1, 0 to 2, 1 to 2, 2 to 2)
+        // Staffelei: Dreibein mit aufgespannter Leinwand obenauf.
+        Carried.EASEL -> listOf(0 to 0, 1 to 0, 2 to 0, 1 to 1, 0 to 2, 2 to 2)
     }
 
     /**

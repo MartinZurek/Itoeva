@@ -84,7 +84,7 @@ object ReminderImport {
     /** Mehr Erinnerungen auf einmal anzulegen ergibt keinen Sinn und fuellt nur die Liste. */
     const val MAX_REMINDERS = 25
 
-    /** Schutz vor einem StackOverflowError im rekursiven JSON-Leser, siehe [extractJson]. */
+    /** Maximale Objekt- und Array-Verschachtelung zum Schutz des rekursiven JSON-Lesers. */
     const val MAX_JSON_DEPTH = 32
 
     /**
@@ -127,6 +127,7 @@ object ReminderImport {
     fun extractJson(text: String): String? {
         val start = text.indexOf('{')
         if (start < 0) return null
+        val containers = CharArray(MAX_JSON_DEPTH)
         var depth = 0
         var inString = false
         var escaped = false
@@ -142,15 +143,19 @@ object ReminderImport {
             }
             when (character) {
                 '"' -> inString = true
-                '{' -> {
+                '{', '[' -> {
+                    // Tief verschachtelte Objekte und Arrays bringen spaeter den JSON-Leser in
+                    // Not: er arbeitet rekursiv, und genuegend Ebenen erzeugen einen
+                    // StackOverflowError. Eine echte Antwort kommt mit einer Handvoll aus; alles
+                    // darueber ist kein Ausschnitt, den es zu retten lohnt.
+                    if (depth == MAX_JSON_DEPTH) return null
+                    containers[depth] = character
                     depth++
-                    // Tief verschachtelte Klammern bringen spaeter den JSON-Leser in Not: er
-                    // arbeitet rekursiv, und genuegend Ebenen erzeugen einen StackOverflowError.
-                    // Eine echte Antwort kommt mit einer Handvoll aus; alles darueber ist kein
-                    // Ausschnitt, den es zu retten lohnt.
-                    if (depth > MAX_JSON_DEPTH) return null
                 }
-                '}' -> {
+                '}', ']' -> {
+                    if (depth == 0) return null
+                    val expectedOpening = if (character == '}') '{' else '['
+                    if (containers[depth - 1] != expectedOpening) return null
                     depth--
                     if (depth == 0) return text.substring(start, i + 1)
                 }

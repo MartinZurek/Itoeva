@@ -1,9 +1,14 @@
 # Auslieferung aufs Telefon.
 #
-# Was hier passiert: Nach jedem Merge nach `main` entsteht eine frische Tama-APK, und die
-# eine Datei `Tama-debug.apk` im Google-Drive-Ordner wird damit ueberschrieben. Auf dem
-# Telefon aendert sich dadurch nichts am Ablauf - Drive-App oeffnen, Datei antippen,
-# "Aktualisieren". Nur das lokale Bauen davor entfaellt.
+# **PAUSIERT (siehe `on:` weiter unten fuer den Grund und die Bedingung zum Wiederaktivieren):**
+# Der `push`-Trigger ist zur Zeit auskommentiert. Ein Merge nach `main` baut und liefert
+# dadurch NICHT mehr automatisch aus - nur ein gezielter `workflow_dispatch`-Lauf tut das.
+#
+# Was hier im Regelbetrieb passiert (sobald der `push`-Trigger wieder aktiv ist): Nach jedem
+# Merge nach `main` entsteht eine frische Tama-APK, und die eine Datei `Tama-debug.apk` im
+# Google-Drive-Ordner wird damit ueberschrieben. Auf dem Telefon aendert sich dadurch nichts
+# am Ablauf - Drive-App oeffnen, Datei antippen, "Aktualisieren". Nur das lokale Bauen davor
+# entfaellt.
 #
 # Der Drive-Teil laesst sich nachreichen: Solange der Zugang dafuer nicht hinterlegt ist,
 # baut und signiert der Lauf trotzdem und legt die fertige APK als Artefakt ab. Damit ist
@@ -53,13 +58,27 @@
 
 name: Deliver APK
 
+# -------------------------------------------------------------------------------------------
+# PAUSIERT (siehe Chat vom 2026-08-30): Der automatische `push`-Trigger ist unten auskommentiert,
+# solange parallel am Skillbaum-Branch (skillbaum/freischaltung, aufbauend auf
+# skillbaum/katalog-und-reaktionen, PR #42/#43) getestet wird. Grund: beide Branches teilen
+# sich dieselbe Drive-Datei und dasselbe Telefon; der versionCode aus `git rev-list --count`
+# ist auf dem laenger laufenden Skillbaum-Branch hoeher, wodurch main automatisch als
+# "Downgrade" erscheint und Android die Installation verweigert (Deinstallieren noetig) -
+# und main enthaelt den Skillbaum ohnehin noch nicht.
+#
+# Wieder aktivieren, sobald #42/#43 in main gelandet sind: den `push`-Block unten
+# einkommentieren. Bis dahin liefert ausschliesslich `workflow_dispatch` auf dem jeweils
+# gewuenschten Branch aus - main-Merges der taeglichen Evolutionen laufen unveraendert
+# weiter, nur die Drive-Ablieferung dafuer pausiert.
+# -------------------------------------------------------------------------------------------
 on:
-  push:
-    branches: [main]
-    # Eine reine Dokumentationsaenderung aendert nichts an der App - dafuer muss kein
-    # Paket gebaut und keine Actions-Minute ausgegeben werden.
-    paths-ignore:
-      - '**/*.md'
+  # push:
+  #   branches: [main]
+  #   # Eine reine Dokumentationsaenderung aendert nichts an der App - dafuer muss kein
+  #   # Paket gebaut und keine Actions-Minute ausgegeben werden.
+  #   paths-ignore:
+  #     - '**/*.md'
   workflow_dispatch:
 
 # Standardmaessig gar keine Rechte, wie in claude-primary-run.yml. Dieser Workflow liest nur;
@@ -125,9 +144,23 @@ jobs:
         id: version
         run: |
           set -euo pipefail
+          # Zuerst die Voraussetzung, dann die Zahl. Ohne `fetch-depth: 0` im Checkout oben
+          # liefert actions/checkout einen flachen Klon, und `git rev-list --count` zaehlt
+          # dann nur die eine geholte Ebene - versionCode 1. Das ist der unangenehmste
+          # Fehlerfall ueberhaupt, weil er NICHT auffaellt: der Lauf bliebe gruen, die APK
+          # entstuende, und erst das Telefon verweigerte sie Wochen spaeter als Downgrade.
+          # Deshalb hier hart abbrechen, statt eine unbrauchbare Nummer weiterzureichen.
+          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+            echo "::error::Flacher Klon - die Commit-Anzahl waere zu niedrig und ergaebe eine"
+            echo "::error::Versionsnummer, die Android als Downgrade ablehnt. Im Checkout-Schritt"
+            echo "::error::oben muss 'fetch-depth: 0' stehen."
+            exit 1
+          fi
           CODE="$(git rev-list --count HEAD)"
+          # Nicht als Ersatz fuer die Pruefung darueber gedacht, sondern als letzter Riegel
+          # gegen alles, woran hier sonst noch nicht gedacht wurde.
           if [ "$CODE" -lt 1 ]; then
-            echo "::error::versionCode $CODE ist unbrauchbar - wurde flach geklont?"
+            echo "::error::versionCode $CODE ist unbrauchbar."
             exit 1
           fi
           SHA="$(git rev-parse --short=7 HEAD)"

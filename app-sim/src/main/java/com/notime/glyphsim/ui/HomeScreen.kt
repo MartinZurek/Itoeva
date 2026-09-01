@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -41,6 +42,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -114,8 +116,14 @@ private data class ActiveReminder(
     val reminderId: Long,
     val occurrenceId: Long,
     val animationType: com.notime.glyphcore.data.AnimationType?,
-    val libraryAnimationLabel: String?
+    val libraryAnimationLabel: String?,
+    /** Vorschau-Frames der Erinnerung - noetig, falls sie statt gefuettert in einen
+     *  Speicherplatz gezogen wird (siehe [SavedAction], [ActionSlotsColumn]). */
+    val frames: List<IntArray>
 )
+
+private fun ActiveReminder.toSavedAction() =
+    SavedAction(reminderId, occurrenceId, animationType, libraryAnimationLabel, frames)
 
 /**
  * Startbildschirm: zeigt die simulierte, runde Glyph-Matrix mit der laufenden
@@ -202,6 +210,29 @@ fun HomeScreen(
     val playState by playViewModel.state.collectAsStateWithLifecycle()
     var showPlayIntro by remember { mutableStateOf(false) }
 
+    // Vier feste Speicherplaetze (siehe ActionSlots.kt): eine Aktion landet hier, wenn sie statt
+    // auf den Avatar hierher gezogen wird, und bleibt liegen, bis sie von hier aus gefuettert
+    // wird. `slotBounds` haelt ihre aktuellen Bildschirm-Grenzen fuer dieselbe Kollisionspruefung,
+    // die auch Uhr und Avatar benutzen (siehe AvatarFeeding.overlaps).
+    val actionSlotProfileId = AvatarSpeciesPrefs.profileId(currentSpecies)
+    var slots by remember(actionSlotProfileId) {
+        mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
+    }
+    val slotBounds = remember { mutableStateListOf(*Array(ACTION_SLOT_COUNT) { Rect.Zero }) }
+
+    /**
+     * Laeuft eine Erinnerung aus, ohne dass darauf reagiert wurde: sie ist damit unwiderruflich
+     * weg, wie schon vor den Speicherplaetzen. Bewusst KEIN automatisches Ablegen in einen freien
+     * Platz - Speicherplaetze fuellen sich ausschliesslich durch eine bewusste Zieh-Geste
+     * (siehe saveToSlot), nie von selbst.
+     */
+    fun clearExpiredReminder() {
+        if (activeReminder == null) return
+        activeReminder = null
+        isPlayingAnimation = false
+        animationFrame = null
+    }
+
     // Faellige Erinnerungen kommen ueber ReminderAnimationBus rein (siehe dort) und
     // unterbrechen kurz den Uhr-Tick oben, statt dass hier nur immer die Uhrzeit zu
     // sehen ist - das Home-Screen-Widget bekommt dieselbe Animation direkt.
@@ -218,7 +249,7 @@ fun HomeScreen(
         val open = OpenReminderLookup.find(context, AvatarSpeciesPrefs.profileId(currentSpecies))
             ?: return@LaunchedEffect
         val event = open.event
-        activeReminder = ActiveReminder(event.reminderId, event.occurrenceId, event.animationType, event.libraryAnimationLabel)
+        activeReminder = ActiveReminder(event.reminderId, event.occurrenceId, event.animationType, event.libraryAnimationLabel, event.frames)
         isPlayingAnimation = true
         clockAnimJob = launch {
             // Nur die RESTdauer, nicht von vorn: die Erinnerung laeuft ja schon eine Weile, und
@@ -232,11 +263,7 @@ fun HomeScreen(
             }
         }
         clockAnimJob?.join()
-        if (activeReminder != null) {
-            activeReminder = null
-            isPlayingAnimation = false
-            animationFrame = null
-        }
+        clearExpiredReminder()
     }
 
     LaunchedEffect(Unit) {
@@ -250,7 +277,7 @@ fun HomeScreen(
             // sein - genau das liess bei mehreren kurz hintereinander ausgeloesten Erinnerungen eine
             // mittlere manchmal unfuetterbar werden, obwohl sie ganz normal ausgeloest hatte.
             snapshotFlow { isReacting }.first { !it }
-            activeReminder = ActiveReminder(event.reminderId, event.occurrenceId, event.animationType, event.libraryAnimationLabel)
+            activeReminder = ActiveReminder(event.reminderId, event.occurrenceId, event.animationType, event.libraryAnimationLabel, event.frames)
             isPlayingAnimation = true
             clockAnimJob = launch {
                 MatrixAnimator.play(
@@ -261,12 +288,9 @@ fun HomeScreen(
             }
             clockAnimJob?.join()
             // Ausgelaufen, ohne dass gefuettert wurde (Fuettern setzt activeReminder selbst
-            // auf null und cancelt diesen Job).
-            if (activeReminder != null) {
-                activeReminder = null
-                isPlayingAnimation = false
-                animationFrame = null
-            }
+            // auf null und cancelt diesen Job) - sie ist damit verloren, kein automatisches
+            // Ablegen in einen Speicherplatz (siehe clearExpiredReminder).
+            clearExpiredReminder()
         }
     }
 
@@ -285,42 +309,46 @@ fun HomeScreen(
         }
     }
 
-    // Herausgeloest, damit dieselbe Logik sowohl von der Drag-Kollision unten als auch von der
-    // TalkBack-Zusatzaktion "Fuettern" am Avatar ausgeloest werden kann (siehe AvatarSpriteView
-    // weiter unten) - per Drag laesst sich nicht sinnvoll fuer einen Screenreader bedienen.
-    fun feedNow() {
-        val current = activeReminder ?: return
-        if (feedingOccurrenceId == current.occurrenceId) return
-        feedingOccurrenceId = current.occurrenceId
+    // Gemeinsamer Kern von feedNow (Uhr -> Avatar) und feedFromSlot (Speicherplatz -> Avatar):
+    // beide beenden eine Ausloesung auf dieselbe Weise, nur woher sie kommt und was danach
+    // aufzuraeumen ist ([onConsumed]) unterscheidet sich. [isStillRelevant] wiederholt die
+    // Pruefung von vorher: Quelle kann waehrend der kurzen DB-Operation ausgelaufen oder ersetzt
+    // worden sein - persistiert ist die Antwort trotzdem, eine Reaktion auf das falsche sichtbare
+    // Ereignis waere aber irrefuehrend.
+    fun feedOccurrence(
+        occurrenceId: Long,
+        animationType: com.notime.glyphcore.data.AnimationType?,
+        libraryAnimationLabel: String?,
+        isStillRelevant: () -> Boolean,
+        onConsumed: () -> Unit
+    ) {
+        // Nicht nur dieselbe occurrenceId abweisen, sondern JEDE laufende Fuetterung: zwei
+        // verschiedene Ausloesungen gleichzeitig zuzulassen liesse ihre Coroutinen nebenlaeufig
+        // auf avatarFrame/avatarDrag/isReacting schreiben - wer zuerst fertig ist, wuerde
+        // isReacting vorzeitig zuruecksetzen und die Idle-Animation mitten in der noch laufenden
+        // zweiten Reaktion neu starten.
+        if (feedingOccurrenceId != null) return
+        feedingOccurrenceId = occurrenceId
         scope.launch {
             var confirmedReactionStarted = false
             try {
                 val result = withContext(Dispatchers.IO) {
-                    AvatarFeeding.logFeedEvent(context, current.occurrenceId)
+                    AvatarFeeding.logFeedEvent(context, occurrenceId)
                 }
-                // Die Erinnerung kann waehrend der kurzen DB-Operation regulaer ausgelaufen oder
-                // durch eine neue ersetzt worden sein. Persistiert ist die Antwort trotzdem;
-                // eine Reaktion auf das falsche sichtbare Ereignis waere aber irrefuehrend.
-                if (activeReminder?.occurrenceId != current.occurrenceId) return@launch
+                if (!isStillRelevant()) return@launch
                 if (!result.isUiSuccess()) {
-                    Log.w(HOME_TAG, "Stale feed occurrenceId=${current.occurrenceId}")
-                    activeReminder = null
-                    clockAnimJob?.cancel()
-                    isPlayingAnimation = false
-                    animationFrame = null
+                    Log.w(HOME_TAG, "Stale feed occurrenceId=$occurrenceId")
+                    onConsumed()
                     return@launch
                 }
 
                 // Erst der bestaetigte DB-Erfolg darf die sichtbare Erfolgsreaktion ausloesen.
-                activeReminder = null
-                clockAnimJob?.cancel()
-                isPlayingAnimation = false
-                animationFrame = null
+                onConsumed()
                 isReacting = true
                 confirmedReactionStarted = true
                 AvatarFeeding.playReaction(
                     species = currentSpecies,
-                    trigger = ReactionTrigger.of(current.animationType, current.libraryAnimationLabel),
+                    trigger = ReactionTrigger.of(animationType, libraryAnimationLabel),
                     screenWidthPx = screenWidthPx,
                     screenHeightPx = screenHeightPx,
                     onFrame = { avatarFrame = it },
@@ -331,7 +359,7 @@ fun HomeScreen(
             } catch (error: Exception) {
                 // Die Transaktion hat Markierung und XP gemeinsam zurueckgerollt. Solange die
                 // Erinnerung noch offen ist, bleibt sie sichtbar und kann erneut versucht werden.
-                Log.e(HOME_TAG, "Feed transaction failed occurrenceId=${current.occurrenceId}", error)
+                Log.e(HOME_TAG, "Feed transaction failed occurrenceId=$occurrenceId", error)
             } finally {
                 // Zwingend im finally: isReacting blendet seit Neuestem die Uhr aus. Bliebe das
                 // Flag nach einem Abbruch (Spezies gewechselt, Fehler in der Reaktion) auf true
@@ -343,18 +371,89 @@ fun HomeScreen(
                     clockDrag = Offset.Zero
                     isReacting = false
                 }
-                if (feedingOccurrenceId == current.occurrenceId) feedingOccurrenceId = null
+                if (feedingOccurrenceId == occurrenceId) feedingOccurrenceId = null
             }
+        }
+    }
+
+    // Herausgeloest, damit dieselbe Logik sowohl von der Drag-Kollision unten als auch von der
+    // TalkBack-Zusatzaktion "Fuettern" am Avatar ausgeloest werden kann (siehe AvatarSpriteView
+    // weiter unten) - per Drag laesst sich nicht sinnvoll fuer einen Screenreader bedienen.
+    fun feedNow() {
+        val current = activeReminder ?: return
+        feedOccurrence(
+            occurrenceId = current.occurrenceId,
+            animationType = current.animationType,
+            libraryAnimationLabel = current.libraryAnimationLabel,
+            isStillRelevant = { activeReminder?.occurrenceId == current.occurrenceId },
+            onConsumed = {
+                activeReminder = null
+                clockAnimJob?.cancel()
+                isPlayingAnimation = false
+                animationFrame = null
+            }
+        )
+    }
+
+    /**
+     * Wendet eine zuvor abgelegte Aktion aus Speicherplatz [index] auf den Avatar an - dieselbe
+     * Fuetter-Mechanik wie [feedNow], nur ohne die laufende Uhr-Animation.
+     */
+    fun feedFromSlot(index: Int) {
+        val saved = slots.getOrNull(index) ?: return
+        feedOccurrence(
+            occurrenceId = saved.occurrenceId,
+            animationType = saved.animationType,
+            libraryAnimationLabel = saved.libraryAnimationLabel,
+            isStillRelevant = { slots.getOrNull(index)?.occurrenceId == saved.occurrenceId },
+            onConsumed = {
+                ActionSlotStore.write(context, actionSlotProfileId, index, null)
+                slots = slots.toMutableList().also { it[index] = null }
+            }
+        )
+    }
+
+    /**
+     * Legt die gerade laufende Erinnerung in Speicherplatz [index] ab, statt sie zu fuettern - sie
+     * bleibt dort erhalten, bis sie spaeter per [feedFromSlot] auf den Avatar gezogen wird. Kein
+     * Fuettern, keine Reaktion, keine XP: das Ablegen selbst ist ein neutraler Zwischenschritt.
+     */
+    fun saveToSlot(index: Int) {
+        val current = activeReminder ?: return
+        if (slots.getOrNull(index) != null) return
+        val saved = current.toSavedAction()
+        ActionSlotStore.write(context, actionSlotProfileId, index, saved)
+        slots = slots.toMutableList().also { it[index] = saved }
+        activeReminder = null
+        clockAnimJob?.cancel()
+        isPlayingAnimation = false
+        animationFrame = null
+        clockDrag = Offset.Zero
+        if (!OnboardingPrefs.hasUsedActionSlot(context)) {
+            OnboardingPrefs.markActionSlotUsed(context)
         }
     }
 
     // Kollisions-Erkennung waehrend des Ziehens (laeuft bei jeder Bewegung neu an, nicht erst
     // am Gesten-Ende) - die Reaktion selbst laeuft ueber [scope], damit sie ungestoert zu Ende
     // spielt, auch wenn der Finger danach noch bewegt wird.
+    //
+    // Der Avatar hat Vorrang vor den Speicherplaetzen: ueberschneidet die Uhr zufaellig beide
+    // zugleich, gewinnt der sofortige Effekt - genau das erwartet, wer gezielt auf den Avatar
+    // zielt. Erst wenn das nicht zutrifft, zaehlt ein freier Speicherplatz.
     LaunchedEffect(clockDrag) {
         if (activeReminder == null) return@LaunchedEffect
-        if (!AvatarFeeding.overlaps(clockBounds, avatarBounds)) return@LaunchedEffect
-        feedNow()
+        if (AvatarFeeding.overlaps(clockBounds, avatarBounds)) {
+            feedNow()
+            return@LaunchedEffect
+        }
+        if (appMode != AppMode.PLAY) return@LaunchedEffect
+        val freeSlotIndex = slotBounds.indexOfFirst { bounds ->
+            AvatarFeeding.overlaps(clockBounds, bounds)
+        }
+        if (freeSlotIndex >= 0 && slots.getOrNull(freeSlotIndex) == null) {
+            saveToSlot(freeSlotIndex)
+        }
     }
 
     /**
@@ -513,7 +612,10 @@ fun HomeScreen(
             }
         }
     ) { padding ->
-        Column(
+        // Aeussere Box statt direkt der Column: die vier Speicherplaetze (siehe ActionSlots.kt)
+        // stehen fest am rechten Rand, unabhaengig von der zentrierten Spalte aus Uhr und Avatar -
+        // eine zweite, ueberlagernde Ebene statt eines weiteren Eintrags in deren Ablauf.
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 // Schwarzer Grund wie im Dock-Modus: Uhr und Avatar sind Lichtpunkte auf dunklem
@@ -523,6 +625,10 @@ fun HomeScreen(
                 // schwarzem Hintergrund entfaellt der Grund dafuer, beide duerfen frei stehen.
                 .background(Color.Black)
                 .padding(padding)
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -589,6 +695,20 @@ fun HomeScreen(
                         }
                         onEnterDockMode()
                     }
+                    // Wie [feedActionLabel] weiter unten am Avatar: Ziehen laesst sich fuer einen
+                    // Screenreader nicht sinnvoll bedienen, deshalb bekommt jeder FREIE
+                    // Speicherplatz hier eine eigene Zusatzaktion, solange eine Erinnerung wartet.
+                    val slotSaveActions = if (activeReminder != null && appMode == AppMode.PLAY) {
+                        slots.mapIndexedNotNull { index, saved ->
+                            if (saved == null) {
+                                index to stringResource(R.string.a11y_clock_save_to_slot, index + 1)
+                            } else {
+                                null
+                            }
+                        }
+                    } else {
+                        emptyList()
+                    }
                     // Reihenfolge der Modifier ist wichtig: .offset VOR .onGloballyPositioned,
                     // damit die gemeldeten Bounds die gezogene Position enthalten - genau die
                     // braucht die Kollisionspruefung gegen den Avatar.
@@ -620,6 +740,11 @@ fun HomeScreen(
                             .semantics {
                                 role = Role.Button
                                 onClick(label = oeffneDockLabel) { oeffneDock(); true }
+                                if (slotSaveActions.isNotEmpty()) {
+                                    customActions = slotSaveActions.map { (index, label) ->
+                                        CustomAccessibilityAction(label) { saveToSlot(index); true }
+                                    }
+                                }
                             }
                             .pointerInput(Unit) {
                                 detectDragGestures(
@@ -756,6 +881,47 @@ fun HomeScreen(
             )
 
         }
+
+            // Vier feste Speicherplaetze nur im Spielmodus, rechts und etwas oberhalb der Mitte
+            // (siehe ActionSlotsColumn) -
+            // eine eigene, ueberlagernde Spalte statt Teil des zentrierten Ablaufs oben: die Welt
+            // (Uhr, Avatar) bleibt dadurch unveraendert mittig, unabhaengig davon, wie viele
+            // Plaetze gerade belegt sind. Die Verschiebung nach oben haelt die Slots aus der
+            // Umgebungswelt heraus.
+            if (appMode == AppMode.PLAY) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .offset(y = (-48).dp)
+                        .padding(end = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Einmaliger Hinweis, solange noch nie etwas abgelegt wurde UND gerade nichts
+                    // belegt ist - sonst erklaert er etwas, das laengst benutzt wird oder gerade
+                    // sichtbar vorgemacht wird.
+                    if (!OnboardingPrefs.hasUsedActionSlot(context) && slots.all { it == null }) {
+                        Text(
+                            stringResource(R.string.onboarding_action_slots),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TamaPalette.TextPrimary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .widthIn(max = 120.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(TamaPalette.BubbleBackground)
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    ActionSlotsColumn(
+                        slots = slots,
+                        avatarBounds = avatarBounds,
+                        onBoundsChanged = { index, bounds -> slotBounds[index] = bounds },
+                        onDropOnAvatar = { feedFromSlot(it) }
+                    )
+                }
+            }
+        }
     }
 
     if (showPlayIntro) {
@@ -835,7 +1001,11 @@ fun HomeScreen(
             onEditReminder = { reminderId ->
                 showStats = false
                 onOpenReminderForEdit(reminderId)
-            }
+            },
+            // ActionSlotStore wurde geleert (siehe FeedStatsDialog) - der eigene In-Memory-Stand
+            // hier ist aber nur an einen Wesenswechsel gekoppelt (siehe remember(actionSlotProfileId)
+            // oben) und muss deshalb hier ausdruecklich nachgezogen werden.
+            onCareLogReset = { slots = ActionSlotStore.read(context, actionSlotProfileId) }
         )
     }
 }
