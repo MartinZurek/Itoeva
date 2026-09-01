@@ -337,6 +337,15 @@ fun DockScreen(
         // dieser Datei (siehe z. B. weiter unten bei PlayWallet/PlayPantry): avatar?.species, falls
         // schon vorhanden, sonst der gespeicherte Auswahlwert.
         val actionSlotProfileId = AvatarSpeciesPrefs.profileId(avatar?.species ?: AvatarSpeciesPrefs.get(context))
+        /**
+         * Welcher Speicherplatz (falls ueberhaupt einer) hinter der Erinnerung mit dieser
+         * occurrenceId steckt - ueber die occurrenceId und nicht als einmaliger Funktionsparameter
+         * verknuepft, damit auch ein SPAETERER Retry ueber den normalen Fuetter-Weg (Ziehen auf den
+         * Avatar, TalkBack-Aktion) noch weiss, dass der Speicherplatz zu leeren ist: Wirft die
+         * Room-Transaktion beim ersten Versuch (siehe feedAvatarNow), bleibt der Avatar fuer einen
+         * Retry verknuepft, aber ein sofortiges Leeren waere hier verloren gegangen.
+         */
+        var slotIndexByOccurrence by remember { mutableStateOf<Pair<Long, Int>?>(null) }
         var slots by remember(actionSlotProfileId) {
             mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
         }
@@ -1670,15 +1679,18 @@ fun DockScreen(
         // der TalkBack-Zusatzaktion "Fuettern" am Avatar ausgeloest werden kann - per Drag laesst
         // sich nicht sinnvoll fuer einen Screenreader bedienen.
         /**
-         * [fromSlotIndex] gesetzt, wenn dieser Aufruf von [feedFromSlot] kommt: der persistierte
-         * Speicherplatz wird dann NICHT sofort, sondern erst hier geleert - und zwar nur an den
-         * beiden Stellen, an denen der DB-Ausgang endgueltig feststeht (Stale-Zweig oder
-         * bestaetigter Erfolg). Ein sofortiges Leeren VOR der Room-Transaktion wuerde die
-         * abgelegte Aktion unwiderruflich verlieren, wenn die Transaktion wirft oder der Prozess
-         * vorher endet - derselbe Grundsatz wie beim Home-Bildschirm-Pendant (siehe dort
-         * feedOccurrence/onConsumed).
+         * Kommt die gerade verknuepfte Erinnerung urspruenglich aus einem Speicherplatz (siehe
+         * [slotIndexByOccurrence]), wird dieser NICHT sofort geleert, sondern erst hier - und
+         * zwar nur an den beiden Stellen, an denen der DB-Ausgang endgueltig feststeht (Stale-
+         * Zweig oder bestaetigter Erfolg). Ein sofortiges Leeren VOR der Room-Transaktion wuerde
+         * die abgelegte Aktion unwiderruflich verlieren, wenn die Transaktion wirft oder der
+         * Prozess vorher endet - derselbe Grundsatz wie beim Home-Bildschirm-Pendant (siehe dort
+         * feedOccurrence/onConsumed). Die Verknuepfung ueber die occurrenceId statt eines
+         * einmaligen Funktionsparameters sorgt dafuer, dass auch ein spaeterer Retry ueber den
+         * normalen Fuetter-Weg (Ziehen auf den Avatar, TalkBack-Aktion) den Speicherplatz noch
+         * findet und leert, falls der erste Versuch hier unten im catch-Zweig scheiterte.
          */
-        fun feedAvatarNow(fromSlotIndex: Int? = null) {
+        fun feedAvatarNow() {
             val current = avatar ?: return
             // occurrenceId == null heisst: keine offene Erinnerung, nichts zu fuettern - im Play-
             // Modus der Normalzustand zwischen zwei Ausloesungen (der Avatar existiert dort
@@ -1687,9 +1699,11 @@ fun DockScreen(
             if (feedingOccurrenceId == current.occurrenceId) return
             feedingOccurrenceId = current.occurrenceId
             fun clearSourceSlot() {
-                val index = fromSlotIndex ?: return
+                val index = slotIndexByOccurrence?.takeIf { it.first == current.occurrenceId }
+                    ?.second ?: return
                 ActionSlotStore.write(context, actionSlotProfileId, index, null)
                 slots = slots.toMutableList().also { it[index] = null }
+                slotIndexByOccurrence = null
             }
             scope.launch {
                 try {
@@ -1858,7 +1872,8 @@ fun DockScreen(
                 fed = false,
                 frames = saved.frames
             )
-            feedAvatarNow(fromSlotIndex = index)
+            slotIndexByOccurrence = saved.occurrenceId to index
+            feedAvatarNow()
         }
 
         // Laeuft bei jeder Aenderung von clockOffset neu an, also auch mitten in einer
