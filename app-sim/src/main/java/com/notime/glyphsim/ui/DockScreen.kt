@@ -507,9 +507,16 @@ fun DockScreen(
             }
         }
 
-        // Worum er gerade gebeten wurde - siehe die Regungs-Schleife weiter unten.
+        // Worum er gerade gebeten wurde - siehe die Regungs-Schleife weiter unten. Nur bei einem
+        // FRISCHEN Einstieg (kein kurzes Zurueckkehren) gesetzt: sonst wuerde die Regungs-Schleife
+        // sofort anspringen und den per [initialPresence.place] korrekt wiederhergestellten
+        // konkreten Ort (z. B. WORK statt des nur allgemeinen Themen-Orts) durch
+        // [PlayScene.forTopic] wieder verwerfen - genau die kurze Abwesenheit, die
+        // [resumesPreviousSituation] eigentlich unveraendert fortsetzen soll.
         var requestedTopic by remember(presenceProfileId) {
-            mutableStateOf<AnimationType?>(initialPresence.topic)
+            mutableStateOf<AnimationType?>(
+                if (initialPresence.resumesPreviousSituation) null else initialPresence.topic
+            )
         }
         val lifecycleOwner = LocalLifecycleOwner.current
         var leftPlayAtMillis by remember { mutableStateOf<Long?>(null) }
@@ -1662,7 +1669,16 @@ fun DockScreen(
         // Herausgeloest, damit dieselbe Logik sowohl von der Drag-Kollision unten als auch von
         // der TalkBack-Zusatzaktion "Fuettern" am Avatar ausgeloest werden kann - per Drag laesst
         // sich nicht sinnvoll fuer einen Screenreader bedienen.
-        fun feedAvatarNow() {
+        /**
+         * [fromSlotIndex] gesetzt, wenn dieser Aufruf von [feedFromSlot] kommt: der persistierte
+         * Speicherplatz wird dann NICHT sofort, sondern erst hier geleert - und zwar nur an den
+         * beiden Stellen, an denen der DB-Ausgang endgueltig feststeht (Stale-Zweig oder
+         * bestaetigter Erfolg). Ein sofortiges Leeren VOR der Room-Transaktion wuerde die
+         * abgelegte Aktion unwiderruflich verlieren, wenn die Transaktion wirft oder der Prozess
+         * vorher endet - derselbe Grundsatz wie beim Home-Bildschirm-Pendant (siehe dort
+         * feedOccurrence/onConsumed).
+         */
+        fun feedAvatarNow(fromSlotIndex: Int? = null) {
             val current = avatar ?: return
             // occurrenceId == null heisst: keine offene Erinnerung, nichts zu fuettern - im Play-
             // Modus der Normalzustand zwischen zwei Ausloesungen (der Avatar existiert dort
@@ -1670,6 +1686,11 @@ fun DockScreen(
             if (current.fed || current.occurrenceId == null) return
             if (feedingOccurrenceId == current.occurrenceId) return
             feedingOccurrenceId = current.occurrenceId
+            fun clearSourceSlot() {
+                val index = fromSlotIndex ?: return
+                ActionSlotStore.write(context, actionSlotProfileId, index, null)
+                slots = slots.toMutableList().also { it[index] = null }
+            }
             scope.launch {
                 try {
                     val result = withContext(Dispatchers.IO) {
@@ -1678,6 +1699,7 @@ fun DockScreen(
                     if (avatar?.occurrenceId != current.occurrenceId) return@launch
                     if (!result.isUiSuccess()) {
                         Log.w(DOCK_TAG, "Stale feed occurrenceId=${current.occurrenceId}")
+                        clearSourceSlot()
                         clockAnimJob?.cancel()
                         isPlayingAnimation = false
                         animationFrame = null
@@ -1697,6 +1719,7 @@ fun DockScreen(
                     // Erst der bestaetigte DB-Erfolg darf Ton, Zaehler und Reaktion ausloesen.
                     // Gefuettert wird immer frei stehend - unter der Bettdecke waere die Reaktion
                     // zur Haelfte unsichtbar.
+                    clearSourceSlot()
                     occupiedStation = null
                     if (currentPlace == PlayScene.Place.SPORT && footballPhase != null &&
                         PlayFootballSkill.isFootballAnimation(
@@ -1816,6 +1839,11 @@ fun DockScreen(
          * dieselbe DB-Schreibung, dieselbe Reaktion, dasselbe Aufraeumen danach. Nur erreichbar,
          * wenn der Avatar gerade KEINE eigene offene Erinnerung traegt: sonst wuerde deren
          * Verknuepfung hier verloren gehen, ohne dass sie je beantwortet oder archiviert wurde.
+         *
+         * Der Speicherplatz selbst wird NICHT hier geleert, sondern erst innerhalb von
+         * [feedAvatarNow] (siehe dort `clearSourceSlot`), nachdem die Room-Transaktion einen
+         * endgueltigen Ausgang hat - sonst waere die abgelegte Aktion bei einem Fehlschlag oder
+         * Prozessende dazwischen unwiderruflich verloren.
          */
         fun feedFromSlot(index: Int) {
             val saved = slots.getOrNull(index) ?: return
@@ -1830,9 +1858,7 @@ fun DockScreen(
                 fed = false,
                 frames = saved.frames
             )
-            ActionSlotStore.write(context, actionSlotProfileId, index, null)
-            slots = slots.toMutableList().also { it[index] = null }
-            feedAvatarNow()
+            feedAvatarNow(fromSlotIndex = index)
         }
 
         // Laeuft bei jeder Aenderung von clockOffset neu an, also auch mitten in einer
