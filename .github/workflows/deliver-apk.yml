@@ -89,8 +89,19 @@ permissions: {}
 # Laufs steht eine Ablieferung nach aussen. Zwei Laeufe warten lieber aufeinander - sie
 # arbeiten die Warteschlange in der Reihenfolge ab, in der die Staende entstanden sind, und
 # der neuere schreibt zuletzt.
+#
+# Die Gruppe ist ABSICHTLICH global (nicht `-${{ github.ref }}` je Branch, Codex-Fund auf
+# PR #57): Der versionCode entsteht aus der Uhrzeit BEIM START von "Version bestimmen", nicht
+# beim Hochladen. Liefen zwei Laeufe auf verschiedenen Branches parallel (je eigene
+# Ref-Gruppe), koennte der frueher gestartete, aber langsamere Lauf NACH einem spaeter
+# gestarteten, aber schnelleren Lauf hochladen - und die Drive-Datei bekaeme dann trotz
+# steigender Uhrzeit einen NIEDRIGEREN versionCode als vorher, genau das Downgrade-Problem,
+# das diese ganze Aenderung beheben soll. Eine einzige Warteschlange ueber alle Branches
+# hinweg verhindert das: Lauf N+1 kann erst starten, wenn Lauf N vollstaendig fertig ist
+# (Upload eingeschlossen), sein versionCode ist also immer NACH dem vorherigen Hochladen
+# entstanden und damit garantiert hoeher.
 concurrency:
-  group: deliver-apk-${{ github.ref }}
+  group: deliver-apk
   cancel-in-progress: false
 
 env:
