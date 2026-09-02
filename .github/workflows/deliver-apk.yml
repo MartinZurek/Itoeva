@@ -1,14 +1,20 @@
 # Auslieferung aufs Telefon.
 #
-# **PAUSIERT (siehe `on:` weiter unten fuer den Grund und die Bedingung zum Wiederaktivieren):**
-# Der `push`-Trigger ist zur Zeit auskommentiert. Ein Merge nach `main` baut und liefert
-# dadurch NICHT mehr automatisch aus - nur ein gezielter `workflow_dispatch`-Lauf tut das.
+# Nach jedem Merge nach `main` entsteht eine frische Tama-APK, und die eine Datei
+# `Tama-debug.apk` im Google-Drive-Ordner wird damit ueberschrieben. Auf dem Telefon aendert
+# sich dadurch nichts am Ablauf - Drive-App oeffnen, Datei antippen, "Aktualisieren". Nur das
+# lokale Bauen davor entfaellt.
 #
-# Was hier im Regelbetrieb passiert (sobald der `push`-Trigger wieder aktiv ist): Nach jedem
-# Merge nach `main` entsteht eine frische Tama-APK, und die eine Datei `Tama-debug.apk` im
-# Google-Drive-Ordner wird damit ueberschrieben. Auf dem Telefon aendert sich dadurch nichts
-# am Ablauf - Drive-App oeffnen, Datei antippen, "Aktualisieren". Nur das lokale Bauen davor
-# entfaellt.
+# **War zeitweise pausiert, ist es seit 2026-09-02 nicht mehr:** main und ein parallel
+# getesteter Feature-Branch teilen sich dieselbe Drive-Datei und dasselbe Telefon. Der
+# versionCode kam bis dahin aus `git rev-list --count` - der Commit-Anzahl DES JEWEILS
+# GEBAUTEN BRANCHES. Ein kuerzerer Branch (z. B. main direkt nach einem Merge) bekam dadurch
+# einen NIEDRIGEREN versionCode als ein laenger laufender Feature-Branch, obwohl main der
+# tatsaechlich neuere Bau war - Android verweigerte die Installation als vermeintliches
+# Downgrade. Der versionCode kommt jetzt stattdessen aus der Uhrzeit des Laufs (siehe
+# "Version bestimmen" unten) und ist dadurch IMMER hoeher als der vorherige, unabhaengig davon,
+# welcher Branch zuletzt gebaut hat. Zwei Branches koennen sich damit nicht mehr gegenseitig als
+# Downgrade ausschlagen, und die Pause ist ueberfluessig geworden.
 #
 # Der Drive-Teil laesst sich nachreichen: Solange der Zugang dafuer nicht hinterlegt ist,
 # baut und signiert der Lauf trotzdem und legt die fertige APK als Artefakt ab. Damit ist
@@ -59,26 +65,20 @@
 name: Deliver APK
 
 # -------------------------------------------------------------------------------------------
-# PAUSIERT (siehe Chat vom 2026-08-30): Der automatische `push`-Trigger ist unten auskommentiert,
-# solange parallel am Skillbaum-Branch (skillbaum/freischaltung, aufbauend auf
-# skillbaum/katalog-und-reaktionen, PR #42/#43) getestet wird. Grund: beide Branches teilen
-# sich dieselbe Drive-Datei und dasselbe Telefon; der versionCode aus `git rev-list --count`
-# ist auf dem laenger laufenden Skillbaum-Branch hoeher, wodurch main automatisch als
-# "Downgrade" erscheint und Android die Installation verweigert (Deinstallieren noetig) -
-# und main enthaelt den Skillbaum ohnehin noch nicht.
-#
-# Wieder aktivieren, sobald #42/#43 in main gelandet sind: den `push`-Block unten
-# einkommentieren. Bis dahin liefert ausschliesslich `workflow_dispatch` auf dem jeweils
-# gewuenschten Branch aus - main-Merges der taeglichen Evolutionen laufen unveraendert
-# weiter, nur die Drive-Ablieferung dafuer pausiert.
+# War vom 2026-08-30 bis 2026-09-02 pausiert (siehe Kommentar oben am Dateianfang): main und
+# ein parallel getesteter Feature-Branch teilten sich dieselbe Drive-Datei/dasselbe Telefon,
+# und der damalige versionCode (aus der Commit-Anzahl des jeweiligen Branches) liess main
+# regelmaessig als Downgrade erscheinen. Seit der versionCode aus der Laufzeit statt der
+# Commit-Anzahl kommt (siehe "Version bestimmen" unten), kann das nicht mehr passieren - der
+# `push`-Trigger ist deshalb wieder aktiv.
 # -------------------------------------------------------------------------------------------
 on:
-  # push:
-  #   branches: [main]
-  #   # Eine reine Dokumentationsaenderung aendert nichts an der App - dafuer muss kein
-  #   # Paket gebaut und keine Actions-Minute ausgegeben werden.
-  #   paths-ignore:
-  #     - '**/*.md'
+  push:
+    branches: [main]
+    # Eine reine Dokumentationsaenderung aendert nichts an der App - dafuer muss kein
+    # Paket gebaut und keine Actions-Minute ausgegeben werden.
+    paths-ignore:
+      - '**/*.md'
   workflow_dispatch:
 
 # Standardmaessig gar keine Rechte, wie in claude-primary-run.yml. Dieser Workflow liest nur;
@@ -89,8 +89,19 @@ permissions: {}
 # Laufs steht eine Ablieferung nach aussen. Zwei Laeufe warten lieber aufeinander - sie
 # arbeiten die Warteschlange in der Reihenfolge ab, in der die Staende entstanden sind, und
 # der neuere schreibt zuletzt.
+#
+# Die Gruppe ist ABSICHTLICH global (nicht `-${{ github.ref }}` je Branch, Codex-Fund auf
+# PR #57): Der versionCode entsteht aus der Uhrzeit BEIM START von "Version bestimmen", nicht
+# beim Hochladen. Liefen zwei Laeufe auf verschiedenen Branches parallel (je eigene
+# Ref-Gruppe), koennte der frueher gestartete, aber langsamere Lauf NACH einem spaeter
+# gestarteten, aber schnelleren Lauf hochladen - und die Drive-Datei bekaeme dann trotz
+# steigender Uhrzeit einen NIEDRIGEREN versionCode als vorher, genau das Downgrade-Problem,
+# das diese ganze Aenderung beheben soll. Eine einzige Warteschlange ueber alle Branches
+# hinweg verhindert das: Lauf N+1 kann erst starten, wenn Lauf N vollstaendig fertig ist
+# (Upload eingeschlossen), sein versionCode ist also immer NACH dem vorherigen Hochladen
+# entstanden und damit garantiert hoeher.
 concurrency:
-  group: deliver-apk-${{ github.ref }}
+  group: deliver-apk
   cancel-in-progress: false
 
 env:
@@ -112,10 +123,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Die vollstaendige Historie, weil der versionCode unten aus der Commit-Anzahl
-          # entsteht. Das Repository ist rund 1,5 MB gross, das kostet nichts.
-          fetch-depth: 0
 
       - uses: actions/setup-java@v4
         with:
@@ -131,34 +138,39 @@ jobs:
       # -----------------------------------------------------------------------------------
       # Die Version.
       #
-      # Die Commit-Anzahl auf main statt github.run_number: sie waechst mit der Geschichte des
-      # Projekts, ist ohne jeden gespeicherten Zustand reproduzierbar und ueberlebt es, wenn
-      # dieser Workflow eines Tages umbenannt oder neu angelegt wird (run_number faengt dann
-      # wieder bei 1 an - und ein sinkender versionCode ist fuer Android ein Downgrade, das
-      # sich nicht mehr installieren laesst).
+      # Minuten seit einem festen Bezugspunkt (2020-01-01 UTC) statt Commit-Anzahl. Der
+      # versionCode stieg frueher mit `git rev-list --count HEAD` - der Commit-Anzahl DES
+      # JEWEILS GEBAUTEN BRANCHES. Zwei Branches, die sich dasselbe Telefon/dieselbe Drive-Datei
+      # teilen (main und ein parallel getesteter Feature-Branch), konnten sich dadurch
+      # gegenseitig als Downgrade ausschlagen, sobald der eine (voruebergehend) weniger Commits
+      # hatte als der andere zuletzt installierte - unabhaengig davon, welcher Bau tatsaechlich
+      # neuer war. Das ist wiederholt passiert und machte eine manuelle Pause noetig (siehe
+      # Kommentar am Dateianfang).
       #
-      # Der Dateiname in Drive bleibt bewusst konstant. Die Eindeutigkeit steckt im Paket:
-      # versionName erscheint in den App-Infos des Telefons, dort ist der Stand ablesbar.
+      # Minuten seit der festen Bezugszeit haengen dagegen ausschliesslich von der echten
+      # Uhrzeit des Laufs ab - nie vom Branch, nie von der Commit-Anzahl. Der naechste Lauf hat
+      # IMMER einen hoeheren versionCode als der vorherige, egal auf welchem Branch beide liefen.
+      # Sekunden statt Minuten waeren zu fein: Sekunden seit 1970 ueberschreiten schon 2038 den
+      # 32-Bit-Bereich, den Android fuer versionCode vorschreibt (das "Jahr-2038-Problem").
+      # Minuten seit 2020-01-01 bleiben bis weit nach dem Jahr 4000 innerhalb dieses Bereichs.
+      #
+      # Ohne jeden gespeicherten Zustand reproduzierbar, wie zuvor - nur die Bezugsgroesse hat
+      # sich geaendert. Der Dateiname in Drive bleibt bewusst konstant. Die Eindeutigkeit steckt
+      # im Paket: versionName erscheint in den App-Infos des Telefons, dort ist der Stand
+      # ablesbar. Bleibt im Schema major.minor.patch (`1.0.<CODE>`), weil `validateRelease` in
+      # app-sim/build.gradle.kts genau dieses Schema von JEDEM versionName verlangt, ganz gleich
+      # welche Quelle ihn setzt - dieser Lauf ruft `validateRelease` zwar nicht auf, aber ein
+      # abweichendes Schema hier waere trotzdem eine unnoetige, leicht vermeidbare Inkonsistenz.
       # -----------------------------------------------------------------------------------
       - name: Version bestimmen
         id: version
         run: |
           set -euo pipefail
-          # Zuerst die Voraussetzung, dann die Zahl. Ohne `fetch-depth: 0` im Checkout oben
-          # liefert actions/checkout einen flachen Klon, und `git rev-list --count` zaehlt
-          # dann nur die eine geholte Ebene - versionCode 1. Das ist der unangenehmste
-          # Fehlerfall ueberhaupt, weil er NICHT auffaellt: der Lauf bliebe gruen, die APK
-          # entstuende, und erst das Telefon verweigerte sie Wochen spaeter als Downgrade.
-          # Deshalb hier hart abbrechen, statt eine unbrauchbare Nummer weiterzureichen.
-          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
-            echo "::error::Flacher Klon - die Commit-Anzahl waere zu niedrig und ergaebe eine"
-            echo "::error::Versionsnummer, die Android als Downgrade ablehnt. Im Checkout-Schritt"
-            echo "::error::oben muss 'fetch-depth: 0' stehen."
-            exit 1
-          fi
-          CODE="$(git rev-list --count HEAD)"
-          # Nicht als Ersatz fuer die Pruefung darueber gedacht, sondern als letzter Riegel
-          # gegen alles, woran hier sonst noch nicht gedacht wurde.
+          EPOCH_S="$(date -u -d '2020-01-01T00:00:00Z' +%s)"
+          NOW_S="$(date -u +%s)"
+          CODE=$(( (NOW_S - EPOCH_S) / 60 ))
+          # Nicht als Ersatz fuer eine Berechnung gedacht, sondern als letzter Riegel gegen
+          # alles, woran hier sonst noch nicht gedacht wurde (z. B. eine falsch gehende Uhr).
           if [ "$CODE" -lt 1 ]; then
             echo "::error::versionCode $CODE ist unbrauchbar."
             exit 1

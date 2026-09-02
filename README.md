@@ -760,12 +760,14 @@ Regelbetrieb baut GitHub nach jedem Merge nach `main` `:app-sim:assembleDebug` u
 alles wie gewohnt – Drive-App, antippen, "Aktualisieren"; nur das Bauen davor entfällt. Eine
 reine Dokumentationsänderung löst keinen Lauf aus.
 
-**Zur Zeit pausiert:** Der `push`-Trigger im Workflow ist auskommentiert, solange parallel an
-einem Feature-Branch mit höherem `versionCode` getestet wird (sonst erscheint jede `main`-
-Auslieferung als Downgrade, den Android nicht installiert). Ein Merge nach `main` baut und
-liefert deshalb bis auf Weiteres NICHT automatisch aus - nur ein gezielter
-`workflow_dispatch`-Lauf auf dem gewünschten Branch tut das. Siehe die Kommentare im Workflow
-für die Bedingung zum Wiederaktivieren.
+**Der `versionCode` kommt aus der Uhrzeit des Laufs, nicht aus der Commit-Anzahl** (Minuten seit
+2020-01-01 UTC, siehe Kommentar bei "Version bestimmen" im Workflow). main und ein parallel
+getesteter Feature-Branch können sich dieselbe Drive-Datei/dasselbe Telefon teilen, ohne sich
+gegenseitig als Downgrade auszuschlagen - der naechste Lauf hat immer einen höheren `versionCode`
+als der vorherige, unabhängig davon, welcher Branch zuletzt gebaut hat. (Bis 2026-09-02 lief das
+noch über die Commit-Anzahl, wodurch ein kürzerer main-Stand gelegentlich niedriger lag als ein
+länger getesteter Feature-Branch - deshalb die frühere Pause des `push`-Triggers, die inzwischen
+aufgehoben ist.)
 
 **Die ganze Konstruktion hängt an einem Punkt: derselben Signatur.** Android aktualisiert eine
 installierte App nur, wenn das Zertifikat übereinstimmt – sonst bliebe nur Deinstallieren, und
