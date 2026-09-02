@@ -141,7 +141,7 @@ object PlayRoutines {
         // oft genug sichtbar sein, um den neuen Standard zu praegen, ohne jeden Spaziergang zu
         // ersetzen.
         if (topic == AnimationType.MOVE && random.nextInt(100) < KITE_CHANCE_PERCENT) {
-            options.firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
+            pool.firstOrNull { routine -> routine.steps.any { it is RoutineStep.Kite } }
                 ?.let { return it }
         }
         if (topic == AnimationType.MOVE && random.nextInt(100) < FOOTBALL_CHANCE_PERCENT) {
