@@ -196,10 +196,18 @@ object PlayAmbientActivity {
             AnimationType.DRINK to 1,
             AnimationType.GENERAL to 1
         )
+        // **Durchgehend schlafen, nicht bloss ueberwiegend.** Gemeldet als "er sollte nachts
+        // durchgehend schlafen" - vorher war REST/MINDFULNESS mit im Topf, macht SLEEP also nur
+        // zum HAEUFIGSTEN von drei moeglichen Themen (5 von 9, gut 55%) statt zum einzigen. Jetzt
+        // ist SLEEP das einzige Thema mit einem Grundgewicht - ohne offene Gewohnheit (siehe
+        // [combinedWeights]) kommt IMMER SLEEP heraus. Das Gewicht 12 ist bewusst deutlich groesser
+        // als jeder erreichbare Boost: [STAY_BONUS]/[LEANING_BONUS] koennen an einem leeren
+        // `base.keys` (nur SLEEP) ohnehin nur SLEEP selbst verstaerken, nie ein fremdes Thema - der
+        // einzige Weg, wie nachts trotzdem etwas anderes erscheint, ist eine tatsaechlich offene,
+        // heute noch unerreichte Gewohnheit (+[HABIT_BOOST] = 4). Mit 12 bleibt SLEEP auch dann
+        // klar in der Mehrheit, statt bloss knapp vorn zu liegen.
         DayPhase.NIGHT -> mapOf(
-            AnimationType.SLEEP to 5,
-            AnimationType.REST to 3,
-            AnimationType.MINDFULNESS to 1
+            AnimationType.SLEEP to 12
         )
     }
 

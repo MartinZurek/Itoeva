@@ -4,6 +4,7 @@ import android.content.Context
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
+import com.notime.glyphcore.data.INTERVAL_OPTIONS
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayWeather
@@ -856,6 +857,29 @@ object PlayTalk {
         return worthSaying[rotation.mod(worthSaying.size)]
     }
 
+    /**
+     * Dieselbe Auswahl wie [remarkFor], aber ohne [Remark.DOING] im Topf.
+     *
+     * **Gemeldet als "die Gespraeche sagen immer dasselbe" - und dann, nachdem DOING eingefuehrt
+     * war, als "der wichtigste Satz kommt nur manchmal".** Beides war derselbe Fehler: [remarkFor]
+     * wuerfelt GLEICHBERECHTIGT unter allem, was zutrifft - Regen, Besuch, Verdienst, und eben auch,
+     * was er gerade tut. Ausgerechnet der einzige Satz, der sich bei jedem Oeffnen aendert, ohne
+     * dass dafuer ein neuer Text noetig waere, verschwand dadurch im Schnitt in drei von vier
+     * Gespraechen hinter Kleinigkeiten wie dem Wetter.
+     *
+     * Die Loesung ist nicht, DOING haeufiger zu wuerfeln, sondern es aus dem Wuerfel herauszunehmen:
+     * [PlayTalkPanel] zeigt es jetzt unbedingt, sobald [Mood.doing] gesetzt ist, und zieht diese
+     * Funktion nur noch fuer die zweite, gedimmte Zeile daneben - das Nebenbei, nicht die Auskunft.
+     */
+    fun secondaryRemarkFor(mood: Mood, rotation: Int = 0): Remark? {
+        // Kein Rueckfall auf QUIET: Steht die Doing-Zeile schon prominent daneben, waere "gerade
+        // ist sonst nichts los" darunter keine zweite Auskunft, sondern eine Wiederholung derselben
+        // Leere in anderen Worten.
+        val rest = remarksFor(mood).filterNot { it == Remark.DOING || it == Remark.QUIET }
+        if (rest.isEmpty()) return null
+        return rest[rotation.mod(rest.size)]
+    }
+
     data class Focus(val headline: Headline, val offers: List<Offer>)
 
     /** Hoechstens so viele Angebote - darueber wird aus dem Gespraech wieder eine Liste. */
@@ -871,8 +895,13 @@ object PlayTalk {
      *
      * Die Reihenfolge selbst bleibt, wie sie war (siehe [suggestable]): Es wird nicht gewuerfelt,
      * WAS wichtig ist, sondern nur, welches von mehreren gleich Wichtigen diesmal drankommt.
+     *
+     * [doing] ist optional (Standard: `null`, fuer Aufrufer ohne Weltzustand, z.B. Tests) - siehe
+     * [nextSuggestion] fuer die einzige Stelle, an der es etwas aendert: eine laufende Taetigkeit,
+     * die der Nutzer noch gar nicht als eigene Gewohnheit hat, wird bevorzugt statt der
+     * durchrotierten Standardauswahl vorgeschlagen ("das mache ich gerade - auch was fuer dich?").
      */
-    fun focus(knowledge: Knowledge, rotation: Int = 0): Focus {
+    fun focus(knowledge: Knowledge, rotation: Int = 0, doing: Doing? = null): Focus {
         val game = knowledge.game
         val offers = mutableListOf<Offer>()
         fun <T> List<T>.rotated(): T? = if (isEmpty()) null else this[rotation.mod(size)]
@@ -899,8 +928,19 @@ object PlayTalk {
             else -> Headline.SMALL_TALK
         }
 
-        // **Der Spielstand steht im Spiel immer zur Verfuegung** und kommt gleich nach einer
-        // dringenden Bitte.
+        // **Nachahmen kommt gleich nach einer dringenden Bitte - noch VOR dem Spielstand.**
+        //
+        // Gemeldet als "das sehe ich nicht": Im Spielmodus sind `game` und `development` so gut
+        // wie IMMER gesetzt (siehe [gather], `includeGame = true` in DockScreen). Stand dieser
+        // Vorschlag - wie in der ersten Fassung - erst hinter `Offer.ShowGame` und `Offer.ShowPath`,
+        // waren die zwei erlaubten Plaetze in der Praxis fast immer schon durch die beiden belegt,
+        // bevor die Pruefung ueberhaupt erreicht wurde. Das Nachahmen ist aber der Anlass, aus dem
+        // heraus jemand gerade JETZT auf die Figur tippt ("was macht er da eigentlich") - es muss
+        // vor allem stehen, was bloss nuetzlich, aber nicht gerade sichtbar ist.
+        val mirrored = doing?.topic?.takeIf { it in knowledge.missing }
+        if (mirrored != null && offers.size < MAX_OFFERS) offers += Offer.Add(mirrored)
+
+        // **Der Spielstand steht im Spiel immer zur Verfuegung.**
         //
         // Er stand frueher dauerhaft am unteren Bildrand. Das war die alte Bauweise "alles ist
         // immer zu sehen" - dieselbe, aus der auch der Tagesstand oben stammte. Beim Umbau auf
@@ -925,7 +965,10 @@ object PlayTalk {
         // Tagesziel seit einer Woche nicht erreicht, ist mit einer zusaetzlichen Gewohnheit nicht
         // geholfen - das waere die Antwort "dann nimm dir noch mehr vor".
         if (offers.size < MAX_OFFERS && knowledge.advice.isNotEmpty()) offers += Offer.ShowAdvice
-        if (offers.size < MAX_OFFERS) {
+        // Kein Nachahmen zur Hand (er tut gerade nichts Vorschlagbares, oder es gibt dafuer schon
+        // eine Erinnerung) - dann bei der bisherigen, durchrotierten Auswahl. Nie beides: ein
+        // zweiter Add-Vorschlag waere wieder die Liste, die [nextSuggestion] gerade vermeidet.
+        if (mirrored == null && offers.size < MAX_OFFERS) {
             nextSuggestion(knowledge, rotation)?.let { offers += Offer.Add(it) }
         }
         // Was er ueber den Nutzer weiss, bietet er erst an, wenn es etwas zu sagen gibt - und
@@ -988,7 +1031,19 @@ object PlayTalk {
         // bleibt - sonst waere aus einer Auskunft ein unmoegliches Ziel geworden (siehe
         // PlayTalkTest: "das Tagesziel ist im Zeitfenster ueberhaupt erreichbar").
         val slots = base.dailyGoal.coerceAtLeast(1) * 4 / 3 + 1
-        val interval = ((end - start) / slots).coerceIn(15, base.intervalMinutes)
+        val rawInterval = ((end - start) / slots).coerceIn(15, base.intervalMinutes)
+        // **Abgestuerzt statt gestaucht.** `rawInterval` ist das Ergebnis einer Division und
+        // trifft dadurch fast nie einen der festen Werte, aus denen der Bearbeiten-Dialog waehlt
+        // (com.notime.glyphcore.data.INTERVAL_OPTIONS) - ReminderValidation verlangt genau das
+        // aber von jeder NICHT vom Spielmodus gewuerfelten Erinnerung (siehe dort,
+        // "IntervalNotSelectable"). Ungeprueft flog `GlyphReminderRepository.add` deshalb mit
+        // einer InvalidReminderException, sobald jemand ueber das Gespraech UND mit beantworteter
+        // Tageszeit-Frage eine Erinnerung anlegte - unkatastrophal wirkend im Code, aber
+        // uncatched in einer viewModelScope-Coroutine, also ein kompletter App-Absturz.
+        // Abrunden auf den naechstkleineren erlaubten Wert haelt das Tagesziel mindestens so
+        // erreichbar wie mit dem unrunden Zwischenwert - ein kuerzerer Abstand kann nur mehr
+        // Anstupser im Fenster unterbringen, nie weniger.
+        val interval = INTERVAL_OPTIONS.filter { it <= rawInterval }.maxOrNull() ?: INTERVAL_OPTIONS.min()
         return base.copy(startMinuteOfDay = start, endMinuteOfDay = end, intervalMinutes = interval)
     }
 

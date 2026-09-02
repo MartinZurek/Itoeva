@@ -56,7 +56,7 @@ jobs:
     outputs:
       app_code: ${{ steps.filter.outputs.app_code }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # Beide Enden des Vergleichs muessen im Klon liegen, nicht nur die Spitze.
           fetch-depth: 0
@@ -123,14 +123,14 @@ jobs:
     # sechs Stunden.
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       # Das Glyph Matrix SDK ist eine AAR, die Nothing nicht ueber ein Maven-Repository
       # ausliefert; sie liegt deshalb unter app/libs/ und ist nicht eingecheckt (siehe
@@ -152,7 +152,7 @@ jobs:
       # sind sie interessant.
       - name: Berichte sichern
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: reports
           path: |
@@ -181,14 +181,14 @@ jobs:
     # das Vierfache des schlechtesten beobachteten Werts.
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - name: bundleRelease muss ohne Schluessel scheitern
         run: |
@@ -257,14 +257,14 @@ jobs:
             api-level: 35
             target: aosp_atd
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       # Ohne KVM laeuft der Emulator in Software und ist zu langsam, um brauchbar zu sein.
       - name: KVM freigeben
@@ -292,7 +292,7 @@ jobs:
 
       - name: Berichte sichern
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: instrumented-reports-api${{ matrix.api-level }}
           path: '**/build/reports/androidTests/**'
@@ -320,14 +320,14 @@ jobs:
     # und deckeln den Fehlerfall trotzdem.
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - name: Signaturdaten herstellen
         env:
@@ -362,7 +362,7 @@ jobs:
         if: always()
         run: rm -f upload-keystore.jks keystore.properties
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: app-sim-release-aab
           path: app-sim/build/outputs/bundle/release/*.aab

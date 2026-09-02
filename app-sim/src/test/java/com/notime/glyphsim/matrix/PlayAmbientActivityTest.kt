@@ -50,34 +50,19 @@ class PlayAmbientActivityTest {
     }
 
     /**
-     * SLEEP hat nachts das Gewicht 5 von insgesamt 9 - erwartet werden also rund 278 von 500.
-     *
-     * **Warum mit festem Startwert.** Vorher zog der Test aus der globalen Zufallsquelle und
-     * verlangte mehr als 250 Treffer. Das liegt etwa zweieinhalb Standardabweichungen unter dem
-     * Erwartungswert, scheitert also ungefaehr bei einem von 160 Laeufen - selten genug, um lange
-     * unbemerkt zu bleiben, haeufig genug, um die CI regelmaessig ohne echten Anlass rot zu
-     * faerben. Genau das ist einmal passiert (249 von 500).
-     *
-     * Mit einem festen Startwert ist das Ergebnis reproduzierbar: der Test misst jetzt die
-     * Gewichtung und nicht mehr das Glueck des Tages. Mehrere Startwerte, damit die Aussage nicht
-     * an einem einzelnen guenstigen haengt.
+     * **Ohne offene Gewohnheit ist SLEEP nachts das EINZIGE Thema - durchgehend, nicht bloss
+     * ueberwiegend.** Gemeldet als "er sollte nachts durchgehend schlafen": Vorher stand REST/
+     * MINDFULNESS mit im Topf (Gewicht 5 von 9, gut 55%) - SLEEP war das haeufigste Thema, aber
+     * eben nicht das einzige. `weightsFor(NIGHT)` hat seither nur noch SLEEP als Grundgewicht.
      */
     @Test
-    fun `nachts ist SLEEP das mit Abstand haeufigste Thema`() {
+    fun `nachts ist SLEEP ohne offene Gewohnheit das einzige Thema`() {
         for (seed in listOf(1, 42, 12345, 987654321)) {
             val random = Random(seed)
-            val counts = (1..500)
+            val results = (1..500)
                 .map { PlayAmbientActivity.nextTopic(PlayAmbientActivity.DayPhase.NIGHT, random = random) }
-                .groupingBy { it }
-                .eachCount()
-            val sleepCount = counts[AnimationType.SLEEP] ?: 0
-            val haeufigstes = counts.maxByOrNull { it.value }?.key
-
-            assertEquals("Startwert $seed: haeufigstes Thema", AnimationType.SLEEP, haeufigstes)
-            assertTrue(
-                "Startwert $seed: SLEEP kam nur $sleepCount von 500 Mal vor (erwartet rund 278)",
-                sleepCount > 230
-            )
+                .toSet()
+            assertEquals("Startwert $seed: nachts kommt etwas anderes als SLEEP vor", setOf(AnimationType.SLEEP), results)
         }
     }
 

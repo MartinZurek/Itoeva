@@ -14,4 +14,32 @@
 
     <string name="default_reminder_drink">Trink was</string>
     <string name="default_reminder_move">Beweg dich</string>
+
+    <string name="node_sport">Sport &amp; Bewegung</string>
+    <string name="node_sport_ballsport">Ballsport</string>
+    <string name="node_sport_kraft">Kraft &amp; Ausdauer</string>
+    <string name="node_koerper">Körper &amp; Versorgung</string>
+    <string name="node_koerper_trinken">Trinken</string>
+    <string name="node_koerper_essen">Essen</string>
+    <string name="node_ruhe">Ruhe &amp; Schlaf</string>
+    <string name="node_ruhe_schlafen">Schlafen</string>
+    <string name="node_ruhe_pause">Pause machen</string>
+    <string name="node_achtsamkeit">Achtsamkeit</string>
+    <string name="node_achtsamkeit_atmen">Atmen</string>
+    <string name="node_achtsamkeit_beobachten">Beobachten</string>
+    <string name="node_arbeit">Arbeit &amp; Fokus</string>
+    <string name="node_arbeit_geraet">Am Gerät</string>
+    <string name="node_arbeit_erledigen">Erledigen</string>
+    <string name="node_lernen">Lernen &amp; Erkenntnis</string>
+    <string name="node_lernen_lesen">Lesen</string>
+    <string name="node_lernen_knobeln">Knobeln</string>
+    <string name="node_kreativ">Kreativität</string>
+    <string name="node_kreativ_musik">Musik</string>
+    <string name="node_kreativ_bauen">Bauen &amp; Malen</string>
+    <string name="node_naehe">Nähe &amp; Beziehung</string>
+    <string name="node_naehe_freunde">Freunde &amp; Familie</string>
+    <string name="node_naehe_tiere">Tiere</string>
+    <string name="node_aufbruch">Aufbruch &amp; Anlässe</string>
+    <string name="node_aufbruch_reisen">Reisen</string>
+    <string name="node_aufbruch_feiern">Feiern</string>
 </resources>

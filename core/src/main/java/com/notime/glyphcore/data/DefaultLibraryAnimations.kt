@@ -27,8 +27,16 @@ object DefaultLibraryAnimations {
      * Die 27 allgemeinen Animationen plus die 30 charakterspezifischen der sechs Avatare
      * ([AvatarSignatureAnimations]). Beide Saetze liegen in derselben Bibliothek und sind gleich
      * verwendbar - unterschiedlich ist nur, wofuer sie entworfen wurden.
+     *
+     * Die Zuordnung zum Animations-Baum ([LibraryAnimation.nodeId]) passiert hier an EINER Stelle
+     * fuer beide Saetze, statt sie an 56 einzelne Eintraege zu schreiben: Der Baum kennt die
+     * Zuordnung ohnehin ([AnimationTree.nodeIdFor]), und eine zweite, von Hand gepflegte Kopie
+     * daneben koennte nur auseinanderlaufen. Ein Eintrag ohne passenden Knoten bekaeme `null` -
+     * dass es den nicht gibt, bewacht `AnimationTreeTest`.
      */
-    fun seed(): List<LibraryAnimation> = general() + AvatarSignatureAnimations.seed()
+    fun seed(): List<LibraryAnimation> =
+        (general() + AvatarSignatureAnimations.seed() + SkillTreeAnimations.seed())
+            .map { it.copy(nodeId = AnimationTree.nodeIdFor(it.label)) }
 
     private fun general(): List<LibraryAnimation> = listOf(
         LibraryAnimation(label = "Star", emoji = "⭐", framesData = FrameCodec.encode(starFrames()), sortOrder = 0),
@@ -136,13 +144,15 @@ object DefaultLibraryAnimations {
         val canopy = listOf(4 to 4, 5 to 3, 6 to 3, 7 to 3, 8 to 4, 3 to 5, 9 to 5, 6 to 4)
         val handle = listOf(6 to 5, 6 to 6, 6 to 7, 5 to 8, 5 to 9)
         val base = canopy + handle
-        val dropCols = listOf(0, 2, 10, 12, 1, 11)
+        // Nicht auf x=0/12: Dort schneidet der runde Bildschirm schon ab der halben Hoehe ab.
+        // Vier klar fallende Bahnen lesen sich ruhiger als sechs halb sichtbare Randtropfen.
+        val dropCols = listOf(2, 4, 8, 10)
         val phases = listOf(0, 5, 2, 8, 10, 4)
         return (0 until 12).map { t ->
             val pts = base.toMutableList()
             dropCols.forEachIndexed { i, x ->
                 val y = (t + phases[i]) % 13
-                if (y <= 11) pts += x to y
+                if (y in 1..11) pts += x to y
             }
             pts
         }
@@ -236,14 +246,14 @@ object DefaultLibraryAnimations {
         val starsC = listOf(1 to 1, 1 to 3, 11 to 2, 10 to 9, 2 to 10)
 
         return listOf(
-            digitThree() + rocket(8) + starsA,
-            digitTwo() + rocket(8) + starsB,
-            digitOne() + rocket(8) + starsA,
-            rocket(8) + flame(8, 2) + starsB,
-            rocket(6) + flame(6, 3) + starsA,
+            digitThree() + rocket(6) + starsA,
+            digitTwo() + rocket(6) + starsB,
+            digitOne() + rocket(6) + starsA,
+            rocket(6) + flame(6, 2) + starsB,
+            rocket(5) + flame(5, 3) + starsA,
             rocket(3) + flame(3, 3) + starsB,
-            rocket(0) + flame(0, 2) + starsA,
-            rocket(-3) + flame(-3, 1) + starsB,
+            rocket(1) + flame(1, 2) + starsA,
+            rocket(-2) + flame(-2, 1) + starsB,
             starsC
         )
     }
@@ -471,22 +481,67 @@ object DefaultLibraryAnimations {
 
     private fun ball(cx: Int, cy: Int) = listOf(cx to cy, (cx - 1) to cy, (cx + 1) to cy, cx to (cy - 1), cx to (cy + 1))
 
-    /** Ball springt/rollt zum Tor, verschwindet im Netz - Netz-Ripple beim Treffer. */
+    /**
+     * **Ein Spieler schiesst den Ball weg** - das Motiv fuer die Untergruppe `sport/ballsport`.
+     *
+     * Der erste Entwurf zeigte einen Ball, der in ein Tor am rechten Rand rollt. Das war aus drei
+     * Gruenden nicht zu erkennen:
+     *
+     * 1. Das Tor sass mit seinem rechten Pfosten auf `x = 12` und damit auf der Kante des runden
+     *    Ausschnitts - seine obere Ecke fiel weg, es blieb ein einseitig offener Rahmen.
+     * 2. Ball und Pfosten waren beide einen Punkt breit und gleich hell. Sobald der Ball das Tor
+     *    erreichte, verschmolz er damit; die letzten vier von neun Frames waren ein Rechteck, das
+     *    sich fuellt.
+     * 3. Es war ausserdem dasselbe Motiv wie [SkillTreeAnimations] `Shot`, das unter diesem Knoten
+     *    als Blatt haengt - und die schlechtere Fassung davon.
+     *
+     * Deshalb jetzt eine Geste statt eines Aufbaus: eine Figur links, ein deutlich runder Ball
+     * rechts, das Bein holt aus, trifft, zieht nach. Der Ball verlaesst das Bild nach rechts oben
+     * und rollt am Boden wieder herein, damit die Schleife ohne Sprung zurueckfindet.
+     *
+     * Der Ball ist mit fuenf Zellen Durchmesser bewusst gross: kleiner bleibt von einer Kugel auf
+     * diesem Raster nur ein Kreuz uebrig. Ein Muster traegt er nicht - bei dieser Groesse frisst
+     * jeder dunkle Flicken die runde Silhouette auf, und dann ist es weder Ball noch Fussball.
+     */
     private fun footballFrames(): List<List<Pair<Int, Int>>> {
-        val goal = listOf(
-            9 to 3, 10 to 3, 11 to 3, 12 to 3,
-            9 to 4, 9 to 5, 9 to 6, 9 to 7, 9 to 8,
-            12 to 4, 12 to 5, 12 to 6, 12 to 7, 12 to 8
-        )
-        val netSmall = listOf(10 to 5, 11 to 6)
-        val netBig = listOf(10 to 5, 11 to 5, 10 to 6, 11 to 6, 10 to 7, 11 to 7)
+        /** Kopf, Schultern, Rumpf. Das Bein kommt je Pose dazu. */
+        fun torso() = sprite(4, 0, "#") + sprite(3, 1, "###") + sprite(4, 2, "#")
 
-        val positions = listOf(1 to 10, 3 to 10, 5 to 9, 7 to 7, 9 to 8, 10 to 7)
-        val frames = positions.map { (x, y) -> ball(x, y) + goal }.toMutableList()
-        frames += ball(11, 6) + goal + netSmall
-        frames += ball(11, 6) + goal + netBig
-        frames += goal + netSmall
-        return frames
+        /**
+         * Der Boden reicht NICHT ueber die volle Breite - die Matrix ist rund, in der untersten
+         * Zeile gibt es nur `x = 2..10` (dieselbe Falle wie beim Dribbling, siehe SKILLBAUM.md).
+         */
+        fun pitch() = sprite(2, 11, "#########")
+
+        fun ball(cx: Int, cy: Int) = sprite(
+            cx - 2, cy - 2,
+            ".###.",
+            "#####",
+            "#####",
+            "#####",
+            ".###."
+        )
+
+        val stand = sprite(4, 3, "#", "#", "#", "#", "#", "#", "#", "###")
+        val windUp = sprite(0, 3, "....#", "...##", "...#.", "..##.", ".##..", "###..")
+        val strike = sprite(4, 3, "#......", "##.....", ".#.....", ".##....", "..#....", "...#...", "...####")
+        val followThrough = sprite(4, 3, "#........", ".#.......", "..#......", "...###...", ".....####")
+        val recover = sprite(4, 3, "#....", "#....", "##...", ".#...", ".#...", ".##..", "..#..", "..###")
+
+        fun frame(leg: List<Pair<Int, Int>>, ballAt: Pair<Int, Int>) =
+            torso() + leg + pitch() + ball(ballAt.first, ballAt.second)
+
+        val rest = 9 to 8
+        return listOf(
+            frame(stand, rest),
+            frame(windUp, rest),
+            frame(strike, rest),
+            frame(followThrough, 10 to 6),
+            frame(followThrough, 12 to 4),
+            frame(recover, 12 to 8),
+            frame(stand, rest),
+            frame(stand, rest)
+        )
     }
 
     /** Ball fliegt im Bogen in den Korb, Netz swisht beim Durchgang. */

@@ -431,6 +431,135 @@ class AppDatabaseMigrationTest {
         assertEquals(listOf(listOf("0")), rows(migrated, "SELECT COUNT(*) FROM glyph_reminders"))
         migrated.close()
     }
+
+    /**
+     * 20 -> 21: `nodeId` an der Bibliotheks-Animation, plus Nachtrag der Zuordnung zum
+     * Animations-Baum (siehe [com.notime.glyphcore.data.AnimationTree] und SKILLBAUM.md).
+     *
+     * Geprueft werden die beiden Faelle, die sich unterscheiden muessen: Ein bekanntes Motiv
+     * bekommt seinen Knoten, eine selbstgezeichnete Animation bleibt `null`. Bekaeme auch sie
+     * einen Wert, waere sie stillschweigend irgendwo im Baum einsortiert, und niemand koennte sie
+     * spaeter noch als "nicht zugeordnet" finden.
+     *
+     * `Snail` ist bewusst ein charakterspezifisches Motiv und `Basketball` ein allgemeines - der
+     * Nachtrag laeuft ueber beide Saetze und wuerde sonst nur fuer einen von beiden geprueft.
+     */
+    @Test
+    fun migration20To21AddsNodeIdAndBackfillsKnownMotifs() {
+        helper.createDatabase(TEST_DB, 20).apply {
+            execSQL(
+                """
+                INSERT INTO library_animations (label, emoji, framesData, isSelected, sortOrder)
+                VALUES ('Basketball', '🏀', '0,0', 1, 15),
+                       ('Snail', '🐌', '1,1', 0, 29),
+                       ('Mein Kringel', '🌀', '2,2', 0, 99)
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 21, true, *MIGRATIONS)
+
+        assertEquals(
+            listOf(
+                listOf("Basketball", "sport/ballsport/basketball"),
+                listOf("Snail", "ruhe/schlafen/snail"),
+                listOf("Mein Kringel", null)
+            ),
+            rows(migrated, "SELECT label, nodeId FROM library_animations ORDER BY sortOrder")
+        )
+        migrated.close()
+    }
+
+    /**
+     * 21 -> 22: `nodeId` an der Fuetter-Historie, nachgetragen aus BEIDEN Quellen.
+     *
+     * **Der Nachtrag ist hier wichtiger als die Spalte.** Die Neigungsrechnung des Skillbaums
+     * (SKILLBAUM.md, P4) leitet aus dieser Historie ab, welchen Zweig jemand am ehesten bedient.
+     * Bliebe sie fuer Altdaten leer, faenge ein Nutzer mit monatelanger Historie bei null an.
+     *
+     * Geprueft werden alle vier Faelle, die sich unterscheiden muessen:
+     * ein eingebauter Typ, eine Bibliotheks-Animation, eine selbstgezeichnete ohne Knoten, und
+     * MEDICINE - das bewusst ausserhalb des Baums steht und deshalb null bleiben MUSS. Bekaeme es
+     * einen Knoten, koennte eine Medikamenten-Erinnerung spaeter ins Spiel geraten.
+     */
+    @Test
+    fun migration21To22BackfillsNodeIdFromBothSources() {
+        helper.createDatabase(TEST_DB, 21).apply {
+            execSQL(
+                """
+                INSERT INTO avatar_feed_events
+                    (reminderId, animationType, epochMillis, profileId, libraryAnimationLabel,
+                     fedAtMillis, isPlayMode)
+                VALUES (1, 'MOVE', 1700000000001, 'PUFFLING', NULL, NULL, 0),
+                       (2, NULL, 1700000000002, 'PUFFLING', 'Basketball', NULL, 0),
+                       (3, NULL, 1700000000003, 'PUFFLING', 'Mein Kringel', NULL, 0),
+                       (4, 'MEDICINE', 1700000000004, 'PUFFLING', NULL, NULL, 0)
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 22, true, *MIGRATIONS)
+
+        assertEquals(
+            listOf(
+                listOf("1", "sport"),
+                listOf("2", "sport/ballsport/basketball"),
+                listOf("3", null),
+                listOf("4", null)
+            ),
+            rows(migrated, "SELECT reminderId, nodeId FROM avatar_feed_events ORDER BY reminderId")
+        )
+        migrated.close()
+    }
+
+    /**
+     * 22 -> 23: neue Tabelle [AvatarUnlockedNode] fuer den Skillbaum (SKILLBAUM.md, P4).
+     *
+     * Reines Anlegen, keine bestehenden Daten betroffen - geprueft wird deshalb beides: dass die
+     * Tabelle da ist und benutzbar, und dass die Fuetter-Historie den Versionswechsel unveraendert
+     * uebersteht. Ein Freischalt-Stand darf nichts kosten, was der Nutzer vorher hatte.
+     *
+     * Der zusammengesetzte Primaerschluessel ist die eigentliche Zusicherung: Derselbe Knoten darf
+     * fuer dasselbe Profil nicht zweimal offen sein, sonst zaehlte die Oberflaeche ihn doppelt.
+     */
+    @Test
+    fun migration22To23AddsUnlockTableWithoutTouchingHistory() {
+        helper.createDatabase(TEST_DB, 22).apply {
+            execSQL(
+                """
+                INSERT INTO avatar_feed_events
+                    (reminderId, animationType, epochMillis, profileId, libraryAnimationLabel,
+                     fedAtMillis, isPlayMode, nodeId)
+                VALUES (9, 'MOVE', 1700000000009, 'GLOOP', NULL, 1700000000010, 0, 'sport')
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(TEST_DB, 23, true, *MIGRATIONS)
+
+        assertEquals(
+            listOf(listOf("9", "sport", "1700000000010")),
+            rows(migrated, "SELECT reminderId, nodeId, fedAtMillis FROM avatar_feed_events")
+        )
+
+        migrated.execSQL(
+            "INSERT INTO avatar_unlocked_nodes (profileId, nodeId, unlockedAtMillis) " +
+                "VALUES ('GLOOP', 'sport', 1700000000000)"
+        )
+        // Zweiter Versuch mit demselben Paar: Der Primaerschluessel muss ihn abweisen.
+        migrated.execSQL(
+            "INSERT OR IGNORE INTO avatar_unlocked_nodes (profileId, nodeId, unlockedAtMillis) " +
+                "VALUES ('GLOOP', 'sport', 1799999999999)"
+        )
+        assertEquals(
+            listOf(listOf("GLOOP", "sport", "1700000000000")),
+            rows(migrated, "SELECT profileId, nodeId, unlockedAtMillis FROM avatar_unlocked_nodes")
+        )
+        migrated.close()
+    }
 }
 
 /**
@@ -439,7 +568,7 @@ class AppDatabaseMigrationTest {
  * Versionssprung mit erhoeht werden; [AppDatabaseMigrationTest.migratesFromBaselineToLatestKeepingData]
  * schlaegt sonst fehl, was genau der gewuenschte Stolperdraht ist.
  */
-private const val CURRENT_VERSION = 20
+private const val CURRENT_VERSION = 23
 
 /**
  * Alle registrierten Migrationen, so wie die App sie verwendet.

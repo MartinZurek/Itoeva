@@ -47,5 +47,26 @@ data class AvatarFeedEvent(
      * Fuettern ohne Zusatz-Abfrage, ob XP faellig sind (siehe ui/PlayModeXp), und die normale
      * Fuetter-Statistik (FeedStatsDialog) kann Play-Mode-Ausloesungen bei Bedarf getrennt halten.
      */
-    val isPlayMode: Boolean = false
+    val isPlayMode: Boolean = false,
+
+    /**
+     * Der Knoten im Animations-Baum, auf den diese Ausloesung faellt (siehe
+     * [com.notime.glyphcore.data.AnimationTree]) - etwa `sport/ballsport/basketball`.
+     *
+     * **Redundant zu [animationType]/[libraryAnimationLabel], und trotzdem eine eigene Spalte.**
+     * Beide liessen sich zur Laufzeit in einen Knoten uebersetzen; die Neigungsrechnung des
+     * Skillbaums (SKILLBAUM.md, Paket P4) muesste das dann aber fuer jede einzelne Zeile tun,
+     * statt einfach nach Zweig gruppieren zu koennen - aus einem `GROUP BY` wuerde ein
+     * vollstaendiger Durchlauf durch die gesamte Historie.
+     *
+     * **Gefuellt fuer BEIDE Quellen**, eingebaute Typen wie Bibliotheks-Animationen. Genau das ist
+     * der Sinn: Fuer die Frage "welchen Zweig bediene ich am ehesten" ist es gleichgueltig, ob die
+     * Erinnerung an einem eingebauten Typ hing oder an einer Bibliotheks-Animation - beide sagen
+     * etwas ueber dasselbe Interesse aus.
+     *
+     * `null` bei den beiden Faellen, die zu keinem Knoten gehoeren: einer selbstgezeichneten
+     * Animation, und [com.notime.glyphcore.data.AnimationType.MEDICINE], das bewusst ausserhalb
+     * des Baums steht.
+     */
+    val nodeId: String? = null
 )

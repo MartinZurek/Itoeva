@@ -76,6 +76,9 @@ class FeedEventOwnershipTest {
         )
 
         assertEquals(42L, event.reminderId)
+        // Der Knoten wird gleich beim Anlegen mitgeschrieben, damit die Neigungsrechnung des
+        // Skillbaums spaeter nach Zweig gruppieren kann statt jede Zeile einzeln zu uebersetzen.
+        assertEquals("koerper", event.nodeId)
         assertEquals(1_000L, event.epochMillis)
     }
 

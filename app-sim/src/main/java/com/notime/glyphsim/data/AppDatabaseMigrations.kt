@@ -3,6 +3,9 @@ package com.notime.glyphsim.data
 import android.content.Context
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.notime.glyphcore.data.AnimationMotif
+import com.notime.glyphcore.data.AnimationTree
+import com.notime.glyphcore.data.LibraryAnimationNodeIds
 import com.notime.glyphcore.reminder.ActiveProfilePrefs
 
 /**
@@ -232,6 +235,25 @@ object AppDatabaseMigrations {
     }
 
     /**
+     * 20 -> 21: [com.notime.glyphcore.data.LibraryAnimation] bekommt `nodeId` - den Knoten im
+     * Animations-Baum, zu dem eine Animation gehoert (siehe
+     * [com.notime.glyphcore.data.AnimationTree] und SKILLBAUM.md).
+     *
+     * Reines Hinzufuegen einer Spalte, alle bestehenden Zeilen bleiben erhalten. Nullable ohne
+     * Standardwert, weil `null` hier eine echte Aussage ist: Selbstgezeichnete Animationen der
+     * Nutzer gehoeren zu keinem Knoten, solange niemand sie zugeordnet hat.
+     *
+     * Der Nachtrag fuer die Vorgaben liegt im Kern ([LibraryAnimationNodeIds]) - dieselbe Spalte
+     * kommt auch in `:app` dazu, und zwei Kopien derselben 56 Zuordnungen wuerden auseinanderlaufen.
+     */
+    private val MIGRATION_20_21 = object : Migration(20, 21) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE library_animations ADD COLUMN nodeId TEXT")
+            LibraryAnimationNodeIds.backfill(db)
+        }
+    }
+
+    /**
      * Alle bekannten Migrationen, in [AppDatabase] registriert.
      *
      * Braucht seit 19 -> 20 einen [Context]: welcher Avatar zuletzt gewaehlt war, steht in den
@@ -240,9 +262,69 @@ object AppDatabaseMigrations {
      * Werte waren bis zu diesem Umbau ohnehin identisch (siehe ui/AvatarSpeciesPrefs). Steht dort
      * noch nichts, greift die Ausweichregel in [chooseSurvivingProfile].
      */
+    /**
+     * 21 -> 22: [AvatarFeedEvent] bekommt `nodeId` - auf welchen Knoten des Animations-Baums eine
+     * Ausloesung faellt (siehe [AvatarFeedEvent.nodeId]).
+     *
+     * **Anders als 20 -> 21 nur hier.** [AvatarFeedEvent] liegt in diesem Modul und nicht im Kern;
+     * `:app` kennt die Tabelle gar nicht und bleibt deshalb auf seiner Version.
+     *
+     * **Der Nachtrag ist hier das Wesentliche**, nicht die neue Spalte: Die Neigungsrechnung des
+     * Skillbaums (SKILLBAUM.md, Paket P4) leitet aus dieser Historie ab, welchen Zweig jemand am
+     * ehesten bedient. Bliebe sie fuer Altdaten leer, faenge ein Nutzer mit monatelanger Historie
+     * bei null an - und bekaeme beim ersten Levelaufstieg eine Auswahl, die nichts mit dem zu tun
+     * hat, was er tatsaechlich tut.
+     *
+     * Nachgetragen wird aus BEIDEN Quellen: `libraryAnimationLabel` hat Vorrang, weil es die
+     * genauere Angabe ist; wo es fehlt, entscheidet `animationType`. Zeilen ohne beides - und
+     * MEDICINE, das ausserhalb des Baums steht - bleiben null.
+     */
+    private val MIGRATION_21_22 = object : Migration(21, 22) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE avatar_feed_events ADD COLUMN nodeId TEXT")
+            for (node in AnimationTree.nodes) {
+                when (val motif = node.motif) {
+                    is AnimationMotif.Library -> db.execSQL(
+                        "UPDATE avatar_feed_events SET nodeId = ? " +
+                            "WHERE libraryAnimationLabel = ? AND nodeId IS NULL",
+                        arrayOf(node.id, motif.label)
+                    )
+                    is AnimationMotif.Builtin -> db.execSQL(
+                        "UPDATE avatar_feed_events SET nodeId = ? " +
+                            "WHERE libraryAnimationLabel IS NULL AND animationType = ? AND nodeId IS NULL",
+                        arrayOf(node.id, motif.type.name)
+                    )
+                    null -> Unit
+                }
+            }
+        }
+    }
+
+    /**
+     * 22 -> 23: neue Tabelle [AvatarUnlockedNode] - welche Knoten des Animations-Baums ein Avatar
+     * freigeschaltet hat (SKILLBAUM.md, Paket P4).
+     *
+     * Reines Anlegen einer neuen, anfangs leeren Tabelle; keine bestehenden Daten betroffen. Die
+     * neun Hauptgruppen werden NICHT hier eingetragen, sondern beim ersten Zugriff je Profil
+     * ([AvatarUnlockRepository.ensureSeeded]): Welche Profile es gibt, steht nicht in der
+     * Datenbank, sondern haengt am gewaehlten Avatar - eine Migration muesste sie raten.
+     */
+    private val MIGRATION_22_23 = object : Migration(22, 23) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS avatar_unlocked_nodes (" +
+                    "profileId TEXT NOT NULL, " +
+                    "nodeId TEXT NOT NULL, " +
+                    "unlockedAtMillis INTEGER NOT NULL, " +
+                    "PRIMARY KEY(profileId, nodeId))"
+            )
+        }
+    }
+
     fun all(context: Context): Array<Migration> = arrayOf(
         MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
         MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19,
-        migration19To20(preferred = ActiveProfilePrefs.get(context))
+        migration19To20(preferred = ActiveProfilePrefs.get(context)),
+        MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23
     )
 }

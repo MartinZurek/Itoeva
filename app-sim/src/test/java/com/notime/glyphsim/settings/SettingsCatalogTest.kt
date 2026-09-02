@@ -176,7 +176,7 @@ class SettingsCatalogTest {
             SettingsCatalog.ClipRecordingEnabled,
             SettingsCatalog.Greeted,
             SettingsCatalog.TappedAvatar, SettingsCatalog.TappedClock, SettingsCatalog.PlayModeIntroSeen,
-            SettingsCatalog.UsedActionSlot,
+            SettingsCatalog.UsedActionSlot, SettingsCatalog.SkillTreeHintSeen,
             SettingsCatalog.PlayCoins, SettingsCatalog.PlayPantryLevel,
             SettingsCatalog.PlayForcedWeather, SettingsCatalog.PlayTimeLapseSpeed
         )

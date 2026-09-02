@@ -161,6 +161,10 @@ object SettingsCatalog {
     /** Ob schon einmal eine Aktion in einen Speicherplatz abgelegt wurde (siehe ui/ActionSlots.kt). */
     val UsedActionSlot = Setting.Bool("onboarding_prefs", "used_action_slot", default = false)
 
+    /** Ob der Hinweis auf dem Baumbildschirm ("Stern antippen, um freizuschalten") schon einmal
+     *  zu sehen war (siehe ui/SkillTreeDialog.kt). */
+    val SkillTreeHintSeen = Setting.Bool("onboarding_prefs", "skill_tree_hint_seen", default = false)
+
     // --- Die Welt des Wesens --------------------------------------------------------------------
 
     /*
@@ -193,7 +197,7 @@ object SettingsCatalog {
         DockSizeDp, DockOffsetFractionX, DockOffsetFractionY,
         AvatarSpecies, MoodEnabled, SoundEnabled, ActiveProfileId,
         ClipRecordingEnabled,
-        Greeted, TappedAvatar, TappedClock, PlayModeIntroSeen, UsedActionSlot,
+        Greeted, TappedAvatar, TappedClock, PlayModeIntroSeen, UsedActionSlot, SkillTreeHintSeen,
         PlayCoins, PlayPantryLevel, PlayForcedWeather, PlayTimeLapseSpeed
     )
 

@@ -25,7 +25,7 @@ import com.notime.glyphcore.data.LibraryAnimationDao
  */
 @Database(
     entities = [GlyphReminder::class, LibraryAnimation::class, BuiltInAnimationSelection::class],
-    version = 19,
+    version = 20,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

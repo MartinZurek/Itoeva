@@ -3,6 +3,7 @@ package com.notime.glyphsim.ui
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.DaysOfWeekMask
 import com.notime.glyphcore.data.GlyphReminder
+import com.notime.glyphcore.data.ReminderValidation
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayScene
@@ -240,6 +241,38 @@ class PlayTalkTest {
         }
     }
 
+    @Test
+    fun `ein aus dem Gespraech angelegtes Preset laesst sich tatsaechlich speichern`() {
+        // Regression: Auf einem echten Geraet crashte die App komplett - "Intervall 40 min steht
+        // nicht in INTERVAL_OPTIONS" aus GlyphReminderRepository.add, uncatched in der Coroutine
+        // von GlyphReminderViewModel.addReminder. `rawInterval` war eine Divisionszahl (Fenster
+        // durch Slot-Anzahl) und traf so gut wie nie einen der festen Werte, aus denen der
+        // Bearbeiten-Dialog waehlt - genau die Erinnerung, die MainActivity.onAddHabit aus einem
+        // Preset baut, ist aber KEINE Spielmodus-Zeile und wird deshalb streng gegen
+        // ReminderValidation geprueft. Dieser Test baut denselben Weg nach: Preset -> GlyphReminder
+        // -> ReminderValidation, fuer jede Kombination aus vorschlagbarem Thema und Tageszeit.
+        for (phase in PlayAmbientActivity.DayPhase.entries + listOf(null)) {
+            for (topic in PlayTalk.SUGGESTABLE) {
+                val preset = PlayTalk.presetFor(topic, phase)
+                val reminder = GlyphReminder(
+                    label = "Test",
+                    animationType = topic,
+                    daysOfWeekMask = PlayTalk.EVERY_DAY_MASK,
+                    startMinuteOfDay = preset.startMinuteOfDay,
+                    endMinuteOfDay = preset.endMinuteOfDay,
+                    intervalMinutes = preset.intervalMinutes,
+                    dailyGoal = preset.dailyGoal
+                )
+                val problems = ReminderValidation.validate(reminder)
+                assertTrue(
+                    "$topic in $phase nicht speicherbar: " +
+                        problems.joinToString { it.message },
+                    problems.isEmpty()
+                )
+            }
+        }
+    }
+
     // ---- Die laengere Rueckschau ----
 
     @Test
@@ -471,6 +504,29 @@ class PlayTalkTest {
     }
 
     @Test
+    fun `secondaryRemarkFor laesst DOING aus - es steht schon prominent daneben`() {
+        // DOING bekommt jetzt eine eigene, unbedingte Zeile in PlayTalkPanel (siehe DoingLine) -
+        // die rotierende Zweitbemerkung darunter darf denselben Satz nicht noch einmal ziehen.
+        val busy = mood(
+            doing = PlayTalk.Doing(PlayScene.Place.KITCHEN, AnimationType.DRINK),
+            weather = PlayWeather.RAIN,
+            lastVisitor = AvatarSpecies.GLOOP
+        )
+        val drawn = (0 until 20).map { PlayTalk.secondaryRemarkFor(busy, it) }
+        assertTrue("DOING taucht trotzdem in der zweiten Zeile auf", drawn.none { it == PlayTalk.Remark.DOING })
+        assertTrue("es gibt trotzdem noch etwas zu sagen", drawn.any { it != null })
+    }
+
+    @Test
+    fun `secondaryRemarkFor bleibt still, wenn es neben dem Tun nichts zu sagen gibt`() {
+        val onlyDoing = mood(doing = PlayTalk.Doing(PlayScene.Place.KITCHEN, AnimationType.DRINK))
+        assertNull(
+            "eine leere Zweitbemerkung ist keine, die auf QUIET zurueckfaellt",
+            PlayTalk.secondaryRemarkFor(onlyDoing)
+        )
+    }
+
+    @Test
     fun `vorgeschlagen wird nur, was der Avatar auch sichtbar tut`() {
         // Ein Vorschlag, der seinen Tagesablauf nicht veraendert, waere eine leere Zusage: Der
         // Nutzer legt etwas an, weil der Begleiter danach gefragt hat, und sieht anschliessend
@@ -694,6 +750,56 @@ class PlayTalkTest {
         assertEquals(PlayTalk.Headline.OPEN_TOPICS, focus.headline)
         val asks = focus.offers.filterIsInstance<PlayTalk.Offer.Ask>()
         assertEquals("Nur EINE Bitte, sonst ist die Liste wieder da", 1, asks.size)
+    }
+
+    @Test
+    fun `was er gerade tut wird bevorzugt vorgeschlagen, wenn es noch keine Gewohnheit dafuer gibt`() {
+        // Der Nachahm-Fall: Der Nutzer sieht die laufende Taetigkeit UND den passenden Vorschlag
+        // dazu - nicht irgendeine durchrotierte Standardauswahl, die zufaellig etwas anderes trifft.
+        val knowledge = known(
+            plan = somePlan(),
+            missing = listOf(AnimationType.FOCUS, AnimationType.MINDFULNESS, AnimationType.MOVE)
+        )
+        val doing = PlayTalk.Doing(PlayScene.Place.PARK, AnimationType.MOVE)
+        val focus = PlayTalk.focus(knowledge, rotation = 0, doing = doing)
+        val add = focus.offers.filterIsInstance<PlayTalk.Offer.Add>().single()
+        assertEquals(AnimationType.MOVE, add.topic)
+    }
+
+    @Test
+    fun `tut er etwas, das er schon als Gewohnheit hat, bleibt es bei der Rotation`() {
+        val knowledge = known(
+            plan = somePlan(),
+            missing = listOf(AnimationType.FOCUS, AnimationType.MINDFULNESS)
+        )
+        // DRINK ist NICHT in missing - der Vorschlag darf sich also nicht danach richten.
+        val doing = PlayTalk.Doing(PlayScene.Place.KITCHEN, AnimationType.DRINK)
+        val focus = PlayTalk.focus(knowledge, rotation = 0, doing = doing)
+        val add = focus.offers.filterIsInstance<PlayTalk.Offer.Add>().single()
+        assertEquals(AnimationType.FOCUS, add.topic)
+    }
+
+    @Test
+    fun `das Nachahmen darf nicht hinter Spielstand und Entwicklung verschwinden`() {
+        // Regression: Im Spielmodus sind `game` und `development` so gut wie immer gesetzt (siehe
+        // PlayTalk.gather, includeGame = true in DockScreen) und fuellten beide erlaubten Plaetze,
+        // bevor die Nachahm-Pruefung ueberhaupt erreicht wurde - der Mechanismus fuer sich genommen
+        // war richtig, aber in der echten App praktisch nie sichtbar.
+        val knowledge = known(
+            plan = somePlan(),
+            missing = listOf(AnimationType.MOVE),
+            game = PlayTalk.Game(level = 2, xp = 30, coins = 5, pantry = 2)
+        ).copy(
+            development = PlayTalk.Development(
+                path = null, stage = 0, sharePercent = 0, enoughData = false, nextStageLevel = 5
+            )
+        )
+        val doing = PlayTalk.Doing(PlayScene.Place.PARK, AnimationType.MOVE)
+        val focus = PlayTalk.focus(knowledge, rotation = 0, doing = doing)
+        assertTrue(
+            "das Nachahmen fehlt - Spielstand/Entwicklung haben beide Plaetze belegt",
+            focus.offers.any { it is PlayTalk.Offer.Add && it.topic == AnimationType.MOVE }
+        )
     }
 
     @Test

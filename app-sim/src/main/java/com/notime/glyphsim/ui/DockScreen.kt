@@ -70,6 +70,7 @@ import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.MoonFrame
@@ -417,10 +418,20 @@ fun DockScreen(
         // PlayEffects. Beides zusammen beantwortet beim Zuschauen die Frage "was hat er vor?",
         // die eine blosse Bewegung offenlaesst.
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
+        /** Das eigene Weltmotiv des gerade laufenden allgemeinen Handlungsschritts. */
+        var activeActivity by remember { mutableStateOf<AnimationType?>(null) }
         /** Sichtbare Phase der langen Drachen-Szene; null ausserhalb dieses Ablaufs. */
         var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
         /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
         var footballPhase by remember { mutableStateOf<PlayEffects.FootballPhase?>(null) }
+        /** Sichtbare Basketballphase; Korb und Ball existieren nur solange sie gesetzt ist. */
+        var basketballPhase by remember { mutableStateOf<PlayEffects.BasketballPhase?>(null) }
+        /** Sichtbare Krafttrainingsphase mit Hantel. */
+        var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
+        /** Sichtbare Musikphase mit Gitarre und Noten. */
+        var musicPhase by remember { mutableStateOf<PlayEffects.MusicPhase?>(null) }
+        /** Sichtbare Malphase mit wachsendem Bild. */
+        var paintingPhase by remember { mutableStateOf<PlayEffects.PaintingPhase?>(null) }
         /** Sichtbare Phase der Angel-Szene am Teich; null ausserhalb dieses Ablaufs. */
         var fishingPhase by remember { mutableStateOf<PlayEffects.FishingPhase?>(null) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
@@ -784,6 +795,11 @@ fun DockScreen(
 
             try {
             for (step in routine.steps) {
+                // Das Motiv bleibt waehrend eines anschliessenden Linger sichtbar. Erst wenn eine
+                // andere Handlung beginnt, ist die kleine Szene wirklich vorbei.
+                if (step !is RoutineStep.Act && step !is RoutineStep.Linger) {
+                    activeActivity = null
+                }
                 val current = avatar ?: return
                 if (current.fed || current.occurrenceId != null) return   // echte Erinnerung hat Vorrang
                 val avatarPx = with(density) { current.sizeDp.dp.toPx() }
@@ -843,6 +859,16 @@ fun DockScreen(
                         // eine Bewegung an Ort und Stelle.
                         val target = spotToOffset(spot, avatarPx)
                         val from = current.offset
+                        // **Schon VOR dem Hinauf, nicht erst danach.** Gemeldet als "der Avatar
+                        // geht durchs Bett" - und genau das war es: [occupiedStation] stand bisher
+                        // erst NACH der Animation, die vordere Ebene mit der Bettdecke (siehe
+                        // weiter unten, "als einziges NACH dem Avatar gezeichnet") blieb also
+                        // waehrend der ganzen Aufstiegsbewegung aus. Die stehende Figur wanderte
+                        // dadurch sichtbar UND UNVERDECKT vom Boden ins Kopfteil/die Matratze
+                        // hinein, bevor am Ziel ploetzlich die Decke erschien. Jetzt steht die
+                        // Decke schon beim ersten Frame der Bewegung - sie deckt zu, waehrend die
+                        // Figur sich hineinlegt, nicht erst danach.
+                        occupiedStation = step.station
                         avatarSettling = true
                         try {
                             animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
@@ -856,11 +882,9 @@ fun DockScreen(
                         } finally {
                             avatarSettling = false
                         }
-                        occupiedStation = step.station
                     }
 
                     RoutineStep.Rise -> {
-                        occupiedStation = null
                         val standing = avatar ?: return
                         val onFloor = avatarSpot(
                             anchorX = (standing.offset.x / (maxWidthPx - avatarPx).coerceAtLeast(1f)).coerceIn(0f, 1f),
@@ -883,9 +907,15 @@ fun DockScreen(
                         } finally {
                             avatarSettling = false
                         }
+                        // **Erst NACH dem Hinunter, nicht schon davor** - das spiegelbildliche
+                        // Gegenstueck zu [RoutineStep.Occupy] oben: Solange die Figur noch aus dem
+                        // Bett heraussteigt, deckt die Decke sie weiter zu, statt schon auf dem
+                        // ersten Frame zu verschwinden und die Bewegung durchs Kopfteil freizulegen.
+                        occupiedStation = null
                     }
 
                     is RoutineStep.Act -> {
+                        activeActivity = step.topic
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
                         if (step.topic == AnimationType.DRINK) {
@@ -942,6 +972,54 @@ fun DockScreen(
                         footballPhase = step.phase
                         avatarIdleJob?.cancel()
                         val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Basketball -> {
+                        basketballPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Training -> {
+                        trainingPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val movement = if (step.phase == PlayEffects.TrainingPhase.REST) {
+                            AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.STRETCH)
+                        } else {
+                            AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                        }
+                        MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Music -> {
+                        musicPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = AvatarAnimations.reactionFor(species, AnimationType.CREATIVITY)
+                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.Painting -> {
+                        paintingPhase = step.phase
+                        avatarIdleJob?.cancel()
+                        val motion = if (step.phase == PlayEffects.PaintingPhase.REVEAL) {
+                            AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.LOOK_AROUND)
+                        } else {
+                            AvatarAnimations.reactionFor(species, AnimationType.CREATIVITY)
+                        }
                         MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
                             avatar = avatar?.copy(frame = f)
                         }
@@ -1056,6 +1134,11 @@ fun DockScreen(
                 carried = null
                 kitePhase = null
                 footballPhase = null
+                basketballPhase = null
+                trainingPhase = null
+                activeActivity = null
+                musicPhase = null
+                paintingPhase = null
                 fishingPhase = null
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
@@ -1751,8 +1834,7 @@ fun DockScreen(
                     fedCount++
                     AvatarFeeding.playReaction(
                         species = current.species,
-                        animationType = current.animationType,
-                        libraryAnimationLabel = current.libraryAnimationLabel,
+                        trigger = ReactionTrigger.of(current.animationType, current.libraryAnimationLabel),
                         screenWidthPx = maxWidthPx,
                         screenHeightPx = maxHeightPx,
                         onFrame = { f -> avatar = avatar?.copy(frame = f) },
@@ -2302,7 +2384,13 @@ fun DockScreen(
         //
         // Der AUFSTIEG bleibt: Er ist kein Zustand, sondern ein Ereignis. Etwas, das man erreicht
         // hat, muss in dem Moment zu sehen sein, in dem es geschieht - es hinterher nachschlagen
-        // zu koennen ist kein Ersatz dafuer. Er zeigt sich kurz und verschwindet von selbst.
+        // zu koennen ist kein Ersatz dafuer.
+        //
+        // Der verdiente Skillpunkt haengt daran NICHT mehr: Frueher blieb der Glueckwunsch stehen,
+        // bis ein erzwungener Dialog die Wahl abgenommen hatte (`LevelUnlockDialog`). Freischalten
+        // ist jetzt ein Spielzug auf dem Wander-Brett (`SkillTreeScreen`, SKILLBAUM.md P11), den der
+        // Spieler jederzeit selbst macht - der Glueckwunsch bestaetigt sich deshalb von selbst nach
+        // einem Moment, statt auf eine Wahl zu warten, die vielleicht erst viel spaeter kommt.
         if (playMode) {
             val playViewModel = androidx.lifecycle.viewmodel.compose.viewModel<PlayModeViewModel>()
             val playState by playViewModel.state.collectAsStateWithLifecycle()
@@ -2320,7 +2408,7 @@ fun DockScreen(
                     avatar?.species?.let { species ->
                         PlaySound.play(context, species, PlayChime.Event.LEVEL_UP, scope)
                     }
-                    delay(LEVEL_UP_MESSAGE_MS)
+                    delay(LEVEL_UP_BANNER_MS)
                     playViewModel.acknowledgeLevelUp()
                 }
             }
@@ -2596,6 +2684,65 @@ fun DockScreen(
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             phase = football,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val basketball = basketballPhase
+                if (current != null && basketball != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.basketballCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = basketball,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val activity = activeActivity
+                if (current != null && activity != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.activityCells(
+                            topic = activity,
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val training = trainingPhase
+                if (current != null && training != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.trainingCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = training,
+                            scenePhase = scenePhase
+                        )
+                    )
+                }
+                val music = musicPhase
+                if (current != null && music != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.musicCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = music,
+                            scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val painting = paintingPhase
+                if (current != null && painting != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.paintingCells(
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            phase = painting,
                             scenePhase = scenePhase,
                             widthCells = sceneWidthCells
                         )
@@ -2996,6 +3143,11 @@ private fun isColliding(clockOffset: Offset, clockSizePx: Float, avatarOffset: O
  * gaengiger Geraete. Groesser gewaehlt, und eine ueberschneidungsfreie Platzierung ist auf
  * schmalen Displays rechnerisch unmoeglich - unabhaengig davon, wie gut man danach sucht.
  */
+/** Wie lange der Levelaufstiegs-Glueckwunsch stehen bleibt, bevor er sich selbst bestaetigt - lang
+ *  genug zum Lesen, ohne auf eine Wahl zu warten, die der Spieler vielleicht erst auf dem
+ *  Wander-Brett und viel spaeter trifft. */
+private const val LEVEL_UP_BANNER_MS = 3_200L
+
 /** Wie lange das Bild nach einem Schnappschuss aufhellt - lang genug, um es zu bemerken, kurz
  *  genug, um nicht als Fehler zu wirken. */
 private const val SNAPSHOT_FLASH_MS = 140L
@@ -3246,9 +3398,6 @@ private const val SCENE_PHASE_TICK_MS = 200L
 private const val SCENE_FADE_OUT_MS = 220
 private const val SCENE_FADE_IN_MS = 380
 
-/** Wie lange der Glueckwunsch zum neuen Level stehen bleibt, bevor wieder der nuechterne Stand
- *  erscheint - lang genug zum Lesen, kurz genug, um nicht im Weg zu stehen. */
-private const val LEVEL_UP_MESSAGE_MS = 4_000L
 private const val DOCK_TAG = "DockScreen"
 
 /** Maximale Auslenkung der Burn-in-Drift. */

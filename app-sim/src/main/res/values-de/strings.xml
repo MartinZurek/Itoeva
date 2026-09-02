@@ -217,7 +217,7 @@
     <string name="playmode_intro_1">Lust zu spielen? Dann bin ich die ganze Zeit da und lebe einen eigenen Tag.</string>
     <string name="playmode_intro_2">Deine eigenen Erinnerungen laufen die ganze Zeit weiter – das Spiel schaltet nichts von dir ab.</string>
     <string name="playmode_intro_3">Zusätzlich tauche ich von allein auf, zu zufälligen Momenten, die zu mir passen. Füttern wie gewohnt: die Uhr auf mich ziehen.</string>
-    <string name="playmode_intro_4">Jede Fütterung bringt XP, und ich steige im Level. Alles andere bleibt, wie du es kennst – Uhr, Dock, Widget.</string>
+    <string name="playmode_intro_4">Jede Fütterung bringt XP. Ab Level 2 wählst du bei jedem Aufstieg eine neue Animation für meinen Fähigkeitenbaum. Alles andere bleibt, wie du es kennst – Uhr, Dock, Widget.</string>
     <string name="playmode_start">Spielmodus starten</string>
     <string name="playmode_level_label">Level %1$d · %2$d XP</string>
     <string name="playmode_level_up">Schau mal – ich bin gerade auf Level %1$d aufgestiegen!</string>
@@ -323,6 +323,8 @@
     <string name="faq_a_animation_length">Genau so lange, wie ihre Anzeigedauer vorgibt – standardmäßig ein kurzes 8-Sekunden-Aufblinken, oder länger, wenn eingestellt. Füttern beendet sie immer vorzeitig, egal welche Einstellung.</string>
     <string name="faq_q_animation_library">Kann ich statt der eingebauten eine eigene Animation nutzen?</string>
     <string name="faq_a_animation_library">Ja – wähl beim Anlegen oder Bearbeiten einer Erinnerung eine aus der Animations-Bibliothek. Eine Bibliotheks-Animation wird dann statt der Standard-Animation des Themas gezeigt.</string>
+    <string name="faq_q_skill_tree">Ich hab noch einen Stern übrig – wie setze ich ihn im Fähigkeitenbaum ein?</string>
+    <string name="faq_a_skill_tree">Jeder Levelaufstieg gibt einen Stern. Öffne den Fähigkeitenbaum (Knopf unter deinem Begleiter) und tipp auf einen hervorgehobenen Knoten, der \"als Nächstes\" markiert ist – das gilt für ganze Gruppen genauso wie für einzelne Animationen. Der Tipp verbraucht den Stern und schaltet den Knoten frei; ein zweiter Tipp auf denselben Platz klappt ihn danach auf und zeigt, was jetzt darunter erreichbar ist.</string>
     <string name="faq_q_feeding">Wie reagiere ich eigentlich auf eine Erinnerung?</string>
     <string name="faq_a_feeding">Zieh die Uhr auf mich, oder nutze die Fütter-Geste – so sagst du mir, dass du es getan hast.</string>
     <string name="faq_q_mood">Beeinflusst jede Erinnerung deine Stimmung?</string>
@@ -386,8 +388,10 @@
     <string name="talk_plan_done">erledigt</string>
     <string name="talk_plan_nogoal">kein Ziel</string>
     <string name="talk_a_steering">Heute noch offen:</string>
+    <string name="talk_a_steering_evening">Für heute Abend hab ich noch vor:</string>
     <string name="talk_a_steering_hint">Danach zieht es mich den Rest des Tages öfter.</string>
     <string name="talk_a_suggest">Wie wäre es mit %1$s? Dafür haben wir noch nichts.</string>
+    <string name="talk_a_suggest_mirror">%1$s mache ich gerade – auch was für dich?</string>
     <string name="talk_a_suggest_detail">%1$s bis %2$s, %3$d× am Tag. Kannst du alles später ändern.</string>
     <string name="talk_a_suggest_accept">Na gut, richte es ein</string>
     <string name="talk_a_suggest_added">Fertig – %1$s steht jetzt auf der Liste.</string>
@@ -719,4 +723,16 @@
     <string name="hobby_maker">Basteln und Bauen</string>
     <string name="talk_a_path_hobby">Angefangen habe ich mit: %1$s.</string>
     <string name="talk_a_path_things">Schau dich um – es steht jetzt mehr herum als am Anfang.</string>
+
+    <string name="skill_tree_title">Fähigkeitenbaum</string>
+    <string name="skill_tree_progress">%1$d von %2$d offen</string>
+    <string name="skill_tree_points_available">⭐ %1$d übrig</string>
+    <string name="skill_tree_state_available">als Nächstes</string>
+    <string name="skill_tree_state_locked">gesperrt</string>
+    <string name="skill_tree_state_pending">noch nicht gezeichnet</string>
+    <string name="skill_tree_level">Level %1$d · noch %2$d XP bis zur nächsten Freischaltung</string>
+    <string name="skill_tree_close">Schließen</string>
+    <string name="skill_tree_expand_all">Alles aufklappen</string>
+    <string name="skill_tree_collapse_all">Alles einklappen</string>
+    <string name="skill_tree_hint">Jeder Levelaufstieg gibt einen Stern ⭐. Tipp auf einen hervorgehobenen Knoten mit \"als Nächstes\", um ihn damit freizuschalten.</string>
 </resources>

@@ -79,6 +79,7 @@ import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarClip
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.ClipStorage
 import com.notime.glyphsim.matrix.ClockFrameSim
@@ -308,6 +309,9 @@ fun HomeScreen(
         }
     }
 
+    // ---- Skillbaum: nur noch der Weg zum Baumbildschirm, keine Zieh-Leiste mehr darunter ----
+    var showSkillTree by remember { mutableStateOf(false) }
+
     // Gemeinsamer Kern von feedNow (Uhr -> Avatar) und feedFromSlot (Speicherplatz -> Avatar):
     // beide beenden eine Ausloesung auf dieselbe Weise, nur woher sie kommt und was danach
     // aufzuraeumen ist ([onConsumed]) unterscheidet sich. [isStillRelevant] wiederholt die
@@ -347,8 +351,7 @@ fun HomeScreen(
                 confirmedReactionStarted = true
                 AvatarFeeding.playReaction(
                     species = currentSpecies,
-                    animationType = animationType,
-                    libraryAnimationLabel = libraryAnimationLabel,
+                    trigger = ReactionTrigger.of(animationType, libraryAnimationLabel),
                     screenWidthPx = screenWidthPx,
                     screenHeightPx = screenHeightPx,
                     onFrame = { avatarFrame = it },
@@ -487,8 +490,7 @@ fun HomeScreen(
                 if (useRocket) {
                     AvatarFeeding.playReaction(
                         species = currentSpecies,
-                        animationType = null,
-                        libraryAnimationLabel = "Rocket",
+                        trigger = ReactionTrigger.of(null, "Rocket"),
                         screenWidthPx = screenWidthPx,
                         screenHeightPx = screenHeightPx,
                         onFrame = { avatarFrame = it },
@@ -881,6 +883,17 @@ fun HomeScreen(
                     )
             )
 
+            Spacer(Modifier.height(18.dp))
+
+            // Der Weg zum Baumbildschirm bleibt, auch ohne die Zieh-Leiste darunter - sonst waere
+            // der Skillbaum von hier aus gar nicht mehr erreichbar.
+            TextButton(onClick = { showSkillTree = true }) {
+                Text(
+                    stringResource(R.string.skill_tree_title),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TamaPalette.TextMuted
+                )
+            }
         }
 
             // Vier feste Speicherplaetze nur im Spielmodus, rechts und etwas oberhalb der Mitte
@@ -993,6 +1006,10 @@ fun HomeScreen(
             initialText = sharedImportText,
             onDismiss = onSharedImportHandled
         )
+    }
+
+    if (showSkillTree) {
+        SkillTreeDialog(onDismiss = { showSkillTree = false })
     }
 
     if (showStats) {
