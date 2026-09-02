@@ -275,7 +275,7 @@ Animation. `LibraryAnimationFitTest` muss fuer die neue Animation ebenso gruen s
 bestehenden 26 (der Test iteriert automatisch ueber `DefaultLibraryAnimations.seed()`, keine
 Testaenderung noetig).
 
-## [open] ITO-0007 - Ein weiteres Beiwerk-Requisit im Wald ergaenzen
+## [done] ITO-0007 - Ein weiteres Beiwerk-Requisit im Wald ergaenzen
 Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt (Vielfalt der Szenen) - keine
 `OPEN DECISION` betroffen, keine Rueckfrage noetig. Neues Requisit + ein Placement-Eintrag, kein
 neuer Mechanismus: keine neue Station, keine Aenderung an `Acquisition`/`PlayPath` (die
@@ -310,7 +310,7 @@ vorbehalten).
   auf schmalen Bildern ohnehin automatisch wegfallen, das neue Requisit darf dafuer ausgelegt
   sein zu verschwinden, nicht zu ueberlappen.
 
-## [open] ITO-0008 - Zuletzt erzaehltes Lore-Stueck bleibt beim Wiederoeffnen sichtbar
+## [done] ITO-0008 - Zuletzt erzaehltes Lore-Stueck bleibt beim Wiederoeffnen sichtbar
 UX-Verbesserung am bestehenden Gespraech, rein additive Leseanzeige: keine neue Ablage, kein
 neuer Mechanismus, keine Aenderung an Fortschritt oder Kalender. `PlayLore.heard()`,
 `available()`, `PIECES`, `unlockedBy()` bleiben unangetastet - deshalb keine `OPEN DECISION`
@@ -350,7 +350,7 @@ wurde - auch dann nicht, wenn fuer heute nichts Neues mehr da ist (`onTell == nu
   von `remember()` liefert `lastToldPiece` genau das Stueck an Index `heard() - 1` aus `story()`.
 - Keine Aenderung an Kalenderlogik, keine neue SharedPreferences-Datei oder -Key.
 
-## [open] ITO-0011 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (vierte Runde)
+## [done] ITO-0011 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (vierte Runde)
 Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
 (Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (PR #14: Puffling-Starlet),
 ITO-0009 (PR #18: Wyrmling-Hootlet) und ITO-0010 (PR #29: Fennec-Gloop). CONTENT-Evolution, keine
@@ -388,6 +388,91 @@ Bedingungen, die nicht verhandelbar sind:
 - `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
   Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
 
+## [open] ITO-0013 - Ein weiteres Beiwerk-Requisit auf der Wiese ergaenzen
+Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt (Vielfalt der Szenen) - keine
+`OPEN DECISION` betroffen, keine Rueckfrage noetig. Analog zu ITO-0007 (PR #44, Wald-Farn): genau
+ein neues privates `Prop`, kein neuer Mechanismus, keine neue Station.
+
+**Lehre aus ITO-0007:** Dort legte ein zu naiv gewaehlter `anchorX`-Wert (0.14) das neue
+Requisit direkt in den Ruheplatz des Avatars (`avatarAnchorX(FOREST) = 0.06`) - die
+Standardgestalt ueberzeichnete dort einen Grossteil der neuen Zellen (Codex-Fund auf PR #44),
+und bei der kleinsten geprueften Breite (`MIN_SCENE_CELLS = 40`) gab es zwischen den bestehenden
+Requisiten ohnehin keine freie Luecke. Diese Aufgabe verlangt deshalb ausdruecklich, den
+gewaehlten `anchorX`-Wert VOR dem Commit gegen genau diese zwei Dinge selbst durchzurechnen.
+
+**Ort:** `app-sim/src/main/java/com/notime/glyphsim/matrix/PlayScene.kt`, `Place.MEADOW` in
+`furnishing()` (Zeile ~1140). Aktuell: `BUSH` (anchorX 0.10, `behind = true`), `TREE` (0.92,
+`behind = true`), `FENCE` (0.02), `BENCH` (0.50, Station `BENCH`), `WILD_TUFT` (0.70),
+`MUSHROOMS` (0.84). `avatarAnchorX(Place.MEADOW) = 0.20` (Funktion `avatarAnchorX`, Zeile ~505).
+
+**Aufgabe:** Genau EIN neues privates `Prop` in derselben Datei ergaenzen (Wahl frei, z. B.
+Butterblumen, ein einzelner Stein, ein Grasbuendel - solange es als niedriger
+Bodenbewuchs/Beiwerk liest, Richtwert Hoehe <= 4, und keine der in `habitatPlacements()` bereits
+vergebenen Landschaftsformen dupliziert: `ROCK`, `CRAG`, `ACACIA`, `REEDS`, `FLOWER` sind belegt,
+ebenso die Namen `WILD_TUFT`/`MUSHROOMS`). Format wie `WILD_TUFT`/`MUSHROOMS` als Vorbild.
+
+Das neue Prop als zusaetzliches `Placement(<NEUES_PROP>, anchorX = <Wert>)` OHNE `station` und
+OHNE `behind = true` in die Liste unter `Place.MEADOW` einfuegen.
+
+**Pflicht vor dem Commit:** Rechne `originX` (Formel in `originX()`, Zeile ~824: `shift + left +
+round((span - width) * anchorX)`, mit `left = right = 0` fuer ein Placement ohne
+`keepClearLeft`/`keepClearRight`) fuer den gewaehlten `anchorX`-Wert UND fuer FENCE/BENCH/
+WILD_TUFT/MUSHROOMS von Hand fuer jede der von `SceneCompositionTest` gepruef­ten Breiten durch:
+`PlayScene.MIN_SCENE_CELLS` (40), 46, `ScenePreview.WIDTH` (54); 72 und 96 sind wegen
+`MAX_ROOM_CELLS = 60` fuer die Raumbreite mit 60 identisch. Der belegte Zellbereich
+`[originX, originX + width)` des neuen Props darf sich bei KEINER dieser Breiten mit
+FENCE/BENCH/WILD_TUFT/MUSHROOMS ueberschneiden, und sollte mit deutlichem Sicherheitsabstand vom
+Avatar-Ruheplatz (`avatarAnchorX(Place.MEADOW) = 0.20`) entfernt bleiben - im Zweifel eher naeher
+an FENCE (0.02) oder zwischen BENCH (0.50) und WILD_TUFT (0.70) planen als in Avatar-Naehe.
+
+**Bedingungen:**
+- Keine Aenderung an anderen `Place`-Zweigen, an `Acquisition`, an `Station`, an `groundDetail()`
+  oder `habitatPlacements()`.
+- Kein bestehendes Prop, keine bestehende `anchorX` veraendern.
+- `SceneCompositionTest` muss unveraendert gruen bleiben, insbesondere `keine zwei Requisiten
+  stehen ineinander` (`propFootprints` schliesst `behind = true`-Requisiten bewusst aus dem
+  Vergleich aus - BUSH/TREE sind davon also nicht betroffen) und `an jedem Ort bleibt Platz zum
+  Stehen`. Der Test iteriert automatisch ueber alle Orte/Spezies/Breiten, keine Testaenderung
+  noetig.
+
+## [open] ITO-0014 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (fuenfte Runde)
+Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
+(Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (PR #14: Puffling-Starlet),
+ITO-0009 (PR #18: Wyrmling-Hootlet), ITO-0010 (PR #29: Fennec-Gloop) und ITO-0011 (PR #47:
+Puffling-Wyrmling). CONTENT-Evolution, keine Konstanten- oder Codeaenderung.
+
+Seit ITO-0005 hat jedes Wesen acht Lore-Stuecke (`PlayLore.PIECES = 8`) - die Ankerzeile fuer
+den neuen Satz darf Stueck 6, 7 ODER 8 sein.
+
+Waehle GENAU EIN Wesen-Paar (A, B) aus den sechs Wesen (Puffling, Starlet, Wyrmling, Fennec,
+Gloop, Hootlet), zwischen denen noch KEIN Satz in den bestehenden Lore-Texten eine Verbindung
+herstellt. Bereits verbunden und NICHT erneut zu waehlen: Puffling-Gloop, Wyrmling-Fennec,
+Starlet-Hootlet (die drei Hauptbeziehungen), Puffling-Starlet (ITO-0004), Wyrmling-Hootlet
+(ITO-0009), Fennec-Gloop (ITO-0010) sowie Puffling-Wyrmling (ITO-0011). Jedes andere Paar ist
+erlaubt, deine Wahl - acht Paare stehen noch offen (Puffling-Fennec, Puffling-Hootlet,
+Starlet-Wyrmling, Starlet-Fennec, Starlet-Gloop, Wyrmling-Gloop, Fennec-Hootlet, Gloop-Hootlet).
+
+Ergaenze in `app-sim/src/main/res/values-de/strings.xml` UND `app-sim/src/main/res/values/strings.xml`
+(Deutsch und Englisch, inhaltlich gleich) an GENAU EINER Stelle einen zusaetzlichen Satz: an
+`lore_<A>_6`, `lore_<A>_7` ODER `lore_<A>_8` (ein Stueck deiner Wahl, bei EINEM der beiden
+gewaehlten Wesen) - angehaengt an den bestehenden Text derselben Zeile, nicht als neue Zeile und
+nicht als Ersatz des Bestehenden. Der neue Satz muss Wesen B beim Namen nennen und in der Stimme
+von Wesen A geschrieben sein, ein bis zwei kurze Saetze, keine Ausrufezeichen, kein pathetischer
+Ton - siehe die vorhandenen Stuecke aller sechs Wesen in denselben Dateien als Vorbild.
+
+Bedingungen, die nicht verhandelbar sind:
+- Keine bestehende Zeile darf geloescht, umbenannt oder inhaltlich veraendert werden - nur die
+  eine gewaehlte Zeile bekommt einen angehaengten Satz.
+- Der neue Satz darf keinem bestehenden Fakt in irgendeinem der 48 Lore-Stuecke widersprechen
+  (Orte, Ereignisse, andere Beziehungen, einschliesslich der in ITO-0004, ITO-0009, ITO-0010 und
+  ITO-0011 ergaenzten Verbindungen). Bei Zweifel: Wesen B nur beilaeufig erwaehnen, keine neue
+  Tatsachenbehauptung ueber B aufstellen, die B's eigene Lore-Stuecke nicht schon stuetzen.
+- Keine andere Datei aendern, insbesondere nicht `PlayLore.kt` oder `PlayLoreTest.kt` - beide
+  pruefen nur Struktur (Anzahl, Eindeutigkeit), keine Wortlaute, und muessen unveraendert gruen
+  bleiben.
+- `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
+  Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
+
 ## [open] ITO-0012 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen (zweite Runde)
 Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt ("Vielfalt von Ambient-Aktivitaeten,
 Routinen, Szenen, Reaktionen und charaktergerechten Dialogen") - keine `OPEN DECISION` betroffen,
@@ -404,6 +489,31 @@ passend zu einem Alltags- oder Erinnerungsthema (siehe die vorhandenen Labels in
 Anhaltspunkt fuer den Rahmen: Star, Wave, Rain, Music, Battery, Dog, Cat, Gift, Football, Fitness,
 Robot, Trophy, Plant, Target, Airplane, Cake, Idea, Mail, Clock, ...). Vermeide ein Thema, das
 einem bestehenden Label zu nahekommt.
+
+**Zweite, GETRENNTE Kollisionsflaeche - nicht nur `general()` pruefen:** Ausser den
+Bibliotheks-Labels gibt es die 12 fest eingebauten Erinnerungs-Animationen aus `enum class
+AnimationType` (`core/src/main/java/com/notime/glyphcore/data/AnimationType.kt`), die im selben
+Erinnerungs-Bildschirm neben den Bibliotheksanimationen zur Auswahl stehen: FOCUS 🎯, DRINK 💧,
+MOVE 🏃, GENERAL 🔔, REST ☕, WORK 💻, MINDFULNESS 🧘, LOVE ❤️, SLEEP 🌙, MEDICINE 💊, BOOK 📖,
+CREATIVITY 🎨 (Emoji-Zuordnung siehe `AnimationVisuals.kt` in `app-sim` und `app`). Ein
+fruehstuecksbezogener "Kaffeetasse mit Dampf"-Entwurf wurde deshalb bereits dreimal vom Reviewer
+abgelehnt (Laeufe 71-73 auf Commit `12b535e`): Emoji ☕ und Thema (Dampf/Ruhepause) dupliziert REST
+nahezu 1:1. Waehle daher ein Thema, das WEDER einem `general()`-Label NOCH einem dieser 12 Typen
+(weder Emoji noch offensichtliches Bildmotiv) zu nahekommt.
+
+**Dritte, ebenfalls GETRENNTE Kollisionsflaeche - diesmal automatisiert als Testfehler, nicht erst
+als Reviewer-Ablehnung:** `AvatarSignatureAnimationsTest.labelsAreUniqueAndDoNotClashWithTheGeneralSet`
+(`core/src/test/java/com/notime/glyphcore/data/AvatarSignatureAnimationsTest.kt`) vergleicht ALLE
+Labels aus `DefaultLibraryAnimations.seed()` - das ist laut Quelltext (Zeile 31) exakt
+`general() + AvatarSignatureAnimations.seed()` - auf Duplikate. Ein neues `general()`-Label, das
+zufaellig einem der 30 charakterspezifischen Labels in `AvatarSignatureAnimations.kt` gleicht,
+lässt deshalb schon `./gradlew verify` (Task `:core:testDebugUnitTest`) rot werden, bevor der
+Reviewer ueberhaupt drankommt - genau das ist Lauf 75 (2026-08-31, Commit `8c60e439`) passiert. Die
+30 belegten Labels: Bubble, Butterfly, Kite, Snail, Compass, Comet, Lantern, Feather,
+Constellation, Candle, Bolt, Summit, Ladder, Drum, Flag, Shield, Lighthouse, Paw, Nest, Anchor,
+Turtle, Cloud, Drip, Puddle, Balloon, Eye, Key, Hourglass, Scroll, Puzzle. Das gewaehlte Label
+muss also gegen DREI getrennte Listen geprueft werden: die `general()`-Labels oben, die 12
+`AnimationType`-Werte, und diese 30 hier - nicht nur gegen eine davon.
 
 **Technische Form** (siehe `starFrames()`/`waveFrames()`/`alarmClockFrames()` in derselben Datei
 als Vorbild):
@@ -431,6 +541,22 @@ Begruendung):
 3. Punkte auf einer Linie oder gefuellte Flaechen koennen das Motiv unkenntlich machen (siehe
    `EVOLUTION.md`/README zu den Signatur-Animationen) - bevorzuge Umrisse und versetzte Punkte
    gegenueber vollstaendig gefuellten Formen.
+
+**Vierte Falle, NICHT automatisiert pruefbar - zweimal in Folge (Laeufe 74 und 76) der
+tatsaechliche Ablehnungsgrund, jeweils ohne jede Kollision:** Ein Motiv, das eine Form INNERHALB
+eines selbst erfundenen Gehaeuses/Rahmens zeigt (z. B. eine Linse in einer Kamera, ein Zeiger in
+einem Ziffernblatt), braucht mehr als "sieht ungefaehr richtig aus". Berechne fuer JEDEN
+verwendeten Radius/jede verwendete Groesse die tatsaechlichen Randkoordinaten (z. B. das Ergebnis
+von `circlePoints()` nach `roundToInt`) explizit und vergleiche sie Zahl fuer Zahl gegen die
+selbst gewaehlten Gehaeusegrenzen, BEVOR du den Frame uebernimmst - nicht nur fuer den groessten
+oder kleinsten Wert, sondern fuer jeden einzelnen in der Sequenz. Lauf 74 hatte eine Linse, die
+bei radius=3 unterhalb der Gehaeuse-Unterkante lag; Lauf 76 hatte einen Iris-Ring, der bei
+mehreren Radien ueber die Rechteck-Gehaeusegrenzen hinausragte, UND einen Blitzpunkt zu nah an
+der Iris, wodurch die geforderten zwei erkennbaren Bewegungen optisch verschmolzen. Beides waren
+vermeidbare Rechenfehler, keine Kollisionen. Findest du kein Motiv, dessen Geometrie du sauber
+gegenrechnen kannst, waehle stattdessen ein freistehendes Motiv OHNE selbst erfundenes Gehaeuse
+(wie `starFrames()`/`waveFrames()`/`batteryFrames()`) - das ist einfacher richtig zu bekommen als
+Form-in-Form.
 
 **Zusaetzlich Pflichtteil der Aufgabe, NICHT optional:** Die Klassendoku VON DERSELBEN DATEI nennt
 an zwei Stellen die alte Anzahl und muss auf den neuen Stand gebracht werden - sonst widerspricht

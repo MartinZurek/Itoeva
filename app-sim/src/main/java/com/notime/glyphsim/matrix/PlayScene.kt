@@ -1126,7 +1126,16 @@ object PlayScene {
             Placement(PINE, anchorX = 0f),
             Placement(BUSH, anchorX = 0.28f),
             Placement(LOG, anchorX = 0.58f, station = Station.BENCH),
-            Placement(TREE, anchorX = 0.86f)
+            Placement(TREE, anchorX = 0.86f),
+            // 1,0 statt naeher am linken Rand: Bei 0,14 lag der Farn im Ruheplatz des Avatars
+            // (avatarAnchorX(FOREST) = 0,06) - die Standardgestalt ueberzeichnete dort einen
+            // Grossteil seiner Zellen. Der Wald hat sonst keine freie Luecke von 5 Zellen Breite:
+            // PINE/BUSH/LOG/TREE liegen bei der kleinsten geprueften Breite (MIN_SCENE_CELLS=40)
+            // bereits luckenlos aneinander (siehe SceneCompositionTest). Erst rechts von TREE
+            // bleibt bei jeder geprueften Breite (40/46/54/60) Platz - dort ueberschneidet sich
+            // der Farn nur mit dem Hintergrund-PINE (anchorX 1f, behind=true), was gewollt ist,
+            // nicht mit einer weiteren Vordergrund-Requisite.
+            Placement(FERN, anchorX = 1f)
         )
 
         // Die WIESE: eine offene Freiflaeche, sparsam bestanden - das Gegenteil des dichten
@@ -1506,6 +1515,12 @@ object PlayScene {
         // Sitzflaeche vor dem Sitzenden, wie bei Bank und Sessel.
         frontArt = hLine(3, 12, 2),
         useSpot = 6 to 2
+    )
+
+    /** Farn - niedriger Bodenbewuchs zwischen den Baeumen, flacher noch als der Strauch. */
+    private val FERN = Prop(
+        width = 5, height = 4,
+        art = listOf(1 to 0, 3 to 0) + hLine(0, 4, 1) + hLine(1, 3, 2) + listOf(2 to 3)
     )
 
     // ---- Draussen: die Lebensraeume ----

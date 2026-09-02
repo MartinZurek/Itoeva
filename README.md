@@ -754,11 +754,20 @@ sofort installierbar, kein Release-Key nötig).
 
 ### Auslieferung aufs Telefon ohne lokalen Bau
 
-`.github/workflows/deliver-apk.yml` nimmt den zweiten Weg von oben und automatisiert ihn: Nach
-jedem Merge nach `main` baut GitHub `:app-sim:assembleDebug` und **überschreibt die bestehende
-Datei `Tama-debug.apk` im Drive-Ordner**. Auf dem Telefon bleibt alles wie gewohnt – Drive-App,
-antippen, "Aktualisieren"; nur das Bauen davor entfällt. Eine reine Dokumentationsänderung löst
-keinen Lauf aus.
+`.github/workflows/deliver-apk.yml` nimmt den zweiten Weg von oben und automatisiert ihn: Im
+Regelbetrieb baut GitHub nach jedem Merge nach `main` `:app-sim:assembleDebug` und
+**überschreibt die bestehende Datei `Tama-debug.apk` im Drive-Ordner**. Auf dem Telefon bleibt
+alles wie gewohnt – Drive-App, antippen, "Aktualisieren"; nur das Bauen davor entfällt. Eine
+reine Dokumentationsänderung löst keinen Lauf aus.
+
+**Der `versionCode` kommt aus der Uhrzeit des Laufs, nicht aus der Commit-Anzahl** (Minuten seit
+2020-01-01 UTC, siehe Kommentar bei "Version bestimmen" im Workflow). main und ein parallel
+getesteter Feature-Branch können sich dieselbe Drive-Datei/dasselbe Telefon teilen, ohne sich
+gegenseitig als Downgrade auszuschlagen - der naechste Lauf hat immer einen höheren `versionCode`
+als der vorherige, unabhängig davon, welcher Branch zuletzt gebaut hat. (Bis 2026-09-02 lief das
+noch über die Commit-Anzahl, wodurch ein kürzerer main-Stand gelegentlich niedriger lag als ein
+länger getesteter Feature-Branch - deshalb die frühere Pause des `push`-Triggers, die inzwischen
+aufgehoben ist.)
 
 **Die ganze Konstruktion hängt an einem Punkt: derselben Signatur.** Android aktualisiert eine
 installierte App nur, wenn das Zertifikat übereinstimmt – sonst bliebe nur Deinstallieren, und
