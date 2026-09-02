@@ -9,9 +9,10 @@ Dieses Repository enthält das Projekt **Itoeva**.
 - Vor Änderungen immer zuerst den aktuellen Git-Status prüfen (`git status`).
 - Vor jedem Push den aktuellen Diff prüfen.
 
-## Laufende Arbeit: der Skillbaum
+## Laufende Arbeit: der Skillbaum (nur bei Skillbaum-Aufträgen)
 
-**[SKILLBAUM.md](SKILLBAUM.md) ist die Arbeitsliste und ersetzt die Erkundung.**
+**Wenn der konkrete Auftrag den Skillbaum betrifft, ist
+[SKILLBAUM.md](SKILLBAUM.md) die Arbeitsliste und ersetzt die Erkundung.**
 
 Dort steht alles: was schon fertig ist, was als Nächstes ansteht, die vollständige Zuordnung
 aller 67 Motive zum Animations-Baum, geprüfte Zeilennummern für jede relevante Datei, und ein
@@ -22,6 +23,10 @@ danach absuchen. Dieselbe Datei nennt auch, welche Dateien man ausdrücklich *ni
 soll (`PlayScene.kt` hat 3.672 Zeilen, gebraucht werden zwei Enums).
 
 Am Ende jeder Sitzung: Haken setzen, Journal fortschreiben, verschobene Zeilennummern korrigieren.
+
+Für den automatisierten Tagesablauf-Dauerauftrag gelten stattdessen
+`evolutions/DAILY_LIFE_TASK.md`, `evolutions/DAILY_LIFE_LEARNING.md` und `Tagesablauf.md`. Eine
+solche Sitzung darf nicht wegen dieses Abschnitts in ein offenes Skillbaum-Paket wechseln.
 
 ## Bauen
 

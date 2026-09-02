@@ -19,6 +19,8 @@ ist bewusst kurz gehalten, damit sie das auch bleibt:
 3. **Die eine konkrete Aufgabe**, nicht die ganze Quelle drumherum:
    - Aus `evolutions/BACKLOG.md`: nur den einen betroffenen `## [open] ITO-NNNN`-Eintrag lesen,
      nicht die Datei linear von oben.
+   - Beim Tagesablauf-Dauerauftrag: `evolutions/DAILY_LIFE_TASK.md` und
+     `evolutions/DAILY_LIFE_LEARNING.md` lesen; danach nur den gewählten Hebel erkunden.
    - Aus `NextTasks.md`: nur die Top-15-Liste, nicht den Future Backlog - außer die gewählte
      Aufgabe stammt explizit von dort.
 4. **Alles Weitere nur nach den Regeln im nächsten Abschnitt** - nicht routinemäßig "sicherheits-
@@ -40,6 +42,9 @@ ist bewusst kurz gehalten, damit sie das auch bleibt:
   letzten ein bis zwei Einträge als Formatvorlage, nicht die gesamte Historie.
 - **NextTasks.md**: nur wenn die aktuelle Aufgabe selbst eine Prozessverbesserung ist, nicht bei
   normalen Content-/Feature-Evolutionen aus `BACKLOG.md`.
+- **Tagesablauf.md** und **`evolutions/DAILY_LIFE_LEARNING.md`**: bei dem automatisierten
+  Tagesablauf-Dauerauftrag oder wenn Aktivitaetswahl, Uebergaenge, Wiedereinstieg,
+  Charakterunterschiede bzw. die sichtbare Wirkung von Remindern betroffen sind.
 
 ## Projektziel
 
@@ -47,10 +52,12 @@ Itoeva ist eine lokale Android-Erinnerungsapp mit einem begleitenden Wesen, das 
 sondern sanft auf gemeinsam verbrachte Zeit reagiert - keine Streaks, keine Schuld, kein Server.
 Details und die nicht verhandelbaren Eigenschaften dieser Erfahrung: siehe Vision.md.
 
-**Aktuelle Priorität:** Build-Prozess, Testabdeckung, Agentenfreundlichkeit und Tokenverbrauch der
-Entwicklung selbst verbessern, bevor neue, größere Gameplay-Features entstehen (siehe
-NextTasks.md, Abschnitt "Die eine Regel über allen anderen"). Inhaltliche Ergänzungen im Rahmen
-der bestehenden "Erzählerischen Autonomie" (Beziehungen, Lore) sind davon ausgenommen.
+**Aktuelle Priorität:** Das beobachtbare Leben der Avatare innerhalb der bestehenden Mechanik
+spürbar verbessern: glaubwürdiger Tagesablauf, individuelle Reaktionen, natürliche Übergänge und
+eine sanft sichtbare Reminder-Wirkung. Kleine Änderungen sollen nach ihrem Spielerlebnis-Hebel,
+nicht nach ihrer leichten Zählbarkeit gewählt werden. Parallel bleiben Build-Prozess,
+Testabdeckung und Agentenfreundlichkeit wichtig; neue große Systeme bleiben bis zu einer
+ausdrücklichen Entscheidung ausgeschlossen (siehe NextTasks.md und Tagesablauf.md).
 
 ## Stilregeln
 

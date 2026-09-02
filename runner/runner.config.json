@@ -52,6 +52,7 @@
     ],
     "forbiddenFileNames": [
       "BACKLOG.md",
+      "DAILY_LIFE_TASK.md",
       "build.gradle.kts",
       "settings.gradle.kts",
       "gradle.properties",

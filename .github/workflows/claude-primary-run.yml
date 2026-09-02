@@ -18,8 +18,8 @@
 #
 # Zum Umgang mit dem Abo-Token siehe die Kommentare am Schritt "Builder-Session".
 #
-# Bewusst NICHT enthalten: schedule, Merge, Rebase, Force-Push, Tag, Release, PR-Freigabe,
-# Codex, mehr als eine Evolution pro Lauf.
+# Bewusst NICHT enthalten: Merge, Rebase, Force-Push, Tag, Release, PR-Freigabe,
+# Codex, mehr als eine Evolution pro Lauf. Der schedule ist weiter unten bewusst enthalten.
 
 name: ClaudePrimaryRun
 
@@ -64,7 +64,8 @@ on:
   # Evolution auf einen menschlichen Merge wartet, ist der Normalfall genau ein
   # vollstaendiger Lauf je gemergter Evolution; die uebrigen Ausloesungen enden nach
   # Sekunden mit SKIPPED_PENDING_EVOLUTION, ohne Claude, ohne Java, ohne Emulator. Ein
-  # leerer Backlog endet ebenso frueh mit SKIPPED_EMPTY_BACKLOG.
+  # leerer Backlog wechselt in den dauerhaften, kontrollierten Tagesablauf-Auftrag: so
+  # entsteht kein Fuellmaterial nur deshalb, weil keine manuell formulierte Aufgabe wartet.
   #
   # **Warum nicht zur vollen Stunde.** GitHub ueberbucht die Cron-Slots zur vollen Stunde
   # stark; Laeufe werden dort verzoegert oder fallen aus. Die 17 aus dem vorherigen Takt
@@ -207,10 +208,14 @@ jobs:
               RC=$?
               set -e
               case "$RC" in
-                0) DECISION=GO;   REASON=BACKLOG_ENTRY; TASK_ID="$(cat "$RUNNER_TEMP/backlog/id")"
+                0) DECISION=GO; REASON=BACKLOG_ENTRY; TASK_ID="$(cat "$RUNNER_TEMP/backlog/id")"
                    echo "Backlog-Eintrag $TASK_ID: $(cat "$RUNNER_TEMP/backlog/title")" ;;
-                2) DECISION=SKIP; REASON=SKIPPED_EMPTY_BACKLOG
-                   echo "Backlog enthaelt keinen offenen Eintrag - nichts zu tun." ;;
+                2) DAILY_TASK='evolutions/DAILY_LIFE_TASK.md'
+                   [ -s "$DAILY_TASK" ] || {
+                     echo "::error::Dauerauftrag fehlt oder ist leer: $DAILY_TASK"; exit 1; }
+                   cp "$DAILY_TASK" "$TASKFILE"
+                   DECISION=GO; REASON=DAILY_LIFE_STANDING; TASK_ID=daily-life
+                   echo "Backlog ohne offenen Eintrag - kontrollierter Tagesablauf-Auftrag." ;;
                 *) echo "::error::Backlog nicht verwertbar (Exitcode $RC) - fail-closed vor jedem Claude-Aufruf."
                    exit 1 ;;
               esac
@@ -280,8 +285,8 @@ jobs:
     name: Builder, Tests, Reviewer
     runs-on: ubuntu-latest
     needs: preflight
-    # Kein GO heisst: dieser Job startet nicht. Damit kann bei SKIPPED_PENDING_EVOLUTION und
-    # SKIPPED_EMPTY_BACKLOG strukturell kein Claude-Aufruf und kein Test stattfinden.
+    # Kein GO heisst: dieser Job startet nicht. Damit kann bei SKIPPED_PENDING_EVOLUTION
+    # strukturell kein Claude-Aufruf und kein Test stattfinden.
     if: needs.preflight.outputs.decision == 'GO'
     permissions:
       contents: read
@@ -531,12 +536,13 @@ jobs:
           Aufgabe:
           ${TASK}
 
-          Bevor du mit eigener Erkundung beginnst: lies AgentGuide.md vollstaendig (kurz) und
-          befolge die dortige Minimal-Startsequenz sowie die Regeln, wann zusaetzlich Vision.md,
-          Architecture.md, EVOLUTION.md oder NextTasks.md noetig sind. Fuer die meisten Aufgaben
-          reicht AgentGuide.md plus CLAUDE.md plus der eine betroffene Backlog-Eintrag - lies die
-          anderen Dokumente nicht routinemaessig vollstaendig mit, sondern nur nach den dort
-          beschriebenen Kriterien und dann gezielt nur den relevanten Abschnitt.
+          Bevor du mit eigener Erkundung beginnst: lies AGENTS.md, AgentGuide.md und CLAUDE.md
+          vollstaendig und befolge die dortige Minimal-Startsequenz sowie die Regeln, wann
+          zusaetzlich Vision.md, Architecture.md, EVOLUTION.md oder NextTasks.md noetig sind.
+          Fuer die meisten Aufgaben reicht dieser kurze Einstieg plus der eine betroffene
+          Aufgabentext - lies die anderen Dokumente nicht routinemaessig vollstaendig mit,
+          sondern nur nach den dort beschriebenen Kriterien und dann gezielt den relevanten
+          Abschnitt.
 
           Wie du arbeitest. Du hast genau vier Werkzeuggruppen: Read, Glob und Grep zum Lesen,
           Edit und Write zum Aendern. Eine Shell hast du NICHT, und das ist Absicht:
@@ -1072,6 +1078,10 @@ jobs:
           - Wurden Tests abgeschwaecht, uebersprungen oder entfernt, damit der Stand gruen wird?
           - Liegt eine Aenderung ausserhalb dessen, was der Auftrag verlangt?
           - Gibt es Sicherheits-, Datenverlust- oder Migrationsrisiken?
+          - Bei einem Tagesablauf-Dauerauftrag: Ist der Vorher-/Nachher-Effekt fuer Spieler in
+            einem normalen Besuch sichtbar oder spuerbar, statt nur isoliertes Fuellmaterial zu
+            erzeugen? Ist ein geaendertes Lernsignal durch Code, Test oder wiederholtes Feedback
+            belegt, und bildet das Lernjournal die tatsaechliche Aenderung wahrheitsgetreu ab?
           - Beruehrt sie einen der Punkte unter AgentGuide.md, Abschnitt \"Was niemals ohne
             menschliche Freigabe veraendert werden darf\", oder EVOLUTION.md, Abschnitte
             \"Non-Negotiable Design Principles\"/\"Protected Areas\"? Falls unklar, dort gezielt

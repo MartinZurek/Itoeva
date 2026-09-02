@@ -12,12 +12,15 @@ normalen Content-/Feature-Evolutionen aus `evolutions/BACKLOG.md` (siehe AgentGu
 
 ## Die eine Regel über allen anderen
 
-**Keine neuen, größeren Gameplay-Features beginnen, bevor Build-Prozess, Testabdeckung,
-Agentenfreundlichkeit und Tokenverbrauch der Entwicklung selbst spürbar besser sind.** Das
-betrifft neue Systeme (Skillbaum, Quest-Struktur, neue Fortschrittspfade) - nicht bereits
-begonnene, klar abgegrenzte Arbeit wie PR #20 (Speicherplätze), die zu Ende gebracht werden darf.
-Inhaltliche Ergänzungen im Rahmen der bestehenden "Erzählerischen Autonomie" (weitere Beziehungen/
-Lore, siehe EVOLUTION.md) sind von dieser Regel ausdrücklich **nicht** betroffen.
+**Keine neuen, größeren Gameplay-Systeme beginnen, bevor Build-Prozess, Testabdeckung,
+Agentenfreundlichkeit und Tokenverbrauch der Entwicklung selbst spürbar besser sind.** Skillbaum,
+Quest-Struktur, neue Fortschrittspfade, Jahreszeiten- oder Wirtschaftssysteme bleiben damit
+ausgeschlossen. Kleine, getestete Verbesserungen am bereits vorhandenen Avatarleben sind dagegen
+seit der Produktentscheidung vom 2026-09-02 ausdrücklich priorisiert: Aktivitaetsauswahl,
+Übergänge, Wiedereinstieg, Charakterunterschiede und sichtbare sanfte Reminder-Wirkung sollen nach
+ihrem Spielerlebnis-Hebel verbessert werden, nicht nach leichter Zählbarkeit. Der kontrollierte
+Dauerauftrag und sein Feedbackkanal stehen in `evolutions/DAILY_LIFE_TASK.md` bzw.
+`evolutions/DAILY_LIFE_LEARNING.md`.
 
 ## Top 15 - nach Hebel geordnet
 

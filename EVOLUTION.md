@@ -1,9 +1,12 @@
 # Itoeva Evolution Protocol
 
-Version: 0.2 - seit 2026-08-18 mit einer engen, im Abschnitt "Character Evolution" →
-"Erzählerische Autonomie" beschriebenen Ausnahme: Welt und Beziehungen der sechs Wesen dürfen
-seitdem ohne vorherige menschliche Freigabe der kreativen Richtung weiterentwickelt werden. Der
-übrige Ablauf (Branch, zweiter Agent als Reviewer, PR, menschlicher Merge) bleibt unverändert.
+Version: 0.3 - seit 2026-09-02 mit einem kontrollierten Dauerauftrag für das beobachtbare
+Avatarleben. Ist kein ausdrücklich priorisierter Backlog-Eintrag offen, darf die tägliche
+Evolution innerhalb der bestehenden Mechanik selbst einen spielerisch wirksamen Hebel an
+Tagesablauf, Individualität, Übergängen oder sanfter Reminder-Wirkung wählen. Ein versioniertes
+Lern- und Feedback-Overlay darf Evidenz zwischen Läufen weitergeben; Sicherheitsgrenzen,
+Produktentscheidungen und der Ablauf aus Branch, zweitem Reviewer, PR und menschlichem Merge
+bleiben unverändert. Die enge erzählerische Autonomie aus Version 0.2 (2026-08-18) gilt fort.
 
 Dieses Dokument legt fest, wie Itoeva weiterentwickelt werden darf, ohne die heute im Repository
 erkennbare Identität, bereits getroffene Produktentscheidungen oder nachweisbares Verhalten
@@ -159,6 +162,36 @@ menschliche Entscheidung eingeführt werden.
 
 **OPEN DECISION:** Eine größere lineare Handlung oder Quest-Struktur ist nicht belegt. Die
 vorhandene Story ist episodisches Worldbuilding.
+
+### Kontrollierte Tagesablauf-Evolution (entschieden 2026-09-02)
+
+Der Nutzer hat ausdrücklich freigegeben, dass die zeitgesteuerten GitHub-Läufe bei leerem
+Prioritäts-Backlog selbst kleine, rücknehmbare Verbesserungen am beobachtbaren Avatarleben
+auswählen. Ziel ist nicht möglichst viel Output, sondern ein spielerisch sichtbares Vorher/Nachher:
+Es soll interessanter werden, den Wesen beim Leben zuzusehen, ihre Unterschiede zu erkennen und
+zu erleben, wie eigene Erinnerungen ihren Tag sanft beeinflussen.
+
+- Offene `ITO-*`-Einträge in `evolutions/BACKLOG.md` behalten Vorrang. Ohne offenen Eintrag gilt
+  `evolutions/DAILY_LIFE_TASK.md` als unveränderlicher Dauerauftrag für genau einen Lauf.
+- Ein Lauf soll einen kleinen, hochwirksamen Spielerlebnis-Hebel wählen und möglichst mindestens
+  zwei bestehende Einflüsse verbinden, etwa Tageszeit, Persönlichkeit, Ort, Tätigkeit, sanfte
+  Reminder-Reaktion oder Kontinuität zwischen Szenen.
+- Isolierte Requisiten, bloße weitere Bibliotheksanimationen, reine Lore-Menge, Pixelpolitur und
+  generische Refactorings sind kein Ersatz für einen belegbaren Nutzen im Avatarleben.
+- Bestehende Mechanismen sollen lesbarer und ausdrucksstärker zusammenspielen. Große neue Systeme,
+  neue Produktentscheidungen oder erfundene Nutzerzustände bleiben außerhalb dieser Freigabe.
+- `evolutions/DAILY_LIFE_LEARNING.md` ist das versionierte Feedback- und Lern-Overlay. Der Lauf
+  darf dort erledigtes Feedback markieren, belegte Beobachtungen protokollieren und höchstens eine
+  konservative, aus Tests oder Diff ableitbare Heuristik ergänzen.
+- Das Overlay darf `.github/`, `runner/`, den Dauerauftrag, Berechtigungen, Sicherheits-Gates,
+  Reviewer-, PR- oder Merge-Regeln niemals selbst verändern. Ideen zur Meta-Automatisierung werden
+  nur dokumentiert und brauchen einen separaten, menschlich freigegebenen Prozess-PR.
+- Nutzer- oder AI-Feedback wirkt erst, wenn es als normaler, geprüfter Repository-Diff in das
+  Overlay gemerged wurde. Die Jobs lesen keine privaten Chats, keine Telemetrie und keine
+  außerhalb des Repositorys liegenden Behauptungen.
+- Alle Non-Negotiable Design Principles gelten unverändert, insbesondere druckfreie Reminder,
+  getrennte Bedeutung von Tagesziel und Intervall, nutzereigene Routinen, lokale Datenhaltung,
+  charaktergerahmter Zufall, `MEDICINE`-Ausschluss und die bestehenden XP-Regeln.
 
 ## Evolution Classes
 
@@ -731,6 +764,53 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   vermutlich nie tatsächlich zurückgibt. Fußball und die neue Angel-Routine umgehen das, indem sie
   bei Treffer direkt die jeweilige Funktion zurückgeben statt über `pool` zu suchen. Verdient eine
   eigene, gezielte Prüfung und ggf. Korrektur.
+
+### 2026-09-02 - Kontrollierte Tagesablauf-Evolution und lernendes Feedback-Overlay
+
+- **Version:** Protokoll 0.2 → 0.3. Prozessänderung ohne App-Laufzeit- oder Nutzerdatenänderung;
+  Rücksetzweg ist der Revert dieses Prozess-PRs. Der letzte bekannte stabile Produktstand bleibt
+  der Basiscommit dieses PRs.
+- **Ausgangsproblem und Nutzerwirkung:** Der feste Backlog lenkte die täglichen Läufe zuletzt auf
+  leicht abzählbare Einzelstücke wie Requisiten, Lore-Sätze und Bibliotheksanimationen. Der Nutzer
+  möchte stattdessen mehr Freiraum für kleine Stellschrauben, durch die Tagesablauf,
+  Persönlichkeit, Übergänge und Reminder-Einfluss beim Zuschauen spürbar interessanter werden,
+  ohne dass der Lauf sich in Kleinigkeiten verzettelt.
+- **Evidenzklassifikation:** `DOCUMENTED INTENT` für den ausdrücklich erteilten Nutzerauftrag;
+  `FACT` für die bisherige Backlog-Reihenfolge und die vorhandene Trennung von Modell- und
+  Push-Rechten; künftige Nutzenbehauptungen müssen je Evolution als `TESTED BEHAVIOR` oder klar
+  begrenzte Beobachtung belegt werden.
+- **Getroffene Produktentscheidung:** Offene `ITO-*`-Aufgaben bleiben die menschlich gesetzte
+  Priorität. Ist keine offen, liefert `evolutions/DAILY_LIFE_TASK.md` einen kontrollierten
+  Dauerauftrag für genau eine kleine, spielerisch sichtbare Verbesserung innerhalb bestehender
+  Mechanik. `evolutions/DAILY_LIFE_LEARNING.md` führt Nutzerfeedback, Evidenzjournal und wenige
+  konservative Heuristiken versioniert zwischen angenommenen Läufen weiter.
+- **Verworfene Alternativen:** Kein unbeschränkter Selbstumbau der Automatisierung, kein Zugriff
+  auf private Chats oder Telemetrie, kein automatischer Merge und kein Freibrief für große neue
+  Systeme. Die offenen Mikroaufgaben ITO-0012, ITO-0013 und ITO-0014 werden bewusst ohne Umsetzung
+  geschlossen; ihre Spezifikationen bleiben als verworfene Alternativen erhalten.
+- **Betroffene Bereiche:** Workflow-Auswahl und Prompts in
+  `.github/workflows/claude-primary-run.yml`, Runner-Schutzkonfiguration und Strukturtest,
+  `evolutions/BACKLOG.md`, die zwei neuen Dauerauftrag-/Lern-Dateien sowie begleitende Agenten-,
+  Architektur-, Aufgaben- und Tagesablauf-Dokumentation.
+- **Geschützte Grenzen:** Modell-Token und Push-Recht bleiben in getrennten Jobs; der Builder darf
+  Workflow, Runner, Backlog und Dauerauftrag nicht schreiben. Zweite Review-Session, PR und
+  menschlicher Merge bleiben Pflicht. Änderungen an diesen Grenzen dürfen aus dem Lern-Overlay
+  nur als Idee hervorgehen und brauchen einen separaten, menschlich freigegebenen Prozess-PR.
+- **Daten und Migration:** Keine App-Datenbank, Preferences, Reminder-Daten oder öffentlichen
+  App-Texte betroffen; keine Migration. Das Overlay enthält nur versionierte Repository-Texte,
+  keine Nutzungsdaten.
+- **Reminder, Game Loop, Charakter und Progression:** Durch diesen Prozess-PR selbst unverändert.
+  Künftige Daueraufträge dürfen ausschließlich innerhalb der oben dokumentierten, bereits
+  entschiedenen Grenzen arbeiten und müssen ihren sichtbaren Vorher/Nachher-Nutzen im jeweiligen
+  PR belegen.
+- **Tests:** Workflow-YAML und Runner-JSON werden syntaktisch geparst; Backlog-Selektor,
+  Leer-Backlog-Fallback, Schreibschutz und Token-/Push-Trennung werden strukturell geprüft.
+  Android-Verifikation ist für diesen reinen Prozess-Diff nicht erforderlich; jeder spätere
+  App-Code-PR durchläuft weiterhin seine üblichen Prüfungen.
+- **Offene Punkte:** Welche Heuristiken tatsächlich bessere Beobachtbarkeit und Freude erzeugen,
+  kann ohne Produktfeedback nicht abschließend entschieden werden. Das Overlay darf deshalb nur
+  kleine, überprüfbare Hypothesen sammeln; menschliches Feedback kann sie in späteren PRs
+  bestätigen, korrigieren oder entfernen.
 
 ### Initialer Erkenntnisstand
 

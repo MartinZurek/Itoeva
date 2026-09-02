@@ -97,6 +97,22 @@ Weltzustand hat Vorrang, beispielsweise einkaufen oder arbeiten bei fehlenden Vo
 - Persistiert wird der kleinste semantische Zustand: Absicht, Ort und Zeitpunkt statt einzelner
   Animationsframes.
 
+## Automatisierter Erfahrungszyklus
+
+Wenn `evolutions/BACKLOG.md` keinen ausdrücklich priorisierten offenen Auftrag enthält, verwendet
+`claude-primary-run.yml` den kontrollierten Dauerauftrag aus
+`evolutions/DAILY_LIFE_TASK.md`. Jede solche Evolution muss in einem normalen Besuch einen
+konkreten Vorher-/Nachher-Effekt haben. Isolierte Requisiten, Einzelanimationen, reine Lore und
+kosmetische Pixelpolitur gelten nicht als Ersatz für eine Verbesserung des Tagesablaufs.
+
+Nutzer- und KI-Feedback wird im versionierten
+`evolutions/DAILY_LIFE_LEARNING.md` gesammelt. Der Lauf darf erledigtes Feedback markieren,
+Evidenz und den nächsten Hebel dokumentieren sowie eng begrenzte, belegte Heuristiken ergänzen.
+Er darf weder seinen Dauerauftrag noch Workflow-, Berechtigungs-, Review- oder Publikationsgrenzen
+selbst verändern. Dadurch lernen spätere Läufe aus angenommenen Änderungen, während jede
+Anpassung weiterhin über Branch, Tests, getrennten Reviewer, Pull Request und menschlichen Merge
+entscheidbar bleibt.
+
 ## Offene Entscheidungen
 
 - Welche Skills existieren und wie werden sie erworben?
