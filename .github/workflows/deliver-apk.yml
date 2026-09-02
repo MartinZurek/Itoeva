@@ -80,6 +80,14 @@ on:
     paths-ignore:
       - '**/*.md'
   workflow_dispatch:
+    inputs:
+      schema_rueckschritt_zulassen:
+        description: >-
+          Auch ausliefern, wenn das Datenbankschema hinter den zuletzt
+          ausgelieferten Stand zurueckfaellt. Die App startet danach ERST nach
+          einer Deinstallation - alle Tama-Daten auf dem Telefon sind dann weg.
+        type: boolean
+        default: false
 
 # Standardmaessig gar keine Rechte, wie in claude-primary-run.yml. Dieser Workflow liest nur;
 # geschrieben wird ausserhalb von GitHub, naemlich in Drive.
@@ -461,6 +469,102 @@ jobs:
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
           echo "Token geholt, gueltig eine Stunde."
 
+      # -----------------------------------------------------------------------------------
+      # Der Riegel gegen ein Datenbankschema, das ZURUECKfaellt.
+      #
+      # Der Fall, der ihn ausgeloest hat: Am 30.08. legte Lauf 57 von Hand einen Build des
+      # Zweigs `skillbaum/freischaltung` (Schema 23) in genau diese Drive-Datei - also NACH
+      # dem letzten main-Build. Auf dem Telefon lag damit der Zweig-Stand. Am 02.09. lieferte
+      # Lauf 58 wieder main aus (Schema 20). Die Datei `glyphsim.db` stand da schon auf 23,
+      # die App verlangte 20, und `AppDatabase` setzt bewusst kein
+      # `fallbackToDestructiveMigrationOnDowngrade` (Begruendung dort: ein fehlender
+      # Migrationspfad soll laut scheitern statt still Nutzerdaten zu loeschen). Room wirft
+      # deshalb beim ersten Zugriff - und der liegt im Start. Die App liess sich nicht mehr
+      # oeffnen.
+      #
+      # **Die CI kann das nie sehen.** Sie startet immer mit leerer Datenbank; ein Downgrade
+      # entsteht ausschliesslich aus der Vorgeschichte des GERAETS. Genau darum gehoert die
+      # Pruefung hierher, an die Stelle, an der bekannt ist, was zuletzt ausgeliefert wurde.
+      #
+      # **Warum es vorher nicht auffiel.** Der alte versionCode (Commit-Anzahl) hat den
+      # Absturz zufaellig verdeckt: Der Zweig hatte mehr Commits als main, also hielt Androids
+      # Installer jeden main-Build fuer ein Downgrade und lehnte die Installation ab. Das war
+      # kein Schutz, sondern ein Nebeneffekt - aber er hat die Mine zugedeckt. Seit der
+      # versionCode aus der Laufzeit kommt, ist jeder neue Build hoeher als jeder aeltere, die
+      # Installation gelingt, und der Schemabruch schlaegt durch. Dieser Schritt ersetzt den
+      # weggefallenen Zufall durch eine bewusste Pruefung.
+      #
+      # Verglichen wird gegen die Beschreibung der Drive-Datei, weil sie beschreibt, was
+      # tatsaechlich auf dem Telefon gelandet ist - kein Zustand im Repository koennte das
+      # leisten, dort liegen mehrere Zweige mit verschiedenen Schemata nebeneinander. Steht
+      # dort noch kein Schema (jeder Stand vor diesem Schritt), wird nur hingewiesen und
+      # ausgeliefert: eine Zahl zu erfinden waere schlechter als sie nicht zu haben.
+      # -----------------------------------------------------------------------------------
+      - name: Schema-Rueckschritt ausschliessen
+        if: steps.drive.outputs.configured == 'true'
+        env:
+          TOKEN: ${{ steps.token.outputs.token }}
+          FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
+          ERLAUBT: ${{ inputs.schema_rueckschritt_zulassen }}
+        run: |
+          set -euo pipefail
+          DB=app-sim/src/main/java/com/notime/glyphsim/data/AppDatabase.kt
+
+          # Die Zahl aus der @Database-Annotation - dieselbe, die Room zur Laufzeit gegen die
+          # Datei auf dem Geraet haelt. Erst ab `@Database(` gesucht, damit eine Jahreszahl
+          # oder ein "version =" aus einem Kommentar darueber nicht faelschlich passt.
+          NEU="$(awk '/@Database\(/ { f = 1 }
+                      f && match($0, /version[[:space:]]*=[[:space:]]*[0-9]+/) {
+                        s = substr($0, RSTART, RLENGTH); gsub(/[^0-9]/, "", s); print s; exit
+                      }' "$DB")"
+          if [ -z "${NEU:-}" ]; then
+            echo "::error::Aus $DB liess sich keine Schema-Version lesen."
+            echo "::error::Ohne sie ist nicht pruefbar, ob diese APK die App auf dem Telefon"
+            echo "::error::unbrauchbar machen wuerde. Abbruch statt Blindflug."
+            exit 1
+          fi
+          echo "Schema dieses Builds: $NEU"
+
+          BESCHREIBUNG="$(curl --fail-with-body -sS \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "https://www.googleapis.com/drive/v3/files/${FILE_ID}?fields=description&supportsAllDrives=true" \
+            | jq -r '.description // empty')"
+
+          ALT="$(printf '%s' "$BESCHREIBUNG" | sed -n 's/.*Schema \([0-9][0-9]*\).*/\1/p')"
+          if [ -z "${ALT:-}" ]; then
+            echo "::notice::In der Drive-Beschreibung steht noch keine Schema-Version - der"
+            echo "::notice::Vergleich entfaellt einmalig. Ab dieser Auslieferung steht sie drin."
+            exit 0
+          fi
+          echo "Zuletzt ausgeliefertes Schema: $ALT"
+
+          if [ "$NEU" -ge "$ALT" ]; then
+            echo "Kein Rueckschritt ($NEU >= $ALT) - Auslieferung geht weiter."
+            exit 0
+          fi
+
+          if [ "${ERLAUBT:-false}" = "true" ]; then
+            echo "::warning::Schema-Rueckschritt von $ALT auf $NEU wurde ausdruecklich erlaubt."
+            echo "::warning::Die App startet danach ERST nach einer Deinstallation - die"
+            echo "::warning::Tama-Daten auf dem Telefon sind damit weg."
+            exit 0
+          fi
+
+          echo "::error::Schema-Rueckschritt: ausgeliefert war $ALT, dieser Build hat $NEU."
+          echo "::error::"
+          echo "::error::Diese APK wuerde die App auf dem Telefon NICHT starten lassen. Room"
+          echo "::error::findet keinen Weg von Schema $ALT zurueck auf $NEU und wirft beim"
+          echo "::error::ersten Zugriff - und der liegt im Start. Nicht ausgeliefert."
+          echo "::error::"
+          echo "::error::Das passiert, wenn zwei Zweige mit unterschiedlichem Schema in"
+          echo "::error::dieselbe Drive-Datei liefern. Zwei Wege hinaus:"
+          echo "::error::  1. Den Zweig mit dem hoeheren Schema nach main bringen. Danach"
+          echo "::error::     liefert main wieder den neuesten Stand, ohne Datenverlust."
+          echo "::error::  2. Diesen Workflow von Hand mit 'schema_rueckschritt_zulassen'"
+          echo "::error::     starten - aber nur, wenn der Verlust ALLER Tama-Daten auf dem"
+          echo "::error::     Telefon in Kauf genommen wird (Deinstallation noetig)."
+          exit 1
+
       - name: APK nach Drive legen
         if: steps.drive.outputs.configured == 'true'
         env:
@@ -481,10 +585,21 @@ jobs:
             -o /dev/null
 
           # Beschreibung nachziehen, damit in Drive sichtbar ist, welcher Stand dort liegt.
+          #
+          # Das "Schema N" ist nicht nur zum Nachlesen da: Der Schritt "Schema-Rueckschritt
+          # ausschliessen" liest genau diesen Wert beim naechsten Lauf zurueck. Die
+          # Beschreibung ist der einzige Ort, der festhaelt, welches Datenbankschema
+          # tatsaechlich auf dem Telefon gelandet ist - im Repository laesst sich das nicht
+          # ablesen, weil dort mehrere Zweige mit verschiedenen Schemata nebeneinander liegen.
+          # Wer das Format hier aendert, muss den Ausdruck dort mitaendern.
+          SCHEMA="$(awk '/@Database\(/ { f = 1 }
+                         f && match($0, /version[[:space:]]*=[[:space:]]*[0-9]+/) {
+                           s = substr($0, RSTART, RLENGTH); gsub(/[^0-9]/, "", s); print s; exit
+                         }' app-sim/src/main/java/com/notime/glyphsim/data/AppDatabase.kt)"
           curl --fail-with-body -sS -X PATCH \
             -H "Authorization: Bearer ${TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"description\":\"Itoeva ${VERSION} (${SHA}), gebaut von deliver-apk.yml, Lauf ${GITHUB_RUN_ID}\"}" \
+            -d "{\"description\":\"Itoeva ${VERSION} (${SHA}), Schema ${SCHEMA}, gebaut von deliver-apk.yml, Lauf ${GITHUB_RUN_ID}\"}" \
             "https://www.googleapis.com/drive/v3/files/${FILE_ID}?supportsAllDrives=true" \
             -o /dev/null
 
