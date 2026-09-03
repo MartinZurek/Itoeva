@@ -19,6 +19,7 @@
 param(
     [string]$WorkflowPath,
     [string]$BacklogPath,
+    [string]$DailyLifeTaskPath,
     [string]$SelectorPath,
     [string]$ConfigPath
 )
@@ -29,6 +30,7 @@ $script:Failures = @()
 # $PSScriptRoot ist im param-Block unter Windows PowerShell 5.1 noch leer.
 if (-not $WorkflowPath) { $WorkflowPath = Join-Path $PSScriptRoot '..\.github\workflows\claude-primary-run.yml' }
 if (-not $BacklogPath)  { $BacklogPath  = Join-Path $PSScriptRoot '..\evolutions\BACKLOG.md' }
+if (-not $DailyLifeTaskPath) { $DailyLifeTaskPath = Join-Path $PSScriptRoot '..\evolutions\DAILY_LIFE_TASK.md' }
 if (-not $SelectorPath) { $SelectorPath = Join-Path $PSScriptRoot 'backlog-select.sh' }
 if (-not $ConfigPath)   { $ConfigPath   = Join-Path $PSScriptRoot 'runner.config.json' }
 
@@ -158,14 +160,17 @@ Write-Host '=== FUNKTIONAL: echtes evolutions/BACKLOG.md ist verwertbar ==='
 
 $echt = Get-Content -Raw -LiteralPath $BacklogPath
 $r = Invoke-Selector $echt
-Test-That 'eingechecktes Backlog laesst sich lesen' ($r.Code -eq 0) "code=$($r.Code) $($r.Stderr)"
-Test-That 'eingechecktes Backlog: ID im erwarteten Format' ($r.Id -match '^ITO-\d{4}$') "id=$($r.Id)"
-Test-That 'eingechecktes Backlog: Aufgabentext ist substanziell' ($r.Task.Trim().Length -gt 200) "Laenge=$($r.Task.Trim().Length)"
+Test-That 'eingechecktes Backlog ist syntaktisch verwertbar' ($r.Code -in @(0, 2)) "code=$($r.Code) $($r.Stderr)"
+if ($r.Code -eq 0) {
+    Test-That 'offener Eintrag: ID im erwarteten Format' ($r.Id -match '^ITO-\d{4}$') "id=$($r.Id)"
+    Test-That 'offener Eintrag: Aufgabentext ist substanziell' ($r.Task.Trim().Length -gt 200) "Laenge=$($r.Task.Trim().Length)"
+}
 
 Write-Host ''
 Write-Host '=== FUNKTIONAL: Builder kann das Backlog nicht aendern ==='
 
 Test-That 'BACKLOG.md steht in forbiddenFileNames' ($config.scope.forbiddenFileNames -contains 'BACKLOG.md')
+Test-That 'DAILY_LIFE_TASK.md steht in forbiddenFileNames' ($config.scope.forbiddenFileNames -contains 'DAILY_LIFE_TASK.md')
 
 # Dieselbe Pruefung, die der Workflow fahrt: Dateiname gegen die Allowlist des Basiscommits.
 $namen = $config.scope.forbiddenFileNames
@@ -387,6 +392,13 @@ Test-That 'Endmarke wird notfalls auf eine eigene Zeile gezwungen' `
     ($preflight -match 'if \[ -n "\$\(tail -c1 "\$TASKFILE"\)" \]; then echo ""; fi')
 Test-That 'Zeitplan-Lauf zieht die Aufgabe aus dem Backlog' `
     ($preflight -match 'runner/backlog-select\.sh evolutions/BACKLOG\.md')
+Test-That 'leerer Backlog wechselt in den Tagesablauf-Dauerauftrag' `
+    (($preflight -match 'DAILY_TASK=.evolutions/DAILY_LIFE_TASK\.md.') -and
+     ($preflight -match 'REASON=DAILY_LIFE_STANDING') -and
+     ($preflight -match 'TASK_ID=daily-life'))
+Test-That 'Tagesablauf-Dauerauftrag ist vorhanden und substanziell' `
+    ((Test-Path -LiteralPath $DailyLifeTaskPath) -and
+     ((Get-Content -Raw -LiteralPath $DailyLifeTaskPath).Length -gt 1000))
 Test-That 'evolve bekommt Aufgabe und Modelle aus preflight' `
     (($evolve -match 'needs\.preflight\.outputs\.task') -and
      ($evolve -match 'needs\.preflight\.outputs\.model') -and
@@ -407,8 +419,9 @@ Test-That 'nur unvereinigte Branches gelten als laufende Evolution' `
     (($preflight -match 'compare/main\.\.\.') -and ($preflight -match 'identical\|behind'))
 Test-That 'Ueberspringen heisst SKIPPED_PENDING_EVOLUTION' `
     ($preflight -match 'SKIPPED_PENDING_EVOLUTION')
-Test-That 'leerer Backlog heisst SKIPPED_EMPTY_BACKLOG' `
-    ($preflight -match 'SKIPPED_EMPTY_BACKLOG')
+Test-That 'leerer Backlog startet keinen ungebundenen Leerauftrag' `
+    (($preflight -notmatch 'SKIPPED_EMPTY_BACKLOG') -and
+     ($preflight -match 'Dauerauftrag fehlt oder ist leer'))
 Test-That 'Waechter greift nicht bei manuellem Lauf' `
     ($preflight -match '(?s)workflow_dispatch.*?else.*?matching-refs')
 

@@ -131,12 +131,14 @@ Systemuhr-Abweichung (siehe `widget/GlyphClockWidgetProvider.kt`, Kommentar bei
 
 Zwei parallele, unterschiedlich weit entwickelte Automatisierungswege existieren im Repository:
 
-1. **`.github/workflows/claude-primary-run.yml`** (1786 Zeilen) - der tatsächlich aktive Weg.
+1. **`.github/workflows/claude-primary-run.yml`** - der tatsächlich aktive Weg.
    Zwei getrennte Jobs pro Lauf: `evolve` (liest, baut, testet, erzeugt Commit + Bundle, hat
    *kein* Push-Recht) und `publish` (prüft das Bundle unabhängig nach, pusht, führt selbst
    keinen Modellcode aus). Diese Trennung ist die eigentliche Sicherheitsgrenze: Abo-Token und
-   Push-Recht liegen nie in derselben VM. Läuft 3x täglich über eine externe Routine, wählt die
-   nächste offene Aufgabe aus `evolutions/BACKLOG.md`.
+   Push-Recht liegen nie in derselben VM. Der interne Zeitplan bietet tagsüber alle drei Stunden
+   eine Gelegenheit; ein Wächter verhindert parallele Evolutionen. Ein offener Eintrag aus
+   `evolutions/BACKLOG.md` hat Vorrang. Ist keiner vorhanden, wird der kontrollierte
+   Tagesablauf-Dauerauftrag aus `evolutions/DAILY_LIFE_TASK.md` verwendet.
 2. **`runner/`** (PowerShell, Windows-Task-Scheduler-basiert, `.ps1`-Dateien + JSON-Schemas) -
    laut eigenem `runner/README.md` "standardmäßig deaktiviert", nirgends in `README.md` oder
    `EVOLUTION.md` referenziert. Wirkt wie eine frühere oder alternative Architektur für denselben
@@ -145,18 +147,24 @@ Zwei parallele, unterschiedlich weit entwickelte Automatisierungswege existieren
 
 **Wichtig für Tokenverbrauch-Aufgaben (NT-045 bis NT-047):** Die Dateigröße von
 `claude-primary-run.yml` ist kein verlässlicher Indikator für Tokenverbrauch. Nur der eigentliche
-`PROMPT`-Text in den Schritten "Builder-Session" und "Reviewer-Session" (je ca. 35-45 Zeilen,
+`PROMPT`-Text in den Schritten "Builder-Session" und "Reviewer-Session" (je ein begrenzter Block,
 zuzüglich interpolierter Aufgabe/Repo-Fakten/Diff) geht als Kontext an das Modell. Der große Rest
-der 1786 Zeilen ist reine Bash-/Workflow-Orchestrierung (Token-Dateideskriptor-Handling,
+der Datei ist reine Bash-/Workflow-Orchestrierung (Token-Dateideskriptor-Handling,
 Git-Gates, Hash-Nachrechnung, Diagnose-Uploads), die den Modellkontext nie erreicht - Kürzen
 dieser Orchestrierung spart Actions-Laufzeit, aber keine Tokens. Seit 2026-08-22 verweisen beide
-Prompts explizit auf `AgentGuide.md`s Minimal-Startsequenz, damit die eigene Read/Glob/Grep-
-Erkundung der Sessions nicht routinemäßig ganze Dokumente lädt - das war der tatsächliche Hebel,
-nicht die Dateigröße der Workflow-YAML selbst.
+Prompts explizit auf `AGENTS.md` und `AgentGuide.md`s Minimal-Startsequenz, damit die eigene
+Read/Glob/Grep-Erkundung der Sessions nicht routinemäßig ganze Dokumente lädt - das war der
+tatsächliche Hebel, nicht die Dateigröße der Workflow-YAML selbst.
 
-`evolutions/BACKLOG.md` ist die Aufgaben-Warteschlange dieser Pipeline (Format: `## [status]
-ITO-NNNN - Titel`, Status `open`/`done`, Statuswechsel wird ausschließlich vom `publish`-Job auf
-`main` geschrieben). `EVOLUTION.md` ist ihr Regelwerk plus datiertes Entscheidungsprotokoll.
+`evolutions/BACKLOG.md` ist die Warteschlange für ausdrücklich priorisierte Einzelaufgaben
+(Format: `## [status] ITO-NNNN - Titel`, Status `open`/`done`, Statuswechsel wird ausschließlich
+vom `publish`-Job im Evolutionsbranch geschrieben). Ohne offenen Eintrag steuern
+`evolutions/DAILY_LIFE_TASK.md` und das lernende, versionierte
+`evolutions/DAILY_LIFE_LEARNING.md` die nächste kleine Spielerlebnis-Evolution. Der Task ist für
+den Builder schreibgeschützt; Feedback, Evidenz und begrenzte Heuristiken reisen im normalen
+Review-PR mit. `.github/`, `runner/`, Berechtigungen und Sicherheits-Gates bleiben von dieser
+Selbstanpassung ausgeschlossen. `EVOLUTION.md` ist das Regelwerk plus datiertes
+Entscheidungsprotokoll.
 
 `.github/workflows/verify.yml` (368 Zeilen, seit PR #21) ist der PR-Prüflauf: ein vorgeschalteter
 Job bestimmt anhand geänderter Pfade, ob App-Code betroffen ist, und überspringt die teuren
@@ -210,8 +218,8 @@ aus der PR). Das ist eine bekannte, bereits benannte Lücke.
 - **Zwei parallele Automatisierungs-Architekturen** (`claude-primary-run.yml` vs. `runner/`),
   von denen eine offensichtlich unbenutzt ist, aber nicht als solche markiert oder entfernt
   wurde.
-- **`claude-primary-run.yml` selbst ist mit 1786 Zeilen die mit Abstand größte Datei im
-  gesamten Repository** - größer als die meisten App-Module zusammen. Für eine Workflow-Datei
+- **`claude-primary-run.yml` selbst ist die mit Abstand größte Workflow-Datei im Repository** -
+  größer als die meisten App-Module. Für eine Workflow-Datei
   ungewöhnlich groß; enthält vermutlich viel Prompt-/Konfigurationstext statt reiner
   Steuerungslogik, was ihre Wartbarkeit nicht automatisch verschlechtert, aber schwer machst,
   Änderungen daran zu überblicken.

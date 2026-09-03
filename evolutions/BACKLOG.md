@@ -1,11 +1,15 @@
 # Itoeva-Backlog
 
-Diese Datei ist die **einzige** Aufgabenquelle fuer zeitgesteuerte Laeufe von
-`.github/workflows/claude-primary-run.yml`. Der oberste Eintrag mit Status `open` ist die
-naechste Evolution. Das Modell waehlt seine Aufgabe nicht selbst und darf diese Datei auch
-nicht aendern: `BACKLOG.md` steht in `runner/runner.config.json` unter
-`scope.forbiddenFileNames`, und die Allowlist wird beim Lauf aus dem Basiscommit gelesen,
-nicht aus dem Arbeitsstand.
+Diese Datei ist die Quelle fuer **ausdruecklich priorisierte Einzelaufgaben** zeitgesteuerter
+Laeufe von `.github/workflows/claude-primary-run.yml`. Der oberste Eintrag mit Status `open`
+hat Vorrang. Ist kein Eintrag offen, startet stattdessen der kontrollierte Dauerauftrag aus
+`evolutions/DAILY_LIFE_TASK.md`; sein versioniertes Feedback und seine belegten Lernergebnisse
+stehen in `evolutions/DAILY_LIFE_LEARNING.md`.
+
+Der Builder darf weder diese Datei noch seinen Dauerauftrag aendern: Beide stehen in
+`runner/runner.config.json` unter `scope.forbiddenFileNames`, und die Allowlist wird beim Lauf
+aus dem Basiscommit gelesen, nicht aus dem Arbeitsstand. Das Lern-Overlay darf er nur innerhalb
+der dort dokumentierten engen Grenzen fortschreiben.
 
 Ein Eintrag gilt als erledigt, sobald der zugehoerige Pull Request gemerged ist. Den
 Statuswechsel auf `done` traegt der Lauf selbst in den Evolutions-Branch ein (Schritt
@@ -388,7 +392,11 @@ Bedingungen, die nicht verhandelbar sind:
 - `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
   Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
 
-## [open] ITO-0013 - Ein weiteres Beiwerk-Requisit auf der Wiese ergaenzen
+## [done] ITO-0013 - Ein weiteres Beiwerk-Requisit auf der Wiese ergaenzen
+**Am 2026-09-02 bewusst ohne Umsetzung geschlossen:** Ein isoliertes Beiwerk-Requisit erfuellt
+den neuen Produktfokus auf beobachtbaren Tagesablauf, individuelle Wesen und sichtbare
+Reminder-Wirkung nicht. Die Spezifikation bleibt als verworfene Alternative erhalten.
+
 Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt (Vielfalt der Szenen) - keine
 `OPEN DECISION` betroffen, keine Rueckfrage noetig. Analog zu ITO-0007 (PR #44, Wald-Farn): genau
 ein neues privates `Prop`, kein neuer Mechanismus, keine neue Station.
@@ -435,7 +443,11 @@ an FENCE (0.02) oder zwischen BENCH (0.50) und WILD_TUFT (0.70) planen als in Av
   Stehen`. Der Test iteriert automatisch ueber alle Orte/Spezies/Breiten, keine Testaenderung
   noetig.
 
-## [open] ITO-0014 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (fuenfte Runde)
+## [done] ITO-0014 - Eine weitere Beziehung zwischen zwei Wesen ergaenzen (fuenfte Runde)
+**Am 2026-09-02 bewusst ohne Umsetzung geschlossen:** Weitere Lore bleibt grundsaetzlich erlaubt,
+soll den automatisierten Lauf derzeit aber nicht vor den Spielerlebnis-Hebeln des Avatarlebens
+belegen. Die Spezifikation bleibt als verworfene Alternative erhalten.
+
 Freigegeben durch `EVOLUTION.md`, Abschnitt "Character Evolution" -> "Erzaehlerische Autonomie"
 (Entscheidung vom 2026-08-18), im selben Rahmen wie bereits ITO-0004 (PR #14: Puffling-Starlet),
 ITO-0009 (PR #18: Wyrmling-Hootlet), ITO-0010 (PR #29: Fennec-Gloop) und ITO-0011 (PR #47:
@@ -473,7 +485,12 @@ Bedingungen, die nicht verhandelbar sind:
 - `MEDICINE`, Nutzerdaten oder Aussagen ueber den Nutzer duerfen in Lore-Text nicht vorkommen -
   Lore ist erfundenes Worldbuilding, keine Aussage ueber den Nutzer.
 
-## [open] ITO-0012 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen (zweite Runde)
+## [done] ITO-0012 - Eine weitere allgemeine Bibliotheks-Animation ergaenzen (zweite Runde)
+**Am 2026-09-02 bewusst ohne Umsetzung geschlossen:** Eine isolierte Bibliotheksanimation ist
+leichter zu zaehlen als ihr Nutzen fuer das Avatarleben. Die Spezifikation bleibt als verworfene
+Alternative erhalten und kann spaeter nur mit neu belegtem Spielerlebnis-Nutzen aufgegriffen
+werden.
+
 Bereits durch "Evolution Goals" in `EVOLUTION.md` gedeckt ("Vielfalt von Ambient-Aktivitaeten,
 Routinen, Szenen, Reaktionen und charaktergerechten Dialogen") - keine `OPEN DECISION` betroffen,
 keine Rueckfrage noetig. CONTENT-Evolution (reine Punktdaten, kein neuer Mechanismus). Setzt auf

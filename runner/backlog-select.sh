@@ -9,7 +9,7 @@
 #
 # Exitcodes, bewusst unterschieden, weil der Workflow sie verschieden behandelt:
 #   0  Eintrag gewaehlt
-#   2  kein offener Eintrag (Backlog leer oder alles erledigt) -> sauberes Ueberspringen
+#   2  kein offener Eintrag (Backlog leer oder alles erledigt) -> Aufrufer waehlt Fallback
 #   3  Formatfehler, doppelte ID oder leerer Aufgabentext      -> fail-closed, roter Lauf
 #   4  Backlogdatei fehlt                                       -> fail-closed
 #  64  falscher Aufruf
