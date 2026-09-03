@@ -86,7 +86,31 @@ concurrency:
 env:
   CLAUDE_CLI_VERSION: '2.1.232'
   JAVA_VERSION: '17'
-  BUILDER_MAX_TURNS: '40'
+  # Von 40 auf 80 angehoben (2026-09-03), aus demselben Grund wie seinerzeit beim Reviewer:
+  # Der Wert ist ein Schutz gegen eine entgleisende Sitzung, kein Sparziel - und 40 war fuer
+  # dieses Repository schlicht zu knapp.
+  #
+  # Belegt durch Lauf 33731374033: subtype "error_max_turns", num_turns 41, stop_reason
+  # "tool_use", permission_denials LEER. Die Sitzung hat sich also nichts erlaubt und ist auch
+  # nicht in eine Schleife geraten - sie war nach 4,9 Minuten und 4,5 Mio. gelesenen
+  # Cache-Token mitten in der Arbeit, als das Budget endete. Dieselbe Stelle traf auch die
+  # Laeufe 33... (81) und (79) vom 02.09., beide noch mit einer ITO-Aufgabe: Das Problem ist
+  # die Groesse dieses Repositorys (PlayScene.kt hat 3.672 Zeilen, DockScreen.kt aehnlich
+  # viel), nicht der seit dem 03.09. geltende Tagesablauf-Dauerauftrag. Der verschaerft es nur,
+  # weil er zusaetzlich Tagesablauf.md und DAILY_LIFE_LEARNING.md zu lesen gibt.
+  #
+  # Warum Erhoehen hier BILLIGER ist als Sparen: Ein Lauf, der in die Begrenzung faellt, kostet
+  # den vollen Sitzungspreis (2,83 USD im belegten Lauf) und liefert NICHTS - kein Diff, keine
+  # Datei, keinen PR. Bei sechs Cron-Laeufen am Tag ist das der teuerste denkbare Zustand.
+  #
+  # Die Zeit ist nicht die Grenze: Der belegte Lauf brauchte 291 Sekunden bei einem
+  # Schritt-Timeout von 40 Minuten. Ein hoeheres Zugbudget bleibt also weit innerhalb des
+  # bestehenden Zeitriegels, der unveraendert scharf bleibt.
+  #
+  # Sollte auch 80 nicht reichen, ist der naechste Hebel NICHT die naechste Erhoehung, sondern
+  # die Leselast: Der Builder-Prompt laesst drei Dokumente vollstaendig lesen, bevor er die
+  # erste Zeile Code sieht.
+  BUILDER_MAX_TURNS: '80'
   # Schutzparameter gegen eine entgleisende Sitzung, KEIN Erfolgskriterium - siehe die
   # ausfuehrliche Begruendung am Schritt "Reviewer-Envelope auswerten". 20 war zu knapp
   # bemessen: Lauf 32020621278 lieferte ein vollstaendiges Review und meldete dabei 24 Turns.
