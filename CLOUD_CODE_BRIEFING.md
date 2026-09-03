@@ -28,8 +28,12 @@ Integration, private Nutzerdaten oder medizinische Reminder.
 - `evolutions/DAILY_LIFE_LEARNING.md` übergibt Nutzerfeedback, belegte Erkenntnisse und den nächsten
   sinnvollen Hebel zwischen angenommenen Evolutionen.
 - Workflow, Runner, Auftrag, Rechte-, Review- und Merge-Gates dürfen sich aus diesem Lern-Overlay
-  nicht selbst verändern. Jede Evolution bleibt ein eigener Branch mit Tests, zweiter Prüfung,
-  Pull Request und menschlichem Merge.
+  nicht selbst verändern. Jede Evolution bleibt ein eigener Branch mit Tests, zweiter Prüfung und
+  Pull Request.
+- **Seit 2026-09-03 darf eine beauftragte Agentensitzung mergen** — bei grüner CI, ohne
+  Merge-Konflikt und ohne offene Review-Anmerkung. Der unbeaufsichtigte Lauf mergt weiterhin nie
+  sein eigenes Ergebnis; `claude-primary-run.yml` und `runner/` haben kein Merge-Recht. Der
+  Revert bleibt beim Menschen. Einzelheiten in EVOLUTION.md, Evolution History.
 
 ## Neue übergreifende Produktvision
 

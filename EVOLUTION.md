@@ -1,14 +1,19 @@
 # Itoeva Evolution Protocol
 
-Version: 0.4 - seit 2026-09-03 mit der strategischen Zielidentität einer öffentlich beobachtbaren
+Version: 0.5 - seit 2026-09-03 darf der Merge eines fertigen Pull Requests von einer beauftragten
+Agentensitzung ausgeführt werden; der unbeaufsichtigte Lauf mergt sein eigenes Ergebnis weiterhin
+nie (siehe Evolution History zum 2026-09-03, "Merge-Freigabe"). Version 0.4 - seit 2026-09-03 mit
+der strategischen Zielidentität einer öffentlich beobachtbaren
 Evolutionswelt. Die lokale persönliche App, eine davon getrennte stille Twitch-Welt und ein von
 den Avataren erzähltes YouTube-Evolutionstagebuch sollen verschiedene Perspektiven auf dasselbe
 gestalterische Experiment eröffnen. Zuschauer dürfen die öffentliche Welt künftig nur durch
 begrenzte Impulse beeinflussen, nicht private oder medizinische Reminder steuern. Technische
 Streaming-, Netzwerk-, Konto-, Zahlungs- und Medienarchitektur bleiben bis zu gesonderten
 Entscheidungen offen. Der kontrollierte Tagesablauf-Dauerauftrag aus Version 0.3 (2026-09-02), die
-enge erzählerische Autonomie aus Version 0.2 (2026-08-18) und alle Sicherheits- und Merge-Grenzen
-gelten fort.
+enge erzählerische Autonomie aus Version 0.2 (2026-08-18) und alle Sicherheitsgrenzen gelten fort.
+Von den Merge-Grenzen ist genau eine gelockert - wer mergen darf; alle übrigen (Branch, Tests,
+zweite Prüfung, Pull Request, kein Merge-Recht für die Pipeline, kein direkter Push auf `main`)
+bleiben unverändert.
 
 Dieses Dokument legt fest, wie Itoeva weiterentwickelt werden darf, ohne die heute im Repository
 erkennbare Identität, bereits getroffene Produktentscheidungen oder nachweisbares Verhalten
@@ -965,6 +970,53 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Weiterhin offen:** Wie stark Nutzergewohnheiten den autonomen Ablauf praegen duerfen, bleibt
   `OPEN DECISION`. Ob zusaetzlich ein Wiederholungs-Daempfer noetig ist, ist als naechster Hebel
   im Lernjournal vermerkt, aber noch nicht belegt.
+
+### 2026-09-03 - Merge-Freigabe für eine beauftragte Agentensitzung
+
+- **Version:** Protokoll 0.4 → 0.5. Reine Prozessänderung ohne Code-, Schema- oder
+  Nutzerdatenwirkung. Rücksetzweg ist der Revert dieses PRs; danach gilt wieder ausschließlich der
+  menschliche Merge.
+- **Ausgangsproblem und Nutzerwirkung:** Die Dokumente verlangten an vier Stellen einen
+  menschlichen Merge. In der Praxis blieben dadurch fertige, vollständig grüne Pull Requests
+  liegen - und weil die APK-Auslieferung an einem Merge auf `main` hängt, bekam der Nutzer keine
+  neue Fassung seiner App, obwohl die Arbeit fertig war. Er hat mehrfach gefragt, warum keine neue
+  APK kommt; die Antwort war jedes Mal "weil niemand gemergt hat".
+- **Evidenzklassifikation:** `DOCUMENTED INTENT` - der Produktverantwortliche hat auf die
+  ausdrückliche Rückfrage, ob die im Repository stehende Merge-Sperre überschrieben werden soll,
+  mit "du kannst immer mergen" geantwortet. `FACT` für die vier Fundstellen und dafür, dass
+  zwischen dem 03.09. 06:58 und 15:15 keine Auslieferung entstand, obwohl zwei fertige grüne Pull
+  Requests vorlagen.
+- **Getroffene Produktentscheidung:** Eine vom Produktverantwortlichen beauftragte Agentensitzung
+  darf einen Pull Request mergen, wenn drei Bedingungen zugleich erfüllt sind: CI vollständig grün,
+  kein Merge-Konflikt, keine offene Review-Anmerkung unbeantwortet. Sind sie nicht erfüllt, ist
+  Beheben die Aufgabe - nicht Warten und nicht Mergen.
+- **Was ausdrücklich NICHT gelockert wurde:** Der unbeaufsichtigte Lauf mergt sein eigenes Ergebnis
+  weiterhin nie. `claude-primary-run.yml` und `runner/` haben kein Merge-Recht, und die Trennung
+  zwischen Schreibrecht und Merge-Entscheidung bleibt damit als Sicherheitseigenschaft erhalten.
+  Ein direkter Push auf `main` bleibt auch für eine Sitzung ausgeschlossen; gemergt wird über einen
+  Pull Request. Branch, Tests, zweite Prüfung und PR bleiben Pflicht.
+- **Verworfene Alternativen:** Die Sperre unangetastet zu lassen und den Widerspruch zwischen
+  Dokument und gelebter Praxis bestehen zu lassen - verworfen, weil jeder andere Agent und Codex
+  selbst die Dokumente lesen und ihnen folgen würden, während eine Sitzung mit mündlicher Freigabe
+  anders handelt. Genau diese Art stehengebliebener Regel hat am selben Tag schon zu einem Fehler
+  geführt: Eine Pflegeroutine aus der Zeit vor PR #62 verlangte ein Auffüllen des absichtlich
+  geleerten Backlogs. Ebenfalls verworfen: die Freigabe auf den unbeaufsichtigten Lauf auszudehnen
+  - der Nutzer hat einer Sitzung Vertrauen gegeben, nicht der Pipeline, und die Rechtetrennung ist
+  zu teuer erkauft, um sie beiläufig aufzugeben.
+- **Betroffene Texte:** `evolutions/DAILY_LIFE_LEARNING.md`, `Tagesablauf.md`,
+  `CLOUD_CODE_BRIEFING.md`, `AgentGuide.md` und der Kopf dieses Dokuments. Die Protokolleinträge
+  vom 2026-08-18 und 2026-09-02 bleiben im Wortlaut unverändert - sie beschreiben, was DAMALS
+  entschieden wurde, und Historie wird nicht umgeschrieben. Wo dort "menschlicher Merge" steht,
+  gilt seit heute der vorliegende Eintrag.
+- **Geschützte Grenzen:** unverändert. Insbesondere bleiben die fünf nicht verhandelbaren
+  Erfahrungs-Eigenschaften, der `MEDICINE`-Ausschluss, die Room-Migrationspflicht und alle
+  `OPEN DECISION`-Punkte unberührt. Diese Entscheidung betrifft ausschließlich, WER den
+  Merge-Knopf drücken darf.
+- **Ausgeführte Tests:** Keine automatisierten - reine Dokumentenänderung. Geprüft wurde
+  stattdessen die Vollständigkeit: Alle vier normativen Fundstellen wurden gesucht und
+  angeglichen, damit kein Dokument dem anderen widerspricht.
+- **Weiterhin offen:** Ob der unbeaufsichtigte Lauf jemals selbst mergen darf, bleibt
+  `OPEN DECISION` und ist mit dieser Entscheidung NICHT beantwortet.
 
 ### Initialer Erkenntnisstand
 

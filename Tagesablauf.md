@@ -110,8 +110,12 @@ Nutzer- und KI-Feedback wird im versionierten
 Evidenz und den nächsten Hebel dokumentieren sowie eng begrenzte, belegte Heuristiken ergänzen.
 Er darf weder seinen Dauerauftrag noch Workflow-, Berechtigungs-, Review- oder Publikationsgrenzen
 selbst verändern. Dadurch lernen spätere Läufe aus angenommenen Änderungen, während jede
-Anpassung weiterhin über Branch, Tests, getrennten Reviewer, Pull Request und menschlichen Merge
-entscheidbar bleibt.
+Anpassung weiterhin über Branch, Tests, getrennten Reviewer und Pull Request entscheidbar bleibt.
+
+Der Merge selbst darf seit dem 2026-09-03 auch von einer beauftragten Agentensitzung ausgeführt
+werden — bei grüner CI, ohne Konflikt und ohne offene Review-Anmerkung. Der unbeaufsichtigte Lauf
+mergt sein eigenes Ergebnis weiterhin nie. Begründung und Grenzen: EVOLUTION.md, Evolution
+History zum 2026-09-03.
 
 ## Offene Entscheidungen
 

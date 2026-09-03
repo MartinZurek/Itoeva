@@ -107,8 +107,13 @@ und "Protected Areas" - im Zweifel gilt dort die ausführliche, verbindliche Fas
 - Der Runner/die Pipeline-Infrastruktur selbst (Workflows, `runner/`, Build-/Dependency-
   Konfiguration) - Änderungen daran sind laut `runner/README.md` explizit vom autonomen Scope
   ausgeschlossen und brauchen menschliche Prüfung.
-- Direkte Arbeit auf `main`: kein Push, kein Merge, kein Rebase, kein Force-Push außerhalb des
-  in `claude-primary-run.yml` festgelegten, streng getrennten `evolve`/`publish`-Ablaufs.
+- Direkte Arbeit auf `main`: kein Push, kein Rebase, kein Force-Push außerhalb des in
+  `claude-primary-run.yml` festgelegten, streng getrennten `evolve`/`publish`-Ablaufs. **Der
+  Merge eines fertigen Pull Requests ist davon seit dem 2026-09-03 ausgenommen** (siehe
+  EVOLUTION.md, Evolution History): Eine beauftragte Agentensitzung darf mergen, wenn die CI
+  vollständig grün ist, kein Konflikt besteht und keine offene Review-Anmerkung unbeantwortet
+  ist. Für den unbeaufsichtigten Lauf gilt das NICHT - er mergt sein eigenes Ergebnis nie, und
+  ein direkter Push auf `main` bleibt auch für eine Sitzung ausgeschlossen.
 
 Erlaubt ohne vorherige Rückfrage zur kreativen Richtung (seit EVOLUTION.md v0.2, "Erzählerische
 Autonomie"): weitere Beziehungen und Lore-Stücke zwischen den sechs bestehenden Wesen, innerhalb
