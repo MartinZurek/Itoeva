@@ -911,6 +911,61 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   Frequenz der Avatarberichte; konkrete Zuschauerimpulse und ihre Limits; mögliche, derzeit nicht
   erlaubte Verbindung öffentlicher Ereignisse mit persönlichen App-Instanzen.
 
+### 2026-09-03 - Der Stundenplan wirkt jetzt auch im laufenden Tag
+
+- **Version:** Protokoll bleibt 0.4. Reine Verhaltensaenderung im Spielmodus ohne Datenmodell-,
+  Schema- oder Preference-Aenderung; Ruecksetzweg ist der Revert dieses PRs, ohne Nutzerdatenfolge.
+- **Ausgangsproblem und Nutzerwirkung:** Gemeldet als "der Avatar laeuft die ganze Zeit repetitiv
+  zwischen den Raeumen hin und her" und "ein voller Tagesablauf soll erkennbar sein". Die Ursache
+  war nicht ein fehlender Tagesablauf, sondern ein ungenutzter: `PlayPresence.topicFor` enthaelt
+  einen exakten 24-Stunden-Plan, wurde aber ausschliesslich beim BETRETEN des Spielmodus gelesen.
+  Die Regungs-Schleife danach kannte nur die vier groben `DayPhase`-Bloecke - von 11 bis 17 Uhr ist
+  alles gleich "Mittag", also konnten Mittagessen, Arbeit und Fokus in beliebiger Reihenfolge
+  beliebig oft kommen. Weil jede `PERFORM`-Regung den Ort wechselt, entstand daraus der Eindruck
+  eines Wesens, das pendelt statt einen Tag zu haben.
+- **Evidenzklassifikation:** `FACT` fuer die bisherige Nutzung der Tabelle (nur `entry` und der
+  Play-Modus-Einstieg lasen sie) und fuer die Phasengrenzen; `TESTED BEHAVIOR` fuer die neue
+  Gewichtung und die beiden geschuetzten Zusagen (vier Tests in `PlayAmbientActivityTest`);
+  `DOCUMENTED INTENT` fuer den Nutzerwunsch nach lesbarem Tagesablauf bei erhaltener Ueberraschung.
+- **Getroffene Produktentscheidung:** Der Stundenplan wird als VIERTES additives Signal in
+  `PlayAmbientActivity.nextTopic` gegeben - nach demselben Muster, mit dem `boostedTopics`,
+  `leaning` und `stayAt` bereits andocken. Der Zuschlag `PLAN_BONUS = 4` ist bewusst so gross wie
+  `HABIT_BOOST` (beide sagen "das steht jetzt an", aus Uhr bzw. Nutzer) und bewusst kleiner als
+  `STAY_BONUS` (5), damit die 2026-08-22 behobene Beschwerde ueber staendige Raumwechsel nicht
+  zurueckkehrt. Anders als Neigung und Verweilen darf der Plan ein Thema auch EINFUEHREN; sichtbar
+  wird das genau einmal am Tag, naemlich beim Arbeitsbeginn um zehn, den die Phase MORNING sonst
+  nicht kennt.
+- **Verworfene Alternativen:** Ein eigener Tagesplan mit Reihenfolge, Einmal-pro-Tag-Bloecken und
+  persistiertem Gedaechtnis wurde erwogen und verworfen - er waere die von `DAILY_LIFE_TASK.md`
+  ausgeschlossene "neue grosse Spielstruktur" und haette den Tag ausserdem vorhersehbar gemacht,
+  also dem Ziel "beim Oeffnen ueberrascht werden" widersprochen. Ebenfalls verworfen: den Plan die
+  Phasengewichte ERSETZEN zu lassen; Charakterneigung und offene Gewohnheiten muessen weiter
+  dagegen gewichten koennen, sonst spulen alle sechs Wesen denselben Tag ab. Ein Vorgabewert, der
+  die Uhr selbst liest, wurde verworfen, weil er jedem Aufrufer mit ausdruecklicher Phase den Plan
+  der echten Uhrzeit untergeschoben haette.
+- **Betroffene Bereiche:** `matrix/PlayAmbientActivity.kt` (neue `plannedTopicFor`, erweiterte
+  `nextTopic`/`combinedWeights`), `ui/PlayPresence.kt` (delegiert die Tabelle statt sie zu
+  duplizieren, Verhalten unveraendert), `ui/DockScreen.kt` (reicht den Plan durch, ueber
+  `PlayTimeLapse` statt der Systemuhr, damit Plan und Phase derselben Zeit folgen).
+- **Reminder-Semantik, Datenmodell, Migration:** unveraendert. Keine Room-, Preference- oder
+  Textaenderung, keine Auswirkung auf bestehende Nutzerstaende.
+- **Geschuetzte Grenzen:** `MEDICINE` bleibt ausgeschlossen - die Tabelle nennt es nie, und
+  `combinedWeights` filtert es zusaetzlich defensiv aus dem uebergebenen Plan. Die Nachtruhe
+  ("durchgehend schlafen") bleibt unangetastet, weil der Plan nachts ausschliesslich `SLEEP`
+  liefert und damit nur verstaerkt, was ohnehin gilt. Beides ist mit einem Test abgesichert.
+- **Ausgefuehrte Tests:** Vier neue Tests in `PlayAmbientActivityTest`: Vollstaendigkeit und
+  MEDICINE-Freiheit des Stundenplans, deutliche aber nicht sichere Anhebung des geplanten Themas,
+  Einfuehrung eines phasenfremden Themas (WORK morgens), sowie der doppelte Schutz von
+  MEDICINE-Ausschluss und Nachtruhe. Die Verteilungsgrenzen der beiden statistischen Tests wurden
+  vorab gegen dieselbe Gewichtungsformel nachgerechnet und liegen mehr als sechs
+  Standardabweichungen von den Schranken entfernt.
+- **Ausstehende Geraeteprueung:** Der subjektive Eindruck "der Tag ist jetzt lesbar" laesst sich
+  nur am Geraet beurteilen und steht noch aus. Die Aenderung wurde in der Cloud-Sitzung nicht
+  lokal gebaut (kein Netzzugang zum Android-Gradle-Plugin); den Nachweis fuehrt die CI.
+- **Weiterhin offen:** Wie stark Nutzergewohnheiten den autonomen Ablauf praegen duerfen, bleibt
+  `OPEN DECISION`. Ob zusaetzlich ein Wiederholungs-Daempfer noetig ist, ist als naechster Hebel
+  im Lernjournal vermerkt, aber noch nicht belegt.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.

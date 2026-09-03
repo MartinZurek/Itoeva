@@ -2,6 +2,7 @@ package com.notime.glyphsim.ui
 
 import android.content.Context
 import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayScene
 import java.time.LocalDateTime
 
@@ -73,27 +74,15 @@ object PlayPresence {
             .apply()
     }
 
-    /** Grober, wiederholbarer Tagesplan statt eines neuen Zufalls bei jedem App-Start. */
-    fun topicFor(now: LocalDateTime): AnimationType = when (now.hour) {
-        in 0..5 -> AnimationType.SLEEP
-        6 -> AnimationType.GENERAL
-        7 -> AnimationType.DRINK
-        8 -> AnimationType.MOVE
-        9 -> AnimationType.FOCUS
-        10, 11 -> AnimationType.WORK
-        12 -> AnimationType.DRINK
-        13 -> AnimationType.MOVE
-        14 -> AnimationType.WORK
-        15 -> AnimationType.FOCUS
-        16 -> AnimationType.CREATIVITY
-        17 -> AnimationType.MOVE
-        18 -> AnimationType.DRINK
-        19 -> AnimationType.LOVE
-        20 -> AnimationType.BOOK
-        21 -> AnimationType.REST
-        22 -> AnimationType.MINDFULNESS
-        else -> AnimationType.SLEEP
-    }
+    /**
+     * Grober, wiederholbarer Tagesplan statt eines neuen Zufalls bei jedem App-Start.
+     *
+     * Die Tabelle selbst liegt seit der Tagesplan-Gewichtung in
+     * [PlayAmbientActivity.plannedTopicFor], weil sie dort im laufenden Betrieb gebraucht wird -
+     * und eine zweite Kopie hier waere genau die Art Duplikat, das irgendwann auseinanderlaeuft.
+     * Verhalten unveraendert.
+     */
+    fun topicFor(now: LocalDateTime): AnimationType = PlayAmbientActivity.plannedTopicFor(now.hour)
 
     private fun key(profileId: String, field: String): String = "${profileId}_$field"
 

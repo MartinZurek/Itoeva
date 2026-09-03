@@ -2115,7 +2115,23 @@ fun DockScreen(
                                     // Pfad faerbt, was er von sich aus tut. Erst dadurch ist die
                                     // Entwicklung etwas, das man SIEHT, statt etwas, das im
                                     // Gespraech behauptet wird.
-                                    leaning = leaningTopics
+                                    leaning = leaningTopics,
+                                    // **Und was zu dieser Stunde eigentlich ansteht.** Der feine
+                                    // Tagesplan lag bisher brach: Er begruesste einen beim
+                                    // BETRETEN des Spielmodus und schwieg danach, waehrend die
+                                    // Schleife nur noch die vier groben Phasen kannte. Von 11 bis
+                                    // 17 Uhr ist aber alles gleich "Mittag" - Essen, Arbeit und
+                                    // Fokus konnten in beliebiger Reihenfolge beliebig oft kommen,
+                                    // und genau daraus entsteht der Eindruck eines Wesens, das
+                                    // zwischen Zimmern pendelt statt einen Tag zu haben.
+                                    //
+                                    // Ueber PlayTimeLapse und nicht ueber die Systemuhr, damit der
+                                    // Plan derselben Zeit folgt wie die Phase daneben (siehe
+                                    // currentDayPhase) - sonst liefe im Zeitraffer die Phase
+                                    // voraus und der Plan hinterher.
+                                    plannedTopic = PlayAmbientActivity.plannedTopicFor(
+                                        PlayTimeLapse.now().hour
+                                    )
                                 )
                             }
 
