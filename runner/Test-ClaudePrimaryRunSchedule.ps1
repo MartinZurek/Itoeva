@@ -422,8 +422,18 @@ Test-That 'Ueberspringen heisst SKIPPED_PENDING_EVOLUTION' `
 Test-That 'leerer Backlog startet keinen ungebundenen Leerauftrag' `
     (($preflight -notmatch 'SKIPPED_EMPTY_BACKLOG') -and
      ($preflight -match 'Dauerauftrag fehlt oder ist leer'))
-Test-That 'Waechter greift nicht bei manuellem Lauf' `
+# Praezisiert am 2026-09-03: Nur ein manueller Lauf MIT ausdruecklichem Aufgabentext
+# uebergeht den Waechter. Ein Nachhol-Lauf ohne Text soll sich wie ein Zeitplan-Lauf
+# verhalten - eine zweite parallele Evolution waere per Hand genauso schaedlich.
+Test-That 'Waechter greift nicht bei manuellem Lauf MIT Auftrag' `
     ($preflight -match '(?s)workflow_dispatch.*?else.*?matching-refs')
+Test-That 'manueller Lauf ohne Auftrag faellt in die Zeitplan-Auswahl' `
+    (($preflight -match '\[ -n "\$HAS_TASK" \]') -and
+     ($preflight -match 'HAS_TASK="\$\(printf'))
+# Das Feld muss optional bleiben, sonst laesst sich ein ausgefallener Cron-Slot nur
+# nachholen, indem jemand den Dauerauftrag von Hand hineinkopiert (siehe 2026-09-03).
+Test-That 'task-Eingabe ist optional' `
+    ($workflow -match '(?m)^      task:[\s\S]*?^        required: false')
 
 Write-Host ''
 Write-Host '=== STRUKTURELL: Sicherheitsarchitektur unveraendert ==='
