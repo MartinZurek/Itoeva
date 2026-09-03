@@ -26,10 +26,22 @@ name: ClaudePrimaryRun
 on:
   workflow_dispatch:
     inputs:
+      # Leer lassen ist ausdruecklich erlaubt und der Normalfall beim Nachholen.
+      #
+      # **Warum das gebraucht wird.** GitHub laesst Cron-Slots aus: Am 2026-09-03 kam der
+      # 12:17-Lauf mit 78 Minuten Verspaetung, der 15:17-Slot fiel ganz aus. Ein
+      # ausgefallener Slot liess sich vorher nur nachholen, indem jemand den vollstaendigen
+      # Text von evolutions/DAILY_LIFE_TASK.md von Hand in dieses Feld kopierte - eine
+      # zweite Kopie der Wahrheit, die frueher oder spaeter von der ersten abweicht.
+      # Bleibt das Feld leer, waehlt preflight denselben Auftrag wie ein Zeitplan-Lauf
+      # (Backlog, sonst Dauerauftrag) und der Waechter greift genauso.
       task:
-        description: Aufgabe fuer die Builder-Session (eine Evolution)
+        description: >-
+          Aufgabe fuer die Builder-Session (eine Evolution). LEER LASSEN, um denselben
+          Auftrag zu verwenden, den auch ein Zeitplan-Lauf waehlen wuerde - so laesst sich
+          ein ausgefallener Cron-Slot nachholen, ohne eine Aufgabe zu erfinden.
         type: string
-        required: true
+        required: false
       model:
         description: Modell der Builder-Session
         type: choice
@@ -186,11 +198,23 @@ jobs:
           TASKFILE="$RUNNER_TEMP/backlog/task"
           DECISION=""; REASON=""; TASK_ID=""
 
-          if [ "$EVENT" = "workflow_dispatch" ]; then
-            # --- Manueller Lauf: der Mensch hat entschieden, der Waechter greift nicht. ----
+          # Ein manueller Lauf OHNE Aufgabentext ist kein Fehler mehr, sondern der Weg,
+          # einen ausgefallenen Cron-Slot nachzuholen (siehe die Begruendung am Eingabefeld
+          # oben). Er soll sich dann in jeder Hinsicht wie ein Zeitplan-Lauf verhalten -
+          # inklusive Waechter, denn eine zweite parallele Evolution waere per Hand genauso
+          # schaedlich wie per Zeitplan. Nur ein AUSDRUECKLICH formulierter Auftrag ist die
+          # Ansage eines Menschen, die den Waechter uebergeht.
+          HAS_TASK="$(printf '%s' "${IN_TASK:-}" | tr -d '[:space:]')"
+
+          if [ "$EVENT" = "workflow_dispatch" ] && [ -n "$HAS_TASK" ]; then
+            # --- Manueller Lauf MIT Auftrag: der Mensch hat entschieden, der Waechter
+            #     greift nicht. ----------------------------------------------------------
             printf '%s' "${IN_TASK:-}" > "$RUNNER_TEMP/manual-task"
             mkdir -p "$RUNNER_TEMP/backlog"
             cp "$RUNNER_TEMP/manual-task" "$TASKFILE"
+            # Doppelter Boden: Die Bedingung oben schliesst den leeren Fall bereits aus.
+            # Die Pruefung bleibt trotzdem stehen, damit eine spaetere Aenderung an jener
+            # Bedingung nicht unbemerkt einen Leerauftrag an Claude durchreicht.
             if [ -z "$(tr -d '[:space:]' < "$TASKFILE")" ]; then
               echo "::error::Leerer Auftrag im manuellen Lauf - fail-closed vor jedem Claude-Aufruf."
               exit 1
@@ -199,7 +223,10 @@ jobs:
             echo "Auftrag aus der Eingabe uebernommen ($(wc -c < "$TASKFILE") Bytes)."
 
           else
-            # --- Zeitplan-Lauf: erst der Waechter, dann das Backlog. ----------------------
+            # --- Zeitplan-Lauf oder manuelles Nachholen ohne Auftrag: erst der Waechter,
+            #     dann das Backlog. ------------------------------------------------------
+            [ "$EVENT" != "workflow_dispatch" ] || \
+              echo "Manueller Lauf ohne Aufgabentext - waehlt wie ein Zeitplan-Lauf."
             # Ein Branch zaehlt nur als laufende Evolution, solange er NICHT in main
             # enthalten ist. Branches werden bewusst nie geloescht; wuerde schon ihre blosse
             # Existenz blockieren, stuende der Zeitplan nach der ersten Evolution fuer immer.
