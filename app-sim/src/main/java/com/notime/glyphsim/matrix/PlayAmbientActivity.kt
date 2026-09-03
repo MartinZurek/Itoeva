@@ -122,6 +122,45 @@ object PlayAmbientActivity {
     }
 
     /**
+     * Was zu dieser Stunde eigentlich ANSTEHT - der feine Tagesplan hinter den vier groben Phasen.
+     *
+     * **Diese Tabelle gab es laengst, sie wurde nur fast nie gelesen.** Sie stand in
+     * [com.notime.glyphsim.ui.PlayPresence] und entschied dort ausschliesslich, womit der Avatar
+     * begruesst wird, wenn man den Spielmodus BETRITT. Die Regungs-Schleife danach kannte sie
+     * nicht und arbeitete allein mit [DayPhase] - und eine Phase ist grob: Von 11 bis 17 Uhr ist
+     * alles gleich "Mittag", also konnten Mittagessen, Arbeit und Fokus in beliebiger Reihenfolge
+     * beliebig oft kommen. Genau daraus entsteht der Eindruck, die Figur laufe nur zwischen
+     * Zimmern hin und her, statt einen Tag zu haben.
+     *
+     * Sie liegt jetzt hier, weil hier gewichtet wird; `PlayPresence.topicFor` ruft dieselbe
+     * Tabelle auf, damit es die Wahrheit nur einmal gibt. Verhalten beim Betreten unveraendert.
+     *
+     * MEDICINE kommt in dieser Tabelle bewusst nicht vor - ein Tagesplan darf kein Weg sein, auf
+     * dem eine Medikamenten-Handlung doch noch in den autonomen Ablauf gelangt (siehe
+     * Klassendoku und [combinedWeights]).
+     */
+    fun plannedTopicFor(hour: Int): AnimationType = when (hour) {
+        in 0..5 -> AnimationType.SLEEP
+        6 -> AnimationType.GENERAL
+        7 -> AnimationType.DRINK
+        8 -> AnimationType.MOVE
+        9 -> AnimationType.FOCUS
+        10, 11 -> AnimationType.WORK
+        12 -> AnimationType.DRINK
+        13 -> AnimationType.MOVE
+        14 -> AnimationType.WORK
+        15 -> AnimationType.FOCUS
+        16 -> AnimationType.CREATIVITY
+        17 -> AnimationType.MOVE
+        18 -> AnimationType.DRINK
+        19 -> AnimationType.LOVE
+        20 -> AnimationType.BOOK
+        21 -> AnimationType.REST
+        22 -> AnimationType.MINDFULNESS
+        else -> AnimationType.SLEEP
+    }
+
+    /**
      * Themenwahl fuer eine PERFORM-Regung: [phase] (Default: die aktuelle Uhrzeit) bestimmt die
      * Grundgewichtung, [boostedTopics] (Default: keine, siehe [com.notime.glyphsim.ui.PlayHabitSignal])
      * hebt heute noch offene echte Gewohnheiten zusaetzlich an.
@@ -156,8 +195,19 @@ object PlayAmbientActivity {
          * keine Figur mehr, sondern eine Einstellung.
          */
         leaning: Set<AnimationType> = emptySet(),
+        /**
+         * Was zu dieser Stunde ANSTEHT (siehe [plannedTopicFor]) - das vierte Signal.
+         *
+         * **Absichtlich ohne Vorgabewert aus der Uhr.** Ein Default, der selbst
+         * [PlayTimeLapse] liest, waere bequem und falsch: Ein Aufrufer, der eine Phase
+         * ausdruecklich uebergibt (jeder Test tut das), bekaeme dann den Plan der ECHTEN
+         * Uhrzeit dazu - nachts geprueft, mittags geplant. Wer den Plan will, reicht ihn
+         * durch; `null` heisst schlicht "ohne Plan gewichten".
+         */
+        plannedTopic: AnimationType? = null,
         random: Random = Random
-    ): AnimationType = pickWeighted(combinedWeights(phase, boostedTopics, stayAt, leaning), random)
+    ): AnimationType =
+        pickWeighted(combinedWeights(phase, boostedTopics, stayAt, leaning, plannedTopic), random)
 
     /**
      * Grob am ueblichen Tagesrhythmus orientiert, nicht an einer festen Uhrzeit-Tabelle mit
@@ -230,14 +280,27 @@ object PlayAmbientActivity {
         phase: DayPhase,
         boostedTopics: Set<AnimationType>,
         stayAt: PlayScene.Place? = null,
-        leaning: Set<AnimationType> = emptySet()
+        leaning: Set<AnimationType> = emptySet(),
+        plannedTopic: AnimationType? = null
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
-        if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty()) return base
+        val relevantPlan = plannedTopic?.takeIf { it != AnimationType.MEDICINE }
+        if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null) {
+            return base
+        }
         val combined = base.toMutableMap()
         for (topic in relevantBoosts) {
             combined[topic] = (combined[topic] ?: 0) + HABIT_BOOST
+        }
+        // **Der Stundenplan darf ein Thema auch EINFUEHREN, nicht nur verstaerken** - anders als
+        // Neigung und Verweilen, die bewusst nur gewichten, was zur Phase ohnehin passt. Der
+        // Grund ist der Unterschied zwischen den beiden Aussagen: Eine Neigung sagt "das mag er",
+        // der Plan sagt "das ist jetzt dran". Sichtbar wird das genau einmal am Tag, und dort
+        // gehoert es hin: Die Phase MORNING (6-10 Uhr) kennt kein WORK, der Plan sieht um zehn
+        // aber den Arbeitsbeginn vor. Ohne diese Zeile ginge die Figur vormittags nie zur Arbeit.
+        if (relevantPlan != null) {
+            combined[relevantPlan] = (combined[relevantPlan] ?: 0) + PLAN_BONUS
         }
         // Die Neigung wirkt nur auf das, was zur Tageszeit ohnehin vorkommt - aus demselben Grund
         // wie beim Verweilen: Sie soll gewichten, nicht Themen erfinden.
@@ -331,6 +394,25 @@ object PlayAmbientActivity {
      * ist gewachsen und darf nur faerben.
      */
     private const val LEANING_BONUS = 2
+
+    /**
+     * Zuschlag fuer das, was der Stundenplan gerade vorsieht (siehe [plannedTopicFor]).
+     *
+     * Bewusst genau so gross wie [HABIT_BOOST]: Beide sagen "das steht jetzt an", nur aus
+     * verschiedenen Quellen - die Uhr und der Nutzer. Keine der beiden Stimmen soll die andere
+     * uebertoenen.
+     *
+     * Und bewusst KLEINER als [STAY_BONUS] (5). Das Verweilen behebt die gemeldete Beschwerde
+     * "er rennt immer nur von einem Raum in den naechsten"; ein Plan, der staerker zoege, haette
+     * sie zurueckgeholt - er wechselt ja stuendlich das Thema und damit den Ort. So bleibt es
+     * eine Absicht, gegen die ein angefangener Aufenthalt noch bestehen kann.
+     *
+     * Wirkung an einem Beispiel: Morgens (MOVE 5, GENERAL 3, DRINK 3, FOCUS 2, MINDFULNESS 1,
+     * Summe 14) hebt der Plan um sieben Uhr DRINK von 3 auf 7 und damit von 21% auf 39% - klar
+     * erkennbar, aber keine Gewissheit. Genau das ist gewollt: Der Tag soll lesbar sein, nicht
+     * abgespult.
+     */
+    private const val PLAN_BONUS = 4
 
     private const val ACTION_WEIGHT_PERFORM = 7
     private const val ACTION_WEIGHT_FIDGET = 5

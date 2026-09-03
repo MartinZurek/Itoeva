@@ -62,7 +62,33 @@ betroffenes Feedback, beobachtetes Problem, Spielerwirkung, Evidenz, Ergebnis un
 sinnvollen Hebel. Vermutungen werden als **Hypothese**, nicht als Tatsache, markiert. Das Journal
 ist eine Uebergabe, keine zweite Commit-Liste.
 
-Noch kein automatisierter Tagesablauf-Lauf abgeschlossen.
+### 2026-09-03 - Der vorhandene Stundenplan war im laufenden Tag wirkungslos
+
+- **Betroffenes Feedback:** FB-2026-09-03-01 und FB-2026-09-02-01, beide **weiterhin `[open]`**.
+  Diese Evolution ist ein Hebel darauf, erledigt aber keinen der beiden Eintraege vollstaendig.
+- **Beobachtetes Problem:** `PlayPresence.topicFor` haelt einen exakten 24-Stunden-Plan bereit,
+  wurde aber nur beim Betreten des Spielmodus gelesen. Die Regungs-Schleife arbeitete allein mit
+  den vier `DayPhase`-Bloecken. Von 11 bis 17 Uhr ist alles gleich "Mittag", also konnten Essen,
+  Arbeit und Fokus in beliebiger Reihenfolge beliebig oft kommen - und da jede `PERFORM`-Regung
+  den Ort wechselt, sah das aus wie Pendeln statt wie ein Tag.
+- **Evidenz:** `FACT` - die Aufrufstellen der Tabelle waren vor dieser Aenderung `PlayPresence.entry`
+  und der Play-Modus-Einstieg in `DockScreen`, sonst keine. Phasengrenzen 6-10/11-17/18-22/Nacht
+  sind in `currentDayPhase` belegt und durch einen bestehenden Test fixiert.
+- **Ergebnis:** Der Plan ist jetzt das vierte additive Signal der Themenwahl (`PLAN_BONUS = 4`),
+  gleich stark wie das Gewohnheits-Signal und schwaecher als der Verweil-Bonus. Er darf ein Thema
+  auch einfuehren, was genau einmal am Tag greift: den Arbeitsbeginn um zehn, den die Morgenphase
+  bisher nicht kannte. Charakterneigung, offene Gewohnheiten und Weltzustand gewichten unveraendert
+  dagegen, damit sich die sechs Wesen weiterhin unterscheiden.
+- **Spielerwirkung:** Um sieben wird eher gefruehstueckt, um zehn eher gearbeitet, um acht abends
+  eher gelesen - erkennbar, aber ohne Gewissheit (im Beispiel Fruehstueck: 21% auf 39%). Die
+  Ueberraschung bleibt bei den Sonderaktivitaeten und den Weltzustands-Ueberstimmungen.
+- **Naechster sinnvoller Hebel (Hypothese):** Ein kurzer Wiederholungs-Daempfer - ein gerade
+  gespieltes Thema fuer wenige Runden geringer gewichten. Der Verdacht ist, dass danach noch
+  auffaellt, wenn dasselbe Thema zweimal kurz hintereinander faellt. **Nicht belegt:** Es fehlt die
+  Beobachtung am Geraet, ob das nach dieser Aenderung ueberhaupt noch stoert.
+- **Anmerkung zur Herkunft:** Diese Evolution entstand in einer Cloud-Code-Sitzung auf
+  ausdruecklichen Nutzerauftrag, nicht im automatisierten Lauf. Sie folgt denselben Leitplanken.
+
 
 ## Offene Meta-Ideen
 

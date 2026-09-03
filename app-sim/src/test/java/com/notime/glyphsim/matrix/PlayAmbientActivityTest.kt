@@ -115,4 +115,97 @@ class PlayAmbientActivityTest {
         val night = (1..200).minOf { PlayAmbientActivity.nextPauseMillis(PlayAmbientActivity.DayPhase.NIGHT) }
         assertTrue("Nachts ist es nicht ruhiger als mittags ($night vs $midday)", night > midday)
     }
+
+    // ---- Stundenplan als viertes Signal ----
+
+    /**
+     * Der Plan muss jede Stunde beantworten und darf MEDICINE nie nennen - er ist sonst ein
+     * stiller Umweg, auf dem eine Medikamenten-Handlung doch in den autonomen Ablauf geriete.
+     */
+    @Test
+    fun `der Stundenplan deckt jede Stunde ab und nennt nie MEDICINE`() {
+        for (hour in 0..23) {
+            assertTrue(
+                "MEDICINE als Tagesplan um $hour Uhr",
+                PlayAmbientActivity.plannedTopicFor(hour) != AnimationType.MEDICINE
+            )
+        }
+        // Eckpunkte des dokumentierten Ablaufs - Fruehstueck, Arbeitsbeginn, Abendlektuere, Nacht.
+        assertEquals(AnimationType.DRINK, PlayAmbientActivity.plannedTopicFor(7))
+        assertEquals(AnimationType.WORK, PlayAmbientActivity.plannedTopicFor(10))
+        assertEquals(AnimationType.BOOK, PlayAmbientActivity.plannedTopicFor(20))
+        assertEquals(AnimationType.SLEEP, PlayAmbientActivity.plannedTopicFor(3))
+    }
+
+    /**
+     * **Der eigentliche Zweck: Der Tag wird lesbar.** Um sieben sieht der Plan das Fruehstueck
+     * vor - danach soll DRINK deutlich haeufiger vorkommen als ohne Plan, aber eben nicht immer.
+     */
+    @Test
+    fun `ein geplantes Thema kommt deutlich haeufiger vor als ohne Plan`() {
+        val ohne = zaehle(AnimationType.DRINK, plan = null, seed = 1)
+        val mit = zaehle(AnimationType.DRINK, plan = AnimationType.DRINK, seed = 1)
+        // 3 von 14 (21%) gegenueber 7 von 18 (39%).
+        assertTrue("ohne Plan $ohne, mit Plan $mit", mit > ohne + 400)
+        assertTrue("mit Plan $mit von 4000 - der Plan darf keine Gewissheit sein", mit < 2400)
+    }
+
+    /**
+     * **Der Arbeitsbeginn um zehn.** Die Phase MORNING kennt gar kein WORK; ohne den Plan ginge
+     * die Figur vormittags nie zur Arbeit. Der Plan darf ein Thema deshalb auch einfuehren - im
+     * Unterschied zu Neigung und Verweilen, die nur gewichten, was ohnehin zur Phase passt.
+     */
+    @Test
+    fun `der Plan darf ein Thema einfuehren das die Phase nicht kennt`() {
+        assertTrue(
+            "WORK kommt morgens ohne Plan gar nicht vor",
+            zaehle(AnimationType.WORK, plan = null, seed = 2) == 0
+        )
+        val mit = zaehle(AnimationType.WORK, plan = AnimationType.WORK, seed = 2)
+        // 4 von 18 = gut 22%.
+        assertTrue("WORK kam $mit von 4000 mal", mit in 700..1100)
+    }
+
+    /**
+     * Zwei geschuetzte Zusagen, die der Plan nicht aushebeln darf: MEDICINE bleibt aussen vor,
+     * auch wenn ein Aufrufer es hineinreicht, und nachts bleibt SLEEP das einzige Thema.
+     */
+    @Test
+    fun `der Plan hebelt weder den MEDICINE-Ausschluss noch die Nachtruhe aus`() {
+        val random = Random(3)
+        repeat(2000) {
+            assertTrue(
+                "MEDICINE trotz ausdruecklichem Plan",
+                PlayAmbientActivity.nextTopic(
+                    PlayAmbientActivity.DayPhase.MIDDAY,
+                    plannedTopic = AnimationType.MEDICINE,
+                    random = random
+                ) != AnimationType.MEDICINE
+            )
+            assertEquals(
+                "nachts etwas anderes als Schlaf",
+                AnimationType.SLEEP,
+                PlayAmbientActivity.nextTopic(
+                    PlayAmbientActivity.DayPhase.NIGHT,
+                    plannedTopic = PlayAmbientActivity.plannedTopicFor(3),
+                    random = random
+                )
+            )
+        }
+    }
+
+    /** Wie oft [topic] morgens in 4000 Ziehungen faellt - mit oder ohne Tagesplan. */
+    private fun zaehle(topic: AnimationType, plan: AnimationType?, seed: Int): Int {
+        val random = Random(seed)
+        var treffer = 0
+        repeat(4000) {
+            val gezogen = PlayAmbientActivity.nextTopic(
+                PlayAmbientActivity.DayPhase.MORNING,
+                plannedTopic = plan,
+                random = random
+            )
+            if (gezogen == topic) treffer++
+        }
+        return treffer
+    }
 }
