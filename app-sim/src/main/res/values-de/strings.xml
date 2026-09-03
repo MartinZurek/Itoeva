@@ -324,7 +324,7 @@
     <string name="faq_q_animation_library">Kann ich statt der eingebauten eine eigene Animation nutzen?</string>
     <string name="faq_a_animation_library">Ja – wähl beim Anlegen oder Bearbeiten einer Erinnerung eine aus der Animations-Bibliothek. Eine Bibliotheks-Animation wird dann statt der Standard-Animation des Themas gezeigt.</string>
     <string name="faq_q_skill_tree">Ich hab noch einen Stern übrig – wie setze ich ihn im Fähigkeitenbaum ein?</string>
-    <string name="faq_a_skill_tree">Jeder Levelaufstieg gibt einen Stern. Öffne den Fähigkeitenbaum (Knopf unter deinem Begleiter) und tipp auf einen hervorgehobenen Knoten, der \"als Nächstes\" markiert ist – das gilt für ganze Gruppen genauso wie für einzelne Animationen. Der Tipp verbraucht den Stern und schaltet den Knoten frei; ein zweiter Tipp auf denselben Platz klappt ihn danach auf und zeigt, was jetzt darunter erreichbar ist.</string>
+    <string name="faq_a_skill_tree">Jeder Levelaufstieg gibt einen Stern. Öffne den Fähigkeitenbaum (Knopf unter deinem Begleiter) und tipp auf einen hervorgehobenen Knoten, der \"als Nächstes\" markiert ist – das gilt für ganze Gruppen genauso wie für einzelne Animationen. Der Tipp verbraucht den Stern, schaltet den Knoten frei und spielt seine Reaktion sofort einmal auf deinem Begleiter ab – so siehst du direkt, was du bekommen hast. Der Ast klappt sich dabei von selbst auf, und der neue Knoten bleibt mit \"neu\" markiert, bis du den Baum schließt.</string>
     <string name="faq_q_feeding">Wie reagiere ich eigentlich auf eine Erinnerung?</string>
     <string name="faq_a_feeding">Zieh die Uhr auf mich, oder nutze die Fütter-Geste – so sagst du mir, dass du es getan hast.</string>
     <string name="faq_q_mood">Beeinflusst jede Erinnerung deine Stimmung?</string>
@@ -734,5 +734,11 @@
     <string name="skill_tree_close">Schließen</string>
     <string name="skill_tree_expand_all">Alles aufklappen</string>
     <string name="skill_tree_collapse_all">Alles einklappen</string>
+    <string name="skill_tree_state_unlocked">freigeschaltet</string>
+    <string name="skill_tree_spend_star">⭐ Stern einsetzen</string>
+    <string name="skill_tree_new">neu</string>
+    <string name="skill_tree_preview_skip">Tippen zum Überspringen</string>
+    <string name="skill_tree_lab_title">Testumgebung</string>
+    <string name="skill_tree_lab_hint">Jede Reaktion auf jedem Begleiter ansehen. Hier wird nichts freigeschaltet und nichts verändert.</string>
     <string name="skill_tree_hint">Jeder Levelaufstieg gibt einen Stern ⭐. Tipp auf einen hervorgehobenen Knoten mit \"als Nächstes\", um ihn damit freizuschalten.</string>
 </resources>

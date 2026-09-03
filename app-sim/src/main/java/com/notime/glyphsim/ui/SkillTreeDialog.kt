@@ -39,6 +39,10 @@ fun SkillTreeDialog(
 ) {
     val context = LocalContext.current
     val profileId = PresentCompanion.profileId(context)
+    // Dieselbe Quelle, aus der auch die Profil-ID stammt (siehe PresentCompanion.profileId) - die
+    // Vorfuehrung nach einer Freischaltung laeuft damit garantiert auf der Kreatur, deren Baum
+    // gerade offen ist, und nicht auf einer anderen.
+    val species = remember(context) { AvatarSpeciesPrefs.get(context) }
     val repository = remember(context) { AvatarUnlockRepository(AppDatabase.getInstance(context)) }
     val scope = rememberCoroutineScope()
 
@@ -70,6 +74,7 @@ fun SkillTreeDialog(
             level = level,
             // Wieviel bis zum naechsten Aufstieg fehlt - der Rest bis zur naechsten vollen Stufe.
             xpToNextLevel = PlayModeXp.XP_PER_LEVEL - (xp % PlayModeXp.XP_PER_LEVEL),
+            species = species,
             onUnlock = { nodeId ->
                 if (busy) return@SkillTreeScreen
                 busy = true

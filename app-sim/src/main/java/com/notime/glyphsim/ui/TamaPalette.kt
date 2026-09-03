@@ -61,6 +61,25 @@ internal object TamaPalette {
 
     /** Antippbare Antwort im Gespraech - eine Spur heller als eine Sprechblase. */
     val ChoiceBackground = Color(0xFF2A2A30)
+
+    /**
+     * Der einzige warme Ton der Palette - fuer das, was JETZT eine Handlung von jemandem
+     * verlangt (der Skillpunkt im Faehigkeitenbaum, der frisch freigeschaltete Knoten).
+     *
+     * **Warum ueberhaupt eine Farbe.** Die uebrigen Flaechen liegen zwischen `0xFF0A0A0B` und
+     * `0xFF2A2A30` - das sind vier Graustufen innerhalb von 32 Helligkeitswerten. Nebeneinander
+     * sind sie unterscheidbar, untereinander in einer langen Liste praktisch nicht: "gesperrt",
+     * "als Naechstes" und "freigeschaltet" sahen im Baum gleich aus, und damit war die einzige
+     * Rueckmeldung nach einer Freischaltung unsichtbar. Ein Farbton loest das dort, wo eine
+     * weitere Graustufe es nicht mehr koennte.
+     *
+     * Bewusst genau einer und bewusst sparsam eingesetzt: Sobald mehrere Dinge leuchten, leuchtet
+     * nichts mehr.
+     */
+    val Accent = Color(0xFFE8C46A)
+
+    /** Grund einer Zeile, die den [Accent] traegt - dunkel genug fuer [TextPrimary] darauf. */
+    val AccentBackground = Color(0xFF33291A)
 }
 
 /**

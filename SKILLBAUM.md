@@ -736,7 +736,81 @@ bleibt, oder ob "Alles aufklappen" auf einem schmalen Telefon zu einer sehr lang
 
 ---
 
+### P14 — Rückmeldung beim Freischalten + Testumgebung
+
+Auf Nutzerbericht: **"Ich bin jetzt eine aufgestiegen, hab einen Stein gekriegt und hab versucht,
+diesen einzusetzen, indem ich eine noch gesperrte Fähigkeit ausgewählt hab. Und dann war der Stern
+plötzlich weg, aber die Fähigkeit ist jetzt nicht neu dazugekommen beziehungsweise weiß ich nicht,
+welche ich da tatsächlich freigeschaltet hab. ... Ich hab die Vermutung, dass es tatsächlich gar
+nicht funktioniert."**
+
+**Die Vermutung stimmte — teilweise, und schlimmer als gedacht.** Zwei Befunde, die man
+auseinanderhalten muss:
+
+1. **Geschrieben wird korrekt.** `AvatarUnlockRepository.unlock` legt die Zeile an, der Flow zieht
+   nach, die Zeile im Baum wechselt ihren Zustand. Daran lag es nicht.
+2. **Aber es liest niemand.** `AvatarUnlockRepository` hat seit `7c38f97` genau **einen** Abnehmer
+   im ganzen Modul: `SkillTreeDialog` selbst. Der eigentliche Abnehmer war die Zieh-Leiste
+   (`SkillDragBar`, P5) — auf Nutzerwunsch entfernt, und mit ihr der einzige Ort, an dem ein
+   freigeschalteter Knoten je etwas bewirkte. Seither ist der Skillbaum ein Bildschirm, der einen
+   Punkt verbraucht und eine Datenbankzeile schreibt, sonst nichts. **Das ist der eigentliche
+   Fehler**, und er ist mit dieser Runde NICHT behoben — siehe „Offene Punkte“.
+
+Dazu kam, dass die Rückmeldung selbst unsichtbar war: `stateColor` unterschied `UNLOCKED`
+(`0xFF1E1E22`), `AVAILABLE` (`0xFF2A2A30`) und `LOCKED` (`0xFF0A0A0B`) — drei Graustufen innerhalb
+von 32 Helligkeitswerten, untereinander in einer 79-zeiligen Liste praktisch nicht zu trennen. Lag
+der Knoten in einem zugeklappten Ast, änderte sich gar nichts sichtbar.
+
+- [x] **Vorführung nach der Freischaltung** (`SkillReactionPreview.kt`, neu): Die Reaktion des
+      neuen Knotens läuft einmal auf der eigenen Kreatur, danach zurück in den Baum. Geht über
+      `AvatarAnimations.reactionFor(species, ReactionTrigger.Node(id))` — dieselbe Reaktion wie im
+      Spiel, keine eigene Vorschau-Choreografie. Ein Tipp bricht ab. Ohne
+      `flightOffsetsFor` (die Rakete verließe das Kärtchen); der einzige Unterschied zum Spiel, und
+      er betrifft die Bewegung der Box, nicht die Figur.
+- [x] **Der Ast klappt sich selbst auf**: `SkillTreeRows.ancestorsOf(nodeId)` (rein, getestet) —
+      plus der neue Knoten selbst, falls er Kinder hat. Nach der Vorführung landet man dort, wo
+      etwas passiert ist.
+- [x] **„neu"-Markierung** am zuletzt freigeschalteten Knoten (Rahmen + Beschriftung), bis der
+      Dialog geschlossen wird. Bewusst nicht persistiert: Sie beantwortet „was habe ich gerade
+      getan", nicht „was besitze ich".
+- [x] **Ein warmer Farbton in der Palette** (`TamaPalette.Accent`/`AccentBackground`) — der erste.
+      Er markiert nur, was JETZT antippbar ist (`spendable` = `AVAILABLE` **und** ein Punkt übrig),
+      nicht jeden erreichbaren Knoten: Ein Baum, in dem 20 Zeilen leuchten und keine antippbar ist,
+      wäre schlechter als einer ohne Farbe. Freigeschaltete Zeilen tragen jetzt ein `✓` statt gar
+      nichts.
+- [x] **Optimistischer Bestand** (`pending`/`owned`): Zwischen `onUnlock` und dem nächsten Wert aus
+      dem Flow lagen Millisekunden, in denen der Knoten weiter als „als Nächstes" dastand und
+      `LevelUnlocks.due` den schon ausgegebenen Punkt noch mitzählte. Der `busy`-Riegel im Dialog
+      verhinderte die doppelte Schreibung, aber nicht die falsche Anzeige. Die Vereinigung schließt
+      das Fenster und macht die Rückmeldung zugleich sofort sichtbar.
+- [x] **Testumgebung unter dem Baum**, im selben Bildlauf, zugeklappt eine Zeile: Kreatur wählen,
+      dann **jede** Reaktion ansehen — auch die gesperrten (`SkillTreeRows.previewable()`). Sie
+      schaltet nichts frei und ändert nichts. Absichtlich nicht hinter einer
+      Entwickler-Einstellung: Der Baum verspricht 79 Knoten, und wer wissen will, worauf er
+      zuläuft, soll nachsehen dürfen.
+- [x] FAQ-Antwort (`faq_a_skill_tree`) EN/DE auf das neue Verhalten nachgezogen; sechs neue
+      Zeichenketten EN/DE synchron.
+
+**Prüfen:** Wie bei P11–P13 kein Gradle-Lauf möglich (in dieser Cloud-Sitzung fehlt der Netzzugang
+zum Android-Gradle-Plugin, und es liegt kein Gradle-Cache mit einem `kotlinc` vor). Klammern von
+Hand nachgezählt und ausgeglichen, beide `strings.xml` gegen einen XML-Parser geprüft. Vier neue
+reine Tests in `SkillTreeRowsTest` (`ancestorsOf` ×3, `previewable` gegen `pendingArtwork`) — die
+Compose-Teile selbst sind auf Unit-Ebene nicht erreichbar, das ist eine ehrliche Lücke. Den Nachweis
+führt die CI; auf dem Gerät noch nicht gesehen.
+
+---
+
 ## Offene Punkte
+
+- [ ] **Der Skillbaum hat keinen Abnehmer mehr (Befund aus P14, das Wichtigste hier).** Seit die
+      Zieh-Leiste entfernt ist (`7c38f97`), liest **niemand** ausser dem Baumbildschirm selbst den
+      Freischalt-Stand: `AvatarUnlockRepository` hat genau einen Aufrufer im ganzen Modul. Ein
+      eingesetzter Skillpunkt schreibt eine Zeile und faerbt eine Zeile ein — er veraendert nichts
+      am Spiel. P14 hat die Rueckmeldung sichtbar gemacht, aber nicht diese Ursache behoben. Der
+      naechste Schritt ist der Punkt direkt darunter: **die Welt zum Abnehmer machen.** Solange das
+      offen ist, ist jede weitere Arbeit an der Darstellung des Baums Arbeit an einer Fassade.
+      Nicht erlaubt als Loesung: den Freischalt-Stand vor **echte Erinnerungen** zu haengen — siehe
+      KDoc von `AvatarUnlockedNode` und Regel 1 weiter oben.
 
 - [ ] **Nutzeridee (2026-08-29):** Der Avatar sollte im Alltag (`PlayAmbientActivity.nextTopic`)
       nur Themen wuerfeln, die im Skillbaum auch tatsaechlich freigeschaltet sind - aktuell
@@ -781,6 +855,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-09-03 | P14 | **Der gemeldete Fehler war zwei Fehler.** Geschrieben wird korrekt — aber seit `7c38f97` (Zieh-Leiste entfernt) liest den Freischalt-Stand **niemand** ausser dem Baumbildschirm selbst; `AvatarUnlockRepository` hat genau einen Aufrufer im Modul. Ein Skillpunkt veraendert also tatsaechlich nichts am Spiel — die Vermutung des Nutzers stimmte. Das ist als erster Punkt unter „Offene Punkte" eingetragen und mit dieser Runde NICHT behoben. Behoben ist die zweite Haelfte: Die Freischaltung fuehrt die neue Reaktion sofort einmal auf der eigenen Kreatur vor (`SkillReactionPreview`, geht ueber `AvatarAnimations.reactionFor` — dieselbe Reaktion wie im Spiel), klappt den Ast selbst auf (`SkillTreeRows.ancestorsOf`), markiert den Knoten mit „neu", und `TamaPalette` hat zum ersten Mal einen warmen Ton, der genau das markiert, was JETZT antippbar ist — vorher trennten drei Graustufen innerhalb von 32 Helligkeitswerten „gesperrt", „als Naechstes" und „freigeschaltet". Dazu ein optimistischer Bestand (`pending`/`owned`), der das Fenster zwischen Tipp und Flow-Rueckmeldung schliesst, und die **Testumgebung** unter dem Baum: Kreatur waehlen, jede der 67 Reaktionen ansehen, auch gesperrte. **Fuer die naechste Sitzung:** die Welt zum Abnehmer machen (offener Punkt 1+2) — alles andere am Baum ist bis dahin Fassade. Auf dem Geraet noch nicht gesehen. |
 | 2026-08-29 | Nachtschlaf + Bett-Durchlauf-Bug | **Zwei Nutzerwuensche zur Schlaf-Animation, kein Skillbaum-Paket.** (1) "Der Avatar sollte nachts von 0 bis ca. 6 Uhr durchgehend schlafen." `PlayAmbientActivity.weightsFor(NIGHT)` hatte SLEEP bisher nur als HAEUFIGSTES von drei Themen (Gewicht 5 von 9 mit REST/MINDFULNESS, ~55%) - jetzt ist SLEEP das EINZIGE Thema mit Grundgewicht (12, REST/MINDFULNESS raus). Ohne offene Gewohnheit kommt nachts jetzt immer SLEEP; eine tatsaechlich offene, heute unerreichte Gewohnheit kann ueber den Boost (+4) weiterhin gelegentlich durchscheinen - das ist keine Nachlaessigkeit, sondern der schon vorher dokumentierte, bewusste Grundsatz ("eine offene Trink-Gewohnheit darf auch nachts einmal durchscheinen"), nur jetzt klar in der Minderheit statt beinahe gleichauf. Test umbenannt/verschaerft: `nachts ist SLEEP ohne offene Gewohnheit das einzige Thema` (vorher: "das mit Abstand haeufigste"). (2) "Er sieht so aus, als wuerde der Avatar durchs Bett durchgehen." Ursache gefunden in `DockScreen.kt`s `runRoutine`: `RoutineStep.Occupy` setzte `occupiedStation` (steuert die vordere Bettdecken-Ebene, [PlayScene.buildFront]s Layer, das "als einziges NACH dem Avatar gezeichnet wird") erst NACH der 420ms-Aufstiegs-Animation vom Boden auf die Matratze - waehrend der gesamten Bewegung war die stehende Figur also unverdeckt sichtbar und wanderte sichtbar durchs Kopfteil/die Matratze, bevor am Ziel ploetzlich die Decke erschien. `RoutineStep.Rise` hatte das spiegelverkehrte Problem (Decke verschwand SOFORT beim Aufstehen, die Abwaertsbewegung durchs Bett war danach unverdeckt sichtbar). Behoben durch Umsortieren: `occupiedStation` wird bei `Occupy` jetzt VOR der Animation gesetzt (Decke deckt schon beim Hinlegen zu) und bei `Rise` erst NACH der Animation geloescht (Decke bleibt bis zum Stehen auf dem Boden). Gilt allgemein fuer jede Requisite mit `frontArt` (auch Sofa/Sessel etc.), nicht nur das Bett. **Nicht gegengeprueft:** Dieser Fehler liegt in Compose-Animationslogik (`DockScreen.kt`), nicht in reinen `PlayInk`/`PlayEffects`-Zellfunktionen - die JVM-Rendering-Technik aus fruaeheren Sitzungen (Gradles gebuendelter Kotlin-Compiler ausserhalb des Android Gradle Plugins) greift hier NICHT, weil sie keine Compose-Laufzeit/Coroutinen simulieren kann. Die Diagnose beruht auf genauem Lesen der Prop-Geometrie (`BED.frontArt` deckt Zeilen 2-5, `useSpot` liegt auf Zeile 5, der Boden entspricht Zeile 6) und der Reihenfolge der Zustandsaenderungen, nicht auf einem gesehenen Bild. **Fuer die naechste Sitzung:** Auf einem echten Geraet/Emulator die Schlafanimation ansehen und bestaetigen, dass das Hinlegen jetzt wie ein Hineinlegen statt eines Durchlaufens aussieht - falls nicht, faellt der Verdacht auf die WAAGERECHTE Anlaufposition (GoTo zielt auf `useSpot.x`, die Mitte der Matratze, nicht auf eine Stelle seitlich davon wie bei Tisch/Schreibtisch ueblich - siehe `Prop.useSpot`-Doku "wer an einem Tisch STEHT, steht daneben"). |
 | 2026-08-29 | Fix: App-Absturz beim Anlegen aus dem Gespraech | **Echter Absturz auf dem Geraet, vom Nutzer mit vollem Stacktrace gemeldet** (nachdem der Nachahm-Vorschlag aus dem vorigen Eintrag endlich sichtbar war und benutzt wurde): `com.notime.glyphcore.data.InvalidReminderException: Intervall 40 min steht nicht in INTERVAL_OPTIONS`, ausgeloest ueber `GlyphReminderViewModel.addReminder` -> `GlyphReminderRepository.add` -> `validated()`, uncatched in der `viewModelScope`-Coroutine - eine Ausnahme dort beendet den ganzen Prozess. Der Nutzer vermutete zunaechst, das haenge mit einer noch nicht freigeschalteten Skillbaum-Animation zusammen (nachvollziehbare Theorie, siehe Zitat: "es müsste so sein, dass der Avatar im Alltag auch nur die Animationen macht, welche er auch freigeschaltet hat") - stimmte hier aber nicht: die Reminder-Erstellung beruehrt den Skillbaum ueberhaupt nicht, das ist ein eigenstaendiges, separates Thema (siehe "Offene Punkte" unten). Tatsaechliche Ursache: `PlayTalk.presetFor(topic, busyPhase)` verengt bei beantworteter Tageszeit-Frage (`Ask.TIME`) das Zeitfenster und berechnet daraus per Division ein "passendes" Intervall (`(end-start)/slots`) - dieser Wert trifft praktisch nie einen der festen, im Bearbeiten-Dialog waehlbaren Werte (`INTERVAL_OPTIONS = [1,5,10,15,20,30,45,60,90,120]`), gegen die `ReminderValidation` jede NICHT vom Spielmodus gewuerfelte Erinnerung streng prueft. Behoben durch Abrunden auf den naechstkleineren erlaubten Wert (`INTERVAL_OPTIONS.filter{it<=rawInterval}.maxOrNull()`) - haelt das Tagesziel mindestens so erreichbar wie der unrunde Zwischenwert, da ein kuerzerer Abstand nur mehr Anstupser im Fenster unterbringt, nie weniger. Neuer Regressionstest baut denselben Weg nach, den `MainActivity.onAddHabit` tatsaechlich geht (Preset -> `GlyphReminder` -> `ReminderValidation.validate`) fuer jede Kombination aus vorschlagbarem Thema und Tageszeit - und haette den urspruenglichen Fehler gefangen. **Lehre:** Ein Preset, das eine Oberflaeche nur ANZEIGT, braucht keine Validierung; eines, das direkt in `repository.add()` landet, unterliegt denselben Regeln wie jede manuell eingegebene Erinnerung - das war hier nicht konsequent zu Ende gedacht. Dieser komplette Codepfad (Anlegen ueber das Gespraech mit beantworteter Zeitfrage) war zudem bis zum vorigen Fix schlicht unerreichbar (siehe Eintrag darueber) und deshalb nie in der Praxis gelaufen. **Nicht gegengeprueft:** wie immer kein Netzzugriff, kein Gradle-Lauf. **Fuer die naechste Sitzung:** Diesmal liegt ein ECHTER Absturzbericht vom Geraet vor (nicht nur Code-Lesen) - das ist die verlaesslichste Verifikation, die diese Sitzung bisher hatte; nach dem naechsten Update erneut ueber das Gespraech eine Erinnerung mit beantworteter Zeitfrage anlegen und bestaetigen, dass es jetzt durchlaeuft. |
 | 2026-08-29 | Gespraech: Erzaehlen statt Vorschlagsliste | **Kein Skillbaum-Paket, sondern Nutzer-Feedback zum Gespraech mit dem Avatar (`PlayTalk`/`PlayTalkPanel`) - hier trotzdem festgehalten, weil derselbe Branch/PR.** Zitat: "wenn man den Avatar antippt... geh doch lesen... das ist irgendwie sinnfrei... schoener waer's, wenn er son bisschen was von sich selbst erzaehlt, was er grade tut und was er vorhat fuer den Abend... und dass man dem quasi nachahmt, was er da macht." Untersuchung ergab: Die Datengrundlage (`PlayTalk.Doing`/`Mood`/`Remark.DOING`, `Headline.OPEN_TOPICS` mit `steering`-Themen, `Offer.Ask`/`Offer.Add`) existierte schon vollstaendig - das Problem war NICHT fehlende Mechanik, sondern dass `remarkFor()` die "Gerade bin ich..."-Zeile GLEICHBERECHTIGT mit Wetter/Besuch/Verdienst verlost (`Random.nextInt(1_000)` unter allen zutreffenden `Remark`s) und dadurch im Schnitt in drei von vier Gespraechen gar nicht auftauchte - der Nutzer sah dann nur noch das kontextlose "Dann mach doch - Lesen" (`Offer.Ask`) ohne die Erzaehlung davor. Drei gezielte Aenderungen statt eines Neubaus: (1) `PlayTalk.secondaryRemarkFor()` neu, dieselbe Rotation OHNE `Remark.DOING` (das Nebenbei bleibt gewuerfelt, DOING nicht mehr); `PlayTalkPanel` zeigt die Doing-Zeile jetzt unbedingt und zuerst (`DoingLine`), samt der bisher nur unter der vergrabenen "Hier"-Frage versteckten `talk_a_doing_why`-Begruendung direkt darunter. (2) `Headline.OPEN_TOPICS` heisst abends ("Fuer heute Abend hab ich noch vor:", neuer String `talk_a_steering_evening`) statt neutral "Heute noch offen" - dieselbe Themenliste, aber als Vorhaben statt als Bilanz gelesen, und damit die Erklaerung dafuer, welche Symbole gleich noch auftauchen. (3) `PlayTalk.focus()` bekommt einen optionalen `doing`-Parameter: Tut der Avatar gerade etwas, wofuer der Nutzer noch KEINE eigene Erinnerung hat (`doing.topic in knowledge.missing`), wird genau das als `Offer.Add` vorgeschlagen statt der durchrotierten Standardauswahl - das ist das "Nachahmen": man sieht die Taetigkeit UND kann sie sich direkt danach selbst vornehmen (`talk_a_suggest_mirror`, EN/DE). **Nachtrag in derselben Sitzung, vom Nutzer direkt nach dem ersten Push gemeldet ("das sehe ich nicht"):** Der Nachahm-Vorschlag stand zunaechst HINTER `Offer.ShowGame` und `Offer.ShowPath` in der Prioritaetenliste - und die sind im Spielmodus so gut wie IMMER gesetzt (`includeGame = true` in DockScreen, `developmentOf` liefert nie `null`). Bei `MAX_OFFERS = 2` waren die zwei erlaubten Plaetze dadurch praktisch immer schon von ShowGame+ShowPath (oder ShowGame+headline-Bitte) belegt, bevor die Nachahm-Pruefung ueberhaupt erreicht wurde - der Mechanismus war korrekt, aber in der echten App unerreichbar. Behoben durch Umsortieren: das Nachahmen steht jetzt direkt hinter einer dringenden Bitte (BROKE/SHOPPING/OPEN_TOPICS) und noch VOR ShowGame. Fuenf statt vier neue Tests in `PlayTalkTest.kt` (secondaryRemarkFor ohne DOING, secondaryRemarkFor still bei reiner Doing-Lage, Mirror-Vorschlag greift/greift nicht, plus eine Regression mit gesetztem `game`+`development`, die den Verdraengungs-Fehler nachstellt). **Lehre:** Tests fuer eine neue Optionsprioritaet muessen den REALISTISCHEN Zustand nachstellen (hier: Spielmodus mit `game`/`development` gesetzt), nicht nur die isolierte Bedingung - die vier ersten Tests pruefen zwar den Mechanismus richtig, haetten die Verdraengung aber nie gefunden, weil sie `game`/`development` beide auf `null` liessen. **Bewusst NICHT gebaut:** eine freie Unterhaltung/ein echtes Sprachmodell - PlayTalk bleibt strikt datengebunden (Klassendoku: "nichts wird erfunden"), das war schon vor dieser Aenderung so und ist explizit die Staerke des Systems, nicht eine Luecke. **Nicht gegengeprueft:** wie immer kein Netzzugriff, kein Gradle-Lauf; Kotlin von Hand gegen bestehende Aufrufstellen (`PlayTalkPanel.kt`, `DockScreen.kt`) abgeglichen. **Fuer die naechste Sitzung:** `gradlew.bat :app-sim:testDebugUnitTest`, dann im Play-Modus abends antippen und pruefen, ob sich die neue Reihenfolge (Doing → Warum → Abend-Vorhaben → Bitte/Nachahm-Vorschlag) tatsaechlich wie eine Erzaehlung liest und nicht wie vier Saetze hintereinander. Die vom Nutzer zusaetzlich gewuenschte freie Rueckfrage ("mit ihm quatschen koennen") ist damit noch nicht abgedeckt - PlayTalk bleibt auf feste Fragen/Antworten beschraenkt, das waere ein eigenes, groesseres Vorhaben. |

@@ -91,6 +91,47 @@ class SkillTreeRowsTest {
         assertEquals(2, offenSpaeter)
     }
 
+    /**
+     * Die Rueckmeldung nach einer Freischaltung haengt daran: Der Bildschirm klappt genau diese
+     * Knoten auf, damit der neue Knoten sichtbar ist, statt in einem zugeklappten Ast zu
+     * verschwinden.
+     */
+    @Test
+    fun `die Vorfahren eines Blattes sind Untergruppe und Hauptgruppe, ohne es selbst`() {
+        assertEquals(
+            setOf("sport/ballsport", "sport"),
+            SkillTreeRows.ancestorsOf("sport/ballsport/basketball")
+        )
+    }
+
+    @Test
+    fun `eine Hauptgruppe hat keine Vorfahren`() {
+        assertEquals(emptySet<String>(), SkillTreeRows.ancestorsOf("sport"))
+    }
+
+    /**
+     * Ein unbekannter Pfad darf keine erfundene Kette liefern - der Bildschirm wuerde sonst einen
+     * Ast aufklappen, den es nicht gibt (siehe [AnimationTree.fallbackChain]).
+     */
+    @Test
+    fun `ein unbekannter Knoten hat keine Vorfahren`() {
+        assertEquals(emptySet<String>(), SkillTreeRows.ancestorsOf("gibt/es/nicht"))
+    }
+
+    /**
+     * Die Testumgebung fuehrt Reaktionen vor. Ein Knoten ohne Motiv haette nichts zu zeigen, und
+     * genau diese Knoten sind die, die [SkillTreeRows.build] als [NodeState.PENDING_ART] fuehrt -
+     * die beiden Mengen duerfen nicht auseinanderlaufen.
+     */
+    @Test
+    fun `vorfuehrbar sind genau die Knoten mit Motiv`() {
+        val vorfuehrbar = SkillTreeRows.previewable().map { it.id }.toSet()
+        val ohneMotiv = AnimationTree.pendingArtwork().map { it.id }.toSet()
+
+        assertEquals(AnimationTree.nodes.size, vorfuehrbar.size + ohneMotiv.size)
+        assertEquals(emptySet<String>(), vorfuehrbar intersect ohneMotiv)
+    }
+
     /** Ist alles offen, darf keine Zeile mehr einen anderen Zustand tragen. */
     @Test
     fun `bei vollstaendig offenem Baum ist alles freigeschaltet`() {
