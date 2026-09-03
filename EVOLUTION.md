@@ -1,12 +1,14 @@
 # Itoeva Evolution Protocol
 
-Version: 0.3 - seit 2026-09-02 mit einem kontrollierten Dauerauftrag für das beobachtbare
-Avatarleben. Ist kein ausdrücklich priorisierter Backlog-Eintrag offen, darf die tägliche
-Evolution innerhalb der bestehenden Mechanik selbst einen spielerisch wirksamen Hebel an
-Tagesablauf, Individualität, Übergängen oder sanfter Reminder-Wirkung wählen. Ein versioniertes
-Lern- und Feedback-Overlay darf Evidenz zwischen Läufen weitergeben; Sicherheitsgrenzen,
-Produktentscheidungen und der Ablauf aus Branch, zweitem Reviewer, PR und menschlichem Merge
-bleiben unverändert. Die enge erzählerische Autonomie aus Version 0.2 (2026-08-18) gilt fort.
+Version: 0.4 - seit 2026-09-03 mit der strategischen Zielidentität einer öffentlich beobachtbaren
+Evolutionswelt. Die lokale persönliche App, eine davon getrennte stille Twitch-Welt und ein von
+den Avataren erzähltes YouTube-Evolutionstagebuch sollen verschiedene Perspektiven auf dasselbe
+gestalterische Experiment eröffnen. Zuschauer dürfen die öffentliche Welt künftig nur durch
+begrenzte Impulse beeinflussen, nicht private oder medizinische Reminder steuern. Technische
+Streaming-, Netzwerk-, Konto-, Zahlungs- und Medienarchitektur bleiben bis zu gesonderten
+Entscheidungen offen. Der kontrollierte Tagesablauf-Dauerauftrag aus Version 0.3 (2026-09-02), die
+enge erzählerische Autonomie aus Version 0.2 (2026-08-18) und alle Sicherheits- und Merge-Grenzen
+gelten fort.
 
 Dieses Dokument legt fest, wie Itoeva weiterentwickelt werden darf, ohne die heute im Repository
 erkennbare Identität, bereits getroffene Produktentscheidungen oder nachweisbares Verhalten
@@ -48,12 +50,38 @@ Der Spielanteil ist kein getrenntes Minispiel. Er verwendet dieselbe Reminder- u
 Fütter-Pipeline wie die Alltagsfunktion und erweitert sie um Ambient-Routinen, Charakterpläne,
 XP, Entwicklungspfade, Beziehungskapitel und persönliche Geschichten.
 
-**OPEN DECISION:** Der endgültige Produktname ist im Repository nicht eindeutig. Verwendet werden
-unter anderem Itoeva, Glyphminder und Tama.
+**OPEN DECISION:** Der endgültige Produktname ist nicht eindeutig. Im Repository werden unter
+anderem Itoeva, Glyphminder und Tama verwendet; der Nutzer bezeichnet die übergreifende Vision
+aktuell zusätzlich als „Toeva“.
 
 **OPEN DECISION:** Es ist nicht abschließend dokumentiert, ob die Nothing-Hardware-App und die
 Simulator-/Tama-App dauerhaft zwei Produkte bleiben oder welche davon die primäre Produktfassung
 ist.
+
+### Strategische Zielidentität: öffentlich beobachtbare Evolutionswelt (entschieden 2026-09-03)
+
+Der Produktverantwortliche hat die übergreifende Richtung festgelegt: Itoeva soll nicht nur eine
+App mit automatisiert erzeugten Inhalten sein, sondern am erlebbaren Produkt selbst zeigen, was
+automatisierte Gestaltung von Geschichten und Pixel-Avatar-Leben leisten kann und wo ihre Grenzen
+liegen. Angenommene Veränderungen, Rücknahmen und belegte Fehlschläge dürfen Teil der Erzählung
+werden; eine erfundene Erfolgsgeschichte ist nicht erlaubt.
+
+Die Zielidentität umfasst drei getrennte Perspektiven:
+
+1. Die **persönliche App** bleibt die lokale, private Beziehung zwischen Nutzer, Remindern und
+   eigenem Avatarleben.
+2. Eine **öffentliche Twitch-Welt** soll als eigene Instanz dauerhaft und ohne Sprecher das
+   laufende Leben der Avatare zeigen. Zuschauer dürfen über klar begrenzte Berechtigungen aus
+   Abos, Donations oder vergleichbaren Mechanismen zulässige Weltimpulse geben.
+3. Ein **YouTube-Evolutionstagebuch** soll möglichst von den Avataren selbst als Protagonisten
+   erzählen lassen, was sich täglich tatsächlich verändert hat, was sie erlebt haben und welche
+   Grenze der Evolution sichtbar wurde. Kürzere Highlight-Formate dürfen auf denselben belegten
+   Ereignissen aufbauen.
+
+Entschieden ist die gestalterische Richtung, nicht ihre technische Ausführung. Insbesondere sind
+Backend, Streaming, Identität, Zahlung, Moderation, Kontingente, Cooldowns, Video- und
+Stimmerzeugung, Veröffentlichungsrhythmus sowie Rechte- und Plattformfragen weiterhin
+`OPEN DECISION` und kein Auftrag an einen autonomen Lauf.
 
 ## Non-Negotiable Design Principles – welche Eigenschaften bei jeder Evolution erhalten bleiben müssen
 
@@ -111,6 +139,22 @@ bedarf ausdrücklicher Freigabe.
   keine Analyse- oder Absturzübertragung und keine eigene Netzwerkkommunikation.
 - Jede geplante Abweichung davon erfordert eine ausdrückliche Produktentscheidung sowie eine
   vorherige Prüfung und Aktualisierung von Store-Texten und Datenschutzerklärung.
+- Die öffentliche Streaming-Welt ist eine künftige, getrennte Produktoberfläche. Ihre Vision hebt
+  den lokalen und privaten Datenvertrag der persönlichen App nicht auf.
+
+### Öffentlicher Einfluss bleibt begrenzt und getrennt
+
+- Zuschauer dürfen nur die öffentliche, erfundene Welt beeinflussen, niemals persönliche
+  App-Reminder, lokale Nutzerhistorien oder private Avatarstände.
+- `MEDICINE` und andere medizinisch wirkende Reminder sind für Zuschauerinteraktionen vollständig
+  ausgeschlossen.
+- Zuschauer geben begrenzte Impulse, etwa auf Zeitpunkt, Aktivitätsgewicht oder Wahlrahmen. Die
+  Eigenlogik und Persönlichkeit des Avatars bleibt erhalten; beliebige Fernsteuerung ist nicht
+  Teil der Vision.
+- Abos, Donations oder häufige Interaktion dürfen keine Schuld-, Verlust- oder Strafmechanik
+  erzeugen.
+- Ungeprüfter Freitext darf nicht unmittelbar als Dialog, Lore, Code oder ausführbarer Auftrag in
+  die Welt übernommen werden.
 
 ### Zugängliche Kerninteraktion
 
@@ -139,6 +183,11 @@ werden:
 - Datenmigrationen und Abwärtskompatibilität, damit bestehende Routinen und Geschichte erhalten
   bleiben.
 - Dokumentation widersprüchlicher, veralteter oder noch ungeprüfter Aussagen.
+- Wahrheitsgetreue, avatarzentrierte Rückblicke auf angenommene Evolutionen und belegte
+  Weltereignisse als Grundlage späterer Video- oder Highlight-Formate.
+- Beobachtbarkeit der öffentlichen Welt und klar begrenzte Weltimpulse, sofern sie zunächst ohne
+  Netzwerk-, Zahlungs- oder Kontenarchitektur auf der niedrigsten sinnvollen Ebene modelliert und
+  getestet werden können.
 
 **OPEN DECISION:** Das Repository definiert kein finales Spielziel, Spielende und keine
 Sieg-/Niederlage-Struktur. Eine solche Struktur darf nicht ohne bewusste Entscheidung eingeführt
@@ -277,6 +326,10 @@ Evolution ohne gesonderte Review und ausdrückliche Entscheidung semantisch ver�
   Evolution" → "Erzählerische Autonomie". Bestehende Texte, die drei etablierten Beziehungen und
   die sechs Persönlichkeiten bleiben unverändert geschützt.
 - Datenschutz-, Netzwerk- und Store-Versprechen.
+- Trennung zwischen persönlicher App-Instanz und öffentlicher Streaming-Welt.
+- Ausschluss persönlicher und medizinischer Reminder aus jeder Zuschauerinteraktion.
+- Twitch-/YouTube-, Streaming-, Netzwerk-, Konto-, Zahlungs-, Moderations- und
+  Medienerzeugungsarchitektur, solange dafür keine eigene menschliche Entscheidung vorliegt.
 - Paketnamen, Application IDs, Signatur-/Keystore-Konfiguration und Releasevarianten.
 - Hardware-spezifische Glyph-SDK-Integration und Gerätekennungen.
 - Barrierefreiheitssemantik der Kerninteraktionen.
@@ -811,6 +864,52 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   kann ohne Produktfeedback nicht abschließend entschieden werden. Das Overlay darf deshalb nur
   kleine, überprüfbare Hypothesen sammeln; menschliches Feedback kann sie in späteren PRs
   bestätigen, korrigieren oder entfernen.
+
+### 2026-09-03 - Öffentliche Evolutionswelt und verbindliche Cloud-Code-Übergabe
+
+- **Version:** Protokoll 0.3 → 0.4. Strategische Produkt- und Dokumentationsentscheidung ohne
+  Änderung an App-Laufzeit, Datenmodell oder GitHub-Workflow; Rücksetzweg ist ein gewöhnlicher
+  Revert dieses Dokumentations-PRs.
+- **Ausgangsproblem und Nutzerwirkung:** Nach dem in PR #62 verankerten Tagesablauf-Dauerauftrag
+  war zwar geklärt, woran tägliche Jobs arbeiten sollen, aber nicht vollständig dokumentiert,
+  warum die Evolution selbst Teil des Produkterlebnisses ist. Die gewünschte Verbindung aus
+  persönlicher App, öffentlichem stillem Twitch-Beobachtungsraum und avatarerzähltem
+  YouTube-Tagebuch fehlte. Neue Cloud-Code-Sitzungen hätten diese Richtung nur aus einem Chat,
+  nicht aus dem Repository erfahren.
+- **Evidenzklassifikation:** `DOCUMENTED INTENT` auf Grundlage der ausdrücklichen
+  Nutzerentscheidung vom 2026-09-03. Alle Plattform- und Betriebsannahmen bleiben `UNVERIFIED`
+  beziehungsweise, wo noch keine Entscheidung getroffen wurde, `OPEN DECISION`.
+- **Getroffene Produktentscheidung:** Itoeva soll als öffentlich nachvollziehbares Experiment die
+  Möglichkeiten und Grenzen automatisierter Geschichten- und Avatarwelt-Gestaltung zeigen. Die
+  drei Zielperspektiven sind persönliche App, getrennte Twitch-Welt und avatarzentriertes
+  YouTube-Evolutionstagebuch. Zuschauer dürfen die öffentliche Welt künftig über begrenzte
+  Impulse beeinflussen, aber nicht beliebig steuern.
+- **Verworfene Alternativen:** Kein Fernzugriff auf persönliche Reminder oder App-Daten, kein
+  Zuschauerzugriff auf `MEDICINE`, keine unmittelbare Übernahme ungeprüften Freitexts und keine
+  stillschweigende Freigabe einer kompletten Streaming-/Backend-/Bezahlinfrastruktur durch die
+  Vision allein.
+- **Agentenübergabe:** Neu `CLOUD_CODE_BRIEFING.md` als kurzer, versionierter Startprompt. Sowohl
+  `AGENTS.md` als auch `CLAUDE.md` verweisen verbindlich darauf, damit Claude Code und andere
+  Agenten den Tagesablauf-Dauerauftrag aus PR #62, die neue Zielidentität und deren Grenzen vor
+  produktbezogener Arbeit kennen.
+- **Betroffene Bereiche:** Ausschließlich `Vision.md`, `EVOLUTION.md`, `AGENTS.md`,
+  `AgentGuide.md`, `CLAUDE.md` und das neue Briefing. Keine Quelltexte, Ressourcen, Workflows,
+  Secrets, Store-Texte oder Abhängigkeiten betroffen.
+- **Daten und Migration:** Keine App-Daten, Room-Schemas, Preferences oder Migrationen betroffen.
+  Die öffentliche Welt erhält durch diesen PR noch keine Datenquelle und keine Verbindung zur
+  persönlichen App.
+- **Reminder, Game Loop und Monetarisierung:** Bestehende Reminder-Semantik und der aktuelle Game
+  Loop bleiben unverändert. Abos/Donations sind nur als künftiger Berechtigungsrahmen für
+  öffentliche Weltimpulse entschieden; Anbieter, Preise, Kontingente, Moderation, rechtliche
+  Prüfung und technische Umsetzung bleiben offen.
+- **Tests:** Dokumentstruktur, Links, `OPEN DECISION`-Abgrenzungen und Diff werden statisch
+  geprüft. Android- oder Migrationstests sind für diesen reinen Dokumentationsstand nicht
+  einschlägig; spätere Implementierungen benötigen die für ihren tatsächlichen Scope vorgesehenen
+  Tests.
+- **Offene Punkte:** Konkrete Streaming-, Backend-, Konto-, Zahlungs-, Moderations-, Sprach- und
+  Videoarchitektur; Plattformregeln und Medienrechte; Verfügbarkeit des Dauerstreams; Form und
+  Frequenz der Avatarberichte; konkrete Zuschauerimpulse und ihre Limits; mögliche, derzeit nicht
+  erlaubte Verbindung öffentlicher Ereignisse mit persönlichen App-Instanzen.
 
 ### Initialer Erkenntnisstand
 
