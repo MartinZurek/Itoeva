@@ -28,6 +28,16 @@ Nur eine Evolution, die den Eintrag vollstaendig behandelt, darf `[open]` auf `[
 Unklare oder geschuetzte Wuensche bleiben offen und werden im Journal als `OPEN DECISION`
 bezeichnet.
 
+### [open] FB-2026-09-03-01 - Das Avatarleben soll auch ohne Kommentar eine Geschichte tragen
+
+Die Welt soll spaeter in einer stillen, oeffentlichen Twitch-Instanz dauerhaft interessant zu
+beobachten sein und belegte Ereignisse fuer ein von den Avataren erzaehltes
+YouTube-Evolutionstagebuch liefern koennen. Bevor irgendeine Plattform-, Netzwerk- oder
+Videointegration gebaut wird, sollen deshalb schon die lokalen Tagesablaeufe lesbare Absichten,
+charaktergerechte Entscheidungen, nachvollziehbare Uebergaenge und erinnerungswuerdige kleine
+Folgen zeigen. Eine Evolution darf diese Beobachtbarkeit auf App-Ebene verbessern, aber daraus
+keine Freigabe fuer Twitch-, YouTube-, Konto-, Zahlungs- oder Cloud-Funktionen ableiten.
+
 ### [open] FB-2026-09-02-01 - Das Avatarleben muss den Kern des Spielerlebnisses tragen
 
 Die automatisierten Jobs sollen sich nicht in isolierten Requisiten, Einzelanimationen oder

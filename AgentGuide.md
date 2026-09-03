@@ -4,26 +4,30 @@ Kurzreferenz für KI-Agenten, die an diesem Repository arbeiten. Ersetzt keinen 
 Dokumente, sondern verweist auf sie: [Vision.md](Vision.md) für das Warum,
 [Architecture.md](Architecture.md) für das Wie, [EVOLUTION.md](EVOLUTION.md) für das
 verbindliche Regelwerk samt Entscheidungsprotokoll, [NextTasks.md](NextTasks.md) für konkrete
-Arbeitspakete, [CLAUDE.md](CLAUDE.md) für die knappen Arbeitsweise-Regeln dieses Repos.
+Arbeitspakete, [CLAUDE.md](CLAUDE.md) für die knappen Arbeitsweise-Regeln dieses Repos und
+[CLOUD_CODE_BRIEFING.md](CLOUD_CODE_BRIEFING.md) für den aktuellen, agentenübergreifenden
+Produktkontext.
 
 **Bei Widerspruch gilt EVOLUTION.md.** Es ist das einzige Dokument mit dem Anspruch, ein
 verbindliches Protokoll zu sein - alle anderen hier sind Orientierung.
 
 ## Minimal-Startsequenz
 
-Für eine normale Aufgabe müssen NICHT alle fünf Dokumente vollständig gelesen werden. Diese Liste
-ist bewusst kurz gehalten, damit sie das auch bleibt:
+Für eine normale Aufgabe müssen NICHT alle verlinkten Dokumente vollständig gelesen werden. Diese
+Liste ist bewusst kurz gehalten, damit sie das auch bleibt:
 
 1. **Dieses Dokument (`AgentGuide.md`) vollständig** - kurz, ist der Router zu allem Weiteren.
-2. **`CLAUDE.md` vollständig** - zehn Zeilen, grundlegende Arbeitsweise-Regeln.
-3. **Die eine konkrete Aufgabe**, nicht die ganze Quelle drumherum:
+2. **`CLAUDE.md` vollständig** - kurz, grundlegende Arbeitsweise-Regeln.
+3. **`CLOUD_CODE_BRIEFING.md` vollständig** - kurze Übergabe der aktuellen Produktvision und
+   Automatisierungsrichtung; keine Arbeitsliste und keine pauschale Implementierungsfreigabe.
+4. **Die eine konkrete Aufgabe**, nicht die ganze Quelle drumherum:
    - Aus `evolutions/BACKLOG.md`: nur den einen betroffenen `## [open] ITO-NNNN`-Eintrag lesen,
      nicht die Datei linear von oben.
    - Beim Tagesablauf-Dauerauftrag: `evolutions/DAILY_LIFE_TASK.md` und
      `evolutions/DAILY_LIFE_LEARNING.md` lesen; danach nur den gewählten Hebel erkunden.
    - Aus `NextTasks.md`: nur die Top-15-Liste, nicht den Future Backlog - außer die gewählte
      Aufgabe stammt explizit von dort.
-4. **Alles Weitere nur nach den Regeln im nächsten Abschnitt** - nicht routinemäßig "sicherheits-
+5. **Alles Weitere nur nach den Regeln im nächsten Abschnitt** - nicht routinemäßig "sicherheits-
    halber" mitlesen. Ungezielt der ganze Satz an Dokumenten kostet bei jedem Lauf Kontext, ohne
    dass er meistens gebraucht wird.
 

@@ -4,6 +4,14 @@
 
 Dieses Repository enthält das Projekt **Itoeva**.
 
+## Verbindlicher aktueller Projektkontext
+
+Lies zu Beginn jeder Claude-Code-Sitzung
+[`CLOUD_CODE_BRIEFING.md`](CLOUD_CODE_BRIEFING.md) vollständig. Die Datei enthält die aktuelle
+Produktvision, den Stand des täglichen Evolutionsauftrags und die Trennung zwischen bereits
+entschiedenen Zielen und noch nicht freigegebener Umsetzung. Sie ist Kontext, keine pauschale
+Aufforderung, Twitch-, YouTube-, Netzwerk- oder Bezahlfunktionen sofort zu bauen.
+
 ## Arbeitsweise
 
 - Vor Änderungen immer zuerst den aktuellen Git-Status prüfen (`git status`).

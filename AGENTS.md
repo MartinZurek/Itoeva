@@ -7,7 +7,9 @@ Projektregeln.
 
 1. [`AgentGuide.md`](AgentGuide.md) vollständig lesen.
 2. [`CLAUDE.md`](CLAUDE.md) vollständig lesen.
-3. Nur die dort für die konkrete Aufgabe genannten weiteren Dokumente und Codebereiche öffnen.
+3. [`CLOUD_CODE_BRIEFING.md`](CLOUD_CODE_BRIEFING.md) vollständig lesen. Dort stehen die aktuelle
+   Produktvision und die Übergabe aus den jüngsten Automatisierungsänderungen.
+4. Nur die dort für die konkrete Aufgabe genannten weiteren Dokumente und Codebereiche öffnen.
 
 Bei Widersprüchen gilt [`EVOLUTION.md`](EVOLUTION.md).
 
