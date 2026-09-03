@@ -68,6 +68,27 @@ object SkillTreeRows {
     }
 
     /**
+     * Die Vorfahren eines Knotens - ohne ihn selbst, von seinem Elternknoten aufwaerts.
+     *
+     * Gebraucht, um nach einer Freischaltung genau den Ast aufzuklappen, in dem der neue Knoten
+     * liegt: Ohne das bliebe die Rueckmeldung unsichtbar, sobald der Zweig zugeklappt war - der
+     * Stern waere weg und auf dem Bildschirm haette sich nichts geruehrt.
+     *
+     * Hier und nicht im Bildschirm, weil es eine Aussage ueber den Baum ist und keine ueber seine
+     * Darstellung - und weil sie sich so ohne Compose pruefen laesst.
+     */
+    fun ancestorsOf(nodeId: String): Set<String> =
+        AnimationTree.fallbackChain(nodeId).drop(1).toSet()
+
+    /**
+     * Alle Knoten, die sich vorfuehren lassen: die mit einem Motiv, in Baumreihenfolge.
+     *
+     * Fuer die Testumgebung unter dem Baum. Ungezeichnete Knoten ([NodeState.PENDING_ART]) fehlen
+     * hier als einzige - sie haetten nichts zu zeigen.
+     */
+    fun previewable(): List<AnimationNode> = AnimationTree.nodes.filter { it.motif != null }
+
+    /**
      * Wieviele Knoten einer Hauptgruppe schon offen sind, und wieviele es ueberhaupt gibt.
      *
      * Fuer die Fortschrittsanzeige je Abschnitt. Ungezeichnete zaehlen im Nenner mit: Sie gehoeren

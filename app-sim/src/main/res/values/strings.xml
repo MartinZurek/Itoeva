@@ -338,7 +338,7 @@
     <string name="faq_q_animation_library">Can I use my own animation instead of the built-in ones?</string>
     <string name="faq_a_animation_library">Yes – pick one from the animation library when creating or editing a reminder. A library animation is shown instead of the topic\'s default one.</string>
     <string name="faq_q_skill_tree">I have a star left over – how do I spend it in the skill tree?</string>
-    <string name="faq_a_skill_tree">Every level-up earns one star. Open the skill tree (the button under your companion) and tap any highlighted node marked \"next up\" – that works the same for a whole group and for a single animation. Tapping spends the star and unlocks it; tap the same spot again afterward to open it and see what\'s now reachable underneath.</string>
+    <string name="faq_a_skill_tree">Every level-up earns one star. Open the skill tree (the button under your companion) and tap any highlighted node marked \"next up\" – that works the same for a whole group and for a single animation. Tapping spends the star, unlocks the node and plays its reaction once on your companion right away, so you see what you just got; the branch it sits in opens by itself, and the new node stays marked \"new\" until you close the tree.</string>
     <string name="faq_q_feeding">How do I actually respond to a reminder?</string>
     <string name="faq_a_feeding">Drag the clock onto me, or use the feed gesture – that\'s how you tell me you did the thing.</string>
     <string name="faq_q_mood">Does every reminder affect your mood?</string>
@@ -741,5 +741,11 @@
     <string name="skill_tree_close">Close</string>
     <string name="skill_tree_expand_all">Expand all</string>
     <string name="skill_tree_collapse_all">Collapse all</string>
+    <string name="skill_tree_state_unlocked">unlocked</string>
+    <string name="skill_tree_spend_star">⭐ spend star</string>
+    <string name="skill_tree_new">new</string>
+    <string name="skill_tree_preview_skip">Tap to skip</string>
+    <string name="skill_tree_lab_title">Test bench</string>
+    <string name="skill_tree_lab_hint">Play any reaction on any companion. Nothing here unlocks or changes anything.</string>
     <string name="skill_tree_hint">Leveling up earns you a star ⭐. Tap a highlighted \"next up\" node to spend it and unlock that node.</string>
 </resources>
