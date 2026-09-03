@@ -3,7 +3,15 @@
 Diese Datei verbindet Nutzerfeedback mit den spaeteren, automatisierten Tagesablauf-Evolutionen.
 Der Dauerauftrag steht getrennt in `DAILY_LIFE_TASK.md`; dadurch kann dieses Overlay lernen, ohne
 seine eigenen Sicherheitsgrenzen umzuschreiben. Jede Aenderung bleibt ein normaler Pull Request
-mit Tests, zweiter KI-Pruefung und menschlichem Merge.
+mit Tests und zweiter KI-Pruefung.
+
+**Wer mergen darf (Entscheidung vom 2026-09-03, siehe EVOLUTION.md, Evolution History).** Der
+Merge muss nicht mehr von Hand erfolgen: Eine vom Produktverantwortlichen beauftragte
+Agentensitzung darf mergen, sofern die CI vollstaendig gruen ist, kein Merge-Konflikt besteht und
+keine offene Review-Anmerkung unbeantwortet ist. Der UNBEAUFSICHTIGTE Lauf selbst mergt weiterhin
+NIE - `claude-primary-run.yml` und `runner/` haben kein Merge-Recht, und die Trennung von
+Schreibrecht und Merge-Entscheidung bleibt damit erhalten. Das Rueckgaengigmachen bleibt in jedem
+Fall beim Menschen: Ein Revert wirkt genauso wie vorher.
 
 Ein einmaliger, bereits vollstaendig formulierter Auftrag kann weiterhin direkt ueber das Feld
 `task` von `workflow_dispatch` gestartet werden. Rueckmeldungen, die mehrere spaetere Laeufe
