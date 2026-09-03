@@ -205,9 +205,30 @@ object PlayAmbientActivity {
          * durch; `null` heisst schlicht "ohne Plan gewichten".
          */
         plannedTopic: AnimationType? = null,
+        /**
+         * Womit die Figur GERADE ERST fertig war (siehe `currentTopic` in
+         * [com.notime.glyphsim.ui.DockScreen]) - das fuenfte Signal, und das einzige mit
+         * negativem Vorzeichen.
+         *
+         * **Belegte statt bloss vermutete Wiederholung.** Mittags stehen WORK/FOCUS/DRINK/MOVE
+         * mit je Gewicht 3 nebeneinander (siehe [weightsFor]) - bei unabhaengiger Ziehung faellt
+         * dieselbe Handlung dort in etwa jeder sechsten Runde zweimal hintereinander (Summe der
+         * quadrierten Anteile, siehe Test `ohne Daempfer wiederholt sich ein Thema spuerbar
+         * oft`). Ohne Gedaechtnis sah das aus wie ein Wesen, das zweimal hintereinander dieselbe
+         * Tasse trinkt, statt einen Tag zu haben.
+         *
+         * Bewusst mild: [REPEAT_MALUS] senkt das zuletzt gespielte Thema, schliesst es aber nie
+         * aus (siehe [combinedWeights]) - ein zweites Mal hintereinander bleibt moeglich, nur
+         * seltener. Und bewusst ohne Wirkung, wenn das Thema die einzige Moeglichkeit ist (nachts
+         * nur SLEEP) - der Daempfer darf die Nachtruhe-Garantie nicht aushebeln.
+         */
+        justPlayed: AnimationType? = null,
         random: Random = Random
     ): AnimationType =
-        pickWeighted(combinedWeights(phase, boostedTopics, stayAt, leaning, plannedTopic), random)
+        pickWeighted(
+            combinedWeights(phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed),
+            random
+        )
 
     /**
      * Grob am ueblichen Tagesrhythmus orientiert, nicht an einer festen Uhrzeit-Tabelle mit
@@ -281,12 +302,15 @@ object PlayAmbientActivity {
         boostedTopics: Set<AnimationType>,
         stayAt: PlayScene.Place? = null,
         leaning: Set<AnimationType> = emptySet(),
-        plannedTopic: AnimationType? = null
+        plannedTopic: AnimationType? = null,
+        justPlayed: AnimationType? = null
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
         val relevantPlan = plannedTopic?.takeIf { it != AnimationType.MEDICINE }
-        if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null) {
+        if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null &&
+            justPlayed == null
+        ) {
             return base
         }
         val combined = base.toMutableMap()
@@ -316,6 +340,18 @@ object PlayAmbientActivity {
                 if (PlayScene.forTopic(topic) == stayAt) {
                     combined[topic] = (combined[topic] ?: 0) + STAY_BONUS
                 }
+            }
+        }
+        // Der Daempfer wirkt zuletzt, auf das Ergebnis aller vorherigen Zuschlaege - er darf ein
+        // Thema abwerten, aber nicht aus dem Pool streichen, und er darf keines EINFUEHREN: Ein
+        // `justPlayed`, das in dieser Phase gar kein Grundgewicht hatte (z. B. SLEEP tagsueber),
+        // fehlt in `combined` und bleibt deshalb unberuehrt. `combined.size > 1` schuetzt den
+        // Fall, in dem das zuletzt gespielte Thema die einzige Moeglichkeit ist (nachts nur
+        // SLEEP) - dort wuerde jede Abwertung sonst die Nachtruhe-Garantie aushebeln.
+        if (justPlayed != null) {
+            val current = combined[justPlayed]
+            if (current != null && combined.size > 1) {
+                combined[justPlayed] = (current - REPEAT_MALUS).coerceAtLeast(1)
             }
         }
         return combined
@@ -394,6 +430,19 @@ object PlayAmbientActivity {
      * ist gewachsen und darf nur faerben.
      */
     private const val LEANING_BONUS = 2
+
+    /**
+     * Wie stark ein GERADE gespieltes Thema fuer die naechste Ziehung sinkt (siehe [nextTopic]).
+     *
+     * Das Gegenstueck zu [LEANING_BONUS], mit umgekehrtem Vorzeichen: Eine Neigung faerbt ein
+     * Thema ueber Wochen ein, eine Wiederholung blasst es fuer genau einen Wurf ab. Kleiner als
+     * [STAY_BONUS] (5) und [PLAN_BONUS]/[HABIT_BOOST] (4) - der Daempfer soll eine Wiederholung
+     * seltener machen, nicht eine laufende Absicht oder einen offenen Stundenplan uebertoenen.
+     * Bei den ueblichen Grundgewichten von 1 bis 3 (siehe [weightsFor]) draengt der Bodenwert
+     * `coerceAtLeast(1)` in [combinedWeights] eine sofortige Wiederholung auf deutlich unter die
+     * Haelfte ihrer vorherigen Haeufigkeit, schliesst sie aber nie aus.
+     */
+    private const val REPEAT_MALUS = 2
 
     /**
      * Zuschlag fuer das, was der Stundenplan gerade vorsieht (siehe [plannedTopicFor]).

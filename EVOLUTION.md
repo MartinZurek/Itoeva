@@ -1018,6 +1018,53 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Weiterhin offen:** Ob der unbeaufsichtigte Lauf jemals selbst mergen darf, bleibt
   `OPEN DECISION` und ist mit dieser Entscheidung NICHT beantwortet.
 
+### 2026-09-03 - Wiederholungs-Daempfer: dieselbe Handlung faellt seltener zweimal hintereinander
+
+- **Version:** Protokoll bleibt 0.5. Reine Verhaltensaenderung im Spielmodus ohne Datenmodell-,
+  Schema- oder Preference-Aenderung; Ruecksetzweg ist der Revert dieses PRs, ohne Nutzerdatenfolge.
+- **Ausgangsproblem und Nutzerwirkung:** Das Lernjournal vom selben Tag notierte als naechsten
+  Hebel, aber ausdruecklich unbelegt: "ein gerade gespieltes Thema fuer wenige Runden geringer
+  gewichten". Diese Sitzung hat das belegt statt nur vermutet: `PlayAmbientActivity.weightsFor`
+  gibt WORK/FOCUS/DRINK/MOVE mittags je Gewicht 3 - bei unabhaengiger Ziehung ohne Gedaechtnis
+  faellt dieselbe Handlung dort rechnerisch in etwa jeder sechsten Runde (Summe der quadrierten
+  Anteile ≈ 16,4 %) zweimal hintereinander. Sichtbar wirkt das wie ein Wesen, das zweimal
+  hintereinander dieselbe Tasse trinkt, statt einen Tag mit Abwechslung zu haben.
+- **Evidenzklassifikation:** `TESTED BEHAVIOR` - ein neuer Test belegt die Basis-Wiederholungsrate
+  vor der Aenderung (`ohne Daempfer wiederholt sich ein Thema spuerbar oft`), ein zweiter die
+  Verringerung danach, zwei weitere schuetzen die Nachtruhe- und Phasen-Garantien.
+- **Getroffene Produktentscheidung:** `nextTopic`/`combinedWeights` erhalten `justPlayed` als
+  fuenftes, additives (in diesem Fall subtraktives) Signal - nach demselben Andock-Muster wie
+  `boostedTopics`, `leaning`, `stayAt` und `plannedTopic`. `REPEAT_MALUS = 2` senkt das Gewicht des
+  zuletzt gespielten Themas fuer die naechste Ziehung, mit einem Bodenwert von 1 (nie ausgeschlossen)
+  und ohne Wirkung, wenn das Thema die einzige Moeglichkeit im kombinierten Pool ist. `DockScreen`
+  reicht dafuer sein bereits vorhandenes `currentTopic` durch - kein neuer Zustand noetig.
+- **Verworfene Alternativen:** Eine harte Sperre ("dasselbe Thema darf nicht zweimal hintereinander
+  fallen") wurde verworfen - sie waere die in `Tagesablauf.md` ausgeschlossene harte Sonderregel und
+  haette echte, plausible Wiederholungen (zweimal hintereinander DRINK bei grossem Durst) unmoeglich
+  gemacht. Eine laenger anhaltende Sperre ueber mehrere Runden (eigener Zaehler wie `stayedRounds`)
+  wurde ebenfalls verworfen: `currentTopic` daempft bereits jede Runde neu, solange sich das Thema
+  nicht aendert, und braucht dafuer keinen zusaetzlichen persistierten Zustand.
+- **Betroffene Bereiche:** `matrix/PlayAmbientActivity.kt` (neuer Parameter `justPlayed`, neue
+  Konstante `REPEAT_MALUS`, erweiterte `combinedWeights`), `ui/DockScreen.kt` (reicht `currentTopic`
+  als `justPlayed` durch).
+- **Reminder-Semantik, Datenmodell, Migration:** unveraendert. Keine Room-, Preference- oder
+  Textaenderung, keine Auswirkung auf bestehende Nutzerstaende.
+- **Geschuetzte Grenzen:** `MEDICINE` bleibt ausgeschlossen (der Daempfer wirkt nur auf Themen, die
+  bereits im gefilterten Pool stehen). Die Nachtruhe ("durchgehend nur SLEEP") bleibt unangetastet,
+  weil der Daempfer bei genau einem moeglichen Thema im Pool (`combined.size > 1`-Wache) gar nicht
+  greift - mit einem eigenen Test abgesichert.
+- **Ausgefuehrte Tests:** Fuenf neue Tests in `PlayAmbientActivityTest`: Beleg der urspruenglichen
+  Wiederholungsrate, Nachweis der Verringerung durch den Daempfer, Nachweis dass eine Wiederholung
+  weiterhin moeglich bleibt, Schutz der Nachtruhe-Garantie und Schutz davor, dass der Daempfer ein
+  phasenfremdes Thema einfuehrt.
+- **Ausstehende Geraeteprueung:** Ob eine unmittelbare Wiederholung beim Zuschauen ueberhaupt noch
+  auffaellt, laesst sich nur am Geraet beurteilen und steht noch aus. Die Aenderung wurde in der
+  Cloud-Sitzung nicht lokal gebaut (kein Netzzugang zum Android-Gradle-Plugin); den Nachweis fuehrt
+  die CI.
+- **Weiterhin offen:** Wie stark Nutzergewohnheiten den autonomen Ablauf praegen duerfen, bleibt
+  `OPEN DECISION`. Der naechste sinnvolle Hebel ist im Lernjournal (`DAILY_LIFE_LEARNING.md`)
+  vermerkt.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.

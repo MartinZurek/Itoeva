@@ -208,4 +208,100 @@ class PlayAmbientActivityTest {
         }
         return treffer
     }
+
+    // ---- Wiederholungsdaempfer (justPlayed) ----
+
+    /**
+     * **Der Beleg fuer die Blockade, bevor sie behoben wird.** Mittags stehen WORK/FOCUS/DRINK/
+     * MOVE mit je Gewicht 3 nebeneinander (siehe `PlayAmbientActivity.weightsFor`) - ohne
+     * Gedaechtnis faellt dieselbe Handlung dort in etwa jeder sechsten Runde zweimal
+     * hintereinander.
+     */
+    @Test
+    fun `ohne Daempfer wiederholt sich ein Thema spuerbar oft`() {
+        val random = Random(7)
+        var vorher: AnimationType? = null
+        var wiederholungen = 0
+        repeat(5000) {
+            val thema = PlayAmbientActivity.nextTopic(PlayAmbientActivity.DayPhase.MIDDAY, random = random)
+            if (thema == vorher) wiederholungen++
+            vorher = thema
+        }
+        assertTrue("nur $wiederholungen von 5000 Wiederholungen - Beleg unerwartet schwach", wiederholungen > 500)
+    }
+
+    @Test
+    fun `der Daempfer macht eine sofortige Wiederholung seltener`() {
+        val ohneDaempfer = zaehleWiederholungen(mitDaempfer = false)
+        val mitDaempfer = zaehleWiederholungen(mitDaempfer = true)
+        assertTrue(
+            "Daempfer wirkungslos: ohne $ohneDaempfer, mit $mitDaempfer",
+            mitDaempfer < ohneDaempfer
+        )
+    }
+
+    @Test
+    fun `der Daempfer schliesst eine Wiederholung nie ganz aus`() {
+        val random = Random(11)
+        var vorher: AnimationType? = null
+        var kamNochVor = false
+        repeat(3000) {
+            val thema = PlayAmbientActivity.nextTopic(
+                PlayAmbientActivity.DayPhase.MIDDAY,
+                justPlayed = vorher,
+                random = random
+            )
+            if (thema == vorher) kamNochVor = true
+            vorher = thema
+        }
+        assertTrue("dasselbe Thema kam trotz Daempfer nie zweimal hintereinander vor", kamNochVor)
+    }
+
+    /** Der Daempfer darf die Nachtruhe-Garantie nicht aushebeln, wenn SLEEP die einzige Moeglichkeit ist. */
+    @Test
+    fun `der Daempfer haengt der Nachtruhe kein zweites Thema an`() {
+        val random = Random(13)
+        repeat(500) {
+            assertEquals(
+                AnimationType.SLEEP,
+                PlayAmbientActivity.nextTopic(
+                    PlayAmbientActivity.DayPhase.NIGHT,
+                    justPlayed = AnimationType.SLEEP,
+                    random = random
+                )
+            )
+        }
+    }
+
+    /** SLEEP hat morgens kein Grundgewicht - der Daempfer darf es nicht ueber den Umweg der Wiederholung einfuehren. */
+    @Test
+    fun `der Daempfer erfindet kein Thema ausserhalb der Phase`() {
+        val random = Random(17)
+        repeat(500) {
+            assertTrue(
+                PlayAmbientActivity.nextTopic(
+                    PlayAmbientActivity.DayPhase.MORNING,
+                    justPlayed = AnimationType.SLEEP,
+                    random = random
+                ) != AnimationType.SLEEP
+            )
+        }
+    }
+
+    /** Zaehlt sofortige Wiederholungen bei 5000 Ziehungen, mit oder ohne den Daempfer als Rueckkopplung. */
+    private fun zaehleWiederholungen(mitDaempfer: Boolean): Int {
+        val random = Random(23)
+        var vorher: AnimationType? = null
+        var wiederholungen = 0
+        repeat(5000) {
+            val thema = PlayAmbientActivity.nextTopic(
+                PlayAmbientActivity.DayPhase.MIDDAY,
+                justPlayed = if (mitDaempfer) vorher else null,
+                random = random
+            )
+            if (thema == vorher) wiederholungen++
+            vorher = thema
+        }
+        return wiederholungen
+    }
 }

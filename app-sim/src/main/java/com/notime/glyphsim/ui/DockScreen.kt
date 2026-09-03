@@ -2000,6 +2000,19 @@ fun DockScreen(
                 val species = avatar?.species ?: return@LaunchedEffect
 
                 requestedTopic?.let { topic ->
+                    // **Eine Bitte ist genauso ein "das tut er gerade" wie eine selbst gewaehlte
+                    // Regung.** Dieser Zweig fuehrte den Ablauf bisher aus, ohne [currentTopic]
+                    // mitzufuehren - und das ist nicht nur fuer den Wiederholungs-Daempfer
+                    // falsch, der hier eingefuehrt wird. [currentTopic] hat vier Leser: die
+                    // Sicherung des Aufenthalts (PlayPresence.save weiter oben), den
+                    // Wiedereinstieg in den Play-Modus, den Daempfer und - am sichtbarsten -
+                    // [PlayTalk.Doing]. Ohne diese Zeile erzaehlt das Wesen im Gespraech also
+                    // weiter von dem, was es VOR der Bitte tat, speichert das Falsche und nimmt
+                    // beim naechsten Einstieg das Falsche wieder auf.
+                    //
+                    // Vor moveToPlace gesetzt, genau wie im PERFORM-Zweig weiter unten: Waehrend
+                    // der Ablauf laeuft, soll bereits das gelten, was er GERADE tut.
+                    currentTopic = topic
                     moveToPlace(PlayScene.forTopic(topic), species)
                     runRoutine(
                         PlayRoutines.forTopic(
@@ -2131,7 +2144,15 @@ fun DockScreen(
                                     // voraus und der Plan hinterher.
                                     plannedTopic = PlayAmbientActivity.plannedTopicFor(
                                         PlayTimeLapse.now().hour
-                                    )
+                                    ),
+                                    // **Der fuenfte Zuschlag, und der einzige negative.** Ohne
+                                    // Gedaechtnis konnte dieselbe Handlung mehrfach hintereinander
+                                    // fallen - bei WORK/FOCUS/DRINK/MOVE mittags mit gleichem
+                                    // Grundgewicht in etwa jeder sechsten Runde (siehe
+                                    // PlayAmbientActivity.nextTopic). currentTopic haelt genau
+                                    // das zuletzt gespielte Thema, unabhaengig davon, wie viele
+                                    // FIDGET/WANDER-Regungen dazwischen lagen.
+                                    justPlayed = currentTopic
                                 )
                             }
 
