@@ -60,8 +60,12 @@ Dieser Abschnitt darf nur um eine kurze Regel erweitert werden, wenn ein Test, e
 Fehler oder mindestens zwei unabhaengige Journaleintraege sie belegen. Eine Heuristik veraendert
 keine Produktentscheidung und keine Sicherheitsgrenze.
 
-- Noch keine automatisiert abgeleitete Heuristik. Die erste Evolution sammelt Evidenz statt eine
-  Vermutung zur Regel zu erheben.
+- Stehen in einer Tagesphase drei oder mehr Themen mit nahezu gleichem Gewicht nebeneinander (siehe
+  `PlayAmbientActivity.weightsFor`, MIDDAY: WORK/FOCUS/DRINK/MOVE je 3), faellt bei unabhaengiger
+  Ziehung ohne Gedaechtnis eine spuerbare sofortige Wiederholung - rechnerisch und testbelegt rund
+  jede sechste Runde (Summe der quadrierten Anteile). **Belegt durch Test:**
+  `PlayAmbientActivityTest`, `ohne Daempfer wiederholt sich ein Thema spuerbar oft` und
+  `der Daempfer macht eine sofortige Wiederholung seltener` (2026-09-03).
 
 ## Lernjournal
 
@@ -69,6 +73,41 @@ Pro Evolution genau ein neuer Eintrag direkt unter dieser Einleitung. Ein Eintra
 betroffenes Feedback, beobachtetes Problem, Spielerwirkung, Evidenz, Ergebnis und den naechsten
 sinnvollen Hebel. Vermutungen werden als **Hypothese**, nicht als Tatsache, markiert. Das Journal
 ist eine Uebergabe, keine zweite Commit-Liste.
+
+### 2026-09-03 - Der im Journal notierte Wiederholungs-Daempfer wurde belegt und umgesetzt
+
+- **Betroffenes Feedback:** FB-2026-09-03-01 und FB-2026-09-02-01, beide **weiterhin `[open]`**.
+  Diese Evolution ist ein weiterer Hebel darauf, erledigt aber keinen der beiden Eintraege
+  vollstaendig - beide bleiben umfassende, mehrere Evolutionen uebergreifende Ziele.
+- **Beobachtetes Problem:** Der vorherige Journaleintrag vom selben Tag vermerkte als naechsten
+  Hebel, ausdruecklich unbelegt: "ein gerade gespieltes Thema fuer wenige Runden geringer
+  gewichten", weil unklar war, ob eine sofortige Wiederholung nach dem Stundenplan-Signal
+  ueberhaupt noch stoert.
+- **Evidenz:** `TESTED BEHAVIOR` statt laenger nur Hypothese. `PlayAmbientActivity.weightsFor`
+  gibt fuer MIDDAY vier Themen (WORK/FOCUS/DRINK/MOVE) je Gewicht 3 - bei unabhaengiger Ziehung
+  ohne Gedaechtnis faellt dieselbe Handlung dort rechnerisch in rund 16,4 % der Runden zweimal
+  hintereinander (Summe der quadrierten Anteile). Ein neuer Test
+  (`ohne Daempfer wiederholt sich ein Thema spuerbar oft`) bestaetigt das empirisch mit 5000
+  Ziehungen, bevor die Aenderung ueberhaupt einsetzt - die Blockade ist damit belegt, nicht nur
+  vermutet.
+- **Ergebnis:** `nextTopic`/`combinedWeights` erhalten `justPlayed` als fuenftes Signal.
+  `REPEAT_MALUS = 2` senkt das Gewicht des zuletzt gespielten Themas fuer die naechste Ziehung, mit
+  Bodenwert 1 (nie ausgeschlossen) und ohne Wirkung, wenn das Thema die einzige Moeglichkeit im
+  Pool ist (Nachtruhe bleibt unangetastet). `DockScreen` reicht dafuer sein ohnehin vorhandenes
+  `currentTopic` durch, kein neuer Zustand noetig. Ein zweiter Test belegt die Verringerung auf
+  rund 7 % derselben 5000 Ziehungen, zwei weitere schuetzen Nachtruhe- und Phasen-Garantie.
+- **Spielerwirkung:** Mittags folgt seltener dieselbe Handlung zweimal direkt hintereinander (z. B.
+  zweimal DRINK), waehrend eine Wiederholung weiterhin moeglich bleibt - kein hartes Verbot, nur
+  eine seltenere Ausnahme. Verbindet die bestehende Aktivitaetsauswahl mit dem, was die Figur
+  gerade erst getan hat (`currentTopic`), ohne Ort, Neigung, Stundenplan oder offene Gewohnheiten
+  zu veraendern.
+- **Naechster sinnvoller Hebel (Hypothese):** Der Daempfer wirkt nur auf die EXAKTE Wiederholung
+  desselben `AnimationType`. Unklar und **nicht belegt** ist, ob auch eine Abfolge NAHE verwandter
+  Themen (z. B. FOCUS direkt nach WORK, beides am selben Ort) beim Zuschauen aehnlich repetitiv
+  wirkt - das braucht zuerst eine Beobachtung, bevor daraus eine Regel wird.
+- **Anmerkung zur Herkunft:** Diese Evolution entstand im automatisierten, unbeaufsichtigten
+  Dauerauftrag (`claude-primary-run.yml` / `evolutions/DAILY_LIFE_TASK.md`), ausgeloest durch den
+  im vorherigen Journaleintrag notierten, damals unbelegten Hebel.
 
 ### 2026-09-03 - Der vorhandene Stundenplan war im laufenden Tag wirkungslos
 

@@ -2131,7 +2131,15 @@ fun DockScreen(
                                     // voraus und der Plan hinterher.
                                     plannedTopic = PlayAmbientActivity.plannedTopicFor(
                                         PlayTimeLapse.now().hour
-                                    )
+                                    ),
+                                    // **Der fuenfte Zuschlag, und der einzige negative.** Ohne
+                                    // Gedaechtnis konnte dieselbe Handlung mehrfach hintereinander
+                                    // fallen - bei WORK/FOCUS/DRINK/MOVE mittags mit gleichem
+                                    // Grundgewicht in etwa jeder sechsten Runde (siehe
+                                    // PlayAmbientActivity.nextTopic). currentTopic haelt genau
+                                    // das zuletzt gespielte Thema, unabhaengig davon, wie viele
+                                    // FIDGET/WANDER-Regungen dazwischen lagen.
+                                    justPlayed = currentTopic
                                 )
                             }
 
