@@ -140,6 +140,16 @@ object AvatarActivityPlans {
     }
 
     /**
+     * Ob dieser Knoten schon eine kontextuelle Ausfuehrung in der Welt besitzt.
+     *
+     * Diese kleine Grenze verhindert, dass derselbe Skill zugleich als alte zufaellige Einlage
+     * UND als neue verhaltensveraendernde Routine abgespielt wird. Weitere vertikale Schnitte
+     * koennen hier spaeter hinzukommen, ohne [SkillRepertoire] ihre IDs beizubringen.
+     */
+    fun supportsContextualExecution(node: AnimationNode): Boolean =
+        node.id in FOOTBALL_INTENT_NODES
+
+    /**
      * Uebersetzt eine bereits vorhandene Skill-/Reminder-Absicht in eine konkrete vorhandene
      * [PlayRoutine]. Der erste vertikale Schnitt ist bewusst nur Fussball; fuer alle anderen
      * Knoten bleibt die bisherige Reaktion unangetastet, statt hier vorschnell ein Framework zu
@@ -156,7 +166,7 @@ object AvatarActivityPlans {
         dropped: AnimationNode,
         context: ActivityContext
     ): ResolvedActivity? {
-        if (dropped.id !in FOOTBALL_INTENT_NODES) return null
+        if (!supportsContextualExecution(dropped)) return null
 
         val plan = planFor(current, dropped)
         if (plan.resultingActivity != BALLSPORT_NODE) return null
