@@ -70,7 +70,10 @@ import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.ReactionTrigger
+import com.notime.glyphsim.skilltree.AvatarUnlockRepository
+import com.notime.glyphsim.skilltree.SkillRepertoire
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.MoonFrame
@@ -2192,6 +2195,43 @@ fun DockScreen(
                                 ),
                                 species
                             )
+
+                            // **Und danach zeigt es, was es kann** - eine Einlage aus dem
+                            // Skillbaum, falls in diesem Bereich etwas freigeschaltet ist.
+                            //
+                            // Das ist der Abnehmer, den der Baum bisher nicht hatte: Seit dem
+                            // Entfernen der Zieh-Leiste las niemand den Freischalt-Stand, ein
+                            // Skillpunkt blieb also folgenlos (SKILLBAUM.md, P14). Hier wird er
+                            // sichtbar, und zwar an der einzigen Stelle, an der er hingehoert -
+                            // im Alltag des Wesens, nicht in einer Liste.
+                            //
+                            // NACH dem Ablauf und nicht statt seiner: Die Handlung bleibt, was sie
+                            // ist, die Faehigkeit kommt obendrauf. Eine Freischaltung darf etwas
+                            // hinzufuegen und nichts wegnehmen (Begruendung in [SkillRepertoire]).
+                            //
+                            // Der Wurf steht VOR der Datenbankabfrage: Ohne ihn liefe bei jeder
+                            // einzelnen Regung eine Abfrage, deren Ergebnis meistens ungenutzt
+                            // bliebe.
+                            if (PlayAmbientActivity.playsSkillFlourish()) {
+                                val unlocked = withContext(Dispatchers.IO) {
+                                    AvatarUnlockRepository(AppDatabase.getInstance(context))
+                                        .unlockedNodes(presenceProfileId)
+                                }
+                                SkillRepertoire.pick(topic, unlocked)?.let { nodeId ->
+                                    avatarIdleJob?.cancel()
+                                    val skill = AvatarAnimations.reactionFor(
+                                        species,
+                                        ReactionTrigger.Node(nodeId)
+                                    )
+                                    MatrixAnimator.playTimed(skill.frames, skill.holdsMs) { f ->
+                                        avatar = avatar?.copy(frame = f)
+                                    }
+                                    startAvatarIdleLoop(
+                                        species,
+                                        AvatarMoodSnapshot.forSpecies(context, species)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

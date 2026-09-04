@@ -800,27 +800,78 @@ führt die CI; auf dem Gerät noch nicht gesehen.
 
 ---
 
+### P15 — Die Welt wird zum Abnehmer
+
+Der Befund aus P14 aufgeloest: Seit `7c38f97` (Zieh-Leiste entfernt) las **niemand** den
+Freischalt-Stand ausser dem Baumbildschirm selbst. Ein Skillpunkt schrieb eine Datenbankzeile und
+veraenderte am Spiel nichts. Jetzt tut er es.
+
+**Die Regel, aus der alles Weitere folgt: eine Freischaltung darf etwas hinzufügen und nichts
+wegnehmen.**
+
+Die naheliegende Umsetzung war die Nutzeridee vom 2026-08-29 — `PlayAmbientActivity.nextTopic` auf
+freigeschaltete Themen zu **beschränken**. Beim Umsetzen fiel auf, dass sie falsch herum ist: Die
+neun Hauptgruppen sind von Anfang an offen und tragen neun der elf Themen (`MOVE`, `DRINK`,
+`SLEEP`, `MINDFULNESS`, `WORK`, `BOOK`, `CREATIVITY`, `LOVE`, `GENERAL`). Gefiltert würde also fast
+nichts — außer dass `REST` und `FOCUS` verschwänden, die als einzige nicht an einer Hauptgruppe
+hängen, sondern an den `subBuiltin`-Knoten `ruhe/pause` und `arbeit/erledigen`. Beide stehen im
+Stundenplan (21 Uhr, 9 und 15 Uhr). Ein neues Spiel hätte damit einen **ärmeren** Tag gehabt als
+vorher — der Skillbaum wäre sichtbar geworden, indem er der Welt etwas nimmt.
+
+- [x] `SkillRepertoire` (`skilltree/`, rein, 8 Tests): `hostNodeFor(topic)` ist schlicht
+      `AnimationTree.nodeIdFor(type)` — der beantwortet Hauptgruppe und `subBuiltin` von sich aus
+      richtig, hier wird nichts nachgebildet. `skillsFor` liefert die freigeschalteten,
+      **gezeichneten** Nachkommen; der Wirtsknoten selbst fehlt bewusst (seine Reaktion IST die
+      Handlung, die gerade lief — sie zu wiederholen wäre ein Echo, keine Fähigkeit).
+- [x] `PlayAmbientActivity.playsSkillFlourish()` — jede dritte Handlung. Bewusst ein Wurf **nach**
+      der Handlung und **keine fünfte Aktion** neben FLOURISH/FIDGET/WANDER/PERFORM: Eine
+      Fähigkeit ist kein eigener Anlass, sie ist etwas, das *während* einer Beschäftigung
+      geschieht — dieselbe Unterscheidung, auf der schon `AvatarActivityPlans` beruht ("Dribbling
+      ist keine Beschäftigung, es ist etwas, das man TUT, WÄHREND man Ball spielt"). Als eigene
+      Aktion hätte sie außerdem den Anteil von PERFORM gesenkt und damit den Tagesablauf
+      ausgedünnt, um den Skillbaum sichtbar zu machen.
+- [x] Angeschlossen im PERFORM-Zweig von `DockScreen`, direkt nach `runRoutine`. Der Würfelwurf
+      steht **vor** der Datenbankabfrage, sonst liefe bei jeder Regung eine Abfrage, deren Ergebnis
+      meistens ungenutzt bliebe. Die Routinen enden alle mit `RoutineStep.Rise`, die Figur steht
+      also — eine Reaktion schließt sauber an.
+
+**MEDICINE kann hier nicht auftauchen, und zwar ohne eigene Prüfung:** Es steht in
+`AnimationTree.EXCLUDED_TYPES` und hat deshalb gar keinen Knoten; `nodeIdFor` liefert `null`, ohne
+Wirtsknoten gibt es nichts zu wählen. Die Garantie liegt damit an derselben Stelle wie die Regel
+statt als Kopie daneben. Ein Test hält fest, dass das auch dann trägt, wenn buchstäblich alles
+freigeschaltet ist.
+
+**Bewusst nicht Teil dieser Runde:**
+- Kein `PlaySpeech`-Satz zur Einlage. Die Figur sagt schon an, was sie vorhat; ein zweiter Satz zur
+  Fähigkeit machte aus einer Beobachtung eine Erklärung.
+- Keine Flugbahn (`flightOffsetsFor`) für die Rakete — der Ambient-Zweig hat sie noch nie benutzt,
+  auch nicht für die Themen-Reaktionen. Sie spielt an Ort und Stelle.
+- `AvatarActivityBus` bleibt unbenutzt. Die Einlage hier braucht keinen mitgeführten Zustand, und
+  ein Schreiber ohne Leser wäre nur eine zweite Karteileiche.
+
+**Prüfen:** 9 neue reine Tests (8 × `SkillRepertoire`, 1 × Häufigkeit der Einlage). Kein
+Gradle-Lauf in dieser Cloud-Sitzung möglich; den Nachweis führt die CI, insbesondere die beiden
+instrumentierten Läufe. Auf dem Gerät noch nicht gesehen — offen ist vor allem, ob jede dritte
+Handlung sich richtig anfühlt oder ob die Einlage zu oft kommt.
+
+---
+
 ## Offene Punkte
 
-- [ ] **Der Skillbaum hat keinen Abnehmer mehr (Befund aus P14, das Wichtigste hier).** Seit die
-      Zieh-Leiste entfernt ist (`7c38f97`), liest **niemand** ausser dem Baumbildschirm selbst den
-      Freischalt-Stand: `AvatarUnlockRepository` hat genau einen Aufrufer im ganzen Modul. Ein
-      eingesetzter Skillpunkt schreibt eine Zeile und faerbt eine Zeile ein — er veraendert nichts
-      am Spiel. P14 hat die Rueckmeldung sichtbar gemacht, aber nicht diese Ursache behoben. Der
-      naechste Schritt ist der Punkt direkt darunter: **die Welt zum Abnehmer machen.** Solange das
-      offen ist, ist jede weitere Arbeit an der Darstellung des Baums Arbeit an einer Fassade.
-      Nicht erlaubt als Loesung: den Freischalt-Stand vor **echte Erinnerungen** zu haengen — siehe
-      KDoc von `AvatarUnlockedNode` und Regel 1 weiter oben.
+- [x] ~~**Der Skillbaum hat keinen Abnehmer mehr (Befund aus P14).**~~ **Erledigt in P15.** Die
+      Welt ist der Abnehmer: Nach einer Alltagshandlung zeigt das Wesen gelegentlich eine
+      Faehigkeit aus dem freigeschalteten Zweig dieses Themas (`SkillRepertoire`, angeschlossen in
+      `DockScreen`s PERFORM-Zweig). `AvatarUnlockRepository` hat damit einen zweiten Leser, und
+      zwar den, auf den es ankommt.
 
-- [ ] **Nutzeridee (2026-08-29):** Der Avatar sollte im Alltag (`PlayAmbientActivity.nextTopic`)
-      nur Themen wuerfeln, die im Skillbaum auch tatsaechlich freigeschaltet sind - aktuell
-      wuerfelt er unter allen zwoelf `AnimationType`s, unabhaengig vom Freischalt-Stand. War NICHT
-      die Ursache des Absturzes weiter unten (die Reminder-Erstellung beruehrt den Baum gar
-      nicht), bleibt aber ein eigenstaendiger, nachvollziehbarer Vorschlag: wuerde bedeuten,
-      `nextTopic`/`combinedWeights` um die Menge der freigeschalteten `AnimationType`s (aus den
-      unlocked Knoten ableitbar) zu filtern. Nicht klein - beruehrt die Gewichtung an mehreren
-      Stellen und aendert das Spielgefuehl fuer neue Spieler (die anfangs kaum etwas freigeschaltet
-      haben) spuerbar. Noch nicht umgesetzt, noch nicht mit dem Nutzer im Detail abgestimmt.
+- [x] ~~**Nutzeridee (2026-08-29):** Der Avatar sollte im Alltag nur Themen wuerfeln, die
+      freigeschaltet sind~~ — **bewusst ANDERS geloest, siehe P15.** Der Vorschlag ist beim
+      Umsetzen als falsch herum aufgefallen: Die neun Hauptgruppen sind von Anfang an offen und
+      decken neun der elf Themen ab. Ein Filter haette also fast nichts gefiltert — ausser dass
+      REST und FOCUS (die beiden `subBuiltin`-Knoten) anfangs verschwunden waeren, und die stehen
+      im Stundenplan um 21 Uhr und um 9/15 Uhr. Ein neues Spiel haette dadurch einen **aermeren**
+      Tag gehabt als vorher. Deshalb ergaenzend statt filternd: **Eine Freischaltung darf etwas
+      hinzufuegen und nichts wegnehmen.**
 - [ ] Selbstgezeichnete Animationen der Nutzer: Auffang-Knoten je Hauptgruppe, Zuordnung später
       von Hand?
 - [ ] Braucht die Zieh-Leiste eine Abklingzeit? Sonst füttert man im Sekundentakt.
@@ -855,6 +906,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-09-03 | P15 | **Der Skillbaum wirkt jetzt im Spiel.** Nach einer Alltagshandlung zeigt das Wesen jede dritte Mal eine Faehigkeit aus dem freigeschalteten Zweig genau dieses Themas (`SkillRepertoire` + `PlayAmbientActivity.playsSkillFlourish`, angeschlossen im PERFORM-Zweig von `DockScreen` direkt nach `runRoutine`). Damit hat `AvatarUnlockRepository` einen zweiten Leser — den, auf den es ankommt. **Die Nutzeridee vom 2026-08-29 (nur freigeschaltete Themen wuerfeln) wurde bewusst NICHT so umgesetzt**: Die neun Hauptgruppen sind von Anfang an offen und decken neun der elf Themen ab, gefiltert wuerden also nur REST und FOCUS — ausgerechnet zwei, die im Stundenplan stehen. Ein neues Spiel haette dadurch einen aermeren Tag gehabt. Daraus die Regel, die kuenftig gilt: **eine Freischaltung darf etwas hinzufuegen und nichts wegnehmen.** MEDICINE ist ohne eigene Pruefung ausgeschlossen, weil es gar keinen Knoten hat. 9 neue reine Tests. **Fuer die naechste Sitzung:** auf dem Geraet pruefen, ob jede dritte Handlung die richtige Haeufigkeit ist (`SKILL_FLOURISH_EVERY_N`), und ob die Einlage nach dem Ablauf sauber anschliesst. Danach steht als naechstes die Verbesserung der Animationen selbst an — die Testumgebung aus P14 ist dafuer das Werkzeug. |
 | 2026-09-03 | P14 | **Der gemeldete Fehler war zwei Fehler.** Geschrieben wird korrekt — aber seit `7c38f97` (Zieh-Leiste entfernt) liest den Freischalt-Stand **niemand** ausser dem Baumbildschirm selbst; `AvatarUnlockRepository` hat genau einen Aufrufer im Modul. Ein Skillpunkt veraendert also tatsaechlich nichts am Spiel — die Vermutung des Nutzers stimmte. Das ist als erster Punkt unter „Offene Punkte" eingetragen und mit dieser Runde NICHT behoben. Behoben ist die zweite Haelfte: Die Freischaltung fuehrt die neue Reaktion sofort einmal auf der eigenen Kreatur vor (`SkillReactionPreview`, geht ueber `AvatarAnimations.reactionFor` — dieselbe Reaktion wie im Spiel), klappt den Ast selbst auf (`SkillTreeRows.ancestorsOf`), markiert den Knoten mit „neu", und `TamaPalette` hat zum ersten Mal einen warmen Ton, der genau das markiert, was JETZT antippbar ist — vorher trennten drei Graustufen innerhalb von 32 Helligkeitswerten „gesperrt", „als Naechstes" und „freigeschaltet". Dazu ein optimistischer Bestand (`pending`/`owned`), der das Fenster zwischen Tipp und Flow-Rueckmeldung schliesst, und die **Testumgebung** unter dem Baum: Kreatur waehlen, jede der 67 Reaktionen ansehen, auch gesperrte. **Fuer die naechste Sitzung:** die Welt zum Abnehmer machen (offener Punkt 1+2) — alles andere am Baum ist bis dahin Fassade. Auf dem Geraet noch nicht gesehen. |
 | 2026-08-29 | Nachtschlaf + Bett-Durchlauf-Bug | **Zwei Nutzerwuensche zur Schlaf-Animation, kein Skillbaum-Paket.** (1) "Der Avatar sollte nachts von 0 bis ca. 6 Uhr durchgehend schlafen." `PlayAmbientActivity.weightsFor(NIGHT)` hatte SLEEP bisher nur als HAEUFIGSTES von drei Themen (Gewicht 5 von 9 mit REST/MINDFULNESS, ~55%) - jetzt ist SLEEP das EINZIGE Thema mit Grundgewicht (12, REST/MINDFULNESS raus). Ohne offene Gewohnheit kommt nachts jetzt immer SLEEP; eine tatsaechlich offene, heute unerreichte Gewohnheit kann ueber den Boost (+4) weiterhin gelegentlich durchscheinen - das ist keine Nachlaessigkeit, sondern der schon vorher dokumentierte, bewusste Grundsatz ("eine offene Trink-Gewohnheit darf auch nachts einmal durchscheinen"), nur jetzt klar in der Minderheit statt beinahe gleichauf. Test umbenannt/verschaerft: `nachts ist SLEEP ohne offene Gewohnheit das einzige Thema` (vorher: "das mit Abstand haeufigste"). (2) "Er sieht so aus, als wuerde der Avatar durchs Bett durchgehen." Ursache gefunden in `DockScreen.kt`s `runRoutine`: `RoutineStep.Occupy` setzte `occupiedStation` (steuert die vordere Bettdecken-Ebene, [PlayScene.buildFront]s Layer, das "als einziges NACH dem Avatar gezeichnet wird") erst NACH der 420ms-Aufstiegs-Animation vom Boden auf die Matratze - waehrend der gesamten Bewegung war die stehende Figur also unverdeckt sichtbar und wanderte sichtbar durchs Kopfteil/die Matratze, bevor am Ziel ploetzlich die Decke erschien. `RoutineStep.Rise` hatte das spiegelverkehrte Problem (Decke verschwand SOFORT beim Aufstehen, die Abwaertsbewegung durchs Bett war danach unverdeckt sichtbar). Behoben durch Umsortieren: `occupiedStation` wird bei `Occupy` jetzt VOR der Animation gesetzt (Decke deckt schon beim Hinlegen zu) und bei `Rise` erst NACH der Animation geloescht (Decke bleibt bis zum Stehen auf dem Boden). Gilt allgemein fuer jede Requisite mit `frontArt` (auch Sofa/Sessel etc.), nicht nur das Bett. **Nicht gegengeprueft:** Dieser Fehler liegt in Compose-Animationslogik (`DockScreen.kt`), nicht in reinen `PlayInk`/`PlayEffects`-Zellfunktionen - die JVM-Rendering-Technik aus fruaeheren Sitzungen (Gradles gebuendelter Kotlin-Compiler ausserhalb des Android Gradle Plugins) greift hier NICHT, weil sie keine Compose-Laufzeit/Coroutinen simulieren kann. Die Diagnose beruht auf genauem Lesen der Prop-Geometrie (`BED.frontArt` deckt Zeilen 2-5, `useSpot` liegt auf Zeile 5, der Boden entspricht Zeile 6) und der Reihenfolge der Zustandsaenderungen, nicht auf einem gesehenen Bild. **Fuer die naechste Sitzung:** Auf einem echten Geraet/Emulator die Schlafanimation ansehen und bestaetigen, dass das Hinlegen jetzt wie ein Hineinlegen statt eines Durchlaufens aussieht - falls nicht, faellt der Verdacht auf die WAAGERECHTE Anlaufposition (GoTo zielt auf `useSpot.x`, die Mitte der Matratze, nicht auf eine Stelle seitlich davon wie bei Tisch/Schreibtisch ueblich - siehe `Prop.useSpot`-Doku "wer an einem Tisch STEHT, steht daneben"). |
 | 2026-08-29 | Fix: App-Absturz beim Anlegen aus dem Gespraech | **Echter Absturz auf dem Geraet, vom Nutzer mit vollem Stacktrace gemeldet** (nachdem der Nachahm-Vorschlag aus dem vorigen Eintrag endlich sichtbar war und benutzt wurde): `com.notime.glyphcore.data.InvalidReminderException: Intervall 40 min steht nicht in INTERVAL_OPTIONS`, ausgeloest ueber `GlyphReminderViewModel.addReminder` -> `GlyphReminderRepository.add` -> `validated()`, uncatched in der `viewModelScope`-Coroutine - eine Ausnahme dort beendet den ganzen Prozess. Der Nutzer vermutete zunaechst, das haenge mit einer noch nicht freigeschalteten Skillbaum-Animation zusammen (nachvollziehbare Theorie, siehe Zitat: "es müsste so sein, dass der Avatar im Alltag auch nur die Animationen macht, welche er auch freigeschaltet hat") - stimmte hier aber nicht: die Reminder-Erstellung beruehrt den Skillbaum ueberhaupt nicht, das ist ein eigenstaendiges, separates Thema (siehe "Offene Punkte" unten). Tatsaechliche Ursache: `PlayTalk.presetFor(topic, busyPhase)` verengt bei beantworteter Tageszeit-Frage (`Ask.TIME`) das Zeitfenster und berechnet daraus per Division ein "passendes" Intervall (`(end-start)/slots`) - dieser Wert trifft praktisch nie einen der festen, im Bearbeiten-Dialog waehlbaren Werte (`INTERVAL_OPTIONS = [1,5,10,15,20,30,45,60,90,120]`), gegen die `ReminderValidation` jede NICHT vom Spielmodus gewuerfelte Erinnerung streng prueft. Behoben durch Abrunden auf den naechstkleineren erlaubten Wert (`INTERVAL_OPTIONS.filter{it<=rawInterval}.maxOrNull()`) - haelt das Tagesziel mindestens so erreichbar wie der unrunde Zwischenwert, da ein kuerzerer Abstand nur mehr Anstupser im Fenster unterbringt, nie weniger. Neuer Regressionstest baut denselben Weg nach, den `MainActivity.onAddHabit` tatsaechlich geht (Preset -> `GlyphReminder` -> `ReminderValidation.validate`) fuer jede Kombination aus vorschlagbarem Thema und Tageszeit - und haette den urspruenglichen Fehler gefangen. **Lehre:** Ein Preset, das eine Oberflaeche nur ANZEIGT, braucht keine Validierung; eines, das direkt in `repository.add()` landet, unterliegt denselben Regeln wie jede manuell eingegebene Erinnerung - das war hier nicht konsequent zu Ende gedacht. Dieser komplette Codepfad (Anlegen ueber das Gespraech mit beantworteter Zeitfrage) war zudem bis zum vorigen Fix schlicht unerreichbar (siehe Eintrag darueber) und deshalb nie in der Praxis gelaufen. **Nicht gegengeprueft:** wie immer kein Netzzugriff, kein Gradle-Lauf. **Fuer die naechste Sitzung:** Diesmal liegt ein ECHTER Absturzbericht vom Geraet vor (nicht nur Code-Lesen) - das ist die verlaesslichste Verifikation, die diese Sitzung bisher hatte; nach dem naechsten Update erneut ueber das Gespraech eine Erinnerung mit beantworteter Zeitfrage anlegen und bestaetigen, dass es jetzt durchlaeuft. |
