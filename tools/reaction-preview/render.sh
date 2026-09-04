@@ -45,7 +45,13 @@ for pkg in com.notime.glyphcore com.notime.glyphsim; do
 done
 
 echo "Uebersetzen ..."
-"$KOTLINC" -nowarn -d "$WORK/out" "$HERE"/src/*.kt "$WORK"/gen/R_*.kt "${SRCS[@]}"
+# Ausdrueckliche Liste statt "$HERE"/src/*.kt: Seit routines.sh daneben liegt, zoege ein
+# Platzhalter dessen RoutineDump.kt mit herein - und dessen Importe (PlayScene,
+# AvatarActivity) stehen in SRCS hier gar nicht. Der Kontaktbogen waere damit kaputt,
+# ohne dass jemand etwas an ihm geaendert haette.
+"$KOTLINC" -nowarn -d "$WORK/out" \
+  "$HERE/src/Annotations.kt" "$HERE/src/Render.kt" "$HERE/src/Dupes.kt" \
+  "$WORK"/gen/R_*.kt "${SRCS[@]}"
 
 CP="$WORK/out:$WORK/kotlinc/lib/kotlin-stdlib.jar"
 mkdir -p "$OUT"
