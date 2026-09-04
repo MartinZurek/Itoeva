@@ -5,6 +5,11 @@ build/
 .cxx/
 .externalNativeBuild/
 
+# ---- Lokale generierte Medien ----
+# API-Ausgaben werden zuerst hier erzeugt und nur ueber den Musik-Workflow gezielt als
+# geprueftes App-Asset in einen eigenen PR uebernommen.
+generated/music/
+
 # ---- Maschinenspezifisch ----
 # Enthaelt den SDK-Pfad DIESES Rechners und gehoert deshalb niemandem sonst.
 local.properties

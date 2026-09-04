@@ -1,0 +1,128 @@
+name: Generate Itoeva Music
+
+on:
+  workflow_dispatch:
+    inputs:
+      track_id:
+        description: Track id from music/manifest.json
+        required: true
+        default: home-evening-01
+        type: string
+      create_pr:
+        description: Put the generated audio into app-sim and open a PR
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    name: Generate music and prepare game asset
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install generator dependency
+        run: python -m pip install --disable-pip-version-check requests==2.32.5
+
+      - name: Validate track without spending credits
+        env:
+          TRACK_ID: ${{ inputs.track_id }}
+        run: >-
+          python tools/music/generate_music.py
+          --track-id "$TRACK_ID"
+          --dry-run
+
+      - name: Require Stability API key
+        env:
+          STABILITY_API_KEY: ${{ secrets.STABILITY_API_KEY }}
+        run: |
+          if [ -z "$STABILITY_API_KEY" ]; then
+            echo "::error::Missing repository secret STABILITY_API_KEY"
+            exit 1
+          fi
+
+      - name: Generate track with Stable Audio
+        env:
+          STABILITY_API_KEY: ${{ secrets.STABILITY_API_KEY }}
+          TRACK_ID: ${{ inputs.track_id }}
+        run: >-
+          python tools/music/generate_music.py
+          --track-id "$TRACK_ID"
+          --output-dir generated/music
+
+      - name: Resolve generated filenames
+        id: track
+        env:
+          TRACK_ID: ${{ inputs.track_id }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = json.loads(Path('music/manifest.json').read_text(encoding='utf-8'))
+          track = next(t for t in manifest['tracks'] if t['id'] == os.environ['TRACK_ID'])
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+              out.write(f"resource={track['android_resource']}\n")
+              out.write(f"format={track['output_format']}\n")
+          PY
+
+      - name: Keep generated track as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: itoeva-music-${{ inputs.track_id }}-${{ github.run_id }}
+          path: generated/music/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create game-asset branch and pull request
+        if: ${{ inputs.create_pr }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRACK_ID: ${{ inputs.track_id }}
+          RESOURCE: ${{ steps.track.outputs.resource }}
+          FORMAT: ${{ steps.track.outputs.format }}
+        run: |
+          set -euo pipefail
+
+          safe_track_id="${TRACK_ID//[^a-zA-Z0-9._-]/-}"
+          branch="generated/music-${safe_track_id}-${GITHUB_RUN_ID}"
+          audio="generated/music/${RESOURCE}.${FORMAT}"
+          metadata="generated/music/${RESOURCE}.json"
+          target="app-sim/src/main/res/raw/${RESOURCE}.${FORMAT}"
+          provenance="music/generated/${safe_track_id}.json"
+
+          test -s "$audio"
+          test -s "$metadata"
+
+          git switch -c "$branch"
+          mkdir -p app-sim/src/main/res/raw music/generated
+          cp "$audio" "$target"
+          cp "$metadata" "$provenance"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$target" "$provenance"
+          git commit -m "Add generated Itoeva track ${TRACK_ID}"
+          git push --set-upstream origin "$branch"
+
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Music: add generated track ${TRACK_ID}" \
+            --body "Generated from the versioned Itoeva music manifest and prompt. Audio and provenance metadata are included. Please listen before merging; this workflow intentionally does not auto-merge generated media."
