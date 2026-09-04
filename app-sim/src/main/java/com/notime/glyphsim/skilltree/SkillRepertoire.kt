@@ -15,17 +15,14 @@ import kotlin.random.Random
  * Alltag des Wesens auf: Wer "Basketball" gewaehlt hat, sieht es spaeter beim Sport tatsaechlich
  * Basketball spielen, statt nur "Sport" zu sehen wie vorher.
  *
- * ## Warum ergaenzend und nicht filternd
+ * ## Zwei Arten, wie ein Skill sichtbar wird
  *
- * Der naheliegende Weg waere gewesen, [com.notime.glyphsim.matrix.PlayAmbientActivity.nextTopic]
- * auf freigeschaltete Themen zu BESCHRAENKEN. Das waere falsch herum: Die neun Hauptgruppen sind
- * von Anfang an offen und decken neun der elf Themen ab - gefiltert wuerde also fast nichts, ausser
- * dass REST und FOCUS anfangs verschwaenden. Die beiden stehen aber im Stundenplan (21 Uhr und
- * 9/15 Uhr, siehe `plannedTopicFor`); ein neues Spiel haette dadurch einen **aermeren** Tag als
- * vorher. Eine Freischaltung darf etwas hinzufuegen, sie darf nichts wegnehmen.
- *
- * Deshalb: Der Tagesablauf bleibt unangetastet, und NACH der Handlung kommt gelegentlich eine
- * Einlage aus dem, was das Wesen in diesem Bereich gelernt hat.
+ * Der erste Stand spielte jeden Skill als kurze Einlage NACH einer ansonsten unveraenderten
+ * Handlung. Das bleibt der Rueckfall fuer Bereiche, die noch keinen eigenen vertikalen Schnitt
+ * besitzen. Sobald ein Knoten aber von [AvatarActivityPlans] kontextuell aufgeloest wird, gehoert
+ * er IN die Handlung selbst und darf hier nicht ein zweites Mal gewuerfelt werden. So entstehen
+ * keine zwei konkurrierenden Handlungssysteme: Der Skillbaum entscheidet das Repertoire, die
+ * vorhandene PlayRoutine fuehrt es aus.
  *
  * ## Warum MEDICINE nicht vorkommen kann
  *
@@ -46,10 +43,12 @@ object SkillRepertoire {
     fun hostNodeFor(topic: AnimationType): String? = AnimationTree.nodeIdFor(topic)
 
     /**
-     * Alle freigeschalteten, gezeichneten Knoten UNTERHALB des Themas - in Baumreihenfolge.
+     * Alle freigeschalteten, gezeichneten Knoten UNTERHALB des Themas, die noch als klassische
+     * Einlage gebraucht werden - in Baumreihenfolge.
      *
      * Der Wirtsknoten selbst fehlt bewusst: Seine Reaktion IST die Handlung, die der Ablauf gerade
-     * gespielt hat. Ihn noch einmal als Einlage zu zeigen waere eine Wiederholung, keine Faehigkeit.
+     * gespielt hat. Kontextuell ausgefuehrte Skills fehlen ebenfalls: Deren Freischaltung hat die
+     * Routine bereits veraendert und soll nicht danach nochmals als Einzelanimation auftauchen.
      */
     fun skillsFor(topic: AnimationType, unlocked: Set<String>): List<String> {
         val host = hostNodeFor(topic) ?: return emptyList()
@@ -58,14 +57,15 @@ object SkillRepertoire {
                 node.id != host &&
                     node.motif != null &&
                     node.id in unlocked &&
-                    host in AnimationTree.fallbackChain(node.id)
+                    host in AnimationTree.fallbackChain(node.id) &&
+                    !AvatarActivityPlans.supportsContextualExecution(node)
             }
             .map { it.id }
     }
 
     /**
      * Eine Faehigkeit fuer diese Handlung, oder `null`, wenn das Wesen in diesem Bereich noch
-     * keine hat.
+     * keine klassische Einlage hat.
      *
      * Gleichverteilt und ohne Gedaechtnis: Eine Einlage kommt ohnehin nur selten (siehe
      * [com.notime.glyphsim.matrix.PlayAmbientActivity.playsSkillFlourish]), und zwischen zwei
