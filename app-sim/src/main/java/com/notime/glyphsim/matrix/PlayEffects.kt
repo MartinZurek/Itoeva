@@ -36,7 +36,7 @@ object PlayEffects {
     enum class KitePhase { PREPARE, LAUNCH, FLY, LAND }
 
     /** Ballkontrolle, Schuss und der spaeter erlernbare Spezialtrick. */
-    enum class FootballPhase { DRIBBLE, AIM, KICK, TRICK }
+    enum class FootballPhase { TOUCH, DRIBBLE, AIM, KICK, TRICK }
 
     /** Basketball vom Prellen bis zum Treffer. */
     enum class BasketballPhase { DRIBBLE, AIM, SHOOT, SCORE }
@@ -469,6 +469,10 @@ object PlayEffects {
         val goalTop = groundY - 9
 
         val centerX = when (phase) {
+            // Einfacher Ballkontakt fuer Anfaenger: nah am Fuss und ohne das seitliche
+            // Hin-und-her des echten Dribblings. So ist DRIBBLE tatsaechlich ein freischaltbarer
+            // Verhaltensschritt statt nur ein anderer Name fuer die Basisaktion.
+            FootballPhase.TOUCH -> avatarCellX + 15
             FootballPhase.DRIBBLE -> avatarCellX + 15 + direction * 2
             FootballPhase.AIM -> avatarCellX + 17
             // Vorher avatarCellX + 23, unabhaengig vom Tor - traf es nur zufaellig, wenn die
@@ -478,7 +482,7 @@ object PlayEffects {
             FootballPhase.TRICK -> avatarCellX + 12 + direction * 4
         }.coerceIn(2, (widthCells - 3).coerceAtLeast(2))
         val centerY = when (phase) {
-            FootballPhase.DRIBBLE, FootballPhase.AIM -> groundY - 1
+            FootballPhase.TOUCH, FootballPhase.DRIBBLE, FootballPhase.AIM -> groundY - 1
             // Sichtbar INNERHALB des Tors, nicht nur auf seiner Anflughoehe - sonst haengt der
             // Ball vor der Torlinie in der Luft, statt drin zu liegen.
             FootballPhase.KICK -> goalTop + 5
@@ -514,7 +518,15 @@ object PlayEffects {
             }
         }
 
-        return (goal.render(grounded = false) + ball.render(grounded = false) + trail.render(carve = false))
+        // Ein Tor gehoert erst zur Schussabsicht. Beim lokalen Ballkontakt oder Dribbling
+        // im Park/Wiese wuerde ein ploetzlich eingeblendetes Tor den eben gewonnenen Ortskontext
+        // wieder unglaubwuerdig machen.
+        val goalCells = if (phase == FootballPhase.AIM || phase == FootballPhase.KICK) {
+            goal.render(grounded = false)
+        } else {
+            emptyList()
+        }
+        return (goalCells + ball.render(grounded = false) + trail.render(carve = false))
             .filter { it.x in 0 until widthCells }
             .distinctBy { it.x to it.y }
     }
