@@ -126,7 +126,7 @@ class AvatarActivityPlansTest {
         )
 
         assertFalse(resolved.routine.steps.any { it is RoutineStep.GoToPlace })
-        assertEquals(listOf(PlayEffects.FootballPhase.DRIBBLE), footballPhases(resolved))
+        assertEquals(listOf(PlayEffects.FootballPhase.TOUCH), footballPhases(resolved))
     }
 
     @Test
@@ -177,8 +177,8 @@ class AvatarActivityPlansTest {
             )
         )
 
-        assertEquals(1, footballPhases(beginner).count { it == PlayEffects.FootballPhase.DRIBBLE })
-        assertEquals(3, footballPhases(learned).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(0, footballPhases(beginner).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(2, footballPhases(learned).count { it == PlayEffects.FootballPhase.DRIBBLE })
     }
 
     @Test
@@ -214,8 +214,8 @@ class AvatarActivityPlansTest {
             )
         )
 
-        assertEquals(2, footballPhases(levelOne).count { it == PlayEffects.FootballPhase.DRIBBLE })
-        assertEquals(3, footballPhases(levelThree).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(1, footballPhases(levelOne).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(2, footballPhases(levelThree).count { it == PlayEffects.FootballPhase.DRIBBLE })
     }
 
     @Test

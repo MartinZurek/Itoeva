@@ -157,9 +157,9 @@ object AvatarActivityPlans {
      *
      * Entscheidend: Freischaltungen waehlen NICHT bloss eine zusaetzliche Animation nach der
      * Handlung, sondern veraendern die Handlung selbst. Ohne Dribbling-Knoten gibt es keine
-     * Dribbling-Sequenz; ohne Schuss-Knoten weder Zielen noch Schuss. Die eine kurze
-     * `Football(DRIBBLE)`-Phase am Anfang ist dabei der bereits vorhandene Renderer fuer eine
-     * einfache Ballberuehrung. Erst Wiederholung und Ortswechsel bilden das gelernte Dribbling.
+     * Dribbling-Sequenz; ohne Schuss-Knoten weder Zielen noch Schuss. Die neue, kleine
+     * `Football(TOUCH)`-Phase am Anfang erweitert dabei nur den vorhandenen Fussball-Renderer um
+     * einfachen Ballkontakt; `DRIBBLE` bleibt dadurch ausschliesslich dem freigeschalteten Skill.
      */
     fun resolve(
         current: AvatarActivity?,
@@ -196,7 +196,7 @@ object AvatarActivityPlans {
 
             // Basiskontakt: Der Reminder darf auch einen Anfaenger zu einer kurzen Ballberuehrung
             // anregen. Das ist noch NICHT das freigeschaltete Dribbling-Repertoire.
-            add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
+            add(RoutineStep.Football(PlayEffects.FootballPhase.TOUCH))
             add(RoutineStep.Linger(if (ballsportLearned) 4_000L else 2_500L))
 
             if (dribblingLearned) {
