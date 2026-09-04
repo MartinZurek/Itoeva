@@ -55,12 +55,21 @@ internal object AvatarMotifReactions {
             "Trophy" -> trophy(body)
             "Dribble" -> dribble(body)
             "Shot" -> shot(body)
+            // ---- naehe/freunde und naehe/tiere: sieben Knoten, sieben Bewegungen ----
+            "Gift" -> gift(body)
+            "Visit" -> visit(body)
+            "Call" -> call(body)
+            "Cat" -> cat(body)
+            "Pet" -> pet(body)
             else -> null
         }
     }
 
     /** Alle Labels mit eigener Reaktion - der Test laeuft sie durch. */
-    val labels: List<String> = listOf("Basketball", "Trophy", "Dribble", "Shot")
+    val labels: List<String> = listOf(
+        "Basketball", "Trophy", "Dribble", "Shot",
+        "Gift", "Visit", "Call", "Cat", "Pet"
+    )
 
     // =====================================================================================
     // sport/ballsport
@@ -148,4 +157,105 @@ internal object AvatarMotifReactions {
             creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
         )
     }
+
+    // =====================================================================================
+    // naehe/freunde und naehe/tiere
+    //
+    // Dieselbe Regel wie beim Ballsport, hier auf eine ganze Hauptgruppe angewandt: Die
+    // Bahnen muessen sich unterscheiden, und zwar auch von denen der anderen Gruppen. Fuer
+    // die fuenf hier heisst das - Geschenk senkrecht in der Mitte, Besuch waagerecht nach
+    // LINKS (und als einziges bewegt sich die FIGUR statt der Requisite), Anruf diagonal in
+    // der rechten oberen Ecke, Katze waagerecht am Boden von rechts, Gefaehrte im Bogen um
+    // ihn herum. Fuenf Richtungen, fuenf Lesarten.
+    //
+    // Der Unterschied zwischen "Freunde" und "Tiere" liegt zusaetzlich in der Blickrichtung:
+    // Bei den Menschen kommt etwas auf Augenhoehe oder von oben, bei den Tieren von unten -
+    // er geht in die Knie statt hochzusehen.
+    // =====================================================================================
+
+    /** Die Schachtel steht da, der Deckel geht hoch, etwas steigt heraus. */
+    private fun AvatarAnimations.gift(body: AvatarBody): List<Beat> {
+        val box = listOf(7 to 3, 8 to 3)
+        return listOf(
+            creatureFrame(
+                body, dy = 1, eyeHoles = body.eyesHalf, prop = box + listOf(7 to 2, 8 to 2)
+            ).beat(BEAT_MS),
+            creatureFrame(
+                body, mouthHoles = body.mouthOpen, prop = box + listOf(7 to 1, 8 to 1)
+            ).beat(FAST_MS),
+            creatureFrame(
+                body, dy = -1, accentPhase = 1, mouthHoles = body.mouthOpen, prop = box + (8 to 0)
+            ).beat(BEAT_MS),
+            creatureFrame(
+                body, dy = -2, mouthHoles = body.mouthOpen, prop = box + listOf(6 to 0, 9 to 0)
+            ).beat(SLOW_MS),
+            creatureFrame(body, dy = -1, accentPhase = -1, prop = box).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
+        )
+    }
+
+    /**
+     * Die Tuer am linken Rand geht auf - und als einzige der fuenf bewegt sich hier die FIGUR
+     * auf die Requisite zu statt umgekehrt. Genau das ist ein Besuch: Man geht hin.
+     */
+    private fun AvatarAnimations.visit(body: AvatarBody): List<Beat> {
+        val frame = listOf(0 to 0, 0 to 1, 0 to 2, 0 to 3)
+        return listOf(
+            creatureFrame(body, prop = frame + (1 to 0)).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = 1, prop = frame + (2 to 0)).beat(FAST_MS),
+            creatureFrame(
+                body, mouthHoles = body.mouthOpen, prop = frame + listOf(3 to 0, 3 to 1)
+            ).beat(BEAT_MS),
+            creatureFrame(
+                body, dx = -2, accentPhase = 1, mouthHoles = body.mouthOpen,
+                prop = frame + listOf(3 to 0, 3 to 1)
+            ).beat(BEAT_MS),
+            creatureFrame(
+                body, dx = -2, dy = -2, mouthHoles = body.mouthOpen, prop = frame
+            ).beat(FAST_MS),
+            creatureFrame(body, dx = -1, accentPhase = -1, prop = frame).beat(SETTLE_MS)
+        )
+    }
+
+    /** Das Signal kommt schraeg aus der oberen rechten Ecke; er nimmt ab und redet. */
+    private fun AvatarAnimations.call(body: AvatarBody): List<Beat> = listOf(
+        creatureFrame(body, prop = listOf(15 to 2)).beat(FAST_MS),
+        creatureFrame(body, accentPhase = 1, prop = listOf(14 to 1, 15 to 2)).beat(FAST_MS),
+        creatureFrame(
+            body, mouthHoles = body.mouthOpen, prop = listOf(13 to 0, 14 to 1, 15 to 2)
+        ).beat(BEAT_MS),
+        creatureFrame(
+            body, accentPhase = -1, mouthHoles = body.mouthOpen, prop = listOf(13 to 0, 15 to 2)
+        ).beat(SLOW_MS),
+        creatureFrame(
+            body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(14 to 1)
+        ).beat(BEAT_MS),
+        creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
+    )
+
+    /** Sie kommt am Boden von rechts heran - und er geht zu ihr hinunter, statt hochzusehen. */
+    private fun AvatarAnimations.cat(body: AvatarBody): List<Beat> = listOf(
+        creatureFrame(body, prop = listOf(13 to 4, 13 to 3)).beat(BEAT_MS),
+        creatureFrame(body, prop = listOf(12 to 4, 12 to 3)).beat(FAST_MS),
+        creatureFrame(body, accentPhase = 1, prop = listOf(10 to 4, 10 to 3)).beat(FAST_MS),
+        creatureFrame(
+            body, eyeHoles = body.eyesHalf, mouthHoles = body.mouthOpen,
+            prop = listOf(9 to 4, 9 to 3)
+        ).beat(BEAT_MS),
+        // In die Knie zu ihr hinunter.
+        creatureFrame(body, dy = 1, eyeHoles = body.eyesHalf, prop = listOf(9 to 4)).beat(SLOW_MS),
+        creatureFrame(body, accentPhase = -1, prop = listOf(10 to 4)).beat(SETTLE_MS)
+    )
+
+    /** Der kleine Gefaehrte umrundet ihn - rechts hoch, oben herueber, links wieder herunter. */
+    private fun AvatarAnimations.pet(body: AvatarBody): List<Beat> = listOf(
+        creatureFrame(body, prop = listOf(12 to 3)).beat(FAST_MS),
+        creatureFrame(body, accentPhase = 1, prop = listOf(12 to 1)).beat(FAST_MS),
+        creatureFrame(body, mouthHoles = body.mouthOpen, prop = listOf(8 to 0)).beat(BEAT_MS),
+        creatureFrame(body, accentPhase = -1, prop = listOf(4 to 1)).beat(FAST_MS),
+        creatureFrame(
+            body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(4 to 3)
+        ).beat(BEAT_MS),
+        creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
+    )
 }

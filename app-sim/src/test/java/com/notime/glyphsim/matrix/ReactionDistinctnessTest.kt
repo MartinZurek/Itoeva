@@ -41,7 +41,7 @@ class ReactionDistinctnessTest {
     }
 
     /**
-     * Der Stand nach P16. Sinkt die Zahl, wurde eine Choreografie ergaenzt - dann gehoert sie hier
+     * Der Stand nach P17. Sinkt die Zahl, wurde eine Choreografie ergaenzt - dann gehoert sie hier
      * nachgezogen, und zwar nach unten. Steigt sie, ist eine eigene Antwort verlorengegangen.
      */
     @Test
@@ -51,9 +51,24 @@ class ReactionDistinctnessTest {
             "80 Knoten mit Motiv, davon teilen sich diese eine Reaktion mit einem Geschwister. " +
                 "Sinkt die Zahl, ist das ein Fortschritt und gehoert hier nachgezogen - " +
                 "siehe tools/reaction-preview fuer den Bericht.",
-            33,
+            26,
             geteilt
         )
+    }
+
+    /**
+     * Die Hauptgruppe `naehe` war nach dem Ballsport der dichteste Bereich: `freunde` und seine
+     * drei Blaetter identisch, `tiere` und zwei seiner drei Blaetter ebenso. Seit P17 hat sie neun
+     * Knoten und neun Reaktionen - die erste Gruppe im Baum, in der sich kein Knoten mehr mit einem
+     * anderen deckt.
+     */
+    @Test
+    fun `in der Gruppe naehe spielt kein Knoten dasselbe wie ein anderer`() {
+        val ids = AnimationTree.nodes
+            .filter { it.motif != null && AnimationTree.fallbackChain(it.id).last() == "naehe" }
+            .map { it.id }
+        assertEquals("naehe hat 9 gezeichnete Knoten", 9, ids.size)
+        assertEquals("und muss 9 verschiedene Reaktionen haben", ids.size, ids.map { shapeOf(it) }.toSet().size)
     }
 
     /**
