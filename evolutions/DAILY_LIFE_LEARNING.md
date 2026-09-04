@@ -74,6 +74,50 @@ betroffenes Feedback, beobachtetes Problem, Spielerwirkung, Evidenz, Ergebnis un
 sinnvollen Hebel. Vermutungen werden als **Hypothese**, nicht als Tatsache, markiert. Das Journal
 ist eine Uebergabe, keine zweite Commit-Liste.
 
+### 2026-09-04 - Die sechs Wesen unterscheiden sich jetzt auch OHNE entwickelten Pfad
+
+- **Betroffenes Feedback:** FB-2026-09-03-01 und FB-2026-09-02-01, beide **weiterhin `[open]`**.
+  Diese Evolution ist ein weiterer Hebel darauf ("wie sich die sechs Wesen unterscheiden"),
+  erledigt aber keinen der beiden umfassenden, mehrere Evolutionen uebergreifenden Eintraege
+  vollstaendig.
+- **Beobachtetes Problem:** `PlayAmbientActivity`, die autonome Zwischen-Regung des Play-Modus,
+  trug die eigene Klassendoku-Zeile "Bewusst noch OHNE Spezies-Charakter in der Gewichtung" -
+  ein von der Klasse selbst dokumentierter, bislang unbehobener Zustand. `PlayGamePlan` gewichtet
+  die ECHTEN Erinnerungs-Ausloesungen laengst nach `AvatarSpecies.signatureTopic` (Hootlet liest
+  gern, Wyrmling bewegt sich gern); die Zwischen-Regung, in der der Avatar die meiste Zeit
+  tatsaechlich sichtbar ist, kannte diesen Charakterzug nicht. Erst `PlayPath` (eine ueber Wochen
+  ERWORBENE Neigung) faerbte den autonomen Ablauf ein - bis dahin, insbesondere direkt nach der
+  Avatarwahl, verhielten sich alle sechs Wesen beim Zuschauen identisch.
+- **Evidenz:** `DOCUMENTED INTENT` fuer die Luecke (Zitat oben aus der Klassendoku vor dieser
+  Aenderung). `TESTED BEHAVIOR` fuer die Wirkung: `PlayVarietyTest` belegt jetzt mit drei Tests,
+  dass die Signatur (a) die Trefferquote ihres Themas hebt, ohne den Tag zu uebernehmen
+  (`die Spezies-Signatur faerbt, ohne den Tag zu uebernehmen`), (b) nachts kein fremdes Thema
+  einfuehrt (`die Spezies-Signatur erfindet kein Thema ausserhalb der Phase`), und (c) zwei
+  Spezies im IDENTISCHEN Kontext (gleiche Uhrzeit, kein Verweilen, keine offene Gewohnheit, kein
+  Pfad) messbar unterschiedliche Themenverteilungen zeigen
+  (`zwei Spezies unterscheiden sich zur selben Uhrzeit im selben Kontext`).
+- **Ergebnis:** `nextTopic`/`combinedWeights` erhalten `signatureTopic` als sechstes, additives
+  Signal, nach demselben Muster wie die fuenf vorherigen. `SIGNATURE_BONUS = 2`, bewusst gleich
+  gross wie `LEANING_BONUS` (angeborene und erworbene Neigung sollen sich gegenseitig nicht
+  uebertoenen), wirkt nur auf ein Thema, das in der jeweiligen Tagesphase ohnehin ein
+  Grundgewicht hat - farbt, erfindet aber nichts. `DockScreen` reicht dafuer das bereits
+  vorhandene `avatar.species.signatureTopic` bei der PERFORM-Regung durch; kein neuer Zustand,
+  keine neue Persistenz, keine Aenderung an Reminder-Semantik oder Datenmodell.
+- **Spielerwirkung:** Ab dem ersten Besuch mit einem neuen Avatar sieht man einen Unterschied, der
+  vorher fruehestens nach einem entwickelten Pfad sichtbar war: Fennec trinkt in der Beispielrechnung
+  im Test (MIDDAY, Basisgewicht 3 von 16) mit Bonus statt 18,75 % in rund 27,8 % der Regungen DRINK,
+  waehrend Hootlets DRINK-Anteil bei denselben Bedingungen bei den unveraenderten rund 16,7 %
+  bleibt, weil bei ihm stattdessen FOCUS angehoben wird. Verbindet zwei bestehende Einfluesse
+  (Tageszeit ueber `weightsFor` und die bereits dokumentierte, geschuetzte Persoenlichkeit aus
+  `AvatarSpecies`), ohne einen von beiden neu zu erfinden oder umzudeuten.
+- **Naechster sinnvoller Hebel (Hypothese, unveraendert seit 2026-09-03):** Der Wiederholungs-
+  Daempfer wirkt nur auf die EXAKTE Wiederholung desselben `AnimationType`. Unklar und **nicht
+  belegt** ist, ob auch eine Abfolge NAHE verwandter Themen (z. B. FOCUS direkt nach WORK, beides
+  am selben Ort) beim Zuschauen aehnlich repetitiv wirkt - das braucht zuerst eine Beobachtung am
+  Geraet, bevor daraus eine Regel wird.
+- **Anmerkung zur Herkunft:** Diese Evolution entstand im automatisierten, unbeaufsichtigten
+  Dauerauftrag (`claude-primary-run.yml` / `evolutions/DAILY_LIFE_TASK.md`).
+
 ### 2026-09-03 - Der im Journal notierte Wiederholungs-Daempfer wurde belegt und umgesetzt
 
 - **Betroffenes Feedback:** FB-2026-09-03-01 und FB-2026-09-02-01, beide **weiterhin `[open]`**.

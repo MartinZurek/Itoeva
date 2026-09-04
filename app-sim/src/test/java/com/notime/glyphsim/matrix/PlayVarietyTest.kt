@@ -235,4 +235,85 @@ class PlayVarietyTest {
             assertTrue("Morgens wurde SLEEP gewuerfelt", topic != AnimationType.SLEEP)
         }
     }
+
+    // ---- Spezies-Signatur als sechstes Signal ----
+
+    @Test
+    fun `die Spezies-Signatur faerbt, ohne den Tag zu uebernehmen`() {
+        // Derselbe Aufbau wie beim Entwicklungspfad ("die Neigung faerbt..."), nur fuer das
+        // ANGEBORENE Merkmal: Ohne diese Verbindung liefen alle sechs Wesen zwischen zwei echten
+        // Ausloesungen identisch, solange noch kein Pfad entwickelt war.
+        val phase = PlayAmbientActivity.DayPhase.MIDDAY
+        val signature = AnimationType.FOCUS // Hootlets Schwerpunkt, siehe AvatarSpecies.
+
+        fun shareOfSignature(withSignature: Boolean): Float {
+            val random = Random(41)
+            var hits = 0
+            val draws = 4_000
+            repeat(draws) {
+                val topic = PlayAmbientActivity.nextTopic(
+                    phase,
+                    signatureTopic = if (withSignature) signature else null,
+                    random = random
+                )
+                if (topic == signature) hits++
+            }
+            return hits.toFloat() / draws
+        }
+
+        val plain = shareOfSignature(withSignature = false)
+        val signed = shareOfSignature(withSignature = true)
+        assertTrue(
+            "Die Signatur aendert nichts am Verhalten ($plain vs $signed)",
+            signed > plain * 1.2f
+        )
+        assertTrue(
+            "Die Signatur verdraengt alles andere ($signed)",
+            signed < 0.75f
+        )
+    }
+
+    @Test
+    fun `die Spezies-Signatur erfindet kein Thema ausserhalb der Phase`() {
+        // Nachts hat nur SLEEP ein Grundgewicht - eine angeborene Neigung zu FOCUS darf die
+        // Nachtruhe nicht durchbrechen, genauso wenig wie das Verweilen es darf.
+        val random = Random(43)
+        repeat(2_000) {
+            val topic = PlayAmbientActivity.nextTopic(
+                PlayAmbientActivity.DayPhase.NIGHT,
+                signatureTopic = AnimationType.FOCUS,
+                random = random
+            )
+            assertEquals(AnimationType.SLEEP, topic)
+        }
+    }
+
+    @Test
+    fun `zwei Spezies unterscheiden sich zur selben Uhrzeit im selben Kontext`() {
+        // Der eigentliche Spielereffekt: Fennec (DRINK) und Hootlet (FOCUS) am selben Mittag, ohne
+        // jeden weiteren Unterschied (kein Verweilen, keine offene Gewohnheit, kein Pfad) - erst
+        // die Signatur macht die beiden ueberhaupt unterscheidbar.
+        fun shareOf(topic: AnimationType, species: AvatarSpecies): Float {
+            val random = Random(47)
+            var hits = 0
+            val draws = 4_000
+            repeat(draws) {
+                val drawn = PlayAmbientActivity.nextTopic(
+                    PlayAmbientActivity.DayPhase.MIDDAY,
+                    signatureTopic = species.signatureTopic,
+                    random = random
+                )
+                if (drawn == topic) hits++
+            }
+            return hits.toFloat() / draws
+        }
+
+        val fennecDrinks = shareOf(AnimationType.DRINK, AvatarSpecies.FENNEC)
+        val hootletDrinks = shareOf(AnimationType.DRINK, AvatarSpecies.HOOTLET)
+        assertTrue(
+            "Fennec trinkt nicht haeufiger als Hootlet ($fennecDrinks vs $hootletDrinks), obwohl " +
+                "nur Fennecs Signatur DRINK ist",
+            fennecDrinks > hootletDrinks
+        )
+    }
 }
