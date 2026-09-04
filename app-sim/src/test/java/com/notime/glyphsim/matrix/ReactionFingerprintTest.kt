@@ -24,6 +24,25 @@ import org.junit.Test
  * Zeilen, die sich unterscheiden - dann ist eine Reaktion umgezogen, und die Ursache gehoert
  * gesucht, nicht die Datei angepasst.
  *
+ * ## Wann die Datei doch angefasst wird
+ *
+ * "Nicht anpassen" gilt fuer die Frage, auf die dieser Test antwortet: *Hat ein Umbau
+ * unbeabsichtigt eine Reaktion verschoben?* Es gibt aber einen zweiten Fall, in dem sich eine Zeile
+ * aendern MUSS - naemlich wenn ein Motiv absichtlich eine neue oder erstmals eine eigene
+ * Choreografie bekommt. Ohne eine Aenderung an dieser Datei liesse sich eine Animation nie
+ * verbessern.
+ *
+ * Die Grenze verlaeuft nicht zwischen "darf" und "darf nicht", sondern zwischen **benannt** und
+ * **stillschweigend**. Wer eine Zeile aendert, schuldet drei Dinge: dass sich **genau** die Zeilen
+ * aendern, die zu den bearbeiteten Motiven gehoeren (jede weitere ist der Fehler, den dieser Test
+ * sucht); dass die Liste im Commit steht; und dass der Grund dort steht.
+ *
+ * So geschehen am 2026-09-04 fuer `LIB:Basketball`, `LIB:Dribble`, `LIB:Shot` und `LIB:Trophy`:
+ * Alle vier trugen bis dahin **denselben** Abdruck `9f76c0f83beb` - sie spielten Bild fuer Bild
+ * dieselbe geerbte Gruppen-Antwort wie `sport/ballsport` selbst (siehe [AvatarMotifReactions] fuer
+ * den Befund und SKILLBAUM.md P16). Der gemeinsame alte Wert in vier Zeilen war dabei selbst der
+ * Beleg: Vier verschiedene Motive duerfen nicht denselben Abdruck haben.
+ *
  * Der Abdruck deckt alle sechs Spezies gleichzeitig ab: Jede Zeile ist der Hash ueber die
  * Bildfolgen UND die Standzeiten aller sechs. Damit faellt auch auf, wenn sich nur bei einer
  * Spezies etwas verschiebt - was der wahrscheinlichere Fehler ist, weil sich die Spezies genau im

@@ -51,6 +51,12 @@ internal object AvatarReactions {
         // 1. Die motiveigene Antwort - nur fuer genau diesen Knoten, siehe Klassendoku.
         AvatarSignatureReactions.forNode(nodeId, body)?.let { return it }
 
+        // 1b. Dasselbe fuer Motive, die keiner Kreatur gehoeren ([AvatarMotifReactions]). Getrennt
+        // gehalten, weil die 30 drueben ausdruecklich die Charakter-Motive sind (fuenf je Spezies);
+        // die Regel - gilt nur fuer genau diesen Knoten, traegt die Requisite ihres Motivs, wird nie
+        // vererbt - ist dieselbe, und deshalb steht der Aufruf hier und nicht weiter unten.
+        AvatarMotifReactions.forNode(nodeId, body)?.let { return it }
+
         // 2. Nach oben: Antworten, die einer Stelle im Baum gehoeren statt einem Motiv.
         //
         // MIT dem Knoten selbst. Der erste Entwurf liess ihn aus (`drop(1)`) in der Annahme, er sei
