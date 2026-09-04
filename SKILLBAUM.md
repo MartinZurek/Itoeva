@@ -856,6 +856,66 @@ Handlung sich richtig anfühlt oder ob die Einlage zu oft kommt.
 
 ---
 
+### P16 — Zum ersten Mal hingesehen: 38 von 80 Knoten spielten dasselbe
+
+**Das Werkzeug, das dreizehnmal gefehlt hat.** In diesem Dokument steht dreizehnmal irgendeine
+Fassung von „auf dem Gerät noch nicht gesehen". Der Grund war nie Nachlässigkeit: In einer
+Cloud-Sitzung ist `dl.google.com` gesperrt, also lädt das Android-Gradle-Plugin nicht, also baut
+nichts, also rendert nichts.
+
+Das war ein Irrtum über die eigene Lage. Die Reaktionen sind **reines Kotlin** — `AvatarAnimations`,
+`AvatarBody`, `AvatarReactions` und alle Choreografien importieren zusammen **kein einziges**
+`android.*`. Und `repo1.maven.org` ist erreichbar (nur `dl.google.com` nicht). Sie brauchten kein
+Android; sie brauchten nur jemanden, der sie ohne Android übersetzt.
+
+- [x] `tools/reaction-preview/` — holt den Kotlin-Compiler, übersetzt die zwanzig beteiligten
+      Dateien, rendert je Hauptgruppe einen Kontaktbogen (eine Zeile je Knoten, acht Standbilder)
+      und gibt danach den Duplikat-Bericht aus. Erster Lauf gut eine Minute. Die drei Klippen
+      (`R.string`, `@StringRes`, Room-Entities) sind im README benannt; die `R`-Namen werden per
+      `grep` **gelesen statt gepflegt**, damit ein neuer String das Werkzeug nicht stillschweigend
+      lahmlegt.
+
+**Der Befund beim ersten Hinsehen.** 80 Knoten mit Motiv, aber nur **55 verschiedene Reaktionen**:
+38 Knoten spielten Bild für Bild dasselbe wie ein Geschwister. Der dichteste Klumpen war
+`sport/ballsport` — Kopf und alle vier Blätter (Basketball, Pokal, Dribbling, Schuss) **identisch**.
+Wer einen Skillpunkt auf „Basketball" setzte, bekam exakt das, was „Ballsport" schon tat.
+
+Das ist kein Fehler im Code, sondern der Preis der Vererbung, und die ist richtig so: Ein Blatt ohne
+eigene Choreografie erbt die Gruppen-Antwort seiner Untergruppe, und die ist absichtlich
+**requisitenfrei** (Begründung bei `AvatarReactions.groupAnswer` — eine geerbte Requisite läge sonst
+auch dann da, wenn ein anderes Motiv gezogen wurde). Requisitenfrei heißt aber auch: austauschbar.
+Solange nur die Uhr Reaktionen auslöste, fiel das kaum auf. **Seit P15 eine Freischaltung im Alltag
+sichtbar macht, ist es die Belohnung selbst, die unsichtbar bleibt.**
+
+- [x] `AvatarMotifReactions` (neu): eigene Choreografien für `Basketball`, `Trophy`, `Dribble`,
+      `Shot`. Sie unterscheiden sich absichtlich in der **Bahn der Requisite**, nicht bloß im Takt —
+      Bogen in den Korb, Senkrechte nach oben, flaches Auf und Ab an derselben Stelle, Waagerechte
+      quer ins Tor. Selbst als Standbildstreifen auseinanderzuhalten, und genau daran hat es
+      gefehlt. Dribbling endet als einziges **ohne** Jubel: Es ist Kontrolle, kein Erfolg — enden
+      alle vier hoch und mit offenem Mund, sind es wieder dieselben.
+- [x] Eigenes Objekt statt Einreihen in `AvatarSignatureReactions`: Dort liegen die **30
+      Charakter-Motive**, fünf je Kreatur, und Klassendoku, `labels` und `PER_SPECIES` sind auf
+      genau diese 30 gebaut. Ein Basketball gehört keiner Kreatur. Die **Regel** ist dieselbe und
+      gilt unverändert: motiveigene Antwort, genau ihr Knoten, trägt ihre Requisite, wird nie
+      vererbt.
+- [x] `ReactionDistinctnessTest` (4 Tests) hält die Zahl fest — jetzt **33** geteilte Knoten. Sie
+      fällt in beide Richtungen auf: Wer eine Choreografie ergänzt, zieht sie nach unten nach; wer
+      versehentlich eine eigene Antwort verliert, wird gestoppt.
+- [x] `reaction-fingerprint.txt`: **genau vier Zeilen** geändert. Die vier alten Werte waren
+      identisch (`9f76c0f83beb`) — der Zahlenbeweis für den Befund. Die Klassendoku des
+      Fingerabdruck-Tests sagt jetzt, wann diese Datei angefasst werden darf: nicht „nie", sondern
+      **benannt statt stillschweigend**, mit der Liste der Zeilen und dem Grund im Commit. Ohne das
+      ließe sich nie eine Animation verbessern.
+
+**Was offen bleibt:** 33 geteilte Knoten. Die nächsten Klumpen sind `arbeit/geraet` (4),
+`arbeit/erledigen` (4) und `naehe/freunde` (4). Der Duplikat-Bericht nennt sie beim Namen — beim
+Verbessern von Animationen gehört er zuerst angesehen, er sagt **wo** es sich lohnt.
+
+**Geprüft:** Der Kontaktbogen wurde tatsächlich angesehen, vorher und nachher. Kein Gradle-Lauf
+möglich; die Unit-Tests und beide instrumentierten Läufe führt die CI.
+
+---
+
 ## Offene Punkte
 
 - [x] ~~**Der Skillbaum hat keinen Abnehmer mehr (Befund aus P14).**~~ **Erledigt in P15.** Die
@@ -906,6 +966,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-09-04 | P16 | **Zum ersten Mal wurden die Reaktionen angesehen.** `tools/reaction-preview/` uebersetzt die zwanzig beteiligten Dateien mit einem von Maven Central geholten Kotlin-Compiler und rendert Kontaktboegen - die Reaktionen sind reines Kotlin, sie brauchten nie Android, nur jemanden, der sie ohne Android uebersetzt. `dl.google.com` ist gesperrt, `repo1.maven.org` nicht. **Befund:** 80 Knoten mit Motiv, aber nur 55 verschiedene Reaktionen - 38 Knoten spielten Bild fuer Bild dasselbe wie ein Geschwister, am dichtesten `sport/ballsport` mit Kopf plus vier Blaettern identisch. Ursache ist die (richtige) requisitenfreie Vererbung; seit P15 die Freischaltung sichtbar macht, ist es die Belohnung selbst, die unsichtbar bleibt. **Behoben:** `AvatarMotifReactions` gibt Basketball/Pokal/Dribbling/Schuss eigene Bahnen (Bogen, Senkrechte, flaches Auf und Ab, Waagerechte), jetzt 33 geteilte Knoten. `ReactionDistinctnessTest` haelt die Zahl fest. Vier Fingerabdruck-Zeilen geaendert - die vier alten Werte waren identisch, was den Befund beweist; die Regel dafuer steht jetzt in der Klassendoku. **Fuer die naechste Sitzung:** Erst den Duplikat-Bericht laufen lassen, dann arbeiten. Naechste Klumpen: `arbeit/geraet`, `arbeit/erledigen`, `naehe/freunde` (je 4). |
 | 2026-09-03 | P15 | **Der Skillbaum wirkt jetzt im Spiel.** Nach einer Alltagshandlung zeigt das Wesen jede dritte Mal eine Faehigkeit aus dem freigeschalteten Zweig genau dieses Themas (`SkillRepertoire` + `PlayAmbientActivity.playsSkillFlourish`, angeschlossen im PERFORM-Zweig von `DockScreen` direkt nach `runRoutine`). Damit hat `AvatarUnlockRepository` einen zweiten Leser — den, auf den es ankommt. **Die Nutzeridee vom 2026-08-29 (nur freigeschaltete Themen wuerfeln) wurde bewusst NICHT so umgesetzt**: Die neun Hauptgruppen sind von Anfang an offen und decken neun der elf Themen ab, gefiltert wuerden also nur REST und FOCUS — ausgerechnet zwei, die im Stundenplan stehen. Ein neues Spiel haette dadurch einen aermeren Tag gehabt. Daraus die Regel, die kuenftig gilt: **eine Freischaltung darf etwas hinzufuegen und nichts wegnehmen.** MEDICINE ist ohne eigene Pruefung ausgeschlossen, weil es gar keinen Knoten hat. 9 neue reine Tests. **Fuer die naechste Sitzung:** auf dem Geraet pruefen, ob jede dritte Handlung die richtige Haeufigkeit ist (`SKILL_FLOURISH_EVERY_N`), und ob die Einlage nach dem Ablauf sauber anschliesst. Danach steht als naechstes die Verbesserung der Animationen selbst an — die Testumgebung aus P14 ist dafuer das Werkzeug. |
 | 2026-09-03 | P14 | **Der gemeldete Fehler war zwei Fehler.** Geschrieben wird korrekt — aber seit `7c38f97` (Zieh-Leiste entfernt) liest den Freischalt-Stand **niemand** ausser dem Baumbildschirm selbst; `AvatarUnlockRepository` hat genau einen Aufrufer im Modul. Ein Skillpunkt veraendert also tatsaechlich nichts am Spiel — die Vermutung des Nutzers stimmte. Das ist als erster Punkt unter „Offene Punkte" eingetragen und mit dieser Runde NICHT behoben. Behoben ist die zweite Haelfte: Die Freischaltung fuehrt die neue Reaktion sofort einmal auf der eigenen Kreatur vor (`SkillReactionPreview`, geht ueber `AvatarAnimations.reactionFor` — dieselbe Reaktion wie im Spiel), klappt den Ast selbst auf (`SkillTreeRows.ancestorsOf`), markiert den Knoten mit „neu", und `TamaPalette` hat zum ersten Mal einen warmen Ton, der genau das markiert, was JETZT antippbar ist — vorher trennten drei Graustufen innerhalb von 32 Helligkeitswerten „gesperrt", „als Naechstes" und „freigeschaltet". Dazu ein optimistischer Bestand (`pending`/`owned`), der das Fenster zwischen Tipp und Flow-Rueckmeldung schliesst, und die **Testumgebung** unter dem Baum: Kreatur waehlen, jede der 67 Reaktionen ansehen, auch gesperrte. **Fuer die naechste Sitzung:** die Welt zum Abnehmer machen (offener Punkt 1+2) — alles andere am Baum ist bis dahin Fassade. Auf dem Geraet noch nicht gesehen. |
 | 2026-08-29 | Nachtschlaf + Bett-Durchlauf-Bug | **Zwei Nutzerwuensche zur Schlaf-Animation, kein Skillbaum-Paket.** (1) "Der Avatar sollte nachts von 0 bis ca. 6 Uhr durchgehend schlafen." `PlayAmbientActivity.weightsFor(NIGHT)` hatte SLEEP bisher nur als HAEUFIGSTES von drei Themen (Gewicht 5 von 9 mit REST/MINDFULNESS, ~55%) - jetzt ist SLEEP das EINZIGE Thema mit Grundgewicht (12, REST/MINDFULNESS raus). Ohne offene Gewohnheit kommt nachts jetzt immer SLEEP; eine tatsaechlich offene, heute unerreichte Gewohnheit kann ueber den Boost (+4) weiterhin gelegentlich durchscheinen - das ist keine Nachlaessigkeit, sondern der schon vorher dokumentierte, bewusste Grundsatz ("eine offene Trink-Gewohnheit darf auch nachts einmal durchscheinen"), nur jetzt klar in der Minderheit statt beinahe gleichauf. Test umbenannt/verschaerft: `nachts ist SLEEP ohne offene Gewohnheit das einzige Thema` (vorher: "das mit Abstand haeufigste"). (2) "Er sieht so aus, als wuerde der Avatar durchs Bett durchgehen." Ursache gefunden in `DockScreen.kt`s `runRoutine`: `RoutineStep.Occupy` setzte `occupiedStation` (steuert die vordere Bettdecken-Ebene, [PlayScene.buildFront]s Layer, das "als einziges NACH dem Avatar gezeichnet wird") erst NACH der 420ms-Aufstiegs-Animation vom Boden auf die Matratze - waehrend der gesamten Bewegung war die stehende Figur also unverdeckt sichtbar und wanderte sichtbar durchs Kopfteil/die Matratze, bevor am Ziel ploetzlich die Decke erschien. `RoutineStep.Rise` hatte das spiegelverkehrte Problem (Decke verschwand SOFORT beim Aufstehen, die Abwaertsbewegung durchs Bett war danach unverdeckt sichtbar). Behoben durch Umsortieren: `occupiedStation` wird bei `Occupy` jetzt VOR der Animation gesetzt (Decke deckt schon beim Hinlegen zu) und bei `Rise` erst NACH der Animation geloescht (Decke bleibt bis zum Stehen auf dem Boden). Gilt allgemein fuer jede Requisite mit `frontArt` (auch Sofa/Sessel etc.), nicht nur das Bett. **Nicht gegengeprueft:** Dieser Fehler liegt in Compose-Animationslogik (`DockScreen.kt`), nicht in reinen `PlayInk`/`PlayEffects`-Zellfunktionen - die JVM-Rendering-Technik aus fruaeheren Sitzungen (Gradles gebuendelter Kotlin-Compiler ausserhalb des Android Gradle Plugins) greift hier NICHT, weil sie keine Compose-Laufzeit/Coroutinen simulieren kann. Die Diagnose beruht auf genauem Lesen der Prop-Geometrie (`BED.frontArt` deckt Zeilen 2-5, `useSpot` liegt auf Zeile 5, der Boden entspricht Zeile 6) und der Reihenfolge der Zustandsaenderungen, nicht auf einem gesehenen Bild. **Fuer die naechste Sitzung:** Auf einem echten Geraet/Emulator die Schlafanimation ansehen und bestaetigen, dass das Hinlegen jetzt wie ein Hineinlegen statt eines Durchlaufens aussieht - falls nicht, faellt der Verdacht auf die WAAGERECHTE Anlaufposition (GoTo zielt auf `useSpot.x`, die Mitte der Matratze, nicht auf eine Stelle seitlich davon wie bei Tisch/Schreibtisch ueblich - siehe `Prop.useSpot`-Doku "wer an einem Tisch STEHT, steht daneben"). |
