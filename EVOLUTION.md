@@ -1065,6 +1065,68 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   `OPEN DECISION`. Der naechste sinnvolle Hebel ist im Lernjournal (`DAILY_LIFE_LEARNING.md`)
   vermerkt.
 
+### 2026-09-04 - Spezies-Signatur faerbt jetzt auch die autonome Zwischen-Regung
+
+- **Version:** Protokoll bleibt 0.5. Reine Verhaltensaenderung im Spielmodus ohne Datenmodell-,
+  Schema- oder Preference-Aenderung; Ruecksetzweg ist der Revert dieses PRs, ohne Nutzerdatenfolge.
+- **Ausgangsproblem und Nutzerwirkung:** `PlayGamePlan` gewichtet die ECHTEN Erinnerungs-
+  Ausloesungen laengst nach Avatar-Charakter (Hootlet liest gern, Wyrmling bewegt sich gern) -
+  `PlayAmbientActivity`, die autonome Zwischen-Regung zwischen zwei solchen Ausloesungen, tat das
+  ausdruecklich noch nicht (`DOCUMENTED INTENT` im eigenen Klassendoc: "Bewusst noch OHNE
+  Spezies-Charakter in der Gewichtung"). Dadurch liefen alle sechs Wesen beim taeglichen
+  Zwischendurch-Verhalten identisch, solange noch kein ueber Wochen erworbener Entwicklungspfad
+  (`PlayPath`/`leaning`) entstanden war - beim frischen Auswaehlen eines Avatars und in den ersten
+  Tagen also praktisch immer. Fuer einen normalen Besuch bedeutet das: Wer einen Fennec waehlt,
+  sieht ihn beim Zuschauen ab sofort haeufiger trinken; wer einen Hootlet waehlt, sieht ihn
+  haeufiger fokussiert arbeiten - derselbe dokumentierte Charakterzug, den `AvatarSpecies` und
+  `PlayGamePlan` ohnehin schon kennen, wird jetzt auch dort sichtbar, wo der Avatar die meiste Zeit
+  tatsaechlich verbringt.
+- **Evidenzklassifikation:** `DOCUMENTED INTENT` fuer die Luecke selbst (siehe Klassendoc-Zitat
+  oben) plus `TESTED BEHAVIOR` fuer die Wirkung: ein neuer Test zeigt, dass die Signatur die
+  Trefferquote ihres Themas erhoeht, ohne den Tag zu uebernehmen (analog zum bestehenden Test fuer
+  `leaning`), ein zweiter, dass sie kein Thema ausserhalb der Tagesphase einfuehrt (Nachtruhe bleibt
+  unangetastet), ein dritter, dass zwei Spezies mit gleichem Kontext (selbe Uhrzeit, kein
+  Verweilen, keine offene Gewohnheit, kein Pfad) messbar unterschiedliche Themenverteilungen
+  zeigen.
+- **Getroffene Produktentscheidung:** `nextTopic`/`combinedWeights` erhalten `signatureTopic` als
+  sechstes, additives Signal - nach demselben Andock-Muster wie `boostedTopics`, `leaning`,
+  `stayAt`, `plannedTopic` und `justPlayed`. `SIGNATURE_BONUS = 2`, bewusst gleich gross wie
+  `LEANING_BONUS`: beide sagen "das mag er von Natur aus", nur mit anderem Ursprung (Spezies von
+  Geburt an, Pfad erst nach Wochen) - keines soll das andere uebertoenen, sobald beide gleichzeitig
+  gelten. Wie bei `leaning` wirkt der Bonus nur auf ein Thema, das in der jeweiligen Tagesphase
+  ohnehin ein Grundgewicht hat - er faerbt, erfindet aber nichts. `DockScreen` reicht dafuer
+  `avatar.species.signatureTopic` durch, das bereits vorhandene Feld aus `AvatarSpecies` - kein
+  neuer Zustand, keine neue Persistenz.
+- **Verworfene Alternativen:** Den vollen `PlayGamePlan.topicWeights` (mehrstufig nach Level)
+  ebenfalls in die Zwischen-Regung zu uebernehmen wurde verworfen - das waere ein deutlich groesserer
+  Eingriff (Level-Abfrage, Stufenzuordnung, doppelte Quelle fuer denselben Charakterzug) fuer
+  denselben sichtbaren Effekt, den die einzelne `signatureTopic` schon liefert. Das Zusammenlegen
+  von `signatureTopic` in dieselbe `leaning`-Menge (statt eines eigenen Parameters) wurde verworfen,
+  weil `leaning` dokumentiert ausschliesslich die ueber Wochen ERWORBENE Pfad-Neigung meint - ein
+  eigener, klar benannter Parameter haelt beide Herkuenfte unterscheidbar und einzeln testbar.
+- **Betroffene Bereiche:** `matrix/PlayAmbientActivity.kt` (neuer Parameter `signatureTopic`, neue
+  Konstante `SIGNATURE_BONUS`, erweiterte `combinedWeights`, aktualisierte Klassendoku),
+  `ui/DockScreen.kt` (reicht `species.signatureTopic` bei der PERFORM-Regung durch),
+  `matrix/PlayVarietyTest.kt` (drei neue Tests).
+- **Reminder-Semantik, Datenmodell, Migration:** unveraendert. Keine Room-, Preference- oder
+  Textaenderung, keine Auswirkung auf bestehende Nutzerstaende.
+- **Geschuetzte Grenzen:** `MEDICINE` bleibt ausgeschlossen (kein `AvatarSpecies.signatureTopic` ist
+  je MEDICINE, zusaetzlich defensiv aus dem Signal gefiltert wie bei `boostedTopics`/`plannedTopic`).
+  Die Nachtruhe-Garantie bleibt unangetastet, weil der Bonus nur auf ein Thema wirkt, das in
+  `weightsFor(phase)` bereits ein Grundgewicht hat (nachts nur SLEEP) - mit eigenem Test
+  abgesichert. Keine geschuetzte Charaktereigenschaft wurde umgedeutet: `signatureTopic` bestand
+  bereits und ist unveraendert aus `AvatarSpecies.personalityRes` abgeleitet.
+- **Ausgefuehrte Tests:** Drei neue Tests in `PlayVarietyTest`: Faerbewirkung ohne Uebernahme des
+  Tages, kein phasenfremdes Thema durch die Signatur, messbarer Unterschied zwischen zwei Spezies
+  im gleichen Kontext.
+- **Ausstehende Geraeteprueung:** Ob der Unterschied zwischen zwei Spezies beim Zuschauen auffaellt,
+  laesst sich nur am Geraet beurteilen und steht noch aus. Die Aenderung wurde im automatisierten,
+  unbeaufsichtigten Lauf nicht lokal gebaut (kein Werkzeug dafuer im Lauf); den Nachweis fuehrt die
+  CI.
+- **Weiterhin offen:** Ob eine Abfolge NAHE verwandter Themen (z. B. FOCUS direkt nach WORK)
+  repetitiv wirkt, bleibt unbelegt und damit weiterhin offen (siehe Lernjournal). Der naechste
+  sinnvolle Hebel ist dort vermerkt.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.
