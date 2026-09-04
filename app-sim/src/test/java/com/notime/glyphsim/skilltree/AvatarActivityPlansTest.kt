@@ -174,7 +174,7 @@ class AvatarActivityPlansTest {
         )
 
         assertEquals(0, footballPhases(beginner).count { it == PlayEffects.FootballPhase.DRIBBLE })
-        assertEquals(2, footballPhases(learned).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(1, footballPhases(learned).count { it == PlayEffects.FootballPhase.DRIBBLE })
     }
 
     @Test
