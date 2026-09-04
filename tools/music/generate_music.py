@@ -103,14 +103,16 @@ def main() -> int:
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Stability's text-to-audio endpoint requires multipart/form-data. The empty
+    # file part mirrors the provider's official Python request sample and makes
+    # requests construct the multipart boundary without setting Content-Type by hand.
     response = requests.post(
         endpoint,
         headers={
             "authorization": f"Bearer {api_key}",
             "accept": "audio/*",
-            "stability-client-id": "Itoeva",
         },
-        files={"none": (None, "")},
+        files={"none": ""},
         data={
             "prompt": prompt,
             "output_format": extension,
