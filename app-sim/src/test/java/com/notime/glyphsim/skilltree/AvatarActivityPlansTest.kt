@@ -348,6 +348,94 @@ class AvatarActivityPlansTest {
         assertEquals(com.notime.glyphcore.data.AnimationType.MOVE, kraft?.topic)
     }
 
+    // ================= Einlage in eine laufende Beschaeftigung =================
+
+    /**
+     * `planFor` sagt es bereits: Laeuft der Wirt schon, kommt nur ein `Flourish` und kein `Begin`.
+     * Die Ausfuehrung hat das lange ignoriert und trotzdem Hinweg, Anker und Basisphase
+     * vorangestellt - wer beim Ballspielen ein Dribbling bekam, sah ihn erneut hinlaufen und den
+     * Ball erstmals beruehren. Genau das soll nicht mehr passieren.
+     */
+    @Test
+    fun `ein Dribbling in laufenden Ballsport faengt nicht von vorn an`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = running("sport/ballsport"),
+            dropped = node("sport/ballsport/dribbling"),
+            context = ActivityContext(
+                PlayScene.Place.SPORT,
+                setOf("sport/ballsport", "sport/ballsport/dribbling")
+            )
+        )
+        val steps = resolved?.routine?.steps.orEmpty()
+        assertTrue("kein neuer Hinweg", steps.none { it is RoutineStep.GoToPlace })
+        assertFalse(
+            "keine erneute Ballberuehrung",
+            steps.filterIsInstance<RoutineStep.Football>()
+                .any { it.phase == PlayEffects.FootballPhase.TOUCH }
+        )
+        assertTrue(
+            "das Dribbling selbst kommt",
+            steps.filterIsInstance<RoutineStep.Football>()
+                .any { it.phase == PlayEffects.FootballPhase.DRIBBLE }
+        )
+    }
+
+    /** Dieselbe Regel bei Kraft & Ausdauer - sie liegt gemeinsam, nicht zweimal. */
+    @Test
+    fun `ein Heben in laufendes Training faengt nicht von vorn an`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = running("sport/kraft-ausdauer"),
+            dropped = node("sport/kraft-ausdauer/heben"),
+            context = ActivityContext(
+                PlayScene.Place.SPORT,
+                setOf("sport/kraft-ausdauer", "sport/kraft-ausdauer/heben")
+            )
+        )
+        assertEquals(listOf(PlayEffects.TrainingPhase.LIFT), phases(resolved))
+    }
+
+    /**
+     * Ohne laufende Beschaeftigung bleibt der volle Ablauf - die Abkuerzung gilt nur fuer das
+     * Einschieben, nicht fuer den Anfang.
+     */
+    @Test
+    fun `ohne laufende Beschaeftigung bleibt der volle Ablauf`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = null,
+            dropped = node("sport/kraft-ausdauer/heben"),
+            context = ActivityContext(
+                PlayScene.Place.SPORT,
+                setOf("sport/kraft-ausdauer", "sport/kraft-ausdauer/heben")
+            )
+        )
+        assertEquals(
+            listOf(
+                PlayEffects.TrainingPhase.WARM_UP,
+                PlayEffects.TrainingPhase.LIFT,
+                PlayEffects.TrainingPhase.REST
+            ),
+            phases(resolved)
+        )
+    }
+
+    /**
+     * Ein Impuls fuer eine NICHT freigeschaltete Faehigkeit gaebe als reine Einlage eine Routine
+     * ohne einen einzigen Schritt. Dann ist der volle Ablauf richtig - er zeigt wenigstens die
+     * Basis.
+     */
+    @Test
+    fun `eine ungelernte Einlage faellt auf den vollen Ablauf zurueck`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = running("sport/kraft-ausdauer"),
+            dropped = node("sport/kraft-ausdauer/heben"),
+            context = ActivityContext(PlayScene.Place.SPORT, setOf("sport/kraft-ausdauer"))
+        )
+        assertEquals(
+            listOf(PlayEffects.TrainingPhase.WARM_UP, PlayEffects.TrainingPhase.REST),
+            phases(resolved)
+        )
+    }
+
     /** Die Gipfel-/Leiter-/Fahnen-Blaetter bleiben beim bisherigen Reaktionsweg. */
     @Test
     fun `die uebrigen Kraft Blaetter bleiben ausserhalb des Schnitts`() {

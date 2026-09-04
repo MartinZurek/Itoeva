@@ -183,20 +183,9 @@ object AvatarActivityPlans {
         val targetPlace = if (localPractice) context.place else PlayScene.Place.SPORT
         val anchor = anchorFor(targetPlace)
 
-        val steps = buildList {
-            // Zuhause, im Arbeitszimmer usw. keinen Ball samt Tor in die Kulisse zaubern. Der
-            // vorhandene GoToPlace-Schritt zeigt den Weg durch die Tuer; es ist also kein
-            // Teleport. Park und Wiese sind dagegen glaubwuerdige lokale Uebungsorte.
-            if (!localPractice) {
-                add(RoutineStep.GoToPlace(PlayScene.Place.SPORT))
-            }
-            add(RoutineStep.Stroll(anchor))
-
-            // Basiskontakt: Der Reminder darf auch einen Anfaenger zu einer kurzen Ballberuehrung
-            // anregen. Das ist noch NICHT das freigeschaltete Dribbling-Repertoire.
-            add(RoutineStep.Football(PlayEffects.FootballPhase.TOUCH))
-            add(RoutineStep.Linger(if (ballsportLearned) 4_000L else 2_500L))
-
+        // Die gelernten Koennens-Anteile - sie allein genuegen, wenn die Beschaeftigung schon
+        // laeuft (siehe [isInsert]).
+        val skill = buildList {
             if (dribblingLearned) {
                 // Gelerntes Dribbling wird als erkennbare Folge sichtbar. Eine zusaetzliche
                 // Level-Schwelle gibt es bewusst nicht: Welche Level Varianten freischalten,
@@ -212,6 +201,25 @@ object AvatarActivityPlans {
                 add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
                 add(RoutineStep.Linger(5_000L))
             }
+        }
+
+        if (isInsert(plan, skill)) return ResolvedActivity(plan, AnimationType.MOVE, PlayRoutine(skill))
+
+        val steps = buildList {
+            // Zuhause, im Arbeitszimmer usw. keinen Ball samt Tor in die Kulisse zaubern. Der
+            // vorhandene GoToPlace-Schritt zeigt den Weg durch die Tuer; es ist also kein
+            // Teleport. Park und Wiese sind dagegen glaubwuerdige lokale Uebungsorte.
+            if (!localPractice) {
+                add(RoutineStep.GoToPlace(PlayScene.Place.SPORT))
+            }
+            add(RoutineStep.Stroll(anchor))
+
+            // Basiskontakt: Der Reminder darf auch einen Anfaenger zu einer kurzen Ballberuehrung
+            // anregen. Das ist noch NICHT das freigeschaltete Dribbling-Repertoire.
+            add(RoutineStep.Football(PlayEffects.FootballPhase.TOUCH))
+            add(RoutineStep.Linger(if (ballsportLearned) 4_000L else 2_500L))
+
+            addAll(skill)
         }
 
         return ResolvedActivity(
@@ -250,6 +258,15 @@ object AvatarActivityPlans {
         val targetPlace = if (localPractice) context.place else PlayScene.Place.SPORT
         val anchor = anchorFor(targetPlace)
 
+        val skill = buildList {
+            if (liftLearned) {
+                add(RoutineStep.Training(PlayEffects.TrainingPhase.LIFT))
+                add(RoutineStep.Linger(5_000L))
+            }
+        }
+
+        if (isInsert(plan, skill)) return ResolvedActivity(plan, AnimationType.MOVE, PlayRoutine(skill))
+
         val steps = buildList {
             // Wie beim Fussball: kein Teleport. Drinnen fuehrt der sichtbare Weg nach draussen.
             if (!localPractice) {
@@ -260,10 +277,7 @@ object AvatarActivityPlans {
             add(RoutineStep.Training(PlayEffects.TrainingPhase.WARM_UP))
             add(RoutineStep.Linger(if (strengthLearned) 4_000L else 2_500L))
 
-            if (liftLearned) {
-                add(RoutineStep.Training(PlayEffects.TrainingPhase.LIFT))
-                add(RoutineStep.Linger(5_000L))
-            }
+            addAll(skill)
 
             add(RoutineStep.Training(PlayEffects.TrainingPhase.REST))
             add(RoutineStep.Linger(3_000L))
@@ -277,6 +291,27 @@ object AvatarActivityPlans {
             routine = PlayRoutine(steps)
         )
     }
+
+    /**
+     * **Eine Einlage in eine bereits LAUFENDE Beschaeftigung bekommt keinen neuen Anlauf.**
+     *
+     * [planFor] beantwortet das bereits: Laeuft der Wirt schon, enthaelt der Plan nur einen
+     * `Flourish` und keinen `Begin` - und seine Doku sagt auch warum ("sonst faenge er nach jedem
+     * Trick wieder von vorn an"). Die Ausfuehrung hat diese Aussage bisher ignoriert und in jedem
+     * Fall Hinweg, Anker und Basisphase vorangestellt. Wer beim Ballspielen ein Dribbling bekam,
+     * sah ihn also erneut hinlaufen und den Ball erstmals beruehren.
+     *
+     * Codex hat das an der Kraft-Familie gemeldet; der Fussball-Schnitt trug denselben Fall von
+     * Anfang an. Deshalb liegt die Regel hier gemeinsam und nicht zweimal: Zwei Familien, die
+     * sich an derselben Stelle verschieden verhalten, waeren schlechter als eine Ungenauigkeit,
+     * die man ueberall sieht.
+     *
+     * [skill] muss dabei nicht leer sein: Kommt ein Impuls fuer eine Faehigkeit, die gar nicht
+     * freigeschaltet ist, gaebe eine reine Einlage eine Routine ohne einen einzigen Schritt. Dann
+     * ist der volle Ablauf richtig - er zeigt wenigstens die Basis.
+     */
+    private fun isInsert(plan: ActivityPlan, skill: List<RoutineStep>): Boolean =
+        skill.isNotEmpty() && plan.steps.none { it is ActivityStep.Begin }
 
     /** Wo auf der Breite des Bildes die Uebung stattfindet - je Ort einmal, fuer beide Familien. */
     private fun anchorFor(place: PlayScene.Place): Float = when (place) {

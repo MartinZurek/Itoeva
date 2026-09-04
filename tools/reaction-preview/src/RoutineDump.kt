@@ -2,11 +2,20 @@ import com.notime.glyphcore.data.AnimationTree
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.RoutineStep
 import com.notime.glyphsim.skilltree.ActivityContext
+import com.notime.glyphsim.skilltree.AvatarActivity
 import com.notime.glyphsim.skilltree.AvatarActivityPlans
 
-fun show(label: String, nodeId: String, place: PlayScene.Place, unlocked: Set<String>) {
+fun show(
+    label: String,
+    nodeId: String,
+    place: PlayScene.Place,
+    unlocked: Set<String>,
+    /** Laufende Beschaeftigung - fuer den Einlage-Fall, siehe AvatarActivityPlans.isInsert. */
+    current: String? = null
+) {
     val node = AnimationTree.node(nodeId) ?: error(nodeId)
-    val r = AvatarActivityPlans.resolve(null, node, ActivityContext(place, unlocked))
+    val running = current?.let { AvatarActivity(it, System.currentTimeMillis()) }
+    val r = AvatarActivityPlans.resolve(running, node, ActivityContext(place, unlocked))
     if (r == null) { println("$label -> kein kontextueller Schnitt (alter Reaktionsweg)"); return }
     val steps = r.routine.steps.joinToString(", ") {
         when (it) {
@@ -35,6 +44,14 @@ fun main() {
     show("im Park", K, PlayScene.Place.PARK, setOf(K, "$K/heben"))
     show("aus dem Wohnzimmer", K, PlayScene.Place.LIVING, setOf(K, "$K/heben"))
     show("Blatt heben direkt", "$K/heben", PlayScene.Place.SPORT, setOf(K, "$K/heben"))
+    println()
+    println("== Einlage in eine LAUFENDE Beschaeftigung (kein neuer Anlauf) ==")
+    show("Dribbling, spielt schon Ball", "$B/dribbling", PlayScene.Place.SPORT,
+        setOf(B, "$B/dribbling"), current = B)
+    show("Heben, trainiert schon", "$K/heben", PlayScene.Place.SPORT,
+        setOf(K, "$K/heben"), current = K)
+    show("Heben ungelernt, trainiert schon", "$K/heben", PlayScene.Place.SPORT,
+        setOf(K), current = K)
     println()
     println("== bleibt aussen vor ==")
     show("Summit", "$K/summit", PlayScene.Place.SPORT, setOf(K, "$K/summit"))

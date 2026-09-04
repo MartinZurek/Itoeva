@@ -52,4 +52,4 @@ echo "Uebersetzen ..."
   "$HERE/src/Annotations.kt" "$HERE/src/AndroidStubs.kt" "$HERE/src/AndroidOsStubs.kt" \
   "$HERE/src/RoutineDump.kt" "$WORK"/gen/R_*.kt "${SRCS[@]}"
 
-java -cp "$WORK/routines:$WORK/kotlinc/lib/kotlin-stdlib.jar" SliceKt
+java -cp "$WORK/routines:$WORK/kotlinc/lib/kotlin-stdlib.jar" RoutineDumpKt
