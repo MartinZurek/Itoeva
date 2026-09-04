@@ -288,6 +288,22 @@ class PlayAmbientActivityTest {
         }
     }
 
+    // ---- Einlage aus dem Skillbaum ----
+
+    /**
+     * Die Einlage soll die Handlung ergaenzen, nicht ersetzen - sie darf also weder immer noch
+     * nie kommen. Geprueft wird der Rahmen, nicht die exakte Quote: Sie ist eine
+     * Gestaltungsentscheidung und darf sich aendern, ohne dass dieser Test bricht.
+     */
+    @Test
+    fun `die Skillbaum-Einlage kommt regelmaessig, aber deutlich seltener als die Handlung selbst`() {
+        val random = Random(29)
+        val treffer = (1..3000).count { PlayAmbientActivity.playsSkillFlourish(random) }
+        assertTrue("kam nie: $treffer", treffer > 0)
+        assertTrue("kam immer: $treffer", treffer < 3000)
+        assertTrue("zu haeufig fuer eine Einlage: $treffer von 3000", treffer < 1500)
+    }
+
     /** Zaehlt sofortige Wiederholungen bei 5000 Ziehungen, mit oder ohne den Daempfer als Rueckkopplung. */
     private fun zaehleWiederholungen(mitDaempfer: Boolean): Int {
         val random = Random(23)

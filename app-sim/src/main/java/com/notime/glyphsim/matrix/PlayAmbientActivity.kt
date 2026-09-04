@@ -231,6 +231,33 @@ object PlayAmbientActivity {
         )
 
     /**
+     * Ob nach der gerade gespielten Handlung noch eine **Einlage aus dem Skillbaum** kommt (siehe
+     * [com.notime.glyphsim.skilltree.SkillRepertoire]).
+     *
+     * **Der Abnehmer, den der Skillbaum bisher nicht hatte.** Bis hierher blieb ein eingesetzter
+     * Skillpunkt folgenlos - er schrieb eine Datenbankzeile, und niemand las sie (SKILLBAUM.md,
+     * P14). Wer "Basketball" gewaehlt hat, sieht das Wesen jetzt gelegentlich beim Sport
+     * tatsaechlich Basketball spielen statt nur "Sport".
+     *
+     * Bewusst ein Wurf NACH der Handlung und keine fuenfte Aktion neben
+     * FLOURISH/FIDGET/WANDER/PERFORM: Eine Faehigkeit ist kein eigener Anlass, sie ist etwas, das
+     * WAEHREND einer Beschaeftigung geschieht - dieselbe Unterscheidung, auf der schon
+     * [com.notime.glyphsim.skilltree.AvatarActivityPlans] beruht ("Dribbling ist keine
+     * Beschaeftigung, es ist etwas, das man TUT, WAEHREND man Ball spielt"). Als eigene Aktion
+     * haette sie ausserdem den Anteil von PERFORM gesenkt und damit den Tagesablauf ausgeduennt,
+     * um den Skillbaum sichtbar zu machen.
+     *
+     * Jede dritte Handlung: Bei einer PERFORM-Regung etwa alle 50 Sekunden liegen zwischen zwei
+     * Einlagen im Mittel gut zwei Minuten. Haeufiger, und die eigentliche Handlung geriete zum
+     * blossen Vorspann; seltener, und man haette den Zusammenhang zwischen Freischaltung und dem,
+     * was man sieht, nicht mehr bemerkt.
+     */
+    fun playsSkillFlourish(random: Random = Random): Boolean =
+        random.nextInt(SKILL_FLOURISH_EVERY_N) == 0
+
+    private const val SKILL_FLOURISH_EVERY_N = 3
+
+    /**
      * Grob am ueblichen Tagesrhythmus orientiert, nicht an einer festen Uhrzeit-Tabelle mit
      * Minuten-Genauigkeit - das waere fuer eine rein kosmetische Zwischen-Regung ueberkonstruiert.
      * MEDICINE taucht bewusst in keiner Phase auf (siehe Klassendoku).
