@@ -916,6 +916,45 @@ möglich; die Unit-Tests und beide instrumentierten Läufe führt die CI.
 
 ---
 
+### P17 — Die Gruppe „Nähe" bekommt neun Bewegungen für neun Knoten
+
+Dieselbe Arbeit wie P16, eine Gruppe weiter — und diesmal mit dem Werkzeug von Anfang an: erst
+`tools/reaction-preview/render.sh` laufen lassen, den Kontaktbogen ansehen, dann bauen.
+
+Der Bogen zeigte in `naehe` zwei Klumpen: `freunde` und seine drei Blätter (Geschenk, Besuch,
+Anrufen) **vier identische Zeilen**, `tiere` mit Katze und Gefährte **drei identische**. Nur `paw`
+hatte als Charakter-Motiv eine eigene Choreografie. Neun Knoten, drei Bewegungen.
+
+- [x] Fünf neue Choreografien in `AvatarMotifReactions`: `Gift`, `Visit`, `Call`, `Cat`, `Pet`.
+
+**Fünf Richtungen, damit sie auch nebeneinander lesbar bleiben** — nicht nur voneinander, sondern
+auch von allem, was der Baum sonst schon zeigt:
+
+| Motiv | Bahn |
+|---|---|
+| Geschenk | senkrecht in der Mitte: Schachtel steht, Deckel hoch, etwas steigt heraus |
+| Besuch | waagerecht nach **links** — und als einziges bewegt sich die **Figur** auf die Requisite zu statt umgekehrt. Genau das ist ein Besuch: Man geht hin. |
+| Anrufen | diagonal in der rechten oberen Ecke, das Signal wächst auf ihn zu |
+| Katze | waagerecht am Boden von rechts heran |
+| Gefährte | im Bogen um ihn herum: rechts hoch, oben herüber, links herunter |
+
+Dazu ein zweiter Unterschied, der die beiden Untergruppen trennt: **Bei den Menschen kommt etwas
+auf Augenhöhe oder von oben, bei den Tieren von unten** — er geht in die Knie, statt hochzusehen.
+
+- [x] `reaction-fingerprint.txt`: **genau fünf Zeilen**, nach derselben Regel wie in P16 (benannt
+      statt stillschweigend). Und wieder liefert die Datei den Beweis gleich mit: `Call`, `Gift`
+      und `Visit` trugen alle drei `eb94a8702bb1`, `Cat` und `Pet` beide `e50015bc9cfa`.
+- [x] `ReactionDistinctnessTest`: geteilte Knoten **33 → 26**, plus ein neuer Test, der festhält,
+      dass `naehe` als **erste Hauptgruppe** neun Knoten mit neun verschiedenen Reaktionen hat.
+
+**Geprüft:** Kontaktbogen vorher und nachher angesehen; alle neun Zeilen unterscheiden sich
+sichtbar. Fingerabdruck-Differenz mit demselben Hashverfahren nachgerechnet wie im Test.
+
+**Was offen bleibt:** 26 geteilte Knoten. Die verbliebenen Vierer-Klumpen sind `arbeit/geraet` und
+`arbeit/erledigen`.
+
+---
+
 ## Offene Punkte
 
 - [x] ~~**Der Skillbaum hat keinen Abnehmer mehr (Befund aus P14).**~~ **Erledigt in P15.** Die
@@ -966,6 +1005,7 @@ Zwei Zeilen je Sitzung: was fertig wurde, und was die nächste Sitzung wissen mu
 
 | Datum | Paket | Ergebnis / Hinweis für die nächste Sitzung |
 |---|---|---|
+| 2026-09-04 | P17 | **Die Gruppe `naehe` hat jetzt neun Bewegungen fuer neun Knoten** - die erste Hauptgruppe im Baum ohne einen einzigen geteilten Knoten. Vorher: `freunde` plus drei Blaetter identisch, `tiere` plus zwei identisch. Fuenf neue Choreografien in `AvatarMotifReactions` (Gift, Visit, Call, Cat, Pet), unterschieden nach der BAHN - Geschenk senkrecht, Besuch waagerecht nach links (als einziges bewegt sich die Figur statt der Requisite), Anruf diagonal oben rechts, Katze am Boden von rechts, Gefaehrte im Bogen herum. Zweiter Unterschied zwischen den Untergruppen: bei Menschen kommt etwas von oben, bei Tieren von unten - er geht in die Knie. Geteilte Knoten 33 -> 26. Fuenf Fingerabdruck-Zeilen, wieder mit geteilten Altwerten als Beleg (`eb94a8702bb1` dreimal, `e50015bc9cfa` zweimal). **Fuer die naechste Sitzung:** `tools/reaction-preview/render.sh` zuerst - diesmal war es von Anfang an dabei, und das war der Unterschied. Verbliebene Vierer-Klumpen: `arbeit/geraet`, `arbeit/erledigen`. |
 | 2026-09-04 | P16 | **Zum ersten Mal wurden die Reaktionen angesehen.** `tools/reaction-preview/` uebersetzt die zwanzig beteiligten Dateien mit einem von Maven Central geholten Kotlin-Compiler und rendert Kontaktboegen - die Reaktionen sind reines Kotlin, sie brauchten nie Android, nur jemanden, der sie ohne Android uebersetzt. `dl.google.com` ist gesperrt, `repo1.maven.org` nicht. **Befund:** 80 Knoten mit Motiv, aber nur 55 verschiedene Reaktionen - 38 Knoten spielten Bild fuer Bild dasselbe wie ein Geschwister, am dichtesten `sport/ballsport` mit Kopf plus vier Blaettern identisch. Ursache ist die (richtige) requisitenfreie Vererbung; seit P15 die Freischaltung sichtbar macht, ist es die Belohnung selbst, die unsichtbar bleibt. **Behoben:** `AvatarMotifReactions` gibt Basketball/Pokal/Dribbling/Schuss eigene Bahnen (Bogen, Senkrechte, flaches Auf und Ab, Waagerechte), jetzt 33 geteilte Knoten. `ReactionDistinctnessTest` haelt die Zahl fest. Vier Fingerabdruck-Zeilen geaendert - die vier alten Werte waren identisch, was den Befund beweist; die Regel dafuer steht jetzt in der Klassendoku. **Fuer die naechste Sitzung:** Erst den Duplikat-Bericht laufen lassen, dann arbeiten. Naechste Klumpen: `arbeit/geraet`, `arbeit/erledigen`, `naehe/freunde` (je 4). |
 | 2026-09-03 | P15 | **Der Skillbaum wirkt jetzt im Spiel.** Nach einer Alltagshandlung zeigt das Wesen jede dritte Mal eine Faehigkeit aus dem freigeschalteten Zweig genau dieses Themas (`SkillRepertoire` + `PlayAmbientActivity.playsSkillFlourish`, angeschlossen im PERFORM-Zweig von `DockScreen` direkt nach `runRoutine`). Damit hat `AvatarUnlockRepository` einen zweiten Leser — den, auf den es ankommt. **Die Nutzeridee vom 2026-08-29 (nur freigeschaltete Themen wuerfeln) wurde bewusst NICHT so umgesetzt**: Die neun Hauptgruppen sind von Anfang an offen und decken neun der elf Themen ab, gefiltert wuerden also nur REST und FOCUS — ausgerechnet zwei, die im Stundenplan stehen. Ein neues Spiel haette dadurch einen aermeren Tag gehabt. Daraus die Regel, die kuenftig gilt: **eine Freischaltung darf etwas hinzufuegen und nichts wegnehmen.** MEDICINE ist ohne eigene Pruefung ausgeschlossen, weil es gar keinen Knoten hat. 9 neue reine Tests. **Fuer die naechste Sitzung:** auf dem Geraet pruefen, ob jede dritte Handlung die richtige Haeufigkeit ist (`SKILL_FLOURISH_EVERY_N`), und ob die Einlage nach dem Ablauf sauber anschliesst. Danach steht als naechstes die Verbesserung der Animationen selbst an — die Testumgebung aus P14 ist dafuer das Werkzeug. |
 | 2026-09-03 | P14 | **Der gemeldete Fehler war zwei Fehler.** Geschrieben wird korrekt — aber seit `7c38f97` (Zieh-Leiste entfernt) liest den Freischalt-Stand **niemand** ausser dem Baumbildschirm selbst; `AvatarUnlockRepository` hat genau einen Aufrufer im Modul. Ein Skillpunkt veraendert also tatsaechlich nichts am Spiel — die Vermutung des Nutzers stimmte. Das ist als erster Punkt unter „Offene Punkte" eingetragen und mit dieser Runde NICHT behoben. Behoben ist die zweite Haelfte: Die Freischaltung fuehrt die neue Reaktion sofort einmal auf der eigenen Kreatur vor (`SkillReactionPreview`, geht ueber `AvatarAnimations.reactionFor` — dieselbe Reaktion wie im Spiel), klappt den Ast selbst auf (`SkillTreeRows.ancestorsOf`), markiert den Knoten mit „neu", und `TamaPalette` hat zum ersten Mal einen warmen Ton, der genau das markiert, was JETZT antippbar ist — vorher trennten drei Graustufen innerhalb von 32 Helligkeitswerten „gesperrt", „als Naechstes" und „freigeschaltet". Dazu ein optimistischer Bestand (`pending`/`owned`), der das Fenster zwischen Tipp und Flow-Rueckmeldung schliesst, und die **Testumgebung** unter dem Baum: Kreatur waehlen, jede der 67 Reaktionen ansehen, auch gesperrte. **Fuer die naechste Sitzung:** die Welt zum Abnehmer machen (offener Punkt 1+2) — alles andere am Baum ist bis dahin Fassade. Auf dem Geraet noch nicht gesehen. |
