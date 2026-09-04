@@ -1065,6 +1065,53 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   `OPEN DECISION`. Der naechste sinnvolle Hebel ist im Lernjournal (`DAILY_LIFE_LEARNING.md`)
   vermerkt.
 
+### 2026-09-04 - Reminder werden zu kontextabhaengigen Handlungen: Fussball als erster Schnitt
+
+- **Version:** Protokoll bleibt 0.5. Die Aenderung erweitert das bestehende Verhalten im Spielmodus;
+  kein neues Datenmodell, keine Room-Migration und keine neue persistente Weltarchitektur.
+- **Ausgangsproblem und Nutzerwirkung:** Reminder und freigeschaltete Skills endeten bislang trotz
+  vorhandener mehrstufiger Play-Routinen oft in einer generischen Reaktion oder einer zufaelligen
+  Einlage NACH der eigentlichen Alltagshandlung. Insbesondere schrumpfte eine Bibliotheksanimation
+  wie `Football` nach dem Fuettern auf das grobe Thema `MOVE`; der folgende Ablauf kannte dadurch
+  weder die genaue Absicht noch den Ort, an dem sie ausgesprochen wurde. Skillfortschritt war so
+  nur eingeschraenkt am tatsaechlichen Verhalten des Wesens ablesbar.
+- **Getroffene Architekturentscheidung:** Kein paralleler `ContextualActionResolver` und kein
+  zweites Handlungssystem. Die bereits vorhandenen `AvatarActivityPlans`/`AvatarActivityBus`
+  bilden die Entscheidungsebene; ihr Ergebnis ist eine vorhandene `PlayRoutine`, die weiterhin
+  von `DockScreen.runRoutine`, `PlayScene`, `RoutineStep` und `PlayEffects` ausgefuehrt wird.
+  `ReactionTrigger` behaelt den exakten Skillbaum-Knoten eines Reminders bis zu dieser Entscheidung.
+- **Fussball als vertikaler Schnitt:** `sport/ballsport`, `dribbling` und `schuss` werden anhand
+  von aktuellem `PlayScene.Place`, echten Freischaltungen und dem bereits vorhandenen Avatar-Level
+  konkretisiert. Auf Sportplatz, Park und Wiese bleibt die Handlung lokal; aus ungeeigneten
+  Innenraeumen verwendet sie den bestehenden `GoToPlace(SPORT)`-Schritt und damit den sichtbaren
+  Weg statt eines Teleports. Ein Anfaenger zeigt nur Ballkontakt; freigeschaltetes Dribbling fuegt
+  erkennbare Dribbling-Sequenzen hinzu; nur ein freigeschalteter Schuss darf `AIM`/`KICK` erzeugen.
+  Hoehere Avatar-Level verlaengern ausschliesslich bereits gelernte Faehigkeiten und schalten keine
+  Knoten heimlich frei.
+- **Laufende Weltaktivitaet:** Eine ausgewaehlte Ballsport-Handlung wird im bereits vorhandenen
+  `AvatarActivityBus` als aktuelle Aktivitaet gesetzt. Damit kann ein weiterer Stufe-3-Skill an
+  eine laufende Ballsport-Aktivitaet anschliessen; der Zustand bleibt sitzungsgebunden und laeuft
+  wie zuvor nach fuenf Minuten ab, statt als zweite Persistenzschicht gespeichert zu werden.
+- **Rueckwaertskompatibilitaet:** Andere Skillbereiche behalten Claudes bisherigen
+  `SkillRepertoire`-Flourish-Weg. Nur Knoten, die bereits kontextuell in eine Routine uebersetzt
+  werden, sind dort ausgeschlossen, damit derselbe Skill nicht zusaetzlich als zufaellige
+  Einzelanimation ein zweites Mal erscheint. Die generische `requestedTopic`-Logik bleibt der
+  Rueckfall fuer alle nicht unterstuetzten Intents.
+- **Spezies:** Im ersten Fussball-Schnitt bewusst kein Entscheidungsfaktor. Die vorhandenen
+  Speziesanimationen werden weiterhin von `runRoutine` verwendet, aber es existiert noch keine
+  belegte Produktregel, nach der eine Spezies andere Fussballfaehigkeiten besitzen darf als eine
+  andere. Eine solche Regel waere eine gesonderte Produktentscheidung.
+- **Tests:** `AvatarActivityPlansTest` prueft lokale Park-Ausfuehrung, sichtbaren Wechsel aus einem
+  ungeeigneten Innenraum, Freischalt-Gating fuer Dribbling und Schuss sowie die Regel, dass ein
+  hoeheres Avatar-Level nur bereits gelernte Faehigkeiten erweitert. Bestehende
+  `SkillRepertoire`-Tests schuetzen die unveraenderte Rueckfalllogik der uebrigen Bereiche.
+- **Daten und Migration:** Keine Schema-, Migration- oder neue Preference-Aenderung. Verwendet
+  werden ausschliesslich bestehende Freischaltungen, XP/Level, `PlayScene.Place` und der
+  sitzungsgebundene `AvatarActivityBus`.
+- **Ausstehende Geraetepruefung:** Die objektiven Auswahlregeln sind automatisiert pruefbar; ob
+  sich Anfaenger, Dribbling und Schuss beim Zuschauen deutlich genug voneinander unterscheiden,
+  muss zusaetzlich am Geraet beurteilt werden.
+
 ### Initialer Erkenntnisstand
 
 - Persönliche Routinen laufen im aktuellen Play-Modus weiter; die Spiel-Erinnerung kommt hinzu.
