@@ -85,6 +85,8 @@ import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlayClipRenderer
 import com.notime.glyphsim.matrix.PlayEffects
+import com.notime.glyphsim.matrix.PlayDreamMemory
+import com.notime.glyphsim.matrix.PlayDreams
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
@@ -441,6 +443,9 @@ fun DockScreen(
         var paintingPhase by remember { mutableStateOf<PlayEffects.PaintingPhase?>(null) }
         /** Sichtbare Phase der Angel-Szene am Teich; null ausserhalb dieses Ablaufs. */
         var fishingPhase by remember { mutableStateOf<PlayEffects.FishingPhase?>(null) }
+        /** Rein visuelle Traumprojektion. Der echte Avatar bleibt waehrenddessen im Bett. */
+        var dreamFrame by remember { mutableStateOf<IntArray?>(null) }
+        var dreamProgress by remember { mutableFloatStateOf(0f) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
@@ -790,6 +795,27 @@ fun DockScreen(
             }
         }
 
+        /** Spielt eine vorhandene Reaktion als kleine Traumprojektion, ohne den Avatar zu bewegen. */
+        suspend fun playDream(topic: AnimationType, species: AvatarSpecies) {
+            val reaction = AvatarAnimations.reactionFor(species, topic)
+            val first = reaction.frames.firstOrNull() ?: return
+            dreamFrame = first
+            dreamProgress = 0f
+            try {
+                coroutineScope {
+                    launch {
+                        MatrixAnimator.playTimed(reaction.frames, reaction.holdsMs) { f -> dreamFrame = f }
+                    }
+                    animate(0f, 1f, animationSpec = tween(DREAM_BUBBLE_MS, easing = FastOutSlowInEasing)) { value, _ ->
+                        dreamProgress = value
+                    }
+                }
+            } finally {
+                dreamFrame = null
+                dreamProgress = 0f
+            }
+        }
+
         /**
          * Fuehrt einen Tagesablauf aus (siehe [PlayRoutine]) - **die Stelle, an der aus Posen
          * neben Moebeln ein Umgang mit ihnen wird.**
@@ -932,6 +958,7 @@ fun DockScreen(
 
                     is RoutineStep.Act -> {
                         activeActivity = step.topic
+                        PlayDreamMemory.remember(context, step.topic)
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
                         if (step.topic == AnimationType.DRINK) {
@@ -1066,6 +1093,35 @@ fun DockScreen(
                         }
                     }
 
+                    RoutineStep.SleepUntilMorning -> {
+                        // Tagsueber bleibt eine ausdrueckliche Schlafhandlung ein kurzes Nickerchen.
+                        // Nachts dagegen bleibt diese Routine aktiv und sperrt damit autonome
+                        // Fidgets, Wanderungen und neue Perform-Aktionen bis zum Morgen.
+                        if (PlayAmbientActivity.currentDayPhase() != PlayAmbientActivity.DayPhase.NIGHT) {
+                            delay((8_000L * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(800L))
+                        } else {
+                            while (PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT) {
+                                var remaining = (PlayDreams.nextPauseMillis() * PlayTimeLapse.paceFactor())
+                                    .toLong().coerceAtLeast(1_000L)
+                                while (remaining > 0L && PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT) {
+                                    val sleeping = avatar ?: return
+                                    if (sleeping.fed || sleeping.occurrenceId != null) return
+                                    val slice = minOf(remaining, DREAM_SLEEP_CHECK_MS)
+                                    delay(slice)
+                                    remaining -= slice
+                                }
+                                if (PlayAmbientActivity.currentDayPhase() != PlayAmbientActivity.DayPhase.NIGHT) break
+                                val sleeping = avatar ?: return
+                                if (sleeping.fed || sleeping.occurrenceId != null) return
+                                if (PlayDreams.shouldDream()) {
+                                    PlayDreams.choose(PlayDreamMemory.today(context))?.let { memory ->
+                                        playDream(memory, species)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Verweilen ist vergehende ZEIT und wird im Zeitraffer entsprechend gekuerzt -
                     // sonst haetten die Pausen zwischen den Regungen ein anderes Tempo als die
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
@@ -1156,6 +1212,8 @@ fun DockScreen(
                 musicPhase = null
                 paintingPhase = null
                 fishingPhase = null
+                dreamFrame = null
+                dreamProgress = 0f
                 // Und zurueck auf den Boden: Wird der Ablauf abgebrochen, waehrend die Figur im
                 // Bett liegt, verschwindet zwar die Decke - stehen bliebe sie aber weiterhin auf
                 // Matratzenhoehe und damit sichtbar in der Luft. Bewusst ohne Animation gesetzt,
@@ -2793,6 +2851,15 @@ fun DockScreen(
             )
         }
 
+        // Traumblase ueber dem Bett. Sie ist eine Projektion; der reale Avatar bleibt im Bett.
+        if (playMode && occupiedStation == PlayScene.Station.BED) {
+            val projected = dreamFrame
+            val sleeping = avatar
+            if (projected != null && sleeping != null && !avatarHidden) {
+                PlayDreamBubble(projected, sleeping.offset, sleeping.sizeDp, dreamProgress, maxWidthPx)
+            }
+        }
+
         // Getragener Gegenstand und Zugriffs-Blitz - beide VOR dem Avatar, weil er sie in der Hand
         // haelt bzw. sie an ihm geschehen. Gemeinsam in einer Ebene, weil sie dieselbe Aufgabe
         // haben: sichtbar machen, was er gerade tut (siehe PlayEffects).
@@ -3488,6 +3555,8 @@ private const val ARRIVAL_SETTLE_MS = 260L
 /** Wie lange das Hinlegen/Hinsetzen bzw. Aufstehen dauert - eine Bewegung an Ort und Stelle,
  *  deshalb deutlich kuerzer als ein Weg. */
 private const val SETTLE_INTO_MS = 420
+private const val DREAM_BUBBLE_MS = 6_200
+private const val DREAM_SLEEP_CHECK_MS = 800L
 
 /**
  * Wo der Avatar steht, wenn er an einem Ort der Kulisse ([PlayScene]) auf dem Boden aufsetzt.

@@ -1127,3 +1127,13 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   verifiziert.
 - Produktname, primäre App-Fassung, finales Spielziel, größere Storystruktur und langfristige
   Ökonomie bleiben **OPEN DECISION**.
+
+### Schlaf & Traeume – exklusiver Nachtzustand
+
+- Schlaf ist nachts exklusiv: Nach dem Hinlegen bleibt der reale Avatar bis zum Morgen im Bett. Die fruehere Routine mit Aufstehen/Umsehen/Wieder-Hinlegen wurde entfernt.
+- Echte Erinnerungen oder ausdrueckliche Nutzeraktionen duerfen Schlaf unterbrechen; autonome Fidgets/Wanderungen nicht.
+- Tageshandlungen werden als kleine semantische `AnimationType`-Erinnerungen gespeichert, nicht als Screenshots oder Videos.
+- Seltene Traumgelegenheiten spielen eine vorhandene Avatar-Reaktion in einer wachsenden, aufsteigenden Traumblase. Die Traumfigur ist nur Projektion; Weltposition und Bettbelegung bleiben unveraendert.
+- `SLEEP` und `MEDICINE` werden nie als Traumerinnerung gespeichert.
+- Spaeter: reichere Erinnerungs-IDs und interaktive Dream-Easter-Eggs. Der Luftballon wird erst an einen echten Ballon-Node/Item angeschlossen; aktuell existiert im Repository noch keiner, deshalb wird kein Parallel-Item erfunden.
+
