@@ -147,7 +147,7 @@ object AvatarActivityPlans {
      * koennen hier spaeter hinzukommen, ohne [SkillRepertoire] ihre IDs beizubringen.
      */
     fun supportsContextualExecution(node: AnimationNode): Boolean =
-        node.id in FOOTBALL_INTENT_NODES
+        node.id in FOOTBALL_INTENT_NODES || node.id in STRENGTH_INTENT_NODES
 
     /**
      * Uebersetzt eine bereits vorhandene Skill-/Reminder-Absicht in eine konkrete vorhandene
@@ -169,6 +169,9 @@ object AvatarActivityPlans {
         if (!supportsContextualExecution(dropped)) return null
 
         val plan = planFor(current, dropped)
+        // Zweiter Schnitt, gleiche Weiche: Kraft & Ausdauer laeuft neben dem Fussball her, nicht
+        // in einem zweiten System. Alles andere faellt weiterhin auf den bisherigen Reaktionsweg.
+        if (plan.resultingActivity == STRENGTH_NODE) return resolveStrength(plan, context)
         if (plan.resultingActivity != BALLSPORT_NODE) return null
 
         val unlocked = context.unlockedNodeIds
@@ -176,14 +179,9 @@ object AvatarActivityPlans {
         val dribblingLearned = DRIBBLING_NODE in unlocked
         val shotLearned = SHOT_NODE in unlocked
 
-        val localPractice = context.place in LOCAL_FOOTBALL_PLACES
+        val localPractice = context.place in LOCAL_SPORT_PLACES
         val targetPlace = if (localPractice) context.place else PlayScene.Place.SPORT
-        val anchor = when (targetPlace) {
-            PlayScene.Place.SPORT -> 0.30f
-            PlayScene.Place.PARK -> 0.42f
-            PlayScene.Place.MEADOW -> 0.46f
-            else -> 0.34f
-        }
+        val anchor = anchorFor(targetPlace)
 
         val steps = buildList {
             // Zuhause, im Arbeitszimmer usw. keinen Ball samt Tor in die Kulisse zaubern. Der
@@ -224,6 +222,71 @@ object AvatarActivityPlans {
     }
 
     /**
+     * **Zweiter vertikaler Schnitt: Kraft & Ausdauer** - dasselbe Muster wie beim Fussball, mit
+     * denselben vorhandenen Bausteinen.
+     *
+     * Nichts daran ist neu erfunden: [PlayEffects.TrainingPhase] und [RoutineStep.Training] gab es
+     * schon (`PlayRoutines` benutzt sie in einer MOVE-Routine), `DockScreen.runRoutine` zeichnet
+     * sie bereits. Was gefehlt hat, war die Verbindung zur Absicht - genau die Luecke, die der
+     * Fussball-Schnitt fuer sein Gebiet geschlossen hat.
+     *
+     * **Die Freischaltung veraendert die Handlung, nicht bloss eine Zugabe danach.** `WARM_UP` ist
+     * die Basis, die auch ein Anfaenger sehen darf - das Gegenstueck zu `TOUCH` beim Fussball.
+     * `LIFT` erscheint ausschliesslich mit tatsaechlich freigeschaltetem `heben`; ohne den Knoten
+     * gibt es kein Heben, egal auf welchem Level. Auch hier **keine erfundene Level-Schwelle**:
+     * Welche Level Varianten oeffnen, bleibt laut `Tagesablauf.md` offen.
+     *
+     * **`REST` schliesst immer ab, auch ohne `LIFT`.** Beim Fussball ist `TOUCH` fuer sich schon
+     * eine vollstaendige kleine Szene; Aufwaermen ohne Ausklang waere dagegen ein Stumpf - man
+     * saehe jemanden anfangen und dann abbrechen. Der Abschluss ist kein Koennen, sondern das
+     * Ende einer Einheit, und deshalb an keine Freischaltung geknuepft.
+     */
+    private fun resolveStrength(plan: ActivityPlan, context: ActivityContext): ResolvedActivity {
+        val unlocked = context.unlockedNodeIds
+        val strengthLearned = STRENGTH_NODE in unlocked
+        val liftLearned = LIFT_NODE in unlocked
+
+        val localPractice = context.place in LOCAL_SPORT_PLACES
+        val targetPlace = if (localPractice) context.place else PlayScene.Place.SPORT
+        val anchor = anchorFor(targetPlace)
+
+        val steps = buildList {
+            // Wie beim Fussball: kein Teleport. Drinnen fuehrt der sichtbare Weg nach draussen.
+            if (!localPractice) {
+                add(RoutineStep.GoToPlace(PlayScene.Place.SPORT))
+            }
+            add(RoutineStep.Stroll(anchor))
+
+            add(RoutineStep.Training(PlayEffects.TrainingPhase.WARM_UP))
+            add(RoutineStep.Linger(if (strengthLearned) 4_000L else 2_500L))
+
+            if (liftLearned) {
+                add(RoutineStep.Training(PlayEffects.TrainingPhase.LIFT))
+                add(RoutineStep.Linger(5_000L))
+            }
+
+            add(RoutineStep.Training(PlayEffects.TrainingPhase.REST))
+            add(RoutineStep.Linger(3_000L))
+        }
+
+        return ResolvedActivity(
+            plan = plan,
+            // Kraft & Ausdauer haengt wie der Ballsport unter `sport`, und dessen eingebauter Typ
+            // ist MOVE. Kein eigener Typ - der Baum sagt es bereits.
+            topic = AnimationType.MOVE,
+            routine = PlayRoutine(steps)
+        )
+    }
+
+    /** Wo auf der Breite des Bildes die Uebung stattfindet - je Ort einmal, fuer beide Familien. */
+    private fun anchorFor(place: PlayScene.Place): Float = when (place) {
+        PlayScene.Place.SPORT -> 0.30f
+        PlayScene.Place.PARK -> 0.42f
+        PlayScene.Place.MEADOW -> 0.46f
+        else -> 0.34f
+    }
+
+    /**
      * Die Beschaeftigung, in der eine Einlage stattfindet - fuer Anzeige und Pruefung.
      *
      * `null` fuer alles, was selbst eine Beschaeftigung ist.
@@ -239,8 +302,21 @@ object AvatarActivityPlans {
     private const val DRIBBLING_NODE = "sport/ballsport/dribbling"
     private const val SHOT_NODE = "sport/ballsport/schuss"
 
+    private const val STRENGTH_NODE = "sport/kraft-ausdauer"
+    private const val LIFT_NODE = "sport/kraft-ausdauer/heben"
+
     private val FOOTBALL_INTENT_NODES = setOf(BALLSPORT_NODE, DRIBBLING_NODE, SHOT_NODE)
-    private val LOCAL_FOOTBALL_PLACES = setOf(
+    private val STRENGTH_INTENT_NODES = setOf(STRENGTH_NODE, LIFT_NODE)
+
+    /**
+     * Orte, an denen Sport ohne Ortswechsel glaubwuerdig ist - fuer BEIDE Familien dieselben.
+     *
+     * Hiess bis zum zweiten Schnitt `LOCAL_FOOTBALL_PLACES`. Die Menge hat sich nicht geaendert,
+     * nur ihr Geltungsbereich: Wiese und Park taugen fuers Ballspielen genauso wie fuer ein paar
+     * Uebungen. Eine zweite, identische Menge daneben waere eine Kopie, die frueher oder spaeter
+     * auseinanderlaeuft.
+     */
+    private val LOCAL_SPORT_PLACES = setOf(
         PlayScene.Place.SPORT,
         PlayScene.Place.PARK,
         PlayScene.Place.MEADOW
