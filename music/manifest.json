@@ -1,18 +1,23 @@
 {
-  "version": 1,
-  "provider": "stability-ai",
-  "api_endpoint": "https://api.stability.ai/v2beta/audio/stable-audio-2/text-to-audio",
+  "version": 2,
+  "backend": "stable-audio-3-open-weights",
+  "model_repository": "stabilityai/stable-audio-3-small-music",
+  "inference_library_repository": "Stability-AI/stable-audio-3",
+  "inference_library_commit": "779434a908193105335fd8d833418603625b2859",
   "tracks": [
     {
       "id": "home-evening-01",
       "title": "Quiet Lanterns",
       "role": "home_evening_background",
-      "model": "stable-audio-2.5",
+      "model": "small-music",
       "duration_seconds": 90,
-      "output_format": "mp3",
+      "output_format": "wav",
       "android_resource": "itoeva_home_evening_01",
       "prompt_file": "music/prompts/home-evening-01.txt",
-      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes."
+      "steps": 8,
+      "cfg_scale": 1.0,
+      "seed": 9042026,
+      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits."
     }
   ]
 }

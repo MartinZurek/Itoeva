@@ -1,0 +1,34 @@
+name: Verify Music Tooling
+
+on:
+  pull_request:
+    paths:
+      - 'music/**'
+      - 'tools/music/**'
+      - '.github/workflows/generate-music.yml'
+      - '.github/workflows/verify-music-tooling.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    name: Validate versioned music definition
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out proposed revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate Quiet Lanterns without model download
+        run: >-
+          python tools/music/generate_music.py
+          --track-id home-evening-01
+          --dry-run
