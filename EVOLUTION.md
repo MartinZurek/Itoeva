@@ -1065,6 +1065,75 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   `OPEN DECISION`. Der naechste sinnvolle Hebel ist im Lernjournal (`DAILY_LIFE_LEARNING.md`)
   vermerkt.
 
+### 2026-09-04 - Dritter Schnitt, erstmals ausserhalb von `sport`: Musizieren
+
+Zwei Sport-Familien konnten noch dieselbe Familie zweimal sein. Dieser Schnitt beantwortet, was
+die beiden offen lassen mussten: Traegt das Muster auch eine Beschaeftigung mit einem anderen
+Themen-Typ und einem anderen Ortsprofil?
+
+Es traegt. `AvatarActivityPlans.resolve` bleibt der einzige Eingang; dazugekommen sind eine dritte
+Verzweigung und ein dritter Schritt-Bauer (`resolveMusic`).
+
+**Der Beleg liegt im Themen-Typ.** Beide Sport-Familien melden `MOVE`, weil `sport` so angelegt
+ist; Musik meldet `CREATIVITY`, weil `kreativ` so angelegt ist. Der Resolver waehlt den Typ
+nirgends selbst - er liest ihn aus dem Baum ab. Genau das ist der Nachweis, dass hier kein
+zweites Regelwerk neben `AnimationTree` entsteht.
+
+**Erneut kein neuer `RoutineStep`, keine neue Phase.** `PlayEffects.MusicPhase { TUNE, PLAY,
+FINALE }` und `RoutineStep.Music` gab es laengst; `PlayRoutines` benutzt sie sogar bereits in
+einer eigenen CREATIVITY-Routine ("Musizieren im Park"), und `DockScreen.runRoutine` zeichnet den
+Schritt. Die Phase war im Alltag also verbunden - nur nicht mit einer *Absicht*. Diese eine Luecke
+schliesst der Schnitt. Unangeschlossen warten weiterhin `BasketballPhase`, `PaintingPhase`,
+`FishingPhase` und `KitePhase`.
+
+**Eine Freischaltung, mehr wird nicht behauptet.** `TUNE` und `PLAY` bilden zusammen die Basis,
+die auch ohne jeden Knoten vollstaendig ist: Er stimmt und er spielt. `FINALE` erscheint
+ausschliesslich mit tatsaechlich freigeschaltetem `kreativ/musik/singen` - auf keinem Level und
+bei keiner Spezies sonst. Erfundene Level-Schwellen bleiben ausgeschlossen, solange
+`Tagesablauf.md` sie offen laesst.
+
+Warum `PLAY` zur Basis gehoert: Beim Fussball ist `TOUCH` fuer sich eine ganze kleine Szene, beim
+Training braucht `WARM_UP` den Ausklang `REST`. Stimmen allein waere dasselbe Stueck Stumpf - man
+saehe jemanden ein Instrument richten und dann aufhoeren. Das Koennen liegt im Abschluss, den
+`FINALE` mit fuenf statt drei Noten sichtbar macht, nicht darin, ueberhaupt einen Ton zu spielen.
+
+**Eine bewusste Ortsentscheidung, keine abgeleitete Tatsache.** Beim Sport zwingt die Sache selbst
+nach draussen - ein Ball und ein Tor gehoeren nicht ins Wohnzimmer. Ein Instrument braucht dagegen
+nur Platz zum Sitzen, und die Choreografie zeichnet Gitarre, Noten und Buehnenlinie neben dem
+Avatar statt in die Kulisse. `LOCAL_MUSIC_PLACES` umfasst deshalb Park, Wiese, Wohnzimmer und
+Leseecke; Schlafzimmer, Bad, Kueche, Werkstatt und alles Oeffentliche bleiben aussen vor. Von dort
+fuehrt derselbe sichtbare `GoToPlace(PARK)`-Weg hinaus - kein Teleport.
+
+**`drum` und `bolt` bleiben absichtlich aussen vor.** Beide haengen unter `kreativ/musik`, aber die
+vorhandene Choreografie kennt keine Phase, die sie voneinander unterscheiden koennte. Sie als
+Absicht zu fuehren und dann dasselbe zu zeigen wie `singen` waere eine Behauptung ohne Deckung.
+
+**Nebenbefund aus dem Duplikat-Bericht:** `kreativ/musik` und `kreativ/musik/singen` spielten auf
+dem alten Reaktionsweg Bild fuer Bild dasselbe. Der Schnitt macht sie unterscheidbar, ohne eine
+einzige Zeile Reaktionscode anzufassen - dieselbe Beobachtung wie bei `sport/ballsport` in P16,
+nur ueber den Handlungsweg geloest statt ueber neue Motive.
+
+### 2026-09-04 - Die Unit-Tests laufen jetzt auch ohne Gradle und Geraet
+
+Die Werkzeuge in `tools/reaction-preview/` konnten den Code bisher nur uebersetzen und seine
+Ausgabe zeigen. Ob die vorhandenen Tests dazu gruen sind, liess sich lokal gar nicht beantworten -
+die Antwort kam erst Minuten spaeter aus der CI. Damit war jeder Push eine Wette, und genau daran
+sind in diesem Repository schon Befunde entstanden, die vorher haetten auffallen koennen.
+
+`tools/reaction-preview/tests.sh` fuehrt die reinen Kotlin-Unit-Tests jetzt tatsaechlich aus: 94
+Tests aus acht Klassen in unter einer Sekunde, mit JUnit 4 aus Maven Central und demselben
+Kotlin-Compiler, den die Nachbarskripte schon holen. Kein Android, kein Gradle, kein Emulator.
+
+Die Grenze ist ausdruecklich benannt und nicht geraten: Alles, was Android, Room, Compose oder
+einen Emulator braucht, bleibt Sache der CI. Die Liste der ausgefuehrten Klassen steht deshalb
+wortwoertlich im Skript statt als Platzhalter - aus demselben Grund, aus dem `render.sh` seit dem
+Codex-Befund eine ausdrueckliche Dateiliste fuehrt.
+
+Ausserdem stand `tools/reaction-preview/.work/` bisher nicht in `.gitignore`. Das fiel nie auf,
+weil die Werkzeuge nie im Repository selbst ausgefuehrt wurden; beim ersten echten Lauf lagen
+dort der geholte Kotlin-Compiler (~80 MB), JUnit und die uebersetzten Klassen als unversionierte
+Dateien. Jetzt ignoriert.
+
 ### 2026-09-04 - Zweiter Schnitt nach demselben Muster: Kraft & Ausdauer
 
 Der Fussball-Schnitt hat die Frage beantwortet, WIE eine Absicht zu einer sichtbaren Handlung
