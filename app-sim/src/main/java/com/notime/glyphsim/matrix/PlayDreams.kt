@@ -2,7 +2,6 @@ package com.notime.glyphsim.matrix
 
 import android.content.Context
 import com.notime.glyphcore.data.AnimationType
-import java.time.LocalDate
 import kotlin.random.Random
 
 /**
@@ -18,13 +17,14 @@ object PlayDreamMemory {
     private const val KEY_TOPICS = "topics"
     private const val MAX_MEMORIES = 12
 
-    fun remember(context: Context, topic: AnimationType, date: LocalDate = LocalDate.now()) {
+    fun remember(context: Context, profileId: String, topic: AnimationType, dayKey: String = PlayTimeLapse.dayKey()) {
         if (!PlayDreams.isEligibleMemory(topic)) return
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val day = date.toString()
-        val storedDay = prefs.getString(KEY_DATE, null)
-        val topics = if (storedDay == day) {
-            decode(prefs.getString(KEY_TOPICS, null))
+        val dateKey = key(profileId, KEY_DATE)
+        val topicsKey = key(profileId, KEY_TOPICS)
+        val storedDay = prefs.getString(dateKey, null)
+        val topics = if (storedDay == dayKey) {
+            decode(prefs.getString(topicsKey, null))
         } else {
             emptyList()
         }
@@ -32,16 +32,20 @@ object PlayDreamMemory {
         // stattdessen nach hinten geschoben und gilt damit als das juengste Erlebnis dieser Art.
         val next = (topics.filterNot { it == topic } + topic).takeLast(MAX_MEMORIES)
         prefs.edit()
-            .putString(KEY_DATE, day)
-            .putString(KEY_TOPICS, next.joinToString(",") { it.name })
+            .putString(dateKey, dayKey)
+            .putString(topicsKey, next.joinToString(",") { it.name })
             .apply()
     }
 
-    fun today(context: Context, date: LocalDate = LocalDate.now()): List<AnimationType> {
+    fun today(context: Context, profileId: String, dayKey: String = PlayTimeLapse.dayKey()): List<AnimationType> {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        if (prefs.getString(KEY_DATE, null) != date.toString()) return emptyList()
-        return decode(prefs.getString(KEY_TOPICS, null))
+        val dateKey = key(profileId, KEY_DATE)
+        val topicsKey = key(profileId, KEY_TOPICS)
+        if (prefs.getString(dateKey, null) != dayKey) return emptyList()
+        return decode(prefs.getString(topicsKey, null))
     }
+
+    private fun key(profileId: String, suffix: String): String = "$profileId:$suffix"
 
     private fun decode(raw: String?): List<AnimationType> =
         raw.orEmpty()

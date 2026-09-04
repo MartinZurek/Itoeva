@@ -2,6 +2,7 @@ package com.notime.glyphsim.matrix
 
 import android.content.Context
 import android.os.SystemClock
+import java.time.LocalDate
 import java.time.LocalTime
 
 /**
@@ -94,6 +95,20 @@ object PlayTimeLapse {
         val elapsedSeconds = (SystemClock.elapsedRealtime() - startedAtMillis) / 1000.0
         val dayFraction = (elapsedSeconds / current.daySeconds) % 1.0
         return lapseStart.plusSeconds((dayFraction * 24 * 60 * 60).toLong())
+    }
+
+    /**
+     * Derselbe Tag wie [now], aber als stabiler Schluessel fuer taggebundene Spielzustande.
+     * Im Zeitraffer zaehlt jeder simulierte 24h-Durchlauf als neuer Tag; im Normalbetrieb gilt
+     * das echte Kalenderdatum. Ein Wechsel der Zeitraffer-Stufe startet bewusst einen neuen
+     * Testtag, genau wie die beschleunigte Uhr dabei wieder am Morgen beginnt.
+     */
+    fun dayKey(): String {
+        val current = speed
+        if (current == Speed.OFF) return "real:${LocalDate.now()}"
+        val elapsedSeconds = (SystemClock.elapsedRealtime() - startedAtMillis) / 1000.0
+        val simulatedDay = (elapsedSeconds / current.daySeconds).toLong()
+        return "lapse:${current.name}:$startedAtMillis:$simulatedDay"
     }
 
     /**

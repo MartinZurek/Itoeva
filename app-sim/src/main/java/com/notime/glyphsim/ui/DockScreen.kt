@@ -830,6 +830,12 @@ fun DockScreen(
         suspend fun runRoutine(routine: PlayRoutine, species: AvatarSpecies) {
             val mood = AvatarMoodSnapshot.forSpecies(context, species)
             routineRunning = true
+            // Einmal an der semantischen Grenze merken, nicht nur bei RoutineStep.Act: Football,
+            // Training, Music, Painting usw. bestehen aus spezialisierten Schritten und wuerden
+            // sonst trotz sichtbarer Handlung nie als Tageserlebnis im Traum landen.
+            currentTopic?.let { topic ->
+                PlayDreamMemory.remember(context, presenceProfileId.toString(), topic)
+            }
 
             /** Setzt die Figur so, dass sie mit [centerX]/[groundY] (Szenenzellen) zusammenfaellt. */
             fun spotToOffset(spot: PlayScene.SceneSpot, avatarPx: Float): Offset =
@@ -958,7 +964,6 @@ fun DockScreen(
 
                     is RoutineStep.Act -> {
                         activeActivity = step.topic
-                        PlayDreamMemory.remember(context, step.topic)
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
                         if (step.topic == AnimationType.DRINK) {
@@ -1094,6 +1099,15 @@ fun DockScreen(
                     }
 
                     RoutineStep.SleepUntilMorning -> {
+                        // `Act(SLEEP)` startet wie jede Act-Reaktion danach wieder die normale
+                        // Idle-Schleife. Fuer echten Schlaf waere das falsch: offene Augen,
+                        // Schwanzbewegung und Spezies-Regungen liefen sonst die ganze Nacht im Bett.
+                        // Deshalb hier die Idle-Schleife stoppen und auf der letzten Schlafpose
+                        // einfrieren, bis Rise/Stretch am Morgen wieder normales Idle startet.
+                        avatarIdleJob?.cancel()
+                        AvatarAnimations.reactionFor(species, AnimationType.SLEEP).frames.lastOrNull()?.let { sleepFrame ->
+                            avatar = avatar?.copy(frame = sleepFrame)
+                        }
                         // Tagsueber bleibt eine ausdrueckliche Schlafhandlung ein kurzes Nickerchen.
                         // Nachts dagegen bleibt diese Routine aktiv und sperrt damit autonome
                         // Fidgets, Wanderungen und neue Perform-Aktionen bis zum Morgen.
@@ -1114,7 +1128,7 @@ fun DockScreen(
                                 val sleeping = avatar ?: return
                                 if (sleeping.fed || sleeping.occurrenceId != null) return
                                 if (PlayDreams.shouldDream()) {
-                                    PlayDreams.choose(PlayDreamMemory.today(context))?.let { memory ->
+                                    PlayDreams.choose(PlayDreamMemory.today(context, presenceProfileId.toString()))?.let { memory ->
                                         playDream(memory, species)
                                     }
                                 }

@@ -1159,3 +1159,42 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   verifiziert.
 - Produktname, primäre App-Fassung, finales Spielziel, größere Storystruktur und langfristige
   Ökonomie bleiben **OPEN DECISION**.
+
+### 2026-09-05 - Schlaf bleibt im Bett; Tageserlebnisse werden zu seltenen Traeumen
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. `BEOBACHTET`: Im bisherigen Nachtablauf
+  enthielt `AnimationType.SLEEP` absichtlich Varianten mit `Rise -> LOOK_AROUND -> Occupy(BED)`;
+  dadurch stand das Wesen nachts wiederholt auf. `ABGELEITET`: Weil jede Schlafroutine danach
+  endete, konnte die normale Ambient-Schleife erneut FIDGET/WANDER/PERFORM waehlen. `ENTSCHIEDEN`:
+  Nach dem Hinlegen ist Schlaf nachts ein exklusiver Zustand bis zum Morgen; Traeume sind eine
+  visuelle Projektion darueber und bewegen den realen Avatar nicht.
+- **Architekturentscheidung:** Kein zweiter Avatar- oder Weltzustand. `PlayRoutine` bekommt nur den
+  Gate-Schritt `SleepUntilMorning`; `DockScreen.runRoutine` bleibt waehrend der Nacht aktiv und
+  blockiert damit die bereits vorhandene autonome Schleife. Die normale Avatar-Idle-Schleife wird
+  am Gate angehalten, damit die Schlafpose nicht von offenen Augen/Fidgets ueberschrieben wird.
+  Traumsequenzen verwenden vorhandene `AvatarAnimations.reactionFor`-Frames in `PlayDreamBubble`.
+- **Erinnerungsmodell:** `PlayDreamMemory` speichert hoechstens zwoelf semantische
+  `AnimationType`-Erlebnisse je Begleiter und simuliertem Tag. Es speichert keine Screenshots,
+  Videos oder zweite Weltkopie. Erfasst wird einmal am gemeinsamen `runRoutine`-Eingang, damit
+  auch spezialisierte Football-/Training-/Music-/Painting-/Fishing-/Kite-Routinen beruecksichtigt
+  werden. `SLEEP` und `MEDICINE` bleiben ausgeschlossen.
+- **Zeitsemantik:** Tagesschluessel kommen aus `PlayTimeLapse.dayKey()`. OFF folgt dem echten
+  Kalenderdatum; FAST/TURBO zaehlen jeden simulierten 24h-Zyklus getrennt. Damit vermischen
+  beschleunigte Testtage ihre Traumerinnerungen nicht.
+- **Persistenz / Migration:** Keine Room-Migration. Neu sind SharedPreferences unter
+  `play_dream_memory`; Schluessel sind mit der bestehenden `presenceProfileId` namespaced. Es gibt
+  keine Alt-Daten aus einem Release zu migrieren. Unscoped Schluessel aus dem unveroeffentlichten
+  ersten PR-Entwurf werden nicht mehr gelesen und sind damit harmlos verwaist.
+- **Rollback:** `SleepUntilMorning`, `PlayDreamMemory`/`PlayDreams` und `PlayDreamBubble` koennen
+  gemeinsam entfernt und die vorherigen SLEEP-Routinen wiederhergestellt werden; keine Room-Daten
+  oder externen Formate muessen zurueckmigriert werden. Die Preference-Datei kann beim Rollback
+  liegenbleiben, da kein anderer Pfad sie liest.
+- **Tests / CI:** `SleepRoutineTest` schuetzt genau eine Schlafroutine sowie "kein Rise/LookAround
+  zwischen Bettbelegung und Morgen-Gate". `PlayDreamsTest` schuetzt die Auswahlregeln. Der PR muss
+  zusaetzlich den bestehenden `gradlew verify`, API-26-/API-35-Instrumentierung und Release-Gate
+  bestehen.
+- **Weiter offen:** Die erste Erinnerung ist absichtlich nur grob (`MOVE` statt z. B. konkretem
+  Dribbling). Reichere Ereignis-IDs, mehrere verfremdete Ausschnitte pro Traum und das gewuenschte
+  Luftballon-Easter-Egg bleiben `OPEN DECISION`/Folgeschnitte. Fuer den Ballon wird kein paralleles
+  Item-System erfunden; er wird erst an einen echten Ballon-Node/Gegenstand angeschlossen.
+
