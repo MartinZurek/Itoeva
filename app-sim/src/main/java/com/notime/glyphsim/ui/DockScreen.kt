@@ -2155,7 +2155,15 @@ fun DockScreen(
                                     // PlayAmbientActivity.nextTopic). currentTopic haelt genau
                                     // das zuletzt gespielte Thema, unabhaengig davon, wie viele
                                     // FIDGET/WANDER-Regungen dazwischen lagen.
-                                    justPlayed = currentTopic
+                                    justPlayed = currentTopic,
+                                    // **Und was diese SPEZIES von sich aus mag** (siehe
+                                    // AvatarSpecies.signatureTopic). [PlayGamePlan] faerbt damit
+                                    // laengst die echten Ausloesungen (Hootlet liest gern,
+                                    // Wyrmling bewegt sich gern) - ohne diese Zeile blieben die
+                                    // sechs Wesen zwischen zwei Ausloesungen ununterscheidbar,
+                                    // solange noch kein Entwicklungspfad ([leaningTopics])
+                                    // entstanden war.
+                                    signatureTopic = species.signatureTopic
                                 )
                             }
 

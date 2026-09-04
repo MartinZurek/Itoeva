@@ -33,11 +33,14 @@ import kotlin.random.Random
  * Additiv statt ersetzend mit der Tagesphase kombiniert (siehe [combinedWeights]) - ein offenes
  * Thema kommt haeufiger vor, verdraengt aber nicht komplett, was gerade zur Uhrzeit passt.
  *
- * **Bewusst noch OHNE Spezies-Charakter in der Gewichtung.** [PlayGamePlan] gewichtet Themen
- * zusaetzlich nach Avatar-Charakter (Hootlet liest gern, Wyrmling bewegt sich gern) - diese
- * Klasse hier noch nicht. Dritte moegliche Signalquelle fuer eine spaetere Ausbaustufe, nach
- * demselben additiven Muster wie [boostedTopics] anzuschliessen, ohne die anderen beiden
- * anzufassen.
+ * **Vierte Ausbaustufe: Spezies-Charakter als sechstes Signal.** [PlayGamePlan] gewichtet die
+ * ECHTEN Erinnerungs-Ausloesungen laengst nach Avatar-Charakter (Hootlet liest gern, Wyrmling
+ * bewegt sich gern) - diese autonome Zwischen-Regung tat es bisher nicht. Dadurch sahen sich alle
+ * sechs Wesen zwischen zwei echten Ausloesungen identisch: Erst [PlayPath] (eine ueber Wochen
+ * ERWORBENE Neigung) faerbte den Ablauf ein, und bis dahin lief ein frisch gewaehlter Fennec exakt
+ * denselben Tag wie ein frisch gewaehlter Wyrmling. [AvatarSpecies.signatureTopic] ist dagegen von
+ * der ersten Sekunde an da - derselbe dokumentierte Charakterzug, den auch [PlayGamePlan] schon
+ * verwendet, hier nur zusaetzlich in [nextTopic] angeschlossen (siehe [SIGNATURE_BONUS]).
  */
 object PlayAmbientActivity {
 
@@ -223,10 +226,21 @@ object PlayAmbientActivity {
          * nur SLEEP) - der Daempfer darf die Nachtruhe-Garantie nicht aushebeln.
          */
         justPlayed: AnimationType? = null,
+        /**
+         * Die angeborene Neigung der SPEZIES (siehe [com.notime.glyphsim.matrix.AvatarSpecies.signatureTopic]) -
+         * das sechste Signal, und bewusst so schwach wie [leaning].
+         *
+         * **Der Unterschied zu [leaning].** Der Pfad ist etwas, das sich ein Wesen ueber Wochen
+         * ERARBEITET; die Spezies-Neigung ist von Anfang an da, unabhaengig von Level oder
+         * Erfahrung - dieselbe Auskunft, die schon [AvatarSpecies.personalityRes] gibt und die
+         * [PlayGamePlan] fuer echte Ausloesungen schon nutzt. Ohne dieses Signal liefen alle sechs
+         * Wesen zwischen zwei echten Ausloesungen identisch, solange noch kein Pfad entwickelt war.
+         */
+        signatureTopic: AnimationType? = null,
         random: Random = Random
     ): AnimationType =
         pickWeighted(
-            combinedWeights(phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed),
+            combinedWeights(phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic),
             random
         )
 
@@ -310,9 +324,9 @@ object PlayAmbientActivity {
     }
 
     /**
-     * Vereint Tagesphase und Gewohnheits-Signal additiv - der Ort, an dem eine kuenftige dritte
-     * Signalquelle (siehe Klassendoku) genauso andocken wuerde: eine weitere Map/Set entgegennehmen
-     * und ihre Gewichte hier draufaddieren, ohne [weightsFor] oder [pickWeighted] anzufassen.
+     * Vereint alle Signale additiv - der Ort, an dem eine kuenftige weitere Signalquelle genauso
+     * andocken wuerde: einen weiteren Wert entgegennehmen und sein Gewicht hier draufaddieren,
+     * ohne [weightsFor] oder [pickWeighted] anzufassen.
      *
      * Ein geboostetes Thema, das in [phase] gar nicht vorkommt (Grundgewicht 0), taucht durch den
      * Bonus trotzdem gelegentlich auf - bewusst so: eine offene Trink-Gewohnheit darf auch nachts
@@ -330,13 +344,17 @@ object PlayAmbientActivity {
         stayAt: PlayScene.Place? = null,
         leaning: Set<AnimationType> = emptySet(),
         plannedTopic: AnimationType? = null,
-        justPlayed: AnimationType? = null
+        justPlayed: AnimationType? = null,
+        signatureTopic: AnimationType? = null
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
         val relevantPlan = plannedTopic?.takeIf { it != AnimationType.MEDICINE }
+        // Defensiv wie bei [relevantPlan]/[relevantBoosts]: kein Spezies-Signaturthema ist je
+        // MEDICINE (siehe AvatarSpecies), aber die Garantie soll unabhaengig davon gelten.
+        val relevantSignature = signatureTopic?.takeIf { it != AnimationType.MEDICINE }
         if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null &&
-            justPlayed == null
+            justPlayed == null && relevantSignature == null
         ) {
             return base
         }
@@ -357,6 +375,12 @@ object PlayAmbientActivity {
         // wie beim Verweilen: Sie soll gewichten, nicht Themen erfinden.
         for (topic in base.keys) {
             if (topic in leaning) combined[topic] = (combined[topic] ?: 0) + LEANING_BONUS
+        }
+        // Dieselbe Zurueckhaltung wie bei der Neigung: Die Spezies-Signatur wirkt nur auf ein
+        // Thema, das zur Tageszeit ohnehin vorkommt - sie soll faerben, nicht nachts ploetzlich
+        // ein Thema herbeirufen, das dort gar kein Grundgewicht hat.
+        if (relevantSignature != null && relevantSignature in base.keys) {
+            combined[relevantSignature] = (combined[relevantSignature] ?: 0) + SIGNATURE_BONUS
         }
         if (stayAt != null) {
             // NUR was ohnehin schon zur Tageszeit passt: Ein Thema, das in dieser Phase gar nicht
@@ -457,6 +481,17 @@ object PlayAmbientActivity {
      * ist gewachsen und darf nur faerben.
      */
     private const val LEANING_BONUS = 2
+
+    /**
+     * Zuschlag fuer die Spezies-Signatur (siehe [nextTopic]) - bewusst genau so gross wie
+     * [LEANING_BONUS].
+     *
+     * Beide sagen "das mag er von Natur aus", nur mit verschiedenem Ursprung: die Spezies von
+     * Geburt an, der Pfad erst nach Wochen. Gleich stark, damit keines der beiden das andere
+     * uebertoent, sobald ein Pfad entwickelt ist - dann faerben angeborene und erworbene Neigung
+     * gemeinsam, statt dass die eine die andere abloest.
+     */
+    private const val SIGNATURE_BONUS = 2
 
     /**
      * Wie stark ein GERADE gespieltes Thema fuer die naechste Ziehung sinkt (siehe [nextTopic]).
