@@ -40,9 +40,11 @@ jobs:
         run: python -m pip install --disable-pip-version-check requests==2.32.5
 
       - name: Validate track without spending credits
+        env:
+          TRACK_ID: ${{ inputs.track_id }}
         run: >-
           python tools/music/generate_music.py
-          --track-id "${{ inputs.track_id }}"
+          --track-id "$TRACK_ID"
           --dry-run
 
       - name: Require Stability API key
@@ -57,9 +59,10 @@ jobs:
       - name: Generate track with Stable Audio
         env:
           STABILITY_API_KEY: ${{ secrets.STABILITY_API_KEY }}
+          TRACK_ID: ${{ inputs.track_id }}
         run: >-
           python tools/music/generate_music.py
-          --track-id "${{ inputs.track_id }}"
+          --track-id "$TRACK_ID"
           --output-dir generated/music
 
       - name: Resolve generated filenames
