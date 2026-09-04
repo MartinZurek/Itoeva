@@ -2,6 +2,9 @@ package com.notime.glyphsim.skilltree
 
 import com.notime.glyphcore.data.AnimationNode
 import com.notime.glyphcore.data.AnimationTree
+import com.notime.glyphsim.matrix.PlayEffects
+import com.notime.glyphsim.matrix.PlayScene
+import com.notime.glyphsim.matrix.RoutineStep
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -101,6 +104,168 @@ class AvatarActivityPlansTest {
         val plan = AvatarActivityPlans.planFor(running("sport"), node("sport/ballsport/basketball"))
         assertTrue("Erwartet wurde ein Wechsel zu Ballsport", plan.isSwitch)
         assertEquals("sport/ballsport", plan.resultingActivity)
+    }
+
+    // ================= Kontextuelle Fussballhandlung =================
+
+    private fun footballPhases(resolved: ResolvedActivity): List<PlayEffects.FootballPhase> =
+        resolved.routine.steps.filterIsInstance<RoutineStep.Football>().map { it.phase }
+
+    @Test
+    fun `derselbe Ballsport Impuls bleibt im Park lokal`() {
+        val resolved = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = null,
+                dropped = node("sport/ballsport"),
+                context = ActivityContext(
+                    place = PlayScene.Place.PARK,
+                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
+                    avatarLevel = 1
+                )
+            )
+        )
+
+        assertFalse(resolved.routine.steps.any { it is RoutineStep.GoToPlace })
+        assertEquals(listOf(PlayEffects.FootballPhase.DRIBBLE), footballPhases(resolved))
+    }
+
+    @Test
+    fun `derselbe Ballsport Impuls geht aus der Wohnung sichtbar zum Sportplatz`() {
+        val resolved = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = null,
+                dropped = node("sport/ballsport"),
+                context = ActivityContext(
+                    place = PlayScene.Place.LIVING,
+                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
+                    avatarLevel = 1
+                )
+            )
+        )
+
+        assertTrue(
+            resolved.routine.steps.first() == RoutineStep.GoToPlace(PlayScene.Place.SPORT)
+        )
+    }
+
+    @Test
+    fun `Dribbling erscheint erst nach echter Freischaltung`() {
+        val beginner = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = null,
+                dropped = node("sport/ballsport"),
+                context = ActivityContext(
+                    place = PlayScene.Place.SPORT,
+                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
+                    avatarLevel = 5
+                )
+            )
+        )
+        val learned = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = null,
+                dropped = node("sport/ballsport"),
+                context = ActivityContext(
+                    place = PlayScene.Place.SPORT,
+                    unlockedNodeIds = setOf(
+                        "sport",
+                        "sport/ballsport",
+                        "sport/ballsport/dribbling"
+                    ),
+                    avatarLevel = 5
+                )
+            )
+        )
+
+        assertEquals(1, footballPhases(beginner).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(3, footballPhases(learned).count { it == PlayEffects.FootballPhase.DRIBBLE })
+    }
+
+    @Test
+    fun `Avatar Level verlaengert nur bereits gelerntes Dribbling`() {
+        val levelOne = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = null,
+                dropped = node("sport/ballsport"),
+                context = ActivityContext(
+                    place = PlayScene.Place.SPORT,
+                    unlockedNodeIds = setOf(
+                        "sport",
+                        "sport/ballsport",
+                        "sport/ballsport/dribbling"
+                    ),
+                    avatarLevel = 1
+                )
+            )
+        )
+        val levelThree = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = null,
+                dropped = node("sport/ballsport"),
+                context = ActivityContext(
+                    place = PlayScene.Place.SPORT,
+                    unlockedNodeIds = setOf(
+                        "sport",
+                        "sport/ballsport",
+                        "sport/ballsport/dribbling"
+                    ),
+                    avatarLevel = 3
+                )
+            )
+        )
+
+        assertEquals(2, footballPhases(levelOne).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(3, footballPhases(levelThree).count { it == PlayEffects.FootballPhase.DRIBBLE })
+    }
+
+    @Test
+    fun `Schuss und Zielen werden ohne Schuss Freischaltung nie benutzt`() {
+        val locked = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = running("sport/ballsport"),
+                dropped = node("sport/ballsport/schuss"),
+                context = ActivityContext(
+                    place = PlayScene.Place.SPORT,
+                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
+                    avatarLevel = 10
+                )
+            )
+        )
+        val unlocked = requireNotNull(
+            AvatarActivityPlans.resolve(
+                current = running("sport/ballsport"),
+                dropped = node("sport/ballsport/schuss"),
+                context = ActivityContext(
+                    place = PlayScene.Place.SPORT,
+                    unlockedNodeIds = setOf(
+                        "sport",
+                        "sport/ballsport",
+                        "sport/ballsport/schuss"
+                    ),
+                    avatarLevel = 2
+                )
+            )
+        )
+
+        assertFalse(footballPhases(locked).contains(PlayEffects.FootballPhase.AIM))
+        assertFalse(footballPhases(locked).contains(PlayEffects.FootballPhase.KICK))
+        assertTrue(footballPhases(unlocked).contains(PlayEffects.FootballPhase.AIM))
+        assertTrue(footballPhases(unlocked).contains(PlayEffects.FootballPhase.KICK))
+    }
+
+    @Test
+    fun `Basketball bleibt ausserhalb des Fussball Vertikalschnitts`() {
+        assertNull(
+            AvatarActivityPlans.resolve(
+                current = null,
+                dropped = node("sport/ballsport/basketball"),
+                context = ActivityContext(
+                    place = PlayScene.Place.SPORT,
+                    unlockedNodeIds = setOf("sport", "sport/ballsport", "sport/ballsport/basketball"),
+                    avatarLevel = 5
+                )
+            )
+        )
     }
 
     // ================= Kein Flackern =================
