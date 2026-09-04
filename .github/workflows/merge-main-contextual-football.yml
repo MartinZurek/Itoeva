@@ -1,0 +1,66 @@
+name: Merge current main into contextual football branch
+
+on:
+  push:
+    branches:
+      - 'evolution/contextual-football-intent'
+
+permissions:
+  contents: write
+
+jobs:
+  merge-main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: evolution/contextual-football-intent
+          fetch-depth: 0
+
+      - name: Merge current main and preserve both handoffs
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+
+          set +e
+          git merge --no-ff origin/main -m 'Merge current main into contextual football branch'
+          status=$?
+          set -e
+
+          if [ "$status" -ne 0 ]; then
+            conflicts="$(git diff --name-only --diff-filter=U)"
+            if [ "$conflicts" != "SKILLBAUM.md" ]; then
+              echo "Unexpected merge conflicts: $conflicts"
+              exit 1
+            fi
+            git checkout --theirs SKILLBAUM.md
+            python .github/scripts/merge_main_contextual_football.py
+            git add SKILLBAUM.md
+            git commit --no-edit
+          else
+            python .github/scripts/merge_main_contextual_football.py
+            if ! git diff --quiet -- SKILLBAUM.md; then
+              git add SKILLBAUM.md
+              git commit --amend --no-edit
+            fi
+          fi
+
+      - name: Check merged state
+        run: |
+          set -euo pipefail
+          test -z "$(git diff --name-only --diff-filter=U)"
+          git diff --check
+          grep -q '### P16' SKILLBAUM.md
+          grep -q 'Kontextueller Fussball-Schnitt' SKILLBAUM.md
+          git merge-base --is-ancestor origin/main HEAD
+
+      - name: Remove merge helpers and push
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/merge-main-contextual-football.yml
+          git rm .github/scripts/merge_main_contextual_football.py
+          git commit -m 'Remove main merge helpers'
+          git push origin HEAD:evolution/contextual-football-intent
