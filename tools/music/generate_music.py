@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Generate one Itoeva music track from music/manifest.json via Stability AI.
+"""Generate one Itoeva music track with Stable Audio 3 open weights.
 
-The API key is read only from STABILITY_API_KEY. It is never written to disk.
-Use --dry-run to validate a track definition without making a paid API call.
+The paid Stability API is intentionally not used. Model weights are downloaded from
+Hugging Face by the official ``stable-audio-3`` inference library. The model is gated,
+so the user running generation must have accepted its terms and authenticated with a
+Hugging Face account (``HF_TOKEN`` works in CI).
+
+``--dry-run`` validates the versioned track definition without importing PyTorch,
+downloading weights, or generating audio.
 """
 
 from __future__ import annotations
@@ -11,14 +16,12 @@ import argparse
 import hashlib
 import json
 import os
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-import requests
-
 
 DEFAULT_MANIFEST = Path("music/manifest.json")
+SUPPORTED_MODELS = {"small-music": 120, "medium": 380}
 
 
 def load_track(manifest_path: Path, track_id: str) -> tuple[dict, dict]:
@@ -39,18 +42,38 @@ def validate_track(track: dict) -> None:
         "output_format",
         "android_resource",
         "prompt_file",
+        "steps",
+        "cfg_scale",
+        "seed",
     }
     missing = sorted(required - track.keys())
     if missing:
         raise SystemExit(f"Track is missing fields: {', '.join(missing)}")
 
+    model = track["model"]
+    if model not in SUPPORTED_MODELS:
+        raise SystemExit(f"model must be one of: {', '.join(sorted(SUPPORTED_MODELS))}")
+
     duration = int(track["duration_seconds"])
-    if not 1 <= duration <= 190:
-        raise SystemExit("duration_seconds must be between 1 and 190 for this endpoint")
-    if track["output_format"] not in {"mp3", "wav"}:
-        raise SystemExit("output_format must be mp3 or wav")
-    if track["model"] not in {"stable-audio-2", "stable-audio-2.5"}:
-        raise SystemExit("model must be stable-audio-2 or stable-audio-2.5")
+    if not 1 <= duration <= SUPPORTED_MODELS[model]:
+        raise SystemExit(
+            f"duration_seconds must be between 1 and {SUPPORTED_MODELS[model]} for {model}"
+        )
+
+    if track["output_format"] != "wav":
+        raise SystemExit("Open-weights generation currently writes WAV only")
+    if int(track["steps"]) < 1:
+        raise SystemExit("steps must be >= 1")
+    if float(track["cfg_scale"]) <= 0:
+        raise SystemExit("cfg_scale must be > 0")
+
+
+def resolve_device(requested: str) -> str | None:
+    if requested == "auto":
+        return None
+    if requested not in {"cpu", "cuda", "mps"}:
+        raise SystemExit("--device must be auto, cpu, cuda or mps")
+    return requested
 
 
 def main() -> int:
@@ -58,6 +81,7 @@ def main() -> int:
     parser.add_argument("--track-id", required=True)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--output-dir", type=Path, default=Path("generated/music"))
+    parser.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda", "mps"])
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -69,10 +93,6 @@ def main() -> int:
     if not prompt:
         raise SystemExit(f"Prompt is empty: {prompt_path}")
 
-    endpoint = manifest.get(
-        "api_endpoint",
-        "https://api.stability.ai/v2beta/audio/stable-audio-2/text-to-audio",
-    )
     extension = track["output_format"]
     output_name = f"{track['android_resource']}.{extension}"
     output_path = args.output_dir / output_name
@@ -81,13 +101,20 @@ def main() -> int:
     resolved = {
         "track_id": track["id"],
         "title": track["title"],
+        "backend": manifest.get("backend", "stable-audio-3-open-weights"),
         "model": track["model"],
+        "model_repository": manifest.get("model_repository"),
+        "inference_library_repository": manifest.get("inference_library_repository"),
+        "inference_library_commit": manifest.get("inference_library_commit"),
         "duration_seconds": int(track["duration_seconds"]),
         "output_format": extension,
         "android_resource": track["android_resource"],
         "prompt_file": str(prompt_path),
         "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
-        "endpoint": endpoint,
+        "steps": int(track["steps"]),
+        "cfg_scale": float(track["cfg_scale"]),
+        "seed": int(track["seed"]),
+        "requested_device": args.device,
         "output_path": str(output_path),
     }
 
@@ -95,65 +122,83 @@ def main() -> int:
         print(json.dumps(resolved, indent=2, ensure_ascii=False))
         return 0
 
-    api_key = os.environ.get("STABILITY_API_KEY", "").strip()
-    if not api_key:
+    # Heavy dependencies are imported only for a real generation. This keeps dry-run
+    # useful in ordinary repo CI without downloading PyTorch or model weights.
+    try:
+        import torch
+        import torchaudio
+        from stable_audio_3 import StableAudioModel
+    except ImportError as exc:
         raise SystemExit(
-            "STABILITY_API_KEY is missing. Add it as a GitHub Actions secret; never commit the key."
+            "Stable Audio 3 runtime is not installed. Follow music/README.md or use the "
+            "Generate Itoeva Music GitHub workflow."
+        ) from exc
+
+    requested_device = resolve_device(args.device)
+    if requested_device == "cuda" and not torch.cuda.is_available():
+        raise SystemExit("CUDA was requested but torch.cuda.is_available() is false")
+    if requested_device == "mps" and not torch.backends.mps.is_available():
+        raise SystemExit("MPS was requested but torch.backends.mps.is_available() is false")
+
+    # The model repository is gated. huggingface_hub automatically reads HF_TOKEN;
+    # locally, an existing `hf auth login` session also works.
+    if os.environ.get("CI") and not os.environ.get("HF_TOKEN"):
+        raise SystemExit(
+            "HF_TOKEN is missing in CI. Accept the Stable Audio 3 model terms on "
+            "Hugging Face and add a read token as the GitHub Actions secret HF_TOKEN."
         )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Stability's text-to-audio endpoint requires multipart/form-data. The empty
-    # file part mirrors the provider's official Python request sample and makes
-    # requests construct the multipart boundary without setting Content-Type by hand.
-    response = requests.post(
-        endpoint,
-        headers={
-            "authorization": f"Bearer {api_key}",
-            "accept": "audio/*",
-        },
-        files={"none": ""},
-        data={
-            "prompt": prompt,
-            "output_format": extension,
-            "duration": str(track["duration_seconds"]),
-            "model": track["model"],
-        },
-        timeout=360,
+    print(f"Loading Stable Audio 3 model: {track['model']}")
+    model = StableAudioModel.from_pretrained(track["model"], device=requested_device)
+    actual_device = str(model.device)
+
+    print(
+        f"Generating {track['duration_seconds']}s on {actual_device} "
+        f"(steps={track['steps']}, cfg={track['cfg_scale']}, seed={track['seed']})"
+    )
+    audio = model.generate(
+        prompt=prompt,
+        duration=float(track["duration_seconds"]),
+        steps=int(track["steps"]),
+        cfg_scale=float(track["cfg_scale"]),
+        seed=int(track["seed"]),
+        batch_size=1,
     )
 
-    if response.status_code != 200:
-        content_type = response.headers.get("content-type", "")
-        if "json" in content_type:
-            try:
-                detail = json.dumps(response.json(), ensure_ascii=False)
-            except ValueError:
-                detail = response.text[:1000]
-        else:
-            detail = response.text[:1000]
-        raise SystemExit(f"Stability API failed ({response.status_code}): {detail}")
+    if audio.ndim != 3 or audio.shape[0] != 1:
+        raise SystemExit(f"Unexpected Stable Audio output shape: {tuple(audio.shape)}")
 
-    output_path.write_bytes(response.content)
+    sample_rate = int(model.model.sample_rate)
+    waveform = audio[0].detach().to(torch.float32).cpu().clamp(-1, 1)
+    torchaudio.save(
+        str(output_path),
+        waveform,
+        sample_rate,
+        encoding="PCM_S",
+        bits_per_sample=16,
+    )
+
     resolved.update(
         {
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-            "provider": manifest.get("provider", "stability-ai"),
-            "response_content_type": response.headers.get("content-type"),
-            "bytes": len(response.content),
+            "actual_device": actual_device,
+            "sample_rate": sample_rate,
+            "channels": int(waveform.shape[0]),
+            "samples": int(waveform.shape[-1]),
+            "bytes": output_path.stat().st_size,
+            "hf_token_present": bool(os.environ.get("HF_TOKEN")),
         }
     )
     metadata_path.write_text(
         json.dumps(resolved, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
 
-    print(f"Generated {output_path} ({len(response.content)} bytes)")
+    print(f"Generated {output_path} ({output_path.stat().st_size} bytes)")
     print(f"Metadata: {metadata_path}")
     return 0
 
 
 if __name__ == "__main__":
-    try:
-        raise SystemExit(main())
-    except requests.RequestException as exc:
-        print(f"Network error: {exc}", file=sys.stderr)
-        raise SystemExit(2)
+    raise SystemExit(main())

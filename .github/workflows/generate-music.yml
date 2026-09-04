@@ -20,9 +20,9 @@ permissions:
 
 jobs:
   generate:
-    name: Generate music and prepare game asset
+    name: Generate music from open weights
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
 
     steps:
       - name: Check out current main
@@ -34,12 +34,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
-      - name: Install generator dependency
-        run: python -m pip install --disable-pip-version-check requests==2.32.5
-
-      - name: Validate track without spending credits
+      - name: Validate track without model download
         env:
           TRACK_ID: ${{ inputs.track_id }}
         run: >-
@@ -47,22 +44,51 @@ jobs:
           --track-id "$TRACK_ID"
           --dry-run
 
-      - name: Require Stability API key
+      - name: Require free Hugging Face model access
         env:
-          STABILITY_API_KEY: ${{ secrets.STABILITY_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          if [ -z "$STABILITY_API_KEY" ]; then
-            echo "::error::Missing repository secret STABILITY_API_KEY"
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::Missing repository secret HF_TOKEN. Accept the Stable Audio 3 Small Music model terms on Hugging Face and add a read token. No Stability API key is required."
             exit 1
           fi
 
-      - name: Generate track with Stable Audio
+      - name: Resolve pinned Stable Audio runtime
+        id: runtime
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = json.loads(Path('music/manifest.json').read_text(encoding='utf-8'))
+          commit = manifest['inference_library_commit']
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+              out.write(f"commit={commit}\n")
+          PY
+
+      - name: Install CPU Stable Audio 3 runtime
         env:
-          STABILITY_API_KEY: ${{ secrets.STABILITY_API_KEY }}
+          RUNTIME_COMMIT: ${{ steps.runtime.outputs.commit }}
+          PIP_NO_CACHE_DIR: '1'
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install \
+            --index-url https://download.pytorch.org/whl/cpu \
+            torch==2.7.1 torchaudio==2.7.1
+          python -m pip install \
+            "git+https://github.com/Stability-AI/stable-audio-3.git@${RUNTIME_COMMIT}"
+
+      - name: Generate track locally on runner
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
           TRACK_ID: ${{ inputs.track_id }}
+          CI: 'true'
         run: >-
           python tools/music/generate_music.py
           --track-id "$TRACK_ID"
+          --device cpu
           --output-dir generated/music
 
       - name: Resolve generated filenames
@@ -125,4 +151,4 @@ jobs:
             --base main \
             --head "$branch" \
             --title "Music: add generated track ${TRACK_ID}" \
-            --body "Generated from the versioned Itoeva music manifest and prompt. Audio and provenance metadata are included. Please listen before merging; this workflow intentionally does not auto-merge generated media."
+            --body "Generated locally from Stable Audio 3 open weights using the versioned Itoeva manifest and prompt. No Stability API credits were used. Audio and provenance metadata are included. Please listen before merging; generated media is never auto-merged."
