@@ -68,6 +68,14 @@ class SkillRepertoireTest {
         )
     }
 
+    @Test
+    fun `kontextuelle Fussballskills bleiben im autonomen MOVE Repertoire sichtbar`() {
+        val offen = setOf("sport/ballsport", "sport/ballsport/dribbling", "sport/ballsport/schuss")
+        val skills = SkillRepertoire.skillsFor(AnimationType.MOVE, offen)
+        assertTrue("Dribbling fehlt im autonomen Repertoire", "sport/ballsport/dribbling" in skills)
+        assertTrue("Schuss fehlt im autonomen Repertoire", "sport/ballsport/schuss" in skills)
+    }
+
     /**
      * Die Garantie liegt im Baum, nicht in einer Pruefung hier: MEDICINE steht in
      * [AnimationTree.EXCLUDED_TYPES] und hat deshalb keinen Knoten. Dieser Test haelt fest, dass

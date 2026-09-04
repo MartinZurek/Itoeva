@@ -2,6 +2,11 @@ package com.notime.glyphsim.skilltree
 
 import com.notime.glyphcore.data.AnimationNode
 import com.notime.glyphcore.data.AnimationTree
+import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.matrix.PlayEffects
+import com.notime.glyphsim.matrix.PlayRoutine
+import com.notime.glyphsim.matrix.PlayScene
+import com.notime.glyphsim.matrix.RoutineStep
 
 /**
  * Was der Begleiter gerade tut - und seit wann.
@@ -63,6 +68,30 @@ data class ActivityPlan(
 }
 
 /**
+ * Der kleine Ausschnitt aus der Welt, den eine Absicht fuer ihre konkrete Ausfuehrung braucht.
+ *
+ * Kein zweiter Weltzustand: [place] kommt direkt aus `DockScreen.currentPlace`, die Freischaltungen
+ * aus [AvatarUnlockRepository]. Welche Avatar-Level welche Ablaufvarianten freischalten, ist laut
+ * `Tagesablauf.md` weiterhin eine offene Produktentscheidung und wird hier deshalb bewusst NICHT
+ * vorweggenommen. Die Ausfuehrung bleibt vollstaendig bei [PlayRoutine] und `DockScreen.runRoutine`.
+ */
+data class ActivityContext(
+    val place: PlayScene.Place,
+    val unlockedNodeIds: Set<String>
+)
+
+/**
+ * Ergebnis der bestehenden Aktivitaetsentscheidung plus die Routine, die sie in der Welt sichtbar
+ * macht. [plan] bleibt die semantische Wahrheit (Begin/Flourish); [routine] ist nur ihre vorhandene
+ * Ausfuehrungsebene.
+ */
+data class ResolvedActivity(
+    val plan: ActivityPlan,
+    val topic: AnimationType,
+    val routine: PlayRoutine
+)
+
+/**
  * **Die Regeln fuer "was passiert, wenn ich das auf den Begleiter ziehe".**
  *
  * Reine Rechnung ohne Compose, Datenbank und Coroutinen - dadurch laesst sich das Verhalten
@@ -111,6 +140,90 @@ object AvatarActivityPlans {
     }
 
     /**
+     * Ob dieser Knoten schon eine kontextuelle Ausfuehrung in der Welt besitzt.
+     *
+     * Diese kleine Grenze verhindert, dass derselbe Skill zugleich als alte zufaellige Einlage
+     * UND als neue verhaltensveraendernde Routine abgespielt wird. Weitere vertikale Schnitte
+     * koennen hier spaeter hinzukommen, ohne [SkillRepertoire] ihre IDs beizubringen.
+     */
+    fun supportsContextualExecution(node: AnimationNode): Boolean =
+        node.id in FOOTBALL_INTENT_NODES
+
+    /**
+     * Uebersetzt eine bereits vorhandene Skill-/Reminder-Absicht in eine konkrete vorhandene
+     * [PlayRoutine]. Der erste vertikale Schnitt ist bewusst nur Fussball; fuer alle anderen
+     * Knoten bleibt die bisherige Reaktion unangetastet, statt hier vorschnell ein Framework zu
+     * bauen.
+     *
+     * Entscheidend: Freischaltungen waehlen NICHT bloss eine zusaetzliche Animation nach der
+     * Handlung, sondern veraendern die Handlung selbst. Ohne Dribbling-Knoten gibt es keine
+     * Dribbling-Sequenz; ohne Schuss-Knoten weder Zielen noch Schuss. Die neue, kleine
+     * `Football(TOUCH)`-Phase am Anfang erweitert dabei nur den vorhandenen Fussball-Renderer um
+     * einfachen Ballkontakt; `DRIBBLE` bleibt dadurch ausschliesslich dem freigeschalteten Skill.
+     */
+    fun resolve(
+        current: AvatarActivity?,
+        dropped: AnimationNode,
+        context: ActivityContext
+    ): ResolvedActivity? {
+        if (!supportsContextualExecution(dropped)) return null
+
+        val plan = planFor(current, dropped)
+        if (plan.resultingActivity != BALLSPORT_NODE) return null
+
+        val unlocked = context.unlockedNodeIds
+        val ballsportLearned = BALLSPORT_NODE in unlocked
+        val dribblingLearned = DRIBBLING_NODE in unlocked
+        val shotLearned = SHOT_NODE in unlocked
+
+        val localPractice = context.place in LOCAL_FOOTBALL_PLACES
+        val targetPlace = if (localPractice) context.place else PlayScene.Place.SPORT
+        val anchor = when (targetPlace) {
+            PlayScene.Place.SPORT -> 0.30f
+            PlayScene.Place.PARK -> 0.42f
+            PlayScene.Place.MEADOW -> 0.46f
+            else -> 0.34f
+        }
+
+        val steps = buildList {
+            // Zuhause, im Arbeitszimmer usw. keinen Ball samt Tor in die Kulisse zaubern. Der
+            // vorhandene GoToPlace-Schritt zeigt den Weg durch die Tuer; es ist also kein
+            // Teleport. Park und Wiese sind dagegen glaubwuerdige lokale Uebungsorte.
+            if (!localPractice) {
+                add(RoutineStep.GoToPlace(PlayScene.Place.SPORT))
+            }
+            add(RoutineStep.Stroll(anchor))
+
+            // Basiskontakt: Der Reminder darf auch einen Anfaenger zu einer kurzen Ballberuehrung
+            // anregen. Das ist noch NICHT das freigeschaltete Dribbling-Repertoire.
+            add(RoutineStep.Football(PlayEffects.FootballPhase.TOUCH))
+            add(RoutineStep.Linger(if (ballsportLearned) 4_000L else 2_500L))
+
+            if (dribblingLearned) {
+                // Gelerntes Dribbling wird als erkennbare Folge sichtbar. Eine zusaetzliche
+                // Level-Schwelle gibt es bewusst nicht: Welche Level Varianten freischalten,
+                // bleibt laut Tagesablauf.md eine offene Produktentscheidung.
+                add(RoutineStep.Stroll((anchor + 0.16f).coerceAtMost(0.72f)))
+                add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
+                add(RoutineStep.Linger(5_000L))
+            }
+
+            if (shotLearned) {
+                add(RoutineStep.Football(PlayEffects.FootballPhase.AIM))
+                add(RoutineStep.Linger(3_000L))
+                add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
+                add(RoutineStep.Linger(5_000L))
+            }
+        }
+
+        return ResolvedActivity(
+            plan = plan,
+            topic = AnimationType.MOVE,
+            routine = PlayRoutine(steps)
+        )
+    }
+
+    /**
      * Die Beschaeftigung, in der eine Einlage stattfindet - fuer Anzeige und Pruefung.
      *
      * `null` fuer alles, was selbst eine Beschaeftigung ist.
@@ -121,4 +234,15 @@ object AvatarActivityPlans {
         } else {
             null
         }
+
+    private const val BALLSPORT_NODE = "sport/ballsport"
+    private const val DRIBBLING_NODE = "sport/ballsport/dribbling"
+    private const val SHOT_NODE = "sport/ballsport/schuss"
+
+    private val FOOTBALL_INTENT_NODES = setOf(BALLSPORT_NODE, DRIBBLING_NODE, SHOT_NODE)
+    private val LOCAL_FOOTBALL_PLACES = setOf(
+        PlayScene.Place.SPORT,
+        PlayScene.Place.PARK,
+        PlayScene.Place.MEADOW
+    )
 }

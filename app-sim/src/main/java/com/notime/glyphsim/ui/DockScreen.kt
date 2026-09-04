@@ -60,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.notime.glyphcore.data.AnimationTree
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.R
@@ -72,6 +73,9 @@ import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.ReactionTrigger
+import com.notime.glyphsim.skilltree.ActivityContext
+import com.notime.glyphsim.skilltree.AvatarActivityBus
+import com.notime.glyphsim.skilltree.AvatarActivityPlans
 import com.notime.glyphsim.skilltree.AvatarUnlockRepository
 import com.notime.glyphsim.skilltree.SkillRepertoire
 import com.notime.glyphsim.matrix.AvatarSpriteView
@@ -541,6 +545,14 @@ fun DockScreen(
                 if (initialPresence.resumesPreviousSituation) null else initialPresence.topic
             )
         }
+        /**
+         * Die genaue Skill-/Reminder-Absicht, falls sie praeziser ist als [requestedTopic].
+         *
+         * Kein zweiter Ablaufzustand: Der grobe Typ bleibt fuer Tagesablauf und Gespraech bestehen;
+         * dieser Wert verhindert nur, dass z. B. "Football" vor der bestehenden
+         * [PlayRoutine]-Ausfuehrung wieder zu einem unbestimmten MOVE zusammenschrumpft.
+         */
+        var requestedNodeId by remember(presenceProfileId) { mutableStateOf<String?>(null) }
         val lifecycleOwner = LocalLifecycleOwner.current
         var leftPlayAtMillis by remember { mutableStateOf<Long?>(null) }
         DisposableEffect(lifecycleOwner, playMode, presenceProfileId) {
@@ -563,6 +575,7 @@ fun DockScreen(
                             currentPlace = place
                             renderedPlace = place
                             currentTopic = topic
+                            requestedNodeId = null
                             requestedTopic = topic
                         }
                         leftPlayAtMillis = null
@@ -1415,7 +1428,8 @@ fun DockScreen(
                     // Beim Umschalten aus dem Spiel wurde ein laufender Ablauf sauber beendet.
                     // Beim Zurueckkehren wird seine Absicht wieder aufgenommen, statt einen neuen
                     // Zufall zu wuerfeln.
-                    if (requestedTopic == null) {
+                    if (requestedTopic == null && requestedNodeId == null) {
+                        requestedNodeId = null
                         requestedTopic = currentTopic ?: PlayPresence.topicFor(java.time.LocalDateTime.now())
                     }
                 }
@@ -1882,12 +1896,26 @@ fun DockScreen(
                             // statt einfach an der Stelle der Reaktion idle stehen zu bleiben.
                             // Reaktion selbst bleibt unberuehrt (laeuft VOR diesem Zweig, frei
                             // stehend und unverdeckt) - erst DANACH beginnt der Ortswechsel. Die
-                            // Tageszeit wirkt dabei bereits mit: [moveToPlace] und die Routine
-                            // selbst richten sich nach der aktuellen Tagesphase (siehe
-                            // PlayAmbientActivity.currentDayPhase), dieselbe Logik wie beim
-                            // autonomen Tagesablauf. Nur bei einem festen [AnimationType] moeglich
-                            // - eine Bibliotheks-Animation ohne Thema kennt keinen Ort.
-                            current.animationType?.let { requestedTopic = it }
+                            // Der grobe Typ bleibt der Rueckfall. Haengt die Erinnerungsanimation
+                            // aber an einem bereits kontextuell ausgefuehrten Skillbaum-Knoten,
+                            // behalten wir zusaetzlich genau DIESEN Knoten. Sonst wuerde
+                            // "Football" hier wieder zu einem blossen MOVE zusammenschrumpfen und
+                            // die folgende Entscheidung koennte weder Ort noch Skillstand nutzen.
+                            val trigger = ReactionTrigger.of(
+                                current.animationType, current.libraryAnimationLabel
+                            )
+                            val contextualNode = (trigger as? ReactionTrigger.Node)
+                                ?.nodeId
+                                ?.let(AnimationTree::node)
+                                ?.takeIf(AvatarActivityPlans::supportsContextualExecution)
+                            if (contextualNode != null) {
+                                requestedNodeId = contextualNode.id
+                                requestedTopic = AnimationType.MOVE
+                            } else {
+                                requestedNodeId = null
+                                requestedTopic =
+                                    (trigger as? ReactionTrigger.Topic)?.type ?: current.animationType
+                            }
                         } else {
                             avatar = null
                         }
@@ -1999,8 +2027,47 @@ fun DockScreen(
             //
             // Ein zweiter, nebenher laufender Anstoss waere die Alternative gewesen und die
             // schlechtere: Zwei Ablaeufe gleichzeitig schieben dieselbe Figur an zwei Orte.
-            LaunchedEffect(avatar?.species, requestedTopic) {
+            LaunchedEffect(avatar?.species, requestedTopic, requestedNodeId) {
                 val species = avatar?.species ?: return@LaunchedEffect
+
+                // Ein genauer Skill-/Reminder-Knoten geht vor dem groben Thema. Die Entscheidung
+                // liest ausschliesslich bereits vorhandenen Zustand und liefert eine bestehende
+                // PlayRoutine zurueck; Bewegung, Ortswechsel und Effekte bleiben damit bei der
+                // bisherigen Ausfuehrungsschicht.
+                val contextualNodeId = requestedNodeId
+                if (contextualNodeId != null) {
+                    val node = AnimationTree.node(contextualNodeId)
+                    if (node != null && AvatarActivityPlans.supportsContextualExecution(node)) {
+                        val now = System.currentTimeMillis()
+                        val unlocked = withContext(Dispatchers.IO) {
+                            val db = AppDatabase.getInstance(context)
+                            AvatarUnlockRepository(db).unlockedNodes(presenceProfileId)
+                        }
+                        val resolved = AvatarActivityPlans.resolve(
+                            current = AvatarActivityBus.currentIfFresh(now),
+                            dropped = node,
+                            context = ActivityContext(
+                                place = currentPlace,
+                                unlockedNodeIds = unlocked
+                            )
+                        )
+                        if (resolved != null) {
+                            currentTopic = resolved.topic
+                            AvatarActivityBus.set(resolved.plan.resultingActivity, now)
+                            // Absichtlich KEIN moveToPlace hier: Ob er lokal uebt oder erst zum
+                            // Sportplatz geht, steckt als vorhandener GoToPlace-Schritt in genau
+                            // dieser kontextuell aufgeloesten Routine.
+                            runRoutine(resolved.routine, species)
+                            requestedNodeId = null
+                            requestedTopic = null
+                            return@LaunchedEffect
+                        }
+                    }
+                    // Defensive Rueckstufung: Wird ein Knoten spaeter entfernt oder noch nicht
+                    // unterstuetzt, darf er die Schleife nicht blockieren. Das grobe Thema darunter
+                    // laeuft dann auf demselben Weg weiter wie vor dieser Evolution.
+                    requestedNodeId = null
+                }
 
                 requestedTopic?.let { topic ->
                     // **Eine Bitte ist genauso ein "das tut er gerade" wie eine selbst gewaehlte
@@ -3065,7 +3132,11 @@ fun DockScreen(
                         onAddReminder = { topic -> onAddHabit(topic); talkRefresh++ },
                         onOpenReminders = { talkOpen = false; onOpenReminders() },
                         // Bitten schliesst das Gespraech - man will ja sehen, was er tut.
-                        onAsk = { topic -> talkOpen = false; requestedTopic = topic },
+                        onAsk = { topic ->
+                            talkOpen = false
+                            requestedNodeId = null
+                            requestedTopic = topic
+                        },
                         // Ein Rat wird sofort wirksam und das Gespraech bleibt offen: Man will
                         // sehen, dass es angekommen ist, und danach weiterlesen.
                         onAdjust = { reminder -> onAdjustHabit(reminder); talkRefresh++ },
