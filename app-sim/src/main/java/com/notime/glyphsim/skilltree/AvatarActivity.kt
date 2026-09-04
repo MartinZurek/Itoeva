@@ -71,13 +71,13 @@ data class ActivityPlan(
  * Der kleine Ausschnitt aus der Welt, den eine Absicht fuer ihre konkrete Ausfuehrung braucht.
  *
  * Kein zweiter Weltzustand: [place] kommt direkt aus `DockScreen.currentPlace`, die Freischaltungen
- * aus [AvatarUnlockRepository], die Stufe aus dem vorhandenen Play-Mode-Level. Die Ausfuehrung
- * bleibt vollstaendig bei [PlayRoutine] und `DockScreen.runRoutine`.
+ * aus [AvatarUnlockRepository]. Welche Avatar-Level welche Ablaufvarianten freischalten, ist laut
+ * `Tagesablauf.md` weiterhin eine offene Produktentscheidung und wird hier deshalb bewusst NICHT
+ * vorweggenommen. Die Ausfuehrung bleibt vollstaendig bei [PlayRoutine] und `DockScreen.runRoutine`.
  */
 data class ActivityContext(
     val place: PlayScene.Place,
-    val unlockedNodeIds: Set<String>,
-    val avatarLevel: Int
+    val unlockedNodeIds: Set<String>
 )
 
 /**
@@ -200,24 +200,19 @@ object AvatarActivityPlans {
             add(RoutineStep.Linger(if (ballsportLearned) 4_000L else 2_500L))
 
             if (dribblingLearned) {
-                // Gelerntes Dribbling wird als erkennbare Folge sichtbar. Hoehere Avatar-Stufen
-                // verlaengern nur eine BEREITS gelernte Faehigkeit; sie schalten nichts heimlich
-                // frei.
+                // Gelerntes Dribbling wird als erkennbare Folge sichtbar. Eine zusaetzliche
+                // Level-Schwelle gibt es bewusst nicht: Welche Level Varianten freischalten,
+                // bleibt laut Tagesablauf.md eine offene Produktentscheidung.
                 add(RoutineStep.Stroll((anchor + 0.16f).coerceAtMost(0.72f)))
                 add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
                 add(RoutineStep.Linger(5_000L))
-                if (context.avatarLevel >= 3) {
-                    add(RoutineStep.Stroll((anchor - 0.10f).coerceAtLeast(0.18f)))
-                    add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
-                    add(RoutineStep.Linger(4_000L))
-                }
             }
 
             if (shotLearned) {
                 add(RoutineStep.Football(PlayEffects.FootballPhase.AIM))
                 add(RoutineStep.Linger(3_000L))
                 add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
-                add(RoutineStep.Linger(if (context.avatarLevel >= 4) 7_000L else 5_000L))
+                add(RoutineStep.Linger(5_000L))
             }
         }
 

@@ -119,8 +119,7 @@ class AvatarActivityPlansTest {
                 dropped = node("sport/ballsport"),
                 context = ActivityContext(
                     place = PlayScene.Place.PARK,
-                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
-                    avatarLevel = 1
+                    unlockedNodeIds = setOf("sport", "sport/ballsport")
                 )
             )
         )
@@ -137,8 +136,7 @@ class AvatarActivityPlansTest {
                 dropped = node("sport/ballsport"),
                 context = ActivityContext(
                     place = PlayScene.Place.LIVING,
-                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
-                    avatarLevel = 1
+                    unlockedNodeIds = setOf("sport", "sport/ballsport")
                 )
             )
         )
@@ -156,8 +154,7 @@ class AvatarActivityPlansTest {
                 dropped = node("sport/ballsport"),
                 context = ActivityContext(
                     place = PlayScene.Place.SPORT,
-                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
-                    avatarLevel = 5
+                    unlockedNodeIds = setOf("sport", "sport/ballsport")
                 )
             )
         )
@@ -171,8 +168,7 @@ class AvatarActivityPlansTest {
                         "sport",
                         "sport/ballsport",
                         "sport/ballsport/dribbling"
-                    ),
-                    avatarLevel = 5
+                    )
                 )
             )
         )
@@ -182,8 +178,8 @@ class AvatarActivityPlansTest {
     }
 
     @Test
-    fun `Avatar Level verlaengert nur bereits gelerntes Dribbling`() {
-        val levelOne = requireNotNull(
+    fun `Dribbling Variante haengt nur an der Freischaltung nicht an einer erfundenen Levelschwelle`() {
+        val resolved = requireNotNull(
             AvatarActivityPlans.resolve(
                 current = null,
                 dropped = node("sport/ballsport"),
@@ -193,29 +189,12 @@ class AvatarActivityPlansTest {
                         "sport",
                         "sport/ballsport",
                         "sport/ballsport/dribbling"
-                    ),
-                    avatarLevel = 1
-                )
-            )
-        )
-        val levelThree = requireNotNull(
-            AvatarActivityPlans.resolve(
-                current = null,
-                dropped = node("sport/ballsport"),
-                context = ActivityContext(
-                    place = PlayScene.Place.SPORT,
-                    unlockedNodeIds = setOf(
-                        "sport",
-                        "sport/ballsport",
-                        "sport/ballsport/dribbling"
-                    ),
-                    avatarLevel = 3
+                    )
                 )
             )
         )
 
-        assertEquals(1, footballPhases(levelOne).count { it == PlayEffects.FootballPhase.DRIBBLE })
-        assertEquals(2, footballPhases(levelThree).count { it == PlayEffects.FootballPhase.DRIBBLE })
+        assertEquals(1, footballPhases(resolved).count { it == PlayEffects.FootballPhase.DRIBBLE })
     }
 
     @Test
@@ -226,8 +205,7 @@ class AvatarActivityPlansTest {
                 dropped = node("sport/ballsport/schuss"),
                 context = ActivityContext(
                     place = PlayScene.Place.SPORT,
-                    unlockedNodeIds = setOf("sport", "sport/ballsport"),
-                    avatarLevel = 10
+                    unlockedNodeIds = setOf("sport", "sport/ballsport")
                 )
             )
         )
@@ -241,8 +219,7 @@ class AvatarActivityPlansTest {
                         "sport",
                         "sport/ballsport",
                         "sport/ballsport/schuss"
-                    ),
-                    avatarLevel = 2
+                    )
                 )
             )
         )
@@ -261,8 +238,7 @@ class AvatarActivityPlansTest {
                 dropped = node("sport/ballsport/basketball"),
                 context = ActivityContext(
                     place = PlayScene.Place.SPORT,
-                    unlockedNodeIds = setOf("sport", "sport/ballsport", "sport/ballsport/basketball"),
-                    avatarLevel = 5
+                    unlockedNodeIds = setOf("sport", "sport/ballsport", "sport/ballsport/basketball")
                 )
             )
         )

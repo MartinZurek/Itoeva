@@ -2039,19 +2039,16 @@ fun DockScreen(
                     val node = AnimationTree.node(contextualNodeId)
                     if (node != null && AvatarActivityPlans.supportsContextualExecution(node)) {
                         val now = System.currentTimeMillis()
-                        val (unlocked, avatarLevel) = withContext(Dispatchers.IO) {
+                        val unlocked = withContext(Dispatchers.IO) {
                             val db = AppDatabase.getInstance(context)
-                            val unlockedNodes = AvatarUnlockRepository(db).unlockedNodes(presenceProfileId)
-                            val xp = db.avatarPlayStateDao().getForProfile(presenceProfileId)?.xp ?: 0
-                            unlockedNodes to PlayModeXp.levelFor(xp)
+                            AvatarUnlockRepository(db).unlockedNodes(presenceProfileId)
                         }
                         val resolved = AvatarActivityPlans.resolve(
                             current = AvatarActivityBus.currentIfFresh(now),
                             dropped = node,
                             context = ActivityContext(
                                 place = currentPlace,
-                                unlockedNodeIds = unlocked,
-                                avatarLevel = avatarLevel
+                                unlockedNodeIds = unlocked
                             )
                         )
                         if (resolved != null) {

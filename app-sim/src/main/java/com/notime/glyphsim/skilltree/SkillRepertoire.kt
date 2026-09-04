@@ -18,11 +18,11 @@ import kotlin.random.Random
  * ## Zwei Arten, wie ein Skill sichtbar wird
  *
  * Der erste Stand spielte jeden Skill als kurze Einlage NACH einer ansonsten unveraenderten
- * Handlung. Das bleibt der Rueckfall fuer Bereiche, die noch keinen eigenen vertikalen Schnitt
- * besitzen. Sobald ein Knoten aber von [AvatarActivityPlans] kontextuell aufgeloest wird, gehoert
- * er IN die Handlung selbst und darf hier nicht ein zweites Mal gewuerfelt werden. So entstehen
- * keine zwei konkurrierenden Handlungssysteme: Der Skillbaum entscheidet das Repertoire, die
- * vorhandene PlayRoutine fuehrt es aus.
+ * Handlung. Bei einem EXAKTEN Reminder-/Skill-Intent kann [AvatarActivityPlans] ihn inzwischen
+ * stattdessen IN eine kontextuelle Routine uebersetzen; dieser Pfad kehrt in `DockScreen` vor dem
+ * Ambient-Flourish zurueck und kann daher nicht doppelt spielen. Der autonome PERFORM-Pfad besitzt
+ * dagegen noch keinen exakten Intent. Dort bleibt die Einlage absichtlich erhalten, damit eine
+ * freigeschaltete Fussballfaehigkeit im normalen Avatarleben nicht unsichtbar wird.
  *
  * ## Warum MEDICINE nicht vorkommen kann
  *
@@ -43,12 +43,11 @@ object SkillRepertoire {
     fun hostNodeFor(topic: AnimationType): String? = AnimationTree.nodeIdFor(topic)
 
     /**
-     * Alle freigeschalteten, gezeichneten Knoten UNTERHALB des Themas, die noch als klassische
-     * Einlage gebraucht werden - in Baumreihenfolge.
+     * Alle freigeschalteten, gezeichneten Knoten UNTERHALB des Themas - in Baumreihenfolge.
      *
      * Der Wirtsknoten selbst fehlt bewusst: Seine Reaktion IST die Handlung, die der Ablauf gerade
-     * gespielt hat. Kontextuell ausgefuehrte Skills fehlen ebenfalls: Deren Freischaltung hat die
-     * Routine bereits veraendert und soll nicht danach nochmals als Einzelanimation auftauchen.
+     * gespielt hat. Kontextuell aufloesbare Skills bleiben hier enthalten, weil dieser Leser den
+     * autonomen PERFORM-Pfad versorgt; der exakte Contextual-Intent-Pfad ruft ihn nicht auf.
      */
     fun skillsFor(topic: AnimationType, unlocked: Set<String>): List<String> {
         val host = hostNodeFor(topic) ?: return emptyList()
@@ -57,8 +56,7 @@ object SkillRepertoire {
                 node.id != host &&
                     node.motif != null &&
                     node.id in unlocked &&
-                    host in AnimationTree.fallbackChain(node.id) &&
-                    !AvatarActivityPlans.supportsContextualExecution(node)
+                    host in AnimationTree.fallbackChain(node.id)
             }
             .map { it.id }
     }

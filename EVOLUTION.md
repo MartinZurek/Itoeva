@@ -1081,33 +1081,34 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   von `DockScreen.runRoutine`, `PlayScene`, `RoutineStep` und `PlayEffects` ausgefuehrt wird.
   `ReactionTrigger` behaelt den exakten Skillbaum-Knoten eines Reminders bis zu dieser Entscheidung.
 - **Fussball als vertikaler Schnitt:** `sport/ballsport`, `dribbling` und `schuss` werden anhand
-  von aktuellem `PlayScene.Place`, echten Freischaltungen und dem bereits vorhandenen Avatar-Level
-  konkretisiert. Auf Sportplatz, Park und Wiese bleibt die Handlung lokal; aus ungeeigneten
-  Innenraeumen verwendet sie den bestehenden `GoToPlace(SPORT)`-Schritt und damit den sichtbaren
-  Weg statt eines Teleports. Ein Anfaenger zeigt nur Ballkontakt; freigeschaltetes Dribbling fuegt
-  erkennbare Dribbling-Sequenzen hinzu; nur ein freigeschalteter Schuss darf `AIM`/`KICK` erzeugen.
-  Hoehere Avatar-Level verlaengern ausschliesslich bereits gelernte Faehigkeiten und schalten keine
-  Knoten heimlich frei.
+  von aktuellem `PlayScene.Place` und echten Freischaltungen konkretisiert. Auf Sportplatz, Park
+  und Wiese bleibt die Handlung lokal; aus ungeeigneten Innenraeumen verwendet sie den bestehenden
+  `GoToPlace(SPORT)`-Schritt und damit den sichtbaren Weg statt eines Teleports. Ein Anfaenger zeigt
+  nur Ballkontakt; freigeschaltetes Dribbling fuegt eine erkennbare Dribbling-Sequenz hinzu; nur ein
+  freigeschalteter Schuss darf `AIM`/`KICK` erzeugen. Avatar-Level wird bewusst noch NICHT fuer
+  Varianten benutzt: Welche Level welche Ablaufe freischalten, ist in `Tagesablauf.md` weiterhin
+  eine `OPEN DECISION` und wird durch diesen Schnitt nicht vorweggenommen.
 - **Laufende Weltaktivitaet:** Eine ausgewaehlte Ballsport-Handlung wird im bereits vorhandenen
   `AvatarActivityBus` als aktuelle Aktivitaet gesetzt. Damit kann ein weiterer Stufe-3-Skill an
   eine laufende Ballsport-Aktivitaet anschliessen; der Zustand bleibt sitzungsgebunden und laeuft
   wie zuvor nach fuenf Minuten ab, statt als zweite Persistenzschicht gespeichert zu werden.
 - **Rueckwaertskompatibilitaet:** Andere Skillbereiche behalten Claudes bisherigen
-  `SkillRepertoire`-Flourish-Weg. Nur Knoten, die bereits kontextuell in eine Routine uebersetzt
-  werden, sind dort ausgeschlossen, damit derselbe Skill nicht zusaetzlich als zufaellige
-  Einzelanimation ein zweites Mal erscheint. Die generische `requestedTopic`-Logik bleibt der
-  Rueckfall fuer alle nicht unterstuetzten Intents.
+  `SkillRepertoire`-Flourish-Weg. Auch kontextuell aufloesbare Fussballknoten bleiben im autonomen
+  PERFORM-Repertoire sichtbar, solange dieser Pfad keinen exakten Skill-Intent besitzt. Eine
+  Doppelung entsteht nicht: Der exakte Reminder-/Skill-Pfad fuehrt die kontextuelle Routine aus und
+  kehrt davor zurueck, statt danach noch `SkillRepertoire.pick` aufzurufen. Die generische
+  `requestedTopic`-Logik bleibt der Rueckfall fuer alle nicht unterstuetzten Intents.
 - **Spezies:** Im ersten Fussball-Schnitt bewusst kein Entscheidungsfaktor. Die vorhandenen
   Speziesanimationen werden weiterhin von `runRoutine` verwendet, aber es existiert noch keine
   belegte Produktregel, nach der eine Spezies andere Fussballfaehigkeiten besitzen darf als eine
   andere. Eine solche Regel waere eine gesonderte Produktentscheidung.
 - **Tests:** `AvatarActivityPlansTest` prueft lokale Park-Ausfuehrung, sichtbaren Wechsel aus einem
-  ungeeigneten Innenraum, Freischalt-Gating fuer Dribbling und Schuss sowie die Regel, dass ein
-  hoeheres Avatar-Level nur bereits gelernte Faehigkeiten erweitert. Bestehende
-  `SkillRepertoire`-Tests schuetzen die unveraenderte Rueckfalllogik der uebrigen Bereiche.
+  ungeeigneten Innenraum sowie striktes Freischalt-Gating fuer Dribbling und Schuss. Ein eigener
+  Regressionstest in `SkillRepertoireTest` schuetzt, dass diese Unlocks im autonomen MOVE-Alltag
+  weiterhin sichtbar bleiben. Level-Schwellen werden ausdruecklich nicht getestet oder erfunden.
 - **Daten und Migration:** Keine Schema-, Migration- oder neue Preference-Aenderung. Verwendet
-  werden ausschliesslich bestehende Freischaltungen, XP/Level, `PlayScene.Place` und der
-  sitzungsgebundene `AvatarActivityBus`.
+  werden ausschliesslich bestehende Freischaltungen, `PlayScene.Place` und der sitzungsgebundene
+  `AvatarActivityBus`.
 - **Ausstehende Geraetepruefung:** Die objektiven Auswahlregeln sind automatisiert pruefbar; ob
   sich Anfaenger, Dribbling und Schuss beim Zuschauen deutlich genug voneinander unterscheiden,
   muss zusaetzlich am Geraet beurteilt werden.
