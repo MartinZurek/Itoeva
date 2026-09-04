@@ -230,6 +230,227 @@ class AvatarActivityPlansTest {
         assertTrue(footballPhases(unlocked).contains(PlayEffects.FootballPhase.KICK))
     }
 
+    // ================= Zweiter Schnitt: Kraft & Ausdauer =================
+
+    private fun strength(place: PlayScene.Place, unlocked: Set<String>, dropped: String) =
+        AvatarActivityPlans.resolve(
+            current = null,
+            dropped = node(dropped),
+            context = ActivityContext(place = place, unlockedNodeIds = unlocked)
+        )
+
+    private fun phases(resolved: ResolvedActivity?): List<PlayEffects.TrainingPhase> =
+        resolved?.routine?.steps.orEmpty()
+            .filterIsInstance<RoutineStep.Training>()
+            .map { it.phase }
+
+    /**
+     * Die Basis darf jeder sehen - sonst waere ein Reminder auf "Kraft & Ausdauer" fuer einen
+     * Anfaenger folgenlos. Gehoben wird deshalb aber noch lange nicht.
+     */
+    @Test
+    fun `ohne Freischaltung waermt er nur auf und klingt aus`() {
+        val resolved = strength(PlayScene.Place.SPORT, emptySet(), "sport/kraft-ausdauer")
+        assertEquals(
+            listOf(PlayEffects.TrainingPhase.WARM_UP, PlayEffects.TrainingPhase.REST),
+            phases(resolved)
+        )
+    }
+
+    /** Erst der echte Knoten bringt das Heben - nicht ein Level, nicht die Spezies. */
+    @Test
+    fun `Heben erscheint erst nach echter Freischaltung`() {
+        val ohne = strength(
+            PlayScene.Place.SPORT,
+            setOf("sport", "sport/kraft-ausdauer"),
+            "sport/kraft-ausdauer"
+        )
+        assertFalse(PlayEffects.TrainingPhase.LIFT in phases(ohne))
+
+        val mit = strength(
+            PlayScene.Place.SPORT,
+            setOf("sport", "sport/kraft-ausdauer", "sport/kraft-ausdauer/heben"),
+            "sport/kraft-ausdauer"
+        )
+        assertEquals(
+            listOf(
+                PlayEffects.TrainingPhase.WARM_UP,
+                PlayEffects.TrainingPhase.LIFT,
+                PlayEffects.TrainingPhase.REST
+            ),
+            phases(mit)
+        )
+    }
+
+    /**
+     * Der Abschluss haengt an keiner Freischaltung: Aufwaermen ohne Ausklang waere ein Stumpf -
+     * man saehe jemanden anfangen und dann abbrechen.
+     */
+    @Test
+    fun `der Ausklang kommt in jeder Ausbaustufe`() {
+        for (unlocked in listOf(
+            emptySet<String>(),
+            setOf("sport/kraft-ausdauer"),
+            setOf("sport/kraft-ausdauer", "sport/kraft-ausdauer/heben")
+        )) {
+            val resolved = strength(PlayScene.Place.SPORT, unlocked, "sport/kraft-ausdauer")
+            assertEquals(
+                "Ausklang fehlt bei $unlocked",
+                PlayEffects.TrainingPhase.REST,
+                phases(resolved).last()
+            )
+        }
+    }
+
+    /** Wiese und Park taugen genauso wie der Sportplatz - kein Ortswechsel, kein Teleport. */
+    @Test
+    fun `im Park wird ohne Ortswechsel trainiert`() {
+        val resolved = strength(PlayScene.Place.PARK, emptySet(), "sport/kraft-ausdauer")
+        assertTrue(
+            resolved?.routine?.steps.orEmpty().none { it is RoutineStep.GoToPlace }
+        )
+    }
+
+    /** Drinnen fuehrt der sichtbare Weg hinaus, statt Hanteln ins Wohnzimmer zu zaubern. */
+    @Test
+    fun `aus der Wohnung geht er sichtbar zum Sportplatz`() {
+        val resolved = strength(PlayScene.Place.LIVING, emptySet(), "sport/kraft-ausdauer")
+        assertEquals(
+            RoutineStep.GoToPlace(PlayScene.Place.SPORT),
+            resolved?.routine?.steps?.first()
+        )
+    }
+
+    /** Das Blatt "heben" ist eine Einlage - es beginnt seine Beschaeftigung mit. */
+    @Test
+    fun `das Blatt heben loest ebenfalls kontextuell auf`() {
+        val resolved = strength(
+            PlayScene.Place.SPORT,
+            setOf("sport/kraft-ausdauer", "sport/kraft-ausdauer/heben"),
+            "sport/kraft-ausdauer/heben"
+        )
+        assertEquals("sport/kraft-ausdauer", resolved?.plan?.resultingActivity)
+        assertTrue(PlayEffects.TrainingPhase.LIFT in phases(resolved))
+    }
+
+    /**
+     * Beide Schnitte haengen unter `sport`, dessen eingebauter Typ MOVE ist - der Baum sagt es
+     * bereits, hier wird kein eigener Typ erfunden.
+     */
+    @Test
+    fun `beide Schnitte melden das Thema ihrer Hauptgruppe`() {
+        val ball = AvatarActivityPlans.resolve(
+            null, node("sport/ballsport"),
+            ActivityContext(PlayScene.Place.SPORT, setOf("sport/ballsport"))
+        )
+        val kraft = strength(PlayScene.Place.SPORT, setOf("sport/kraft-ausdauer"), "sport/kraft-ausdauer")
+        assertEquals(com.notime.glyphcore.data.AnimationType.MOVE, ball?.topic)
+        assertEquals(com.notime.glyphcore.data.AnimationType.MOVE, kraft?.topic)
+    }
+
+    // ================= Einlage in eine laufende Beschaeftigung =================
+
+    /**
+     * `planFor` sagt es bereits: Laeuft der Wirt schon, kommt nur ein `Flourish` und kein `Begin`.
+     * Die Ausfuehrung hat das lange ignoriert und trotzdem Hinweg, Anker und Basisphase
+     * vorangestellt - wer beim Ballspielen ein Dribbling bekam, sah ihn erneut hinlaufen und den
+     * Ball erstmals beruehren. Genau das soll nicht mehr passieren.
+     */
+    @Test
+    fun `ein Dribbling in laufenden Ballsport faengt nicht von vorn an`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = running("sport/ballsport"),
+            dropped = node("sport/ballsport/dribbling"),
+            context = ActivityContext(
+                PlayScene.Place.SPORT,
+                setOf("sport/ballsport", "sport/ballsport/dribbling")
+            )
+        )
+        val steps = resolved?.routine?.steps.orEmpty()
+        assertTrue("kein neuer Hinweg", steps.none { it is RoutineStep.GoToPlace })
+        assertFalse(
+            "keine erneute Ballberuehrung",
+            steps.filterIsInstance<RoutineStep.Football>()
+                .any { it.phase == PlayEffects.FootballPhase.TOUCH }
+        )
+        assertTrue(
+            "das Dribbling selbst kommt",
+            steps.filterIsInstance<RoutineStep.Football>()
+                .any { it.phase == PlayEffects.FootballPhase.DRIBBLE }
+        )
+    }
+
+    /** Dieselbe Regel bei Kraft & Ausdauer - sie liegt gemeinsam, nicht zweimal. */
+    @Test
+    fun `ein Heben in laufendes Training faengt nicht von vorn an`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = running("sport/kraft-ausdauer"),
+            dropped = node("sport/kraft-ausdauer/heben"),
+            context = ActivityContext(
+                PlayScene.Place.SPORT,
+                setOf("sport/kraft-ausdauer", "sport/kraft-ausdauer/heben")
+            )
+        )
+        assertEquals(listOf(PlayEffects.TrainingPhase.LIFT), phases(resolved))
+    }
+
+    /**
+     * Ohne laufende Beschaeftigung bleibt der volle Ablauf - die Abkuerzung gilt nur fuer das
+     * Einschieben, nicht fuer den Anfang.
+     */
+    @Test
+    fun `ohne laufende Beschaeftigung bleibt der volle Ablauf`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = null,
+            dropped = node("sport/kraft-ausdauer/heben"),
+            context = ActivityContext(
+                PlayScene.Place.SPORT,
+                setOf("sport/kraft-ausdauer", "sport/kraft-ausdauer/heben")
+            )
+        )
+        assertEquals(
+            listOf(
+                PlayEffects.TrainingPhase.WARM_UP,
+                PlayEffects.TrainingPhase.LIFT,
+                PlayEffects.TrainingPhase.REST
+            ),
+            phases(resolved)
+        )
+    }
+
+    /**
+     * Ein Impuls fuer eine NICHT freigeschaltete Faehigkeit gaebe als reine Einlage eine Routine
+     * ohne einen einzigen Schritt. Dann ist der volle Ablauf richtig - er zeigt wenigstens die
+     * Basis.
+     */
+    @Test
+    fun `eine ungelernte Einlage faellt auf den vollen Ablauf zurueck`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = running("sport/kraft-ausdauer"),
+            dropped = node("sport/kraft-ausdauer/heben"),
+            context = ActivityContext(PlayScene.Place.SPORT, setOf("sport/kraft-ausdauer"))
+        )
+        assertEquals(
+            listOf(PlayEffects.TrainingPhase.WARM_UP, PlayEffects.TrainingPhase.REST),
+            phases(resolved)
+        )
+    }
+
+    /** Die Gipfel-/Leiter-/Fahnen-Blaetter bleiben beim bisherigen Reaktionsweg. */
+    @Test
+    fun `die uebrigen Kraft Blaetter bleiben ausserhalb des Schnitts`() {
+        for (id in listOf(
+            "sport/kraft-ausdauer/summit",
+            "sport/kraft-ausdauer/ladder",
+            "sport/kraft-ausdauer/flag"
+        )) {
+            assertNull(
+                id,
+                strength(PlayScene.Place.SPORT, setOf("sport/kraft-ausdauer", id), id)
+            )
+        }
+    }
+
     @Test
     fun `Basketball bleibt ausserhalb des Fussball Vertikalschnitts`() {
         assertNull(

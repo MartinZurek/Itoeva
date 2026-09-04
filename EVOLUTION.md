@@ -1065,6 +1065,38 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   `OPEN DECISION`. Der naechste sinnvolle Hebel ist im Lernjournal (`DAILY_LIFE_LEARNING.md`)
   vermerkt.
 
+### 2026-09-04 - Zweiter Schnitt nach demselben Muster: Kraft & Ausdauer
+
+Der Fussball-Schnitt hat die Frage beantwortet, WIE eine Absicht zu einer sichtbaren Handlung
+wird. Dieser Eintrag beantwortet die Anschlussfrage: Traegt das Muster einen zweiten Fall, ohne
+dass daneben ein zweites System entsteht?
+
+Es traegt. `AvatarActivityPlans.resolve` bleibt der einzige Eingang; dazugekommen ist eine
+Verzweigung nach der Wirtsbeschaeftigung und ein zweiter Schritt-Bauer. Kein neuer Zustand, kein
+neuer Bus, keine zweite Entscheidungsschicht.
+
+**Was dabei NICHT gebaut wurde, und warum das der Punkt ist:** kein einziger neuer
+`RoutineStep`, keine neue Phase in `PlayEffects`. `TrainingPhase { WARM_UP, LIFT, REST }` und
+`RoutineStep.Training` gab es laengst - `PlayRoutines` benutzt sie in einer MOVE-Routine, und
+`DockScreen.runRoutine` zeichnet sie. Gefehlt hat nur die Verbindung zur Absicht. Wer den
+naechsten Schnitt baut, sollte deshalb zuerst nachsehen, was schon da ist:
+`BasketballPhase`, `MusicPhase`, `PaintingPhase`, `FishingPhase` und `KitePhase` warten
+unangeschlossen.
+
+**Die Regel aus dem Fussball-Schnitt gilt unveraendert weiter:** Die Freischaltung veraendert die
+HANDLUNG, nicht bloss eine Zugabe danach. Ohne `sport/kraft-ausdauer/heben` gibt es kein Heben -
+auf keinem Level, bei keiner Spezies. Erfundene Level-Schwellen bleiben ausgeschlossen, solange
+`Tagesablauf.md` sie offen laesst.
+
+**Eine bewusste Abweichung vom Fussball:** Der Ausklang (`REST`) haengt an keiner Freischaltung.
+Beim Fussball ist `TOUCH` fuer sich schon eine vollstaendige kleine Szene; Aufwaermen ohne
+Ausklang waere dagegen ein Stumpf - man saehe jemanden anfangen und dann abbrechen. Ein Abschluss
+ist kein Koennen.
+
+`LOCAL_FOOTBALL_PLACES` heisst jetzt `LOCAL_SPORT_PLACES`. Die Menge ist unveraendert, nur ihr
+Geltungsbereich - Wiese und Park taugen fuers Ballspielen wie fuers Ueben. Eine zweite, identische
+Menge daneben waere eine Kopie, die auseinanderlaeuft.
+
 ### 2026-09-04 - Reminder werden zu kontextabhaengigen Handlungen: Fussball als erster Schnitt
 
 - **Version:** Protokoll bleibt 0.5. Die Aenderung erweitert das bestehende Verhalten im Spielmodus;
@@ -1127,13 +1159,3 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   verifiziert.
 - Produktname, primäre App-Fassung, finales Spielziel, größere Storystruktur und langfristige
   Ökonomie bleiben **OPEN DECISION**.
-
-### Schlaf & Traeume – exklusiver Nachtzustand
-
-- Schlaf ist nachts exklusiv: Nach dem Hinlegen bleibt der reale Avatar bis zum Morgen im Bett. Die fruehere Routine mit Aufstehen/Umsehen/Wieder-Hinlegen wurde entfernt.
-- Echte Erinnerungen oder ausdrueckliche Nutzeraktionen duerfen Schlaf unterbrechen; autonome Fidgets/Wanderungen nicht.
-- Tageshandlungen werden als kleine semantische `AnimationType`-Erinnerungen gespeichert, nicht als Screenshots oder Videos.
-- Seltene Traumgelegenheiten spielen eine vorhandene Avatar-Reaktion in einer wachsenden, aufsteigenden Traumblase. Die Traumfigur ist nur Projektion; Weltposition und Bettbelegung bleiben unveraendert.
-- `SLEEP` und `MEDICINE` werden nie als Traumerinnerung gespeichert.
-- Spaeter: reichere Erinnerungs-IDs und interaktive Dream-Easter-Eggs. Der Luftballon wird erst an einen echten Ballon-Node/Item angeschlossen; aktuell existiert im Repository noch keiner, deshalb wird kein Parallel-Item erfunden.
-

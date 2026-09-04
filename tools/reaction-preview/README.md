@@ -47,11 +47,41 @@ wird (P15), ist es die Belohnung selbst, die unsichtbar bleibt.
 Die Zahl gehört beim Verbessern von Animationen zuerst angesehen: Sie sagt, **wo** es sich
 lohnt.
 
+## Der zweite Ausgang: `routines.sh`
+
+```
+tools/reaction-preview/routines.sh
+```
+
+Gibt aus, welche `PlayRoutine` ein **kontextueller Skill-Intent** tatsächlich erzeugt — je Ort und
+je Freischaltungsstand:
+
+```
+Anfaenger, Sportplatz -> [Stroll, Training.WARM_UP, Linger(2500), Training.REST, Linger(3000)]
+mit Heben             -> [Stroll, Training.WARM_UP, Linger(4000), Training.LIFT, ...]
+aus dem Wohnzimmer    -> [GoToPlace(SPORT), Stroll, Training.WARM_UP, ...]
+```
+
+Gedacht für die vertikalen Schnitte in `AvatarActivityPlans.resolve` (Fußball, Kraft & Ausdauer,
+und was danach kommt). Man sieht die Schrittfolge, statt sie aus dem Code zu erraten — und vor
+allem sieht man, dass eine **fehlende Freischaltung** die Handlung wirklich verkürzt statt nur
+eine Zugabe wegzulassen.
+
+Braucht drei Zeilen mehr Attrappe als `render.sh`: `PlayTimeLapse` und `PlayWeather` lesen
+`SharedPreferences`, deshalb liegen in `src/AndroidStubs.kt` und `src/AndroidOsStubs.kt` gerade so
+viele Platzhalter, dass es übersetzt. Geprüft wird damit **nicht** die Zeitraffer- oder
+Wetterlogik, nur die Routinen-Entscheidung.
+
+`AvatarActivityBus` bleibt draußen — er hängt an `kotlinx.coroutines` und wird für die Entscheidung
+nicht gebraucht.
+
 ## Grenzen
 
 - Rein rechnerisch. Timing (`holdsMs`) steht nur als Zahl am Rand, die Bewegung selbst sieht
   man als Streifen, nicht als Film.
 - Die Flugbahn der Rakete (`flightOffsetsFor`) verschiebt im Spiel die ganze Sprite-Box. Der
   Bogen zeigt nur die Figur darin.
+- `routines.sh` zeigt die Schrittfolge, nicht ihre Wirkung: Ob `GoToPlace` gut aussieht, sagt
+  erst das Gerät.
 - Kein Ersatz für einen Blick auf das Gerät — aber der Unterschied zwischen „nie gesehen" und
   „als Standbildfolge gesehen" ist größer als der zwischen Bogen und Gerät.
