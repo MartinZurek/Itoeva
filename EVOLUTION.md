@@ -1392,3 +1392,42 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   bleiben Normalisierung, Peak-Grenze, Stille- und Loop-Pruefung ein eigenes Pipeline-Paket in
   NT-055. Ebenso offen bleiben mehrere Varianten je Rolle, ein gemeinsames Leitmotiv, die
   aesthetische Grundsatzfrage und die Lizenzpruefung.
+
+### 2026-09-05 - Draussen wird ein Aufenthalt statt eines Durchgangs
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Reine Verlaengerung vorhandener Ablaeufe -
+  keine neue Requisite, keine neue Animation, keine neue Regel. Ruecknehmbar Zeile fuer Zeile.
+- **BEOBACHTET:** Beim Zusehen wechselte die Musik hoerbar, als die Figur nach draussen ging - und
+  wechselte Sekunden spaeter zurueck. Gemeldet als "die Zeit draussen ist viel zu kurz, man sieht
+  fast nur drinnen, und draussen macht er nichts ausser zum Laden zu laufen".
+- **URSACHE, belegbar:** Der Einkaufsablauf in `PlayRoutines.allFor(DRINK)` enthielt **kein
+  einziges `RoutineStep.Linger`**. Jeder Schritt ging unmittelbar in den naechsten ueber; der Weg
+  zum Laden bestand aus einem `Stroll`, der Laden aus Regal und Kasse im Vorbeigehen, und aus dem
+  Laden fuehrte der Ablauf ohne Rueckweg direkt in die Kueche. Der Arbeitsweg war derselbe Fall in
+  kleiner: ein `Stroll` je Richtung, danach Schnitt.
+- **Warum der vorhandene Test das nicht gefunden hat:** `der Avatar kommt regelmaessig nach
+  draussen` zaehlt, WIE OFT eine Regung unter freien Himmel fuehrt, und war die ganze Zeit gruen.
+  Die Beobachtung betraf die DAUER, und dafuer gab es keine Zusicherung. Der neue Test
+  `wer nach draussen geht, bleibt auch eine Weile draussen` summiert je Ablauf die Verweilzeit,
+  die anfaellt, waehrend der mitgefuehrte Ort draussen liegt, und verlangt mindestens zwoelf
+  Sekunden. Zwoelf ist kein runder Wert, sondern der Abstand zum jetzt kuerzesten Aufenthalt
+  (Arbeitsweg, vierzehn Sekunden).
+- **Spielerwirkung:** Der Einkauf nimmt sich Zeit - stehen bleiben auf dem Hinweg, Suchen am
+  Regal, Ueberlegen mit dem Gefundenen in der Hand, Warten an der Kasse - und geht ueber die
+  Strasse zurueck statt aus dem Laden in die Kueche zu springen. Arbeitswege haben Hin- und
+  Rueckweg mit Aufenthalt. Spaziergaenge, Wald, Wiese und der Block sitzen laenger auf der Bank.
+  Musizieren im Park und Malen auf der Wiese dauern etwa doppelt so lang. Der kuerzeste Aufenthalt
+  draussen liegt bei 14 s, der laengste bei 45 s (Drachensteigen, unveraendert).
+- **Hoerbare Nebenwirkung, beabsichtigt:** Weil die Musikauswahl am Ort haengt, hoert der
+  Rollenwechsel damit auf, ein Aufblitzen zu sein. Der Tagestrack laeuft draussen jetzt lang
+  genug, um als Stueck wahrgenommen zu werden, statt in die Ueberblendung zurueckzufallen.
+- **NICHT geloest, ausdruecklich:** Zwei Punkte derselben Meldung bleiben offen und sind als
+  NT-056 und NT-057 eingetragen. (a) Waehrend eines Ablaufs kann **kein** Besuch stattfinden:
+  `visitPossible()` in `DockScreen.kt` verlangt `!routineRunning`. Da die Figur ausschliesslich
+  innerhalb von Ablaeufen nach draussen kommt, ist "draussen jemanden treffen" derzeit strukturell
+  ausgeschlossen - laengere Ablaeufe verschieben Besuche sogar noch weiter nach hinten. (b) Eine
+  Mindestdauer fuer den dynamischen Zustand selbst gibt es weiterhin nicht; ob sie zur Musik oder
+  zum Zustand gehoert, ist eine offene Entwurfsfrage und soll erst nach der Messung dieser
+  Aenderung am Geraet beantwortet werden.
+- **Nebenbei:** `tools/reaction-preview/tests.sh` fuehrt `PlayRoutineTest` jetzt mit aus - 149
+  statt 129 Tests, weiterhin unter einer Sekunde und ohne Gradle.

@@ -140,6 +140,18 @@ auseinanderlaufen; (d) ob realistische generierte Musik ueber einer 16x16-Welt a
 richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer kommerziellen
 Veroeffentlichung.
 
+**Welt und Tagesablauf, offen:** NT-056 **Begegnung waehrend eines Aufenthalts draussen.**
+`visitPossible()` in `DockScreen.kt` verlangt `!routineRunning`; da die Figur nur innerhalb von
+Ablaeufen nach draussen kommt, kann sie draussen derzeit niemandem begegnen. Die laengeren
+Aussenphasen (2026-09-05) verschieben Besuche sogar weiter nach hinten. Zu klaeren ist, ob ein
+Besuch waehrend eines `RoutineStep.Linger` unter freiem Himmel zugelassen wird und der Ablauf
+dafuer wartet, statt die Figur mitten im Gespraech weiterlaufen zu lassen. · NT-057
+**Mindestdauer eines dynamischen Zustands.** Gemeldet zusammen mit den zu kurzen Aussenphasen.
+Bewusst zurueckgestellt, bis die Wirkung der Verweildauern am Geraet gemessen ist - sonst
+entstuende eine Regel, die nie greift. Offene Entwurfsfrage: Gehoert die Mindestdauer der MUSIK
+(ein Track laeuft mindestens X) oder dem ZUSTAND (eine Aussenphase dauert mindestens X)? Das
+Zweite ist richtiger, greift aber tiefer in `PlayAmbientActivity` ein.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.
@@ -156,4 +168,4 @@ IDs bleiben stabile Referenzen, auch nach dem Verschieben zwischen Top 15 und Fu
 Wird eine Top-15-Aufgabe erledigt, rückt die höchste noch offene Future-Backlog-Aufgabe nach dem
 Hebel-Maßstab oben in die Top 15 nach - die Liste bleibt dadurch dauerhaft auf maximal 15
 Einträge begrenzt. Neue Aufgaben, die während der Arbeit entdeckt werden, kommen mit
-fortlaufender neuer ID (ab NT-056) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
+fortlaufender neuer ID (ab NT-058) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
