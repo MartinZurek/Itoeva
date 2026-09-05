@@ -1065,6 +1065,75 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   `OPEN DECISION`. Der naechste sinnvolle Hebel ist im Lernjournal (`DAILY_LIFE_LEARNING.md`)
   vermerkt.
 
+### 2026-09-04 - Dritter Schnitt, erstmals ausserhalb von `sport`: Musizieren
+
+Zwei Sport-Familien konnten noch dieselbe Familie zweimal sein. Dieser Schnitt beantwortet, was
+die beiden offen lassen mussten: Traegt das Muster auch eine Beschaeftigung mit einem anderen
+Themen-Typ und einem anderen Ortsprofil?
+
+Es traegt. `AvatarActivityPlans.resolve` bleibt der einzige Eingang; dazugekommen sind eine dritte
+Verzweigung und ein dritter Schritt-Bauer (`resolveMusic`).
+
+**Der Beleg liegt im Themen-Typ.** Beide Sport-Familien melden `MOVE`, weil `sport` so angelegt
+ist; Musik meldet `CREATIVITY`, weil `kreativ` so angelegt ist. Der Resolver waehlt den Typ
+nirgends selbst - er liest ihn aus dem Baum ab. Genau das ist der Nachweis, dass hier kein
+zweites Regelwerk neben `AnimationTree` entsteht.
+
+**Erneut kein neuer `RoutineStep`, keine neue Phase.** `PlayEffects.MusicPhase { TUNE, PLAY,
+FINALE }` und `RoutineStep.Music` gab es laengst; `PlayRoutines` benutzt sie sogar bereits in
+einer eigenen CREATIVITY-Routine ("Musizieren im Park"), und `DockScreen.runRoutine` zeichnet den
+Schritt. Die Phase war im Alltag also verbunden - nur nicht mit einer *Absicht*. Diese eine Luecke
+schliesst der Schnitt. Unangeschlossen warten weiterhin `BasketballPhase`, `PaintingPhase`,
+`FishingPhase` und `KitePhase`.
+
+**Eine Freischaltung, mehr wird nicht behauptet.** `TUNE` und `PLAY` bilden zusammen die Basis,
+die auch ohne jeden Knoten vollstaendig ist: Er stimmt und er spielt. `FINALE` erscheint
+ausschliesslich mit tatsaechlich freigeschaltetem `kreativ/musik/singen` - auf keinem Level und
+bei keiner Spezies sonst. Erfundene Level-Schwellen bleiben ausgeschlossen, solange
+`Tagesablauf.md` sie offen laesst.
+
+Warum `PLAY` zur Basis gehoert: Beim Fussball ist `TOUCH` fuer sich eine ganze kleine Szene, beim
+Training braucht `WARM_UP` den Ausklang `REST`. Stimmen allein waere dasselbe Stueck Stumpf - man
+saehe jemanden ein Instrument richten und dann aufhoeren. Das Koennen liegt im Abschluss, den
+`FINALE` mit fuenf statt drei Noten sichtbar macht, nicht darin, ueberhaupt einen Ton zu spielen.
+
+**Eine bewusste Ortsentscheidung, keine abgeleitete Tatsache.** Beim Sport zwingt die Sache selbst
+nach draussen - ein Ball und ein Tor gehoeren nicht ins Wohnzimmer. Ein Instrument braucht dagegen
+nur Platz zum Sitzen, und die Choreografie zeichnet Gitarre, Noten und Buehnenlinie neben dem
+Avatar statt in die Kulisse. `LOCAL_MUSIC_PLACES` umfasst deshalb Park, Wiese, Wohnzimmer und
+Leseecke; Schlafzimmer, Bad, Kueche, Werkstatt und alles Oeffentliche bleiben aussen vor. Von dort
+fuehrt derselbe sichtbare `GoToPlace(PARK)`-Weg hinaus - kein Teleport.
+
+**`drum` und `bolt` bleiben absichtlich aussen vor.** Beide haengen unter `kreativ/musik`, aber die
+vorhandene Choreografie kennt keine Phase, die sie voneinander unterscheiden koennte. Sie als
+Absicht zu fuehren und dann dasselbe zu zeigen wie `singen` waere eine Behauptung ohne Deckung.
+
+**Nebenbefund aus dem Duplikat-Bericht:** `kreativ/musik` und `kreativ/musik/singen` spielten auf
+dem alten Reaktionsweg Bild fuer Bild dasselbe. Der Schnitt macht sie unterscheidbar, ohne eine
+einzige Zeile Reaktionscode anzufassen - dieselbe Beobachtung wie bei `sport/ballsport` in P16,
+nur ueber den Handlungsweg geloest statt ueber neue Motive.
+
+### 2026-09-04 - Die Unit-Tests laufen jetzt auch ohne Gradle und Geraet
+
+Die Werkzeuge in `tools/reaction-preview/` konnten den Code bisher nur uebersetzen und seine
+Ausgabe zeigen. Ob die vorhandenen Tests dazu gruen sind, liess sich lokal gar nicht beantworten -
+die Antwort kam erst Minuten spaeter aus der CI. Damit war jeder Push eine Wette, und genau daran
+sind in diesem Repository schon Befunde entstanden, die vorher haetten auffallen koennen.
+
+`tools/reaction-preview/tests.sh` fuehrt die reinen Kotlin-Unit-Tests jetzt tatsaechlich aus: 94
+Tests aus acht Klassen in unter einer Sekunde, mit JUnit 4 aus Maven Central und demselben
+Kotlin-Compiler, den die Nachbarskripte schon holen. Kein Android, kein Gradle, kein Emulator.
+
+Die Grenze ist ausdruecklich benannt und nicht geraten: Alles, was Android, Room, Compose oder
+einen Emulator braucht, bleibt Sache der CI. Die Liste der ausgefuehrten Klassen steht deshalb
+wortwoertlich im Skript statt als Platzhalter - aus demselben Grund, aus dem `render.sh` seit dem
+Codex-Befund eine ausdrueckliche Dateiliste fuehrt.
+
+Ausserdem stand `tools/reaction-preview/.work/` bisher nicht in `.gitignore`. Das fiel nie auf,
+weil die Werkzeuge nie im Repository selbst ausgefuehrt wurden; beim ersten echten Lauf lagen
+dort der geholte Kotlin-Compiler (~80 MB), JUnit und die uebersetzten Klassen als unversionierte
+Dateien. Jetzt ignoriert.
+
 ### 2026-09-04 - Zweiter Schnitt nach demselben Muster: Kraft & Ausdauer
 
 Der Fussball-Schnitt hat die Frage beantwortet, WIE eine Absicht zu einer sichtbaren Handlung
@@ -1160,6 +1229,247 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - Produktname, primäre App-Fassung, finales Spielziel, größere Storystruktur und langfristige
   Ökonomie bleiben **OPEN DECISION**.
 
+### 2026-09-05 - Der erste Audio-Asset trifft auf ein Prinzip, das es ausschliesst
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Dieser Eintrag entscheidet nichts, er legt
+  eine Entscheidung offen, die bisher unbemerkt getroffen worden waere.
+- **BEOBACHTET:** Die Musik-Pipeline (PR #77, #78) ist in `main` und hat mit
+  „Quiet Lanterns" (PR #82) ihren ersten Track erzeugt: 90 s, 44,1 kHz, stereo, **15,88 MB
+  unkomprimiertes WAV**. PR #82 legt damit `app-sim/src/main/res/raw/` an - **das Verzeichnis
+  existierte bisher nicht, die App hat heute keinen einzigen Audio-Asset.**
+- **BEOBACHTET:** `PlayChime.kt` begruendet in seiner Klassendoku ausdruecklich, warum der Klang
+  der App **gerechnet und nicht abgespielt** wird, mit drei Gruenden: keine Lizenzfrage, es passt
+  zur gerechneten Welt („Ein aufgenommener Klang daneben waere derselbe Bruch wie eine
+  fotografierte Blume in einer Pixel-Kulisse"), und - woertlich - „Kein Asset, keine Groesse im
+  Paket, kein Dekoder". Das ist das klangliche Gegenstueck zu „Prozedural statt gemalt" in
+  `Vision.md`.
+- **BEOBACHTET:** Die Musik-Pipeline ist in `EVOLUTION.md`, `Vision.md`, `Architecture.md` und
+  `NextTasks.md` **an keiner Stelle erwaehnt**. Ihre einzige Dokumentation ist `music/README.md`.
+  Laut `AGENTS.md` gilt bei Widerspruechen `EVOLUTION.md` - und dort steht zu diesem Thema nichts,
+  woraus sich der Widerspruch aufloesen liesse.
+- **ABGELEITET:** Ein Merge von PR #82 wuerde damit zwei Dinge zugleich tun, von denen nur eines
+  sichtbar ist: einen Track hinzufuegen, und stillschweigend entscheiden, dass Itoeva kuenftig
+  Audio als Asset ausliefert. Genau das schliesst dieses Dokument fuer `OPEN DECISION`-Punkte aus.
+- **GEMESSEN (2026-09-05, an genau dieser Datei):** Die Groesse ist kein Naturgesetz des Tracks,
+  sondern eine Folge des gewaehlten Formats. Alle Werte nachgerechnet, alle Ergebnisdateien
+  zurueckgelesen und auf 90,0 s geprueft:
+
+  | Format | Groesse | Anteil am WAV |
+  |---|---|---|
+  | WAV 44,1 kHz stereo (heute) | 15,88 MB | 100 % |
+  | FLAC 44,1 kHz stereo (verlustfrei) | 3,48 MB | 21,9 % |
+  | **Vorbis 44,1 kHz stereo** | **1,06 MB** | **6,7 %** |
+  | Opus 48 kHz stereo | 1,37 MB | 8,6 % |
+  | Vorbis 44,1 kHz mono | 0,63 MB | 4,0 % |
+  | Vorbis 22,05 kHz mono | 0,41 MB | 2,6 % |
+
+- **ABGELEITET (Formatwahl ist nicht frei):** `:app-sim` hat `minSdk = 26`. Vorbis in `.ogg` wird
+  seit den ersten Android-Versionen unterstuetzt; **Opus in `.ogg` erst ab Android 10 (API 29)**
+  und faellt damit fuer API 26-28 aus, obwohl es hier kaum kleiner waere. Das ist vor einer
+  Festlegung gegen die aktuelle Android-Formattabelle zu pruefen und nicht aus diesem Eintrag zu
+  uebernehmen.
+- **GEMESSEN (Stereo ist echt):** Kanalkorrelation L/R 0,870, Differenz-RMS 0,0385 gegen
+  Signal-RMS 0,0753. Der Track ist nicht breitgezogenes Mono - eine Mono-Ablage naehme
+  tatsaechlich Breite weg und ist deshalb eine Klangentscheidung, keine reine Sparmassnahme.
+  Spitzenpegel 0,782, also ohne Uebersteuerung.
+- **ENTSCHIEDEN am 2026-09-05 (Format):** Ausgeliefert wird **Ogg/Vorbis**, 44,1 kHz, stereo.
+  `manifest.json` steht auf `output_format: "ogg"`, `generate_music.py` schreibt es direkt.
+  Nicht Opus (minSdk 26), nicht Mono (das Stereobild ist echt), nicht FLAC (verlustfrei ohne
+  Empfaenger unter einer 16x16-Figur).
+- **ENTSCHIEDEN am 2026-09-05 (Ort der Umwandlung):** In der **Pipeline**, nicht im Build. Die
+  Provenienz-Kette lebt davon, dass das Gehoerte das Ausgelieferte ist - `music/README.md` sagt
+  "Erst der Merge des generierten PR macht ihn zum versionierten Spiel-Asset"; ein
+  nachtraeglich neu kodierender Build wuerde etwas ausliefern, das niemand gehoert hat. Das
+  uebliche Gegenargument - ein verlustfreies Archiv fuer spaetere Neukodierung - greift hier
+  nicht: Das Manifest pinnt Seed, Modell und Runtime-Commit, eine Neuerzeugung kostet zwei
+  Minuten und liefert dasselbe. Ein WAV-Archiv waere die Sicherung von etwas jederzeit
+  Rekonstruierbarem.
+- **ENTSCHIEDEN am 2026-09-05 (die Grenze der Ausnahme):** Audio als Asset ist zugelassen, aber
+  begrenzt: **Alles, was die Welt oder das Wesen selbst von sich gibt, bleibt gerechnet. Nur der
+  Score darf eine Datei sein.** Eine Filmmusik war noch nie aus demselben Material wie das
+  Buehnenbild; die Stimme einer Figur schon. `PlayChime` behaelt damit sein Prinzip vollstaendig
+  fuer den Bereich, in dem es traegt, und Musik bekommt eine benannte Spur statt einer Ausnahme
+  ohne Rand. Wer spaeter Schritte, Tueren oder Wetter als Sample ergaenzen will, verletzt sie.
+- **OPEN DECISION - weiterhin NICHT entschieden:**
+  1. Ob **realistische** generierte Musik ueber einer 16x16-Welt aesthetisch richtig ist. Das ist
+     der eigentliche Kern von `PlayChime`s zweitem Grund und laesst sich nicht wegkomprimieren -
+     es ist eine Hoerentscheidung, keine technische.
+  2. Wie viele Tracks langfristig vorgesehen sind. Die Rechnung beantwortet die Frage allerdings
+     teilweise selbst: Vier Tageszeiten mal drei Stimmungen waeren als WAV rund 191 MB und damit
+     nicht mehr auslieferbar, als Vorbis rund 13 MB.
+  3. Die Lizenzlage. `music/README.md` haelt fest, dass Stability-Community-Lizenz und
+     Gemma-Terms **vor einer kommerziellen Veroeffentlichung erneut zu pruefen** sind. Solange
+     `PLAY_STORE.md` existiert, ist das ein offener Punkt und keine Formalie.
+- **Umgesetzt:** Die Musikschicht `PlayMusic` spielt den Track als Schleife, solange der
+  Spielmodus sichtbar ist - standardmaessig AUS, nie ueber fremdem Ton, nicht bei stumm
+  gestelltem Geraet, ohne Audio-Focus zu greifen. Nachts wird **nicht** gesperrt (anders als bei
+  `PlaySound`): Musik laeuft nur, solange jemand den eingeschalteten Bildschirm ansieht und sie
+  eingeschaltet hat, und ein Abendtrack, den man abends nicht hoeren darf, waere sinnlos.
+- **Bewusst ueber Namen statt `R.raw` aufgeloest:** Die Audiodatei kommt aus einem eigenen
+  erzeugten Pull Request und ist kein fester Bestandteil des Quellbaums. Ein direkter Verweis
+  wuerde jeden Build brechen, in dem noch kein Track gemergt ist; so bleibt die Welt still, bis
+  es etwas zu hoeren gibt. Arbeitspaket: NT-055.
+
+### 2026-09-05 - Musik richtet sich nach Tageszeit und Ort; der Schalter bleibt der des Nutzers
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. `ENTSCHIEDEN` durch Produktvorgabe, im Code
+  umgesetzt und mit Tests belegt.
+- **Die Trennung, um die es geht:** *Die Welt entscheidet, WAS passen wuerde. Der Nutzer
+  entscheidet, OB ueberhaupt Musik laufen darf.* Beides liegt jetzt in getrennten Dateien.
+  `MusicResolver` (in `PlayMusicPlan.kt`) kennt weder die Einstellung noch einen Player noch
+  Android; `PlayMusic` fragt ihn **erst**, wenn der Nutzer Musik erlaubt hat. Ein Szenenwechsel
+  kann Musik deshalb nicht eigenmaechtig einschalten - der Resolver kennt den Schalter nicht
+  einmal.
+- **BEOBACHTET (Persistenz war bereits richtig):** `SettingsCatalog.MusicEnabled` liegt in
+  SharedPreferences, und die einzige schreibende Stelle ist der Schalter in den Einstellungen.
+  `stop()` fasst die Einstellung nicht an. Die Anforderung "die letzte Nutzerentscheidung
+  ueberlebt App-Start, Moduswechsel, Szenen- und Tageszeitwechsel" war damit schon erfuellt;
+  neu ist nur, dass Tests das jetzt festhalten statt es zu unterstellen. **Nicht neu gebaut.**
+- **Sparse und hierarchisch statt Matrix:** Vier Tageszeiten mal sechzehn Orte waeren
+  vierundsechzig Felder, von denen fast alle dasselbe enthielten, und jeder neue Ort verlangte
+  vier neue Entscheidungen. Stattdessen liefert `MusicResolver.candidates` je Lage eine kurze,
+  **vom Spezifischsten zum Allgemeinsten** geordnete Liste von Rollen; `resolve` nimmt die erste,
+  zu der es einen ausgelieferten Track gibt. Fehlt alles, bleibt es still. Ein neuer Track wird
+  dadurch gehoert, sobald er gemergt ist, ohne dass eine Zeile Entscheidungslogik zu aendern ist.
+- **Rollen statt Dateinamen:** `MusicRole` fuehrt `main_day_background`,
+  `home_evening_background`, `morning_background`, `sport_background` und `dream_background` -
+  dieselben Namen wie das Feld `role` im Manifest, dazu den passenden `android_resource`.
+  `generate_music.py` verlangt `role` jetzt als Pflichtfeld, prueft es gegen dieselbe Liste und
+  schreibt es in die Provenienz. Ein Tippfehler scheitert damit beim Erzeugen statt sich als
+  Stille zu zeigen.
+- **Der heutige Stand ist ausdruecklich unvollstaendig, und das ist richtig so:** Es gibt genau
+  einen Track (`HOME_EVENING`). Morgen und Mittag ergeben deshalb **Stille**. Ein Abendstueck den
+  ganzen Tag zu spielen waere schlechter als nichts - und es waere der bequeme Fehler, den ein
+  Rueckfall "irgendwas ist besser als Stille" genau hier erzeugt haette. Nachts gibt es aus
+  demselben Grund keinen Rueckfall auf den Tages-Track.
+- **Kein Zerhacken durch kurzfristige Bewegung:** `PlayMusic.apply` tut nichts, solange sich die
+  aufgeloeste ROLLE nicht aendert. Ein Avatar, der zwischen Kueche und Wohnzimmer wechselt, laesst
+  die Musik weiterlaufen. Ein echter Trackwechsel ist heute ein harter Schnitt und liegt in genau
+  einer Methode (`switchTo`); eine Ueberblendung waere derzeit Architektur fuer ein Verhalten, das
+  mit einem einzigen Track gar nicht auftreten kann. Naechster Schritt, siehe NT-055.
+- **Vorbereitet, aber NICHT erzeugt:** `main-day-01` / "Lantern Streets" steht mit Prompt und
+  Manifest-Eintrag bereit - japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, rund 82 BPM,
+  warme Rhodes-Akkorde, staubiger Boom-Bap-Groove, dezente pentatonische Faerbung. Der Prompt
+  beschreibt **Eigenschaften und Instrumente**, keinen Kuenstler und kein Stueck, wie es
+  `music/README.md` verlangt. Erzeugt wird er erst nach dieser Arbeit.
+- **Fehler behoben, der noch nicht sichtbar war:** `app-sim` baut Release mit
+  `isShrinkResources = true`. Da die Tracks nur ueber ihren Namen gesucht werden, gab es keine
+  statische Referenz - der Schrumpfer haette sie entfernen duerfen, und die Musik waere
+  ausgerechnet im signierten Release still gewesen. Im Debug faellt das nie auf, und die CI baut
+  kein geschrumpftes Release (der Job "Release-Torwaechter beisst" prueft nur, dass
+  `bundleRelease` OHNE Keystore scheitert). `app-sim/src/main/res/raw/keep.xml` haelt jetzt
+  `@raw/itoeva_*` fest - bewusst mit Platzhalter, damit kuenftige Tracks nicht vergessen werden.
+- **Weiterhin OPEN DECISION:** ob realistische generierte Musik ueber einer 16x16-Welt
+  aesthetisch richtig ist, und die Lizenzpruefung vor einer kommerziellen Veroeffentlichung.
+
+### 2026-09-05 - Zwei Tracks werden zu einem sanften Zustandswechsel
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Kleine, ruecknehmbare Verfeinerung der am
+  selben Tag entschiedenen Rollen-Architektur; keine neue Musikrolle und kein neues Asset.
+- **BEOBACHTET:** Seit PR #89 liegen nicht mehr einer, sondern zwei Tracks im Paket:
+  `HOME_EVENING` / Quiet Lanterns und `MAIN_DAY` / Lantern Streets. README, Manifest-Kommentar,
+  Tests und KDoc beschrieben noch den Zustand vor diesem Merge. Vor allem war der als "spaeter"
+  dokumentierte harte Rollenwechsel damit erstmals wirklich erreichbar.
+- **Spielerwirkung:** Ein echter Rollenwechsel bricht den bisherigen Track nicht mehr ab. Alter
+  und neuer Player laufen vier Sekunden nebeneinander und folgen einer Equal-Power-Kurve; dadurch
+  bleibt die wahrgenommene Energie in der Mitte erhalten. Gleiche Rollen starten weiterhin nicht
+  neu. Wird die Lage waehrend der Ueberblendung erneut gewechselt, beginnt der naechste Verlauf
+  bei der gerade hoerbaren Lautstaerke statt wieder auf die Ziellautstaerke zu springen. Die
+  Nutzerentscheidung und alle bisherigen Audio-Sperren bleiben unveraendert.
+- **Aktivitaet statt Kulissenbehauptung:** Ein kuenftiger `SPORT`-Track steht nur dann vor dem
+  Tagestrack, wenn die Figur am Sportplatz tatsaechlich `MOVE` ausfuehrt. Der Ort allein reicht
+  nicht mehr. `DockScreen.currentTopic` existierte bereits und wird nur an den kleinen
+  `MusicContext` durchgereicht; kein zweiter Aktivitaetszustand entsteht.
+- **Abendliche Natur:** Park, Wald und Wiese folgen abends nun wie der bereits enthaltene Teich
+  der ruhigen Abendrolle. Stadt, Strasse, Laden und Arbeitsplatz bleiben beim ausklingenden
+  Tagestrack. Das entspricht der vorhandenen Weltsemantik: Wald, Wiese und Teich lassen keine
+  zufaelligen Besucher zu und sind Rueckzugsorte; die Stadt und Strasse sind Wege und Begegnungs-
+  raeume.
+- **Nicht stillschweigend geloest:** Die beiden erzeugten Ogg-Dateien wurden nicht nachbearbeitet.
+  Die technische Analyse ergab rund 6 LU Lautheitsunterschied, einen True Peak ueber 0 dB beim
+  Tagestrack sowie lange leise Passagen und keine belegte nahtlose Loop-Grenze beim Abendtrack.
+  Weil generierte Binaerdateien nur ueber ihren vorgesehenen Prozess veraendert werden duerfen,
+  bleiben Normalisierung, Peak-Grenze, Stille- und Loop-Pruefung ein eigenes Pipeline-Paket in
+  NT-055. Ebenso offen bleiben mehrere Varianten je Rolle, ein gemeinsames Leitmotiv, die
+  aesthetische Grundsatzfrage und die Lizenzpruefung.
+
+### 2026-09-05 - Draussen wird ein Aufenthalt statt eines Durchgangs
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Reine Verlaengerung vorhandener Ablaeufe -
+  keine neue Requisite, keine neue Animation, keine neue Regel. Ruecknehmbar Zeile fuer Zeile.
+- **BEOBACHTET:** Beim Zusehen wechselte die Musik hoerbar, als die Figur nach draussen ging - und
+  wechselte Sekunden spaeter zurueck. Gemeldet als "die Zeit draussen ist viel zu kurz, man sieht
+  fast nur drinnen, und draussen macht er nichts ausser zum Laden zu laufen".
+- **URSACHE, belegbar:** Der Einkaufsablauf in `PlayRoutines.allFor(DRINK)` enthielt **kein
+  einziges `RoutineStep.Linger`**. Jeder Schritt ging unmittelbar in den naechsten ueber; der Weg
+  zum Laden bestand aus einem `Stroll`, der Laden aus Regal und Kasse im Vorbeigehen, und aus dem
+  Laden fuehrte der Ablauf ohne Rueckweg direkt in die Kueche. Der Arbeitsweg war derselbe Fall in
+  kleiner: ein `Stroll` je Richtung, danach Schnitt.
+- **Warum der vorhandene Test das nicht gefunden hat:** `der Avatar kommt regelmaessig nach
+  draussen` zaehlt, WIE OFT eine Regung unter freien Himmel fuehrt, und war die ganze Zeit gruen.
+  Die Beobachtung betraf die DAUER, und dafuer gab es keine Zusicherung. Der neue Test
+  `wer nach draussen geht, bleibt auch eine Weile draussen` summiert je Ablauf die Verweilzeit,
+  die anfaellt, waehrend der mitgefuehrte Ort draussen liegt, und verlangt mindestens zwoelf
+  Sekunden. Zwoelf ist kein runder Wert, sondern der Abstand zum jetzt kuerzesten Aufenthalt
+  (Arbeitsweg, vierzehn Sekunden).
+- **Spielerwirkung:** Der Einkauf nimmt sich Zeit - stehen bleiben auf dem Hinweg, Suchen am
+  Regal, Ueberlegen mit dem Gefundenen in der Hand, Warten an der Kasse - und geht ueber die
+  Strasse zurueck statt aus dem Laden in die Kueche zu springen. Arbeitswege haben Hin- und
+  Rueckweg mit Aufenthalt. Spaziergaenge, Wald, Wiese und der Block sitzen laenger auf der Bank.
+  Musizieren im Park und Malen auf der Wiese dauern etwa doppelt so lang. Der kuerzeste Aufenthalt
+  draussen liegt bei 14 s, der laengste bei 45 s (Drachensteigen, unveraendert).
+- **Hoerbare Nebenwirkung, beabsichtigt:** Weil die Musikauswahl am Ort haengt, hoert der
+  Rollenwechsel damit auf, ein Aufblitzen zu sein. Der Tagestrack laeuft draussen jetzt lang
+  genug, um als Stueck wahrgenommen zu werden, statt in die Ueberblendung zurueckzufallen.
+- **NICHT geloest, ausdruecklich:** Zwei Punkte derselben Meldung bleiben offen und sind als
+  NT-056 und NT-057 eingetragen. (a) Waehrend eines Ablaufs kann **kein** Besuch stattfinden:
+  `visitPossible()` in `DockScreen.kt` verlangt `!routineRunning`. Da die Figur ausschliesslich
+  innerhalb von Ablaeufen nach draussen kommt, ist "draussen jemanden treffen" derzeit strukturell
+  ausgeschlossen - laengere Ablaeufe verschieben Besuche sogar noch weiter nach hinten. (b) Eine
+  Mindestdauer fuer den dynamischen Zustand selbst gibt es weiterhin nicht; ob sie zur Musik oder
+  zum Zustand gehoert, ist eine offene Entwurfsfrage und soll erst nach der Messung dieser
+  Aenderung am Geraet beantwortet werden.
+- **Nebenbei:** `tools/reaction-preview/tests.sh` fuehrt `PlayRoutineTest` jetzt mit aus - 149
+  statt 129 Tests, weiterhin unter einer Sekunde und ohne Gradle.
+
+### 2026-09-05 - Draussen kann man jetzt jemandem begegnen
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Eine Bedingung wird herausgeloest und um
+  einen Fall erweitert; keine neue Figur, kein neues Ereignis, keine neue Animation. Der Besuch
+  selbst (`runVisit`) ist unveraendert.
+- **BEOBACHTET / BELEGT:** Gewuenscht war, dass die Figur draussen auch mal jemanden trifft. Das
+  war **strukturell ausgeschlossen**: `visitPossible()` verlangte `!routineRunning`, und unter
+  freien Himmel kommt die Figur ausschliesslich INNERHALB eines Ablaufs. Uebrig blieb der schmale
+  Rest zwischen zwei Ablaeufen - und auch der nur, wenn der letzte zufaellig an einem Ort endete,
+  an dem man Leute trifft (Wald und Wiese lassen keine Besucher zu). Die laengeren Aussenphasen
+  vom selben Tag haetten die Lage sogar verschlechtert: Sie verschieben jeden Besuch weiter nach
+  hinten.
+- **Warum das niemandem aufgefallen ist:** Der Fehler war nur an einer AUSBLEIBENDEN Sache zu
+  bemerken. Ein Besuch kommt ohnehin nur alle anderthalb bis dreieinhalb Minuten in Frage; ob er
+  ausblieb, weil die Regel ihn verbot oder weil der Wuerfel anders fiel, sieht beim Zusehen
+  identisch aus.
+- **Die Aenderung:** Ein laufender Ablauf sperrt einen Besuch weiterhin - mit genau einer
+  Ausnahme, dem `RoutineStep.Linger` unter freiem Himmel. Das ist die eine Stelle, an der der
+  urspruengliche Einwand ("der Gast streitet sich mit dem Ablauf um dieselbe Figur") nicht greift,
+  weil die Figur dort nichts vorhat ausser dazustehen. Damit sie dem Gast nicht nach zwei Sekunden
+  davonlaeuft, **wartet der Ablauf nach dem Linger auf das Ende des Besuchs**. Drinnen bleibt
+  alles wie zuvor; die Ortsregel (`PlayScene.allowsVisitors`) bleibt uneingeschraenkt vorrangig.
+- **Aus dem Unpruefbaren ins Pruefbare geholt:** Die Bedingung stand als lokale Funktion mitten in
+  einer Compose-Funktion und war nur am Geraet zu beobachten. Sie ist jetzt
+  `PlayVisitWindow.isOpen` - reine Wahrheitswerte, dieselbe Trennung wie zwischen `MusicResolver`
+  und `PlayMusic`: Die Entscheidung wandert heraus, die Wiedergabe bleibt. Sechs neue Tests halten
+  fest, dass das Fenster draussen aufgeht, drinnen nicht, die Ortsregel nicht aushebelt und dass
+  jede einzelne Sperre (sitzt, geht, setzt sich, nicht im Bild, offene Erinnerung) es wieder
+  schliesst. `tests.sh`: 155 statt 149.
+- **NICHT geloest, ausdruecklich:** Wer draussen auf einer BANK sitzt, bekommt weiterhin keinen
+  Besuch - `occupied` sperrt unveraendert. Ausgerechnet dort liegen die laengsten Aussenpausen
+  (zwoelf bis sechzehn Sekunden). "Wer sitzt, faellt heraus" war aber eine bewusste Entscheidung
+  des Besuchstakts und wird nicht nebenbei umgedreht; der Punkt bleibt als NT-056-Rest notiert.
+- **Grenze der Pruefung:** Das Zusammenspiel der beiden Flags ist Compose-Verhalten und offline
+  nicht pruefbar. Geprueft ist die REGEL, nicht der Ablauf um sie herum. Der Beleg muss am Geraet
+  erfolgen - am ehesten daran, dass waehrend eines Aufenthalts auf der Strasse jemand vorbeikommt
+  und die Figur ihm nicht mitten im Gruss davonlaeuft.
+
 ### 2026-09-05 - Schlaf bleibt im Bett; Tageserlebnisse werden zu seltenen Traeumen
 
 - **Version / Evidenzklasse:** Protokoll bleibt 0.5. `BEOBACHTET`: Im bisherigen Nachtablauf
@@ -1197,4 +1507,3 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Dribbling). Reichere Ereignis-IDs, mehrere verfremdete Ausschnitte pro Traum und das gewuenschte
   Luftballon-Easter-Egg bleiben `OPEN DECISION`/Folgeschnitte. Fuer den Ballon wird kein paralleles
   Item-System erfunden; er wird erst an einen echten Ballon-Node/Gegenstand angeschlossen.
-

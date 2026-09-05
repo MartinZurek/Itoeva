@@ -35,3 +35,13 @@ keystore.properties
 
 # Zwischenergebnisse des Kotlin-Compilers
 .kotlin/
+
+# ---- Arbeitsverzeichnis der Offline-Werkzeuge ----
+# `tools/reaction-preview/*.sh` legen hier den geholten Kotlin-Compiler (~80 MB), JUnit und ihre
+# uebersetzten Klassen ab. Alles davon ist nachladbar und gehoert nicht in die Historie. Stand
+# bisher nicht hier, weil die Werkzeuge nie im Repository selbst ausgefuehrt wurden - beim ersten
+# echten Lauf landete prompt der ganze Compiler in einem Commit.
+tools/reaction-preview/.work/
+
+# Python-Bytecode der Musik-Werkzeuge - Ergebnis, keine Quelle.
+__pycache__/

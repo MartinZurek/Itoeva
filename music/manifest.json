@@ -11,13 +11,27 @@
       "role": "home_evening_background",
       "model": "small-music",
       "duration_seconds": 90,
-      "output_format": "wav",
+      "output_format": "ogg",
       "android_resource": "itoeva_home_evening_01",
       "prompt_file": "music/prompts/home-evening-01.txt",
       "steps": 8,
       "cfg_scale": 1.0,
       "seed": 9042026,
-      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits."
+      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26."
+    },
+    {
+      "id": "main-day-01",
+      "title": "Lantern Streets",
+      "role": "main_day_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_main_day_01",
+      "prompt_file": "music/prompts/main-day-01.txt",
+      "steps": 8,
+      "cfg_scale": 1.0,
+      "seed": 5092026,
+      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert."
     }
   ]
 }

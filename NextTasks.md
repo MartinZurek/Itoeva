@@ -127,6 +127,32 @@ größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für Hom
 NT-054 Skills, Level und Jahreszeiten als gewichtete Erweiterungen des in `Tagesablauf.md`
 definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay-Code entsteht.
 
+**Produktentscheidungen, offen:** NT-055 Musik - *Format (Ogg/Vorbis), Ort der Umwandlung
+(Pipeline), die Grenze der Ausnahme (nur der Score) sowie die kontextabhaengige Auswahl ueber
+`MusicRole`/`MusicResolver` sind am 2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.*
+`main-day-01` und `home-evening-01` werden inzwischen ausgeliefert; Rollenwechsel sind seit der
+nachfolgenden Musik-Evolution vier Sekunden lang ueberblendet und Sport setzt Ort plus echte
+MOVE-Beschaeftigung voraus. **Offen bleibt:** (a) Lautheit, True Peak, lange Stille und
+Loop-Grenzen als reproduzierbares Freigabe-Gate der Erzeugungspipeline definieren; (b) mehrere
+gepruefte Varianten je Rolle ermoeglichen, ohne die Weltlogik an Dateinamen zu binden; (c) ein
+gemeinsames musikalisches Leitmotiv festlegen, bevor Morgen-, Sport- und Traumtrack unabhaengig
+auseinanderlaufen; (d) ob realistische generierte Musik ueber einer 16x16-Welt aesthetisch
+richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer kommerziellen
+Veroeffentlichung.
+
+**Welt und Tagesablauf, offen:** NT-056 **Begegnung waehrend eines Aufenthalts draussen** -
+*am 2026-09-05 umgesetzt; siehe EVOLUTION.md.* Die Bedingung ist als `PlayVisitWindow.isOpen`
+aus `DockScreen` herausgeloest und geprueft; ein Besuch ist waehrend eines `RoutineStep.Linger`
+unter freiem Himmel moeglich, und der Ablauf wartet danach auf das Ende des Besuchs. **Offen
+bleibt:** ob ein Besuch auch dann kommen darf, wenn die Figur draussen auf einer Bank SITZT
+(`occupied`) - die laengsten Aussenpausen liegen genau dort, aber "wer sitzt, faellt heraus" war
+eine bewusste Entscheidung und gehoert nicht nebenbei umgedreht. · NT-057
+**Mindestdauer eines dynamischen Zustands.** Gemeldet zusammen mit den zu kurzen Aussenphasen.
+Bewusst zurueckgestellt, bis die Wirkung der Verweildauern am Geraet gemessen ist - sonst
+entstuende eine Regel, die nie greift. Offene Entwurfsfrage: Gehoert die Mindestdauer der MUSIK
+(ein Track laeuft mindestens X) oder dem ZUSTAND (eine Aussenphase dauert mindestens X)? Das
+Zweite ist richtiger, greift aber tiefer in `PlayAmbientActivity` ein.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.
@@ -143,4 +169,4 @@ IDs bleiben stabile Referenzen, auch nach dem Verschieben zwischen Top 15 und Fu
 Wird eine Top-15-Aufgabe erledigt, rückt die höchste noch offene Future-Backlog-Aufgabe nach dem
 Hebel-Maßstab oben in die Top 15 nach - die Liste bleibt dadurch dauerhaft auf maximal 15
 Einträge begrenzt. Neue Aufgaben, die während der Arbeit entdeckt werden, kommen mit
-fortlaufender neuer ID (ab NT-054) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
+fortlaufender neuer ID (ab NT-058) direkt in den Future Backlog, nicht ungeprüft in die Top 15.

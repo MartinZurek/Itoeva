@@ -383,6 +383,80 @@ class PlayRoutineTest {
         }
     }
 
+    /**
+     * Laeuft den Ablauf ab und summiert die Verweilzeit, die dabei UNTER FREIEM HIMMEL anfaellt.
+     *
+     * Gezaehlt wird nur [RoutineStep.Linger]: Wege und Animationen dauern zwar auch, aber ihre
+     * Dauer steht nicht hier, sondern haengt an Bildschirmbreite und Bildrate. Der Linger ist
+     * die einzige Zeitangabe, die dieser Datei tatsaechlich gehoert - und damit die einzige,
+     * ueber die sich hier ehrlich urteilen laesst.
+     */
+    private fun outdoorLingerMillis(startPlace: PlayScene.Place, routine: PlayRoutine): Long {
+        var place = startPlace
+        var millis = 0L
+        for (step in routine.steps) {
+            when (step) {
+                is RoutineStep.GoToPlace -> place = step.place
+                is RoutineStep.Linger -> if (PlayScene.isOutdoors(place)) millis += step.millis
+                else -> Unit
+            }
+        }
+        return millis
+    }
+
+    @Test
+    fun `wer nach draussen geht, bleibt auch eine Weile draussen`() {
+        // **Die Pruefung zur zweiten Haelfte derselben Beobachtung.** Der Test darueber zaehlt,
+        // WIE OFT es nach draussen geht; er war gruen, waehrend beim Zusehen trotzdem fast nur
+        // Zimmer zu sehen waren. Der Grund lag in der Dauer: Der Einkaufsablauf hatte kein
+        // einziges Linger, der Arbeitsweg bestand aus einem Stroll je Richtung. Draussen war
+        // damit ein Uebergang und kein Aufenthalt - hoerbar sogar an der Musik, die beim
+        // Hinausgehen wechselte und Sekunden spaeter zurueckwechselte.
+        //
+        // Zwoelf Sekunden sind kein schoener runder Wert, sondern der Abstand zum kuerzesten
+        // Aufenthalt, den es nach dieser Aenderung noch gibt (der Arbeitsweg mit vierzehn). Wer
+        // die Grenze anhebt, muss also zuerst die Ablaeufe verlaengern - und genau darum geht es.
+        val minimum = 12_000L
+        for (topic in AnimationType.entries) {
+            val start = PlayScene.forTopic(topic)
+            for (routine in PlayRoutines.allFor(topic)) {
+                val visited = routine.steps.filterIsInstance<RoutineStep.GoToPlace>()
+                    .map { it.place } + start
+                if (visited.none { PlayScene.isOutdoors(it) }) continue
+                val outside = outdoorLingerMillis(start, routine)
+                assertTrue(
+                    "Ein Ablauf zu $topic fuehrt nach draussen, verweilt dort aber nur " +
+                        "${outside}ms - das ist ein Durchgang, kein Aufenthalt.",
+                    outside >= minimum
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `der Einkauf besteht nicht nur aus Wegen`() {
+        // Der Ablauf, der die Beobachtung ausgeloest hat, einzeln festgehalten: Es genuegt nicht,
+        // dass er ueberhaupt Pausen hat - sie muessen an den Stellen liegen, an denen ein Einkauf
+        // Zeit kostet. Sonst waere die naechste Fassung wieder ein Regal im Vorbeigehen.
+        val einkauf = PlayRoutines.forTopic(AnimationType.DRINK, needsShopping = true)
+
+        val imLaden = einkauf.steps
+            .dropWhile { !(it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP) }
+            .takeWhile { !(it is RoutineStep.GoToPlace && it.place != PlayScene.Place.SHOP) }
+        assertTrue(
+            "Im Laden wird nichts gesucht - er greift ins Regal und ist wieder draussen",
+            imLaden.filterIsInstance<RoutineStep.Linger>().sumOf { it.millis } >= 15_000L
+        )
+
+        // Der Heimweg fuehrt wieder ueber die Strasse. Vorher ging es aus dem Laden unmittelbar
+        // in die Kueche - der Rueckweg fehlte vollstaendig, obwohl er die Haelfte des Ausflugs ist.
+        val orte = einkauf.steps.filterIsInstance<RoutineStep.GoToPlace>().map { it.place }
+        assertTrue(
+            "Nach dem Laden geht es ohne Rueckweg direkt nach Hause",
+            orte.indexOf(PlayScene.Place.SHOP) < orte.lastIndexOf(PlayScene.Place.STREET)
+        )
+    }
+
     @Test
     fun `jeder Ort draussen wird tatsaechlich aufgesucht`() {
         // Eine Kulisse, die niemand betritt, ist Aufwand ohne Wirkung. Geprueft wird deshalb,

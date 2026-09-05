@@ -84,6 +84,7 @@ import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlayClipRenderer
+import com.notime.glyphsim.matrix.MusicContext
 import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayDreamMemory
 import com.notime.glyphsim.matrix.PlayDreams
@@ -98,6 +99,7 @@ import com.notime.glyphsim.matrix.PlayFootballSkill
 import com.notime.glyphsim.matrix.PlaySceneView
 import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
+import com.notime.glyphsim.matrix.PlayVisitWindow
 import com.notime.glyphsim.matrix.PlayWallet
 import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.RoutineStep
@@ -393,6 +395,33 @@ fun DockScreen(
          */
         var routineRunning by remember { mutableStateOf(false) }
         /**
+         * Ob die Figur GERADE DRAUSSEN STEHT UND WARTET - also mitten in einem
+         * [RoutineStep.Linger] unter freiem Himmel (siehe den Besuchstakt).
+         *
+         * **Ohne dieses Fenster konnte die Figur draussen niemandem begegnen.** Der Besuchstakt
+         * verlangt [routineRunning] `== false`, und unter freien Himmel kommt sie ausschliesslich
+         * INNERHALB eines Ablaufs. Es blieb also nur der schmale Rest zwischen zwei Ablaeufen, und
+         * auch der nur, wenn der letzte zufaellig an einem Ort endete, an dem man Leute trifft.
+         * Mit laengeren Aussenphasen wurde daraus sogar noch weniger statt mehr.
+         *
+         * Der oben genannte Einwand bleibt trotzdem richtig - deshalb ist das Fenster genau so eng
+         * gewaehlt, dass er nicht greift: Ein Linger ist die eine Stelle, an der die Figur nichts
+         * vorhat ausser dazustehen. Und damit sie nicht mitten im Gespraech weiterlaeuft, WARTET
+         * der Ablauf danach auf das Ende des Besuchs (siehe [visitRunning]).
+         *
+         * Drinnen bleibt alles wie zuvor: Wer in der Kueche kurz innehaelt, bekommt deswegen
+         * keinen Gast an den Kuehlschrank.
+         */
+        var lingeringOutdoors by remember { mutableStateOf(false) }
+        /**
+         * Ob gerade ein Besuch laeuft - das Gegenstueck zu [lingeringOutdoors].
+         *
+         * Der Ablauf fragt danach, bevor er nach einem Linger weitergeht. Ohne diese Frage waere
+         * das Fenster oben ein Eigentor: Der Gast kaeme herein, und die Figur ginge ihm nach zwei
+         * Sekunden davon.
+         */
+        var visitRunning by remember { mutableStateOf(false) }
+        /**
          * Ob die Figur sich gerade HINEINSETZT oder aufsteht (siehe [RoutineStep.Occupy]).
          *
          * Dasselbe wie [avatarWalking], nur senkrecht - und aus demselben Grund noetig: Waehrend
@@ -590,6 +619,61 @@ fun DockScreen(
             }
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
+        /**
+         * Ob dieser Bildschirm gerade zu sehen ist - allein fuer die Musik.
+         *
+         * Getrennt vom Zustands-Beobachter darueber, weil es eine andere Frage beantwortet: Der
+         * dort merkt sich, wo das Wesen war; dieser haelt nur den Ton an. Zusammengelegt waere
+         * spaeter nicht mehr zu sehen, welche Zeile wofuer da ist.
+         */
+        var screenVisible by remember { mutableStateOf(true) }
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> screenVisible = true
+                    Lifecycle.Event.ON_STOP -> screenVisible = false
+                    else -> Unit
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                // Auch beim Verlassen des Spielmodus ohne Lebenszyklus-Ereignis, etwa beim
+                // Wechsel zurueck in den Erinnerungs-Modus. Die EINSTELLUNG bleibt davon
+                // unberuehrt - siehe PlayMusic.
+                PlayMusic.stop()
+            }
+        }
+        /**
+         * **Musik an die Lage angleichen** - siehe [PlayMusic.apply] und `MusicResolver`.
+         *
+         * Der Neustart bei [currentPlace] laesst einen Ortswechsel sofort wirken; die Schleife
+         * darin faengt den Tageszeitwechsel, der von selbst kommt und an kein Ereignis haengt.
+         *
+         * **Das sieht haeufiger aus, als es ist:** [PlayMusic.apply] tut nichts, solange sich
+         * die aufgeloeste ROLLE nicht aendert. Ein Avatar, der zwischen Kueche und Wohnzimmer
+         * wechselt, laesst die Musik also weiterlaufen, statt sie jedes Mal neu zu beginnen.
+         *
+         * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
+         * allein [PlayMusic]; welche passt, allein der Resolver.
+         */
+        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic) {
+            if (!playMode || !screenVisible) {
+                PlayMusic.stop()
+                return@LaunchedEffect
+            }
+            while (true) {
+                PlayMusic.apply(
+                    context,
+                    MusicContext(
+                        dayPhase = PlayAmbientActivity.currentDayPhase(),
+                        place = currentPlace,
+                        topic = currentTopic
+                    )
+                )
+                delay(MUSIC_RECHECK_MS)
+            }
         }
         // Der letzte glaubhafte Zustand wird bei jeder Aenderung gespeichert; ON_STOP oben setzt
         // den Zeitstempel exakt auf den Moment des Weggehens. So laesst sich eine kurze Rueckkehr
@@ -1141,8 +1225,27 @@ fun DockScreen(
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
                     // Die Animationen selbst bleiben unangetastet: mitbeschleunigt saehe man nur
                     // noch Zucken statt Bewegung.
-                    is RoutineStep.Linger ->
-                        delay((step.millis * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(120L))
+                    is RoutineStep.Linger -> {
+                        // Unter freiem Himmel ist ein Verweilen zugleich das Fenster, in dem
+                        // jemand vorbeikommen kann - siehe [lingeringOutdoors]. Das Flag steht
+                        // NUR um das delay herum und wird im finally sicher zurueckgenommen:
+                        // Bricht der Ablauf hier ab (echte Erinnerung, Play-Modus aus), bliebe
+                        // sonst dauerhaft ein offenes Besuchsfenster stehen.
+                        lingeringOutdoors = PlayScene.isOutdoors(currentPlace)
+                        try {
+                            delay((step.millis * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(120L))
+                        } finally {
+                            lingeringOutdoors = false
+                        }
+                        // Ist waehrenddessen tatsaechlich jemand gekommen, wird der Ablauf
+                        // angehalten, bis der Gast wieder geht. Sonst liefe die Figur mitten im
+                        // Gespraech weiter, und die Begegnung saehe nach Fehler aus statt nach
+                        // Begegnung. Die Wartezeit ist kein Leerlauf: Der Besuch selbst spielt
+                        // waehrenddessen seine Bilder.
+                        while (visitRunning) {
+                            delay(VISIT_WAIT_TICK_MS)
+                        }
+                    }
 
                     is RoutineStep.Take -> {
                         // Hinlangen, Blitz genau dort, wo zugegriffen wird, dann liegt es in der
@@ -1294,6 +1397,17 @@ fun DockScreen(
                 gait.cancel()
             }
 
+            // Ab hier laeuft ein Besuch: Ein Ablauf, der gerade draussen wartet, geht erst
+            // weiter, wenn der Gast wieder fort ist (siehe [visitRunning]).
+            //
+            // **Diese Zeile gehoert unmittelbar vor das `try`, nicht weiter oben.** Zwischen ihr
+            // und dem `finally`, das sie zuruecknimmt, darf nichts liegen, was aufhaengen kann:
+            // Wuerde die Coroutine dort abgebrochen, bliebe das Flag stehen - und ein draussen
+            // wartender Ablauf waere bis zum Ende des Play-Modus angehalten, die Figur stuende
+            // regungslos auf der Strasse. Weiter oben waere das heute zwar auch sicher (keine der
+            // Zeilen davor haelt an), aber nur solange das so bleibt; hier ist es unabhaengig
+            // davon richtig.
+            visitRunning = true
             try {
                 // Treffpunkt so waehlen, dass sich die beiden NICHT ueberdecken.
                 //
@@ -1377,6 +1491,10 @@ fun DockScreen(
                 // bliebe der Gast sonst mitten im Bild stehen und ginge nie wieder.
                 visitor = null
                 speechStep = -1
+                // Und ebenso zwingend: Bliebe dieses Flag stehen, waere der wartende Ablauf
+                // draussen fuer immer angehalten - die Figur stuende bis zum Ende des
+                // Play-Modus regungslos auf der Strasse.
+                visitRunning = false
             }
         }
 
@@ -1440,18 +1558,34 @@ fun DockScreen(
         val avatarSizeStep = worldAvatarSizeDp.roundToInt()
         var lastAvatarPx by remember { mutableStateOf(0f) }
         var lastWidthPx by remember { mutableStateOf(0f) }
-        LaunchedEffect(avatarSizeStep, maxWidthPx, maxHeightPx) {
+        // **Auch auf die laufenden Bewegungen hoerend, und das ist der Kern der Sache.** Wer waehrend
+        // eines Gangs oder eines Hinlegens dreht, hatte bisher zwei Schreiber auf derselben
+        // Position: Dieser Effekt setzte einmal richtig um, die noch laufende Animation schrieb
+        // danach Bild fuer Bild ihr vor der Drehung berechnetes Ziel zurueck - und behielt damit
+        // das letzte Wort. Beim Hinlegen ist dieses Ziel die Matratzenhoehe der ALTEN Kulisse;
+        // genau so entsteht die Figur, die in der Luft steht.
+        //
+        // Statt dagegen anzuschreiben, wird gewartet: Solange eine Bewegung laeuft, tut dieser
+        // Effekt nichts und merkt sich auch nichts. Sobald sie endet, kippt das Flag, der Effekt
+        // laeuft erneut - und rechnet dann gegen die Masse, die beim letzten ECHTEN Umstellen
+        // galten.
+        LaunchedEffect(avatarSizeStep, maxWidthPx, maxHeightPx, avatarWalking, avatarSettling) {
             val current = avatar
+
+            // Beim allerersten Durchlauf gibt es noch keine vorherige Geometrie - dann ist auch
+            // nichts umzustellen, die Figur wird ohnehin gleich frisch hingestellt.
+            //
+            // **Die Buchfuehrung steht bewusst NACH dieser Pruefung.** Stand sie davor, merkte sich
+            // ein uebersprungener Lauf trotzdem die neuen Masse - die naechste Drehung rechnete
+            // ihren Bruchteil dann gegen eine Breite, gegen die die Figur nie gestanden hat.
+            if (!playMode || current == null || avatarWalking || avatarSettling) {
+                return@LaunchedEffect
+            }
             val previousAvatarPx = lastAvatarPx
             val previousWidthPx = lastWidthPx
             lastAvatarPx = worldAvatarPx
             lastWidthPx = maxWidthPx
-
-            // Beim allerersten Durchlauf gibt es noch keine vorherige Geometrie - dann ist auch
-            // nichts umzustellen, die Figur wird ohnehin gleich frisch hingestellt.
-            if (!playMode || current == null || previousAvatarPx <= 0f || previousWidthPx <= 0f) {
-                return@LaunchedEffect
-            }
+            if (previousAvatarPx <= 0f || previousWidthPx <= 0f) return@LaunchedEffect
 
             val station = occupiedStation
             val next = if (station != null) {
@@ -1462,6 +1596,14 @@ fun DockScreen(
                 )?.let { spot ->
                     stationOffset(spot, worldAvatarPx, maxWidthPx, current.species)
                 }
+                // Findet sich die Aufsetzstelle in der neuen Kulisse NICHT, ist die alte Position
+                // das Schlechteste, was man behalten kann: Sie ist eine Pixelhoehe aus einem Bild,
+                // das es nicht mehr gibt. Lieber auf den Boden - das ist vielleicht nicht die
+                // gemeinte Stelle, aber es ist eine, die es gibt.
+                    ?: avatarSpot(
+                        AvatarFooting.fractionOf(current.offset.x, worldAvatarPx, maxWidthPx),
+                        worldAvatarPx, maxWidthPx, floorYPx, current.species
+                    )
             } else {
                 // Sonst bleibt die WAAGERECHTE Stelle erhalten, an der sie stand - als Bruchteil
                 // gerechnet, und zwar mit den ALTEN Massen. Mit den neuen gerechnet spraenge sie
@@ -1541,12 +1683,21 @@ fun DockScreen(
             // auch die ehrlichere Lesart: Jemand kommt vorbei, wenn man draussen ist, nicht
             // wenn die Uhr es sagt.
             LaunchedEffect(Unit) {
+                // Die Bedingung selbst steht in [PlayVisitWindow] - dort ist sie pruefbar,
+                // hier waere sie es nur am Geraet. Diese Funktion sammelt nur noch den Zustand
+                // ein und reicht ihn weiter.
                 fun visitPossible(): Boolean {
                     val current = avatar ?: return false
-                    return !current.fed && current.occurrenceId == null &&
-                        occupiedStation == null && !avatarHidden &&
-                        !routineRunning && !avatarWalking && !avatarSettling &&
-                        PlayScene.allowsVisitors(currentPlace)
+                    return PlayVisitWindow.isOpen(
+                        place = currentPlace,
+                        routineRunning = routineRunning,
+                        lingeringOutdoors = lingeringOutdoors,
+                        occupied = occupiedStation != null,
+                        walking = avatarWalking,
+                        settling = avatarSettling,
+                        hidden = avatarHidden,
+                        userBusy = current.fed || current.occurrenceId != null
+                    )
                 }
                 while (isActive) {
                     delay(
@@ -3552,6 +3703,15 @@ private val VISIT_INTERVAL_MS_BUSY = 30_000L..70_000L
 /** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
 private const val VISIT_RETRY_MS = 4_000L
 
+/**
+ * Wie oft ein draussen wartender Ablauf nachsieht, ob der Gast wieder fort ist.
+ *
+ * Kurz gewaehlt, weil es hier nur ums Weitergehen geht: Ein Viertelsekundentakt kostet nichts und
+ * macht den Uebergang vom Gespraech zurueck in den Ablauf unmerklich. Bewusst NICHT im Zeitraffer
+ * gestreckt - das ist Ablaufsteuerung, keine vergehende Zeit.
+ */
+private const val VISIT_WAIT_TICK_MS = 250L
+
 /** Welcher Besuchstakt an diesem Ort gilt - siehe [VISIT_INTERVAL_MS_BUSY]. */
 private fun visitIntervalFor(place: PlayScene.Place): LongRange = when (place) {
     PlayScene.Place.STREET, PlayScene.Place.CITY -> VISIT_INTERVAL_MS_BUSY
@@ -3571,6 +3731,15 @@ private const val ARRIVAL_SETTLE_MS = 260L
 private const val SETTLE_INTO_MS = 420
 private const val DREAM_BUBBLE_MS = 6_200
 private const val DREAM_SLEEP_CHECK_MS = 800L
+
+/**
+ * Wie oft die Musik mit der Lage abgeglichen wird.
+ *
+ * Nicht haeufiger: Der einzige Anlass, der ohne Ereignis kommt, ist der Tageszeitwechsel, und
+ * der passiert viermal am Tag. Der Abgleich ist ohnehin folgenlos, solange sich die Rolle nicht
+ * aendert - er darf also selten sein.
+ */
+private const val MUSIC_RECHECK_MS = 30_000L
 
 /**
  * Wo der Avatar steht, wenn er an einem Ort der Kulisse ([PlayScene]) auf dem Boden aufsetzt.

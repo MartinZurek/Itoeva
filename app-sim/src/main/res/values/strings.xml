@@ -620,6 +620,8 @@
 
     <string name="settings_sound">Sound</string>
     <string name="settings_sound_hint">A short motif when you answer a reminder, on a level-up and when someone visits. Every creature sounds different. Silent at night, and never over music that is playing.</string>
+    <string name="settings_music">Music in play mode</string>
+    <string name="settings_music_hint">A calm background track while the pixel world is on screen. Never over other audio, and it stops when you leave play mode.</string>
 
     <string name="talk_sound_on">Let me hear you</string>
     <string name="talk_sound_off">Be quiet for now</string>

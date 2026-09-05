@@ -1124,6 +1124,7 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
     var selectedLanguage by remember { mutableStateOf(LanguagePrefs.get(context)) }
     var moodEnabled by remember { mutableStateOf(MoodPrefs.isEnabled(context)) }
     var soundEnabled by remember { mutableStateOf(PlaySound.isEnabled(context)) }
+    var musicEnabled by remember { mutableStateOf(PlayMusic.isEnabled(context)) }
     var lapseSpeed by remember { mutableStateOf(PlayTimeLapse.speed()) }
     var forcedWeather by remember { mutableStateOf(PlayWeather.forcedOrNull()) }
     // Aufnahme laeuft / fertige Datei / Fehlschlag - drei Zustaende, mehr braucht es nicht.
@@ -1265,6 +1266,32 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                             onCheckedChange = { enabled ->
                                 soundEnabled = enabled
                                 PlaySound.setEnabled(context, enabled)
+                            }
+                        )
+                    }
+                    // Eigener Schalter neben dem Ton, nicht darin: Wer die kurze Rueckmeldung
+                    // will, will nicht zwangslaeufig einen laufenden Soundtrack.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.settings_music))
+                            Text(
+                                stringResource(R.string.settings_music_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = musicEnabled,
+                            onCheckedChange = { enabled ->
+                                musicEnabled = enabled
+                                PlayMusic.setEnabled(context, enabled)
+                                // Sofort hoerbar statt erst beim naechsten Betreten - wer den
+                                // Schalter umlegt, will wissen, ob etwas passiert.
+                                if (!enabled) PlayMusic.stop()
                             }
                         )
                     }
