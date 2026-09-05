@@ -1,0 +1,90 @@
+name: Stable Audio Hugging Face Check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-hugging-face-access:
+    name: Verify HF token and Stable Audio access
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Resolve Stable Audio model from Itoeva manifest
+        id: model
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = json.loads(Path("music/manifest.json").read_text(encoding="utf-8"))
+          repo = manifest.get("model_repository")
+          if not repo or "/" not in repo:
+              raise SystemExit("music/manifest.json has no valid model_repository")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"repository={repo}\n")
+          PY
+
+      - name: Verify Hugging Face authentication
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${HF_TOKEN:-}" ]; then
+            echo "::error::Repository secret HF_TOKEN is missing."
+            exit 1
+          fi
+
+          # Never print the token or the response body. A successful request is enough.
+          curl --fail --silent --show-error \
+            --header "Authorization: Bearer ${HF_TOKEN}" \
+            https://huggingface.co/api/whoami-v2 \
+            --output /dev/null
+
+          echo "Hugging Face authentication succeeded."
+
+      - name: Verify gated Stable Audio model access
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          MODEL_REPOSITORY: ${{ steps.model.outputs.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Download only the small model configuration, not the multi-GB model weights.
+          curl --fail --silent --show-error --location \
+            --header "Authorization: Bearer ${HF_TOKEN}" \
+            "https://huggingface.co/${MODEL_REPOSITORY}/resolve/main/model_config.json" \
+            --output /tmp/stable-audio-model-config.json
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          config = json.loads(Path("/tmp/stable-audio-model-config.json").read_text(encoding="utf-8"))
+          if not isinstance(config, dict) or not config:
+              raise SystemExit("Downloaded Stable Audio model_config.json is invalid")
+          PY
+
+          rm -f /tmp/stable-audio-model-config.json
+          echo "Stable Audio gated model access succeeded."
+
+      - name: Confirm Itoeva music tooling dry-run
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/music/generate_music.py \
+            --track-id home-evening-01 \
+            --dry-run >/dev/null
+          echo "Itoeva Stable Audio tooling is ready."
