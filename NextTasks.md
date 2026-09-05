@@ -127,14 +127,12 @@ größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für Hom
 NT-054 Skills, Level und Jahreszeiten als gewichtete Erweiterungen des in `Tagesablauf.md`
 definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay-Code entsteht.
 
-**Produktentscheidungen, offen:** NT-055 Audio-Asset-Strategie festlegen, bevor der erste Track
-gemergt wird - Format, Kanalzahl und Ort der Umwandlung. *Der erzeugte Referenztrack ist 15,88 MB
-unkomprimiertes WAV; dieselben 90 Sekunden sind als Vorbis 44,1 kHz stereo 1,06 MB, also Faktor 15.
-`minSdk = 26` schliesst Opus in `.ogg` aus (erst ab API 29). Zugleich begruendet `PlayChime.kt`
-ausdruecklich, warum Klang in dieser App gerechnet und nicht als Asset ausgeliefert wird - eine
-Musikdatei ist damit eine Ausnahme, die benannt werden muss. Messwerte und die vier offenen Fragen:
-EVOLUTION.md, Eintrag zum 2026-09-05.* Diese Aufgabe ist zeitkritisch, solange PR #82 offen ist:
-Ein Merge entscheidet die Frage stillschweigend mit.
+**Produktentscheidungen, offen:** NT-055 Audio-Asset-Strategie - *Format (Ogg/Vorbis), Ort der
+Umwandlung (Pipeline) und die Grenze der Ausnahme (nur der Score, nie die Stimme der Welt) sind am
+2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.* **Offen bleibt**, ob realistische
+generierte Musik ueber einer 16x16-Welt aesthetisch richtig ist, wie viele Tracks vorgesehen sind,
+und die vor einer kommerziellen Veroeffentlichung erneut zu pruefende Lizenzlage aus
+`music/README.md`.
 
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052

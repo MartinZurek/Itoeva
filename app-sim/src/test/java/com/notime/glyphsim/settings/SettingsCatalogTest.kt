@@ -99,6 +99,13 @@ class SettingsCatalogTest {
         // war bis dahin vollstaendig stumm. Eine, die nach einem Update ungefragt Geraeusche
         // macht, hat ihr Vertrauen verspielt, bevor der erste Ton zu Ende ist.
         assertEquals(false, SettingsCatalog.SoundEnabled.default)
+        // Musik teilt sich die Datei mit dem Ton, hat aber einen eigenen Schluessel und einen
+        // eigenen Schalter: Wer die kurze Rueckmeldung will, will nicht zwangslaeufig einen
+        // laufenden Soundtrack.
+        pruefe(SettingsCatalog.MusicEnabled, "sound_prefs", "music_enabled")
+        // **Aus demselben Grund AUS wie der Ton, hier sogar deutlicher.** Ein Motiv ist nach
+        // einer halben Sekunde vorbei, eine Musikschleife nicht.
+        assertEquals(false, SettingsCatalog.MusicEnabled.default)
     }
 
     /**
@@ -172,6 +179,7 @@ class SettingsCatalogTest {
             SettingsCatalog.DockBrightnessOverride, SettingsCatalog.DockBrightness,
             SettingsCatalog.DockSizeDp, SettingsCatalog.DockOffsetFractionX, SettingsCatalog.DockOffsetFractionY,
             SettingsCatalog.AvatarSpecies, SettingsCatalog.MoodEnabled, SettingsCatalog.SoundEnabled,
+            SettingsCatalog.MusicEnabled,
             SettingsCatalog.ActiveProfileId,
             SettingsCatalog.ClipRecordingEnabled,
             SettingsCatalog.Greeted,

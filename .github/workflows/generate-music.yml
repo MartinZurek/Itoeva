@@ -79,6 +79,8 @@ jobs:
             torch==2.7.1 torchaudio==2.7.1
           python -m pip install \
             "git+https://github.com/Stability-AI/stable-audio-3.git@${RUNTIME_COMMIT}"
+          # Schreibt Ogg/Vorbis - torchaudio deckt das je nach Backend nicht zuverlaessig ab.
+          python -m pip install "soundfile==0.13.1"
 
       - name: Generate track locally on runner
         env:

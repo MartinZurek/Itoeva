@@ -92,19 +92,33 @@ Beispiel nach installierter Runtime und `hf auth login`:
 python tools/music/generate_music.py --track-id home-evening-01 --device auto
 ```
 
-## Offen: Ablageformat und Groesse
+## Ablageformat: Ogg/Vorbis
 
-`manifest.json` legt heute `output_format: "wav"` fest. Der erste erzeugte Track ist damit
-**15,88 MB** gross - dieselben 90 Sekunden waeren als Vorbis 44,1 kHz stereo **1,06 MB**.
+`manifest.json` steht auf `output_format: "ogg"`, und `generate_music.py` schreibt es direkt.
+Derselbe Referenztrack waere als WAV **15,88 MB** gross und ist so **1,06 MB** - Faktor 15, ohne
+einen Kanal aufzugeben.
 
-Das ist noch nicht entschieden und soll hier auch nicht nebenbei entschieden werden, denn es
-haengt an einer Grundsatzfrage: `PlayChime.kt` begruendet ausdruecklich, warum der Klang dieser
-App gerechnet und nicht als Datei ausgeliefert wird. Musik als Asset ist davon eine Ausnahme, und
-die gehoert benannt.
+Nicht Opus, obwohl es hier kaum kleiner waere: `:app-sim` hat `minSdk = 26`, und Opus in `.ogg`
+dekodiert erst ab Android 10. Nicht Mono: das Stereobild des Tracks ist echt (Kanalkorrelation
+0,87), Mono naehme wirklich Breite weg.
 
-Messwerte, Randbedingungen (`minSdk = 26` schliesst Opus in `.ogg` aus) und die vier offenen
-Fragen stehen in `EVOLUTION.md` zum 2026-09-05; das Arbeitspaket ist NT-055 in `NextTasks.md`.
-**Wer das Format aendert, aendert es dort und nicht nur hier.**
+Umgewandelt wird in der **Pipeline und nicht im Build**, damit das Gehoerte das Ausgelieferte ist.
+Ein verlustfreies Archiv braucht es dafuer nicht - das Manifest pinnt Seed, Modell und
+Runtime-Commit, eine Neuerzeugung liefert dasselbe.
+
+Das setzt eine Ausnahme von einem Prinzip: `PlayChime.kt` begruendet, warum der Klang dieser App
+gerechnet und nicht als Datei ausgeliefert wird. Die Ausnahme hat deshalb eine Grenze - **nur der
+Score darf eine Datei sein; alles, was die Welt oder das Wesen selbst von sich gibt, bleibt
+gerechnet.** Begruendung, Messwerte und die noch offenen Punkte: `EVOLUTION.md` zum 2026-09-05,
+Arbeitspaket NT-055. **Wer das Format aendert, aendert es dort und nicht nur hier.**
+
+## Im Spiel hoeren
+
+Der gemergte Track laeuft als Schleife, solange der Spielmodus zu sehen ist. Der Schalter dafuer
+steht in den Einstellungen unter **Musik im Spielmodus** und ist **standardmaessig aus**. Er
+schweigt ueber fremdem Ton und bei stumm gestelltem Geraet, und er hoert auf, sobald der
+Spielmodus verlassen wird (siehe `PlayMusic`). Solange kein Track gemergt ist, bleibt es still -
+die App sucht ihn ueber seinen Namen und kommt ohne ihn aus.
 
 ## Rechte und Herkunft
 
