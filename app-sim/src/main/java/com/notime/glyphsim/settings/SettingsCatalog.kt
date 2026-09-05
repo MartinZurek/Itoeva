@@ -136,6 +136,17 @@ object SettingsCatalog {
      */
     val SoundEnabled = Setting.Bool("sound_prefs", "sound_enabled", default = false)
 
+    /**
+     * Ob im Spielmodus Musik laeuft (siehe [com.notime.glyphsim.ui.PlayMusic]).
+     *
+     * **Ebenfalls standardmaessig AUS, und aus demselben Grund** wie bei [SoundEnabled] - hier
+     * sogar noch deutlicher: Ein kurzes Motiv ist nach einer halben Sekunde vorbei, eine
+     * Musikschleife nicht. Ein eigener Schalter neben dem Ton statt eines gemeinsamen, weil sich
+     * die beiden nicht bedingen: Wer die Rueckmeldung will, will nicht zwangslaeufig einen
+     * Soundtrack, und umgekehrt.
+     */
+    val MusicEnabled = Setting.Bool("sound_prefs", "music_enabled", default = false)
+
     /** Profil-Id im gemeinsamen Kern - dort neutral, hier ist es der Avatar. */
     val ActiveProfileId = Setting.OptionalString("reminder_profile_prefs", "active_profile_id")
 
@@ -195,7 +206,7 @@ object SettingsCatalog {
         ClockStyle, Language, AllowRotation,
         DockBrightnessOverride, DockBrightness,
         DockSizeDp, DockOffsetFractionX, DockOffsetFractionY,
-        AvatarSpecies, MoodEnabled, SoundEnabled, ActiveProfileId,
+        AvatarSpecies, MoodEnabled, SoundEnabled, MusicEnabled, ActiveProfileId,
         ClipRecordingEnabled,
         Greeted, TappedAvatar, TappedClock, PlayModeIntroSeen, UsedActionSlot, SkillTreeHintSeen,
         PlayCoins, PlayPantryLevel, PlayForcedWeather, PlayTimeLapseSpeed

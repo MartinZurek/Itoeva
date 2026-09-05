@@ -1228,3 +1228,84 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   verifiziert.
 - Produktname, primäre App-Fassung, finales Spielziel, größere Storystruktur und langfristige
   Ökonomie bleiben **OPEN DECISION**.
+
+### 2026-09-05 - Der erste Audio-Asset trifft auf ein Prinzip, das es ausschliesst
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Dieser Eintrag entscheidet nichts, er legt
+  eine Entscheidung offen, die bisher unbemerkt getroffen worden waere.
+- **BEOBACHTET:** Die Musik-Pipeline (PR #77, #78) ist in `main` und hat mit
+  „Quiet Lanterns" (PR #82) ihren ersten Track erzeugt: 90 s, 44,1 kHz, stereo, **15,88 MB
+  unkomprimiertes WAV**. PR #82 legt damit `app-sim/src/main/res/raw/` an - **das Verzeichnis
+  existierte bisher nicht, die App hat heute keinen einzigen Audio-Asset.**
+- **BEOBACHTET:** `PlayChime.kt` begruendet in seiner Klassendoku ausdruecklich, warum der Klang
+  der App **gerechnet und nicht abgespielt** wird, mit drei Gruenden: keine Lizenzfrage, es passt
+  zur gerechneten Welt („Ein aufgenommener Klang daneben waere derselbe Bruch wie eine
+  fotografierte Blume in einer Pixel-Kulisse"), und - woertlich - „Kein Asset, keine Groesse im
+  Paket, kein Dekoder". Das ist das klangliche Gegenstueck zu „Prozedural statt gemalt" in
+  `Vision.md`.
+- **BEOBACHTET:** Die Musik-Pipeline ist in `EVOLUTION.md`, `Vision.md`, `Architecture.md` und
+  `NextTasks.md` **an keiner Stelle erwaehnt**. Ihre einzige Dokumentation ist `music/README.md`.
+  Laut `AGENTS.md` gilt bei Widerspruechen `EVOLUTION.md` - und dort steht zu diesem Thema nichts,
+  woraus sich der Widerspruch aufloesen liesse.
+- **ABGELEITET:** Ein Merge von PR #82 wuerde damit zwei Dinge zugleich tun, von denen nur eines
+  sichtbar ist: einen Track hinzufuegen, und stillschweigend entscheiden, dass Itoeva kuenftig
+  Audio als Asset ausliefert. Genau das schliesst dieses Dokument fuer `OPEN DECISION`-Punkte aus.
+- **GEMESSEN (2026-09-05, an genau dieser Datei):** Die Groesse ist kein Naturgesetz des Tracks,
+  sondern eine Folge des gewaehlten Formats. Alle Werte nachgerechnet, alle Ergebnisdateien
+  zurueckgelesen und auf 90,0 s geprueft:
+
+  | Format | Groesse | Anteil am WAV |
+  |---|---|---|
+  | WAV 44,1 kHz stereo (heute) | 15,88 MB | 100 % |
+  | FLAC 44,1 kHz stereo (verlustfrei) | 3,48 MB | 21,9 % |
+  | **Vorbis 44,1 kHz stereo** | **1,06 MB** | **6,7 %** |
+  | Opus 48 kHz stereo | 1,37 MB | 8,6 % |
+  | Vorbis 44,1 kHz mono | 0,63 MB | 4,0 % |
+  | Vorbis 22,05 kHz mono | 0,41 MB | 2,6 % |
+
+- **ABGELEITET (Formatwahl ist nicht frei):** `:app-sim` hat `minSdk = 26`. Vorbis in `.ogg` wird
+  seit den ersten Android-Versionen unterstuetzt; **Opus in `.ogg` erst ab Android 10 (API 29)**
+  und faellt damit fuer API 26-28 aus, obwohl es hier kaum kleiner waere. Das ist vor einer
+  Festlegung gegen die aktuelle Android-Formattabelle zu pruefen und nicht aus diesem Eintrag zu
+  uebernehmen.
+- **GEMESSEN (Stereo ist echt):** Kanalkorrelation L/R 0,870, Differenz-RMS 0,0385 gegen
+  Signal-RMS 0,0753. Der Track ist nicht breitgezogenes Mono - eine Mono-Ablage naehme
+  tatsaechlich Breite weg und ist deshalb eine Klangentscheidung, keine reine Sparmassnahme.
+  Spitzenpegel 0,782, also ohne Uebersteuerung.
+- **ENTSCHIEDEN am 2026-09-05 (Format):** Ausgeliefert wird **Ogg/Vorbis**, 44,1 kHz, stereo.
+  `manifest.json` steht auf `output_format: "ogg"`, `generate_music.py` schreibt es direkt.
+  Nicht Opus (minSdk 26), nicht Mono (das Stereobild ist echt), nicht FLAC (verlustfrei ohne
+  Empfaenger unter einer 16x16-Figur).
+- **ENTSCHIEDEN am 2026-09-05 (Ort der Umwandlung):** In der **Pipeline**, nicht im Build. Die
+  Provenienz-Kette lebt davon, dass das Gehoerte das Ausgelieferte ist - `music/README.md` sagt
+  "Erst der Merge des generierten PR macht ihn zum versionierten Spiel-Asset"; ein
+  nachtraeglich neu kodierender Build wuerde etwas ausliefern, das niemand gehoert hat. Das
+  uebliche Gegenargument - ein verlustfreies Archiv fuer spaetere Neukodierung - greift hier
+  nicht: Das Manifest pinnt Seed, Modell und Runtime-Commit, eine Neuerzeugung kostet zwei
+  Minuten und liefert dasselbe. Ein WAV-Archiv waere die Sicherung von etwas jederzeit
+  Rekonstruierbarem.
+- **ENTSCHIEDEN am 2026-09-05 (die Grenze der Ausnahme):** Audio als Asset ist zugelassen, aber
+  begrenzt: **Alles, was die Welt oder das Wesen selbst von sich gibt, bleibt gerechnet. Nur der
+  Score darf eine Datei sein.** Eine Filmmusik war noch nie aus demselben Material wie das
+  Buehnenbild; die Stimme einer Figur schon. `PlayChime` behaelt damit sein Prinzip vollstaendig
+  fuer den Bereich, in dem es traegt, und Musik bekommt eine benannte Spur statt einer Ausnahme
+  ohne Rand. Wer spaeter Schritte, Tueren oder Wetter als Sample ergaenzen will, verletzt sie.
+- **OPEN DECISION - weiterhin NICHT entschieden:**
+  1. Ob **realistische** generierte Musik ueber einer 16x16-Welt aesthetisch richtig ist. Das ist
+     der eigentliche Kern von `PlayChime`s zweitem Grund und laesst sich nicht wegkomprimieren -
+     es ist eine Hoerentscheidung, keine technische.
+  2. Wie viele Tracks langfristig vorgesehen sind. Die Rechnung beantwortet die Frage allerdings
+     teilweise selbst: Vier Tageszeiten mal drei Stimmungen waeren als WAV rund 191 MB und damit
+     nicht mehr auslieferbar, als Vorbis rund 13 MB.
+  3. Die Lizenzlage. `music/README.md` haelt fest, dass Stability-Community-Lizenz und
+     Gemma-Terms **vor einer kommerziellen Veroeffentlichung erneut zu pruefen** sind. Solange
+     `PLAY_STORE.md` existiert, ist das ein offener Punkt und keine Formalie.
+- **Umgesetzt:** Die Musikschicht `PlayMusic` spielt den Track als Schleife, solange der
+  Spielmodus sichtbar ist - standardmaessig AUS, nie ueber fremdem Ton, nicht bei stumm
+  gestelltem Geraet, ohne Audio-Focus zu greifen. Nachts wird **nicht** gesperrt (anders als bei
+  `PlaySound`): Musik laeuft nur, solange jemand den eingeschalteten Bildschirm ansieht und sie
+  eingeschaltet hat, und ein Abendtrack, den man abends nicht hoeren darf, waere sinnlos.
+- **Bewusst ueber Namen statt `R.raw` aufgeloest:** Die Audiodatei kommt aus einem eigenen
+  erzeugten Pull Request und ist kein fester Bestandteil des Quellbaums. Ein direkter Verweis
+  wuerde jeden Build brechen, in dem noch kein Track gemergt ist; so bleibt die Welt still, bis
+  es etwas zu hoeren gibt. Arbeitspaket: NT-055.

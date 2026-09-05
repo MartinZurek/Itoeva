@@ -127,6 +127,13 @@ größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für Hom
 NT-054 Skills, Level und Jahreszeiten als gewichtete Erweiterungen des in `Tagesablauf.md`
 definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay-Code entsteht.
 
+**Produktentscheidungen, offen:** NT-055 Audio-Asset-Strategie - *Format (Ogg/Vorbis), Ort der
+Umwandlung (Pipeline) und die Grenze der Ausnahme (nur der Score, nie die Stimme der Welt) sind am
+2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.* **Offen bleibt**, ob realistische
+generierte Musik ueber einer 16x16-Welt aesthetisch richtig ist, wie viele Tracks vorgesehen sind,
+und die vor einer kommerziellen Veroeffentlichung erneut zu pruefende Lizenzlage aus
+`music/README.md`.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.
@@ -143,4 +150,4 @@ IDs bleiben stabile Referenzen, auch nach dem Verschieben zwischen Top 15 und Fu
 Wird eine Top-15-Aufgabe erledigt, rückt die höchste noch offene Future-Backlog-Aufgabe nach dem
 Hebel-Maßstab oben in die Top 15 nach - die Liste bleibt dadurch dauerhaft auf maximal 15
 Einträge begrenzt. Neue Aufgaben, die während der Arbeit entdeckt werden, kommen mit
-fortlaufender neuer ID (ab NT-054) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
+fortlaufender neuer ID (ab NT-056) direkt in den Future Backlog, nicht ungeprüft in die Top 15.

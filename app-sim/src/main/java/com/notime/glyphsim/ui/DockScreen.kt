@@ -586,6 +586,33 @@ fun DockScreen(
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
         }
+        /**
+         * Musik laeuft NUR, solange dieser Bildschirm sichtbar ist - siehe [PlayMusic].
+         *
+         * Getrennt vom Zustands-Beobachter darueber, weil es eine andere Frage beantwortet: Der
+         * dort merkt sich, wo das Wesen war; dieser haelt nur den Ton an. Zusammengelegt waere
+         * spaeter nicht mehr zu sehen, welche Zeile wofuer da ist.
+         *
+         * [PlayMusic.start] prueft selbst, ob Musik eingeschaltet, ein Track vorhanden und der
+         * Weg frei ist - hier steht deshalb kein zweites Regelwerk daneben.
+         */
+        DisposableEffect(lifecycleOwner, playMode) {
+            if (playMode) PlayMusic.start(context)
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> if (playMode) PlayMusic.start(context)
+                    Lifecycle.Event.ON_STOP -> PlayMusic.stop()
+                    else -> Unit
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                // Auch beim Verlassen des Spielmodus ohne Lebenszyklus-Ereignis, etwa beim
+                // Wechsel zurueck in den Erinnerungs-Modus.
+                PlayMusic.stop()
+            }
+        }
         // Der letzte glaubhafte Zustand wird bei jeder Aenderung gespeichert; ON_STOP oben setzt
         // den Zeitstempel exakt auf den Moment des Weggehens. So laesst sich eine kurze Rueckkehr
         // von einem langen Fortsein unterscheiden, ohne Ablaufschritte nachzusimulieren.
