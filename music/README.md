@@ -47,6 +47,35 @@ Standardmaessig wird `home-evening-01` erzeugt. Ein erfolgreicher Lauf:
 
 So landet kein ungehoerter Modelloutput automatisch in der App. Erst der Merge des generierten PR macht ihn zum versionierten Spiel-Asset.
 
+## Zugang einmal pruefen, bevor generiert wird
+
+GitHub Actions -> **Stable Audio Hugging Face Check** -> Run workflow.
+
+Der Lauf ist eine reine Diagnose und **keine zweite Musikpipeline**: Er erzeugt nichts, schreibt
+nichts und laedt keine Modellgewichte. Er beantwortet in dieser Reihenfolge vier Fragen und bricht
+bei der ersten ab, die mit Nein endet:
+
+1. Ist das Repository-Secret `HF_TOKEN` in Actions vorhanden?
+2. Wird der Token von Hugging Face akzeptiert (`whoami-v2`)?
+3. Erreicht dieser Token das gated Modell aus `music/manifest.json`? Geprueft wird durch Abruf der
+   kleinen `model_config.json`, nicht der mehrere Gigabyte grossen Gewichte.
+4. Laeuft der vorhandene Generator aus `tools/music/generate_music.py` im `--dry-run`?
+
+Weder der Token noch eine Antwort werden ausgegeben; der Workflow verwirft jeden Antwortkoerper.
+
+**Wenn ein Schritt fehlschlaegt**, sagt die Stelle des Abbruchs, was zu tun ist:
+
+| Fehlgeschlagener Schritt | Bedeutung | Naechster Schritt |
+|---|---|---|
+| Verify Hugging Face authentication, Meldung `HF_TOKEN is missing` | Secret fehlt | `HF_TOKEN` unter Settings -> Secrets and variables -> Actions anlegen |
+| Verify Hugging Face authentication, HTTP 401 | Token ungueltig oder abgelaufen | Neuen Read-Token auf Hugging Face erzeugen und das Secret ersetzen |
+| Verify gated Stable Audio model access, HTTP 401/403 | Token gueltig, aber der Account hat das gated Modell nicht freigeschaltet | Auf Hugging Face die Bedingungen fuer `stabilityai/stable-audio-3-small-music` akzeptieren |
+| Verify gated Stable Audio model access, HTTP 404 | Zugang besteht, aber die Datei liegt nicht unter diesem Pfad | Dateinamen im Modell-Repository pruefen; Manifest oder Pfad anpassen |
+| Confirm Itoeva music tooling dry-run | Manifest oder Prompt sind kaputt | `python tools/music/generate_music.py --track-id home-evening-01 --dry-run` lokal nachvollziehen |
+
+Ein gruener Lauf heisst: Der naechste Klick auf **Generate Itoeva Music** scheitert nicht mehr am
+Zugang.
+
 ## Lokal pruefen
 
 Die Definition laesst sich ohne PyTorch, Modell-Download oder Kosten pruefen:
