@@ -57,6 +57,9 @@ sealed interface RoutineStep {
     /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
     data class Linger(val millis: Long) : RoutineStep
 
+    /** Exklusiver Schlaf: Im Bett bleiben, bis die Nacht endet. */
+    data object SleepUntilMorning : RoutineStep
+
     /**
      * Einen Gegenstand schalten - derzeit die Stehlampe (siehe [PlayScene.build]).
      *
@@ -242,7 +245,7 @@ object PlayRoutines {
      */
     fun allFor(topic: AnimationType): List<PlayRoutine> = when (topic) {
 
-        // ---- Schlafen: hingehen, hineinlegen, liegen bleiben ----
+        // ---- Schlafen: einmal hineinlegen und bis zum Aufwachen dort bleiben ----
         AnimationType.SLEEP -> listOf(
             PlayRoutine(
                 listOf(
@@ -250,32 +253,9 @@ object PlayRoutines {
                     RoutineStep.Stir(AvatarAnimations.Fidget.YAWN),
                     RoutineStep.Occupy(PlayScene.Station.BED),
                     RoutineStep.Act(AnimationType.SLEEP),
-                    RoutineStep.Linger(4_000L),
-                    RoutineStep.Rise
-                )
-            ),
-            PlayRoutine(
-                listOf(
-                    RoutineStep.GoTo(PlayScene.Station.BED),
-                    RoutineStep.Occupy(PlayScene.Station.BED),
-                    RoutineStep.Linger(6_000L),
+                    RoutineStep.SleepUntilMorning,
                     RoutineStep.Rise,
                     RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
-                )
-            ),
-            // Nachts einmal aufstehen und wieder hineinlegen - der Ablauf, den man beim
-            // Zuschauen am ehesten wiedererkennt, weil ihn jeder kennt.
-            PlayRoutine(
-                listOf(
-                    RoutineStep.GoTo(PlayScene.Station.BED),
-                    RoutineStep.Occupy(PlayScene.Station.BED),
-                    RoutineStep.Linger(3_500L),
-                    RoutineStep.Rise,
-                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
-                    RoutineStep.Occupy(PlayScene.Station.BED),
-                    RoutineStep.Act(AnimationType.SLEEP),
-                    RoutineStep.Linger(3_000L),
-                    RoutineStep.Rise
                 )
             )
         )
