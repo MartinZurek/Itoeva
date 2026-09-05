@@ -1,5 +1,6 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -16,14 +17,15 @@ class MusicResolverTest {
 
     private fun ctx(
         phase: PlayAmbientActivity.DayPhase,
-        place: PlayScene.Place
-    ) = MusicContext(phase, place)
+        place: PlayScene.Place,
+        topic: AnimationType? = null
+    ) = MusicContext(phase, place, topic)
 
-    /** Der Stand, der heute tatsaechlich ausgeliefert wird: genau ein Track. */
-    private val heute = setOf(MusicRole.HOME_EVENING)
+    /** Der Stand, der heute tatsaechlich ausgeliefert wird: Tages- und Abendtrack. */
+    private val heute = setOf(MusicRole.HOME_EVENING, MusicRole.MAIN_DAY)
 
-    /** Der Stand nach dem naechsten Schritt - Tages-Track dazu, sonst nichts. */
-    private val mitTagesTrack = setOf(MusicRole.HOME_EVENING, MusicRole.MAIN_DAY)
+    /** Historischer und weiterhin wichtiger Rueckfalltest: nur der Abendtrack ist vorhanden. */
+    private val nurAbendTrack = setOf(MusicRole.HOME_EVENING)
 
     // ================= Der heutige Stand =================
 
@@ -35,9 +37,9 @@ class MusicResolverTest {
      */
     @Test
     fun `ohne Tages-Track bleiben Morgen und Mittag still`() {
-        assertNull(MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.LIVING), heute))
-        assertNull(MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.PARK), heute))
-        assertNull(MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.CITY), heute))
+        assertNull(MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.LIVING), nurAbendTrack))
+        assertNull(MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.PARK), nurAbendTrack))
+        assertNull(MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.CITY), nurAbendTrack))
     }
 
     @Test
@@ -61,21 +63,31 @@ class MusicResolverTest {
      * sind - und dann waere ein falscher Vorrang teuer.
      */
     @Test
-    fun `am Sportplatz steht Sport vor dem Tages-Track`() {
+    fun `bei echter Bewegung am Sportplatz steht Sport vor dem Tages-Track`() {
         val kandidaten = MusicResolver.candidates(
-            ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT)
+            ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT, AnimationType.MOVE)
         )
         assertEquals(listOf(MusicRole.SPORT, MusicRole.MAIN_DAY), kandidaten)
+    }
+
+    @Test
+    fun `der Sportplatz allein behauptet noch keine Sporthandlung`() {
+        assertEquals(
+            listOf(MusicRole.MAIN_DAY),
+            MusicResolver.candidates(
+                ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT, AnimationType.GENERAL)
+            )
+        )
     }
 
     /** Sobald es ihn gibt, uebernimmt der spezifischere Track - ohne Aenderung am Resolver. */
     @Test
     fun `ein vorhandener Sport-Track schlaegt den Tages-Track`() {
-        val lage = ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT)
-        assertEquals(MusicRole.MAIN_DAY, MusicResolver.resolve(lage, mitTagesTrack))
+        val lage = ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT, AnimationType.MOVE)
+        assertEquals(MusicRole.MAIN_DAY, MusicResolver.resolve(lage, heute))
         assertEquals(
             MusicRole.SPORT,
-            MusicResolver.resolve(lage, mitTagesTrack + MusicRole.SPORT)
+            MusicResolver.resolve(lage, heute + MusicRole.SPORT)
         )
     }
 
@@ -94,7 +106,7 @@ class MusicResolverTest {
     fun `nachts gibt es auch am Sportplatz keinen Sport-Track`() {
         assertTrue(
             MusicRole.SPORT !in MusicResolver.candidates(
-                ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.SPORT)
+                ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.SPORT, AnimationType.MOVE)
             )
         )
     }
@@ -109,6 +121,17 @@ class MusicResolverTest {
             listOf(MusicRole.HOME_EVENING, MusicRole.MAIN_DAY),
             MusicResolver.candidates(ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.LIVING))
         )
+    }
+
+    @Test
+    fun `stille Naturorte gehoeren abends zum ruhigen Track`() {
+        for (place in listOf(PlayScene.Place.PARK, PlayScene.Place.FOREST, PlayScene.Place.MEADOW)) {
+            assertEquals(
+                "$place",
+                listOf(MusicRole.HOME_EVENING, MusicRole.MAIN_DAY),
+                MusicResolver.candidates(ctx(PlayAmbientActivity.DayPhase.EVENING, place))
+            )
+        }
     }
 
     // ================= Vollstaendigkeit =================

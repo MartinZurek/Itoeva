@@ -1361,3 +1361,32 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   `@raw/itoeva_*` fest - bewusst mit Platzhalter, damit kuenftige Tracks nicht vergessen werden.
 - **Weiterhin OPEN DECISION:** ob realistische generierte Musik ueber einer 16x16-Welt
   aesthetisch richtig ist, und die Lizenzpruefung vor einer kommerziellen Veroeffentlichung.
+
+### 2026-09-05 - Zwei Tracks werden zu einem sanften Zustandswechsel
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Kleine, ruecknehmbare Verfeinerung der am
+  selben Tag entschiedenen Rollen-Architektur; keine neue Musikrolle und kein neues Asset.
+- **BEOBACHTET:** Seit PR #89 liegen nicht mehr einer, sondern zwei Tracks im Paket:
+  `HOME_EVENING` / Quiet Lanterns und `MAIN_DAY` / Lantern Streets. README, Manifest-Kommentar,
+  Tests und KDoc beschrieben noch den Zustand vor diesem Merge. Vor allem war der als "spaeter"
+  dokumentierte harte Rollenwechsel damit erstmals wirklich erreichbar.
+- **Spielerwirkung:** Ein echter Rollenwechsel bricht den bisherigen Track nicht mehr ab. Alter
+  und neuer Player laufen vier Sekunden nebeneinander und folgen einer Equal-Power-Kurve; dadurch
+  bleibt die wahrgenommene Energie in der Mitte erhalten. Gleiche Rollen starten weiterhin nicht
+  neu, die Nutzerentscheidung und alle bisherigen Audio-Sperren bleiben unveraendert.
+- **Aktivitaet statt Kulissenbehauptung:** Ein kuenftiger `SPORT`-Track steht nur dann vor dem
+  Tagestrack, wenn die Figur am Sportplatz tatsaechlich `MOVE` ausfuehrt. Der Ort allein reicht
+  nicht mehr. `DockScreen.currentTopic` existierte bereits und wird nur an den kleinen
+  `MusicContext` durchgereicht; kein zweiter Aktivitaetszustand entsteht.
+- **Abendliche Natur:** Park, Wald und Wiese folgen abends nun wie der bereits enthaltene Teich
+  der ruhigen Abendrolle. Stadt, Strasse, Laden und Arbeitsplatz bleiben beim ausklingenden
+  Tagestrack. Das entspricht der vorhandenen Weltsemantik: Wald, Wiese und Teich lassen keine
+  zufaelligen Besucher zu und sind Rueckzugsorte; die Stadt und Strasse sind Wege und Begegnungs-
+  raeume.
+- **Nicht stillschweigend geloest:** Die beiden erzeugten Ogg-Dateien wurden nicht nachbearbeitet.
+  Die technische Analyse ergab rund 6 LU Lautheitsunterschied, einen True Peak ueber 0 dB beim
+  Tagestrack sowie lange leise Passagen und keine belegte nahtlose Loop-Grenze beim Abendtrack.
+  Weil generierte Binaerdateien nur ueber ihren vorgesehenen Prozess veraendert werden duerfen,
+  bleiben Normalisierung, Peak-Grenze, Stille- und Loop-Pruefung ein eigenes Pipeline-Paket in
+  NT-055. Ebenso offen bleiben mehrere Varianten je Rolle, ein gemeinsames Leitmotiv, die
+  aesthetische Grundsatzfrage und die Lizenzpruefung.

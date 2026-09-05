@@ -31,7 +31,7 @@
       "steps": 8,
       "cfg_scale": 1.0,
       "seed": 5092026,
-      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. NOCH NICHT ERZEUGT - erst nach Abschluss der Resolver-Arbeit generieren."
+      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert."
     }
   ]
 }

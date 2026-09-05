@@ -3,9 +3,9 @@ package android.media
 /**
  * Attrappen fuer die Audio-Wiedergabe - siehe tools/reaction-preview/README.md.
  *
- * Geprueft wird ausdruecklich NICHT, ob etwas erklingt, sondern nur `PlayMusic.decide`: ob unter
- * den gegebenen Bedingungen ueberhaupt gespielt werden duerfte und welche Rolle passt. Deshalb
- * genuegt hier, dass es uebersetzt.
+ * Geprueft wird ausdruecklich NICHT, ob etwas erklingt, sondern die reine Auswahl und die
+ * Lautstaerke-Kurve der Ueberblendung. Deshalb genuegt hier, dass die Android-Anbindung
+ * uebersetzt; den echten Zeitverlauf prueft die CI beziehungsweise der Geraetetest.
  */
 class AudioAttributes private constructor() {
     class Builder {

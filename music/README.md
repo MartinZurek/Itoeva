@@ -2,9 +2,14 @@
 
 Itoevas Musik soll sich mit Welt und Charakter entwickeln, aber nicht bei jedem App-Start live von einem Modell erzeugt werden. Generierte Stuecke werden deshalb wie andere Spielinhalte versioniert: Prompt -> Open-Weights-Modell -> pruefbare Audiodatei -> Pull Request -> App-Asset.
 
-## Erster Track
+## Die ersten beiden Tracks
 
 `home-evening-01` / **Quiet Lanterns** ist die erste klangliche Referenz fuer ruhige Home- und Abendszenen. Der Prompt beschreibt Eigenschaften und Instrumente, nicht den Stil eines konkreten lebenden oder verstorbenen Kuenstlers.
+
+`main-day-01` / **Lantern Streets** traegt dieselbe warme, japanisch gefaerbte Jazz-/Lo-Fi-
+Sprache in den normalen Tagesablauf. Beide Tracks liegen als gepruefte Ogg/Vorbis-Assets in der
+App; weitere Rollen bleiben absichtlich ohne erfundenen Ersatz, bis ein passendes Stueck erzeugt
+und gehoert wurde.
 
 Definitionen liegen in:
 
@@ -40,7 +45,7 @@ Standardmaessig wird `home-evening-01` erzeugt. Ein erfolgreicher Lauf:
 2. installiert die festgehaltene Stable-Audio-3-Inferenzbibliothek,
 3. laedt die freigeschalteten Open Weights ueber Hugging Face,
 4. erzeugt den Track lokal auf dem Runner,
-5. speichert WAV plus Metadaten als GitHub-Artifact,
+5. speichert Ogg/Vorbis plus Metadaten als GitHub-Artifact,
 6. legt bei aktiviertem `create_pr` einen neuen Branch an,
 7. kopiert das Audio nach `app-sim/src/main/res/raw/`,
 8. oeffnet einen PR gegen `main`.
@@ -124,23 +129,29 @@ Welcher Track laeuft, entscheidet die Welt:
 > Die Welt entscheidet, WAS passen wuerde. Der Nutzer entscheidet, OB ueberhaupt Musik laufen
 > darf.
 
-`MusicResolver` bekommt Tageszeit und Ort und liefert eine kurze Liste von **Rollen**, vom
-Spezifischsten zum Allgemeinsten. Genommen wird die erste, zu der ein Track ausgeliefert ist -
-sonst bleibt es still. Keine vollstaendige Matrix aus Tageszeit mal Ort: Die waere zu 90 %
-Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt werden.
+`MusicResolver` bekommt Tageszeit, Ort und die aktuelle Beschaeftigung und liefert eine kurze
+Liste von **Rollen**, vom Spezifischsten zum Allgemeinsten. Genommen wird die erste, zu der ein
+Track ausgeliefert ist - sonst bleibt es still. Keine vollstaendige Matrix aus Tageszeit mal Ort:
+Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt werden.
 
 | Rolle | wofuer | Track |
 |---|---|---|
-| `main_day_background` | der normale Tag, musikalische Hauptidentitaet | vorbereitet, **noch nicht erzeugt** |
-| `home_evening_background` | ruhiger Abend und Nacht zu Hause | `home-evening-01` / Quiet Lanterns |
+| `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets |
+| `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns |
 | `morning_background` | frueher Morgen, falls er sich abheben soll | noch keiner |
 | `sport_background` | Bewegung und Anstrengung | noch keiner |
 | `dream_background` | Traum-Szenen | noch keiner |
 
-**Der heutige Stand ist absichtlich unvollstaendig:** Es gibt genau einen Track. Morgens und
-mittags bleibt es deshalb **still**, und das ist die richtige Antwort - ein Abendstueck den
-ganzen Tag zu spielen waere schlechter als nichts. Sobald `main_day_background` erzeugt und
-gemergt ist, fuellt sich diese Luecke von selbst, ohne eine Zeile Entscheidungslogik.
+**Der heutige Stand umfasst zwei Tracks:** Morgens faellt die noch unbelegte Morgenrolle auf
+`main_day_background` zurueck, mittags laeuft derselbe Tagestrack. Abends uebernimmt an ruhigen
+Orten `home_evening_background`; Stadt, Strasse, Laden und Arbeitsplatz lassen den Tag noch
+ausklingen. Park, Wald, Wiese und Teich gelten abends als ruhige Naturorte. Nachts wird nie auf
+den Tagestrack zurueckgefallen.
+
+Ein spaeterer Sporttrack uebernimmt nur, wenn die Figur am Sportplatz **tatsaechlich MOVE
+ausfuehrt**. Der Ort allein behauptet keine Handlung. Traum, Wetter und Stimmung bleiben
+vorbereitet beziehungsweise vorhandene Weltsignale, erhalten aber erst mit einem geprueften
+passenden Track eine eigene musikalische Wirkung.
 
 Das Feld `role` ist deshalb Pflicht im Manifest und wird gegen dieselbe Liste geprueft, die
 `MusicRole` in `app-sim/.../matrix/PlayMusicPlan.kt` fuehrt. **Wer eine Rolle ergaenzt, ergaenzt
@@ -148,8 +159,9 @@ sie an beiden Stellen** - `generate_music.py` laesst einen unbekannten Namen son
 durch, was der Sinn der Sache ist.
 
 Ein laufender Track wird bei einem Ortswechsel **nicht** neu gestartet, solange er nach wie vor
-die richtige Rolle ist. Ein echter Wechsel ist heute ein harter Schnitt; die Ueberblendung hat
-ihren Platz in `PlayMusic.switchTo` und ist als naechster Schritt vermerkt (NT-055).
+die richtige Rolle ist. Ein echter Rollenwechsel blendet den bisherigen und den neuen Player
+vier Sekunden lang mit einer Equal-Power-Kurve ineinander. So entsteht weder ein harter Schnitt
+noch das Lautstaerke-Loch einer linearen Ueberblendung.
 
 Solange kein Track fuer eine Rolle gemergt ist, sucht die App ihn vergeblich und bleibt still -
 sie kommt ohne ihn aus. Damit der Ressourcen-Schrumpfer die vorhandenen Dateien im Release nicht

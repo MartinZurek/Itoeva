@@ -68,7 +68,8 @@ SRCS=(
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Die Musik-Wiedergabeschicht: reines Kotlin bis auf MediaPlayer/AudioManager, fuer die
-  # src/MediaStubs.kt daneben einspringt. Geprueft wird PlayMusic.decide, nicht die Ausgabe.
+  # MediaStubs.kt und AnimatorStubs.kt daneben einspringen. Geprueft werden Entscheidung und
+  # Lautstaerke-Kurve, nicht Androids tatsaechliche Audioausgabe.
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/settings/SettingsCatalog.kt"
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayMusic.kt"
 )
@@ -104,7 +105,8 @@ TEST_CLASSES=(
 echo "Uebersetzen ..."
 "$KOTLINC" -nowarn -d "$WORK/tests" -cp "$JUNIT:$HAMCREST" \
   "$HERE/src/Annotations.kt" "$HERE/src/AndroidStubs.kt" "$HERE/src/AndroidOsStubs.kt" \
-  "$HERE/src/MediaStubs.kt" "$HERE/src/SettingsStoreStub.kt" "$HERE/src/LogStub.kt" \
+  "$HERE/src/MediaStubs.kt" "$HERE/src/AnimatorStubs.kt" \
+  "$HERE/src/SettingsStoreStub.kt" "$HERE/src/LogStub.kt" \
   "$WORK"/gen/R_*.kt "${SRCS[@]}" "${TEST_SRCS[@]}"
 
 echo "Laufen lassen ..."

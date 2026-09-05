@@ -8,6 +8,7 @@ import com.notime.glyphsim.settings.SettingsCatalog
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -27,8 +28,8 @@ class PlayMusicTest {
         PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.PARK
     )
 
-    /** Der heutige Auslieferungsstand: genau ein Track. */
-    private val heute = setOf(MusicRole.HOME_EVENING)
+    /** Der heutige Auslieferungsstand: Tages- und Abendtrack. */
+    private val heute = setOf(MusicRole.HOME_EVENING, MusicRole.MAIN_DAY)
 
     private fun decide(
         enabled: Boolean = true,
@@ -85,12 +86,12 @@ class PlayMusicTest {
     // ================= Das OB trifft das WAS =================
 
     /**
-     * Eingeschaltet, aber fuer diese Lage gibt es (noch) nichts: still. Das ist kein Fehler,
-     * sondern der Zustand, in dem sich Morgen und Mittag heute befinden.
+     * Eingeschaltet, aber fuer diese Lage gibt es nichts: still. Das bleibt wichtig fuer Builds,
+     * in denen ein erzeugtes Asset noch nicht gemergt ist.
      */
     @Test
     fun `eingeschaltet ohne passenden Track ergibt Stille`() {
-        assertNull(decide(context = mittagsImPark))
+        assertNull(decide(context = mittagsImPark, available = setOf(MusicRole.HOME_EVENING)))
     }
 
     /** Sobald der Tages-Track existiert, fuellt sich genau diese Luecke - ohne weitere Aenderung. */
@@ -98,7 +99,7 @@ class PlayMusicTest {
     fun `mit Tages-Track wird aus der Mittagsstille Musik`() {
         assertEquals(
             MusicRole.MAIN_DAY,
-            decide(context = mittagsImPark, available = heute + MusicRole.MAIN_DAY)
+            decide(context = mittagsImPark)
         )
     }
 
@@ -108,5 +109,19 @@ class PlayMusicTest {
         assertNull(decide(enabled = false, otherAudioActive = true))
         assertNull(decide(otherAudioActive = true, deviceSilent = true))
         assertNull(decide(enabled = false, deviceSilent = true, available = emptySet()))
+    }
+
+    @Test
+    fun `Ueberblendung behaelt an Anfang Mitte und Ende ihre Energie`() {
+        val start = PlayMusic.transitionVolumes(0f)
+        val middle = PlayMusic.transitionVolumes(0.5f)
+        val end = PlayMusic.transitionVolumes(1f)
+
+        assertEquals(0.35f, start.first, 0.0001f)
+        assertEquals(0f, start.second, 0.0001f)
+        assertTrue(middle.first > 0f && middle.second > 0f)
+        assertEquals(middle.first, middle.second, 0.0001f)
+        assertEquals(0f, end.first, 0.0001f)
+        assertEquals(0.35f, end.second, 0.0001f)
     }
 }
