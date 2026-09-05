@@ -147,13 +147,16 @@ object AvatarActivityPlans {
      * koennen hier spaeter hinzukommen, ohne [SkillRepertoire] ihre IDs beizubringen.
      */
     fun supportsContextualExecution(node: AnimationNode): Boolean =
-        node.id in FOOTBALL_INTENT_NODES || node.id in STRENGTH_INTENT_NODES
+        node.id in FOOTBALL_INTENT_NODES ||
+            node.id in STRENGTH_INTENT_NODES ||
+            node.id in MUSIC_INTENT_NODES
 
     /**
      * Uebersetzt eine bereits vorhandene Skill-/Reminder-Absicht in eine konkrete vorhandene
-     * [PlayRoutine]. Der erste vertikale Schnitt ist bewusst nur Fussball; fuer alle anderen
-     * Knoten bleibt die bisherige Reaktion unangetastet, statt hier vorschnell ein Framework zu
-     * bauen.
+     * [PlayRoutine]. Angeschlossen sind bisher drei Familien - Fussball, Kraft & Ausdauer und
+     * Musizieren; fuer alle anderen Knoten bleibt die bisherige Reaktion unangetastet, statt hier
+     * vorschnell ein Framework zu bauen. Jeder Schnitt kam als eine Verzweigung und ein
+     * Schritt-Bauer dazu, nicht als zweite Entscheidungsschicht.
      *
      * Entscheidend: Freischaltungen waehlen NICHT bloss eine zusaetzliche Animation nach der
      * Handlung, sondern veraendern die Handlung selbst. Ohne Dribbling-Knoten gibt es keine
@@ -172,6 +175,9 @@ object AvatarActivityPlans {
         // Zweiter Schnitt, gleiche Weiche: Kraft & Ausdauer laeuft neben dem Fussball her, nicht
         // in einem zweiten System. Alles andere faellt weiterhin auf den bisherigen Reaktionsweg.
         if (plan.resultingActivity == STRENGTH_NODE) return resolveStrength(plan, context)
+        // Dritter Schnitt, dieselbe Weiche - und der erste Fall ausserhalb von `sport`. Der
+        // Themen-Typ kommt dabei aus dem Baum (CREATIVITY), nicht aus einer Meinung dieser Datei.
+        if (plan.resultingActivity == MUSIC_NODE) return resolveMusic(plan, context)
         if (plan.resultingActivity != BALLSPORT_NODE) return null
 
         val unlocked = context.unlockedNodeIds
@@ -293,6 +299,90 @@ object AvatarActivityPlans {
     }
 
     /**
+     * **Dritter vertikaler Schnitt: Musizieren** - und der erste Fall ausserhalb von `sport`.
+     *
+     * Damit beantwortet dieser Schnitt die Frage, die die beiden Sport-Faelle offen lassen mussten:
+     * Traegt das Muster auch eine Beschaeftigung mit einem anderen Themen-Typ und einem anderen
+     * Ortsprofil - oder war es nur zweimal derselbe Fall?
+     *
+     * **Erneut nichts Neues erfunden.** [PlayEffects.MusicPhase] und [RoutineStep.Music] gab es
+     * schon; `PlayRoutines` benutzt sie sogar bereits in einer eigenen CREATIVITY-Routine
+     * ("Musizieren im Park"), und `DockScreen.runRoutine` zeichnet den Schritt. Die Phase war also
+     * im Alltag laengst verbunden - nur nicht mit einer *Absicht*. Genau diese eine Luecke schliesst
+     * der Schnitt, wie zuvor bei Fussball und Kraft.
+     *
+     * **Der Themen-Typ kommt aus dem Baum, nicht von hier.** `kreativ` ist als
+     * [AnimationType.CREATIVITY] angelegt; die beiden Sport-Familien liefern MOVE, weil `sport` so
+     * angelegt ist. Dass diese Datei den Typ nirgends selbst waehlt, ist der eigentliche Beleg,
+     * dass hier kein zweites Regelwerk neben dem Baum entsteht.
+     *
+     * **Eine Freischaltung, mehr behauptet der Schnitt nicht.** `TUNE` und `PLAY` bilden zusammen
+     * die Basis, die auch ohne jeden Knoten vollstaendig ist: Er stimmt und er spielt. `FINALE`
+     * erscheint ausschliesslich mit tatsaechlich freigeschaltetem `singen` - auf keinem Level und
+     * bei keiner Spezies sonst. Keine erfundene Level-Schwelle; welche Level Varianten oeffnen,
+     * bleibt laut `Tagesablauf.md` offen.
+     *
+     * **Warum `PLAY` zur Basis gehoert und nicht zur Freischaltung.** Beim Fussball ist `TOUCH`
+     * fuer sich eine ganze kleine Szene, beim Training braucht `WARM_UP` den Ausklang `REST`.
+     * Stimmen allein waere hier dasselbe Stueck Stumpf: Man saehe jemanden ein Instrument richten
+     * und dann aufhoeren. Das Koennen liegt im Abschluss, den `FINALE` mit fuenf statt drei Noten
+     * sichtbar macht - nicht darin, ueberhaupt einen Ton zu spielen.
+     *
+     * **`drum` und `bolt` bleiben bewusst aussen vor.** Beide haengen unter `kreativ/musik`, aber
+     * die vorhandene Choreografie kennt keine Phase, die sie voneinander unterscheiden koennte.
+     * Sie als Absicht zu fuehren und dann dasselbe zu zeigen wie `singen` waere eine Behauptung
+     * ohne Deckung; sie behalten deshalb den bisherigen Reaktionsweg - genau wie `basketball` und
+     * `trophy` beim Fussball-Schnitt.
+     */
+    private fun resolveMusic(plan: ActivityPlan, context: ActivityContext): ResolvedActivity {
+        val unlocked = context.unlockedNodeIds
+        val musicLearned = MUSIC_NODE in unlocked
+        val singLearned = SING_NODE in unlocked
+
+        val localStage = context.place in LOCAL_MUSIC_PLACES
+        val targetPlace = if (localStage) context.place else PlayScene.Place.PARK
+        val anchor = anchorFor(targetPlace)
+
+        val skill = buildList {
+            if (singLearned) {
+                add(RoutineStep.Music(PlayEffects.MusicPhase.FINALE))
+                add(RoutineStep.Linger(4_000L))
+            }
+        }
+
+        if (isInsert(plan, skill)) {
+            return ResolvedActivity(plan, AnimationType.CREATIVITY, PlayRoutine(skill))
+        }
+
+        val steps = buildList {
+            // Anders als beim Sport ist der Ortswechsel hier die Ausnahme: Ein Instrument braucht
+            // kein Feld, nur Platz zum Sitzen. Wohnzimmer und Leseecke taugen dafuer so gut wie
+            // Park und Wiese. Wo es dagegen laut, nass oder eng ist, fuehrt der sichtbare Weg in
+            // den Park - kein Teleport, derselbe vorhandene Schritt wie in beiden Sport-Faellen.
+            if (!localStage) {
+                add(RoutineStep.GoToPlace(PlayScene.Place.PARK))
+            }
+            add(RoutineStep.Stroll(anchor))
+
+            add(RoutineStep.Music(PlayEffects.MusicPhase.TUNE))
+            add(RoutineStep.Linger(if (musicLearned) 3_000L else 2_000L))
+
+            add(RoutineStep.Music(PlayEffects.MusicPhase.PLAY))
+            add(RoutineStep.Linger(if (musicLearned) 6_000L else 4_000L))
+
+            addAll(skill)
+        }
+
+        return ResolvedActivity(
+            plan = plan,
+            // Aus dem Baum: `kreativ` ist als CREATIVITY angelegt. Diese Datei waehlt den Typ
+            // nirgends selbst - sie liest ihn nur ab.
+            topic = AnimationType.CREATIVITY,
+            routine = PlayRoutine(steps)
+        )
+    }
+
+    /**
      * **Eine Einlage in eine bereits LAUFENDE Beschaeftigung bekommt keinen neuen Anlauf.**
      *
      * [planFor] beantwortet das bereits: Laeuft der Wirt schon, enthaelt der Plan nur einen
@@ -313,7 +403,13 @@ object AvatarActivityPlans {
     private fun isInsert(plan: ActivityPlan, skill: List<RoutineStep>): Boolean =
         skill.isNotEmpty() && plan.steps.none { it is ActivityStep.Begin }
 
-    /** Wo auf der Breite des Bildes die Uebung stattfindet - je Ort einmal, fuer beide Familien. */
+    /**
+     * Wo auf der Breite des Bildes das Ganze stattfindet - je Ort einmal, fuer ALLE Familien.
+     *
+     * Hiess bis zum dritten Schnitt "fuer beide Familien". An den Werten aendert sich nichts:
+     * Sie beschreiben den Ort, nicht die Taetigkeit, und ein Park ist zum Musizieren so breit wie
+     * zum Kicken. Eine eigene Anker-Tabelle je Familie waere eine Kopie, die auseinanderlaeuft.
+     */
     private fun anchorFor(place: PlayScene.Place): Float = when (place) {
         PlayScene.Place.SPORT -> 0.30f
         PlayScene.Place.PARK -> 0.42f
@@ -340,8 +436,18 @@ object AvatarActivityPlans {
     private const val STRENGTH_NODE = "sport/kraft-ausdauer"
     private const val LIFT_NODE = "sport/kraft-ausdauer/heben"
 
+    private const val MUSIC_NODE = "kreativ/musik"
+    private const val SING_NODE = "kreativ/musik/singen"
+
     private val FOOTBALL_INTENT_NODES = setOf(BALLSPORT_NODE, DRIBBLING_NODE, SHOT_NODE)
     private val STRENGTH_INTENT_NODES = setOf(STRENGTH_NODE, LIFT_NODE)
+
+    /**
+     * `drum` und `bolt` haengen ebenfalls unter `kreativ/musik`, fehlen hier aber absichtlich -
+     * siehe [resolveMusic]: Ohne unterscheidbare Phase waere ihre Aufnahme eine Behauptung ohne
+     * Deckung.
+     */
+    private val MUSIC_INTENT_NODES = setOf(MUSIC_NODE, SING_NODE)
 
     /**
      * Orte, an denen Sport ohne Ortswechsel glaubwuerdig ist - fuer BEIDE Familien dieselben.
@@ -355,5 +461,24 @@ object AvatarActivityPlans {
         PlayScene.Place.SPORT,
         PlayScene.Place.PARK,
         PlayScene.Place.MEADOW
+    )
+
+    /**
+     * Orte, an denen Musizieren ohne Ortswechsel glaubwuerdig ist.
+     *
+     * **Eine bewusste Entscheidung, keine abgeleitete Tatsache.** Beim Sport zwingt die Sache
+     * selbst nach draussen - ein Ball und ein Tor gehoeren nicht ins Wohnzimmer. Ein Instrument
+     * braucht dagegen nur Platz zum Sitzen, und die Choreografie zeichnet Gitarre, Noten und
+     * Buehnenlinie neben dem Avatar statt in die Kulisse. Deshalb kommen Wohnzimmer und Leseecke
+     * zu Park und Wiese dazu.
+     *
+     * Absichtlich NICHT enthalten: das Schlafzimmer (nachts kein Konzert), Bad, Kueche, Werkstatt
+     * und alles Oeffentliche. Dort fuehrt der sichtbare Weg in den Park.
+     */
+    private val LOCAL_MUSIC_PLACES = setOf(
+        PlayScene.Place.PARK,
+        PlayScene.Place.MEADOW,
+        PlayScene.Place.LIVING,
+        PlayScene.Place.NOOK
     )
 }
