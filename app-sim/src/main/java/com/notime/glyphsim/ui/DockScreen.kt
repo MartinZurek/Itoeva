@@ -1291,9 +1291,6 @@ fun DockScreen(
         suspend fun runVisit() {
             val host = avatar ?: return
             if (host.fed || host.occurrenceId != null || avatarHidden) return
-            // Ab hier laeuft ein Besuch: Ein Ablauf, der gerade draussen wartet, geht erst
-            // weiter, wenn der Gast wieder fort ist (siehe [visitRunning]).
-            visitRunning = true
             val guestSpecies = AvatarSpecies.entries.filter { it != host.species }.random()
             val px = with(density) { host.sizeDp.dp.toPx() }
             val fromLeft = Random.nextBoolean()
@@ -1328,6 +1325,17 @@ fun DockScreen(
                 gait.cancel()
             }
 
+            // Ab hier laeuft ein Besuch: Ein Ablauf, der gerade draussen wartet, geht erst
+            // weiter, wenn der Gast wieder fort ist (siehe [visitRunning]).
+            //
+            // **Diese Zeile gehoert unmittelbar vor das `try`, nicht weiter oben.** Zwischen ihr
+            // und dem `finally`, das sie zuruecknimmt, darf nichts liegen, was aufhaengen kann:
+            // Wuerde die Coroutine dort abgebrochen, bliebe das Flag stehen - und ein draussen
+            // wartender Ablauf waere bis zum Ende des Play-Modus angehalten, die Figur stuende
+            // regungslos auf der Strasse. Weiter oben waere das heute zwar auch sicher (keine der
+            // Zeilen davor haelt an), aber nur solange das so bleibt; hier ist es unabhaengig
+            // davon richtig.
+            visitRunning = true
             try {
                 // Treffpunkt so waehlen, dass sich die beiden NICHT ueberdecken.
                 //
