@@ -92,6 +92,20 @@ Beispiel nach installierter Runtime und `hf auth login`:
 python tools/music/generate_music.py --track-id home-evening-01 --device auto
 ```
 
+## Offen: Ablageformat und Groesse
+
+`manifest.json` legt heute `output_format: "wav"` fest. Der erste erzeugte Track ist damit
+**15,88 MB** gross - dieselben 90 Sekunden waeren als Vorbis 44,1 kHz stereo **1,06 MB**.
+
+Das ist noch nicht entschieden und soll hier auch nicht nebenbei entschieden werden, denn es
+haengt an einer Grundsatzfrage: `PlayChime.kt` begruendet ausdruecklich, warum der Klang dieser
+App gerechnet und nicht als Datei ausgeliefert wird. Musik als Asset ist davon eine Ausnahme, und
+die gehoert benannt.
+
+Messwerte, Randbedingungen (`minSdk = 26` schliesst Opus in `.ogg` aus) und die vier offenen
+Fragen stehen in `EVOLUTION.md` zum 2026-09-05; das Arbeitspaket ist NT-055 in `NextTasks.md`.
+**Wer das Format aendert, aendert es dort und nicht nur hier.**
+
 ## Rechte und Herkunft
 
 Zu jedem erzeugten Track wird eine JSON-Metadatendatei mit Modell, Upstream-Commit, Prompt-Hash, Seed, Zeitpunkt und Track-ID abgelegt. Das ist keine Rechtsgarantie, aber eine nachvollziehbare Provenienzspur fuer spaetere Releases.

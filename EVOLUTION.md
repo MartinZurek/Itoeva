@@ -1159,3 +1159,60 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   verifiziert.
 - Produktname, primäre App-Fassung, finales Spielziel, größere Storystruktur und langfristige
   Ökonomie bleiben **OPEN DECISION**.
+
+### 2026-09-05 - Der erste Audio-Asset trifft auf ein Prinzip, das es ausschliesst
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Dieser Eintrag entscheidet nichts, er legt
+  eine Entscheidung offen, die bisher unbemerkt getroffen worden waere.
+- **BEOBACHTET:** Die Musik-Pipeline (PR #77, #78) ist in `main` und hat mit
+  „Quiet Lanterns" (PR #82) ihren ersten Track erzeugt: 90 s, 44,1 kHz, stereo, **15,88 MB
+  unkomprimiertes WAV**. PR #82 legt damit `app-sim/src/main/res/raw/` an - **das Verzeichnis
+  existierte bisher nicht, die App hat heute keinen einzigen Audio-Asset.**
+- **BEOBACHTET:** `PlayChime.kt` begruendet in seiner Klassendoku ausdruecklich, warum der Klang
+  der App **gerechnet und nicht abgespielt** wird, mit drei Gruenden: keine Lizenzfrage, es passt
+  zur gerechneten Welt („Ein aufgenommener Klang daneben waere derselbe Bruch wie eine
+  fotografierte Blume in einer Pixel-Kulisse"), und - woertlich - „Kein Asset, keine Groesse im
+  Paket, kein Dekoder". Das ist das klangliche Gegenstueck zu „Prozedural statt gemalt" in
+  `Vision.md`.
+- **BEOBACHTET:** Die Musik-Pipeline ist in `EVOLUTION.md`, `Vision.md`, `Architecture.md` und
+  `NextTasks.md` **an keiner Stelle erwaehnt**. Ihre einzige Dokumentation ist `music/README.md`.
+  Laut `AGENTS.md` gilt bei Widerspruechen `EVOLUTION.md` - und dort steht zu diesem Thema nichts,
+  woraus sich der Widerspruch aufloesen liesse.
+- **ABGELEITET:** Ein Merge von PR #82 wuerde damit zwei Dinge zugleich tun, von denen nur eines
+  sichtbar ist: einen Track hinzufuegen, und stillschweigend entscheiden, dass Itoeva kuenftig
+  Audio als Asset ausliefert. Genau das schliesst dieses Dokument fuer `OPEN DECISION`-Punkte aus.
+- **GEMESSEN (2026-09-05, an genau dieser Datei):** Die Groesse ist kein Naturgesetz des Tracks,
+  sondern eine Folge des gewaehlten Formats. Alle Werte nachgerechnet, alle Ergebnisdateien
+  zurueckgelesen und auf 90,0 s geprueft:
+
+  | Format | Groesse | Anteil am WAV |
+  |---|---|---|
+  | WAV 44,1 kHz stereo (heute) | 15,88 MB | 100 % |
+  | FLAC 44,1 kHz stereo (verlustfrei) | 3,48 MB | 21,9 % |
+  | **Vorbis 44,1 kHz stereo** | **1,06 MB** | **6,7 %** |
+  | Opus 48 kHz stereo | 1,37 MB | 8,6 % |
+  | Vorbis 44,1 kHz mono | 0,63 MB | 4,0 % |
+  | Vorbis 22,05 kHz mono | 0,41 MB | 2,6 % |
+
+- **ABGELEITET (Formatwahl ist nicht frei):** `:app-sim` hat `minSdk = 26`. Vorbis in `.ogg` wird
+  seit den ersten Android-Versionen unterstuetzt; **Opus in `.ogg` erst ab Android 10 (API 29)**
+  und faellt damit fuer API 26-28 aus, obwohl es hier kaum kleiner waere. Das ist vor einer
+  Festlegung gegen die aktuelle Android-Formattabelle zu pruefen und nicht aus diesem Eintrag zu
+  uebernehmen.
+- **GEMESSEN (Stereo ist echt):** Kanalkorrelation L/R 0,870, Differenz-RMS 0,0385 gegen
+  Signal-RMS 0,0753. Der Track ist nicht breitgezogenes Mono - eine Mono-Ablage naehme
+  tatsaechlich Breite weg und ist deshalb eine Klangentscheidung, keine reine Sparmassnahme.
+  Spitzenpegel 0,782, also ohne Uebersteuerung.
+- **OPEN DECISION - ausdruecklich NICHT hier entschieden:**
+  1. Soll Itoeva ueberhaupt Audio als Asset ausliefern, oder bleibt `PlayChime`s Prinzip die
+     Regel und Musik die begruendete Ausnahme? Wenn Ausnahme: wodurch ist sie begrenzt?
+  2. In welchem Format und mit welcher Kanalzahl? Das entscheidet ueber den Faktor 15 zwischen
+     15,88 MB und 1,06 MB je Track.
+  3. Liegt die Umwandlung in der Pipeline (`generate_music.py` schreibt bereits komprimiert) oder
+     im Build? Ersteres haelt Erzeugtes und Ausgeliefertes identisch, Letzteres erlaubt ein
+     verlustfreies Archiv.
+  4. Wie viele Tracks sind langfristig vorgesehen? Die Frage entscheidet, ob das ueberhaupt zaehlt:
+     bei einem Track sind 15 MB verschmerzbar, bei zwoelf Tageszeiten- und Ortsvarianten nicht.
+- **Nicht veraendert:** An `music/manifest.json`, `tools/music/generate_music.py`, den
+  Musik-Workflows und PR #82 wurde nichts angefasst. Die Entscheidung gehoert dem Menschen; dieser
+  Eintrag stellt nur sicher, dass sie als Entscheidung sichtbar ist. Arbeitspaket: NT-055.

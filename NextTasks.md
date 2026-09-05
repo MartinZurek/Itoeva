@@ -127,6 +127,15 @@ größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für Hom
 NT-054 Skills, Level und Jahreszeiten als gewichtete Erweiterungen des in `Tagesablauf.md`
 definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay-Code entsteht.
 
+**Produktentscheidungen, offen:** NT-055 Audio-Asset-Strategie festlegen, bevor der erste Track
+gemergt wird - Format, Kanalzahl und Ort der Umwandlung. *Der erzeugte Referenztrack ist 15,88 MB
+unkomprimiertes WAV; dieselben 90 Sekunden sind als Vorbis 44,1 kHz stereo 1,06 MB, also Faktor 15.
+`minSdk = 26` schliesst Opus in `.ogg` aus (erst ab API 29). Zugleich begruendet `PlayChime.kt`
+ausdruecklich, warum Klang in dieser App gerechnet und nicht als Asset ausgeliefert wird - eine
+Musikdatei ist damit eine Ausnahme, die benannt werden muss. Messwerte und die vier offenen Fragen:
+EVOLUTION.md, Eintrag zum 2026-09-05.* Diese Aufgabe ist zeitkritisch, solange PR #82 offen ist:
+Ein Merge entscheidet die Frage stillschweigend mit.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.
@@ -143,4 +152,4 @@ IDs bleiben stabile Referenzen, auch nach dem Verschieben zwischen Top 15 und Fu
 Wird eine Top-15-Aufgabe erledigt, rückt die höchste noch offene Future-Backlog-Aufgabe nach dem
 Hebel-Maßstab oben in die Top 15 nach - die Liste bleibt dadurch dauerhaft auf maximal 15
 Einträge begrenzt. Neue Aufgaben, die während der Arbeit entdeckt werden, kommen mit
-fortlaufender neuer ID (ab NT-054) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
+fortlaufender neuer ID (ab NT-056) direkt in den Future Backlog, nicht ungeprüft in die Top 15.
