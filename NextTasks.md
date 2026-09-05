@@ -140,12 +140,13 @@ auseinanderlaufen; (d) ob realistische generierte Musik ueber einer 16x16-Welt a
 richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer kommerziellen
 Veroeffentlichung.
 
-**Welt und Tagesablauf, offen:** NT-056 **Begegnung waehrend eines Aufenthalts draussen.**
-`visitPossible()` in `DockScreen.kt` verlangt `!routineRunning`; da die Figur nur innerhalb von
-Ablaeufen nach draussen kommt, kann sie draussen derzeit niemandem begegnen. Die laengeren
-Aussenphasen (2026-09-05) verschieben Besuche sogar weiter nach hinten. Zu klaeren ist, ob ein
-Besuch waehrend eines `RoutineStep.Linger` unter freiem Himmel zugelassen wird und der Ablauf
-dafuer wartet, statt die Figur mitten im Gespraech weiterlaufen zu lassen. · NT-057
+**Welt und Tagesablauf, offen:** NT-056 **Begegnung waehrend eines Aufenthalts draussen** -
+*am 2026-09-05 umgesetzt; siehe EVOLUTION.md.* Die Bedingung ist als `PlayVisitWindow.isOpen`
+aus `DockScreen` herausgeloest und geprueft; ein Besuch ist waehrend eines `RoutineStep.Linger`
+unter freiem Himmel moeglich, und der Ablauf wartet danach auf das Ende des Besuchs. **Offen
+bleibt:** ob ein Besuch auch dann kommen darf, wenn die Figur draussen auf einer Bank SITZT
+(`occupied`) - die laengsten Aussenpausen liegen genau dort, aber "wer sitzt, faellt heraus" war
+eine bewusste Entscheidung und gehoert nicht nebenbei umgedreht. · NT-057
 **Mindestdauer eines dynamischen Zustands.** Gemeldet zusammen mit den zu kurzen Aussenphasen.
 Bewusst zurueckgestellt, bis die Wirkung der Verweildauern am Geraet gemessen ist - sonst
 entstuende eine Regel, die nie greift. Offene Entwurfsfrage: Gehoert die Mindestdauer der MUSIK
