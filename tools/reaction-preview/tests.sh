@@ -84,6 +84,8 @@ TEST_SRCS=(
   "$TEST/matrix/ReactionTriggerTest.kt"
   "$TEST/matrix/AvatarReactionsTest.kt"
   "$TEST/matrix/MusicResolverTest.kt"
+  "$TEST/matrix/ScenePreview.kt"
+  "$TEST/matrix/PlayRoutineTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
@@ -98,6 +100,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReactionTriggerTest
   com.notime.glyphsim.matrix.AvatarReactionsTest
   com.notime.glyphsim.matrix.MusicResolverTest
+  com.notime.glyphsim.matrix.PlayRoutineTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )

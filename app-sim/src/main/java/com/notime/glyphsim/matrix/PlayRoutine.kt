@@ -405,15 +405,38 @@ object PlayRoutines {
             ),
             // Einkaufen: der erste Ablauf, der ueber mehrere Raeume geht - und seit es die
             // Strasse gibt, fuehrt er auch dorthin, wo ein Einkauf tatsaechlich entlanggeht.
+            //
+            // **Der Ablauf hatte kein einziges [RoutineStep.Linger].** Gemeldet als "die Musik
+            // wechselt, wenn er rausgeht, aber er ist sofort wieder drinnen" - und genau das war
+            // es: Jeder Schritt ging unmittelbar in den naechsten ueber, der Weg zum Laden
+            // bestand aus zwei Bildern, und der Laden selbst war ein Regal und eine Kasse im
+            // Vorbeigehen. Draussen war damit kein Aufenthalt, sondern ein Uebergang.
+            //
+            // Die Pausen stehen deshalb dort, wo ein Einkauf tatsaechlich Zeit kostet: einmal
+            // stehen bleiben auf dem Hinweg, SUCHEN am Regal, UEBERLEGEN mit dem Gefundenen in
+            // der Hand, WARTEN an der Kasse - und der Rueckweg fuehrt wieder ueber die Strasse
+            // statt aus dem Laden direkt in die Kueche. Der Heimweg ist der Teil, den ein Sprung
+            // am billigsten verschluckt und den man am ehesten vermisst.
             PlayRoutine(
                 listOf(
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
                     RoutineStep.Stroll(0.66f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),  // schaut sich um
+                    RoutineStep.Linger(9_000L),
+                    RoutineStep.Stroll(0.34f),
+                    RoutineStep.Linger(6_000L),
                     RoutineStep.GoToPlace(PlayScene.Place.SHOP),
                     RoutineStep.GoTo(PlayScene.Station.RACK),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),  // sucht im Regal
+                    RoutineStep.Linger(8_000L),
                     RoutineStep.Take(PlayEffects.Carried.FOOD),
+                    RoutineStep.Linger(4_500L),                             // ueberlegt es sich
                     RoutineStep.GoTo(PlayScene.Station.CHECKOUT),
+                    RoutineStep.Linger(6_000L),                             // steht an
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),  // bezahlt
+                    RoutineStep.GoToPlace(PlayScene.Place.STREET),
+                    RoutineStep.Stroll(0.28f),
+                    RoutineStep.Linger(8_000L),                             // Heimweg mit Tuete
                     RoutineStep.GoToPlace(PlayScene.Place.KITCHEN),
                     RoutineStep.GoTo(PlayScene.Station.FRIDGE),
                     RoutineStep.Drop,                                       // raeumt ein
@@ -464,10 +487,17 @@ object PlayRoutines {
         // einzige Teil eines Arbeitstages, der unter freiem Himmel stattfindet, und er fehlte
         // vorher vollstaendig. Zwei Schritte auf der Strasse genuegen dafuer: Sie machen aus
         // "ist jetzt bei der Arbeit" ein "geht zur Arbeit".
+        //
+        // Zwei Schritte genuegten allerdings nur, um den Weg zu BEHAUPTEN. Sichtbar war er
+        // nicht: Ein Stroll dauert, was ein Gang durchs Bild dauert, und danach ging es
+        // unmittelbar durch die Tuer. Der Feierabend war noch kuerzer - ein Gaehnen im Gehen,
+        // dann Schnitt. Seither steht hinter jedem Aussenstueck ein Verweilen, und der Heimweg
+        // endet nicht auf dem ersten Schritt der Strasse.
         AnimationType.WORK -> listOf(
             PlayRoutine(
                 listOf(
                     RoutineStep.Stroll(0.72f),
+                    RoutineStep.Linger(7_000L),                          // Arbeitsweg
                     RoutineStep.GoToPlace(PlayScene.Place.WORK),
                     RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
                     RoutineStep.Act(AnimationType.WORK),
@@ -479,20 +509,24 @@ object PlayRoutines {
                     // naechsten Regung im Buero stehen, und der Arbeitstag haette kein Ende.
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
                     RoutineStep.Stroll(0.16f),
-                    RoutineStep.Stir(AvatarAnimations.Fidget.YAWN)
+                    RoutineStep.Stir(AvatarAnimations.Fidget.YAWN),
+                    RoutineStep.Linger(9_000L)                           // Feierabend, kein Sprung
                 )
             ),
             PlayRoutine(
                 listOf(
                     RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
                     RoutineStep.Stroll(0.78f),
+                    RoutineStep.Linger(6_000L),
                     RoutineStep.GoToPlace(PlayScene.Place.WORK),
                     RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
                     RoutineStep.Act(AnimationType.WORK),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
                     RoutineStep.Linger(2_500L),
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
-                    RoutineStep.Stroll(0.20f)
+                    RoutineStep.Stroll(0.20f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(8_000L)
                 )
             ),
             // Derselbe Arbeitsweg, nur durch die STADT statt ueber die Strasse - hin UND zurueck
@@ -502,6 +536,8 @@ object PlayRoutines {
                 listOf(
                     RoutineStep.GoToPlace(PlayScene.Place.CITY),
                     RoutineStep.Stroll(0.68f),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(8_000L),
                     RoutineStep.GoToPlace(PlayScene.Place.WORK),
                     RoutineStep.GoTo(PlayScene.Station.WORKPLACE),
                     RoutineStep.Act(AnimationType.WORK),
@@ -509,7 +545,9 @@ object PlayRoutines {
                     RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
                     RoutineStep.Act(AnimationType.WORK),
                     RoutineStep.GoToPlace(PlayScene.Place.CITY),
-                    RoutineStep.Stroll(0.24f)
+                    RoutineStep.Stroll(0.24f),
+                    RoutineStep.Linger(9_000L),
+                    RoutineStep.Stroll(0.55f)
                 )
             )
         )
@@ -578,10 +616,13 @@ object PlayRoutines {
                 listOf(
                     RoutineStep.Stroll(0.12f),
                     RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Linger(5_000L),
                     RoutineStep.Stroll(0.80f),
                     RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Linger(6_000L),
                     RoutineStep.Stroll(0.45f),
-                    RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE)
+                    RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE),
+                    RoutineStep.Linger(6_000L)
                 )
             ),
             // Spaziergang mit Pause auf der Bank.
@@ -589,12 +630,14 @@ object PlayRoutines {
                 listOf(
                     RoutineStep.Stroll(0.16f),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(5_000L),
                     RoutineStep.GoTo(PlayScene.Station.BENCH),
                     RoutineStep.Occupy(PlayScene.Station.BENCH),
-                    RoutineStep.Linger(3_500L),
+                    RoutineStep.Linger(14_000L),
                     RoutineStep.Rise,
                     RoutineStep.Stroll(0.75f),
-                    RoutineStep.Act(AnimationType.MOVE)
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Linger(6_000L)
                 )
             ),
             // Der WALDSPAZIERGANG - ueber die Strasse hinaus, bis der Park hinter einem liegt.
@@ -606,15 +649,18 @@ object PlayRoutines {
                 listOf(
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
                     RoutineStep.Stroll(0.70f),
+                    RoutineStep.Linger(6_000L),
                     RoutineStep.GoToPlace(PlayScene.Place.FOREST),
                     RoutineStep.Stroll(0.30f),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(7_000L),
                     RoutineStep.GoTo(PlayScene.Station.BENCH),
                     RoutineStep.Occupy(PlayScene.Station.BENCH),
-                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Linger(16_000L),
                     RoutineStep.Rise,
                     RoutineStep.Stroll(0.84f),
-                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+                    RoutineStep.Linger(7_000L)
                 )
             ),
             // Nur in den Wald und dort umherstreifen - ohne Ziel, das ist der Punkt.
@@ -623,10 +669,12 @@ object PlayRoutines {
                     RoutineStep.GoToPlace(PlayScene.Place.FOREST),
                     RoutineStep.Stroll(0.18f),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(8_000L),
                     RoutineStep.Stroll(0.76f),
                     RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Linger(7_000L),
                     RoutineStep.Stroll(0.40f),
-                    RoutineStep.Linger(2_000L)
+                    RoutineStep.Linger(9_000L)
                 )
             ),
             // Eine Runde um den Block: Strasse, Bank, zurueck. Der kurze Ablauf fuer zwischendurch.
@@ -635,12 +683,14 @@ object PlayRoutines {
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
                     RoutineStep.Stroll(0.24f),
                     RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Linger(5_000L),
                     RoutineStep.GoTo(PlayScene.Station.BENCH),
                     RoutineStep.Occupy(PlayScene.Station.BENCH),
-                    RoutineStep.Linger(2_500L),
+                    RoutineStep.Linger(12_000L),
                     RoutineStep.Rise,
                     RoutineStep.Stroll(0.88f),
-                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(6_000L)
                 )
             ),
             // Spaziergang zur WIESE - ueber die Strasse hinaus, wie der Waldspaziergang oben,
@@ -650,14 +700,17 @@ object PlayRoutines {
                 listOf(
                     RoutineStep.GoToPlace(PlayScene.Place.STREET),
                     RoutineStep.Stroll(0.60f),
+                    RoutineStep.Linger(6_000L),
                     RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(6_000L),
                     RoutineStep.Stroll(0.35f),
                     RoutineStep.GoTo(PlayScene.Station.BENCH),
                     RoutineStep.Occupy(PlayScene.Station.BENCH),
-                    RoutineStep.Linger(3_500L),
+                    RoutineStep.Linger(15_000L),
                     RoutineStep.Rise,
-                    RoutineStep.Act(AnimationType.MOVE)
+                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Linger(7_000L)
                 )
             ),
             // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
@@ -705,11 +758,13 @@ object PlayRoutines {
                     RoutineStep.GoToPlace(PlayScene.Place.PARK),
                     RoutineStep.Stroll(0.40f),
                     RoutineStep.Music(PlayEffects.MusicPhase.TUNE),
-                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Linger(5_000L),
                     RoutineStep.Music(PlayEffects.MusicPhase.PLAY),
-                    RoutineStep.Linger(6_000L),
+                    RoutineStep.Linger(14_000L),
                     RoutineStep.Music(PlayEffects.MusicPhase.FINALE),
-                    RoutineStep.Linger(4_000L)
+                    RoutineStep.Linger(5_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(5_000L)
                 )
             ),
             // Staffelei auf der Wiese: Erst Skizze, dann Flaeche, dann das fertige Bild zeigen.
@@ -718,10 +773,12 @@ object PlayRoutines {
                     RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
                     RoutineStep.Stroll(0.55f),
                     RoutineStep.Painting(PlayEffects.PaintingPhase.SKETCH),
-                    RoutineStep.Linger(4_000L),
+                    RoutineStep.Linger(6_000L),
                     RoutineStep.Painting(PlayEffects.PaintingPhase.PAINT),
-                    RoutineStep.Linger(5_000L),
+                    RoutineStep.Linger(12_000L),
                     RoutineStep.Painting(PlayEffects.PaintingPhase.REVEAL),
+                    RoutineStep.Linger(6_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
                     RoutineStep.Linger(4_000L)
                 )
             )
