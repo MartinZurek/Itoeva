@@ -97,6 +97,7 @@ import com.notime.glyphsim.matrix.PlayFootballSkill
 import com.notime.glyphsim.matrix.PlaySceneView
 import com.notime.glyphsim.matrix.PlaySnapshot
 import com.notime.glyphsim.matrix.PlayTimeLapse
+import com.notime.glyphsim.matrix.PlayVisitWindow
 import com.notime.glyphsim.matrix.PlayWallet
 import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.RoutineStep
@@ -391,6 +392,33 @@ fun DockScreen(
          * ohnehin die ehrlichere Lesart ist.
          */
         var routineRunning by remember { mutableStateOf(false) }
+        /**
+         * Ob die Figur GERADE DRAUSSEN STEHT UND WARTET - also mitten in einem
+         * [RoutineStep.Linger] unter freiem Himmel (siehe den Besuchstakt).
+         *
+         * **Ohne dieses Fenster konnte die Figur draussen niemandem begegnen.** Der Besuchstakt
+         * verlangt [routineRunning] `== false`, und unter freien Himmel kommt sie ausschliesslich
+         * INNERHALB eines Ablaufs. Es blieb also nur der schmale Rest zwischen zwei Ablaeufen, und
+         * auch der nur, wenn der letzte zufaellig an einem Ort endete, an dem man Leute trifft.
+         * Mit laengeren Aussenphasen wurde daraus sogar noch weniger statt mehr.
+         *
+         * Der oben genannte Einwand bleibt trotzdem richtig - deshalb ist das Fenster genau so eng
+         * gewaehlt, dass er nicht greift: Ein Linger ist die eine Stelle, an der die Figur nichts
+         * vorhat ausser dazustehen. Und damit sie nicht mitten im Gespraech weiterlaeuft, WARTET
+         * der Ablauf danach auf das Ende des Besuchs (siehe [visitRunning]).
+         *
+         * Drinnen bleibt alles wie zuvor: Wer in der Kueche kurz innehaelt, bekommt deswegen
+         * keinen Gast an den Kuehlschrank.
+         */
+        var lingeringOutdoors by remember { mutableStateOf(false) }
+        /**
+         * Ob gerade ein Besuch laeuft - das Gegenstueck zu [lingeringOutdoors].
+         *
+         * Der Ablauf fragt danach, bevor er nach einem Linger weitergeht. Ohne diese Frage waere
+         * das Fenster oben ein Eigentor: Der Gast kaeme herein, und die Figur ginge ihm nach zwei
+         * Sekunden davon.
+         */
+        var visitRunning by remember { mutableStateOf(false) }
         /**
          * Ob die Figur sich gerade HINEINSETZT oder aufsteht (siehe [RoutineStep.Occupy]).
          *
@@ -1127,8 +1155,27 @@ fun DockScreen(
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
                     // Die Animationen selbst bleiben unangetastet: mitbeschleunigt saehe man nur
                     // noch Zucken statt Bewegung.
-                    is RoutineStep.Linger ->
-                        delay((step.millis * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(120L))
+                    is RoutineStep.Linger -> {
+                        // Unter freiem Himmel ist ein Verweilen zugleich das Fenster, in dem
+                        // jemand vorbeikommen kann - siehe [lingeringOutdoors]. Das Flag steht
+                        // NUR um das delay herum und wird im finally sicher zurueckgenommen:
+                        // Bricht der Ablauf hier ab (echte Erinnerung, Play-Modus aus), bliebe
+                        // sonst dauerhaft ein offenes Besuchsfenster stehen.
+                        lingeringOutdoors = PlayScene.isOutdoors(currentPlace)
+                        try {
+                            delay((step.millis * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(120L))
+                        } finally {
+                            lingeringOutdoors = false
+                        }
+                        // Ist waehrenddessen tatsaechlich jemand gekommen, wird der Ablauf
+                        // angehalten, bis der Gast wieder geht. Sonst liefe die Figur mitten im
+                        // Gespraech weiter, und die Begegnung saehe nach Fehler aus statt nach
+                        // Begegnung. Die Wartezeit ist kein Leerlauf: Der Besuch selbst spielt
+                        // waehrenddessen seine Bilder.
+                        while (visitRunning) {
+                            delay(VISIT_WAIT_TICK_MS)
+                        }
+                    }
 
                     is RoutineStep.Take -> {
                         // Hinlangen, Blitz genau dort, wo zugegriffen wird, dann liegt es in der
@@ -1244,6 +1291,9 @@ fun DockScreen(
         suspend fun runVisit() {
             val host = avatar ?: return
             if (host.fed || host.occurrenceId != null || avatarHidden) return
+            // Ab hier laeuft ein Besuch: Ein Ablauf, der gerade draussen wartet, geht erst
+            // weiter, wenn der Gast wieder fort ist (siehe [visitRunning]).
+            visitRunning = true
             val guestSpecies = AvatarSpecies.entries.filter { it != host.species }.random()
             val px = with(density) { host.sizeDp.dp.toPx() }
             val fromLeft = Random.nextBoolean()
@@ -1361,6 +1411,10 @@ fun DockScreen(
                 // bliebe der Gast sonst mitten im Bild stehen und ginge nie wieder.
                 visitor = null
                 speechStep = -1
+                // Und ebenso zwingend: Bliebe dieses Flag stehen, waere der wartende Ablauf
+                // draussen fuer immer angehalten - die Figur stuende bis zum Ende des
+                // Play-Modus regungslos auf der Strasse.
+                visitRunning = false
             }
         }
 
@@ -1549,12 +1603,21 @@ fun DockScreen(
             // auch die ehrlichere Lesart: Jemand kommt vorbei, wenn man draussen ist, nicht
             // wenn die Uhr es sagt.
             LaunchedEffect(Unit) {
+                // Die Bedingung selbst steht in [PlayVisitWindow] - dort ist sie pruefbar,
+                // hier waere sie es nur am Geraet. Diese Funktion sammelt nur noch den Zustand
+                // ein und reicht ihn weiter.
                 fun visitPossible(): Boolean {
                     val current = avatar ?: return false
-                    return !current.fed && current.occurrenceId == null &&
-                        occupiedStation == null && !avatarHidden &&
-                        !routineRunning && !avatarWalking && !avatarSettling &&
-                        PlayScene.allowsVisitors(currentPlace)
+                    return PlayVisitWindow.isOpen(
+                        place = currentPlace,
+                        routineRunning = routineRunning,
+                        lingeringOutdoors = lingeringOutdoors,
+                        occupied = occupiedStation != null,
+                        walking = avatarWalking,
+                        settling = avatarSettling,
+                        hidden = avatarHidden,
+                        userBusy = current.fed || current.occurrenceId != null
+                    )
                 }
                 while (isActive) {
                     delay(
@@ -3550,6 +3613,15 @@ private val VISIT_INTERVAL_MS_BUSY = 30_000L..70_000L
 
 /** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
 private const val VISIT_RETRY_MS = 4_000L
+
+/**
+ * Wie oft ein draussen wartender Ablauf nachsieht, ob der Gast wieder fort ist.
+ *
+ * Kurz gewaehlt, weil es hier nur ums Weitergehen geht: Ein Viertelsekundentakt kostet nichts und
+ * macht den Uebergang vom Gespraech zurueck in den Ablauf unmerklich. Bewusst NICHT im Zeitraffer
+ * gestreckt - das ist Ablaufsteuerung, keine vergehende Zeit.
+ */
+private const val VISIT_WAIT_TICK_MS = 250L
 
 /** Welcher Besuchstakt an diesem Ort gilt - siehe [VISIT_INTERVAL_MS_BUSY]. */
 private fun visitIntervalFor(place: PlayScene.Place): LongRange = when (place) {

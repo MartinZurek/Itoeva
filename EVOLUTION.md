@@ -1431,3 +1431,41 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Aenderung am Geraet beantwortet werden.
 - **Nebenbei:** `tools/reaction-preview/tests.sh` fuehrt `PlayRoutineTest` jetzt mit aus - 149
   statt 129 Tests, weiterhin unter einer Sekunde und ohne Gradle.
+
+### 2026-09-05 - Draussen kann man jetzt jemandem begegnen
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Eine Bedingung wird herausgeloest und um
+  einen Fall erweitert; keine neue Figur, kein neues Ereignis, keine neue Animation. Der Besuch
+  selbst (`runVisit`) ist unveraendert.
+- **BEOBACHTET / BELEGT:** Gewuenscht war, dass die Figur draussen auch mal jemanden trifft. Das
+  war **strukturell ausgeschlossen**: `visitPossible()` verlangte `!routineRunning`, und unter
+  freien Himmel kommt die Figur ausschliesslich INNERHALB eines Ablaufs. Uebrig blieb der schmale
+  Rest zwischen zwei Ablaeufen - und auch der nur, wenn der letzte zufaellig an einem Ort endete,
+  an dem man Leute trifft (Wald und Wiese lassen keine Besucher zu). Die laengeren Aussenphasen
+  vom selben Tag haetten die Lage sogar verschlechtert: Sie verschieben jeden Besuch weiter nach
+  hinten.
+- **Warum das niemandem aufgefallen ist:** Der Fehler war nur an einer AUSBLEIBENDEN Sache zu
+  bemerken. Ein Besuch kommt ohnehin nur alle anderthalb bis dreieinhalb Minuten in Frage; ob er
+  ausblieb, weil die Regel ihn verbot oder weil der Wuerfel anders fiel, sieht beim Zusehen
+  identisch aus.
+- **Die Aenderung:** Ein laufender Ablauf sperrt einen Besuch weiterhin - mit genau einer
+  Ausnahme, dem `RoutineStep.Linger` unter freiem Himmel. Das ist die eine Stelle, an der der
+  urspruengliche Einwand ("der Gast streitet sich mit dem Ablauf um dieselbe Figur") nicht greift,
+  weil die Figur dort nichts vorhat ausser dazustehen. Damit sie dem Gast nicht nach zwei Sekunden
+  davonlaeuft, **wartet der Ablauf nach dem Linger auf das Ende des Besuchs**. Drinnen bleibt
+  alles wie zuvor; die Ortsregel (`PlayScene.allowsVisitors`) bleibt uneingeschraenkt vorrangig.
+- **Aus dem Unpruefbaren ins Pruefbare geholt:** Die Bedingung stand als lokale Funktion mitten in
+  einer Compose-Funktion und war nur am Geraet zu beobachten. Sie ist jetzt
+  `PlayVisitWindow.isOpen` - reine Wahrheitswerte, dieselbe Trennung wie zwischen `MusicResolver`
+  und `PlayMusic`: Die Entscheidung wandert heraus, die Wiedergabe bleibt. Sechs neue Tests halten
+  fest, dass das Fenster draussen aufgeht, drinnen nicht, die Ortsregel nicht aushebelt und dass
+  jede einzelne Sperre (sitzt, geht, setzt sich, nicht im Bild, offene Erinnerung) es wieder
+  schliesst. `tests.sh`: 155 statt 149.
+- **NICHT geloest, ausdruecklich:** Wer draussen auf einer BANK sitzt, bekommt weiterhin keinen
+  Besuch - `occupied` sperrt unveraendert. Ausgerechnet dort liegen die laengsten Aussenpausen
+  (zwoelf bis sechzehn Sekunden). "Wer sitzt, faellt heraus" war aber eine bewusste Entscheidung
+  des Besuchstakts und wird nicht nebenbei umgedreht; der Punkt bleibt als NT-056-Rest notiert.
+- **Grenze der Pruefung:** Das Zusammenspiel der beiden Flags ist Compose-Verhalten und offline
+  nicht pruefbar. Geprueft ist die REGEL, nicht der Ablauf um sie herum. Der Beleg muss am Geraet
+  erfolgen - am ehesten daran, dass waehrend eines Aufenthalts auf der Strasse jemand vorbeikommt
+  und die Figur ihm nicht mitten im Gruss davonlaeuft.
