@@ -625,7 +625,7 @@ fun DockScreen(
          * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
          * allein [PlayMusic]; welche passt, allein der Resolver.
          */
-        LaunchedEffect(playMode, screenVisible, currentPlace) {
+        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
                 return@LaunchedEffect
@@ -633,7 +633,11 @@ fun DockScreen(
             while (true) {
                 PlayMusic.apply(
                     context,
-                    MusicContext(PlayAmbientActivity.currentDayPhase(), currentPlace)
+                    MusicContext(
+                        dayPhase = PlayAmbientActivity.currentDayPhase(),
+                        place = currentPlace,
+                        topic = currentTopic
+                    )
                 )
                 delay(MUSIC_RECHECK_MS)
             }

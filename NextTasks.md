@@ -130,13 +130,15 @@ definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay
 **Produktentscheidungen, offen:** NT-055 Musik - *Format (Ogg/Vorbis), Ort der Umwandlung
 (Pipeline), die Grenze der Ausnahme (nur der Score) sowie die kontextabhaengige Auswahl ueber
 `MusicRole`/`MusicResolver` sind am 2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.*
-**Offen bleibt:** (a) den vorbereiteten Track `main-day-01` erzeugen und mergen - erst dann
-haben Morgen und Mittag ueberhaupt Musik; (b) Ueberblendung beim Trackwechsel in
-`PlayMusic.switchTo`, heute ein harter Schnitt und mit nur einem Track nicht ausloesbar;
-(c) dem Nutzer erklaeren, warum es gerade still ist (es gibt keinen Track fuer diese Szene) -
-`PlaySound` hat dafuer ein Muster; (d) ob realistische generierte Musik ueber einer
-16x16-Welt aesthetisch richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer
-kommerziellen Veroeffentlichung.
+`main-day-01` und `home-evening-01` werden inzwischen ausgeliefert; Rollenwechsel sind seit der
+nachfolgenden Musik-Evolution vier Sekunden lang ueberblendet und Sport setzt Ort plus echte
+MOVE-Beschaeftigung voraus. **Offen bleibt:** (a) Lautheit, True Peak, lange Stille und
+Loop-Grenzen als reproduzierbares Freigabe-Gate der Erzeugungspipeline definieren; (b) mehrere
+gepruefte Varianten je Rolle ermoeglichen, ohne die Weltlogik an Dateinamen zu binden; (c) ein
+gemeinsames musikalisches Leitmotiv festlegen, bevor Morgen-, Sport- und Traumtrack unabhaengig
+auseinanderlaufen; (d) ob realistische generierte Musik ueber einer 16x16-Welt aesthetisch
+richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer kommerziellen
+Veroeffentlichung.
 
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052

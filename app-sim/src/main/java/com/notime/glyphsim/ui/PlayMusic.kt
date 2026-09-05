@@ -1,5 +1,8 @@
 package com.notime.glyphsim.ui
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
@@ -10,6 +13,9 @@ import com.notime.glyphsim.matrix.MusicResolver
 import com.notime.glyphsim.matrix.MusicRole
 import com.notime.glyphsim.settings.SettingsCatalog
 import com.notime.glyphsim.settings.SettingsStore
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * **Die Musik der Welt** - im Gegensatz zu [PlaySound] nicht die Stimme des Wesens, sondern der
@@ -62,7 +68,7 @@ import com.notime.glyphsim.settings.SettingsStore
  * [availableRoles] schlaegt jede Rolle ueber ihren Ressourcennamen nach statt ueber `R.raw`.
  * Der Grund ist nicht Bequemlichkeit: Audiodateien kommen aus **eigenen, erzeugten Pull
  * Requests** und sind kein fester Bestandteil des Quellbaums. Ein direkter Verweis wuerde jeden
- * Build brechen, in dem eine Rolle noch keinen Track hat - und genau das ist heute fuer vier
+ * Build brechen, in dem eine Rolle noch keinen Track hat - und genau das ist heute fuer drei
  * von fuenf Rollen der Fall. So bleibt die Welt einfach still, bis es etwas zu hoeren gibt.
  *
  * Damit der Ressourcen-Schrumpfer die Dateien im Release nicht als unbenutzt entfernt, haelt
@@ -79,7 +85,16 @@ object PlayMusic {
      */
     private const val VOLUME = 0.35f
 
+    /**
+     * Lang genug, dass ein Tageszeit- oder Szenenwechsel wie ein Uebergang der Welt klingt,
+     * kurz genug, dass die neue Lage nicht noch minutenlang den alten Score traegt.
+     */
+    private const val CROSSFADE_MS = 4_000L
+
     private var player: MediaPlayer? = null
+    private var outgoingPlayer: MediaPlayer? = null
+    private var transition: ValueAnimator? = null
+    private var playerVolume = 0f
 
     /** Welche Rolle gerade klingt - die Grundlage dafuer, sie NICHT neu zu starten. */
     private var playingRole: MusicRole? = null
@@ -106,7 +121,7 @@ object PlayMusic {
             .takeIf { it != 0 }
 
     /**
-     * Welche Rollen tatsaechlich ausgeliefert werden. Heute genau eine; jeder gemergte Track
+     * Welche Rollen tatsaechlich ausgeliefert werden. Heute genau zwei; jeder gemergte Track
      * erweitert die Menge, ohne dass hier oder im [MusicResolver] etwas zu aendern waere.
      */
     fun availableRoles(context: Context): Set<MusicRole> =
@@ -163,19 +178,16 @@ object PlayMusic {
     }
 
     /**
-     * Wechselt auf eine andere Rolle.
+     * Wechselt auf eine andere Rolle und ueberblendet den bisherigen Score.
      *
-     * **Hier gehoert spaeter die Ueberblendung hin, und bewusst nur hier.** Heute ist es ein
-     * harter Schnitt: anhalten, neu anfangen. Solange es genau einen Track gibt, kann dieser
-     * Fall gar nicht eintreten - ein Crossfade waere also Architektur fuer ein Verhalten, das
-     * sich noch nie gezeigt hat. Sobald der zweite Track existiert, ist diese eine Methode die
-     * einzige Stelle, die dafuer aufgemacht werden muss (siehe NT-055).
+     * Der zweite Track macht den Wechsel erstmals real: um 18 Uhr oder beim Heimkommen darf der
+     * Tag nicht mitten im Takt abbrechen. Beide Player leben deshalb nur fuer die Dauer dieses
+     * Uebergangs nebeneinander; ausserhalb davon bleibt es bei genau einem Decoder.
      */
     private fun switchTo(context: Context, role: MusicRole) {
         val res = trackResId(context, role) ?: return
-        release()
         runCatching {
-            MediaPlayer.create(context, res)?.apply {
+            val next = MediaPlayer.create(context, res)?.apply {
                 setAudioAttributes(
                     AudioAttributes.Builder()
                         // MEDIA/MUSIC statt SONIFICATION wie bei PlaySound: Das hier ist keine
@@ -186,11 +198,56 @@ object PlayMusic {
                         .build()
                 )
                 isLooping = true
-                setVolume(VOLUME, VOLUME)
+                setVolume(0f, 0f)
                 start()
-                player = this
-                playingRole = role
+            } ?: return
+
+            val previous = player
+            val previousVolume = playerVolume
+            transition?.removeAllListeners()
+            transition?.cancel()
+            outgoingPlayer?.takeIf { it !== previous }?.let(::releasePlayer)
+            outgoingPlayer = previous
+            player = next
+            playerVolume = 0f
+            playingRole = role
+
+            if (previous == null) {
+                next.setVolume(VOLUME, VOLUME)
+                playerVolume = VOLUME
+                outgoingPlayer = null
+                return
             }
+
+            val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+                duration = CROSSFADE_MS
+                addUpdateListener { valueAnimator ->
+                    val (oldVolume, newVolume) =
+                        transitionVolumes(valueAnimator.animatedValue as Float, previousVolume)
+                    if (outgoingPlayer === previous) {
+                        runCatching { previous.setVolume(oldVolume, oldVolume) }
+                    }
+                    if (player === next) {
+                        playerVolume = newVolume
+                        runCatching { next.setVolume(newVolume, newVolume) }
+                    }
+                }
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        if (outgoingPlayer === previous) {
+                            outgoingPlayer = null
+                            releasePlayer(previous)
+                        }
+                        if (player === next) {
+                            playerVolume = VOLUME
+                            runCatching { next.setVolume(VOLUME, VOLUME) }
+                        }
+                        if (transition === animation) transition = null
+                    }
+                })
+            }
+            transition = animator
+            animator.start()
         }.onFailure {
             Log.w(TAG, "Musik konnte nicht starten: ${role.manifestName}", it)
             release()
@@ -206,10 +263,30 @@ object PlayMusic {
     fun stop() = release()
 
     private fun release() {
-        val current = player ?: run { playingRole = null; return }
+        val current = player
+        val outgoing = outgoingPlayer
+        transition?.removeAllListeners()
+        transition?.cancel()
+        transition = null
         player = null
+        outgoingPlayer = null
+        playerVolume = 0f
         playingRole = null
-        runCatching { if (current.isPlaying) current.stop() }
-        runCatching { current.release() }
+        current?.let(::releasePlayer)
+        outgoing?.takeIf { it !== current }?.let(::releasePlayer)
+    }
+
+    private fun releasePlayer(value: MediaPlayer) {
+        runCatching { if (value.isPlaying) value.stop() }
+        runCatching { value.release() }
+    }
+
+    /** Konstante wahrgenommene Energie statt eines Lautstaerke-Lochs in der Mitte. */
+    internal fun transitionVolumes(
+        progress: Float,
+        outgoingStart: Float = VOLUME
+    ): Pair<Float, Float> {
+        val angle = progress.coerceIn(0f, 1f) * (PI / 2.0)
+        return (outgoingStart * cos(angle).toFloat()) to (VOLUME * sin(angle).toFloat())
     }
 }

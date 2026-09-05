@@ -1,5 +1,7 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationType
+
 /**
  * **Welche Musik zur Lage passen WUERDE** - und ausdruecklich nicht, ob ueberhaupt welche laeuft.
  *
@@ -35,13 +37,12 @@ enum class MusicRole(val manifestName: String, val androidResource: String) {
     /**
      * Der Grundcharakter des normalen Tages - die musikalische Identitaet von Itoeva.
      *
-     * **Noch nicht erzeugt.** Solange kein Track mit dieser Rolle gemergt ist, faellt alles,
-     * was hier landen wuerde, auf Stille zurueck (siehe [MusicResolver]). Das ist Absicht: Ein
-     * Abendstueck den ganzen Tag zu spielen waere schlechter als nichts.
+     * Seit PR #89 als `Lantern Streets` ausgeliefert. Die Rolle bleibt vom Dateinamen getrennt,
+     * damit die Welt weiterhin Bedeutung statt Asset-Namen auswaehlt.
      */
     MAIN_DAY("main_day_background", "itoeva_main_day_01"),
 
-    /** Ruhige Abend- und Nachtstunden zu Hause. Heute der einzige vorhandene Track. */
+    /** Ruhige Abend- und Nachtstunden zu Hause und an stillen Naturorten. */
     HOME_EVENING("home_evening_background", "itoeva_home_evening_01"),
 
     /** Der frueh Morgen, falls er sich spaeter vom uebrigen Tag abheben soll. */
@@ -62,13 +63,19 @@ enum class MusicRole(val manifestName: String, val androidResource: String) {
  * Der Ausschnitt aus der Welt, den die Musikauswahl braucht.
  *
  * Bewusst klein und bewusst kein zweiter Weltzustand: [dayPhase] kommt aus
- * [PlayAmbientActivity.currentDayPhase], [place] aus `DockScreen.currentPlace`. Weitere Signale -
- * eine laufende Sportroutine, ein besonderer Weltzustand - kommen als zusaetzliches Feld dazu,
- * wenn sie gebraucht werden, und nicht vorher.
+ * [PlayAmbientActivity.currentDayPhase], [place] aus `DockScreen.currentPlace` und [topic] aus der
+ * aktuell laufenden Handlung. Weitere Signale - etwa Wetter oder Stimmung - kommen erst als
+ * zusaetzliches Feld dazu, wenn sie eine hoerbare Entscheidung tragen koennen.
  */
 data class MusicContext(
     val dayPhase: PlayAmbientActivity.DayPhase,
-    val place: PlayScene.Place
+    val place: PlayScene.Place,
+    /**
+     * Was die Figur gerade wirklich tut. Der Ort allein reicht dafuer nicht: Auf dem Sportplatz
+     * kann sie auch nur ankommen oder warten. Ein spezifischer Aktivitaets-Track darf erst dann
+     * uebernehmen, wenn Ort UND Beschaeftigung dieselbe Geschichte erzaehlen.
+     */
+    val topic: AnimationType? = null
 )
 
 /**
@@ -97,7 +104,10 @@ object MusicResolver {
         PlayScene.Place.KITCHEN,
         PlayScene.Place.DESK,
         PlayScene.Place.CRAFT,
-        PlayScene.Place.POND
+        PlayScene.Place.POND,
+        PlayScene.Place.FOREST,
+        PlayScene.Place.MEADOW,
+        PlayScene.Place.PARK
     )
 
     /**
@@ -108,9 +118,11 @@ object MusicResolver {
      * wenn es beide heute noch gar nicht gibt.
      */
     fun candidates(context: MusicContext): List<MusicRole> = buildList {
-        // Ort schlaegt Tageszeit, solange es nicht Nacht ist: Wer nachts am Sportplatz steht,
-        // trainiert nicht, sondern geht nach Hause.
+        // Eine echte Sporthandlung schlaegt die Tageszeit, solange es nicht Nacht ist. Der Ort
+        // allein genuegt absichtlich nicht: Ein kurzer Weg oder eine Pause am Sportplatz soll
+        // spaeter keinen energischen Track starten und gleich wieder abbrechen.
         if (context.place == PlayScene.Place.SPORT &&
+            context.topic == AnimationType.MOVE &&
             context.dayPhase != PlayAmbientActivity.DayPhase.NIGHT
         ) {
             add(MusicRole.SPORT)
@@ -143,9 +155,9 @@ object MusicResolver {
      * Die erste Rolle aus [candidates], zu der es tatsaechlich einen ausgelieferten Track gibt -
      * oder `null` fuer Stille.
      *
-     * [available] beantwortet der Aufrufer, weil nur er weiss, was im Paket liegt. Heute ist das
-     * genau [MusicRole.HOME_EVENING]; Morgen und Mittag ergeben deshalb **Stille**, und das ist
-     * die richtige Antwort, bis der Tages-Track existiert.
+     * [available] beantwortet der Aufrufer, weil nur er weiss, was im Paket liegt. Fehlt eine
+     * spezifische Rolle, greift die oben dokumentierte Rangfolge; fehlt auch ihr Rueckfall,
+     * bleibt die Welt still statt einen unpassenden Track zu behaupten.
      */
     fun resolve(context: MusicContext, available: Set<MusicRole>): MusicRole? =
         candidates(context).firstOrNull { it in available }
