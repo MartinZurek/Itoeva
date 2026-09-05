@@ -90,14 +90,14 @@ Die beiden Skripte oben können den Code übersetzen und seine Ausgabe zeigen. O
 Minuten später aus der CI. Damit war jeder Push eine Wette, und genau daran sind in diesem
 Repository schon Befunde entstanden, die vorher hätten auffallen können.
 
-`tests.sh` führt die reinen Kotlin-Unit-Tests tatsächlich aus: **94 Tests aus acht Klassen in
+`tests.sh` führt die reinen Kotlin-Unit-Tests tatsächlich aus: **125 Tests aus elf Klassen in
 unter einer Sekunde.** JUnit 4 kommt aus Maven Central, der Kotlin-Compiler ist derselbe, den die
 Nachbarskripte schon nach `.work/` holen.
 
 ```
 JUnit version 4.13.2
 ..............................................................................................
-OK (94 tests)
+OK (125 tests)
 ```
 
 **Was hier nicht laufen kann**, und das ist keine Nachlässigkeit, sondern die Grenze der Methode:
@@ -105,6 +105,12 @@ alles, was Android, Room, Compose oder einen Emulator braucht — `app-sim/src/a
 Datenbank-Migrationen, die UI. Das bleibt Sache der CI. Die Liste der ausgeführten Klassen steht
 deshalb wortwörtlich im Skript statt als Platzhalter; ein `*Test.kt` zöge Klassen herein, deren
 Abhängigkeiten hier gar nicht übersetzt werden.
+
+Fuer die Musikschicht kommen drei weitere Attrappen dazu (`MediaStubs.kt`,
+`SettingsStoreStub.kt`, `LogStub.kt`): `PlayMusic` haengt an MediaPlayer und AudioManager,
+`SettingsStore` an kotlinx-Flows. Geprueft wird damit ausdruecklich **nicht**, ob etwas
+erklingt oder ob eine Einstellung einen App-Start ueberlebt - nur die Entscheidung
+`PlayMusic.decide` und die Auswahl im `MusicResolver`. Die Persistenz sichert die CI.
 
 Aus demselben Grund unterscheiden sich die Dateilisten der drei Skripte absichtlich: `render.sh`
 braucht die Welt-Dateien nicht, `tests.sh` zusätzlich `LevelUnlocks.kt`. Ein gemeinsamer

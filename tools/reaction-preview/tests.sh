@@ -64,8 +64,13 @@ SRCS=(
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
   "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
+  "$SIM/PlayMusicPlan.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
+  # Die Musik-Wiedergabeschicht: reines Kotlin bis auf MediaPlayer/AudioManager, fuer die
+  # src/MediaStubs.kt daneben einspringt. Geprueft wird PlayMusic.decide, nicht die Ausgabe.
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/settings/SettingsCatalog.kt"
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayMusic.kt"
 )
 
 TEST_SRCS=(
@@ -77,6 +82,9 @@ TEST_SRCS=(
   "$TEST/matrix/ReactionDistinctnessTest.kt"
   "$TEST/matrix/ReactionTriggerTest.kt"
   "$TEST/matrix/AvatarReactionsTest.kt"
+  "$TEST/matrix/MusicResolverTest.kt"
+  "$TEST/ui/PlayMusicTest.kt"
+  "$TEST/settings/SettingsCatalogTest.kt"
 )
 
 TEST_CLASSES=(
@@ -88,11 +96,15 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReactionDistinctnessTest
   com.notime.glyphsim.matrix.ReactionTriggerTest
   com.notime.glyphsim.matrix.AvatarReactionsTest
+  com.notime.glyphsim.matrix.MusicResolverTest
+  com.notime.glyphsim.ui.PlayMusicTest
+  com.notime.glyphsim.settings.SettingsCatalogTest
 )
 
 echo "Uebersetzen ..."
 "$KOTLINC" -nowarn -d "$WORK/tests" -cp "$JUNIT:$HAMCREST" \
   "$HERE/src/Annotations.kt" "$HERE/src/AndroidStubs.kt" "$HERE/src/AndroidOsStubs.kt" \
+  "$HERE/src/MediaStubs.kt" "$HERE/src/SettingsStoreStub.kt" "$HERE/src/LogStub.kt" \
   "$WORK"/gen/R_*.kt "${SRCS[@]}" "${TEST_SRCS[@]}"
 
 echo "Laufen lassen ..."

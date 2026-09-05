@@ -84,6 +84,7 @@ import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlayClipRenderer
+import com.notime.glyphsim.matrix.MusicContext
 import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
@@ -587,21 +588,18 @@ fun DockScreen(
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
         }
         /**
-         * Musik laeuft NUR, solange dieser Bildschirm sichtbar ist - siehe [PlayMusic].
+         * Ob dieser Bildschirm gerade zu sehen ist - allein fuer die Musik.
          *
          * Getrennt vom Zustands-Beobachter darueber, weil es eine andere Frage beantwortet: Der
          * dort merkt sich, wo das Wesen war; dieser haelt nur den Ton an. Zusammengelegt waere
          * spaeter nicht mehr zu sehen, welche Zeile wofuer da ist.
-         *
-         * [PlayMusic.start] prueft selbst, ob Musik eingeschaltet, ein Track vorhanden und der
-         * Weg frei ist - hier steht deshalb kein zweites Regelwerk daneben.
          */
-        DisposableEffect(lifecycleOwner, playMode) {
-            if (playMode) PlayMusic.start(context)
+        var screenVisible by remember { mutableStateOf(true) }
+        DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
-                    Lifecycle.Event.ON_START -> if (playMode) PlayMusic.start(context)
-                    Lifecycle.Event.ON_STOP -> PlayMusic.stop()
+                    Lifecycle.Event.ON_START -> screenVisible = true
+                    Lifecycle.Event.ON_STOP -> screenVisible = false
                     else -> Unit
                 }
             }
@@ -609,8 +607,35 @@ fun DockScreen(
             onDispose {
                 lifecycleOwner.lifecycle.removeObserver(observer)
                 // Auch beim Verlassen des Spielmodus ohne Lebenszyklus-Ereignis, etwa beim
-                // Wechsel zurueck in den Erinnerungs-Modus.
+                // Wechsel zurueck in den Erinnerungs-Modus. Die EINSTELLUNG bleibt davon
+                // unberuehrt - siehe PlayMusic.
                 PlayMusic.stop()
+            }
+        }
+        /**
+         * **Musik an die Lage angleichen** - siehe [PlayMusic.apply] und `MusicResolver`.
+         *
+         * Der Neustart bei [currentPlace] laesst einen Ortswechsel sofort wirken; die Schleife
+         * darin faengt den Tageszeitwechsel, der von selbst kommt und an kein Ereignis haengt.
+         *
+         * **Das sieht haeufiger aus, als es ist:** [PlayMusic.apply] tut nichts, solange sich
+         * die aufgeloeste ROLLE nicht aendert. Ein Avatar, der zwischen Kueche und Wohnzimmer
+         * wechselt, laesst die Musik also weiterlaufen, statt sie jedes Mal neu zu beginnen.
+         *
+         * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
+         * allein [PlayMusic]; welche passt, allein der Resolver.
+         */
+        LaunchedEffect(playMode, screenVisible, currentPlace) {
+            if (!playMode || !screenVisible) {
+                PlayMusic.stop()
+                return@LaunchedEffect
+            }
+            while (true) {
+                PlayMusic.apply(
+                    context,
+                    MusicContext(PlayAmbientActivity.currentDayPhase(), currentPlace)
+                )
+                delay(MUSIC_RECHECK_MS)
             }
         }
         // Der letzte glaubhafte Zustand wird bei jeder Aenderung gespeichert; ON_STOP oben setzt
@@ -3515,6 +3540,15 @@ private const val ARRIVAL_SETTLE_MS = 260L
 /** Wie lange das Hinlegen/Hinsetzen bzw. Aufstehen dauert - eine Bewegung an Ort und Stelle,
  *  deshalb deutlich kuerzer als ein Weg. */
 private const val SETTLE_INTO_MS = 420
+
+/**
+ * Wie oft die Musik mit der Lage abgeglichen wird.
+ *
+ * Nicht haeufiger: Der einzige Anlass, der ohne Ereignis kommt, ist der Tageszeitwechsel, und
+ * der passiert viermal am Tag. Der Abgleich ist ohnehin folgenlos, solange sich die Rolle nicht
+ * aendert - er darf also selten sein.
+ */
+private const val MUSIC_RECHECK_MS = 30_000L
 
 /**
  * Wo der Avatar steht, wenn er an einem Ort der Kulisse ([PlayScene]) auf dem Boden aufsetzt.

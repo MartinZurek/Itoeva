@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Haelt die Musiktracks im Release-Build am Leben.
+
+  `app-sim` baut Release mit `isShrinkResources = true`. PlayMusic sucht jeden Track ueber
+  seinen NAMEN (`resources.getIdentifier`) und nicht ueber `R.raw`, weil die Audiodateien aus
+  eigenen erzeugten Pull Requests kommen und in Builds ohne den jeweiligen Track schlicht
+  fehlen - ein statischer Verweis wuerde dort die Uebersetzung brechen.
+
+  Genau dadurch sieht der Schrumpfer aber keine Referenz und darf die Dateien entfernen. Im
+  Debug-Build faellt das nie auf (dort wird nicht geschrumpft), und die CI baut kein
+  geschrumpftes Release: Der Job "Release-Torwaechter beisst" prueft ausdruecklich nur, dass
+  `bundleRelease` OHNE Keystore scheitert. Die Musik waere also erst in einem signierten
+  Release still gewesen, und dort am spaetesten zu bemerken.
+
+  Der Platzhalter deckt alle Rollen aus `MusicRole` mit ab, auch die noch nicht erzeugten -
+  sonst muesste diese Datei bei jedem neuen Track nachgezogen werden, und genau das vergisst
+  man.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/itoeva_*" />
