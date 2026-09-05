@@ -23,6 +23,12 @@ from pathlib import Path
 DEFAULT_MANIFEST = Path("music/manifest.json")
 SUPPORTED_MODELS = {"small-music": 120, "medium": 380}
 
+# WAV stays allowed for a lossless local experiment; `ogg` is what the app ships.
+SUPPORTED_OUTPUT_FORMATS = {"wav", "ogg"}
+
+# libsndfile crashes on one large Vorbis write - see write_vorbis().
+VORBIS_BLOCK_FRAMES = 8192
+
 
 def load_track(manifest_path: Path, track_id: str) -> tuple[dict, dict]:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -60,12 +66,40 @@ def validate_track(track: dict) -> None:
             f"duration_seconds must be between 1 and {SUPPORTED_MODELS[model]} for {model}"
         )
 
-    if track["output_format"] != "wav":
-        raise SystemExit("Open-weights generation currently writes WAV only")
+    if track["output_format"] not in SUPPORTED_OUTPUT_FORMATS:
+        raise SystemExit(
+            "output_format must be one of: "
+            + ", ".join(sorted(SUPPORTED_OUTPUT_FORMATS))
+        )
     if int(track["steps"]) < 1:
         raise SystemExit("steps must be >= 1")
     if float(track["cfg_scale"]) <= 0:
         raise SystemExit("cfg_scale must be > 0")
+
+
+def write_vorbis(output_path: Path, frames, sample_rate: int) -> None:
+    """Write Ogg/Vorbis via libsndfile.
+
+    Ships compressed rather than as WAV: the same 90 seconds are ~1 MB instead of ~16 MB,
+    and the app has to carry one file per mood, time of day and place. Vorbis rather than
+    Opus because ``:app-sim`` targets minSdk 26 and Opus in ``.ogg`` only decodes from
+    Android 10 (API 29). See EVOLUTION.md, entry for 2026-09-05.
+
+    Written in blocks on purpose. A single large write crashes libsndfile 1.2.2 with a
+    segmentation fault for Vorbis at 44.1 kHz; the same data written in blocks is fine.
+    """
+    import soundfile as sf
+
+    with sf.SoundFile(
+        str(output_path),
+        mode="w",
+        samplerate=sample_rate,
+        channels=frames.shape[1],
+        format="OGG",
+        subtype="VORBIS",
+    ) as handle:
+        for start in range(0, frames.shape[0], VORBIS_BLOCK_FRAMES):
+            handle.write(frames[start : start + VORBIS_BLOCK_FRAMES])
 
 
 def resolve_device(requested: str) -> str | None:
@@ -172,13 +206,16 @@ def main() -> int:
 
     sample_rate = int(model.model.sample_rate)
     waveform = audio[0].detach().to(torch.float32).cpu().clamp(-1, 1)
-    torchaudio.save(
-        str(output_path),
-        waveform,
-        sample_rate,
-        encoding="PCM_S",
-        bits_per_sample=16,
-    )
+    if extension == "ogg":
+        write_vorbis(output_path, waveform.numpy().T, sample_rate)
+    else:
+        torchaudio.save(
+            str(output_path),
+            waveform,
+            sample_rate,
+            encoding="PCM_S",
+            bits_per_sample=16,
+        )
 
     resolved.update(
         {
