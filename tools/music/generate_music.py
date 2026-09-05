@@ -26,6 +26,18 @@ SUPPORTED_MODELS = {"small-music": 120, "medium": 380}
 # WAV stays allowed for a lossless local experiment; `ogg` is what the app ships.
 SUPPORTED_OUTPUT_FORMATS = {"wav", "ogg"}
 
+# Semantic track roles. The app decides WHICH role fits the current scene and time of day;
+# these names must stay in sync with the MusicRole enum in
+# app-sim/.../matrix/PlayMusicPlan.kt, which also carries the matching android_resource.
+# Validated here so a typo fails at generation time rather than showing up as silence.
+SUPPORTED_ROLES = {
+    "main_day_background",
+    "home_evening_background",
+    "morning_background",
+    "sport_background",
+    "dream_background",
+}
+
 # libsndfile crashes on one large Vorbis write - see write_vorbis().
 VORBIS_BLOCK_FRAMES = 8192
 
@@ -46,6 +58,7 @@ def validate_track(track: dict) -> None:
         "model",
         "duration_seconds",
         "output_format",
+        "role",
         "android_resource",
         "prompt_file",
         "steps",
@@ -64,6 +77,11 @@ def validate_track(track: dict) -> None:
     if not 1 <= duration <= SUPPORTED_MODELS[model]:
         raise SystemExit(
             f"duration_seconds must be between 1 and {SUPPORTED_MODELS[model]} for {model}"
+        )
+
+    if track["role"] not in SUPPORTED_ROLES:
+        raise SystemExit(
+            f"role must be one of: {', '.join(sorted(SUPPORTED_ROLES))}"
         )
 
     if track["output_format"] not in SUPPORTED_OUTPUT_FORMATS:
@@ -141,6 +159,7 @@ def main() -> int:
         "inference_library_repository": manifest.get("inference_library_repository"),
         "inference_library_commit": manifest.get("inference_library_commit"),
         "duration_seconds": int(track["duration_seconds"]),
+        "role": track["role"],
         "output_format": extension,
         "android_resource": track["android_resource"],
         "prompt_file": str(prompt_path),

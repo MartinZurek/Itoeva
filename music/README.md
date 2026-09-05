@@ -112,13 +112,48 @@ Score darf eine Datei sein; alles, was die Welt oder das Wesen selbst von sich g
 gerechnet.** Begruendung, Messwerte und die noch offenen Punkte: `EVOLUTION.md` zum 2026-09-05,
 Arbeitspaket NT-055. **Wer das Format aendert, aendert es dort und nicht nur hier.**
 
-## Im Spiel hoeren
+## Im Spiel hoeren: Rollen, nicht Dateinamen
 
-Der gemergte Track laeuft als Schleife, solange der Spielmodus zu sehen ist. Der Schalter dafuer
-steht in den Einstellungen unter **Musik im Spielmodus** und ist **standardmaessig aus**. Er
-schweigt ueber fremdem Ton und bei stumm gestelltem Geraet, und er hoert auf, sobald der
-Spielmodus verlassen wird (siehe `PlayMusic`). Solange kein Track gemergt ist, bleibt es still -
-die App sucht ihn ueber seinen Namen und kommt ohne ihn aus.
+Der Schalter in den Einstellungen heisst **Musik im Spielmodus** und bedeutet *"Musik
+grundsaetzlich verwenden"* - nicht *"diesen einen Track jetzt abspielen"*. Er ist beim
+allerersten Start aus; danach gilt ausschliesslich die zuletzt gespeicherte Entscheidung. Das
+Verlassen des Spielmodus haelt die Wiedergabe an, **aendert die Einstellung aber nicht**.
+
+Welcher Track laeuft, entscheidet die Welt:
+
+> Die Welt entscheidet, WAS passen wuerde. Der Nutzer entscheidet, OB ueberhaupt Musik laufen
+> darf.
+
+`MusicResolver` bekommt Tageszeit und Ort und liefert eine kurze Liste von **Rollen**, vom
+Spezifischsten zum Allgemeinsten. Genommen wird die erste, zu der ein Track ausgeliefert ist -
+sonst bleibt es still. Keine vollstaendige Matrix aus Tageszeit mal Ort: Die waere zu 90 %
+Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt werden.
+
+| Rolle | wofuer | Track |
+|---|---|---|
+| `main_day_background` | der normale Tag, musikalische Hauptidentitaet | vorbereitet, **noch nicht erzeugt** |
+| `home_evening_background` | ruhiger Abend und Nacht zu Hause | `home-evening-01` / Quiet Lanterns |
+| `morning_background` | frueher Morgen, falls er sich abheben soll | noch keiner |
+| `sport_background` | Bewegung und Anstrengung | noch keiner |
+| `dream_background` | Traum-Szenen | noch keiner |
+
+**Der heutige Stand ist absichtlich unvollstaendig:** Es gibt genau einen Track. Morgens und
+mittags bleibt es deshalb **still**, und das ist die richtige Antwort - ein Abendstueck den
+ganzen Tag zu spielen waere schlechter als nichts. Sobald `main_day_background` erzeugt und
+gemergt ist, fuellt sich diese Luecke von selbst, ohne eine Zeile Entscheidungslogik.
+
+Das Feld `role` ist deshalb Pflicht im Manifest und wird gegen dieselbe Liste geprueft, die
+`MusicRole` in `app-sim/.../matrix/PlayMusicPlan.kt` fuehrt. **Wer eine Rolle ergaenzt, ergaenzt
+sie an beiden Stellen** - `generate_music.py` laesst einen unbekannten Namen sonst gar nicht erst
+durch, was der Sinn der Sache ist.
+
+Ein laufender Track wird bei einem Ortswechsel **nicht** neu gestartet, solange er nach wie vor
+die richtige Rolle ist. Ein echter Wechsel ist heute ein harter Schnitt; die Ueberblendung hat
+ihren Platz in `PlayMusic.switchTo` und ist als naechster Schritt vermerkt (NT-055).
+
+Solange kein Track fuer eine Rolle gemergt ist, sucht die App ihn vergeblich und bleibt still -
+sie kommt ohne ihn aus. Damit der Ressourcen-Schrumpfer die vorhandenen Dateien im Release nicht
+als unbenutzt entfernt, haelt `app-sim/src/main/res/raw/keep.xml` sie fest.
 
 ## Rechte und Herkunft
 

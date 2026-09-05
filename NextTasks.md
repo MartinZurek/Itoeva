@@ -127,12 +127,16 @@ größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für Hom
 NT-054 Skills, Level und Jahreszeiten als gewichtete Erweiterungen des in `Tagesablauf.md`
 definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay-Code entsteht.
 
-**Produktentscheidungen, offen:** NT-055 Audio-Asset-Strategie - *Format (Ogg/Vorbis), Ort der
-Umwandlung (Pipeline) und die Grenze der Ausnahme (nur der Score, nie die Stimme der Welt) sind am
-2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.* **Offen bleibt**, ob realistische
-generierte Musik ueber einer 16x16-Welt aesthetisch richtig ist, wie viele Tracks vorgesehen sind,
-und die vor einer kommerziellen Veroeffentlichung erneut zu pruefende Lizenzlage aus
-`music/README.md`.
+**Produktentscheidungen, offen:** NT-055 Musik - *Format (Ogg/Vorbis), Ort der Umwandlung
+(Pipeline), die Grenze der Ausnahme (nur der Score) sowie die kontextabhaengige Auswahl ueber
+`MusicRole`/`MusicResolver` sind am 2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.*
+**Offen bleibt:** (a) den vorbereiteten Track `main-day-01` erzeugen und mergen - erst dann
+haben Morgen und Mittag ueberhaupt Musik; (b) Ueberblendung beim Trackwechsel in
+`PlayMusic.switchTo`, heute ein harter Schnitt und mit nur einem Track nicht ausloesbar;
+(c) dem Nutzer erklaeren, warum es gerade still ist (es gibt keinen Track fuer diese Szene) -
+`PlaySound` hat dafuer ein Muster; (d) ob realistische generierte Musik ueber einer
+16x16-Welt aesthetisch richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer
+kommerziellen Veroeffentlichung.
 
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052

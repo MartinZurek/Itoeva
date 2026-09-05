@@ -2,8 +2,33 @@ package android.content
 
 /** Attrappe fuer die Offline-Uebersetzung - siehe tools/reaction-preview/README.md. */
 class Context {
-    companion object { const val MODE_PRIVATE = 0 }
+    companion object {
+        const val MODE_PRIVATE = 0
+        const val AUDIO_SERVICE = "audio"
+    }
+
+    val applicationContext: Context get() = this
+    val packageName: String get() = "com.notime.glyphsim"
+    val resources: Resources get() = Resources()
+
     fun getSharedPreferences(name: String, mode: Int): SharedPreferences = SharedPreferences()
+
+    /**
+     * Gibt immer `null` zurueck, und das ist fuer die geprueften Faelle richtig: Die
+     * Musikentscheidung liegt in `PlayMusic.decide` und bekommt ihre Eingaben als Parameter.
+     * Was `getSystemService` liefert, ist nur der Weg dorthin und wird nicht mitgeprueft.
+     */
+    fun getSystemService(name: String): Any? = null
+}
+
+/**
+ * Nur `getIdentifier`, und immer 0 - also "dieser Track ist nicht ausgeliefert".
+ *
+ * Damit uebersetzt die Namenssuche aus `PlayMusic`, ohne dass es ein echtes Paket braucht. Welche
+ * Rollen tatsaechlich vorhanden sind, geben die Tests ohnehin selbst vor.
+ */
+class Resources {
+    fun getIdentifier(name: String, defType: String, defPackage: String): Int = 0
 }
 
 class SharedPreferences {

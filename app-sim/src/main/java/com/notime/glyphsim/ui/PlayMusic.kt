@@ -5,6 +5,9 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.util.Log
+import com.notime.glyphsim.matrix.MusicContext
+import com.notime.glyphsim.matrix.MusicResolver
+import com.notime.glyphsim.matrix.MusicRole
 import com.notime.glyphsim.settings.SettingsCatalog
 import com.notime.glyphsim.settings.SettingsStore
 
@@ -12,58 +15,62 @@ import com.notime.glyphsim.settings.SettingsStore
  * **Die Musik der Welt** - im Gegensatz zu [PlaySound] nicht die Stimme des Wesens, sondern der
  * Score darueber.
  *
- * ## Warum das hier ueberhaupt eine Datei abspielt
+ * ## Die eine Trennung, die diese Datei traegt
  *
- * [com.notime.glyphsim.matrix.PlayChime] begruendet ausfuehrlich, warum der Klang dieser App
- * **gerechnet und nicht abgespielt** wird - unter anderem, weil ein aufgenommener Klang neben
- * einer gerechneten Welt derselbe Bruch waere wie eine fotografierte Blume in einer
- * Pixel-Kulisse. Diese Datei ist die Ausnahme davon, und sie hat eine Grenze:
+ * > Die Welt entscheidet, WAS passen wuerde. Der Nutzer entscheidet, OB ueberhaupt Musik laufen
+ * > darf.
  *
- * **Alles, was die Welt oder das Wesen selbst von sich gibt, bleibt gerechnet. Nur der Score darf
- * eine Datei sein.** Eine Filmmusik war noch nie aus demselben Material wie das Buehnenbild; die
- * Stimme einer Figur schon. Wer hier spaeter Schritte, Tueren oder Wetter als Sample ergaenzen
- * will, verletzt die Regel - das gehoert zu [com.notime.glyphsim.matrix.PlayChime].
+ * Das WAS liegt vollstaendig in [MusicResolver] - ohne Android, ohne Einstellungen, pruefbar.
+ * Das OB liegt hier, und es ist eine harte Sperre: Ist [isEnabled] falsch, wird der Resolver
+ * gar nicht erst gefragt. **Kein Szenenwechsel und keine Aufloesung darf Musik eigenmaechtig
+ * einschalten** - der Resolver kennt die Einstellung nicht einmal und koennte es deshalb nicht.
  *
- * Die Herkunft der Datei liegt bei der versionierten Musik-Pipeline (siehe `music/README.md`):
- * Prompt, Modell und Seed sind festgehalten, und erst der Merge eines erzeugten Pull Requests
- * macht einen Track zum Asset.
+ * ## Was der Schalter bedeutet
+ *
+ * "Musik grundsaetzlich verwenden" - **nicht** "diesen einen Track jetzt abspielen". Die
+ * Einstellung liegt in [SettingsCatalog.MusicEnabled] und damit in SharedPreferences; sie
+ * ueberlebt App-Start, Moduswechsel und Szenenwechsel. [stop] haelt nur die Wiedergabe an und
+ * fasst die Einstellung **nie** an - sonst waere ein Verlassen des Spielmodus stillschweigend
+ * ein Ausschalten, und der Nutzer haette einen Schalter, der sich selbst umlegt.
+ *
+ * ## Warum gibt es hier ueberhaupt eine Datei zu hoeren
+ *
+ * [com.notime.glyphsim.matrix.PlayChime] begruendet, warum der Klang dieser App gerechnet und
+ * nicht abgespielt wird. Diese Datei ist die benannte Ausnahme davon, mit einer Grenze:
+ * **Alles, was die Welt oder das Wesen selbst von sich gibt, bleibt gerechnet. Nur der Score
+ * darf eine Datei sein.** Wer hier spaeter Schritte, Tueren oder Wetter als Sample ergaenzt,
+ * verletzt sie.
  *
  * ## Wann sie zu hoeren ist
  *
  * Dieselbe Zurueckhaltung wie bei [PlaySound], mit **einer** bewussten Abweichung:
  *
- * - **Standardmaessig aus.** Wer nichts eingeschaltet hat, hoert nichts.
- * - **Nicht ueber fremdem Ton.** Laeuft ein Podcast, bleibt es still - und wie bei [PlaySound]
- *   wird ausdruecklich **kein Audio-Focus** angefordert. Wer Focus greift, pausiert die
- *   Wiedergabe des Nutzers; ein Spielmodus, der den Podcast anhaelt, ist kaputt.
- * - **Nicht bei stumm gestelltem Geraet.** Streng genommen regelt der Klingelton-Schalter die
- *   Medienlautstaerke nicht mit. Uebernommen wird die Regel trotzdem, weil sie dem entspricht,
- *   was jemand erwartet, der sein Telefon stumm gestellt hat.
- * - **Nur solange der Spielmodus zu sehen ist.** Der Aufrufer haelt sie an, sobald der Bildschirm
- *   verschwindet (siehe `DockScreen`).
+ * - **Beim allerersten Start aus.** Wer nichts eingeschaltet hat, hoert nichts. Danach gilt
+ *   ausschliesslich die zuletzt gespeicherte Entscheidung des Nutzers.
+ * - **Nicht ueber fremdem Ton**, und ausdruecklich **ohne Audio-Focus** anzufordern. Wer Focus
+ *   greift, pausiert die Wiedergabe des Nutzers; ein Spielmodus, der den Podcast anhaelt, ist
+ *   kaputt.
+ * - **Nicht bei stumm gestelltem Geraet.**
+ * - **Nur solange der Spielmodus zu sehen ist** - der Aufrufer haelt an (siehe `DockScreen`).
  *
  * **Die Abweichung: nachts wird nicht gesperrt.** [PlaySound] schweigt nachts, weil ein Ton dort
- * unaufgefordert aus einem dunklen Zimmer kommt. Musik hier kann das nicht: Sie laeuft nur,
- * solange jemand den eingeschalteten Bildschirm ansieht, und nur, wenn er sie eingeschaltet hat.
- * Ein Abendtrack, den man abends nicht hoeren darf, waere zudem sinnlos.
+ * unaufgefordert aus einem dunklen Zimmer kommt. Musik kann das nicht: Sie laeuft nur, solange
+ * jemand den eingeschalteten Bildschirm ansieht und sie eingeschaltet hat.
  *
- * ## Warum der Track zur Laufzeit gesucht wird
+ * ## Warum die Tracks zur Laufzeit gesucht werden
  *
- * [trackResId] schlaegt die Ressource ueber ihren Namen nach statt ueber `R.raw`. Der Grund ist
- * nicht Bequemlichkeit: Die Audiodatei kommt aus einem **eigenen, erzeugten Pull Request** und
- * ist damit kein fester Bestandteil des Quellbaums. Ein direkter `R.raw`-Verweis wuerde jeden
- * Build brechen, in dem noch kein Track gemergt wurde. So bleibt die Welt einfach still, bis es
- * etwas zu hoeren gibt - was auch der ehrlichere Zustand ist.
+ * [availableRoles] schlaegt jede Rolle ueber ihren Ressourcennamen nach statt ueber `R.raw`.
+ * Der Grund ist nicht Bequemlichkeit: Audiodateien kommen aus **eigenen, erzeugten Pull
+ * Requests** und sind kein fester Bestandteil des Quellbaums. Ein direkter Verweis wuerde jeden
+ * Build brechen, in dem eine Rolle noch keinen Track hat - und genau das ist heute fuer vier
+ * von fuenf Rollen der Fall. So bleibt die Welt einfach still, bis es etwas zu hoeren gibt.
+ *
+ * Damit der Ressourcen-Schrumpfer die Dateien im Release nicht als unbenutzt entfernt, haelt
+ * `app-sim/src/main/res/raw/keep.xml` sie ausdruecklich fest.
  */
 object PlayMusic {
 
     private const val TAG = "PlayMusic"
-
-    /**
-     * Der Ressourcenname aus `music/manifest.json` (`android_resource`). Aendert sich dort etwas,
-     * aendert es sich hier mit - deshalb steht der Name an genau einer Stelle.
-     */
-    private const val TRACK_RESOURCE = "itoeva_home_evening_01"
 
     /**
      * Hintergrundmusik unter einer 16x16-Figur soll zuruecktreten, nicht fuehren. Bewusst
@@ -74,70 +81,99 @@ object PlayMusic {
 
     private var player: MediaPlayer? = null
 
+    /** Welche Rolle gerade klingt - die Grundlage dafuer, sie NICHT neu zu starten. */
+    private var playingRole: MusicRole? = null
+
+    // --- Das OB: die Entscheidung des Nutzers ---------------------------------------------------
+
     fun isEnabled(context: Context): Boolean =
         SettingsStore.read(context, SettingsCatalog.MusicEnabled)
 
+    /**
+     * Die einzige Stelle, die die Einstellung schreibt - und sie wird ausschliesslich vom
+     * Schalter in den Einstellungen aufgerufen. Weltlogik ruft das nie.
+     */
     fun setEnabled(context: Context, enabled: Boolean) {
         SettingsStore.write(context, SettingsCatalog.MusicEnabled, enabled)
     }
 
-    /** Die Ressourcen-Id des gemergten Tracks, oder `null`, wenn noch keiner ausgeliefert wird. */
-    fun trackResId(context: Context): Int? {
-        val id = context.resources.getIdentifier(
-            TRACK_RESOURCE, "raw", context.packageName
-        )
-        return id.takeIf { it != 0 }
-    }
+    // --- Das WAS: welche Tracks es ueberhaupt gibt -----------------------------------------------
+
+    /** Die Ressourcen-Id eines Tracks, oder `null`, wenn diese Rolle noch keinen hat. */
+    fun trackResId(context: Context, role: MusicRole): Int? =
+        context.resources
+            .getIdentifier(role.androidResource, "raw", context.packageName)
+            .takeIf { it != 0 }
 
     /**
-     * Die Entscheidung selbst - ohne Android, damit sie sich pruefen laesst.
-     *
-     * Ohne diese Trennung waere die Frage "spielt er gerade zu Recht nichts?" nur am Geraet zu
-     * beantworten, und zwar nachts, mit laufendem Podcast, bei stumm gestelltem Telefon.
+     * Welche Rollen tatsaechlich ausgeliefert werden. Heute genau eine; jeder gemergte Track
+     * erweitert die Menge, ohne dass hier oder im [MusicResolver] etwas zu aendern waere.
      */
-    fun shouldPlay(
+    fun availableRoles(context: Context): Set<MusicRole> =
+        MusicRole.entries.filterTo(mutableSetOf()) { trackResId(context, it) != null }
+
+    // --- Die Zusammenfuehrung -------------------------------------------------------------------
+
+    /**
+     * Die vollstaendige Entscheidung, ohne Android - damit sie sich pruefen laesst.
+     *
+     * Die Reihenfolge ist der Punkt: **[enabled] steht vorn.** Ist es falsch, kommt der Resolver
+     * nicht vor - dann gibt es kein "aber die Szene passt doch so gut".
+     */
+    fun decide(
         enabled: Boolean,
-        trackPresent: Boolean,
+        context: MusicContext,
+        available: Set<MusicRole>,
         otherAudioActive: Boolean,
         deviceSilent: Boolean
-    ): Boolean =
-        enabled && trackPresent && !otherAudioActive && !deviceSilent
-
-    /** Warum gerade nichts laeuft, obwohl Musik eingeschaltet ist - `null`, wenn nichts im Weg steht. */
-    enum class Reason { NO_TRACK, OTHER_AUDIO, DEVICE_SILENT }
-
-    fun silentReason(context: Context): Reason? {
-        if (!isEnabled(context)) return null
-        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-        return when {
-            trackResId(context) == null -> Reason.NO_TRACK
-            // Der eigene Player zaehlt hier nicht mit: Gefragt wird nur, bevor etwas laeuft.
-            player == null && audio?.isMusicActive == true -> Reason.OTHER_AUDIO
-            audio?.ringerMode == AudioManager.RINGER_MODE_SILENT ||
-                audio?.ringerMode == AudioManager.RINGER_MODE_VIBRATE -> Reason.DEVICE_SILENT
-            else -> null
-        }
+    ): MusicRole? {
+        if (!enabled || otherAudioActive || deviceSilent) return null
+        return MusicResolver.resolve(context, available)
     }
 
     /**
-     * Startet die Schleife, falls sie erlaubt ist und nicht schon laeuft.
+     * Bringt die Wiedergabe mit der Lage in Einklang - **die Stelle, die der Aufrufer wiederholt
+     * aufruft.**
      *
-     * Mehrfaches Aufrufen ist harmlos - der Spielmodus darf das bei jedem Wiedereintritt tun,
-     * ohne pruefen zu muessen, ob er es schon getan hat.
+     * Mehrfaches Aufrufen mit derselben Lage ist ausdruecklich harmlos und der Normalfall: Loest
+     * es zur selben Rolle auf wie zuletzt, passiert **nichts** - der Track laeuft weiter, ohne
+     * neu zu beginnen. Genau das verhindert, dass kurzfristige Ortswechsel des Avatars die Musik
+     * zerhacken. Ein Wechsel findet nur statt, wenn sich die aufgeloeste ROLLE aendert, nicht
+     * wenn sich die Welt aendert.
      */
-    fun start(context: Context) {
-        if (player != null) return
-        val res = trackResId(context) ?: return
+    fun apply(context: Context, musicContext: MusicContext) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-        val allowed = shouldPlay(
+        val wanted = decide(
             enabled = isEnabled(context),
-            trackPresent = true,
-            otherAudioActive = audio?.isMusicActive == true,
+            context = musicContext,
+            available = availableRoles(context),
+            // Der eigene Player zaehlt nicht als fremder Ton, sonst hielte sich die Musik
+            // beim naechsten Abgleich selbst fuer eine Stoerung und schaltete sich ab.
+            otherAudioActive = player == null && audio?.isMusicActive == true,
             deviceSilent = audio?.ringerMode == AudioManager.RINGER_MODE_SILENT ||
                 audio?.ringerMode == AudioManager.RINGER_MODE_VIBRATE
         )
-        if (!allowed) return
 
+        if (wanted == playingRole) return
+        if (wanted == null) {
+            stop()
+            return
+        }
+        switchTo(context, wanted)
+    }
+
+    /**
+     * Wechselt auf eine andere Rolle.
+     *
+     * **Hier gehoert spaeter die Ueberblendung hin, und bewusst nur hier.** Heute ist es ein
+     * harter Schnitt: anhalten, neu anfangen. Solange es genau einen Track gibt, kann dieser
+     * Fall gar nicht eintreten - ein Crossfade waere also Architektur fuer ein Verhalten, das
+     * sich noch nie gezeigt hat. Sobald der zweite Track existiert, ist diese eine Methode die
+     * einzige Stelle, die dafuer aufgemacht werden muss (siehe NT-055).
+     */
+    private fun switchTo(context: Context, role: MusicRole) {
+        val res = trackResId(context, role) ?: return
+        release()
         runCatching {
             MediaPlayer.create(context, res)?.apply {
                 setAudioAttributes(
@@ -153,22 +189,27 @@ object PlayMusic {
                 setVolume(VOLUME, VOLUME)
                 start()
                 player = this
+                playingRole = role
             }
         }.onFailure {
-            Log.w(TAG, "Musik konnte nicht starten", it)
+            Log.w(TAG, "Musik konnte nicht starten: ${role.manifestName}", it)
             release()
         }
     }
 
-    /** Haelt an und gibt den Player frei. Mehrfaches Aufrufen ist harmlos. */
+    /**
+     * Haelt die Wiedergabe an. Mehrfaches Aufrufen ist harmlos.
+     *
+     * **Fasst die Einstellung des Nutzers nicht an** - siehe Klassendoku. Ein Verlassen des
+     * Spielmodus ist kein Ausschalten.
+     */
     fun stop() = release()
 
     private fun release() {
-        val current = player ?: return
+        val current = player ?: run { playingRole = null; return }
         player = null
-        runCatching {
-            if (current.isPlaying) current.stop()
-        }
+        playingRole = null
+        runCatching { if (current.isPlaying) current.stop() }
         runCatching { current.release() }
     }
 }

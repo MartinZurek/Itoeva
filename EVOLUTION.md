@@ -1240,3 +1240,55 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   erzeugten Pull Request und ist kein fester Bestandteil des Quellbaums. Ein direkter Verweis
   wuerde jeden Build brechen, in dem noch kein Track gemergt ist; so bleibt die Welt still, bis
   es etwas zu hoeren gibt. Arbeitspaket: NT-055.
+
+### 2026-09-05 - Musik richtet sich nach Tageszeit und Ort; der Schalter bleibt der des Nutzers
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. `ENTSCHIEDEN` durch Produktvorgabe, im Code
+  umgesetzt und mit Tests belegt.
+- **Die Trennung, um die es geht:** *Die Welt entscheidet, WAS passen wuerde. Der Nutzer
+  entscheidet, OB ueberhaupt Musik laufen darf.* Beides liegt jetzt in getrennten Dateien.
+  `MusicResolver` (in `PlayMusicPlan.kt`) kennt weder die Einstellung noch einen Player noch
+  Android; `PlayMusic` fragt ihn **erst**, wenn der Nutzer Musik erlaubt hat. Ein Szenenwechsel
+  kann Musik deshalb nicht eigenmaechtig einschalten - der Resolver kennt den Schalter nicht
+  einmal.
+- **BEOBACHTET (Persistenz war bereits richtig):** `SettingsCatalog.MusicEnabled` liegt in
+  SharedPreferences, und die einzige schreibende Stelle ist der Schalter in den Einstellungen.
+  `stop()` fasst die Einstellung nicht an. Die Anforderung "die letzte Nutzerentscheidung
+  ueberlebt App-Start, Moduswechsel, Szenen- und Tageszeitwechsel" war damit schon erfuellt;
+  neu ist nur, dass Tests das jetzt festhalten statt es zu unterstellen. **Nicht neu gebaut.**
+- **Sparse und hierarchisch statt Matrix:** Vier Tageszeiten mal sechzehn Orte waeren
+  vierundsechzig Felder, von denen fast alle dasselbe enthielten, und jeder neue Ort verlangte
+  vier neue Entscheidungen. Stattdessen liefert `MusicResolver.candidates` je Lage eine kurze,
+  **vom Spezifischsten zum Allgemeinsten** geordnete Liste von Rollen; `resolve` nimmt die erste,
+  zu der es einen ausgelieferten Track gibt. Fehlt alles, bleibt es still. Ein neuer Track wird
+  dadurch gehoert, sobald er gemergt ist, ohne dass eine Zeile Entscheidungslogik zu aendern ist.
+- **Rollen statt Dateinamen:** `MusicRole` fuehrt `main_day_background`,
+  `home_evening_background`, `morning_background`, `sport_background` und `dream_background` -
+  dieselben Namen wie das Feld `role` im Manifest, dazu den passenden `android_resource`.
+  `generate_music.py` verlangt `role` jetzt als Pflichtfeld, prueft es gegen dieselbe Liste und
+  schreibt es in die Provenienz. Ein Tippfehler scheitert damit beim Erzeugen statt sich als
+  Stille zu zeigen.
+- **Der heutige Stand ist ausdruecklich unvollstaendig, und das ist richtig so:** Es gibt genau
+  einen Track (`HOME_EVENING`). Morgen und Mittag ergeben deshalb **Stille**. Ein Abendstueck den
+  ganzen Tag zu spielen waere schlechter als nichts - und es waere der bequeme Fehler, den ein
+  Rueckfall "irgendwas ist besser als Stille" genau hier erzeugt haette. Nachts gibt es aus
+  demselben Grund keinen Rueckfall auf den Tages-Track.
+- **Kein Zerhacken durch kurzfristige Bewegung:** `PlayMusic.apply` tut nichts, solange sich die
+  aufgeloeste ROLLE nicht aendert. Ein Avatar, der zwischen Kueche und Wohnzimmer wechselt, laesst
+  die Musik weiterlaufen. Ein echter Trackwechsel ist heute ein harter Schnitt und liegt in genau
+  einer Methode (`switchTo`); eine Ueberblendung waere derzeit Architektur fuer ein Verhalten, das
+  mit einem einzigen Track gar nicht auftreten kann. Naechster Schritt, siehe NT-055.
+- **Vorbereitet, aber NICHT erzeugt:** `main-day-01` / "Lantern Streets" steht mit Prompt und
+  Manifest-Eintrag bereit - japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, rund 82 BPM,
+  warme Rhodes-Akkorde, staubiger Boom-Bap-Groove, dezente pentatonische Faerbung. Der Prompt
+  beschreibt **Eigenschaften und Instrumente**, keinen Kuenstler und kein Stueck, wie es
+  `music/README.md` verlangt. Erzeugt wird er erst nach dieser Arbeit.
+- **Fehler behoben, der noch nicht sichtbar war:** `app-sim` baut Release mit
+  `isShrinkResources = true`. Da die Tracks nur ueber ihren Namen gesucht werden, gab es keine
+  statische Referenz - der Schrumpfer haette sie entfernen duerfen, und die Musik waere
+  ausgerechnet im signierten Release still gewesen. Im Debug faellt das nie auf, und die CI baut
+  kein geschrumpftes Release (der Job "Release-Torwaechter beisst" prueft nur, dass
+  `bundleRelease` OHNE Keystore scheitert). `app-sim/src/main/res/raw/keep.xml` haelt jetzt
+  `@raw/itoeva_*` fest - bewusst mit Platzhalter, damit kuenftige Tracks nicht vergessen werden.
+- **Weiterhin OPEN DECISION:** ob realistische generierte Musik ueber einer 16x16-Welt
+  aesthetisch richtig ist, und die Lizenzpruefung vor einer kommerziellen Veroeffentlichung.
