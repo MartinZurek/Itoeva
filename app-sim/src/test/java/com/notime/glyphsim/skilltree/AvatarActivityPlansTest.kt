@@ -348,6 +348,174 @@ class AvatarActivityPlansTest {
         assertEquals(com.notime.glyphcore.data.AnimationType.MOVE, kraft?.topic)
     }
 
+    // ================= Dritter Schnitt: Musizieren =================
+
+    private fun music(place: PlayScene.Place, unlocked: Set<String>, dropped: String) =
+        AvatarActivityPlans.resolve(
+            current = null,
+            dropped = node(dropped),
+            context = ActivityContext(place = place, unlockedNodeIds = unlocked)
+        )
+
+    private fun musicPhases(resolved: ResolvedActivity?): List<PlayEffects.MusicPhase> =
+        resolved?.routine?.steps.orEmpty()
+            .filterIsInstance<RoutineStep.Music>()
+            .map { it.phase }
+
+    /**
+     * Auch ohne jeden Knoten ist die Szene vollstaendig: Er stimmt und er spielt. Stimmen allein
+     * waere ein Stumpf - man saehe jemanden ein Instrument richten und dann aufhoeren.
+     */
+    @Test
+    fun `ohne Freischaltung stimmt er und spielt`() {
+        assertEquals(
+            listOf(PlayEffects.MusicPhase.TUNE, PlayEffects.MusicPhase.PLAY),
+            musicPhases(music(PlayScene.Place.PARK, emptySet(), "kreativ/musik"))
+        )
+    }
+
+    /** Erst der echte `singen`-Knoten bringt den Abschluss - nicht ein Level, nicht die Spezies. */
+    @Test
+    fun `das Finale erscheint erst nach echter Freischaltung`() {
+        val ohne = music(PlayScene.Place.PARK, setOf("kreativ/musik"), "kreativ/musik")
+        val mit = music(
+            PlayScene.Place.PARK,
+            setOf("kreativ/musik", "kreativ/musik/singen"),
+            "kreativ/musik"
+        )
+        assertFalse(musicPhases(ohne).contains(PlayEffects.MusicPhase.FINALE))
+        assertEquals(
+            listOf(
+                PlayEffects.MusicPhase.TUNE,
+                PlayEffects.MusicPhase.PLAY,
+                PlayEffects.MusicPhase.FINALE
+            ),
+            musicPhases(mit)
+        )
+    }
+
+    /**
+     * Die Freischaltung fuegt hinzu und nimmt nichts weg: Die Basisphasen bleiben in jeder
+     * Ausbaustufe die ersten beiden.
+     */
+    @Test
+    fun `die Basis bleibt in jeder Ausbaustufe erhalten`() {
+        for (unlocked in listOf(
+            emptySet(),
+            setOf("kreativ/musik"),
+            setOf("kreativ/musik", "kreativ/musik/singen")
+        )) {
+            val phasen = musicPhases(music(PlayScene.Place.PARK, unlocked, "kreativ/musik"))
+            assertEquals(unlocked.toString(), PlayEffects.MusicPhase.TUNE, phasen.first())
+            assertTrue(unlocked.toString(), phasen.contains(PlayEffects.MusicPhase.PLAY))
+        }
+    }
+
+    /** Das Blatt `singen` loest ebenso kontextuell auf wie `heben` und `dribbling`. */
+    @Test
+    fun `das Blatt singen loest ebenfalls kontextuell auf`() {
+        val resolved = music(
+            PlayScene.Place.PARK,
+            setOf("kreativ/musik", "kreativ/musik/singen"),
+            "kreativ/musik/singen"
+        )
+        assertEquals("kreativ/musik", resolved?.plan?.resultingActivity)
+        assertTrue(musicPhases(resolved).contains(PlayEffects.MusicPhase.FINALE))
+    }
+
+    /**
+     * **Der Beleg, dass das Muster nicht nur zweimal derselbe Fall war.** Beide Sport-Familien
+     * melden MOVE, weil `sport` so angelegt ist; Musik meldet CREATIVITY, weil `kreativ` so
+     * angelegt ist. Der Resolver waehlt den Typ nirgends selbst.
+     */
+    @Test
+    fun `Musik meldet das Thema seiner eigenen Hauptgruppe`() {
+        val musik = music(PlayScene.Place.PARK, setOf("kreativ/musik"), "kreativ/musik")
+        assertEquals(com.notime.glyphcore.data.AnimationType.CREATIVITY, musik?.topic)
+    }
+
+    /**
+     * Anders als beim Sport ist der Ortswechsel hier die Ausnahme: Ein Instrument braucht kein
+     * Feld. Im Wohnzimmer bleibt er also, wo er ist.
+     */
+    @Test
+    fun `im Wohnzimmer wird ohne Ortswechsel musiziert`() {
+        val steps = music(PlayScene.Place.LIVING, setOf("kreativ/musik"), "kreativ/musik")
+            ?.routine?.steps.orEmpty()
+        assertTrue(steps.none { it is RoutineStep.GoToPlace })
+    }
+
+    /** Wo es laut, nass oder eng ist, fuehrt der sichtbare Weg in den Park - kein Teleport. */
+    @Test
+    fun `aus der Kueche geht er sichtbar in den Park`() {
+        val steps = music(PlayScene.Place.KITCHEN, setOf("kreativ/musik"), "kreativ/musik")
+            ?.routine?.steps.orEmpty()
+        assertEquals(
+            PlayScene.Place.PARK,
+            (steps.first() as RoutineStep.GoToPlace).place
+        )
+    }
+
+    /** Nachts kein Konzert: Das Schlafzimmer ist bewusst kein lokaler Ort fuers Musizieren. */
+    @Test
+    fun `aus dem Schlafzimmer geht er ebenfalls hinaus`() {
+        val steps = music(PlayScene.Place.BEDROOM, setOf("kreativ/musik"), "kreativ/musik")
+            ?.routine?.steps.orEmpty()
+        assertTrue(steps.first() is RoutineStep.GoToPlace)
+    }
+
+    /**
+     * Dieselbe Regel wie bei den beiden Sport-Schnitten: Laeuft die Beschaeftigung schon, kommt
+     * nur die Einlage - kein zweiter Hinweg, kein erneutes Stimmen.
+     */
+    @Test
+    fun `ein Finale in laufendes Musizieren faengt nicht von vorn an`() {
+        val resolved = AvatarActivityPlans.resolve(
+            current = running("kreativ/musik"),
+            dropped = node("kreativ/musik/singen"),
+            context = ActivityContext(
+                place = PlayScene.Place.KITCHEN,
+                unlockedNodeIds = setOf("kreativ/musik", "kreativ/musik/singen")
+            )
+        )
+        val steps = resolved?.routine?.steps.orEmpty()
+        assertTrue(steps.none { it is RoutineStep.GoToPlace })
+        assertEquals(listOf(PlayEffects.MusicPhase.FINALE), musicPhases(resolved))
+    }
+
+    /**
+     * `drum` und `bolt` haengen zwar unter `kreativ/musik`, haben aber keine unterscheidbare
+     * Phase. Sie bleiben deshalb auf dem bisherigen Reaktionsweg, statt dasselbe zu zeigen wie
+     * `singen`.
+     */
+    @Test
+    fun `die uebrigen Musik Blaetter bleiben ausserhalb des Schnitts`() {
+        for (id in listOf("kreativ/musik/drum", "kreativ/musik/bolt")) {
+            assertNull(id, music(PlayScene.Place.PARK, setOf("kreativ/musik", id), id))
+        }
+    }
+
+    /** Der Nachbarzweig `kreativ/bauen-malen` ist noch nicht angeschlossen. */
+    @Test
+    fun `Bauen und Malen bleibt ausserhalb des Musik Schnitts`() {
+        assertNull(music(PlayScene.Place.MEADOW, setOf("kreativ/bauen-malen"), "kreativ/bauen-malen"))
+    }
+
+    /**
+     * Ein Tippfehler in einer der Knoten-IDs bliebe sonst stumm: Der Resolver gaebe einfach `null`
+     * zurueck und alles fiele auf den alten Weg zurueck, ohne dass ein Test rot wuerde.
+     */
+    @Test
+    fun `alle angeschlossenen Knoten existieren wirklich im Baum`() {
+        for (id in listOf(
+            "sport/ballsport", "sport/ballsport/dribbling", "sport/ballsport/schuss",
+            "sport/kraft-ausdauer", "sport/kraft-ausdauer/heben",
+            "kreativ/musik", "kreativ/musik/singen"
+        )) {
+            assertTrue(id, AvatarActivityPlans.supportsContextualExecution(node(id)))
+        }
+    }
+
     // ================= Einlage in eine laufende Beschaeftigung =================
 
     /**

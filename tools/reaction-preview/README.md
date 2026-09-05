@@ -63,9 +63,13 @@ aus dem Wohnzimmer    -> [GoToPlace(SPORT), Stroll, Training.WARM_UP, ...]
 ```
 
 Gedacht für die vertikalen Schnitte in `AvatarActivityPlans.resolve` (Fußball, Kraft & Ausdauer,
-und was danach kommt). Man sieht die Schrittfolge, statt sie aus dem Code zu erraten — und vor
-allem sieht man, dass eine **fehlende Freischaltung** die Handlung wirklich verkürzt statt nur
-eine Zugabe wegzulassen.
+Musizieren, und was danach kommt). Man sieht die Schrittfolge, statt sie aus dem Code zu erraten —
+und vor allem sieht man, dass eine **fehlende Freischaltung** die Handlung wirklich verkürzt statt
+nur eine Zugabe wegzulassen.
+
+Der Bericht nennt auch ausdrücklich, was **nicht** angeschlossen ist („kein kontextueller Schnitt
+(alter Reaktionsweg)"). Das ist die schnellste Antwort auf die Frage, mit der eine Sitzung an
+diesem Thema anfängt: Was liegt schon bereit und was fehlt noch?
 
 Braucht drei Zeilen mehr Attrappe als `render.sh`: `PlayTimeLapse` und `PlayWeather` lesen
 `SharedPreferences`, deshalb liegen in `src/AndroidStubs.kt` und `src/AndroidOsStubs.kt` gerade so
@@ -75,6 +79,38 @@ Wetterlogik, nur die Routinen-Entscheidung.
 `AvatarActivityBus` bleibt draußen — er hängt an `kotlinx.coroutines` und wird für die Entscheidung
 nicht gebraucht.
 
+## Der dritte Ausgang: `tests.sh` — die Tests wirklich laufen lassen
+
+```
+tools/reaction-preview/tests.sh
+```
+
+Die beiden Skripte oben können den Code übersetzen und seine Ausgabe zeigen. Ob die vorhandenen
+**Tests** dazu grün sind, ließ sich lokal lange gar nicht beantworten — die Antwort kam erst
+Minuten später aus der CI. Damit war jeder Push eine Wette, und genau daran sind in diesem
+Repository schon Befunde entstanden, die vorher hätten auffallen können.
+
+`tests.sh` führt die reinen Kotlin-Unit-Tests tatsächlich aus: **94 Tests aus acht Klassen in
+unter einer Sekunde.** JUnit 4 kommt aus Maven Central, der Kotlin-Compiler ist derselbe, den die
+Nachbarskripte schon nach `.work/` holen.
+
+```
+JUnit version 4.13.2
+..............................................................................................
+OK (94 tests)
+```
+
+**Was hier nicht laufen kann**, und das ist keine Nachlässigkeit, sondern die Grenze der Methode:
+alles, was Android, Room, Compose oder einen Emulator braucht — `app-sim/src/androidTest/`, die
+Datenbank-Migrationen, die UI. Das bleibt Sache der CI. Die Liste der ausgeführten Klassen steht
+deshalb wortwörtlich im Skript statt als Platzhalter; ein `*Test.kt` zöge Klassen herein, deren
+Abhängigkeiten hier gar nicht übersetzt werden.
+
+Aus demselben Grund unterscheiden sich die Dateilisten der drei Skripte absichtlich: `render.sh`
+braucht die Welt-Dateien nicht, `tests.sh` zusätzlich `LevelUnlocks.kt`. Ein gemeinsamer
+Platzhalter hat hier schon einmal ein funktionierendes Werkzeug lahmgelegt, ohne dass jemand etwas
+an ihm geändert hätte.
+
 ## Grenzen
 
 - Rein rechnerisch. Timing (`holdsMs`) steht nur als Zahl am Rand, die Bewegung selbst sieht
@@ -83,5 +119,7 @@ nicht gebraucht.
   Bogen zeigt nur die Figur darin.
 - `routines.sh` zeigt die Schrittfolge, nicht ihre Wirkung: Ob `GoToPlace` gut aussieht, sagt
   erst das Gerät.
+- `tests.sh` deckt die Entscheidungs- und Reaktionslogik ab, nicht die Persistenz und nicht die
+  Oberfläche. Ein grüner Lauf hier ist ein guter Grund zu pushen, kein Ersatz für die CI.
 - Kein Ersatz für einen Blick auf das Gerät — aber der Unterschied zwischen „nie gesehen" und
   „als Standbildfolge gesehen" ist größer als der zwischen Bogen und Gerät.
