@@ -124,4 +124,13 @@ class PlayMusicTest {
         assertEquals(0f, end.first, 0.0001f)
         assertEquals(0.35f, end.second, 0.0001f)
     }
+
+    @Test
+    fun `unterbrochene Ueberblendung setzt ohne Lautstaerkesprung fort`() {
+        val teilweiseEingeblendet = PlayMusic.transitionVolumes(0.25f).second
+        val neuerWechsel = PlayMusic.transitionVolumes(0f, teilweiseEingeblendet)
+
+        assertEquals(teilweiseEingeblendet, neuerWechsel.first, 0.0001f)
+        assertEquals(0f, neuerWechsel.second, 0.0001f)
+    }
 }

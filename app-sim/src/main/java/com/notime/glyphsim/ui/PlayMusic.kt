@@ -94,6 +94,7 @@ object PlayMusic {
     private var player: MediaPlayer? = null
     private var outgoingPlayer: MediaPlayer? = null
     private var transition: ValueAnimator? = null
+    private var playerVolume = 0f
 
     /** Welche Rolle gerade klingt - die Grundlage dafuer, sie NICHT neu zu starten. */
     private var playingRole: MusicRole? = null
@@ -202,15 +203,18 @@ object PlayMusic {
             } ?: return
 
             val previous = player
+            val previousVolume = playerVolume
             transition?.removeAllListeners()
             transition?.cancel()
             outgoingPlayer?.takeIf { it !== previous }?.let(::releasePlayer)
             outgoingPlayer = previous
             player = next
+            playerVolume = 0f
             playingRole = role
 
             if (previous == null) {
                 next.setVolume(VOLUME, VOLUME)
+                playerVolume = VOLUME
                 outgoingPlayer = null
                 return
             }
@@ -219,9 +223,14 @@ object PlayMusic {
                 duration = CROSSFADE_MS
                 addUpdateListener { valueAnimator ->
                     val (oldVolume, newVolume) =
-                        transitionVolumes(valueAnimator.animatedValue as Float)
-                    runCatching { previous.setVolume(oldVolume, oldVolume) }
-                    runCatching { next.setVolume(newVolume, newVolume) }
+                        transitionVolumes(valueAnimator.animatedValue as Float, previousVolume)
+                    if (outgoingPlayer === previous) {
+                        runCatching { previous.setVolume(oldVolume, oldVolume) }
+                    }
+                    if (player === next) {
+                        playerVolume = newVolume
+                        runCatching { next.setVolume(newVolume, newVolume) }
+                    }
                 }
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
@@ -230,6 +239,7 @@ object PlayMusic {
                             releasePlayer(previous)
                         }
                         if (player === next) {
+                            playerVolume = VOLUME
                             runCatching { next.setVolume(VOLUME, VOLUME) }
                         }
                         if (transition === animation) transition = null
@@ -260,6 +270,7 @@ object PlayMusic {
         transition = null
         player = null
         outgoingPlayer = null
+        playerVolume = 0f
         playingRole = null
         current?.let(::releasePlayer)
         outgoing?.takeIf { it !== current }?.let(::releasePlayer)
@@ -271,8 +282,11 @@ object PlayMusic {
     }
 
     /** Konstante wahrgenommene Energie statt eines Lautstaerke-Lochs in der Mitte. */
-    internal fun transitionVolumes(progress: Float): Pair<Float, Float> {
+    internal fun transitionVolumes(
+        progress: Float,
+        outgoingStart: Float = VOLUME
+    ): Pair<Float, Float> {
         val angle = progress.coerceIn(0f, 1f) * (PI / 2.0)
-        return (VOLUME * cos(angle).toFloat()) to (VOLUME * sin(angle).toFloat())
+        return (outgoingStart * cos(angle).toFloat()) to (VOLUME * sin(angle).toFloat())
     }
 }

@@ -1373,7 +1373,9 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Spielerwirkung:** Ein echter Rollenwechsel bricht den bisherigen Track nicht mehr ab. Alter
   und neuer Player laufen vier Sekunden nebeneinander und folgen einer Equal-Power-Kurve; dadurch
   bleibt die wahrgenommene Energie in der Mitte erhalten. Gleiche Rollen starten weiterhin nicht
-  neu, die Nutzerentscheidung und alle bisherigen Audio-Sperren bleiben unveraendert.
+  neu. Wird die Lage waehrend der Ueberblendung erneut gewechselt, beginnt der naechste Verlauf
+  bei der gerade hoerbaren Lautstaerke statt wieder auf die Ziellautstaerke zu springen. Die
+  Nutzerentscheidung und alle bisherigen Audio-Sperren bleiben unveraendert.
 - **Aktivitaet statt Kulissenbehauptung:** Ein kuenftiger `SPORT`-Track steht nur dann vor dem
   Tagestrack, wenn die Figur am Sportplatz tatsaechlich `MOVE` ausfuehrt. Der Ort allein reicht
   nicht mehr. `DockScreen.currentTopic` existierte bereits und wird nur an den kleinen
