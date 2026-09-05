@@ -1424,18 +1424,34 @@ fun DockScreen(
         val avatarSizeStep = worldAvatarSizeDp.roundToInt()
         var lastAvatarPx by remember { mutableStateOf(0f) }
         var lastWidthPx by remember { mutableStateOf(0f) }
-        LaunchedEffect(avatarSizeStep, maxWidthPx, maxHeightPx) {
+        // **Auch auf die laufenden Bewegungen hoerend, und das ist der Kern der Sache.** Wer waehrend
+        // eines Gangs oder eines Hinlegens dreht, hatte bisher zwei Schreiber auf derselben
+        // Position: Dieser Effekt setzte einmal richtig um, die noch laufende Animation schrieb
+        // danach Bild fuer Bild ihr vor der Drehung berechnetes Ziel zurueck - und behielt damit
+        // das letzte Wort. Beim Hinlegen ist dieses Ziel die Matratzenhoehe der ALTEN Kulisse;
+        // genau so entsteht die Figur, die in der Luft steht.
+        //
+        // Statt dagegen anzuschreiben, wird gewartet: Solange eine Bewegung laeuft, tut dieser
+        // Effekt nichts und merkt sich auch nichts. Sobald sie endet, kippt das Flag, der Effekt
+        // laeuft erneut - und rechnet dann gegen die Masse, die beim letzten ECHTEN Umstellen
+        // galten.
+        LaunchedEffect(avatarSizeStep, maxWidthPx, maxHeightPx, avatarWalking, avatarSettling) {
             val current = avatar
+
+            // Beim allerersten Durchlauf gibt es noch keine vorherige Geometrie - dann ist auch
+            // nichts umzustellen, die Figur wird ohnehin gleich frisch hingestellt.
+            //
+            // **Die Buchfuehrung steht bewusst NACH dieser Pruefung.** Stand sie davor, merkte sich
+            // ein uebersprungener Lauf trotzdem die neuen Masse - die naechste Drehung rechnete
+            // ihren Bruchteil dann gegen eine Breite, gegen die die Figur nie gestanden hat.
+            if (!playMode || current == null || avatarWalking || avatarSettling) {
+                return@LaunchedEffect
+            }
             val previousAvatarPx = lastAvatarPx
             val previousWidthPx = lastWidthPx
             lastAvatarPx = worldAvatarPx
             lastWidthPx = maxWidthPx
-
-            // Beim allerersten Durchlauf gibt es noch keine vorherige Geometrie - dann ist auch
-            // nichts umzustellen, die Figur wird ohnehin gleich frisch hingestellt.
-            if (!playMode || current == null || previousAvatarPx <= 0f || previousWidthPx <= 0f) {
-                return@LaunchedEffect
-            }
+            if (previousAvatarPx <= 0f || previousWidthPx <= 0f) return@LaunchedEffect
 
             val station = occupiedStation
             val next = if (station != null) {
@@ -1446,6 +1462,14 @@ fun DockScreen(
                 )?.let { spot ->
                     stationOffset(spot, worldAvatarPx, maxWidthPx, current.species)
                 }
+                // Findet sich die Aufsetzstelle in der neuen Kulisse NICHT, ist die alte Position
+                // das Schlechteste, was man behalten kann: Sie ist eine Pixelhoehe aus einem Bild,
+                // das es nicht mehr gibt. Lieber auf den Boden - das ist vielleicht nicht die
+                // gemeinte Stelle, aber es ist eine, die es gibt.
+                    ?: avatarSpot(
+                        AvatarFooting.fractionOf(current.offset.x, worldAvatarPx, maxWidthPx),
+                        worldAvatarPx, maxWidthPx, floorYPx, current.species
+                    )
             } else {
                 // Sonst bleibt die WAAGERECHTE Stelle erhalten, an der sie stand - als Bruchteil
                 // gerechnet, und zwar mit den ALTEN Massen. Mit den neuen gerechnet spraenge sie
