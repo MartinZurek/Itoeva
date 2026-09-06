@@ -20,6 +20,18 @@
 #
 # Bewusst NICHT enthalten: Merge, Rebase, Force-Push, Tag, Release, PR-Freigabe,
 # Codex, mehr als eine Evolution pro Lauf. Der schedule ist weiter unten bewusst enthalten.
+#
+# Benoetigte Secrets (Settings > Secrets and variables > Actions):
+#
+#   CLAUDE_CODE_OAUTH_TOKEN   Der Abo-Token. Fehlt er, bricht der Lauf ab.
+#   EVOLUTION_PR_TOKEN        Fein granulierter Personal Access Token, nur fuer dieses
+#                             Repository, mit "Contents: Read and write" und
+#                             "Pull requests: Read and write". Er wird ausschliesslich
+#                             beim Eroeffnen des Pull Requests benutzt (siehe den Schritt
+#                             "Pull Request eroeffnen" ganz unten und die ausfuehrliche
+#                             Begruendung dort). Fehlt er, laeuft alles weiter - der PR
+#                             gehoert dann aber wieder dem Bot, und seine Pruefungen
+#                             bleiben bei "action_required" stehen.
 
 name: ClaudePrimaryRun
 
@@ -1864,9 +1876,32 @@ jobs:
       # -----------------------------------------------------------------------------------
       - name: Pull Request eroeffnen
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # **Bewusst NICHT das GITHUB_TOKEN - und das ist der ganze Punkt dieses Schritts.**
+          #
+          # Ein mit GITHUB_TOKEN eroeffneter Pull Request gehoert `github-actions[bot]`, und
+          # GitHub laesst dessen `pull_request`-Ereignis nicht frei laufen. Der Verify-Lauf
+          # entstand zwar, blieb aber bei `action_required` mit NULL Jobs stehen und wartete
+          # auf einen Klick auf "Approve and run" im Actions-Tab. Der Grund dafuer ist
+          # Rekursionsschutz: Duerfte ein Lauf durch sein eigenes Ergebnis wieder einen Lauf
+          # starten, koennte ein PR-erzeugender Workflow sich endlos selbst ausloesen.
+          #
+          # Die Folge war nicht theoretisch. PR #72 lag dadurch vom 04.09. bis 06.09. ohne
+          # eine einzige gelaufene Pruefung, wurde konfliktbehaftet und musste am Ende von
+          # Hand auf einen anderen Branch gerettet werden (#94). Dasselbe traf #82, #85 und
+          # #88. Jede Nacht erzeugt dieser Workflow einen solchen PR - ohne diese Zeile
+          # produziert er also zuverlaessig Arbeit, die liegen bleibt.
+          #
+          # Mit einem eigenen Token gehoert der Pull Request einem Menschen, und die CI
+          # laeuft von allein an. Faellt das Secret weg, wird weiterhin ein PR eroeffnet -
+          # die fertige Arbeit zu verlieren waere schlimmer als ein wartender Lauf -, aber
+          # der Schritt sagt unten laut, was dann passiert.
+          GH_TOKEN: ${{ secrets.EVOLUTION_PR_TOKEN || secrets.GITHUB_TOKEN }}
+          EIGENES_PR_TOKEN: ${{ secrets.EVOLUTION_PR_TOKEN != '' }}
         run: |
           set -euo pipefail
+          if [ "${EIGENES_PR_TOKEN}" != "true" ]; then
+            echo "::warning::EVOLUTION_PR_TOKEN fehlt oder heisst anders. Der Pull Request wird mit GITHUB_TOKEN eroeffnet und gehoert damit github-actions[bot]; seine Pruefungen bleiben bei 'action_required' stehen und brauchen im Actions-Tab einen Klick auf 'Approve and run'."
+          fi
           BRANCH='${{ steps.verify.outputs.branch }}'
           COMMIT='${{ steps.verify.outputs.commit }}'
           TASK_ID='${{ needs.preflight.outputs.task_id }}'
