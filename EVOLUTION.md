@@ -1569,3 +1569,39 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Dribbling). Reichere Ereignis-IDs, mehrere verfremdete Ausschnitte pro Traum und das gewuenschte
   Luftballon-Easter-Egg bleiben `OPEN DECISION`/Folgeschnitte. Fuer den Ballon wird kein paralleles
   Item-System erfunden; er wird erst an einen echten Ballon-Node/Gegenstand angeschlossen.
+
+### 2026-09-06 - Die naechtlichen Pull Requests koennen endlich selbst gepruefte Arbeit abliefern
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Prozessaenderung, kein Anwendungscode. Eine
+  Token-Quelle wird ausgetauscht; der Ablauf davor und danach bleibt Zeile fuer Zeile derselbe.
+- **BEOBACHTET:** Von `claude-primary-run.yml` eroeffnete Pull Requests trugen nie ein einziges
+  gelaufenes Pruefergebnis. PR #72 lag vom 04.09. bis 06.09. so da, wurde konfliktbehaftet und
+  musste am Ende von Hand auf einen anderen Branch gerettet werden (#94). #82, #85 und #88 traf
+  dasselbe. Es war viermal umgangen worden, ohne die Ursache anzusehen.
+- **URSACHE, belegt statt vermutet:** Auf dem Head von #72 lag genau ein Workflow-Lauf:
+  `Verify | completed | action_required | event: pull_request | actor: github-actions[bot]` - mit
+  **null Jobs**. Der PR wurde in Zeile 1885 mit `gh pr create` und
+  `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` eroeffnet und gehoerte damit `github-actions[bot]`.
+  GitHub laesst dessen Ereignisse nicht frei laufen; der Lauf wartete auf einen menschlichen Klick
+  auf "Approve and run". Der Grund dafuer ist Rekursionsschutz - ein PR-erzeugender Workflow
+  koennte sich sonst endlos selbst ausloesen.
+- **Die Korrektur einer eigenen Fehlannahme:** Die Arbeit in diesen PRs war NICHT ungeprueft.
+  `claude-primary-run.yml` fuehrt `./gradlew verify` (Zeile 933) und die instrumentierten
+  Emulator-Suiten (989-1026) aus, BEVOR der PR entsteht. Die Pruefung fand statt - sie stand nur
+  als Fliesstext in der PR-Beschreibung statt als Haekchen. Fliesstext ist kein Nachweis, aber die
+  Unterstellung "ungeprueft" war ebenfalls falsch.
+- **Umgesetzt:** Der PR wird mit `EVOLUTION_PR_TOKEN` eroeffnet - einem fein granulierten Token
+  fuer nur dieses Repository mit `Contents` und `Pull requests` auf "Read and write". Damit gehoert
+  der PR einem Menschen, die Rekursionssperre greift nicht, und die CI laeuft von allein an.
+- **Der Rueckfall ist absichtlich weich, aber laut:** Fehlt das Secret, wird der PR weiterhin mit
+  `GITHUB_TOKEN` eroeffnet - eine fertige Evolution zu verlieren waere schlimmer als ein wartender
+  Lauf. Der Schritt setzt dann aber eine `::warning::`, die genau benennt, was passiert und wo zu
+  klicken ist. Ein stiller Rueckfall haette denselben Fehler unsichtbar wiederhergestellt.
+- **Warum nicht ueber die Repository-Einstellung:** Die Genehmigungspflicht unter
+  Settings > Actions > General war der billigere Verdacht, liess sich aber nicht pruefen - die
+  API-Pfade dorthin sind aus dieser Umgebung gesperrt -, und der Abschnitt heisst
+  "fork pull request workflows", waehrend #72 aus demselben Repository kam. Der Token-Weg haengt
+  nicht davon ab, wie GitHub intern Bots einordnet.
+- **NICHT geloest:** Ob es wirkt, zeigt erst der naechste naechtliche Lauf. Der Beleg ist, dass
+  "Verify" auf dem neuen PR von allein anlaeuft, statt bei `action_required` zu stehen. Bis dahin
+  bleibt diese Aenderung eine begruendete Vermutung mit Rueckfallebene.
