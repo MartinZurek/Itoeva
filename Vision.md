@@ -51,21 +51,42 @@ entwickeln eine persönliche Geschichte und beeinflussen dessen Alltag sanft dur
 Reminder. Diese Perspektive bleibt privat und behält die unten beschriebenen nicht verhandelbaren
 Eigenschaften.
 
-**Die öffentliche Twitch-Welt.** Eine von privaten App-Instanzen getrennte, gemeinsame Welt soll
-als dauerhafter Stream ohne Moderator oder Sprecher beobachtbar sein. Der Inhalt ist das laufende
-Leben selbst: Tagesabläufe, Entscheidungen, Beziehungen, Übergänge und die schrittweisen Folgen
-angenommener Evolutionen. „Dauerhaft“ beschreibt das Ziel; Verfügbarkeit und technische
-Streaming-Architektur sind noch nicht gebaut oder bestätigt.
+**Die öffentlichen Charakter-Streams.** Langfristig soll jedes der sechs Wesen eine eigene,
+dauerhaft laufende öffentliche Itoeva-Instanz erhalten. Sie wird als echter 24/7-Livestream auf
+YouTube Live und Twitch ausgespielt, nicht als wiederholte Videoschleife. Der Inhalt ist das
+fortlaufende Leben des jeweiligen Wesens: Schlafen, Essen, Sport, Ausflüge, Musikwechsel,
+Entscheidungen und später begrenzte Begegnungen mit anderen öffentlichen Charakterinstanzen.
+„24/7“ beschreibt das Betriebsziel; die dafür nötige Verfügbarkeit ist noch nicht nachgewiesen.
 
 **Das YouTube-Evolutionstagebuch.** Die Avatare sollen möglichst selbst als Protagonisten
 erzählen, was sich Tag für Tag verändert hat, was in ihrer Welt passiert ist und wo die
 automatisierte Evolution an Grenzen gestoßen ist. Die Berichte sollen aus belegten Änderungen und
 Weltzuständen entstehen, nicht aus erfundenen Entwicklungsbehauptungen. Aus denselben Ereignissen
-können später auch kurze Tagesablauf-Highlights entstehen.
+können später auch kurze Tagesablauf-Highlights entstehen. Diese redaktionelle YouTube-Perspektive
+ist vom dauerhaften YouTube-Livestream desselben Charakters zu unterscheiden.
 
 Die drei Perspektiven teilen eine gestalterische Identität, aber nicht automatisch Daten oder
-Laufzeit. Insbesondere ist die öffentliche Twitch-Welt keine Übertragung eines privaten
+Laufzeit. Insbesondere sind die öffentlichen Charakterinstanzen keine Übertragung eines privaten
 Nutzerprofils und kein Fernzugriff auf die persönliche App.
+
+## Echte Instanzen statt Videoschleifen
+
+Jeder öffentliche Charakter soll eine eigene fortlaufende Weltzeit und einen eigenen öffentlichen
+Zustand besitzen. Ein Neustart darf nicht bloß wieder dieselbe vorproduzierte Sequenz abspielen.
+Schlaf, Tagesablauf, Ortswechsel, Musik und spätere Begegnungen müssen aus derselben laufenden
+Itoeva-Logik entstehen, die auch beim direkten Beobachten glaubwürdig bleibt.
+
+Langfristig sollen diese Instanzen serverseitig betrieben, überwacht und nach Fehlern
+wiederhergestellt werden können, ohne von Martins lokalem PC oder Smartphone abhängig zu sein.
+Das ist ein beschlossenes Betriebsziel, aber noch keine Entscheidung für einen Cloud-Anbieter,
+Android-Emulatoren im Dauerbetrieb oder eine neue Headless-Engine.
+
+Dezente Hinweise auf die Android-App sind Teil der öffentlichen Produktoberfläche, nicht der
+privaten Reminder-Erfahrung. Für den ersten Stand gehören App-Link und kurze Erklärung in die
+Kanal- beziehungsweise Streambeschreibung. Ein dauerhaft eingeblendeter Werbeblock, aggressive
+Handlungsaufforderungen oder plattformübergreifend zusammengeführter Chat sind nicht beschlossen.
+Vor jeder öffentlichen Ausspielung werden die dann aktuellen YouTube- und Twitch-Regeln erneut
+geprüft.
 
 ## Evolution ist sichtbarer Inhalt
 
@@ -178,8 +199,10 @@ Practices" oder automatisierte Weiterentwicklung stillschweigend festgelegt werd
 - Ob `:app` (Hardware) und `:app-sim` (Simulator/Spiel) dauerhaft zwei Produkte bleiben.
 - Größere Spielstruktur: finales Spielziel, Quest-Struktur, ein Skillbaum-/Talentbaum-System.
 - Langfristige Wirtschaft/Balancing jenseits der heutigen additiven Fortschrittspfade.
-- Technische Architektur, Finanzierung, Moderation und Plattformanbindung der öffentlichen
-  Twitch-Welt sowie die konkreten Zuschauer-Kontingente.
+- Konkrete technische Architektur, Cloud-Anbieter, Kostenmodell, Ausfallsicherung, Moderation und
+  Plattformanbindung der öffentlichen Charakter-Streams sowie die konkreten
+  Zuschauer-Kontingente. Entschieden sind nur getrennte echte Instanzen je Charakter, langfristig
+  cloudbasierter Betrieb und die Zielausspielung auf YouTube Live und Twitch.
 - Produktionsweg, Stimmen, Videoerzeugung, Veröffentlichungsrhythmus und Rechte des
   YouTube-Evolutionstagebuchs.
 - Ob und wie öffentliche Weltzustände später in persönliche App-Instanzen einfließen dürfen.
