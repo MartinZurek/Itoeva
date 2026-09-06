@@ -17,11 +17,13 @@
   "seed": 5092026,
   "requested_device": "cpu",
   "output_path": "generated/music/itoeva_main_day_01.ogg",
-  "generated_at_utc": "2026-09-05T09:37:55.606155+00:00",
+  "generated_at_utc": "2026-09-06T12:03:10.684321+00:00",
   "actual_device": "cpu",
   "sample_rate": 44100,
   "channels": 2,
-  "samples": 3969000,
-  "bytes": 1135358,
+  "samples": 3941461,
+  "polished": true,
+  "peak_dbfs": -0.41,
+  "bytes": 1126932,
   "hf_token_present": true
 }
