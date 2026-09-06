@@ -1773,3 +1773,31 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **NICHT geloest:** Die drei ausgelieferten Dateien sind unveraendert - erzeugte Binaerdateien
   aendern sich nur ueber ihren Prozess. Sie muessen neu erzeugt werden, und ob ein Stueck nach dem
   Schnitt noch dasselbe ist, entscheidet ein Mensch beim Hoeren.
+
+### 2026-09-06 - Ein Pruefschritt, der seine eigene Voraussetzung mitbringt, prueft nichts
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich an der
+  Erzeugungspipeline und ihren Tests; kein Anwendungscode, keine Audiodatei angefasst.
+- **BEOBACHTET:** Der erste Erzeugungslauf nach dem Freigabe-Gate (Lauf 34031057429) starb nach
+  sieben Sekunden am ersten Schritt `Validate track without model download` mit
+  `ModuleNotFoundError: No module named 'numpy'`.
+- **URSACHE:** Das Gate wurde in `generate_music.py` auf Modulebene importiert. Der Trockenlauf
+  ist aber der erste Schritt des Workflows und laeuft absichtlich VOR jeder Installation - damit
+  ein Tippfehler im Manifest in Sekunden auffaellt statt nach einem Modell-Download. Der Import
+  hat genau diesen Zweck zerstoert.
+- **Warum die CI es durchliess - das ist die eigentliche Lehre:** `verify-music-tooling.yml`
+  installiert numpy, BEVOR sie den Trockenlauf aufruft. Dort war der Import immer erfuellbar. Ein
+  Pruefschritt, der seine eigene Voraussetzung mitbringt, prueft die Voraussetzung nicht. Die
+  Luecke war also nicht die falsch platzierte Zeile, sondern eine Pruefung, die eine andere
+  Umgebung herstellt als die, die sie absichern soll.
+- **Umgesetzt:** Der Import steht jetzt bei `torch` und `stable_audio_3`, hinter dem Ausstieg fuer
+  `--dry-run`, mit einem Kommentar, der erklaert warum - damit ihn niemand nach oben "aufraeumt".
+  Die Fehlermeldung nennt die tatsaechlich fehlende Abhaengigkeit.
+- **Belegt:** `tools/music/test_dry_run.py` startet den Trockenlauf als Unterprozess, in dem
+  numpy, soundfile, torch, torchaudio und stable_audio_3 durch Stubs unimportierbar sind - fuer
+  jeden Track im Manifest, weil der Workflow mit beliebiger Id angestossen wird. Ein zweiter Test
+  belegt, dass die Stubs wirklich greifen; ohne ihn waere die Absicherung bei einem Tippfehler im
+  Stub-Namen stillschweigend wertlos. Gegenprobe: mit dem alten Import fallen 4 von 15 Tests.
+- **Fuer den naechsten Lauf:** Eine Umgebung, die eine andere Umgebung absichern soll, muss deren
+  Kargheit nachstellen, nicht die eigene Bequemlichkeit. Wo das nicht geht, gehoert der karge Fall
+  in einen Test, der ihn herstellt.

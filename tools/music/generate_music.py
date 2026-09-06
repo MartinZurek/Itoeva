@@ -21,11 +21,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Loop polish and release gate - pure numpy, no model. See audio_polish.py for the three
-# defects it replaces and why the check runs on the DECODED file rather than in memory.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from audio_polish import check_audio, polish_for_loop  # noqa: E402
-
 
 DEFAULT_MANIFEST = Path("music/manifest.json")
 SUPPORTED_MODELS = {"small-music": 120, "medium": 380}
@@ -184,14 +179,24 @@ def main() -> int:
 
     # Heavy dependencies are imported only for a real generation. This keeps dry-run
     # useful in ordinary repo CI without downloading PyTorch or model weights.
+    #
+    # audio_polish belongs in this block and NOT at module level, even though it is only
+    # numpy. The workflow runs --dry-run as its very first step, before installing anything,
+    # precisely so a typo in the manifest fails in seconds instead of after a model download.
+    # A module-level numpy import breaks that step - it did, see the run on 2026-09-06 - and
+    # ordinary CI does not notice because verify-music-tooling installs numpy beforehand.
+    # test_dry_run_needs_no_audio_deps guards this.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         import torch
         import torchaudio
+        from audio_polish import check_audio, polish_for_loop
         from stable_audio_3 import StableAudioModel
     except ImportError as exc:
         raise SystemExit(
-            "Stable Audio 3 runtime is not installed. Follow music/README.md or use the "
-            "Generate Itoeva Music GitHub workflow."
+            f"A generation dependency is missing: {exc}. Follow music/README.md or use "
+            "the Generate Itoeva Music GitHub workflow, which installs the Stable Audio 3 "
+            "runtime and numpy for the release gate."
         ) from exc
 
     requested_device = resolve_device(args.device)
