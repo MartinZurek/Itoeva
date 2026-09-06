@@ -255,12 +255,26 @@ object PlayAmbientActivity {
          * etwas - sonst entstuende genau der starre Rundlauf, den der Auftrag ausschliesst.
          */
         recentTopics: List<AnimationType> = emptyList(),
+        /**
+         * Ob die Figur den Aufenthalt unter freiem Himmel noch fortsetzen MUSS - siehe
+         * [PlayOutdoorStay] und NT-057.
+         *
+         * Das einzige Signal hier, das nicht gewichtet, sondern **auswaehlt**. Alle anderen
+         * verschieben Wahrscheinlichkeiten; eine Mindestdauer, die sich fortwuerfeln laesst, ist
+         * aber keine. Gemeldet wurde genau das: "die dynamische Zeit sollte auch eine Mindestdauer
+         * haben und nicht so schnell wechseln".
+         *
+         * Bleibt trotzdem folgenlos, wenn es zur Tageszeit gar kein Aussenthema gibt - dann
+         * gewinnt die Tagesphase, nicht die Regel. Und nachts liefert [PlayOutdoorStay] ohnehin
+         * nie `true`.
+         */
+        holdOutdoors: Boolean = false,
         random: Random = Random
     ): AnimationType =
         pickWeighted(
             combinedWeights(
                 phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic,
-                recentTopics
+                recentTopics, holdOutdoors
             ),
             random
         )
@@ -367,7 +381,8 @@ object PlayAmbientActivity {
         plannedTopic: AnimationType? = null,
         justPlayed: AnimationType? = null,
         signatureTopic: AnimationType? = null,
-        recentTopics: List<AnimationType> = emptyList()
+        recentTopics: List<AnimationType> = emptyList(),
+        holdOutdoors: Boolean = false
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
@@ -376,7 +391,8 @@ object PlayAmbientActivity {
         // MEDICINE (siehe AvatarSpecies), aber die Garantie soll unabhaengig davon gelten.
         val relevantSignature = signatureTopic?.takeIf { it != AnimationType.MEDICINE }
         if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null &&
-            justPlayed == null && relevantSignature == null && recentTopics.isEmpty()
+            justPlayed == null && relevantSignature == null && recentTopics.isEmpty() &&
+            !holdOutdoors
         ) {
             return base
         }
@@ -452,6 +468,20 @@ object PlayAmbientActivity {
             val current = combined[justPlayed]
             if (current != null && combined.size > 1) {
                 combined[justPlayed] = (current - REPEAT_MALUS).coerceAtLeast(1)
+            }
+        }
+        // **Die Mindestdauer draussen** (NT-057) - ganz zuletzt, weil sie als einzige Regel hier
+        // AUSWAEHLT statt zu gewichten. Ein Zuschlag waere an dieser Stelle das falsche Werkzeug:
+        // Eine Mindestdauer, die sich fortwuerfeln laesst, ist keine.
+        //
+        // Der Rueckfall ist der Punkt, an dem sie zahm bleibt: Gibt es zur Tageszeit ueberhaupt
+        // kein Aussenthema, bleibt alles wie es war. Die Regel kann den Tagesablauf damit
+        // verlangsamen, aber nie zum Stillstand bringen - und nachts liefert
+        // [PlayOutdoorStay.holdsOutdoors] gar nicht erst `true`.
+        if (holdOutdoors) {
+            val draussen = PlayOutdoorStay.outdoorTopics(combined.keys)
+            if (draussen.isNotEmpty()) {
+                return combined.filterKeys { it in draussen }
             }
         }
         return combined

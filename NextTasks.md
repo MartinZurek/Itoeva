@@ -170,11 +170,11 @@ unter freiem Himmel moeglich, und der Ablauf wartet danach auf das Ende des Besu
 bleibt:** ob ein Besuch auch dann kommen darf, wenn die Figur draussen auf einer Bank SITZT
 (`occupied`) - die laengsten Aussenpausen liegen genau dort, aber "wer sitzt, faellt heraus" war
 eine bewusste Entscheidung und gehoert nicht nebenbei umgedreht. · NT-057
-**Mindestdauer eines dynamischen Zustands.** Gemeldet zusammen mit den zu kurzen Aussenphasen.
-Bewusst zurueckgestellt, bis die Wirkung der Verweildauern am Geraet gemessen ist - sonst
-entstuende eine Regel, die nie greift. Offene Entwurfsfrage: Gehoert die Mindestdauer der MUSIK
-(ein Track laeuft mindestens X) oder dem ZUSTAND (eine Aussenphase dauert mindestens X)? Das
-Zweite ist richtiger, greift aber tiefer in `PlayAmbientActivity` ein.
+**Mindestdauer eines dynamischen Zustands** - *am 2026-09-06 umgesetzt; siehe EVOLUTION.md.* Die
+Entwurfsfrage ist zugunsten des ZUSTANDS entschieden: `PlayOutdoorStay` haelt einen Aufenthalt
+unter freiem Himmel mindestens neunzig Sekunden, und die Musik folgt daraufhin von selbst. Eine
+Regel im Player haette das Symptom behandelt und ausserdem Ton und Bild entkoppelt. **Offen
+bleibt:** ob neunzig Sekunden richtig sind - das ist eine Zahl und erst am Geraet zu beurteilen.
 
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
