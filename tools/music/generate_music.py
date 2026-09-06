@@ -15,9 +15,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+# Loop polish and release gate - pure numpy, no model. See audio_polish.py for the three
+# defects it replaces and why the check runs on the DECODED file rather than in memory.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from audio_polish import check_audio, polish_for_loop  # noqa: E402
 
 
 DEFAULT_MANIFEST = Path("music/manifest.json")
@@ -224,16 +231,38 @@ def main() -> int:
         raise SystemExit(f"Unexpected Stable Audio output shape: {tuple(audio.shape)}")
 
     sample_rate = int(model.model.sample_rate)
-    waveform = audio[0].detach().to(torch.float32).cpu().clamp(-1, 1)
+    # **No clamp at full scale.** That is what produced the over-0 dBFS peaks on the first two
+    # day tracks: a signal sitting exactly at +-1.0 is handed to a *lossy* encoder, and Vorbis
+    # reconstructs above its input (+0.68 dBFS measured on main-day-01). polish_for_loop leaves
+    # a decibel of headroom instead, and closes the loop seam while it is at it - see
+    # audio_polish.py for the full account of the three defects this replaces.
+    raw = audio[0].detach().to(torch.float32).cpu().numpy().T
+    frames = polish_for_loop(raw, sample_rate)
     if extension == "ogg":
-        write_vorbis(output_path, waveform.numpy().T, sample_rate)
+        write_vorbis(output_path, frames, sample_rate)
     else:
         torchaudio.save(
             str(output_path),
-            waveform,
+            torch.from_numpy(frames.T),
             sample_rate,
             encoding="PCM_S",
             bits_per_sample=16,
+        )
+
+    # **The gate, and deliberately AFTER encoding.** Checking the waveform in memory would
+    # miss exactly the defect that shipped: the overshoot appears when the lossy file is
+    # decoded again, not before. So the written file is read back and judged as the phone
+    # will hear it.
+    import soundfile as sf
+
+    decoded, decoded_rate = sf.read(str(output_path), always_2d=True)
+    findings = check_audio(decoded, decoded_rate)
+    if findings:
+        for finding in findings:
+            print(f"::error::{track['id']}: {finding}", file=sys.stderr)
+        raise SystemExit(
+            f"{track['id']} is not releasable - see the findings above. The file was written to "
+            f"{output_path} for listening, but must not be merged in this state."
         )
 
     resolved.update(
@@ -241,8 +270,10 @@ def main() -> int:
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
             "actual_device": actual_device,
             "sample_rate": sample_rate,
-            "channels": int(waveform.shape[0]),
-            "samples": int(waveform.shape[-1]),
+            "channels": int(frames.shape[1]),
+            "samples": int(frames.shape[0]),
+            "polished": True,
+            "peak_dbfs": round(float(20.0 * math.log10(max(float(abs(decoded).max()), 1e-12))), 2),
             "bytes": output_path.stat().st_size,
             "hf_token_present": bool(os.environ.get("HF_TOKEN")),
         }

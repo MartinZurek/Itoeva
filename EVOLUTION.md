@@ -1744,3 +1744,32 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **NICHT belegt:** Ob neunzig Sekunden richtig sind. Das ist eine Zahl, sie ist am Geraet zu
   beurteilen, und sie ist eine Zeile. Acht neue Tests sichern die Regel und ihre Ausnahmen ab;
   keiner davon kann sagen, ob sich der Aufenthalt richtig anfuehlt.
+
+### 2026-09-06 - NT-055 (a): Ein Freigabe-Gate fuer erzeugte Musik
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich an der
+  Erzeugungspipeline; kein Anwendungscode, keine vorhandene Audiodatei angefasst.
+- **BEOBACHTET, gemessen:** Alle drei ausgelieferten Tracks enden mit Stille und beginnen sofort
+  auf vollem Pegel - `main-day-01` 0,50 s, `main-day-02` 0,62 s, `home-evening-01` 1,13 s. Die App
+  loopt sie (`MediaPlayer.isLooping = true`), also faellt die Musik alle 90 Sekunden fuer knapp
+  eine Sekunde aus und setzt hart wieder ein. Dazu ein True Peak von +0,68 bzw. +0,41 dBFS bei den
+  beiden Tagestracks.
+- **URSACHE, praezise:** Der Erzeuger klemmte mit `clamp(-1, 1)` auf Vollaussteuerung und gab das
+  an einen **verlustbehafteten** Encoder. Vorbis rekonstruiert beim Dekodieren ueber seinen
+  Eingang hinaus - ein Signal, das exakt bei 0 dBFS lag, dekodiert darueber. Das Klemmen war also
+  nicht der Schutz, fuer den man es halten koennte, sondern die Ursache.
+- **Was das ueber die bisherige Bewertung sagt:** Diese Maengel standen seit dem 2026-09-05 als
+  NT-055 (a) im Backlog, und ich hatte sie zweimal als "offen, aber nicht neu" abgehakt. Das war
+  richtig und trotzdem zu bequem: Ein Loch alle 90 Sekunden ist keine Feinheit, sondern genau die
+  Sorte Stoerung, die als "nach fuenf Minuten wirkt der Track monoton" gemeldet wird.
+- **Umgesetzt:** `tools/music/audio_polish.py` schneidet die Raender, faltet den Schluss ueber den
+  Anfang - damit das Ende IN den Anfang fuehrt statt an ihn zu stossen - und setzt den Pegel auf
+  −1 dBFS Kopfraum. Danach wird die **dekodierte** Datei gemessen und der Lauf scheitert bei
+  jedem Befund. Die Messung nach dem Kodieren ist der Punkt: Im Speicher waere der Ueberschwinger
+  unsichtbar geblieben, weil er erst beim Dekodieren entsteht.
+- **Belegt:** Das Gate beanstandet alle drei vorhandenen Dateien; die Politur behebt jeden Befund
+  (Peak −1,00 dBFS, Nahtsprung ~0, Restbefunde 0) und kostet dabei weniger als eine Sekunde
+  Spielzeit. Zwoelf Tests in `tools/music/test_audio_polish.py`, in der CI ohne Modellgewichte.
+- **NICHT geloest:** Die drei ausgelieferten Dateien sind unveraendert - erzeugte Binaerdateien
+  aendern sich nur ueber ihren Prozess. Sie muessen neu erzeugt werden, und ob ein Stueck nach dem
+  Schnitt noch dasselbe ist, entscheidet ein Mensch beim Hoeren.
