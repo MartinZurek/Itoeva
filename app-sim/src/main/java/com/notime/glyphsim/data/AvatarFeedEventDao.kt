@@ -45,6 +45,13 @@ data class OccurrenceRow(
 data class TypeFedCount(val animationType: AnimationType, val count: Int)
 
 /**
+ * Eine beantwortete ECHTE Erinnerung mit dem Zeitpunkt der Antwort - Grundlage des Nachklangs,
+ * siehe [AvatarFeedEventDao.answeredTopicsSince] und
+ * [com.notime.glyphsim.matrix.PlayAfterglow].
+ */
+data class AnsweredTopicRow(val animationType: AnimationType, val fedAtMillis: Long)
+
+/**
  * Wann ein Thema zum ersten Mal beantwortet wurde - siehe
  * [AvatarFeedEventDao.firstAnsweredPerTopic]. Genau eines von [animationType] und
  * [libraryAnimationLabel] ist gesetzt.
@@ -166,6 +173,32 @@ interface AvatarFeedEventDao {
             "GROUP BY animationType ORDER BY count DESC"
     )
     fun observePlayFedPerTypeSince(profileId: String, sinceEpochMillis: Long): Flow<List<TypeFedCount>>
+
+    /**
+     * **Was der Nutzer heute beantwortet hat, mit Uhrzeit** - woraus [com.notime.glyphsim.matrix.PlayAfterglow]
+     * den Nachklang rechnet.
+     *
+     * Drei Bedingungen, jede aus einem eigenen Grund:
+     *
+     * - `fedAtMillis IS NOT NULL` - nur beantwortete. Eine uebergangene Ausloesung ist keine
+     *   Handlung des Nutzers und darf nichts nachklingen lassen.
+     * - `isPlayMode = 0` - keine Spiel-Erinnerungen. Dieselbe Sperre wie in
+     *   [com.notime.glyphsim.ui.PlayHabitSignal]: Was das Spiel sich selbst wuerfelt, darf sich
+     *   nicht selbst verstaerken.
+     * - `animationType IS NOT NULL` - eine selbstgezeichnete Bibliotheks-Animation traegt kein
+     *   Thema, und ohne Thema gibt es nichts zu gewichten.
+     *
+     * Gefiltert wird ueber `fedAtMillis` und nicht ueber `epochMillis`: Gemeint ist, wann der
+     * Nutzer REAGIERT hat, nicht wann die Erinnerung ausgeloest wurde. Eine um 23:50 ausgeloeste
+     * und um 00:10 beantwortete Erinnerung klingt am neuen Tag nach, nicht am alten.
+     */
+    @Query(
+        "SELECT animationType, fedAtMillis FROM avatar_feed_events " +
+            "WHERE profileId = :profileId AND fedAtMillis >= :sinceEpochMillis " +
+            "AND isPlayMode = 0 AND animationType IS NOT NULL " +
+            "ORDER BY fedAtMillis"
+    )
+    suspend fun answeredTopicsSince(profileId: String, sinceEpochMillis: Long): List<AnsweredTopicRow>
 
     /** Wie [observeCountSince], aber ohne Flow - fuer die Stimmungsberechnung des Avatars. */
     @Query(

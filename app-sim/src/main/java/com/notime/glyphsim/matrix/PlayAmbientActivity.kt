@@ -269,12 +269,28 @@ object PlayAmbientActivity {
          * nie `true`.
          */
         holdOutdoors: Boolean = false,
+        /**
+         * **Was der Nutzer heute schon beantwortet hat** - der Nachklang, siehe [PlayAfterglow].
+         *
+         * Das achte Signal, und das einzige, das direkt von einer Handlung des Nutzers kommt statt
+         * von einer Auswertung ueber ihn. Eine beantwortete Erinnerung endete bisher nach EINER
+         * Routine; danach wusste der naechste Wurf nichts mehr davon. Die einzige Spur, die blieb,
+         * zeigte sogar in die falsche Richtung: Ein erfuelltes Tagesziel faellt aus
+         * [boostedTopics] heraus, Beantworten machte das Thema also seltener.
+         *
+         * Fertig gewichtet hereingereicht statt hier gerechnet, aus demselben Grund wie bei
+         * [plannedTopic]: Der Nachklang haengt an ECHTER Uhrzeit (die Tabelle der Antworten fuehrt
+         * echte Zeitpunkte), die Phase daneben an der Weltzeit. Wer beides in einer Funktion
+         * mischt, bekommt im Zeitraffer einen Nachklang, der entweder sofort abgelaufen ist oder
+         * nie endet.
+         */
+        afterglow: Map<AnimationType, Int> = emptyMap(),
         random: Random = Random
     ): AnimationType =
         pickWeighted(
             combinedWeights(
                 phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic,
-                recentTopics, holdOutdoors
+                recentTopics, holdOutdoors, afterglow
             ),
             random
         )
@@ -382,7 +398,8 @@ object PlayAmbientActivity {
         justPlayed: AnimationType? = null,
         signatureTopic: AnimationType? = null,
         recentTopics: List<AnimationType> = emptyList(),
-        holdOutdoors: Boolean = false
+        holdOutdoors: Boolean = false,
+        afterglow: Map<AnimationType, Int> = emptyMap()
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
@@ -392,7 +409,7 @@ object PlayAmbientActivity {
         val relevantSignature = signatureTopic?.takeIf { it != AnimationType.MEDICINE }
         if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null &&
             justPlayed == null && relevantSignature == null && recentTopics.isEmpty() &&
-            !holdOutdoors
+            !holdOutdoors && afterglow.isEmpty()
         ) {
             return base
         }
@@ -413,6 +430,21 @@ object PlayAmbientActivity {
         // wie beim Verweilen: Sie soll gewichten, nicht Themen erfinden.
         for (topic in base.keys) {
             if (topic in leaning) combined[topic] = (combined[topic] ?: 0) + LEANING_BONUS
+        }
+        // **Der Nachklang - dieselbe Zurueckhaltung wie bei der Neigung**, und das ist die
+        // wichtigste Entscheidung an dieser Stelle. Anders als der Stundenplan darf er kein Thema
+        // EINFUEHREN, sondern nur verstaerken, was zur Tageszeit ohnehin vorkommt. Sonst haette
+        // eine abends beantwortete Erinnerung das Wesen um drei Uhr nachts aus dem Bett geholt -
+        // die Nachtruhe kennt nur SLEEP (siehe [weightsFor]), und eine Garantie, die sich durch
+        // eine Nutzerhandlung am Vortag aushebeln laesst, ist keine.
+        //
+        // Die Handlung selbst geht dem Nachklang ohnehin voraus und braucht ihn nicht: Sie laeuft
+        // unabhaengig von dieser Gewichtung ueber `requestedTopic` in DockScreen. Hier geht es
+        // allein darum, was DANACH noch davon uebrig ist.
+        for (topic in base.keys) {
+            val nachklang = afterglow[topic] ?: continue
+            if (topic == AnimationType.MEDICINE) continue
+            combined[topic] = (combined[topic] ?: 0) + nachklang
         }
         // Dieselbe Zurueckhaltung wie bei der Neigung: Die Spezies-Signatur wirkt nur auf ein
         // Thema, das zur Tageszeit ohnehin vorkommt - sie soll faerben, nicht nachts ploetzlich
