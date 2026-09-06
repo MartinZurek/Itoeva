@@ -119,6 +119,40 @@ data class PlayRoutine(val steps: List<RoutineStep>)
 object PlayRoutines {
 
     /**
+     * Die grossen Sonderbeschaeftigungen unter freiem Himmel - **alle fuenf teilen sich das
+     * Thema [AnimationType.MOVE]**, und genau daran scheitert Abwechslung auf Themenebene.
+     *
+     * Gemeldet als "Basketball war beim normalen Zuschauen ueberhaupt nicht sichtbar". Nachgerechnet
+     * ist es nicht gesperrt, sondern zu selten, um bemerkt zu werden: Mittags hat MOVE Gewicht 3
+     * von 16, davon fuehren [SPECIAL_ACTIVITY_CHANCE_PERCENT] zu einer Sonderaktivitaet, und die
+     * wird unter fuenf gleichberechtigten gezogen - rund 2,6 % je Ablauf. In fuenf Minuten laufen
+     * etwa drei Ablaeufe.
+     *
+     * Der Ausweg ist NICHT, Basketball zu bevorzugen - dann waere die naechste Aktivitaet die
+     * unsichtbare. Stattdessen merkt sich der Aufrufer, welche Sonderaktivitaeten zuletzt zu sehen
+     * waren, und [forTopic] zieht bevorzugt aus dem Rest. Dadurch werden alle fuenf gleich gut
+     * sichtbar, ohne dass eine von ihnen eine Sonderregel bekommt.
+     */
+    enum class SpecialActivity { KITE, FOOTBALL, BASKETBALL, TRAINING, FISHING }
+
+    /**
+     * Welche Sonderaktivitaet dieser Ablauf zeigt, oder `null` fuer einen Alltagsablauf.
+     *
+     * Ueber die Schritttypen statt ueber eine Kennzeichnung am Ablauf: Die Schritte SIND schon
+     * die Auskunft, und eine zweite, gepflegte Liste koennte davon abweichen.
+     */
+    fun specialOf(routine: PlayRoutine): SpecialActivity? = routine.steps.firstNotNullOfOrNull {
+        when (it) {
+            is RoutineStep.Kite -> SpecialActivity.KITE
+            is RoutineStep.Football -> SpecialActivity.FOOTBALL
+            is RoutineStep.Basketball -> SpecialActivity.BASKETBALL
+            is RoutineStep.Training -> SpecialActivity.TRAINING
+            is RoutineStep.Fishing -> SpecialActivity.FISHING
+            else -> null
+        }
+    }
+
+    /**
      * Waehlt einen Ablauf zum Thema. Ein Thema hat oft MEHRERE moegliche Ablaeufe - das ist die
      * Stelle, an der sich Abwechslung am billigsten erzeugen laesst: dieselbe Absicht
      * ("etwas trinken") an unterschiedlichen Tagen anders ausgefuehrt.
@@ -135,6 +169,14 @@ object PlayRoutines {
         topic: AnimationType,
         needsShopping: Boolean = false,
         footballTrickLearned: Boolean = false,
+        /**
+         * Welche Sonderaktivitaeten zuletzt zu sehen waren, das juengste zuerst - siehe
+         * [SpecialActivity].
+         *
+         * Wird bevorzugt UEBERGANGEN, nicht ausgeschlossen: Sind alle fuenf im Fenster, wird
+         * wieder aus dem vollen Feld gezogen, statt gar keine Sonderaktivitaet zu zeigen.
+         */
+        recentSpecials: List<SpecialActivity> = emptyList(),
         random: Random = Random
     ): PlayRoutine {
         val options = allFor(topic)
@@ -164,7 +206,13 @@ object PlayRoutines {
         if (topic == AnimationType.MOVE && special.isNotEmpty() &&
             random.nextInt(100) < SPECIAL_ACTIVITY_CHANCE_PERCENT
         ) {
-            val chosen = special.random(random)
+            // Zuerst aus dem, was zuletzt NICHT zu sehen war. Bleibt davon nichts uebrig - weil
+            // im Fenster schon alle fuenf vorkamen -, wird wieder aus dem vollen Feld gezogen:
+            // Lieber eine Wiederholung als eine Runde ohne Sonderaktivitaet, denn genau die
+            // waeren aus Zuschauersicht ein Rueckschritt.
+            val ungesehen = special.filter { specialOf(it) !in recentSpecials }
+            val feld = ungesehen.ifEmpty { special }
+            val chosen = feld[random.nextInt(feld.size)]
             return if (chosen.steps.any { it is RoutineStep.Football }) {
                 footballRoutine(footballTrickLearned)
             } else {
