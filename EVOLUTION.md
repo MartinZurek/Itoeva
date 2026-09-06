@@ -1679,8 +1679,8 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   YouTube Live plus Twitch und langfristig serverseitigen Betrieb. Dauerstabilität,
   Plattformbetrieb, Kosten und Skalierung sind `UNVERIFIED`; konkrete Produktionsarchitektur
   bleibt `OPEN DECISION`.
-- **Getroffene Produktentscheidung:** Jedes der sechs Wesen soll langfristig eine eigene
-  fortlaufende öffentliche Itoeva-Instanz erhalten. Die Figur schläft, isst, treibt Sport,
+- **Getroffene Produktentscheidung:** Jeder veröffentlichte Itoeva-Charakter soll langfristig eine eigene fortlaufende
+  öffentliche Itoeva-Instanz erhalten. Die Figur schläft, isst, treibt Sport,
   unternimmt Ausflüge und erlebt Musik- und Zustandswechsel aus laufender Weltlogik. Der Stream
   ist keine aufgezeichnete Schleife. Spätere Interaktionen zwischen Charakterinstanzen gehören
   zum Ziel, aber noch nicht zum ersten Schnitt.
