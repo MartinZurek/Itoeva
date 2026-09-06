@@ -6,9 +6,11 @@ Klassen, bekannte technische Schulden und mögliche zukünftige Modularisierung.
 weiterentwickelt, siehe den Abschnitt "Die Evolution-Pipeline" unten und
 [EVOLUTION.md](EVOLUTION.md); für konkrete Arbeitspakete [NextTasks.md](NextTasks.md).
 
-Stand dieser Analyse: 2026-08-22, per Zeilenzählung und Struktur-Scan des Repositorys unter
-`claude/itoevo-latest-updates-xvzr8b` (Basis `main`@`74fe7eb`). Zahlen verändern sich mit jeder
-Evolution - als Größenordnung und zur Priorisierung sind sie trotzdem brauchbar.
+Stand der Modul- und Größenanalyse: 2026-08-22, per Zeilenzählung und Struktur-Scan des
+Repositorys unter `claude/itoevo-latest-updates-xvzr8b` (Basis `main`@`74fe7eb`). Die
+Architektureinordnung der öffentlichen Charakter-Streams wurde am 2026-09-06 ergänzt. Zahlen
+verändern sich mit jeder Evolution - als Größenordnung und zur Priorisierung sind sie trotzdem
+brauchbar.
 
 ## Diese Datei nicht linear lesen
 
@@ -22,6 +24,7 @@ Abschnitt öffnen:
 | [Module](#module) | ...eine Modul-Zugehörigkeit klären muss (`core`/`app`/`app-sim`). |
 | [Datenfluss: Erinnerungen](#datenfluss-erinnerungen-die-kerninteraktion) | ...die Auslöse-/Zieh-/Fütter-Kette betrifft. |
 | [Die Evolution-Pipeline](#die-evolution-pipeline-wie-dieses-repository-selbst-arbeitet) | ...den Automations-Prozess selbst (Workflows, `runner/`) betrifft. |
+| [Öffentliche 24/7-Charakter-Streams](#öffentliche-247-charakter-streams-zielarchitektur-nicht-implementiert) | ...Streaming, Dauerbetrieb oder öffentliche Weltinstanzen betrifft. |
 | [Größte Dateien](#größte-dateien-kandidaten-für-aufteilung) | ...eine der großen Dateien ändert oder eine Aufteilung plant. |
 | [Duplizierte Logik](#duplizierte-logik) | ...Code in `app` UND `app-sim` gleichzeitig betrifft. |
 | [Technische Schulden](#technische-schulden-repository-hygiene) | ...eine NextTasks.md-Aufgabe aus dem Bereich Hygiene/Cleanup umsetzt. |
@@ -170,6 +173,68 @@ Entscheidungsprotokoll.
 Job bestimmt anhand geänderter Pfade, ob App-Code betroffen ist, und überspringt die teuren
 Jobs (Emulator-Tests, Lint/R8) bei reinen Text-/Backlog-Änderungen. `deliver-apk.yml` liefert
 nach jedem Merge ein signiertes Test-APK nach Google Drive aus.
+
+## Öffentliche 24/7-Charakter-Streams (Zielarchitektur, nicht implementiert)
+
+### Wie das Ziel zur heutigen Architektur passt
+
+Der kleinste glaubwürdige Ausgangspunkt ist `:app-sim`: Dort existieren bereits Pixelwelt,
+Avatar-Rendering, Tagesabläufe, Orte, Musikrollen und die sichtbare Spieloberfläche. Ein
+Android-Emulator kann genau diese laufende Instanz darstellen; OBS kann ihr Bild und ihren Ton
+aufnehmen beziehungsweise an einen Streaming-Endpunkt senden. Das beweist den Zuschauerpfad,
+ohne vorzeitig einen zweiten Renderer oder eine Server-Spielengine zu erfinden.
+
+Der aktuelle Code ist jedoch eine Vordergrund-App, kein belegter 24/7-Dienst. Für einen
+Produktionsbetrieb fehlen unter anderem:
+
+- ein pro Charakter isolierter öffentlicher Zustand mit eigener Weltzeit und stabiler Identität;
+- Wiederanlauf aus einem überprüfbaren Checkpoint statt Rückkehr an einen beliebigen Startzustand;
+- Überwachung von Prozess, Bildfortschritt, Audio, Encoder und Plattformverbindung;
+- sichere Verwaltung von Stream-Keys und anderen Betriebsgeheimnissen;
+- Ressourcen- und Kostenmessung je gleichzeitig laufender Charakterinstanz;
+- ein sicherer, nachvollziehbarer Ereigniskanal für spätere Begegnungen zwischen Instanzen.
+
+Die persönliche Reminder-Datenbank ist dafür ausdrücklich keine Datenquelle. Öffentliche
+Instanzen verwenden nur erfundene, eigens konfigurierte Weltzustände; sie lesen weder lokale
+Reminder noch Nutzerhistorien, Konten oder medizinische Inhalte.
+
+### Gestufter Weg statt vorweggenommener Cloud-Plattform
+
+| Stufe | Technischer Schnitt | Was damit gelernt wird | Noch nicht enthalten |
+|---|---|---|---|
+| 0 - lokaler PoC | Eine `:app-sim`-Instanz im Android-Emulator, Fenster- und Audioaufnahme in OBS, zunächst lokale Aufzeichnung oder privater Teststream | Bleibt das Avatarleben über Stunden interessant, stabil, korrekt skaliert und hörbar? | Cloud, 24/7-SLA, mehrere Charaktere, Zuschauerinteraktion |
+| 1 - einzelner Betriebsprototyp | Ein isolierter Host mit genau einer öffentlichen Instanz, Prozessaufsicht, Neustart und Zustands-Checkpoint | Welche Laufzeit-, RAM-, CPU-, Encoder- und Wiederanlaufkosten entstehen wirklich? | Flotte aus sechs Instanzen, gemeinsame Welt |
+| 2 - wiederholbare Charakterinstanzen | Parametrisierter Start je Wesen, getrennte Zustände und standardisierte Gesundheitsprüfung | Lässt sich jede Figur unabhängig betreiben und aktualisieren? | Direkte Interaktion zwischen Instanzen |
+| 3 - sichere Weltbegegnungen | Kleiner typisierter Ereigniskanal zwischen öffentlichen Instanzen | Wie können Begegnungen koordiniert werden, ohne beliebige Fernsteuerung oder private Daten? | Zahlungen, ungeprüfter Freitext, offene Nutzerbefehle |
+
+Ob Stufe 1 weiter Android-Emulatoren verwendet oder ob Tagesablauf und Weltzustand später in ein
+neues reines Modul wie `:world-core` herausgelöst werden, bleibt bis nach den Messungen aus
+Stufe 0 eine `OPEN DECISION`. Ein Emulator pro Stream maximiert Wiederverwendung, kann aber teuer
+und betrieblich schwergewichtig sein. Eine Headless-Engine wäre langfristig effizienter und
+testbarer, erzeugt heute aber einen zweiten Laufzeitpfad, bevor bekannt ist, ob er gebraucht wird.
+
+### Grenzen des ersten Proof-of-Concepts
+
+Der erste PoC verändert weder App-Code noch GitHub-Workflows noch Cloud-Infrastruktur. Er startet
+eine echte vorhandene `:app-sim`-Instanz, hält den Spielmodus sichtbar und zeichnet mindestens
+einen längeren Lauf über OBS auf. Dabei werden Stabilität, Aktivitätsvielfalt, Tagesphasen,
+Musikwechsel, Seitenverhältnis, CPU/RAM und Unterbrechungs-/Wiederanlaufverhalten protokolliert.
+
+YouTube unterstützt laut seinen
+[Encoder-Hinweisen](https://support.google.com/youtube/answer/2853702) die Ausspielung über
+RTMP/RTMPS und empfiehlt ausdrücklich Tests mit realistischer Bewegung und Audio sowie die
+Überwachung des Streamzustands. Twitch behandelt parallele Ausspielung in seiner
+[Simulcasting-FAQ](https://help.twitch.tv/s/article/simulcasting-guidelines). Deshalb bleibt die
+Mehrfachausspielung ein eigener Prüfschritt; insbesondere werden im PoC keine Chats verschiedener
+Plattformen zusammengeführt und Zuschauer nicht von einer Plattform zur anderen gedrängt.
+
+Ein sachlicher App-Link in der Beschreibung ist als gewünschter Ausgangspunkt festgehalten.
+YouTubes [Richtlinie zu externen Links](https://support.google.com/youtube/answer/9054257) gilt
+auch für Livestreams und Beschreibungen. Links, Overlays, KI-Kennzeichnung, Musikrechte und
+Monetarisierung werden vor einem öffentlichen Test anhand der dann aktuellen Plattformregeln
+geprüft. Stream-Keys gehören ausschließlich in
+lokale beziehungsweise spätere Cloud-Secrets und niemals in Repository, Logs oder
+PR-Beschreibungen.
 
 ## Größte Dateien (Kandidaten für Aufteilung)
 

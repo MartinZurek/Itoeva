@@ -47,11 +47,29 @@ Die Vision hat drei miteinander verbundene Perspektiven:
 
 1. **Persönliche App:** Nutzer erleben eine eigene lokale Instanz, beobachten ihr Wesen und
    beeinflussen dessen Alltag sanft durch ihre persönlichen Reminder.
-2. **Öffentliche Twitch-Welt:** Eine eigene, von privaten App-Instanzen getrennte Welt kann
-   dauerhaft und ohne Sprecher als beobachtbares Pixel-Avatar-Leben gestreamt werden.
-3. **YouTube-Evolutionstagebuch:** Die Avatare sollen möglichst selbst als Protagonisten erzählen,
-   was sich Tag für Tag in ihrer Welt verändert hat, was sie erlebt haben und wo die Evolution an
-   Grenzen gestoßen ist. Aus demselben Material können später auch kurze Highlights entstehen.
+2. **Öffentliche Charakter-Streams:** Jedes Wesen soll langfristig eine eigene echte
+   24/7-Itoeva-Instanz erhalten, die gleichzeitig auf YouTube Live und Twitch ausgespielt werden
+   kann. Sie lebt fortlaufend mit Schlaf, Essen, Sport, Ausflügen und Musikwechseln statt als
+   Videoschleife. Der spätere Betrieb soll serverseitig und unabhängig von Martins PC oder
+   Smartphone möglich sein.
+3. **YouTube-Evolutionstagebuch:** Zusätzlich zu den YouTube-Livestreams sollen die Avatare
+   möglichst selbst als Protagonisten erzählen, was sich Tag für Tag in ihrer Welt verändert hat,
+   was sie erlebt haben und wo die Evolution an Grenzen gestoßen ist. Aus demselben belegten
+   Material können später auch kurze Highlights entstehen.
+
+## Nächster Validierungsschritt: Emulator plus OBS
+
+Vor jeder Cloud-, Multi-Instanz- oder Plattformintegration kommt ein begrenzter Proof-of-Concept:
+genau eine bestehende `:app-sim`-Instanz läuft in einem Android-Emulator und wird mit OBS über
+einen längeren Zeitraum aufgenommen beziehungsweise privat getestet. Gemessen werden
+Stabilität, sichtbare Aktivitätsvielfalt, Musik, Bildformat, Ressourcenverbrauch und
+Wiederanlauf. Dieser PoC darf keine Produktions-Cloud, keine neue Headless-Engine und keine
+Zuschauerintegration vorwegnehmen. Das priorisierte Arbeitspaket steht als NT-058 in
+`NextTasks.md`; die technische Einordnung in `Architecture.md`.
+
+Dezente App-Hinweise gehören zunächst in die Stream- beziehungsweise Kanalbeschreibung. Sichtbare
+Werbeeinblendungen, zusammengeführte Plattform-Chats und automatische Cross-Promotion bleiben bis
+zur aktuellen Regelprüfung unentschieden.
 
 ## Zuschauer beeinflussen, aber steuern nicht direkt
 
@@ -74,10 +92,13 @@ Dabei gelten folgende Grenzen:
 
 ## Noch nicht entschieden oder gebaut
 
-Die Vision beschließt noch keine technische Twitch-, YouTube-, Streaming-, Video-, Sprach-,
-Backend-, Konto- oder Zahlungsarchitektur. Ebenfalls offen sind konkrete Interaktionskontingente,
-Preise, Cooldowns, Moderation, Plattformregeln, Rechte an generierten Medien, Verfügbarkeit des
-Dauerstreams und der genaue Produktionsweg für Avatarstimmen und Videos. Jede solche Umsetzung
+Entschieden sind die getrennten echten 24/7-Instanzen je Charakter, die Zielausspielung auf
+YouTube Live und Twitch sowie langfristig ein serverseitiger Betrieb ohne Martins Geräte. Noch
+nicht entschieden sind Cloud-Anbieter, Laufzeitmodell, Encoder-/Relay-Topologie, technische
+Twitch-/YouTube-Anbindung, Video-, Sprach-, Backend-, Konto- oder Zahlungsarchitektur. Ebenfalls
+offen sind konkrete Interaktionskontingente, Preise, Cooldowns, Moderation, Plattformregeln,
+Rechte an generierten Medien, tatsächlich erreichbare Verfügbarkeit und der genaue
+Produktionsweg für Avatarstimmen und Videos. Jede solche Umsetzung
 braucht ein eigenes kleines Arbeitspaket sowie Sicherheits-, Datenschutz-, Kosten- und
 Rechtsprüfung.
 

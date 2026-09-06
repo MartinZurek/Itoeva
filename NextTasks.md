@@ -1,8 +1,9 @@
 # NextTasks.md
 
 Priorisierte, unabhängige Arbeitspakete für Itoeva. Diese Datei enthält **maximal 15 aktuell
-relevante Aufgaben**, geordnet nach tatsächlichem Hebel für Entwicklungsgeschwindigkeit und
-Token-/Actions-Effizienz - alles Weitere steht kompakt im [Future Backlog](#future-backlog) unten.
+relevante Aufgaben**, geordnet nach tatsächlichem Hebel für belastbare Produktentscheidungen,
+Entwicklungsgeschwindigkeit und Token-/Actions-Effizienz - alles Weitere steht kompakt im
+[Future Backlog](#future-backlog) unten.
 Grundlage ist die Analyse in [Architecture.md](Architecture.md); der Rahmen dafür steht in
 [Vision.md](Vision.md) und [AgentGuide.md](AgentGuide.md).
 
@@ -22,6 +23,10 @@ ihrem Spielerlebnis-Hebel verbessert werden, nicht nach leichter Zählbarkeit. D
 Dauerauftrag und sein Feedbackkanal stehen in `evolutions/DAILY_LIFE_TASK.md` bzw.
 `evolutions/DAILY_LIFE_LEARNING.md`.
 
+Der ausdrücklich freigegebene Streaming-PoC aus NT-058 ist keine Ausnahme zugunsten einer großen
+neuen Plattform. Er ist ein begrenzter Messversuch mit der vorhandenen App, der gerade verhindern
+soll, dass Cloud-, Multi-Instanz- oder Headless-Infrastruktur ohne Evidenz gebaut wird.
+
 ## Top 15 - nach Hebel geordnet
 
 Format je Aufgabe: **Rang - ID** - Aufgabe. *Hebel:* warum das gerade jetzt am meisten bringt.
@@ -32,66 +37,70 @@ feststellen, was tatsächlich in den Modellkontext gelangt, nicht von Dateigrö�
 Quelle ausgehen - siehe AgentGuide.md, Stilregeln, und das Beispiel in Architecture.md (frühere
 NT-043-Annahme, korrigiert in PR #23).
 
-1. **NT-045** - Erledigte (`[done]`)-Einträge aus `evolutions/BACKLOG.md` (25 KB) nach einer
+1. **NT-058** - Einen begrenzten End-to-End-PoC für genau einen öffentlichen Charakter
+   durchführen: aktuelle `:app-sim` in einem Android-Emulator, Spielmodus dauerhaft sichtbar,
+   Bild und App-Audio über OBS mindestens zwei Stunden lokal aufzeichnen; optional erst danach
+   ein privater oder nicht gelisteter Plattformtest. Keine Videoschleife, keine Cloud und keine
+   neue Engine. *Hebel: prüft mit dem bestehenden Produkt, ob das Avatarleben als Stream trägt,
+   bevor Infrastrukturentscheidungen Kosten und Architektur festschreiben.* *Erfolgskriterium:
+   `docs/streaming-poc.md` dokumentiert Setup, Seitenverhältnis, Aktivitäts- und Musikbeobachtung,
+   CPU/RAM, Bild-/Audioausfälle, Neustartverhalten, Screenshots sowie eine begründete
+   Go/Change/Stop-Empfehlung für NT-059. Stream-Keys und Kontodaten bleiben außerhalb des
+   Repositorys.* (keine; 120 min plus Beobachtungszeit)
+2. **NT-045** - Erledigte (`[done]`)-Einträge aus `evolutions/BACKLOG.md` (25 KB) nach einer
    gewissen Zeit in ein Archiv (`BACKLOG-ARCHIVE.md`) auslagern. *Hebel: die Datei wächst mit
    jeder Evolution weiter und wird sonst bei jedem Lauf komplett mitgeladen.* *Umgesetzt oder
    bewusst verworfen mit Begründung.* (keine; 60 min)
-2. **NT-051** - Prüfen, ob sich der "Betroffene Bereiche bestimmen"-Job aus `verify.yml` (PR #21)
+3. **NT-051** - Prüfen, ob sich der "Betroffene Bereiche bestimmen"-Job aus `verify.yml` (PR #21)
    auch für die Builder-Session eignet, um ihr vorab zu sagen, welche Bereiche für die aktuelle
    Aufgabe relevant sind, statt das gesamte Repository zu scannen. *Hebel: spart Scan-Overhead bei
    jedem einzelnen Lauf, Muster hat sich in PR #21/#22 bereits bewährt.* *Machbarkeit bewertet,
    ggf. prototypisch umgesetzt.* (keine; 90 min)
-3. **NT-046** - Prüfen, ob die Reviewer-Session denselben vollen Kontext wie die Builder-Session
+4. **NT-046** - Prüfen, ob die Reviewer-Session denselben vollen Kontext wie die Builder-Session
    bekommt, obwohl sie nur den Diff bewerten muss. *Hebel: zweite Session pro Lauf, doppelter
    Effekt jeder Einsparung.* *Gemessene Tokenersparnis pro Lauf.* (keine; 60 min)
-4. **NT-047** - Standard-Modellwahl (`model`/`review_model` in `claude-primary-run.yml`) gegen
+5. **NT-047** - Standard-Modellwahl (`model`/`review_model` in `claude-primary-run.yml`) gegen
    Aufgabentyp prüfen - läuft standardmäßig ein teureres Modell für einfache Aufgaben (z. B. reine
    Lore-Ergänzung)? *Hebel: direkter Kostenhebel unabhängig vom Tokenumfang.* *Standardwahl
    begründet dokumentiert oder angepasst.* (keine; 45 min)
-5. **NT-005** - Gradle-Abhängigkeits-Caching in `verify.yml`/`claude-primary-run.yml` prüfen und
+6. **NT-005** - Gradle-Abhängigkeits-Caching in `verify.yml`/`claude-primary-run.yml` prüfen und
    ggf. einrichten. *Hebel: beschleunigt JEDEN CI-Lauf, unabhängig vom Änderungstyp.* *Gemessene
    Laufzeitverkürzung eines typischen Jobs dokumentiert.* (keine; 60 min)
-6. **NT-004** - Timeout-Werte aller Jobs in `verify.yml` prüfen/ergänzen, nicht nur beim
+7. **NT-004** - Timeout-Werte aller Jobs in `verify.yml` prüfen/ergänzen, nicht nur beim
    `changes`-Job. *Hebel: ein hängender Job ohne Timeout kann überproportional viel Zeit
    verbrauchen, geringer Aufwand.* *Jeder Job hat einen begründeten `timeout-minutes`-Wert.*
    (keine; 30 min)
-7. **NT-006** - `deliver-apk.yml` denselben Pfad-Filter wie `verify.yml` (PR #21) spendieren,
+8. **NT-006** - `deliver-apk.yml` denselben Pfad-Filter wie `verify.yml` (PR #21) spendieren,
    falls es aktuell auch bei reinen Doku-Merges läuft (wie diesem PR gerade). *Hebel: analoger,
    bereits bewiesener Effekt wie bei `verify.yml`.* *Job überspringt sich nachweislich bei
    Text-only-Änderungen.* (PR #21 als Vorlage; 45 min)
-8. **NT-002** - Klären, ob `runner/` (PowerShell/Windows-Task-Scheduler) noch gebraucht wird oder
+9. **NT-002** - Klären, ob `runner/` (PowerShell/Windows-Task-Scheduler) noch gebraucht wird oder
    von `claude-primary-run.yml` abgelöst ist. *Hebel: beendet doppelte Pflege und Verwirrung -
    jeder Agent, der beide Systeme prüft, verliert dabei Zeit und Kontext.* *Entscheidung in
    Architecture.md nachgetragen; falls obsolet, per PR entfernt (menschliche Freigabe nötig,
    Protected Area).* (keine; 60 min)
-9. **NT-029** - `README.md` (829 Zeilen) in einen kurzen Einstieg plus themenspezifische Dateien
+10. **NT-029** - `README.md` (829 Zeilen) in einen kurzen Einstieg plus themenspezifische Dateien
    aufteilen (z. B. `docs/persistence.md`, `docs/release-process.md`). *Hebel: senkt strukturell
    die Kontextgröße, die für eine "normale Aufgabe" laut AgentGuide.md nötig ist.* *`README.md`
    unter 300 Zeilen, alle Inhalte weiterhin auffindbar, keine toten Links.* (keine; 90 min)
-10. **NT-030** - Kurze Zuständigkeits-Notiz je Gradle-Modul ergänzen ("was gehört hierher, was
+11. **NT-030** - Kurze Zuständigkeits-Notiz je Gradle-Modul ergänzen ("was gehört hierher, was
     nicht") für `core`, `app`, `app-sim`. *Hebel: Agent kann Modul-Zugehörigkeit ohne Volltextsuche
     klären.* *Drei Dateien, je unter 50 Zeilen.* (keine; 60 min)
-11. **NT-009** - Tatsächliche Flaky-Rate des Emulator-Jobs über die letzten 20 Läufe auswerten
+12. **NT-009** - Tatsächliche Flaky-Rate des Emulator-Jobs über die letzten 20 Läufe auswerten
     (Retry+KVM-Diagnose existiert bereits). *Hebel: weniger Retries bedeuten schnelleren
     PR-Turnaround.* *Kennzahl dokumentiert, Schwelle bei Bedarf angepasst.* (keine; 60 min)
-12. **NT-003** - Prüfen, ob `claude-auth-smoke.yml`/`claude-builder-smoke.yml`
+13. **NT-003** - Prüfen, ob `claude-auth-smoke.yml`/`claude-builder-smoke.yml`
     (Machbarkeitstests) nach dem produktiven Einsatz von `claude-primary-run.yml` noch gebraucht
     werden. *Hebel: räumt ungenutzte Läufe/Dateien auf, geringer Aufwand.* *Workflows begründet
     behalten oder entfernt.* (keine; 45 min)
-13. **NT-050** - Durchschnittlichen Tokenverbrauch je Evolutionslauf der letzten 10 Läufe als
+14. **NT-050** - Durchschnittlichen Tokenverbrauch je Evolutionslauf der letzten 10 Läufe als
     Baseline dokumentieren. *Hebel: ohne Vorher-Wert lässt sich die Wirkung von NT-045 bis NT-047
     nicht belegen - Messinstrument für den gesamten Fokusbereich.* *Baseline-Zahl mit Quelle in
     Architecture.md oder EVOLUTION.md dokumentiert.* (keine; 45 min)
-14. **NT-013** - Actions-Minutenverbrauch der letzten 30 Tage nach Workflow aufschlüsseln.
+15. **NT-013** - Actions-Minutenverbrauch der letzten 30 Tage nach Workflow aufschlüsseln.
     *Hebel: Geschwister-Messinstrument zu NT-050, aber für Actions-Zeit statt Tokens - ohne diese
     Zahl bleibt unklar, welcher Workflow tatsächlich die meiste Zeit kostet.* *Tabelle mit
     Quelle/Datum in Architecture.md ergänzt.* (keine; 60 min)
-15. **NT-053** - Animations-/Habit-Slots vor jedem Gameplay-Code als strategische Mechanik
-    spezifizieren und mit Nutzern oder einem schlanken Prototyp validieren: Auswahlwirkung,
-    Sichtbarkeit/mentale Präsenz und die Entscheidung "jetzt einsetzen oder für später aufheben?".
-    *Hebel: verhindert, dass Slot-Anzahl oder Umsetzung festgeschrieben werden, bevor der
-    Kernnutzen belegt ist.* *Validierte Mechanikbeschreibung mit offenen Entscheidungen und
-    klaren Kriterien für einen späteren Implementierungs-PR.* (Vision.md; 90 min)
 
 ## Future Backlog
 
@@ -127,7 +136,10 @@ größten Dateien stichprobenhaft prüfen · NT-042 Fehlende `@Preview` für Hom
 NT-054 Skills, Level und Jahreszeiten als gewichtete Erweiterungen des in `Tagesablauf.md`
 definierten Systems spezifizieren und validieren, bevor dazu größerer Gameplay-Code entsteht.
 
-**Produktentscheidungen, offen:** NT-055 Musik - *Format (Ogg/Vorbis), Ort der Umwandlung
+**Produktentscheidungen, offen:** NT-053 Animations-/Habit-Slots vor jedem Gameplay-Code als
+strategische Mechanik spezifizieren und mit Nutzern oder einem schlanken Prototyp validieren;
+Auswahlwirkung, Sichtbarkeit und die Entscheidung "jetzt einsetzen oder für später aufheben?"
+müssen vor einer größeren Umsetzung belegt sein. · NT-055 Musik - *Format (Ogg/Vorbis), Ort der Umwandlung
 (Pipeline), die Grenze der Ausnahme (nur der Score) sowie die kontextabhaengige Auswahl ueber
 `MusicRole`/`MusicResolver` sind am 2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.*
 `main-day-01` und `home-evening-01` werden inzwischen ausgeliefert; Rollenwechsel sind seit der
@@ -139,6 +151,17 @@ gemeinsames musikalisches Leitmotiv festlegen, bevor Morgen-, Sport- und Traumtr
 auseinanderlaufen; (d) ob realistische generierte Musik ueber einer 16x16-Welt aesthetisch
 richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer kommerziellen
 Veroeffentlichung.
+
+**Öffentliche Streams, gestufte Roadmap:** NT-059 Ergebnis von NT-058 auswerten und ausdrücklich
+zwischen drei Wegen entscheiden: Emulator-basierter Einzelbetrieb weiter testen, zuerst
+`:app-sim` für Dauerbetrieb härten oder eine reine Weltengine untersuchen; ohne Messdaten keine
+Auswahl. · NT-060 danach genau eine Charakterinstanz auf einem isolierten Cloud-Host mit
+Checkpoint, Prozessaufsicht, Secret-Verwaltung und Gesundheitsprüfung erproben; Kosten pro
+24 Stunden messen, noch keine Sechser-Flotte. · NT-061 erst nach stabilem Einzelbetrieb
+parametrisierte Instanzen je Wesen und einen typisierten, auditierbaren Ereigniskanal für
+Begegnungen spezifizieren; keine privaten Daten und kein ungeprüfter Freitext. · NT-062 vor einem
+öffentlichen Simulcast die dann aktuellen YouTube-/Twitch-Regeln, Musikrechte, KI-Transparenz,
+Moderation, Beschreibungstexte und dezente App-Hinweise als eigenes Freigabe-Gate prüfen.
 
 **Welt und Tagesablauf, offen:** NT-056 **Begegnung waehrend eines Aufenthalts draussen** -
 *am 2026-09-05 umgesetzt; siehe EVOLUTION.md.* Die Bedingung ist als `PlayVisitWindow.isOpen`

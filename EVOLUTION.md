@@ -1,19 +1,20 @@
 # Itoeva Evolution Protocol
 
-Version: 0.5 - seit 2026-09-03 darf der Merge eines fertigen Pull Requests von einer beauftragten
-Agentensitzung ausgeführt werden; der unbeaufsichtigte Lauf mergt sein eigenes Ergebnis weiterhin
-nie (siehe Evolution History zum 2026-09-03, "Merge-Freigabe"). Version 0.4 - seit 2026-09-03 mit
-der strategischen Zielidentität einer öffentlich beobachtbaren
-Evolutionswelt. Die lokale persönliche App, eine davon getrennte stille Twitch-Welt und ein von
-den Avataren erzähltes YouTube-Evolutionstagebuch sollen verschiedene Perspektiven auf dasselbe
-gestalterische Experiment eröffnen. Zuschauer dürfen die öffentliche Welt künftig nur durch
-begrenzte Impulse beeinflussen, nicht private oder medizinische Reminder steuern. Technische
-Streaming-, Netzwerk-, Konto-, Zahlungs- und Medienarchitektur bleiben bis zu gesonderten
-Entscheidungen offen. Der kontrollierte Tagesablauf-Dauerauftrag aus Version 0.3 (2026-09-02), die
-enge erzählerische Autonomie aus Version 0.2 (2026-08-18) und alle Sicherheitsgrenzen gelten fort.
-Von den Merge-Grenzen ist genau eine gelockert - wer mergen darf; alle übrigen (Branch, Tests,
-zweite Prüfung, Pull Request, kein Merge-Recht für die Pipeline, kein direkter Push auf `main`)
-bleiben unverändert.
+Version: 0.6 - seit 2026-09-06 mit dem langfristigen Betriebsziel eigener echter
+24/7-Charakterinstanzen, die auf YouTube Live und Twitch ausgespielt werden und später
+serverseitig unabhängig von Martins Geräten laufen sollen. Der nächste freigegebene Schritt ist
+nur ein begrenzter Emulator-plus-OBS-PoC; Cloud-Anbieter, Produktionslaufzeit, Multi-Instanz-
+Orchestrierung und Zuschauerintegration bleiben offen. Version 0.5 - seit 2026-09-03 darf der
+Merge eines fertigen Pull Requests von einer beauftragten Agentensitzung ausgeführt werden; der
+unbeaufsichtigte Lauf mergt sein eigenes Ergebnis weiterhin nie (siehe Evolution History zum
+2026-09-03, "Merge-Freigabe"). Version 0.4 - seit 2026-09-03 mit der strategischen Zielidentität
+einer öffentlich beobachtbaren Evolutionswelt. Die lokale persönliche App, davon getrennte
+öffentliche Charakter-Streams und ein von den Avataren erzähltes YouTube-Evolutionstagebuch
+sollen verschiedene Perspektiven auf dasselbe gestalterische Experiment eröffnen. Zuschauer
+dürfen die öffentliche Welt künftig nur durch begrenzte Impulse beeinflussen, nicht private oder
+medizinische Reminder steuern. Der kontrollierte Tagesablauf-Dauerauftrag aus Version 0.3
+(2026-09-02), die enge erzählerische Autonomie aus Version 0.2 (2026-08-18) und alle
+Sicherheitsgrenzen gelten fort.
 
 Dieses Dokument legt fest, wie Itoeva weiterentwickelt werden darf, ohne die heute im Repository
 erkennbare Identität, bereits getroffene Produktentscheidungen oder nachweisbares Verhalten
@@ -75,18 +76,24 @@ Die Zielidentität umfasst drei getrennte Perspektiven:
 
 1. Die **persönliche App** bleibt die lokale, private Beziehung zwischen Nutzer, Remindern und
    eigenem Avatarleben.
-2. Eine **öffentliche Twitch-Welt** soll als eigene Instanz dauerhaft und ohne Sprecher das
-   laufende Leben der Avatare zeigen. Zuschauer dürfen über klar begrenzte Berechtigungen aus
-   Abos, Donations oder vergleichbaren Mechanismen zulässige Weltimpulse geben.
-3. Ein **YouTube-Evolutionstagebuch** soll möglichst von den Avataren selbst als Protagonisten
-   erzählen lassen, was sich täglich tatsächlich verändert hat, was sie erlebt haben und welche
-   Grenze der Evolution sichtbar wurde. Kürzere Highlight-Formate dürfen auf denselben belegten
-   Ereignissen aufbauen.
+2. Jedes Wesen soll langfristig eine **eigene öffentliche 24/7-Charakterinstanz** besitzen. Diese
+   echte laufende Itoeva-Instanz wird gleichzeitig für YouTube Live und Twitch ausgespielt und
+   führt mit Schlaf, Essen, Sport, Ausflügen und Musikwechseln ihr virtuelles Leben statt eine
+   Videoschleife abzuspielen. Der Betrieb soll später serverseitig und unabhängig von Martins PC
+   oder Smartphone möglich sein. Zuschauer dürfen künftig nur über klar begrenzte
+   Berechtigungen zulässige Weltimpulse geben.
+3. Ein **YouTube-Evolutionstagebuch** soll zusätzlich zum dauerhaften YouTube-Livestream möglichst
+   von den Avataren selbst als Protagonisten erzählen lassen, was sich täglich tatsächlich
+   verändert hat, was sie erlebt haben und welche Grenze der Evolution sichtbar wurde. Kürzere
+   Highlight-Formate dürfen auf denselben belegten Ereignissen aufbauen.
 
-Entschieden ist die gestalterische Richtung, nicht ihre technische Ausführung. Insbesondere sind
-Backend, Streaming, Identität, Zahlung, Moderation, Kontingente, Cooldowns, Video- und
-Stimmerzeugung, Veröffentlichungsrhythmus sowie Rechte- und Plattformfragen weiterhin
-`OPEN DECISION` und kein Auftrag an einen autonomen Lauf.
+Entschieden sind die gestalterische Richtung, getrennte echte Instanzen je Charakter,
+Zielausspielung auf YouTube Live und Twitch sowie langfristig ein serverseitiger Betrieb ohne
+Martins Geräte. Der nächste freigegebene technische Schritt ist ausschließlich ein begrenzter
+PoC aus einer vorhandenen `:app-sim`-Instanz im Android-Emulator und OBS. Cloud-Anbieter,
+Produktionslaufzeit, Encoder-/Relay-Topologie, Identität, Zahlung, Moderation, Kontingente,
+Cooldowns, Video- und Stimmerzeugung, Veröffentlichungsrhythmus sowie Rechte- und weitere
+Plattformfragen bleiben `OPEN DECISION` und kein Auftrag an einen autonomen Lauf.
 
 ## Non-Negotiable Design Principles – welche Eigenschaften bei jeder Evolution erhalten bleiben müssen
 
@@ -333,8 +340,10 @@ Evolution ohne gesonderte Review und ausdrückliche Entscheidung semantisch ver�
 - Datenschutz-, Netzwerk- und Store-Versprechen.
 - Trennung zwischen persönlicher App-Instanz und öffentlicher Streaming-Welt.
 - Ausschluss persönlicher und medizinischer Reminder aus jeder Zuschauerinteraktion.
-- Twitch-/YouTube-, Streaming-, Netzwerk-, Konto-, Zahlungs-, Moderations- und
-  Medienerzeugungsarchitektur, solange dafür keine eigene menschliche Entscheidung vorliegt.
+- Produktionsreife Twitch-/YouTube-, Streaming-, Cloud-, Netzwerk-, Konto-, Zahlungs-,
+  Moderations- und Medienerzeugungsarchitektur. Die menschliche Entscheidung vom 2026-09-06
+  erlaubt nur das dokumentierte Zielbild und den begrenzten Emulator-plus-OBS-PoC, nicht dessen
+  stillschweigende Ausweitung auf Cloud- oder Zuschauerfunktionen.
 - Paketnamen, Application IDs, Signatur-/Keystore-Konfiguration und Releasevarianten.
 - Hardware-spezifische Glyph-SDK-Integration und Gerätekennungen.
 - Barrierefreiheitssemantik der Kerninteraktionen.
@@ -1655,3 +1664,53 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Weiterhin offen:** Lautheit, True Peak, Stille und Loop-Grenze des neuen Tracks sind erst nach
   seiner Erzeugung pruefbar. Die Lizenzfragen aus `music/README.md` bleiben unveraendert offen und
   werden hier nicht als geloest behauptet.
+
+
+### 2026-09-06 - Eigene 24/7-Livestream-Instanz je Charakter als langfristiges Betriebsziel
+
+- **Version:** Protokoll 0.5 → 0.6. Strategische Produkt- und Architekturdokumentation ohne
+  Änderung an App-Laufzeit, Datenmodell, GitHub-Workflow oder externer Infrastruktur.
+- **Ausgangsproblem und Nutzerwirkung:** Die 2026-09-03 beschlossene öffentliche Twitch-Welt
+  benannte weder die Anzahl der laufenden Welten noch klar, ob YouTube nur Tagebuch oder auch
+  Live-Ziel ist. Ebenso blieb offen, ob der Betrieb von Martins PC oder Smartphone abhängen darf.
+  Dadurch hätten Agenten eine gemeinsame Welt, Videoschleifen oder lokale Dauerhardware als
+  gleichwertige Zielbilder behandeln können.
+- **Evidenzklassifikation:** `DOCUMENTED INTENT` für eigene echte 24/7-Instanzen je Charakter,
+  YouTube Live plus Twitch und langfristig serverseitigen Betrieb. Dauerstabilität,
+  Plattformbetrieb, Kosten und Skalierung sind `UNVERIFIED`; konkrete Produktionsarchitektur
+  bleibt `OPEN DECISION`.
+- **Getroffene Produktentscheidung:** Jeder veröffentlichte Itoeva-Charakter soll langfristig eine eigene fortlaufende
+  öffentliche Itoeva-Instanz erhalten. Die Figur schläft, isst, treibt Sport,
+  unternimmt Ausflüge und erlebt Musik- und Zustandswechsel aus laufender Weltlogik. Der Stream
+  ist keine aufgezeichnete Schleife. Spätere Interaktionen zwischen Charakterinstanzen gehören
+  zum Ziel, aber noch nicht zum ersten Schnitt.
+- **Architektureinordnung:** `:app-sim` ist der Wiederverwendungsanker für den ersten Test:
+  vorhandener Android-Emulator plus OBS statt neuer Renderer. Für Produktion werden
+  Instanzisolation, Checkpoints, Prozessaufsicht, Frame-/Audio-Gesundheit, Secret-Verwaltung und
+  Kostenmessung benötigt. Ob Emulatoren bleiben oder eine Headless-Weltengine entsteht, wird erst
+  nach dem PoC entschieden.
+- **Nächster freigegebener Schritt:** NT-058 nimmt genau eine `:app-sim`-Instanz mindestens zwei
+  Stunden lokal über OBS auf und dokumentiert Stabilität, Vielfalt, Musik, Bildformat,
+  Ressourcenverbrauch und Wiederanlauf. Kein Cloud-Deployment, keine Sechser-Flotte, keine
+  Zuschauersteuerung und keine neuen Konten in diesem Schritt.
+- **Trennung und Datenschutz:** Öffentliche Instanzen verwenden ausschließlich erfundene
+  öffentliche Zustände. Persönliche Reminder, lokale Historien, private Avatarstände und
+  `MEDICINE` werden weder gelesen noch übertragen. Die persönliche App bleibt lokal und ohne
+  Konto oder Cloud.
+- **App-Hinweis und Plattformen:** Gewünscht sind zunächst ein sachlicher Android-App-Link und
+  eine kurze Erklärung in den Kanal-/Streambeschreibungen. Aggressive Werbung und ein
+  plattformübergreifend zusammengeführter Chat sind nicht beschlossen. Vor öffentlicher
+  Ausspielung werden aktuelle YouTube-/Twitch-Regeln, Musikrechte, KI-Transparenz und Moderation
+  als eigenes Gate geprüft.
+- **Roadmap:** NT-059 entscheidet anhand der PoC-Messwerte über den nächsten Laufzeitschnitt;
+  NT-060 begrenzt einen ersten Cloud-Test auf einen Charakter; NT-061 behandelt erst danach
+  parametrisierte Instanzen und typisierte Begegnungsereignisse; NT-062 ist das Plattform- und
+  Rechte-Gate vor öffentlichem Simulcast.
+- **Daten, Migration und Rücksetzweg:** Keine App-Daten, Room-Schemas, Preferences, Secrets oder
+  Migrationen betroffen. Rücksetzweg ist ein gewöhnlicher Revert dieses Dokumentations-PRs.
+- **Tests:** Dokumentstruktur, Links, Task-Anzahl und `OPEN DECISION`-Grenzen werden im Diff
+  geprüft. Android- und Emulator-Tests sind für diesen reinen Planungsstand nicht einschlägig.
+- **Weiter offen:** Cloud-Anbieter, Region, SLA, Kostenobergrenze, Encoder/Relay, Zeitmodell,
+  Checkpoint-Format, Anzahl Streams pro Host, Kanalstruktur, Stream-Key-Lebenszyklus, konkrete
+  Interaktionen, Moderation, Monetarisierung, Musik-/Medienrechte und der Zeitpunkt einer
+  öffentlichen Ausspielung.
