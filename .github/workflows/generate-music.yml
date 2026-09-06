@@ -121,7 +121,20 @@ jobs:
       - name: Create game-asset branch and pull request
         if: ${{ inputs.create_pr }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          # **Dieselbe Sperre wie in claude-primary-run.yml** - siehe die ausfuehrliche
+          # Begruendung am Schritt "Pull Request eroeffnen" dort und PR #95.
+          #
+          # Ein mit `github.token` eroeffneter Pull Request gehoert github-actions[bot], und
+          # GitHub laesst dessen Ereignisse aus Rekursionsschutz nicht frei laufen. PR #98 - der
+          # erzeugte Track main-day-02 - hatte deshalb NULL Pruefungen: nicht rot, nicht gruen,
+          # gar keine.
+          #
+          # Das ist die Luecke, die PR #95 offen gelassen hat: Dort wurde der eine Workflow
+          # repariert und dieser hier uebersehen, obwohl er denselben Fehler enthielt. Ein PR,
+          # der eine Binaerdatei in `res/raw` legt, ist genau der Fall, in dem eine ungeprueft
+          # durchgereichte Aenderung teuer wird.
+          GH_TOKEN: ${{ secrets.EVOLUTION_PR_TOKEN || github.token }}
+          EIGENES_PR_TOKEN: ${{ secrets.EVOLUTION_PR_TOKEN != '' }}
           TRACK_ID: ${{ inputs.track_id }}
           RESOURCE: ${{ steps.track.outputs.resource }}
           FORMAT: ${{ steps.track.outputs.format }}
@@ -149,6 +162,9 @@ jobs:
           git commit -m "Add generated Itoeva track ${TRACK_ID}"
           git push --set-upstream origin "$branch"
 
+          if [ "${EIGENES_PR_TOKEN}" != "true" ]; then
+            echo "::warning::EVOLUTION_PR_TOKEN fehlt oder heisst anders. Der Pull Request gehoert damit github-actions[bot], und seine Pruefungen starten nicht - im Actions-Tab ist dann 'Approve and run' noetig."
+          fi
           gh pr create \
             --base main \
             --head "$branch" \
