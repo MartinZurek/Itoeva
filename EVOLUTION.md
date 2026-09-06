@@ -1714,3 +1714,33 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Checkpoint-Format, Anzahl Streams pro Host, Kanalstruktur, Stream-Key-Lebenszyklus, konkrete
   Interaktionen, Moderation, Monetarisierung, Musik-/Medienrechte und der Zeitpunkt einer
   öffentlichen Ausspielung.
+
+### 2026-09-06 - NT-057: Die Mindestdauer gehoert dem Zustand, nicht der Musik
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Eine neue Regel in der autonomen Themenwahl;
+  Musik, Player und Resolver bleiben unangetastet.
+- **BEOBACHTET:** Gemeldet am 2026-09-05 zusammen mit den zu kurzen Aussenphasen - "der Wechsel
+  war viel zu schnell, dann wieder in diese ruhige Stimmung ... die dynamische Zeit sollte auch
+  eine Mindestdauer haben".
+- **Die Entwurfsfrage, jetzt entschieden:** Naheliegend waere eine Regel im Player gewesen - ein
+  Track laeuft mindestens X. Das waere die Behandlung des Symptoms: Die Musik wechselte richtig,
+  sie folgte nur einer Welt, in der die Figur nach zwanzig Sekunden wieder hineinging. Eine
+  Player-Regel haette ausserdem die schlechtere Eigenschaft gehabt, Ton und Bild zu entkoppeln -
+  Musik fuer draussen, waehrend die Figur schon am Kuehlschrank steht.
+- **Umgesetzt:** `PlayOutdoorStay.holdsOutdoors` haelt einen Aufenthalt unter freiem Himmel
+  mindestens neunzig Sekunden - ungefaehr drei Regungen. Die Musik tut daraufhin von selbst das
+  Richtige, ohne eine zweite Zeitregel zu kennen.
+- **Die einzige Regel in `nextTopic`, die AUSWAEHLT statt zu gewichten.** Alle sieben Signale
+  davor verschieben Wahrscheinlichkeiten; eine Mindestdauer, die sich fortwuerfeln laesst, ist
+  aber keine. Sie steht deshalb ganz am Ende und filtert.
+- **Vier Ausnahmen, alle absichtlich:** Nachts greift sie nie - ein Wesen, das um drei Uhr auf der
+  Strasse festgehalten wird, weil es dort die Tageszeit gewechselt hat, waere ein schlimmerer
+  Fehler als der behobene. Gibt es zur Tageszeit gar kein Aussenthema, gewinnt die Tageszeit.
+  Echte Erinnerung, ausdrueckliche Bitte des Nutzers und der Arbeitszwang bei leerem Vorrat laufen
+  ohnehin an `nextTopic` vorbei. Und MEDICINE bleibt auch hier ausgeschlossen.
+- **Die Uhr laeuft nicht neu bei jedem Schritt:** Der Wechsel von der Strasse in den Park setzt
+  sie nicht zurueck - sonst wuerde aus "mindestens neunzig Sekunden" ein "nie wieder hinein". Sie
+  haengt am Uebergang drinnen/draussen, nicht am einzelnen Ort, und lebt nur im Arbeitsspeicher.
+- **NICHT belegt:** Ob neunzig Sekunden richtig sind. Das ist eine Zahl, sie ist am Geraet zu
+  beurteilen, und sie ist eine Zeile. Acht neue Tests sichern die Regel und ihre Ausnahmen ab;
+  keiner davon kann sagen, ob sich der Aufenthalt richtig anfuehlt.

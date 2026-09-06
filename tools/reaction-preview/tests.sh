@@ -66,7 +66,7 @@ SRCS=(
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
   "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
-  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
+  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Die Musik-Wiedergabeschicht: reines Kotlin bis auf MediaPlayer/AudioManager, fuer die
@@ -94,6 +94,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayDreamsTest.kt"
   "$TEST/matrix/PlayAmbientActivityTest.kt"
   "$TEST/matrix/PlayVarietyGuardTest.kt"
+  "$TEST/matrix/PlayOutdoorStayTest.kt"
   "$TEST/matrix/PlayMotifLegibilityTest.kt"
   "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
@@ -117,6 +118,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayDreamsTest
   com.notime.glyphsim.matrix.PlayAmbientActivityTest
   com.notime.glyphsim.matrix.PlayVarietyGuardTest
+  com.notime.glyphsim.matrix.PlayOutdoorStayTest
   com.notime.glyphsim.matrix.PlayMotifLegibilityTest
   com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.ui.PlayMusicTest

@@ -93,6 +93,7 @@ import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayChime
+import com.notime.glyphsim.matrix.PlayOutdoorStay
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.matrix.PlayWeather
@@ -473,6 +474,16 @@ fun DockScreen(
          * dieselbe der fuenf Sonderaktivitaeten" - die teilen sich naemlich alle das Thema MOVE
          * und waeren fuer die Themen-Ebene ununterscheidbar (siehe PlayRoutines.SpecialActivity).
          */
+        /**
+         * Seit wann die Figur ununterbrochen unter freiem Himmel ist, oder `0`, wenn sie drinnen
+         * ist - siehe [PlayOutdoorStay] und NT-057.
+         *
+         * Wie die Verlaufserinnerung daneben nur im Arbeitsspeicher: Wer den Spielmodus verlaesst
+         * und zurueckkommt, faengt einen neuen Aufenthalt an. Das ist richtig so - die
+         * Mindestdauer soll verhindern, dass ein Ausflug im Zusehen zerfaellt, nicht ueber
+         * Sitzungsgrenzen hinweg buchhalten.
+         */
+        var outdoorsSinceMs by remember { mutableStateOf(0L) }
         val recentTopics = remember { mutableStateListOf<AnimationType>() }
         val recentSpecials = remember { mutableStateListOf<PlayRoutines.SpecialActivity>() }
 
@@ -669,6 +680,25 @@ fun DockScreen(
                 // Wechsel zurueck in den Erinnerungs-Modus. Die EINSTELLUNG bleibt davon
                 // unberuehrt - siehe PlayMusic.
                 PlayMusic.stop()
+            }
+        }
+        /**
+         * Die Uhr fuer die Mindestdauer draussen (NT-057) - siehe [PlayOutdoorStay].
+         *
+         * Ueber einen Effekt auf [currentPlace] statt direkt in `moveToPlace`, weil der Ort an
+         * mehreren Stellen gesetzt wird: beim Ortswechsel im Ablauf, aber auch beim
+         * Wiedereinstieg aus dem gespeicherten Aufenthalt. Ein Zaehler, den nur einer der beiden
+         * Wege stellt, waere nach dem Wiedereinstieg falsch.
+         */
+        LaunchedEffect(playMode, currentPlace) {
+            outdoorsSinceMs = when {
+                !playMode -> 0L
+                !PlayScene.isOutdoors(currentPlace) -> 0L
+                // Schon draussen und bleibt draussen: die laufende Uhr NICHT neu stellen. Sonst
+                // begaenne die Mindestdauer bei jedem Schritt von der Strasse in den Park von
+                // vorn, und aus "mindestens neunzig Sekunden" wuerde "nie wieder hinein".
+                outdoorsSinceMs != 0L -> outdoorsSinceMs
+                else -> System.currentTimeMillis()
             }
         }
         /**
@@ -2491,7 +2521,18 @@ fun DockScreen(
                                     // wurde genau das: dass die Figur zu lange bei derselben Art
                                     // von Verhalten bleibt, obwohl der Einzelschritt-Daempfer
                                     // laengst wirkt.
-                                    recentTopics = recentTopics
+                                    recentTopics = recentTopics,
+                                    // **Die Mindestdauer draussen** (NT-057). Gemeldet an der
+                                    // Musik - "der Wechsel war viel zu schnell, dann wieder in
+                                    // diese ruhige Stimmung" -, aber die Musik wechselte richtig:
+                                    // Sie folgte einer Welt, in der die Figur nach zwanzig
+                                    // Sekunden wieder hineinging. Deshalb sitzt die Regel hier
+                                    // beim Zustand und nicht im Player.
+                                    holdOutdoors = PlayOutdoorStay.holdsOutdoors(
+                                        outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
+                                            else System.currentTimeMillis() - outdoorsSinceMs,
+                                        phase = PlayAmbientActivity.currentDayPhase()
+                                    )
                                 )
                             }
 
