@@ -47,10 +47,21 @@ NT-043-Annahme, korrigiert in PR #23).
    CPU/RAM, Bild-/Audioausfälle, Neustartverhalten, Screenshots sowie eine begründete
    Go/Change/Stop-Empfehlung für NT-059. Stream-Keys und Kontodaten bleiben außerhalb des
    Repositorys.* (keine; 120 min plus Beobachtungszeit)
-2. **NT-045** - Erledigte (`[done]`)-Einträge aus `evolutions/BACKLOG.md` (25 KB) nach einer
-   gewissen Zeit in ein Archiv (`BACKLOG-ARCHIVE.md`) auslagern. *Hebel: die Datei wächst mit
-   jeder Evolution weiter und wird sonst bei jedem Lauf komplett mitgeladen.* *Umgesetzt oder
-   bewusst verworfen mit Begründung.* (keine; 60 min)
+2. **NT-045** - ~~Erledigte (`[done]`)-Einträge aus `evolutions/BACKLOG.md` in ein Archiv
+   auslagern.~~ **Die Begründung trägt nicht - am 2026-09-06 empirisch widerlegt.** Der Hebel
+   lautete "wird sonst bei jedem Lauf komplett mitgeladen". Das stimmt nicht:
+   `runner/backlog-select.sh` schneidet **genau einen** Eintrag heraus, und `AgentGuide.md`
+   (Minimal-Startsequenz, Punkt 4) schreibt ausdrücklich vor, "nur den einen betroffenen
+   `## [open] ITO-NNNN`-Eintrag" zu lesen. Die inzwischen 44 KB landen also nie im Modellkontext
+   des automatischen Laufs; die Ersparnis wäre null gewesen.
+   **Der Eintrag bleibt als Befund stehen statt gestrichen zu werden**, weil genau davor der
+   Absatz über dieser Liste warnt - und weil derselbe Fehler schon einmal passiert ist (frühere
+   NT-043-Annahme, korrigiert in PR #23). Zweimal dieselbe Falle ist ein Muster, kein Zufall.
+   **Was tatsächlich offen ist:** `BACKLOG.md` enthält aktuell **keinen einzigen `[open]`-Eintrag**
+   (alle 14 stehen auf `[done]`). `backlog-select.sh` gibt deshalb Exitcode 2 zurück, und jeder
+   nächtliche Lauf fällt auf `DAILY_LIFE_TASK.md` zurück. Das ist so vorgesehen und nicht kaputt -
+   aber es heißt, dass die kuratierte Aufgabenliste erschöpft ist. Ob das so bleiben soll, ist
+   eine Produktentscheidung. (keine; Befund dokumentiert)
 3. **NT-051** - Prüfen, ob sich der "Betroffene Bereiche bestimmen"-Job aus `verify.yml` (PR #21)
    auch für die Builder-Session eignet, um ihr vorab zu sagen, welche Bereiche für die aktuelle
    Aufgabe relevant sind, statt das gesamte Repository zu scannen. *Hebel: spart Scan-Overhead bei
@@ -70,10 +81,11 @@ NT-043-Annahme, korrigiert in PR #23).
    `changes`-Job. *Hebel: ein hängender Job ohne Timeout kann überproportional viel Zeit
    verbrauchen, geringer Aufwand.* *Jeder Job hat einen begründeten `timeout-minutes`-Wert.*
    (keine; 30 min)
-8. **NT-006** - `deliver-apk.yml` denselben Pfad-Filter wie `verify.yml` (PR #21) spendieren,
-   falls es aktuell auch bei reinen Doku-Merges läuft (wie diesem PR gerade). *Hebel: analoger,
-   bereits bewiesener Effekt wie bei `verify.yml`.* *Job überspringt sich nachweislich bei
-   Text-only-Änderungen.* (PR #21 als Vorlage; 45 min)
+8. **NT-006** - ~~`deliver-apk.yml` denselben Pfad-Filter wie `verify.yml` spendieren.~~
+   **Erledigt, am 2026-09-06 nachgeprüft.** Der Workflow trägt bereits
+   `paths-ignore: ['**/*.md']` samt Begründung im Kopf ("Eine reine Dokumentationsaenderung
+   aendert nichts an der App"). Wann das dazukam, ist nicht mehr nachvollziehbar - der Eintrag
+   wurde nur nie nachgezogen. (erledigt)
 9. **NT-002** - Klären, ob `runner/` (PowerShell/Windows-Task-Scheduler) noch gebraucht wird oder
    von `claude-primary-run.yml` abgelöst ist. *Hebel: beendet doppelte Pflege und Verwirrung -
    jeder Agent, der beide Systeme prüft, verliert dabei Zeit und Kontext.* *Entscheidung in
