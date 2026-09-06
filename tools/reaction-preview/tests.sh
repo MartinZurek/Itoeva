@@ -91,6 +91,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayDreamsTest.kt"
   "$TEST/matrix/PlayAmbientActivityTest.kt"
   "$TEST/matrix/PlayVarietyGuardTest.kt"
+  "$TEST/matrix/PlayMotifLegibilityTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
@@ -111,6 +112,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayDreamsTest
   com.notime.glyphsim.matrix.PlayAmbientActivityTest
   com.notime.glyphsim.matrix.PlayVarietyGuardTest
+  com.notime.glyphsim.matrix.PlayMotifLegibilityTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )

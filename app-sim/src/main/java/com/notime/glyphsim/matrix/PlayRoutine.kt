@@ -344,6 +344,14 @@ object PlayRoutines {
                     RoutineStep.Take(PlayEffects.Carried.BOOK),
                     RoutineStep.GoTo(PlayScene.Station.SEAT),
                     RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    // **Zweimal lesen mit einer Pause dazwischen.** Eine einzelne Act-Reaktion
+                    // dauert gut drei Sekunden; danach uebernimmt die Ruhe-Schleife, und das
+                    // gehaltene Buch verschwindet. Das Weltmotiv daneben bleibt zwar stehen,
+                    // zeigt aber ein Buch, das DA STEHT, nicht eine Figur, die liest. Wer beim
+                    // Zusehen einmal wegschaut, hat die ganze Handlung verpasst - genau das war
+                    // gemeldet.
+                    RoutineStep.Act(AnimationType.BOOK),
+                    RoutineStep.Linger(4_000L),
                     RoutineStep.Act(AnimationType.BOOK),
                     RoutineStep.Linger(3_500L),
                     RoutineStep.Rise,
@@ -360,6 +368,8 @@ object PlayRoutines {
                     RoutineStep.Take(PlayEffects.Carried.BOOK),
                     RoutineStep.GoTo(PlayScene.Station.SEAT),
                     RoutineStep.Occupy(PlayScene.Station.SEAT),
+                    RoutineStep.Act(AnimationType.BOOK),
+                    RoutineStep.Linger(3_000L),
                     RoutineStep.Act(AnimationType.BOOK),
                     RoutineStep.Linger(2_500L),
                     RoutineStep.Rise,
