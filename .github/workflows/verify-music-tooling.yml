@@ -37,6 +37,15 @@ jobs:
       #
       # Der Dry-Run laedt keine Modellgewichte und braucht kein Secret; er prueft Pflichtfelder,
       # die Rolle gegen SUPPORTED_ROLES und die Erreichbarkeit der Prompt-Datei.
+      # Das Freigabe-Gate selbst pruefen, bevor irgendein Track daran gemessen wird. Reines
+      # numpy, keine Modellgewichte, kein Secret - und es faellt in Sekunden auf, wenn eine
+      # Regel aufgeweicht wird, die drei ausgelieferte Dateien beanstandet haette.
+      - name: Install numpy for the audio gate
+        run: pip install --quiet numpy
+
+      - name: Test the loop polish and release gate
+        run: python -m unittest discover --start-directory tools/music --pattern 'test_*.py' --verbose
+
       - name: Validate every track definition without model download
         run: |
           set -euo pipefail

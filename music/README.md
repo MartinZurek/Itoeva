@@ -142,6 +142,33 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 | `sport_background` | Bewegung und Anstrengung | noch keiner |
 | `dream_background` | Traum-Szenen | noch keiner |
 
+## Freigabe-Gate: Loop-Politur und Messung
+
+**Kein Track geht ohne Messung durch.** `tools/music/audio_polish.py` poliert die Erzeugung und
+prueft danach die fertige Datei; findet es etwas, scheitert der Lauf, statt eine unbrauchbare
+Datei weiterzureichen.
+
+Drei Maengel haben dazu gefuehrt, und alle drei kamen aus der Pipeline, nicht aus dem Modell:
+
+1. **Ein Loch an der Loop-Grenze.** `main-day-01` endete mit 0,50 s Stille, `main-day-02` mit
+   0,62 s, `home-evening-01` mit 1,13 s - und alle drei begannen sofort auf vollem Pegel. Die App
+   loopt diese Dateien, also fiel die Musik alle 90 Sekunden fuer knapp eine Sekunde aus und setzte
+   hart wieder ein.
+2. **True Peak ueber 0 dBFS.** Der Erzeuger klemmte auf ±1,0 und gab das an einen
+   **verlustbehafteten** Encoder. Vorbis rekonstruiert ueber seinen Eingang hinaus, gemessen
+   +0,68 dBFS bei `main-day-01`. Das Klemmen war die Ursache; Kopfraum vor dem Encoder ist die
+   Behebung.
+3. **Keine Pruefung.** Nichts hat davon etwas gemessen. Beide Maengel erreichten das Telefon.
+
+Die Politur schneidet die Raender, faltet den Schluss ueber den Anfang (damit das Ende IN den
+Anfang fuehrt statt an ihn zu stossen) und setzt den Pegel auf −1 dBFS. Gemessen wird danach die
+**dekodierte** Datei, nicht der Puffer im Speicher - der Ueberschwinger entsteht erst beim
+Dekodieren.
+
+Was das Gate ausdruecklich NICHT tut: bereits erzeugte Dateien anfassen. Erzeugte Binaerdateien
+aendern sich nur ueber den Prozess, der sie gemacht hat - die drei vorhandenen Tracks werden also
+neu erzeugt, nicht nachbearbeitet.
+
 ## Mehrere Stuecke je Rolle
 
 **Eine Rolle ist kein Dateiname.** Sie kann von mehreren Stuecken erfuellt werden, und seit
