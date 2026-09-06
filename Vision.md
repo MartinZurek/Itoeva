@@ -51,8 +51,8 @@ entwickeln eine persönliche Geschichte und beeinflussen dessen Alltag sanft dur
 Reminder. Diese Perspektive bleibt privat und behält die unten beschriebenen nicht verhandelbaren
 Eigenschaften.
 
-**Die öffentlichen Charakter-Streams.** Langfristig soll jedes der sechs Wesen eine eigene,
-dauerhaft laufende öffentliche Itoeva-Instanz erhalten. Sie wird als echter 24/7-Livestream auf
+**Die öffentlichen Charakter-Streams.** Langfristig soll jeder veröffentlichte Itoeva-Charakter eine eigene, dauerhaft laufende
+öffentliche Itoeva-Instanz erhalten. Sie wird als echter 24/7-Livestream auf
 YouTube Live und Twitch ausgespielt, nicht als wiederholte Videoschleife. Der Inhalt ist das
 fortlaufende Leben des jeweiligen Wesens: Schlafen, Essen, Sport, Ausflüge, Musikwechsel,
 Entscheidungen und später begrenzte Begegnungen mit anderen öffentlichen Charakterinstanzen.
