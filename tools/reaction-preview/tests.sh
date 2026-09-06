@@ -58,6 +58,8 @@ done
 # Skripte unterscheiden sich absichtlich; render.sh braucht die Welt-Dateien nicht.
 SRCS=(
   "$CORE/AnimationType.kt" "$CORE/AnimationNode.kt" "$CORE/AnimationTree.kt"
+  "$CORE/LibraryAnimation.kt" "$CORE/DefaultLibraryAnimations.kt" "$CORE/FrameCodec.kt"
+  "$CORE/AvatarSignatureAnimations.kt" "$CORE/SkillTreeAnimations.kt"
   "$CORE/FrameCrossfade.kt" "$CORE/FrameSprite.kt" "$CORE/ReminderFrameGrid.kt"
   "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
@@ -93,6 +95,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayAmbientActivityTest.kt"
   "$TEST/matrix/PlayVarietyGuardTest.kt"
   "$TEST/matrix/PlayMotifLegibilityTest.kt"
+  "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
@@ -115,17 +118,22 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayAmbientActivityTest
   com.notime.glyphsim.matrix.PlayVarietyGuardTest
   com.notime.glyphsim.matrix.PlayMotifLegibilityTest
+  com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )
 
 echo "Uebersetzen ..."
 "$KOTLINC" -nowarn -d "$WORK/tests" -cp "$JUNIT:$HAMCREST" \
-  "$HERE/src/Annotations.kt" "$HERE/src/AndroidStubs.kt" "$HERE/src/AndroidOsStubs.kt" \
+  "$HERE/src/Annotations.kt" "$HERE/src/RoomStubs.kt" "$HERE/src/AndroidStubs.kt" "$HERE/src/AndroidOsStubs.kt" \
   "$HERE/src/MediaStubs.kt" "$HERE/src/AnimatorStubs.kt" \
   "$HERE/src/SettingsStoreStub.kt" "$HERE/src/LogStub.kt" \
   "$WORK"/gen/R_*.kt "${SRCS[@]}" "${TEST_SRCS[@]}"
 
 echo "Laufen lassen ..."
+# Aus :app-sim heraus, weil ReactionFingerprintTest seine Golden-Datei unter
+# src/test/reaction-fingerprint.txt sucht - relativ zum Modul, wie Gradle es aufruft. Alle
+# Klassenpfade oben sind absolut und bleiben davon unberuehrt.
+cd "$ROOT/app-sim"
 java -cp "$WORK/tests:$WORK/kotlinc/lib/kotlin-stdlib.jar:$JUNIT:$HAMCREST" \
   org.junit.runner.JUnitCore "${TEST_CLASSES[@]}"
