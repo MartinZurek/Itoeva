@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -458,6 +459,31 @@ fun DockScreen(
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
         /** Das eigene Weltmotiv des gerade laufenden allgemeinen Handlungsschritts. */
         var activeActivity by remember { mutableStateOf<AnimationType?>(null) }
+        /**
+         * Was zuletzt zu sehen war - das juengste zuerst, hoechstens [RECENT_MEMORY] Eintraege.
+         *
+         * **Bewusst nur im Arbeitsspeicher und bewusst klein.** Der Auftrag verlangt weniger
+         * Wiederholung, aber ausdruecklich keine neue Persistenz-, Datenbank- oder
+         * Telemetrieschicht - und er hat recht damit: Wovon die Figur vorgestern gependelt hat,
+         * ist beim Zusehen heute vollkommen gleichgueltig. Beim Neustart faengt die Erinnerung
+         * bei null an, und das ist der richtige Zustand, nicht ein Verlust.
+         *
+         * Zwei Listen statt einer, weil auf zwei verschiedenen Ebenen gependelt werden kann:
+         * [recentTopics] gegen "immer wieder dasselbe Thema", [recentSpecials] gegen "immer
+         * dieselbe der fuenf Sonderaktivitaeten" - die teilen sich naemlich alle das Thema MOVE
+         * und waeren fuer die Themen-Ebene ununterscheidbar (siehe PlayRoutines.SpecialActivity).
+         */
+        val recentTopics = remember { mutableStateListOf<AnimationType>() }
+        val recentSpecials = remember { mutableStateListOf<PlayRoutines.SpecialActivity>() }
+
+        /** Traegt nach, was gerade gelaufen ist - vorn einfuegen, hinten abschneiden. */
+        fun rememberShown(topic: AnimationType, routine: PlayRoutine?) {
+            recentTopics.add(0, topic)
+            while (recentTopics.size > RECENT_MEMORY) recentTopics.removeAt(recentTopics.lastIndex)
+            val special = routine?.let { PlayRoutines.specialOf(it) } ?: return
+            recentSpecials.add(0, special)
+            while (recentSpecials.size > RECENT_MEMORY) recentSpecials.removeAt(recentSpecials.lastIndex)
+        }
         /** Sichtbare Phase der langen Drachen-Szene; null ausserhalb dieses Ablaufs. */
         var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
         /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
@@ -2307,14 +2333,18 @@ fun DockScreen(
                     // der Ablauf laeuft, soll bereits das gelten, was er GERADE tut.
                     currentTopic = topic
                     moveToPlace(PlayScene.forTopic(topic), species)
-                    runRoutine(
-                        PlayRoutines.forTopic(
-                            topic = topic,
-                            needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
-                            footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
-                        ),
-                        species
+                    // **Ohne `recentSpecials`, mit Absicht.** Eine ausdrueckliche Bitte des
+                    // Nutzers ist kein Baustein des Tagesablaufs, den man auf Abwechslung
+                    // trimmen darf - wer zweimal dasselbe erbittet, soll zweimal dasselbe
+                    // bekommen. Mitgefuehrt wird es trotzdem: Fuer die FOLGENDEN autonomen
+                    // Regungen war es sehr wohl zu sehen.
+                    val gebeten = PlayRoutines.forTopic(
+                        topic = topic,
+                        needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                        footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
                     )
+                    rememberShown(topic, gebeten)
+                    runRoutine(gebeten, species)
                     // Zuruecksetzen startet die Schleife ein letztes Mal - dann ohne Bitte, und
                     // von da an laeuft wieder der gewoehnliche Tagesablauf.
                     requestedTopic = null
@@ -2453,7 +2483,15 @@ fun DockScreen(
                                     // sechs Wesen zwischen zwei Ausloesungen ununterscheidbar,
                                     // solange noch kein Entwicklungspfad ([leaningTopics])
                                     // entstanden war.
-                                    signatureTopic = species.signatureTopic
+                                    signatureTopic = species.signatureTopic,
+                                    // **Der siebte Zuschlag - gegen das Pendel, nicht gegen die
+                                    // Wiederholung.** `justPlayed` darueber kennt genau einen
+                                    // Schritt zurueck und haelt A,A auf; A,B,A,B,A laesst er
+                                    // durch, und beim Zusehen ist das dasselbe Bild. Gemeldet
+                                    // wurde genau das: dass die Figur zu lange bei derselben Art
+                                    // von Verhalten bleibt, obwohl der Einzelschritt-Daempfer
+                                    // laengst wirkt.
+                                    recentTopics = recentTopics
                                 )
                             }
 
@@ -2479,6 +2517,18 @@ fun DockScreen(
                                 spokenLine = line
                             }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
+                            // Der Ablauf wird VOR dem Weg gezogen, damit der Verlauf schon
+                            // steht, wenn die naechste Regung faellt - und mit
+                            // [recentSpecials], weil die fuenf Sonderbeschaeftigungen sich
+                            // alle das Thema MOVE teilen und auf Themenebene ununterscheidbar
+                            // waeren (siehe PlayRoutines.SpecialActivity).
+                            val gewaehlt = PlayRoutines.forTopic(
+                                topic = topic,
+                                needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                                footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId),
+                                recentSpecials = recentSpecials
+                            )
+                            rememberShown(topic, gewaehlt)
                             moveToPlace(place, species)
 
                             // Nicht mehr EINE Animation, sondern ein mehrschrittiger Ablauf:
@@ -2486,11 +2536,7 @@ fun DockScreen(
                             // PlayRoutine). Erst dadurch setzt sich die Figur mit ihrer Umgebung
                             // auseinander, statt neben den Moebeln zu agieren.
                             runRoutine(
-                                PlayRoutines.forTopic(
-                                    topic = topic,
-                                    needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
-                                    footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
-                                ),
+                                gewaehlt,
                                 species
                             )
 
@@ -3710,6 +3756,16 @@ private val VISIT_INTERVAL_MS_BUSY = 30_000L..70_000L
 
 /** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
 private const val VISIT_RETRY_MS = 4_000L
+
+/**
+ * Wie viele zuletzt gezeigte Themen und Sonderaktivitaeten die Figur im Kopf behaelt.
+ *
+ * Vier ist dieselbe Groesse wie das Fenster in [PlayAmbientActivity] und aus demselben Grund
+ * gewaehlt: lang genug, um ein Pendel zu bemerken, kurz genug, dass daraus keine abgearbeitete
+ * Liste wird. Die Erinnerung lebt nur im Arbeitsspeicher - beim Neustart faengt sie bei null an,
+ * und das ist richtig so.
+ */
+private const val RECENT_MEMORY = 4
 
 /**
  * Wie oft ein draussen wartender Ablauf nachsieht, ob der Gast wieder fort ist.

@@ -11,6 +11,7 @@ import android.util.Log
 import com.notime.glyphsim.matrix.MusicContext
 import com.notime.glyphsim.matrix.MusicResolver
 import com.notime.glyphsim.matrix.MusicRole
+import com.notime.glyphsim.matrix.PlayMusicRotation
 import com.notime.glyphsim.settings.SettingsCatalog
 import com.notime.glyphsim.settings.SettingsStore
 import kotlin.math.PI
@@ -99,6 +100,12 @@ object PlayMusic {
     /** Welche Rolle gerade klingt - die Grundlage dafuer, sie NICHT neu zu starten. */
     private var playingRole: MusicRole? = null
 
+    /** Welche Variante der laufenden Rolle gerade klingt - siehe [PlayMusicRotation]. */
+    private var playingVariant: Int? = null
+
+    /** Seit wann die aktuelle ROLLE laeuft. Ein Variantenwechsel setzt das bewusst NICHT zurueck. */
+    private var roleStartedAtMs: Long = 0L
+
     // --- Das OB: die Entscheidung des Nutzers ---------------------------------------------------
 
     fun isEnabled(context: Context): Boolean =
@@ -114,18 +121,30 @@ object PlayMusic {
 
     // --- Das WAS: welche Tracks es ueberhaupt gibt -----------------------------------------------
 
-    /** Die Ressourcen-Id eines Tracks, oder `null`, wenn diese Rolle noch keinen hat. */
-    fun trackResId(context: Context, role: MusicRole): Int? =
+    /** Die Ressourcen-Id einer bestimmten Variante, oder `null`, wenn es sie nicht gibt. */
+    fun trackResId(context: Context, role: MusicRole, variant: Int = 1): Int? =
         context.resources
-            .getIdentifier(role.androidResource, "raw", context.packageName)
+            .getIdentifier(role.variantResource(variant), "raw", context.packageName)
             .takeIf { it != 0 }
 
     /**
-     * Welche Rollen tatsaechlich ausgeliefert werden. Heute genau zwei; jeder gemergte Track
-     * erweitert die Menge, ohne dass hier oder im [MusicResolver] etwas zu aendern waere.
+     * Welche Varianten dieser Rolle tatsaechlich im Paket liegen, aufsteigend.
+     *
+     * Ueber Namenssuche statt ueber eine gepflegte Liste, aus demselben Grund wie schon bei der
+     * einzelnen Datei: Ein erzeugter Track kommt in einem eigenen Pull Request, und niemand soll
+     * dabei eine zweite Stelle nachziehen muessen. Die Luecke ist beabsichtigt zugelassen -
+     * fehlt die 02, wird die 03 trotzdem gefunden.
+     */
+    fun availableVariants(context: Context, role: MusicRole): List<Int> =
+        (1..MusicRole.MAX_VARIANTS).filter { trackResId(context, role, it) != null }
+
+    /**
+     * Welche Rollen tatsaechlich ausgeliefert werden - jede, zu der es mindestens ein Stueck
+     * gibt. Jeder gemergte Track erweitert die Menge, ohne dass hier oder im [MusicResolver]
+     * etwas zu aendern waere.
      */
     fun availableRoles(context: Context): Set<MusicRole> =
-        MusicRole.entries.filterTo(mutableSetOf()) { trackResId(context, it) != null }
+        MusicRole.entries.filterTo(mutableSetOf()) { availableVariants(context, it).isNotEmpty() }
 
     // --- Die Zusammenfuehrung -------------------------------------------------------------------
 
@@ -169,12 +188,30 @@ object PlayMusic {
                 audio?.ringerMode == AudioManager.RINGER_MODE_VIBRATE
         )
 
-        if (wanted == playingRole) return
         if (wanted == null) {
             stop()
             return
         }
-        switchTo(context, wanted)
+        val varianten = availableVariants(context, wanted)
+        if (wanted == playingRole) {
+            // **Dieselbe Lage, dieselbe Rolle - und trotzdem gelegentlich ein anderes Stueck.**
+            // Gemeldet als "nach ungefaehr fuenf Minuten wirkt ein einzelner wiederholter Track
+            // monoton". Die Entscheidung darueber faellt in [PlayMusicRotation] und ist dort
+            // pruefbar; hier steht nur die Uhr und der Player.
+            //
+            // Der Zeitstempel gehoert der ROLLE, nicht der Variante: Sonst faenge die Uhr bei
+            // jedem Wechsel neu an, und aus "spaetestens nach fuenf Minuten" wuerde "alle fuenf
+            // Minuten wieder von vorn" - hoerbar als Metronom.
+            if (varianten.size < 2) return
+            val gelaufen = System.currentTimeMillis() - roleStartedAtMs
+            if (!PlayMusicRotation.rotationDue(gelaufen, varianten.size)) return
+            val naechste = PlayMusicRotation.pickVariant(varianten, playingVariant) ?: return
+            if (naechste == playingVariant) return
+            switchTo(context, wanted, naechste, rollenwechsel = false)
+            return
+        }
+        val start = PlayMusicRotation.pickVariant(varianten, current = null) ?: return
+        switchTo(context, wanted, start, rollenwechsel = true)
     }
 
     /**
@@ -184,8 +221,8 @@ object PlayMusic {
      * Tag nicht mitten im Takt abbrechen. Beide Player leben deshalb nur fuer die Dauer dieses
      * Uebergangs nebeneinander; ausserhalb davon bleibt es bei genau einem Decoder.
      */
-    private fun switchTo(context: Context, role: MusicRole) {
-        val res = trackResId(context, role) ?: return
+    private fun switchTo(context: Context, role: MusicRole, variant: Int, rollenwechsel: Boolean) {
+        val res = trackResId(context, role, variant) ?: return
         runCatching {
             val next = MediaPlayer.create(context, res)?.apply {
                 setAudioAttributes(
@@ -211,6 +248,9 @@ object PlayMusic {
             player = next
             playerVolume = 0f
             playingRole = role
+            playingVariant = variant
+            // Nur beim ROLLENwechsel neu stellen - siehe die Begruendung in [apply].
+            if (rollenwechsel) roleStartedAtMs = System.currentTimeMillis()
 
             if (previous == null) {
                 next.setVolume(VOLUME, VOLUME)
@@ -272,6 +312,8 @@ object PlayMusic {
         outgoingPlayer = null
         playerVolume = 0f
         playingRole = null
+        playingVariant = null
+        roleStartedAtMs = 0L
         current?.let(::releasePlayer)
         outgoing?.takeIf { it !== current }?.let(::releasePlayer)
     }

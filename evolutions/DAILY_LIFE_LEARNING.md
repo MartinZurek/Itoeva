@@ -181,6 +181,37 @@ ist eine Uebergabe, keine zweite Commit-Liste.
   ausdruecklichen Nutzerauftrag, nicht im automatisierten Lauf. Sie folgt denselben Leitplanken.
 
 
+## 2026-09-06 - ITO-0015: "man sieht immer dasselbe" war eine Haeufigkeitsfrage
+
+- **Nutzerfeedback, woertlich sinngemaess:** Buchlesen unklar; der Drachen schwach und schwer
+  verstaendlich; Basketball beim normalen Zuschauen ueberhaupt nie sichtbar; viele Aktivitaeten
+  so selten, dass die versprochene Vielfalt kaum wahrnehmbar ist; dieselbe Musik zu lange
+  unveraendert; die Figur zu lange bei derselben Art Verhalten - aber ausdruecklich ohne Hektik.
+- **Was die Untersuchung ergab:** Keine der drei genannten Aktivitaeten war gesperrt. Basketball
+  liegt bei rund 2,6 % je Ablauf; in fuenf Minuten laufen etwa drei Ablaeufe. Die Meldung "nie
+  gesehen" war also voellig zutreffend, und die naheliegende Vermutung (eine Sackgasse im Code)
+  trotzdem falsch. **Das ist die uebertragbare Lehre:** Eine Aktivitaet kann vollstaendig
+  erreichbar und trotzdem praktisch unsichtbar sein, und beides sieht beim Zusehen gleich aus.
+- **Was daraus folgte:** Kein Zuschlag fuer die vermisste Aktivitaet - das haette nur die naechste
+  unsichtbar gemacht. Stattdessen eine Verlaufserinnerung, die zwei Ebenen unterscheidet: Thema
+  und Sonderaktivitaet. Die fuenf Sonderbeschaeftigungen teilen sich naemlich alle das Thema MOVE
+  und waeren auf Themenebene nicht auseinanderzuhalten.
+- **Der Einzelschritt-Daempfer war nicht genug, und warum das vorhersehbar war:** Die Hypothese
+  vom 2026-09-05 (Eintrag darueber) lautete, ein Wiederholungs-Daempfer koennte reichen. Er wirkt
+  auch - aber nur gegen A,A. Gegen A,B,A,B,A ist er blind, und beim Zusehen ist das dasselbe Bild.
+  Wer den naechsten Hebel dieser Art sucht, sollte gleich fragen, welche Musterlaenge er abdeckt.
+- **Zwei Befunde ausserhalb der Auswahl:** Erstens war bei Buch, Drachen und Ball dreimal derselbe
+  Fehler die Ursache - eine Bewegung mit nur zwei oder drei Stellungen, weil vor dem Skalieren
+  gerundet wurde. Zweitens hatte das gehaltene Buch eine Lehre nie mitbekommen, die im Weltmotiv
+  nebenan schon im Kommentar stand. **Beides waere durch einen Blick auf die Nachbarstelle
+  auffindbar gewesen.**
+- **Naechster sinnvoller Hebel (Hypothese):** Beobachten, ob die Aussenphasen aus dem 2026-09-05
+  zusammen mit dieser Aenderung ausreichen, oder ob ein Zustand zusaetzlich eine Mindestdauer
+  braucht (NT-057). **Nicht belegt:** Es fehlt weiterhin die Beobachtung am Geraet.
+- **Anmerkung zur Herkunft:** Diese Evolution entstand in einer Cloud-Code-Sitzung auf
+  ausdruecklichen Nutzerauftrag (Backlog-Eintrag ITO-0015), nicht im automatisierten Lauf.
+
+
 ## Offene Meta-Ideen
 
 Hier darf ein Lauf Verbesserungen an Auswahl, Messbarkeit oder Automationsqualitaet vorschlagen,

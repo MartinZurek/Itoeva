@@ -27,8 +27,22 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Validate Quiet Lanterns without model download
-        run: >-
-          python tools/music/generate_music.py
-          --track-id home-evening-01
-          --dry-run
+      # **Jeden Track im Manifest, nicht einen fest verdrahteten.**
+      #
+      # Vorher stand hier `--track-id home-evening-01`. Das prueft die Werkzeugkette, aber
+      # ausgerechnet nicht den Eintrag, der gerade dazugekommen ist - und neue Eintraege sind der
+      # einzige Grund, aus dem diese Datei ueberhaupt jemals anschlaegt. Beim Hinzufuegen von
+      # main-day-02 waere ein Tippfehler in Rolle, Ressourcenname oder Prompt-Pfad gruen durch die
+      # CI gegangen und erst am stillen Player aufgefallen.
+      #
+      # Der Dry-Run laedt keine Modellgewichte und braucht kein Secret; er prueft Pflichtfelder,
+      # die Rolle gegen SUPPORTED_ROLES und die Erreichbarkeit der Prompt-Datei.
+      - name: Validate every track definition without model download
+        run: |
+          set -euo pipefail
+          IDS="$(python -c "import json;print(' '.join(t['id'] for t in json.load(open('music/manifest.json'))['tracks']))")"
+          [ -n "$IDS" ] || { echo "::error::Das Manifest enthaelt keinen einzigen Track."; exit 1; }
+          for id in $IDS; do
+            echo "--- $id"
+            python tools/music/generate_music.py --track-id "$id" --dry-run
+          done

@@ -58,13 +58,15 @@ done
 # Skripte unterscheiden sich absichtlich; render.sh braucht die Welt-Dateien nicht.
 SRCS=(
   "$CORE/AnimationType.kt" "$CORE/AnimationNode.kt" "$CORE/AnimationTree.kt"
+  "$CORE/LibraryAnimation.kt" "$CORE/DefaultLibraryAnimations.kt" "$CORE/FrameCodec.kt"
+  "$CORE/AvatarSignatureAnimations.kt" "$CORE/SkillTreeAnimations.kt"
   "$CORE/FrameCrossfade.kt" "$CORE/FrameSprite.kt" "$CORE/ReminderFrameGrid.kt"
   "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
   "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
-  "$SIM/PlayMusicPlan.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
+  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Die Musik-Wiedergabeschicht: reines Kotlin bis auf MediaPlayer/AudioManager, fuer die
@@ -84,12 +86,16 @@ TEST_SRCS=(
   "$TEST/matrix/ReactionTriggerTest.kt"
   "$TEST/matrix/AvatarReactionsTest.kt"
   "$TEST/matrix/MusicResolverTest.kt"
+  "$TEST/matrix/PlayMusicRotationTest.kt"
   "$TEST/matrix/ScenePreview.kt"
   "$TEST/matrix/PlayRoutineTest.kt"
   "$TEST/matrix/PlayVisitWindowTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
   "$TEST/matrix/PlayAmbientActivityTest.kt"
+  "$TEST/matrix/PlayVarietyGuardTest.kt"
+  "$TEST/matrix/PlayMotifLegibilityTest.kt"
+  "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
@@ -104,22 +110,30 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReactionTriggerTest
   com.notime.glyphsim.matrix.AvatarReactionsTest
   com.notime.glyphsim.matrix.MusicResolverTest
+  com.notime.glyphsim.matrix.PlayMusicRotationTest
   com.notime.glyphsim.matrix.PlayRoutineTest
   com.notime.glyphsim.matrix.PlayVisitWindowTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest
   com.notime.glyphsim.matrix.PlayAmbientActivityTest
+  com.notime.glyphsim.matrix.PlayVarietyGuardTest
+  com.notime.glyphsim.matrix.PlayMotifLegibilityTest
+  com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )
 
 echo "Uebersetzen ..."
 "$KOTLINC" -nowarn -d "$WORK/tests" -cp "$JUNIT:$HAMCREST" \
-  "$HERE/src/Annotations.kt" "$HERE/src/AndroidStubs.kt" "$HERE/src/AndroidOsStubs.kt" \
+  "$HERE/src/Annotations.kt" "$HERE/src/RoomStubs.kt" "$HERE/src/AndroidStubs.kt" "$HERE/src/AndroidOsStubs.kt" \
   "$HERE/src/MediaStubs.kt" "$HERE/src/AnimatorStubs.kt" \
   "$HERE/src/SettingsStoreStub.kt" "$HERE/src/LogStub.kt" \
   "$WORK"/gen/R_*.kt "${SRCS[@]}" "${TEST_SRCS[@]}"
 
 echo "Laufen lassen ..."
+# Aus :app-sim heraus, weil ReactionFingerprintTest seine Golden-Datei unter
+# src/test/reaction-fingerprint.txt sucht - relativ zum Modul, wie Gradle es aufruft. Alle
+# Klassenpfade oben sind absolut und bleiben davon unberuehrt.
+cd "$ROOT/app-sim"
 java -cp "$WORK/tests:$WORK/kotlinc/lib/kotlin-stdlib.jar:$JUNIT:$HAMCREST" \
   org.junit.runner.JUnitCore "${TEST_CLASSES[@]}"

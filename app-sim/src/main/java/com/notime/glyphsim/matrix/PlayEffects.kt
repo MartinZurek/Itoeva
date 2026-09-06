@@ -542,7 +542,16 @@ object PlayEffects {
         val floorY = groundY + 1
         val hoopX = (widthCells - 8).coerceAtLeast(10)
         val hoopY = groundY - 15
-        val bob = if ((scenePhase / 4) % 2 == 0) 0 else 4
+        // **Drei Hoehen statt zwei.** Vorher sprang der Ball zwischen genau zwei Stellen (0 und
+        // 4) hin und her - dasselbe Zucken wie beim Drachen nebenan, nur waagerecht gedacht. Ein
+        // Aufprall hat aber eine Mitte: hoch, halb, unten. Erst damit liest sich das Prellen als
+        // Bewegung statt als Blinken zweier Bilder.
+        val bob = when ((scenePhase / 3) % 4) {
+            0 -> 0
+            1 -> 3
+            2 -> 5
+            else -> 3
+        }
         val ballX = when (phase) {
             BasketballPhase.DRIBBLE -> avatarCellX + 15
             BasketballPhase.AIM -> avatarCellX + 11
@@ -867,7 +876,13 @@ object PlayEffects {
     ): List<SceneCell> {
         val handX = (avatarCellX + 12).coerceIn(0, (widthCells - 1).coerceAtLeast(0))
         val handY = avatarCellY + AvatarGeometry.HEADROOM + 9
-        val sway = if (phase == KitePhase.FLY) sin(scenePhase * 0.32).roundToInt() * 2 else 0
+        // **Weich statt in Zweierschritten.** Vorher stand hier `sin(...).roundToInt() * 2`, und
+        // das Runden VOR dem Skalieren laesst von einer Sinuskurve genau drei Werte uebrig: -2, 0
+        // und +2. Der Drachen sprang damit zwischen drei Stellen hin und her, statt zu schweben -
+        // gemeldet als "sieht schwach aus". Jetzt wird erst skaliert und dann gerundet, was fuenf
+        // Stellungen ergibt; auf dem Zellraster ist das der Unterschied zwischen Zucken und Wind.
+        val swayRaw = if (phase == KitePhase.FLY) sin(scenePhase * 0.32) * 2.4 else 0.0
+        val sway = swayRaw.roundToInt()
         val rawCenterX = when (phase) {
             KitePhase.PREPARE -> handX + 4
             KitePhase.LAUNCH -> handX + 10
@@ -888,7 +903,12 @@ object PlayEffects {
         if (phase != KitePhase.PREPARE) {
             val steps = kotlin.math.max(kotlin.math.abs(centerX - handX), kotlin.math.abs(centerY - handY))
                 .coerceAtLeast(1)
-            for (i in 0..steps step 2) {
+            // **Jede Zelle, nicht jede zweite.** Der Schritt 2 liess eine gepunktete Spur
+            // entstehen; auf einem Raster, dessen Zellen ohnehin sichtbar getrennt sind, las sich
+            // das als verstreute Punkte und nicht als Schnur. Die Schnur ist aber genau das, was
+            // den Gegenstand am Himmel mit der Figur verbindet - ohne sie wandert ein Fleck
+            // unmotiviert nach oben, und das war die Meldung.
+            for (i in 0..steps) {
                 val t = i.toFloat() / steps
                 string.dot(
                     ((centerX - handX) * t).roundToInt(),
@@ -901,22 +921,34 @@ object PlayEffects {
         // Der Drachen selbst: eine Raute mit Kreuzstreben, dazu der geknickte Schweif, der ihn
         // auch in Bewegung eindeutig als Drachen lesbar macht.
         val kite = PlayInk.Sketch(centerX, centerY, 1, widthCells, UNBOUNDED)
+        // **Eine RAUTE, kein Klumpen.** Die Vorgaengerform war sieben Zeilen fast durchgehend
+        // gefuellt und lief oben wie unten stumpf aus - auf dem Raster ein Sechseck, also die
+        // Silhouette von irgendetwas. Ein Drachen wird an genau zwei Dingen erkannt: an der
+        // spitz zulaufenden Raute und am Kreuz darin. Beides steht jetzt da, und die Spitze oben
+        // ist eine einzelne Zelle statt dreier.
         kite.art(
             -3, -4,
+            "   #   ",
             "  ###  ",
-            " ##+## ",
-            "#######",
-            "#######",
+            " ##### ",
             "#######",
             " ##### ",
-            "  ###  "
+            "  ###  ",
+            "   #   "
         )
-        kite.spark(0, -3)
-        kite.dot(1, 5, PlayInk.BODY)
-        kite.dot(-1, 6, PlayInk.BODY)
-        kite.dot(1, 7, PlayInk.BODY)
-        kite.dot(-1, 8, PlayInk.BODY)
-        kite.dot(1, 9, PlayInk.BODY)
+        // Die Querstrebe als dunklere Linie: Erst das Kreuz macht aus der Raute ein Segeltuch,
+        // das ueber Staebe gespannt ist. Ohne sie bleibt es eine Flaeche.
+        kite.line(-2, 0, 2, 0, PlayInk.DETAIL)
+        kite.spark(0, -2)
+        // **Der Schweif schwingt mit.** Vorher sassen die fuenf Punkte auf festen Versaetzen -
+        // der Drachen wanderte im Wind seitlich, der Schweif blieb starr darunter stehen, und
+        // genau daran sah man, dass sich nichts wirklich bewegt. Jetzt laeuft eine Welle durch
+        // ihn hindurch, die dem Ausschlag des Drachens nachlaeuft: je tiefer am Schweif, desto
+        // spaeter. Das ist die zweite Bewegung, die den Aufstieg lesbar macht.
+        for (glied in 0 until 5) {
+            val nachlauf = sin(scenePhase * 0.32 - glied * 0.6) * (1.0 + glied * 0.25)
+            kite.dot(nachlauf.roundToInt(), 4 + glied, PlayInk.BODY)
+        }
 
         return (string.render(carve = false) + kite.render(grounded = false))
             .filter { it.x in 0 until widthCells }

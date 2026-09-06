@@ -29,10 +29,19 @@ import com.notime.glyphcore.data.AnimationType
  * Weltlogik an Dateinamen, und ein zweiter Abendtrack braeuchte eine Aenderung an jeder
  * Entscheidungsstelle statt an einer.
  *
- * [androidResource] muss mit `android_resource` desselben Tracks im Manifest uebereinstimmen -
- * `tools/music/generate_music.py` prueft beim Erzeugen, dass die Rolle hier bekannt ist.
+ * **Eine Rolle kann MEHRERE Stuecke haben.** Bis zur Variantenfaehigkeit galt "eine Rolle
+ * entspricht genau einer Datei"; wer nachmittags zu Hause sass, hoerte deshalb denselben
+ * Neunzig-Sekunden-Loop, solange er zusah. Die Rolle war dabei richtig - es fehlte die
+ * Moeglichkeit, sie mit mehr als einem Stueck zu erfuellen. Deshalb steht hier jetzt der
+ * gemeinsame RESSOURCEN-STAMM, und die einzelnen Dateien haengen eine zweistellige Nummer daran
+ * ([variantResource]). Welche davon laeuft, entscheidet [PlayMusicRotation] - nach der Rolle,
+ * nicht statt ihrer.
+ *
+ * [androidResource] bleibt als erste Variante erhalten und muss mit `android_resource` desselben
+ * Tracks im Manifest uebereinstimmen - `tools/music/generate_music.py` prueft beim Erzeugen, dass
+ * die Rolle hier bekannt ist.
  */
-enum class MusicRole(val manifestName: String, val androidResource: String) {
+enum class MusicRole(val manifestName: String, val resourceBase: String) {
 
     /**
      * Der Grundcharakter des normalen Tages - die musikalische Identitaet von Itoeva.
@@ -40,21 +49,46 @@ enum class MusicRole(val manifestName: String, val androidResource: String) {
      * Seit PR #89 als `Lantern Streets` ausgeliefert. Die Rolle bleibt vom Dateinamen getrennt,
      * damit die Welt weiterhin Bedeutung statt Asset-Namen auswaehlt.
      */
-    MAIN_DAY("main_day_background", "itoeva_main_day_01"),
+    MAIN_DAY("main_day_background", "itoeva_main_day"),
 
     /** Ruhige Abend- und Nachtstunden zu Hause und an stillen Naturorten. */
-    HOME_EVENING("home_evening_background", "itoeva_home_evening_01"),
+    HOME_EVENING("home_evening_background", "itoeva_home_evening"),
 
     /** Der frueh Morgen, falls er sich spaeter vom uebrigen Tag abheben soll. */
-    MORNING("morning_background", "itoeva_morning_01"),
+    MORNING("morning_background", "itoeva_morning"),
 
     /** Bewegung und Anstrengung - energischer als der normale Tag. */
-    SPORT("sport_background", "itoeva_sport_01"),
+    SPORT("sport_background", "itoeva_sport"),
 
     /** Traum-Szenen. Bewusst schon benannt, damit sie spaeter keine Sonderregel brauchen. */
-    DREAM("dream_background", "itoeva_dream_01");
+    DREAM("dream_background", "itoeva_dream");
+
+    /**
+     * Der Ressourcenname der [variant]-ten Datei dieser Rolle, eins-basiert.
+     *
+     * Die zweistellige Nummer ist kein Schmuck: Sie haelt die Dateien im Verzeichnis in derselben
+     * Reihenfolge wie im Manifest, und sie macht aus einer zehnten Variante keinen Namen, der
+     * zwischen der ersten und der zweiten einsortiert wird.
+     */
+    fun variantResource(variant: Int): String = "%s_%02d".format(resourceBase, variant)
+
+    /**
+     * Die erste Variante - der Name, unter dem diese Rolle vor der Variantenfaehigkeit
+     * ausgeliefert wurde. Bleibt bestehen, damit Manifest und bereits gemergte Dateien
+     * unveraendert gueltig sind.
+     */
+    val androidResource: String get() = variantResource(1)
 
     companion object {
+        /**
+         * Wie viele Varianten je Rolle hoechstens gesucht werden.
+         *
+         * Eine Obergrenze braucht es, weil die Suche zur Laufzeit ueber `getIdentifier` laeuft und
+         * sonst kein Ende haette. Acht ist grosszuegig gegenueber allem, was absehbar erzeugt
+         * wird, und billig: Die Suche laeuft einmal je Abgleich, nicht je Bild.
+         */
+        const val MAX_VARIANTS = 8
+
         fun byManifestName(name: String): MusicRole? = entries.firstOrNull { it.manifestName == name }
     }
 }

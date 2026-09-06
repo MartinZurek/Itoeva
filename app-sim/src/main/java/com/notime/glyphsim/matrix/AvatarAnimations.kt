@@ -54,6 +54,18 @@ object AvatarAnimations {
      */
     internal const val SETTLE_MS = 480L
 
+    /**
+     * Standzeit fuer ein Bild, das GELESEN werden muss, nicht bloss wahrgenommen.
+     *
+     * Gemeldet als "die Buchlesen-Animation ist nicht klar genug". Neben der Form war die Dauer
+     * die Ursache: Die ganze Reaktion lief in 2 200 ms durch, davon zeigten die vier
+     * Lese-Bilder je 260 ms. Bei einem Gegenstand aus fuenfzehn Zellen auf einer runden Matrix
+     * reicht das nicht, um zu erkennen, WAS man da sieht - man nimmt eine Bewegung wahr und hat
+     * das Buch verpasst. [SLOW_MS] ist fuer eine ruhige BEWEGUNG gedacht; hier geht es um das
+     * Stehenbleiben eines Gegenstands, und das ist etwas anderes.
+     */
+    internal const val READ_MS = 620L
+
     /** Ein Keyframe mit eigener Standzeit. */
     internal data class Beat(val points: List<Pair<Int, Int>>, val holdMs: Long = BEAT_MS)
 
@@ -1011,13 +1023,39 @@ object AvatarAnimations {
     // als zufriedenes Blinzeln NACHDEM das Buch schon wieder zugeklappt ist. Zusaetzlich
     // ein Seitenumblaettern zwischen den beiden Lese-Frames fuer mehr Eigenleben ----
     private fun bookClosed() = listOf(6 to 0, 7 to 0, 8 to 0, 9 to 0, 6 to 1, 9 to 1, 6 to 2, 9 to 2, 6 to 3, 7 to 3, 8 to 3, 9 to 3)
-    private fun bookOpen(pageTurned: Boolean = false) = if (!pageTurned) listOf(
-        4 to 0, 11 to 0, 4 to 1, 6 to 1, 9 to 1, 11 to 1,
-        4 to 2, 6 to 2, 9 to 2, 11 to 2, 4 to 3, 5 to 3, 6 to 3, 9 to 3, 10 to 3, 11 to 3
-    ) else listOf(
-        4 to 0, 11 to 0, 4 to 1, 7 to 1, 8 to 1, 11 to 1,
-        4 to 2, 7 to 2, 8 to 2, 11 to 2, 4 to 3, 5 to 3, 6 to 3, 9 to 3, 10 to 3, 11 to 3
-    )
+    /**
+     * Das aufgeschlagene Buch als **Keil**, nicht als zwei parallele Rahmen.
+     *
+     * Die Vorgaengerform hatte oben gar keine Kante - nur die beiden aeusseren Ecken bei x=4 und
+     * x=11 - und dazwischen zwei senkrechte Rahmen. Das las sich als zwei Klammern nebeneinander,
+     * und die Meldung "die Buchlesen-Animation ist nicht klar genug" trifft genau das.
+     *
+     * Denselben Fehler und dieselbe Behebung gibt es im Weltmotiv nebenan schon: Dort steht im
+     * Kommentar zu [com.notime.glyphsim.matrix.PlayEffects.activityCells], dass zwei parallele
+     * Rahmen sich "als zwei Steine nebeneinander" lasen und erst echte Diagonalen die Rundung
+     * ergeben, an der man ein aufgeschlagenes Buch erkennt. Das gehaltene Buch hatte diese
+     * Lehre nur nie mitbekommen.
+     *
+     * Jetzt faechern beide Seiten von der gebundenen Mitte unten nach aussen-oben auf. Der
+     * Umblaetter-Zustand veraendert nur die INNEREN Kanten - die Silhouette bleibt stehen, damit
+     * das Buch beim Blaettern nicht kurz zu etwas anderem wird.
+     */
+    private fun bookOpen(pageTurned: Boolean = false) = listOf(
+        // Die beiden Seitenspitzen, oben aussen.
+        4 to 0, 11 to 0,
+        // Die auffaechernden Kanten.
+        4 to 1, 5 to 1, 10 to 1, 11 to 1,
+        4 to 2, 5 to 2, 6 to 2, 9 to 2, 10 to 2, 11 to 2,
+        // Der gebundene Ruecken unten in der Mitte - der Punkt, an dem beide Seiten
+        // zusammenlaufen. Ohne ihn zerfaellt der Keil in zwei lose Flaechen.
+        6 to 3, 7 to 3, 8 to 3, 9 to 3
+    ) + if (!pageTurned) {
+        // Ruhezustand: die gelesene Seite liegt links an.
+        listOf(6 to 1, 7 to 2)
+    } else {
+        // Umgeblaettert: dieselbe Andeutung, nur auf der anderen Seite.
+        listOf(9 to 1, 8 to 2)
+    }
     // Fehlerkorrektur: der zweite "Lese"-Frame war zunaechst nur per tailWag von seinem
     // Vorgaenger unterschieden - bei Starlet/Gloop/Hootlet (kein Schwanz) blieb das Bild
     // dadurch 120ms lang komplett unveraendert (per Cross-Species-Check bestaetigt, auch
@@ -1030,8 +1068,14 @@ object AvatarAnimations {
      * Bildwechsel aussah als nach Umblaettern.
      */
     private fun bookPageInFlight() = listOf(
-        4 to 0, 11 to 0, 4 to 1, 11 to 1, 4 to 2, 11 to 2,
-        4 to 3, 5 to 3, 6 to 3, 9 to 3, 10 to 3, 11 to 3,
+        // Dieselbe Silhouette wie im Ruhezustand - nur die inneren Andeutungen weichen dem
+        // aufgestellten Blatt. Ohne diese Uebereinstimmung sprang das Buch beim Blaettern
+        // sichtbar in eine andere Form, und genau das machte den Vorgang unleserlich.
+        4 to 0, 11 to 0,
+        4 to 1, 5 to 1, 10 to 1, 11 to 1,
+        4 to 2, 5 to 2, 6 to 2, 9 to 2, 10 to 2, 11 to 2,
+        6 to 3, 7 to 3, 8 to 3, 9 to 3,
+        // Das Blatt steht senkrecht in der Mitte, waehrend es umschlaegt.
         7 to 0, 7 to 1, 7 to 2
     )
 
@@ -1046,14 +1090,14 @@ object AvatarAnimations {
         creatureFrame(body, prop = bookClosed(), propFollows = true).beat(BEAT_MS),
         creatureFrame(body, prop = bookOpen(), propFollows = true).beat(FAST_MS),
         // Lesen: Blick nach links, dann nach rechts.
-        creatureFrame(body, dx = -1, prop = bookOpen(), propFollows = true).beat(SLOW_MS),
-        creatureFrame(body, dx = 1, prop = bookOpen(), propFollows = true).beat(SLOW_MS),
+        creatureFrame(body, dx = -1, prop = bookOpen(), propFollows = true).beat(READ_MS),
+        creatureFrame(body, dx = 1, prop = bookOpen(), propFollows = true).beat(READ_MS),
         // Erste Seite umblaettern - mit aufgestelltem Blatt dazwischen.
         creatureFrame(body, accentPhase = 1, prop = bookPageInFlight(), propFollows = true).beat(FAST_MS),
         creatureFrame(body, prop = bookOpen(pageTurned = true), propFollows = true).beat(FAST_MS),
         // Weiterlesen.
-        creatureFrame(body, dx = -1, prop = bookOpen(pageTurned = true), propFollows = true).beat(SLOW_MS),
-        creatureFrame(body, dx = 1, prop = bookOpen(pageTurned = true), propFollows = true).beat(SLOW_MS),
+        creatureFrame(body, dx = -1, prop = bookOpen(pageTurned = true), propFollows = true).beat(READ_MS),
+        creatureFrame(body, dx = 1, prop = bookOpen(pageTurned = true), propFollows = true).beat(READ_MS),
         // Zweite Seite.
         creatureFrame(body, accentPhase = -1, prop = bookPageInFlight(), propFollows = true).beat(FAST_MS),
         creatureFrame(body, prop = bookOpen(), propFollows = true).beat(BEAT_MS),

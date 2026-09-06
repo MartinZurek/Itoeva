@@ -136,14 +136,37 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 
 | Rolle | wofuer | Track |
 |---|---|---|
-| `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets |
+| `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns |
 | `morning_background` | frueher Morgen, falls er sich abheben soll | noch keiner |
 | `sport_background` | Bewegung und Anstrengung | noch keiner |
 | `dream_background` | Traum-Szenen | noch keiner |
 
-**Der heutige Stand umfasst zwei Tracks:** Morgens faellt die noch unbelegte Morgenrolle auf
-`main_day_background` zurueck, mittags laeuft derselbe Tagestrack. Abends uebernimmt an ruhigen
+## Mehrere Stuecke je Rolle
+
+**Eine Rolle ist kein Dateiname.** Sie kann von mehreren Stuecken erfuellt werden, und seit
+`main-day-02` wird das auch genutzt: Bleibt die Lage stabil, wechselt die Musik nach drei bis
+spaetestens fuenf Minuten innerhalb derselben Rolle auf ein anderes Stueck - ueber dieselbe
+viersekuendige Ueberblendung wie ein Rollenwechsel.
+
+Der Grund steht in der Meldung, die dazu gefuehrt hat: "Innerhalb eines stabilen Zustands bleibt
+dieselbe Musik zu lange unveraendert. Nach ungefaehr fuenf Minuten wirkt ein einzelner
+wiederholter Track bereits monoton." Die Rolle war dabei richtig - es fehlte die Moeglichkeit,
+sie mit mehr als einem Stueck zu erfuellen.
+
+Die Dateien einer Rolle heissen `<stamm>_01`, `<stamm>_02` und so weiter; die App sucht sie zur
+Laufzeit ueber diesen Namen (`MusicRole.variantResource`, hoechstens `MAX_VARIANTS`). Ein neuer
+Track wird damit gehoert, sobald er gemergt ist, ohne dass an einer zweiten Stelle etwas
+nachzuziehen waere. Eine Luecke ist zugelassen: Fehlt die `02`, wird die `03` trotzdem gefunden.
+
+**Was ausdruecklich NICHT passiert:** Ein Ortswechsel oder ein Taetigkeitswechsel innerhalb
+derselben Rolle startet die Musik nicht neu. Und die Uhr fuer den Variantenwechsel gehoert der
+ROLLE, nicht der Variante - sonst wuerde aus "spaetestens nach fuenf Minuten" ein "alle fuenf
+Minuten wieder von vorn", und das waere als Metronom hoerbar.
+
+**Der heutige Stand umfasst drei Track-Definitionen:** Morgens faellt die noch unbelegte Morgenrolle auf
+`main_day_background` zurueck, mittags laeuft dieselbe Rolle - dort inzwischen mit zwei Stuecken,
+zwischen denen bei laengerem Zusehen gewechselt wird. Abends uebernimmt an ruhigen
 Orten `home_evening_background`; Stadt, Strasse, Laden und Arbeitsplatz lassen den Tag noch
 ausklingen. Park, Wald, Wiese und Teich gelten abends als ruhige Naturorte. Nachts wird nie auf
 den Tagestrack zurueckgefallen.

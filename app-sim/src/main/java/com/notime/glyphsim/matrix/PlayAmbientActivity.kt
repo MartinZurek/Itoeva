@@ -237,10 +237,31 @@ object PlayAmbientActivity {
          * Wesen zwischen zwei echten Ausloesungen identisch, solange noch kein Pfad entwickelt war.
          */
         signatureTopic: AnimationType? = null,
+        /**
+         * Was in den letzten Regungen schon zu sehen war, **das juengste zuerst** - das siebte
+         * Signal und das zweite mit negativem Vorzeichen.
+         *
+         * **Der Unterschied zu [justPlayed]:** Der Daempfer dort kennt genau einen Schritt
+         * zurueck und verhindert die unmittelbare Wiederholung. Er kann aber nichts gegen ein
+         * Pendel ausrichten - A, B, A, B, A ist fuer ihn jedes Mal in Ordnung, und beim Zusehen
+         * ist es dasselbe Bild wie eine Wiederholung. Gemeldet wurde genau das: dass die Figur
+         * "zu lange bei derselben Art von Verhalten" bleibt, obwohl der Einzelschritt-Daempfer
+         * laengst wirkt.
+         *
+         * Der Blick zurueck ist bewusst kurz ([VARIETY_WINDOW]) und der Zuschlag klein: Ort,
+         * Tageszeit, Plan und Persoenlichkeit sollen weiterhin schwerer wiegen als blosse
+         * Abwechslung. Ein Thema, das lange nicht dran war, bekommt einen milden Vorteil; eines,
+         * das gerade mehrfach vorkam, einen milden Nachteil. Aus dem Pool geworfen wird nie
+         * etwas - sonst entstuende genau der starre Rundlauf, den der Auftrag ausschliesst.
+         */
+        recentTopics: List<AnimationType> = emptyList(),
         random: Random = Random
     ): AnimationType =
         pickWeighted(
-            combinedWeights(phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic),
+            combinedWeights(
+                phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic,
+                recentTopics
+            ),
             random
         )
 
@@ -345,7 +366,8 @@ object PlayAmbientActivity {
         leaning: Set<AnimationType> = emptySet(),
         plannedTopic: AnimationType? = null,
         justPlayed: AnimationType? = null,
-        signatureTopic: AnimationType? = null
+        signatureTopic: AnimationType? = null,
+        recentTopics: List<AnimationType> = emptyList()
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
@@ -354,7 +376,7 @@ object PlayAmbientActivity {
         // MEDICINE (siehe AvatarSpecies), aber die Garantie soll unabhaengig davon gelten.
         val relevantSignature = signatureTopic?.takeIf { it != AnimationType.MEDICINE }
         if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null &&
-            justPlayed == null && relevantSignature == null
+            justPlayed == null && relevantSignature == null && recentTopics.isEmpty()
         ) {
             return base
         }
@@ -390,6 +412,33 @@ object PlayAmbientActivity {
             for (topic in base.keys) {
                 if (PlayScene.forTopic(topic) == stayAt) {
                     combined[topic] = (combined[topic] ?: 0) + STAY_BONUS
+                }
+            }
+        }
+        // **Die Vielfaltssicherung** - wirkt vor dem Einzelschritt-Daempfer und nach allen
+        // Zuschlaegen, aus demselben Grund wie jener: Sie soll bewerten, was uebrig bleibt.
+        //
+        // Nur auf `base.keys`, also ausschliesslich auf Themen, die zur Tageszeit ohnehin
+        // vorkommen. Die Vielfalt darf nichts EINFUEHREN - nachts bleibt SLEEP das einzige
+        // Grundgewicht, und ein Bonus fuer "lange nicht dran gewesene" Themen wuerde dort sonst
+        // ausgerechnet die Nachtruhe aufbrechen, die [weightsFor] ausdruecklich garantiert.
+        //
+        // Und nur, wenn es ueberhaupt etwas zu waehlen gibt: Bei einem einzigen moeglichen Thema
+        // ist jede Umgewichtung entweder wirkungslos oder schaedlich.
+        if (recentTopics.isNotEmpty() && combined.size > 1) {
+            val fenster = recentTopics.take(VARIETY_WINDOW)
+            for (topic in base.keys) {
+                val current = combined[topic] ?: continue
+                val gesehen = fenster.count { it == topic }
+                combined[topic] = if (gesehen > 0) {
+                    // Je oefter im Fenster, desto staerker gedaempft - aber nie unter 1. Ein
+                    // Thema verschwindet nicht, es tritt nur zurueck.
+                    (current - gesehen * VARIETY_MALUS).coerceAtLeast(1)
+                } else {
+                    // Der Gegenpol, und der schwaechere von beiden: Wer laenger nicht dran war,
+                    // rueckt auf. Bewusst nur um EINS, damit die Reihenfolge der Signale
+                    // erhalten bleibt - Abwechslung ist ein Tiebreaker, kein Taktgeber.
+                    current + VARIETY_BONUS
                 }
             }
         }
@@ -505,6 +554,38 @@ object PlayAmbientActivity {
      * Haelfte ihrer vorherigen Haeufigkeit, schliesst sie aber nie aus.
      */
     private const val REPEAT_MALUS = 2
+
+    /**
+     * Wie weit die Vielfaltssicherung zurueckblickt (siehe [nextTopic]).
+     *
+     * Vier Regungen sind bei einem Takt von 18 bis 36 Sekunden gut zwei bis drei Minuten - lang
+     * genug, um ein Pendel wie A, B, A, B zu bemerken, und kurz genug, dass die Figur nicht
+     * anfaengt, eine Liste abzuarbeiten. Ein langes Fenster wuerde genau den starren Rundlauf
+     * erzeugen, den der Auftrag ausschliesst: Irgendwann waere jedes Thema "lange nicht dran"
+     * ausser dem einen, das noch fehlt.
+     */
+    private const val VARIETY_WINDOW = 4
+
+    /**
+     * Abschlag je Vorkommen im Rueckblickfenster - dieselbe Groesse wie [REPEAT_MALUS] und
+     * kumulativ.
+     *
+     * Wer im Fenster zweimal vorkam, verliert vier; wer viermal vorkam, acht. Damit faellt ein
+     * Thema, das gerade dominiert, deutlich zurueck, ohne je aus dem Pool zu verschwinden - die
+     * Untergrenze 1 ist dieselbe wie beim Einzelschritt-Daempfer und aus demselben Grund da.
+     */
+    private const val VARIETY_MALUS = 2
+
+    /**
+     * Zuschlag fuer ein Thema, das im Rueckblickfenster gar nicht vorkam - **bewusst kleiner als
+     * jeder andere Zuschlag im Haus.**
+     *
+     * Groesser gewaehlt wuerde Abwechslung zum staerksten Signal ueberhaupt und schluege Plan,
+     * Ort und Persoenlichkeit. Dann liefe die Figur nicht mehr ihren Tag, sondern eine
+     * Vorfuehrung ihres Repertoires - und das waere ein anderer Fehler als der gemeldete, nicht
+     * dessen Behebung.
+     */
+    private const val VARIETY_BONUS = 1
 
     /**
      * Zuschlag fuer das, was der Stundenplan gerade vorsieht (siehe [plannedTopicFor]).
