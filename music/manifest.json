@@ -32,6 +32,20 @@
       "cfg_scale": 1.0,
       "seed": 5092026,
       "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert."
+    },
+    {
+      "id": "main-day-02",
+      "title": "Paper Bridges",
+      "role": "main_day_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_main_day_02",
+      "prompt_file": "music/prompts/main-day-02.txt",
+      "steps": 8,
+      "cfg_scale": 1.0,
+      "seed": 6092026,
+      "notes": "Zweite Variante derselben Rolle wie main-day-01, nicht deren Ersatz. Gemeldet: innerhalb eines stabilen Zustands bleibt dieselbe Musik zu lange unveraendert. Gleiche musikalische Familie - warmer, japanisch gefaerbter jazzy Lo-Fi -, aber etwas leichter und bewegter: 88 statt 82 BPM, gebuerstete Snare, jeweils nur ein melodiefuehrendes Instrument. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Welche der Varianten laeuft, entscheidet PlayMusicRotation nach der Rolle, nicht statt ihrer."
     }
   ]
 }

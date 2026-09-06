@@ -1605,3 +1605,53 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **NICHT geloest:** Ob es wirkt, zeigt erst der naechste naechtliche Lauf. Der Beleg ist, dass
   "Verify" auf dem neuen PR von allein anlaeuft, statt bei `action_required` zu stehen. Bis dahin
   bleibt diese Aenderung eine begruendete Vermutung mit Rueckfallebene.
+
+### 2026-09-06 - ITO-0015: Sichtbare Vielfalt im Tagesablauf und in der Musik
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Zwei getrennte Aenderungen mit einer
+  gemeinsamen Ursache: Was es gibt, ist zu selten oder zu kurz zu sehen und zu hoeren.
+- **BEOBACHTET:** Buchlesen unklar, der Drachen "schwach und schwer verstaendlich", Basketball
+  beim normalen Zuschauen ueberhaupt nie sichtbar, viele Aktivitaeten so selten, dass die
+  Vielfalt nicht wahrnehmbar ist - und innerhalb eines stabilen Zustands dieselbe Musik zu lange.
+- **URSACHE, gerechnet statt vermutet:** Keine der drei gemeldeten Aktivitaeten ist gesperrt.
+  Mittags hat MOVE Gewicht 3 von 16, davon fuehren 70 % zu einer Sonderaktivitaet, und die wird
+  unter fuenf gleichberechtigten gezogen: rund 2,6 % je Ablauf. Bei einem Regungstakt von 18 bis
+  36 Sekunden und `PERFORM` in der Haelfte der Faelle laufen in fuenf Minuten etwa drei Ablaeufe -
+  knapp 8 % Chance auf Basketball. Buchlesen liegt aehnlich. Sie sind zu selten, um bemerkt zu
+  werden, nicht unerreichbar.
+- **Warum kein pauschaler Zuschlag:** Basketball zu bevorzugen haette nur die naechste Aktivitaet
+  unsichtbar gemacht. Stattdessen zwei Verlaufserinnerungen, beide nur im Arbeitsspeicher:
+  `recentTopics` gegen dasselbe Thema, `recentSpecials` gegen dieselbe der fuenf
+  Sonderaktivitaeten - die teilen sich alle das Thema MOVE und waeren auf Themenebene
+  ununterscheidbar. Der Zuschlag ist bewusst der kleinste im Haus: +1 fuer lange nicht Gezeigtes,
+  -2 je Vorkommen im Fenster von vier. Abwechslung ist ein Tiebreaker, kein Taktgeber.
+- **Die Grenzen, die bleiben:** Nichts wird aus dem Pool geworfen, nachts bleibt SLEEP das
+  einzige Thema, MEDICINE bleibt aus autonomen Regungen heraus, eine laufende Routine wird nie
+  fuer einen kuenstlichen Wechsel abgebrochen, und eine ausdrueckliche Bitte des Nutzers wird
+  nicht auf Abwechslung getrimmt - wer zweimal dasselbe erbittet, bekommt zweimal dasselbe.
+- **Animationen, vier belegte Ursachen beim Drachen:** ein fast durchgehend gefuellter Klumpen
+  statt einer Raute; eine in Zweierschritten abgetastete und dadurch gepunktete Schnur; ein
+  Schweif auf festen Versaetzen, der bei Wind stillstand; und `sin(...).roundToInt() * 2`, das von
+  einer Sinuskurve genau drei Werte uebrig liess. Alle vier behoben.
+- **Buch:** Dieselbe Lehre, die das Weltmotiv nebenan schon gezogen hatte - zwei parallele Rahmen
+  lesen sich als zwei Steine, erst Diagonalen ergeben die Rundung. Das GEHALTENE Buch hatte sie
+  nie mitbekommen und besass oben nicht einmal eine Kante. Dazu die Dauer: Die Reaktion lief in
+  2 200 ms durch; darin nimmt man eine Bewegung wahr und hat das Buch verpasst.
+- **Basketball:** Zeichnung und Phasen waren in Ordnung; die Ursache war ausschliesslich die
+  Haeufigkeit. Geblieben war derselbe Fehler wie beim Drachen - der Ball prellte zwischen genau
+  zwei Hoehen.
+- **Musik, Produktentscheidung umgesetzt:** Eine Rolle ist kein Dateiname mehr. `MusicRole` traegt
+  den Ressourcen-Stamm, die Dateien haengen eine zweistellige Nummer daran, und die App findet sie
+  zur Laufzeit. Die ROLLE bestimmt weiterhin allein `MusicResolver` aus der Weltlage; erst danach
+  waehlt `PlayMusicRotation` ein Stueck daraus. Zeitsteuerung und Variantenwahl sind reine
+  Funktionen - am Geraet waere ein Wechsel nach fuenf Minuten kaum von Zufall zu unterscheiden.
+- **Die Uhr gehoert der Rolle, nicht der Variante.** Sonst wuerde aus "spaetestens nach fuenf
+  Minuten" ein "alle fuenf Minuten wieder von vorn", und das waere als Metronom hoerbar.
+- **NICHT geloest, ausdruecklich:** Der Track `main-day-02` "Paper Bridges" ist als Prompt,
+  Manifest-Eintrag und Code vollstaendig vorbereitet und validiert (`--dry-run` laeuft durch), die
+  **Audiodatei selbst ist nicht erzeugt** - das braucht den Workflow `Generate Itoeva Music` mit
+  Modellgewichten und HF_TOKEN. Bis dahin hat `main_day_background` genau ein Stueck, und die
+  Rotation greift dort schlicht nicht; die Wiedergabe verhaelt sich exakt wie zuvor.
+- **Weiterhin offen:** Lautheit, True Peak, Stille und Loop-Grenze des neuen Tracks sind erst nach
+  seiner Erzeugung pruefbar. Die Lizenzfragen aus `music/README.md` bleiben unveraendert offen und
+  werden hier nicht als geloest behauptet.
