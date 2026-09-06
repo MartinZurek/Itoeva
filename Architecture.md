@@ -220,15 +220,19 @@ eine echte vorhandene `:app-sim`-Instanz, hält den Spielmodus sichtbar und zeic
 einen längeren Lauf über OBS auf. Dabei werden Stabilität, Aktivitätsvielfalt, Tagesphasen,
 Musikwechsel, Seitenverhältnis, CPU/RAM und Unterbrechungs-/Wiederanlaufverhalten protokolliert.
 
-YouTube unterstützt Encoder-Ausspielung über RTMP/RTMPS und empfiehlt ausdrücklich Tests mit
-realistischer Bewegung und Audio sowie die Überwachung des Streamzustands. Twitch erlaubt
-Simulcasting nur unter seinen jeweils aktuellen Simulcasting-Regeln. Deshalb bleibt die
+YouTube unterstützt laut seinen
+[Encoder-Hinweisen](https://support.google.com/youtube/answer/2853702) die Ausspielung über
+RTMP/RTMPS und empfiehlt ausdrücklich Tests mit realistischer Bewegung und Audio sowie die
+Überwachung des Streamzustands. Twitch behandelt parallele Ausspielung in seiner
+[Simulcasting-FAQ](https://help.twitch.tv/s/article/simulcasting-guidelines). Deshalb bleibt die
 Mehrfachausspielung ein eigener Prüfschritt; insbesondere werden im PoC keine Chats verschiedener
 Plattformen zusammengeführt und Zuschauer nicht von einer Plattform zur anderen gedrängt.
 
 Ein sachlicher App-Link in der Beschreibung ist als gewünschter Ausgangspunkt festgehalten.
-Links, Overlays, KI-Kennzeichnung, Musikrechte und Monetarisierung werden vor einem öffentlichen
-Test anhand der dann aktuellen Plattformregeln geprüft. Stream-Keys gehören ausschließlich in
+YouTubes [Richtlinie zu externen Links](https://support.google.com/youtube/answer/9054257) gilt
+auch für Livestreams und Beschreibungen. Links, Overlays, KI-Kennzeichnung, Musikrechte und
+Monetarisierung werden vor einem öffentlichen Test anhand der dann aktuellen Plattformregeln
+geprüft. Stream-Keys gehören ausschließlich in
 lokale beziehungsweise spätere Cloud-Secrets und niemals in Repository, Logs oder
 PR-Beschreibungen.
 
