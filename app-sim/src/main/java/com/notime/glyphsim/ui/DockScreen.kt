@@ -2456,6 +2456,14 @@ fun DockScreen(
                             val boostedTopics =
                                 PlayHabitSignal.underfulfilledTopics(context, PresentCompanion.profileId(context)) +
                                     setOfNotNull(PlayUserProfile.focusTopic(context))
+                            // **Und was heute schon beantwortet wurde** (siehe PlayAfterglow).
+                            // Die Zeile darueber allein hatte ein Vorzeichenproblem: Sie
+                            // gewichtet, was heute noch OFFEN ist, also faellt ein Thema mit dem
+                            // Erfuellen des Tagesziels aus dem Zuschlag heraus. Beantworten machte
+                            // das Thema damit fuer den Rest des Tages SELTENER - genau umgekehrt
+                            // zu dem, was eine Bitte bewirken sollte.
+                            val afterglow =
+                                PlayAfterglowSignal.bonuses(context, PresentCompanion.profileId(context))
                             // Vorrang vor allem anderen: Ist nichts mehr da UND kein Geld fuer
                             // einen Einkauf, muss gearbeitet werden. Das ist die Stelle, an der
                             // die Welt den Zufall ueberstimmt - und der Grund, warum man ihm beim
@@ -2522,6 +2530,10 @@ fun DockScreen(
                                     // von Verhalten bleibt, obwohl der Einzelschritt-Daempfer
                                     // laengst wirkt.
                                     recentTopics = recentTopics,
+                                    // **Der Nachklang.** Kurz nach einer Antwort stark genug, dass
+                                    // aus der einen angeforderten Routine eine zusammenhaengende
+                                    // Weile wird; danach nur noch eine Faerbung des Tages.
+                                    afterglow = afterglow,
                                     // **Die Mindestdauer draussen** (NT-057). Gemeldet an der
                                     // Musik - "der Wechsel war viel zu schnell, dann wieder in
                                     // diese ruhige Stimmung" -, aber die Musik wechselte richtig:

@@ -1801,3 +1801,39 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Fuer den naechsten Lauf:** Eine Umgebung, die eine andere Umgebung absichern soll, muss deren
   Kargheit nachstellen, nicht die eigene Bequemlichkeit. Wo das nicht geht, gehoert der karge Fall
   in einen Test, der ihn herstellt.
+
+### 2026-09-06 - Der Nachklang: eine beantwortete Erinnerung faerbt den Tag, statt spurlos zu enden
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Neue reine Funktion plus eine Abfrage; keine
+  Aenderung an bestehendem Verhalten ausser der Gewichtung selbst.
+- **BEOBACHTET, im Code belegt:** Eine beantwortete Erinnerung lief bisher so ab - kurze Reaktion,
+  einmal an den zum Thema passenden Ort, dort EINE Routine (`requestedTopic` in `DockScreen`), und
+  danach war sie spurlos. Der naechste Wurf wusste nichts mehr davon.
+- **URSACHE, und sie ist schlimmer als "es fehlt etwas":** Die einzige Spur, die blieb, zeigte in
+  die falsche Richtung. `PlayHabitSignal.underfulfilledTopics` gewichtet, was heute noch NICHT
+  erreicht ist (+`HABIT_BOOST` = 4). Sobald das Tagesziel erfuellt war, fiel das Thema aus dem
+  Zuschlag heraus. **Wer seine Erinnerung beantwortete, machte damit genau dieses Thema fuer den
+  Rest des Tages seltener.** Der Nachklang war negativ.
+- **Umgesetzt:** `PlayAfterglow` mit zwei Zeitskalen, weil zwei verschiedene Dinge gemeint sind.
+  Der **Nachklang** (`ECHO_MS` = 3 min, `ECHO_BONUS` = 5, so gross wie `STAY_BONUS`) haelt etwa ein
+  halbes Dutzend Regungen lang - aus der einen angeforderten Routine wird eine zusammenhaengende
+  Weile. Danach bleibt die **Tagesfarbe** (`DAY_BONUS` = 2, so gross wie `LEANING_BONUS`) bis zum
+  Tagesende. Dass eine heutige Bitte genauso schwer wiegt wie eine ueber Wochen gewachsene
+  Neigung, ist die Aussage und kein fehlender Feinschliff.
+- **Belegt, in Zahlen:** Mittags hat BOOK Grundgewicht 1 von 16 (6,3 %). Mit dem frischen
+  Nachklang sind es 6 von 21 (28,6 %), mit der Tagesfarbe 3 von 18 (16,7 %). DRINK steigt von
+  3/16 (18,8 %) auf 5/18 (27,8 %). Fuenfzehn neue Tests, Gesamtstand 226 in der Offline-Strecke;
+  Gegenprobe gemacht: ohne die Verdrahtung fallen zwei davon.
+- **Die wichtigste Grenze:** Der Nachklang darf kein Thema EINFUEHREN, nur verstaerken, was zur
+  Tageszeit ohnehin vorkommt - dieselbe Zurueckhaltung wie bei der Neigung und anders als beim
+  Stundenplan. Sonst haette eine nachmittags beantwortete Erinnerung das Wesen um drei Uhr nachts
+  aus dem Bett geholt. Ein eigener Test prueft das ueber 2.000 Ziehungen.
+- **NICHT gebaut, weil es das schon gibt:** Eine dritte Zeitskala fuer "aendert die ganze
+  Geschichte". `PlayPath` leitet aus ALLEN je beantworteten Erinnerungen den Entwicklungspfad ab,
+  faerbt darueber dauerhaft die Themenwahl und moebliert die Zimmer sichtbar
+  (`PlayScene.Acquisition`). Das dort noch einmal zu bauen waere Verdopplung. Es braucht
+  allerdings `MIN_FEEDS` = 20 Antworten und bewegt sich absichtlich langsam - wer den Effekt
+  sucht, sieht ihn dort nicht nach einem Tag.
+- **NICHT belegt:** Ob drei Minuten die richtige Laenge sind und ob 5 und 2 sich beim Zusehen
+  richtig anfuehlen. Das sind drei Zahlen, sie sind am Geraet zu beurteilen. Die Tests sichern die
+  Regeln und ihre Grenzen ab; keiner kann sagen, ob der Tag sich dadurch anders anfuehlt.
