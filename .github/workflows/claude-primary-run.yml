@@ -242,6 +242,21 @@ jobs:
             # Ein Branch zaehlt nur als laufende Evolution, solange er NICHT in main
             # enthalten ist. Branches werden bewusst nie geloescht; wuerde schon ihre blosse
             # Existenz blockieren, stuende der Zeitplan nach der ersten Evolution fuer immer.
+            #
+            # **"In main enthalten" ist aber nicht dasselbe wie "identical|behind".** Genau daran
+            # ist diese Pruefung am 2026-09-06 haengengeblieben und hat die Strecke zwei Tage lang
+            # stillgelegt: Der Branch von PR #72 wurde geschlossen statt gemergt, sein Inhalt kam
+            # ueber einen ANDEREN Commit nach main (PR #94, gerettet). Damit ist er auf ewig
+            # `diverged` - und damit auf ewig eine "laufende Evolution". Fuenf Zeitplan-Laeufe in
+            # Folge sprangen ab, jeder davon mit `success`, weil das Ueberspringen vorgesehen ist.
+            # Niemand hat es gemerkt.
+            #
+            # Der Zweck des Waechters ist, keine zweite Evolution zu starten, solange eine auf
+            # einen MENSCHEN wartet. Ein geschlossener Pull Request heisst: Der Mensch hat bereits
+            # entschieden. Deshalb blockiert ein Branch, der nicht in main ist, nur dann, wenn zu
+            # ihm ueberhaupt kein Pull Request existiert - dann haengt er wirklich in der Luft
+            # (etwa weil ein Lauf den Branch pushen konnte, das Oeffnen des PR aber scheiterte).
+            # Offene Pull Requests faengt die Abfrage darunter ohnehin ab.
             PENDING=""
             REFS="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
                       "$API/git/matching-refs/heads/claude-evolution" | jq -r '.[].ref // empty')"
@@ -249,11 +264,21 @@ jobs:
               br="${ref#refs/heads/}"
               st="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
                       "$API/compare/main...${br}" | jq -r '.status')"
-              echo "  Branch $br: $st"
               case "$st" in
-                identical|behind) ;;                       # vollstaendig in main enthalten
-                *) PENDING="${PENDING}${br} (nicht in main: $st)\n" ;;
+                identical|behind)                          # vollstaendig in main enthalten
+                  echo "  Branch $br: $st"
+                  continue ;;
               esac
+              # Nicht in main - also fragen, ob dazu je ein Pull Request bestand.
+              PR_STATES="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
+                             "$API/pulls?state=all&head=${GITHUB_REPOSITORY%%/*}:${br}&per_page=100" \
+                           | jq -r '.[].state')"
+              if [ -z "$PR_STATES" ]; then
+                echo "  Branch $br: $st, ohne Pull Request - laufende Evolution"
+                PENDING="${PENDING}${br} (nicht in main: $st, kein Pull Request)\n"
+              else
+                echo "  Branch $br: $st, Pull Request vorhanden ($(echo "$PR_STATES" | tr '\n' ' ')) - bereits entschieden"
+              fi
             done
             OPEN_PRS="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
                           "$API/pulls?state=open&per_page=100" \

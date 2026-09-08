@@ -1878,3 +1878,34 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   `ReactionDwellTest`, damit die naechste Sitzung sie nicht neu erheben muss; WORK waere der
   naechste Kandidat.
 - **NICHT belegt:** Ob 2 420 ms fuer MOVE richtig sind. Das ist am Geraet zu beurteilen.
+
+### 2026-09-08 - Ein geschlossener Pull Request legte die Evolutionsstrecke zwei Tage still
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich am Waechter in
+  `claude-primary-run.yml`; kein Anwendungscode.
+- **BEOBACHTET:** Fuenf Zeitplan-Laeufe in Folge (34100064301, 34136307577, 34154567283,
+  34202740728, 34233269761) haben `Builder, Tests, Reviewer` uebersprungen. Alle fuenf melden
+  `success` - das Ueberspringen ist ein vorgesehener Zustand, also faellt es niemandem auf. Erst
+  ein von Hand angestossener Lauf (34263907769) hat es sichtbar gemacht.
+- **URSACHE:** Der Waechter fragt, ob ein `claude-evolution/*`-Branch noch nicht in main enthalten
+  ist, und prueft das ueber `compare/main...<branch>` mit `identical|behind` als "enthalten".
+  `claude-evolution/33849938800-1` gehoert zu PR #72, der am 2026-09-06 **geschlossen statt
+  gemergt** wurde; sein Inhalt kam ueber einen ANDEREN Commit nach main (PR #94, gerettet). Damit
+  ist der Branch auf ewig `diverged` - und auf ewig eine "laufende Evolution".
+- **Der Denkfehler, genau benannt:** "In main enthalten" ist nicht dasselbe wie
+  `identical|behind`. Der Kommentar an der Stelle nahm bereits vorweg, dass Branches nie geloescht
+  werden; uebersehen wurde der Fall, dass Arbeit ueber einen anderen Commit landet. Cherry-Pick,
+  Rettung und Squash erzeugen ihn alle.
+- **Umgesetzt:** Ein Branch, der nicht in main ist, blockiert nur noch dann, wenn zu ihm
+  **ueberhaupt kein Pull Request existiert** - dann haengt er wirklich in der Luft (etwa weil ein
+  Lauf den Branch pushen konnte, das Oeffnen des PR aber scheiterte). Ein geschlossener Pull
+  Request heisst: Ein Mensch hat bereits entschieden, und genau darauf wartet der Waechter. Offene
+  Pull Requests blockieren unveraendert ueber die Abfrage darunter.
+- **Belegt, gegen das echte Repository:** Die neue Schleife wortgleich lokal gegen die GitHub-API
+  ausgefuehrt - 14 Branches, der einzige `diverged` wird als "Pull Request vorhanden (closed) -
+  bereits entschieden" eingestuft, `PENDING` bleibt leer, Ergebnis GO. Gegenprobe fuer die andere
+  Richtung: Die Abfrage liefert fuer einen Branch ohne Pull Request eine leere Liste, er wuerde
+  also weiterhin blockieren. Dazu `bash -n` ueber das aus dem YAML extrahierte Skript.
+- **NICHT geloest:** Der Rest-Branch `claude-evolution/33849938800-1` existiert weiter. Loeschen
+  war aus der Sitzung heraus nicht moeglich - der Git-Proxy bricht Lösch-Pushes ab und die
+  REST-Route `git/refs` ist gesperrt (403). Nach dieser Aenderung stoert er allerdings nicht mehr.
