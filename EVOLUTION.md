@@ -1909,3 +1909,33 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **NICHT geloest:** Der Rest-Branch `claude-evolution/33849938800-1` existiert weiter. Loeschen
   war aus der Sitzung heraus nicht moeglich - der Git-Proxy bricht Lösch-Pushes ab und die
   REST-Route `git/refs` ist gesperrt (403). Nach dieser Aenderung stoert er allerdings nicht mehr.
+
+### 2026-09-08 - Eine Diagnose, an die man nicht herankommt, ist keine
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich an der
+  Diagnose-Ausgabe in `claude-primary-run.yml`; kein Anwendungscode, keine Gates beruehrt.
+- **BEOBACHTET:** Die Builder-Sitzung von Lauf 34273049230 ist nach 11,4 Minuten mit Exitcode 1
+  ausgestiegen. Die Ursache steht in `builder-diagnostics.json` (930 Bytes, also ein echter
+  Envelope mit `subtype`, `num_turns` und `stop_reason`) - und war trotzdem nicht zu ermitteln:
+  - Das Job-Protokoll ist ueber die API nur vom Ende her abrufbar; die Mitte, in der die Diagnose
+    per `cat` steht, wird abgeschnitten.
+  - Das Diagnose-Artefakt liegt auf `productionresultssa1.blob.core.windows.net`, und der
+    Egress-Proxy dieser Umgebung lehnt die Verbindung ab (`connect_rejected`).
+  - Die Annotation des fehlgeschlagenen Schritts lautete `Process completed with exit code 1.` -
+    fuer jede Ursache dieselbe.
+- **URSACHE:** Die Forensik war vollstaendig, aber nur mit Browser und Maus erreichbar. Fuer einen
+  Lauf, dessen Sinn gerade darin besteht, unbeaufsichtigt zu arbeiten, ist das die falsche
+  Zustellung.
+- **Umgesetzt:** Builder- und Reviewer-Diagnose gehen zusaetzlich als `::notice`-Annotation
+  heraus. Annotationen sind ueber `/check-runs/<id>/annotations` abrufbar, also genau ueber den
+  Weg, der auch ohne Browser offensteht. Bewusst einzeilig und nur die strukturierten Felder
+  (`subtype`, `is_error`, `num_turns`, `stop_reason`, `permission_denials`) - keine Modellausgabe
+  und kein Freitext: Eine Annotation ist oeffentlich sichtbar und soll nichts weitertragen, was
+  nicht ohnehin Metadaten sind.
+- **Belegt:** `bash -n` ueber beide aus dem YAML extrahierten Skripte, YAML-Gueltigkeit, und die
+  jq-Zeile mit einem echten Envelope sowie mit kaputtem JSON durchgespielt - im zweiten Fall
+  faellt sie auf `{"note":"nicht auswertbar"}` zurueck statt eine leere Annotation zu erzeugen.
+- **NICHT geloest:** Warum die Sitzung ausgestiegen ist. Das beantwortet erst der naechste Lauf,
+  und genau dafuer ist diese Aenderung da. Blind neu anzustossen waere die Alternative gewesen -
+  und ein Fehlschlag ohne bekannte Ursache, den man einfach noch einmal wuerfelt, ist kein
+  Befund, sondern eine Hoffnung.
