@@ -66,6 +66,20 @@ object AvatarAnimations {
      */
     internal const val READ_MS = 620L
 
+    /**
+     * Der Scheitel eines Sprungs - der Moment, in dem die Figur oben steht.
+     *
+     * Gemessen und nicht geschaetzt: MOVE hielt neun von elf Bildern auf [FAST_MS], die
+     * kuerzeste Standzeit der Datei, und war damit neben GENERAL die einzige Reaktion ohne
+     * irgendein Verweilen ueber [BEAT_MS] vor dem Ausklang. Ein Sprung ohne sichtbaren Scheitel
+     * liest sich nicht als Sprung, sondern als Zucken - und ausgerechnet MOVE ist mit
+     * Grundgewicht 5/3/4 (siehe [PlayAmbientActivity]) das meistgesehene Thema des Tages.
+     *
+     * Bewusst kein neues Bild, sondern eine laengere Standzeit: Die Choreografie war richtig,
+     * nur zu schnell zum Ansehen.
+     */
+    internal const val LEAP_MS = 420L
+
     /** Ein Keyframe mit eigener Standzeit. */
     internal data class Beat(val points: List<Pair<Int, Int>>, val holdMs: Long = BEAT_MS)
 
@@ -781,17 +795,24 @@ object AvatarAnimations {
      */
     private fun dust(dx: Int) = listOf((4 + dx) to 15, (11 + dx) to 15)
 
+    // Die Bilder sind unveraendert, der RHYTHMUS nicht. Vorher stand jedes einzelne 90 ms
+    // ([FAST_MS]) - bei diesem Tempo loest das Auge die Posen nicht auf, und aus drei Spruengen
+    // und einem Abschluss wurde ein Flimmern. Jetzt bekommt jeder Scheitel Zeit ([SLOW_MS]),
+    // jede Landung einen Grundtakt ([BEAT_MS]) und der Abschlusssprung seinen eigenen
+    // Hoehepunkt ([LEAP_MS]). Ein Sprung braucht ein Oben, das man sieht.
     private fun moveKeyframes(body: AvatarBody) = listOf(
-        creatureFrame(body).beat(FAST_MS),
-        creatureFrame(body, dx = -2, dy = -2, feetSpread = 1, accentPhase = 1, mouthHoles = body.mouthOpen).beat(FAST_MS),
+        // Absprungstellung - kurz lesbar, sonst beginnt der erste Sprung aus dem Nichts.
+        creatureFrame(body).beat(BEAT_MS),
+        creatureFrame(body, dx = -2, dy = -2, feetSpread = 1, accentPhase = 1, mouthHoles = body.mouthOpen).beat(SLOW_MS),
         // Aufkommen - Staub wirbelt auf.
-        creatureFrame(body, dx = -2, prop = dust(-2)).beat(FAST_MS),
-        creatureFrame(body, dx = 2, dy = -2, feetSpread = 1, accentPhase = -1, mouthHoles = body.mouthOpen).beat(FAST_MS),
-        creatureFrame(body, dx = 2, prop = dust(2)).beat(FAST_MS),
-        creatureFrame(body, dx = -1, dy = -2, feetSpread = 1, accentPhase = 1, mouthHoles = body.mouthOpen).beat(FAST_MS),
-        creatureFrame(body, dx = -1, prop = dust(-1)).beat(FAST_MS),
-        // Grosser Abschluss-Sprung, hoeher als die davor.
-        creatureFrame(body, dy = -3, feetSpread = 2, accentPhase = -1, mouthHoles = body.mouthOpen).beat(BEAT_MS),
+        creatureFrame(body, dx = -2, prop = dust(-2)).beat(BEAT_MS),
+        creatureFrame(body, dx = 2, dy = -2, feetSpread = 1, accentPhase = -1, mouthHoles = body.mouthOpen).beat(SLOW_MS),
+        creatureFrame(body, dx = 2, prop = dust(2)).beat(BEAT_MS),
+        creatureFrame(body, dx = -1, dy = -2, feetSpread = 1, accentPhase = 1, mouthHoles = body.mouthOpen).beat(SLOW_MS),
+        creatureFrame(body, dx = -1, prop = dust(-1)).beat(BEAT_MS),
+        // Grosser Abschluss-Sprung, hoeher als die davor - und laenger als die davor, sonst ist
+        // er nur hoeher gezeichnet und nicht hoeher erlebt.
+        creatureFrame(body, dy = -3, feetSpread = 2, accentPhase = -1, mouthHoles = body.mouthOpen).beat(LEAP_MS),
         creatureFrame(body, prop = dust(0)).beat(SETTLE_MS)
     )
 
@@ -813,17 +834,23 @@ object AvatarAnimations {
         else -> listOf(2 to 2, 12 to 2)
     }
 
+    // Zweite Reaktion ohne Verweilen (siehe [LEAP_MS]): sieben von zehn Bildern standen 90 ms.
+    // Das wiegt schwerer als bei den uebrigen Themen, denn dies ist die Rueckfall-Reaktion fuer
+    // JEDE Bibliotheks-Animation ohne eigenen Typ - wer sich etwas Eigenes gezeichnet hat, sah
+    // bisher genau hier am wenigsten. Eine Glocke muss ausserdem nachklingen duerfen: Ein
+    // Laeuten, das in 90 ms vorbei ist, ist ein Klicken.
     private fun generalKeyframes(body: AvatarBody) = listOf(
-        creatureFrame(body, prop = bell(0)).beat(FAST_MS),
-        // Erster Schlag - Wellen laufen nach aussen.
-        creatureFrame(body, accentPhase = 1, prop = bell(-2) + bellWaves(0)).beat(FAST_MS),
-        creatureFrame(body, accentPhase = -1, prop = bell(2) + bellWaves(1)).beat(FAST_MS),
-        creatureFrame(body, accentPhase = 1, prop = bell(-1) + bellWaves(2)).beat(FAST_MS),
+        creatureFrame(body, prop = bell(0)).beat(BEAT_MS),
+        // Erster Schlag - Wellen laufen nach aussen und werden dabei schwaecher.
+        creatureFrame(body, accentPhase = 1, prop = bell(-2) + bellWaves(0)).beat(SLOW_MS),
+        creatureFrame(body, accentPhase = -1, prop = bell(2) + bellWaves(1)).beat(BEAT_MS),
+        creatureFrame(body, accentPhase = 1, prop = bell(-1) + bellWaves(2)).beat(BEAT_MS),
         // Zweiter, schwaecherer Schlag.
-        creatureFrame(body, accentPhase = -1, prop = bell(1) + bellWaves(0)).beat(FAST_MS),
+        creatureFrame(body, accentPhase = -1, prop = bell(1) + bellWaves(0)).beat(SLOW_MS),
         creatureFrame(body, prop = bell(0) + bellWaves(1)).beat(BEAT_MS),
-        // Aufmerksam werden: Kopf hoch, Mund auf.
-        creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = bell(0)).beat(BEAT_MS),
+        // Aufmerksam werden: Kopf hoch, Mund auf. DER Moment dieser Reaktion - er sagt "ich habe
+        // dich gehoert" - und stand vorher genauso lang da wie eine Zwischenschwingung.
+        creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = bell(0)).beat(LEAP_MS),
         creatureFrame(body).beat(SETTLE_MS)
     )
 

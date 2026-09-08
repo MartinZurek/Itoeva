@@ -96,6 +96,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayVarietyGuardTest.kt"
   "$TEST/matrix/PlayOutdoorStayTest.kt"
   "$TEST/matrix/PlayAfterglowTest.kt"
+  "$TEST/matrix/ReactionDwellTest.kt"
   "$TEST/matrix/PlayMotifLegibilityTest.kt"
   "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
@@ -121,6 +122,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayVarietyGuardTest
   com.notime.glyphsim.matrix.PlayOutdoorStayTest
   com.notime.glyphsim.matrix.PlayAfterglowTest
+  com.notime.glyphsim.matrix.ReactionDwellTest
   com.notime.glyphsim.matrix.PlayMotifLegibilityTest
   com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.ui.PlayMusicTest
