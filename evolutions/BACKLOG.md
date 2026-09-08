@@ -47,6 +47,128 @@ so gut abgegrenzt sein, dass ein unbeaufsichtigter Lauf daraus arbeiten kann, oh
 zu stellen - einschliesslich der Erwartungswerte, die der Builder ohne Shell nicht selbst
 ausrechnen kann.
 
+## [open] ITO-0016 - Charakter-Themensong: die Rolle bauen, noch ohne Audio
+Lege die Grundlage dafuer, dass **jedes Wesen sein eigenes Musikstueck** bekommt - erkennbar als
+sein Thema, nicht als weitere Hintergrundschleife.
+
+Der Auftraggeber will das ausdruecklich als Charakterisierung: ein Wesen etwas rauer und
+gitarrenlastiger, eines mehr am Klavier, eines melancholischer. Fernziel ist, diese Stuecke
+spaeter je Charakter live auf YouTube zu singen; deshalb sollen sie sich hoerbar voneinander
+unterscheiden und nicht Varianten desselben Grundklangs sein.
+
+**Nur die Mechanik, KEIN Audio.** Die Erzeugung laeuft ueber `.github/workflows/generate-music.yml`,
+und der ist `workflow_dispatch` - ein unbeaufsichtigter Lauf kann ihn nicht ausloesen und darf es
+auch nicht versuchen. Die Stuecke selbst kommen in ITO-0017 bis ITO-0022 als je eigene Aufgabe.
+
+Umzusetzen:
+
+1. In `app-sim/src/main/java/com/notime/glyphsim/matrix/PlayMusicPlan.kt` eine neue Rolle
+   `CHARACTER_THEME("character_theme_background", "itoeva_theme")` ergaenzen. Sie ist die erste
+   Rolle, deren Variante NICHT frei rotiert, sondern am anwesenden Wesen haengt: Variante 1 bis 6
+   entsprechen der Deklarationsreihenfolge von `AvatarSpecies` (PUFFLING, STARLET, WYRMLING,
+   FENNEC, GLOOP, HOOTLET). Schreibe diese Zuordnung als Funktion, nicht als Kommentar, und
+   stuetze sie auf `AvatarSpecies.entries.indexOf(...) + 1`, damit eine spaeter ergaenzte Spezies
+   nicht stillschweigend das Thema einer anderen bekommt.
+2. In `tools/music/generate_music.py` `character_theme_background` zu `SUPPORTED_ROLES`
+   hinzufuegen.
+3. Entscheiden und dokumentieren, WANN das Thema laeuft. Vorgabe: **nicht** als Dauerschleife
+   anstelle des Tagesklangs - ein Charakterstueck, das immer laeuft, ist wieder nur
+   Hintergrundmusik. Schlage im PR-Text genau einen Anlass vor und setze ihn um; naheliegend ist
+   der Moment, in dem das Wesen im Spielmodus zum ersten Mal an einem Tag erscheint, oder ein
+   ausdruecklich vom Nutzer ausgeloester Anlass. Aendere die bestehende Regel aus `PlayMusic.decide`
+   nicht: Der Nutzer entscheidet weiterhin, OB ueberhaupt Musik laufen darf.
+4. Tests in der Offline-Strecke (`tools/reaction-preview/tests.sh`, Klassen dort ausdruecklich
+   eintragen): Jede Spezies bekommt genau eine Variante, keine zwei Spezies teilen sich eine, und
+   die Zuordnung bleibt stabil, wenn eine siebte Spezies ans Ende der Enum tritt.
+
+Nicht anfassen: die drei vorhandenen Tracks, `PlayMusicRotation`, `tools/music/audio_polish.py`
+und das Freigabe-Gate. Keine zweite Musikpipeline. Keine kostenpflichtige API.
+
+## [open] ITO-0017 - Themensong fuer PUFFLING schreiben (Prompt und Manifest)
+Schreibe Prompt und Manifest-Eintrag fuer das Charakterstueck von **PUFFLING**. Setzt ITO-0016
+voraus; ist die Rolle `character_theme_background` noch nicht vorhanden, brich mit einer klaren
+Meldung ab, statt sie nebenbei mit anzulegen.
+
+PUFFLING hat `signatureTopic = GENERAL` (siehe `AvatarSpecies.kt`) - das freundliche, zugewandte,
+unaufgeregte Wesen. Musikalisch: **warm und offen, das hellste der sechs Stuecke.** Klavier steht
+im Vordergrund, akustisch statt Rhodes, mit einer singbaren Melodie.
+
+Zu liefern:
+
+- `music/prompts/theme-puffling.txt` nach dem Muster der vorhandenen Prompts (englisch, Tempo,
+  Instrumente, Klangbild, Stimmung, ausdrueckliche Ausschlussliste am Ende). **Eigenschaften und
+  Instrumente beschreiben, niemals einen konkreten Kuenstler oder ein konkretes Stueck.**
+- Einen Eintrag in `music/manifest.json`: `id` `theme-puffling`, `role`
+  `character_theme_background`, `android_resource` `itoeva_theme_01`, `duration_seconds` 90,
+  `model` `small-music`, `output_format` `ogg`, `steps` 8, `cfg_scale` 1.0, ein bisher unbenutzter
+  `seed`, und ein `notes`-Feld, das den Charakterbezug nennt.
+- Eine Zeile in `music/README.md` unter den vorhandenen Tracks.
+
+**Kein Audio erzeugen** - `generate-music.yml` ist `workflow_dispatch` und wird von einem Menschen
+ausgeloest. `verify-music-tooling.yml` prueft den neuen Eintrag im Trockenlauf; dass der gruen
+ist, ist das Abnahmekriterium dieser Aufgabe.
+
+Der Prompt soll ausdruecklich **singbar** sein: eine Melodie, zu der sich spaeter live singen
+laesst. Trotzdem instrumental erzeugen - kein Gesang in der Datei.
+
+## [open] ITO-0018 - Themensong fuer STARLET schreiben (Prompt und Manifest)
+Wie ITO-0017, aber fuer **STARLET** (`signatureTopic = MINDFULNESS`), `android_resource`
+`itoeva_theme_02`, Prompt `music/prompts/theme-starlet.txt`, id `theme-starlet`.
+
+Charakter: still, aufmerksam, nach innen gewandt. Musikalisch **das melancholischste der sechs
+Stuecke** - langsam, viel Raum, Moll-gefaerbt, aber nicht traurig-schwer. Sparsame Instrumente,
+lange Toene, hoerbare Stille zwischen den Phrasen.
+
+Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
+
+## [open] ITO-0019 - Themensong fuer WYRMLING schreiben (Prompt und Manifest)
+Wie ITO-0017, aber fuer **WYRMLING** (`signatureTopic = MOVE`), `android_resource`
+`itoeva_theme_03`, Prompt `music/prompts/theme-wyrmling.txt`, id `theme-wyrmling`.
+
+Charakter: in Bewegung, ungeduldig, zupackend. Musikalisch **das raueste und kantigste der sechs
+Stuecke** - hoeheres Tempo, angezerrte Gitarre, deutlicher Bass, ein Schlagzeug mit Kante. Das ist
+das Stueck, das der Auftraggeber als "etwas grungelastiger" beschrieben hat. Es darf sich
+hoerbar vom ruhigen Grundklang der App absetzen; es soll nicht dazu passen, sondern zu diesem
+Wesen.
+
+Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
+
+## [open] ITO-0020 - Themensong fuer FENNEC schreiben (Prompt und Manifest)
+Wie ITO-0017, aber fuer **FENNEC** (`signatureTopic = DRINK`), `android_resource`
+`itoeva_theme_04`, Prompt `music/prompts/theme-fennec.txt`, id `theme-fennec`.
+
+Charakter: gemuetlich, zugewandt, der Gastgeber unter den sechs. Musikalisch **das waermste und
+geselligste** - mittleres Tempo, Buerstenschlagzeug, weiches Rhodes, eine Melodie, die man
+mitsummt. Naeher am bestehenden Grundklang der App als die uebrigen fuenf, aber mit eigener
+Melodie, nicht als Variante von `main-day-01`.
+
+Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
+
+## [open] ITO-0021 - Themensong fuer GLOOP schreiben (Prompt und Manifest)
+Wie ITO-0017, aber fuer **GLOOP** (`signatureTopic = REST`), `android_resource`
+`itoeva_theme_05`, Prompt `music/prompts/theme-gloop.txt`, id `theme-gloop`.
+
+Charakter: traege, weich, ohne Eile. Musikalisch **das langsamste der sechs** - tiefes Tempo,
+weiche Baesse, verwaschene Klangflaechen, alles ohne scharfe Kanten. Darf schwebend sein, aber
+braucht trotzdem eine erkennbare Melodie: ein Stueck ohne Melodie kann man spaeter nicht singen.
+
+Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
+
+## [open] ITO-0022 - Themensong fuer HOOTLET schreiben (Prompt und Manifest)
+Wie ITO-0017, aber fuer **HOOTLET** (`signatureTopic = FOCUS`), `android_resource`
+`itoeva_theme_06`, Prompt `music/prompts/theme-hootlet.txt`, id `theme-hootlet`.
+
+Charakter: konzentriert, praezise, wach. Musikalisch **das klarste und geordnetste der sechs** -
+gleichmaessiger Puls, ein sauber gespieltes Klavier- oder Vibraphon-Motiv, das sich wiederholt und
+dabei leicht verschiebt. Nicht kalt: die Praezision soll ruhig wirken, nicht streng.
+
+Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
+
+Wenn dieser Eintrag erledigt ist, existieren alle sechs Prompts und Manifest-Eintraege. Die
+Audiodateien selbst fehlen dann noch: Sie entstehen einzeln ueber `generate-music.yml`, von einem
+Menschen ausgeloest, und werden vor dem Merge angehoert - so wie die drei vorhandenen Tracks am
+2026-09-06.
+
 ## [done] ITO-0001 - KDoc von MatrixCellSizing berichtigen
 Berichtige die sachlich falsche Aussage in der KDoc von `app-sim/src/main/java/com/notime/glyphsim/matrix/MatrixCellSizing.kt`, Zeilen 5 bis 9.
 
