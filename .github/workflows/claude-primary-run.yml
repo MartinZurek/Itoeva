@@ -719,6 +719,22 @@ jobs:
           fi
           cat "$RUNNER_TEMP/builder-diagnostics.json"
 
+          # **Zusaetzlich als Annotation, nicht nur ins Protokoll.**
+          #
+          # Am 2026-09-08 ist die Builder-Sitzung mit Exitcode 1 ausgestiegen (Lauf 34273049230).
+          # Die Ursache stand genau hier - und war trotzdem nicht zu ermitteln: Das Protokoll ist
+          # ueber die API nur am Ende abrufbar, und das Diagnose-Artefakt liegt auf einem
+          # Blob-Speicher, den nicht jede Umgebung erreicht. Eine Forensik, an die man nur mit
+          # Browser und Maus kommt, hilft einem unbeaufsichtigten Lauf nicht.
+          #
+          # Annotationen sind dagegen ueber /check-runs/<id>/annotations abrufbar. Bewusst
+          # einzeilig und nur die strukturierten Felder: keine Modellausgabe, kein Freitext -
+          # eine Annotation ist oeffentlich sichtbar und soll nichts weitertragen, was nicht
+          # ohnehin Metadaten sind.
+          KURZ="$(jq -c '{subtype, is_error, num_turns, stop_reason, permission_denials}' \
+                    "$RUNNER_TEMP/builder-diagnostics.json" 2>/dev/null || echo '{"note":"nicht auswertbar"}')"
+          echo "::notice title=Builder-Diagnose::${KURZ}"
+
       # -----------------------------------------------------------------------------------
       # BUILDER-GATE
       #
@@ -1227,6 +1243,10 @@ jobs:
             echo '{"note":"kein Envelope erzeugt"}' > "$RUNNER_TEMP/reviewer-diagnostics.json"
           fi
           cat "$RUNNER_TEMP/reviewer-diagnostics.json"
+          # Aus demselben Grund wie beim Builder daneben - siehe dort.
+          KURZ="$(jq -c '{subtype, is_error, num_turns, stop_reason, permission_denials}' \
+                    "$RUNNER_TEMP/reviewer-diagnostics.json" 2>/dev/null || echo '{"note":"nicht auswertbar"}')"
+          echo "::notice title=Reviewer-Diagnose::${KURZ}"
 
       # -----------------------------------------------------------------------------------
       # REVIEWER-GATE
