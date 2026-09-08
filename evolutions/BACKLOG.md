@@ -47,6 +47,14 @@ so gut abgegrenzt sein, dass ein unbeaufsichtigter Lauf daraus arbeiten kann, oh
 zu stellen - einschliesslich der Erwartungswerte, die der Builder ohne Shell nicht selbst
 ausrechnen kann.
 
+**Und er darf nichts verlangen, was die Allowlist verbietet.** `runner/runner.config.json` sperrt
+unter `scope` die Praefixe `runner/`, `.github/`, `gradle/`, `app/libs/`, die Dateinamen
+`BACKLOG.md`, `build.gradle.kts` und weitere, sowie die Endungen `.ps1`, `.psm1`, `.bat`, `.cmd`,
+`.sh`, `.exe`, `.dll`, `.jar`, `.aar`, `.jks`, `.keystore`. Ein Auftrag, der eine dieser Dateien
+verlangt, laesst den Lauf scheitern, NACHDEM die eigentliche Arbeit fertig ist - und die ist dann
+verloren, weil nichts gepusht wird. Das ist am 2026-09-08 mit ITO-0016 passiert: Der Eintrag
+verlangte einen Eintrag in `tools/reaction-preview/tests.sh`.
+
 ## [open] ITO-0016 - Charakter-Themensong: die Rolle bauen, noch ohne Audio
 Lege die Grundlage dafuer, dass **jedes Wesen sein eigenes Musikstueck** bekommt - erkennbar als
 sein Thema, nicht als weitere Hintergrundschleife.
@@ -77,9 +85,17 @@ Umzusetzen:
    der Moment, in dem das Wesen im Spielmodus zum ersten Mal an einem Tag erscheint, oder ein
    ausdruecklich vom Nutzer ausgeloester Anlass. Aendere die bestehende Regel aus `PlayMusic.decide`
    nicht: Der Nutzer entscheidet weiterhin, OB ueberhaupt Musik laufen darf.
-4. Tests in der Offline-Strecke (`tools/reaction-preview/tests.sh`, Klassen dort ausdruecklich
-   eintragen): Jede Spezies bekommt genau eine Variante, keine zwei Spezies teilen sich eine, und
-   die Zuordnung bleibt stabil, wenn eine siebte Spezies ans Ende der Enum tritt.
+4. Tests als gewoehnliche JUnit-Klassen unter `app-sim/src/test/java/com/notime/glyphsim/`:
+   Jede Spezies bekommt genau eine Variante, keine zwei Spezies teilen sich eine, und die
+   Zuordnung bleibt stabil, wenn eine siebte Spezies ans Ende der Enum tritt.
+
+   **`tools/reaction-preview/tests.sh` dabei NICHT anfassen.** Die Endung `.sh` steht in
+   `runner/runner.config.json` unter `scope.forbiddenExtensions`, und die Sperre ist richtig: Ein
+   Lauf, der Shell-Skripte aendern darf, koennte seine eigene Pruefstrecke umschreiben. Ein
+   frueherer Anlauf dieser Aufgabe (Lauf 34270387747) ist genau daran gescheitert - die Arbeit war
+   fertig und richtig, nur die letzte Datei verboten. Gradle fuehrt die neuen Klassen ohnehin aus;
+   sie zusaetzlich in die Offline-Strecke einzutragen ist Sache eines Menschen und ausdruecklich
+   nicht Teil dieser Aufgabe.
 
 Nicht anfassen: die drei vorhandenen Tracks, `PlayMusicRotation`, `tools/music/audio_polish.py`
 und das Freigabe-Gate. Keine zweite Musikpipeline. Keine kostenpflichtige API.
