@@ -79,13 +79,7 @@ Umzusetzen:
    nicht stillschweigend das Thema einer anderen bekommt.
 2. In `tools/music/generate_music.py` `character_theme_background` zu `SUPPORTED_ROLES`
    hinzufuegen.
-3. Entscheiden und dokumentieren, WANN das Thema laeuft. Vorgabe: **nicht** als Dauerschleife
-   anstelle des Tagesklangs - ein Charakterstueck, das immer laeuft, ist wieder nur
-   Hintergrundmusik. Schlage im PR-Text genau einen Anlass vor und setze ihn um; naheliegend ist
-   der Moment, in dem das Wesen im Spielmodus zum ersten Mal an einem Tag erscheint, oder ein
-   ausdruecklich vom Nutzer ausgeloester Anlass. Aendere die bestehende Regel aus `PlayMusic.decide`
-   nicht: Der Nutzer entscheidet weiterhin, OB ueberhaupt Musik laufen darf.
-4. Tests als gewoehnliche JUnit-Klassen unter `app-sim/src/test/java/com/notime/glyphsim/`:
+3. Tests als gewoehnliche JUnit-Klassen unter `app-sim/src/test/java/com/notime/glyphsim/`:
    Jede Spezies bekommt genau eine Variante, keine zwei Spezies teilen sich eine, und die
    Zuordnung bleibt stabil, wenn eine siebte Spezies ans Ende der Enum tritt.
 
@@ -97,8 +91,41 @@ Umzusetzen:
    sie zusaetzlich in die Offline-Strecke einzutragen ist Sache eines Menschen und ausdruecklich
    nicht Teil dieser Aufgabe.
 
+**Ausdruecklich NICHT Teil dieser Aufgabe: wann das Thema abgespielt wird.** Das steht als
+ITO-0023 direkt darunter und ist bewusst getrennt. Grund, gemessen statt vermutet: Diese Aufgabe
+enthielt beides und hat dreimal 80 Turns verbraucht, ohne fertig zu werden (Laeufe 34273049230
+und 34279293146, jeweils `error_max_turns` bei 81 Turns, `permission_denials` leer - der Builder
+hing also an keiner Sperre, ihm ging schlicht das Budget aus). Die Abspiel-Entscheidung zwingt
+zum Lesen von `DockScreen.kt` mit 3.984 Zeilen; das Budget geht fuers Lesen drauf, bevor die
+Arbeit beginnt. `PlayMusicPlan.kt` (198 Zeilen) und `AvatarSpecies.kt` (103) sind dagegen klein.
+Fasse `DockScreen.kt` und `PlayMusic.kt` hier deshalb gar nicht an.
+
 Nicht anfassen: die drei vorhandenen Tracks, `PlayMusicRotation`, `tools/music/audio_polish.py`
 und das Freigabe-Gate. Keine zweite Musikpipeline. Keine kostenpflichtige API.
+
+## [open] ITO-0023 - Charakter-Themensong: wann er abgespielt wird
+Setzt ITO-0016 voraus (Rolle `CHARACTER_THEME` und die Zuordnung Spezies -> Variante). Ist die
+Rolle noch nicht vorhanden, brich mit einer klaren Meldung ab, statt sie nebenbei anzulegen.
+
+Entscheide und setze um, **wann** das Charakterstueck eines Wesens laeuft.
+
+Die einzige harte Vorgabe: **nicht als Dauerschleife anstelle des Tagesklangs.** Ein
+Charakterstueck, das immer laeuft, ist wieder nur Hintergrundmusik und damit kein Charakterstueck.
+Waehle genau einen Anlass und begruende ihn im PR-Text; naheliegend ist der Moment, in dem das
+Wesen im Spielmodus zum ersten Mal an einem Tag erscheint, oder ein ausdruecklich vom Nutzer
+ausgeloester Anlass.
+
+`PlayMusic.decide` bleibt unveraendert: Der Nutzer entscheidet weiterhin, OB ueberhaupt Musik
+laufen darf. Das Charakterstueck aendert nur, WAS die Welt vorschlaegt.
+
+**Zum Budget - lies `DockScreen.kt` nicht als Ganzes.** Die Datei hat 3.984 Zeilen, und genau
+daran ist diese Aufgabe als Teil von ITO-0016 dreimal gescheitert. Suche mit Grep gezielt nach
+`PlayMusic`, `MusicRole` und `currentPlace` und lies nur die Umgebung der Treffer. Die
+Musikentscheidung selbst steht in `PlayMusic.kt` (334 Zeilen), das ist die kleinere und
+wichtigere Datei.
+
+Tests als gewoehnliche JUnit-Klassen unter `app-sim/src/test/java/com/notime/glyphsim/`;
+`tools/reaction-preview/tests.sh` nicht anfassen (Endung `.sh` ist gesperrt).
 
 ## [open] ITO-0017 - Themensong fuer PUFFLING schreiben (Prompt und Manifest)
 Schreibe Prompt und Manifest-Eintrag fuer das Charakterstueck von **PUFFLING**. Setzt ITO-0016
