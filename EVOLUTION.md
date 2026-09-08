@@ -1939,3 +1939,35 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   und genau dafuer ist diese Aenderung da. Blind neu anzustossen waere die Alternative gewesen -
   und ein Fehlschlag ohne bekannte Ursache, den man einfach noch einmal wuerfelt, ist kein
   Befund, sondern eine Hoffnung.
+
+### 2026-09-08 - Das Turn-Budget geht fuers Lesen drauf, nicht fuers Arbeiten
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich am Backlog-Text;
+  kein Code, kein Workflow.
+- **BEOBACHTET, jetzt endlich lesbar:** Die Builder-Sitzungen der Laeufe 34273049230 und
+  34279293146 sind beide mit demselben Befund ausgestiegen:
+
+      {"subtype":"error_max_turns","is_error":true,"num_turns":81,
+       "stop_reason":"tool_use","permission_denials":[]}
+
+  81 Turns bei einem Budget von 80. `permission_denials` leer - der Builder hat sich an keiner
+  Sperre aufgerieben, ihm ging schlicht das Kontingent aus, mitten im Werkzeuggebrauch.
+- **URSACHE, gemessen:** ITO-0016 buendelte zwei Dinge. Die Mechanik (Rolle, Zuordnung Spezies ->
+  Variante) beruehrt kleine Dateien: `PlayMusicPlan.kt` 198 Zeilen, `AvatarSpecies.kt` 103. Die
+  Frage "wann laeuft das Thema" zwingt dagegen zum Lesen von `DockScreen.kt` mit **3.984 Zeilen**,
+  dazu `PlayMusic.kt` mit 334 - und das zusaetzlich zu den drei Pflichtdokumenten am Anfang jeder
+  Sitzung. Das Budget war aufgebraucht, bevor die eigentliche Arbeit begann.
+- **Warum Lauf 1 durchkam:** 10,2 Minuten, knapp innerhalb der Grenze. Die Aufgabe lag genau auf
+  der Kante; zwei von drei Anlaeufen fielen darueber.
+- **Umgesetzt:** ITO-0016 auf die Mechanik reduziert und ausdruecklich mit dem Verbot versehen,
+  `DockScreen.kt` und `PlayMusic.kt` anzufassen. Die Abspiel-Entscheidung steht jetzt als
+  ITO-0023 direkt darunter, mit dem Hinweis, `DockScreen.kt` nicht als Ganzes zu lesen, sondern
+  gezielt nach `PlayMusic`, `MusicRole` und `currentPlace` zu greppen.
+- **Warum nicht einfach das Budget hochsetzen:** Das waere die schnellere Antwort und die
+  schlechtere. Der Builder-Prompt verlangt selbst "Genau eine Evolution. Aendere so wenige Dateien
+  wie moeglich" - mein Eintrag hat gegen genau diesen Grundsatz verstossen, indem er Mechanik und
+  Anbindung buendelte. Ein groesseres Budget haette den Fehler im Auftrag bezahlt statt ihn zu
+  beheben, und jeder Lauf waere teurer geworden.
+- **Was die Annotation aus dem Eintrag darueber wert war:** Ohne sie stuende hier eine Vermutung.
+  Die Diagnose lag zweimal vor und war zweimal unerreichbar; erst der dritte Lauf konnte sie
+  ausliefern. Das ist der ganze Unterschied zwischen "wahrscheinlich das Turn-Limit" und 81.
