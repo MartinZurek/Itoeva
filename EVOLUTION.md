@@ -1837,3 +1837,44 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **NICHT belegt:** Ob drei Minuten die richtige Laenge sind und ob 5 und 2 sich beim Zusehen
   richtig anfuehlen. Das sind drei Zahlen, sie sind am Geraet zu beurteilen. Die Tests sichern die
   Regeln und ihre Grenzen ab; keiner kann sagen, ob der Tag sich dadurch anders anfuehlt.
+
+### 2026-09-08 - MOVE und GENERAL hatten keinen Moment zum Innehalten
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Geaendert wurden ausschliesslich Standzeiten;
+  kein einziges Bild ist neu, keins entfaellt.
+- **BEOBACHTET, gemessen statt geschaetzt:** Die Gesamtdauer der zwoelf Themen-Reaktionen reicht
+  von 1 390 ms (GENERAL) bis 3 920 ms (BOOK) - Faktor 2,8. Entscheidend ist aber nicht die Summe,
+  sondern die Mitte. Jede Reaktion endet mit 480 ms Ausklang; davor hielten **MOVE und GENERAL als
+  einzige nirgends laenger als 140 ms**:
+
+      MOVE      90,90,90,90,90,90,90,140,90,90,480    (9 von 11 Bildern auf 90 ms)
+      GENERAL   90,90,90,90,90,140,140,90,90,480      (7 von 10)
+      BOOK      140,90,620,620,90,90,620,620,...      (zwei Lese-Verweiler je Seite)
+
+- **URSACHE:** 90 ms ist die kuerzeste Standzeit der Datei. Bei diesem Tempo loest das Auge die
+  einzelnen Posen nicht auf - aus drei Spruengen wird ein Flimmern, aus einem Laeuten ein Klicken.
+  Das ist gemeint, wenn eine Reaktion "zu kurz" wirkt: nicht die Dauer, das fehlende Verweilen.
+- **Warum ausgerechnet diese beiden schwer wiegen:** MOVE ist mit Grundgewicht 5/3/4 das
+  meistgesehene Thema des Tages. GENERAL ist die Rueckfall-Reaktion fuer JEDE Bibliotheks-
+  Animation ohne eigenen Typ - wer sich etwas Eigenes gezeichnet hat, sah bisher genau dort am
+  wenigsten.
+- **Umgesetzt:** Jeder Sprungscheitel bekommt SLOW_MS, jede Landung BEAT_MS, der Abschlusssprung
+  ein neues LEAP_MS (420 ms). Bei GENERAL bekommt der Moment "Kopf hoch, Mund auf" - der einzige,
+  der "ich habe dich gehoert" sagt - dieselben 420 ms, statt so lang zu stehen wie eine
+  Zwischenschwingung. MOVE 1 430 -> 2 420 ms, GENERAL 1 390 -> 2 160 ms; schnelle Bilder von 9/11
+  auf 2/11 bzw. 7/10 auf 2/10, wobei die verbleibenden zwei je Reaktion der gemeinsame Abschluss
+  sind.
+- **Belegt:** `ReactionFingerprintTest` meldete GENAU zwei geaenderte Reaktionen und keine dritte -
+  der Nachweis, dass nichts anderes mitgewandert ist. Dazu `ReactionDwellTest`: jede Reaktion jeder
+  Spezies muss vor dem Ausklang irgendwo mindestens SLOW_MS verweilen. Gesamtstand 228 Tests.
+- **Was ausdruecklich NICHT geprueft wird:** Eine Mindestdauer oder eine Angleichung der Laengen.
+  BOOK darf dreimal so lang sein wie CREATIVITY - Lesen ist eine laengere Handlung als ein
+  Einfall.
+- **Ein Test, den ich wieder entfernt habe:** "keine Reaktion besteht ueberwiegend aus dem
+  schnellsten Takt" faellt auch fuer FOCUS (6/8), WORK (8/11), MEDICINE (7/11), DRINK (10/17) und
+  LOVE (5/11) - Reaktionen, die den eigentlichen Fehler gar nicht haben, sondern nur flott
+  geschnitten sind. Einen Test zu schreiben und danach den Code an die eigene nachtraegliche
+  Erfindung anzupassen waere die falsche Richtung. Die Zahlen stehen im KDoc von
+  `ReactionDwellTest`, damit die naechste Sitzung sie nicht neu erheben muss; WORK waere der
+  naechste Kandidat.
+- **NICHT belegt:** Ob 2 420 ms fuer MOVE richtig sind. Das ist am Geraet zu beurteilen.
