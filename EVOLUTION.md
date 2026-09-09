@@ -2027,3 +2027,28 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Weiterhin offen:** Der Builder liegt mit 83 Turns ueber dem Budget von 80. Das ist laut
   Workflow rein diagnostisch - die Sitzung lieferte ein vollstaendiges Ergebnis - aber es zeigt,
   dass ITO-0023 auch nach dem Zuschnitt am oberen Rand arbeitet.
+
+### 2026-09-09 - Der Testname allein sagt nicht, warum der Test fiel
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Ein erweitertes Filtermuster in der
+  Verify-Annotation; sonst nichts.
+- **BEOBACHTET, und es ist zweifacher Fortschritt:** Der dritte Anlauf auf ITO-0023 (Lauf
+  34377934139) hat den Namenskonflikt vermieden - der benannte Stolperstein hat gewirkt. Zwei
+  Zahlen belegen es: **83 -> 61 Turns**, und der Kompilierfehler mit achtzehn Zeilen ist weg.
+  Gescheitert ist jetzt ein einzelner Test:
+
+      PlayCharacterThemeTest > das Zeitfenster verklingt von selbst FAILED
+
+- **Was fehlte:** Die Begruendung. JUnit schreibt den Testnamen mit `FAILED` an den linken Rand,
+  die Ursache (`expected:<...> but was:<...>`) aber EINGERUECKT in die naechste Zeile. Das
+  Filtermuster kannte nur linksbuendige Formen und lieferte deshalb "Test X ist gefallen", ohne
+  zu sagen, was erwartet wurde.
+- **Umgesetzt:** Das Muster nimmt zusaetzlich `AssertionError`, `expected:`, `but was:` und
+  `Caused by:` auf und laesst 40 statt 25 Zeilen durch - ein Stapel mit Kompilierfehlern UND
+  Testausgabe braucht mehr Platz.
+- **Belegt:** An einer echten JUnit-Ausgabe durchgespielt; `expected:<false> but was:<true>` kommt
+  jetzt mit. Dazu `bash -n` und YAML-Gueltigkeit.
+- **Die Einsicht dahinter:** Instrumentierung ist nicht einmal fertig, sondern folgt dem Fehler.
+  Erst war unklar, WARUM die Sitzung abbrach; dann, DASS der Bau rot war; dann, WELCHE Datei; jetzt
+  WARUM ein Test faellt. Jede Stufe wurde erst sichtbar, als die darueber behoben war - und jede
+  hat einen Lauf gekostet, weil bei rotem `evolve` nichts gepusht wird.

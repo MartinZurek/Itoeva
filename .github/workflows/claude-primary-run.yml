@@ -1006,8 +1006,12 @@ jobs:
           [ -f "$L" ] || { echo "::warning::Kein verify.log - der Schritt kam nicht so weit."; exit 0; }
           # Kotlin meldet Uebersetzungsfehler als "e: ", Gradle das fehlgeschlagene Ziel als
           # "> Task ... FAILED", JUnit den Test als "FAILED" hinter dem Testnamen.
-          AUSZUG="$(grep -E '^e: |FAILED|^\* What went wrong|^Execution failed' "$L" \
-                    | grep -v '^\s*$' | head -25 || true)"
+          # Warum die eingerueckten Zeilen mitmuessen: JUnit schreibt den Testnamen mit FAILED
+          # an den Rand, die BEGRUENDUNG aber eingerueckt in die naechste Zeile. Ein Filter, der
+          # nur linksbuendige Muster kennt, liefert deshalb "Test X FAILED" ohne zu sagen, was
+          # erwartet wurde - genau daran bin ich am 2026-09-09 haengengeblieben (Lauf 34377934139).
+          AUSZUG="$(grep -E '^e: |FAILED|^\* What went wrong|^Execution failed|AssertionError|expected:|but was:|^Caused by:' "$L" \
+                    | grep -v '^\s*$' | head -40 || true)"
           if [ -z "$AUSZUG" ]; then
             echo "::error title=gradlew verify::Fehlgeschlagen, aber keine erkannte Fehlerzeile - siehe Protokoll."
             exit 0
