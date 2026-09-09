@@ -93,6 +93,7 @@ import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayChime
+import com.notime.glyphsim.matrix.PlayCharacterTheme
 import com.notime.glyphsim.matrix.PlayOutdoorStay
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
@@ -702,6 +703,35 @@ fun DockScreen(
             }
         }
         /**
+         * **Der eine Anlass fuer das Charakterstueck** - die ganze Begruendung steht in
+         * [PlayCharacterTheme].
+         *
+         * Der Effekt setzt nur eine Zustandsvariable; abgespielt wird nichts von hier aus. Weil
+         * [themeSpecies] ein Schluessel des Musik-Effekts darunter ist, wirken Anfang und Ende
+         * der Begruessung sofort - und nicht erst beim naechsten Abgleich in dreissig Sekunden.
+         *
+         * **Der Bildschirm gehoert zu den Schluesseln.** Wer weggeht, bricht die Begruessung ab,
+         * ohne sie zu verbrauchen (der Effekt wird abgebrochen, bevor er sie festhaelt) - und
+         * bekommt sie beim Zurueckkommen von vorn.
+         */
+        var themeSpecies by remember(presenceProfileId) { mutableStateOf<AvatarSpecies?>(null) }
+        LaunchedEffect(playMode, screenVisible, presenceProfileId) {
+            themeSpecies = null
+            if (!playMode || !screenVisible) return@LaunchedEffect
+            // Ist Musik ausgeschaltet, findet der Anlass nicht statt - und wird deshalb auch
+            // nicht verbraucht. Sonst waere er bei ausgeschalteter Musik jeden Tag lautlos
+            // aufgebraucht, und wer den Schalter mittags umlegt, hoerte sein Wesen nie. Das ist
+            // ein LESEN der Einstellung und kein Einschalten; die Sperre selbst bleibt allein
+            // bei [PlayMusic].
+            if (!PlayMusic.isEnabled(context)) return@LaunchedEffect
+            val greeting = AvatarSpeciesPrefs.get(context)
+            if (!PlayCharacterThemeLog.isDue(context, greeting)) return@LaunchedEffect
+            themeSpecies = greeting
+            delay(PlayCharacterTheme.GREETING_MS)
+            themeSpecies = null
+            PlayCharacterThemeLog.greeted(context, greeting)
+        }
+        /**
          * **Musik an die Lage angleichen** - siehe [PlayMusic.apply] und `MusicResolver`.
          *
          * Der Neustart bei [currentPlace] laesst einen Ortswechsel sofort wirken; die Schleife
@@ -714,7 +744,7 @@ fun DockScreen(
          * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
          * allein [PlayMusic]; welche passt, allein der Resolver.
          */
-        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic) {
+        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, themeSpecies) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
                 return@LaunchedEffect
@@ -725,7 +755,8 @@ fun DockScreen(
                     MusicContext(
                         dayPhase = PlayAmbientActivity.currentDayPhase(),
                         place = currentPlace,
-                        topic = currentTopic
+                        topic = currentTopic,
+                        characterTheme = themeSpecies
                     )
                 )
                 delay(MUSIC_RECHECK_MS)

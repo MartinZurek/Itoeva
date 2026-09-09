@@ -69,9 +69,13 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
      * frei zwischen mehreren Stuecken derselben Stimmung: Variante 1 bis 6 gehoeren fest je
      * einer Spezies, siehe [characterThemeVariant].
      *
-     * Die sechs Stuecke selbst sind noch nicht Teil dieser Aenderung (siehe ITO-0017 bis
-     * ITO-0022 in `evolutions/BACKLOG.md`); wann dieses Thema statt der lagebasierten Musik
-     * erklingt, ebenfalls nicht (siehe ITO-0023).
+     * **Wann** es erklingt, steht in [PlayCharacterTheme]: beim ersten Erscheinen des Wesens an
+     * einem Kalendertag, ein Stueck lang - und ausdruecklich nicht als Dauerschleife anstelle
+     * des Tagesklangs.
+     *
+     * Die sechs Stuecke selbst sind noch nicht ausgeliefert (siehe ITO-0017 bis ITO-0022 in
+     * `evolutions/BACKLOG.md`). Bis dahin greift die gewoehnliche Rangfolge: Fehlt das Stueck,
+     * klingt der Tag wie sonst.
      */
     CHARACTER_THEME("character_theme_background", "itoeva_theme");
 
@@ -132,7 +136,15 @@ data class MusicContext(
      * kann sie auch nur ankommen oder warten. Ein spezifischer Aktivitaets-Track darf erst dann
      * uebernehmen, wenn Ort UND Beschaeftigung dieselbe Geschichte erzaehlen.
      */
-    val topic: AnimationType? = null
+    val topic: AnimationType? = null,
+    /**
+     * Das Wesen, dessen eigenes Stueck gerade an der Reihe ist - im Normalfall `null`.
+     *
+     * Nicht "welches Wesen anwesend ist": Das ist es immer, und ein daran haengendes Stueck waere
+     * eine Dauerschleife. Gesetzt ist dieses Feld nur, solange der Anlass laeuft, den
+     * [PlayCharacterTheme] beschreibt.
+     */
+    val characterTheme: AvatarSpecies? = null
 )
 
 /**
@@ -175,6 +187,13 @@ object MusicResolver {
      * wenn es beide heute noch gar nicht gibt.
      */
     fun candidates(context: MusicContext): List<MusicRole> = buildList {
+        // **Ganz vorn und ohne Ruecksicht auf Tageszeit und Ort** - aber nur, solange der Anlass
+        // laeuft (siehe [PlayCharacterTheme]). Das Stueck beschreibt das Wesen und nicht die
+        // Lage; es waere die falsche Reihenfolge, ein Wiedersehen von der Uhrzeit abhaengig zu
+        // machen. Die uebrigen Kandidaten bleiben trotzdem stehen: Fehlt das Stueck dieses
+        // Wesens noch, klingt der Tag wie sonst statt still zu werden.
+        if (context.characterTheme != null) add(MusicRole.CHARACTER_THEME)
+
         // Eine echte Sporthandlung schlaegt die Tageszeit, solange es nicht Nacht ist. Der Ort
         // allein genuegt absichtlich nicht: Ein kurzer Weg oder eine Pause am Sportplatz soll
         // spaeter keinen energischen Track starten und gleich wieder abbrechen.
