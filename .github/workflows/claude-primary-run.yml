@@ -982,8 +982,38 @@ jobs:
           fi
 
       - name: gradlew verify
+        id: verify
         timeout-minutes: 45
-        run: ./gradlew verify --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew verify --stacktrace 2>&1 | tee "$RUNNER_TEMP/verify.log"
+
+      # **Warum der Fehler zusaetzlich als Annotation herausgeht.**
+      #
+      # Am 2026-09-09 hat der Builder fuer ITO-0023 eine vollstaendige Aenderung geliefert
+      # (27 kB Diff, is_error false) - und `gradlew verify` fiel. Welcher Uebersetzungsfehler
+      # oder welcher Test, stand ausschliesslich in der Protokollmitte und im Bericht-Artefakt;
+      # beides ist ueber die API nicht erreichbar (das Protokoll wird nur vom Ende geliefert,
+      # das Artefakt liegt auf einem Blob-Speicher, den nicht jede Umgebung erreicht).
+      #
+      # Dieselbe Ueberlegung wie bei der Builder-Diagnose weiter oben: Eine Verifikation, deren
+      # Ergebnis man nur mit Browser und Maus lesen kann, hilft einem unbeaufsichtigten Lauf
+      # nicht. Hier reichen die Zeilen, die Kotlin und Gradle ohnehin als Fehler markieren.
+      - name: Verify-Fehler als Annotation
+        if: failure() && steps.verify.outcome == 'failure'
+        run: |
+          L="$RUNNER_TEMP/verify.log"
+          [ -f "$L" ] || { echo "::warning::Kein verify.log - der Schritt kam nicht so weit."; exit 0; }
+          # Kotlin meldet Uebersetzungsfehler als "e: ", Gradle das fehlgeschlagene Ziel als
+          # "> Task ... FAILED", JUnit den Test als "FAILED" hinter dem Testnamen.
+          AUSZUG="$(grep -E '^e: |FAILED|^\* What went wrong|^Execution failed' "$L" \
+                    | grep -v '^\s*$' | head -25 || true)"
+          if [ -z "$AUSZUG" ]; then
+            echo "::error title=gradlew verify::Fehlgeschlagen, aber keine erkannte Fehlerzeile - siehe Protokoll."
+            exit 0
+          fi
+          # Annotationen sind einzeilig; %0A ist der Zeilenumbruch in Workflow-Kommandos.
+          printf '::error title=gradlew verify::%s\n' "$(printf '%s' "$AUSZUG" | sed 's/%/%25/g; s/\r/ /g' | awk '{printf "%s%%0A", $0}')"
 
       - name: KVM freigeben
         if: steps.gates.outputs.need_sim == 'true' || steps.gates.outputs.need_app == 'true'

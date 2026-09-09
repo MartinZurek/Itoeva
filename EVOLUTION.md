@@ -1971,3 +1971,31 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Was die Annotation aus dem Eintrag darueber wert war:** Ohne sie stuende hier eine Vermutung.
   Die Diagnose lag zweimal vor und war zweimal unerreichbar; erst der dritte Lauf konnte sie
   ausliefern. Das ist der ganze Unterschied zwischen "wahrscheinlich das Turn-Limit" und 81.
+
+### 2026-09-09 - Auch der Build muss sagen duerfen, woran er gescheitert ist
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich an der
+  Fehlerausgabe von `gradlew verify` in `claude-primary-run.yml`; keine Gates verschoben, kein
+  Anwendungscode.
+- **BEOBACHTET:** Lauf 34346668497 hat ITO-0023 gezogen, und der Builder hat geliefert -
+  `is_error: false`, 27 kB Diff, 404 Bytes Dateiliste. Gescheitert ist danach `gradlew verify`
+  nach 6,5 Minuten. **Welcher** Uebersetzungsfehler oder welcher Test, war nicht zu ermitteln: Das
+  Protokoll gibt die API nur vom Ende her heraus, die Testberichte liegen im selben
+  Blob-Speicher wie das Diagnosepaket.
+- **Dieselbe Wand, eine Ebene tiefer.** Am Vortag war es die Builder-Diagnose, jetzt die
+  Verifikation. Die Lehre ist dieselbe: Was ein unbeaufsichtigter Lauf nicht ueber die API
+  ausliefert, existiert fuer die naechste Sitzung nicht.
+- **Umgesetzt:** `gradlew verify` schreibt seine Ausgabe zusaetzlich nach `$RUNNER_TEMP/verify.log`
+  (`tee` mit `set -o pipefail`, damit der Exitcode der von Gradle bleibt und nicht der von `tee`).
+  Ein Folgeschritt greift bei Fehlschlag die Zeilen heraus, die Kotlin und Gradle ohnehin als
+  Fehler markieren - `e: `, `... FAILED`, `* What went wrong`, `Execution failed` - und gibt sie
+  als `::error`-Annotation aus, hoechstens 25 Zeilen.
+- **Belegt:** `bash -n` ueber beide Schritte, YAML-Gueltigkeit, und die Extraktion an einer echten
+  Kotlin-/Gradle-Ausgabe durchgespielt: Dateiname, Zeile, Spalte und Meldung kommen vollstaendig
+  an. Gegenprobe mit einer Ausgabe ohne erkennbare Fehlerzeile - dort erscheint ein
+  ausdruecklicher Hinweis statt einer leeren Annotation.
+- **Was das kostet, wenn man es NICHT hat:** Bei rotem `evolve` wird nichts gepusht. Die 27 kB
+  fertige Arbeit sind weg, und der naechste Lauf faengt von vorn an. Ein Fehlschlag, dessen
+  Ursache man nicht lesen kann, kostet deshalb nicht einen Blick ins Protokoll, sondern einen
+  ganzen Lauf.
+- **NICHT geloest:** Woran ITO-0023 konkret gescheitert ist. Das beantwortet der naechste Lauf.
