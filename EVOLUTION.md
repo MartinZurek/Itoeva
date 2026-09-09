@@ -1999,3 +1999,31 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Ursache man nicht lesen kann, kostet deshalb nicht einen Blick ins Protokoll, sondern einen
   ganzen Lauf.
 - **NICHT geloest:** Woran ITO-0023 konkret gescheitert ist. Das beantwortet der naechste Lauf.
+
+### 2026-09-09 - Die Verify-Annotation hat sich beim ersten Einsatz bezahlt gemacht
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich am Backlog-Text.
+- **BEOBACHTET:** Der erste Lauf nach dem Merge der Verify-Annotation (34352208047) ist wieder an
+  `gradlew verify` gescheitert - diesmal aber lesbar:
+
+      > Task :app-sim:compileDebugUnitTestKotlin FAILED
+      e: .../PlayCharacterThemeTest.kt:15:15 Redeclaration:
+      e: .../PlayLoreTest.kt:22:60 Cannot access 'class InMemoryPrefsContext': it is private in file.
+      (und siebzehn weitere derselben Art)
+
+- **URSACHE, am Bestand geprueft statt aus der Meldung geschlossen:**
+  `app-sim/src/test/java/com/notime/glyphsim/ui/PlayLoreTest.kt:17` deklariert bereits
+  `private class InMemoryPrefsContext : ContextWrapper(null)`. Der Builder hat im selben Paket
+  eine zweite Klasse desselben Namens angelegt. Dass beide `private` sind, hilft nicht: In Kotlin
+  kollidieren zwei Top-Level-Klassen gleichen Namens im selben Paket unabhaengig von ihrer
+  Sichtbarkeit - und nach der Kollision ist auch der urspruengliche Verweis nicht mehr eindeutig.
+- **Umgesetzt:** ITO-0023 nennt den Stolperstein jetzt beim Namen, mit Datei und Zeile, und sagt,
+  was stattdessen zu tun ist (eigener Name statt Verschieben oder Oeffentlichmachen der
+  vorhandenen Klasse - Letzteres waere eine zweite Aenderung in einer fremden Datei).
+- **Was das ueber die Annotation sagt:** Beim vorigen Lauf war exakt derselbe Fehlertyp
+  aufgetreten und blieb unauffindbar; ich konnte nur feststellen, DASS `gradlew verify` fiel. Der
+  Unterschied zwischen "der Bau ist rot" und achtzehn Zeilen mit Datei, Zeile und Spalte ist der
+  Unterschied zwischen einem verlorenen Lauf und einer behebbaren Aufgabe.
+- **Weiterhin offen:** Der Builder liegt mit 83 Turns ueber dem Budget von 80. Das ist laut
+  Workflow rein diagnostisch - die Sitzung lieferte ein vollstaendiges Ergebnis - aber es zeigt,
+  dass ITO-0023 auch nach dem Zuschnitt am oberen Rand arbeitet.
