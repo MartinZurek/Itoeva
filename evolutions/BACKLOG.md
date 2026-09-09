@@ -127,6 +127,22 @@ wichtigere Datei.
 Tests als gewoehnliche JUnit-Klassen unter `app-sim/src/test/java/com/notime/glyphsim/`;
 `tools/reaction-preview/tests.sh` nicht anfassen (Endung `.sh` ist gesperrt).
 
+**Ein konkreter Stolperstein, an dem diese Aufgabe schon einmal gescheitert ist** (Lauf
+34352208047): Im Paket `com.notime.glyphsim.ui` existiert bereits eine Hilfsklasse
+
+    app-sim/src/test/java/com/notime/glyphsim/ui/PlayLoreTest.kt:17
+    private class InMemoryPrefsContext : ContextWrapper(null)
+
+Wer im selben Paket eine zweite Klasse dieses Namens anlegt, bekommt `Redeclaration`, und
+danach findet `PlayLoreTest` seine eigene Klasse nicht mehr - der Bau scheitert mit achtzehn
+Fehlerzeilen. **`private` schuetzt davor nicht:** In Kotlin kollidieren zwei Top-Level-Klassen
+gleichen Namens im selben Paket unabhaengig von ihrer Sichtbarkeit.
+
+Brauchst du einen falschen `Context`, gib ihm einen Namen, der zu DEINEM Test gehoert (etwa
+`CharacterThemePrefsContext`). Verschiebe die vorhandene Klasse nicht und mache sie nicht
+oeffentlich - das waere eine zweite Aenderung in einer fremden Datei und gehoert nicht zu
+dieser Aufgabe.
+
 ## [open] ITO-0017 - Themensong fuer PUFFLING schreiben (Prompt und Manifest)
 Schreibe Prompt und Manifest-Eintrag fuer das Charakterstueck von **PUFFLING**. Setzt ITO-0016
 voraus; ist die Rolle `character_theme_background` noch nicht vorhanden, brich mit einer klaren
