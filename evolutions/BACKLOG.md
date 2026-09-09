@@ -55,7 +55,7 @@ verlangt, laesst den Lauf scheitern, NACHDEM die eigentliche Arbeit fertig ist -
 verloren, weil nichts gepusht wird. Das ist am 2026-09-08 mit ITO-0016 passiert: Der Eintrag
 verlangte einen Eintrag in `tools/reaction-preview/tests.sh`.
 
-## [open] ITO-0016 - Charakter-Themensong: die Rolle bauen, noch ohne Audio
+## [done] ITO-0016 - Charakter-Themensong: die Rolle bauen, noch ohne Audio
 Lege die Grundlage dafuer, dass **jedes Wesen sein eigenes Musikstueck** bekommt - erkennbar als
 sein Thema, nicht als weitere Hintergrundschleife.
 
