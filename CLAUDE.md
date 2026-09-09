@@ -12,6 +12,12 @@ Produktvision, den Stand des täglichen Evolutionsauftrags und die Trennung zwis
 entschiedenen Zielen und noch nicht freigegebener Umsetzung. Sie ist Kontext, keine pauschale
 Aufforderung, Twitch-, YouTube-, Netzwerk- oder Bezahlfunktionen sofort zu bauen.
 
+## Uebergabe
+
+[`UEBERGABE.md`](UEBERGABE.md) haelt fest, wo der Faden gerade liegt, welche Regeln fuer die
+Musik gelten und welche Fallen in diesem Baum schon zugeschnappt sind. Wer neu dazukommt, liest
+sie nach dem Briefing.
+
 ## Arbeitsweise
 
 - Vor Änderungen immer zuerst den aktuellen Git-Status prüfen (`git status`).
