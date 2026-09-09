@@ -149,7 +149,7 @@ Brauchst du einen falschen `Context`, gib ihm einen Namen, der zu DEINEM Test ge
 oeffentlich - das waere eine zweite Aenderung in einer fremden Datei und gehoert nicht zu
 dieser Aufgabe.
 
-## [open] ITO-0017 - Themensong fuer PUFFLING schreiben (Prompt und Manifest)
+## [done] ITO-0017 - Themensong fuer PUFFLING schreiben (Prompt und Manifest)
 Schreibe Prompt und Manifest-Eintrag fuer das Charakterstueck von **PUFFLING**. Setzt ITO-0016
 voraus; ist die Rolle `character_theme_background` noch nicht vorhanden, brich mit einer klaren
 Meldung ab, statt sie nebenbei mit anzulegen.
