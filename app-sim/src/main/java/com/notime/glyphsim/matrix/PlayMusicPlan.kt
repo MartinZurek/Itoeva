@@ -61,7 +61,19 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
     SPORT("sport_background", "itoeva_sport"),
 
     /** Traum-Szenen. Bewusst schon benannt, damit sie spaeter keine Sonderregel brauchen. */
-    DREAM("dream_background", "itoeva_dream");
+    DREAM("dream_background", "itoeva_dream"),
+
+    /**
+     * Das persoenliche Musikstueck des anwesenden Wesens - sein eigenes Thema, nicht eine
+     * weitere Hintergrundschleife. Anders als jede andere Rolle hier rotiert die Variante nicht
+     * frei zwischen mehreren Stuecken derselben Stimmung: Variante 1 bis 6 gehoeren fest je
+     * einer Spezies, siehe [characterThemeVariant].
+     *
+     * Die sechs Stuecke selbst sind noch nicht Teil dieser Aenderung (siehe ITO-0017 bis
+     * ITO-0022 in `evolutions/BACKLOG.md`); wann dieses Thema statt der lagebasierten Musik
+     * erklingt, ebenfalls nicht (siehe ITO-0023).
+     */
+    CHARACTER_THEME("character_theme_background", "itoeva_theme");
 
     /**
      * Der Ressourcenname der [variant]-ten Datei dieser Rolle, eins-basiert.
@@ -90,6 +102,17 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
         const val MAX_VARIANTS = 8
 
         fun byManifestName(name: String): MusicRole? = entries.firstOrNull { it.manifestName == name }
+
+        /**
+         * Die [CHARACTER_THEME]-Variante von [species] - eins-basiert nach der
+         * Deklarationsreihenfolge in [AvatarSpecies], nicht nach einer separat gepflegten
+         * Zahlentabelle.
+         *
+         * Auf [AvatarSpecies.entries]`.indexOf` gestuetzt, damit eine spaeter angehaengte
+         * siebte Spezies automatisch eine neue, noch unbelegte Variante bekommt - statt
+         * stillschweigend das Thema eines bestehenden Wesens zu uebernehmen.
+         */
+        fun characterThemeVariant(species: AvatarSpecies): Int = AvatarSpecies.entries.indexOf(species) + 1
     }
 }
 

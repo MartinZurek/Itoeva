@@ -38,6 +38,7 @@ SUPPORTED_ROLES = {
     "morning_background",
     "sport_background",
     "dream_background",
+    "character_theme_background",
 }
 
 # libsndfile crashes on one large Vorbis write - see write_vorbis().
