@@ -173,6 +173,97 @@ class MusicResolverTest {
         }
     }
 
+    // ================= Das Charakterstueck =================
+    //
+    // Siehe [PlayCharacterTheme] fuer den Anlass. Hier steht nur, was der Resolver daraus macht.
+
+    private val mitThema = heute + MusicRole.CHARACTER_THEME
+
+    @Test
+    fun `waehrend der Begruessung steht das Charakterstueck vor allem anderen`() {
+        val lagen = listOf(
+            ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.PARK),
+            ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.LIVING),
+            ctx(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.KITCHEN),
+            ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT, AnimationType.MOVE)
+        )
+        for (lage in lagen) {
+            val begruessung = lage.copy(characterTheme = AvatarSpecies.WYRMLING)
+            assertEquals(
+                "$lage",
+                MusicRole.CHARACTER_THEME,
+                MusicResolver.candidates(begruessung).first()
+            )
+            assertEquals(
+                "$lage",
+                MusicRole.CHARACTER_THEME,
+                MusicResolver.resolve(begruessung, mitThema + MusicRole.SPORT)
+            )
+        }
+    }
+
+    /**
+     * **Die Grenze zur Dauerschleife.** Ohne gesetztes Feld kommt die Rolle in keiner Lage vor -
+     * das Charakterstueck ist ein Anlass und kein Ort in der Rangfolge.
+     */
+    @Test
+    fun `ohne Anlass taucht das Charakterstueck nirgends auf`() {
+        for (phase in PlayAmbientActivity.DayPhase.entries) {
+            for (place in PlayScene.Place.entries) {
+                for (topic in listOf(null, AnimationType.MOVE, AnimationType.REST)) {
+                    val k = MusicResolver.candidates(ctx(phase, place, topic))
+                    assertTrue("$phase / $place / $topic", MusicRole.CHARACTER_THEME !in k)
+                }
+            }
+        }
+    }
+
+    /**
+     * Fehlt das Stueck noch, klingt der Tag wie sonst - **nicht** still. Das ist der heutige
+     * Auslieferungsstand fuer alle sechs Wesen und deshalb der wichtigere der beiden Faelle.
+     */
+    @Test
+    fun `ohne ausgeliefertes Stueck bleibt die gewoehnliche Rangfolge`() {
+        val begruessung = ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.PARK)
+            .copy(characterTheme = AvatarSpecies.PUFFLING)
+        assertEquals(MusicRole.MAIN_DAY, MusicResolver.resolve(begruessung, heute))
+    }
+
+    /**
+     * Auch nachts. [MusicResolver] laesst nachts bewusst keinen Tagesklang zu; ein Wiedersehen
+     * ist trotzdem eines - siehe die Begruendung in [PlayCharacterTheme].
+     */
+    @Test
+    fun `nachts begruesst das Wesen trotzdem`() {
+        val nachts = ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.BEDROOM)
+            .copy(characterTheme = AvatarSpecies.HOOTLET)
+        assertEquals(MusicRole.CHARACTER_THEME, MusicResolver.resolve(nachts, mitThema))
+        // Und danach wieder das, was die Nacht zulaesst.
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.resolve(nachts.copy(characterTheme = null), mitThema)
+        )
+    }
+
+    @Test
+    fun `jedes Wesen hat seine eigene Variante`() {
+        val varianten = AvatarSpecies.entries.map { MusicRole.characterThemeVariant(it) }
+        assertEquals(AvatarSpecies.entries.size, varianten.distinct().size)
+        assertEquals(1, varianten.min())
+        assertEquals(AvatarSpecies.entries.size, varianten.max())
+        // Die Zuordnung im Backlog (ITO-0017 bis ITO-0022) haengt an genau diesen Dateinamen.
+        assertEquals(
+            "itoeva_theme_01",
+            MusicRole.CHARACTER_THEME.variantResource(
+                MusicRole.characterThemeVariant(AvatarSpecies.PUFFLING)
+            )
+        )
+        assertTrue(
+            "sechs Wesen passen in MAX_VARIANTS",
+            AvatarSpecies.entries.size <= MusicRole.MAX_VARIANTS
+        )
+    }
+
     // ================= Rollen und Manifest =================
 
     /**

@@ -103,7 +103,13 @@ Fasse `DockScreen.kt` und `PlayMusic.kt` hier deshalb gar nicht an.
 Nicht anfassen: die drei vorhandenen Tracks, `PlayMusicRotation`, `tools/music/audio_polish.py`
 und das Freigabe-Gate. Keine zweite Musikpipeline. Keine kostenpflichtige API.
 
-## [open] ITO-0023 - Charakter-Themensong: wann er abgespielt wird
+## [done] ITO-0023 - Charakter-Themensong: wann er abgespielt wird
+**Erledigt ausserhalb der Pipeline.** Vier Builder-Laeufe sind an dieser Aufgabe gescheitert -
+dreimal am Zugbudget, einmal an einem abgebrochenen Lauf; umgesetzt wurde sie am Ende von Hand
+in einer Sitzung. Gewaehlter Anlass: **das erste Erscheinen des Wesens im Spielmodus an einem
+Kalendertag**, ein Stueck lang. Die Begruendung steht vollstaendig im KDoc von
+`app-sim/src/main/java/com/notime/glyphsim/matrix/PlayCharacterTheme.kt`.
+
 Setzt ITO-0016 voraus (Rolle `CHARACTER_THEME` und die Zuordnung Spezies -> Variante). Ist die
 Rolle noch nicht vorhanden, brich mit einer klaren Meldung ab, statt sie nebenbei anzulegen.
 

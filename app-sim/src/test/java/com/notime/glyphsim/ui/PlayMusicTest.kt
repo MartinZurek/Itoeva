@@ -1,8 +1,10 @@
 package com.notime.glyphsim.ui
 
+import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.MusicContext
 import com.notime.glyphsim.matrix.MusicRole
 import com.notime.glyphsim.matrix.PlayAmbientActivity
+import com.notime.glyphsim.matrix.PlayCharacterTheme
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.settings.SettingsCatalog
 import org.junit.Assert.assertEquals
@@ -110,6 +112,69 @@ class PlayMusicTest {
         assertNull(decide(otherAudioActive = true, deviceSilent = true))
         assertNull(decide(enabled = false, deviceSilent = true, available = emptySet()))
     }
+
+    // ================= Das Charakterstueck =================
+
+    private val begruessung = mittagsImPark.copy(characterTheme = AvatarSpecies.WYRMLING)
+
+    /** Variante 3 gehoert dem Wyrmling - und nur die darf es zu hoeren bekommen. */
+    private val wyrmlingVariante = MusicRole.characterThemeVariant(AvatarSpecies.WYRMLING)
+
+    /**
+     * **Der Fall, den es heute fuer fuenf von sechs Wesen gibt.** Sobald ein einziges Themenstueck
+     * ausgeliefert ist, gilt die Rolle als vorhanden; ohne [PlayMusic.rolesFor] bekaeme das
+     * Wyrmling damit das Stueck des Pufflings zu hoeren.
+     */
+    @Test
+    fun `ein fremdes Themenstueck zaehlt nicht als das eigene`() {
+        val angebot = heute + MusicRole.CHARACTER_THEME
+        assertEquals(
+            angebot - MusicRole.CHARACTER_THEME,
+            PlayMusic.rolesFor(angebot, begruessung, characterThemeVariants = listOf(1))
+        )
+        assertEquals(
+            angebot,
+            PlayMusic.rolesFor(angebot, begruessung, listOf(1, wyrmlingVariante))
+        )
+    }
+
+    @Test
+    fun `ohne Anlass bleibt das Angebot unveraendert`() {
+        val angebot = heute + MusicRole.CHARACTER_THEME
+        // Ohne gesetztes Wesen faellt die Rolle heraus - der Resolver wuerde sie ohnehin nie
+        // vorschlagen, aber ein Angebot, das etwas Unerreichbares enthaelt, waere irrefuehrend.
+        assertEquals(heute, PlayMusic.rolesFor(angebot, mittagsImPark, listOf(1, 2, 3)))
+        // Und eine Rollenmenge ohne das Thema bleibt unangetastet.
+        assertEquals(heute, PlayMusic.rolesFor(heute, begruessung, emptyList()))
+    }
+
+    /**
+     * **Warum das Thema nicht rotieren darf.** Ueberall sonst sind mehrere Varianten mehrere
+     * Stuecke derselben Stimmung; hier gehoert jede einem Wesen. Ein Wechsel nach fuenf Minuten
+     * waere kein frischer Track, sondern ein anderes Wesen.
+     */
+    @Test
+    fun `die Variante des Themas steht fest, jede andere rotiert frei`() {
+        assertEquals(
+            wyrmlingVariante,
+            PlayMusic.fixedVariant(MusicRole.CHARACTER_THEME, begruessung)
+        )
+        assertNull(PlayMusic.fixedVariant(MusicRole.MAIN_DAY, begruessung))
+        assertNull(PlayMusic.fixedVariant(MusicRole.HOME_EVENING, begruessung))
+        assertNull(PlayMusic.fixedVariant(MusicRole.CHARACTER_THEME, mittagsImPark))
+    }
+
+    /**
+     * Die Laenge der Begruessung ist um genau eine Ueberblendung kuerzer als das Stueck (siehe
+     * [com.notime.glyphsim.matrix.PlayCharacterTheme]). Beide Zahlen stehen an ihrem eigenen Ort;
+     * dass sie zusammenpassen, soll ein Test sagen und nicht das Ohr.
+     */
+    @Test
+    fun `Begruessungsfenster und Ueberblendung passen zusammen`() {
+        assertEquals(PlayMusic.CROSSFADE_MS, PlayCharacterTheme.FADE_MS)
+    }
+
+    // ================= Die Ueberblendung =================
 
     @Test
     fun `Ueberblendung behaelt an Anfang Mitte und Ende ihre Energie`() {

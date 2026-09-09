@@ -90,7 +90,7 @@ object PlayMusic {
      * Lang genug, dass ein Tageszeit- oder Szenenwechsel wie ein Uebergang der Welt klingt,
      * kurz genug, dass die neue Lage nicht noch minutenlang den alten Score traegt.
      */
-    private const val CROSSFADE_MS = 4_000L
+    internal const val CROSSFADE_MS = 4_000L
 
     private var player: MediaPlayer? = null
     private var outgoingPlayer: MediaPlayer? = null
@@ -149,6 +149,46 @@ object PlayMusic {
     // --- Die Zusammenfuehrung -------------------------------------------------------------------
 
     /**
+     * Streicht [MusicRole.CHARACTER_THEME] wieder aus dem Angebot, wenn das Stueck GENAU DIESES
+     * Wesens fehlt - rein, damit sich der Fall pruefen laesst, den es heute noch fuer fuenf von
+     * sechs Wesen gibt.
+     *
+     * Ohne diesen Schritt genuegte eine einzige ausgelieferte Datei, damit die Rolle als
+     * vorhanden gilt ([availableRoles] fragt nur, ob es IRGENDEINE Variante gibt) - und dann
+     * bekaeme das Wyrmling zur Begruessung das Thema des Pufflings. Ein fremdes Stueck ist
+     * schlechter als gar keines: Es behauptet etwas ueber ein Wesen, das nicht stimmt.
+     *
+     * Faellt die Rolle hier heraus, bleibt es nicht still - [MusicResolver.candidates] fuehrt
+     * hinter dem Thema die gewoehnlichen Kandidaten, und der Tag klingt wie sonst.
+     */
+    internal fun rolesFor(
+        available: Set<MusicRole>,
+        musicContext: MusicContext,
+        characterThemeVariants: List<Int>
+    ): Set<MusicRole> {
+        if (MusicRole.CHARACTER_THEME !in available) return available
+        val eigenes = musicContext.characterTheme?.let(MusicRole.Companion::characterThemeVariant)
+        if (eigenes != null && eigenes in characterThemeVariants) return available
+        return available - MusicRole.CHARACTER_THEME
+    }
+
+    /**
+     * Die Variante, die bei dieser Lage FEST steht - oder `null`, wenn die Rolle frei rotieren
+     * darf.
+     *
+     * Der Unterschied ist der ganze Sinn der Rolle [MusicRole.CHARACTER_THEME]: Ueberall sonst
+     * sind mehrere Varianten mehrere Stuecke derselben Stimmung, zwischen denen
+     * [PlayMusicRotation] gegen Monotonie wechselt. Hier gehoert jede Variante einem Wesen. Ein
+     * Wechsel nach fuenf Minuten waere kein frischer Track, sondern ein anderes Wesen.
+     */
+    internal fun fixedVariant(role: MusicRole, musicContext: MusicContext): Int? =
+        if (role == MusicRole.CHARACTER_THEME) {
+            musicContext.characterTheme?.let(MusicRole.Companion::characterThemeVariant)
+        } else {
+            null
+        }
+
+    /**
      * Die vollstaendige Entscheidung, ohne Android - damit sie sich pruefen laesst.
      *
      * Die Reihenfolge ist der Punkt: **[enabled] steht vorn.** Ist es falsch, kommt der Resolver
@@ -180,7 +220,11 @@ object PlayMusic {
         val wanted = decide(
             enabled = isEnabled(context),
             context = musicContext,
-            available = availableRoles(context),
+            available = rolesFor(
+                available = availableRoles(context),
+                musicContext = musicContext,
+                characterThemeVariants = availableVariants(context, MusicRole.CHARACTER_THEME)
+            ),
             // Der eigene Player zaehlt nicht als fremder Ton, sonst hielte sich die Musik
             // beim naechsten Abgleich selbst fuer eine Stoerung und schaltete sich ab.
             otherAudioActive = player == null && audio?.isMusicActive == true,
@@ -193,7 +237,15 @@ object PlayMusic {
             return
         }
         val varianten = availableVariants(context, wanted)
+        val fest = fixedVariant(wanted, musicContext)
         if (wanted == playingRole) {
+            // Eine feste Variante rotiert nicht (siehe [fixedVariant]). Sie wechselt nur, wenn
+            // das Wesen wechselt - dann ist der laufende Track das Thema von jemand anderem.
+            if (fest != null) {
+                if (fest == playingVariant) return
+                switchTo(context, wanted, fest, rollenwechsel = false)
+                return
+            }
             // **Dieselbe Lage, dieselbe Rolle - und trotzdem gelegentlich ein anderes Stueck.**
             // Gemeldet als "nach ungefaehr fuenf Minuten wirkt ein einzelner wiederholter Track
             // monoton". Die Entscheidung darueber faellt in [PlayMusicRotation] und ist dort
@@ -210,7 +262,7 @@ object PlayMusic {
             switchTo(context, wanted, naechste, rollenwechsel = false)
             return
         }
-        val start = PlayMusicRotation.pickVariant(varianten, current = null) ?: return
+        val start = fest ?: PlayMusicRotation.pickVariant(varianten, current = null) ?: return
         switchTo(context, wanted, start, rollenwechsel = true)
     }
 
