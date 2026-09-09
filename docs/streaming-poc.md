@@ -1,12 +1,14 @@
-# Streaming-PoC: Emulator, OBS und Twitch-Vorbereitung
+# Vorbereitung fuer den Streaming-PoC: Emulator, OBS und Twitch
 
-Status: **vorbereitet, noch nicht durchgefuehrt**  
-Arbeitspaket: NT-058  
+Status: **separates Vorbereitungsartefakt; NT-058 ist weiterhin offen und nicht durchgefuehrt**  
+Einordnung: Voraussetzung fuer das Arbeitspaket NT-058, kein NT-058-Ergebnis  
 Letzte Regelpruefung: 2026-09-10
 
-Dieses Dokument ist zugleich Runbook und Messbogen fuer den ersten begrenzten
-End-to-End-Test einer oeffentlichen Itoeva-Instanz. Ergebnisse werden erst nach einem
-tatsaechlichen Lauf eingetragen. Leere Felder sind kein positives Testergebnis.
+Dieses Dokument ist Runbook und leerer Messbogen fuer den ersten begrenzten End-to-End-Test
+einer oeffentlichen Itoeva-Instanz. Dieser PR liefert nur die Vorbereitung. NT-058 ist erst
+erledigt, wenn ein tatsaechlicher Zwei-Stunden-Lauf samt Messwerten, Screenshots,
+Wiederanlaufbefund und begruendeter GO/CHANGE/STOP-Empfehlung dokumentiert ist. Leere
+`TODO`-Felder sind kein positives Testergebnis.
 
 ## Ziel und feste Grenze
 
@@ -252,6 +254,9 @@ Die zweistuendige Aufnahme ist zu gross fuer Git und bleibt lokal. Im Ergebnis n
 Dauer, Groesse und SHA-256 notieren.
 
 ## 8. Entscheidung fuer NT-059
+
+Dieser Abschnitt wird erst im tatsaechlichen NT-058-Lauf ausgefuellt. Vorher darf dieses
+Vorbereitungsartefakt keine Entscheidung fuer NT-059 ausloesen.
 
 Nach dem Lauf genau eine Empfehlung markieren und mit Messwerten begruenden:
 
