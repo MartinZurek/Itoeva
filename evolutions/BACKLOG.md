@@ -176,7 +176,7 @@ ist, ist das Abnahmekriterium dieser Aufgabe.
 Der Prompt soll ausdruecklich **singbar** sein: eine Melodie, zu der sich spaeter live singen
 laesst. Trotzdem instrumental erzeugen - kein Gesang in der Datei.
 
-## [open] ITO-0018 - Themensong fuer STARLET schreiben (Prompt und Manifest)
+## [done] ITO-0018 - Themensong fuer STARLET schreiben (Prompt und Manifest)
 Wie ITO-0017, aber fuer **STARLET** (`signatureTopic = MINDFULNESS`), `android_resource`
 `itoeva_theme_02`, Prompt `music/prompts/theme-starlet.txt`, id `theme-starlet`.
 
