@@ -141,6 +141,14 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 | `morning_background` | frueher Morgen, falls er sich abheben soll | noch keiner |
 | `sport_background` | Bewegung und Anstrengung | noch keiner |
 | `dream_background` | Traum-Szenen | noch keiner |
+| `character_theme_background` | das persoenliche Stueck des anwesenden Wesens, Variante 01-06 fest je Spezies | `theme-puffling` / Puffling's Theme (Variante 01) |
+
+Die Rolle `character_theme_background` ist die einzige, deren Variante **nicht** rotiert: 01 bis 06
+gehoeren fest je einem Wesen (`MusicRole.characterThemeVariant`). Sie laeuft auch nicht dauernd,
+sondern zu einem Anlass - beim ersten Erscheinen des Wesens im Spielmodus an einem Kalendertag,
+ein Stueck lang (`PlayCharacterTheme`). Die sechs Stuecke sollen sich hoerbar voneinander
+unterscheiden und eine **singbare** Melodie haben; Fernziel ist, sie je Charakter live zu singen.
+Erzeugt werden sie trotzdem instrumental.
 
 ## Freigabe-Gate: Loop-Politur und Messung
 
