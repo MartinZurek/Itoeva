@@ -62,17 +62,27 @@ medizinischen Inhalte.
 Eine neue AVD ohne Google-Konto verwenden. Keine persoenlichen Reminder oder echten Namen
 anlegen. Netzwerkbenachrichtigungen anderer Programme vor der Aufnahme deaktivieren.
 
-Die Debug-App bauen und installieren:
+Die Debug-App bauen und installieren. Unter Windows vorher `JAVA_HOME` gemaess
+`CLAUDE.md` setzen.
+
+PowerShell unter Windows:
+
+```powershell
+.\gradlew.bat :app-sim:installDebug
+adb.exe shell am start -n com.notime.glyphminderwatch/com.notime.glyphsim.ui.MainActivity
+```
+
+Bash unter macOS oder Linux:
 
 ```bash
 ./gradlew :app-sim:installDebug
 adb shell am start -n com.notime.glyphminderwatch/com.notime.glyphsim.ui.MainActivity
 ```
 
-Unter Windows vorher `JAVA_HOME` gemaess `CLAUDE.md` setzen. Im Emulator den Bildschirm nur
-fuer den Test wach halten; die Einstellung danach wieder zuruecksetzen:
+Im Emulator den Bildschirm nur fuer den Test wach halten; die Einstellung danach wieder
+zuruecksetzen. Unter PowerShell `adb.exe`, unter Bash `adb` verwenden:
 
-```bash
+```text
 adb shell svc power stayon true
 # Nach dem Test:
 adb shell svc power stayon false
