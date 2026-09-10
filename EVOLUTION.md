@@ -2340,6 +2340,11 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
     Kern gegen die neue Wirklichkeit.
   - Unbekannte Zukunftsversionen und beschaedigte Pflichtwerte werden abgelehnt statt geraten.
     V1-Felder fuer Episoden, Beziehungen und Geschmack werden leer und nachvollziehbar migriert.
+- **Eine Testerwartung war zu streng, nicht der Store:** `Needs` behandelt fehlende und
+  ausdruecklich mit null gespeicherte Beduerfnisse fachlich gleich, seine Data-Class-Gleichheit
+  aber nicht. Der Roundtrip-Test vergleicht deshalb den Druck aller sieben Beduerfnisse und die
+  uebrigen Zustandsfelder getrennt, statt eine interne Map-Darstellung zum Speichervertrag zu
+  machen.
 - **Abgrenzung:** Keine Runtime-Anbindung, keine Aenderung an `DockScreen`, `PlayRoutine`,
   Room oder `:core`; keine zweite Simulationspipeline, kein Stream-UI und kein Audio.
 - **Betroffene Bereiche:** `app-sim/.../data/LivingAgentStore.kt`,
