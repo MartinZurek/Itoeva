@@ -181,6 +181,14 @@ unter `app-sim/.../living/`: Er bewertet Beduerfnisse und Weltzustand, haelt Zie
 erzeugt bedeutungsvolle Ereignisse und liefert eine erklaerbare Momentaufnahme. Er kennt weder
 Compose noch Android, Room oder Renderer.
 
+**Der entscheidende Teil steht seit NT-063 (Schnitt 2a) und laeuft in der Offline-Strecke mit:**
+`LivingSimulation.step` fuehrt Beduerfnisse, Zielwahl, Plan und Weltzustand zusammen und prueft
+die Voraussetzungen des naechsten Schritts unmittelbar vor der Ausfuehrung - nicht beim Planen.
+Faellt eine Voraussetzung, faellt der Plan und das ZIEL bleibt; der naechste Schritt leitet aus
+derselben Absicht einen anderen Weg ab. Daran haengt der Unterschied zwischen einem lebendigen
+Wesen und einer festen Animationsfolge. Erinnerung, Beziehungen und symbolische Verstaendigung
+folgen im Schnitt 2b.
+
 Die bestehende Architektur bleibt die Ausfuehrungsebene:
 
 - `PlayRoutine` und `RoutineStep` choreografieren gewaehlte Aktionen.

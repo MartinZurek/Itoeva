@@ -29,11 +29,11 @@ beobachten koennen.
 
 Format je Aufgabe: **Rang - ID** - Aufgabe. *Erfolgskriterium.* (Abhaengigkeit; Aufwand)
 
-1. **NT-063** - Reinen Living-Agent-Kern bauen: Beduerfnisse, Utility-Auswahl, Ziele,
-   Mehrschrittplan/Replan, kleiner Aktionssatz, Ereignisse, Episoden, Beziehungen, symbolische
-   Intentionen und `AgentExplanation`. *Deterministische JVM-Tests belegen
-   `WORK -> BUY_FOOD -> EAT`, zustandsabhaengige Kommunikation, unterschiedliche Historien und
-   eine ungeskriptete Ereignisfolge.* (LIVING_AGENT.md; 1 PR)
+1. **NT-067** - Erinnerung, Beziehungen und symbolische Verstaendigung im Living-Agent-Kern
+   ergaenzen: `Episode`, `RelationshipState`, `SymbolicIntent`, gelernter Geschmack und das Ziel
+   `CONNECT_WITH`. *Deterministische JVM-Tests belegen zustandsabhaengige Antworten auf eine
+   Einladung und zwei aehnlich gestartete Agenten, deren Vorlieben und Historien auseinander
+   laufen.* (NT-063; 1 PR)
 2. **NT-064** - Agentenzustand versioniert und profilbezogen persistieren, inklusive
    Zeitfortschritt zwischen Sitzungen und begrenzter episodischer Erinnerung. *Roundtrip,
    Versions-/Migrationsfall und getrennte Profile sind getestet; bei Room liegen Migration und

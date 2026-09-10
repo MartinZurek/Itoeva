@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-10
+Stand: 2026-09-10 (Schnitt 2a umgesetzt)
 
 ## Leitidee
 
@@ -69,6 +69,32 @@ Datenbank oder Renderer.
 Die Praesentationsschicht darf spaeter Ereignisfolgen wie Wunsch -> Hindernis -> Versuch ->
 Anpassung -> Erfolg erkennen. Sie darf keine Ereignisse erfinden oder die Simulation steuern.
 
+## Stand: was Schnitt 2a tatsaechlich gebaut hat
+
+Der Kern liegt in `app-sim/src/main/java/com/notime/glyphsim/living/` in fuenf Dateien:
+`LivingWorld.kt` (Welt, Orte, `Requirement`), `LivingNeed.kt` (Beduerfnisse, `Personality`),
+`LivingAction.kt` (Handlungen, `ActionOutcome`, Katalog), `LivingPlanner.kt` (Ziele,
+`UtilitySelector`, `Plan`, `Planner`) und `LivingAgent.kt` (`AgentState`, `LivingEvent`,
+`AgentExplanation`, `LivingSimulation`).
+
+Drei Entscheidungen daraus binden alles Weitere:
+
+- **Eigenes Ortsmodell `LivingSite` mit vier Werten** statt der sechzehn `PlayScene.Place`. Die
+  Abbildung gehoert in den Runtime-Adapter (Schnitt 4). Haenge die Entscheidungslogik an
+  `PlayScene.kt` (3.672 Zeilen), waere sie ohne Emulator nicht mehr pruefbar.
+- **`Requirement` ist ein benanntes Ding, kein `Boolean`.** Nur deshalb kann
+  `AgentExplanation.blockedBy` sagen, WORAN es haengt, ohne dass irgendwo ein Satz dafuer
+  geschrieben wurde. Ereignisse und Erklaerung enthalten deshalb auch keinen freien Text -
+  Sprache macht die Anzeige daraus, nicht die Simulation.
+- **`ActionOutcome` ist die einzige Erweiterungsstelle fuer Wirkungen.** Sie traegt heute
+  Muenzen, Vorrat, Ort, Zeit und Beduerfnislinderung; Wissen, Erinnerung, Beziehungswirkung und
+  Faehigkeitsfortschritt kommen als weitere Felder derselben Klasse dazu. Keine Handlung
+  bekommt dafuer einen Sonderweg.
+
+Noch nicht gebaut und ausdruecklich Schnitt 2b: Episoden, Beziehungen, Symbole, gelernter
+Geschmack, `CONNECT_WITH`. `LivingAgentStore` gehoert zu Schnitt 3 und wurde bewusst noch nicht
+angelegt - ein Interface, das niemand ruft, ist toter Code.
+
 ## Erster demonstrierbarer Schnitt
 
 Der Kern beginnt mit etwa sieben Aktionen und einem echten Ressourcenpfad:
@@ -110,10 +136,19 @@ getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentliche
 
 1. **Plan und Grenzen** (dieses Dokument): Produktentscheidung, Wiederverwendung, Schnittstellen,
    Persistenzweg und Abnahmekriterien festhalten.
-2. **Reiner Simulationskern**: Beduerfnisse, Utility-Wahl, Ziele, Plan/Replan, kleiner
-   Aktionssatz, Ereignisse, Episoden, Beziehungen, Symbole und Erklaerung. Deterministische
-   JVM-Tests inklusive Mehrtagesgeschichte; neue Testdatei an beiden Stellen in
-   `tools/reaction-preview/tests.sh`.
+2. **Reiner Simulationskern** - aus Groessengruenden in zwei Schnitte geteilt. Der Grund steht
+   nicht in der Theorie, sondern in der Geschichte dieses Repositories: An zu gross
+   geschnittenen Aufgaben ist die Builder-Sitzung hier schon dreimal am Zugbudget gescheitert
+   (siehe ITO-0016/ITO-0023 in `evolutions/BACKLOG.md`). Beide Haelften sind fuer sich gruen
+   und ruecksetzbar.
+   - **2a - Entscheiden (erledigt, NT-063):** Beduerfnisse, Utility-Wahl mit aufgeschluesselter
+     Begruendung, Ziele, Plan und Replanning, sechs Handlungen mit benannten Voraussetzungen,
+     typisierte Ereignisse und `AgentExplanation`. Deterministische JVM-Tests inklusive
+     Mehrtageslauf.
+   - **2b - Sich erinnern und verstaendigen (offen, NT-067):** `Episode`, `RelationshipState`,
+     `SymbolicIntent`, gelernter Geschmack, das Ziel `CONNECT_WITH` und der Beleg, dass zwei
+     aehnlich gestartete Agenten auseinanderlaufen.
+   Neue Testdateien jeweils an beiden Stellen in `tools/reaction-preview/tests.sh`.
 3. **Profilbezogene Persistenz**: versionierter Store, Zeitfortschritt zwischen Sitzungen,
    begrenzte Episoden und belastbare Roundtrip-/Migrations-Tests.
 4. **Bestehende Welt anbinden**: Planaktionen gezielt auf vorhandene `PlayRoutine`-Varianten,

@@ -2204,3 +2204,60 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Tests dieses Planungs-PRs:** Dokument-/Diff-Pruefung und Repository-CI; Anwendungscode und
   Datenvertraege bleiben unveraendert.
 
+
+### 2026-09-10 - Living-Agent-Kern: Entscheiden, Planen, Neuplanen (Schnitt 2a)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Erster Code-Schnitt des am selben Tag
+  freigegebenen Meilensteins; deterministische JVM-Tests, keine Geraetepruefung noetig.
+- **Ausgangsproblem:** Der Ressourcenpfad `Vorrat leer -> Geld pruefen -> Arbeit/Einkauf` steckte
+  als Sonderfall in `DockScreen`. Es gab kein langlebiges Ziel, keinen Plan, keine benannte
+  Voraussetzung und damit keine Antwort auf die Frage, warum ein Wesen gerade das tut, was es
+  tut.
+- **Entscheidung:** Ein reiner Kotlin-Kern unter `app-sim/.../living/` in fuenf Dateien:
+  `LivingWorld.kt`, `LivingNeed.kt`, `LivingAction.kt`, `LivingPlanner.kt`, `LivingAgent.kt`.
+  Kein Android, keine Uhr, kein Zufall - Zeit wird als `day`/`minuteOfDay` hereingereicht.
+- **Aufteilung des geplanten Schnitts:** Der in `LIVING_AGENT.md` als PR 2 beschriebene
+  Simulationskern wurde in 2a (entscheiden) und 2b (sich erinnern und verstaendigen) geteilt.
+  Grund ist kein Prinzip, sondern die Geschichte dieses Repositories: An zu gross geschnittenen
+  Aufgaben ist die Builder-Sitzung hier dreimal am Zugbudget gescheitert (ITO-0016/ITO-0023).
+  Beide Haelften sind fuer sich gruen und ruecksetzbar.
+- **Erster Beleg:** `Planner.planFor` leitet aus derselben Bedingung drei verschiedene Wege zu
+  Essen ab - nachsehen/essen, einkaufen/essen und arbeiten/einkaufen/essen. Die Kette
+  `WORK -> BUY_FOOD -> EAT` steht nirgends als Kette im Code; sie faellt aus der Ressourcenlage
+  ab und verschwindet, sobald Geld da ist. Ein Testlauf ueber sieben Schritte fuehrt sie
+  vollstaendig aus und belegt den gesunkenen Hunger, den ausgegebenen Lohn und den Restvorrat.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - Voraussetzungen sind benannte Dinge (`Requirement.Coins`, `.Portions`, `.At`, `.SiteOpen`)
+    und keine Wahrheitswerte. Nur deshalb kann `AgentExplanation.blockedBy` sagen, woran es
+    haengt, ohne dass irgendwo ein Satz dafuer geschrieben wurde. Ereignisse und Erklaerung
+    enthalten aus demselben Grund keinen freien Text - Sprache macht die Anzeige daraus.
+  - Die Pruefung der Voraussetzungen steht **vor der Ausfuehrung, nicht beim Planen**. Faellt
+    sie, faellt der Plan und das Ziel bleibt; der naechste Schritt leitet aus derselben Absicht
+    einen anderen Weg ab. Daran haengt der Unterschied zwischen einem lebendigen Wesen und einer
+    festen Animationsfolge.
+  - `ActionOutcome` ist die einzige Erweiterungsstelle fuer Wirkungen und traegt heute schon
+    mehr als Beduerfnisbefriedigung (Muenzen, Vorrat, Ort, Zeit). Wissen, Erinnerung,
+    Beziehungswirkung und Faehigkeitsfortschritt kommen als weitere Felder derselben Klasse
+    dazu, ohne dass eine Handlung einen Sonderweg bekommt.
+  - `Personality` liegt als Datum im `AgentState` und wird nicht bei jeder Entscheidung aus
+    `AvatarSpecies` nachgeschlagen. Das ist die Bedingung dafuer, dass sich ein Wesen spaeter
+    ueberhaupt veraendern kann; ein Wert aus einem Enum koennte es nie. Der Bias ist bei jeder
+    Spezies kleiner als `UtilitySelector.MIN_PRESSURE` und kann den Beduerfnisdruck damit
+    verschieben, aber nicht ueberstimmen - ein Test haelt das fest.
+  - Eigenes Ortsmodell `LivingSite` mit vier Werten statt der sechzehn `PlayScene.Place`. Die
+    Abbildung gehoert in den Runtime-Adapter (NT-065). Haenge die Entscheidungslogik an
+    `PlayScene.kt` mit 3.672 Zeilen, waere sie ohne Emulator nicht mehr pruefbar.
+- **Zwei Testerwartungen waren falsch, nicht der Code.** Ein Agent lief nach dem Essen weiter
+  (richtig - der Testlauf war zu lang angesetzt), und ein ruhefreudiges Wesen waehlte Lernen
+  statt Ruhe, weil Ruhe doppelt so viel Zeit kostet. Beide Male wurde der Test korrigiert und
+  nicht die Rechnung; die Kostenrechnung war in beiden Faellen die bessere Antwort.
+- **Abgrenzung:** Kein `StoryManager`, kein allgemeiner KI-Planer, kein freier Dialog, keine
+  Persistenz, keine Aenderung an `DockScreen`, keine Room-Entity und keine Zeile in `:core`.
+- **Betroffene Dokumente:** `LIVING_AGENT.md` (Abschnitt "Stand" und die Aufteilung von PR 2),
+  `Architecture.md`, `NextTasks.md`, `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 265 Tests gruen (vorher 243, davon 22 neu
+  in `LivingAgentTest`). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
+  gruen. Die neue Testdatei ist an beiden Stellen in `tools/reaction-preview/tests.sh`
+  eingetragen; ohne den zweiten Eintrag waere sie gruen gewesen, ohne je gelaufen zu sein.
+- **Naechster Schritt:** NT-067 (Schnitt 2b) - Episoden, Beziehungen, symbolische
+  Verstaendigung, gelernter Geschmack und `CONNECT_WITH`, wieder als reine Domaene.
