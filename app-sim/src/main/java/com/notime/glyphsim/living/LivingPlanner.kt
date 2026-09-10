@@ -19,7 +19,10 @@ enum class GoalKind {
     HAVE_FUN,
 
     /** Etwas lernen, besser werden. */
-    DEVELOP;
+    DEVELOP,
+
+    /** Die Naehe eines wirklich anwesenden Wesens suchen. */
+    CONNECT_WITH;
 
     /**
      * Das Beduerfnis, dessen Druck dieses Ziel traegt.
@@ -28,8 +31,6 @@ enum class GoalKind {
      * gespeist wird, laesst sich nicht mehr in einem Satz begruenden - und Begruendbarkeit ist
      * die Abnahmebedingung dieses Meilensteins.
      *
-     * `CONNECT_WITH` fehlt hier absichtlich: Es braucht ein zweites Wesen und damit den
-     * sozialen Schnitt (NT-063b), nicht nur einen Enum-Eintrag.
      */
     val drivenBy: NeedKind
         get() = when (this) {
@@ -37,6 +38,7 @@ enum class GoalKind {
             REST -> NeedKind.ENERGY
             HAVE_FUN -> NeedKind.FUN
             DEVELOP -> NeedKind.GROWTH
+            CONNECT_WITH -> NeedKind.SOCIAL
         }
 }
 
@@ -53,9 +55,16 @@ data class GoalScore(
     /** Verschiebung durch die Persoenlichkeit. */
     val bias: Double,
     /** Abzug fuer Muehe und Zeit des billigsten bekannten Wegs. */
-    val cost: Double
+    val cost: Double,
+    /** Langsam aus wiederholtem Erleben gewachsener Geschmack. */
+    val learnedPreference: Double = 0.0,
+    /** Kleine Spur der juengsten passenden Erfolge und Fehlschlaege. */
+    val memoryInfluence: Double = 0.0,
+    /** Wert einer vorhandenen Beziehung fuer ein soziales Ziel. */
+    val socialValue: Double = 0.0
 ) {
-    val total: Double get() = needPressure + bias - cost
+    val total: Double
+        get() = needPressure + bias + learnedPreference + memoryInfluence + socialValue - cost
 }
 
 /**
@@ -89,7 +98,21 @@ object UtilitySelector {
                     goal = goal,
                     needPressure = agent.needs.pressure(goal.drivenBy),
                     bias = agent.personality.bias(goal),
-                    cost = Planner.estimatedCost(goal, world)
+                    cost = Planner.estimatedCost(goal, world, agent),
+                    learnedPreference = agent.learnedPreferences[goal] ?: 0.0,
+                    memoryInfluence = agent.episodes
+                        .asReversed()
+                        .filter { it.event.goal == goal }
+                        .take(RECENT_EPISODES)
+                        .sumOf { it.valence * MEMORY_WEIGHT },
+                    socialValue = if (goal == GoalKind.CONNECT_WITH) {
+                        world.nearbyProfiles
+                            .asSequence()
+                            .filter { it != agent.profileId }
+                            .mapNotNull { agent.relationships[it] }
+                            .maxOfOrNull { (it.trust + it.closeness) * RELATIONSHIP_WEIGHT }
+                            ?: 0.0
+                    } else 0.0
                 )
             }
             .sortedWith(compareByDescending<GoalScore> { it.total }.thenBy { it.goal.ordinal })
@@ -97,6 +120,10 @@ object UtilitySelector {
     /** Das gewinnende Ziel - oder `null`, wenn nichts draengend genug ist. */
     fun choose(agent: AgentState, world: WorldState): GoalKind? =
         rank(agent, world).firstOrNull { it.needPressure >= MIN_PRESSURE }?.goal
+
+    private const val RECENT_EPISODES = 6
+    private const val MEMORY_WEIGHT = 0.015
+    private const val RELATIONSHIP_WEIGHT = 0.05
 }
 
 /**
@@ -137,11 +164,17 @@ object Planner {
      * geschlossenen Arbeitsplatz steht, hat keinen Weg zu Essen. Der Agent behaelt dann sein
      * Ziel und meldet das Hindernis, statt eine Handlung zu erfinden.
      */
-    fun planFor(goal: GoalKind, world: WorldState): Plan? {
+    fun planFor(goal: GoalKind, world: WorldState, agent: AgentState? = null): Plan? {
         val schritte = when (goal) {
             GoalKind.GET_FOOD -> foodSteps(world)
             GoalKind.REST -> goTo(LivingSite.HOME, world) + ActionCatalog[ActionKind.REST]
             GoalKind.HAVE_FUN, GoalKind.DEVELOP -> listOf(ActionCatalog[ActionKind.PURSUE_INTEREST])
+            GoalKind.CONNECT_WITH -> world.nearbyProfiles
+                .asSequence()
+                .filter { it != agent?.profileId }
+                .sorted()
+                .firstOrNull()
+                ?.let { listOf(ActionCatalog.inviteToPlay(it)) }
         }
         return schritte?.let { Plan(goal, it) }
     }
@@ -192,8 +225,8 @@ object Planner {
      * ausrechnen. Wer hier optimiert, baut den allgemeinen Planer, den dieser Meilenstein
      * ausdruecklich nicht will.
      */
-    fun estimatedCost(goal: GoalKind, world: WorldState): Double {
-        val plan = planFor(goal, world) ?: return UNREACHABLE
+    fun estimatedCost(goal: GoalKind, world: WorldState, agent: AgentState? = null): Double {
+        val plan = planFor(goal, world, agent) ?: return UNREACHABLE
         val muehe = plan.steps.sumOf { it.effort }
         val zeit = plan.steps.sumOf { it.outcome.minutes } / MINUTES_PER_COST_POINT
         return muehe + zeit
