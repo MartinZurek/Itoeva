@@ -219,7 +219,7 @@ braucht trotzdem eine erkennbare Melodie: ein Stueck ohne Melodie kann man spaet
 
 Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
 
-## [open] ITO-0022 - Themensong fuer HOOTLET schreiben (Prompt und Manifest)
+## [done] ITO-0022 - Themensong fuer HOOTLET schreiben (Prompt und Manifest)
 Wie ITO-0017, aber fuer **HOOTLET** (`signatureTopic = FOCUS`), `android_resource`
 `itoeva_theme_06`, Prompt `music/prompts/theme-hootlet.txt`, id `theme-hootlet`.
 
