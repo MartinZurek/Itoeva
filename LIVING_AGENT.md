@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-10 (Schnitt 2a umgesetzt)
+Stand: 2026-09-10 (Schnitte 2a und 2b umgesetzt)
 
 ## Leitidee
 
@@ -69,7 +69,7 @@ Datenbank oder Renderer.
 Die Praesentationsschicht darf spaeter Ereignisfolgen wie Wunsch -> Hindernis -> Versuch ->
 Anpassung -> Erfolg erkennen. Sie darf keine Ereignisse erfinden oder die Simulation steuern.
 
-## Stand: was Schnitt 2a tatsaechlich gebaut hat
+## Stand: was Schnitte 2a und 2b tatsaechlich gebaut haben
 
 Der Kern liegt in `app-sim/src/main/java/com/notime/glyphsim/living/` in fuenf Dateien:
 `LivingWorld.kt` (Welt, Orte, `Requirement`), `LivingNeed.kt` (Beduerfnisse, `Personality`),
@@ -87,17 +87,21 @@ Drei Entscheidungen daraus binden alles Weitere:
   geschrieben wurde. Ereignisse und Erklaerung enthalten deshalb auch keinen freien Text -
   Sprache macht die Anzeige daraus, nicht die Simulation.
 - **`ActionOutcome` ist die einzige Erweiterungsstelle fuer Wirkungen.** Sie traegt heute
-  Muenzen, Vorrat, Ort, Zeit und Beduerfnislinderung; Wissen, Erinnerung, Beziehungswirkung und
-  Faehigkeitsfortschritt kommen als weitere Felder derselben Klasse dazu. Keine Handlung
-  bekommt dafuer einen Sonderweg.
+  Muenzen, Vorrat, Ort, Zeit, Beduerfnislinderung, gelernte Praeferenz, Erinnerung,
+  Beziehungswirkung und Symbolbedeutung. Keine soziale Handlung bekommt dafuer einen
+  Sonderweg.
 
-Noch nicht gebaut und ausdruecklich Schnitt 2b: Episoden, Beziehungen, Symbole, gelernter
-Geschmack, `CONNECT_WITH`. `LivingAgentStore` gehoert zu Schnitt 3 und wurde bewusst noch nicht
-angelegt - ein Interface, das niemand ruft, ist toter Code.
+Schnitt 2b ergaenzt begrenzte `Episode`-Listen, `RelationshipState` mit Vertrauen, Naehe und
+letzter Interaktion, die feste `SymbolicIntent`-Menge, gelernte Zielpraeferenzen und
+`CONNECT_WITH`. Einladungen werden als `PLAY + QUESTION` gesendet; Annahme oder Ablehnung
+entsteht aus Energie, sozialem Bedarf, Beziehung, Persoenlichkeit und laufendem Ziel. Der
+Mehrtagesbeleg laesst zwei gleich beduerftige Wesen allein durch unterschiedliche Erlebnisse in
+Vorlieben und Historie auseinanderlaufen. `LivingAgentStore` gehoert weiterhin zu Schnitt 3 und
+wurde bewusst nicht angelegt.
 
 ## Erster demonstrierbarer Schnitt
 
-Der Kern beginnt mit etwa sieben Aktionen und einem echten Ressourcenpfad:
+Der Kern arbeitet mit zehn tief verbundenen Aktionen und einem echten Ressourcenpfad:
 
 1. Hunger wird dringlich und `GET_FOOD` gewinnt die Zielwahl.
 2. Der Agent prueft den eigenen Vorrat.
@@ -116,8 +120,8 @@ auseinanderlaufen, ohne eine Geschichte vorzugeben.
 
 ## Persistenz
 
-Die Domaene spricht nur mit einem `LivingAgentStore`-Interface. Damit bleiben Tests rein und
-ein spaeterer Speicher austauschbar.
+Die naechste Scheibe fuehrt einen `LivingAgentStore`-Vertrag an der Android-Grenze ein. Bis
+dahin bleibt der Kern speicherfrei; ein unbenutztes Vorab-Interface waere toter Code.
 
 Fuer den ersten App-Adapter wird der Zustand versioniert und pro `profileId` gespeichert.
 Ressourcen duerfen nicht wie heute global zwischen Profilen geteilt werden. Episoden werden
@@ -145,9 +149,9 @@ getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentliche
      Begruendung, Ziele, Plan und Replanning, sechs Handlungen mit benannten Voraussetzungen,
      typisierte Ereignisse und `AgentExplanation`. Deterministische JVM-Tests inklusive
      Mehrtageslauf.
-   - **2b - Sich erinnern und verstaendigen (offen, NT-067):** `Episode`, `RelationshipState`,
-     `SymbolicIntent`, gelernter Geschmack, das Ziel `CONNECT_WITH` und der Beleg, dass zwei
-     aehnlich gestartete Agenten auseinanderlaufen.
+   - **2b - Sich erinnern und verstaendigen (erledigt, NT-067):** `Episode`,
+     `RelationshipState`, `SymbolicIntent`, gelernter Geschmack, das Ziel `CONNECT_WITH` und
+     der deterministische Beleg, dass zwei aehnlich gestartete Agenten auseinanderlaufen.
    Neue Testdateien jeweils an beiden Stellen in `tools/reaction-preview/tests.sh`.
 3. **Profilbezogene Persistenz**: versionierter Store, Zeitfortschritt zwischen Sitzungen,
    begrenzte Episoden und belastbare Roundtrip-/Migrations-Tests.

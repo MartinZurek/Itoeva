@@ -2261,3 +2261,55 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   eingetragen; ohne den zweiten Eintrag waere sie gruen gewesen, ohne je gelaufen zu sein.
 - **Naechster Schritt:** NT-067 (Schnitt 2b) - Episoden, Beziehungen, symbolische
   Verstaendigung, gelernter Geschmack und `CONNECT_WITH`, wieder als reine Domaene.
+
+### 2026-09-10 - Living-Agent-Kern: Erinnern und Verstaendigen (Schnitt 2b)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Zweiter reiner Kotlin-Schnitt des
+  freigegebenen Meilensteins; deterministische JVM-Belege, keine Geraetepruefung erforderlich.
+- **Ausgangsproblem:** Schnitt 2a konnte wollen, planen, scheitern und neu planen, aber Erlebtes
+  veraenderte spaetere Entscheidungen nicht. Andere Wesen waren weder als Beziehung noch als
+  semantisches Gegenueber vorhanden; ein Stream haette eine soziale Szene deshalb nicht aus dem
+  Zustand erklaeren koennen.
+- **Entscheidung:** `AgentState` traegt nun begrenzte verdichtete `Episode`-Listen, gelernte
+  Zielpraeferenzen und `RelationshipState` je Gegenueber. Beziehungen trennen Vertrauen und
+  Naehe und behalten die letzte typisierte Interaktion. `SymbolicIntent` bildet die feste
+  sprachunabhaengige Bedeutungsmenge; `CONNECT_WITH` wird wie jedes andere Ziel durch
+  `UtilitySelector` bewertet und vom kleinen regelbasierten Planer in eine Einladung
+  ueberfuehrt.
+- **Erster Beleg:** STARLET sendet aus echtem sozialem Druck `PLAY + QUESTION`. Derselbe
+  WYRMLING antwortet bei hoher Energiebelastung mit `TIRED + NO`, bei Kraft und sozialem
+  Bedarf mit `PLAY + YES`; ein dringendes laufendes `GET_FOOD` fuehrt zu `FOOD + NO`.
+  Zwei mit gleicher Persoenlichkeit und gleicher Bedarfslage gestartete Agenten sammeln durch
+  verschiedene Begegnungen ueber mehrere simulierte Tage unterschiedliche Praeferenzen und
+  Episoden, ohne dass eine Handlungskette als Plot vorgegeben ist.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - `Requirement.Near` macht Anwesenheit zu einem benannten, erklaerbaren Hindernis statt zu
+    einem Wahrheitswert.
+  - Erinnerung, Praeferenz, Beziehung und Symbolbedeutung sind Felder von `ActionOutcome`.
+    `Action.applyTo` bleibt die einzige Stelle, die Wirkungen berechnet; es gibt keinen
+    sozialen Sonderweg und keine zweite Ereignispipeline.
+  - Episoden speichern nur wichtige typisierte Ereignisse und eine kleine Wertung. Die feste
+    Grenze von 24 verhindert Rohframe- und Tick-Historien.
+  - Die Antwortbereitschaft ist eine lesbare Rechnung aus Energie, sozialem Druck, Beziehung,
+    Persoenlichkeitsbias und dem Druck eines kollidierenden laufenden Grundziels. Gleiche
+    Eingaben ergeben dieselbe Antwort; es gibt weder Uhr noch Zufall noch Dialogtabelle.
+  - Gelernter Geschmack liegt als Datum im `AgentState` und bleibt auf einen kleinen Bereich
+    begrenzt. Der bestehende Test haelt weiterhin fest, dass jeder Startbias kleiner als
+    `UtilitySelector.MIN_PRESSURE` bleibt.
+- **Abgrenzung:** Keine Persistenz und kein `LivingAgentStore`, keine Aenderung an Room,
+  `:core`, `DockScreen`, `PlayScene` oder `PlayRoutine`; kein `StoryManager`, kein freier
+  Textdialog, kein allgemeiner Planer, kein Twitch-UI und keine Musik- oder Audioumbaute.
+- **Betroffene Bereiche:** Die bestehenden fuenf Kerndateien unter
+  `app-sim/src/main/java/com/notime/glyphsim/living/`, die bestehende
+  `LivingAgentTest.kt`, `LIVING_AGENT.md`, `NextTasks.md`, `UEBERGABE.md` und dieses
+  Protokoll. Keine neue Quell- oder Testdatei, deshalb keine Aenderung an der ausdruecklichen
+  Dateiliste in `tools/reaction-preview/tests.sh`.
+- **Tests:** Sechs neue Verhaltensfaelle erweitern `LivingAgentTest` von 22 auf 28 Tests und
+  die Offline-Strecke von 265 auf 271 Tests. Geprueft werden Symbolaustausch, zwei
+  zustandsabhaengige Antworten, Vorrang eines laufenden Grundziels, Episodengrenze,
+  Entscheidungseinfluss und auseinanderlaufende Mehrtageshistorien. Zusaetzlich bleibt die
+  Musikstrecke mit 15 Tests unveraendert; vor dem Merge entscheidet die vollstaendige Head-CI.
+- **Naechster Schritt:** NT-064 - profilbezogene, versionierte Persistenz. Falls dafuer Room
+  gewaehlt wird, liegen Migration und Migrationstest im selben PR; `:core` bleibt
+  unangetastet.
+
