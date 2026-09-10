@@ -17,6 +17,18 @@ rücknehmbaren Schritt um, sichere Verhaltensänderungen mit Tests ab und dokume
 für den nächsten Agenten. Erfinde keine Freigabe für Netzwerk, Konten, Bezahlung, Twitch-/YouTube-
 Integration, private Nutzerdaten oder medizinische Reminder.
 
+## Aktueller Hauptauftrag: Living Agent System
+
+Die Charakter-Musikvorbereitung ist abgeschlossen; die Audiodateien bleiben bis zur manuellen
+Einzel-Erzeugung und Hoerfreigabe aussen vor. Der naechste freigegebene Architektur-Meilenstein
+ist das [Itoeva Living Agent System](LIVING_AGENT.md).
+
+Baue es ausschliesslich in den dort beschriebenen kleinen PR-Schnitten. Die Simulation waehlt aus
+Beduerfnissen, Weltzustand, Persoenlichkeit, Erinnerung, Beziehungen und Kosten; sie schreibt
+keine Handlung vor. Kein `StoryManager`, kein freier Textdialog, keine zweite Weltpipeline.
+Zuerst reiner deterministischer Kern, dann profilbezogene Persistenz, dann bestehende
+`PlayRoutine`-Anbindung und zuletzt der read-only Stream-Vertrag.
+
 ## Was gerade geändert wurde
 
 - `AGENTS.md` ist seit PR #61 der verbindliche Einstiegspunkt für alle KI-Agenten.
