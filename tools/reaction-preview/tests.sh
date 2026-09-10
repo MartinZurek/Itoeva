@@ -70,7 +70,7 @@ SRCS=(
   "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
-  # Der reine Living-Agent-Kern (NT-063, Schnitt 2a in LIVING_AGENT.md) - kein Android, kein Zufall,
+  # Der reine Living-Agent-Kern (NT-063/NT-067) - kein Android, keine Uhr, kein Zufall,
   # keine Uhr. Genau deshalb laeuft er hier und nicht erst in der CI.
   "$LIV/LivingWorld.kt" "$LIV/LivingNeed.kt" "$LIV/LivingAction.kt"
   "$LIV/LivingPlanner.kt" "$LIV/LivingAgent.kt"
