@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 9. September 2026
+# Uebergabe: Stand am 10. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -20,13 +20,16 @@ unterscheiden** und eine **singbare** Melodie haben; erzeugt werden sie trotzdem
 | ITO-0016 | Rolle `CHARACTER_THEME` in `PlayMusicPlan.kt`, Variante 01-06 fest je Spezies (`MusicRole.characterThemeVariant`), Rolle in `generate_music.py` bekannt |
 | ITO-0023 | **Wann** das Stueck laeuft: beim ersten Erscheinen des Wesens im Spielmodus an einem Kalendertag, ein Stueck lang. Begruendung vollstaendig im KDoc von `app-sim/.../matrix/PlayCharacterTheme.kt` |
 | ITO-0017 | Prompt und Manifest-Eintrag fuer **PUFFLING** (`music/prompts/theme-puffling.txt`, `itoeva_theme_01`) |
+| ITO-0018 | Prompt und Manifest-Eintrag fuer **STARLET** (`music/prompts/theme-starlet.txt`, `itoeva_theme_02`) |
+| ITO-0019 | Prompt und Manifest-Eintrag fuer **WYRMLING** (`music/prompts/theme-wyrmling.txt`, `itoeva_theme_03`) |
+| ITO-0020 | Prompt und Manifest-Eintrag fuer **FENNEC** (`music/prompts/theme-fennec.txt`, `itoeva_theme_04`) |
 
 ### Was ansteht
 
-**ITO-0018 bis ITO-0022** - dieselbe Arbeit fuer STARLET, WYRMLING, FENNEC, GLOOP, HOOTLET. Die
-Eintraege im Backlog nennen je Wesen den Charakter und die musikalische Richtung; jeder verweist
-auf ITO-0017 als Muster. **`theme-puffling` ist das durchgerechnete Beispiel** - Prompt, Manifest,
-README-Zeile, Trockenlauf. Wer ITO-0018 macht, kopiert diese vier Schritte und tauscht den Inhalt.
+**ITO-0021 bis ITO-0022** - dieselbe Arbeit fuer GLOOP und HOOTLET. Die Eintraege im Backlog
+nennen je Wesen den Charakter und die musikalische Richtung; jeder verweist auf ITO-0017 als
+Muster. **`theme-puffling` ist das durchgerechnete Beispiel** - Prompt, Manifest, README-Zeile,
+Trockenlauf. Wer ITO-0021 macht, kopiert diese vier Schritte und tauscht den Inhalt.
 
 Zu liefern je Wesen:
 
