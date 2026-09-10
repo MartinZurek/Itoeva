@@ -54,6 +54,15 @@ enum class ActionKind {
      */
     PURSUE_INTEREST,
 
+    /** Eine sprachunabhaengige Einladung an ein anwesendes Wesen senden. */
+    INVITE_TO_PLAY,
+
+    /** Auf eine Einladung anhand des eigenen Zustands antworten. */
+    RESPOND_TO_INVITE,
+
+    /** Die Antwort der anderen Seite wahrnehmen und fuer die Beziehung behalten. */
+    RECEIVE_RESPONSE,
+
     /**
      * Zu einem anderen Ort gehen.
      *
@@ -70,6 +79,27 @@ enum class ActionKind {
  * Alles ist eine Differenz und kein neuer Zustand: Nur so laesst sich dieselbe Handlung auf
  * jede Weltlage anwenden, ohne dass sie die Welt kennen muss.
  */
+enum class SymbolDirection { SEND, RECEIVE }
+
+data class SymbolEffect(
+    val counterpartProfileId: String,
+    val intents: Set<SymbolicIntent>,
+    val direction: SymbolDirection
+)
+
+data class RelationshipEffect(
+    val counterpartProfileId: String,
+    val affinityDelta: Double
+)
+
+/** Ergebnis genau eines angewandten Schritts, einschliesslich semantischer Ausgabe. */
+data class AppliedAction(
+    val agent: AgentState,
+    val world: WorldState,
+    val event: LivingEvent,
+    val message: SymbolicMessage? = null
+)
+
 data class ActionOutcome(
     val coinsDelta: Int = 0,
     val portionsDelta: Int = 0,
@@ -77,7 +107,15 @@ data class ActionOutcome(
     val needRelief: Map<NeedKind, Double> = emptyMap(),
     /** Wohin die Handlung den Agenten bringt, oder `null`, wenn sie ihn stehen laesst. */
     val movesTo: LivingSite? = null,
-    val minutes: Int = 0
+    val minutes: Int = 0,
+    /** Langsame Veraenderung des Geschmacks fuer das Ziel dieser Handlung. */
+    val preferenceDelta: Double = 0.0,
+    /** `null` bedeutet: zu klein fuer eine Episode; sonst emotionale Wertung -1, 0 oder 1. */
+    val rememberValence: Int? = null,
+    val relationshipEffect: RelationshipEffect? = null,
+    val symbols: SymbolEffect? = null,
+    /** Soziale Schritte bleiben im Ereignisstrom von normalen Handlungen unterscheidbar. */
+    val eventKind: LivingEventKind = LivingEventKind.ACTION_DONE
 )
 
 /**
@@ -104,17 +142,72 @@ data class Action(
     fun isPossible(world: WorldState): Boolean = blockedBy(world) == null
 
     /**
-     * Die Welt nach dieser Handlung.
+     * Agent und Welt nach dieser Handlung.
      *
      * Ruft man das mit einer Welt, die [blockedBy] meldet, kommt trotzdem ein Ergebnis heraus -
-     * die Pruefung gehoert dem Aufrufer ([LivingSimulation]). Diese Funktion soll rechnen und
-     * nicht urteilen; sonst haette man zwei Stellen, die dasselbe verbieten.
+     * die Pruefung gehoert dem Aufrufer ([LivingSimulation]). Diese eine Rechnung wendet ALLE
+     * Felder von [ActionOutcome] an: Welt, Beduerfnisse, Geschmack, Beziehung, Episode und
+     * Symbole. Eine neue Handlung bekommt deshalb keinen zweiten Wirkungsweg.
      */
-    fun applyTo(world: WorldState): WorldState = world.advanced(outcome.minutes).copy(
-        site = outcome.movesTo ?: world.site,
-        coins = (world.coins + outcome.coinsDelta).coerceAtLeast(0),
-        portions = (world.portions + outcome.portionsDelta).coerceAtLeast(0)
-    )
+    fun applyTo(agent: AgentState, world: WorldState, goal: GoalKind): AppliedAction {
+        val nextWorld = world.advanced(outcome.minutes).copy(
+            site = outcome.movesTo ?: world.site,
+            coins = (world.coins + outcome.coinsDelta).coerceAtLeast(0),
+            portions = (world.portions + outcome.portionsDelta).coerceAtLeast(0)
+        )
+        val symbolEffect = outcome.symbols
+        val relationshipEffect = outcome.relationshipEffect
+        val nextRelationships = if (relationshipEffect == null) {
+            agent.relationships
+        } else {
+            val previous = agent.relationships[relationshipEffect.counterpartProfileId]
+                ?: RelationshipState()
+            agent.relationships + (
+                relationshipEffect.counterpartProfileId to previous.changedBy(
+                    relationshipEffect.affinityDelta,
+                    nextWorld.absoluteMinute
+                )
+            )
+        }
+        val nextPreferences = if (outcome.preferenceDelta == 0.0) {
+            agent.learnedPreferences
+        } else {
+            val learned = (agent.learnedPreferences[goal] ?: 0.0) + outcome.preferenceDelta
+            agent.learnedPreferences + (goal to learned.coerceIn(-0.15, 0.15))
+        }
+        val event = LivingEvent(
+            kind = outcome.eventKind,
+            atMinute = nextWorld.absoluteMinute,
+            goal = goal,
+            action = kind,
+            counterpartProfileId = symbolEffect?.counterpartProfileId
+                ?: relationshipEffect?.counterpartProfileId,
+            intents = symbolEffect?.intents ?: emptySet()
+        )
+        val nextEpisodes = outcome.rememberValence?.let { valence ->
+            (agent.episodes + Episode.from(event, valence)).takeLast(AgentState.MAX_EPISODES)
+        } ?: agent.episodes
+        val nextAgent = agent.copy(
+            needs = agent.needs
+                .advanced(outcome.minutes, agent.personality)
+                .relieved(outcome.needRelief),
+            learnedPreferences = nextPreferences,
+            relationships = nextRelationships,
+            episodes = nextEpisodes,
+            lastEvent = event
+        )
+        val message = symbolEffect
+            ?.takeIf { it.direction == SymbolDirection.SEND }
+            ?.let {
+                SymbolicMessage(
+                    senderProfileId = agent.profileId,
+                    recipientProfileId = it.counterpartProfileId,
+                    intents = it.intents,
+                    atMinute = nextWorld.absoluteMinute
+                )
+            }
+        return AppliedAction(nextAgent, nextWorld, event, message)
+    }
 }
 
 /**
@@ -145,7 +238,8 @@ object ActionCatalog {
             outcome = ActionOutcome(
                 portionsDelta = -1,
                 needRelief = mapOf(NeedKind.HUNGER to 0.7, NeedKind.COMFORT to 0.2),
-                minutes = 20
+                minutes = 20,
+                rememberValence = 1
             )
         ),
         Action(
@@ -160,7 +254,8 @@ object ActionCatalog {
                 // Grund, warum ein satter Agent nicht den ganzen Tag arbeitet, obwohl Muenzen
                 // immer nuetzlich waeren.
                 needRelief = mapOf(NeedKind.ENERGY to -0.25, NeedKind.FUN to -0.1),
-                minutes = WORK_MINUTES
+                minutes = WORK_MINUTES,
+                rememberValence = 0
             ),
             effort = 0.35
         ),
@@ -174,7 +269,8 @@ object ActionCatalog {
             outcome = ActionOutcome(
                 coinsDelta = -GROCERY_COST,
                 portionsDelta = GROCERY_PORTIONS,
-                minutes = 30
+                minutes = 30,
+                rememberValence = 1
             ),
             effort = 0.1
         ),
@@ -183,7 +279,8 @@ object ActionCatalog {
             requirements = listOf(Requirement.At(LivingSite.HOME)),
             outcome = ActionOutcome(
                 needRelief = mapOf(NeedKind.ENERGY to 0.6, NeedKind.COMFORT to 0.3),
-                minutes = 120
+                minutes = 120,
+                rememberValence = 1
             )
         ),
         Action(
@@ -196,7 +293,9 @@ object ActionCatalog {
                     NeedKind.GROWTH to 0.3,
                     NeedKind.ENERGY to -0.05
                 ),
-                minutes = 60
+                minutes = 60,
+                preferenceDelta = 0.02,
+                rememberValence = 1
             )
         )
     ).associateBy { it.kind }
@@ -219,5 +318,64 @@ object ActionCatalog {
             minutes = TRAVEL_MINUTES
         ),
         effort = 0.05
+    )
+
+    fun inviteToPlay(targetProfileId: String): Action = Action(
+        kind = ActionKind.INVITE_TO_PLAY,
+        requirements = listOf(Requirement.Near(targetProfileId)),
+        outcome = ActionOutcome(
+            needRelief = mapOf(NeedKind.SOCIAL to 0.1),
+            minutes = 5,
+            rememberValence = 0,
+            relationshipEffect = RelationshipEffect(targetProfileId, affinityDelta = 0.0),
+            symbols = SymbolEffect(
+                targetProfileId,
+                setOf(SymbolicIntent.PLAY, SymbolicIntent.QUESTION),
+                SymbolDirection.SEND
+            ),
+            eventKind = LivingEventKind.SYMBOLS_SENT
+        )
+    )
+
+    fun respondToInvite(
+        senderProfileId: String,
+        intents: Set<SymbolicIntent>,
+        accepted: Boolean
+    ): Action = Action(
+        kind = ActionKind.RESPOND_TO_INVITE,
+        requirements = listOf(Requirement.Near(senderProfileId)),
+        outcome = ActionOutcome(
+            needRelief = if (accepted) mapOf(NeedKind.SOCIAL to 0.4) else emptyMap(),
+            minutes = 2,
+            preferenceDelta = if (accepted) 0.02 else -0.01,
+            rememberValence = if (accepted) 1 else -1,
+            relationshipEffect = RelationshipEffect(
+                senderProfileId,
+                affinityDelta = if (accepted) 0.08 else -0.04
+            ),
+            symbols = SymbolEffect(senderProfileId, intents, SymbolDirection.SEND),
+            eventKind = LivingEventKind.SYMBOLS_SENT
+        )
+    )
+
+    fun receiveResponse(
+        senderProfileId: String,
+        intents: Set<SymbolicIntent>,
+        accepted: Boolean
+    ): Action = Action(
+        kind = ActionKind.RECEIVE_RESPONSE,
+        requirements = listOf(Requirement.Near(senderProfileId)),
+        outcome = ActionOutcome(
+            needRelief = if (accepted) mapOf(NeedKind.SOCIAL to 0.5) else emptyMap(),
+            minutes = 1,
+            preferenceDelta = if (accepted) 0.02 else -0.01,
+            rememberValence = if (accepted) 1 else -1,
+            relationshipEffect = RelationshipEffect(
+                senderProfileId,
+                affinityDelta = if (accepted) 0.08 else -0.04
+            ),
+            symbols = SymbolEffect(senderProfileId, intents, SymbolDirection.RECEIVE),
+            eventKind = LivingEventKind.SYMBOLS_RECEIVED
+        )
     )
 }
