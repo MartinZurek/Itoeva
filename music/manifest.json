@@ -74,6 +74,20 @@
       "cfg_scale": 1,
       "seed": 10092026,
       "notes": "Persoenliches Stueck des STARLET, Variante 02 der Rolle character_theme_background. STARLET hat signatureTopic MINDFULNESS - still, aufmerksam und nach innen gewandt; musikalisch deshalb das melancholischste der sechs Themen: langsam, moll-gefaerbt und mit viel Raum, ohne traurig-schwer zu werden. Die sparsame Besetzung traegt lange Toene und hoerbare Stille zwischen den Phrasen. Die Melodie ist ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
+    },
+    {
+      "id": "theme-wyrmling",
+      "title": "Wyrmling's Theme",
+      "role": "character_theme_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_theme_03",
+      "prompt_file": "music/prompts/theme-wyrmling.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 11092026,
+      "notes": "Persoenliches Stueck des WYRMLING, Variante 03 der Rolle character_theme_background. WYRMLING hat signatureTopic MOVE - der positive, nicht hektische Motivator mit Schwerpunkt Bewegung; musikalisch deshalb das raueste und gitarrenbetonteste der sechs Themen: hoeheres, aber kontrolliertes Tempo, angezerrte Gitarre, deutlicher Bass und ein Schlagzeug mit Kante. Die Energie wirkt zielgerichtet und ermutigend, nicht ungeduldig oder chaotisch. Die Melodie ist ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
     }
   ]
 }

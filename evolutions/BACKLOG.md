@@ -186,7 +186,7 @@ lange Toene, hoerbare Stille zwischen den Phrasen.
 
 Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
 
-## [open] ITO-0019 - Themensong fuer WYRMLING schreiben (Prompt und Manifest)
+## [done] ITO-0019 - Themensong fuer WYRMLING schreiben (Prompt und Manifest)
 Wie ITO-0017, aber fuer **WYRMLING** (`signatureTopic = MOVE`), `android_resource`
 `itoeva_theme_03`, Prompt `music/prompts/theme-wyrmling.txt`, id `theme-wyrmling`.
 
