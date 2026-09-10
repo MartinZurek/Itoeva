@@ -2111,3 +2111,33 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Noch unverified:** Klang, Loop und subjektive Passung koennen erst nach einem einzelnen
   manuellen `Generate Itoeva Music`-Lauf gehoert und ueber das bestehende Freigabe-Gate
   beurteilt werden. Es wurde bewusst kein Audio erzeugt oder gemergt.
+
+### 2026-09-10 - Hootlets persoenliches Musikstueck vorbereitet
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. `DOCUMENTED INTENT` fuer die vom
+  Produktverantwortlichen gewuenschten eigenen, spaeter singbaren Charakterstuecke und `FACT`
+  fuer Hootlets bestehende Persoenlichkeit und `signatureTopic = FOCUS`.
+- **Ausgangsproblem und Nutzerwirkung:** Die feste Charaktermusik-Rolle und ihr taeglicher Anlass
+  waren vorhanden, fuer HOOTLET fehlten aber Prompt und Manifest-Eintrag. Ein spaeterer Stream
+  konnte den stillen, geduldigen Beobachter deshalb musikalisch noch nicht von den anderen Wesen
+  unterscheiden.
+- **Getroffene Entscheidung:** Variante 06 ist das klarste und geordnetste der sechs Themen:
+  stetiger ruhiger Puls, ein sauberes Piano-/Vibraphon-Motiv und genau eine kleine kontrollierte
+  Verschiebung je Wiederholung. Die Acht-Takt-Melodie bleibt sofort erkennbar und singbar;
+  Resonanz und warme offene Harmonie halten die Praezision aufmerksam statt kalt. Das erweitert
+  nicht Hootlets Persoenlichkeit, sondern uebersetzt die bereits geschuetzte Stimme in Musik.
+- **Verworfene Alternativen:** Kein steriler Metronomcharakter, keine virtuosen Laeufe, kein
+  konturloses Ambient-Stueck, kein Austausch der gemeinsamen Tagesmusik, keine Rotation der
+  persoenlichen Variante, kein Gesang im erzeugten Asset und keine zweite oder kostenpflichtige
+  Musikpipeline.
+- **Betroffene Bereiche:** `music/prompts/theme-hootlet.txt`, `music/manifest.json`,
+  `music/README.md`, `evolutions/BACKLOG.md` und die aktuelle `UEBERGABE.md`. Kein
+  Anwendungscode, keine oeffentlichen App-Texte und keine ausgelieferte Audiodatei.
+- **Daten, Migration und Ruecksetzweg:** Keine Room-, Preference- oder Nutzerdatenaenderung.
+  Ruecksetzweg ist ein gewoehnlicher Revert dieses PRs.
+- **Ausgefuehrte Tests:** Der lokale
+  `python3 tools/music/generate_music.py --track-id theme-hootlet --dry-run` war erfolgreich;
+  danach laufen `Verify Music Tooling` und die vollstaendige Android-CI auf dem PR.
+- **Noch unverified:** Klang, Loop und subjektive Passung koennen erst nach einem einzelnen
+  manuellen `Generate Itoeva Music`-Lauf gehoert und ueber das bestehende Freigabe-Gate
+  beurteilt werden. Es wurde bewusst kein Audio erzeugt oder gemergt.
