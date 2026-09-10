@@ -2052,3 +2052,33 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Erst war unklar, WARUM die Sitzung abbrach; dann, DASS der Bau rot war; dann, WELCHE Datei; jetzt
   WARUM ein Test faellt. Jede Stufe wurde erst sichtbar, als die darueber behoben war - und jede
   hat einen Lauf gekostet, weil bei rotem `evolve` nichts gepusht wird.
+
+### 2026-09-10 - Fennecs persoenliches Musikstueck vorbereitet
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. `DOCUMENTED INTENT` fuer die vom
+  Produktverantwortlichen gewuenschten eigenen, spaeter singbaren Charakterstuecke und `FACT`
+  fuer Fennecs bestehende Persoenlichkeit und `signatureTopic = DRINK`.
+- **Ausgangsproblem und Nutzerwirkung:** Die feste Charaktermusik-Rolle und ihr taeglicher Anlass
+  waren vorhanden, fuer FENNEC fehlten aber Prompt und Manifest-Eintrag. Ein spaeterer Stream
+  konnte den gelassenen, verlaesslichen Beschuetzer deshalb musikalisch noch nicht von den
+  anderen Wesen unterscheiden.
+- **Getroffene Entscheidung:** Variante 04 ist das waermste und sozialste der sechs Themen:
+  mittleres Tempo, gebuerstetes Schlagzeug, weiches Rhodes, warme Bassbegleitung und eine eigene
+  singbare Acht-Takt-Melodie. Die Energie bleibt ruhig, einladend und verlaesslich statt kalt,
+  sentimental oder hastig. Das erweitert nicht Fennecs Persoenlichkeit, sondern uebersetzt die
+  bereits geschuetzte Stimme in Musik.
+- **Verworfene Alternativen:** Kein Austausch der gemeinsamen Tagesmusik, keine Rotation der
+  persoenlichen Variante, kein Gesang im erzeugten Asset und keine zweite oder kostenpflichtige
+  Musikpipeline. Ein rein schlaefriges Ambient-Stueck wurde verworfen, weil es Fennecs soziale
+  Waerme und die geforderte singbare Melodie verdecken wuerde.
+- **Betroffene Bereiche:** `music/prompts/theme-fennec.txt`, `music/manifest.json`,
+  `music/README.md`, `evolutions/BACKLOG.md` und die aktuelle `UEBERGABE.md`. Kein
+  Anwendungscode, keine oeffentlichen App-Texte und keine ausgelieferte Audiodatei.
+- **Daten, Migration und Ruecksetzweg:** Keine Room-, Preference- oder Nutzerdatenaenderung.
+  Ruecksetzweg ist ein gewoehnlicher Revert dieses PRs.
+- **Ausgefuehrte Tests:** Der lokale
+  `python3 tools/music/generate_music.py --track-id theme-fennec --dry-run` war erfolgreich;
+  danach liefen `Verify Music Tooling` und die vollstaendige Android-CI auf dem PR.
+- **Noch unverified:** Klang, Loop und subjektive Passung koennen erst nach einem einzelnen
+  manuellen `Generate Itoeva Music`-Lauf gehoert und ueber das bestehende Freigabe-Gate
+  beurteilt werden. Es wurde bewusst kein Audio erzeugt oder gemergt.
