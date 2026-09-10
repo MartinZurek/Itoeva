@@ -462,6 +462,7 @@ class LivingAgentTest {
             species = AvatarSpecies.WYRMLING,
             weitere = arrayOf(NeedKind.SOCIAL to 0.6)
         ).copy(
+            goal = GoalKind.CONNECT_WITH,
             learnedPreferences = mapOf(GoalKind.CONNECT_WITH to 0.08),
             episodes = listOf(Episode(vergangenheit, 1)),
             relationships = mapOf(
