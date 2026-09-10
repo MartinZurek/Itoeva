@@ -1,7 +1,7 @@
 package com.notime.glyphsim.living
 
 /**
- * **Was ein Wesen tun kann** - sechs Handlungen, jede mit benannten Voraussetzungen und einer
+ * **Was ein Wesen tun kann** - ein kleiner Satz tief verbundener Handlungen mit benannten Voraussetzungen und einer
  * benannten Wirkung.
  *
  * ## Die Trennung, die diese Datei traegt
@@ -15,10 +15,9 @@ package com.notime.glyphsim.living
  *
  * ## Die Wirkung ist die Erweiterungsstelle
  *
- * [ActionOutcome] traegt heute Muenzen, Vorrat, Ort, Zeit und Beduerfnislinderung. Das ist
- * bereits **mehr als Beduerfnisbefriedigung** und genau der Punkt: Wissen, Erinnerungen,
- * Beziehungswirkung und Faehigkeitsfortschritt kommen spaeter als weitere Felder derselben
- * Klasse dazu. Keine Handlung bekommt dafuer einen Sonderweg, und der Kern bleibt, wie er ist.
+ * [ActionOutcome] traegt Muenzen, Vorrat, Ort, Zeit, Beduerfnislinderung, Erinnerung,
+ * Geschmack, Beziehung und Symbolbedeutung. Genau diese gemeinsame Form verhindert
+ * Sonderwege fuer soziale Handlungen; [Action.applyTo] bleibt die einzige Rechnung.
  */
 enum class ActionKind {
     /**
@@ -89,7 +88,8 @@ data class SymbolEffect(
 
 data class RelationshipEffect(
     val counterpartProfileId: String,
-    val affinityDelta: Double
+    val trustDelta: Double,
+    val closenessDelta: Double
 )
 
 /** Ergebnis genau eines angewandten Schritts, einschliesslich semantischer Ausgabe. */
@@ -157,24 +157,6 @@ data class Action(
         )
         val symbolEffect = outcome.symbols
         val relationshipEffect = outcome.relationshipEffect
-        val nextRelationships = if (relationshipEffect == null) {
-            agent.relationships
-        } else {
-            val previous = agent.relationships[relationshipEffect.counterpartProfileId]
-                ?: RelationshipState()
-            agent.relationships + (
-                relationshipEffect.counterpartProfileId to previous.changedBy(
-                    relationshipEffect.affinityDelta,
-                    nextWorld.absoluteMinute
-                )
-            )
-        }
-        val nextPreferences = if (outcome.preferenceDelta == 0.0) {
-            agent.learnedPreferences
-        } else {
-            val learned = (agent.learnedPreferences[goal] ?: 0.0) + outcome.preferenceDelta
-            agent.learnedPreferences + (goal to learned.coerceIn(-0.15, 0.15))
-        }
         val event = LivingEvent(
             kind = outcome.eventKind,
             atMinute = nextWorld.absoluteMinute,
@@ -184,6 +166,25 @@ data class Action(
                 ?: relationshipEffect?.counterpartProfileId,
             intents = symbolEffect?.intents ?: emptySet()
         )
+        val nextRelationships = if (relationshipEffect == null) {
+            agent.relationships
+        } else {
+            val previous = agent.relationships[relationshipEffect.counterpartProfileId]
+                ?: RelationshipState()
+            agent.relationships + (
+                relationshipEffect.counterpartProfileId to previous.changedBy(
+                    relationshipEffect.trustDelta,
+                    relationshipEffect.closenessDelta,
+                    event
+                )
+            )
+        }
+        val nextPreferences = if (outcome.preferenceDelta == 0.0) {
+            agent.learnedPreferences
+        } else {
+            val learned = (agent.learnedPreferences[goal] ?: 0.0) + outcome.preferenceDelta
+            agent.learnedPreferences + (goal to learned.coerceIn(-0.15, 0.15))
+        }
         val nextEpisodes = outcome.rememberValence?.let { valence ->
             (agent.episodes + Episode.from(event, valence)).takeLast(AgentState.MAX_EPISODES)
         } ?: agent.episodes
@@ -327,7 +328,7 @@ object ActionCatalog {
             needRelief = mapOf(NeedKind.SOCIAL to 0.1),
             minutes = 5,
             rememberValence = 0,
-            relationshipEffect = RelationshipEffect(targetProfileId, affinityDelta = 0.0),
+            relationshipEffect = RelationshipEffect(targetProfileId, trustDelta = 0.0, closenessDelta = 0.01),
             symbols = SymbolEffect(
                 targetProfileId,
                 setOf(SymbolicIntent.PLAY, SymbolicIntent.QUESTION),
@@ -351,7 +352,8 @@ object ActionCatalog {
             rememberValence = if (accepted) 1 else -1,
             relationshipEffect = RelationshipEffect(
                 senderProfileId,
-                affinityDelta = if (accepted) 0.08 else -0.04
+                trustDelta = if (accepted) 0.06 else -0.03,
+                closenessDelta = if (accepted) 0.08 else -0.02
             ),
             symbols = SymbolEffect(senderProfileId, intents, SymbolDirection.SEND),
             eventKind = LivingEventKind.SYMBOLS_SENT
