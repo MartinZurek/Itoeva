@@ -6,48 +6,30 @@ ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
 [`evolutions/BACKLOG.md`](evolutions/BACKLOG.md) (die Arbeitsliste), sondern sagt, **wo genau der
 Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
-## 1. Der offene Faden: die sechs Charakterstuecke
+## 1. Der offene Faden: Living Agent System
 
-Der Auftraggeber will, dass **jedes der sechs Wesen ein eigenes Musikstueck bekommt** - eines
-etwas grungelastiger, eines mehr am Klavier, eines melancholischer. Fernziel: diese Stuecke
-spaeter je Charakter live auf YouTube singen. Deshalb sollen sie sich **hoerbar voneinander
-unterscheiden** und eine **singbare** Melodie haben; erzeugt werden sie trotzdem instrumental.
+Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
+eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, danach hoeren und
+erst dann einen Asset-PR oeffnen.
 
-### Was fertig ist
+Der neue ausdruecklich freigegebene Hauptauftrag steht in
+[`LIVING_AGENT.md`](LIVING_AGENT.md). Die Bestandsaufnahme ist abgeschlossen:
 
-| | |
-|---|---|
-| ITO-0016 | Rolle `CHARACTER_THEME` in `PlayMusicPlan.kt`, Variante 01-06 fest je Spezies (`MusicRole.characterThemeVariant`), Rolle in `generate_music.py` bekannt |
-| ITO-0023 | **Wann** das Stueck laeuft: beim ersten Erscheinen des Wesens im Spielmodus an einem Kalendertag, ein Stueck lang. Begruendung vollstaendig im KDoc von `app-sim/.../matrix/PlayCharacterTheme.kt` |
-| ITO-0017 | Prompt und Manifest-Eintrag fuer **PUFFLING** (`music/prompts/theme-puffling.txt`, `itoeva_theme_01`) |
-| ITO-0018 | Prompt und Manifest-Eintrag fuer **STARLET** (`music/prompts/theme-starlet.txt`, `itoeva_theme_02`) |
-| ITO-0019 | Prompt und Manifest-Eintrag fuer **WYRMLING** (`music/prompts/theme-wyrmling.txt`, `itoeva_theme_03`) |
-| ITO-0020 | Prompt und Manifest-Eintrag fuer **FENNEC** (`music/prompts/theme-fennec.txt`, `itoeva_theme_04`) |
-| ITO-0021 | Prompt und Manifest-Eintrag fuer **GLOOP** (`music/prompts/theme-gloop.txt`, `itoeva_theme_05`) |
-| ITO-0022 | Prompt und Manifest-Eintrag fuer **HOOTLET** (`music/prompts/theme-hootlet.txt`, `itoeva_theme_06`) |
+- Vorrat, Geld, Arbeit, Einkauf und Essen existieren bereits als `PlayPantry`, `PlayWallet`
+  und `PlayRoutine`, sind aber noch global beziehungsweise in `DockScreen` hart verdrahtet.
+- `PlayAmbientActivity` waehlt Freizeit gewichtet, hat aber kein Ziel, keinen Plan und keine
+  erklaerbare Utility-Rechnung.
+- `PlayDreamMemory` speichert kompakte Tageserlebnisse; echte episodische Agentenerinnerung und
+  deren Einfluss auf Entscheidungen fehlen.
+- Besuche sind sichtbar, kommunizieren aber nur feste Punktblasen ohne semantische Absicht oder
+  Beziehungseinfluss.
+- `AvatarActivityPlans` zeigt das richtige Integrationsmuster: semantische Absicht bleibt von
+  der vorhandenen `PlayRoutine`-Choreografie getrennt.
 
-### Was ansteht
-
-**Keine weitere Prompt- oder Manifest-Arbeit fuer die sechs Charakterstuecke.** ITO-0017 bis
-ITO-0022 sind abgeschlossen. Offen bleibt bewusst die eigentliche Audioerzeugung: ein manueller
-Workflow-Lauf pro Charakter, danach Hoerpruefung und erst dann ein separater Asset-PR.
-
-Zu liefern je Wesen:
-
-1. `music/prompts/theme-<wesen>.txt` - englisch; Tempo, Instrumente, Klangbild, Stimmung, und am
-   Ende eine ausdrueckliche Ausschlussliste. **Niemals einen konkreten Kuenstler oder ein
-   konkretes Stueck nennen** - immer Eigenschaften und Instrumente.
-2. Ein Eintrag in `music/manifest.json`: `role` `character_theme_background`, `android_resource`
-   `itoeva_theme_0<n>` nach der Deklarationsreihenfolge von `AvatarSpecies` (PUFFLING 01, STARLET
-   02, WYRMLING 03, FENNEC 04, GLOOP 05, HOOTLET 06), `duration_seconds` 90, `model`
-   `small-music`, `output_format` `ogg`, `steps` 8, `cfg_scale` 1.0, ein bisher unbenutzter `seed`.
-3. Eine Zeile in `music/README.md`.
-4. `python tools/music/generate_music.py --track-id theme-<wesen> --dry-run` muss durchgehen. Das
-   ist das Abnahmekriterium; in CI prueft es `verify-music-tooling.yml`.
-
-**Kein Audio erzeugen.** `generate-music.yml` ist `workflow_dispatch` und wird **von einem
-Menschen** ausgeloest. Der Auftraggeber will jedes Stueck einzeln hoeren, bevor es gemergt wird -
-also je Track ein Lauf, nicht sechs auf einmal.
+Naechster Schnitt ist NT-063: ein reiner Kotlin-Kern unter `app-sim/.../living/` mit
+deterministischen JVM-Tests. Erst nach dessen Merge folgen Persistenz, Runtime-Anbindung und
+Stream-Snapshot in getrennten PRs. `DockScreen.kt` fuer den Kern nicht anfassen und niemals als
+Ganzes lesen.
 
 ## 2. Harte Regeln fuer die Musik
 

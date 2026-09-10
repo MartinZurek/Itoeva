@@ -212,14 +212,16 @@ das Ergänzen weiterer Beziehungen und Lore-Stücke innerhalb des bestehenden Ra
 Wesen ("Erzählerische Autonomie") - das bleibt in EVOLUTION.md die maßgebliche, laufend
 gepflegte Quelle für den genauen Umfang dieser Freigabe.
 
-## Warum diese Priorität gerade jetzt: Prozess vor neuen Features
+## Naechster Architektur-Meilenstein: lebende Agenten
 
-Itoeva wird seit dem 17.08. von einer automatisierten Pipeline weiterentwickelt
-(`claude-primary-run.yml`, siehe Architecture.md). Zwei Tage dieser kurzen Geschichte gingen bereits
-durch ein erschöpftes CI-Kontingent verloren, mehrere große Dateien sind über 1500-3600 Zeilen
-gewachsen, und Kernlogik existiert zwischen `:app` und `:app-sim` teils dupliziert statt geteilt
-(Details in Architecture.md). Eine Vision, die nur neue Spielinhalte beschreibt, ohne die
-Tragfähigkeit des Prozesses zu sichern, der sie bauen soll, wäre unvollständig. Deshalb gilt bis
-auf Weiteres: **keine neuen, größeren Gameplay-Features, bevor Build-Prozess, Testabdeckung,
-Agentenfreundlichkeit und Tokenverbrauch der Entwicklung selbst spürbar besser sind** - siehe
-NextTasks.md für die konkrete, priorisierte Umsetzung dieser Regel.
+Am 2026-09-10 hat der Produktverantwortliche das
+[Itoeva Living Agent System](LIVING_AGENT.md) ausdruecklich als naechsten groesseren
+Architektur-Meilenstein freigegeben. Damit ist die fruehere pauschale Sperre fuer neue groessere
+Gameplay-Systeme fuer genau diesen, inkrementell beschriebenen Rahmen aufgehoben.
+
+Das Ziel ist keine Quest- oder Plotmaschine. Beduerfnisse, Ressourcen, Ziele, Erinnerungen,
+Beziehungen und lernende Praeferenzen sollen nachvollziehbare Entscheidungen hervorbringen.
+Geschichten werden aus wirklichen Simulationsereignissen beobachtet, nie vorgeschrieben. Der
+bestehende Prozessfokus bleibt als Umsetzungsgrenze erhalten: kleine PRs, reiner testbarer Kern,
+keine zweite Welt- oder Animationspipeline und keine Cloud-/Plattformarchitektur ohne eigene
+Freigabe. Die konkrete Reihenfolge steht in NextTasks.md.
