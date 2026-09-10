@@ -174,6 +174,27 @@ Job bestimmt anhand geänderter Pfade, ob App-Code betroffen ist, und übersprin
 Jobs (Emulator-Tests, Lint/R8) bei reinen Text-/Backlog-Änderungen. `deliver-apk.yml` liefert
 nach jedem Merge ein signiertes Test-APK nach Google Drive aus.
 
+## Living Agent System (freigegeben, inkrementell)
+
+Der Integrationsplan steht in [LIVING_AGENT.md](LIVING_AGENT.md). Der neue reine Kotlin-Kern lebt
+unter `app-sim/.../living/`: Er bewertet Beduerfnisse und Weltzustand, haelt Ziel und Plan,
+erzeugt bedeutungsvolle Ereignisse und liefert eine erklaerbare Momentaufnahme. Er kennt weder
+Compose noch Android, Room oder Renderer.
+
+Die bestehende Architektur bleibt die Ausfuehrungsebene:
+
+- `PlayRoutine` und `RoutineStep` choreografieren gewaehlte Aktionen.
+- `PlayScene`, `PlayPantry`, `PlayWallet`, `PlayPresence` und `PlayTimeLapse` liefern
+  Welt- und Runtime-Adapter.
+- `PlayAmbientActivity` bleibt Quelle fuer nicht dringende Aktivitaetskandidaten.
+- `AvatarSpecies` liefert nur Startbias; Erfahrungen duerfen Praeferenzen veraendern.
+- Besuche werden spaeter ueber einen typisierten Symbolvertrag statt feste Punktblasen entschieden.
+
+Es entsteht keine zweite Engine und kein `StoryManager`. Der Kern wird zuerst mit
+deterministischen JVM-Tests bewiesen, danach profilbezogen persistiert und erst dann gezielt an
+`DockScreen` angeschlossen. Eine eventuelle Auslagerung in ein neues Modul bleibt bis zu
+Messdaten aus dem Streaming-PoC offen.
+
 ## Öffentliche 24/7-Charakter-Streams (Zielarchitektur, nicht implementiert)
 
 ### Wie das Ziel zur heutigen Architektur passt
