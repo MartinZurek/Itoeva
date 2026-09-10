@@ -26,18 +26,19 @@ Der neue ausdruecklich freigegebene Hauptauftrag steht in
 - `AvatarActivityPlans` zeigt das richtige Integrationsmuster: semantische Absicht bleibt von
   der vorhandenen `PlayRoutine`-Choreografie getrennt.
 
-**NT-063 (Schnitt 2a) ist umgesetzt.** Der reine Kotlin-Kern steht in fuenf Dateien unter
-`app-sim/src/main/java/com/notime/glyphsim/living/` und laeuft mit 22 deterministischen Tests in
-der Offline-Strecke mit. Belegt sind: Zielwahl mit aufgeschluesselter Begruendung, der
-ressourcenbedingte Weg `WORK -> BUY_FOOD -> EAT`, benannte Voraussetzungen, Neuplanung nach
-einer Weltaenderung, die Erklaerung als read-only Vertrag, der Startbias je Spezies und ein
-Mehrtageslauf. Was der Kern absichtlich noch NICHT tut, steht im Abschnitt "Stand" von
-[`LIVING_AGENT.md`](LIVING_AGENT.md).
+**NT-063 und NT-067 (Schnitte 2a und 2b) sind umgesetzt.** Der reine Kotlin-Kern steht
+weiterhin in genau fuenf Dateien unter `app-sim/src/main/java/com/notime/glyphsim/living/`.
+Zusaetzlich zu Zielwahl, Ressourcenplan und Neuplanung sind nun begrenzte Episoden, gelernte
+Zielpraeferenzen, Vertrauen/Naehe je Gegenueber und sprachunabhaengige Symbolnachrichten
+belegt. `CONNECT_WITH` sendet `PLAY + QUESTION`; die Antwort entsteht aus Energie, sozialem
+Bedarf, Beziehung, Persoenlichkeit und laufendem Ziel. Ein deterministischer Mehrtagesfall
+laesst zwei aehnlich gestartete Wesen aus unterschiedlichen Erlebnissen verschiedene Vorlieben
+und Historien entwickeln, ohne Plot.
 
-Naechster Schnitt ist **NT-067** (Schnitt 2b): Episoden, Beziehungen, symbolische Verstaendigung,
-gelernter Geschmack und `CONNECT_WITH` - wieder als reine Domaene, wieder mit Tests in der
-Offline-Strecke. Danach erst Persistenz (NT-064), Runtime-Anbindung (NT-065) und
-Stream-Snapshot (NT-066), jeweils als eigener PR.
+Naechster Schnitt ist **NT-064**: profilbezogene, versionierte Persistenz. Bei einer
+Room-Entscheidung muessen Migration und Migrationstest in denselben PR; `:core` bleibt
+unangetastet. Danach folgen Runtime-Anbindung (NT-065) und Stream-Snapshot (NT-066), jeweils als
+eigener PR.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
@@ -46,6 +47,9 @@ Drei Dinge, die man beim Weiterbauen wissen muss:
   macht den Mehrtageslauf unpruefbar - und im Zeitraffer rechnet er gegen die falsche Uhr.
 - **`Requirement` ist ein benanntes Ding und kein `Boolean`.** Daran haengt die ganze
   Erklaerbarkeit. Aus demselben Grund enthaelt kein Ereignis freien Text.
+- **`ActionOutcome` ist der einzige Wirkungsweg.** Auch Episode, Geschmack, Beziehung und
+  Symbolbedeutung werden in `Action.applyTo` gemeinsam gerechnet; soziale Handlungen bekommen
+  keine Nebenpipeline.
 - **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung gehoert in den
   Runtime-Adapter (NT-065), nicht in die Domaene. `DockScreen.kt` fuer die reinen Schnitte nicht
   anfassen und niemals als Ganzes lesen.
@@ -81,7 +85,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 243 Tests, ~1,5 s
+bash tools/reaction-preview/tests.sh          # derzeit 271 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 
