@@ -2313,3 +2313,49 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   gewaehlt wird, liegen Migration und Migrationstest im selben PR; `:core` bleibt
   unangetastet.
 
+### 2026-09-10 - Living-Agent-Zustand versioniert und profilbezogen gespeichert (Schnitt 3)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Android-Grenze mit deterministischen
+  JVM-Belegen; keine Geraetepruefung fuer den Speicherkern erforderlich.
+- **Ausgangsproblem:** Der Kern konnte Erinnerungen, Beziehungen, Ressourcen und gelernten
+  Geschmack bilden, verlor diesen Zustand aber beim Prozessende. Ein alter Plan durfte beim
+  Wiedereinstieg zugleich keine inzwischen geschlossene Welt oder abwesende Figur umgehen.
+- **Entscheidung:** `LivingAgentStore` speichert genau einen atomaren, versionierten Snapshot
+  pro `profileId`. Der reine Kern bleibt speicherfrei; ein kleines `LivingAgentStorage` trennt
+  Codec und Android-`SharedPreferences`-Adapter. Snapshot-Version 2 umfasst Agent, Ressourcen,
+  Persoenlichkeit, Ziel, gelernte Praeferenzen, begrenzte Episoden, Beziehungen und das letzte
+  wichtige Ereignis.
+- **Erster Beleg:** Zwei Profile werden mit verschiedenen Hungerwerten und Muenzen gespeichert
+  und getrennt wiederhergestellt. Ein V1-Snapshot wird mit leeren neuen Lernfeldern gelesen und
+  anschliessend als V2 geschrieben. Derselbe Snapshot mit derselben expliziten Simulationsminute
+  ergibt zweimal exakt denselben Zustand.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - SharedPreferences statt Room: Der kleine zusammenhaengende Snapshot ist nicht relational.
+    Eine Room-Migration wuerde hier Schema- und Zwei-Datenbank-Risiko ohne fachlichen Nutzen
+    erzeugen. `:core` und beide Room-Datenbanken bleiben unveraendert.
+  - Zeit wird als `currentSimulationMinute` uebergeben. Es gibt keinen Zugriff auf Systemuhr
+    oder Zufall; Beduerfnisse und Welt laufen nur um die nichtnegative Differenz weiter.
+  - Das langlebige Ziel wird gespeichert, der konkrete Plan absichtlich nicht. Aktuell
+    geoeffnete Orte und anwesende Profile kommen beim Laden aus der Runtime; danach plant der
+    Kern gegen die neue Wirklichkeit.
+  - Unbekannte Zukunftsversionen und beschaedigte Pflichtwerte werden abgelehnt statt geraten.
+    V1-Felder fuer Episoden, Beziehungen und Geschmack werden leer und nachvollziehbar migriert.
+- **Eine Testerwartung war zu streng, nicht der Store:** `Needs` behandelt fehlende und
+  ausdruecklich mit null gespeicherte Beduerfnisse fachlich gleich, seine Data-Class-Gleichheit
+  aber nicht. Der Roundtrip-Test vergleicht deshalb den Druck aller sieben Beduerfnisse und die
+  uebrigen Zustandsfelder getrennt, statt eine interne Map-Darstellung zum Speichervertrag zu
+  machen.
+- **Abgrenzung:** Keine Runtime-Anbindung, keine Aenderung an `DockScreen`, `PlayRoutine`,
+  Room oder `:core`; keine zweite Simulationspipeline, kein Stream-UI und kein Audio.
+- **Betroffene Bereiche:** `app-sim/.../data/LivingAgentStore.kt`,
+  `LivingAgentStoreTest.kt`, die ausdrueckliche Offline-Testliste sowie `LIVING_AGENT.md`,
+  `NextTasks.md`, `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** Sechs neue Verhaltensfaelle erhoehen die Offline-Strecke von 271 auf 277 Tests:
+  vollstaendiger Roundtrip, Profiltrennung, Zeitfortschritt, deterministische Wiederholung,
+  echte V1-Migration und Ablehnung einer Zukunftsversion. Die neue Quell- und Testdatei stehen
+  in `SRCS`, `TEST_SRCS` und `TEST_CLASSES`; die vollstaendige Head-CI entscheidet vor
+  dem Merge.
+- **Naechster Schritt:** NT-065 - Ziel und jeweils naechste Living Action ueber einen kleinen
+  Adapter auf die vorhandenen `PlayRoutine`-, Vorrats-, Geld- und Besuchsmechaniken abbilden;
+  den harten Notfall-Sonderfall dabei ersetzen und keine zweite Choreografie bauen.
+
