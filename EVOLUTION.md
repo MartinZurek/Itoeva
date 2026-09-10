@@ -224,6 +224,34 @@ menschliche Entscheidung eingeführt werden.
 **OPEN DECISION:** Eine größere lineare Handlung oder Quest-Struktur ist nicht belegt. Die
 vorhandene Story ist episodisches Worldbuilding.
 
+### Living Agent System (entschieden 2026-09-10)
+
+Der Produktverantwortliche hat ein kleines, erweiterbares Living Agent System als naechsten
+groesseren Architektur-Meilenstein freigegeben. Voller Umfang und PR-Grenzen stehen in
+[LIVING_AGENT.md](LIVING_AGENT.md).
+
+- Geschichten entstehen aus Beduerfnissen, Weltbedingungen, Zielen, Erinnerungen,
+  Persoenlichkeit, Beziehungen und Folgen. Ein `StoryManager`, Plot-Skripte oder vorgefertigte
+  Gespraechsfolgen sind nicht Teil der Freigabe.
+- Der erste Schnitt ist deterministisch und inspizierbar. Dringende Grundbeduerfnisse duerfen
+  Freizeit verdraengen; bei gedeckten Grundlagen schaffen Utility-Regeln Raum fuer Spiel, Musik,
+  Neugier, soziale Naehe und Entwicklung.
+- Ziele und konkrete Handlungen sind getrennt. Plaene duerfen scheitern, unterbrochen und gegen
+  den aktuellen Weltzustand neu gebildet werden.
+- Spezies und bestehende Persoenlichkeit liefern Startbias, keine unveraenderliche
+  Verhaltensvorschrift. Bedeutungsvolle Erfahrungen duerfen Praeferenzen und Beziehungen langsam
+  veraendern.
+- Kommunikation ist intern typisiert und sprachunabhaengig. Darstellung als Icon, Emoji oder
+  Pixelsymbol ist eine spaetere UI-Aufgabe; ungepruefter Freitext bleibt ausgeschlossen.
+- Bedeutungsvolle Simulationsereignisse sind die Wahrheit fuer spaetere Rueckblicke und
+  Stream-Praesentation. Eine Beobachterschicht darf Muster erkennen, aber nichts erfinden oder
+  steuern.
+- Der lokale private Begleiterstand bleibt von kuenftigen oeffentlichen Stream-Instanzen getrennt.
+  Diese Entscheidung gibt keine Cloud-, Konto-, Netzwerk-, Zahlungs- oder Plattformintegration
+  frei.
+- Umsetzung erfolgt in kleinen PRs: reiner Kern, profilbezogene Persistenz,
+  vorhandene-Routinen-Adapter, dann read-only Stream-Vertrag.
+
 ### Kontrollierte Tagesablauf-Evolution (entschieden 2026-09-02)
 
 Der Nutzer hat ausdrücklich freigegeben, dass die zeitgesteuerten GitHub-Läufe bei leerem
@@ -475,8 +503,10 @@ Münzen und Vorrat ist nicht als final bestätigt.
 **OPEN DECISION:** Das Verhalten bei einem Moduswechsel während einer bereits offenen Erinnerung
 ist nicht entschieden, insbesondere die nachträgliche XP-Vergabe.
 
-**OPEN DECISION:** Es ist nicht entschieden, ob Münzen und Vorrat langfristig eine sichtbare
-Spielökonomie bleiben, erweitert werden oder nur Ambient-Simulation unterstützen sollen.
+Münzen und Vorrat sind fuer den freigegebenen Living-Agent-Schnitt als reale
+Weltbedingungen entschieden: Der Agent darf daraus Arbeit, Einkauf und Essen planen. **OPEN
+DECISION** bleibt, ob daraus langfristig eine sichtbare, groessere Spieloekonomie mit weiteren
+Guetern, Preisen oder Progressionsfolgen wird.
 
 ## Technical Evolution – Regeln für Code- und Architekturänderungen
 
@@ -2141,3 +2171,36 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Noch unverified:** Klang, Loop und subjektive Passung koennen erst nach einem einzelnen
   manuellen `Generate Itoeva Music`-Lauf gehoert und ueber das bestehende Freigabe-Gate
   beurteilt werden. Es wurde bewusst kein Audio erzeugt oder gemergt.
+
+### 2026-09-10 - Living Agent System als naechster Architektur-Meilenstein freigegeben
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Ausdrueckliche menschliche
+  Produktentscheidung; die bisherige pauschale Prozess-vor-Gameplay-Sperre ist fuer diesen
+  begrenzten Rahmen aufgehoben.
+- **Ausgangsproblem:** Itoeva besitzt bereits Tagesplaene, gewichtete Aktivitaeten, Orte,
+  Vorrat, Geld, Arbeit, Einkauf, Essen, Besuche und kurze Traumerinnerungen. Der entscheidende
+  Ressourcenpfad steckt jedoch als Sonderfall in `DockScreen`; es gibt kein persistentes
+  avatarbezogenes Beduerfnis, kein langlebiges Ziel, keinen erklaerbaren Plan, keine
+  entscheidungswirksame episodische Erinnerung und keine semantische Kommunikation.
+- **Entscheidung:** Ein kleiner reiner Kotlin-Kern fuehrt Beduerfnisse, Weltzustand,
+  Utility-Auswahl, Ziele, Replanning, Ereignisse, Episoden, lernende Praeferenzen, Beziehungen
+  und Symbole zusammen. Geschichten entstehen ausschliesslich als Folge der Simulation.
+- **Erster Beleg:** Der vertikale Slice muss den ressourcenbedingten Pfad
+  `WORK -> BUY_FOOD -> EAT`, eine optionale Freizeit-/Entwicklungshandlung, eine
+  zustandsabhaengige symbolische Interaktion und auseinanderlaufende Mehrtageshistorien
+  deterministisch pruefen.
+- **Architekturentscheidung:** Bestehende `PlayRoutine`-/`PlayScene`-Mechanik bleibt
+  Ausfuehrungsebene. Zuerst kommt die reine Domaene, danach profilbezogene Persistenz, danach die
+  gezielte Runtime-Anbindung und zuletzt ein read-only Stream-Zustandsvertrag. Kein grosser
+  Umbau, keine zweite Pipeline und vorerst keine neue `:core`-Entity.
+- **Persistenzfolge:** Ressourcen und Agentenzustand muessen pro `profileId` getrennt werden.
+  Die konkrete Android-Speicherung wird erst im Persistenz-PR entschieden; Room-Aenderungen
+  erfordern Migration und Migrationstest im selben PR.
+- **Abgrenzung:** Kein `StoryManager`, keine lineare Queststruktur, kein freier Dialog, keine
+  Twitch-Oberflaeche, keine Cloud-/Netzwerk-/Konto-/Zahlungsarchitektur und keine Aenderung des
+  Musik-Freigabe-Gates.
+- **Betroffene Dokumente:** `LIVING_AGENT.md`, `Vision.md`, `Architecture.md`,
+  `NextTasks.md`, `CLOUD_CODE_BRIEFING.md`, `UEBERGABE.md` und dieses Protokoll.
+- **Tests dieses Planungs-PRs:** Dokument-/Diff-Pruefung und Repository-CI; Anwendungscode und
+  Datenvertraege bleiben unveraendert.
+
