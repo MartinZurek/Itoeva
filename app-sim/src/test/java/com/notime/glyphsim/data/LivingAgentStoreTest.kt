@@ -107,7 +107,17 @@ class LivingAgentStoreTest {
             beforeWorld.nearbyProfiles
         )!!
 
-        assertEquals(beforeAgent.copy(plan = null), restored.agent)
+        assertEquals(
+            beforeAgent.copy(needs = Needs.calm(), plan = null),
+            restored.agent.copy(needs = Needs.calm())
+        )
+        NeedKind.entries.forEach { kind ->
+            assertEquals(
+                beforeAgent.needs.pressure(kind),
+                restored.agent.needs.pressure(kind),
+                1e-9
+            )
+        }
         assertEquals(beforeWorld, restored.world)
         assertNull(restored.migratedFromVersion)
         assertTrue(storage.values.getValue(beforeAgent.profileId).startsWith("version=2\n"))
