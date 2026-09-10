@@ -2359,3 +2359,53 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Adapter auf die vorhandenen `PlayRoutine`-, Vorrats-, Geld- und Besuchsmechaniken abbilden;
   den harten Notfall-Sonderfall dabei ersetzen und keine zweite Choreografie bauen.
 
+### 2026-09-10 - Living-Agent handelt in der vorhandenen Pixelwelt (Schnitt 4)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Reiner Adapter mit deterministischen
+  JVM-Belegen plus gezielte Compose-Anbindung; die sichtbare Wirkung bleibt am Geraet zu pruefen.
+- **Ausgangsproblem:** Der neue Kern konnte nachvollziehbar entscheiden, planen und speichern,
+  aber `DockScreen` spielte weiter den alten gewichteten Tagesablauf. Der eine Ressourcenpfad
+  steckte dort noch als harter Sonderfall `Vorrat leer und Geld fehlt -> WORK`; Kernzustand und
+  sichtbare Choreografie hatten damit zwei getrennte Entscheidungen und zwei Wirtschaften.
+- **Entscheidung:** `LivingRuntimeAdapter` ist die schmale Grenze zwischen beiden Seiten. Er
+  synchronisiert `PlayScene.Place`, Simulationszeit, Verfuegbarkeit und anwesende Profile mit
+  `WorldState`, laesst ausschliesslich `LivingSimulation` den naechsten Schritt bestimmen und
+  waehlt dafuer vorhandene `PlayRoutine`-Ablaufe. `PlayAmbientActivity` bleibt als
+  Vielfaltssignal fuer die konkrete Freizeitvariante erhalten, entscheidet aber nicht mehr, ob
+  ein Grundbeduerfnis uebergangen wird.
+- **Erster Beleg:** Ein pleite und hungrig gestarteter Agent waehlt sichtbar zuerst Arbeitsweg
+  plus Arbeit. Der folgende vorbereitete Ablauf enthaelt Laden, Bezahlen, Heimweg, Einraeumen und
+  Essen; danach stehen zwei verdiente und wieder ausgegebene Muenzen, zwei Restportionen und
+  deutlich geringerer Hunger im Kernzustand. Keine dieser Folgen steht als Plot in `DockScreen`.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - Die Abbildung aller sechzehn sichtbaren Orte auf vier `LivingSite` steht ausschliesslich im
+    Runtime-Adapter. `PlayScene` und die reine Domaene erhalten keine gegenseitige Sonderlogik.
+  - Eine Kernwirkung wird vorbereitet, aber erst nach vollstaendig gelaufener `PlayRoutine`
+    gespeichert. Wird sie durch eine echte Erinnerung oder einen Moduswechsel abgebrochen,
+    bleiben Lohn, Einkauf, Beduerfnisse und Episode auf dem letzten abgeschlossenen Stand.
+  - Zusammengefasst werden nur Schritte, die eine vorhandene Routine ohnehin als eine sichtbare
+    Einheit zeigt: Arbeitsweg plus Arbeit und Einkauf plus Heimweg, Einraeumen und Essen. Die
+    Choreografie bleibt bei `PlayRoutine`; es gibt keinen zweiten Ausfuehrer.
+  - Fuer Living-Routinen sind die alten globalen Nebenwirkungen in `runRoutine` abgeschaltet.
+    Geld, Vorrat, Erinnerung und Bedarf laufen weiterhin allein durch `ActionOutcome`. Die alten
+    `PlayWallet`-/`PlayPantry`-Werte dienen beim ersten Anschluss als Startwert und werden weder
+    geloescht noch umgedeutet; danach zeigt das Gespraech die profilbezogenen Weltwerte.
+  - `PlayTimeLapse.absoluteMinute` liefert dem Store eine fortlaufende Simulationsminute und
+    behaelt im Zeitraffer auch vollstaendige simulierte Tage. Der reine Kern kennt weiterhin
+    weder Android-Uhr noch Zufall.
+- **Abgrenzung:** Kein Stream-Overlay, keine Twitch-/YouTube-Anbindung, keine Cloud, kein neuer
+  Renderer, keine neue Room-Entity, keine Aenderung in `:core`, kein StoryManager und keine
+  allgemeine Planungsmaschine. Ausdrueckliche Nutzerbitten und die sichtbare Ausgestaltung
+  symbolischer Besuche bleiben bestehende beziehungsweise spaetere Integrationspunkte.
+- **Betroffene Bereiche:** Neuer reiner `matrix/LivingRuntimeAdapter.kt`, gezielte Stellen in
+  `DockScreen.kt`, die fortlaufende Runtime-Zeit in `PlayTimeLapse.kt`, profilbezogene
+  Ressourcenanzeige in `PlayTalk.kt`, `LivingRuntimeAdapterTest.kt`, die Offline-Testliste sowie
+  `LIVING_AGENT.md`, `Architecture.md`, `NextTasks.md`, `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** Acht neue Verhaltensfaelle erhoehen die Offline-Strecke von 277 auf 285 Tests:
+  vollstaendige Ortsabbildung, Oeffnungszeiten, fortlaufender Zeitraffer, Uebernahme bestehender
+  Ressourcen, Arbeits-/Einkaufskette, Essen aus vorhandenem Vorrat, vorhandene Freizeit-
+  Choreografie und bewusstes Nichtstun. `python3 -m unittest discover --start-directory
+  tools/music` bleibt mit 15 Tests gruen. Compose und der echte `ContextWrapper` werden erst von
+  der vollstaendigen Head-CI geprueft.
+- **Naechster Schritt:** NT-066 - eine read-only Snapshot-/Event-Quelle und den Mehrtages-
+  Langlauftest auf den nun wirklich ausgefuehrten Zustand setzen; weiterhin kein Twitch-UI.

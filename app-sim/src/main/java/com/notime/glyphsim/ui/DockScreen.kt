@@ -66,6 +66,10 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AvatarFeedEvent
+import com.notime.glyphsim.data.LivingAgentStore
+import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
+import com.notime.glyphsim.living.AgentState
+import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
 import com.notime.glyphsim.matrix.AvatarFooting
@@ -81,6 +85,7 @@ import com.notime.glyphsim.skilltree.AvatarUnlockRepository
 import com.notime.glyphsim.skilltree.SkillRepertoire
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
+import com.notime.glyphsim.matrix.LivingRuntimeAdapter
 import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
@@ -535,6 +540,14 @@ fun DockScreen(
         // Gelesen wird er jetzt vom Gespraech: Bezahlt der Avatar an der Kasse, waehrend das Feld
         // offen steht, sollen Muenzen und Vorrat darin nicht auf dem alten Stand stehen bleiben.
         var economyTick by remember { mutableIntStateOf(0) }
+        // Entscheidung und sichtbare Choreografie bleiben getrennt: Dieser Zustand wird erst
+        // nach einer vollstaendig gelaufenen PlayRoutine uebernommen. Bricht eine echte
+        // Erinnerung dazwischen, bleibt der letzte abgeschlossene Living-Schritt erhalten.
+        val livingStore = remember(context) {
+            LivingAgentStore(SharedPreferencesLivingAgentStorage(context))
+        }
+        var livingAgent by remember(presenceProfileId) { mutableStateOf<AgentState?>(null) }
+        var livingWorld by remember(presenceProfileId) { mutableStateOf<WorldState?>(null) }
         // Laufende Aufnahme: null = keine. Der Fortschritt gilt fuers Zusammenrechnen DANACH.
         var clipSession by remember { mutableStateOf<PlayClipRecorder.Session?>(null) }
         // Das kurze Aufhellen nach einem Schnappschuss. Der Zaehler daneben ist noetig, damit auch
@@ -998,7 +1011,11 @@ fun DockScreen(
          * Wiederaufnehmen, mehrere gleichzeitige Ablaeufe - waere Aufwand fuer einen Fall, den es
          * hier nicht gibt.
          */
-        suspend fun runRoutine(routine: PlayRoutine, species: AvatarSpecies) {
+        suspend fun runRoutine(
+            routine: PlayRoutine,
+            species: AvatarSpecies,
+            applyLegacyEconomy: Boolean = true
+        ): Boolean {
             val mood = AvatarMoodSnapshot.forSpecies(context, species)
             routineRunning = true
             // Einmal an der semantischen Grenze merken, nicht nur bei RoutineStep.Act: Football,
@@ -1019,8 +1036,8 @@ fun DockScreen(
                 if (step !is RoutineStep.Act && step !is RoutineStep.Linger) {
                     activeActivity = null
                 }
-                val current = avatar ?: return
-                if (current.fed || current.occurrenceId != null) return   // echte Erinnerung hat Vorrang
+                val current = avatar ?: return false
+                if (current.fed || current.occurrenceId != null) return false   // echte Erinnerung hat Vorrang
                 val avatarPx = with(density) { current.sizeDp.dp.toPx() }
 
                 when (step) {
@@ -1050,7 +1067,9 @@ fun DockScreen(
                         activeStation = step.station
                         // An der Kasse wird bezahlt - mit sichtbarem Aufblitzen, damit man den
                         // Vorgang bemerkt und nicht nur die Zahl unten kleiner wird.
-                        if (step.station == PlayScene.Station.CHECKOUT && PlayWallet.pay(context)) {
+                        if (applyLegacyEconomy && step.station == PlayScene.Station.CHECKOUT &&
+                            PlayWallet.pay(context)
+                        ) {
                             economyTick++
                             flashAt(avatar)
                         }
@@ -1104,7 +1123,7 @@ fun DockScreen(
                     }
 
                     RoutineStep.Rise -> {
-                        val standing = avatar ?: return
+                        val standing = avatar ?: return false
                         val onFloor = avatarSpot(
                             anchorX = (standing.offset.x / (maxWidthPx - avatarPx).coerceAtLeast(1f)).coerceIn(0f, 1f),
                             avatarPx = avatarPx,
@@ -1137,12 +1156,12 @@ fun DockScreen(
                         activeActivity = step.topic
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
-                        if (step.topic == AnimationType.DRINK) {
+                        if (applyLegacyEconomy && step.topic == AnimationType.DRINK) {
                             PlayPantry.consume(context)
                             economyTick++
                         }
                         // Der Lohn - erst dadurch ist Arbeit mehr als eine Bewegung.
-                        if (step.topic == AnimationType.WORK) {
+                        if (applyLegacyEconomy && step.topic == AnimationType.WORK) {
                             PlayWallet.earn(context)
                             economyTick++
                         }
@@ -1289,15 +1308,15 @@ fun DockScreen(
                                 var remaining = (PlayDreams.nextPauseMillis() * PlayTimeLapse.paceFactor())
                                     .toLong().coerceAtLeast(1_000L)
                                 while (remaining > 0L && PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT) {
-                                    val sleeping = avatar ?: return
-                                    if (sleeping.fed || sleeping.occurrenceId != null) return
+                                    val sleeping = avatar ?: return false
+                                    if (sleeping.fed || sleeping.occurrenceId != null) return false
                                     val slice = minOf(remaining, DREAM_SLEEP_CHECK_MS)
                                     delay(slice)
                                     remaining -= slice
                                 }
                                 if (PlayAmbientActivity.currentDayPhase() != PlayAmbientActivity.DayPhase.NIGHT) break
-                                val sleeping = avatar ?: return
-                                if (sleeping.fed || sleeping.occurrenceId != null) return
+                                val sleeping = avatar ?: return false
+                                if (sleeping.fed || sleeping.occurrenceId != null) return false
                                 if (PlayDreams.shouldDream()) {
                                     PlayDreams.choose(PlayDreamMemory.today(context, presenceProfileId.toString()))?.let { memory ->
                                         playDream(memory, species)
@@ -1362,7 +1381,7 @@ fun DockScreen(
                     RoutineStep.Drop -> {
                         if (carried != null) {
                             // Wird der Einkauf zu Hause eingeraeumt, ist der Vorrat wieder voll.
-                            if (currentPlace == PlayScene.Place.KITCHEN &&
+                            if (applyLegacyEconomy && currentPlace == PlayScene.Place.KITCHEN &&
                                 carried == PlayEffects.Carried.FOOD
                             ) {
                                 PlayPantry.refill(context)
@@ -1431,6 +1450,7 @@ fun DockScreen(
                     )
                 }
             }
+            return true
         }
 
         /**
@@ -2495,27 +2515,15 @@ fun DockScreen(
                             // zu dem, was eine Bitte bewirken sollte.
                             val afterglow =
                                 PlayAfterglowSignal.bonuses(context, PresentCompanion.profileId(context))
-                            // Vorrang vor allem anderen: Ist nichts mehr da UND kein Geld fuer
-                            // einen Einkauf, muss gearbeitet werden. Das ist die Stelle, an der
-                            // die Welt den Zufall ueberstimmt - und der Grund, warum man ihm beim
-                            // Zuschauen abnimmt, dass er zur Arbeit GEHT statt dort zu erscheinen.
-                            val mustEarn = PlayPantry.isEmpty(context) && !PlayWallet.canAfford(context)
-                            val topic = if (mustEarn) {
-                                AnimationType.WORK
-                            } else {
-                                // MIT dem jetzigen Ort: Die Figur bleibt dann eher, wo sie ist,
-                                // statt bei jeder Regung das Zimmer zu wechseln (siehe
-                                // PlayAmbientActivity.nextTopic).
-                                //
-                                // Aber nur BEGRENZT oft hintereinander. Ein Zuschlag ohne Ende
-                                // haette den umgekehrten Fehler erzeugt: Wer im Wohnzimmer sitzt,
-                                // bekommt dort dauernd Rueckenwind fuers Bleiben, und die Figur
-                                // kaeme kaum noch vor die Tuer - genau der Zustand, gegen den die
-                                // Strasse und der Wald angelegt wurden. Zwei-, dreimal verweilen
-                                // ist ein Aufenthalt, fuenfmal ist ein Hausarrest.
-                                PlayAmbientActivity.nextTopic(
-                                    boostedTopics = boostedTopics,
-                                    stayAt = currentPlace.takeIf { stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS },
+                            // Die bisherige Themenwahl bleibt als Vielfaltssignal erhalten, aber
+                            // nicht mehr als Entscheidung ueber Grundbeduerfnisse: Der Living
+                            // Agent entscheidet, OB Freizeit gerade traegt; diese Wahl sagt nur,
+                            // WIE eine solche Phase in der vorhandenen Welt aussieht.
+                            val interestTopic = PlayAmbientActivity.nextTopic(
+                                boostedTopics = boostedTopics,
+                                stayAt = currentPlace.takeIf {
+                                    stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS
+                                },
                                     // **Und wohin er sich entwickelt hat** (siehe PlayPath): Der
                                     // Pfad faerbt, was er von sich aus tut. Erst dadurch ist die
                                     // Entwicklung etwas, das man SIEHT, statt etwas, das im
@@ -2564,19 +2572,66 @@ fun DockScreen(
                                     // **Der Nachklang.** Kurz nach einer Antwort stark genug, dass
                                     // aus der einen angeforderten Routine eine zusammenhaengende
                                     // Weile wird; danach nur noch eine Faerbung des Tages.
-                                    afterglow = afterglow,
+                                afterglow = afterglow,
                                     // **Die Mindestdauer draussen** (NT-057). Gemeldet an der
                                     // Musik - "der Wechsel war viel zu schnell, dann wieder in
                                     // diese ruhige Stimmung" -, aber die Musik wechselte richtig:
                                     // Sie folgte einer Welt, in der die Figur nach zwanzig
                                     // Sekunden wieder hineinging. Deshalb sitzt die Regel hier
                                     // beim Zustand und nicht im Player.
-                                    holdOutdoors = PlayOutdoorStay.holdsOutdoors(
-                                        outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
-                                            else System.currentTimeMillis() - outdoorsSinceMs,
-                                        phase = PlayAmbientActivity.currentDayPhase()
-                                    )
+                                holdOutdoors = PlayOutdoorStay.holdsOutdoors(
+                                    outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
+                                        else System.currentTimeMillis() - outdoorsSinceMs,
+                                    phase = PlayAmbientActivity.currentDayPhase()
                                 )
+                            )
+
+                            val nearbyProfiles = visitor?.species
+                                ?.let(AvatarSpeciesPrefs::profileId)
+                                ?.let(::setOf)
+                                .orEmpty()
+                            val simulationMinute = PlayTimeLapse.absoluteMinute()
+                            val restored = if (livingAgent == null || livingWorld == null) {
+                                livingStore.restore(
+                                    profileId = presenceProfileId,
+                                    currentSimulationMinute = simulationMinute,
+                                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(
+                                        simulationMinute % WorldState.MINUTES_PER_DAY
+                                    ),
+                                    currentNearbyProfiles = nearbyProfiles
+                                )
+                            } else {
+                                null
+                            }
+                            val baseAgent = livingAgent ?: restored?.agent
+                                ?: LivingRuntimeAdapter.initialAgent(presenceProfileId, species)
+                            val baseWorld = livingWorld ?: restored?.world
+                                ?: LivingRuntimeAdapter.initialWorld(
+                                    absoluteMinute = simulationMinute,
+                                    place = currentPlace,
+                                    coins = PlayWallet.coins(context),
+                                    portions = PlayPantry.level(context),
+                                    nearbyProfiles = nearbyProfiles
+                                )
+                            val prepared = LivingRuntimeAdapter.prepare(
+                                agent = baseAgent,
+                                world = baseWorld,
+                                renderedPlace = currentPlace,
+                                interestTopic = interestTopic,
+                                footballTrickLearned = PlayFootballSkill.isLearned(
+                                    context,
+                                    presenceProfileId
+                                ),
+                                recentSpecials = recentSpecials,
+                                nearbyProfiles = nearbyProfiles
+                            )
+                            val topic = prepared.topic
+                            val gewaehlt = prepared.routine
+                            if (topic == null || gewaehlt == null) {
+                                livingAgent = prepared.result.agent
+                                livingWorld = prepared.result.world
+                                livingStore.save(prepared.result.agent, prepared.result.world)
+                                continue
                             }
 
                             // Erst den Ort wechseln, dann HINGEHEN, dann handeln - in dieser
@@ -2591,7 +2646,8 @@ fun DockScreen(
                             // (siehe LaunchedEffect(currentPlace) oben, laeuft in eigener
                             // Coroutine), und waehrend er geht, blendet der alte Raum weg und der
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
-                            val place = PlayScene.forTopic(topic)
+                            val place = gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>()
+                                .firstOrNull()?.place ?: PlayScene.forTopic(topic)
                             currentTopic = topic
                             // **Er sagt, was er vorhat** - selten, kurz und nie nachts (siehe
                             // PlaySpeech). Das beantwortet die Frage, die man sich beim Zuschauen
@@ -2601,28 +2657,32 @@ fun DockScreen(
                                 spokenLine = line
                             }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
-                            // Der Ablauf wird VOR dem Weg gezogen, damit der Verlauf schon
-                            // steht, wenn die naechste Regung faellt - und mit
-                            // [recentSpecials], weil die fuenf Sonderbeschaeftigungen sich
-                            // alle das Thema MOVE teilen und auf Themenebene ununterscheidbar
-                            // waeren (siehe PlayRoutines.SpecialActivity).
-                            val gewaehlt = PlayRoutines.forTopic(
-                                topic = topic,
-                                needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
-                                footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId),
-                                recentSpecials = recentSpecials
-                            )
                             rememberShown(topic, gewaehlt)
-                            moveToPlace(place, species)
 
                             // Nicht mehr EINE Animation, sondern ein mehrschrittiger Ablauf:
                             // hingehen, benutzen, handeln, verweilen, aufstehen (siehe
                             // PlayRoutine). Erst dadurch setzt sich die Figur mit ihrer Umgebung
                             // auseinander, statt neben den Moebeln zu agieren.
-                            runRoutine(
+                            val completed = runRoutine(
                                 gewaehlt,
-                                species
+                                species,
+                                // ActionOutcome hat die Wirkung bereits vorbereitet. Die alte
+                                // globale Wirtschaft darf sie nicht ein zweites Mal verbuchen.
+                                applyLegacyEconomy = false
                             )
+                            if (!completed) continue
+                            val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
+                                prepared.result.world,
+                                currentPlace,
+                                visitor?.species
+                                    ?.let(AvatarSpeciesPrefs::profileId)
+                                    ?.let(::setOf)
+                                    .orEmpty()
+                            )
+                            livingAgent = prepared.result.agent
+                            livingWorld = committedWorld
+                            livingStore.save(prepared.result.agent, committedWorld)
+                            economyTick++
 
                             // **Und danach zeigt es, was es kann** - eine Einlage aus dem
                             // Skillbaum, falls in diesem Bereich etwas freigeschaltet ist.
@@ -3465,7 +3525,12 @@ fun DockScreen(
                     // Mit Spielstand: Dieses Feld gibt es nur im Spielmodus, also ist die Frage
                     // nach Stufe, Geld und Vorrat hier immer sinnvoll.
                     PlayTalk.gather(
-                        context, AvatarSpeciesPrefs.profileId(species), includeGame = true
+                        context,
+                        AvatarSpeciesPrefs.profileId(species),
+                        includeGame = true,
+                        gameResources = livingWorld?.let { world ->
+                            PlayTalk.GameResources(world.coins, world.portions)
+                        }
                     )
                 }
             }

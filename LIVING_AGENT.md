@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-10 (Schnitte 2a, 2b und 3 umgesetzt)
+Stand: 2026-09-10 (Schnitte 2a, 2b, 3 und 4 umgesetzt)
 
 ## Leitidee
 
@@ -69,7 +69,7 @@ Datenbank oder Renderer.
 Die Praesentationsschicht darf spaeter Ereignisfolgen wie Wunsch -> Hindernis -> Versuch ->
 Anpassung -> Erfolg erkennen. Sie darf keine Ereignisse erfinden oder die Simulation steuern.
 
-## Stand: was Schnitte 2a, 2b und 3 tatsaechlich gebaut haben
+## Stand: was Schnitte 2a, 2b, 3 und 4 tatsaechlich gebaut haben
 
 Der Kern liegt in `app-sim/src/main/java/com/notime/glyphsim/living/` in fuenf Dateien:
 `LivingWorld.kt` (Welt, Orte, `Requirement`), `LivingNeed.kt` (Beduerfnisse, `Personality`),
@@ -104,6 +104,21 @@ gelernten Geschmack. Beim Wiedereinstieg wachsen Beduerfnisse und Welt nur ueber
 uebergebene Simulationszeit weiter. Das langlebige Ziel bleibt erhalten; der konkrete Plan wird
 verworfen, damit aktuelle Orte und anwesende Wesen vor dem naechsten Schritt erneut geprueft
 werden.
+
+Schnitt 4 bindet den Kern ueber `LivingRuntimeAdapter` an die vorhandene Pixelwelt. Die
+sechzehn `PlayScene.Place` werden dort und nur dort auf vier `LivingSite` abgebildet;
+Simulationszeit kommt aus `PlayTimeLapse`, und Arbeit sowie Markt liefern der Domaene eine
+aktuelle Verfuegbarkeitsmenge. Die bisherige gewichtete Themenwahl bleibt als Vielfaltssignal
+fuer Freizeit erhalten, darf aber kein dringendes Grundbeduerfnis mehr ueberstimmen.
+
+Eine vorbereitete Kernwirkung wird erst nach der vollstaendig gelaufenen `PlayRoutine`
+gespeichert. Wird die Choreografie durch eine echte Erinnerung oder einen Moduswechsel
+abgebrochen, bleiben Lohn, Einkauf, Beduerfnisse und Episode auf dem letzten abgeschlossenen
+Stand. Arbeitsweg plus Arbeit und die zusammenhaengende Einkaufsfolge werden jeweils auf die
+bereits vorhandenen Routinen abgebildet; deren alte globale Nebenwirkungen sind fuer Living-
+Schritte abgeschaltet, damit `ActionOutcome` die einzige fachliche Rechnung bleibt. Bestehende
+`PlayWallet`-/`PlayPantry`-Werte dienen einmalig als Startwert, danach zeigt auch das Gespraech
+die profilbezogenen Weltressourcen.
 
 ## Erster demonstrierbarer Schnitt
 
@@ -167,7 +182,7 @@ getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentliche
 3. **Profilbezogene Persistenz (erledigt, NT-064)**: atomarer Version-2-Snapshot pro Profil,
    expliziter Zeitfortschritt zwischen Sitzungen, begrenzte Episoden sowie Roundtrip-,
    Profiltrennungs- und V1-Migrationsbelege. Der alte Plan wird beim Laden verworfen.
-4. **Bestehende Welt anbinden**: Planaktionen gezielt auf vorhandene `PlayRoutine`-Varianten,
+4. **Bestehende Welt anbinden (erledigt, NT-065)**: Planaktionen gezielt auf vorhandene `PlayRoutine`-Varianten,
    `PlayPantry`, `PlayWallet`, `PlayPresence` und Besuchsfenster abbilden. Nur gezielte
    Aenderungen an `DockScreen`; keine zweite Choreografie-Pipeline.
 5. **Stream-Vertrag beobachten**: read-only Snapshot/Event-Quelle fuer spaetere Overlays,
