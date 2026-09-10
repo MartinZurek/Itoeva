@@ -374,7 +374,8 @@ object ActionCatalog {
             rememberValence = if (accepted) 1 else -1,
             relationshipEffect = RelationshipEffect(
                 senderProfileId,
-                affinityDelta = if (accepted) 0.08 else -0.04
+                trustDelta = if (accepted) 0.06 else -0.03,
+                closenessDelta = if (accepted) 0.08 else -0.02
             ),
             symbols = SymbolEffect(senderProfileId, intents, SymbolDirection.RECEIVE),
             eventKind = LivingEventKind.SYMBOLS_RECEIVED
