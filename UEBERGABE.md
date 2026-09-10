@@ -13,31 +13,22 @@ eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, 
 erst dann einen Asset-PR oeffnen.
 
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
-[`LIVING_AGENT.md`](LIVING_AGENT.md). Die Bestandsaufnahme ist abgeschlossen:
+[`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067 und NT-064 (Schnitte 2a, 2b und 3)
+sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter
+`app-sim/src/main/java/com/notime/glyphsim/living/`. Zielwahl, Ressourcenplan, Neuplanung,
+begrenzte Episoden, gelernte Zielpraeferenzen, Beziehungen und symbolische Verstaendigung sind
+deterministisch belegt.
 
-- Vorrat, Geld, Arbeit, Einkauf und Essen existieren bereits als `PlayPantry`, `PlayWallet`
-  und `PlayRoutine`, sind aber noch global beziehungsweise in `DockScreen` hart verdrahtet.
-- `PlayAmbientActivity` waehlt Freizeit gewichtet, hat aber kein Ziel, keinen Plan und keine
-  erklaerbare Utility-Rechnung.
-- `PlayDreamMemory` speichert kompakte Tageserlebnisse; echte episodische Agentenerinnerung und
-  deren Einfluss auf Entscheidungen fehlen.
-- Besuche sind sichtbar, kommunizieren aber nur feste Punktblasen ohne semantische Absicht oder
-  Beziehungseinfluss.
-- `AvatarActivityPlans` zeigt das richtige Integrationsmuster: semantische Absicht bleibt von
-  der vorhandenen `PlayRoutine`-Choreografie getrennt.
+Die Persistenz liegt bewusst ausserhalb des Kerns unter `app-sim/.../data/LivingAgentStore.kt`.
+Sie schreibt einen atomaren Version-2-Snapshot je `profileId` in SharedPreferences. Agent,
+Weltressourcen, Erinnerungen, Beziehungen und gelernter Geschmack bleiben getrennt pro Profil.
+Version 1 wird beim Lesen angehoben; unbekannte Zukunftsversionen werden abgelehnt. Der
+Wiedereinstieg bekommt die Simulationsminute explizit, behaelt das Ziel und verwirft den alten
+Plan, damit aktuelle Orte und Nachbarn neu geprueft werden. Room und `:core` blieben unangetastet.
 
-**NT-063 und NT-067 (Schnitte 2a und 2b) sind umgesetzt.** Der reine Kotlin-Kern steht
-weiterhin in genau fuenf Dateien unter `app-sim/src/main/java/com/notime/glyphsim/living/`.
-Zusaetzlich zu Zielwahl, Ressourcenplan und Neuplanung sind nun begrenzte Episoden, gelernte
-Zielpraeferenzen, Vertrauen/Naehe je Gegenueber und sprachunabhaengige Symbolnachrichten
-belegt. `CONNECT_WITH` sendet `PLAY + QUESTION`; die Antwort entsteht aus Energie, sozialem
-Bedarf, Beziehung, Persoenlichkeit und laufendem Ziel. Ein deterministischer Mehrtagesfall
-laesst zwei aehnlich gestartete Wesen aus unterschiedlichen Erlebnissen verschiedene Vorlieben
-und Historien entwickeln, ohne Plot.
-
-Naechster Schnitt ist **NT-064**: profilbezogene, versionierte Persistenz. Bei einer
-Room-Entscheidung muessen Migration und Migrationstest in denselben PR; `:core` bleibt
-unangetastet. Danach folgen Runtime-Anbindung (NT-065) und Stream-Snapshot (NT-066), jeweils als
+Naechster Schnitt ist **NT-065**: den Kern an die vorhandene `PlayRoutine`-/Weltpipeline
+anbinden und den harten Notfall-Sonderfall in `DockScreen` dabei ersetzen, nicht verdoppeln.
+Danach folgen Stream-Snapshot (NT-066) und der begrenzte Streaming-PoC (NT-058), jeweils als
 eigener PR.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
@@ -50,6 +41,9 @@ Drei Dinge, die man beim Weiterbauen wissen muss:
 - **`ActionOutcome` ist der einzige Wirkungsweg.** Auch Episode, Geschmack, Beziehung und
   Symbolbedeutung werden in `Action.applyTo` gemeinsam gerechnet; soziale Handlungen bekommen
   keine Nebenpipeline.
+- **Persistenz behaelt das Ziel, aber nie den Plan.** Geoeffnete Orte und anwesende Wesen
+  kommen beim Laden aus dem aktuellen Runtime-Kontext; damit kann ein alter Snapshot keine
+  ungueltige Voraussetzung umgehen.
 - **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung gehoert in den
   Runtime-Adapter (NT-065), nicht in die Domaene. `DockScreen.kt` fuer die reinen Schnitte nicht
   anfassen und niemals als Ganzes lesen.
@@ -85,7 +79,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 271 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 277 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 
