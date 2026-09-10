@@ -74,6 +74,8 @@ SRCS=(
   # keine Uhr. Genau deshalb laeuft er hier und nicht erst in der CI.
   "$LIV/LivingWorld.kt" "$LIV/LivingNeed.kt" "$LIV/LivingAction.kt"
   "$LIV/LivingPlanner.kt" "$LIV/LivingAgent.kt"
+  # Android sitzt nur hinter LivingAgentStorage; Codec und Store bekommen die Zeit explizit.
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/data/LivingAgentStore.kt"
   # Die Musik-Wiedergabeschicht: reines Kotlin bis auf MediaPlayer/AudioManager, fuer die
   # MediaStubs.kt und AnimatorStubs.kt daneben einspringen. Geprueft werden Entscheidung und
   # Lautstaerke-Kurve, nicht Androids tatsaechliche Audioausgabe.
@@ -107,6 +109,7 @@ TEST_SRCS=(
   "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
+  "$TEST/data/LivingAgentStoreTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
 
@@ -135,6 +138,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
+  com.notime.glyphsim.data.LivingAgentStoreTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )
 
