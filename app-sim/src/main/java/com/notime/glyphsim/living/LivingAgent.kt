@@ -1,5 +1,57 @@
 package com.notime.glyphsim.living
 
+/** Sprachunabhaengige Bedeutung; erst die Anzeige macht daraus Wort, Emoji oder Pixelsymbol. */
+enum class SymbolicIntent {
+    FOOD,
+    PLAY,
+    MUSIC,
+    HOME,
+    WORK,
+    AFFECTION,
+    QUESTION,
+    YES,
+    NO,
+    TIRED,
+    SURPRISE
+}
+
+data class SymbolicMessage(
+    val senderProfileId: String,
+    val recipientProfileId: String,
+    val intents: Set<SymbolicIntent>,
+    val atMinute: Int
+)
+
+/**
+ * Verdichtete Erinnerung an eine Wendung. Sie enthaelt denselben typisierten Fakt wie das
+ * Ereignis und eine kleine emotionale Wertung, aber weder Rohframes noch Leerlauf-Ticks.
+ */
+data class Episode(
+    val event: LivingEvent,
+    val valence: Int
+) {
+    init {
+        require(valence in -1..1) { "valence must be -1, 0 or 1" }
+    }
+
+    companion object {
+        fun from(event: LivingEvent, valence: Int): Episode = Episode(event, valence)
+    }
+}
+
+/** Eine langsam wachsende oder abkuehlende Beziehung aus tatsaechlichen Begegnungen. */
+data class RelationshipState(
+    val affinity: Double = 0.0,
+    val interactions: Int = 0,
+    val lastInteractionMinute: Int? = null
+) {
+    fun changedBy(delta: Double, atMinute: Int): RelationshipState = copy(
+        affinity = (affinity + delta).coerceIn(-1.0, 1.0),
+        interactions = interactions + 1,
+        lastInteractionMinute = atMinute
+    )
+}
+
 /**
  * **Der Zustand eines lebendigen Wesens** - alles, was es ueber einen Schritt hinaus mit sich
  * traegt.
@@ -9,12 +61,9 @@ package com.notime.glyphsim.living
  * identisch abspielen laesst - und dass ein Test einen Zustand von gestern neben einen von
  * heute legen kann.
  *
- * ## Was hier noch fehlt und wo es hingehoert
- *
- * `episodes` (verdichtete Erinnerungen), `relationships` und gelernter Geschmack sind Teil des
- * naechsten Schnitts (NT-063b). Sie kommen als weitere Felder DIESER Klasse dazu; der
- * Entscheidungsweg bleibt derselbe, weil [UtilitySelector] ohnehin den ganzen Agenten sieht
- * und nicht nur seine Beduerfnisse.
+ * Episoden, Beziehungen und gelernter Geschmack liegen als Daten hier und nicht hinter einem
+ * Arten-Nachschlagen. Nur dadurch koennen zwei gleich gestartete Wesen nach Erlebtem auseinander
+ * laufen, waehrend dieselbe Eingabe weiterhin dasselbe Ergebnis liefert.
  */
 data class AgentState(
     /** Dasselbe Profil wie in der bestehenden Welt - der Enum-Name der Spezies. */
@@ -26,9 +75,19 @@ data class AgentState(
     val goal: GoalKind? = null,
     /** Der Weg dorthin, oder `null`, wenn noch keiner gefunden ist. */
     val plan: Plan? = null,
+    /** Durch Erlebtes veraenderter Geschmack, getrennt vom Startbias der Persoenlichkeit. */
+    val learnedPreferences: Map<GoalKind, Double> = emptyMap(),
+    /** Nur Wendungen; die aeltesten fallen an der festen Grenze heraus. */
+    val episodes: List<Episode> = emptyList(),
+    /** Je Gegenueber ein eigener, symmetrisch fortschreibbarer Beziehungsstand. */
+    val relationships: Map<String, RelationshipState> = emptyMap(),
     /** Das letzte bedeutungsvolle Ereignis - fuer die Erklaerung, nicht als Protokoll. */
     val lastEvent: LivingEvent? = null
-)
+) {
+    companion object {
+        const val MAX_EPISODES = 24
+    }
+}
 
 /**
  * **Was tatsaechlich passiert ist** - typisiert, nie als Text.
@@ -49,7 +108,9 @@ data class LivingEvent(
     val goal: GoalKind? = null,
     val action: ActionKind? = null,
     /** Bei [LivingEventKind.ACTION_BLOCKED] die Voraussetzung, an der es lag. */
-    val blockedBy: Requirement? = null
+    val blockedBy: Requirement? = null,
+    val counterpartProfileId: String? = null,
+    val intents: Set<SymbolicIntent> = emptySet()
 )
 
 enum class LivingEventKind {
@@ -77,6 +138,12 @@ enum class LivingEventKind {
     /** Das Ziel ist erreicht. */
     GOAL_REACHED,
 
+    /** Eine typisierte Bedeutung wurde an ein anwesendes Wesen gesendet. */
+    SYMBOLS_SENT,
+
+    /** Die Antwort eines anderen Wesens wurde wahrgenommen. */
+    SYMBOLS_RECEIVED,
+
     /** Nichts draengt. Ein Wesen darf auch einmal nichts vorhaben. */
     IDLE
 }
@@ -102,6 +169,9 @@ data class AgentExplanation(
     val plan: List<ActionKind>,
     val currentAction: ActionKind?,
     val blockedBy: Requirement?,
+    /** Juengste Episoden, die das laufende Ziel tatsaechlich gewichten. */
+    val influentialEpisodes: List<Episode>,
+    val relationships: Map<String, RelationshipState>,
     val lastEvent: LivingEvent?
 )
 
@@ -110,7 +180,8 @@ data class StepResult(
     val agent: AgentState,
     val world: WorldState,
     /** Die Ereignisse dieses Schritts, in der Reihenfolge ihres Auftretens. */
-    val events: List<LivingEvent>
+    val events: List<LivingEvent>,
+    val messages: List<SymbolicMessage> = emptyList()
 ) {
     fun explain(): AgentExplanation = LivingSimulation.explain(agent, world)
 }
@@ -210,10 +281,12 @@ object LivingSimulation {
             val verworfen = event(welt, LivingEventKind.PLAN_ABANDONED, goal = ziel)
             // Der Plan faellt, das Ziel bleibt. Der naechste Schritt leitet aus derselben
             // Absicht einen neuen Weg ab - oder meldet, dass es keinen gibt.
+            val episode = Episode.from(blockiert, valence = -1)
             return StepResult(
                 agent = zustand.copy(
                     plan = null,
                     needs = zustand.needs.advanced(IDLE_MINUTES, zustand.personality),
+                    episodes = (zustand.episodes + episode).takeLast(AgentState.MAX_EPISODES),
                     lastEvent = verworfen
                 ),
                 world = welt.advanced(IDLE_MINUTES),
@@ -221,28 +294,99 @@ object LivingSimulation {
             )
         }
 
-        // 4. Ausfuehren.
-        welt = schritt.applyTo(welt)
-        val getan = event(welt, LivingEventKind.ACTION_DONE, goal = ziel, action = schritt.kind)
-        zustand = zustand.copy(
-            needs = zustand.needs
-                .advanced(schritt.outcome.minutes, zustand.personality)
-                .relieved(schritt.outcome.needRelief),
-            plan = plan.advanced(),
-            lastEvent = getan
+        // 4. Ausfuehren. Jede Wirkung - auch Erinnerung, Geschmack und Beziehung - laeuft
+        // durch ActionOutcome und genau diesen Action.applyTo-Aufruf.
+        val angewandt = schritt.applyTo(zustand, welt, ziel)
+        zustand = angewandt.agent.copy(plan = plan.advanced())
+        welt = angewandt.world
+        return StepResult(
+            zustand,
+            welt,
+            ereignisse + angewandt.event,
+            listOfNotNull(angewandt.message)
         )
-        return StepResult(zustand, welt, ereignisse + getan)
     }
 
     /** [count] Schritte am Stueck - fuer Mehrtageslaeufe im Test. */
     fun run(agent: AgentState, world: WorldState, count: Int): StepResult {
         var ergebnis = StepResult(agent, world, emptyList())
         val alle = mutableListOf<LivingEvent>()
+        val nachrichten = mutableListOf<SymbolicMessage>()
         repeat(count) {
             ergebnis = step(ergebnis.agent, ergebnis.world)
             alle += ergebnis.events
+            nachrichten += ergebnis.messages
         }
-        return ergebnis.copy(events = alle)
+        return ergebnis.copy(events = alle, messages = nachrichten)
+    }
+
+    /**
+     * Antwort auf eine Spielanfrage. Kein Dialogbaum: Dieselbe Anfrage kann je nach Muedigkeit,
+     * sozialem Druck, Beziehung, Persoenlichkeit und aktuellem Ziel anders ausgehen.
+     */
+    fun respondToPlay(
+        receiver: AgentState,
+        world: WorldState,
+        request: SymbolicMessage
+    ): StepResult {
+        require(request.recipientProfileId == receiver.profileId) { "wrong recipient" }
+        require(SymbolicIntent.PLAY in request.intents && SymbolicIntent.QUESTION in request.intents) {
+            "not a play question"
+        }
+        val sender = request.senderProfileId
+        val relationship = receiver.relationships[sender]?.affinity ?: 0.0
+        val energyPressure = receiver.needs.pressure(NeedKind.ENERGY)
+        val socialPressure = receiver.needs.pressure(NeedKind.SOCIAL)
+        val currentGoalPressure = receiver.goal?.let { receiver.needs.pressure(it.drivenBy) } ?: 0.0
+        val urgentConflict = if (
+            receiver.goal == GoalKind.GET_FOOD || receiver.goal == GoalKind.REST
+        ) currentGoalPressure else 0.0
+        val readiness = socialPressure + receiver.personality.bias(GoalKind.CONNECT_WITH) +
+            relationship * RELATIONSHIP_RESPONSE_WEIGHT - energyPressure - urgentConflict
+        val accepts = energyPressure < TIRED_AT && readiness >= ACCEPT_AT
+        val intents = when {
+            accepts -> setOf(SymbolicIntent.PLAY, SymbolicIntent.YES)
+            energyPressure >= TIRED_AT -> setOf(SymbolicIntent.TIRED, SymbolicIntent.NO)
+            receiver.goal == GoalKind.GET_FOOD -> setOf(SymbolicIntent.FOOD, SymbolicIntent.NO)
+            else -> setOf(SymbolicIntent.PLAY, SymbolicIntent.NO)
+        }
+        val action = ActionCatalog.respondToInvite(sender, intents, accepts)
+        val obstacle = action.blockedBy(world)
+        if (obstacle != null) {
+            val blocked = event(
+                world, LivingEventKind.ACTION_BLOCKED, GoalKind.CONNECT_WITH,
+                action.kind, obstacle
+            )
+            return StepResult(receiver.copy(lastEvent = blocked), world, listOf(blocked))
+        }
+        val applied = action.applyTo(receiver, world, GoalKind.CONNECT_WITH)
+        return StepResult(
+            applied.agent,
+            applied.world,
+            listOf(applied.event),
+            listOfNotNull(applied.message)
+        )
+    }
+
+    /** Die erste Seite verarbeitet die erhaltene Antwort durch denselben Wirkungsweg. */
+    fun receiveResponse(
+        receiver: AgentState,
+        world: WorldState,
+        response: SymbolicMessage
+    ): StepResult {
+        require(response.recipientProfileId == receiver.profileId) { "wrong recipient" }
+        val accepted = SymbolicIntent.YES in response.intents
+        val action = ActionCatalog.receiveResponse(response.senderProfileId, response.intents, accepted)
+        val obstacle = action.blockedBy(world)
+        if (obstacle != null) {
+            val blocked = event(
+                world, LivingEventKind.ACTION_BLOCKED, GoalKind.CONNECT_WITH,
+                action.kind, obstacle
+            )
+            return StepResult(receiver.copy(lastEvent = blocked), world, listOf(blocked))
+        }
+        val applied = action.applyTo(receiver, world, GoalKind.CONNECT_WITH)
+        return StepResult(applied.agent, applied.world, listOf(applied.event))
     }
 
     /** Der Schnappschuss fuer Anzeige und spaeteres Overlay. Veraendert nichts. */
@@ -254,6 +398,10 @@ object LivingSimulation {
         plan = agent.plan?.kinds ?: emptyList(),
         currentAction = agent.plan?.next?.kind,
         blockedBy = agent.plan?.next?.blockedBy(world),
+        influentialEpisodes = agent.goal?.let { goal ->
+            agent.episodes.asReversed().filter { it.event.goal == goal }.take(3)
+        } ?: emptyList(),
+        relationships = agent.relationships,
         lastEvent = agent.lastEvent
     )
 
@@ -264,6 +412,9 @@ object LivingSimulation {
      * unloesbaren Ziel unendlich oft durch dieselbe Minute.
      */
     private const val IDLE_MINUTES = 30
+    private const val TIRED_AT = 0.75
+    private const val ACCEPT_AT = 0.2
+    private const val RELATIONSHIP_RESPONSE_WEIGHT = 0.25
 
     private fun event(
         world: WorldState,
