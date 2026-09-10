@@ -139,7 +139,7 @@ class LivingAgentStoreTest {
         val startAgent = AgentState("A", Personality(), Needs.calm())
 
         store.save(startAgent, startWorld, simulationMinute = 100)
-        val restored = store.restore("A", 220, open)!!
+        val restored = store.restore("A", 220, open, startWorld.nearbyProfiles)!!
 
         assertEquals(
             startAgent.needs.advanced(120, startAgent.personality),
