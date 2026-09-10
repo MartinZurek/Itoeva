@@ -198,7 +198,7 @@ Wesen.
 
 Alle uebrigen Vorgaben, Ausschluesse und Abnahmekriterien wie in ITO-0017.
 
-## [open] ITO-0020 - Themensong fuer FENNEC schreiben (Prompt und Manifest)
+## [done] ITO-0020 - Themensong fuer FENNEC schreiben (Prompt und Manifest)
 Wie ITO-0017, aber fuer **FENNEC** (`signatureTopic = DRINK`), `android_resource`
 `itoeva_theme_04`, Prompt `music/prompts/theme-fennec.txt`, id `theme-fennec`.
 

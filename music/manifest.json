@@ -88,6 +88,20 @@
       "cfg_scale": 1,
       "seed": 11092026,
       "notes": "Persoenliches Stueck des WYRMLING, Variante 03 der Rolle character_theme_background. WYRMLING hat signatureTopic MOVE - der positive, nicht hektische Motivator mit Schwerpunkt Bewegung; musikalisch deshalb das raueste und gitarrenbetonteste der sechs Themen: hoeheres, aber kontrolliertes Tempo, angezerrte Gitarre, deutlicher Bass und ein Schlagzeug mit Kante. Die Energie wirkt zielgerichtet und ermutigend, nicht ungeduldig oder chaotisch. Die Melodie ist ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
+    },
+    {
+      "id": "theme-fennec",
+      "title": "Fennec's Theme",
+      "role": "character_theme_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_theme_04",
+      "prompt_file": "music/prompts/theme-fennec.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 12092026,
+      "notes": "Persoenliches Stueck des FENNEC, Variante 04 der Rolle character_theme_background. FENNEC hat signatureTopic DRINK - der ruhige, verlaessliche Beschuetzer; musikalisch deshalb das waermste und sozialste der sechs Themen: mittleres Tempo, gebuerstetes Schlagzeug, weiches Rhodes und eine kleine, gespraechige Besetzung. Die Melodie ist eigenstaendig und ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
     }
   ]
 }
