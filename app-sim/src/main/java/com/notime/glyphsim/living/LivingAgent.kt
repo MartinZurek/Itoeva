@@ -39,16 +39,22 @@ data class Episode(
     }
 }
 
-/** Eine langsam wachsende oder abkuehlende Beziehung aus tatsaechlichen Begegnungen. */
+/** Vertrauen und Naehe wachsen nur aus tatsaechlichen Begegnungen. */
 data class RelationshipState(
-    val affinity: Double = 0.0,
+    val trust: Double = 0.0,
+    val closeness: Double = 0.0,
     val interactions: Int = 0,
-    val lastInteractionMinute: Int? = null
+    val lastInteraction: LivingEvent? = null
 ) {
-    fun changedBy(delta: Double, atMinute: Int): RelationshipState = copy(
-        affinity = (affinity + delta).coerceIn(-1.0, 1.0),
+    fun changedBy(
+        trustDelta: Double,
+        closenessDelta: Double,
+        interaction: LivingEvent
+    ): RelationshipState = copy(
+        trust = (trust + trustDelta).coerceIn(-1.0, 1.0),
+        closeness = (closeness + closenessDelta).coerceIn(-1.0, 1.0),
         interactions = interactions + 1,
-        lastInteractionMinute = atMinute
+        lastInteraction = interaction
     )
 }
 
@@ -252,7 +258,7 @@ object LivingSimulation {
 
         // 2. Plan besorgen, falls keiner steht.
         if (zustand.plan == null || zustand.plan?.isDone == true) {
-            val plan = Planner.planFor(ziel, welt)
+            val plan = Planner.planFor(ziel, welt, zustand)
             if (plan == null) {
                 val ohneWeg = event(welt, LivingEventKind.NO_PLAN, goal = ziel)
                 return StepResult(
@@ -334,7 +340,9 @@ object LivingSimulation {
             "not a play question"
         }
         val sender = request.senderProfileId
-        val relationship = receiver.relationships[sender]?.affinity ?: 0.0
+        val relationship = receiver.relationships[sender]?.let {
+            (it.trust + it.closeness) / 2.0
+        } ?: 0.0
         val energyPressure = receiver.needs.pressure(NeedKind.ENERGY)
         val socialPressure = receiver.needs.pressure(NeedKind.SOCIAL)
         val currentGoalPressure = receiver.goal?.let { receiver.needs.pressure(it.drivenBy) } ?: 0.0
