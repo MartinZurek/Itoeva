@@ -23,13 +23,14 @@ unterscheiden** und eine **singbare** Melodie haben; erzeugt werden sie trotzdem
 | ITO-0018 | Prompt und Manifest-Eintrag fuer **STARLET** (`music/prompts/theme-starlet.txt`, `itoeva_theme_02`) |
 | ITO-0019 | Prompt und Manifest-Eintrag fuer **WYRMLING** (`music/prompts/theme-wyrmling.txt`, `itoeva_theme_03`) |
 | ITO-0020 | Prompt und Manifest-Eintrag fuer **FENNEC** (`music/prompts/theme-fennec.txt`, `itoeva_theme_04`) |
+| ITO-0021 | Prompt und Manifest-Eintrag fuer **GLOOP** (`music/prompts/theme-gloop.txt`, `itoeva_theme_05`) |
 
 ### Was ansteht
 
-**ITO-0021 bis ITO-0022** - dieselbe Arbeit fuer GLOOP und HOOTLET. Die Eintraege im Backlog
-nennen je Wesen den Charakter und die musikalische Richtung; jeder verweist auf ITO-0017 als
-Muster. **`theme-puffling` ist das durchgerechnete Beispiel** - Prompt, Manifest, README-Zeile,
-Trockenlauf. Wer ITO-0021 macht, kopiert diese vier Schritte und tauscht den Inhalt.
+**ITO-0022** - dieselbe Arbeit fuer HOOTLET. Der Eintrag im Backlog nennt den Charakter und
+die musikalische Richtung und verweist auf ITO-0017 als Muster. **`theme-puffling` ist das
+durchgerechnete Beispiel** - Prompt, Manifest, README-Zeile, Trockenlauf. Wer ITO-0022 macht,
+kopiert diese vier Schritte und tauscht den Inhalt.
 
 Zu liefern je Wesen:
 
