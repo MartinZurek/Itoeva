@@ -15,7 +15,7 @@
       "android_resource": "itoeva_home_evening_01",
       "prompt_file": "music/prompts/home-evening-01.txt",
       "steps": 8,
-      "cfg_scale": 1.0,
+      "cfg_scale": 1,
       "seed": 9042026,
       "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26."
     },
@@ -29,7 +29,7 @@
       "android_resource": "itoeva_main_day_01",
       "prompt_file": "music/prompts/main-day-01.txt",
       "steps": 8,
-      "cfg_scale": 1.0,
+      "cfg_scale": 1,
       "seed": 5092026,
       "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert."
     },
@@ -43,7 +43,7 @@
       "android_resource": "itoeva_main_day_02",
       "prompt_file": "music/prompts/main-day-02.txt",
       "steps": 8,
-      "cfg_scale": 1.0,
+      "cfg_scale": 1,
       "seed": 6092026,
       "notes": "Zweite Variante derselben Rolle wie main-day-01, nicht deren Ersatz. Gemeldet: innerhalb eines stabilen Zustands bleibt dieselbe Musik zu lange unveraendert. Gleiche musikalische Familie - warmer, japanisch gefaerbter jazzy Lo-Fi -, aber etwas leichter und bewegter: 88 statt 82 BPM, gebuerstete Snare, jeweils nur ein melodiefuehrendes Instrument. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Welche der Varianten laeuft, entscheidet PlayMusicRotation nach der Rolle, nicht statt ihrer."
     },
@@ -57,9 +57,23 @@
       "android_resource": "itoeva_theme_01",
       "prompt_file": "music/prompts/theme-puffling.txt",
       "steps": 8,
-      "cfg_scale": 1.0,
+      "cfg_scale": 1,
       "seed": 9092026,
       "notes": "Persoenliches Stueck des PUFFLING, Variante 01 der Rolle character_theme_background (die Zuordnung Spezies -> Variante steht in MusicRole.characterThemeVariant). PUFFLING hat signatureTopic GENERAL - das freundliche, zugewandte, unaufgeregte Wesen; musikalisch deshalb das hellste und offenste der sechs Themen, akustisches Klavier im Vordergrund statt Rhodes. Die Melodie ist ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
+    },
+    {
+      "id": "theme-starlet",
+      "title": "Starlet's Theme",
+      "role": "character_theme_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_theme_02",
+      "prompt_file": "music/prompts/theme-starlet.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 10092026,
+      "notes": "Persoenliches Stueck des STARLET, Variante 02 der Rolle character_theme_background. STARLET hat signatureTopic MINDFULNESS - still, aufmerksam und nach innen gewandt; musikalisch deshalb das melancholischste der sechs Themen: langsam, moll-gefaerbt und mit viel Raum, ohne traurig-schwer zu werden. Die sparsame Besetzung traegt lange Toene und hoerbare Stille zwischen den Phrasen. Die Melodie ist ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
     }
   ]
 }
