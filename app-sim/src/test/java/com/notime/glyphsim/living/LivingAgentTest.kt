@@ -519,6 +519,12 @@ class LivingAgentTest {
             ersterB.world,
             antwort.messages.single()
         )
+        assertTrue(
+            bNachBegegnung.agent.episodes.any {
+                it.event.kind == LivingEventKind.SYMBOLS_RECEIVED &&
+                    SymbolicIntent.YES in it.event.intents
+            }
+        )
         val mehrereTageA = LivingSimulation.run(ersterA.agent, ersterA.world, count = 120)
         val mehrereTageB = LivingSimulation.run(
             bNachBegegnung.agent,
@@ -530,12 +536,6 @@ class LivingAgentTest {
         assertTrue(mehrereTageB.world.day >= 2)
         assertTrue(mehrereTageA.agent.learnedPreferences != mehrereTageB.agent.learnedPreferences)
         assertTrue(mehrereTageA.agent.episodes != mehrereTageB.agent.episodes)
-        assertTrue(
-            mehrereTageB.agent.episodes.any {
-                it.event.kind == LivingEventKind.SYMBOLS_RECEIVED &&
-                    SymbolicIntent.YES in it.event.intents
-            }
-        )
     }
 
 }
