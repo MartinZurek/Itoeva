@@ -48,7 +48,9 @@ data class WorldState(
      * Als Menge und nicht als Oeffnungszeiten-Tabelle: Wer die Zeiten hier hineinschreibt,
      * verdoppelt eine Regel, die die Welt spaeter besser kennt als diese Domaene.
      */
-    val openSites: Set<LivingSite>
+    val openSites: Set<LivingSite>,
+    /** Profile, die fuer eine direkte symbolische Begegnung nah genug sind. */
+    val nearbyProfiles: Set<String> = emptySet()
 ) {
 
     fun has(requirement: Requirement): Boolean = when (requirement) {
@@ -56,6 +58,7 @@ data class WorldState(
         is Requirement.Portions -> portions >= requirement.amount
         is Requirement.At -> site == requirement.site
         is Requirement.SiteOpen -> requirement.site in openSites
+        is Requirement.Near -> requirement.profileId in nearbyProfiles
     }
 
     /**
@@ -106,4 +109,7 @@ sealed interface Requirement {
     /** Der Ort muss offen sein. Getrennt von [At], weil "zu" und "woanders" verschiedene
      * Hindernisse sind: das eine wartet man ab, das andere laeuft man weg. */
     data class SiteOpen(val site: LivingSite) : Requirement
+
+    /** Das andere Wesen muss fuer eine direkte Begegnung anwesend sein. */
+    data class Near(val profileId: String) : Requirement
 }
