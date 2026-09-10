@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-10 (Schnitte 2a und 2b umgesetzt)
+Stand: 2026-09-10 (Schnitte 2a, 2b und 3 umgesetzt)
 
 ## Leitidee
 
@@ -69,7 +69,7 @@ Datenbank oder Renderer.
 Die Praesentationsschicht darf spaeter Ereignisfolgen wie Wunsch -> Hindernis -> Versuch ->
 Anpassung -> Erfolg erkennen. Sie darf keine Ereignisse erfinden oder die Simulation steuern.
 
-## Stand: was Schnitte 2a und 2b tatsaechlich gebaut haben
+## Stand: was Schnitte 2a, 2b und 3 tatsaechlich gebaut haben
 
 Der Kern liegt in `app-sim/src/main/java/com/notime/glyphsim/living/` in fuenf Dateien:
 `LivingWorld.kt` (Welt, Orte, `Requirement`), `LivingNeed.kt` (Beduerfnisse, `Personality`),
@@ -96,8 +96,14 @@ letzter Interaktion, die feste `SymbolicIntent`-Menge, gelernte Zielpraeferenzen
 `CONNECT_WITH`. Einladungen werden als `PLAY + QUESTION` gesendet; Annahme oder Ablehnung
 entsteht aus Energie, sozialem Bedarf, Beziehung, Persoenlichkeit und laufendem Ziel. Der
 Mehrtagesbeleg laesst zwei gleich beduerftige Wesen allein durch unterschiedliche Erlebnisse in
-Vorlieben und Historie auseinanderlaufen. `LivingAgentStore` gehoert weiterhin zu Schnitt 3 und
-wurde bewusst nicht angelegt.
+Vorlieben und Historie auseinanderlaufen.
+
+Schnitt 3 legt `LivingAgentStore` an der Android-Grenze unter `data/` an. Ein atomarer,
+versionierter Snapshot pro `profileId` speichert Agent, Ressourcen, Erinnerungen, Beziehungen und
+gelernten Geschmack. Beim Wiedereinstieg wachsen Beduerfnisse und Welt nur ueber die explizit
+uebergebene Simulationszeit weiter. Das langlebige Ziel bleibt erhalten; der konkrete Plan wird
+verworfen, damit aktuelle Orte und anwesende Wesen vor dem naechsten Schritt erneut geprueft
+werden.
 
 ## Erster demonstrierbarer Schnitt
 
@@ -120,17 +126,22 @@ auseinanderlaufen, ohne eine Geschichte vorzugeben.
 
 ## Persistenz
 
-Die naechste Scheibe fuehrt einen `LivingAgentStore`-Vertrag an der Android-Grenze ein. Bis
-dahin bleibt der Kern speicherfrei; ein unbenutztes Vorab-Interface waere toter Code.
+`LivingAgentStore` liegt als Android-Grenze unter `app-sim/.../data/`; der reine Kern bleibt
+speicherfrei. `SharedPreferencesLivingAgentStorage` schreibt genau einen atomaren, versionierten
+Snapshot pro `profileId`. Diese Form passt zum kleinen zusammenhaengenden Zustandsgraphen und
+vermeidet eine Room-Schemaaenderung ohne relationalen Nutzen. Weder `:core` noch eine der beiden
+Room-Datenbanken werden angefasst.
 
-Fuer den ersten App-Adapter wird der Zustand versioniert und pro `profileId` gespeichert.
-Ressourcen duerfen nicht wie heute global zwischen Profilen geteilt werden. Episoden werden
-begrenzt und verdichtet; Rohframes und endlose Tick-Protokolle werden nicht gespeichert.
+Codec-Version 2 speichert Weltressourcen, Beduerfnisse, Persoenlichkeit, Ziel, gelernten
+Geschmack, begrenzte Episoden, Beziehungen und das letzte wichtige Ereignis. Version 1 wird beim
+Lesen mit leeren sozialen Lernfeldern auf Version 2 angehoben; unbekannte Zukunftsversionen und
+beschaedigte Pflichtwerte werden abgelehnt. Rohframes und Tick-Protokolle gehoeren nicht in den
+Snapshot.
 
-Die erste Kern-PR aendert keine Room-Entity. Die Persistenz-PR entscheidet anhand der
-Zuverlaessigkeitsanforderung zwischen einer versionierten profilbezogenen Datei/Preference und
-eigenen `:app-sim`-Room-Entities. Bei Room gilt: Migration und Migrationstest im selben PR.
-`:core` wird dafuer nicht geaendert, damit keine Migration in beiden Apps ausgeloest wird.
+Zeit kommt auch beim Wiederherstellen ausschliesslich als Simulationsminute von aussen. Negative
+Differenzen werden zu null begrenzt. Geoeffnete Orte und anwesende Wesen stammen aus dem aktuellen
+Runtime-Kontext, nicht aus einem alten Snapshot. Das Ziel ueberlebt, der Plan nicht: So muss der
+Planer aktuelle Voraussetzungen erneut pruefen.
 
 Die private lokale Begleiterhistorie bleibt von einer kuenftigen oeffentlichen Stream-Welt
 getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentlichen
@@ -153,8 +164,9 @@ getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentliche
      `RelationshipState`, `SymbolicIntent`, gelernter Geschmack, das Ziel `CONNECT_WITH` und
      der deterministische Beleg, dass zwei aehnlich gestartete Agenten auseinanderlaufen.
    Neue Testdateien jeweils an beiden Stellen in `tools/reaction-preview/tests.sh`.
-3. **Profilbezogene Persistenz**: versionierter Store, Zeitfortschritt zwischen Sitzungen,
-   begrenzte Episoden und belastbare Roundtrip-/Migrations-Tests.
+3. **Profilbezogene Persistenz (erledigt, NT-064)**: atomarer Version-2-Snapshot pro Profil,
+   expliziter Zeitfortschritt zwischen Sitzungen, begrenzte Episoden sowie Roundtrip-,
+   Profiltrennungs- und V1-Migrationsbelege. Der alte Plan wird beim Laden verworfen.
 4. **Bestehende Welt anbinden**: Planaktionen gezielt auf vorhandene `PlayRoutine`-Varianten,
    `PlayPantry`, `PlayWallet`, `PlayPresence` und Besuchsfenster abbilden. Nur gezielte
    Aenderungen an `DockScreen`; keine zweite Choreografie-Pipeline.
