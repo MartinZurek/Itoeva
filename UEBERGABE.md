@@ -24,13 +24,13 @@ unterscheiden** und eine **singbare** Melodie haben; erzeugt werden sie trotzdem
 | ITO-0019 | Prompt und Manifest-Eintrag fuer **WYRMLING** (`music/prompts/theme-wyrmling.txt`, `itoeva_theme_03`) |
 | ITO-0020 | Prompt und Manifest-Eintrag fuer **FENNEC** (`music/prompts/theme-fennec.txt`, `itoeva_theme_04`) |
 | ITO-0021 | Prompt und Manifest-Eintrag fuer **GLOOP** (`music/prompts/theme-gloop.txt`, `itoeva_theme_05`) |
+| ITO-0022 | Prompt und Manifest-Eintrag fuer **HOOTLET** (`music/prompts/theme-hootlet.txt`, `itoeva_theme_06`) |
 
 ### Was ansteht
 
-**ITO-0022** - dieselbe Arbeit fuer HOOTLET. Der Eintrag im Backlog nennt den Charakter und
-die musikalische Richtung und verweist auf ITO-0017 als Muster. **`theme-puffling` ist das
-durchgerechnete Beispiel** - Prompt, Manifest, README-Zeile, Trockenlauf. Wer ITO-0022 macht,
-kopiert diese vier Schritte und tauscht den Inhalt.
+**Keine weitere Prompt- oder Manifest-Arbeit fuer die sechs Charakterstuecke.** ITO-0017 bis
+ITO-0022 sind abgeschlossen. Offen bleibt bewusst die eigentliche Audioerzeugung: ein manueller
+Workflow-Lauf pro Charakter, danach Hoerpruefung und erst dann ein separater Asset-PR.
 
 Zu liefern je Wesen:
 

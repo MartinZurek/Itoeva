@@ -116,6 +116,20 @@
       "cfg_scale": 1,
       "seed": 13092026,
       "notes": "Persoenliches Stueck des GLOOP, Variante 05 der Rolle character_theme_background. GLOOP hat signatureTopic REST - der gemuetliche, leicht chaotische Entschleuniger; musikalisch deshalb das langsamste und weichste der sechs Themen: runder Bass, verwaschene warme Pads, gedaempfte Brush-Percussion und keine harten Kanten. Kleine verspaetete oder wandernde Details zeigen das freundliche Chaos, ohne den ruhigen Loop aufzulosen. Die Melodie bleibt klar und ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
+    },
+    {
+      "id": "theme-hootlet",
+      "title": "Hootlet's Theme",
+      "role": "character_theme_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_theme_06",
+      "prompt_file": "music/prompts/theme-hootlet.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 14092026,
+      "notes": "Persoenliches Stueck des HOOTLET, Variante 06 der Rolle character_theme_background. HOOTLET hat signatureTopic FOCUS - der stille, geduldige Beobachter; musikalisch deshalb das klarste und geordnetste der sechs Themen: stetiger ruhiger Puls und ein sauberes Piano-/Vibraphon-Motiv, das sich mit kleinen kontrollierten Verschiebungen wiederholt. Praezision und Raum wirken aufmerksam und warm, nicht kalt oder klinisch. Die Melodie bleibt sofort erkennbar und ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen."
     }
   ]
 }
