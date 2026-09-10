@@ -26,10 +26,29 @@ Der neue ausdruecklich freigegebene Hauptauftrag steht in
 - `AvatarActivityPlans` zeigt das richtige Integrationsmuster: semantische Absicht bleibt von
   der vorhandenen `PlayRoutine`-Choreografie getrennt.
 
-Naechster Schnitt ist NT-063: ein reiner Kotlin-Kern unter `app-sim/.../living/` mit
-deterministischen JVM-Tests. Erst nach dessen Merge folgen Persistenz, Runtime-Anbindung und
-Stream-Snapshot in getrennten PRs. `DockScreen.kt` fuer den Kern nicht anfassen und niemals als
-Ganzes lesen.
+**NT-063 (Schnitt 2a) ist umgesetzt.** Der reine Kotlin-Kern steht in fuenf Dateien unter
+`app-sim/src/main/java/com/notime/glyphsim/living/` und laeuft mit 22 deterministischen Tests in
+der Offline-Strecke mit. Belegt sind: Zielwahl mit aufgeschluesselter Begruendung, der
+ressourcenbedingte Weg `WORK -> BUY_FOOD -> EAT`, benannte Voraussetzungen, Neuplanung nach
+einer Weltaenderung, die Erklaerung als read-only Vertrag, der Startbias je Spezies und ein
+Mehrtageslauf. Was der Kern absichtlich noch NICHT tut, steht im Abschnitt "Stand" von
+[`LIVING_AGENT.md`](LIVING_AGENT.md).
+
+Naechster Schnitt ist **NT-067** (Schnitt 2b): Episoden, Beziehungen, symbolische Verstaendigung,
+gelernter Geschmack und `CONNECT_WITH` - wieder als reine Domaene, wieder mit Tests in der
+Offline-Strecke. Danach erst Persistenz (NT-064), Runtime-Anbindung (NT-065) und
+Stream-Snapshot (NT-066), jeweils als eigener PR.
+
+Drei Dinge, die man beim Weiterbauen wissen muss:
+
+- Der Kern hat **kein Android, keine Uhr und keinen Zufall**. Zeit wird als `day` und
+  `minuteOfDay` hereingereicht. Wer hier `System.currentTimeMillis` oder `Random` einfuehrt,
+  macht den Mehrtageslauf unpruefbar - und im Zeitraffer rechnet er gegen die falsche Uhr.
+- **`Requirement` ist ein benanntes Ding und kein `Boolean`.** Daran haengt die ganze
+  Erklaerbarkeit. Aus demselben Grund enthaelt kein Ereignis freien Text.
+- **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung gehoert in den
+  Runtime-Adapter (NT-065), nicht in die Domaene. `DockScreen.kt` fuer die reinen Schnitte nicht
+  anfassen und niemals als Ganzes lesen.
 
 ## 2. Harte Regeln fuer die Musik
 
