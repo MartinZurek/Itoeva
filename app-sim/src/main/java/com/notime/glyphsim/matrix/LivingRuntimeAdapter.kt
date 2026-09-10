@@ -1,10 +1,12 @@
 package com.notime.glyphsim.matrix
 
 import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.living.Action
 import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.GoalKind
+import com.notime.glyphsim.living.LivingEvent
 import com.notime.glyphsim.living.LivingEventKind
 import com.notime.glyphsim.living.LivingSimulation
 import com.notime.glyphsim.living.LivingSite
@@ -12,6 +14,7 @@ import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Personality
 import com.notime.glyphsim.living.StepResult
+import com.notime.glyphsim.living.SymbolicMessage
 import com.notime.glyphsim.living.WorldState
 import kotlin.random.Random
 
@@ -154,7 +157,11 @@ object LivingRuntimeAdapter {
                 LivingSite.WORKPLACE -> {
                     result = advanceExpected(result, listOf(ActionKind.WORK))
                     topic = AnimationType.WORK
-                    routine = workRoutine(renderedPlace)
+                    routine = if (ActionKind.WORK in completedActions(result)) {
+                        workRoutine(renderedPlace)
+                    } else {
+                        closedSiteRoutine(PlayScene.Place.WORK)
+                    }
                 }
                 LivingSite.MARKET -> {
                     result = advanceExpected(
@@ -167,7 +174,11 @@ object LivingRuntimeAdapter {
                         )
                     )
                     topic = AnimationType.DRINK
-                    routine = shoppingRoutine(renderedPlace)
+                    routine = if (ActionKind.BUY_FOOD in completedActions(result)) {
+                        shoppingRoutine(renderedPlace)
+                    } else {
+                        closedSiteRoutine(PlayScene.Place.SHOP)
+                    }
                 }
                 LivingSite.HOME -> {
                     if (result.agent.plan?.next?.kind == ActionKind.REST) {
@@ -244,16 +255,58 @@ object LivingRuntimeAdapter {
         return PreparedLivingRoutine(result, topic, routine, completedActions(result))
     }
 
+    /**
+     * Verbucht eine ausdruecklich erbetene sichtbare Routine in derselben Living-Welt.
+     *
+     * Die Bitte ersetzt kein autonomes Ziel. Sie wendet nur die Wirkungen der Handlungen an,
+     * die auf dem Bildschirm wirklich gelaufen sind, und behaelt Ziel sowie Plan des Agenten.
+     * Auch hier rechnet ausschliesslich [com.notime.glyphsim.living.Action.applyTo].
+     */
+    fun applyRequestedRoutine(
+        agent: AgentState,
+        world: WorldState,
+        renderedPlace: PlayScene.Place,
+        topic: AnimationType,
+        routine: PlayRoutine
+    ): StepResult {
+        val originalGoal = agent.goal
+        val originalPlan = agent.plan
+        val syncedWorld = synchroniseWorld(world, renderedPlace, world.nearbyProfiles)
+        val goal = requestedGoal(topic)
+        val actions = requestedActions(topic, routine, syncedWorld)
+        var currentAgent = agent.copy(plan = null)
+        var currentWorld = syncedWorld
+        val events = mutableListOf<LivingEvent>()
+        val messages = mutableListOf<SymbolicMessage>()
+
+        for (action in actions) {
+            currentWorld = currentWorld.copy(openSites = openSitesAt(currentWorld.minuteOfDay))
+            if (!action.isPossible(currentWorld)) break
+            val applied = action.applyTo(currentAgent, currentWorld, goal)
+            currentAgent = applied.agent
+            currentWorld = applied.world
+            events += applied.event
+            applied.message?.let(messages::add)
+        }
+        return StepResult(
+            agent = currentAgent.copy(goal = originalGoal, plan = originalPlan),
+            world = currentWorld,
+            events = events,
+            messages = messages
+        )
+    }
+
     private fun advanceExpected(start: StepResult, expected: List<ActionKind>): StepResult {
         var result = start
         for (kind in expected) {
             if (result.agent.plan?.next?.kind != kind) break
-            val next = LivingSimulation.step(result.agent, result.world)
-            if (completedActions(next).firstOrNull() != kind) break
+            val currentWorld = result.world.copy(openSites = openSitesAt(result.world.minuteOfDay))
+            val next = LivingSimulation.step(result.agent, currentWorld)
             result = next.copy(
                 events = result.events + next.events,
                 messages = result.messages + next.messages
             )
+            if (completedActions(next).firstOrNull() != kind) break
         }
         return result
     }
@@ -286,6 +339,14 @@ object LivingRuntimeAdapter {
     }
 
     private fun restRoutine(): PlayRoutine = PlayRoutines.allFor(AnimationType.REST).first()
+
+    private fun closedSiteRoutine(place: PlayScene.Place): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(place),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Linger(2_000L)
+        )
+    )
 
     private fun workRoutine(renderedPlace: PlayScene.Place): PlayRoutine {
         val steps = PlayRoutines.allFor(AnimationType.WORK).first().steps
@@ -327,6 +388,42 @@ object LivingRuntimeAdapter {
         if (candidate !in unsuitable) return candidate
         return if (goal == GoalKind.DEVELOP) AnimationType.BOOK else AnimationType.MOVE
     }
+
+    private fun requestedGoal(topic: AnimationType): GoalKind = when (topic) {
+        AnimationType.DRINK, AnimationType.WORK -> GoalKind.GET_FOOD
+        AnimationType.REST, AnimationType.SLEEP -> GoalKind.REST
+        AnimationType.BOOK, AnimationType.FOCUS, AnimationType.CREATIVITY -> GoalKind.DEVELOP
+        else -> GoalKind.HAVE_FUN
+    }
+
+    private fun requestedActions(
+        topic: AnimationType,
+        routine: PlayRoutine,
+        world: WorldState
+    ): List<Action> = when (topic) {
+        AnimationType.WORK -> travelIfNeeded(LivingSite.WORKPLACE, world) +
+            ActionCatalog[ActionKind.WORK]
+        AnimationType.DRINK -> if (routine.steps.any {
+                it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP
+            }
+        ) {
+            travelIfNeeded(LivingSite.MARKET, world) +
+                ActionCatalog[ActionKind.BUY_FOOD] +
+                ActionCatalog.travelTo(LivingSite.HOME) +
+                ActionCatalog[ActionKind.INSPECT_FOOD] +
+                ActionCatalog[ActionKind.EAT]
+        } else {
+            travelIfNeeded(LivingSite.HOME, world) +
+                ActionCatalog[ActionKind.INSPECT_FOOD] +
+                ActionCatalog[ActionKind.EAT]
+        }
+        AnimationType.REST, AnimationType.SLEEP -> travelIfNeeded(LivingSite.HOME, world) +
+            ActionCatalog[ActionKind.REST]
+        else -> listOf(ActionCatalog[ActionKind.PURSUE_INTEREST])
+    }
+
+    private fun travelIfNeeded(site: LivingSite, world: WorldState): List<Action> =
+        if (world.site == site) emptyList() else listOf(ActionCatalog.travelTo(site))
 
     private const val WORK_OPENS = 6 * 60
     private const val WORK_CLOSES = 18 * 60

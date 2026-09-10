@@ -3,7 +3,9 @@ package com.notime.glyphsim.matrix
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.AgentState
+import com.notime.glyphsim.living.GoalKind
 import com.notime.glyphsim.living.LivingSite
+import com.notime.glyphsim.living.LivingEventKind
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Personality
@@ -151,6 +153,59 @@ class LivingRuntimeAdapterTest {
         assertTrue(second.routine.steps.any {
             it is RoutineStep.Act && it.topic == AnimationType.DRINK
         })
+    }
+
+    @Test
+    fun `zusammengefasster Einkauf kauft nach Ladenschluss nicht weiter`() {
+        val prepared = LivingRuntimeAdapter.prepare(
+            agent = hungry(),
+            world = world(coins = 2, portions = 0, minute = 21 * 60 + 50),
+            renderedPlace = PlayScene.Place.KITCHEN,
+            interestTopic = AnimationType.MOVE,
+            random = Random(3)
+        )
+
+        assertEquals(listOf(ActionKind.TRAVEL), prepared.completedActions)
+        assertEquals(2, prepared.result.world.coins)
+        assertEquals(0, prepared.result.world.portions)
+        assertTrue(prepared.result.events.any { it.kind == LivingEventKind.ACTION_BLOCKED })
+        assertFalse(prepared.routine!!.steps.any {
+            it is RoutineStep.GoTo && it.station == PlayScene.Station.CHECKOUT
+        })
+    }
+
+    @Test
+    fun `erbetene Arbeit und Einkauf verbuchen dieselbe Living-Wirtschaft`() {
+        val startAgent = hungry().copy(goal = GoalKind.GET_FOOD)
+        val startWorld = world(coins = 0, portions = 0)
+        val workRoutine = PlayRoutines.forTopic(AnimationType.WORK, random = Random(2))
+
+        val afterWork = LivingRuntimeAdapter.applyRequestedRoutine(
+            startAgent,
+            startWorld,
+            PlayScene.Place.KITCHEN,
+            AnimationType.WORK,
+            workRoutine
+        )
+        assertEquals(2, afterWork.world.coins)
+        assertEquals(startAgent.goal, afterWork.agent.goal)
+
+        val shoppingRoutine = PlayRoutines.forTopic(
+            AnimationType.DRINK,
+            needsShopping = true,
+            random = Random(2)
+        )
+        val afterShopping = LivingRuntimeAdapter.applyRequestedRoutine(
+            afterWork.agent,
+            afterWork.world,
+            PlayScene.Place.WORK,
+            AnimationType.DRINK,
+            shoppingRoutine
+        )
+
+        assertEquals(0, afterShopping.world.coins)
+        assertEquals(2, afterShopping.world.portions)
+        assertTrue(afterShopping.agent.needs.pressure(NeedKind.HUNGER) < 0.5)
     }
 
     @Test

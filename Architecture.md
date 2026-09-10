@@ -204,7 +204,10 @@ Routine vollstaendig beendet ist, wird der profilbezogene Snapshot uebernommen; 
 kommende echte Erinnerung kann deshalb keine unsichtbar bereits bezahlte oder verdiente Handlung
 hinterlassen. Die alte harte `Vorrat leer und Geld fehlt -> WORK`-Abzweigung in `DockScreen` ist
 entfallen. `PlayAmbientActivity` bestimmt bei Freizeit weiterhin die sichtbare Variante, aber
-nicht mehr, ob Hunger, Energie oder soziale Naehe uebergangen werden.
+nicht mehr, ob Hunger, Energie oder soziale Naehe uebergangen werden. Dieselbe Adaptergrenze
+verbucht ausdruecklich erbetene Routinen, ohne das autonome Ziel zu ueberschreiben, und stellt
+den Zustand vor dem ersten Gespraech wieder her. Oeffnungszeiten werden vor jedem in einer
+Routine zusammengefassten Kernschritt erneut bestimmt.
 
 Es entsteht keine zweite Engine und kein `StoryManager`. Der Kern wird zuerst mit
 deterministischen JVM-Tests bewiesen, profilbezogen persistiert und gezielt an `DockScreen`

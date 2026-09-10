@@ -118,7 +118,10 @@ Stand. Arbeitsweg plus Arbeit und die zusammenhaengende Einkaufsfolge werden jew
 bereits vorhandenen Routinen abgebildet; deren alte globale Nebenwirkungen sind fuer Living-
 Schritte abgeschaltet, damit `ActionOutcome` die einzige fachliche Rechnung bleibt. Bestehende
 `PlayWallet`-/`PlayPantry`-Werte dienen einmalig als Startwert, danach zeigt auch das Gespraech
-die profilbezogenen Weltressourcen.
+die profilbezogenen Weltressourcen. Ausdruecklich erbetene Arbeit, Einkauf und Essen laufen
+ebenfalls ueber diese Living-Wirtschaft, ohne das autonome Ziel zu ersetzen. Vor jedem
+zusammengefassten Teilschritt wird die Verfuegbarkeit neu bestimmt; schliesst ein Ort unterwegs,
+endet die sichtbare Folge dort statt nach Ladenschluss oder Feierabend weiterzurechnen.
 
 ## Erster demonstrierbarer Schnitt
 

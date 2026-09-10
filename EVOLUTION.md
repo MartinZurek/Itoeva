@@ -2390,21 +2390,29 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
     Geld, Vorrat, Erinnerung und Bedarf laufen weiterhin allein durch `ActionOutcome`. Die alten
     `PlayWallet`-/`PlayPantry`-Werte dienen beim ersten Anschluss als Startwert und werden weder
     geloescht noch umgedeutet; danach zeigt das Gespraech die profilbezogenen Weltwerte.
+  - Auch ausdruecklich erbetene Arbeit, Einkauf und Essen werden ueber vorhandene Living-
+    Actions verbucht. Die Bitte ersetzt das autonome Ziel nicht. Vor jeder zusammengefassten
+    Action wird die Verfuegbarkeit aus der inzwischen fortgeschrittenen Simulationszeit neu
+    bestimmt; schliesst ein Ort unterwegs, endet der Ablauf mit dem benannten Hindernis.
+  - Handeln und Gespraech stellen den Snapshot ueber dieselbe Grenze wieder her. Dadurch zeigt
+    ein unmittelbar nach dem Start geoeffnetes Gespraech nicht mehr die alten globalen
+    Ressourcen, bis zufaellig die erste autonome Handlung gelaufen ist.
   - `PlayTimeLapse.absoluteMinute` liefert dem Store eine fortlaufende Simulationsminute und
     behaelt im Zeitraffer auch vollstaendige simulierte Tage. Der reine Kern kennt weiterhin
     weder Android-Uhr noch Zufall.
 - **Abgrenzung:** Kein Stream-Overlay, keine Twitch-/YouTube-Anbindung, keine Cloud, kein neuer
   Renderer, keine neue Room-Entity, keine Aenderung in `:core`, kein StoryManager und keine
-  allgemeine Planungsmaschine. Ausdrueckliche Nutzerbitten und die sichtbare Ausgestaltung
-  symbolischer Besuche bleiben bestehende beziehungsweise spaetere Integrationspunkte.
+  allgemeine Planungsmaschine. Die sichtbare Ausgestaltung symbolischer Besuche bleibt ein
+  spaeterer Integrationspunkt.
 - **Betroffene Bereiche:** Neuer reiner `matrix/LivingRuntimeAdapter.kt`, gezielte Stellen in
   `DockScreen.kt`, die fortlaufende Runtime-Zeit in `PlayTimeLapse.kt`, profilbezogene
   Ressourcenanzeige in `PlayTalk.kt`, `LivingRuntimeAdapterTest.kt`, die Offline-Testliste sowie
   `LIVING_AGENT.md`, `Architecture.md`, `NextTasks.md`, `UEBERGABE.md` und dieses Protokoll.
-- **Tests:** Acht neue Verhaltensfaelle erhoehen die Offline-Strecke von 277 auf 285 Tests:
+- **Tests:** Zehn neue Verhaltensfaelle erhoehen die Offline-Strecke von 277 auf 287 Tests:
   vollstaendige Ortsabbildung, Oeffnungszeiten, fortlaufender Zeitraffer, Uebernahme bestehender
   Ressourcen, Arbeits-/Einkaufskette, Essen aus vorhandenem Vorrat, vorhandene Freizeit-
-  Choreografie und bewusstes Nichtstun. `python3 -m unittest discover --start-directory
+  Choreografie, bewusstes Nichtstun, Ladenschluss waehrend einer Einkaufsfolge und dieselbe
+  Living-Wirtschaft fuer erbetene Arbeit samt Einkauf. `python3 -m unittest discover --start-directory
   tools/music` bleibt mit 15 Tests gruen. Compose und der echte `ContextWrapper` werden erst von
   der vollstaendigen Head-CI geprueft.
 - **Naechster Schritt:** NT-066 - eine read-only Snapshot-/Event-Quelle und den Mehrtages-

@@ -31,7 +31,10 @@ uebergibt Oeffnungszeiten und waehlt fuer Kernhandlungen vorhandene `PlayRoutine
 Der harte `mustEarn`-Sonderfall in `DockScreen` ist entfernt. Kernwirkungen werden erst nach
 einem vollstaendigen sichtbaren Ablauf gespeichert; ein Abbruch durch eine echte Erinnerung
 verbucht nichts vorzeitig. Bestehende `PlayWallet`-/`PlayPantry`-Werte werden beim ersten
-Anschluss als Startwert uebernommen, danach sind die Ressourcen profilbezogen.
+Anschluss als Startwert uebernommen, danach sind die Ressourcen profilbezogen. Erbetene Arbeit
+und Einkaeufe laufen durch dieselbe Wirtschaft, das Gespraech stellt sie schon vor der ersten
+autonomen Handlung wieder her, und zusammengefasste Ablaufe pruefen Oeffnungszeiten nach jedem
+fortgeschrittenen Kernschritt erneut.
 
 Naechster Schnitt ist **NT-066**: read-only Snapshot-/Event-Quelle und Mehrtages-Langlauftest
 fuer den spaeteren Stream-Vertrag. Danach folgt der begrenzte Streaming-PoC (NT-058), jeweils
@@ -85,7 +88,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 285 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 287 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 

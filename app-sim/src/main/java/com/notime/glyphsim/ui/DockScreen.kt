@@ -68,6 +68,7 @@ import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AvatarFeedEvent
 import com.notime.glyphsim.data.LivingAgentStore
 import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
+import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
@@ -548,6 +549,50 @@ fun DockScreen(
         }
         var livingAgent by remember(presenceProfileId) { mutableStateOf<AgentState?>(null) }
         var livingWorld by remember(presenceProfileId) { mutableStateOf<WorldState?>(null) }
+
+        /**
+         * Stellt denselben Living-Zustand fuer Handeln und Gespraech bereit.
+         *
+         * Ohne diese gemeinsame Grenze zeigte das Gespraech vor der ersten autonomen Handlung
+         * noch die alte Wirtschaft. Gleichzeitig darf ein ausdruecklicher Wunsch nicht wieder
+         * bei den globalen Vorgaengerwerten anfangen.
+         */
+        fun livingStateFor(species: AvatarSpecies): Pair<AgentState, WorldState> {
+            val nearbyProfiles = visitor?.species?.let {
+                setOf(AvatarSpeciesPrefs.profileId(it))
+            }.orEmpty()
+            val simulationMinute = PlayTimeLapse.absoluteMinute()
+            val restored = if (livingAgent == null || livingWorld == null) {
+                livingStore.restore(
+                    profileId = presenceProfileId,
+                    currentSimulationMinute = simulationMinute,
+                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(
+                        simulationMinute % WorldState.MINUTES_PER_DAY
+                    ),
+                    currentNearbyProfiles = nearbyProfiles
+                )
+            } else {
+                null
+            }
+            val agent = livingAgent ?: restored?.agent
+                ?: LivingRuntimeAdapter.initialAgent(presenceProfileId, species)
+            val world = livingWorld ?: restored?.world
+                ?: LivingRuntimeAdapter.initialWorld(
+                    absoluteMinute = simulationMinute,
+                    place = currentPlace,
+                    coins = PlayWallet.coins(context),
+                    portions = PlayPantry.level(context),
+                    nearbyProfiles = nearbyProfiles
+                )
+            val synchronised = LivingRuntimeAdapter.synchroniseWorld(
+                world,
+                currentPlace,
+                nearbyProfiles
+            )
+            livingAgent = agent
+            livingWorld = synchronised
+            return agent to synchronised
+        }
         // Laufende Aufnahme: null = keine. Der Fortschritt gilt fuers Zusammenrechnen DANACH.
         var clipSession by remember { mutableStateOf<PlayClipRecorder.Session?>(null) }
         // Das kurze Aufhellen nach einem Schnappschuss. Der Zaehler daneben ist noetig, damit auch
@@ -2412,6 +2457,8 @@ fun DockScreen(
                     //
                     // Vor moveToPlace gesetzt, genau wie im PERFORM-Zweig weiter unten: Waehrend
                     // der Ablauf laeuft, soll bereits das gelten, was er GERADE tut.
+                    val requestedFrom = currentPlace
+                    val (baseAgent, baseWorld) = livingStateFor(species)
                     currentTopic = topic
                     moveToPlace(PlayScene.forTopic(topic), species)
                     // **Ohne `recentSpecials`, mit Absicht.** Eine ausdrueckliche Bitte des
@@ -2421,11 +2468,38 @@ fun DockScreen(
                     // Regungen war es sehr wohl zu sehen.
                     val gebeten = PlayRoutines.forTopic(
                         topic = topic,
-                        needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                        needsShopping = baseWorld.portions <= 0 &&
+                            baseWorld.coins >= ActionCatalog.GROCERY_COST,
                         footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
                     )
                     rememberShown(topic, gebeten)
-                    runRoutine(gebeten, species)
+                    val completed = runRoutine(
+                        gebeten,
+                        species,
+                        // Die Living-Wirkung wird nach dem sichtbaren Abschluss genau einmal
+                        // ueber ActionOutcome verbucht.
+                        applyLegacyEconomy = false
+                    )
+                    if (completed) {
+                        val applied = LivingRuntimeAdapter.applyRequestedRoutine(
+                            agent = baseAgent,
+                            world = baseWorld,
+                            renderedPlace = requestedFrom,
+                            topic = topic,
+                            routine = gebeten
+                        )
+                        val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
+                            applied.world,
+                            currentPlace,
+                            visitor?.species?.let {
+                                setOf(AvatarSpeciesPrefs.profileId(it))
+                            }.orEmpty()
+                        )
+                        livingAgent = applied.agent
+                        livingWorld = committedWorld
+                        livingStore.save(applied.agent, committedWorld)
+                        economyTick++
+                    }
                     // Zuruecksetzen startet die Schleife ein letztes Mal - dann ohne Bitte, und
                     // von da an laeuft wieder der gewoehnliche Tagesablauf.
                     requestedTopic = null
@@ -2586,33 +2660,10 @@ fun DockScreen(
                                 )
                             )
 
-                            val nearbyProfiles = visitor?.species
-                                ?.let(AvatarSpeciesPrefs::profileId)
-                                ?.let(::setOf)
-                                .orEmpty()
-                            val simulationMinute = PlayTimeLapse.absoluteMinute()
-                            val restored = if (livingAgent == null || livingWorld == null) {
-                                livingStore.restore(
-                                    profileId = presenceProfileId,
-                                    currentSimulationMinute = simulationMinute,
-                                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(
-                                        simulationMinute % WorldState.MINUTES_PER_DAY
-                                    ),
-                                    currentNearbyProfiles = nearbyProfiles
-                                )
-                            } else {
-                                null
-                            }
-                            val baseAgent = livingAgent ?: restored?.agent
-                                ?: LivingRuntimeAdapter.initialAgent(presenceProfileId, species)
-                            val baseWorld = livingWorld ?: restored?.world
-                                ?: LivingRuntimeAdapter.initialWorld(
-                                    absoluteMinute = simulationMinute,
-                                    place = currentPlace,
-                                    coins = PlayWallet.coins(context),
-                                    portions = PlayPantry.level(context),
-                                    nearbyProfiles = nearbyProfiles
-                                )
+                            val nearbyProfiles = visitor?.species?.let {
+                                setOf(AvatarSpeciesPrefs.profileId(it))
+                            }.orEmpty()
+                            val (baseAgent, baseWorld) = livingStateFor(species)
                             val prepared = LivingRuntimeAdapter.prepare(
                                 agent = baseAgent,
                                 world = baseWorld,
@@ -3521,6 +3572,7 @@ fun DockScreen(
             LaunchedEffect(talkOpen, talkRefresh, economyTick) {
                 talkKnowledge = null
                 val species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
+                val gameWorld = livingStateFor(species).second
                 talkKnowledge = withContext(Dispatchers.IO) {
                     // Mit Spielstand: Dieses Feld gibt es nur im Spielmodus, also ist die Frage
                     // nach Stufe, Geld und Vorrat hier immer sinnvoll.
@@ -3528,9 +3580,10 @@ fun DockScreen(
                         context,
                         AvatarSpeciesPrefs.profileId(species),
                         includeGame = true,
-                        gameResources = livingWorld?.let { world ->
-                            PlayTalk.GameResources(world.coins, world.portions)
-                        }
+                        gameResources = PlayTalk.GameResources(
+                            gameWorld.coins,
+                            gameWorld.portions
+                        )
                     )
                 }
             }
