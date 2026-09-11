@@ -63,7 +63,8 @@ internal class LivingObservationJournal(
         synchronized(lock) {
             val previous = observations[result.agent.profileId]
             val persisted = if (previous == null) {
-                result.agent.episodes.map(Episode::event) + listOfNotNull(result.agent.lastEvent)
+                (result.agent.episodes.map(Episode::event) + listOfNotNull(result.agent.lastEvent))
+                    .filterNot(result.events::contains)
             } else {
                 emptyList()
             }

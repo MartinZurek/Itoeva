@@ -59,6 +59,10 @@ class LivingObservationSourceTest {
         )
         assertEquals(LivingEventKind.ACTION_BLOCKED, observed.importantEvent?.kind)
         assertTrue(observed.recentEvents.none { it.kind == LivingEventKind.IDLE })
+        assertEquals(
+            prepared.result.events.filterNot { it.kind == LivingEventKind.IDLE },
+            observed.recentEvents
+        )
         assertEquals(unchanged, startAgent to startWorld)
     }
 
