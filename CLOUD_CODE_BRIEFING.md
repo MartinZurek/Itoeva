@@ -29,6 +29,10 @@ keine Handlung vor. Kein `StoryManager`, kein freier Textdialog, keine zweite We
 Zuerst reiner deterministischer Kern, dann profilbezogene Persistenz, dann bestehende
 `PlayRoutine`-Anbindung und zuletzt der read-only Stream-Vertrag.
 
+Diese fuenf Schnitte sind seit NT-066 abgeschlossen. Der naechste freigegebene Schritt ist der
+begrenzte lokale Emulator-/OBS-PoC NT-058. Er misst genau eine Instanz und nimmt keine Cloud-,
+Plattform- oder Mehrinstanz-Architektur vorweg.
+
 ## Was gerade geändert wurde
 
 - `AGENTS.md` ist seit PR #61 der verbindliche Einstiegspunkt für alle KI-Agenten.

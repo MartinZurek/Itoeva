@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-10 (Schnitte 2a, 2b, 3 und 4 umgesetzt)
+Stand: 2026-09-11 (Schnitte 2a, 2b, 3, 4 und 5 umgesetzt)
 
 ## Leitidee
 
@@ -69,7 +69,7 @@ Datenbank oder Renderer.
 Die Praesentationsschicht darf spaeter Ereignisfolgen wie Wunsch -> Hindernis -> Versuch ->
 Anpassung -> Erfolg erkennen. Sie darf keine Ereignisse erfinden oder die Simulation steuern.
 
-## Stand: was Schnitte 2a, 2b, 3 und 4 tatsaechlich gebaut haben
+## Stand: was Schnitte 2a, 2b, 3, 4 und 5 tatsaechlich gebaut haben
 
 Der Kern liegt in `app-sim/src/main/java/com/notime/glyphsim/living/` in fuenf Dateien:
 `LivingWorld.kt` (Welt, Orte, `Requirement`), `LivingNeed.kt` (Beduerfnisse, `Personality`),
@@ -122,6 +122,18 @@ die profilbezogenen Weltressourcen. Ausdruecklich erbetene Arbeit, Einkauf und E
 ebenfalls ueber diese Living-Wirtschaft, ohne das autonome Ziel zu ersetzen. Vor jedem
 zusammengefassten Teilschritt wird die Verfuegbarkeit neu bestimmt; schliesst ein Ort unterwegs,
 endet die sichtbare Folge dort statt nach Ladenschluss oder Feierabend weiterzurechnen.
+
+Schnitt 5 stellt mit `LivingObservationSource` einen reinen Lesevertrag bereit. Sein flacher
+`LivingObservation`-Snapshot nennt Simulationsminute, staerkstes Beduerfnis, Wunsch, dessen
+aufgeschluesselten Grund, Plan, naechste Handlung, benanntes Hindernis, wirksame Episoden,
+Beziehungen und das wichtigste juengste Ereignis. `LivingObservationFeed` erhaelt nur bereits
+abgeschlossene Runtime-Ergebnisse; eine Anzeige kann weder Agent noch Welt veraendern. Das
+zugehoerige Ereignisfenster ist fest begrenzt und laesst `IDLE`-Ticks aus.
+
+Der Langlauf geht ueber denselben `LivingRuntimeAdapter` wie die Pixelwelt. Ueber vier
+simulierte Tage bleibt er deterministisch und erzeugt aus der Startlage die belegbare Folge
+Wunsch -> geschlossener Arbeitsplatz -> Warten/Neuplanung -> Arbeit -> Einkauf -> Essen. Der
+Test beschreibt nur die Startlage und die erwarteten Bedeutungen, keinen Plot.
 
 ## Erster demonstrierbarer Schnitt
 
@@ -188,7 +200,7 @@ getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentliche
 4. **Bestehende Welt anbinden (erledigt, NT-065)**: Planaktionen gezielt auf vorhandene `PlayRoutine`-Varianten,
    `PlayPantry`, `PlayWallet`, `PlayPresence` und Besuchsfenster abbilden. Nur gezielte
    Aenderungen an `DockScreen`; keine zweite Choreografie-Pipeline.
-5. **Stream-Vertrag beobachten**: read-only Snapshot/Event-Quelle fuer spaetere Overlays,
+5. **Stream-Vertrag beobachten (erledigt, NT-066)**: read-only Snapshot/Event-Quelle fuer spaetere Overlays,
    Langlauftest ueber mehrere simulierte Tage und Geraetepruefung der sichtbaren Ablaeufe. Noch
    kein komplexes Twitch-UI und keine Plattformintegration.
 

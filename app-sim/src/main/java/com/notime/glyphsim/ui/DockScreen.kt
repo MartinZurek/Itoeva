@@ -70,6 +70,7 @@ import com.notime.glyphsim.data.LivingAgentStore
 import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
 import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.AgentState
+import com.notime.glyphsim.living.StepResult
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
@@ -84,6 +85,7 @@ import com.notime.glyphsim.skilltree.AvatarActivityBus
 import com.notime.glyphsim.skilltree.AvatarActivityPlans
 import com.notime.glyphsim.skilltree.AvatarUnlockRepository
 import com.notime.glyphsim.skilltree.SkillRepertoire
+import com.notime.glyphsim.stream.LivingObservationFeed
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
@@ -591,7 +593,13 @@ fun DockScreen(
             )
             livingAgent = agent
             livingWorld = synchronised
+            LivingObservationFeed.record(StepResult(agent, synchronised, emptyList()))
             return agent to synchronised
+        }
+        // Die Beobachtungsquelle soll nach dem Einstieg lesbar sein, nicht erst nach der ersten
+        // zufaellig faelligen Regung oder nachdem das Gespraech geoeffnet wurde.
+        LaunchedEffect(playMode, presenceProfileId, avatar?.species) {
+            if (playMode) avatar?.species?.let(::livingStateFor)
         }
         // Laufende Aufnahme: null = keine. Der Fortschritt gilt fuers Zusammenrechnen DANACH.
         var clipSession by remember { mutableStateOf<PlayClipRecorder.Session?>(null) }
@@ -2498,6 +2506,7 @@ fun DockScreen(
                         livingAgent = applied.agent
                         livingWorld = committedWorld
                         livingStore.save(applied.agent, committedWorld)
+                        LivingObservationFeed.record(applied.copy(world = committedWorld))
                         economyTick++
                     }
                     // Zuruecksetzen startet die Schleife ein letztes Mal - dann ohne Bitte, und
@@ -2682,6 +2691,7 @@ fun DockScreen(
                                 livingAgent = prepared.result.agent
                                 livingWorld = prepared.result.world
                                 livingStore.save(prepared.result.agent, prepared.result.world)
+                                LivingObservationFeed.record(prepared.result)
                                 continue
                             }
 
@@ -2733,6 +2743,9 @@ fun DockScreen(
                             livingAgent = prepared.result.agent
                             livingWorld = committedWorld
                             livingStore.save(prepared.result.agent, committedWorld)
+                            LivingObservationFeed.record(
+                                prepared.result.copy(world = committedWorld)
+                            )
                             economyTick++
 
                             // **Und danach zeigt es, was es kann** - eine Einlage aus dem
