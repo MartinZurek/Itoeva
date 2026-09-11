@@ -37,10 +37,15 @@ Format je Aufgabe: **Rang - ID** - Aufgabe. *Erfolgskriterium.* (Abhaengigkeit; 
    **Runbook und Messbogen sind fertig; der Lauf selbst braucht einen Menschen an einem Rechner
    mit Android Studio und OBS.** Eine Agentenumgebung hat weder SDK noch Emulator noch
    Aufzeichnung - siehe den Abschnitt "Warum NT-058 weiterhin offen ist" im Runbook.
-2. **NT-051** - Pruefen, ob der Bereichsdetektor aus `verify.yml` auch der Builder-Session einen
+2. **NT-069** - Den Wunsch und das Hindernis des Living Agents als Symbol ueber dem Kopf
+   zeigen und den gewuerfelten Satz aus `PlaySpeech` dort ersetzen. *Beim Zusehen ist
+   erkennbar, WAS das Wesen will und WORAN es haengt; kein freier Text mehr ueber dem Kopf, der
+   Text beim Antippen bleibt.* (LivingSymbols aus NT-063ff.; 1 PR - braucht zwei neue
+   Pixel-Symbole fuer QUESTION und NO, die vor dem Merge angesehen werden sollten)
+3. **NT-051** - Pruefen, ob der Bereichsdetektor aus `verify.yml` auch der Builder-Session einen
    kleineren relevanten Kontext geben kann. *Machbarkeit bewertet, gegebenenfalls prototypisch
    umgesetzt.* (keine; 90 min)
-3. **NT-046** - Empirisch pruefen, welchen Kontext die Reviewer-Session erhaelt. *Gemessene
+4. **NT-046** - Empirisch pruefen, welchen Kontext die Reviewer-Session erhaelt. *Gemessene
    Tokenersparnis oder begruendete Beibehaltung.* (keine; 60 min)
 4. **NT-047** - Standard-Modellwahl je Aufgabentyp pruefen. *Auswahl begruendet dokumentiert oder
    angepasst.* (keine; 45 min)

@@ -3,6 +3,59 @@
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
 Stand: 2026-09-11 (Schnitte 2a, 2b, 3, 4 und 5 umgesetzt)
 
+## Was das System heute wirklich ist
+
+Nach sieben Schnitten (#127 bis #133) ist aus dem Plan ein laufendes System geworden. Diese
+Uebersicht beschreibt den IST-Stand; der Rest des Dokuments bleibt der Plan, an dem er gemessen
+wird.
+
+**Der Kern rechnet, die alte Welt zeigt.** Unter `app-sim/.../living/` liegt eine Domaene ohne
+Android, ohne Uhr und ohne Zufall. Sie entscheidet; die vorhandene Pixelwelt fuehrt aus. Es gibt
+keine zweite Engine und keinen `StoryManager`.
+
+| Baustein | Was er beitraegt |
+| --- | --- |
+| `Needs` / `NeedKind` | Sieben Beduerfnisse, die mit der Zeit wachsen: Hunger, Energie, Spass, Naehe, Behaglichkeit, Neugier, Entwicklung. |
+| `Personality` | Startbias je Spezies - **veraenderbar**, weil er als Datum im `AgentState` liegt und nicht in einem Enum. Er verschiebt die Wahl, er ueberstimmt sie nie. |
+| `UtilitySelector` | Vergibt je Ziel eine Punktzahl aus Beduerfnisdruck, Bias und Kosten - **aufgeschluesselt**, damit "warum will er das?" beantwortbar bleibt. |
+| `GoalKind` | Sechs langlebige Absichten: `GET_FOOD`, `REST`, `HAVE_FUN`, `DEVELOP`, `CONNECT_WITH`, `EARN_MONEY`. |
+| `Planner` / `Plan` | Leitet aus einem Ziel einen mehrschrittigen Weg ab - je nach Ressourcenlage `EAT`, oder `BUY_FOOD -> EAT`, oder `WORK -> BUY_FOOD -> EAT`. |
+| `Requirement` | Voraussetzungen als **benannte Dinge** (`Coins`, `Portions`, `At`, `SiteOpen`, `Near`), nicht als Wahrheitswerte. Daran haengt die ganze Erklaerbarkeit. |
+| `ActionOutcome` | Der eine Wirkungsweg. Traegt Muenzen, Vorrat, Ort, Zeit, Beduerfnisse, Episoden, Beziehungen. |
+| `Episode` / `RelationshipState` | Begrenzte Erinnerung und Naehe je Wesenpaar - beides wirkt auf die Zielwahl zurueck. |
+| `SymbolicIntent` | Sprachunabhaengige Verstaendigung. Kein freier Text, nirgends. |
+| `AgentExplanation` | Der Schnappschuss: Ziel, Begruendung, Plan, aktuelle Handlung, Hindernis, wirksame Erinnerungen. |
+| `LivingAgentStore` | Versionierter Snapshot je `profileId` in SharedPreferences. |
+| `LivingRuntimeAdapter` | Bildet 16 sichtbare Orte auf 4 Domaenenorte ab und waehlt fuer jede Kernhandlung eine vorhandene `PlayRoutine`. |
+
+**Der Ablauf eines Schrittes**, und die Reihenfolge ist die Aussage:
+
+1. Ist das Ziel gestillt oder fehlt es, waehlt der `UtilitySelector` ein neues.
+2. Fehlt ein Plan, sucht der `Planner` einen Weg aus der WIRKLICHEN Lage.
+3. **Vor** der Ausfuehrung werden die Voraussetzungen erneut geprueft - nicht beim Planen.
+4. Traegt die Lage den Schritt nicht, faellt der PLAN und das ZIEL bleibt. Der naechste Schritt
+   leitet aus derselben Absicht einen anderen Weg ab.
+
+Punkt 3 und 4 sind der Unterschied zwischen einem lebendigen Wesen und einer Animationsfolge.
+Eine feste Kette liefe blind weiter, auch wenn der Laden inzwischen zu hat.
+
+### Die Luecke, die am 11.09. gefunden wurde
+
+**Das alles lief - und war unsichtbar.** Die `AgentExplanation` entsteht bei jedem Schritt und
+geht in `LivingObservationFeed`; der ist fuer ein kuenftiges Overlay gedacht und wurde von
+niemandem gelesen. Das Einzige ueber dem Kopf war ein zufaellig gewuerfelter Satz aus
+`PlaySpeech`, der mit dem Ziel des Wesens nichts zu tun hatte.
+
+Wer zusah, konnte deshalb nicht unterscheiden, ob die Figur etwas WOLLTE oder ob der Wuerfel es
+ergab - obwohl sie es seit Wochen wirklich will. Gemeldet wurde das als "ich sehe das Living
+Agent System in der APK nicht", und das war genau richtig beobachtet.
+
+`LivingSymbols` schliesst diese Luecke an der Stelle, an der die Entscheidung entsteht: Es
+uebersetzt eine `AgentExplanation` in **zwei** Symbole - den Wunsch und, falls vorhanden, das
+Hindernis. Zusammen ergeben sie die kleinste Geschichte, die diese Welt erzaehlen kann; "ich
+will essen" plus "mir fehlt Geld" ist bereits ein Konflikt. Die Anzeige dieser Symbole ueber dem
+Kopf ist der naechste Schnitt (NT-069) und ersetzt dabei den gewuerfelten Satz.
+
 ## Leitidee
 
 Itoeva schreibt keine Geschichten vor. Die Simulation fuehrt Beduerfnisse, Weltzustand,
