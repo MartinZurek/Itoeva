@@ -1,8 +1,9 @@
 # Vorbereitung fuer den Streaming-PoC: Emulator, OBS und Twitch
 
-Status: **separates Vorbereitungsartefakt; NT-058 ist weiterhin offen und nicht durchgefuehrt**  
+Status: **Runbook und leerer Messbogen; NT-058 ist weiterhin offen und nicht durchgefuehrt**  
 Einordnung: Voraussetzung fuer das Arbeitspaket NT-058, kein NT-058-Ergebnis  
-Letzte Regelpruefung: 2026-09-10
+Letzte Regelpruefung: 2026-09-10  
+Letzter Abgleich mit dem Stream-Client: 2026-09-11 (nach PR #133)
 
 Dieses Dokument ist Runbook und leerer Messbogen fuer den ersten begrenzten End-to-End-Test
 einer oeffentlichen Itoeva-Instanz. Dieser PR liefert nur die Vorbereitung. NT-058 ist erst
@@ -10,11 +11,52 @@ erledigt, wenn ein tatsaechlicher Zwei-Stunden-Lauf samt Messwerten, Screenshots
 Wiederanlaufbefund und begruendeter GO/CHANGE/STOP-Empfehlung dokumentiert ist. Leere
 `TODO`-Felder sind kein positives Testergebnis.
 
+## Warum NT-058 weiterhin offen ist
+
+Am 2026-09-11 hat eine Agenten-Sitzung versucht, diesen Lauf durchzufuehren. Sie konnte es
+nicht, und zwar nicht aus Zeitmangel, sondern weil in ihrer Umgebung nichts davon existiert:
+
+| gebraucht | vorhanden | Befund |
+|---|---|---|
+| Android SDK | nein | `ANDROID_HOME` und `ANDROID_SDK_ROOT` nicht gesetzt, kein SDK auf der Platte |
+| Android Gradle Plugin | nein | `./gradlew :app-sim:assembleStream` bricht ab: `Plugin [id: 'com.android.application', version: '8.13.1'] was not found` - der Egress-Proxy erreicht das Google-Repository nicht |
+| Emulator / `adb` | nein | keines der Werkzeuge installiert |
+| Hardwarebeschleunigung | nein | kein `/dev/kvm`; ein Emulator waere selbst nach Installation nicht ernsthaft messbar |
+| OBS oder `ffmpeg` | nein | keine Bild- oder Tonaufzeichnung moeglich |
+
+Damit sind **alle** Kennzahlen dieses Dokuments unerreichbar: kein Bild, kein Ton, keine CPU-,
+RAM- oder Frame-Messung, kein Wiederanlauf, keine Slot- oder Impulsbeobachtung. Es waere leicht
+gewesen, hier plausible Zahlen einzutragen; sie waeren erfunden. Die Felder bleiben deshalb
+`TODO`.
+
+Was die Sitzung stattdessen getan hat - und was den naechsten Lauf schneller macht:
+
+- Die beiden rein lokalen Teststrecken ausgefuehrt: `tools/reaction-preview/tests.sh` mit
+  **299 gruenen Tests**, `tools/music` mit **15 gruenen Tests**.
+- Den Bau-Abschnitt dieses Runbooks gegen `app-sim/build.gradle.kts` geprueft und korrigiert.
+  **Er war falsch:** Er baute `installDebug` und startete `com.notime.glyphminderwatch` - also
+  die normale App. Wer ihm gefolgt waere, haette zwei Stunden lang den falschen Build gemessen,
+  ohne Direktstart, ohne automatische Slots und ohne Viewer-Simulator.
+- Die seit PR #133 hinzugekommenen Beobachtungen als eigenen Messbogen ergaenzt
+  (Abschnitt 4b): Slot-Belegung, Viewer-Impulse, Einfluss statt Steuerung, Erklaerbarkeit,
+  Datenschutz.
+- Einen Test ergaenzt, der Runbook und Build-Konfiguration aneinander bindet
+  (`StreamRunbookTest`), damit dieselbe Abweichung nicht ein zweites Mal unbemerkt entsteht.
+
+**NT-058 bleibt damit vollstaendig offen.** Es braucht einen Menschen an einem Rechner mit
+Android Studio und OBS. Der Rest dieses Dokuments ist der Zettel, den dieser Mensch abarbeitet.
+
 ## Ziel und feste Grenze
 
-Eine unveraenderte `:app-sim`-Instanz laeuft in einem Android-Emulator. Der Spielmodus bleibt
+Die **Stream-Variante** von `:app-sim` laeuft in einem Android-Emulator. Der Spielmodus bleibt
 mindestens zwei Stunden sichtbar und OBS zeichnet Bild und ausschliesslich den App-Ton lokal auf.
 Erst danach darf optional ein Twitch-Bandbreitentest folgen.
+
+Seit PR #133 ist der Gegenstand dieses Laufs nicht mehr die normale App, sondern der
+Stream-Client: dieselbe Runtime, derselbe Code, dieselbe Pixelwelt - nur mit
+`stream_mode = true`, eigener `applicationId` und Direktstart in den Spielmodus. Alle Befehle
+weiter unten beziehen sich auf diese Variante. Wer versehentlich die normale App misst, misst
+weder den Direktstart noch die automatische Slot-Belegung noch den Viewer-Simulator.
 
 Der PoC prueft:
 
@@ -22,7 +64,12 @@ Der PoC prueft:
 - ob Musik, Aktivitaeten und Szenenwechsel fuer Zuschauer zusammenpassen;
 - welches Seitenverhaeltnis den runden Pixelbildschirm lesbar zeigt;
 - ob Emulator und Encoder auf dem Testrechner genuegend Reserven haben;
-- ob sich App, Emulator und Aufnahme kontrolliert wieder starten lassen.
+- ob sich App, Emulator und Aufnahme kontrolliert wieder starten lassen;
+- **ob Erinnerungen von selbst in hoechstens vier Stream-Slots landen** und dabei nichts
+  Privates oder Medizinisches oeffentlich wird;
+- **ob ein simulierter Zuschauerimpuls beeinflusst statt steuert** - also abgelehnt wird oder
+  liegen bleibt, wenn ein dringenderes Ziel laeuft;
+- **ob Ziel, Grund, Plan und Hindernis des Wesens waehrend des Laufs nachvollziehbar bleiben.**
 
 Nicht enthalten sind Cloud-Betrieb, sechs parallele Instanzen, eine neue Weltengine,
 Zuschauerinteraktion, Monetarisierung oder ein oeffentlicher Simulcast. Der PoC verwendet eine
@@ -64,22 +111,50 @@ medizinischen Inhalte.
 Eine neue AVD ohne Google-Konto verwenden. Keine persoenlichen Reminder oder echten Namen
 anlegen. Netzwerkbenachrichtigungen anderer Programme vor der Aufnahme deaktivieren.
 
-Die Debug-App bauen und installieren. Unter Windows vorher `JAVA_HOME` gemaess
-`CLAUDE.md` setzen.
+### Die Stream-Variante bauen und installieren
+
+**Nicht `installDebug`.** Der Stream-Client ist ein eigener Build-Typ `stream` derselben App
+(siehe `app-sim/build.gradle.kts`), debug-signiert, mit `applicationIdSuffix = ".stream"`. Er
+laesst sich deshalb neben der normalen App installieren - und genau das soll er, damit beide
+Zustaende getrennt bleiben.
+
+| | |
+|---|---|
+| Build-Aufgabe | `:app-sim:assembleStream` (bauen) bzw. `:app-sim:installStream` (bauen und installieren) |
+| APK-Pfad | `app-sim/build/outputs/apk/stream/app-sim-stream.apk` |
+| `applicationId` | `com.notime.glyphminderwatch.stream` |
+| Startklasse | `com.notime.glyphsim.ui.MainActivity` |
+| Name im Launcher | **Itoeva Stream** (die normale App heisst dort `Tama`) |
+
+Unter Windows vorher `JAVA_HOME` gemaess `CLAUDE.md` setzen.
 
 PowerShell unter Windows:
 
 ```powershell
-.\gradlew.bat :app-sim:installDebug
-adb.exe shell am start -n com.notime.glyphminderwatch/com.notime.glyphsim.ui.MainActivity
+.\gradlew.bat :app-sim:installStream
+adb.exe shell am start -n com.notime.glyphminderwatch.stream/com.notime.glyphsim.ui.MainActivity
 ```
 
 Bash unter macOS oder Linux:
 
 ```bash
-./gradlew :app-sim:installDebug
-adb shell am start -n com.notime.glyphminderwatch/com.notime.glyphsim.ui.MainActivity
+./gradlew :app-sim:installStream
+adb shell am start -n com.notime.glyphminderwatch.stream/com.notime.glyphsim.ui.MainActivity
 ```
+
+Vor dem Lauf einmal pruefen, dass wirklich die Stream-Variante laeuft - sonst misst der ganze
+Nachmittag die falsche App:
+
+```bash
+adb shell pm list packages | grep glyphminderwatch
+# erwartet: ...glyphminderwatch UND ...glyphminderwatch.stream
+adb shell dumpsys activity activities | grep mResumedActivity
+# erwartet: com.notime.glyphminderwatch.stream/...MainActivity
+```
+
+Zwei sichtbare Unterschiede, an denen die Stream-Variante ohne Werkzeuge zu erkennen ist: Sie
+heisst im Launcher **Itoeva Stream**, und sie startet **unmittelbar in den Spielmodus** statt in
+die Uhr. Bleibt die Uhr stehen, laeuft die falsche App.
 
 Im Emulator den Bildschirm nur fuer den Test wach halten; die Einstellung danach wieder
 zuruecksetzen. Unter PowerShell `adb.exe`, unter Bash `adb` verwenden:
@@ -94,9 +169,16 @@ In der App:
 
 1. eine einzige Spezies fuer den gesamten Lauf waehlen und oben dokumentieren;
 2. Musik im Spielmodus einschalten;
-3. den Spielmodus oeffnen und keine persoenlichen Reminder konfigurieren;
+3. **keine persoenlichen Erinnerungen anlegen** - der Lauf braucht nur die Erinnerungen, die
+   die App selbst erzeugt. Schritt "Spielmodus oeffnen" entfaellt: Die Stream-Variante startet
+   von sich aus dort;
 4. Systemlautstaerke und App-Ton vor OBS einmal mit Kopfhoerern pruefen;
 5. Benachrichtigungsleiste, Emulator-Bedienelemente und Mauszeiger aus dem Bild halten.
+
+**Ein Datenschutzbefund gehoert in diesen Lauf, nicht in eine spaetere Pruefung.** Der
+Stream-Client legt Ausloesungen automatisch in die Slots. Wer zum Ausprobieren doch eine eigene
+Erinnerung anlegt, nimmt sie mit ins Bild. Falls das passiert: Lauf abbrechen, App-Daten
+loeschen, neu beginnen - und den Vorfall unten unter "Datenschutz" vermerken.
 
 ## 2. Bildformat vor dem Langzeittest entscheiden
 
@@ -203,6 +285,85 @@ Aufnahme notieren. Besonders pruefen:
 - Sind Aktivitaeten, Text und wichtige Pixel auf einem normalen Laptopbildschirm erkennbar?
 - Gibt es innerhalb von zehn Minuten mindestens einen Grund, weiter zuzusehen?
 
+## 4b. Was seit PR #133 zusaetzlich zu messen ist
+
+Der Zwei-Stunden-Lauf oben misst Stabilitaet und Vielfalt. Seit dem Stream-Client kommen drei
+Dinge dazu, die man **nur im Lauf** sehen kann - im Test ist jedes davon schon belegt, aber nur
+gegen eine erfundene Welt.
+
+### Automatische Slot-Belegung
+
+Der Stream-Client legt jede oeffentlich zeigbare Ausloesung selbst in den ersten freien der
+**vier** vorhandenen Slots (`ACTION_SLOT_COUNT`, `ui/ActionSlotState.kt`). Zu beobachten:
+
+| Frage | Ergebnis |
+|---|---|
+| Wie viele Slots waren nach 30 / 60 / 120 Minuten belegt? | TODO |
+| Gab es je einen fuenften Platz oder ein Ueberschreiben? | TODO |
+| Tauchte dieselbe Ausloesung zweimal auf? | TODO |
+| Wie lange dauerte es bis zur ersten Belegung? | TODO |
+| Blieben alle vier dauerhaft belegt (Stau) oder leerten sie sich wieder? | TODO |
+
+Ein Stau ist kein Absturz, aber ein Produktbefund: Vier dauerhaft volle Slots heissen, dass
+Zuschauer nichts Neues mehr zu waehlen bekommen.
+
+### Lokaler Viewer-Simulator
+
+Ein Tippen auf einen belegten Slot bedeutet «ein Zuschauer waehlt diesen Impuls». Mindestens
+sechs Versuche ueber den Lauf verteilen, davon bewusst je einer auf einen leeren Slot und einen
+auf einen Slot, dessen Vorkommen laengst vorbei ist.
+
+| # | Minute | Slot | erwartet | tatsaechlich | Slot danach geleert? |
+|---:|---:|---:|---|---|---|
+| 1 | TODO | TODO | TODO | TODO | TODO |
+| 2 | TODO | TODO | TODO | TODO | TODO |
+| 3 | TODO | TODO | TODO | TODO | TODO |
+| 4 | TODO | leer | wirkungslos | TODO | - |
+| 5 | TODO | veraltet | wirkungslos | TODO | - |
+| 6 | TODO | TODO | TODO | TODO | TODO |
+
+### Einfluss ist keine Steuerung
+
+Das ist die wichtigste Beobachtung des ganzen Laufs, und sie ist eine ueber ABLEHNUNG. Ein
+Impuls geht als fluechtiger `GoalInfluence` in die vorhandene Utility-Wahl; sein Gewicht
+(`GoalInfluence.MAX_WEIGHT` = 0,15) liegt unter `UtilitySelector.MIN_PRESSURE` (0,2). Ein
+dringendes Beduerfnis oder ein laufender Mehrschrittplan gewinnt also weiterhin.
+
+Deshalb ausdruecklich **einen Impuls setzen, waehrend das Wesen sichtbar beschaeftigt ist** -
+etwa mitten in Arbeit oder auf dem Weg zum Laden:
+
+| Frage | Ergebnis |
+|---|---|
+| Hat das Wesen den Impuls sofort befolgt? (erwartet: nein) | TODO |
+| Blieb der Slot belegt, bis der Impuls wirklich angenommen wurde? | TODO |
+| Wurde der Slot erst nach der VOLLSTAENDIG sichtbaren Routine geleert? | TODO |
+| Gab es einen Sprung, ein Teleport oder einen abgebrochenen Ablauf? | TODO |
+| Wurde ein Impuls dauerhaft nie angenommen? Welcher, und warum vermutlich? | TODO |
+
+Ein sofort befolgter Impuls waere kein Erfolg, sondern ein Fehler: Dann waere aus Einfluss
+Fernsteuerung geworden, und die Figur haette aufgehoert, eine eigene zu sein.
+
+### Erklaerbarkeit waehrend des Laufs
+
+Zu drei selbst gewaehlten Zeitpunkten festhalten, was das Wesen gerade will, warum, welcher Plan
+laeuft und was ihn gegebenenfalls blockiert (Quelle: `stream/LivingObservationSource.kt`).
+
+| Minute | Ziel | Grund | Plan | Hindernis | passt das zum sichtbaren Bild? |
+|---:|---|---|---|---|---|
+| TODO | TODO | TODO | TODO | TODO | TODO |
+| TODO | TODO | TODO | TODO | TODO | TODO |
+| TODO | TODO | TODO | TODO | TODO | TODO |
+
+### Datenschutz
+
+| Frage | Ergebnis |
+|---|---|
+| War je ein medizinischer Inhalt in einem Slot sichtbar? (erwartet: nie) | TODO |
+| War je ein frei beschrifteter/privater Text sichtbar? (erwartet: nie) | TODO |
+| Sonstige personenbezogene Anzeige im Bild? | TODO |
+
+Ein einziger Treffer hier ist ein **STOP** in Abschnitt 8, unabhaengig von allen anderen Werten.
+
 ## 5. Wiederanlauf separat pruefen
 
 Nach der vollstaendigen Zwei-Stunden-Aufnahme:
@@ -217,6 +378,15 @@ Nach der vollstaendigen Zwei-Stunden-Aufnahme:
 | App-Neustart | TODO | TODO | TODO | TODO |
 | OBS-Neustart | TODO | TODO | TODO | TODO |
 | Emulator-Neustart | TODO | TODO | TODO | TODO |
+
+Beim Stream-Client zusaetzlich pruefen, weil beides erst seit PR #130 und #133 existiert:
+
+| Frage | Ergebnis |
+|---|---|
+| Startet die App wieder direkt im Spielmodus, ohne Bedienung? | TODO |
+| Sind die belegten Slots nach dem Neustart noch da? (erwartet: ja, `ActionSlotStore`) | TODO |
+| Setzt der Living Agent seinen Zustand plausibel fort oder faengt er bei null an? | TODO |
+| Springt die Simulationszeit sichtbar oder holt sie sinnvoll auf? | TODO |
 
 Ein zufaelliger oder sichtbar widerspruechlicher Neustart ist kein Cloud-Problem, sondern ein
 Befund fuer NT-059. Noch keinen neuen Checkpoint-Dienst bauen.

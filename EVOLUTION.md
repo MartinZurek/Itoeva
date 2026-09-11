@@ -2526,3 +2526,52 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   `app-sim/build/outputs/apk/stream/app-sim-stream.apk` mindestens zwei Stunden im Emulator und
   misst Stabilitaet, Aktivitaets-/Musikvielfalt, Auto-Save, Viewer-Reaktionen, Ressourcen und
   Wiederanlauf. Erst danach folgt eine Entscheidung ueber Host und echte Plattformstrecke.
+
+### 2026-09-11 - NT-058 vorbereitet statt behauptet: das Runbook zeigte auf die falsche App
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Kein Messlauf, sondern ein Befund an der
+  Vorbereitung dazu plus ein Test, der ihn festhaelt.
+- **Ausgangsproblem:** NT-058 verlangt einen zweistuendigen Emulator-/OBS-Lauf der Stream-APK.
+  Eine Agenten-Sitzung hat ihn versucht und konnte ihn nicht durchfuehren: In der Umgebung gibt
+  es weder Android SDK noch Android Gradle Plugin (`assembleStream` bricht bereits beim
+  Aufloesen von `com.android.application:8.13.1` ab), weder Emulator noch `adb`, kein
+  `/dev/kvm`, kein OBS und kein `ffmpeg`. Damit ist keine einzige Kennzahl des Messbogens
+  erreichbar.
+- **Entscheidung:** Keine Messwerte erfinden. Alle Felder in `docs/streaming-poc.md` bleiben
+  `TODO`, NT-058 bleibt in den Top 15, und die Sitzung liefert stattdessen das, was den
+  spaeteren echten Lauf schneller und richtiger macht.
+- **Der eigentliche Befund:** `docs/streaming-poc.md` stammte aus der Zeit VOR dem Stream-Client
+  und baute weiterhin `:app-sim:installDebug`, gestartet ueber
+  `am start -n com.notime.glyphminderwatch/...`. Das ist die NORMALE App. Wer dem Runbook
+  gefolgt waere, haette zwei Stunden aufgezeichnet - ohne Direktstart in den Spielmodus, ohne
+  automatische Slot-Belegung und ohne Viewer-Simulator - und es vermutlich erst beim Auswerten
+  gemerkt. Der Fehler war nicht rot, weil ein Markdown-Dokument und eine Gradle-Datei nichts
+  voneinander wissen.
+- **Behoben:** Der Bau-Abschnitt nennt jetzt `:app-sim:installStream`, den APK-Pfad
+  `app-sim/build/outputs/apk/stream/app-sim-stream.apk`, die `applicationId`
+  `com.notime.glyphminderwatch.stream` und zwei werkzeuglose Erkennungsmerkmale (Launcher-Name
+  `Itoeva Stream` gegenueber `Tama`, Direktstart in den Spielmodus statt in die Uhr).
+- **Neuer Messbogen (Abschnitt 4b):** Slot-Belegung ueber die Zeit, mindestens sechs
+  Viewer-Impulse einschliesslich leerem und veraltetem Slot, ausdruecklich ein Impuls waehrend
+  einer laufenden Beschaeftigung, Erklaerbarkeit an drei Zeitpunkten und eine
+  Datenschutzzeile, deren einziger Treffer ein STOP ist. Die wichtigste Beobachtung des Laufs
+  ist eine ueber ABLEHNUNG: Ein sofort befolgter Impuls waere kein Erfolg, sondern der Beleg,
+  dass aus Einfluss Fernsteuerung geworden ist.
+- **Architekturentscheidung:** `StreamRunbookTest` bindet Runbook und `app-sim/build.gradle.kts`
+  aneinander - Build-Typ, `applicationIdSuffix`, Aufgabe, APK-Pfad, `applicationId` und die
+  Startbefehle. Gegenprobe ausgefuehrt: Wird der alte Startbefehl wiederhergestellt, faellt der
+  Test mit genau dieser Begruendung. Der Test baut nichts und startet nichts; er prueft nur die
+  Bezeichner, an denen der Leser haengenbleibt.
+- **Abgrenzung:** Kein Twitch, kein OAuth, kein EventSub, kein Backend, kein neues
+  `:app-stream`-Modul, keine Auslagerung nach `:world-core`, kein Overlay, keine
+  Verhaltensaenderung an Living Agent, Stream-Client oder Musik. Kein Code ausserhalb des neuen
+  Tests.
+- **Betroffene Dokumente:** `docs/streaming-poc.md`, `NextTasks.md`, `UEBERGABE.md` und dieses
+  Protokoll. `Architecture.md` bleibt unveraendert - ohne Messdaten rechtfertigt nichts davon
+  eine Architekturentscheidung.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 303 Tests gruen (vorher 299, davon 4 neu in
+  `StreamRunbookTest`). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
+  gruen. `:app-sim:assembleStream`, `:app-sim:test` und `gradlew verify` waren in dieser
+  Umgebung nicht ausfuehrbar; die CI des Pull Requests fuehrt sie aus.
+- **Naechster Schritt:** NT-058 unveraendert - der echte Zwei-Stunden-Lauf an einem Rechner mit
+  Android Studio und OBS. Erst sein Ergebnis oeffnet NT-059.

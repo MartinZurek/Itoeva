@@ -116,6 +116,7 @@ TEST_SRCS=(
   "$TEST/living/LivingAgentTest.kt"
   "$TEST/stream/LivingObservationSourceTest.kt"
   "$TEST/stream/StreamInteractionTest.kt"
+  "$TEST/stream/StreamRunbookTest.kt"
   "$TEST/data/LivingAgentStoreTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
@@ -148,6 +149,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.living.LivingAgentTest
   com.notime.glyphsim.stream.LivingObservationSourceTest
   com.notime.glyphsim.stream.StreamInteractionTest
+  com.notime.glyphsim.stream.StreamRunbookTest
   com.notime.glyphsim.data.LivingAgentStoreTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )
