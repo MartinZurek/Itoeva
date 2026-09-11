@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-10 (Schnitt 2a umgesetzt)
+Stand: 2026-09-11 (Schnitte 2a, 2b, 3, 4 und 5 umgesetzt)
 
 ## Leitidee
 
@@ -69,7 +69,7 @@ Datenbank oder Renderer.
 Die Praesentationsschicht darf spaeter Ereignisfolgen wie Wunsch -> Hindernis -> Versuch ->
 Anpassung -> Erfolg erkennen. Sie darf keine Ereignisse erfinden oder die Simulation steuern.
 
-## Stand: was Schnitt 2a tatsaechlich gebaut hat
+## Stand: was Schnitte 2a, 2b, 3, 4 und 5 tatsaechlich gebaut haben
 
 Der Kern liegt in `app-sim/src/main/java/com/notime/glyphsim/living/` in fuenf Dateien:
 `LivingWorld.kt` (Welt, Orte, `Requirement`), `LivingNeed.kt` (Beduerfnisse, `Personality`),
@@ -87,17 +87,57 @@ Drei Entscheidungen daraus binden alles Weitere:
   geschrieben wurde. Ereignisse und Erklaerung enthalten deshalb auch keinen freien Text -
   Sprache macht die Anzeige daraus, nicht die Simulation.
 - **`ActionOutcome` ist die einzige Erweiterungsstelle fuer Wirkungen.** Sie traegt heute
-  Muenzen, Vorrat, Ort, Zeit und Beduerfnislinderung; Wissen, Erinnerung, Beziehungswirkung und
-  Faehigkeitsfortschritt kommen als weitere Felder derselben Klasse dazu. Keine Handlung
-  bekommt dafuer einen Sonderweg.
+  Muenzen, Vorrat, Ort, Zeit, Beduerfnislinderung, gelernte Praeferenz, Erinnerung,
+  Beziehungswirkung und Symbolbedeutung. Keine soziale Handlung bekommt dafuer einen
+  Sonderweg.
 
-Noch nicht gebaut und ausdruecklich Schnitt 2b: Episoden, Beziehungen, Symbole, gelernter
-Geschmack, `CONNECT_WITH`. `LivingAgentStore` gehoert zu Schnitt 3 und wurde bewusst noch nicht
-angelegt - ein Interface, das niemand ruft, ist toter Code.
+Schnitt 2b ergaenzt begrenzte `Episode`-Listen, `RelationshipState` mit Vertrauen, Naehe und
+letzter Interaktion, die feste `SymbolicIntent`-Menge, gelernte Zielpraeferenzen und
+`CONNECT_WITH`. Einladungen werden als `PLAY + QUESTION` gesendet; Annahme oder Ablehnung
+entsteht aus Energie, sozialem Bedarf, Beziehung, Persoenlichkeit und laufendem Ziel. Der
+Mehrtagesbeleg laesst zwei gleich beduerftige Wesen allein durch unterschiedliche Erlebnisse in
+Vorlieben und Historie auseinanderlaufen.
+
+Schnitt 3 legt `LivingAgentStore` an der Android-Grenze unter `data/` an. Ein atomarer,
+versionierter Snapshot pro `profileId` speichert Agent, Ressourcen, Erinnerungen, Beziehungen und
+gelernten Geschmack. Beim Wiedereinstieg wachsen Beduerfnisse und Welt nur ueber die explizit
+uebergebene Simulationszeit weiter. Das langlebige Ziel bleibt erhalten; der konkrete Plan wird
+verworfen, damit aktuelle Orte und anwesende Wesen vor dem naechsten Schritt erneut geprueft
+werden.
+
+Schnitt 4 bindet den Kern ueber `LivingRuntimeAdapter` an die vorhandene Pixelwelt. Die
+sechzehn `PlayScene.Place` werden dort und nur dort auf vier `LivingSite` abgebildet;
+Simulationszeit kommt aus `PlayTimeLapse`, und Arbeit sowie Markt liefern der Domaene eine
+aktuelle Verfuegbarkeitsmenge. Die bisherige gewichtete Themenwahl bleibt als Vielfaltssignal
+fuer Freizeit erhalten, darf aber kein dringendes Grundbeduerfnis mehr ueberstimmen.
+
+Eine vorbereitete Kernwirkung wird erst nach der vollstaendig gelaufenen `PlayRoutine`
+gespeichert. Wird die Choreografie durch eine echte Erinnerung oder einen Moduswechsel
+abgebrochen, bleiben Lohn, Einkauf, Beduerfnisse und Episode auf dem letzten abgeschlossenen
+Stand. Arbeitsweg plus Arbeit und die zusammenhaengende Einkaufsfolge werden jeweils auf die
+bereits vorhandenen Routinen abgebildet; deren alte globale Nebenwirkungen sind fuer Living-
+Schritte abgeschaltet, damit `ActionOutcome` die einzige fachliche Rechnung bleibt. Bestehende
+`PlayWallet`-/`PlayPantry`-Werte dienen einmalig als Startwert, danach zeigt auch das Gespraech
+die profilbezogenen Weltressourcen. Ausdruecklich erbetene Arbeit, Einkauf und Essen laufen
+ebenfalls ueber diese Living-Wirtschaft, ohne das autonome Ziel zu ersetzen. Vor jedem
+zusammengefassten Teilschritt wird die Verfuegbarkeit neu bestimmt; schliesst ein Ort unterwegs,
+endet die sichtbare Folge dort statt nach Ladenschluss oder Feierabend weiterzurechnen.
+
+Schnitt 5 stellt mit `LivingObservationSource` einen reinen Lesevertrag bereit. Sein flacher
+`LivingObservation`-Snapshot nennt Simulationsminute, staerkstes Beduerfnis, Wunsch, dessen
+aufgeschluesselten Grund, Plan, naechste Handlung, benanntes Hindernis, wirksame Episoden,
+Beziehungen und das wichtigste juengste Ereignis. `LivingObservationFeed` erhaelt nur bereits
+abgeschlossene Runtime-Ergebnisse; eine Anzeige kann weder Agent noch Welt veraendern. Das
+zugehoerige Ereignisfenster ist fest begrenzt und laesst `IDLE`-Ticks aus.
+
+Der Langlauf geht ueber denselben `LivingRuntimeAdapter` wie die Pixelwelt. Ueber vier
+simulierte Tage bleibt er deterministisch und erzeugt aus der Startlage die belegbare Folge
+Wunsch -> geschlossener Arbeitsplatz -> Warten/Neuplanung -> Arbeit -> Einkauf -> Essen. Der
+Test beschreibt nur die Startlage und die erwarteten Bedeutungen, keinen Plot.
 
 ## Erster demonstrierbarer Schnitt
 
-Der Kern beginnt mit etwa sieben Aktionen und einem echten Ressourcenpfad:
+Der Kern arbeitet mit zehn tief verbundenen Aktionen und einem echten Ressourcenpfad:
 
 1. Hunger wird dringlich und `GET_FOOD` gewinnt die Zielwahl.
 2. Der Agent prueft den eigenen Vorrat.
@@ -116,17 +156,22 @@ auseinanderlaufen, ohne eine Geschichte vorzugeben.
 
 ## Persistenz
 
-Die Domaene spricht nur mit einem `LivingAgentStore`-Interface. Damit bleiben Tests rein und
-ein spaeterer Speicher austauschbar.
+`LivingAgentStore` liegt als Android-Grenze unter `app-sim/.../data/`; der reine Kern bleibt
+speicherfrei. `SharedPreferencesLivingAgentStorage` schreibt genau einen atomaren, versionierten
+Snapshot pro `profileId`. Diese Form passt zum kleinen zusammenhaengenden Zustandsgraphen und
+vermeidet eine Room-Schemaaenderung ohne relationalen Nutzen. Weder `:core` noch eine der beiden
+Room-Datenbanken werden angefasst.
 
-Fuer den ersten App-Adapter wird der Zustand versioniert und pro `profileId` gespeichert.
-Ressourcen duerfen nicht wie heute global zwischen Profilen geteilt werden. Episoden werden
-begrenzt und verdichtet; Rohframes und endlose Tick-Protokolle werden nicht gespeichert.
+Codec-Version 2 speichert Weltressourcen, Beduerfnisse, Persoenlichkeit, Ziel, gelernten
+Geschmack, begrenzte Episoden, Beziehungen und das letzte wichtige Ereignis. Version 1 wird beim
+Lesen mit leeren sozialen Lernfeldern auf Version 2 angehoben; unbekannte Zukunftsversionen und
+beschaedigte Pflichtwerte werden abgelehnt. Rohframes und Tick-Protokolle gehoeren nicht in den
+Snapshot.
 
-Die erste Kern-PR aendert keine Room-Entity. Die Persistenz-PR entscheidet anhand der
-Zuverlaessigkeitsanforderung zwischen einer versionierten profilbezogenen Datei/Preference und
-eigenen `:app-sim`-Room-Entities. Bei Room gilt: Migration und Migrationstest im selben PR.
-`:core` wird dafuer nicht geaendert, damit keine Migration in beiden Apps ausgeloest wird.
+Zeit kommt auch beim Wiederherstellen ausschliesslich als Simulationsminute von aussen. Negative
+Differenzen werden zu null begrenzt. Geoeffnete Orte und anwesende Wesen stammen aus dem aktuellen
+Runtime-Kontext, nicht aus einem alten Snapshot. Das Ziel ueberlebt, der Plan nicht: So muss der
+Planer aktuelle Voraussetzungen erneut pruefen.
 
 Die private lokale Begleiterhistorie bleibt von einer kuenftigen oeffentlichen Stream-Welt
 getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentlichen
@@ -145,18 +190,24 @@ getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentliche
      Begruendung, Ziele, Plan und Replanning, sechs Handlungen mit benannten Voraussetzungen,
      typisierte Ereignisse und `AgentExplanation`. Deterministische JVM-Tests inklusive
      Mehrtageslauf.
-   - **2b - Sich erinnern und verstaendigen (offen, NT-067):** `Episode`, `RelationshipState`,
-     `SymbolicIntent`, gelernter Geschmack, das Ziel `CONNECT_WITH` und der Beleg, dass zwei
-     aehnlich gestartete Agenten auseinanderlaufen.
+   - **2b - Sich erinnern und verstaendigen (erledigt, NT-067):** `Episode`,
+     `RelationshipState`, `SymbolicIntent`, gelernter Geschmack, das Ziel `CONNECT_WITH` und
+     der deterministische Beleg, dass zwei aehnlich gestartete Agenten auseinanderlaufen.
    Neue Testdateien jeweils an beiden Stellen in `tools/reaction-preview/tests.sh`.
-3. **Profilbezogene Persistenz**: versionierter Store, Zeitfortschritt zwischen Sitzungen,
-   begrenzte Episoden und belastbare Roundtrip-/Migrations-Tests.
-4. **Bestehende Welt anbinden**: Planaktionen gezielt auf vorhandene `PlayRoutine`-Varianten,
+3. **Profilbezogene Persistenz (erledigt, NT-064)**: atomarer Version-2-Snapshot pro Profil,
+   expliziter Zeitfortschritt zwischen Sitzungen, begrenzte Episoden sowie Roundtrip-,
+   Profiltrennungs- und V1-Migrationsbelege. Der alte Plan wird beim Laden verworfen.
+4. **Bestehende Welt anbinden (erledigt, NT-065)**: Planaktionen gezielt auf vorhandene `PlayRoutine`-Varianten,
    `PlayPantry`, `PlayWallet`, `PlayPresence` und Besuchsfenster abbilden. Nur gezielte
    Aenderungen an `DockScreen`; keine zweite Choreografie-Pipeline.
-5. **Stream-Vertrag beobachten**: read-only Snapshot/Event-Quelle fuer spaetere Overlays,
-   Langlauftest ueber mehrere simulierte Tage und Geraetepruefung der sichtbaren Ablaeufe. Noch
+5. **Stream-Vertrag beobachten (erledigt, NT-066)**: read-only Snapshot/Event-Quelle fuer spaetere Overlays,
+   Langlauftest ueber mehrere simulierte Tage. Noch
    kein komplexes Twitch-UI und keine Plattformintegration.
+
+Nach dem Meilenstein nutzt NT-068 diesen Vertrag in einer separat installierbaren Stream-
+Build-Variante derselben `:app-sim`-Runtime. Ein `ExternalImpulse` wird als begrenzter,
+fluechtiger `GoalInfluence` bewertet; er setzt weder Bedarf noch Ziel oder Agentenzustand direkt.
+Die echte Plattform- und Netzwerkstrecke bleibt ausserhalb des Living-Agent-Kerns.
 
 Jede PR muss fuer sich klein, ruecksetzbar und gruen sein. Eine spaetere PR darf erst beginnen,
 wenn die vorherige gemergt und der neue `main`-Stand gelesen ist.

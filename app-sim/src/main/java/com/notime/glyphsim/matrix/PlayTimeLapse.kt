@@ -98,6 +98,42 @@ object PlayTimeLapse {
     }
 
     /**
+     * Fortlaufende Minute derselben Uhr, fuer persistente Simulation statt Anzeige.
+     *
+     * [now] darf nach Mitternacht wieder bei null beginnen; ein gespeicherter Agent braucht
+     * dagegen eine geordnete Zeitachse ueber mehrere Tage. Im Zeitraffer wird deshalb der volle
+     * simulierte Tageszaehler mitgenommen und nicht nur die sichtbare Uhrzeit.
+     */
+    fun absoluteMinute(): Int {
+        val realDay = LocalDate.now().toEpochDay()
+        val current = speed
+        val elapsedSeconds = (SystemClock.elapsedRealtime() - startedAtMillis)
+            .coerceAtLeast(0L) / 1000.0
+        return absoluteMinuteFor(
+            realDay = realDay,
+            realMinuteOfDay = LocalTime.now().toSecondOfDay() / 60,
+            speed = current,
+            elapsedSeconds = elapsedSeconds
+        )
+    }
+
+    /** Reine Rechnung hinter [absoluteMinute], damit der Zeitraffer ohne Warten pruefbar ist. */
+    internal fun absoluteMinuteFor(
+        realDay: Long,
+        realMinuteOfDay: Int,
+        speed: Speed,
+        elapsedSeconds: Double
+    ): Int {
+        val minute = if (speed == Speed.OFF) {
+            realDay * MINUTES_PER_DAY + realMinuteOfDay.coerceIn(0, 1439)
+        } else {
+            realDay * MINUTES_PER_DAY + LAPSE_START_MINUTE +
+                (elapsedSeconds.coerceAtLeast(0.0) / speed.daySeconds * MINUTES_PER_DAY).toLong()
+        }
+        return minute.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+    }
+
+    /**
      * Derselbe Tag wie [now], aber als stabiler Schluessel fuer taggebundene Spielzustande.
      * Im Zeitraffer zaehlt jeder simulierte 24h-Durchlauf als neuer Tag; im Normalbetrieb gilt
      * das echte Kalenderdatum. Ein Wechsel der Zeitraffer-Stufe startet bewusst einen neuen
@@ -117,6 +153,9 @@ object PlayTimeLapse {
      * nur noch Zucken statt Bewegung.
      */
     fun paceFactor(): Float = speed.pace
+
+    private const val MINUTES_PER_DAY = 24L * 60L
+    private const val LAPSE_START_MINUTE = 6L * 60L
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

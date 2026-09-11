@@ -363,6 +363,9 @@
     <string name="a11y_action_slot_empty">Save slot %1$d, empty</string>
     <string name="a11y_action_slot_filled">Save slot %1$d: %2$s</string>
     <string name="a11y_action_slot_apply">Apply to companion</string>
+    <string name="stream_slot_choose">Simulate viewer choosing this slot</string>
+    <string name="stream_viewer_ready">VIEWER SIM · tap a saved impulse</string>
+    <string name="stream_viewer_impulse">VIEWER · slot %1$d · %2$s</string>
     <string name="a11y_clock_save_to_slot">Save to slot %1$d</string>
     <string name="settings_timelapse">Time lapse (test)</string>
     <string name="settings_timelapse_hint">Runs a full day in about four minutes so every scene and time of day can be seen quickly. For trying things out only – turn off for normal use.</string>

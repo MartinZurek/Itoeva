@@ -341,12 +341,13 @@ object ReminderTrigger {
         )
         ReminderAnimationBus.emit(
             ReminderAnimationEvent(
-                reminder.id,
-                occurrenceId,
-                animationType,
-                resolved.libraryAnimationLabel,
-                resolved.frames,
-                reminder.openDurationSeconds
+                reminderId = reminder.id,
+                occurrenceId = occurrenceId,
+                animationType = animationType,
+                libraryAnimationLabel = resolved.libraryAnimationLabel,
+                frames = resolved.frames,
+                openDurationSeconds = reminder.openDurationSeconds,
+                semanticType = reminder.animationType
             )
         )
         Log.d(TAG, "\"${reminder.label}\" (id=${reminder.id}) gezeigt")

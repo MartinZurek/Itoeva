@@ -32,32 +32,9 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.SimulatedMatrixView
 import kotlin.math.roundToInt
-
-/**
- * Feste Anzahl an Speicherplaetzen - vier statt einer wachsenden Liste, weil [ActionSlotsColumn]
- * genau so viele fest gezeichnete Plaetze anbietet. Ohne Kartendeck, ohne Raritaeten: ein Platz
- * ist entweder frei oder belegt, mehr Zustand gibt es bewusst nicht.
- */
-internal const val ACTION_SLOT_COUNT = 4
-
-/**
- * Eine Aktion, die der Spieler von der Uhr in einen Speicherplatz gezogen hat, statt sie sofort
- * auf den Avatar anzuwenden (siehe [HomeScreen]s `saveToSlot`). Sie bleibt hier liegen, bis sie
- * von dort aus gefuettert wird. [frames] bewahrt die eigentliche Bibliotheksanimation fuer das
- * spaetere Fuettern; die Vorschau im Platz selbst kommt aus [ActionSlotSymbols] und ist dadurch
- * ein stabiles Motiv statt eines zufaelligen Animations-Zwischenbilds.
- */
-internal data class SavedAction(
-    val reminderId: Long,
-    val occurrenceId: Long,
-    val animationType: AnimationType?,
-    val libraryAnimationLabel: String?,
-    val frames: List<IntArray>
-)
 
 /**
  * Vier feste Speicherplaetze in einer Spalte - erreichbar per Ziehen der Uhr hierher (ablegen)

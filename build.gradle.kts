@@ -62,6 +62,7 @@ tasks.register("verify") {
     dependsOn(
         subprojects.map { "${it.path}:test" } +
             subprojects.map { "${it.path}:lint" } +
+            ":app-sim:assembleStream" +
             ":app-sim:assembleReleaseCheck" +
             ":app:assembleReleaseCheck"
     )

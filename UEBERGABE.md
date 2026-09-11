@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 10. September 2026
+# Uebergabe: Stand am 11. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -13,31 +13,50 @@ eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, 
 erst dann einen Asset-PR oeffnen.
 
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
-[`LIVING_AGENT.md`](LIVING_AGENT.md). Die Bestandsaufnahme ist abgeschlossen:
+[`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064, NT-065 und NT-066 (Schnitte 2a,
+2b, 3, 4 und 5) sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter
+`app-sim/src/main/java/com/notime/glyphsim/living/`. Zielwahl, Ressourcenplan, Neuplanung,
+begrenzte Episoden, gelernte Zielpraeferenzen, Beziehungen und symbolische Verstaendigung sind
+deterministisch belegt.
 
-- Vorrat, Geld, Arbeit, Einkauf und Essen existieren bereits als `PlayPantry`, `PlayWallet`
-  und `PlayRoutine`, sind aber noch global beziehungsweise in `DockScreen` hart verdrahtet.
-- `PlayAmbientActivity` waehlt Freizeit gewichtet, hat aber kein Ziel, keinen Plan und keine
-  erklaerbare Utility-Rechnung.
-- `PlayDreamMemory` speichert kompakte Tageserlebnisse; echte episodische Agentenerinnerung und
-  deren Einfluss auf Entscheidungen fehlen.
-- Besuche sind sichtbar, kommunizieren aber nur feste Punktblasen ohne semantische Absicht oder
-  Beziehungseinfluss.
-- `AvatarActivityPlans` zeigt das richtige Integrationsmuster: semantische Absicht bleibt von
-  der vorhandenen `PlayRoutine`-Choreografie getrennt.
+Die Persistenz liegt bewusst ausserhalb des Kerns unter `app-sim/.../data/LivingAgentStore.kt`.
+Sie schreibt einen atomaren Version-2-Snapshot je `profileId` in SharedPreferences. Agent,
+Weltressourcen, Erinnerungen, Beziehungen und gelernter Geschmack bleiben getrennt pro Profil.
+Version 1 wird beim Lesen angehoben; unbekannte Zukunftsversionen werden abgelehnt. Der
+Wiedereinstieg bekommt die Simulationsminute explizit, behaelt das Ziel und verwirft den alten
+Plan, damit aktuelle Orte und Nachbarn neu geprueft werden. Room und `:core` blieben unangetastet.
 
-**NT-063 (Schnitt 2a) ist umgesetzt.** Der reine Kotlin-Kern steht in fuenf Dateien unter
-`app-sim/src/main/java/com/notime/glyphsim/living/` und laeuft mit 22 deterministischen Tests in
-der Offline-Strecke mit. Belegt sind: Zielwahl mit aufgeschluesselter Begruendung, der
-ressourcenbedingte Weg `WORK -> BUY_FOOD -> EAT`, benannte Voraussetzungen, Neuplanung nach
-einer Weltaenderung, die Erklaerung als read-only Vertrag, der Startbias je Spezies und ein
-Mehrtageslauf. Was der Kern absichtlich noch NICHT tut, steht im Abschnitt "Stand" von
-[`LIVING_AGENT.md`](LIVING_AGENT.md).
+`LivingRuntimeAdapter` bildet die sechzehn sichtbaren Orte auf die vier Domaenenorte ab,
+uebergibt Oeffnungszeiten und waehlt fuer Kernhandlungen vorhandene `PlayRoutine`-Choreografie.
+Der harte `mustEarn`-Sonderfall in `DockScreen` ist entfernt. Kernwirkungen werden erst nach
+einem vollstaendigen sichtbaren Ablauf gespeichert; ein Abbruch durch eine echte Erinnerung
+verbucht nichts vorzeitig. Bestehende `PlayWallet`-/`PlayPantry`-Werte werden beim ersten
+Anschluss als Startwert uebernommen, danach sind die Ressourcen profilbezogen. Erbetene Arbeit
+und Einkaeufe laufen durch dieselbe Wirtschaft, das Gespraech stellt sie schon vor der ersten
+autonomen Handlung wieder her, und zusammengefasste Ablaufe pruefen Oeffnungszeiten nach jedem
+fortgeschrittenen Kernschritt erneut.
 
-Naechster Schnitt ist **NT-067** (Schnitt 2b): Episoden, Beziehungen, symbolische Verstaendigung,
-gelernter Geschmack und `CONNECT_WITH` - wieder als reine Domaene, wieder mit Tests in der
-Offline-Strecke. Danach erst Persistenz (NT-064), Runtime-Anbindung (NT-065) und
-Stream-Snapshot (NT-066), jeweils als eigener PR.
+Der read-only Vertrag liegt ausserhalb des Kerns unter
+`app-sim/.../stream/LivingObservationSource.kt`. Er liefert pro Profil einen flachen,
+sprachunabhaengigen Snapshot und hoechstens 32 wichtige juengste Ereignisse; `IDLE`-Ticks werden
+nicht exportiert. `DockScreen` speist ihn nur nach Wiederherstellung oder einem abgeschlossenen
+Runtime-Schritt. Der Vier-Tage-Test laeuft ueber `LivingRuntimeAdapter` und belegt deterministisch
+Hindernis, Neuplanung, Arbeit, Einkauf und Essen.
+
+NT-068 setzt darauf den lokalen Stream-Client-PoC. Es gibt bewusst kein zweites Spiel und kein
+neues Anwendungsmodul: `:app-sim:assembleStream` baut dieselbe Runtime mit isolierter
+`applicationId` als debug-signierte APK. Die vorhandene Play-Mode-Erinnerung belegt dort den
+ersten freien der vier bestehenden Save-Slots automatisch. Ein Tippen simuliert die spaetere
+Viewer-Auswahl und erzeugt einen Twitch-neutralen `ExternalImpulse`. Dessen `GoalInfluence`
+bleibt unter dem Mindestdruck eines Grundbeduerfnisses; der Slot wird erst nach einer passenden,
+vollstaendig sichtbaren Agentenhandlung geleert. Medizin und frei beschriftete Inhalte gelangen
+nicht in den Stream-Pfad. Netzwerk, OAuth, Twitch, Bits, Subs und Backend fehlen absichtlich.
+
+Naechster Schritt ist **NT-058**: die Stream-APK im Emulator mindestens zwei
+Stunden lokal mit OBS beobachten und die Ergebnisse in `docs/streaming-poc.md` festhalten. Das
+ist Beobachtung, keine Freigabe fuer Cloud oder echte Twitch-/YouTube-Anbindung. Gebaut wird mit
+`./gradlew :app-sim:assembleStream`; der regulaere Pfad ist
+`app-sim/build/outputs/apk/stream/app-sim-stream.apk`.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
@@ -46,9 +65,15 @@ Drei Dinge, die man beim Weiterbauen wissen muss:
   macht den Mehrtageslauf unpruefbar - und im Zeitraffer rechnet er gegen die falsche Uhr.
 - **`Requirement` ist ein benanntes Ding und kein `Boolean`.** Daran haengt die ganze
   Erklaerbarkeit. Aus demselben Grund enthaelt kein Ereignis freien Text.
-- **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung gehoert in den
-  Runtime-Adapter (NT-065), nicht in die Domaene. `DockScreen.kt` fuer die reinen Schnitte nicht
-  anfassen und niemals als Ganzes lesen.
+- **`ActionOutcome` ist der einzige Wirkungsweg.** Auch Episode, Geschmack, Beziehung und
+  Symbolbedeutung werden in `Action.applyTo` gemeinsam gerechnet; soziale Handlungen bekommen
+  keine Nebenpipeline.
+- **Persistenz behaelt das Ziel, aber nie den Plan.** Geoeffnete Orte und anwesende Wesen
+  kommen beim Laden aus dem aktuellen Runtime-Kontext; damit kann ein alter Snapshot keine
+  ungueltige Voraussetzung umgehen.
+- **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung steht allein in
+  `LivingRuntimeAdapter`, nicht in der Domaene. `DockScreen.kt` niemals als Ganzes lesen; NT-065
+  hat nur die Ablaufgrenze und den bisherigen Notfallzweig gezielt geaendert.
 
 ## 2. Harte Regeln fuer die Musik
 
@@ -81,7 +106,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 243 Tests, ~1,5 s
+bash tools/reaction-preview/tests.sh          # derzeit 290 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 

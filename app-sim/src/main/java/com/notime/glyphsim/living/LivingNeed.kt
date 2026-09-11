@@ -26,7 +26,7 @@ enum class NeedKind {
     /** Langeweile. */
     FUN,
 
-    /** Naehe zu anderen Wesen. Wirkt erst, wenn es echte soziale Handlungen gibt (NT-063b). */
+    /** Naehe zu anderen Wesen. Treibt im sozialen Schnitt NT-067 das Ziel `CONNECT_WITH`. */
     SOCIAL,
 
     /** Behaglichkeit und Sicherheit. */
@@ -90,8 +90,7 @@ data class Needs(private val values: Map<NeedKind, Double>) {
  *
  * Die Persoenlichkeit liegt als Datum im [AgentState] und wird nicht bei jeder Entscheidung aus
  * [AvatarSpecies] nachgeschlagen. Der Unterschied ist der ganze Punkt: Ein Wert, der im Agenten
- * steht, kann sich durch Erlebtes veraendern; einer, der aus einem Enum kommt, kann es nie. Die
- * Handlung, die ihn veraendert, gibt es noch nicht - der Platz dafuer ist da.
+ * steht, kann sich durch Erlebtes veraendern; einer, der aus einem Enum kommt, kann es nie. Gelernter Geschmack liegt getrennt daneben im [AgentState], damit der Anfang lesbar bleibt.
  *
  * [goalBias] verschiebt die Zielwahl, [needGrowthPerHour] das Tempo der Beduerfnisse. Beides
  * sind kleine Zahlen: Ein Wesen, dessen Bias den Beduerfnisdruck ueberstimmt, waere kein
@@ -134,31 +133,31 @@ data class Personality(
         fun of(species: AvatarSpecies): Personality = when (species) {
             // Der neugierige Optimist: schneller gelangweilt, staerker auf Entwicklung aus.
             AvatarSpecies.PUFFLING -> Personality(
-                goalBias = mapOf(GoalKind.DEVELOP to 0.06, GoalKind.HAVE_FUN to 0.04),
+                goalBias = mapOf(GoalKind.DEVELOP to 0.06, GoalKind.HAVE_FUN to 0.04, GoalKind.CONNECT_WITH to 0.02),
                 needGrowthPerHour = mapOf(NeedKind.CURIOSITY to 0.05)
             )
             // Die Traeumerin: ruhig, braucht mehr Erholung.
             AvatarSpecies.STARLET -> Personality(
-                goalBias = mapOf(GoalKind.REST to 0.06),
+                goalBias = mapOf(GoalKind.REST to 0.06, GoalKind.CONNECT_WITH to 0.03),
                 needGrowthPerHour = mapOf(NeedKind.ENERGY to 0.06)
             )
             // Der Motivator: viel unterwegs, entsprechend hungriger.
             AvatarSpecies.WYRMLING -> Personality(
-                goalBias = mapOf(GoalKind.HAVE_FUN to 0.06),
+                goalBias = mapOf(GoalKind.HAVE_FUN to 0.06, GoalKind.CONNECT_WITH to 0.04),
                 needGrowthPerHour = mapOf(NeedKind.HUNGER to 0.09)
             )
             // Der Beschuetzer: haelt den Vorrat gern voll, kuemmert sich frueh.
             AvatarSpecies.FENNEC -> Personality(
-                goalBias = mapOf(GoalKind.GET_FOOD to 0.05)
+                goalBias = mapOf(GoalKind.GET_FOOD to 0.05, GoalKind.CONNECT_WITH to 0.05)
             )
             // Der Entschleuniger: nimmt sich Zeit, wird langsamer muede.
             AvatarSpecies.GLOOP -> Personality(
-                goalBias = mapOf(GoalKind.REST to 0.08),
+                goalBias = mapOf(GoalKind.REST to 0.08, GoalKind.CONNECT_WITH to 0.01),
                 needGrowthPerHour = mapOf(NeedKind.ENERGY to 0.03)
             )
             // Der Beobachter: still, lernt lieber, als sich zu vergnuegen.
             AvatarSpecies.HOOTLET -> Personality(
-                goalBias = mapOf(GoalKind.DEVELOP to 0.08),
+                goalBias = mapOf(GoalKind.DEVELOP to 0.08, GoalKind.CONNECT_WITH to 0.02),
                 needGrowthPerHour = mapOf(NeedKind.CURIOSITY to 0.04, NeedKind.FUN to 0.02)
             )
         }

@@ -65,7 +65,8 @@ object OpenReminderLookup {
                 animationType = if (libraryId == null) reminder.animationType else null,
                 libraryAnimationLabel = label,
                 frames = frames,
-                openDurationSeconds = reminder.openDurationSeconds
+                openDurationSeconds = reminder.openDurationSeconds,
+                semanticType = reminder.animationType
             ),
             remainingMillis = remaining
         )

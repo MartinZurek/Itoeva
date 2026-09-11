@@ -66,6 +66,12 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphcore.data.ReminderOpenDuration
 import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AvatarFeedEvent
+import com.notime.glyphsim.data.LivingAgentStore
+import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
+import com.notime.glyphsim.living.ActionCatalog
+import com.notime.glyphsim.living.AgentState
+import com.notime.glyphsim.living.StepResult
+import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
 import com.notime.glyphsim.matrix.AvatarFooting
@@ -79,8 +85,14 @@ import com.notime.glyphsim.skilltree.AvatarActivityBus
 import com.notime.glyphsim.skilltree.AvatarActivityPlans
 import com.notime.glyphsim.skilltree.AvatarUnlockRepository
 import com.notime.glyphsim.skilltree.SkillRepertoire
+import com.notime.glyphsim.stream.LivingObservationFeed
+import com.notime.glyphsim.stream.ExternalImpulse
+import com.notime.glyphsim.stream.StreamInteractionState
+import com.notime.glyphsim.stream.StreamInteractions
+import com.notime.glyphsim.stream.StreamSelection
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
+import com.notime.glyphsim.matrix.LivingRuntimeAdapter
 import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
@@ -105,9 +117,11 @@ import com.notime.glyphsim.matrix.PlayTimeLapse
 import com.notime.glyphsim.matrix.PlayVisitWindow
 import com.notime.glyphsim.matrix.PlayWallet
 import com.notime.glyphsim.matrix.ReminderAnimationBus
+import com.notime.glyphsim.matrix.ReminderAnimationEvent
 import com.notime.glyphsim.matrix.RoutineStep
 import com.notime.glyphsim.matrix.SimulatedMatrixView
 import com.notime.glyphsim.matrix.groundRow
+import com.notime.glyphsim.widget.GlyphClockWidgetProvider
 import java.time.LocalTime
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -167,6 +181,13 @@ fun DockScreen(
      * Fortschrittsanzeige.
      */
     playMode: Boolean = false,
+    /**
+     * Separat installierbare Stream-Praesentation derselben Welt.
+     *
+     * Der Schalter aendert nur Save-Slot-Eingang und lokale Viewer-Bedienung. Zielwahl,
+     * Choreografie, Persistenz und Rendering bleiben dieselben wie im normalen Spielmodus.
+     */
+    streamMode: Boolean = false,
     /**
      * **Nur die Uhr** - kein Wesen, keine Wohnung, keine Erinnerung (siehe [WatchModePrefs]).
      *
@@ -364,6 +385,15 @@ fun DockScreen(
         var slots by remember(actionSlotProfileId) {
             mutableStateOf(ActionSlotStore.read(context, actionSlotProfileId))
         }
+        // Fluechtig mit Absicht: Ein Prozessabbruch darf einen Viewer-Anstoss verlieren, aber
+        // niemals den gespeicherten Reminder. Der bleibt im persistenten Slot und kann erneut
+        // gewaehlt werden. Erst eine abgeschlossene Agentenreaktion leert ihn weiter unten.
+        var pendingExternalImpulse by remember(actionSlotProfileId) {
+            mutableStateOf<ExternalImpulse?>(null)
+        }
+        var latestExternalImpulse by remember(actionSlotProfileId) {
+            mutableStateOf<ExternalImpulse?>(null)
+        }
 
         // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
         // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
@@ -535,6 +565,64 @@ fun DockScreen(
         // Gelesen wird er jetzt vom Gespraech: Bezahlt der Avatar an der Kasse, waehrend das Feld
         // offen steht, sollen Muenzen und Vorrat darin nicht auf dem alten Stand stehen bleiben.
         var economyTick by remember { mutableIntStateOf(0) }
+        // Entscheidung und sichtbare Choreografie bleiben getrennt: Dieser Zustand wird erst
+        // nach einer vollstaendig gelaufenen PlayRoutine uebernommen. Bricht eine echte
+        // Erinnerung dazwischen, bleibt der letzte abgeschlossene Living-Schritt erhalten.
+        val livingStore = remember(context) {
+            LivingAgentStore(SharedPreferencesLivingAgentStorage(context))
+        }
+        var livingAgent by remember(presenceProfileId) { mutableStateOf<AgentState?>(null) }
+        var livingWorld by remember(presenceProfileId) { mutableStateOf<WorldState?>(null) }
+
+        /**
+         * Stellt denselben Living-Zustand fuer Handeln und Gespraech bereit.
+         *
+         * Ohne diese gemeinsame Grenze zeigte das Gespraech vor der ersten autonomen Handlung
+         * noch die alte Wirtschaft. Gleichzeitig darf ein ausdruecklicher Wunsch nicht wieder
+         * bei den globalen Vorgaengerwerten anfangen.
+         */
+        fun livingStateFor(species: AvatarSpecies): Pair<AgentState, WorldState> {
+            val nearbyProfiles = visitor?.species?.let {
+                setOf(AvatarSpeciesPrefs.profileId(it))
+            }.orEmpty()
+            val simulationMinute = PlayTimeLapse.absoluteMinute()
+            val restored = if (livingAgent == null || livingWorld == null) {
+                livingStore.restore(
+                    profileId = presenceProfileId,
+                    currentSimulationMinute = simulationMinute,
+                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(
+                        simulationMinute % WorldState.MINUTES_PER_DAY
+                    ),
+                    currentNearbyProfiles = nearbyProfiles
+                )
+            } else {
+                null
+            }
+            val agent = livingAgent ?: restored?.agent
+                ?: LivingRuntimeAdapter.initialAgent(presenceProfileId, species)
+            val world = livingWorld ?: restored?.world
+                ?: LivingRuntimeAdapter.initialWorld(
+                    absoluteMinute = simulationMinute,
+                    place = currentPlace,
+                    coins = PlayWallet.coins(context),
+                    portions = PlayPantry.level(context),
+                    nearbyProfiles = nearbyProfiles
+                )
+            val synchronised = LivingRuntimeAdapter.synchroniseWorld(
+                world,
+                currentPlace,
+                nearbyProfiles
+            )
+            livingAgent = agent
+            livingWorld = synchronised
+            LivingObservationFeed.record(StepResult(agent, synchronised, emptyList()))
+            return agent to synchronised
+        }
+        // Die Beobachtungsquelle soll nach dem Einstieg lesbar sein, nicht erst nach der ersten
+        // zufaellig faelligen Regung oder nachdem das Gespraech geoeffnet wurde.
+        LaunchedEffect(playMode, presenceProfileId, avatar?.species) {
+            if (playMode) avatar?.species?.let(::livingStateFor)
+        }
         // Laufende Aufnahme: null = keine. Der Fortschritt gilt fuers Zusammenrechnen DANACH.
         var clipSession by remember { mutableStateOf<PlayClipRecorder.Session?>(null) }
         // Das kurze Aufhellen nach einem Schnappschuss. Der Zaehler daneben ist noetig, damit auch
@@ -998,7 +1086,11 @@ fun DockScreen(
          * Wiederaufnehmen, mehrere gleichzeitige Ablaeufe - waere Aufwand fuer einen Fall, den es
          * hier nicht gibt.
          */
-        suspend fun runRoutine(routine: PlayRoutine, species: AvatarSpecies) {
+        suspend fun runRoutine(
+            routine: PlayRoutine,
+            species: AvatarSpecies,
+            applyLegacyEconomy: Boolean = true
+        ): Boolean {
             val mood = AvatarMoodSnapshot.forSpecies(context, species)
             routineRunning = true
             // Einmal an der semantischen Grenze merken, nicht nur bei RoutineStep.Act: Football,
@@ -1019,8 +1111,8 @@ fun DockScreen(
                 if (step !is RoutineStep.Act && step !is RoutineStep.Linger) {
                     activeActivity = null
                 }
-                val current = avatar ?: return
-                if (current.fed || current.occurrenceId != null) return   // echte Erinnerung hat Vorrang
+                val current = avatar ?: return false
+                if (current.fed || current.occurrenceId != null) return false   // echte Erinnerung hat Vorrang
                 val avatarPx = with(density) { current.sizeDp.dp.toPx() }
 
                 when (step) {
@@ -1050,7 +1142,9 @@ fun DockScreen(
                         activeStation = step.station
                         // An der Kasse wird bezahlt - mit sichtbarem Aufblitzen, damit man den
                         // Vorgang bemerkt und nicht nur die Zahl unten kleiner wird.
-                        if (step.station == PlayScene.Station.CHECKOUT && PlayWallet.pay(context)) {
+                        if (applyLegacyEconomy && step.station == PlayScene.Station.CHECKOUT &&
+                            PlayWallet.pay(context)
+                        ) {
                             economyTick++
                             flashAt(avatar)
                         }
@@ -1104,7 +1198,7 @@ fun DockScreen(
                     }
 
                     RoutineStep.Rise -> {
-                        val standing = avatar ?: return
+                        val standing = avatar ?: return false
                         val onFloor = avatarSpot(
                             anchorX = (standing.offset.x / (maxWidthPx - avatarPx).coerceAtLeast(1f)).coerceIn(0f, 1f),
                             avatarPx = avatarPx,
@@ -1137,12 +1231,12 @@ fun DockScreen(
                         activeActivity = step.topic
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
-                        if (step.topic == AnimationType.DRINK) {
+                        if (applyLegacyEconomy && step.topic == AnimationType.DRINK) {
                             PlayPantry.consume(context)
                             economyTick++
                         }
                         // Der Lohn - erst dadurch ist Arbeit mehr als eine Bewegung.
-                        if (step.topic == AnimationType.WORK) {
+                        if (applyLegacyEconomy && step.topic == AnimationType.WORK) {
                             PlayWallet.earn(context)
                             economyTick++
                         }
@@ -1289,15 +1383,15 @@ fun DockScreen(
                                 var remaining = (PlayDreams.nextPauseMillis() * PlayTimeLapse.paceFactor())
                                     .toLong().coerceAtLeast(1_000L)
                                 while (remaining > 0L && PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT) {
-                                    val sleeping = avatar ?: return
-                                    if (sleeping.fed || sleeping.occurrenceId != null) return
+                                    val sleeping = avatar ?: return false
+                                    if (sleeping.fed || sleeping.occurrenceId != null) return false
                                     val slice = minOf(remaining, DREAM_SLEEP_CHECK_MS)
                                     delay(slice)
                                     remaining -= slice
                                 }
                                 if (PlayAmbientActivity.currentDayPhase() != PlayAmbientActivity.DayPhase.NIGHT) break
-                                val sleeping = avatar ?: return
-                                if (sleeping.fed || sleeping.occurrenceId != null) return
+                                val sleeping = avatar ?: return false
+                                if (sleeping.fed || sleeping.occurrenceId != null) return false
                                 if (PlayDreams.shouldDream()) {
                                     PlayDreams.choose(PlayDreamMemory.today(context, presenceProfileId.toString()))?.let { memory ->
                                         playDream(memory, species)
@@ -1362,7 +1456,7 @@ fun DockScreen(
                     RoutineStep.Drop -> {
                         if (carried != null) {
                             // Wird der Einkauf zu Hause eingeraeumt, ist der Vorrat wieder voll.
-                            if (currentPlace == PlayScene.Place.KITCHEN &&
+                            if (applyLegacyEconomy && currentPlace == PlayScene.Place.KITCHEN &&
                                 carried == PlayEffects.Carried.FOOD
                             ) {
                                 PlayPantry.refill(context)
@@ -1431,6 +1525,7 @@ fun DockScreen(
                     )
                 }
             }
+            return true
         }
 
         /**
@@ -1907,6 +2002,42 @@ fun DockScreen(
             }
         }
 
+        /**
+         * Legt eine oeffentliche Spiel-Ausloesung ohne Zieh-Geste in den ersten freien Platz.
+         *
+         * Medizin und frei beschriftete Bibliotheksinhalte weist [StreamInteractions] ab. So
+         * bleibt der Stream-Client auch dann datensparsam, wenn spaeter versehentlich eine
+         * persoenliche Datenbank in denselben Prozess gelangte.
+         */
+        fun autoSaveForStream(event: ReminderAnimationEvent): Boolean {
+            val saved = SavedAction(
+                reminderId = event.reminderId,
+                occurrenceId = event.occurrenceId,
+                // Im Stream zaehlt die typisierte Bedeutung, nicht ein eventuell frei
+                // beschriftetes Bibliotheksmotiv. Die echten Frames duerfen trotzdem sichtbar
+                // bleiben; sie enthalten keine Nutzerdaten.
+                animationType = event.semanticType,
+                libraryAnimationLabel = null,
+                frames = event.frames
+            )
+            val before = StreamInteractionState(
+                slots = slots,
+                pending = pendingExternalImpulse,
+                latest = latestExternalImpulse
+            )
+            val after = StreamInteractions.autoSave(streamMode, before, saved)
+            val index = after.slots.indices.firstOrNull {
+                after.slots[it]?.occurrenceId != before.slots[it]?.occurrenceId
+            }
+                ?: return false
+            ActionSlotStore.write(context, actionSlotProfileId, index, after.slots[index])
+            slots = after.slots
+            // Das Widget kennt die neue Stream-Semantik nicht. Sobald die Ausloesung sicher im
+            // Slot liegt, darf dort keine zweite Darstellung weiterlaufen.
+            GlyphClockWidgetProvider.stopReminderAnimation(context)
+            return true
+        }
+
         // Faellige Erinnerung: Avatar spawnen, Uhr zeigt die Animation, Avatar blinzelt
         // idle daneben, bis entweder die Animation ausgelaufen ist (siehe unten, Avatar
         // verschwindet ungetrackt) oder die Kollisions-Erkennung unten die Fuetterung
@@ -1942,6 +2073,9 @@ fun DockScreen(
                 }
                 emit(open.event.copy(openDurationSeconds = remainingSeconds))
             }.collect { event ->
+                if (streamMode && playMode && autoSaveForStream(event)) {
+                    return@collect
+                }
                 // Solange noch eine Fuetter-Reaktion laeuft (avatar.fed == true, Uhr ausgeblendet
                 // - siehe unten), muss die naechste Erinnerung warten, bevor ihre eigene
                 // Anzeigedauer zu laufen beginnt. Sonst begaenne diese Anzeigedauer "im Dunkeln":
@@ -2299,6 +2433,66 @@ fun DockScreen(
             feedAvatarNow()
         }
 
+        /**
+         * Lokaler Ersatz fuer das spaetere Backend: Ein Tippen waehlt genau einen vorhandenen
+         * Slot. Die zugehoerige Ausloesung wird vor dem Anstoss noch einmal in Room geprueft;
+         * ein veralteter Snapshot darf keine Agentenentscheidung ausloesen.
+         */
+        fun selectStreamSlot(index: Int) {
+            if (!streamMode || pendingExternalImpulse != null) return
+            val saved = slots.getOrNull(index) ?: return
+            scope.launch {
+                val exists = withContext(Dispatchers.IO) {
+                    AppDatabase.getInstance(context).avatarFeedEventDao()
+                        .getById(saved.occurrenceId)
+                        ?.fedAtMillis == null
+                }
+                if (!exists) {
+                    ActionSlotStore.write(context, actionSlotProfileId, index, null)
+                    slots = slots.toMutableList().also { it[index] = null }
+                    return@launch
+                }
+                val state = StreamInteractionState(
+                    slots = slots,
+                    pending = pendingExternalImpulse,
+                    latest = latestExternalImpulse
+                )
+                when (val selected = StreamInteractions.select(
+                    state,
+                    slotId = index + 1,
+                    atMinute = PlayTimeLapse.absoluteMinute()
+                )) {
+                    is StreamSelection.Accepted -> {
+                        pendingExternalImpulse = selected.impulse
+                        latestExternalImpulse = selected.impulse
+                    }
+                    StreamSelection.Busy,
+                    StreamSelection.Missing -> Unit
+                }
+            }
+        }
+
+        /** Erst nach sichtbarem Abschluss werden Reminder-Eintrag und Slot gemeinsam verbraucht. */
+        suspend fun completeStreamImpulse(
+            prepared: com.notime.glyphsim.matrix.PreparedLivingRoutine
+        ) {
+            val impulse = pendingExternalImpulse ?: return
+            if (!StreamInteractions.wasHandled(impulse, prepared)) return
+            val result = withContext(Dispatchers.IO) {
+                AvatarFeeding.logFeedEvent(context, impulse.occurrenceId)
+            }
+            val state = StreamInteractions.clearHandled(
+                StreamInteractionState(slots, pendingExternalImpulse, latestExternalImpulse),
+                impulse
+            )
+            if (state.pending != null) return
+            val index = impulse.savedSlotId - 1
+            ActionSlotStore.write(context, actionSlotProfileId, index, null)
+            slots = state.slots
+            pendingExternalImpulse = null
+            if (result.isUiSuccess()) fedCount++
+        }
+
         // Laeuft bei jeder Aenderung von clockOffset neu an, also auch mitten in einer
         // laufenden Drag-Geste (nicht erst am Gesten-Ende) - dadurch wird die Kollision
         // erkannt, sobald sich Uhr und Avatar beim Ziehen beruehren.
@@ -2337,7 +2531,12 @@ fun DockScreen(
             //
             // Ein zweiter, nebenher laufender Anstoss waere die Alternative gewesen und die
             // schlechtere: Zwei Ablaeufe gleichzeitig schieben dieselbe Figur an zwei Orte.
-            LaunchedEffect(avatar?.species, requestedTopic, requestedNodeId) {
+            LaunchedEffect(
+                avatar?.species,
+                requestedTopic,
+                requestedNodeId,
+                pendingExternalImpulse?.impulseId
+            ) {
                 val species = avatar?.species ?: return@LaunchedEffect
 
                 // Ein genauer Skill-/Reminder-Knoten geht vor dem groben Thema. Die Entscheidung
@@ -2392,6 +2591,8 @@ fun DockScreen(
                     //
                     // Vor moveToPlace gesetzt, genau wie im PERFORM-Zweig weiter unten: Waehrend
                     // der Ablauf laeuft, soll bereits das gelten, was er GERADE tut.
+                    val requestedFrom = currentPlace
+                    val (baseAgent, baseWorld) = livingStateFor(species)
                     currentTopic = topic
                     moveToPlace(PlayScene.forTopic(topic), species)
                     // **Ohne `recentSpecials`, mit Absicht.** Eine ausdrueckliche Bitte des
@@ -2401,25 +2602,69 @@ fun DockScreen(
                     // Regungen war es sehr wohl zu sehen.
                     val gebeten = PlayRoutines.forTopic(
                         topic = topic,
-                        needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
+                        needsShopping = baseWorld.portions <= 0 &&
+                            baseWorld.coins >= ActionCatalog.GROCERY_COST,
                         footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
                     )
                     rememberShown(topic, gebeten)
-                    runRoutine(gebeten, species)
+                    val completed = runRoutine(
+                        gebeten,
+                        species,
+                        // Die Living-Wirkung wird nach dem sichtbaren Abschluss genau einmal
+                        // ueber ActionOutcome verbucht.
+                        applyLegacyEconomy = false
+                    )
+                    if (completed) {
+                        val applied = LivingRuntimeAdapter.applyRequestedRoutine(
+                            agent = baseAgent,
+                            world = baseWorld,
+                            renderedPlace = requestedFrom,
+                            topic = topic,
+                            routine = gebeten
+                        )
+                        val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
+                            applied.world,
+                            currentPlace,
+                            visitor?.species?.let {
+                                setOf(AvatarSpeciesPrefs.profileId(it))
+                            }.orEmpty()
+                        )
+                        livingAgent = applied.agent
+                        livingWorld = committedWorld
+                        livingStore.save(applied.agent, committedWorld)
+                        LivingObservationFeed.record(applied.copy(world = committedWorld))
+                        economyTick++
+                    }
                     // Zuruecksetzen startet die Schleife ein letztes Mal - dann ohne Bitte, und
                     // von da an laeuft wieder der gewoehnliche Tagesablauf.
                     requestedTopic = null
                     return@LaunchedEffect
                 }
 
+                // Eine Viewer-Auswahl fordert sofort eine neue Entscheidung an, aber keine
+                // bestimmte Handlung. Der PERFORM-Zweig unten darf den Impuls deshalb ebenso
+                // ablehnen oder hinter ein dringendes Grundbeduerfnis stellen.
+                var evaluateExternalImpulse = pendingExternalImpulse != null
                 while (isActive) {
-                    delay(PlayAmbientActivity.nextPauseMillis())
+                    if (!evaluateExternalImpulse) {
+                        delay(PlayAmbientActivity.nextPauseMillis())
+                    }
                     val current = avatar
                     // Nur ausserhalb einer offenen Erinnerung und ausserhalb einer Fuetter-
                     // Reaktion - sonst wuerde eine autonome Regung mit der Kollisions-/
                     // Fuetterlogik oben konkurrieren.
-                    if (current == null || current.fed || current.occurrenceId != null) continue
-                    when (PlayAmbientActivity.nextAction()) {
+                    if (current == null || current.fed || current.occurrenceId != null) {
+                        evaluateExternalImpulse = false
+                        delay(PlayAmbientActivity.nextPauseMillis())
+                        continue
+                    }
+                    val ambientAction = if (evaluateExternalImpulse) {
+                        evaluateExternalImpulse = false
+                        PlayAmbientActivity.Action.PERFORM
+                    } else {
+                        PlayAmbientActivity.nextAction()
+                    }
+                    when (ambientAction) {
                         PlayAmbientActivity.Action.FLOURISH -> {
                             avatarIdleJob?.cancel()
                             val flourish = AvatarAnimations.tapReaction(species)
@@ -2495,27 +2740,15 @@ fun DockScreen(
                             // zu dem, was eine Bitte bewirken sollte.
                             val afterglow =
                                 PlayAfterglowSignal.bonuses(context, PresentCompanion.profileId(context))
-                            // Vorrang vor allem anderen: Ist nichts mehr da UND kein Geld fuer
-                            // einen Einkauf, muss gearbeitet werden. Das ist die Stelle, an der
-                            // die Welt den Zufall ueberstimmt - und der Grund, warum man ihm beim
-                            // Zuschauen abnimmt, dass er zur Arbeit GEHT statt dort zu erscheinen.
-                            val mustEarn = PlayPantry.isEmpty(context) && !PlayWallet.canAfford(context)
-                            val topic = if (mustEarn) {
-                                AnimationType.WORK
-                            } else {
-                                // MIT dem jetzigen Ort: Die Figur bleibt dann eher, wo sie ist,
-                                // statt bei jeder Regung das Zimmer zu wechseln (siehe
-                                // PlayAmbientActivity.nextTopic).
-                                //
-                                // Aber nur BEGRENZT oft hintereinander. Ein Zuschlag ohne Ende
-                                // haette den umgekehrten Fehler erzeugt: Wer im Wohnzimmer sitzt,
-                                // bekommt dort dauernd Rueckenwind fuers Bleiben, und die Figur
-                                // kaeme kaum noch vor die Tuer - genau der Zustand, gegen den die
-                                // Strasse und der Wald angelegt wurden. Zwei-, dreimal verweilen
-                                // ist ein Aufenthalt, fuenfmal ist ein Hausarrest.
-                                PlayAmbientActivity.nextTopic(
-                                    boostedTopics = boostedTopics,
-                                    stayAt = currentPlace.takeIf { stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS },
+                            // Die bisherige Themenwahl bleibt als Vielfaltssignal erhalten, aber
+                            // nicht mehr als Entscheidung ueber Grundbeduerfnisse: Der Living
+                            // Agent entscheidet, OB Freizeit gerade traegt; diese Wahl sagt nur,
+                            // WIE eine solche Phase in der vorhandenen Welt aussieht.
+                            val ordinaryInterestTopic = PlayAmbientActivity.nextTopic(
+                                boostedTopics = boostedTopics,
+                                stayAt = currentPlace.takeIf {
+                                    stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS
+                                },
                                     // **Und wohin er sich entwickelt hat** (siehe PlayPath): Der
                                     // Pfad faerbt, was er von sich aus tut. Erst dadurch ist die
                                     // Entwicklung etwas, das man SIEHT, statt etwas, das im
@@ -2564,19 +2797,47 @@ fun DockScreen(
                                     // **Der Nachklang.** Kurz nach einer Antwort stark genug, dass
                                     // aus der einen angeforderten Routine eine zusammenhaengende
                                     // Weile wird; danach nur noch eine Faerbung des Tages.
-                                    afterglow = afterglow,
+                                afterglow = afterglow,
                                     // **Die Mindestdauer draussen** (NT-057). Gemeldet an der
                                     // Musik - "der Wechsel war viel zu schnell, dann wieder in
                                     // diese ruhige Stimmung" -, aber die Musik wechselte richtig:
                                     // Sie folgte einer Welt, in der die Figur nach zwanzig
                                     // Sekunden wieder hineinging. Deshalb sitzt die Regel hier
                                     // beim Zustand und nicht im Player.
-                                    holdOutdoors = PlayOutdoorStay.holdsOutdoors(
-                                        outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
-                                            else System.currentTimeMillis() - outdoorsSinceMs,
-                                        phase = PlayAmbientActivity.currentDayPhase()
-                                    )
+                                holdOutdoors = PlayOutdoorStay.holdsOutdoors(
+                                    outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
+                                        else System.currentTimeMillis() - outdoorsSinceMs,
+                                    phase = PlayAmbientActivity.currentDayPhase()
                                 )
+                            )
+
+                            val externalImpulse = pendingExternalImpulse
+                            val interestTopic = externalImpulse?.animationType ?: ordinaryInterestTopic
+                            val nearbyProfiles = visitor?.species?.let {
+                                setOf(AvatarSpeciesPrefs.profileId(it))
+                            }.orEmpty()
+                            val (baseAgent, baseWorld) = livingStateFor(species)
+                            val prepared = LivingRuntimeAdapter.prepare(
+                                agent = baseAgent,
+                                world = baseWorld,
+                                renderedPlace = currentPlace,
+                                interestTopic = interestTopic,
+                                footballTrickLearned = PlayFootballSkill.isLearned(
+                                    context,
+                                    presenceProfileId
+                                ),
+                                recentSpecials = recentSpecials,
+                                nearbyProfiles = nearbyProfiles,
+                                goalInfluence = StreamInteractions.influenceFor(externalImpulse)
+                            )
+                            val topic = prepared.topic
+                            val gewaehlt = prepared.routine
+                            if (topic == null || gewaehlt == null) {
+                                livingAgent = prepared.result.agent
+                                livingWorld = prepared.result.world
+                                livingStore.save(prepared.result.agent, prepared.result.world)
+                                LivingObservationFeed.record(prepared.result)
+                                continue
                             }
 
                             // Erst den Ort wechseln, dann HINGEHEN, dann handeln - in dieser
@@ -2591,7 +2852,8 @@ fun DockScreen(
                             // (siehe LaunchedEffect(currentPlace) oben, laeuft in eigener
                             // Coroutine), und waehrend er geht, blendet der alte Raum weg und der
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
-                            val place = PlayScene.forTopic(topic)
+                            val place = gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>()
+                                .firstOrNull()?.place ?: PlayScene.forTopic(topic)
                             currentTopic = topic
                             // **Er sagt, was er vorhat** - selten, kurz und nie nachts (siehe
                             // PlaySpeech). Das beantwortet die Frage, die man sich beim Zuschauen
@@ -2601,28 +2863,36 @@ fun DockScreen(
                                 spokenLine = line
                             }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
-                            // Der Ablauf wird VOR dem Weg gezogen, damit der Verlauf schon
-                            // steht, wenn die naechste Regung faellt - und mit
-                            // [recentSpecials], weil die fuenf Sonderbeschaeftigungen sich
-                            // alle das Thema MOVE teilen und auf Themenebene ununterscheidbar
-                            // waeren (siehe PlayRoutines.SpecialActivity).
-                            val gewaehlt = PlayRoutines.forTopic(
-                                topic = topic,
-                                needsShopping = PlayPantry.isEmpty(context) && PlayWallet.canAfford(context),
-                                footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId),
-                                recentSpecials = recentSpecials
-                            )
                             rememberShown(topic, gewaehlt)
-                            moveToPlace(place, species)
 
                             // Nicht mehr EINE Animation, sondern ein mehrschrittiger Ablauf:
                             // hingehen, benutzen, handeln, verweilen, aufstehen (siehe
                             // PlayRoutine). Erst dadurch setzt sich die Figur mit ihrer Umgebung
                             // auseinander, statt neben den Moebeln zu agieren.
-                            runRoutine(
+                            val completed = runRoutine(
                                 gewaehlt,
-                                species
+                                species,
+                                // ActionOutcome hat die Wirkung bereits vorbereitet. Die alte
+                                // globale Wirtschaft darf sie nicht ein zweites Mal verbuchen.
+                                applyLegacyEconomy = false
                             )
+                            if (!completed) continue
+                            val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
+                                prepared.result.world,
+                                currentPlace,
+                                visitor?.species
+                                    ?.let(AvatarSpeciesPrefs::profileId)
+                                    ?.let(::setOf)
+                                    .orEmpty()
+                            )
+                            livingAgent = prepared.result.agent
+                            livingWorld = committedWorld
+                            livingStore.save(prepared.result.agent, committedWorld)
+                            LivingObservationFeed.record(
+                                prepared.result.copy(world = committedWorld)
+                            )
+                            economyTick++
+                            completeStreamImpulse(prepared)
 
                             // **Und danach zeigt es, was es kann** - eine Einlage aus dem
                             // Skillbaum, falls in diesem Bereich etwas freigeschaltet ist.
@@ -3369,7 +3639,10 @@ fun DockScreen(
                     } else {
                         stringResource(R.string.a11y_action_slot_empty, index + 1)
                     }
-                    val applyLabel = stringResource(R.string.a11y_action_slot_apply)
+                    val applyLabel = stringResource(
+                        if (streamMode) R.string.stream_slot_choose
+                        else R.string.a11y_action_slot_apply
+                    )
 
                     // Ueber den Belegungs-Schluessel neu erzeugt: sobald dieser Platz frei wird
                     // (gefuettert) oder neu belegt wird, beginnt die Verschiebung wieder bei Null -
@@ -3379,7 +3652,7 @@ fun DockScreen(
 
                     LaunchedEffect(dragOffset, avatar?.offset, avatar?.sizeDp) {
                         val current = avatar
-                        if (saved == null || current == null || dragOffset == Offset.Zero) {
+                        if (streamMode || saved == null || current == null || dragOffset == Offset.Zero) {
                             return@LaunchedEffect
                         }
                         val avatarPx = with(density) { current.sizeDp.dp.toPx() }
@@ -3396,35 +3669,49 @@ fun DockScreen(
                             .clip(CircleShape)
                             .background(if (saved != null) TamaPalette.BubbleBackground else TamaPalette.RowBackground)
                             .border(
-                                width = 1.dp,
-                                color = TamaPalette.TextMuted.copy(alpha = if (saved != null) 0f else 0.35f),
+                                width = if (
+                                    pendingExternalImpulse?.occurrenceId == saved?.occurrenceId
+                                ) 2.dp else 1.dp,
+                                color = if (
+                                    pendingExternalImpulse?.occurrenceId == saved?.occurrenceId
+                                ) {
+                                    Color(0xFF7FD1A6)
+                                } else {
+                                    TamaPalette.TextMuted.copy(alpha = if (saved != null) 0f else 0.35f)
+                                },
                                 shape = CircleShape
                             )
                             .then(
                                 if (saved != null) {
-                                    Modifier.pointerInput(saved.occurrenceId) {
-                                        detectDragGestures(
-                                            onDrag = { change, amount ->
-                                                change.consume()
-                                                dragOffset += amount
-                                            },
-                                            onDragEnd = {
-                                                // Ueberschneidet sich der Platz gerade mit dem
-                                                // Avatar, laeuft das Fuettern bereits (siehe
-                                                // LaunchedEffect oben) - dann NICHT zurueckschnappen,
-                                                // der Platz verschwindet gleich ohnehin.
-                                                val current = avatar
-                                                val stillOverlapping = current != null &&
-                                                    isColliding(
-                                                        slotOffsetPx(index) + dragOffset,
-                                                        slotSizePx,
-                                                        current.offset,
-                                                        with(density) { current.sizeDp.dp.toPx() }
-                                                    )
-                                                if (!stillOverlapping) dragOffset = Offset.Zero
-                                            },
-                                            onDragCancel = { dragOffset = Offset.Zero }
-                                        )
+                                    if (streamMode) {
+                                        Modifier.pointerInput(saved.occurrenceId) {
+                                            detectTapGestures(onTap = { selectStreamSlot(index) })
+                                        }
+                                    } else {
+                                        Modifier.pointerInput(saved.occurrenceId) {
+                                            detectDragGestures(
+                                                onDrag = { change, amount ->
+                                                    change.consume()
+                                                    dragOffset += amount
+                                                },
+                                                onDragEnd = {
+                                                    // Ueberschneidet sich der Platz gerade mit dem
+                                                    // Avatar, laeuft das Fuettern bereits (siehe
+                                                    // LaunchedEffect oben) - dann NICHT zurueckschnappen,
+                                                    // der Platz verschwindet gleich ohnehin.
+                                                    val current = avatar
+                                                    val stillOverlapping = current != null &&
+                                                        isColliding(
+                                                            slotOffsetPx(index) + dragOffset,
+                                                            slotSizePx,
+                                                            current.offset,
+                                                            with(density) { current.sizeDp.dp.toPx() }
+                                                        )
+                                                    if (!stillOverlapping) dragOffset = Offset.Zero
+                                                },
+                                                onDragCancel = { dragOffset = Offset.Zero }
+                                            )
+                                        }
                                     }
                                 } else {
                                     Modifier
@@ -3434,7 +3721,11 @@ fun DockScreen(
                                 contentDescription = slotLabel
                                 if (saved != null) {
                                     customActions = listOf(
-                                        CustomAccessibilityAction(applyLabel) { feedFromSlot(index); true }
+                                        CustomAccessibilityAction(applyLabel) {
+                                            if (streamMode) selectStreamSlot(index)
+                                            else feedFromSlot(index)
+                                            true
+                                        }
                                     )
                                 }
                             },
@@ -3450,6 +3741,25 @@ fun DockScreen(
                     }
                 }
             }
+            if (streamMode) {
+                val latest = latestExternalImpulse
+                Text(
+                    text = if (latest == null) {
+                        stringResource(R.string.stream_viewer_ready)
+                    } else {
+                        stringResource(
+                            R.string.stream_viewer_impulse,
+                            latest.savedSlotId,
+                            stringResource(latest.animationType.labelRes)
+                        )
+                    },
+                    color = TamaPalette.TextMuted,
+                    fontSize = 11.sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 12.dp, bottom = 12.dp)
+                )
+            }
         }
 
         // ---- Das Gespraech (siehe PlayTalk / PlayTalkPanel) ----
@@ -3461,11 +3771,18 @@ fun DockScreen(
             LaunchedEffect(talkOpen, talkRefresh, economyTick) {
                 talkKnowledge = null
                 val species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
+                val gameWorld = livingStateFor(species).second
                 talkKnowledge = withContext(Dispatchers.IO) {
                     // Mit Spielstand: Dieses Feld gibt es nur im Spielmodus, also ist die Frage
                     // nach Stufe, Geld und Vorrat hier immer sinnvoll.
                     PlayTalk.gather(
-                        context, AvatarSpeciesPrefs.profileId(species), includeGame = true
+                        context,
+                        AvatarSpeciesPrefs.profileId(species),
+                        includeGame = true,
+                        gameResources = PlayTalk.GameResources(
+                            gameWorld.coins,
+                            gameWorld.portions
+                        )
                     )
                 }
             }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +28,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.notime.glyphcore.reminder.ReminderScheduler
+import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.PlayTimeLapse
 import com.notime.glyphsim.matrix.PlayWeather
 import com.notime.glyphsim.reminder.ReminderTrigger
@@ -75,6 +77,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val streamMode = resources.getBoolean(R.bool.stream_mode)
 
         // Frueher stand hier ein einmaliger Anstoss, die Exact-Alarm-Berechtigung zu erteilen.
         // Die App deklariert sie nicht mehr (Begruendung im Manifest): sie zeigt Erinnerungen
@@ -119,7 +122,10 @@ class MainActivity : ComponentActivity() {
         // umgeschaltet wird zur Laufzeit (siehe OrientationPrefs).
         OrientationPrefs.apply(this)
 
-        applyDockModeFlags(DockModePrefs.isEnabled(this))
+        // Der Stream-Client ist eine dauerhafte Praesentation und darf nicht auf einen
+        // Einstellungszustand der normalen App zurueckfallen. Seine eigene applicationId haelt
+        // Daten und Preferences dennoch vollstaendig von der persoenlichen App getrennt.
+        applyDockModeFlags(streamMode || DockModePrefs.isEnabled(this))
 
         // Testschalter aus den Einstellungen uebernehmen - PlayTimeLapse haelt seinen Zustand im
         // Speicher, damit die beschleunigte Uhr im Zeichenpfad ohne Dateizugriff auskommt.
@@ -178,7 +184,20 @@ class MainActivity : ComponentActivity() {
                     // herueberreicht, will das Ergebnis sehen und nicht auf einem schwarzen
                     // Uhrenbildschirm landen.
                     // Geteilter Text hat weiterhin Vorrang vor der Dock-Darstellung.
-                    if (state.presentation == Presentation.DOCK && shared == null) {
+                    if (streamMode) {
+                        val playViewModel: PlayModeViewModel = viewModel()
+                        LaunchedEffect(Unit) {
+                            if (!PlayModePrefs.isActive(this@MainActivity)) {
+                                playViewModel.setActive(true)
+                            }
+                        }
+                        DockScreen(
+                            playMode = true,
+                            streamMode = true,
+                            watchOnly = false,
+                            onExit = {}
+                        )
+                    } else if (state.presentation == Presentation.DOCK && shared == null) {
                         // Der ViewModel wird hier NUR fuer das Anlegen aus dem Gespraech heraus
                         // geholt (siehe PlayTalk). Der Dock-Bildschirm selbst kommt weiterhin
                         // ohne aus - er zeigt eine Welt und verwaltet keine Erinnerungen.

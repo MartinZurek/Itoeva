@@ -2261,3 +2261,268 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   eingetragen; ohne den zweiten Eintrag waere sie gruen gewesen, ohne je gelaufen zu sein.
 - **Naechster Schritt:** NT-067 (Schnitt 2b) - Episoden, Beziehungen, symbolische
   Verstaendigung, gelernter Geschmack und `CONNECT_WITH`, wieder als reine Domaene.
+
+### 2026-09-10 - Living-Agent-Kern: Erinnern und Verstaendigen (Schnitt 2b)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Zweiter reiner Kotlin-Schnitt des
+  freigegebenen Meilensteins; deterministische JVM-Belege, keine Geraetepruefung erforderlich.
+- **Ausgangsproblem:** Schnitt 2a konnte wollen, planen, scheitern und neu planen, aber Erlebtes
+  veraenderte spaetere Entscheidungen nicht. Andere Wesen waren weder als Beziehung noch als
+  semantisches Gegenueber vorhanden; ein Stream haette eine soziale Szene deshalb nicht aus dem
+  Zustand erklaeren koennen.
+- **Entscheidung:** `AgentState` traegt nun begrenzte verdichtete `Episode`-Listen, gelernte
+  Zielpraeferenzen und `RelationshipState` je Gegenueber. Beziehungen trennen Vertrauen und
+  Naehe und behalten die letzte typisierte Interaktion. `SymbolicIntent` bildet die feste
+  sprachunabhaengige Bedeutungsmenge; `CONNECT_WITH` wird wie jedes andere Ziel durch
+  `UtilitySelector` bewertet und vom kleinen regelbasierten Planer in eine Einladung
+  ueberfuehrt.
+- **Erster Beleg:** STARLET sendet aus echtem sozialem Druck `PLAY + QUESTION`. Derselbe
+  WYRMLING antwortet bei hoher Energiebelastung mit `TIRED + NO`, bei Kraft und sozialem
+  Bedarf mit `PLAY + YES`; ein dringendes laufendes `GET_FOOD` fuehrt zu `FOOD + NO`.
+  Zwei mit gleicher Persoenlichkeit und gleicher Bedarfslage gestartete Agenten sammeln durch
+  verschiedene Begegnungen ueber mehrere simulierte Tage unterschiedliche Praeferenzen und
+  Episoden, ohne dass eine Handlungskette als Plot vorgegeben ist.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - `Requirement.Near` macht Anwesenheit zu einem benannten, erklaerbaren Hindernis statt zu
+    einem Wahrheitswert.
+  - Erinnerung, Praeferenz, Beziehung und Symbolbedeutung sind Felder von `ActionOutcome`.
+    `Action.applyTo` bleibt die einzige Stelle, die Wirkungen berechnet; es gibt keinen
+    sozialen Sonderweg und keine zweite Ereignispipeline.
+  - Episoden speichern nur wichtige typisierte Ereignisse und eine kleine Wertung. Die feste
+    Grenze von 24 verhindert Rohframe- und Tick-Historien.
+  - Die Antwortbereitschaft ist eine lesbare Rechnung aus Energie, sozialem Druck, Beziehung,
+    Persoenlichkeitsbias und dem Druck eines kollidierenden laufenden Grundziels. Gleiche
+    Eingaben ergeben dieselbe Antwort; es gibt weder Uhr noch Zufall noch Dialogtabelle.
+  - Gelernter Geschmack liegt als Datum im `AgentState` und bleibt auf einen kleinen Bereich
+    begrenzt. Der bestehende Test haelt weiterhin fest, dass jeder Startbias kleiner als
+    `UtilitySelector.MIN_PRESSURE` bleibt.
+- **Abgrenzung:** Keine Persistenz und kein `LivingAgentStore`, keine Aenderung an Room,
+  `:core`, `DockScreen`, `PlayScene` oder `PlayRoutine`; kein `StoryManager`, kein freier
+  Textdialog, kein allgemeiner Planer, kein Twitch-UI und keine Musik- oder Audioumbaute.
+- **Betroffene Bereiche:** Die bestehenden fuenf Kerndateien unter
+  `app-sim/src/main/java/com/notime/glyphsim/living/`, die bestehende
+  `LivingAgentTest.kt`, `LIVING_AGENT.md`, `NextTasks.md`, `UEBERGABE.md` und dieses
+  Protokoll. Keine neue Quell- oder Testdatei, deshalb keine Aenderung an der ausdruecklichen
+  Dateiliste in `tools/reaction-preview/tests.sh`.
+- **Tests:** Sechs neue Verhaltensfaelle erweitern `LivingAgentTest` von 22 auf 28 Tests und
+  die Offline-Strecke von 265 auf 271 Tests. Geprueft werden Symbolaustausch, zwei
+  zustandsabhaengige Antworten, Vorrang eines laufenden Grundziels, Episodengrenze,
+  Entscheidungseinfluss und auseinanderlaufende Mehrtageshistorien. Zusaetzlich bleibt die
+  Musikstrecke mit 15 Tests unveraendert; vor dem Merge entscheidet die vollstaendige Head-CI.
+- **Naechster Schritt:** NT-064 - profilbezogene, versionierte Persistenz. Falls dafuer Room
+  gewaehlt wird, liegen Migration und Migrationstest im selben PR; `:core` bleibt
+  unangetastet.
+
+### 2026-09-10 - Living-Agent-Zustand versioniert und profilbezogen gespeichert (Schnitt 3)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Android-Grenze mit deterministischen
+  JVM-Belegen; keine Geraetepruefung fuer den Speicherkern erforderlich.
+- **Ausgangsproblem:** Der Kern konnte Erinnerungen, Beziehungen, Ressourcen und gelernten
+  Geschmack bilden, verlor diesen Zustand aber beim Prozessende. Ein alter Plan durfte beim
+  Wiedereinstieg zugleich keine inzwischen geschlossene Welt oder abwesende Figur umgehen.
+- **Entscheidung:** `LivingAgentStore` speichert genau einen atomaren, versionierten Snapshot
+  pro `profileId`. Der reine Kern bleibt speicherfrei; ein kleines `LivingAgentStorage` trennt
+  Codec und Android-`SharedPreferences`-Adapter. Snapshot-Version 2 umfasst Agent, Ressourcen,
+  Persoenlichkeit, Ziel, gelernte Praeferenzen, begrenzte Episoden, Beziehungen und das letzte
+  wichtige Ereignis.
+- **Erster Beleg:** Zwei Profile werden mit verschiedenen Hungerwerten und Muenzen gespeichert
+  und getrennt wiederhergestellt. Ein V1-Snapshot wird mit leeren neuen Lernfeldern gelesen und
+  anschliessend als V2 geschrieben. Derselbe Snapshot mit derselben expliziten Simulationsminute
+  ergibt zweimal exakt denselben Zustand.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - SharedPreferences statt Room: Der kleine zusammenhaengende Snapshot ist nicht relational.
+    Eine Room-Migration wuerde hier Schema- und Zwei-Datenbank-Risiko ohne fachlichen Nutzen
+    erzeugen. `:core` und beide Room-Datenbanken bleiben unveraendert.
+  - Zeit wird als `currentSimulationMinute` uebergeben. Es gibt keinen Zugriff auf Systemuhr
+    oder Zufall; Beduerfnisse und Welt laufen nur um die nichtnegative Differenz weiter.
+  - Das langlebige Ziel wird gespeichert, der konkrete Plan absichtlich nicht. Aktuell
+    geoeffnete Orte und anwesende Profile kommen beim Laden aus der Runtime; danach plant der
+    Kern gegen die neue Wirklichkeit.
+  - Unbekannte Zukunftsversionen und beschaedigte Pflichtwerte werden abgelehnt statt geraten.
+    V1-Felder fuer Episoden, Beziehungen und Geschmack werden leer und nachvollziehbar migriert.
+- **Eine Testerwartung war zu streng, nicht der Store:** `Needs` behandelt fehlende und
+  ausdruecklich mit null gespeicherte Beduerfnisse fachlich gleich, seine Data-Class-Gleichheit
+  aber nicht. Der Roundtrip-Test vergleicht deshalb den Druck aller sieben Beduerfnisse und die
+  uebrigen Zustandsfelder getrennt, statt eine interne Map-Darstellung zum Speichervertrag zu
+  machen.
+- **Abgrenzung:** Keine Runtime-Anbindung, keine Aenderung an `DockScreen`, `PlayRoutine`,
+  Room oder `:core`; keine zweite Simulationspipeline, kein Stream-UI und kein Audio.
+- **Betroffene Bereiche:** `app-sim/.../data/LivingAgentStore.kt`,
+  `LivingAgentStoreTest.kt`, die ausdrueckliche Offline-Testliste sowie `LIVING_AGENT.md`,
+  `NextTasks.md`, `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** Sechs neue Verhaltensfaelle erhoehen die Offline-Strecke von 271 auf 277 Tests:
+  vollstaendiger Roundtrip, Profiltrennung, Zeitfortschritt, deterministische Wiederholung,
+  echte V1-Migration und Ablehnung einer Zukunftsversion. Die neue Quell- und Testdatei stehen
+  in `SRCS`, `TEST_SRCS` und `TEST_CLASSES`; die vollstaendige Head-CI entscheidet vor
+  dem Merge.
+- **Naechster Schritt:** NT-065 - Ziel und jeweils naechste Living Action ueber einen kleinen
+  Adapter auf die vorhandenen `PlayRoutine`-, Vorrats-, Geld- und Besuchsmechaniken abbilden;
+  den harten Notfall-Sonderfall dabei ersetzen und keine zweite Choreografie bauen.
+
+### 2026-09-10 - Living-Agent handelt in der vorhandenen Pixelwelt (Schnitt 4)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Reiner Adapter mit deterministischen
+  JVM-Belegen plus gezielte Compose-Anbindung; die sichtbare Wirkung bleibt am Geraet zu pruefen.
+- **Ausgangsproblem:** Der neue Kern konnte nachvollziehbar entscheiden, planen und speichern,
+  aber `DockScreen` spielte weiter den alten gewichteten Tagesablauf. Der eine Ressourcenpfad
+  steckte dort noch als harter Sonderfall `Vorrat leer und Geld fehlt -> WORK`; Kernzustand und
+  sichtbare Choreografie hatten damit zwei getrennte Entscheidungen und zwei Wirtschaften.
+- **Entscheidung:** `LivingRuntimeAdapter` ist die schmale Grenze zwischen beiden Seiten. Er
+  synchronisiert `PlayScene.Place`, Simulationszeit, Verfuegbarkeit und anwesende Profile mit
+  `WorldState`, laesst ausschliesslich `LivingSimulation` den naechsten Schritt bestimmen und
+  waehlt dafuer vorhandene `PlayRoutine`-Ablaufe. `PlayAmbientActivity` bleibt als
+  Vielfaltssignal fuer die konkrete Freizeitvariante erhalten, entscheidet aber nicht mehr, ob
+  ein Grundbeduerfnis uebergangen wird.
+- **Erster Beleg:** Ein pleite und hungrig gestarteter Agent waehlt sichtbar zuerst Arbeitsweg
+  plus Arbeit. Der folgende vorbereitete Ablauf enthaelt Laden, Bezahlen, Heimweg, Einraeumen und
+  Essen; danach stehen zwei verdiente und wieder ausgegebene Muenzen, zwei Restportionen und
+  deutlich geringerer Hunger im Kernzustand. Keine dieser Folgen steht als Plot in `DockScreen`.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - Die Abbildung aller sechzehn sichtbaren Orte auf vier `LivingSite` steht ausschliesslich im
+    Runtime-Adapter. `PlayScene` und die reine Domaene erhalten keine gegenseitige Sonderlogik.
+  - Eine Kernwirkung wird vorbereitet, aber erst nach vollstaendig gelaufener `PlayRoutine`
+    gespeichert. Wird sie durch eine echte Erinnerung oder einen Moduswechsel abgebrochen,
+    bleiben Lohn, Einkauf, Beduerfnisse und Episode auf dem letzten abgeschlossenen Stand.
+  - Zusammengefasst werden nur Schritte, die eine vorhandene Routine ohnehin als eine sichtbare
+    Einheit zeigt: Arbeitsweg plus Arbeit und Einkauf plus Heimweg, Einraeumen und Essen. Die
+    Choreografie bleibt bei `PlayRoutine`; es gibt keinen zweiten Ausfuehrer.
+  - Fuer Living-Routinen sind die alten globalen Nebenwirkungen in `runRoutine` abgeschaltet.
+    Geld, Vorrat, Erinnerung und Bedarf laufen weiterhin allein durch `ActionOutcome`. Die alten
+    `PlayWallet`-/`PlayPantry`-Werte dienen beim ersten Anschluss als Startwert und werden weder
+    geloescht noch umgedeutet; danach zeigt das Gespraech die profilbezogenen Weltwerte.
+  - Auch ausdruecklich erbetene Arbeit, Einkauf und Essen werden ueber vorhandene Living-
+    Actions verbucht. Die Bitte ersetzt das autonome Ziel nicht. Vor jeder zusammengefassten
+    Action wird die Verfuegbarkeit aus der inzwischen fortgeschrittenen Simulationszeit neu
+    bestimmt; schliesst ein Ort unterwegs, endet der Ablauf mit dem benannten Hindernis.
+  - Handeln und Gespraech stellen den Snapshot ueber dieselbe Grenze wieder her. Dadurch zeigt
+    ein unmittelbar nach dem Start geoeffnetes Gespraech nicht mehr die alten globalen
+    Ressourcen, bis zufaellig die erste autonome Handlung gelaufen ist.
+  - `PlayTimeLapse.absoluteMinute` liefert dem Store eine fortlaufende Simulationsminute und
+    behaelt im Zeitraffer auch vollstaendige simulierte Tage. Der reine Kern kennt weiterhin
+    weder Android-Uhr noch Zufall.
+- **Abgrenzung:** Kein Stream-Overlay, keine Twitch-/YouTube-Anbindung, keine Cloud, kein neuer
+  Renderer, keine neue Room-Entity, keine Aenderung in `:core`, kein StoryManager und keine
+  allgemeine Planungsmaschine. Die sichtbare Ausgestaltung symbolischer Besuche bleibt ein
+  spaeterer Integrationspunkt.
+- **Betroffene Bereiche:** Neuer reiner `matrix/LivingRuntimeAdapter.kt`, gezielte Stellen in
+  `DockScreen.kt`, die fortlaufende Runtime-Zeit in `PlayTimeLapse.kt`, profilbezogene
+  Ressourcenanzeige in `PlayTalk.kt`, `LivingRuntimeAdapterTest.kt`, die Offline-Testliste sowie
+  `LIVING_AGENT.md`, `Architecture.md`, `NextTasks.md`, `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** Zehn neue Verhaltensfaelle erhoehen die Offline-Strecke von 277 auf 287 Tests:
+  vollstaendige Ortsabbildung, Oeffnungszeiten, fortlaufender Zeitraffer, Uebernahme bestehender
+  Ressourcen, Arbeits-/Einkaufskette, Essen aus vorhandenem Vorrat, vorhandene Freizeit-
+  Choreografie, bewusstes Nichtstun, Ladenschluss waehrend einer Einkaufsfolge und dieselbe
+  Living-Wirtschaft fuer erbetene Arbeit samt Einkauf. `python3 -m unittest discover --start-directory
+  tools/music` bleibt mit 15 Tests gruen. Compose und der echte `ContextWrapper` werden erst von
+  der vollstaendigen Head-CI geprueft.
+- **Naechster Schritt:** NT-066 - eine read-only Snapshot-/Event-Quelle und den Mehrtages-
+  Langlauftest auf den nun wirklich ausgefuehrten Zustand setzen; weiterhin kein Twitch-UI.
+
+### 2026-09-11 - Living-Agent wird als Ereignisquelle beobachtbar (Schnitt 5)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Reiner Lesevertrag mit deterministischem
+  JVM-Langlauf ueber die echte Runtime-Adaptergrenze; noch keine Stream-Oberflaeche und keine
+  Plattformanbindung.
+- **Ausgangsproblem:** `AgentExplanation` konnte einen einzelnen Kernzustand erklaeren, aber es
+  gab keine laufende Quelle fuer eine spaetere Anzeige und kein begrenztes Ereignisfenster. Der
+  vorhandene Mehrtagesbeleg lief direkt durch `LivingSimulation.run` und bewies damit nicht,
+  dass Oeffnungszeiten, Ortsabbildung und zusammengefasste Pixelwelt-Routinen ueber mehrere Tage
+  zusammenpassen.
+- **Entscheidung:** `LivingObservationSource` ist der ausschliessliche Lesevertrag.
+  `LivingObservation` legt die fuer Zuschauerfragen relevanten typisierten Felder flach: Zeit,
+  staerkstes Beduerfnis, Wunsch, dessen aufgeschluesselten `GoalScore`, Plan, naechste Handlung,
+  benanntes Hindernis, wirksame Episoden, Beziehungen und wichtigstes juengstes Ereignis.
+  `LivingObservationFeed` wird in `DockScreen` beim Restore und nach einem wirklich
+  abgeschlossenen Runtime-Schritt gespeist.
+- **Erster Beleg:** Ein bei 17:50 Uhr hungrig und mittellos gestartetes Wesen erreicht zwar den
+  Arbeitsplatz, trifft dort nach dem Weg aber auf den Feierabend. Der Vertrag meldet weiter
+  `GET_FOOD`, den gewaehlt berechneten Grund und `SiteOpen(WORKPLACE)` als Hindernis. Ueber vier
+  simulierte Tage folgen aus derselben Lage Warten und Neuplanung, Arbeit, Einkauf und Essen in
+  dieser Reihenfolge. Nur Startzustand und Bedeutungen stehen im Test; kein Story-Ablauf steht
+  im Produktionscode.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - Die neue Grenze liegt unter `app-sim/.../stream/`, nicht in den weiterhin genau fuenf
+    Kerndateien. Sie kennt weder Android noch Twitch, YouTube, OBS oder Netzwerk.
+  - Oeffentlich ist nur `LivingObservationSource.current`. Das interne Journal kann Beobachtung
+    aktualisieren, aber niemals Agent oder Welt veraendern.
+  - Das Ereignisfenster bleibt auf 32 Eintraege begrenzt. `IDLE` wird nicht aufgenommen;
+    Rohframes und Tick-Protokolle bleiben ausserhalb. Planzwischenschritte duerfen im Fenster
+    stehen, waehrend `importantEvent` nur eine fuer Zuschauer lesbare Wendung hervorhebt.
+  - Nach einem blockierten und verworfenen Plan bleibt das konkrete `Requirement` sichtbar,
+    solange der Agent wegen desselben Ziels wartet. Sobald wieder gehandelt wird, gilt keine
+    alte Blockade weiter.
+  - Die Runtime speist nur wiederhergestellte oder bereits abgeschlossene Ergebnisse ein. Eine
+    abgebrochene sichtbare Routine kann deshalb auch im Beobachtungskanal keine nur vorbereitete
+    Wirkung als Tatsache ausgeben.
+- **Abgrenzung:** Kein Twitch-UI, kein HTTP-/WebSocket-Endpunkt, keine Datei- oder Cloud-Ausgabe,
+  kein Plattformkonto, keine zweite Simulations- oder Ereignispipeline, keine Room-Aenderung,
+  keine Aenderung in `:core` und kein `StoryManager`.
+- **Betroffene Bereiche:** Neuer reiner Vertrag
+  `app-sim/.../stream/LivingObservationSource.kt`, gezielte Commit-Grenzen in `DockScreen.kt`,
+  `LivingObservationSourceTest.kt`, die ausdrueckliche Offline-Testliste sowie
+  `LIVING_AGENT.md`, `Architecture.md`, `CLOUD_CODE_BRIEFING.md`, `NextTasks.md`,
+  `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** Drei neue Verhaltensfaelle erhoehen die Offline-Strecke von 287 auf 290 Tests. Sie
+  belegen den unveraenderlichen Lesezugriff samt benanntem Hindernis, den Ausschluss eines beim
+  Restore gefundenen `IDLE`-Ereignisses sowie einen zweimal exakt gleichen Vier-Tage-Lauf ueber
+  `LivingRuntimeAdapter`, das begrenzte Ereignisfenster und die emergente Ressourcenfolge.
+  `python3 -m unittest discover --start-directory tools/music`
+  bleibt mit 15 Tests unveraendert; Compose und die echte Prozessquelle entscheidet die
+  vollstaendige Head-CI.
+- **Naechster Schritt:** NT-058 - genau eine bestehende `:app-sim`-Instanz mindestens zwei
+  Stunden lokal im Emulator ueber OBS aufzeichnen und Stabilitaet, Vielfalt, Musik,
+  Erklaerbarkeit, Ressourcenverbrauch und Wiederanlauf dokumentieren. Keine Cloud- oder
+  Plattformintegration vor diesen Messdaten.
+
+### 2026-09-11 - Lokaler Stream-Client mit begrenzten Viewer-Impulsen (NT-068)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Separat installierbarer Android-PoC mit
+  deterministischen JVM-Belegen; die mehrstuendige Emulator-/OBS-Beobachtung bleibt NT-058.
+- **Ausgangsproblem:** Die Welt war lesbar, aber eine oeffentliche Instanz liess sich nur als
+  normale persoenliche App starten. Reminder mussten von Hand in Slots gezogen werden, und der
+  vorhandene Slot-Weg fuetterte den Avatar unmittelbar. Beides belegt weder einen eigenstaendigen
+  Stream-Client noch die Produktregel "Viewer influence != viewer control".
+- **Entscheidung:** Der Produktverantwortliche hat einen separaten Stream-Client und den lokalen
+  Interaktions-PoC ausdruecklich freigegeben. `:app-sim:assembleStream` baut deshalb dieselbe
+  Runtime debug-signiert mit eigener `applicationId`; ein neues `:app-stream`-Modul wurde bewusst
+  nicht angelegt. Das heutige Android-Anwendungsmodul kann nicht als Bibliothek konsumiert werden,
+  und Kopieren oder eine grosse vorzeitige Modulverschiebung haette eine zweite Spielpipeline
+  erzeugt.
+- **Erster Beleg:** Eine BOOK-Ausloesung belegt automatisch Slot 1, der lokale Viewer waehlt nur
+  diesen vorhandenen Slot, und der Living Agent entscheidet ueber einen kleinen `GoalInfluence`
+  selbst auf `DEVELOP`. Derselbe Impuls bleibt bei einem dringend hungrigen Agenten liegen,
+  waehrend `GET_FOOD` gewinnt. Erst eine passende abgeschlossene `PlayRoutine` verbraucht die
+  Ausloesung und leert den Slot.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - `ExternalImpulse` traegt nur stabile IDs, typisierte Bedeutung, Quelle und explizite
+    Simulationsminute. Twitch, OAuth, Konten und Zahlungen bleiben ausserhalb.
+  - Der Impuls lebt fluechtig ausserhalb von `AgentState`. `GoalInfluence.MAX_WEIGHT` liegt mit
+    0,15 unter `UtilitySelector.MIN_PRESSURE`; Bedarf, Persoenlichkeit, Erinnerung, Beziehung und
+    laufende Ziele bleiben die Quelle der Entscheidung.
+  - Die normale App behaelt Ziehen und direktes Fuettern. Nur die Stream-Ressource schaltet
+    Auto-Save und Tap-Simulator ein. Beide APKs verwenden denselben `DockScreen`, denselben
+    `LivingRuntimeAdapter`, dieselben `PlayRoutine`s, Musik und Persistenzklassen.
+  - Die Stream-APK hat einen isolierten App-Speicher. Sie startet die vorhandene Play-Mode-
+    Erinnerung ueber Repository und Scheduler; weder persoenliche Reminder noch medizinische
+    oder frei beschriftete Inhalte gelangen in die Stream-Slots.
+  - Vier vorhandene `ActionSlotStore`-Plaetze bleiben die feste Grenze und ihre Positionen
+    bleiben dieselben wie im Spiel. Ein spaeteres transparentes Overlay kann daran ausgerichtet
+    werden, ohne den Renderer zu veraendern.
+- **Abgrenzung:** Kein Twitch-/YouTube-SDK, kein OAuth, EventSub, Backend, WebSocket oder Web-
+  Overlay; keine Bits, Donations, Subs oder Channel Points; keine Cloud, kein zweiter Renderer,
+  keine neue Room-Entity, kein StoryManager und keine direkte Aenderung von Needs, Skills,
+  Emotionen, Position oder Ziel.
+- **Betroffene Bereiche:** `stream/StreamInteraction.kt`, begrenzte Stellen in `DockScreen` und
+  `MainActivity`, ein kleiner optionaler `GoalInfluence` in der bestehenden Utility-Auswahl,
+  die Stream-Build-Variante, Reminder-Bedeutung, Save-Slot-Datum, Tests und die Architektur-/
+  Uebergabedokumente.
+- **Tests:** Neun neue Verhaltensfaelle erhoehen die Offline-Strecke von 290 auf 299 Tests:
+  Auto-Save, Vierergrenze, gueltige und fehlende Auswahl, Weitergabe an den bestehenden Adapter,
+  unveraenderter Normalmodus, Vorrang von Hunger, ein freiwilliges Arbeitsziel ohne Umweg ueber
+  Nahrung sowie Ausschluss medizinischer und frei beschrifteter Inhalte. Die Musikstrecke bleibt
+  mit 15 Tests gruen. Compose, beide App-Varianten und die erzeugte Stream-APK entscheidet die
+  vollstaendige Head-CI.
+- **Naechster Schritt:** NT-058 startet
+  `app-sim/build/outputs/apk/stream/app-sim-stream.apk` mindestens zwei Stunden im Emulator und
+  misst Stabilitaet, Aktivitaets-/Musikvielfalt, Auto-Save, Viewer-Reaktionen, Ressourcen und
+  Wiederanlauf. Erst danach folgt eine Entscheidung ueber Host und echte Plattformstrecke.

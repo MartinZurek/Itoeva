@@ -25,8 +25,9 @@ class LivingAgentTest {
         site: LivingSite = LivingSite.HOME,
         openSites: Set<LivingSite> = alleOffen,
         minuteOfDay: Int = 8 * 60,
-        day: Int = 0
-    ) = WorldState(day, minuteOfDay, site, coins, portions, openSites)
+        day: Int = 0,
+        nearbyProfiles: Set<String> = emptySet()
+    ) = WorldState(day, minuteOfDay, site, coins, portions, openSites, nearbyProfiles)
 
     private fun agent(
         hunger: Double = 0.0,
@@ -60,7 +61,12 @@ class LivingAgentTest {
         val essen = rang.first { it.goal == GoalKind.GET_FOOD }
         assertEquals(0.8, essen.needPressure, 1e-9)
         assertTrue("Kosten muessen einfliessen", essen.cost > 0.0)
-        assertEquals(essen.needPressure + essen.bias - essen.cost, essen.total, 1e-9)
+        assertEquals(
+            essen.needPressure + essen.bias + essen.learnedPreference +
+                essen.memoryInfluence + essen.socialValue - essen.cost,
+            essen.total,
+            1e-9
+        )
     }
 
     @Test
@@ -324,4 +330,213 @@ class LivingAgentTest {
             LivingSimulation.run(a, w, count = 60).events
         )
     }
+
+    // ================= Erinnerung und symbolische Begegnung =================
+
+    @Test
+    fun `PLAY und QUESTION werden aus echtem Zustand mit TIRED und NO beantwortet`() {
+        val stern = agent(
+            species = AvatarSpecies.STARLET,
+            weitere = arrayOf(NeedKind.SOCIAL to 0.8)
+        )
+        val beisammen = welt(nearbyProfiles = setOf("WYRMLING"))
+        val einladung = LivingSimulation.step(stern, beisammen)
+
+        assertEquals(GoalKind.CONNECT_WITH, einladung.agent.goal)
+        assertEquals(
+            setOf(SymbolicIntent.PLAY, SymbolicIntent.QUESTION),
+            einladung.messages.single().intents
+        )
+
+        val muede = agent(
+            species = AvatarSpecies.WYRMLING,
+            weitere = arrayOf(NeedKind.SOCIAL to 0.8, NeedKind.ENERGY to 0.9)
+        )
+        val antwort = LivingSimulation.respondToPlay(
+            muede,
+            einladung.world.copy(nearbyProfiles = setOf("STARLET")),
+            einladung.messages.single()
+        )
+
+        assertEquals(
+            setOf(SymbolicIntent.TIRED, SymbolicIntent.NO),
+            antwort.messages.single().intents
+        )
+        val beziehung = antwort.agent.relationships.getValue("STARLET")
+        assertTrue(beziehung.trust < 0.0)
+        assertTrue(beziehung.closeness < 0.0)
+        assertEquals(LivingEventKind.SYMBOLS_SENT, beziehung.lastInteraction?.kind)
+
+        val verstanden = LivingSimulation.receiveResponse(
+            einladung.agent,
+            einladung.world,
+            antwort.messages.single()
+        )
+        assertEquals(
+            setOf(SymbolicIntent.TIRED, SymbolicIntent.NO),
+            verstanden.agent.lastEvent?.intents
+        )
+        assertTrue(verstanden.agent.relationships.getValue("WYRMLING").trust < 0.0)
+    }
+
+    @Test
+    fun `dieselbe Einladung wird bei Kraft und sozialem Bedarf angenommen`() {
+        val request = SymbolicMessage(
+            senderProfileId = "STARLET",
+            recipientProfileId = "WYRMLING",
+            intents = setOf(SymbolicIntent.PLAY, SymbolicIntent.QUESTION),
+            atMinute = 10
+        )
+        val bereit = agent(
+            species = AvatarSpecies.WYRMLING,
+            weitere = arrayOf(NeedKind.SOCIAL to 0.7, NeedKind.ENERGY to 0.1)
+        )
+        val antwort = LivingSimulation.respondToPlay(
+            bereit,
+            welt(nearbyProfiles = setOf("STARLET")),
+            request
+        )
+
+        assertEquals(
+            setOf(SymbolicIntent.PLAY, SymbolicIntent.YES),
+            antwort.messages.single().intents
+        )
+        val beziehung = antwort.agent.relationships.getValue("STARLET")
+        assertTrue(beziehung.trust > 0.0)
+        assertTrue(beziehung.closeness > 0.0)
+        assertEquals(GoalKind.CONNECT_WITH, antwort.agent.episodes.last().event.goal)
+    }
+
+    @Test
+    fun `ein dringendes laufendes Ziel kann eine Spielanfrage verdraengen`() {
+        val request = SymbolicMessage(
+            senderProfileId = "STARLET",
+            recipientProfileId = "WYRMLING",
+            intents = setOf(SymbolicIntent.PLAY, SymbolicIntent.QUESTION),
+            atMinute = 10
+        )
+        val hungrig = agent(
+            hunger = 0.95,
+            species = AvatarSpecies.WYRMLING,
+            weitere = arrayOf(NeedKind.SOCIAL to 0.9, NeedKind.ENERGY to 0.1)
+        ).copy(goal = GoalKind.GET_FOOD)
+
+        val antwort = LivingSimulation.respondToPlay(
+            hungrig,
+            welt(nearbyProfiles = setOf("STARLET")),
+            request
+        )
+        assertEquals(
+            setOf(SymbolicIntent.FOOD, SymbolicIntent.NO),
+            antwort.messages.single().intents
+        )
+    }
+
+    @Test
+    fun `Episoden bleiben verdichtet und an einer festen Grenze`() {
+        var zustand = agent(weitere = arrayOf(NeedKind.FUN to 0.8))
+        var lage = welt()
+        repeat(AgentState.MAX_EPISODES + 7) {
+            val angewandt = ActionCatalog[ActionKind.PURSUE_INTEREST]
+                .applyTo(zustand, lage, GoalKind.HAVE_FUN)
+            zustand = angewandt.agent
+            lage = angewandt.world
+        }
+
+        assertEquals(AgentState.MAX_EPISODES, zustand.episodes.size)
+        assertTrue(zustand.episodes.all { it.event.kind == LivingEventKind.ACTION_DONE })
+        assertTrue(zustand.episodes.first().event.atMinute > 60)
+    }
+
+    @Test
+    fun `Erinnerung Beziehung und Geschmack bleiben in der Zielerklaerung sichtbar`() {
+        val vergangenheit = LivingEvent(
+            kind = LivingEventKind.SYMBOLS_RECEIVED,
+            atMinute = 30,
+            goal = GoalKind.CONNECT_WITH,
+            action = ActionKind.RECEIVE_RESPONSE,
+            counterpartProfileId = "STARLET",
+            intents = setOf(SymbolicIntent.PLAY, SymbolicIntent.YES)
+        )
+        val mitErfahrung = agent(
+            species = AvatarSpecies.WYRMLING,
+            weitere = arrayOf(NeedKind.SOCIAL to 0.6)
+        ).copy(
+            goal = GoalKind.CONNECT_WITH,
+            learnedPreferences = mapOf(GoalKind.CONNECT_WITH to 0.08),
+            episodes = listOf(Episode(vergangenheit, 1)),
+            relationships = mapOf(
+                "STARLET" to RelationshipState(
+                    trust = 0.5,
+                    closeness = 0.4,
+                    interactions = 2,
+                    lastInteraction = vergangenheit
+                )
+            )
+        )
+        val erklaerung = LivingSimulation.explain(
+            mitErfahrung,
+            welt(nearbyProfiles = setOf("STARLET"))
+        )
+        val verbinden = erklaerung.ranking.first { it.goal == GoalKind.CONNECT_WITH }
+
+        assertEquals(0.08, verbinden.learnedPreference, 1e-9)
+        assertTrue(verbinden.memoryInfluence > 0.0)
+        assertTrue(verbinden.socialValue > 0.0)
+        assertEquals(listOf(Episode(vergangenheit, 1)), erklaerung.influentialEpisodes)
+        assertEquals(2, erklaerung.relationships.getValue("STARLET").interactions)
+    }
+
+    @Test
+    fun `aehnlich gestartete Agenten entwickeln ohne Plot verschiedene Geschichten`() {
+        val beduerfnisse = Needs.of(
+            NeedKind.FUN to 0.65,
+            NeedKind.SOCIAL to 0.65,
+            NeedKind.ENERGY to 0.1
+        )
+        val startA = AgentState("A", Personality(), beduerfnisse)
+        val startB = AgentState("B", Personality(), beduerfnisse)
+
+        val ersterA = LivingSimulation.step(startA, welt(portions = 2))
+        val ersterB = LivingSimulation.step(
+            startB,
+            welt(portions = 2, nearbyProfiles = setOf("FREUND"))
+        )
+        assertEquals(GoalKind.HAVE_FUN, ersterA.agent.goal)
+        assertEquals(GoalKind.CONNECT_WITH, ersterB.agent.goal)
+
+        val freund = AgentState(
+            "FREUND",
+            Personality(goalBias = mapOf(GoalKind.CONNECT_WITH to 0.1)),
+            Needs.of(NeedKind.SOCIAL to 0.8, NeedKind.ENERGY to 0.1)
+        )
+        val antwort = LivingSimulation.respondToPlay(
+            freund,
+            ersterB.world.copy(nearbyProfiles = setOf("B")),
+            ersterB.messages.single()
+        )
+        val bNachBegegnung = LivingSimulation.receiveResponse(
+            ersterB.agent,
+            ersterB.world,
+            antwort.messages.single()
+        )
+        assertTrue(
+            bNachBegegnung.agent.episodes.any {
+                it.event.kind == LivingEventKind.SYMBOLS_RECEIVED &&
+                    SymbolicIntent.YES in it.event.intents
+            }
+        )
+        val mehrereTageA = LivingSimulation.run(ersterA.agent, ersterA.world, count = 120)
+        val mehrereTageB = LivingSimulation.run(
+            bNachBegegnung.agent,
+            bNachBegegnung.world,
+            count = 120
+        )
+
+        assertTrue(mehrereTageA.world.day >= 2)
+        assertTrue(mehrereTageB.world.day >= 2)
+        assertTrue(mehrereTageA.agent.learnedPreferences != mehrereTageB.agent.learnedPreferences)
+        assertTrue(mehrereTageA.agent.episodes != mehrereTageB.agent.episodes)
+    }
+
 }
