@@ -111,6 +111,15 @@ object PlayTalk {
         val progress: Float get() = xpInLevel.toFloat() / xpPerLevel
     }
 
+    /**
+     * Geld und Vorrat aus der gerade laufenden Welt.
+     *
+     * Getrennt vom restlichen Spielstand, weil der Living Agent sie profilbezogen fuehrt,
+     * waehrend Erfahrung weiterhin aus Room kommt. Das Gespraech muss beide Quellen in EINEM
+     * Bild zusammenfuehren, ohne die alte globale Ablage zur zweiten Wahrheit zu machen.
+     */
+    data class GameResources(val coins: Int, val pantry: Int)
+
     data class Knowledge(
         val plan: List<PlanEntry>,
         /** Wie oft heute insgesamt reagiert wurde. */
@@ -587,7 +596,9 @@ object PlayTalk {
         context: Context,
         companionProfileId: String,
         /** Im Spielmodus kommt der Spielstand dazu - siehe [Game]. */
-        includeGame: Boolean = false
+        includeGame: Boolean = false,
+        /** Aktuelle profilbezogene Weltwerte; ohne Living-Snapshot gilt der alte Startwert. */
+        gameResources: GameResources? = null
     ): Knowledge {
         val db = AppDatabase.getInstance(context)
         val since = FeedStatsPeriod.TODAY.startMillis()
@@ -624,14 +635,15 @@ object PlayTalk {
         val history = summariseHistory(longTimestamps)
 
         val game = if (includeGame) {
-            // Die Erfahrung steht in der Datenbank, Geld und Vorrat in den Einstellungen - beides
-            // hier zusammengefuehrt, damit das Gespraech nur EINE Quelle kennt.
+            // Erfahrung bleibt in der Datenbank; Geld und Vorrat kommen nach dem ersten
+            // Living-Schritt aus dessen profilbezogener Welt. Bis dahin bewahren die alten
+            // Preferences den bisherigen Startstand.
             val xp = db.avatarPlayStateDao().getForProfile(companionProfileId)?.xp ?: 0
             Game(
                 level = PlayModeXp.levelFor(xp),
                 xp = xp,
-                coins = PlayWallet.coins(context),
-                pantry = PlayPantry.level(context)
+                coins = gameResources?.coins ?: PlayWallet.coins(context),
+                pantry = gameResources?.pantry ?: PlayPantry.level(context)
             )
         } else {
             null

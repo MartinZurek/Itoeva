@@ -13,8 +13,8 @@ eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, 
 erst dann einen Asset-PR oeffnen.
 
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
-[`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067 und NT-064 (Schnitte 2a, 2b und 3)
-sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter
+[`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064 und NT-065 (Schnitte 2a, 2b, 3
+und 4) sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter
 `app-sim/src/main/java/com/notime/glyphsim/living/`. Zielwahl, Ressourcenplan, Neuplanung,
 begrenzte Episoden, gelernte Zielpraeferenzen, Beziehungen und symbolische Verstaendigung sind
 deterministisch belegt.
@@ -26,10 +26,19 @@ Version 1 wird beim Lesen angehoben; unbekannte Zukunftsversionen werden abgeleh
 Wiedereinstieg bekommt die Simulationsminute explizit, behaelt das Ziel und verwirft den alten
 Plan, damit aktuelle Orte und Nachbarn neu geprueft werden. Room und `:core` blieben unangetastet.
 
-Naechster Schnitt ist **NT-065**: den Kern an die vorhandene `PlayRoutine`-/Weltpipeline
-anbinden und den harten Notfall-Sonderfall in `DockScreen` dabei ersetzen, nicht verdoppeln.
-Danach folgen Stream-Snapshot (NT-066) und der begrenzte Streaming-PoC (NT-058), jeweils als
-eigener PR.
+`LivingRuntimeAdapter` bildet die sechzehn sichtbaren Orte auf die vier Domaenenorte ab,
+uebergibt Oeffnungszeiten und waehlt fuer Kernhandlungen vorhandene `PlayRoutine`-Choreografie.
+Der harte `mustEarn`-Sonderfall in `DockScreen` ist entfernt. Kernwirkungen werden erst nach
+einem vollstaendigen sichtbaren Ablauf gespeichert; ein Abbruch durch eine echte Erinnerung
+verbucht nichts vorzeitig. Bestehende `PlayWallet`-/`PlayPantry`-Werte werden beim ersten
+Anschluss als Startwert uebernommen, danach sind die Ressourcen profilbezogen. Erbetene Arbeit
+und Einkaeufe laufen durch dieselbe Wirtschaft, das Gespraech stellt sie schon vor der ersten
+autonomen Handlung wieder her, und zusammengefasste Ablaufe pruefen Oeffnungszeiten nach jedem
+fortgeschrittenen Kernschritt erneut.
+
+Naechster Schnitt ist **NT-066**: read-only Snapshot-/Event-Quelle und Mehrtages-Langlauftest
+fuer den spaeteren Stream-Vertrag. Danach folgt der begrenzte Streaming-PoC (NT-058), jeweils
+als eigener PR.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
@@ -44,9 +53,9 @@ Drei Dinge, die man beim Weiterbauen wissen muss:
 - **Persistenz behaelt das Ziel, aber nie den Plan.** Geoeffnete Orte und anwesende Wesen
   kommen beim Laden aus dem aktuellen Runtime-Kontext; damit kann ein alter Snapshot keine
   ungueltige Voraussetzung umgehen.
-- **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung gehoert in den
-  Runtime-Adapter (NT-065), nicht in die Domaene. `DockScreen.kt` fuer die reinen Schnitte nicht
-  anfassen und niemals als Ganzes lesen.
+- **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung steht allein in
+  `LivingRuntimeAdapter`, nicht in der Domaene. `DockScreen.kt` niemals als Ganzes lesen; NT-065
+  hat nur die Ablaufgrenze und den bisherigen Notfallzweig gezielt geaendert.
 
 ## 2. Harte Regeln fuer die Musik
 
@@ -79,7 +88,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 277 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 287 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 

@@ -186,10 +186,11 @@ Compose noch Android, Room oder Renderer.
 die Voraussetzungen des naechsten Schritts unmittelbar vor der Ausfuehrung - nicht beim Planen.
 Faellt eine Voraussetzung, faellt der Plan und das ZIEL bleibt; der naechste Schritt leitet aus
 derselben Absicht einen anderen Weg ab. Daran haengt der Unterschied zwischen einem lebendigen
-Wesen und einer festen Animationsfolge. Erinnerung, Beziehungen und symbolische Verstaendigung
-folgen im Schnitt 2b.
+Wesen und einer festen Animationsfolge. Erinnerung, Beziehungen, symbolische Verstaendigung und
+profilbezogene Persistenz stehen seit NT-067/NT-064 ebenfalls.
 
-Die bestehende Architektur bleibt die Ausfuehrungsebene:
+Seit NT-065 verbindet `LivingRuntimeAdapter` diese Domaene mit der bestehenden
+Ausfuehrungsebene:
 
 - `PlayRoutine` und `RoutineStep` choreografieren gewaehlte Aktionen.
 - `PlayScene`, `PlayPantry`, `PlayWallet`, `PlayPresence` und `PlayTimeLapse` liefern
@@ -198,9 +199,19 @@ Die bestehende Architektur bleibt die Ausfuehrungsebene:
 - `AvatarSpecies` liefert nur Startbias; Erfahrungen duerfen Praeferenzen veraendern.
 - Besuche werden spaeter ueber einen typisierten Symbolvertrag statt feste Punktblasen entschieden.
 
+Der Adapter bereitet Kernwirkung und vorhandene `PlayRoutine` gemeinsam vor. Erst wenn die
+Routine vollstaendig beendet ist, wird der profilbezogene Snapshot uebernommen; eine dazwischen
+kommende echte Erinnerung kann deshalb keine unsichtbar bereits bezahlte oder verdiente Handlung
+hinterlassen. Die alte harte `Vorrat leer und Geld fehlt -> WORK`-Abzweigung in `DockScreen` ist
+entfallen. `PlayAmbientActivity` bestimmt bei Freizeit weiterhin die sichtbare Variante, aber
+nicht mehr, ob Hunger, Energie oder soziale Naehe uebergangen werden. Dieselbe Adaptergrenze
+verbucht ausdruecklich erbetene Routinen, ohne das autonome Ziel zu ueberschreiben, und stellt
+den Zustand vor dem ersten Gespraech wieder her. Oeffnungszeiten werden vor jedem in einer
+Routine zusammengefassten Kernschritt erneut bestimmt.
+
 Es entsteht keine zweite Engine und kein `StoryManager`. Der Kern wird zuerst mit
-deterministischen JVM-Tests bewiesen, danach profilbezogen persistiert und erst dann gezielt an
-`DockScreen` angeschlossen. Eine eventuelle Auslagerung in ein neues Modul bleibt bis zu
+deterministischen JVM-Tests bewiesen, profilbezogen persistiert und gezielt an `DockScreen`
+angeschlossen. Eine eventuelle Auslagerung in ein neues Modul bleibt bis zu
 Messdaten aus dem Streaming-PoC offen.
 
 ## Öffentliche 24/7-Charakter-Streams (Zielarchitektur, nicht implementiert)

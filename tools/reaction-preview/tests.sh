@@ -66,6 +66,7 @@ SRCS=(
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
   "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
+  "$SIM/LivingRuntimeAdapter.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
   "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
@@ -97,6 +98,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayCharacterThemeTest.kt"
   "$TEST/matrix/ScenePreview.kt"
   "$TEST/matrix/PlayRoutineTest.kt"
+  "$TEST/matrix/LivingRuntimeAdapterTest.kt"
   "$TEST/matrix/PlayVisitWindowTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
@@ -126,6 +128,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayMusicRotationTest
   com.notime.glyphsim.matrix.PlayCharacterThemeTest
   com.notime.glyphsim.matrix.PlayRoutineTest
+  com.notime.glyphsim.matrix.LivingRuntimeAdapterTest
   com.notime.glyphsim.matrix.PlayVisitWindowTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest
