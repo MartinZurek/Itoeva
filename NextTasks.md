@@ -21,19 +21,19 @@ Quest-/Plotmaschine, keine zweite Renderpipeline und keine Cloud- oder Plattform
 eigene Entscheidung. Jeder Schnitt muss klein, deterministisch testbar und einzeln ruecksetzbar
 sein.
 
-Der Streaming-PoC NT-058 bleibt wichtig, folgt aber auf den ersten erklaerbaren Agenten-Slice:
-Er soll nicht nur die heutige Zufallsvielfalt, sondern ein nachvollziehbares virtuelles Leben
-beobachten koennen.
+Der lokale Stream-Client NT-068 ist als Build-Variante derselben `:app-sim`-Runtime umgesetzt.
+Der Messlauf NT-058 bleibt wichtig: Er soll nun nicht nur ein nachvollziehbares virtuelles Leben,
+sondern auch Auto-Save und begrenzte Viewer-Impulse ueber einen laengeren Lauf beobachten.
 
 ## Top 15 - nach Hebel geordnet
 
 Format je Aufgabe: **Rang - ID** - Aufgabe. *Erfolgskriterium.* (Abhaengigkeit; Aufwand)
 
 1. **NT-058** - Begrenzten End-to-End-PoC fuer genau einen oeffentlichen Charakter durchfuehren:
-   aktuelle `:app-sim` im Emulator, Spielmodus dauerhaft sichtbar, Bild und App-Audio ueber OBS
+   `:app-sim:assembleStream` im Emulator, Spielmodus dauerhaft sichtbar, Bild und App-Audio ueber OBS
    mindestens zwei Stunden lokal aufzeichnen. *`docs/streaming-poc.md` dokumentiert Stabilitaet,
-   Vielfalt, Musik, erklaerbaren Agentenzustand, Ressourcenverbrauch und Neustartverhalten.*
-   (NT-066; 120 min plus Beobachtungszeit)
+   Vielfalt, Musik, Auto-Save, lokale Viewer-Impulse, erklaerbaren Agentenzustand,
+   Ressourcenverbrauch und Neustartverhalten.* (NT-068; 120 min plus Beobachtungszeit)
 2. **NT-051** - Pruefen, ob der Bereichsdetektor aus `verify.yml` auch der Builder-Session einen
    kleineren relevanten Kontext geben kann. *Machbarkeit bewertet, gegebenenfalls prototypisch
    umgesetzt.* (keine; 90 min)

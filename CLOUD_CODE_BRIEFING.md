@@ -29,9 +29,12 @@ keine Handlung vor. Kein `StoryManager`, kein freier Textdialog, keine zweite We
 Zuerst reiner deterministischer Kern, dann profilbezogene Persistenz, dann bestehende
 `PlayRoutine`-Anbindung und zuletzt der read-only Stream-Vertrag.
 
-Diese fuenf Schnitte sind seit NT-066 abgeschlossen. Der naechste freigegebene Schritt ist der
-begrenzte lokale Emulator-/OBS-PoC NT-058. Er misst genau eine Instanz und nimmt keine Cloud-,
-Plattform- oder Mehrinstanz-Architektur vorweg.
+Diese fuenf Schnitte sind seit NT-066 abgeschlossen. NT-068 stellt darauf eine separat
+installierbare Stream-Build-Variante derselben `:app-sim`-Runtime, vier automatisch belegte
+Save-Slots und einen lokalen Viewer-Simulator. Ein Impuls ist nur ein begrenzter Zielanreiz;
+dringende oder laufende Agentenziele behalten Vorrang. Der naechste Schritt ist der lokale
+Emulator-/OBS-Messlauf NT-058. Echte Twitch-/YouTube-, Netzwerk-, Konto- und Bezahltechnik bleibt
+weiterhin unfreigegeben.
 
 ## Was gerade geändert wurde
 

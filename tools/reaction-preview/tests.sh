@@ -76,7 +76,8 @@ SRCS=(
   # Genau deshalb laeuft seine Verhaltensstrecke hier und nicht erst in der CI.
   "$LIV/LivingWorld.kt" "$LIV/LivingNeed.kt" "$LIV/LivingAction.kt"
   "$LIV/LivingPlanner.kt" "$LIV/LivingAgent.kt"
-  "$STREAM/LivingObservationSource.kt"
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/ActionSlotState.kt"
+  "$STREAM/LivingObservationSource.kt" "$STREAM/StreamInteraction.kt"
   # Android sitzt nur hinter LivingAgentStorage; Codec und Store bekommen die Zeit explizit.
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/data/LivingAgentStore.kt"
   # Die Musik-Wiedergabeschicht: reines Kotlin bis auf MediaPlayer/AudioManager, fuer die
@@ -114,6 +115,7 @@ TEST_SRCS=(
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
   "$TEST/stream/LivingObservationSourceTest.kt"
+  "$TEST/stream/StreamInteractionTest.kt"
   "$TEST/data/LivingAgentStoreTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
@@ -145,6 +147,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
   com.notime.glyphsim.stream.LivingObservationSourceTest
+  com.notime.glyphsim.stream.StreamInteractionTest
   com.notime.glyphsim.data.LivingAgentStoreTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )

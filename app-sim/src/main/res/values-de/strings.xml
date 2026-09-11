@@ -348,6 +348,9 @@
     <string name="a11y_action_slot_empty">Speicherplatz %1$d, leer</string>
     <string name="a11y_action_slot_filled">Speicherplatz %1$d: %2$s</string>
     <string name="a11y_action_slot_apply">Auf das Wesen anwenden</string>
+    <string name="stream_slot_choose">Zuschauerauswahl fuer diesen Slot simulieren</string>
+    <string name="stream_viewer_ready">ZUSCHAUER-SIM · gespeicherten Impuls antippen</string>
+    <string name="stream_viewer_impulse">ZUSCHAUER · Slot %1$d · %2$s</string>
     <string name="a11y_clock_save_to_slot">In Speicherplatz %1$d ablegen</string>
     <string name="settings_timelapse">Zeitraffer (Test)</string>
     <string name="settings_timelapse_hint">Lässt einen ganzen Tag in etwa vier Minuten ablaufen, damit sich alle Szenen und Tageszeiten schnell ansehen lassen. Nur zum Ausprobieren – für den normalen Betrieb ausschalten.</string>

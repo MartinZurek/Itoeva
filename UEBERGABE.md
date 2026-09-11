@@ -43,9 +43,20 @@ nicht exportiert. `DockScreen` speist ihn nur nach Wiederherstellung oder einem 
 Runtime-Schritt. Der Vier-Tage-Test laeuft ueber `LivingRuntimeAdapter` und belegt deterministisch
 Hindernis, Neuplanung, Arbeit, Einkauf und Essen.
 
-Naechster Schritt ist **NT-058**: genau eine `:app-sim`-Instanz im Emulator mindestens zwei
+NT-068 setzt darauf den lokalen Stream-Client-PoC. Es gibt bewusst kein zweites Spiel und kein
+neues Anwendungsmodul: `:app-sim:assembleStream` baut dieselbe Runtime mit isolierter
+`applicationId` als debug-signierte APK. Die vorhandene Play-Mode-Erinnerung belegt dort den
+ersten freien der vier bestehenden Save-Slots automatisch. Ein Tippen simuliert die spaetere
+Viewer-Auswahl und erzeugt einen Twitch-neutralen `ExternalImpulse`. Dessen `GoalInfluence`
+bleibt unter dem Mindestdruck eines Grundbeduerfnisses; der Slot wird erst nach einer passenden,
+vollstaendig sichtbaren Agentenhandlung geleert. Medizin und frei beschriftete Inhalte gelangen
+nicht in den Stream-Pfad. Netzwerk, OAuth, Twitch, Bits, Subs und Backend fehlen absichtlich.
+
+Naechster Schritt ist **NT-058**: die Stream-APK im Emulator mindestens zwei
 Stunden lokal mit OBS beobachten und die Ergebnisse in `docs/streaming-poc.md` festhalten. Das
-ist Beobachtung, keine Freigabe fuer Cloud oder echte Twitch-/YouTube-Anbindung.
+ist Beobachtung, keine Freigabe fuer Cloud oder echte Twitch-/YouTube-Anbindung. Gebaut wird mit
+`./gradlew :app-sim:assembleStream`; der regulaere Pfad ist
+`app-sim/build/outputs/apk/stream/app-sim-stream.apk`.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
