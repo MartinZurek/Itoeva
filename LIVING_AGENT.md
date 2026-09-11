@@ -52,7 +52,13 @@ Agent System in der APK nicht", und das war genau richtig beobachtet.
 
 `LivingSymbols` schliesst diese Luecke an der Stelle, an der die Entscheidung entsteht: Es
 uebersetzt eine `AgentExplanation` in **zwei** Symbole - den Wunsch und, falls vorhanden, das
-Hindernis. Zusammen ergeben sie die kleinste Geschichte, die diese Welt erzaehlen kann; "ich
+Hindernis.
+
+Ueber dem Kopf bleibt danach **ausschliesslich Symbolik**. Auch der Halbsatz "das hast du dir
+heute auch vorgenommen" (`PlaySpeech.habitHint`) faellt weg - ausdrueckliche Entscheidung vom
+2026-09-11. Die Verbindung zwischen dem Tag des Wesens und dem des Nutzers geht dadurch nicht
+verloren, sie wechselt nur den Ort: Sie steht im Gespraech beim Antippen, wo sie eine Antwort
+auf eine Frage ist statt ein ungefragter Hinweis. Zusammen ergeben sie die kleinste Geschichte, die diese Welt erzaehlen kann; "ich
 will essen" plus "mir fehlt Geld" ist bereits ein Konflikt. Die Anzeige dieser Symbole ueber dem
 Kopf ist der naechste Schnitt (NT-069) und ersetzt dabei den gewuerfelten Satz.
 

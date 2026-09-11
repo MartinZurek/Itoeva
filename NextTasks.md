@@ -42,6 +42,14 @@ Format je Aufgabe: **Rang - ID** - Aufgabe. *Erfolgskriterium.* (Abhaengigkeit; 
    erkennbar, WAS das Wesen will und WORAN es haengt; kein freier Text mehr ueber dem Kopf, der
    Text beim Antippen bleibt.* (LivingSymbols aus NT-063ff.; 1 PR - braucht zwei neue
    Pixel-Symbole fuer QUESTION und NO, die vor dem Merge angesehen werden sollten)
+
+   **Der Halbsatz verschwindet mit** (`PlaySpeech.habitHint`, "das hast du dir heute auch
+   vorgenommen"). Ausdrueckliche Entscheidung des Auftraggebers am 2026-09-11, nachgefragt und
+   beantwortet. Ueber dem Kopf bleibt damit ausschliesslich Symbolik - kein Resttext, auch kein
+   kurzer. Die Verbindung zwischen seinem Tag und deinem geht dadurch nicht verloren: Sie steht
+   weiterhin im Gespraech beim Antippen (`PlayTalk`, Nachahm-Vorschlag `Offer.Add`), und dort
+   ist sie eine Antwort auf eine Frage statt ein ungefragter Hinweis. Genau das war der
+   Einwand.
 3. **NT-051** - Pruefen, ob der Bereichsdetektor aus `verify.yml` auch der Builder-Session einen
    kleineren relevanten Kontext geben kann. *Machbarkeit bewertet, gegebenenfalls prototypisch
    umgesetzt.* (keine; 90 min)
