@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 10. September 2026
+# Uebergabe: Stand am 11. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -13,8 +13,8 @@ eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, 
 erst dann einen Asset-PR oeffnen.
 
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
-[`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064 und NT-065 (Schnitte 2a, 2b, 3
-und 4) sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter
+[`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064, NT-065 und NT-066 (Schnitte 2a,
+2b, 3, 4 und 5) sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter
 `app-sim/src/main/java/com/notime/glyphsim/living/`. Zielwahl, Ressourcenplan, Neuplanung,
 begrenzte Episoden, gelernte Zielpraeferenzen, Beziehungen und symbolische Verstaendigung sind
 deterministisch belegt.
@@ -36,9 +36,16 @@ und Einkaeufe laufen durch dieselbe Wirtschaft, das Gespraech stellt sie schon v
 autonomen Handlung wieder her, und zusammengefasste Ablaufe pruefen Oeffnungszeiten nach jedem
 fortgeschrittenen Kernschritt erneut.
 
-Naechster Schnitt ist **NT-066**: read-only Snapshot-/Event-Quelle und Mehrtages-Langlauftest
-fuer den spaeteren Stream-Vertrag. Danach folgt der begrenzte Streaming-PoC (NT-058), jeweils
-als eigener PR.
+Der read-only Vertrag liegt ausserhalb des Kerns unter
+`app-sim/.../stream/LivingObservationSource.kt`. Er liefert pro Profil einen flachen,
+sprachunabhaengigen Snapshot und hoechstens 32 wichtige juengste Ereignisse; `IDLE`-Ticks werden
+nicht exportiert. `DockScreen` speist ihn nur nach Wiederherstellung oder einem abgeschlossenen
+Runtime-Schritt. Der Vier-Tage-Test laeuft ueber `LivingRuntimeAdapter` und belegt deterministisch
+Hindernis, Neuplanung, Arbeit, Einkauf und Essen.
+
+Naechster Schritt ist **NT-058**: genau eine `:app-sim`-Instanz im Emulator mindestens zwei
+Stunden lokal mit OBS beobachten und die Ergebnisse in `docs/streaming-poc.md` festhalten. Das
+ist Beobachtung, keine Freigabe fuer Cloud oder echte Twitch-/YouTube-Anbindung.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
@@ -88,7 +95,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 287 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 289 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 

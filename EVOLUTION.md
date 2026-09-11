@@ -2417,3 +2417,58 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   der vollstaendigen Head-CI geprueft.
 - **Naechster Schritt:** NT-066 - eine read-only Snapshot-/Event-Quelle und den Mehrtages-
   Langlauftest auf den nun wirklich ausgefuehrten Zustand setzen; weiterhin kein Twitch-UI.
+
+### 2026-09-11 - Living-Agent wird als Ereignisquelle beobachtbar (Schnitt 5)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Reiner Lesevertrag mit deterministischem
+  JVM-Langlauf ueber die echte Runtime-Adaptergrenze; noch keine Stream-Oberflaeche und keine
+  Plattformanbindung.
+- **Ausgangsproblem:** `AgentExplanation` konnte einen einzelnen Kernzustand erklaeren, aber es
+  gab keine laufende Quelle fuer eine spaetere Anzeige und kein begrenztes Ereignisfenster. Der
+  vorhandene Mehrtagesbeleg lief direkt durch `LivingSimulation.run` und bewies damit nicht,
+  dass Oeffnungszeiten, Ortsabbildung und zusammengefasste Pixelwelt-Routinen ueber mehrere Tage
+  zusammenpassen.
+- **Entscheidung:** `LivingObservationSource` ist der ausschliessliche Lesevertrag.
+  `LivingObservation` legt die fuer Zuschauerfragen relevanten typisierten Felder flach: Zeit,
+  staerkstes Beduerfnis, Wunsch, dessen aufgeschluesselten `GoalScore`, Plan, naechste Handlung,
+  benanntes Hindernis, wirksame Episoden, Beziehungen und wichtigstes juengstes Ereignis.
+  `LivingObservationFeed` wird in `DockScreen` beim Restore und nach einem wirklich
+  abgeschlossenen Runtime-Schritt gespeist.
+- **Erster Beleg:** Ein bei 17:50 Uhr hungrig und mittellos gestartetes Wesen erreicht zwar den
+  Arbeitsplatz, trifft dort nach dem Weg aber auf den Feierabend. Der Vertrag meldet weiter
+  `GET_FOOD`, den gewaehlt berechneten Grund und `SiteOpen(WORKPLACE)` als Hindernis. Ueber vier
+  simulierte Tage folgen aus derselben Lage Warten und Neuplanung, Arbeit, Einkauf und Essen in
+  dieser Reihenfolge. Nur Startzustand und Bedeutungen stehen im Test; kein Story-Ablauf steht
+  im Produktionscode.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - Die neue Grenze liegt unter `app-sim/.../stream/`, nicht in den weiterhin genau fuenf
+    Kerndateien. Sie kennt weder Android noch Twitch, YouTube, OBS oder Netzwerk.
+  - Oeffentlich ist nur `LivingObservationSource.current`. Das interne Journal kann Beobachtung
+    aktualisieren, aber niemals Agent oder Welt veraendern.
+  - Das Ereignisfenster bleibt auf 32 Eintraege begrenzt. `IDLE` wird nicht aufgenommen;
+    Rohframes und Tick-Protokolle bleiben ausserhalb. Planzwischenschritte duerfen im Fenster
+    stehen, waehrend `importantEvent` nur eine fuer Zuschauer lesbare Wendung hervorhebt.
+  - Nach einem blockierten und verworfenen Plan bleibt das konkrete `Requirement` sichtbar,
+    solange der Agent wegen desselben Ziels wartet. Sobald wieder gehandelt wird, gilt keine
+    alte Blockade weiter.
+  - Die Runtime speist nur wiederhergestellte oder bereits abgeschlossene Ergebnisse ein. Eine
+    abgebrochene sichtbare Routine kann deshalb auch im Beobachtungskanal keine nur vorbereitete
+    Wirkung als Tatsache ausgeben.
+- **Abgrenzung:** Kein Twitch-UI, kein HTTP-/WebSocket-Endpunkt, keine Datei- oder Cloud-Ausgabe,
+  kein Plattformkonto, keine zweite Simulations- oder Ereignispipeline, keine Room-Aenderung,
+  keine Aenderung in `:core` und kein `StoryManager`.
+- **Betroffene Bereiche:** Neuer reiner Vertrag
+  `app-sim/.../stream/LivingObservationSource.kt`, gezielte Commit-Grenzen in `DockScreen.kt`,
+  `LivingObservationSourceTest.kt`, die ausdrueckliche Offline-Testliste sowie
+  `LIVING_AGENT.md`, `Architecture.md`, `CLOUD_CODE_BRIEFING.md`, `NextTasks.md`,
+  `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** Zwei neue Verhaltensfaelle erhoehen die Offline-Strecke von 287 auf 289 Tests. Sie
+  belegen den unveraenderlichen Lesezugriff samt benanntem Hindernis sowie einen zweimal exakt
+  gleichen Vier-Tage-Lauf ueber `LivingRuntimeAdapter`, das begrenzte Ereignisfenster und die
+  emergente Ressourcenfolge. `python3 -m unittest discover --start-directory tools/music`
+  bleibt mit 15 Tests unveraendert; Compose und die echte Prozessquelle entscheidet die
+  vollstaendige Head-CI.
+- **Naechster Schritt:** NT-058 - genau eine bestehende `:app-sim`-Instanz mindestens zwei
+  Stunden lokal im Emulator ueber OBS aufzeichnen und Stabilitaet, Vielfalt, Musik,
+  Erklaerbarkeit, Ressourcenverbrauch und Wiederanlauf dokumentieren. Keine Cloud- oder
+  Plattformintegration vor diesen Messdaten.

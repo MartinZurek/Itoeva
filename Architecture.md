@@ -209,6 +209,14 @@ verbucht ausdruecklich erbetene Routinen, ohne das autonome Ziel zu ueberschreib
 den Zustand vor dem ersten Gespraech wieder her. Oeffnungszeiten werden vor jedem in einer
 Routine zusammengefassten Kernschritt erneut bestimmt.
 
+Seit NT-066 liegt die Praesentationsgrenze unter `app-sim/.../stream/`.
+`LivingObservationSource` bietet ausschliesslich den aktuellen typisierten
+`LivingObservation`-Snapshot je Profil. `LivingObservationFeed` nimmt nur abgeschlossene
+Runtime-Ergebnisse auf, haelt ein begrenztes Ereignisfenster ohne Leerlauf-Ticks und veraendert
+weder Agent noch Welt. Damit kann ein spaeteres Overlay Wunsch, Grund, Handlung, Plan,
+Hindernis, wirksame Erinnerungen und das wichtigste juengste Ereignis lesen, ohne in die
+Simulation zurueckzuschreiben.
+
 Es entsteht keine zweite Engine und kein `StoryManager`. Der Kern wird zuerst mit
 deterministischen JVM-Tests bewiesen, profilbezogen persistiert und gezielt an `DockScreen`
 angeschlossen. Eine eventuelle Auslagerung in ein neues Modul bleibt bis zu

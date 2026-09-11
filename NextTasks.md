@@ -29,46 +29,46 @@ beobachten koennen.
 
 Format je Aufgabe: **Rang - ID** - Aufgabe. *Erfolgskriterium.* (Abhaengigkeit; Aufwand)
 
-1. **NT-066** - Read-only Snapshot/Event-Quelle und Mehrtages-Langlauftest ergaenzen.
-   *Ein kuenftiges Overlay kann aktuelle Handlung, Wunsch, Grund, Hindernis und wichtiges
-   juengstes Ereignis in einem stabilen Vertrag lesen; kein Twitch-UI.* (NT-065; 1 PR)
-2. **NT-058** - Begrenzten End-to-End-PoC fuer genau einen oeffentlichen Charakter durchfuehren:
+1. **NT-058** - Begrenzten End-to-End-PoC fuer genau einen oeffentlichen Charakter durchfuehren:
    aktuelle `:app-sim` im Emulator, Spielmodus dauerhaft sichtbar, Bild und App-Audio ueber OBS
    mindestens zwei Stunden lokal aufzeichnen. *`docs/streaming-poc.md` dokumentiert Stabilitaet,
    Vielfalt, Musik, erklaerbaren Agentenzustand, Ressourcenverbrauch und Neustartverhalten.*
    (NT-066; 120 min plus Beobachtungszeit)
-3. **NT-051** - Pruefen, ob der Bereichsdetektor aus `verify.yml` auch der Builder-Session einen
+2. **NT-051** - Pruefen, ob der Bereichsdetektor aus `verify.yml` auch der Builder-Session einen
    kleineren relevanten Kontext geben kann. *Machbarkeit bewertet, gegebenenfalls prototypisch
    umgesetzt.* (keine; 90 min)
-4. **NT-046** - Empirisch pruefen, welchen Kontext die Reviewer-Session erhaelt. *Gemessene
+3. **NT-046** - Empirisch pruefen, welchen Kontext die Reviewer-Session erhaelt. *Gemessene
    Tokenersparnis oder begruendete Beibehaltung.* (keine; 60 min)
-5. **NT-047** - Standard-Modellwahl je Aufgabentyp pruefen. *Auswahl begruendet dokumentiert oder
+4. **NT-047** - Standard-Modellwahl je Aufgabentyp pruefen. *Auswahl begruendet dokumentiert oder
    angepasst.* (keine; 45 min)
-6. **NT-005** - Gradle-Abhaengigkeits-Caching in den Hauptworkflows pruefen. *Gemessene
+5. **NT-005** - Gradle-Abhaengigkeits-Caching in den Hauptworkflows pruefen. *Gemessene
    Laufzeitwirkung.* (keine; 60 min)
-7. **NT-004** - Timeout-Werte aller Jobs pruefen und ergaenzen. *Jeder Job hat einen begruendeten
+6. **NT-004** - Timeout-Werte aller Jobs pruefen und ergaenzen. *Jeder Job hat einen begruendeten
     Grenzwert.* (keine; 30 min)
-8. **NT-002** - Klaeren, ob `runner/` noch gebraucht wird. *Doppelte Pflege ist begruendet
+7. **NT-002** - Klaeren, ob `runner/` noch gebraucht wird. *Doppelte Pflege ist begruendet
     beendet oder dokumentiert.* (menschliche Freigabe fuer Entfernen; 60 min)
-9. **NT-029** - `README.md` in kurzen Einstieg und Themendokumente aufteilen. *Unter 300
+8. **NT-029** - `README.md` in kurzen Einstieg und Themendokumente aufteilen. *Unter 300
     Zeilen, keine verlorenen Inhalte oder toten Links.* (keine; 90 min)
-10. **NT-030** - Kurze Zustaendigkeitsnotiz je Gradle-Modul ergaenzen. *Drei Dateien unter je 50
+9. **NT-030** - Kurze Zustaendigkeitsnotiz je Gradle-Modul ergaenzen. *Drei Dateien unter je 50
     Zeilen.* (keine; 60 min)
-11. **NT-009** - Flaky-Rate des Emulator-Jobs ueber die letzten 20 Laeufe messen. *Kennzahl und
+10. **NT-009** - Flaky-Rate des Emulator-Jobs ueber die letzten 20 Laeufe messen. *Kennzahl und
     gegebenenfalls neue Schwelle dokumentiert.* (keine; 60 min)
-12. **NT-050** - Tokenverbrauch der letzten zehn Evolutionslaeufe als Baseline dokumentieren.
+11. **NT-050** - Tokenverbrauch der letzten zehn Evolutionslaeufe als Baseline dokumentieren.
     *Zahl, Quelle und Datum stehen in der Architektur-/Evolutionsdokumentation.* (keine; 45 min)
 
-13. **NT-007** - Die durchschnittlichen Minutenkosten der letzten zehn abgeschlossenen
+12. **NT-007** - Die durchschnittlichen Minutenkosten der letzten zehn abgeschlossenen
     `evolve`-Laeufe ermitteln. *Zahl, Stichprobe und Messdatum bilden eine belastbare Baseline
     fuer weitere Workflow-Entscheidungen.* (keine; 60 min)
 
-14. **NT-008** - Die API-Level-Matrix gegen `minSdk` und `targetSdk` pruefen. *Unterstuetzte
+13. **NT-008** - Die API-Level-Matrix gegen `minSdk` und `targetSdk` pruefen. *Unterstuetzte
     Geraete, instrumentierte CI-Abdeckung und bewusst offene Luecken sind dokumentiert.*
     (keine; 45 min)
 
-15. **NT-010** - PLAY_STORE.md-Signierungsdokumentation gegen den `release`-Job abgleichen.
+14. **NT-010** - PLAY_STORE.md-Signierungsdokumentation gegen den `release`-Job abgleichen.
     *Dokumentation und tatsaechlicher Release-Ablauf widersprechen sich nicht.* (keine; 45 min)
+
+15. **NT-011** - Selbsttest fuer `backlog-select.sh` ergaenzen. *Die Auswahl des obersten offenen
+    Eintrags und die leere Warteschlange sind reproduzierbar belegt.* (keine; 60 min)
 
 ## Future Backlog
 
@@ -76,7 +76,7 @@ Kompakt, ohne volle Erfolgskriterien - wichtig, aber aktuell nicht unter den 15 
 Hebel auf Geschwindigkeit/Effizienz. Wird eine dieser Aufgaben durch veränderte Umstände
 hebelstärker als eine Top-15-Aufgabe, rückt sie beim nächsten Pflegedurchlauf nach (siehe unten).
 
-**Build/CI, weitere:** NT-011 Selbsttest für `backlog-select.sh` · NT-012 Gradle/AGP-
+**Build/CI, weitere:** NT-012 Gradle/AGP-
 Versionskonsistenz zwischen Workflows · NT-014 Branch-Protection-Stand nach Public-Wechsel
 prüfen · NT-001 acht leere Stimmungs-/Prozent-Dateien im Wurzelverzeichnis entfernen.
 
