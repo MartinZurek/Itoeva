@@ -237,7 +237,11 @@ object LivingSimulation {
 
         // 1. Ziel pruefen und gegebenenfalls neu waehlen.
         val altesZiel = zustand.goal
-        if (altesZiel == null || zustand.needs.pressure(altesZiel.drivenBy) < SATISFIED_BELOW) {
+        val planIstAbgeschlossen = zustand.plan == null || zustand.plan?.isDone == true
+        if (
+            altesZiel == null ||
+            (planIstAbgeschlossen && zustand.needs.pressure(altesZiel.drivenBy) < SATISFIED_BELOW)
+        ) {
             if (altesZiel != null) {
                 ereignisse += event(welt, LivingEventKind.GOAL_REACHED, goal = altesZiel)
             }

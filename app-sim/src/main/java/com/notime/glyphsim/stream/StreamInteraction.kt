@@ -141,8 +141,8 @@ internal object StreamInteractions {
     }
 
     private fun goalFor(type: AnimationType): GoalKind = when (type) {
-        AnimationType.DRINK,
-        AnimationType.WORK -> GoalKind.GET_FOOD
+        AnimationType.DRINK -> GoalKind.GET_FOOD
+        AnimationType.WORK -> GoalKind.EARN_MONEY
         AnimationType.REST,
         AnimationType.SLEEP -> GoalKind.REST
         AnimationType.BOOK,

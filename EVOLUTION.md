@@ -2516,11 +2516,12 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   `MainActivity`, ein kleiner optionaler `GoalInfluence` in der bestehenden Utility-Auswahl,
   die Stream-Build-Variante, Reminder-Bedeutung, Save-Slot-Datum, Tests und die Architektur-/
   Uebergabedokumente.
-- **Tests:** Acht neue Verhaltensfaelle erhoehen die Offline-Strecke von 290 auf 298 Tests:
+- **Tests:** Neun neue Verhaltensfaelle erhoehen die Offline-Strecke von 290 auf 299 Tests:
   Auto-Save, Vierergrenze, gueltige und fehlende Auswahl, Weitergabe an den bestehenden Adapter,
-  unveraenderter Normalmodus, Vorrang von Hunger sowie Ausschluss medizinischer und frei
-  beschrifteter Inhalte. Die Musikstrecke bleibt mit 15 Tests gruen. Compose, beide App-Varianten
-  und die erzeugte Stream-APK entscheidet die vollstaendige Head-CI.
+  unveraenderter Normalmodus, Vorrang von Hunger, ein freiwilliges Arbeitsziel ohne Umweg ueber
+  Nahrung sowie Ausschluss medizinischer und frei beschrifteter Inhalte. Die Musikstrecke bleibt
+  mit 15 Tests gruen. Compose, beide App-Varianten und die erzeugte Stream-APK entscheidet die
+  vollstaendige Head-CI.
 - **Naechster Schritt:** NT-058 startet
   `app-sim/build/outputs/apk/stream/app-sim-stream.apk` mindestens zwei Stunden im Emulator und
   misst Stabilitaet, Aktivitaets-/Musikvielfalt, Auto-Save, Viewer-Reaktionen, Ressourcen und

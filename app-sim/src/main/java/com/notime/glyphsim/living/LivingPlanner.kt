@@ -22,7 +22,10 @@ enum class GoalKind {
     DEVELOP,
 
     /** Die Naehe eines wirklich anwesenden Wesens suchen. */
-    CONNECT_WITH;
+    CONNECT_WITH,
+
+    /** Geld durch eine normale, freiwillig gewaehlte Arbeit verdienen. */
+    EARN_MONEY;
 
     /**
      * Das Beduerfnis, dessen Druck dieses Ziel traegt.
@@ -39,6 +42,7 @@ enum class GoalKind {
             HAVE_FUN -> NeedKind.FUN
             DEVELOP -> NeedKind.GROWTH
             CONNECT_WITH -> NeedKind.SOCIAL
+            EARN_MONEY -> NeedKind.GROWTH
         }
 }
 
@@ -211,6 +215,9 @@ object Planner {
                 .sorted()
                 .firstOrNull()
                 ?.let { listOf(ActionCatalog.inviteToPlay(it)) }
+            GoalKind.EARN_MONEY -> if (LivingSite.WORKPLACE in world.openSites) {
+                goTo(LivingSite.WORKPLACE, world) + ActionCatalog[ActionKind.WORK]
+            } else null
         }
         return schritte?.let { Plan(goal, it) }
     }

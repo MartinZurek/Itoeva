@@ -1,6 +1,7 @@
 package com.notime.glyphsim.stream
 
 import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.GoalKind
 import com.notime.glyphsim.living.GoalInfluence
@@ -92,6 +93,27 @@ class StreamInteractionTest {
         val cleared = StreamInteractions.clearHandled(selected.state, selected.impulse)
         assertNull(cleared.slots.first())
         assertNull(cleared.pending)
+    }
+
+    @Test
+    fun `Work Impuls fuehrt trotz vollem Vorrat nur zur freiwilligen Arbeit`() {
+        val selected = selected(AnimationType.WORK)
+        val agent = AgentState("PUFFLING", Personality(), Needs.calm())
+
+        val prepared = LivingRuntimeAdapter.prepare(
+            agent = agent,
+            world = world(portions = 3),
+            renderedPlace = PlayScene.Place.LIVING,
+            interestTopic = selected.impulse.animationType,
+            random = Random(4),
+            goalInfluence = StreamInteractions.influenceFor(selected.impulse)
+        )
+
+        assertEquals(GoalKind.EARN_MONEY, prepared.result.agent.goal)
+        assertTrue(ActionKind.WORK in prepared.completedActions)
+        assertTrue(ActionKind.EAT !in prepared.completedActions)
+        assertTrue(StreamInteractions.wasHandled(selected.impulse, prepared))
+        assertNull(StreamInteractions.clearHandled(selected.state, selected.impulse).pending)
     }
 
     @Test
