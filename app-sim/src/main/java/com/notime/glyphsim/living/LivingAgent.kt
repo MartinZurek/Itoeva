@@ -226,18 +226,26 @@ object LivingSimulation {
      */
     const val SATISFIED_BELOW = 0.15
 
-    fun step(agent: AgentState, world: WorldState): StepResult {
+    fun step(
+        agent: AgentState,
+        world: WorldState,
+        influence: GoalInfluence? = null
+    ): StepResult {
         val ereignisse = mutableListOf<LivingEvent>()
         var zustand = agent
         var welt = world
 
         // 1. Ziel pruefen und gegebenenfalls neu waehlen.
         val altesZiel = zustand.goal
-        if (altesZiel == null || zustand.needs.pressure(altesZiel.drivenBy) < SATISFIED_BELOW) {
+        val planIstAbgeschlossen = zustand.plan == null || zustand.plan?.isDone == true
+        if (
+            altesZiel == null ||
+            (planIstAbgeschlossen && zustand.needs.pressure(altesZiel.drivenBy) < SATISFIED_BELOW)
+        ) {
             if (altesZiel != null) {
                 ereignisse += event(welt, LivingEventKind.GOAL_REACHED, goal = altesZiel)
             }
-            val neu = UtilitySelector.choose(zustand, welt)
+            val neu = UtilitySelector.choose(zustand, welt, influence)
             zustand = zustand.copy(goal = neu, plan = null)
             if (neu == null) {
                 // Nichts draengt. Der Agent tut nichts und die Zeit laeuft trotzdem weiter -

@@ -6,6 +6,7 @@ import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.GoalKind
+import com.notime.glyphsim.living.GoalInfluence
 import com.notime.glyphsim.living.LivingEvent
 import com.notime.glyphsim.living.LivingEventKind
 import com.notime.glyphsim.living.LivingSimulation
@@ -143,10 +144,11 @@ object LivingRuntimeAdapter {
         footballTrickLearned: Boolean = false,
         recentSpecials: List<PlayRoutines.SpecialActivity> = emptyList(),
         random: Random = Random.Default,
-        nearbyProfiles: Set<String> = emptySet()
+        nearbyProfiles: Set<String> = emptySet(),
+        goalInfluence: GoalInfluence? = null
     ): PreparedLivingRoutine {
         val startWorld = synchroniseWorld(world, renderedPlace, nearbyProfiles)
-        var result = LivingSimulation.step(agent, startWorld)
+        var result = LivingSimulation.step(agent, startWorld, goalInfluence)
         val firstAction = completedActions(result).firstOrNull()
             ?: return PreparedLivingRoutine(result, null, null, emptyList())
 

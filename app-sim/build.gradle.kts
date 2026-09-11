@@ -161,6 +161,22 @@ android {
             applicationIdSuffix = ".releasecheck"
             versionNameSuffix = "-releasecheck"
         }
+
+        /**
+         * Separat installierbarer Stream-Client derselben App-Runtime.
+         *
+         * Ein eigenes Anwendungsmodul koennte die Living- und Pixelwelt aus `:app-sim` nicht
+         * verwenden, ohne sie zu kopieren oder vorzeitig in ein neues Bibliotheksmodul zu
+         * verschieben. Diese debug-signierte Variante teilt dagegen jede Code- und
+         * Ressourcenquelle und schaltet nur die Stream-Praesentation ein.
+         */
+        create("stream") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            applicationIdSuffix = ".stream"
+            versionNameSuffix = "-stream"
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
     compileOptions {

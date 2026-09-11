@@ -40,7 +40,9 @@ data class ReminderAnimationEvent(
      * [com.notime.glyphcore.data.ReminderOpenDuration]) - der Dock-Modus laesst die Animation
      * entsprechend lange laufen, das Fuettern des Avatars bricht sie jederzeit vorzeitig ab.
      */
-    val openDurationSeconds: Int = com.notime.glyphcore.data.ReminderOpenDuration.DEFAULT_SECONDS
+    val openDurationSeconds: Int = com.notime.glyphcore.data.ReminderOpenDuration.DEFAULT_SECONDS,
+    /** Fachliche Bedeutung auch dann, wenn [animationType] wegen eines Bibliotheksmotivs null ist. */
+    val semanticType: AnimationType = animationType ?: AnimationType.GENERAL
 )
 
 object ReminderAnimationBus {

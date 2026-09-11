@@ -22,7 +22,10 @@ enum class GoalKind {
     DEVELOP,
 
     /** Die Naehe eines wirklich anwesenden Wesens suchen. */
-    CONNECT_WITH;
+    CONNECT_WITH,
+
+    /** Geld durch eine normale, freiwillig gewaehlte Arbeit verdienen. */
+    EARN_MONEY;
 
     /**
      * Das Beduerfnis, dessen Druck dieses Ziel traegt.
@@ -39,6 +42,7 @@ enum class GoalKind {
             HAVE_FUN -> NeedKind.FUN
             DEVELOP -> NeedKind.GROWTH
             CONNECT_WITH -> NeedKind.SOCIAL
+            EARN_MONEY -> NeedKind.GROWTH
         }
 }
 
@@ -61,10 +65,33 @@ data class GoalScore(
     /** Kleine Spur der juengsten passenden Erfolge und Fehlschlaege. */
     val memoryInfluence: Double = 0.0,
     /** Wert einer vorhandenen Beziehung fuer ein soziales Ziel. */
-    val socialValue: Double = 0.0
+    val socialValue: Double = 0.0,
+    /** Begrenzter Anstoss von ausserhalb der Simulation, niemals ein Befehl. */
+    val externalInfluence: Double = 0.0
 ) {
     val total: Double
-        get() = needPressure + bias + learnedPreference + memoryInfluence + socialValue - cost
+        get() = needPressure + bias + learnedPreference + memoryInfluence + socialValue +
+            externalInfluence - cost
+}
+
+/**
+ * Ein kleiner, fluechtiger Zielanreiz fuer Nutzer- oder spaetere Stream-Impulse.
+ *
+ * Er liegt absichtlich nicht im [AgentState]: Ein Zuschauer veraendert weder Bedarf noch
+ * Persoenlichkeit. Die Obergrenze unter [UtilitySelector.MIN_PRESSURE] sorgt zugleich dafuer,
+ * dass ein dringendes Grundbeduerfnis den Anstoss weiterhin ueberstimmen kann.
+ */
+data class GoalInfluence(
+    val goal: GoalKind,
+    val weight: Double = MAX_WEIGHT
+) {
+    init {
+        require(weight in 0.0..MAX_WEIGHT) { "weight must be between 0 and $MAX_WEIGHT" }
+    }
+
+    companion object {
+        const val MAX_WEIGHT = 0.15
+    }
 }
 
 /**
@@ -91,7 +118,11 @@ object UtilitySelector {
      * wenn erst gearbeitet werden muss, und billig, wenn der Vorrat voll ist. Genau das macht
      * aus derselben Beduerfnislage an zwei Tagen zwei verschiedene Entscheidungen.
      */
-    fun rank(agent: AgentState, world: WorldState): List<GoalScore> =
+    fun rank(
+        agent: AgentState,
+        world: WorldState,
+        influence: GoalInfluence? = null
+    ): List<GoalScore> =
         GoalKind.entries
             .map { goal ->
                 GoalScore(
@@ -112,14 +143,23 @@ object UtilitySelector {
                             .mapNotNull { agent.relationships[it] }
                             .maxOfOrNull { (it.trust + it.closeness) * RELATIONSHIP_WEIGHT }
                             ?: 0.0
-                    } else 0.0
+                    } else 0.0,
+                    externalInfluence = influence
+                        ?.takeIf { it.goal == goal }
+                        ?.weight
+                        ?: 0.0
                 )
             }
             .sortedWith(compareByDescending<GoalScore> { it.total }.thenBy { it.goal.ordinal })
 
     /** Das gewinnende Ziel - oder `null`, wenn nichts draengend genug ist. */
-    fun choose(agent: AgentState, world: WorldState): GoalKind? =
-        rank(agent, world).firstOrNull { it.needPressure >= MIN_PRESSURE }?.goal
+    fun choose(
+        agent: AgentState,
+        world: WorldState,
+        influence: GoalInfluence? = null
+    ): GoalKind? = rank(agent, world, influence)
+        .firstOrNull { it.needPressure >= MIN_PRESSURE || it.externalInfluence > 0.0 }
+        ?.goal
 
     private const val RECENT_EPISODES = 6
     private const val MEMORY_WEIGHT = 0.015
@@ -175,6 +215,9 @@ object Planner {
                 .sorted()
                 .firstOrNull()
                 ?.let { listOf(ActionCatalog.inviteToPlay(it)) }
+            GoalKind.EARN_MONEY -> if (LivingSite.WORKPLACE in world.openSites) {
+                goTo(LivingSite.WORKPLACE, world) + ActionCatalog[ActionKind.WORK]
+            } else null
         }
         return schritte?.let { Plan(goal, it) }
     }

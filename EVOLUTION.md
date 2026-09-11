@@ -2473,3 +2473,56 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Stunden lokal im Emulator ueber OBS aufzeichnen und Stabilitaet, Vielfalt, Musik,
   Erklaerbarkeit, Ressourcenverbrauch und Wiederanlauf dokumentieren. Keine Cloud- oder
   Plattformintegration vor diesen Messdaten.
+
+### 2026-09-11 - Lokaler Stream-Client mit begrenzten Viewer-Impulsen (NT-068)
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Separat installierbarer Android-PoC mit
+  deterministischen JVM-Belegen; die mehrstuendige Emulator-/OBS-Beobachtung bleibt NT-058.
+- **Ausgangsproblem:** Die Welt war lesbar, aber eine oeffentliche Instanz liess sich nur als
+  normale persoenliche App starten. Reminder mussten von Hand in Slots gezogen werden, und der
+  vorhandene Slot-Weg fuetterte den Avatar unmittelbar. Beides belegt weder einen eigenstaendigen
+  Stream-Client noch die Produktregel "Viewer influence != viewer control".
+- **Entscheidung:** Der Produktverantwortliche hat einen separaten Stream-Client und den lokalen
+  Interaktions-PoC ausdruecklich freigegeben. `:app-sim:assembleStream` baut deshalb dieselbe
+  Runtime debug-signiert mit eigener `applicationId`; ein neues `:app-stream`-Modul wurde bewusst
+  nicht angelegt. Das heutige Android-Anwendungsmodul kann nicht als Bibliothek konsumiert werden,
+  und Kopieren oder eine grosse vorzeitige Modulverschiebung haette eine zweite Spielpipeline
+  erzeugt.
+- **Erster Beleg:** Eine BOOK-Ausloesung belegt automatisch Slot 1, der lokale Viewer waehlt nur
+  diesen vorhandenen Slot, und der Living Agent entscheidet ueber einen kleinen `GoalInfluence`
+  selbst auf `DEVELOP`. Derselbe Impuls bleibt bei einem dringend hungrigen Agenten liegen,
+  waehrend `GET_FOOD` gewinnt. Erst eine passende abgeschlossene `PlayRoutine` verbraucht die
+  Ausloesung und leert den Slot.
+- **Architekturentscheidungen mit Bindung fuer alles Weitere:**
+  - `ExternalImpulse` traegt nur stabile IDs, typisierte Bedeutung, Quelle und explizite
+    Simulationsminute. Twitch, OAuth, Konten und Zahlungen bleiben ausserhalb.
+  - Der Impuls lebt fluechtig ausserhalb von `AgentState`. `GoalInfluence.MAX_WEIGHT` liegt mit
+    0,15 unter `UtilitySelector.MIN_PRESSURE`; Bedarf, Persoenlichkeit, Erinnerung, Beziehung und
+    laufende Ziele bleiben die Quelle der Entscheidung.
+  - Die normale App behaelt Ziehen und direktes Fuettern. Nur die Stream-Ressource schaltet
+    Auto-Save und Tap-Simulator ein. Beide APKs verwenden denselben `DockScreen`, denselben
+    `LivingRuntimeAdapter`, dieselben `PlayRoutine`s, Musik und Persistenzklassen.
+  - Die Stream-APK hat einen isolierten App-Speicher. Sie startet die vorhandene Play-Mode-
+    Erinnerung ueber Repository und Scheduler; weder persoenliche Reminder noch medizinische
+    oder frei beschriftete Inhalte gelangen in die Stream-Slots.
+  - Vier vorhandene `ActionSlotStore`-Plaetze bleiben die feste Grenze und ihre Positionen
+    bleiben dieselben wie im Spiel. Ein spaeteres transparentes Overlay kann daran ausgerichtet
+    werden, ohne den Renderer zu veraendern.
+- **Abgrenzung:** Kein Twitch-/YouTube-SDK, kein OAuth, EventSub, Backend, WebSocket oder Web-
+  Overlay; keine Bits, Donations, Subs oder Channel Points; keine Cloud, kein zweiter Renderer,
+  keine neue Room-Entity, kein StoryManager und keine direkte Aenderung von Needs, Skills,
+  Emotionen, Position oder Ziel.
+- **Betroffene Bereiche:** `stream/StreamInteraction.kt`, begrenzte Stellen in `DockScreen` und
+  `MainActivity`, ein kleiner optionaler `GoalInfluence` in der bestehenden Utility-Auswahl,
+  die Stream-Build-Variante, Reminder-Bedeutung, Save-Slot-Datum, Tests und die Architektur-/
+  Uebergabedokumente.
+- **Tests:** Neun neue Verhaltensfaelle erhoehen die Offline-Strecke von 290 auf 299 Tests:
+  Auto-Save, Vierergrenze, gueltige und fehlende Auswahl, Weitergabe an den bestehenden Adapter,
+  unveraenderter Normalmodus, Vorrang von Hunger, ein freiwilliges Arbeitsziel ohne Umweg ueber
+  Nahrung sowie Ausschluss medizinischer und frei beschrifteter Inhalte. Die Musikstrecke bleibt
+  mit 15 Tests gruen. Compose, beide App-Varianten und die erzeugte Stream-APK entscheidet die
+  vollstaendige Head-CI.
+- **Naechster Schritt:** NT-058 startet
+  `app-sim/build/outputs/apk/stream/app-sim-stream.apk` mindestens zwei Stunden im Emulator und
+  misst Stabilitaet, Aktivitaets-/Musikvielfalt, Auto-Save, Viewer-Reaktionen, Ressourcen und
+  Wiederanlauf. Erst danach folgt eine Entscheidung ueber Host und echte Plattformstrecke.

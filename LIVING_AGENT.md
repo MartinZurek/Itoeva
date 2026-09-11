@@ -201,8 +201,13 @@ getrennt. Ein Stream exportiert nur den ausdruecklich freigegebenen oeffentliche
    `PlayPantry`, `PlayWallet`, `PlayPresence` und Besuchsfenster abbilden. Nur gezielte
    Aenderungen an `DockScreen`; keine zweite Choreografie-Pipeline.
 5. **Stream-Vertrag beobachten (erledigt, NT-066)**: read-only Snapshot/Event-Quelle fuer spaetere Overlays,
-   Langlauftest ueber mehrere simulierte Tage und Geraetepruefung der sichtbaren Ablaeufe. Noch
+   Langlauftest ueber mehrere simulierte Tage. Noch
    kein komplexes Twitch-UI und keine Plattformintegration.
+
+Nach dem Meilenstein nutzt NT-068 diesen Vertrag in einer separat installierbaren Stream-
+Build-Variante derselben `:app-sim`-Runtime. Ein `ExternalImpulse` wird als begrenzter,
+fluechtiger `GoalInfluence` bewertet; er setzt weder Bedarf noch Ziel oder Agentenzustand direkt.
+Die echte Plattform- und Netzwerkstrecke bleibt ausserhalb des Living-Agent-Kerns.
 
 Jede PR muss fuer sich klein, ruecksetzbar und gruen sein. Eine spaetere PR darf erst beginnen,
 wenn die vorherige gemergt und der neue `main`-Stand gelesen ist.

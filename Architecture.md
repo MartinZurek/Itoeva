@@ -219,10 +219,10 @@ Simulation zurueckzuschreiben.
 
 Es entsteht keine zweite Engine und kein `StoryManager`. Der Kern wird zuerst mit
 deterministischen JVM-Tests bewiesen, profilbezogen persistiert und gezielt an `DockScreen`
-angeschlossen. Eine eventuelle Auslagerung in ein neues Modul bleibt bis zu
-Messdaten aus dem Streaming-PoC offen.
+angeschlossen. Eine eventuelle Auslagerung der Welt in ein neues Bibliotheksmodul bleibt bis zu
+Messdaten aus dem Streaming-PoC offen; die Stream-APK kopiert diese Entscheidung nicht vorweg.
 
-## Öffentliche 24/7-Charakter-Streams (Zielarchitektur, nicht implementiert)
+## Öffentliche 24/7-Charakter-Streams (lokaler Client-PoC, Produktion nicht implementiert)
 
 ### Wie das Ziel zur heutigen Architektur passt
 
@@ -231,6 +231,30 @@ Avatar-Rendering, Tagesabläufe, Orte, Musikrollen und die sichtbare Spieloberfl
 Android-Emulator kann genau diese laufende Instanz darstellen; OBS kann ihr Bild und ihren Ton
 aufnehmen beziehungsweise an einen Streaming-Endpunkt senden. Das beweist den Zuschauerpfad,
 ohne vorzeitig einen zweiten Renderer oder eine Server-Spielengine zu erfinden.
+
+Seit NT-068 erzeugt `./gradlew :app-sim:assembleStream` eine separat installierbare,
+debug-signierte APK unter `app-sim/build/outputs/apk/stream/app-sim-stream.apk`. Sie ist bewusst
+eine Build-Variante von `:app-sim` und kein neues `:app-stream`-Anwendungsmodul: Ein Android-
+Anwendungsmodul kann nicht als gemeinsame Spielbibliothek konsumiert werden. Ein neues Modul
+muesste die heutige Living-/Pixelwelt daher kopieren oder vor den Laufzeitmessungen gross
+verschieben. Die Variante teilt dagegen Code, Renderer, Musik, Room-Schema und Living-Agent-
+Adapter vollstaendig, hat durch die abweichende `applicationId` aber einen isolierten lokalen
+Zustand und kann neben der normalen App installiert werden.
+
+Der Stream-Schalter veraendert nur die Praesentationsgrenze:
+
+- Die bestehende Play-Mode-Erinnerung entsteht weiter ueber Repository, Scheduler,
+  `ReminderTrigger` und `ReminderAnimationBus`.
+- Eine oeffentliche, typisierte Ausloesung belegt automatisch den ersten von vier vorhandenen
+  `ActionSlotStore`-Plaetzen. Medizin und frei beschriftete Inhalte werden verworfen.
+- Ein Tippen auf einen belegten Platz ist der lokale Viewer-Simulator. Es erzeugt einen
+  `ExternalImpulse` mit Simulationszeit und einen auf 0,15 begrenzten `GoalInfluence`.
+- Der Living Agent waehlt weiter selbst. Ein laufendes oder dringenderes Ziel bleibt bestehen;
+  erst eine passende, vollstaendig sichtbare `PlayRoutine` verbraucht Ausloesung und Slot.
+
+`ExternalImpulse` und `LivingObservationSource` sind die schmalen Schreib- beziehungsweise
+Lesegrenzen fuer ein spaeteres Backend. Weder Twitch noch OAuth, Netzwerk, Konten oder
+Bezahlrechte sind Teil dieses Schnitts.
 
 Der aktuelle Code ist jedoch eine Vordergrund-App, kein belegter 24/7-Dienst. Für einen
 Produktionsbetrieb fehlen unter anderem:
@@ -250,7 +274,7 @@ Reminder noch Nutzerhistorien, Konten oder medizinische Inhalte.
 
 | Stufe | Technischer Schnitt | Was damit gelernt wird | Noch nicht enthalten |
 |---|---|---|---|
-| 0 - lokaler PoC | Eine `:app-sim`-Instanz im Android-Emulator, Fenster- und Audioaufnahme in OBS, zunächst lokale Aufzeichnung oder privater Teststream | Bleibt das Avatarleben über Stunden interessant, stabil, korrekt skaliert und hörbar? | Cloud, 24/7-SLA, mehrere Charaktere, Zuschauerinteraktion |
+| 0 - lokaler PoC | Die Stream-Variante von `:app-sim` im Android-Emulator, lokaler Viewer-Simulator sowie Fenster- und Audioaufnahme in OBS | Bleiben Avatarleben, vier Slots und begrenzte Impulse ueber Stunden interessant, stabil, korrekt skaliert und hoerbar? | Cloud, 24/7-SLA, mehrere Charaktere, echte Plattformanbindung |
 | 1 - einzelner Betriebsprototyp | Ein isolierter Host mit genau einer öffentlichen Instanz, Prozessaufsicht, Neustart und Zustands-Checkpoint | Welche Laufzeit-, RAM-, CPU-, Encoder- und Wiederanlaufkosten entstehen wirklich? | Flotte aus sechs Instanzen, gemeinsame Welt |
 | 2 - wiederholbare Charakterinstanzen | Parametrisierter Start je Wesen, getrennte Zustände und standardisierte Gesundheitsprüfung | Lässt sich jede Figur unabhängig betreiben und aktualisieren? | Direkte Interaktion zwischen Instanzen |
 | 3 - sichere Weltbegegnungen | Kleiner typisierter Ereigniskanal zwischen öffentlichen Instanzen | Wie können Begegnungen koordiniert werden, ohne beliebige Fernsteuerung oder private Daten? | Zahlungen, ungeprüfter Freitext, offene Nutzerbefehle |
@@ -263,10 +287,11 @@ testbarer, erzeugt heute aber einen zweiten Laufzeitpfad, bevor bekannt ist, ob 
 
 ### Grenzen des ersten Proof-of-Concepts
 
-Der erste PoC verändert weder App-Code noch GitHub-Workflows noch Cloud-Infrastruktur. Er startet
-eine echte vorhandene `:app-sim`-Instanz, hält den Spielmodus sichtbar und zeichnet mindestens
-einen längeren Lauf über OBS auf. Dabei werden Stabilität, Aktivitätsvielfalt, Tagesphasen,
-Musikwechsel, Seitenverhältnis, CPU/RAM und Unterbrechungs-/Wiederanlaufverhalten protokolliert.
+Der erste PoC veraendert keine GitHub-Workflows oder Cloud-Infrastruktur. Er startet die echte
+vorhandene `:app-sim`-Runtime in ihrer Stream-Variante, haelt den Spielmodus sichtbar und zeichnet
+mindestens einen laengeren Lauf ueber OBS auf. Dabei werden Stabilitaet, Aktivitaetsvielfalt,
+Tagesphasen, Musikwechsel, Seitenverhaeltnis, CPU/RAM, Save-Slot-Interaktion und
+Unterbrechungs-/Wiederanlaufverhalten protokolliert.
 
 YouTube unterstützt laut seinen
 [Encoder-Hinweisen](https://support.google.com/youtube/answer/2853702) die Ausspielung über
