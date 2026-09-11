@@ -75,7 +75,7 @@ SRCS=(
   # Der reine Living-Agent-Kern (NT-063/NT-067) - kein Android, keine Uhr, kein Zufall.
   # Genau deshalb laeuft seine Verhaltensstrecke hier und nicht erst in der CI.
   "$LIV/LivingWorld.kt" "$LIV/LivingNeed.kt" "$LIV/LivingAction.kt"
-  "$LIV/LivingPlanner.kt" "$LIV/LivingAgent.kt"
+  "$LIV/LivingPlanner.kt" "$LIV/LivingAgent.kt" "$LIV/LivingSymbols.kt"
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/ActionSlotState.kt"
   "$STREAM/LivingObservationSource.kt" "$STREAM/StreamInteraction.kt"
   # Android sitzt nur hinter LivingAgentStorage; Codec und Store bekommen die Zeit explizit.
@@ -114,6 +114,7 @@ TEST_SRCS=(
   "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
+  "$TEST/living/LivingSymbolsTest.kt"
   "$TEST/stream/LivingObservationSourceTest.kt"
   "$TEST/stream/StreamInteractionTest.kt"
   "$TEST/stream/StreamRunbookTest.kt"
@@ -147,6 +148,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
+  com.notime.glyphsim.living.LivingSymbolsTest
   com.notime.glyphsim.stream.LivingObservationSourceTest
   com.notime.glyphsim.stream.StreamInteractionTest
   com.notime.glyphsim.stream.StreamRunbookTest

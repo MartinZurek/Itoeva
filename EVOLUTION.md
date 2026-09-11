@@ -2618,3 +2618,52 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Naechster Schritt:** Eine Datei `Itoeva-Stream-debug.apk` in Drive anlegen, dem
   Service-Konto als Bearbeiter freigeben und ihre Id als `GDRIVE_STREAM_APK_FILE_ID`
   eintragen. Danach NT-058 unveraendert.
+
+### 2026-09-11 - Der Living Agent entschied seit Wochen sichtbar nichts
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Befund plus erster, reiner Schnitt seiner
+  Behebung; deterministische JVM-Tests, keine Geraetepruefung noetig.
+- **Ausgangsproblem:** Gemeldet als "das Living Agent System sehe ich in der APK nicht". Die
+  Pruefung ergab: Es laeuft. `LivingRuntimeAdapter.prepare` entscheidet seit NT-065 bei jedem
+  Schritt in `DockScreen`, ungeschaltet und ohne Rueckfallpfad. Aber **nichts davon war zu
+  sehen**: Die vollstaendige `AgentExplanation` - Ziel, Begruendung, Plan, Hindernis, wirksame
+  Erinnerungen - ging in `LivingObservationFeed`, und den liest niemand; er ist fuer ein
+  kuenftiges Overlay gedacht. `grep` fand fuenf schreibende Aufrufe und keinen lesenden.
+- **Was stattdessen zu sehen war:** ein zufaellig gewuerfelter Satz aus `PlaySpeech`
+  (`CHANCE_PERCENT = 34`, eine von drei Regungen), der allein am Thema haengt und mit dem ZIEL
+  des Wesens nichts zu tun hat. Wer zusah, konnte deshalb nicht unterscheiden, ob die Figur
+  etwas wollte oder ob der Wuerfel es ergab - obwohl sie es seit Wochen wirklich will. Die
+  Beobachtung des Auftraggebers war damit exakt richtig, nur die Ursache eine andere als
+  vermutet: keine fehlende Anbindung, sondern eine fehlende Anzeige.
+- **Entscheidung:** `living/LivingSymbols.kt` uebersetzt eine `AgentExplanation` in **zwei**
+  Symbole - den Wunsch und, falls vorhanden, das Hindernis. Rein, ohne Android, an der Stelle,
+  an der die Entscheidung entsteht, statt an der, an der sie gezeichnet wird.
+- **Zwei Symbole und nicht eines:** Wunsch und Hindernis sind nicht gleichrangig. Zusammen
+  ergeben sie die kleinste Geschichte, die diese Welt erzaehlen kann - "ich will essen" plus
+  "mir fehlt Geld" ist bereits ein Konflikt, und Konflikte sind das, worauf man zusieht.
+  Einzeln waere jedes davon nur eine Zustandsanzeige.
+- **Drei Abbildungsentscheidungen, die im Code begruendet stehen:**
+  - `DEVELOP -> QUESTION` statt eines neuen zwoelften Symbols. Der Satz aus diesem Dokument ist
+    klein und soll es bleiben; "etwas wissen wollen" ist genau das, was DEVELOP antreibt.
+  - Fehlendes Geld zeigt `WORK`, nicht eine leere Hand: das Symbol nennt den AUSWEG, nicht den
+    Mangel. Ein Mangelsymbol liesse sich nicht von "kein Beduerfnis" unterscheiden.
+  - `Requirement.At` ist ausdruecklich KEIN Hindernis. Es heisst nur, dass das Wesen unterwegs
+    ist, und das sieht man ohnehin - es laeuft gerade. Ein Symbol dafuer haenge bei jedem
+    zweiten Schritt ueber dem Kopf und verdeckte die Faelle, in denen wirklich etwas fehlt.
+- **Kein freier Text, und warum der Text beim Antippen trotzdem bleibt:** Ein Satz ueber dem
+  Kopf ist in einem Stream fuer die Haelfte der Zuschauer wertlos, braucht je Sprache eine
+  Uebersetzung und verleitet dazu, dem Wesen Dinge in den Mund zu legen, die die Simulation gar
+  nicht weiss. Wer ausdruecklich fragt (`PlayTalkPanel`), bekommt weiterhin Sprache; wer nur
+  zusieht, bekommt ein Bild. Das ist der Unterschied zwischen einer Auskunft und einem Kommentar.
+- **Abgrenzung:** Diese PR zeigt noch nichts an - sie liefert die Uebersetzung, nicht die Blase.
+  Kein `DockScreen`, kein `PlaySpeech` entfernt, keine Verhaltensaenderung am Agenten, keine
+  neue Pixelgrafik. Die Anzeige ist NT-069 und braucht zwei neue Symbole (`QUESTION`, `NO`), die
+  vor dem Merge angesehen werden sollten - Pixelkunst blind zu schreiben waere der falsche Weg.
+- **Betroffene Dokumente:** `LIVING_AGENT.md` (neuer Kopfabschnitt "Was das System heute
+  wirklich ist" samt der gefundenen Luecke), `NextTasks.md`, dieses Protokoll.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 315 Tests gruen (vorher 303, davon 12 neu
+  in `LivingSymbolsTest`). Darunter die Zusicherung, dass jedes Ziel ein Symbol hat und keine
+  zwei Ziele dasselbe tragen - ein spaeter angehaengtes siebtes Ziel faellt damit auf, statt
+  stumm zu bleiben.
+- **Naechster Schritt:** NT-069 - die Blase ueber dem Kopf, die diese Symbole zeigt, und das
+  Ende des gewuerfelten Satzes.
