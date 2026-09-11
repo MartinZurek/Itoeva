@@ -58,6 +58,17 @@ ist Beobachtung, keine Freigabe fuer Cloud oder echte Twitch-/YouTube-Anbindung.
 `./gradlew :app-sim:assembleStream`; der regulaere Pfad ist
 `app-sim/build/outputs/apk/stream/app-sim-stream.apk`.
 
+**NT-058 braucht einen Menschen und ist von einer Agenten-Sitzung aus nicht zu erledigen.** Am
+2026-09-11 ist der Versuch daran gescheitert, dass in der Agentenumgebung weder Android SDK noch
+Android Gradle Plugin, Emulator, `adb`, `/dev/kvm` oder OBS existieren - `assembleStream` bricht
+schon beim Aufloesen des Plugins ab. Erfundene Messwerte waeren leicht gewesen und waren keine
+Option; alle Felder in `docs/streaming-poc.md` stehen weiterhin auf `TODO`.
+
+Vorbereitet ist dafuer alles Uebrige: Das Runbook zeigt jetzt auf die Stream-Variante statt auf
+die normale App (es tat das vorher NICHT - siehe Abschnitt 4), hat einen eigenen Messbogen fuer
+Slot-Belegung, Viewer-Impulse, Einfluss-statt-Steuerung, Erklaerbarkeit und Datenschutz, und
+`StreamRunbookTest` haelt Runbook und `app-sim/build.gradle.kts` ab jetzt zusammen.
+
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
 - Der Kern hat **kein Android, keine Uhr und keinen Zufall**. Zeit wird als `day` und
@@ -136,6 +147,12 @@ echten `ContextWrapper` braucht. Das prueft erst `gradlew verify` in CI.
 - **`JAVA_HOME` ist auf dem Rechner des Auftraggebers nicht gesetzt** - siehe `CLAUDE.md`. Und
   scheitert ein Build an einem Pfad unter `G:\Meine Ablage\...`: `gradlew.bat --stop` (siehe
   `UMZUG.md`).
+
+- **Ein Runbook rostet stiller als Code.** `docs/streaming-poc.md` schickte nach dem Bau des
+  Stream-Clients weiterhin zu `installDebug` und zur normalen `applicationId`. Nichts war rot,
+  niemand haette es bemerkt - erst nach zwei aufgezeichneten Stunden waere aufgefallen, dass die
+  falsche App gemessen wurde. Wo ein Dokument konkrete Befehle oder Bezeichner nennt, gehoert
+  ein Test daneben, der sie gegen die Quelle haelt (`StreamRunbookTest`).
 
 ## 5. Die automatische Pipeline (`claude-primary-run.yml`)
 

@@ -34,6 +34,9 @@ Format je Aufgabe: **Rang - ID** - Aufgabe. *Erfolgskriterium.* (Abhaengigkeit; 
    mindestens zwei Stunden lokal aufzeichnen. *`docs/streaming-poc.md` dokumentiert Stabilitaet,
    Vielfalt, Musik, Auto-Save, lokale Viewer-Impulse, erklaerbaren Agentenzustand,
    Ressourcenverbrauch und Neustartverhalten.* (NT-068; 120 min plus Beobachtungszeit)
+   **Runbook und Messbogen sind fertig; der Lauf selbst braucht einen Menschen an einem Rechner
+   mit Android Studio und OBS.** Eine Agentenumgebung hat weder SDK noch Emulator noch
+   Aufzeichnung - siehe den Abschnitt "Warum NT-058 weiterhin offen ist" im Runbook.
 2. **NT-051** - Pruefen, ob der Bereichsdetektor aus `verify.yml` auch der Builder-Session einen
    kleineren relevanten Kontext geben kann. *Machbarkeit bewertet, gegebenenfalls prototypisch
    umgesetzt.* (keine; 90 min)
