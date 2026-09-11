@@ -5,6 +5,13 @@
 # sich dadurch nichts am Ablauf - Drive-App oeffnen, Datei antippen, "Aktualisieren". Nur das
 # lokale Bauen davor entfaellt.
 #
+# **Seit 2026-09-11 entsteht daneben die Stream-APK** (Build-Typ `stream`, eigene
+# applicationId, startet direkt im Spielmodus - siehe app-sim/build.gradle.kts und
+# docs/streaming-poc.md). Sie liegt IMMER als Artefakt des Laufs bereit; nach Drive geht sie
+# nur, wenn dafuer eine eigene Datei eingerichtet ist (Variable GDRIVE_STREAM_APK_FILE_ID,
+# unten). Der Grund fuer die getrennte Datei: Beide Pakete liegen auf dem Telefon
+# nebeneinander, eine geteilte Drive-Datei enthielte abwechselnd das eine und das andere.
+#
 # **War zeitweise pausiert, ist es seit 2026-09-02 nicht mehr:** main und ein parallel
 # getesteter Feature-Branch teilen sich dieselbe Drive-Datei und dasselbe Telefon. Der
 # versionCode kam bis dahin aus `git rev-list --count` - der Commit-Anzahl DES JEWEILS
@@ -61,6 +68,14 @@
 #                               BESTEHENDE Datei aktualisieren statt eine neue anzulegen: nur so
 #                               bleiben Name, Link und Eigentuemer gleich, und das Telefon findet
 #                               die Datei am gewohnten Platz.
+#
+#   Variable GDRIVE_STREAM_APK_FILE_ID - dasselbe fuer die Stream-APK, EINZELN nachreichbar.
+#                               Fehlt sie, laeuft die gewohnte Tama-Ablieferung unveraendert
+#                               weiter und nur die Stream-Datei bleibt aus; die APK liegt dann
+#                               als Artefakt des Laufs. Zum Einrichten: eine Datei
+#                               Itoeva-Stream-debug.apk in Drive anlegen (Inhalt egal, sie wird
+#                               ueberschrieben), demselben Service-Konto als Bearbeiter
+#                               freigeben, Datei-Id hier eintragen.
 
 name: Deliver APK
 
@@ -189,6 +204,7 @@ jobs:
             echo "name=1.0.$CODE"
             echo "sha=$SHA"
             echo "archive=itoeva-dev-$(date -u +%Y%m%d)-$SHA.apk"
+            echo "archive_stream=itoeva-stream-$(date -u +%Y%m%d)-$SHA.apk"
           } >> "$GITHUB_OUTPUT"
           echo "versionCode $CODE, versionName 1.0.$CODE, Stand $SHA"
 
@@ -286,9 +302,17 @@ jobs:
           fi
           echo "Schluessel und Erwartung stimmen ueberein - der Bau kann beginnen."
 
-      - name: assembleDebug
+      # Beide Varianten in EINEM Aufruf: Der zweite Bau teilt sich den aufgewaermten Daemon,
+      # die aufgeloesten Abhaengigkeiten und den kompilierten :core - getrennt aufgerufen
+      # kostete er ein zweites Mal alles davon.
+      #
+      # `stream` ist kein zweites Spiel, sondern derselbe Code mit `stream_mode = true` und
+      # eigener applicationId (siehe app-sim/build.gradle.kts). Er entsteht hier, weil er
+      # sonst nur auf dem Rechner dessen existiert, der ihn zufaellig baut - und NT-058
+      # verlangt genau ihn im Emulator.
+      - name: assembleDebug und assembleStream
         run: >
-          ./gradlew :app-sim:assembleDebug
+          ./gradlew :app-sim:assembleDebug :app-sim:assembleStream
           -PitoevaVersionCode=${{ steps.version.outputs.code }}
           -PitoevaVersionName=${{ steps.version.outputs.name }}
           --stacktrace
@@ -303,35 +327,24 @@ jobs:
       # apksigner statt keytool: bei minSdk 26 signiert AGP ohne v1-/JAR-Signatur, es gibt
       # also kein META-INF/*.RSA, an dem sich das ablesen liesse.
       # -----------------------------------------------------------------------------------
+      #
+      # **Beide Pakete, nicht nur das erste.** `stream` erbt zwar dieselbe Signaturkonfiguration
+      # (`initWith(debug)` plus ausdrueckliches `signingConfig = debug`), aber "erbt laut
+      # Build-Datei" und "traegt tatsaechlich dasselbe Zertifikat" sind zwei verschiedene
+      # Aussagen - und die zweite ist die, an der eine Installation auf dem Telefon scheitert.
+      # Ab der zweiten Auslieferung gilt fuer die Stream-APK genau dasselbe wie fuer die
+      # normale: falsches Zertifikat, kein Update.
       - name: Signatur nachweisen
         env:
           EXPECTED: ${{ vars.EXPECTED_SIGNER_SHA256 }}
         run: |
           set -euo pipefail
-          APK=app-sim/build/outputs/apk/debug/app-sim-debug.apk
-          if [ ! -f "$APK" ]; then
-            echo "::error::$APK wurde nicht erzeugt."
-            exit 1
-          fi
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
           APKSIGNER="$(ls -1 "$SDK"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)"
           if [ -z "$APKSIGNER" ]; then
             echo "::error::apksigner nicht gefunden - Signatur nicht pruefbar, Abbruch."
             exit 1
           fi
-          # Erst einsammeln, dann auswerten - und die Auswertung ohne Pipe. `... | head -1`
-          # wuerde den Erzeuger per SIGPIPE abwuergen, sobald mehr als eine Zeile passt (v2
-          # und v3 liefern je eine), und unter `pipefail` gaelte der Schritt dann als
-          # gescheitert, obwohl alles in Ordnung war.
-          CERTS="$("$APKSIGNER" verify --print-certs "$APK")"
-          FOUND="$(awk 'tolower($0) ~ /certificate sha-256 digest/ {
-                          gsub(/:/, "", $NF); print tolower($NF); exit
-                        }' <<< "$CERTS")"
-          if [ -z "$FOUND" ]; then
-            echo "::error::Aus der APK liess sich kein Signaturzertifikat lesen."
-            exit 1
-          fi
-          echo "Signatur der APK (SHA-256): $FOUND"
           # Normalisiert vergleichen: keytool schreibt GROSS mit Doppelpunkten, apksigner
           # klein ohne - beide Schreibweisen sollen als Variable durchgehen.
           WANT="$(printf '%s' "${EXPECTED:-}" | tr -d ':' | tr 'A-Z' 'a-z')"
@@ -340,19 +353,39 @@ jobs:
             echo "::error::Passt der Wert oben zum Schluessel deines Rechners, trage ihn dort ein."
             exit 1
           fi
-          if [ "$FOUND" != "$WANT" ]; then
-            echo "::error::Fremde Signatur - erwartet war $WANT."
-            echo "::error::Diese APK waere kein Update der installierten App, sondern verlangte"
-            echo "::error::eine Deinstallation. Nicht ausgeliefert."
-            echo "::error::"
-            echo "::error::Der hinterlegte Schluessel passte weiter oben noch zur Erwartung - der"
-            echo "::error::Fehler liegt also NICHT an den Secrets, sondern daran, dass AGP beim"
-            echo "::error::Bauen einen anderen Schluessel benutzt hat als den unter"
-            echo "::error::\$HOME/.android/debug.keystore hinterlegten. Dort ansetzen, nicht an"
-            echo "::error::der Einrichtung."
-            exit 1
-          fi
-          echo "Signatur stimmt mit der installierten App ueberein."
+          for APK in app-sim/build/outputs/apk/debug/app-sim-debug.apk \
+                     app-sim/build/outputs/apk/stream/app-sim-stream.apk; do
+            if [ ! -f "$APK" ]; then
+              echo "::error::$APK wurde nicht erzeugt."
+              exit 1
+            fi
+            # Erst einsammeln, dann auswerten - und die Auswertung ohne Pipe. `... | head -1`
+            # wuerde den Erzeuger per SIGPIPE abwuergen, sobald mehr als eine Zeile passt (v2
+            # und v3 liefern je eine), und unter `pipefail` gaelte der Schritt dann als
+            # gescheitert, obwohl alles in Ordnung war.
+            CERTS="$("$APKSIGNER" verify --print-certs "$APK")"
+            FOUND="$(awk 'tolower($0) ~ /certificate sha-256 digest/ {
+                            gsub(/:/, "", $NF); print tolower($NF); exit
+                          }' <<< "$CERTS")"
+            if [ -z "$FOUND" ]; then
+              echo "::error::Aus $APK liess sich kein Signaturzertifikat lesen."
+              exit 1
+            fi
+            echo "Signatur von $APK (SHA-256): $FOUND"
+            if [ "$FOUND" != "$WANT" ]; then
+              echo "::error::Fremde Signatur in $APK - erwartet war $WANT."
+              echo "::error::Diese APK waere kein Update der installierten App, sondern verlangte"
+              echo "::error::eine Deinstallation. Nicht ausgeliefert."
+              echo "::error::"
+              echo "::error::Der hinterlegte Schluessel passte weiter oben noch zur Erwartung - der"
+              echo "::error::Fehler liegt also NICHT an den Secrets, sondern daran, dass AGP beim"
+              echo "::error::Bauen einen anderen Schluessel benutzt hat als den unter"
+              echo "::error::\$HOME/.android/debug.keystore hinterlegten. Dort ansetzen, nicht an"
+              echo "::error::der Einrichtung."
+              exit 1
+            fi
+          done
+          echo "Beide Pakete tragen das Zertifikat der installierten App."
 
       - name: Schluesselreste entfernen
         if: always()
@@ -373,11 +406,17 @@ jobs:
       # jede APK wiegt rund 15 MB. Zweck ist die Rueckfallebene auf den vorherigen Stand -
       # in Drive liegt immer nur der neueste -, nicht ein Archiv.
       # -----------------------------------------------------------------------------------
-      - name: Paket als Rueckfallebene sichern
+      - name: Pakete als Rueckfallebene sichern
         run: |
           mkdir -p dist
           cp app-sim/build/outputs/apk/debug/app-sim-debug.apk \
              "dist/${{ steps.version.outputs.archive }}"
+          # Die Stream-APK liegt IMMER als Artefakt bereit, auch ohne eingerichteten
+          # Drive-Weg. Fuer NT-058 genuegt das: Der Messlauf laeuft am Rechner, und von dort
+          # ist ein Artefakt genauso gut erreichbar wie eine Drive-Datei. Der Drive-Weg
+          # daneben ist fuer den bequemen Fall gedacht, nicht als einzige Quelle.
+          cp app-sim/build/outputs/apk/stream/app-sim-stream.apk \
+             "dist/${{ steps.version.outputs.archive_stream }}"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -410,6 +449,7 @@ jobs:
         env:
           SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
           FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
+          STREAM_FILE_ID: ${{ vars.GDRIVE_STREAM_APK_FILE_ID }}
         run: |
           set -euo pipefail
           if [ -n "${SA_JSON}" ] && [ -n "${FILE_ID}" ]; then
@@ -422,6 +462,22 @@ jobs:
             [ -n "${FILE_ID}" ] || fehlt="${fehlt:+$fehlt und }Variable GDRIVE_APK_FILE_ID"
             echo "::notice::Drive-Ablieferung uebersprungen - es fehlt: ${fehlt}."
             echo "::notice::Die fertige APK liegt als Artefakt dieses Laufs bereit."
+          fi
+
+          # Die Stream-Datei wird GETRENNT geprueft und ist einzeln nachreichbar: Sie braucht
+          # eine eigene, vorher angelegte und freigegebene Drive-Datei, und bis es die gibt,
+          # soll die gewohnte Tama-Ablieferung unveraendert weiterlaufen. Ein gemeinsames
+          # "alles oder nichts" haette bedeutet, dass ein noch nicht eingerichteter
+          # Stream-Weg die funktionierende Hauptauslieferung mit anhaelt.
+          if [ -n "${SA_JSON}" ] && [ -n "${STREAM_FILE_ID}" ]; then
+            echo "stream_configured=true" >> "$GITHUB_OUTPUT"
+            echo "Drive-Zugang fuer die Stream-APK eingerichtet."
+          else
+            echo "stream_configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Stream-APK nicht nach Drive abgeliefert - Variable GDRIVE_STREAM_APK_FILE_ID fehlt."
+            echo "::notice::Sie liegt als Artefakt dieses Laufs bereit. Zum Einrichten: eine Datei"
+            echo "::notice::Itoeva-Stream-debug.apk in Drive anlegen, demselben Service-Konto als"
+            echo "::notice::Bearbeiter freigeben und ihre Datei-Id als Variable eintragen."
           fi
 
       # -----------------------------------------------------------------------------------
@@ -440,7 +496,7 @@ jobs:
       # die Begruendung, warum hier nicht google-github-actions/auth steht.
       - name: Zugriffstoken holen
         id: token
-        if: steps.drive.outputs.configured == 'true'
+        if: steps.drive.outputs.configured == 'true' || steps.drive.outputs.stream_configured == 'true'
         env:
           SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
         run: |
@@ -604,3 +660,49 @@ jobs:
             -o /dev/null
 
           echo "Tama-debug.apk in Drive aktualisiert: ${VERSION} (${SHA})"
+
+      # -----------------------------------------------------------------------------------
+      # Dasselbe fuer den Stream-Client - eigene Datei, eigene Id, eigener Schalter.
+      #
+      # **Warum eine zweite Datei und nicht dieselbe.** Beide Pakete haben verschiedene
+      # applicationIds (`...glyphminderwatch` und `...glyphminderwatch.stream`) und liegen auf
+      # dem Telefon nebeneinander - genau dafuer ist der Build-Typ da. Eine geteilte Drive-Datei
+      # haette abwechselnd das eine und das andere Paket enthalten, und welches gerade
+      # daruntersteckt, saehe man erst beim Installieren.
+      #
+      # **Warum hier kein Schema-Riegel steht.** Der Rueckschritt-Riegel weiter oben schuetzt
+      # die gewachsenen Tama-Daten auf dem Telefon. Der Stream-Client ist eine frische
+      # Installation fuer den Messlauf (NT-058) ohne persoenliche Erinnerungen; sein
+      # Datenverlust waere aergerlich, aber kein Schaden. Der versionCode kommt ohnehin aus der
+      # Uhrzeit des Laufs und steigt damit immer - zwei aufeinanderfolgende Laeufe dieses
+      # Workflows koennen sich nicht gegenseitig als Downgrade ausschlagen.
+      # -----------------------------------------------------------------------------------
+      - name: Stream-APK nach Drive legen
+        if: steps.drive.outputs.stream_configured == 'true'
+        env:
+          TOKEN: ${{ steps.token.outputs.token }}
+          FILE_ID: ${{ vars.GDRIVE_STREAM_APK_FILE_ID }}
+          VERSION: ${{ steps.version.outputs.name }}
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          set -euo pipefail
+          APK=app-sim/build/outputs/apk/stream/app-sim-stream.apk
+
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @"$APK" \
+            "https://www.googleapis.com/upload/drive/v3/files/${FILE_ID}?uploadType=media&supportsAllDrives=true" \
+            -o /dev/null
+
+          # Die Beschreibung nennt die applicationId ausdruecklich: Zwei APKs im selben Ordner
+          # sehen gleich aus, und auf dem Telefon merkt man den Unterschied sonst erst daran,
+          # dass die falsche App startet.
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"description\":\"Itoeva Stream ${VERSION}-stream (${SHA}), applicationId com.notime.glyphminderwatch.stream, startet direkt im Spielmodus, gebaut von deliver-apk.yml, Lauf ${GITHUB_RUN_ID}\"}" \
+            "https://www.googleapis.com/drive/v3/files/${FILE_ID}?supportsAllDrives=true" \
+            -o /dev/null
+
+          echo "Stream-APK in Drive aktualisiert: ${VERSION}-stream (${SHA})"

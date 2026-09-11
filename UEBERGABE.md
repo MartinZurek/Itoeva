@@ -58,6 +58,13 @@ ist Beobachtung, keine Freigabe fuer Cloud oder echte Twitch-/YouTube-Anbindung.
 `./gradlew :app-sim:assembleStream`; der regulaere Pfad ist
 `app-sim/build/outputs/apk/stream/app-sim-stream.apk`.
 
+Die Stream-APK entsteht seit dem 11.09. **automatisch bei jedem Merge** (`deliver-apk.yml`
+baut `assembleDebug` und `assembleStream` in einem Aufruf, weist fuer beide dasselbe Zertifikat
+nach und legt beide als Artefakt ab). Nach Drive geht sie nur, wenn die Variable
+`GDRIVE_STREAM_APK_FILE_ID` auf eine eigene, dem Service-Konto freigegebene Datei zeigt -
+getrennt nachreichbar, damit ein fehlender Stream-Weg die gewohnte Tama-Ablieferung nicht
+anhaelt.
+
 **NT-058 braucht einen Menschen und ist von einer Agenten-Sitzung aus nicht zu erledigen.** Am
 2026-09-11 ist der Versuch daran gescheitert, dass in der Agentenumgebung weder Android SDK noch
 Android Gradle Plugin, Emulator, `adb`, `/dev/kvm` oder OBS existieren - `assembleStream` bricht

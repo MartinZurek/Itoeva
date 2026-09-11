@@ -126,6 +126,12 @@ Zustaende getrennt bleiben.
 | Startklasse | `com.notime.glyphsim.ui.MainActivity` |
 | Name im Launcher | **Itoeva Stream** (die normale App heisst dort `Tama`) |
 
+**Bauen muss man sie seit dem 11.09. nicht mehr selbst.** `deliver-apk.yml` erzeugt bei jedem
+Merge nach `main` beide Pakete und legt sie als Artefakt des Laufs ab (`itoeva-stream-*.apk`,
+14 Tage). Ist die Variable `GDRIVE_STREAM_APK_FILE_ID` eingerichtet, liegt die Stream-APK
+zusaetzlich als eigene Datei in Drive - neben der gewohnten `Tama-debug.apk` und nicht statt
+ihrer. Der lokale Bau unten bleibt der Weg fuer einen Stand, der noch nicht gemergt ist.
+
 Unter Windows vorher `JAVA_HOME` gemaess `CLAUDE.md` setzen.
 
 PowerShell unter Windows:
