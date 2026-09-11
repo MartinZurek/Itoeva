@@ -65,6 +65,7 @@ internal class LivingObservationJournal(
             val persisted = if (previous == null) {
                 (result.agent.episodes.map(Episode::event) + listOfNotNull(result.agent.lastEvent))
                     .filterNot(result.events::contains)
+                    .filterNot { it.kind == LivingEventKind.IDLE }
             } else {
                 emptyList()
             }

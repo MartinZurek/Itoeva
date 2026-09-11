@@ -6,11 +6,13 @@ import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.GoalKind
 import com.notime.glyphsim.living.LivingEvent
 import com.notime.glyphsim.living.LivingEventKind
+import com.notime.glyphsim.living.LivingSimulation
 import com.notime.glyphsim.living.LivingSite
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Personality
 import com.notime.glyphsim.living.Requirement
+import com.notime.glyphsim.living.StepResult
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
@@ -64,6 +66,25 @@ class LivingObservationSourceTest {
             observed.recentEvents
         )
         assertEquals(unchanged, startAgent to startWorld)
+    }
+
+    @Test
+    fun `Wiederherstellung exportiert keinen vergangenen Leerlauf-Tick`() {
+        val idle = LivingSimulation.step(
+            AgentState("GLOOP", Personality(), Needs.calm()),
+            LivingRuntimeAdapter.initialWorld(
+                absoluteMinute = 8 * 60,
+                place = PlayScene.Place.LIVING,
+                coins = 2,
+                portions = 2
+            )
+        )
+        val restored = StepResult(idle.agent, idle.world, emptyList())
+        val journal = LivingObservationJournal()
+
+        journal.record(restored)
+
+        assertTrue(journal.current("GLOOP")!!.recentEvents.isEmpty())
     }
 
     @Test

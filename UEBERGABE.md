@@ -95,7 +95,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 289 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 290 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 

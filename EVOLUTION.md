@@ -2462,10 +2462,11 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   `LivingObservationSourceTest.kt`, die ausdrueckliche Offline-Testliste sowie
   `LIVING_AGENT.md`, `Architecture.md`, `CLOUD_CODE_BRIEFING.md`, `NextTasks.md`,
   `UEBERGABE.md` und dieses Protokoll.
-- **Tests:** Zwei neue Verhaltensfaelle erhoehen die Offline-Strecke von 287 auf 289 Tests. Sie
-  belegen den unveraenderlichen Lesezugriff samt benanntem Hindernis sowie einen zweimal exakt
-  gleichen Vier-Tage-Lauf ueber `LivingRuntimeAdapter`, das begrenzte Ereignisfenster und die
-  emergente Ressourcenfolge. `python3 -m unittest discover --start-directory tools/music`
+- **Tests:** Drei neue Verhaltensfaelle erhoehen die Offline-Strecke von 287 auf 290 Tests. Sie
+  belegen den unveraenderlichen Lesezugriff samt benanntem Hindernis, den Ausschluss eines beim
+  Restore gefundenen `IDLE`-Ereignisses sowie einen zweimal exakt gleichen Vier-Tage-Lauf ueber
+  `LivingRuntimeAdapter`, das begrenzte Ereignisfenster und die emergente Ressourcenfolge.
+  `python3 -m unittest discover --start-directory tools/music`
   bleibt mit 15 Tests unveraendert; Compose und die echte Prozessquelle entscheidet die
   vollstaendige Head-CI.
 - **Naechster Schritt:** NT-058 - genau eine bestehende `:app-sim`-Instanz mindestens zwei
