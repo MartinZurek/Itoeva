@@ -2575,3 +2575,46 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Umgebung nicht ausfuehrbar; die CI des Pull Requests fuehrt sie aus.
 - **Naechster Schritt:** NT-058 unveraendert - der echte Zwei-Stunden-Lauf an einem Rechner mit
   Android Studio und OBS. Erst sein Ergebnis oeffnet NT-059.
+
+### 2026-09-11 - Die Stream-APK wird ausgeliefert, nicht nur gebaut
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Auslieferungsaenderung ohne Produktlogik;
+  belegt wird sie erst durch den naechsten Lauf von `deliver-apk.yml` auf `main`.
+- **Ausgangsproblem:** Gemeldet als "Ich sehe keinen Itoeva Stream APK im Drive Ordner". Der
+  Befund war schlicht: Es gab sie nie. PR #133 hat den Build-Typ `stream` angelegt, aber keinen
+  Auslieferungsweg dafuer; `deliver-apk.yml` baute weiterhin allein `:app-sim:assembleDebug` und
+  ueberschrieb die eine Drive-Datei `Tama-debug.apk`. Die Stream-APK existierte nur auf dem
+  Rechner dessen, der sie zufaellig baute - und NT-058 verlangt genau sie im Emulator.
+- **Entscheidung:** `deliver-apk.yml` baut beide Varianten in EINEM Gradle-Aufruf (der zweite
+  Bau teilt sich Daemon, aufgeloeste Abhaengigkeiten und kompiliertes `:core`), legt beide als
+  Artefakt ab und liefert die Stream-APK in eine EIGENE Drive-Datei.
+- **Zwei Dateien und nicht eine:** Beide Pakete haben verschiedene applicationIds und liegen auf
+  dem Telefon nebeneinander - genau dafuer ist der Build-Typ da. Eine geteilte Drive-Datei
+  enthielte abwechselnd das eine und das andere Paket, und welches gerade daruntersteckt, saehe
+  man erst beim Installieren.
+- **Einzeln nachreichbar:** Der Stream-Weg haengt an einer eigenen Variable
+  `GDRIVE_STREAM_APK_FILE_ID` und wird getrennt geprueft. Fehlt sie, laeuft die gewohnte
+  Tama-Ablieferung unveraendert weiter und die Stream-APK liegt als Artefakt. Ein gemeinsames
+  "alles oder nichts" haette bedeutet, dass ein noch nicht eingerichteter Stream-Weg die
+  funktionierende Hauptauslieferung mit anhaelt - dieselbe Ueberlegung, aus der schon der
+  gesamte Drive-Teil nachreichbar gebaut ist.
+- **Signatur jetzt fuer beide Pakete:** Der Torwaechter prueft in einer Schleife. `stream` erbt
+  zwar dieselbe Signaturkonfiguration (`initWith(debug)` plus ausdrueckliches
+  `signingConfig = debug`), aber "erbt laut Build-Datei" und "traegt tatsaechlich dasselbe
+  Zertifikat" sind zwei verschiedene Aussagen - und die zweite ist die, an der ab der zweiten
+  Auslieferung eine Installation scheitern wuerde.
+- **Kein Schema-Riegel fuer die Stream-Datei:** Der Rueckschritt-Riegel schuetzt die gewachsenen
+  Tama-Daten. Der Stream-Client ist eine frische Installation fuer den Messlauf ohne
+  persoenliche Erinnerungen; sein Datenverlust waere aergerlich, aber kein Schaden. Der
+  versionCode kommt aus der Uhrzeit des Laufs und steigt ohnehin immer.
+- **Abgrenzung:** Keine Aenderung an Living Agent, Stream-Client, Pixelwelt oder Musik. Kein
+  neues Modul, kein Twitch, kein Backend. Kein Kotlin-Code angefasst.
+- **Betroffene Dokumente:** `.github/workflows/deliver-apk.yml`, `docs/streaming-poc.md`,
+  `UEBERGABE.md` und dieses Protokoll.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 303 Tests gruen;
+  `python3 -m unittest discover --start-directory tools/music` - 15 Tests gruen. Beide sind von
+  dieser Aenderung unberuehrt und belegen nur, dass nichts kaputtgegangen ist. Der Workflow
+  selbst laesst sich erst auf `main` beobachten - er laeuft nicht auf Pull Requests.
+- **Naechster Schritt:** Eine Datei `Itoeva-Stream-debug.apk` in Drive anlegen, dem
+  Service-Konto als Bearbeiter freigeben und ihre Id als `GDRIVE_STREAM_APK_FILE_ID`
+  eintragen. Danach NT-058 unveraendert.
