@@ -61,7 +61,8 @@ fun PlayModeIntroDialog(
                 AvatarSpriteView(
                     frame = remember(species) { AvatarAnimations.idlePose(species) },
                     showBackground = false,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    species = species
                 )
                 Text(
                     stringResource(R.string.playmode_intro_title),

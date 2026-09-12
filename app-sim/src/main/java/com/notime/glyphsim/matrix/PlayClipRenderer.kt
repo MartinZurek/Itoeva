@@ -152,16 +152,29 @@ object PlayClipRenderer {
             ?: ((widthCells - AvatarGeometry.SIZE) * frame.avatarAnchorX).roundToInt()
         val originCellY = (spot?.groundY ?: (floorY - 1)) - groundRow
 
+        // Dieselbe Schattierung wie auf dem Bildschirm (siehe AvatarShading und
+        // AvatarSpriteView). Ohne diese Zeile saehe eine exportierte Aufnahme flacher aus als
+        // das, was man beim Aufnehmen gesehen hat - und das faellt erst auf, wenn man sie
+        // jemandem zeigt.
+        //
+        // Dasselbe gilt fuer die FARBE (siehe AvatarPalette): Eine Aufnahme, in der die Kreatur
+        // weiss ist, zeigt nicht die Kreatur, die man gerade begleitet hat. Die Kulisse bleibt
+        // dagegen weiss - genau wie auf dem Bildschirm.
+        val avatarTint = AvatarPalette.tintFor(frame.species)
+        val avatarFrame = AvatarShading.shade(
+            frame.avatarFrame,
+            floor = AvatarShading.TINTED_SHADOW
+        )
         for (y in 0 until AvatarGeometry.HEIGHT) {
             for (x in 0 until AvatarGeometry.SIZE) {
-                val brightness = frame.avatarFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
+                val brightness = avatarFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
                 if (brightness <= 0) continue
                 val f = brightness.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                     AvatarGeometry.MAX_BRIGHTNESS
                 paint.color = Color.rgb(
-                    (Color.red(ledOn) * f).roundToInt(),
-                    (Color.green(ledOn) * f).roundToInt(),
-                    (Color.blue(ledOn) * f).roundToInt()
+                    (Color.red(avatarTint) * f).roundToInt(),
+                    (Color.green(avatarTint) * f).roundToInt(),
+                    (Color.blue(avatarTint) * f).roundToInt()
                 )
                 val left = (originCellX + x) * cell
                 val top = (originCellY + y) * cell
@@ -175,16 +188,20 @@ object PlayClipRenderer {
         if (guestFrame != null && guestSpecies != null) {
             val gx = ((widthCells - AvatarGeometry.SIZE) * frame.visitorAnchorX).roundToInt()
             val gy = (floorY - 1) - AvatarBodies.forSpecies(guestSpecies).groundRow()
+            // Der Gast bekommt dieselbe Woelbung; seine Daempfung kommt zusaetzlich obendrauf,
+            // weil AvatarShading skaliert statt zu ersetzen.
+            val gastTint = AvatarPalette.tintFor(guestSpecies)
+            val gastFrame = AvatarShading.shade(guestFrame, floor = AvatarShading.TINTED_SHADOW)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
-                    val b = guestFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
+                    val b = gastFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
                     if (b <= 0) continue
                     val f = (b.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                         AvatarGeometry.MAX_BRIGHTNESS) * VISITOR_DIM
                     paint.color = Color.rgb(
-                        (Color.red(ledOn) * f).roundToInt(),
-                        (Color.green(ledOn) * f).roundToInt(),
-                        (Color.blue(ledOn) * f).roundToInt()
+                        (Color.red(gastTint) * f).roundToInt(),
+                        (Color.green(gastTint) * f).roundToInt(),
+                        (Color.blue(gastTint) * f).roundToInt()
                     )
                     val left = (gx + x) * cell
                     val top = (gy + y) * cell

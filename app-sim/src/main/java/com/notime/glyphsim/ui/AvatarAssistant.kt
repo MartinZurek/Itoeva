@@ -96,7 +96,8 @@ fun AvatarAssistantDialog(
                 AvatarSpriteView(
                     frame = remember(species) { AvatarAnimations.idlePose(species) },
                     showBackground = false,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    species = species
                 )
                 Text(
                     stringResource(species.labelRes),

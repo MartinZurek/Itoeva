@@ -3346,6 +3346,10 @@ fun DockScreen(
                 // Aneinander-Vorbeigehen nicht immer vermeiden.
                 brightnessScale = VISITOR_DIM,
                 contentDescription = stringResource(R.string.a11y_visitor, stringResource(guest.species.labelRes)),
+                // **Der Gast hat seine eigene Farbe** (siehe AvatarPalette) - und das nimmt der
+                // Daempfung oben einen Teil ihrer Last ab: Zwei Kreaturen verschmelzen nicht
+                // mehr allein deshalb, weil sie denselben Ton haben.
+                species = guest.species,
                 modifier = Modifier
                     .width(guest.sizeDp.dp)
                     .height(guest.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
@@ -3502,6 +3506,7 @@ fun DockScreen(
                 // her. Dasselbe gilt laengst im Startbildschirm (siehe HomeScreen).
                 showBackground = false,
                 contentDescription = avatarContentDescription,
+                species = current.species,
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
                     // Quadratgroesse das Raster und die Figur waere zu klein.

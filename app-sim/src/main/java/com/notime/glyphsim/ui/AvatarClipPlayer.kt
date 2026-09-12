@@ -38,6 +38,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.notime.glyphsim.matrix.AvatarClip
 import com.notime.glyphsim.matrix.AvatarGeometry
+import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.ClockCue
 import com.notime.glyphsim.matrix.ClockFrameSim
@@ -68,7 +69,12 @@ import kotlin.math.sin
  * [Dialog] das per `onDismissRequest` schon von Haus aus so behandelt.
  */
 @Composable
-fun AvatarClipPlayer(clip: AvatarClip, onFinished: () -> Unit) {
+fun AvatarClipPlayer(
+    clip: AvatarClip,
+    /** Wessen Vorstellung das ist - der Clip wird in der Farbe dieser Kreatur gespielt. */
+    species: AvatarSpecies,
+    onFinished: () -> Unit
+) {
     Dialog(
         onDismissRequest = onFinished,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -245,6 +251,7 @@ fun AvatarClipPlayer(clip: AvatarClip, onFinished: () -> Unit) {
                 AvatarSpriteView(
                     frame = currentFrame,
                     showBackground = false,
+                    species = species,
                     modifier = Modifier
                         .align(Alignment.Center)
                         // Breite festgelegt, Hoehe folgt dem Raster: Seit der Avatar oben
