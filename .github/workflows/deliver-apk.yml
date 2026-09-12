@@ -8,8 +8,8 @@
 # **Seit 2026-09-11 entsteht daneben die Stream-APK** (Build-Typ `stream`, eigene
 # applicationId, startet direkt im Spielmodus - siehe app-sim/build.gradle.kts und
 # docs/streaming-poc.md). Sie liegt IMMER als Artefakt des Laufs bereit; nach Drive geht sie
-# nur, wenn dafuer eine eigene Datei eingerichtet ist (Variable GDRIVE_STREAM_APK_FILE_ID,
-# unten). Der Grund fuer die getrennte Datei: Beide Pakete liegen auf dem Telefon
+# nur, wenn dafuer eine eigene Datei eingerichtet ist (GDRIVE_STREAM_APK_FILE_ID, unten -
+# als Variable oder als Secret). Der Grund fuer die getrennte Datei: Beide Pakete liegen auf dem Telefon
 # nebeneinander, eine geteilte Drive-Datei enthielte abwechselnd das eine und das andere.
 #
 # **War zeitweise pausiert, ist es seit 2026-09-02 nicht mehr:** main und ein parallel
@@ -70,6 +70,10 @@
 #                               die Datei am gewohnten Platz.
 #
 #   Variable GDRIVE_STREAM_APK_FILE_ID - dasselbe fuer die Stream-APK, EINZELN nachreichbar.
+#                               Wird auch als SECRET desselben Namens akzeptiert: Die beiden
+#                               Listen stehen auf derselben Einstellungsseite und werden
+#                               erfahrungsgemaess verwechselt. Eine Datei-Id ist nichts
+#                               Geheimes; die Variable bleibt der dokumentierte Weg.
 #                               Fehlt sie, laeuft die gewohnte Tama-Ablieferung unveraendert
 #                               weiter und nur die Stream-Datei bleibt aus; die APK liegt dann
 #                               als Artefakt des Laufs. Zum Einrichten: eine Datei
@@ -135,7 +139,7 @@ env:
 jobs:
 
   deliver:
-    name: Tama-APK bauen und nach Drive legen
+    name: APKs bauen und nach Drive legen
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -449,7 +453,13 @@ jobs:
         env:
           SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
           FILE_ID: ${{ vars.GDRIVE_APK_FILE_ID }}
-          STREAM_FILE_ID: ${{ vars.GDRIVE_STREAM_APK_FILE_ID }}
+          # **Beide Orte, absichtlich.** Eine Drive-Datei-Id ist nichts Geheimes - sie steht in
+          # der URL der Datei -, und "Variable" ist deshalb der richtige Platz. Nur sind
+          # Secrets und Variables zwei getrennte Listen auf DERSELBEN Einstellungsseite, und
+          # der Wert landete beim Einrichten prompt in der falschen. Das kostete einen Lauf und
+          # eine Rueckfrage, ohne dass irgendetwas kaputt war. Wer beides akzeptiert, spart
+          # jedem Kuenftigen dieselbe Viertelstunde; die Variable bleibt der dokumentierte Weg.
+          STREAM_FILE_ID: ${{ vars.GDRIVE_STREAM_APK_FILE_ID || secrets.GDRIVE_STREAM_APK_FILE_ID }}
         run: |
           set -euo pipefail
           if [ -n "${SA_JSON}" ] && [ -n "${FILE_ID}" ]; then
@@ -474,10 +484,11 @@ jobs:
             echo "Drive-Zugang fuer die Stream-APK eingerichtet."
           else
             echo "stream_configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Stream-APK nicht nach Drive abgeliefert - Variable GDRIVE_STREAM_APK_FILE_ID fehlt."
+            echo "::notice::Stream-APK nicht nach Drive abgeliefert - GDRIVE_STREAM_APK_FILE_ID"
+            echo "::notice::fehlt (weder als Variable noch als Secret gefunden)."
             echo "::notice::Sie liegt als Artefakt dieses Laufs bereit. Zum Einrichten: eine Datei"
             echo "::notice::Itoeva-Stream-debug.apk in Drive anlegen, demselben Service-Konto als"
-            echo "::notice::Bearbeiter freigeben und ihre Datei-Id als Variable eintragen."
+            echo "::notice::Bearbeiter freigeben und ihre Datei-Id eintragen."
           fi
 
       # -----------------------------------------------------------------------------------
@@ -681,7 +692,11 @@ jobs:
         if: steps.drive.outputs.stream_configured == 'true'
         env:
           TOKEN: ${{ steps.token.outputs.token }}
-          FILE_ID: ${{ vars.GDRIVE_STREAM_APK_FILE_ID }}
+          # Dieselbe Herkunft wie in "Drive-Zugang pruefen" - beide Stellen muessen denselben
+          # Wert sehen. Stuende hier nur `vars`, waere der Schritt bei einem als Secret
+          # hinterlegten Wert zwar EINGESCHALTET, bekaeme aber eine leere Id und liefe in einen
+          # Fehler von Google statt in die uebersprungene Ablieferung.
+          FILE_ID: ${{ vars.GDRIVE_STREAM_APK_FILE_ID || secrets.GDRIVE_STREAM_APK_FILE_ID }}
           VERSION: ${{ steps.version.outputs.name }}
           SHA: ${{ steps.version.outputs.sha }}
         run: |
