@@ -130,6 +130,7 @@ TEST_SRCS=(
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
   "$TEST/living/LivingSymbolsTest.kt"
+  "$TEST/living/LivingDriveTest.kt"
   "$TEST/ui/LivingSymbolFramesTest.kt"
   "$TEST/stream/LivingObservationSourceTest.kt"
   "$TEST/stream/StreamInteractionTest.kt"
@@ -173,6 +174,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
   com.notime.glyphsim.living.LivingSymbolsTest
+  com.notime.glyphsim.living.LivingDriveTest
   com.notime.glyphsim.ui.LivingSymbolFramesTest
   com.notime.glyphsim.stream.LivingObservationSourceTest
   com.notime.glyphsim.stream.StreamInteractionTest

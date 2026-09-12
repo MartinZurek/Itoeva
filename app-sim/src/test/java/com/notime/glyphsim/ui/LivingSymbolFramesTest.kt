@@ -86,12 +86,35 @@ class LivingSymbolFramesTest {
 
     @Test
     fun `noch nicht gezeichnete Symbole sagen das ehrlich`() {
-        // YES und SURPRISE gehoeren zur Verstaendigung zwischen zwei Wesen und koennen heute
-        // nicht ueber dem Kopf erscheinen. Kunst auf Verdacht waere der falsche Weg; ein
-        // ehrliches null ist der richtige.
+        // YES gehoert zur Verstaendigung zwischen zwei Wesen und kann heute nicht ueber dem Kopf
+        // erscheinen. Kunst auf Verdacht waere der falsche Weg; ein ehrliches null ist der
+        // richtige.
+        //
+        // **SURPRISE stand bis NT-074 ebenfalls hier.** Es ist gezeichnet worden, weil ein Ziel
+        // darauf zeigt (EXPLORE) - also genau in dem Moment, in dem es gebraucht wurde, und
+        // keinen davor. Aufgefallen ist das nicht beim Nachdenken, sondern weil der Test
+        // darueber rot wurde.
         assertNull(LivingSymbolFrames.frameFor(SymbolicIntent.YES))
-        assertNull(LivingSymbolFrames.frameFor(SymbolicIntent.SURPRISE))
         assertTrue(SymbolicIntent.YES !in erreichbareSymbole())
-        assertTrue(SymbolicIntent.SURPRISE !in erreichbareSymbole())
+    }
+
+    @Test
+    fun `das Ausrufezeichen ist das Gegenstueck zum Fragezeichen`() {
+        val frame = LivingSymbolFrames.frameFor(SymbolicIntent.SURPRISE)!!
+        fun an(x: Int, y: Int) = frame[y * MatrixGeometry.SIZE + x] > 0
+
+        assertTrue("Der Kopf muss breit sein", an(5, 2) && an(6, 2) && an(7, 2))
+        assertTrue("Der Balken muss durchgehen", an(6, 4) && an(6, 5) && an(6, 6) && an(6, 7))
+        assertTrue("Die Luecke traegt die Bedeutung", !an(6, 8) && !an(6, 9))
+        assertTrue("Der Punkt muss den Kopf ausbalancieren", an(5, 10) && an(6, 10) && an(7, 10))
+        // Auf ungeradem Raster muss es symmetrisch um Spalte 6 liegen, sonst haengt es schief.
+        for (y in 0 until MatrixGeometry.SIZE) {
+            for (x in 0 until MatrixGeometry.SIZE) {
+                assertTrue(
+                    "Zeile $y ist nicht spiegelsymmetrisch",
+                    an(x, y) == an(MatrixGeometry.SIZE - 1 - x, y)
+                )
+            }
+        }
     }
 }

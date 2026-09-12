@@ -187,6 +187,16 @@ traegt eine Traumgelegenheit auf dem Sofa, beim Innehalten, auf der Bank und im 
 **Offen bleibt:** ob es sich am Geraet nach genug anfuehlt - 28 Prozent Tagtraum und der
 Ausgleich fuer den Weg nach draussen sind begruendete Schaetzungen, keine Messungen.
 
+**Living Agent, weiter:** NT-074 **Jedes Beduerfnis wird ein Antrieb; Stimmung aus dem
+Wohlbefinden** - *am 2026-09-12 umgesetzt; siehe LIVING_AGENT.md.* Von sieben Beduerfnissen
+trieben nur fuenf ein Ziel: Neugier und Behaglichkeit wuchsen mit, ohne je ein Grund zu sein.
+Neu sind `EXPLORE` und `SEEK_COMFORT`; ein Test haelt fest, dass jedes Beduerfnis ein Ziel
+traegt. `CONNECT_WITH` faellt ohne Gegenueber auf `SHOW_AFFECTION` zurueck, statt unerreichbar
+zu sein. Die Stimmung mittelt Pflegebuch und `Needs.wellbeing()`; ohne Tagesziele entscheidet
+allein das Wohlbefinden. **Offen bleibt:** ob sich die Gewichtung 50/50 richtig anfuehlt, und ob
+Erkunden und Bewegung beim Zusehen wirklich unterscheidbar sind - beides ist begruendet, nicht
+gemessen.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.

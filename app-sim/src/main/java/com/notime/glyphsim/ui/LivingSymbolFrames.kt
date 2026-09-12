@@ -51,7 +51,8 @@ internal object LivingSymbolFrames {
         SymbolicIntent.HOME -> ActionSlotSymbols.frameFor(AnimationType.REST)
         SymbolicIntent.QUESTION -> questionFrame()
         SymbolicIntent.NO -> noFrame()
-        SymbolicIntent.YES, SymbolicIntent.SURPRISE -> null
+        SymbolicIntent.SURPRISE -> surpriseFrame()
+        SymbolicIntent.YES -> null
     }
 
     /**
@@ -83,6 +84,30 @@ internal object LivingSymbolFrames {
      * bleibt eine verbeulte Null. Ein zweizelliges X wiederum verklumpt in der Mitte. Diese
      * Fassung ist einzellig und damit genauso schwer wie das Auge und der Becher daneben.
      */
+    /**
+     * **Das Ausrufezeichen** - gezeichnet, weil `SURPRISE` erreichbar geworden ist (NT-074).
+     *
+     * Es war das letzte Symbol ohne Motiv und blieb es bewusst, solange kein Ziel darauf zeigte.
+     * Mit [com.notime.glyphsim.living.GoalKind.EXPLORE] zeigt eines darauf: Wer losgeht, um
+     * etwas zu finden, weiss noch nicht, was er findet.
+     *
+     * Bewusst das Gegenstueck zum Fragezeichen und in derselben Handschrift: breiter Kopf,
+     * schlanker Balken, deutliche Luecke, ausbalancierter Punkt. Auf einem Raster mit ungerader
+     * Kantenlaenge muss beides symmetrisch um Spalte 6 liegen - ein zwei Zellen breiter Balken
+     * saesse sichtbar neben der Mitte.
+     */
+    private fun surpriseFrame(): IntArray = pointsFrame(
+        listOf(
+            5 to 2, 6 to 2, 7 to 2,
+            5 to 3, 6 to 3, 7 to 3,
+            6 to 4,
+            6 to 5,
+            6 to 6,
+            6 to 7,
+            5 to 10, 6 to 10, 7 to 10
+        )
+    )
+
     private fun noFrame(): IntArray = pointsFrame(
         listOf(
             3 to 3, 9 to 3,

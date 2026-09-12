@@ -142,6 +142,51 @@ von Erinnerungen, nicht aus dem Erleben. Der Zuschlag kommt oben drauf und misst
 Handlung dem Wesen wirklich gebracht hat. Er ist **nie negativ**: Arbeit und Konzentration senken
 das Wohlbefinden kurz, und dafuer XP abzuziehen hiesse, das Wesen fuer Anstrengung zu bestrafen.
 
+### Die fuenfte: zwei Beduerfnisse, die nie ein Grund waren
+
+Von sieben Beduerfnissen trieben nur fuenf ein Ziel. `CURIOSITY` und `COMFORT` wuchsen jede
+Stunde mit, standen in jeder Erklaerung - und waren nie ein Grund, irgendetwas zu unternehmen.
+Sie wurden ausschliesslich nebenbei gestillt, wenn ohnehin gelesen, gegessen oder geruht wurde.
+
+Das ist der Unterschied zwischen einem Wert, den es gibt, und einem Antrieb. **Ein Wesen, das nie
+aus Neugier losgeht, wirkt nicht neugierig**, egal wie hoch die Zahl dahinter steht.
+
+NT-074 ergaenzt `GoalKind.EXPLORE` (getragen von `CURIOSITY`) und `GoalKind.SEEK_COMFORT`
+(getragen von `COMFORT`). Ein Test haelt von jetzt an fest, dass **jedes** Beduerfnis ein Ziel
+traegt; ein achtes ohne Ziel faellt dort auf.
+
+Erkunden verlangt den Aufenthalt draussen - was man zu Hause findet, kennt man schon - und
+bevorzugt die Ablaeufe, die den Ort wechseln. Erst dadurch, dass man an etwas VORBEIKOMMT, wird
+aus einem Weg eine Strecke. Acht der elf Bewegungsablaeufe tun das, und vier davon enden in einer
+Sonderaktivitaet: Drachen, Fussball, Basketball, Training, Angeln. Erkunden trifft also oft auf
+etwas Besonderes, ohne dass dafuer eine eigene Ueberraschungsmechanik noetig waere.
+
+### Und einer im Sozialen: allein ging gar nichts
+
+Ohne Gegenueber lieferte der Planer fuer `CONNECT_WITH` **keinen Weg**. Das Ziel galt damit als
+unerreichbar und fiel aus der Wahl - ein einsames Wesen konnte gegen seine Einsamkeit nichts
+tun und stand daneben, bis zufaellig Besuch kam.
+
+Jetzt faellt es auf `SHOW_AFFECTION` zurueck. Dabei lauerte eine Falle, die ein bestehender Test
+aufgedeckt hat: Ohne Muehe war Zuwendung ins Leere **billiger** als jede Freizeitbeschaeftigung,
+und damit haette ein Wesen allein bei gleichem Druck immer an jemanden gedacht - die Anwesenheit
+eines Freundes haette an der Entscheidung nichts mehr geaendert. Genau die Aussage, die das
+Soziale traegt, waere verloren gegangen. Der Aufwand von 0,12 stellt das zurecht, und er ist auch
+inhaltlich richtig: An jemanden zu denken, der nicht da ist, ist die schwerere Wahl.
+
+### Die Stimmung kommt jetzt auch aus dem Wesen
+
+Bis NT-074 stammte sie ausschliesslich aus dem Pflegebuch, also daraus, wie der NUTZER seinen Tag
+gemacht hat. Zwei Folgen stoerten beim Zusehen:
+
+1. Wer keine Tagesziele gesetzt hat, sah **immer** `NEUTRAL` - ein Wesen ohne jede Regung.
+2. Dass ein hungriges, muedes, einsames Wesen gut gelaunt aussah, solange die Haekchen stimmten,
+   war der sichtbarste Bruch zwischen dem, was das Modell weiss, und dem, was das Bild zeigt.
+
+`AvatarMood.of(progress, wellbeing)` mittelt beide Quellen; ohne Tagesziele entscheidet allein
+das Wohlbefinden. Am Grundsatz aendert das nichts: kein Verhungern, keine Strafe. Auch bei
+vollstaendigem Elend ist `SAD` das Ende der Skala - trueber, nie verloren.
+
 ## Leitidee
 
 Itoeva schreibt keine Geschichten vor. Die Simulation fuehrt Beduerfnisse, Weltzustand,

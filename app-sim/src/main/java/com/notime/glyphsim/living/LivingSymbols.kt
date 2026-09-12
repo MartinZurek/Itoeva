@@ -59,6 +59,11 @@ object LivingSymbols {
         GoalKind.DEVELOP -> SymbolicIntent.QUESTION
         GoalKind.CONNECT_WITH -> SymbolicIntent.AFFECTION
         GoalKind.EARN_MONEY -> SymbolicIntent.WORK
+        // Erkunden ist Ueberraschung, bevor sie eintritt: Wer losgeht, weiss noch nicht, was
+        // er findet. SURPRISE war bis hierher das einzige Symbol ohne Verwendung.
+        GoalKind.EXPLORE -> SymbolicIntent.SURPRISE
+        // Behaglichkeit ist nach Hause wollen - im woertlichen wie im uebertragenen Sinn.
+        GoalKind.SEEK_COMFORT -> SymbolicIntent.HOME
         null -> null
     }
 

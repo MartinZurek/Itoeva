@@ -8,6 +8,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AppDatabase
+import com.notime.glyphsim.data.LivingAgentStore
+import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
+import com.notime.glyphsim.living.WorldState
+import com.notime.glyphsim.matrix.LivingRuntimeAdapter
+import com.notime.glyphsim.matrix.PlayTimeLapse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.GoalProgress
 import com.notime.glyphsim.matrix.expectedByNow
@@ -35,7 +42,6 @@ object AvatarMoodSnapshot {
         // Nur Erinnerungen MIT Ziel zaehlen - reine Stupser ohne Vorgabe bleiben aussen vor und
         // koennen den Avatar daher nie truebe machen (siehe GlyphReminder.dailyGoal).
         val goals = db.glyphReminderDao().getEnabledForProfile(routineOwner).filter { it.dailyGoal > 0 }
-        if (goals.isEmpty()) return AvatarMood.NEUTRAL
 
         val fedByReminder = db.avatarFeedEventDao()
             .countFedPerReminderSince(companionId, since)
@@ -46,20 +52,50 @@ object AvatarMoodSnapshot {
         // null Prozent, und selbst ein puenktlich erledigter Tag machte das Wesen bis zum
         // Nachmittag truebe (siehe expectedByNow).
         val minuteOfDay = LocalTime.now().let { it.hour * 60 + it.minute }
-        return AvatarMood.fromGoals(
-            goals.map {
-                GoalProgress(
-                    goal = it.dailyGoal,
-                    achieved = fedByReminder[it.id] ?: 0,
-                    expected = expectedByNow(
-                        goal = it.dailyGoal,
-                        startMinuteOfDay = it.startMinuteOfDay,
-                        endMinuteOfDay = it.endMinuteOfDay,
-                        minuteOfDay = minuteOfDay
+
+        // **Und wie es dem Wesen selbst geht** (NT-074).
+        //
+        // Der Living Agent fuehrt laengst sieben Beduerfnisse mit. Dass ein hungriges, muedes,
+        // einsames Wesen trotzdem gut gelaunt aussah, solange die Haekchen stimmten, war der
+        // sichtbarste Bruch zwischen dem, was das Modell weiss, und dem, was das Bild zeigt.
+        //
+        // Ueber `restore` und nicht ueber einen Rohzugriff: Es laesst die Beduerfnisse um die
+        // verstrichene Zeit nachwachsen. Wer die App zwei Tage nicht geoeffnet hat, trifft kein
+        // eingefrorenes Wesen. Fehlt ein gespeicherter Zustand - beim allerersten Start -, bleibt
+        // nur das Pflegebuch, und die Stimmung ist dieselbe wie bisher.
+        val wellbeing = withContext(Dispatchers.IO) {
+            runCatching {
+                LivingAgentStore(SharedPreferencesLivingAgentStorage(context)).restore(
+                    profileId = companionId,
+                    currentSimulationMinute = PlayTimeLapse.absoluteMinute(),
+                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(
+                        PlayTimeLapse.absoluteMinute() % WorldState.MINUTES_PER_DAY
                     )
+                )?.agent?.needs?.wellbeing()
+            }.getOrNull()
+        }
+
+        if (goals.isEmpty()) {
+            // Ohne Tagesziele gab es bisher immer NEUTRAL - ein Wesen ohne jede Regung. Jetzt
+            // folgt es seinem eigenen Zustand, sofern einer da ist.
+            return wellbeing?.let { AvatarMood.of(emptyList(), it) } ?: AvatarMood.NEUTRAL
+        }
+
+        val fortschritt = goals.map {
+            GoalProgress(
+                goal = it.dailyGoal,
+                achieved = fedByReminder[it.id] ?: 0,
+                expected = expectedByNow(
+                    goal = it.dailyGoal,
+                    startMinuteOfDay = it.startMinuteOfDay,
+                    endMinuteOfDay = it.endMinuteOfDay,
+                    minuteOfDay = minuteOfDay
                 )
-            }
-        )
+            )
+        }
+        return wellbeing
+            ?.let { AvatarMood.of(fortschritt, it) }
+            ?: AvatarMood.fromGoals(fortschritt)
     }
 }
 
