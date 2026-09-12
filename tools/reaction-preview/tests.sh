@@ -136,6 +136,7 @@ TEST_SRCS=(
   "$TEST/stream/StreamBoundaryTest.kt"
   "$TEST/stream/StreamRunbookTest.kt"
   "$TEST/data/LivingAgentStoreTest.kt"
+  "$TEST/data/LivingMemoryContinuityTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
 )
 
@@ -176,6 +177,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.stream.StreamBoundaryTest
   com.notime.glyphsim.stream.StreamRunbookTest
   com.notime.glyphsim.data.LivingAgentStoreTest
+  com.notime.glyphsim.data.LivingMemoryContinuityTest
   com.notime.glyphsim.settings.SettingsCatalogTest
 )
 
