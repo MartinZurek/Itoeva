@@ -71,7 +71,11 @@ fun AvatarSpriteView(
     }
 }
 
-private fun DrawScope.drawSprite(frame: IntArray, brightnessScale: Float) {
+private fun DrawScope.drawSprite(rawFrame: IntArray, brightnessScale: Float) {
+    // **Hier und nicht in den Animationsdaten** (siehe [AvatarShading]): Die Posen bleiben reine
+    // Punktmengen, Ueberblendungen rechnen unveraendert weiter, und die abgelegten
+    // Vergleichsbilder der Reaktionspruefung bleiben gueltig. Schattierung ist Darstellung.
+    val frame = AvatarShading.shade(rawFrame)
     val cell = size.width / AvatarGeometry.SIZE
     // Winziger Ueberlapp zwischen benachbarten Zellen, damit Antialiasing keine
     // sichtbaren Ein-Pixel-Spalten zwischen zwei eigentlich zusammenhaengenden

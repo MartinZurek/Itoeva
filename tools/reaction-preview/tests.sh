@@ -63,7 +63,7 @@ SRCS=(
   "$CORE/LibraryAnimation.kt" "$CORE/DefaultLibraryAnimations.kt" "$CORE/FrameCodec.kt"
   "$CORE/AvatarSignatureAnimations.kt" "$CORE/SkillTreeAnimations.kt"
   "$CORE/FrameCrossfade.kt" "$CORE/FrameSprite.kt" "$CORE/ReminderFrameGrid.kt"
-  "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
+  "$SIM/AvatarShading.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
   "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
@@ -106,6 +106,7 @@ TEST_SRCS=(
   "$TEST/skilltree/SkillTreeRowsTest.kt"
   "$TEST/skilltree/SkillRepertoireTest.kt"
   "$TEST/skilltree/LevelUnlocksTest.kt"
+  "$TEST/matrix/AvatarShadingTest.kt"
   "$TEST/matrix/ReactionDistinctnessTest.kt"
   "$TEST/matrix/ReactionTriggerTest.kt"
   "$TEST/matrix/AvatarReactionsTest.kt"
@@ -151,6 +152,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.skilltree.SkillTreeRowsTest
   com.notime.glyphsim.skilltree.SkillRepertoireTest
   com.notime.glyphsim.skilltree.LevelUnlocksTest
+  com.notime.glyphsim.matrix.AvatarShadingTest
   com.notime.glyphsim.matrix.ReactionDistinctnessTest
   com.notime.glyphsim.matrix.ReactionTriggerTest
   com.notime.glyphsim.matrix.AvatarReactionsTest

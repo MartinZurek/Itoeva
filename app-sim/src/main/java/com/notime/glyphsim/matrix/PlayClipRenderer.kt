@@ -152,9 +152,14 @@ object PlayClipRenderer {
             ?: ((widthCells - AvatarGeometry.SIZE) * frame.avatarAnchorX).roundToInt()
         val originCellY = (spot?.groundY ?: (floorY - 1)) - groundRow
 
+        // Dieselbe Schattierung wie auf dem Bildschirm (siehe AvatarShading und
+        // AvatarSpriteView). Ohne diese Zeile saehe eine exportierte Aufnahme flacher aus als
+        // das, was man beim Aufnehmen gesehen hat - und das faellt erst auf, wenn man sie
+        // jemandem zeigt.
+        val avatarFrame = AvatarShading.shade(frame.avatarFrame)
         for (y in 0 until AvatarGeometry.HEIGHT) {
             for (x in 0 until AvatarGeometry.SIZE) {
-                val brightness = frame.avatarFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
+                val brightness = avatarFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
                 if (brightness <= 0) continue
                 val f = brightness.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                     AvatarGeometry.MAX_BRIGHTNESS
@@ -175,9 +180,12 @@ object PlayClipRenderer {
         if (guestFrame != null && guestSpecies != null) {
             val gx = ((widthCells - AvatarGeometry.SIZE) * frame.visitorAnchorX).roundToInt()
             val gy = (floorY - 1) - AvatarBodies.forSpecies(guestSpecies).groundRow()
+            // Der Gast bekommt dieselbe Woelbung; seine Daempfung kommt zusaetzlich obendrauf,
+            // weil AvatarShading skaliert statt zu ersetzen.
+            val gastFrame = AvatarShading.shade(guestFrame)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
-                    val b = guestFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
+                    val b = gastFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
                     if (b <= 0) continue
                     val f = (b.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                         AvatarGeometry.MAX_BRIGHTNESS) * VISITOR_DIM

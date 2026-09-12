@@ -197,6 +197,16 @@ allein das Wohlbefinden. **Offen bleibt:** ob sich die Gewichtung 50/50 richtig 
 Erkunden und Bewegung beim Zusehen wirklich unterscheidbar sind - beides ist begruendet, nicht
 gemessen.
 
+**Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
+beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.
+`AvatarShading` legt beim Zeichnen einen Verlauf darueber, von oben links hell nach unten rechts
+dunkel. Bewusst ein Verlauf und keine Kantenerkennung: Der erste Entwurf streifte duenne Ohren
+hell-dunkel, gab abgesetzten Fuessen das hellste Licht der Figur und liess Aussenspalten
+zeilenweise flimmern. Angewandt beim Zeichnen, nicht in den Animationsdaten - die Posen bleiben
+reine Punktmengen und die Golden-Datei der Reaktionspruefung gueltig. **Offen bleibt:** ob 0,42
+am unteren Ende und 0,18 Seitenlicht am Geraet richtig wirken; beurteilt wurde es an
+ausgedruckten Silhouetten, nicht auf dem Bildschirm.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.
