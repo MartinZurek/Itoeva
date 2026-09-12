@@ -33,6 +33,18 @@ sealed interface RoutineStep {
     /** Eine Alltagsregung einschieben. */
     data class Stir(val fidget: AvatarAnimations.Fidget) : RoutineStep
 
+    /**
+     * **Eine Gelegenheit zum Tagtraum** (NT-073).
+     *
+     * Ein ausdruecklicher Schritt und keine stille Regel im Verweilen: So steht im Ablauf
+     * selbst, WO ein Traum moeglich ist - beim Ausruhen, beim Zur-Ruhe-Kommen und auf der Bank
+     * draussen -, und ein Test kann es nachlesen, statt es aus Zeitfenstern zu erschliessen.
+     *
+     * Er tut nichts, wenn es heute nichts zu traeumen gibt oder der Wurf dagegen ausfaellt. Ein
+     * Ablauf darf ihn deshalb an jeder ruhigen Stelle enthalten, ohne laenger zu werden.
+     */
+    data object Daydream : RoutineStep
+
     /** Eine Phase der mehrstufigen Drachen-Szene sichtbar machen. */
     data class Kite(val phase: PlayEffects.KitePhase) : RoutineStep
 
@@ -318,6 +330,7 @@ object PlayRoutines {
                     RoutineStep.Occupy(PlayScene.Station.SEAT),
                     RoutineStep.Act(AnimationType.REST),
                     RoutineStep.Linger(4_000L),
+                    RoutineStep.Daydream,
                     RoutineStep.Rise,
                     RoutineStep.GoTo(PlayScene.Station.TV),
                     RoutineStep.Switch(PlayScene.Station.TV, on = false)
@@ -329,6 +342,7 @@ object PlayRoutines {
                     RoutineStep.Occupy(PlayScene.Station.SEAT),
                     RoutineStep.Act(AnimationType.REST),
                     RoutineStep.Linger(3_000L),
+                    RoutineStep.Daydream,
                     RoutineStep.Stir(AvatarAnimations.Fidget.YAWN),
                     RoutineStep.Rise
                 )
@@ -385,6 +399,7 @@ object PlayRoutines {
                     RoutineStep.Occupy(PlayScene.Station.SEAT),
                     RoutineStep.Act(AnimationType.MINDFULNESS),
                     RoutineStep.Linger(3_000L),
+                    RoutineStep.Daydream,
                     RoutineStep.Rise
                 )
             ),
@@ -672,6 +687,7 @@ object PlayRoutines {
                     RoutineStep.GoTo(PlayScene.Station.BENCH),
                     RoutineStep.Occupy(PlayScene.Station.BENCH),
                     RoutineStep.Linger(14_000L),
+                    RoutineStep.Daydream,
                     RoutineStep.Rise,
                     RoutineStep.Stroll(0.75f),
                     RoutineStep.Act(AnimationType.MOVE),
@@ -695,6 +711,7 @@ object PlayRoutines {
                     RoutineStep.GoTo(PlayScene.Station.BENCH),
                     RoutineStep.Occupy(PlayScene.Station.BENCH),
                     RoutineStep.Linger(16_000L),
+                    RoutineStep.Daydream,
                     RoutineStep.Rise,
                     RoutineStep.Stroll(0.84f),
                     RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),

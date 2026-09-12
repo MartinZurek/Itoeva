@@ -95,6 +95,41 @@ diesem Entwicklungspfad passt, weiss weiterhin die gewichtete Tagesablaufwahl de
 gerade traegt; die Ausformung wird ihm als `interest` hereingereicht (`Planner.planFor`), statt
 dass er sie ein zweites Mal und schlechter nachbaut.
 
+### Die dritte Luecke: Draussen war kein Ziel
+
+Gemeldet als "er hockt hauptsaechlich in seinem Zimmer". Naheliegend waere gewesen, an den
+Gewichten der Tagesablaufwahl zu drehen - dort steht Bewegung abends mit 4 aber ohnehin schon
+ganz oben. Die Ursache lag eine Schicht tiefer:
+
+**Kein einziges `Requirement` im ganzen Kern nannte `LivingSite.OUTSIDE`.** Der Ort existierte in
+der Welt, in der Ortsabbildung und in den Oeffnungszeiten - aber in keinem einzigen Plan.
+Draussen zu sein war damit nie eine Absicht, sondern immer nur eine Nebenwirkung davon, welches
+Thema die Oberflaeche gerade gezogen hatte.
+
+Seit NT-073 verlangt `MOVE_BODY`, draussen zu sein. Damit muss der Planer einen Weg vor die Tuer
+voranstellen - der Gang hinaus ist ein sichtbarer Planschritt geworden statt einer Kulissenfrage.
+`Planner.planFor` stellt den Weg allgemein voran, sobald eine Freizeitbeschaeftigung ein `At`
+traegt; eine kuenftige mit eigenem Ort braucht dort nichts mehr.
+
+Der Ausgleich gehoert dazu: Weil der Weg jetzt Zeit kostet, stillt Bewegung etwas mehr als das
+Herumsitzen daheim. Ohne das waere Hinausgehen unterm Strich teurer geworden - die Aenderung
+haette das Gegenteil bewirkt.
+
+### Die vierte: der Traum war nicht selten, er war unerreichbar
+
+Gemeldet als "die Traumsequenz hab ich noch nie gesehen". Auch hier war die Wahrscheinlichkeit
+nicht das Problem: 40 Prozent je Gelegenheit, alle sechs bis fuenfzehn Minuten.
+
+Traeume liefen aber ausschliesslich in `RoutineStep.SleepUntilMorning` und dort nur in
+`DayPhase.NIGHT` - also ab 23 Uhr. Tagsueber war dieselbe Schlafhandlung ein Nickerchen von acht
+Sekunden Stille. Wer abends zusieht, konnte keinen Traum sehen, egal wie lange.
+
+NT-073 fuehrt `RoutineStep.Daydream` ein: ein ausdruecklicher Schritt statt einer stillen Regel im
+Verweilen, damit im Ablauf selbst steht, wo ein Traum moeglich ist - auf dem Sofa, beim
+Innehalten und auf der Bank draussen - und ein Test es nachlesen kann. Dazu traeumt jetzt auch
+das Nickerchen. Der Tagtraum ist mit 28 Prozent bewusst seltener als der Nachttraum; er soll ein
+Aufblitzen bleiben.
+
 ### Erfahrung aus dem Erleben
 
 `Needs.wellbeing()` fasst den Zustand zu einer Zahl zusammen - 1 heisst "nichts draengt". Der

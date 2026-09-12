@@ -500,7 +500,9 @@ object LivingRuntimeAdapter {
         AnimationType.CREATIVITY -> listOf(ActionCatalog[ActionKind.CREATE])
         AnimationType.FOCUS -> listOf(ActionCatalog[ActionKind.CONCENTRATE])
         AnimationType.MINDFULNESS -> listOf(ActionCatalog[ActionKind.SETTLE])
-        AnimationType.MOVE -> listOf(ActionCatalog[ActionKind.MOVE_BODY])
+        // Auch eine erbetene Bewegung faengt vor der Tuer an (NT-073).
+        AnimationType.MOVE -> travelIfNeeded(LivingSite.OUTSIDE, world) +
+            ActionCatalog[ActionKind.MOVE_BODY]
         AnimationType.MEDICINE -> listOf(ActionCatalog[ActionKind.TEND_SELF])
 
         // Ist wirklich jemand da, wird aus Zuwendung eine Begegnung - mit Beziehungswirkung.

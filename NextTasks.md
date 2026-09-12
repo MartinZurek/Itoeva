@@ -178,6 +178,15 @@ hereingereicht. Dazu `Needs.wellbeing()` und ein XP-Zuschlag nach tatsaechlicher
 nicht erprobt; und ob das Wohlbefinden auch die sichtbare Stimmung faerben soll (heute stammt
 die ausschliesslich aus dem Pflegebuch, siehe AvatarMoodState).
 
+**Welt, weiter:** NT-073 **Draussen als Ziel, Traeume ausserhalb der Nacht** - *am 2026-09-12
+umgesetzt; siehe LIVING_AGENT.md.* Beide Beobachtungen vom Geraet hatten dieselbe Art Ursache:
+Die Sache gab es im Modell nicht. `LivingSite.OUTSIDE` wurde von keinem Requirement verlangt und
+stand deshalb in keinem Plan; Traeume liefen nur im Nachtschlaf ab 23 Uhr und waren abends
+unerreichbar. Jetzt verlangt `MOVE_BODY` den Aufenthalt draussen, und `RoutineStep.Daydream`
+traegt eine Traumgelegenheit auf dem Sofa, beim Innehalten, auf der Bank und im Nickerchen.
+**Offen bleibt:** ob es sich am Geraet nach genug anfuehlt - 28 Prozent Tagtraum und der
+Ausgleich fuer den Weg nach draussen sind begruendete Schaetzungen, keine Messungen.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.

@@ -116,6 +116,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayRoutineTest.kt"
   "$TEST/matrix/LivingRuntimeAdapterTest.kt"
   "$TEST/matrix/ReminderActionsTest.kt"
+  "$TEST/matrix/OutdoorsAndDreamsTest.kt"
   "$TEST/matrix/PlayVisitWindowTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
@@ -158,6 +159,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayRoutineTest
   com.notime.glyphsim.matrix.LivingRuntimeAdapterTest
   com.notime.glyphsim.matrix.ReminderActionsTest
+  com.notime.glyphsim.matrix.OutdoorsAndDreamsTest
   com.notime.glyphsim.matrix.PlayVisitWindowTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest
