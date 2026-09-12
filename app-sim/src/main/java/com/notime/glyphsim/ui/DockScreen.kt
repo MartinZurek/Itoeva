@@ -51,6 +51,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
@@ -86,9 +87,19 @@ import com.notime.glyphsim.skilltree.AvatarUnlockRepository
 import com.notime.glyphsim.skilltree.SkillRepertoire
 import com.notime.glyphsim.stream.LivingObservationFeed
 import com.notime.glyphsim.stream.ExternalImpulse
+import com.notime.glyphsim.stream.ExternalImpulseSource
+import com.notime.glyphsim.stream.LocalTestInteractionProvider
+import com.notime.glyphsim.stream.StreamCommandConfig
+import com.notime.glyphsim.stream.StreamCommandGate
+import com.notime.glyphsim.stream.StreamCommandParser
+import com.notime.glyphsim.stream.StreamGateDecision
+import com.notime.glyphsim.stream.StreamGateLogEntry
+import com.notime.glyphsim.stream.StreamGateState
 import com.notime.glyphsim.stream.StreamInteractionState
 import com.notime.glyphsim.stream.StreamInteractions
 import com.notime.glyphsim.stream.StreamSelection
+import com.notime.glyphsim.stream.TwitchChatInteractionProvider
+import com.notime.glyphsim.stream.TwitchChatStatus
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
@@ -134,6 +145,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -395,6 +407,32 @@ fun DockScreen(
         var latestExternalImpulse by remember(actionSlotProfileId) {
             mutableStateOf<ExternalImpulse?>(null)
         }
+
+        // ---- Die Zuschauer-Eingangsschicht (NT-070) ----
+        //
+        // Alles, was von aussen kommt, laeuft ueber genau diese drei Werte: eine zentrale
+        // Konfiguration, das Gedaechtnis der Abstandspruefung und die zuletzt gefallene
+        // Entscheidung fuers Bild. Die Spielschicht darunter kennt keinen davon - sie sieht nur
+        // den [ExternalImpulse], der eventuell dabei herauskommt.
+        val streamConfig = remember { StreamCommandConfig() }
+        val localViewers = remember { LocalTestInteractionProvider(streamConfig) }
+        var gateState by remember(actionSlotProfileId) { mutableStateOf(StreamGateState()) }
+        var lastGateEntry by remember(actionSlotProfileId) {
+            mutableStateOf<StreamGateLogEntry?>(null)
+        }
+        // Jedes Tippen im Client steht fuer EINEN Zuschauer - nicht immer denselben. Ohne die
+        // laufende Nummer traefe die Vorfuehrung am Geraet staendig den Einzelabstand und saehe
+        // aus wie ein Fehler; den Einzelabstand pruefen die Tests, nicht der Daumen.
+        var demoViewerCount by remember { mutableStateOf(0) }
+        val twitchChannel = stringResource(R.string.stream_twitch_channel)
+        val twitchChat = remember(streamMode, twitchChannel) {
+            if (streamMode && twitchChannel.isNotBlank()) {
+                TwitchChatInteractionProvider(twitchChannel, streamConfig)
+            } else {
+                null
+            }
+        }
+        var chatStatus by remember { mutableStateOf(TwitchChatStatus.OFF) }
 
         // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
         // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
@@ -2438,11 +2476,20 @@ fun DockScreen(
         }
 
         /**
-         * Lokaler Ersatz fuer das spaetere Backend: Ein Tippen waehlt genau einen vorhandenen
-         * Slot. Die zugehoerige Ausloesung wird vor dem Anstoss noch einmal in Room geprueft;
-         * ein veralteter Snapshot darf keine Agentenentscheidung ausloesen.
+         * Der eine Weg, auf dem ein Angebot von aussen ins Spiel gelangt.
+         *
+         * Hier ist bereits entschieden, DASS gewaehlt werden darf - Syntax und Abstaende hat das
+         * Tor geprueft. Offen bleibt, ob der Platz noch gilt: Die zugehoerige Ausloesung wird
+         * deshalb unmittelbar davor noch einmal in Room nachgeschlagen, denn ein veralteter
+         * Abzug darf keine Agentenentscheidung ausloesen.
+         *
+         * [source] wandert nur ins Protokoll und in den Impuls. Ob dahinter ein Chat-Befehl,
+         * der Demo-Eingang oder spaeter ein Bits-Ereignis stand, aendert ab hier nichts mehr.
          */
-        fun selectStreamSlot(index: Int) {
+        fun selectStreamSlot(
+            index: Int,
+            source: ExternalImpulseSource = ExternalImpulseSource.LOCAL_VIEWER_SIMULATOR
+        ) {
             if (!streamMode || pendingExternalImpulse != null) return
             val saved = slots.getOrNull(index) ?: return
             scope.launch {
@@ -2464,7 +2511,8 @@ fun DockScreen(
                 when (val selected = StreamInteractions.select(
                     state,
                     slotId = index + 1,
-                    atMinute = PlayTimeLapse.absoluteMinute()
+                    atMinute = PlayTimeLapse.absoluteMinute(),
+                    source = source
                 )) {
                     is StreamSelection.Accepted -> {
                         pendingExternalImpulse = selected.impulse
@@ -2495,6 +2543,40 @@ fun DockScreen(
             slots = state.slots
             pendingExternalImpulse = null
             if (result.isUiSuccess()) fedCount++
+        }
+
+        // ---- Von aussen nach innen: die einzige Verbindung zwischen Publikum und Welt ----
+        //
+        // **Was hier NICHT passiert.** Diese Stelle kennt keine Befehlssyntax, kein Twitch und
+        // keine Bezahlfrage. Sie nimmt fertige [ViewerCommand]s aus beliebig vielen Quellen
+        // entgegen, laesst sie durch dasselbe Tor laufen und reicht das Ergebnis an
+        // [selectStreamSlot] weiter - dieselbe Funktion, die auch ein Tippen im Client benutzt.
+        //
+        // Genau deshalb kostet ein spaeterer Bits- oder Sub-Eingang hier **keine Zeile**: Er ist
+        // ein weiterer [StreamInteractionProvider] in dieser Liste, und alles danach bleibt, wie
+        // es ist.
+        //
+        // Der Chat-Faden laeuft nebenher: Er darf Minuten mit Wiederverbindungsversuchen
+        // verbringen, ohne den Demo-Eingang anzuhalten.
+        LaunchedEffect(streamMode, playMode, twitchChat) {
+            if (!streamMode || !playMode) return@LaunchedEffect
+            twitchChat?.let { chat ->
+                launch { chat.status.collect { chatStatus = it } }
+                launch { chat.listen() }
+            }
+            listOfNotNull(localViewers.commands, twitchChat?.commands).merge().collect { command ->
+                val decision = StreamCommandGate.admit(
+                    gateState,
+                    command,
+                    StreamInteractionState(slots, pendingExternalImpulse, latestExternalImpulse),
+                    streamConfig
+                )
+                gateState = decision.state
+                lastGateEntry = decision.state.log.lastOrNull()
+                if (decision is StreamGateDecision.Accepted) {
+                    selectStreamSlot(decision.slotId - 1, command.origin)
+                }
+            }
         }
 
         // Laeuft bei jeder Aenderung von clockOffset neu an, also auch mitten in einer
@@ -3679,8 +3761,20 @@ fun DockScreen(
                             .then(
                                 if (saved != null) {
                                     if (streamMode) {
+                                        // Bewusst NICHT direkt in die Auswahl: Das Tippen
+                                        // schreibt dieselbe Zeile, die ein Zuschauer tippen
+                                        // wuerde, und nimmt denselben Weg durch Parser und Tor.
+                                        // Sonst pruefte die Vorfuehrung am Geraet eine Strecke,
+                                        // die es im Stream gar nicht gibt.
                                         Modifier.pointerInput(saved.occurrenceId) {
-                                            detectTapGestures(onTap = { selectStreamSlot(index) })
+                                            detectTapGestures(onTap = {
+                                                demoViewerCount++
+                                                localViewers.type(
+                                                    "demo-$demoViewerCount",
+                                                    "${streamConfig.prefix}${streamConfig.dropKeyword} " +
+                                                        StreamCommandParser.letterFor(index + 1)
+                                                )
+                                            })
                                         }
                                     } else {
                                         Modifier.pointerInput(saved.occurrenceId) {
@@ -3733,23 +3827,35 @@ fun DockScreen(
                                 modifier = Modifier.fillMaxSize().padding(8.dp)
                             )
                         }
+                        // Der Name, unter dem dieser Platz im Chat angesprochen wird. Auch an
+                        // einem LEEREN Platz sichtbar: Wer zuschaut, soll sehen, dass es vier
+                        // gibt und welcher gerade nichts hergibt - sonst wirkt ein
+                        // "Platz C ist leer" wie eine Fehlermeldung ohne Zusammenhang.
+                        if (streamMode) {
+                            Text(
+                                text = StreamCommandParser.letterFor(index + 1).toString(),
+                                color = if (saved != null) {
+                                    TamaPalette.TextMuted
+                                } else {
+                                    TamaPalette.TextMuted.copy(alpha = 0.45f)
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(start = 5.dp, top = 1.dp)
+                            )
+                        }
                     }
                 }
             }
             if (streamMode) {
-                val latest = latestExternalImpulse
-                Text(
-                    text = if (latest == null) {
-                        stringResource(R.string.stream_viewer_ready)
-                    } else {
-                        stringResource(
-                            R.string.stream_viewer_impulse,
-                            latest.savedSlotId,
-                            stringResource(latest.animationType.labelRes)
-                        )
-                    },
-                    color = TamaPalette.TextMuted,
-                    fontSize = 11.sp,
+                StreamViewerOverlay(
+                    config = streamConfig,
+                    chatStatus = chatStatus,
+                    channel = twitchChannel,
+                    lastEntry = lastGateEntry,
+                    latestImpulse = latestExternalImpulse,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(start = 12.dp, bottom = 12.dp)

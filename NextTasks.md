@@ -158,6 +158,16 @@ unter freiem Himmel mindestens neunzig Sekunden, und die Musik folgt daraufhin v
 Regel im Player haette das Symptom behandelt und ausserdem Ton und Bild entkoppelt. **Offen
 bleibt:** ob neunzig Sekunden richtig sind - das ist eine Zahl und erst am Geraet zu beurteilen.
 
+**Stream und Zuschauer:** NT-070 **Kostenlose Zuschauer-Interaktion ueber den Twitch-Chat** -
+*am 2026-09-12 umgesetzt; siehe `docs/streaming-interaction.md`.* Zuschauer loesen mit `!drop A`
+bis `!drop D` einen gespeicherten Platz aus. Die Kette Chat -> Provider -> normalisierte
+`StreamInteraction` -> bestehende Auswahl -> Living Agent steht; ein Test schickt dasselbe
+Angebot aus drei Quellen durch und verlangt dasselbe Ergebnis, damit die spaetere Bits-Anbindung
+die Spielschicht nicht anfassen muss. Anonyme Leseverbindung ohne Token, Netzberechtigung nur im
+Stream-Quellsatz. **Offen bleibt:** der Lauf an einem echten Kanal mit echtem Publikum (gehoert
+zu NT-058) und die Frage, ob 60 s je Zuschauer und 8 s gemeinsam die richtigen Abstaende sind -
+das sind Vermutungen und erst vor Publikum zu beurteilen.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.

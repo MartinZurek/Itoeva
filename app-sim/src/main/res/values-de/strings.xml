@@ -349,6 +349,15 @@
     <string name="a11y_action_slot_filled">Speicherplatz %1$d: %2$s</string>
     <string name="a11y_action_slot_apply">Auf das Wesen anwenden</string>
     <string name="stream_slot_choose">Zuschauerauswahl fuer diesen Slot simulieren</string>
+    <string name="stream_chat_off">CHAT AUS · nur Demo</string>
+    <string name="stream_chat_connecting">CHAT · verbindet…</string>
+    <string name="stream_chat_listening">CHAT · %1$s</string>
+    <string name="stream_chat_retrying">CHAT · neuer Versuch…</string>
+    <string name="stream_decision_accepted">%1$s → Platz %2$s</string>
+    <string name="stream_decision_viewer_cooldown">%1$s · war schon dran</string>
+    <string name="stream_decision_global_cooldown">%1$s · einen Moment</string>
+    <string name="stream_decision_pending">%1$s · es passiert schon etwas</string>
+    <string name="stream_decision_slot_empty">%1$s · Platz %2$s ist leer</string>
     <string name="stream_viewer_ready">ZUSCHAUER-SIM · gespeicherten Impuls antippen</string>
     <string name="stream_viewer_impulse">ZUSCHAUER · Slot %1$d · %2$s</string>
     <string name="a11y_clock_save_to_slot">In Speicherplatz %1$d ablegen</string>
