@@ -25,7 +25,30 @@ enum class GoalKind {
     CONNECT_WITH,
 
     /** Geld durch eine normale, freiwillig gewaehlte Arbeit verdienen. */
-    EARN_MONEY;
+    EARN_MONEY,
+
+    /**
+     * **Etwas sehen, das man noch nicht kennt** (NT-074).
+     *
+     * Bis hierher trieb [NeedKind.CURIOSITY] kein einziges Ziel. Neugier wuchs jede Stunde und
+     * war nie ein Grund, irgendetwas zu tun - sie wurde nur nebenbei gestillt, wenn ohnehin
+     * gelesen oder gebastelt wurde. Ein Wesen, das nie aus Neugier losgeht, wirkt nicht
+     * neugierig, egal wie hoch die Zahl steht.
+     *
+     * Erkunden heisst hier: hinausgehen und woanders sein als zuletzt. Deshalb verlangt
+     * [ActionKind.EXPLORE] den Aufenthalt draussen - dieselbe Bedingung wie Bewegung, aus
+     * demselben Grund (siehe NT-073).
+     */
+    EXPLORE,
+
+    /**
+     * **Es sich gut gehen lassen** (NT-074).
+     *
+     * Der zweite blinde Fleck: [NeedKind.COMFORT] trieb ebenfalls kein Ziel. Behaglichkeit wurde
+     * gestillt, wenn gegessen, geruht oder innegehalten wurde - aber nie gesucht. Ein Wesen, dem
+     * es unbehaglich ist, konnte nichts dagegen tun.
+     */
+    SEEK_COMFORT;
 
     /**
      * Das Beduerfnis, dessen Druck dieses Ziel traegt.
@@ -43,6 +66,8 @@ enum class GoalKind {
             DEVELOP -> NeedKind.GROWTH
             CONNECT_WITH -> NeedKind.SOCIAL
             EARN_MONEY -> NeedKind.GROWTH
+            EXPLORE -> NeedKind.CURIOSITY
+            SEEK_COMFORT -> NeedKind.COMFORT
         }
 }
 
@@ -240,12 +265,24 @@ object Planner {
                     ?.site
                 (ort?.let { goTo(it, world) } ?: emptyList()) + beschaeftigung
             }
+            // **Auch allein laesst sich etwas gegen Einsamkeit tun** (NT-074).
+            //
+            // Vorher war dieser Zweig `null`, wenn niemand da war - das Ziel galt damit als
+            // unerreichbar und fiel aus der Wahl. Ein Wesen mit hohem sozialem Druck und ohne
+            // Gegenueber konnte gegen seine Einsamkeit also nichts unternehmen; es stand daneben,
+            // bis zufaellig Besuch kam. Zuwendung zu zeigen stillt weniger als eine Begegnung
+            // (siehe ActionKind.SHOW_AFFECTION), aber es ist etwas.
             GoalKind.CONNECT_WITH -> world.nearbyProfiles
                 .asSequence()
                 .filter { it != agent?.profileId }
                 .sorted()
                 .firstOrNull()
                 ?.let { listOf(ActionCatalog.inviteToPlay(it)) }
+                ?: listOf(ActionCatalog[ActionKind.SHOW_AFFECTION])
+
+            GoalKind.EXPLORE -> goTo(LivingSite.OUTSIDE, world) + ActionCatalog[ActionKind.EXPLORE]
+
+            GoalKind.SEEK_COMFORT -> goTo(LivingSite.HOME, world) + ActionCatalog[ActionKind.SETTLE]
             GoalKind.EARN_MONEY -> if (LivingSite.WORKPLACE in world.openSites) {
                 goTo(LivingSite.WORKPLACE, world) + ActionCatalog[ActionKind.WORK]
             } else null

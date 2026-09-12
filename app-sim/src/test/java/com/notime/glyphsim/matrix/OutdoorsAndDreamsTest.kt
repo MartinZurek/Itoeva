@@ -35,17 +35,18 @@ class OutdoorsAndDreamsTest {
     // ---- Draussen ----
 
     @Test
-    fun `genau eine Beschaeftigung verlangt, draussen zu sein`() {
+    fun `die Beschaeftigungen, die hinausfuehren, sind benannt`() {
         val draussen = ActionCatalog.FREE_TIME.filter { kind ->
             ActionCatalog[kind].requirements.any {
                 it is Requirement.At && it.site == LivingSite.OUTSIDE
             }
         }
+        // Zwei, und beide aus eigenem Grund: Bewegung tut dem Koerper gut, Erkunden dem Kopf
+        // (NT-074). Genau daran wird der Unterschied beim Zusehen sichtbar - der eine bleibt
+        // eher in der Naehe, der andere geht weiter weg.
         assertEquals(
-            "Sich zu bewegen heisst, draussen zu sein - und das ist die Handlung, die den " +
-                "Avatar ueberhaupt vor die Tuer bringt",
-            listOf(ActionKind.MOVE_BODY),
-            draussen
+            setOf(ActionKind.EXPLORE, ActionKind.MOVE_BODY),
+            draussen.toSet()
         )
     }
 
@@ -87,6 +88,43 @@ class OutdoorsAndDreamsTest {
                 "Um $stunde Uhr war draussen zu",
                 LivingSite.OUTSIDE in LivingRuntimeAdapter.openSitesAt(stunde * 60)
             )
+        }
+    }
+
+    @Test
+    fun `Erkunden fuehrt wirklich woanders hin - und behaelt die Abwechslung`() {
+        // Acht der elf Bewegungsablaeufe wechseln den Ort, vier davon enden in einer
+        // Sonderaktivitaet (Drachen, Fussball, Basketball, Training, Angeln). Erkunden trifft
+        // also oft auf etwas Besonderes - genau das macht das Zusehen lohnend.
+        repeat(40) { seed ->
+            val ablauf = PlayRoutines.forTopic(
+                topic = AnimationType.MOVE,
+                preferPlaceChange = true,
+                random = Random(seed)
+            )
+            assertTrue(
+                "Seed $seed lieferte einen Ablauf ohne Ortswechsel",
+                ablauf.steps.any { it is RoutineStep.GoToPlace }
+            )
+        }
+    }
+
+    @Test
+    fun `die Auswahl fuers Erkunden umgeht den Wiederholungsschutz nicht`() {
+        // Der Grund, warum diese Vorauswahl IN PlayRoutines sitzt und nicht daneben nachgebaut
+        // ist: Sonst zoege das Erkunden an der Sonderaktivitaets-Ziehung vorbei, und dieselbe
+        // Sportart koennte sich beliebig oft wiederholen.
+        val alleFuenf = PlayRoutines.SpecialActivity.entries.toList()
+        repeat(20) { seed ->
+            val ablauf = PlayRoutines.forTopic(
+                topic = AnimationType.MOVE,
+                recentSpecials = alleFuenf,
+                preferPlaceChange = true,
+                random = Random(seed)
+            )
+            // Alle fuenf zuletzt gesehen: Es darf trotzdem etwas herauskommen, statt dass die
+            // Auswahl leer laeuft.
+            assertTrue("Seed $seed lieferte gar nichts", ablauf.steps.isNotEmpty())
         }
     }
 

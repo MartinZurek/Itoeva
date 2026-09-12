@@ -189,9 +189,27 @@ object PlayRoutines {
          * wieder aus dem vollen Feld gezogen, statt gar keine Sonderaktivitaet zu zeigen.
          */
         recentSpecials: List<SpecialActivity> = emptyList(),
+        /**
+         * **Nur Ablaeufe, die wirklich woanders hinfuehren** (NT-074).
+         *
+         * Fuers Erkunden: Erst dadurch, dass man an etwas VORBEIKOMMT, wird aus einem Weg eine
+         * Strecke. Die Auswahl bleibt bewusst hier und wird nicht daneben nachgebaut - sonst
+         * umginge das Erkunden die Sonderaktivitaets-Ziehung und den Wiederholungsschutz, die
+         * unten stehen, und Drachen, Fussball und Angeln koennten sich wiederholen.
+         *
+         * Gibt es keinen solchen Ablauf, bleibt es bei der gewoehnlichen Auswahl - ein fehlender
+         * Ablauf darf ein Ziel nicht unerreichbar machen.
+         */
+        preferPlaceChange: Boolean = false,
         random: Random = Random
     ): PlayRoutine {
-        val options = allFor(topic)
+        val alle = allFor(topic)
+        val options = if (preferPlaceChange) {
+            alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
+                .ifEmpty { alle }
+        } else {
+            alle
+        }
         if (needsShopping) {
             options.firstOrNull { routine ->
                 routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP }

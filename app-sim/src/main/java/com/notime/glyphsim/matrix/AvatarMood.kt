@@ -62,6 +62,58 @@ enum class AvatarMood {
         }
 
         /**
+         * **Wie es dem Wesen geht - aus beiden Quellen** (NT-074).
+         *
+         * Bis hierher stammte die Stimmung ausschliesslich aus dem Pflegebuch, also daraus, wie
+         * der NUTZER seinen Tag gemacht hat. Das war als Erinnerungshilfe richtig gedacht, hatte
+         * aber zwei Folgen, die beim Zusehen stoerten:
+         *
+         * 1. Wer keine Tagesziele gesetzt hat, sah **immer** [NEUTRAL] - ein Wesen ohne jede
+         *    Regung, egal was es gerade erlebt.
+         * 2. Der Living Agent fuehrt laengst einen vollstaendigen Zustand mit sieben
+         *    Beduerfnissen. Dass ein hungriges, muedes, einsames Wesen trotzdem gut gelaunt
+         *    aussah, solange die Haekchen stimmten, war der sichtbarste Bruch zwischen dem, was
+         *    das Modell weiss, und dem, was das Bild zeigt.
+         *
+         * [wellbeing] ist [com.notime.glyphsim.living.Needs.wellbeing]: 1 heisst "nichts
+         * draengt". Beide Quellen zaehlen gleich viel - die eine sagt, wie der Tag des Nutzers
+         * lief, die andere, wie es dem Wesen dabei ergangen ist.
+         *
+         * **Ohne Tagesziele entscheidet allein das Wohlbefinden.** Das ist der groessere Teil
+         * der Aenderung: Aus einem dauerhaft neutralen Gesicht wird eines, das seinem eigenen
+         * Zustand folgt.
+         *
+         * Am Grundsatz aendert das nichts: Es gibt weiterhin kein Verhungern und keine Strafe.
+         * Ein Wohlbefinden von 0 ergibt [SAD], nicht mehr - trueber, nie verloren.
+         */
+        fun of(progress: List<GoalProgress>, wellbeing: Double): AvatarMood {
+            val ausDemPflegebuch = fromGoals(progress).takeIf { it != NEUTRAL }?.let(::scoreOf)
+            val ausDemWesen = wellbeing.coerceIn(0.0, 1.0)
+            val gesamt = ausDemPflegebuch?.let { (it + ausDemWesen) / 2.0 } ?: ausDemWesen
+            return moodOf(gesamt)
+        }
+
+        /** Die Stimmungsstufen als Zahl, damit sich beide Quellen ueberhaupt mitteln lassen. */
+        private fun scoreOf(mood: AvatarMood): Double = when (mood) {
+            HAPPY -> 0.9
+            CONTENT -> 0.65
+            HUNGRY -> 0.35
+            SAD -> 0.1
+            // fromGoals liefert NEUTRAL nur, wenn es nichts zu bewerten gibt; der Aufrufer
+            // oben filtert das vorher heraus, damit "keine Ziele" nicht als "mittelmaessig"
+            // in den Mittelwert eingeht.
+            NEUTRAL -> 0.5
+        }
+
+        /** Dieselben Schwellen wie in [fromGoals], damit beide Wege dasselbe bedeuten. */
+        private fun moodOf(score: Double): AvatarMood = when {
+            score >= 0.8 -> HAPPY
+            score >= 0.5 -> CONTENT
+            score >= 0.2 -> HUNGRY
+            else -> SAD
+        }
+
+        /**
          * Bewertungszeitraum: der laufende KALENDERTAG, nicht die letzten 24 Stunden.
          *
          * Ein Tagesziel endet um Mitternacht - ein gleitendes Fenster wuerde die Erfolge von

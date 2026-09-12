@@ -100,6 +100,19 @@ enum class ActionKind {
     TEND_SELF,
 
     /**
+     * **Losgehen und etwas sehen, das man noch nicht kennt** (NT-074).
+     *
+     * Die Handlung, die es vorher nicht gab - und deshalb wirkte das Wesen nie neugierig,
+     * obwohl der Wert dafuer die ganze Zeit mitlief. Sie verlangt den Aufenthalt draussen: Was
+     * man zu Hause finden kann, kennt man schon.
+     *
+     * Anders als [MOVE_BODY], das dem Koerper guttut, stillt sie vor allem den Kopf. Beide
+     * fuehren hinaus, aus verschiedenen Gruenden - genau daran wird der Unterschied beim
+     * Zusehen sichtbar.
+     */
+    EXPLORE,
+
+    /**
      * Zuwendung zeigen, ohne dass jemand da ist.
      *
      * [INVITE_TO_PLAY] braucht ein anwesendes Gegenueber; diese hier nicht. Sie lindert das
@@ -470,6 +483,24 @@ object ActionCatalog {
             effort = 0.02
         ),
         Action(
+            kind = ActionKind.EXPLORE,
+            // Draussen, aus demselben Grund wie MOVE_BODY (NT-073): Der Ort ist Teil der Sache.
+            requirements = listOf(Requirement.At(LivingSite.OUTSIDE)),
+            outcome = ActionOutcome(
+                needRelief = mapOf(
+                    NeedKind.CURIOSITY to 0.65,
+                    NeedKind.FUN to 0.3,
+                    NeedKind.GROWTH to 0.15,
+                    NeedKind.ENERGY to -0.15,
+                    NeedKind.HUNGER to -0.05
+                ),
+                minutes = 50,
+                preferenceDelta = 0.03,
+                rememberValence = 1
+            ),
+            effort = 0.1
+        ),
+        Action(
             kind = ActionKind.SHOW_AFFECTION,
             requirements = emptyList(),
             outcome = ActionOutcome(
@@ -481,7 +512,18 @@ object ActionCatalog {
                 minutes = 25,
                 preferenceDelta = 0.02,
                 rememberValence = 1
-            )
+            ),
+            // **Der Ersatz darf nicht bequemer sein als die Sache selbst** (NT-074).
+            //
+            // Seit diese Handlung auch von sich aus gewaehlt werden kann (Planner, wenn niemand
+            // da ist), entscheidet ihr Preis mit. Ohne Muehe war sie schneller und billiger als
+            // jede Freizeitbeschaeftigung - ein Wesen allein zu Hause haette dann bei gleichem
+            // Druck IMMER an jemanden gedacht, statt sich zu beschaeftigen, und die Anwesenheit
+            // eines Freundes haette an der Entscheidung nichts mehr geaendert.
+            //
+            // Das ist auch inhaltlich richtig: An jemanden zu denken, der nicht da ist, ist die
+            // schwerere Wahl, nicht die leichtere.
+            effort = 0.12
         )
     ).associateBy { it.kind }
 
@@ -495,6 +537,7 @@ object ActionCatalog {
      */
     val FREE_TIME: Set<ActionKind> = setOf(
         ActionKind.PURSUE_INTEREST,
+        ActionKind.EXPLORE,
         ActionKind.READ,
         ActionKind.CREATE,
         ActionKind.CONCENTRATE,

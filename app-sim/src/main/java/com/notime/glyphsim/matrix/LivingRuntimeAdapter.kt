@@ -283,6 +283,22 @@ object LivingRuntimeAdapter {
                     )
                 )
             }
+            ActionKind.EXPLORE -> {
+                topic = AnimationType.MOVE
+                // **Erkunden sieht anders aus als Bewegung, obwohl beides hinausfuehrt** (NT-074).
+                //
+                // Bevorzugt werden die Ablaeufe, die den ORT wechseln - Strasse, Wald, Wiese.
+                // Genau das macht aus einem Weg eine Strecke: Man kommt an etwas vorbei, statt
+                // vor der Haustuer im Kreis zu gehen. Wer sich nur bewegt, bleibt haeufiger in
+                // der Naehe; wer erkundet, geht weiter weg.
+                routine = PlayRoutines.forTopic(
+                    topic = AnimationType.MOVE,
+                    footballTrickLearned = footballTrickLearned,
+                    recentSpecials = recentSpecials,
+                    preferPlaceChange = true,
+                    random = random
+                )
+            }
             ActionKind.TEND_SELF -> {
                 topic = AnimationType.MEDICINE
                 routine = topicRoutine(AnimationType.MEDICINE, random)
