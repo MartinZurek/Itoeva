@@ -148,7 +148,18 @@ object LivingRuntimeAdapter {
         goalInfluence: GoalInfluence? = null
     ): PreparedLivingRoutine {
         val startWorld = synchroniseWorld(world, renderedPlace, nearbyProfiles)
-        var result = LivingSimulation.step(agent, startWorld, goalInfluence)
+        // **Die Ausformung geht VOR der Entscheidung mit hinein** (NT-072).
+        //
+        // Der Kern entscheidet weiterhin allein, OB Freizeit oder Entwicklung gerade traegt.
+        // Faellt sie aber, soll daraus nicht wieder die eine bedeutungslose Beschaeftigung
+        // werden, sondern genau das, was die gewichtete Tagesablaufwahl ohnehin schon
+        // ausgesucht hat - mit deren Wirkung. Lesen stillt dann Neugier, Bewegung macht hungrig.
+        var result = LivingSimulation.step(
+            agent,
+            startWorld,
+            goalInfluence,
+            interestActionFor(safeInterestTopic(agent.goal, interestTopic))
+        )
         val firstAction = completedActions(result).firstOrNull()
             ?: return PreparedLivingRoutine(result, null, null, emptyList())
 
@@ -237,6 +248,48 @@ object LivingRuntimeAdapter {
                         random = random
                     )
                 )
+            }
+            // ---- Die sieben benannten Beschaeftigungen (NT-072) ----
+            //
+            // Jede zeigt ihr eigenes Thema, und damit ihren eigenen Ort und ihre eigene
+            // sichtbare Routine. Dass dieser `when` sie erzwingt, ist der Grund, warum eine
+            // neue Kernhandlung nicht stillschweigend unsichtbar bleiben kann: Wer sie
+            // hinzufuegt, muss hier sagen, wie sie aussieht, sonst faellt der Build.
+            ActionKind.READ -> {
+                topic = AnimationType.BOOK
+                routine = topicRoutine(AnimationType.BOOK, random)
+            }
+            ActionKind.CREATE -> {
+                topic = AnimationType.CREATIVITY
+                routine = topicRoutine(AnimationType.CREATIVITY, random)
+            }
+            ActionKind.CONCENTRATE -> {
+                topic = AnimationType.FOCUS
+                routine = topicRoutine(AnimationType.FOCUS, random)
+            }
+            ActionKind.SETTLE -> {
+                topic = AnimationType.MINDFULNESS
+                routine = topicRoutine(AnimationType.MINDFULNESS, random)
+            }
+            ActionKind.MOVE_BODY -> {
+                topic = AnimationType.MOVE
+                routine = atPlace(
+                    PlayScene.forTopic(AnimationType.MOVE),
+                    PlayRoutines.forTopic(
+                        topic = AnimationType.MOVE,
+                        footballTrickLearned = footballTrickLearned,
+                        recentSpecials = recentSpecials,
+                        random = random
+                    )
+                )
+            }
+            ActionKind.TEND_SELF -> {
+                topic = AnimationType.MEDICINE
+                routine = topicRoutine(AnimationType.MEDICINE, random)
+            }
+            ActionKind.SHOW_AFFECTION -> {
+                topic = AnimationType.LOVE
+                routine = topicRoutine(AnimationType.LOVE, random)
             }
             ActionKind.INVITE_TO_PLAY -> {
                 topic = AnimationType.LOVE
@@ -391,11 +444,21 @@ object LivingRuntimeAdapter {
         return if (goal == GoalKind.DEVELOP) AnimationType.BOOK else AnimationType.MOVE
     }
 
+    /**
+     * Aus welcher Absicht eine erbetene Handlung kommt.
+     *
+     * Wichtig fuer die Erinnerung: Episoden und gelernter Geschmack haengen am ZIEL, nicht an
+     * der Handlung. Liefe Medizin weiterhin unter "Vergnuegen", lernte das Wesen mit jeder
+     * Tablette, dass Vergnuegen schoen ist - und traefe spaeter deshalb andere Entscheidungen.
+     */
     private fun requestedGoal(topic: AnimationType): GoalKind = when (topic) {
         AnimationType.DRINK, AnimationType.WORK -> GoalKind.GET_FOOD
         AnimationType.REST, AnimationType.SLEEP -> GoalKind.REST
+        // Fuersorge und Zur-Ruhe-Kommen sind Erholung, kein Zeitvertreib.
+        AnimationType.MINDFULNESS, AnimationType.MEDICINE -> GoalKind.REST
         AnimationType.BOOK, AnimationType.FOCUS, AnimationType.CREATIVITY -> GoalKind.DEVELOP
-        else -> GoalKind.HAVE_FUN
+        AnimationType.LOVE -> GoalKind.CONNECT_WITH
+        AnimationType.MOVE, AnimationType.GENERAL -> GoalKind.HAVE_FUN
     }
 
     private fun requestedActions(
@@ -421,8 +484,62 @@ object LivingRuntimeAdapter {
         }
         AnimationType.REST, AnimationType.SLEEP -> travelIfNeeded(LivingSite.HOME, world) +
             ActionCatalog[ActionKind.REST]
-        else -> listOf(ActionCatalog[ActionKind.PURSUE_INTEREST])
+
+        // ---- Die acht, die frueher alle dasselbe waren (NT-072) ----
+        //
+        // Bis hierher endete dieser `when` mit `else -> PURSUE_INTEREST`. Acht der zwoelf
+        // Reminder-Typen liefen dadurch durch **eine einzige** Handlung: Ein Buch zu lesen und
+        // eine Tablette zu nehmen stillte Spass, Neugier und Wachstum in genau demselben Mass.
+        // Sichtbar war das nicht - die Choreografie unterschied sich laengst -, aber der Tag
+        // des Wesens bekam davon keine Struktur, und die Erinnerung lernte aus jeder Handlung
+        // dasselbe.
+        //
+        // Kein `else` mehr, mit Absicht: Ein neuer Reminder-Typ soll hier auffallen, statt
+        // still im Sammelposten zu verschwinden.
+        AnimationType.BOOK -> listOf(ActionCatalog[ActionKind.READ])
+        AnimationType.CREATIVITY -> listOf(ActionCatalog[ActionKind.CREATE])
+        AnimationType.FOCUS -> listOf(ActionCatalog[ActionKind.CONCENTRATE])
+        AnimationType.MINDFULNESS -> listOf(ActionCatalog[ActionKind.SETTLE])
+        AnimationType.MOVE -> listOf(ActionCatalog[ActionKind.MOVE_BODY])
+        AnimationType.MEDICINE -> listOf(ActionCatalog[ActionKind.TEND_SELF])
+
+        // Ist wirklich jemand da, wird aus Zuwendung eine Begegnung - mit Beziehungswirkung.
+        // Sonst bleibt es das stille Denken an jemanden.
+        AnimationType.LOVE -> listOf(
+            world.nearbyProfiles.sorted().firstOrNull()
+                ?.let(ActionCatalog::inviteToPlay)
+                ?: ActionCatalog[ActionKind.SHOW_AFFECTION]
+        )
+
+        AnimationType.GENERAL -> listOf(ActionCatalog[ActionKind.PURSUE_INTEREST])
     }
+
+    /**
+     * Welche Kernhandlung hinter einem sichtbaren Thema steckt.
+     *
+     * Nur die Freizeit- und Entwicklungsthemen stehen hier. Essen, Arbeit und Schlaf fehlen mit
+     * Absicht: Die entscheidet der Kern aus der Lage, nicht die Themenwahl der Oberflaeche.
+     */
+    private fun interestActionFor(topic: AnimationType): ActionKind? = when (topic) {
+        AnimationType.BOOK -> ActionKind.READ
+        AnimationType.CREATIVITY -> ActionKind.CREATE
+        AnimationType.FOCUS -> ActionKind.CONCENTRATE
+        AnimationType.MINDFULNESS -> ActionKind.SETTLE
+        AnimationType.MOVE -> ActionKind.MOVE_BODY
+        AnimationType.LOVE -> ActionKind.SHOW_AFFECTION
+        AnimationType.GENERAL -> ActionKind.PURSUE_INTEREST
+        AnimationType.DRINK,
+        AnimationType.WORK,
+        AnimationType.REST,
+        AnimationType.SLEEP,
+        AnimationType.MEDICINE -> null
+    }
+
+    /** Thema, Ort und sichtbarer Ablauf aus einer Hand - fuer die benannten Beschaeftigungen. */
+    private fun topicRoutine(topic: AnimationType, random: Random): PlayRoutine = atPlace(
+        PlayScene.forTopic(topic),
+        PlayRoutines.forTopic(topic = topic, random = random)
+    )
 
     private fun travelIfNeeded(site: LivingSite, world: WorldState): List<Action> =
         if (world.site == site) emptyList() else listOf(ActionCatalog.travelTo(site))

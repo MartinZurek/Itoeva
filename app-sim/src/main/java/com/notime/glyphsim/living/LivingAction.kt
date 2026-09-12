@@ -45,13 +45,68 @@ enum class ActionKind {
     REST,
 
     /**
-     * Sich mit etwas beschaeftigen - spielen, Musik hoeren, lernen.
+     * Sich mit irgendetwas beschaeftigen - der Rueckfall ohne eigene Bedeutung.
      *
-     * Eine Handlung fuer Freizeit UND Entwicklung, weil der Unterschied heute keiner waere: Was
-     * sie stillt, entscheidet das Ziel, aus dem sie kommt. Sobald Faehigkeiten existieren,
-     * trennt sich das von selbst.
+     * **Diese Handlung war einmal alle acht darunter.** Buch, Fokus, Kreativitaet, Achtsamkeit,
+     * Bewegung, Fuersorge und Zuwendung liefen samt und sonders hierdurch, mit identischer
+     * Wirkung: Ein Buch zu lesen und eine Tablette zu nehmen stillte dasselbe. Das war im Bild
+     * nicht zu sehen und im Agenten trotzdem falsch - es gab dem Wesen einen Tag, in dem alles
+     * dasselbe bedeutet.
+     *
+     * Was bleibt, ist der ehrliche Sammelposten fuer [AnimationType.GENERAL]: eine Regung ohne
+     * naeher benannte Absicht.
      */
     PURSUE_INTEREST,
+
+    /**
+     * Lesen.
+     *
+     * Neugier zuerst, Wachstum dahinter: Ein Buch beantwortet Fragen, und dabei lernt man auch
+     * etwas - nicht umgekehrt.
+     */
+    READ,
+
+    /** Etwas herstellen. Wachstum und Freude zugleich; nichts kostet dabei so wenig Kraft. */
+    CREATE,
+
+    /**
+     * Sich sammeln und an einer Sache bleiben.
+     *
+     * Die einzige freiwillige Handlung, die auch **belastet**: Konzentration zehrt an der Kraft
+     * und macht keinen Spass. Genau daran unterscheidet sie sich von [CREATE], mit dem sie sich
+     * sonst das Wachstum teilte.
+     */
+    CONCENTRATE,
+
+    /** Zur Ruhe kommen. Behaglichkeit, ein wenig Kraft - und sehr wenig Zeit. */
+    SETTLE,
+
+    /**
+     * Den Koerper bewegen.
+     *
+     * Macht Freude und tut gut, kostet Kraft **und macht hungrig**. Die letzte Wirkung ist die
+     * interessanteste: Erst dadurch zieht eine Bewegung am Nachmittag ein Abendessen nach sich,
+     * ohne dass irgendwo eine Regel "nach Sport kommt Essen" stuende.
+     */
+    MOVE_BODY,
+
+    /**
+     * Fuer sich selbst sorgen - Medizin, Pflege, das Noetige.
+     *
+     * **Stillt ausschliesslich Behaglichkeit, ausdruecklich keinen Spass.** Fuersorge ist kein
+     * Vergnuegen; sie soll es im Modell auch nicht sein. Vorher lief sie durch
+     * [PURSUE_INTEREST] und machte das Wesen damit vergnuegt und neugierig.
+     */
+    TEND_SELF,
+
+    /**
+     * Zuwendung zeigen, ohne dass jemand da ist.
+     *
+     * [INVITE_TO_PLAY] braucht ein anwesendes Gegenueber; diese hier nicht. Sie lindert das
+     * soziale Beduerfnis nur teilweise - wer allein an jemanden denkt, ist nicht in
+     * Gesellschaft gewesen, aber auch nicht ganz allein geblieben.
+     */
+    SHOW_AFFECTION,
 
     /** Eine sprachunabhaengige Einladung an ein anwesendes Wesen senden. */
     INVITE_TO_PLAY,
@@ -298,8 +353,141 @@ object ActionCatalog {
                 preferenceDelta = 0.02,
                 rememberValence = 1
             )
+        ),
+
+        // ---- Die sieben benannten Beschaeftigungen (NT-072) ----
+        //
+        // **Warum sie einzeln dastehen.** Jede stillt etwas anderes, und genau das ist ihr
+        // ganzer Zweck: Erst wenn Lesen die Neugier stillt und Bewegung hungrig macht, zieht das
+        // eine das andere nach sich - ohne dass irgendwo eine Regel "nach Sport kommt Essen"
+        // stuende. Ein einziger Sammelposten konnte das nicht, gleich wie gut seine Zahlen waren.
+        //
+        // Keine hat eine Voraussetzung ausser der Zeit, die sie kostet. Das ist Absicht: Ein
+        // Wesen soll lesen koennen, wo es gerade ist. Wo etwas stattfindet, entscheidet die
+        // sichtbare Routine ([com.notime.glyphsim.matrix.PlayRoutines]), nicht der Kern.
+        Action(
+            kind = ActionKind.READ,
+            requirements = emptyList(),
+            outcome = ActionOutcome(
+                needRelief = mapOf(
+                    NeedKind.CURIOSITY to 0.55,
+                    NeedKind.GROWTH to 0.35,
+                    NeedKind.FUN to 0.2,
+                    NeedKind.ENERGY to -0.05
+                ),
+                minutes = 45,
+                preferenceDelta = 0.02,
+                rememberValence = 1
+            ),
+            effort = 0.05
+        ),
+        Action(
+            kind = ActionKind.CREATE,
+            requirements = emptyList(),
+            outcome = ActionOutcome(
+                needRelief = mapOf(
+                    NeedKind.GROWTH to 0.5,
+                    NeedKind.FUN to 0.4,
+                    NeedKind.CURIOSITY to 0.25,
+                    NeedKind.ENERGY to -0.08
+                ),
+                minutes = 60,
+                preferenceDelta = 0.03,
+                rememberValence = 1
+            ),
+            effort = 0.1
+        ),
+        Action(
+            kind = ActionKind.CONCENTRATE,
+            requirements = emptyList(),
+            outcome = ActionOutcome(
+                // Die einzige freiwillige Handlung, die auch belastet - siehe ActionKind.
+                needRelief = mapOf(
+                    NeedKind.GROWTH to 0.55,
+                    NeedKind.CURIOSITY to 0.2,
+                    NeedKind.ENERGY to -0.12,
+                    NeedKind.FUN to -0.05
+                ),
+                minutes = 50,
+                preferenceDelta = 0.02,
+                rememberValence = 1
+            ),
+            effort = 0.18
+        ),
+        Action(
+            kind = ActionKind.SETTLE,
+            requirements = emptyList(),
+            outcome = ActionOutcome(
+                needRelief = mapOf(
+                    NeedKind.COMFORT to 0.6,
+                    NeedKind.ENERGY to 0.15,
+                    NeedKind.FUN to 0.1
+                ),
+                minutes = 20,
+                preferenceDelta = 0.02,
+                rememberValence = 1
+            )
+        ),
+        Action(
+            kind = ActionKind.MOVE_BODY,
+            requirements = emptyList(),
+            outcome = ActionOutcome(
+                needRelief = mapOf(
+                    NeedKind.FUN to 0.5,
+                    NeedKind.COMFORT to 0.3,
+                    NeedKind.ENERGY to -0.2,
+                    NeedKind.HUNGER to -0.08
+                ),
+                minutes = 40,
+                preferenceDelta = 0.02,
+                rememberValence = 1
+            ),
+            effort = 0.12
+        ),
+        Action(
+            kind = ActionKind.TEND_SELF,
+            requirements = emptyList(),
+            outcome = ActionOutcome(
+                // Ausdruecklich NUR Behaglichkeit. Siehe ActionKind.TEND_SELF.
+                needRelief = mapOf(NeedKind.COMFORT to 0.7),
+                minutes = 10,
+                rememberValence = 0
+            ),
+            effort = 0.02
+        ),
+        Action(
+            kind = ActionKind.SHOW_AFFECTION,
+            requirements = emptyList(),
+            outcome = ActionOutcome(
+                needRelief = mapOf(
+                    NeedKind.SOCIAL to 0.35,
+                    NeedKind.COMFORT to 0.25,
+                    NeedKind.FUN to 0.15
+                ),
+                minutes = 25,
+                preferenceDelta = 0.02,
+                rememberValence = 1
+            )
         )
     ).associateBy { it.kind }
+
+    /**
+     * Die Handlungen, mit denen sich eine Freizeit- oder Entwicklungsphase fuellen laesst.
+     *
+     * Eine ausdrueckliche Menge und keine Ableitung aus den Zielen: Sie ist das, was der Planer
+     * von aussen vorgeschlagen bekommen DARF. Arbeiten, essen und schlafen stehen bewusst nicht
+     * darin - die entscheidet der Kern selbst aus der Lage, und ein Vorschlag von aussen soll
+     * sie nicht umgehen koennen.
+     */
+    val FREE_TIME: Set<ActionKind> = setOf(
+        ActionKind.PURSUE_INTEREST,
+        ActionKind.READ,
+        ActionKind.CREATE,
+        ActionKind.CONCENTRATE,
+        ActionKind.SETTLE,
+        ActionKind.MOVE_BODY,
+        ActionKind.SHOW_AFFECTION
+    )
 
     operator fun get(kind: ActionKind): Action = actions.getValue(kind)
 

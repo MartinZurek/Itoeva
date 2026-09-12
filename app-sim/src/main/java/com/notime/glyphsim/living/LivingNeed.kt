@@ -69,6 +69,21 @@ data class Needs(private val values: Map<NeedKind, Double>) {
         )
     }
 
+    /**
+     * **Wie gut es dem Wesen insgesamt geht** - 1 heisst "nichts draengt", 0 heisst "alles
+     * draengt zugleich".
+     *
+     * Der Mittelwert und nicht das staerkste Beduerfnis: Ein Wesen, das satt, ausgeruht und
+     * zufrieden ist, aber seit Tagen niemanden gesehen hat, geht es nicht gut - und ein Wesen
+     * mit sieben halb gestillten Beduerfnissen geht es nicht schlecht. Das Maximum wuerde
+     * beides gleich bewerten.
+     *
+     * Bewusst abgeleitet und nicht gespeichert: Es kann damit nie mit den Beduerfnissen
+     * auseinanderlaufen, aus denen es entsteht.
+     */
+    fun wellbeing(): Double =
+        1.0 - NeedKind.entries.sumOf { pressure(it) } / NeedKind.entries.size
+
     /** Derselbe Stand, ein Beduerfnis um [amount] erleichtert. */
     fun relieved(kind: NeedKind, amount: Double): Needs =
         Needs(values + (kind to (pressure(kind) - amount).coerceIn(0.0, 1.0)))

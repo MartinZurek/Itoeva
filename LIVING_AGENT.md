@@ -62,6 +62,51 @@ auf eine Frage ist statt ein ungefragter Hinweis. Zusammen ergeben sie die klein
 will essen" plus "mir fehlt Geld" ist bereits ein Konflikt. Die Anzeige dieser Symbole ueber dem
 Kopf ist der naechste Schnitt (NT-069) und ersetzt dabei den gewuerfelten Satz.
 
+### Die zweite Luecke, gefunden am 12.09.: acht Reminder, eine Wirkung
+
+Die erste Luecke war, dass man den Agenten nicht SAH. Die zweite war, dass er fuer den groessten
+Teil des Tages **nicht unterschied**.
+
+`LivingRuntimeAdapter.requestedActions` uebersetzte eine beantwortete Erinnerung in eine
+Kernhandlung - aber nur fuer vier der zwoelf Typen (Arbeit, Essen, Ausruhen, Schlafen). Die
+anderen acht endeten samt und sonders in `else -> PURSUE_INTEREST`. Buch, Fokus, Kreativitaet,
+Achtsamkeit, Liebe, Bewegung, Medizin und Allgemein stillten damit **exakt dasselbe**: Spass
+0,5, Neugier 0,4, Wachstum 0,3. Eine Tablette machte das Wesen vergnuegt und neugierig.
+
+Sichtbar war der Unterschied laengst - der Avatar ging ans Regal, an die Staffelei, nach
+draussen. Nur im Kern kam davon nichts an. Dasselbe galt autonom: `Planner.planFor` plante fuer
+`HAVE_FUN` **und** `DEVELOP` dieselbe eine Handlung.
+
+Das ist nicht nur ungenau, es nimmt dem Tag seine Struktur. Wenn jede Beschaeftigung dasselbe
+stillt, kann keine die naechste nach sich ziehen, und die Erinnerung lernt aus allen dasselbe.
+
+NT-072 gibt jeder der acht ihre eigene Handlung mit eigener Wirkung. Zwei Entscheidungen dabei
+sind erwaehnenswert:
+
+- **Fuersorge stillt ausschliesslich Behaglichkeit**, ausdruecklich keinen Spass. Medizin laeuft
+  seither unter dem Ziel `REST` statt `HAVE_FUN` - sonst lernte das Wesen mit jeder Tablette,
+  dass Vergnuegen schoen ist, und traefe spaeter deshalb andere Entscheidungen.
+- **Bewegung macht hungrig.** Erst dadurch zieht ein Nachmittag draussen ein Abendessen nach
+  sich, ohne dass irgendwo eine Regel "nach Sport kommt Essen" stuende.
+
+**Die Vielfalt bleibt, wo sie war.** Welche Beschaeftigung zu dieser Stunde, dieser Spezies und
+diesem Entwicklungspfad passt, weiss weiterhin die gewichtete Tagesablaufwahl der Laufzeitschicht
+- mitsamt Wiederholungsdaempfer und Nachklang. Der Kern entscheidet nach wie vor nur, OB Freizeit
+gerade traegt; die Ausformung wird ihm als `interest` hereingereicht (`Planner.planFor`), statt
+dass er sie ein zweites Mal und schlechter nachbaut.
+
+### Erfahrung aus dem Erleben
+
+`Needs.wellbeing()` fasst den Zustand zu einer Zahl zusammen - 1 heisst "nichts draengt". Der
+Mittelwert und nicht das staerkste Beduerfnis: Ein Wesen, das satt und ausgeruht ist, aber seit
+Tagen niemanden gesehen hat, geht es nicht gut; das Maximum wuerde das nicht sehen.
+
+Darauf setzt `PlayModeXp.wellbeingBonus` auf. Bis NT-072 gab jede beantwortete Erinnerung genau
+zehn XP - eine Tablette so viel wie ein Nachmittag draussen. Erfahrung entstand aus dem ZAEHLEN
+von Erinnerungen, nicht aus dem Erleben. Der Zuschlag kommt oben drauf und misst, was die
+Handlung dem Wesen wirklich gebracht hat. Er ist **nie negativ**: Arbeit und Konzentration senken
+das Wohlbefinden kurz, und dafuer XP abzuziehen hiesse, das Wesen fuer Anstrengung zu bestrafen.
+
 ## Leitidee
 
 Itoeva schreibt keine Geschichten vor. Die Simulation fuehrt Beduerfnisse, Weltzustand,

@@ -2719,6 +2719,29 @@ fun DockScreen(
                         livingWorld = committedWorld
                         livingStore.save(applied.agent, committedWorld)
                         LivingObservationFeed.record(applied.copy(world = committedWorld))
+
+                        // **Erfahrung aus dem Erleben, nicht aus dem Zaehlen** (NT-072).
+                        //
+                        // Den Grundbetrag hat die Fuetter-Transaktion bereits gutgeschrieben.
+                        // Hier kommt dazu, was die Handlung dem Wesen tatsaechlich gebracht hat -
+                        // gemessen an derselben Groesse, die das Living Agent System ohnehin
+                        // fuehrt. Ein Nachmittag draussen bringt damit mehr als eine Tablette,
+                        // und zwar ohne dass irgendwo eine Tabelle "Bewegung ist wertvoller"
+                        // stuende: Der Unterschied faellt aus den gestillten Beduerfnissen ab.
+                        //
+                        // Erst NACH dem sichtbaren Abschluss, wie die Living-Wirkung daneben.
+                        // Wer die Routine abbricht, hat sie nicht erlebt.
+                        val bonus = PlayModeXp.wellbeingBonus(
+                            before = baseAgent.needs.wellbeing(),
+                            after = applied.agent.needs.wellbeing()
+                        )
+                        if (bonus > 0) {
+                            withContext(Dispatchers.IO) {
+                                AppDatabase.getInstance(context)
+                                    .avatarPlayStateDao()
+                                    .addXp(presenceProfileId, bonus)
+                            }
+                        }
                         economyTick++
                     }
                     // Zuruecksetzen startet die Schleife ein letztes Mal - dann ohne Bitte, und

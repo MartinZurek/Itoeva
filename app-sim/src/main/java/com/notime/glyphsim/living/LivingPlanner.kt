@@ -204,11 +204,31 @@ object Planner {
      * geschlossenen Arbeitsplatz steht, hat keinen Weg zu Essen. Der Agent behaelt dann sein
      * Ziel und meldet das Hindernis, statt eine Handlung zu erfinden.
      */
-    fun planFor(goal: GoalKind, world: WorldState, agent: AgentState? = null): Plan? {
+    /**
+     * [interest] sagt, WIE eine Freizeit- oder Entwicklungsphase aussehen soll - lesen, etwas
+     * herstellen, sich sammeln, sich bewegen.
+     *
+     * **Warum das von aussen kommt und nicht hier entschieden wird.** Welche Beschaeftigung zu
+     * dieser Stunde, dieser Spezies und diesem Entwicklungspfad passt, weiss die gewichtete
+     * Tagesablaufwahl in der Laufzeitschicht - mitsamt Wiederholungsdaempfer und Nachklang. Der
+     * Kern entscheidet, OB Freizeit gerade traegt; er soll diese Auswahl nicht ein zweites Mal
+     * und schlechter nachbauen.
+     *
+     * Unbekannt oder unpassend heisst [ActionKind.PURSUE_INTEREST] - die Beschaeftigung ohne
+     * naeher benannte Absicht. Damit bleibt ein Aufruf ohne Angabe genau das, was er vorher war.
+     */
+    fun planFor(
+        goal: GoalKind,
+        world: WorldState,
+        agent: AgentState? = null,
+        interest: ActionKind? = null
+    ): Plan? {
         val schritte = when (goal) {
             GoalKind.GET_FOOD -> foodSteps(world)
             GoalKind.REST -> goTo(LivingSite.HOME, world) + ActionCatalog[ActionKind.REST]
-            GoalKind.HAVE_FUN, GoalKind.DEVELOP -> listOf(ActionCatalog[ActionKind.PURSUE_INTEREST])
+            GoalKind.HAVE_FUN, GoalKind.DEVELOP -> listOf(
+                ActionCatalog[interest?.takeIf { it in ActionCatalog.FREE_TIME } ?: ActionKind.PURSUE_INTEREST]
+            )
             GoalKind.CONNECT_WITH -> world.nearbyProfiles
                 .asSequence()
                 .filter { it != agent?.profileId }

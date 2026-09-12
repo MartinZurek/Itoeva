@@ -96,6 +96,8 @@ SRCS=(
   # Lautstaerke-Kurve, nicht Androids tatsaechliche Audioausgabe.
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/settings/SettingsCatalog.kt"
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayMusic.kt"
+  # XP nach Wirkung (NT-072) - reine Zahlenarbeit, kein Android.
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayModeXp.kt"
 )
 
 TEST_SRCS=(
@@ -113,6 +115,7 @@ TEST_SRCS=(
   "$TEST/matrix/ScenePreview.kt"
   "$TEST/matrix/PlayRoutineTest.kt"
   "$TEST/matrix/LivingRuntimeAdapterTest.kt"
+  "$TEST/matrix/ReminderActionsTest.kt"
   "$TEST/matrix/PlayVisitWindowTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
@@ -154,6 +157,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayCharacterThemeTest
   com.notime.glyphsim.matrix.PlayRoutineTest
   com.notime.glyphsim.matrix.LivingRuntimeAdapterTest
+  com.notime.glyphsim.matrix.ReminderActionsTest
   com.notime.glyphsim.matrix.PlayVisitWindowTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest

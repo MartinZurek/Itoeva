@@ -168,6 +168,16 @@ Stream-Quellsatz. **Offen bleibt:** der Lauf an einem echten Kanal mit echtem Pu
 zu NT-058) und die Frage, ob 60 s je Zuschauer und 8 s gemeinsam die richtigen Abstaende sind -
 das sind Vermutungen und erst vor Publikum zu beurteilen.
 
+**Living Agent, weiter:** NT-072 **Jeder Reminder bekommt eine eigene Handlung** - *am
+2026-09-12 umgesetzt; siehe LIVING_AGENT.md.* Acht der zwoelf Reminder-Typen liefen im Kern
+durch eine einzige generische Handlung und stillten damit exakt dasselbe. Jeder hat jetzt seine
+eigene Wirkung; Fuersorge stillt nur Behaglichkeit, Bewegung macht hungrig. Die gewichtete
+Themenwahl der Laufzeitschicht bleibt unangetastet und wird dem Planer als Ausformung
+hereingereicht. Dazu `Needs.wellbeing()` und ein XP-Zuschlag nach tatsaechlicher Wirkung.
+**Offen bleibt:** ob die Zahlen sich am Geraet richtig anfuehlen - sie sind begruendet, aber
+nicht erprobt; und ob das Wohlbefinden auch die sichtbare Stimmung faerben soll (heute stammt
+die ausschliesslich aus dem Pflegebuch, siehe AvatarMoodState).
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.
