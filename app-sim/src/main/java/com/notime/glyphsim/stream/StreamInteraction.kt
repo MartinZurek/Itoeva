@@ -1,6 +1,7 @@
 package com.notime.glyphsim.stream
 
 import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.GoalInfluence
 import com.notime.glyphsim.living.GoalKind
@@ -141,8 +142,12 @@ internal object StreamInteractions {
                 it == ActionKind.RESPOND_TO_INVITE ||
                 it == ActionKind.RECEIVE_RESPONSE
         }
+        // **Nicht mehr nur PURSUE_INTEREST** (NT-072). Seit jede Beschaeftigung ihre eigene
+        // Handlung hat, liefert ein Buch-Impuls READ und ein Bewegungs-Impuls MOVE_BODY. Bliebe
+        // hier die alte Abfrage stehen, gaelte ein Buch-Anstoss nie als angenommen - der Platz
+        // wuerde nie geleert, und der Zuschauer saehe seinen Wunsch auf ewig im Bild stehen.
         else -> prepared.topic == impulse.animationType &&
-            ActionKind.PURSUE_INTEREST in prepared.completedActions
+            prepared.completedActions.any { it in ActionCatalog.FREE_TIME }
     }
 
     fun clearHandled(

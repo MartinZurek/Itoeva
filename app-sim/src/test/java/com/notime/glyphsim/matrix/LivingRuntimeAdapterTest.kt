@@ -241,7 +241,11 @@ class LivingRuntimeAdapterTest {
             random = Random(12)
         )
 
-        assertEquals(listOf(ActionKind.PURSUE_INTEREST), prepared.completedActions)
+        // Seit NT-072 ist es nicht mehr die eine bedeutungslose Beschaeftigung, sondern die
+        // Handlung, die zum gewaehlten Thema gehoert. Die Aussage dieses Tests - dass die
+        // gewichtete Themenwahl und ihre Choreografie erhalten bleiben - gilt unveraendert und
+        // steht in den drei Zeilen darunter.
+        assertEquals(listOf(ActionKind.CREATE), prepared.completedActions)
         assertEquals(AnimationType.CREATIVITY, prepared.topic)
         assertNotNull(prepared.routine)
         assertTrue(prepared.routine!!.steps.any {
