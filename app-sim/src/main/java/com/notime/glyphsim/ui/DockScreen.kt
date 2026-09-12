@@ -1420,6 +1420,17 @@ fun DockScreen(
                         // Fidgets, Wanderungen und neue Perform-Aktionen bis zum Morgen.
                         if (PlayAmbientActivity.currentDayPhase() != PlayAmbientActivity.DayPhase.NIGHT) {
                             delay((8_000L * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(800L))
+                            // **Auch ein Nickerchen darf traeumen** (NT-073). Das war die Stelle,
+                            // an der der Traum am naechsten lag und trotzdem nie vorkam: Wer
+                            // abends um eine Schlafhandlung bittet, bekam acht Sekunden Stille.
+                            val schlaefer = avatar
+                            if (schlaefer != null && !schlaefer.fed && schlaefer.occurrenceId == null &&
+                                PlayDreams.shouldDaydream()
+                            ) {
+                                PlayDreams.choose(
+                                    PlayDreamMemory.today(context, presenceProfileId.toString())
+                                )?.let { memory -> playDream(memory, species) }
+                            }
                         } else {
                             while (PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT) {
                                 var remaining = (PlayDreams.nextPauseMillis() * PlayTimeLapse.paceFactor())
@@ -1448,6 +1459,24 @@ fun DockScreen(
                     // Pausen innerhalb eines Ablaufs, und der Turbo bliebe an jedem Sessel haengen.
                     // Die Animationen selbst bleiben unangetastet: mitbeschleunigt saehe man nur
                     // noch Zucken statt Bewegung.
+                    RoutineStep.Daydream -> {
+                        // **Der Tagtraum** (NT-073). Bis hierher gab es Traeume ausschliesslich
+                        // im Nachtschlaf ab 23 Uhr - wer abends zusah, konnte gar keinen sehen.
+                        //
+                        // Dieselbe Traumblase, dieselbe Erinnerungsquelle, nur an einer ruhigen
+                        // Stelle des Tages: auf dem Sofa, beim Innehalten, auf der Bank draussen.
+                        // Faellt der Wurf dagegen aus oder gibt es heute nichts zu traeumen,
+                        // kostet dieser Schritt nichts - der Ablauf laeuft unveraendert weiter.
+                        val traeumer = avatar
+                        if (traeumer != null && !traeumer.fed && traeumer.occurrenceId == null &&
+                            PlayDreams.shouldDaydream()
+                        ) {
+                            PlayDreams.choose(
+                                PlayDreamMemory.today(context, presenceProfileId.toString())
+                            )?.let { memory -> playDream(memory, species) }
+                        }
+                    }
+
                     is RoutineStep.Linger -> {
                         // Unter freiem Himmel ist ein Verweilen zugleich das Fenster, in dem
                         // jemand vorbeikommen kann - siehe [lingeringOutdoors]. Das Flag steht

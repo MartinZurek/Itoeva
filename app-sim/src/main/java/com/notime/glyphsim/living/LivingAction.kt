@@ -430,11 +430,25 @@ object ActionCatalog {
         ),
         Action(
             kind = ActionKind.MOVE_BODY,
-            requirements = emptyList(),
+            // **Die einzige Handlung, die verlangt, draussen zu sein** (NT-073).
+            //
+            // Bis hierher war [LivingSite.OUTSIDE] ein Ort, an dem sich das Wesen gelegentlich
+            // BEFAND - kein einziges Requirement im ganzen Kern nannte ihn. Damit war Draussensein
+            // nie ein Ziel, sondern immer nur eine Nebenwirkung der Themenwahl, und genau deshalb
+            // wirkte die Figur, als hocke sie im Zimmer. Der Ort stand in der Welt und in keinem
+            // einzigen Plan.
+            //
+            // Mit dieser Zeile muss der Planer einen Weg nach draussen voranstellen, bevor er sich
+            // bewegen kann - der Gang vor die Tuer ist ab jetzt ein sichtbarer Planschritt und
+            // keine Kulissenfrage mehr.
+            requirements = listOf(Requirement.At(LivingSite.OUTSIDE)),
             outcome = ActionOutcome(
+                // Etwas grosszuegiger als drinnen, und das mit Absicht: Der Weg nach draussen
+                // kostet jetzt Zeit, und ohne diesen Ausgleich waere Hinausgehen unterm Strich
+                // teurer als Herumsitzen - die Aenderung haette dann das Gegenteil bewirkt.
                 needRelief = mapOf(
-                    NeedKind.FUN to 0.5,
-                    NeedKind.COMFORT to 0.3,
+                    NeedKind.FUN to 0.6,
+                    NeedKind.COMFORT to 0.35,
                     NeedKind.ENERGY to -0.2,
                     NeedKind.HUNGER to -0.08
                 ),

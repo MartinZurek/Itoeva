@@ -9,6 +9,7 @@ import com.notime.glyphsim.living.LivingSite
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Personality
+import com.notime.glyphsim.living.Planner
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.ui.PlayModeXp
 import kotlin.random.Random
@@ -60,15 +61,22 @@ class ReminderActionsTest {
         needs = Needs.of(*needs)
     )
 
-    /** Was beim Fuettern dieses Reminders im Kern wirklich passiert. */
+    /**
+     * Was beim Fuettern dieses Reminders im Kern wirklich passiert.
+     *
+     * [ort] ist die sichtbare Kulisse und damit die Wahrheit ueber den Aufenthalt: Der Adapter
+     * leitet den Ort der Welt daraus ab ([LivingRuntimeAdapter.synchroniseWorld]), statt einem
+     * mitgegebenen Weltzustand zu glauben. Genau richtig - was auf dem Bildschirm steht, gilt.
+     */
     private fun handlungenFuer(
         topic: AnimationType,
         start: AgentState = agent(),
-        welt: WorldState = world()
+        welt: WorldState = world(),
+        ort: PlayScene.Place = PlayScene.Place.LIVING
     ): List<ActionKind> = LivingRuntimeAdapter.applyRequestedRoutine(
         agent = start,
         world = welt,
-        renderedPlace = PlayScene.Place.LIVING,
+        renderedPlace = ort,
         topic = topic,
         routine = PlayRoutines.forTopic(topic, random = Random(7))
     ).events.mapNotNull { it.action }
@@ -96,10 +104,52 @@ class ReminderActionsTest {
             AnimationType.GENERAL to ActionKind.PURSUE_INTEREST
         )
         for ((topic, kind) in erwartet) {
-            assertEquals("$topic", listOf(kind), handlungenFuer(topic))
+            // Die LETZTE Handlung ist die eigentliche; davor kann seit NT-073 ein Weg stehen
+            // (Bewegung verlangt, draussen zu sein).
+            assertEquals("$topic", kind, handlungenFuer(topic).last())
         }
         // Und keine zwei davon sind dieselbe - genau das war vorher der Fall.
         assertEquals(erwartet.size, erwartet.values.toSet().size)
+    }
+
+    @Test
+    fun `Bewegung faengt vor der Tuer an`() {
+        // **Der Kern des Zimmerhockens** (NT-073): Bis hierher verlangte keine einzige Handlung
+        // im ganzen Kern, draussen zu sein. OUTSIDE war ein Ort, an dem sich das Wesen
+        // gelegentlich BEFAND - nie einer, an den es gehen MUSSTE.
+        assertEquals(
+            listOf(ActionKind.TRAVEL, ActionKind.MOVE_BODY),
+            handlungenFuer(AnimationType.MOVE, ort = PlayScene.Place.LIVING)
+        )
+        // Ist er schon draussen, faellt der Weg weg - und Bleiben wird billiger als Hineingehen.
+        assertEquals(
+            listOf(ActionKind.MOVE_BODY),
+            handlungenFuer(AnimationType.MOVE, ort = PlayScene.Place.PARK)
+        )
+    }
+
+    @Test
+    fun `auch von sich aus geht er zum Bewegen hinaus`() {
+        // Nicht nur auf Bitte: Waehlt der Kern selbst Freizeit und die Themenwahl Bewegung,
+        // gehoert der Gang nach draussen in den Plan wie der Weg zur Arbeit.
+        val plan = Planner.planFor(
+            goal = GoalKind.HAVE_FUN,
+            world = world(site = LivingSite.HOME),
+            agent = agent(NeedKind.FUN to 0.9),
+            interest = ActionKind.MOVE_BODY
+        )
+        assertEquals(listOf(ActionKind.TRAVEL, ActionKind.MOVE_BODY), plan?.kinds)
+
+        // Eine Beschaeftigung ohne eigenen Ort bekommt weiterhin keinen Weg vorangestellt.
+        assertEquals(
+            listOf(ActionKind.READ),
+            Planner.planFor(
+                goal = GoalKind.DEVELOP,
+                world = world(site = LivingSite.HOME),
+                agent = agent(NeedKind.GROWTH to 0.9),
+                interest = ActionKind.READ
+            )?.kinds
+        )
     }
 
     @Test

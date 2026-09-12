@@ -226,9 +226,20 @@ object Planner {
         val schritte = when (goal) {
             GoalKind.GET_FOOD -> foodSteps(world)
             GoalKind.REST -> goTo(LivingSite.HOME, world) + ActionCatalog[ActionKind.REST]
-            GoalKind.HAVE_FUN, GoalKind.DEVELOP -> listOf(
-                ActionCatalog[interest?.takeIf { it in ActionCatalog.FREE_TIME } ?: ActionKind.PURSUE_INTEREST]
-            )
+            GoalKind.HAVE_FUN, GoalKind.DEVELOP -> {
+                val beschaeftigung = ActionCatalog[
+                    interest?.takeIf { it in ActionCatalog.FREE_TIME } ?: ActionKind.PURSUE_INTEREST
+                ]
+                // **Auch eine Freizeitbeschaeftigung kann einen Ort verlangen** (NT-073).
+                // Sich zu bewegen heisst, draussen zu sein. Der Weg dorthin gehoert damit in den
+                // Plan wie der Weg zur Arbeit - allgemein formuliert, damit eine kuenftige
+                // Beschaeftigung mit eigenem Ort hier nichts mehr braucht.
+                val ort = beschaeftigung.requirements
+                    .filterIsInstance<Requirement.At>()
+                    .firstOrNull()
+                    ?.site
+                (ort?.let { goTo(it, world) } ?: emptyList()) + beschaeftigung
+            }
             GoalKind.CONNECT_WITH -> world.nearbyProfiles
                 .asSequence()
                 .filter { it != agent?.profileId }

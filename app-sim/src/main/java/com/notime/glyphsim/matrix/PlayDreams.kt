@@ -70,6 +70,21 @@ object PlayDreams {
      */
     fun shouldDream(random: Random = Random): Boolean = random.nextFloat() < DREAM_CHANCE
 
+    /**
+     * **Der Tagtraum** (NT-073) - und der Grund, warum ihn bisher niemand gesehen hat.
+     *
+     * Traeume gab es ausschliesslich waehrend [RoutineStep.SleepUntilMorning] und dort nur in
+     * [PlayAmbientActivity.DayPhase.NIGHT], also ab 23 Uhr. Wer abends zusieht - und das ist die
+     * uebliche Zeit -, konnte gar keinen sehen, egal wie lange er zusah. Die Sequenz war nicht
+     * selten, sie war unerreichbar.
+     *
+     * Diese Gelegenheit gilt ausserhalb der Nacht: beim Nickerchen, beim Ausruhen auf dem Sofa
+     * und auf der Bank draussen. Sie ist bewusst SELTENER als der Nachttraum - ein Tagtraum soll
+     * ein Aufblitzen bleiben, kein Dauerzustand -, aber sie existiert ueberhaupt, und das ist der
+     * ganze Unterschied.
+     */
+    fun shouldDaydream(random: Random = Random): Boolean = random.nextFloat() < DAYDREAM_CHANCE
+
     fun choose(memories: List<AnimationType>, random: Random = Random): AnimationType? {
         val eligible = memories.filter(::isEligibleMemory)
         return if (eligible.isEmpty()) null else eligible[random.nextInt(eligible.size)]
@@ -80,6 +95,7 @@ object PlayDreams {
         random.nextLong(DREAM_PAUSE_MIN_MS, DREAM_PAUSE_MAX_MS + 1)
 
     private const val DREAM_CHANCE = 0.40f
+    private const val DAYDREAM_CHANCE = 0.28f
     private const val DREAM_PAUSE_MIN_MS = 6 * 60_000L
     private const val DREAM_PAUSE_MAX_MS = 15 * 60_000L
 }
