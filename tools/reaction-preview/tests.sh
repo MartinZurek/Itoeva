@@ -108,6 +108,7 @@ TEST_SRCS=(
   "$TEST/skilltree/LevelUnlocksTest.kt"
   "$TEST/matrix/AvatarShadingTest.kt"
   "$TEST/matrix/AvatarPaletteTest.kt"
+  "$TEST/matrix/FacadeTest.kt"
   "$TEST/matrix/ReactionDistinctnessTest.kt"
   "$TEST/matrix/ReactionTriggerTest.kt"
   "$TEST/matrix/AvatarReactionsTest.kt"
@@ -155,6 +156,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.skilltree.LevelUnlocksTest
   com.notime.glyphsim.matrix.AvatarShadingTest
   com.notime.glyphsim.matrix.AvatarPaletteTest
+  com.notime.glyphsim.matrix.FacadeTest
   com.notime.glyphsim.matrix.ReactionDistinctnessTest
   com.notime.glyphsim.matrix.ReactionTriggerTest
   com.notime.glyphsim.matrix.AvatarReactionsTest

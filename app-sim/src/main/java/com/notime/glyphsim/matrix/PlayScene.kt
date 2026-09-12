@@ -95,6 +95,19 @@ object PlayScene {
      *  sonst kippt die Tiefenstaffelung, von der das ganze Bild lebt. */
     private const val RIM_MAX = GLOW - 300
 
+    // ---- Fassaden in der Ferne (siehe [facadeBrightness]) ----
+    //
+    // Erste Schaetzung, an der ausgedruckten Stadt nachjustiert - die Werte stehen hier
+    // beieinander, damit man die Staffelung als Ganzes sieht statt sie aus drei Formeln
+    // zusammenzusuchen.
+
+    /** Die Wandflaeche selbst - dunkler als der fruehere Umriss, weil sie jetzt gross ist. */
+    private const val FACADE_WALL = 0.34f
+
+    /** Ein Fenster ohne Licht dahinter: eine Vertiefung, also dunkler als die Wand. */
+    private const val FACADE_WINDOW_DARK = 0.22f
+
+
     /**
      * Die Orte, an denen sich der Avatar aufhalten kann.
      *
@@ -624,6 +637,12 @@ object PlayScene {
                 .toHashSet()
             for (point in shape) {
                 val (px, py) = point
+                // Die Fassade rechnet ihre Zelle selbst - Geschoss fuer Geschoss, Fenster fuer
+                // Fenster, und ein brennendes Fenster als LICHT statt als Materie.
+                if (placement.prop.facade) {
+                    cells += facadeCell(px, py, placement.prop, originX, originY, placement.brightness)
+                    continue
+                }
                 val isTopEdge = (px to (py - 1)) !in shape
                 val brightness = if (isTopEdge) {
                     (placement.brightness * RIM_BOOST).roundToInt().coerceAtMost(RIM_MAX)
@@ -707,6 +726,17 @@ object PlayScene {
         val width: Int,
         val height: Int,
         val art: List<Pair<Int, Int>>,
+        /**
+         * Ob diese Form eine HAUSFASSADE in der Ferne ist - dann bekommt jede Zelle ihre eigene
+         * Helligkeit statt einer gemeinsamen (siehe [facadeBrightness]).
+         *
+         * Gebraucht, weil ein Haus als Umriss keine Masse hat: Man sah durch die Fassade
+         * hindurch auf den schwarzen Grund, und eine Stadt las sich als Drahtgitter. Gefuellt
+         * waere sie ein grauer Klotz. Was aus beidem ein Haus macht, sind die Fenster - und die
+         * gehoeren nicht in die gezeichnete Form, sondern werden aus ihr gerechnet, damit sie
+         * bei jeder Fassade entstehen und niemand sie vergessen kann.
+         */
+        val facade: Boolean = false,
         /** Teile, die VOR der Figur liegen, waehrend sie diese Requisite benutzt - siehe [buildFront]. */
         val frontArt: List<Pair<Int, Int>> = emptyList(),
         /**
@@ -1358,6 +1388,103 @@ object PlayScene {
     // gefuellte Form bleibt auch stark gedimmt noch eindeutig lesbar. Dasselbe Prinzip wie beim
     // Avatar selbst (siehe [AvatarAnimations]).
 
+    /**
+     * Helligkeit einer einzelnen Zelle einer HAUSFASSADE (siehe [Prop.facade]).
+     *
+     * ## Warum die Fassade gefuellt und nicht gezeichnet ist
+     *
+     * Ein Haus als Umriss hat keine Masse - man sieht durch es hindurch auf den schwarzen Grund,
+     * und vier davon nebeneinander sind ein Drahtgitter statt einer Stadt. Eine gefuellte Flaeche
+     * in genau einem Grauton waere aber ein Klotz; dasselbe Problem, das bei den Moebeln zur
+     * Oberkanten-Aufhellung gefuehrt hat (siehe [RIM_BOOST]).
+     *
+     * Was aus der Flaeche ein Haus macht, sind **Fenster** - und die entstehen hier aus der Form
+     * statt in ihr gezeichnet zu werden. Wer eine Fassade in Breite oder Hoehe aendert oder eine
+     * neue anlegt, bekommt sie geschenkt und kann sie nicht vergessen.
+     *
+     * ## Die Staffelung
+     *
+     * Die Wand liegt bewusst UNTER der uebergebenen Helligkeit. Beim Fuellen wird aus einem
+     * duennen Umriss eine grosse Flaeche; behielte sie dieselbe Helligkeit, waere die Stadt
+     * plotzlich das Hellste im Bild und der Blick bliebe hinten haengen statt bei der Figur. Die
+     * Flaeche wird also dunkel, und die wenigen erleuchteten Fenster tragen den Kontrast - genau
+     * so, wie eine Stadt bei Nacht auch wirklich aussieht.
+     *
+     * ## Welches Fenster brennt
+     *
+     * Aus der Lage GERECHNET, nicht gewuerfelt - dieselbe Regel wie beim Gras (siehe
+     * [groundDetail]): Ein Fenster, das bei jedem Neuzeichnen neu entscheidet, ob es brennt,
+     * flackert. Ein Haus muss stillstehen duerfen. [originX] geht in die Rechnung ein, damit
+     * nicht alle vier Haeuser dasselbe Fenstermuster tragen.
+     *
+     * Wie viele brennen, haengt an der Tageszeit: nachts die meisten, mittags fast keine. Das
+     * ist der billigste Hinweis darauf, dass hinter den Fenstern jemand wohnt.
+     */
+    private fun facadeCell(
+        px: Int,
+        py: Int,
+        prop: Prop,
+        originX: Int,
+        originY: Int,
+        base: Int
+    ): SceneCell {
+        val x = originX + px
+        val y = originY + py
+        // Dachkante: die oberste Zeile bleibt die beleuchtete Kante wie bei jeder Requisite.
+        if (py == 0) {
+            return SceneCell(x, y, (base * RIM_BOOST).roundToInt().coerceAtMost(RIM_MAX))
+        }
+
+        // Ein dunkles Fenster ist eine Vertiefung in der Wand, sonst nichts. Ob eines davon
+        // BRENNT, entscheidet weiterhin [litWindows] - das gab es hier schon, lange bevor die
+        // Fassade gefuellt wurde, und es ist auf den Vordergrund abgestimmt ("ein Fenster, das
+        // so hell strahlt wie eine Strassenlaterne, holt den Hintergrund nach vorn"). Ein
+        // zweites Beleuchtungssystem daneben waere genau die Art Doppelung, an der spaeter
+        // niemand mehr erkennt, welche Regel gilt.
+        val imFenster = facadeOpenings(prop).any { (spalte, zeilen) -> px == spalte && py in zeilen }
+        val anteil = if (imFenster) FACADE_WINDOW_DARK else FACADE_WALL
+        return SceneCell(x, y, (base * anteil).roundToInt())
+    }
+
+    /**
+     * Wo die Fenster einer Fassade sitzen: je Eintrag eine Spalte und die Zeilen darin.
+     *
+     * **Eine Quelle fuer zwei Dinge**, die vorher auseinanderlaufen konnten: die dunkle
+     * Vertiefung in der Wand (siehe [facadeCell]) und das Licht dahinter (siehe [litWindows]).
+     * Bis die Fassade gefuellt wurde, standen diese Zahlen nur in [litWindows] und mussten von
+     * Hand zu den gezeichneten Laibungen passen - wer eine Laibung verschob, liess das Licht
+     * daneben brennen, ohne dass es auffiel.
+     */
+    private fun facadeOpenings(prop: Prop): List<Pair<Int, IntRange>> =
+        if (prop === HOUSE) {
+            listOf(4 to (2..4), 9 to (2..4), 4 to (7..9), 9 to (7..9))
+        } else {
+            listOf(3 to (2..5), 8 to (2..5))
+        }
+
+    /**
+     * Alle Zellen, die von einer HAUSFASSADE verdeckt sind.
+     *
+     * Gebraucht, seit die Haeuser gefuellt sind: Die Sterne lagen immer schon VOR ihnen, was bei
+     * einem Umriss niemandem auffiel - man sah ohnehin durch das Haus hindurch. Bei einer
+     * geschlossenen Wand ist es ein Fehler, und zwar ein auffaelliger: Ein Stern blinkt, also
+     * blinkte auch das Loch, das er in die Wand stanzte.
+     *
+     * Ein Haus verdeckt den Himmel dahinter. Alles andere - Regen, der Lichtkegel der Laterne -
+     * liegt weiterhin davor und bleibt unberuehrt.
+     */
+    private fun facadeMask(
+        placements: List<Placement>,
+        widthCells: Int,
+        floorY: Int
+    ): Set<Pair<Int, Int>> = placements
+        .filter { it.prop.facade }
+        .flatMapTo(HashSet()) { placement ->
+            val ox = originX(placement, widthCells)
+            val oy = originY(placement, floorY)
+            placement.prop.art.map { (px, py) -> (ox + px) to (oy + py) }
+        }
+
     private fun rect(x0: Int, y0: Int, x1: Int, y1: Int): List<Pair<Int, Int>> =
         (y0..y1).flatMap { y -> (x0..x1).map { x -> x to y } }
 
@@ -1608,16 +1735,22 @@ object PlayScene {
      * genau sie erleuchtet (siehe [litWindows]), und dann steht dort eine Strasse, in der jemand
      * wohnt - das ist der ganze Trick, und er kostet keine einzige zusaetzliche Requisite.
      */
+    /**
+     * Wohnhaus in der Ferne - eine GEFUELLTE Fassade, keine gezeichnete.
+     *
+     * Bis NT-077 stand hier ein Umriss: Dach, zwei Hauswaende, zwei Geschossbaender, ein paar
+     * Fensterlaibungen, eine Tuer. Das war sorgfaeltig gezeichnet und trotzdem falsch - man sah
+     * durch das Haus hindurch auf den schwarzen Grund. Vier solche Umrisse nebeneinander sind
+     * ein Drahtgitter, keine Stadt.
+     *
+     * Jetzt ist es eine volle Flaeche; Geschosse, Fenster und Licht rechnet [facadeBrightness]
+     * aus ihr heraus. Dadurch wird aus einer Form, die man nicht mehr aendern konnte, ohne alle
+     * Laibungen nachzuziehen, eine, bei der Breite und Hoehe genuegen.
+     */
     private val HOUSE = Prop(
         width = 13, height = 17,
-        art = hLine(0, 12, 0) + vLine(0, 1, 16) + vLine(12, 1, 16) +
-            // Geschossbaender - sie geben dem Haus seine Hoehe, ohne dass Fenster noetig waeren.
-            hLine(1, 11, 5) + hLine(1, 11, 10) +
-            // Fensterlaibungen: nur die senkrechten Kanten, die Waende bleiben offen.
-            vLine(3, 2, 4) + vLine(5, 2, 4) + vLine(8, 2, 4) + vLine(10, 2, 4) +
-            vLine(3, 7, 9) + vLine(5, 7, 9) + vLine(8, 7, 9) + vLine(10, 7, 9) +
-            // Tuer im Erdgeschoss.
-            vLine(5, 12, 16) + vLine(8, 12, 16) + hLine(5, 8, 12)
+        art = rect(0, 0, 12, 16),
+        facade = true
     )
 
     /**
@@ -1630,10 +1763,8 @@ object PlayScene {
      */
     private val HOUSE_LOW = Prop(
         width = 11, height = 12,
-        art = hLine(0, 10, 0) + vLine(0, 1, 11) + vLine(10, 1, 11) +
-            hLine(1, 9, 6) +
-            vLine(2, 2, 5) + vLine(4, 2, 5) + vLine(7, 2, 5) + vLine(9, 2, 5) +
-            vLine(4, 8, 11) + vLine(7, 8, 11) + hLine(4, 7, 8)
+        art = rect(0, 0, 10, 11),
+        facade = true
     )
 
     // ---- Draussen: kleines Stadt- und Naturbeiwerk ----
@@ -3486,13 +3617,7 @@ object PlayScene {
             .flatMapIndexed { houseIndex: Int, house: Placement ->
                 val ox = originX(house, widthCells)
                 val oy = originY(house, floorY)
-                // Die Fensteroeffnungen liegen zwischen den Laibungen der Requisite - hier als
-                // Paare (Spalte, Zeilen) beschrieben, passend zu HOUSE bzw. HOUSE_LOW.
-                val openings = if (house.prop === HOUSE) {
-                    listOf(4 to (2..4), 9 to (2..4), 4 to (7..9), 9 to (7..9))
-                } else {
-                    listOf(3 to (2..5), 8 to (2..5))
-                }
+                val openings = facadeOpenings(house.prop)
                 openings.filterIndexed { index, _ ->
                     // Aus Haus- und Fensternummer gerechnet: fest, aber ungleichmaessig verteilt.
                     val awake = (houseIndex * 3 + index * 5) % (if (night) 4 else 3) != 0
@@ -3701,6 +3826,9 @@ object PlayScene {
             // ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
             Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
+                // Was hinter einem Haus steht, sieht man nicht - siehe [facadeMask]. Einmal
+                // berechnet: Sternbild UND Sternschnuppe brauchen dieselbe Maske.
+                val verdeckt = facadeMask(placements, widthCells, floorY)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
                     // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:
                     // ein Sternbild aus sieben Sternen, jeder auf
@@ -3734,7 +3862,7 @@ object PlayScene {
                         // fuellen im Querformat genau die Ecken, die sonst leer blieben.
                         SceneCell(at(0.06f), sky - 6, twinkleOf(phase, 17, GLOW / 2), isLight = true),
                         SceneCell(at(0.97f), sky - 5, twinkleOf(phase, 19, GLOW / 2), isLight = true)
-                    )
+                    ).filterNot { (it.x to it.y) in verdeckt }
                 } else {
                     // Bewusst breiter und heller als der erste Entwurf (drei Zellen auf
                     // Boden-Helligkeit): so klein und so schwach war das kein Woelkchen, sondern
@@ -3753,7 +3881,9 @@ object PlayScene {
                         hLine(0, 3, highY).map { (dx, y) -> SceneCell(slowDrift + dx, y, BACKDROP) } +
                         hLine(1, 2, highY - 1).map { (dx, y) -> SceneCell(slowDrift + dx, y, BACKDROP) }
                 } + parkBird(phase, widthCells, floorY, dayPhase) +
-                    shootingStar(phase, widthCells, floorY, dayPhase) +
+                    // Auch die Sternschnuppe zieht HINTER den Haeusern durch, nicht davor.
+                    shootingStar(phase, widthCells, floorY, dayPhase)
+                        .filterNot { (it.x to it.y) in verdeckt } +
                     parkLantern(placements, widthCells, floorY, dayPhase) +
                     litWindows(place, placements, widthCells, floorY, dayPhase, phase)
             }
