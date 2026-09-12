@@ -52,6 +52,11 @@ Die **Stream-Variante** von `:app-sim` laeuft in einem Android-Emulator. Der Spi
 mindestens zwei Stunden sichtbar und OBS zeichnet Bild und ausschliesslich den App-Ton lokal auf.
 Erst danach darf optional ein Twitch-Bandbreitentest folgen.
 
+Seit NT-070 gehoert zusaetzlich die Zuschauer-Interaktion in die Beobachtung: `!drop A` bis
+`!drop D` aus dem Twitch-Chat, die Abstaende und die Frage, ob Zuschauer die Mechanik ueberhaupt
+verstehen. Wie sie gebaut ist und wie sie sich ohne Twitch vorfuehren laesst, steht in
+[`streaming-interaction.md`](streaming-interaction.md).
+
 Seit PR #133 ist der Gegenstand dieses Laufs nicht mehr die normale App, sondern der
 Stream-Client: dieselbe Runtime, derselbe Code, dieselbe Pixelwelt - nur mit
 `stream_mode = true`, eigener `applicationId` und Direktstart in den Spielmodus. Alle Befehle

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Nur der Stream-Client darf ins Netz.
+
+    Die Twitch-Anbindung liest den oeffentlichen Chat ueber einen TLS-Socket. Dafuer braucht es
+    diese Berechtigung - aber ausschliesslich hier. Weil es ein eigener Quellsatz des Build-Typs
+    `stream` ist, bekommt die normale Itoeva-App sie NICHT: In `app-sim/src/main/AndroidManifest.xml`
+    steht sie nicht, und damit kann die ausgelieferte Endnutzer-App keine Verbindung aufbauen,
+    gleich was im gemeinsamen Quelltext liegt.
+
+    Das ist die belastbarste Trennung, die uns hier zur Verfuegung steht: Sie wird nicht von einer
+    Namenskonvention getragen, sondern vom Betriebssystem. Ein Aufruf ohne diese Berechtigung
+    scheitert, statt still zu funktionieren.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

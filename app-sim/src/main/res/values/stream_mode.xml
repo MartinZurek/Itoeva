@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <bool name="stream_mode">false</bool>
+
+    <!--
+        Der Twitch-Kanal, dessen oeffentlicher Chat mitgelesen wird.
+
+        Leer heisst: keine Verbindung. Der Client laeuft dann vollstaendig weiter, nur eben mit
+        dem eingebauten Demo-Eingang statt mit echten Zuschauern - genau der Zustand, in dem die
+        gesamte Mechanik entstanden ist.
+
+        Gesetzt wird der Wert in `app-sim/src/stream/res/values/stream_mode.xml`, also nur fuer
+        den Stream-Build-Typ. Hier steht er ausschliesslich als Voreinstellung, damit die normale
+        App dieselbe Ressource kennt und nichts nachschlagen muss, was es nicht gibt.
+
+        Es ist KEIN Geheimnis: Ein Kanalname ist oeffentlich, und fuer das Mitlesen braucht es
+        weder Token noch Konto (siehe TwitchIrc).
+    -->
+    <string name="stream_twitch_channel" translatable="false"></string>
 </resources>

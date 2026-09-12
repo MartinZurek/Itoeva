@@ -363,7 +363,16 @@
     <string name="a11y_action_slot_empty">Save slot %1$d, empty</string>
     <string name="a11y_action_slot_filled">Save slot %1$d: %2$s</string>
     <string name="a11y_action_slot_apply">Apply to companion</string>
-    <string name="stream_slot_choose">Simulate viewer choosing this slot</string>
+    <string name="stream_slot_choose">Simulate a viewer choosing this slot</string>
+    <string name="stream_chat_off">CHAT OFF · demo only</string>
+    <string name="stream_chat_connecting">CHAT · connecting…</string>
+    <string name="stream_chat_listening">CHAT · %1$s</string>
+    <string name="stream_chat_retrying">CHAT · reconnecting…</string>
+    <string name="stream_decision_accepted">%1$s → slot %2$s</string>
+    <string name="stream_decision_viewer_cooldown">%1$s · already had a turn</string>
+    <string name="stream_decision_global_cooldown">%1$s · one moment</string>
+    <string name="stream_decision_pending">%1$s · something is already happening</string>
+    <string name="stream_decision_slot_empty">%1$s · slot %2$s is empty</string>
     <string name="stream_viewer_ready">VIEWER SIM · tap a saved impulse</string>
     <string name="stream_viewer_impulse">VIEWER · slot %1$d · %2$s</string>
     <string name="a11y_clock_save_to_slot">Save to slot %1$d</string>
@@ -588,21 +597,6 @@
     <string name="talk_ask_time_evening">Evenings</string>
     <string name="talk_ask_skip">Rather not</string>
     <string name="talk_focus_noted">You wanted me to keep an eye on %1$s. I will.</string>
-
-    <!-- Was er beim Tun kurz ueber dem Kopf sagt - siehe PlaySpeech. -->
-    <string name="speech_sleep">Lying down for a moment.</string>
-    <string name="speech_rest">Doing nothing for a bit.</string>
-    <string name="speech_book">Reading a little.</string>
-    <string name="speech_mindfulness">Taking a breath.</string>
-    <string name="speech_love">Thinking of you.</string>
-    <string name="speech_drink">Getting something to drink.</string>
-    <string name="speech_medicine">Freshening up.</string>
-    <string name="speech_work">Off to work.</string>
-    <string name="speech_focus">I still have something to finish.</string>
-    <string name="speech_move">Going for a round.</string>
-    <string name="speech_creativity">Carrying on with my piece.</string>
-    <string name="speech_general">Let us see what is going on.</string>
-    <string name="speech_open_habit">This one is still open for you today.</string>
 
     <string name="talk_ask_purpose">And what do you actually need me for?</string>
     <string name="talk_ask_purpose_health">To live a bit healthier</string>

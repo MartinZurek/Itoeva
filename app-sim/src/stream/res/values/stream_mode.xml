@@ -2,4 +2,13 @@
 <resources>
     <bool name="stream_mode">true</bool>
     <string name="app_name" translatable="false">Itoeva Stream</string>
+
+    <!--
+        Hier den eigenen Kanalnamen eintragen, zum Beispiel `itoeva`. Mit `#` oder ohne, gross
+        oder klein - TwitchIrc.normalizeChannel vereinheitlicht das.
+
+        Bleibt der Wert leer, baut der Client keine Verbindung auf und die Zuschauer-Mechanik
+        laesst sich trotzdem vollstaendig ueber den Demo-Eingang vorfuehren.
+    -->
+    <string name="stream_twitch_channel" translatable="false"></string>
 </resources>

@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +51,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
@@ -87,9 +87,19 @@ import com.notime.glyphsim.skilltree.AvatarUnlockRepository
 import com.notime.glyphsim.skilltree.SkillRepertoire
 import com.notime.glyphsim.stream.LivingObservationFeed
 import com.notime.glyphsim.stream.ExternalImpulse
+import com.notime.glyphsim.stream.ExternalImpulseSource
+import com.notime.glyphsim.stream.LocalTestInteractionProvider
+import com.notime.glyphsim.stream.StreamCommandConfig
+import com.notime.glyphsim.stream.StreamCommandGate
+import com.notime.glyphsim.stream.StreamCommandParser
+import com.notime.glyphsim.stream.StreamGateDecision
+import com.notime.glyphsim.stream.StreamGateLogEntry
+import com.notime.glyphsim.stream.StreamGateState
 import com.notime.glyphsim.stream.StreamInteractionState
 import com.notime.glyphsim.stream.StreamInteractions
 import com.notime.glyphsim.stream.StreamSelection
+import com.notime.glyphsim.stream.TwitchChatInteractionProvider
+import com.notime.glyphsim.stream.TwitchChatStatus
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
@@ -106,6 +116,8 @@ import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayCharacterTheme
+import com.notime.glyphsim.living.LivingSymbolPair
+import com.notime.glyphsim.living.LivingSymbols
 import com.notime.glyphsim.matrix.PlayOutdoorStay
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
@@ -133,6 +145,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -395,6 +408,32 @@ fun DockScreen(
             mutableStateOf<ExternalImpulse?>(null)
         }
 
+        // ---- Die Zuschauer-Eingangsschicht (NT-070) ----
+        //
+        // Alles, was von aussen kommt, laeuft ueber genau diese drei Werte: eine zentrale
+        // Konfiguration, das Gedaechtnis der Abstandspruefung und die zuletzt gefallene
+        // Entscheidung fuers Bild. Die Spielschicht darunter kennt keinen davon - sie sieht nur
+        // den [ExternalImpulse], der eventuell dabei herauskommt.
+        val streamConfig = remember { StreamCommandConfig() }
+        val localViewers = remember { LocalTestInteractionProvider(streamConfig) }
+        var gateState by remember(actionSlotProfileId) { mutableStateOf(StreamGateState()) }
+        var lastGateEntry by remember(actionSlotProfileId) {
+            mutableStateOf<StreamGateLogEntry?>(null)
+        }
+        // Jedes Tippen im Client steht fuer EINEN Zuschauer - nicht immer denselben. Ohne die
+        // laufende Nummer traefe die Vorfuehrung am Geraet staendig den Einzelabstand und saehe
+        // aus wie ein Fehler; den Einzelabstand pruefen die Tests, nicht der Daumen.
+        var demoViewerCount by remember { mutableStateOf(0) }
+        val twitchChannel = stringResource(R.string.stream_twitch_channel)
+        val twitchChat = remember(streamMode, twitchChannel) {
+            if (streamMode && twitchChannel.isNotBlank()) {
+                TwitchChatInteractionProvider(twitchChannel, streamConfig)
+            } else {
+                null
+            }
+        }
+        var chatStatus by remember { mutableStateOf(TwitchChatStatus.OFF) }
+
         // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
         // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
         val slotSizePx = with(density) { 56.dp.toPx() }
@@ -414,10 +453,13 @@ fun DockScreen(
         }
         /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
         var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
-        /** Was er gerade ueber dem Kopf sagt (Text-Id), oder null - siehe PlaySpeech. */
-        var spokenLine by remember { mutableStateOf<Int?>(null) }
-        /** Ob dazu der Halbsatz zu einer heute offenen Gewohnheit gehoert. */
-        var spokenIsOpenHabit by remember { mutableStateOf(false) }
+        /**
+         * Was er gerade ueber dem Kopf zeigt - Wunsch und, falls vorhanden, Hindernis.
+         *
+         * Kein Text mehr: Hier stand bis NT-069 ein gewuerfelter Satz, der allein am Thema hing
+         * und mit dem ZIEL des Wesens nichts zu tun hatte. Siehe [PlayWishBubble].
+         */
+        var wishSymbols by remember { mutableStateOf<LivingSymbolPair?>(null) }
         /**
          * Ob gerade ein Tagesablauf laeuft - siehe den Besuchstakt.
          *
@@ -2434,11 +2476,20 @@ fun DockScreen(
         }
 
         /**
-         * Lokaler Ersatz fuer das spaetere Backend: Ein Tippen waehlt genau einen vorhandenen
-         * Slot. Die zugehoerige Ausloesung wird vor dem Anstoss noch einmal in Room geprueft;
-         * ein veralteter Snapshot darf keine Agentenentscheidung ausloesen.
+         * Der eine Weg, auf dem ein Angebot von aussen ins Spiel gelangt.
+         *
+         * Hier ist bereits entschieden, DASS gewaehlt werden darf - Syntax und Abstaende hat das
+         * Tor geprueft. Offen bleibt, ob der Platz noch gilt: Die zugehoerige Ausloesung wird
+         * deshalb unmittelbar davor noch einmal in Room nachgeschlagen, denn ein veralteter
+         * Abzug darf keine Agentenentscheidung ausloesen.
+         *
+         * [source] wandert nur ins Protokoll und in den Impuls. Ob dahinter ein Chat-Befehl,
+         * der Demo-Eingang oder spaeter ein Bits-Ereignis stand, aendert ab hier nichts mehr.
          */
-        fun selectStreamSlot(index: Int) {
+        fun selectStreamSlot(
+            index: Int,
+            source: ExternalImpulseSource = ExternalImpulseSource.LOCAL_VIEWER_SIMULATOR
+        ) {
             if (!streamMode || pendingExternalImpulse != null) return
             val saved = slots.getOrNull(index) ?: return
             scope.launch {
@@ -2460,7 +2511,8 @@ fun DockScreen(
                 when (val selected = StreamInteractions.select(
                     state,
                     slotId = index + 1,
-                    atMinute = PlayTimeLapse.absoluteMinute()
+                    atMinute = PlayTimeLapse.absoluteMinute(),
+                    source = source
                 )) {
                     is StreamSelection.Accepted -> {
                         pendingExternalImpulse = selected.impulse
@@ -2491,6 +2543,40 @@ fun DockScreen(
             slots = state.slots
             pendingExternalImpulse = null
             if (result.isUiSuccess()) fedCount++
+        }
+
+        // ---- Von aussen nach innen: die einzige Verbindung zwischen Publikum und Welt ----
+        //
+        // **Was hier NICHT passiert.** Diese Stelle kennt keine Befehlssyntax, kein Twitch und
+        // keine Bezahlfrage. Sie nimmt fertige [ViewerCommand]s aus beliebig vielen Quellen
+        // entgegen, laesst sie durch dasselbe Tor laufen und reicht das Ergebnis an
+        // [selectStreamSlot] weiter - dieselbe Funktion, die auch ein Tippen im Client benutzt.
+        //
+        // Genau deshalb kostet ein spaeterer Bits- oder Sub-Eingang hier **keine Zeile**: Er ist
+        // ein weiterer [StreamInteractionProvider] in dieser Liste, und alles danach bleibt, wie
+        // es ist.
+        //
+        // Der Chat-Faden laeuft nebenher: Er darf Minuten mit Wiederverbindungsversuchen
+        // verbringen, ohne den Demo-Eingang anzuhalten.
+        LaunchedEffect(streamMode, playMode, twitchChat) {
+            if (!streamMode || !playMode) return@LaunchedEffect
+            twitchChat?.let { chat ->
+                launch { chat.status.collect { chatStatus = it } }
+                launch { chat.listen() }
+            }
+            listOfNotNull(localViewers.commands, twitchChat?.commands).merge().collect { command ->
+                val decision = StreamCommandGate.admit(
+                    gateState,
+                    command,
+                    StreamInteractionState(slots, pendingExternalImpulse, latestExternalImpulse),
+                    streamConfig
+                )
+                gateState = decision.state
+                lastGateEntry = decision.state.log.lastOrNull()
+                if (decision is StreamGateDecision.Accepted) {
+                    selectStreamSlot(decision.slotId - 1, command.origin)
+                }
+            }
         }
 
         // Laeuft bei jeder Aenderung von clockOffset neu an, also auch mitten in einer
@@ -2855,13 +2941,23 @@ fun DockScreen(
                             val place = gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>()
                                 .firstOrNull()?.place ?: PlayScene.forTopic(topic)
                             currentTopic = topic
-                            // **Er sagt, was er vorhat** - selten, kurz und nie nachts (siehe
-                            // PlaySpeech). Das beantwortet die Frage, die man sich beim Zuschauen
-                            // ohnehin stellt, im selben Augenblick, in dem sie aufkommt.
-                            PlaySpeech.lineFor(topic, PlayAmbientActivity.currentDayPhase())?.let { line ->
-                                spokenIsOpenHabit = topic in boostedTopics
-                                spokenLine = line
-                            }
+                            // **Er zeigt, was er will** - aus der Erklaerung DIESES Schrittes,
+                            // nicht aus einem Wuerfel. Das beantwortet die Frage, die man sich
+                            // beim Zuschauen ohnehin stellt, im selben Augenblick, in dem sie
+                            // aufkommt - und sie ist damit zum ersten Mal wirklich beantwortet
+                            // und nicht nur bebildert.
+                            //
+                            // Nachts nicht: Das Dock steht auf einem Nachttisch. Diese
+                            // Zurueckhaltung stammt aus PlaySpeech und ist der eine Teil davon,
+                            // der bleibt.
+                            wishSymbols =
+                                if (PlayAmbientActivity.currentDayPhase() ==
+                                    PlayAmbientActivity.DayPhase.NIGHT
+                                ) {
+                                    null
+                                } else {
+                                    LivingSymbols.of(prepared.result.explain())
+                                }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
                             rememberShown(topic, gewaehlt)
 
@@ -3569,43 +3665,24 @@ fun DockScreen(
             }
         }
 
-        // **Sein Satz ueber dem Kopf** (siehe PlaySpeech).
+        // **Was er will, ueber dem Kopf** (siehe PlayWishBubble).
         //
-        // Ueber der Figur und unter dem Gespraech: Er gehoert zur Welt, nicht zur Bedienung -
-        // deshalb faengt er auch keine Gesten ab. Wer die Figur antippt, oeffnet weiterhin das
-        // Gespraech, auch wenn der Satz gerade darueber steht.
-        spokenLine?.let { line ->
+        // Ueber der Figur und unter dem Gespraech: Es gehoert zur Welt, nicht zur Bedienung -
+        // deshalb faengt es auch keine Gesten ab. Wer die Figur antippt, oeffnet weiterhin das
+        // Gespraech, auch wenn gerade ein Symbol darueber steht. Dort gibt es Sprache; hier
+        // nicht.
+        wishSymbols?.let { symbole ->
             avatar?.takeIf { playMode && !avatarHidden }?.let { current ->
-                val speechY = current.offset.y - with(density) { SPEECH_LIFT_DP.dp.toPx() }
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = SPEECH_MAX_WIDTH_DP.dp)
-                        .offset {
-                            IntOffset(
-                                current.offset.x.roundToInt(),
-                                speechY.roundToInt().coerceAtLeast(0)
-                            )
-                        }
-                ) {
-                    Text(
-                        text = stringResource(line),
-                        color = Color(0xFFF3F1EA),
-                        fontSize = 13.sp,
-                        lineHeight = 16.sp
-                    )
-                    if (spokenIsOpenHabit) {
-                        Text(
-                            text = stringResource(PlaySpeech.habitHint()),
-                            color = Color(0xFF8F8B82),
-                            fontSize = 11.sp,
-                            lineHeight = 14.sp
-                        )
-                    }
-                }
+                PlayWishBubble(
+                    symbols = symbole,
+                    avatarOffset = current.offset,
+                    avatarSizeDp = current.sizeDp,
+                    maxWidthPx = maxWidthPx
+                )
             }
-            LaunchedEffect(line, spokenIsOpenHabit) {
-                delay((SPEECH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
-                spokenLine = null
+            LaunchedEffect(symbole) {
+                delay((WISH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
+                wishSymbols = null
             }
         }
 
@@ -3684,8 +3761,20 @@ fun DockScreen(
                             .then(
                                 if (saved != null) {
                                     if (streamMode) {
+                                        // Bewusst NICHT direkt in die Auswahl: Das Tippen
+                                        // schreibt dieselbe Zeile, die ein Zuschauer tippen
+                                        // wuerde, und nimmt denselben Weg durch Parser und Tor.
+                                        // Sonst pruefte die Vorfuehrung am Geraet eine Strecke,
+                                        // die es im Stream gar nicht gibt.
                                         Modifier.pointerInput(saved.occurrenceId) {
-                                            detectTapGestures(onTap = { selectStreamSlot(index) })
+                                            detectTapGestures(onTap = {
+                                                demoViewerCount++
+                                                localViewers.type(
+                                                    "demo-$demoViewerCount",
+                                                    "${streamConfig.prefix}${streamConfig.dropKeyword} " +
+                                                        StreamCommandParser.letterFor(index + 1)
+                                                )
+                                            })
                                         }
                                     } else {
                                         Modifier.pointerInput(saved.occurrenceId) {
@@ -3738,23 +3827,35 @@ fun DockScreen(
                                 modifier = Modifier.fillMaxSize().padding(8.dp)
                             )
                         }
+                        // Der Name, unter dem dieser Platz im Chat angesprochen wird. Auch an
+                        // einem LEEREN Platz sichtbar: Wer zuschaut, soll sehen, dass es vier
+                        // gibt und welcher gerade nichts hergibt - sonst wirkt ein
+                        // "Platz C ist leer" wie eine Fehlermeldung ohne Zusammenhang.
+                        if (streamMode) {
+                            Text(
+                                text = StreamCommandParser.letterFor(index + 1).toString(),
+                                color = if (saved != null) {
+                                    TamaPalette.TextMuted
+                                } else {
+                                    TamaPalette.TextMuted.copy(alpha = 0.45f)
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(start = 5.dp, top = 1.dp)
+                            )
+                        }
                     }
                 }
             }
             if (streamMode) {
-                val latest = latestExternalImpulse
-                Text(
-                    text = if (latest == null) {
-                        stringResource(R.string.stream_viewer_ready)
-                    } else {
-                        stringResource(
-                            R.string.stream_viewer_impulse,
-                            latest.savedSlotId,
-                            stringResource(latest.animationType.labelRes)
-                        )
-                    },
-                    color = TamaPalette.TextMuted,
-                    fontSize = 11.sp,
+                StreamViewerOverlay(
+                    config = streamConfig,
+                    chatStatus = chatStatus,
+                    channel = twitchChannel,
+                    lastEntry = lastGateEntry,
+                    latestImpulse = latestExternalImpulse,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(start = 12.dp, bottom = 12.dp)
@@ -4133,14 +4234,17 @@ private const val VISITOR_GAP = 1.15f
  *  Besuch zur Szene aufblasen, die er nicht sein soll. */
 private const val CONVERSATION_TURNS = 3
 
-/** Wie lange sein Satz ueber dem Kopf stehen bleibt. */
-private const val SPEECH_HOLD_MS = 3_200L
 
-/** Wie weit ueber der Figur - hoch genug, dass er ihren Kopf nicht verdeckt. */
-private const val SPEECH_LIFT_DP = 22
+/**
+ * Wie lange Wunsch und Hindernis ueber dem Kopf stehen.
+ *
+ * Laenger als der fruehere Satz (3,2 s): Ein Satz ist gelesen, sobald man ihn gelesen hat, ein
+ * Symbolpaar will einen Moment betrachtet werden - und es steht ohnehin nur dann da, wenn das
+ * Wesen tatsaechlich etwas vorhat.
+ */
+private const val WISH_HOLD_MS = 4_500L
 
-/** Und wie breit hoechstens: ein Satz, keine Spalte. */
-private const val SPEECH_MAX_WIDTH_DP = 210
+
 
 /** Takt, in dem die Sprechpunkte erscheinen. */
 private const val SPEECH_DOT_MS = 190L

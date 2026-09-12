@@ -77,7 +77,18 @@ SRCS=(
   "$LIV/LivingWorld.kt" "$LIV/LivingNeed.kt" "$LIV/LivingAction.kt"
   "$LIV/LivingPlanner.kt" "$LIV/LivingAgent.kt" "$LIV/LivingSymbols.kt"
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/ActionSlotState.kt"
+  # Die Symbole ueber dem Kopf (NT-069): Bedeutung im living-Paket, Motiv hier. Beide
+  # sind reines Kotlin - ActionSlotSymbols schlaegt nur in ReminderAnimations nach.
+  "$SIM/ReminderAnimations.kt" "$SIM/MatrixGeometry.kt"
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/ActionSlotSymbols.kt"
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/LivingSymbolFrames.kt"
   "$STREAM/LivingObservationSource.kt" "$STREAM/StreamInteraction.kt"
+  # Die Zuschauer-Eingangsschicht (NT-070). Befehlssyntax, Abstandspruefung und das
+  # Twitch-Protokoll sind bewusst reines Kotlin - deshalb laufen sie hier und brauchen weder
+  # Netz noch Twitch-Konto. Die beiden Provider fehlen absichtlich: Sie haengen an
+  # kotlinx-coroutines, das dieser Harness nicht auf dem Klassenpfad hat, und werden in der CI
+  # uebersetzt.
+  "$STREAM/StreamCommands.kt" "$STREAM/StreamCommandGate.kt" "$STREAM/TwitchIrc.kt"
   # Android sitzt nur hinter LivingAgentStorage; Codec und Store bekommen die Zeit explizit.
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/data/LivingAgentStore.kt"
   # Die Musik-Wiedergabeschicht: reines Kotlin bis auf MediaPlayer/AudioManager, fuer die
@@ -115,8 +126,14 @@ TEST_SRCS=(
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
   "$TEST/living/LivingSymbolsTest.kt"
+  "$TEST/ui/LivingSymbolFramesTest.kt"
   "$TEST/stream/LivingObservationSourceTest.kt"
   "$TEST/stream/StreamInteractionTest.kt"
+  "$TEST/stream/StreamCommandParserTest.kt"
+  "$TEST/stream/StreamCommandGateTest.kt"
+  "$TEST/stream/TwitchIrcTest.kt"
+  "$TEST/stream/StreamViewerChainTest.kt"
+  "$TEST/stream/StreamBoundaryTest.kt"
   "$TEST/stream/StreamRunbookTest.kt"
   "$TEST/data/LivingAgentStoreTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
@@ -149,8 +166,14 @@ TEST_CLASSES=(
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
   com.notime.glyphsim.living.LivingSymbolsTest
+  com.notime.glyphsim.ui.LivingSymbolFramesTest
   com.notime.glyphsim.stream.LivingObservationSourceTest
   com.notime.glyphsim.stream.StreamInteractionTest
+  com.notime.glyphsim.stream.StreamCommandParserTest
+  com.notime.glyphsim.stream.StreamCommandGateTest
+  com.notime.glyphsim.stream.TwitchIrcTest
+  com.notime.glyphsim.stream.StreamViewerChainTest
+  com.notime.glyphsim.stream.StreamBoundaryTest
   com.notime.glyphsim.stream.StreamRunbookTest
   com.notime.glyphsim.data.LivingAgentStoreTest
   com.notime.glyphsim.settings.SettingsCatalogTest

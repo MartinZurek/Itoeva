@@ -8,9 +8,27 @@ import com.notime.glyphsim.matrix.PreparedLivingRoutine
 import com.notime.glyphsim.ui.ACTION_SLOT_COUNT
 import com.notime.glyphsim.ui.SavedAction
 
-/** Herkunft eines Impulses; Plattformkonten und Bezahlrechte gehoeren noch nicht hierher. */
+/**
+ * Herkunft eines Impulses.
+ *
+ * Die Spielschicht liest diesen Wert nie. Er steht im Eingangsprotokoll und macht spaeter den
+ * Unterschied zwischen kostenlosen und bezahlten Quellen sichtbar, **ohne** dass dafuer an der
+ * Auswahl oder am Living Agent etwas geaendert werden muesste: Eine neue Quelle ist ein neuer
+ * Eintrag hier und ein neuer [StreamInteractionProvider], mehr nicht.
+ *
+ * Bezahlrechte und Plattformkonten gehoeren weiterhin nicht hierher - nur die Angabe, welcher
+ * Eingang ein Angebot erzeugt hat.
+ */
 enum class ExternalImpulseSource {
-    LOCAL_VIEWER_SIMULATOR
+    /** Ein Tippen auf einen Platz im Client selbst - der aelteste Weg, zum Pruefen am Geraet. */
+    LOCAL_VIEWER_SIMULATOR,
+
+    /** Der eingebaute Demo-/Testeingang: erzeugte Zeilen ohne jede Netzverbindung. */
+    LOCAL_TEST_PROVIDER,
+
+    /** Ein kostenloser Befehl aus dem Twitch-Chat. Keine Bits, kein Sub, kein Konto noetig. */
+    TWITCH_CHAT_FREE
+    // Spaeter, ohne Aenderung an der Spielschicht: TWITCH_BITS, TWITCH_SUBSCRIPTION.
 }
 
 /**
