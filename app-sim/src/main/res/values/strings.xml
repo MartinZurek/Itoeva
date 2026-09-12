@@ -589,21 +589,6 @@
     <string name="talk_ask_skip">Rather not</string>
     <string name="talk_focus_noted">You wanted me to keep an eye on %1$s. I will.</string>
 
-    <!-- Was er beim Tun kurz ueber dem Kopf sagt - siehe PlaySpeech. -->
-    <string name="speech_sleep">Lying down for a moment.</string>
-    <string name="speech_rest">Doing nothing for a bit.</string>
-    <string name="speech_book">Reading a little.</string>
-    <string name="speech_mindfulness">Taking a breath.</string>
-    <string name="speech_love">Thinking of you.</string>
-    <string name="speech_drink">Getting something to drink.</string>
-    <string name="speech_medicine">Freshening up.</string>
-    <string name="speech_work">Off to work.</string>
-    <string name="speech_focus">I still have something to finish.</string>
-    <string name="speech_move">Going for a round.</string>
-    <string name="speech_creativity">Carrying on with my piece.</string>
-    <string name="speech_general">Let us see what is going on.</string>
-    <string name="speech_open_habit">This one is still open for you today.</string>
-
     <string name="talk_ask_purpose">And what do you actually need me for?</string>
     <string name="talk_ask_purpose_health">To live a bit healthier</string>
     <string name="talk_ask_purpose_calm">To settle down</string>

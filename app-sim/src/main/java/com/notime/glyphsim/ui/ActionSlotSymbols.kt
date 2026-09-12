@@ -20,22 +20,30 @@ internal object ActionSlotSymbols {
         if (action.libraryAnimationLabel?.trim()?.equals("Rocket", ignoreCase = true) == true) {
             return rocketFrame()
         }
-        action.animationType?.let { type ->
-            // Bewegte Animationsframes muessen im Ablauf funktionieren; ein winziges ruhendes
-            // Piktogramm hat eine andere Aufgabe. Die Motive, deren "vollster" Frame im Slot nur
-            // als Ornament oder Pixelblock lesbar war, bekommen deshalb eine klare Silhouette.
-            when (type) {
-                AnimationType.FOCUS -> return focusFrame()
-                AnimationType.DRINK -> return drinkFrame()
-                AnimationType.WORK -> return workFrame()
-                AnimationType.SLEEP -> return sleepFrame()
-                AnimationType.BOOK -> return bookFrame()
-                AnimationType.CREATIVITY -> return creativityFrame()
-                else -> Unit
-            }
-            return mostComplete(ReminderAnimations.framesFor(type))
-        }
+        action.animationType?.let { return frameFor(it) }
         return mostComplete(action.frames)
+    }
+
+    /**
+     * Dasselbe Piktogramm, aber allein aus dem Typ - ohne Speicherplatz drumherum.
+     *
+     * Herausgezogen, weil [LivingSymbolFrames] genau diese Zuordnung braucht: Die Symbole ueber
+     * dem Kopf sollen dieselben sein wie die in den Speicherplaetzen. Zwei Kataloge fuer
+     * dasselbe Motiv waeren die sicherste Art, sie langsam auseinanderlaufen zu lassen.
+     */
+    fun frameFor(type: AnimationType): IntArray {
+        // Bewegte Animationsframes muessen im Ablauf funktionieren; ein winziges ruhendes
+        // Piktogramm hat eine andere Aufgabe. Die Motive, deren "vollster" Frame im Slot nur
+        // als Ornament oder Pixelblock lesbar war, bekommen deshalb eine klare Silhouette.
+        return when (type) {
+            AnimationType.FOCUS -> focusFrame()
+            AnimationType.DRINK -> drinkFrame()
+            AnimationType.WORK -> workFrame()
+            AnimationType.SLEEP -> sleepFrame()
+            AnimationType.BOOK -> bookFrame()
+            AnimationType.CREATIVITY -> creativityFrame()
+            else -> mostComplete(ReminderAnimations.framesFor(type))
+        }
     }
 
     /**

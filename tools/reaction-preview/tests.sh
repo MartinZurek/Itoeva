@@ -77,6 +77,11 @@ SRCS=(
   "$LIV/LivingWorld.kt" "$LIV/LivingNeed.kt" "$LIV/LivingAction.kt"
   "$LIV/LivingPlanner.kt" "$LIV/LivingAgent.kt" "$LIV/LivingSymbols.kt"
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/ActionSlotState.kt"
+  # Die Symbole ueber dem Kopf (NT-069): Bedeutung im living-Paket, Motiv hier. Beide
+  # sind reines Kotlin - ActionSlotSymbols schlaegt nur in ReminderAnimations nach.
+  "$SIM/ReminderAnimations.kt" "$SIM/MatrixGeometry.kt"
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/ActionSlotSymbols.kt"
+  "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/LivingSymbolFrames.kt"
   "$STREAM/LivingObservationSource.kt" "$STREAM/StreamInteraction.kt"
   # Android sitzt nur hinter LivingAgentStorage; Codec und Store bekommen die Zeit explizit.
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/data/LivingAgentStore.kt"
@@ -115,6 +120,7 @@ TEST_SRCS=(
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
   "$TEST/living/LivingSymbolsTest.kt"
+  "$TEST/ui/LivingSymbolFramesTest.kt"
   "$TEST/stream/LivingObservationSourceTest.kt"
   "$TEST/stream/StreamInteractionTest.kt"
   "$TEST/stream/StreamRunbookTest.kt"
@@ -149,6 +155,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
   com.notime.glyphsim.living.LivingSymbolsTest
+  com.notime.glyphsim.ui.LivingSymbolFramesTest
   com.notime.glyphsim.stream.LivingObservationSourceTest
   com.notime.glyphsim.stream.StreamInteractionTest
   com.notime.glyphsim.stream.StreamRunbookTest

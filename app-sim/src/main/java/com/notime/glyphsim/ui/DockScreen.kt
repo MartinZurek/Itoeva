@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -106,6 +105,8 @@ import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayCharacterTheme
+import com.notime.glyphsim.living.LivingSymbolPair
+import com.notime.glyphsim.living.LivingSymbols
 import com.notime.glyphsim.matrix.PlayOutdoorStay
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
@@ -414,10 +415,13 @@ fun DockScreen(
         }
         /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
         var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
-        /** Was er gerade ueber dem Kopf sagt (Text-Id), oder null - siehe PlaySpeech. */
-        var spokenLine by remember { mutableStateOf<Int?>(null) }
-        /** Ob dazu der Halbsatz zu einer heute offenen Gewohnheit gehoert. */
-        var spokenIsOpenHabit by remember { mutableStateOf(false) }
+        /**
+         * Was er gerade ueber dem Kopf zeigt - Wunsch und, falls vorhanden, Hindernis.
+         *
+         * Kein Text mehr: Hier stand bis NT-069 ein gewuerfelter Satz, der allein am Thema hing
+         * und mit dem ZIEL des Wesens nichts zu tun hatte. Siehe [PlayWishBubble].
+         */
+        var wishSymbols by remember { mutableStateOf<LivingSymbolPair?>(null) }
         /**
          * Ob gerade ein Tagesablauf laeuft - siehe den Besuchstakt.
          *
@@ -2855,13 +2859,23 @@ fun DockScreen(
                             val place = gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>()
                                 .firstOrNull()?.place ?: PlayScene.forTopic(topic)
                             currentTopic = topic
-                            // **Er sagt, was er vorhat** - selten, kurz und nie nachts (siehe
-                            // PlaySpeech). Das beantwortet die Frage, die man sich beim Zuschauen
-                            // ohnehin stellt, im selben Augenblick, in dem sie aufkommt.
-                            PlaySpeech.lineFor(topic, PlayAmbientActivity.currentDayPhase())?.let { line ->
-                                spokenIsOpenHabit = topic in boostedTopics
-                                spokenLine = line
-                            }
+                            // **Er zeigt, was er will** - aus der Erklaerung DIESES Schrittes,
+                            // nicht aus einem Wuerfel. Das beantwortet die Frage, die man sich
+                            // beim Zuschauen ohnehin stellt, im selben Augenblick, in dem sie
+                            // aufkommt - und sie ist damit zum ersten Mal wirklich beantwortet
+                            // und nicht nur bebildert.
+                            //
+                            // Nachts nicht: Das Dock steht auf einem Nachttisch. Diese
+                            // Zurueckhaltung stammt aus PlaySpeech und ist der eine Teil davon,
+                            // der bleibt.
+                            wishSymbols =
+                                if (PlayAmbientActivity.currentDayPhase() ==
+                                    PlayAmbientActivity.DayPhase.NIGHT
+                                ) {
+                                    null
+                                } else {
+                                    LivingSymbols.of(prepared.result.explain())
+                                }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
                             rememberShown(topic, gewaehlt)
 
@@ -3569,43 +3583,24 @@ fun DockScreen(
             }
         }
 
-        // **Sein Satz ueber dem Kopf** (siehe PlaySpeech).
+        // **Was er will, ueber dem Kopf** (siehe PlayWishBubble).
         //
-        // Ueber der Figur und unter dem Gespraech: Er gehoert zur Welt, nicht zur Bedienung -
-        // deshalb faengt er auch keine Gesten ab. Wer die Figur antippt, oeffnet weiterhin das
-        // Gespraech, auch wenn der Satz gerade darueber steht.
-        spokenLine?.let { line ->
+        // Ueber der Figur und unter dem Gespraech: Es gehoert zur Welt, nicht zur Bedienung -
+        // deshalb faengt es auch keine Gesten ab. Wer die Figur antippt, oeffnet weiterhin das
+        // Gespraech, auch wenn gerade ein Symbol darueber steht. Dort gibt es Sprache; hier
+        // nicht.
+        wishSymbols?.let { symbole ->
             avatar?.takeIf { playMode && !avatarHidden }?.let { current ->
-                val speechY = current.offset.y - with(density) { SPEECH_LIFT_DP.dp.toPx() }
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = SPEECH_MAX_WIDTH_DP.dp)
-                        .offset {
-                            IntOffset(
-                                current.offset.x.roundToInt(),
-                                speechY.roundToInt().coerceAtLeast(0)
-                            )
-                        }
-                ) {
-                    Text(
-                        text = stringResource(line),
-                        color = Color(0xFFF3F1EA),
-                        fontSize = 13.sp,
-                        lineHeight = 16.sp
-                    )
-                    if (spokenIsOpenHabit) {
-                        Text(
-                            text = stringResource(PlaySpeech.habitHint()),
-                            color = Color(0xFF8F8B82),
-                            fontSize = 11.sp,
-                            lineHeight = 14.sp
-                        )
-                    }
-                }
+                PlayWishBubble(
+                    symbols = symbole,
+                    avatarOffset = current.offset,
+                    avatarSizeDp = current.sizeDp,
+                    maxWidthPx = maxWidthPx
+                )
             }
-            LaunchedEffect(line, spokenIsOpenHabit) {
-                delay((SPEECH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
-                spokenLine = null
+            LaunchedEffect(symbole) {
+                delay((WISH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
+                wishSymbols = null
             }
         }
 
@@ -4133,14 +4128,17 @@ private const val VISITOR_GAP = 1.15f
  *  Besuch zur Szene aufblasen, die er nicht sein soll. */
 private const val CONVERSATION_TURNS = 3
 
-/** Wie lange sein Satz ueber dem Kopf stehen bleibt. */
-private const val SPEECH_HOLD_MS = 3_200L
 
-/** Wie weit ueber der Figur - hoch genug, dass er ihren Kopf nicht verdeckt. */
-private const val SPEECH_LIFT_DP = 22
+/**
+ * Wie lange Wunsch und Hindernis ueber dem Kopf stehen.
+ *
+ * Laenger als der fruehere Satz (3,2 s): Ein Satz ist gelesen, sobald man ihn gelesen hat, ein
+ * Symbolpaar will einen Moment betrachtet werden - und es steht ohnehin nur dann da, wenn das
+ * Wesen tatsaechlich etwas vorhat.
+ */
+private const val WISH_HOLD_MS = 4_500L
 
-/** Und wie breit hoechstens: ein Satz, keine Spalte. */
-private const val SPEECH_MAX_WIDTH_DP = 210
+
 
 /** Takt, in dem die Sprechpunkte erscheinen. */
 private const val SPEECH_DOT_MS = 190L
