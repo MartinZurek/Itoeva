@@ -99,7 +99,8 @@ fun SkillReactionPreview(
                     }
                     .size(160.dp),
                 showBackground = false,
-                contentDescription = title
+                contentDescription = title,
+                species = species
             )
         }
 

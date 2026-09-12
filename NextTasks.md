@@ -207,6 +207,18 @@ reine Punktmengen und die Golden-Datei der Reaktionspruefung gueltig. **Offen bl
 am unteren Ende und 0,18 Seitenlicht am Geraet richtig wirken; beurteilt wurde es an
 ausgedruckten Silhouetten, nicht auf dem Bildschirm.
 
+**Darstellung:** NT-076 **Jede Kreatur bekommt ihre eigene Farbe** - *am 2026-09-12 umgesetzt.*
+Alle sechs waren derselbe warme Weisston. `AvatarPalette` gibt jeder den Akzentton ihres
+Schwerpunkts aus `ui/AnimationVisuals.kt` - FOCUS-Violett fuer den weisen Beobachter,
+MOVE-Orange fuer den Motivator -, also keine neue Farbquelle, sondern die vorhandene. Angehoben
+wurde nur die Helligkeit, nicht der Farbton: Die Akzentfarben sind fuer Beschriftungen auf
+hellem Grund gemacht und waeren als leuchtende Figur auf Schwarz zu dunkel. Dazu
+`AvatarShading.TINTED_SHADOW` - ein farbiger Koerper vertraegt den tiefen Verlauf der weissen
+Figur nicht, sonst verschwindet sein Fuss im Hintergrund. Eingefaerbt wird nur die Kreatur;
+Kulisse, Glyph-Matrix und die Zeichen in Wunsch- und Traumblase bleiben weiss. **Offen bleibt:**
+ob die sechs Toene auf dem Geraet gefallen - geprueft ist bisher nur, dass sie gleich hell,
+unten lesbar und voneinander unterscheidbar sind.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.

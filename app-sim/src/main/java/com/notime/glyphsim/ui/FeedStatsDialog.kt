@@ -421,7 +421,8 @@ private fun AvatarCommentarySection(
                 AvatarSpriteView(
                     frame = avatarFrame,
                     showBackground = false,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    species = species
                 )
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {

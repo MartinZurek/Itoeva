@@ -49,7 +49,7 @@ object AvatarShading {
     private const val LIT = 1.0f
 
     /** Helligkeit an der untersten. Tiefer nicht: Die Silhouette muss lesbar bleiben. */
-    private const val SHADOW = 0.42f
+    const val SHADOW = 0.42f
 
     /**
      * Wie stark das Licht zusaetzlich von LINKS kommt.
@@ -70,15 +70,41 @@ object AvatarShading {
     private const val SIDE = 0.18f
 
     /**
+     * Fussfaktor fuer eine EINGEFAERBTE Figur (siehe [AvatarPalette]) - deutlich flacher als
+     * [SHADOW].
+     *
+     * **Weiss und Farbe vertragen nicht denselben Verlauf.** Eine weisse Zelle hat fast die
+     * volle Helligkeit zur Verfuegung; von der darf der Verlauf viel wegnehmen, ohne dass unten
+     * etwas verschwindet. Ein farbiger Grundton liegt von Haus aus bei rund einem Drittel davon
+     * - derselbe Verlauf zoege die untersten Zeilen in den Hintergrund. Gemessen am
+     * Dock-Schwarz: Farbe mit 0,42 haette unten Kontrast 1,5, also praktisch nichts; heute hat
+     * die weisse Figur dort 2,53.
+     *
+     * 0,70 ist der Wert, bei dem eine farbige Kreatur unten genau dieselbe Lesbarkeit erreicht
+     * wie die weisse heute. Er ist damit keine Geschmacksfrage, sondern die Gegenrechnung zur
+     * geringeren Grundhelligkeit.
+     *
+     * Bestaetigt vom Bild, das den Anstoss gab: Dessen Kreatur benutzt zwei Toene desselben
+     * Farbtons im Verhaeltnis 0,87 - also ebenfalls einen flachen Verlauf, nicht den tiefen.
+     * Eine farbige Figur braucht ihn auch nicht so tief: Sie hebt sich schon durch den Farbton
+     * von der weissen Kulisse ab, waehrend eine weisse Figur dafuer allein die Helligkeit hat.
+     */
+    const val TINTED_SHADOW = 0.70f
+
+    /**
      * Schattierte Kopie von [frame].
      *
      * Ein Feld, das nicht zum Raster passt, wird unveraendert zurueckgegeben, statt eine
      * Ausnahme zu werfen - eine Zeichenroutine darf an einem unerwarteten Feld nicht scheitern.
+     *
+     * [floor] ist die Helligkeit an der untersten Zeile der Figur: [SHADOW] fuer die weisse
+     * Zeichnung, [TINTED_SHADOW] fuer eine eingefaerbte.
      */
     fun shade(
         frame: IntArray,
         width: Int = AvatarGeometry.SIZE,
-        height: Int = AvatarGeometry.HEIGHT
+        height: Int = AvatarGeometry.HEIGHT,
+        floor: Float = SHADOW
     ): IntArray {
         if (width <= 0 || height <= 0 || frame.size != width * height) return frame
 
@@ -102,7 +128,7 @@ object AvatarShading {
         val breite = (rechts - links).toFloat()
         val shaded = IntArray(frame.size)
         for (y in oben..unten) {
-            val vonOben = LIT - (y - oben) / hoehe * (LIT - SHADOW)
+            val vonOben = LIT - (y - oben) / hoehe * (LIT - floor)
             for (x in 0 until width) {
                 val index = y * width + x
                 val wert = frame[index]

@@ -51,7 +51,17 @@ fun AvatarSpriteView(
      * hellste Figur im Bild. Das wirkt auch dann noch, wenn sich eine Ueberdeckung nicht
      * vermeiden laesst.
      */
-    brightnessScale: Float = 1f
+    brightnessScale: Float = 1f,
+    /**
+     * Welche Kreatur hier gezeichnet wird - bestimmt ihre Farbe (siehe [AvatarPalette]).
+     *
+     * `null` heisst "keine Kreatur, sondern ein Zeichen": Wunsch- und Traumblase zeichnen mit
+     * derselben Ansicht die 13x13-Symbole aus `LivingSymbolFrames`. Die sind Aussagen ueber die
+     * Welt, keine Koerper, und bleiben deshalb weiss wie die Kulisse. Genau deshalb ist Weiss
+     * hier der Standard: Wer einen Wert vergisst, bekommt das bisherige Bild, nicht ein falsch
+     * eingefaerbtes Symbol.
+     */
+    species: AvatarSpecies? = null
 ) {
     Canvas(
         modifier = modifier
@@ -67,15 +77,23 @@ fun AvatarSpriteView(
                 }
             )
     ) {
-        drawSprite(frame, brightnessScale)
+        drawSprite(frame, brightnessScale, species)
     }
 }
 
-private fun DrawScope.drawSprite(rawFrame: IntArray, brightnessScale: Float) {
+private fun DrawScope.drawSprite(
+    rawFrame: IntArray,
+    brightnessScale: Float,
+    species: AvatarSpecies?
+) {
     // **Hier und nicht in den Animationsdaten** (siehe [AvatarShading]): Die Posen bleiben reine
     // Punktmengen, Ueberblendungen rechnen unveraendert weiter, und die abgelegten
     // Vergleichsbilder der Reaktionspruefung bleiben gueltig. Schattierung ist Darstellung.
-    val frame = AvatarShading.shade(rawFrame)
+    // Dasselbe gilt fuer die Farbe - eine Pose weiss nicht, wer sie gerade einnimmt.
+    val onColor = species?.let { Color(AvatarPalette.tintFor(it)) } ?: LED_ON_COLOR
+    // Farbe vertraegt den tiefen Verlauf der weissen Figur nicht, siehe AvatarShading.
+    val floor = if (species == null) AvatarShading.SHADOW else AvatarShading.TINTED_SHADOW
+    val frame = AvatarShading.shade(rawFrame, floor = floor)
     val cell = size.width / AvatarGeometry.SIZE
     // Winziger Ueberlapp zwischen benachbarten Zellen, damit Antialiasing keine
     // sichtbaren Ein-Pixel-Spalten zwischen zwei eigentlich zusammenhaengenden
@@ -88,7 +106,7 @@ private fun DrawScope.drawSprite(rawFrame: IntArray, brightnessScale: Float) {
             val fraction = (brightness.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                 AvatarGeometry.MAX_BRIGHTNESS) * brightnessScale.coerceIn(0f, 1f)
             drawRect(
-                color = lerpColor(LED_OFF_COLOR, LED_ON_COLOR, fraction),
+                color = lerpColor(LED_OFF_COLOR, onColor, fraction),
                 topLeft = Offset(x * cell, y * cell),
                 size = cellSize
             )

@@ -852,6 +852,7 @@ fun HomeScreen(
                     stringResource(currentSpecies.labelRes),
                     mood.describeForAccessibility()
                 ),
+                species = currentSpecies,
                 modifier = Modifier
                     .size(96.dp)
                     .offset { IntOffset(avatarDrag.x.roundToInt(), avatarDrag.y.roundToInt()) }
@@ -990,6 +991,7 @@ fun HomeScreen(
     playingClip?.let { clip ->
         AvatarClipPlayer(
             clip = clip,
+            species = currentSpecies,
             onFinished = {
                 playingClip = null
                 showAssistant = true
@@ -1583,7 +1585,9 @@ private fun AvatarSpeciesRow(species: AvatarSpecies, selected: Boolean, onClick:
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        AvatarSpriteView(frame = previewFrame, modifier = Modifier.size(48.dp))
+        // Die Auswahlliste zeigt jede Kreatur in IHRER Farbe - hier steht die Entscheidung an,
+        // also gehoert der Unterschied genau hierher.
+        AvatarSpriteView(frame = previewFrame, modifier = Modifier.size(48.dp), species = species)
         Column(modifier = Modifier.weight(1f)) {
             Text(stringResource(species.labelRes), style = MaterialTheme.typography.titleSmall)
             Text(
