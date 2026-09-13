@@ -32,7 +32,15 @@ data class AvatarBody(
     val eyesHalf: Set<Pair<Int, Int>> = eyesOpen,
     val mouthNeutral: Set<Pair<Int, Int>>,
     val mouthOpen: Set<Pair<Int, Int>>,
-    val feet: (spread: Int) -> List<Pair<Int, Int>>,
+    /**
+     * Die Fuesse, abhaengig von [spread] (wie weit auseinander) und [lift] (welcher gerade
+     * angehoben ist: +1 der linke, -1 der rechte, 0 beide am Boden).
+     *
+     * [lift] kam mit dem Laufschritt dazu. Vorher spreizten sich beide Fuesse gleichzeitig nach
+     * aussen und wieder zusammen - das ist ein Huepfen auf der Stelle, kein Gang. Ein Schritt
+     * ist unsymmetrisch: Ein Fuss steht, der andere hebt ab.
+     */
+    val feet: (spread: Int, lift: Int) -> List<Pair<Int, Int>>,
     val tail: (wag: Int) -> List<Pair<Int, Int>>,
     /**
      * Spezies-eigener Bewegungs-Akzent, [phase] ist -1/0/1 (0 = Ruhelage).
@@ -90,11 +98,25 @@ data class AvatarBody(
  */
 fun AvatarBody.groundRow(): Int = maxOf(
     silhouette.maxOfOrNull { it.second } ?: 0,
-    feet(0).maxOfOrNull { it.second } ?: 0
+    feet(0, 0).maxOfOrNull { it.second } ?: 0
 ) + AvatarGeometry.HEADROOM   // die Posen liegen um die Kopffreiheit nach unten versetzt
 
 object AvatarBodies {
-    private val noFeet: (Int) -> List<Pair<Int, Int>> = { emptyList() }
+    private val noFeet: (Int, Int) -> List<Pair<Int, Int>> = { _, _ -> emptyList() }
+
+    /**
+     * Zwei Fuesse in [row], die sich spreizen und abwechselnd abheben.
+     *
+     * Ausgelagert, weil fuenf der sechs Koerper dieselbe Mechanik haben und sich nur in den
+     * Spalten und der Zeile unterscheiden - so steht die Schrittlogik einmal da statt fuenfmal.
+     */
+    private fun stepping(left: Int, right: Int, row: Int): (Int, Int) -> List<Pair<Int, Int>> =
+        { spread, lift ->
+            listOf(
+                (left - spread) to (row - maxOf(lift, 0)),
+                (right + spread) to (row + minOf(lift, 0))
+            )
+        }
     private val noTail: (Int) -> List<Pair<Int, Int>> = { emptyList() }
 
     fun forSpecies(species: AvatarSpecies): AvatarBody = when (species) {
@@ -124,7 +146,7 @@ object AvatarBodies {
         eyesHalf = setOf(6 to 10, 9 to 10),
         mouthNeutral = setOf(7 to 11, 8 to 11),
         mouthOpen = setOf(6 to 11, 7 to 11, 8 to 11, 9 to 11),
-        feet = { spread -> listOf((6 - spread) to 14, (9 + spread) to 14) },
+        feet = stepping(left = 6, right = 9, row = 14),
         tail = { wag -> listOf(11 to (10 + wag), 12 to (9 + wag)) },
         // Ohrenspitzen zucken: die Ohren sitzen bei (5,5)/(10,5), die Spitze wandert je nach
         // Phase eine Zeile hoch bzw. nach aussen.
@@ -159,7 +181,7 @@ object AvatarBodies {
         eyesHalf = setOf(5 to 10, 6 to 10, 10 to 10, 11 to 10),
         mouthNeutral = setOf(8 to 12),
         mouthOpen = setOf(7 to 12, 8 to 12, 9 to 12),
-        feet = { spread -> listOf((7 - spread) to 15, (8 + spread) to 15) },
+        feet = stepping(left = 7, right = 8, row = 15),
         tail = noTail,
         // Kein Schwanz - stattdessen schwingt der Stern-Zopf ueber dem Kopf (Accessory bei
         // (7,2)/(8,2)/(6,1)/(9,1)) zur Seite aus.
@@ -190,7 +212,7 @@ object AvatarBodies {
         eyesHalf = setOf(6 to 9, 9 to 9),
         mouthNeutral = setOf(7 to 10, 8 to 10),
         mouthOpen = setOf(6 to 10, 7 to 10, 8 to 10, 9 to 10),
-        feet = { spread -> listOf((6 - spread) to 13, (9 + spread) to 13) },
+        feet = stepping(left = 6, right = 9, row = 13),
         tail = { wag -> listOf(11 to (10 + wag), 12 to (9 + wag), 13 to (8 + wag)) },
         // Fluegelschlag: die Fluegel sitzen bei (3,8)/(2,9) bzw. (12,8)/(13,9) - je nach Phase
         // heben oder senken sich die Spitzen.
@@ -221,7 +243,7 @@ object AvatarBodies {
         eyesHalf = setOf(6 to 9, 9 to 9),
         mouthNeutral = emptySet(),
         mouthOpen = setOf(7 to 13, 8 to 13),
-        feet = { spread -> listOf((6 - spread) to 14, (9 + spread) to 14) },
+        feet = stepping(left = 6, right = 9, row = 14),
         tail = { wag -> listOf(11 to (10 + wag), 12 to (10 + wag), 12 to (9 + wag), 13 to (9 + wag)) },
         // Spitze Ohren (Accessory bei (5,1)/(5,2) bzw. (10,1)/(10,2)) stellen sich auf oder
         // legen sich an.
@@ -299,7 +321,7 @@ object AvatarBodies {
         eyesClosed = emptySet(),
         mouthNeutral = setOf(7 to 11),
         mouthOpen = setOf(7 to 11, 8 to 11, 7 to 12),
-        feet = { spread -> listOf((6 - spread) to 14, (9 + spread) to 14) },
+        feet = stepping(left = 6, right = 9, row = 14),
         tail = noTail,
         // Kein Schwanz - dafuer schlagen die Fluegel-Stummel (Accessory bei (3,10)/(3,11) bzw.
         // (12,10)/(12,11)) und die Federohren zucken.

@@ -6,6 +6,7 @@ import com.notime.glyphsim.living.LivingSymbols
 import com.notime.glyphsim.living.Requirement
 import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.matrix.MatrixGeometry
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -50,6 +51,24 @@ class LivingSymbolFramesTest {
             val wunsch = LivingSymbols.wish(goal)
             assertNotNull("$goal ohne Symbol", wunsch)
             assertNotNull("$goal ohne Motiv", LivingSymbolFrames.frameFor(wunsch!!))
+        }
+    }
+
+    @Test
+    fun `jedes Motiv liegt auf dem Matrix-Raster`() {
+        // **Der Fehler, den diese Pruefung festnagelt, war nicht zu sehen, sondern zu LESEN.**
+        // Die Zeichen liegen auf 13x13; gezeichnet wurden sie in den Blasen ueber dem Kopf von
+        // der Avatar-Ansicht, und die liest mit der Zeilenbreite des Avatars, also 16. Jede
+        // Zeile rutschte um drei Spalten weiter, das Zeichen wurde diagonal zerschert, und ueber
+        // dem Kopf stand nur noch Rauschen.
+        //
+        // Die Groesse hier festzuhalten ist die Haelfte der Absicherung: Wer ein Motiv auf einem
+        // anderen Raster anlegt, faellt auf. Die andere Haelfte ist, dass die Blasen dieselbe
+        // Ansicht benutzen wie die Speicherplaetze (siehe PlayWishBubble).
+        val erwartet = MatrixGeometry.SIZE * MatrixGeometry.SIZE
+        for (intent in SymbolicIntent.entries) {
+            val frame = LivingSymbolFrames.frameFor(intent) ?: continue
+            assertEquals("$intent liegt nicht auf 13x13", erwartet, frame.size)
         }
     }
 

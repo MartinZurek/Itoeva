@@ -16,7 +16,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.notime.glyphsim.matrix.AvatarSpriteView
+import com.notime.glyphsim.matrix.MatrixGeometry
+import com.notime.glyphsim.matrix.SimulatedMatrixView
 import kotlin.math.roundToInt
 
 /**
@@ -81,10 +82,14 @@ internal fun PlayDreamBubble(
             .clip(CircleShape)
             .background(Color.White.copy(alpha = 0.035f))
     ) {
-        AvatarSpriteView(
-            frame = frame,
-            showBackground = false,
-            brightnessScale = 0.82f,
+        // **Die Matrix-Ansicht, nicht die Avatar-Ansicht** - siehe PlayWishBubble fuer den
+        // ausfuehrlichen Grund: Das Zeichen liegt auf 13x13, die Avatar-Ansicht liest mit 16 und
+        // zerschert es diagonal.
+        SimulatedMatrixView(
+            frame = IntArray(frame.size) {
+                (frame[it] * 0.82f).toInt().coerceIn(0, MatrixGeometry.MAX_BRIGHTNESS)
+            },
+            showPuck = false,
             contentDescription = null,
             modifier = Modifier.fillMaxSize()
         )

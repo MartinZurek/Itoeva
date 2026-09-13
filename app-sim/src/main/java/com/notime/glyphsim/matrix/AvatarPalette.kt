@@ -27,18 +27,17 @@ package com.notime.glyphsim.matrix
  * ## Warum die Werte trotzdem nicht die aus der Liste sind
  *
  * Die Akzentfarben sind fuer Beschriftungen auf hellem Grund gemacht. Als leuchtende Figur auf
- * Schwarz sind sie zu dunkel: FOCUS-Violett #6750A4 hat ein Drittel der Helligkeit des heutigen
- * Weiss, und die unterste, beschattete Zeile der Figur verschwindet damit im Hintergrund.
+ * Schwarz sind sie zu dunkel - FOCUS-Violett #6750A4 hat ein Drittel der Helligkeit des frueheren
+ * Weiss.
  *
- * Deshalb ist jede Farbe **im Farbton unveraendert** (gemessen: hoechstens 0,5 Grad Abweichung)
- * und nur in der Helligkeit so weit angehoben, dass die unterste Zeile der Figur **genauso gut
- * lesbar ist wie heute bei der weissen** - Kontrast 2,54 bis 2,56 gegen den Hintergrund,
- * gegenueber 2,53 heute. Keine Kreatur ist also dunkler als das, was schon auf dem Bildschirm
- * steht, und keine ist heller als eine andere. Nur MOVE musste dabei etwas Saettigung abgeben
- * (0,88 auf 0,83), weil sein Orange sonst ueber die maximale Helligkeit hinausgelaufen waere.
+ * Deshalb ist jede Farbe **im Farbton unveraendert** (gemessen: hoechstens 0,5 Grad Abweichung,
+ * steht als Test) und nur in der Helligkeit angehoben - und zwar alle auf **dieselbe Stufe**,
+ * damit keine Kreatur allein durch ihre Farbe kraenklich neben einer anderen wirkt. Nur MOVE
+ * musste dabei etwas Saettigung abgeben (0,88 auf 0,83), weil sein Orange sonst ueber die
+ * maximale Helligkeit hinausgelaufen waere.
  *
- * Der zweite Teil derselben Rechnung steht in [AvatarShading.TINTED_SHADOW]: Ein farbiger
- * Koerper vertraegt den tiefen Verlauf der weissen Figur nicht.
+ * Welche Stufe das ist, gibt das Bild vor, das den Anstoss gegeben hat: Sein Terrakotta #D97757
+ * liegt genau dort. Die Schattierung darauf setzt [AvatarShading] auf.
  *
  * ## Die Zahlen stehen hier und nicht als Rechnung
  *

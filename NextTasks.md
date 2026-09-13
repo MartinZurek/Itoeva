@@ -213,11 +213,35 @@ Schwerpunkts aus `ui/AnimationVisuals.kt` - FOCUS-Violett fuer den weisen Beobac
 MOVE-Orange fuer den Motivator -, also keine neue Farbquelle, sondern die vorhandene. Angehoben
 wurde nur die Helligkeit, nicht der Farbton: Die Akzentfarben sind fuer Beschriftungen auf
 hellem Grund gemacht und waeren als leuchtende Figur auf Schwarz zu dunkel. Dazu
-`AvatarShading.TINTED_SHADOW` - ein farbiger Koerper vertraegt den tiefen Verlauf der weissen
-Figur nicht, sonst verschwindet sein Fuss im Hintergrund. Eingefaerbt wird nur die Kreatur;
+`AvatarShading` - siehe NT-078, der diesen Verlauf spaeter ersetzt hat. Eingefaerbt wird nur die Kreatur;
 Kulisse, Glyph-Matrix und die Zeichen in Wunsch- und Traumblase bleiben weiss. **Offen bleibt:**
 ob die sechs Toene auf dem Geraet gefallen - geprueft ist bisher nur, dass sie gleich hell,
 unten lesbar und voneinander unterscheidbar sind.
+
+**Darstellung:** NT-078 **Der Schatten wird sichtbar und zeigt die Laufrichtung** - *am
+2026-09-13 umgesetzt.* Die Schattierung aus NT-075 war ein weicher Verlauf ueber die Hoehe, und
+man sah sie nicht: Dreissig Prozent Unterschied auf sechzehn Zeilen sind zwei Prozent von einer
+Zeile zur naechsten - kein Auge trennt das. Nachgezaehlt am Vorbild: Dessen Kreatur hat **genau
+zwei Toene** (8876 zu 1896 Pixel, kein Zwischenwert), und der dunkle liegt als **Band auf einer
+Flanke**, ueber die aeusseren 30 Prozent der Breite. Was ein Auge als Koerper liest, ist eine
+Kante zwischen zwei Flaechen, kein sanfter Uebergang. `AvatarShading` macht das jetzt so - und
+weil der Schatten auf EINER Seite liegt, traegt er zugleich die Richtung: Beim Gang nach links
+springt die Kante auf die andere Seite, und die Figur dreht sich sichtbar um, obwohl das Sprite
+nirgends gespiegelt wird. Dazu ein echter Schritt: Die Fuesse spreizten sich bisher symmetrisch
+(ein Huepfen auf der Stelle), jetzt hebt abwechselnd einer ab, waehrend der andere steht.
+**Offen bleibt:** ob 0,875 als Tonabstand am Geraet reicht - es ist der Wert des Vorbilds, aber
+dessen Figur ist groesser als unsere.
+
+**Darstellung:** NT-079 **Die Zeichen ueber dem Kopf waren zerschert** - *am 2026-09-13
+umgesetzt.* In der Wunsch- und der Traumblase war nur Rauschen zu sehen. Die Ursache ist keine
+Gestaltungsfrage: Die Zeichen liegen auf dem 13x13-Raster der Matrix, gezeichnet wurden sie aber
+von `AvatarSpriteView`, und die liest mit der Zeilenbreite des Avatars, also 16. Jede Zeile
+rutschte dadurch um drei Spalten weiter - das Bild wurde diagonal zerschert. Dazu kam das
+erzwungene Seitenverhaeltnis 16:20, das ein quadratisches Zeichen zusaetzlich stauchte. Beide
+Blasen benutzen jetzt `SimulatedMatrixView` - genau die Ansicht, mit der die Speicherplaetze
+dieselben Zeichen schon immer gezeichnet haben, und damit auch die Gleichheit, die
+`LivingSymbolFrames` ausdruecklich anstrebt. **Offen bleibt:** ob die Zeichen jetzt, richtig
+gezeichnet, auch verstaendlich sind - das war bisher gar nicht zu beurteilen.
 
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem

@@ -16,7 +16,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.notime.glyphsim.living.LivingSymbolPair
-import com.notime.glyphsim.matrix.AvatarSpriteView
+import com.notime.glyphsim.matrix.MatrixGeometry
+import com.notime.glyphsim.matrix.SimulatedMatrixView
 import kotlin.math.roundToInt
 
 /**
@@ -72,10 +73,19 @@ internal fun PlayWishBubble(
                 .background(Color.White.copy(alpha = 0.05f))
         ) {
             LivingSymbolFrames.frameFor(symbols.wish)?.let { frame ->
-                AvatarSpriteView(
+                // **Die Matrix-Ansicht, nicht die Avatar-Ansicht.** Die Zeichen liegen auf dem
+                // 13x13-Raster (siehe LivingSymbolFrames); [AvatarSpriteView] liest mit der
+                // Zeilenbreite des Avatars, also 16. Jede Zeile rutschte dadurch um drei Spalten
+                // weiter und das Zeichen wurde diagonal zerschert - auf dem Bildschirm war ueber
+                // dem Kopf nur noch Rauschen zu sehen. Dazu kam das erzwungene Seitenverhaeltnis
+                // 16:20, das ein quadratisches Zeichen zusaetzlich stauchte.
+                //
+                // Dieselbe Ansicht wie bei den Speicherplaetzen (siehe ActionSlots) - und genau
+                // das ist ohnehin der Sinn der Sache: Wer im Slot ein Buch sieht und ueber dem
+                // Kopf ein anderes Zeichen, lernt zwei Zeichen fuer dieselbe Sache.
+                SimulatedMatrixView(
                     frame = frame,
-                    showBackground = false,
-                    brightnessScale = 0.95f,
+                    showPuck = false,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -89,11 +99,12 @@ internal fun PlayWishBubble(
                         .clip(CircleShape)
                         .background(Color.White.copy(alpha = 0.03f))
                 ) {
-                    AvatarSpriteView(
-                        frame = frame,
-                        showBackground = false,
-                        // Blasser als der Wunsch: eine Randbemerkung, keine zweite Meldung.
-                        brightnessScale = 0.55f,
+                    SimulatedMatrixView(
+                        // Blasser als der Wunsch: eine Randbemerkung, keine zweite Meldung. Die
+                        // Matrix-Ansicht kennt keine Daempfung, also wird das Bild selbst
+                        // heruntergerechnet - dasselbe Ergebnis, eine Stelle weniger Zustand.
+                        frame = gedaempft(frame, 0.55f),
+                        showPuck = false,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -114,3 +125,7 @@ private const val WISH_SCALE = 0.62f
 
 /** Das Hindernis ist kleiner als der Wunsch - siehe die Begruendung in der Klassendoku. */
 private const val OBSTACLE_SCALE = 0.72f
+
+/** Dasselbe Bild, nur schwaecher - siehe die Verwendung oben. */
+private fun gedaempft(frame: IntArray, faktor: Float): IntArray =
+    IntArray(frame.size) { (frame[it] * faktor).toInt().coerceIn(0, MatrixGeometry.MAX_BRIGHTNESS) }
