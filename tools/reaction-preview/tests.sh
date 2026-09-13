@@ -109,6 +109,11 @@ TEST_SRCS=(
   "$TEST/matrix/AvatarShadingTest.kt"
   "$TEST/matrix/AvatarPaletteTest.kt"
   "$TEST/matrix/FacadeTest.kt"
+  # PlaySceneTest kam mit NT-078 dazu: Eine Signaturaenderung an AvatarBody.feet lief hier
+  # gruen durch und fiel erst in der CI auf, weil dieser Test gar nicht uebersetzt wurde.
+  # AvatarAnimationsTest laesst sich NICHT ergaenzen - er braucht MatrixAnimator und damit
+  # android.os.SystemClock und kotlinx-coroutines, beides hier nicht auf dem Klassenpfad.
+  "$TEST/matrix/PlaySceneTest.kt"
   "$TEST/matrix/ReactionDistinctnessTest.kt"
   "$TEST/matrix/ReactionTriggerTest.kt"
   "$TEST/matrix/AvatarReactionsTest.kt"
@@ -157,6 +162,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.AvatarShadingTest
   com.notime.glyphsim.matrix.AvatarPaletteTest
   com.notime.glyphsim.matrix.FacadeTest
+  com.notime.glyphsim.matrix.PlaySceneTest
   com.notime.glyphsim.matrix.ReactionDistinctnessTest
   com.notime.glyphsim.matrix.ReactionTriggerTest
   com.notime.glyphsim.matrix.AvatarReactionsTest

@@ -160,7 +160,7 @@ class PlaySceneTest {
         // GLOOP hat keine Fuesse (feet = noFeet) - dort muss die Silhouette den Ausschlag geben,
         // sonst saesse der Wert bei 0 und die Figur haenge weit ueber dem Boden.
         val gloop = AvatarBodies.forSpecies(AvatarSpecies.GLOOP)
-        assertTrue("GLOOP hat wider Erwarten Fuesse", gloop.feet(0).isEmpty())
+        assertTrue("GLOOP hat wider Erwarten Fuesse", gloop.feet(0, 0).isEmpty())
         assertEquals(
             gloop.silhouette.maxOf { it.second } + AvatarGeometry.HEADROOM,
             gloop.groundRow()
