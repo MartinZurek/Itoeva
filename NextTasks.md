@@ -330,6 +330,18 @@ Weltmotiv-Stellungen sowie die ruhige Angel-Szene sind keine Fehlerkorrekturen. 
 belegte Animationshebel sind die in NT-082 notierten getragenen Gegenstaende, die beim Gehen
 keinen eigenen Takt kennen.
 
+**Darstellung:** NT-084 **Jeder Reminder hat eine motiveigene Avatarreaktion** - *am
+2026-09-13 umgesetzt.* Die Vollpruefung ergab: Alle Reminder spielten bereits Avatarframes, aber
+29 allgemeine Bibliotheksmotive erbten noch eine bildgleiche Gruppenreaktion. Sie haben jetzt
+jeweils eine eigene kleine Choreografie aus Motiv-Requisite, Koerperbahn, Mimik und Timing. Der
+Katalogtest verlangt vollstaendige Abdeckung aller 69 Bibliotheksmotive: 30 Charaktermotive,
+38 allgemeine Motive und die vorhandene Rocket-Sonderfolge. Der Bildvergleich misst nun fuer 80
+Motivknoten 80 verschiedene Reaktionen; ein Geschwister-Rueckfall ist damit ein Testfehler statt
+eine fortzuschreibende Bestandszahl. Kontaktboegen fuer PUFFLING und GLOOP wurden geprueft.
+**Offen bleibt:** Tempo und Lesbarkeit im laufenden Spiel am Geraet ansehen. Der naechste bereits
+gemessene Animationshebel bleibt NT-082: getragene Gegenstaende bewegen sich beim Gehen noch ohne
+eigenen Takt.
+
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
 durchsichtig. Man sah durch sie hindurch auf den schwarzen Grund, vier davon nebeneinander waren

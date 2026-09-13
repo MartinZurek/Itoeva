@@ -1,11 +1,11 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-13 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-083 umgesetzt)
+Stand: 2026-09-13 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-084 umgesetzt)
 
 ## Was das System heute wirklich ist
 
-Nach den gemergten Schnitten #127 bis #147 und dem aktuellen NT-083 ist aus dem Plan ein
+Nach den gemergten Schnitten #127 bis #148 und dem aktuellen NT-084 ist aus dem Plan ein
 laufendes System geworden. Diese
 Uebersicht beschreibt den IST-Stand; der Rest des Dokuments bleibt der Plan, an dem er gemessen
 wird.
@@ -149,6 +149,19 @@ Nacht ohne sichtbaren Gedanken. NT-083 trennt deshalb die Regeln klar:
 Das ist weiterhin Darstellung vorhandener Erlebnisse, keine zweite episodische Erinnerung und
 kein Plot: `Episode` im Living Agent beeinflusst Entscheidungen; `PlayDreamMemory` verdichtet nur
 die Bilder, die der Zuschauer im Schlaf wiedersehen kann.
+
+### Reminder sind nicht nur verschieden wirksam, sondern verschieden sichtbar
+
+NT-072 trennte die Wirkungen der Reminder im Kern. Die anschliessende Vollpruefung der sichtbaren
+Antworten fand eine zweite Ebene: Alle Reminder loesten zwar Avatarframes aus, aber 29 allgemeine
+Bibliotheksmotive erbten noch die Animation eines Geschwisters. `AvatarMotifReactions` gibt ihnen
+seit NT-084 eine eigene Requisite, Koerperbahn, Mimik und Taktung. Die 30 Charaktermotive und die
+Rocket-Flugfolge bleiben in ihren vorhandenen Spezialkatalogen.
+
+Der Beleg betrachtet nicht nur Funktionsnamen: Das Vorschauwerkzeug misst Bildfolge und
+Standzeiten aller 80 Motivknoten. Vorher lagen 26 Knoten in bildgleichen Geschwistergruppen,
+jetzt sind es 80 verschiedene Reaktionen. Damit gilt fuer den gesamten Baum: Ein sichtbares
+Reminder-Motiv besitzt auch eine sichtbar eigene Antwort des Avatars.
 
 ### Erfahrung aus dem Erleben
 

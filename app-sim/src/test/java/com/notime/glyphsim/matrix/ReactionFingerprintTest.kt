@@ -43,6 +43,9 @@ import org.junit.Test
  * den Befund und SKILLBAUM.md P16). Der gemeinsame alte Wert in vier Zeilen war dabei selbst der
  * Beleg: Vier verschiedene Motive duerfen nicht denselben Abdruck haben.
  *
+ * NT-084 zog dieselbe Grenze fuer die letzten 29 geerbten Bibliotheksmotive: Nur ihre `LIB:`-
+ * Zeilen wurden erneuert. Seitdem darf kein Motiv mehr bildgleich auf ein Geschwister fallen.
+ *
  * Der Abdruck deckt alle sechs Spezies gleichzeitig ab: Jede Zeile ist der Hash ueber die
  * Bildfolgen UND die Standzeiten aller sechs. Damit faellt auch auf, wenn sich nur bei einer
  * Spezies etwas verschiebt - was der wahrscheinlichere Fehler ist, weil sich die Spezies genau im
@@ -83,7 +86,7 @@ class ReactionFingerprintTest {
 
     /**
      * Jeder Weg, auf dem eine Reaktion entstehen kann: die zwoelf eingebauten Typen, der Fall ohne
-     * jedes Thema, und alle 56 Bibliotheks-Motive. Sortiert, damit die Datei stabil bleibt.
+     * jedes Thema, und alle 69 Bibliotheks-Motive. Sortiert, damit die Datei stabil bleibt.
      */
     private fun currentFingerprint(): List<String> {
         val rows = mutableListOf<String>()
