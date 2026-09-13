@@ -1,11 +1,12 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-11 (Schnitte 2a, 2b, 3, 4 und 5 umgesetzt)
+Stand: 2026-09-13 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-083 umgesetzt)
 
 ## Was das System heute wirklich ist
 
-Nach sieben Schnitten (#127 bis #133) ist aus dem Plan ein laufendes System geworden. Diese
+Nach den gemergten Schnitten #127 bis #147 und dem aktuellen NT-083 ist aus dem Plan ein
+laufendes System geworden. Diese
 Uebersicht beschreibt den IST-Stand; der Rest des Dokuments bleibt der Plan, an dem er gemessen
 wird.
 
@@ -18,7 +19,7 @@ keine zweite Engine und keinen `StoryManager`.
 | `Needs` / `NeedKind` | Sieben Beduerfnisse, die mit der Zeit wachsen: Hunger, Energie, Spass, Naehe, Behaglichkeit, Neugier, Entwicklung. |
 | `Personality` | Startbias je Spezies - **veraenderbar**, weil er als Datum im `AgentState` liegt und nicht in einem Enum. Er verschiebt die Wahl, er ueberstimmt sie nie. |
 | `UtilitySelector` | Vergibt je Ziel eine Punktzahl aus Beduerfnisdruck, Bias und Kosten - **aufgeschluesselt**, damit "warum will er das?" beantwortbar bleibt. |
-| `GoalKind` | Sechs langlebige Absichten: `GET_FOOD`, `REST`, `HAVE_FUN`, `DEVELOP`, `CONNECT_WITH`, `EARN_MONEY`. |
+| `GoalKind` | Acht langlebige Absichten: `GET_FOOD`, `REST`, `HAVE_FUN`, `DEVELOP`, `CONNECT_WITH`, `EARN_MONEY`, `EXPLORE`, `SEEK_COMFORT`. |
 | `Planner` / `Plan` | Leitet aus einem Ziel einen mehrschrittigen Weg ab - je nach Ressourcenlage `EAT`, oder `BUY_FOOD -> EAT`, oder `WORK -> BUY_FOOD -> EAT`. |
 | `Requirement` | Voraussetzungen als **benannte Dinge** (`Coins`, `Portions`, `At`, `SiteOpen`, `Near`), nicht als Wahrheitswerte. Daran haengt die ganze Erklaerbarkeit. |
 | `ActionOutcome` | Der eine Wirkungsweg. Traegt Muenzen, Vorrat, Ort, Zeit, Beduerfnisse, Episoden, Beziehungen. |
@@ -124,11 +125,30 @@ Traeume liefen aber ausschliesslich in `RoutineStep.SleepUntilMorning` und dort 
 `DayPhase.NIGHT` - also ab 23 Uhr. Tagsueber war dieselbe Schlafhandlung ein Nickerchen von acht
 Sekunden Stille. Wer abends zusieht, konnte keinen Traum sehen, egal wie lange.
 
-NT-073 fuehrt `RoutineStep.Daydream` ein: ein ausdruecklicher Schritt statt einer stillen Regel im
-Verweilen, damit im Ablauf selbst steht, wo ein Traum moeglich ist - auf dem Sofa, beim
-Innehalten und auf der Bank draussen - und ein Test es nachlesen kann. Dazu traeumt jetzt auch
-das Nickerchen. Der Tagtraum ist mit 28 Prozent bewusst seltener als der Nachttraum; er soll ein
-Aufblitzen bleiben.
+NT-073 fuehrte `RoutineStep.Daydream` ein: ein ausdruecklicher Schritt statt einer stillen Regel
+im Verweilen, damit im Ablauf selbst steht, wo ein Tagtraum moeglich ist - auf dem Sofa, beim
+Innehalten und auf der Bank draussen - und ein Test es nachlesen kann. Der Tagtraum bleibt mit
+28 Prozent ein seltenes Aufblitzen.
+
+Die naechste Messung fand zwei weitere Luecken. Erstens hing die einzige Traumdarstellung an
+`occupiedStation == BED`; die neu geplanten Sofa- und Banktraeume liefen deshalb, blieben aber
+unsichtbar. Zweitens blieb der eigentliche Schlaf trotz 40-Prozent-Regel manchmal eine ganze
+Nacht ohne sichtbaren Gedanken. NT-083 trennt deshalb die Regeln klar:
+
+- Ein TAGTRAUM bleibt selten und zeigt ein einzelnes wirklich erlebtes Thema in der kleinen
+  Blase, jetzt auch ausserhalb des Betts sichtbar.
+- Jeder echte SCHLAF ruft genau einmal einen sicheren Tagesrueckblick auf. Kleine Traumblasen
+  oeffnen sich ueber dem Wesen, das Bild geht in die Watch ueber, und die Watch waechst und zieht
+  wie in der Mondsequenz nach oben. Dort laufen hoechstens drei der juengsten unterschiedlichen
+  Tageserlebnisse mit ihren vorhandenen Charakteranimationen.
+- Die Erinnerungsliste wird beim Einschlafen festgehalten, damit Mitternacht den Rueckblick nicht
+  austauscht. Schlaf und Medizin werden nicht als Highlights verkauft. Ein ganz neuer Tag ohne
+  geeignetes Erlebnis erhaelt trotzdem die Sequenz mit der echten Schlafpose, aber kein
+  erfundenes Highlight.
+
+Das ist weiterhin Darstellung vorhandener Erlebnisse, keine zweite episodische Erinnerung und
+kein Plot: `Episode` im Living Agent beeinflusst Entscheidungen; `PlayDreamMemory` verdichtet nur
+die Bilder, die der Zuschauer im Schlaf wiedersehen kann.
 
 ### Erfahrung aus dem Erleben
 

@@ -2667,3 +2667,43 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   stumm zu bleiben.
 - **Naechster Schritt:** NT-069 - die Blase ueber dem Kopf, die diese Symbole zeigt, und das
   Ende des gewuerfelten Satzes.
+
+### 2026-09-13 - Der Schlaf erzaehlt den wirklichen Tag in der Watch (NT-083)
+
+- **Ausgangsproblem:** Gewuenscht war, dass jede Schlafsequenz sichtbar etwas traegt: kleine
+  Traumblasen sollen in die Watch uebergehen, die sich wie in der Mondsequenz vergroessert und
+  darin die Highlights des Tages zeigt. Der bisherige Nachttraum kam nur mit 40 Prozent je
+  Gelegenheit nach sechs bis fuenfzehn Minuten; eine ganze Schlafphase konnte leer bleiben.
+- **Gemessener Nebenbefund:** `RoutineStep.Daydream` wurde seit NT-073 auf Sofa und Bank geplant,
+  aber die einzige `PlayDreamBubble`-Aufrufstelle verlangte zugleich
+  `occupiedStation == BED`. Die Handlung lief, nur ihr Bild war ausserhalb des Betts unsichtbar.
+- **Entscheidung:** Jeder `RoutineStep.SleepUntilMorning` spielt genau einmal einen sicheren
+  Rueckblick. Die kleine Blase oeffnet mit dem ersten Bild, danach uebernimmt die vergroesserte
+  und nach oben gezogene Watch. Sie zeigt hoechstens drei der juengsten unterschiedlichen
+  geeigneten `PlayDreamMemory`-Themen in zeitlicher Reihenfolge und verwendet dafuer die bereits
+  vorhandenen charakterbezogenen Reaktionsfolgen. Ein Tagtraum ausserhalb echten Schlafs bleibt
+  mit 28 Prozent selten.
+- **Leerer erster Tag:** Die visuelle Schlafsequenz faellt nicht aus. Ohne geeignetes Erlebnis
+  zeigt sie die wirkliche Schlafpose; `PlayDreams.highlights` bleibt leer, damit kein Ereignis
+  erfunden und spaeter als Tagesgeschichte missverstanden wird.
+- **Architekturentscheidungen:** Der Rueckblick ist reine Darstellung und schreibt weder
+  `AgentState` noch `Episode` um. Die semantische Erinnerungsliste wird beim Einschlafen einmal
+  festgehalten, damit ein Mitternachtswechsel die laufende Folge nicht leert. Uhrposition und
+  Groesse werden auch bei Coroutine-Abbruch sicher zurueckgesetzt; die temporaere Traumposition
+  wird nie in `DockLayoutPrefs` gespeichert. Die Bettbedingung ist aus der Projektion entfernt,
+  damit der vorhandene `Daydream`-Schritt an jedem Ruheort sichtbar sein kann.
+- **Abgrenzung:** Kein neuer Plot, keine zweite Erinnerungs- oder Renderpipeline, keine
+  Aenderung an Living-Agent-Kern, Room, `:core`, Stream-Interaktion oder Musik. Die absichtlich
+  zweistufigen LOVE-, SLEEP- und BOOK-Weltmotive sowie die ruhige Angel-Szene bleiben
+  unangetastet.
+- **Betroffene Bereiche:** `PlayDreams`, die gezielte Schlaf-/Watch-Grenze in `DockScreen`,
+  `PlayDreamBubble`, zwei barrierefreie Beschreibungen sowie Living-Agent-, Backlog- und
+  Uebergabedokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 463 Tests gruen (vorher 461, zwei neue
+  Verhaltensfaelle). Belegt sind Auswahl der drei juengsten wirklichen Erlebnisse, zeitliche
+  Reihenfolge, Entduplizierung und der leere Fall. Compose und der sichtbare Uebergang werden
+  zusaetzlich durch `gradlew verify` in CI geprueft; Groesse und Tempo bleiben eine
+  Geraetebeurteilung.
+- **Naechster Schritt:** Den Uebergang in normaler und Stream-APK am Geraet ansehen. Danach ist
+  der naechste bereits belegte Animationshebel aus NT-082: getragene Gegenstaende bewegen sich
+  beim Gehen noch ohne eigenen Takt.

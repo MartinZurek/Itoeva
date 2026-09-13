@@ -29,4 +29,31 @@ class PlayDreamsTest {
     fun `no eligible experience means no dream`() {
         assertNull(PlayDreams.choose(listOf(AnimationType.SLEEP, AnimationType.MEDICINE), Random(1)))
     }
+
+    @Test
+    fun `Schlaf fasst die drei juengsten wirklichen Tageserlebnisse zusammen`() {
+        val memories = listOf(
+            AnimationType.DRINK,
+            AnimationType.BOOK,
+            AnimationType.MOVE,
+            AnimationType.SLEEP,
+            AnimationType.CREATIVITY
+        )
+
+        assertEquals(
+            listOf(AnimationType.BOOK, AnimationType.MOVE, AnimationType.CREATIVITY),
+            PlayDreams.highlights(memories)
+        )
+    }
+
+    @Test
+    fun `Schlaf erfindet nichts und behaelt das juengste Vorkommen`() {
+        assertTrue(PlayDreams.highlights(emptyList()).isEmpty())
+        assertEquals(
+            listOf(AnimationType.MOVE, AnimationType.BOOK),
+            PlayDreams.highlights(
+                listOf(AnimationType.BOOK, AnimationType.MOVE, AnimationType.BOOK)
+            )
+        )
+    }
 }

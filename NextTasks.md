@@ -315,6 +315,21 @@ duennste Szene - strukturell richtig (Rute, Schnur, Schwimmer, Wellen), aber seh
 GETRAGENEN Gegenstaende (Buch, Becher, Gitarre, Staffelei, Essen) kennen die Zeit gar nicht: Sie
 stehen in der Hand still, auch waehrend die Figur laeuft.
 
+**Darstellung:** NT-083 **Jeder Schlaf erzaehlt den wirklichen Tag in der Watch** - *am
+2026-09-13 umgesetzt.* Der bisherige Nachttraum war eine 40-Prozent-Gelegenheit und konnte eine
+ganze Schlafsequenz auslassen. Jetzt oeffnen sich bei jedem `SleepUntilMorning` kleine
+Traumblasen; ihr erstes Bild geht in die Watch ueber, die sich wie bei der Mondsequenz vergroessert
+und nach oben zieht. Darin laufen deterministisch hoechstens drei der juengsten unterschiedlichen
+wirklich erlebten Themen mit der vorhandenen Charakteranimation. Bei einem leeren ersten Tag
+laeuft die Sequenz mit der echten Schlafpose, ohne ein Highlight zu erfinden. Nebenbefund der
+Messung: Seit NT-073 geplante Tagtraeume auf Sofa und Bank waren wegen einer Bettbedingung in der
+Darstellung unsichtbar; die Projektion folgt jetzt dem traeumenden Wesen statt dem Moebel.
+**Offen bleibt:** Uebergang, Groesse und Tempo am Geraet ansehen. Der Tagtraum bleibt bewusst
+zufaellig; nur echter Schlaf garantiert den Rueckblick. LOVE, SLEEP und BOOK mit je zwei
+Weltmotiv-Stellungen sowie die ruhige Angel-Szene sind keine Fehlerkorrekturen. Der naechste
+belegte Animationshebel sind die in NT-082 notierten getragenen Gegenstaende, die beim Gehen
+keinen eigenen Takt kennen.
+
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
 durchsichtig. Man sah durch sie hindurch auf den schwarzen Grund, vier davon nebeneinander waren

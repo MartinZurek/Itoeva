@@ -30,19 +30,19 @@ import kotlin.math.roundToInt
 @Composable
 internal fun PlayDreamBubble(
     frame: IntArray,
-    sleepingAvatarOffset: Offset,
-    sleepingAvatarSizeDp: Float,
+    dreamingAvatarOffset: Offset,
+    dreamingAvatarSizeDp: Float,
     progress: Float,
     maxWidthPx: Float
 ) {
     val density = LocalDensity.current
     val p = progress.coerceIn(0f, 1f)
-    val avatarPx = with(density) { sleepingAvatarSizeDp.dp.toPx() }
-    val bubbleSizeDp = sleepingAvatarSizeDp * (0.50f + p * 0.55f)
+    val avatarPx = with(density) { dreamingAvatarSizeDp.dp.toPx() }
+    val bubbleSizeDp = dreamingAvatarSizeDp * (0.50f + p * 0.55f)
     val bubblePx = with(density) { bubbleSizeDp.dp.toPx() }
-    val centerX = (sleepingAvatarOffset.x + avatarPx * (0.85f + p * 0.30f))
+    val centerX = (dreamingAvatarOffset.x + avatarPx * (0.85f + p * 0.30f))
         .coerceIn(bubblePx / 2f, (maxWidthPx - bubblePx / 2f).coerceAtLeast(bubblePx / 2f))
-    val centerY = (sleepingAvatarOffset.y - avatarPx * (0.15f + p * 1.55f))
+    val centerY = (dreamingAvatarOffset.y - avatarPx * (0.15f + p * 1.55f))
         .coerceAtLeast(bubblePx / 2f)
     val left = centerX - bubblePx / 2f
     val top = centerY - bubblePx / 2f
@@ -55,16 +55,16 @@ internal fun PlayDreamBubble(
             color = Color.White.copy(alpha = alpha * 0.55f),
             radius = bubblePx * 0.075f,
             center = Offset(
-                sleepingAvatarOffset.x + avatarPx * 0.72f,
-                sleepingAvatarOffset.y - avatarPx * (0.08f + p * 0.28f)
+                dreamingAvatarOffset.x + avatarPx * 0.72f,
+                dreamingAvatarOffset.y - avatarPx * (0.08f + p * 0.28f)
             )
         )
         drawCircle(
             color = Color.White.copy(alpha = alpha * 0.72f),
             radius = bubblePx * 0.12f,
             center = Offset(
-                sleepingAvatarOffset.x + avatarPx * 0.82f,
-                sleepingAvatarOffset.y - avatarPx * (0.18f + p * 0.55f)
+                dreamingAvatarOffset.x + avatarPx * 0.82f,
+                dreamingAvatarOffset.y - avatarPx * (0.18f + p * 0.55f)
             )
         )
         drawCircle(

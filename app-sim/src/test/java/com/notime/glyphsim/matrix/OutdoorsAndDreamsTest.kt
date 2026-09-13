@@ -157,17 +157,16 @@ class OutdoorsAndDreamsTest {
     }
 
     @Test
-    fun `der Tagtraum kommt, aber seltener als der Nachttraum`() {
+    fun `der Tagtraum bleibt ein seltenes Aufblitzen`() {
         fun anteil(wuerfe: Int, regel: (Random) -> Boolean): Double {
             val zufall = Random(42)
             return (1..wuerfe).count { regel(zufall) } / wuerfe.toDouble()
         }
-        val nachts = anteil(4_000) { PlayDreams.shouldDream(it) }
         val tagsueber = anteil(4_000) { PlayDreams.shouldDaydream(it) }
 
         assertTrue("Ein Tagtraum muss vorkommen, sonst aendert sich fuer den Zuschauer nichts",
             tagsueber > 0.15)
-        assertTrue("Er soll ein Aufblitzen bleiben, kein Dauerzustand", tagsueber < nachts)
+        assertTrue("Er soll ein Aufblitzen bleiben, kein Dauerzustand", tagsueber < 0.40)
     }
 
     @Test

@@ -365,6 +365,8 @@
     <string name="settings_timelapse_hint">Lässt einen ganzen Tag in etwa vier Minuten ablaufen, damit sich alle Szenen und Tageszeiten schnell ansehen lassen. Nur zum Ausprobieren – für den normalen Betrieb ausschalten.</string>
     <string name="a11y_visitor">%1$s kommt vorbei</string>
     <string name="a11y_clock_moon">Mond</string>
+    <string name="a11y_clock_dream_highlight">Traum vom heutigen Tag: %1$s</string>
+    <string name="a11y_clock_dream_empty">Ruhiger Traum — noch keine Tagesmomente</string>
     <string name="settings_clip_share">Clip teilen</string>
     <string name="settings_clip_enable">Aufnehmen im Spiel-Modus</string>
     <string name="settings_clip_enable_hint">Blendet im Spiel-Modus oben rechts einen Aufnahmeknopf ein.</string>

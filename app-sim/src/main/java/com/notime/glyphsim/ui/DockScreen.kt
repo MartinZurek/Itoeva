@@ -238,7 +238,14 @@ fun DockScreen(
     // NICHT jede Nacht - eine Ausnahme, die jedes Mal kaeme, waere keine mehr.
     var moonMode by remember { mutableStateOf(false) }
     var moonPhase by remember { mutableIntStateOf(0) }
-    val frame = animationFrame ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
+    // Traumprojektion und Rueckblick bleiben reine Darstellung. Der echte Avatar und sein
+    // Living-Zustand werden davon nicht bewegt oder nachtraeglich umgeschrieben.
+    var dreamFrame by remember { mutableStateOf<IntArray?>(null) }
+    var dreamProgress by remember { mutableFloatStateOf(0f) }
+    var dreamWatchFrame by remember { mutableStateOf<IntArray?>(null) }
+    var dreamWatchTopic by remember { mutableStateOf<AnimationType?>(null) }
+    var dreamRecapMode by remember { mutableStateOf(false) }
+    val frame = animationFrame ?: dreamWatchFrame ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
 
     var clockSizeDp by remember { mutableFloatStateOf(DockLayoutPrefs.getSizeDp(context)) }
     val initialFraction = remember { DockLayoutPrefs.getOffsetFraction(context) }
@@ -263,7 +270,7 @@ fun DockScreen(
             delay(300L)
             // Waehrend der Mond-Szene steht die Uhr am Himmel und nicht dort, wo der Nutzer sie
             // haben will - diese Position darf auf keinen Fall die gemerkte ueberschreiben.
-            if (moonMode) return@LaunchedEffect
+            if (moonMode || dreamRecapMode) return@LaunchedEffect
             val clockPxNow = with(density) { clockSizeDp.dp.toPx() }
             val boundX = (with(density) { maxWidth.toPx() } - clockPxNow).coerceAtLeast(0f)
             val boundY = (with(density) { maxHeight.toPx() } - clockPxNow).coerceAtLeast(0f)
@@ -315,7 +322,9 @@ fun DockScreen(
 
             // Waehrend der Mond-Szene steht die Uhr am Himmel und nicht dort, wo der Nutzer sie
             // haben will - dieselbe Ruecksicht wie beim Sichern.
-            if (moonMode || previousWidth <= 0f || previousHeight <= 0f) return@LaunchedEffect
+            if (moonMode || dreamRecapMode || previousWidth <= 0f || previousHeight <= 0f) {
+                return@LaunchedEffect
+            }
 
             // Mit der AKTUELLEN Uhrgroesse gegen die ALTEN Bildschirmmasse zurueckgerechnet: Es
             // hat sich ja nur das Bild gedreht, nicht die Uhr.
@@ -595,9 +604,6 @@ fun DockScreen(
         var paintingPhase by remember { mutableStateOf<PlayEffects.PaintingPhase?>(null) }
         /** Sichtbare Phase der Angel-Szene am Teich; null ausserhalb dieses Ablaufs. */
         var fishingPhase by remember { mutableStateOf<PlayEffects.FishingPhase?>(null) }
-        /** Rein visuelle Traumprojektion. Der echte Avatar bleibt waehrenddessen im Bett. */
-        var dreamFrame by remember { mutableStateOf<IntArray?>(null) }
-        var dreamProgress by remember { mutableFloatStateOf(0f) }
         // Waehrend eines Raumwechsels ist die Figur im Tuerrahmen und damit nicht zu sehen.
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
@@ -1144,6 +1150,92 @@ fun DockScreen(
         }
 
         /**
+         * Fuehrt den wirklichen Tag aus der kleinen Traumblase in die vergroesserte Uhr.
+         *
+         * Der Rueckblick bekommt die Erinnerungen beim Einschlafen als fertige Liste. Dadurch
+         * verliert ein Schlaf, der ueber Mitternacht laeuft, nicht ploetzlich seinen Vortag.
+         * Gibt es noch kein einziges geeignetes Erlebnis, laeuft die Sequenz trotzdem mit der
+         * wirklichen Schlafpose - nur ein Tageshighlight wird dann nicht erfunden.
+         */
+        suspend fun playSleepRecap(memories: List<AnimationType>, species: AvatarSpecies) {
+            val highlights = PlayDreams.highlights(memories)
+            val firstTopic = highlights.firstOrNull()
+            val firstReaction = AvatarAnimations.reactionFor(
+                species,
+                firstTopic ?: AnimationType.SLEEP
+            )
+            val firstFrame = firstReaction.frames.firstOrNull() ?: return
+            val originalClockOffset = clockOffset
+            val recapClockPx = with(density) { clockSizeDp.dp.toPx() } * MOON_SCALE
+            val targetClockOffset = Offset(
+                x = ((maxWidthPx - recapClockPx) / 2f).coerceAtLeast(0f),
+                y = (maxHeightPx * DREAM_WATCH_TOP_FRACTION).coerceAtLeast(0f)
+            )
+
+            dreamFrame = firstFrame
+            dreamProgress = 0f
+            try {
+                animate(
+                    0f,
+                    1f,
+                    animationSpec = tween(DREAM_RECAP_BUBBLE_MS, easing = FastOutSlowInEasing)
+                ) { value, _ -> dreamProgress = value }
+
+                dreamRecapMode = true
+                dreamWatchTopic = firstTopic
+                dreamWatchFrame = firstFrame
+                val from = clockOffset
+                animate(
+                    0f,
+                    1f,
+                    animationSpec = tween(DREAM_WATCH_MOVE_MS, easing = FastOutSlowInEasing)
+                ) { value, _ ->
+                    clockOffset = Offset(
+                        from.x + (targetClockOffset.x - from.x) * value,
+                        from.y + (targetClockOffset.y - from.y) * value
+                    )
+                }
+                dreamFrame = null
+                dreamProgress = 0f
+
+                if (highlights.isEmpty()) {
+                    delay(DREAM_EMPTY_RECAP_HOLD_MS)
+                } else {
+                    for (topic in highlights) {
+                        val reaction = AvatarAnimations.reactionFor(species, topic)
+                        if (reaction.frames.isEmpty()) continue
+                        dreamWatchTopic = topic
+                        MatrixAnimator.playTimed(reaction.frames, reaction.holdsMs) { current ->
+                            dreamWatchFrame = current
+                        }
+                        delay(DREAM_HIGHLIGHT_HOLD_MS)
+                    }
+                }
+
+                val backFrom = clockOffset
+                animate(
+                    0f,
+                    1f,
+                    animationSpec = tween(DREAM_WATCH_MOVE_MS, easing = FastOutSlowInEasing)
+                ) { value, _ ->
+                    clockOffset = Offset(
+                        backFrom.x + (originalClockOffset.x - backFrom.x) * value,
+                        backFrom.y + (originalClockOffset.y - backFrom.y) * value
+                    )
+                }
+            } finally {
+                // Eine echte Erinnerung oder ein Moduswechsel kann jede suspend-Stelle abbrechen.
+                // Die frei platzierte Uhr darf danach weder gross noch am Traumort bleiben.
+                clockOffset = originalClockOffset
+                dreamFrame = null
+                dreamProgress = 0f
+                dreamWatchFrame = null
+                dreamWatchTopic = null
+                dreamRecapMode = false
+            }
+        }
+
+        /**
          * Fuehrt einen Tagesablauf aus (siehe [PlayRoutine]) - **die Stelle, an der aus Posen
          * neben Moebeln ein Umgang mit ihnen wird.**
          *
@@ -1443,41 +1535,32 @@ fun DockScreen(
                         AvatarAnimations.reactionFor(species, AnimationType.SLEEP).frames.lastOrNull()?.let { sleepFrame ->
                             avatar = avatar?.copy(frame = sleepFrame)
                         }
+                        // Einmal beim Einschlafen festhalten. Nach Mitternacht gehoeren diese
+                        // Erlebnisse kalendertechnisch zum Vortag, inhaltlich aber weiter zu
+                        // genau diesem Schlaf.
+                        val sleepMemories = PlayDreamMemory.today(
+                            context,
+                            presenceProfileId.toString()
+                        )
                         // Tagsueber bleibt eine ausdrueckliche Schlafhandlung ein kurzes Nickerchen.
                         // Nachts dagegen bleibt diese Routine aktiv und sperrt damit autonome
                         // Fidgets, Wanderungen und neue Perform-Aktionen bis zum Morgen.
                         if (PlayAmbientActivity.currentDayPhase() != PlayAmbientActivity.DayPhase.NIGHT) {
                             delay((8_000L * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(800L))
-                            // **Auch ein Nickerchen darf traeumen** (NT-073). Das war die Stelle,
-                            // an der der Traum am naechsten lag und trotzdem nie vorkam: Wer
-                            // abends um eine Schlafhandlung bittet, bekam acht Sekunden Stille.
                             val schlaefer = avatar
-                            if (schlaefer != null && !schlaefer.fed && schlaefer.occurrenceId == null &&
-                                PlayDreams.shouldDaydream()
-                            ) {
-                                PlayDreams.choose(
-                                    PlayDreamMemory.today(context, presenceProfileId.toString())
-                                )?.let { memory -> playDream(memory, species) }
+                            if (schlaefer != null && !schlaefer.fed && schlaefer.occurrenceId == null) {
+                                playSleepRecap(sleepMemories, species)
                             }
                         } else {
+                            // Nachttraeume waren bisher eine 40-Prozent-Gelegenheit alle sechs
+                            // bis fuenfzehn Minuten. Damit konnte eine ganze Schlafsequenz ohne
+                            // sichtbaren Gedanken enden. Der Tagesrueckblick kommt jetzt sicher
+                            // genau einmal; danach darf die Nacht wieder ruhig sein.
+                            playSleepRecap(sleepMemories, species)
                             while (PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT) {
-                                var remaining = (PlayDreams.nextPauseMillis() * PlayTimeLapse.paceFactor())
-                                    .toLong().coerceAtLeast(1_000L)
-                                while (remaining > 0L && PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT) {
-                                    val sleeping = avatar ?: return false
-                                    if (sleeping.fed || sleeping.occurrenceId != null) return false
-                                    val slice = minOf(remaining, DREAM_SLEEP_CHECK_MS)
-                                    delay(slice)
-                                    remaining -= slice
-                                }
-                                if (PlayAmbientActivity.currentDayPhase() != PlayAmbientActivity.DayPhase.NIGHT) break
                                 val sleeping = avatar ?: return false
                                 if (sleeping.fed || sleeping.occurrenceId != null) return false
-                                if (PlayDreams.shouldDream()) {
-                                    PlayDreams.choose(PlayDreamMemory.today(context, presenceProfileId.toString()))?.let { memory ->
-                                        playDream(memory, species)
-                                    }
-                                }
+                                delay(DREAM_SLEEP_CHECK_MS)
                             }
                         }
                     }
@@ -3241,11 +3324,17 @@ fun DockScreen(
             // dauerhaft (siehe LaunchedEffect(playMode) oben), auch ohne offene Erinnerung - ohne
             // diese Praezisierung haette die Uhr hier staendig eine Erinnerung angesagt, obwohl
             // sie nur die aktuelle Uhrzeit zeigt.
+            val currentDreamTopic = dreamWatchTopic
             val clockContentDescription = if (activeAvatar?.occurrenceId != null) {
                 val topicLabel = activeAvatar.libraryAnimationLabel
                     ?: activeAvatar.animationType?.let { stringResource(it.labelRes) }
                     ?: stringResource(R.string.a11y_reminder_generic)
                 stringResource(R.string.a11y_clock_reminder, topicLabel)
+            } else if (currentDreamTopic != null) {
+                val topicLabel = stringResource(currentDreamTopic.labelRes)
+                stringResource(R.string.a11y_clock_dream_highlight, topicLabel)
+            } else if (dreamRecapMode) {
+                stringResource(R.string.a11y_clock_dream_empty)
             } else if (moonMode) {
                 stringResource(R.string.a11y_clock_moon)
             } else {
@@ -3253,16 +3342,16 @@ fun DockScreen(
                 stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
             }
             // Der Mond waechst weich auf seine Groesse - im selben Zug, in dem er aufsteigt.
-            val moonScale by animateFloatAsState(
-                targetValue = if (moonMode) MOON_SCALE else 1f,
+            val watchScale by animateFloatAsState(
+                targetValue = if (moonMode || dreamRecapMode) MOON_SCALE else 1f,
                 animationSpec = tween(MOON_RISE_MS, easing = FastOutSlowInEasing),
-                label = "moon"
+                label = "watch-scene"
             )
             SimulatedMatrixView(
                 frame = frame,
                 contentDescription = clockContentDescription,
                 modifier = Modifier
-                    .size((clockSizeDp * moonScale).dp)
+                    .size((clockSizeDp * watchScale).dp)
                     // driftOffset ist die rein optische Burn-in-Verschiebung und wird nur hier
                     // draufgerechnet - Kollisionspruefung und Speicherung nutzen weiter clockOffset,
                     // damit sich weder das Fuettern noch die gemerkte Position dadurch aendert.
@@ -3616,8 +3705,9 @@ fun DockScreen(
             )
         }
 
-        // Traumblase ueber dem Bett. Sie ist eine Projektion; der reale Avatar bleibt im Bett.
-        if (playMode && occupiedStation == PlayScene.Station.BED) {
+        // Traumblase ueber dem ruhenden Wesen. Daydream kann auch auf Sofa und Bank liegen;
+        // die alte Bettbedingung machte genau diese seit NT-073 geplanten Traeume unsichtbar.
+        if (playMode) {
             val projected = dreamFrame
             val sleeping = avatar
             if (projected != null && sleeping != null && !avatarHidden) {
@@ -4397,6 +4487,11 @@ private const val ARRIVAL_SETTLE_MS = 260L
  *  deshalb deutlich kuerzer als ein Weg. */
 private const val SETTLE_INTO_MS = 420
 private const val DREAM_BUBBLE_MS = 6_200
+private const val DREAM_RECAP_BUBBLE_MS = 1_600
+private const val DREAM_WATCH_MOVE_MS = MOON_RISE_MS
+private const val DREAM_HIGHLIGHT_HOLD_MS = 420L
+private const val DREAM_EMPTY_RECAP_HOLD_MS = 1_200L
+private const val DREAM_WATCH_TOP_FRACTION = 0.06f
 private const val DREAM_SLEEP_CHECK_MS = 800L
 
 /**
