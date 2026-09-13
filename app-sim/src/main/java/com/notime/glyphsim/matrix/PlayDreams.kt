@@ -45,6 +45,25 @@ object PlayDreamMemory {
         return decode(prefs.getString(topicsKey, null))
     }
 
+    /**
+     * Erlebnisse fuer einen Schlaf, der auch nach Mitternacht beginnen kann.
+     *
+     * Der Speicher haelt absichtlich nur einen verdichteten Tag. Solange am neuen Kalendertag
+     * noch nichts erlebt wurde, ist das genau der gerade beendete Vortag und darf nicht allein
+     * wegen der Datumsgrenze verschwinden. Aeltere Tage werden nicht wieder hervorgeholt.
+     */
+    fun forSleep(
+        context: Context,
+        profileId: String,
+        dayKey: String = PlayTimeLapse.dayKey(),
+        previousDayKey: String = PlayTimeLapse.dayKey(dayOffset = -1L)
+    ): List<AnimationType> {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val storedDay = prefs.getString(key(profileId, KEY_DATE), null)
+        val storedTopics = decode(prefs.getString(key(profileId, KEY_TOPICS), null))
+        return PlayDreams.memoriesForSleep(storedDay, dayKey, previousDayKey, storedTopics)
+    }
+
     private fun key(profileId: String, suffix: String): String = "$profileId:$suffix"
 
     private fun decode(raw: String?): List<AnimationType> =
@@ -58,17 +77,11 @@ object PlayDreamMemory {
             .filter(PlayDreams::isEligibleMemory)
 }
 
-/** Regeln fuer seltene Traeume. Getrennt vom Speicher, damit die Auswahl ohne Android testbar ist. */
+/** Regeln fuer Tagtraeume und den sicheren Schlafrueckblick. Ohne Android testbar. */
 object PlayDreams {
     /** Schlaf selbst und Medizin werden nie als Tageserlebnis zurueckgetraeumt. */
     fun isEligibleMemory(topic: AnimationType): Boolean =
         topic != AnimationType.SLEEP && topic != AnimationType.MEDICINE
-
-    /**
-     * Nicht jede Gelegenheit wird ein Traum. Zusammen mit dem langen Abstand bleibt ein Traum ein
-     * Fundstueck und kein zweiter Bildschirmschoner.
-     */
-    fun shouldDream(random: Random = Random): Boolean = random.nextFloat() < DREAM_CHANCE
 
     /**
      * **Der Tagtraum** (NT-073) - und der Grund, warum ihn bisher niemand gesehen hat.
@@ -78,10 +91,9 @@ object PlayDreams {
      * uebliche Zeit -, konnte gar keinen sehen, egal wie lange er zusah. Die Sequenz war nicht
      * selten, sie war unerreichbar.
      *
-     * Diese Gelegenheit gilt ausserhalb der Nacht: beim Nickerchen, beim Ausruhen auf dem Sofa
-     * und auf der Bank draussen. Sie ist bewusst SELTENER als der Nachttraum - ein Tagtraum soll
-     * ein Aufblitzen bleiben, kein Dauerzustand -, aber sie existiert ueberhaupt, und das ist der
-     * ganze Unterschied.
+     * Diese Gelegenheit gilt ausserhalb des Schlafs: beim Ausruhen auf dem Sofa und auf der Bank
+     * draussen. Sie bleibt bewusst selten - ein Tagtraum soll ein Aufblitzen sein, kein
+     * Dauerzustand. Der Schlafrueckblick darunter folgt einer anderen Regel: Er kommt sicher.
      */
     fun shouldDaydream(random: Random = Random): Boolean = random.nextFloat() < DAYDREAM_CHANCE
 
@@ -90,12 +102,33 @@ object PlayDreams {
         return if (eligible.isEmpty()) null else eligible[random.nextInt(eligible.size)]
     }
 
-    /** Zwischen zwei Traum-Gelegenheiten liegen im Normalbetrieb sechs bis fuenfzehn Minuten. */
-    fun nextPauseMillis(random: Random = Random): Long =
-        random.nextLong(DREAM_PAUSE_MIN_MS, DREAM_PAUSE_MAX_MS + 1)
+    /**
+     * Die juengsten wirklichen Tageserlebnisse fuer eine Schlafsequenz.
+     *
+     * Ein Schlafrueckblick ist kein Zufallsfund: Wer einschlaeft, schaut sicher auf seinen Tag
+     * zurueck. Drei Bilder tragen bereits eine kleine Folge, ohne aus dem ruhigen Schlaf einen
+     * zweiten Tagesablauf zu machen. Wiederholungen werden vom juengsten Vorkommen her entfernt,
+     * damit eine spaete Rueckkehr zu einem Thema auch wirklich am Ende des Rueckblicks steht.
+     */
+    fun highlights(memories: List<AnimationType>): List<AnimationType> = memories
+        .asReversed()
+        .filter(::isEligibleMemory)
+        .distinct()
+        .take(SLEEP_HIGHLIGHT_COUNT)
+        .asReversed()
 
-    private const val DREAM_CHANCE = 0.40f
+    /** Nur der laufende oder unmittelbar davorliegende Tag darf einen Schlaf bebildern. */
+    fun memoriesForSleep(
+        storedDay: String?,
+        currentDay: String,
+        previousDay: String,
+        storedTopics: List<AnimationType>
+    ): List<AnimationType> = if (storedDay == currentDay || storedDay == previousDay) {
+        storedTopics.filter(::isEligibleMemory)
+    } else {
+        emptyList()
+    }
+
     private const val DAYDREAM_CHANCE = 0.28f
-    private const val DREAM_PAUSE_MIN_MS = 6 * 60_000L
-    private const val DREAM_PAUSE_MAX_MS = 15 * 60_000L
+    private const val SLEEP_HIGHLIGHT_COUNT = 3
 }

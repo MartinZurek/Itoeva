@@ -380,6 +380,8 @@
     <string name="settings_timelapse_hint">Runs a full day in about four minutes so every scene and time of day can be seen quickly. For trying things out only – turn off for normal use.</string>
     <string name="a11y_visitor">%1$s is passing by</string>
     <string name="a11y_clock_moon">Moon</string>
+    <string name="a11y_clock_dream_highlight">Dreaming of today: %1$s</string>
+    <string name="a11y_clock_dream_empty">Quiet dream — no highlights yet</string>
     <string name="settings_clip_share">Share clip</string>
     <string name="settings_clip_enable">Recording in Play mode</string>
     <string name="settings_clip_enable_hint">Shows a record button at the top right of Play mode.</string>

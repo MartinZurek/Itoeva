@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 11. September 2026
+# Uebergabe: Stand am 13. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -6,7 +6,7 @@ ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
 [`evolutions/BACKLOG.md`](evolutions/BACKLOG.md) (die Arbeitsliste), sondern sagt, **wo genau der
 Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
-## 1. Der offene Faden: Living Agent System
+## 1. Der offene Faden: Living Agent System und Darstellung
 
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
 eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, danach hoeren und
@@ -76,6 +76,16 @@ die normale App (es tat das vorher NICHT - siehe Abschnitt 4), hat einen eigenen
 Slot-Belegung, Viewer-Impulse, Einfluss-statt-Steuerung, Erklaerbarkeit und Datenschutz, und
 `StreamRunbookTest` haelt Runbook und `app-sim/build.gradle.kts` ab jetzt zusammen.
 
+Seitdem sind NT-069 bis NT-074 auch sichtbar in die Welt geflossen: Wunsch und Hindernis stehen
+symbolisch ueber dem Kopf, jede Reminder-Art hat eine eigene Kernwirkung, Draussen ist ein Ziel,
+alle sieben Beduerfnisse koennen Entscheidungen tragen und die Stimmung beruecksichtigt das
+Wohlbefinden. NT-075 bis NT-083 bearbeiten die anschliessend gemessene Darstellung. Der juengste
+Schnitt ist der sichere Schlafrueckblick: Bei jedem echten Schlaf oeffnet sich die Traumblase,
+geht in die vergroesserte Watch ueber und zeigt bis zu drei tatsaechliche Tageserlebnisse. Die
+seit NT-073 vorgesehenen Tagtraeume auf Sofa und Bank sind dabei erstmals wirklich sichtbar.
+Details und die drei wiederkehrenden Darstellungsfallen stehen in `LIVING_AGENT.md` und bei
+NT-075 bis NT-083 in `NextTasks.md`.
+
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
 - Der Kern hat **kein Android, keine Uhr und keinen Zufall**. Zeit wird als `day` und
@@ -124,7 +134,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 290 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 464 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 
