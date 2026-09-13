@@ -139,6 +139,8 @@ object AvatarAnimations {
         dx: Int = 0,
         dy: Int = 0,
         feetSpread: Int = 0,
+        /** Welcher Fuss gerade abhebt: +1 der linke, -1 der rechte, 0 beide am Boden. */
+        feetLift: Int = 0,
         tailWag: Int = 0,
         accentPhase: Int = 0,
         prop: List<Pair<Int, Int>> = emptyList(),
@@ -153,7 +155,7 @@ object AvatarAnimations {
         // Silhouette wie zuvor.
         val silhouette = (body.silhouetteFor(accentPhase) - holes) + body.accessory
         val shifted = silhouette.map { (x, y) -> (x + dx) to (y + dy) }
-        val feetShifted = body.feet(feetSpread).map { (x, y) -> (x + dx) to (y + dy) }
+        val feetShifted = body.feet(feetSpread, feetLift).map { (x, y) -> (x + dx) to (y + dy) }
         val tailShifted = body.tail(tailWag).map { (x, y) -> (x + dx) to (y + dy) }
         val accentShifted = body.accent(accentPhase).map { (x, y) -> (x + dx) to (y + dy) }
         val propPlaced = if (propFollows) prop.map { (x, y) -> (x + dx) to (y + dy) } else prop
@@ -615,9 +617,14 @@ object AvatarAnimations {
     fun walkSequence(species: AvatarSpecies): AvatarSequence {
         val body = AvatarBodies.forSpecies(species)
         val beats = listOf(
-            creatureFrame(body, feetSpread = 1, tailWag = 1).beat(WALK_STEP_MS),
+            // **Ein Schritt, kein Huepfen.** Bis NT-078 spreizten sich beide Fuesse gleichzeitig
+            // nach aussen und wieder zusammen - symmetrisch, und damit von einem Huepfen auf der
+            // Stelle nicht zu unterscheiden. Jetzt hebt abwechselnd einer ab, waehrend der
+            // andere steht, und dazwischen liegt je ein Bild mit beiden am Boden: abheben,
+            // aufsetzen, abheben mit dem anderen, aufsetzen.
+            creatureFrame(body, feetSpread = 1, feetLift = 1, tailWag = 1).beat(WALK_STEP_MS),
             creatureFrame(body, dy = -1, accentPhase = 1).beat(WALK_STEP_MS),
-            creatureFrame(body, feetSpread = 1, tailWag = -1).beat(WALK_STEP_MS),
+            creatureFrame(body, feetSpread = 1, feetLift = -1, tailWag = -1).beat(WALK_STEP_MS),
             creatureFrame(body, dy = -1, accentPhase = -1).beat(WALK_STEP_MS)
         ).mergeRepeats()
         val frames = FrameCrossfade.withCrossfades(GRID, AvatarGeometry.HEIGHT, beats.map { it.points }, steps = CROSSFADE_STEPS, loop = true)

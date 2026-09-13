@@ -61,7 +61,12 @@ fun AvatarSpriteView(
      * hier der Standard: Wer einen Wert vergisst, bekommt das bisherige Bild, nicht ein falsch
      * eingefaerbtes Symbol.
      */
-    species: AvatarSpecies? = null
+    species: AvatarSpecies? = null,
+    /**
+     * Beschattete Flanke (siehe [AvatarShading.Side]). Beim Laufen die Seite, von der die
+     * Kreatur KOMMT - dadurch dreht sie sich beim Richtungswechsel sichtbar um.
+     */
+    shadeSide: AvatarShading.Side = AvatarShading.Side.RIGHT
 ) {
     Canvas(
         modifier = modifier
@@ -77,23 +82,22 @@ fun AvatarSpriteView(
                 }
             )
     ) {
-        drawSprite(frame, brightnessScale, species)
+        drawSprite(frame, brightnessScale, species, shadeSide)
     }
 }
 
 private fun DrawScope.drawSprite(
     rawFrame: IntArray,
     brightnessScale: Float,
-    species: AvatarSpecies?
+    species: AvatarSpecies?,
+    shadeSide: AvatarShading.Side
 ) {
     // **Hier und nicht in den Animationsdaten** (siehe [AvatarShading]): Die Posen bleiben reine
     // Punktmengen, Ueberblendungen rechnen unveraendert weiter, und die abgelegten
     // Vergleichsbilder der Reaktionspruefung bleiben gueltig. Schattierung ist Darstellung.
     // Dasselbe gilt fuer die Farbe - eine Pose weiss nicht, wer sie gerade einnimmt.
     val onColor = species?.let { Color(AvatarPalette.tintFor(it)) } ?: LED_ON_COLOR
-    // Farbe vertraegt den tiefen Verlauf der weissen Figur nicht, siehe AvatarShading.
-    val floor = if (species == null) AvatarShading.SHADOW else AvatarShading.TINTED_SHADOW
-    val frame = AvatarShading.shade(rawFrame, floor = floor)
+    val frame = AvatarShading.shade(rawFrame, side = shadeSide)
     val cell = size.width / AvatarGeometry.SIZE
     // Winziger Ueberlapp zwischen benachbarten Zellen, damit Antialiasing keine
     // sichtbaren Ein-Pixel-Spalten zwischen zwei eigentlich zusammenhaengenden

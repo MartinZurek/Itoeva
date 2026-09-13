@@ -21,8 +21,8 @@ class AvatarPaletteTest {
 
     private val hintergrund = 0xFF0D0D0D.toInt()
 
-    /** Dunkelster Punkt einer Figur: unterste Zeile, dazu die lichtabgewandte Seite. */
-    private val tiefsterPunkt = AvatarShading.TINTED_SHADOW * (1f - 0.18f)
+    /** Dunkelster Punkt einer Figur: ihre beschattete Flanke (siehe [AvatarShading]). */
+    private val tiefsterPunkt = AvatarShading.SHADE
 
     private fun kanal(argb: Int, schieben: Int) = (argb shr schieben) and 0xFF
 
@@ -85,19 +85,26 @@ class AvatarPaletteTest {
     }
 
     @Test
-    fun `die unterste Zeile bleibt so lesbar wie bei der weissen Figur`() {
-        // Der eigentliche Grund fuer AvatarShading.TINTED_SHADOW. Ein farbiger Grundton bringt
-        // weniger Helligkeit mit als Weiss; ohne den flacheren Verlauf verschwaende der Fuss
-        // der Figur im Hintergrund.
-        val weissUnten = gedimmt(MatrixColors.LED_ON, AvatarShading.SHADOW * (1f - 0.18f))
-        val messlatte = kontrast(weissUnten, hintergrund)
+    fun `auch die beschattete Flanke hebt sich noch vom Hintergrund ab`() {
+        // Die dunkelste Stelle einer Kreatur ist ihre beschattete Flanke. Sie darf ruhig dunkler
+        // sein als der Rest - aber nicht so dunkel, dass die Silhouette dort ausfranst.
         for (species in AvatarSpecies.entries) {
-            val unten = gedimmt(AvatarPalette.tintFor(species), tiefsterPunkt)
-            val k = kontrast(unten, hintergrund)
-            assertTrue(
-                "$species unten: Kontrast $k statt mindestens $messlatte",
-                k >= messlatte - 0.05
-            )
+            val flanke = gedimmt(AvatarPalette.tintFor(species), tiefsterPunkt)
+            val k = kontrast(flanke, hintergrund)
+            assertTrue("$species im Schatten: Kontrast nur $k", k >= 4.0)
+        }
+    }
+
+    @Test
+    fun `die beschattete Flanke ist vom Rest zu unterscheiden`() {
+        // Sonst waere die Schattierung eine Behauptung im Kommentar. Gefordert wird ein
+        // Unterschied, den ein Auge als Kante liest - deutlich weniger als der Abstand zum
+        // Hintergrund, aber mehr als nichts.
+        for (species in AvatarSpecies.entries) {
+            val grund = AvatarPalette.tintFor(species)
+            val flanke = gedimmt(grund, tiefsterPunkt)
+            val abstand = farbabstand(grund, flanke)
+            assertTrue("$species: Grundton und Flanke liegen nur $abstand auseinander", abstand >= 3.0)
         }
     }
 

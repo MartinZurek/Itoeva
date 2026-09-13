@@ -45,6 +45,14 @@ object PlayClipRenderer {
         val avatarFrame: IntArray,
         /** Waagerechte Lage der Figur als Bruchteil der Breite. */
         val avatarAnchorX: Float,
+        /**
+         * Beschattete Flanke (siehe [AvatarShading.Side]) - beim Laufen die Seite, von der die
+         * Kreatur kommt. Muss mit in den Film, sonst laeuft sie in der Aufnahme anders herum
+         * als auf dem Bildschirm.
+         */
+        val shadeSide: AvatarShading.Side = AvatarShading.Side.RIGHT,
+        /** Dasselbe fuer den Gast, falls einer im Bild ist. */
+        val visitorShadeSide: AvatarShading.Side = AvatarShading.Side.RIGHT,
         val scenePhase: Int,
         val station: PlayScene.Station? = null,
         val lampOn: Boolean = true,
@@ -161,10 +169,7 @@ object PlayClipRenderer {
         // weiss ist, zeigt nicht die Kreatur, die man gerade begleitet hat. Die Kulisse bleibt
         // dagegen weiss - genau wie auf dem Bildschirm.
         val avatarTint = AvatarPalette.tintFor(frame.species)
-        val avatarFrame = AvatarShading.shade(
-            frame.avatarFrame,
-            floor = AvatarShading.TINTED_SHADOW
-        )
+        val avatarFrame = AvatarShading.shade(frame.avatarFrame, side = frame.shadeSide)
         for (y in 0 until AvatarGeometry.HEIGHT) {
             for (x in 0 until AvatarGeometry.SIZE) {
                 val brightness = avatarFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
@@ -191,7 +196,7 @@ object PlayClipRenderer {
             // Der Gast bekommt dieselbe Woelbung; seine Daempfung kommt zusaetzlich obendrauf,
             // weil AvatarShading skaliert statt zu ersetzen.
             val gastTint = AvatarPalette.tintFor(guestSpecies)
-            val gastFrame = AvatarShading.shade(guestFrame, floor = AvatarShading.TINTED_SHADOW)
+            val gastFrame = AvatarShading.shade(guestFrame, side = frame.visitorShadeSide)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
                     val b = gastFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
