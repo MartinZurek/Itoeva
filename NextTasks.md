@@ -286,6 +286,35 @@ stehen jetzt im Offline-Lauf (459 Tests) - genau die Luecke, die in NT-078 schon
 roten Lauf erzeugt hat. **Offen bleibt:** ob die Maschen am Geraet als Netz lesbar sind und ob
 der Ball mit fuenf Zellen neben einer sechzehn Zellen breiten Figur nicht zu gross wirkt.
 
+**Darstellung:** NT-082 **Die anderen Szenen standen still** - *am 2026-09-13 umgesetzt.*
+Dieselbe Messung wie beim Fussball ueber alle Mehrphasen-Szenen laufen lassen: Wie viele
+verschiedene Bilder ergibt eine Phase ueber vierzig Takte, also acht Sekunden? Basketball AIM,
+SHOOT und SCORE je EINS, Training REST eins, Musik TUNE eins, Angeln CAST und CATCH je eins, alle
+drei Malphasen eins. Zusammen ueber fuenfzig Sekunden, in denen die Welt bewegungslos dasteht,
+waehrend eine Figur angeblich wirft, malt oder angelt. **Die Malszene war der schlimmste Fund:**
+Die Staffelei stand fest rechts neben der Figur und klappte nach links um, wenn dort kein Platz
+war - ob LINKS Platz ist, hat niemand gefragt. Bei 40 Zellen lagen von 19 Spalten 13 im Bild, der
+Rest davor, und der Pinsel ganz; dazu lag er bei lokal x 13 bis 16 auf der ABGEWANDTEN Seite der
+Leinwand, wohin keine Hand reicht, und stand zuletzt in der Zellenliste, verlor also jede Zelle
+an den Rahmen. Vierundzwanzig Sekunden Malen ohne eine einzige bewegte Zelle. **Beim Basketball
+dieselben drei Fehler wie beim Fussball:** Der Korb stand vor dem Ball (`distinctBy` behaelt den
+ersten Eintrag), der Ball war fuenf breit und sieben hoch, und der Wurf hatte keinen Flug - der
+Ball hing dreieinhalb Sekunden in der Luft und stand dann sechs Sekunden unter dem Korb. Jetzt
+fliegt er in einem Bogen und faellt nach dem Treffer heraus; wie beim Fussball zaehlt
+`basketballCells` dafuer die Takte seit Beginn der Phase. **Training** kannte nur `pulse` 0/1 im
+Sekundentakt - jetzt eine Wiederholung mit Mitte, und in der Ruhephase wandert wenigstens der
+Glanz auf der Flasche. **Musik/TUNE** war ausdruecklich vom Notenversatz ausgenommen; **Angeln**
+warf einen Schwimmer aus, der genau auf der Rutenspitze sass (fuenf helle Zellen), und der Fang
+zappelte nicht. Ein Test haelt jetzt fuer JEDE Phase JEDER Szene fest, dass in acht Sekunden
+mindestens drei verschiedene Bilder entstehen - gemessen werden Muster, nicht Stellungen, weil
+ein wandernder Glanzpunkt keine Zelle bewegt und trotzdem Bewegung ist. Nebenbei mass
+`Basketball prellt und landet sichtbar im Korb` in Wahrheit das KORBBRETT: `minOf { it.y }` ueber
+die ganze Szene ist immer dessen Oberkante, und die steht in jeder Phase gleich hoch. **Offen
+bleibt:** Angeln ist mit acht bis zehn hellen Zellen ueber zweiundzwanzig Sekunden Wartezeit die
+duennste Szene - strukturell richtig (Rute, Schnur, Schwimmer, Wellen), aber sehr leise. Und die
+GETRAGENEN Gegenstaende (Buch, Becher, Gitarre, Staffelei, Essen) kennen die Zeit gar nicht: Sie
+stehen in der Hand still, auch waehrend die Figur laeuft.
+
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
 durchsichtig. Man sah durch sie hindurch auf den schwarzen Grund, vier davon nebeneinander waren

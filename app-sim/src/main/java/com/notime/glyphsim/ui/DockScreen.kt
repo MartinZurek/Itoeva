@@ -585,6 +585,8 @@ fun DockScreen(
         var footballSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Basketballphase; Korb und Ball existieren nur solange sie gesetzt ist. */
         var basketballPhase by remember { mutableStateOf<PlayEffects.BasketballPhase?>(null) }
+        /** Der Stand von [scenePhase] beim Beginn der Basketballphase - wie [footballSince]. */
+        var basketballSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Krafttrainingsphase mit Hantel. */
         var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
         /** Sichtbare Musikphase mit Gitarre und Noten. */
@@ -1360,6 +1362,7 @@ fun DockScreen(
 
                     is RoutineStep.Basketball -> {
                         basketballPhase = step.phase
+                        basketballSince = scenePhase
                         avatarIdleJob?.cancel()
                         val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
                         MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
@@ -3669,7 +3672,7 @@ fun DockScreen(
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             phase = basketball,
-                            scenePhase = scenePhase,
+                            phaseAge = scenePhase - basketballSince,
                             widthCells = sceneWidthCells
                         )
                     )

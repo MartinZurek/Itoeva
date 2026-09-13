@@ -39,20 +39,53 @@ class PlayEffectsTest {
         assertTrue((dribble + trick).all { it.x in 0 until 48 })
     }
 
+    /**
+     * **Dieser Test hat vorher das KORBBRETT gemessen.**
+     *
+     * `minOf { it.y }` ueber die ganze Szene ist immer die Oberkante des Bretts, und die steht
+     * in jeder Phase gleich hoch - die alte Zusicherung "beim Wurf steigt der Ball" sagte also
+     * nichts ueber den Ball. Sie ging nur durch, solange der Wurf den Ball ohne jeden Flug
+     * oberhalb des Bretts absetzte; genau dieses Absetzen war der Fehler. Dieselbe Falle steht
+     * als Warnung schon im Nachbartest (siehe `ballHoehe` in PlayMotifLegibilityTest).
+     *
+     * Verfolgt wird jetzt der Glanzpunkt des Balls. Der Korb traegt auch einen - aber einen
+     * unbeweglichen, und daran sind die beiden zu unterscheiden.
+     */
     @Test
-    fun `Basketball prellt und landet sichtbar im Korb`() {
-        val low = PlayEffects.basketballCells(
-            8, 20, PlayEffects.BasketballPhase.DRIBBLE, 0, 48
+    fun `Basketball prellt und der Wurf fliegt sichtbar zum Korb`() {
+        fun glanz(phase: PlayEffects.BasketballPhase, takt: Int) =
+            PlayEffects.basketballCells(8, 20, phase, takt, 48)
+                .filter { it.brightness == PlayInk.SPARK }
+                .map { it.x to it.y }
+                .toSet()
+        val fest = glanz(PlayEffects.BasketballPhase.DRIBBLE, 0)
+            .intersect(glanz(PlayEffects.BasketballPhase.DRIBBLE, 6))
+        fun ball(phase: PlayEffects.BasketballPhase, takt: Int) =
+            (glanz(phase, takt) - fest).single()
+
+        // Prellen: mehr als zwei Hoehen, sonst ist es ein Blinken zweier Bilder.
+        val prellen = (0..12).map { ball(PlayEffects.BasketballPhase.DRIBBLE, it).second }
+        assertTrue("Der Ball prellt nur ueber ${prellen.distinct()}", prellen.distinct().size >= 3)
+
+        // Der Wurf: nach rechts UND ueber die Hand hinauf, und nicht in einem Sprung.
+        val bahn = (0..8).map { ball(PlayEffects.BasketballPhase.SHOOT, it) }
+        assertTrue(
+            "Der Ball nimmt beim Wurf nur ${bahn.map { it.first }.distinct().size} Stellen ein",
+            bahn.map { it.first }.distinct().size >= 6
         )
-        val high = PlayEffects.basketballCells(
-            8, 20, PlayEffects.BasketballPhase.SHOOT, 0, 48
-        )
-        val score = PlayEffects.basketballCells(
-            8, 20, PlayEffects.BasketballPhase.SCORE, 0, 48
-        )
-        assertTrue(high.minOf { it.y } < low.minOf { it.y })
-        assertTrue(score.size >= 20)
-        assertTrue((low + high + score).all { it.x in 0 until 48 })
+        for (i in 1 until bahn.size) {
+            assertTrue("Der Wurf laeuft bei Takt $i zurueck", bahn[i].first >= bahn[i - 1].first)
+        }
+        assertTrue("Der Wurf steigt nicht", bahn.minOf { it.second } < bahn.first().second - 2)
+
+        // Und der Treffer faellt heraus, statt im Netz zu haengen.
+        val fall = (0..8).map { ball(PlayEffects.BasketballPhase.SCORE, it).second }
+        assertTrue("Der Ball faellt nach dem Treffer nicht", fall.last() > fall.first())
+
+        val alle = PlayEffects.BasketballPhase.entries.flatMap { p ->
+            (0..12).flatMap { PlayEffects.basketballCells(8, 20, p, it, 48) }
+        }
+        assertTrue(alle.all { it.x in 0 until 48 })
     }
 
     @Test

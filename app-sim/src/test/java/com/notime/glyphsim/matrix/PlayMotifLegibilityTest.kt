@@ -345,4 +345,87 @@ class PlayMotifLegibilityTest {
         }
         assertTrue("Der Ball dreht sich beim Rollen nicht", muster.distinct().size >= 3)
     }
+
+    // ================= Alle Szenen: kein Standbild =================
+
+    /**
+     * **Die Regel, die den ganzen Rest gefunden hat.**
+     *
+     * Nach dem Fussball habe ich dieselbe Messung ueber jede Mehrphasen-Szene laufen lassen:
+     * Wie viele verschiedene Bilder ergibt eine Phase ueber vierzig Takte, also acht Sekunden?
+     * Die Antwort war ernuechternd - Basketball AIM, SHOOT und SCORE je EINS, Training REST
+     * eins, Musik TUNE eins, Angeln CAST und CATCH je eins, und alle drei Malphasen eins. Das
+     * sind zusammen ueber fuenfzig Sekunden, in denen die Welt bewegungslos dasteht, waehrend
+     * eine Figur angeblich wirft, malt oder angelt.
+     *
+     * Gemessen werden MUSTER, nicht Stellungen: Ein wandernder Glanzpunkt auf einer Flasche
+     * bewegt keine Zelle und ist trotzdem Bewegung. Drei ueber acht Sekunden ist wenig, aber es
+     * ist der Unterschied zwischen "ruhig" und "eingefroren".
+     */
+    @Test
+    fun `keine Phase einer Szene steht ueber acht Sekunden still`() {
+        val takte = 0 until 40
+        fun pruefe(name: String, bilder: List<List<SceneCell>>) {
+            val muster = bilder.map { z -> z.map { Triple(it.x, it.y, it.brightness) }.toSet() }
+            assertTrue(
+                "$name zeigt in acht Sekunden nur ${muster.distinct().size} Bilder",
+                muster.distinct().size >= 3
+            )
+        }
+        val x = fussballFigurX(breite)
+        for (p in PlayEffects.KitePhase.entries) {
+            pruefe("Drachen/$p", takte.map { PlayEffects.kiteCells(x, avatarY, p, it, breite) })
+        }
+        for (p in PlayEffects.BasketballPhase.entries) {
+            pruefe("Basketball/$p", takte.map { PlayEffects.basketballCells(x, avatarY, p, it, breite) })
+        }
+        for (p in PlayEffects.TrainingPhase.entries) {
+            pruefe("Training/$p", takte.map { PlayEffects.trainingCells(x, avatarY, p, it) })
+        }
+        for (p in PlayEffects.MusicPhase.entries) {
+            pruefe("Musik/$p", takte.map { PlayEffects.musicCells(x, avatarY, p, it, breite) })
+        }
+        for (p in PlayEffects.PaintingPhase.entries) {
+            pruefe("Malen/$p", takte.map { PlayEffects.paintingCells(x, avatarY, p, it, breite) })
+        }
+        for (p in PlayEffects.FishingPhase.entries) {
+            pruefe("Angeln/$p", takte.map { PlayEffects.fishingCells(x, avatarY, p, it, breite) })
+        }
+        for (p in PlayEffects.FootballPhase.entries) {
+            pruefe("Fussball/$p", takte.map { PlayEffects.footballCells(x, avatarY, p, it, breite) })
+        }
+    }
+
+    /**
+     * **Die Staffelei lag zur Haelfte ausserhalb des Bildes.**
+     *
+     * Sie stand fest rechts neben der Figur und klappte nach links um, wenn dort kein Platz war -
+     * ob LINKS Platz ist, hat niemand gefragt. Gemessen bei 40 Zellen: Vom 19 Zellen breiten
+     * Motiv lagen 13 im Bild, der Rest davor, und der Pinsel ganz. Erst ab 56 Zellen stimmte die
+     * Szene - und 40 ist auf einem Telefon im Hochformat der Normalfall.
+     *
+     * Geprueft wird nicht die Aufstellung, sondern das Ergebnis: Das Motiv ist bei jeder Breite
+     * gleich breit. Fehlen Spalten, ist es abgeschnitten.
+     */
+    @Test
+    fun `die Staffelei passt bei jeder Bildbreite ganz ins Bild`() {
+        var erwartet = -1
+        for (breiteZellen in listOf(PlayScene.MIN_SCENE_CELLS, 46, 56, 64, 80)) {
+            val x = ((breiteZellen - AvatarGeometry.SIZE) * 0.20f).toInt()
+            val zellen = PlayEffects.paintingCells(
+                x, avatarY, PlayEffects.PaintingPhase.PAINT, 0, breiteZellen
+            )
+            val breit = zellen.maxOf { it.x } - zellen.minOf { it.x } + 1
+            if (erwartet < 0) erwartet = breit
+            assertEquals(
+                "$breiteZellen Zellen: das Motiv ist nur $breit statt $erwartet Spalten breit",
+                erwartet, breit
+            )
+            // Und der Pinsel ist da - genau ein Glanzpunkt gehoert seiner Spitze.
+            assertTrue(
+                "$breiteZellen Zellen: der Pinsel fehlt",
+                zellen.any { it.brightness == PlayInk.SPARK }
+            )
+        }
+    }
 }

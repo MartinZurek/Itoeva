@@ -465,6 +465,9 @@ object PlayEffects {
     /** Takte vom Fuss bis ins Netz - acht mal 200 ms, gut anderthalb Sekunden Flug. */
     private const val SHOT_TICKS = 8
 
+    /** Der Bogen eines Korbwurfs. Hoch, nicht flach - flach waere ein Pass. */
+    private const val HOOP_ARC = 6f
+
     /**
      * Wie hoch der Schuss ueber der Verbindungslinie steht - abgeleitet, nicht geraten.
      *
@@ -675,49 +678,69 @@ object PlayEffects {
         avatarCellX: Int,
         avatarCellY: Int,
         phase: BasketballPhase,
-        scenePhase: Int,
+        phaseAge: Int,
         widthCells: Int
     ): List<SceneCell> {
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
         val floorY = groundY + 1
+        val age = phaseAge.coerceAtLeast(0)
         val hoopX = (widthCells - 8).coerceAtLeast(10)
         val hoopY = groundY - 15
+        val ringX = hoopX - 1
         // **Drei Hoehen statt zwei.** Vorher sprang der Ball zwischen genau zwei Stellen (0 und
         // 4) hin und her - dasselbe Zucken wie beim Drachen nebenan, nur waagerecht gedacht. Ein
         // Aufprall hat aber eine Mitte: hoch, halb, unten. Erst damit liest sich das Prellen als
         // Bewegung statt als Blinken zweier Bilder.
-        val bob = when ((scenePhase / 3) % 4) {
+        val bob = when ((age / 3) % 4) {
             0 -> 0
             1 -> 3
             2 -> 5
             else -> 3
         }
+        val handX = avatarCellX + AvatarGeometry.SIZE - 1
+        val handY = groundY - 11
+
+        // **Der Wurf hatte keinen Flug.** Gemessen: AIM, SHOOT und SCORE ergaben ueber vierzig
+        // Takte je GENAU EIN Bild - der Ball hing dreieinhalb Sekunden bewegungslos in der Luft
+        // und stand danach sechs Sekunden lang still unter dem Korb. Derselbe Befund wie beim
+        // Fussball nebenan, und dieselbe Ursache: Ein freilaufender Szenentakt kann einen Flug
+        // nicht tragen, weil niemand weiss, wann die Phase angefangen hat. [phaseAge] weiss es.
+        val flug = (age.toFloat() / SHOT_TICKS).coerceAtMost(1f)
         val ballX = when (phase) {
-            BasketballPhase.DRIBBLE -> avatarCellX + 15
+            BasketballPhase.DRIBBLE -> handX
             BasketballPhase.AIM -> avatarCellX + 11
-            BasketballPhase.SHOOT -> (avatarCellX + hoopX) / 2
-            BasketballPhase.SCORE -> hoopX - 2
-        }.coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+            BasketballPhase.SHOOT -> handX + ((ringX - handX) * flug).toInt()
+            // Nach dem Treffer faellt der Ball heraus und rollt ein Stueck vom Korb weg.
+            BasketballPhase.SCORE -> ringX - (PlayInk.swing(age, 14) * 5).toInt()
+        }.coerceIn(BALL_RADIUS, (widthCells - 1 - BALL_RADIUS).coerceAtLeast(BALL_RADIUS))
         val ballY = when (phase) {
-            BasketballPhase.DRIBBLE -> groundY - 2 - bob
-            BasketballPhase.AIM -> groundY - 11
-            BasketballPhase.SHOOT -> hoopY - 5
-            // Deutlich UNTER dem Netz, nicht mittendrin: Bei hoopY+2 lag der Ball noch im Netz-
-            // Punktmuster und verschmolz optisch mit Ring und Netz zu einem einzigen Klumpen -
-            // "getroffen" war so nicht zu erkennen. Erst unterhalb des Netzes liest sich die
-            // Szene als "durchgefallen und faellt heraus".
-            BasketballPhase.SCORE -> hoopY + 9
+            BasketballPhase.DRIBBLE -> groundY - BALL_RADIUS - bob
+            // Der gehaltene Ball atmet mit: eine Zelle Auf und Ab. Ein voellig stillstehender
+            // Ball in der Hand liest sich nach drei Sekunden als eingefrorenes Bild.
+            BasketballPhase.AIM -> handY - (PlayInk.swing(age, 8) * 2).toInt()
+            BasketballPhase.SHOOT -> {
+                val gerade = handY + (hoopY - handY) * flug
+                // Ein Wurf auf einen Korb ist hoch, nicht flach - der Scheitel liegt deutlich
+                // ueber dem Ring, sonst waere es ein Pass.
+                (gerade - HOOP_ARC * 4f * flug * (1f - flug)).toInt()
+            }
+            // Durchgefallen und ausgerollt: Der Ball kommt unter dem Netz heraus und kommt am
+            // Boden zur Ruhe. Bei hoopY+2 lag er noch im Netz-Punktmuster und verschmolz mit
+            // Ring und Netz zu einem Klumpen - "getroffen" war so nicht zu erkennen.
+            BasketballPhase.SCORE -> {
+                val fall = (age.toFloat() / 6f).coerceAtMost(1f)
+                ((hoopY + 4) + (groundY - BALL_RADIUS - (hoopY + 4)) * fall).toInt()
+            }
         }
 
         // Kreuznaehte als typische Basketballstruktur, auf DETAIL statt die Silhouette zu
-        // zerschneiden.
-        val ball = PlayInk.Sketch(ballX - 2, ballY - 3, 1, widthCells, floorY)
+        // zerschneiden. **Fuenf mal fuenf, nicht fuenf mal sieben** - derselbe Fund wie beim
+        // Fussball: Ein Ball, der hoeher als breit ist, ist ein Ei, und in der Luft sieht man es.
+        val ball = PlayInk.Sketch(ballX - BALL_RADIUS, ballY - BALL_RADIUS, 1, widthCells, floorY)
         ball.art(
             0, 0,
             " ### ",
             "#+#+#",
-            "#####",
-            "+###+",
             "#####",
             "#+#+#",
             " ### "
@@ -725,8 +748,16 @@ object PlayEffects {
         ball.spark(1, 1)
 
         val trail = PlayInk.Sketch(ballX, ballY, 1, widthCells, floorY)
-        if (phase == BasketballPhase.SHOOT) {
-            for (i in 1..5) trail.dot(-i * 2, i, PlayInk.DETAIL)
+        if (phase == BasketballPhase.SHOOT && flug < 1f) {
+            // Abstand wie beim Fussball: dichter, und der eigene Freistellungsring des Balls
+            // frisst die Spur.
+            for (i in 1..4) {
+                val t = (flug - i * 0.15f).coerceAtLeast(0f)
+                if (t <= 0f) break
+                val x = handX + ((ringX - handX) * t).toInt()
+                val y = (handY + (hoopY - handY) * t - HOOP_ARC * 4f * t * (1f - t)).toInt()
+                trail.dot(x, y, PlayInk.DETAIL)
+            }
         }
 
         // Der Korb wird nur fuer Basketball eingeblendet. Fussball und Training behalten damit
@@ -744,7 +775,10 @@ object PlayEffects {
             if (dy % 2 == 0) hoop.dot(-1, localY, PlayInk.DETAIL)
         }
 
-        return (hoop.render(grounded = false) + ball.render(grounded = false) + trail.render(carve = false))
+        // **Der Ball steht vorn** - genau wie beim Fussball. `distinctBy` behaelt den ersten
+        // Eintrag; stand der Korb zuerst, verschwand der Ball in Ring und Netz, und der Treffer
+        // war nicht zu sehen.
+        return (ball.render(grounded = false) + trail.render(carve = false) + hoop.render(grounded = false))
             .filter { it.x in 0 until widthCells }
             .distinctBy { it.x to it.y }
     }
@@ -757,11 +791,21 @@ object PlayEffects {
     ): List<SceneCell> {
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
         val floorY = groundY + 1
-        val pulse = if ((scenePhase / 5) % 2 == 0) 0 else 1
+        // **Zwei Bilder im Sekundentakt.** Der alte `pulse` kannte nur 0 und 1 und wechselte
+        // alle fuenf Takte; gemessen ergaben WARM_UP und LIFT ueber vierzig Takte je GENAU ZWEI
+        // Bilder und REST genau eines. Eine Wiederholung beim Krafttraining ist aber eine
+        // Bewegung mit einer Mitte - derselbe Befund wie beim Prellen nebenan, nur senkrecht.
+        val hub = when (phase) {
+            TrainingPhase.WARM_UP -> (PlayInk.swing(scenePhase, 8) * 3).toInt()
+            TrainingPhase.LIFT -> (PlayInk.swing(scenePhase, 14) * 6).toInt()
+            TrainingPhase.REST -> 0
+        }
         val centerX = avatarCellX + 8
         val centerY = when (phase) {
-            TrainingPhase.WARM_UP -> groundY - 3 - pulse
-            TrainingPhase.LIFT -> groundY - 17 - pulse
+            TrainingPhase.WARM_UP -> groundY - 3 - hub
+            // Von der Brust ueber den Kopf und zurueck. Der Takt 0 liegt unten, weil eine
+            // Wiederholung dort anfaengt.
+            TrainingPhase.LIFT -> groundY - 13 - hub
             TrainingPhase.REST -> groundY - 2
         }
 
@@ -795,7 +839,10 @@ object PlayEffects {
                 "#++#",
                 "####"
             )
-            bottle.spark(1, 2)
+            // Der Glanz wandert ueber das Glas. Das ist in der Ruhephase das Einzige, was sich
+            // noch bewegt - und ohne ihn stuende die Szene fuenf Sekunden lang voellig still,
+            // was in einer Welt, die sonst atmet, wie ein eingefrorenes Bild aussieht.
+            bottle.spark(1, 2 + (scenePhase / 4) % 3)
             bottle.render(grounded = true)
         } else {
             emptyList()
@@ -840,13 +887,16 @@ object PlayEffects {
             MusicPhase.PLAY -> 3
             MusicPhase.FINALE -> 5
         }
-        val drift = (scenePhase / 2) % 6
+        // **TUNE stand still.** Der Versatz galt ausdruecklich nur fuer PLAY und FINALE, und
+        // damit war das Stimmen fuenf Sekunden lang ein Standbild. Auch beim Stimmen klingt ein
+        // Ton an und verhallt - nur langsamer und einzeln.
+        val drift = if (phase == MusicPhase.TUNE) (scenePhase / 4) % 6 else (scenePhase / 2) % 6
         // Noten sind Klang, kein Gegenstand: Sie trennen sich ueber Helligkeit, nicht ueber
         // eine schwarze Kante.
         val notes = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
         for (i in 0 until count) {
             val x = 12 + i * 4
-            val y = 9 - i * 3 - if (phase != MusicPhase.TUNE) drift else 0
+            val y = 9 - i * 3 - drift
             // Runder Notenkopf (2x2) mit Hals, statt eines duennen Zickzacks - der vorige
             // Ein-Zellen-Pfad las sich aus der Distanz eher als Kritzel denn als Note.
             for ((dx, dy) in listOf(0 to 0, 1 to 0, 0 to 1, 1 to 1, 1 to -1, 1 to -2, 1 to -3)) {
@@ -862,6 +912,15 @@ object PlayEffects {
             .distinctBy { it.x to it.y }
     }
 
+    /**
+     * Wie breit die ganze Malszene ist: Rahmen (14) plus Pinselarm zur Seite des Malers.
+     *
+     * Oeffentlich gebraucht wird sie nicht - aber als Zahl an EINER Stelle, weil sowohl die
+     * Seitenwahl als auch der Anschlag am Bildrand sie kennen muessen. Standen beide getrennt
+     * da, passten sie genau so lange zusammen, bis jemand den Rahmen aenderte.
+     */
+    private const val EASEL_WIDTH = 17
+
     fun paintingCells(
         avatarCellX: Int,
         avatarCellY: Int,
@@ -869,9 +928,22 @@ object PlayEffects {
         scenePhase: Int,
         widthCells: Int
     ): List<SceneCell> {
-        val useRight = avatarCellX + 35 < widthCells
+        // **Die Staffelei passte auf dem haeufigsten Bild gar nicht hinein.** Sie stand fest
+        // rechts neben der Figur und klappte nach links um, wenn dort kein Platz war - aber ob
+        // LINKS Platz ist, hat niemand gefragt. Gemessen bei 40 Zellen (Telefon im Hochformat,
+        // `PlayScene.MIN_SCENE_CELLS`): Vom 19 Zellen breiten Motiv lagen 13 im Bild, der Rest
+        // links davor, und der Pinsel GANZ. Erst ab 56 Zellen stimmte die Szene.
+        //
+        // Jetzt entscheidet die freie Flaeche, und der Anschlag ist der BILDRAND: Lieber rueckt
+        // die Staffelei naeher an den Maler heran, als dass sie aus dem Bild laeuft.
+        val rechtsFrei = widthCells - (avatarCellX + AvatarGeometry.SIZE)
+        val useRight = rechtsFrei >= avatarCellX
         val direction = if (useRight) 1 else -1
-        val ox = if (useRight) avatarCellX + 17 else avatarCellX - 2
+        val ox = if (useRight) {
+            minOf(avatarCellX + AvatarGeometry.SIZE + 1, widthCells - EASEL_WIDTH)
+        } else {
+            maxOf(avatarCellX - 2, EASEL_WIDTH - 1)
+        }
         val oy = avatarCellY + AvatarGeometry.HEADROOM - 1
 
         val frame = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
@@ -908,14 +980,26 @@ object PlayEffects {
             for (x in 1..12) if ((x + scenePhase / 4) % 3 != 0) picture.dot(x, 12, PlayInk.EDGE)
         }
 
-        val brushY = 5 + (scenePhase / 2) % 7
+        // **Der Pinsel lag auf der ABGEWANDTEN Seite der Leinwand** - bei lokal x 13 bis 16,
+        // also jenseits des Rahmens, der bei 13 endet. Dorthin reicht keine Hand; und weil er
+        // zuletzt in der Liste stand, verlor er ausserdem jede Zelle, die schon dem Rahmen
+        // gehoerte. Er kommt jetzt von der Seite des Malers (negative lokale x, die `direction`
+        // in beiden Aufstellungen zum Maler hin dreht) und tippt die Leinwand an.
+        val brushY = 2 + (scenePhase / 2) % 9
         val brush = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
-        for (i in 0..6) brush.dot(16 - i / 2, brushY + i, PlayInk.BODY)
-        brush.spark(16, brushY)
+        for (i in 1..3) brush.dot(-i, brushY + i, PlayInk.BODY)
+        brush.spark(1, brushY)
+        // Der frische Strich unter der Spitze. Ohne ihn waere der Pinsel ein Stock, der vor
+        // einem fertigen Bild auf und ab faehrt - erst die nasse Spur macht daraus Malen.
+        val stroke = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
+        for (dx in 2..4) stroke.dot(1 + dx, brushY, PlayInk.EDGE)
 
+        // **Pinsel und Strich stehen VORN.** `distinctBy` behaelt den ersten Eintrag; standen
+        // sie wie bisher hinten, gewaenne der Rahmen jede gemeinsame Zelle - und genau daran
+        // ist die ganze Bewegung dieser Szene verschwunden.
         return (
-            frame.render(grounded = false) + picture.render(carve = false) +
-                brush.render(grounded = false)
+            brush.render(grounded = false) + stroke.render(carve = false) +
+                picture.render(carve = false) + frame.render(grounded = false)
             )
             .filter { it.x in 0 until widthCells }
             .distinctBy { it.x to it.y }
@@ -940,12 +1024,29 @@ object PlayEffects {
         val tipY = handY - 2
         // In der Wartephase treibt der Schwimmer leicht auf und ab - sonst liesse sich WAIT auf
         // dem Standbild nicht von CAST unterscheiden.
-        val bob = if (phase == FishingPhase.WAIT) sin(scenePhase * 0.24).roundToInt() else 0
-        val bobberX = (handX + 6).coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+        // Amplitude 2 statt 1: Gemessen kannte der Schwimmer ueber vierzig Takte drei
+        // Stellungen, und das ueber eine Wartezeit von zweiundzwanzig Sekunden.
+        val bob = if (phase == FishingPhase.WAIT) (sin(scenePhase * 0.3) * 2).roundToInt() else 0
+        // **Der Wurf war ein Standbild** - der Schwimmer hing zwei Zellen unter der Rutenspitze,
+        // drei Sekunden lang, neun helle Zellen. Jetzt fliegt er von der Spitze zum Wasser
+        // hinaus; der Zyklus laeuft durch, weil hier - anders als beim Schuss - JEDER Zeitpunkt
+        // der Phase "er wirft aus" zeigt und nicht nur ein einziger.
+        // Nie ganz eingeholt: Bei Wert 0 saesse der Schwimmer GENAU auf der Rutenspitze, die
+        // Schnur haette die Laenge null, und vom ganzen Wurf blieben fuenf helle Zellen uebrig.
+        val wurf = 0.35f + 0.65f * PlayInk.swing(scenePhase, 10)
+        val ruheX = (handX + 6).coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+        val bobberX = when (phase) {
+            FishingPhase.CAST -> (tipX + ((ruheX - tipX) * wurf).toInt())
+                .coerceIn(2, (widthCells - 3).coerceAtLeast(2))
+            else -> ruheX
+        }
+        // Der Fang zappelt. Ein Fisch, der sechs Sekunden lang bewegungslos in der Luft haengt,
+        // ist ein Anhaenger, kein Fang.
+        val zappeln = (PlayInk.swing(scenePhase, 7) * 3).toInt()
         val bobberY = when (phase) {
-            FishingPhase.CAST -> handY - 2
+            FishingPhase.CAST -> handY - 2 + ((handY + 4 - (handY - 2)) * wurf).toInt()
             FishingPhase.WAIT -> handY + 4 + bob
-            FishingPhase.CATCH -> handY - 1
+            FishingPhase.CATCH -> handY - 1 - zappeln
         }
 
         // Die Rute: ein kurzer schraeger Strich von der Hand nach vorn-oben.

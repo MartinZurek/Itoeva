@@ -847,7 +847,10 @@ object PlayRoutines {
             PlayRoutine(
                 listOf(
                     RoutineStep.GoToPlace(PlayScene.Place.MEADOW),
-                    RoutineStep.Stroll(0.55f),
+                    // **0,20 statt 0,55.** Die Staffelei steht neben dem Maler und braucht
+                    // siebzehn Spalten; in der Mitte des Zimmers blieben auf einem schmalen
+                    // Bild weder rechts noch links genug uebrig (siehe PlayEffects.EASEL_WIDTH).
+                    RoutineStep.Stroll(0.20f),
                     RoutineStep.Painting(PlayEffects.PaintingPhase.SKETCH),
                     RoutineStep.Linger(6_000L),
                     RoutineStep.Painting(PlayEffects.PaintingPhase.PAINT),
