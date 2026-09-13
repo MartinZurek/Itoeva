@@ -260,6 +260,32 @@ zusammenhaengenden Zellen, weil WYRMLINGs Fluegel sonst einzelne Randzellen aufb
 **Offen bleibt:** ob der Akzent gross genug ist - bei vier der sechs Kreaturen sind es vier
 Zellen.
 
+**Darstellung:** NT-081 **Das Fussballspielen war kaum zu erkennen** - *am 2026-09-13
+umgesetzt.* Gemeldet als "das Fussball spielen kann man kaum erkennen", und daran war alles
+wahr. Die Szene offline gerendert und nachgezaehlt ergab fuenf Befunde, von denen jeder einzeln
+gereicht haette. **Der Ball lag hinter dem Tor:** Die Zellenliste endete auf `distinctBy`, das
+den ERSTEN Eintrag behaelt, und das Tor stand vorne - zwischen "er zielt" und "der Ball liegt im
+Tor" aenderten sich 10 von 72 Zellen. Der Treffer, auf den die ganze halbe Minute zulaeuft, war
+unsichtbar. **Die Figur stand im Tor:** Bei der kleinsten Bildbreite (40 Zellen - auf einem
+Telefon im Hochformat der Normalfall, nicht der Grenzfall) lag der Ball bei x=22 und der linke
+Pfosten bei x=25; der "Schuss" war ein Ball, der drei Zellen weit umfiel. **Das Tor war ein
+geschlossenes Rechteck** mit Punktraster darin - also ein Fenster; ein Tor hat zwei Pfosten,
+eine Latte und ist unten offen. **Der Schuss hatte keinen Flug** - der Ball stand am Fuss und im
+naechsten Takt im Netz. **Und der Ball war ein Ei:** fuenf breit, sechs hoch, was am Boden
+niemand sah, weil die unterste Zeile unter dem Boden weggeschnitten wurde, in der Luft aber
+dastand; er drehte sich ueber vierzig Takte nie und dribbelte in zwei Stellungen auf gleicher
+Hoehe im Sekundentakt - dasselbe Blinken zweier Bilder, das beim Basketball nebenan schon einmal
+auffiel. Jetzt: Ball vorn in der Liste (seine Freistellung schneidet ihn sauber aus dem Netz),
+Tor unten offen und breiter als hoch mit schraegen Maschen, garantiertes Feld zwischen Ball und
+Pfosten, ein Schuss mit Bogen unter der Latte, ein runder Ball, dessen Naht sich mit dem
+zurueckgelegten WEG dreht - rueckwaerts, wenn er zurueckrollt, und gar nicht, wenn er liegt.
+Damit der Flug ueberhaupt einmal stattfindet, zaehlt `footballCells` jetzt die Takte SEIT
+BEGINN DER PHASE statt seit Beginn der Szene; ein freilaufender Zaehler traefe ihn nur
+zufaellig. Nebenbei: `PlayEffectsTest` und `PlayInkTest` liefen bis hierher NUR in der CI und
+stehen jetzt im Offline-Lauf (459 Tests) - genau die Luecke, die in NT-078 schon einmal einen
+roten Lauf erzeugt hat. **Offen bleibt:** ob die Maschen am Geraet als Netz lesbar sind und ob
+der Ball mit fuenf Zellen neben einer sechzehn Zellen breiten Figur nicht zu gross wirkt.
+
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
 durchsichtig. Man sah durch sie hindurch auf den schwarzen Grund, vier davon nebeneinander waren

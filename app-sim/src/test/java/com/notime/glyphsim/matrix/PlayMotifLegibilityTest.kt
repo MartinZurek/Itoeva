@@ -149,4 +149,200 @@ class PlayMotifLegibilityTest {
         val dauer = lesen.holdsMs.sum()
         assertTrue("Die Lese-Reaktion dauert nur ${dauer}ms", dauer >= 3_000L)
     }
+
+    // ================= Fussball =================
+
+    /**
+     * **Gemeldet als "das Fussballspielen kann man kaum erkennen".** Die Tests hier halten die
+     * fuenf Befunde fest, die das ausgemacht haben - jeder von ihnen war an der fertigen Szene
+     * nachzaehlbar, keiner eine Geschmacksfrage.
+     *
+     * Die Figur steht dort, wo [PlayRoutine.footballRoutine] sie hinstellt: 15 Prozent der
+     * Breite. Ohne diese Uebereinstimmung pruefte der Test eine Szene, die es nicht gibt.
+     */
+    private fun fussballFigurX(breiteZellen: Int): Int =
+        ((breiteZellen - AvatarGeometry.SIZE) * 0.15f).toInt()
+
+    /** Alles, was man sieht - ohne die Freistellung (VOID) und den Bodenschatten. */
+    private fun fussball(
+        phase: PlayEffects.FootballPhase,
+        takt: Int,
+        breiteZellen: Int = breite
+    ): List<SceneCell> =
+        PlayEffects.footballCells(fussballFigurX(breiteZellen), avatarY, phase, takt, breiteZellen)
+            .filter { it.brightness >= PlayInk.DETAIL }
+
+    /**
+     * Trennt Ball und Tor an der breitesten senkrechten Luecke.
+     *
+     * Eine feste Grenze (etwa "alles rechts von breite minus 14 ist das Tor") ginge auch, waere
+     * hier aber genau die Zahl, die der Test pruefen soll: Das Tor steht nicht mehr an einem
+     * festen Platz, sondern rueckt vom Ball ab, wenn das Bild schmal ist. Die Luecke dazwischen
+     * ist damit das einzige, worauf sich beide Seiten verlassen koennen - und dass es sie gibt,
+     * prueft der Test darunter.
+     */
+    private fun ballUndTor(zellen: List<SceneCell>): Pair<List<SceneCell>, List<SceneCell>> {
+        val spalten = zellen.map { it.x }.distinct().sorted()
+        var schnitt = spalten.last() + 1
+        var groesste = 1
+        for (i in 1 until spalten.size) {
+            if (spalten[i] - spalten[i - 1] > groesste) {
+                groesste = spalten[i] - spalten[i - 1]
+                schnitt = spalten[i]
+            }
+        }
+        return zellen.filter { it.x < schnitt } to zellen.filter { it.x >= schnitt }
+    }
+
+    private fun ball(
+        phase: PlayEffects.FootballPhase,
+        takt: Int,
+        breiteZellen: Int = breite
+    ): List<SceneCell> {
+        val zellen = fussball(phase, takt, breiteZellen)
+        return if (phase == PlayEffects.FootballPhase.AIM) ballUndTor(zellen).first else zellen
+    }
+
+    private fun tor(takt: Int, breiteZellen: Int = breite): List<SceneCell> =
+        ballUndTor(fussball(PlayEffects.FootballPhase.AIM, takt, breiteZellen)).second
+
+    /**
+     * **Der Ball war fuenf breit und SECHS hoch** - ein Ei auf der Spitze. Am Boden fiel es nicht
+     * auf, weil die unterste Zeile unter dem Boden lag und weggeschnitten wurde; in der Luft
+     * stand es da. Geprueft wird deshalb ausdruecklich der FLIEGENDE Ball.
+     */
+    @Test
+    fun `der Ball ist auch in der Luft rund`() {
+        for (takt in 0..9) {
+            val fliegend = ball(PlayEffects.FootballPhase.TRICK, takt)
+            val b = fliegend.maxOf { it.x } - fliegend.minOf { it.x } + 1
+            val h = fliegend.maxOf { it.y } - fliegend.minOf { it.y } + 1
+            assertEquals("Takt $takt: der Ball ist ${b}x${h}", b, h)
+        }
+    }
+
+    /**
+     * **Der Ball lag HINTER dem Tor.** Die Liste endete auf `distinctBy`, das den ERSTEN Eintrag
+     * behaelt, und das Tor stand vorne. Nachgemessen aenderten sich zwischen "er zielt" und "der
+     * Ball liegt im Tor" zehn von zweiundsiebzig Zellen - der Treffer, auf den die ganze halbe
+     * Minute zulaeuft, war unsichtbar.
+     */
+    @Test
+    fun `der Ball im Netz ist ganz zu sehen`() {
+        // Im Tor ist der Ball nicht mehr vom Netz zu trennen - gezaehlt wird deshalb, wie viel
+        // sich gegenueber dem Bild OHNE Ball im Netz ueberhaupt aendert.
+        val ohneBall = fussball(PlayEffects.FootballPhase.AIM, 0).map { it.x to it.y }.toSet()
+        val liegt = fussball(PlayEffects.FootballPhase.KICK, 40).filterNot { (it.x to it.y) in ohneBall }
+        val frei = ball(PlayEffects.FootballPhase.TRICK, 0)
+        assertTrue(
+            "Vom Ball im Netz bleiben nur ${liegt.size} von ${frei.size} Zellen uebrig",
+            liegt.size >= frei.size / 2
+        )
+    }
+
+    /**
+     * **Das Tor war ein geschlossenes Rechteck**, denn `box` zog auch unten einen durchgehenden
+     * Balken ueber den Boden. Ein Rechteck mit Gitter darin ist ein Fenster; ein Tor hat zwei
+     * Pfosten, eine Latte und ist unten offen.
+     */
+    @Test
+    fun `das Tor ist unten offen und breiter als hoch`() {
+        for (breiteZellen in listOf(PlayScene.MIN_SCENE_CELLS, 46, 64)) {
+            val pfosten = tor(0, breiteZellen)
+            val unten = pfosten.maxOf { it.y }
+            val breit = pfosten.maxOf { it.x } - pfosten.minOf { it.x } + 1
+            val hoch = unten - pfosten.minOf { it.y } + 1
+            // Unten stehen nur noch die beiden Pfostenfuesse; ein durchgehender Balken waere die
+            // vierte Seite und damit ein Rahmen.
+            assertTrue(
+                "$breiteZellen Zellen: unten liegen ${pfosten.count { it.y == unten }} Zellen - " +
+                    "das ist ein Balken, also ein Fenster",
+                pfosten.count { it.y == unten } <= 3
+            )
+            assertTrue("$breiteZellen Zellen: Tor ist ${breit}x$hoch", breit > hoch)
+        }
+    }
+
+    /**
+     * **Die Figur stand im Tor.** Bei der kleinsten geprueften Bildbreite - auf einem Telefon im
+     * Hochformat der Normalfall, nicht der Grenzfall - lag der Ball bei x=22 und der linke
+     * Pfosten bei x=25. Ohne freies Feld dazwischen gibt es keinen Schuss, sondern einen Ball,
+     * der drei Zellen weit umfaellt.
+     */
+    @Test
+    fun `zwischen Ball und Pfosten liegt Feld`() {
+        for (breiteZellen in listOf(PlayScene.MIN_SCENE_CELLS, 46, 64)) {
+            val amFuss = ball(PlayEffects.FootballPhase.AIM, 0, breiteZellen)
+            val pfosten = tor(0, breiteZellen).minOf { it.x }
+            val luecke = pfosten - amFuss.maxOf { it.x }
+            assertTrue("$breiteZellen Zellen: nur $luecke Zellen Feld vor dem Tor", luecke >= 4)
+        }
+    }
+
+    /**
+     * **Der Schuss hatte keinen Flug** - der Ball stand am Fuss und im naechsten Takt im Tor.
+     * Geprueft wird die Bahn: Sie laeuft nach rechts, sie hat einen Bogen, und der Bogen bleibt
+     * UNTER der Latte. Ein Ball, der darueber steigt, ginge ueber das Tor, auch wenn er danach
+     * im Netz liegt.
+     */
+    @Test
+    fun `der Schuss fliegt in einem Bogen unter der Latte`() {
+        // Verfolgt wird der GLANZPUNKT: Genau eine Zelle je Bild traegt ihn, und er gehoert
+        // immer dem Ball. Ueber die linke Kante ginge es nicht - die gehoert waehrend des Flugs
+        // der Spur dahinter, die mit jedem Takt laenger wird.
+        val bahn = (0..8).map { takt ->
+            val glanz = fussball(PlayEffects.FootballPhase.KICK, takt).single { it.brightness == PlayInk.SPARK }
+            glanz.x to glanz.y
+        }
+        assertTrue(
+            "Der Ball nimmt nur ${bahn.map { it.first }.distinct().size} Stellen ein",
+            bahn.map { it.first }.distinct().size >= 6
+        )
+        for (i in 1 until bahn.size) {
+            assertTrue("Der Ball laeuft bei Takt $i zurueck", bahn[i].first >= bahn[i - 1].first)
+        }
+        // Gleichauf mit der Latte ist der scharfe Schuss unter die Querstange; DARUEBER waere
+        // der Ball am Tor vorbei, auch wenn er danach im Netz liegt.
+        val latte = tor(0).minOf { it.y }
+        assertTrue(
+            "Der Ball steigt bis ${bahn.minOf { it.second }} und damit ueber die Latte bei $latte",
+            bahn.minOf { it.second } >= latte
+        )
+        val hoechste = bahn.minOf { it.second }
+        assertTrue("Der Schuss hat keinen Bogen", hoechste < bahn.first().second - 1)
+    }
+
+    /**
+     * **Und danach liegt er.** Ein Ball, der sich im Netz weiterdreht oder weiterwandert, nimmt
+     * dem Treffer genau das, was ihn zum Schluss macht.
+     */
+    @Test
+    fun `im Netz liegt der Ball still`() {
+        val bilder = (12..40).map { takt ->
+            ball(PlayEffects.FootballPhase.KICK, takt).map { it.x to it.y to it.brightness }.toSet()
+        }
+        assertEquals("Der Ball bewegt sich im Netz weiter", 1, bilder.distinct().size)
+    }
+
+    /**
+     * **Gedribbelt wurde in zwei Stellungen**, beide auf derselben Hoehe, im Sekundentakt hin und
+     * her - dasselbe Blinken zweier Bilder, das beim Basketball nebenan schon einmal auffiel, nur
+     * waagerecht. Und der Ball zeigte dabei ueber vierzig Takte genau ein Binnenmuster: eine
+     * Scheibe, die geschoben wird, kein Ball, der rollt.
+     */
+    @Test
+    fun `der Ball rollt, statt zwischen zwei Stellungen zu springen`() {
+        val stellen = (0..24).map { ball(PlayEffects.FootballPhase.DRIBBLE, it).minOf { z -> z.x } }
+        assertTrue(
+            "Der Ball kennt nur ${stellen.distinct().size} Stellungen",
+            stellen.distinct().size >= 5
+        )
+        val muster = (0..24).map { takt ->
+            val b = ball(PlayEffects.FootballPhase.DRIBBLE, takt)
+            val ox = b.minOf { it.x }
+            val oy = b.minOf { it.y }
+            b.map { (it.x - ox) to (it.y - oy) to it.brightness }.toSet()
+        }
+        assertTrue("Der Ball dreht sich beim Rollen nicht", muster.distinct().size >= 3)
+    }
 }

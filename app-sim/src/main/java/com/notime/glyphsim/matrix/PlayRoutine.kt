@@ -257,7 +257,10 @@ object PlayRoutines {
     fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(
         buildList {
             add(RoutineStep.GoToPlace(PlayScene.Place.SPORT))
-            add(RoutineStep.Stroll(0.30f))
+            // **0,15 statt 0,30.** Das Tor steht am rechten Rand; bei 0,30 stand die Figur auf
+            // einem schmalen Bild direkt davor, und zwischen Ball und Pfosten lag kein Feld
+            // mehr, ueber das sich schiessen liesse (siehe PlayEffects.RUN_UP).
+            add(RoutineStep.Stroll(0.15f))
             add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
             add(RoutineStep.Linger(12_000L))
             add(RoutineStep.Football(PlayEffects.FootballPhase.AIM))

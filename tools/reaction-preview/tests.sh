@@ -135,6 +135,12 @@ TEST_SRCS=(
   "$TEST/matrix/PlayAfterglowTest.kt"
   "$TEST/matrix/ReactionDwellTest.kt"
   "$TEST/matrix/PlayMotifLegibilityTest.kt"
+  # PlayEffectsTest und PlayInkTest kamen mit NT-081 dazu - beide rufen footballCells auf und
+  # liefen bis dahin NUR in der CI. Genau diese Luecke hat in NT-078 schon einmal einen roten
+  # Lauf erzeugt: Ein Test, der hier nicht uebersetzt wird, meldet eine Signaturaenderung erst
+  # Minuten spaeter aus der CI.
+  "$TEST/matrix/PlayEffectsTest.kt"
+  "$TEST/matrix/PlayInkTest.kt"
   "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
@@ -184,6 +190,8 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayAfterglowTest
   com.notime.glyphsim.matrix.ReactionDwellTest
   com.notime.glyphsim.matrix.PlayMotifLegibilityTest
+  com.notime.glyphsim.matrix.PlayEffectsTest
+  com.notime.glyphsim.matrix.PlayInkTest
   com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest

@@ -452,69 +452,206 @@ object PlayEffects {
         }
     }
 
+    /**
+     * Der Ball ist eine Scheibe von fuenf mal fuenf Zellen.
+     *
+     * Vorher war er fuenf breit und SECHS hoch - ein Ei, das auf der Spitze steht. Am Boden fiel
+     * es nicht auf, weil die unterste Zeile unter dem Boden lag und weggeschnitten wurde; in der
+     * Luft (Trick, Schuss) stand es da. Fuenf mal fuenf ist die kleinste Form, die auf diesem
+     * Raster als Kreis durchgeht.
+     */
+    private const val BALL_RADIUS = 2
+
+    /** Takte vom Fuss bis ins Netz - acht mal 200 ms, gut anderthalb Sekunden Flug. */
+    private const val SHOT_TICKS = 8
+
+    /**
+     * Wie hoch der Schuss ueber der Verbindungslinie steht - abgeleitet, nicht geraten.
+     *
+     * Ein fester Wert war hier zuerst 7, und damit stieg der Ball ueber die LATTE und fiel von
+     * oben ins Tor. Das ist kein Treffer, sondern ein Ball, der uebers Tor geht. Die Hoehe muss
+     * sich also am Tor messen: Der Scheitel bleibt zwei Zeilen unter der Latte.
+     */
+    private fun shotArc(restY: Int, goalTop: Int): Float =
+        ((restY - goalTop) / 2f).coerceIn(2f, 5f)
+
+    /** Groesstmasse des Tors. **Breiter als hoch** - das ist der Unterschied zu einem Fenster. */
+    private const val GOAL_WIDTH = 15
+    private const val GOAL_HEIGHT = 9
+
+    /**
+     * Freies Feld zwischen Ball und nahem Pfosten.
+     *
+     * **Ohne diesen Abstand gab es den Schuss gar nicht.** Bei der kleinsten geprueften
+     * Bildbreite (`PlayScene.MIN_SCENE_CELLS` = 40, und das ist auf einem Telefon im Hochformat
+     * mit gross gezogener Uhr der Normalfall, nicht der Grenzfall) stand die Figur bei x=7 bis
+     * 22, der Ball bei x=22 - und der linke Pfosten bei x=25. Die Figur stand IM Tor, und der
+     * "Schuss" war ein Ball, der drei Zellen weit umfiel.
+     */
+    private const val RUN_UP = 8
+
+    /**
+     * Ein Ball an der Stelle [cx]/[cy], mit einer Naht, die sich mit [spin] weiterdreht.
+     *
+     * **Die Naht ist das Einzige, woran man auf fuenf Zellen sieht, dass sich der Ball dreht.**
+     * Fuenfecke lassen sich hier nicht zeichnen - dafuer waere die Scheibe dreimal so gross
+     * noetig. Ein Ball ohne jede Binnenbewegung liest sich aber als aufgeklebte Scheibe, die
+     * ueber den Rasen geschoben wird, und genau das war der Eindruck.
+     */
+    private fun drawBall(sketch: PlayInk.Sketch, cx: Int, cy: Int, spin: Int) {
+        sketch.art(
+            cx - BALL_RADIUS, cy - BALL_RADIUS,
+            " ### ",
+            "#####",
+            "#####",
+            "#####",
+            " ### "
+        )
+        val naht = ((spin % 3) + 3) % 3
+        sketch.stamp(cx - 1, cy + naht, PlayInk.DETAIL, "###")
+        // Der Glanzpunkt sitzt oben links, wo in dieser Welt das Licht herkommt (siehe
+        // PlayInk.Sketch.render) - und nie dort, wo gerade die Naht liegt.
+        sketch.spark(cx - 1, cy - 1)
+    }
+
+    /**
+     * Fussball: Ballfuehrung, Zielen, Schuss und der erlernbare Trick.
+     *
+     * **Gemeldet als "das Fussballspielen kann man kaum erkennen" - und daran war alles wahr.**
+     * Nachgemessen an der fertigen Szene (46 Spalten, Figur bei x=6):
+     *
+     * 1. **Der Ball lag HINTER dem Tor.** Die Liste endete auf `distinctBy`, das den ERSTEN
+     *    Eintrag behaelt, und das Tor stand vorne. Vom Ball im Netz blieben zehn verstreute
+     *    Zellen uebrig - zwischen "er zielt" und "der Ball liegt im Tor" aenderten sich 10 von
+     *    72 Zellen. Der Treffer, auf den die ganze halbe Minute zulaeuft, war unsichtbar.
+     *    Deshalb steht der Ball jetzt VORNE in der Liste: Wer zuerst kommt, gewinnt die Zelle,
+     *    und seine Freistellung schneidet ihn sauber aus dem Netz.
+     * 2. **Das Tor war ein geschlossenes Rechteck** - `box` zog auch unten einen durchgehenden
+     *    Balken aus dreizehn Zellen ueber den Boden. Ein Rechteck mit Gitter darin ist ein
+     *    Fenster. Ein Tor hat zwei Pfosten und eine Latte und ist unten offen.
+     * 3. **Der Ball drehte sich nie** - ueber vierzig Takte genau ein einziges Binnenmuster.
+     * 4. **Gedribbelt wurde in zwei Stellungen**, beide auf derselben Hoehe, im Sekundentakt
+     *    hin und her. Das ist dasselbe Blinken zweier Bilder, das beim Basketball nebenan
+     *    schon einmal auffiel - nur waagerecht.
+     * 5. **Der Schuss hatte keinen Flug.** Der Ball stand am Fuss und im naechsten Takt im Tor.
+     *
+     * [phaseAge] zaehlt die Takte SEIT DEM BEGINN dieser Phase, nicht seit dem Start der Szene.
+     * Ohne diesen Unterschied gaebe es den Schuss nicht: Ein freilaufender Zaehler trifft den
+     * Flug nur zufaellig, und wer in der falschen Sekunde hinsieht, bekommt wieder nur einen
+     * Ball, der im Netz liegt, ohne je dorthin geflogen zu sein.
+     */
     fun footballCells(
         avatarCellX: Int,
         avatarCellY: Int,
         phase: FootballPhase,
-        scenePhase: Int,
+        phaseAge: Int,
         widthCells: Int
     ): List<SceneCell> {
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
         val floorY = groundY + 1
-        val direction = if ((scenePhase / 5) % 2 == 0) 1 else -1
+        val age = phaseAge.coerceAtLeast(0)
+
+        // Der Fuss - von hier aus rollt, huepft und fliegt alles.
+        val footX = avatarCellX + AvatarGeometry.SIZE - 1
+        val restY = groundY - BALL_RADIUS
 
         // VOR der Ballposition berechnet, nicht danach: Der Schuss muss wissen, wohin er trifft.
         val goalRight = widthCells - 3
-        val goalLeft = (goalRight - 12).coerceAtLeast(0)
-        val goalTop = groundY - 9
+        val goalLeft = (goalRight - GOAL_WIDTH + 1)
+            .coerceAtLeast(footX + RUN_UP)
+            .coerceAtMost(goalRight - 5)
+        val goalSpan = goalRight - goalLeft
+        // Die Hoehe folgt der Breite, statt fest zu stehen: Auf einem schmalen Bild bleibt vom
+        // Tor weniger uebrig, und mit fester Hoehe waere genau daraus wieder ein Fenster
+        // geworden - hoch und schmal. Drei Fuenftel halten es breiter als hoch.
+        val goalTop = groundY - (goalSpan * 3 / 5).coerceIn(4, GOAL_HEIGHT - 1)
+        val goalMouthX = (goalLeft + goalRight) / 2
 
-        val centerX = when (phase) {
-            // Einfacher Ballkontakt fuer Anfaenger: nah am Fuss und ohne das seitliche
-            // Hin-und-her des echten Dribblings. So ist DRIBBLE tatsaechlich ein freischaltbarer
-            // Verhaltensschritt statt nur ein anderer Name fuer die Basisaktion.
-            FootballPhase.TOUCH -> avatarCellX + 15
-            FootballPhase.DRIBBLE -> avatarCellX + 15 + direction * 2
-            FootballPhase.AIM -> avatarCellX + 17
-            // Vorher avatarCellX + 23, unabhaengig vom Tor - traf es nur zufaellig, wenn die
-            // Figur genau richtig stand, und lag sonst davor oder daneben. Jetzt wie beim
-            // Basketballkorb: die Zielposition selbst entscheidet, nicht der Abstand zur Figur.
-            FootballPhase.KICK -> (goalLeft + goalRight) / 2
-            FootballPhase.TRICK -> avatarCellX + 12 + direction * 4
-        }.coerceIn(2, (widthCells - 3).coerceAtLeast(2))
-        val centerY = when (phase) {
-            FootballPhase.TOUCH, FootballPhase.DRIBBLE, FootballPhase.AIM -> groundY - 1
-            // Sichtbar INNERHALB des Tors, nicht nur auf seiner Anflughoehe - sonst haengt der
-            // Ball vor der Torlinie in der Luft, statt drin zu liegen.
-            FootballPhase.KICK -> goalTop + 5
-            FootballPhase.TRICK -> groundY - 13
+        val bogen = shotArc(restY, goalTop)
+        val flug = if (phase == FootballPhase.KICK) {
+            (age.toFloat() / SHOT_TICKS).coerceAtMost(1f)
+        } else {
+            0f
         }
 
-        // Der Ball: Fuenfecke und Naehte auf DETAIL verhindern, dass er wie ein heller Kreis
-        // aussieht, statt wie ein Ball mit Struktur.
-        val ball = PlayInk.Sketch(centerX - 2, centerY - 3, 1, widthCells, floorY)
-        ball.art(
-            0, 0,
-            " ### ",
-            "##+##",
-            "#+++#",
-            "#+++#",
-            "##+##",
-            " ### "
-        )
-        ball.spark(2, 1)
+        val centerX = when (phase) {
+            // Einfacher Ballkontakt fuer Anfaenger: ein kurzes Antippen am Fuss, ohne die
+            // Laufwege des echten Dribblings. So ist DRIBBLE tatsaechlich ein freischaltbarer
+            // Verhaltensschritt statt nur ein anderer Name fuer die Basisaktion.
+            FootballPhase.TOUCH -> footX + (PlayInk.swing(age, 8) * 2).toInt()
+            // Weich ueber sechs Zellen hinaus und zurueck statt zweier Stellungen im
+            // Sekundentakt: Ein Fussball ROLLT, er springt nicht wie ein Basketball - deshalb
+            // traegt hier die Naht die Bewegung und nicht die Hoehe.
+            FootballPhase.DRIBBLE -> footX + (PlayInk.swing(age, 12) * 6).toInt()
+            // **Ausholen statt Ziellinie.** Ein gepunkteter Zielstrich zum Tor stand hier
+            // zuerst - und war auf vierzig Zellen genau EIN Punkt lang, weil zwischen dem
+            // Freistellungsring des Balls und dem nahen Pfosten vier Zellen liegen. Ein
+            // Motiv, das nur auf breiten Bildern erscheint, ist schlechter als keines.
+            // [PlayInk.anticipate] ist der Weg, den dieses Haus dafuer hat: Der Ball geht
+            // kurz vom Tor WEG, bevor es losgeht.
+            FootballPhase.AIM -> footX + 1 - (PlayInk.anticipate(age, 10) * 2).toInt()
+            FootballPhase.KICK -> footX + ((goalMouthX - footX) * flug).toInt()
+            FootballPhase.TRICK -> footX - 2 + (PlayInk.swing(age, 10) * 4).toInt()
+        }.coerceIn(BALL_RADIUS, (widthCells - 1 - BALL_RADIUS).coerceAtLeast(BALL_RADIUS))
 
-        // Beim Schuss und beim Trick zieht der Ball eine Spur hinter sich her - Luftzug, kein
-        // Material, also nicht freigestellt.
-        val trail = PlayInk.Sketch(centerX, centerY, 1, widthCells, floorY)
-        if (phase == FootballPhase.KICK || phase == FootballPhase.TRICK) {
-            for (i in 1..4) trail.dot(-i * 2, i / 2, PlayInk.DETAIL)
+        // Im Netz liegt der Ball TIEF, nicht auf Anflughoehe - sonst haengt er vor der Torlinie
+        // in der Luft, statt drin zu liegen.
+        val kickRestY = groundY - BALL_RADIUS - 1
+        val centerY = when (phase) {
+            FootballPhase.TOUCH, FootballPhase.DRIBBLE, FootballPhase.AIM -> restY
+            FootballPhase.KICK -> {
+                val gerade = restY + (kickRestY - restY) * flug
+                // Die Parabel ueber der Verbindungslinie: an den Enden null, in der Mitte voll.
+                (gerade - bogen * 4f * flug * (1f - flug)).toInt()
+            }
+            // Hochhalten: Der Ball steht im Takt 0 oben und faellt zum Fuss zurueck. Umgekehrt
+            // herum begaenne die Phase mit einem Ball am Boden, und der Trick faenge unsichtbar an.
+            // Die Steighoehe misst sich an der FIGUR, nicht an einer Zahl: Der Ball muss ueber
+            // den Kopf, und der sitzt bei jeder Kreatur gleich hoch ueber dem Boden.
+            FootballPhase.TRICK ->
+                restY - ((1f - PlayInk.swing(age, 10)) * (AvatarGeometry.HEIGHT - 7)).toInt()
+        }
+
+        // **Die Drehung haengt am zurueckgelegten WEG, nicht an der Uhr.** Rollt der Ball zum
+        // Fuss zurueck, dreht er sich zurueck; liegt er im Netz, steht die Naht still. Eine
+        // Drehung, die stur vorwaerts laeuft, waehrend der Ball rueckwaerts rollt oder gar nicht
+        // mehr rollt, ist genau das, was man als "geschoben" statt "gerollt" sieht. Beim
+        // Hochhalten zaehlt dagegen die Zeit - dort bewegt sich der Ball senkrecht.
+        val spin = if (phase == FootballPhase.TRICK) age else centerX / 2
+
+        val ball = PlayInk.Sketch(0, 0, 1, widthCells, floorY)
+        drawBall(ball, centerX, centerY, spin)
+
+        // Die Spur hinter dem fliegenden Ball - Luftzug, kein Material, also nicht freigestellt.
+        val trail = PlayInk.Sketch(0, 0, 1, widthCells, floorY)
+        if (phase == FootballPhase.KICK && flug < 1f) {
+            // **Abstand 0,15 statt 0,06.** Die Spur stand vorher so dicht hinter dem Ball, dass
+            // sein eigener Freistellungsring sie auffrass - uebrig blieb ein einzelner Punkt.
+            for (i in 1..4) {
+                val t = (flug - i * 0.15f).coerceAtLeast(0f)
+                if (t <= 0f) break
+                val x = footX + ((goalMouthX - footX) * t).toInt()
+                val y = (restY + (kickRestY - restY) * t - bogen * 4f * t * (1f - t)).toInt()
+                trail.dot(x, y, PlayInk.DETAIL)
+            }
         }
 
         val goal = PlayInk.Sketch(goalLeft, goalTop, 1, widthCells, floorY)
-        goal.box(0, 0, goalRight - goalLeft, groundY - goalTop, PlayInk.BODY)
-        for (x in 2 until (goalRight - goalLeft) step 2) {
-            for (y in 2 until (groundY - goalTop) step 2) {
-                goal.dot(x, y, PlayInk.DETAIL)
+        val w = goalSpan
+        val h = groundY - goalTop
+        // Latte und zwei Pfosten - und UNTEN NICHTS. Der vierte Strich war der Unterschied
+        // zwischen einem Tor und einem Fenster.
+        goal.line(0, 0, w, 0)
+        goal.line(0, 0, 0, h)
+        goal.line(w, 0, w, h)
+        // Das Netz als schraege Maschen statt als Punktraster: Ein Raster in Zweierschritten
+        // liest sich als Lochblech. **Eine** Diagonalenschar, nicht zwei - gemessen deckten
+        // zwei zusammen 56 Prozent der Flaeche ab, und mit dem Freistellungsring dazwischen war
+        // das eine graue Scheibe statt eines Netzes. Auf DETAIL, damit die Maschen den Rahmen
+        // nicht zerschneiden und der Ball davor mit seinem hellen Rand herausspringt.
+        for (x in 1 until w) {
+            for (y in 1 until h) {
+                if ((x + y) % 3 == 0) goal.dot(x, y, PlayInk.DETAIL)
             }
         }
 
@@ -526,7 +663,10 @@ object PlayEffects {
         } else {
             emptyList()
         }
-        return (goalCells + ball.render(grounded = false) + trail.render(carve = false))
+        // **Der Ball steht vorne.** `distinctBy` behaelt den ERSTEN Eintrag; stuende das Tor
+        // zuerst, verschwaende der Ball wieder darin (siehe die Messung im KDoc oben).
+        return (ball.render(grounded = phase != FootballPhase.KICK && phase != FootballPhase.TRICK) +
+            trail.render(carve = false) + goalCells)
             .filter { it.x in 0 until widthCells }
             .distinctBy { it.x to it.y }
     }
