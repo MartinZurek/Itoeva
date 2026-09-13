@@ -232,6 +232,17 @@ nirgends gespiegelt wird. Dazu ein echter Schritt: Die Fuesse spreizten sich bis
 **Offen bleibt:** ob 0,875 als Tonabstand am Geraet reicht - es ist der Wert des Vorbilds, aber
 dessen Figur ist groesser als unsere.
 
+**Darstellung:** NT-079 **Die Zeichen ueber dem Kopf waren zerschert** - *am 2026-09-13
+umgesetzt.* In der Wunsch- und der Traumblase war nur Rauschen zu sehen. Die Ursache ist keine
+Gestaltungsfrage: Die Zeichen liegen auf dem 13x13-Raster der Matrix, gezeichnet wurden sie aber
+von `AvatarSpriteView`, und die liest mit der Zeilenbreite des Avatars, also 16. Jede Zeile
+rutschte dadurch um drei Spalten weiter - das Bild wurde diagonal zerschert. Dazu kam das
+erzwungene Seitenverhaeltnis 16:20, das ein quadratisches Zeichen zusaetzlich stauchte. Beide
+Blasen benutzen jetzt `SimulatedMatrixView` - genau die Ansicht, mit der die Speicherplaetze
+dieselben Zeichen schon immer gezeichnet haben, und damit auch die Gleichheit, die
+`LivingSymbolFrames` ausdruecklich anstrebt. **Offen bleibt:** ob die Zeichen jetzt, richtig
+gezeichnet, auch verstaendlich sind - das war bisher gar nicht zu beurteilen.
+
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
 durchsichtig. Man sah durch sie hindurch auf den schwarzen Grund, vier davon nebeneinander waren

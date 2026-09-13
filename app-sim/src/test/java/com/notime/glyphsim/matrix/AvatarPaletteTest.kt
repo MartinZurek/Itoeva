@@ -166,11 +166,10 @@ class AvatarPaletteTest {
     }
 
     @Test
-    fun `Symbole bleiben weiss`() {
-        // Wunsch- und Traumblase zeichnen mit derselben Ansicht die 13x13-Zeichen aus
-        // LivingSymbolFrames. Die sind Aussagen ueber die Welt, keine Koerper - sie duerfen
-        // nicht in der Farbe der Kreatur erscheinen, sonst liest man sie als Teil von ihr.
-        // Festgehalten wird das hier am Standardwert: Wer nichts angibt, bekommt Weiss.
+    fun `die Kulissenfarbe gehoert keiner Kreatur`() {
+        // Kulisse, Uhr und die Zeichen in den Blasen bleiben weiss - sie sind Aussagen ueber die
+        // Welt, keine Koerper. Traege eine Kreatur denselben Ton, liesse sich beides nicht mehr
+        // trennen.
         assertTrue(
             "LED_ON darf nicht in der Kreaturenpalette auftauchen",
             MatrixColors.LED_ON !in AvatarPalette.all

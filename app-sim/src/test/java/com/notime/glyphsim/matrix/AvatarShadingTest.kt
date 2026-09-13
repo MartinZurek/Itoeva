@@ -101,8 +101,10 @@ class AvatarShadingTest {
 
     @Test
     fun `ein fremdes oder zu schmales Feld wird unveraendert durchgereicht`() {
-        // Eine Zeichenroutine darf an einem unerwarteten Feld nicht scheitern - die
-        // 13x13-Zeichen der Wunsch- und Traumblase laufen genau hier durch.
+        // Eine Zeichenroutine darf an einem unerwarteten Feld nicht scheitern. Bis NT-079 liefen
+        // die 13x13-Zeichen der Blasen hier durch; dass sie unveraendert herauskamen, hat den
+        // eigentlichen Fehler sogar verdeckt - gezeichnet wurden sie trotzdem mit der falschen
+        // Zeilenbreite. Die Absicherung bleibt, der Grund ist jetzt ein anderer.
         val fremd = IntArray(13 * 13) { AvatarGeometry.MAX_BRIGHTNESS }
         assertSame(fremd, AvatarShading.shade(fremd))
         val leer = IntArray(AvatarGeometry.SIZE * AvatarGeometry.HEIGHT)

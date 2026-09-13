@@ -55,11 +55,12 @@ fun AvatarSpriteView(
     /**
      * Welche Kreatur hier gezeichnet wird - bestimmt ihre Farbe (siehe [AvatarPalette]).
      *
-     * `null` heisst "keine Kreatur, sondern ein Zeichen": Wunsch- und Traumblase zeichnen mit
-     * derselben Ansicht die 13x13-Symbole aus `LivingSymbolFrames`. Die sind Aussagen ueber die
-     * Welt, keine Koerper, und bleiben deshalb weiss wie die Kulisse. Genau deshalb ist Weiss
-     * hier der Standard: Wer einen Wert vergisst, bekommt das bisherige Bild, nicht ein falsch
-     * eingefaerbtes Symbol.
+     * `null` zeichnet in Weiss. Das bleibt der Standard, damit eine vergessene Angabe das
+     * bisherige Bild ergibt und nicht eine willkuerliche Farbe.
+     *
+     * Diese Ansicht ist NUR fuer Kreaturen. Die 13x13-Zeichen aus `LivingSymbolFrames` liefen
+     * bis NT-079 auch hier durch und wurden dabei zerschert, weil hier mit der Zeilenbreite des
+     * Avatars gelesen wird; sie gehen jetzt ueber [SimulatedMatrixView] (siehe PlayWishBubble).
      */
     species: AvatarSpecies? = null,
     /**
