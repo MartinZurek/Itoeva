@@ -53,10 +53,10 @@ fun AvatarSpriteView(
      */
     brightnessScale: Float = 1f,
     /**
-     * Welche Kreatur hier gezeichnet wird - bestimmt ihre Farbe (siehe [AvatarPalette]).
+     * Welche Kreatur hier gezeichnet wird - bestimmt die Farbe ihres GESICHTS (siehe
+     * [AvatarAccent] und [AvatarPalette]). Der Koerper bleibt weiss wie die Welt.
      *
-     * `null` zeichnet in Weiss. Das bleibt der Standard, damit eine vergessene Angabe das
-     * bisherige Bild ergibt und nicht eine willkuerliche Farbe.
+     * `null` laesst auch das Gesicht weiss, also das Bild von vor NT-076.
      *
      * Diese Ansicht ist NUR fuer Kreaturen. Die 13x13-Zeichen aus `LivingSymbolFrames` liefen
      * bis NT-079 auch hier durch und wurden dabei zerschert, weil hier mit der Zeilenbreite des
@@ -64,10 +64,10 @@ fun AvatarSpriteView(
      */
     species: AvatarSpecies? = null,
     /**
-     * Beschattete Flanke (siehe [AvatarShading.Side]). Beim Laufen die Seite, von der die
-     * Kreatur KOMMT - dadurch dreht sie sich beim Richtungswechsel sichtbar um.
+     * Beschattete Flanke (siehe [AvatarShading.Side]) - im Stand [AvatarShading.Side.NONE],
+     * beim Gehen die Seite, von der die Kreatur KOMMT.
      */
-    shadeSide: AvatarShading.Side = AvatarShading.Side.RIGHT
+    shadeSide: AvatarShading.Side = AvatarShading.Side.NONE
 ) {
     Canvas(
         modifier = modifier
@@ -97,8 +97,14 @@ private fun DrawScope.drawSprite(
     // Punktmengen, Ueberblendungen rechnen unveraendert weiter, und die abgelegten
     // Vergleichsbilder der Reaktionspruefung bleiben gueltig. Schattierung ist Darstellung.
     // Dasselbe gilt fuer die Farbe - eine Pose weiss nicht, wer sie gerade einnimmt.
-    val onColor = species?.let { Color(AvatarPalette.tintFor(it)) } ?: LED_ON_COLOR
+    // **Der Koerper ist weiss, die Farbe sitzt im Gesicht** (siehe [AvatarAccent]). Eine
+    // durchgehend eingefaerbte Figur war eine einfarbige Flaeche in Kreaturform - sie sagte,
+    // welches Wesen es ist, aber nichts darueber, was daran ein Gesicht ist.
+    val accentColor = species?.let { Color(AvatarPalette.tintFor(it)) } ?: LED_ON_COLOR
     val frame = AvatarShading.shade(rawFrame, side = shadeSide)
+    // Das Gesicht wird an der ROHEN Form gesucht: Die Schattierung aendert Helligkeiten, nicht
+    // die Silhouette, und ein Loch bleibt ein Loch - aber so haengt der Fund nicht daran.
+    val face = AvatarAccent.facesIn(rawFrame)
     val cell = size.width / AvatarGeometry.SIZE
     // Winziger Ueberlapp zwischen benachbarten Zellen, damit Antialiasing keine
     // sichtbaren Ein-Pixel-Spalten zwischen zwei eigentlich zusammenhaengenden
@@ -106,12 +112,17 @@ private fun DrawScope.drawSprite(
     val cellSize = Size(cell + 0.75f, cell + 0.75f)
     for (y in 0 until AvatarGeometry.HEIGHT) {
         for (x in 0 until AvatarGeometry.SIZE) {
-            val brightness = frame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
-            if (brightness <= 0) continue
-            val fraction = (brightness.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
+            val index = y * AvatarGeometry.SIZE + x
+            val imGesicht = face.getOrElse(index) { false }
+            val brightness = frame.getOrElse(index) { 0 }
+            // Gesichtszellen sind LOECHER in der Figur - dort steht keine Helligkeit, sie waeren
+            // sonst gar nicht gezeichnet worden. Genau deshalb bekommen sie ihre eigene.
+            if (brightness <= 0 && !imGesicht) continue
+            val roh = if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else brightness
+            val fraction = (roh.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                 AvatarGeometry.MAX_BRIGHTNESS) * brightnessScale.coerceIn(0f, 1f)
             drawRect(
-                color = lerpColor(LED_OFF_COLOR, onColor, fraction),
+                color = lerpColor(LED_OFF_COLOR, if (imGesicht) accentColor else LED_ON_COLOR, fraction),
                 topLeft = Offset(x * cell, y * cell),
                 size = cellSize
             )

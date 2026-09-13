@@ -30,7 +30,7 @@ class AvatarShadingTest {
     fun `die Figur zerfaellt in genau zwei Helligkeiten`() {
         // Zwei flache Toene mit einer harten Grenze - nicht sechzehn feine Stufen.
         for (species in AvatarSpecies.entries) {
-            val schattiert = AvatarShading.shade(AvatarAnimations.idlePose(species))
+            val schattiert = AvatarShading.shade(AvatarAnimations.idlePose(species), side = AvatarShading.Side.RIGHT)
             val stufen = schattiert.filter { it > 0 }.toSortedSet()
             assertEquals("$species hat $stufen statt zwei Stufen", 2, stufen.size)
         }
@@ -41,7 +41,7 @@ class AvatarShadingTest {
         // Der eigentliche Zweck. Ein Verhaeltnis nahe 1 waere derselbe unsichtbare Effekt wie
         // vorher, nur anders gerechnet.
         for (species in AvatarSpecies.entries) {
-            val schattiert = AvatarShading.shade(AvatarAnimations.idlePose(species))
+            val schattiert = AvatarShading.shade(AvatarAnimations.idlePose(species), side = AvatarShading.Side.RIGHT)
             val stufen = schattiert.filter { it > 0 }.toSortedSet().toList()
             val verhaeltnis = stufen[0].toFloat() / stufen[1]
             assertTrue("$species: Stufen liegen bei $verhaeltnis zu eng beieinander", verhaeltnis <= 0.92f)
@@ -50,16 +50,27 @@ class AvatarShadingTest {
     }
 
     @Test
-    fun `der Schatten liegt rechts, solange die Figur steht`() {
-        // Wie im Vorbild: dunkler Ton auf der rechten Flanke.
+    fun `im Stand gibt es keinen Schatten`() {
+        // **Der Schatten gehoert zur Bewegung.** Einer, der immer da ist, ist ein Muster auf der
+        // Haut: Man gewoehnt sich in Sekunden daran, und er sagt nichts - im Stand waere er
+        // derselbe wie im Lauf.
+        for (species in AvatarSpecies.entries) {
+            val ruhe = AvatarAnimations.idlePose(species)
+            assertSame("$species hat im Stand einen Schatten", ruhe, AvatarShading.shade(ruhe))
+        }
+    }
+
+    @Test
+    fun `wer nach rechts laeuft, ist hinten links beschattet`() {
+        // Beschattet ist die Flanke, von der die Kreatur KOMMT.
         val breit = hell(*(4..11).map { it to 8 }.toTypedArray())
-        val zeile = zeile(AvatarShading.shade(breit), 8)
+        val zeile = zeile(AvatarShading.shade(breit, side = AvatarShading.Side.RIGHT), 8)
         val belegt = zeile.withIndex().filter { it.value > 0 }
         assertTrue("rechts ist nicht dunkler", belegt.last().value < belegt.first().value)
     }
 
     @Test
-    fun `beim Laufen nach links springt der Schatten auf die andere Seite`() {
+    fun `beim Wechsel der Richtung springt der Schatten auf die andere Seite`() {
         // **Der Grund, warum die Flanke ueberhaupt waehlbar ist.** Das Sprite wird nirgends
         // gespiegelt; der Seitenwechsel des Schattens ist das Einzige, woran man sieht, dass
         // sich die Kreatur umgedreht hat.
@@ -77,7 +88,7 @@ class AvatarShadingTest {
         // anfassen - sonst waere die Figur eine andere.
         for (species in AvatarSpecies.entries) {
             val roh = AvatarAnimations.idlePose(species)
-            val schattiert = AvatarShading.shade(roh)
+            val schattiert = AvatarShading.shade(roh, side = AvatarShading.Side.RIGHT)
             assertEquals(
                 "$species: Silhouette veraendert",
                 roh.map { it > 0 },
@@ -92,7 +103,7 @@ class AvatarShadingTest {
         // Zeichnen auf volle Staerke.
         val halb = IntArray(AvatarGeometry.SIZE * AvatarGeometry.HEIGHT)
         for (x in 4..11) halb[8 * AvatarGeometry.SIZE + x] = AvatarGeometry.MAX_BRIGHTNESS / 2
-        val schattiert = AvatarShading.shade(halb)
+        val schattiert = AvatarShading.shade(halb, side = AvatarShading.Side.RIGHT)
         assertTrue(
             "eine halbe Zelle wurde heller als halb",
             schattiert.filter { it > 0 }.all { it <= AvatarGeometry.MAX_BRIGHTNESS / 2 }
@@ -106,12 +117,12 @@ class AvatarShadingTest {
         // eigentlichen Fehler sogar verdeckt - gezeichnet wurden sie trotzdem mit der falschen
         // Zeilenbreite. Die Absicherung bleibt, der Grund ist jetzt ein anderer.
         val fremd = IntArray(13 * 13) { AvatarGeometry.MAX_BRIGHTNESS }
-        assertSame(fremd, AvatarShading.shade(fremd))
+        assertSame(fremd, AvatarShading.shade(fremd, side = AvatarShading.Side.RIGHT))
         val leer = IntArray(AvatarGeometry.SIZE * AvatarGeometry.HEIGHT)
-        assertSame(leer, AvatarShading.shade(leer))
+        assertSame(leer, AvatarShading.shade(leer, side = AvatarShading.Side.RIGHT))
         // Eine Figur von einer Spalte Breite hat keine zweite Flanke.
         val strich = hell(6 to 8, 6 to 9, 6 to 10)
-        assertSame(strich, AvatarShading.shade(strich))
+        assertSame(strich, AvatarShading.shade(strich, side = AvatarShading.Side.RIGHT))
     }
 
     @Test
@@ -119,7 +130,7 @@ class AvatarShadingTest {
         // Sonst saesse die Kante bei einer schmalen Kreatur neben ihr statt in ihr - und eine
         // Figur am linken Rand waere ganz unbeschattet.
         val schmalLinks = hell(*(1..4).map { it to 8 }.toTypedArray())
-        val zeile = zeile(AvatarShading.shade(schmalLinks), 8)
+        val zeile = zeile(AvatarShading.shade(schmalLinks, side = AvatarShading.Side.RIGHT), 8)
         val belegt = zeile.withIndex().filter { it.value > 0 }
         assertTrue("auch eine schmale Figur am Rand bekommt eine Kante", belegt.last().value < belegt.first().value)
     }

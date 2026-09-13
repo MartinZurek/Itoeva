@@ -1,20 +1,16 @@
 package com.notime.glyphsim.matrix
 
 /**
- * **Jede Kreatur bekommt eine eigene Farbe** - vorher waren alle sechs derselbe warme Weisston
- * ([MatrixColors.LED_ON]).
+ * **Die Akzentfarbe einer Kreatur** - der Ton, in dem ihr Gesicht leuchtet (siehe
+ * [AvatarAccent]).
  *
- * ## Nur die Kreatur, nicht die Welt
+ * ## Akzent, nicht Anstrich
  *
- * Eingefaerbt wird ausschliesslich das Avatar-Sprite. Das Zimmer, der Park, die Stationen
- * ([PlaySceneView]), die simulierte Glyph-Matrix ([SimulatedMatrixView]) und die Symbole in
- * Wunsch- und Traumblase bleiben weiss.
- *
- * Das ist keine Sparsamkeit, sondern folgt der Trennung, die dieses Projekt ohnehin zieht:
- * [SimulatedMatrixView] bildet ECHTE Hardware nach, deren LEDs weiss sind - eine farbige
- * Nachbildung waere schlicht falsch. Der Avatar dagegen ist ausdruecklich keine Nachbildung,
- * sondern ein frei gezeichnetes Sprite (siehe [AvatarGeometry]), also darf er Farbe haben. Und
- * eine farbige Figur vor weisser Kulisse ist genau das Bild, das den Anstoss gegeben hat.
+ * In NT-076 war die GANZE Figur in diesem Ton eingefaerbt. Das war der falsche Ort: Eine
+ * einfarbige Flaeche in Kreaturform sagt zwar, welches Wesen es ist, aber nichts darueber, was
+ * daran ein Gesicht ist - und sie sieht neben der weissen Kulisse aus wie ein Aufkleber. Der
+ * Koerper ist deshalb wieder weiss wie die Welt, und die Farbe sitzt nur dort, wo ein Auge
+ * ohnehin zuerst hinsieht.
  *
  * ## Woher die Farben kommen
  *
@@ -24,51 +20,38 @@ package com.notime.glyphsim.matrix
  * es nur eine Quelle fuer "welche Farbe gehoert zu welchem Thema", und eine Erinnerung in der
  * Liste hat denselben Ton wie das Wesen, das sich darum kuemmert.
  *
- * ## Warum die Werte trotzdem nicht die aus der Liste sind
+ * ## Warum es GENAU die Werte von dort sind
  *
- * Die Akzentfarben sind fuer Beschriftungen auf hellem Grund gemacht. Als leuchtende Figur auf
- * Schwarz sind sie zu dunkel - FOCUS-Violett #6750A4 hat ein Drittel der Helligkeit des frueheren
- * Weiss.
+ * NT-076 hat sie noch aufgehellt, weil eine grosse Flaeche in FOCUS-Violett auf Schwarz zu
+ * dunkel gewesen waere. Fuer einen Akzent auf WEISSEM Koerper dreht sich das um: Gefragt ist
+ * jetzt Kontrast gegen Weiss, und den haben die kraeftigen Originale deutlich besser als die
+ * aufgehellten Fassungen (gemessen 2,9 bis 5,7 gegenueber durchgehend 2,7).
  *
- * Deshalb ist jede Farbe **im Farbton unveraendert** (gemessen: hoechstens 0,5 Grad Abweichung,
- * steht als Test) und nur in der Helligkeit angehoben - und zwar alle auf **dieselbe Stufe**,
- * damit keine Kreatur allein durch ihre Farbe kraenklich neben einer anderen wirkt. Nur MOVE
- * musste dabei etwas Saettigung abgeben (0,88 auf 0,83), weil sein Orange sonst ueber die
- * maximale Helligkeit hinausgelaufen waere.
- *
- * Welche Stufe das ist, gibt das Bild vor, das den Anstoss gegeben hat: Sein Terrakotta #D97757
- * liegt genau dort. Die Schattierung darauf setzt [AvatarShading] auf.
- *
- * ## Die Zahlen stehen hier und nicht als Rechnung
- *
- * Ausgeschrieben statt zur Laufzeit hergeleitet, damit man sie beim Lesen sieht und aendern
- * kann. Dass sie stimmen, haelt `AvatarPaletteTest` fest - und zwar an den EIGENSCHAFTEN
- * (gleiche Helligkeitsstufe, Lesbarkeit unten, Mindestabstand zwischen zwei Kreaturen), nicht an
- * den Zahlen selbst. Wer eine Farbe austauscht oder eine siebte Kreatur anhaengt, erfaehrt dort,
- * ob sie taugt.
+ * Nebenbei ist es damit buchstaeblich derselbe Ton wie in den farbigen Kreisen der
+ * Erinnerungsliste - dieselbe Farbe an zwei Stellen und nicht zwei Farben, die sich aehneln.
  */
 object AvatarPalette {
 
     /** Der ruhige Beobachter ohne Schwerpunkt - GENERAL, das gedeckte Blaugrau der Glocke. */
-    private const val PUFFLING = 0xFF7397A7.toInt()
+    private const val PUFFLING = 0xFF546E7A.toInt()
 
     /** Die freundliche Traeumerin - MINDFULNESS, gruen. */
-    private const val STARLET = 0xFF45A549.toInt()
+    private const val STARLET = 0xFF43A047.toInt()
 
     /** Der kleine Motivator - MOVE, orange. */
-    private const val WYRMLING = 0xFFFE5D2A.toInt()
+    private const val WYRMLING = 0xFFF4511E.toInt()
 
     /** Der ruhige Beschuetzer - DRINK, wasserblau. */
-    private const val FENNEC = 0xFF2195FA.toInt()
+    private const val FENNEC = 0xFF1E88E5.toInt()
 
     /** Der Entschleuniger - REST, tuerkis. */
-    private const val GLOOP = 0xFF00A594.toInt()
+    private const val GLOOP = 0xFF00897B.toInt()
 
     /** Der weise Beobachter - FOCUS, violett. */
-    private const val HOOTLET = 0xFF9E7BFB.toInt()
+    private const val HOOTLET = 0xFF6750A4.toInt()
 
     /**
-     * Grundton der Kreatur als ARGB.
+     * Akzentfarbe der Kreatur als ARGB.
      *
      * Bewusst `Int` und nicht `androidx.compose.ui.graphics.Color`: Dieselbe Zahl wird von der
      * Compose-Ansicht ([AvatarSpriteView]) UND vom Bitmap-Renderer des Filmexports
@@ -84,6 +67,6 @@ object AvatarPalette {
         AvatarSpecies.HOOTLET -> HOOTLET
     }
 
-    /** Alle Grundtoene - fuer die Pruefung der Abstaende untereinander. */
+    /** Alle Akzentfarben - fuer die Pruefung der Abstaende untereinander. */
     val all: List<Int> = AvatarSpecies.entries.map(::tintFor)
 }

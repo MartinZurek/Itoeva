@@ -50,9 +50,9 @@ object PlayClipRenderer {
          * Kreatur kommt. Muss mit in den Film, sonst laeuft sie in der Aufnahme anders herum
          * als auf dem Bildschirm.
          */
-        val shadeSide: AvatarShading.Side = AvatarShading.Side.RIGHT,
+        val shadeSide: AvatarShading.Side = AvatarShading.Side.NONE,
         /** Dasselbe fuer den Gast, falls einer im Bild ist. */
-        val visitorShadeSide: AvatarShading.Side = AvatarShading.Side.RIGHT,
+        val visitorShadeSide: AvatarShading.Side = AvatarShading.Side.NONE,
         val scenePhase: Int,
         val station: PlayScene.Station? = null,
         val lampOn: Boolean = true,
@@ -168,18 +168,24 @@ object PlayClipRenderer {
         // Dasselbe gilt fuer die FARBE (siehe AvatarPalette): Eine Aufnahme, in der die Kreatur
         // weiss ist, zeigt nicht die Kreatur, die man gerade begleitet hat. Die Kulisse bleibt
         // dagegen weiss - genau wie auf dem Bildschirm.
-        val avatarTint = AvatarPalette.tintFor(frame.species)
+        // Koerper weiss, Farbe im Gesicht - wie auf dem Bildschirm (siehe AvatarAccent).
+        val avatarAccent = AvatarPalette.tintFor(frame.species)
+        val avatarFace = AvatarAccent.facesIn(frame.avatarFrame)
         val avatarFrame = AvatarShading.shade(frame.avatarFrame, side = frame.shadeSide)
         for (y in 0 until AvatarGeometry.HEIGHT) {
             for (x in 0 until AvatarGeometry.SIZE) {
-                val brightness = avatarFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
-                if (brightness <= 0) continue
-                val f = brightness.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
+                val index = y * AvatarGeometry.SIZE + x
+                val imGesicht = avatarFace.getOrElse(index) { false }
+                val brightness = avatarFrame.getOrElse(index) { 0 }
+                if (brightness <= 0 && !imGesicht) continue
+                val ton = if (imGesicht) avatarAccent else ledOn
+                val f = (if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else brightness)
+                    .coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                     AvatarGeometry.MAX_BRIGHTNESS
                 paint.color = Color.rgb(
-                    (Color.red(avatarTint) * f).roundToInt(),
-                    (Color.green(avatarTint) * f).roundToInt(),
-                    (Color.blue(avatarTint) * f).roundToInt()
+                    (Color.red(ton) * f).roundToInt(),
+                    (Color.green(ton) * f).roundToInt(),
+                    (Color.blue(ton) * f).roundToInt()
                 )
                 val left = (originCellX + x) * cell
                 val top = (originCellY + y) * cell
@@ -195,18 +201,23 @@ object PlayClipRenderer {
             val gy = (floorY - 1) - AvatarBodies.forSpecies(guestSpecies).groundRow()
             // Der Gast bekommt dieselbe Woelbung; seine Daempfung kommt zusaetzlich obendrauf,
             // weil AvatarShading skaliert statt zu ersetzen.
-            val gastTint = AvatarPalette.tintFor(guestSpecies)
+            val gastAccent = AvatarPalette.tintFor(guestSpecies)
+            val gastFace = AvatarAccent.facesIn(guestFrame)
             val gastFrame = AvatarShading.shade(guestFrame, side = frame.visitorShadeSide)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
-                    val b = gastFrame.getOrElse(y * AvatarGeometry.SIZE + x) { 0 }
-                    if (b <= 0) continue
-                    val f = (b.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
+                    val index = y * AvatarGeometry.SIZE + x
+                    val imGesicht = gastFace.getOrElse(index) { false }
+                    val b = gastFrame.getOrElse(index) { 0 }
+                    if (b <= 0 && !imGesicht) continue
+                    val ton = if (imGesicht) gastAccent else ledOn
+                    val f = ((if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else b)
+                        .coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                         AvatarGeometry.MAX_BRIGHTNESS) * VISITOR_DIM
                     paint.color = Color.rgb(
-                        (Color.red(gastTint) * f).roundToInt(),
-                        (Color.green(gastTint) * f).roundToInt(),
-                        (Color.blue(gastTint) * f).roundToInt()
+                        (Color.red(ton) * f).roundToInt(),
+                        (Color.green(ton) * f).roundToInt(),
+                        (Color.blue(ton) * f).roundToInt()
                     )
                     val left = (gx + x) * cell
                     val top = (gy + y) * cell

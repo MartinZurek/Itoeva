@@ -243,6 +243,23 @@ dieselben Zeichen schon immer gezeichnet haben, und damit auch die Gleichheit, d
 `LivingSymbolFrames` ausdruecklich anstrebt. **Offen bleibt:** ob die Zeichen jetzt, richtig
 gezeichnet, auch verstaendlich sind - das war bisher gar nicht zu beurteilen.
 
+**Darstellung:** NT-080 **Schatten nur in Bewegung, Farbe nur im Gesicht** - *am 2026-09-13
+umgesetzt.* Zwei Rueckmeldungen vom Geraet, beide berechtigt. Erstens lag der Schatten staendig
+an derselben Stelle - damit ist er ein Muster auf der Haut, an das man sich in Sekunden
+gewoehnt, und er sagt nichts, weil er im Stand derselbe ist wie im Lauf. Jetzt steht die Kreatur
+ohne Schatten da, und er erscheint nur waehrend eines Gangs auf der Flanke, von der sie KOMMT.
+Zweitens war die ganze Figur eingefaerbt: eine einfarbige Flaeche in Kreaturform, die zwar sagt,
+welches Wesen es ist, aber nichts darueber, was daran ein Gesicht ist. Der Koerper ist wieder
+weiss wie die Welt; die Farbe sitzt im Gesicht, und zwar in genau den kraeftigen Toenen der
+Kreise aus der Erinnerungsliste (die aufgehellten aus NT-076 waren fuer eine grosse Flaeche auf
+Schwarz gerechnet - auf weissem Koerper zaehlt der Kontrast andersherum, gemessen 2,9 bis 5,7
+gegenueber durchgehend 2,7). Das Gesicht wird beim Zeichnen GEFUNDEN statt uebergeben: Augen
+sind Loecher in der Silhouette, und durch `FrameCrossfade` kommt nur An, Aus und Ueberblendung
+an - eine Flutfuellung vom Bildrand her findet die umschlossenen Stellen. Ab zwei
+zusammenhaengenden Zellen, weil WYRMLINGs Fluegel sonst einzelne Randzellen aufblitzen liesse.
+**Offen bleibt:** ob der Akzent gross genug ist - bei vier der sechs Kreaturen sind es vier
+Zellen.
+
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
 durchsichtig. Man sah durch sie hindurch auf den schwarzen Grund, vier davon nebeneinander waren

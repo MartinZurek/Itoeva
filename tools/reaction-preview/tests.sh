@@ -63,7 +63,7 @@ SRCS=(
   "$CORE/LibraryAnimation.kt" "$CORE/DefaultLibraryAnimations.kt" "$CORE/FrameCodec.kt"
   "$CORE/AvatarSignatureAnimations.kt" "$CORE/SkillTreeAnimations.kt"
   "$CORE/FrameCrossfade.kt" "$CORE/FrameSprite.kt" "$CORE/ReminderFrameGrid.kt"
-  "$SIM/AvatarShading.kt" "$SIM/AvatarPalette.kt" "$SIM/MatrixColors.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
+  "$SIM/AvatarShading.kt" "$SIM/AvatarAccent.kt" "$SIM/AvatarPalette.kt" "$SIM/MatrixColors.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
   "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
@@ -108,6 +108,7 @@ TEST_SRCS=(
   "$TEST/skilltree/LevelUnlocksTest.kt"
   "$TEST/matrix/AvatarShadingTest.kt"
   "$TEST/matrix/AvatarPaletteTest.kt"
+  "$TEST/matrix/AvatarAccentTest.kt"
   "$TEST/matrix/FacadeTest.kt"
   # PlaySceneTest kam mit NT-078 dazu: Eine Signaturaenderung an AvatarBody.feet lief hier
   # gruen durch und fiel erst in der CI auf, weil dieser Test gar nicht uebersetzt wurde.
@@ -161,6 +162,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.skilltree.LevelUnlocksTest
   com.notime.glyphsim.matrix.AvatarShadingTest
   com.notime.glyphsim.matrix.AvatarPaletteTest
+  com.notime.glyphsim.matrix.AvatarAccentTest
   com.notime.glyphsim.matrix.FacadeTest
   com.notime.glyphsim.matrix.PlaySceneTest
   com.notime.glyphsim.matrix.ReactionDistinctnessTest
