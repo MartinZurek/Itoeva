@@ -573,6 +573,16 @@ fun DockScreen(
         var kitePhase by remember { mutableStateOf<PlayEffects.KitePhase?>(null) }
         /** Sichtbare Fussballphase; zugleich der Kontext, in dem ein Trick gelernt werden kann. */
         var footballPhase by remember { mutableStateOf<PlayEffects.FootballPhase?>(null) }
+        /**
+         * Der Stand von [scenePhase], als die Fussballphase begann.
+         *
+         * **Der Schuss braucht ihn.** [scenePhase] laeuft frei durch, seit der Spielmodus offen
+         * ist; ein Flug, der sich daran bindet, beginnt zu einem beliebigen Zeitpunkt und ist
+         * meistens schon vorbei, wenn die Phase ueberhaupt anfaengt. Die Differenz sagt
+         * stattdessen, wie lange DIESE Phase schon laeuft - und erst damit fliegt der Ball
+         * einmal, wenn geschossen wird, und liegt danach im Netz.
+         */
+        var footballSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Basketballphase; Korb und Ball existieren nur solange sie gesetzt ist. */
         var basketballPhase by remember { mutableStateOf<PlayEffects.BasketballPhase?>(null) }
         /** Sichtbare Krafttrainingsphase mit Hantel. */
@@ -1339,6 +1349,7 @@ fun DockScreen(
 
                     is RoutineStep.Football -> {
                         footballPhase = step.phase
+                        footballSince = scenePhase
                         avatarIdleJob?.cancel()
                         val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
                         MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
@@ -3646,7 +3657,7 @@ fun DockScreen(
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             phase = football,
-                            scenePhase = scenePhase,
+                            phaseAge = scenePhase - footballSince,
                             widthCells = sceneWidthCells
                         )
                     )
