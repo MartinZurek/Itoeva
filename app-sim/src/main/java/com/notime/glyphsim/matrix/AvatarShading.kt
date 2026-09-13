@@ -25,17 +25,19 @@ package com.notime.glyphsim.matrix
  * eine **Kante** zwischen zwei Flaechen. Zwei flache Toene mit einer harten Grenze zeigen mehr
  * Volumen als sechzehn feine Stufen.
  *
- * ## Die Flanke sagt, wohin die Figur geht
+ * ## Der Schatten gehoert zur BEWEGUNG, nicht zur Figur
  *
- * Weil der Schatten auf EINER Seite liegt, kostet es nichts, ihn die Seite wechseln zu lassen -
- * und dann traegt er zusaetzlich die Laufrichtung.
+ * Ein Schatten, der immer da ist, ist ein Muster auf der Haut - man gewoehnt sich in Sekunden
+ * daran und sieht ihn danach nicht mehr. Er sagt dann auch nichts: Er ist im Stand derselbe wie
+ * im Lauf.
  *
- * Im Stand liegt er rechts, wie im Vorbild. Laeuft die Kreatur nach LINKS, dreht sie sich, und
- * die beschattete Flanke wandert mit: Die Kante springt auf die linke Seite. Nach rechts bleibt
- * sie, wo sie im Stand war - dieselbe Richtung, dasselbe Bild.
+ * Deshalb steht die Kreatur **ohne Schatten** da, und er erscheint nur, solange sie geht - auf
+ * der Flanke, von der sie KOMMT. Wer nach rechts laeuft, ist hinten links beschattet; wer nach
+ * links laeuft, hinten rechts. Beim Anhalten verschwindet er wieder.
  *
- * Das ist der einzige Hinweis darauf, dass die Figur sich umgedreht hat: Das Sprite wird
- * nirgends gespiegelt (geprueft), also traegt allein die Kante die Richtung.
+ * Damit traegt er zwei Dinge auf einmal: dass sich die Figur bewegt, und wohin. Das Sprite wird
+ * nirgends gespiegelt (geprueft) - die Kante ist also das Einzige, woran man die Richtung
+ * ueberhaupt ablesen kann.
  *
  * ## Wo das angewandt wird
  *
@@ -66,12 +68,15 @@ object AvatarShading {
      */
     private const val SHADE_WIDTH = 0.30f
 
-    /** Auf welcher Flanke der Schatten liegt. */
+    /** Auf welcher Flanke der Schatten liegt - oder auf keiner. */
     enum class Side {
-        /** Stand, oder Gang nach rechts - Schatten auf der rechten Flanke wie im Vorbild. */
+        /** Die Figur steht. Kein Schatten, siehe Klassendoku. */
+        NONE,
+
+        /** Gang nach LINKS - beschattet ist die rechte Flanke, von der sie kommt. */
         RIGHT,
 
-        /** Gang nach links: Die Kreatur dreht sich, die beschattete Flanke wandert mit. */
+        /** Gang nach RECHTS - beschattet ist die linke Flanke, von der sie kommt. */
         LEFT
     }
 
@@ -81,15 +86,16 @@ object AvatarShading {
      * Ein Feld, das nicht zum Raster passt, wird unveraendert zurueckgegeben, statt eine
      * Ausnahme zu werfen - eine Zeichenroutine darf an einem unerwarteten Feld nicht scheitern.
      *
-     * [side] ist die beschattete Flanke: [Side.RIGHT] im Stand und beim Gang nach rechts,
-     * [Side.LEFT] beim Gang nach links.
+     * [side] ist die beschattete Flanke - im Stand [Side.NONE], beim Gehen die Seite, von der
+     * die Kreatur kommt.
      */
     fun shade(
         frame: IntArray,
         width: Int = AvatarGeometry.SIZE,
         height: Int = AvatarGeometry.HEIGHT,
-        side: Side = Side.RIGHT
+        side: Side = Side.NONE
     ): IntArray {
+        if (side == Side.NONE) return frame
         if (width <= 0 || height <= 0 || frame.size != width * height) return frame
 
         var links = width
@@ -111,6 +117,7 @@ object AvatarShading {
         val imSchatten: (Int) -> Boolean = when (side) {
             Side.RIGHT -> { x -> x > rechts - band }
             Side.LEFT -> { x -> x < links + band }
+            Side.NONE -> return frame
         }
 
         val shaded = IntArray(frame.size)

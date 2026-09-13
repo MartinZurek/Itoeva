@@ -592,10 +592,10 @@ fun DockScreen(
         val avatarDim = remember { Animatable(1f) }
         // Gast, der gerade durchs Bild laeuft - siehe runVisit.
         var visitor by remember { mutableStateOf<VisitorState?>(null) }
-        // **Wohin die Figur zuletzt gegangen ist** - sie behaelt die Blickrichtung, wenn sie
-        // stehen bleibt (siehe [AvatarShading.Side]). Wuerde sie am Ende jedes Gangs auf die
-        // Grundstellung zurueckspringen, drehte sie sich nach jedem Schritt wieder um.
-        var avatarFacing by remember { mutableStateOf(AvatarShading.Side.RIGHT) }
+        // **Der Schatten gehoert zur Bewegung** (siehe [AvatarShading]): Im Stand hat die Figur
+        // keinen, waehrend eines Gangs liegt er auf der Flanke, von der sie kommt. Ein Schatten,
+        // der immer da ist, ist ein Muster auf der Haut und sagt nichts.
+        var avatarFacing by remember { mutableStateOf(AvatarShading.Side.NONE) }
         // Sprechzeichen: -1 = niemand spricht, sonst 0..2 fuer die drei Punkte.
         var speechStep by remember { mutableIntStateOf(-1) }
         var speakerIsGuest by remember { mutableStateOf(false) }
@@ -972,12 +972,12 @@ fun DockScreen(
                 return false
             }
             avatarIdleJob?.cancel()
-            // Die beschattete Flanke wandert mit der Richtung - das ist das Einzige, woran man
-            // sieht, dass die Kreatur sich umgedreht hat (siehe [AvatarShading]).
+            // Beschattet ist die Flanke, von der sie KOMMT: Wer nach rechts laeuft, ist hinten
+            // links beschattet. Am Ende des Gangs faellt der Schatten wieder weg (siehe unten).
             avatarFacing = if (destination.x < current.offset.x) {
-                AvatarShading.Side.LEFT
-            } else {
                 AvatarShading.Side.RIGHT
+            } else {
+                AvatarShading.Side.LEFT
             }
             // Waehrend eines Gangs darf niemand sonst die Figur versetzen - siehe das
             // Nachfuehren des Bodens weiter unten.
@@ -1019,6 +1019,8 @@ fun DockScreen(
                 gait.cancel()
             }
             } finally {
+                // Sie steht wieder - also kein Schatten mehr.
+                avatarFacing = AvatarShading.Side.NONE
                 avatarWalking = false
             }
             return true
@@ -1649,7 +1651,7 @@ fun DockScreen(
                 val from = visitor?.offset?.x ?: return@coroutineScope
                 // Ein Gast, der nach links hereinkommt und dabei nach rechts schattiert ist,
                 // laeuft rueckwaerts - dieselbe Regel wie beim Bewohner.
-                val richtung = if (targetX < from) AvatarShading.Side.LEFT else AvatarShading.Side.RIGHT
+                val richtung = if (targetX < from) AvatarShading.Side.RIGHT else AvatarShading.Side.LEFT
                 visitor = visitor?.copy(facing = richtung)
                 val gait = launch {
                     while (isActive) {
@@ -1664,6 +1666,7 @@ fun DockScreen(
                     animationSpec = tween(walkDurationMs(abs(targetX - from), px), easing = FastOutSlowInEasing)
                 ) { value, _ -> visitor = visitor?.copy(offset = Offset(value, groundY)) }
                 gait.cancel()
+                visitor = visitor?.copy(facing = AvatarShading.Side.NONE)
             }
 
             // Ab hier laeuft ein Besuch: Ein Ablauf, der gerade draussen wartet, geht erst
@@ -3120,7 +3123,7 @@ fun DockScreen(
                 // Muss mit in den Film, sonst laeuft die Kreatur in der Aufnahme anders herum
                 // als auf dem Bildschirm.
                 shadeSide = avatarFacing,
-                visitorShadeSide = visitor?.facing ?: AvatarShading.Side.RIGHT,
+                visitorShadeSide = visitor?.facing ?: AvatarShading.Side.NONE,
                 scenePhase = scenePhase,
                 station = occupiedStation ?: activeStation,
                 lampOn = lampOn,
@@ -4105,7 +4108,7 @@ private data class VisitorState(
     val sizeDp: Float,
     val frame: IntArray,
     /** Beschattete Flanke - der Gast dreht sich wie der Bewohner, siehe [AvatarShading.Side]. */
-    val facing: AvatarShading.Side = AvatarShading.Side.RIGHT
+    val facing: AvatarShading.Side = AvatarShading.Side.NONE
 )
 
 private data class AvatarState(

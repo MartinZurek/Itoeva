@@ -19,10 +19,8 @@ import org.junit.Test
  */
 class AvatarPaletteTest {
 
-    private val hintergrund = 0xFF0D0D0D.toInt()
-
-    /** Dunkelster Punkt einer Figur: ihre beschattete Flanke (siehe [AvatarShading]). */
-    private val tiefsterPunkt = AvatarShading.SHADE
+    /** Der Koerper, gegen den sich der Akzent abheben muss (siehe [AvatarAccent]). */
+    private val koerper = MatrixColors.LED_ON
 
     private fun kanal(argb: Int, schieben: Int) = (argb shr schieben) and 0xFF
 
@@ -73,38 +71,14 @@ class AvatarPaletteTest {
     }
 
     @Test
-    fun `keine Kreatur ist heller oder dunkler als eine andere`() {
-        // Sonst waere eine Spezies allein durch ihre Farbe benachteiligt - sie wirkte
-        // kraenklich neben einer anderen, ohne dass es irgendetwas bedeuten wuerde.
-        val werte = AvatarPalette.all.map(::helligkeit)
-        val spanne = werte.max() - werte.min()
-        assertTrue(
-            "Helligkeit der Grundtoene laeuft um $spanne auseinander: $werte",
-            spanne < 0.02
-        )
-    }
-
-    @Test
-    fun `auch die beschattete Flanke hebt sich noch vom Hintergrund ab`() {
-        // Die dunkelste Stelle einer Kreatur ist ihre beschattete Flanke. Sie darf ruhig dunkler
-        // sein als der Rest - aber nicht so dunkel, dass die Silhouette dort ausfranst.
+    fun `der Akzent hebt sich vom weissen Koerper ab`() {
+        // **Der Grund, warum hier die kraeftigen Originalfarben stehen und nicht die
+        // aufgehellten aus NT-076.** Damals war die ganze Figur eingefaerbt und musste sich
+        // gegen SCHWARZ behaupten; jetzt sitzt der Ton als Gesicht auf einem WEISSEN Koerper,
+        // und damit zaehlt der Kontrast in die andere Richtung.
         for (species in AvatarSpecies.entries) {
-            val flanke = gedimmt(AvatarPalette.tintFor(species), tiefsterPunkt)
-            val k = kontrast(flanke, hintergrund)
-            assertTrue("$species im Schatten: Kontrast nur $k", k >= 4.0)
-        }
-    }
-
-    @Test
-    fun `die beschattete Flanke ist vom Rest zu unterscheiden`() {
-        // Sonst waere die Schattierung eine Behauptung im Kommentar. Gefordert wird ein
-        // Unterschied, den ein Auge als Kante liest - deutlich weniger als der Abstand zum
-        // Hintergrund, aber mehr als nichts.
-        for (species in AvatarSpecies.entries) {
-            val grund = AvatarPalette.tintFor(species)
-            val flanke = gedimmt(grund, tiefsterPunkt)
-            val abstand = farbabstand(grund, flanke)
-            assertTrue("$species: Grundton und Flanke liegen nur $abstand auseinander", abstand >= 3.0)
+            val k = kontrast(AvatarPalette.tintFor(species), koerper)
+            assertTrue("$species hebt sich mit $k kaum vom Koerper ab", k >= 2.5)
         }
     }
 
@@ -167,9 +141,8 @@ class AvatarPaletteTest {
 
     @Test
     fun `die Kulissenfarbe gehoert keiner Kreatur`() {
-        // Kulisse, Uhr und die Zeichen in den Blasen bleiben weiss - sie sind Aussagen ueber die
-        // Welt, keine Koerper. Traege eine Kreatur denselben Ton, liesse sich beides nicht mehr
-        // trennen.
+        // Kulisse, Uhr, Koerper und die Zeichen in den Blasen sind weiss. Traege ein Akzent
+        // denselben Ton, waere er im Gesicht nicht zu sehen.
         assertTrue(
             "LED_ON darf nicht in der Kreaturenpalette auftauchen",
             MatrixColors.LED_ON !in AvatarPalette.all
