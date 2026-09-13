@@ -219,6 +219,20 @@ Kulisse, Glyph-Matrix und die Zeichen in Wunsch- und Traumblase bleiben weiss. *
 ob die sechs Toene auf dem Geraet gefallen - geprueft ist bisher nur, dass sie gleich hell,
 unten lesbar und voneinander unterscheidbar sind.
 
+**Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
+Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
+durchsichtig. Man sah durch sie hindurch auf den schwarzen Grund, vier davon nebeneinander waren
+ein Drahtgitter statt einer Stadt. Jetzt sind es gefuellte Flaechen; Fenster und Geschosse
+rechnet `facadeCell` aus Breite und Hoehe heraus. Gemessen an der Stadt: Die Flaeche, die
+deutlich sichtbar ist, faellt von 45 auf 21 Prozent - eine gefuellte Fassade ist also nicht
+lauter, sondern ruhiger als ein Umriss, weil die Wand dunkel wird und nur die Fenster den
+Kontrast tragen. Zwei Funde nebenbei: Die Sterne standen VOR den Haeusern (bei einem Umriss
+unsichtbar, bei einer Wand ein blinkendes Loch), und die Fensterlichter kamen aus einer zweiten
+Liste, die von Hand zu den gezeichneten Laibungen passen musste - beides zusammengefuehrt.
+**Offen bleibt:** Im Vorbild sind die Haeuser klein und weit oben, bei uns reichen sie ueber
+zwei Drittel der Bildhoehe; ob die Ferne wirklich fern wirkt, entscheidet die Groesse, nicht die
+Fuellung.
+
 **Tokenverbrauch, weitere:** NT-048 `runner/prompts/*.md` gegen `claude-primary-run.yml` auf
 Redundanz prüfen · NT-049 Kompakteres Backlog-Format für mechanische Aufgaben erproben · NT-052
 Wiederkehrende Datei-Header-Boilerplate prüfen.
