@@ -10,9 +10,8 @@ import org.junit.Test
  *
  * Der Fingerabdruck-Test daneben ([ReactionFingerprintTest]) beantwortet "hat sich etwas
  * unbeabsichtigt VERSCHOBEN". Er kann nicht beantworten, was am 2026-09-04 mit dem Vorschau-
- * Werkzeug (`tools/reaction-preview`) sichtbar wurde: dass **38 von 80** Knoten mit Motiv eine
- * Reaktion mit einem Geschwister teilten - 80 Motive, aber nur 55 verschiedene Reaktionen. Fuenf
- * davon lagen allein unter `sport/ballsport`.
+ * Werkzeug (`tools/reaction-preview`) sichtbar wurde: dass viele Knoten mit Motiv eine Reaktion
+ * mit einem Geschwister teilten. Fuenf davon lagen allein unter `sport/ballsport`.
  *
  * Das ist kein Fehler im Code, sondern der Preis der Vererbung: Ein Blatt ohne eigene Choreografie
  * erbt die Gruppen-Antwort seiner Untergruppe, und die ist absichtlich requisitenfrei (siehe
@@ -20,9 +19,9 @@ import org.junit.Test
  * ausloeste, fiel das kaum auf - seit eine Freischaltung im Alltag sichtbar wird (SKILLBAUM.md
  * P15), ist es die Belohnung selbst, die unsichtbar bleibt.
  *
- * Dieser Test haelt den Stand fest, damit die Zahl in BEIDE Richtungen auffaellt: Wer eine
- * Choreografie ergaenzt, sieht sie sinken und muss sie hier nachziehen; wer versehentlich eine
- * eigene Antwort verliert, sieht sie steigen und wird gestoppt.
+ * Seit NT-084 ist die richtige Zahl null. Der Test ist damit keine fortzuschreibende Bestandszahl
+ * mehr, sondern eine harte Vollstaendigkeitsregel: Jedes gezeichnete Motiv muss sichtbar seine
+ * eigene Antwort behalten.
  */
 class ReactionDistinctnessTest {
 
@@ -40,18 +39,12 @@ class ReactionDistinctnessTest {
         return byShape.values.filter { it.size > 1 }.map { it.toList() }
     }
 
-    /**
-     * Der Stand nach P17. Sinkt die Zahl, wurde eine Choreografie ergaenzt - dann gehoert sie hier
-     * nachgezogen, und zwar nach unten. Steigt sie, ist eine eigene Antwort verlorengegangen.
-     */
     @Test
-    fun `die Zahl der geteilten Reaktionen ist bekannt und dokumentiert`() {
+    fun `kein Motiv teilt seine Reaktion mit einem Geschwister`() {
         val geteilt = clusters().sumOf { it.size }
         assertEquals(
-            "80 Knoten mit Motiv, davon teilen sich diese eine Reaktion mit einem Geschwister. " +
-                "Sinkt die Zahl, ist das ein Fortschritt und gehoert hier nachgezogen - " +
-                "siehe tools/reaction-preview fuer den Bericht.",
-            26,
+            "Diese Knoten teilen ihre Reaktion mit einem Geschwister: ${clusters()}",
+            0,
             geteilt
         )
     }

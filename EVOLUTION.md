@@ -2709,3 +2709,40 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Naechster Schritt:** Den Uebergang in normaler und Stream-APK am Geraet ansehen. Danach ist
   der naechste bereits belegte Animationshebel aus NT-082: getragene Gegenstaende bewegen sich
   beim Gehen noch ohne eigenen Takt.
+
+### 2026-09-13 - Jeder Reminder bekommt eine motiveigene Avatarreaktion (NT-084)
+
+- **Ausgangsproblem:** Gefragt war, ob wirklich jeder Reminder eine an sein Motiv angelehnte
+  Animation des Avatars besitzt. Die Ablaufpruefung zeigte zunaechst: Jeder Reminder spielt
+  bereits Frames ab. Die Bildpruefung zeigte aber die wichtigere Luecke: 29 allgemeine
+  Bibliotheksmotive fielen noch auf eine passende, jedoch mit Geschwistern identische
+  Gruppenreaktion zurueck. Unterschiedliche Reminder waren dadurch wirksam, aber nicht immer
+  sichtbar unterscheidbar.
+- **Entscheidung:** Jedes dieser 29 Motive erhaelt in `AvatarMotifReactions` eine eigene kurze
+  Choreografie. Eine gemeinsame Hilfsfunktion uebersetzt nur die Grammatik eines Takts; Requisite,
+  Bahn, Haltung, Blick, Mund und Tempo kommen aus der jeweiligen Motivfunktion. Die vorhandenen
+  30 Charakterreaktionen und die Rocket-Flugfolge bleiben getrennte Spezialfaelle.
+- **Erster Beleg:** Der erste unveraenderte Testlauf meldete genau 29 geaenderte `LIB:`-
+  Fingerabdruecke und keine weitere Reaktion. Gleichzeitig sank die gemessene Zahl der Knoten in
+  bildgleichen Geschwistergruppen von 26 auf 0. Das Vorschauwerkzeug zaehlt nun 80 Motivknoten,
+  80 verschiedene Reaktionen und 80 Einzelvorkommen.
+- **Architekturentscheidungen:** Der Katalogtest bildet die Menge aller 69 Bibliotheksmotive aus
+  der wirklichen Bibliothek und zieht nur die 30 Charaktermotive sowie Rocket ab. Damit kann ein
+  neues allgemeines Motiv nicht still auf Vererbung zurueckfallen. Der Bildgleichheitstest
+  erwartet dauerhaft null statt einer nachzufuehrenden Schuldenzahl. `ActionOutcome`, Reminder-
+  Semantik und der Living-Agent-Kern bleiben unveraendert; dies ist ausschliesslich die sichtbare
+  Antwort auf ein bereits gewaehltes Motiv.
+- **Abgrenzung:** Keine neue Renderpipeline, keine Aenderung an Room, `:core`, `DockScreen`,
+  Stream-Interaktion, Musik oder dem Freigabe-Gate. Die absichtlich zweistufigen LOVE-, SLEEP-
+  und BOOK-Weltmotive und die ruhige Angel-Szene bleiben unangetastet.
+- **Sichtpruefung:** Kontaktboegen fuer PUFFLING und GLOOP wurden ueber alle neun Motivgruppen
+  geprueft. Die neuen Requisiten bleiben bei schmalem und breitem Koerper sichtbar; die
+  abschliessende Beurteilung von Tempo und Lesbarkeit gehoert weiterhin ans Geraet.
+- **Betroffene Bereiche:** `AvatarMotifReactions`, Reaktionsabdeckung, Bildgleichheits- und
+  Fingerabdrucktest sowie Living-Agent-, Backlog- und Uebergabedokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 465 Tests gruen (vorher 464, ein neuer
+  Katalogtest). `python3 -m unittest discover --start-directory tools/music` bleibt als
+  unabhaengiges Freigabe-Gate Teil der Vorpruefung.
+- **Naechster Schritt:** NT-082s verbleibenden Befund angehen: Getragene Gegenstaende brauchen
+  beim Gehen einen eigenen Takt. Schlafrueckblick und neue Reminderreaktionen vorher bzw. dabei
+  am Geraet beurteilen.

@@ -14,11 +14,9 @@ import com.notime.glyphsim.matrix.AvatarAnimations.beat
  *
  * ## Warum es das braucht
  *
- * Der Baum hat 80 Knoten mit Motiv, aber bis hierher nur **55 verschiedene Reaktionen** - 38 Knoten
- * spielten Bild fuer Bild dasselbe wie ein Geschwister. Am dichtesten unter `sport/ballsport`: Der
- * Kopf und seine vier Blaetter (Basketball, Pokal, Dribbling, Schuss) waren **alle fuenf
- * identisch**. Wer einen Skillpunkt auf "Basketball" setzte, bekam exakt das, was "Ballsport" schon
- * tat.
+ * Der Baum erbte frueher fuer viele Bibliotheksmotive die Antwort eines Geschwisters. Wer etwa
+ * einen Skillpunkt auf "Basketball" setzte, bekam dadurch exakt das, was "Ballsport" schon tat.
+ * Diese Datei gibt jedem nicht charaktergebundenen Bibliotheksmotiv eine eigene sichtbare Antwort.
  *
  * Der Grund liegt in der Vererbung und ist kein Fehler: Ein Blatt ohne eigene Antwort erbt die
  * Gruppen-Antwort seiner Untergruppe, und die ist **absichtlich requisitenfrei**
@@ -50,6 +48,28 @@ internal object AvatarMotifReactions {
     /** null = kein eigener Ablauf hinterlegt, der Aufrufer geht seinen bisherigen Weg. */
     fun forLabel(label: String, body: AvatarBody): List<Beat>? = with(AvatarAnimations) {
         when (label) {
+            // ---- allgemeine Bibliothek: das Motiv bestimmt die sichtbare Antwort ----
+            "Star" -> star(body)
+            "Wave" -> wave(body)
+            "Check" -> check(body)
+            "Rain" -> rain(body)
+            "Music" -> music(body)
+            "Battery" -> battery(body)
+            "Dog" -> dog(body)
+            "Stocks" -> stocks(body)
+            "TAMA" -> tama(body)
+            "Breathe" -> breathe(body)
+            "Football" -> football(body)
+            "Fitness" -> fitness(body)
+            "Robot" -> robot(body)
+            "Fire" -> fire(body)
+            "Plant" -> plant(body)
+            "Target" -> target(body)
+            "Airplane" -> airplane(body)
+            "Cake" -> cake(body)
+            "Idea" -> idea(body)
+            "Mail" -> mail(body)
+            "Clock" -> clock(body)
             // ---- sport/ballsport: vier Blaetter, vier verschiedene Bewegungen ----
             "Basketball" -> basketball(body)
             "Trophy" -> trophy(body)
@@ -61,14 +81,327 @@ internal object AvatarMotifReactions {
             "Call" -> call(body)
             "Cat" -> cat(body)
             "Pet" -> pet(body)
+            // ---- zusaetzliche Motive des Skillbaums ----
+            "Plate" -> plate(body)
+            "Lift" -> lift(body)
+            "Breather" -> breather(body)
+            "Notes" -> notes(body)
+            "Sing" -> sing(body)
+            "Map" -> map(body)
+            "Confetti" -> confetti(body)
+            "Candles" -> candles(body)
             else -> null
         }
     }
 
     /** Alle Labels mit eigener Reaktion - der Test laeuft sie durch. */
     val labels: List<String> = listOf(
+        "Star", "Wave", "Check", "Rain", "Music", "Battery", "Dog", "Stocks", "TAMA",
+        "Breathe", "Football", "Fitness", "Robot", "Fire", "Plant", "Target", "Airplane",
+        "Cake", "Idea", "Mail", "Clock",
         "Basketball", "Trophy", "Dribble", "Shot",
-        "Gift", "Visit", "Call", "Cat", "Pet"
+        "Gift", "Visit", "Call", "Cat", "Pet",
+        "Plate", "Lift", "Breather", "Notes", "Sing", "Map", "Confetti", "Candles"
+    )
+
+    /**
+     * Gemeinsame Grammatik fuer kleine motiveigene Antworten.
+     *
+     * Geteilt wird nur WIE ein Takt in einen Avatarframe uebersetzt wird. WAS darin passiert -
+     * Requisite, Bahn, Blick, Haltung und Tempo - liefert jede Funktion darunter selbst. So
+     * bleibt eine neue Antwort kurz genug zum Pflegen, ohne wieder identische Geschwister zu
+     * erzeugen.
+     */
+    private fun AvatarAnimations.motif(
+        body: AvatarBody,
+        props: List<List<Pair<Int, Int>>>,
+        offsets: List<Pair<Int, Int>> = emptyList(),
+        accents: List<Int> = emptyList(),
+        halfEyes: Set<Int> = emptySet(),
+        closedEyes: Set<Int> = emptySet(),
+        openMouth: Set<Int> = emptySet(),
+        fast: Set<Int> = emptySet(),
+        slow: Set<Int> = emptySet()
+    ): List<Beat> = props.mapIndexed { index, prop ->
+        val (dx, dy) = offsets.getOrElse(index) { 0 to 0 }
+        val eyes = when (index) {
+            in closedEyes -> body.eyesClosed
+            in halfEyes -> body.eyesHalf
+            else -> body.eyesOpen
+        }
+        val hold = when (index) {
+            in slow -> SLOW_MS
+            in fast -> FAST_MS
+            else -> BEAT_MS
+        }
+        creatureFrame(
+            body = body,
+            dx = dx,
+            dy = dy,
+            accentPhase = accents.getOrElse(index) { 0 },
+            eyeHoles = eyes,
+            mouthHoles = if (index in openMouth) body.mouthOpen else body.mouthNeutral,
+            prop = prop
+        ).beat(hold)
+    } + creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
+
+    // =====================================================================================
+    // Allgemeine Bibliothek und Skillbaum
+    //
+    // Die Requisite bleibt klein und oben oder am Rand. Sie nennt das Motiv; die Koerperbahn
+    // zeigt, wie das Wesen darauf reagiert. Keine dieser Antworten wird an Kinder vererbt.
+    // =====================================================================================
+
+    private fun AvatarAnimations.star(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(2 to 1), listOf(6 to 1, 7 to 0, 7 to 1, 7 to 2, 8 to 1),
+            listOf(5 to 1, 7 to 0, 7 to 1, 7 to 2, 9 to 1), listOf(13 to 1)),
+        offsets = listOf(-1 to 0, 0 to -1, 1 to -1, 1 to 0),
+        accents = listOf(0, 1, -1, 1), openMouth = setOf(2), fast = setOf(0, 3)
+    )
+
+    private fun AvatarAnimations.wave(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(0 to 2, 1 to 1, 2 to 2), listOf(4 to 1, 5 to 2, 6 to 1),
+            listOf(8 to 2, 9 to 1, 10 to 2), listOf(12 to 1, 13 to 2, 14 to 1)),
+        offsets = listOf(-1 to 0, 0 to 1, 1 to 0, 0 to -1),
+        halfEyes = setOf(1, 2), slow = setOf(1, 2)
+    )
+
+    private fun AvatarAnimations.check(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(10 to 2), listOf(10 to 2, 11 to 3),
+            listOf(10 to 2, 11 to 3, 12 to 2, 13 to 1), listOf(11 to 3, 12 to 2, 13 to 1)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -1, 0 to 0),
+        accents = listOf(0, 1, 1, -1), openMouth = setOf(2), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.rain(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(2 to 0, 8 to 1, 13 to 0), listOf(2 to 2, 8 to 3, 13 to 2),
+            listOf(2 to 4, 8 to 1, 13 to 4), listOf(2 to 1, 8 to 4, 13 to 1)),
+        offsets = listOf(0 to 0, 0 to 1, -1 to 1, 0 to 0),
+        halfEyes = setOf(1), closedEyes = setOf(2), fast = setOf(0, 3)
+    )
+
+    private fun AvatarAnimations.music(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(3 to 2, 3 to 3, 2 to 3), listOf(7 to 0, 7 to 1, 6 to 1),
+            listOf(11 to 2, 11 to 3, 10 to 3), listOf(7 to 0, 3 to 2, 11 to 2)),
+        offsets = listOf(-1 to 0, 0 to -1, 1 to 0, 0 to -1),
+        accents = listOf(-1, 1, -1, 1), openMouth = setOf(1, 2, 3), fast = setOf(0, 1, 2)
+    )
+
+    private fun AvatarAnimations.battery(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(13 to 1, 14 to 1, 13 to 4, 14 to 4),
+            listOf(13 to 1, 14 to 1, 13 to 3, 14 to 3, 13 to 4, 14 to 4),
+            listOf(13 to 1, 14 to 1, 13 to 2, 14 to 2, 13 to 3, 14 to 3, 13 to 4, 14 to 4),
+            listOf(12 to 2, 13 to 1, 14 to 2, 13 to 3)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -1, 0 to -2),
+        accents = listOf(0, 0, 1, -1), openMouth = setOf(2, 3), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.dog(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(14 to 4), listOf(12 to 3, 13 to 4, 14 to 3),
+            listOf(10 to 3, 11 to 4, 12 to 3), listOf(8 to 4, 9 to 3)),
+        offsets = listOf(0 to 0, 1 to 0, 1 to 1, 0 to 1),
+        accents = listOf(0, 1, -1, 1), halfEyes = setOf(3), openMouth = setOf(2), fast = setOf(0, 1)
+    )
+
+    private fun AvatarAnimations.stocks(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(1 to 4, 2 to 4), listOf(1 to 4, 2 to 3, 3 to 3),
+            listOf(1 to 4, 2 to 3, 3 to 3, 4 to 1, 5 to 1), listOf(4 to 1, 5 to 0, 6 to 1)),
+        offsets = listOf(0 to 1, -1 to 0, 0 to -1, 1 to -1),
+        accents = listOf(0, 0, 1, 1), openMouth = setOf(2, 3), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.tama(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(2 to 0, 3 to 0, 4 to 0, 3 to 1, 3 to 2),
+            listOf(6 to 0, 6 to 1, 7 to 2, 8 to 1, 8 to 0),
+            listOf(10 to 0, 10 to 1, 10 to 2, 11 to 1, 12 to 0, 12 to 1, 12 to 2),
+            listOf(2 to 0, 7 to 0, 11 to 0)),
+        offsets = listOf(-1 to 0, 0 to 0, 1 to 0, 0 to -1),
+        accents = listOf(0, 1, -1, 1), openMouth = setOf(3), fast = setOf(0, 1, 2)
+    )
+
+    private fun AvatarAnimations.breathe(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(7 to 1), listOf(5 to 1, 7 to 0, 9 to 1),
+            listOf(3 to 1, 5 to 0, 7 to 0, 9 to 0, 11 to 1), listOf(5 to 1, 7 to 0, 9 to 1)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -2, 0 to 0),
+        closedEyes = setOf(0, 1, 2), halfEyes = setOf(3), slow = setOf(0, 1, 2, 3)
+    )
+
+    private fun AvatarAnimations.football(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(2 to 4), listOf(4 to 3), listOf(8 to 1), listOf(13 to 3, 14 to 2, 14 to 3, 14 to 4)),
+        offsets = listOf(-1 to 1, 0 to 0, 1 to -2, 1 to 0),
+        accents = listOf(0, 1, -1, 1), openMouth = setOf(2, 3), fast = setOf(1, 2)
+    )
+
+    private fun AvatarAnimations.fitness(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(2 to 3, 13 to 3), listOf(1 to 1, 14 to 1),
+            listOf(2 to 4, 13 to 4), listOf(1 to 0, 14 to 0)),
+        offsets = listOf(0 to 1, 0 to -2, 0 to 1, 0 to -2),
+        accents = listOf(-1, 1, -1, 1), openMouth = setOf(1, 3), fast = setOf(0, 1, 2)
+    )
+
+    private fun AvatarAnimations.robot(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(7 to 0, 6 to 1, 7 to 1, 8 to 1),
+            listOf(6 to 0, 7 to 0, 8 to 0, 6 to 2, 8 to 2),
+            listOf(5 to 1, 6 to 0, 8 to 0, 9 to 1, 6 to 2, 8 to 2), listOf(7 to 0)),
+        offsets = listOf(-1 to 0, 1 to 0, -1 to 0, 0 to -1),
+        accents = listOf(-1, 1, -1, 1), halfEyes = setOf(1, 2), fast = setOf(0, 1, 2)
+    )
+
+    private fun AvatarAnimations.fire(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(13 to 4), listOf(12 to 3, 13 to 2, 14 to 3, 13 to 4),
+            listOf(12 to 2, 13 to 0, 14 to 2, 13 to 3), listOf(13 to 1, 14 to 3, 13 to 4)),
+        offsets = listOf(-1 to 0, -1 to 0, 0 to -1, 1 to 0),
+        accents = listOf(0, -1, 1, -1), openMouth = setOf(2), fast = setOf(0, 1, 3)
+    )
+
+    private fun AvatarAnimations.plant(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(2 to 4), listOf(2 to 3, 2 to 4),
+            listOf(1 to 2, 2 to 3, 3 to 2, 2 to 4), listOf(0 to 1, 1 to 2, 2 to 3, 3 to 2, 4 to 1)),
+        offsets = listOf(0 to 1, 0 to 0, -1 to 0, -1 to -1),
+        accents = listOf(0, 0, 1, 1), halfEyes = setOf(0, 1), openMouth = setOf(3), slow = setOf(1, 2)
+    )
+
+    private fun AvatarAnimations.target(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(13 to 2), listOf(12 to 1, 13 to 1, 14 to 1, 12 to 2, 14 to 2, 12 to 3, 13 to 3, 14 to 3),
+            listOf(13 to 0, 11 to 2, 13 to 2, 15 to 2, 13 to 4), listOf(13 to 2)),
+        offsets = listOf(-1 to 1, 0 to 0, 1 to -1, 0 to 0),
+        accents = listOf(0, -1, 1, 1), halfEyes = setOf(1, 2), openMouth = setOf(3), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.airplane(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(0 to 3, 1 to 2, 1 to 3), listOf(4 to 2, 5 to 1, 5 to 2, 6 to 2),
+            listOf(9 to 1, 10 to 0, 10 to 1, 11 to 1), listOf(13 to 0, 14 to 0, 15 to 0)),
+        offsets = listOf(-1 to 1, 0 to 0, 1 to -1, 1 to -2),
+        accents = listOf(0, 1, -1, 1), openMouth = setOf(2, 3), fast = setOf(0, 1, 3)
+    )
+
+    private fun AvatarAnimations.cake(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(11 to 4, 12 to 4, 13 to 4),
+            listOf(10 to 3, 11 to 3, 12 to 3, 13 to 3, 14 to 3, 11 to 4, 12 to 4, 13 to 4),
+            listOf(12 to 1, 12 to 2, 10 to 3, 11 to 3, 12 to 3, 13 to 3, 14 to 3),
+            listOf(11 to 0, 12 to 1, 13 to 0, 10 to 3, 11 to 3, 12 to 3, 13 to 3, 14 to 3)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -1, 0 to -2),
+        accents = listOf(0, 0, 1, -1), openMouth = setOf(2, 3), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.idea(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(7 to 3), listOf(6 to 2, 7 to 1, 8 to 2, 7 to 3),
+            listOf(5 to 2, 6 to 1, 7 to 0, 8 to 1, 9 to 2, 7 to 3),
+            listOf(7 to 0, 5 to 1, 9 to 1, 6 to 3, 7 to 3, 8 to 3)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -1, 0 to -2),
+        accents = listOf(0, -1, 1, -1), halfEyes = setOf(0, 1), openMouth = setOf(2, 3), slow = setOf(1)
+    )
+
+    private fun AvatarAnimations.mail(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(15 to 2), listOf(12 to 1, 13 to 1, 14 to 2, 13 to 3),
+            listOf(8 to 1, 9 to 1, 10 to 2, 9 to 3), listOf(5 to 1, 6 to 2, 7 to 1, 6 to 3)),
+        offsets = listOf(1 to 0, 1 to 0, 0 to 0, -1 to -1),
+        accents = listOf(0, 1, -1, 1), openMouth = setOf(3), fast = setOf(0, 1)
+    )
+
+    private fun AvatarAnimations.clock(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(12 to 2, 13 to 1, 14 to 2, 13 to 3),
+            listOf(12 to 1, 13 to 0, 14 to 1, 12 to 2, 14 to 2, 13 to 3),
+            listOf(12 to 1, 13 to 0, 14 to 1, 12 to 2, 13 to 2, 14 to 2, 13 to 3),
+            listOf(12 to 1, 13 to 0, 14 to 1, 12 to 2, 14 to 2, 12 to 3, 13 to 3, 14 to 3)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -1, 0 to 0),
+        accents = listOf(0, -1, 1, -1), halfEyes = setOf(0, 1, 2), openMouth = setOf(3), fast = setOf(1, 2)
+    )
+
+    private fun AvatarAnimations.plate(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(10 to 4, 11 to 3, 12 to 3, 13 to 3, 14 to 4),
+            listOf(10 to 4, 11 to 3, 13 to 3, 14 to 4),
+            listOf(10 to 4, 12 to 3, 14 to 4), listOf(10 to 4, 11 to 4, 12 to 4, 13 to 4, 14 to 4)),
+        offsets = listOf(0 to 0, 1 to 1, 0 to 1, 0 to 0),
+        halfEyes = setOf(0, 1, 2), openMouth = setOf(0, 1, 2), fast = setOf(0, 1, 2)
+    )
+
+    private fun AvatarAnimations.lift(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(3 to 4, 4 to 4, 11 to 4, 12 to 4),
+            listOf(2 to 3, 3 to 3, 4 to 3, 11 to 3, 12 to 3, 13 to 3),
+            listOf(2 to 1, 3 to 1, 4 to 1, 11 to 1, 12 to 1, 13 to 1),
+            listOf(1 to 0, 2 to 0, 3 to 0, 12 to 0, 13 to 0, 14 to 0)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -2, 0 to -3),
+        accents = listOf(0, -1, 1, -1), halfEyes = setOf(0, 1), openMouth = setOf(1, 2, 3), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.breather(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(5 to 1, 5 to 2, 9 to 1, 9 to 2),
+            listOf(4 to 0, 4 to 1, 4 to 2, 4 to 3, 10 to 0, 10 to 1, 10 to 2, 10 to 3),
+            listOf(5 to 1, 5 to 2, 9 to 1, 9 to 2), listOf(6 to 2, 8 to 2)),
+        offsets = listOf(0 to 0, 0 to 1, -1 to 1, 0 to 0),
+        halfEyes = setOf(0, 3), closedEyes = setOf(1, 2), slow = setOf(0, 1, 2)
+    )
+
+    private fun AvatarAnimations.notes(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(1 to 1, 2 to 1, 3 to 1), listOf(1 to 1, 2 to 1, 3 to 1, 5 to 2),
+            listOf(1 to 1, 2 to 1, 3 to 1, 5 to 2, 6 to 2, 8 to 3),
+            listOf(1 to 1, 2 to 1, 3 to 1, 5 to 2, 6 to 2, 8 to 3, 9 to 3, 11 to 1)),
+        offsets = listOf(-1 to 1, -1 to 0, 0 to 0, 1 to -1),
+        halfEyes = setOf(0, 1, 2), accents = listOf(0, 1, -1, 1), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.sing(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(12 to 4), listOf(12 to 2, 12 to 3, 12 to 4),
+            listOf(11 to 1, 12 to 0, 13 to 1, 12 to 2, 12 to 3, 12 to 4),
+            listOf(10 to 0, 12 to 0, 14 to 0, 12 to 2, 12 to 3, 12 to 4)),
+        offsets = listOf(0 to 0, 1 to 0, 1 to -1, 0 to -1),
+        accents = listOf(-1, 1, -1, 1), openMouth = setOf(0, 1, 2, 3), slow = setOf(2)
+    )
+
+    private fun AvatarAnimations.map(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(1 to 3, 2 to 2, 3 to 3),
+            listOf(1 to 2, 2 to 1, 3 to 2, 4 to 1, 5 to 2),
+            listOf(1 to 1, 2 to 0, 3 to 1, 4 to 0, 5 to 1, 6 to 0, 7 to 1),
+            listOf(3 to 1, 4 to 0, 5 to 1, 6 to 0, 7 to 1, 8 to 0, 9 to 1)),
+        offsets = listOf(-1 to 1, -1 to 0, 0 to -1, 1 to -1),
+        accents = listOf(0, -1, 1, -1), halfEyes = setOf(0, 1, 2), openMouth = setOf(3), slow = setOf(1, 2)
+    )
+
+    private fun AvatarAnimations.confetti(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(7 to 0), listOf(4 to 1, 7 to 0, 10 to 1),
+            listOf(2 to 3, 5 to 2, 8 to 3, 11 to 2, 14 to 3),
+            listOf(1 to 4, 4 to 3, 7 to 4, 10 to 3, 13 to 4)),
+        offsets = listOf(0 to 1, 0 to 0, 0 to -2, 0 to -1),
+        accents = listOf(-1, 1, -1, 1), openMouth = setOf(1, 2, 3), fast = setOf(0, 1, 3)
+    )
+
+    private fun AvatarAnimations.candles(body: AvatarBody) = motif(
+        body,
+        listOf(listOf(5 to 3, 5 to 4, 10 to 3, 10 to 4),
+            listOf(5 to 2, 5 to 3, 5 to 4, 10 to 2, 10 to 3, 10 to 4),
+            listOf(4 to 1, 5 to 0, 6 to 1, 5 to 3, 5 to 4, 9 to 1, 10 to 0, 11 to 1, 10 to 3, 10 to 4),
+            listOf(5 to 3, 5 to 4, 10 to 3, 10 to 4)),
+        offsets = listOf(0 to 0, 0 to 0, 0 to -1, 0 to 1),
+        halfEyes = setOf(0, 1), closedEyes = setOf(3), openMouth = setOf(2), slow = setOf(2)
     )
 
     // =====================================================================================

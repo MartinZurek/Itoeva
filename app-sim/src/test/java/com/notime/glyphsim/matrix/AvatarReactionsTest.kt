@@ -2,6 +2,7 @@ package com.notime.glyphsim.matrix
 
 import com.notime.glyphcore.data.AnimationMotif
 import com.notime.glyphcore.data.AnimationTree
+import com.notime.glyphcore.data.DefaultLibraryAnimations
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotEquals
@@ -38,6 +39,29 @@ class AvatarReactionsTest {
             "Diese Motive haben eine Choreografie, sind ueber den Baum aber nicht erreichbar",
             emptyList<String>(),
             ohneAntwort
+        )
+    }
+
+    /**
+     * Rocket hat bereits seine eigene Flugchoreografie; Charaktermotive liegen bewusst im
+     * getrennten Katalog. Fuer jedes uebrige Bibliotheksmotiv muss dieser Katalog eine exakte
+     * Antwort tragen, sonst faellt es unbemerkt auf die Antwort eines Geschwisters zurueck.
+     */
+    @Test
+    fun `jedes allgemeine Bibliotheksmotiv hat eine eigene Antwort`() {
+        val erwartet = DefaultLibraryAnimations.seed().map { it.label }.toSet() -
+            AvatarSignatureReactions.labels.toSet() -
+            "Rocket"
+
+        assertEquals(
+            "Diese Bibliotheksmotive muessen genau vom allgemeinen Katalog abgedeckt werden",
+            erwartet,
+            AvatarMotifReactions.labels.toSet()
+        )
+        assertEquals(
+            "Ein doppeltes Label wuerde eine fehlende Antwort in der Mengenpruefung verdecken",
+            AvatarMotifReactions.labels.size,
+            AvatarMotifReactions.labels.toSet().size
         )
     }
 

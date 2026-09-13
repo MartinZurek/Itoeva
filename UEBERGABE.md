@@ -83,8 +83,11 @@ Wohlbefinden. NT-075 bis NT-083 bearbeiten die anschliessend gemessene Darstellu
 Schnitt ist der sichere Schlafrueckblick: Bei jedem echten Schlaf oeffnet sich die Traumblase,
 geht in die vergroesserte Watch ueber und zeigt bis zu drei tatsaechliche Tageserlebnisse. Die
 seit NT-073 vorgesehenen Tagtraeume auf Sofa und Bank sind dabei erstmals wirklich sichtbar.
-Details und die drei wiederkehrenden Darstellungsfallen stehen in `LIVING_AGENT.md` und bei
-NT-075 bis NT-083 in `NextTasks.md`.
+NT-084 schliesst danach die sichtbare Reminder-Abdeckung: Alle Reminder animierten den Avatar,
+aber 29 Bibliotheksmotive erbten noch die Antwort eines Geschwisters. Nun stehen fuer 80
+Motivknoten 80 verschiedene Reaktionen; Katalog-, Fingerabdruck- und Bildgleichheitstest halten
+das fest. Details und die drei wiederkehrenden Darstellungsfallen stehen in `LIVING_AGENT.md`
+und bei NT-075 bis NT-084 in `NextTasks.md`.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
@@ -134,7 +137,7 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 464 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 465 Tests, ~2 s
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 
@@ -204,6 +207,7 @@ man ueber sie wissen muss, bevor man ihr etwas hinlegt:
 - **Am Geraet nachsehen** (nichts davon laesst sich im Test belegen): die neunzig Sekunden
   Mindestaufenthalt draussen, der Vielfaltsbonus, die Verweildauern der Reaktionen, der Nachklang
   mit 3 Minuten / +5 / +2, MOVE bei 2.420 ms - und ob "Paper Bridges" neben "Lantern Streets"
-  passt.
+  passt; ausserdem Tempo und Lesbarkeit des Schlafrueckblicks sowie der 29 neuen motiveigenen
+  Reminderreaktionen.
 - **Die 86 Sekunden Begruessung** aus ITO-0023 lassen sich erst beurteilen, wenn das erste der
   sechs Stuecke erzeugt ist.
