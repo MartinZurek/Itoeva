@@ -77,6 +77,7 @@ import com.notime.glyphsim.matrix.AvatarBodies
 import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarMood
+import com.notime.glyphsim.matrix.AvatarShading
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.ReactionTrigger
@@ -591,6 +592,10 @@ fun DockScreen(
         val avatarDim = remember { Animatable(1f) }
         // Gast, der gerade durchs Bild laeuft - siehe runVisit.
         var visitor by remember { mutableStateOf<VisitorState?>(null) }
+        // **Wohin die Figur zuletzt gegangen ist** - sie behaelt die Blickrichtung, wenn sie
+        // stehen bleibt (siehe [AvatarShading.Side]). Wuerde sie am Ende jedes Gangs auf die
+        // Grundstellung zurueckspringen, drehte sie sich nach jedem Schritt wieder um.
+        var avatarFacing by remember { mutableStateOf(AvatarShading.Side.RIGHT) }
         // Sprechzeichen: -1 = niemand spricht, sonst 0..2 fuer die drei Punkte.
         var speechStep by remember { mutableIntStateOf(-1) }
         var speakerIsGuest by remember { mutableStateOf(false) }
@@ -967,6 +972,13 @@ fun DockScreen(
                 return false
             }
             avatarIdleJob?.cancel()
+            // Die beschattete Flanke wandert mit der Richtung - das ist das Einzige, woran man
+            // sieht, dass die Kreatur sich umgedreht hat (siehe [AvatarShading]).
+            avatarFacing = if (destination.x < current.offset.x) {
+                AvatarShading.Side.LEFT
+            } else {
+                AvatarShading.Side.RIGHT
+            }
             // Waehrend eines Gangs darf niemand sonst die Figur versetzen - siehe das
             // Nachfuehren des Bodens weiter unten.
             avatarWalking = true
@@ -1635,6 +1647,10 @@ fun DockScreen(
             /** Laesst den Gast von seiner jetzigen Stelle nach [targetX] gehen. */
             suspend fun walkGuestTo(targetX: Float) = coroutineScope {
                 val from = visitor?.offset?.x ?: return@coroutineScope
+                // Ein Gast, der nach links hereinkommt und dabei nach rechts schattiert ist,
+                // laeuft rueckwaerts - dieselbe Regel wie beim Bewohner.
+                val richtung = if (targetX < from) AvatarShading.Side.LEFT else AvatarShading.Side.RIGHT
+                visitor = visitor?.copy(facing = richtung)
                 val gait = launch {
                     while (isActive) {
                         MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
@@ -3101,6 +3117,10 @@ fun DockScreen(
                 dayPhase = PlayAmbientActivity.currentDayPhase(),
                 avatarFrame = current.frame,
                 avatarAnchorX = (current.offset.x / boundX).coerceIn(0f, 1f),
+                // Muss mit in den Film, sonst laeuft die Kreatur in der Aufnahme anders herum
+                // als auf dem Bildschirm.
+                shadeSide = avatarFacing,
+                visitorShadeSide = visitor?.facing ?: AvatarShading.Side.RIGHT,
                 scenePhase = scenePhase,
                 station = occupiedStation ?: activeStation,
                 lampOn = lampOn,
@@ -3350,6 +3370,7 @@ fun DockScreen(
                 // Daempfung oben einen Teil ihrer Last ab: Zwei Kreaturen verschmelzen nicht
                 // mehr allein deshalb, weil sie denselben Ton haben.
                 species = guest.species,
+                shadeSide = guest.facing,
                 modifier = Modifier
                     .width(guest.sizeDp.dp)
                     .height(guest.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
@@ -3507,6 +3528,7 @@ fun DockScreen(
                 showBackground = false,
                 contentDescription = avatarContentDescription,
                 species = current.species,
+                shadeSide = avatarFacing,
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
                     // Quadratgroesse das Raster und die Figur waere zu klein.
@@ -4081,7 +4103,9 @@ private data class VisitorState(
     val species: AvatarSpecies,
     val offset: Offset,
     val sizeDp: Float,
-    val frame: IntArray
+    val frame: IntArray,
+    /** Beschattete Flanke - der Gast dreht sich wie der Bewohner, siehe [AvatarShading.Side]. */
+    val facing: AvatarShading.Side = AvatarShading.Side.RIGHT
 )
 
 private data class AvatarState(

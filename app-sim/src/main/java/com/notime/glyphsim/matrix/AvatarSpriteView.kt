@@ -55,13 +55,19 @@ fun AvatarSpriteView(
     /**
      * Welche Kreatur hier gezeichnet wird - bestimmt ihre Farbe (siehe [AvatarPalette]).
      *
-     * `null` heisst "keine Kreatur, sondern ein Zeichen": Wunsch- und Traumblase zeichnen mit
-     * derselben Ansicht die 13x13-Symbole aus `LivingSymbolFrames`. Die sind Aussagen ueber die
-     * Welt, keine Koerper, und bleiben deshalb weiss wie die Kulisse. Genau deshalb ist Weiss
-     * hier der Standard: Wer einen Wert vergisst, bekommt das bisherige Bild, nicht ein falsch
-     * eingefaerbtes Symbol.
+     * `null` zeichnet in Weiss. Das bleibt der Standard, damit eine vergessene Angabe das
+     * bisherige Bild ergibt und nicht eine willkuerliche Farbe.
+     *
+     * Diese Ansicht ist NUR fuer Kreaturen. Die 13x13-Zeichen aus `LivingSymbolFrames` liefen
+     * bis NT-079 auch hier durch und wurden dabei zerschert, weil hier mit der Zeilenbreite des
+     * Avatars gelesen wird; sie gehen jetzt ueber [SimulatedMatrixView] (siehe PlayWishBubble).
      */
-    species: AvatarSpecies? = null
+    species: AvatarSpecies? = null,
+    /**
+     * Beschattete Flanke (siehe [AvatarShading.Side]). Beim Laufen die Seite, von der die
+     * Kreatur KOMMT - dadurch dreht sie sich beim Richtungswechsel sichtbar um.
+     */
+    shadeSide: AvatarShading.Side = AvatarShading.Side.RIGHT
 ) {
     Canvas(
         modifier = modifier
@@ -77,23 +83,22 @@ fun AvatarSpriteView(
                 }
             )
     ) {
-        drawSprite(frame, brightnessScale, species)
+        drawSprite(frame, brightnessScale, species, shadeSide)
     }
 }
 
 private fun DrawScope.drawSprite(
     rawFrame: IntArray,
     brightnessScale: Float,
-    species: AvatarSpecies?
+    species: AvatarSpecies?,
+    shadeSide: AvatarShading.Side
 ) {
     // **Hier und nicht in den Animationsdaten** (siehe [AvatarShading]): Die Posen bleiben reine
     // Punktmengen, Ueberblendungen rechnen unveraendert weiter, und die abgelegten
     // Vergleichsbilder der Reaktionspruefung bleiben gueltig. Schattierung ist Darstellung.
     // Dasselbe gilt fuer die Farbe - eine Pose weiss nicht, wer sie gerade einnimmt.
     val onColor = species?.let { Color(AvatarPalette.tintFor(it)) } ?: LED_ON_COLOR
-    // Farbe vertraegt den tiefen Verlauf der weissen Figur nicht, siehe AvatarShading.
-    val floor = if (species == null) AvatarShading.SHADOW else AvatarShading.TINTED_SHADOW
-    val frame = AvatarShading.shade(rawFrame, floor = floor)
+    val frame = AvatarShading.shade(rawFrame, side = shadeSide)
     val cell = size.width / AvatarGeometry.SIZE
     // Winziger Ueberlapp zwischen benachbarten Zellen, damit Antialiasing keine
     // sichtbaren Ein-Pixel-Spalten zwischen zwei eigentlich zusammenhaengenden
