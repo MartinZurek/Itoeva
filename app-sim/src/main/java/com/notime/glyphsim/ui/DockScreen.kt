@@ -1538,7 +1538,7 @@ fun DockScreen(
                         // Einmal beim Einschlafen festhalten. Nach Mitternacht gehoeren diese
                         // Erlebnisse kalendertechnisch zum Vortag, inhaltlich aber weiter zu
                         // genau diesem Schlaf.
-                        val sleepMemories = PlayDreamMemory.today(
+                        val sleepMemories = PlayDreamMemory.forSleep(
                             context,
                             presenceProfileId.toString()
                         )
@@ -2728,6 +2728,9 @@ fun DockScreen(
         // laufenden Drag-Geste (nicht erst am Gesten-Ende) - dadurch wird die Kollision
         // erkannt, sobald sich Uhr und Avatar beim Ziehen beruehren.
         LaunchedEffect(clockOffset) {
+            // Waehrend des Rueckblicks bewegt die Darstellung die Watch selbst. Das ist keine
+            // Zieh-Geste und darf weder fuettern noch einen Speicherplatz belegen.
+            if (dreamRecapMode) return@LaunchedEffect
             val current = avatar
             if (current == null || current.fed || current.occurrenceId == null) return@LaunchedEffect
             val clockPx = with(density) { clockSizeDp.dp.toPx() }
@@ -2764,6 +2767,10 @@ fun DockScreen(
             // schlechtere: Zwei Ablaeufe gleichzeitig schieben dieselbe Figur an zwei Orte.
             LaunchedEffect(
                 avatar?.species,
+                // Eine neu eintreffende Erinnerung unterbricht auch eine gerade laufende
+                // Schlafzusammenfassung. Sonst koennte deren offene Zeit hinter drei Highlights
+                // verstreichen, bevor die normale Erinnerungsreaktion ueberhaupt sichtbar wird.
+                avatar?.occurrenceId,
                 requestedTopic,
                 requestedNodeId,
                 pendingExternalImpulse?.impulseId

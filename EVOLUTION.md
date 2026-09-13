@@ -2688,10 +2688,12 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   erfunden und spaeter als Tagesgeschichte missverstanden wird.
 - **Architekturentscheidungen:** Der Rueckblick ist reine Darstellung und schreibt weder
   `AgentState` noch `Episode` um. Die semantische Erinnerungsliste wird beim Einschlafen einmal
-  festgehalten, damit ein Mitternachtswechsel die laufende Folge nicht leert. Uhrposition und
-  Groesse werden auch bei Coroutine-Abbruch sicher zurueckgesetzt; die temporaere Traumposition
-  wird nie in `DockLayoutPrefs` gespeichert. Die Bettbedingung ist aus der Projektion entfernt,
-  damit der vorhandene `Daydream`-Schritt an jedem Ruheort sichtbar sein kann.
+  festgehalten; ein Schlaf nach Mitternacht darf dabei noch genau den unmittelbar vorigen Tag
+  lesen. Uhrposition und Groesse werden auch bei Coroutine-Abbruch sicher zurueckgesetzt; die
+  temporaere Traumposition wird weder in `DockLayoutPrefs` gespeichert noch als Zieh-Kollision
+  gewertet. Eine eintreffende Erinnerung unterbricht den Rueckblick sofort. Die Bettbedingung ist
+  aus der Projektion entfernt, damit der vorhandene `Daydream`-Schritt an jedem Ruheort sichtbar
+  sein kann.
 - **Abgrenzung:** Kein neuer Plot, keine zweite Erinnerungs- oder Renderpipeline, keine
   Aenderung an Living-Agent-Kern, Room, `:core`, Stream-Interaktion oder Musik. Die absichtlich
   zweistufigen LOVE-, SLEEP- und BOOK-Weltmotive sowie die ruhige Angel-Szene bleiben
@@ -2699,9 +2701,9 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Betroffene Bereiche:** `PlayDreams`, die gezielte Schlaf-/Watch-Grenze in `DockScreen`,
   `PlayDreamBubble`, zwei barrierefreie Beschreibungen sowie Living-Agent-, Backlog- und
   Uebergabedokumentation.
-- **Tests:** `bash tools/reaction-preview/tests.sh` - 463 Tests gruen (vorher 461, zwei neue
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 464 Tests gruen (vorher 461, drei neue
   Verhaltensfaelle). Belegt sind Auswahl der drei juengsten wirklichen Erlebnisse, zeitliche
-  Reihenfolge, Entduplizierung und der leere Fall. Compose und der sichtbare Uebergang werden
+  Reihenfolge, Entduplizierung, der leere Fall und die enge Vortagsgrenze. Compose und der sichtbare Uebergang werden
   zusaetzlich durch `gradlew verify` in CI geprueft; Groesse und Tempo bleiben eine
   Geraetebeurteilung.
 - **Naechster Schritt:** Den Uebergang in normaler und Stream-APK am Geraet ansehen. Danach ist

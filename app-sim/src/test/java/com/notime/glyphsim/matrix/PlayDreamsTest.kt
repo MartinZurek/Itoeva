@@ -56,4 +56,21 @@ class PlayDreamsTest {
             )
         )
     }
+
+    @Test
+    fun `Schlaf nach Mitternacht behaelt genau den unmittelbar vorigen Tag`() {
+        val topics = listOf(AnimationType.BOOK, AnimationType.MOVE)
+
+        assertEquals(
+            topics,
+            PlayDreams.memoriesForSleep("day:4", "day:5", "day:4", topics)
+        )
+        assertEquals(
+            topics,
+            PlayDreams.memoriesForSleep("day:5", "day:5", "day:4", topics)
+        )
+        assertTrue(
+            PlayDreams.memoriesForSleep("day:3", "day:5", "day:4", topics).isEmpty()
+        )
+    }
 }

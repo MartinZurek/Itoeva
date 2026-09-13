@@ -139,11 +139,11 @@ object PlayTimeLapse {
      * das echte Kalenderdatum. Ein Wechsel der Zeitraffer-Stufe startet bewusst einen neuen
      * Testtag, genau wie die beschleunigte Uhr dabei wieder am Morgen beginnt.
      */
-    fun dayKey(): String {
+    fun dayKey(dayOffset: Long = 0L): String {
         val current = speed
-        if (current == Speed.OFF) return "real:${LocalDate.now()}"
+        if (current == Speed.OFF) return "real:${LocalDate.now().plusDays(dayOffset)}"
         val elapsedSeconds = (SystemClock.elapsedRealtime() - startedAtMillis) / 1000.0
-        val simulatedDay = (elapsedSeconds / current.daySeconds).toLong()
+        val simulatedDay = (elapsedSeconds / current.daySeconds).toLong() + dayOffset
         return "lapse:${current.name}:$startedAtMillis:$simulatedDay"
     }
 

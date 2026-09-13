@@ -45,6 +45,25 @@ object PlayDreamMemory {
         return decode(prefs.getString(topicsKey, null))
     }
 
+    /**
+     * Erlebnisse fuer einen Schlaf, der auch nach Mitternacht beginnen kann.
+     *
+     * Der Speicher haelt absichtlich nur einen verdichteten Tag. Solange am neuen Kalendertag
+     * noch nichts erlebt wurde, ist das genau der gerade beendete Vortag und darf nicht allein
+     * wegen der Datumsgrenze verschwinden. Aeltere Tage werden nicht wieder hervorgeholt.
+     */
+    fun forSleep(
+        context: Context,
+        profileId: String,
+        dayKey: String = PlayTimeLapse.dayKey(),
+        previousDayKey: String = PlayTimeLapse.dayKey(dayOffset = -1L)
+    ): List<AnimationType> {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val storedDay = prefs.getString(key(profileId, KEY_DATE), null)
+        val storedTopics = decode(prefs.getString(key(profileId, KEY_TOPICS), null))
+        return PlayDreams.memoriesForSleep(storedDay, dayKey, previousDayKey, storedTopics)
+    }
+
     private fun key(profileId: String, suffix: String): String = "$profileId:$suffix"
 
     private fun decode(raw: String?): List<AnimationType> =
@@ -97,6 +116,18 @@ object PlayDreams {
         .distinct()
         .take(SLEEP_HIGHLIGHT_COUNT)
         .asReversed()
+
+    /** Nur der laufende oder unmittelbar davorliegende Tag darf einen Schlaf bebildern. */
+    fun memoriesForSleep(
+        storedDay: String?,
+        currentDay: String,
+        previousDay: String,
+        storedTopics: List<AnimationType>
+    ): List<AnimationType> = if (storedDay == currentDay || storedDay == previousDay) {
+        storedTopics.filter(::isEligibleMemory)
+    } else {
+        emptyList()
+    }
 
     private const val DAYDREAM_CHANCE = 0.28f
     private const val SLEEP_HIGHLIGHT_COUNT = 3
