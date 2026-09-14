@@ -1,9 +1,11 @@
 package com.notime.glyphsim.matrix
 
 import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.living.SymbolicIntent
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -152,6 +154,53 @@ class PlayAfterglowTest {
         assertTrue(PlayAfterglow.isEchoing(frisch, MITTAGS))
         assertFalse(PlayAfterglow.isEchoing(alt, MITTAGS))
         assertFalse(PlayAfterglow.isEchoing(emptyList(), MITTAGS))
+    }
+
+    // ================= Der Nachklang einer wirklichen Begegnung (NT-085) =================
+
+    @Test
+    fun `eine angenommene Einladung klingt als LOVE nach`() {
+        val antwort = PlayAfterglow.fromVisit(
+            setOf(SymbolicIntent.PLAY, SymbolicIntent.YES), atMillis = MITTAGS
+        )
+        assertEquals(PlayAfterglow.Answer(AnimationType.LOVE, MITTAGS), antwort)
+    }
+
+    @Test
+    fun `eine muede Absage klingt nicht nach`() {
+        assertNull(PlayAfterglow.fromVisit(setOf(SymbolicIntent.TIRED, SymbolicIntent.NO), MITTAGS))
+    }
+
+    @Test
+    fun `eine gewoehnliche Absage klingt nicht nach`() {
+        assertNull(PlayAfterglow.fromVisit(setOf(SymbolicIntent.PLAY, SymbolicIntent.NO), MITTAGS))
+    }
+
+    @Test
+    fun `der Besuchsnachklang macht LOVE abends deutlich haeufiger`() {
+        // LOVE hat nur abends ein Grundgewicht (siehe PlayAmbientActivity.weightsFor) - derselbe
+        // Zurueckhaltungsgrundsatz wie beim Erinnerungs-Nachklang gilt auch hier: Der Bonus darf
+        // nur verstaerken, was zur Tageszeit ohnehin vorkommt, nie ein Thema einfuehren.
+        val besuch = PlayAfterglow.fromVisit(setOf(SymbolicIntent.PLAY, SymbolicIntent.YES), MITTAGS)
+        checkNotNull(besuch)
+        val bonus = PlayAfterglow.bonuses(listOf(besuch), nowMillis = MITTAGS, dayStartMillis = TAGESBEGINN)
+        val random = Random(20260914)
+        fun anteilLoveAbends(afterglow: Map<AnimationType, Int>): Double {
+            var treffer = 0
+            val laeufe = 20_000
+            repeat(laeufe) {
+                val gewaehlt = PlayAmbientActivity.nextTopic(
+                    phase = PlayAmbientActivity.DayPhase.EVENING,
+                    afterglow = afterglow,
+                    random = random
+                )
+                if (gewaehlt == AnimationType.LOVE) treffer++
+            }
+            return treffer.toDouble() / laeufe
+        }
+        val ohne = anteilLoveAbends(emptyMap())
+        val mit = anteilLoveAbends(bonus)
+        assertTrue("ohne=$ohne mit=$mit", mit > ohne * 2)
     }
 
     // ================= Die Wirkung auf die Themenwahl =================

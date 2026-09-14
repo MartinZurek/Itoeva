@@ -1,6 +1,7 @@
 package com.notime.glyphsim.matrix
 
 import com.notime.glyphcore.data.AnimationType
+import com.notime.glyphsim.living.SymbolicIntent
 
 /**
  * **Was eine beantwortete Erinnerung hinterlaesst** - der Nachklang.
@@ -42,6 +43,16 @@ import com.notime.glyphcore.data.AnimationType
  * Aufrufer filtert das, bevor er hier hineingeht.
  *
  * Alles hier ist reine Rechnung - keine Datenbank, keine Uhr im Hintergrund, kein Android.
+ *
+ * ## Derselbe Nachklang fuer eine wirkliche Begegnung
+ *
+ * Seit NT-085 fragt ein Gast beim Besuch (`runVisit` in `DockScreen`) wirklich `PLAY + QUESTION`,
+ * und der Bewohner antwortet aus seinem echten Zustand statt aus einem Skript. Eine angenommene
+ * Einladung endete bis hierher trotzdem spurlos, sobald der Gast weiterging - derselbe Fehler wie
+ * bei einer beantworteten Erinnerung vor dieser Datei, nur an einer anderen Stelle entdeckt.
+ * [fromVisit] macht daraus dieselbe [Answer], mit der auch eine Erinnerung nachklingt: eine
+ * frisch gespielte Begegnung faerbt das naechste Stueck des Ablaufs Richtung LOVE, danach den
+ * Rest des Tages nur noch mild - siehe [bonuses].
  */
 object PlayAfterglow {
 
@@ -120,4 +131,19 @@ object PlayAfterglow {
      */
     fun isEchoing(answers: List<Answer>, nowMillis: Long): Boolean =
         answers.any { it.fedAtMillis in (nowMillis - ECHO_MS + 1)..nowMillis }
+
+    /**
+     * Macht aus der Antwort einer echten Besuchs-Einladung eine [Answer] fuer [bonuses] - oder
+     * `null`, wenn nichts nachklingen soll (siehe Klassendoku).
+     *
+     * **Nur eine ANGENOMMENE Einladung klingt nach.** `respondToPlay` in `LivingAgent` liefert
+     * `SymbolicIntent.YES` ausschliesslich bei echter Zusage; ein mueder oder abgelehnter Gast
+     * (`TIRED`/`NO`) hat nichts miteinander erlebt, wovon danach etwas uebrig bleiben koennte -
+     * ein Nachklang dafuer waere erfunden statt beobachtet.
+     *
+     * LOVE und kein anderes Thema - [PlayAmbientActivity]s eigene Klassendoku setzt "soziale
+     * Kontakte" bereits mit LOVE gleich, und zusammen gespielt zu haben ist genau das.
+     */
+    fun fromVisit(response: Set<SymbolicIntent>, atMillis: Long): Answer? =
+        if (SymbolicIntent.YES in response) Answer(AnimationType.LOVE, atMillis) else null
 }

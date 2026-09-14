@@ -75,6 +75,7 @@ import com.notime.glyphsim.living.StepResult
 import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
+import com.notime.glyphsim.matrix.PlayAfterglow
 import com.notime.glyphsim.matrix.AvatarBodies
 import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
@@ -465,6 +466,12 @@ fun DockScreen(
         }
         /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
         var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
+        /**
+         * Wann zuletzt eine Besuchs-Einladung wirklich ANGENOMMEN wurde - siehe
+         * [PlayAfterglow.fromVisit]. Faerbt danach wie eine beantwortete Erinnerung die naechste
+         * autonome Regung Richtung LOVE, statt spurlos zu bleiben, sobald der Gast weiterging.
+         */
+        var warmVisitAtMs by remember { mutableStateOf<Long?>(null) }
         /**
          * Was er gerade ueber dem Kopf zeigt - Wunsch und, falls vorhanden, Hindernis.
          *
@@ -1814,6 +1821,11 @@ fun DockScreen(
                     receiver = hostAgent,
                     world = hostWorld
                 )
+                // **Nur eine angenommene Einladung klingt nach** (siehe [PlayAfterglow.fromVisit]):
+                // Ein mueder oder abgelehnter Gast hinterlaesst kein gemeinsames Erlebnis, aus dem
+                // etwas werden koennte.
+                PlayAfterglow.fromVisit(exchange.response.intents, System.currentTimeMillis())
+                    ?.let { warmVisitAtMs = it.fedAtMillis }
 
                 avatarIdleJob?.cancel()
                 coroutineScope {
@@ -3057,8 +3069,19 @@ fun DockScreen(
                             // Erfuellen des Tagesziels aus dem Zuschlag heraus. Beantworten machte
                             // das Thema damit fuer den Rest des Tages SELTENER - genau umgekehrt
                             // zu dem, was eine Bitte bewirken sollte.
+                            //
+                            // **Und eine angenommene Besuchs-Einladung genauso** (siehe
+                            // [PlayAfterglow.fromVisit]): Sie steht in keiner Erinnerungs-Tabelle,
+                            // darf aber denselben Nachklang bekommen wie eine beantwortete Bitte -
+                            // sonst waere ein wirklich gemeinsam verbrachter Moment folgenlos,
+                            // sobald der Gast weiterging.
                             val afterglow =
-                                PlayAfterglowSignal.bonuses(context, PresentCompanion.profileId(context))
+                                PlayAfterglowSignal.bonuses(
+                                    context, PresentCompanion.profileId(context),
+                                    extra = listOfNotNull(
+                                        warmVisitAtMs?.let { PlayAfterglow.Answer(AnimationType.LOVE, it) }
+                                    )
+                                )
                             // Die bisherige Themenwahl bleibt als Vielfaltssignal erhalten, aber
                             // nicht mehr als Entscheidung ueber Grundbeduerfnisse: Der Living
                             // Agent entscheidet, OB Freizeit gerade traegt; diese Wahl sagt nur,
