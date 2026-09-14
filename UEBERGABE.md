@@ -106,13 +106,26 @@ wiederverwendet. Beim Austausch bleiben die Weltressourcen beider Profile getren
 Zeitstaende werden vorwaerts synchronisiert und nach der vollstaendig sichtbaren Begegnung werden
 beide Agenten gespeichert.
 
-**Der naechste offene soziale Schnitt ist NT-087:** Die drei Einwohner sind jetzt dauerhaft,
+**Die Architekturfrage ist entschieden - und zwar gegen meine eigene Vermutung (NT-087).** Hier
+stand, die Huerde liege im Ortsmodell. Die Messung sagt etwas anderes: Sechs unabhaengig
+entscheidende Wesen ergaben **1 662 Begegnungsgelegenheiten**, **kein Paar** blieb ohne, **12 von
+16** sichtbaren Orten kamen vor, und in **1 von 720** Schritten wich der Kern vom sichtbaren Ort
+ab. Nicht der Ort platziert ein Wesen, sondern das Thema - `PlayScene.forTopic` fuehrt zwei
+Wesen, die dasselbe tun wollen, schon heute an denselben Ort. **`LivingSite` bleibt bei vier.**
+
+Dieselbe Messung fand dafuer zwei Ziele, die NIE gewinnen. `SEEK_COMFORT` ist behoben
+(Behaglichkeit stillt nur noch, was ihr gilt - siehe NT-087); `EARN_MONEY` bleibt bewusst
+ungewaehlt, weil Muenzen heute nur Essen zahlen. Verkauf und Lohn sind der konkrete Anlass, dem
+Ziel erstmals einen Sinn zu geben; die Auswahlzahl wird dafuer nicht vorab kuenstlich erhoeht.
+
+**Der naechste offene soziale Schnitt ist NT-088:** Die drei Einwohner sind jetzt dauerhaft,
 aber noch keine selbst laufende Bevoelkerung. Zwischen Begegnungen wachsen ihre Beduerfnisse beim
 Restore; sie fuehren noch keine eigenen Handlungen aus, und die Anzeige traegt weiterhin nur
 einen Gast. Als Naechstes werden ihre Aufenthalts- und Aktivitaetsentscheidungen ueber denselben
 Living-Agent-Kern fortgeschrieben und als read-only Population-Snapshot ausgegeben. Der
-Mehrfach-Renderer fuer SHOP, PARK und SPORT ist danach NT-088; neue Orte kommen weiterhin erst,
-wenn die vorhandenen Plaetze wirklich bewohnt sind.
+Mehrfach-Renderer fuer SHOP, PARK und SPORT ist danach NT-089. Die offene Huerde ist Lesbarkeit
+bei vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn die vorhandenen Plaetze
+wirklich bewohnt sind.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 

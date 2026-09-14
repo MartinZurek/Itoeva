@@ -1928,6 +1928,8 @@ fun DockScreen(
                 livingAgent = exchange.receiver
                 livingWorld = committedWorld
                 livingStore.save(exchange.receiver, committedWorld)
+                // Beide Seiten behalten ihre eigene Welt. `exchangePlayInvitation` hat nur die
+                // Simulationszeit angeglichen; Geld und Vorrat des Bewohners werden nie kopiert.
                 val committedGuestWorld = LivingRuntimeAdapter.synchroniseWorld(
                     exchange.initiatorWorld,
                     currentPlace,

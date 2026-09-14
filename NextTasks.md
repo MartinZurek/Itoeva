@@ -203,7 +203,7 @@ Pseudo-Wortwechsel. Der Gast sendet `PLAY + QUESTION`; der Living Agent antworte
 sozialem Bedarf, Beziehung, Persoenlichkeit und aktuellem Ziel. Einladung und Antwort stehen als
 Pixelsymbole ueber dem wirklichen Sprecher, einschliesslich eines neuen Ja-Hakens. Die Beziehung
 und Episode des Bewohners werden ueber `ActionOutcome` gespeichert. **Offen bleibt:** Der Gast
-ist noch kein persistenter Einwohner; er wird weiterhin vom vorhandenen Besuchstakt erzeugt.
+ist mit NT-086 zum persistenten Einwohner geworden; sein eigener Tagesablauf folgt in NT-088.
 
 **Living Agent, sozial:** NT-086 **Persistente Weltbewohner statt zufaelliger Kulissengaeste** -
 *am 2026-09-14 umgesetzt.* Eine Verkaufskraft, ein Parkstammgast und ein Sportler besitzen eigene
@@ -214,14 +214,14 @@ verschiedene letzte Simulationsminuten werden vor dem Austausch vorwaerts synchr
 **Offen bleibt:** Die Einwohner entscheiden ihren Tagesablauf zwischen Besuchen noch nicht
 selbst, und der Renderer zeigt weiterhin nur einen Gast zugleich.
 
-**Living Agent, sozial:** NT-087 **Einwohner entscheiden Aufenthalt und Aktivitaet selbst** -
+**Living Agent, sozial:** NT-088 **Einwohner entscheiden Aufenthalt und Aktivitaet selbst** -
 offen. Die drei persistenten Einwohner ueber denselben Living-Agent-Kern in kleinen
 deterministischen Zeitschritten fortschreiben und einen read-only Population-Snapshot mit
 Profil, Ort, Ziel, naechster Handlung und Rolle bereitstellen. Rolle ist nur Bias und
 Weltvoraussetzung: Auch die Verkaufskraft darf bei dringendem Hunger oder Muedigkeit den SHOP
 verlassen. *Nach mehreren simulierten Tagen sind Aufenthalt und Aktivitaet jedes Einwohners aus
 Beduerfnissen, Ressourcen und Oeffnungszeiten erklaerbar; zwei Bewohner entwickeln verschiedene
-Historien.* Noch kein Mehrfach-Renderer. NT-088 zeigt danach mehrere tatsaechlich anwesende
+Historien.* Noch kein Mehrfach-Renderer. NT-089 zeigt danach mehrere tatsaechlich anwesende
 Bewohner gleichzeitig; gemeinsame Sport-, Drachen- und Angelhandlungen folgen getrennt.
 
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
@@ -312,6 +312,51 @@ zufaellig. Nebenbei: `PlayEffectsTest` und `PlayInkTest` liefen bis hierher NUR 
 stehen jetzt im Offline-Lauf (459 Tests) - genau die Luecke, die in NT-078 schon einmal einen
 roten Lauf erzeugt hat. **Offen bleibt:** ob die Maschen am Geraet als Netz lesbar sind und ob
 der Ball mit fuenf Zellen neben einer sechzehn Zellen breiten Figur nicht zu gross wirkt.
+
+**Living Agent, weiter:** NT-087 **Vier Orte reichen; Behaglichkeit war unerreichbar** - *am
+2026-09-14 umgesetzt.* Vor der zweiten Haelfte von NT-086 stand die Architekturentscheidung, ob
+`LivingSite` feiner werden muss. Ich hatte das selbst als die eigentliche Huerde bezeichnet - die
+Messung sagt: **keines von beiden**. Sechs unabhaengig entscheidende Wesen, je 120 Schritte durch
+den vorhandenen Adapter: **1 662 Begegnungsgelegenheiten**, **kein Paar** ohne Gelegenheit, **12
+von 16** sichtbaren Orten, und in **1 von 720** Schritten wich der Kern vom sichtbaren Ort ab.
+Nicht der Ort platziert ein Wesen, sondern das Thema; `PlayScene.forTopic` fuehrt zwei Wesen mit
+demselben Vorhaben schon heute an denselben Ort. `LivingSite` bleibt bei vier, und die
+Begruendung im KDoc ist jetzt belegt statt behauptet. **Der eigentliche Fund:** Von acht Zielen
+gewannen zwei NIE. `SEEK_COMFORT` kam nie ueber Rang 3 und nie ueber 0,157 Punkte - bei den
+geringsten Kosten aller acht Ziele. Behaglichkeit waechst mit 0,02 je Stunde (in 80
+Simulationsstunden also 1,6) und wurde im selben Lauf um rund 11 erleichtert, weil Essen, Ruhen,
+Zuwendung und Bewegung alle nebenbei daran zogen - genau der Befund, den NT-074 selbst
+aufgeschrieben, aber nur auf der Zielseite behoben hat. Mit kleineren Zahlen war das nicht zu
+heilen (Versuch 0,08/0,12/0,10/0,05: Verhaeltnis blieb 3,2 zu 1, Punktzahl 0,157 -> 0,174).
+Jetzt gilt die Regel statt der Zahl: Behaglichkeit stillt nur, was ihr gilt (`SETTLE`,
+`TEND_SELF`). `SEEK_COMFORT` wird seitdem 30 Mal im Tageslauf gewaehlt statt nie, `SETTLE` 30 Mal
+ausgefuehrt statt 6; DEVELOP faellt dabei von 39 auf 24, weil es sich den langsam wachsenden
+Bereich jetzt teilt. **Offen bleibt:** `EARN_MONEY` gewinnt weiterhin nie (-0,434 bei Kosten 58)
+- kein Fehler, solange Muenzen ausschliesslich Essen zahlen; ein eigener Antrieb fuer Geld
+braucht erst etwas, wofuer sich Sparen lohnt. Und fuer die Bevoelkerung ist die naechste Huerde
+die Lesbarkeit, nicht das Ortsmodell: Bei `MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten
+Figur passen drei bis vier Wesen nicht nebeneinander.
+
+**Living Agent, weiter:** NT-086 **Der Gast wird ein Wesen mit Gedaechtnis** - *erste Haelfte am
+2026-09-14 umgesetzt.* NT-085 hat die Begegnung echt gemacht, den Gast aber nicht: Er wurde bei
+jedem Besuch neu erfunden und danach verworfen, gespeichert wurde nur die Seite des Bewohners.
+Die Beziehung, die der Kern auf BEIDEN Seiten rechnet, hielt damit genau so lange wie der Besuch.
+Jetzt wird er aus dem vorhandenen `LivingAgentStore` geladen und unter eigener Kennung wieder
+gespeichert - derselbe Store, derselbe Codec, ein zweiter Schluessel; `restore` traegt seine
+Beduerfnisse um die verstrichene Zeit weiter, er hat also gelebt statt gewartet. Zwei Funde
+mussten dafuer erst getrennt werden: **Die Kennung** - `AvatarSpeciesPrefs.profileId` ist der
+blosse Speziesname, und darunter liegt der Zustand des SPIELERS, sobald er diese Kreatur waehlt;
+ein gespeicherter Gast waere beim naechsten Speziestausch zum eigenen Avatar geworden. **Die
+Welt** - `WorldState` traegt Muenzen und Vorrat, die der sichtbaren Welt des Spielers gehoeren;
+unveraendert uebernommen haette der Gast Geldbeutel und Speisekammer geerbt. Beleg: dieselbe
+Einladung an denselben ausgeruhten Bewohner ergibt mit mitgebrachtem Gast vier Interaktionen und
+mehr Naehe als mit einem Gast ohne Gedaechtnis mit zwei. **Offen bleibt:** die zweite Haelfte -
+Einwohner, die ihren Aufenthalt selbst waehlen. Davor steht eine Architekturentscheidung, die im
+bisherigen Plan fehlt: Die Domaene fuehrt VIER Orte (`LivingSite`), und PARK, POND, SPORT,
+FOREST, MEADOW, CITY und STREET sind darin alle `OUTSIDE`. "Im Park stehen zwei Einwohner" ist
+dort nicht formulierbar. Nebenbei aufgefallen und nicht geaendert: Ein HUNGRIGER Bewohner sagt zu
+einer Spieleinladung trotzdem zu - `FOOD + NO` entsteht in der Praxis also seltener, als die
+Dokumentation nahelegt.
 
 **Darstellung:** NT-082 **Die anderen Szenen standen still** - *am 2026-09-13 umgesetzt.*
 Dieselbe Messung wie beim Fussball ueber alle Mehrphasen-Szenen laufen lassen: Wie viele

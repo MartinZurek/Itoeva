@@ -2747,6 +2747,101 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   beim Gehen einen eigenen Takt. Schlafrueckblick und neue Reminderreaktionen vorher bzw. dabei
   am Geraet beurteilen.
 
+### 2026-09-14 - Vier Orte reichen, Behaglichkeit war unerreichbar (NT-087)
+
+- **Ausgangsfrage:** Vor der zweiten Haelfte von NT-086 stand die Architekturentscheidung, ob
+  `LivingSite` feiner werden muss oder Einwohner eine Position unterhalb der Site brauchen. Ich
+  hatte das gestern selbst als die eigentliche Huerde bezeichnet. **Die Messung sagt: keines von
+  beiden.**
+- **Was gemessen wurde:** Sechs unabhaengig entscheidende Wesen, je 120 Schritte durch den
+  vorhandenen `LivingRuntimeAdapter`, ohne eine einzige Aenderung an der Domaene.
+  - **1 662 Begegnungsgelegenheiten** (gleicher sichtbarer Ort im Fenster von 30
+    Simulationsminuten). **Kein einziges Paar** blieb ohne Gelegenheit.
+  - **12 von 16 sichtbaren Orten** kamen vor. Der sichtbare Ort ist also bereits fein genug.
+  - Die Domaene luegt dabei nicht: In **1 von 720 Schritten** stand die Figur draussen, waehrend
+    der Kern HOME sagte. Auch dieser Verdacht war falsch.
+  - Der Grund: Nicht der Ort platziert ein Wesen, sondern das **Thema**. `PURSUE_INTEREST` und
+    die benannten Beschaeftigungen aus NT-072 gehen ueber `PlayScene.forTopic` an den Ort, der
+    zur Taetigkeit gehoert. Zwei Wesen, die dasselbe tun wollen, stehen deshalb schon heute am
+    selben Ort - ohne dass die Domaene mehr als vier Orte kennen muesste.
+- **Entscheidung:** `LivingSite` bleibt bei vier. Die Begruendung im KDoc der Domaene stimmt und
+  ist jetzt belegt statt behauptet.
+- **Was die Messung stattdessen gefunden hat:** Von acht Zielen gewannen **zwei nie**.
+  `SEEK_COMFORT` kam nie ueber Rang 3 und nie ueber 0,157 Punkte - bei den GERINGSTEN Kosten
+  aller acht Ziele (0,052). Es lag also nicht am Aufwand, sondern am Druck: Behaglichkeit kam nie
+  ueber 0,257, waehrend Hunger und Ruhe 1,0 erreichten.
+- **Die Rechnung:** Behaglichkeit waechst mit 0,02 je Stunde, dem langsamsten Wert von sieben -
+  in achtzig Simulationsstunden um 1,6. Erleichtert wurde sie im selben Lauf um rund 11, weil
+  Essen (0,2), Ruhen (0,3), Zuwendung (0,25) und Bewegung (0,35) alle nebenbei daran zogen und
+  zusammen ueber zweihundertfuenfzig Mal vorkamen. **Das ist genau der Befund, den NT-074 selbst
+  aufgeschrieben hat** ("wurden ausschliesslich nebenbei gestillt") - behoben wurde damals nur
+  die Zielseite.
+- **Mit kleineren Zahlen nicht zu heilen:** Ein erster Versuch senkte die vier Werte auf
+  0,08 / 0,12 / 0,10 / 0,05. Das Verhaeltnis blieb bei 3,2 zu 1, die beste Punktzahl stieg von
+  0,157 auf 0,174 - praktisch nichts. Bei zweihundertfuenfzig Gelegenheiten gegen 1,6 Wachstum
+  schwemmt jeder plausible Wert das Beduerfnis weg.
+- **Deshalb eine Regel statt einer Zahl:** Behaglichkeit stillt nur, was ihr gilt - `SETTLE` und
+  `TEND_SELF`. Wer isst, ruht, jemanden herzt oder sich bewegt, tut das aus einem anderen Grund.
+- **Wirkung:** `SEEK_COMFORT` wird jetzt 30 Mal in einem Tageslauf gewaehlt statt nie, `SETTLE`
+  30 Mal ausgefuehrt statt 6. Die anderen Ziele bleiben stehen: GET_FOOD 348 -> 314, REST
+  102 -> 99, HAVE_FUN 60 -> 63, CONNECT_WITH 48 -> 56, EXPLORE 52 -> 55. **DEVELOP faellt von 39
+  auf 24** - es teilt sich den langsam wachsenden Bereich jetzt mit der Behaglichkeit. Das ist
+  eine Umverteilung, kein Einbruch.
+- **Nicht geaendert:** `EARN_MONEY` gewinnt weiterhin nie (beste Punktzahl -0,434 bei
+  Durchschnittskosten 58). Das ist kein Fehler: Wer weder hungrig noch knapp bei Kasse ist, hat
+  fuer Geld heute keine Verwendung - Muenzen zahlen ausschliesslich Essen. Ein eigener Antrieb
+  fuer Geld braucht erst etwas, wofuer es sich zu sparen lohnt.
+- **Betroffene Bereiche:** `LivingAction` (vier Wirkungen), `LivingDriveTest`, Living-Agent-,
+  Uebergabe- und Backlogdokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 473 Tests gruen (vorher 471, zwei neue
+  Faelle: die Regel und der Verhaltensbeleg).
+- **Naechster Schritt:** Die zweite Haelfte von NT-086 kann ohne Architekturumbau beginnen. Die
+  offene Frage ist jetzt die Lesbarkeit, nicht das Ortsmodell: Bei `MIN_SCENE_CELLS = 40` und
+  einer 16 Zellen breiten Figur passen drei bis vier Wesen nicht nebeneinander.
+
+### 2026-09-14 - Der Gast wird ein Wesen mit Gedaechtnis (NT-086, erste Haelfte)
+
+- **Ausgangsproblem:** NT-085 hat die Begegnung echt gemacht, den Gast aber nicht. Er wurde bei
+  jedem Besuch mit `LivingRuntimeAdapter.initialAgent` neu erfunden, erlebte den Wortwechsel und
+  war danach verworfen. Gespeichert wurde ausschliesslich die Seite des Bewohners. Die Beziehung,
+  die der Kern seit NT-067 auf BEIDEN Seiten rechnet, hielt damit genau so lange wie der Besuch;
+  ein Wiedersehen gab es nie, weil niemand da war, der sich erinnern konnte.
+- **Entscheidung:** Der Gast wird vor der Begegnung aus dem vorhandenen `LivingAgentStore`
+  geladen und danach unter seiner eigenen Kennung wieder gespeichert. `restore` traegt dabei
+  seine Beduerfnisse um die verstrichene Simulationszeit weiter - er hat nicht gewartet, sondern
+  gelebt, waehrend er weg war. Keine zweite Ablage, keine zweite Engine: derselbe Store, derselbe
+  Codec, ein zweiter Schluessel.
+- **Der Fund, der diesen Schnitt erzwungen hat:** `AvatarSpeciesPrefs.profileId` liefert den
+  blossen Speziesnamen, und unter genau dem liegt der Zustand des SPIELERS, sobald er diese
+  Kreatur waehlt. Solange der Gast weggeworfen wurde, war das folgenlos. Mit dem ersten
+  gespeicherten Gast waere es ein Datenfehler mit Folgen geworden: Wer heute Besuch von einem
+  WYRMLING bekommt und morgen selbst WYRMLING wird, haette dessen Beziehungen, Erinnerungen und
+  Beduerfnisse als seine eigenen uebernommen. `LivingRuntimeAdapter.visitorProfileId` trennt die
+  Namensraeume; ein Gast ist ein eigenes Wesen, das zufaellig dieselbe Art hat.
+- **Zweiter Fund:** Die Welt des Gastes ist NICHT die des Bewohners. `WorldState` traegt Muenzen
+  und Vorrat, und die gehoeren der sichtbaren Welt des Spielers (`PlayWallet`, `PlayPantry`).
+  Waere die gemeinsame Begegnungswelt unveraendert fuer den Gast gespeichert worden, haette er
+  den Geldbeutel und die Speisekammer des Spielers geerbt. Zeit, Ort und Anwesende stammen aus
+  der Begegnung, Muenzen und Vorrat aus seinem eigenen letzten Stand.
+- **Erster Beleg:** Dieselbe Einladung an denselben ausgeruhten Bewohner ergibt bei einem
+  mitgebrachten Gast vier Interaktionen und eine hoehere Naehe als bei einem Gast ohne
+  Gedaechtnis mit zwei. Der Gast bringt ausserdem die Episoden des ersten Treffens mit.
+- **Abgrenzung:** Der Gast bleibt vom vorhandenen Besuchstakt erzeugt und waehlt seinen
+  Aufenthalt nicht selbst. Es gibt weiterhin hoechstens EINEN sichtbaren Gast, keinen Verkaeufer
+  und keine Rolle. Die Domaene fuehrt unveraendert vier Orte; "im Park" ist dort nicht
+  formulierbar, und das begrenzt die zweite Haelfte von NT-086.
+- **Bestandsdaten:** Beziehungen, die seit NT-085 unter dem blossen Speziesnamen entstanden sind,
+  fangen einmal bei null an. Eine Umschluesselung koennte einen echten Spielerzustand nicht von
+  einem Gastzustand unterscheiden und wuerde im Zweifel das Falsche behalten.
+- **Betroffene Bereiche:** `LivingRuntimeAdapter`, die Besuchssequenz in `DockScreen`, die
+  Berechnung der anwesenden Profile an drei Stellen, Living-Agent- und Uebergabedokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 471 Tests gruen (vorher 467, vier neue
+  Faelle).
+- **Naechster Schritt:** Die zweite Haelfte von NT-086 - Einwohner, die ihren Aufenthalt selbst
+  waehlen. Davor steht die Entscheidung, ob `LivingSite` feiner wird oder ob Einwohner eine
+  Position unterhalb der Site bekommen; ohne sie ist "im Park" keine Aussage, die die Domaene
+  treffen kann.
+
 ### 2026-09-14 - Der sichtbare Besuch wird eine wirkliche Begegnung (NT-085)
 
 - **Ausgangsproblem:** Das Living-Agent-System konnte seit NT-067 eine symbolische Einladung aus
@@ -2816,9 +2911,10 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Betroffene Bereiche:** Neue reine Runtime-Datei `LivingResidents`, die soziale Zeit- und
   Welttrennung in `LivingAgent`, die gezielte Besuchsgrenze in `DockScreen`, Store- und
   Adaptertests sowie Living-Agent-, Backlog- und Uebergabedokumentation.
-- **Tests:** `bash tools/reaction-preview/tests.sh` - 472 Tests gruen (vorher 467, fuenf neue
-  Verhaltensfaelle). Die neue Quelldatei steht ausdruecklich in `SRCS`.
-  `python3 -m unittest discover --start-directory tools/music` bleibt das zweite Freigabe-Gate.
-- **Naechster Schritt:** NT-087 - Einwohner ueber denselben Living-Agent-Kern selbst Aufenthalt
-  und Aktivitaet entscheiden lassen und den Zustand read-only ausgeben. NT-088 projiziert erst
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 475 Tests gruen. Darin laufen die
+  Verhaltensbelege beider NT-086-Haelften und die zwei NT-087-Belege gemeinsam; die neue
+  Quelldatei steht ausdruecklich in `SRCS`.
+  `python3 -m unittest discover --start-directory tools/music` - 15 Tests gruen.
+- **Naechster Schritt:** NT-088 - Einwohner ueber denselben Living-Agent-Kern selbst Aufenthalt
+  und Aktivitaet entscheiden lassen und den Zustand read-only ausgeben. NT-089 projiziert erst
   danach mehrere wirklich anwesende Wesen zugleich in die vorhandenen oeffentlichen Orte.
