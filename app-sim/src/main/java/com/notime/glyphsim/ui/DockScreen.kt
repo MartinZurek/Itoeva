@@ -106,6 +106,7 @@ import com.notime.glyphsim.stream.TwitchChatStatus
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
+import com.notime.glyphsim.matrix.LivingResidents
 import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
@@ -465,6 +466,8 @@ fun DockScreen(
         }
         /** Wer zuletzt zu Besuch da war - damit er im Gespraech davon erzaehlen kann. */
         var lastVisitor by remember { mutableStateOf<AvatarSpecies?>(null) }
+        /** Stabile Einwohner-ID fuer die feste Rotation am selben oeffentlichen Ort. */
+        var lastResidentProfileId by remember { mutableStateOf<String?>(null) }
         /**
          * Was er gerade ueber dem Kopf zeigt - Wunsch und, falls vorhanden, Hindernis.
          *
@@ -652,9 +655,7 @@ fun DockScreen(
          * bei den globalen Vorgaengerwerten anfangen.
          */
         fun livingStateFor(species: AvatarSpecies): Pair<AgentState, WorldState> {
-            val nearbyProfiles = visitor?.species?.let {
-                setOf(AvatarSpeciesPrefs.profileId(it))
-            }.orEmpty()
+            val nearbyProfiles = visitor?.let { setOf(it.profileId) }.orEmpty()
             val simulationMinute = PlayTimeLapse.absoluteMinute()
             val restored = if (livingAgent == null || livingWorld == null) {
                 livingStore.restore(
@@ -1723,8 +1724,8 @@ fun DockScreen(
          * die eine Welt bewohnt statt bloss eingerichtet wirken laesst - und es genuegt dafuer,
          * dass jemand vorbeikommt, kurz stehen bleibt und weitergeht. Er muss nichts erledigen.
          *
-         * **Bewusst eine ANDERE Spezies als die eigene.** Sonst saehe es aus, als liefe der Avatar
-         * sich selbst ueber den Weg - bei sechs Grundformen waere das ein unnoetiger Zufall.
+         * Der Gast kommt aus [LivingResidents] und hat damit eine stabile Identitaet, auch wenn
+         * seine Silhouette eine der sechs vorhandenen Grundformen wiederverwendet.
          *
          * Der Besuch bleibt aus, solange eine echte Erinnerung offen ist oder gefuettert wird: In
          * diesen Momenten gehoert die Aufmerksamkeit dem Nutzer, nicht der Kulisse.
@@ -1732,7 +1733,13 @@ fun DockScreen(
         suspend fun runVisit() {
             val host = avatar ?: return
             if (host.fed || host.occurrenceId != null || avatarHidden) return
-            val guestSpecies = AvatarSpecies.entries.filter { it != host.species }.random()
+            val simulationMinute = PlayTimeLapse.absoluteMinute()
+            val resident = LivingResidents.nextVisitor(
+                place = currentPlace,
+                minuteOfDay = simulationMinute % WorldState.MINUTES_PER_DAY,
+                previousProfileId = lastResidentProfileId
+            ) ?: return
+            val guestSpecies = resident.species
             val px = with(density) { host.sizeDp.dp.toPx() }
             val fromLeft = Random.nextBoolean()
             val startX = if (fromLeft) -px else maxWidthPx
@@ -1742,8 +1749,15 @@ fun DockScreen(
             val walk = AvatarAnimations.walkSequence(guestSpecies)
             val idle = AvatarAnimations.idleSequence(guestSpecies, mood)
 
-            visitor = VisitorState(guestSpecies, Offset(startX, groundY), host.sizeDp, walk.frames.first())
+            visitor = VisitorState(
+                profileId = resident.profileId,
+                species = guestSpecies,
+                offset = Offset(startX, groundY),
+                sizeDp = host.sizeDp,
+                frame = walk.frames.first()
+            )
             lastVisitor = guestSpecies
+            lastResidentProfileId = resident.profileId
             // Der Gast gruesst mit SEINEM Motiv, nicht mit dem des Bewohners - daran hoert man,
             // dass jemand anderes da ist.
             PlaySound.play(context, guestSpecies, PlayChime.Event.VISIT, scope)
@@ -1806,13 +1820,26 @@ fun DockScreen(
                 // fragt PLAY + QUESTION, der Bewohner antwortet aus seinem wirklichen Zustand.
                 // Hier wird nichts entschieden; die Oberflaeche zeigt nur die beiden Nachrichten
                 // und waehlt eine passende Koerperregung dazu.
-                val guestProfileId = AvatarSpeciesPrefs.profileId(guestSpecies)
+                val guestProfileId = resident.profileId
                 val (hostAgent, hostWorld) = livingStateFor(host.species)
-                val guestAgent = LivingRuntimeAdapter.initialAgent(guestProfileId, guestSpecies)
+                val restoredGuest = livingStore.restore(
+                    profileId = guestProfileId,
+                    currentSimulationMinute = hostWorld.absoluteMinute,
+                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(hostWorld.minuteOfDay),
+                    currentNearbyProfiles = setOf(presenceProfileId)
+                )
+                val guestAgent = restoredGuest?.agent ?: LivingResidents.initialAgent(resident)
+                val guestWorld = LivingRuntimeAdapter.synchroniseWorld(
+                    restoredGuest?.world
+                        ?: LivingResidents.initialWorld(resident, hostWorld.absoluteMinute),
+                    currentPlace,
+                    setOf(presenceProfileId)
+                )
                 val exchange = LivingSimulation.exchangePlayInvitation(
                     initiator = guestAgent,
+                    initiatorWorld = guestWorld,
                     receiver = hostAgent,
-                    world = hostWorld
+                    receiverWorld = hostWorld
                 )
 
                 avatarIdleJob?.cancel()
@@ -1901,6 +1928,12 @@ fun DockScreen(
                 livingAgent = exchange.receiver
                 livingWorld = committedWorld
                 livingStore.save(exchange.receiver, committedWorld)
+                val committedGuestWorld = LivingRuntimeAdapter.synchroniseWorld(
+                    exchange.initiatorWorld,
+                    currentPlace,
+                    setOf(presenceProfileId)
+                )
+                livingStore.save(exchange.initiator, committedGuestWorld)
                 LivingObservationFeed.record(
                     StepResult(
                         agent = exchange.receiver,
@@ -2921,9 +2954,7 @@ fun DockScreen(
                         val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
                             applied.world,
                             currentPlace,
-                            visitor?.species?.let {
-                                setOf(AvatarSpeciesPrefs.profileId(it))
-                            }.orEmpty()
+                            visitor?.let { setOf(it.profileId) }.orEmpty()
                         )
                         livingAgent = applied.agent
                         livingWorld = committedWorld
@@ -3132,9 +3163,7 @@ fun DockScreen(
 
                             val externalImpulse = pendingExternalImpulse
                             val interestTopic = externalImpulse?.animationType ?: ordinaryInterestTopic
-                            val nearbyProfiles = visitor?.species?.let {
-                                setOf(AvatarSpeciesPrefs.profileId(it))
-                            }.orEmpty()
+                            val nearbyProfiles = visitor?.let { setOf(it.profileId) }.orEmpty()
                             val (baseAgent, baseWorld) = livingStateFor(species)
                             val prepared = LivingRuntimeAdapter.prepare(
                                 agent = baseAgent,
@@ -4290,6 +4319,8 @@ fun DockScreen(
 
 /** Eine zweite Kreatur, die gerade zu Besuch durchs Bild geht - siehe runVisit in DockScreen. */
 private data class VisitorState(
+    /** Stabile Identitaet des Einwohners; die Spezies ist nur seine sichtbare Grundform. */
+    val profileId: String,
     val species: AvatarSpecies,
     val offset: Offset,
     val sizeDp: Float,

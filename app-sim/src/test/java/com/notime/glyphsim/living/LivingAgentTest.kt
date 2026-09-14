@@ -420,8 +420,9 @@ class LivingAgentTest {
 
         val muedeBegegnung = LivingSimulation.exchangePlayInvitation(
             besucher,
+            welt(coins = 1),
             muederBewohner,
-            welt()
+            welt(coins = 9)
         )
 
         assertEquals(
@@ -452,8 +453,9 @@ class LivingAgentTest {
         )
         val froheBegegnung = LivingSimulation.exchangePlayInvitation(
             besucher,
+            welt(coins = 1, minuteOfDay = 7 * 60 + 55),
             bereiterBewohner,
-            welt()
+            welt(coins = 9)
         )
 
         assertEquals(
@@ -467,6 +469,8 @@ class LivingAgentTest {
             froheBegegnung.initiatorWorld.absoluteMinute,
             froheBegegnung.receiverWorld.absoluteMinute
         )
+        assertEquals(1, froheBegegnung.initiatorWorld.coins)
+        assertEquals(9, froheBegegnung.receiverWorld.coins)
     }
 
     @Test

@@ -98,12 +98,21 @@ Persoenlichkeit und aktuellem Ziel; die zwei echten Nachrichten erscheinen als P
 ueber dem jeweiligen Sprecher. Ja besitzt deshalb nun wie Nein ein eigenes Motiv. Beziehung und
 Episode des Bewohners werden ueber den vorhandenen Store gesichert.
 
-**Der naechste soziale Schnitt ist NT-086, nicht ein neuer Ort:** Der heutige Gast bleibt ein
-vom Besuchstakt erzeugter, nach der Szene verworfener Gast. Als Naechstes kommen wenige
-persistente, nicht waehlbare Weltbewohner mit eigenem AgentState - zuerst Verkaeufer im SHOP und
-Bewohner fuer PARK/SPORT. Danach erst mehrere gleichzeitig sichtbare Wesen und gemeinsame
-Aktivitaeten. PARK, SPORT, SHOP, CITY, FOREST, MEADOW und POND existieren bereits; sie werden
-bevoelkert, bevor Gebirge oder weitere Kulissen dazukommen.
+NT-086 ersetzt diesen verworfenen Gast inzwischen durch drei dauerhafte, nicht waehlbare
+Identitaeten: Verkaufskraft im SHOP, Parkstammgast und Sportler. Ihre `resident:`-Profil-IDs sind
+von den sechs waehlbaren Speziesprofilen getrennt; Rolle, Ankerort und Anwesenheitsfenster waehlen
+deterministisch den passenden Gast. `LivingAgentStore` wird unveraendert je Einwohner
+wiederverwendet. Beim Austausch bleiben die Weltressourcen beider Profile getrennt, beide
+Zeitstaende werden vorwaerts synchronisiert und nach der vollstaendig sichtbaren Begegnung werden
+beide Agenten gespeichert.
+
+**Der naechste offene soziale Schnitt ist NT-087:** Die drei Einwohner sind jetzt dauerhaft,
+aber noch keine selbst laufende Bevoelkerung. Zwischen Begegnungen wachsen ihre Beduerfnisse beim
+Restore; sie fuehren noch keine eigenen Handlungen aus, und die Anzeige traegt weiterhin nur
+einen Gast. Als Naechstes werden ihre Aufenthalts- und Aktivitaetsentscheidungen ueber denselben
+Living-Agent-Kern fortgeschrieben und als read-only Population-Snapshot ausgegeben. Der
+Mehrfach-Renderer fuer SHOP, PARK und SPORT ist danach NT-088; neue Orte kommen weiterhin erst,
+wenn die vorhandenen Plaetze wirklich bewohnt sind.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 

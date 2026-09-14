@@ -9,6 +9,7 @@ import com.notime.glyphsim.living.LivingEventKind
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Personality
+import com.notime.glyphsim.living.UtilitySelector
 import com.notime.glyphsim.living.WorldState
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
@@ -267,5 +268,44 @@ class LivingRuntimeAdapterTest {
         assertTrue(prepared.completedActions.isEmpty())
         assertNull(prepared.topic)
         assertNull(prepared.routine)
+    }
+
+    @Test
+    fun `Einwohner sind stabile nicht waehlbare Identitaeten mit Rollenorten`() {
+        assertEquals(3, LivingResidents.all.size)
+        assertEquals(3, LivingResidents.all.map { it.profileId }.distinct().size)
+        assertTrue(
+            LivingResidents.all.none { resident ->
+                AvatarSpecies.entries.any { it.name == resident.profileId }
+            }
+        )
+
+        val seller = LivingResidents.nextVisitor(PlayScene.Place.SHOP, 9 * 60)
+        assertEquals(ResidentRole.SHOPKEEPER, seller?.role)
+        assertEquals(PlayScene.Place.SHOP, seller?.anchorPlace)
+        assertNull(LivingResidents.nextVisitor(PlayScene.Place.SHOP, 22 * 60))
+    }
+
+    @Test
+    fun `Einwohnerrotation ist deterministisch und Rollenbias bleibt unter Beduerfnisdruck`() {
+        val first = LivingResidents.nextVisitor(PlayScene.Place.PARK, 10 * 60)!!
+        val second = LivingResidents.nextVisitor(
+            PlayScene.Place.PARK,
+            10 * 60,
+            previousProfileId = first.profileId
+        )!!
+
+        assertEquals(ResidentRole.PARK_REGULAR, first.role)
+        assertEquals(ResidentRole.ATHLETE, second.role)
+        assertEquals(
+            first,
+            LivingResidents.nextVisitor(PlayScene.Place.PARK, 10 * 60)
+        )
+        for (resident in LivingResidents.all) {
+            val agent = LivingResidents.initialAgent(resident)
+            assertTrue(
+                agent.personality.goalBias.values.all { it < UtilitySelector.MIN_PRESSURE }
+            )
+        }
     }
 }

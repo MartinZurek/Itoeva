@@ -1,11 +1,11 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-14 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-085 umgesetzt)
+Stand: 2026-09-14 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-086 umgesetzt)
 
 ## Was das System heute wirklich ist
 
-Nach den gemergten Schnitten #127 bis #149 und dem aktuellen NT-085 ist aus dem Plan ein
+Nach den gemergten Schnitten #127 bis #150 und dem aktuellen NT-086 ist aus dem Plan ein
 laufendes System geworden. Diese
 Uebersicht beschreibt den IST-Stand; der Rest des Dokuments bleibt der Plan, an dem er gemessen
 wird.
@@ -227,6 +227,22 @@ vom vorhandenen Besuchstakt erzeugt und nach der Begegnung verworfen. Persistent
 waehlbare Einwohner mit eigenem Alltag, Beruf und Aufenthaltsort sind NT-086. Erst darauf bauen
 mehrere gleichzeitig sichtbare Wesen, Verkaeufer und gemeinsame Aktivitaeten auf; neue Orte sind
 nicht der erste Hebel, solange PARK, SPORT, SHOP, CITY, FOREST, MEADOW und POND noch leer sind.
+
+NT-086 ersetzt den verworfenen Zufallsgast durch den kleinsten dauerhaften Einwohnerbestand:
+eine Verkaufskraft mit Anker im SHOP, einen Parkstammgast und einen Sportler. Sie verwenden die
+vorhandenen sechs Silhouetten, besitzen aber eigene `resident:`-Profil-IDs, sind damit nicht
+waehlbar und teilen weder Geld noch Vorrat mit dem Hauptavatar. Ort und Uhrzeit bestimmen
+deterministisch, wer fuer eine Begegnung in Frage kommt; eine feste Rotation ersetzt Zufall.
+Nach dem sichtbaren Austausch werden beide Agenten samt Beduerfnissen, Episoden und Beziehung
+gespeichert. Verschiedene letzte Handlungsminuten werden vor der Begegnung auf die spaetere Zeit
+fortgeschrieben, nie zurueckgedreht.
+
+Das ist Identitaets- und Persistenzgrundlage, noch keine vollstaendige Bevoelkerungssimulation.
+Zwischen Besuchen wachsen Beduerfnisse, aber Einwohner fuehren noch keinen eigenen unsichtbaren
+Tagesablauf aus; der Renderer zeigt weiterhin hoechstens einen Gast. NT-087 muss deshalb als
+Naechstes die Agentenentscheidung fuer Aufenthalt und Aktivitaet rechnen und als read-only
+Population-Snapshot ausgeben. Erst NT-088 projiziert mehrere dieser tatsaechlich anwesenden
+Wesen zugleich in SHOP, PARK und SPORT.
 
 ### Die Stimmung kommt jetzt auch aus dem Wesen
 

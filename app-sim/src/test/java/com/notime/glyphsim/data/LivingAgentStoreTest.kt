@@ -7,6 +7,7 @@ import com.notime.glyphsim.living.GoalKind
 import com.notime.glyphsim.living.LivingEvent
 import com.notime.glyphsim.living.LivingEventKind
 import com.notime.glyphsim.living.LivingSite
+import com.notime.glyphsim.living.LivingSimulation
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Personality
@@ -15,6 +16,7 @@ import com.notime.glyphsim.living.RelationshipState
 import com.notime.glyphsim.living.Requirement
 import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
+import com.notime.glyphsim.matrix.LivingResidents
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -121,6 +123,80 @@ class LivingAgentStoreTest {
         assertEquals(beforeWorld, restored.world)
         assertNull(restored.migratedFromVersion)
         assertTrue(storage.values.getValue(beforeAgent.profileId).startsWith("version=2\n"))
+    }
+
+    @Test
+    fun `Einwohner behaelt Beziehung und entwickelt Beduerfnisse zwischen Besuchen`() {
+        val storage = LivingAgentMemoryStorage()
+        val store = LivingAgentStore(storage)
+        val resident = LivingResidents.all.first()
+        val beforeAgent = richAgent(resident.profileId)
+        val beforeWorld = LivingResidents.initialWorld(resident, absoluteMinute = 8 * 60)
+        store.save(beforeAgent, beforeWorld)
+
+        val restored = store.restore(
+            profileId = resident.profileId,
+            currentSimulationMinute = beforeWorld.absoluteMinute + WorldState.MINUTES_PER_DAY,
+            currentOpenSites = open,
+            currentNearbyProfiles = setOf("PUFFLING")
+        )!!
+
+        assertEquals(
+            beforeAgent.relationships.getValue("STARLET"),
+            restored.agent.relationships.getValue("STARLET")
+        )
+        assertTrue(
+            restored.agent.needs.pressure(NeedKind.SOCIAL) >
+                beforeAgent.needs.pressure(NeedKind.SOCIAL)
+        )
+        assertEquals(resident.profileId, restored.agent.profileId)
+        assertEquals(setOf("PUFFLING"), restored.world.nearbyProfiles)
+    }
+
+    @Test
+    fun `beide Seiten einer Einwohnerbegegnung ueberleben getrennt`() {
+        val storage = LivingAgentMemoryStorage()
+        val store = LivingAgentStore(storage)
+        val resident = LivingResidents.all.first()
+        val minute = world().absoluteMinute
+        val residentAgent = LivingResidents.initialAgent(resident)
+        val residentWorld = LivingResidents.initialWorld(resident, minute)
+        val hostAgent = richAgent("PUFFLING")
+        val hostWorld = world(coins = 7, portions = 1).copy(site = LivingSite.MARKET)
+
+        val exchange = LivingSimulation.exchangePlayInvitation(
+            residentAgent,
+            residentWorld,
+            hostAgent,
+            hostWorld
+        )
+        store.save(exchange.initiator, exchange.initiatorWorld)
+        store.save(exchange.receiver, exchange.receiverWorld)
+
+        val residentAgain = store.restore(
+            resident.profileId,
+            exchange.initiatorWorld.absoluteMinute,
+            open,
+            setOf("PUFFLING")
+        )!!
+        val hostAgain = store.restore(
+            "PUFFLING",
+            exchange.receiverWorld.absoluteMinute,
+            open,
+            setOf(resident.profileId)
+        )!!
+
+        assertTrue("Einwohner kennt den Host", "PUFFLING" in residentAgain.agent.relationships)
+        assertTrue(
+            "Host kennt den Einwohner",
+            resident.profileId in hostAgain.agent.relationships
+        )
+        assertEquals(2, residentAgain.world.coins)
+        assertEquals(7, hostAgain.world.coins)
+        assertEquals(
+            residentAgain.world.absoluteMinute,
+            hostAgain.world.absoluteMinute
+        )
     }
 
     @Test
