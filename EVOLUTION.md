@@ -2747,6 +2747,58 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   beim Gehen einen eigenen Takt. Schlafrueckblick und neue Reminderreaktionen vorher bzw. dabei
   am Geraet beurteilen.
 
+### 2026-09-14 - Vier Orte reichen, Behaglichkeit war unerreichbar (NT-087)
+
+- **Ausgangsfrage:** Vor der zweiten Haelfte von NT-086 stand die Architekturentscheidung, ob
+  `LivingSite` feiner werden muss oder Einwohner eine Position unterhalb der Site brauchen. Ich
+  hatte das gestern selbst als die eigentliche Huerde bezeichnet. **Die Messung sagt: keines von
+  beiden.**
+- **Was gemessen wurde:** Sechs unabhaengig entscheidende Wesen, je 120 Schritte durch den
+  vorhandenen `LivingRuntimeAdapter`, ohne eine einzige Aenderung an der Domaene.
+  - **1 662 Begegnungsgelegenheiten** (gleicher sichtbarer Ort im Fenster von 30
+    Simulationsminuten). **Kein einziges Paar** blieb ohne Gelegenheit.
+  - **12 von 16 sichtbaren Orten** kamen vor. Der sichtbare Ort ist also bereits fein genug.
+  - Die Domaene luegt dabei nicht: In **1 von 720 Schritten** stand die Figur draussen, waehrend
+    der Kern HOME sagte. Auch dieser Verdacht war falsch.
+  - Der Grund: Nicht der Ort platziert ein Wesen, sondern das **Thema**. `PURSUE_INTEREST` und
+    die benannten Beschaeftigungen aus NT-072 gehen ueber `PlayScene.forTopic` an den Ort, der
+    zur Taetigkeit gehoert. Zwei Wesen, die dasselbe tun wollen, stehen deshalb schon heute am
+    selben Ort - ohne dass die Domaene mehr als vier Orte kennen muesste.
+- **Entscheidung:** `LivingSite` bleibt bei vier. Die Begruendung im KDoc der Domaene stimmt und
+  ist jetzt belegt statt behauptet.
+- **Was die Messung stattdessen gefunden hat:** Von acht Zielen gewannen **zwei nie**.
+  `SEEK_COMFORT` kam nie ueber Rang 3 und nie ueber 0,157 Punkte - bei den GERINGSTEN Kosten
+  aller acht Ziele (0,052). Es lag also nicht am Aufwand, sondern am Druck: Behaglichkeit kam nie
+  ueber 0,257, waehrend Hunger und Ruhe 1,0 erreichten.
+- **Die Rechnung:** Behaglichkeit waechst mit 0,02 je Stunde, dem langsamsten Wert von sieben -
+  in achtzig Simulationsstunden um 1,6. Erleichtert wurde sie im selben Lauf um rund 11, weil
+  Essen (0,2), Ruhen (0,3), Zuwendung (0,25) und Bewegung (0,35) alle nebenbei daran zogen und
+  zusammen ueber zweihundertfuenfzig Mal vorkamen. **Das ist genau der Befund, den NT-074 selbst
+  aufgeschrieben hat** ("wurden ausschliesslich nebenbei gestillt") - behoben wurde damals nur
+  die Zielseite.
+- **Mit kleineren Zahlen nicht zu heilen:** Ein erster Versuch senkte die vier Werte auf
+  0,08 / 0,12 / 0,10 / 0,05. Das Verhaeltnis blieb bei 3,2 zu 1, die beste Punktzahl stieg von
+  0,157 auf 0,174 - praktisch nichts. Bei zweihundertfuenfzig Gelegenheiten gegen 1,6 Wachstum
+  schwemmt jeder plausible Wert das Beduerfnis weg.
+- **Deshalb eine Regel statt einer Zahl:** Behaglichkeit stillt nur, was ihr gilt - `SETTLE` und
+  `TEND_SELF`. Wer isst, ruht, jemanden herzt oder sich bewegt, tut das aus einem anderen Grund.
+- **Wirkung:** `SEEK_COMFORT` wird jetzt 30 Mal in einem Tageslauf gewaehlt statt nie, `SETTLE`
+  30 Mal ausgefuehrt statt 6. Die anderen Ziele bleiben stehen: GET_FOOD 348 -> 314, REST
+  102 -> 99, HAVE_FUN 60 -> 63, CONNECT_WITH 48 -> 56, EXPLORE 52 -> 55. **DEVELOP faellt von 39
+  auf 24** - es teilt sich den langsam wachsenden Bereich jetzt mit der Behaglichkeit. Das ist
+  eine Umverteilung, kein Einbruch.
+- **Nicht geaendert:** `EARN_MONEY` gewinnt weiterhin nie (beste Punktzahl -0,434 bei
+  Durchschnittskosten 58). Das ist kein Fehler: Wer weder hungrig noch knapp bei Kasse ist, hat
+  fuer Geld heute keine Verwendung - Muenzen zahlen ausschliesslich Essen. Ein eigener Antrieb
+  fuer Geld braucht erst etwas, wofuer es sich zu sparen lohnt.
+- **Betroffene Bereiche:** `LivingAction` (vier Wirkungen), `LivingDriveTest`, Living-Agent-,
+  Uebergabe- und Backlogdokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 473 Tests gruen (vorher 471, zwei neue
+  Faelle: die Regel und der Verhaltensbeleg).
+- **Naechster Schritt:** Die zweite Haelfte von NT-086 kann ohne Architekturumbau beginnen. Die
+  offene Frage ist jetzt die Lesbarkeit, nicht das Ortsmodell: Bei `MIN_SCENE_CELLS = 40` und
+  einer 16 Zellen breiten Figur passen drei bis vier Wesen nicht nebeneinander.
+
 ### 2026-09-14 - Der Gast wird ein Wesen mit Gedaechtnis (NT-086, erste Haelfte)
 
 - **Ausgangsproblem:** NT-085 hat die Begegnung echt gemacht, den Gast aber nicht. Er wurde bei

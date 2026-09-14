@@ -303,6 +303,30 @@ stehen jetzt im Offline-Lauf (459 Tests) - genau die Luecke, die in NT-078 schon
 roten Lauf erzeugt hat. **Offen bleibt:** ob die Maschen am Geraet als Netz lesbar sind und ob
 der Ball mit fuenf Zellen neben einer sechzehn Zellen breiten Figur nicht zu gross wirkt.
 
+**Living Agent, weiter:** NT-087 **Vier Orte reichen; Behaglichkeit war unerreichbar** - *am
+2026-09-14 umgesetzt.* Vor der zweiten Haelfte von NT-086 stand die Architekturentscheidung, ob
+`LivingSite` feiner werden muss. Ich hatte das selbst als die eigentliche Huerde bezeichnet - die
+Messung sagt: **keines von beiden**. Sechs unabhaengig entscheidende Wesen, je 120 Schritte durch
+den vorhandenen Adapter: **1 662 Begegnungsgelegenheiten**, **kein Paar** ohne Gelegenheit, **12
+von 16** sichtbaren Orten, und in **1 von 720** Schritten wich der Kern vom sichtbaren Ort ab.
+Nicht der Ort platziert ein Wesen, sondern das Thema; `PlayScene.forTopic` fuehrt zwei Wesen mit
+demselben Vorhaben schon heute an denselben Ort. `LivingSite` bleibt bei vier, und die
+Begruendung im KDoc ist jetzt belegt statt behauptet. **Der eigentliche Fund:** Von acht Zielen
+gewannen zwei NIE. `SEEK_COMFORT` kam nie ueber Rang 3 und nie ueber 0,157 Punkte - bei den
+geringsten Kosten aller acht Ziele. Behaglichkeit waechst mit 0,02 je Stunde (in 80
+Simulationsstunden also 1,6) und wurde im selben Lauf um rund 11 erleichtert, weil Essen, Ruhen,
+Zuwendung und Bewegung alle nebenbei daran zogen - genau der Befund, den NT-074 selbst
+aufgeschrieben, aber nur auf der Zielseite behoben hat. Mit kleineren Zahlen war das nicht zu
+heilen (Versuch 0,08/0,12/0,10/0,05: Verhaeltnis blieb 3,2 zu 1, Punktzahl 0,157 -> 0,174).
+Jetzt gilt die Regel statt der Zahl: Behaglichkeit stillt nur, was ihr gilt (`SETTLE`,
+`TEND_SELF`). `SEEK_COMFORT` wird seitdem 30 Mal im Tageslauf gewaehlt statt nie, `SETTLE` 30 Mal
+ausgefuehrt statt 6; DEVELOP faellt dabei von 39 auf 24, weil es sich den langsam wachsenden
+Bereich jetzt teilt. **Offen bleibt:** `EARN_MONEY` gewinnt weiterhin nie (-0,434 bei Kosten 58)
+- kein Fehler, solange Muenzen ausschliesslich Essen zahlen; ein eigener Antrieb fuer Geld
+braucht erst etwas, wofuer sich Sparen lohnt. Und fuer die Bevoelkerung ist die naechste Huerde
+die Lesbarkeit, nicht das Ortsmodell: Bei `MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten
+Figur passen drei bis vier Wesen nicht nebeneinander.
+
 **Living Agent, weiter:** NT-086 **Der Gast wird ein Wesen mit Gedaechtnis** - *erste Haelfte am
 2026-09-14 umgesetzt.* NT-085 hat die Begegnung echt gemacht, den Gast aber nicht: Er wurde bei
 jedem Besuch neu erfunden und danach verworfen, gespeichert wurde nur die Seite des Bewohners.

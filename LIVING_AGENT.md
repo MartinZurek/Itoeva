@@ -231,11 +231,54 @@ nicht gewartet, sondern gelebt, waehrend er weg war.
 
 Was damit ausdruecklich NOCH NICHT da ist: Der Gast waehlt seinen Aufenthalt nicht selbst, es gibt
 weiterhin hoechstens einen sichtbaren gleichzeitig, und es gibt keine Rolle und keinen Verkaeufer.
-**Die Grenze dafuer liegt tiefer als in der Oberflaeche:** Die Domaene fuehrt vier Orte
-(`LivingSite`), und PARK, POND, SPORT, FOREST, MEADOW, CITY und STREET sind darin alle derselbe
-Ort `OUTSIDE`. "Im Park stehen ein Spaziergaenger und ein Sportler" ist auf dieser Ebene nicht
-formulierbar. Wer Einwohner will, die sich selbst verteilen, muss vorher entscheiden, ob
-`LivingSite` feiner wird oder ob Einwohner eine Position unterhalb der Site bekommen.
+
+### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
+
+Hier stand zuerst, die Grenze liege im Ortsmodell: Die Domaene fuehrt vier Orte, PARK, POND,
+SPORT, FOREST, MEADOW, CITY und STREET seien darin alle `OUTSIDE`, und "im Park stehen ein
+Spaziergaenger und ein Sportler" sei deshalb nicht formulierbar. **Das war falsch, und die
+Messung hat es widerlegt.**
+
+Sechs unabhaengig entscheidende Wesen, je 120 Schritte durch den vorhandenen Adapter, ohne eine
+einzige Aenderung an der Domaene:
+
+| Frage | Messung |
+| --- | --- |
+| Begegnungsgelegenheiten (gleicher sichtbarer Ort, 30 Minuten Fenster) | **1 662** |
+| Paare ganz ohne Gelegenheit | **keines** |
+| Verschiedene sichtbare Orte | **12 von 16** |
+| Schritte, in denen die Figur draussen steht und der Kern HOME sagt | **1 von 720** |
+
+**Nicht der Ort platziert ein Wesen, sondern das Thema.** `PURSUE_INTEREST` und die benannten
+Beschaeftigungen aus NT-072 gehen ueber `PlayScene.forTopic` an den Ort, der zur Taetigkeit
+gehoert. Zwei Wesen, die dasselbe tun wollen, stehen deshalb schon heute am selben Ort - dafuer
+muss die Domaene keinen fuenften Ort kennen. Die Begruendung im KDoc von `WorldState` ("fuer eine
+Entscheidung zaehlt davon fast nichts") stimmt und ist jetzt belegt.
+
+Die offene Frage fuer eine Bevoelkerung ist damit nicht das Ortsmodell, sondern die
+**Lesbarkeit**: Bei `PlayScene.MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten Figur passen
+drei bis vier Wesen nicht nebeneinander.
+
+### Behaglichkeit war ein Ziel ohne Weg (NT-087)
+
+Dieselbe Messung hat gezeigt, dass von acht Zielen **zwei nie gewinnen**. `SEEK_COMFORT` kam nie
+ueber Rang 3 und nie ueber 0,157 Punkte - bei den GERINGSTEN Kosten aller acht Ziele. Es lag also
+nicht am Aufwand, sondern am Druck: Behaglichkeit kam nie ueber 0,257, waehrend Hunger und Ruhe
+1,0 erreichten.
+
+Behaglichkeit waechst mit 0,02 je Stunde, dem langsamsten Wert von sieben - in achtzig
+Simulationsstunden um 1,6. Erleichtert wurde sie im selben Lauf um rund 11, weil Essen, Ruhen,
+Zuwendung und Bewegung alle nebenbei daran zogen und zusammen ueber zweihundertfuenfzig Mal
+vorkamen. **Das ist genau der Befund, den NT-074 oben selbst aufschreibt** - behoben wurde damals
+nur die Zielseite.
+
+Mit kleineren Zahlen war das nicht zu heilen: Ein Versuch mit 0,08 / 0,12 / 0,10 / 0,05 liess das
+Verhaeltnis bei 3,2 zu 1 und die beste Punktzahl bei 0,174. Deshalb eine Regel statt einer Zahl -
+**Behaglichkeit stillt nur, was ihr gilt**: `SETTLE` und `TEND_SELF`. Seitdem wird `SEEK_COMFORT`
+dreissig Mal im Tageslauf gewaehlt statt nie.
+
+`EARN_MONEY` gewinnt weiterhin nie, und das ist kein Fehler: Wer weder hungrig noch knapp bei
+Kasse ist, hat fuer Geld heute keine Verwendung - Muenzen zahlen ausschliesslich Essen.
 
 ### Die soziale Rechnung war echt, der sichtbare Besuch war es nicht
 
