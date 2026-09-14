@@ -207,6 +207,36 @@ eines Freundes haette an der Entscheidung nichts mehr geaendert. Genau die Aussa
 Soziale traegt, waere verloren gegangen. Der Aufwand von 0,12 stellt das zurecht, und er ist auch
 inhaltlich richtig: An jemanden zu denken, der nicht da ist, ist die schwerere Wahl.
 
+### Der Gast hatte kein Gedaechtnis
+
+NT-085 hat die Begegnung echt gemacht, den Gast aber nicht. Er wurde bei jedem Besuch neu
+erfunden, erlebte den Wortwechsel und war danach verworfen; gespeichert wurde nur die Seite des
+Bewohners. Die Beziehung, die der Kern auf BEIDEN Seiten rechnet, hielt damit genau so lange wie
+der Besuch.
+
+Der Gast wird jetzt vor der Begegnung aus dem vorhandenen `LivingAgentStore` geladen und danach
+unter seiner eigenen Kennung wieder gespeichert - derselbe Store, derselbe Codec, ein zweiter
+Schluessel. `restore` traegt seine Beduerfnisse um die verstrichene Simulationszeit weiter: Er hat
+nicht gewartet, sondern gelebt, waehrend er weg war.
+
+**Zwei Dinge mussten dafuer getrennt werden, und beide waren vorher unsichtbar:**
+
+1. **Kennung.** `AvatarSpeciesPrefs.profileId` liefert den blossen Speziesnamen - und unter genau
+   dem liegt der Zustand des Spielers, sobald er diese Kreatur waehlt. Ein gespeicherter Gast
+   waere beim naechsten Speziestausch zum eigenen Avatar geworden, mit fremden Beziehungen und
+   fremden Erinnerungen. `LivingRuntimeAdapter.visitorProfileId` trennt die Namensraeume.
+2. **Welt.** `WorldState` traegt Muenzen und Vorrat, und die gehoeren der sichtbaren Welt des
+   Spielers (`PlayWallet`, `PlayPantry`). Der Gast bekommt Zeit, Ort und Anwesende aus der
+   gemeinsamen Begegnung, Muenzen und Vorrat aber aus seinem eigenen letzten Stand.
+
+Was damit ausdruecklich NOCH NICHT da ist: Der Gast waehlt seinen Aufenthalt nicht selbst, es gibt
+weiterhin hoechstens einen sichtbaren gleichzeitig, und es gibt keine Rolle und keinen Verkaeufer.
+**Die Grenze dafuer liegt tiefer als in der Oberflaeche:** Die Domaene fuehrt vier Orte
+(`LivingSite`), und PARK, POND, SPORT, FOREST, MEADOW, CITY und STREET sind darin alle derselbe
+Ort `OUTSIDE`. "Im Park stehen ein Spaziergaenger und ein Sportler" ist auf dieser Ebene nicht
+formulierbar. Wer Einwohner will, die sich selbst verteilen, muss vorher entscheiden, ob
+`LivingSite` feiner wird oder ob Einwohner eine Position unterhalb der Site bekommen.
+
 ### Die soziale Rechnung war echt, der sichtbare Besuch war es nicht
 
 Seit NT-067 konnte der Kern eine Einladung aus `PLAY + QUESTION` zustandsabhaengig beantworten.

@@ -303,6 +303,27 @@ stehen jetzt im Offline-Lauf (459 Tests) - genau die Luecke, die in NT-078 schon
 roten Lauf erzeugt hat. **Offen bleibt:** ob die Maschen am Geraet als Netz lesbar sind und ob
 der Ball mit fuenf Zellen neben einer sechzehn Zellen breiten Figur nicht zu gross wirkt.
 
+**Living Agent, weiter:** NT-086 **Der Gast wird ein Wesen mit Gedaechtnis** - *erste Haelfte am
+2026-09-14 umgesetzt.* NT-085 hat die Begegnung echt gemacht, den Gast aber nicht: Er wurde bei
+jedem Besuch neu erfunden und danach verworfen, gespeichert wurde nur die Seite des Bewohners.
+Die Beziehung, die der Kern auf BEIDEN Seiten rechnet, hielt damit genau so lange wie der Besuch.
+Jetzt wird er aus dem vorhandenen `LivingAgentStore` geladen und unter eigener Kennung wieder
+gespeichert - derselbe Store, derselbe Codec, ein zweiter Schluessel; `restore` traegt seine
+Beduerfnisse um die verstrichene Zeit weiter, er hat also gelebt statt gewartet. Zwei Funde
+mussten dafuer erst getrennt werden: **Die Kennung** - `AvatarSpeciesPrefs.profileId` ist der
+blosse Speziesname, und darunter liegt der Zustand des SPIELERS, sobald er diese Kreatur waehlt;
+ein gespeicherter Gast waere beim naechsten Speziestausch zum eigenen Avatar geworden. **Die
+Welt** - `WorldState` traegt Muenzen und Vorrat, die der sichtbaren Welt des Spielers gehoeren;
+unveraendert uebernommen haette der Gast Geldbeutel und Speisekammer geerbt. Beleg: dieselbe
+Einladung an denselben ausgeruhten Bewohner ergibt mit mitgebrachtem Gast vier Interaktionen und
+mehr Naehe als mit einem Gast ohne Gedaechtnis mit zwei. **Offen bleibt:** die zweite Haelfte -
+Einwohner, die ihren Aufenthalt selbst waehlen. Davor steht eine Architekturentscheidung, die im
+bisherigen Plan fehlt: Die Domaene fuehrt VIER Orte (`LivingSite`), und PARK, POND, SPORT,
+FOREST, MEADOW, CITY und STREET sind darin alle `OUTSIDE`. "Im Park stehen zwei Einwohner" ist
+dort nicht formulierbar. Nebenbei aufgefallen und nicht geaendert: Ein HUNGRIGER Bewohner sagt zu
+einer Spieleinladung trotzdem zu - `FOOD + NO` entsteht in der Praxis also seltener, als die
+Dokumentation nahelegt.
+
 **Darstellung:** NT-082 **Die anderen Szenen standen still** - *am 2026-09-13 umgesetzt.*
 Dieselbe Messung wie beim Fussball ueber alle Mehrphasen-Szenen laufen lassen: Wie viele
 verschiedene Bilder ergibt eine Phase ueber vierzig Takte, also acht Sekunden? Basketball AIM,

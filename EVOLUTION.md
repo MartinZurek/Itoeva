@@ -2747,6 +2747,49 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   beim Gehen einen eigenen Takt. Schlafrueckblick und neue Reminderreaktionen vorher bzw. dabei
   am Geraet beurteilen.
 
+### 2026-09-14 - Der Gast wird ein Wesen mit Gedaechtnis (NT-086, erste Haelfte)
+
+- **Ausgangsproblem:** NT-085 hat die Begegnung echt gemacht, den Gast aber nicht. Er wurde bei
+  jedem Besuch mit `LivingRuntimeAdapter.initialAgent` neu erfunden, erlebte den Wortwechsel und
+  war danach verworfen. Gespeichert wurde ausschliesslich die Seite des Bewohners. Die Beziehung,
+  die der Kern seit NT-067 auf BEIDEN Seiten rechnet, hielt damit genau so lange wie der Besuch;
+  ein Wiedersehen gab es nie, weil niemand da war, der sich erinnern konnte.
+- **Entscheidung:** Der Gast wird vor der Begegnung aus dem vorhandenen `LivingAgentStore`
+  geladen und danach unter seiner eigenen Kennung wieder gespeichert. `restore` traegt dabei
+  seine Beduerfnisse um die verstrichene Simulationszeit weiter - er hat nicht gewartet, sondern
+  gelebt, waehrend er weg war. Keine zweite Ablage, keine zweite Engine: derselbe Store, derselbe
+  Codec, ein zweiter Schluessel.
+- **Der Fund, der diesen Schnitt erzwungen hat:** `AvatarSpeciesPrefs.profileId` liefert den
+  blossen Speziesnamen, und unter genau dem liegt der Zustand des SPIELERS, sobald er diese
+  Kreatur waehlt. Solange der Gast weggeworfen wurde, war das folgenlos. Mit dem ersten
+  gespeicherten Gast waere es ein Datenfehler mit Folgen geworden: Wer heute Besuch von einem
+  WYRMLING bekommt und morgen selbst WYRMLING wird, haette dessen Beziehungen, Erinnerungen und
+  Beduerfnisse als seine eigenen uebernommen. `LivingRuntimeAdapter.visitorProfileId` trennt die
+  Namensraeume; ein Gast ist ein eigenes Wesen, das zufaellig dieselbe Art hat.
+- **Zweiter Fund:** Die Welt des Gastes ist NICHT die des Bewohners. `WorldState` traegt Muenzen
+  und Vorrat, und die gehoeren der sichtbaren Welt des Spielers (`PlayWallet`, `PlayPantry`).
+  Waere die gemeinsame Begegnungswelt unveraendert fuer den Gast gespeichert worden, haette er
+  den Geldbeutel und die Speisekammer des Spielers geerbt. Zeit, Ort und Anwesende stammen aus
+  der Begegnung, Muenzen und Vorrat aus seinem eigenen letzten Stand.
+- **Erster Beleg:** Dieselbe Einladung an denselben ausgeruhten Bewohner ergibt bei einem
+  mitgebrachten Gast vier Interaktionen und eine hoehere Naehe als bei einem Gast ohne
+  Gedaechtnis mit zwei. Der Gast bringt ausserdem die Episoden des ersten Treffens mit.
+- **Abgrenzung:** Der Gast bleibt vom vorhandenen Besuchstakt erzeugt und waehlt seinen
+  Aufenthalt nicht selbst. Es gibt weiterhin hoechstens EINEN sichtbaren Gast, keinen Verkaeufer
+  und keine Rolle. Die Domaene fuehrt unveraendert vier Orte; "im Park" ist dort nicht
+  formulierbar, und das begrenzt die zweite Haelfte von NT-086.
+- **Bestandsdaten:** Beziehungen, die seit NT-085 unter dem blossen Speziesnamen entstanden sind,
+  fangen einmal bei null an. Eine Umschluesselung koennte einen echten Spielerzustand nicht von
+  einem Gastzustand unterscheiden und wuerde im Zweifel das Falsche behalten.
+- **Betroffene Bereiche:** `LivingRuntimeAdapter`, die Besuchssequenz in `DockScreen`, die
+  Berechnung der anwesenden Profile an drei Stellen, Living-Agent- und Uebergabedokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 471 Tests gruen (vorher 467, vier neue
+  Faelle).
+- **Naechster Schritt:** Die zweite Haelfte von NT-086 - Einwohner, die ihren Aufenthalt selbst
+  waehlen. Davor steht die Entscheidung, ob `LivingSite` feiner wird oder ob Einwohner eine
+  Position unterhalb der Site bekommen; ohne sie ist "im Park" keine Aussage, die die Domaene
+  treffen kann.
+
 ### 2026-09-14 - Der sichtbare Besuch wird eine wirkliche Begegnung (NT-085)
 
 - **Ausgangsproblem:** Das Living-Agent-System konnte seit NT-067 eine symbolische Einladung aus

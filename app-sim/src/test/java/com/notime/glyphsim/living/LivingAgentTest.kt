@@ -601,4 +601,83 @@ class LivingAgentTest {
         assertTrue(mehrereTageA.agent.episodes != mehrereTageB.agent.episodes)
     }
 
+    /**
+     * **Ein Wiedersehen ist nicht dasselbe wie ein erstes Treffen.**
+     *
+     * Das ist die Eigenschaft, um derentwillen der Gast ueberhaupt gespeichert wird. Bis dahin
+     * bekam er bei jedem Besuch einen brandneuen Zustand: Er kam an, erlebte die Begegnung, und
+     * beim naechsten Mal wusste er nichts mehr davon. Die Beziehung, die der Kern laengst
+     * rechnet, hielt genau so lange wie der Besuch selbst.
+     *
+     * Geprueft wird nicht, DASS gespeichert wird - das entscheidet die Oberflaeche -, sondern
+     * dass der Kern aus einem mitgebrachten Zustand etwas anderes macht als aus einem leeren.
+     * Waere das nicht so, waere das Speichern eine Buchhaltung ohne Wirkung.
+     *
+     * **Der Bewohner ist hier ausgeruht, und das ist kein Zufall.** Der erste Entwurf dieses
+     * Tests gab ihm einen halb leeren Energiespeicher - da sagt er ab, und dann SINKT die Naehe.
+     * Die Zusicherung "die Naehe waechst" war also nicht falsch gerechnet, sondern am falschen
+     * Fall gemessen. Gegen eine Absage wachsen die Zahlen genauso weiter, nur nach unten.
+     */
+    @Test
+    fun `ein zweites Treffen baut auf dem ersten auf`() {
+        fun gast() = AgentState(
+            "guest_WYRMLING",
+            Personality(),
+            Needs.of(NeedKind.SOCIAL to 0.6)
+        )
+        fun ausgeruhterBewohner() = AgentState(
+            "PUFFLING",
+            Personality(),
+            Needs.of(NeedKind.SOCIAL to 0.8, NeedKind.ENERGY to 0.1)
+        )
+        val welt = WorldState(
+            day = 0,
+            minuteOfDay = 10 * 60,
+            site = LivingSite.HOME,
+            coins = 2,
+            portions = 2,
+            openSites = LivingSite.entries.toSet()
+        )
+
+        val erstes = LivingSimulation.exchangePlayInvitation(gast(), ausgeruhterBewohner(), welt)
+        assertTrue(
+            "Der Bewohner sagt in diesem Test zu - sonst misst er die falsche Richtung",
+            SymbolicIntent.YES in erstes.response.intents
+        )
+
+        // Der mitgebrachte Gast - so, wie ihn der Store beim naechsten Besuch zurueckgibt.
+        val zweites = LivingSimulation.exchangePlayInvitation(
+            initiator = erstes.initiator,
+            receiver = ausgeruhterBewohner(),
+            world = erstes.initiatorWorld
+        )
+        // Und zum Vergleich derselbe Augenblick mit einem Gast ohne Gedaechtnis.
+        val alsFremder = LivingSimulation.exchangePlayInvitation(
+            initiator = gast(),
+            receiver = ausgeruhterBewohner(),
+            world = erstes.initiatorWorld
+        )
+
+        val wiedersehen = zweites.initiator.relationships.getValue("PUFFLING")
+        val fremd = alsFremder.initiator.relationships.getValue("PUFFLING")
+        assertTrue(
+            "Das zweite Treffen zaehlt nicht weiter: ${wiedersehen.interactions} " +
+                "gegen ${fremd.interactions}",
+            wiedersehen.interactions > fremd.interactions
+        )
+        assertTrue(
+            "Die Naehe waechst beim Wiedersehen nicht: ${wiedersehen.closeness} " +
+                "gegen ${fremd.closeness}",
+            wiedersehen.closeness > fremd.closeness
+        )
+        assertTrue(
+            "Das Vertrauen waechst beim Wiedersehen nicht",
+            wiedersehen.trust > fremd.trust
+        )
+        assertTrue(
+            "Der Gast erinnert sich nicht an das erste Treffen",
+            zweites.initiator.episodes.size > alsFremder.initiator.episodes.size
+        )
+    }
+
 }

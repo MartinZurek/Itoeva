@@ -653,7 +653,7 @@ fun DockScreen(
          */
         fun livingStateFor(species: AvatarSpecies): Pair<AgentState, WorldState> {
             val nearbyProfiles = visitor?.species?.let {
-                setOf(AvatarSpeciesPrefs.profileId(it))
+                setOf(LivingRuntimeAdapter.visitorProfileId(it))
             }.orEmpty()
             val simulationMinute = PlayTimeLapse.absoluteMinute()
             val restored = if (livingAgent == null || livingWorld == null) {
@@ -1806,9 +1806,23 @@ fun DockScreen(
                 // fragt PLAY + QUESTION, der Bewohner antwortet aus seinem wirklichen Zustand.
                 // Hier wird nichts entschieden; die Oberflaeche zeigt nur die beiden Nachrichten
                 // und waehlt eine passende Koerperregung dazu.
-                val guestProfileId = AvatarSpeciesPrefs.profileId(guestSpecies)
+                val guestProfileId = LivingRuntimeAdapter.visitorProfileId(guestSpecies)
                 val (hostAgent, hostWorld) = livingStateFor(host.species)
-                val guestAgent = LivingRuntimeAdapter.initialAgent(guestProfileId, guestSpecies)
+                // **Der Gast wird geladen, nicht erfunden.** Bis hierher bekam er bei jedem
+                // Besuch einen brandneuen Zustand: Er kam an, erlebte die Begegnung, und beim
+                // naechsten Mal wusste er nichts mehr davon. Die Beziehung, die der Kern laengst
+                // rechnet, hielt damit genau so lange wie der Besuch selbst.
+                //
+                // `restore` traegt nebenbei seine Beduerfnisse um die verstrichene Zeit weiter -
+                // er hat also nicht gewartet, sondern gelebt, waehrend er weg war.
+                val guestBefore = livingStore.restore(
+                    profileId = guestProfileId,
+                    currentSimulationMinute = hostWorld.absoluteMinute,
+                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(hostWorld.minuteOfDay),
+                    currentNearbyProfiles = setOf(presenceProfileId)
+                )
+                val guestAgent = guestBefore?.agent
+                    ?: LivingRuntimeAdapter.initialAgent(guestProfileId, guestSpecies)
                 val exchange = LivingSimulation.exchangePlayInvitation(
                     initiator = guestAgent,
                     receiver = hostAgent,
@@ -1901,6 +1915,25 @@ fun DockScreen(
                 livingAgent = exchange.receiver
                 livingWorld = committedWorld
                 livingStore.save(exchange.receiver, committedWorld)
+                // **Und jetzt auch die Seite des Gastes.** Ohne diese Zeile bliebe die Begegnung
+                // einseitig: Der Bewohner erinnerte sich, der Besucher nicht.
+                //
+                // Seine Welt ist NICHT die des Bewohners. Zeit, Ort und Anwesende stammen aus der
+                // gemeinsamen Begegnung - Muenzen und Vorrat aber aus seinem eigenen letzten
+                // Stand. Sonst erbte er den Geldbeutel und die Speisekammer des Spielers, und die
+                // gehoeren der sichtbaren Welt (PlayWallet, PlayPantry), nicht ihm.
+                val guestOwn = guestBefore?.world
+                livingStore.save(
+                    exchange.initiator,
+                    LivingRuntimeAdapter.synchroniseWorld(
+                        exchange.initiatorWorld.copy(
+                            coins = guestOwn?.coins ?: 0,
+                            portions = guestOwn?.portions ?: 0
+                        ),
+                        currentPlace,
+                        setOf(presenceProfileId)
+                    )
+                )
                 LivingObservationFeed.record(
                     StepResult(
                         agent = exchange.receiver,
@@ -2922,7 +2955,7 @@ fun DockScreen(
                             applied.world,
                             currentPlace,
                             visitor?.species?.let {
-                                setOf(AvatarSpeciesPrefs.profileId(it))
+                                setOf(LivingRuntimeAdapter.visitorProfileId(it))
                             }.orEmpty()
                         )
                         livingAgent = applied.agent
@@ -3133,7 +3166,7 @@ fun DockScreen(
                             val externalImpulse = pendingExternalImpulse
                             val interestTopic = externalImpulse?.animationType ?: ordinaryInterestTopic
                             val nearbyProfiles = visitor?.species?.let {
-                                setOf(AvatarSpeciesPrefs.profileId(it))
+                                setOf(LivingRuntimeAdapter.visitorProfileId(it))
                             }.orEmpty()
                             val (baseAgent, baseWorld) = livingStateFor(species)
                             val prepared = LivingRuntimeAdapter.prepare(
