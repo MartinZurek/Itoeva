@@ -2784,3 +2784,41 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Zustand und Aufenthaltsentscheidung; zuerst Verkaeufer im SHOP und Bewohner fuer PARK/SPORT.
   Mehrere gleichzeitig sichtbare Wesen und gemeinsame Aktivitaeten folgen danach in eigenen
   Scheiben.
+
+### 2026-09-14 - Der Nachklang gilt jetzt auch fuer eine wirklich gespielte Begegnung
+
+- **Version / Evidenzklasse:** Protokoll bleibt 0.6. Eine reine Funktion plus eine optionale
+  Parameter-Erweiterung an bestehender Verdrahtung; kein neues System, keine Reminder-Semantik
+  beruehrt.
+- **BEOBACHTET, im Code belegt:** Der Eintrag direkt darueber (NT-085, selber Tag) liess
+  `runVisit` in `DockScreen` erstmals wirklich fragen und antworten: Der Gast sendet
+  `PLAY + QUESTION`, der Bewohner antwortet aus Energie, sozialem Beduerfnis, Beziehung,
+  Persoenlichkeit und Ziel. Sobald der Gast danach weiterging, war davon nichts mehr zu sehen -
+  derselbe Befund, den der Eintrag vom 2026-09-06 ("Der Nachklang") schon einmal fuer eine
+  beantwortete Erinnerung behoben hatte, hier nur an einer neuen Stelle: Eine angenommene Einladung
+  ist ein echtes gemeinsames Erlebnis und faerbte trotzdem nichts an dem, was der Bewohner als
+  naechstes von sich aus tat.
+- **Umgesetzt:** `PlayAfterglow.fromVisit(response, atMillis)` macht aus einer angenommenen
+  Einladung (`SymbolicIntent.YES` in der Antwort) dieselbe `Answer(LOVE, ...)`, mit der auch eine
+  beantwortete Erinnerung nachklingt - eine muede oder abgelehnte Einladung (`TIRED`/`NO`) bleibt
+  bewusst folgenlos, weil dort nichts Gemeinsames stattfand. `PlayAfterglowSignal.bonuses` nimmt
+  dafuer einen neuen optionalen `extra`-Parameter entgegen, statt eine zweite Abfrage zu bauen - ein
+  Besuch steht in keiner Datenbanktabelle. `DockScreen` haelt dazu nur eine einzige neue
+  Zustandsvariable (`warmVisitAtMs`) und reicht sie dort durch, wo der Erinnerungs-Nachklang ohnehin
+  schon zusammengebaut wird.
+- **Belegt, in Zahlen:** LOVE hat nur abends ein Grundgewicht (2 von 17, rund 11,8 %); ein neuer
+  Test (`der Besuchsnachklang macht LOVE abends deutlich haeufiger`) bestaetigt ueber 20.000
+  Ziehungen mit dem frischen Nachklang (+`ECHO_BONUS` = 5) mehr als eine Verdopplung auf rund 32 %.
+  Zwei weitere Tests belegen, dass eine muede oder gewoehnliche Absage `null` liefert und damit gar
+  nicht erst in den Zuschlag gelangt.
+- **Die wichtigste Grenze, unveraendert aus dem Eintrag vom 2026-09-06:** Der Nachklang darf kein
+  Thema EINFUEHREN, nur verstaerken, was zur Tageszeit ohnehin vorkommt - LOVE steht in MORNING,
+  MIDDAY und NIGHT gar nicht in der Grundgewichtung (siehe `PlayAmbientActivity.weightsFor`), ein
+  Besuch zu diesen Zeiten faerbt also bewusst NICHTS und reisst insbesondere die
+  Nachtruhe-Garantie nicht auf. Das ist dieselbe Zurueckhaltung wie beim Erinnerungs-Nachklang, kein
+  Sonderfall dafuer.
+- **NICHT belegt:** Ob eine tagsueber oder mittags gespielte Begegnung ebenfalls einen sichtbaren
+  Nachklang verdient haette - das wuerde ein zweites, LOVE-unabhaengiges Signal brauchen und ist
+  hier bewusst nicht gebaut. Ebenso offen: ob sich drei Minuten frischer Nachklang bei einem Besuch
+  richtig anfuehlen; das ist dieselbe unbelegte Zahl wie beim Erinnerungs-Nachklang, nur zum ersten
+  Mal an einem Besuch beobachtet.

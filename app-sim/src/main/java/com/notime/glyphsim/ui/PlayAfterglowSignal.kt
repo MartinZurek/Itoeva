@@ -23,14 +23,23 @@ object PlayAfterglowSignal {
      *
      * Echte Zeit ueberall, nicht die Weltzeit aus
      * [com.notime.glyphsim.matrix.PlayTimeLapse] - siehe [PlayAfterglow.Answer].
+     *
+     * [extra] traegt Nachklaenge, die nicht aus der Datenbank kommen - bisher genau einer: eine
+     * angenommene Besuchs-Einladung (siehe [PlayAfterglow.fromVisit] und `runVisit` in
+     * `DockScreen`). Ein eigener Parameter statt einer zweiten Abfrage, weil ein Besuch nirgends
+     * als Ausloesung gespeichert wird - er ist ein rein sichtbares Ereignis dieser Sitzung.
      */
-    suspend fun bonuses(context: Context, companionProfileId: String): Map<AnimationType, Int> {
+    suspend fun bonuses(
+        context: Context,
+        companionProfileId: String,
+        extra: List<PlayAfterglow.Answer> = emptyList()
+    ): Map<AnimationType, Int> {
         val tagesbeginn = FeedStatsPeriod.TODAY.startMillis()
         val antworten = AppDatabase.getInstance(context).avatarFeedEventDao()
             .answeredTopicsSince(companionProfileId, tagesbeginn)
             .map { PlayAfterglow.Answer(it.animationType, it.fedAtMillis) }
         return PlayAfterglow.bonuses(
-            answers = antworten,
+            answers = antworten + extra,
             nowMillis = System.currentTimeMillis(),
             dayStartMillis = tagesbeginn
         )

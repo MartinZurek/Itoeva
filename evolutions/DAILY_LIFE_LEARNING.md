@@ -74,6 +74,53 @@ betroffenes Feedback, beobachtetes Problem, Spielerwirkung, Evidenz, Ergebnis un
 sinnvollen Hebel. Vermutungen werden als **Hypothese**, nicht als Tatsache, markiert. Das Journal
 ist eine Uebergabe, keine zweite Commit-Liste.
 
+### 2026-09-14 - Eine wirklich gespielte Begegnung faerbt jetzt auch die naechste Regung
+
+- **Betroffenes Feedback:** FB-2026-09-03-01 und FB-2026-09-02-01, beide **weiterhin `[open]`**.
+  Diese Evolution ist ein weiterer Hebel auf "wie der Avatar Ereignisse sichtbar folgenreich
+  macht", erledigt aber keinen der beiden umfassenden, mehrere Evolutionen uebergreifenden
+  Eintraege vollstaendig.
+- **Beobachtetes Problem:** Derselbe Tag brachte kurz zuvor NT-085 (siehe EVOLUTION.md,
+  2026-09-14): Ein Besuch fragt seither wirklich `PLAY + QUESTION` und der Bewohner antwortet aus
+  seinem echten Zustand. Die Antwort blieb danach aber folgenlos - sobald der Gast weiterging, war
+  fuer die naechste autonome Regung nicht mehr zu sehen, ob gerade etwas Schoenes geschehen war
+  oder nichts. Derselbe Fehler wie beim Eintrag vom 2026-09-06 ("Der Nachklang"), nur an einer
+  neuen Stelle wiedergefunden: eine echte Begegnung ohne sichtbare Nachwirkung.
+- **Evidenz:** `DOCUMENTED INTENT` fuer die Luecke (NT-085s eigener "Offen bleibt"-Hinweis nennt
+  nur die fehlende Dauerhaftigkeit des Gasts, nicht die fehlende Nachwirkung beim Bewohner - die
+  Luecke stand also bislang nirgends explizit). `TESTED BEHAVIOR` fuer die Wirkung:
+  `PlayAfterglowTest` belegt mit vier neuen Tests, dass eine ANGENOMMENE Einladung
+  (`SymbolicIntent.YES`) als `Answer(LOVE, ...)` nachklingt, eine muede oder gewoehnliche Absage
+  dagegen `null` liefert, und dass der Nachklang LOVE abends (wo es ein Grundgewicht hat) ueber
+  20.000 Ziehungen mehr als verdoppelt.
+- **Ergebnis:** `PlayAfterglow.fromVisit` wiederverwendet exakt dieselbe Rechnung wie beim
+  Erinnerungs-Nachklang (`ECHO_MS`/`ECHO_BONUS`/`DAY_BONUS`), nur mit LOVE als Thema und einem
+  Besuchs-Zeitpunkt statt einer Datenbank-Antwort. `PlayAfterglowSignal.bonuses` bekommt dafuer
+  einen optionalen `extra`-Parameter; `DockScreen` haelt eine einzige neue Zustandsvariable
+  (`warmVisitAtMs`) und reicht sie dort durch, wo der Erinnerungs-Nachklang schon zusammengebaut
+  wird. Keine neue parallele Ablaufsteuerung, keine Aenderung an Reminder-Semantik, Beziehungs-
+  oder XP-Regeln.
+- **Spielerwirkung:** Wer abends einen Besuch beobachtet, der mit einer echten Zusage endet, sieht
+  den Bewohner in der Zeit danach spuerbar oefter etwas Soziales/Zaertliches tun (LOVE-Thema) statt
+  sofort zu einem beliebigen anderen Grundgewicht zurueckzukehren - dieselbe Art "das war gerade
+  wichtig" wie beim Beantworten einer echten Erinnerung, nur ausgeloest durch eine Begegnung
+  zwischen zwei Wesen statt durch den Nutzer. Verbindet zwei bereits vorhandene Einfluesse: den
+  Living-Agent-Besuchsausgang (Weltzustand/Beziehung) und die autonome Aktivitaetsauswahl
+  (`PlayAmbientActivity.nextTopic`).
+- **Wichtige, bewusst uebernommene Grenze:** Der Nachklang faerbt nur, was zur Tageszeit ohnehin
+  vorkommt - LOVE hat nur abends ein Grundgewicht (siehe `PlayAmbientActivity.weightsFor`), also
+  bleibt ein Besuch morgens, mittags oder nachts fuer diese Regung ohne Wirkung, und insbesondere
+  reisst er die Nachtruhe-Garantie nicht auf. Das ist keine neue Entscheidung, sondern dieselbe
+  Zurueckhaltung, die der Erinnerungs-Nachklang seit dem 2026-09-06 schon befolgt.
+- **Naechster sinnvoller Hebel (Hypothese, nicht belegt):** Ob eine tagsueber oder mittags
+  gespielte Begegnung ebenfalls eine sichtbare Nachwirkung verdient - dafuer reicht LOVE als
+  alleiniges Zielthema nicht, weil es dort kein Grundgewicht hat. Das braucht zuerst eine
+  Beobachtung, ob das ueberhaupt auffaellt, bevor ein zweites, tageszeitunabhaengiges Signal (z. B.
+  ein allgemeiner "gerade war jemand da"-Zuschlag statt eines Themas) gerechtfertigt ist.
+- **Anmerkung zur Herkunft:** Diese Evolution entstand im automatisierten, unbeaufsichtigten
+  Dauerauftrag (`claude-primary-run.yml` / `evolutions/DAILY_LIFE_TASK.md`), direkt im Anschluss an
+  die manuell beauftragte NT-085-Sitzung desselben Tages.
+
 ### 2026-09-04 - Die sechs Wesen unterscheiden sich jetzt auch OHNE entwickelten Pfad
 
 - **Betroffenes Feedback:** FB-2026-09-03-01 und FB-2026-09-02-01, beide **weiterhin `[open]`**.
