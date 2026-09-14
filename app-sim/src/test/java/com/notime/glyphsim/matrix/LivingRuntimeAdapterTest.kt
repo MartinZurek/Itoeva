@@ -308,4 +308,13 @@ class LivingRuntimeAdapterTest {
             )
         }
     }
+
+    @Test
+    fun `jeder besuchbare Ort hat tagsueber einen Einwohner`() {
+        val uncovered = PlayScene.Place.entries.filter { place ->
+            PlayScene.allowsVisitors(place) && LivingResidents.nextVisitor(place, 10 * 60) == null
+        }
+
+        assertTrue("Besuch ohne Einwohner: $uncovered", uncovered.isEmpty())
+    }
 }

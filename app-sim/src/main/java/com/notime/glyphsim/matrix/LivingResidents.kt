@@ -47,7 +47,13 @@ object LivingResidents {
             species = AvatarSpecies.FENNEC,
             role = ResidentRole.SHOPKEEPER,
             anchorPlace = PlayScene.Place.SHOP,
-            visitPlaces = setOf(PlayScene.Place.SHOP, PlayScene.Place.CITY),
+            // Verkauf ist ihre feste Rolle; WORK bleibt erreichbar, weil die vorhandene Welt
+            // dort ausdruecklich Besuche erlaubt und berufliche Begegnungen sonst verschwinden.
+            visitPlaces = setOf(
+                PlayScene.Place.SHOP,
+                PlayScene.Place.WORK,
+                PlayScene.Place.CITY
+            ),
             activeFromMinute = 7 * 60,
             activeUntilMinute = 22 * 60
         ),

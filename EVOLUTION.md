@@ -2816,7 +2816,7 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Betroffene Bereiche:** Neue reine Runtime-Datei `LivingResidents`, die soziale Zeit- und
   Welttrennung in `LivingAgent`, die gezielte Besuchsgrenze in `DockScreen`, Store- und
   Adaptertests sowie Living-Agent-, Backlog- und Uebergabedokumentation.
-- **Tests:** `bash tools/reaction-preview/tests.sh` - 471 Tests gruen (vorher 467, vier neue
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 472 Tests gruen (vorher 467, fuenf neue
   Verhaltensfaelle). Die neue Quelldatei steht ausdruecklich in `SRCS`.
   `python3 -m unittest discover --start-directory tools/music` bleibt das zweite Freigabe-Gate.
 - **Naechster Schritt:** NT-087 - Einwohner ueber denselben Living-Agent-Kern selbst Aufenthalt
