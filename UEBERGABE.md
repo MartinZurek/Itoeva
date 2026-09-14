@@ -104,12 +104,20 @@ Kennung gespeichert. Ein Wiedersehen zaehlt damit auf dem ersten Treffen weiter.
 mussten dafuer die Kennung (der blosse Speziesname gehoert dem SPIELER) und die Welt (Muenzen und
 Vorrat gehoeren `PlayWallet`/`PlayPantry`, nicht dem Gast).
 
-**Was noch fehlt - und wo die eigentliche Huerde liegt:** Der Gast waehlt seinen Aufenthalt nicht
-selbst, es gibt hoechstens einen sichtbaren gleichzeitig, und es gibt keine Rolle. Die Domaene
-fuehrt VIER Orte; PARK, POND, SPORT, FOREST, MEADOW, CITY und STREET sind darin alle `OUTSIDE`.
-Bevor Einwohner sich selbst verteilen koennen, muss entschieden werden, ob `LivingSite` feiner
-wird oder ob Einwohner eine Position unterhalb der Site bekommen. Dazu kommt die Lesbarkeit: Bei
-`MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten Figur passen drei bis vier Wesen nicht
+**Die Architekturfrage ist entschieden - und zwar gegen meine eigene Vermutung (NT-087).** Hier
+stand, die Huerde liege im Ortsmodell. Die Messung sagt etwas anderes: Sechs unabhaengig
+entscheidende Wesen ergaben **1 662 Begegnungsgelegenheiten**, **kein Paar** blieb ohne, **12 von
+16** sichtbaren Orten kamen vor, und in **1 von 720** Schritten wich der Kern vom sichtbaren Ort
+ab. Nicht der Ort platziert ein Wesen, sondern das Thema - `PlayScene.forTopic` fuehrt zwei
+Wesen, die dasselbe tun wollen, schon heute an denselben Ort. **`LivingSite` bleibt bei vier.**
+
+Dieselbe Messung fand dafuer zwei Ziele, die NIE gewinnen. `SEEK_COMFORT` ist behoben
+(Behaglichkeit stillt nur noch, was ihr gilt - siehe NT-087); `EARN_MONEY` bleibt bewusst
+ungewaehlt, weil Muenzen heute nur Essen zahlen.
+
+**Was noch fehlt:** Der Gast waehlt seinen Aufenthalt nicht selbst, es gibt hoechstens einen
+sichtbaren gleichzeitig, und es gibt keine Rolle. Die offene Frage ist jetzt die **Lesbarkeit**:
+Bei `MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten Figur passen drei bis vier Wesen nicht
 nebeneinander.
 
 **Der Rest des naechsten sozialen Schnitts, nicht ein neuer Ort:** Der heutige Gast bleibt ein

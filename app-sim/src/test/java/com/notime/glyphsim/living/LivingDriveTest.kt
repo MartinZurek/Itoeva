@@ -173,4 +173,89 @@ class LivingDriveTest {
         assertEquals(AvatarMood.HAPPY, AvatarMood.of(emptyList(), wellbeing = 42.0))
         assertEquals(AvatarMood.SAD, AvatarMood.of(emptyList(), wellbeing = -3.0))
     }
+
+    // ================= Die andere Haelfte von NT-074 =================
+
+    /**
+     * **Das Ziel gab es, erreichbar war es nie.**
+     *
+     * NT-074 hat `SEEK_COMFORT` eingefuehrt, weil Behaglichkeit "ausschliesslich nebenbei
+     * gestillt" wurde - und genau dieses Nebenbei dann stehen gelassen. Nachgemessen ueber einen
+     * Tageslauf von sechs Wesen: Das Ziel wurde **kein einziges Mal** gewaehlt. Es kam nie ueber
+     * Rang 3 und nie ueber 0,157 Punkte, obwohl es mit 0,052 die GERINGSTEN Kosten aller acht
+     * Ziele hatte. Es lag nicht am Aufwand, sondern am Druck: Behaglichkeit kam nie ueber 0,257,
+     * waehrend Hunger und Ruhe 1,0 erreichten.
+     *
+     * Die Rechnung dahinter: Behaglichkeit waechst mit 0,02 je Stunde, dem langsamsten Wert von
+     * sieben - in achtzig Simulationsstunden also um 1,6. Erleichtert wurde sie im selben Lauf um
+     * rund 11, weil Essen (0,2), Ruhen (0,3), Zuwendung (0,25) und Bewegung (0,35) alle nebenbei
+     * daran zogen und zusammen ueber zweihundertfuenfzig Mal vorkamen.
+     *
+     * **Das war mit kleineren Zahlen nicht zu heilen.** Ein erster Versuch senkte die vier Werte
+     * auf 0,08 / 0,12 / 0,10 / 0,05 - das Verhaeltnis blieb bei 3,2 zu 1, und die beste Punktzahl
+     * stieg von 0,157 auf 0,174. Bei zweihundertfuenfzig Gelegenheiten gegen 1,6 Wachstum
+     * schwemmt jeder plausible Wert das Beduerfnis weg.
+     *
+     * Deshalb die Regel statt der Zahl: **Behaglichkeit stillt nur, was ihr gilt.** Wer sich
+     * hinsetzt oder sich pflegt, wird es behaglich haben; wer isst, ruht, jemanden herzt oder
+     * sich bewegt, tut das aus einem anderen Grund und bekommt Behaglichkeit nicht geschenkt.
+     */
+    @Test
+    fun `Behaglichkeit stillt nur, was ihr gilt`() {
+        val absichtlich = setOf(ActionKind.SETTLE, ActionKind.TEND_SELF)
+        // Nicht jede Art steht im festen Katalog: INVITE_TO_PLAY und RECEIVE_RESPONSE werden je
+        // Gegenueber gebaut. Sie ruehren Behaglichkeit ohnehin nicht an.
+        val stillen = ActionKind.entries.filter { kind ->
+            val action = runCatching { ActionCatalog[kind] }.getOrNull()
+            (action?.outcome?.needRelief?.get(NeedKind.COMFORT) ?: 0.0) > 0.0
+        }.toSet()
+        assertEquals(
+            "Diese Handlungen stillen Behaglichkeit nebenbei: ${stillen - absichtlich}",
+            absichtlich,
+            stillen
+        )
+    }
+
+    /**
+     * **Und der Beleg, dass es jetzt wirklich ein Antrieb ist.**
+     *
+     * Die Regel oben allein waere wieder nur eine Behauptung ueber Zahlen. Geprueft wird deshalb
+     * das Verhalten: Ueber einen Tageslauf muss Behaglichkeit mindestens einmal die Wahl
+     * gewinnen - vorher tat sie das nie.
+     */
+    @Test
+    fun `Behaglichkeit gewinnt im Tageslauf mindestens einmal die Wahl`() {
+        var agent = AgentState(
+            "PRUEFLING",
+            Personality(),
+            Needs.of(
+                NeedKind.HUNGER to 0.28,
+                NeedKind.ENERGY to 0.18,
+                NeedKind.FUN to 0.38,
+                NeedKind.SOCIAL to 0.22,
+                NeedKind.COMFORT to 0.12,
+                NeedKind.CURIOSITY to 0.30,
+                NeedKind.GROWTH to 0.26
+            )
+        )
+        var world = WorldState(
+            day = 0,
+            minuteOfDay = 6 * 60,
+            site = LivingSite.HOME,
+            coins = 2,
+            portions = 2,
+            openSites = LivingSite.entries.toSet()
+        )
+        val gewaehlt = mutableSetOf<GoalKind>()
+        repeat(120) {
+            val schritt = LivingSimulation.step(agent, world)
+            agent = schritt.agent
+            world = schritt.world
+            agent.goal?.let { g -> gewaehlt += g }
+        }
+        assertTrue(
+            "Behaglichkeit wurde in einem ganzen Tageslauf nie zum Ziel: $gewaehlt",
+            GoalKind.SEEK_COMFORT in gewaehlt
+        )
+    }
 }

@@ -306,7 +306,8 @@ object ActionCatalog {
             requirements = listOf(Requirement.At(LivingSite.HOME), Requirement.Portions(1)),
             outcome = ActionOutcome(
                 portionsDelta = -1,
-                needRelief = mapOf(NeedKind.HUNGER to 0.7, NeedKind.COMFORT to 0.2),
+                // Kein Behaglichkeitsanteil - siehe die Regel bei [ActionKind.SETTLE].
+                needRelief = mapOf(NeedKind.HUNGER to 0.7),
                 minutes = 20,
                 rememberValence = 1
             )
@@ -347,7 +348,8 @@ object ActionCatalog {
             kind = ActionKind.REST,
             requirements = listOf(Requirement.At(LivingSite.HOME)),
             outcome = ActionOutcome(
-                needRelief = mapOf(NeedKind.ENERGY to 0.6, NeedKind.COMFORT to 0.3),
+                // Kein Behaglichkeitsanteil - siehe die Regel bei [ActionKind.SETTLE].
+                needRelief = mapOf(NeedKind.ENERGY to 0.6),
                 minutes = 120,
                 rememberValence = 1
             )
@@ -428,6 +430,24 @@ object ActionCatalog {
             effort = 0.18
         ),
         Action(
+            // **Behaglichkeit stillt nur, was ihr gilt** - diese Handlung und [TEND_SELF].
+            //
+            // Bis NT-087 zogen Essen (0,2), Ruhen (0,3), Zuwendung (0,25) und Bewegung (0,35)
+            // alle nebenbei daran. Gemessen ueber einen Tageslauf von sechs Wesen: Das
+            // Beduerfnis waechst mit 0,02 je Stunde, in achtzig Simulationsstunden also um 1,6 -
+            // erleichtert wurde es im selben Lauf um rund 11, weil jene vier zusammen ueber
+            // zweihundertfuenfzig Mal vorkamen. `SEEK_COMFORT` kam deshalb nie ueber Rang 3 und
+            // wurde NIE gewaehlt, obwohl es die geringsten Kosten aller acht Ziele hat.
+            //
+            // **Mit kleineren Zahlen war das nicht zu heilen.** Ein Versuch mit
+            // 0,08 / 0,12 / 0,10 / 0,05 liess das Verhaeltnis bei 3,2 zu 1 und die beste
+            // Punktzahl bei 0,174 statt 0,157. Bei so vielen Gelegenheiten schwemmt jeder
+            // plausible Wert das Beduerfnis weg - es braucht die Regel, nicht die Zahl.
+            //
+            // Wer isst, ruht, jemanden herzt oder sich bewegt, tut das aus einem anderen Grund
+            // und bekommt Behaglichkeit nicht geschenkt. Das ist die andere Haelfte dessen, was
+            // NT-074 aufgeschrieben hat ("wurden ausschliesslich nebenbei gestillt") und damals
+            // nur auf der Zielseite behoben wurde.
             kind = ActionKind.SETTLE,
             requirements = emptyList(),
             outcome = ActionOutcome(
@@ -461,7 +481,6 @@ object ActionCatalog {
                 // teurer als Herumsitzen - die Aenderung haette dann das Gegenteil bewirkt.
                 needRelief = mapOf(
                     NeedKind.FUN to 0.6,
-                    NeedKind.COMFORT to 0.35,
                     NeedKind.ENERGY to -0.2,
                     NeedKind.HUNGER to -0.08
                 ),
@@ -506,7 +525,6 @@ object ActionCatalog {
             outcome = ActionOutcome(
                 needRelief = mapOf(
                     NeedKind.SOCIAL to 0.35,
-                    NeedKind.COMFORT to 0.25,
                     NeedKind.FUN to 0.15
                 ),
                 minutes = 25,
