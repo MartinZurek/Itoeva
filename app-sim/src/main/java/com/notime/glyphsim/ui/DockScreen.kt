@@ -70,7 +70,9 @@ import com.notime.glyphsim.data.LivingAgentStore
 import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
 import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.AgentState
+import com.notime.glyphsim.living.LivingSimulation
 import com.notime.glyphsim.living.StepResult
+import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
@@ -617,6 +619,9 @@ fun DockScreen(
         // Sprechzeichen: -1 = niemand spricht, sonst 0..2 fuer die drei Punkte.
         var speechStep by remember { mutableIntStateOf(-1) }
         var speakerIsGuest by remember { mutableStateOf(false) }
+        // Die Bedeutung des laufenden Wortwechsels. Anders als die Punkte kommt sie aus dem
+        // Living Agent und sagt deshalb nicht nur, DASS jemand spricht, sondern WAS gemeint ist.
+        var socialMessage by remember { mutableStateOf<Set<SymbolicIntent>?>(null) }
         var sparkAt by remember { mutableStateOf<PlayScene.SceneSpot?>(null) }
         val sparkProgress = remember { Animatable(1f) }
         // Zustand der Stehlampe - der erste Gegenstand, den die Figur selbst schaltet (siehe
@@ -1797,13 +1802,19 @@ fun DockScreen(
                 }
                 walkGuestTo(meetX)
 
-                // UNTERHALTUNG statt eines einzelnen Grusses: mehrere Wortwechsel hin und her,
-                // jeweils mit Sprechzeichen ueber dem Kopf dessen, der gerade dran ist. Ein
-                // einmaliges gemeinsames Huepfen liess sich als alles moegliche deuten; ein
-                // Wechsel mit erkennbarem Sprecher kann nur ein Gespraech sein.
-                //
-                // Die Ruhe-Schleife des jeweils ZUHOERENDEN laeuft weiter - jemand, der beim
-                // Zuhoeren einfriert, sieht aus wie ein Standbild, nicht wie ein Gespraechspartner.
+                // Der sichtbare Besuch traegt jetzt denselben Austausch wie der Kern: Der Gast
+                // fragt PLAY + QUESTION, der Bewohner antwortet aus seinem wirklichen Zustand.
+                // Hier wird nichts entschieden; die Oberflaeche zeigt nur die beiden Nachrichten
+                // und waehlt eine passende Koerperregung dazu.
+                val guestProfileId = AvatarSpeciesPrefs.profileId(guestSpecies)
+                val (hostAgent, hostWorld) = livingStateFor(host.species)
+                val guestAgent = LivingRuntimeAdapter.initialAgent(guestProfileId, guestSpecies)
+                val exchange = LivingSimulation.exchangePlayInvitation(
+                    initiator = guestAgent,
+                    receiver = hostAgent,
+                    world = hostWorld
+                )
+
                 avatarIdleJob?.cancel()
                 coroutineScope {
                     val hostIdleWhileListening = launch {
@@ -1824,8 +1835,11 @@ fun DockScreen(
                         }
                     }
 
-                    repeat(CONVERSATION_TURNS) { turn ->
-                        val guestSpeaks = turn % 2 == 0
+                    suspend fun showSymbols(
+                        guestSpeaks: Boolean,
+                        intents: Set<SymbolicIntent>,
+                        movement: AvatarAnimations.AvatarSequence
+                    ) {
                         // Sprechzeichen laufen mit: erst ein Punkt, dann zwei, dann drei.
                         for (dot in 0..2) {
                             speakerIsGuest = guestSpeaks
@@ -1833,25 +1847,68 @@ fun DockScreen(
                             delay(SPEECH_DOT_MS)
                         }
                         speechStep = -1
-                        // Wer spricht, unterstreicht es einmal kurz mit seiner arteigenen Regung.
+                        socialMessage = intents
+                        // Wer spricht, unterstreicht die Bedeutung mit einer Koerperregung.
                         if (guestSpeaks) {
                             guestIdle.cancel()
-                            val say = AvatarAnimations.fidgetSequence(guestSpecies, AvatarAnimations.Fidget.LOOK_AROUND)
-                            MatrixAnimator.playTimed(say.frames, say.holdsMs) { f ->
+                            MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
                                 visitor = visitor?.copy(frame = f)
                             }
                         } else {
                             hostIdleWhileListening.cancel()
-                            val say = AvatarAnimations.tapReaction(host.species)
-                            MatrixAnimator.playTimed(say.frames, say.holdsMs) { f ->
+                            MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
                                 avatar = avatar?.copy(frame = f)
                             }
                         }
+                        delay(SOCIAL_SYMBOL_HOLD_MS)
+                        socialMessage = null
                     }
+
+                    showSymbols(
+                        guestSpeaks = true,
+                        intents = exchange.request.intents,
+                        movement = AvatarAnimations.fidgetSequence(
+                            guestSpecies,
+                            AvatarAnimations.Fidget.LOOK_AROUND
+                        )
+                    )
+                    val responseMovement = when {
+                        SymbolicIntent.TIRED in exchange.response.intents ->
+                            AvatarAnimations.fidgetSequence(host.species, AvatarAnimations.Fidget.YAWN)
+                        SymbolicIntent.NO in exchange.response.intents ->
+                            AvatarAnimations.fidgetSequence(host.species, AvatarAnimations.Fidget.SHAKE)
+                        else -> AvatarAnimations.tapReaction(host.species)
+                    }
+                    showSymbols(
+                        guestSpeaks = false,
+                        intents = exchange.response.intents,
+                        movement = responseMovement
+                    )
                     speechStep = -1
+                    socialMessage = null
                     hostIdleWhileListening.cancel()
                     guestIdle.cancel()
                 }
+
+                // Wie bei jeder anderen Living-Choreografie erst NACH dem sichtbaren Abschluss
+                // verbuchen. Bricht eine Erinnerung den Wortwechsel ab, darf keine unsichtbare
+                // Beziehungserfahrung im Snapshot stehen.
+                val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
+                    exchange.receiverWorld,
+                    currentPlace,
+                    setOf(guestProfileId)
+                )
+                livingAgent = exchange.receiver
+                livingWorld = committedWorld
+                livingStore.save(exchange.receiver, committedWorld)
+                LivingObservationFeed.record(
+                    StepResult(
+                        agent = exchange.receiver,
+                        world = committedWorld,
+                        events = exchange.receiverEvents,
+                        messages = listOf(exchange.response)
+                    )
+                )
                 startAvatarIdleLoop(host.species, AvatarMoodSnapshot.forSpecies(context, host.species))
 
                 walkGuestTo(exitX)
@@ -1860,6 +1917,7 @@ fun DockScreen(
                 // bliebe der Gast sonst mitten im Bild stehen und ginge nie wieder.
                 visitor = null
                 speechStep = -1
+                socialMessage = null
                 // Und ebenso zwingend: Bliebe dieses Flag stehen, waere der wartende Ablauf
                 // draussen fuer immer angehalten - die Figur stuende bis zum Ende des
                 // Play-Modus regungslos auf der Strasse.
@@ -3864,7 +3922,7 @@ fun DockScreen(
         // deshalb faengt es auch keine Gesten ab. Wer die Figur antippt, oeffnet weiterhin das
         // Gespraech, auch wenn gerade ein Symbol darueber steht. Dort gibt es Sprache; hier
         // nicht.
-        wishSymbols?.let { symbole ->
+        wishSymbols?.takeIf { socialMessage == null }?.let { symbole ->
             avatar?.takeIf { playMode && !avatarHidden }?.let { current ->
                 PlayWishBubble(
                     symbols = symbole,
@@ -3876,6 +3934,24 @@ fun DockScreen(
             LaunchedEffect(symbole) {
                 delay((WISH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
                 wishSymbols = null
+            }
+        }
+
+
+        // Die wirkliche Nachricht der Begegnung steht ueber dem jeweiligen Sprecher. Einladung
+        // und Antwort verwenden dieselben sprachunabhaengigen Symbole wie der Kern; Text oder
+        // ein zweiter Dialogkatalog werden hier nicht eingefuehrt.
+        socialMessage?.let { intents ->
+            val speaker = if (speakerIsGuest) visitor else null
+            val speakerOffset = speaker?.offset ?: avatar?.offset
+            val speakerSize = speaker?.sizeDp ?: avatar?.sizeDp
+            if (speakerOffset != null && speakerSize != null) {
+                PlayMessageBubble(
+                    intents = intents,
+                    avatarOffset = speakerOffset,
+                    avatarSizeDp = speakerSize,
+                    maxWidthPx = maxWidthPx
+                )
             }
         }
 
@@ -4425,11 +4501,6 @@ private const val VISITOR_DIM = 0.78f
  *  Luft, damit sich die Silhouetten sicher nicht beruehren. */
 private const val VISITOR_GAP = 1.15f
 
-/** Wortwechsel je Begegnung - drei reichen, damit es ein Gespraech ist; mehr wuerde den
- *  Besuch zur Szene aufblasen, die er nicht sein soll. */
-private const val CONVERSATION_TURNS = 3
-
-
 /**
  * Wie lange Wunsch und Hindernis ueber dem Kopf stehen.
  *
@@ -4443,6 +4514,9 @@ private const val WISH_HOLD_MS = 4_500L
 
 /** Takt, in dem die Sprechpunkte erscheinen. */
 private const val SPEECH_DOT_MS = 190L
+
+/** Nachklang, damit die gelesene Bedeutung nicht mit der letzten Koerperpose verschwindet. */
+private const val SOCIAL_SYMBOL_HOLD_MS = 650L
 
 /** Abstand zwischen zwei Besuchen. */
 private val VISIT_INTERVAL_MS = 90_000L..210_000L

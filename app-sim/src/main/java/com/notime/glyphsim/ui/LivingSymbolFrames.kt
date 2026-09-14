@@ -19,9 +19,8 @@ import com.notime.glyphsim.matrix.MatrixGeometry
  * Buch sieht und ueber dem Kopf ein anderes, lernt zwei Zeichen fuer dieselbe Sache. Diese Datei
  * schlaegt deshalb im vorhandenen Katalog nach und zeichnet nur, was dort fehlt.
  *
- * Neu gezeichnet sind genau zwei: das Fragezeichen und das Nein. Beide haben in der Welt der
- * zwoelf Animationstypen kein Gegenstueck, weil sie keine Taetigkeit sind, sondern eine Haltung
- * dazu.
+ * Neu gezeichnet sind Fragezeichen, Nein und Ja. Sie haben in der Welt der zwoelf
+ * Animationstypen kein Gegenstueck, weil sie keine Taetigkeit sind, sondern eine Haltung dazu.
  *
  * ## Der Kompromiss, der hier benannt gehoert
  *
@@ -35,11 +34,8 @@ internal object LivingSymbolFrames {
     /**
      * Das Motiv zu [intent], oder `null`, wenn es dafuer noch keines gibt.
      *
-     * `null` ist kein Versehen: [SymbolicIntent] fuehrt elf Werte, weil es auch die
-     * Verstaendigung zwischen zwei Wesen traegt. Ueber dem Kopf erscheinen davon heute nur die
-     * sieben, die [com.notime.glyphsim.living.LivingSymbols] tatsaechlich erzeugen kann. Fuer
-     * `YES` und `SURPRISE` jetzt schon Piktogramme zu zeichnen hiesse, Kunst auf Verdacht zu
-     * machen - ein Test haelt dafuer fest, dass jedes ERREICHBARE Symbol ein Bild hat.
+     * Jede heute erzeugbare Bedeutung besitzt ein Bild. Das ist seit der sichtbaren sozialen
+     * Begegnung mehr als die Zielanzeige: Auch eine Annahme muss ohne Text lesbar sein.
      */
     fun frameFor(intent: SymbolicIntent): IntArray? = when (intent) {
         SymbolicIntent.FOOD -> ActionSlotSymbols.frameFor(AnimationType.DRINK)
@@ -52,7 +48,7 @@ internal object LivingSymbolFrames {
         SymbolicIntent.QUESTION -> questionFrame()
         SymbolicIntent.NO -> noFrame()
         SymbolicIntent.SURPRISE -> surpriseFrame()
-        SymbolicIntent.YES -> null
+        SymbolicIntent.YES -> yesFrame()
     }
 
     /**
@@ -117,6 +113,21 @@ internal object LivingSymbolFrames {
             5 to 7, 7 to 7,
             4 to 8, 8 to 8,
             3 to 9, 9 to 9
+        )
+    )
+
+    /** Ja: ein offener Haken, klar verschieden vom Kreuz fuer [SymbolicIntent.NO]. */
+    private fun yesFrame(): IntArray = pointsFrame(
+        listOf(
+            2 to 6,
+            3 to 7,
+            4 to 8,
+            5 to 9,
+            6 to 8,
+            7 to 7,
+            8 to 6,
+            9 to 5,
+            10 to 4
         )
     )
 

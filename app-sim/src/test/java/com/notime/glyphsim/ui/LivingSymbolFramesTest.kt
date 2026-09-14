@@ -7,8 +7,8 @@ import com.notime.glyphsim.living.Requirement
 import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.matrix.MatrixGeometry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -104,17 +104,22 @@ class LivingSymbolFramesTest {
     }
 
     @Test
-    fun `noch nicht gezeichnete Symbole sagen das ehrlich`() {
-        // YES gehoert zur Verstaendigung zwischen zwei Wesen und kann heute nicht ueber dem Kopf
-        // erscheinen. Kunst auf Verdacht waere der falsche Weg; ein ehrliches null ist der
-        // richtige.
-        //
-        // **SURPRISE stand bis NT-074 ebenfalls hier.** Es ist gezeichnet worden, weil ein Ziel
-        // darauf zeigt (EXPLORE) - also genau in dem Moment, in dem es gebraucht wurde, und
-        // keinen davor. Aufgefallen ist das nicht beim Nachdenken, sondern weil der Test
-        // darueber rot wurde.
-        assertNull(LivingSymbolFrames.frameFor(SymbolicIntent.YES))
-        assertTrue(SymbolicIntent.YES !in erreichbareSymbole())
+    fun `jede heute gesendete Bedeutung hat ein Motiv`() {
+        // YES wurde erst gezeichnet, als der wirkliche soziale Austausch auf dem Bildschirm
+        // ankam. Seitdem darf keine Kernbedeutung wieder als leere Blase enden.
+        for (intent in SymbolicIntent.entries) {
+            assertNotNull("$intent hat kein Motiv", LivingSymbolFrames.frameFor(intent))
+        }
+    }
+
+    @Test
+    fun `Ja und Nein bleiben gegensaetzlich lesbar`() {
+        val yes = LivingSymbolFrames.frameFor(SymbolicIntent.YES)!!
+        val no = LivingSymbolFrames.frameFor(SymbolicIntent.NO)!!
+
+        assertFalse("Ja und Nein duerfen nicht gleich aussehen", yes.contentEquals(no))
+        assertTrue("Der Ja-Haken braucht einen tiefsten Punkt", yes[9 * MatrixGeometry.SIZE + 5] > 0)
+        assertTrue("Das Nein-Kreuz braucht seine Mitte", no[6 * MatrixGeometry.SIZE + 6] > 0)
     }
 
     @Test

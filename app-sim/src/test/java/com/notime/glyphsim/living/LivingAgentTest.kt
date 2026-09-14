@@ -408,6 +408,68 @@ class LivingAgentTest {
     }
 
     @Test
+    fun `vollstaendige Begegnung bleibt eine echte Frage und Zustandsantwort`() {
+        val besucher = agent(
+            species = AvatarSpecies.STARLET,
+            weitere = arrayOf(NeedKind.SOCIAL to 0.8)
+        )
+        val muederBewohner = agent(
+            species = AvatarSpecies.WYRMLING,
+            weitere = arrayOf(NeedKind.SOCIAL to 0.8, NeedKind.ENERGY to 0.9)
+        )
+
+        val muedeBegegnung = LivingSimulation.exchangePlayInvitation(
+            besucher,
+            muederBewohner,
+            welt()
+        )
+
+        assertEquals(
+            setOf(SymbolicIntent.PLAY, SymbolicIntent.QUESTION),
+            muedeBegegnung.request.intents
+        )
+        assertEquals(
+            setOf(SymbolicIntent.TIRED, SymbolicIntent.NO),
+            muedeBegegnung.response.intents
+        )
+        assertEquals(
+            listOf(LivingEventKind.SYMBOLS_SENT, LivingEventKind.SYMBOLS_RECEIVED),
+            muedeBegegnung.initiatorEvents.map { it.kind }
+        )
+        assertEquals(
+            listOf(LivingEventKind.SYMBOLS_SENT),
+            muedeBegegnung.receiverEvents.map { it.kind }
+        )
+        assertTrue(
+            muedeBegegnung.initiator.relationships.getValue("WYRMLING").trust < 0.0
+        )
+        assertTrue(
+            muedeBegegnung.receiver.relationships.getValue("STARLET").trust < 0.0
+        )
+
+        val bereiterBewohner = muederBewohner.copy(
+            needs = Needs.of(NeedKind.SOCIAL to 0.8, NeedKind.ENERGY to 0.1)
+        )
+        val froheBegegnung = LivingSimulation.exchangePlayInvitation(
+            besucher,
+            bereiterBewohner,
+            welt()
+        )
+
+        assertEquals(
+            setOf(SymbolicIntent.PLAY, SymbolicIntent.YES),
+            froheBegegnung.response.intents
+        )
+        assertTrue(
+            froheBegegnung.initiatorWorld.absoluteMinute > muedeBegegnung.request.atMinute
+        )
+        assertTrue(
+            froheBegegnung.initiatorWorld.absoluteMinute >
+                froheBegegnung.receiverWorld.absoluteMinute
+        )
+    }
+
+    @Test
     fun `ein dringendes laufendes Ziel kann eine Spielanfrage verdraengen`() {
         val request = SymbolicMessage(
             senderProfileId = "STARLET",
