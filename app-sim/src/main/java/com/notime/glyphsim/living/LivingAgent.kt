@@ -197,8 +197,8 @@ data class StepResult(
  *
  * Die getrennten Ereignislisten sind wichtig: Eine Laufzeit darf den eigenen Beobachtungsstrom
  * fortschreiben, ohne die Erinnerung des Gegenuebers als eigenes Erlebnis auszugeben. Die
- * beiden Ergebniswelten behalten den Zeitpunkt der jeweils letzten eigenen Handlung; die
- * Ereignisse liegen trotzdem auf einer einzigen fortlaufenden Zeitachse.
+ * beiden Ergebniswelten enden auf derselben fortlaufenden Zeitachse. So verliert eine Laufzeit
+ * beim Speichern nicht die Minute, in der die erste Seite die Antwort wahrgenommen hat.
  */
 data class SocialExchangeResult(
     val initiator: AgentState,
@@ -453,12 +453,19 @@ object LivingSimulation {
             "response did not emit exactly one message"
         }
         val heard = receiveResponse(asked.agent, answered.world, response)
+        val receiverWait = heard.world.absoluteMinute - answered.world.absoluteMinute
+        val receiverAtEnd = answered.agent.copy(
+            // Das Gegenueber handelt in dieser Minute nicht, lebt aber weiter. Diese reine
+            // Zeitfortschreibung ist dieselbe wie beim Wiederherstellen aus dem Store; soziale
+            // Wirkungen selbst bleiben vollstaendig in ActionOutcome.
+            needs = answered.agent.needs.advanced(receiverWait, answered.agent.personality)
+        )
 
         return SocialExchangeResult(
             initiator = heard.agent,
-            receiver = answered.agent,
+            receiver = receiverAtEnd,
             initiatorWorld = heard.world,
-            receiverWorld = answered.world,
+            receiverWorld = heard.world,
             request = request,
             response = response,
             initiatorEvents = listOf(asked.event) + heard.events,

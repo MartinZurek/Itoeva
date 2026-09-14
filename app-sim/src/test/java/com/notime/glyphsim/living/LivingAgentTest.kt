@@ -463,9 +463,9 @@ class LivingAgentTest {
         assertTrue(
             froheBegegnung.initiatorWorld.absoluteMinute > muedeBegegnung.request.atMinute
         )
-        assertTrue(
-            froheBegegnung.initiatorWorld.absoluteMinute >
-                froheBegegnung.receiverWorld.absoluteMinute
+        assertEquals(
+            froheBegegnung.initiatorWorld.absoluteMinute,
+            froheBegegnung.receiverWorld.absoluteMinute
         )
     }
 
