@@ -197,6 +197,23 @@ allein das Wohlbefinden. **Offen bleibt:** ob sich die Gewichtung 50/50 richtig 
 Erkunden und Bewegung beim Zusehen wirklich unterscheidbar sind - beides ist begruendet, nicht
 gemessen.
 
+**Living Agent, sozial:** NT-085 **Der sichtbare Besuch verwendet die echte symbolische
+Verstaendigung** - *am 2026-09-14 umgesetzt.* `runVisit` spielt nicht mehr drei feste
+Pseudo-Wortwechsel. Der Gast sendet `PLAY + QUESTION`; der Living Agent antwortet aus Energie,
+sozialem Bedarf, Beziehung, Persoenlichkeit und aktuellem Ziel. Einladung und Antwort stehen als
+Pixelsymbole ueber dem wirklichen Sprecher, einschliesslich eines neuen Ja-Hakens. Die Beziehung
+und Episode des Bewohners werden ueber `ActionOutcome` gespeichert. **Offen bleibt:** Der Gast
+ist noch kein persistenter Einwohner; er wird weiterhin vom vorhandenen Besuchstakt erzeugt.
+
+**Living Agent, sozial:** NT-086 **Persistente Weltbewohner statt zufaelliger Kulissengaeste** -
+offen. Einen kleinen Katalog nicht waehlbarer Einwohner mit eigenem `AgentState`, stabilem Ort,
+Beruf/Rolle und Tagesziel einfuehren. Zuerst genau ein Verkaeufer im SHOP und zwei frei lebende
+Bewohner fuer PARK/SPORT; keine zweite Engine und keine Plotfolge. *Nach mehreren simulierten
+Tagen bleiben Beziehungen, Beduerfnisse und Aufenthalte je Einwohner erhalten; oeffentliche Orte
+werden aus denselben Entscheidungen sichtbar bewohnt.* Darauf folgen in eigenen Schnitten
+mehrere gleichzeitige Figuren und gemeinsame Aktivitaeten wie Sport, Drachen und Angeln. Neue
+Orte erst danach, weil die vorhandenen oeffentlichen Plaetze zuerst Leben brauchen.
+
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.
 `AvatarShading` legt beim Zeichnen einen Verlauf darueber, von oben links hell nach unten rechts

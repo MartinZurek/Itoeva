@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.notime.glyphsim.living.LivingSymbolPair
+import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.matrix.MatrixGeometry
 import com.notime.glyphsim.matrix.SimulatedMatrixView
 import kotlin.math.roundToInt
@@ -113,6 +114,67 @@ internal fun PlayWishBubble(
         }
     }
 }
+
+/**
+ * Eine symbolische Nachricht zwischen zwei Wesen.
+ *
+ * Anders als [PlayWishBubble] sind beide Zeichen gleichrangig: `PLAY + QUESTION` ist eine
+ * Einladung, `TIRED + NO` eine begruendete Antwort. Die feste Reihenfolge verhindert, dass die
+ * Darstellung von der Iterationsreihenfolge eines Sets abhaengt.
+ */
+@Composable
+internal fun PlayMessageBubble(
+    intents: Set<SymbolicIntent>,
+    avatarOffset: Offset,
+    avatarSizeDp: Float,
+    maxWidthPx: Float
+) {
+    val ordered = MESSAGE_ORDER.filter(intents::contains).take(2)
+    if (ordered.isEmpty()) return
+    val density = LocalDensity.current
+    val avatarPx = with(density) { avatarSizeDp.dp.toPx() }
+    val symbolDp = avatarSizeDp * MESSAGE_SCALE
+    val totalPx = with(density) { (symbolDp * ordered.size).dp.toPx() }
+    val left = (avatarOffset.x + avatarPx * 0.45f)
+        .coerceIn(0f, (maxWidthPx - totalPx).coerceAtLeast(0f))
+    val top = (avatarOffset.y - with(density) { symbolDp.dp.toPx() }).coerceAtLeast(0f)
+
+    Row(modifier = Modifier.offset { IntOffset(left.roundToInt(), top.roundToInt()) }) {
+        for (intent in ordered) {
+            LivingSymbolFrames.frameFor(intent)?.let { frame ->
+                Box(
+                    modifier = Modifier
+                        .size(symbolDp.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.05f))
+                ) {
+                    SimulatedMatrixView(
+                        frame = frame,
+                        showPuck = false,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val MESSAGE_ORDER = listOf(
+    SymbolicIntent.FOOD,
+    SymbolicIntent.PLAY,
+    SymbolicIntent.MUSIC,
+    SymbolicIntent.HOME,
+    SymbolicIntent.WORK,
+    SymbolicIntent.AFFECTION,
+    SymbolicIntent.TIRED,
+    SymbolicIntent.SURPRISE,
+    SymbolicIntent.QUESTION,
+    SymbolicIntent.YES,
+    SymbolicIntent.NO
+)
+
+private const val MESSAGE_SCALE = 0.46f
 
 /**
  * Wie gross der Wunsch gegenueber der Figur ist.

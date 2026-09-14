@@ -2746,3 +2746,41 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Naechster Schritt:** NT-082s verbleibenden Befund angehen: Getragene Gegenstaende brauchen
   beim Gehen einen eigenen Takt. Schlafrueckblick und neue Reminderreaktionen vorher bzw. dabei
   am Geraet beurteilen.
+
+### 2026-09-14 - Der sichtbare Besuch wird eine wirkliche Begegnung (NT-085)
+
+- **Ausgangsproblem:** Das Living-Agent-System konnte seit NT-067 eine symbolische Einladung aus
+  dem echten Zustand beantworten, aber die Produktionslaufzeit rief diese Funktion nirgends auf.
+  `runVisit` spielte bei jedem Gast genau drei abwechselnde Sprechpunkte samt fest gewaehlter
+  Regung. Ob der Bewohner muede, einsam, hungrig, befreundet oder mit etwas Dringendem beschaeftigt
+  war, aenderte die Begegnung nicht. Die Welt sah sozial aus, ohne sozial zu rechnen.
+- **Entscheidung:** `LivingSimulation.exchangePlayInvitation` verbindet die vorhandenen
+  Handlungen Einladung, Zustandsantwort und Antwortwahrnehmung auf einer gemeinsamen
+  Simulationszeit. Der Gast sendet `PLAY + QUESTION`; `respondToPlay` entscheidet unveraendert
+  aus Energie, sozialem Bedarf, Beziehung, Persoenlichkeit und aktuellem Ziel. `runVisit` zeigt
+  nur diese Anfrage und diese Antwort ueber dem jeweiligen Sprecher und waehlt dazu eine
+  passende vorhandene Koerperregung.
+- **Erster Beleg:** Derselbe Ablauf liefert bei einem mueden Bewohner `TIRED + NO` und bei einem
+  ausgeruhten, sozial beduerftigen Bewohner `PLAY + YES`. Beide Seiten erhalten ueber
+  `ActionOutcome` ihre eigene Beziehungswirkung; die Ereignisse stehen in der Reihenfolge
+  `SYMBOLS_SENT -> SYMBOLS_RECEIVED` beziehungsweise `SYMBOLS_SENT`.
+- **Architekturentscheidungen:** Keine Dialogtabelle, keine zweite Ereignispipeline und keine
+  direkte Zustandsmutation. Die getrennten Ereignislisten verhindern, dass der Beobachtungsstrom
+  des Bewohners die Erinnerung des Gasts als eigenes Erlebnis ausgibt. `YES` erhaelt erst jetzt,
+  wo es sichtbar erzeugt wird, ein eigenes 13x13-Motiv. Die Nachricht zeigt hoechstens zwei
+  Symbole in fester semantischer Reihenfolge; sie haengt nicht an der Iterationsreihenfolge eines
+  Sets.
+- **Abgrenzung:** Der Gast ist in diesem Schnitt noch kein persistenter Weltbewohner. Auswahl und
+  Eintritt stammen unveraendert aus dem vorhandenen Besuchstakt; nur die Begegnung selbst wird
+  echt. Keine neue Spezies, kein neuer Ort, keine zweite Engine, kein Room-, `:core`-, Stream-
+  oder Musikumbau.
+- **Betroffene Bereiche:** `LivingAgent`, die gezielte Besuchssequenz in `DockScreen`,
+  `LivingSymbolFrames`, `PlayWishBubble` sowie Living-Agent-, Backlog- und
+  Uebergabedokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 467 Tests gruen (vorher 465, zwei neue
+  Verhaltensfaelle). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
+  gruen. Compose und die sichtbare Ueberlagerung prueft zusaetzlich `gradlew verify` in CI.
+- **Naechster Schritt:** NT-086 - wenige persistente, nicht waehlbare Einwohner mit eigenem
+  Zustand und Aufenthaltsentscheidung; zuerst Verkaeufer im SHOP und Bewohner fuer PARK/SPORT.
+  Mehrere gleichzeitig sichtbare Wesen und gemeinsame Aktivitaeten folgen danach in eigenen
+  Scheiben.

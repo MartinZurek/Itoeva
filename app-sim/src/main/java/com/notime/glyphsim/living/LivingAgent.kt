@@ -193,6 +193,25 @@ data class StepResult(
 }
 
 /**
+ * Eine vollstaendige Begegnung zweier Wesen, ohne Dialogbaum und ohne zweite Wirkungslogik.
+ *
+ * Die getrennten Ereignislisten sind wichtig: Eine Laufzeit darf den eigenen Beobachtungsstrom
+ * fortschreiben, ohne die Erinnerung des Gegenuebers als eigenes Erlebnis auszugeben. Die
+ * beiden Ergebniswelten enden auf derselben fortlaufenden Zeitachse. So verliert eine Laufzeit
+ * beim Speichern nicht die Minute, in der die erste Seite die Antwort wahrgenommen hat.
+ */
+data class SocialExchangeResult(
+    val initiator: AgentState,
+    val receiver: AgentState,
+    val initiatorWorld: WorldState,
+    val receiverWorld: WorldState,
+    val request: SymbolicMessage,
+    val response: SymbolicMessage,
+    val initiatorEvents: List<LivingEvent>,
+    val receiverEvents: List<LivingEvent>
+)
+
+/**
  * **Ein Schritt Leben** - die einzige Stelle, an der Beduerfnisse, Ziel, Plan und Welt
  * zusammenkommen.
  *
@@ -405,6 +424,53 @@ object LivingSimulation {
         }
         val applied = action.applyTo(receiver, world, GoalKind.CONNECT_WITH)
         return StepResult(applied.agent, applied.world, listOf(applied.event))
+    }
+
+    /**
+     * Fuehrt die kleinste echte soziale Begegnung auf EINER Zeitachse aus.
+     *
+     * Der Anlass ist eine Einladung, ihr Ausgang aber kein Ablaufskript: [respondToPlay]
+     * entscheidet aus dem wirklichen Zustand des Empfaengers. Einladung, Antwort und
+     * Wahrnehmung laufen weiterhin ausschliesslich durch [Action.applyTo] und damit durch
+     * [ActionOutcome].
+     */
+    fun exchangePlayInvitation(
+        initiator: AgentState,
+        receiver: AgentState,
+        world: WorldState
+    ): SocialExchangeResult {
+        require(initiator.profileId != receiver.profileId) { "participants must differ" }
+        val together = world.copy(
+            nearbyProfiles = world.nearbyProfiles + initiator.profileId + receiver.profileId
+        )
+        val invitation = ActionCatalog.inviteToPlay(receiver.profileId)
+        require(invitation.isPossible(together)) { "participants are not near" }
+        val asked = invitation.applyTo(initiator, together, GoalKind.CONNECT_WITH)
+        val request = requireNotNull(asked.message) { "invitation did not emit symbols" }
+
+        val answered = respondToPlay(receiver, asked.world, request)
+        val response = requireNotNull(answered.messages.singleOrNull()) {
+            "response did not emit exactly one message"
+        }
+        val heard = receiveResponse(asked.agent, answered.world, response)
+        val receiverWait = heard.world.absoluteMinute - answered.world.absoluteMinute
+        val receiverAtEnd = answered.agent.copy(
+            // Das Gegenueber handelt in dieser Minute nicht, lebt aber weiter. Diese reine
+            // Zeitfortschreibung ist dieselbe wie beim Wiederherstellen aus dem Store; soziale
+            // Wirkungen selbst bleiben vollstaendig in ActionOutcome.
+            needs = answered.agent.needs.advanced(receiverWait, answered.agent.personality)
+        )
+
+        return SocialExchangeResult(
+            initiator = heard.agent,
+            receiver = receiverAtEnd,
+            initiatorWorld = heard.world,
+            receiverWorld = heard.world,
+            request = request,
+            response = response,
+            initiatorEvents = listOf(asked.event) + heard.events,
+            receiverEvents = answered.events
+        )
     }
 
     /** Der Schnappschuss fuer Anzeige und spaeteres Overlay. Veraendert nichts. */

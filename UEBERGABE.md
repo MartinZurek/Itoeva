@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 13. September 2026
+# Uebergabe: Stand am 14. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -88,6 +88,22 @@ aber 29 Bibliotheksmotive erbten noch die Antwort eines Geschwisters. Nun stehen
 Motivknoten 80 verschiedene Reaktionen; Katalog-, Fingerabdruck- und Bildgleichheitstest halten
 das fest. Details und die drei wiederkehrenden Darstellungsfallen stehen in `LIVING_AGENT.md`
 und bei NT-075 bis NT-084 in `NextTasks.md`.
+
+NT-085 schliesst die bis dahin wichtigste soziale Laufzeitluecke: Der Kern konnte seit NT-067
+zustandsabhaengig auf `PLAY + QUESTION` antworten, aber keine Produktionsstelle rief diese
+Funktionen auf. `runVisit` zeigte stattdessen immer drei feste Pseudo-Wortwechsel. Jetzt fuehrt
+`LivingSimulation.exchangePlayInvitation` Einladung, Antwort und Wahrnehmung auf einer
+gemeinsamen Simulationszeit aus. Der Bewohner antwortet aus Energie, sozialem Bedarf, Beziehung,
+Persoenlichkeit und aktuellem Ziel; die zwei echten Nachrichten erscheinen als Pixelsymbole
+ueber dem jeweiligen Sprecher. Ja besitzt deshalb nun wie Nein ein eigenes Motiv. Beziehung und
+Episode des Bewohners werden ueber den vorhandenen Store gesichert.
+
+**Der naechste soziale Schnitt ist NT-086, nicht ein neuer Ort:** Der heutige Gast bleibt ein
+vom Besuchstakt erzeugter, nach der Szene verworfener Gast. Als Naechstes kommen wenige
+persistente, nicht waehlbare Weltbewohner mit eigenem AgentState - zuerst Verkaeufer im SHOP und
+Bewohner fuer PARK/SPORT. Danach erst mehrere gleichzeitig sichtbare Wesen und gemeinsame
+Aktivitaeten. PARK, SPORT, SHOP, CITY, FOREST, MEADOW und POND existieren bereits; sie werden
+bevoelkert, bevor Gebirge oder weitere Kulissen dazukommen.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 

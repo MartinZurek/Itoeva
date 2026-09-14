@@ -1,11 +1,11 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-13 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-084 umgesetzt)
+Stand: 2026-09-14 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-085 umgesetzt)
 
 ## Was das System heute wirklich ist
 
-Nach den gemergten Schnitten #127 bis #148 und dem aktuellen NT-084 ist aus dem Plan ein
+Nach den gemergten Schnitten #127 bis #149 und dem aktuellen NT-085 ist aus dem Plan ein
 laufendes System geworden. Diese
 Uebersicht beschreibt den IST-Stand; der Rest des Dokuments bleibt der Plan, an dem er gemessen
 wird.
@@ -207,6 +207,27 @@ eines Freundes haette an der Entscheidung nichts mehr geaendert. Genau die Aussa
 Soziale traegt, waere verloren gegangen. Der Aufwand von 0,12 stellt das zurecht, und er ist auch
 inhaltlich richtig: An jemanden zu denken, der nicht da ist, ist die schwerere Wahl.
 
+### Die soziale Rechnung war echt, der sichtbare Besuch war es nicht
+
+Seit NT-067 konnte der Kern eine Einladung aus `PLAY + QUESTION` zustandsabhaengig beantworten.
+Im laufenden Spiel kam diese Rechnung jedoch nie an: `runVisit` spielte immer drei fest
+wechselnde Sprechpunkte und Koerperregungen ab. Energie, sozialer Bedarf, Beziehung,
+Persoenlichkeit und laufendes Ziel des Bewohners blieben fuer die Begegnung bedeutungslos.
+
+NT-085 schliesst genau diese Laufzeitluecke. `LivingSimulation.exchangePlayInvitation` verbindet
+die drei bereits vorhandenen sozialen Handlungen auf einer gemeinsamen Simulationszeit:
+Einladung senden, aus dem Zustand antworten, Antwort wahrnehmen. Jede Wirkung laeuft weiter ueber
+`ActionOutcome`. `runVisit` zeigt anschliessend nur die beiden tatsaechlichen Nachrichten ueber
+dem jeweiligen Sprecher. Eine Annahme erscheint als `PLAY + YES`; Muedigkeit als `TIRED + NO`,
+ein dringendes Essensziel als `FOOD + NO`. Der Bewohner behaelt die Beziehung und Episode in
+seinem profilbezogenen Zustand.
+
+Der Schnitt behauptet bewusst noch keine lebende Bevoelkerung. Der heutige Gast wird weiterhin
+vom vorhandenen Besuchstakt erzeugt und nach der Begegnung verworfen. Persistente, nicht
+waehlbare Einwohner mit eigenem Alltag, Beruf und Aufenthaltsort sind NT-086. Erst darauf bauen
+mehrere gleichzeitig sichtbare Wesen, Verkaeufer und gemeinsame Aktivitaeten auf; neue Orte sind
+nicht der erste Hebel, solange PARK, SPORT, SHOP, CITY, FOREST, MEADOW und POND noch leer sind.
+
 ### Die Stimmung kommt jetzt auch aus dem Wesen
 
 Bis NT-074 stammte sie ausschliesslich aus dem Pflegebuch, also daraus, wie der NUTZER seinen Tag
@@ -244,7 +265,7 @@ ausgefuehrt werden soll.
 | `PlayPresence` und `PlayTimeLapse` | Adapter fuer Ort, Zeit und Wiedereinstieg; die Kerndomaene bekommt Uhrzeit explizit uebergeben. |
 | `AvatarActivityPlans` | Bewaehrtes Muster: semantische Absicht getrennt von konkreter Routine. |
 | `PlayDreamMemory` | Beleg fuer kompakte, profilbezogene Speicherung; nicht selbst die episodische Agentenerinnerung. |
-| `PlayVisitWindow` / `runVisit` | Eintrittspunkt fuer spaetere echte soziale Entscheidungen und symbolische Kommunikation. |
+| `PlayVisitWindow` / `runVisit` | Zeigt seit NT-085 echte symbolische Einladung und zustandsabhaengige Antwort; Bevoelkerung folgt getrennt. |
 
 Die heutige Sonderregel in `DockScreen` (`Vorrat leer -> Geld pruefen -> Arbeit/Einkauf`) wird
 nicht verdoppelt. Sobald der Runtime-Adapter angeschlossen ist, liefert der neue Planer diese
