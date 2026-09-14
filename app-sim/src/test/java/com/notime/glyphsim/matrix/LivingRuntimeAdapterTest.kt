@@ -268,4 +268,50 @@ class LivingRuntimeAdapterTest {
         assertNull(prepared.topic)
         assertNull(prepared.routine)
     }
+
+    // ================= Die Kennung eines Gastes =================
+
+    /**
+     * **Gast und Spieler duerfen nie denselben Namen tragen.**
+     *
+     * `AvatarSpeciesPrefs.profileId` liefert den blossen Speziesnamen, und unter genau dem liegt
+     * der Zustand des Spielers, sobald er diese Kreatur waehlt. Solange der Gast bei jedem Besuch
+     * neu erfunden wurde, war das folgenlos. Seit er gespeichert wird, waere es ein Fehler mit
+     * Folgen: Wer heute Besuch von einem WYRMLING bekommt und morgen selbst WYRMLING wird,
+     * uebernaehme dessen Beziehungen, Erinnerungen und Beduerfnisse als seine eigenen.
+     *
+     * Geprueft wird die Eigenschaft, nicht das Praefix - wer den Namensraum anders trennt, darf
+     * das tun, solange er ihn trennt.
+     */
+    @Test
+    fun `die Kennung eines Gastes kollidiert mit keiner Spielerkennung`() {
+        val spieler = AvatarSpecies.entries.map { it.name }.toSet()
+        for (species in AvatarSpecies.entries) {
+            val gast = LivingRuntimeAdapter.visitorProfileId(species)
+            assertFalse("$species: $gast ist zugleich eine Spielerkennung", gast in spieler)
+            assertTrue("$gast wird nicht als Gast erkannt", LivingRuntimeAdapter.isVisitorProfileId(gast))
+            assertFalse(
+                "${species.name} wird faelschlich als Gast erkannt",
+                LivingRuntimeAdapter.isVisitorProfileId(species.name)
+            )
+        }
+    }
+
+    /** Und zwei Gaeste verschiedener Art sind zwei verschiedene Wesen. */
+    @Test
+    fun `jede Gastart hat ihre eigene Kennung`() {
+        val kennungen = AvatarSpecies.entries.map { LivingRuntimeAdapter.visitorProfileId(it) }
+        assertEquals(AvatarSpecies.entries.size, kennungen.toSet().size)
+    }
+
+    /** Dieselbe Art ergibt ueber Besuche hinweg dieselbe Kennung - sonst gaebe es kein Wiedersehen. */
+    @Test
+    fun `die Kennung eines Gastes bleibt ueber Besuche gleich`() {
+        for (species in AvatarSpecies.entries) {
+            assertEquals(
+                LivingRuntimeAdapter.visitorProfileId(species),
+                LivingRuntimeAdapter.visitorProfileId(species)
+            )
+        }
+    }
 }

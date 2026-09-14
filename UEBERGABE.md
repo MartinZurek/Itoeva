@@ -98,7 +98,21 @@ Persoenlichkeit und aktuellem Ziel; die zwei echten Nachrichten erscheinen als P
 ueber dem jeweiligen Sprecher. Ja besitzt deshalb nun wie Nein ein eigenes Motiv. Beziehung und
 Episode des Bewohners werden ueber den vorhandenen Store gesichert.
 
-**Der naechste soziale Schnitt ist NT-086, nicht ein neuer Ort:** Der heutige Gast bleibt ein
+**NT-086 hat begonnen.** Der Gast wird nicht mehr bei jedem Besuch neu erfunden: Er wird aus dem
+vorhandenen Store geladen, lebt zwischen den Besuchen weiter und wird danach unter einer eigenen
+Kennung gespeichert. Ein Wiedersehen zaehlt damit auf dem ersten Treffen weiter. Getrennt werden
+mussten dafuer die Kennung (der blosse Speziesname gehoert dem SPIELER) und die Welt (Muenzen und
+Vorrat gehoeren `PlayWallet`/`PlayPantry`, nicht dem Gast).
+
+**Was noch fehlt - und wo die eigentliche Huerde liegt:** Der Gast waehlt seinen Aufenthalt nicht
+selbst, es gibt hoechstens einen sichtbaren gleichzeitig, und es gibt keine Rolle. Die Domaene
+fuehrt VIER Orte; PARK, POND, SPORT, FOREST, MEADOW, CITY und STREET sind darin alle `OUTSIDE`.
+Bevor Einwohner sich selbst verteilen koennen, muss entschieden werden, ob `LivingSite` feiner
+wird oder ob Einwohner eine Position unterhalb der Site bekommen. Dazu kommt die Lesbarkeit: Bei
+`MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten Figur passen drei bis vier Wesen nicht
+nebeneinander.
+
+**Der Rest des naechsten sozialen Schnitts, nicht ein neuer Ort:** Der heutige Gast bleibt ein
 vom Besuchstakt erzeugter, nach der Szene verworfener Gast. Als Naechstes kommen wenige
 persistente, nicht waehlbare Weltbewohner mit eigenem AgentState - zuerst Verkaeufer im SHOP und
 Bewohner fuer PARK/SPORT. Danach erst mehrere gleichzeitig sichtbare Wesen und gemeinsame
