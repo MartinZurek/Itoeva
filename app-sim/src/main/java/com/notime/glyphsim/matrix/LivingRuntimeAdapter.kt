@@ -77,29 +77,6 @@ object LivingRuntimeAdapter {
         if (minute in MARKET_OPENS until MARKET_CLOSES) add(LivingSite.MARKET)
     }
 
-    /**
-     * Die Kennung eines BESUCHERS - und ausdruecklich nicht die des Spielers.
-     *
-     * `AvatarSpeciesPrefs.profileId` liefert den blossen Speziesnamen, und unter genau diesem
-     * Namen liegt der Zustand des Spielers, sobald er diese Kreatur waehlt. Solange der Gast bei
-     * jedem Besuch neu erfunden wurde, war das folgenlos. Sobald er gespeichert wird, ist es ein
-     * Fehler mit Folgen: Wer heute Besuch von einem WYRMLING bekommt und morgen selbst WYRMLING
-     * wird, uebernaehme dessen Beziehungen, Erinnerungen und Beduerfnisse als seine eigenen.
-     *
-     * Die beiden Namensraeume sind deshalb getrennt. Ein Gast ist ein eigenes Wesen, das
-     * zufaellig dieselbe Art hat - nicht dieselbe Person in einer anderen Rolle.
-     *
-     * **Bestehende Beziehungen aus NT-085 fangen dadurch einmal bei null an.** Sie lagen unter
-     * dem blossen Speziesnamen; eine Umschluesselung koennte einen echten Spielerzustand nicht
-     * von einem Gastzustand unterscheiden und wuerde im Zweifel das Falsche behalten.
-     */
-    fun visitorProfileId(species: AvatarSpecies): String = VISITOR_PREFIX + species.name
-
-    /** Ob eine Kennung zu einem Besucher gehoert - fuer Anzeige und Pruefung. */
-    fun isVisitorProfileId(profileId: String): Boolean = profileId.startsWith(VISITOR_PREFIX)
-
-    private const val VISITOR_PREFIX = "guest_"
-
     /** Ein neuer Agent beginnt weder in Not noch vollkommen antriebslos. */
     fun initialAgent(profileId: String, species: AvatarSpecies): AgentState = AgentState(
         profileId = profileId,

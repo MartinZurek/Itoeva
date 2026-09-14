@@ -9,6 +9,7 @@ import com.notime.glyphsim.living.LivingEventKind
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Personality
+import com.notime.glyphsim.living.UtilitySelector
 import com.notime.glyphsim.living.WorldState
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
@@ -269,49 +270,51 @@ class LivingRuntimeAdapterTest {
         assertNull(prepared.routine)
     }
 
-    // ================= Die Kennung eines Gastes =================
-
-    /**
-     * **Gast und Spieler duerfen nie denselben Namen tragen.**
-     *
-     * `AvatarSpeciesPrefs.profileId` liefert den blossen Speziesnamen, und unter genau dem liegt
-     * der Zustand des Spielers, sobald er diese Kreatur waehlt. Solange der Gast bei jedem Besuch
-     * neu erfunden wurde, war das folgenlos. Seit er gespeichert wird, waere es ein Fehler mit
-     * Folgen: Wer heute Besuch von einem WYRMLING bekommt und morgen selbst WYRMLING wird,
-     * uebernaehme dessen Beziehungen, Erinnerungen und Beduerfnisse als seine eigenen.
-     *
-     * Geprueft wird die Eigenschaft, nicht das Praefix - wer den Namensraum anders trennt, darf
-     * das tun, solange er ihn trennt.
-     */
     @Test
-    fun `die Kennung eines Gastes kollidiert mit keiner Spielerkennung`() {
-        val spieler = AvatarSpecies.entries.map { it.name }.toSet()
-        for (species in AvatarSpecies.entries) {
-            val gast = LivingRuntimeAdapter.visitorProfileId(species)
-            assertFalse("$species: $gast ist zugleich eine Spielerkennung", gast in spieler)
-            assertTrue("$gast wird nicht als Gast erkannt", LivingRuntimeAdapter.isVisitorProfileId(gast))
-            assertFalse(
-                "${species.name} wird faelschlich als Gast erkannt",
-                LivingRuntimeAdapter.isVisitorProfileId(species.name)
+    fun `Einwohner sind stabile nicht waehlbare Identitaeten mit Rollenorten`() {
+        assertEquals(3, LivingResidents.all.size)
+        assertEquals(3, LivingResidents.all.map { it.profileId }.distinct().size)
+        assertTrue(
+            LivingResidents.all.none { resident ->
+                AvatarSpecies.entries.any { it.name == resident.profileId }
+            }
+        )
+
+        val seller = LivingResidents.nextVisitor(PlayScene.Place.SHOP, 9 * 60)
+        assertEquals(ResidentRole.SHOPKEEPER, seller?.role)
+        assertEquals(PlayScene.Place.SHOP, seller?.anchorPlace)
+        assertNull(LivingResidents.nextVisitor(PlayScene.Place.SHOP, 22 * 60))
+    }
+
+    @Test
+    fun `Einwohnerrotation ist deterministisch und Rollenbias bleibt unter Beduerfnisdruck`() {
+        val first = LivingResidents.nextVisitor(PlayScene.Place.PARK, 10 * 60)!!
+        val second = LivingResidents.nextVisitor(
+            PlayScene.Place.PARK,
+            10 * 60,
+            previousProfileId = first.profileId
+        )!!
+
+        assertEquals(ResidentRole.PARK_REGULAR, first.role)
+        assertEquals(ResidentRole.ATHLETE, second.role)
+        assertEquals(
+            first,
+            LivingResidents.nextVisitor(PlayScene.Place.PARK, 10 * 60)
+        )
+        for (resident in LivingResidents.all) {
+            val agent = LivingResidents.initialAgent(resident)
+            assertTrue(
+                agent.personality.goalBias.values.all { it < UtilitySelector.MIN_PRESSURE }
             )
         }
     }
 
-    /** Und zwei Gaeste verschiedener Art sind zwei verschiedene Wesen. */
     @Test
-    fun `jede Gastart hat ihre eigene Kennung`() {
-        val kennungen = AvatarSpecies.entries.map { LivingRuntimeAdapter.visitorProfileId(it) }
-        assertEquals(AvatarSpecies.entries.size, kennungen.toSet().size)
-    }
-
-    /** Dieselbe Art ergibt ueber Besuche hinweg dieselbe Kennung - sonst gaebe es kein Wiedersehen. */
-    @Test
-    fun `die Kennung eines Gastes bleibt ueber Besuche gleich`() {
-        for (species in AvatarSpecies.entries) {
-            assertEquals(
-                LivingRuntimeAdapter.visitorProfileId(species),
-                LivingRuntimeAdapter.visitorProfileId(species)
-            )
+    fun `jeder besuchbare Ort hat tagsueber einen Einwohner`() {
+        val uncovered = PlayScene.Place.entries.filter { place ->
+            PlayScene.allowsVisitors(place) && LivingResidents.nextVisitor(place, 10 * 60) == null
         }
+
+        assertTrue("Besuch ohne Einwohner: $uncovered", uncovered.isEmpty())
     }
 }

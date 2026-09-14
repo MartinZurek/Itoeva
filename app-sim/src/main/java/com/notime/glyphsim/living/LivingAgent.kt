@@ -436,23 +436,53 @@ object LivingSimulation {
      */
     fun exchangePlayInvitation(
         initiator: AgentState,
+        initiatorWorld: WorldState,
         receiver: AgentState,
-        world: WorldState
+        receiverWorld: WorldState
     ): SocialExchangeResult {
         require(initiator.profileId != receiver.profileId) { "participants must differ" }
-        val together = world.copy(
-            nearbyProfiles = world.nearbyProfiles + initiator.profileId + receiver.profileId
+        require(initiatorWorld.site == receiverWorld.site) {
+            "participants must share a site"
+        }
+        // Persistente Einwohner koennen zuletzt zu unterschiedlichen Minuten gehandelt haben.
+        // Eine Begegnung beginnt auf der spaeteren davon; niemand wird dafuer zurueckgedreht.
+        val startMinute = maxOf(initiatorWorld.absoluteMinute, receiverWorld.absoluteMinute)
+        val initiatorStartWait = startMinute - initiatorWorld.absoluteMinute
+        val receiverStartWait = startMinute - receiverWorld.absoluteMinute
+        val initiatorAtStart = initiator.copy(
+            needs = initiator.needs.advanced(initiatorStartWait, initiator.personality)
         )
+        val receiverAtStart = receiver.copy(
+            needs = receiver.needs.advanced(receiverStartWait, receiver.personality)
+        )
+        val initiatorTogether = initiatorWorld.advanced(initiatorStartWait).copy(
+            nearbyProfiles = initiatorWorld.nearbyProfiles + receiver.profileId
+        )
+        val receiverTogether = receiverWorld.advanced(receiverStartWait)
         val invitation = ActionCatalog.inviteToPlay(receiver.profileId)
-        require(invitation.isPossible(together)) { "participants are not near" }
-        val asked = invitation.applyTo(initiator, together, GoalKind.CONNECT_WITH)
+        require(invitation.isPossible(initiatorTogether)) { "participants are not near" }
+        val asked = invitation.applyTo(initiatorAtStart, initiatorTogether, GoalKind.CONNECT_WITH)
         val request = requireNotNull(asked.message) { "invitation did not emit symbols" }
 
-        val answered = respondToPlay(receiver, asked.world, request)
+        val waitForRequest = asked.world.absoluteMinute - receiverTogether.absoluteMinute
+        val receiverAtRequest = receiverAtStart.copy(
+            needs = receiverAtStart.needs.advanced(waitForRequest, receiverAtStart.personality)
+        )
+        val receiverWorldAtRequest = receiverTogether.advanced(waitForRequest).copy(
+            nearbyProfiles = receiverWorld.nearbyProfiles + initiator.profileId
+        )
+        val answered = respondToPlay(receiverAtRequest, receiverWorldAtRequest, request)
         val response = requireNotNull(answered.messages.singleOrNull()) {
             "response did not emit exactly one message"
         }
-        val heard = receiveResponse(asked.agent, answered.world, response)
+        val waitForResponse = answered.world.absoluteMinute - asked.world.absoluteMinute
+        val initiatorAtResponse = asked.agent.copy(
+            needs = asked.agent.needs.advanced(waitForResponse, asked.agent.personality)
+        )
+        val initiatorWorldAtResponse = asked.world.advanced(waitForResponse).copy(
+            nearbyProfiles = asked.world.nearbyProfiles + receiver.profileId
+        )
+        val heard = receiveResponse(initiatorAtResponse, initiatorWorldAtResponse, response)
         val receiverWait = heard.world.absoluteMinute - answered.world.absoluteMinute
         val receiverAtEnd = answered.agent.copy(
             // Das Gegenueber handelt in dieser Minute nicht, lebt aber weiter. Diese reine
@@ -465,7 +495,7 @@ object LivingSimulation {
             initiator = heard.agent,
             receiver = receiverAtEnd,
             initiatorWorld = heard.world,
-            receiverWorld = heard.world,
+            receiverWorld = answered.world.advanced(receiverWait),
             request = request,
             response = response,
             initiatorEvents = listOf(asked.event) + heard.events,

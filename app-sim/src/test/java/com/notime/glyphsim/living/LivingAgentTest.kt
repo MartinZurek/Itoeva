@@ -420,8 +420,9 @@ class LivingAgentTest {
 
         val muedeBegegnung = LivingSimulation.exchangePlayInvitation(
             besucher,
+            welt(coins = 1),
             muederBewohner,
-            welt()
+            welt(coins = 9)
         )
 
         assertEquals(
@@ -452,8 +453,9 @@ class LivingAgentTest {
         )
         val froheBegegnung = LivingSimulation.exchangePlayInvitation(
             besucher,
+            welt(coins = 1, minuteOfDay = 7 * 60 + 55),
             bereiterBewohner,
-            welt()
+            welt(coins = 9)
         )
 
         assertEquals(
@@ -467,6 +469,8 @@ class LivingAgentTest {
             froheBegegnung.initiatorWorld.absoluteMinute,
             froheBegegnung.receiverWorld.absoluteMinute
         )
+        assertEquals(1, froheBegegnung.initiatorWorld.coins)
+        assertEquals(9, froheBegegnung.receiverWorld.coins)
     }
 
     @Test
@@ -639,7 +643,12 @@ class LivingAgentTest {
             openSites = LivingSite.entries.toSet()
         )
 
-        val erstes = LivingSimulation.exchangePlayInvitation(gast(), ausgeruhterBewohner(), welt)
+        val erstes = LivingSimulation.exchangePlayInvitation(
+            gast(),
+            welt,
+            ausgeruhterBewohner(),
+            welt
+        )
         assertTrue(
             "Der Bewohner sagt in diesem Test zu - sonst misst er die falsche Richtung",
             SymbolicIntent.YES in erstes.response.intents
@@ -648,14 +657,16 @@ class LivingAgentTest {
         // Der mitgebrachte Gast - so, wie ihn der Store beim naechsten Besuch zurueckgibt.
         val zweites = LivingSimulation.exchangePlayInvitation(
             initiator = erstes.initiator,
+            initiatorWorld = erstes.initiatorWorld,
             receiver = ausgeruhterBewohner(),
-            world = erstes.initiatorWorld
+            receiverWorld = erstes.receiverWorld
         )
         // Und zum Vergleich derselbe Augenblick mit einem Gast ohne Gedaechtnis.
         val alsFremder = LivingSimulation.exchangePlayInvitation(
             initiator = gast(),
+            initiatorWorld = erstes.initiatorWorld,
             receiver = ausgeruhterBewohner(),
-            world = erstes.initiatorWorld
+            receiverWorld = erstes.receiverWorld
         )
 
         val wiedersehen = zweites.initiator.relationships.getValue("PUFFLING")

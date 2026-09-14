@@ -2879,3 +2879,42 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Zustand und Aufenthaltsentscheidung; zuerst Verkaeufer im SHOP und Bewohner fuer PARK/SPORT.
   Mehrere gleichzeitig sichtbare Wesen und gemeinsame Aktivitaeten folgen danach in eigenen
   Scheiben.
+
+### 2026-09-14 - Drei Besucher werden dauerhafte Weltbewohner (NT-086)
+
+- **Ausgangsproblem:** NT-085 machte die sichtbare Antwort echt, erzeugte den Gast aber weiterhin
+  bei jeder Begegnung neu aus einer zufaelligen waehlbaren Spezies. Der Bewohner konnte eine
+  Beziehung speichern; das Gegenueber verlor seine Seite, Beduerfnisse und Episoden beim
+  Fortgehen. Ausserdem lief der Austausch auf der Welt des Hauptavatars - fuer einen dauerhaften
+  Gast haetten damit Muenzen und Vorrat beider Profile dieselbe Quelle gehabt.
+- **Entscheidung:** `LivingResidents` fuehrt genau drei nicht waehlbare Identitaeten ein:
+  Verkaufskraft, Parkstammgast und Sportler. Jede hat eine stabile `resident:`-ID, vorhandene
+  Spezies-Silhouette, Rolle als kleinen Persoenlichkeitsbias, Ankerort und aktives Zeitfenster.
+  Ort, Minute und vorheriger Gast ergeben eine feste Rotation. `runVisit` stellt den Einwohner
+  ueber den vorhandenen `LivingAgentStore` wieder her und speichert nach der sichtbaren
+  Begegnung beide Seiten.
+- **Erster Beleg:** Der Katalog enthaelt drei verschiedene IDs, von denen keine ein waehlbares
+  Speziesprofil ist. Im SHOP erscheint waehrend der Oeffnungszeit die Verkaufskraft und danach
+  niemand; im PARK rotieren Stammgast und Sportler deterministisch. Ein gespeicherter Einwohner
+  behaelt seine Beziehung ueber einen simulierten Tag, waehrend sein sozialer Bedarf weiter
+  waechst.
+- **Architekturentscheidungen:** `exchangePlayInvitation` erhaelt nun die getrennten Welten
+  beider Beteiligten. Vor dem Austausch werden unterschiedliche letzte Minuten ausschliesslich
+  auf die spaetere fortgeschrieben. Einladung, Antwort und Wahrnehmung laufen danach auf einer
+  gemeinsamen Zeitachse, aber Muenzen und Vorrat bleiben im jeweiligen Weltzustand. Passive Zeit
+  laesst Beduerfnisse wachsen; jede soziale Wirkung bleibt in `ActionOutcome`. Der vorhandene
+  Store braucht fuer Einwohner keine zweite Persistenzschicht und keine Room-Migration.
+- **Abgrenzung:** Drei Identitaeten statt einer grossen NPC-Datenbank. Noch kein autonomer
+  Hintergrundlauf, kein Mehrfach-Renderer, kein Berufssystem, keine neuen Orte und keine
+  gemeinsamen Sport-/Drachen-/Angelaktionen. Rolle und Fenster stellen Anwesenheit bereit, sie
+  sind noch kein vollstaendiger Tagesplan.
+- **Betroffene Bereiche:** Neue reine Runtime-Datei `LivingResidents`, die soziale Zeit- und
+  Welttrennung in `LivingAgent`, die gezielte Besuchsgrenze in `DockScreen`, Store- und
+  Adaptertests sowie Living-Agent-, Backlog- und Uebergabedokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 475 Tests gruen. Darin laufen die
+  Verhaltensbelege beider NT-086-Haelften und die zwei NT-087-Belege gemeinsam; die neue
+  Quelldatei steht ausdruecklich in `SRCS`.
+  `python3 -m unittest discover --start-directory tools/music` - 15 Tests gruen.
+- **Naechster Schritt:** NT-088 - Einwohner ueber denselben Living-Agent-Kern selbst Aufenthalt
+  und Aktivitaet entscheiden lassen und den Zustand read-only ausgeben. NT-089 projiziert erst
+  danach mehrere wirklich anwesende Wesen zugleich in die vorhandenen oeffentlichen Orte.

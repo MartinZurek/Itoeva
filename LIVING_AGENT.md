@@ -1,11 +1,11 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-14 (Kern-Schnitte 2a bis 5 und Weiterentwicklungen bis NT-085 umgesetzt)
+Stand: 2026-09-14 (Kern-Schnitte 2a bis 5, NT-085 bis NT-087 umgesetzt)
 
 ## Was das System heute wirklich ist
 
-Nach den gemergten Schnitten #127 bis #149 und dem aktuellen NT-085 ist aus dem Plan ein
+Nach den gemergten Schnitten #127 bis #154 und dem vollstaendigen NT-086 ist aus dem Plan ein
 laufendes System geworden. Diese
 Uebersicht beschreibt den IST-Stand; der Rest des Dokuments bleibt der Plan, an dem er gemessen
 wird.
@@ -224,13 +224,15 @@ nicht gewartet, sondern gelebt, waehrend er weg war.
 1. **Kennung.** `AvatarSpeciesPrefs.profileId` liefert den blossen Speziesnamen - und unter genau
    dem liegt der Zustand des Spielers, sobald er diese Kreatur waehlt. Ein gespeicherter Gast
    waere beim naechsten Speziestausch zum eigenen Avatar geworden, mit fremden Beziehungen und
-   fremden Erinnerungen. `LivingRuntimeAdapter.visitorProfileId` trennt die Namensraeume.
+   fremden Erinnerungen. Die stabilen `resident:`-Kennungen aus `LivingResidents` trennen die
+   Namensraeume und bezeichnen Personen statt Spezies.
 2. **Welt.** `WorldState` traegt Muenzen und Vorrat, und die gehoeren der sichtbaren Welt des
    Spielers (`PlayWallet`, `PlayPantry`). Der Gast bekommt Zeit, Ort und Anwesende aus der
    gemeinsamen Begegnung, Muenzen und Vorrat aber aus seinem eigenen letzten Stand.
 
-Was damit ausdruecklich NOCH NICHT da ist: Der Gast waehlt seinen Aufenthalt nicht selbst, es gibt
-weiterhin hoechstens einen sichtbaren gleichzeitig, und es gibt keine Rolle und keinen Verkaeufer.
+Was damit ausdruecklich NOCH NICHT da ist: Der Einwohner waehlt seinen Tagesablauf nicht selbst,
+und es gibt weiterhin hoechstens einen sichtbaren Gast gleichzeitig. Rollen und eine
+Verkaufskraft existieren als Bias und Anwesenheitsfenster, noch nicht als Berufssystem.
 
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 
@@ -300,6 +302,22 @@ vom vorhandenen Besuchstakt erzeugt und nach der Begegnung verworfen. Persistent
 waehlbare Einwohner mit eigenem Alltag, Beruf und Aufenthaltsort sind NT-086. Erst darauf bauen
 mehrere gleichzeitig sichtbare Wesen, Verkaeufer und gemeinsame Aktivitaeten auf; neue Orte sind
 nicht der erste Hebel, solange PARK, SPORT, SHOP, CITY, FOREST, MEADOW und POND noch leer sind.
+
+NT-086 ersetzt den verworfenen Zufallsgast durch den kleinsten dauerhaften Einwohnerbestand:
+eine Verkaufskraft mit Anker im SHOP, einen Parkstammgast und einen Sportler. Sie verwenden die
+vorhandenen sechs Silhouetten, besitzen aber eigene `resident:`-Profil-IDs, sind damit nicht
+waehlbar und teilen weder Geld noch Vorrat mit dem Hauptavatar. Ort und Uhrzeit bestimmen
+deterministisch, wer fuer eine Begegnung in Frage kommt; eine feste Rotation ersetzt Zufall.
+Nach dem sichtbaren Austausch werden beide Agenten samt Beduerfnissen, Episoden und Beziehung
+gespeichert. Verschiedene letzte Handlungsminuten werden vor der Begegnung auf die spaetere Zeit
+fortgeschrieben, nie zurueckgedreht.
+
+Das ist Identitaets- und Persistenzgrundlage, noch keine vollstaendige Bevoelkerungssimulation.
+Zwischen Besuchen wachsen Beduerfnisse, aber Einwohner fuehren noch keinen eigenen unsichtbaren
+Tagesablauf aus; der Renderer zeigt weiterhin hoechstens einen Gast. NT-088 muss deshalb als
+Naechstes die Agentenentscheidung fuer Aufenthalt und Aktivitaet rechnen und als read-only
+Population-Snapshot ausgeben. Erst NT-089 projiziert mehrere dieser tatsaechlich anwesenden
+Wesen zugleich in SHOP, PARK und SPORT.
 
 ### Die Stimmung kommt jetzt auch aus dem Wesen
 

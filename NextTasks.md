@@ -203,16 +203,26 @@ Pseudo-Wortwechsel. Der Gast sendet `PLAY + QUESTION`; der Living Agent antworte
 sozialem Bedarf, Beziehung, Persoenlichkeit und aktuellem Ziel. Einladung und Antwort stehen als
 Pixelsymbole ueber dem wirklichen Sprecher, einschliesslich eines neuen Ja-Hakens. Die Beziehung
 und Episode des Bewohners werden ueber `ActionOutcome` gespeichert. **Offen bleibt:** Der Gast
-ist noch kein persistenter Einwohner; er wird weiterhin vom vorhandenen Besuchstakt erzeugt.
+ist mit NT-086 zum persistenten Einwohner geworden; sein eigener Tagesablauf folgt in NT-088.
 
 **Living Agent, sozial:** NT-086 **Persistente Weltbewohner statt zufaelliger Kulissengaeste** -
-offen. Einen kleinen Katalog nicht waehlbarer Einwohner mit eigenem `AgentState`, stabilem Ort,
-Beruf/Rolle und Tagesziel einfuehren. Zuerst genau ein Verkaeufer im SHOP und zwei frei lebende
-Bewohner fuer PARK/SPORT; keine zweite Engine und keine Plotfolge. *Nach mehreren simulierten
-Tagen bleiben Beziehungen, Beduerfnisse und Aufenthalte je Einwohner erhalten; oeffentliche Orte
-werden aus denselben Entscheidungen sichtbar bewohnt.* Darauf folgen in eigenen Schnitten
-mehrere gleichzeitige Figuren und gemeinsame Aktivitaeten wie Sport, Drachen und Angeln. Neue
-Orte erst danach, weil die vorhandenen oeffentlichen Plaetze zuerst Leben brauchen.
+*am 2026-09-14 umgesetzt.* Eine Verkaufskraft, ein Parkstammgast und ein Sportler besitzen eigene
+nicht waehlbare `resident:`-Profil-IDs, Rollenbias, Ankerort und Anwesenheitsfenster. Der
+Besuchstakt waehlt sie deterministisch nach Ort, Zeit und fester Rotation. Beide Seiten einer
+sichtbaren Begegnung werden getrennt gespeichert; Muenzen und Vorrat bleiben je Profil getrennt,
+verschiedene letzte Simulationsminuten werden vor dem Austausch vorwaerts synchronisiert.
+**Offen bleibt:** Die Einwohner entscheiden ihren Tagesablauf zwischen Besuchen noch nicht
+selbst, und der Renderer zeigt weiterhin nur einen Gast zugleich.
+
+**Living Agent, sozial:** NT-088 **Einwohner entscheiden Aufenthalt und Aktivitaet selbst** -
+offen. Die drei persistenten Einwohner ueber denselben Living-Agent-Kern in kleinen
+deterministischen Zeitschritten fortschreiben und einen read-only Population-Snapshot mit
+Profil, Ort, Ziel, naechster Handlung und Rolle bereitstellen. Rolle ist nur Bias und
+Weltvoraussetzung: Auch die Verkaufskraft darf bei dringendem Hunger oder Muedigkeit den SHOP
+verlassen. *Nach mehreren simulierten Tagen sind Aufenthalt und Aktivitaet jedes Einwohners aus
+Beduerfnissen, Ressourcen und Oeffnungszeiten erklaerbar; zwei Bewohner entwickeln verschiedene
+Historien.* Noch kein Mehrfach-Renderer. NT-089 zeigt danach mehrere tatsaechlich anwesende
+Bewohner gleichzeitig; gemeinsame Sport-, Drachen- und Angelhandlungen folgen getrennt.
 
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.

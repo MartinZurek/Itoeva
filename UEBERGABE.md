@@ -98,11 +98,13 @@ Persoenlichkeit und aktuellem Ziel; die zwei echten Nachrichten erscheinen als P
 ueber dem jeweiligen Sprecher. Ja besitzt deshalb nun wie Nein ein eigenes Motiv. Beziehung und
 Episode des Bewohners werden ueber den vorhandenen Store gesichert.
 
-**NT-086 hat begonnen.** Der Gast wird nicht mehr bei jedem Besuch neu erfunden: Er wird aus dem
-vorhandenen Store geladen, lebt zwischen den Besuchen weiter und wird danach unter einer eigenen
-Kennung gespeichert. Ein Wiedersehen zaehlt damit auf dem ersten Treffen weiter. Getrennt werden
-mussten dafuer die Kennung (der blosse Speziesname gehoert dem SPIELER) und die Welt (Muenzen und
-Vorrat gehoeren `PlayWallet`/`PlayPantry`, nicht dem Gast).
+NT-086 ersetzt diesen verworfenen Gast inzwischen durch drei dauerhafte, nicht waehlbare
+Identitaeten: Verkaufskraft im SHOP, Parkstammgast und Sportler. Ihre `resident:`-Profil-IDs sind
+von den sechs waehlbaren Speziesprofilen getrennt; Rolle, Ankerort und Anwesenheitsfenster waehlen
+deterministisch den passenden Gast. `LivingAgentStore` wird unveraendert je Einwohner
+wiederverwendet. Beim Austausch bleiben die Weltressourcen beider Profile getrennt, beide
+Zeitstaende werden vorwaerts synchronisiert und nach der vollstaendig sichtbaren Begegnung werden
+beide Agenten gespeichert.
 
 **Die Architekturfrage ist entschieden - und zwar gegen meine eigene Vermutung (NT-087).** Hier
 stand, die Huerde liege im Ortsmodell. Die Messung sagt etwas anderes: Sechs unabhaengig
@@ -113,19 +115,17 @@ Wesen, die dasselbe tun wollen, schon heute an denselben Ort. **`LivingSite` ble
 
 Dieselbe Messung fand dafuer zwei Ziele, die NIE gewinnen. `SEEK_COMFORT` ist behoben
 (Behaglichkeit stillt nur noch, was ihr gilt - siehe NT-087); `EARN_MONEY` bleibt bewusst
-ungewaehlt, weil Muenzen heute nur Essen zahlen.
+ungewaehlt, weil Muenzen heute nur Essen zahlen. Verkauf und Lohn sind der konkrete Anlass, dem
+Ziel erstmals einen Sinn zu geben; die Auswahlzahl wird dafuer nicht vorab kuenstlich erhoeht.
 
-**Was noch fehlt:** Der Gast waehlt seinen Aufenthalt nicht selbst, es gibt hoechstens einen
-sichtbaren gleichzeitig, und es gibt keine Rolle. Die offene Frage ist jetzt die **Lesbarkeit**:
-Bei `MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten Figur passen drei bis vier Wesen nicht
-nebeneinander.
-
-**Der Rest des naechsten sozialen Schnitts, nicht ein neuer Ort:** Der heutige Gast bleibt ein
-vom Besuchstakt erzeugter, nach der Szene verworfener Gast. Als Naechstes kommen wenige
-persistente, nicht waehlbare Weltbewohner mit eigenem AgentState - zuerst Verkaeufer im SHOP und
-Bewohner fuer PARK/SPORT. Danach erst mehrere gleichzeitig sichtbare Wesen und gemeinsame
-Aktivitaeten. PARK, SPORT, SHOP, CITY, FOREST, MEADOW und POND existieren bereits; sie werden
-bevoelkert, bevor Gebirge oder weitere Kulissen dazukommen.
+**Der naechste offene soziale Schnitt ist NT-088:** Die drei Einwohner sind jetzt dauerhaft,
+aber noch keine selbst laufende Bevoelkerung. Zwischen Begegnungen wachsen ihre Beduerfnisse beim
+Restore; sie fuehren noch keine eigenen Handlungen aus, und die Anzeige traegt weiterhin nur
+einen Gast. Als Naechstes werden ihre Aufenthalts- und Aktivitaetsentscheidungen ueber denselben
+Living-Agent-Kern fortgeschrieben und als read-only Population-Snapshot ausgegeben. Der
+Mehrfach-Renderer fuer SHOP, PARK und SPORT ist danach NT-089. Die offene Huerde ist Lesbarkeit
+bei vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn die vorhandenen Plaetze
+wirklich bewohnt sind.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
