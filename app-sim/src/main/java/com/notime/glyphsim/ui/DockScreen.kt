@@ -3823,7 +3823,9 @@ fun DockScreen(
                         PlayEffects.carriedCells(
                             item = item,
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
-                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt()
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            gaitPhase = scenePhase,
+                            moving = avatarFacing != AvatarShading.Side.NONE
                         )
                     )
                 }

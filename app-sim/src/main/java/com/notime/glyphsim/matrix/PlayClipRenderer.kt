@@ -228,7 +228,15 @@ object PlayClipRenderer {
 
         // Getragener Gegenstand, an derselben Stelle wie auf dem Bildschirm.
         frame.carried?.let { item ->
-            drawCells(PlayEffects.carriedCells(item, originCellX, originCellY))
+            drawCells(
+                PlayEffects.carriedCells(
+                    item,
+                    originCellX,
+                    originCellY,
+                    gaitPhase = frame.scenePhase,
+                    moving = frame.shadeSide != AvatarShading.Side.NONE
+                )
+            )
         }
 
         // Vordere Ebene zuletzt - sie liegt auch im Bild vor der Figur.
