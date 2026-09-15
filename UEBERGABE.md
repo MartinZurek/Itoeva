@@ -8,6 +8,19 @@ Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
+**Stand 15.09.: NT-088 ist umgesetzt.** Die drei Einwohner leben jetzt zwischen den Besuchen
+weiter - `LivingPopulation` schreibt sie ueber denselben `LivingSimulation.step` fort und liefert
+einen read-only `ResidentSnapshot`. Ueber fuenf simulierte Tage sind Verkaufskraft (SHOP 36),
+Parkstammgast (PARK 21) und Sportler (SPORT 42) an ihren Ankerorten zu sehen, die Rollen sind an
+den Zielen ablesbar, und zwei Laeufe ergeben denselben Zustand.
+
+**Was NT-089 aus diesem Schnitt mitnehmen muss:** Der Snapshot fuehrt `minuteOfDay` je Einwohner,
+weil eine lange Handlung (Arbeiten 180 Minuten) ueber die Zielminute hinausschiesst - die drei
+koennen bis zu drei Stunden auseinanderliegen, und wer sie gleichzeitig zeichnet, darf das nicht
+ignorieren. Die zweite Grenze ist die Lesbarkeit: bei `MIN_SCENE_CELLS = 40` und einer 16 Zellen
+breiten Figur passen drei bis vier Wesen nicht nebeneinander.
+
+
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
 eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, danach hoeren und
 erst dann einen Asset-PR oeffnen.

@@ -664,6 +664,65 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-15 - Die Einwohner leben zwischen den Besuchen weiter (NT-088)
+
+- **Ausgangsproblem:** Seit NT-086 besitzen die drei Einwohner Identitaet, Erinnerung und eigene
+  Ressourcen - aber ihr Zustand bewegte sich ausschliesslich, wenn der Hauptavatar ihnen zufaellig
+  begegnete. Zwischen zwei Begegnungen standen sie still. Ein Laden, dessen Verkaufskraft nur
+  existiert, waehrend jemand hinsieht, ist eine Kulisse mit Gedaechtnis, keine Bevoelkerung.
+- **Entscheidung:** `LivingPopulation` schreibt die drei ueber `LivingSimulation.step` fort -
+  denselben Kern wie der Hauptavatar. Keine eigene Zielwahl, kein eigener Planer, keine Abkuerzung
+  "die Verkaufskraft steht eben im Laden". Dazu ein read-only `ResidentSnapshot` mit Profil,
+  Rolle, Ort, Domaenenort, Ziel, naechster Handlung, benanntem Hindernis, Muenzen, Vorrat und
+  Tagesminute.
+- **Der Fund, der die Rolle erst sichtbar gemacht hat:** Die Verkaufskraft ARBEITET im Laden, aber
+  die Domaene kennt fuer Arbeit nur `WORKPLACE`, und `siteFor(SHOP)` ist `MARKET`. Sie fiel beim
+  Arbeiten auf die Kulisse WORK durch und stand im eigenen Laden nur dann, wenn sie dort gerade
+  EINKAUFTE - gemessen **neun von 240** Schnappschuessen. `LivingResident.anchorSites` sagt jetzt,
+  welche Domaenenorte der Ankerort fuer diese Figur vertritt; danach **sechsunddreissig**, und
+  WORK verschwindet aus ihrem Tag.
+- **Oeffnungszeiten:** `WorldState.advanced` bewegt die Zeit, aber nicht `openSites`. Ohne
+  Nachfuehren bei jedem Schritt truege ein um sieben Uhr angelegter Einwohner bis in die Nacht die
+  Oeffnungszeiten von sieben Uhr mit sich - der Laden haette fuer ihn nie geschlossen, und
+  `SiteOpen` waere als benanntes Hindernis wirkungslos.
+- **Beleg ueber fuenf simulierte Tage, in Halbstundenschritten:**
+
+  | Einwohner | oeffentlich anwesend im Fenster | Ankerort | dominante Ziele |
+  | --- | --- | --- | --- |
+  | Verkaufskraft | 45 von 147 (30 %) | SHOP 36, CITY 9 | GET_FOOD 98, REST 71, HAVE_FUN 16 |
+  | Parkstammgast | 21 von 129 (16 %) | PARK 21 | GET_FOOD 104, REST 60, DEVELOP 33 |
+  | Sportler | 42 von 161 (26 %) | SPORT 42 | GET_FOOD 88, **HAVE_FUN 74**, REST 52 |
+
+  Oeffentliche Orte ueber fuenf Tage: SPORT 42, SHOP 36, PARK 21, CITY 9. Die Rollen sind an den
+  Zielen ablesbar, ohne dass irgendwo ein Ablauf vorgeschrieben waere.
+- **Rolle neigt, sie zwingt nicht:** Eine Verkaufskraft mit Hunger 0,95 verlaesst den Arbeitsplatz,
+  geht zum Markt, kauft, geht nach Hause, isst und ruht danach. Ein Test haelt die BAHN fest und
+  nicht den Endzustand - der erste Entwurf sah vier Stunden spaeter nach und fand `REST`, weil sie
+  da laengst gegessen hatte.
+- **Determinismus:** Zwei Laeufe ueber drei Tage ergeben denselben Schnappschuss. Der Kern
+  wuerfelt nicht; das Interessenthema kommt aus einer festen Rotation ueber Tag und Einwohner.
+- **Getrennte Geldbeutel, anders geprueft als geplant:** Nach vier Tagen stehen alle drei auf null
+  Muenzen und null Portionen - nicht wegen einer geteilten Welt, sondern weil Lohn und Einkauf
+  beide 2 kosten. Gleiche Zahlen sind hier also kein Beleg fuer Vermischung. Der Test gibt
+  stattdessen EINEM Einwohner 99 Muenzen und prueft, dass die anderen davon unberuehrt bleiben.
+- **Nicht geaendert und ausdruecklich vermerkt:** Der Rollenbias der Verkaufskraft liegt auf
+  `EARN_MONEY` - und das Ziel gewinnt nie, wie NT-087 gemessen hat (beste Punktzahl -0,43 bei
+  Kosten 58). Ihr Bias ist damit wirkungslos. Repariert wird das hier NICHT durch Drehen an der
+  Wirtschaft: Solange Muenzen ausschliesslich Essen zahlen, ist "Geld wollen" kein sinnvoller
+  Antrieb. Der Hebel ist eine Verwendung fuer Geld, nicht ein Schwellwert.
+- **Betroffene Bereiche:** neu `LivingPopulation`, ergaenzt `LivingResidents` (`anchorSites`), neu
+  `LivingPopulationTest`, Testlaeufer, Living-Agent-, Uebergabe- und Backlogdokumentation. Kein
+  Renderer, keine Room-Migration, keine Musik- oder Twitch-Aenderung.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 484 Tests gruen (vorher 476).
+  `python3 -m unittest discover --start-directory tools/music` - 15 Tests gruen.
+- **Naechster Schritt:** NT-089 zeigt mehrere tatsaechlich anwesende Einwohner gleichzeitig.
+  Zwei Dinge sind dafuer aus diesem Schnitt mitzunehmen: Der Schnappschuss fuehrt `minuteOfDay`
+  je Einwohner, weil eine lange Handlung (Arbeiten 180 Minuten) ueber die Zielminute
+  hinausschiesst und die drei deshalb bis zu drei Stunden auseinanderliegen koennen - der
+  Renderer darf das nicht ignorieren. Und die Lesbarkeit bleibt die eigentliche Grenze: bei
+  `MIN_SCENE_CELLS = 40` und einer 16 Zellen breiten Figur passen drei bis vier Wesen nicht
+  nebeneinander.
+
 ### 2026-08-18 - Erzählerische Autonomie freigegeben
 
 - **Version:** Protokoll 0.1 → 0.2. Kein Rücksetzweg im technischen Sinn nötig - eine

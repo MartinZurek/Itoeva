@@ -215,7 +215,7 @@ verschiedene letzte Simulationsminuten werden vor dem Austausch vorwaerts synchr
 selbst, und der Renderer zeigt weiterhin nur einen Gast zugleich.
 
 **Living Agent, sozial:** NT-088 **Einwohner entscheiden Aufenthalt und Aktivitaet selbst** -
-offen. Die drei persistenten Einwohner ueber denselben Living-Agent-Kern in kleinen
+*am 2026-09-15 umgesetzt.* Die drei persistenten Einwohner ueber denselben Living-Agent-Kern in kleinen
 deterministischen Zeitschritten fortschreiben und einen read-only Population-Snapshot mit
 Profil, Ort, Ziel, naechster Handlung und Rolle bereitstellen. Rolle ist nur Bias und
 Weltvoraussetzung: Auch die Verkaufskraft darf bei dringendem Hunger oder Muedigkeit den SHOP
@@ -223,6 +223,21 @@ verlassen. *Nach mehreren simulierten Tagen sind Aufenthalt und Aktivitaet jedes
 Beduerfnissen, Ressourcen und Oeffnungszeiten erklaerbar; zwei Bewohner entwickeln verschiedene
 Historien.* Noch kein Mehrfach-Renderer. NT-089 zeigt danach mehrere tatsaechlich anwesende
 Bewohner gleichzeitig; gemeinsame Sport-, Drachen- und Angelhandlungen folgen getrennt.
+
+`LivingPopulation` schreibt die drei ueber denselben `LivingSimulation.step` fort und liefert
+einen read-only `ResidentSnapshot`. Ueber fuenf simulierte Tage in Halbstundenschritten: Die
+Verkaufskraft ist 30 Prozent ihres Fensters oeffentlich zu sehen (SHOP 36, CITY 9), der
+Parkstammgast 16 Prozent (PARK 21), der Sportler 26 Prozent (SPORT 42) - und die Rollen sind an
+den Zielen ablesbar, ohne Ablaufskript (Sportler HAVE_FUN 74, Parkgast DEVELOP 33). Zwei Laeufe
+ergeben denselben Zustand. **Der Fund unterwegs:** Die Verkaufskraft arbeitet im Laden, aber die
+Domaene kennt fuer Arbeit nur `WORKPLACE` und `siteFor(SHOP)` ist `MARKET` - sie fiel beim
+Arbeiten auf die Kulisse WORK durch und stand im eigenen Laden nur beim EINKAUFEN, neun von 240
+Schnappschuessen. Mit `anchorSites` sind es sechsunddreissig. **Offen bleibt:** Der Rollenbias der
+Verkaufskraft liegt auf `EARN_MONEY`, und das Ziel gewinnt nie (NT-087: -0,43 bei Kosten 58) - ihr
+Bias ist wirkungslos, und der Hebel dafuer ist eine Verwendung fuer Geld, kein Schwellwert. Und
+der Schnappschuss fuehrt `minuteOfDay` je Einwohner, weil eine 180-Minuten-Schicht ueber die
+Zielminute hinausschiesst; die drei koennen bis zu drei Stunden auseinanderliegen, was NT-089
+beim Zeichnen beruecksichtigen muss.
 
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.

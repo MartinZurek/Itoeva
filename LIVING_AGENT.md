@@ -234,6 +234,47 @@ Was damit ausdruecklich NOCH NICHT da ist: Der Einwohner waehlt seinen Tagesabla
 und es gibt weiterhin hoechstens einen sichtbaren Gast gleichzeitig. Rollen und eine
 Verkaufskraft existieren als Bias und Anwesenheitsfenster, noch nicht als Berufssystem.
 
+### Die Einwohner leben zwischen den Besuchen weiter (NT-088)
+
+Seit NT-086 haben die drei Einwohner Identitaet, Erinnerung und eigene Ressourcen - aber ihr
+Zustand bewegte sich ausschliesslich, wenn der Hauptavatar ihnen begegnete. Zwischen zwei
+Begegnungen standen sie still.
+
+`LivingPopulation` schreibt sie ueber `LivingSimulation.step` fort - **denselben Kern**, keine
+zweite Zielwahl und keinen zweiten Planer. Dazu ein read-only `ResidentSnapshot` (Profil, Rolle,
+sichtbarer Ort, Domaenenort, Ziel, naechste Handlung, benanntes Hindernis, Muenzen, Vorrat,
+Tagesminute). Der Snapshot gibt den `AgentState` ausdruecklich NICHT heraus: Wer den ganzen Kern
+bekommt, veraendert ihn irgendwann von der Oberflaeche aus, und dann entsteht Leben an zwei
+Stellen.
+
+Fuenf simulierte Tage in Halbstundenschritten, deterministisch wiederholbar:
+
+| Einwohner | oeffentlich im Fenster | Ankerort | dominante Ziele |
+| --- | --- | --- | --- |
+| Verkaufskraft | 45 von 147 (30 %) | SHOP 36, CITY 9 | GET_FOOD 98, REST 71, HAVE_FUN 16 |
+| Parkstammgast | 21 von 129 (16 %) | PARK 21 | GET_FOOD 104, REST 60, DEVELOP 33 |
+| Sportler | 42 von 161 (26 %) | SPORT 42 | GET_FOOD 88, **HAVE_FUN 74**, REST 52 |
+
+**Zwei Dinge mussten dafuer stimmen, und beide waren zuerst falsch:**
+
+1. **Der Ankerort vertritt auch die Arbeit.** Die Verkaufskraft arbeitet im Laden, aber die
+   Domaene kennt fuer Arbeit nur `WORKPLACE`, und `siteFor(SHOP)` ist `MARKET`. Sie fiel beim
+   Arbeiten auf die Kulisse WORK durch und stand im eigenen Laden nur beim EINKAUFEN - neun von
+   240 Schnappschuessen. `LivingResident.anchorSites` sagt, welche Domaenenorte der Ankerort fuer
+   diese Figur vertritt; danach sechsunddreissig.
+2. **Die Oeffnungszeiten muessen mitwandern.** `WorldState.advanced` bewegt die Zeit, aber nicht
+   `openSites`. Ohne Nachfuehren bei jedem Schritt truege ein morgens angelegter Einwohner bis in
+   die Nacht die Oeffnungszeiten des Morgens mit sich - `SiteOpen` waere als Hindernis wirkungslos.
+
+**Rolle neigt, sie zwingt nicht.** Eine Verkaufskraft mit Hunger 0,95 verlaesst den Arbeitsplatz,
+geht zum Markt, kauft, geht nach Hause und isst. Kein Ablaufskript sagt ihr das; `GET_FOOD`
+gewinnt schlicht die Wahl.
+
+Was offen bleibt: Ihr Rollenbias liegt auf `EARN_MONEY`, und das Ziel gewinnt nie (NT-087). Der
+Hebel dafuer ist eine Verwendung fuer Geld, kein Schwellwert. Und der Snapshot fuehrt
+`minuteOfDay` je Einwohner, weil eine 180-Minuten-Schicht ueber die Zielminute hinausschiesst -
+die drei koennen bis zu drei Stunden auseinanderliegen. NT-089 muss das beim Zeichnen wissen.
+
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 
 Hier stand zuerst, die Grenze liege im Ortsmodell: Die Domaene fuehrt vier Orte, PARK, POND,
