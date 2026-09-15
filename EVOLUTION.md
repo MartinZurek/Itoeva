@@ -2926,11 +2926,14 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   eigenen Takt. Sie folgten zwar der absoluten Position der Figur, blieben relativ zu ihrem
   Koerper jedoch fest und glitten beim Gehen wie angeklebt durch das Bild.
 - **Entscheidung:** `PlayEffects.carriedCells` bekommt den vorhandenen Szenentakt und die
-  ausdrueckliche Information, ob die Figur gerade geht. Nur dann hebt und senkt sich das Motiv
-  ueber sechs Takte um eine Zelle; im Stand bleibt es unveraendert. Eine Zelle ist bewusst die
-  kleinste lesbare Bewegung auf diesem Raster, drei Hoehen vermeiden blosses Zweibildblinken.
+  ausdrueckliche Information, ob die Figur gerade geht. Nur dann schwingt das Motiv ueber sechs
+  Takte zwischen Grundstellung und zwei angehobenen Hoehen; im Stand bleibt es unveraendert.
+  Eine Zelle je Schritt ist bewusst die kleinste lesbare Bewegung auf diesem Raster, drei Hoehen
+  vermeiden blosses Zweibildblinken. Die Folge geht nie unter die Grundstellung, damit der
+  schwarze Freistellungsrand auch bei WYRMLING nicht die Bodenlinie uebermalt.
 - **Erster Beleg:** Fuer jeden der fuenf Gegenstaende entstehen ueber zwoelf Gangtakte mindestens
-  drei verschiedene Bilder. Dieselbe Folge ergibt im Stand genau ein Bild.
+  drei verschiedene Bilder. Dieselbe Folge ergibt im Stand genau ein Bild; keine Gangphase
+  reicht mit ihrer Freistellung unter dessen ruhige Unterkante.
 - **Architekturentscheidungen:** Kein zweiter Animationszaehler und keine Gegenstandslogik in der
   grossen Oberflaeche. `DockScreen` und `PlayClipRenderer` uebergeben denselben `scenePhase`; die
   bereits vorhandene Laufrichtung ist die Bewegungsquelle. Damit stimmen Bildschirm und

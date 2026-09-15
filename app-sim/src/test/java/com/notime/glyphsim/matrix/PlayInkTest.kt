@@ -137,6 +137,11 @@ class PlayInkTest {
                 "$item gleitet beim Gehen ohne eigenen Takt",
                 imGang.distinct().size >= 3
             )
+            val unterkanteImStand = imStand.first().maxOf { it.second }
+            assertTrue(
+                "$item taucht mit seiner Freistellung unter die ruhige Grundstellung",
+                imGang.all { bild -> bild.maxOf { it.second } <= unterkanteImStand }
+            )
         }
     }
 

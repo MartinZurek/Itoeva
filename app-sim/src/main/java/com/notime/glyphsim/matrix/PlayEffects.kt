@@ -1309,6 +1309,6 @@ object PlayEffects {
     private const val CARRY_OFFSET_X = 11
     // Im hohen Raster: 9 Zeilen unter der Figur plus deren Kopffreiheit (siehe AvatarGeometry).
     private val CARRY_OFFSET_Y = 9 + AvatarGeometry.HEADROOM
-    /** Drei lesbare Hoehen in einem weichen Sechsertakt statt hektischem Pixelblinken. */
-    private val CARRY_LIFT = intArrayOf(0, -1, -1, 0, 1, 0)
+    /** Drei lesbare Hoehen oberhalb der Grundstellung, damit die Freistellung nie den Boden trifft. */
+    private val CARRY_LIFT = intArrayOf(0, -1, -2, -1, 0, -1)
 }

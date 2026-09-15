@@ -90,10 +90,11 @@ das fest. Details und die drei wiederkehrenden Darstellungsfallen stehen in `LIV
 und bei NT-075 bis NT-084 in `NextTasks.md`.
 
 NT-090 schliesst den naechsten dort bereits gemessenen Animationshebel: Buch, Becher, Essen,
-Gitarre und Staffelei gleiten beim Tragen nicht mehr starr mit. Sie heben und senken sich nur
-waehrend eines Gangs in einem ruhigen Sechsertakt; im Stand bleibt das Motiv still. Bildschirm
-und Clip leiten Bewegung aus derselben Laufrichtung ab, ein Test haelt alle fuenf Gegenstaende
-auf drei Ganghoehen und genau einem Standbild fest.
+Gitarre und Staffelei gleiten beim Tragen nicht mehr starr mit. Sie schwingen nur waehrend eines
+Gangs in einem ruhigen Sechsertakt zwischen Grundstellung und zwei angehobenen Hoehen; im Stand
+bleibt das Motiv still. Bildschirm und Clip leiten Bewegung aus derselben Laufrichtung ab. Ein
+Test haelt alle fuenf Gegenstaende auf drei Ganghoehen, genau einem Standbild und oberhalb der
+ruhigen Unterkante fest, damit ihre Freistellung nie die Bodenlinie uebermalt.
 
 NT-085 schliesst die bis dahin wichtigste soziale Laufzeitluecke: Der Kern konnte seit NT-067
 zustandsabhaengig auf `PLAY + QUESTION` antworten, aber keine Produktionsstelle rief diese

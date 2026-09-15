@@ -415,10 +415,11 @@ gemessene Animationshebel aus NT-082 ist mit NT-090 umgesetzt.
 **Darstellung:** NT-090 **Getragene Dinge folgen dem Gang** - *am 2026-09-15 umgesetzt.* Buch,
 Becher, Essen, Gitarre und Staffelei folgten zwar der Position der Figur, blieben relativ zum
 Koerper aber starr und glitten dadurch sichtbar mit. Sie erhalten jetzt beim Gehen einen ruhigen
-Sechsertakt mit drei lesbaren Hoehen. Im Stand bleibt die Hand ruhig; Bildschirm und Clip nutzen
-dieselbe Phase und dieselbe Bewegungsbedingung. Ein Verhaltenstest prueft alle fuenf Gegenstaende
-auf mindestens drei Gangbilder und genau ein Standbild. **Offen bleibt:** Am Geraet beurteilen,
-ob eine Zelle Hub fuer die kleine Matrix natuerlich wirkt.
+Sechsertakt zwischen Grundstellung und zwei angehobenen Hoehen. Im Stand bleibt die Hand ruhig;
+Bildschirm und Clip nutzen dieselbe Phase und dieselbe Bewegungsbedingung. Ein Verhaltenstest
+prueft alle fuenf Gegenstaende auf mindestens drei Gangbilder, genau ein Standbild und darauf,
+dass die Freistellung nie unter die ruhige Grundstellung und damit in den Boden wandert.
+**Offen bleibt:** Den Hub am Geraet auf Natuerlichkeit beurteilen.
 
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem
