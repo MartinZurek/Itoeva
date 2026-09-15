@@ -2,6 +2,7 @@ package com.notime.glyphsim.matrix
 
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.GoalKind
+import com.notime.glyphsim.living.LivingSite
 import com.notime.glyphsim.living.WorldState
 
 /** Eine soziale Funktion in der Welt, keine unveraenderliche Charaktervorschrift. */
@@ -25,8 +26,26 @@ data class LivingResident(
     val anchorPlace: PlayScene.Place,
     val visitPlaces: Set<PlayScene.Place>,
     val activeFromMinute: Int,
-    val activeUntilMinute: Int
+    val activeUntilMinute: Int,
+    /**
+     * Welche Domaenenorte der Ankerort fuer DIESEN Einwohner vertritt.
+     *
+     * **Der Grund steht im Laden.** Die Verkaufskraft arbeitet dort, aber die Domaene kennt fuer
+     * Arbeit nur [LivingSite.WORKPLACE], und `siteFor(SHOP)` ist [LivingSite.MARKET]. Ohne diese
+     * Angabe fiel sie beim Arbeiten auf die Kulisse WORK durch und stand im eigenen Laden nur
+     * dann, wenn sie dort gerade EINKAUFTE - gemessen an neun von 240 Schnappschuessen.
+     *
+     * Das ist eine Tatsache ueber die Figur, kein Ablaufskript: Sie sagt, wo ihre Arbeit
+     * stattfindet, und nicht, dass sie arbeiten muss. Wird sie hungrig genug, geht sie trotzdem.
+     *
+     * Leer gelassen heisst "nur der Domaenenort des Ankerorts" - siehe [anchorSites].
+     */
+    private val extraAnchorSites: Set<LivingSite> = emptySet()
 ) {
+    /** Die Domaenenorte, an denen dieser Einwohner an seinem Ankerort zu sehen ist. */
+    val anchorSites: Set<LivingSite>
+        get() = extraAnchorSites + LivingRuntimeAdapter.siteFor(anchorPlace)
+
     fun isActiveAt(minuteOfDay: Int): Boolean =
         minuteOfDay.coerceIn(0, WorldState.MINUTES_PER_DAY - 1) in
             activeFromMinute until activeUntilMinute
@@ -55,7 +74,9 @@ object LivingResidents {
                 PlayScene.Place.CITY
             ),
             activeFromMinute = 7 * 60,
-            activeUntilMinute = 22 * 60
+            activeUntilMinute = 22 * 60,
+            // Ihre Arbeit findet im Laden statt und nicht in einem Buero.
+            extraAnchorSites = setOf(LivingSite.WORKPLACE)
         ),
         LivingResident(
             profileId = "resident:park:puffling",
