@@ -398,9 +398,8 @@ Messung: Seit NT-073 geplante Tagtraeume auf Sofa und Bank waren wegen einer Bet
 Darstellung unsichtbar; die Projektion folgt jetzt dem traeumenden Wesen statt dem Moebel.
 **Offen bleibt:** Uebergang, Groesse und Tempo am Geraet ansehen. Der Tagtraum bleibt bewusst
 zufaellig; nur echter Schlaf garantiert den Rueckblick. LOVE, SLEEP und BOOK mit je zwei
-Weltmotiv-Stellungen sowie die ruhige Angel-Szene sind keine Fehlerkorrekturen. Der naechste
-belegte Animationshebel sind die in NT-082 notierten getragenen Gegenstaende, die beim Gehen
-keinen eigenen Takt kennen.
+Weltmotiv-Stellungen sowie die ruhige Angel-Szene sind keine Fehlerkorrekturen. Der damals
+naechste belegte Animationshebel - getragene Gegenstaende ohne Gangtakt - ist in NT-090 behoben.
 
 **Darstellung:** NT-084 **Jeder Reminder hat eine motiveigene Avatarreaktion** - *am
 2026-09-13 umgesetzt.* Die Vollpruefung ergab: Alle Reminder spielten bereits Avatarframes, aber
@@ -410,9 +409,16 @@ Katalogtest verlangt vollstaendige Abdeckung aller 69 Bibliotheksmotive: 30 Char
 38 allgemeine Motive und die vorhandene Rocket-Sonderfolge. Der Bildvergleich misst nun fuer 80
 Motivknoten 80 verschiedene Reaktionen; ein Geschwister-Rueckfall ist damit ein Testfehler statt
 eine fortzuschreibende Bestandszahl. Kontaktboegen fuer PUFFLING und GLOOP wurden geprueft.
-**Offen bleibt:** Tempo und Lesbarkeit im laufenden Spiel am Geraet ansehen. Der naechste bereits
-gemessene Animationshebel bleibt NT-082: getragene Gegenstaende bewegen sich beim Gehen noch ohne
-eigenen Takt.
+**Offen bleibt:** Tempo und Lesbarkeit im laufenden Spiel am Geraet ansehen. Der damals naechste
+gemessene Animationshebel aus NT-082 ist mit NT-090 umgesetzt.
+
+**Darstellung:** NT-090 **Getragene Dinge folgen dem Gang** - *am 2026-09-15 umgesetzt.* Buch,
+Becher, Essen, Gitarre und Staffelei folgten zwar der Position der Figur, blieben relativ zum
+Koerper aber starr und glitten dadurch sichtbar mit. Sie erhalten jetzt beim Gehen einen ruhigen
+Sechsertakt mit drei lesbaren Hoehen. Im Stand bleibt die Hand ruhig; Bildschirm und Clip nutzen
+dieselbe Phase und dieselbe Bewegungsbedingung. Ein Verhaltenstest prueft alle fuenf Gegenstaende
+auf mindestens drei Gangbilder und genau ein Standbild. **Offen bleibt:** Am Geraet beurteilen,
+ob eine Zelle Hub fuer die kleine Matrix natuerlich wirkt.
 
 **Darstellung:** NT-077 **Die Haeuser in der Ferne bekommen Masse** - *am 2026-09-12 umgesetzt.*
 Sie waren Umrisse: Dach, Waende, Laibungen, Tuer - sorgfaeltig gezeichnet und trotzdem

@@ -2918,3 +2918,29 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Naechster Schritt:** NT-088 - Einwohner ueber denselben Living-Agent-Kern selbst Aufenthalt
   und Aktivitaet entscheiden lassen und den Zustand read-only ausgeben. NT-089 projiziert erst
   danach mehrere wirklich anwesende Wesen zugleich in die vorhandenen oeffentlichen Orte.
+
+### 2026-09-15 - Getragene Dinge folgen dem Gang (NT-090)
+
+- **Ausgangsproblem:** Die Vollmessung aus NT-082 hatte die grossen Szenen belebt, aber einen
+  gemeinsamen Rest stehen gelassen: Buch, Essen, Becher, Gitarre und Staffelei kannten keinen
+  eigenen Takt. Sie folgten zwar der absoluten Position der Figur, blieben relativ zu ihrem
+  Koerper jedoch fest und glitten beim Gehen wie angeklebt durch das Bild.
+- **Entscheidung:** `PlayEffects.carriedCells` bekommt den vorhandenen Szenentakt und die
+  ausdrueckliche Information, ob die Figur gerade geht. Nur dann hebt und senkt sich das Motiv
+  ueber sechs Takte um eine Zelle; im Stand bleibt es unveraendert. Eine Zelle ist bewusst die
+  kleinste lesbare Bewegung auf diesem Raster, drei Hoehen vermeiden blosses Zweibildblinken.
+- **Erster Beleg:** Fuer jeden der fuenf Gegenstaende entstehen ueber zwoelf Gangtakte mindestens
+  drei verschiedene Bilder. Dieselbe Folge ergibt im Stand genau ein Bild.
+- **Architekturentscheidungen:** Kein zweiter Animationszaehler und keine Gegenstandslogik in der
+  grossen Oberflaeche. `DockScreen` und `PlayClipRenderer` uebergeben denselben `scenePhase`; die
+  bereits vorhandene Laufrichtung ist die Bewegungsquelle. Damit stimmen Bildschirm und
+  aufgenommener Clip ueberein.
+- **Abgrenzung:** Formen, Groesse, Freistellung, Routinen und Greif-/Ablegefolge bleiben
+  unveraendert. Keine neue Aktivitaet, kein Living-Agent-, Musik- oder Stream-Umbau.
+- **Betroffene Bereiche:** `PlayEffects`, die zwei gezielten Renderaufrufe in `DockScreen` und
+  `PlayClipRenderer`, `PlayInkTest`, Backlog und Uebergabe.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 476 Tests gruen (vorher 475, ein neuer
+  Verhaltensfall); `python3 -m unittest discover --start-directory tools/music` - 15 Tests gruen.
+- **Naechster Schritt:** Die sichtbare Bewegung am Geraet zusammen mit Schlafrueckblick und den
+  motiveigenen Reaktionen beurteilen. Fuer die Weltlogik bleibt NT-088 der naechste offene
+  Schnitt; NT-089 rendert danach mehrere anwesende Einwohner.

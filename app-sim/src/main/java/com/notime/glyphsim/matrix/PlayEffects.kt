@@ -1203,11 +1203,22 @@ object PlayEffects {
      * Der Versatz zielt auf die untere rechte Koerperhaelfte: Die Kreaturen blicken den Betrachter
      * an (siehe [AvatarBodies]), "in der Hand" heisst hier also vorn-seitlich und nicht vor dem
      * Bauch, wo der Gegenstand von der Silhouette verschluckt wuerde.
+     *
+     * [gaitPhase] bewegt das Getragene nur, wenn [moving] wahr ist. Ein freilaufender Takt auch
+     * im Stand wuerde aus einer ruhigen Hand ein dauerhaftes Zittern machen; beim Gehen braucht
+     * das Ding dagegen einen eigenen kleinen Hub, weil es sonst wie festgeklebt mitgleitet.
      */
-    fun carriedCells(item: Carried, avatarCellX: Int, avatarCellY: Int): List<SceneCell> {
+    fun carriedCells(
+        item: Carried,
+        avatarCellX: Int,
+        avatarCellY: Int,
+        gaitPhase: Int = 0,
+        moving: Boolean = false
+    ): List<SceneCell> {
+        val lift = if (moving) CARRY_LIFT[Math.floorMod(gaitPhase, CARRY_LIFT.size)] else 0
         val sketch = PlayInk.Sketch(
             originX = avatarCellX + CARRY_OFFSET_X,
-            originY = avatarCellY + CARRY_OFFSET_Y,
+            originY = avatarCellY + CARRY_OFFSET_Y + lift,
             direction = 1,
             widthCells = UNBOUNDED,
             floorY = UNBOUNDED
@@ -1298,4 +1309,6 @@ object PlayEffects {
     private const val CARRY_OFFSET_X = 11
     // Im hohen Raster: 9 Zeilen unter der Figur plus deren Kopffreiheit (siehe AvatarGeometry).
     private val CARRY_OFFSET_Y = 9 + AvatarGeometry.HEADROOM
+    /** Drei lesbare Hoehen in einem weichen Sechsertakt statt hektischem Pixelblinken. */
+    private val CARRY_LIFT = intArrayOf(0, -1, -1, 0, 1, 0)
 }

@@ -89,6 +89,12 @@ Motivknoten 80 verschiedene Reaktionen; Katalog-, Fingerabdruck- und Bildgleichh
 das fest. Details und die drei wiederkehrenden Darstellungsfallen stehen in `LIVING_AGENT.md`
 und bei NT-075 bis NT-084 in `NextTasks.md`.
 
+NT-090 schliesst den naechsten dort bereits gemessenen Animationshebel: Buch, Becher, Essen,
+Gitarre und Staffelei gleiten beim Tragen nicht mehr starr mit. Sie heben und senken sich nur
+waehrend eines Gangs in einem ruhigen Sechsertakt; im Stand bleibt das Motiv still. Bildschirm
+und Clip leiten Bewegung aus derselben Laufrichtung ab, ein Test haelt alle fuenf Gegenstaende
+auf drei Ganghoehen und genau einem Standbild fest.
+
 NT-085 schliesst die bis dahin wichtigste soziale Laufzeitluecke: Der Kern konnte seit NT-067
 zustandsabhaengig auf `PLAY + QUESTION` antworten, aber keine Produktionsstelle rief diese
 Funktionen auf. `runVisit` zeigte stattdessen immer drei feste Pseudo-Wortwechsel. Jetzt fuehrt

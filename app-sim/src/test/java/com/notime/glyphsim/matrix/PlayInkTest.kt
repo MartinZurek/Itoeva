@@ -1,6 +1,7 @@
 package com.notime.glyphsim.matrix
 
 import com.notime.glyphcore.data.AnimationType
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -113,6 +114,28 @@ class PlayInkTest {
             assertTrue(
                 "$item benutzt Stufen ausserhalb des Zeichenkastens",
                 cells.all { it.brightness in PlayInk.LEVELS }
+            )
+        }
+    }
+
+    @Test
+    fun `Getragenes folgt dem Gang und bleibt im Stand ruhig`() {
+        for (item in PlayEffects.Carried.entries) {
+            fun muster(phase: Int, moving: Boolean) = PlayEffects.carriedCells(
+                item = item,
+                avatarCellX = avatarX,
+                avatarCellY = avatarY,
+                gaitPhase = phase,
+                moving = moving
+            ).map { Triple(it.x, it.y, it.brightness) }.toSet()
+
+            val imStand = (0 until 12).map { muster(it, moving = false) }
+            assertEquals("$item zittert im Stand", 1, imStand.distinct().size)
+
+            val imGang = (0 until 12).map { muster(it, moving = true) }
+            assertTrue(
+                "$item gleitet beim Gehen ohne eigenen Takt",
+                imGang.distinct().size >= 3
             )
         }
     }
