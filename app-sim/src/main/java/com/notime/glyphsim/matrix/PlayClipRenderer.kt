@@ -34,6 +34,14 @@ object PlayClipRenderer {
         android.graphics.Color.blue(MatrixColors.LED_ON)
     )
 
+    /** Eine kleinere Hintergrundfigur; Lage und Breite gelten relativ zum ganzen Bild. */
+    class ResidentFigure(
+        val frame: IntArray,
+        val species: AvatarSpecies,
+        val leftFraction: Float,
+        val widthFraction: Float
+    )
+
     /**
      * Alles, was ein einzelnes Bild ausmacht. Bewusst als Datenklasse: Der Aufnehmer erzeugt
      * daraus eine Folge, ohne dass diese Datei etwas ueber Abläufe wissen muesste.
@@ -77,7 +85,9 @@ object PlayClipRenderer {
         /** Ein Gast, falls gerade einer durchs Bild geht. */
         val visitorFrame: IntArray? = null,
         val visitorSpecies: AvatarSpecies? = null,
-        val visitorAnchorX: Float = 0f
+        val visitorAnchorX: Float = 0f,
+        /** Tatsaechlich anwesende Einwohner hinter Hauptfigur und aktivem Gast. */
+        val residents: List<ResidentFigure> = emptyList()
     ) {
         // IntArray hat keine sinnvolle Gleichheit - fuer eine Datenklasse mit Array-Feld muss das
         // von Hand kommen, sonst warnt der Compiler zu Recht.
@@ -193,6 +203,47 @@ object PlayClipRenderer {
             }
         }
 
+        // Ruhige Hintergrundwesen. Ihre kleinere Zellgroesse ist die Lesbarkeitsentscheidung
+        // aus NT-089: Auf der normalen Breite von vierzig Szenenzellen passen mehrere
+        // vollgrosse 16-Zellen-Figuren nicht neben den Hauptavatar. Sie stehen auf derselben
+        // Bodenlinie und bleiben gedaempft, damit die begleitete Figur Mittelpunkt bleibt.
+        for (resident in frame.residents) {
+            val residentCell = widthPx * resident.widthFraction / AvatarGeometry.SIZE
+            if (residentCell <= 0f) continue
+            val residentX = widthPx * resident.leftFraction
+            val residentGroundY = floorY * cell
+            val residentY = residentGroundY -
+                (AvatarBodies.forSpecies(resident.species).groundRow() + 1) * residentCell
+            val accent = AvatarPalette.tintFor(resident.species)
+            val face = AvatarAccent.facesIn(resident.frame)
+            for (y in 0 until AvatarGeometry.HEIGHT) {
+                for (x in 0 until AvatarGeometry.SIZE) {
+                    val index = y * AvatarGeometry.SIZE + x
+                    val imGesicht = face.getOrElse(index) { false }
+                    val brightness = resident.frame.getOrElse(index) { 0 }
+                    if (brightness <= 0 && !imGesicht) continue
+                    val ton = if (imGesicht) accent else ledOn
+                    val f = ((if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else brightness)
+                        .coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
+                        AvatarGeometry.MAX_BRIGHTNESS) * RESIDENT_DIM
+                    paint.color = Color.rgb(
+                        (Color.red(ton) * f).roundToInt(),
+                        (Color.green(ton) * f).roundToInt(),
+                        (Color.blue(ton) * f).roundToInt()
+                    )
+                    val left = residentX + x * residentCell
+                    val top = residentY + y * residentCell
+                    canvas.drawRect(
+                        left,
+                        top,
+                        left + residentCell + residentCell * 0.04f,
+                        top + residentCell + residentCell * 0.04f,
+                        paint
+                    )
+                }
+            }
+        }
+
         // Gast, falls einer vorbeikommt - gedaempft wie auf dem Bildschirm.
         val guestFrame = frame.visitorFrame
         val guestSpecies = frame.visitorSpecies
@@ -277,4 +328,7 @@ object PlayClipRenderer {
 
     /** Wie im Dock: Der Gast wird zurueckgenommen, damit der eigene Avatar die hellste Figur bleibt. */
     private const val VISITOR_DIM = 0.62f
+
+    /** Hintergrundwesen stehen noch eine Ebene hinter dem aktiven Gast. */
+    private const val RESIDENT_DIM = 0.66f
 }

@@ -664,6 +664,49 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-15 - Mehrere wirkliche Einwohner werden sichtbar (NT-089)
+
+- **Ausgangsproblem:** NT-088 rechnete drei dauerhafte Einwohner samt Ort und Handlung, aber
+  kein Produktionspfad las den Population-Snapshot. Im Bild erschien weiterhin hoechstens der
+  eine Gast des Besuchstakts. Die Welt wusste also, dass mehrere Wesen da waren, und zeigte sie
+  nicht.
+- **Entscheidung:** `DockScreen` stellt jedes `resident:`-Profil aus dem vorhandenen
+  `LivingAgentStore` wieder her, laesst `LivingPopulation` es an `PlayTimeLapse.absoluteMinute`
+  weiterlaufen und speichert seine eigene Welt zurueck. `LivingPopulationLayout` projiziert nur
+  Schnappschuesse mit `publiclyPresent` am gerade gezeigten Ort.
+- **Lesbarkeit:** Bei `MIN_SCENE_CELLS = 40` belegt der Hauptavatar sechzehn Zellen. Deshalb
+  werden hoechstens zwei Einwohner mit halber Hauptfigurbreite und geringerer Helligkeit auf
+  fuenf festen Bahnen verteilt. Sie ueberdecken weder den Hauptavatar noch einander. Werden die
+  Masse so eng, dass keine freie Bahn bleibt, verschwindet eine Hintergrundfigur statt eine
+  wichtige Figur zu verdecken.
+- **Eigene Zeit:** `publiclyPresent` wird nicht gegen die Uhr des Hauptavatars neu berechnet.
+  Der Snapshot traegt den eigenen `minuteOfDay` jedes Einwohners; derselbe Wert versetzt dessen
+  Ruheanimation. So bleibt die bis zu dreistuendige Abweichung nach langen Handlungen wirksam
+  und mehrere Wesen atmen nicht im Gleichschritt.
+- **Eine Wahrheit fuer Begegnung und Hintergrund:** Der Besuchstakt waehlt nun aus derselben
+  Liste wirklich anwesender Einwohner. Solange ein Profil als voller Gast eintritt, wird es aus
+  dem Hintergrund ausgeschlossen. Nach dem sichtbaren symbolischen Austausch uebernimmt der
+  Population-Lauf genau den gespeicherten Gastzustand, statt ihn mit einer aelteren Kopie zu
+  ueberschreiben.
+- **Darstellungsparitaet:** `PlayClipRenderer.Frame` traegt dieselben relativen Einwohnerfiguren,
+  die der Bildschirm zeigt. Damit enthalten Schnappschuss und Clip die Bevoelkerung ebenfalls.
+- **Abgrenzung:** Keine neue Simulation, kein neuer Ort, kein Room- oder `:core`-Umbau und keine
+  Twitch- oder Musiklogik. Die Einwohner zeigen vorerst artgerechte Ruhebewegung. Gemeinsamer
+  Sport, Drachen oder Angeln wird nicht aus Rolle oder Anwesenheit erfunden, sondern folgt erst
+  mit NT-091 aus kompatiblen wirklichen Handlungen.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration und kein neuer Preference-Schluessel. Die
+  bereits getrennten Einwohner-Snapshots werden weiterverwendet; ein Revert entfernt nur deren
+  laufende Darstellung und laesst die Daten lesbar zurueck.
+- **Betroffene Bereiche:** neu `LivingPopulationLayout` samt Verhaltenstest, gezielte
+  Population-, Besuchs- und Renderanbindung in `DockScreen`, Einwohnerbeschreibung in
+  `PlayClipRenderer`, Testlaeufer sowie Living-Agent-, Uebergabe- und Backlogdokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 488 Tests gruen (vorher 484; vier neue
+  Verhaltensfaelle). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
+  gruen. Der lokale Android-Compile bleibt in der Agentenumgebung ohne Gradle-Distribution
+  unmoeglich; Compose und beide APK-Varianten prueft deshalb `gradlew verify` in der PR-CI.
+- **Naechster Schritt:** NT-091 - die erste gemeinsame Aktivitaet nur dann choreografieren, wenn
+  zwei anwesende Wesen am selben Ort kompatible `nextAction`-Zustaende besitzen.
+
 ### 2026-09-15 - Die Einwohner leben zwischen den Besuchen weiter (NT-088)
 
 - **Ausgangsproblem:** Seit NT-086 besitzen die drei Einwohner Identitaet, Erinnerung und eigene

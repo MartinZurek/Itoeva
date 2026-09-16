@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-14 (Kern-Schnitte 2a bis 5, NT-085 bis NT-087 umgesetzt)
+Stand: 2026-09-15 (Kern-Schnitte 2a bis 5, NT-085 bis NT-090 umgesetzt)
 
 ## Was das System heute wirklich ist
 
@@ -273,7 +273,25 @@ gewinnt schlicht die Wahl.
 Was offen bleibt: Ihr Rollenbias liegt auf `EARN_MONEY`, und das Ziel gewinnt nie (NT-087). Der
 Hebel dafuer ist eine Verwendung fuer Geld, kein Schwellwert. Und der Snapshot fuehrt
 `minuteOfDay` je Einwohner, weil eine 180-Minuten-Schicht ueber die Zielminute hinausschiesst -
-die drei koennen bis zu drei Stunden auseinanderliegen. NT-089 muss das beim Zeichnen wissen.
+die drei koennen bis zu drei Stunden auseinanderliegen. NT-089 beruecksichtigt das beim Zeichnen.
+
+### Mehrere wirkliche Einwohner im Bild (NT-089)
+
+Die Anzeige erfindet keine Menge neben der Simulation. `DockScreen` stellt die drei
+`resident:`-Profile aus dem vorhandenen Store wieder her, laesst `LivingPopulation` sie an der
+simulierten Uhr weiterleben und liest fuer die Darstellung nur `ResidentSnapshot`. Ein Besuch
+wird aus derselben Liste gewaehlt; waehrend er laeuft, faellt dieses Profil aus dem Hintergrund.
+
+Die Lesbarkeitsgrenze aus NT-087 bestimmt die Form: Bei vierzig Szenenzellen ist der
+Hauptavatar sechzehn Zellen breit. Deshalb stehen hoechstens zwei Einwohner halb so gross auf
+festen freien Bahnen neben ihm und bleiben gedaempft. Auf Bildschirm, Schnappschuss und Clip
+gelten dieselben relativen Positionen. `publiclyPresent` wird nicht aus der Uhr des Hauptavatars
+neu berechnet; es traegt bereits den eigenen `minuteOfDay` des Einwohners. Derselbe Wert versetzt
+auch seine Ruhebewegung, damit mehrere Wesen nicht im Gleichschritt atmen.
+
+Bewusst noch nicht behauptet wird eine gemeinsame Aktivitaet. Die Einwohner zeigen nur ihre
+artgerechte Ruhebewegung. Sport, Drachen oder Angeln werden erst dann gemeinsam choreografiert,
+wenn die wirklichen `nextAction`-Zustaende zweier anwesender Wesen zusammenpassen (NT-091).
 
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 
@@ -353,12 +371,9 @@ Nach dem sichtbaren Austausch werden beide Agenten samt Beduerfnissen, Episoden 
 gespeichert. Verschiedene letzte Handlungsminuten werden vor der Begegnung auf die spaetere Zeit
 fortgeschrieben, nie zurueckgedreht.
 
-Das ist Identitaets- und Persistenzgrundlage, noch keine vollstaendige Bevoelkerungssimulation.
-Zwischen Besuchen wachsen Beduerfnisse, aber Einwohner fuehren noch keinen eigenen unsichtbaren
-Tagesablauf aus; der Renderer zeigt weiterhin hoechstens einen Gast. NT-088 muss deshalb als
-Naechstes die Agentenentscheidung fuer Aufenthalt und Aktivitaet rechnen und als read-only
-Population-Snapshot ausgeben. Erst NT-089 projiziert mehrere dieser tatsaechlich anwesenden
-Wesen zugleich in SHOP, PARK und SPORT.
+Darauf bauen inzwischen zwei getrennte Schnitte auf: NT-088 schreibt den unsichtbaren Alltag
+ueber denselben Living-Agent-Kern fort; NT-089 projiziert mehrere der daraus wirklich anwesenden
+Wesen zugleich in die vorhandenen Orte. Gemeinsame Aktivitaeten bleiben NT-091.
 
 ### Die Stimmung kommt jetzt auch aus dem Wesen
 
