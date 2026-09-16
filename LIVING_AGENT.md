@@ -345,6 +345,29 @@ tatsaechlich Teil des abgeleiteten Plans ist, nicht per Rolle oder Zufall gerate
 dieses Signal am `ResidentSnapshot` real ausgelesen werden kann, darf `sharedSportPartner` danach
 filtern. Bis dahin bleibt TRAINING die einzige gemeinsame Sportplatz-Aktivitaet.
 
+### Basketball wird ehrlich gemeinsam: ein echtes Einwohner-Signal (NT-093)
+
+Der oben skizzierte naechste Schritt ist jetzt umgesetzt. `LivingPopulation.specialActivityFor`
+leitet deterministisch aus Einwohner-Index und Simulationstag her, welche der beiden am
+Sportplatz moeglichen Aktivitaeten (`TRAINING` oder `BASKETBALL`) ein geplantes `MOVE_BODY`
+wirklich meint - nach demselben Muster wie `interestFor`s Themenrotation, mit eigenem Takt.
+`ResidentSnapshot.nextSpecialActivity` traegt diesen Wert (nur gesetzt, wenn `nextAction`
+tatsaechlich `MOVE_BODY` ist); `LivingPopulationLayout.sharedSportPartner` verlangt jetzt
+zusaetzlich `it.nextSpecialActivity == specialActivity`.
+
+**Warum das den NT-092-Fund wirklich schliesst.** Beide Seiten leiten ihre konkrete Aktivitaet
+jetzt unabhaengig voneinander her - der Hauptavatar aus der bereits gewaehlten, wirklich
+rendernden Routine, der Einwohner aus seinem eigenen deterministischen Tages-Signal. Eine
+gemeinsame Szene entsteht nur, wenn beide zufaellig auf denselben Wert treffen: eine echte
+Koinzidenz zweier konkreter Absichten statt einer Behauptung aus generischem `MOVE_BODY`. Ein
+Einwohner mit `MOVE_BODY`, aber ohne passendes oder mit einem falschen `nextSpecialActivity`,
+loest weiterhin keine gemeinsame Szene aus - genau der Fall, den der Codex-Fund aufgedeckt hatte.
+
+**Bewusst nur zwei Werte.** TRAINING und BASKETBALL teilen sich den Ort SPORT und brauchen daher
+keine neue Ortszuordnung. Drachen (PARK) und Angeln (POND) brauchten einen eigenen Domaenenort,
+Fussball einen zusaetzlichen, rein hauptavatarbezogenen Zustand (den gelernten Trick) - alle drei
+bleiben ausserhalb dieses kleinen Schnitts offen.
+
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 
 Hier stand zuerst, die Grenze liege im Ortsmodell: Die Domaene fuehrt vier Orte, PARK, POND,

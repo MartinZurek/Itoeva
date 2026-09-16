@@ -283,6 +283,21 @@ dem wirklichen Plan ausdrueckt - nicht per Rolle oder Zufall geraten, und keine 
 Aktivitaets- oder Skillplattform. Bis dahin bleibt TRAINING die einzige gemeinsame
 Sportplatz-Aktivitaet.
 
+**Living Agent, sozial:** NT-093 **Basketball wird ehrlich gemeinsam: ein echtes
+Einwohner-Signal** - *am 2026-09-16 umgesetzt.* Schliesst genau die in NT-092 offen gelassene
+Luecke. `LivingPopulation.specialActivityFor` leitet deterministisch aus Einwohner-Index und
+Simulationstag her, ob ein geplantes `MOVE_BODY` `TRAINING` oder `BASKETBALL` meint - nach
+demselben Muster wie `interestFor`s Themenrotation, nicht per Rolle oder Zufall.
+`ResidentSnapshot.nextSpecialActivity` traegt diesen Wert; `LivingPopulationLayout.
+sharedSportPartner` verlangt jetzt zusaetzlich, dass er mit der Aktivitaet des Hauptavatars
+uebereinstimmt.
+Beide Seiten leiten ihre konkrete Absicht damit unabhaengig voneinander her, eine gemeinsame
+Szene entsteht nur bei echter Koinzidenz. **Offen bleibt:** Fussball, Drachen und Angeln brauchen
+weiterhin entweder eine eigene Ortszuordnung (Drachen: PARK, Angeln: POND) oder eine Loesung fuer
+hauptavatarbezogenen Zusatzzustand (Fussballtrick), bevor sich dasselbe Muster ein drittes Mal
+anwenden laesst. Die Lesbarkeit von Training UND Basketball gemeinsam auf vierzig Szenenzellen
+bleibt `UNVERIFIED`.
+
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.
 `AvatarShading` legt beim Zeichnen einen Verlauf darueber, von oben links hell nach unten rechts

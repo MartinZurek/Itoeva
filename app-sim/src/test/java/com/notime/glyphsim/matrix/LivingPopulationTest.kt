@@ -266,6 +266,55 @@ class LivingPopulationTest {
         }
     }
 
+    /**
+     * **Das Signal, das NT-092 zuerst fehlte.** Ohne ein eigenes, vom Hauptavatar unabhaengiges
+     * Zeichen dafuer, WELCHE Sonderaktivitaet ein `MOVE_BODY` meint, waere jede gemeinsame
+     * Sportszene nur eine zufaellige Koinzidenz zweier generischer Handlungen gewesen - genau das
+     * hat ein automatisches Review am ersten Entwurf zu Recht zurueckgewiesen (siehe
+     * `EVOLUTION.md`, NT-092). Geprueft wird hier die Eigenschaft, nicht ein Einzelwert: Das
+     * Feld ist gesetzt genau dann, wenn `MOVE_BODY` wirklich geplant ist, es ist immer eine der
+     * beiden am Sportplatz moeglichen Aktivitaeten, und derselbe Einwohner am selben Tag ergibt
+     * wieder denselben Wert.
+     */
+    @Test
+    fun `nextSpecialActivity ist gesetzt genau dann wenn wirklich MOVE_BODY geplant ist`() {
+        val states = run(5)
+        for (s in LivingPopulation.snapshot(states)) {
+            if (s.nextAction == ActionKind.MOVE_BODY) {
+                assertTrue(
+                    "${s.profileId} plant MOVE_BODY, traegt aber kein Sportsignal",
+                    s.nextSpecialActivity in setOf(
+                        PlayRoutines.SpecialActivity.TRAINING,
+                        PlayRoutines.SpecialActivity.BASKETBALL
+                    )
+                )
+            } else {
+                assertNull(
+                    "${s.profileId} plant kein MOVE_BODY, traegt aber ein Sportsignal",
+                    s.nextSpecialActivity
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `specialActivityFor ist deterministisch und wiederholt sich nicht bei jedem Tag gleich`() {
+        val athlet = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }
+        val welt = LivingResidents.initialWorld(athlet, 10 * 60)
+
+        val ersterLauf = (0 until 6).map {
+            LivingPopulation.specialActivityFor(athlet, welt.copy(day = it))
+        }
+        val zweiterLauf = (0 until 6).map {
+            LivingPopulation.specialActivityFor(athlet, welt.copy(day = it))
+        }
+        assertEquals("gleicher Tag muss denselben Wert ergeben", ersterLauf, zweiterLauf)
+        assertTrue(
+            "ueber sechs Tage sollten beide Aktivitaeten vorkommen, nicht immer dieselbe",
+            ersterLauf.toSet().size == 2
+        )
+    }
+
     @Test
     fun `sichtbarer gemeinsamer Abschluss nutzt die wirkliche Bewegungswirkung`() {
         val resident = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }

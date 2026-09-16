@@ -87,15 +87,26 @@ object LivingPopulationLayout {
     }
 
     /**
-     * Findet einen wirklichen Partner fuer die erste gemeinsame Aktivitaet (NT-091).
+     * Findet einen wirklichen Partner fuer eine gemeinsame Sportplatz-Aktivitaet (NT-091, seit
+     * dem NT-092-Folgeschnitt auch Basketball).
      *
      * Weder ATHLETE noch WYRMLING noch der Ort allein reichen aus. Der Hauptavatar muss gerade
-     * wirklich `MOVE_BODY` abschliessen, die vorhandene Routine muss TRAINING sein, und der
-     * Einwohner muss am selben Sportplatz oeffentlich anwesend sein und dieselbe ungehinderte
-     * Handlung als naechstes geplant haben. So beschreibt das Bild zwei Handlungen und nicht
-     * zwei Etiketten.
+     * wirklich `MOVE_BODY` abschliessen, die vorhandene Routine muss TRAINING oder BASKETBALL
+     * sein, und der Einwohner muss am selben Sportplatz oeffentlich anwesend sein, dieselbe
+     * ungehinderte Handlung als naechstes geplant haben - UND sein eigenes, deterministisch aus
+     * [LivingPopulation.specialActivityFor] hergeleitetes `nextSpecialActivity` muss mit der
+     * Aktivitaet des Hauptavatars UEBEREINSTIMMEN. So beschreibt das Bild zwei wirklich
+     * zusammenpassende Handlungen und nicht zwei Etiketten auf einem zufaelligen MOVE_BODY.
+     *
+     * **Warum dieser letzte Vergleich noetig ist.** Ein frueherer Entwurf liess genau ihn weg und
+     * pruefte nur generisches `MOVE_BODY` - dieselbe Bedingung haette damit jede der fuenf
+     * Sonderaktivitaeten "belegt", weil der Einwohner nie wirklich sagte, WELCHE er meint. Das
+     * hat ein automatisches Review (siehe `EVOLUTION.md`, NT-092) aufgedeckt; die Ruecknahme
+     * steht dort. `nextSpecialActivity` schliesst diese Luecke: Der Einwohner traegt jetzt ein
+     * eigenes, vom Hauptavatar unabhaengiges Signal, welche der beiden Sportplatz-Aktivitaeten
+     * sein `MOVE_BODY` an diesem Simulationstag bedeutet.
      */
-    fun sharedTrainingPartner(
+    fun sharedSportPartner(
         snapshots: List<ResidentSnapshot>,
         place: PlayScene.Place,
         hostCompletedActions: List<ActionKind>,
@@ -103,14 +114,22 @@ object LivingPopulationLayout {
     ): ResidentSnapshot? {
         if (place != PlayScene.Place.SPORT ||
             ActionKind.MOVE_BODY !in hostCompletedActions ||
-            specialActivity != PlayRoutines.SpecialActivity.TRAINING
+            specialActivity !in SHARED_SPORT_ACTIVITIES
         ) {
             return null
         }
         return presentAt(snapshots, place).firstOrNull {
-            it.nextAction == ActionKind.MOVE_BODY && it.blockedBy == null
+            it.nextAction == ActionKind.MOVE_BODY &&
+                it.blockedBy == null &&
+                it.nextSpecialActivity == specialActivity
         }
     }
+
+    /** Die einzigen zwei Sonderaktivitaeten, die heute eine gemeinsame Szene tragen koennen. */
+    private val SHARED_SPORT_ACTIVITIES = setOf(
+        PlayRoutines.SpecialActivity.TRAINING,
+        PlayRoutines.SpecialActivity.BASKETBALL
+    )
 
     /**
      * Waehlt ein Ruhebild mit den echten Haltezeiten und einem Versatz aus der Einwohnerzeit.

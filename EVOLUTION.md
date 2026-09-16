@@ -711,6 +711,61 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   Eine zweite gemeinsame Faehigkeit erst ergaenzen, wenn ihre Bedeutung aus wirklichem Zustand
   unterscheidbar ist.
 
+### 2026-09-16 - Basketball wird ehrlich gemeinsam: ein echtes Einwohner-Signal (NT-093)
+
+- **Ausgangsproblem:** NT-092 hat den naiven Basketball-Entwurf zu Recht zurueckgenommen (siehe
+  Eintrag darunter) - der Einwohner trug kein eigenes Zeichen dafuer, WELCHE Sonderaktivitaet
+  sein generisches `MOVE_BODY` meint. Der Auftrag hatte fuer genau diesen Fall den kleinsten
+  ehrlichen naechsten Schritt vorgezeichnet: ein echtes, deterministisches Einwohner-Signal, kein
+  weiteres Raten aus Rolle oder Zufall.
+- **Entscheidung:** `LivingPopulation.specialActivityFor(resident, world)` leitet deterministisch
+  aus Einwohner-Index und Simulationstag her, welche der beiden Sportplatz-Aktivitaeten
+  (`TRAINING` oder `BASKETBALL`) ein geplantes `MOVE_BODY` an diesem Tag wirklich meint - nach
+  demselben bereits bestehenden Muster wie `interestFor`s Themenrotation, nur mit eigenem Takt.
+  `ResidentSnapshot.nextSpecialActivity` traegt diesen Wert (nur gesetzt, wenn `nextAction`
+  wirklich `MOVE_BODY` ist). `LivingPopulationLayout.sharedSportPartner` (die Umbenennung aus
+  NT-092 bleibt) verlangt jetzt zusaetzlich `it.nextSpecialActivity == specialActivity` - der
+  Einwohner muss dieselbe konkrete Aktivitaet wie der Hauptavatar wirklich meinen, nicht nur
+  irgendein unblockiertes `MOVE_BODY` planen.
+- **Warum nur zwei Werte und kein fuenfteiliges Signal:** TRAINING und BASKETBALL teilen sich den
+  Ort SPORT, brauchen also keine neue Ortszuordnung. Drachen (PARK) und Angeln (POND) haetten
+  einen eigenen Domaenenort gebraucht, Fussball einen zusaetzlichen, rein hauptavatarbezogenen
+  Zustand (den gelernten Trick) - alles drei ausserhalb dieses kleinen Schnitts. Damit bleibt der
+  Umfang exakt der, den NT-092 als naechsten Schritt vorgeschlagen hat.
+- **Warum das jetzt ehrlich ist:** Beide Seiten leiten ihre konkrete Aktivitaet unabhaengig
+  voneinander her - der Hauptavatar aus der bereits gewaehlten, wirklich rendernden Routine, der
+  Einwohner aus seinem eigenen deterministischen Tages-Signal. Eine gemeinsame Szene entsteht nur,
+  wenn beide **zufaellig auf denselben Wert treffen**; das ist eine echte Koinzidenz zweier
+  konkreter Absichten, keine Behauptung aus einem generischen `MOVE_BODY`.
+- **Evidenz:** `TESTED BEHAVIOR`. Ein Test belegt, dass `nextSpecialActivity` ueber einen
+  Fuenf-Tage-Lauf genau dann gesetzt ist, wenn wirklich `MOVE_BODY` geplant ist, und sonst `null`
+  bleibt; ein zweiter belegt Determinismus (gleicher Tag -> gleicher Wert) und dass beide Werte
+  ueber mehrere Tage vorkommen (kein entarteter Konstantwert). Der Kernfall aus dem Codex-Fund
+  ist jetzt direkt als Verhaltenstest festgehalten: ein Einwohner mit generischem `MOVE_BODY`,
+  aber ohne passendes oder mit einem FALSCHEN `nextSpecialActivity`, loest weiterhin keine
+  gemeinsame Szene aus - selbst wenn Ort, Anwesenheit und Blockade sonst passen. Die bestehenden
+  positiven/negativen Faelle aus NT-091/092 sind unveraendert gruen, jetzt mit echtem statt
+  keinem Signal.
+- **Abgrenzung:** Keine neue Domaenen-Aktion, kein neuer `LivingSite`, keine Freundschafts- oder
+  Beziehungswirkung, kein zweiter Renderer, kein grossflaechiger `DockScreen`-Umbau. Fussball,
+  Drachen und Angeln bleiben aus den oben genannten Gruenden offen.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration und kein neuer Preference-Schluessel -
+  `nextSpecialActivity` ist ein abgeleitetes Feld des read-only Schnappschusses, nicht Teil eines
+  gespeicherten Zustands. Ein Revert stellt exakt den NT-092-Stand (nur TRAINING) wieder her.
+- **Betroffene Bereiche:** `LivingPopulation` (neues Feld, neue Funktion),
+  `LivingPopulationLayout` (neuer Abgleich), die gezielte Population-/Routine-/Rendergrenze in
+  `DockScreen`, `LivingPopulationTest`, `LivingPopulationLayoutTest`, Living-Agent-, Uebergabe-
+  und Aufgaben-Dokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 497 Tests gruen (vorher 493, vier neue
+  Verhaltensfaelle). `python3 -m unittest discover --start-directory tools/music` unveraendert.
+  Android-Compile, Lint, R8 und instrumentierte Tests sind aus dieser Sitzung heraus nicht
+  ausfuehrbar (kein Android SDK, Gradle-Plugin-Repository vom Sandbox-Netzwerk aus nicht
+  erreichbar) und bleiben der PR-CI ueberlassen.
+- **Naechster Schritt:** Lesbarkeit von Training UND Basketball gemeinsam am Geraet beurteilen
+  (weiterhin `UNVERIFIED`). Fuer Fussball, Drachen oder Angeln braucht es entweder eine eigene
+  Ortszuordnung oder eine Loesung fuer den hauptavatarbezogenen Zusatzzustand, bevor sich dasselbe
+  Muster ein drittes Mal anwenden laesst.
+
 ### 2026-09-16 - NT-092 geprueft: keine zweite gemeinsame Aktivitaet ohne echtes Resident-Signal
 
 - **Ausgangsproblem:** NT-091 verband genau EINE bestehende Choreografie (TRAINING) zu einer
