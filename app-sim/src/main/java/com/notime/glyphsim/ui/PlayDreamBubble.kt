@@ -3,11 +3,15 @@ package com.notime.glyphsim.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -16,9 +20,17 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.notime.glyphsim.matrix.MatrixGeometry
-import com.notime.glyphsim.matrix.SimulatedMatrixView
+import com.notime.glyphsim.matrix.AvatarGeometry
+import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.AvatarSpriteView
 import kotlin.math.roundToInt
+
+/**
+ * Wie hoch [AvatarSpriteView] innerhalb einer quadratischen Kreisflaeche stehen darf, ohne dass
+ * eine ihrer vier Ecken ueber den Kreisrand hinausragt - bei einem 16:20-Seitenverhaeltnis
+ * bleiben 0,781 des Durchmessers die rechnerische Grenze; 0,75 laesst spuerbar Luft.
+ */
+private const val SPRITE_HEIGHT_FRACTION = 0.75f
 
 /**
  * Eine Traumblase ueber dem schlafenden Avatar.
@@ -30,6 +42,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun PlayDreamBubble(
     frame: IntArray,
+    species: AvatarSpecies,
     dreamingAvatarOffset: Offset,
     dreamingAvatarSizeDp: Float,
     progress: Float,
@@ -80,18 +93,76 @@ internal fun PlayDreamBubble(
             .size(bubbleSizeDp.dp)
             .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.035f))
+            .background(Color.White.copy(alpha = 0.035f)),
+        contentAlignment = Alignment.Center
     ) {
-        // **Die Matrix-Ansicht, nicht die Avatar-Ansicht** - siehe PlayWishBubble fuer den
-        // ausfuehrlichen Grund: Das Zeichen liegt auf 13x13, die Avatar-Ansicht liest mit 16 und
-        // zerschert es diagonal.
-        SimulatedMatrixView(
+        // **Die Avatar-Ansicht, nicht die Matrix-Ansicht.** [frame] ist eine ganz gewoehnliche
+        // Kreatur-Reaktion aus [com.notime.glyphsim.matrix.AvatarAnimations.reactionFor] - auf
+        // dem 16x20-[AvatarGeometry]-Raster, nicht auf dem 13x13-[com.notime.glyphsim.matrix
+        // .MatrixGeometry]-Raster der Uhr-/Zeichen-Symbole. Hier stand bis zu diesem Fund
+        // [com.notime.glyphsim.matrix.SimulatedMatrixView] - dieselbe falsche Kombination, vor
+        // der [AvatarSpriteView] fuer den umgekehrten Fall ausdruecklich warnt ("wurden dabei
+        // zerschert, weil hier mit der Zeilenbreite des Avatars gelesen wird"): Ein 320 Zellen
+        // langes Array in einen 169 Zellen breiten Leser gegeben, gelesen mit der falschen
+        // Zeilenbreite - sichtbar als Pixelsalat statt als Traumszene (gemeldet 2026-09-16).
+        //
+        // **Explizite Hoehe/Breite statt `fillMaxSize()`.** Die Box oben gibt bereits eine
+        // straffe quadratische Groesse vor (`.size(bubbleSizeDp.dp)`); ein Aspect-Ratio-Modifier
+        // kann eine bereits straffe Groesse nicht mehr veraendern (siehe [AvatarClipPlayer] fuer
+        // dasselbe Muster mit expliziter Breite/Hoehe statt eines Aspect-Ratio-Modifiers).
+        // `fillMaxSize()` liesse [AvatarSpriteView] deshalb quadratisch messen; die vier
+        // HEADROOM-Zeilen am oberen Rand des 16x20-Rasters schieben die eigentliche Figur dann
+        // unten aus dem Quadrat heraus, wo sie vom Kreisausschnitt der Blase abgeschnitten wird
+        // (gefunden per Review an genau dieser Stelle).
+        val spriteHeight = bubbleSizeDp.dp * SPRITE_HEIGHT_FRACTION
+        val spriteWidth = spriteHeight * AvatarGeometry.SIZE.toFloat() / AvatarGeometry.HEIGHT
+        AvatarSpriteView(
             frame = IntArray(frame.size) {
-                (frame[it] * 0.82f).toInt().coerceIn(0, MatrixGeometry.MAX_BRIGHTNESS)
+                (frame[it] * 0.82f).toInt().coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS)
             },
-            showPuck = false,
+            species = species,
+            showBackground = false,
             contentDescription = null,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.width(spriteWidth).height(spriteHeight)
+        )
+    }
+}
+
+/**
+ * Der Tagesrueckblick, sobald er von der Traumblase in die vergroesserte Uhr uebergegangen ist
+ * (siehe `DockScreen.playSleepRecap`).
+ *
+ * Dieselbe Kreis-Chrome wie die Uhr selbst (runder schwarzer Grund), aber mit derselben
+ * Avatar-Ansicht wie [PlayDreamBubble] statt der 13x13-Zifferndarstellung - aus demselben Grund:
+ * Ein Tagesrueckblick ist eine Kreatur-Reaktion, kein Uhr-/Mond-Zeichen.
+ */
+@Composable
+internal fun PlayDreamWatchFace(
+    frame: IntArray,
+    species: AvatarSpecies,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null
+) {
+    // BoxWithConstraints statt Box: [modifier] traegt von aussen bereits eine straffe
+    // quadratische Groesse (`watchModifier` in DockScreen, `.size(...)`). Genau wie in
+    // [PlayDreamBubble] braucht [AvatarSpriteView] deshalb eine explizite, im 16:20-Verhaeltnis
+    // berechnete Breite/Hoehe statt `fillMaxSize()` - sonst wird sie quadratisch gemessen und
+    // die Figur unten am Kreisrand abgeschnitten. BoxWithConstraints liefert die dafuer noetige
+    // tatsaechliche Kantenlaenge, ohne dass der Aufrufer sie zusaetzlich durchreichen muesste.
+    BoxWithConstraints(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        val spriteHeight = maxHeight * SPRITE_HEIGHT_FRACTION
+        val spriteWidth = spriteHeight * AvatarGeometry.SIZE.toFloat() / AvatarGeometry.HEIGHT
+        AvatarSpriteView(
+            frame = frame,
+            species = species,
+            showBackground = false,
+            contentDescription = contentDescription,
+            modifier = Modifier.width(spriteWidth).height(spriteHeight)
         )
     }
 }

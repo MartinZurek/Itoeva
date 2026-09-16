@@ -237,6 +237,18 @@ echten `ContextWrapper` braucht. Das prueft erst `gradlew verify` in CI.
   falsche App gemessen wurde. Wo ein Dokument konkrete Befehle oder Bezeichner nennt, gehoert
   ein Test daneben, der sie gegen die Quelle haelt (`StreamRunbookTest`).
 
+- **Zwei verschiedene Pixelraster teilen sich den Typ `IntArray`.** `AvatarGeometry` (16x20,
+  Kreatur-Sprites) und `MatrixGeometry` (13x13, Uhr/Zeichen/Bibliotheksmotive) sehen fuer den
+  Kotlin-Compiler identisch aus - beides ist einfach `IntArray`. `AvatarSpriteView` und
+  `SimulatedMatrixView` lesen sie mit unterschiedlicher Zeilenbreite; vertauscht man sie, gibt
+  es keine Ausnahme und keinen Absturz, nur ein Bild ohne Bezug zur eigentlichen Pose
+  ("Pixelsalat", gemeldet 2026-09-16 am Traumrueckblick - siehe EVOLUTION.md). Schon einmal in
+  die andere Richtung passiert (13x13-Zeichen liefen bis NT-079 durch `AvatarSpriteView`, siehe
+  dessen KDoc) und jetzt ein zweites Mal andersherum. `CreatureFrameSizeTest` haelt die
+  Groessendifferenz (320 vs. 169) fest, kann die Verwechslung selbst aber nicht erkennen - wer
+  einen neuen `SimulatedMatrixView`- oder `AvatarSpriteView`-Aufruf schreibt, muss von Hand
+  pruefen, aus welchem der beiden Raster das `frame` wirklich stammt.
+
 ## 5. Die automatische Pipeline (`claude-primary-run.yml`)
 
 Sie nimmt sich den obersten `[open]`-Eintrag aus `evolutions/BACKLOG.md` und arbeitet ihn ab. Was
