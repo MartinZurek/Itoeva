@@ -316,31 +316,34 @@ Angeln. Diese Szenen bleiben offen, bis eine wirkliche Handlung oder eine ebenso
 Zuordnung sie unterscheidet. Ob zwei unterschiedlich grosse Figuren beim Training auf vierzig
 Szenenzellen am Geraet klar zusammengehoeren, ist weiterhin `UNVERIFIED`.
 
-### Basketball wird die zweite gemeinsame Sportplatz-Aktivitaet (NT-092)
+### NT-092 geprueft: keine zweite gemeinsame Aktivitaet ohne echtes Resident-Signal
 
-**Der Modellbefund zuerst.** Der Living-Agent-Kern kennt fuer einen Einwohner ausschliesslich das
+**Der Modellbefund.** Der Living-Agent-Kern kennt fuer einen Einwohner ausschliesslich das
 allgemeine `ActionKind.MOVE_BODY` - keine der fuenf Sonderaktivitaeten aus
 `PlayRoutines.SpecialActivity` (KITE, FOOTBALL, BASKETBALL, TRAINING, FISHING) ist im Kern
-selbst abgebildet. Was TRAINING in NT-091 ueberhaupt unterscheidbar gemacht hat, war ausschliess-
-lich die Seite des Hauptavatars: seine bereits gewaehlte, gerade wirklich rendernde Routine ist
-ein wirklicher, nicht geratener Fakt, auch wenn die Auswahl DAVOR ein Zufallszug war. Fuer den
-Einwohner blieb und bleibt die Bedingung allgemein (`MOVE_BODY`, unblockiert, am selben Ort). Da
-NT-091 diese asymmetrische Regel bereits als ausreichend behandelt, laesst sie sich mechanisch
-identisch auf eine zweite Sonderaktivitaet anwenden - ohne neue Domaenen-Aktion und ohne neue
-Ortszuordnung.
+selbst abgebildet, und `LivingPopulation.interestFor` leitet fuer Einwohner nie eine einzelne
+Sportart her. Was TRAINING in NT-091 ueberhaupt unterscheidbar gemacht hat, war ausschliesslich
+die Seite des Hauptavatars: seine bereits gewaehlte, gerade wirklich rendernde Routine ist ein
+wirklicher, nicht geratener Fakt. Auf der Einwohner-Seite bleibt die Bedingung dagegen fuer JEDE
+Sonderaktivitaet identisch (`MOVE_BODY`, unblockiert, am selben Ort) - sie enthaelt keine
+Information darueber, WELCHE Aktivitaet gemeint ist.
 
-`LivingPopulationLayout.sharedSportPartner` (vormals `sharedTrainingPartner`) akzeptiert seitdem
-`TRAINING` ODER `BASKETBALL` als die bereits gewaehlte Routine; alle uebrigen Bedingungen aus
-NT-091 bleiben unveraendert. Fussball bleibt trotz desselben Ortes SPORT aussen vor: Sein Ablauf
-traegt mit dem gelernten Trick zusaetzlichen, rein hauptavatarbezogenen Zustand ohne saubere
-Entsprechung im Einwohner. Drachen (PARK) und Angeln (POND) bleiben offen - der Auftrag verlangte
-ausdruecklich hoechstens eine weitere Aktivitaet.
+**Ein erster Entwurf hat genau das uebersehen.** Er erweiterte `sharedTrainingPartner` (umbenannt
+zu `sharedSportPartner`) um `BASKETBALL`, mit der Begruendung, dieselbe bereits akzeptierte
+Regel liesse sich mechanisch auf eine zweite Aktivitaet anwenden. Die automatische Pruefung
+(Codex-Review, PR #160) hat den Fehler darin benannt: Die Einwohner-Seite blieb fuer TRAINING
+und BASKETBALL ununterscheidbar, also haette dieselbe Regel ebenso Fussball, Drachen oder Angeln
+"belegt" - obwohl genau diese vier Taetigkeiten oben als aus `MOVE_BODY` NICHT herleitbar gelten.
+Der Entwurf haette eine gemeinsame Basketball-Absicht des Einwohners vorgetaeuscht, die im Kern
+gar nicht existiert. Er wurde deshalb vollstaendig zurueckgenommen; `sharedTrainingPartner`
+akzeptiert weiterhin ausschliesslich `TRAINING`.
 
-Waehrend der gemeinsamen Basketball-Szene bewegt sich der Einwohner durchgehend mit der
-vorhandenen MOVE-Regung; anders als beim Training gibt es keine Ruhephase mit eigener
-STRETCH-Haltung. Wirkungsgrenze, Reservierung und die atomare `saveAll`-Speicherung sind
-unveraendert gegenueber NT-091. Ob zwei unterschiedlich grosse Figuren beim Basketball auf
-vierzig Szenenzellen am Geraet klar zusammengehoeren, ist ebenso `UNVERIFIED`.
+**Der kleinste ehrliche naechste Schritt.** Eine zweite gemeinsame Aktivitaet braucht ein echtes,
+deterministisches Signal am Einwohner selbst - zum Beispiel ein Feld am geplanten Schritt oder
+ein zusaetzliches `Requirement`, das der Planer nur setzt, wenn eine konkrete Sonderaktivitaet
+tatsaechlich Teil des abgeleiteten Plans ist, nicht per Rolle oder Zufall geraten. Erst wenn
+dieses Signal am `ResidentSnapshot` real ausgelesen werden kann, darf `sharedSportPartner` danach
+filtern. Bis dahin bleibt TRAINING die einzige gemeinsame Sportplatz-Aktivitaet.
 
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 

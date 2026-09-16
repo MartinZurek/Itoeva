@@ -266,20 +266,22 @@ Drachen, Fussball, Basketball und Angeln sind aus `MOVE_BODY` nicht unterscheidb
 nicht geraten. Sie brauchen entweder eine spezifischere wirkliche Handlung oder eine ebenso eng
 belegte Zuordnung; die Lesbarkeit am Geraet bleibt fuer die erste Szene `UNVERIFIED`.
 
-**Living Agent, sozial:** NT-092 **Basketball als zweite gemeinsame Sportplatz-Aktivitaet** - *am
-2026-09-16 umgesetzt.* Gepruefte Ausgangsfrage: Der Living-Agent-Kern kennt fuer Einwohner
-ausschliesslich `ActionKind.MOVE_BODY`, keine einzelne Sportart. Unterscheidbar war TRAINING in
-NT-091 ausschliesslich ueber die bereits gewaehlte, wirklich rendernde Routine des Hauptavatars;
-dieselbe asymmetrische, bereits akzeptierte Regel traegt genau eine weitere Aktivitaet.
-`LivingPopulationLayout.sharedSportPartner` (vormals `sharedTrainingPartner`) akzeptiert seitdem
-`TRAINING` ODER `BASKETBALL` als bereits gewaehlte Hauptavatar-Routine; Ort (SPORT), wirklich
-abgeschlossenes `MOVE_BODY` und der ungehinderte `nextAction` des Einwohners bleiben unveraendert
-Pflicht. Fussball bleibt trotz gleichen Ortes aussen vor (zusaetzlicher hauptavatarbezogener
-Trick-Zustand ohne Entsprechung beim Einwohner); Drachen (PARK) und Angeln (POND) bleiben offen,
-wie vom Auftrag verlangt ("hoechstens eine weitere Aktivitaet"). **Offen bleibt:** Fussball,
-Drachen und Angeln brauchen entweder eine eigene Domaenen-Aktion je Sportart oder einen ebenso
-engen zustandsbasierten Ersatz, keine allgemeine Aktivitaetsplattform. Die Lesbarkeit von
-Training UND Basketball gemeinsam auf vierzig Szenenzellen bleibt `UNVERIFIED`.
+**Living Agent, sozial:** NT-092 **Zweite gemeinsame Aktivitaet gepruefte und bewusst NICHT
+umgesetzt** - *am 2026-09-16 abgeschlossen als dokumentierter Negativbefund.* Gepruefte
+Ausgangsfrage: Der Living-Agent-Kern kennt fuer Einwohner ausschliesslich `ActionKind.MOVE_BODY`,
+keine einzelne Sportart, und `LivingPopulation.interestFor` leitet nie eine Sportart her. Ein
+erster Entwurf erweiterte `sharedTrainingPartner` um BASKETBALL mit der Begruendung, dieselbe in
+NT-091 akzeptierte, asymmetrische Regel (Hauptavatar-Seite real, Einwohner-Seite generisch)
+trage mechanisch eine zweite Aktivitaet. Ein automatisches Review (Codex, P1, PR #160) hat das
+widerlegt: Die Einwohner-Seite blieb fuer TRAINING und BASKETBALL identisch - dieselbe Regel
+haette ebenso Fussball, Drachen oder Angeln "belegt", obwohl `EVOLUTION.md` (NT-091) genau diese
+als aus `MOVE_BODY` nicht herleitbar benennt. Der Entwurf wurde vollstaendig zurueckgenommen; der
+Code entspricht wieder exakt dem gemergten NT-091-Stand (nur TRAINING). **Offen bleibt:** Eine
+zweite gemeinsame Aktivitaet braucht zuerst ein echtes, deterministisches Einwohner-Signal
+(Feld am geplanten Schritt oder ein neues `Requirement`), das eine konkrete Sonderaktivitaet aus
+dem wirklichen Plan ausdrueckt - nicht per Rolle oder Zufall geraten, und keine allgemeine
+Aktivitaets- oder Skillplattform. Bis dahin bleibt TRAINING die einzige gemeinsame
+Sportplatz-Aktivitaet.
 
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.

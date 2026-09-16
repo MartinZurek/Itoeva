@@ -8,38 +8,42 @@ Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
-**Stand 16.09.: NT-091 und NT-092 sind als kleinste Schnitte umgesetzt.** Die drei Einwohner
-leben ueber `LivingPopulation` an der simulierten Uhr weiter und mehrere wirklich anwesende
-Wesen koennen zugleich in der Pixelwelt stehen. `LivingPopulationLayout` liest nur
+**Stand 16.09.: NT-091 ist umgesetzt; NT-092 ist geprueft und bewusst NICHT umgesetzt.** Die drei
+Einwohner leben ueber `LivingPopulation` an der simulierten Uhr weiter und mehrere wirklich
+anwesende Wesen koennen zugleich in der Pixelwelt stehen. `LivingPopulationLayout` liest nur
 `ResidentSnapshot.publiclyPresent`, zeigt hoechstens zwei kleinere Hintergrundfiguren auf freien
 festen Bahnen und verwendet ihren jeweils eigenen `minuteOfDay` als Versatz der Ruhebewegung. Ein
 aktiver Besuch wird aus derselben Anwesenheitsliste gewaehlt und nicht als zweite Kopie gezeichnet.
 Bildschirm, Schnappschuss und Clip teilen dieselbe relative Figurenbeschreibung. Wenn am SPORT
 die vorbereitete Hauptaktion wirklich `MOVE_BODY` abschliesst, die gewaehlte Routine `TRAINING`
-ODER seit NT-092 auch `BASKETBALL` ist und ein dort wirklich anwesender Einwohner selbst
-ungehindert `MOVE_BODY` als naechsten Schritt traegt, bewegt er sich nun sichtbar mit.
+ist und ein dort wirklich anwesender Einwohner selbst ungehindert `MOVE_BODY` als naechsten
+Schritt traegt, bewegt er sich sichtbar mit.
 Fortschreibung und Besuch pausieren fuer dieses Profil; erst nach dem vollstaendigen Bild werden
 beide Living-Zustaende ueber ihre vorhandenen Wirkungswege in einer gemeinsamen
 SharedPreferences-Transaktion gespeichert. Abbruch oder Prozessende verbucht nicht nur einen.
 Bildschirm, Schnappschuss und Clip teilen auch diese Einwohnerbewegung.
 
-**Was NT-092 wirklich geprueft und ergaenzt hat.** Der Auftrag verlangte zuerst zu pruefen, ob im
-Modell schon eine weitere Aktivitaet existiert, die aus dem wirklichen Zustand beider Beteiligter
-unterscheidbar ist - nicht sofort eine neue Szene zu bauen. Befund: Der Living-Agent-Kern fuehrt
-fuer Einwohner ausschliesslich `ActionKind.MOVE_BODY`; keine Sportart steht im Kern. Unterscheidbar
-war TRAINING in NT-091 ausschliesslich ueber die Seite des Hauptavatars - die bereits gewaehlte,
-wirklich rendernde Routine ist ein realer Fakt, kein geratener. Diese bereits akzeptierte,
-asymmetrische Regel traegt mechanisch identisch genau eine weitere Aktivitaet:
-`LivingPopulationLayout.sharedTrainingPartner` heisst jetzt `sharedSportPartner` und akzeptiert
-`TRAINING` ODER `BASKETBALL`. Fussball blieb trotz gleichen Ortes aussen vor (der gelernte Trick
-ist reiner Hauptavatar-Zustand ohne Einwohner-Entsprechung); Drachen und Angeln blieben offen,
-weil der Auftrag ausdruecklich hoechstens eine weitere Aktivitaet verlangte.
+**Was NT-092 wirklich geprueft hat - und warum daraus keine zweite Szene wurde.** Der Auftrag
+verlangte zuerst zu pruefen, ob im Modell schon eine weitere Aktivitaet existiert, die aus dem
+wirklichen Zustand BEIDER Beteiligter unterscheidbar ist - nicht sofort eine neue Szene zu bauen.
+Ein erster Entwurf in PR #160 erweiterte `sharedTrainingPartner` (umbenannt zu
+`sharedSportPartner`) um `BASKETBALL`, mit dem Argument, TRAINING sei in NT-091 ja auch nur ueber
+die bereits gewaehlte, wirklich rendernde Hauptavatar-Routine unterschieden worden. **Das war ein
+Fehler**, den ein automatisches Review (Codex, P1) aufgedeckt hat: Auf der Einwohner-Seite blieb
+die Bedingung fuer TRAINING und BASKETBALL identisch (`MOVE_BODY`, unblockiert, am selben Ort) -
+sie haette ebenso Fussball, Drachen oder Angeln "belegt". Der eigene Kommentar des Entwurfs gab
+das sogar zu ("gilt fuer jede der fuenf Sonderaktivitaeten gleichermassen") und widersprach damit
+der eigenen Begruendung. Die Szene haette eine Basketball-Absicht des Einwohners vorgetaeuscht,
+die im Kern nicht existiert. Der Entwurf wurde vollstaendig zurueckgenommen; der Code ist wieder
+exakt der gemergte NT-091-Stand (nur TRAINING). Siehe `EVOLUTION.md`, Eintrag vom 16.09. zu
+NT-092, fuer die volle Herleitung.
 
-**Offen nach NT-092:** Fussball, Drachen und Angeln lassen sich weiterhin nicht aus dem
-generischen `MOVE_BODY` erraten. Eine Erweiterung braucht entweder eine eigene Domaenen-Aktion je
-Sportart im Living-Agent-Kern oder einen ebenso eng belegten Ersatz - ausdruecklich keine
-allgemeine Aktivitaets- oder Skillplattform. Die Lesbarkeit von Training UND Basketball bei
-vierzig Zellen ist am Geraet weiterhin `UNVERIFIED`.
+**Offen nach NT-092:** Eine zweite gemeinsame Aktivitaet braucht zuerst ein echtes,
+deterministisches Einwohner-Signal - ein Feld am geplanten Schritt oder ein neues `Requirement`,
+das eine konkrete Sonderaktivitaet aus dem wirklichen Plan ausdrueckt, nicht per Rolle oder
+Zufall geraten. Erst wenn `ResidentSnapshot` dieses Signal real fuehrt, darf `sharedSportPartner`
+danach filtern - ausdruecklich keine allgemeine Aktivitaets- oder Skillplattform. Bis dahin bleibt
+TRAINING die einzige gemeinsame Sportplatz-Aktivitaet.
 
 
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
@@ -159,13 +163,14 @@ Dieselbe Messung fand dafuer zwei Ziele, die NIE gewinnen. `SEEK_COMFORT` ist be
 ungewaehlt, weil Muenzen heute nur Essen zahlen. Verkauf und Lohn sind der konkrete Anlass, dem
 Ziel erstmals einen Sinn zu geben; die Auswahlzahl wird dafuer nicht vorab kuenstlich erhoeht.
 
-**Der erste gemeinsame soziale Schnitt ist mit NT-091 geschlossen, NT-092 erweitert ihn um
-Basketball:** Kompatibles `MOVE_BODY` zweier wirklich anwesender Wesen wird nur fuer die bereits
-gewaehlte TRAINING- oder BASKETBALL-Routine gemeinsam lesbar - beide teilen sich denselben Ort
-SPORT und denselben Ablaufaufbau. Die offene Huerde fuer weitere gemeinsame Faehigkeiten bleibt
-die Bedeutung der Handlung im Kern selbst (der Einwohner kennt keine einzelne Sportart) und
-danach die Choreografie auf vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn die
-vorhandenen Plaetze wirklich bewohnt sind.
+**Der erste gemeinsame soziale Schnitt ist mit NT-091 geschlossen; NT-092 hat gepruefte, aber
+verworfen, ihn auf Basketball auszuweiten:** Kompatibles `MOVE_BODY` zweier wirklich anwesender
+Wesen wird weiterhin nur fuer die bereits gewaehlte TRAINING-Routine gemeinsam lesbar. Die offene
+Huerde fuer weitere gemeinsame Faehigkeiten ist die Bedeutung der Handlung im Kern selbst (der
+Einwohner kennt keine einzelne Sportart, nur generisches `MOVE_BODY`) - ein Basketball-Versuch in
+NT-092 hat das exemplarisch vorgefuehrt und wurde deshalb zurueckgenommen (siehe Abschnitt 1). Erst
+danach folgt die Choreografie auf vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst,
+wenn die vorhandenen Plaetze wirklich bewohnt sind.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 
