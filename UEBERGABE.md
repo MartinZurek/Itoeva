@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 15. September 2026
+# Uebergabe: Stand am 16. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -8,17 +8,25 @@ Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
-**Stand 15.09.: NT-089 ist umgesetzt.** Die drei Einwohner leben ueber `LivingPopulation` an der
-simulierten Uhr weiter und mehrere wirklich anwesende Wesen koennen zugleich in der Pixelwelt
-stehen. `LivingPopulationLayout` liest nur `ResidentSnapshot.publiclyPresent`, zeigt hoechstens
-zwei kleinere Hintergrundfiguren auf freien festen Bahnen und verwendet ihren jeweils eigenen
-`minuteOfDay` als Versatz der Ruhebewegung. Ein aktiver Besuch wird aus derselben Anwesenheitsliste
-gewaehlt und nicht als zweite Kopie gezeichnet. Bildschirm, Schnappschuss und Clip teilen dieselbe
-relative Figurenbeschreibung.
+**Stand 16.09.: NT-091 ist als kleinster Schnitt umgesetzt.** Die drei Einwohner leben ueber
+`LivingPopulation` an der simulierten Uhr weiter und mehrere wirklich anwesende Wesen koennen
+zugleich in der Pixelwelt stehen. `LivingPopulationLayout` liest nur
+`ResidentSnapshot.publiclyPresent`, zeigt hoechstens zwei kleinere Hintergrundfiguren auf freien
+festen Bahnen und verwendet ihren jeweils eigenen `minuteOfDay` als Versatz der Ruhebewegung. Ein
+aktiver Besuch wird aus derselben Anwesenheitsliste gewaehlt und nicht als zweite Kopie gezeichnet.
+Bildschirm, Schnappschuss und Clip teilen dieselbe relative Figurenbeschreibung. Wenn am SPORT
+die vorbereitete Hauptaktion wirklich `MOVE_BODY` abschliesst, die gewaehlte Routine `TRAINING`
+ist und ein dort wirklich anwesender Einwohner selbst ungehindert `MOVE_BODY` als naechsten
+Schritt traegt, bewegt er sich nun sichtbar mit.
+Fortschreibung und Besuch pausieren fuer dieses Profil; erst nach dem vollstaendigen Bild werden
+beide Living-Zustaende ueber ihre vorhandenen Wirkungswege in einer gemeinsamen
+SharedPreferences-Transaktion gespeichert. Abbruch oder Prozessende verbucht nicht nur einen.
+Bildschirm, Schnappschuss und Clip teilen auch diese Einwohnerbewegung.
 
-**Naechste offene Scheibe ist NT-091:** Gemeinsame Sport-, Drachen- oder Angelszenen duerfen nur
-entstehen, wenn Ort und wirkliche `nextAction`-Zustaende der beteiligten Einwohner zusammenpassen.
-NT-089 spielt absichtlich keine Aktivitaet allein aus einer Rolle oder Anwesenheit vor.
+**Offen nach NT-091:** Fussball, Basketball, Drachen und Angeln nicht aus dem generischen
+`MOVE_BODY` erraten. Eine Erweiterung braucht spezifischere wirkliche Handlungen oder eine
+gleich eng belegte Zuordnung. Die Lesbarkeit des gemeinsamen Trainings bei vierzig Zellen ist am
+Geraet noch `UNVERIFIED`.
 
 
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
@@ -138,11 +146,11 @@ Dieselbe Messung fand dafuer zwei Ziele, die NIE gewinnen. `SEEK_COMFORT` ist be
 ungewaehlt, weil Muenzen heute nur Essen zahlen. Verkauf und Lohn sind der konkrete Anlass, dem
 Ziel erstmals einen Sinn zu geben; die Auswahlzahl wird dafuer nicht vorab kuenstlich erhoeht.
 
-**Der naechste offene soziale Schnitt ist NT-091:** NT-088 hat den eigenen Alltag der Einwohner
-fortgeschrieben, NT-089 zeigt mehrere wirkliche Anwesende. Als Naechstes werden kompatible
-Handlungen zweier Wesen an einem Ort gemeinsam lesbar gemacht. Die offene Huerde bleibt dabei
-Choreografie auf vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn die vorhandenen
-Plaetze wirklich bewohnt sind.
+**Der erste gemeinsame soziale Schnitt ist mit NT-091 geschlossen:** Kompatibles `MOVE_BODY`
+zweier wirklich anwesender Wesen wird nur fuer die bereits gewaehlte Trainingsroutine gemeinsam
+lesbar. Die offene Huerde fuer weitere gemeinsame Faehigkeiten bleibt die Bedeutung der Handlung
+und danach die Choreografie auf vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn
+die vorhandenen Plaetze wirklich bewohnt sind.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 

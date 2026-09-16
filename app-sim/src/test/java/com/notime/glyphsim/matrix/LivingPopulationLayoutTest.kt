@@ -14,7 +14,9 @@ class LivingPopulationLayoutTest {
         index: Int,
         place: PlayScene.Place?,
         present: Boolean = true,
-        minuteOfDay: Int = 9 * 60
+        minuteOfDay: Int = 9 * 60,
+        nextAction: ActionKind? = ActionKind.PURSUE_INTEREST,
+        blockedBy: com.notime.glyphsim.living.Requirement? = null
     ) = ResidentSnapshot(
         profileId = "resident:test:$index",
         role = ResidentRole.entries[index % ResidentRole.entries.size],
@@ -22,8 +24,8 @@ class LivingPopulationLayoutTest {
         place = place,
         site = if (place == null) LivingSite.HOME else LivingRuntimeAdapter.siteFor(place),
         goal = GoalKind.HAVE_FUN,
-        nextAction = ActionKind.PURSUE_INTEREST,
-        blockedBy = null,
+        nextAction = nextAction,
+        blockedBy = blockedBy,
         coins = index,
         portions = 1,
         minuteOfDay = minuteOfDay,
@@ -105,5 +107,67 @@ class LivingPopulationLayoutTest {
         assertEquals(1, LivingPopulationLayout.idleFrameIndex(holds, 0, 1, 200))
         assertEquals(2, LivingPopulationLayout.idleFrameIndex(holds, 0, 2, 200))
         assertEquals(0, LivingPopulationLayout.idleFrameIndex(holds, 4, 0, 200))
+    }
+
+    @Test
+    fun `gemeinsames Training braucht zwei wirkliche kompatible Handlungen`() {
+        val partner = resident(
+            index = 0,
+            place = PlayScene.Place.SPORT,
+            nextAction = ActionKind.MOVE_BODY
+        )
+
+        assertEquals(
+            partner.profileId,
+            LivingPopulationLayout.sharedTrainingPartner(
+                snapshots = listOf(partner),
+                place = PlayScene.Place.SPORT,
+                hostCompletedActions = listOf(ActionKind.MOVE_BODY),
+                specialActivity = PlayRoutines.SpecialActivity.TRAINING
+            )?.profileId
+        )
+    }
+
+    @Test
+    fun `ort rolle und spezies allein behaupten kein gemeinsames Training`() {
+        val athleteWithoutAction = resident(
+            index = ResidentRole.ATHLETE.ordinal,
+            place = PlayScene.Place.SPORT,
+            nextAction = ActionKind.READ
+        ).copy(role = ResidentRole.ATHLETE, species = AvatarSpecies.WYRMLING)
+        val cases = listOf(
+            LivingPopulationLayout.sharedTrainingPartner(
+                listOf(athleteWithoutAction), PlayScene.Place.SPORT,
+                listOf(ActionKind.MOVE_BODY), PlayRoutines.SpecialActivity.TRAINING
+            ),
+            LivingPopulationLayout.sharedTrainingPartner(
+                listOf(athleteWithoutAction.copy(nextAction = ActionKind.MOVE_BODY)),
+                PlayScene.Place.SPORT, listOf(ActionKind.READ),
+                PlayRoutines.SpecialActivity.TRAINING
+            ),
+            LivingPopulationLayout.sharedTrainingPartner(
+                listOf(athleteWithoutAction.copy(nextAction = ActionKind.MOVE_BODY)),
+                PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
+                PlayRoutines.SpecialActivity.FOOTBALL
+            ),
+            LivingPopulationLayout.sharedTrainingPartner(
+                listOf(athleteWithoutAction.copy(
+                    nextAction = ActionKind.MOVE_BODY,
+                    blockedBy = com.notime.glyphsim.living.Requirement.At(LivingSite.HOME)
+                )),
+                PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
+                PlayRoutines.SpecialActivity.TRAINING
+            ),
+            LivingPopulationLayout.sharedTrainingPartner(
+                listOf(athleteWithoutAction.copy(
+                    nextAction = ActionKind.MOVE_BODY,
+                    publiclyPresent = false
+                )),
+                PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
+                PlayRoutines.SpecialActivity.TRAINING
+            )
+        )
+
+        assertTrue(cases.all { it == null })
     }
 }

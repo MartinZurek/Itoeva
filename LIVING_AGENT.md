@@ -289,9 +289,32 @@ gelten dieselben relativen Positionen. `publiclyPresent` wird nicht aus der Uhr 
 neu berechnet; es traegt bereits den eigenen `minuteOfDay` des Einwohners. Derselbe Wert versetzt
 auch seine Ruhebewegung, damit mehrere Wesen nicht im Gleichschritt atmen.
 
-Bewusst noch nicht behauptet wird eine gemeinsame Aktivitaet. Die Einwohner zeigen nur ihre
-artgerechte Ruhebewegung. Sport, Drachen oder Angeln werden erst dann gemeinsam choreografiert,
-wenn die wirklichen `nextAction`-Zustaende zweier anwesender Wesen zusammenpassen (NT-091).
+Bis NT-089 wurde bewusst noch keine gemeinsame Aktivitaet behauptet. Die Einwohner zeigten nur
+ihre artgerechte Ruhebewegung. NT-091 fuehrt darauf die erste enge Ausnahme ein.
+
+### Gemeinsames Training aus zwei wirklichen Handlungen (NT-091)
+
+Am Sportplatz trainiert der Hauptavatar mit genau einem Einwohner, aber nur wenn vier Aussagen
+zugleich wahr sind: Die vorbereitete Hauptaktion schliesst `MOVE_BODY` ab, die bereits gewaehlte
+vorhandene Routine ist `TRAINING`, der Einwohner ist dort `publiclyPresent`, und seine eigene
+ungehinderte `nextAction` ist ebenfalls `MOVE_BODY`. ATHLETE, WYRMLING oder SPORT allein sind
+kein Beleg. Der Hauptavatar hat keinen `ResidentSnapshot`; seine Gegenwart und Handlung kommen
+aus dem sichtbaren Play-Ablauf, die des Einwohners aus dem read-only Population-Snapshot.
+
+Waehrend der Choreografie ist der Einwohner fuer Fortschreibung und Besuch beansprucht. Seine
+Figur folgt denselben vorhandenen MOVE-/STRETCH-Regungen und wird ueber `residentFigures` in
+Bildschirm, Schnappschuss und Clip gleich beschrieben. Erst nach dem sichtbaren Abschluss fuehrt
+`LivingPopulation.completeSharedAction` seinen bereits geplanten Schritt durch
+`LivingSimulation.step` aus. Damit entstehen Zeit, Beduerfniswirkung, Erinnerung und Geschmack
+weiter ausschliesslich aus `ActionOutcome`; der Hauptavatar uebernimmt gleichzeitig seinen schon
+vorbereiteten Schritt. `LivingAgentStore.saveAll` schreibt beide weiterhin profilgetrennten Blobs
+mit einem einzigen SharedPreferences-Editor und synchronem AtomicFile-Commit. Ein Abbruch oder
+Prozessende kann damit nicht nur einen Teilnehmer uebernehmen.
+
+Mehr wird daraus noch nicht abgeleitet. `MOVE_BODY` sagt nicht Fussball, Basketball, Drachen oder
+Angeln. Diese Szenen bleiben offen, bis eine wirkliche Handlung oder eine ebenso enge belegte
+Zuordnung sie unterscheidet. Ob zwei unterschiedlich grosse Figuren beim Training auf vierzig
+Szenenzellen am Geraet klar zusammengehoeren, ist weiterhin `UNVERIFIED`.
 
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 

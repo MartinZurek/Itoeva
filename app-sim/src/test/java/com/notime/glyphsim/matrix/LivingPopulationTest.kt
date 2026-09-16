@@ -1,9 +1,12 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphsim.living.ActionCatalog
+import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.GoalKind
 import com.notime.glyphsim.living.LivingSite
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
+import com.notime.glyphsim.living.Plan
 import com.notime.glyphsim.living.WorldState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -261,5 +264,46 @@ class LivingPopulationTest {
             assertEquals(zustand.world.portions, s.portions)
             assertEquals(zustand.world.minuteOfDay, s.minuteOfDay)
         }
+    }
+
+    @Test
+    fun `sichtbarer gemeinsamer Abschluss nutzt die wirkliche Bewegungswirkung`() {
+        val resident = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }
+        val before = ResidentState(
+            agent = LivingResidents.initialAgent(resident).copy(
+                goal = GoalKind.HAVE_FUN,
+                plan = Plan(
+                    GoalKind.HAVE_FUN,
+                    listOf(ActionCatalog[ActionKind.MOVE_BODY])
+                )
+            ),
+            world = LivingResidents.initialWorld(resident, 10 * 60)
+                .copy(site = LivingSite.OUTSIDE)
+        )
+
+        val result = LivingPopulation.completeSharedAction(before, ActionKind.MOVE_BODY)
+        requireNotNull(result)
+
+        assertTrue(result.world.absoluteMinute > before.world.absoluteMinute)
+        assertTrue(
+            result.agent.needs.pressure(NeedKind.FUN) <
+                before.agent.needs.pressure(NeedKind.FUN)
+        )
+        assertTrue(result.agent.plan?.isDone == true)
+    }
+
+    @Test
+    fun `unpassender Einwohnerplan wird nicht fuer das Bild umgedeutet`() {
+        val resident = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }
+        val before = ResidentState(
+            agent = LivingResidents.initialAgent(resident).copy(
+                goal = GoalKind.DEVELOP,
+                plan = Plan(GoalKind.DEVELOP, listOf(ActionCatalog[ActionKind.READ]))
+            ),
+            world = LivingResidents.initialWorld(resident, 10 * 60)
+                .copy(site = LivingSite.OUTSIDE)
+        )
+
+        assertNull(LivingPopulation.completeSharedAction(before, ActionKind.MOVE_BODY))
     }
 }

@@ -69,6 +69,7 @@ import com.notime.glyphsim.data.AvatarFeedEvent
 import com.notime.glyphsim.data.LivingAgentStore
 import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
 import com.notime.glyphsim.living.ActionCatalog
+import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.LivingSimulation
 import com.notime.glyphsim.living.StepResult
@@ -150,6 +151,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -661,6 +663,12 @@ fun DockScreen(
         // auch vollstaendig gespeichert ist. Sonst koennte er einen noch alten Einwohnerstand
         // laden und dessen gerade gelebte Stunden beim Abschluss wieder ueberschreiben.
         val residentPersistenceMutex = remember { Mutex() }
+        /**
+         * Der Einwohner, dessen wirkliche MOVE_BODY-Handlung gerade zusammen mit dem
+         * Hauptavatar sichtbar laeuft. Solange die Kennung gesetzt ist, darf weder die
+         * Hintergrundfortschreibung noch ein Besuch denselben Zustand uebernehmen.
+         */
+        var sharedTrainingProfileId by remember { mutableStateOf<String?>(null) }
 
         /**
          * Stellt denselben Living-Zustand fuer Handeln und Gespraech bereit.
@@ -990,7 +998,7 @@ fun DockScreen(
             }
             residentSnapshots = LivingPopulation.snapshot(residentStates)
             while (isActive) {
-                if (!visitRunning) {
+                if (!visitRunning && sharedTrainingProfileId == null) {
                     val targetMinute = PlayTimeLapse.absoluteMinute()
                     val currentResidents = residentStates
                     val advanced = withContext(Dispatchers.Default) {
@@ -999,7 +1007,7 @@ fun DockScreen(
                     // Ein Besuch kann waehrend der Hintergrundrechnung beginnen. Dann wird
                     // dessen sichtbarer Abschluss zur Wahrheit; der vorher berechnete Stand
                     // darf ihn weder im Speicher noch im Bild ueberholen.
-                    if (visitRunning) {
+                    if (visitRunning || sharedTrainingProfileId != null) {
                         delay(POPULATION_REFRESH_MS)
                         continue
                     }
@@ -1009,7 +1017,9 @@ fun DockScreen(
                         // noch mit dem alten vollstaendigen Zustand, oder erst mit dem neuen.
                         residentPersistenceMutex.lock()
                         try {
-                            if (!visitRunning && residentStates == currentResidents) {
+                            if (!visitRunning && sharedTrainingProfileId == null &&
+                                residentStates == currentResidents
+                            ) {
                                 withContext(Dispatchers.IO) {
                                     advanced.values.forEach { state ->
                                         livingStore.save(state.agent, state.world)
@@ -1813,7 +1823,7 @@ fun DockScreen(
          */
         suspend fun runVisit() {
             val (host, resident, residentState) = residentPersistenceMutex.withLock {
-                if (visitRunning) return@withLock null
+                if (visitRunning || sharedTrainingProfileId != null) return@withLock null
                 val currentHost = avatar ?: return@withLock null
                 if (currentHost.fed || currentHost.occurrenceId != null || avatarHidden) {
                     return@withLock null
@@ -3322,30 +3332,103 @@ fun DockScreen(
                             // hingehen, benutzen, handeln, verweilen, aufstehen (siehe
                             // PlayRoutine). Erst dadurch setzt sich die Figur mit ihrer Umgebung
                             // auseinander, statt neben den Moebeln zu agieren.
-                            val completed = runRoutine(
-                                gewaehlt,
-                                species,
-                                // ActionOutcome hat die Wirkung bereits vorbereitet. Die alte
-                                // globale Wirtschaft darf sie nicht ein zweites Mal verbuchen.
-                                applyLegacyEconomy = false
-                            )
-                            if (!completed) continue
-                            val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
-                                prepared.result.world,
-                                currentPlace,
-                                visitor?.species
-                                    ?.let(AvatarSpeciesPrefs::profileId)
-                                    ?.let(::setOf)
-                                    .orEmpty()
-                            )
-                            livingAgent = prepared.result.agent
-                            livingWorld = committedWorld
-                            livingStore.save(prepared.result.agent, committedWorld)
-                            LivingObservationFeed.record(
-                                prepared.result.copy(world = committedWorld)
-                            )
-                            economyTick++
-                            completeStreamImpulse(prepared)
+                            // Die erste gemeinsame Aktivitaet ist bewusst nur TRAINING. Ein
+                            // MOVE_BODY-Zustand allein behauptet weder Fussball noch Angeln oder
+                            // Drachensteigen; die vorhandene spezifische Routine des
+                            // Hauptavatars muss ebenfalls passen.
+                            val sharedTraining = residentPersistenceMutex.withLock {
+                                if (visitRunning || sharedTrainingProfileId != null) {
+                                    return@withLock null
+                                }
+                                val partner = LivingPopulationLayout.sharedTrainingPartner(
+                                    snapshots = residentSnapshots,
+                                    place = place,
+                                    hostCompletedActions = prepared.completedActions,
+                                    specialActivity = PlayRoutines.specialOf(gewaehlt)
+                                ) ?: return@withLock null
+                                val state = residentStates[partner.profileId]
+                                    ?: return@withLock null
+                                sharedTrainingProfileId = partner.profileId
+                                partner to state
+                            }
+                            try {
+                                val completed = runRoutine(
+                                    gewaehlt,
+                                    species,
+                                    // ActionOutcome hat die Wirkung bereits vorbereitet. Die alte
+                                    // globale Wirtschaft darf sie nicht ein zweites Mal verbuchen.
+                                    applyLegacyEconomy = false
+                                )
+                                if (!completed) continue
+                                val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
+                                    prepared.result.world,
+                                    currentPlace,
+                                    visitor?.species
+                                        ?.let(AvatarSpeciesPrefs::profileId)
+                                        ?.let(::setOf)
+                                        .orEmpty()
+                                )
+                                if (sharedTraining == null) {
+                                    livingAgent = prepared.result.agent
+                                    livingWorld = committedWorld
+                                    livingStore.save(prepared.result.agent, committedWorld)
+                                } else {
+                                    val (partner, before) = sharedTraining
+                                    val partnerResult = LivingPopulation.completeSharedAction(
+                                        before,
+                                        ActionKind.MOVE_BODY
+                                    ) ?: continue
+                                    val after = ResidentState(
+                                        partnerResult.agent,
+                                        partnerResult.world
+                                    )
+                                    val committedTogether = withContext(NonCancellable) {
+                                        residentPersistenceMutex.withLock {
+                                            if (sharedTrainingProfileId != partner.profileId ||
+                                                residentStates[partner.profileId] != before
+                                            ) {
+                                                return@withLock false
+                                            }
+                                            // Beide Speicherungen liegen hinter derselben
+                                            // sichtbaren Grenze. Nach dem vollstaendigen Bild
+                                            // darf eine gerade eintreffende Erinnerung diesen
+                                            // kurzen Doppel-Commit nicht halbieren.
+                                            withContext(Dispatchers.IO) {
+                                                livingStore.saveAll(
+                                                    listOf(
+                                                        prepared.result.agent to committedWorld,
+                                                        after.agent to after.world
+                                                    )
+                                                )
+                                            }
+                                            livingAgent = prepared.result.agent
+                                            livingWorld = committedWorld
+                                            val updated = residentStates +
+                                                (partner.profileId to after)
+                                            residentStates = updated
+                                            residentSnapshots = LivingPopulation.snapshot(updated)
+                                            true
+                                        }
+                                    }
+                                    if (!committedTogether) continue
+                                }
+                                LivingObservationFeed.record(
+                                    prepared.result.copy(world = committedWorld)
+                                )
+                                economyTick++
+                                completeStreamImpulse(prepared)
+                            } finally {
+                                if (sharedTraining != null) {
+                                    // Kein suspendierendes Lock im Abbruch-finally: Die
+                                    // umgebende LaunchedEffect ist dann bereits cancelled und
+                                    // koennte die Kennung sonst fuer immer gesetzt lassen.
+                                    if (sharedTrainingProfileId ==
+                                        sharedTraining.first.profileId
+                                    ) {
+                                        sharedTrainingProfileId = null
+                                    }
+                                }
+                            }
 
                             // **Und danach zeigt es, was es kann** - eine Einlage aus dem
                             // Skillbaum, falls in diesem Bereich etwas freigeschaltet ist.
@@ -3403,10 +3486,29 @@ fun DockScreen(
                 hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f),
                 visitingProfileId = visitor?.profileId
             ).map { placement ->
-                val idle = AvatarAnimations.idleSequence(
-                    placement.resident.species,
-                    AvatarMood.NEUTRAL
-                )
+                // Der zweite Teilnehmer benutzt dieselbe bestehende Koerperregung wie der
+                // Hauptavatar. Weil [residentFigures] Bildschirm, Schnappschuss und Clip speist,
+                // bleibt die gemeinsame Phase in allen drei Ausgaben dieselbe.
+                val together = placement.resident.profileId == sharedTrainingProfileId &&
+                    trainingPhase != null
+                val idle = if (together) {
+                    if (trainingPhase == PlayEffects.TrainingPhase.REST) {
+                        AvatarAnimations.fidgetSequence(
+                            placement.resident.species,
+                            AvatarAnimations.Fidget.STRETCH
+                        )
+                    } else {
+                        AvatarAnimations.reactionFor(
+                            placement.resident.species,
+                            AnimationType.MOVE
+                        )
+                    }
+                } else {
+                    AvatarAnimations.idleSequence(
+                        placement.resident.species,
+                        AvatarMood.NEUTRAL
+                    )
+                }
                 val index = LivingPopulationLayout.idleFrameIndex(
                     holdsMs = idle.holdsMs,
                     scenePhase = scenePhase,

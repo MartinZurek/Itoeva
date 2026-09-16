@@ -1,5 +1,6 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphsim.living.ActionKind
 import kotlin.math.max
 
 /**
@@ -83,6 +84,32 @@ object LivingPopulationLayout {
         if (candidates.isEmpty()) return null
         val previousIndex = candidates.indexOfFirst { it.profileId == previousProfileId }
         return candidates[(previousIndex + 1).mod(candidates.size)]
+    }
+
+    /**
+     * Findet einen wirklichen Partner fuer die erste gemeinsame Aktivitaet (NT-091).
+     *
+     * Weder ATHLETE noch WYRMLING noch der Ort allein reichen aus. Der Hauptavatar muss gerade
+     * wirklich `MOVE_BODY` abschliessen, die vorhandene Routine muss TRAINING sein, und der
+     * Einwohner muss am selben Sportplatz oeffentlich anwesend sein und dieselbe ungehinderte
+     * Handlung als naechstes geplant haben. So beschreibt das Bild zwei Handlungen und nicht
+     * zwei Etiketten.
+     */
+    fun sharedTrainingPartner(
+        snapshots: List<ResidentSnapshot>,
+        place: PlayScene.Place,
+        hostCompletedActions: List<ActionKind>,
+        specialActivity: PlayRoutines.SpecialActivity?
+    ): ResidentSnapshot? {
+        if (place != PlayScene.Place.SPORT ||
+            ActionKind.MOVE_BODY !in hostCompletedActions ||
+            specialActivity != PlayRoutines.SpecialActivity.TRAINING
+        ) {
+            return null
+        }
+        return presentAt(snapshots, place).firstOrNull {
+            it.nextAction == ActionKind.MOVE_BODY && it.blockedBy == null
+        }
     }
 
     /**

@@ -27,11 +27,19 @@ private class LivingAgentMemoryStorage(
     initial: Map<String, String> = emptyMap()
 ) : LivingAgentStorage {
     val values = initial.toMutableMap()
+    var singleWrites = 0
+    var batchWrites = 0
 
     override fun read(profileId: String): String? = values[profileId]
 
     override fun write(profileId: String, payload: String) {
+        singleWrites++
         values[profileId] = payload
+    }
+
+    override fun writeAll(payloads: Map<String, String>) {
+        batchWrites++
+        values.putAll(payloads)
     }
 }
 
@@ -197,6 +205,25 @@ class LivingAgentStoreTest {
             residentAgain.world.absoluteMinute,
             hostAgain.world.absoluteMinute
         )
+    }
+
+    @Test
+    fun `gemeinsame Handlung schreibt beide Profile in einer Ablagetransaktion`() {
+        val storage = LivingAgentMemoryStorage()
+        val store = LivingAgentStore(storage)
+        val host = richAgent("host")
+        val resident = richAgent("resident:sport:test")
+
+        store.saveAll(
+            listOf(
+                host to world(coins = 7),
+                resident to world(coins = 2)
+            )
+        )
+
+        assertEquals(0, storage.singleWrites)
+        assertEquals(1, storage.batchWrites)
+        assertEquals(setOf("host", "resident:sport:test"), storage.values.keys)
     }
 
     @Test

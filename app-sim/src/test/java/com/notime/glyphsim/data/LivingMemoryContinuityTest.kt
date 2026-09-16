@@ -23,6 +23,10 @@ private class SpeicherAttrappe : LivingAgentStorage {
     override fun write(profileId: String, payload: String) {
         values[profileId] = payload
     }
+
+    override fun writeAll(payloads: Map<String, String>) {
+        values.putAll(payloads)
+    }
 }
 
 /**

@@ -4,9 +4,11 @@ import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.GoalKind
+import com.notime.glyphsim.living.LivingEventKind
 import com.notime.glyphsim.living.LivingSimulation
 import com.notime.glyphsim.living.LivingSite
 import com.notime.glyphsim.living.Requirement
+import com.notime.glyphsim.living.StepResult
 import com.notime.glyphsim.living.WorldState
 
 /**
@@ -161,6 +163,30 @@ object LivingPopulation {
                 publiclyPresent = place != null && resident.isActiveAt(state.world.minuteOfDay)
             )
         }
+
+    /**
+     * Schliesst genau die bereits geplante Einwohnerhandlung an der sichtbaren Wirkungsgrenze ab.
+     *
+     * NT-091 darf Bewegung nicht direkt auf Beduerfnisse oder Erinnerungen schreiben. Deshalb
+     * laeuft auch der zweite Teilnehmer nach der Choreografie durch [LivingSimulation.step] und
+     * damit durch denselben `ActionOutcome` wie jede unsichtbare Fortschreibung. Ist der Plan
+     * inzwischen unpassend oder blockiert, gibt es kein Ergebnis und der Aufrufer uebernimmt
+     * keinen der beiden vorbereiteten Zustaende.
+     */
+    fun completeSharedAction(
+        state: ResidentState,
+        expected: ActionKind
+    ): StepResult? {
+        val world = synchronised(state.world)
+        val next = state.agent.plan?.next ?: return null
+        if (next.kind != expected || next.blockedBy(world) != null) return null
+        val result = LivingSimulation.step(state.agent, world)
+        return result.takeIf { step ->
+            step.events.any {
+                it.kind == LivingEventKind.ACTION_DONE && it.action == expected
+            }
+        }
+    }
 
     /**
      * Wo ein Einwohner sichtbar waere.

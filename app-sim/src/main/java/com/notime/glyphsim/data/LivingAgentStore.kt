@@ -44,6 +44,8 @@ data class RestoredLivingAgent(
 interface LivingAgentStorage {
     fun read(profileId: String): String?
     fun write(profileId: String, payload: String)
+    /** Schreibt mehrere Profile als EINE Ablagetransaktion. */
+    fun writeAll(payloads: Map<String, String>)
 }
 
 /**
@@ -62,6 +64,21 @@ class SharedPreferencesLivingAgentStorage(context: Context) : LivingAgentStorage
 
     override fun write(profileId: String, payload: String) {
         preferences.edit().putString(key(profileId), payload).apply()
+    }
+
+    @Suppress("ApplySharedPref")
+    override fun writeAll(payloads: Map<String, String>) {
+        if (payloads.isEmpty()) return
+        val editor = preferences.edit()
+        payloads.forEach { (profileId, payload) ->
+            editor.putString(key(profileId), payload)
+        }
+        // Ein Editor schreibt eine gemeinsame AtomicFile-Fassung. `commit` wartet ausserdem auf
+        // den dauerhaften Abschluss: Nach der sichtbaren gemeinsamen Handlung darf ein
+        // Prozessende nicht ein Profil neu und das andere alt wiederherstellen.
+        check(editor.commit()) {
+            "Living-Agent-Zustaende konnten nicht gemeinsam gespeichert werden"
+        }
     }
 
     private fun key(profileId: String): String =
@@ -90,6 +107,28 @@ class LivingAgentStore(private val storage: LivingAgentStorage) {
         storage.write(
             agent.profileId,
             LivingAgentSnapshotCodec.encode(LivingAgentSnapshot(agent, world, simulationMinute))
+        )
+    }
+
+    /**
+     * Speichert mehrere profilgetrennte Zustaende in genau einer Ablagetransaktion.
+     *
+     * Der Codec bleibt identisch zu [save]; nur die Commit-Grenze umfasst alle Teilnehmer.
+     * Doppelte Profil-IDs werden abgelehnt, weil sonst die Reihenfolge still einen Sieger
+     * bestimmen wuerde.
+     */
+    fun saveAll(states: Collection<Pair<AgentState, WorldState>>) {
+        val profiles = states.map { it.first.profileId }
+        require(profiles.all(String::isNotBlank)) { "profileId darf nicht leer sein" }
+        require(profiles.distinct().size == profiles.size) {
+            "profileId darf in einem gemeinsamen Speichervorgang nur einmal vorkommen"
+        }
+        storage.writeAll(
+            states.associate { (agent, world) ->
+                agent.profileId to LivingAgentSnapshotCodec.encode(
+                    LivingAgentSnapshot(agent, world, world.absoluteMinute)
+                )
+            }
         )
     }
 
