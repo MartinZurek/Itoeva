@@ -44,6 +44,11 @@ class FacadeTest {
             .filter { it.x in 1..9 && it.y in 6..14 }
             .associateBy { it.x to it.y }
 
+    /** Fenster der ersten Fassade und die jeweils direkt angrenzende Wandzelle. */
+    private val fensterMitWand = ((7..9) + (12..14)).map { y ->
+        (5 to y) to (6 to y)
+    }
+
     @Test
     fun `die Fassade ist geschlossen, man sieht nicht hindurch`() {
         val belegt = stadt(PlayAmbientActivity.DayPhase.MIDDAY).map { it.x to it.y }.toHashSet()
@@ -56,12 +61,18 @@ class FacadeTest {
 
     @Test
     fun `ein Fenster ist eine Vertiefung, also dunkler als die Wand`() {
-        // Eine gefuellte Flaeche in genau einem Grauton waere ein Klotz - dasselbe Problem, das
-        // bei den Moebeln zur Oberkanten-Aufhellung gefuehrt hat.
-        val stufen = fassade(PlayAmbientActivity.DayPhase.MIDDAY).values
-            .map { it.brightness }
-            .toSortedSet()
-        assertEquals("erwartet werden genau zwei Stufen: Fenster und Wand", 2, stufen.size)
+        // Spaetere Umgebungszellen duerfen vor der Fassade liegen; deshalb nicht mehr die Zahl
+        // ALLER Helligkeitsstufen im Ausschnitt zaehlen. Entscheidend ist die lokale Aussage:
+        // Dieselbe Fensterzelle bleibt dunkler als die Wand unmittelbar daneben.
+        val tags = fassade(PlayAmbientActivity.DayPhase.MIDDAY)
+        for ((fensterOrt, wandOrt) in fensterMitWand) {
+            val fenster = requireNotNull(tags[fensterOrt])
+            val wand = requireNotNull(tags[wandOrt])
+            assertTrue(
+                "Fenster $fensterOrt gegen Wand $wandOrt",
+                fenster.brightness < wand.brightness
+            )
+        }
     }
 
     @Test
@@ -94,10 +105,20 @@ class FacadeTest {
     fun `die Wand bleibt dunkler als das erleuchtete Fenster`() {
         // Behielte die gefuellte Flaeche die Helligkeit des frueheren Umrisses, waere die Stadt
         // das Hellste im Bild und der Blick bliebe hinten haengen statt bei der Figur.
-        val nachts = fassade(PlayAmbientActivity.DayPhase.NIGHT).values
-        val wand = nachts.filter { !it.isLight }.maxOf { it.brightness }
-        val licht = nachts.filter { it.isLight }.minOf { it.brightness }
-        assertTrue("Wand $wand gegen Fensterlicht $licht", licht > wand * 3)
+        // Auch hier lokal vergleichen: Eine spaeter darueber gezeichnete Umgebungszelle oder die
+        // helle Dachkante ist keine Wand und darf den Kontrastbeleg nicht verfaelschen.
+        val nachts = fassade(PlayAmbientActivity.DayPhase.NIGHT)
+        val beleuchtet = fensterMitWand.mapNotNull { (fensterOrt, wandOrt) ->
+            val fenster = requireNotNull(nachts[fensterOrt])
+            if (fenster.isLight) fenster to requireNotNull(nachts[wandOrt]) else null
+        }
+        assertTrue("nachts brennt in dieser Fassade kein einziges Fenster", beleuchtet.isNotEmpty())
+        for ((licht, wand) in beleuchtet) {
+            assertTrue(
+                "Wand ${wand.brightness} gegen Fensterlicht ${licht.brightness}",
+                licht.brightness > wand.brightness * 3
+            )
+        }
     }
 
     @Test
