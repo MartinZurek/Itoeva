@@ -316,6 +316,32 @@ Angeln. Diese Szenen bleiben offen, bis eine wirkliche Handlung oder eine ebenso
 Zuordnung sie unterscheidet. Ob zwei unterschiedlich grosse Figuren beim Training auf vierzig
 Szenenzellen am Geraet klar zusammengehoeren, ist weiterhin `UNVERIFIED`.
 
+### Basketball wird die zweite gemeinsame Sportplatz-Aktivitaet (NT-092)
+
+**Der Modellbefund zuerst.** Der Living-Agent-Kern kennt fuer einen Einwohner ausschliesslich das
+allgemeine `ActionKind.MOVE_BODY` - keine der fuenf Sonderaktivitaeten aus
+`PlayRoutines.SpecialActivity` (KITE, FOOTBALL, BASKETBALL, TRAINING, FISHING) ist im Kern
+selbst abgebildet. Was TRAINING in NT-091 ueberhaupt unterscheidbar gemacht hat, war ausschliess-
+lich die Seite des Hauptavatars: seine bereits gewaehlte, gerade wirklich rendernde Routine ist
+ein wirklicher, nicht geratener Fakt, auch wenn die Auswahl DAVOR ein Zufallszug war. Fuer den
+Einwohner blieb und bleibt die Bedingung allgemein (`MOVE_BODY`, unblockiert, am selben Ort). Da
+NT-091 diese asymmetrische Regel bereits als ausreichend behandelt, laesst sie sich mechanisch
+identisch auf eine zweite Sonderaktivitaet anwenden - ohne neue Domaenen-Aktion und ohne neue
+Ortszuordnung.
+
+`LivingPopulationLayout.sharedSportPartner` (vormals `sharedTrainingPartner`) akzeptiert seitdem
+`TRAINING` ODER `BASKETBALL` als die bereits gewaehlte Routine; alle uebrigen Bedingungen aus
+NT-091 bleiben unveraendert. Fussball bleibt trotz desselben Ortes SPORT aussen vor: Sein Ablauf
+traegt mit dem gelernten Trick zusaetzlichen, rein hauptavatarbezogenen Zustand ohne saubere
+Entsprechung im Einwohner. Drachen (PARK) und Angeln (POND) bleiben offen - der Auftrag verlangte
+ausdruecklich hoechstens eine weitere Aktivitaet.
+
+Waehrend der gemeinsamen Basketball-Szene bewegt sich der Einwohner durchgehend mit der
+vorhandenen MOVE-Regung; anders als beim Training gibt es keine Ruhephase mit eigener
+STRETCH-Haltung. Wirkungsgrenze, Reservierung und die atomare `saveAll`-Speicherung sind
+unveraendert gegenueber NT-091. Ob zwei unterschiedlich grosse Figuren beim Basketball auf
+vierzig Szenenzellen am Geraet klar zusammengehoeren, ist ebenso `UNVERIFIED`.
+
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 
 Hier stand zuerst, die Grenze liege im Ortsmodell: Die Domaene fuehrt vier Orte, PARK, POND,

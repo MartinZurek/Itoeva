@@ -119,7 +119,7 @@ class LivingPopulationLayoutTest {
 
         assertEquals(
             partner.profileId,
-            LivingPopulationLayout.sharedTrainingPartner(
+            LivingPopulationLayout.sharedSportPartner(
                 snapshots = listOf(partner),
                 place = PlayScene.Place.SPORT,
                 hostCompletedActions = listOf(ActionKind.MOVE_BODY),
@@ -129,28 +129,59 @@ class LivingPopulationLayoutTest {
     }
 
     @Test
-    fun `ort rolle und spezies allein behaupten kein gemeinsames Training`() {
+    fun `gemeinsames Basketball braucht dieselben zwei wirklichen Handlungen`() {
+        val partner = resident(
+            index = 0,
+            place = PlayScene.Place.SPORT,
+            nextAction = ActionKind.MOVE_BODY
+        )
+
+        assertEquals(
+            partner.profileId,
+            LivingPopulationLayout.sharedSportPartner(
+                snapshots = listOf(partner),
+                place = PlayScene.Place.SPORT,
+                hostCompletedActions = listOf(ActionKind.MOVE_BODY),
+                specialActivity = PlayRoutines.SpecialActivity.BASKETBALL
+            )?.profileId
+        )
+    }
+
+    @Test
+    fun `ort rolle und spezies allein behaupten keine gemeinsame Sportaktivitaet`() {
         val athleteWithoutAction = resident(
             index = ResidentRole.ATHLETE.ordinal,
             place = PlayScene.Place.SPORT,
             nextAction = ActionKind.READ
         ).copy(role = ResidentRole.ATHLETE, species = AvatarSpecies.WYRMLING)
         val cases = listOf(
-            LivingPopulationLayout.sharedTrainingPartner(
+            LivingPopulationLayout.sharedSportPartner(
                 listOf(athleteWithoutAction), PlayScene.Place.SPORT,
                 listOf(ActionKind.MOVE_BODY), PlayRoutines.SpecialActivity.TRAINING
             ),
-            LivingPopulationLayout.sharedTrainingPartner(
+            LivingPopulationLayout.sharedSportPartner(
                 listOf(athleteWithoutAction.copy(nextAction = ActionKind.MOVE_BODY)),
                 PlayScene.Place.SPORT, listOf(ActionKind.READ),
                 PlayRoutines.SpecialActivity.TRAINING
             ),
-            LivingPopulationLayout.sharedTrainingPartner(
+            // Ein allgemeiner MOVE_BODY-Zustand allein reicht nicht: Weder Fussball noch Drachen
+            // oder Angeln sind heute eine gemeinsame Szene - nur TRAINING und BASKETBALL.
+            LivingPopulationLayout.sharedSportPartner(
                 listOf(athleteWithoutAction.copy(nextAction = ActionKind.MOVE_BODY)),
                 PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
                 PlayRoutines.SpecialActivity.FOOTBALL
             ),
-            LivingPopulationLayout.sharedTrainingPartner(
+            LivingPopulationLayout.sharedSportPartner(
+                listOf(athleteWithoutAction.copy(nextAction = ActionKind.MOVE_BODY)),
+                PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
+                PlayRoutines.SpecialActivity.KITE
+            ),
+            LivingPopulationLayout.sharedSportPartner(
+                listOf(athleteWithoutAction.copy(nextAction = ActionKind.MOVE_BODY)),
+                PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
+                PlayRoutines.SpecialActivity.FISHING
+            ),
+            LivingPopulationLayout.sharedSportPartner(
                 listOf(athleteWithoutAction.copy(
                     nextAction = ActionKind.MOVE_BODY,
                     blockedBy = com.notime.glyphsim.living.Requirement.At(LivingSite.HOME)
@@ -158,13 +189,29 @@ class LivingPopulationLayoutTest {
                 PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
                 PlayRoutines.SpecialActivity.TRAINING
             ),
-            LivingPopulationLayout.sharedTrainingPartner(
+            LivingPopulationLayout.sharedSportPartner(
+                listOf(athleteWithoutAction.copy(
+                    nextAction = ActionKind.MOVE_BODY,
+                    blockedBy = com.notime.glyphsim.living.Requirement.At(LivingSite.HOME)
+                )),
+                PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
+                PlayRoutines.SpecialActivity.BASKETBALL
+            ),
+            LivingPopulationLayout.sharedSportPartner(
                 listOf(athleteWithoutAction.copy(
                     nextAction = ActionKind.MOVE_BODY,
                     publiclyPresent = false
                 )),
                 PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
                 PlayRoutines.SpecialActivity.TRAINING
+            ),
+            LivingPopulationLayout.sharedSportPartner(
+                listOf(athleteWithoutAction.copy(
+                    nextAction = ActionKind.MOVE_BODY,
+                    publiclyPresent = false
+                )),
+                PlayScene.Place.SPORT, listOf(ActionKind.MOVE_BODY),
+                PlayRoutines.SpecialActivity.BASKETBALL
             )
         )
 

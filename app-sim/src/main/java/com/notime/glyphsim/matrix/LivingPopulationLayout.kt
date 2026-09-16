@@ -87,15 +87,25 @@ object LivingPopulationLayout {
     }
 
     /**
-     * Findet einen wirklichen Partner fuer die erste gemeinsame Aktivitaet (NT-091).
+     * Findet einen wirklichen Partner fuer eine gemeinsame Sportplatz-Aktivitaet (NT-091, seit
+     * NT-092 auch Basketball).
      *
      * Weder ATHLETE noch WYRMLING noch der Ort allein reichen aus. Der Hauptavatar muss gerade
-     * wirklich `MOVE_BODY` abschliessen, die vorhandene Routine muss TRAINING sein, und der
-     * Einwohner muss am selben Sportplatz oeffentlich anwesend sein und dieselbe ungehinderte
-     * Handlung als naechstes geplant haben. So beschreibt das Bild zwei Handlungen und nicht
-     * zwei Etiketten.
+     * wirklich `MOVE_BODY` abschliessen, die vorhandene Routine muss eine der beiden hier
+     * gefuehrten Sonderaktivitaeten sein, und der Einwohner muss am selben Sportplatz oeffentlich
+     * anwesend sein und dieselbe ungehinderte Handlung als naechstes geplant haben. So beschreibt
+     * das Bild zwei Handlungen und nicht zwei Etiketten.
+     *
+     * **Warum nur diese zwei und nicht auch Drachen, Fussball oder Angeln.** Der Einwohner traegt
+     * im Kern ausschliesslich das allgemeine `ActionKind.MOVE_BODY` - der Living-Agent-Kern kennt
+     * keine einzelne Sportart. Was den Hauptavatar unterscheidet, ist ausschliesslich der bereits
+     * wirklich gewaehlte, gleich rendernde Ablauf; das gilt fuer jede der fuenf Sonderaktivitaeten
+     * gleichermassen. Der Auftrag verlangt aber hoechstens eine weitere neben TRAINING (NT-092).
+     * BASKETBALL ist die naheliegendste: gleicher Ort (SPORT, keine neue Ortszuordnung), gleicher
+     * Ablaufaufbau ohne zusaetzlichen Zustand wie den gelernten Fussballtrick. Drachen (PARK) und
+     * Angeln (POND) blieben deshalb bewusst aussen vor, nicht weil sie unmoeglich waeren.
      */
-    fun sharedTrainingPartner(
+    fun sharedSportPartner(
         snapshots: List<ResidentSnapshot>,
         place: PlayScene.Place,
         hostCompletedActions: List<ActionKind>,
@@ -103,7 +113,7 @@ object LivingPopulationLayout {
     ): ResidentSnapshot? {
         if (place != PlayScene.Place.SPORT ||
             ActionKind.MOVE_BODY !in hostCompletedActions ||
-            specialActivity != PlayRoutines.SpecialActivity.TRAINING
+            specialActivity !in SHARED_SPORT_ACTIVITIES
         ) {
             return null
         }
@@ -111,6 +121,12 @@ object LivingPopulationLayout {
             it.nextAction == ActionKind.MOVE_BODY && it.blockedBy == null
         }
     }
+
+    /** Die einzigen zwei Sonderaktivitaeten, die heute eine gemeinsame Szene tragen koennen. */
+    private val SHARED_SPORT_ACTIVITIES = setOf(
+        PlayRoutines.SpecialActivity.TRAINING,
+        PlayRoutines.SpecialActivity.BASKETBALL
+    )
 
     /**
      * Waehlt ein Ruhebild mit den echten Haltezeiten und einem Versatz aus der Einwohnerzeit.

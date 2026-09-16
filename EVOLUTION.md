@@ -711,6 +711,66 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   Eine zweite gemeinsame Faehigkeit erst ergaenzen, wenn ihre Bedeutung aus wirklichem Zustand
   unterscheidbar ist.
 
+### 2026-09-16 - Basketball wird die zweite gemeinsame Sportplatz-Aktivitaet (NT-092)
+
+- **Ausgangsproblem:** NT-091 verband genau EINE bestehende Choreografie (TRAINING) zu einer
+  gemeinsamen Szene. Martins Auftrag verlangte, im aktuellen Modell zu pruefen, ob eine weitere
+  Taetigkeit (Fussball, Basketball, Drachen oder Angeln) ebenso eindeutig vom allgemeinen
+  `MOVE_BODY` unterscheidbar ist, hoechstens eine davon zu ergaenzen und sonst nur die kleinste
+  ehrliche semantische Voraussetzung zu schaffen.
+- **Befund:** Der Living-Agent-Kern kennt fuer Einwohner ausschliesslich das allgemeine
+  `ActionKind.MOVE_BODY` - keine der fuenf Sonderaktivitaeten (`PlayRoutines.SpecialActivity`)
+  ist im Kern selbst abgebildet. Was TRAINING in NT-091 unterscheidbar gemacht hat, war deshalb
+  allein die Seite des Hauptavatars: die bereits gewaehlte, tatsaechlich rendernde Routine ist
+  ein wirklicher, nicht geratener Fakt. Fuer den Einwohner blieb die Bedingung unveraendert
+  allgemein (`MOVE_BODY`, unblockiert, am selben Ort). Diese asymmetrische Regel ist mit NT-091
+  bereits akzeptiert; sie laesst sich mechanisch identisch auf eine zweite Sonderaktivitaet
+  anwenden, ohne eine neue Ortszuordnung oder eine neue Domaenen-Aktion einzufuehren.
+- **Entscheidung:** Genau eine weitere Aktivitaet wird ergaenzt: BASKETBALL, am selben Ort SPORT
+  wie TRAINING. `LivingPopulationLayout.sharedTrainingPartner` wird zu `sharedSportPartner` und
+  akzeptiert jetzt `TRAINING` ODER `BASKETBALL` als bereits gewaehlte Routine des Hauptavatars;
+  alle uebrigen Bedingungen (Ort SPORT, `MOVE_BODY` wirklich abgeschlossen, Einwohner
+  `publiclyPresent` mit ungehindertem `MOVE_BODY` als `nextAction`) bleiben unveraendert.
+  Fussball entfaellt bewusst trotz gleichen Ortes: Sein Ablauf traegt mit dem gelernten Trick
+  zusaetzlichen, rein hauptavatarbezogenen Zustand, der bei einem gemeinsamen Abschluss keine
+  saubere Entsprechung im Einwohner haette. Drachen (PARK) und Angeln (POND) bleiben offen -
+  "hoechstens eine weitere Aktivitaet" war der ausdrueckliche Auftrag.
+- **Wirkungsgrenze:** Unveraendert gegenueber NT-091. `LivingPopulation.completeSharedAction`
+  erwartet weiterhin `ActionKind.MOVE_BODY`; ein Abbruch oder ein inzwischen unpassender Plan
+  verbucht keine der beiden vorbereiteten Seiten. Reservierung, Speicherung und Veroeffentlichung
+  laufen ueber dieselbe Mutex- und `saveAll`-Grenze wie beim Training.
+- **Darstellung:** Der Einwohner bewegt sich waehrend Basketball durchgehend mit der vorhandenen
+  MOVE-Regung - anders als bei Training gibt es keine Ruhephase, die eine STRETCH-Haltung
+  braucht. `residentFigures` bleibt die eine Beschreibung fuer Bildschirm, Schnappschuss und
+  Clip; die Host-Animation (Dribbeln, Zielen, Werfen, Treffen) existierte bereits unveraendert
+  aus dem Alltagsablauf.
+- **Evidenz:** `TESTED BEHAVIOR` fuer Auswahl und Ablehnung: Ein Test belegt den positiven
+  BASKETBALL-Fall symmetrisch zu TRAINING; ein zweiter erweiterter Test lehnt FOOTBALL, KITE und
+  FISHING trotz identischem Ort und identischem `MOVE_BODY`-Zustand weiterhin ab, zusammen mit
+  Rolle/Spezies allein, fehlendem Hauptavatar-Abschluss, Blockade und fehlender Anwesenheit -
+  fuer beide zugelassenen Aktivitaeten einzeln. `UNVERIFIED` bleibt wie bei NT-091 die Lesbarkeit
+  auf einem Geraet mit vierzig Szenenzellen; das gilt fuer Basketball unveraendert.
+- **Abgrenzung:** Keine neue Domaenen-Aktion, kein neuer `LivingSite`, keine Freundschafts- oder
+  Beziehungswirkung, kein zweiter Renderer, kein grossflaechiger `DockScreen`-Umbau. Fussball,
+  Drachen und Angeln bleiben aus denselben Gruenden wie in NT-091 offen; ihre Bedeutung ist aus
+  dem wirklichen Zustand eines Einwohners weiterhin nicht herleitbar.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration und kein neuer Preference-Schluessel. Ein
+  Revert nimmt Basketball aus der zugelassenen Menge zurueck und stellt den reinen
+  Trainings-Stand wieder her; vorhandene Einwohner- und Hauptavatar-Snapshots bleiben lesbar.
+- **Betroffene Bereiche:** `LivingPopulationLayout` (Umbenennung und erweiterte Menge),
+  `DockScreen` (Umbenennung der Reservierungskennung, erweiterte Ruhebild-Bedingung),
+  `LivingPopulationLayoutTest`, Living-Agent-, Uebergabe- und Aufgaben-Dokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 494 Tests gruen (vorher 493, ein neuer
+  Verhaltensfall; der bestehende Ablehnungstest waechst um die Basketball-, Kite- und
+  Fishing-Faelle). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
+  gruen. Android-Compile, Lint, R8 und die instrumentierten Tests sind aus dieser Sitzung heraus
+  nicht ausfuehrbar (siehe UEBERGABE.md, Abschnitt "Die Offline-Strecke": kein Android SDK, die
+  Gradle-Distribution fuer das Android-Plugin ist vom Sandbox-Netzwerk aus nicht erreichbar) und
+  bleiben der PR-CI ueberlassen.
+- **Naechster Schritt:** Lesbarkeit von Training UND Basketball gemeinsam am Geraet beurteilen.
+  Fussball, Drachen und Angeln brauchen entweder eine eigene Domaenen-Aktion je Sportart oder
+  einen ebenso engen, wirklich zustandsbasierten Ersatz - keine allgemeine Aktivitaetsplattform.
+
 ### 2026-09-15 - Mehrere wirkliche Einwohner werden sichtbar (NT-089)
 
 - **Ausgangsproblem:** NT-088 rechnete drei dauerhafte Einwohner samt Ort und Handlung, aber
