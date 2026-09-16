@@ -139,6 +139,7 @@ import com.notime.glyphsim.matrix.PlayVisitWindow
 import com.notime.glyphsim.matrix.PlayWallet
 import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.ReminderAnimationEvent
+import com.notime.glyphsim.matrix.ReminderAnimations
 import com.notime.glyphsim.matrix.RoutineStep
 import com.notime.glyphsim.matrix.SimulatedMatrixView
 import com.notime.glyphsim.matrix.groundRow
@@ -256,7 +257,9 @@ fun DockScreen(
     var dreamWatchFrame by remember { mutableStateOf<IntArray?>(null) }
     var dreamWatchTopic by remember { mutableStateOf<AnimationType?>(null) }
     var dreamRecapMode by remember { mutableStateOf(false) }
-    val frame = animationFrame ?: dreamWatchFrame ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
+    // Die zusammengefuehrte Anzeige selbst (Erinnerung vor Traum vor Mond vor Taetigkeits-
+    // Spiegelung vor Uhrzeit) entsteht erst als `watchFrame` weiter unten - dort, wo auch
+    // [activityWatchFrame] bereits deklariert ist (siehe dessen KDoc fuer die Prioritaet).
 
     var clockSizeDp by remember { mutableFloatStateOf(DockLayoutPrefs.getSizeDp(context)) }
     val initialFraction = remember { DockLayoutPrefs.getOffsetFraction(context) }
@@ -556,6 +559,32 @@ fun DockScreen(
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
         /** Das eigene Weltmotiv des gerade laufenden allgemeinen Handlungsschritts. */
         var activeActivity by remember { mutableStateOf<AnimationType?>(null) }
+        /**
+         * Dieselbe Taetigkeit, zusaetzlich im kleinen Kreis gespiegelt - nicht anstelle der
+         * Weltebene, sondern ZUSAETZLICH zu ihr (siehe [PlayEffects.activityCells] fuer die
+         * Weltebene). Genutzt werden dieselben Symbol-Frames wie beim Ausloesen einer Erinnerung
+         * ([ReminderAnimations.framesFor]) - eigens fuer den 13x13-Kreis gebaut, anders als die
+         * Kreatur-Reaktionsposen, die dort laut [com.notime.glyphsim.matrix.CreatureFrameSizeTest]
+         * gerade NICHT hineingehoeren.
+         *
+         * Bewusst nur fuer autonome, nicht durch eine Erinnerung ausgeloeste Taetigkeiten
+         * gedacht: Laeuft schon eine Erinnerungs-Animation ([animationFrame]), gewinnt die weiter
+         * unten in der Prioritaetskette - zwei Bewegungen gleichzeitig im selben Kreis waeren
+         * gegeneinander gelesen, nicht miteinander.
+         */
+        var activityWatchFrame by remember { mutableStateOf<IntArray?>(null) }
+        LaunchedEffect(activeActivity) {
+            val topic = activeActivity
+            if (topic == null) {
+                activityWatchFrame = null
+                return@LaunchedEffect
+            }
+            MatrixAnimator.play(
+                ReminderAnimations.framesFor(topic),
+                targetDurationMs = MatrixAnimator.DURATION_UNTIL_FED,
+                frameDelayMs = MatrixAnimator.CLOCK_FRAME_DELAY_MS
+            ) { activityWatchFrame = it }
+        }
         /**
          * Was zuletzt zu sehen war - das juengste zuerst, hoechstens [RECENT_MEMORY] Eintraege.
          *
@@ -3524,6 +3553,14 @@ fun DockScreen(
             }
         }.orEmpty()
 
+        // Was der Kreis gerade zeigt - dieselbe Prioritaet wie zuvor (Erinnerung vor Traum vor
+        // Mond vor Uhrzeit), nur um die autonome Taetigkeits-Spiegelung ergaenzt: Sie gewinnt nur,
+        // wenn weder eine Erinnerung noch ein Traum laeuft, UND nicht waehrend der Mondszene -
+        // die ist eine bewusst seltene Ausnahme (siehe moonMode-Kommentar oben) und soll nicht
+        // von einem taeglichen Taetigkeits-Symbol verdraengt werden.
+        val watchFrame = animationFrame ?: dreamWatchFrame
+            ?: if (moonMode) MoonFrame.build(moonPhase) else (activityWatchFrame ?: clockFrame)
+
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
         //
         // An EINER Stelle, weil sie zweimal gebraucht wird: Der Film sammelt sie fuenfzehnmal je
@@ -3549,7 +3586,7 @@ fun DockScreen(
                 station = occupiedStation ?: activeStation,
                 lampOn = lampOn,
                 tvOn = tvOn,
-                clockFrame = if (current.fed) null else frame,
+                clockFrame = if (current.fed) null else watchFrame,
                 clockLeftFraction = (clockOffset.x / maxWidthPx).coerceIn(0f, 1f),
                 clockTopFraction = (clockOffset.y / maxHeightPx).coerceIn(0f, 1f),
                 clockSizeFraction = (clockPx / maxWidthPx).coerceIn(0.05f, 1f),
@@ -3650,6 +3687,7 @@ fun DockScreen(
             // diese Praezisierung haette die Uhr hier staendig eine Erinnerung angesagt, obwohl
             // sie nur die aktuelle Uhrzeit zeigt.
             val currentDreamTopic = dreamWatchTopic
+            val currentActivity = activeActivity
             val clockContentDescription = if (activeAvatar?.occurrenceId != null) {
                 val topicLabel = activeAvatar.libraryAnimationLabel
                     ?: activeAvatar.animationType?.let { stringResource(it.labelRes) }
@@ -3662,6 +3700,9 @@ fun DockScreen(
                 stringResource(R.string.a11y_clock_dream_empty)
             } else if (moonMode) {
                 stringResource(R.string.a11y_clock_moon)
+            } else if (activityWatchFrame != null && currentActivity != null) {
+                val topicLabel = stringResource(currentActivity.labelRes)
+                stringResource(R.string.a11y_clock_activity_highlight, topicLabel)
             } else {
                 val now = LocalTime.now()
                 stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
@@ -3673,7 +3714,7 @@ fun DockScreen(
                 label = "watch-scene"
             )
             SimulatedMatrixView(
-                frame = frame,
+                frame = watchFrame,
                 contentDescription = clockContentDescription,
                 modifier = Modifier
                     .size((clockSizeDp * watchScale).dp)

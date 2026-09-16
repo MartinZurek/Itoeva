@@ -664,6 +664,68 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-16 - Staffelei, Trinken, Buch neu gezeichnet; der Kreis wird zweite Buehne
+
+- **Ausgangsproblem:** Direktes Nutzer-Feedback zu vier World-Motiven/der Uhr: (1) die
+  Malszene liess sich nicht sicher von Angeln unterscheiden ("langes Ding in der Hand, ein
+  Rechteck geht hoch - Angeln oder Malen?"), (2) die autonome, nicht durch eine Erinnerung
+  ausgeloeste Trink-Animation "sieht noch richtig schlecht aus", (3) die Buch-Animation
+  "gefaellt mir ueberhaupt nicht", (4) der Wunsch, dass der kleine runde Kreis (wie beim
+  Traum-Rueckblick) ZUSAETZLICH zur Weltebene zeigt, was der Bewohner gerade tut - nicht
+  anstelle davon.
+- **Entscheidung Malen/Angeln:** Kein neues Motiv, sondern die Staffelei eindeutiger gemacht:
+  ein drittes, HINTERES Bein ergibt im Profil die Dreieckssilhouette, an der eine Staffelei von
+  einem schwebenden Bilderrahmen zu unterscheiden ist; der Pinsel laeuft jetzt als
+  durchgehender Schaft bis zum Kontaktpunkt auf der Leinwand statt als zwei getrennte, nicht
+  verbundene Marken. `fishingCells` blieb unveraendert - sie war schon eindeutig (Rute,
+  Schnur, Schwimmer, Wellenringe), nur die Malszene war zu abstrakt.
+- **Entscheidung Trinken:** Von Grund auf neu: statt eines einzelnen Tropfens, der ueber vier
+  Takte einsam zum Glasrand wandert, faellt jetzt ein Schwall aus drei Tropfen im Verbund, und
+  das Auftreffen zeigt Ringe auf zwei Hoehen statt nur zweier Randpunkte. Das Glas selbst
+  (Form, steigender Pegel) blieb unangetastet.
+- **Entscheidung Buch:** Bewusst vereinfacht statt weiter am Keil aus vier Diagonalen zu
+  feilen (der laut Feedback trotz zweier Vorfassungen immer noch nicht als Buch gelesen wurde):
+  ein einzelnes, geschlossen umrissenes Rechteck mit sichtbarem Ruecken in der Mitte. Die
+  Bewegung ist jetzt eine einzelne wandernde Ecke oberhalb des Ruecken (rechts nach links ueber
+  vier Takte) statt aufsummierter Textzeilen - wichtig fuer den Regressionstest, siehe Evidenz.
+- **Entscheidung Kreis-Spiegelung:** `DockScreen` bekommt einen neuen abgeleiteten Zustand
+  `activityWatchFrame`, der bei jeder Aenderung von `activeActivity` per
+  `MatrixAnimator.play(..., targetDurationMs = DURATION_UNTIL_FED)` durch
+  `ReminderAnimations.framesFor(topic)` loopt - dieselben 13x13-Symbol-Frames, die beim
+  Ausloesen einer Erinnerung ohnehin schon existieren, nicht die 16x20-Kreatur-Reaktionsposen
+  (die gehoeren laut `CreatureFrameSizeTest` ausdruecklich NICHT in den 13x13-Kreis). Die
+  Prioritaet im Kreis bleibt: Erinnerungs-Animation vor Traum vor Mond vor Taetigkeits-
+  Spiegelung vor Uhrzeit - die Mondszene ist eine bewusst seltene Ausnahme (siehe
+  `moonMode`-Kommentar in `DockScreen`) und soll nicht von einem alltaeglichen
+  Taetigkeits-Symbol verdraengt werden. Neue A11y-Zeichenkette
+  `a11y_clock_activity_highlight` (de/en) fuer TalkBack.
+- **Evidenz:** `TESTED BEHAVIOR` fuer die drei `PlayEffects`-Motive - der bestehende,
+  generische Test `Weltmotive veraendern ihren Zustand sichtbar` deckt auf, ob sich ein Motiv
+  zwischen zwei Zeitpunkten ueberhaupt sichtbar aendert (die Buch-Neufassung waere daran beim
+  ersten Versuch gescheitert, siehe Abgrenzung). `UNVERIFIED` fuer die Kreis-Spiegelung in
+  `DockScreen.kt`: reines Compose/Android, in dieser Umgebung ohne Android-SDK nicht
+  kompilierbar - nur sorgfaeltig gegen bestehende Muster (`MatrixAnimator.play`-Aufrufe,
+  Prioritaetslogik) gegengelesen, nicht am Geraet gesehen. `UNVERIFIED` bleibt ausserdem, ob
+  die neue Staffelei-Silhouette und das neue Buch am Geraet tatsaechlich eindeutiger wirken.
+- **Abgrenzung:** Kein neues Motiv, keine neue Erinnerungs-Kategorie, keine Aenderung an
+  `PlayAmbientActivity`s Auswahl-Gewichtung. Die Kreis-Spiegelung zeigt bewusst nur autonome
+  Taetigkeiten (`activeActivity`), nicht die bereits eigenstaendig choreografierten Szenen
+  (Fussball, Basketball, Drachen, Musik, Malen, Angeln, Training) - die haben keinen
+  `ReminderAnimations`-Eintrag und wurden nicht angefasst.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration, kein neuer Preference-Schluessel. Ein
+  Revert entfernt Silhouetten-Aenderungen und die Kreis-Spiegelung; nichts davon ist
+  persistent.
+- **Betroffene Bereiche:** `PlayEffects.kt` (`paintingCells`, `AnimationType.DRINK`,
+  `AnimationType.BOOK`), `DockScreen.kt` (`activityWatchFrame`, `watchFrame`,
+  `clockContentDescription`), `strings.xml`/`values-de/strings.xml`.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 493 Tests gruen (unveraendert; die
+  bestehenden generischen Motiv-Tests deckten die Umgestaltung ausreichend ab, kein neuer
+  Testfall noetig). Android-Compile und beide `:app-sim`-Varianten laufen wie ueblich erst in
+  der PR-CI.
+- **Naechster Schritt:** Am Geraet pruefen, ob (a) die Staffelei jetzt sicher von Angeln zu
+  unterscheiden ist, (b) Trinken und Buch tatsaechlich besser wirken, (c) die Kreis-Spiegelung
+  sich rund anfuehlt und nicht hektisch, wenn Taetigkeiten schnell wechseln.
+
 ### 2026-09-16 - Zwei wirkliche Bewegungen werden gemeinsames Training (NT-091)
 
 - **Ausgangsproblem:** NT-089 zeigte wirkliche Einwohner, aber immer nur in Ruhe. Selbst wenn
