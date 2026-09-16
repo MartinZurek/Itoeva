@@ -262,8 +262,8 @@ fun DockScreen(
     var dreamWatchTopic by remember { mutableStateOf<AnimationType?>(null) }
     var dreamRecapMode by remember { mutableStateOf(false) }
     // Die zusammengefuehrte Anzeige selbst (Erinnerung vor Traum vor Mond vor Taetigkeits-
-    // Spiegelung vor Uhrzeit) entsteht erst als `watchFrame` weiter unten - dort, wo auch
-    // [activityWatchFrame] bereits deklariert ist (siehe dessen KDoc fuer die Prioritaet).
+    // Spiegelung vor Uhrzeit) entsteht erst als `currentWatchFrame()` weiter unten - dort, wo
+    // auch [activityWatchFrame] bereits deklariert ist (siehe dessen KDoc fuer die Prioritaet).
 
     var clockSizeDp by remember { mutableFloatStateOf(DockLayoutPrefs.getSizeDp(context)) }
     val initialFraction = remember { DockLayoutPrefs.getOffsetFraction(context) }
@@ -3564,7 +3564,17 @@ fun DockScreen(
         // wenn weder eine Erinnerung noch ein Traum laeuft, UND nicht waehrend der Mondszene -
         // die ist eine bewusst seltene Ausnahme (siehe moonMode-Kommentar oben) und soll nicht
         // von einem taeglichen Taetigkeits-Symbol verdraengt werden.
-        val watchFrame = animationFrame ?: dreamWatchFrame
+        //
+        // **Als Funktion, nicht als `val`.** Ein `val` wuerde nur einmal pro Rekomposition
+        // ausgewertet und von `describeScreen()` unten als fester Wert eingefangen - fuer den
+        // laufenden Uhr-Kreis unsichtbar, weil der bei jeder Rekomposition ohnehin neu gelesen
+        // wird, aber toedlich fuer den Mitschnitt: dessen `LaunchedEffect(clipSession)` startet
+        // nur einmal pro Aufnahme neu und ruft `describeScreen()` danach aus genau DIESEM
+        // eingefrorenen Rekompositions-Stand heraus wiederholt auf - der exportierte Clip zeigte
+        // dann ein eingefrorenes Kreis-Symbol, waehrend der Bildschirm daneben weiterlief (Fund
+        // aus dem Review zu PR #162). Als Funktion liest jeder Aufruf `animationFrame` &Co. frisch
+        // - genau das Muster, das `current = avatar` in `describeScreen()` schon nutzt.
+        fun currentWatchFrame(): IntArray = animationFrame ?: dreamWatchFrame
             ?: if (moonMode) MoonFrame.build(moonPhase) else (activityWatchFrame ?: clockFrame)
 
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
@@ -3592,7 +3602,7 @@ fun DockScreen(
                 station = occupiedStation ?: activeStation,
                 lampOn = lampOn,
                 tvOn = tvOn,
-                clockFrame = if (current.fed) null else watchFrame,
+                clockFrame = if (current.fed) null else currentWatchFrame(),
                 clockLeftFraction = (clockOffset.x / maxWidthPx).coerceIn(0f, 1f),
                 clockTopFraction = (clockOffset.y / maxHeightPx).coerceIn(0f, 1f),
                 clockSizeFraction = (clockPx / maxWidthPx).coerceIn(0.05f, 1f),
@@ -3778,8 +3788,8 @@ fun DockScreen(
             // Begruendung und den gemeldeten Fund vom 2026-09-16).
             //
             // animationFrame haelt weiterhin Vorrang, genau wie zuvor in der Elvis-Kette oben
-            // ([watchFrame]): Eine echte, gerade abgespielte Bibliotheks-Erinnerung ist selbst
-            // schon 13x13-Daten und bricht die Traum-Koroutine ohnehin ab (siehe deren
+            // ([currentWatchFrame]): Eine echte, gerade abgespielte Bibliotheks-Erinnerung ist
+            // selbst schon 13x13-Daten und bricht die Traum-Koroutine ohnehin ab (siehe deren
             // finally-Block).
             val recapFrame = if (animationFrame == null) dreamWatchFrame else null
             val recapSpecies = if (recapFrame != null) dreamWatchSpecies else null
@@ -3792,7 +3802,7 @@ fun DockScreen(
                 )
             } else {
                 SimulatedMatrixView(
-                    frame = watchFrame,
+                    frame = currentWatchFrame(),
                     contentDescription = clockContentDescription,
                     modifier = watchModifier
                 )
