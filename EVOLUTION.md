@@ -664,6 +664,51 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-16 - Der Traumrückblick zeigt die Kreatur, nicht Pixelsalat
+
+- **Ausgangsproblem:** Vom Auftraggeber gemeldet: "die Traumsequenz... stellt nur ein
+  Pixelsalat dar. Ich sehe da tatsächlich nichts." Betroffen war die gesamte Aufstiegsfolge aus
+  NT-083 - die kleine Traumblase über dem schlafenden Wesen UND die vergrößerte Uhr, in die sie
+  übergeht.
+- **Befund:** `PlayDreamBubble` und die Uhr im Rückblick zeichneten eine ganz gewöhnliche
+  Kreatur-Reaktion aus `AvatarAnimations.reactionFor` - ein `IntArray` auf dem 16x20-Raster von
+  `AvatarGeometry` (320 Zellen) - über `SimulatedMatrixView`, das für das 13x13-Raster von
+  `MatrixGeometry` (169 Zellen) gebaut ist und mit dessen Zeilenbreite liest. Genau die
+  Verwechslung, vor der `AvatarSpriteView`s eigener KDoc bereits warnt ("wurden dabei zerschert,
+  weil hier mit der Zeilenbreite des Avatars gelesen wird") - nur in die andere Richtung, und an
+  zwei Stellen: der kleinen Blase und der später vergrößerten Uhr, die während des Rückblicks
+  dieselben (falschen) Frames erhielt.
+- **Entscheidung:** Beide Stellen zeichnen jetzt über `AvatarSpriteView` (die auch der normale
+  Avatar überall sonst benutzt), eingebettet in dieselbe runde Kreis-Chrome wie zuvor (Umriss,
+  Vorblasen, Kreisausschnitt bzw. runder Uhr-Puck). Neu ist `PlayDreamWatchFace` für die
+  vergrößerte Uhr; `PlayDreamBubble` selbst bekommt zusätzlich einen `species`-Parameter, damit
+  das Gesicht dieselbe Farbe zeigt wie der echte Avatar. `dreamWatchSpecies` (neuer State in
+  `DockScreen`) trägt diese Information während des Rückblicks; eine echte, gerade abgespielte
+  Bibliotheks-Erinnerung (`animationFrame`) behält wie zuvor Vorrang vor dem Rückblick.
+- **Nicht die Größe war das Problem.** Der Auftraggeber vermutete zunächst, der Kreis müsse
+  größer werden, damit "man was erkennt" - naheliegend, aber nicht die Ursache: Die Blase wuchs
+  schon vorher bis auf Avatargröße, nur eben mit der falschen Zeilenbreite gelesen. Die
+  Wachstumskurve (`bubbleSizeDp`) bleibt deshalb unverändert; mit der richtigen Ansicht sollte
+  dieselbe Größe bereits lesbar sein.
+- **Evidenz:** `TESTED BEHAVIOR` für die Ursache: `CreatureFrameSizeTest` belegt über alle sechs
+  Spezies und alle zwölf `AnimationType`-Reaktionen, dass eine Kreatur-Reaktion nie die Größe
+  hat, die `SimulatedMatrixView` erwartet (320 vs. 169 Zellen) - der Fakt, an dem der Fehler
+  hing. Die eigentliche Compose-Zeichnung selbst bleibt `UNVERIFIED`: Diese Sitzung hat kein
+  Android SDK und kann `PlayDreamBubble`/`PlayDreamWatchFace` nicht rendern oder auf einem Gerät
+  ansehen - siehe UEBERGABE.md für die Umgebungsgrenze.
+- **Abgrenzung:** Keine neue Traumlogik, keine neue Speicherung, keine Änderung an `PlayDreams`
+  oder `PlayDreamMemory`. Nur der Renderer wurde ausgetauscht, nicht was oder wann geträumt wird.
+- **Betroffene Bereiche:** `PlayDreamBubble.kt` (neue `PlayDreamWatchFace`), die gezielte
+  Uhr-/Rückblick-Rendergrenze in `DockScreen.kt`, neuer `CreatureFrameSizeTest`,
+  `tools/reaction-preview/tests.sh`.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 494 Tests grün (main-Stand 493, ein neuer
+  Test). `git diff --check` sauber. Android-Compile, Lint, R8 und ein Blick auf das gerenderte
+  Ergebnis sind aus dieser Sitzung heraus nicht möglich; das bleibt der PR-CI und einer
+  Geräteprüfung überlassen.
+- **Nächster Schritt:** Auf einem echten Gerät bestätigen, dass Traumblase und Rückblick jetzt
+  die schlafende Kreatur zeigen statt Rauschen, und ob die bestehende Größe bereits gut lesbar
+  ist oder doch noch wachsen sollte.
+
 ### 2026-09-16 - Staffelei, Trinken, Buch neu gezeichnet; der Kreis wird zweite Buehne
 
 - **Ausgangsproblem:** Direktes Nutzer-Feedback zu vier World-Motiven/der Uhr: (1) die
