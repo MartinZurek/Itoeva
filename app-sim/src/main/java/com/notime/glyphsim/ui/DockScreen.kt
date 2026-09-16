@@ -157,6 +157,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -655,6 +657,10 @@ fun DockScreen(
         // nur [ResidentSnapshot], gerechnet wird ausschliesslich in [LivingPopulation].
         var residentStates by remember { mutableStateOf<Map<String, ResidentState>>(emptyMap()) }
         var residentSnapshots by remember { mutableStateOf<List<ResidentSnapshot>>(emptyList()) }
+        // Ein Besuch darf erst starten, wenn der zuletzt veroeffentlichte Population-Snapshot
+        // auch vollstaendig gespeichert ist. Sonst koennte er einen noch alten Einwohnerstand
+        // laden und dessen gerade gelebte Stunden beim Abschluss wieder ueberschreiben.
+        val residentPersistenceMutex = remember { Mutex() }
 
         /**
          * Stellt denselben Living-Zustand fuer Handeln und Gespraech bereit.
@@ -998,12 +1004,22 @@ fun DockScreen(
                         continue
                     }
                     if (advanced != currentResidents) {
-                        residentStates = advanced
-                        residentSnapshots = LivingPopulation.snapshot(advanced)
-                        withContext(Dispatchers.IO) {
-                            advanced.values.forEach { state ->
-                                livingStore.save(state.agent, state.world)
+                        // Speichern und Veroeffentlichen bilden eine gemeinsame Grenze. Ein
+                        // Besuch nimmt denselben Mutex fuer seine Auswahl: Entweder beginnt er
+                        // noch mit dem alten vollstaendigen Zustand, oder erst mit dem neuen.
+                        residentPersistenceMutex.lock()
+                        try {
+                            if (!visitRunning && residentStates == currentResidents) {
+                                withContext(Dispatchers.IO) {
+                                    advanced.values.forEach { state ->
+                                        livingStore.save(state.agent, state.world)
+                                    }
+                                }
+                                residentStates = advanced
+                                residentSnapshots = LivingPopulation.snapshot(advanced)
                             }
+                        } finally {
+                            residentPersistenceMutex.unlock()
                         }
                     }
                 }
@@ -1796,78 +1812,79 @@ fun DockScreen(
          * diesen Momenten gehoert die Aufmerksamkeit dem Nutzer, nicht der Kulisse.
          */
         suspend fun runVisit() {
-            val host = avatar ?: return
-            if (host.fed || host.occurrenceId != null || avatarHidden) return
-            // Der Gast wird nicht mehr aus einem zweiten Zeitfenster geraten. Er muss im
-            // Population-Snapshot mit SEINER Tagesminute wirklich an diesem Ort stehen. Die
-            // feste Rotation bleibt nur die Auswahl zwischen mehreren echten Kandidaten.
-            val residentSnapshot = LivingPopulationLayout.nextVisitor(
-                residentSnapshots,
-                currentPlace,
-                lastResidentProfileId
-            ) ?: return
-            val resident = LivingResidents.all.firstOrNull {
-                it.profileId == residentSnapshot.profileId
-            } ?: return
-            val guestSpecies = resident.species
-            val px = with(density) { host.sizeDp.dp.toPx() }
-            val fromLeft = Random.nextBoolean()
-            val startX = if (fromLeft) -px else maxWidthPx
-            val exitX = if (fromLeft) maxWidthPx else -px
-            val groundY = avatarSpot(0f, px, maxWidthPx, floorYPx, guestSpecies).y
-            val mood = AvatarMoodSnapshot.forSpecies(context, guestSpecies)
-            val walk = AvatarAnimations.walkSequence(guestSpecies)
-            val idle = AvatarAnimations.idleSequence(guestSpecies, mood)
-
-            visitor = VisitorState(
-                profileId = resident.profileId,
-                species = guestSpecies,
-                offset = Offset(startX, groundY),
-                sizeDp = host.sizeDp,
-                frame = walk.frames.first()
-            )
-            lastVisitor = guestSpecies
-            lastResidentProfileId = resident.profileId
-            // Der Gast gruesst mit SEINEM Motiv, nicht mit dem des Bewohners - daran hoert man,
-            // dass jemand anderes da ist.
-            PlaySound.play(context, guestSpecies, PlayChime.Event.VISIT, scope)
-
-            /** Laesst den Gast von seiner jetzigen Stelle nach [targetX] gehen. */
-            suspend fun walkGuestTo(targetX: Float) = coroutineScope {
-                val from = visitor?.offset?.x ?: return@coroutineScope
-                // Ein Gast, der nach links hereinkommt und dabei nach rechts schattiert ist,
-                // laeuft rueckwaerts - dieselbe Regel wie beim Bewohner.
-                val richtung = if (targetX < from) AvatarShading.Side.RIGHT else AvatarShading.Side.LEFT
-                visitor = visitor?.copy(facing = richtung)
-                val gait = launch {
-                    while (isActive) {
-                        MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
-                            visitor = visitor?.copy(frame = f)
-                        }
-                    }
+            val (host, resident, residentState) = residentPersistenceMutex.withLock {
+                if (visitRunning) return@withLock null
+                val currentHost = avatar ?: return@withLock null
+                if (currentHost.fed || currentHost.occurrenceId != null || avatarHidden) {
+                    return@withLock null
                 }
-                animate(
-                    initialValue = from,
-                    targetValue = targetX,
-                    animationSpec = tween(walkDurationMs(abs(targetX - from), px), easing = FastOutSlowInEasing)
-                ) { value, _ -> visitor = visitor?.copy(offset = Offset(value, groundY)) }
-                gait.cancel()
-                visitor = visitor?.copy(facing = AvatarShading.Side.NONE)
-            }
-
-            // Ab hier laeuft ein Besuch: Ein Ablauf, der gerade draussen wartet, geht erst
-            // weiter, wenn der Gast wieder fort ist (siehe [visitRunning]).
-            //
-            // **Diese Zeile gehoert unmittelbar vor das `try`, nicht weiter oben.** Zwischen ihr
-            // und dem `finally`, das sie zuruecknimmt, darf nichts liegen, was aufhaengen kann:
-            // Wuerde die Coroutine dort abgebrochen, bliebe das Flag stehen - und ein draussen
-            // wartender Ablauf waere bis zum Ende des Play-Modus angehalten, die Figur stuende
-            // regungslos auf der Strasse. Weiter oben waere das heute zwar auch sicher (keine der
-            // Zeilen davor haelt an), aber nur solange das so bleibt; hier ist es unabhaengig
-            // davon richtig.
-            visitRunning = true
+                // Auswahl und Anspruch sind atomar zur Population-Persistenz. Der Gast kommt
+                // direkt aus dem veroeffentlichten Zustand statt aus einem moeglicherweise noch
+                // aelteren Store-Snapshot.
+                val residentSnapshot = LivingPopulationLayout.nextVisitor(
+                    residentSnapshots,
+                    currentPlace,
+                    lastResidentProfileId
+                ) ?: return@withLock null
+                val currentResident = LivingResidents.all.firstOrNull {
+                    it.profileId == residentSnapshot.profileId
+                } ?: return@withLock null
+                val currentResidentState = residentStates[currentResident.profileId]
+                    ?: return@withLock null
+                visitRunning = true
+                Triple(currentHost, currentResident, currentResidentState)
+            } ?: return
             var committedGuest: ResidentState? = null
             try {
+                val guestSpecies = resident.species
+                val px = with(density) { host.sizeDp.dp.toPx() }
+                val fromLeft = Random.nextBoolean()
+                val startX = if (fromLeft) -px else maxWidthPx
+                val exitX = if (fromLeft) maxWidthPx else -px
+                val groundY = avatarSpot(0f, px, maxWidthPx, floorYPx, guestSpecies).y
+                val mood = AvatarMoodSnapshot.forSpecies(context, guestSpecies)
+                val walk = AvatarAnimations.walkSequence(guestSpecies)
+                val idle = AvatarAnimations.idleSequence(guestSpecies, mood)
+
+                visitor = VisitorState(
+                    profileId = resident.profileId,
+                    species = guestSpecies,
+                    offset = Offset(startX, groundY),
+                    sizeDp = host.sizeDp,
+                    frame = walk.frames.first()
+                )
+                lastVisitor = guestSpecies
+                lastResidentProfileId = resident.profileId
+                // Der Gast gruesst mit SEINEM Motiv, nicht mit dem des Bewohners - daran hoert man,
+                // dass jemand anderes da ist.
+                PlaySound.play(context, guestSpecies, PlayChime.Event.VISIT, scope)
+
+                /** Laesst den Gast von seiner jetzigen Stelle nach [targetX] gehen. */
+                suspend fun walkGuestTo(targetX: Float) = coroutineScope {
+                    val from = visitor?.offset?.x ?: return@coroutineScope
+                    // Ein Gast, der nach links hereinkommt und dabei nach rechts schattiert ist,
+                    // laeuft rueckwaerts - dieselbe Regel wie beim Bewohner.
+                    val richtung = if (targetX < from) AvatarShading.Side.RIGHT else AvatarShading.Side.LEFT
+                    visitor = visitor?.copy(facing = richtung)
+                    val gait = launch {
+                        while (isActive) {
+                            MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
+                                visitor = visitor?.copy(frame = f)
+                            }
+                        }
+                    }
+                    animate(
+                        initialValue = from,
+                        targetValue = targetX,
+                        animationSpec = tween(
+                            walkDurationMs(abs(targetX - from), px),
+                            easing = FastOutSlowInEasing
+                        )
+                    ) { value, _ -> visitor = visitor?.copy(offset = Offset(value, groundY)) }
+                    gait.cancel()
+                    visitor = visitor?.copy(facing = AvatarShading.Side.NONE)
+                }
+
                 // Treffpunkt so waehlen, dass sich die beiden NICHT ueberdecken.
                 //
                 // Der erste Entwurf stellte den Gast einfach auf die Seite, von der er kam. Stand
@@ -1893,16 +1910,9 @@ fun DockScreen(
                 // und waehlt eine passende Koerperregung dazu.
                 val guestProfileId = resident.profileId
                 val (hostAgent, hostWorld) = livingStateFor(host.species)
-                val restoredGuest = livingStore.restore(
-                    profileId = guestProfileId,
-                    currentSimulationMinute = hostWorld.absoluteMinute,
-                    currentOpenSites = LivingRuntimeAdapter.openSitesAt(hostWorld.minuteOfDay),
-                    currentNearbyProfiles = setOf(presenceProfileId)
-                )
-                val guestAgent = restoredGuest?.agent ?: LivingResidents.initialAgent(resident)
+                val guestAgent = residentState.agent
                 val guestWorld = LivingRuntimeAdapter.synchroniseWorld(
-                    restoredGuest?.world
-                        ?: LivingResidents.initialWorld(resident, hostWorld.absoluteMinute),
+                    residentState.world,
                     currentPlace,
                     setOf(presenceProfileId)
                 )
