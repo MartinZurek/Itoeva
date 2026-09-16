@@ -307,7 +307,9 @@ Bildschirm, Schnappschuss und Clip gleich beschrieben. Erst nach dem sichtbaren 
 `LivingPopulation.completeSharedAction` seinen bereits geplanten Schritt durch
 `LivingSimulation.step` aus. Damit entstehen Zeit, Beduerfniswirkung, Erinnerung und Geschmack
 weiter ausschliesslich aus `ActionOutcome`; der Hauptavatar uebernimmt gleichzeitig seinen schon
-vorbereiteten Schritt. Ein Abbruch uebernimmt keinen der beiden Zustaende.
+vorbereiteten Schritt. `LivingAgentStore.saveAll` schreibt beide weiterhin profilgetrennten Blobs
+mit einem einzigen SharedPreferences-Editor und synchronem AtomicFile-Commit. Ein Abbruch oder
+Prozessende kann damit nicht nur einen Teilnehmer uebernehmen.
 
 Mehr wird daraus noch nicht abgeleitet. `MOVE_BODY` sagt nicht Fussball, Basketball, Drachen oder
 Angeln. Diese Szenen bleiben offen, bis eine wirkliche Handlung oder eine ebenso enge belegte

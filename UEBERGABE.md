@@ -19,8 +19,9 @@ die vorbereitete Hauptaktion wirklich `MOVE_BODY` abschliesst, die gewaehlte Rou
 ist und ein dort wirklich anwesender Einwohner selbst ungehindert `MOVE_BODY` als naechsten
 Schritt traegt, bewegt er sich nun sichtbar mit.
 Fortschreibung und Besuch pausieren fuer dieses Profil; erst nach dem vollstaendigen Bild werden
-beide Living-Zustaende ueber ihre vorhandenen Wirkungswege gespeichert. Ein Abbruch verbucht
-keinen. Bildschirm, Schnappschuss und Clip teilen auch diese Einwohnerbewegung.
+beide Living-Zustaende ueber ihre vorhandenen Wirkungswege in einer gemeinsamen
+SharedPreferences-Transaktion gespeichert. Abbruch oder Prozessende verbucht nicht nur einen.
+Bildschirm, Schnappschuss und Clip teilen auch diese Einwohnerbewegung.
 
 **Offen nach NT-091:** Fussball, Basketball, Drachen und Angeln nicht aus dem generischen
 `MOVE_BODY` erraten. Eine Erweiterung braucht spezifischere wirkliche Handlungen oder eine

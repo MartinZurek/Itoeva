@@ -46,5 +46,6 @@ class SharedPreferences {
         fun putString(key: String, value: String?): Editor = this
         fun remove(key: String): Editor = this
         fun apply() {}
+        fun commit(): Boolean = true
     }
 }

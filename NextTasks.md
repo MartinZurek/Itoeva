@@ -258,7 +258,8 @@ gemeldeter Einwohner trainieren gemeinsam am SPORT, wenn der vorbereitete Haupts
 `MOVE_BODY` abschliesst, seine bereits gewaehlte Choreografie `TRAINING` ist und der Einwohner
 am selben Ort selbst ungehindert `MOVE_BODY` als `nextAction` traegt. Die Population pausiert
 waehrend des sichtbaren Ablaufs; erst nach dessen vollstaendigem Abschluss laufen beide
-Handlungen ueber den vorhandenen `ActionOutcome`-Weg in ihre getrennten Zustaende und Speicher.
+Handlungen ueber den vorhandenen `ActionOutcome`-Weg in ihre getrennten Zustaende und eine
+gemeinsame SharedPreferences-Transaktion.
 Ein Abbruch verbucht keine von beiden. Rolle, Spezies und Ort allein reichen ausdruecklich nicht.
 Bildschirm, Schnappschuss und Clip verwenden dieselbe mitbewegte Einwohnerfigur. **Offen bleibt:**
 Drachen, Fussball, Basketball und Angeln sind aus `MOVE_BODY` nicht unterscheidbar und werden

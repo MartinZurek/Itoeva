@@ -3394,11 +3394,12 @@ fun DockScreen(
                                             // darf eine gerade eintreffende Erinnerung diesen
                                             // kurzen Doppel-Commit nicht halbieren.
                                             withContext(Dispatchers.IO) {
-                                                livingStore.save(
-                                                    prepared.result.agent,
-                                                    committedWorld
+                                                livingStore.saveAll(
+                                                    listOf(
+                                                        prepared.result.agent to committedWorld,
+                                                        after.agent to after.world
+                                                    )
                                                 )
-                                                livingStore.save(after.agent, after.world)
                                             }
                                             livingAgent = prepared.result.agent
                                             livingWorld = committedWorld

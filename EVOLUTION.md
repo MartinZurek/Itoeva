@@ -679,8 +679,9 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   Besuch beansprucht. Erst nach dem vollstaendigen Ablauf fuehrt
   `LivingPopulation.completeSharedAction` seine geplante Handlung durch denselben
   `LivingSimulation.step`/`ActionOutcome`-Weg wie sonst aus. Hauptavatar und Einwohner werden
-  danach gemeinsam gespeichert und veroeffentlicht. Abbruch oder ein inzwischen unpassender
-  Plan verbucht keinen der beiden vorbereiteten Zustaende.
+  danach mit `LivingAgentStore.saveAll` in einem SharedPreferences-Editor und einem synchronen
+  AtomicFile-Commit gespeichert und erst dann veroeffentlicht. Abbruch, Prozessende oder ein
+  inzwischen unpassender Plan verbucht damit nicht nur einen der beiden vorbereiteten Zustaende.
 - **Darstellung:** Die vorhandenen MOVE-Regungen und in der Ruhephase STRETCH bewegen den
   kleineren Einwohner synchron zur Trainingsphase. `residentFigures` bleibt die eine
   Beschreibung fuer Bildschirm, Schnappschuss und Clip; kein zweiter Renderer und keine neue
@@ -697,10 +698,11 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Bestandsdaten und Ruecksetzung:** Keine Migration und kein neuer Preference-Schluessel. Ein
   Revert entfernt Auswahl, Mitbewegung und gemeinsamen Abschluss; vorhandene Einwohner- und
   Hauptavatar-Snapshots bleiben lesbar.
-- **Betroffene Bereiche:** `LivingPopulation`, `LivingPopulationLayout`, die gezielte
-  Population-/Routine-/Rendergrenze in `DockScreen`, Verhaltenstests sowie Living-Agent-,
-  Uebergabe- und Aufgaben-Dokumentation.
-- **Tests:** `bash tools/reaction-preview/tests.sh` - 492 Tests gruen (vorher 488; vier neue
+- **Betroffene Bereiche:** `LivingPopulation`, `LivingPopulationLayout`, die atomare Mehrprofil-
+  Grenze in `LivingAgentStore`, die gezielte Population-/Routine-/Rendergrenze in `DockScreen`,
+  Verhaltenstests samt Android-Offline-Stub sowie Living-Agent-, Uebergabe- und
+  Aufgaben-Dokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 493 Tests gruen (vorher 488; fuenf neue
   Verhaltensfaelle). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
   gruen. Android-Compile und beide
   `:app-sim`-Varianten laufen in der PR-CI, weil die Gradle-Distribution lokal nicht erreichbar
