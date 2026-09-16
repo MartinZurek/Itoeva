@@ -664,6 +664,51 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-16 - Zwei wirkliche Bewegungen werden gemeinsames Training (NT-091)
+
+- **Ausgangsproblem:** NT-089 zeigte wirkliche Einwohner, aber immer nur in Ruhe. Selbst wenn
+  Hauptavatar und Sportler am selben Sportplatz beide `MOVE_BODY` vorhatten, blieben sie zwei
+  unverbundene Bilder. Umgekehrt durfte eine ATHLETE-Rolle am SPORT nicht schon als gemeinsamer
+  Sport gelten; das waere Darstellung ohne Handlung gewesen.
+- **Entscheidung:** Genau eine vorhandene Choreografie wird verbunden: TRAINING am SPORT. Der
+  vorbereitete Hauptschritt muss `MOVE_BODY` wirklich abgeschlossen haben, die bereits gewaehlte
+  Routine muss `TRAINING` sein, und ein dort `publiclyPresent` gemeldeter Einwohner muss selbst
+  ungehindert `MOVE_BODY` als `nextAction` tragen. Der Hauptavatar besitzt keinen
+  `ResidentSnapshot`; seine wirkliche Gegenwart ist der laufende sichtbare Play-Ablauf.
+- **Wirkungsgrenze:** Der Einwohner wird waehrend der Szene gegen Hintergrundfortschreibung und
+  Besuch beansprucht. Erst nach dem vollstaendigen Ablauf fuehrt
+  `LivingPopulation.completeSharedAction` seine geplante Handlung durch denselben
+  `LivingSimulation.step`/`ActionOutcome`-Weg wie sonst aus. Hauptavatar und Einwohner werden
+  danach gemeinsam gespeichert und veroeffentlicht. Abbruch oder ein inzwischen unpassender
+  Plan verbucht keinen der beiden vorbereiteten Zustaende.
+- **Darstellung:** Die vorhandenen MOVE-Regungen und in der Ruhephase STRETCH bewegen den
+  kleineren Einwohner synchron zur Trainingsphase. `residentFigures` bleibt die eine
+  Beschreibung fuer Bildschirm, Schnappschuss und Clip; kein zweiter Renderer und keine neue
+  Choreografie wurden eingefuehrt.
+- **Evidenz:** `TESTED BEHAVIOR` fuer Auswahl und Wirkung: Tests belegen den positiven
+  MOVE_BODY/TRAINING-Fall, lehnen Rolle, Spezies, Ort, fremde Hauptaktion, fremde Choreografie,
+  Blockade und fehlende Anwesenheit als alleinige Gruende ab und weisen nach, dass der Abschluss
+  Zeit und Bewegungswirkung des wirklichen Einwohnerzustands veraendert. `UNVERIFIED` bleibt die
+  Lesbarkeit der zwei unterschiedlich grossen Figuren auf einem Geraet mit vierzig Szenenzellen.
+- **Abgrenzung:** Keine Freundschafts- oder Beziehungswirkung, kein neuer Ort, keine zweite
+  Simulation, kein Room-, `:core`-, Stream- oder Musikumbau. Fussball, Basketball, Drachen und
+  Angeln bleiben offen: `MOVE_BODY` unterscheidet diese Taetigkeiten nicht, also werden sie nicht
+  aus Kulisse, Rolle oder Spezies geraten.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration und kein neuer Preference-Schluessel. Ein
+  Revert entfernt Auswahl, Mitbewegung und gemeinsamen Abschluss; vorhandene Einwohner- und
+  Hauptavatar-Snapshots bleiben lesbar.
+- **Betroffene Bereiche:** `LivingPopulation`, `LivingPopulationLayout`, die gezielte
+  Population-/Routine-/Rendergrenze in `DockScreen`, Verhaltenstests sowie Living-Agent-,
+  Uebergabe- und Aufgaben-Dokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 492 Tests gruen (vorher 488; vier neue
+  Verhaltensfaelle). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
+  gruen. Android-Compile und beide
+  `:app-sim`-Varianten laufen in der PR-CI, weil die Gradle-Distribution lokal nicht erreichbar
+  ist.
+- **Naechster Schritt:** Zuerst die Lesbarkeit des gemeinsamen Trainings am Geraet beurteilen.
+  Eine zweite gemeinsame Faehigkeit erst ergaenzen, wenn ihre Bedeutung aus wirklichem Zustand
+  unterscheidbar ist.
+
 ### 2026-09-15 - Mehrere wirkliche Einwohner werden sichtbar (NT-089)
 
 - **Ausgangsproblem:** NT-088 rechnete drei dauerhafte Einwohner samt Ort und Handlung, aber

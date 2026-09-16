@@ -252,13 +252,18 @@ nur ihre artgerechte Ruhebewegung. NT-091 verbindet als eigener Schnitt kompatib
 Handlungen zu gemeinsamen Sport-, Drachen- oder Angelszenen; ihre Anwesenheit allein darf keine
 Aktivitaet vorspielen.
 
-**Living Agent, sozial:** NT-091 **Gemeinsame Aktivitaet aus wirklichen Handlungen** - als
-naechster kleiner Schnitt. Zuerst genau eine vorhandene oeffentliche Choreografie waehlen und nur
-dann gemeinsam zeigen, wenn zwei `publiclyPresent` gemeldete Wesen am selben Ort kompatible
-`nextAction`-Zustaende tragen. Der sichtbare Abschluss muss ueber die vorhandene Wirkungsgrenze
-zurueck in beide Agentenzustaende gehen; Ort, Rolle oder Spezies allein duerfen keinen Sport und
-keine Freundschaft behaupten. Danach erst Drachen und Angeln ergaenzen, falls die erste
-Choreografie auf vierzig Zellen lesbar bleibt.
+**Living Agent, sozial:** NT-091 **Gemeinsame Aktivitaet aus wirklichen Handlungen** - *am
+2026-09-16 als kleinster Schnitt umgesetzt.* Hauptavatar und genau ein `publiclyPresent`
+gemeldeter Einwohner trainieren gemeinsam am SPORT, wenn der vorbereitete Hauptschritt wirklich
+`MOVE_BODY` abschliesst, seine bereits gewaehlte Choreografie `TRAINING` ist und der Einwohner
+am selben Ort selbst ungehindert `MOVE_BODY` als `nextAction` traegt. Die Population pausiert
+waehrend des sichtbaren Ablaufs; erst nach dessen vollstaendigem Abschluss laufen beide
+Handlungen ueber den vorhandenen `ActionOutcome`-Weg in ihre getrennten Zustaende und Speicher.
+Ein Abbruch verbucht keine von beiden. Rolle, Spezies und Ort allein reichen ausdruecklich nicht.
+Bildschirm, Schnappschuss und Clip verwenden dieselbe mitbewegte Einwohnerfigur. **Offen bleibt:**
+Drachen, Fussball, Basketball und Angeln sind aus `MOVE_BODY` nicht unterscheidbar und werden
+nicht geraten. Sie brauchen entweder eine spezifischere wirkliche Handlung oder eine ebenso eng
+belegte Zuordnung; die Lesbarkeit am Geraet bleibt fuer die erste Szene `UNVERIFIED`.
 
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.
