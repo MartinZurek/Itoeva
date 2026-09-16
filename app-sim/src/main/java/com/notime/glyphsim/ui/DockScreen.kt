@@ -106,7 +106,11 @@ import com.notime.glyphsim.stream.TwitchChatStatus
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
+import com.notime.glyphsim.matrix.LivingPopulation
+import com.notime.glyphsim.matrix.LivingPopulationLayout
 import com.notime.glyphsim.matrix.LivingResidents
+import com.notime.glyphsim.matrix.ResidentSnapshot
+import com.notime.glyphsim.matrix.ResidentState
 import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
@@ -646,6 +650,11 @@ fun DockScreen(
         }
         var livingAgent by remember(presenceProfileId) { mutableStateOf<AgentState?>(null) }
         var livingWorld by remember(presenceProfileId) { mutableStateOf<WorldState?>(null) }
+        // Dieselben persistenten Profile wie bei einem sichtbaren Besuch, nun auch zwischen den
+        // Begegnungen fortgeschrieben. Snapshot und Zustand bleiben getrennt: Die Anzeige liest
+        // nur [ResidentSnapshot], gerechnet wird ausschliesslich in [LivingPopulation].
+        var residentStates by remember { mutableStateOf<Map<String, ResidentState>>(emptyMap()) }
+        var residentSnapshots by remember { mutableStateOf<List<ResidentSnapshot>>(emptyList()) }
 
         /**
          * Stellt denselben Living-Zustand fuer Handeln und Gespraech bereit.
@@ -945,6 +954,62 @@ fun DockScreen(
         }
         var scenePhase by remember { mutableIntStateOf(0) }
         val sceneFade = remember { Animatable(1f) }
+
+        /**
+         * Haelt die drei Einwohner an derselben simulierten Uhr wie den Hauptavatar am Leben.
+         *
+         * Jeder wird ueber seine eigene `resident:`-Kennung wiederhergestellt und gespeichert;
+         * weder Geld noch Vorrat werden in eine gemeinsame Welt gelegt. Waehrend eines sichtbaren
+         * Besuchs pausiert diese Fortschreibung kurz, damit nicht zwei Ablaufe denselben Gast
+         * gleichzeitig speichern.
+         */
+        LaunchedEffect(playMode) {
+            if (!playMode) {
+                residentStates = emptyMap()
+                residentSnapshots = emptyList()
+                return@LaunchedEffect
+            }
+            val startMinute = PlayTimeLapse.absoluteMinute()
+            val initial = LivingPopulation.initial(startMinute)
+            residentStates = withContext(Dispatchers.IO) {
+                initial.mapValues { (profileId, fallback) ->
+                    livingStore.restore(
+                        profileId = profileId,
+                        currentSimulationMinute = startMinute,
+                        currentOpenSites = LivingRuntimeAdapter.openSitesAt(
+                            startMinute % WorldState.MINUTES_PER_DAY
+                        )
+                    )?.let { ResidentState(it.agent, it.world) } ?: fallback
+                }
+            }
+            residentSnapshots = LivingPopulation.snapshot(residentStates)
+            while (isActive) {
+                if (!visitRunning) {
+                    val targetMinute = PlayTimeLapse.absoluteMinute()
+                    val currentResidents = residentStates
+                    val advanced = withContext(Dispatchers.Default) {
+                        LivingPopulation.advance(currentResidents, targetMinute)
+                    }
+                    // Ein Besuch kann waehrend der Hintergrundrechnung beginnen. Dann wird
+                    // dessen sichtbarer Abschluss zur Wahrheit; der vorher berechnete Stand
+                    // darf ihn weder im Speicher noch im Bild ueberholen.
+                    if (visitRunning) {
+                        delay(POPULATION_REFRESH_MS)
+                        continue
+                    }
+                    if (advanced != currentResidents) {
+                        residentStates = advanced
+                        residentSnapshots = LivingPopulation.snapshot(advanced)
+                        withContext(Dispatchers.IO) {
+                            advanced.values.forEach { state ->
+                                livingStore.save(state.agent, state.world)
+                            }
+                        }
+                    }
+                }
+                delay(POPULATION_REFRESH_MS)
+            }
+        }
 
         // Startet (und ersetzt) die endlose Ruhe-Schleife des Avatars - eigene Funktion, weil sie
         // im Play-Modus von mehreren Stellen aus gebraucht wird (Einstieg in den Play-Modus,
@@ -1733,12 +1798,17 @@ fun DockScreen(
         suspend fun runVisit() {
             val host = avatar ?: return
             if (host.fed || host.occurrenceId != null || avatarHidden) return
-            val simulationMinute = PlayTimeLapse.absoluteMinute()
-            val resident = LivingResidents.nextVisitor(
-                place = currentPlace,
-                minuteOfDay = simulationMinute % WorldState.MINUTES_PER_DAY,
-                previousProfileId = lastResidentProfileId
+            // Der Gast wird nicht mehr aus einem zweiten Zeitfenster geraten. Er muss im
+            // Population-Snapshot mit SEINER Tagesminute wirklich an diesem Ort stehen. Die
+            // feste Rotation bleibt nur die Auswahl zwischen mehreren echten Kandidaten.
+            val residentSnapshot = LivingPopulationLayout.nextVisitor(
+                residentSnapshots,
+                currentPlace,
+                lastResidentProfileId
             ) ?: return
+            val resident = LivingResidents.all.firstOrNull {
+                it.profileId == residentSnapshot.profileId
+            } ?: return
             val guestSpecies = resident.species
             val px = with(density) { host.sizeDp.dp.toPx() }
             val fromLeft = Random.nextBoolean()
@@ -1796,6 +1866,7 @@ fun DockScreen(
             // Zeilen davor haelt an), aber nur solange das so bleibt; hier ist es unabhaengig
             // davon richtig.
             visitRunning = true
+            var committedGuest: ResidentState? = null
             try {
                 // Treffpunkt so waehlen, dass sich die beiden NICHT ueberdecken.
                 //
@@ -1936,6 +2007,7 @@ fun DockScreen(
                     setOf(presenceProfileId)
                 )
                 livingStore.save(exchange.initiator, committedGuestWorld)
+                committedGuest = ResidentState(exchange.initiator, committedGuestWorld)
                 LivingObservationFeed.record(
                     StepResult(
                         agent = exchange.receiver,
@@ -1948,6 +2020,17 @@ fun DockScreen(
 
                 walkGuestTo(exitX)
             } finally {
+                // Der Hintergrundlauf muss mit genau dem Zustand weitergehen, der gerade
+                // sichtbar erlebt wurde. Nach dem Fortgehen ist der Hauptavatar aber nicht mehr
+                // `Near`; bliebe er in der Welt des Einwohners stehen, wuerde die naechste
+                // Entscheidung ein Gegenueber sehen, das laengst nicht mehr da ist.
+                committedGuest?.let { state ->
+                    val departed = state.copy(world = state.world.copy(nearbyProfiles = emptySet()))
+                    livingStore.save(departed.agent, departed.world)
+                    val updatedResidents = residentStates + (departed.agent.profileId to departed)
+                    residentStates = updatedResidents
+                    residentSnapshots = LivingPopulation.snapshot(updatedResidents)
+                }
                 // Zwingend: Wird der Besuch abgebrochen (Erinnerung feuert, Play-Modus endet),
                 // bliebe der Gast sonst mitten im Bild stehen und ginge nie wieder.
                 visitor = null
@@ -3296,7 +3379,40 @@ fun DockScreen(
             }
         }
 
-        // Was gerade zu sehen ist, als Beschreibung - Kulisse, Figur, Uhr, Getragenes, Gast.
+        // Eine gemeinsame Beschreibung fuer Bildschirm und Aufnahme. Die Einwohner behalten
+        // ihren eigenen Zeitversatz auch in der Ruhebewegung; `scenePhase` allein liesse alle
+        // drei wie ein einziges vervielfachtes Uhrwerk atmen.
+        val residentFigures = avatar?.takeIf {
+            playMode && maxWidthPx > 0f && sceneCellPx > 0f
+        }?.let { host ->
+            val hostPx = with(density) { host.sizeDp.dp.toPx() }
+            LivingPopulationLayout.place(
+                snapshots = residentSnapshots,
+                place = renderedPlace,
+                hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f),
+                hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f),
+                visitingProfileId = visitor?.profileId
+            ).map { placement ->
+                val idle = AvatarAnimations.idleSequence(
+                    placement.resident.species,
+                    AvatarMood.NEUTRAL
+                )
+                val index = LivingPopulationLayout.idleFrameIndex(
+                    holdsMs = idle.holdsMs,
+                    scenePhase = scenePhase,
+                    minuteOfDay = placement.resident.minuteOfDay,
+                    phaseTickMs = SCENE_PHASE_TICK_MS.toInt()
+                ).coerceIn(idle.frames.indices)
+                PlayClipRenderer.ResidentFigure(
+                    frame = idle.frames[index],
+                    species = placement.resident.species,
+                    leftFraction = placement.leftFraction,
+                    widthFraction = placement.widthFraction
+                )
+            }
+        }.orEmpty()
+
+        // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
         //
         // An EINER Stelle, weil sie zweimal gebraucht wird: Der Film sammelt sie fuenfzehnmal je
         // Sekunde, der Schnappschuss genau einmal. Beide muessen dasselbe festhalten, sonst zeigte
@@ -3330,7 +3446,8 @@ fun DockScreen(
                 visitorSpecies = visitor?.species,
                 visitorAnchorX = visitor?.let {
                     (it.offset.x / boundX).coerceIn(0f, 1f)
-                } ?: 0f
+                } ?: 0f,
+                residents = residentFigures
             )
         }
 
@@ -3556,6 +3673,37 @@ fun DockScreen(
                     delay(LEVEL_UP_BANNER_MS)
                     playViewModel.acknowledgeLevelUp()
                 }
+            }
+        }
+
+        // Die kleineren Einwohner stehen auf demselben Boden wie die Hauptfigur. Sie sind
+        // weder antippbar noch Handlungsausloeser: Ihre Anwesenheit kommt aus der Simulation,
+        // die Darstellung beobachtet sie nur.
+        if (playMode) {
+            residentFigures.forEach { resident ->
+                val residentPx = maxWidthPx * resident.widthFraction
+                val residentDp = with(density) { residentPx.toDp() }
+                val groundRow = AvatarBodies.forSpecies(resident.species).groundRow()
+                val top = AvatarFooting.topFor(floorYPx, residentPx, groundRow)
+                AvatarSpriteView(
+                    frame = resident.frame,
+                    showBackground = false,
+                    brightnessScale = RESIDENT_DIM,
+                    contentDescription = stringResource(
+                        R.string.a11y_visitor,
+                        stringResource(resident.species.labelRes)
+                    ),
+                    species = resident.species,
+                    modifier = Modifier
+                        .width(residentDp)
+                        .height(residentDp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
+                        .offset {
+                            IntOffset(
+                                (maxWidthPx * resident.leftFraction).roundToInt(),
+                                top.roundToInt()
+                            )
+                        }
+                )
             }
         }
 
@@ -4532,6 +4680,9 @@ private const val MOON_PHASE_TICK_MS = 900L
  */
 private const val VISITOR_DIM = 0.78f
 
+/** Hintergrundwesen bleiben sichtbar, ohne den begleiteten Avatar oder einen Gast zu uebertoenen. */
+private const val RESIDENT_DIM = 0.66f
+
 /** Abstand beim Stehenbleiben, in Vielfachen der Figurenbreite - eine volle Breite plus etwas
  *  Luft, damit sich die Silhouetten sicher nicht beruehren. */
 private const val VISITOR_GAP = 1.15f
@@ -4565,6 +4716,12 @@ private val VISIT_INTERVAL_MS_BUSY = 30_000L..70_000L
 
 /** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
 private const val VISIT_RETRY_MS = 4_000L
+
+/**
+ * Die Bevoelkerung braucht keinen Bildtakt. Eine Sekunde bildet auch im schnellen Testlauf
+ * Ortswechsel zeitnah ab, ohne den Store zweihundertmal je Sekunde zu beschreiben.
+ */
+private const val POPULATION_REFRESH_MS = 1_000L
 
 /**
  * Wie viele zuletzt gezeigte Themen und Sonderaktivitaeten die Figur im Kopf behaelt.

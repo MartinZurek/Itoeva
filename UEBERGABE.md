@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 14. September 2026
+# Uebergabe: Stand am 15. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -8,17 +8,17 @@ Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
-**Stand 15.09.: NT-088 ist umgesetzt.** Die drei Einwohner leben jetzt zwischen den Besuchen
-weiter - `LivingPopulation` schreibt sie ueber denselben `LivingSimulation.step` fort und liefert
-einen read-only `ResidentSnapshot`. Ueber fuenf simulierte Tage sind Verkaufskraft (SHOP 36),
-Parkstammgast (PARK 21) und Sportler (SPORT 42) an ihren Ankerorten zu sehen, die Rollen sind an
-den Zielen ablesbar, und zwei Laeufe ergeben denselben Zustand.
+**Stand 15.09.: NT-089 ist umgesetzt.** Die drei Einwohner leben ueber `LivingPopulation` an der
+simulierten Uhr weiter und mehrere wirklich anwesende Wesen koennen zugleich in der Pixelwelt
+stehen. `LivingPopulationLayout` liest nur `ResidentSnapshot.publiclyPresent`, zeigt hoechstens
+zwei kleinere Hintergrundfiguren auf freien festen Bahnen und verwendet ihren jeweils eigenen
+`minuteOfDay` als Versatz der Ruhebewegung. Ein aktiver Besuch wird aus derselben Anwesenheitsliste
+gewaehlt und nicht als zweite Kopie gezeichnet. Bildschirm, Schnappschuss und Clip teilen dieselbe
+relative Figurenbeschreibung.
 
-**Was NT-089 aus diesem Schnitt mitnehmen muss:** Der Snapshot fuehrt `minuteOfDay` je Einwohner,
-weil eine lange Handlung (Arbeiten 180 Minuten) ueber die Zielminute hinausschiesst - die drei
-koennen bis zu drei Stunden auseinanderliegen, und wer sie gleichzeitig zeichnet, darf das nicht
-ignorieren. Die zweite Grenze ist die Lesbarkeit: bei `MIN_SCENE_CELLS = 40` und einer 16 Zellen
-breiten Figur passen drei bis vier Wesen nicht nebeneinander.
+**Naechste offene Scheibe ist NT-091:** Gemeinsame Sport-, Drachen- oder Angelszenen duerfen nur
+entstehen, wenn Ort und wirkliche `nextAction`-Zustaende der beteiligten Einwohner zusammenpassen.
+NT-089 spielt absichtlich keine Aktivitaet allein aus einer Rolle oder Anwesenheit vor.
 
 
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
@@ -138,14 +138,11 @@ Dieselbe Messung fand dafuer zwei Ziele, die NIE gewinnen. `SEEK_COMFORT` ist be
 ungewaehlt, weil Muenzen heute nur Essen zahlen. Verkauf und Lohn sind der konkrete Anlass, dem
 Ziel erstmals einen Sinn zu geben; die Auswahlzahl wird dafuer nicht vorab kuenstlich erhoeht.
 
-**Der naechste offene soziale Schnitt ist NT-088:** Die drei Einwohner sind jetzt dauerhaft,
-aber noch keine selbst laufende Bevoelkerung. Zwischen Begegnungen wachsen ihre Beduerfnisse beim
-Restore; sie fuehren noch keine eigenen Handlungen aus, und die Anzeige traegt weiterhin nur
-einen Gast. Als Naechstes werden ihre Aufenthalts- und Aktivitaetsentscheidungen ueber denselben
-Living-Agent-Kern fortgeschrieben und als read-only Population-Snapshot ausgegeben. Der
-Mehrfach-Renderer fuer SHOP, PARK und SPORT ist danach NT-089. Die offene Huerde ist Lesbarkeit
-bei vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn die vorhandenen Plaetze
-wirklich bewohnt sind.
+**Der naechste offene soziale Schnitt ist NT-091:** NT-088 hat den eigenen Alltag der Einwohner
+fortgeschrieben, NT-089 zeigt mehrere wirkliche Anwesende. Als Naechstes werden kompatible
+Handlungen zweier Wesen an einem Ort gemeinsam lesbar gemacht. Die offene Huerde bleibt dabei
+Choreografie auf vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn die vorhandenen
+Plaetze wirklich bewohnt sind.
 
 Drei Dinge, die man beim Weiterbauen wissen muss:
 

@@ -239,6 +239,27 @@ der Schnappschuss fuehrt `minuteOfDay` je Einwohner, weil eine 180-Minuten-Schic
 Zielminute hinausschiesst; die drei koennen bis zu drei Stunden auseinanderliegen, was NT-089
 beim Zeichnen beruecksichtigen muss.
 
+**Living Agent, sozial:** NT-089 **Mehrere tatsaechlich anwesende Einwohner sind sichtbar** -
+*am 2026-09-15 umgesetzt.* `DockScreen` stellt die drei `resident:`-Profile aus demselben
+`LivingAgentStore` wieder her, schreibt sie ueber `LivingPopulation` an der simulierten Uhr fort
+und zeichnet an einem Ort hoechstens zwei wirklich `publiclyPresent` gemeldete Wesen. Bei der
+Normalbreite von vierzig Szenenzellen stehen sie halb so gross und gedaempft neben dem
+Hauptavatar; feste Bahnen verhindern Ueberdeckung. Ihr eigener `minuteOfDay` versetzt den
+Ruhetakt, statt drei Kopien im Gleichschritt zu zeigen. Ein aktiver Besuch kommt aus derselben
+Anwesenheitsliste und wird im Hintergrund ausgeschlossen. Bildschirm, Schnappschuss und Clip
+verwenden dieselbe relative Figurenbeschreibung. **Offen bleibt:** Die Einwohner zeigen vorerst
+nur ihre artgerechte Ruhebewegung. NT-091 verbindet als eigener Schnitt kompatible wirkliche
+Handlungen zu gemeinsamen Sport-, Drachen- oder Angelszenen; ihre Anwesenheit allein darf keine
+Aktivitaet vorspielen.
+
+**Living Agent, sozial:** NT-091 **Gemeinsame Aktivitaet aus wirklichen Handlungen** - als
+naechster kleiner Schnitt. Zuerst genau eine vorhandene oeffentliche Choreografie waehlen und nur
+dann gemeinsam zeigen, wenn zwei `publiclyPresent` gemeldete Wesen am selben Ort kompatible
+`nextAction`-Zustaende tragen. Der sichtbare Abschluss muss ueber die vorhandene Wirkungsgrenze
+zurueck in beide Agentenzustaende gehen; Ort, Rolle oder Spezies allein duerfen keinen Sport und
+keine Freundschaft behaupten. Danach erst Drachen und Angeln ergaenzen, falls die erste
+Choreografie auf vierzig Zellen lesbar bleibt.
+
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.
 `AvatarShading` legt beim Zeichnen einen Verlauf darueber, von oben links hell nach unten rechts
