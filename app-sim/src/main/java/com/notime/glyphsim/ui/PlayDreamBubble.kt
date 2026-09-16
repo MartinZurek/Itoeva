@@ -3,9 +3,12 @@ package com.notime.glyphsim.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +24,13 @@ import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import kotlin.math.roundToInt
+
+/**
+ * Wie hoch [AvatarSpriteView] innerhalb einer quadratischen Kreisflaeche stehen darf, ohne dass
+ * eine ihrer vier Ecken ueber den Kreisrand hinausragt - bei einem 16:20-Seitenverhaeltnis
+ * bleiben 0,781 des Durchmessers die rechnerische Grenze; 0,75 laesst spuerbar Luft.
+ */
+private const val SPRITE_HEIGHT_FRACTION = 0.75f
 
 /**
  * Eine Traumblase ueber dem schlafenden Avatar.
@@ -95,6 +105,17 @@ internal fun PlayDreamBubble(
         // zerschert, weil hier mit der Zeilenbreite des Avatars gelesen wird"): Ein 320 Zellen
         // langes Array in einen 169 Zellen breiten Leser gegeben, gelesen mit der falschen
         // Zeilenbreite - sichtbar als Pixelsalat statt als Traumszene (gemeldet 2026-09-16).
+        //
+        // **Explizite Hoehe/Breite statt `fillMaxSize()`.** Die Box oben gibt bereits eine
+        // straffe quadratische Groesse vor (`.size(bubbleSizeDp.dp)`); ein Aspect-Ratio-Modifier
+        // kann eine bereits straffe Groesse nicht mehr veraendern (siehe [AvatarClipPlayer] fuer
+        // dasselbe Muster mit expliziter Breite/Hoehe statt eines Aspect-Ratio-Modifiers).
+        // `fillMaxSize()` liesse [AvatarSpriteView] deshalb quadratisch messen; die vier
+        // HEADROOM-Zeilen am oberen Rand des 16x20-Rasters schieben die eigentliche Figur dann
+        // unten aus dem Quadrat heraus, wo sie vom Kreisausschnitt der Blase abgeschnitten wird
+        // (gefunden per Review an genau dieser Stelle).
+        val spriteHeight = bubbleSizeDp.dp * SPRITE_HEIGHT_FRACTION
+        val spriteWidth = spriteHeight * AvatarGeometry.SIZE.toFloat() / AvatarGeometry.HEIGHT
         AvatarSpriteView(
             frame = IntArray(frame.size) {
                 (frame[it] * 0.82f).toInt().coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS)
@@ -102,7 +123,7 @@ internal fun PlayDreamBubble(
             species = species,
             showBackground = false,
             contentDescription = null,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.width(spriteWidth).height(spriteHeight)
         )
     }
 }
@@ -122,18 +143,26 @@ internal fun PlayDreamWatchFace(
     modifier: Modifier = Modifier,
     contentDescription: String? = null
 ) {
-    Box(
+    // BoxWithConstraints statt Box: [modifier] traegt von aussen bereits eine straffe
+    // quadratische Groesse (`watchModifier` in DockScreen, `.size(...)`). Genau wie in
+    // [PlayDreamBubble] braucht [AvatarSpriteView] deshalb eine explizite, im 16:20-Verhaeltnis
+    // berechnete Breite/Hoehe statt `fillMaxSize()` - sonst wird sie quadratisch gemessen und
+    // die Figur unten am Kreisrand abgeschnitten. BoxWithConstraints liefert die dafuer noetige
+    // tatsaechliche Kantenlaenge, ohne dass der Aufrufer sie zusaetzlich durchreichen muesste.
+    BoxWithConstraints(
         modifier = modifier
             .clip(CircleShape)
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
+        val spriteHeight = maxHeight * SPRITE_HEIGHT_FRACTION
+        val spriteWidth = spriteHeight * AvatarGeometry.SIZE.toFloat() / AvatarGeometry.HEIGHT
         AvatarSpriteView(
             frame = frame,
             species = species,
             showBackground = false,
             contentDescription = contentDescription,
-            modifier = Modifier.fillMaxSize(0.82f)
+            modifier = Modifier.width(spriteWidth).height(spriteHeight)
         )
     }
 }
