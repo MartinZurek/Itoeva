@@ -254,6 +254,10 @@ fun DockScreen(
     var dreamFrame by remember { mutableStateOf<IntArray?>(null) }
     var dreamProgress by remember { mutableFloatStateOf(0f) }
     var dreamWatchFrame by remember { mutableStateOf<IntArray?>(null) }
+    // Welche Kreatur der Rueckblick gerade zeigt - siehe PlayDreamWatchFace. Ohne dieses Feld
+    // wuesste die vergroesserte Uhr nicht, mit welcher Gesichtsfarbe sie die Reaktion zeichnen
+    // soll, und muesste raten statt es vom tatsaechlich schlafenden Wesen zu wissen.
+    var dreamWatchSpecies by remember { mutableStateOf<AvatarSpecies?>(null) }
     var dreamWatchTopic by remember { mutableStateOf<AnimationType?>(null) }
     var dreamRecapMode by remember { mutableStateOf(false) }
     val frame = animationFrame ?: dreamWatchFrame ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
@@ -1279,6 +1283,7 @@ fun DockScreen(
                 ) { value, _ -> dreamProgress = value }
 
                 dreamRecapMode = true
+                dreamWatchSpecies = species
                 dreamWatchTopic = firstTopic
                 dreamWatchFrame = firstFrame
                 val from = clockOffset
@@ -1327,6 +1332,7 @@ fun DockScreen(
                 dreamFrame = null
                 dreamProgress = 0f
                 dreamWatchFrame = null
+                dreamWatchSpecies = null
                 dreamWatchTopic = null
                 dreamRecapMode = false
             }
@@ -3672,62 +3678,83 @@ fun DockScreen(
                 animationSpec = tween(MOON_RISE_MS, easing = FastOutSlowInEasing),
                 label = "watch-scene"
             )
-            SimulatedMatrixView(
-                frame = frame,
-                contentDescription = clockContentDescription,
-                modifier = Modifier
-                    .size((clockSizeDp * watchScale).dp)
-                    // driftOffset ist die rein optische Burn-in-Verschiebung und wird nur hier
-                    // draufgerechnet - Kollisionspruefung und Speicherung nutzen weiter clockOffset,
-                    // damit sich weder das Fuettern noch die gemerkte Position dadurch aendert.
-                    .offset {
-                        IntOffset(
-                            (clockOffset.x + driftOffset.x).roundToInt(),
-                            (clockOffset.y + driftOffset.y).roundToInt()
+            val watchModifier = Modifier
+                .size((clockSizeDp * watchScale).dp)
+                // driftOffset ist die rein optische Burn-in-Verschiebung und wird nur hier
+                // draufgerechnet - Kollisionspruefung und Speicherung nutzen weiter clockOffset,
+                // damit sich weder das Fuettern noch die gemerkte Position dadurch aendert.
+                .offset {
+                    IntOffset(
+                        (clockOffset.x + driftOffset.x).roundToInt(),
+                        (clockOffset.y + driftOffset.y).roundToInt()
+                    )
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { onExit() })
+                }
+                .pointerInput(Unit) {
+                    // **Die Bildschirmmasse muessen nachgezogen werden.**
+                    //
+                    // Hier stand: "fuer die Lebensdauer dieses Screens praktisch konstant
+                    // (keine Rotation waehrend des Andockens vorgesehen)". Die Annahme war
+                    // falsch - das Drehen ist eine Einstellung (siehe OrientationPrefs), und
+                    // im Dock-Modus liegt das Geraet gerade dann auf dem Tisch, wenn man es
+                    // dreht.
+                    //
+                    // `pointerInput(Unit)` startet genau einmal und schliesst die damaligen
+                    // Werte ein. Nach dem Drehen ins Querformat klemmte die Geste deshalb
+                    // weiter gegen die HOCHFORMAT-Breite: Die Uhr liess sich nur bis dorthin
+                    // schieben und blieb dann stehen, als waere der Bildschirm dort zu Ende.
+                    //
+                    // clockSizeDp/clockOffset waren nie betroffen - sie sind State-gestuetzt
+                    // und liefern beim Lesen immer den aktuellen Wert. Genau deshalb ist der
+                    // Fehler nur den Massen passiert, die als einfache Zahlen danebenstanden.
+                    detectTransformGestures(panZoomLock = false) { _, pan, zoom, _ ->
+                        val newSize = (clockSizeDp * zoom)
+                            .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.MAX_SIZE_DP)
+                        // Nur schreiben, wenn sich wirklich etwas aendert. Beim reinen
+                        // Verschieben liefert die Geste ein Zoom von fast genau 1, also eine
+                        // Groesse, die sich in der zehnten Nachkommastelle unterscheidet -
+                        // sichtbar ist das nichts, aber jede Zuweisung stoesst alles an, was
+                        // an der Uhrgroesse haengt. Genau daraus entstand die "Grenze", ueber
+                        // die sich die Uhr nicht schieben liess.
+                        if (kotlin.math.abs(newSize - clockSizeDp) > 0.05f) {
+                            clockSizeDp = newSize
+                        }
+                        val clockPxNow = with(density) { newSize.dp.toPx() }
+                        val boundX = (currentWidthPx.value - clockPxNow).coerceAtLeast(0f)
+                        val boundY = (currentHeightPx.value - clockPxNow).coerceAtLeast(0f)
+                        clockOffset = Offset(
+                            (clockOffset.x + pan.x).coerceIn(0f, boundX),
+                            (clockOffset.y + pan.y).coerceIn(0f, boundY)
                         )
                     }
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = { onExit() })
-                    }
-                    .pointerInput(Unit) {
-                        // **Die Bildschirmmasse muessen nachgezogen werden.**
-                        //
-                        // Hier stand: "fuer die Lebensdauer dieses Screens praktisch konstant
-                        // (keine Rotation waehrend des Andockens vorgesehen)". Die Annahme war
-                        // falsch - das Drehen ist eine Einstellung (siehe OrientationPrefs), und
-                        // im Dock-Modus liegt das Geraet gerade dann auf dem Tisch, wenn man es
-                        // dreht.
-                        //
-                        // `pointerInput(Unit)` startet genau einmal und schliesst die damaligen
-                        // Werte ein. Nach dem Drehen ins Querformat klemmte die Geste deshalb
-                        // weiter gegen die HOCHFORMAT-Breite: Die Uhr liess sich nur bis dorthin
-                        // schieben und blieb dann stehen, als waere der Bildschirm dort zu Ende.
-                        //
-                        // clockSizeDp/clockOffset waren nie betroffen - sie sind State-gestuetzt
-                        // und liefern beim Lesen immer den aktuellen Wert. Genau deshalb ist der
-                        // Fehler nur den Massen passiert, die als einfache Zahlen danebenstanden.
-                        detectTransformGestures(panZoomLock = false) { _, pan, zoom, _ ->
-                            val newSize = (clockSizeDp * zoom)
-                                .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.MAX_SIZE_DP)
-                            // Nur schreiben, wenn sich wirklich etwas aendert. Beim reinen
-                            // Verschieben liefert die Geste ein Zoom von fast genau 1, also eine
-                            // Groesse, die sich in der zehnten Nachkommastelle unterscheidet -
-                            // sichtbar ist das nichts, aber jede Zuweisung stoesst alles an, was
-                            // an der Uhrgroesse haengt. Genau daraus entstand die "Grenze", ueber
-                            // die sich die Uhr nicht schieben liess.
-                            if (kotlin.math.abs(newSize - clockSizeDp) > 0.05f) {
-                                clockSizeDp = newSize
-                            }
-                            val clockPxNow = with(density) { newSize.dp.toPx() }
-                            val boundX = (currentWidthPx.value - clockPxNow).coerceAtLeast(0f)
-                            val boundY = (currentHeightPx.value - clockPxNow).coerceAtLeast(0f)
-                            clockOffset = Offset(
-                                (clockOffset.x + pan.x).coerceIn(0f, boundX),
-                                (clockOffset.y + pan.y).coerceIn(0f, boundY)
-                            )
-                        }
-                    }
-            )
+                }
+            // **Der Tagesrueckblick ist eine Kreatur-Reaktion, keine Uhrziffer.** Solange
+            // dreamWatchFrame gesetzt ist, zeigt dieselbe Kreisflaeche PlayDreamWatchFace statt
+            // SimulatedMatrixView - sonst wird dasselbe 16x20-Avatarbild wieder mit der falschen
+            // 13x13-Zeilenbreite gelesen (siehe PlayDreamBubble fuer die ausfuehrliche
+            // Begruendung und den gemeldeten Fund vom 2026-09-16).
+            //
+            // animationFrame haelt weiterhin Vorrang, genau wie zuvor in der Elvis-Kette oben
+            // ([frame]): Eine echte, gerade abgespielte Bibliotheks-Erinnerung ist selbst schon
+            // 13x13-Daten und bricht die Traum-Koroutine ohnehin ab (siehe deren finally-Block).
+            val recapFrame = if (animationFrame == null) dreamWatchFrame else null
+            val recapSpecies = if (recapFrame != null) dreamWatchSpecies else null
+            if (recapFrame != null && recapSpecies != null) {
+                PlayDreamWatchFace(
+                    frame = recapFrame,
+                    species = recapSpecies,
+                    contentDescription = clockContentDescription,
+                    modifier = watchModifier
+                )
+            } else {
+                SimulatedMatrixView(
+                    frame = frame,
+                    contentDescription = clockContentDescription,
+                    modifier = watchModifier
+                )
+            }
         }
 
         // **Ein leiser Hinweis, dass Erinnerungen gerade ruhen.**
@@ -4067,7 +4094,14 @@ fun DockScreen(
             val projected = dreamFrame
             val sleeping = avatar
             if (projected != null && sleeping != null && !avatarHidden) {
-                PlayDreamBubble(projected, sleeping.offset, sleeping.sizeDp, dreamProgress, maxWidthPx)
+                PlayDreamBubble(
+                    projected,
+                    sleeping.species,
+                    sleeping.offset,
+                    sleeping.sizeDp,
+                    dreamProgress,
+                    maxWidthPx
+                )
             }
         }
 

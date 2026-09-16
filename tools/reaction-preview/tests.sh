@@ -145,6 +145,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayEffectsTest.kt"
   "$TEST/matrix/PlayInkTest.kt"
   "$TEST/matrix/ReactionFingerprintTest.kt"
+  "$TEST/matrix/CreatureFrameSizeTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
   "$TEST/living/LivingSymbolsTest.kt"
@@ -198,6 +199,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayEffectsTest
   com.notime.glyphsim.matrix.PlayInkTest
   com.notime.glyphsim.matrix.ReactionFingerprintTest
+  com.notime.glyphsim.matrix.CreatureFrameSizeTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
   com.notime.glyphsim.living.LivingSymbolsTest

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -16,8 +17,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.notime.glyphsim.matrix.MatrixGeometry
-import com.notime.glyphsim.matrix.SimulatedMatrixView
+import com.notime.glyphsim.matrix.AvatarGeometry
+import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.AvatarSpriteView
 import kotlin.math.roundToInt
 
 /**
@@ -30,6 +32,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun PlayDreamBubble(
     frame: IntArray,
+    species: AvatarSpecies,
     dreamingAvatarOffset: Offset,
     dreamingAvatarSizeDp: Float,
     progress: Float,
@@ -80,18 +83,57 @@ internal fun PlayDreamBubble(
             .size(bubbleSizeDp.dp)
             .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.035f))
+            .background(Color.White.copy(alpha = 0.035f)),
+        contentAlignment = Alignment.Center
     ) {
-        // **Die Matrix-Ansicht, nicht die Avatar-Ansicht** - siehe PlayWishBubble fuer den
-        // ausfuehrlichen Grund: Das Zeichen liegt auf 13x13, die Avatar-Ansicht liest mit 16 und
-        // zerschert es diagonal.
-        SimulatedMatrixView(
+        // **Die Avatar-Ansicht, nicht die Matrix-Ansicht.** [frame] ist eine ganz gewoehnliche
+        // Kreatur-Reaktion aus [com.notime.glyphsim.matrix.AvatarAnimations.reactionFor] - auf
+        // dem 16x20-[AvatarGeometry]-Raster, nicht auf dem 13x13-[com.notime.glyphsim.matrix
+        // .MatrixGeometry]-Raster der Uhr-/Zeichen-Symbole. Hier stand bis zu diesem Fund
+        // [com.notime.glyphsim.matrix.SimulatedMatrixView] - dieselbe falsche Kombination, vor
+        // der [AvatarSpriteView] fuer den umgekehrten Fall ausdruecklich warnt ("wurden dabei
+        // zerschert, weil hier mit der Zeilenbreite des Avatars gelesen wird"): Ein 320 Zellen
+        // langes Array in einen 169 Zellen breiten Leser gegeben, gelesen mit der falschen
+        // Zeilenbreite - sichtbar als Pixelsalat statt als Traumszene (gemeldet 2026-09-16).
+        AvatarSpriteView(
             frame = IntArray(frame.size) {
-                (frame[it] * 0.82f).toInt().coerceIn(0, MatrixGeometry.MAX_BRIGHTNESS)
+                (frame[it] * 0.82f).toInt().coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS)
             },
-            showPuck = false,
+            species = species,
+            showBackground = false,
             contentDescription = null,
             modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+/**
+ * Der Tagesrueckblick, sobald er von der Traumblase in die vergroesserte Uhr uebergegangen ist
+ * (siehe `DockScreen.playSleepRecap`).
+ *
+ * Dieselbe Kreis-Chrome wie die Uhr selbst (runder schwarzer Grund), aber mit derselben
+ * Avatar-Ansicht wie [PlayDreamBubble] statt der 13x13-Zifferndarstellung - aus demselben Grund:
+ * Ein Tagesrueckblick ist eine Kreatur-Reaktion, kein Uhr-/Mond-Zeichen.
+ */
+@Composable
+internal fun PlayDreamWatchFace(
+    frame: IntArray,
+    species: AvatarSpecies,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null
+) {
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        AvatarSpriteView(
+            frame = frame,
+            species = species,
+            showBackground = false,
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(0.82f)
         )
     }
 }
