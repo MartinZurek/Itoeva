@@ -664,6 +664,63 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-16 - Der Hauptrückblick zeigt die Taetigkeit, nicht die Reminder-Pose
+
+- **Ausgangsproblem:** Direktes Folge-Feedback, nachdem der Pixelsalat-Fund vom selben Tag
+  behoben war und der Rückblick endlich lesbar wurde: "in der schlussendlichen Hauptbubble
+  werden dann nur die Reminder-Animation gezeigt. Ich meinte tatsächlich, dass dort die Szenen
+  gezeigt werden, die im Spiel so spannend sind/gewesen sind." Die vergrößerte Uhr zeigte
+  `AvatarAnimations.reactionFor(species, topic)` - wörtlich dieselbe Pose, die beim Beantworten
+  einer ECHTEN Erinnerung erscheint. Ein Rückblick auf den Tag fühlte sich dadurch wie eine
+  Wiederholung von Erinnerungs-Antworten an, nicht wie ein Blick auf das, was im Spiel geschah.
+- **Entscheidung:** `playSleepRecap`s Hauptschleife und die Übergabe davor holen ihre Frames
+  jetzt aus `ReminderAnimations.framesFor(topic)` statt aus `AvatarAnimations.reactionFor` -
+  denselben 13x13-Symbol-Frames, die seit der Kreis-Spiegelung vom selben Tag (siehe die andere
+  2026-09-16-Eintragung) schon tagsüber die autonome Tätigkeit zeigen: ein Glas, das sich
+  tropfenweise füllt, ein Buch mit umblätternden Seiten, ein Pinsel, der zeichnet - das bildet
+  die TÄTIGKEIT selbst ab statt einer generischen Freuden-Pose. Die kleine AUFSTEIGENDE Blase
+  (`dreamFrame`/`PlayDreamBubble`, die schlafende Kreatur, die aus dem Bett "aufsteigt") bleibt
+  unverändert Kreatur-Format - nur die vergrößerte Hauptblase mit dem Tagesrückblick wechselt
+  das Motiv. Damit wurde `PlayDreamWatchFace` (erst am selben Tag fürs Format-Fix eingeführt)
+  wieder entfernt: Die Rückblick-Frames sind jetzt wieder legitim 13x13, `SimulatedMatrixView`
+  ist dafür der richtige, nicht der falsche Leser.
+- **Zeitgefüge angepasst:** `DREAM_HIGHLIGHT_HOLD_MS` war eine reine Pause NACH einer einmal
+  durchlaufenden Kreatur-Reaktion (420ms). Die ReminderAnimations-Frames sind für Dauer-Anzeige
+  während eines offenen Reminders gebaut, nicht für einen einzelnen Durchlauf - der Wert ist
+  jetzt die GESAMTE Anzeigedauer je Highlight (2000ms; `MatrixAnimator.play` läuft die Frames
+  notfalls erneut von vorn, bis die Zeit um ist). Drei Highlights: ein Rückblick dauert damit
+  höchstens sechs Sekunden.
+- **Evidenz:** `TESTED BEHAVIOR` nur indirekt - die Compose-Änderung selbst bleibt `UNVERIFIED`
+  (kein Android-SDK in dieser Sitzung, wie bei jeder DockScreen.kt-Änderung hier). Die
+  wiederverwendeten `ReminderAnimations`-Frames sind bereits produktiver Code (Reminder-Anzeige
+  und die Kreis-Spiegelung vom selben Tag); neu ist nur, WO sie zusätzlich verwendet werden.
+- **Offen geblieben (zweiter gemeldeter Punkt):** "wenn er ins Bett geht, ... auch wenn er
+  danach träumt, dann steht er quasi vor dem Bett, obwohl er träumt" - vermutlich die
+  Bettdecken-Überdeckung (`PlayScene.buildFront`, gesteuert über `occupiedStation` in
+  `DockScreen`), die die untere Körperhälfte waehrend `RoutineStep.Occupy(BED)` verdeckt.
+  Nachverfolgt: `occupiedStation` wird bei `Occupy(BED)` gesetzt und erst bei `Rise` wieder
+  `null` - dazwischen liegen `Act(SLEEP)`, `SleepUntilMorning` (inklusive des ganzen
+  Rückblicks) und keiner dieser Schritte fasst `occupiedStation` an. Der einzige andere
+  Rücksetzpunkt (Fütter-Erfolg, "Gefüttert wird immer frei stehend") ist auf eine ECHTE offene
+  Erinnerung (`occurrenceId != null`) begrenzt und sollte während eines ambienten Schlafs nicht
+  greifen. Ohne Geräteprüfung konnte die tatsächliche Ursache nicht gefunden werden - **bleibt
+  UNVERIFIED/offen**, siehe Nächster Schritt.
+- **Abgrenzung:** Keine Änderung an `PlayDreamMemory`/`PlayDreams` (welche Themen überhaupt als
+  Erlebnis gelten) - nur woraus die Anzeige gebaut wird. Spezielle Tätigkeiten (Fußball, Malen,
+  Angeln, Training, Musik, Drachen) bleiben im Traum nicht von ihrer generischen
+  `AnimationType`-Kategorie unterscheidbar, weil `PlayDreamMemory` nur diese Kategorie
+  speichert, nicht die konkrete Sonderaktivität - eine tiefere Verbesserung ("hat heute
+  Fußball gespielt" statt "hat sich bewegt") wäre ein eigenes, größeres Vorhaben.
+- **Bestandsdaten und Rücksetzung:** Keine Migration, kein neuer Preference-Schlüssel. Ein
+  Revert stellt die Kreatur-Reaktion im Rückblick wieder her; nichts davon ist persistent.
+- **Betroffene Bereiche:** `DockScreen.kt` (`playSleepRecap`, der Uhr-Renderzweig,
+  `DREAM_HIGHLIGHT_HOLD_MS`), `PlayDreamBubble.kt` (`PlayDreamWatchFace` entfernt).
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 494 Tests grün (unverändert, reiner
+  UI-Umbau ohne neue Matrix-Logik).
+- **Nächster Schritt:** Am Gerät beobachten, WANN genau die Bettdecke verschwindet (sofort beim
+  Einschlafen, erst beim Übergang in die Hauptblase, oder erst waehrend eines bestimmten
+  Highlights) - das grenzt die Ursache ein, die per Code-Lesen allein nicht zu finden war.
+
 ### 2026-09-16 - Der Traumrückblick zeigt die Kreatur, nicht Pixelsalat
 
 - **Ausgangsproblem:** Vom Auftraggeber gemeldet: "die Traumsequenz... stellt nur ein
