@@ -131,6 +131,15 @@ enum class ActionKind {
     RECEIVE_RESPONSE,
 
     /**
+     * Ein vollstaendig gemeinsam absolviertes Training als soziales Erlebnis behalten.
+     *
+     * Die eigentliche Bewegung bleibt [MOVE_BODY]. Diese zweite, zeitlose Wirkung entsteht erst
+     * hinter der sichtbaren Abschlussgrenze und traegt ausschliesslich Gegenueber, Episode und
+     * Naehe. Dadurch wird nicht jede beliebige Bewegung nachtraeglich zu einer Begegnung.
+     */
+    TRAIN_TOGETHER,
+
+    /**
      * Zu einem anderen Ort gehen.
      *
      * Eine eigene Handlung und kein stiller Sprung: Wege kosten Zeit, koennen scheitern (der
@@ -294,6 +303,7 @@ object ActionCatalog {
     const val GROCERY_PORTIONS = 3
     const val WORK_MINUTES = 180
     const val TRAVEL_MINUTES = 20
+    const val SHARED_TRAINING_CLOSENESS = 0.02
 
     private val actions: Map<ActionKind, Action> = listOf(
         Action(
@@ -598,6 +608,30 @@ object ActionCatalog {
                 SymbolDirection.SEND
             ),
             eventKind = LivingEventKind.SYMBOLS_SENT
+        )
+    )
+
+    /**
+     * Die soziale Spur eines bereits vollstaendig gezeigten gemeinsamen Trainings.
+     *
+     * Mit 0,02 bleibt die Naehe deutlich unter einer angenommenen Einladung (0,08). Vertrauen
+     * und Beduerfnisse aendern sich nicht: Dieser kleine Schnitt belegt nur, dass beide dasselbe
+     * Erlebnis hatten; die koerperliche Wirkung wurde zuvor schon durch [ActionKind.MOVE_BODY]
+     * gerechnet.
+     */
+    fun trainTogether(targetProfileId: String): Action = Action(
+        kind = ActionKind.TRAIN_TOGETHER,
+        requirements = listOf(
+            Requirement.At(LivingSite.OUTSIDE),
+            Requirement.Near(targetProfileId)
+        ),
+        outcome = ActionOutcome(
+            rememberValence = 1,
+            relationshipEffect = RelationshipEffect(
+                targetProfileId,
+                trustDelta = 0.0,
+                closenessDelta = SHARED_TRAINING_CLOSENESS
+            )
         )
     )
 

@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 16. September 2026
+# Uebergabe: Stand am 18. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -8,7 +8,9 @@ Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
-**Stand 16.09.: NT-091, NT-092 und NT-093 sind umgesetzt.** Die drei Einwohner leben ueber
+**Stand 18.09.: NT-091 und NT-093 (Basketball) sowie ein zweites, unabhaengig ebenfalls
+"NT-092" genanntes Training-Erinnerungs-Feature sind gemergt - siehe die Nummernkollision am
+Ende dieses Abschnitts.** Die drei Einwohner leben ueber
 `LivingPopulation` an der simulierten Uhr weiter und mehrere wirklich anwesende Wesen koennen
 zugleich in der Pixelwelt stehen. `LivingPopulationLayout` liest nur
 `ResidentSnapshot.publiclyPresent`, zeigt hoechstens zwei kleinere Hintergrundfiguren auf freien
@@ -47,10 +49,30 @@ BASKETBALL sich den Ort SPORT teilen; Drachen (PARK) und Angeln (POND) braeuchte
 Ortszuordnung, Fussball einen zusaetzlichen, rein hauptavatarbezogenen Zustand (den gelernten
 Trick) - alle drei bleiben bewusst aussen vor.
 
-**Offen nach NT-093:** Fussball, Drachen und Angeln lassen sich weiterhin nicht anschliessen,
-ohne entweder eine neue Ortszuordnung oder eine Loesung fuer hauptavatarbezogenen Zusatzzustand
-zu bauen - ausdruecklich keine allgemeine Aktivitaets- oder Skillplattform. Die Lesbarkeit von
-Training UND Basketball gemeinsam bei vierzig Zellen ist am Geraet weiterhin `UNVERIFIED`.
+**Ein zweites, unabhaengig ebenfalls "NT-092" genanntes Feature: gemeinsames Training wird
+gemeinsame Erinnerung.** Parallel zu NT-093 hat ein Codex-Auftrag (PR #163) dieselbe Ticketnummer
+fuer eine andere Erweiterung vergeben: Nach einem vollstaendig sichtbaren gemeinsamen Training
+behalten jetzt beide Profile das Gegenueber im Gedaechtnis. `TRAIN_TOGETHER` erzeugt je eine
+typisierte positive Episode und 0,02 Naehe durch den vorhandenen `ActionOutcome`-Weg. Die
+physische Wirkung bleibt genau einmal `MOVE_BODY`. Scheitert der Bewegungsabschluss auf einer
+Seite oder wird die Szene abgebrochen, entsteht keine soziale Spur. Beide angereicherten
+Zustaende bleiben Teil derselben atomaren `LivingAgentStore.saveAll`-Transaktion. Ein
+Codex-Review (P2) fand dabei eine Zeitstempel-Desynchronisation - Hauptavatar und Einwohner
+koennen bis zu diesem Aufruf unabhaengig voneinander vorgerueckte Uhren haben, wurde per
+`maxOf(...)` + `.advanced(...)` behoben (Muster wie in `exchangePlayInvitation`), mit einer
+Regressionstest-Absicherung in `LivingAgentStoreTest`.
+
+**Offen insgesamt:** Fussball, Drachen und Angeln lassen sich weiterhin nicht anschliessen, ohne
+entweder eine neue Ortszuordnung oder eine Loesung fuer hauptavatarbezogenen Zusatzzustand zu
+bauen - ausdruecklich keine allgemeine Aktivitaets- oder Skillplattform. Die Lesbarkeit von
+Training UND Basketball gemeinsam bei vierzig Zellen, und die Lesbarkeit der neuen
+Trainingserinnerung, sind am Geraet weiterhin `UNVERIFIED`. Danach ist eine deterministische
+Rotation der Trainingspartner der naechste kleine soziale Schnitt.
+
+PR #160 (`claude/itoeva-shared-activity-kwlk4h`, der urspruengliche, zurueckgenommene
+NT-092-Basketball-Versuch) und PR #163 (`codex/shared-training-memory`) sind inzwischen gemergt -
+die obige Nummernkollision ist damit dauerhaft im Verlauf und wird hier nur noch dokumentiert,
+nicht mehr aufgeloest.
 
 
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
@@ -179,9 +201,12 @@ dieselbe konkrete Aktivitaet auch wirklich meint (siehe Abschnitt 1). Die offene
 weitere gemeinsame Faehigkeiten bleibt die Bedeutung der Handlung im Kern selbst - Fussball,
 Drachen und Angeln brauchen entweder eine eigene Ortszuordnung oder eine Loesung fuer
 hauptavatarbezogenen Zusatzzustand. Danach folgt erst die Choreografie auf vierzig Zellen, nicht
-das Ortsmodell; neue Orte kommen erst, wenn die vorhandenen Plaetze wirklich bewohnt sind.
+das Ortsmodell; neue Orte kommen erst, wenn die vorhandenen Plaetze wirklich bewohnt sind. Ein
+zweites, unabhaengig ebenfalls "NT-092" genanntes Feature ist seitdem dazugekommen: Ein
+vollstaendig sichtbares gemeinsames Training haelt jetzt auch bei BEIDEN Profilen als
+`TRAIN_TOGETHER`-Episode mit geringer Naehe fest (siehe Abschnitt 1 fuer die Nummernkollision).
 
-Drei Dinge, die man beim Weiterbauen wissen muss:
+Vier Dinge, die man beim Weiterbauen wissen muss:
 
 - Der Kern hat **kein Android, keine Uhr und keinen Zufall**. Zeit wird als `day` und
   `minuteOfDay` hereingereicht. Wer hier `System.currentTimeMillis` oder `Random` einfuehrt,
@@ -197,6 +222,9 @@ Drei Dinge, die man beim Weiterbauen wissen muss:
 - **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung steht allein in
   `LivingRuntimeAdapter`, nicht in der Domaene. `DockScreen.kt` niemals als Ganzes lesen; NT-065
   hat nur die Ablaufgrenze und den bisherigen Notfallzweig gezielt geaendert.
+- **`ActionKind` liegt als Name in den Version-2-Episoden.** Ein funktionaler Revert von NT-092
+  darf `TRAIN_TOGETHER` nicht aus dem Enum entfernen, solange damit gespeicherte Snapshots
+  existieren; nur Erzeugung und Laufzeitanbindung werden zurueckgenommen.
 
 ## 2. Harte Regeln fuer die Musik
 

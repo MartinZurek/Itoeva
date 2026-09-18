@@ -213,17 +213,78 @@ class LivingAgentStoreTest {
         val store = LivingAgentStore(storage)
         val host = richAgent("host")
         val resident = richAgent("resident:sport:test")
+        val hostWorld = world(coins = 7).copy(site = LivingSite.OUTSIDE)
+        val residentWorld = world(coins = 2).copy(site = LivingSite.OUTSIDE)
+        val memory = LivingSimulation.rememberSharedTraining(
+            host,
+            hostWorld,
+            resident,
+            residentWorld
+        )
 
         store.saveAll(
             listOf(
-                host to world(coins = 7),
-                resident to world(coins = 2)
+                memory.first to hostWorld,
+                memory.second to residentWorld
             )
         )
 
         assertEquals(0, storage.singleWrites)
         assertEquals(1, storage.batchWrites)
         assertEquals(setOf("host", "resident:sport:test"), storage.values.keys)
+        val restoredHost = store.restore("host", hostWorld.absoluteMinute, open)!!
+        val restoredResident = store.restore(
+            "resident:sport:test",
+            residentWorld.absoluteMinute,
+            open
+        )!!
+        assertEquals(ActionKind.TRAIN_TOGETHER, restoredHost.agent.episodes.last().event.action)
+        assertEquals(
+            "resident:sport:test",
+            restoredHost.agent.episodes.last().event.counterpartProfileId
+        )
+        assertEquals(
+            ActionKind.TRAIN_TOGETHER,
+            restoredResident.agent.episodes.last().event.action
+        )
+        assertEquals(
+            "host",
+            restoredResident.agent.episodes.last().event.counterpartProfileId
+        )
+    }
+
+    /**
+     * Codex-Fund auf PR #163 (2026-09-18): Der Host bewegt seine Welt unabhaengig vom Einwohner
+     * (der [com.notime.glyphsim.matrix.PlayTimeLapse] folgt) - ihre `absoluteMinute`-Werte
+     * koennen deshalb schon vor demselben sichtbaren Training auseinanderlaufen. Ohne Angleichung
+     * (siehe `exchangePlayInvitation`s `startMinute`-Muster) buchte [LivingSimulation
+     * .rememberSharedTraining] dieselbe Begegnung auf zwei verschiedene Zeitpunkte - dieser Test
+     * haette das vorher NICHT bemerkt, weil er oben mit identischen Minuten arbeitet.
+     */
+    @Test
+    fun `gemeinsames Training gleicht auseinandergelaufene Uhren an`() {
+        val host = richAgent("host")
+        val resident = richAgent("resident:sport:test")
+        val hostWorld = world(coins = 7, minute = 8 * 60 + 20).copy(site = LivingSite.OUTSIDE)
+        val residentWorld = world(coins = 2, minute = 8 * 60).copy(site = LivingSite.OUTSIDE)
+
+        val memory = LivingSimulation.rememberSharedTraining(
+            host,
+            hostWorld,
+            resident,
+            residentWorld
+        )
+
+        assertEquals(
+            "Beide Seiten muessen dasselbe sichtbare Training auf denselben Zeitpunkt buchen",
+            memory.firstEvent.atMinute,
+            memory.secondEvent.atMinute
+        )
+        assertEquals(
+            "Angeglichen wird auf den spaeteren Zeitpunkt, niemand wird zurueckgedreht",
+            hostWorld.absoluteMinute,
+            memory.firstEvent.atMinute
+        )
     }
 
     @Test

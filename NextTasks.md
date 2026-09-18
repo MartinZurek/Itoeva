@@ -298,6 +298,19 @@ hauptavatarbezogenen Zusatzzustand (Fussballtrick), bevor sich dasselbe Muster e
 anwenden laesst. Die Lesbarkeit von Training UND Basketball gemeinsam auf vierzig Szenenzellen
 bleibt `UNVERIFIED`.
 
+**Living Agent, sozial:** NT-092 **Gemeinsames Training wird gemeinsame Erinnerung** (Nummer
+kollidiert mit dem oben dokumentierten, verworfenen NT-092 - unabhaengig auf einem parallelen
+Zweig vergeben, siehe `UEBERGABE.md`) - *am 2026-09-18 umgesetzt.* Erst nach der vollstaendig
+sichtbaren Trainingsroutine und dem wirklichen `MOVE_BODY`-Abschluss beider Teilnehmer erhalten
+Hauptavatar und Einwohner gegenseitig eine typisierte `TRAIN_TOGETHER`-Episode und 0,02 Naehe.
+Beide Wirkungen laufen je Profil durch `ActionOutcome` und werden zusammen mit den
+Bewegungszustaenden in derselben atomaren `saveAll`-Transaktion gespeichert. Eine normale
+Bewegung, ein sichtbarer Abbruch oder ein fehlgeschlagener Einwohnerabschluss erzeugt keine
+soziale Spur. **Offen bleibt:** Die Lesbarkeit von NT-091 muss am Geraet beurteilt werden. Danach
+ist eine deterministische Rotation der Trainingspartner der naechste kleine soziale Schnitt; erst
+anschliessend darf eine zweite gemeinsame Taetigkeit auf einer eigenen, wirklichen
+Aktivitaetsbedeutung aufbauen.
+
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.
 `AvatarShading` legt beim Zeichnen einen Verlauf darueber, von oben links hell nach unten rechts

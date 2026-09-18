@@ -1,7 +1,7 @@
 # Itoeva Living Agent System
 
 Status: freigegebener naechster Architektur-Meilenstein nach der Charakter-Musik  
-Stand: 2026-09-15 (Kern-Schnitte 2a bis 5, NT-085 bis NT-090 umgesetzt)
+Stand: 2026-09-18 (Kern-Schnitte 2a bis 5, NT-085 bis NT-092 umgesetzt)
 
 ## Was das System heute wirklich ist
 
@@ -368,6 +368,26 @@ keine neue Ortszuordnung. Drachen (PARK) und Angeln (POND) brauchten einen eigen
 Fussball einen zusaetzlichen, rein hauptavatarbezogenen Zustand (den gelernten Trick) - alle drei
 bleiben ausserhalb dieses kleinen Schnitts offen.
 
+### Das gemeinsame Training bleibt bei beiden in Erinnerung (NT-092)
+
+Bis NT-091 rechneten beide Wesen ihre wirkliche Bewegung und wurden gemeinsam atomar gespeichert,
+doch sozial blieb die Szene folgenlos: In beiden Episodenlisten stand nur das jeweilige
+`MOVE_BODY`, und keine Beziehung wusste, dass ein Gegenueber beteiligt war.
+
+Nach dem vollstaendigen sichtbaren Ablauf und dem erfolgreichen Bewegungsabschluss beider Seiten
+wendet `LivingSimulation.rememberSharedTraining` deshalb fuer jedes Profil die eng benannte
+Handlung `TRAIN_TOGETHER` an. Ihr `ActionOutcome` traegt den jeweils anderen `profileId`, eine
+positive Episode und 0,02 Naehe. Das ist deutlich weniger als die 0,08 einer angenommenen
+Einladung: Training schafft Vertrautheit, ersetzt aber keine ausdrueckliche soziale Zuwendung.
+Vertrauen, Beduerfnisse, Weltzeit und die koerperliche Wirkung bleiben unveraendert; letztere ist
+bereits durch `MOVE_BODY` entstanden.
+
+Die Wirkung liegt hinter derselben Abschlussgrenze wie die atomare Doppel-Speicherung. Fehlt der
+wirkliche Abschluss auf nur einer Seite, entsteht weder eine gemeinsame Episode noch Naehe und
+kein Profil wird teilweise uebernommen. Eine gewoehnliche Bewegung bleibt eine gewoehnliche
+Bewegung. Die Geraetelesbarkeit aus NT-091 bleibt `UNVERIFIED`; eine zweite sichtbare gemeinsame
+Taetigkeit ist damit weiterhin nicht freigegeben.
+
 ### Vier Orte reichen - nachgemessen statt behauptet (NT-087)
 
 Hier stand zuerst, die Grenze liege im Ortsmodell: Die Domaene fuehrt vier Orte, PARK, POND,
@@ -446,9 +466,10 @@ Nach dem sichtbaren Austausch werden beide Agenten samt Beduerfnissen, Episoden 
 gespeichert. Verschiedene letzte Handlungsminuten werden vor der Begegnung auf die spaetere Zeit
 fortgeschrieben, nie zurueckgedreht.
 
-Darauf bauen inzwischen zwei getrennte Schnitte auf: NT-088 schreibt den unsichtbaren Alltag
+Darauf bauen inzwischen vier getrennte Schnitte auf: NT-088 schreibt den unsichtbaren Alltag
 ueber denselben Living-Agent-Kern fort; NT-089 projiziert mehrere der daraus wirklich anwesenden
-Wesen zugleich in die vorhandenen Orte. Gemeinsame Aktivitaeten bleiben NT-091.
+Wesen zugleich in die vorhandenen Orte; NT-091 verbindet das erste wirkliche Training und
+NT-092 laesst es beide Seiten als gemeinsames Erlebnis behalten.
 
 ### Die Stimmung kommt jetzt auch aus dem Wesen
 

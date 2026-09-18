@@ -322,6 +322,9 @@ object LivingRuntimeAdapter {
                     PlayRoutines.forTopic(AnimationType.GENERAL, random = random)
                 )
             }
+            ActionKind.TRAIN_TOGETHER -> error(
+                "TRAIN_TOGETHER is a completed-scene effect, not a standalone routine"
+            )
         }
         return PreparedLivingRoutine(result, topic, routine, completedActions(result))
     }
