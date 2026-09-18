@@ -453,10 +453,19 @@ object LivingSimulation {
 
         val firstAction = ActionCatalog.trainTogether(second.profileId)
         val secondAction = ActionCatalog.trainTogether(first.profileId)
-        val firstTogether = firstWorld.copy(
+        // Wie in [exchangePlayInvitation]: der Hauptavatar bewegt seine Welt unabhaengig vom
+        // Einwohner (der [PlayTimeLapse] folgt), ihre `absoluteMinute` koennen deshalb schon vor
+        // diesem Aufruf auseinanderlaufen. Ohne Angleichung würde dasselbe sichtbare Training auf
+        // zwei verschiedenen Zeitpunkten verbucht - die beiden gegenseitigen Episoden altern dann
+        // unterschiedlich schnell, statt dieselbe Begegnung zu beschreiben. Anders als dort wird
+        // dabei niemandes Beduerfnis vorgerueckt: Es ist keine wirkliche Wartezeit, nur eine
+        // Angleichung zweier Uhren auf denselben, bereits vergangenen Moment - das sichtbare
+        // Training selbst lief laengst gemeinsam und in Echtzeit ab.
+        val eventMinute = maxOf(firstWorld.absoluteMinute, secondWorld.absoluteMinute)
+        val firstTogether = firstWorld.advanced(eventMinute - firstWorld.absoluteMinute).copy(
             nearbyProfiles = firstWorld.nearbyProfiles + second.profileId
         )
-        val secondTogether = secondWorld.copy(
+        val secondTogether = secondWorld.advanced(eventMinute - secondWorld.absoluteMinute).copy(
             nearbyProfiles = secondWorld.nearbyProfiles + first.profileId
         )
         require(firstAction.isPossible(firstTogether)) {

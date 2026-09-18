@@ -253,6 +253,40 @@ class LivingAgentStoreTest {
         )
     }
 
+    /**
+     * Codex-Fund auf PR #163 (2026-09-18): Der Host bewegt seine Welt unabhaengig vom Einwohner
+     * (der [com.notime.glyphsim.matrix.PlayTimeLapse] folgt) - ihre `absoluteMinute`-Werte
+     * koennen deshalb schon vor demselben sichtbaren Training auseinanderlaufen. Ohne Angleichung
+     * (siehe `exchangePlayInvitation`s `startMinute`-Muster) buchte [LivingSimulation
+     * .rememberSharedTraining] dieselbe Begegnung auf zwei verschiedene Zeitpunkte - dieser Test
+     * haette das vorher NICHT bemerkt, weil er oben mit identischen Minuten arbeitet.
+     */
+    @Test
+    fun `gemeinsames Training gleicht auseinandergelaufene Uhren an`() {
+        val host = richAgent("host")
+        val resident = richAgent("resident:sport:test")
+        val hostWorld = world(coins = 7, minute = 8 * 60 + 20).copy(site = LivingSite.OUTSIDE)
+        val residentWorld = world(coins = 2, minute = 8 * 60).copy(site = LivingSite.OUTSIDE)
+
+        val memory = LivingSimulation.rememberSharedTraining(
+            host,
+            hostWorld,
+            resident,
+            residentWorld
+        )
+
+        assertEquals(
+            "Beide Seiten muessen dasselbe sichtbare Training auf denselben Zeitpunkt buchen",
+            memory.firstEvent.atMinute,
+            memory.secondEvent.atMinute
+        )
+        assertEquals(
+            "Angeglichen wird auf den spaeteren Zeitpunkt, niemand wird zurueckgedreht",
+            hostWorld.absoluteMinute,
+            memory.firstEvent.atMinute
+        )
+    }
+
     @Test
     fun `Profile behalten getrennte Beduerfnisse und Ressourcen`() {
         val storage = LivingAgentMemoryStorage()
