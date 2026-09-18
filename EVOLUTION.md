@@ -664,6 +664,63 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-16 - Der Hauptrückblick zeigt die Taetigkeit, nicht die Reminder-Pose
+
+- **Ausgangsproblem:** Direktes Folge-Feedback, nachdem der Pixelsalat-Fund vom selben Tag
+  behoben war und der Rückblick endlich lesbar wurde: "in der schlussendlichen Hauptbubble
+  werden dann nur die Reminder-Animation gezeigt. Ich meinte tatsächlich, dass dort die Szenen
+  gezeigt werden, die im Spiel so spannend sind/gewesen sind." Die vergrößerte Uhr zeigte
+  `AvatarAnimations.reactionFor(species, topic)` - wörtlich dieselbe Pose, die beim Beantworten
+  einer ECHTEN Erinnerung erscheint. Ein Rückblick auf den Tag fühlte sich dadurch wie eine
+  Wiederholung von Erinnerungs-Antworten an, nicht wie ein Blick auf das, was im Spiel geschah.
+- **Entscheidung:** `playSleepRecap`s Hauptschleife und die Übergabe davor holen ihre Frames
+  jetzt aus `ReminderAnimations.framesFor(topic)` statt aus `AvatarAnimations.reactionFor` -
+  denselben 13x13-Symbol-Frames, die seit der Kreis-Spiegelung vom selben Tag (siehe die andere
+  2026-09-16-Eintragung) schon tagsüber die autonome Tätigkeit zeigen: ein Glas, das sich
+  tropfenweise füllt, ein Buch mit umblätternden Seiten, ein Pinsel, der zeichnet - das bildet
+  die TÄTIGKEIT selbst ab statt einer generischen Freuden-Pose. Die kleine AUFSTEIGENDE Blase
+  (`dreamFrame`/`PlayDreamBubble`, die schlafende Kreatur, die aus dem Bett "aufsteigt") bleibt
+  unverändert Kreatur-Format - nur die vergrößerte Hauptblase mit dem Tagesrückblick wechselt
+  das Motiv. Damit wurde `PlayDreamWatchFace` (erst am selben Tag fürs Format-Fix eingeführt)
+  wieder entfernt: Die Rückblick-Frames sind jetzt wieder legitim 13x13, `SimulatedMatrixView`
+  ist dafür der richtige, nicht der falsche Leser.
+- **Zeitgefüge angepasst:** `DREAM_HIGHLIGHT_HOLD_MS` war eine reine Pause NACH einer einmal
+  durchlaufenden Kreatur-Reaktion (420ms). Die ReminderAnimations-Frames sind für Dauer-Anzeige
+  während eines offenen Reminders gebaut, nicht für einen einzelnen Durchlauf - der Wert ist
+  jetzt die GESAMTE Anzeigedauer je Highlight (2000ms; `MatrixAnimator.play` läuft die Frames
+  notfalls erneut von vorn, bis die Zeit um ist). Drei Highlights: ein Rückblick dauert damit
+  höchstens sechs Sekunden.
+- **Evidenz:** `TESTED BEHAVIOR` nur indirekt - die Compose-Änderung selbst bleibt `UNVERIFIED`
+  (kein Android-SDK in dieser Sitzung, wie bei jeder DockScreen.kt-Änderung hier). Die
+  wiederverwendeten `ReminderAnimations`-Frames sind bereits produktiver Code (Reminder-Anzeige
+  und die Kreis-Spiegelung vom selben Tag); neu ist nur, WO sie zusätzlich verwendet werden.
+- **Offen geblieben (zweiter gemeldeter Punkt):** "wenn er ins Bett geht, ... auch wenn er
+  danach träumt, dann steht er quasi vor dem Bett, obwohl er träumt" - vermutlich die
+  Bettdecken-Überdeckung (`PlayScene.buildFront`, gesteuert über `occupiedStation` in
+  `DockScreen`), die die untere Körperhälfte waehrend `RoutineStep.Occupy(BED)` verdeckt.
+  Nachverfolgt: `occupiedStation` wird bei `Occupy(BED)` gesetzt und erst bei `Rise` wieder
+  `null` - dazwischen liegen `Act(SLEEP)`, `SleepUntilMorning` (inklusive des ganzen
+  Rückblicks) und keiner dieser Schritte fasst `occupiedStation` an. Der einzige andere
+  Rücksetzpunkt (Fütter-Erfolg, "Gefüttert wird immer frei stehend") ist auf eine ECHTE offene
+  Erinnerung (`occurrenceId != null`) begrenzt und sollte während eines ambienten Schlafs nicht
+  greifen. Ohne Geräteprüfung konnte die tatsächliche Ursache nicht gefunden werden - **bleibt
+  UNVERIFIED/offen**, siehe Nächster Schritt.
+- **Abgrenzung:** Keine Änderung an `PlayDreamMemory`/`PlayDreams` (welche Themen überhaupt als
+  Erlebnis gelten) - nur woraus die Anzeige gebaut wird. Spezielle Tätigkeiten (Fußball, Malen,
+  Angeln, Training, Musik, Drachen) bleiben im Traum nicht von ihrer generischen
+  `AnimationType`-Kategorie unterscheidbar, weil `PlayDreamMemory` nur diese Kategorie
+  speichert, nicht die konkrete Sonderaktivität - eine tiefere Verbesserung ("hat heute
+  Fußball gespielt" statt "hat sich bewegt") wäre ein eigenes, größeres Vorhaben.
+- **Bestandsdaten und Rücksetzung:** Keine Migration, kein neuer Preference-Schlüssel. Ein
+  Revert stellt die Kreatur-Reaktion im Rückblick wieder her; nichts davon ist persistent.
+- **Betroffene Bereiche:** `DockScreen.kt` (`playSleepRecap`, der Uhr-Renderzweig,
+  `DREAM_HIGHLIGHT_HOLD_MS`), `PlayDreamBubble.kt` (`PlayDreamWatchFace` entfernt).
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 494 Tests grün (unverändert, reiner
+  UI-Umbau ohne neue Matrix-Logik).
+- **Nächster Schritt:** Am Gerät beobachten, WANN genau die Bettdecke verschwindet (sofort beim
+  Einschlafen, erst beim Übergang in die Hauptblase, oder erst waehrend eines bestimmten
+  Highlights) - das grenzt die Ursache ein, die per Code-Lesen allein nicht zu finden war.
+
 ### 2026-09-16 - Der Traumrückblick zeigt die Kreatur, nicht Pixelsalat
 
 - **Ausgangsproblem:** Vom Auftraggeber gemeldet: "die Traumsequenz... stellt nur ein
@@ -708,6 +765,68 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Nächster Schritt:** Auf einem echten Gerät bestätigen, dass Traumblase und Rückblick jetzt
   die schlafende Kreatur zeigen statt Rauschen, und ob die bestehende Größe bereits gut lesbar
   ist oder doch noch wachsen sollte.
+
+### 2026-09-16 - Staffelei, Trinken, Buch neu gezeichnet; der Kreis wird zweite Buehne
+
+- **Ausgangsproblem:** Direktes Nutzer-Feedback zu vier World-Motiven/der Uhr: (1) die
+  Malszene liess sich nicht sicher von Angeln unterscheiden ("langes Ding in der Hand, ein
+  Rechteck geht hoch - Angeln oder Malen?"), (2) die autonome, nicht durch eine Erinnerung
+  ausgeloeste Trink-Animation "sieht noch richtig schlecht aus", (3) die Buch-Animation
+  "gefaellt mir ueberhaupt nicht", (4) der Wunsch, dass der kleine runde Kreis (wie beim
+  Traum-Rueckblick) ZUSAETZLICH zur Weltebene zeigt, was der Bewohner gerade tut - nicht
+  anstelle davon.
+- **Entscheidung Malen/Angeln:** Kein neues Motiv, sondern die Staffelei eindeutiger gemacht:
+  ein drittes, HINTERES Bein ergibt im Profil die Dreieckssilhouette, an der eine Staffelei von
+  einem schwebenden Bilderrahmen zu unterscheiden ist; der Pinsel laeuft jetzt als
+  durchgehender Schaft bis zum Kontaktpunkt auf der Leinwand statt als zwei getrennte, nicht
+  verbundene Marken. `fishingCells` blieb unveraendert - sie war schon eindeutig (Rute,
+  Schnur, Schwimmer, Wellenringe), nur die Malszene war zu abstrakt.
+- **Entscheidung Trinken:** Von Grund auf neu: statt eines einzelnen Tropfens, der ueber vier
+  Takte einsam zum Glasrand wandert, faellt jetzt ein Schwall aus drei Tropfen im Verbund, und
+  das Auftreffen zeigt Ringe auf zwei Hoehen statt nur zweier Randpunkte. Das Glas selbst
+  (Form, steigender Pegel) blieb unangetastet.
+- **Entscheidung Buch:** Bewusst vereinfacht statt weiter am Keil aus vier Diagonalen zu
+  feilen (der laut Feedback trotz zweier Vorfassungen immer noch nicht als Buch gelesen wurde):
+  ein einzelnes, geschlossen umrissenes Rechteck mit sichtbarem Ruecken in der Mitte. Die
+  Bewegung ist jetzt eine einzelne wandernde Ecke oberhalb des Ruecken (rechts nach links ueber
+  vier Takte) statt aufsummierter Textzeilen - wichtig fuer den Regressionstest, siehe Evidenz.
+- **Entscheidung Kreis-Spiegelung:** `DockScreen` bekommt einen neuen abgeleiteten Zustand
+  `activityWatchFrame`, der bei jeder Aenderung von `activeActivity` per
+  `MatrixAnimator.play(..., targetDurationMs = DURATION_UNTIL_FED)` durch
+  `ReminderAnimations.framesFor(topic)` loopt - dieselben 13x13-Symbol-Frames, die beim
+  Ausloesen einer Erinnerung ohnehin schon existieren, nicht die 16x20-Kreatur-Reaktionsposen
+  (die gehoeren laut `CreatureFrameSizeTest` ausdruecklich NICHT in den 13x13-Kreis). Die
+  Prioritaet im Kreis bleibt: Erinnerungs-Animation vor Traum vor Mond vor Taetigkeits-
+  Spiegelung vor Uhrzeit - die Mondszene ist eine bewusst seltene Ausnahme (siehe
+  `moonMode`-Kommentar in `DockScreen`) und soll nicht von einem alltaeglichen
+  Taetigkeits-Symbol verdraengt werden. Neue A11y-Zeichenkette
+  `a11y_clock_activity_highlight` (de/en) fuer TalkBack.
+- **Evidenz:** `TESTED BEHAVIOR` fuer die drei `PlayEffects`-Motive - der bestehende,
+  generische Test `Weltmotive veraendern ihren Zustand sichtbar` deckt auf, ob sich ein Motiv
+  zwischen zwei Zeitpunkten ueberhaupt sichtbar aendert (die Buch-Neufassung waere daran beim
+  ersten Versuch gescheitert, siehe Abgrenzung). `UNVERIFIED` fuer die Kreis-Spiegelung in
+  `DockScreen.kt`: reines Compose/Android, in dieser Umgebung ohne Android-SDK nicht
+  kompilierbar - nur sorgfaeltig gegen bestehende Muster (`MatrixAnimator.play`-Aufrufe,
+  Prioritaetslogik) gegengelesen, nicht am Geraet gesehen. `UNVERIFIED` bleibt ausserdem, ob
+  die neue Staffelei-Silhouette und das neue Buch am Geraet tatsaechlich eindeutiger wirken.
+- **Abgrenzung:** Kein neues Motiv, keine neue Erinnerungs-Kategorie, keine Aenderung an
+  `PlayAmbientActivity`s Auswahl-Gewichtung. Die Kreis-Spiegelung zeigt bewusst nur autonome
+  Taetigkeiten (`activeActivity`), nicht die bereits eigenstaendig choreografierten Szenen
+  (Fussball, Basketball, Drachen, Musik, Malen, Angeln, Training) - die haben keinen
+  `ReminderAnimations`-Eintrag und wurden nicht angefasst.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration, kein neuer Preference-Schluessel. Ein
+  Revert entfernt Silhouetten-Aenderungen und die Kreis-Spiegelung; nichts davon ist
+  persistent.
+- **Betroffene Bereiche:** `PlayEffects.kt` (`paintingCells`, `AnimationType.DRINK`,
+  `AnimationType.BOOK`), `DockScreen.kt` (`activityWatchFrame`, `watchFrame`,
+  `clockContentDescription`), `strings.xml`/`values-de/strings.xml`.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 493 Tests gruen (unveraendert; die
+  bestehenden generischen Motiv-Tests deckten die Umgestaltung ausreichend ab, kein neuer
+  Testfall noetig). Android-Compile und beide `:app-sim`-Varianten laufen wie ueblich erst in
+  der PR-CI.
+- **Naechster Schritt:** Am Geraet pruefen, ob (a) die Staffelei jetzt sicher von Angeln zu
+  unterscheiden ist, (b) Trinken und Buch tatsaechlich besser wirken, (c) die Kreis-Spiegelung
+  sich rund anfuehlt und nicht hektisch, wenn Taetigkeiten schnell wechseln.
 
 ### 2026-09-16 - Zwei wirkliche Bewegungen werden gemeinsames Training (NT-091)
 

@@ -139,6 +139,7 @@ import com.notime.glyphsim.matrix.PlayVisitWindow
 import com.notime.glyphsim.matrix.PlayWallet
 import com.notime.glyphsim.matrix.ReminderAnimationBus
 import com.notime.glyphsim.matrix.ReminderAnimationEvent
+import com.notime.glyphsim.matrix.ReminderAnimations
 import com.notime.glyphsim.matrix.RoutineStep
 import com.notime.glyphsim.matrix.SimulatedMatrixView
 import com.notime.glyphsim.matrix.groundRow
@@ -254,13 +255,11 @@ fun DockScreen(
     var dreamFrame by remember { mutableStateOf<IntArray?>(null) }
     var dreamProgress by remember { mutableFloatStateOf(0f) }
     var dreamWatchFrame by remember { mutableStateOf<IntArray?>(null) }
-    // Welche Kreatur der Rueckblick gerade zeigt - siehe PlayDreamWatchFace. Ohne dieses Feld
-    // wuesste die vergroesserte Uhr nicht, mit welcher Gesichtsfarbe sie die Reaktion zeichnen
-    // soll, und muesste raten statt es vom tatsaechlich schlafenden Wesen zu wissen.
-    var dreamWatchSpecies by remember { mutableStateOf<AvatarSpecies?>(null) }
     var dreamWatchTopic by remember { mutableStateOf<AnimationType?>(null) }
     var dreamRecapMode by remember { mutableStateOf(false) }
-    val frame = animationFrame ?: dreamWatchFrame ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
+    // Die zusammengefuehrte Anzeige selbst (Erinnerung vor Traum vor Mond vor Taetigkeits-
+    // Spiegelung vor Uhrzeit) entsteht erst als `currentWatchFrame()` weiter unten - dort, wo
+    // auch [activityWatchFrame] bereits deklariert ist (siehe dessen KDoc fuer die Prioritaet).
 
     var clockSizeDp by remember { mutableFloatStateOf(DockLayoutPrefs.getSizeDp(context)) }
     val initialFraction = remember { DockLayoutPrefs.getOffsetFraction(context) }
@@ -560,6 +559,32 @@ fun DockScreen(
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
         /** Das eigene Weltmotiv des gerade laufenden allgemeinen Handlungsschritts. */
         var activeActivity by remember { mutableStateOf<AnimationType?>(null) }
+        /**
+         * Dieselbe Taetigkeit, zusaetzlich im kleinen Kreis gespiegelt - nicht anstelle der
+         * Weltebene, sondern ZUSAETZLICH zu ihr (siehe [PlayEffects.activityCells] fuer die
+         * Weltebene). Genutzt werden dieselben Symbol-Frames wie beim Ausloesen einer Erinnerung
+         * ([ReminderAnimations.framesFor]) - eigens fuer den 13x13-Kreis gebaut, anders als die
+         * Kreatur-Reaktionsposen, die dort laut [com.notime.glyphsim.matrix.CreatureFrameSizeTest]
+         * gerade NICHT hineingehoeren.
+         *
+         * Bewusst nur fuer autonome, nicht durch eine Erinnerung ausgeloeste Taetigkeiten
+         * gedacht: Laeuft schon eine Erinnerungs-Animation ([animationFrame]), gewinnt die weiter
+         * unten in der Prioritaetskette - zwei Bewegungen gleichzeitig im selben Kreis waeren
+         * gegeneinander gelesen, nicht miteinander.
+         */
+        var activityWatchFrame by remember { mutableStateOf<IntArray?>(null) }
+        LaunchedEffect(activeActivity) {
+            val topic = activeActivity
+            if (topic == null) {
+                activityWatchFrame = null
+                return@LaunchedEffect
+            }
+            MatrixAnimator.play(
+                ReminderAnimations.framesFor(topic),
+                targetDurationMs = MatrixAnimator.DURATION_UNTIL_FED,
+                frameDelayMs = MatrixAnimator.CLOCK_FRAME_DELAY_MS
+            ) { activityWatchFrame = it }
+        }
         /**
          * Was zuletzt zu sehen war - das juengste zuerst, hoechstens [RECENT_MEMORY] Eintraege.
          *
@@ -1257,6 +1282,18 @@ fun DockScreen(
          * verliert ein Schlaf, der ueber Mitternacht laeuft, nicht ploetzlich seinen Vortag.
          * Gibt es noch kein einziges geeignetes Erlebnis, laeuft die Sequenz trotzdem mit der
          * wirklichen Schlafpose - nur ein Tageshighlight wird dann nicht erfunden.
+         *
+         * **Die vergroesserte Uhr zeigt seit dem Fund vom 2026-09-16 die ReminderAnimations-
+         * Symbol-Frames je Thema, nicht mehr [AvatarAnimations.reactionFor].** Gemeldet: "in der
+         * schlussendlichen Hauptbubble werden dann nur die Reminder-Animation gezeigt" - die
+         * Kreatur-Reaktionspose IST woertlich die Pose, die beim Beantworten einer echten
+         * Erinnerung erscheint, und fuehlte sich deshalb nicht wie ein Rueckblick auf den Tag an,
+         * sondern wie eine Wiederholung von Erinnerungs-Antworten. Die ReminderAnimations-Frames
+         * (Glas, das sich fuellt, Buch mit umblaetternden Seiten, Pinsel, der zeichnet, ...)
+         * bilden dagegen die TAETIGKEIT selbst ab - dieselben Frames, die tagsueber schon die
+         * autonome Taetigkeits-Spiegelung im Kreis nutzt (siehe [currentWatchFrame]). Die kleine
+         * AUFSTEIGENDE Blase ([dreamFrame]/[PlayDreamBubble]) zeigt weiterhin die Kreatur - nur
+         * die vergroesserte Hauptblase mit dem Tagesrueckblick wechselt das Motiv.
          */
         suspend fun playSleepRecap(memories: List<AnimationType>, species: AvatarSpecies) {
             val highlights = PlayDreams.highlights(memories)
@@ -1283,9 +1320,12 @@ fun DockScreen(
                 ) { value, _ -> dreamProgress = value }
 
                 dreamRecapMode = true
-                dreamWatchSpecies = species
                 dreamWatchTopic = firstTopic
-                dreamWatchFrame = firstFrame
+                // Der Uebergabe-Frame: dieselbe Quelle wie die Schleife unten, damit die
+                // Hauptblase nicht fuer einen Frame lang die Kreaturpose zeigt, bevor die
+                // Schleife sie wieder ueberschreibt.
+                dreamWatchFrame = ReminderAnimations.framesFor(firstTopic ?: AnimationType.SLEEP)
+                    .firstOrNull()
                 val from = clockOffset
                 animate(
                     0f,
@@ -1304,13 +1344,14 @@ fun DockScreen(
                     delay(DREAM_EMPTY_RECAP_HOLD_MS)
                 } else {
                     for (topic in highlights) {
-                        val reaction = AvatarAnimations.reactionFor(species, topic)
-                        if (reaction.frames.isEmpty()) continue
+                        val frames = ReminderAnimations.framesFor(topic)
+                        if (frames.isEmpty()) continue
                         dreamWatchTopic = topic
-                        MatrixAnimator.playTimed(reaction.frames, reaction.holdsMs) { current ->
-                            dreamWatchFrame = current
-                        }
-                        delay(DREAM_HIGHLIGHT_HOLD_MS)
+                        MatrixAnimator.play(
+                            frames,
+                            targetDurationMs = DREAM_HIGHLIGHT_HOLD_MS,
+                            frameDelayMs = MatrixAnimator.CLOCK_FRAME_DELAY_MS
+                        ) { current -> dreamWatchFrame = current }
                     }
                 }
 
@@ -1332,7 +1373,6 @@ fun DockScreen(
                 dreamFrame = null
                 dreamProgress = 0f
                 dreamWatchFrame = null
-                dreamWatchSpecies = null
                 dreamWatchTopic = null
                 dreamRecapMode = false
             }
@@ -3535,6 +3575,24 @@ fun DockScreen(
             }
         }.orEmpty()
 
+        // Was der Kreis gerade zeigt - dieselbe Prioritaet wie zuvor (Erinnerung vor Traum vor
+        // Mond vor Uhrzeit), nur um die autonome Taetigkeits-Spiegelung ergaenzt: Sie gewinnt nur,
+        // wenn weder eine Erinnerung noch ein Traum laeuft, UND nicht waehrend der Mondszene -
+        // die ist eine bewusst seltene Ausnahme (siehe moonMode-Kommentar oben) und soll nicht
+        // von einem taeglichen Taetigkeits-Symbol verdraengt werden.
+        //
+        // **Als Funktion, nicht als `val`.** Ein `val` wuerde nur einmal pro Rekomposition
+        // ausgewertet und von `describeScreen()` unten als fester Wert eingefangen - fuer den
+        // laufenden Uhr-Kreis unsichtbar, weil der bei jeder Rekomposition ohnehin neu gelesen
+        // wird, aber toedlich fuer den Mitschnitt: dessen `LaunchedEffect(clipSession)` startet
+        // nur einmal pro Aufnahme neu und ruft `describeScreen()` danach aus genau DIESEM
+        // eingefrorenen Rekompositions-Stand heraus wiederholt auf - der exportierte Clip zeigte
+        // dann ein eingefrorenes Kreis-Symbol, waehrend der Bildschirm daneben weiterlief (Fund
+        // aus dem Review zu PR #162). Als Funktion liest jeder Aufruf `animationFrame` &Co. frisch
+        // - genau das Muster, das `current = avatar` in `describeScreen()` schon nutzt.
+        fun currentWatchFrame(): IntArray = animationFrame ?: dreamWatchFrame
+            ?: if (moonMode) MoonFrame.build(moonPhase) else (activityWatchFrame ?: clockFrame)
+
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
         //
         // An EINER Stelle, weil sie zweimal gebraucht wird: Der Film sammelt sie fuenfzehnmal je
@@ -3560,7 +3618,7 @@ fun DockScreen(
                 station = occupiedStation ?: activeStation,
                 lampOn = lampOn,
                 tvOn = tvOn,
-                clockFrame = if (current.fed) null else frame,
+                clockFrame = if (current.fed) null else currentWatchFrame(),
                 clockLeftFraction = (clockOffset.x / maxWidthPx).coerceIn(0f, 1f),
                 clockTopFraction = (clockOffset.y / maxHeightPx).coerceIn(0f, 1f),
                 clockSizeFraction = (clockPx / maxWidthPx).coerceIn(0.05f, 1f),
@@ -3661,6 +3719,7 @@ fun DockScreen(
             // diese Praezisierung haette die Uhr hier staendig eine Erinnerung angesagt, obwohl
             // sie nur die aktuelle Uhrzeit zeigt.
             val currentDreamTopic = dreamWatchTopic
+            val currentActivity = activeActivity
             val clockContentDescription = if (activeAvatar?.occurrenceId != null) {
                 val topicLabel = activeAvatar.libraryAnimationLabel
                     ?: activeAvatar.animationType?.let { stringResource(it.labelRes) }
@@ -3673,6 +3732,9 @@ fun DockScreen(
                 stringResource(R.string.a11y_clock_dream_empty)
             } else if (moonMode) {
                 stringResource(R.string.a11y_clock_moon)
+            } else if (activityWatchFrame != null && currentActivity != null) {
+                val topicLabel = stringResource(currentActivity.labelRes)
+                stringResource(R.string.a11y_clock_activity_highlight, topicLabel)
             } else {
                 val now = LocalTime.now()
                 stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
@@ -3735,31 +3797,23 @@ fun DockScreen(
                         )
                     }
                 }
-            // **Der Tagesrueckblick ist eine Kreatur-Reaktion, keine Uhrziffer.** Solange
-            // dreamWatchFrame gesetzt ist, zeigt dieselbe Kreisflaeche PlayDreamWatchFace statt
-            // SimulatedMatrixView - sonst wird dasselbe 16x20-Avatarbild wieder mit der falschen
-            // 13x13-Zeilenbreite gelesen (siehe PlayDreamBubble fuer die ausfuehrliche
-            // Begruendung und den gemeldeten Fund vom 2026-09-16).
-            //
-            // animationFrame haelt weiterhin Vorrang, genau wie zuvor in der Elvis-Kette oben
-            // ([frame]): Eine echte, gerade abgespielte Bibliotheks-Erinnerung ist selbst schon
-            // 13x13-Daten und bricht die Traum-Koroutine ohnehin ab (siehe deren finally-Block).
-            val recapFrame = if (animationFrame == null) dreamWatchFrame else null
-            val recapSpecies = if (recapFrame != null) dreamWatchSpecies else null
-            if (recapFrame != null && recapSpecies != null) {
-                PlayDreamWatchFace(
-                    frame = recapFrame,
-                    species = recapSpecies,
-                    contentDescription = clockContentDescription,
-                    modifier = watchModifier
-                )
-            } else {
-                SimulatedMatrixView(
-                    frame = frame,
-                    contentDescription = clockContentDescription,
-                    modifier = watchModifier
-                )
-            }
+            // **Der Rueckblick zeigt wieder die 13x13-Symbol-Frames, nicht die Kreatur-Pose.**
+            // Gemeldet 2026-09-16: Die vorige Fassung zeigte hier dieselbe Reaktionspose wie beim
+            // Beantworten einer echten Erinnerung ("nur die Reminder-Animation") - fachlich zwar
+            // korrekt gerendert (siehe die Behebung vom selben Tag), aber inhaltlich nicht das,
+            // was "spannend im Spiel war": ein Glas, das sich Tropfen fuer Tropfen fuellt, ein
+            // Buch mit umblaetternden Seiten, ein Pinsel, der einen Kreis zieht, sind genau die
+            // ReminderAnimations-Frames, die [DockScreen.currentWatchFrame] ohnehin schon fuer
+            // die autonome Taetigkeits-Spiegelung nutzt (siehe deren KDoc). `dreamWatchFrame`
+            // traegt seither dieselben 13x13-Frames, PlayDreamWatchFace/AvatarSpriteView waeren
+            // dafuer wieder der falsche Leser (siehe PlayDreamBubble) - `currentWatchFrame()`
+            // schliesst `dreamWatchFrame` bereits in seine Prioritaetskette ein, ein eigener Zweig
+            // hier ist nicht mehr noetig.
+            SimulatedMatrixView(
+                frame = currentWatchFrame(),
+                contentDescription = clockContentDescription,
+                modifier = watchModifier
+            )
         }
 
         // **Ein leiser Hinweis, dass Erinnerungen gerade ruhen.**
@@ -4913,7 +4967,14 @@ private const val SETTLE_INTO_MS = 420
 private const val DREAM_BUBBLE_MS = 6_200
 private const val DREAM_RECAP_BUBBLE_MS = 1_600
 private const val DREAM_WATCH_MOVE_MS = MOON_RISE_MS
-private const val DREAM_HIGHLIGHT_HOLD_MS = 420L
+// War 420ms - eine reine Pause NACH einer einmal durchlaufenden Kreatur-Reaktion. Seit dem
+// Wechsel auf ReminderAnimations-Symbol-Frames (siehe playSleepRecap) ist das die GESAMTE
+// Anzeigedauer je Tageshighlight, inklusive der Animation selbst (MatrixAnimator.play laesst
+// die - fuers Dauer-Anzeigen eines offenen Reminders gebauten - Frames notfalls einfach erneut
+// von vorn laufen, bis die Zeit um ist). 2 Sekunden je Motiv, drei Motive: ein Rueckblick dauert
+// damit hoechstens sechs Sekunden - lang genug, um z.B. das umblaetternde Buch oder den
+// zeichnenden Pinsel wirklich zu erkennen, kurz genug, um vor dem Einschlafen nicht zu ziehen.
+private const val DREAM_HIGHLIGHT_HOLD_MS = 2_000L
 private const val DREAM_EMPTY_RECAP_HOLD_MS = 1_200L
 private const val DREAM_WATCH_TOP_FRACTION = 0.06f
 private const val DREAM_SLEEP_CHECK_MS = 800L
