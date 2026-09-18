@@ -23,6 +23,12 @@ data class ResidentState(
     val world: WorldState
 )
 
+/** Beide bereits gerechneten Seiten eines vollstaendig abgeschlossenen gemeinsamen Trainings. */
+data class SharedTrainingCompletion(
+    val host: StepResult,
+    val resident: StepResult
+)
+
 /**
  * Was die Anzeige von einem Einwohner sehen darf - **lesend und vollstaendig abgeleitet**.
  *
@@ -186,6 +192,47 @@ object LivingPopulation {
                 it.kind == LivingEventKind.ACTION_DONE && it.action == expected
             }
         }
+    }
+
+    /**
+     * Verbindet zwei abgeschlossene `MOVE_BODY`-Schritte erst hinter der sichtbaren Grenze.
+     *
+     * Fehlt der wirkliche Abschluss auf nur einer Seite, entsteht gar kein Ergebnis. Der
+     * Aufrufer kann dadurch weder die Hauptseite noch den Einwohner teilweise speichern. Erst
+     * danach erzeugt [LivingSimulation.rememberSharedTraining] die gegenseitige Episode und
+     * Naehe; die vorhandenen Bewegungswirkungen werden nicht ein zweites Mal gerechnet.
+     */
+    fun completeSharedTraining(
+        host: StepResult,
+        residentBefore: ResidentState
+    ): SharedTrainingCompletion? {
+        val hostMoved = host.events.any {
+            it.kind == LivingEventKind.ACTION_DONE && it.action == ActionKind.MOVE_BODY
+        }
+        if (!hostMoved) return null
+        val residentMoved = completeSharedAction(residentBefore, ActionKind.MOVE_BODY)
+            ?: return null
+        if (
+            host.world.site != LivingSite.OUTSIDE ||
+            residentMoved.world.site != LivingSite.OUTSIDE
+        ) return null
+
+        val memory = LivingSimulation.rememberSharedTraining(
+            first = host.agent,
+            firstWorld = host.world,
+            second = residentMoved.agent,
+            secondWorld = residentMoved.world
+        )
+        return SharedTrainingCompletion(
+            host = host.copy(
+                agent = memory.first,
+                events = host.events + memory.firstEvent
+            ),
+            resident = residentMoved.copy(
+                agent = memory.second,
+                events = residentMoved.events + memory.secondEvent
+            )
+        )
     }
 
     /**

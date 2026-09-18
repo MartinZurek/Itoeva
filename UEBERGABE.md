@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 16. September 2026
+# Uebergabe: Stand am 18. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -8,7 +8,7 @@ Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
-**Stand 16.09.: NT-091 ist als kleinster Schnitt umgesetzt.** Die drei Einwohner leben ueber
+**Stand 18.09.: NT-092 setzt auf dem gemergten NT-091 auf.** Die drei Einwohner leben ueber
 `LivingPopulation` an der simulierten Uhr weiter und mehrere wirklich anwesende Wesen koennen
 zugleich in der Pixelwelt stehen. `LivingPopulationLayout` liest nur
 `ResidentSnapshot.publiclyPresent`, zeigt hoechstens zwei kleinere Hintergrundfiguren auf freien
@@ -23,10 +23,23 @@ beide Living-Zustaende ueber ihre vorhandenen Wirkungswege in einer gemeinsamen
 SharedPreferences-Transaktion gespeichert. Abbruch oder Prozessende verbucht nicht nur einen.
 Bildschirm, Schnappschuss und Clip teilen auch diese Einwohnerbewegung.
 
+Nach einem vollstaendig sichtbaren gemeinsamen Training behalten jetzt beide Profile das
+Gegenueber: `TRAIN_TOGETHER` erzeugt je eine typisierte positive Episode und 0,02 Naehe durch
+den vorhandenen `ActionOutcome`-Weg. Die physische Wirkung bleibt genau einmal `MOVE_BODY`.
+Scheitert der Bewegungsabschluss auf einer Seite oder wird die Szene abgebrochen, entsteht keine
+soziale Spur. Beide angereicherten Zustaende bleiben Teil derselben atomaren
+`LivingAgentStore.saveAll`-Transaktion.
+
 **Offen nach NT-091:** Fussball, Basketball, Drachen und Angeln nicht aus dem generischen
 `MOVE_BODY` erraten. Eine Erweiterung braucht spezifischere wirkliche Handlungen oder eine
 gleich eng belegte Zuordnung. Die Lesbarkeit des gemeinsamen Trainings bei vierzig Zellen ist am
 Geraet noch `UNVERIFIED`.
+
+**Nicht mergen:** PR #160 (`claude/itoeva-shared-activity-kwlk4h`) ist ein paralleler,
+ungemergter Versuch, bereits Basketball als zweite gemeinsame Szene einzufuehren. Er ueberspringt
+die hier festgehaltene Geraetepruefung und kollidiert zudem mit der Nummer NT-092. Er gehoert
+nicht in diesen Stand. Nach echtem Geraetefeedback folgt zuerst die kleine deterministische
+Partnerrotation; eine zweite Taetigkeit braucht danach eine eigene semantische Grundlage.
 
 
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
@@ -146,13 +159,14 @@ Dieselbe Messung fand dafuer zwei Ziele, die NIE gewinnen. `SEEK_COMFORT` ist be
 ungewaehlt, weil Muenzen heute nur Essen zahlen. Verkauf und Lohn sind der konkrete Anlass, dem
 Ziel erstmals einen Sinn zu geben; die Auswahlzahl wird dafuer nicht vorab kuenstlich erhoeht.
 
-**Der erste gemeinsame soziale Schnitt ist mit NT-091 geschlossen:** Kompatibles `MOVE_BODY`
+**Der erste gemeinsame soziale Schnitt ist mit NT-091/092 geschlossen:** Kompatibles `MOVE_BODY`
 zweier wirklich anwesender Wesen wird nur fuer die bereits gewaehlte Trainingsroutine gemeinsam
-lesbar. Die offene Huerde fuer weitere gemeinsame Faehigkeiten bleibt die Bedeutung der Handlung
-und danach die Choreografie auf vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn
-die vorhandenen Plaetze wirklich bewohnt sind.
+lesbar und bleibt danach auf beiden Seiten als `TRAIN_TOGETHER` mit geringer Naehe erhalten. Die
+offene Huerde fuer weitere gemeinsame Faehigkeiten bleibt die Bedeutung der Handlung und danach
+die Choreografie auf vierzig Zellen, nicht das Ortsmodell; neue Orte kommen erst, wenn die
+vorhandenen Plaetze wirklich bewohnt sind.
 
-Drei Dinge, die man beim Weiterbauen wissen muss:
+Vier Dinge, die man beim Weiterbauen wissen muss:
 
 - Der Kern hat **kein Android, keine Uhr und keinen Zufall**. Zeit wird als `day` und
   `minuteOfDay` hereingereicht. Wer hier `System.currentTimeMillis` oder `Random` einfuehrt,
@@ -168,6 +182,9 @@ Drei Dinge, die man beim Weiterbauen wissen muss:
 - **`LivingSite` hat vier Werte, `PlayScene.Place` hat sechzehn.** Die Abbildung steht allein in
   `LivingRuntimeAdapter`, nicht in der Domaene. `DockScreen.kt` niemals als Ganzes lesen; NT-065
   hat nur die Ablaufgrenze und den bisherigen Notfallzweig gezielt geaendert.
+- **`ActionKind` liegt als Name in den Version-2-Episoden.** Ein funktionaler Revert von NT-092
+  darf `TRAIN_TOGETHER` nicht aus dem Enum entfernen, solange damit gespeicherte Snapshots
+  existieren; nur Erzeugung und Laufzeitanbindung werden zurueckgenommen.
 
 ## 2. Harte Regeln fuer die Musik
 

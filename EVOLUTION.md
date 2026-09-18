@@ -664,6 +664,46 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-18 - Gemeinsames Training wird von beiden Wesen erinnert (NT-092)
+
+- **Ausgangsproblem:** NT-091 verband zwei wirkliche `MOVE_BODY`-Handlungen sichtbar und
+  speicherte beide Profile atomar. Sozial blieb die Szene dennoch folgenlos: Beide Episoden
+  erinnerten nur die eigene Bewegung, keine Beziehung nannte das Gegenueber. Die Welt zeigte
+  gemeinsames Handeln, waehrend die Agenten es als zwei Einzelhandlungen behielten.
+- **Entscheidung:** Genau nach dem vollstaendigen sichtbaren Training und dem erfolgreichen
+  Bewegungsabschluss beider Seiten wendet `LivingSimulation.rememberSharedTraining` zweimal die
+  eng benannte Handlung `TRAIN_TOGETHER` an. Ihr `ActionOutcome` erzeugt je eine positive Episode
+  mit der anderen `profileId` und 0,02 Naehe. Das bleibt deutlich unter den 0,08 einer
+  angenommenen Einladung: gemeinsame Bewegung schafft Vertrautheit, ersetzt aber keine
+  ausdrueckliche Zuwendung.
+- **Wirkungsgrenze:** `LivingPopulation.completeSharedTraining` liefert nur dann beide
+  angereicherten Ergebnisse, wenn Host und Einwohner `MOVE_BODY` wirklich abgeschlossen haben
+  und denselben Domaenenort teilen. Gewoehnliches `MOVE_BODY`, ein sichtbarer Abbruch oder ein
+  inzwischen unpassender Einwohnerplan erzeugt weder Episode noch Beziehung. `DockScreen`
+  schreibt erst danach beide Profile in derselben vorhandenen `saveAll`-Transaktion.
+- **Abgrenzung:** Keine zweite Bewegung, kein zusaetzlicher Zeitverbrauch, keine
+  Beduerfniswirkung, kein Vertrauen, keine neue Choreografie und keine zweite gemeinsame
+  Taetigkeit. `TRAIN_TOGETHER` ist im Runtime-Adapter ausdruecklich keine allein startbare
+  Routine. Vier `LivingSite`, Renderpfad, Stream-Build und Room bleiben unveraendert.
+- **Evidenz:** `TESTED BEHAVIOR` belegt die beidseitigen Gegenueber-Episoden, die beidseitige
+  Naehe, den Unterschied zu gewoehnlichem `MOVE_BODY`, beide einseitigen Fehlerfaelle sowie den
+  Store-Roundtrip in genau einer Batch-Transaktion. Die sichtbare Lesbarkeit des zugrunde
+  liegenden gemeinsamen Trainings bei vierzig Zellen bleibt `UNVERIFIED`.
+- **Bestandsdaten und Ruecksetzung:** Kein neuer Preference-Schluessel und keine Migration.
+  Bestehende Version-2-Snapshots bleiben lesbar; neue koennen `TRAIN_TOGETHER` als typisierten
+  `ActionKind` enthalten. Ein funktionaler Revert muss diesen Enum-Wert im Codec belassen und nur
+  Erzeugung sowie Laufzeitanbindung entfernen - ein blindes Entfernen des Werts wuerde danach
+  geschriebene Episoden unlesbar machen.
+- **Betroffene Bereiche:** `LivingAction`, `LivingAgent`, `LivingPopulation`, die gezielte
+  Abschlussgrenze in `DockScreen`, Population-/Store-Verhaltenstests sowie Living-Agent-,
+  Uebergabe- und Aufgaben-Dokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 498 Tests gruen (main-Stand 494, vier neue
+  Verhaltensfaelle). `python3 -m unittest discover --start-directory tools/music` - 15 Tests
+  gruen. Android-Compile, Lint und R8 folgen in der PR-CI.
+- **Naechster Schritt:** Zuerst NT-091 am Geraet beurteilen. Danach die Partnerauswahl
+  deterministisch rotieren; eine zweite gemeinsame Taetigkeit erst auf einer eigenen wirklichen
+  Aktivitaetsbedeutung aufbauen.
+
 ### 2026-09-16 - Der Traumrückblick zeigt die Kreatur, nicht Pixelsalat
 
 - **Ausgangsproblem:** Vom Auftraggeber gemeldet: "die Traumsequenz... stellt nur ein

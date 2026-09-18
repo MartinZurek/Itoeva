@@ -211,6 +211,14 @@ data class SocialExchangeResult(
     val receiverEvents: List<LivingEvent>
 )
 
+/** Die zwei sozialen Spuren eines bereits vollstaendig absolvierten gemeinsamen Trainings. */
+data class SharedTrainingMemory(
+    val first: AgentState,
+    val second: AgentState,
+    val firstEvent: LivingEvent,
+    val secondEvent: LivingEvent
+)
+
 /**
  * **Ein Schritt Leben** - die einzige Stelle, an der Beduerfnisse, Ziel, Plan und Welt
  * zusammenkommen.
@@ -424,6 +432,48 @@ object LivingSimulation {
         }
         val applied = action.applyTo(receiver, world, GoalKind.CONNECT_WITH)
         return StepResult(applied.agent, applied.world, listOf(applied.event))
+    }
+
+    /**
+     * Laesst zwei Wesen dasselbe abgeschlossene Training gegenseitig behalten.
+     *
+     * Die sichtbare Laufzeit entscheidet, OB wirklich gemeinsam trainiert wurde. Hier wird nur
+     * die daraus folgende soziale Wirkung gerechnet - zweimal durch [Action.applyTo], einmal je
+     * Profil. Das kurz ergaenzte `Near` ist Ausfuehrungskontext und wird nicht gespeichert; sonst
+     * bliebe ein Trainingspartner nach dem Ortswechsel faelschlich in der Welt anwesend.
+     */
+    fun rememberSharedTraining(
+        first: AgentState,
+        firstWorld: WorldState,
+        second: AgentState,
+        secondWorld: WorldState
+    ): SharedTrainingMemory {
+        require(first.profileId != second.profileId) { "participants must differ" }
+        require(firstWorld.site == secondWorld.site) { "participants must share a site" }
+
+        val firstAction = ActionCatalog.trainTogether(second.profileId)
+        val secondAction = ActionCatalog.trainTogether(first.profileId)
+        val firstTogether = firstWorld.copy(
+            nearbyProfiles = firstWorld.nearbyProfiles + second.profileId
+        )
+        val secondTogether = secondWorld.copy(
+            nearbyProfiles = secondWorld.nearbyProfiles + first.profileId
+        )
+        require(firstAction.isPossible(firstTogether)) {
+            "first participant cannot train here"
+        }
+        require(secondAction.isPossible(secondTogether)) {
+            "second participant cannot train here"
+        }
+
+        val firstMemory = firstAction.applyTo(first, firstTogether, GoalKind.CONNECT_WITH)
+        val secondMemory = secondAction.applyTo(second, secondTogether, GoalKind.CONNECT_WITH)
+        return SharedTrainingMemory(
+            first = firstMemory.agent,
+            second = secondMemory.agent,
+            firstEvent = firstMemory.event,
+            secondEvent = secondMemory.event
+        )
     }
 
     /**

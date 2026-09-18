@@ -213,17 +213,44 @@ class LivingAgentStoreTest {
         val store = LivingAgentStore(storage)
         val host = richAgent("host")
         val resident = richAgent("resident:sport:test")
+        val hostWorld = world(coins = 7).copy(site = LivingSite.OUTSIDE)
+        val residentWorld = world(coins = 2).copy(site = LivingSite.OUTSIDE)
+        val memory = LivingSimulation.rememberSharedTraining(
+            host,
+            hostWorld,
+            resident,
+            residentWorld
+        )
 
         store.saveAll(
             listOf(
-                host to world(coins = 7),
-                resident to world(coins = 2)
+                memory.first to hostWorld,
+                memory.second to residentWorld
             )
         )
 
         assertEquals(0, storage.singleWrites)
         assertEquals(1, storage.batchWrites)
         assertEquals(setOf("host", "resident:sport:test"), storage.values.keys)
+        val restoredHost = store.restore("host", hostWorld.absoluteMinute, open)!!
+        val restoredResident = store.restore(
+            "resident:sport:test",
+            residentWorld.absoluteMinute,
+            open
+        )!!
+        assertEquals(ActionKind.TRAIN_TOGETHER, restoredHost.agent.episodes.last().event.action)
+        assertEquals(
+            "resident:sport:test",
+            restoredHost.agent.episodes.last().event.counterpartProfileId
+        )
+        assertEquals(
+            ActionKind.TRAIN_TOGETHER,
+            restoredResident.agent.episodes.last().event.action
+        )
+        assertEquals(
+            "host",
+            restoredResident.agent.episodes.last().event.counterpartProfileId
+        )
     }
 
     @Test

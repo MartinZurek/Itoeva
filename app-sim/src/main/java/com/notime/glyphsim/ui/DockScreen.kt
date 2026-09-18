@@ -3374,19 +3374,20 @@ fun DockScreen(
                                         ?.let(::setOf)
                                         .orEmpty()
                                 )
+                                var committedResult = prepared.result.copy(world = committedWorld)
                                 if (sharedTraining == null) {
                                     livingAgent = prepared.result.agent
                                     livingWorld = committedWorld
                                     livingStore.save(prepared.result.agent, committedWorld)
                                 } else {
                                     val (partner, before) = sharedTraining
-                                    val partnerResult = LivingPopulation.completeSharedAction(
-                                        before,
-                                        ActionKind.MOVE_BODY
+                                    val sharedCompletion = LivingPopulation.completeSharedTraining(
+                                        host = committedResult,
+                                        residentBefore = before
                                     ) ?: continue
                                     val after = ResidentState(
-                                        partnerResult.agent,
-                                        partnerResult.world
+                                        sharedCompletion.resident.agent,
+                                        sharedCompletion.resident.world
                                     )
                                     val committedTogether = withContext(NonCancellable) {
                                         residentPersistenceMutex.withLock {
@@ -3402,12 +3403,12 @@ fun DockScreen(
                                             withContext(Dispatchers.IO) {
                                                 livingStore.saveAll(
                                                     listOf(
-                                                        prepared.result.agent to committedWorld,
+                                                        sharedCompletion.host.agent to committedWorld,
                                                         after.agent to after.world
                                                     )
                                                 )
                                             }
-                                            livingAgent = prepared.result.agent
+                                            livingAgent = sharedCompletion.host.agent
                                             livingWorld = committedWorld
                                             val updated = residentStates +
                                                 (partner.profileId to after)
@@ -3417,10 +3418,9 @@ fun DockScreen(
                                         }
                                     }
                                     if (!committedTogether) continue
+                                    committedResult = sharedCompletion.host
                                 }
-                                LivingObservationFeed.record(
-                                    prepared.result.copy(world = committedWorld)
-                                )
+                                LivingObservationFeed.record(committedResult)
                                 economyTick++
                                 completeStreamImpulse(prepared)
                             } finally {

@@ -4,6 +4,7 @@ import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.ActionKind
 import com.notime.glyphsim.living.GoalKind
 import com.notime.glyphsim.living.LivingSite
+import com.notime.glyphsim.living.LivingSimulation
 import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.Needs
 import com.notime.glyphsim.living.Plan
@@ -305,5 +306,128 @@ class LivingPopulationTest {
         )
 
         assertNull(LivingPopulation.completeSharedAction(before, ActionKind.MOVE_BODY))
+    }
+
+    @Test
+    fun `vollstaendiges gemeinsames Training wird von beiden gegenseitig erinnert`() {
+        val resident = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }
+        val hostBefore = LivingResidents.initialAgent(resident).copy(
+            profileId = "PUFFLING",
+            goal = GoalKind.HAVE_FUN,
+            plan = Plan(GoalKind.HAVE_FUN, listOf(ActionCatalog[ActionKind.MOVE_BODY]))
+        )
+        val hostWorld = LivingResidents.initialWorld(resident, 10 * 60)
+            .copy(site = LivingSite.OUTSIDE)
+        val hostMoved = LivingSimulation.step(hostBefore, hostWorld)
+        val residentBefore = ResidentState(
+            agent = LivingResidents.initialAgent(resident).copy(
+                goal = GoalKind.HAVE_FUN,
+                plan = Plan(GoalKind.HAVE_FUN, listOf(ActionCatalog[ActionKind.MOVE_BODY]))
+            ),
+            world = LivingResidents.initialWorld(resident, 10 * 60)
+                .copy(site = LivingSite.OUTSIDE)
+        )
+
+        val completed = LivingPopulation.completeSharedTraining(hostMoved, residentBefore)
+        requireNotNull(completed)
+
+        val hostEpisode = completed.host.agent.episodes.last()
+        val residentEpisode = completed.resident.agent.episodes.last()
+        assertEquals(ActionKind.TRAIN_TOGETHER, hostEpisode.event.action)
+        assertEquals(resident.profileId, hostEpisode.event.counterpartProfileId)
+        assertEquals(ActionKind.TRAIN_TOGETHER, residentEpisode.event.action)
+        assertEquals("PUFFLING", residentEpisode.event.counterpartProfileId)
+        assertEquals(
+            ActionCatalog.SHARED_TRAINING_CLOSENESS,
+            completed.host.agent.relationships.getValue(resident.profileId).closeness,
+            1e-9
+        )
+        assertEquals(
+            ActionCatalog.SHARED_TRAINING_CLOSENESS,
+            completed.resident.agent.relationships.getValue("PUFFLING").closeness,
+            1e-9
+        )
+    }
+
+    @Test
+    fun `eine gewoehnliche Bewegung erzeugt keine gemeinsame Erinnerung`() {
+        val resident = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }
+        val before = LivingResidents.initialAgent(resident).copy(
+            profileId = "PUFFLING",
+            goal = GoalKind.HAVE_FUN,
+            plan = Plan(GoalKind.HAVE_FUN, listOf(ActionCatalog[ActionKind.MOVE_BODY]))
+        )
+        val moved = LivingSimulation.step(
+            before,
+            LivingResidents.initialWorld(resident, 10 * 60).copy(site = LivingSite.OUTSIDE)
+        )
+
+        assertTrue(moved.agent.relationships.isEmpty())
+        assertTrue(moved.agent.episodes.none { it.event.action == ActionKind.TRAIN_TOGETHER })
+        assertTrue(moved.agent.episodes.none { it.event.counterpartProfileId != null })
+    }
+
+    @Test
+    fun `fehlender Abschluss auf einer Seite veraendert keinen Eingangszustand`() {
+        val resident = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }
+        val hostBefore = LivingResidents.initialAgent(resident).copy(
+            profileId = "PUFFLING",
+            goal = GoalKind.DEVELOP,
+            plan = Plan(GoalKind.DEVELOP, listOf(ActionCatalog[ActionKind.READ]))
+        )
+        val hostResult = LivingSimulation.step(
+            hostBefore,
+            LivingResidents.initialWorld(resident, 10 * 60).copy(site = LivingSite.OUTSIDE)
+        )
+        val residentBefore = ResidentState(
+            agent = LivingResidents.initialAgent(resident).copy(
+                goal = GoalKind.HAVE_FUN,
+                plan = Plan(GoalKind.HAVE_FUN, listOf(ActionCatalog[ActionKind.MOVE_BODY]))
+            ),
+            world = LivingResidents.initialWorld(resident, 10 * 60)
+                .copy(site = LivingSite.OUTSIDE)
+        )
+
+        assertNull(LivingPopulation.completeSharedTraining(hostResult, residentBefore))
+        assertTrue(hostResult.agent.relationships.isEmpty())
+        assertTrue(residentBefore.agent.relationships.isEmpty())
+        assertTrue(hostResult.agent.episodes.none { it.event.action == ActionKind.TRAIN_TOGETHER })
+        assertTrue(
+            residentBefore.agent.episodes.none {
+                it.event.action == ActionKind.TRAIN_TOGETHER
+            }
+        )
+    }
+
+    @Test
+    fun `fehlender Einwohnerabschluss hinterlaesst auch beim Host keine soziale Spur`() {
+        val resident = LivingResidents.all.first { it.role == ResidentRole.ATHLETE }
+        val hostBefore = LivingResidents.initialAgent(resident).copy(
+            profileId = "PUFFLING",
+            goal = GoalKind.HAVE_FUN,
+            plan = Plan(GoalKind.HAVE_FUN, listOf(ActionCatalog[ActionKind.MOVE_BODY]))
+        )
+        val hostMoved = LivingSimulation.step(
+            hostBefore,
+            LivingResidents.initialWorld(resident, 10 * 60).copy(site = LivingSite.OUTSIDE)
+        )
+        val residentBefore = ResidentState(
+            agent = LivingResidents.initialAgent(resident).copy(
+                goal = GoalKind.DEVELOP,
+                plan = Plan(GoalKind.DEVELOP, listOf(ActionCatalog[ActionKind.READ]))
+            ),
+            world = LivingResidents.initialWorld(resident, 10 * 60)
+                .copy(site = LivingSite.OUTSIDE)
+        )
+
+        assertNull(LivingPopulation.completeSharedTraining(hostMoved, residentBefore))
+        assertTrue(hostMoved.agent.relationships.isEmpty())
+        assertTrue(residentBefore.agent.relationships.isEmpty())
+        assertTrue(hostMoved.agent.episodes.none { it.event.action == ActionKind.TRAIN_TOGETHER })
+        assertTrue(
+            residentBefore.agent.episodes.none {
+                it.event.action == ActionKind.TRAIN_TOGETHER
+            }
+        )
     }
 }
