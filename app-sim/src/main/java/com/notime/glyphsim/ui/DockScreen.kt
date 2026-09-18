@@ -672,7 +672,7 @@ fun DockScreen(
          * Hauptavatar sichtbar laeuft. Solange die Kennung gesetzt ist, darf weder die
          * Hintergrundfortschreibung noch ein Besuch denselben Zustand uebernehmen.
          */
-        var sharedTrainingProfileId by remember { mutableStateOf<String?>(null) }
+        var sharedActivityProfileId by remember { mutableStateOf<String?>(null) }
 
         /**
          * Stellt denselben Living-Zustand fuer Handeln und Gespraech bereit.
@@ -1002,7 +1002,7 @@ fun DockScreen(
             }
             residentSnapshots = LivingPopulation.snapshot(residentStates)
             while (isActive) {
-                if (!visitRunning && sharedTrainingProfileId == null) {
+                if (!visitRunning && sharedActivityProfileId == null) {
                     val targetMinute = PlayTimeLapse.absoluteMinute()
                     val currentResidents = residentStates
                     val advanced = withContext(Dispatchers.Default) {
@@ -1011,7 +1011,7 @@ fun DockScreen(
                     // Ein Besuch kann waehrend der Hintergrundrechnung beginnen. Dann wird
                     // dessen sichtbarer Abschluss zur Wahrheit; der vorher berechnete Stand
                     // darf ihn weder im Speicher noch im Bild ueberholen.
-                    if (visitRunning || sharedTrainingProfileId != null) {
+                    if (visitRunning || sharedActivityProfileId != null) {
                         delay(POPULATION_REFRESH_MS)
                         continue
                     }
@@ -1021,7 +1021,7 @@ fun DockScreen(
                         // noch mit dem alten vollstaendigen Zustand, oder erst mit dem neuen.
                         residentPersistenceMutex.lock()
                         try {
-                            if (!visitRunning && sharedTrainingProfileId == null &&
+                            if (!visitRunning && sharedActivityProfileId == null &&
                                 residentStates == currentResidents
                             ) {
                                 withContext(Dispatchers.IO) {
@@ -1829,7 +1829,7 @@ fun DockScreen(
          */
         suspend fun runVisit() {
             val (host, resident, residentState) = residentPersistenceMutex.withLock {
-                if (visitRunning || sharedTrainingProfileId != null) return@withLock null
+                if (visitRunning || sharedActivityProfileId != null) return@withLock null
                 val currentHost = avatar ?: return@withLock null
                 if (currentHost.fed || currentHost.occurrenceId != null || avatarHidden) {
                     return@withLock null
@@ -3338,15 +3338,18 @@ fun DockScreen(
                             // hingehen, benutzen, handeln, verweilen, aufstehen (siehe
                             // PlayRoutine). Erst dadurch setzt sich die Figur mit ihrer Umgebung
                             // auseinander, statt neben den Moebeln zu agieren.
-                            // Die erste gemeinsame Aktivitaet ist bewusst nur TRAINING. Ein
-                            // MOVE_BODY-Zustand allein behauptet weder Fussball noch Angeln oder
-                            // Drachensteigen; die vorhandene spezifische Routine des
-                            // Hauptavatars muss ebenfalls passen.
-                            val sharedTraining = residentPersistenceMutex.withLock {
-                                if (visitRunning || sharedTrainingProfileId != null) {
+                            // Gemeinsame Aktivitaeten bleiben bewusst auf TRAINING und BASKETBALL
+                            // begrenzt (NT-091, NT-092-Folgeschnitt). Ein MOVE_BODY-Zustand allein
+                            // behauptet weder Fussball noch Angeln oder Drachensteigen; die
+                            // vorhandene spezifische Routine des Hauptavatars muss ebenfalls
+                            // passen UND der Einwohner muss ueber sein eigenes
+                            // `nextSpecialActivity` dieselbe Aktivitaet wirklich meinen (siehe
+                            // LivingPopulationLayout.sharedSportPartner).
+                            val sharedActivity = residentPersistenceMutex.withLock {
+                                if (visitRunning || sharedActivityProfileId != null) {
                                     return@withLock null
                                 }
-                                val partner = LivingPopulationLayout.sharedTrainingPartner(
+                                val partner = LivingPopulationLayout.sharedSportPartner(
                                     snapshots = residentSnapshots,
                                     place = place,
                                     hostCompletedActions = prepared.completedActions,
@@ -3354,7 +3357,7 @@ fun DockScreen(
                                 ) ?: return@withLock null
                                 val state = residentStates[partner.profileId]
                                     ?: return@withLock null
-                                sharedTrainingProfileId = partner.profileId
+                                sharedActivityProfileId = partner.profileId
                                 partner to state
                             }
                             try {
@@ -3374,12 +3377,12 @@ fun DockScreen(
                                         ?.let(::setOf)
                                         .orEmpty()
                                 )
-                                if (sharedTraining == null) {
+                                if (sharedActivity == null) {
                                     livingAgent = prepared.result.agent
                                     livingWorld = committedWorld
                                     livingStore.save(prepared.result.agent, committedWorld)
                                 } else {
-                                    val (partner, before) = sharedTraining
+                                    val (partner, before) = sharedActivity
                                     val partnerResult = LivingPopulation.completeSharedAction(
                                         before,
                                         ActionKind.MOVE_BODY
@@ -3390,7 +3393,7 @@ fun DockScreen(
                                     )
                                     val committedTogether = withContext(NonCancellable) {
                                         residentPersistenceMutex.withLock {
-                                            if (sharedTrainingProfileId != partner.profileId ||
+                                            if (sharedActivityProfileId != partner.profileId ||
                                                 residentStates[partner.profileId] != before
                                             ) {
                                                 return@withLock false
@@ -3424,14 +3427,14 @@ fun DockScreen(
                                 economyTick++
                                 completeStreamImpulse(prepared)
                             } finally {
-                                if (sharedTraining != null) {
+                                if (sharedActivity != null) {
                                     // Kein suspendierendes Lock im Abbruch-finally: Die
                                     // umgebende LaunchedEffect ist dann bereits cancelled und
                                     // koennte die Kennung sonst fuer immer gesetzt lassen.
-                                    if (sharedTrainingProfileId ==
-                                        sharedTraining.first.profileId
+                                    if (sharedActivityProfileId ==
+                                        sharedActivity.first.profileId
                                     ) {
-                                        sharedTrainingProfileId = null
+                                        sharedActivityProfileId = null
                                     }
                                 }
                             }
@@ -3494,9 +3497,11 @@ fun DockScreen(
             ).map { placement ->
                 // Der zweite Teilnehmer benutzt dieselbe bestehende Koerperregung wie der
                 // Hauptavatar. Weil [residentFigures] Bildschirm, Schnappschuss und Clip speist,
-                // bleibt die gemeinsame Phase in allen drei Ausgaben dieselbe.
-                val together = placement.resident.profileId == sharedTrainingProfileId &&
-                    trainingPhase != null
+                // bleibt die gemeinsame Phase in allen drei Ausgaben dieselbe. Basketball kennt
+                // keine Ruhephase wie Training - der Einwohner bleibt dort durchgehend in
+                // Bewegung, was der else-Zweig unten bereits ohne weitere Fallunterscheidung tut.
+                val together = placement.resident.profileId == sharedActivityProfileId &&
+                    (trainingPhase != null || basketballPhase != null)
                 val idle = if (together) {
                     if (trainingPhase == PlayEffects.TrainingPhase.REST) {
                         AvatarAnimations.fidgetSequence(
