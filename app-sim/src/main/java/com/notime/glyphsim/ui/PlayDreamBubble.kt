@@ -3,7 +3,6 @@ package com.notime.glyphsim.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -123,45 +122,6 @@ internal fun PlayDreamBubble(
             species = species,
             showBackground = false,
             contentDescription = null,
-            modifier = Modifier.width(spriteWidth).height(spriteHeight)
-        )
-    }
-}
-
-/**
- * Der Tagesrueckblick, sobald er von der Traumblase in die vergroesserte Uhr uebergegangen ist
- * (siehe `DockScreen.playSleepRecap`).
- *
- * Dieselbe Kreis-Chrome wie die Uhr selbst (runder schwarzer Grund), aber mit derselben
- * Avatar-Ansicht wie [PlayDreamBubble] statt der 13x13-Zifferndarstellung - aus demselben Grund:
- * Ein Tagesrueckblick ist eine Kreatur-Reaktion, kein Uhr-/Mond-Zeichen.
- */
-@Composable
-internal fun PlayDreamWatchFace(
-    frame: IntArray,
-    species: AvatarSpecies,
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null
-) {
-    // BoxWithConstraints statt Box: [modifier] traegt von aussen bereits eine straffe
-    // quadratische Groesse (`watchModifier` in DockScreen, `.size(...)`). Genau wie in
-    // [PlayDreamBubble] braucht [AvatarSpriteView] deshalb eine explizite, im 16:20-Verhaeltnis
-    // berechnete Breite/Hoehe statt `fillMaxSize()` - sonst wird sie quadratisch gemessen und
-    // die Figur unten am Kreisrand abgeschnitten. BoxWithConstraints liefert die dafuer noetige
-    // tatsaechliche Kantenlaenge, ohne dass der Aufrufer sie zusaetzlich durchreichen muesste.
-    BoxWithConstraints(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(Color.Black),
-        contentAlignment = Alignment.Center
-    ) {
-        val spriteHeight = maxHeight * SPRITE_HEIGHT_FRACTION
-        val spriteWidth = spriteHeight * AvatarGeometry.SIZE.toFloat() / AvatarGeometry.HEIGHT
-        AvatarSpriteView(
-            frame = frame,
-            species = species,
-            showBackground = false,
-            contentDescription = contentDescription,
             modifier = Modifier.width(spriteWidth).height(spriteHeight)
         )
     }

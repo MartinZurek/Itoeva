@@ -704,6 +704,63 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   deterministisch rotieren; eine zweite gemeinsame Taetigkeit erst auf einer eigenen wirklichen
   Aktivitaetsbedeutung aufbauen.
 
+### 2026-09-16 - Der Hauptrückblick zeigt die Taetigkeit, nicht die Reminder-Pose
+
+- **Ausgangsproblem:** Direktes Folge-Feedback, nachdem der Pixelsalat-Fund vom selben Tag
+  behoben war und der Rückblick endlich lesbar wurde: "in der schlussendlichen Hauptbubble
+  werden dann nur die Reminder-Animation gezeigt. Ich meinte tatsächlich, dass dort die Szenen
+  gezeigt werden, die im Spiel so spannend sind/gewesen sind." Die vergrößerte Uhr zeigte
+  `AvatarAnimations.reactionFor(species, topic)` - wörtlich dieselbe Pose, die beim Beantworten
+  einer ECHTEN Erinnerung erscheint. Ein Rückblick auf den Tag fühlte sich dadurch wie eine
+  Wiederholung von Erinnerungs-Antworten an, nicht wie ein Blick auf das, was im Spiel geschah.
+- **Entscheidung:** `playSleepRecap`s Hauptschleife und die Übergabe davor holen ihre Frames
+  jetzt aus `ReminderAnimations.framesFor(topic)` statt aus `AvatarAnimations.reactionFor` -
+  denselben 13x13-Symbol-Frames, die seit der Kreis-Spiegelung vom selben Tag (siehe die andere
+  2026-09-16-Eintragung) schon tagsüber die autonome Tätigkeit zeigen: ein Glas, das sich
+  tropfenweise füllt, ein Buch mit umblätternden Seiten, ein Pinsel, der zeichnet - das bildet
+  die TÄTIGKEIT selbst ab statt einer generischen Freuden-Pose. Die kleine AUFSTEIGENDE Blase
+  (`dreamFrame`/`PlayDreamBubble`, die schlafende Kreatur, die aus dem Bett "aufsteigt") bleibt
+  unverändert Kreatur-Format - nur die vergrößerte Hauptblase mit dem Tagesrückblick wechselt
+  das Motiv. Damit wurde `PlayDreamWatchFace` (erst am selben Tag fürs Format-Fix eingeführt)
+  wieder entfernt: Die Rückblick-Frames sind jetzt wieder legitim 13x13, `SimulatedMatrixView`
+  ist dafür der richtige, nicht der falsche Leser.
+- **Zeitgefüge angepasst:** `DREAM_HIGHLIGHT_HOLD_MS` war eine reine Pause NACH einer einmal
+  durchlaufenden Kreatur-Reaktion (420ms). Die ReminderAnimations-Frames sind für Dauer-Anzeige
+  während eines offenen Reminders gebaut, nicht für einen einzelnen Durchlauf - der Wert ist
+  jetzt die GESAMTE Anzeigedauer je Highlight (2000ms; `MatrixAnimator.play` läuft die Frames
+  notfalls erneut von vorn, bis die Zeit um ist). Drei Highlights: ein Rückblick dauert damit
+  höchstens sechs Sekunden.
+- **Evidenz:** `TESTED BEHAVIOR` nur indirekt - die Compose-Änderung selbst bleibt `UNVERIFIED`
+  (kein Android-SDK in dieser Sitzung, wie bei jeder DockScreen.kt-Änderung hier). Die
+  wiederverwendeten `ReminderAnimations`-Frames sind bereits produktiver Code (Reminder-Anzeige
+  und die Kreis-Spiegelung vom selben Tag); neu ist nur, WO sie zusätzlich verwendet werden.
+- **Offen geblieben (zweiter gemeldeter Punkt):** "wenn er ins Bett geht, ... auch wenn er
+  danach träumt, dann steht er quasi vor dem Bett, obwohl er träumt" - vermutlich die
+  Bettdecken-Überdeckung (`PlayScene.buildFront`, gesteuert über `occupiedStation` in
+  `DockScreen`), die die untere Körperhälfte waehrend `RoutineStep.Occupy(BED)` verdeckt.
+  Nachverfolgt: `occupiedStation` wird bei `Occupy(BED)` gesetzt und erst bei `Rise` wieder
+  `null` - dazwischen liegen `Act(SLEEP)`, `SleepUntilMorning` (inklusive des ganzen
+  Rückblicks) und keiner dieser Schritte fasst `occupiedStation` an. Der einzige andere
+  Rücksetzpunkt (Fütter-Erfolg, "Gefüttert wird immer frei stehend") ist auf eine ECHTE offene
+  Erinnerung (`occurrenceId != null`) begrenzt und sollte während eines ambienten Schlafs nicht
+  greifen. Ohne Geräteprüfung konnte die tatsächliche Ursache nicht gefunden werden - **bleibt
+  UNVERIFIED/offen**, siehe Nächster Schritt.
+- **Abgrenzung:** Keine Änderung an `PlayDreamMemory`/`PlayDreams` (welche Themen überhaupt als
+  Erlebnis gelten) - nur woraus die Anzeige gebaut wird. Spezielle Tätigkeiten (Fußball, Malen,
+  Angeln, Training, Musik, Drachen) bleiben im Traum nicht von ihrer generischen
+  `AnimationType`-Kategorie unterscheidbar, weil `PlayDreamMemory` nur diese Kategorie
+  speichert, nicht die konkrete Sonderaktivität - eine tiefere Verbesserung ("hat heute
+  Fußball gespielt" statt "hat sich bewegt") wäre ein eigenes, größeres Vorhaben.
+- **Bestandsdaten und Rücksetzung:** Keine Migration, kein neuer Preference-Schlüssel. Ein
+  Revert stellt die Kreatur-Reaktion im Rückblick wieder her; nichts davon ist persistent.
+- **Betroffene Bereiche:** `DockScreen.kt` (`playSleepRecap`, der Uhr-Renderzweig,
+  `DREAM_HIGHLIGHT_HOLD_MS`), `PlayDreamBubble.kt` (`PlayDreamWatchFace` entfernt).
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 494 Tests grün (unverändert, reiner
+  UI-Umbau ohne neue Matrix-Logik).
+- **Nächster Schritt:** Am Gerät beobachten, WANN genau die Bettdecke verschwindet (sofort beim
+  Einschlafen, erst beim Übergang in die Hauptblase, oder erst waehrend eines bestimmten
+  Highlights) - das grenzt die Ursache ein, die per Code-Lesen allein nicht zu finden war.
+
 ### 2026-09-16 - Der Traumrückblick zeigt die Kreatur, nicht Pixelsalat
 
 - **Ausgangsproblem:** Vom Auftraggeber gemeldet: "die Traumsequenz... stellt nur ein
@@ -748,6 +805,68 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Nächster Schritt:** Auf einem echten Gerät bestätigen, dass Traumblase und Rückblick jetzt
   die schlafende Kreatur zeigen statt Rauschen, und ob die bestehende Größe bereits gut lesbar
   ist oder doch noch wachsen sollte.
+
+### 2026-09-16 - Staffelei, Trinken, Buch neu gezeichnet; der Kreis wird zweite Buehne
+
+- **Ausgangsproblem:** Direktes Nutzer-Feedback zu vier World-Motiven/der Uhr: (1) die
+  Malszene liess sich nicht sicher von Angeln unterscheiden ("langes Ding in der Hand, ein
+  Rechteck geht hoch - Angeln oder Malen?"), (2) die autonome, nicht durch eine Erinnerung
+  ausgeloeste Trink-Animation "sieht noch richtig schlecht aus", (3) die Buch-Animation
+  "gefaellt mir ueberhaupt nicht", (4) der Wunsch, dass der kleine runde Kreis (wie beim
+  Traum-Rueckblick) ZUSAETZLICH zur Weltebene zeigt, was der Bewohner gerade tut - nicht
+  anstelle davon.
+- **Entscheidung Malen/Angeln:** Kein neues Motiv, sondern die Staffelei eindeutiger gemacht:
+  ein drittes, HINTERES Bein ergibt im Profil die Dreieckssilhouette, an der eine Staffelei von
+  einem schwebenden Bilderrahmen zu unterscheiden ist; der Pinsel laeuft jetzt als
+  durchgehender Schaft bis zum Kontaktpunkt auf der Leinwand statt als zwei getrennte, nicht
+  verbundene Marken. `fishingCells` blieb unveraendert - sie war schon eindeutig (Rute,
+  Schnur, Schwimmer, Wellenringe), nur die Malszene war zu abstrakt.
+- **Entscheidung Trinken:** Von Grund auf neu: statt eines einzelnen Tropfens, der ueber vier
+  Takte einsam zum Glasrand wandert, faellt jetzt ein Schwall aus drei Tropfen im Verbund, und
+  das Auftreffen zeigt Ringe auf zwei Hoehen statt nur zweier Randpunkte. Das Glas selbst
+  (Form, steigender Pegel) blieb unangetastet.
+- **Entscheidung Buch:** Bewusst vereinfacht statt weiter am Keil aus vier Diagonalen zu
+  feilen (der laut Feedback trotz zweier Vorfassungen immer noch nicht als Buch gelesen wurde):
+  ein einzelnes, geschlossen umrissenes Rechteck mit sichtbarem Ruecken in der Mitte. Die
+  Bewegung ist jetzt eine einzelne wandernde Ecke oberhalb des Ruecken (rechts nach links ueber
+  vier Takte) statt aufsummierter Textzeilen - wichtig fuer den Regressionstest, siehe Evidenz.
+- **Entscheidung Kreis-Spiegelung:** `DockScreen` bekommt einen neuen abgeleiteten Zustand
+  `activityWatchFrame`, der bei jeder Aenderung von `activeActivity` per
+  `MatrixAnimator.play(..., targetDurationMs = DURATION_UNTIL_FED)` durch
+  `ReminderAnimations.framesFor(topic)` loopt - dieselben 13x13-Symbol-Frames, die beim
+  Ausloesen einer Erinnerung ohnehin schon existieren, nicht die 16x20-Kreatur-Reaktionsposen
+  (die gehoeren laut `CreatureFrameSizeTest` ausdruecklich NICHT in den 13x13-Kreis). Die
+  Prioritaet im Kreis bleibt: Erinnerungs-Animation vor Traum vor Mond vor Taetigkeits-
+  Spiegelung vor Uhrzeit - die Mondszene ist eine bewusst seltene Ausnahme (siehe
+  `moonMode`-Kommentar in `DockScreen`) und soll nicht von einem alltaeglichen
+  Taetigkeits-Symbol verdraengt werden. Neue A11y-Zeichenkette
+  `a11y_clock_activity_highlight` (de/en) fuer TalkBack.
+- **Evidenz:** `TESTED BEHAVIOR` fuer die drei `PlayEffects`-Motive - der bestehende,
+  generische Test `Weltmotive veraendern ihren Zustand sichtbar` deckt auf, ob sich ein Motiv
+  zwischen zwei Zeitpunkten ueberhaupt sichtbar aendert (die Buch-Neufassung waere daran beim
+  ersten Versuch gescheitert, siehe Abgrenzung). `UNVERIFIED` fuer die Kreis-Spiegelung in
+  `DockScreen.kt`: reines Compose/Android, in dieser Umgebung ohne Android-SDK nicht
+  kompilierbar - nur sorgfaeltig gegen bestehende Muster (`MatrixAnimator.play`-Aufrufe,
+  Prioritaetslogik) gegengelesen, nicht am Geraet gesehen. `UNVERIFIED` bleibt ausserdem, ob
+  die neue Staffelei-Silhouette und das neue Buch am Geraet tatsaechlich eindeutiger wirken.
+- **Abgrenzung:** Kein neues Motiv, keine neue Erinnerungs-Kategorie, keine Aenderung an
+  `PlayAmbientActivity`s Auswahl-Gewichtung. Die Kreis-Spiegelung zeigt bewusst nur autonome
+  Taetigkeiten (`activeActivity`), nicht die bereits eigenstaendig choreografierten Szenen
+  (Fussball, Basketball, Drachen, Musik, Malen, Angeln, Training) - die haben keinen
+  `ReminderAnimations`-Eintrag und wurden nicht angefasst.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration, kein neuer Preference-Schluessel. Ein
+  Revert entfernt Silhouetten-Aenderungen und die Kreis-Spiegelung; nichts davon ist
+  persistent.
+- **Betroffene Bereiche:** `PlayEffects.kt` (`paintingCells`, `AnimationType.DRINK`,
+  `AnimationType.BOOK`), `DockScreen.kt` (`activityWatchFrame`, `watchFrame`,
+  `clockContentDescription`), `strings.xml`/`values-de/strings.xml`.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 493 Tests gruen (unveraendert; die
+  bestehenden generischen Motiv-Tests deckten die Umgestaltung ausreichend ab, kein neuer
+  Testfall noetig). Android-Compile und beide `:app-sim`-Varianten laufen wie ueblich erst in
+  der PR-CI.
+- **Naechster Schritt:** Am Geraet pruefen, ob (a) die Staffelei jetzt sicher von Angeln zu
+  unterscheiden ist, (b) Trinken und Buch tatsaechlich besser wirken, (c) die Kreis-Spiegelung
+  sich rund anfuehlt und nicht hektisch, wenn Taetigkeiten schnell wechseln.
 
 ### 2026-09-16 - Zwei wirkliche Bewegungen werden gemeinsames Training (NT-091)
 
@@ -795,6 +914,120 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Naechster Schritt:** Zuerst die Lesbarkeit des gemeinsamen Trainings am Geraet beurteilen.
   Eine zweite gemeinsame Faehigkeit erst ergaenzen, wenn ihre Bedeutung aus wirklichem Zustand
   unterscheidbar ist.
+
+### 2026-09-16 - Basketball wird ehrlich gemeinsam: ein echtes Einwohner-Signal (NT-093)
+
+- **Ausgangsproblem:** NT-092 hat den naiven Basketball-Entwurf zu Recht zurueckgenommen (siehe
+  Eintrag darunter) - der Einwohner trug kein eigenes Zeichen dafuer, WELCHE Sonderaktivitaet
+  sein generisches `MOVE_BODY` meint. Der Auftrag hatte fuer genau diesen Fall den kleinsten
+  ehrlichen naechsten Schritt vorgezeichnet: ein echtes, deterministisches Einwohner-Signal, kein
+  weiteres Raten aus Rolle oder Zufall.
+- **Entscheidung:** `LivingPopulation.specialActivityFor(resident, world)` leitet deterministisch
+  aus Einwohner-Index und Simulationstag her, welche der beiden Sportplatz-Aktivitaeten
+  (`TRAINING` oder `BASKETBALL`) ein geplantes `MOVE_BODY` an diesem Tag wirklich meint - nach
+  demselben bereits bestehenden Muster wie `interestFor`s Themenrotation, nur mit eigenem Takt.
+  `ResidentSnapshot.nextSpecialActivity` traegt diesen Wert (nur gesetzt, wenn `nextAction`
+  wirklich `MOVE_BODY` ist). `LivingPopulationLayout.sharedSportPartner` (die Umbenennung aus
+  NT-092 bleibt) verlangt jetzt zusaetzlich `it.nextSpecialActivity == specialActivity` - der
+  Einwohner muss dieselbe konkrete Aktivitaet wie der Hauptavatar wirklich meinen, nicht nur
+  irgendein unblockiertes `MOVE_BODY` planen.
+- **Warum nur zwei Werte und kein fuenfteiliges Signal:** TRAINING und BASKETBALL teilen sich den
+  Ort SPORT, brauchen also keine neue Ortszuordnung. Drachen (PARK) und Angeln (POND) haetten
+  einen eigenen Domaenenort gebraucht, Fussball einen zusaetzlichen, rein hauptavatarbezogenen
+  Zustand (den gelernten Trick) - alles drei ausserhalb dieses kleinen Schnitts. Damit bleibt der
+  Umfang exakt der, den NT-092 als naechsten Schritt vorgeschlagen hat.
+- **Warum das jetzt ehrlich ist:** Beide Seiten leiten ihre konkrete Aktivitaet unabhaengig
+  voneinander her - der Hauptavatar aus der bereits gewaehlten, wirklich rendernden Routine, der
+  Einwohner aus seinem eigenen deterministischen Tages-Signal. Eine gemeinsame Szene entsteht nur,
+  wenn beide **zufaellig auf denselben Wert treffen**; das ist eine echte Koinzidenz zweier
+  konkreter Absichten, keine Behauptung aus einem generischen `MOVE_BODY`.
+- **Evidenz:** `TESTED BEHAVIOR`. Ein Test belegt, dass `nextSpecialActivity` ueber einen
+  Fuenf-Tage-Lauf genau dann gesetzt ist, wenn wirklich `MOVE_BODY` geplant ist, und sonst `null`
+  bleibt; ein zweiter belegt Determinismus (gleicher Tag -> gleicher Wert) und dass beide Werte
+  ueber mehrere Tage vorkommen (kein entarteter Konstantwert). Der Kernfall aus dem Codex-Fund
+  ist jetzt direkt als Verhaltenstest festgehalten: ein Einwohner mit generischem `MOVE_BODY`,
+  aber ohne passendes oder mit einem FALSCHEN `nextSpecialActivity`, loest weiterhin keine
+  gemeinsame Szene aus - selbst wenn Ort, Anwesenheit und Blockade sonst passen. Die bestehenden
+  positiven/negativen Faelle aus NT-091/092 sind unveraendert gruen, jetzt mit echtem statt
+  keinem Signal.
+- **Abgrenzung:** Keine neue Domaenen-Aktion, kein neuer `LivingSite`, keine Freundschafts- oder
+  Beziehungswirkung, kein zweiter Renderer, kein grossflaechiger `DockScreen`-Umbau. Fussball,
+  Drachen und Angeln bleiben aus den oben genannten Gruenden offen.
+- **Bestandsdaten und Ruecksetzung:** Keine Migration und kein neuer Preference-Schluessel -
+  `nextSpecialActivity` ist ein abgeleitetes Feld des read-only Schnappschusses, nicht Teil eines
+  gespeicherten Zustands. Ein Revert stellt exakt den NT-092-Stand (nur TRAINING) wieder her.
+- **Betroffene Bereiche:** `LivingPopulation` (neues Feld, neue Funktion),
+  `LivingPopulationLayout` (neuer Abgleich), die gezielte Population-/Routine-/Rendergrenze in
+  `DockScreen`, `LivingPopulationTest`, `LivingPopulationLayoutTest`, Living-Agent-, Uebergabe-
+  und Aufgaben-Dokumentation.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 497 Tests gruen (vorher 493, vier neue
+  Verhaltensfaelle). `python3 -m unittest discover --start-directory tools/music` unveraendert.
+  Android-Compile, Lint, R8 und instrumentierte Tests sind aus dieser Sitzung heraus nicht
+  ausfuehrbar (kein Android SDK, Gradle-Plugin-Repository vom Sandbox-Netzwerk aus nicht
+  erreichbar) und bleiben der PR-CI ueberlassen.
+- **Naechster Schritt:** Lesbarkeit von Training UND Basketball gemeinsam am Geraet beurteilen
+  (weiterhin `UNVERIFIED`). Fuer Fussball, Drachen oder Angeln braucht es entweder eine eigene
+  Ortszuordnung oder eine Loesung fuer den hauptavatarbezogenen Zusatzzustand, bevor sich dasselbe
+  Muster ein drittes Mal anwenden laesst.
+
+### 2026-09-16 - NT-092 geprueft: keine zweite gemeinsame Aktivitaet ohne echtes Resident-Signal
+
+- **Ausgangsproblem:** NT-091 verband genau EINE bestehende Choreografie (TRAINING) zu einer
+  gemeinsamen Szene. Martins Auftrag verlangte, im aktuellen Modell zu pruefen, ob eine weitere
+  Taetigkeit (Fussball, Basketball, Drachen oder Angeln) ebenso eindeutig vom allgemeinen
+  `MOVE_BODY` unterscheidbar ist, hoechstens eine davon zu ergaenzen und sonst nur die kleinste
+  ehrliche semantische Voraussetzung zu schaffen.
+- **Erster Versuch (verworfen):** Ein erster Entwurf erweiterte
+  `LivingPopulationLayout.sharedTrainingPartner` (umbenannt zu `sharedSportPartner`) um
+  `BASKETBALL` neben `TRAINING`, mit dem Argument, TRAINING sei in NT-091 ja auch nur ueber die
+  bereits gewaehlte, wirklich rendernde Hauptavatar-Routine unterschieden worden und dieselbe
+  Regel liesse sich mechanisch auf eine zweite Aktivitaet anwenden.
+- **Warum das falsch war - Befund aus dem automatischen Review (Codex, P1):** Die
+  Einwohner-Seite der Bedingung blieb dabei fuer TRAINING und BASKETBALL identisch: `MOVE_BODY`,
+  unblockiert, am selben Ort. Ein anwesender Einwohner ohne jedes sportartspezifische Signal
+  erfuellt beide Faelle gleichermassen. Der eigene KDoc-Kommentar des Entwurfs gab das sogar zu:
+  "das gilt fuer jede der fuenf Sonderaktivitaeten gleichermassen" - und genau das ist der
+  Beweis, dass die Regel NICHTS Basketball-Spezifisches pruefte. Sie haette identisch auch
+  Fussball, Drachen oder Angeln "gerechtfertigt", waehrend `EVOLUTION.md` (NT-091) genau diese
+  vier Taetigkeiten ausdruecklich als aus `MOVE_BODY` NICHT herleitbar benennt. Die Szene haette
+  also eine gemeinsame Basketball-Absicht des Einwohners vorgetaeuscht, die im Kern gar nicht
+  existiert - exakt das, was der Auftrag ("keine gemeinsame Szene aus zwei allgemeinen
+  MOVE_BODY-Handlungen") und die Non-Negotiable-Grundsaetze in `EVOLUTION.md` verbieten.
+- **Befund (bestaetigt):** Der Living-Agent-Kern kennt fuer Einwohner ausschliesslich das
+  allgemeine `ActionKind.MOVE_BODY`; keine der fuenf Sonderaktivitaeten
+  (`PlayRoutines.SpecialActivity`) ist im Kern selbst abgebildet, und `interestFor` in
+  `LivingPopulation.kt` leitet fuer Einwohner nie eine einzelne Sportart her. Was TRAINING in
+  NT-091 auf der Hauptavatar-Seite unterscheidbar machte, ueberdeckt auf der Einwohner-Seite
+  nichts - dort bleibt jede Sonderaktivitaet gleichermassen unbelegt. Eine zweite Aktivitaet
+  laesst sich deshalb NICHT allein durch Erweitern der bestehenden Bedingungsmenge ehrlich
+  ergaenzen.
+- **Entscheidung:** Der Basketball-Entwurf wird vollstaendig zurueckgenommen (Code- und
+  Testaenderungen in `LivingPopulationLayout.kt`, `DockScreen.kt` und
+  `LivingPopulationLayoutTest.kt` entfernt; Stand entspricht wieder exakt dem gemergten NT-091).
+  Es wird keine gemeinsame Basketball-, Fussball-, Drachen- oder Angel-Szene gezeichnet. Dieser
+  Schnitt ist damit ausschliesslich dokumentarisch: Er haelt den geprueften Modellengpass fest
+  und schlaegt den kleinstmoeglichen naechsten Schritt vor, anstatt ihn zu erzwingen (siehe
+  Auftragspunkt 4/10).
+- **Der kleinste ehrliche naechste Schritt (nicht in diesem PR umgesetzt):** Ein Einwohner
+  braucht ein echtes, deterministisches Signal, WELCHE Sonderaktivitaet sein `MOVE_BODY` gerade
+  meint - zum Beispiel ein optionales Feld am geplanten Schritt oder ein zusaetzliches
+  `Requirement`, das der Planer nur setzt, wenn eine konkrete Sonderaktivitaet tatsaechlich Teil
+  des abgeleiteten Plans ist (nicht per Rolle oder Wuerfel geraten). Erst wenn dieses Signal am
+  `ResidentSnapshot` real ausgelesen werden kann, darf `sharedSportPartner` eine zweite Aktivitaet
+  danach filtern. Das ist bewusst kein Auftrag fuer eine allgemeine Aktivitaets- oder
+  Skillplattform, sondern fuer genau ein neues, benanntes Signal.
+- **Abgrenzung:** Keine Code-Aenderung an Domaene, Renderer oder Persistenz in diesem Schnitt.
+  Keine Migration, kein neuer Preference-Schluessel.
+- **Evidenz:** `DOCUMENTED INTENT` fuer den Befund und die verworfene Alternative; die
+  Codex-Review-Fundstelle ist im PR #160 nachvollziehbar. Kein neues Verhalten wurde ausgeliefert,
+  also gibt es auch nichts Neues zu testen - `bash tools/reaction-preview/tests.sh` steht wieder
+  auf dem NT-091-Stand von 493 gruenen Tests, `python3 -m unittest discover --start-directory
+  tools/music` unveraendert bei 15 (in dieser Sandbox laufen davon 3, da `numpy` hier fehlt -
+  Umgebungsluecke, unabhaengig von diesem Schnitt).
+- **Naechster Schritt:** Falls Martin die zweite gemeinsame Aktivitaet weiterhin will: zuerst das
+  oben skizzierte Einwohner-Signal fuer GENAU eine Sonderaktivitaet entwerfen und belegen, dann
+  erst `sharedSportPartner` erweitern. Bis dahin bleibt TRAINING die einzige gemeinsame
+  Sportplatz-Aktivitaet.
 
 ### 2026-09-15 - Mehrere wirkliche Einwohner werden sichtbar (NT-089)
 

@@ -382,6 +382,7 @@
     <string name="a11y_clock_moon">Moon</string>
     <string name="a11y_clock_dream_highlight">Dreaming of today: %1$s</string>
     <string name="a11y_clock_dream_empty">Quiet dream — no highlights yet</string>
+    <string name="a11y_clock_activity_highlight">Right now: %1$s</string>
     <string name="settings_clip_share">Share clip</string>
     <string name="settings_clip_enable">Recording in Play mode</string>
     <string name="settings_clip_enable_hint">Shows a record button at the top right of Play mode.</string>

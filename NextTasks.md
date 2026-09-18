@@ -266,16 +266,50 @@ Drachen, Fussball, Basketball und Angeln sind aus `MOVE_BODY` nicht unterscheidb
 nicht geraten. Sie brauchen entweder eine spezifischere wirkliche Handlung oder eine ebenso eng
 belegte Zuordnung; die Lesbarkeit am Geraet bleibt fuer die erste Szene `UNVERIFIED`.
 
-**Living Agent, sozial:** NT-092 **Gemeinsames Training wird gemeinsame Erinnerung** - *am
-2026-09-18 umgesetzt.* Erst nach der vollstaendig sichtbaren Trainingsroutine und dem wirklichen
-`MOVE_BODY`-Abschluss beider Teilnehmer erhalten Hauptavatar und Einwohner gegenseitig eine
-typisierte `TRAIN_TOGETHER`-Episode und 0,02 Naehe. Beide Wirkungen laufen je Profil durch
-`ActionOutcome` und werden zusammen mit den Bewegungszustaenden in derselben atomaren
-`saveAll`-Transaktion gespeichert. Eine normale Bewegung, ein sichtbarer Abbruch oder ein
-fehlgeschlagener Einwohnerabschluss erzeugt keine soziale Spur. **Offen bleibt:** Die Lesbarkeit
-von NT-091 muss am Geraet beurteilt werden. Danach ist eine deterministische Rotation der
-Trainingspartner der naechste kleine soziale Schnitt; erst anschliessend darf eine zweite
-gemeinsame Taetigkeit auf einer eigenen, wirklichen Aktivitaetsbedeutung aufbauen.
+**Living Agent, sozial:** NT-092 **Zweite gemeinsame Aktivitaet gepruefte und bewusst NICHT
+umgesetzt** - *am 2026-09-16 abgeschlossen als dokumentierter Negativbefund.* Gepruefte
+Ausgangsfrage: Der Living-Agent-Kern kennt fuer Einwohner ausschliesslich `ActionKind.MOVE_BODY`,
+keine einzelne Sportart, und `LivingPopulation.interestFor` leitet nie eine Sportart her. Ein
+erster Entwurf erweiterte `sharedTrainingPartner` um BASKETBALL mit der Begruendung, dieselbe in
+NT-091 akzeptierte, asymmetrische Regel (Hauptavatar-Seite real, Einwohner-Seite generisch)
+trage mechanisch eine zweite Aktivitaet. Ein automatisches Review (Codex, P1, PR #160) hat das
+widerlegt: Die Einwohner-Seite blieb fuer TRAINING und BASKETBALL identisch - dieselbe Regel
+haette ebenso Fussball, Drachen oder Angeln "belegt", obwohl `EVOLUTION.md` (NT-091) genau diese
+als aus `MOVE_BODY` nicht herleitbar benennt. Der Entwurf wurde vollstaendig zurueckgenommen; der
+Code entspricht wieder exakt dem gemergten NT-091-Stand (nur TRAINING). **Offen bleibt:** Eine
+zweite gemeinsame Aktivitaet braucht zuerst ein echtes, deterministisches Einwohner-Signal
+(Feld am geplanten Schritt oder ein neues `Requirement`), das eine konkrete Sonderaktivitaet aus
+dem wirklichen Plan ausdrueckt - nicht per Rolle oder Zufall geraten, und keine allgemeine
+Aktivitaets- oder Skillplattform. Bis dahin bleibt TRAINING die einzige gemeinsame
+Sportplatz-Aktivitaet.
+
+**Living Agent, sozial:** NT-093 **Basketball wird ehrlich gemeinsam: ein echtes
+Einwohner-Signal** - *am 2026-09-16 umgesetzt.* Schliesst genau die in NT-092 offen gelassene
+Luecke. `LivingPopulation.specialActivityFor` leitet deterministisch aus Einwohner-Index und
+Simulationstag her, ob ein geplantes `MOVE_BODY` `TRAINING` oder `BASKETBALL` meint - nach
+demselben Muster wie `interestFor`s Themenrotation, nicht per Rolle oder Zufall.
+`ResidentSnapshot.nextSpecialActivity` traegt diesen Wert; `LivingPopulationLayout.
+sharedSportPartner` verlangt jetzt zusaetzlich, dass er mit der Aktivitaet des Hauptavatars
+uebereinstimmt.
+Beide Seiten leiten ihre konkrete Absicht damit unabhaengig voneinander her, eine gemeinsame
+Szene entsteht nur bei echter Koinzidenz. **Offen bleibt:** Fussball, Drachen und Angeln brauchen
+weiterhin entweder eine eigene Ortszuordnung (Drachen: PARK, Angeln: POND) oder eine Loesung fuer
+hauptavatarbezogenen Zusatzzustand (Fussballtrick), bevor sich dasselbe Muster ein drittes Mal
+anwenden laesst. Die Lesbarkeit von Training UND Basketball gemeinsam auf vierzig Szenenzellen
+bleibt `UNVERIFIED`.
+
+**Living Agent, sozial:** NT-092 **Gemeinsames Training wird gemeinsame Erinnerung** (Nummer
+kollidiert mit dem oben dokumentierten, verworfenen NT-092 - unabhaengig auf einem parallelen
+Zweig vergeben, siehe `UEBERGABE.md`) - *am 2026-09-18 umgesetzt.* Erst nach der vollstaendig
+sichtbaren Trainingsroutine und dem wirklichen `MOVE_BODY`-Abschluss beider Teilnehmer erhalten
+Hauptavatar und Einwohner gegenseitig eine typisierte `TRAIN_TOGETHER`-Episode und 0,02 Naehe.
+Beide Wirkungen laufen je Profil durch `ActionOutcome` und werden zusammen mit den
+Bewegungszustaenden in derselben atomaren `saveAll`-Transaktion gespeichert. Eine normale
+Bewegung, ein sichtbarer Abbruch oder ein fehlgeschlagener Einwohnerabschluss erzeugt keine
+soziale Spur. **Offen bleibt:** Die Lesbarkeit von NT-091 muss am Geraet beurteilt werden. Danach
+ist eine deterministische Rotation der Trainingspartner der naechste kleine soziale Schnitt; erst
+anschliessend darf eine zweite gemeinsame Taetigkeit auf einer eigenen, wirklichen
+Aktivitaetsbedeutung aufbauen.
 
 **Darstellung:** NT-075 **Die Kreaturen bekommen Volumen** - *am 2026-09-12 umgesetzt.* Jede
 beleuchtete Zelle stand auf voller Helligkeit; die Figur war eine reine An/Aus-Flaeche.

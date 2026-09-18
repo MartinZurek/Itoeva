@@ -148,30 +148,31 @@ object PlayEffects {
             }
 
             AnimationType.BOOK -> {
-                // Aufgeschlagenes Buch als WEDGE, nicht als Rechteck: zwei Seiten faechern sich
-                // ueber schraege Linien vom Ruecken nach unten-aussen auf. Die Vorgaenger-Fassung
-                // (zwei parallele Rahmen mit geradem Spalt dazwischen) las sich als zwei Steine
-                // nebeneinander - erst echte Diagonalen ergeben die Rundung, an der man ein
-                // aufgeschlagenes Buch erkennt.
+                // Voellig neu gedacht statt weiter am Keil aus vier Diagonalen zu feilen (der
+                // schon die zweite Fassung war und laut Bugmeldung immer noch "gefaellt mir
+                // ueberhaupt nicht" wirkte). Einfacher, wie vorgeschlagen: ein einzelnes,
+                // geschlossen umrissenes Buch mit sichtbarem Ruecken in der Mitte statt zweier
+                // frei schwebender Seiten - auf neun Zellen Breite ist eine geschlossene Form
+                // eindeutiger als eine Silhouette, die sich erst aus vier Linienenden ergibt.
                 val book = place(height = 6)
-                book.line(6, 0, 1, 3, PlayInk.BODY)
-                book.line(6, 0, 11, 3, PlayInk.BODY)
-                book.line(1, 3, 2, 5, PlayInk.BODY)
-                book.line(11, 3, 10, 5, PlayInk.BODY)
-                book.line(2, 5, 6, 5, PlayInk.BODY)
-                book.line(6, 5, 10, 5, PlayInk.BODY)
-                // Der Ruecken: Material wie der Rest, aber mit einem Lichtakzent obendrauf -
-                // derselbe Kniff wie das Glanzlicht am Avatar selbst, nicht die ganze Flaeche hell.
-                book.line(6, 0, 6, 5, PlayInk.BODY)
-                book.spark(6, 1)
-                // Textzeilen kommen weiterhin Takt fuer Takt dazu - siehe scrollFrames in
-                // AvatarSignatureAnimations, dasselbe Prinzip einer progressiven Enthuellung.
-                for (line in 0 until beat) {
-                    val y = 2 + line
-                    book.line(2, y, 4, y, PlayInk.DETAIL)
-                    book.line(8, y, 10, y, PlayInk.DETAIL)
-                }
-                if (beat == 3) book.spark(6, 5)
+                book.art(
+                    0, 0,
+                    "#######",
+                    "#++#++#",
+                    "#++#++#",
+                    "#++#++#",
+                    "#++#++#",
+                    "#######"
+                )
+                // Statt Textzeilen, die sich Takt fuer Takt aufsummieren, wandert eine kleine
+                // Ecke ueber vier Takte knapp UEBER dem Ruecken von rechts nach links - derselbe
+                // Blick wie beim echten Umblaettern, nur als eine einzelne bewegte Marke statt
+                // aufsummierter Linien. Bewusst ausserhalb der Buch-Silhouette (Zeile -1): eine
+                // Marke INNERHALB des schon gemalten Rechtecks aendert nur die Helligkeit einer
+                // ohnehin vorhandenen Zelle, nicht die Menge der gezeichneten Zellen - und genau
+                // daran haengt die Zusicherung, dass die Szene sich sichtbar veraendert.
+                val flipX = 6 - beat * 2
+                book.spark(flipX, -1)
                 book.render(grounded = true)
             }
 
@@ -233,10 +234,12 @@ object PlayEffects {
             }
 
             AnimationType.DRINK -> {
-                // Glas mit steigendem Pegel und einem Tropfen, der sichtbar bis zum Rand faellt
-                // und dort spritzt. Der Tropfen liegt in DENSELBEN lokalen Koordinaten wie das
-                // Glas (nicht in einem eigenen, weit darueber schwebenden Sketch) - sonst haengt
-                // er sichtbar in der Luft, ohne dass er je etwas beruehrt.
+                // Voellig neu gedacht: nicht mehr EIN Tropfen, der ueber vier Takte einsam den
+                // Rand sucht, sondern ein kurzer Schwall aus drei Tropfen im Verbund. Ein
+                // einzelner wandernder Punkt war ueber die ganze Animation zu duenn, um als
+                // Fluessigkeit gelesen zu werden - eine kleine Gruppe faellt sofort als "da
+                // giesst gerade etwas" ins Auge, genau das Bild, an das sich frueher schon einmal
+                // funktioniert hat.
                 val glass = place(height = 8)
                 glass.art(
                     0, 0,
@@ -254,15 +257,21 @@ object PlayEffects {
                 val level = 1 + beat
                 for (y in (6 - level).coerceAtLeast(1)..5) glass.line(1, y, 4, y, PlayInk.DETAIL)
                 glass.spark(1, 1)
-                // Der Tropfen naehert sich ueber die vier Takte dem Rand (y=-4 bis y=-1) und
-                // spritzt im letzten Takt sichtbar auf - erst das macht aus "ein Punkt schwebt"
-                // ein "etwas faellt und trifft".
-                val dropY = -4 + beat
-                glass.dot(2, dropY, PlayInk.SPARK)
-                glass.dot(2, dropY + 1, PlayInk.EDGE)
+                // Drei Tropfen im Abstand von je zwei Zeilen, GEMEINSAM auf dem Weg nach unten -
+                // die Mitte hell als Kern des Schwalls, die aeusseren als Vor- und Nachlauf.
+                for (drop in 0..2) {
+                    val dropY = -6 + beat * 2 - drop * 2
+                    if (dropY in -6..-2) {
+                        glass.dot(2, dropY, if (drop == 1) PlayInk.SPARK else PlayInk.EDGE)
+                    }
+                }
+                // Im letzten Takt trifft der Schwall auf: Ringe statt nur zweier Randpunkte -
+                // erst mehrere Punkte auf zwei Hoehen ergeben ein sichtbares Aufklatschen.
                 if (beat == 3) {
                     glass.dot(1, 0, PlayInk.EDGE)
                     glass.dot(3, 0, PlayInk.EDGE)
+                    glass.dot(0, -1, PlayInk.DETAIL)
+                    glass.dot(4, -1, PlayInk.DETAIL)
                     glass.spark(2, 0)
                 }
                 glass.render(grounded = true)
@@ -953,6 +962,11 @@ object PlayEffects {
         frame.line(10, 14, 10, 15, PlayInk.BODY)
         frame.dot(2, 16, PlayInk.BODY)
         frame.dot(11, 16, PlayInk.BODY)
+        // Das dritte, HINTERE Bein - ohne es waren die zwei vorderen Beine plus Rahmen nicht von
+        // einem schwebenden Bilderrahmen zu unterscheiden. Erst die schraege Linie nach hinten
+        // ergibt im Seitenprofil die Dreieckssilhouette, an der man eine Staffelei erkennt (statt
+        // sie mit einer Angel zu verwechseln, die kein drittes Bein und keinen Rahmen hat).
+        frame.line(11, 3, 15, 16, PlayInk.BODY)
 
         val progress = when (phase) {
             PaintingPhase.SKETCH -> 5
@@ -985,14 +999,23 @@ object PlayEffects {
         // zuletzt in der Liste stand, verlor er ausserdem jede Zelle, die schon dem Rahmen
         // gehoerte. Er kommt jetzt von der Seite des Malers (negative lokale x, die `direction`
         // in beiden Aufstellungen zum Maler hin dreht) und tippt die Leinwand an.
+        //
+        // **Ein durchgaengiger Schaft statt Schaft und Spitze an zwei getrennten Stellen.** Die
+        // Vorgaenger-Fassung endete die Diagonale bei (-1|+1) und setzte den Glanzpunkt separat
+        // bei (1|0) - zwei nicht verbundene Marken, die aus der Distanz wie zwei unabhaengige
+        // Kritzel wirkten, nicht wie EIN Pinsel. Jetzt laeuft die Diagonale bis zum Kontaktpunkt
+        // auf der Leinwand (0|0) durch, und der Glanzpunkt sitzt genau dort - derselbe Kniff wie
+        // beim Malen-Kritikpunkt oben: ein Gegenstand ist erst eine geschlossene Form, keine Wolke
+        // aus Einzelpunkten.
         val brushY = 2 + (scenePhase / 2) % 9
         val brush = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
-        for (i in 1..3) brush.dot(-i, brushY + i, PlayInk.BODY)
-        brush.spark(1, brushY)
+        for (i in 1..4) brush.dot(-i, brushY + i, PlayInk.BODY)
+        brush.dot(0, brushY, PlayInk.BODY)
+        brush.spark(0, brushY)
         // Der frische Strich unter der Spitze. Ohne ihn waere der Pinsel ein Stock, der vor
         // einem fertigen Bild auf und ab faehrt - erst die nasse Spur macht daraus Malen.
         val stroke = PlayInk.Sketch(ox, oy, direction, widthCells, UNBOUNDED)
-        for (dx in 2..4) stroke.dot(1 + dx, brushY, PlayInk.EDGE)
+        for (dx in 1..3) stroke.dot(dx, brushY, PlayInk.EDGE)
 
         // **Pinsel und Strich stehen VORN.** `distinctBy` behaelt den ersten Eintrag; standen
         // sie wie bisher hinten, gewaenne der Rahmen jede gemeinsame Zelle - und genau daran

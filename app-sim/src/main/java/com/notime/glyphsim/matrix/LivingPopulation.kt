@@ -58,7 +58,19 @@ data class ResidentSnapshot(
     val portions: Int,
     val minuteOfDay: Int,
     /** Ob der Einwohner in seinem Anwesenheitsfenster UND an einem sichtbaren Ort ist. */
-    val publiclyPresent: Boolean
+    val publiclyPresent: Boolean,
+    /**
+     * Welche Sonderaktivitaet das geplante `MOVE_BODY` wirklich meint - `null` bei jeder anderen
+     * Handlung (siehe [LivingPopulation.specialActivityFor]).
+     *
+     * **Ohne dieses Feld waere jedes `MOVE_BODY` austauschbar.** Der Kern kennt keine einzelne
+     * Sportart (siehe `ActionKind.MOVE_BODY`-KDoc); ohne einen echten, vom Einwohner selbst
+     * herleitbaren Wert koennte eine gemeinsame Szene nur behaupten, beide Seiten meinten
+     * dieselbe Sonderaktivitaet, ohne es zu belegen - genau der Fehler, den NT-092 gefunden und
+     * zurueckgenommen hat (siehe `EVOLUTION.md`). Der Wert ist deterministisch aus Einwohner und
+     * Simulationstag hergeleitet, nie aus Rolle allein und nie gewuerfelt.
+     */
+    val nextSpecialActivity: PlayRoutines.SpecialActivity?
 )
 
 /**
@@ -166,7 +178,12 @@ object LivingPopulation {
                 coins = state.world.coins,
                 portions = state.world.portions,
                 minuteOfDay = state.world.minuteOfDay,
-                publiclyPresent = place != null && resident.isActiveAt(state.world.minuteOfDay)
+                publiclyPresent = place != null && resident.isActiveAt(state.world.minuteOfDay),
+                nextSpecialActivity = if (state.agent.plan?.next?.kind == ActionKind.MOVE_BODY) {
+                    specialActivityFor(resident, state.world)
+                } else {
+                    null
+                }
             )
         }
 
@@ -299,6 +316,41 @@ object LivingPopulation {
             else -> ActionKind.PURSUE_INTEREST
         }
     }
+
+    /**
+     * Welche Sonderaktivitaet ein geplantes `MOVE_BODY` wirklich meint (Folgeschnitt zu NT-092).
+     *
+     * **Der Fund, der diese Funktion noetig gemacht hat.** Ein erster Versuch liess eine
+     * gemeinsame Basketball-Szene allein daran haengen, dass der Hauptavatar wirklich Basketball
+     * spielte UND ein Einwohner irgendein unblockiertes `MOVE_BODY` plante - ohne dass der
+     * Einwohner selbst je Basketball "meinte". Dieselbe Bedingung haette ebenso Fussball, Drachen
+     * oder Angeln "belegt" (siehe `EVOLUTION.md`, Eintrag zu NT-092); der Entwurf wurde deshalb
+     * zurueckgenommen.
+     *
+     * **Nur zwei Werte, aus demselben Grund wie beim Hauptavatar.** TRAINING und BASKETBALL
+     * teilen sich den Ort SPORT; eine dritte Sonderaktivitaet braeuchte entweder einen eigenen
+     * Domaenenort (Drachen: PARK, Angeln: POND) oder zusaetzlichen, rein hauptavatarbezogenen
+     * Zustand (Fussball: der gelernte Trick) - beides ausserhalb dieses kleinen Schnitts.
+     *
+     * **Deterministisch aus Einwohner und Simulationstag**, nach demselben Muster wie
+     * [interestFor]s Themenrotation - nicht aus der Rolle allein (beide Werte kommen fuer
+     * ATHLETE UND PARK_REGULAR gleichermassen an die Reihe) und nicht gewuerfelt, damit ein
+     * Mehrtageslauf wiederholbar bleibt und der Wert unabhaengig vom Hauptavatar entsteht: Nur
+     * wenn beide Seiten am selben Tag zufaellig dieselbe konkrete Aktivitaet "meinen", entsteht
+     * eine gemeinsame Szene.
+     */
+    fun specialActivityFor(
+        resident: LivingResident,
+        world: WorldState
+    ): PlayRoutines.SpecialActivity {
+        val index = LivingResidents.all.indexOfFirst { it.profileId == resident.profileId }
+        return SHARED_SPORT_ROTATION[(world.day + index).mod(SHARED_SPORT_ROTATION.size)]
+    }
+
+    private val SHARED_SPORT_ROTATION = listOf(
+        PlayRoutines.SpecialActivity.TRAINING,
+        PlayRoutines.SpecialActivity.BASKETBALL
+    )
 
     /** Zeit, Ort und Oeffnungszeiten in Uebereinstimmung bringen - siehe KDoc oben. */
     private fun synchronised(world: WorldState): WorldState =
