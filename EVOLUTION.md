@@ -664,6 +664,88 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-19 - Mehrere gleichzeitige Besucher statt eines einzelnen
+
+- **Ausgangsproblem:** Der Nutzer bemerkte weniger soziale Interaktion als erwartet - der
+  Verkäufer im Laden existierte zwar bereits (`LivingResidents.kt`, seit NT-086), aber im Park
+  liefen nie mehrere Avatare gleichzeitig. Untersuchung ergab: Das System zeigte systemweit immer
+  nur EINEN interaktiven Besucher gleichzeitig (`var visitor: VisitorState?` in `DockScreen.kt`) -
+  dokumentiert als bewusste, vorlaeufige Grenze in `LivingResidents.kt`s KDoc ("Mehr Figuren sind
+  erst sinnvoll, wenn der Renderer mehrere zugleich tragen kann"). Zusaetzlich hatte der
+  Bewohnerkatalog nur drei Eintraege - selbst mit voller Mehr-Besucher-Technik waeren am Park nie
+  mehr als zwei gleichzeitig moeglich gewesen (nur Puffling und Wyrmling hatten PARK in ihren
+  `visitPlaces`).
+- **Entscheidung (mit dem Nutzer abgestimmt):** Ein gestaffelter Deckel statt einer einzelnen
+  Zahl - 2 gleichzeitige Besucher an kleinen/drinnen Orten, 4 an offenen/draussen Orten (Park,
+  Sportplatz, Strasse, Stadt). Abgeleitet aus dem bereits vorhandenen Fuenf-Bahnen-Raster in
+  `LivingPopulationLayout.kt` (`LANE_COUNT`), das fuer die passiven Hintergrundfiguren schon
+  bewiesen hatte, wie viele Figuren auf der 40-Zellen-Szene noch lesbar Platz finden. Der Nutzer
+  hatte zunaechst bis zu zehn Besucher im Park vorgeschlagen; nach Ruecksprache (Bildschirmbreite,
+  Lesbarkeit, quadratisch wachsende Kollisionspruefung) auf 4 draussen / 2 drinnen geeinigt.
+- **Katalog auf sechs Bewohner erweitert** (`LivingResidents.kt`): drei neue Eintraege (Starlet/
+  Park, Gloop/Stadt mit neuer Rolle `NEIGHBOR`, Hootlet/Sportplatz) fuer die drei bis dahin
+  ungenutzten Spezies - jede der sechs waehlbaren Spezies traegt jetzt genau einen Bewohner. Ohne
+  diese Erweiterung waere die neue Technik strukturell vorhanden, aber im Park leer geblieben.
+  - **Zwei Fallstricke beim Erweitern, beide ueber den Testlauf gefunden, nicht vorher erkannt:**
+    Erstens waehlt `LivingPopulation.interestFor` das Tagesthema ueber
+    `(world.day + Listenindex) mod 3` aus einer drei Eintraege langen, rollenspezifischen Liste -
+    zwei Bewohner DERSELBEN Rolle, deren Listenindex sich um ein Vielfaches von drei
+    unterscheidet, waehlen dadurch an jedem Tag dasselbe Thema und entwickeln identische gelernte
+    Vorlieben. Wyrmling (Index 2) und das urspruenglich an Index 5 platzierte Hootlet (beide
+    ATHLETE) kollidierten genau so; behoben durch Umsortieren auf Index 4 (Differenz zwei statt
+    drei). Zweitens hatte `Personality.of(GLOOP)` einen speziesseitigen `REST`-Bias von 0,08 -
+    hoeher als bei jeder anderen Spezies -, den die neue Rolle `NEIGHBOR` nicht automatisch
+    ueberschrieb: `Map + Map` in Kotlin ERSETZT einen vorhandenen Schluessel, statt ihn
+    aufzuaddieren, also blieb der Bias unveraendert stehen. Gloop war dadurch trotz aktiver
+    EXPLORE/CONNECT_WITH-Rollenneigung kaum oeffentlich zu sehen (6 von erwarteten mindestens 15
+    Malen in fuenf simulierten Tagen). Behoben durch einen expliziten `GoalKind.REST to 0.0` in
+    der `NEIGHBOR`-Rollenneigung, der genau diesen einen Schluessel gezielt uebersteuert.
+- **`LivingPopulationLayout.kt` erweitert:** `nextVisitor(...)` bekommt `excludeProfileIds`, damit
+  derselbe Bewohner nicht zweimal gleichzeitig als eigenstaendiger Gast startet; neue
+  `visitorCapFor(place)` mit den Konstanten `INTERACTIVE_VISITOR_CAP_OUTDOOR = 4` /
+  `INTERACTIVE_VISITOR_CAP_INDOOR = 2`; neue `pickInteractiveSlot(...)` fuer die Platzierung
+  voller-Groesse interaktiver Gaeste - ein eigenes, an der tatsaechlichen Gastbreite orientiertes
+  Bahnenraster statt des bestehenden `LANE_COUNT`, das nur fuer die halbgrossen
+  Hintergrundfiguren passt (ein Gast ist so breit wie der Wirt selbst, nicht halb so breit).
+- **`DockScreen.kt` umgebaut:** `visitor: VisitorState?` → `visitors: List<VisitorState>`;
+  `visitRunning: Boolean` → `visitingProfileIds` (Reservierungs- und Kapazitaetsmenge);
+  `runVisit()` mehrfach gleichzeitig aktiv statt seriell abgewartet (`scope.launch { runVisit() }`
+  in der Ablaufsteuerung statt eines direkten Aufrufs); der bisherige host-relative
+  Treffpunkt-Einzelfall bleibt als Sicherheitsnetz erhalten, wenn `pickInteractiveSlot` keinen
+  Platz findet. **Sprechblase bewusst weiterhin auf EINE gleichzeitig begrenzt** (neues
+  `conversationOwnerProfileId`, ein Besuch wartet kurz, falls ein anderer gerade "spricht") - auf
+  dem kleinen Bildschirm waeren zwei Sprechblasen-Paare gleichzeitig nicht lesbar, auch wenn
+  mehrere Gaeste gleichzeitig sichtbar laufen/stehen duerfen.
+  - **Ein Wettlaufe-Fund beim eigenen Review, vor dem Testen behoben:** Die Ruhe-Schleife des
+    Wirts (`avatarIdleJob`) wird beim Eintritt ins Gespraech angehalten und danach neu gestartet -
+    im ersten Entwurf geschah der Neustart erst NACH dem Freigeben des Gespraechs-Schilds
+    (`conversationOwnerProfileId = null`), mit mehreren suspendierenden Zwischenschritten
+    (Speichern des Besuchs-Ergebnisses) dazwischen. Ein zweiter, wartender Besuch haette in genau
+    dieser Luecke das Schild uebernehmen und seine EIGENE "hoert zu"-Animation starten koennen,
+    kurz bevor der erste Besuch die Ruhe-Schleife neu gestartet haette - beide haetten dann
+    gleichzeitig in denselben Avatar-Frame geschrieben. Behoben durch Umsortieren: Der Neustart
+    passiert jetzt VOR der Freigabe, innerhalb desselben ununterbrochenen Besitzfensters.
+- **`PlayClipRenderer.kt`:** `Frame.visitorFrame`/`visitorSpecies`/`visitorShadeSide`/
+  `visitorAnchorX` (je einzeln) → `Frame.visitors: List<VisitorFrame>`, analog zum bereits
+  vorhandenen `Frame.residents: List<ResidentFigure>`-Muster im selben File - fuer den
+  Erinnerungs-Rueckblick/Clip-Export.
+- **Bewusst unveraendert:** Die passive Hintergrundfiguren-Mechanik (`MAX_VISIBLE_RESIDENTS = 2`,
+  `LivingPopulationLayout.place()`) - ein separates, leichteres System fuer nicht-interaktive,
+  gedimmte Statisten, nicht Teil dieses Umbaus. `PlayVisitWindow.isOpen()` (wann ein Besuch
+  ueberhaupt starten darf) unveraendert; nur DockScreen prueft jetzt zusaetzlich die Kapazitaet
+  davor.
+- **Tests:** `bash tools/reaction-preview/tests.sh`, 507 Tests gruen (503 bestehend + 4 neu fuer
+  `excludeProfileIds`/`visitorCapFor`/`pickInteractiveSlot`); `LivingRuntimeAdapterTest.kt` und
+  `LivingPopulationTest.kt` auf den erweiterten Katalog nachgezogen. `DockScreen.kt` bleibt wie
+  immer ausserhalb der reinen Kotlin-Testdecke - dort zaehlt Lesekontrolle gegen die bestehenden
+  Muster (`residentFigures.forEach`, `Frame.residents`) plus ein noch ausstehender manueller
+  Geraetetest (mehrere Besucher gleichzeitig im Park beobachten, Sprechblase bleibt auf einen
+  begrenzt, niemand verschwindet mitten im Bild).
+- **Offen:** Manuelle Geraetepruefung nach dem Merge. Die Interessens-Rotation
+  (`(day + Index) mod 3`) bleibt strukturell kollisionsanfaellig fuer kuenftige
+  Katalogerweiterungen - wer weitere Bewohner ergaenzt, muss deren Listenindex innerhalb derselben
+  Rolle bewusst auf einen Abstand pruefen, der kein Vielfaches von drei ist.
+
 ### 2026-09-19 - Taetigkeits-Spiegelung im Uhr-Kreis wieder ausgebaut
 
 - **Ausgangsproblem:** Nach vier Iterationen an der in den drei Eintraegen darunter beschriebenen

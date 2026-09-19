@@ -42,6 +42,16 @@ object PlayClipRenderer {
         val widthFraction: Float
     )
 
+    /** Ein eigenstaendiger, volle-Groesse Besucher - mehrere gleichzeitig moeglich. */
+    class VisitorFrame(
+        val frame: IntArray,
+        val species: AvatarSpecies,
+        /** Beim Laufen die Seite, von der die Kreatur kommt - siehe [Frame.shadeSide]. */
+        val shadeSide: AvatarShading.Side = AvatarShading.Side.NONE,
+        /** Waagerechte Lage als Bruchteil der Breite. */
+        val anchorX: Float = 0f
+    )
+
     /**
      * Alles, was ein einzelnes Bild ausmacht. Bewusst als Datenklasse: Der Aufnehmer erzeugt
      * daraus eine Folge, ohne dass diese Datei etwas ueber Abläufe wissen muesste.
@@ -59,8 +69,6 @@ object PlayClipRenderer {
          * als auf dem Bildschirm.
          */
         val shadeSide: AvatarShading.Side = AvatarShading.Side.NONE,
-        /** Dasselbe fuer den Gast, falls einer im Bild ist. */
-        val visitorShadeSide: AvatarShading.Side = AvatarShading.Side.NONE,
         val scenePhase: Int,
         val station: PlayScene.Station? = null,
         val lampOn: Boolean = true,
@@ -82,11 +90,9 @@ object PlayClipRenderer {
         val clockSizeFraction: Float = 0.45f,
         /** Getragener Gegenstand, damit auch im Film zu sehen ist, was die Figur in der Hand hat. */
         val carried: PlayEffects.Carried? = null,
-        /** Ein Gast, falls gerade einer durchs Bild geht. */
-        val visitorFrame: IntArray? = null,
-        val visitorSpecies: AvatarSpecies? = null,
-        val visitorAnchorX: Float = 0f,
-        /** Tatsaechlich anwesende Einwohner hinter Hauptfigur und aktivem Gast. */
+        /** Eigenstaendige Gaeste, falls gerade welche durchs Bild gehen - mehrere moeglich. */
+        val visitors: List<VisitorFrame> = emptyList(),
+        /** Tatsaechlich anwesende Einwohner hinter Hauptfigur und aktiven Gaesten. */
         val residents: List<ResidentFigure> = emptyList()
     ) {
         // IntArray hat keine sinnvolle Gleichheit - fuer eine Datenklasse mit Array-Feld muss das
@@ -244,17 +250,16 @@ object PlayClipRenderer {
             }
         }
 
-        // Gast, falls einer vorbeikommt - gedaempft wie auf dem Bildschirm.
-        val guestFrame = frame.visitorFrame
-        val guestSpecies = frame.visitorSpecies
-        if (guestFrame != null && guestSpecies != null) {
-            val gx = ((widthCells - AvatarGeometry.SIZE) * frame.visitorAnchorX).roundToInt()
-            val gy = (floorY - 1) - AvatarBodies.forSpecies(guestSpecies).groundRow()
+        // Eigenstaendige Gaeste, falls gerade welche vorbeikommen - gedaempft wie auf dem
+        // Bildschirm, mehrere gleichzeitig moeglich (siehe LivingPopulationLayout.visitorCapFor).
+        for (guest in frame.visitors) {
+            val gx = ((widthCells - AvatarGeometry.SIZE) * guest.anchorX).roundToInt()
+            val gy = (floorY - 1) - AvatarBodies.forSpecies(guest.species).groundRow()
             // Der Gast bekommt dieselbe Woelbung; seine Daempfung kommt zusaetzlich obendrauf,
             // weil AvatarShading skaliert statt zu ersetzen.
-            val gastAccent = AvatarPalette.tintFor(guestSpecies)
-            val gastFace = AvatarAccent.facesIn(guestFrame)
-            val gastFrame = AvatarShading.shade(guestFrame, side = frame.visitorShadeSide)
+            val gastAccent = AvatarPalette.tintFor(guest.species)
+            val gastFace = AvatarAccent.facesIn(guest.frame)
+            val gastFrame = AvatarShading.shade(guest.frame, side = guest.shadeSide)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
                     val index = y * AvatarGeometry.SIZE + x

@@ -272,8 +272,8 @@ class LivingRuntimeAdapterTest {
 
     @Test
     fun `Einwohner sind stabile nicht waehlbare Identitaeten mit Rollenorten`() {
-        assertEquals(3, LivingResidents.all.size)
-        assertEquals(3, LivingResidents.all.map { it.profileId }.distinct().size)
+        assertEquals(6, LivingResidents.all.size)
+        assertEquals(6, LivingResidents.all.map { it.profileId }.distinct().size)
         assertTrue(
             LivingResidents.all.none { resident ->
                 AvatarSpecies.entries.any { it.name == resident.profileId }

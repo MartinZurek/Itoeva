@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -506,20 +507,12 @@ fun DockScreen(
          * Der oben genannte Einwand bleibt trotzdem richtig - deshalb ist das Fenster genau so eng
          * gewaehlt, dass er nicht greift: Ein Linger ist die eine Stelle, an der die Figur nichts
          * vorhat ausser dazustehen. Und damit sie nicht mitten im Gespraech weiterlaeuft, WARTET
-         * der Ablauf danach auf das Ende des Besuchs (siehe [visitRunning]).
+         * der Ablauf danach auf das Ende des Besuchs (siehe `visitingProfileIds`).
          *
          * Drinnen bleibt alles wie zuvor: Wer in der Kueche kurz innehaelt, bekommt deswegen
          * keinen Gast an den Kuehlschrank.
          */
         var lingeringOutdoors by remember { mutableStateOf(false) }
-        /**
-         * Ob gerade ein Besuch laeuft - das Gegenstueck zu [lingeringOutdoors].
-         *
-         * Der Ablauf fragt danach, bevor er nach einem Linger weitergeht. Ohne diese Frage waere
-         * das Fenster oben ein Eigentor: Der Gast kaeme herein, und die Figur ginge ihm nach zwei
-         * Sekunden davon.
-         */
-        var visitRunning by remember { mutableStateOf(false) }
         /**
          * Ob die Figur sich gerade HINEINSETZT oder aufsteht (siehe [RoutineStep.Occupy]).
          *
@@ -622,8 +615,15 @@ fun DockScreen(
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
         val avatarDim = remember { Animatable(1f) }
-        // Gast, der gerade durchs Bild laeuft - siehe runVisit.
-        var visitor by remember { mutableStateOf<VisitorState?>(null) }
+        // Gaeste, die gerade durchs Bild laufen - siehe runVisit. Mehrere gleichzeitig moeglich
+        // (Deckel je Ort in LivingPopulationLayout.visitorCapFor), jeder eigenstaendig per
+        // profileId gefuehrt statt einer einzelnen Variable.
+        val visitors = remember { mutableStateListOf<VisitorState>() }
+        // Welche Bewohner gerade als eigenstaendiger Besuch laufen - von der Auswahl bis zum
+        // Verlassen des Bildes, siehe runVisit. Ersetzt das fruehere einzelne visitRunning:
+        // dient zugleich als Sperre (kein Bewohner startet doppelt) und als Kapazitaetszaehler
+        // gegen LivingPopulationLayout.visitorCapFor(currentPlace).
+        val visitingProfileIds = remember { mutableStateListOf<String>() }
         // **Der Schatten gehoert zur Bewegung** (siehe [AvatarShading]): Im Stand hat die Figur
         // keinen, waehrend eines Gangs liegt er auf der Flanke, von der sie kommt. Ein Schatten,
         // der immer da ist, ist ein Muster auf der Haut und sagt nichts.
@@ -631,6 +631,13 @@ fun DockScreen(
         // Sprechzeichen: -1 = niemand spricht, sonst 0..2 fuer die drei Punkte.
         var speechStep by remember { mutableIntStateOf(-1) }
         var speakerIsGuest by remember { mutableStateOf(false) }
+        // Welcher Besuch gerade das EINE Gespraechs-/Sprechblasen-"Schild" haelt (siehe
+        // speechStep/socialMessage) - null heisst frei. Auch wenn mehrere Gaeste gleichzeitig
+        // sichtbar laufen/warten koennen, bleibt bewusst nur EIN Gespraech gleichzeitig aktiv:
+        // zwei Sprechblasen-Paare gleichzeitig waeren auf dem kleinen Bildschirm nicht lesbar.
+        // Ein Besuch, dessen Gespraechsphase ansteht, waehrend ein anderer das Schild haelt,
+        // wartet kurz (siehe runVisit) statt gleichzeitig zu sprechen.
+        var conversationOwnerProfileId by remember { mutableStateOf<String?>(null) }
         // Die Bedeutung des laufenden Wortwechsels. Anders als die Punkte kommt sie aus dem
         // Living Agent und sagt deshalb nicht nur, DASS jemand spricht, sondern WAS gemeint ist.
         var socialMessage by remember { mutableStateOf<Set<SymbolicIntent>?>(null) }
@@ -679,7 +686,7 @@ fun DockScreen(
          * bei den globalen Vorgaengerwerten anfangen.
          */
         fun livingStateFor(species: AvatarSpecies): Pair<AgentState, WorldState> {
-            val nearbyProfiles = visitor?.let { setOf(it.profileId) }.orEmpty()
+            val nearbyProfiles = visitors.map { it.profileId }.toSet()
             val simulationMinute = PlayTimeLapse.absoluteMinute()
             val restored = if (livingAgent == null || livingWorld == null) {
                 livingStore.restore(
@@ -999,7 +1006,7 @@ fun DockScreen(
             }
             residentSnapshots = LivingPopulation.snapshot(residentStates)
             while (isActive) {
-                if (!visitRunning && sharedActivityProfileId == null) {
+                if (visitingProfileIds.isEmpty() && sharedActivityProfileId == null) {
                     val targetMinute = PlayTimeLapse.absoluteMinute()
                     val currentResidents = residentStates
                     val advanced = withContext(Dispatchers.Default) {
@@ -1008,7 +1015,7 @@ fun DockScreen(
                     // Ein Besuch kann waehrend der Hintergrundrechnung beginnen. Dann wird
                     // dessen sichtbarer Abschluss zur Wahrheit; der vorher berechnete Stand
                     // darf ihn weder im Speicher noch im Bild ueberholen.
-                    if (visitRunning || sharedActivityProfileId != null) {
+                    if (visitingProfileIds.isNotEmpty() || sharedActivityProfileId != null) {
                         delay(POPULATION_REFRESH_MS)
                         continue
                     }
@@ -1018,7 +1025,7 @@ fun DockScreen(
                         // noch mit dem alten vollstaendigen Zustand, oder erst mit dem neuen.
                         residentPersistenceMutex.lock()
                         try {
-                            if (!visitRunning && sharedActivityProfileId == null &&
+                            if (visitingProfileIds.isEmpty() && sharedActivityProfileId == null &&
                                 residentStates == currentResidents
                             ) {
                                 withContext(Dispatchers.IO) {
@@ -1722,7 +1729,7 @@ fun DockScreen(
                         // Gespraech weiter, und die Begegnung saehe nach Fehler aus statt nach
                         // Begegnung. Die Wartezeit ist kein Leerlauf: Der Besuch selbst spielt
                         // waehrenddessen seine Bilder.
-                        while (visitRunning) {
+                        while (visitingProfileIds.isNotEmpty()) {
                             delay(VISIT_WAIT_TICK_MS)
                         }
                     }
@@ -1843,27 +1850,38 @@ fun DockScreen(
          */
         suspend fun runVisit() {
             val (host, resident, residentState) = residentPersistenceMutex.withLock {
-                if (visitRunning || sharedActivityProfileId != null) return@withLock null
+                if (sharedActivityProfileId != null) return@withLock null
+                if (visitingProfileIds.size >= LivingPopulationLayout.visitorCapFor(currentPlace)) {
+                    return@withLock null
+                }
                 val currentHost = avatar ?: return@withLock null
                 if (currentHost.fed || currentHost.occurrenceId != null || avatarHidden) {
                     return@withLock null
                 }
                 // Auswahl und Anspruch sind atomar zur Population-Persistenz. Der Gast kommt
                 // direkt aus dem veroeffentlichten Zustand statt aus einem moeglicherweise noch
-                // aelteren Store-Snapshot.
+                // aelteren Store-Snapshot. Bereits laufende Besuche werden ausgeschlossen, damit
+                // derselbe Bewohner nicht zweimal gleichzeitig als eigenstaendiger Gast auftaucht.
                 val residentSnapshot = LivingPopulationLayout.nextVisitor(
                     residentSnapshots,
                     currentPlace,
-                    lastResidentProfileId
+                    lastResidentProfileId,
+                    excludeProfileIds = visitingProfileIds.toSet()
                 ) ?: return@withLock null
                 val currentResident = LivingResidents.all.firstOrNull {
                     it.profileId == residentSnapshot.profileId
                 } ?: return@withLock null
                 val currentResidentState = residentStates[currentResident.profileId]
                     ?: return@withLock null
-                visitRunning = true
+                visitingProfileIds.add(currentResident.profileId)
                 Triple(currentHost, currentResident, currentResidentState)
             } ?: return
+            val guestProfileId = resident.profileId
+            /** Aendert genau den Gast [id] in [visitors], falls er noch dort steht. */
+            fun updateVisitor(id: String, transform: (VisitorState) -> VisitorState) {
+                val index = visitors.indexOfFirst { it.profileId == id }
+                if (index >= 0) visitors[index] = transform(visitors[index])
+            }
             var committedGuest: ResidentState? = null
             try {
                 val guestSpecies = resident.species
@@ -1876,30 +1894,33 @@ fun DockScreen(
                 val walk = AvatarAnimations.walkSequence(guestSpecies)
                 val idle = AvatarAnimations.idleSequence(guestSpecies, mood)
 
-                visitor = VisitorState(
-                    profileId = resident.profileId,
-                    species = guestSpecies,
-                    offset = Offset(startX, groundY),
-                    sizeDp = host.sizeDp,
-                    frame = walk.frames.first()
+                visitors.add(
+                    VisitorState(
+                        profileId = guestProfileId,
+                        species = guestSpecies,
+                        offset = Offset(startX, groundY),
+                        sizeDp = host.sizeDp,
+                        frame = walk.frames.first()
+                    )
                 )
                 lastVisitor = guestSpecies
-                lastResidentProfileId = resident.profileId
+                lastResidentProfileId = guestProfileId
                 // Der Gast gruesst mit SEINEM Motiv, nicht mit dem des Bewohners - daran hoert man,
                 // dass jemand anderes da ist.
                 PlaySound.play(context, guestSpecies, PlayChime.Event.VISIT, scope)
 
-                /** Laesst den Gast von seiner jetzigen Stelle nach [targetX] gehen. */
+                /** Laesst DIESEN Gast von seiner jetzigen Stelle nach [targetX] gehen. */
                 suspend fun walkGuestTo(targetX: Float) = coroutineScope {
-                    val from = visitor?.offset?.x ?: return@coroutineScope
+                    val from = visitors.firstOrNull { it.profileId == guestProfileId }
+                        ?.offset?.x ?: return@coroutineScope
                     // Ein Gast, der nach links hereinkommt und dabei nach rechts schattiert ist,
                     // laeuft rueckwaerts - dieselbe Regel wie beim Bewohner.
                     val richtung = if (targetX < from) AvatarShading.Side.RIGHT else AvatarShading.Side.LEFT
-                    visitor = visitor?.copy(facing = richtung)
+                    updateVisitor(guestProfileId) { it.copy(facing = richtung) }
                     val gait = launch {
                         while (isActive) {
                             MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
-                                visitor = visitor?.copy(frame = f)
+                                updateVisitor(guestProfileId) { it.copy(frame = f) }
                             }
                         }
                     }
@@ -1910,27 +1931,49 @@ fun DockScreen(
                             walkDurationMs(abs(targetX - from), px),
                             easing = FastOutSlowInEasing
                         )
-                    ) { value, _ -> visitor = visitor?.copy(offset = Offset(value, groundY)) }
+                    ) { value, _ -> updateVisitor(guestProfileId) { it.copy(offset = Offset(value, groundY)) } }
                     gait.cancel()
-                    visitor = visitor?.copy(facing = AvatarShading.Side.NONE)
+                    updateVisitor(guestProfileId) { it.copy(facing = AvatarShading.Side.NONE) }
                 }
 
-                // Treffpunkt so waehlen, dass sich die beiden NICHT ueberdecken.
+                // Treffpunkt so waehlen, dass sich weder Wirt noch ein bereits anwesender anderer
+                // Besucher ueberdecken.
                 //
                 // Der erste Entwurf stellte den Gast einfach auf die Seite, von der er kam. Stand
                 // der Bewohner nahe am Bildrand, wurde dieser Platz auf den Rand zurechtgestutzt -
-                // und der Gast landete genau auf ihm. Deshalb wird jetzt die Seite mit mehr Raum
-                // genommen und geprueft, ob dort ueberhaupt genug Platz ist; sonst bleibt der Gast
-                // weiter weg stehen, statt in den Bewohner hineinzulaufen.
+                // und der Gast landete genau auf ihm. Seither uebernimmt
+                // [LivingPopulationLayout.pickInteractiveSlot] dieselbe Bahnen-/Trennungspruefung,
+                // die auch die Hintergrundfiguren nutzen, nur fuer volle Groesse und gegen alle
+                // gerade laufenden Besucher zugleich. Findet sie keinen freien Platz (z.B. weil
+                // sich Wirt und Bahnen gerade ungewoehnlich ueberschneiden), bleibt die alte,
+                // rein wirtsrelative Berechnung als Sicherheitsnetz.
                 val bound = (maxWidthPx - px).coerceAtLeast(0f)
-                val gap = px * VISITOR_GAP
-                val roomLeft = host.offset.x
-                val roomRight = bound - host.offset.x
-                val preferLeft = roomLeft > roomRight
-                val meetX = if (preferLeft) {
-                    (host.offset.x - gap).coerceIn(0f, bound)
+                val hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f)
+                val hostWidthFraction = (px / maxWidthPx).coerceIn(0.01f, 1f)
+                val occupiedFractions = visitors
+                    .filter { it.profileId != guestProfileId }
+                    .map { other ->
+                        val otherPx = with(density) { other.sizeDp.dp.toPx() }
+                        (other.offset.x / maxWidthPx).coerceIn(0f, 1f) to
+                            (otherPx / maxWidthPx).coerceIn(0f, 1f)
+                    }
+                val laneLeftFraction = LivingPopulationLayout.pickInteractiveSlot(
+                    hostLeftFraction,
+                    hostWidthFraction,
+                    occupiedFractions
+                )
+                val meetX = if (laneLeftFraction != null) {
+                    (laneLeftFraction * maxWidthPx).coerceIn(0f, bound)
                 } else {
-                    (host.offset.x + gap).coerceIn(0f, bound)
+                    val gap = px * VISITOR_GAP
+                    val roomLeft = host.offset.x
+                    val roomRight = bound - host.offset.x
+                    val preferLeft = roomLeft > roomRight
+                    if (preferLeft) {
+                        (host.offset.x - gap).coerceIn(0f, bound)
+                    } else {
+                        (host.offset.x + gap).coerceIn(0f, bound)
+                    }
                 }
                 walkGuestTo(meetX)
 
@@ -1938,7 +1981,6 @@ fun DockScreen(
                 // fragt PLAY + QUESTION, der Bewohner antwortet aus seinem wirklichen Zustand.
                 // Hier wird nichts entschieden; die Oberflaeche zeigt nur die beiden Nachrichten
                 // und waehlt eine passende Koerperregung dazu.
-                val guestProfileId = resident.profileId
                 val (hostAgent, hostWorld) = livingStateFor(host.species)
                 val guestAgent = residentState.agent
                 val guestWorld = LivingRuntimeAdapter.synchroniseWorld(
@@ -1952,6 +1994,15 @@ fun DockScreen(
                     receiver = hostAgent,
                     receiverWorld = hostWorld
                 )
+
+                // Nur EIN Gespraech gleichzeitig, auch wenn mehrere Besucher gleichzeitig laufen
+                // koennen (siehe conversationOwnerProfileId oben) - sonst gaebe es zwei
+                // Sprechblasen-Paare zugleich, auf dem kleinen Bildschirm nicht lesbar. Ein
+                // anderer Besuch, dessen Gespraechsphase gerade laeuft, wird hier kurz abgewartet.
+                while (conversationOwnerProfileId != null) {
+                    delay(VISIT_WAIT_TICK_MS)
+                }
+                conversationOwnerProfileId = guestProfileId
 
                 avatarIdleJob?.cancel()
                 coroutineScope {
@@ -1968,7 +2019,7 @@ fun DockScreen(
                     val guestIdle = launch {
                         while (isActive) {
                             MatrixAnimator.playTimed(idle.frames, idle.holdsMs) { f ->
-                                visitor = visitor?.copy(frame = f)
+                                updateVisitor(guestProfileId) { it.copy(frame = f) }
                             }
                         }
                     }
@@ -1990,7 +2041,7 @@ fun DockScreen(
                         if (guestSpeaks) {
                             guestIdle.cancel()
                             MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
-                                visitor = visitor?.copy(frame = f)
+                                updateVisitor(guestProfileId) { it.copy(frame = f) }
                             }
                         } else {
                             hostIdleWhileListening.cancel()
@@ -2027,6 +2078,17 @@ fun DockScreen(
                     hostIdleWhileListening.cancel()
                     guestIdle.cancel()
                 }
+                // Die Ruhe-Schleife des Wirts noch WAEHREND das Gespraechs-Schild gehalten wird
+                // neu starten, nicht erst nach dem Verbuchen weiter unten - sonst koennte ein
+                // zweiter, laengst wartender Besuch dazwischenfunken: Sein eigenes
+                // `avatarIdleJob?.cancel()` (beim Erwerb des Schilds) faende dann eine bereits
+                // wieder laufende Schleife vor UND liesse sie parallel zu seiner eigenen
+                // "hoert zu"-Animation weiterschreiben.
+                startAvatarIdleLoop(host.species, AvatarMoodSnapshot.forSpecies(context, host.species))
+                // Das Gespraech ist vorbei - das Schild geht sofort wieder frei, nicht erst im
+                // finally, damit der naechste wartende Besuch nicht bis zum Ende dieses ganzen
+                // Besuchs (inklusive Verlassen) warten muss.
+                conversationOwnerProfileId = null
 
                 // Wie bei jeder anderen Living-Choreografie erst NACH dem sichtbaren Abschluss
                 // verbuchen. Bricht eine Erinnerung den Wortwechsel ab, darf keine unsichtbare
@@ -2056,7 +2118,6 @@ fun DockScreen(
                         messages = listOf(exchange.response)
                     )
                 )
-                startAvatarIdleLoop(host.species, AvatarMoodSnapshot.forSpecies(context, host.species))
 
                 walkGuestTo(exitX)
             } finally {
@@ -2073,13 +2134,21 @@ fun DockScreen(
                 }
                 // Zwingend: Wird der Besuch abgebrochen (Erinnerung feuert, Play-Modus endet),
                 // bliebe der Gast sonst mitten im Bild stehen und ginge nie wieder.
-                visitor = null
-                speechStep = -1
-                socialMessage = null
-                // Und ebenso zwingend: Bliebe dieses Flag stehen, waere der wartende Ablauf
-                // draussen fuer immer angehalten - die Figur stuende bis zum Ende des
-                // Play-Modus regungslos auf der Strasse.
-                visitRunning = false
+                visitors.removeAll { it.profileId == guestProfileId }
+                // Nur raeumen, wenn DIESER Besuch das Gespraechs-Schild noch haelt - ein Abbruch
+                // MITTEN im Wortwechsel (siehe oben) ist der einzige Fall, in dem es hier noch
+                // gesetzt sein kann; laeuft laengst ein anderer Besuch mit dem Schild, darf der
+                // hier nicht unterbrochen werden.
+                if (conversationOwnerProfileId == guestProfileId) {
+                    conversationOwnerProfileId = null
+                    speechStep = -1
+                    socialMessage = null
+                }
+                // Und ebenso zwingend: Bliebe dieser Bewohner in der Sperrliste stehen, koennte er
+                // nie wieder besucht werden und der wartende Ablauf draussen (siehe
+                // lingeringOutdoors) bliebe angehalten, falls gerade er der letzte laufende
+                // Besuch war.
+                visitingProfileIds.remove(guestProfileId)
             }
         }
 
@@ -2289,10 +2358,17 @@ fun DockScreen(
                         (visitIntervalFor(currentPlace).random() * PlayTimeLapse.paceFactor())
                             .toLong().coerceAtLeast(3_000L)
                     )
-                    while (isActive && !visitPossible()) {
+                    while (isActive &&
+                        (!visitPossible() ||
+                            visitingProfileIds.size >= LivingPopulationLayout.visitorCapFor(currentPlace))
+                    ) {
                         delay((VISIT_RETRY_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(250L))
                     }
-                    if (isActive) runVisit()
+                    // Als eigene Coroutine statt inline abgewartet: Mehrere Besuche duerfen
+                    // gleichzeitig laufen (Deckel siehe LivingPopulationLayout.visitorCapFor),
+                    // deshalb schlaeft diese Schleife weiter und kann einen weiteren Besuch
+                    // anstossen, waehrend bereits gestartete noch laufen/gehen.
+                    if (isActive) launch { runVisit() }
                 }
             }
 
@@ -3079,7 +3155,7 @@ fun DockScreen(
                         val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
                             applied.world,
                             currentPlace,
-                            visitor?.let { setOf(it.profileId) }.orEmpty()
+                            visitors.map { it.profileId }.toSet()
                         )
                         livingAgent = applied.agent
                         livingWorld = committedWorld
@@ -3288,7 +3364,7 @@ fun DockScreen(
 
                             val externalImpulse = pendingExternalImpulse
                             val interestTopic = externalImpulse?.animationType ?: ordinaryInterestTopic
-                            val nearbyProfiles = visitor?.let { setOf(it.profileId) }.orEmpty()
+                            val nearbyProfiles = visitors.map { it.profileId }.toSet()
                             val (baseAgent, baseWorld) = livingStateFor(species)
                             val prepared = LivingRuntimeAdapter.prepare(
                                 agent = baseAgent,
@@ -3360,7 +3436,7 @@ fun DockScreen(
                             // `nextSpecialActivity` dieselbe Aktivitaet wirklich meinen (siehe
                             // LivingPopulationLayout.sharedSportPartner).
                             val sharedActivity = residentPersistenceMutex.withLock {
-                                if (visitRunning || sharedActivityProfileId != null) {
+                                if (visitingProfileIds.isNotEmpty() || sharedActivityProfileId != null) {
                                     return@withLock null
                                 }
                                 val partner = LivingPopulationLayout.sharedSportPartner(
@@ -3386,10 +3462,7 @@ fun DockScreen(
                                 val committedWorld = LivingRuntimeAdapter.synchroniseWorld(
                                     prepared.result.world,
                                     currentPlace,
-                                    visitor?.species
-                                        ?.let(AvatarSpeciesPrefs::profileId)
-                                        ?.let(::setOf)
-                                        .orEmpty()
+                                    visitors.map { AvatarSpeciesPrefs.profileId(it.species) }.toSet()
                                 )
                                 var committedResult = prepared.result.copy(world = committedWorld)
                                 if (sharedActivity == null) {
@@ -3502,12 +3575,14 @@ fun DockScreen(
             playMode && maxWidthPx > 0f && sceneCellPx > 0f
         }?.let { host ->
             val hostPx = with(density) { host.sizeDp.dp.toPx() }
+            // Mehrere eigenstaendige Besucher moeglich (siehe visitors oben) - alle werden aus
+            // den Hintergrundfiguren herausgefiltert, damit niemand doppelt im Bild steht.
+            val visitingIds = visitors.map { it.profileId }.toSet()
             LivingPopulationLayout.place(
-                snapshots = residentSnapshots,
+                snapshots = residentSnapshots.filterNot { it.profileId in visitingIds },
                 place = renderedPlace,
                 hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f),
-                hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f),
-                visitingProfileId = visitor?.profileId
+                hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f)
             ).map { placement ->
                 // Der zweite Teilnehmer benutzt dieselbe bestehende Koerperregung wie der
                 // Hauptavatar. Weil [residentFigures] Bildschirm, Schnappschuss und Clip speist,
@@ -3583,7 +3658,6 @@ fun DockScreen(
                 // Muss mit in den Film, sonst laeuft die Kreatur in der Aufnahme anders herum
                 // als auf dem Bildschirm.
                 shadeSide = avatarFacing,
-                visitorShadeSide = visitor?.facing ?: AvatarShading.Side.NONE,
                 scenePhase = scenePhase,
                 station = occupiedStation ?: activeStation,
                 lampOn = lampOn,
@@ -3593,11 +3667,14 @@ fun DockScreen(
                 clockTopFraction = (clockOffset.y / maxHeightPx).coerceIn(0f, 1f),
                 clockSizeFraction = (clockPx / maxWidthPx).coerceIn(0.05f, 1f),
                 carried = carried,
-                visitorFrame = visitor?.frame,
-                visitorSpecies = visitor?.species,
-                visitorAnchorX = visitor?.let {
-                    (it.offset.x / boundX).coerceIn(0f, 1f)
-                } ?: 0f,
+                visitors = visitors.map { guest ->
+                    PlayClipRenderer.VisitorFrame(
+                        frame = guest.frame,
+                        species = guest.species,
+                        shadeSide = guest.facing,
+                        anchorX = (guest.offset.x / boundX).coerceIn(0f, 1f)
+                    )
+                },
                 residents = residentFigures
             )
         }
@@ -3867,25 +3944,33 @@ fun DockScreen(
             }
         }
 
-        visitor?.let { guest ->
-            AvatarSpriteView(
-                frame = guest.frame,
-                showBackground = false,
-                // Durchgehend zurueckgenommen: So bleibt der eigene Avatar auch dann die hellste
-                // Figur im Bild, wenn die beiden sich ueberdecken - und das laesst sich beim
-                // Aneinander-Vorbeigehen nicht immer vermeiden.
-                brightnessScale = VISITOR_DIM,
-                contentDescription = stringResource(R.string.a11y_visitor, stringResource(guest.species.labelRes)),
-                // **Der Gast hat seine eigene Farbe** (siehe AvatarPalette) - und das nimmt der
-                // Daempfung oben einen Teil ihrer Last ab: Zwei Kreaturen verschmelzen nicht
-                // mehr allein deshalb, weil sie denselben Ton haben.
-                species = guest.species,
-                shadeSide = guest.facing,
-                modifier = Modifier
-                    .width(guest.sizeDp.dp)
-                    .height(guest.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
-                    .offset { IntOffset(guest.offset.x.roundToInt(), guest.offset.y.roundToInt()) }
-            )
+        // Mehrere eigenstaendige Besucher gleichzeitig moeglich (siehe visitors oben,
+        // Deckel je Ort in LivingPopulationLayout.visitorCapFor) - dasselbe forEach-Muster wie
+        // bei den Hintergrundfiguren direkt darueber, nur ohne deren Daempfung/Verkleinerung.
+        visitors.forEach { guest ->
+            key(guest.profileId) {
+                AvatarSpriteView(
+                    frame = guest.frame,
+                    showBackground = false,
+                    // Durchgehend zurueckgenommen: So bleibt der eigene Avatar auch dann die
+                    // hellste Figur im Bild, wenn sich die beiden ueberdecken - und das laesst
+                    // sich beim Aneinander-Vorbeigehen nicht immer vermeiden.
+                    brightnessScale = VISITOR_DIM,
+                    contentDescription = stringResource(
+                        R.string.a11y_visitor,
+                        stringResource(guest.species.labelRes)
+                    ),
+                    // **Der Gast hat seine eigene Farbe** (siehe AvatarPalette) - und das nimmt
+                    // der Daempfung oben einen Teil ihrer Last ab: Zwei Kreaturen verschmelzen
+                    // nicht mehr allein deshalb, weil sie denselben Ton haben.
+                    species = guest.species,
+                    shadeSide = guest.facing,
+                    modifier = Modifier
+                        .width(guest.sizeDp.dp)
+                        .height(guest.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
+                        .offset { IntOffset(guest.offset.x.roundToInt(), guest.offset.y.roundToInt()) }
+                )
+            }
         }
 
         // Aufnahmeknopf - nur im Play-Modus und nur, wenn in den Einstellungen freigeschaltet.
@@ -4243,7 +4328,11 @@ fun DockScreen(
                     addAll(PlayEffects.sparkCells(spot.centerX, spot.groundY, sparkProgress.value))
                 }
                 if (speechStep >= 0 && sceneCellPx > 0f) {
-                    val speaker = if (speakerIsGuest) visitor?.offset else avatar?.offset
+                    val speaker = if (speakerIsGuest) {
+                        visitors.firstOrNull { it.profileId == conversationOwnerProfileId }?.offset
+                    } else {
+                        avatar?.offset
+                    }
                     speaker?.let { at ->
                         addAll(
                             PlayEffects.speechCells(
@@ -4290,7 +4379,11 @@ fun DockScreen(
         // und Antwort verwenden dieselben sprachunabhaengigen Symbole wie der Kern; Text oder
         // ein zweiter Dialogkatalog werden hier nicht eingefuehrt.
         socialMessage?.let { intents ->
-            val speaker = if (speakerIsGuest) visitor else null
+            val speaker = if (speakerIsGuest) {
+                visitors.firstOrNull { it.profileId == conversationOwnerProfileId }
+            } else {
+                null
+            }
             val speakerOffset = speaker?.offset ?: avatar?.offset
             val speakerSize = speaker?.sizeDp ?: avatar?.sizeDp
             if (speakerOffset != null && speakerSize != null) {

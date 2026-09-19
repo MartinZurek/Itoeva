@@ -102,6 +102,89 @@ class LivingPopulationLayoutTest {
         assertEquals(listOf(residents.last().profileId), result.map { it.resident.profileId })
     }
 
+    /**
+     * **Mehrere gleichzeitige Besucher duerfen sich nicht doppeln.** Sobald ein Bewohner bereits
+     * als eigenstaendiger Besuch laeuft (siehe `visitingProfileIds` in DockScreen), muss die
+     * Rotation ihn ueberspringen, statt ihn ein zweites Mal als neuen Gast zu waehlen.
+     */
+    @Test
+    fun `nextVisitor ueberspringt bereits laufende Besuche`() {
+        val erster = resident(0, PlayScene.Place.PARK)
+        val zweiter = resident(1, PlayScene.Place.PARK)
+
+        assertEquals(
+            zweiter.profileId,
+            LivingPopulationLayout.nextVisitor(
+                listOf(erster, zweiter),
+                PlayScene.Place.PARK,
+                previousProfileId = null,
+                excludeProfileIds = setOf(erster.profileId)
+            )?.profileId
+        )
+        assertEquals(
+            null,
+            LivingPopulationLayout.nextVisitor(
+                listOf(erster, zweiter),
+                PlayScene.Place.PARK,
+                previousProfileId = null,
+                excludeProfileIds = setOf(erster.profileId, zweiter.profileId)
+            )
+        )
+    }
+
+    @Test
+    fun `visitorCapFor gibt draussen mehr Platz als drinnen`() {
+        assertEquals(
+            LivingPopulationLayout.INTERACTIVE_VISITOR_CAP_OUTDOOR,
+            LivingPopulationLayout.visitorCapFor(PlayScene.Place.PARK)
+        )
+        assertEquals(
+            LivingPopulationLayout.INTERACTIVE_VISITOR_CAP_INDOOR,
+            LivingPopulationLayout.visitorCapFor(PlayScene.Place.SHOP)
+        )
+        assertTrue(
+            LivingPopulationLayout.INTERACTIVE_VISITOR_CAP_OUTDOOR >
+                LivingPopulationLayout.INTERACTIVE_VISITOR_CAP_INDOOR
+        )
+    }
+
+    /**
+     * **Ein neuer Besucher findet einen freien Platz, der weder Wirt noch bereits anwesende
+     * Besucher ueberdeckt** - dieselbe Trennungspruefung wie [LivingPopulationLayout.place],
+     * nur fuer volle statt halber Groesse.
+     */
+    @Test
+    fun `pickInteractiveSlot meidet Wirt und bereits anwesende Besucher`() {
+        val slot = LivingPopulationLayout.pickInteractiveSlot(
+            hostLeftFraction = 0.4f,
+            hostWidthFraction = 0.2f,
+            occupied = emptyList()
+        )
+        assertTrue("kein freier Platz gefunden", slot != null)
+        val gefunden = slot!!
+        assertTrue(gefunden + 0.2f <= 0.4f || gefunden >= 0.6f)
+
+        val slotMitBesetzung = LivingPopulationLayout.pickInteractiveSlot(
+            hostLeftFraction = 0.4f,
+            hostWidthFraction = 0.2f,
+            occupied = listOf(0f to 0.2f)
+        )
+        assertTrue("kein freier Platz trotz Restraum gefunden", slotMitBesetzung != null)
+        val zweiterGefunden = slotMitBesetzung!!
+        assertTrue(zweiterGefunden + 0.2f <= 0f || zweiterGefunden >= 0.2f)
+        assertTrue(zweiterGefunden + 0.2f <= 0.4f || zweiterGefunden >= 0.6f)
+    }
+
+    @Test
+    fun `pickInteractiveSlot liefert null wenn kein Platz mehr frei ist`() {
+        val slot = LivingPopulationLayout.pickInteractiveSlot(
+            hostLeftFraction = 0.5f,
+            hostWidthFraction = 0.9f,
+            occupied = emptyList()
+        )
+        assertEquals(null, slot)
+    }
+
     @Test
     fun `eigene Einwohnerzeit versetzt die Ruhebewegung deterministisch`() {
         val holds = listOf(200L, 200L, 400L)
