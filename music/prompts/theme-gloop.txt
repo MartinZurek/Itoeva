@@ -4,8 +4,8 @@ and softest-edged of six personal themes.
 
 Tempo around 56 BPM in a loose, swaying four-four pulse. A round, soft electric
 bass carries the foundation with long notes and an occasional friendly slide.
-Warm, washed synthesizer pads breathe in and out behind it without becoming a
-featureless drone. Use muted brush percussion, a very soft kick and small
+Warm, washed synthesizer pads breathe in and out behind it, gently low-pass
+filtered for a softer, rounder edge, without becoming a featureless drone. Use muted brush percussion, a very soft kick and small
 shaker gestures with no sharp attacks. A mellow bass clarinet or rounded analog
 lead carries the tune above the low texture.
 
