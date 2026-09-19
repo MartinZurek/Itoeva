@@ -664,6 +664,49 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-19 - Ein dritter Fund zur Taetigkeits-Spiegelung: falsches Motiv, plus ein neuer Akzent
+
+- **Ausgangsproblem:** Dritte Meldung in derselben Reihe (siehe Eintrag darunter): "wenn er zum
+  Beispiel in der Welt was trinkt, dann geht in der Uhr... die Work-Animation an mit dem PC, wo
+  1, 2, 3 im Bildschirm steht." Auf Nachfrage bestaetigt: die Figur selbst zeigte korrekt Trinken
+  (nicht die Pose war falsch), nur der Kreis zeigte die Arbeits-Animation - und das ohne
+  erkennbares Muster (nicht zuverlaessig nach einem Wechsel von Arbeiten zu Trinken).
+- **Untersuchung, ohne abschliessenden Befund:** Ausfuehrlich nachverfolgt und mehrere plausible
+  Mechanismen einzeln geprueft und wieder verworfen: das `finally`, das `activeActivity` beim
+  Abbruch zuruecksetzt, arbeitet zuverlaessig; `MatrixAnimator.play` ist sauber
+  Cancellation-kooperativ, kein Leck moeglich; ein vermuteter zweiter, parallel laufender
+  `LaunchedEffect`, der mit der Ambient-Schleife um denselben Avatar-Zustand haette wetteifern
+  koennen, stellte sich bei genauerem Lesen als derselbe, sequenzielle Effekt heraus; die
+  `ActionKind`-zu-`AnimationType`-Zuordnung in `LivingRuntimeAdapter` sieht fuer jeden Zweig
+  korrekt aus. Sowohl der kleine Weltmotiv-Effekt (`PlayEffects.activityCells`) als auch der
+  Kreis lesen exakt denselben `activeActivity`-Zustand - ein Fund "Kreis falsch, Welt richtig"
+  kann sich damit nur auf die sichtbare Koerperhaltung (separat, korrekt gesetzt) beziehen, nicht
+  auf einen echten zweiten Lesepfad. **`UNVERIFIED` und weiterhin offen** - vermutlich eine echte
+  Nebenlaeufigkeit oder ein Randfall, der sich nur mit einem Geraete-Log statt durch weiteres
+  Lesen findet.
+- **Stattdessen umgesetzt: ein zusaetzlicher, einmaliger Akzent beim Uebergang.** Auftrag des
+  Nutzers, nachdem die Ursache nicht auffindbar war: die Uhr soll beim Beginn einer autonomen
+  Taetigkeit sichtbar "auf den Avatar untergehen", dabei die Groesse veraendern und wieder
+  zurueckfedern - zusaetzlich zur bestehenden Dimmung (siehe Eintrag darunter), nicht statt ihr.
+  `DockScreen.activityAccentProgress` (ein `Animatable<Float>`, 0..1..0) treibt einen rein
+  additiven Versatz und Skalierungsfaktor auf `clockOffset`/`clockSizeDp` - genau nach demselben
+  Muster wie `driftOffset` fuer den Burn-in-Schutz: Kollisionspruefung (echtes Fuettern) und die
+  gespeicherte Nutzerposition bleiben unberuehrt. Ausgeloest ueber `showingAmbientActivity`, eine
+  mit `derivedStateOf` reaktiv gemachte Fassung von `isShowingAmbientActivity()` (eine schlichte
+  Funktion waere fuer einen `LaunchedEffect`-Schluessel unsichtbar). Der Akzent schrumpft auf 50%
+  der Uhrgroesse, zentriert auf die Avatar-Mitte, haelt 900ms, federt zurueck - insgesamt knapp
+  unter zwei Sekunden.
+- **Abgrenzung:** Keine Aenderung an `activeActivity`, an der Zuordnung von `ActionKind` zu
+  `AnimationType`, oder an der Kollisions-/Fuetterlogik. Die Dimmung aus dem Eintrag darunter
+  bleibt fuer die gesamte Dauer der Taetigkeit bestehen; der Akzent laeuft nur einmal beim
+  Uebergang.
+- **Evidenz:** `UNVERIFIED` - rein visuelle/zeitliche Aenderung, am Geraet zu beurteilen.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 503 gruen (unveraendert, DockScreen.kt nicht
+  Teil dieses Harness).
+- **Naechster Schritt:** Falscher-Kreis-Bug bleibt offen - am ehesten mit einem temporaeren Log
+  von `activeActivity`-Aenderungen (Zeitstempel + Aufrufer) am Geraet aufzuloesen. Am Geraet auch
+  pruefen, ob der neue Akzent bei kleinen Uhrgroessen noch gut lesbar ist.
+
 ### 2026-09-19 - Die Taetigkeits-Spiegelung im Kreis verwechselt sich mit einer echten Erinnerung
 
 - **Ausgangsproblem, in zwei Meldungen:** Erste Meldung nach dem Merge der Animations-Erweiterung

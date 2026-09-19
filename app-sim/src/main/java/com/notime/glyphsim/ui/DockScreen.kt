@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -3624,6 +3625,39 @@ fun DockScreen(
             animationFrame == null && dreamWatchFrame == null && !moonMode &&
                 avatar?.occurrenceId == null && activityWatchFrame != null
 
+        // Reaktiv gemacht, statt [isShowingAmbientActivity] direkt als LaunchedEffect-Schluessel
+        // zu nehmen: Eine schlichte Funktion ist fuer Compose unsichtbar und wuerde den
+        // folgenden Effekt nie neu anstossen, egal wie oft sich ihr Ergebnis aendert.
+        val showingAmbientActivity by remember { derivedStateOf { isShowingAmbientActivity() } }
+
+        /**
+         * Zusaetzlich zur dauerhaften Dimmung (siehe [isShowingAmbientActivity]): ein einmaliger
+         * Akzent GENAU beim Uebergang zu einer autonomen Taetigkeit, wie vom Nutzer nach der
+         * Dimmung noch vorgeschlagen - "die Watch [sollte] untergehen auf den Avatar und... die
+         * Groesse veraendern und dann wieder die normale Groesse... uebergehen, sodass man die
+         * Reminder direkt unterscheiden kann". 0 = normale Position/Groesse, 1 = vollstaendig
+         * auf den Avatar abgesunken und geschrumpft.
+         *
+         * Bewusst ein separater additiver Wert statt einer Aenderung an [clockOffset]/
+         * [clockSizeDp] selbst - genau wie bei [driftOffset]: Kollisionspruefung (echtes
+         * Fuettern) und die gespeicherte Nutzerposition duerfen von einem rein optischen Akzent
+         * nicht beruehrt werden. Sonst wuerde der Akzent selbst wie ein Ziehen auf den Avatar
+         * wirken und faelschlich eine echte Erinnerung ausloesen, falls zufaellig gerade eine
+         * ansteht.
+         */
+        val activityAccentProgress = remember { Animatable(0f) }
+        LaunchedEffect(showingAmbientActivity) {
+            if (showingAmbientActivity) {
+                activityAccentProgress.animateTo(1f, tween(ACTIVITY_ACCENT_MOVE_MS, easing = FastOutSlowInEasing))
+                delay(ACTIVITY_ACCENT_HOLD_MS)
+                activityAccentProgress.animateTo(0f, tween(ACTIVITY_ACCENT_MOVE_MS, easing = FastOutSlowInEasing))
+            } else if (activityAccentProgress.value != 0f) {
+                // Unterbrochen, z.B. weil inzwischen eine echte Erinnerung ansteht - sauber
+                // zurueckfedern statt auf halbem Weg stehen zu bleiben.
+                activityAccentProgress.animateTo(0f, tween(ACTIVITY_ACCENT_MOVE_MS, easing = FastOutSlowInEasing))
+            }
+        }
+
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
         //
         // An EINER Stelle, weil sie zweimal gebraucht wird: Der Film sammelt sie fuenfzehnmal je
@@ -3776,15 +3810,37 @@ fun DockScreen(
                 animationSpec = tween(MOON_RISE_MS, easing = FastOutSlowInEasing),
                 label = "watch-scene"
             )
+            // Wohin und wie weit der Akzent aus [activityAccentProgress] zieht - auf die
+            // Avatar-Mitte zu, geschrumpft auf ACTIVITY_ACCENT_SCALE. Additiv wie driftOffset
+            // (siehe dessen Kommentar unten): clockOffset selbst bleibt unberuehrt.
+            val accentProgress = activityAccentProgress.value
+            val baseTopLeft = Offset(clockOffset.x + driftOffset.x, clockOffset.y + driftOffset.y)
+            val accentOffset = if (accentProgress > 0f && activeAvatar != null) {
+                val avatarPx = with(density) { activeAvatar.sizeDp.dp.toPx() }
+                val shrunkPx = with(density) { clockSizeDp.dp.toPx() } * ACTIVITY_ACCENT_SCALE
+                val avatarCenter = Offset(
+                    activeAvatar.offset.x + avatarPx / 2f,
+                    activeAvatar.offset.y + avatarPx / 2f
+                )
+                val target = Offset(avatarCenter.x - shrunkPx / 2f, avatarCenter.y - shrunkPx / 2f)
+                Offset(
+                    (target.x - baseTopLeft.x) * accentProgress,
+                    (target.y - baseTopLeft.y) * accentProgress
+                )
+            } else {
+                Offset.Zero
+            }
+            val accentScale = 1f - (1f - ACTIVITY_ACCENT_SCALE) * accentProgress
             val watchModifier = Modifier
-                .size((clockSizeDp * watchScale).dp)
-                // driftOffset ist die rein optische Burn-in-Verschiebung und wird nur hier
-                // draufgerechnet - Kollisionspruefung und Speicherung nutzen weiter clockOffset,
-                // damit sich weder das Fuettern noch die gemerkte Position dadurch aendert.
+                .size((clockSizeDp * watchScale * accentScale).dp)
+                // driftOffset ist die rein optische Burn-in-Verschiebung, accentOffset der
+                // Taetigkeits-Akzent - beide draufgerechnet, nur hier: Kollisionspruefung und
+                // Speicherung nutzen weiter clockOffset, damit weder das Fuettern noch die
+                // gemerkte Position dadurch aendert.
                 .offset {
                     IntOffset(
-                        (clockOffset.x + driftOffset.x).roundToInt(),
-                        (clockOffset.y + driftOffset.y).roundToInt()
+                        (baseTopLeft.x + accentOffset.x).roundToInt(),
+                        (baseTopLeft.y + accentOffset.y).roundToInt()
                     )
                 }
                 .pointerInput(Unit) {
@@ -5021,6 +5077,17 @@ private const val DREAM_SLEEP_CHECK_MS = 800L
 // aber nicht so schwach, dass die Taetigkeit selbst unkenntlich wird - siehe
 // DockScreen.isShowingAmbientActivity.
 private const val WATCH_ACTIVITY_ALPHA = 0.55f
+// Wie weit die Uhr beim Taetigkeits-Akzent auf dem Weg zum Avatar schrumpft - siehe
+// DockScreen.activityAccentProgress. 0,5 ist deutlich genug, um als eigene Bewegung
+// wahrgenommen zu werden, ohne bei kleinen Uhrgroessen auf der Strecke unkenntlich zu werden.
+private const val ACTIVITY_ACCENT_SCALE = 0.5f
+// Hin- und Rueckweg des Akzents. Schnell genug, um wie ein kurzer Hinweis statt einer traegen
+// Bewegung zu wirken.
+private const val ACTIVITY_ACCENT_MOVE_MS = 420
+// Wie lange die Uhr geschrumpft auf dem Avatar stehen bleibt, bevor sie zurueckfedert - lang
+// genug, um wirklich wahrgenommen zu werden, kurz genug, um kein Dauerzustand zu sein (das
+// uebernimmt weiterhin die Dimmung aus WATCH_ACTIVITY_ALPHA).
+private const val ACTIVITY_ACCENT_HOLD_MS = 900L
 
 /**
  * Wie oft die Musik mit der Lage abgeglichen wird.
