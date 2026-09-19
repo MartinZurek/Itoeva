@@ -126,13 +126,19 @@ müssen vor einer größeren Umsetzung belegt sein. · NT-055 Musik - *Format (O
 `MusicRole`/`MusicResolver` sind am 2026-09-05 entschieden und umgesetzt; siehe EVOLUTION.md.*
 `main-day-01` und `home-evening-01` werden inzwischen ausgeliefert; Rollenwechsel sind seit der
 nachfolgenden Musik-Evolution vier Sekunden lang ueberblendet und Sport setzt Ort plus echte
-MOVE-Beschaeftigung voraus. **Offen bleibt:** (a) Lautheit, True Peak, lange Stille und
-Loop-Grenzen als reproduzierbares Freigabe-Gate der Erzeugungspipeline definieren; (b) mehrere
-gepruefte Varianten je Rolle ermoeglichen, ohne die Weltlogik an Dateinamen zu binden; (c) ein
-gemeinsames musikalisches Leitmotiv festlegen, bevor Morgen-, Sport- und Traumtrack unabhaengig
-auseinanderlaufen; (d) ob realistische generierte Musik ueber einer 16x16-Welt aesthetisch
-richtig ist; (e) die Lizenzpruefung aus `music/README.md` vor einer kommerziellen
-Veroeffentlichung.
+MOVE-Beschaeftigung voraus. *Am 2026-09-19 ergaenzt:* `sport-01`/Full Stride und
+`morning-01`/First Light fuellen zwei der drei bis dahin leeren Rollen, bewusst in derselben
+warmen Jazz-/Lo-Fi-Familie wie die ersten beiden Tracks (gleiche Instrumentensprache,
+unterschiedliches Tempo) statt eigener Klangwelten. **Offen bleibt:** (a) Lautheit, True Peak,
+lange Stille und Loop-Grenzen als reproduzierbares Freigabe-Gate der Erzeugungspipeline
+definieren; (b) mehrere gepruefte Varianten je Rolle ermoeglichen, ohne die Weltlogik an
+Dateinamen zu binden; (c) `dream_background` braucht noch einen Track UND die zugehoerige
+Abfrage in `MusicResolver.candidates()` - fuer Morgen und Sport ist das gemeinsame Leitmotiv
+jetzt durch dieselbe Instrumentensprache gesichert, fuer den Traumtrack steht das noch aus; (d) ob
+realistische generierte Musik ueber einer 16x16-Welt aesthetisch richtig ist; (e) die
+Lizenzpruefung aus `music/README.md` vor einer kommerziellen Veroeffentlichung. Ausserdem: Die
+fuenf betroffenen Tracks (drei ueberarbeitete Prompts, zwei neue) sind noch nicht ueber **Generate
+Itoeva Music** erzeugt und gehoert worden - das Manifest ist bereit, die Audiodateien fehlen noch.
 
 **Öffentliche Streams, gestufte Roadmap:** NT-059 Ergebnis von NT-058 auswerten und ausdrücklich
 zwischen drei Wegen entscheiden: Emulator-basierter Einzelbetrieb weiter testen, zuerst
