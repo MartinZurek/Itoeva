@@ -576,6 +576,10 @@ fun DockScreen(
         var activityWatchFrame by remember { mutableStateOf<IntArray?>(null) }
         LaunchedEffect(activeActivity) {
             val topic = activeActivity
+            // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv"): bestaetigt, welches
+            // Thema dieser Effekt WIRKLICH bekommen hat - zum Abgleich mit den "set"/"clear"-
+            // Logs oben, falls sich die beiden je unterscheiden sollten.
+            Log.d("ActivityWatch", "watch effect restarted with topic=$topic")
             if (topic == null) {
                 activityWatchFrame = null
                 return@LaunchedEffect
@@ -1413,10 +1417,26 @@ fun DockScreen(
                 // Das Motiv bleibt waehrend eines anschliessenden Linger sichtbar. Erst wenn eine
                 // andere Handlung beginnt, ist die kleine Szene wirklich vorbei.
                 if (step !is RoutineStep.Act && step !is RoutineStep.Linger) {
+                    // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv"): geloggt nur
+                    // beim wirklichen Wechsel, um Logcat nicht mit jedem Schritt zu fluten.
+                    if (activeActivity != null) {
+                        Log.d(
+                            "ActivityWatch",
+                            "clear (step=${step::class.simpleName}): $activeActivity -> null"
+                        )
+                    }
                     activeActivity = null
                 }
                 val current = avatar ?: return false
-                if (current.fed || current.occurrenceId != null) return false   // echte Erinnerung hat Vorrang
+                if (current.fed || current.occurrenceId != null) {
+                    if (activeActivity != null) {
+                        Log.d(
+                            "ActivityWatch",
+                            "abort (echte Erinnerung hat Vorrang): activeActivity war $activeActivity, finally raeumt gleich auf"
+                        )
+                    }
+                    return false   // echte Erinnerung hat Vorrang
+                }
                 val avatarPx = with(density) { current.sizeDp.dp.toPx() }
 
                 when (step) {
@@ -1532,6 +1552,8 @@ fun DockScreen(
                     }
 
                     is RoutineStep.Act -> {
+                        // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv").
+                        Log.d("ActivityWatch", "set: $activeActivity -> ${step.topic} (Act)")
                         activeActivity = step.topic
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
@@ -1832,6 +1854,13 @@ fun DockScreen(
                 footballPhase = null
                 basketballPhase = null
                 trainingPhase = null
+                // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv"): dieser finally
+                // laeuft auch, wenn die umgebende Coroutine abgebrochen wird (z.B. Spezies- oder
+                // Praesenzwechsel) - moeglicher Ort fuer eine Race mit dem NEU gestarteten Effekt,
+                // falls dessen erster Act-Schritt bereits VOR diesem Aufraeumen geschrieben hat.
+                if (activeActivity != null) {
+                    Log.d("ActivityWatch", "finally: $activeActivity -> null")
+                }
                 activeActivity = null
                 musicPhase = null
                 paintingPhase = null
