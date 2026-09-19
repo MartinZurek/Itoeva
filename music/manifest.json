@@ -16,8 +16,8 @@
       "prompt_file": "music/prompts/home-evening-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 9042026,
-      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26."
+      "seed": 21092026,
+      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19: Die vorherige Kombination aus Seed und dem leicht ueberarbeiteten Prompt (siehe EVOLUTION.md, 2026-09-19) erzeugte eine Aufnahme mit 0,17s Stille am Ende - ueber dem 0,15s-Limit von tools/music/audio_polish.py und damit vom Freigabe-Gate zu Recht abgelehnt."
     },
     {
       "id": "main-day-01",
