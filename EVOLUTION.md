@@ -664,6 +664,50 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-19 - Die Taetigkeits-Spiegelung im Kreis verwechselt sich mit einer echten Erinnerung
+
+- **Ausgangsproblem, in zwei Meldungen:** Erste Meldung nach dem Merge der Animations-Erweiterung
+  (siehe Eintrag "Staffelei, Trinken, Buch neu gezeichnet; der Kreis wird zweite Buehne" vom
+  16.09.): "die Reminder man nicht mehr tatsaechlich verschieben kann... die Aktionen vom Avatar
+  auch in der Reminder Watch angezeigt werden... das verschwimmt dann", zusammen mit einem
+  zweiten, unabhaengigen Fund: leere Speicherplaetze wurden faelschlich gruen hervorgehoben.
+  Nach dem ersten Fix eine zweite, praezisere Meldung: "ich weiss nicht, ob ein Reminder
+  angezeigt wird... oder ob es die Taetigkeit ist, die der Avatar macht... das verwischt bzw.
+  vermischt sich" - inklusive des konkreten Symptoms, eine blosse Taetigkeit (z. B. Trinken) wie
+  einen Reminder in einen Speicherplatz ziehen zu wollen, was folgerichtig nicht funktioniert.
+- **Erster Fund und Fix (PR #178):** `currentWatchFrame()`s eigener Kommentar dokumentierte die
+  Prioritaet "Erinnerung vor Traum vor Mond vor Uhrzeit", geprueft wurde dafuer aber nur
+  `animationFrame` - gesetzt erst waehrend der laufenden Reaktion, nicht schon waehrend eine
+  Erinnerung ansteht und noch gezogen werden muss. In dieser Luecke gewann eine gleichzeitig
+  laufende autonome Taetigkeit im selben Kreis. Behoben durch eine zusaetzliche Abfrage von
+  `avatar?.occurrenceId != null`. Zweiter, unabhaengiger Fund in derselben Datei: Der gruene
+  Rahmen fuer einen zu einem Zuschauerimpuls passenden Speicherplatz verglich
+  `pendingExternalImpulse?.occurrenceId == saved?.occurrenceId` ohne vorherige
+  `saved != null`-Pruefung - ausserhalb des Stream-Modus sind beide Seiten `null`, und
+  `null == null` markierte dadurch jeden leeren Platz.
+- **Zweiter Fund und Fix (dieser Eintrag):** Auch ohne offene Erinnerung bleibt die Verwechslung
+  moeglich, weil die Taetigkeits-Spiegelung dieselben `ReminderAnimations`-Symbol-Frames
+  verwendet wie eine echte, im Kreis angezeigte Erinnerung (bewusste Entscheidung bei ihrer
+  Einfuehrung, um keine zweite Animationssprache zu bauen) - optisch bleiben beide ununterscheidbar,
+  obwohl die Bedeutung fuer die Speicherplaetze eine komplett andere ist. `DockScreen.
+  isShowingAmbientActivity()` erkennt jetzt denselben Zustand, den `currentWatchFrame()` schon
+  fuer die Prioritaet auswertet, und der Kreis wird in genau diesem Fall auf 55 % Deckkraft
+  gedimmt (`WATCH_ACTIVITY_ALPHA`). Bewusst gedimmt statt entfernt: Die Spiegelung selbst war ein
+  ausdruecklicher Wunsch (siehe Eintrag vom 16.09.), nur ihre Verwechslungsgefahr mit einer
+  ziehbaren Erinnerung sollte verschwinden - fuer TalkBack gab es diese Trennung bereits
+  (`a11y_clock_activity_highlight` statt `a11y_clock_reminder`).
+- **Abgrenzung:** Keine Aenderung an `activityWatchFrame` selbst, an `ReminderAnimations`, an der
+  Kollisions-/Speicherplatz-Logik oder an der Weltebene (`PlayEffects.activityCells`). Nur die
+  Sichtbarkeit einer bereits bestehenden Fallunterscheidung im Kreis.
+- **Evidenz:** `UNVERIFIED` am Geraet - die Wirkung ist rein visuell (Deckkraft) und laesst sich
+  aus dem reinen Kotlin-Test-Harness nicht pruefen (`DockScreen.kt` ist Compose/Android). CI
+  (Android-Compile, Lint, R8) bestaetigt fuer den ersten Fix (PR #178) bereits die Kompilierbarkeit
+  derselben Datei.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 503 gruen (unveraendert, DockScreen.kt nicht
+  Teil dieses Harness).
+- **Naechster Schritt:** Am Geraet bestaetigen, dass 55 % Deckkraft als Unterscheidung ausreicht,
+  ohne die Taetigkeit selbst unkenntlich zu machen.
+
 ### 2026-09-19 - Die sechs Charakterthemen ziehen auf das Qualitaetsniveau der neuen Tracks nach
 
 - **Ausgangsproblem:** Direktes Nutzerfeedback nach dem Anhoeren von `sport-01`, `morning-01` und
