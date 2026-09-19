@@ -367,7 +367,6 @@
     <string name="a11y_clock_moon">Mond</string>
     <string name="a11y_clock_dream_highlight">Traum vom heutigen Tag: %1$s</string>
     <string name="a11y_clock_dream_empty">Ruhiger Traum — noch keine Tagesmomente</string>
-    <string name="a11y_clock_activity_highlight">Gerade: %1$s</string>
     <string name="settings_clip_share">Clip teilen</string>
     <string name="settings_clip_enable">Aufnehmen im Spiel-Modus</string>
     <string name="settings_clip_enable_hint">Blendet im Spiel-Modus oben rechts einen Aufnahmeknopf ein.</string>
