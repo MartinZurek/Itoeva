@@ -3590,7 +3590,20 @@ fun DockScreen(
         // aus dem Review zu PR #162). Als Funktion liest jeder Aufruf `animationFrame` &Co. frisch
         // - genau das Muster, das `current = avatar` in `describeScreen()` schon nutzt.
         fun currentWatchFrame(): IntArray = animationFrame ?: dreamWatchFrame
-            ?: if (moonMode) MoonFrame.build(moonPhase) else (activityWatchFrame ?: clockFrame)
+            ?: if (moonMode) {
+                MoonFrame.build(moonPhase)
+            } else if (avatar?.occurrenceId != null) {
+                // Eine echte, noch nicht gezogene Erinnerung hat Vorrang vor der autonomen
+                // Taetigkeits-Spiegelung (siehe Prioritaet oben: "Erinnerung vor Traum vor Mond
+                // vor Uhrzeit"). [animationFrame] deckt das nur ab, solange die Reaktion bereits
+                // LAEUFT - bevor gezogen wird, ist es noch null, und ohne diese Abfrage haette
+                // eine gleichzeitig laufende autonome Taetigkeit die anstehende Erinnerung im
+                // Kreis ueberdeckt. Gemeldet: "die Aktionen vom Avatar werden auch in der
+                // Reminder Watch angezeigt... das verschwimmt dann".
+                clockFrame
+            } else {
+                activityWatchFrame ?: clockFrame
+            }
 
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
         //
@@ -4393,6 +4406,12 @@ fun DockScreen(
                         }
                     }
 
+                    // saved != null zuerst geprueft: Beide occurrenceId waeren sonst bei einem
+                    // LEEREN Platz ausserhalb des Stream-Modus ebenfalls null und "null == null"
+                    // haette jeden leeren Platz faelschlich hervorgehoben - gemeldet als "Reminder
+                    // Slots werden bunt mit diesem hellgruenen Kreis gehighlightet".
+                    val matchesPendingImpulse = saved != null &&
+                        pendingExternalImpulse?.occurrenceId == saved.occurrenceId
                     Box(
                         modifier = Modifier
                             .size(with(density) { slotSizePx.toDp() })
@@ -4400,12 +4419,8 @@ fun DockScreen(
                             .clip(CircleShape)
                             .background(if (saved != null) TamaPalette.BubbleBackground else TamaPalette.RowBackground)
                             .border(
-                                width = if (
-                                    pendingExternalImpulse?.occurrenceId == saved?.occurrenceId
-                                ) 2.dp else 1.dp,
-                                color = if (
-                                    pendingExternalImpulse?.occurrenceId == saved?.occurrenceId
-                                ) {
+                                width = if (matchesPendingImpulse) 2.dp else 1.dp,
+                                color = if (matchesPendingImpulse) {
                                     Color(0xFF7FD1A6)
                                 } else {
                                     TamaPalette.TextMuted.copy(alpha = if (saved != null) 0f else 0.35f)
