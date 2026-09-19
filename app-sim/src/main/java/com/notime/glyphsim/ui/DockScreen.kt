@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -258,9 +256,8 @@ fun DockScreen(
     var dreamWatchFrame by remember { mutableStateOf<IntArray?>(null) }
     var dreamWatchTopic by remember { mutableStateOf<AnimationType?>(null) }
     var dreamRecapMode by remember { mutableStateOf(false) }
-    // Die zusammengefuehrte Anzeige selbst (Erinnerung vor Traum vor Mond vor Taetigkeits-
-    // Spiegelung vor Uhrzeit) entsteht erst als `currentWatchFrame()` weiter unten - dort, wo
-    // auch [activityWatchFrame] bereits deklariert ist (siehe dessen KDoc fuer die Prioritaet).
+    // Die zusammengefuehrte Anzeige selbst (Erinnerung vor Traum vor Mond vor Uhrzeit) entsteht
+    // erst als `currentWatchFrame()` weiter unten.
 
     var clockSizeDp by remember { mutableFloatStateOf(DockLayoutPrefs.getSizeDp(context)) }
     val initialFraction = remember { DockLayoutPrefs.getOffsetFraction(context) }
@@ -560,36 +557,6 @@ fun DockScreen(
         var carried by remember { mutableStateOf<PlayEffects.Carried?>(null) }
         /** Das eigene Weltmotiv des gerade laufenden allgemeinen Handlungsschritts. */
         var activeActivity by remember { mutableStateOf<AnimationType?>(null) }
-        /**
-         * Dieselbe Taetigkeit, zusaetzlich im kleinen Kreis gespiegelt - nicht anstelle der
-         * Weltebene, sondern ZUSAETZLICH zu ihr (siehe [PlayEffects.activityCells] fuer die
-         * Weltebene). Genutzt werden dieselben Symbol-Frames wie beim Ausloesen einer Erinnerung
-         * ([ReminderAnimations.framesFor]) - eigens fuer den 13x13-Kreis gebaut, anders als die
-         * Kreatur-Reaktionsposen, die dort laut [com.notime.glyphsim.matrix.CreatureFrameSizeTest]
-         * gerade NICHT hineingehoeren.
-         *
-         * Bewusst nur fuer autonome, nicht durch eine Erinnerung ausgeloeste Taetigkeiten
-         * gedacht: Laeuft schon eine Erinnerungs-Animation ([animationFrame]), gewinnt die weiter
-         * unten in der Prioritaetskette - zwei Bewegungen gleichzeitig im selben Kreis waeren
-         * gegeneinander gelesen, nicht miteinander.
-         */
-        var activityWatchFrame by remember { mutableStateOf<IntArray?>(null) }
-        LaunchedEffect(activeActivity) {
-            val topic = activeActivity
-            // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv"): bestaetigt, welches
-            // Thema dieser Effekt WIRKLICH bekommen hat - zum Abgleich mit den "set"/"clear"-
-            // Logs oben, falls sich die beiden je unterscheiden sollten.
-            Log.d("ActivityWatch", "watch effect restarted with topic=$topic")
-            if (topic == null) {
-                activityWatchFrame = null
-                return@LaunchedEffect
-            }
-            MatrixAnimator.play(
-                ReminderAnimations.framesFor(topic),
-                targetDurationMs = MatrixAnimator.DURATION_UNTIL_FED,
-                frameDelayMs = MatrixAnimator.CLOCK_FRAME_DELAY_MS
-            ) { activityWatchFrame = it }
-        }
         /**
          * Was zuletzt zu sehen war - das juengste zuerst, hoechstens [RECENT_MEMORY] Eintraege.
          *
@@ -1417,24 +1384,10 @@ fun DockScreen(
                 // Das Motiv bleibt waehrend eines anschliessenden Linger sichtbar. Erst wenn eine
                 // andere Handlung beginnt, ist die kleine Szene wirklich vorbei.
                 if (step !is RoutineStep.Act && step !is RoutineStep.Linger) {
-                    // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv"): geloggt nur
-                    // beim wirklichen Wechsel, um Logcat nicht mit jedem Schritt zu fluten.
-                    if (activeActivity != null) {
-                        Log.d(
-                            "ActivityWatch",
-                            "clear (step=${step::class.simpleName}): $activeActivity -> null"
-                        )
-                    }
                     activeActivity = null
                 }
                 val current = avatar ?: return false
                 if (current.fed || current.occurrenceId != null) {
-                    if (activeActivity != null) {
-                        Log.d(
-                            "ActivityWatch",
-                            "abort (echte Erinnerung hat Vorrang): activeActivity war $activeActivity, finally raeumt gleich auf"
-                        )
-                    }
                     return false   // echte Erinnerung hat Vorrang
                 }
                 val avatarPx = with(density) { current.sizeDp.dp.toPx() }
@@ -1552,8 +1505,6 @@ fun DockScreen(
                     }
 
                     is RoutineStep.Act -> {
-                        // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv").
-                        Log.d("ActivityWatch", "set: $activeActivity -> ${step.topic} (Act)")
                         activeActivity = step.topic
                         // Essen zehrt am Vorrat - das ist die Rueckkopplung, aus der spaeter der
                         // Einkauf entsteht (siehe PlayPantry und PlayRoutines.forTopic).
@@ -1854,13 +1805,6 @@ fun DockScreen(
                 footballPhase = null
                 basketballPhase = null
                 trainingPhase = null
-                // TEMPORAER (siehe EVOLUTION.md, "falsches Taetigkeits-Motiv"): dieser finally
-                // laeuft auch, wenn die umgebende Coroutine abgebrochen wird (z.B. Spezies- oder
-                // Praesenzwechsel) - moeglicher Ort fuer eine Race mit dem NEU gestarteten Effekt,
-                // falls dessen erster Act-Schritt bereits VOR diesem Aufraeumen geschrieben hat.
-                if (activeActivity != null) {
-                    Log.d("ActivityWatch", "finally: $activeActivity -> null")
-                }
                 activeActivity = null
                 musicPhase = null
                 paintingPhase = null
@@ -3605,11 +3549,7 @@ fun DockScreen(
             }
         }.orEmpty()
 
-        // Was der Kreis gerade zeigt - dieselbe Prioritaet wie zuvor (Erinnerung vor Traum vor
-        // Mond vor Uhrzeit), nur um die autonome Taetigkeits-Spiegelung ergaenzt: Sie gewinnt nur,
-        // wenn weder eine Erinnerung noch ein Traum laeuft, UND nicht waehrend der Mondszene -
-        // die ist eine bewusst seltene Ausnahme (siehe moonMode-Kommentar oben) und soll nicht
-        // von einem taeglichen Taetigkeits-Symbol verdraengt werden.
+        // Was der Kreis gerade zeigt - Erinnerung vor Traum vor Mond vor Uhrzeit.
         //
         // **Als Funktion, nicht als `val`.** Ein `val` wuerde nur einmal pro Rekomposition
         // ausgewertet und von `describeScreen()` unten als fester Wert eingefangen - fuer den
@@ -3621,71 +3561,7 @@ fun DockScreen(
         // aus dem Review zu PR #162). Als Funktion liest jeder Aufruf `animationFrame` &Co. frisch
         // - genau das Muster, das `current = avatar` in `describeScreen()` schon nutzt.
         fun currentWatchFrame(): IntArray = animationFrame ?: dreamWatchFrame
-            ?: if (moonMode) {
-                MoonFrame.build(moonPhase)
-            } else if (avatar?.occurrenceId != null) {
-                // Eine echte, noch nicht gezogene Erinnerung hat Vorrang vor der autonomen
-                // Taetigkeits-Spiegelung (siehe Prioritaet oben: "Erinnerung vor Traum vor Mond
-                // vor Uhrzeit"). [animationFrame] deckt das nur ab, solange die Reaktion bereits
-                // LAEUFT - bevor gezogen wird, ist es noch null, und ohne diese Abfrage haette
-                // eine gleichzeitig laufende autonome Taetigkeit die anstehende Erinnerung im
-                // Kreis ueberdeckt. Gemeldet: "die Aktionen vom Avatar werden auch in der
-                // Reminder Watch angezeigt... das verschwimmt dann".
-                clockFrame
-            } else {
-                activityWatchFrame ?: clockFrame
-            }
-
-        /**
-         * Ob der Kreis gerade die autonome Taetigkeits-Spiegelung zeigt statt Uhrzeit, Traum,
-         * Mond oder einer echten Erinnerung - dieselbe Prioritaet wie [currentWatchFrame].
-         *
-         * Gemeldet, nachdem die Spiegelung tatsaechlich sichtbar wurde: "ich weiss nicht, ob
-         * ein Reminder angezeigt wird... oder ob es die Taetigkeit ist, die der Avatar macht...
-         * das verwischt bzw. vermischt sich" - samt dem Versuch, eine blosse Taetigkeit wie ein
-         * Reminder in einen Speicherplatz zu ziehen. Beide nutzen dieselben
-         * ReminderAnimations-Symbol-Frames (siehe [activityWatchFrame]s KDoc) und sehen sich
-         * dadurch zwangslaeufig aehnlich. Gedimmt statt entfernt: Die Spiegelung selbst wurde
-         * ausdruecklich gewuenscht, sie muss nur von einer wirklich ziehbaren Erinnerung
-         * unterscheidbar bleiben - genau wie [clockContentDescription] es fuer TalkBack schon
-         * tut (`a11y_clock_activity_highlight` statt `a11y_clock_reminder`).
-         */
-        fun isShowingAmbientActivity(): Boolean =
-            animationFrame == null && dreamWatchFrame == null && !moonMode &&
-                avatar?.occurrenceId == null && activityWatchFrame != null
-
-        // Reaktiv gemacht, statt [isShowingAmbientActivity] direkt als LaunchedEffect-Schluessel
-        // zu nehmen: Eine schlichte Funktion ist fuer Compose unsichtbar und wuerde den
-        // folgenden Effekt nie neu anstossen, egal wie oft sich ihr Ergebnis aendert.
-        val showingAmbientActivity by remember { derivedStateOf { isShowingAmbientActivity() } }
-
-        /**
-         * Zusaetzlich zur dauerhaften Dimmung (siehe [isShowingAmbientActivity]): ein einmaliger
-         * Akzent GENAU beim Uebergang zu einer autonomen Taetigkeit, wie vom Nutzer nach der
-         * Dimmung noch vorgeschlagen - "die Watch [sollte] untergehen auf den Avatar und... die
-         * Groesse veraendern und dann wieder die normale Groesse... uebergehen, sodass man die
-         * Reminder direkt unterscheiden kann". 0 = normale Position/Groesse, 1 = vollstaendig
-         * auf den Avatar abgesunken und geschrumpft.
-         *
-         * Bewusst ein separater additiver Wert statt einer Aenderung an [clockOffset]/
-         * [clockSizeDp] selbst - genau wie bei [driftOffset]: Kollisionspruefung (echtes
-         * Fuettern) und die gespeicherte Nutzerposition duerfen von einem rein optischen Akzent
-         * nicht beruehrt werden. Sonst wuerde der Akzent selbst wie ein Ziehen auf den Avatar
-         * wirken und faelschlich eine echte Erinnerung ausloesen, falls zufaellig gerade eine
-         * ansteht.
-         */
-        val activityAccentProgress = remember { Animatable(0f) }
-        LaunchedEffect(showingAmbientActivity) {
-            if (showingAmbientActivity) {
-                activityAccentProgress.animateTo(1f, tween(ACTIVITY_ACCENT_MOVE_MS, easing = FastOutSlowInEasing))
-                delay(ACTIVITY_ACCENT_HOLD_MS)
-                activityAccentProgress.animateTo(0f, tween(ACTIVITY_ACCENT_MOVE_MS, easing = FastOutSlowInEasing))
-            } else if (activityAccentProgress.value != 0f) {
-                // Unterbrochen, z.B. weil inzwischen eine echte Erinnerung ansteht - sauber
-                // zurueckfedern statt auf halbem Weg stehen zu bleiben.
-                activityAccentProgress.animateTo(0f, tween(ACTIVITY_ACCENT_MOVE_MS, easing = FastOutSlowInEasing))
-            }
-        }
+            ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
 
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
         //
@@ -3813,7 +3689,6 @@ fun DockScreen(
             // diese Praezisierung haette die Uhr hier staendig eine Erinnerung angesagt, obwohl
             // sie nur die aktuelle Uhrzeit zeigt.
             val currentDreamTopic = dreamWatchTopic
-            val currentActivity = activeActivity
             val clockContentDescription = if (activeAvatar?.occurrenceId != null) {
                 val topicLabel = activeAvatar.libraryAnimationLabel
                     ?: activeAvatar.animationType?.let { stringResource(it.labelRes) }
@@ -3826,9 +3701,6 @@ fun DockScreen(
                 stringResource(R.string.a11y_clock_dream_empty)
             } else if (moonMode) {
                 stringResource(R.string.a11y_clock_moon)
-            } else if (activityWatchFrame != null && currentActivity != null) {
-                val topicLabel = stringResource(currentActivity.labelRes)
-                stringResource(R.string.a11y_clock_activity_highlight, topicLabel)
             } else {
                 val now = LocalTime.now()
                 stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
@@ -3839,37 +3711,12 @@ fun DockScreen(
                 animationSpec = tween(MOON_RISE_MS, easing = FastOutSlowInEasing),
                 label = "watch-scene"
             )
-            // Wohin und wie weit der Akzent aus [activityAccentProgress] zieht - auf die
-            // Avatar-Mitte zu, geschrumpft auf ACTIVITY_ACCENT_SCALE. Additiv wie driftOffset
-            // (siehe dessen Kommentar unten): clockOffset selbst bleibt unberuehrt.
-            val accentProgress = activityAccentProgress.value
-            val baseTopLeft = Offset(clockOffset.x + driftOffset.x, clockOffset.y + driftOffset.y)
-            val accentOffset = if (accentProgress > 0f && activeAvatar != null) {
-                val avatarPx = with(density) { activeAvatar.sizeDp.dp.toPx() }
-                val shrunkPx = with(density) { clockSizeDp.dp.toPx() } * ACTIVITY_ACCENT_SCALE
-                val avatarCenter = Offset(
-                    activeAvatar.offset.x + avatarPx / 2f,
-                    activeAvatar.offset.y + avatarPx / 2f
-                )
-                val target = Offset(avatarCenter.x - shrunkPx / 2f, avatarCenter.y - shrunkPx / 2f)
-                Offset(
-                    (target.x - baseTopLeft.x) * accentProgress,
-                    (target.y - baseTopLeft.y) * accentProgress
-                )
-            } else {
-                Offset.Zero
-            }
-            val accentScale = 1f - (1f - ACTIVITY_ACCENT_SCALE) * accentProgress
             val watchModifier = Modifier
-                .size((clockSizeDp * watchScale * accentScale).dp)
-                // driftOffset ist die rein optische Burn-in-Verschiebung, accentOffset der
-                // Taetigkeits-Akzent - beide draufgerechnet, nur hier: Kollisionspruefung und
-                // Speicherung nutzen weiter clockOffset, damit weder das Fuettern noch die
-                // gemerkte Position dadurch aendert.
+                .size((clockSizeDp * watchScale).dp)
                 .offset {
                     IntOffset(
-                        (baseTopLeft.x + accentOffset.x).roundToInt(),
-                        (baseTopLeft.y + accentOffset.y).roundToInt()
+                        (clockOffset.x + driftOffset.x).roundToInt(),
+                        (clockOffset.y + driftOffset.y).roundToInt()
                     )
                 }
                 .pointerInput(Unit) {
@@ -3919,22 +3766,15 @@ fun DockScreen(
             // korrekt gerendert (siehe die Behebung vom selben Tag), aber inhaltlich nicht das,
             // was "spannend im Spiel war": ein Glas, das sich Tropfen fuer Tropfen fuellt, ein
             // Buch mit umblaetternden Seiten, ein Pinsel, der einen Kreis zieht, sind genau die
-            // ReminderAnimations-Frames, die [DockScreen.currentWatchFrame] ohnehin schon fuer
-            // die autonome Taetigkeits-Spiegelung nutzt (siehe deren KDoc). `dreamWatchFrame`
-            // traegt seither dieselben 13x13-Frames, PlayDreamWatchFace/AvatarSpriteView waeren
-            // dafuer wieder der falsche Leser (siehe PlayDreamBubble) - `currentWatchFrame()`
-            // schliesst `dreamWatchFrame` bereits in seine Prioritaetskette ein, ein eigener Zweig
-            // hier ist nicht mehr noetig.
+            // ReminderAnimations-Frames, die auch beim Ausloesen einer echten Erinnerung im Kreis
+            // laufen. `dreamWatchFrame` traegt seither dieselben 13x13-Frames,
+            // PlayDreamWatchFace/AvatarSpriteView waeren dafuer wieder der falsche Leser (siehe
+            // PlayDreamBubble) - `currentWatchFrame()` schliesst `dreamWatchFrame` bereits in
+            // seine Prioritaetskette ein, ein eigener Zweig hier ist nicht mehr noetig.
             SimulatedMatrixView(
                 frame = currentWatchFrame(),
                 contentDescription = clockContentDescription,
-                // Gedimmt, solange nur die Taetigkeits-Spiegelung zu sehen ist - siehe
-                // [isShowingAmbientActivity]s KDoc fuer den Fund, der dazu gefuehrt hat.
-                modifier = if (isShowingAmbientActivity()) {
-                    watchModifier.alpha(WATCH_ACTIVITY_ALPHA)
-                } else {
-                    watchModifier
-                }
+                modifier = watchModifier
             )
         }
 
@@ -5102,21 +4942,6 @@ private const val DREAM_HIGHLIGHT_HOLD_MS = 2_000L
 private const val DREAM_EMPTY_RECAP_HOLD_MS = 1_200L
 private const val DREAM_WATCH_TOP_FRACTION = 0.06f
 private const val DREAM_SLEEP_CHECK_MS = 800L
-// Deutlich genug gedimmt, um von einer vollen, ziehbaren Erinnerung unterscheidbar zu sein,
-// aber nicht so schwach, dass die Taetigkeit selbst unkenntlich wird - siehe
-// DockScreen.isShowingAmbientActivity.
-private const val WATCH_ACTIVITY_ALPHA = 0.55f
-// Wie weit die Uhr beim Taetigkeits-Akzent auf dem Weg zum Avatar schrumpft - siehe
-// DockScreen.activityAccentProgress. 0,5 ist deutlich genug, um als eigene Bewegung
-// wahrgenommen zu werden, ohne bei kleinen Uhrgroessen auf der Strecke unkenntlich zu werden.
-private const val ACTIVITY_ACCENT_SCALE = 0.5f
-// Hin- und Rueckweg des Akzents. Schnell genug, um wie ein kurzer Hinweis statt einer traegen
-// Bewegung zu wirken.
-private const val ACTIVITY_ACCENT_MOVE_MS = 420
-// Wie lange die Uhr geschrumpft auf dem Avatar stehen bleibt, bevor sie zurueckfedert - lang
-// genug, um wirklich wahrgenommen zu werden, kurz genug, um kein Dauerzustand zu sein (das
-// uebernimmt weiterhin die Dimmung aus WATCH_ACTIVITY_ALPHA).
-private const val ACTIVITY_ACCENT_HOLD_MS = 900L
 
 /**
  * Wie oft die Musik mit der Lage abgeglichen wird.
