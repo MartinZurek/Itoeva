@@ -296,6 +296,11 @@ object LivingPopulation {
                 AnimationType.GENERAL,
                 AnimationType.FOCUS
             )
+            ResidentRole.NEIGHBOR -> listOf(
+                AnimationType.LOVE,
+                AnimationType.GENERAL,
+                AnimationType.MINDFULNESS
+            )
         }
         val index = LivingResidents.all.indexOfFirst { it.profileId == resident.profileId }
         val topic = neigung[(world.day + index).mod(neigung.size)]

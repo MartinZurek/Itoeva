@@ -74,17 +74,79 @@ object LivingPopulationLayout {
         return chosen
     }
 
-    /** Der naechste wirkliche Gast in fester Rotation - aus derselben Wahrheit wie das Bild. */
+    /**
+     * Der naechste wirkliche Gast in fester Rotation - aus derselben Wahrheit wie das Bild.
+     *
+     * [excludeProfileIds] nimmt die Bewohner heraus, die gerade schon woanders im Bild als
+     * eigener Besuch laufen (siehe `visitingProfileIds` in DockScreen) - sonst koennte
+     * derselbe Bewohner zweimal gleichzeitig als eigenstaendiger Gast auftauchen, sobald mehrere
+     * Besuche parallel laufen duerfen.
+     */
     fun nextVisitor(
         snapshots: List<ResidentSnapshot>,
         place: PlayScene.Place,
-        previousProfileId: String?
+        previousProfileId: String?,
+        excludeProfileIds: Set<String> = emptySet()
     ): ResidentSnapshot? {
-        val candidates = presentAt(snapshots, place)
+        val candidates = presentAt(snapshots, place).filterNot { it.profileId in excludeProfileIds }
         if (candidates.isEmpty()) return null
         val previousIndex = candidates.indexOfFirst { it.profileId == previousProfileId }
         return candidates[(previousIndex + 1).mod(candidates.size)]
     }
+
+    /**
+     * Wie viele eigenstaendige, laufende Besucher an diesem Ort gleichzeitig auftreten duerfen.
+     *
+     * Offene Orte (Park, Sportplatz, Strasse, Stadt) bekommen mehr Platz als enge Raeume: das
+     * bestehende Fuenf-Bahnen-Raster (siehe [LANE_COUNT]/[place]) zeigt schon fuer die kleineren,
+     * gedimmten Hintergrundfiguren, wie viele Gestalten auf den vierzig Szenenzellen noch lesbar
+     * bleiben - fuer die volle Groesse eigenstaendiger Besucher bleibt eine Bahn Puffer zum Wirt.
+     */
+    fun visitorCapFor(place: PlayScene.Place): Int =
+        if (PlayScene.isOutdoors(place)) INTERACTIVE_VISITOR_CAP_OUTDOOR else INTERACTIVE_VISITOR_CAP_INDOOR
+
+    const val INTERACTIVE_VISITOR_CAP_OUTDOOR = 4
+    const val INTERACTIVE_VISITOR_CAP_INDOOR = 2
+
+    /**
+     * Zielort fuer einen NEUEN eigenstaendigen Besucher (volle Groesse, nicht die halbgrossen
+     * Hintergrundfiguren aus [place]) - so, dass er weder den Wirt noch einen bereits
+     * anwesenden Besucher ueberdeckt.
+     *
+     * **Eigenes Bahnenraster statt [LANE_COUNT].** Ein eigenstaendiger Besucher ist so breit wie
+     * der Wirt selbst (siehe `VisitorState.sizeDp = host.sizeDp` in DockScreen), nicht nur halb
+     * so breit wie die Hintergrundfiguren aus [place] - die fuenf dort fest verteilten Bahnen
+     * waeren fuer volle Breite zu eng beieinander und liessen benachbarte Kandidaten selbst dann
+     * ueberlappen, wenn noch niemand gewaehlt ist. Der Bahnenabstand richtet sich deshalb nach
+     * der tatsaechlichen Gastbreite, gedeckelt auf [MAX_INTERACTIVE_CANDIDATES] Versuche.
+     *
+     * Liefert `null`, wenn gerade kein Kandidat frei ist - der Aufrufer faellt dann auf eine
+     * einfachere, nur wirtsrelative Platzierung zurueck.
+     */
+    fun pickInteractiveSlot(
+        hostLeftFraction: Float,
+        hostWidthFraction: Float,
+        occupied: List<Pair<Float, Float>>
+    ): Float? {
+        val hostLeft = hostLeftFraction.coerceIn(0f, 1f)
+        val hostWidth = hostWidthFraction.coerceIn(0.01f, 1f)
+        val hostRight = (hostLeft + hostWidth).coerceAtMost(1f)
+        val guestWidth = hostWidth
+        val lastStart = 1f - guestWidth
+        if (lastStart < 0f) return null
+        val pitch = guestWidth + GAP_FRACTION
+        val laneCount = (lastStart / pitch).toInt().coerceIn(0, MAX_INTERACTIVE_CANDIDATES - 1) + 1
+        val candidates = (0 until laneCount).map { lane -> (pitch * lane).coerceAtMost(lastStart) }
+        return candidates.firstOrNull { candidate ->
+            val right = candidate + guestWidth
+            separated(candidate, right, hostLeft, hostRight) && occupied.all { (otherLeft, otherWidth) ->
+                separated(candidate, right, otherLeft, otherLeft + otherWidth)
+            }
+        }
+    }
+
+    /** Genug Versuche fuer den groessten geplanten Deckel ([INTERACTIVE_VISITOR_CAP_OUTDOOR]) plus Puffer. */
+    private const val MAX_INTERACTIVE_CANDIDATES = INTERACTIVE_VISITOR_CAP_OUTDOOR + 2
 
     /**
      * Findet einen wirklichen Partner fuer eine gemeinsame Sportplatz-Aktivitaet (NT-091, seit

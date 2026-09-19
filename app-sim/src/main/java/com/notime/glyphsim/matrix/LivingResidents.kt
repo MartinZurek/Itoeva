@@ -9,7 +9,9 @@ import com.notime.glyphsim.living.WorldState
 enum class ResidentRole {
     SHOPKEEPER,
     PARK_REGULAR,
-    ATHLETE
+    ATHLETE,
+    /** Kein fester Beruf - laeuft einfach in der Stadt herum, wie Fennec dort auch. */
+    NEIGHBOR
 }
 
 /**
@@ -52,12 +54,16 @@ data class LivingResident(
 }
 
 /**
- * Der erste kleine Einwohnerkatalog.
+ * Der Einwohnerkatalog - eine feste Form statt einer zufaelligen, ihre IDs liegen absichtlich
+ * ausserhalb der sechs waehlbaren Speziesprofile.
  *
- * Drei statt einer zufaelligen Form: Der Laden hat eine wiedererkennbare Verkaufskraft, Park
- * und Sportplatz haben je einen Stammgast. Ihre IDs liegen absichtlich ausserhalb der sechs
- * waehlbaren Speziesprofile. Mehr Figuren sind erst sinnvoll, wenn der Renderer mehrere zugleich
- * tragen kann; bis dahin waere ein grosser Katalog nur unsichtbarer Zustand.
+ * Sechs statt drei: Seit der Renderer mehrere Besucher gleichzeitig tragen kann (siehe `visitors`
+ * in [com.notime.glyphsim.ui.DockScreen] und [LivingPopulationLayout.visitorCapFor]), waere ein
+ * kleinerer Katalog an offenen Orten wie dem Park nie ausgeschoepft - dort waeren trotz Platz
+ * fuer vier gleichzeitige Gaeste nie mehr als zwei wirklich anwesend gewesen. Jede der sechs
+ * waehlbaren Spezies traegt jetzt genau einen Bewohner: Fennec verkauft, Puffling und Starlet
+ * halten sich oft im Park auf, Wyrmling und Hootlet trainieren (Hootlet zusaetzlich oft im
+ * Park), Gloop laeuft ohne festen Beruf durch die Stadt.
  */
 object LivingResidents {
     val all: List<LivingResident> = listOf(
@@ -103,6 +109,54 @@ object LivingResidents {
             ),
             activeFromMinute = 6 * 60,
             activeUntilMinute = 22 * 60
+        ),
+        LivingResident(
+            profileId = "resident:park:starlet",
+            species = AvatarSpecies.STARLET,
+            role = ResidentRole.PARK_REGULAR,
+            anchorPlace = PlayScene.Place.PARK,
+            visitPlaces = setOf(
+                PlayScene.Place.PARK,
+                PlayScene.Place.STREET,
+                PlayScene.Place.CITY
+            ),
+            activeFromMinute = 7 * 60,
+            activeUntilMinute = 22 * 60
+        ),
+        // **Reihenfolge ist hier keine Nebensache.** Die Interessens-Rotation in
+        // LivingPopulation.interestFor waehlt ueber `(world.day + Listenindex) mod 3` aus einer
+        // drei Eintraege langen, rollenspezifischen Themenliste - zwei Bewohner DERSELBEN Rolle
+        // duerfen sich deshalb nicht um ein Vielfaches von drei in ihrem Listenindex
+        // unterscheiden, sonst waehlen sie an jedem Tag dasselbe Thema und entwickeln identische
+        // gelernte Vorlieben (siehe LivingPopulationTest, "die drei Einwohner entwickeln
+        // verschiedene Historien"). Hootlet (ATHLETE, Index 4) und Wyrmling (ATHLETE, Index 2)
+        // liegen deshalb bewusst nur zwei statt drei Plaetze auseinander; Gloop (NEIGHBOR) traegt
+        // als einziger seiner Rolle ohnehin kein Kollisionsrisiko und steht deshalb zuletzt.
+        LivingResident(
+            profileId = "resident:sport:hootlet",
+            species = AvatarSpecies.HOOTLET,
+            role = ResidentRole.ATHLETE,
+            anchorPlace = PlayScene.Place.SPORT,
+            visitPlaces = setOf(
+                PlayScene.Place.SPORT,
+                PlayScene.Place.PARK,
+                PlayScene.Place.STREET
+            ),
+            activeFromMinute = 7 * 60,
+            activeUntilMinute = 19 * 60
+        ),
+        LivingResident(
+            profileId = "resident:city:gloop",
+            species = AvatarSpecies.GLOOP,
+            role = ResidentRole.NEIGHBOR,
+            anchorPlace = PlayScene.Place.CITY,
+            visitPlaces = setOf(
+                PlayScene.Place.CITY,
+                PlayScene.Place.STREET,
+                PlayScene.Place.SHOP
+            ),
+            activeFromMinute = 6 * 60,
+            activeUntilMinute = 22 * 60
         )
     )
 
@@ -143,6 +197,16 @@ object LivingResidents {
             ResidentRole.ATHLETE -> mapOf(
                 GoalKind.HAVE_FUN to 0.08,
                 GoalKind.DEVELOP to 0.05
+            )
+            // REST wird hier bewusst auf 0 uebersteuert (`+` auf zwei Maps ersetzt einen
+            // vorhandenen Schluessel, statt ihn aufzuaddieren - siehe Personality.of): Ohne diese
+            // Zeile behielte Gloop seinen speziesseitigen REST-Bias von 0,08 (staerker als der
+            // jeder anderen Spezies), und ein Nachbar, der lieber zuhause ausruht, waere oeffentlich
+            // kaum zu sehen - genau das, was der urspruengliche Auftrag beheben sollte.
+            ResidentRole.NEIGHBOR -> mapOf(
+                GoalKind.EXPLORE to 0.08,
+                GoalKind.CONNECT_WITH to 0.05,
+                GoalKind.REST to 0.0
             )
         }
         return base.copy(

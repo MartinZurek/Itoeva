@@ -67,12 +67,20 @@ class LivingPopulationTest {
 
         // Gelernter Geschmack und Erinnerung entstehen aus dem, was jeder wirklich getan hat.
         val geschmack = LivingResidents.all.map { states.getValue(it.profileId).agent.learnedPreferences }
-        assertEquals("Zwei Einwohner haben denselben gelernten Geschmack", 3, geschmack.distinct().size)
+        assertEquals(
+            "Zwei Einwohner haben denselben gelernten Geschmack",
+            LivingResidents.all.size,
+            geschmack.distinct().size
+        )
 
         val episoden = LivingResidents.all.map {
             states.getValue(it.profileId).agent.episodes.map { e -> e.event.kind to e.event.action }
         }
-        assertEquals("Zwei Einwohner haben dieselbe Erinnerung", 3, episoden.distinct().size)
+        assertEquals(
+            "Zwei Einwohner haben dieselbe Erinnerung",
+            LivingResidents.all.size,
+            episoden.distinct().size
+        )
     }
 
     /**
