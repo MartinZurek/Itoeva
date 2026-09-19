@@ -664,6 +664,50 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-19 - Zwei weitere Rollen bekommen einen Track: Morgen und Sport
+
+- **Ausgangsproblem:** Von den sechs Rollen in `MusicRole` (`PlayMusicPlan.kt`) waren nach der
+  Charakterthema-Serie drei weiterhin ohne ausgeliefertes Stueck: `morning_background`,
+  `sport_background`, `dream_background`. Auftrag war eine Durchsicht der vorhandenen Musik plus
+  zwei neue Stuecke gegen diese Luecke.
+- **Entscheidung:** Zwei neue Track-Definitionen in `music/manifest.json` - `sport-01` / Full
+  Stride (`sport_background`, 100 BPM, gechopptes gefiltertes Rhodes, Blaeser-Antworten) und
+  `morning-01` / First Light (`morning_background`, 72 BPM, Kalimba/Mallet-Melodie). Beide bleiben
+  in derselben warmen, japanisch gepraegten Jazz-/Lo-Fi-Familie wie `main_day_background` und
+  `home_evening_background` - unterschiedliches Tempo und Instrumentierung statt eines neuen
+  Genres, damit die App durchgehend nach einer Welt klingt. Prompts beschreiben ausschliesslich
+  Eigenschaften und Instrumente, nennen keinen Kuenstler und kein konkretes Stueck (siehe
+  `music/README.md`, Abschnitt Rechte und Herkunft).
+- **Warum diese zwei und nicht `dream_background`:** `sport_background` und `morning_background`
+  sind in `MusicResolver.candidates()` bereits verdrahtet (Sport nur bei wirklichem `MOVE` am
+  Sportplatz, Morgen in der fruehen Tagesphase) - ein gemergter Track wird dort sofort hoerbar,
+  ohne dass an der Auswahllogik etwas zu aendern waere. `MusicRole.DREAM` existiert zwar bereits
+  als Enum-Eintrag, aber `candidates()` fragt diese Rolle noch nirgends ab; ein Traum-Track allein
+  haette noch keine hoerbare Wirkung. Das bleibt offen, siehe naechster Schritt.
+- **Ueberarbeitung der drei bereits ausgelieferten Prompts:** `main-day-01`, `main-day-02` und
+  `home-evening-01` bekommen je einen Satz zum sanft tiefpassgefilterten Rhodes fuer mehr staubige
+  Waerme - dieselbe Eigenschaft, die die beiden neuen Prompts von Anfang an tragen. Die bereits
+  gemergten Audiodateien klingen dadurch noch nicht anders: Der Prompt-Text ist nur die halbe
+  Pipeline (siehe `music/README.md`, "Prompt -> Open-Weights-Modell -> pruefbare Audiodatei"). Erst
+  ein Lauf von **Generate Itoeva Music** erzeugt daraus tatsaechlich neues, per Ohr zu pruefendes
+  Audio - das ist bewusst nicht Teil dieser Aenderung.
+- **Abgrenzung:** Keine Aenderung an `MusicResolver`, `PlayMusicPlan.kt` oder einer bestehenden
+  Android-Ressource. `app-sim/src/main/res/raw/keep.xml` deckt neue `itoeva_*`-Dateien bereits
+  ueber ihr Wildcard ab, keine Aenderung dort noetig.
+- **Evidenz:** `DOCUMENTED INTENT` fuer die musikalische Absicht der Prompts - ungehoert, bis ein
+  Generierungslauf sie in eine gepruefte Audiodatei uebersetzt. `TESTED BEHAVIOR` fuer die
+  Manifest-Gueltigkeit: beide neuen Tracks bestehen `--dry-run` und die volle Python-Testsuite.
+- **Tests:** `python3 tools/music/generate_music.py --track-id sport-01 --dry-run` und
+  `--track-id morning-01 --dry-run` - beide sauber. `python3 -m unittest discover --start-directory
+  tools/music` - 15 gruen. `bash tools/reaction-preview/tests.sh` unveraendert (Kotlin-Seite nicht
+  betroffen) - 503 gruen.
+- **Naechster Schritt:** `dream_background` braucht zwei Dinge, nicht nur eins - einen Track UND
+  ein eigenes Signal "es wird gerade getraeumt" in `MusicContext`, das `MusicResolver.candidates()`
+  dann tatsaechlich abfragt. Ausserdem: die fuenf ueberarbeiteten und neuen Tracks muessen ueber
+  **Generate Itoeva Music** erzeugt und **gehoert** werden, bevor sie als Asset gemergt werden -
+  das gilt fuer neue Tracks ohnehin und ist bei den drei ueberarbeiteten Prompts jetzt die
+  Voraussetzung, damit die Aenderung ueberhaupt hoerbar wird.
+
 ### 2026-09-18 - Gemeinsames Training wird von beiden Wesen erinnert (NT-092)
 
 - **Ausgangsproblem:** NT-091 verband zwei wirkliche `MOVE_BODY`-Handlungen sichtbar und

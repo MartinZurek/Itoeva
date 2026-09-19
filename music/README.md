@@ -138,9 +138,9 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 |---|---|---|
 | `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns |
-| `morning_background` | frueher Morgen, falls er sich abheben soll | noch keiner |
-| `sport_background` | Bewegung und Anstrengung | noch keiner |
-| `dream_background` | Traum-Szenen | noch keiner |
+| `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light |
+| `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride |
+| `dream_background` | Traum-Szenen | noch keiner - `MusicResolver.candidates()` setzt diese Rolle bislang auch noch gar nicht ein; ausser einem Track braucht es dort noch ein eigenes Signal "es wird gerade getraeumt" in `MusicContext` |
 | `character_theme_background` | das persoenliche Stueck des anwesenden Wesens, Variante 01-06 fest je Spezies | `theme-puffling` / Puffling's Theme (Variante 01), `theme-starlet` / Starlet's Theme (Variante 02), `theme-wyrmling` / Wyrmling's Theme (Variante 03), `theme-fennec` / Fennec's Theme (Variante 04), `theme-gloop` / Gloop's Theme (Variante 05), `theme-hootlet` / Hootlet's Theme (Variante 06) |
 
 Die Rolle `character_theme_background` ist die einzige, deren Variante **nicht** rotiert: 01 bis 06
@@ -199,17 +199,20 @@ derselben Rolle startet die Musik nicht neu. Und die Uhr fuer den Variantenwechs
 ROLLE, nicht der Variante - sonst wuerde aus "spaetestens nach fuenf Minuten" ein "alle fuenf
 Minuten wieder von vorn", und das waere als Metronom hoerbar.
 
-**Der heutige Stand umfasst drei Track-Definitionen:** Morgens faellt die noch unbelegte Morgenrolle auf
-`main_day_background` zurueck, mittags laeuft dieselbe Rolle - dort inzwischen mit zwei Stuecken,
-zwischen denen bei laengerem Zusehen gewechselt wird. Abends uebernimmt an ruhigen
-Orten `home_evening_background`; Stadt, Strasse, Laden und Arbeitsplatz lassen den Tag noch
-ausklingen. Park, Wald, Wiese und Teich gelten abends als ruhige Naturorte. Nachts wird nie auf
-den Tagestrack zurueckgefallen.
+**Der heutige Stand deckt fuenf der sechs Rollen ab:** Frueh morgens laeuft jetzt `morning-01` /
+First Light, mittags `main_day_background` - dort inzwischen mit zwei Stuecken, zwischen denen bei
+laengerem Zusehen gewechselt wird. Abends uebernimmt an ruhigen Orten `home_evening_background`;
+Stadt, Strasse, Laden und Arbeitsplatz lassen den Tag noch ausklingen. Park, Wald, Wiese und Teich
+gelten abends als ruhige Naturorte. Nachts wird nie auf den Tagestrack zurueckgefallen.
 
-Ein spaeterer Sporttrack uebernimmt nur, wenn die Figur am Sportplatz **tatsaechlich MOVE
-ausfuehrt**. Der Ort allein behauptet keine Handlung. Traum, Wetter und Stimmung bleiben
-vorbereitet beziehungsweise vorhandene Weltsignale, erhalten aber erst mit einem geprueften
-passenden Track eine eigene musikalische Wirkung.
+`sport-01` / Full Stride uebernimmt nur, wenn die Figur am Sportplatz **tatsaechlich MOVE
+ausfuehrt**. Der Ort allein behauptet keine Handlung.
+
+`dream_background` bleibt die letzte offene Rolle. Der Enum-Eintrag existiert bewusst schon
+(`MusicRole.DREAM` in `PlayMusicPlan.kt`), aber `MusicResolver.candidates()` fragt ihn noch nirgends
+ab - ein Traum-Track allein wuerde also noch nicht erklingen. Wetter und Stimmung bleiben ebenfalls
+vorhandene, aber musikalisch noch ungenutzte Weltsignale, bis ein gepruefter passender Track UND die
+zugehoerige Abfrage in `candidates()` beide stehen.
 
 Das Feld `role` ist deshalb Pflicht im Manifest und wird gegen dieselbe Liste geprueft, die
 `MusicRole` in `app-sim/.../matrix/PlayMusicPlan.kt` fuehrt. **Wer eine Rolle ergaenzt, ergaenzt

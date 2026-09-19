@@ -48,6 +48,34 @@
       "notes": "Zweite Variante derselben Rolle wie main-day-01, nicht deren Ersatz. Gemeldet: innerhalb eines stabilen Zustands bleibt dieselbe Musik zu lange unveraendert. Gleiche musikalische Familie - warmer, japanisch gefaerbter jazzy Lo-Fi -, aber etwas leichter und bewegter: 88 statt 82 BPM, gebuerstete Snare, jeweils nur ein melodiefuehrendes Instrument. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Welche der Varianten laeuft, entscheidet PlayMusicRotation nach der Rolle, nicht statt ihrer."
     },
     {
+      "id": "sport-01",
+      "title": "Full Stride",
+      "role": "sport_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_sport_01",
+      "prompt_file": "music/prompts/sport-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 19092026,
+      "notes": "Erster Track der bisher unbelegten Rolle sport_background. MusicResolver.candidates() setzt diese Rolle bereits ganz vorn ein, sobald am Sportplatz wirklich MOVE laeuft (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist, ohne dass an der Auswahllogik etwas zu aendern waere. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie wie main_day_background, aber schneller und energischer (100 statt 82 BPM), mit gechopptem gefiltertem Rhodes und Blaeser-Antworten statt gehaltener Akkorde. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck."
+    },
+    {
+      "id": "morning-01",
+      "title": "First Light",
+      "role": "morning_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_morning_01",
+      "prompt_file": "music/prompts/morning-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 20092026,
+      "notes": "Erster Track der bisher unbelegten Rolle morning_background. MusicResolver.candidates() waehlt diese Rolle bereits am fruehen Morgen vor main_day_background (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie, aber luftiger und langsamer (72 BPM), mit Kalimba/Mallet-Melodie statt Rhodes im Vordergrund. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck."
+    },
+    {
       "id": "theme-puffling",
       "title": "Puffling's Theme",
       "role": "character_theme_background",
