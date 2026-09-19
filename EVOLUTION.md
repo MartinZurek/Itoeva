@@ -664,6 +664,48 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-19 - Taetigkeits-Spiegelung im Uhr-Kreis wieder ausgebaut
+
+- **Ausgangsproblem:** Nach vier Iterationen an der in den drei Eintraegen darunter beschriebenen
+  Taetigkeits-Spiegelung (Prioritaet, Dimmung, Akzent, Diagnose-Logs fuer das falsche Motiv)
+  entschied der Nutzer, das Feature nicht weiter zu debuggen, sondern ganz zu entfernen: "Diese
+  Funktion, dass das mit der Watch interagiert, will ich jetzt ganz raus haben... das funktioniert
+  nicht so, wie ich mir das vorgestellt habe." Die Uhr soll wieder ausschliesslich Uhrzeit und
+  echte Erinnerungen zeigen, genau wie vor `1c9ee9e` (PR #162, 2026-09-16).
+- **Was entfernt wurde** (alles in `DockScreen.kt`): `activityWatchFrame` (State + der es
+  fuellende `LaunchedEffect(activeActivity)`), `isShowingAmbientActivity()`/
+  `showingAmbientActivity` (Dimmung), `activityAccentProgress` samt dem treibenden
+  `LaunchedEffect(showingAmbientActivity)` (Akzent-Absinken auf den Avatar), die vier temporaeren
+  `Log.d("ActivityWatch", ...)`-Diagnosezeilen aus dem vorigen Eintrag, der TalkBack-Zweig
+  `a11y_clock_activity_highlight` (String-Resource samt Verwendung entfernt), sowie die
+  Konstanten `WATCH_ACTIVITY_ALPHA`, `ACTIVITY_ACCENT_SCALE`, `ACTIVITY_ACCENT_MOVE_MS`,
+  `ACTIVITY_ACCENT_HOLD_MS`. `currentWatchFrame()` ist wieder auf die urspruengliche Prioritaet
+  zurueckgesetzt: `animationFrame ?: dreamWatchFrame ?: (moonMode ? Mond : clockFrame)`, ohne
+  Taetigkeits-Fallback und ohne den dafuer noetig gewordenen `avatar?.occurrenceId`-Sonderfall.
+  `watchModifier` zeigt wieder direkt `clockOffset + driftOffset`, ohne Akzent-Offset/-Scale.
+- **Was bewusst erhalten blieb**, weil es demselben Ursprungscommit entstammt, aber ein anderes
+  Anliegen ist: `activeActivity` selbst und seine Zuweisung/Raeumung in `runRoutine` (Act-Schritt
+  setzt, Schrittwechsel und `finally` raeumen) - treibt weiterhin ausschliesslich
+  `PlayEffects.activityCells`, das WELT-Motiv neben der Figur (Staffelei/Glas/Buch je nach
+  Taetigkeit), das der Nutzer ausdruecklich behalten wollte ("in der Welt sollte es erkennbar
+  sein"). Ebenso erhalten: die drei anderen `PlayEffects.kt`-Neuzeichnungen aus `1c9ee9e`
+  (Staffelei-Bein, Trink-Schwall, Buch-Glanzpunkt), `dreamWatchFrame`/der Traumrueckblick (nutzt
+  dieselben `ReminderAnimations`-Frames fuer einen unabhaengigen Zweck) und die
+  `matchesPendingImpulse`-Korrektur aus PR #178 (leere Speicherplaetze faelschlich gruen) - ein
+  eigener, unabhaengiger Bugfix an der Save-Slot-Hervorhebung, keine Taetigkeits-Spiegelung.
+- **Warum von Hand statt `git revert 1c9ee9e`:** Dieser Commit buendelt die drei zu erhaltenden
+  `PlayEffects.kt`-Aenderungen mit der einen zu entfernenden `DockScreen.kt`-Ergaenzung - ein
+  einfacher Revert haette auch die gewuenschten Teile ruecknehmen. Stattdessen wurde
+  `DockScreen.kt` abschnittsweise gegen den Diff von `1c9ee9e` und die drei Folgecommits (PR
+  #178-181) geprueft und nur die Taetigkeits-Spiegelung selbst entfernt.
+- **Tests:** `bash tools/reaction-preview/tests.sh` (503 Tests, deckt `DockScreen.kt` nicht direkt
+  ab, bestaetigt aber keine Kollateralschaeden in den reinen Kotlin-Modulen).
+- **Ergebnis:** Die Uhr zeigt wieder ausschliesslich Uhrzeit, echte Erinnerungen (inklusive deren
+  bisheriger Prioritaet vor allem anderen) und den Traumrueckblick - keine Spiegelung autonomer
+  Taetigkeiten mehr. Reminder landen weiterhin per Ziehen in einem Speicherplatz oder direkt auf
+  dem Avatar. Die zuvor ungeloeste Frage nach dem gelegentlich falschen Taetigkeits-Symbol ist
+  damit hinfaellig - das instrumentierte Feature existiert nicht mehr.
+
 ### 2026-09-19 - Falsches Taetigkeits-Motiv: zweite Lesepruefung, diesmal mit Logcat statt Vermutung
 
 - **Ausgangsproblem:** Auftrag, den Fund aus dem Eintrag darunter ("falsches Taetigkeits-Motiv")
