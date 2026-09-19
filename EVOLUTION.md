@@ -664,6 +664,44 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-19 - Falsches Taetigkeits-Motiv: zweite Lesepruefung, diesmal mit Logcat statt Vermutung
+
+- **Ausgangsproblem:** Auftrag, den Fund aus dem Eintrag darunter ("falsches Taetigkeits-Motiv")
+  nochmal aufzugreifen und sicherzustellen, dass die Uhr immer genau zur laufenden Taetigkeit
+  passt.
+- **Zweite Untersuchung, strukturell praeziser als die erste:** Anhand der tatsaechlichen
+  Einrueckung nachgewiesen (nicht mehr nur vermutet), dass alle drei `runRoutine`-Aufrufstellen
+  (Ambient-Schleife, angeforderte Handlung, gemeinsame Sportplatz-Aktivitaet) tatsaechlich
+  innerhalb DESSELBEN `LaunchedEffect` liegen, nicht in getrennten, potenziell nebenlaeufigen
+  Effekten - die zuvor vermutete Race zwischen zwei Effekten ist damit endgueltig ausgeschlossen,
+  nicht nur plausibel verworfen. Dabei einen echten, aber vermutlich unabhaengigen Befund
+  gefunden: `startAvatarIdleLoop` startet die Ruhe-Schleife ueber `scope` (den
+  `rememberCoroutineScope()` der ganzen Komposition), nicht ueber den Coroutine-Scope des
+  jeweils laufenden `LaunchedEffect` - sie wuerde einen Abbruch des umgebenden Effekts also NICHT
+  automatisch mitnehmen. In der Praxis wird sie an ueber zwanzig Stellen explizit per
+  `avatarIdleJob?.cancel()` abgeraeumt; ob das jede Abbruchstelle abdeckt, bleibt ungeprueft.
+  Betrifft aber ohnehin nur `avatar.frame` (die Kreatur-Pose), nicht `activeActivity` - passt
+  damit nicht zur bestaetigten Beobachtung "Koerper richtig, nur die Uhr falsch".
+- **Kein abschliessender Befund trotzdem.** Weiteres Lesen der Zuweisungslogik selbst (drei
+  Schreibstellen: `Act`-Schritt setzt, Schrittwechsel und `finally` raeumen auf) zeigt keine
+  Luecke.
+- **Stattdessen: temporaere Diagnose-Logs statt einer weiteren Vermutung.** Vier `Log.d("ActivityWatch", ...)`-Zeilen, klar als TEMPORAER markiert:
+  - beim Setzen (`Act`-Schritt): altes und neues Thema,
+  - beim Raeumen durch einen Nicht-Act/Linger-Schritt: welcher Schritt es ausgeloest hat,
+  - beim Abbruch durch eine echte Erinnerung,
+  - beim Aufraeumen im `finally`,
+  - und im Uhr-Effekt selbst: mit welchem Thema er tatsaechlich neu gestartet ist - der
+    entscheidende Abgleich, falls die geschriebene Zuweisung und das, was der Uhr-Effekt bekommt,
+    je auseinanderlaufen sollten.
+  Absichtlich nur bei einem wirklichen Wechsel geloggt (nicht bei jedem Schritt), damit Logcat
+  beim eigentlichen Vorfall lesbar bleibt.
+- **Abgrenzung:** Keine Verhaltensaenderung - ausschliesslich Log-Zeilen. Nichts an
+  `activeActivity`, der Routinenwahl oder der Kollisions-/Fuetterlogik geaendert.
+- **Naechster Schritt:** Am Geraet `adb logcat -s ActivityWatch` waehrend des Spielmodus laufen
+  lassen, bis der Fund erneut auftritt, und die letzten zehn bis zwanzig Zeilen vor dem Zeitpunkt
+  teilen. Nach der Behebung: alle vier `Log.d`-Stellen wieder entfernen (siehe "TEMPORAER"-Marker
+  in `DockScreen.kt`).
+
 ### 2026-09-19 - Ein dritter Fund zur Taetigkeits-Spiegelung: falsches Motiv, plus ein neuer Akzent
 
 - **Ausgangsproblem:** Dritte Meldung in derselben Reihe (siehe Eintrag darunter): "wenn er zum
