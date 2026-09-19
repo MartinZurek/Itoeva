@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -3605,6 +3606,24 @@ fun DockScreen(
                 activityWatchFrame ?: clockFrame
             }
 
+        /**
+         * Ob der Kreis gerade die autonome Taetigkeits-Spiegelung zeigt statt Uhrzeit, Traum,
+         * Mond oder einer echten Erinnerung - dieselbe Prioritaet wie [currentWatchFrame].
+         *
+         * Gemeldet, nachdem die Spiegelung tatsaechlich sichtbar wurde: "ich weiss nicht, ob
+         * ein Reminder angezeigt wird... oder ob es die Taetigkeit ist, die der Avatar macht...
+         * das verwischt bzw. vermischt sich" - samt dem Versuch, eine blosse Taetigkeit wie ein
+         * Reminder in einen Speicherplatz zu ziehen. Beide nutzen dieselben
+         * ReminderAnimations-Symbol-Frames (siehe [activityWatchFrame]s KDoc) und sehen sich
+         * dadurch zwangslaeufig aehnlich. Gedimmt statt entfernt: Die Spiegelung selbst wurde
+         * ausdruecklich gewuenscht, sie muss nur von einer wirklich ziehbaren Erinnerung
+         * unterscheidbar bleiben - genau wie [clockContentDescription] es fuer TalkBack schon
+         * tut (`a11y_clock_activity_highlight` statt `a11y_clock_reminder`).
+         */
+        fun isShowingAmbientActivity(): Boolean =
+            animationFrame == null && dreamWatchFrame == null && !moonMode &&
+                avatar?.occurrenceId == null && activityWatchFrame != null
+
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
         //
         // An EINER Stelle, weil sie zweimal gebraucht wird: Der Film sammelt sie fuenfzehnmal je
@@ -3824,7 +3843,13 @@ fun DockScreen(
             SimulatedMatrixView(
                 frame = currentWatchFrame(),
                 contentDescription = clockContentDescription,
-                modifier = watchModifier
+                // Gedimmt, solange nur die Taetigkeits-Spiegelung zu sehen ist - siehe
+                // [isShowingAmbientActivity]s KDoc fuer den Fund, der dazu gefuehrt hat.
+                modifier = if (isShowingAmbientActivity()) {
+                    watchModifier.alpha(WATCH_ACTIVITY_ALPHA)
+                } else {
+                    watchModifier
+                }
             )
         }
 
@@ -4992,6 +5017,10 @@ private const val DREAM_HIGHLIGHT_HOLD_MS = 2_000L
 private const val DREAM_EMPTY_RECAP_HOLD_MS = 1_200L
 private const val DREAM_WATCH_TOP_FRACTION = 0.06f
 private const val DREAM_SLEEP_CHECK_MS = 800L
+// Deutlich genug gedimmt, um von einer vollen, ziehbaren Erinnerung unterscheidbar zu sein,
+// aber nicht so schwach, dass die Taetigkeit selbst unkenntlich wird - siehe
+// DockScreen.isShowingAmbientActivity.
+private const val WATCH_ACTIVITY_ALPHA = 0.55f
 
 /**
  * Wie oft die Musik mit der Lage abgeglichen wird.
