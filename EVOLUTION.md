@@ -664,6 +664,45 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-19 - Die sechs Charakterthemen ziehen auf das Qualitaetsniveau der neuen Tracks nach
+
+- **Ausgangsproblem:** Direktes Nutzerfeedback nach dem Anhoeren von `sport-01`, `morning-01` und
+  den neu erzeugten `main-day-01`/`main-day-02`: "diese Musik wirklich sehr, sehr gut... dieses
+  aktuelle Niveau... um einiges besser als das, was schon im Game drin ist." Auftrag war, die
+  sechs bereits ausgelieferten Charakterthemen (`theme-puffling` bis `theme-hootlet`) auf
+  dasselbe Qualitaetsniveau zu heben, **ohne** ihren jeweiligen Charakter zu verwischen - "nicht
+  alles gleich klingen lassen, sondern nur die Qualitaet... verbessern".
+- **Entscheidung:** Jedes der sechs Themen bekommt genau einen gezielten Satz zur analogen
+  Produktionswaerme seines jeweils fuehrenden Harmonieinstruments - denselben Kunstgriff, der bei
+  `main-day-01`/`02`/`home-evening-01` (PR #164) bereits zu einer vom Nutzer als hoerbar besser
+  bewerteten Aufnahme fuehrte. Bewusst je Instrument unterschiedlich formuliert, nicht ein
+  Textbaustein fuer alle sechs:
+  - `theme-fennec` (Rhodes): sanft tiefpassgefiltert.
+  - `theme-gloop` (Pads): sanft tiefpassgefiltert.
+  - `theme-puffling` (Klavier): analoge Waerme rundet den Hammeranschlag.
+  - `theme-starlet` (Felt-Piano): sanfte analoge Saettigung.
+  - `theme-hootlet` (Felt-Piano): sanfte analoge Waerme.
+  - `theme-wyrmling` (Gitarre): sanfte Bandkompression.
+- **Warum nicht angleichen:** Alle sechs behalten ihr dokumentiertes Alleinstellungsmerkmal -
+  Tempo, Leitinstrument, Melodiefuehrung und die jeweilige Ausschlussliste in
+  `music/prompts/theme-*.txt` bleiben unangetastet. Der explizite Verzicht auf Vinyl-Knistern (in
+  allen sechs Prompts schon vorher ausdruecklich ausgeschlossen: "sauberer und praesenter als die
+  Stadtmusik") bleibt bestehen - die Waerme kommt ueber Filterung/Saettigung, nicht ueber
+  Schallplattengeraeusch, damit sich die Charakterthemen weiterhin von den Umgebungs-Tracks
+  unterscheiden.
+- **Abgrenzung:** Keine Aenderung an Tempo, Seed, Rolle oder Zuordnung
+  (`MusicRole.characterThemeVariant`). Keine Aenderung an einem Kuenstlernamen oder einem
+  konkreten Stueck - die Prompts beschreiben weiterhin ausschliesslich Eigenschaften und
+  Instrumente (siehe `music/README.md`, Rechte und Herkunft).
+- **Evidenz:** `DOCUMENTED INTENT` fuer die musikalische Absicht - ungehoert, bis ein
+  Generierungslauf sie in eine gepruefte Audiodatei uebersetzt. `TESTED BEHAVIOR` fuer die
+  Manifest-Gueltigkeit: alle sechs bestehen `--dry-run` und die volle Python-Testsuite.
+- **Tests:** `python3 tools/music/generate_music.py --track-id theme-<name> --dry-run` fuer alle
+  sechs Themen - sauber. `python3 -m unittest discover --start-directory tools/music` - 15 gruen.
+- **Naechster Schritt:** **Generate Itoeva Music** fuer alle sechs Themen laufen lassen und vor
+  dem Mergen anhoeren - faellt eines am Freigabe-Gate durch (wie `home-evening-01` zuvor, siehe
+  Eintrag darunter), ist ein neuer Seed bei unveraendertem Prompt der etablierte naechste Schritt.
+
 ### 2026-09-19 - Zwei weitere Rollen bekommen einen Track: Morgen und Sport
 
 - **Ausgangsproblem:** Von den sechs Rollen in `MusicRole` (`PlayMusicPlan.kt`) waren nach der
