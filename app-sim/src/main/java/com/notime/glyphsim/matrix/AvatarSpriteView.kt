@@ -15,6 +15,11 @@ import androidx.compose.ui.semantics.semantics
 private val LED_OFF_COLOR = Color(MatrixColors.LED_OFF)
 private val LED_ON_COLOR = Color(MatrixColors.LED_ON)
 
+// Wie stark die Augen Richtung Weiss aufgehellt werden gegenueber dem flachen Akzentton des
+// restlichen Gesichts (siehe AvatarAccent.eyesIn) - deutlich genug fuer ein Glanzlicht, aber
+// nicht so stark, dass die Speziesfarbe verloren geht.
+private const val EYE_GLINT_FRACTION = 0.4f
+
 /**
  * Zeichnet den Tamagotchi-Avatar als eckige Pixelgrafik direkt auf dem schwarzen
  * Dock-Hintergrund - bewusst KEIN runder "Puck" wie [SimulatedMatrixView] (der Avatar
@@ -101,10 +106,14 @@ private fun DrawScope.drawSprite(
     // durchgehend eingefaerbte Figur war eine einfarbige Flaeche in Kreaturform - sie sagte,
     // welches Wesen es ist, aber nichts darueber, was daran ein Gesicht ist.
     val accentColor = species?.let { Color(AvatarPalette.tintFor(it)) } ?: LED_ON_COLOR
+    // Die Augen bekommen denselben Ton, nur heller - ein Glanzlicht statt einer zweiten Farbe
+    // (siehe AvatarAccent.eyesIn).
+    val eyeColor = lerpColor(accentColor, Color.White, EYE_GLINT_FRACTION)
     val frame = AvatarShading.shade(rawFrame, side = shadeSide)
     // Das Gesicht wird an der ROHEN Form gesucht: Die Schattierung aendert Helligkeiten, nicht
     // die Silhouette, und ein Loch bleibt ein Loch - aber so haengt der Fund nicht daran.
     val face = AvatarAccent.facesIn(rawFrame)
+    val eyes = AvatarAccent.eyesIn(rawFrame)
     val cell = size.width / AvatarGeometry.SIZE
     // Winziger Ueberlapp zwischen benachbarten Zellen, damit Antialiasing keine
     // sichtbaren Ein-Pixel-Spalten zwischen zwei eigentlich zusammenhaengenden
@@ -114,6 +123,7 @@ private fun DrawScope.drawSprite(
         for (x in 0 until AvatarGeometry.SIZE) {
             val index = y * AvatarGeometry.SIZE + x
             val imGesicht = face.getOrElse(index) { false }
+            val imAuge = eyes.getOrElse(index) { false }
             val brightness = frame.getOrElse(index) { 0 }
             // Gesichtszellen sind LOECHER in der Figur - dort steht keine Helligkeit, sie waeren
             // sonst gar nicht gezeichnet worden. Genau deshalb bekommen sie ihre eigene.
@@ -121,8 +131,9 @@ private fun DrawScope.drawSprite(
             val roh = if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else brightness
             val fraction = (roh.coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                 AvatarGeometry.MAX_BRIGHTNESS) * brightnessScale.coerceIn(0f, 1f)
+            val ziel = if (imAuge) eyeColor else if (imGesicht) accentColor else LED_ON_COLOR
             drawRect(
-                color = lerpColor(LED_OFF_COLOR, if (imGesicht) accentColor else LED_ON_COLOR, fraction),
+                color = lerpColor(LED_OFF_COLOR, ziel, fraction),
                 topLeft = Offset(x * cell, y * cell),
                 size = cellSize
             )
