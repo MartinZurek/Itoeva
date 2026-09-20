@@ -664,6 +664,45 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-20 - Der blecherne Klang war kein Tonhoehen-, sondern ein Diffusions-Sparfehler
+
+- **Ausgangsproblem:** Direkt nach dem Merge der Prompt-Entschaerfung (siehe Eintrag darunter,
+  selber Tag) testete der Nutzer eine frisch gebaute APK und meldete die Abendmusik weiterhin als
+  "sehr blechern und langsam... sehr, sehr billig... als wuerde der Synthesizer das total
+  uebersteuern auf so einen roboterblechernden Sound". Wichtige Klarstellung zuerst: Diese APK
+  konnte den bereits neu erzeugten Track noch gar nicht enthalten - nur die Prompt-Texte und
+  `PlayMusic.kt` waren zu diesem Zeitpunkt gemergt (PR #186), die eigentliche neu erzeugte
+  Audiodatei lag noch ungehoert in den offenen PRs #187/#188. Der Nutzer hatte also unwissentlich
+  den urspruenglichen, nie ueberarbeiteten `home-evening-01`-Track beurteilt.
+- **Befund:** "Blechern", "uebersteuert" und "roboterhaft" beschreiben etwas anderes als die
+  Tonhoehen-Schwankung (wow and flutter) aus dem vorigen Eintrag - das ist eine Klangfarben-,
+  keine Tonhoehen-Beschwerde. Nachgesehen im Manifest: JEDER bisherige Track, auch die vom Nutzer
+  ausdruecklich gelobten sechs Charakterthemen, wurde mit `steps: 8` und `cfg_scale: 1` erzeugt -
+  fuer ein Diffusionsmodell sehr niedrige Werte (wenige Sampling-Schritte, kaum Prompt-Fuehrung).
+  Zu wenige Schritte sind eine bekannte Ursache genau solcher rauer, metallischer, "billig"
+  wirkender Artefakte - und sie sind auf lang gehaltenen Toenen (Rhodes, Vibraphon, Pads, wie im
+  Abendtrack) deutlich hoerbarer als auf den eher perkussiven, kurz angeschlagenen Klaengen der
+  Charakterthemen (Klavier, Vibraphon-Anschlag, Gitarre). Das erklaert die vom Nutzer selbst
+  gezogene Unterscheidung schluessig, ohne die Tonhoehen-Diagnose zu widerlegen - beides kann
+  gleichzeitig zutreffen und im selben Stueck zusammenwirken.
+- **Entscheidung (mit dem Nutzer abgestimmt):** `home-evening-01` und `home-evening-02` von
+  `steps: 8`/`cfg_scale: 1` auf `steps: 32`/`cfg_scale: 4` angehoben und neu erzeugt. Die zuvor
+  geoeffneten PRs #187 (home-evening-02, ungehoert) und #188 (home-evening-01, ungehoert) sind
+  damit ueberholt - beide tragen zwar schon den bereinigten Prompt, aber noch die niedrigen
+  Diffusions-Werte, und wurden geschlossen statt gemergt.
+- **Bewusst NICHT angefasst:** `main-day-01/02`, `sport-01` und die sechs Charakterthemen bleiben
+  bei `steps: 8`/`cfg_scale: 1` - die Charakterthemen wurden vom Nutzer ausdruecklich als gut
+  befunden, eine Anhebung dort waere eine Loesung fuer ein nicht gemeldetes Problem. Ob
+  `main-day-01/02`/`sport-01` (die denselben niedrigen Wert tragen) ebenfalls betroffen sind,
+  bleibt offen, bis sie gezielt gemeldet werden.
+- **Tests:** `python tools/music/generate_music.py --track-id <id> --dry-run` fuer beide
+  geaenderten Tracks erfolgreich (kein Obergrenzen-Check auf `steps`/`cfg_scale` in
+  `generate_music.py`s `validate_track`). `bash tools/reaction-preview/tests.sh` unveraendert
+  gruen (diese Aenderung betrifft nur `music/manifest.json`, keinen Kotlin-Code).
+- **Offen:** Ob 32/4 die richtige Abwaegung zwischen Klangqualitaet und CPU-Generierungszeit ist,
+  entscheidet erst der naechste Hoertest - eine harte Zahl ohne Praezedenz in dieser Pipeline,
+  gewaehlt als deutliche, aber nicht extreme Anhebung gegenueber dem bisherigen Wert.
+
 ### 2026-09-20 - Die Abendmusik klang wie eine gezogene Kassette, nicht wie Melancholie
 
 - **Ausgangsproblem:** Der Nutzer bat als "Musik Game Designer" um eine Durchsicht der Musik,

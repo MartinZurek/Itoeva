@@ -14,10 +14,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_home_evening_01",
       "prompt_file": "music/prompts/home-evening-01.txt",
-      "steps": 8,
-      "cfg_scale": 1,
+      "steps": 32,
+      "cfg_scale": 4,
       "seed": 21092026,
-      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19: Die vorherige Kombination aus Seed und dem leicht ueberarbeiteten Prompt (siehe EVOLUTION.md, 2026-09-19) erzeugte eine Aufnahme mit 0,17s Stille am Ende - ueber dem 0,15s-Limit von tools/music/audio_polish.py und damit vom Freigabe-Gate zu Recht abgelehnt. Am 2026-09-20 erneut ueberarbeitet: Gemeldet als klinge das Stueck wie eine kuenstlich verlangsamte, gezogene Aufnahme. Ursache im Prompt gefunden - 'subtle tape and vinyl texture' ist genau die Beschreibung, aus der ein Modell hoerbare Tonhoehen-Schwankung (wow and flutter) macht, und bei diesem langsamen, sparsam besetzten Stueck war sie am wenigsten maskiert. Prompt entschaerft (Waerme ja, Tonhoehen-Instabilitaet ausdruecklich nein), neu erzeugt. Siehe EVOLUTION.md und music/README.md fuer die vollstaendige Begruendung."
+      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19: Die vorherige Kombination aus Seed und dem leicht ueberarbeiteten Prompt (siehe EVOLUTION.md, 2026-09-19) erzeugte eine Aufnahme mit 0,17s Stille am Ende - ueber dem 0,15s-Limit von tools/music/audio_polish.py und damit vom Freigabe-Gate zu Recht abgelehnt. Am 2026-09-20 erneut ueberarbeitet: Gemeldet als klinge das Stueck wie eine kuenstlich verlangsamte, gezogene Aufnahme. Ursache im Prompt gefunden - 'subtle tape and vinyl texture' ist genau die Beschreibung, aus der ein Modell hoerbare Tonhoehen-Schwankung (wow and flutter) macht, und bei diesem langsamen, sparsam besetzten Stueck war sie am wenigsten maskiert. Prompt entschaerft, neu erzeugt (PR #188). Noch am selben Tag, nach Hoertest der Alt-Datei am Geraet: Der ausgelieferte Track klang zusaetzlich blechern, roboterhaft und uebersteuert - kein Tonhoehen-, sondern ein Klangfarben-Fehler. `steps: 8`/`cfg_scale: 1` (der Wert JEDES bisherigen Tracks, auch der als gut befundenen Charakterthemen) sind fuer ein Diffusionsmodell sehr niedrig; bei so wenigen Schritten entstehen typischerweise genau solche rauen, metallischen Artefakte, und sie sind auf lang gehaltenen Toenen (dieses Stueck: Rhodes, Vibraphon) viel hoerbarer als auf den eher perkussiven Charakterthemen. Auf 32/4 angehoben, PR #188 damit ueberholt und geschlossen - siehe EVOLUTION.md."
     },
     {
       "id": "home-evening-02",
@@ -28,10 +28,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_home_evening_02",
       "prompt_file": "music/prompts/home-evening-02.txt",
-      "steps": 8,
-      "cfg_scale": 1,
+      "steps": 32,
+      "cfg_scale": 4,
       "seed": 22092026,
-      "notes": "Zweite Variante der Rolle home_evening_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: Abends wurde kaum Variation bemerkt, weil diese Rolle bis dahin nur EIN Stueck kannte (anders als main_day_background). Gleiche warme, japanisch gefaerbte Lo-Fi-Familie wie home-evening-01, aber sparsamer und naechtlicher: Glockenspiel/Music-Box-Melodie statt Rhodes im Vordergrund, Bass nur auf ausgewaehlten Schlaegen, kaum gespieltes Schlagzeug. Von Anfang an ohne die Tonhoehen-Instabilitaets-Formulierung erzeugt, die home-evening-01 am 2026-09-20 ueberarbeiten liess."
+      "notes": "Zweite Variante der Rolle home_evening_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: Abends wurde kaum Variation bemerkt, weil diese Rolle bis dahin nur EIN Stueck kannte (anders als main_day_background). Gleiche warme, japanisch gefaerbte Lo-Fi-Familie wie home-evening-01, aber sparsamer und naechtlicher: Glockenspiel/Music-Box-Melodie statt Rhodes im Vordergrund, Bass nur auf ausgewaehlten Schlaegen, kaum gespieltes Schlagzeug. Von Anfang an ohne die Tonhoehen-Instabilitaets-Formulierung erzeugt (PR #187). Direkt danach zusammen mit home-evening-01 auf `steps: 32`/`cfg_scale: 4` angehoben - siehe dessen Notiz fuer den Befund (blecherner Klangfarbenfehler bei niedrigen Diffusionsschritten). PR #187 damit ueberholt und geschlossen, bevor es je gehoert wurde."
     },
     {
       "id": "main-day-01",
