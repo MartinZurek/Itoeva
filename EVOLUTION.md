@@ -664,6 +664,45 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-20 - Der Fisch beim Angeln ist ein Fisch, kein Klumpen
+
+- **Ausgangsproblem:** Der Nutzer bat erneut als "Pixel Artist" um eine Durchsicht - diesmal nicht
+  der Charaktere, sondern der Aktions-Motive (die kleinen Weltgegenstaende waehrend einer
+  Taetigkeit, `PlayEffects.kt`). Konkret benannt: Der Fisch beim Angeln sehe "immer noch so aus
+  wie so ein Stueck Klumpen", dazu die Bitte, auch alles andere zu pruefen.
+- **Befund:** Die alte `art()`-Form des Fisches (in `fishingCells`, Phase `CATCH`) war zu beiden
+  Seiten gleich rund - auf dem Zellraster eine Linse ohne Kopf- oder Schwanzende, mit dem
+  Glanzpunkt in der geometrischen Mitte. Genau dieselbe Falle hatte der Drachen (`kiteCells`)
+  bereits einmal, dort dokumentiert und behoben: Eine runde, nach allen Seiten gleich geformte
+  Flaeche ist die Silhouette von "irgendetwas", nicht von einem bestimmten Objekt. Eine
+  Durchsicht aller uebrigen `art()`-Motive der Datei (Basketball-/Fussball-Baelle mit Naht bzw.
+  Karo-Muster und Glanzpunkt, Gitarre mit Hals/Kopfplatte/Schallloch, Hantel aus Stange und
+  Gewichtsscheiben, Flasche/Becher/Glas mit Henkel bzw. verjuengtem Hals, Buch mit abgesetztem
+  Ruecken, Zielscheibe aus konzentrischen Ringen, die kleinen getragenen Gegenstaende und die
+  Schrittabdruecke) ergab: Jedes dieser Motive traegt mindestens ein Merkmal, an dem es sich von
+  einer reinen Flaeche unterscheidet - nur der Fisch nicht.
+- **Entscheidung:** Die Fisch-Form neu gezeichnet, nach demselben Prinzip wie beim Drachen: genau
+  zwei erkennbare Merkmale statt einer runden Flaeche. Koerper links bleibt rund, rechts laeuft er
+  ueber eine schmale Wirbelsaeule in eine gegabelte Schwanzflosse aus - zwei Spitzen um eine leere
+  Kerbe. Der Glanzpunkt (das Auge) sitzt jetzt an der Kopf-Schulter oben links statt in der
+  Bauchmitte. Alles andere an der Szene (Rute, Schnur, das Zappeln beim Fang) blieb unveraendert -
+  die Bewegung des Fangs kommt weiterhin aus `zappeln`, nur die lokale Form darin wurde ersetzt.
+- **Bewusst NICHT angefasst:** Alle uebrigen Motive der Datei - die Durchsicht fand kein zweites
+  Motiv, das denselben "Klumpen"-Fehler traegt wie vormals Drache und jetzt Fisch. Die Gitarre
+  etwa verjuengt sich zwar symmetrisch (kein tailliertes Instrument), traegt aber bereits Hals,
+  Kopfplatte und Schallloch als eigene Merkmale und wurde deshalb nicht angefasst.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 507 gruen, unveraendert gegenueber vor der
+  Aenderung. `ReactionFingerprintTest` betrifft nur Avatar-Reaktionen und lief unveraendert durch,
+  weil Aktions-Motive nicht Teil dieses Abdrucks sind. `PlayInkTest`s Vokabular-Pruefung und
+  `PlayMotifLegibilityTest`s Stillstands-Pruefung fuer `FishingPhase` liefen unveraendert durch -
+  beide haengen an Zellhelligkeiten aus dem festen `PlayInk.LEVELS`-Vokabular bzw. an der
+  bestehenden `zappeln`-Bewegung, keine davon an der lokalen Form. Visuelle Kontrolle ueber
+  direkten ASCII-/Blockzeichen-Ausdruck der neuen Form im Terminal, nicht ueber
+  `tools/reaction-preview/render.sh` - dessen `SRCS`-Liste deckt nur die Avatar-Dateien ab, nicht
+  `PlayEffects.kt`/`PlayInk.kt`.
+- **Offen:** Keine Kontrolle am tatsaechlichen Geraet/in der App-Szene selbst - die ASCII-Kontrolle
+  bestaetigt die Silhouette, nicht die Wirkung auf der kleinen Bildschirmgroesse.
+
 ### 2026-09-20 - Der Schwanz sitzt jetzt am Ruecken, die Augen bekommen ein Glanzlicht
 
 - **Ausgangsproblem:** Der Nutzer bat als "Pixel Animation Specialist" um eine Durchsicht der
