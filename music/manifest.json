@@ -17,7 +17,21 @@
       "steps": 8,
       "cfg_scale": 1,
       "seed": 21092026,
-      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19: Die vorherige Kombination aus Seed und dem leicht ueberarbeiteten Prompt (siehe EVOLUTION.md, 2026-09-19) erzeugte eine Aufnahme mit 0,17s Stille am Ende - ueber dem 0,15s-Limit von tools/music/audio_polish.py und damit vom Freigabe-Gate zu Recht abgelehnt."
+      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19: Die vorherige Kombination aus Seed und dem leicht ueberarbeiteten Prompt (siehe EVOLUTION.md, 2026-09-19) erzeugte eine Aufnahme mit 0,17s Stille am Ende - ueber dem 0,15s-Limit von tools/music/audio_polish.py und damit vom Freigabe-Gate zu Recht abgelehnt. Am 2026-09-20 erneut ueberarbeitet: Gemeldet als klinge das Stueck wie eine kuenstlich verlangsamte, gezogene Aufnahme. Ursache im Prompt gefunden - 'subtle tape and vinyl texture' ist genau die Beschreibung, aus der ein Modell hoerbare Tonhoehen-Schwankung (wow and flutter) macht, und bei diesem langsamen, sparsam besetzten Stueck war sie am wenigsten maskiert. Prompt entschaerft (Waerme ja, Tonhoehen-Instabilitaet ausdruecklich nein), neu erzeugt. Siehe EVOLUTION.md und music/README.md fuer die vollstaendige Begruendung."
+    },
+    {
+      "id": "home-evening-02",
+      "title": "Late Windows",
+      "role": "home_evening_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_home_evening_02",
+      "prompt_file": "music/prompts/home-evening-02.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 22092026,
+      "notes": "Zweite Variante der Rolle home_evening_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: Abends wurde kaum Variation bemerkt, weil diese Rolle bis dahin nur EIN Stueck kannte (anders als main_day_background). Gleiche warme, japanisch gefaerbte Lo-Fi-Familie wie home-evening-01, aber sparsamer und naechtlicher: Glockenspiel/Music-Box-Melodie statt Rhodes im Vordergrund, Bass nur auf ausgewaehlten Schlaegen, kaum gespieltes Schlagzeug. Von Anfang an ohne die Tonhoehen-Instabilitaets-Formulierung erzeugt, die home-evening-01 am 2026-09-20 ueberarbeiten liess."
     },
     {
       "id": "main-day-01",
@@ -31,7 +45,7 @@
       "steps": 8,
       "cfg_scale": 1,
       "seed": 5092026,
-      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert."
+      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert."
     },
     {
       "id": "main-day-02",
@@ -45,7 +59,7 @@
       "steps": 8,
       "cfg_scale": 1,
       "seed": 6092026,
-      "notes": "Zweite Variante derselben Rolle wie main-day-01, nicht deren Ersatz. Gemeldet: innerhalb eines stabilen Zustands bleibt dieselbe Musik zu lange unveraendert. Gleiche musikalische Familie - warmer, japanisch gefaerbter jazzy Lo-Fi -, aber etwas leichter und bewegter: 88 statt 82 BPM, gebuerstete Snare, jeweils nur ein melodiefuehrendes Instrument. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Welche der Varianten laeuft, entscheidet PlayMusicRotation nach der Rolle, nicht statt ihrer."
+      "notes": "Zweite Variante derselben Rolle wie main-day-01, nicht deren Ersatz. Gemeldet: innerhalb eines stabilen Zustands bleibt dieselbe Musik zu lange unveraendert. Gleiche musikalische Familie - warmer, japanisch gefaerbter jazzy Lo-Fi -, aber etwas leichter und bewegter: 88 statt 82 BPM, gebuerstete Snare, jeweils nur ein melodiefuehrendes Instrument. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Welche der Varianten laeuft, entscheidet PlayMusicRotation nach der Rolle, nicht statt ihrer. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert."
     },
     {
       "id": "sport-01",
@@ -59,7 +73,7 @@
       "steps": 8,
       "cfg_scale": 1,
       "seed": 19092026,
-      "notes": "Erster Track der bisher unbelegten Rolle sport_background. MusicResolver.candidates() setzt diese Rolle bereits ganz vorn ein, sobald am Sportplatz wirklich MOVE laeuft (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist, ohne dass an der Auswahllogik etwas zu aendern waere. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie wie main_day_background, aber schneller und energischer (100 statt 82 BPM), mit gechopptem gefiltertem Rhodes und Blaeser-Antworten statt gehaltener Akkorde. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck."
+      "notes": "Erster Track der bisher unbelegten Rolle sport_background. MusicResolver.candidates() setzt diese Rolle bereits ganz vorn ein, sobald am Sportplatz wirklich MOVE laeuft (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist, ohne dass an der Auswahllogik etwas zu aendern waere. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie wie main_day_background, aber schneller und energischer (100 statt 82 BPM), mit gechopptem gefiltertem Rhodes und Blaeser-Antworten statt gehaltener Akkorde. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert."
     },
     {
       "id": "morning-01",

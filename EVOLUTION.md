@@ -664,6 +664,83 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-20 - Die Abendmusik klang wie eine gezogene Kassette, nicht wie Melancholie
+
+- **Ausgangsproblem:** Der Nutzer bat als "Musik Game Designer" um eine Durchsicht der Musik,
+  vor allem der Abendmusik. Wortlaut: Sie klinge teilweise "wie so eine verlangsamte Platte, die
+  extra auf langsam gezogen wird, so wie ein Kaugummi, der sich so langsam zieht" - kuenstlich,
+  nicht bloss langsam; gewuenscht sei melancholisch und ruhig, aber nicht zaeh. Zusaetzlich drei
+  weitere Beobachtungen: die am Vortag verbesserten Charakterthemen seien gut, aber es sei kaum
+  Variation zu bemerken; Uebergaenge klaengen teilweise stockend; manchmal falle die Musik fuer
+  mehrere Sekunden ganz aus, bevor der naechste Track abrupt einsetzt.
+- **Befund zum Klang:** `home-evening-01.txt` verlangte im Prompt woertlich "subtle tape and
+  vinyl texture"; die drei parallelen Prompts (`main-day-01`, `main-day-02`, `sport-01`) sogar
+  "gentle wow and flutter" - der Fachbegriff der Tontechnik fuer genau die Tonhoehen-Schwankung
+  einer schwankenden Bandgeschwindigkeit oder eines schleifenden Plattentellers. Das IST die
+  gemeldete "gezogene Kassette". `tools/music/audio_polish.py`s Freigabe-Gate misst Pegel,
+  Randstille und Nahtsprung - keine dieser drei Kennzahlen erfasst Tonhoehen-Instabilitaet, das
+  Gate haette den Track also unveraendert durchgelassen. Bei einem langsamen, sparsam besetzten
+  Stueck mit langen gehaltenen Akkorden (wie der Abendtrack) ist die Schwankung am wenigsten
+  maskiert - konsistent damit, dass genau dort die Beschwerde entstand und nicht bei den
+  schnelleren Tages-/Sport-Stuecken, die denselben Prompt-Fehler tragen.
+- **Entscheidung:** Alle vier betroffenen Prompts entschaerft - "warm"/"nostalgisch"/Bandrauschen
+  bleiben erwuenscht, "wow and flutter" und die unspezifische "tape and vinyl texture" sind raus,
+  ersetzt durch eine ausdrueckliche Gegenklausel ("every instrument stays perfectly in tune and
+  in time... no pitch wobble, no wavering intonation, no warped-tape or dragged-vinyl effect").
+  `home-evening-01` zusaetzlich neu erzeugt (dieselbe Ausgangslage wie zuvor, nur der Klangfehler
+  behoben); `main-day-01`, `main-day-02` und `sport-01` wurden defensiv bereinigt, aber NICHT neu
+  erzeugt, da sie nicht als betroffen gemeldet wurden - das bleibt ein bewusst offener
+  Folgeschritt statt einer angenommenen Notwendigkeit. Die sechs Charakterthemen tragen diese
+  Formulierung ohnehin nicht (mehrere schliessen "no vinyl crackle" sogar ausdruecklich aus) -
+  deckt sich mit dem Lob des Nutzers fuer genau diese Stuecke.
+- **Befund zur Variation:** `main_day_background` ist die einzige Rolle mit zwei Stuecken
+  (`main-day-01`/`main-day-02`, siehe `PlayMusicRotation`). `home_evening_background`,
+  `morning_background`, `sport_background` und `character_theme_background` haben je genau EIN
+  Stueck - `PlayMusicRotation.rotationDue` verlangt mindestens zwei Varianten und wechselt sonst
+  nie (`if (variantCount < 2) return false`). Die fehlende Variation abends war also keine
+  Fehlwahrnehmung, sondern der zutreffende Stand.
+- **Entscheidung:** Zweite Variante `home-evening-02` / *Late Windows* fuer `home_evening_
+  background` angelegt (Prompt, Manifest-Eintrag, `keep.xml` deckt sie ueber den bestehenden
+  Platzhalter `@raw/itoeva_*` bereits ab) - dieselbe warme Lo-Fi-Familie, aber sparsamer und
+  naechtlicher (Glockenspiel/Music-Box statt Rhodes im Vordergrund, Bass nur auf ausgewaehlten
+  Schlaegen), von Anfang an ohne die fehlerhafte Formulierung geschrieben. Noch keine Datei -
+  `PlayMusicRotation` greift erst, sobald der Track ueber **Generate Itoeva Music** erzeugt und
+  gemergt ist; bis dahin bleibt die Rolle bei einem Stueck, exakt wie das README es fuer diesen
+  Fall beschreibt.
+- **Befund zu Uebergaengen/Aussetzern:** `PlayMusic.switchTo` sprang im Fall "kein vorheriger
+  Player" (`previous == null`) bisher SOFORT auf volle Lautstaerke, ohne jede Einblendung -
+  anders als jeder Rollenwechsel, der ueber vier Sekunden equal-power ueberblendet. Dieser Fall
+  tritt bei jedem Neueinstieg in den Spielmodus nach vollstaendigem Stillstand ein (Bildschirm
+  verlassen und wiedergekommen, siehe `DockScreen`s `DisposableEffect`, das beim Verlassen
+  `PlayMusic.stop()` ruft). Genau das deckt sich mit der Beschreibung "die Musik geht aus, dann
+  kommt der neue Track [abrupt]": Kein Aussetzer, sondern ein fehlender Einblend-Bogen an exakt
+  dieser einen Stelle.
+- **Entscheidung:** `switchTo` blendet jetzt IMMER ein, mit oder ohne Vorgaenger - dieselbe
+  Ueberblendungs-Kurve (`transitionVolumes`) laeuft in beiden Faellen; ohne Vorgaenger faellt nur
+  der Ausblend-Zweig weg, weil es nichts auszublenden gibt. `transitionVolumes`s neue Lautstaerke
+  war schon vorher unabhaengig von der alten (siehe deren eigene Signatur) - die Vereinheitlichung
+  kam ohne neue Fallunterscheidung aus. Keine Ursache gefunden, die einen echten MEHRSEKUENDIGEN
+  Stillstand WAEHREND aktiven Zusehens erklaeren wuerde (der Resolver liefert bei den heute
+  ausgelieferten Rollen fuer jede Tageszeit einen Kandidaten); die Vermutung ist, dass "die Musik
+  geht aus" das erwartungsgemaesse Schweigen beim Verlassen des Spielmodus beschreibt und "dann
+  kommt der neue Track abrupt" den jetzt behobenen Einblend-Fehler beim Zurueckkommen.
+- **Bewusst NICHT angefasst:** Keine Umstellung von `android.media.MediaPlayer` auf ExoPlayer/
+  Media3. Eine synchrone `MediaPlayer.create()` waere ein plausibler zusaetzlicher Beitrag zu
+  spuerbaren Rucklern, aber ein Wechsel der Wiedergabe-Bibliothek ist ohne Geraetetest nicht
+  verantwortbar zu verifizieren und war nicht der befundene Fehler - siehe "Naechster Schritt".
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 507 gruen, `PlayMusicTest`s bestehende
+  Pruefungen der Ueberblendungskurve (`transitionVolumes`) decken die neue Vereinheitlichung ab,
+  ohne dass sich ihr Erwartungswert aendert. `python3 -m unittest discover --start-directory
+  tools/music` - 15 gruen. `python tools/music/generate_music.py --track-id <id> --dry-run` fuer
+  alle fuenf veraenderten/neuen Tracks (home-evening-01, home-evening-02, main-day-01,
+  main-day-02, sport-01) erfolgreich.
+- **Naechster Schritt:** Nach Merge dieser Textaenderungen **Generate Itoeva Music** fuer
+  `home-evening-01` (Neuerzeugung mit bereinigtem Prompt) und `home-evening-02` (neue Variante)
+  auslösen - erst der Merge des jeweils erzeugten PRs macht die Aenderung tatsaechlich hoerbar.
+  `main-day-01`, `main-day-02` und `sport-01` bleiben vorerst unveraendert ausgeliefert, ihre
+  bereinigten Prompts warten auf eine Entscheidung, ob auch sie neu erzeugt werden sollen. Eine
+  moegliche ExoPlayer-Migration bleibt offen, siehe oben.
+
 ### 2026-09-20 - Der Fisch beim Angeln ist ein Fisch, kein Klumpen
 
 - **Ausgangsproblem:** Der Nutzer bat erneut als "Pixel Artist" um eine Durchsicht - diesmal nicht
