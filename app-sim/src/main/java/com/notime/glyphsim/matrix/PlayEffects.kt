@@ -1097,17 +1097,23 @@ object PlayEffects {
         if (phase == FishingPhase.CATCH) {
             // Der Fisch: ein kleiner Umriss direkt ueber dem Schwimmer, gerade aus dem Wasser
             // gezogen statt darauf zu treiben.
+            //
+            // **Eine spitz zulaufende Schwanzflosse, kein Klumpen.** Die Vorgaengerform war nach
+            // beiden Seiten gleich rund - auf dem Raster eine Linse, also die Silhouette von
+            // irgendetwas (dieselbe Falle wie beim Drachen weiter unten in dieser Datei, siehe
+            // dessen Kommentar bei kiteCells). Ein Fisch wird an genau zwei Dingen erkannt: an
+            // der gegabelten Schwanzflosse und am Auge nahe dem Kopf, nicht in der Mitte. Koerper
+            // links (rund), Flosse rechts (zwei Spitzen um eine leere Kerbe, durch die
+            // Wirbelsaeule in der mittleren Zeile verbunden).
             water.art(
-                -4, -6,
-                "  ###  ",
-                " ##+## ",
-                "##+++##",
-                "#+++++#",
-                "##+++##",
-                " ##+## ",
-                "  ###  "
+                -4, -5,
+                "  ###    ",
+                " ##+##  #",
+                "#+++++###",
+                " ##+##  #",
+                "  ###    "
             )
-            water.spark(-1, -4)
+            water.spark(-3, -4)
         } else {
             // Der Schwimmer ist reiner Lichtpunkt auf dem Wasser, kein Gegenstand.
             water.spark(0, 0)
