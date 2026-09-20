@@ -34,6 +34,17 @@ object PlayClipRenderer {
         android.graphics.Color.blue(MatrixColors.LED_ON)
     )
 
+    // Dieselbe Aufhellung wie AvatarSpriteView.EYE_GLINT_FRACTION - der Clip soll zeigen, was auf
+    // dem Bildschirm zu sehen war, nicht eine flachere Zweitfassung davon.
+    private const val EYE_GLINT_FRACTION = 0.4f
+
+    /** Blendet [color] Richtung Weiss - siehe [AvatarAccent.eyesIn]. */
+    private fun lightened(color: Int, fraction: Float): Int = Color.rgb(
+        (Color.red(color) + (255 - Color.red(color)) * fraction).roundToInt(),
+        (Color.green(color) + (255 - Color.green(color)) * fraction).roundToInt(),
+        (Color.blue(color) + (255 - Color.blue(color)) * fraction).roundToInt()
+    )
+
     /** Eine kleinere Hintergrundfigur; Lage und Breite gelten relativ zum ganzen Bild. */
     class ResidentFigure(
         val frame: IntArray,
@@ -186,7 +197,9 @@ object PlayClipRenderer {
         // dagegen weiss - genau wie auf dem Bildschirm.
         // Koerper weiss, Farbe im Gesicht - wie auf dem Bildschirm (siehe AvatarAccent).
         val avatarAccent = AvatarPalette.tintFor(frame.species)
+        val avatarEyeAccent = lightened(avatarAccent, EYE_GLINT_FRACTION)
         val avatarFace = AvatarAccent.facesIn(frame.avatarFrame)
+        val avatarEyes = AvatarAccent.eyesIn(frame.avatarFrame)
         val avatarFrame = AvatarShading.shade(frame.avatarFrame, side = frame.shadeSide)
         for (y in 0 until AvatarGeometry.HEIGHT) {
             for (x in 0 until AvatarGeometry.SIZE) {
@@ -194,7 +207,13 @@ object PlayClipRenderer {
                 val imGesicht = avatarFace.getOrElse(index) { false }
                 val brightness = avatarFrame.getOrElse(index) { 0 }
                 if (brightness <= 0 && !imGesicht) continue
-                val ton = if (imGesicht) avatarAccent else ledOn
+                val ton = if (avatarEyes.getOrElse(index) { false }) {
+                    avatarEyeAccent
+                } else if (imGesicht) {
+                    avatarAccent
+                } else {
+                    ledOn
+                }
                 val f = (if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else brightness)
                     .coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                     AvatarGeometry.MAX_BRIGHTNESS
@@ -221,14 +240,22 @@ object PlayClipRenderer {
             val residentY = residentGroundY -
                 (AvatarBodies.forSpecies(resident.species).groundRow() + 1) * residentCell
             val accent = AvatarPalette.tintFor(resident.species)
+            val eyeAccent = lightened(accent, EYE_GLINT_FRACTION)
             val face = AvatarAccent.facesIn(resident.frame)
+            val eyes = AvatarAccent.eyesIn(resident.frame)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
                     val index = y * AvatarGeometry.SIZE + x
                     val imGesicht = face.getOrElse(index) { false }
                     val brightness = resident.frame.getOrElse(index) { 0 }
                     if (brightness <= 0 && !imGesicht) continue
-                    val ton = if (imGesicht) accent else ledOn
+                    val ton = if (eyes.getOrElse(index) { false }) {
+                        eyeAccent
+                    } else if (imGesicht) {
+                        accent
+                    } else {
+                        ledOn
+                    }
                     val f = ((if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else brightness)
                         .coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                         AvatarGeometry.MAX_BRIGHTNESS) * RESIDENT_DIM
@@ -258,7 +285,9 @@ object PlayClipRenderer {
             // Der Gast bekommt dieselbe Woelbung; seine Daempfung kommt zusaetzlich obendrauf,
             // weil AvatarShading skaliert statt zu ersetzen.
             val gastAccent = AvatarPalette.tintFor(guest.species)
+            val gastEyeAccent = lightened(gastAccent, EYE_GLINT_FRACTION)
             val gastFace = AvatarAccent.facesIn(guest.frame)
+            val gastEyes = AvatarAccent.eyesIn(guest.frame)
             val gastFrame = AvatarShading.shade(guest.frame, side = guest.shadeSide)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
@@ -266,7 +295,13 @@ object PlayClipRenderer {
                     val imGesicht = gastFace.getOrElse(index) { false }
                     val b = gastFrame.getOrElse(index) { 0 }
                     if (b <= 0 && !imGesicht) continue
-                    val ton = if (imGesicht) gastAccent else ledOn
+                    val ton = if (gastEyes.getOrElse(index) { false }) {
+                        gastEyeAccent
+                    } else if (imGesicht) {
+                        gastAccent
+                    } else {
+                        ledOn
+                    }
                     val f = ((if (imGesicht) AvatarGeometry.MAX_BRIGHTNESS else b)
                         .coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS).toFloat() /
                         AvatarGeometry.MAX_BRIGHTNESS) * VISITOR_DIM

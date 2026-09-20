@@ -53,8 +53,78 @@ object AvatarAccent {
         width: Int = AvatarGeometry.SIZE,
         height: Int = AvatarGeometry.HEIGHT
     ): BooleanArray {
-        val leer = BooleanArray(0)
-        if (width <= 0 || height <= 0 || frame.size != width * height) return leer
+        val gruppen = enclosedGroups(frame, width, height) ?: return BooleanArray(0)
+        val gesicht = BooleanArray(frame.size)
+        for (gruppe in gruppen) for (i in gruppe) gesicht[i] = true
+        return gesicht
+    }
+
+    /**
+     * Nur die AUGEN innerhalb von [facesIn] - derselbe Fund, nur enger gefasst.
+     *
+     * ## Warum ein Glanzlicht ueberhaupt
+     *
+     * Bis hierher trug jede Gesichtszelle exakt denselben Akzentton, Auge wie Mund. Auf einem
+     * 16x20-Raster liest sich das als ein einziger flacher Farbfleck - ein Auge lebt aber
+     * gerade vom Kontrast zu seiner Umgebung, nicht von seiner Flaeche. Die Augen bekommen
+     * deshalb denselben Ton, nur heller (siehe [AvatarSpriteView]) - keine zweite Farbe, nur ein
+     * Glanzlicht auf der schon vorhandenen.
+     *
+     * ## Warum wieder GEFUNDEN statt UEBERGEBEN
+     *
+     * Aus demselben Grund wie [facesIn]: Bis zum Zeichnen bleibt vom Loch nichts als eine dunkle
+     * Stelle uebrig, und einen eigenen Kanal fuer "das hier ist ein Auge" einzufuehren hiesse
+     * wieder, das gemeinsame `:core`-Bildformat fuer eine Farbfrage aufzubohren (siehe
+     * [AvatarBody.eyesOpen] fuer die eigentliche Quelle, die hier bewusst NICHT gelesen wird).
+     *
+     * ## Wie unterschieden wird
+     *
+     * Zwei gleich grosse, spiegelsymmetrisch zur Bildmitte liegende Gruppen sind ein Augenpaar -
+     * bei der Haelfte der sechs Kreaturen ist der Mund zu klein, um selbst als Gesichtszug zu
+     * gelten (siehe [MIN_GROUP]), und ohne diese Sonderregel waere sonst eines der beiden Augen
+     * faelschlich zum "Mund" erklaert worden, weil irgendeine Gruppe als unterste gelten muss.
+     * Gibt es (wie bei PUFFLING/WYRMLING) zusaetzlich einen dritten, davon verschiedenen
+     * Gesichtszug, ist die am weitesten unten liegende Gruppe der Mund - Augen sitzen bei jeder
+     * der sechs Grundformen oberhalb davon.
+     */
+    fun eyesIn(
+        frame: IntArray,
+        width: Int = AvatarGeometry.SIZE,
+        height: Int = AvatarGeometry.HEIGHT
+    ): BooleanArray {
+        val gruppen = enclosedGroups(frame, width, height) ?: return BooleanArray(0)
+        val augen = BooleanArray(frame.size)
+        if (gruppen.isEmpty()) return augen
+        if (gruppen.size == 2) {
+            val (a, b) = gruppen
+            val avgXa = a.map { it % width }.average()
+            val avgXb = b.map { it % width }.average()
+            val gespiegelt = kotlin.math.abs((avgXa + avgXb) - (width - 1)) <= 1.5
+            val aehnlichGross = kotlin.math.abs(a.size - b.size) <= maxOf(1, minOf(a.size, b.size) / 2)
+            if (gespiegelt && aehnlichGross) {
+                for (i in a) augen[i] = true
+                for (i in b) augen[i] = true
+                return augen
+            }
+        }
+        val mundGruppe = if (gruppen.size >= 2) {
+            gruppen.maxByOrNull { gruppe -> gruppe.map { it / width }.average() }
+        } else {
+            null
+        }
+        for (gruppe in gruppen) {
+            if (gruppe === mundGruppe) continue
+            for (i in gruppe) augen[i] = true
+        }
+        return augen
+    }
+
+    /**
+     * Die umschlossenen, zusammenhaengenden Gesichtsgruppen in [frame] - die gemeinsame
+     * Fundlogik hinter [facesIn] und [eyesIn]. `null`, wenn das Feld nicht zum Raster passt.
+     */
+    private fun enclosedGroups(frame: IntArray, width: Int, height: Int): List<List<Int>>? {
+        if (width <= 0 || height <= 0 || frame.size != width * height) return null
 
         // Alles Dunkle, das vom Bildrand aus erreichbar ist, liegt AUSSERHALB der Figur.
         val aussen = BooleanArray(frame.size)
@@ -85,8 +155,8 @@ object AvatarAccent {
 
         // Was uebrig bleibt, ist umschlossen. Davon zaehlt nur, was zusammenhaengend gross genug
         // ist - siehe Klassendoku zum blitzenden Fluegelrand.
-        val gesicht = BooleanArray(frame.size)
         val besucht = BooleanArray(frame.size)
+        val gruppen = mutableListOf<List<Int>>()
         for (start in frame.indices) {
             if (frame[start] > 0 || aussen[start] || besucht[start]) continue
             val gruppe = mutableListOf<Int>()
@@ -109,8 +179,8 @@ object AvatarAccent {
                 if (y > 0) weiter(i - width)
                 if (y < height - 1) weiter(i + width)
             }
-            if (gruppe.size >= MIN_GROUP) for (i in gruppe) gesicht[i] = true
+            if (gruppe.size >= MIN_GROUP) gruppen += gruppe
         }
-        return gesicht
+        return gruppen
     }
 }

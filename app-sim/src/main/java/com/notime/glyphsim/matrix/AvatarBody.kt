@@ -147,7 +147,18 @@ object AvatarBodies {
         mouthNeutral = setOf(7 to 11, 8 to 11),
         mouthOpen = setOf(6 to 11, 7 to 11, 8 to 11, 9 to 11),
         feet = stepping(left = 6, right = 9, row = 14),
-        tail = { wag -> listOf(11 to (10 + wag), 12 to (9 + wag)) },
+        // Am unteren Ruecken statt auf Augenhoehe (Fund vom 2026-09-20: die alte Lage bei
+        // (11,10)/(12,9) sass direkt neben den Augen bei Zeile 9/10 und wurde deshalb als Arm
+        // gelesen, nicht als Schwanz). [wag] schwingt ihn jetzt ein und aus statt ihn nur
+        // senkrecht zu wippen: negativ = fast eingezogen, null = ruhig angelegt, positiv =
+        // sichtbar ausgeschwungen.
+        tail = { wag ->
+            when {
+                wag <= -1 -> listOf(10 to 12)
+                wag == 0 -> listOf(10 to 12, 11 to 13)
+                else -> listOf(10 to 12, 11 to 12, 12 to 13)
+            }
+        },
         // Ohrenspitzen zucken: die Ohren sitzen bei (5,5)/(10,5), die Spitze wandert je nach
         // Phase eine Zeile hoch bzw. nach aussen.
         accent = { phase ->
@@ -213,7 +224,16 @@ object AvatarBodies {
         mouthNeutral = setOf(7 to 10, 8 to 10),
         mouthOpen = setOf(6 to 10, 7 to 10, 8 to 10, 9 to 10),
         feet = stepping(left = 6, right = 9, row = 13),
-        tail = { wag -> listOf(11 to (10 + wag), 12 to (9 + wag), 13 to (8 + wag)) },
+        // Am unteren Ruecken statt auf Augenhoehe (dieselbe Umgestaltung wie bei PUFFLING/FENNEC,
+        // siehe deren Kommentar) - ein Drache mit dem Schwanz direkt neben dem Kopf sah aus wie
+        // ein drittes Fluegelpaar, nicht wie ein Schwanz.
+        tail = { wag ->
+            when {
+                wag <= -1 -> listOf(10 to 11)
+                wag == 0 -> listOf(10 to 11, 11 to 12)
+                else -> listOf(10 to 11, 11 to 11, 12 to 12, 13 to 12)
+            }
+        },
         // Fluegelschlag: die Fluegel sitzen bei (3,8)/(2,9) bzw. (12,8)/(13,9) - je nach Phase
         // heben oder senken sich die Spitzen.
         accent = { phase ->
@@ -244,7 +264,16 @@ object AvatarBodies {
         mouthNeutral = emptySet(),
         mouthOpen = setOf(7 to 13, 8 to 13),
         feet = stepping(left = 6, right = 9, row = 14),
-        tail = { wag -> listOf(11 to (10 + wag), 12 to (10 + wag), 12 to (9 + wag), 13 to (9 + wag)) },
+        // Am unteren Ruecken statt auf Augenhoehe (dieselbe Umgestaltung wie bei PUFFLING/
+        // WYRMLING, siehe deren Kommentar) - eine buschige Fuchsschwanz-Andeutung passt ohnehin
+        // besser unten am Koerper als seitlich am Kopf.
+        tail = { wag ->
+            when {
+                wag <= -1 -> listOf(10 to 11)
+                wag == 0 -> listOf(10 to 11, 11 to 12)
+                else -> listOf(10 to 11, 11 to 11, 12 to 12, 12 to 13)
+            }
+        },
         // Spitze Ohren (Accessory bei (5,1)/(5,2) bzw. (10,1)/(10,2)) stellen sich auf oder
         // legen sich an.
         accent = { phase ->

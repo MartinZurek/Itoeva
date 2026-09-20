@@ -664,6 +664,70 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-20 - Der Schwanz sitzt jetzt am Ruecken, die Augen bekommen ein Glanzlicht
+
+- **Ausgangsproblem:** Der Nutzer bat als "Pixel Animation Specialist" um eine Durchsicht der
+  Charakteranimationen. Zwei konkrete Beobachtungen: Ein Arm/Anhaengsel stehe bei manchen
+  Kreaturen staendig rechts ab ("sieht dann aus wie so ein Schwaenzchen"), und die Augen
+  wirkten "monochrom in einer Farbe".
+- **Befund zum "Arm":** Es gibt in `AvatarBody` gar keine Arme - PUFFLING, WYRMLING und FENNEC
+  haben aber je einen Schwanz (`tail`), dessen x-Koordinaten bislang FEST einprogrammiert waren
+  und der bei jeder Ruhelage (`tailWag = 0`, der Vorgabewert in `creatureFrame`) an derselben
+  Stelle stand - und diese Stelle lag auf Augenhoehe (Zeile 9/10 von 20), direkt neben dem
+  Gesicht, statt am unteren Ruecken. Ein ASCII-Vorschau-Skript (`/tmp/.../scratchpad/preview*.py`,
+  nicht Teil des Commits) hat das vor der Aenderung sichtbar gemacht: Auf einem 16x20-Raster las
+  sich ein 1-2 Zellen breiter, unbewegter Stummel neben dem Auge tatsaechlich wie ein
+  abstehendes Anhaengsel, nicht wie ein Schwanz - der Nutzer hat richtig gesehen, nur nicht
+  benannt, WARUM es so wirkte.
+- **Entscheidung:** Die drei betroffenen `tail`-Funktionen in `AvatarBody.kt` neu gezeichnet -
+  an den unteren Ruecken verlegt (nahe der Fuesse statt neben den Augen) und `wag` schwingt jetzt
+  seitlich EIN und AUS statt nur senkrecht zu wippen (negativ = fast eingezogen, null = ruhig
+  angelegt, positiv = sichtbar ausgeschwungen). Da `tailWag` bereits ueberall im Code (Gang,
+  Reaktionen, Ruhelage) mit denselben Werten -1/0/1 aufgerufen wird, genuegte die Aenderung DER
+  FUNKTION selbst - kein Aufrufer musste angefasst werden, und der bestehende Rhythmus (z.B.
+  `feetLift`/`tailWag` mit gleichem Vorzeichen im Gang) liest sich jetzt von selbst als
+  Seitwaerts-Wedeln. STARLET/GLOOP/HOOTLET haben ohnehin keinen Schwanz (`noTail`) und sind
+  unveraendert.
+- **Befund zu den Augen:** `AvatarSpriteView`/`PlayClipRenderer` faerben seit NT-080 das GANZE
+  Gesicht (Augen UND Mund) im selben Akzentton - eine bewusste, dokumentierte Entscheidung gegen
+  eine einfarbig eingefaerbte Figur, aber NT-080s eigene letzte Zeile fragte schon: "ob der
+  Akzent gross genug ist". Es gibt keinen Kanal, der "diese Zelle ist ein Auge" bis zum Zeichnen
+  mitfuehrt (`AvatarAccent`s eigene KDoc begruendet das ausdruecklich: das gemeinsame
+  `:core`-Bildformat soll dafuer nicht aufgebohrt werden) - Augen und Mund werden stattdessen rein
+  geometrisch GEFUNDEN.
+- **Entscheidung:** `AvatarAccent.eyesIn(frame)` ergaenzt - dieselbe Flutfuellungs-Logik wie
+  `facesIn`, aber zusaetzlich nach Augen gegenueber Mund sortiert: Bei zwei gleich grossen,
+  spiegelsymmetrisch liegenden Gruppen sind beide Augen (kein Mund erkannt - bei der Haelfte der
+  sechs Kreaturen ist der Mund nur eine einzelne Zelle und faellt unter die vorhandene
+  `MIN_GROUP`-Schwelle sowieso schon heraus); bei drei oder mehr Gruppen ist die am weitesten
+  unten liegende der Mund. Gegen die tatsaechlichen Augen-/Mund-Positionen aller sechs Grundformen
+  durchgerechnet (Python-Nachbau derselben Flutfuellung, `/tmp/.../scratchpad/verify_eyes.py`,
+  nicht Teil des Commits) - alle sechs korrekt klassifiziert. Augen bekommen jetzt denselben
+  Akzentton wie bisher, nur Richtung Weiss aufgehellt (`EYE_GLINT_FRACTION = 0.4f`) - ein
+  Glanzlicht statt einer zweiten Farbe, der Mund bleibt unveraendert. Fuer Bildschirm
+  (`AvatarSpriteView`) UND Erinnerungs-Clip (`PlayClipRenderer`, alle drei Zeichenstellen: Avatar,
+  Hintergrundfiguren, Besucher) gleichermassen, damit der Clip zeigt, was auf dem Bildschirm zu
+  sehen war.
+- **Bewusst NICHT angefasst:** Die uebrige Choreografie (Ruhelage-Rhythmus, Fluegel-/Ohren-Akzente,
+  die 30 Signatur-Reaktionen) - das bestehende Muster aus langen Ruhelagen mit kurzen Regungen ist
+  laut eigener KDoc bewusst gewaehlt, und mehrere "Fehlerkorrektur"-Kommentare im Code zeigen, dass
+  es bereits am Geraet fein abgestimmt wurde. Eine blinde Neufassung aller sechs Ruhe-Sequenzen
+  ohne Geraetetest haette ein echtes Regressionsrisiko getragen, ohne dass der Auftrag das verlangt
+  haette - die zwei benannten Beschwerden (Schwanzposition, Augenfarbe) waren beide praezise genug,
+  um gezielt behoben zu werden.
+- **Tests:** `bash tools/reaction-preview/tests.sh`, 507 gruen. `ReactionFingerprintTest` schlug
+  zunaechst wie erwartet fehl (alle 83 Zeilen aendern sich, weil jede den Abdruck ueber ALLE sechs
+  Spezies gemeinsam bildet und die Schwanzaenderung fast jede Reaktion fuer drei der sechs
+  betrifft) - `src/test/reaction-fingerprint.txt` entsprechend dem neuen, absichtlich veraenderten
+  Stand aktualisiert (siehe Testdatei-KDoc: "wenn ein Motiv absichtlich eine neue... Choreografie
+  bekommt"). Zusaetzlich `tools/reaction-preview/render.sh` (kein Android/Geraet noetig) fuer
+  PUFFLING/WYRMLING/FENNEC gerendert und die neue Schwanzposition/-bewegung visuell an echten
+  Kontaktboegen bestaetigt, nicht nur an der ASCII-Vorschau.
+- **Offen:** Manuelle Pruefung am Geraet, ob das Augen-Glanzlicht in der tatsaechlichen
+  Bildschirmgroesse (13x13/16x20-Zellen, klein) noch als solches erkennbar ist oder zu subtil
+  wirkt - `render.sh` bildet die Akzentfarbe nicht mit ab (reines Graustufen-Tool ohne
+  `AvatarAccent`), das liess sich in dieser Sitzung nicht visuell verifizieren.
+
 ### 2026-09-19 - Mehrere gleichzeitige Besucher statt eines einzelnen
 
 - **Ausgangsproblem:** Der Nutzer bemerkte weniger soziale Interaktion als erwartet - der
