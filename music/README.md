@@ -137,7 +137,7 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 | Rolle | wofuer | Track |
 |---|---|---|
 | `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges |
-| `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns |
+| `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
 | `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light |
 | `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride |
 | `dream_background` | Traum-Szenen | noch keiner - `MusicResolver.candidates()` setzt diese Rolle bislang auch noch gar nicht ein; ausser einem Track braucht es dort noch ein eigenes Signal "es wird gerade getraeumt" in `MusicContext` |
@@ -176,6 +176,32 @@ Dekodieren.
 Was das Gate ausdruecklich NICHT tut: bereits erzeugte Dateien anfassen. Erzeugte Binaerdateien
 aendern sich nur ueber den Prozess, der sie gemacht hat - die drei vorhandenen Tracks werden also
 neu erzeugt, nicht nachbearbeitet.
+
+### Ein vierter Mangel, den keine Messung faengt
+
+Gemeldet am 2026-09-20: `home-evening-01` klinge "wie eine verlangsamte Platte, die extra auf
+langsam gezogen wird" - kuenstlich, nicht bloss langsam. Die drei obigen Kennzahlen (Pegel,
+Randstille, Nahtsprung) waren dabei alle unauffaellig; das Gate haette diesen Track anstandslos
+durchgelassen, und hat es auch.
+
+Die Ursache lag nicht im Modell, sondern im **Prompt**: `home-evening-01.txt` verlangte explizit
+"subtle tape and vinyl texture", und die drei parallelen Tages-/Sport-Prompts sogar woertlich
+"gentle wow and flutter" - der Fachbegriff der Tontechnik fuer genau die Tonhoehen-Schwankung
+einer schwankenden Bandgeschwindigkeit oder eines schleifenden Plattentellers. Bei einem
+langsamen, sparsam besetzten Stueck mit langen gehaltenen Akkorden (wie dem Abendtrack) ist genau
+diese Schwankung am wenigsten maskiert und am ehesten als "kuenstlich" statt "warm" hoerbar.
+
+**Die Lehre:** "Warm" und "nostalgisch" sind erwuenschte Prompt-Eigenschaften; Tonhoehen- oder
+Geschwindigkeitsinstabilitaet ist es nicht, auch wenn sie oft im selben Atemzug genannt wird
+("tape and vinyl texture"). Ein Prompt darf um Bandrauschen, Vinylknistern oder analoge Waerme
+bitten - **nie** um "wow and flutter" oder aehnliche Pitch-Wobble-Beschreibungen, und sollte bei
+langsamen, ruhigen Stuecken ausdruecklich das Gegenteil verlangen ("every instrument stays
+perfectly in tune and in time"). Diese Regel gehoert seitdem in jeden neuen Prompt dieser
+Pipeline, nicht nur in die betroffenen vier.
+
+Weil das Gate diesen Mangel strukturell nicht messen kann (er ist eine Eigenschaft des Klangs,
+nicht des Pegels), bleibt die Vorbeugung im Prompt-Text die einzige Verteidigung - siehe
+EVOLUTION.md zum 2026-09-20 fuer die vollstaendige Herleitung.
 
 ## Mehrere Stuecke je Rolle
 

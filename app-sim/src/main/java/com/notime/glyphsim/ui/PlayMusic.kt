@@ -304,19 +304,20 @@ object PlayMusic {
             // Nur beim ROLLENwechsel neu stellen - siehe die Begruendung in [apply].
             if (rollenwechsel) roleStartedAtMs = System.currentTimeMillis()
 
-            if (previous == null) {
-                next.setVolume(VOLUME, VOLUME)
-                playerVolume = VOLUME
-                outgoingPlayer = null
-                return
-            }
-
+            // **Jeder Start blendet ein - auch ohne Vorgaenger.** Gemeldet als "manchmal geht die
+            // Musik fuer mehrere Sekunden aus, und dann kommt der neue Track" - das war kein
+            // Aussetzer, sondern genau dieser Zweig: Ein Neustart nach vollstaendiger Stille
+            // (Bildschirm verlassen und wiedergekommen, Spielmodus neu betreten) sprang bisher
+            // OHNE Einblendung auf volle Lautstaerke. [transitionVolumes] liefert die neue
+            // Lautstaerke unabhaengig von der alten (siehe deren Dokumentation) - derselbe
+            // Einblend-Bogen wie bei einem Rollenwechsel passt deshalb auch hier, `previous`
+            // bleibt einfach null und es gibt nichts auszublenden.
             val animator = ValueAnimator.ofFloat(0f, 1f).apply {
                 duration = CROSSFADE_MS
                 addUpdateListener { valueAnimator ->
                     val (oldVolume, newVolume) =
                         transitionVolumes(valueAnimator.animatedValue as Float, previousVolume)
-                    if (outgoingPlayer === previous) {
+                    if (previous != null && outgoingPlayer === previous) {
                         runCatching { previous.setVolume(oldVolume, oldVolume) }
                     }
                     if (player === next) {
@@ -326,7 +327,7 @@ object PlayMusic {
                 }
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        if (outgoingPlayer === previous) {
+                        if (previous != null && outgoingPlayer === previous) {
                             outgoingPlayer = null
                             releasePlayer(previous)
                         }
