@@ -42,10 +42,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_main_day_01",
       "prompt_file": "music/prompts/main-day-01.txt",
-      "steps": 8,
-      "cfg_scale": 1,
-      "seed": 5092026,
-      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: japanisch gepraegter jazzy Lo-Fi-Hip-Hop, instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert."
+      "steps": 50,
+      "cfg_scale": 5,
+      "seed": 24092026,
+      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt, aber nicht neu erzeugt (nicht als betroffen gemeldet). Am 2026-09-21 gemeldet als 'vollkommen schraeg' und 'nicht gut' - Prompt VOLLSTAENDIG neu geschrieben statt nachgebessert, gleicher Befund wie bei home-evening-01: keine verlangte Melodie, nur Akkorde mit 'Farbe'; zusaetzlich die zweideutige '11th voicing'-Formulierung entfernt, die dissonant realisiert worden sein kann ('schraeg'). Jetzt mit klarer achttaktiger Frage-Antwort-Melodie (Rhodes stellt vor, Gitarre antwortet), ausdruecklicher 'no clashing or dissonant harmony'-Klausel, steps/cfg_scale auf den seit 2026-09-21 geltenden Standard 50/5 angehoben, neuer Seed - siehe EVOLUTION.md."
     },
     {
       "id": "main-day-02",
@@ -76,6 +76,20 @@
       "notes": "Erster Track der bisher unbelegten Rolle sport_background. MusicResolver.candidates() setzt diese Rolle bereits ganz vorn ein, sobald am Sportplatz wirklich MOVE laeuft (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist, ohne dass an der Auswahllogik etwas zu aendern waere. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie wie main_day_background, aber schneller und energischer (100 statt 82 BPM), mit gechopptem gefiltertem Rhodes und Blaeser-Antworten statt gehaltener Akkorde. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert."
     },
     {
+      "id": "sport-02",
+      "title": "Second Wind",
+      "role": "sport_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_sport_02",
+      "prompt_file": "music/prompts/sport-02.txt",
+      "steps": 50,
+      "cfg_scale": 5,
+      "seed": 25092026,
+      "notes": "Zweite Variante der Rolle sport_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche energische Familie wie sport-01/'Full Stride', aber gitarrengetragenes Riff statt Blaeser-Antworten auf Rhodes-Stabs. Von Anfang an mit klarer, im Prompt ausdruecklich verlangter Melodie (Riff-Struktur) und dem seit 2026-09-21 geltenden Diffusions-Standard steps=50/cfg_scale=5 erzeugt, nicht erst nachtraeglich korrigiert."
+    },
+    {
       "id": "morning-01",
       "title": "First Light",
       "role": "morning_background",
@@ -88,6 +102,20 @@
       "cfg_scale": 1,
       "seed": 20092026,
       "notes": "Erster Track der bisher unbelegten Rolle morning_background. MusicResolver.candidates() waehlt diese Rolle bereits am fruehen Morgen vor main_day_background (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie, aber luftiger und langsamer (72 BPM), mit Kalimba/Mallet-Melodie statt Rhodes im Vordergrund. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck."
+    },
+    {
+      "id": "morning-02",
+      "title": "Paper Dawn",
+      "role": "morning_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_morning_02",
+      "prompt_file": "music/prompts/morning-02.txt",
+      "steps": 50,
+      "cfg_scale": 5,
+      "seed": 26092026,
+      "notes": "Zweite Variante der Rolle morning_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche ruhige Morgenfamilie wie morning-01/'First Light', aber waermer und geerdeter: akustisches Klavier statt Kalimba/Mallet, Nylongitarre-Doppelung statt Floete. Von Anfang an mit klarer, im Prompt ausdruecklich verlangter Melodie und dem seit 2026-09-21 geltenden Diffusions-Standard steps=50/cfg_scale=5 erzeugt, nicht erst nachtraeglich korrigiert."
     },
     {
       "id": "theme-puffling",

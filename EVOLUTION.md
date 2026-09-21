@@ -664,6 +664,55 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-21 - Lantern Streets neu komponiert, zwei neue Varianten, ein Name bewusst nicht uebernommen
+
+- **Ausgangsproblem:** Direkt im Anschluss an die Quiet-Lanterns-Neukomposition (siehe Eintrag
+  darunter): "Lantern Streets" (`main-day-01`) sei "vollkommen schraeg" und klinge "echt nicht
+  gut". Dazu zwei weitere Wuensche: insgesamt noch mehr Musikstuecke, und als Inspiration fuer
+  den melancholischen Sound ein konkreter japanischer Produzentenname sowie "japanische
+  Anime-Klassiker" allgemein.
+- **Befund zu Lantern Streets:** Derselbe Strukturfehler wie bei Quiet Lanterns - der Prompt
+  verlangte nie eine Melodie, nur Akkorde mit "Farbe". Zusaetzlich eine moegliche zweite
+  Ursache fuer "schraeg": Der Prompt bat um eine "occasional 11th voicing" auf den
+  Rhodes-Akkorden - eine mehrdeutige Formulierung, die ein Modell durchaus als hoerbar
+  dissonant realisieren kann, ohne dass das die Absicht war.
+- **Entscheidung:** Prompt vollstaendig neu geschrieben, nach demselben erfolgreichen Muster wie
+  Quiet Lanterns: klare achttaktige Frage-Antwort-Melodie (Rhodes, Gitarre antwortet),
+  die unklare "11th voicing" entfernt, dafuer eine ausdrueckliche "no clashing or dissonant
+  harmony"-Klausel ergaenzt. Tempo bleibt bei 82 BPM (unterscheidet sich weiterhin von
+  main-day-02s 88 BPM) - hier ging es nicht um Tempo, sondern um Harmonik und fehlende Melodie.
+  `steps`/`cfg_scale` auf den seit der letzten Runde geltenden Wert 50/5 angehoben (vorher 8/1),
+  neuer Seed.
+- **Befund/Entscheidung zur Kuenstler-Nennung:** Der vorgeschlagene Name (ein noch aktiv
+  verwalteter Nachlass) und "Anime-Klassiker" allgemein wurden NICHT woertlich in die Prompts
+  uebernommen. `music/README.md` haelt seit der ersten Track-Generierung fest: "Prompts sollen
+  weiterhin konkrete Kuenstler, Songs oder Aufforderungen zur engen Imitation vermeiden" - eine
+  bestehende, bewusste Regel, keine neu erfundene Einschraenkung. Ein Name im Prompt ist genau
+  die Art "enger Imitation", die die Regel ausschliesst, unabhaengig von der guten Absicht
+  dahinter. Stattdessen die STILISTISCHEN Eigenschaften verstaerkt, die diesen Klang ausmachen -
+  "Japanese-influenced"/pentatonische Farbe war in den vorherigen Neukompositionen (Quiet
+  Lanterns, jetzt auch Lantern Streets) versehentlich beim Neuschreiben verlorengegangen und
+  wurde in allen vier betroffenen Prompts wieder ergaenzt. `music/README.md` bekam dazu einen
+  Absatz, der diese Entscheidung konkret an diesem Vorfall festmacht, statt nur abstrakt zu
+  bleiben.
+- **Befund/Entscheidung zur Track-Anzahl:** Gemeldet: insgesamt noch zu wenige Musikstuecke.
+  `morning_background` und `sport_background` hatten bislang je nur EIN Stueck (anders als
+  `main_day_background`/`home_evening_background`, die inzwischen je zwei haben oder bekommen).
+  Zwei neue Varianten angelegt: `morning-02` / "Paper Dawn" (waermer/geerdeter als "First Light":
+  akustisches Klavier statt Kalimba, Nylongitarre-Doppelung statt Floete) und `sport-02` /
+  "Second Wind" (gitarrengetragenes Riff statt Blaeser-Antworten wie bei "Full Stride"). Beide
+  von Anfang an mit klar verlangter Melodie/Riff-Struktur und `steps: 50`/`cfg_scale: 5`
+  geschrieben - nicht erst nachtraeglich korrigiert wie die aelteren Tracks.
+- **Bewusst NICHT angefasst:** `main-day-02`, `sport-01`, `morning-01` (die jeweiligen
+  Erst-Tracks) bleiben unveraendert - keiner wurde konkret gemeldet. Die sechs Charakterthemen
+  bleiben unangetastet.
+- **Tests:** `python tools/music/generate_music.py --track-id <id> --dry-run` fuer alle drei
+  betroffenen Tracks (main-day-01, morning-02, sport-02) erfolgreich. `bash
+  tools/reaction-preview/tests.sh` unveraendert gruen - reine Manifest-/Prompt-Aenderung.
+- **Naechster Schritt:** Nach Merge **Generate Itoeva Music** fuer `main-day-01`, `morning-02`
+  und `sport-02` ausloesen; jeder resultierende PR braucht einen Hoertest vor dem Merge, wie
+  jeder generierte Track.
+
 ### 2026-09-21 - Quiet Lanterns komplett neu komponiert statt weiter nachgebessert
 
 - **Ausgangsproblem:** Erster Hoertest ueber die neue Musik-Bibliothek (siehe Eintrag darunter):

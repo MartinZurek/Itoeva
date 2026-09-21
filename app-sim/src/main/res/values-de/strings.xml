@@ -756,9 +756,11 @@
     <string name="music_role_character_theme">Das eigene Thema des anwesenden Wesens, einmal am Tag</string>
     <string name="music_role_dream">Traum-Szenen - noch nicht ausgeliefert</string>
     <string name="music_title_morning_01">First Light</string>
+    <string name="music_title_morning_02">Paper Dawn</string>
     <string name="music_title_main_day_01">Lantern Streets</string>
     <string name="music_title_main_day_02">Paper Bridges</string>
     <string name="music_title_sport_01">Full Stride</string>
+    <string name="music_title_sport_02">Second Wind</string>
     <string name="music_title_home_evening_01">Quiet Lanterns</string>
     <string name="music_title_home_evening_02">Late Windows</string>
     <string name="music_title_theme_puffling">Puffling\'s Theme</string>
