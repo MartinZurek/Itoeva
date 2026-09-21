@@ -606,6 +606,8 @@
     <string name="settings_sound_hint">Ein kurzes Motiv, wenn du eine Erinnerung beantwortest, bei einem Levelaufstieg und bei Besuch. Jedes Wesen klingt anders. Nachts still, und nie über laufender Musik.</string>
     <string name="settings_music">Musik im Spielmodus</string>
     <string name="settings_music_hint">Ein ruhiger Hintergrundtrack, solange die Pixelwelt zu sehen ist. Läuft nie über fremdem Ton und hört auf, sobald du den Spielmodus verlässt.</string>
+    <string name="settings_music_library">Musik-Bibliothek</string>
+    <string name="settings_music_library_hint">Jedes Stück einzeln anhören, mit Titel und dazu, wann es läuft.</string>
 
     <string name="talk_sound_on">Lass dich hören</string>
     <string name="talk_sound_off">Sei mal still</string>
@@ -742,4 +744,29 @@
     <string name="skill_tree_lab_title">Testumgebung</string>
     <string name="skill_tree_lab_hint">Jede Reaktion auf jedem Begleiter ansehen. Hier wird nichts freigeschaltet und nichts verändert.</string>
     <string name="skill_tree_hint">Jeder Levelaufstieg gibt einen Stern ⭐. Tipp auf einen hervorgehobenen Knoten mit \"als Nächstes\", um ihn damit freizuschalten.</string>
+
+    <!-- Musik-Bibliothek: eigener Testbildschirm, damit sich ein einzelnes Stueck beim Namen
+         nennen laesst statt auf einen internen Ressourcennamen zu zeigen. Siehe MusicCatalog.kt. -->
+    <string name="music_library_title">Musik-Bibliothek</string>
+    <string name="music_library_empty">Für diese Rolle ist noch kein Stück ausgeliefert.</string>
+    <string name="music_role_morning">Früher Morgen</string>
+    <string name="music_role_main_day">Der normale Tag</string>
+    <string name="music_role_sport">Bewegung am Sportplatz</string>
+    <string name="music_role_home_evening">Ruhiger Abend, Nacht und stille Naturorte</string>
+    <string name="music_role_character_theme">Das eigene Thema des anwesenden Wesens, einmal am Tag</string>
+    <string name="music_role_dream">Traum-Szenen - noch nicht ausgeliefert</string>
+    <string name="music_title_morning_01">First Light</string>
+    <string name="music_title_main_day_01">Lantern Streets</string>
+    <string name="music_title_main_day_02">Paper Bridges</string>
+    <string name="music_title_sport_01">Full Stride</string>
+    <string name="music_title_home_evening_01">Quiet Lanterns</string>
+    <string name="music_title_home_evening_02">Late Windows</string>
+    <string name="music_title_theme_puffling">Puffling\'s Theme</string>
+    <string name="music_title_theme_starlet">Starlet\'s Theme</string>
+    <string name="music_title_theme_wyrmling">Wyrmling\'s Theme</string>
+    <string name="music_title_theme_fennec">Fennec\'s Theme</string>
+    <string name="music_title_theme_gloop">Gloop\'s Theme</string>
+    <string name="music_title_theme_hootlet">Hootlet\'s Theme</string>
+    <string name="a11y_music_play_track">%1$s abspielen</string>
+    <string name="a11y_music_stop_track">%1$s anhalten</string>
 </resources>

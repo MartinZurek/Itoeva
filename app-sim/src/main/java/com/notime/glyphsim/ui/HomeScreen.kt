@@ -22,14 +22,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -158,6 +163,10 @@ fun HomeScreen(
     val playViewModel: PlayModeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     var showSettings by remember { mutableStateOf(false) }
+    // Die Musik-Bibliothek (siehe MusicLibraryScreen) ist ein eigener Vollbild-Dialog, kein
+    // weiterer Umschalter in [SettingsDialog] - dort steht nur der Einstiegspunkt, der ihn
+    // oeffnet und dabei die Einstellungen selbst schliesst.
+    var showMusicLibrary by remember { mutableStateOf(false) }
     var showAssistant by remember { mutableStateOf(false) }
     // Der gerade abgespielte Vorstellungs-Clip (siehe AvatarClipPlayer/AvatarClips) - null heisst
     // "kein Player offen". Ein eigener Zustand statt eines Booleans, weil der Player den Clip
@@ -999,7 +1008,16 @@ fun HomeScreen(
         )
     }
     if (showSettings) {
-        SettingsDialog(onDismiss = { showSettings = false })
+        SettingsDialog(
+            onDismiss = { showSettings = false },
+            onOpenMusicLibrary = {
+                showSettings = false
+                showMusicLibrary = true
+            }
+        )
+    }
+    if (showMusicLibrary) {
+        MusicLibraryDialog(onDismiss = { showMusicLibrary = false })
     }
     // Geteilter Text oeffnet den Import unmittelbar - der Nutzer hat die Absicht ja schon
     // in der anderen App geaeussert, ein weiterer Zwischenschritt waere nur Reibung.
@@ -1120,7 +1138,7 @@ private const val HOME_TAG = "HomeScreen"
  * wer trotzdem dimmen will, kann das hier bewusst einschalten, per Default aus).
  */
 @Composable
-private fun SettingsDialog(onDismiss: () -> Unit) {
+private fun SettingsDialog(onDismiss: () -> Unit, onOpenMusicLibrary: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var selectedLanguage by remember { mutableStateOf(LanguagePrefs.get(context)) }
@@ -1296,6 +1314,33 @@ private fun SettingsDialog(onDismiss: () -> Unit) {
                                 if (!enabled) PlayMusic.stop()
                             }
                         )
+                    }
+                    // Eigener Bildschirm statt eines weiteren Schalters hier: Die Bibliothek
+                    // spielt einzelne Stuecke unabhaengig davon ab, ob "Musik im Spielmodus"
+                    // ueberhaupt an ist - siehe MusicLibraryScreen. Direkt unter dem Schalter,
+                    // damit man beim Hoertest sofort findet, wonach man sucht.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.settings_music_library))
+                            Text(
+                                stringResource(R.string.settings_music_library_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        OutlinedButton(onClick = onOpenMusicLibrary) {
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.settings_music_library))
+                        }
                     }
                     // Freischalten - AUFGENOMMEN wird im Play-Modus, nicht hier. Die
                     // Einstellungen sind der Ort zum Einrichten, nicht zum Bedienen.

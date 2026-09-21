@@ -70,7 +70,7 @@ SRCS=(
   "$SIM/LivingRuntimeAdapter.kt" "$SIM/LivingResidents.kt" "$SIM/LivingPopulation.kt"
   "$SIM/LivingPopulationLayout.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
-  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
+  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Der reine Living-Agent-Kern (NT-063/NT-067) - kein Android, keine Uhr, kein Zufall.
@@ -121,6 +121,7 @@ TEST_SRCS=(
   "$TEST/matrix/AvatarReactionsTest.kt"
   "$TEST/matrix/MusicResolverTest.kt"
   "$TEST/matrix/PlayMusicRotationTest.kt"
+  "$TEST/matrix/MusicCatalogTest.kt"
   "$TEST/matrix/PlayCharacterThemeTest.kt"
   "$TEST/matrix/ScenePreview.kt"
   "$TEST/matrix/PlayRoutineTest.kt"
@@ -180,6 +181,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.AvatarReactionsTest
   com.notime.glyphsim.matrix.MusicResolverTest
   com.notime.glyphsim.matrix.PlayMusicRotationTest
+  com.notime.glyphsim.matrix.MusicCatalogTest
   com.notime.glyphsim.matrix.PlayCharacterThemeTest
   com.notime.glyphsim.matrix.PlayRoutineTest
   com.notime.glyphsim.matrix.LivingRuntimeAdapterTest
