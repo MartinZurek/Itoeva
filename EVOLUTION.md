@@ -664,6 +664,45 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-21 - Quiet Lanterns komplett neu komponiert statt weiter nachgebessert
+
+- **Ausgangsproblem:** Erster Hoertest ueber die neue Musik-Bibliothek (siehe Eintrag darunter):
+  "Quiet Lanterns" (`home-evening-01`) sei "mega langweilig und blechig". Gewuenscht:
+  melancholisches Abendlied, aber nicht so langsam. Zwei vorherige Runden (Tonhoehen-Fix,
+  Diffusions-Werte 8/1 auf 32/4) hatten das Problem nicht geloest - diesmal ausdruecklich als
+  vollstaendiger Ersatz verlangt, nicht als weitere Nachbesserung.
+- **Befund:** Der Prompt bat weiterhin um "gently low-pass filtered" Rhodes-Flaechenklaenge ohne
+  festen melodischen Kern ("small organic variations" statt einer klaren Melodie), bei
+  niedrigem Tempo (78 BPM). Zum Vergleich die sechs Charakterthemen - vom Nutzer wiederholt
+  gelobt: Jeder ihrer Prompts verlangt ausdruecklich "The melody is the point of this piece: a
+  simple, singable eight-bar tune...", mit Frage-Antwort-Struktur und klarer Entwicklung.
+  "Quiet Lanterns" hatte dagegen nie eine Melodie verlangt, nur eine Klangflaeche mit "kleinen
+  organischen Variationen" - das erklaert "langweilig". Und ein durchgehend gefiltertes
+  Flaecheninstrument ohne perkussiven Halt ist genau die Kombination, die dünn/"blechig" wirkt,
+  unabhaengig von den bereits erhoehten Diffusions-Werten.
+- **Entscheidung:** Prompt VOLLSTAENDIG neu geschrieben, nicht nachgebessert - nach demselben
+  Muster wie die erfolgreichen Charakterthemen: klare, singbare achttaktige Melodie mit
+  Frage-Antwort-Struktur (Felt-Piano/Rhodes stellt sie vor, Nylongitarre antwortet, beide
+  zusammen mit kleiner rhythmischer Variation im zweiten Durchgang). Leitinstrument von
+  durchgehend gefiltertem Rhodes auf waermeres Felt-Piano umgestellt. Tempo von 78 auf 86 BPM
+  angehoben UND ein durchgehend hoerbarer Groove verlangt (statt nur "implizit") - beides
+  zusammen soll "nicht so langsam" bewirken, mehr durch wahrgenommene Bewegung als durch die
+  reine BPM-Zahl. Die Tonhoehen-Stabilitaetsklausel aus der vorigen Runde blieb erhalten.
+  `steps`/`cfg_scale` zusaetzlich von 32/4 auf 50/5 angehoben; neuer Seed (23092026, vorher
+  21092026) - der alte Seed war an die jetzt verworfene Komposition gebunden, an einer
+  voellig neuen Musik haette ihn weiterzuverwenden nichts gespart.
+- **Bewusst NICHT angefasst:** Der Titel "Quiet Lanterns" bleibt - er gehoert der ROLLE
+  (`home_evening_background`, Variante 1), nicht einer bestimmten Aufnahme, und wurde schon
+  zweimal zuvor bei inhaltlich veraenderter Musik beibehalten (Seed-Wechsel 2026-09-19,
+  Prompt-Fix 2026-09-20). `home-evening-02` ("Late Windows") bleibt unangetastet - andere
+  Instrumentierung (Glockenspiel/Music-Box), noch nicht gemeldet.
+- **Tests:** `python tools/music/generate_music.py --track-id home-evening-01 --dry-run`
+  erfolgreich. `bash tools/reaction-preview/tests.sh` unveraendert gruen - reine
+  Manifest-/Prompt-Aenderung, kein Kotlin-Code betroffen.
+- **Naechster Schritt:** Nach Merge **Generate Itoeva Music** fuer `home-evening-01` erneut
+  ausloesen; der daraus entstehende PR braucht wie jeder generierte Track einen Hoertest, bevor
+  er gemergt wird.
+
 ### 2026-09-21 - Eine Musik-Bibliothek, damit sich ein Stueck ueberhaupt benennen laesst
 
 - **Ausgangsproblem:** Nach zwei Runden Musik-Nachbesserung (siehe die beiden Eintraege
