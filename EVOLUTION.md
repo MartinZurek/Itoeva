@@ -664,6 +664,60 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-21 - Eine Musik-Bibliothek, damit sich ein Stueck ueberhaupt benennen laesst
+
+- **Ausgangsproblem:** Nach zwei Runden Musik-Nachbesserung (siehe die beiden Eintraege
+  darunter) sagte der Nutzer: die Abendmusik gefaellt ihm immer noch nicht, aber um genau zu
+  sagen, WELCHES Stueck er meint, muesste er wissen, wie es heisst - und das weiss er nicht. Die
+  App zeigte nirgends einen Titel, eine Rolle oder eine Spezies-Zuordnung an; intern gibt es nur
+  Ressourcennamen wie `itoeva_home_evening_01`. Ohne einen Namen war jede weitere Rueckmeldung
+  nur "die Abendmusik" oder "die Musik generell" - zu grob, um gezielt nachzubessern.
+- **Entscheidung:** Eine eigene Musik-Bibliothek in den Einstellungen, direkt unter dem
+  bestehenden Schalter "Musik im Spielmodus" (derselbe Ort, den der Nutzer mit "neben dem Play
+  Mode" meinte). Sie listet jedes ausgelieferte Stueck einzeln auf: Titel, welche Rolle es traegt,
+  in Worten wann diese Rolle zum Zug kommt (frueher Morgen, normaler Tag, Sport, Abend/Nacht,
+  Charakterthema), und bei einem Charakterthema zusaetzlich die Spezies. Antippen spielt GENAU
+  dieses eine Stueck ab, erneutes Antippen haelt es an.
+- **Neue Datei `MusicCatalog.kt`** (matrix-Paket, rein und testbar): Die einzige Stelle, die einem
+  `(MusicRole, Variante)`-Paar einen Titel und - nur bei `CHARACTER_THEME` - eine Spezies
+  zuordnet. Muss von Hand mit `music/manifest.json` synchron gehalten werden, dieselbe Grenze wie
+  bei jedem erzeugten Track. Die Spezies-Zuordnung selbst ist KEINE zweite Tabelle, sondern leitet
+  sich direkt aus `MusicRole.characterThemeVariant` ab - `MusicCatalogTest` haelt fest, dass beide
+  nie auseinanderlaufen duerfen.
+- **Neue Datei `MusicLibraryScreen.kt`**: `MusicLibraryDialog` als Vollbild-`Dialog`, exakt
+  dasselbe Muster wie `SkillTreeDialog` fuer den Faehigkeitenbaum. Spielt ueber einen EIGENEN,
+  schlichten `MediaPlayer` ab - bewusst nicht ueber `PlayMusic.apply`: Die Weltlogik waehlt Rolle
+  und Variante selbst und kennt den Schalter "Musik im Spielmodus", waehrend die Bibliothek genau
+  EIN angetipptes Stueck spielt, unabhaengig davon, was zur Tageszeit passen wuerde und ob der
+  Schalter ueberhaupt an ist. Beide Systeme sollen sich nicht gegenseitig unterbrechen koennen.
+  Loop bewusst an, genau wie im echten Betrieb (`isLooping = true`) - ein Ruckler an der
+  Schleifennaht ist selbst eine Qualitaetsfrage, die sich nur im Loop pruefen laesst. Verlassen
+  des Bildschirms stoppt die Vorschau hart, wie das Verlassen des Spielmodus bei `PlayMusic`.
+  Kein "Stop"-Symbol verwendet (fehlt in `material-icons-core`, siehe `HomeScreen.kt`s eigene
+  Begruendung fuer dieselbe Grenze) - ein gefuelltes Quadrat als Text statt des groesseren
+  `-extended`-Artefakts.
+- **`HomeScreen.kt`:** neuer Zustand `showMusicLibrary`, gerendert als weiterer Vollbild-Dialog
+  neben `showSettings`; `SettingsDialog` bekommt ein `onOpenMusicLibrary`, das die Einstellungen
+  schliesst und die Bibliothek oeffnet - eine neue Zeile direkt unter dem Musik-Schalter, kein
+  weiterer Umschalter darin.
+- **String-Ressourcen** fuer Titel, Rollen-Beschreibungen und a11y-Beschriftungen in BEIDEN
+  Sprachdateien ergaenzt (`values/strings.xml`, `values-de/strings.xml`) - die Titel selbst
+  (Eigennamen wie "Quiet Lanterns") bleiben in beiden Sprachen gleich, genau wie bei den
+  Kreaturnamen in `AvatarSpecies.kt` begruendet.
+- **Bewusst NICHT angefasst:** Keine Aenderung an `PlayMusic`, `MusicResolver` oder
+  `PlayMusicRotation` - die Bibliothek liest nur (`trackResId`/`availableVariants`), sie greift
+  nie in die Weltlogik ein. Kein Debug-Flag/`FLAG_DEBUGGABLE`-Schutz wie beim Skill-Labor: Der
+  Nutzer selbst soll die Bibliothek im normalen Release nutzen koennen, nicht nur in
+  Entwickler-Builds - anders als das Animationslabor ist sie kein internes Werkzeug, sondern der
+  Weg, auf dem der Nutzer ueberhaupt praezise Rueckmeldung geben kann.
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 512 gruen (507 zuvor, fuenf neue Faelle in
+  `MusicCatalogTest`). `MusicLibraryScreen.kt`/die `HomeScreen.kt`-Aenderungen selbst liegen wie
+  jede Compose-Datei ausserhalb dieser Testdecke (siehe CLAUDE.md) - dort zaehlt Lesekontrolle
+  gegen die vorhandenen Muster (`SkillTreeDialog`, `LibraryScreen`, `ReminderScreen`s
+  Vorschau-Knopf) plus die CI und ein manueller Geraetetest nach dem Merge.
+- **Naechster Schritt:** Der Nutzer hoert sich damit jedes Stueck einzeln an und kann dann
+  gezielt sagen, welches konkrete Stueck noch nicht passt.
+
 ### 2026-09-20 - Der blecherne Klang war kein Tonhoehen-, sondern ein Diffusions-Sparfehler
 
 - **Ausgangsproblem:** Direkt nach dem Merge der Prompt-Entschaerfung (siehe Eintrag darunter,
