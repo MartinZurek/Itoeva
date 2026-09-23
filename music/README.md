@@ -138,8 +138,8 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 |---|---|---|
 | `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
-| `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light |
-| `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride |
+| `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light; `morning-02` / Paper Dawn definiert und im Manifest angelegt, noch nicht erzeugt |
+| `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride; `sport-02` / Second Wind definiert und im Manifest angelegt, noch nicht erzeugt |
 | `dream_background` | Traum-Szenen | noch keiner - `MusicResolver.candidates()` setzt diese Rolle bislang auch noch gar nicht ein; ausser einem Track braucht es dort noch ein eigenes Signal "es wird gerade getraeumt" in `MusicContext` |
 | `character_theme_background` | das persoenliche Stueck des anwesenden Wesens, Variante 01-06 fest je Spezies | `theme-puffling` / Puffling's Theme (Variante 01), `theme-starlet` / Starlet's Theme (Variante 02), `theme-wyrmling` / Wyrmling's Theme (Variante 03), `theme-fennec` / Fennec's Theme (Variante 04), `theme-gloop` / Gloop's Theme (Variante 05), `theme-hootlet` / Hootlet's Theme (Variante 06) |
 
@@ -259,3 +259,5 @@ als unbenutzt entfernt, haelt `app-sim/src/main/res/raw/keep.xml` sie fest.
 Zu jedem erzeugten Track wird eine JSON-Metadatendatei mit Modell, Upstream-Commit, Prompt-Hash, Seed, Zeitpunkt und Track-ID abgelegt. Das ist keine Rechtsgarantie, aber eine nachvollziehbare Provenienzspur fuer spaetere Releases.
 
 Stable Audio 3 steht unter der Stability AI Community License und enthaelt zudem Komponenten unter den Gemma Terms. Vor einer kommerziellen Veroeffentlichung muessen die dann aktuellen Bedingungen erneut geprueft werden. Prompts sollen weiterhin konkrete Kuenstler, Songs oder Aufforderungen zur engen Imitation vermeiden.
+
+**Diese Regel gilt auch fuer eine gut gemeinte Stilempfehlung.** Am 2026-09-21 wurde als Inspiration fuer den melancholischen Sound ein konkreter, noch aktiv verwalteter japanischer Produzentenname vorgeschlagen, dazu "japanische Anime-Klassiker" allgemein. Beides blieb bewusst aussen vor: Ein Name im Prompt ist genau die Art von "enger Imitation", die die Regel oben ausschliesst, unabhaengig davon, wie gut die Absicht ist. Was stattdessen in die Prompts einfliesst, sind Eigenschaften, die diesen Klang ausmachen - warmer, japanisch gefaerbter Boom-Bap, Rhodes/Klavier mit pentatonischer Farbe, Bandrauschen, eine klare singbare Melodie -, wie es diese Datei von Anfang an schon vorsieht. Die stilistische Absicht laesst sich so treffen, ohne einen Namen zu nennen.
