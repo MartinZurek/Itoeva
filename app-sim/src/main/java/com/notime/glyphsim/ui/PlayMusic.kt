@@ -8,10 +8,13 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.util.Log
+import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.MusicContext
 import com.notime.glyphsim.matrix.MusicResolver
 import com.notime.glyphsim.matrix.MusicRole
+import com.notime.glyphsim.matrix.PlayMusicCue
 import com.notime.glyphsim.matrix.PlayMusicRotation
+import com.notime.glyphsim.matrix.PlayMusicTransition
 import com.notime.glyphsim.settings.SettingsCatalog
 import com.notime.glyphsim.settings.SettingsStore
 import kotlin.math.PI
@@ -47,6 +50,14 @@ import kotlin.math.sin
  * **Alles, was die Welt oder das Wesen selbst von sich gibt, bleibt gerechnet. Nur der Score
  * darf eine Datei sein.** Wer hier spaeter Schritte, Tueren oder Wetter als Sample ergaenzt,
  * verletzt sie.
+ *
+ * ## Zwei Ebenen
+ *
+ * Die **Szene** traegt die Lage (Tageszeit, Ort, das eigene Stueck am Tagesanfang). Darueber
+ * liegt fuer kurze Zeit der **Einspieler** eines Gasts ([startCue], Regeln in [PlayMusicCue]):
+ * Die Szene taucht unter ihm ab, laeuft aber weiter und kehrt danach an ihrer laufenden Stelle
+ * zurueck. Beide Ebenen haben je einen eigenen Player; der Einspieler findet nur ueber bereits
+ * laufender Szenenmusik statt und erbt damit jede Sperre darunter.
  *
  * ## Wann sie zu hoeren ist
  *
@@ -87,8 +98,9 @@ object PlayMusic {
     private const val VOLUME = 0.35f
 
     /**
-     * Lang genug, dass ein Tageszeit- oder Szenenwechsel wie ein Uebergang der Welt klingt,
-     * kurz genug, dass die neue Lage nicht noch minutenlang den alten Score traegt.
+     * Die Ueberblendung in das eigene Stueck und aus ihm heraus - darauf ist
+     * [com.notime.glyphsim.matrix.PlayCharacterTheme.GREETING_MS] gerechnet. Alle anderen
+     * Wechsel waehlen ihre Dauer in [PlayMusicTransition.fadeMs].
      */
     internal const val CROSSFADE_MS = 4_000L
 
@@ -105,6 +117,29 @@ object PlayMusic {
 
     /** Seit wann die aktuelle ROLLE laeuft. Ein Variantenwechsel setzt das bewusst NICHT zurueck. */
     private var roleStartedAtMs: Long = 0L
+
+    /** Ein Rollenwechsel, der noch auf Bestaetigung wartet - siehe [PlayMusicTransition.settle]. */
+    private var pendingRole: PlayMusicTransition.Pending? = null
+
+    // --- Die zweite Ebene: der Einspieler eines Gasts (siehe [PlayMusicCue]) -------------------
+
+    private var cuePlayer: MediaPlayer? = null
+    private var cueAnimator: ValueAnimator? = null
+    private var cueVolume = 0f
+
+    /** Welcher Einspieler gerade klingt; [endCue] beendet nur genau diesen. */
+    private var cueToken: Long? = null
+    private var nextCueToken = 1L
+
+    /**
+     * Wie weit die Szenenmusik gerade unter einem Einspieler liegt: 1 = voll, 0 = ganz
+     * abgetaucht. Sie laeuft dabei weiter - nach dem Einspieler kehrt sie an der Stelle zurueck,
+     * an der sie ohnehin waere, statt von vorn zu beginnen.
+     */
+    private var baseDuck = 1f
+
+    /** Ueberlebt [stop] absichtlich: Wer rein- und rausgeht, soll keinen Einspieler erzwingen. */
+    private var cueMemory = PlayMusicCue.Memory()
 
     // --- Das OB: die Entscheidung des Nutzers ---------------------------------------------------
 
@@ -214,8 +249,13 @@ object PlayMusic {
      * neu zu beginnen. Genau das verhindert, dass kurzfristige Ortswechsel des Avatars die Musik
      * zerhacken. Ein Wechsel findet nur statt, wenn sich die aufgeloeste ROLLE aendert, nicht
      * wenn sich die Welt aendert.
+     *
+     * Und selbst dann nicht sofort: Ein Rollenwechsel muss sich erst bestaetigen (siehe
+     * [PlayMusicTransition.settle]). Der Rueckgabewert nennt, in wie vielen Millisekunden das
+     * faellig ist, damit der Aufrufer genau dann wieder fragt; `null` heisst, es gibt keinen
+     * eigenen Termin.
      */
-    fun apply(context: Context, musicContext: MusicContext) {
+    fun apply(context: Context, musicContext: MusicContext): Long? {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
         val wanted = decide(
             enabled = isEnabled(context),
@@ -234,17 +274,18 @@ object PlayMusic {
 
         if (wanted == null) {
             stop()
-            return
+            return null
         }
         val varianten = availableVariants(context, wanted)
         val fest = fixedVariant(wanted, musicContext)
         if (wanted == playingRole) {
+            pendingRole = null
             // Eine feste Variante rotiert nicht (siehe [fixedVariant]). Sie wechselt nur, wenn
             // das Wesen wechselt - dann ist der laufende Track das Thema von jemand anderem.
             if (fest != null) {
-                if (fest == playingVariant) return
+                if (fest == playingVariant) return null
                 switchTo(context, wanted, fest, rollenwechsel = false)
-                return
+                return null
             }
             // **Dieselbe Lage, dieselbe Rolle - und trotzdem gelegentlich ein anderes Stueck.**
             // Gemeldet als "nach ungefaehr fuenf Minuten wirkt ein einzelner wiederholter Track
@@ -254,16 +295,26 @@ object PlayMusic {
             // Der Zeitstempel gehoert der ROLLE, nicht der Variante: Sonst faenge die Uhr bei
             // jedem Wechsel neu an, und aus "spaetestens nach fuenf Minuten" wuerde "alle fuenf
             // Minuten wieder von vorn" - hoerbar als Metronom.
-            if (varianten.size < 2) return
+            if (varianten.size < 2) return null
             val gelaufen = System.currentTimeMillis() - roleStartedAtMs
-            if (!PlayMusicRotation.rotationDue(gelaufen, varianten.size)) return
-            val naechste = PlayMusicRotation.pickVariant(varianten, playingVariant) ?: return
-            if (naechste == playingVariant) return
+            if (!PlayMusicRotation.rotationDue(gelaufen, varianten.size)) return null
+            val naechste = PlayMusicRotation.pickVariant(varianten, playingVariant) ?: return null
+            if (naechste == playingVariant) return null
             switchTo(context, wanted, naechste, rollenwechsel = false)
-            return
+            return null
         }
-        val start = fest ?: PlayMusicRotation.pickVariant(varianten, current = null) ?: return
+        // **Erst bestaetigen, dann wechseln.** Ein Ortswechsel, der nur ein Durchgang ist,
+        // soll die Musik nicht zweimal umwerfen - siehe [PlayMusicTransition]. Der Rueckgabewert
+        // sagt dem Aufrufer, wann die Bestaetigung faellig ist, damit er nicht erst beim naechsten
+        // gewoehnlichen Abgleich nachsieht.
+        val settle = PlayMusicTransition.settle(
+            playingRole, wanted, pendingRole, System.currentTimeMillis()
+        )
+        pendingRole = settle.pending
+        if (!settle.switchNow) return settle.recheckInMs
+        val start = fest ?: PlayMusicRotation.pickVariant(varianten, current = null) ?: return null
         switchTo(context, wanted, start, rollenwechsel = true)
+        return null
     }
 
     /**
@@ -275,6 +326,7 @@ object PlayMusic {
      */
     private fun switchTo(context: Context, role: MusicRole, variant: Int, rollenwechsel: Boolean) {
         val res = trackResId(context, role, variant) ?: return
+        val fadeMs = PlayMusicTransition.fadeMs(playingRole, role, variantOnly = !rollenwechsel)
         runCatching {
             val next = MediaPlayer.create(context, res)?.apply {
                 setAudioAttributes(
@@ -313,16 +365,16 @@ object PlayMusic {
             // Einblend-Bogen wie bei einem Rollenwechsel passt deshalb auch hier, `previous`
             // bleibt einfach null und es gibt nichts auszublenden.
             val animator = ValueAnimator.ofFloat(0f, 1f).apply {
-                duration = CROSSFADE_MS
+                duration = fadeMs
                 addUpdateListener { valueAnimator ->
                     val (oldVolume, newVolume) =
                         transitionVolumes(valueAnimator.animatedValue as Float, previousVolume)
                     if (previous != null && outgoingPlayer === previous) {
-                        runCatching { previous.setVolume(oldVolume, oldVolume) }
+                        setBaseVolume(previous, oldVolume)
                     }
                     if (player === next) {
                         playerVolume = newVolume
-                        runCatching { next.setVolume(newVolume, newVolume) }
+                        setBaseVolume(next, newVolume)
                     }
                 }
                 addListener(object : AnimatorListenerAdapter() {
@@ -333,7 +385,7 @@ object PlayMusic {
                         }
                         if (player === next) {
                             playerVolume = VOLUME
-                            runCatching { next.setVolume(VOLUME, VOLUME) }
+                            setBaseVolume(next, VOLUME)
                         }
                         if (transition === animation) transition = null
                     }
@@ -367,8 +419,159 @@ object PlayMusic {
         playingRole = null
         playingVariant = null
         roleStartedAtMs = 0L
+        pendingRole = null
         current?.let(::releasePlayer)
         outgoing?.takeIf { it !== current }?.let(::releasePlayer)
+        releaseCue()
+    }
+
+    // --- Der Einspieler ---------------------------------------------------------------------
+
+    /**
+     * Laesst das Thema von [guest] kurz ueber der Szene klingen - der Auftritt eines Gasts.
+     *
+     * Ob das ueberhaupt passiert, entscheidet [PlayMusicCue.judge]; hier steht nur der Player.
+     * Weil ein Einspieler **nur ueber bereits laufender Musik** stattfindet, braucht er keine
+     * eigene Pruefung von Schalter, Stummschaltung oder fremdem Ton: Laeuft keine Musik, gibt es
+     * keinen Einspieler.
+     *
+     * @return ein Kennzeichen fuer [endCue], oder `null`, wenn kein Einspieler beginnt.
+     */
+    fun startCue(context: Context, guest: AvatarSpecies, host: AvatarSpecies?): Long? {
+        val now = System.currentTimeMillis()
+        val verdict = PlayMusicCue.judge(
+            guest = guest,
+            host = host,
+            playingRole = playingRole.takeIf { player != null },
+            cueRunning = cueToken != null,
+            themeVariants = availableVariants(context, MusicRole.CHARACTER_THEME),
+            memory = cueMemory,
+            nowMs = now
+        )
+        if (verdict != PlayMusicCue.Verdict.PLAY) return null
+        val res = trackResId(
+            context, MusicRole.CHARACTER_THEME, MusicRole.characterThemeVariant(guest)
+        ) ?: return null
+        val next = runCatching {
+            MediaPlayer.create(context, res)?.apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
+                setVolume(0f, 0f)
+                start()
+            }
+        }.onFailure {
+            Log.w(TAG, "Einspieler konnte nicht starten: $guest", it)
+        }.getOrNull() ?: return null
+
+        releaseCue()
+        cueMemory = PlayMusicCue.remember(cueMemory, guest, now)
+        val token = nextCueToken++
+        cueToken = token
+        cuePlayer = next
+        animateCue(next, fromDuck = baseDuck, toDuck = 0f, toCue = VOLUME, durationMs = PlayMusicCue.FADE_IN_MS)
+        return token
+    }
+
+    /**
+     * Laesst den Einspieler [token] ausklingen und die Szene zurueckkehren. Harmlos, wenn er
+     * schon vorbei ist oder die Musik inzwischen angehalten wurde.
+     */
+    fun endCue(token: Long) {
+        if (cueToken != token) return
+        val current = cuePlayer ?: return
+        cueToken = null
+        animateCue(current, fromDuck = baseDuck, toDuck = 1f, toCue = 0f, durationMs = PlayMusicCue.FADE_OUT_MS) {
+            if (cuePlayer === current) {
+                cuePlayer = null
+                releasePlayer(current)
+            }
+        }
+    }
+
+    /**
+     * Ein Bogen fuer beide Ebenen zugleich. Szene und Gast teilen sich dieselbe Kurve mit
+     * konstanter wahrgenommener Energie (siehe [transitionVolumes]) - zwei Stuecke in fremden
+     * Tonarten und Tempi duerfen sich nur in diesem kurzen Bogen ueberlagern, nie laenger.
+     */
+    private fun animateCue(
+        cue: MediaPlayer,
+        fromDuck: Float,
+        toDuck: Float,
+        toCue: Float,
+        durationMs: Long,
+        onEnd: () -> Unit = {}
+    ) {
+        cueAnimator?.removeAllListeners()
+        cueAnimator?.cancel()
+        val fromCue = cueVolume
+        val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = durationMs
+            addUpdateListener { valueAnimator ->
+                val progress = valueAnimator.animatedValue as Float
+                baseDuck = cueArc(fromDuck, toDuck, progress)
+                cueVolume = cueArc(fromCue, toCue, progress)
+                refreshBaseVolumes()
+                if (cuePlayer === cue) runCatching { cue.setVolume(cueVolume, cueVolume) }
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    baseDuck = toDuck
+                    cueVolume = toCue
+                    refreshBaseVolumes()
+                    if (cuePlayer === cue) runCatching { cue.setVolume(toCue, toCue) }
+                    if (cueAnimator === animation) cueAnimator = null
+                    onEnd()
+                }
+            })
+        }
+        cueAnimator = animator
+        animator.start()
+    }
+
+    /**
+     * Ein Wert auf dem Weg von [from] nach [to]: steigend auf dem Sinus-, fallend auf dem
+     * Kosinus-Viertel - dieselbe Kurve wie [transitionVolumes], nur mit beliebigem Anfang, weil ein
+     * Einspieler auch mitten in seinem Aufklingen wieder gehen kann.
+     */
+    internal fun cueArc(from: Float, to: Float, progress: Float): Float {
+        val angle = progress.coerceIn(0f, 1f) * (PI / 2.0)
+        return if (to >= from) {
+            from + (to - from) * sin(angle).toFloat()
+        } else {
+            to + (from - to) * cos(angle).toFloat()
+        }
+    }
+
+    private fun releaseCue() {
+        val cue = cuePlayer
+        cueAnimator?.removeAllListeners()
+        cueAnimator?.cancel()
+        cueAnimator = null
+        cuePlayer = null
+        cueToken = null
+        cueVolume = 0f
+        baseDuck = 1f
+        cue?.let(::releasePlayer)
+        refreshBaseVolumes()
+    }
+
+    /** Setzt die Lautstaerke eines Szenen-Players - immer unter Beruecksichtigung des Duckings. */
+    private fun setBaseVolume(value: MediaPlayer, volume: Float) {
+        val effective = volume * baseDuck
+        runCatching { value.setVolume(effective, effective) }
+    }
+
+    /**
+     * Nach einer Aenderung von [baseDuck] ausserhalb einer Ueberblendung. Laeuft gerade eine, setzt
+     * sie beim naechsten Bild ohnehin beide Player neu.
+     */
+    private fun refreshBaseVolumes() {
+        if (transition != null) return
+        player?.let { setBaseVolume(it, playerVolume) }
     }
 
     private fun releasePlayer(value: MediaPlayer) {

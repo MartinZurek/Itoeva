@@ -97,6 +97,13 @@ dem Loop-Punkt. Als Pilot ist nur `theme-hootlet.txt` neu gefasst (Seed und 8/1 
 naechste Schritt ist genau ein manueller Lauf von **Generate Itoeva Music** mit `theme-hootlet`,
 danach Hoertest und Messvergleich - erst dann die uebrigen vier einzeln angehen.
 
+**Musik-Engine, Stand 23.09. nachts:** Gaeste spielen beim Hereinkommen ihr Thema kurz an
+(`PlayMusicCue`), Rollenwechsel bestaetigen sich 10 s (`PlayMusicTransition`). Engine und neuer
+Starlet-Prompt sind auf `main`; die ungehoerten Audiodateien bleiben im Hoertest-Paket (PR #213).
+Naechster Schritt: ein Lauf von **Generate Itoeva Music** mit `theme-starlet`, dann Hoertest und
+Messvergleich. `home-evening-02` wurde mit 8/1 neu angestossen - die groesste Luecke (Abend +
+Nacht auf einem einzigen Stueck).
+
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
 [`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064, NT-065 und NT-066 (Schnitte 2a,
 2b, 3, 4 und 5) sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter

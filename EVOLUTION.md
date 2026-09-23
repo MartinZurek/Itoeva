@@ -664,6 +664,73 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-23 - Musik-Engine: Auftritts-Einspieler, bestaetigte Wechsel, Starlet-Pilot, Track-Abdeckung
+
+**Auftrag:** "Wenn ein Charakter von aussen ins Bild kommt, passend einen Musikwechsel zu seinem
+Thema und das ein bisschen reinspielen" - dazu die Uebergaenge insgesamt, Starlets Thema ("passt
+noch nicht zum Charakter") und die Frage, ob es fuer die vorhandenen Szenen zu wenige Stuecke gibt.
+
+**Ausgangslage (gelesen, nicht vermutet):** Die Engine kannte genau einen Uebergang - vier Sekunden
+Ueberblendung, sofort, fuer alles. Ein Charakterthema lief nur einmal am Tag fuer das EIGENE
+Wesen (`PlayCharacterTheme`). Besucher gruessten mit einem gerechneten Klang (`PlaySound`), die
+Musik nahm von ihnen keine Notiz. Abends kippte ein kurzer Gang Wohnzimmer -> Strasse -> Park die
+Musik zweimal, weil `MusicResolver` die Strasse anders einordnet als die beiden ruhigen Orte.
+
+**Umgesetzt:**
+
+- `matrix/PlayMusicCue.kt` (rein, getestet): Kommt ein Gast herein, klingt SEIN Thema als
+  Einspieler ueber der Szene auf (2,5 s), haelt mindestens 12 s, hoechstens 24 s (acht Takte des
+  langsamsten Themas = eine Phrase) und endet, sobald der Gast geht; die Szene kehrt in 5 s zurueck.
+  Sparsam: nur ueber laufender Musik, nie ueber der eigenen Begruessung, nicht fuer ein Gast-Wesen
+  gleich dem Bewohner, nur mit genau diesem Thema im Paket, hoechstens einer zugleich, 2 min
+  Pause global, 8 min je Wesen - sonst waere es bei vier Gaesten im Park Senderwechsel.
+- `ui/PlayMusic.kt`: zweite Ebene fuer den Einspieler. Die Szene wird geduckt, laeuft aber weiter
+  und kehrt an ihrer laufenden Stelle zurueck statt von vorn. Beide Kurven mit konstanter
+  wahrgenommener Energie; ein unterbrochenes Aufklingen kehrt ohne Sprung um (`cueArc`).
+- `matrix/PlayMusicTransition.kt` (rein, getestet): Ein Rollenwechsel aus einem Ortswechsel muss
+  sich 10 s halten, bevor die Musik folgt; das eigene Stueck wartet nie (sein Ende ist auf
+  `GREETING_MS` gerechnet). Blendlaengen nach Art: Start 4 s, Szene/Tageszeit 6 s, Sport 3 s,
+  Varianten-Rotation 8 s, eigenes Stueck unveraendert 4 s. `PlayMusic.apply` nennt dem Aufrufer,
+  wann eine Bestaetigung faellig ist.
+- `DockScreen.runVisit`: startet den Einspieler beim Erscheinen des Gasts, markiert den Abgang;
+  der Einspieler laeuft im Bildschirm-Scope weiter, damit ein abgebrochener Besuch ihn ausklingen
+  und nicht abreissen laesst.
+- 29 neue Tests (Suite 512 -> 541).
+
+**Starlet-Pilot (nur Prompt, Seed und 8/1 unveraendert):** Gemessen am ausgelieferten Take:
+umgekehrter Loop-Bogen (erste 10 s bei -32,6 dBFS, Ende um -15,6), Rumpeln 20-60 Hz nur 5 dB unter
+dem lautesten Band (die tiefe Rahmentrommel), unklarste Tonart der sechs Themen (0,636), kein Puls
+im verlangten 6/8-Tempo. Der neue Prompt folgt dem Hootlet-Muster: Tempo/Puls/Motiv zuerst
+(72 BPM, 4/4, zweitaktiges Filzklavier-Motiv in a-Moll, Celesta-Verdopplung jede zweite
+Wiederkehr), feste Akkordfolge a-F-C-G, weiche Streicher, Besen statt tiefer Trommel,
+ausdruecklich kein Rumpeln, kein Einblenden, kein Ausblenden. Die Stimmung - still, aufmerksam,
+leicht melancholisch, warm - bleibt. **Nicht gehoert, nur gemessen und beschrieben.** Der Einspieler
+macht das doppelt dringlich: Mit dem alten Take waeren Starlets erste zehn Sekunden fast still.
+
+**Track-Abdeckung (Stunden je Rolle und Anzahl Stuecke):**
+
+| Rolle | traegt | Stuecke |
+|---|---|---|
+| HOME_EVENING | Abend an ruhigen Orten (18-22 Uhr) **und die ganze Nacht** (23-5 Uhr) | **1** |
+| MAIN_DAY | Mittag ueberall, Morgen/Abend als Rueckfall, Abend draussen | 2 |
+| MORNING | 6-10 Uhr | 2 (Hoertest-Paket) |
+| SPORT | Sportplatz mit Bewegung | 2 (Hoertest-Paket) |
+| DREAM | nie - der Resolver erzeugt die Rolle nicht | 0 |
+| CHARACTER_THEME | Begruessung + jetzt Einspieler | 6 |
+
+Die groesste Luecke ist eindeutig HOME_EVENING: bis zu zwoelf Stunden am Tag auf einer
+90-Sekunden-Schleife. Der Prompt fuer `home-evening-02` liegt mit 8/1 schon auf `main`; ihr
+einziger Take entstand mit den falschen 50/5-Werten. Deshalb heute ein Generierungslauf fuer genau
+dieses Stueck (Ergebnis als eigener PR, Hoertest vor jedem Merge). **Vorschlaege, noch nicht
+umgesetzt:** (1) eine eigene Nacht-Rolle bzw. DREAM fuer Schlafzimmer + Schlaf, damit Nacht nicht
+wie Abend klingt; (2) eine dritte MAIN_DAY-Variante; (3) eine eigene Rolle fuer Stadt/Strasse/Laden,
+die heute wie das Wohnzimmer klingen.
+
+**Offen / Rueckweg:** Der Einspieler ist am Geraet noch nicht gehoert. Zu pruefen: Ist 24 s zu
+lang oder zu kurz? Stoert das Abtauchen der Szene? Wird es im Park zu oft? Alle Werte stehen als
+Konstanten in `PlayMusicCue`/`PlayMusicTransition`; Rueckbau = die beiden `startCue`-Zeilen in
+`DockScreen` entfernen, die Szene laeuft dann wie vorher.
+
 ### 2026-09-23 - Audit der sechs Charakter-Themes, Prompt-Pilot fuer Hootlet
 
 - **Ausgangsproblem und Nutzerwirkung:** Von den sechs ausgelieferten Charakter-Themes gefaellt

@@ -125,6 +125,7 @@ import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayCharacterTheme
+import com.notime.glyphsim.matrix.PlayMusicCue
 import com.notime.glyphsim.living.LivingSymbolPair
 import com.notime.glyphsim.living.LivingSymbols
 import com.notime.glyphsim.matrix.PlayOutdoorStay
@@ -940,7 +941,10 @@ fun DockScreen(
                 return@LaunchedEffect
             }
             while (true) {
-                PlayMusic.apply(
+                // Wartet ein Rollenwechsel auf seine Bestaetigung (siehe PlayMusicTransition),
+                // nennt apply den Zeitpunkt - sonst kaeme er erst mit dem naechsten gewoehnlichen
+                // Abgleich, bis zu dreissig Sekunden zu spaet.
+                val faellig = PlayMusic.apply(
                     context,
                     MusicContext(
                         dayPhase = PlayAmbientActivity.currentDayPhase(),
@@ -949,7 +953,7 @@ fun DockScreen(
                         characterTheme = themeSpecies
                     )
                 )
-                delay(MUSIC_RECHECK_MS)
+                delay(faellig?.coerceIn(MUSIC_SETTLE_TICK_MS, MUSIC_RECHECK_MS) ?: MUSIC_RECHECK_MS)
             }
         }
         // Der letzte glaubhafte Zustand wird bei jeder Aenderung gespeichert; ON_STOP oben setzt
@@ -1883,6 +1887,8 @@ fun DockScreen(
                 if (index >= 0) visitors[index] = transform(visitors[index])
             }
             var committedGuest: ResidentState? = null
+            /** Wird wahr, sobald der Gast geht - dann darf sein Einspieler ausklingen. */
+            var guestLeaving = false
             try {
                 val guestSpecies = resident.species
                 val px = with(density) { host.sizeDp.dp.toPx() }
@@ -1908,6 +1914,26 @@ fun DockScreen(
                 // Der Gast gruesst mit SEINEM Motiv, nicht mit dem des Bewohners - daran hoert man,
                 // dass jemand anderes da ist.
                 PlaySound.play(context, guestSpecies, PlayChime.Event.VISIT, scope)
+                // Und die Musik tut dasselbe eine Ebene hoeher: Sein Thema klingt kurz ueber der
+                // Szene auf, solange er hereinkommt und da ist (siehe PlayMusicCue). Die Uhr
+                // dafuer laeuft in [scope] und nicht in diesem Besuch - bricht er ab, soll der
+                // Einspieler trotzdem ausklingen und nicht mitten im Takt abreissen.
+                PlayMusic.startCue(context, guestSpecies, host.species)?.let { token ->
+                    scope.launch {
+                        val begonnen = System.currentTimeMillis()
+                        try {
+                            while (!PlayMusicCue.releaseDue(
+                                    System.currentTimeMillis() - begonnen,
+                                    guestLeaving
+                                )
+                            ) {
+                                delay(MUSIC_CUE_TICK_MS)
+                            }
+                        } finally {
+                            PlayMusic.endCue(token)
+                        }
+                    }
+                }
 
                 /** Laesst DIESEN Gast von seiner jetzigen Stelle nach [targetX] gehen. */
                 suspend fun walkGuestTo(targetX: Float) = coroutineScope {
@@ -2119,8 +2145,10 @@ fun DockScreen(
                     )
                 )
 
+                guestLeaving = true
                 walkGuestTo(exitX)
             } finally {
+                guestLeaving = true
                 // Der Hintergrundlauf muss mit genau dem Zustand weitergehen, der gerade
                 // sichtbar erlebt wurde. Nach dem Fortgehen ist der Hauptavatar aber nicht mehr
                 // `Near`; bliebe er in der Welt des Einwohners stehen, wuerde die naechste
@@ -5044,6 +5072,12 @@ private const val DREAM_SLEEP_CHECK_MS = 800L
  * aendert - er darf also selten sein.
  */
 private const val MUSIC_RECHECK_MS = 30_000L
+
+/** Frueher als so nachzusehen lohnt nicht - auch wenn eine Bestaetigung knapp faellig ist. */
+private const val MUSIC_SETTLE_TICK_MS = 500L
+
+/** Wie oft der Einspieler eines Gasts fragt, ob er ausklingen soll (siehe PlayMusicCue). */
+private const val MUSIC_CUE_TICK_MS = 250L
 
 /**
  * Wo der Avatar steht, wenn er an einem Ort der Kulisse ([PlayScene]) auf dem Boden aufsetzt.
