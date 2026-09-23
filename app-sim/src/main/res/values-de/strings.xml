@@ -762,13 +762,13 @@
     <string name="music_title_sport_01">Full Stride</string>
     <string name="music_title_sport_02">Second Wind</string>
     <string name="music_title_home_evening_01">Amber Windows</string>
-    <string name="music_title_home_evening_02">Late Windows</string>
+    <string name="music_title_home_evening_02">Late Windows (neu)</string>
     <string name="music_title_theme_puffling">Puffling\'s Theme</string>
-    <string name="music_title_theme_starlet">Starlet\'s Theme</string>
+    <string name="music_title_theme_starlet">Starlet\'s Theme (neu)</string>
     <string name="music_title_theme_wyrmling">Wyrmling\'s Theme</string>
     <string name="music_title_theme_fennec">Fennec\'s Theme</string>
     <string name="music_title_theme_gloop">Gloop\'s Theme</string>
-    <string name="music_title_theme_hootlet">Hootlet\'s Theme</string>
+    <string name="music_title_theme_hootlet">Hootlet\'s Theme (neu)</string>
     <string name="a11y_music_play_track">%1$s abspielen</string>
     <string name="a11y_music_stop_track">%1$s anhalten</string>
 </resources>
