@@ -98,11 +98,11 @@ naechste Schritt ist genau ein manueller Lauf von **Generate Itoeva Music** mit 
 danach Hoertest und Messvergleich - erst dann die uebrigen vier einzeln angehen.
 
 **Musik-Engine, Stand 23.09. nachts:** Gaeste spielen beim Hereinkommen ihr Thema kurz an
-(`PlayMusicCue`), Rollenwechsel bestaetigen sich 10 s (`PlayMusicTransition`). Liegt vorerst nur auf
-dem Hoertest-Branch (PR #213), weil der Nutzer beides zusammen am Geraet hoeren soll. Der neue
-Starlet-Prompt liegt ebenfalls dort und muss fuer einen Generierungslauf erst auf `main`
-(`generate-music.yml` liest nur `main`). `home-evening-02` wurde mit 8/1 neu angestossen - die
-groesste Luecke (Abend + Nacht auf einem einzigen Stueck).
+(`PlayMusicCue`), Rollenwechsel bestaetigen sich 10 s (`PlayMusicTransition`). Engine und neuer
+Starlet-Prompt sind auf `main`; die ungehoerten Audiodateien bleiben im Hoertest-Paket (PR #213).
+Naechster Schritt: ein Lauf von **Generate Itoeva Music** mit `theme-starlet`, dann Hoertest und
+Messvergleich. `home-evening-02` wurde mit 8/1 neu angestossen - die groesste Luecke (Abend +
+Nacht auf einem einzigen Stueck).
 
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
 [`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064, NT-065 und NT-066 (Schnitte 2a,
