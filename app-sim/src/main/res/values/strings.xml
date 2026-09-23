@@ -766,6 +766,8 @@
     <string name="music_title_morning_02">Paper Dawn</string>
     <string name="music_title_main_day_01">Lantern Streets</string>
     <string name="music_title_main_day_02">Paper Bridges</string>
+    <!-- Bewusst deutsch auch hier: eine Hommage an einen deutschen Titel, deren Wortspiel sich nicht uebersetzt. -->
+    <string name="music_title_main_day_03">Der verpixelste Tag meines Lebens</string>
     <string name="music_title_sport_01">Full Stride</string>
     <string name="music_title_sport_02">Second Wind</string>
     <string name="music_title_home_evening_01">Quiet Lanterns</string>
