@@ -664,6 +664,49 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-23 - Post-trainiertes Musikmodell wieder im vorgesehenen Inferenzmodus
+
+- **Ausgangsproblem und Nutzerwirkung:** Die vier nach der Gate-Korrektur erzeugten Takes in PR
+  #194 (`home-evening-01`), #195 (`main-day-01`), #196 (`sport-02`) und #197 (`morning-02`)
+  bestehen die Pegel-, Rand- und Loop-Pruefung, klingen laut Geraete-Hoertest aber nicht wie
+  Musik, sondern wie verzerrtes Rauschen beziehungsweise kaputte Computergeraeusche. Keiner
+  dieser Asset-PRs darf gemergt werden; sie bleiben Referenzmaterial fuer den Fehler.
+- **Evidenz und korrigierter Befund:** `FACT` fuer Manifest, gepinnte Runtime und Audiodateien;
+  `DOCUMENTED INTENT` fuer den Hoertest. Alle vier kaputten Dateien wurden erstmals mit
+  `steps=50`/`cfg_scale=5` erzeugt. Die zuvor hoerbaren Vergleichsdateien stammen aus 8/1. Die
+  fertigen 50/5-Takes sind nicht nur lauter beziehungsweise staerker verdichtet: Ihre
+  breitbandige Energie oberhalb 8 kHz liegt bei 0,27 bis 4,16 Prozent, gegenueber 0,00 bis 0,24
+  Prozent bei den vier rollenbezogenen 8/1-Referenzen; ihre spektrale Flachheit ist ebenfalls
+  durchgehend hoeher. Entscheidend ist die Dokumentation des exakt gepinnten Upstream-Commits:
+  `small-music` ist ein post-trainierter Checkpoint. Fuer ihn sind 8 Schritte und CFG 1 der
+  Inferenzmodus; mehr Schritte sind fuer `*-base` vorgesehen, abweichende CFG-Werte ebenfalls.
+  Damit ist die fruehere Annahme in PR #191 (32/4 beziehungsweise 50/5 verbessere die
+  Diffusionsqualitaet dieses Modells) widerlegt. Auch die Aussage im direkt folgenden Eintrag,
+  der Ueberschwinger sei nur eine Encoder-Eigenheit und keine Fehlkonfiguration, ist ueberholt:
+  Die Pegelkorrektur tat korrekt, was sie konnte, machte den bereits defekten Modelloutput aber
+  lediglich leiser.
+- **Entscheidung:** Alle `small-music`-Eintraege stehen wieder auf `steps=8` und `cfg_scale=1`;
+  das betrifft neben den vier gemeldeten Tracks vorsorglich auch das noch nicht gehoerte
+  `home-evening-02`, das zwischenzeitlich auf 32/4 stand. `generate_music.validate_track`
+  erzwingt diesen Modus fuer alle in Itoeva unterstuetzten post-trainierten Checkpoints, damit
+  ein spaeterer Manifest-Eintrag den Fehler nicht erneut in einen teuren Generierungslauf traegt.
+  Die neu geschriebenen Prompts und Seeds bleiben erhalten: Sie beschreiben die gewollten neuen
+  Kompositionen und waren nicht die gemeinsame Ursache der vier unabhaengigen Defekte.
+- **Bewusst nicht geaendert:** Kein kaputtes Audio aus #194 bis #197, keine App-Ressource, kein
+  Workflow, kein Secret und keine zweite Musikpipeline. `audio_polish.py` bleibt unveraendert;
+  Pegel, Kanten und Loop-Naht sind weiterhin sein technisches Freigabe-Gate. Ein generischer
+  "Musik oder Rauschen"-Schwellwert wird nicht erfunden, weil er legitime helle/perkussive
+  Stuecke falsch ablehnen koennte und den menschlichen Hoertest nicht ersetzt.
+- **Daten, Migration und Ruecksetzweg:** Keine App-Daten, Preferences oder Datenbank betroffen.
+  Ruecksetzbar durch Revert dieses Parameter-/Validierungs-PRs; die bereits ausgelieferten
+  Audiodateien bleiben dabei unveraendert. Die offenen kaputten Asset-PRs duerfen auch nach einem
+  Revert nicht gemergt werden.
+- **Tests und offene Pruefung:** Drei Regressionstests belegen, dass jedes Manifest-Stueck den
+  unterstuetzten Modus nutzt und dass 50 Schritte beziehungsweise CFG 5 abgelehnt werden. Die
+  vorhandene Bare-Dry-Run-Pruefung laeuft weiterhin ohne Audioabhaengigkeiten. Nach dem Merge die
+  vier Tracks einzeln neu erzeugen; jeder neue Asset-PR braucht weiterhin einen menschlichen
+  Hoertest vor dem Merge.
+
 ### 2026-09-23 - Freigabe-Gate reagiert auf gemessenen Ueberschwinger statt nur abzulehnen
 
 - **Ausgangsproblem:** Nach dem Merge der Quiet-Lanterns-/Lantern-Streets-Neukomposition (siehe

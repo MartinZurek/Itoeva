@@ -14,10 +14,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_home_evening_01",
       "prompt_file": "music/prompts/home-evening-01.txt",
-      "steps": 50,
-      "cfg_scale": 5,
+      "steps": 8,
+      "cfg_scale": 1,
       "seed": 23092026,
-      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19 (Stille am Ende ueber dem Gate-Limit). Am 2026-09-20 der Prompt von 'subtle tape and vinyl texture' auf ausdruecklich pitch-stabil umgestellt (wow-and-flutter-Befund) und steps/cfg_scale von 8/1 auf 32/4 angehoben (Klangfarben-Befund) - siehe EVOLUTION.md fuer beide. Am 2026-09-21, nach Hoertest ueber die neue Musik-Bibliothek: Gemeldet als 'mega langweilig und blechig'. Der Prompt bat weiterhin um 'gently low-pass filtered' Rhodes-Flaechenklaenge ohne festen melodischen Kern ('small organic variations' statt einer klaren Melodie) bei niedrigem Tempo (78 BPM) - genau die Kombination aus duennem, gefiltertem Klang und fehlender musikalischer Entwicklung, die 'blechig' und 'langweilig' erklaert. Prompt VOLLSTAENDIG neu geschrieben statt nachgebessert: klare achttaktige singbare Melodie mit Frage-Antwort-Struktur (wie bei den Charakterthemen), waermeres Leitinstrument (Felt-Piano/Nylongitarre statt gefiltertes Rhodes), Tempo auf 86 BPM angehoben, durchgehend hoerbarer Groove statt Flaechenklang. steps/cfg_scale zusaetzlich auf 50/5 angehoben, neuer Seed (der alte war an die jetzt verworfene Komposition gebunden). Titel bleibt 'Quiet Lanterns' - dieselbe Rollen-Identitaet, voellig neu komponiert."
+      "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19 (Stille am Ende ueber dem Gate-Limit). Am 2026-09-20 der Prompt von 'subtle tape and vinyl texture' auf ausdruecklich pitch-stabil umgestellt (wow-and-flutter-Befund). Am 2026-09-21, nach Hoertest ueber die neue Musik-Bibliothek: Gemeldet als 'mega langweilig und blechig'. Der Prompt bat weiterhin um 'gently low-pass filtered' Rhodes-Flaechenklaenge ohne festen melodischen Kern ('small organic variations' statt einer klaren Melodie) bei niedrigem Tempo (78 BPM). Prompt VOLLSTAENDIG neu geschrieben statt nachgebessert: klare achttaktige singbare Melodie mit Frage-Antwort-Struktur, waermeres Leitinstrument, Tempo 86 BPM und durchgehend hoerbarer Groove. Die zugleich versuchten Inferenzwerte 50/5 waren fuer das post-trainierte small-music-Modell falsch und erzeugten in PR #194 verzerrtes Rauschen; seit 2026-09-23 gilt wieder der dokumentierte Modellmodus 8/1. Prompt und neuer Seed bleiben fuer die korrekte Neuerzeugung erhalten."
     },
     {
       "id": "home-evening-02",
@@ -28,10 +28,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_home_evening_02",
       "prompt_file": "music/prompts/home-evening-02.txt",
-      "steps": 32,
-      "cfg_scale": 4,
+      "steps": 8,
+      "cfg_scale": 1,
       "seed": 22092026,
-      "notes": "Zweite Variante der Rolle home_evening_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: Abends wurde kaum Variation bemerkt, weil diese Rolle bis dahin nur EIN Stueck kannte (anders als main_day_background). Gleiche warme, japanisch gefaerbte Lo-Fi-Familie wie home-evening-01, aber sparsamer und naechtlicher: Glockenspiel/Music-Box-Melodie statt Rhodes im Vordergrund, Bass nur auf ausgewaehlten Schlaegen, kaum gespieltes Schlagzeug. Von Anfang an ohne die Tonhoehen-Instabilitaets-Formulierung erzeugt (PR #187). Direkt danach zusammen mit home-evening-01 auf `steps: 32`/`cfg_scale: 4` angehoben - siehe dessen Notiz fuer den Befund (blecherner Klangfarbenfehler bei niedrigen Diffusionsschritten). PR #187 damit ueberholt und geschlossen, bevor es je gehoert wurde."
+      "notes": "Zweite Variante der Rolle home_evening_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: Abends wurde kaum Variation bemerkt, weil diese Rolle bis dahin nur EIN Stueck kannte. Gleiche warme, japanisch gefaerbte Lo-Fi-Familie wie home-evening-01, aber sparsamer und naechtlicher: Glockenspiel/Music-Box-Melodie statt Rhodes im Vordergrund, Bass nur auf ausgewaehlten Schlaegen, kaum gespieltes Schlagzeug. Von Anfang an ohne die Tonhoehen-Instabilitaets-Formulierung erzeugt (PR #187). Der danach versuchte Wert 32/4 beruhte auf derselben falschen Annahme wie die spaeteren 50/5-Laeufe; seit 2026-09-23 gilt auch hier der dokumentierte post-trainierte Modellmodus 8/1."
     },
     {
       "id": "main-day-01",
@@ -42,10 +42,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_main_day_01",
       "prompt_file": "music/prompts/main-day-01.txt",
-      "steps": 50,
-      "cfg_scale": 5,
+      "steps": 8,
+      "cfg_scale": 1,
       "seed": 24092026,
-      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt, aber nicht neu erzeugt (nicht als betroffen gemeldet). Am 2026-09-21 gemeldet als 'vollkommen schraeg' und 'nicht gut' - Prompt VOLLSTAENDIG neu geschrieben statt nachgebessert, gleicher Befund wie bei home-evening-01: keine verlangte Melodie, nur Akkorde mit 'Farbe'; zusaetzlich die zweideutige '11th voicing'-Formulierung entfernt, die dissonant realisiert worden sein kann ('schraeg'). Jetzt mit klarer achttaktiger Frage-Antwort-Melodie (Rhodes stellt vor, Gitarre antwortet), ausdruecklicher 'no clashing or dissonant harmony'-Klausel, steps/cfg_scale auf den seit 2026-09-21 geltenden Standard 50/5 angehoben, neuer Seed - siehe EVOLUTION.md."
+      "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt. Am 2026-09-21 gemeldet als 'vollkommen schraeg' und 'nicht gut': Prompt VOLLSTAENDIG neu geschrieben, mit klarer achttaktiger Frage-Antwort-Melodie, ohne die mehrdeutige '11th voicing'-Formulierung und mit neuer Seed. Die zugleich versuchten Inferenzwerte 50/5 waren fuer das post-trainierte small-music-Modell falsch und erzeugten in PR #195 verzerrtes Rauschen; seit 2026-09-23 gilt wieder der dokumentierte Modellmodus 8/1. Prompt und neuer Seed bleiben fuer die korrekte Neuerzeugung erhalten."
     },
     {
       "id": "main-day-02",
@@ -84,10 +84,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_sport_02",
       "prompt_file": "music/prompts/sport-02.txt",
-      "steps": 50,
-      "cfg_scale": 5,
+      "steps": 8,
+      "cfg_scale": 1,
       "seed": 25092026,
-      "notes": "Zweite Variante der Rolle sport_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche energische Familie wie sport-01/'Full Stride', aber gitarrengetragenes Riff statt Blaeser-Antworten auf Rhodes-Stabs. Von Anfang an mit klarer, im Prompt ausdruecklich verlangter Melodie (Riff-Struktur) und dem seit 2026-09-21 geltenden Diffusions-Standard steps=50/cfg_scale=5 erzeugt, nicht erst nachtraeglich korrigiert."
+      "notes": "Zweite Variante der Rolle sport_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche energische Familie wie sport-01/'Full Stride', aber gitarrengetragenes Riff statt Blaeser-Antworten auf Rhodes-Stabs. Der erste Lauf mit den fuer das post-trainierte small-music-Modell falschen Werten 50/5 erzeugte in PR #196 verzerrtes Rauschen. Prompt und Seed bleiben erhalten; seit 2026-09-23 gilt fuer die korrekte Neuerzeugung der dokumentierte Modellmodus 8/1."
     },
     {
       "id": "morning-01",
@@ -112,10 +112,10 @@
       "output_format": "ogg",
       "android_resource": "itoeva_morning_02",
       "prompt_file": "music/prompts/morning-02.txt",
-      "steps": 50,
-      "cfg_scale": 5,
+      "steps": 8,
+      "cfg_scale": 1,
       "seed": 26092026,
-      "notes": "Zweite Variante der Rolle morning_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche ruhige Morgenfamilie wie morning-01/'First Light', aber waermer und geerdeter: akustisches Klavier statt Kalimba/Mallet, Nylongitarre-Doppelung statt Floete. Von Anfang an mit klarer, im Prompt ausdruecklich verlangter Melodie und dem seit 2026-09-21 geltenden Diffusions-Standard steps=50/cfg_scale=5 erzeugt, nicht erst nachtraeglich korrigiert."
+      "notes": "Zweite Variante der Rolle morning_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche ruhige Morgenfamilie wie morning-01/'First Light', aber waermer und geerdeter: akustisches Klavier statt Kalimba/Mallet, Nylongitarre-Doppelung statt Floete. Der erste Lauf mit den fuer das post-trainierte small-music-Modell falschen Werten 50/5 erzeugte in PR #197 verzerrtes Rauschen. Prompt und Seed bleiben erhalten; seit 2026-09-23 gilt fuer die korrekte Neuerzeugung der dokumentierte Modellmodus 8/1."
     },
     {
       "id": "theme-puffling",

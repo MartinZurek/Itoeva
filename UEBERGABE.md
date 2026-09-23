@@ -1,4 +1,4 @@
-# Uebergabe: Stand am 18. September 2026
+# Uebergabe: Stand am 23. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
@@ -78,6 +78,17 @@ nicht mehr aufgeloest.
 Die sechs Charakter-Prompts und Manifest-Eintraege ITO-0017 bis ITO-0022 sind gemergt. Die
 eigentliche Audioerzeugung bleibt bewusst manuell: ein Wesen pro Workflow-Lauf, danach hoeren und
 erst dann einen Asset-PR oeffnen.
+
+**Musik-Warnung vom 23.09.: PR #194 bis #197 niemals mergen.** Die vier dortigen Takes
+(`home-evening-01`, `main-day-01`, `sport-02`, `morning-02`) wurden mit `steps=50` und
+`cfg_scale=5` erzeugt und klingen laut Geraete-Hoertest wie verzerrtes Rauschen. Das ist kein
+kaputter Android-Player und keine durch Pegelabsenkung heilbare Vorbis-Spitze: `small-music` ist
+in der gepinnten Stable-Audio-3-Runtime ein post-trainierter Checkpoint mit dokumentiertem
+Inferenzmodus 8/1. `generate_music.py` lehnt andere Werte nun bereits im Dry-Run ab; alle
+Manifest-Eintraege stehen wieder auf 8/1. Prompts und Seeds der Neukompositionen bleiben erhalten.
+Nach Merge dieses Schutzes die vier Tracks einzeln neu erzeugen und jeden resultierenden PR
+erneut hoeren. Auch `home-evening-02`, dessen noch nicht gehoerter Eintrag zwischenzeitlich auf
+32/4 stand, ist vorsorglich auf 8/1 zurueckgesetzt.
 
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
 [`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064, NT-065 und NT-066 (Schnitte 2a,

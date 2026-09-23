@@ -14,6 +14,9 @@ explicit one - run the dry run in a subprocess with the audio modules made unimp
 
 from __future__ import annotations
 
+import copy
+import importlib.util
+import json
 import os
 import subprocess
 import sys
@@ -29,6 +32,14 @@ GENERATOR = TOOLS / "generate_music.py"
 # Everything the dry run must not need. soundfile is listed as well: it is installed by the
 # same workflow step as numpy, so a top-level import of it would fail in exactly the same way.
 BLOCKED = ("numpy", "soundfile", "torch", "torchaudio", "stable_audio_3")
+
+
+def load_generator_module():
+    spec = importlib.util.spec_from_file_location("itoeva_generate_music", GENERATOR)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 def shadowed_env(shadow: str) -> dict:
@@ -92,8 +103,6 @@ class DryRunDependencyTest(unittest.TestCase):
 
     def test_every_manifest_track_passes_the_bare_dry_run(self):
         """Not just one id: the workflow is dispatched with whichever track the user picks."""
-        import json
-
         manifest = json.loads((REPO / "music" / "manifest.json").read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as shadow:
             for name in BLOCKED:
@@ -108,6 +117,36 @@ class DryRunDependencyTest(unittest.TestCase):
                         text=True,
                     )
                     self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class PostTrainedSettingsTest(unittest.TestCase):
+    """Keep the post-trained checkpoint out of the corrupt 50/5 parameter regime."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.generator = load_generator_module()
+        cls.manifest = json.loads(
+            (REPO / "music" / "manifest.json").read_text(encoding="utf-8")
+        )
+
+    def test_every_manifest_track_uses_the_supported_inference_mode(self):
+        for track in self.manifest["tracks"]:
+            with self.subTest(track=track["id"]):
+                self.generator.validate_track(track)
+                self.assertEqual(self.generator.POST_TRAINED_STEPS, track["steps"])
+                self.assertEqual(self.generator.POST_TRAINED_CFG_SCALE, track["cfg_scale"])
+
+    def test_more_steps_are_rejected_for_the_post_trained_checkpoint(self):
+        track = copy.deepcopy(self.manifest["tracks"][0])
+        track["steps"] = 50
+        with self.assertRaisesRegex(SystemExit, "post-trained"):
+            self.generator.validate_track(track)
+
+    def test_cfg_above_one_is_rejected_for_the_post_trained_checkpoint(self):
+        track = copy.deepcopy(self.manifest["tracks"][0])
+        track["cfg_scale"] = 5
+        with self.assertRaisesRegex(SystemExit, "post-trained"):
+            self.generator.validate_track(track)
 
 
 if __name__ == "__main__":

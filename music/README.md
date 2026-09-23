@@ -24,6 +24,20 @@ Die Pipeline nutzt jetzt `Stable Audio 3 Small Music` als Open-Weights-Modell. F
 
 `Stable Audio 3 Medium` bleibt als spaetere Qualitaetsoption denkbar, braucht aber CUDA/Flash Attention und ist deshalb nicht der Standard fuer den normalen GitHub-Runner.
 
+### Verbindlicher Inferenzmodus: 8 Schritte, CFG 1
+
+`small-music` ist ein **post-trainierter** Stable-Audio-3-Checkpoint, kein `*-base`-Modell. Die
+Dokumentation der im Manifest gepinnten Runtime nennt dafuer `steps=8` und `cfg_scale=1` als
+Inferenzmodus; groessere Schrittzahlen sind fuer die Base-Modelle vorgesehen, ebenso abweichende
+Classifier-Free-Guidance-Werte.
+
+Das ist seit dem Hoertest vom 2026-09-23 eine harte, im Generator gepruefte Regel. Vier mit 50/5
+erzeugte Takes (PR #194 bis #197) bestanden nach reiner Pegelkorrektur das technische Loop-/Peak-
+Gate, klangen aber wie verzerrtes Computerrauschen. Ihre fertigen Dateien zeigen gegenueber den
+hoerbaren 8/1-Referenzen deutlich mehr breitbandige Hochfrequenzenergie und eine dichtere
+Signalform. Die vier PRs bleiben deshalb ungemergtes Referenzmaterial. Ein Prompt oder Seed darf
+weiterentwickelt werden; fuer dieses Modell darf daraus kein eigener Diffusionsstandard werden.
+
 ## Einmalig: kostenlosen Hugging-Face-Zugang freischalten
 
 Die Gewichte sind kostenlos nutzbar, aber auf Hugging Face gated. Einmalig:
