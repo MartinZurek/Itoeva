@@ -152,9 +152,9 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 |---|---|---|
 | `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges, `main-day-03` / Der verpixelste Tag meines Lebens |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
-| `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light; `morning-02` / Paper Dawn definiert und im Manifest angelegt, noch nicht erzeugt |
+| `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light, `morning-02` / Paper Dawn, `morning-03` / The Last Evo |
 | `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride; `sport-02` / Second Wind definiert und im Manifest angelegt, noch nicht erzeugt |
-| `dream_background` | Traum-Szenen | noch keiner - `MusicResolver.candidates()` setzt diese Rolle bislang auch noch gar nicht ein; ausser einem Track braucht es dort noch ein eigenes Signal "es wird gerade getraeumt" in `MusicContext` |
+| `dream_background` | Traum-Szenen | `dream-01` / Ita Stella - seit 2026-09-23 nachts im Schlafzimmer vor dem Abendtrack (`MusicResolver.candidates()`) |
 | `character_theme_background` | das persoenliche Stueck des anwesenden Wesens, Variante 01-06 fest je Spezies | `theme-puffling` / Puffling's Theme (Variante 01), `theme-starlet` / Starlet's Theme (Variante 02), `theme-wyrmling` / Wyrmling's Theme (Variante 03), `theme-fennec` / Fennec's Theme (Variante 04), `theme-gloop` / Gloop's Theme (Variante 05), `theme-hootlet` / Hootlet's Theme (Variante 06) |
 
 Die Rolle `character_theme_background` ist die einzige, deren Variante **nicht** rotiert: 01 bis 06
@@ -248,9 +248,9 @@ gelten abends als ruhige Naturorte. Nachts wird nie auf den Tagestrack zurueckge
 `sport-01` / Full Stride uebernimmt nur, wenn die Figur am Sportplatz **tatsaechlich MOVE
 ausfuehrt**. Der Ort allein behauptet keine Handlung.
 
-`dream_background` bleibt die letzte offene Rolle. Der Enum-Eintrag existiert bewusst schon
-(`MusicRole.DREAM` in `PlayMusicPlan.kt`), aber `MusicResolver.candidates()` fragt ihn noch nirgends
-ab - ein Traum-Track allein wuerde also noch nicht erklingen. Wetter und Stimmung bleiben ebenfalls
+`dream_background` ist seit 2026-09-23 belegt: `MusicResolver.candidates()` setzt die Rolle nachts
+im Schlafzimmer vor den Abendtrack, sodass die Nacht dort nicht mehr wie der Abend klingt. Fehlt das
+Stueck, bleibt es beim Abendtrack. Wetter und Stimmung bleiben
 vorhandene, aber musikalisch noch ungenutzte Weltsignale, bis ein gepruefter passender Track UND die
 zugehoerige Abfrage in `candidates()` beide stehen.
 

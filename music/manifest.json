@@ -132,6 +132,20 @@
       "notes": "Zweite Variante der Rolle morning_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche ruhige Morgenfamilie wie morning-01/'First Light', aber waermer und geerdeter: akustisches Klavier statt Kalimba/Mallet, Nylongitarre-Doppelung statt Floete. Der erste Lauf mit den fuer das post-trainierte small-music-Modell falschen Werten 50/5 erzeugte in PR #197 verzerrtes Rauschen. Prompt und Seed bleiben erhalten; seit 2026-09-23 gilt fuer die korrekte Neuerzeugung der dokumentierte Modellmodus 8/1."
     },
     {
+      "id": "morning-03",
+      "title": "The Last Evo",
+      "role": "morning_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_morning_03",
+      "prompt_file": "music/prompts/morning-03.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 28092026,
+      "notes": "Dritte Variante der Rolle morning_background, gewuenscht vom Nutzer als Hommage im Stil von main-day-03: das Gefuehl eines grossen, edlen Filmthemas mit japanischer Faerbung - stiller Stolz, tiefe Ruhe, ein wenig Trauer um etwas Vergehendes, darunter aufsteigende Hoffnung. Ausdruecklich KEINE Nachbildung: Melodie, Akkordfolge (d-B-g-A), Tempo (70 BPM) und Besetzung (Cello, Bambusfloete, Taiko, Koto, Streicher) sind eigene Vorgaben; der Prompt nennt weder Film, Komponist noch Stueck. Die Pixelwelt steckt wie bei main-day-03 in einer weichen 8-Bit-Stimme, die jede zweite Runde die Melodie verdoppelt. Morgen, weil der Sonnenaufgang das Bild dieses Gefuehls ist. Aufbau nach dem Hootlet-Pilotmuster: Tempo, Puls und Motiv zuerst, kein Ein- und kein Ausblenden."
+    },
+    {
       "id": "theme-puffling",
       "title": "Puffling's Theme",
       "role": "character_theme_background",
@@ -214,6 +228,20 @@
       "cfg_scale": 1,
       "seed": 14092026,
       "notes": "Persoenliches Stueck des HOOTLET, Variante 06 der Rolle character_theme_background. HOOTLET hat signatureTopic FOCUS - der stille, geduldige Beobachter; musikalisch deshalb das klarste und geordnetste der sechs Themen: stetiger ruhiger Puls und ein sauberes Piano-/Vibraphon-Motiv, das sich mit kleinen kontrollierten Verschiebungen wiederholt. Praezision und Raum wirken aufmerksam und warm, nicht kalt oder klinisch. Die Melodie bleibt sofort erkennbar und ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen. Am 2026-09-19 qualitativ nachgezogen: der Felt-Piano-Part bekam eine sanfte analoge Waerme, Charakter und Instrumentierung bleiben unveraendert. Am 2026-09-23 als Prompt-Pilot neu gefasst (siehe EVOLUTION.md): Die Messung des ausgelieferten Takes verfehlte alle drei Kernvorgaben - schwaechster Puls der sechs Themen, keine Motivwiederholung im Taktraster, spektral so dunkel wie das bewusst weiche Gloop-Thema - und blendete in den letzten fuenf Sekunden um rund 44 dB aus. Der neue Prompt ist kuerzer, nennt Tempo, Puls, Motiv und Wiederholungsabstand zuerst, gibt jeder der vier Stimmen genau eine Aufgabe, streicht die widerspruechlichen Weichmacher (weiche Schlegel, Filzklavier, analoge Waerme) und verlangt ausdruecklich kein Ausblenden. Seed und 8/1 bleiben absichtlich gleich, damit der Vergleich nur den Prompt aendert."
+    },
+    {
+      "id": "dream-01",
+      "title": "Ita Stella",
+      "role": "dream_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_dream_01",
+      "prompt_file": "music/prompts/dream-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 29092026,
+      "notes": "Erstes Stueck der Rolle dream_background, gewuenscht vom Nutzer als Hommage im Stil von main-day-03: das Gefuehl eines grossen Weltraum-Filmthemas - Staunen, Sehnsucht, leise Hoffnung, eine tickende Uhr. Ausdruecklich KEINE Nachbildung: Muster, Melodie, Akkordfolge (e-C-G-D), Tempo (72 BPM) und Besetzung (Pfeifenorgel mit gebrochenen Akkorden, Klavier, Streicher, Holz-Tick) sind eigene Vorgaben; der Prompt nennt weder Film, Komponist noch Stueck. Weiche 8-Bit-Stimme wie ein blinkender Stern. Mit diesem Stueck bekommt die Rolle DREAM erstmals einen Platz im Spiel: nachts im Schlafzimmer (MusicResolver), damit die Nacht nicht mehr wie der Abend klingt. Kein Schlagzeug, kein Ein- und kein Ausblenden."
     }
   ]
 }
