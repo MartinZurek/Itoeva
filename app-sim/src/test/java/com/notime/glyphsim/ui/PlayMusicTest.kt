@@ -198,4 +198,25 @@ class PlayMusicTest {
         assertEquals(teilweiseEingeblendet, neuerWechsel.first, 0.0001f)
         assertEquals(0f, neuerWechsel.second, 0.0001f)
     }
+
+    // ================= Der Einspieler eines Gasts =================
+
+    @Test
+    fun `der Bogen des Einspielers trifft Anfang und Ziel in beide Richtungen`() {
+        assertEquals(1f, PlayMusic.cueArc(1f, 0f, 0f), 0.0001f)
+        assertEquals(0f, PlayMusic.cueArc(1f, 0f, 1f), 0.0001f)
+        assertEquals(0f, PlayMusic.cueArc(0f, 0.35f, 0f), 0.0001f)
+        assertEquals(0.35f, PlayMusic.cueArc(0f, 0.35f, 1f), 0.0001f)
+    }
+
+    /**
+     * Geht der Gast, waehrend sein Thema noch aufklingt, beginnt die Rueckkehr der Szene an der
+     * Stelle, an der sie gerade steht - kein Sprung auf "ganz weg" oder "ganz da".
+     */
+    @Test
+    fun `ein unterbrochenes Aufklingen kehrt ohne Sprung um`() {
+        val halbAbgetaucht = PlayMusic.cueArc(1f, 0f, 0.4f)
+        assertEquals(halbAbgetaucht, PlayMusic.cueArc(halbAbgetaucht, 1f, 0f), 0.0001f)
+        assertTrue(PlayMusic.cueArc(halbAbgetaucht, 1f, 0.5f) > halbAbgetaucht)
+    }
 }
