@@ -191,7 +191,7 @@ def main() -> int:
     try:
         import torch
         import torchaudio
-        from audio_polish import check_audio, polish_for_loop
+        from audio_polish import encode_within_gate, polish_for_loop
         from stable_audio_3 import StableAudioModel
     except ImportError as exc:
         raise SystemExit(
@@ -244,25 +244,31 @@ def main() -> int:
     # audio_polish.py for the full account of the three defects this replaces.
     raw = audio[0].detach().to(torch.float32).cpu().numpy().T
     frames = polish_for_loop(raw, sample_rate)
-    if extension == "ogg":
-        write_vorbis(output_path, frames, sample_rate)
-    else:
-        torchaudio.save(
-            str(output_path),
-            torch.from_numpy(frames.T),
-            sample_rate,
-            encoding="PCM_S",
-            bits_per_sample=16,
-        )
 
     # **The gate, and deliberately AFTER encoding.** Checking the waveform in memory would
     # miss exactly the defect that shipped: the overshoot appears when the lossy file is
     # decoded again, not before. So the written file is read back and judged as the phone
-    # will hear it.
+    # will hear it. encode_within_gate also corrects for it: see audio_polish.py for why a
+    # single fixed headroom value is not enough - some takes decode 5-6 dB above the level
+    # they were encoded at, others barely above it, and the difference is not known in advance.
     import soundfile as sf
 
-    decoded, decoded_rate = sf.read(str(output_path), always_2d=True)
-    findings = check_audio(decoded, decoded_rate)
+    def encode_and_decode(current):
+        if extension == "ogg":
+            write_vorbis(output_path, current, sample_rate)
+        else:
+            torchaudio.save(
+                str(output_path),
+                torch.from_numpy(current.T),
+                sample_rate,
+                encoding="PCM_S",
+                bits_per_sample=16,
+            )
+        decoded, _ = sf.read(str(output_path), always_2d=True)
+        return decoded
+
+    frames, decoded, findings, attempt = encode_within_gate(frames, sample_rate, encode_and_decode)
+
     if findings:
         for finding in findings:
             print(f"::error::{track['id']}: {finding}", file=sys.stderr)
@@ -280,6 +286,7 @@ def main() -> int:
             "samples": int(frames.shape[0]),
             "polished": True,
             "peak_dbfs": round(float(20.0 * math.log10(max(float(abs(decoded).max()), 1e-12))), 2),
+            "gain_correction_attempts": attempt - 1,
             "bytes": output_path.stat().st_size,
             "hf_token_present": bool(os.environ.get("HF_TOKEN")),
         }

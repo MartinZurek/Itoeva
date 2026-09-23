@@ -7,11 +7,39 @@ five-minute generation run to produce and were only caught by measuring the fini
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
 import audio_polish as ap
+
+try:
+    import soundfile as sf
+
+    HAS_SOUNDFILE = True
+except ImportError:  # pragma: no cover - soundfile is a real dependency of this tool
+    HAS_SOUNDFILE = False
+
+
+def encode_decode_vorbis(frames: np.ndarray, sample_rate: int = 44100) -> np.ndarray:
+    """A real lossy round trip, the same one generate_music.py uses to write a track.
+
+    Only a real encoder reproduces true-peak overshoot - the numpy-only functions in
+    audio_polish.py cannot fabricate it, so the tests that need it go through libsndfile
+    for real instead of mocking the round trip away.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "take.ogg"
+        with sf.SoundFile(
+            str(path), mode="w", samplerate=sample_rate, channels=frames.shape[1],
+            format="OGG", subtype="VORBIS",
+        ) as handle:
+            for start in range(0, frames.shape[0], 8192):
+                handle.write(frames[start : start + 8192].astype(np.float32))
+        decoded, _ = sf.read(str(path), always_2d=True)
+        return decoded
 
 
 def tone(seconds: float, sample_rate: int = 44100, amplitude: float = 0.5) -> np.ndarray:
@@ -104,6 +132,81 @@ class PolishTest(unittest.TestCase):
     def test_silence_only_material_does_not_crash(self):
         polished = ap.polish_for_loop(np.zeros((44100, 2)), 44100)
         self.assertEqual(2, polished.ndim)
+
+
+@unittest.skipUnless(HAS_SOUNDFILE, "soundfile is not installed")
+class EncodeWithinGateTest(unittest.TestCase):
+    """The release gate's reaction to a real encoder round trip, not a simulated one.
+
+    The 2026-09-23 incident: four tracks sat at the identical -1 dBFS pre-encode peak and
+    decoded to true peaks 5-6 dB apart. A synthetic square-wave burst reproduces the mechanism
+    reliably (measured +3.65 dB in exploration, see EVOLUTION.md) while smooth material stays
+    close to its encoded level - that difference is exactly what encode_within_gate has to
+    correct for one and leave alone for the other.
+    """
+
+    def sharp_transient(self, sample_rate: int = 44100) -> np.ndarray:
+        """A near-square high-frequency burst riding on a continuous bed.
+
+        The bed keeps both edges above the silence threshold, so the only thing check_audio
+        can flag is the true peak - isolating exactly the defect this test is about from the
+        edge-silence and seam-jump checks, which a bare burst-in-silence would also trip.
+        """
+        t = np.arange(int(3.0 * sample_rate)) / sample_rate
+        bed = 0.2 * np.sin(2 * np.pi * 220 * t)
+        start = sample_rate // 4
+        length = 300
+        bed[start : start + length] = np.sign(np.sin(2 * np.pi * 8000 * t[start : start + length]))
+        frames = np.stack([bed, bed], axis=1).astype(np.float64)
+        peak = np.abs(frames).max()
+        frames *= (10 ** (ap.TARGET_PEAK_DBFS / 20.0)) / peak
+        return frames
+
+    def test_a_sharp_transient_overshoots_more_than_smooth_material(self):
+        """Proof the mechanism is real, independent of encode_within_gate's reaction to it."""
+        sharp = encode_decode_vorbis(self.sharp_transient())
+        smooth = encode_decode_vorbis(ap.polish_for_loop(tone(3.0, amplitude=0.999), 44100))
+        sharp_overshoot = 20 * np.log10(np.abs(sharp).max()) - ap.TARGET_PEAK_DBFS
+        smooth_overshoot = 20 * np.log10(np.abs(smooth).max()) - ap.TARGET_PEAK_DBFS
+        self.assertGreater(sharp_overshoot, 2.0, "the reproduction itself did not overshoot")
+        self.assertLess(smooth_overshoot, 1.0)
+
+    def test_a_clipping_take_is_corrected_and_passes(self):
+        frames, decoded, findings, attempts = ap.encode_within_gate(
+            self.sharp_transient(), 44100, encode_decode_vorbis
+        )
+        self.assertEqual([], findings, findings)
+        self.assertGreater(attempts, 1, "the first attempt should not already have passed")
+        self.assertLessEqual(20 * np.log10(np.abs(decoded).max()), ap.MAX_PEAK_DBFS)
+
+    def test_clean_material_passes_on_the_first_attempt(self):
+        frames, decoded, findings, attempts = ap.encode_within_gate(
+            ap.polish_for_loop(tone(3.0), 44100), 44100, encode_decode_vorbis
+        )
+        self.assertEqual([], findings, findings)
+        self.assertEqual(1, attempts)
+
+    def test_a_non_level_defect_is_not_masked_by_gain_reduction(self):
+        """Reducing gain cannot close a hole at the loop point - the loop must not pretend it can."""
+        frames = with_silent_tail(3.0, 1.0)
+        _, _, findings, attempts = ap.encode_within_gate(frames, 44100, encode_decode_vorbis)
+        self.assertTrue(findings)
+        self.assertTrue(any("loop point" in f for f in findings), findings)
+        self.assertEqual(1, attempts, "a non-level defect must not trigger more attempts")
+
+    def test_gives_up_after_max_attempts_on_a_take_that_never_converges(self):
+        def never_passes(_frames: np.ndarray) -> np.ndarray:
+            # Always reports the same 10 dB overshoot, however much gain was already removed -
+            # a stand-in for a take whose overshoot does not scale down with level.
+            frames = self.sharp_transient()
+            frames *= 10 ** (10.0 / 20.0)
+            return frames
+
+        _, _, findings, attempts = ap.encode_within_gate(
+            self.sharp_transient(), 44100, never_passes, max_attempts=3
+        )
+        self.assertTrue(findings)
+        self.assertEqual(3, attempts)
 
 
 if __name__ == "__main__":
