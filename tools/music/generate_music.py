@@ -25,6 +25,14 @@ from pathlib import Path
 DEFAULT_MANIFEST = Path("music/manifest.json")
 SUPPORTED_MODELS = {"small-music": 120, "medium": 380}
 
+# Both supported names select Stable Audio 3 post-trained checkpoints. The pinned upstream
+# runtime documents 8/1 as their inference mode; larger step counts are for ``*-base`` models,
+# and classifier-free guidance controls are base-model controls. PRs #194-#197 are the concrete
+# failure mode behind this guard: 50/5 produced dense, broadband computer noise in four
+# independent takes even though their ordinary peak/loop checks passed after level correction.
+POST_TRAINED_STEPS = 8
+POST_TRAINED_CFG_SCALE = 1.0
+
 # WAV stays allowed for a lossless local experiment; `ogg` is what the app ships.
 SUPPORTED_OUTPUT_FORMATS = {"wav", "ogg"}
 
@@ -92,10 +100,15 @@ def validate_track(track: dict) -> None:
             "output_format must be one of: "
             + ", ".join(sorted(SUPPORTED_OUTPUT_FORMATS))
         )
-    if int(track["steps"]) < 1:
-        raise SystemExit("steps must be >= 1")
-    if float(track["cfg_scale"]) <= 0:
-        raise SystemExit("cfg_scale must be > 0")
+    steps = int(track["steps"])
+    cfg_scale = float(track["cfg_scale"])
+    if steps != POST_TRAINED_STEPS or cfg_scale != POST_TRAINED_CFG_SCALE:
+        raise SystemExit(
+            f"{model} is a post-trained Stable Audio 3 checkpoint and must use "
+            f"steps={POST_TRAINED_STEPS}, cfg_scale={POST_TRAINED_CFG_SCALE:g}; "
+            "higher diffusion/CFG values belong to base checkpoints and produced corrupt "
+            "audio in PRs #194-#197"
+        )
 
 
 def write_vorbis(output_path: Path, frames, sample_rate: int) -> None:
