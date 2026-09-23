@@ -111,15 +111,22 @@ jobs:
           PY
 
       - name: Keep generated track as workflow artifact
+        # `always()`, damit eine Datei, die den Gate-Check in generate_music.py nicht besteht,
+        # trotzdem zum Nachhoeren/Analysieren hochgeladen wird statt mit dem fehlgeschlagenen Job
+        # verworfen zu werden - genau das fehlte am 2026-09-23, als vier Laeufe am Clipping-Gate
+        # scheiterten und die Ursache mangels Artefakt nicht am tatsaechlichen Signal geprueft
+        # werden konnte. `warn` statt `error`, weil ein frueherer Schritt (Modell laden, Praeflug)
+        # scheitern kann, bevor ueberhaupt eine Datei entsteht.
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: itoeva-music-${{ inputs.track_id }}-${{ github.run_id }}
           path: generated/music/*
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Create game-asset branch and pull request
-        if: ${{ inputs.create_pr }}
+        if: ${{ success() && inputs.create_pr }}
         env:
           # **Dieselbe Sperre wie in claude-primary-run.yml** - siehe die ausfuehrliche
           # Begruendung am Schritt "Pull Request eroeffnen" dort und PR #95.
