@@ -664,6 +664,48 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-23 - Freigabe-Gate reagiert auf gemessenen Ueberschwinger statt nur abzulehnen
+
+- **Ausgangsproblem:** Nach dem Merge der Quiet-Lanterns-/Lantern-Streets-Neukomposition (siehe
+  Eintraege darunter) sind alle vier angestossenen Generierungslaeufe (`home-evening-01`,
+  `main-day-01`, `morning-02`, `sport-02`) am Freigabe-Gate in `audio_polish.py` gescheitert -
+  drei davon massiv (dekodierter true peak +5.1 bis +5.6 dBFS), einer nur knapp (+0.27 dBFS).
+  Der Job endete jedes Mal, bevor die generierte Datei als Workflow-Artefakt erhalten blieb, also
+  war die eigentliche Ursache zunaechst nicht am Signal pruefbar (behoben in einem eigenen PR:
+  `if: always()` auf den Artefakt-Schritt).
+- **Befund:** Alle vier Takes lagen vor der Kodierung auf demselben Pegel (-1 dBFS, das Ziel von
+  `polish_for_loop`). Ein synthetischer Nachbau grenzte die Ursache ein: glattes, breitbandiges
+  Material (ein Sinuston, die urspruengliche Testdecke) ueberschwingt beim Vorbis-Dekodieren nur
+  um einen Bruchteil eines dB - exakt wie die zwei 2026-09-06 ausgelieferten Tracks. Ein kurzer,
+  fast rechteckiger Burst bei 8 kHz dagegen ueberschwingt real um +3.65 dB (siehe
+  `test_a_sharp_transient_overshoots_more_than_smooth_material`). Das passt zu einem
+  Diffusionsmodell, das bei `cfg_scale=5` (angehoben in PR #191 fuer die Klangqualitaet)
+  gelegentlich haertere, kantigere Transienten erzeugt als bei den vorher genutzten niedrigeren
+  Werten - eine reine Encoder-Eigenheit, keine Fehlkonfiguration des Gates.
+- **Entscheidung:** Statt eine einzelne feste Headroom-Konstante auf den bisher schlechtesten
+  beobachteten Fall aufzublasen (macht jeden gewoehnlichen Track leiser als noetig und haette
+  beim naechsten Ausreisser trotzdem versagen koennen), misst `encode_within_gate` in
+  `audio_polish.py` jetzt den tatsaechlich dekodierten Pegel und zieht bei einem reinen
+  Pegel-Befund genau die noetige Verstaerkung ab, bevor erneut kodiert wird - begrenzt auf
+  `MAX_PEAK_CORRECTION_ATTEMPTS = 4` Versuche, damit ein Take mit einem echten, nicht
+  pegelbedingten Defekt (Kantenstille, Sprung am Loop-Punkt) weiterhin sofort durchfaellt statt
+  in eine Schleife zu laufen. `generate_music.py` ruft diese Funktion jetzt auf, statt die
+  Schreib-/Dekodierlogik selbst zu wiederholen.
+- **Bewusst offen gelassen:** Ob `cfg_scale=5` neben dem Encoder-Ueberschwinger auch die
+  Rohqualitaet selbst haerter/kantiger klingen laesst (ein kantiger Transient vor der Kodierung
+  ist potenziell auch nach Pegelkorrektur noch hoerbar kantig), ist NICHT untersucht - dafuer
+  fehlt der direkte Zugriff auf die generierte Rohdatei. Der naechste Hoertest der vier
+  betroffenen Tracks sollte deshalb gezielt auch auf Haerte/Verzerrung achten, nicht nur auf die
+  bereits gemeldeten Punkte (langweilig, blechig, schraeg).
+- **Tests:** `EncodeWithinGateTest` in `tools/music/test_audio_polish.py` (neu, 5 Faelle:
+  Ueberschwinger-Nachweis, erfolgreiche Korrektur, sofortiger Erfolg bei glattem Material, ein
+  nicht-pegelbedingter Defekt wird nicht durch Pegelabsenkung maskiert, Abbruch nach
+  Versuchslimit) - braucht einen echten Vorbis-Roundtrip (`soundfile`), `verify-music-tooling.yml`
+  installiert das jetzt zusaetzlich zu numpy. `python -m unittest discover --start-directory
+  tools/music --pattern 'test_*.py'`: 20 Tests gruen.
+- **Naechster Schritt:** Die vier Tracks mit dem reparierten Gate neu generieren; jeder
+  resultierende PR braucht wie immer einen menschlichen Hoertest vor dem Merge.
+
 ### 2026-09-21 - Lantern Streets neu komponiert, zwei neue Varianten, ein Name bewusst nicht uebernommen
 
 - **Ausgangsproblem:** Direkt im Anschluss an die Quiet-Lanterns-Neukomposition (siehe Eintrag
