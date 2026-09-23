@@ -150,7 +150,7 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 
 | Rolle | wofuer | Track |
 |---|---|---|
-| `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges |
+| `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges, `main-day-03` / Der verpixelste Tag meines Lebens |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
 | `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light; `morning-02` / Paper Dawn definiert und im Manifest angelegt, noch nicht erzeugt |
 | `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride; `sport-02` / Second Wind definiert und im Manifest angelegt, noch nicht erzeugt |

@@ -97,6 +97,14 @@ dem Loop-Punkt. Als Pilot ist nur `theme-hootlet.txt` neu gefasst (Seed und 8/1 
 naechste Schritt ist genau ein manueller Lauf von **Generate Itoeva Music** mit `theme-hootlet`,
 danach Hoertest und Messvergleich - erst dann die uebrigen vier einzeln angehen.
 
+**Stehende Regel des Nutzers (23.09.):** Jedes neu erzeugte Stueck kommt SOFORT in die
+Hoertest-APK - den Asset-Branch `generated/music-...` in den Hoertest-Branch mergen, pushen,
+**Deliver APK** auf diesem Branch ausloesen, Drive-Beschreibung pruefen. "In der Musik-Liste der
+Einstellungen" heisst zugleich "im Spiel": `PlayMusic` findet jede Datei ueber ihren Namen und
+nimmt sie ohne Codeaenderung in Rotation bzw. als Thema; neu ist je Stueck nur der Titel
+(`MusicCatalog.TITLES` + `strings.xml` DE/EN). Nach `main` geht Audio weiterhin erst nach dem
+Hoertest.
+
 **Musik-Engine, Stand 23.09. nachts:** Gaeste spielen beim Hereinkommen ihr Thema kurz an
 (`PlayMusicCue`), Rollenwechsel bestaetigen sich 10 s (`PlayMusicTransition`). Engine und neuer
 Starlet-Prompt sind auf `main`; die ungehoerten Audiodateien bleiben im Hoertest-Paket (PR #213).

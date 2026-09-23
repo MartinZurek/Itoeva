@@ -62,6 +62,20 @@
       "notes": "Zweite Variante derselben Rolle wie main-day-01, nicht deren Ersatz. Gemeldet: innerhalb eines stabilen Zustands bleibt dieselbe Musik zu lange unveraendert. Gleiche musikalische Familie - warmer, japanisch gefaerbter jazzy Lo-Fi -, aber etwas leichter und bewegter: 88 statt 82 BPM, gebuerstete Snare, jeweils nur ein melodiefuehrendes Instrument. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Welche der Varianten laeuft, entscheidet PlayMusicRotation nach der Rolle, nicht statt ihrer. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert."
     },
     {
+      "id": "main-day-03",
+      "title": "Der verpixelste Tag meines Lebens",
+      "role": "main_day_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_main_day_03",
+      "prompt_file": "music/prompts/main-day-03.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 27092026,
+      "notes": "Dritte Variante der Rolle main_day_background, gewuenscht vom Nutzer als Hommage: das melancholische, bittersuesse Gefuehl eines deutschen Rap-Beats, den er mag - ausdruecklich NICHT dessen Nachbildung. Uebernommen wird nur die Haltung (Rueckblick auf einen schoenen Tag, warm und ein wenig traurig, hoffnungsvoll darunter) und die Gattung (Boom-Bap mit Klavierloop und Streichern). Melodie, Akkordfolge, Tempo und Klangfarben sind eigene Vorgaben; der Prompt nennt weder Kuenstler noch Stueck. Die Pixelwelt steckt in einer weichen 8-Bit-Rechteckstimme, die jede zweite Runde die Klaviermelodie eine Oktave hoeher verdoppelt. Aufbau nach dem Hootlet-Pilotmuster: Tempo, Puls und Motiv zuerst, kein Ein- und kein Ausblenden. Gleichzeitig die erste dritte Tagesvariante - MAIN_DAY traegt den Mittag ueberall und ist Rueckfall fuer Morgen und Abend (siehe Track-Abdeckung in EVOLUTION.md)."
+    },
+    {
       "id": "sport-01",
       "title": "Full Stride",
       "role": "sport_background",
