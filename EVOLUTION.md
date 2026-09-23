@@ -664,6 +664,26 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-23 - Zwei weitere Hommagen: "The Last Evo" (morning-03) und "Ita Stella" (dream-01)
+
+**Wunsch des Nutzers:** Nach "Der verpixelste Tag meines Lebens" zwei weitere Stuecke in derselben
+Art - Hommage an das GEFUEHL zweier grosser Filmthemen, nicht an deren Klang. Wie bei main-day-03
+nennen die Prompts weder Film, Komponist noch Stueck; Melodie, Akkorde, Tempo und Besetzung sind
+eigene Vorgaben, die Pixelwelt steckt jeweils in einer weichen 8-Bit-Stimme, die jede zweite
+Runde die Melodie verdoppelt.
+
+- **The Last Evo** (`morning-03`, 70 BPM, d-B-g-A): edel, still stolz, ein wenig Trauer um etwas
+  Vergehendes, darunter Hoffnung - Cello-Melodie, Bambusfloete als Echo, Taiko auf eins und drei,
+  Koto in Achteln. Morgen, weil der Sonnenaufgang das Bild dieses Gefuehls ist.
+- **Ita Stella** (`dream-01`, 72 BPM, e-C-G-D): Staunen, Sehnsucht, leise Hoffnung unter einem
+  Sternenhimmel - Pfeifenorgel mit gebrochenen Akkorden, Klavier-Melodie, ein Holz-Tick wie eine
+  kleine Uhr, kein Schlagzeug.
+
+**Engine:** Damit "in der Musikliste" auch "im Spiel" heisst (stehende Regel des Nutzers), bekommt
+die bisher nie aufgeloeste Rolle `DREAM` ihren Platz: `MusicResolver.candidates()` setzt sie nachts
+im Schlafzimmer vor den Abendtrack. Die sieben Nachtstunden klangen dort bis heute wie der Abend
+davor (siehe Track-Abdeckung unten). Fehlt das Stueck, bleibt alles wie bisher. Vier neue Tests.
+
 ### 2026-09-23 - Neuer Tagestrack "Der verpixelste Tag meines Lebens" (main-day-03)
 
 **Wunsch des Nutzers:** ein eigener Track als Hommage an das melancholische Gefuehl eines

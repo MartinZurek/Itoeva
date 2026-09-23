@@ -285,4 +285,50 @@ class MusicResolverTest {
         assertNull(MusicRole.byManifestName("gibt_es_nicht"))
         assertEquals("itoeva_home_evening_01", MusicRole.HOME_EVENING.androidResource)
     }
+
+    // ================= Die Nacht im Schlafzimmer =================
+
+    private val mitNacht = heute + MusicRole.DREAM
+
+    /** Seit "Ita Stella": Wer nachts im Schlafzimmer ist, hoert die Nacht und nicht den Abend. */
+    @Test
+    fun `nachts im Schlafzimmer klingt die Nacht`() {
+        assertEquals(
+            MusicRole.DREAM,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.BEDROOM), mitNacht)
+        )
+    }
+
+    /** Nur dort - nachts im Wohnzimmer und abends im Schlafzimmer bleibt es beim Abendtrack. */
+    @Test
+    fun `die Nachtmusik bleibt im Schlafzimmer und in der Nacht`() {
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.LIVING), mitNacht)
+        )
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.BEDROOM), mitNacht)
+        )
+    }
+
+    /** Fehlt das Stueck, bleibt die bisherige Nacht - kein stilles Schlafzimmer. */
+    @Test
+    fun `ohne Nachtstueck bleibt der Abendtrack`() {
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.BEDROOM), heute)
+        )
+    }
+
+    /** Das eigene Stueck am Tagesanfang geht auch der Nachtmusik vor. */
+    @Test
+    fun `die Begruessung schlaegt auch die Nachtmusik`() {
+        val nachts = ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.BEDROOM)
+            .copy(characterTheme = AvatarSpecies.STARLET)
+        assertEquals(
+            MusicRole.CHARACTER_THEME,
+            MusicResolver.resolve(nachts, mitNacht + MusicRole.CHARACTER_THEME)
+        )
+    }
 }
