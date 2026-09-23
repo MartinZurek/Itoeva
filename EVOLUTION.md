@@ -664,6 +664,81 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-23 - Audit der sechs Charakter-Themes, Prompt-Pilot fuer Hootlet
+
+- **Ausgangsproblem und Nutzerwirkung:** Von den sechs ausgelieferten Charakter-Themes gefaellt
+  dem Nutzer nur Gloops Stueck; die Musikqualitaet der uebrigen fuenf empfindet er insgesamt als zu
+  niedrig. Auftrag: erst ein belegter Audit, dann genau ein kleiner Pilot, keine Massengenerierung.
+- **Evidenzklassen:** `FACT` fuer Prompts, Manifest, Provenienz und die unten stehenden
+  Signalmessungen der dekodierten Dateien. `DOCUMENTED INTENT` fuer das Nutzerurteil. Die Dateien
+  wurden **nicht angehoert**; jede Aussage zum Klangeindruck ist eine Messung oder eine
+  Modellannahme, kein Hoerbefund. `UNVERIFIED`: ob der Text-Encoder von `small-music` ~300-Woerter-
+  Prompts vollstaendig liest (Modellkarte und Upstream-Code waren aus der Sitzung nicht erreichbar).
+- **Vergleichbarkeit:** Alle sechs Dateien entstanden am 2026-09-19 mit 8/1 und genau den heute
+  eingecheckten Prompts (`prompt_sha256` in `music/generated/theme-*.json` stimmt ueberein). Der
+  Unterschied zwischen Gloop und den uebrigen liegt also nur in Prompt und Seed.
+- **Messmethode** (dekodiertes Ogg, 44,1 kHz Stereo; reproduzierbar mit numpy/scipy/pyloudnorm):
+  Lautheit nach BS.1770, True Peak bei 4-fachem Oversampling, Bandpegel aus dem gemittelten
+  Leistungsspektrum relativ zum lautesten Band, Pulsklarheit = normierte Autokorrelation des
+  spektralen Flusses (Hop 512) beim Prompt-Tempo bzw. halb/doppelt, Phrasenwiederholung =
+  Chroma-Aehnlichkeit bei 1/2/4/8 Takten (Prompt-Tempo) minus Median aller Lags von 1 bis 40 s,
+  Loop-Huellkurve = RMS in 0,5-s-Fenstern der letzten und ersten fuenf Sekunden.
+- **Technisch unauffaellig bei allen sechs:** 89,0 bis 89,8 s, Stereo-Ogg/Vorbis, True Peak
+  -0,6 bis -1,3 dBTP, -13,9 bis -17,9 LUFS, DC unter -62 dBFS, `check_audio` ohne Befund, keine
+  Stufe an der Naht. Pegel, Encoding und Clipping sind **nicht** die Ursache.
+- **Befund je Theme:**
+  - *Hootlet* (Vorgabe: das klarste, gleichmaessiger Puls, wiederkehrendes Motiv): schwaechster
+    Puls aller sechs (0,15; beim Prompt-Tempo 0,04), keine Wiederholung im Taktraster (2/4 Takte
+    unter dem Median), 1-2 kHz bei -26 dB und 2-4 kHz bei -41 dB - so dunkel wie Gloop. Blendet in
+    den letzten fuenf Sekunden von -15 auf -59 dBFS aus (0,6 dB ueber der Stille-Schwelle des Gates)
+    und setzt dann mit -14 dBFS ein. Der Prompt widerspricht sich: "klar/praezise" neben weichen
+    Schlegeln, Filzklavier, analoger Waerme, "kleinem runden" Bass und "leichtestem" Shaker.
+  - *Fennec*: kein Puls beim Prompt-Tempo (0,01), keine Phrasenwiederholung, erste und zweite
+    Haelfte harmonisch fast identisch (0,998), ausdruecklich tiefpassgefiltertes Rhodes; Ausblenden
+    auf -58 dBFS.
+  - *Wyrmling*: praktisch Mono (L/R-Korrelation 0,999), rauschartigste Signalform und am wenigsten
+    tonal fokussiert (bei verzerrter Gitarre teils gewollt), harmonisch statisch; Ausblenden um
+    28 dB. Tempo trifft den Prompt (~120 zu 116 BPM).
+  - *Puffling*: klarste Tonalitaet (0,88), Tempo passt, leichte 1-2-Takt-Wiederholung - der
+    musikalisch am besten gemessene der fuenf. Hauptbefund: 28 dB Ausblenden am Ende.
+  - *Starlet*: umgekehrte Naht - die ersten zehn Sekunden liegen bei -33 dBFS, das Ende bei -16;
+    Lautheitsspanne 14 dB; Anteil 20-60 Hz nur 5 dB unter dem lautesten Band (Tieftonrumpeln bei
+    Floete und Filzklavier, vermutlich die "low frame drum"); unklarste Tonalitaet (0,64).
+- **Was Gloop messbar anders macht:** Puls passend zum Prompt (~2 x 56 BPM), deutlichste
+  Wiederholung auf Phrasenebene (2 Takte +0,13, 4 Takte +0,11), ein allmaehlicher Bogen statt
+  Stillstand (Helligkeit je 10 s von 114 auf 199 Hz, Pegel von -18,7 auf bis zu -14,9 dBFS) und nur
+  ~1,5 s Ausklang statt fuenf. Gloop ist zugleich das dunkelste Stueck - Dunkelheit allein erklaert
+  die Ablehnung also nicht; entscheidend ist, dass sein weicher Klang zur Figur passt und im Prompt
+  keinen Gegenspieler hat. Sein Prompt uebersetzt Charakter in Melodieverhalten ("die Antwort kommt
+  etwas zu spaet", "eine harmlose Extranote"), statt ihn nur mit Adjektiven zu beschreiben.
+- **Uebergreifend (nicht nur Hootlet):** Vier der fuenf ungeliebten Takes enden mit einem
+  mehrsekuendigen Ausblenden und beginnen voll - bei jeder 90-Sekunden-Schleife ein hoerbares
+  Absinken mit hartem Wiedereinstieg, das `check_audio` bewusst nicht erfasst (es prueft Stille
+  unter -60 dBFS, keinen Ausklang). Alle Prompts haben 285-305 Woerter, nennen Kerninformationen
+  erst ab dem zweiten Absatz und enden mit rund 15 bis 20 benannten Ausschluessen. Modellannahme,
+  ungeprueft: Text-zu-Audio-Modelle mit T5-artigem Encoder verarbeiten Negation schlecht und
+  koennen lange Prompts kuerzen.
+- **Entscheidung - Pilot Hootlet:** groesster belegbarer Abstand zwischen Vorgabe und Ergebnis
+  (alle drei Kernvorgaben verfehlt), dazu ein direkter Widerspruch im Prompt selbst. Der neue
+  Prompt hat 202 statt 293 Woerter, nennt Tempo, Puls, Motiv und Wiederholungsabstand (alle
+  zwei Takte) im ersten Drittel, gibt vier Stimmen je genau eine Aufgabe, streicht die Weichmacher,
+  verlangt ausdruecklich kein Ausblenden und fuehrt nur noch fuenf Ausschluesse. Charakter,
+  Instrumentenfamilie (Vibraphon, Klavier, Bass, leichtes Schlagzeug), Singbarkeit und
+  Instrumentalfassung bleiben. Seed und 8/1 bleiben unveraendert, damit sich nur der Prompt
+  aendert; welche Einzelaenderung wirkt, laesst sich mit einem Take nicht trennen.
+- **Messbare Erwartung an den neuen Take** (ersetzt nicht den Hoertest): Puls beim Prompt-Tempo
+  deutlich ueber 0,04 (Gloop 0,40), 2-Takt-Wiederholung ueber dem Median (Gloop +0,13), 1-2 kHz
+  hoeher als -26 dB ohne Haerte, Pegelabfall in den letzten fuenf Sekunden unter ~10 dB statt 44 dB,
+  `check_audio` ohne Befund.
+- **Bewusst nicht geaendert:** Gloop, die vier uebrigen Themes, 8/1, `audio_polish.py`, Workflows,
+  App-Code, ausgelieferte Audiodateien. Keine Erzeugung ausgeloest.
+- **Ruecksetzweg:** Revert dieses PRs stellt Prompt und Notiz wieder her; die ausgelieferte Datei
+  bleibt ohnehin bis zum Merge eines gehoerten Asset-PRs unveraendert.
+- **Offene Fragen:** Hoert der Nutzer bei Hootlet vor allem fehlende Klarheit, fehlenden Puls,
+  fehlende Melodie oder den Loop-Einbruch? Ist das Ausblenden am Ende der anderen Themes beim
+  Hoeren im Spiel ueberhaupt aufgefallen? Traegt der Pilot, folgen die uebrigen vier einzeln nach
+  derselben Methode.
+
 ### 2026-09-23 - Post-trainiertes Musikmodell wieder im vorgesehenen Inferenzmodus
 
 - **Ausgangsproblem und Nutzerwirkung:** Die vier nach der Gate-Korrektur erzeugten Takes in PR

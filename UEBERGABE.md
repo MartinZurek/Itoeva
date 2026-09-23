@@ -90,6 +90,13 @@ Nach Merge dieses Schutzes die vier Tracks einzeln neu erzeugen und jeden result
 erneut hoeren. Auch `home-evening-02`, dessen noch nicht gehoerter Eintrag zwischenzeitlich auf
 32/4 stand, ist vorsorglich auf 8/1 zurueckgesetzt.
 
+**Charakter-Themes, Stand 23.09. abends:** Nur Gloops Thema gefaellt. Ein Mess-Audit aller sechs
+Takes (EVOLUTION.md, Eintrag "Audit der sechs Charakter-Themes") fand keine Pegel- oder
+Encoding-Fehler, aber verfehlte Kernvorgaben und bei vier Takes ein mehrsekuendiges Ausblenden vor
+dem Loop-Punkt. Als Pilot ist nur `theme-hootlet.txt` neu gefasst (Seed und 8/1 unveraendert). Der
+naechste Schritt ist genau ein manueller Lauf von **Generate Itoeva Music** mit `theme-hootlet`,
+danach Hoertest und Messvergleich - erst dann die uebrigen vier einzeln angehen.
+
 Der neue ausdruecklich freigegebene Hauptauftrag steht in
 [`LIVING_AGENT.md`](LIVING_AGENT.md). **NT-063, NT-067, NT-064, NT-065 und NT-066 (Schnitte 2a,
 2b, 3, 4 und 5) sind umgesetzt.** Der reine Kotlin-Kern steht weiterhin in genau fuenf Dateien unter
