@@ -60,7 +60,11 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
     /** Bewegung und Anstrengung - energischer als der normale Tag. */
     SPORT("sport_background", "itoeva_sport"),
 
-    /** Traum-Szenen. Bewusst schon benannt, damit sie spaeter keine Sonderregel brauchen. */
+    /**
+     * Die Nacht im Schlafzimmer - Schlaf unter Sternen. Lange nur benannt und nie aufgeloest;
+     * seit "Ita Stella" (dream-01) klingt die Nacht dort nicht mehr wie der Abend (siehe
+     * [MusicResolver.candidates]).
+     */
     DREAM("dream_background", "itoeva_dream"),
 
     /**
@@ -206,7 +210,14 @@ object MusicResolver {
 
         when (context.dayPhase) {
             // Nachts gibt es keinen Rueckfall auf den Tages-Track. Lieber still als munter.
-            PlayAmbientActivity.DayPhase.NIGHT -> add(MusicRole.HOME_EVENING)
+            //
+            // Im Schlafzimmer zuerst die Nacht selbst: Dort schlaeft das Wesen, und bis hierhin
+            // klangen die sieben Nachtstunden wie der Abend davor. Fehlt das Stueck, bleibt es
+            // beim Abendtrack - dieselbe Rangfolge wie ueberall.
+            PlayAmbientActivity.DayPhase.NIGHT -> {
+                if (context.place == PlayScene.Place.BEDROOM) add(MusicRole.DREAM)
+                add(MusicRole.HOME_EVENING)
+            }
 
             PlayAmbientActivity.DayPhase.EVENING ->
                 if (context.place in QUIET_PLACES) {

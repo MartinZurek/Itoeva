@@ -754,10 +754,16 @@
     <string name="music_role_sport">Bewegung am Sportplatz</string>
     <string name="music_role_home_evening">Ruhiger Abend, Nacht und stille Naturorte</string>
     <string name="music_role_character_theme">Das eigene Thema des anwesenden Wesens, einmal am Tag</string>
-    <string name="music_role_dream">Traum-Szenen - noch nicht ausgeliefert</string>
+    <string name="music_role_dream">Nachts im Schlafzimmer - Schlaf unter Sternen</string>
     <string name="music_title_morning_01">First Light</string>
     <string name="music_title_morning_02">Paper Dawn</string>
+<<<<<<< HEAD
     <string name="music_title_main_day_01">Quiet Rooftops</string>
+=======
+    <string name="music_title_morning_03">The Last Evo</string>
+    <string name="music_title_dream_01">Ita Stella</string>
+    <string name="music_title_main_day_01">Lantern Streets</string>
+>>>>>>> origin/main
     <string name="music_title_main_day_02">Paper Bridges</string>
     <string name="music_title_main_day_03">Der verpixelste Tag meines Lebens</string>
     <string name="music_title_sport_01">Full Stride</string>

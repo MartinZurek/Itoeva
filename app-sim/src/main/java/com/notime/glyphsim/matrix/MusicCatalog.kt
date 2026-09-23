@@ -32,6 +32,7 @@ object MusicCatalog {
     private val TITLES: Map<Pair<MusicRole, Int>, Int> = mapOf(
         (MusicRole.MORNING to 1) to R.string.music_title_morning_01,
         (MusicRole.MORNING to 2) to R.string.music_title_morning_02,
+        (MusicRole.MORNING to 3) to R.string.music_title_morning_03,
         (MusicRole.MAIN_DAY to 1) to R.string.music_title_main_day_01,
         (MusicRole.MAIN_DAY to 2) to R.string.music_title_main_day_02,
         (MusicRole.MAIN_DAY to 3) to R.string.music_title_main_day_03,
@@ -39,6 +40,7 @@ object MusicCatalog {
         (MusicRole.SPORT to 2) to R.string.music_title_sport_02,
         (MusicRole.HOME_EVENING to 1) to R.string.music_title_home_evening_01,
         (MusicRole.HOME_EVENING to 2) to R.string.music_title_home_evening_02,
+        (MusicRole.DREAM to 1) to R.string.music_title_dream_01,
         (MusicRole.CHARACTER_THEME to 1) to R.string.music_title_theme_puffling,
         (MusicRole.CHARACTER_THEME to 2) to R.string.music_title_theme_starlet,
         (MusicRole.CHARACTER_THEME to 3) to R.string.music_title_theme_wyrmling,

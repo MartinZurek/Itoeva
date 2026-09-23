@@ -761,9 +761,11 @@
     <string name="music_role_sport">Moving at the sports ground</string>
     <string name="music_role_home_evening">Quiet evening, night and calm outdoor places</string>
     <string name="music_role_character_theme">The present creature\'s own theme, once a day</string>
-    <string name="music_role_dream">Dream scenes - not shipped yet</string>
+    <string name="music_role_dream">Night in the bedroom - sleeping under the stars</string>
     <string name="music_title_morning_01">First Light</string>
     <string name="music_title_morning_02">Paper Dawn</string>
+    <string name="music_title_morning_03">The Last Evo</string>
+    <string name="music_title_dream_01">Ita Stella</string>
     <string name="music_title_main_day_01">Quiet Rooftops</string>
     <string name="music_title_main_day_02">Paper Bridges</string>
     <!-- Bewusst deutsch auch hier: eine Hommage an einen deutschen Titel, deren Wortspiel sich nicht uebersetzt. -->
