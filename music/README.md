@@ -138,7 +138,7 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 |---|---|---|
 | `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Quiet Rooftops, `main-day-02` / Paper Bridges |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Amber Windows; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
-| `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light; `morning-02` / Paper Dawn definiert und im Manifest angelegt, noch nicht erzeugt |
+| `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light; `morning-02` / Paper Dawn |
 | `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride; `sport-02` / Second Wind |
 | `dream_background` | Traum-Szenen | noch keiner - `MusicResolver.candidates()` setzt diese Rolle bislang auch noch gar nicht ein; ausser einem Track braucht es dort noch ein eigenes Signal "es wird gerade getraeumt" in `MusicContext` |
 | `character_theme_background` | das persoenliche Stueck des anwesenden Wesens, Variante 01-06 fest je Spezies | `theme-puffling` / Puffling's Theme (Variante 01), `theme-starlet` / Starlet's Theme (Variante 02), `theme-wyrmling` / Wyrmling's Theme (Variante 03), `theme-fennec` / Fennec's Theme (Variante 04), `theme-gloop` / Gloop's Theme (Variante 05), `theme-hootlet` / Hootlet's Theme (Variante 06) |
