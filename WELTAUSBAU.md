@@ -34,6 +34,10 @@ erst nach dem Hörtest nach `main`.
 - Sonnenaufgang und -untergang als eigene kurze Momente: ein Einspieler wie beim Gast
   (`PlayMusicCue`), einmal je Übergang, wenn der Bildschirm gerade an ist.
 - Drachensteigen bekommt eine eigene Aktivitätsrolle (*Wind*).
+- **Lautstärkeausgleich je Stück:** Gemessen am 2026-09-24 liegen die Stücke zwischen −19,5 und
+  −10,8 LUFS (*99 Pixels* ist fast doppelt so laut wie *Bitter Pixel Symphony*). Ein kleines
+  Skript misst jede Datei und schreibt eine reine Kotlin-Tabelle; `PlayMusic` gleicht damit auf
+  ein gemeinsames Ziel (etwa −16 LUFS) an, statt jede Datei mit derselben Lautstärke abzuspielen.
 
 ## Stufe 3 – Neuer Ort: die Spielhalle (visuell + Musik)
 
