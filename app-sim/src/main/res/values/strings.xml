@@ -558,6 +558,7 @@
     <string name="talk_place_forest">in the forest</string>
     <string name="talk_place_meadow">out in the meadow</string>
     <string name="talk_place_city">in the city</string>
+    <string name="talk_place_arcade">at the arcade</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. -->
     <string name="remark_rain">It is raining outside. Sounds quite good at the window.</string>
@@ -763,6 +764,7 @@
     <string name="music_role_shop">In the shop</string>
     <string name="music_role_fishing">While fishing</string>
     <string name="music_role_ballgame">During a ball game - basketball and football</string>
+    <string name="music_role_arcade">In the arcade</string>
     <string name="music_role_sport">Moving at the sports ground</string>
     <string name="music_role_home_evening">Quiet evening, night and calm outdoor places</string>
     <string name="music_role_character_theme">The present creature\'s own theme, once a day</string>
@@ -787,6 +789,8 @@
     <string name="music_title_shop_01">Checkout Bossa</string>
     <string name="music_title_fishing_01">Gone Pixel Fishing</string>
     <string name="music_title_ballgame_01">Pixel Hoops</string>
+    <string name="music_title_arcade_01">Insert Coin</string>
+    <string name="music_title_arcade_02">Continue?</string>
     <string name="music_title_home_evening_01">Quiet Lanterns</string>
     <string name="music_title_home_evening_02">Late Windows</string>
     <string name="music_title_theme_puffling">Puffling\'s Theme</string>

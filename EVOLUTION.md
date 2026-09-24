@@ -664,6 +664,27 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-24 - Weltausbau Stufe 3: die Spielhalle
+
+**Wunsch des Nutzers:** neue Orte, weil die Welt zu monoton ist ("leg los, wo es fuer dich am besten
+ist"). Die Spielhalle zuerst, weil sie zur Pixelwelt passt wie kein anderer Ort und eine neue Art zu
+spielen mitbringt: Das Wesen spielt selbst.
+
+- `PlayScene.Place.ARCADE` (hinten angehaengt, damit gespeicherte Orte gueltig bleiben), Innenraum,
+  Besuch erlaubt; `Station.ARCADE`.
+- Requisiten: `ARCADE_CABINET` (Schild, Bildschirm mit dunkler Fuge zur Gehaeusewand, Pult mit
+  Knueppel und Knoepfen, Muenzschlitz), `CLAW_MACHINE`, `NEON_SIGN`. Umgebungsanimation: Demobild
+  im Leerlauf, laufendes Spiel am benutzten Automaten (heller Punkt ueber flackerndem Feld),
+  pulsierendes Neon. In der Zeichenraster-Vorschau geprueft (48 und 84 Zellen breit); zwei
+  Korrekturen daraus: Fuge um den Bildschirm, Aufstellpunkte ohne Ueberlappung.
+- Ablauf `PlayRoutines.arcadeRoutine` in der Freizeit (GENERAL): hingehen, einschalten (wie der
+  Fernseher ueber `Switch`), spielen, jubeln, ausschalten.
+- Bewohner: Gloop und Wyrmling besuchen die Spielhalle.
+- Musik: Rolle `ARCADE` vor Stadt und Tag; Prompts *Insert Coin* (Chiptune) und *Continue?*
+  (Synthwave).
+- Gespraech: "in der Spielhalle" / "at the arcade".
+- 6 neue Tests (`ArcadeTest`), zwei bestehende nachgezogen.
+
 ### 2026-09-24 - Weltausbau Stufe 1: Musik kennt Umgebung und Aktivitaet
 
 **Wunsch des Nutzers:** Die Engine soll intelligent wissen, wo und wann das Wesen ist - nicht nur

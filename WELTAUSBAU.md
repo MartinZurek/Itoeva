@@ -43,9 +43,13 @@ erst nach dem Hörtest nach `main`.
 
 Warum zuerst: Sie passt zur Pixelwelt wie kein anderer Ort und bringt eine neue Art zu spielen
 mit – das Wesen spielt selbst ein Spiel.
-- Ort `ARCADE` in `PlayScene` (Automaten, Neonlicht, Teppich), erreichbar aus der Stadt.
-- Interaktion: an einem Automaten spielen; Highscore als Erinnerung in der Welt.
-- Musik: Chiptune-Hommage an klassische Automatenspiele (Rolle `ARCADE`).
+- [x] Ort `ARCADE` in `PlayScene`: zwei Spielautomaten mit leuchtendem Bildschirm (Demobild im
+      Leerlauf, laufendes Spiel beim Benutzen), Greifautomat, Neonschild. Innenraum mit Besuch
+      (Gloop und Wyrmling kommen vorbei).
+- [x] Interaktion: Freizeit-Ablauf `arcadeRoutine` - hingehen, einschalten, spielen, jubeln,
+      ausschalten.
+- [x] Musik: Rolle `ARCADE` mit *Insert Coin* (Chiptune) und *Continue?* (Synthwave).
+- [ ] Später: Highscore als Erinnerung in der Welt.
 
 ## Stufe 4 – Neuer Ort: das Café
 

@@ -129,7 +129,16 @@ object PlayScene {
      * der Schleim toepfert, der Wuestenfuchs graebt, die Eule spielt. Es ist der Gegenentwurf zum
      * Arbeitsplatz - dort geht sie einem BERUF nach, hier tut sie etwas, weil sie es ist.
      */
-    enum class Place { BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SPORT, POND, SHOP, STREET, FOREST, MEADOW, CITY }
+    enum class Place {
+        BEDROOM, BATH, DESK, WORK, KITCHEN, NOOK, LIVING, CRAFT, PARK, SPORT, POND, SHOP, STREET, FOREST, MEADOW, CITY,
+
+        /**
+         * Die Spielhalle (Weltausbau Stufe 3, siehe `WELTAUSBAU.md`) - ein Innenraum in der Stadt
+         * mit Spielautomaten und Neonschild. Bewusst hinten angehaengt: Gespeicherte Orte
+         * bleiben gueltig, und alle bisherigen Ordnungszahlen aendern sich nicht.
+         */
+        ARCADE
+    }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
     private val Place.isIndoors: Boolean
@@ -164,7 +173,9 @@ object PlayScene {
         // Gegenteil dessen, wofuer man in den Wald geht, und ein Fremder zwischen den Baeumen
         // wirkt eher beunruhigend als belebt.
         // Die STADT gehoert dazu wie die Strasse - ein Platz, an dem Leute ohnehin unterwegs sind.
-        Place.PARK, Place.SPORT, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY -> true
+        // Die SPIELHALLE erst recht: Man geht dorthin, um unter Leuten zu sein.
+        Place.PARK, Place.SPORT, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY,
+        Place.ARCADE -> true
         // Die eigene Ecke ([Place.CRAFT]) ausdruecklich NICHT: Wer dort sitzt, hat sich
         // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
         //
@@ -186,7 +197,7 @@ object PlayScene {
      * Bett", und wo das Bett steht, weiss allein diese Datei. Genau daran haengt, ob sich die
      * Welt spaeter erweitern laesst, ohne dass die Ablaeufe brechen.
      */
-    enum class Station { BED, SEAT, DESK, TABLE, FRIDGE, BOOKSHELF, LAMP, TV, BENCH, DOOR, RACK, CHECKOUT, TUB, BASIN, WORKPLACE, CRAFT }
+    enum class Station { BED, SEAT, DESK, TABLE, FRIDGE, BOOKSHELF, LAMP, TV, BENCH, DOOR, RACK, CHECKOUT, TUB, BASIN, WORKPLACE, CRAFT, ARCADE }
 
     /** Aufloesung eines [Station] in Szenen-Zellen: waagerechte Mitte und Aufsetzzeile. */
     data class SceneSpot(val centerX: Int, val groundY: Int)
@@ -527,6 +538,9 @@ object PlayScene {
         Place.MEADOW -> 0.20f
         // Wie die Strasse, aus demselben Grund: auch die Stadt ist ein Weg, kein Aufenthaltsort.
         Place.CITY -> 0.08f
+        // Zwischen den beiden Automaten - in Ruhe steht die Figur und sieht sich um. Bei 0,46
+        // ragte sie in der Vorschau in den zweiten Automaten hinein.
+        Place.ARCADE -> 0.36f
     }
 
     /**
@@ -1101,6 +1115,15 @@ object PlayScene {
             // der Figur und macht auch auf schmalen Telefonen beide Funktionen lesbar.
             Placement(RACK, anchorX = 0.08f, station = Station.RACK),
             Placement(CHECKOUT, anchorX = 0.90f, station = Station.CHECKOUT)
+        ))
+        // Die SPIELHALLE: links der Automat, an dem gespielt wird, daneben ein zweiter im
+        // Demobild, rechts der Greifautomat - drei verschiedene Silhouetten, damit sich die Reihe
+        // nicht wie ein einziges Moebel liest. Darueber das Neonschild als Wandleuchte.
+        Place.ARCADE -> besideDoor(listOf(
+            Placement(ARCADE_CABINET, anchorX = 0.08f, station = Station.ARCADE),
+            Placement(NEON_SIGN, anchorX = 0.40f, liftCells = 12, brightness = BACKDROP),
+            Placement(ARCADE_CABINET, anchorX = 0.58f, brightness = BACKDROP),
+            Placement(CLAW_MACHINE, anchorX = 0.80f)
         ))
         // **Das Draussen, das IHM gehoert** - siehe [habitatPlacements].
         Place.PARK -> habitatPlacements(species)
@@ -3077,6 +3100,46 @@ object PlayScene {
     )
 
     /**
+     * Spielautomat - Schild oben, Bildschirm im Rahmen, Steuerpult mit Knueppel und zwei Knoepfen,
+     * Muenzschlitz. Als Umriss, damit der Bildschirm ([Prop.screenArea]) als eigene Lichtebene
+     * darin leuchten kann (siehe [ambient]: Demobild im Leerlauf, laufendes Spiel beim Benutzen).
+     */
+    private val ARCADE_CABINET = Prop(
+        width = 9, height = 16,
+        // Zwischen Gehaeusewand und Bildschirm bleibt je eine dunkle Spalte: Mit Rahmenlinien
+        // direkt daneben verschmolzen Wand, Rahmen und Bild in der Vorschau zu einem Block.
+        art = rect(0, 0, 8, 0) + hLine(0, 8, 2) + vLine(0, 0, 15) + vLine(8, 0, 15) +  // Schild, Seiten
+            hLine(2, 6, 3) + hLine(2, 6, 9) +                                              // Bildschirmkanten
+            hLine(0, 8, 11) + listOf(3 to 10, 5 to 10, 6 to 10) +                          // Pult, Knueppel, Knoepfe
+            listOf(4 to 13) + hLine(0, 8, 15),                                             // Muenzschlitz, Sockel
+        // Rechts davor, mit Abstand zur Gehaeusewand: Die Figur steht seitlich am Pult, damit
+        // man den Bildschirm noch sieht (bei 11 ragte sie in der Vorschau in das Gehaeuse, bei
+        // 13 noch Wyrmlings Schwanz).
+        useSpot = 14 to 15,
+        screenArea = rect(2, 4, 6, 8)
+    )
+
+    /**
+     * Greifautomat - Glaskasten mit Greifer und Preisen, darunter der Ausgabeschacht. Eine zweite,
+     * klar andere Silhouette neben den Spielautomaten; die Lichterleiste oben blinkt im Wechsel.
+     */
+    private val CLAW_MACHINE = Prop(
+        width = 9, height = 16,
+        art = hLine(0, 8, 0) + hLine(0, 8, 9) + vLine(0, 0, 15) + vLine(8, 0, 15) +  // Kasten
+            vLine(4, 2, 3) + listOf(3 to 4, 5 to 4) +                                   // Greifer
+            listOf(2 to 8, 3 to 7, 4 to 8, 6 to 8, 6 to 7) +                             // Preise
+            rect(2, 11, 3, 12) + hLine(0, 8, 15),                                        // Schacht, Sockel
+        screenArea = hLine(1, 7, 1)
+    )
+
+    /** Neonschild an der Wand - ein Blitz, der im Takt aufleuchtet. */
+    private val NEON_SIGN = Prop(
+        width = 7, height = 5,
+        art = listOf(4 to 0, 3 to 1, 2 to 2, 3 to 2, 4 to 2, 5 to 2, 4 to 3, 3 to 4),
+        screenArea = listOf(4 to 0, 3 to 1, 2 to 2, 3 to 2, 4 to 2, 5 to 2, 4 to 3, 3 to 4)
+    )
+
+    /**
      * Tuer - Rahmen mit Blatt und Griff, als Umriss statt als Flaeche: Eine gefuellte Tuer waere
      * von einem Schrank nicht zu unterscheiden.
      *
@@ -3731,6 +3794,7 @@ object PlayScene {
     private const val BEACON_TICKS = 2
     private const val DRIP_TICKS = 3
     private const val SIGN_TICKS = 4
+    private const val ARCADE_TICKS = 1
     private const val TV_TICKS = 2
     private const val DAYLIGHT_TICKS = 9
     private const val STAR_TICKS = 5
@@ -3933,6 +3997,33 @@ object PlayScene {
                 val x = (widthCells * 0.62f).toInt()
                 val lit = if (beat(phase, SIGN_TICKS) % 2 == 0) GLOW else GLOW - 900
                 (0..3).map { SceneCell(x + it, signY, lit, isLight = true) }
+            }
+
+            // Die SPIELHALLE lebt von ihren Bildschirmen: Im Leerlauf zeigt jeder Automat sein
+            // Demobild (jede zweite Zelle im Wechsel), der benutzte zeigt ein laufendes Spiel -
+            // ein heller Punkt wandert ueber ein flackerndes Feld. Das Neonschild pulst.
+            Place.ARCADE -> placements.flatMap { placement ->
+                val area = placement.prop.screenArea
+                if (area.isEmpty()) return@flatMap emptyList()
+                val ox = originX(placement, widthCells)
+                val oy = originY(placement, floorY)
+                val step = beat(phase, ARCADE_TICKS)
+                when {
+                    placement.prop === NEON_SIGN -> {
+                        val lit = if (beat(phase, SIGN_TICKS) % 3 == 2) GLOW - 1100 else GLOW - 300
+                        area.map { (col, row) -> SceneCell(ox + col, oy + row, lit, isLight = true) }
+                    }
+                    placement.station == Station.ARCADE && tvOn -> {
+                        val hero = area[step % area.size]
+                        val field = if (step % 2 == 0) GLOW - 1000 else GLOW - 1300
+                        area.map { cell ->
+                            val lit = if (cell == hero) GLOW else field
+                            SceneCell(ox + cell.first, oy + cell.second, lit, isLight = true)
+                        }
+                    }
+                    else -> area.filterIndexed { index, _ -> (index + step) % 2 == 0 }
+                        .map { (col, row) -> SceneCell(ox + col, oy + row, GLOW - 1400, isLight = true) }
+                }
             }
 
             // Wohnzimmer: der Fernseher flimmert, und sein Licht faellt in den Raum. Bei den drei
