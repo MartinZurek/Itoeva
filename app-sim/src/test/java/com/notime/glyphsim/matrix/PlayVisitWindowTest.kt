@@ -97,4 +97,57 @@ class PlayVisitWindowTest {
             assertFalse("$place", offen(place = place, userBusy = true))
         }
     }
+
+    /**
+     * **Ein Grueppchen statt einer Reihe.** Vorher kam der naechste Gast anderthalb bis
+     * dreieinhalb Minuten nach dem letzten - der war nach einer Viertelminute laengst weg. Steht
+     * jemand da und ist noch jemand uebrig, kommt er jetzt binnen Sekunden dazu.
+     */
+    @Test
+    fun `steht schon jemand da, kommt der naechste bald dazu`() {
+        val allein = PlayVisitWindow.intervalMs(PlayScene.Place.PARK, 0, moreCandidates = true)
+        val dazu = PlayVisitWindow.intervalMs(PlayScene.Place.PARK, 1, moreCandidates = true)
+        assertTrue(dazu.last < allein.first)
+        // Ist niemand mehr uebrig, bleibt es beim gewoehnlichen Takt.
+        assertTrue(PlayVisitWindow.intervalMs(PlayScene.Place.PARK, 1, moreCandidates = false) == allein)
+        // Strasse und Stadt bleiben belebter als der Park.
+        assertTrue(
+            PlayVisitWindow.intervalMs(PlayScene.Place.STREET, 0, moreCandidates = true).last <
+                allein.first
+        )
+    }
+
+    /** Draussen bleibt ein Gast eine Weile, drinnen nur kurz - aber nirgends geht er sofort. */
+    @Test
+    fun `draussen bleibt ein Gast laenger als drinnen`() {
+        val draussen = PlayVisitWindow.lingerMs(PlayScene.Place.PARK)
+        val drinnen = PlayVisitWindow.lingerMs(PlayScene.Place.SHOP)
+        assertTrue(drinnen.first > 0)
+        assertTrue(draussen.first > drinnen.last)
+    }
+
+    /**
+     * Wer eben gegangen ist, kommt nicht gleich wieder - sonst wechselten sich zwei Bewohner
+     * endlos ab, sobald der naechste Gast binnen Sekunden dazukommen darf.
+     */
+    @Test
+    fun `wer eben gegangen ist, kommt nicht sofort wieder`() {
+        val jetzt = 1_000_000L
+        val gesperrt = PlayVisitWindow.unavailableGuests(
+            visiting = listOf("a"),
+            lastLeftAtMs = mapOf("b" to jetzt - 10_000L, "c" to jetzt - 10 * 60_000L),
+            nowMs = jetzt,
+            pace = 1f
+        )
+        assertTrue("a" in gesperrt)
+        assertTrue("b" in gesperrt)
+        assertFalse("c" in gesperrt)
+        // Im Zeitraffer vergeht auch diese Sperre schneller.
+        assertFalse(
+            "b" in PlayVisitWindow.unavailableGuests(
+                emptyList(), mapOf("b" to jetzt - 10_000L), jetzt, pace = 0.1f
+            )
+        )
+    }
 }
+

@@ -126,8 +126,8 @@ TEST_SRCS=(
   "$TEST/matrix/PlayMusicCueTest.kt"
   "$TEST/matrix/PlayMusicTransitionTest.kt"
   "$TEST/matrix/PlayMusicLoopTest.kt"
-  "$TEST/matrix/MusicLoudnessTest.kt"
   "$TEST/matrix/ArcadeTest.kt"
+  "$TEST/matrix/MusicLoudnessTest.kt"
   "$TEST/matrix/ScenePreview.kt"
   "$TEST/matrix/PlayRoutineTest.kt"
   "$TEST/matrix/LivingRuntimeAdapterTest.kt"
@@ -191,8 +191,8 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayMusicCueTest
   com.notime.glyphsim.matrix.PlayMusicTransitionTest
   com.notime.glyphsim.matrix.PlayMusicLoopTest
-  com.notime.glyphsim.matrix.MusicLoudnessTest
   com.notime.glyphsim.matrix.ArcadeTest
+  com.notime.glyphsim.matrix.MusicLoudnessTest
   com.notime.glyphsim.matrix.PlayRoutineTest
   com.notime.glyphsim.matrix.LivingRuntimeAdapterTest
   com.notime.glyphsim.matrix.LivingPopulationTest

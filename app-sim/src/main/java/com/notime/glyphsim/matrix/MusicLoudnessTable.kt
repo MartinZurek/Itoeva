@@ -6,6 +6,8 @@ package com.notime.glyphsim.matrix
  */
 internal object MusicLoudnessTable {
     val MEASURED_LUFS: Map<String, Double> = mapOf(
+        "itoeva_arcade_01" to -19.3,
+        "itoeva_arcade_02" to -16.5,
         "itoeva_ballgame_01" to -14.4,
         "itoeva_city_01" to -17.6,
         "itoeva_city_02" to -12.4,

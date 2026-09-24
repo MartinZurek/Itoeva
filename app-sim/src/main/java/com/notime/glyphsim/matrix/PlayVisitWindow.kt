@@ -61,4 +61,83 @@ object PlayVisitWindow {
         // steht dort, weil nur dort die Wiedergabe laeuft.
         return !routineRunning || lingeringOutdoors
     }
+
+    /**
+     * Wie lange es bis zum naechsten Besuch dauert.
+     *
+     * **Gemeldet als "ich habe noch nie drei oder vier zusammen gesehen".** Ein Besuch dauert
+     * vom Hereinkommen bis zum Gehen etwa eine Viertelminute, der naechste kam aber erst
+     * anderthalb bis dreieinhalb Minuten spaeter. Selbst wenn drei Bewohner gleichzeitig im Park
+     * waren, traten sie deshalb nacheinander auf und nie miteinander - der Deckel von vier
+     * gleichzeitigen Gaesten (siehe [LivingPopulationLayout.visitorCapFor]) wurde nie erreicht.
+     *
+     * Jetzt gilt: Steht schon ein Gast im Bild und ist noch jemand da, der kommen koennte, folgt
+     * er nach [FOLLOW_UP_MS] - so entsteht ein Grueppchen statt einer Reihe.
+     *
+     * @param visitorsOnScreen wie viele Besuche gerade laufen.
+     * @param moreCandidates ob noch ein anwesender Bewohner uebrig ist, der nicht schon zu Besuch ist.
+     */
+    fun intervalMs(place: PlayScene.Place, visitorsOnScreen: Int, moreCandidates: Boolean): LongRange =
+        when {
+            visitorsOnScreen > 0 && moreCandidates -> FOLLOW_UP_MS
+            place == PlayScene.Place.STREET || place == PlayScene.Place.CITY -> BUSY_INTERVAL_MS
+            else -> INTERVAL_MS
+        }
+
+    /**
+     * Wie lange ein Gast nach dem Gespraech noch bleibt, bevor er geht.
+     *
+     * Vorher ging er sofort - wer vorbeikam, war nach zwei Wortwechseln wieder weg, und zwei
+     * Gaeste standen deshalb kaum je gleichzeitig im Bild. Unter freiem Himmel bleibt er jetzt
+     * eine Weile stehen (man haengt zusammen ab), drinnen nur kurz.
+     */
+    fun lingerMs(place: PlayScene.Place): LongRange =
+        if (PlayScene.isOutdoors(place)) OUTDOOR_LINGER_MS else INDOOR_LINGER_MS
+
+    /** Abstand zwischen zwei Besuchen. */
+    val INTERVAL_MS = 90_000L..210_000L
+
+    /**
+     * Deutlich kuerzerer Abstand fuer die belebten Orte (Strasse, Stadt): Auf einem Weg begegnet
+     * man einander haeufiger als beim Ausruhen im Park oder beim Einkaufen.
+     */
+    val BUSY_INTERVAL_MS = 30_000L..70_000L
+
+    /** Der naechste Gast, waehrend schon jemand da ist - er kommt dazu, statt abzuloesen. */
+    val FOLLOW_UP_MS = 5_000L..14_000L
+
+    val OUTDOOR_LINGER_MS = 15_000L..30_000L
+    val INDOOR_LINGER_MS = 3_000L..6_000L
+
+    /**
+     * Wer gerade NICHT zu Besuch kommen kann: wer schon im Bild ist, und wer eben erst gegangen
+     * ist.
+     *
+     * Der zweite Teil kam mit dem schnellen Dazukommen ([FOLLOW_UP_MS]): Sind nur zwei Bewohner
+     * da, haette sonst der eben Gegangene sofort wieder kehrtgemacht, sobald der andere noch im
+     * Bild steht - zwei, die sich endlos abwechseln, statt eines Grueppchens.
+     *
+     * @param lastLeftAtMs wann jeder Bewohner zuletzt das Bild verlassen hat.
+     * @param pace der Zeitraffer-Faktor (siehe [PlayTimeLapse.paceFactor]).
+     */
+    fun unavailableGuests(
+        visiting: Collection<String>,
+        lastLeftAtMs: Map<String, Long>,
+        nowMs: Long,
+        pace: Float
+    ): Set<String> {
+        val sperre = (RECENT_GUEST_MS * pace).toLong()
+        return visiting.toSet() + lastLeftAtMs.filterValues { nowMs - it in 0 until sperre }.keys
+    }
+
+    /** So lange kommt ein Gast, der eben gegangen ist, nicht gleich wieder. */
+    const val RECENT_GUEST_MS = 90_000L
+
+    /**
+     * Wie lange die wartende Figur draussen noch fuer Neuankoemmlinge offen bleibt, solange schon
+     * Gaeste bei ihr stehen - danach geht ihr Ablauf weiter, sobald der letzte gegangen ist.
+     * Ohne diese Grenze koennte eine Kette von Besuchen den Ablauf beliebig lange aufhalten.
+     */
+    const val GROUP_WINDOW_MS = 45_000L
 }
+
