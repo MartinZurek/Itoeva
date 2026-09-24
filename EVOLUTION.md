@@ -683,7 +683,7 @@ Minuten): Im Park stand zu 75 % niemand, zu 5 % zwei, nie drei. Drei Ursachen:
    17 % Freizeit und Lernen daheim). Das entscheidet der gemeinsame Kern.
 
 **Geaendert:** Ein gemeinsamer Treffpunkt je Tageszeit (`LivingPopulation.gatheringPlace`:
-morgens und nachmittags Park, mittags und abends Stadt, frueher Abend Strasse); wer draussen ist
+morgens und nachmittags Park, mittags Stadt, frueher Abend Strasse, abends Spielhalle); wer draussen ist
 und den Treffpunkt kennt, geht dorthin - wer als Naechstes Sport treibt, bleibt am Sportplatz.
 Wer einkauft, steht im Laden. Steht schon ein Gast im Bild und ist noch jemand da, kommt der
 naechste nach 5 bis 14 Sekunden dazu (`PlayVisitWindow.intervalMs`); Gaeste bleiben nach dem
@@ -697,6 +697,40 @@ bringt niemanden zusammen.
 entscheidet derselbe Kern, der auch den Hauptavatar steuert; das zu aendern ist eine eigene
 Entscheidung und steht als Vorschlag an den Nutzer aus. Deshalb bleiben drei draussen zusammen
 selten (Test: einmal in der Woche mindestens).
+
+### 2026-09-24 - Weltausbau Stufe 3: die Spielhalle
+
+**Wunsch des Nutzers:** neue Orte, weil die Welt zu monoton ist ("leg los, wo es fuer dich am besten
+ist"). Die Spielhalle zuerst, weil sie zur Pixelwelt passt wie kein anderer Ort und eine neue Art zu
+spielen mitbringt: Das Wesen spielt selbst.
+
+- `PlayScene.Place.ARCADE` (hinten angehaengt, damit gespeicherte Orte gueltig bleiben), Innenraum,
+  Besuch erlaubt; `Station.ARCADE`.
+- Requisiten: `ARCADE_CABINET` (Schild, Bildschirm mit dunkler Fuge zur Gehaeusewand, Pult mit
+  Knueppel und Knoepfen, Muenzschlitz), `CLAW_MACHINE`, `NEON_SIGN`. Umgebungsanimation: Demobild
+  im Leerlauf, laufendes Spiel am benutzten Automaten (heller Punkt ueber flackerndem Feld),
+  pulsierendes Neon. In der Zeichenraster-Vorschau geprueft (48 und 84 Zellen breit); zwei
+  Korrekturen daraus: Fuge um den Bildschirm, Aufstellpunkte ohne Ueberlappung.
+- Ablauf `PlayRoutines.arcadeRoutine` in der Freizeit (GENERAL): hingehen, einschalten (wie der
+  Fernseher ueber `Switch`), spielen, jubeln, ausschalten.
+- Bewohner: Gloop und Wyrmling besuchen die Spielhalle.
+- Musik: Rolle `ARCADE` vor Stadt und Tag; Prompts *Insert Coin* (Chiptune) und *Continue?*
+  (Synthwave).
+- Gespraech: "in der Spielhalle" / "at the arcade".
+- 6 neue Tests (`ArcadeTest`), zwei bestehende nachgezogen.
+
+### 2026-09-24 - Weltausbau Stufe 2a: Lautheitsausgleich je Stueck
+
+**Befund (gemessen, BS.1770):** Die 22 ausgelieferten Stuecke liegen zwischen -22,6 (Paper Dawn)
+und -10,8 LUFS (99 Pixels). Der Player spielte jede Datei gleich laut; ein Rotationswechsel konnte
+ein Sprung um ueber 10 dB sein, und in der Musikliste klang das lauteste Stueck automatisch "besser".
+
+- `tools/music/loudness_table.py` misst jede Datei und schreibt `MusicLoudnessTable.kt` (erzeugt,
+  nicht von Hand).
+- `MusicLoudness`: gleicht auf -16 LUFS an, hoechstens +6/-9 dB; ohne Messwert unveraendert.
+- `PlayMusic` wendet den Faktor je Player an (Szene, Ueberblendung, Einspieler);
+  `MusicLibraryScreen` ebenso in der Vorschau (Grundlautstaerke 0,5, damit Anheben moeglich ist).
+- 6 neue Tests (567 -> 573). Arbeitsregel in `UEBERGABE.md`: nach jedem neuen Stueck neu messen.
 
 ### 2026-09-24 - Weltausbau Stufe 1: Musik kennt Umgebung und Aktivitaet
 

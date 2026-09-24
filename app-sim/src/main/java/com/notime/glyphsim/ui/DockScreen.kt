@@ -1813,7 +1813,9 @@ fun DockScreen(
                             avatar = avatar?.copy(frame = f)
                         }
                         when (step.device) {
-                            PlayScene.Station.TV -> tvOn = step.on
+                            // Der Spielautomat ist ein Bildschirm wie der Fernseher: Eingeschaltet
+                            // zeigt er das laufende Spiel (siehe PlayScene.ambient).
+                            PlayScene.Station.TV, PlayScene.Station.ARCADE -> tvOn = step.on
                             else -> lampOn = step.on
                         }
                         startAvatarIdleLoop(species, mood)

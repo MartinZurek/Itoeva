@@ -42,6 +42,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.MusicCatalog
+import com.notime.glyphsim.matrix.MusicLoudness
 import com.notime.glyphsim.matrix.MusicRole
 
 /**
@@ -100,6 +101,11 @@ fun MusicLibraryScreen(onBack: () -> Unit) {
                     .build()
             )
             next.isLooping = true
+            // Derselbe Lautheitsausgleich wie im Spiel (siehe MusicLoudness): Beim Vergleichen
+            // soll kein Stueck nur deshalb besser klingen, weil es lauter erzeugt wurde.
+            val lautstaerke =
+                (PREVIEW_VOLUME * MusicLoudness.gainFor(role.variantResource(variant))).coerceIn(0f, 1f)
+            next.setVolume(lautstaerke, lautstaerke)
             next.start()
             player = next
             playing = role to variant
@@ -241,3 +247,9 @@ private fun TrackRow(
         }
     }
 }
+
+/**
+ * Grundlautstaerke der Vorschau. Unter 1, damit der Lautheitsausgleich leise Stuecke auch anheben
+ * kann (hoechstens [MusicLoudness.MAX_BOOST_DB], also etwa Faktor 2).
+ */
+private const val PREVIEW_VOLUME = 0.5f

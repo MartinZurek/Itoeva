@@ -34,7 +34,7 @@ erst nach dem Hörtest nach `main`.
 - Sonnenaufgang und -untergang als eigene kurze Momente: ein Einspieler wie beim Gast
   (`PlayMusicCue`), einmal je Übergang, wenn der Bildschirm gerade an ist.
 - Drachensteigen bekommt eine eigene Aktivitätsrolle (*Wind*).
-- **Lautstärkeausgleich je Stück:** Gemessen am 2026-09-24 liegen die Stücke zwischen −19,5 und
+- [x] **Lautstärkeausgleich je Stück** (PR `claude/itoeva-loudness-kwlk4h`): Gemessen am 2026-09-24 liegen die Stücke zwischen −19,5 und
   −10,8 LUFS (*99 Pixels* ist fast doppelt so laut wie *Bitter Pixel Symphony*). Ein kleines
   Skript misst jede Datei und schreibt eine reine Kotlin-Tabelle; `PlayMusic` gleicht damit auf
   ein gemeinsames Ziel (etwa −16 LUFS) an, statt jede Datei mit derselben Lautstärke abzuspielen.
@@ -43,9 +43,13 @@ erst nach dem Hörtest nach `main`.
 
 Warum zuerst: Sie passt zur Pixelwelt wie kein anderer Ort und bringt eine neue Art zu spielen
 mit – das Wesen spielt selbst ein Spiel.
-- Ort `ARCADE` in `PlayScene` (Automaten, Neonlicht, Teppich), erreichbar aus der Stadt.
-- Interaktion: an einem Automaten spielen; Highscore als Erinnerung in der Welt.
-- Musik: Chiptune-Hommage an klassische Automatenspiele (Rolle `ARCADE`).
+- [x] Ort `ARCADE` in `PlayScene`: zwei Spielautomaten mit leuchtendem Bildschirm (Demobild im
+      Leerlauf, laufendes Spiel beim Benutzen), Greifautomat, Neonschild. Innenraum mit Besuch
+      (Gloop und Wyrmling kommen vorbei).
+- [x] Interaktion: Freizeit-Ablauf `arcadeRoutine` - hingehen, einschalten, spielen, jubeln,
+      ausschalten.
+- [x] Musik: Rolle `ARCADE` mit *Insert Coin* (Chiptune) und *Continue?* (Synthwave).
+- [ ] Später: Highscore als Erinnerung in der Welt.
 
 ## Stufe 4 – Neuer Ort: das Café
 

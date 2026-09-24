@@ -70,6 +70,9 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
     /** Waehrend eines Ballspiels (Basketball, Fussball) - Streetball statt Trainingsplatz. */
     BALLGAME("ballgame_background", "itoeva_ballgame"),
 
+    /** In der Spielhalle - Chiptune, die Musik der Automaten selbst. */
+    ARCADE("arcade_background", "itoeva_arcade"),
+
     /** Ruhige Abend- und Nachtstunden zu Hause und an stillen Naturorten. */
     HOME_EVENING("home_evening_background", "itoeva_home_evening"),
 
@@ -274,6 +277,7 @@ object MusicResolver {
                 } else {
                     // Abends noch unterwegs: Die Stadt klingt nach Stadt, der Tag klingt nach,
                     // der Abendtrack ist der Rueckfall.
+                    if (context.place == PlayScene.Place.ARCADE) add(MusicRole.ARCADE)
                     if (context.place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
                     if (context.place in CITY_PLACES) add(MusicRole.CITY)
                     add(MusicRole.MAIN_DAY)
@@ -299,6 +303,7 @@ object MusicResolver {
      * Laden vor der Stadt, die Natur fuer sich.
      */
     private fun MutableList<MusicRole>.addPlaceRoles(place: PlayScene.Place) {
+        if (place == PlayScene.Place.ARCADE) add(MusicRole.ARCADE)
         if (place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
         if (place in CITY_PLACES) add(MusicRole.CITY)
         if (place in NATURE_PLACES) add(MusicRole.NATURE)

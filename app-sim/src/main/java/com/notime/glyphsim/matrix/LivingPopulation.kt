@@ -328,6 +328,10 @@ object LivingPopulation {
         in 11 until 14 -> PlayScene.Place.CITY
         in 14 until 18 -> PlayScene.Place.PARK
         in 18 until 20 -> PlayScene.Place.STREET
+        // Abends in die Spielhalle - wer sie nicht kennt, bleibt an seinem Ankerort. Ohne diese
+        // Zeile stand dort nie ein Bewohner, obwohl Gloop und Wyrmling sie in ihren
+        // Besuchsorten fuehren.
+        in 20 until 24 -> PlayScene.Place.ARCADE
         else -> PlayScene.Place.CITY
     }
 

@@ -510,6 +510,16 @@ class LivingPopulationTest {
         val gloop = LivingResidents.all.first { it.species == AvatarSpecies.GLOOP }
         val gloopDraussen = LivingResidents.initialWorld(gloop, 15 * 60).copy(site = LivingSite.OUTSIDE)
         assertEquals(PlayScene.Place.CITY, LivingPopulation.placeFor(gloop, gloopDraussen))
+        // Abends trifft man sich in der Spielhalle - aber nur, wer sie kennt.
+        assertEquals(
+            PlayScene.Place.ARCADE,
+            LivingPopulation.placeFor(
+                gloop,
+                LivingResidents.initialWorld(gloop, 20 * 60 + 30).copy(site = LivingSite.OUTSIDE)
+            )
+        )
+        val abends = LivingResidents.initialWorld(hootlet, 20 * 60 + 30).copy(site = LivingSite.OUTSIDE)
+        assertEquals(PlayScene.Place.SPORT, LivingPopulation.placeFor(hootlet, abends))
     }
 
     /** Es gibt genau einen Laden - wer einkauft, steht dort und ist nicht unsichtbar. */
