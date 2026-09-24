@@ -577,6 +577,11 @@ fun DockScreen(
         var outdoorsSinceMs by remember { mutableStateOf(0L) }
         val recentTopics = remember { mutableStateListOf<AnimationType>() }
         val recentSpecials = remember { mutableStateListOf<PlayRoutines.SpecialActivity>() }
+        /**
+         * Die Sonderaktivitaet, die gerade wirklich laeuft - fuer die Musik (siehe
+         * `MusicContext.activity`). Nur fuer die Dauer des Ablaufs gesetzt.
+         */
+        var currentActivity by remember { mutableStateOf<PlayRoutines.SpecialActivity?>(null) }
 
         /** Traegt nach, was gerade gelaufen ist - vorn einfuegen, hinten abschneiden. */
         fun rememberShown(topic: AnimationType, routine: PlayRoutine?) {
@@ -935,7 +940,7 @@ fun DockScreen(
          * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
          * allein [PlayMusic]; welche passt, allein der Resolver.
          */
-        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, themeSpecies) {
+        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
                 return@LaunchedEffect
@@ -950,6 +955,7 @@ fun DockScreen(
                         dayPhase = PlayAmbientActivity.currentDayPhase(),
                         place = currentPlace,
                         topic = currentTopic,
+                        activity = currentActivity,
                         characterTheme = themeSpecies
                     )
                 )
@@ -3479,6 +3485,7 @@ fun DockScreen(
                                 partner to state
                             }
                             try {
+                                currentActivity = PlayRoutines.specialOf(gewaehlt)
                                 val completed = runRoutine(
                                     gewaehlt,
                                     species,
@@ -3542,6 +3549,7 @@ fun DockScreen(
                                 economyTick++
                                 completeStreamImpulse(prepared)
                             } finally {
+                                currentActivity = null
                                 if (sharedActivity != null) {
                                     // Kein suspendierendes Lock im Abbruch-finally: Die
                                     // umgebende LaunchedEffect ist dann bereits cancelled und

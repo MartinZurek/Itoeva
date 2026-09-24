@@ -47,8 +47,16 @@ object PlayMusicTransition {
     fun settleMs(playing: MusicRole?, wanted: MusicRole): Long = when {
         playing == null || playing == wanted -> 0L
         playing == MusicRole.CHARACTER_THEME || wanted == MusicRole.CHARACTER_THEME -> 0L
+        // Eine Aktivitaet beginnt, wenn sie beginnt: Der Wurf, der erste Auswurf der Angel -
+        // zehn Sekunden spaeter waere die Musik zu spaet. Das ENDE einer Aktivitaet wartet
+        // dagegen wie jeder Ortswechsel, damit eine kurze Pause zwischen zwei Wuerfen die
+        // Musik nicht umwirft.
+        wanted in ACTIVITY_ROLES -> 0L
         else -> ROLE_SETTLE_MS
     }
+
+    /** Rollen, die an einer laufenden Handlung haengen und nicht an einem Ort. */
+    val ACTIVITY_ROLES: Set<MusicRole> = setOf(MusicRole.FISHING, MusicRole.BALLGAME)
 
     /**
      * Entscheidet, ob der Player jetzt auf [wanted] wechseln soll, und fuehrt die Vormerkung
@@ -83,6 +91,7 @@ object PlayMusicTransition {
             PlayCharacterTheme.FADE_MS
         variantOnly -> VARIANT_FADE_MS
         from == MusicRole.SPORT || to == MusicRole.SPORT -> SPORT_FADE_MS
+        from == MusicRole.BALLGAME || to == MusicRole.BALLGAME -> SPORT_FADE_MS
         else -> SCENE_FADE_MS
     }
 }

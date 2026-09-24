@@ -664,6 +664,25 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-24 - Weltausbau Stufe 1: Musik kennt Umgebung und Aktivitaet
+
+**Wunsch des Nutzers:** Die Engine soll intelligent wissen, wo und wann das Wesen ist - nicht nur
+fuer Sport, sondern fuer Wald, Laden, Angeln, Basketball; dazu neue Orte und Interaktionen, weil das
+Spiel sonst zu monoton ist, "Stueck fuer Stueck, in einem Plan". Der Plan steht in
+[`WELTAUSBAU.md`](WELTAUSBAU.md); dies ist seine erste Stufe.
+
+- `MusicContext.activity`: `DockScreen` setzt die laufende Sonderaktivitaet
+  (`PlayRoutines.specialOf`) fuer die Dauer des Ablaufs.
+- Vier neue Rollen im `MusicResolver`: `NATURE` (Wald, Wiese, Teich morgens und tagsueber; abends
+  bleibt der ruhige Abend), `SHOP` (vor der Stadt), `FISHING` und `BALLGAME` (Basketball,
+  Fussball; Training bleibt Sport). Aktivitaeten vor dem Ort, nie nachts; jede Rolle faellt ohne
+  Stueck auf die bisherige Wahl zurueck.
+- `PlayMusicTransition`: Eine Aktivitaet beginnt sofort (der erste Wurf wartet nicht zehn
+  Sekunden), ihr Ende wartet wie ein Ortswechsel.
+- Fuenf Prompts: My Neighbor Pixel, Clover Hills (Natur), Checkout Bossa (Laden), Gone Pixel
+  Fishing (Angeln), Pixel Hoops (Ballspiel).
+- 10 neue Tests (557 -> 567).
+
 ### 2026-09-24 - Musik, zweite Welle: fuenf Hommagen, Stadtmusik, nahtlose Loops
 
 **Wunsch des Nutzers:** Mehr Stuecke als Hommage an die Essenz grosser Vorbilder - Britpop-Hymnen,
