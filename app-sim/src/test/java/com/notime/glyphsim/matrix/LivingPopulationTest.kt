@@ -487,4 +487,72 @@ class LivingPopulationTest {
             }
         )
     }
+
+    /**
+     * **Draussen trifft man sich** - gemeldet als "noch nie drei oder vier zusammen gesehen".
+     *
+     * Vorher vertrat fuer jeden Bewohner mit Ankerort unter freiem Himmel immer der Ankerort das
+     * ganze Draussen: Hootlet stand nie im Park, obwohl der Park zu ihren Besuchsorten gehoert.
+     * Nachmittags ist der Park jetzt der Treffpunkt.
+     */
+    @Test
+    fun `wer nachmittags draussen ist, trifft sich im Park`() {
+        val hootlet = LivingResidents.all.first { it.species == AvatarSpecies.HOOTLET }
+        val draussen = LivingResidents.initialWorld(hootlet, 15 * 60).copy(site = LivingSite.OUTSIDE)
+        assertEquals(PlayScene.Place.PARK, LivingPopulation.placeFor(hootlet, draussen))
+        // Wer als Naechstes Sport treibt, bleibt dafuer auf dem Sportplatz - sonst fehlte der
+        // gemeinsamen Sportplatz-Szene der Partner.
+        assertEquals(
+            PlayScene.Place.SPORT,
+            LivingPopulation.placeFor(hootlet, draussen, keepAnchor = true)
+        )
+        // Wer den Treffpunkt nicht kennt, bleibt, wo er hingehoert: Gloop geht nicht in den Park.
+        val gloop = LivingResidents.all.first { it.species == AvatarSpecies.GLOOP }
+        val gloopDraussen = LivingResidents.initialWorld(gloop, 15 * 60).copy(site = LivingSite.OUTSIDE)
+        assertEquals(PlayScene.Place.CITY, LivingPopulation.placeFor(gloop, gloopDraussen))
+        // Abends trifft man sich in der Spielhalle - aber nur, wer sie kennt.
+        assertEquals(
+            PlayScene.Place.ARCADE,
+            LivingPopulation.placeFor(
+                gloop,
+                LivingResidents.initialWorld(gloop, 20 * 60 + 30).copy(site = LivingSite.OUTSIDE)
+            )
+        )
+        val abends = LivingResidents.initialWorld(hootlet, 20 * 60 + 30).copy(site = LivingSite.OUTSIDE)
+        assertEquals(PlayScene.Place.SPORT, LivingPopulation.placeFor(hootlet, abends))
+    }
+
+    /** Es gibt genau einen Laden - wer einkauft, steht dort und ist nicht unsichtbar. */
+    @Test
+    fun `wer einkauft, steht im Laden`() {
+        val puffling = LivingResidents.all.first { it.species == AvatarSpecies.PUFFLING }
+        assertTrue(PlayScene.Place.SHOP !in puffling.visitPlaces)
+        val amMarkt = LivingResidents.initialWorld(puffling, 11 * 60).copy(site = LivingSite.MARKET)
+        assertEquals(PlayScene.Place.SHOP, LivingPopulation.placeFor(puffling, amMarkt))
+    }
+
+    /**
+     * **Der Beleg aus der Messung.** Vor der Aenderung standen ueber eine ganze Woche nie mehr als
+     * zwei Bewohner gleichzeitig an einem Ort unter freiem Himmel. Jetzt kommt es vor, dass sich
+     * drei treffen - selten, weil jeder nur etwa ein Fuenftel des Tages draussen ist, aber es
+     * kommt vor.
+     */
+    @Test
+    fun `im Lauf einer Woche treffen sich draussen einmal drei`() {
+        var states = LivingPopulation.initial(start)
+        var minute = start
+        val ende = start + 7 * WorldState.MINUTES_PER_DAY
+        var groesstesGrueppchen = 0
+        while (minute < ende) {
+            minute += 5
+            states = LivingPopulation.advance(states, minute)
+            val anwesend = LivingPopulation.snapshot(states)
+                .filter { it.publiclyPresent && it.place != null && PlayScene.isOutdoors(it.place!!) }
+                .groupingBy { it.place }
+                .eachCount()
+            groesstesGrueppchen = maxOf(groesstesGrueppchen, anwesend.values.maxOrNull() ?: 0)
+        }
+        assertTrue("groesstes Grueppchen: $groesstesGrueppchen", groesstesGrueppchen >= 3)
+    }
 }
+
