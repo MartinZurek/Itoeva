@@ -33,6 +33,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -630,6 +631,12 @@ fun DockScreen(
         // dient zugleich als Sperre (kein Bewohner startet doppelt) und als Kapazitaetszaehler
         // gegen LivingPopulationLayout.visitorCapFor(currentPlace).
         val visitingProfileIds = remember { mutableStateListOf<String>() }
+        // Wann jeder Bewohner zuletzt das Bild verlassen hat - damit er nicht sofort wiederkommt
+        // (siehe PlayVisitWindow.unavailableGuests).
+        val guestLeftAtMs = remember { mutableStateMapOf<String, Long>() }
+        fun unavailableGuests(): Set<String> = PlayVisitWindow.unavailableGuests(
+            visitingProfileIds, guestLeftAtMs, System.currentTimeMillis(), PlayTimeLapse.paceFactor()
+        )
         // **Der Schatten gehoert zur Bewegung** (siehe [AvatarShading]): Im Stand hat die Figur
         // keinen, waehrend eines Gangs liegt er auf der Flanke, von der sie kommt. Ein Schatten,
         // der immer da ist, ist ein Muster auf der Haut und sagt nichts.
@@ -1731,16 +1738,24 @@ fun DockScreen(
                         lingeringOutdoors = PlayScene.isOutdoors(currentPlace)
                         try {
                             delay((step.millis * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(120L))
+                            // Ist waehrenddessen tatsaechlich jemand gekommen, wird der Ablauf
+                            // angehalten, bis der Gast wieder geht. Sonst liefe die Figur mitten
+                            // im Gespraech weiter, und die Begegnung saehe nach Fehler aus statt
+                            // nach Begegnung. Die Wartezeit ist kein Leerlauf: Der Besuch selbst
+                            // spielt waehrenddessen seine Bilder.
+                            //
+                            // Solange schon jemand da ist, bleibt die Figur fuer weitere Gaeste
+                            // offen - sonst koennte sich nur waehrend des kurzen Verweilens selbst
+                            // ein Grueppchen bilden. Begrenzt durch GROUP_WINDOW_MS, damit eine
+                            // Kette von Besuchen den Ablauf nicht beliebig aufhaelt.
+                            val offenBis = System.currentTimeMillis() +
+                                (PlayVisitWindow.GROUP_WINDOW_MS * PlayTimeLapse.paceFactor()).toLong()
+                            while (visitingProfileIds.isNotEmpty()) {
+                                if (System.currentTimeMillis() >= offenBis) lingeringOutdoors = false
+                                delay(VISIT_WAIT_TICK_MS)
+                            }
                         } finally {
                             lingeringOutdoors = false
-                        }
-                        // Ist waehrenddessen tatsaechlich jemand gekommen, wird der Ablauf
-                        // angehalten, bis der Gast wieder geht. Sonst liefe die Figur mitten im
-                        // Gespraech weiter, und die Begegnung saehe nach Fehler aus statt nach
-                        // Begegnung. Die Wartezeit ist kein Leerlauf: Der Besuch selbst spielt
-                        // waehrenddessen seine Bilder.
-                        while (visitingProfileIds.isNotEmpty()) {
-                            delay(VISIT_WAIT_TICK_MS)
                         }
                     }
 
@@ -1876,7 +1891,7 @@ fun DockScreen(
                     residentSnapshots,
                     currentPlace,
                     lastResidentProfileId,
-                    excludeProfileIds = visitingProfileIds.toSet()
+                    excludeProfileIds = unavailableGuests()
                 ) ?: return@withLock null
                 val currentResident = LivingResidents.all.firstOrNull {
                     it.profileId == residentSnapshot.profileId
@@ -2151,6 +2166,24 @@ fun DockScreen(
                     )
                 )
 
+                // Noch eine Weile dableiben, bevor es weitergeht (siehe PlayVisitWindow.lingerMs):
+                // So stehen mehrere Gaeste tatsaechlich zusammen im Bild, statt einander nur
+                // abzuloesen. Der Gast atmet dabei in seiner Ruhe-Schleife weiter.
+                coroutineScope {
+                    val verweilen = launch {
+                        while (isActive) {
+                            MatrixAnimator.playTimed(idle.frames, idle.holdsMs) { f ->
+                                updateVisitor(guestProfileId) { it.copy(frame = f) }
+                            }
+                        }
+                    }
+                    delay(
+                        (PlayVisitWindow.lingerMs(currentPlace).random() * PlayTimeLapse.paceFactor())
+                            .toLong().coerceAtLeast(500L)
+                    )
+                    verweilen.cancel()
+                }
+
                 guestLeaving = true
                 walkGuestTo(exitX)
             } finally {
@@ -2182,6 +2215,7 @@ fun DockScreen(
                 // nie wieder besucht werden und der wartende Ablauf draussen (siehe
                 // lingeringOutdoors) bliebe angehalten, falls gerade er der letzte laufende
                 // Besuch war.
+                guestLeftAtMs[guestProfileId] = System.currentTimeMillis()
                 visitingProfileIds.remove(guestProfileId)
             }
         }
@@ -2388,10 +2422,32 @@ fun DockScreen(
                     )
                 }
                 while (isActive) {
-                    delay(
-                        (visitIntervalFor(currentPlace).random() * PlayTimeLapse.paceFactor())
-                            .toLong().coerceAtLeast(3_000L)
-                    )
+                    // Steht schon jemand da und koennte noch jemand kommen, kommt er bald dazu
+                    // (siehe PlayVisitWindow.intervalMs) - sonst gaebe es nie ein Grueppchen.
+                    // Deshalb wird in kleinen Schritten gewartet und die Lage jedes Mal neu
+                    // angesehen: Der eben gestartete Besuch meldet sich erst in seiner eigenen
+                    // Coroutine an, ein einmal zu Beginn gewaehlter Abstand wuesste davon nichts.
+                    val pace = PlayTimeLapse.paceFactor()
+                    val wurf = Random.nextFloat()
+                    fun abstand(): Long {
+                        val nochJemand = LivingPopulationLayout.nextVisitor(
+                            residentSnapshots,
+                            currentPlace,
+                            null,
+                            excludeProfileIds = unavailableGuests()
+                        ) != null
+                        val spanne = PlayVisitWindow.intervalMs(
+                            currentPlace, visitingProfileIds.size, nochJemand
+                        )
+                        val ms = spanne.first + ((spanne.last - spanne.first) * wurf).toLong()
+                        return (ms * pace).toLong().coerceAtLeast(3_000L)
+                    }
+                    var gewartet = 0L
+                    while (isActive && gewartet < abstand()) {
+                        val schritt = (VISIT_RETRY_MS * pace).toLong().coerceAtLeast(250L)
+                        delay(schritt)
+                        gewartet += schritt
+                    }
                     while (isActive &&
                         (!visitPossible() ||
                             visitingProfileIds.size >= LivingPopulationLayout.visitorCapFor(currentPlace))
@@ -5002,16 +5058,6 @@ private const val SPEECH_DOT_MS = 190L
 /** Nachklang, damit die gelesene Bedeutung nicht mit der letzten Koerperpose verschwindet. */
 private const val SOCIAL_SYMBOL_HOLD_MS = 650L
 
-/** Abstand zwischen zwei Besuchen. */
-private val VISIT_INTERVAL_MS = 90_000L..210_000L
-
-/**
- * Deutlich kuerzerer Abstand fuer die belebten Orte (Strasse, Stadt): Auf einem Weg begegnet man
- * einander haeufiger als beim Ausruhen im Park oder beim Einkaufen - grob ein Drittel des
- * sonstigen Takts statt alle anderthalb bis dreieinhalb Minuten.
- */
-private val VISIT_INTERVAL_MS_BUSY = 30_000L..70_000L
-
 /** Wie oft nachgesehen wird, ob ein Besuch inzwischen passt - siehe den Besuchstakt in DockScreen. */
 private const val VISIT_RETRY_MS = 4_000L
 
@@ -5039,12 +5085,6 @@ private const val RECENT_MEMORY = 4
  * gestreckt - das ist Ablaufsteuerung, keine vergehende Zeit.
  */
 private const val VISIT_WAIT_TICK_MS = 250L
-
-/** Welcher Besuchstakt an diesem Ort gilt - siehe [VISIT_INTERVAL_MS_BUSY]. */
-private fun visitIntervalFor(place: PlayScene.Place): LongRange = when (place) {
-    PlayScene.Place.STREET, PlayScene.Place.CITY -> VISIT_INTERVAL_MS_BUSY
-    else -> VISIT_INTERVAL_MS
-}
 
 
 /** Wo an der Figur ein Zugriff aufblitzt - auf Handhoehe, seitlich vorn (16x16-Raster). */

@@ -165,7 +165,9 @@ object LivingPopulation {
     fun snapshot(states: Map<String, ResidentState>): List<ResidentSnapshot> =
         LivingResidents.all.mapNotNull { resident ->
             val state = states[resident.profileId] ?: return@mapNotNull null
-            val place = placeFor(resident, state.world)
+            val nextKind = state.agent.plan?.next?.kind
+            // Wer als Naechstes Sport treibt, bleibt dafuer am Ankerort (siehe [placeFor]).
+            val place = placeFor(resident, state.world, keepAnchor = nextKind == ActionKind.MOVE_BODY)
             ResidentSnapshot(
                 profileId = resident.profileId,
                 role = resident.role,
@@ -173,13 +175,13 @@ object LivingPopulation {
                 place = place,
                 site = state.world.site,
                 goal = state.agent.goal,
-                nextAction = state.agent.plan?.next?.kind,
+                nextAction = nextKind,
                 blockedBy = state.agent.plan?.next?.blockedBy(synchronised(state.world)),
                 coins = state.world.coins,
                 portions = state.world.portions,
                 minuteOfDay = state.world.minuteOfDay,
                 publiclyPresent = place != null && resident.isActiveAt(state.world.minuteOfDay),
-                nextSpecialActivity = if (state.agent.plan?.next?.kind == ActionKind.MOVE_BODY) {
+                nextSpecialActivity = if (nextKind == ActionKind.MOVE_BODY) {
                     specialActivityFor(resident, state.world)
                 } else {
                     null
@@ -259,14 +261,84 @@ object LivingPopulation {
      * geht deshalb ueber den Ortsvorrat des Einwohners: Sein Ankerort gewinnt, sonst der erste
      * seiner Besuchsorte, der zum Domaenenort passt. Damit steht die Verkaufskraft im Laden und
      * nicht irgendwo, ohne dass die Domaene einen fuenften Ort braeuchte.
+     *
+     * ## Draussen trifft man sich
+     *
+     * **Gemeldet als "ich habe noch nie drei oder vier zusammen gesehen".** Gemessen ueber eine
+     * Woche (8 bis 20 Uhr, alle fuenf Minuten) stand im Park nie mehr als zwei, zu 75 Prozent
+     * niemand - obwohl vier Bewohner den Park in ihren Besuchsorten fuehren. Der Grund stand
+     * hier: Draussen ist fuer die Domaene ein einziger Ort, [LivingSite.OUTSIDE], und den
+     * vertritt fuer jeden Bewohner mit Ankerort unter freiem Himmel immer der Ankerort. Hootlet
+     * und Wyrmling standen deshalb ausschliesslich auf dem Sportplatz, Gloop nur in der Stadt;
+     * Strasse und Park-Besuche aus [LivingResident.visitPlaces] kamen nie vor.
+     *
+     * Jetzt geht, wer draussen ist, zum Treffpunkt der Tageszeit ([gatheringPlace]), sofern der
+     * zu seinen Besuchsorten gehoert - sonst bleibt er an seinem Ankerort. Kein Zufall: Derselbe
+     * Stand ergibt denselben Ort.
+     *
+     * [keepAnchor] haelt den Bewohner an seinem Ankerort fest, solange er dort gerade etwas
+     * Bestimmtes vorhat (Sport auf dem Sportplatz - siehe [snapshot]); sonst verschwaende die
+     * gemeinsame Sportplatz-Szene (siehe [LivingPopulationLayout.sharedSportPartner]) oft ihren Partner.
+     *
+     * ## Einkaufen im einzigen Laden
+     *
+     * Wer auf den Markt geht und den Laden nicht in seinen Besuchsorten fuehrt, war bisher
+     * unsichtbar ([LivingSite.MARKET] ohne passenden Ort). Es gibt aber genau einen Laden in der
+     * Stadt - wer einkauft, steht dort.
      */
-    fun placeFor(resident: LivingResident, world: WorldState): PlayScene.Place? {
+    fun placeFor(
+        resident: LivingResident,
+        world: WorldState,
+        keepAnchor: Boolean = false
+    ): PlayScene.Place? {
         if (world.site == LivingSite.HOME) return null
+        val passend = resident.visitPlaces
+            .filter { LivingRuntimeAdapter.siteFor(it) == world.site }
+            .sortedBy { it.ordinal }
         // Der Ankerort gewinnt, sobald er diesen Domaenenort vertritt - fuer die Verkaufskraft
-        // also auch beim Arbeiten (siehe [LivingResident.anchorSites]).
-        if (world.site in resident.anchorSites) return resident.anchorPlace
-        val passend = { place: PlayScene.Place -> LivingRuntimeAdapter.siteFor(place) == world.site }
-        return resident.visitPlaces.sortedBy { it.ordinal }.firstOrNull(passend)
+        // also auch beim Arbeiten (siehe [LivingResident.anchorSites]). Nur draussen darf ein
+        // Bewohner zwischendurch woanders sein.
+        if (world.site in resident.anchorSites) {
+            val andere = passend - resident.anchorPlace
+            if (keepAnchor || world.site != LivingSite.OUTSIDE || andere.isEmpty()) {
+                return resident.anchorPlace
+            }
+            return wanderPlace(resident, world, andere)
+        }
+        if (passend.isEmpty() && world.site == LivingSite.MARKET) return PlayScene.Place.SHOP
+        if (world.site == LivingSite.OUTSIDE) {
+            val treffpunkt = gatheringPlace(world.minuteOfDay)
+            if (treffpunkt in passend) return treffpunkt
+        }
+        return passend.firstOrNull()
+    }
+
+    /**
+     * Der Treffpunkt der Stadt zu dieser Tageszeit - fuer alle derselbe.
+     *
+     * **Absichtlich gemeinsam und nicht je Bewohner versetzt.** Ein erster Entwurf liess jeden
+     * Bewohner in eigenem Takt durch seine Besuchsorte wandern. Gemessen verteilte das nur: Der
+     * Park hatte danach noch seltener Besuch als vorher (16 statt 25 Prozent), weil ein Bewohner
+     * ohnehin nur etwa ein Fuenftel des Tages draussen ist. Menschen verteilen sich nicht
+     * gleichmaessig - sie treffen sich dort, wo zu dieser Stunde alle hingehen. Genau daraus
+     * entstehen Grueppchen.
+     */
+    fun gatheringPlace(minuteOfDay: Int): PlayScene.Place = when (minuteOfDay / 60) {
+        in 0 until 11 -> PlayScene.Place.PARK
+        in 11 until 14 -> PlayScene.Place.CITY
+        in 14 until 18 -> PlayScene.Place.PARK
+        in 18 until 20 -> PlayScene.Place.STREET
+        else -> PlayScene.Place.CITY
+    }
+
+    /** Zum Treffpunkt, wenn er zu den eigenen Besuchsorten gehoert - sonst der Ankerort. */
+    private fun wanderPlace(
+        resident: LivingResident,
+        world: WorldState,
+        andere: List<PlayScene.Place>
+    ): PlayScene.Place {
+        val treffpunkt = gatheringPlace(world.minuteOfDay)
+        return if (treffpunkt in andere) treffpunkt else resident.anchorPlace
     }
 
     /**
