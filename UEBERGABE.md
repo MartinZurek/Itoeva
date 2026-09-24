@@ -97,6 +97,10 @@ dem Loop-Punkt. Als Pilot ist nur `theme-hootlet.txt` neu gefasst (Seed und 8/1 
 naechste Schritt ist genau ein manueller Lauf von **Generate Itoeva Music** mit `theme-hootlet`,
 danach Hoertest und Messvergleich - erst dann die uebrigen vier einzeln angehen.
 
+**Lautheit (24.09.):** Nach jedem neu erzeugten Stueck `python3 tools/music/loudness_table.py`
+laufen lassen (auf dem Hoertest-Branch, wo alle Dateien liegen) und `MusicLoudnessTable.kt`
+mitcommitten - sonst spielt das neue Stueck ohne Ausgleich, also in seiner Rohlautstaerke.
+
 **Weltausbau (24.09.):** Der Plan fuer neue Orte, Interaktionen und Musik steht in
 [`WELTAUSBAU.md`](WELTAUSBAU.md) - Stufe fuer Stufe, je ein kleiner PR. Stufe 1 (Musik kennt
 Umgebung und Aktivitaet) ist umgesetzt.

@@ -664,6 +664,19 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-24 - Weltausbau Stufe 2a: Lautheitsausgleich je Stueck
+
+**Befund (gemessen, BS.1770):** Die 22 ausgelieferten Stuecke liegen zwischen -22,6 (Paper Dawn)
+und -10,8 LUFS (99 Pixels). Der Player spielte jede Datei gleich laut; ein Rotationswechsel konnte
+ein Sprung um ueber 10 dB sein, und in der Musikliste klang das lauteste Stueck automatisch "besser".
+
+- `tools/music/loudness_table.py` misst jede Datei und schreibt `MusicLoudnessTable.kt` (erzeugt,
+  nicht von Hand).
+- `MusicLoudness`: gleicht auf -16 LUFS an, hoechstens +6/-9 dB; ohne Messwert unveraendert.
+- `PlayMusic` wendet den Faktor je Player an (Szene, Ueberblendung, Einspieler);
+  `MusicLibraryScreen` ebenso in der Vorschau (Grundlautstaerke 0,5, damit Anheben moeglich ist).
+- 6 neue Tests (567 -> 573). Arbeitsregel in `UEBERGABE.md`: nach jedem neuen Stueck neu messen.
+
 ### 2026-09-24 - Weltausbau Stufe 1: Musik kennt Umgebung und Aktivitaet
 
 **Wunsch des Nutzers:** Die Engine soll intelligent wissen, wo und wann das Wesen ist - nicht nur

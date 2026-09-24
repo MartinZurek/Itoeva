@@ -12,6 +12,7 @@ import android.os.Looper
 import android.util.Log
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.MusicContext
+import com.notime.glyphsim.matrix.MusicLoudness
 import com.notime.glyphsim.matrix.MusicResolver
 import com.notime.glyphsim.matrix.MusicRole
 import com.notime.glyphsim.matrix.PlayMusicCue
@@ -111,6 +112,15 @@ object PlayMusic {
     private var outgoingPlayer: MediaPlayer? = null
     private var transition: ValueAnimator? = null
     private var playerVolume = 0f
+
+    /**
+     * Der Lautheitsausgleich je laufendem Player (siehe [MusicLoudness]). Alle Lautstaerken in
+     * dieser Datei rechnen in "Stueck auf Ziel angeglichen"; erst beim Setzen am Player wird
+     * dieser Faktor angewandt.
+     */
+    private val gains = HashMap<MediaPlayer, Float>()
+
+    private fun gainOf(value: MediaPlayer): Float = gains[value] ?: 1f
 
     /** Welche Rolle gerade klingt - die Grundlage dafuer, sie NICHT neu zu starten. */
     private var playingRole: MusicRole? = null
@@ -343,6 +353,7 @@ object PlayMusic {
         fadeOverrideMs: Long? = null
     ) {
         val res = trackResId(context, role, variant) ?: return
+        val gain = MusicLoudness.gainFor(role.variantResource(variant))
         val fadeMs = fadeOverrideMs
             ?: PlayMusicTransition.fadeMs(playingRole, role, variantOnly = !rollenwechsel)
         runCatching {
@@ -360,6 +371,7 @@ object PlayMusic {
                 setVolume(0f, 0f)
                 start()
             } ?: return
+            gains[next] = gain
 
             val previous = player
             val previousVolume = playerVolume
@@ -510,6 +522,9 @@ object PlayMusic {
         val res = trackResId(
             context, MusicRole.CHARACTER_THEME, MusicRole.characterThemeVariant(guest)
         ) ?: return null
+        val cueGain = MusicLoudness.gainFor(
+            MusicRole.CHARACTER_THEME.variantResource(MusicRole.characterThemeVariant(guest))
+        )
         val next = runCatching {
             MediaPlayer.create(context, res)?.apply {
                 setAudioAttributes(
@@ -526,6 +541,7 @@ object PlayMusic {
         }.getOrNull() ?: return null
 
         releaseCue()
+        gains[next] = cueGain
         cueMemory = PlayMusicCue.remember(cueMemory, guest, now)
         val token = nextCueToken++
         cueToken = token
@@ -573,14 +589,20 @@ object PlayMusic {
                 baseDuck = cueArc(fromDuck, toDuck, progress)
                 cueVolume = cueArc(fromCue, toCue, progress)
                 refreshBaseVolumes()
-                if (cuePlayer === cue) runCatching { cue.setVolume(cueVolume, cueVolume) }
+                if (cuePlayer === cue) {
+                    val v = cueVolume * gainOf(cue)
+                    runCatching { cue.setVolume(v, v) }
+                }
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     baseDuck = toDuck
                     cueVolume = toCue
                     refreshBaseVolumes()
-                    if (cuePlayer === cue) runCatching { cue.setVolume(toCue, toCue) }
+                    if (cuePlayer === cue) {
+                        val v = toCue * gainOf(cue)
+                        runCatching { cue.setVolume(v, v) }
+                    }
                     if (cueAnimator === animation) cueAnimator = null
                     onEnd()
                 }
@@ -619,7 +641,7 @@ object PlayMusic {
 
     /** Setzt die Lautstaerke eines Szenen-Players - immer unter Beruecksichtigung des Duckings. */
     private fun setBaseVolume(value: MediaPlayer, volume: Float) {
-        val effective = volume * baseDuck
+        val effective = (volume * baseDuck * gainOf(value)).coerceIn(0f, 1f)
         runCatching { value.setVolume(effective, effective) }
     }
 
@@ -633,6 +655,7 @@ object PlayMusic {
     }
 
     private fun releasePlayer(value: MediaPlayer) {
+        gains.remove(value)
         runCatching { if (value.isPlaying) value.stop() }
         runCatching { value.release() }
     }
