@@ -32,6 +32,7 @@ class AudioManager {
 
 class MediaPlayer {
     var isLooping: Boolean = false
+    val duration: Int = -1
     val isPlaying: Boolean = false
     fun setAudioAttributes(attributes: AudioAttributes) {}
     fun setVolume(left: Float, right: Float) {}

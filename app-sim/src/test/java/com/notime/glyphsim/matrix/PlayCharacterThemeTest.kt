@@ -51,9 +51,17 @@ class PlayCharacterThemeTest {
     @Test
     fun `das Fenster endet vor dem zweiten Durchlauf`() {
         assertTrue(PlayCharacterTheme.GREETING_MS < PlayCharacterTheme.PIECE_MS)
-        assertEquals(
-            PlayCharacterTheme.PIECE_MS - PlayCharacterTheme.FADE_MS,
-            PlayCharacterTheme.GREETING_MS
+        // Die ausgelieferten Dateien sind bis zu anderthalb Sekunden kuerzer als bestellt. Auch
+        // dann wechselt die Begruessung, bevor die Naht des Themas beginnt ...
+        val kuerzestesStueck = PlayCharacterTheme.PIECE_MS - 1_500L
+        assertTrue(
+            PlayCharacterTheme.GREETING_MS <
+                PlayMusicLoop.playableMs(kuerzestesStueck, PlayMusicLoop.SEAM_FADE_MS)
+        )
+        // ... und ihre Ausblendung ist vorbei, bevor der Ausklang der Datei beginnt.
+        assertTrue(
+            PlayCharacterTheme.GREETING_MS + PlayCharacterTheme.FADE_MS <=
+                kuerzestesStueck - PlayMusicLoop.TAIL_TRIM_MS
         )
     }
 

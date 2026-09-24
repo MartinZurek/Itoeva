@@ -7,12 +7,15 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.MusicContext
 import com.notime.glyphsim.matrix.MusicResolver
 import com.notime.glyphsim.matrix.MusicRole
 import com.notime.glyphsim.matrix.PlayMusicCue
+import com.notime.glyphsim.matrix.PlayMusicLoop
 import com.notime.glyphsim.matrix.PlayMusicRotation
 import com.notime.glyphsim.matrix.PlayMusicTransition
 import com.notime.glyphsim.settings.SettingsCatalog
@@ -120,6 +123,10 @@ object PlayMusic {
 
     /** Ein Rollenwechsel, der noch auf Bestaetigung wartet - siehe [PlayMusicTransition.settle]. */
     private var pendingRole: PlayMusicTransition.Pending? = null
+
+    /** Die geplante Naht des laufenden Stuecks - siehe [PlayMusicLoop]. */
+    private var seamTask: Runnable? = null
+    private val seamHandler by lazy { Handler(Looper.getMainLooper()) }
 
     // --- Die zweite Ebene: der Einspieler eines Gasts (siehe [PlayMusicCue]) -------------------
 
@@ -295,7 +302,11 @@ object PlayMusic {
             // Der Zeitstempel gehoert der ROLLE, nicht der Variante: Sonst faenge die Uhr bei
             // jedem Wechsel neu an, und aus "spaetestens nach fuenf Minuten" wuerde "alle fuenf
             // Minuten wieder von vorn" - hoerbar als Metronom.
-            if (varianten.size < 2) return null
+            //
+            // Seit [PlayMusicLoop] faellt diese Entscheidung an der Naht des Stuecks, nicht hier
+            // mitten im Takt. Dieser Weg bleibt nur fuer den Fall, dass keine Naht geplant werden
+            // konnte (unbekannte Laenge).
+            if (seamTask != null || varianten.size < 2) return null
             val gelaufen = System.currentTimeMillis() - roleStartedAtMs
             if (!PlayMusicRotation.rotationDue(gelaufen, varianten.size)) return null
             val naechste = PlayMusicRotation.pickVariant(varianten, playingVariant) ?: return null
@@ -324,9 +335,16 @@ object PlayMusic {
      * Tag nicht mitten im Takt abbrechen. Beide Player leben deshalb nur fuer die Dauer dieses
      * Uebergangs nebeneinander; ausserhalb davon bleibt es bei genau einem Decoder.
      */
-    private fun switchTo(context: Context, role: MusicRole, variant: Int, rollenwechsel: Boolean) {
+    private fun switchTo(
+        context: Context,
+        role: MusicRole,
+        variant: Int,
+        rollenwechsel: Boolean,
+        fadeOverrideMs: Long? = null
+    ) {
         val res = trackResId(context, role, variant) ?: return
-        val fadeMs = PlayMusicTransition.fadeMs(playingRole, role, variantOnly = !rollenwechsel)
+        val fadeMs = fadeOverrideMs
+            ?: PlayMusicTransition.fadeMs(playingRole, role, variantOnly = !rollenwechsel)
         runCatching {
             val next = MediaPlayer.create(context, res)?.apply {
                 setAudioAttributes(
@@ -355,6 +373,7 @@ object PlayMusic {
             playingVariant = variant
             // Nur beim ROLLENwechsel neu stellen - siehe die Begruendung in [apply].
             if (rollenwechsel) roleStartedAtMs = System.currentTimeMillis()
+            scheduleSeam(context, role, variant, next)
 
             // **Jeder Start blendet ein - auch ohne Vorgaenger.** Gemeldet als "manchmal geht die
             // Musik fuer mehrere Sekunden aus, und dann kommt der neue Track" - das war kein
@@ -407,7 +426,46 @@ object PlayMusic {
      */
     fun stop() = release()
 
+    /**
+     * Plant, wann das gerade gestartete Stueck [forPlayer] in seinen naechsten Durchlauf
+     * uebergeht - vor seinem Ausklang, und gegebenenfalls in ein anderes Stueck derselben
+     * Stimmung (siehe [PlayMusicLoop]).
+     *
+     * Die Schleife des Players selbst bleibt eingeschaltet: Kommt die Naht aus irgendeinem Grund
+     * nicht, klingt es wie vorher - nie still.
+     */
+    private fun scheduleSeam(context: Context, role: MusicRole, variant: Int, forPlayer: MediaPlayer) {
+        cancelSeam()
+        val dauer = runCatching { forPlayer.duration.toLong() }.getOrDefault(-1L)
+        val varianten = availableVariants(context, role)
+        val gelaufenBeiNaht = System.currentTimeMillis() - roleStartedAtMs + dauer.coerceAtLeast(0L)
+        val naht = PlayMusicLoop.plan(
+            durationMs = dauer,
+            current = variant,
+            variants = varianten,
+            fixedVariant = if (role == MusicRole.CHARACTER_THEME) variant else null,
+            rotate = PlayMusicRotation.rotationDue(gelaufenBeiNaht, varianten.size),
+            variantFadeMs = PlayMusicTransition.fadeMs(role, role, variantOnly = true),
+            pickOther = { verfuegbar, jetzt -> PlayMusicRotation.pickVariant(verfuegbar, jetzt) }
+        ) ?: return
+        val appContext = context.applicationContext
+        val task = Runnable {
+            seamTask = null
+            // Hat inzwischen ein anderer Wechsel stattgefunden, gehoert diese Naht niemandem mehr.
+            if (player !== forPlayer || playingRole != role) return@Runnable
+            switchTo(appContext, role, naht.nextVariant, rollenwechsel = false, fadeOverrideMs = naht.fadeMs)
+        }
+        seamTask = task
+        seamHandler.postDelayed(task, naht.atMs)
+    }
+
+    private fun cancelSeam() {
+        seamTask?.let { seamHandler.removeCallbacks(it) }
+        seamTask = null
+    }
+
     private fun release() {
+        cancelSeam()
         val current = player
         val outgoing = outgoingPlayer
         transition?.removeAllListeners()
