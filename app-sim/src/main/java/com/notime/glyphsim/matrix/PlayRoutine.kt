@@ -318,6 +318,31 @@ object PlayRoutines {
     )
 
     /**
+     * Eine Runde in der Spielhalle (Weltausbau Stufe 3): hingehen, den Automaten einschalten,
+     * spielen - der Bildschirm zeigt dabei ein laufendes Spiel (siehe PlayScene.ambient) -, sich
+     * am Ende freuen und wieder ausschalten.
+     *
+     * Ueber [RoutineStep.Switch] statt ueber eine eigene Sonderaktivitaet: Der Bildschirm ist ein
+     * Geraet wie der Fernseher, und der Automat braucht keine zweite Effektmaschine, um zu leuchten.
+     */
+    fun arcadeRoutine(): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(PlayScene.Place.ARCADE),
+            RoutineStep.GoTo(PlayScene.Station.ARCADE),
+            RoutineStep.Switch(PlayScene.Station.ARCADE, on = true),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Linger(5_000L),
+            // Gewonnen - die Freude ist dieselbe Regung wie das Schuetteln nach dem Bad, nur
+            // aus einem anderen Anlass; im Zusammenhang liest sie sich als Jubel.
+            RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE),
+            RoutineStep.Linger(2_000L),
+            RoutineStep.Switch(PlayScene.Station.ARCADE, on = false),
+            RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
+        )
+    )
+
+    /**
      * ALLE Ablaeufe zu einem Thema - oeffentlich, weil sich sonst nicht pruefen laesst, dass jeder
      * Ablauf nur Plaetze anspricht, die es an seinem Ort tatsaechlich gibt (siehe
      * PlayRoutineTest). Ein Ablauf, der ins Leere greift, wuerde sonst stillschweigend einen
@@ -872,6 +897,8 @@ object PlayRoutines {
         // einziges nichts. Vier Fassungen kosten keine neue Animation und keine neue Requisite -
         // es sind Wege und Pausen zwischen dem, was es schon gibt.
         AnimationType.GENERAL -> listOf(
+            // Freizeit ausser Haus: eine Runde in der Spielhalle.
+            arcadeRoutine(),
             PlayRoutine(
                 listOf(
                     RoutineStep.Act(topic),

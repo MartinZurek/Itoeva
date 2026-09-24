@@ -47,6 +47,7 @@ SUPPORTED_ROLES = {
     "shop_background",
     "fishing_background",
     "ballgame_background",
+    "arcade_background",
     "home_evening_background",
     "morning_background",
     "sport_background",
