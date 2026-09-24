@@ -58,6 +58,18 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
      */
     CITY("city_background", "itoeva_city"),
 
+    /** Draussen in der Natur - Wald, Wiese und Teich, morgens und tagsueber. */
+    NATURE("nature_background", "itoeva_nature"),
+
+    /** Im Laden - die klassische, gut gelaunte Ladenmusik, die jedes Spiel kennt. */
+    SHOP("shop_background", "itoeva_shop"),
+
+    /** Waehrend das Wesen angelt - ruhig, geduldig, sonnig. */
+    FISHING("fishing_background", "itoeva_fishing"),
+
+    /** Waehrend eines Ballspiels (Basketball, Fussball) - Streetball statt Trainingsplatz. */
+    BALLGAME("ballgame_background", "itoeva_ballgame"),
+
     /** Ruhige Abend- und Nachtstunden zu Hause und an stillen Naturorten. */
     HOME_EVENING("home_evening_background", "itoeva_home_evening"),
 
@@ -149,6 +161,11 @@ data class MusicContext(
      */
     val topic: AnimationType? = null,
     /**
+     * Die Sonderaktivitaet, die gerade wirklich laeuft (Angeln, Basketball ...), oder `null`.
+     * Wie [topic] nur gesetzt, solange der Ablauf laeuft - danach klingt wieder der Ort.
+     */
+    val activity: PlayRoutines.SpecialActivity? = null,
+    /**
      * Das Wesen, dessen eigenes Stueck gerade an der Reihe ist - im Normalfall `null`.
      *
      * Nicht "welches Wesen anwesend ist": Das ist es immer, und ein daran haengendes Stueck waere
@@ -176,6 +193,12 @@ object MusicResolver {
      * Orte, an denen ein Abend leise ist. Drinnen plus die stillen Aussenorte - der Sportplatz,
      * die Stadt und die Strasse stehen bewusst nicht hier.
      */
+    private val NATURE_PLACES = setOf(
+        PlayScene.Place.FOREST,
+        PlayScene.Place.MEADOW,
+        PlayScene.Place.POND
+    )
+
     private val CITY_PLACES = setOf(
         PlayScene.Place.STREET,
         PlayScene.Place.CITY,
@@ -211,6 +234,18 @@ object MusicResolver {
         // Wesens noch, klingt der Tag wie sonst statt still zu werden.
         if (context.characterTheme != null) add(MusicRole.CHARACTER_THEME)
 
+        // **Die laufende Aktivitaet vor dem Ort** - aber nie nachts. Angeln klingt nach Angeln,
+        // egal an welchem Ufer; ein Ballspiel nach Streetball, egal auf welchem Platz.
+        val nachts = context.dayPhase == PlayAmbientActivity.DayPhase.NIGHT
+        if (!nachts) {
+            when (context.activity) {
+                PlayRoutines.SpecialActivity.FISHING -> add(MusicRole.FISHING)
+                PlayRoutines.SpecialActivity.BASKETBALL,
+                PlayRoutines.SpecialActivity.FOOTBALL -> add(MusicRole.BALLGAME)
+                else -> Unit
+            }
+        }
+
         // Eine echte Sporthandlung schlaegt die Tageszeit, solange es nicht Nacht ist. Der Ort
         // allein genuegt absichtlich nicht: Ein kurzer Weg oder eine Pause am Sportplatz soll
         // spaeter keinen energischen Track starten und gleich wieder abbrechen.
@@ -239,6 +274,7 @@ object MusicResolver {
                 } else {
                     // Abends noch unterwegs: Die Stadt klingt nach Stadt, der Tag klingt nach,
                     // der Abendtrack ist der Rueckfall.
+                    if (context.place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
                     if (context.place in CITY_PLACES) add(MusicRole.CITY)
                     add(MusicRole.MAIN_DAY)
                     add(MusicRole.HOME_EVENING)
@@ -247,15 +283,25 @@ object MusicResolver {
             PlayAmbientActivity.DayPhase.MORNING -> {
                 // Der Morgen hat Vorrang auch in der Stadt - er ist die seltenere Stimmung.
                 add(MusicRole.MORNING)
-                if (context.place in CITY_PLACES) add(MusicRole.CITY)
+                addPlaceRoles(context.place)
                 add(MusicRole.MAIN_DAY)
             }
 
             PlayAmbientActivity.DayPhase.MIDDAY -> {
-                if (context.place in CITY_PLACES) add(MusicRole.CITY)
+                addPlaceRoles(context.place)
                 add(MusicRole.MAIN_DAY)
             }
         }
+    }
+
+    /**
+     * Die Rollen, die ein Ort tagsueber mitbringt, vom Spezifischsten zum Allgemeinsten: der
+     * Laden vor der Stadt, die Natur fuer sich.
+     */
+    private fun MutableList<MusicRole>.addPlaceRoles(place: PlayScene.Place) {
+        if (place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
+        if (place in CITY_PLACES) add(MusicRole.CITY)
+        if (place in NATURE_PLACES) add(MusicRole.NATURE)
     }
 
     /**

@@ -393,4 +393,82 @@ class MusicResolverTest {
             MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SHOP), heute)
         )
     }
+
+    // ================= Umgebungen und Aktivitaeten =================
+
+    private val alleRollen = MusicRole.entries.toSet() - MusicRole.CHARACTER_THEME
+
+    @Test
+    fun `tagsueber in Wald, Wiese und am Teich klingt die Natur`() {
+        for (place in listOf(PlayScene.Place.FOREST, PlayScene.Place.MEADOW, PlayScene.Place.POND)) {
+            assertEquals(
+                "$place",
+                MusicRole.NATURE,
+                MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, place), alleRollen)
+            )
+        }
+    }
+
+    /** Abends gehoeren die stillen Naturorte weiterhin zum ruhigen Abend. */
+    @Test
+    fun `abends in der Natur bleibt der ruhige Abend`() {
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.FOREST), alleRollen)
+        )
+    }
+
+    @Test
+    fun `im Laden klingt der Laden, sonst die Stadt`() {
+        assertEquals(
+            MusicRole.SHOP,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SHOP), alleRollen)
+        )
+        assertEquals(
+            MusicRole.CITY,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SHOP), alleRollen - MusicRole.SHOP)
+        )
+    }
+
+    @Test
+    fun `beim Angeln klingt das Angeln, egal an welchem Ort`() {
+        val angeln = ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.POND)
+            .copy(activity = PlayRoutines.SpecialActivity.FISHING)
+        assertEquals(MusicRole.FISHING, MusicResolver.resolve(angeln, alleRollen))
+        // Ohne Angelstueck bleibt es bei der Natur.
+        assertEquals(MusicRole.NATURE, MusicResolver.resolve(angeln, alleRollen - MusicRole.FISHING))
+    }
+
+    @Test
+    fun `Basketball und Fussball klingen nach Streetball, Training nach Sport`() {
+        val lage = ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT, AnimationType.MOVE)
+        for (spiel in listOf(PlayRoutines.SpecialActivity.BASKETBALL, PlayRoutines.SpecialActivity.FOOTBALL)) {
+            assertEquals("$spiel", MusicRole.BALLGAME, MusicResolver.resolve(lage.copy(activity = spiel), alleRollen))
+        }
+        assertEquals(
+            MusicRole.SPORT,
+            MusicResolver.resolve(lage.copy(activity = PlayRoutines.SpecialActivity.TRAINING), alleRollen)
+        )
+        // Ohne Streetball-Stueck faellt ein Ballspiel auf den Sport zurueck.
+        assertEquals(
+            MusicRole.SPORT,
+            MusicResolver.resolve(lage.copy(activity = PlayRoutines.SpecialActivity.BASKETBALL), alleRollen - MusicRole.BALLGAME)
+        )
+    }
+
+    /** Nachts gibt es keine Aktivitaetsmusik - dort gilt weiterhin nur die Nacht. */
+    @Test
+    fun `nachts schweigt die Aktivitaetsmusik`() {
+        val nachtsAngeln = ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.POND)
+            .copy(activity = PlayRoutines.SpecialActivity.FISHING)
+        assertEquals(MusicRole.HOME_EVENING, MusicResolver.resolve(nachtsAngeln, alleRollen))
+    }
+
+    /** Die Begruessung des eigenen Wesens schlaegt auch jede Aktivitaet. */
+    @Test
+    fun `die Begruessung schlaegt auch das Ballspiel`() {
+        val lage = ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT, AnimationType.MOVE)
+            .copy(activity = PlayRoutines.SpecialActivity.BASKETBALL, characterTheme = AvatarSpecies.WYRMLING)
+        assertEquals(MusicRole.CHARACTER_THEME, MusicResolver.resolve(lage, MusicRole.entries.toSet()))
+    }
 }

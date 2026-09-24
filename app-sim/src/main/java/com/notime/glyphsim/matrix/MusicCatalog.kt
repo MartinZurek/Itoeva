@@ -43,6 +43,11 @@ object MusicCatalog {
         (MusicRole.CITY to 1) to R.string.music_title_city_01,
         (MusicRole.CITY to 2) to R.string.music_title_city_02,
         (MusicRole.CITY to 3) to R.string.music_title_city_03,
+        (MusicRole.NATURE to 1) to R.string.music_title_nature_01,
+        (MusicRole.NATURE to 2) to R.string.music_title_nature_02,
+        (MusicRole.SHOP to 1) to R.string.music_title_shop_01,
+        (MusicRole.FISHING to 1) to R.string.music_title_fishing_01,
+        (MusicRole.BALLGAME to 1) to R.string.music_title_ballgame_01,
         (MusicRole.HOME_EVENING to 1) to R.string.music_title_home_evening_01,
         (MusicRole.HOME_EVENING to 2) to R.string.music_title_home_evening_02,
         (MusicRole.DREAM to 1) to R.string.music_title_dream_01,
@@ -62,8 +67,12 @@ object MusicCatalog {
     val DISPLAY_ORDER: List<MusicRole> = listOf(
         MusicRole.MORNING,
         MusicRole.MAIN_DAY,
+        MusicRole.NATURE,
         MusicRole.CITY,
+        MusicRole.SHOP,
+        MusicRole.FISHING,
         MusicRole.SPORT,
+        MusicRole.BALLGAME,
         MusicRole.HOME_EVENING,
         MusicRole.CHARACTER_THEME,
         MusicRole.DREAM
@@ -88,6 +97,10 @@ object MusicCatalog {
         MusicRole.MORNING -> R.string.music_role_morning
         MusicRole.MAIN_DAY -> R.string.music_role_main_day
         MusicRole.CITY -> R.string.music_role_city
+        MusicRole.NATURE -> R.string.music_role_nature
+        MusicRole.SHOP -> R.string.music_role_shop
+        MusicRole.FISHING -> R.string.music_role_fishing
+        MusicRole.BALLGAME -> R.string.music_role_ballgame
         MusicRole.SPORT -> R.string.music_role_sport
         MusicRole.HOME_EVENING -> R.string.music_role_home_evening
         MusicRole.CHARACTER_THEME -> R.string.music_role_character_theme
