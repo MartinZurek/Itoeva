@@ -42,6 +42,7 @@ SUPPORTED_OUTPUT_FORMATS = {"wav", "ogg"}
 # Validated here so a typo fails at generation time rather than showing up as silence.
 SUPPORTED_ROLES = {
     "main_day_background",
+    "city_background",
     "home_evening_background",
     "morning_background",
     "sport_background",

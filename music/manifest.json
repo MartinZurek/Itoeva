@@ -76,6 +76,48 @@
       "notes": "Dritte Variante der Rolle main_day_background, gewuenscht vom Nutzer als Hommage: das melancholische, bittersuesse Gefuehl eines deutschen Rap-Beats, den er mag - ausdruecklich NICHT dessen Nachbildung. Uebernommen wird nur die Haltung (Rueckblick auf einen schoenen Tag, warm und ein wenig traurig, hoffnungsvoll darunter) und die Gattung (Boom-Bap mit Klavierloop und Streichern). Melodie, Akkordfolge, Tempo und Klangfarben sind eigene Vorgaben; der Prompt nennt weder Kuenstler noch Stueck. Die Pixelwelt steckt in einer weichen 8-Bit-Rechteckstimme, die jede zweite Runde die Klaviermelodie eine Oktave hoeher verdoppelt. Aufbau nach dem Hootlet-Pilotmuster: Tempo, Puls und Motiv zuerst, kein Ein- und kein Ausblenden. Gleichzeitig die erste dritte Tagesvariante - MAIN_DAY traegt den Mittag ueberall und ist Rueckfall fuer Morgen und Abend (siehe Track-Abdeckung in EVOLUTION.md)."
     },
     {
+      "id": "city-01",
+      "title": "Bitter Pixel Symphony",
+      "role": "city_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_city_01",
+      "prompt_file": "music/prompts/city-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 30092026,
+      "notes": "Erstes Stueck der Rolle city_background (Strasse, Stadt, Laden), gewuenscht vom Nutzer: die Essenz eines melancholischen Britpop-Klassikers mit endloser Streicher-Schleife - stolz, ein wenig gebrochen, erhobenen Kopfes die Strasse entlang. F-Dur, F-C-d-B, 86 BPM, Streicher-Loop ueber lassigem Hip-Hop-Puls. Hommage wie main-day-03: nur die Essenz, keine Nachbildung; Melodie, Akkorde, Tempo und Besetzung sind eigene Vorgaben, der Prompt nennt weder Kuenstler noch Stueck. Weiche 8-Bit-Stimme als Pixel-Signatur, Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden)."
+    },
+    {
+      "id": "city-02",
+      "title": "Pixel Supernova",
+      "role": "city_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_city_02",
+      "prompt_file": "music/prompts/city-02.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 1102026,
+      "notes": "Zweites Stueck der Rolle city_background, gewuenscht vom Nutzer: die Essenz grosser Britpop-Hymnen - geschrammelte Akustikgitarren, warme E-Gitarren-Melodie statt Gesang, Tamburin, das Gefuehl eines mitsingenden Stadions. G-Dur, G-D-e-C, 84 BPM. Hommage wie main-day-03: nur die Essenz, keine Nachbildung; Melodie, Akkorde, Tempo und Besetzung sind eigene Vorgaben, der Prompt nennt weder Kuenstler noch Stueck. Weiche 8-Bit-Stimme als Pixel-Signatur, Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden)."
+    },
+    {
+      "id": "city-03",
+      "title": "La Mélancolie des Pixels",
+      "role": "city_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_city_03",
+      "prompt_file": "music/prompts/city-03.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 2102026,
+      "notes": "Drittes Stueck der Rolle city_background, gewuenscht vom Nutzer: die Essenz melancholischer franzoesischer Rap-Beats - trauriges Klavier, Streicher, ein Musette-Akkordeon als Antwort, schwere staubige Boom-Bap-Drums. c-Moll, c-As-Es-G, 88 BPM. Ausdruecklich tonhoehenstabil (siehe home-evening-01 fuer den Wow-Befund). Hommage wie main-day-03: nur die Essenz, keine Nachbildung; Melodie, Akkorde, Tempo und Besetzung sind eigene Vorgaben, der Prompt nennt weder Kuenstler noch Stueck. Weiche 8-Bit-Stimme als Pixel-Signatur, Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden)."
+    },
+    {
       "id": "sport-01",
       "title": "Full Stride",
       "role": "sport_background",
@@ -102,6 +144,34 @@
       "cfg_scale": 1,
       "seed": 25092026,
       "notes": "Zweite Variante der Rolle sport_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: insgesamt noch zu wenige Musikstuecke. Gleiche energische Familie wie sport-01/'Full Stride', aber gitarrengetragenes Riff statt Blaeser-Antworten auf Rhodes-Stabs. Der erste Lauf mit den fuer das post-trainierte small-music-Modell falschen Werten 50/5 erzeugte in PR #196 verzerrtes Rauschen. Prompt und Seed bleiben erhalten; seit 2026-09-23 gilt fuer die korrekte Neuerzeugung der dokumentierte Modellmodus 8/1."
+    },
+    {
+      "id": "sport-03",
+      "title": "99 Pixels",
+      "role": "sport_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_sport_03",
+      "prompt_file": "music/prompts/sport-03.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 3102026,
+      "notes": "Dritte Variante der Rolle sport_background, gewuenscht vom Nutzer: die Essenz harter Rap-Rock-Beats - trockener, lauter Drum-Break, knackiges Gitarrenriff, Power-Chord-Stabs, Selbstbewusstsein. e-Moll, 92 BPM, ohne Rap und ohne Scratching. Hommage wie main-day-03: nur die Essenz, keine Nachbildung; Melodie, Akkorde, Tempo und Besetzung sind eigene Vorgaben, der Prompt nennt weder Kuenstler noch Stueck. Weiche 8-Bit-Stimme als Pixel-Signatur, Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden)."
+    },
+    {
+      "id": "sport-04",
+      "title": "Now We Are Pixels",
+      "role": "sport_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_sport_04",
+      "prompt_file": "music/prompts/sport-04.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 4102026,
+      "notes": "Vierte Variante der Rolle sport_background, gewuenscht vom Nutzer: die Essenz epischer Filmmusik, kombiniert mit Hip-Hop - treibendes Streicher-Ostinato, heroisches Hornthema, grosse Hip-Hop-Drums mit orchestralem Gewicht. g-Moll, g-Es-B-F, 90 BPM, gleichbleibende Energie ohne Aufbau. Hommage wie main-day-03: nur die Essenz, keine Nachbildung; Melodie, Akkorde, Tempo und Besetzung sind eigene Vorgaben, der Prompt nennt weder Kuenstler noch Stueck. Weiche 8-Bit-Stimme als Pixel-Signatur, Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden)."
     },
     {
       "id": "morning-01",

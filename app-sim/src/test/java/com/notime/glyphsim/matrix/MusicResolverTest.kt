@@ -113,9 +113,15 @@ class MusicResolverTest {
 
     @Test
     fun `abends unterwegs klingt der Tag nach, zu Hause nicht`() {
+        // Seit 2026-09-24 steht in der Stadt deren eigene Rolle davor; die Reihenfolge Tag vor
+        // Abend dahinter ist dieselbe geblieben.
+        assertEquals(
+            listOf(MusicRole.CITY, MusicRole.MAIN_DAY, MusicRole.HOME_EVENING),
+            MusicResolver.candidates(ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.CITY))
+        )
         assertEquals(
             listOf(MusicRole.MAIN_DAY, MusicRole.HOME_EVENING),
-            MusicResolver.candidates(ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.CITY))
+            MusicResolver.candidates(ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.SPORT))
         )
         assertEquals(
             listOf(MusicRole.HOME_EVENING, MusicRole.MAIN_DAY),
@@ -329,6 +335,62 @@ class MusicResolverTest {
         assertEquals(
             MusicRole.CHARACTER_THEME,
             MusicResolver.resolve(nachts, mitNacht + MusicRole.CHARACTER_THEME)
+        )
+    }
+
+    // ================= Die Stadt =================
+
+    private val mitStadt = heute + MusicRole.CITY
+
+    /** Seit 2026-09-24 klingen Strasse, Stadt und Laden nicht mehr wie das Wohnzimmer. */
+    @Test
+    fun `mittags in der Stadt klingt die Stadt`() {
+        for (place in listOf(PlayScene.Place.STREET, PlayScene.Place.CITY, PlayScene.Place.SHOP)) {
+            assertEquals(
+                "$place",
+                MusicRole.CITY,
+                MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, place), mitStadt)
+            )
+        }
+    }
+
+    @Test
+    fun `zu Hause und im Park bleibt der Tag`() {
+        for (place in listOf(PlayScene.Place.LIVING, PlayScene.Place.PARK, PlayScene.Place.KITCHEN)) {
+            assertEquals(
+                "$place",
+                MusicRole.MAIN_DAY,
+                MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, place), mitStadt)
+            )
+        }
+    }
+
+    /** Abends unterwegs: erst die Stadt; nachts nie - dort gilt weiterhin nur der Abend. */
+    @Test
+    fun `abends unterwegs Stadt, nachts nicht`() {
+        assertEquals(
+            MusicRole.CITY,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.EVENING, PlayScene.Place.STREET), mitStadt)
+        )
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.NIGHT, PlayScene.Place.CITY), mitStadt)
+        )
+    }
+
+    @Test
+    fun `morgens hat der Morgen auch in der Stadt Vorrang`() {
+        val lage = ctx(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.CITY)
+        assertEquals(MusicRole.MORNING, MusicResolver.resolve(lage, mitStadt + MusicRole.MORNING))
+        assertEquals(MusicRole.CITY, MusicResolver.resolve(lage, mitStadt))
+    }
+
+    /** Ohne Stadtstueck klingt die Stadt wie bisher - kein stiller Laden. */
+    @Test
+    fun `ohne Stadtstueck bleibt der Tag`() {
+        assertEquals(
+            MusicRole.MAIN_DAY,
+            MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SHOP), heute)
         )
     }
 }

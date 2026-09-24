@@ -67,13 +67,15 @@ object PlayCharacterTheme {
     /**
      * Wie lange das Thema vorn steht.
      *
-     * **Kuerzer als das Stueck, und zwar genau um die Ueberblendung.** Der Player laesst jeden
-     * Track in einer Schleife laufen; endete das Fenster erst nach [PIECE_MS], begaenne das
-     * Stueck hoerbar ein zweites Mal und wuerde vier Sekunden spaeter mitten im Anfang
-     * weggeblendet. So klingt es stattdessen genau einmal durch, und die letzten Sekunden davon
-     * sind schon der Uebergang zurueck in den Tag.
+     * **Kuerzer als das Stueck - um die Ueberblendung UND um das Ende, das nie gespielt wird.**
+     * Seit [PlayMusicLoop] beginnt jeder Durchlauf [PlayMusicLoop.TAIL_TRIM_MS] vor dem
+     * Dateiende von vorn (mit [PlayMusicLoop.SEAM_FADE_MS] Ueberblendung). Endete die
+     * Begruessung erst danach, begaenne das Thema hoerbar ein zweites Mal und wuerde Sekunden
+     * spaeter mitten im Anfang weggeblendet. So endet sie vor der Naht, und die letzten Sekunden
+     * sind schon der Uebergang zurueck in den Tag - bevor der Ausklang der Datei beginnt.
      */
-    const val GREETING_MS = PIECE_MS - FADE_MS
+    const val GREETING_MS =
+        PIECE_MS - PlayMusicLoop.TAIL_TRIM_MS - PlayMusicLoop.SEAM_FADE_MS - FADE_MS
 
     /**
      * Ob dieses Wesen heute noch nicht begruesst hat.

@@ -151,9 +151,10 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 | Rolle | wofuer | Track |
 |---|---|---|
 | `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges, `main-day-03` / Der verpixelste Tag meines Lebens |
+| `city_background` | unterwegs in der Stadt: Strasse, Stadt, Laden (seit 2026-09-24) | `city-01` / Bitter Pixel Symphony, `city-02` / Pixel Supernova, `city-03` / La Mélancolie des Pixels |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
 | `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light, `morning-02` / Paper Dawn, `morning-03` / The Last Evo |
-| `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride; `sport-02` / Second Wind definiert und im Manifest angelegt, noch nicht erzeugt |
+| `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride, `sport-02` / Second Wind, `sport-03` / 99 Pixels, `sport-04` / Now We Are Pixels |
 | `dream_background` | Traum-Szenen | `dream-01` / Ita Stella - seit 2026-09-23 nachts im Schlafzimmer vor dem Abendtrack (`MusicResolver.candidates()`) |
 | `character_theme_background` | das persoenliche Stueck des anwesenden Wesens, Variante 01-06 fest je Spezies | `theme-puffling` / Puffling's Theme (Variante 01), `theme-starlet` / Starlet's Theme (Variante 02), `theme-wyrmling` / Wyrmling's Theme (Variante 03), `theme-fennec` / Fennec's Theme (Variante 04), `theme-gloop` / Gloop's Theme (Variante 05), `theme-hootlet` / Hootlet's Theme (Variante 06) |
 
