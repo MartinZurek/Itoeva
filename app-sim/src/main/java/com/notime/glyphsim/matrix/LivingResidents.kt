@@ -105,7 +105,9 @@ object LivingResidents {
             visitPlaces = setOf(
                 PlayScene.Place.SPORT,
                 PlayScene.Place.PARK,
-                PlayScene.Place.CITY
+                PlayScene.Place.CITY,
+                // Wer sich gern bewegt, misst sich auch gern - am Automaten in der Spielhalle.
+                PlayScene.Place.ARCADE
             ),
             activeFromMinute = 6 * 60,
             activeUntilMinute = 22 * 60
@@ -153,7 +155,9 @@ object LivingResidents {
             visitPlaces = setOf(
                 PlayScene.Place.CITY,
                 PlayScene.Place.STREET,
-                PlayScene.Place.SHOP
+                PlayScene.Place.SHOP,
+                // Der Nachbar aus der Stadt schaut in der Spielhalle vorbei - sie liegt um die Ecke.
+                PlayScene.Place.ARCADE
             ),
             activeFromMinute = 6 * 60,
             activeUntilMinute = 22 * 60

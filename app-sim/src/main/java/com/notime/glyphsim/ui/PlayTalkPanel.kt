@@ -649,6 +649,7 @@ private fun placeTextFor(place: PlayScene.Place): Int = when (place) {
     PlayScene.Place.FOREST -> R.string.talk_place_forest
     PlayScene.Place.MEADOW -> R.string.talk_place_meadow
     PlayScene.Place.CITY -> R.string.talk_place_city
+    PlayScene.Place.ARCADE -> R.string.talk_place_arcade
 }
 
 @Composable

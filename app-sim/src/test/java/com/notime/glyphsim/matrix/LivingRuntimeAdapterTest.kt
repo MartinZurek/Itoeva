@@ -51,7 +51,8 @@ class LivingRuntimeAdapterTest {
                 PlayScene.Place.STREET,
                 PlayScene.Place.FOREST,
                 PlayScene.Place.MEADOW,
-                PlayScene.Place.CITY
+                PlayScene.Place.CITY,
+                PlayScene.Place.ARCADE
             ),
             grouped.getValue(LivingSite.OUTSIDE).toSet()
         )

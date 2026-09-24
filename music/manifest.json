@@ -382,6 +382,34 @@
       "cfg_scale": 1,
       "seed": 9102026,
       "notes": "Erstes Stueck der Rolle ballgame_background (Basketball, Fussball): die Essenz eines Neunziger-Streetball-Sommers - Slap-Bass-Riff, Bläser-Stabs, Funk-Gitarre, knackige Boom-Bap-Drums. e-Moll, 95 BPM, ohne Rap und ohne Publikum. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden), weiche 8-Bit-Stimme als Pixel-Signatur wie bei den Hommagen; der Prompt nennt weder Kuenstler noch Werk."
+    },
+    {
+      "id": "arcade-01",
+      "title": "Insert Coin",
+      "role": "arcade_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_arcade_01",
+      "prompt_file": "music/prompts/arcade-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 10102026,
+      "notes": "Erstes Stueck der Rolle arcade_background (Spielhalle, Weltausbau Stufe 3): die Essenz klassischer Automaten-Chipmusik - Rechteck-Lead, Arpeggien, Dreieck-Bass, Rausch-Schlagzeug. C-Dur, 132 BPM, ohne Spielgeraeusche. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden); der Prompt nennt weder Spiel noch Komponist."
+    },
+    {
+      "id": "arcade-02",
+      "title": "Continue?",
+      "role": "arcade_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_arcade_02",
+      "prompt_file": "music/prompts/arcade-02.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 11102026,
+      "notes": "Zweites Stueck der Rolle arcade_background: Synthwave fuer die Spielhalle am Abend - analoger Synth-Lead, warme Flaechen, pulsierender Bass, Drumcomputer, 8-Bit-Doppelung als Pixel-Signatur. a-Moll, 100 BPM. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden); der Prompt nennt weder Spiel noch Komponist."
     }
   ]
 }

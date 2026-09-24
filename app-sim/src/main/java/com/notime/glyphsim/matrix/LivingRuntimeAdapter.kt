@@ -43,7 +43,7 @@ data class PreparedLivingRoutine(
  */
 object LivingRuntimeAdapter {
 
-    /** Die sechzehn sichtbaren Orte auf die vier entscheidungsrelevanten Orte abbilden. */
+    /** Die siebzehn sichtbaren Orte auf die vier entscheidungsrelevanten Orte abbilden. */
     fun siteFor(place: PlayScene.Place): LivingSite = when (place) {
         PlayScene.Place.WORK -> LivingSite.WORKPLACE
         PlayScene.Place.SHOP -> LivingSite.MARKET
@@ -53,7 +53,10 @@ object LivingRuntimeAdapter {
         PlayScene.Place.STREET,
         PlayScene.Place.FOREST,
         PlayScene.Place.MEADOW,
-        PlayScene.Place.CITY -> LivingSite.OUTSIDE
+        PlayScene.Place.CITY,
+        // Die Spielhalle ist fuer die Entscheidungen des Kerns "unterwegs" - weder Zuhause noch
+        // Arbeit noch Markt.
+        PlayScene.Place.ARCADE -> LivingSite.OUTSIDE
         PlayScene.Place.BEDROOM,
         PlayScene.Place.BATH,
         PlayScene.Place.DESK,

@@ -156,6 +156,7 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 | `shop_background` | im Laden | `shop-01` / Checkout Bossa |
 | `fishing_background` | waehrend das Wesen angelt | `fishing-01` / Gone Pixel Fishing |
 | `ballgame_background` | waehrend Basketball oder Fussball | `ballgame-01` / Pixel Hoops |
+| `arcade_background` | in der Spielhalle (seit 2026-09-24) | `arcade-01` / Insert Coin, `arcade-02` / Continue? |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
 | `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light, `morning-02` / Paper Dawn, `morning-03` / The Last Evo |
 | `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride, `sport-02` / Second Wind, `sport-03` / 99 Pixels, `sport-04` / Now We Are Pixels |
