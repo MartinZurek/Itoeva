@@ -43,6 +43,10 @@ SUPPORTED_OUTPUT_FORMATS = {"wav", "ogg"}
 SUPPORTED_ROLES = {
     "main_day_background",
     "city_background",
+    "nature_background",
+    "shop_background",
+    "fishing_background",
+    "ballgame_background",
     "home_evening_background",
     "morning_background",
     "sport_background",

@@ -752,6 +752,10 @@
     <string name="music_role_morning">Früher Morgen</string>
     <string name="music_role_main_day">Der normale Tag</string>
     <string name="music_role_city">Unterwegs in der Stadt – Straße, Stadt und Laden</string>
+    <string name="music_role_nature">Draußen in der Natur – Wald, Wiese und Teich</string>
+    <string name="music_role_shop">Im Laden</string>
+    <string name="music_role_fishing">Beim Angeln</string>
+    <string name="music_role_ballgame">Beim Ballspiel – Basketball und Fußball</string>
     <string name="music_role_sport">Bewegung am Sportplatz</string>
     <string name="music_role_home_evening">Ruhiger Abend, Nacht und stille Naturorte</string>
     <string name="music_role_character_theme">Das eigene Thema des anwesenden Wesens, einmal am Tag</string>
@@ -770,6 +774,11 @@
     <string name="music_title_city_01">Bitter Pixel Symphony</string>
     <string name="music_title_city_02">Pixel Supernova</string>
     <string name="music_title_city_03">La Mélancolie des Pixels</string>
+    <string name="music_title_nature_01">My Neighbor Pixel</string>
+    <string name="music_title_nature_02">Clover Hills</string>
+    <string name="music_title_shop_01">Checkout Bossa</string>
+    <string name="music_title_fishing_01">Gone Pixel Fishing</string>
+    <string name="music_title_ballgame_01">Pixel Hoops</string>
     <string name="music_title_home_evening_01">Quiet Lanterns</string>
     <string name="music_title_home_evening_02">Late Windows</string>
     <string name="music_title_theme_puffling">Puffling\'s Theme</string>

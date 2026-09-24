@@ -152,4 +152,30 @@ class PlayMusicTransitionTest {
         // Die Bestaetigung ist laenger als jede Blende - sonst waere sie kaum hoerbar.
         assertTrue(PlayMusicTransition.ROLE_SETTLE_MS > PlayMusicTransition.VARIANT_FADE_MS)
     }
+
+    // ================= Aktivitaeten =================
+
+    /** Der erste Wurf wartet nicht zehn Sekunden auf seine Musik. */
+    @Test
+    fun `eine Aktivitaet beginnt sofort`() {
+        for (rolle in PlayMusicTransition.ACTIVITY_ROLES) {
+            assertTrue("$rolle", PlayMusicTransition.settle(MusicRole.NATURE, rolle, null, t0).switchNow)
+        }
+    }
+
+    /** Eine kurze Pause zwischen zwei Wuerfen wirft die Musik nicht um. */
+    @Test
+    fun `das Ende einer Aktivitaet wartet wie ein Ortswechsel`() {
+        val s = PlayMusicTransition.settle(MusicRole.BALLGAME, MusicRole.MAIN_DAY, null, t0)
+        assertFalse(s.switchNow)
+        assertEquals(PlayMusicTransition.ROLE_SETTLE_MS, s.recheckInMs)
+    }
+
+    @Test
+    fun `ins Ballspiel und hinaus mit Impuls`() {
+        assertEquals(
+            PlayMusicTransition.SPORT_FADE_MS,
+            PlayMusicTransition.fadeMs(MusicRole.MAIN_DAY, MusicRole.BALLGAME, false)
+        )
+    }
 }

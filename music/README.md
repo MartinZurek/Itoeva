@@ -152,6 +152,10 @@ Die waere zu 90 % Wiederholung und muesste bei jedem neuen Ort viermal ergaenzt 
 |---|---|---|
 | `main_day_background` | der normale Tag, musikalische Hauptidentitaet | `main-day-01` / Lantern Streets, `main-day-02` / Paper Bridges, `main-day-03` / Der verpixelste Tag meines Lebens |
 | `city_background` | unterwegs in der Stadt: Strasse, Stadt, Laden (seit 2026-09-24) | `city-01` / Bitter Pixel Symphony, `city-02` / Pixel Supernova, `city-03` / La Mélancolie des Pixels |
+| `nature_background` | Wald, Wiese, Teich - morgens und tagsueber (seit 2026-09-24) | `nature-01` / My Neighbor Pixel, `nature-02` / Clover Hills |
+| `shop_background` | im Laden | `shop-01` / Checkout Bossa |
+| `fishing_background` | waehrend das Wesen angelt | `fishing-01` / Gone Pixel Fishing |
+| `ballgame_background` | waehrend Basketball oder Fussball | `ballgame-01` / Pixel Hoops |
 | `home_evening_background` | ruhiger Abend, Nacht und stille Naturorte | `home-evening-01` / Quiet Lanterns; `home-evening-02` / Late Windows definiert und im Manifest angelegt, aber erst nach einem Lauf von **Generate Itoeva Music** tatsaechlich als Datei da - bis dahin bleibt die Rolle bei genau einem Stueck |
 | `morning_background` | frueher Morgen, falls er sich abheben soll | `morning-01` / First Light, `morning-02` / Paper Dawn, `morning-03` / The Last Evo |
 | `sport_background` | Bewegung und Anstrengung | `sport-01` / Full Stride, `sport-02` / Second Wind, `sport-03` / 99 Pixels, `sport-04` / Now We Are Pixels |
