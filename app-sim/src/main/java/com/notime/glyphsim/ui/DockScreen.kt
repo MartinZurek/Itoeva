@@ -2026,6 +2026,20 @@ fun DockScreen(
                 }
                 walkGuestTo(meetX)
 
+                // Nur EIN Gespraech gleichzeitig, auch wenn mehrere Besucher gleichzeitig laufen
+                // koennen (siehe conversationOwnerProfileId oben) - sonst gaebe es zwei
+                // Sprechblasen-Paare zugleich, auf dem kleinen Bildschirm nicht lesbar. Ein
+                // anderer Besuch, dessen Gespraechsphase gerade laeuft, wird hier kurz abgewartet.
+                //
+                // Das Schild muss VOR dem Lesen des Living-Zustands gehalten werden und bleibt
+                // bis NACH dem Speichern bestehen. Sonst koennen zwei Gaeste denselben alten
+                // Wirtszustand lesen und der zweite Commit ueberschreibt die Beziehungserfahrung
+                // des ersten, obwohl die Gespraeche im Bild nacheinander erscheinen.
+                while (conversationOwnerProfileId != null) {
+                    delay(VISIT_WAIT_TICK_MS)
+                }
+                conversationOwnerProfileId = guestProfileId
+
                 // Der sichtbare Besuch traegt jetzt denselben Austausch wie der Kern: Der Gast
                 // fragt PLAY + QUESTION, der Bewohner antwortet aus seinem wirklichen Zustand.
                 // Hier wird nichts entschieden; die Oberflaeche zeigt nur die beiden Nachrichten
@@ -2043,15 +2057,6 @@ fun DockScreen(
                     receiver = hostAgent,
                     receiverWorld = hostWorld
                 )
-
-                // Nur EIN Gespraech gleichzeitig, auch wenn mehrere Besucher gleichzeitig laufen
-                // koennen (siehe conversationOwnerProfileId oben) - sonst gaebe es zwei
-                // Sprechblasen-Paare zugleich, auf dem kleinen Bildschirm nicht lesbar. Ein
-                // anderer Besuch, dessen Gespraechsphase gerade laeuft, wird hier kurz abgewartet.
-                while (conversationOwnerProfileId != null) {
-                    delay(VISIT_WAIT_TICK_MS)
-                }
-                conversationOwnerProfileId = guestProfileId
 
                 avatarIdleJob?.cancel()
                 coroutineScope {
@@ -2134,11 +2139,6 @@ fun DockScreen(
                 // wieder laufende Schleife vor UND liesse sie parallel zu seiner eigenen
                 // "hoert zu"-Animation weiterschreiben.
                 startAvatarIdleLoop(host.species, AvatarMoodSnapshot.forSpecies(context, host.species))
-                // Das Gespraech ist vorbei - das Schild geht sofort wieder frei, nicht erst im
-                // finally, damit der naechste wartende Besuch nicht bis zum Ende dieses ganzen
-                // Besuchs (inklusive Verlassen) warten muss.
-                conversationOwnerProfileId = null
-
                 // Wie bei jeder anderen Living-Choreografie erst NACH dem sichtbaren Abschluss
                 // verbuchen. Bricht eine Erinnerung den Wortwechsel ab, darf keine unsichtbare
                 // Beziehungserfahrung im Snapshot stehen.
@@ -2167,6 +2167,10 @@ fun DockScreen(
                         messages = listOf(exchange.response)
                     )
                 )
+                // Gespraech UND Zustandsaenderung sind jetzt vollstaendig. Erst hier darf der
+                // naechste wartende Gast den neuen Wirtszustand lesen. Auf das anschliessende
+                // Verweilen oder Verlassen muss er dagegen nicht warten.
+                conversationOwnerProfileId = null
 
                 // Noch eine Weile dableiben, bevor es weitergeht (siehe PlayVisitWindow.lingerMs):
                 // So stehen mehrere Gaeste tatsaechlich zusammen im Bild, statt einander nur
@@ -3291,6 +3295,14 @@ fun DockScreen(
                 while (isActive) {
                     if (!evaluateExternalImpulse) {
                         delay(PlayAmbientActivity.nextPauseMillis())
+                    }
+                    // Ein Besuch endet nicht mit der letzten Sprechblase: Der Gast bleibt noch
+                    // sichtbar stehen. Solange irgendein Gast im Bild ist, darf der Wirt weder
+                    // loswandern noch einen neuen Tagesablauf beginnen. Der Besuch besitzt diese
+                    // Szene bis zum tatsaechlichen Verlassen (siehe PlayVisitWindow.lingerMs).
+                    if (PlayVisitWindow.pausesHost(visitingProfileIds.size)) {
+                        delay(VISIT_WAIT_TICK_MS)
+                        continue
                     }
                     val current = avatar
                     // Nur ausserhalb einer offenen Erinnerung und ausserhalb einer Fuetter-

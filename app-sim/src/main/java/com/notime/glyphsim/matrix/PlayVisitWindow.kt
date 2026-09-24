@@ -94,6 +94,15 @@ object PlayVisitWindow {
     fun lingerMs(place: PlayScene.Place): LongRange =
         if (PlayScene.isOutdoors(place)) OUTDOOR_LINGER_MS else INDOOR_LINGER_MS
 
+    /**
+     * Ob der Hauptavatar seine autonomen Regungen pausieren muss.
+     *
+     * Ein Gast zaehlt bis zum wirklichen Verlassen als anwesend, nicht nur waehrend seines
+     * Gespraechs. So kann die Figur beim anschliessenden gemeinsamen Verweilen weder fortgehen
+     * noch mitten im Grueppchen einen neuen Tagesablauf beginnen.
+     */
+    fun pausesHost(visitorsOnScreen: Int): Boolean = visitorsOnScreen > 0
+
     /** Abstand zwischen zwei Besuchen. */
     val INTERVAL_MS = 90_000L..210_000L
 
@@ -140,4 +149,3 @@ object PlayVisitWindow {
      */
     const val GROUP_WINDOW_MS = 45_000L
 }
-
