@@ -38,6 +38,11 @@ object MusicCatalog {
         (MusicRole.MAIN_DAY to 3) to R.string.music_title_main_day_03,
         (MusicRole.SPORT to 1) to R.string.music_title_sport_01,
         (MusicRole.SPORT to 2) to R.string.music_title_sport_02,
+        (MusicRole.SPORT to 3) to R.string.music_title_sport_03,
+        (MusicRole.SPORT to 4) to R.string.music_title_sport_04,
+        (MusicRole.CITY to 1) to R.string.music_title_city_01,
+        (MusicRole.CITY to 2) to R.string.music_title_city_02,
+        (MusicRole.CITY to 3) to R.string.music_title_city_03,
         (MusicRole.HOME_EVENING to 1) to R.string.music_title_home_evening_01,
         (MusicRole.HOME_EVENING to 2) to R.string.music_title_home_evening_02,
         (MusicRole.DREAM to 1) to R.string.music_title_dream_01,
@@ -57,6 +62,7 @@ object MusicCatalog {
     val DISPLAY_ORDER: List<MusicRole> = listOf(
         MusicRole.MORNING,
         MusicRole.MAIN_DAY,
+        MusicRole.CITY,
         MusicRole.SPORT,
         MusicRole.HOME_EVENING,
         MusicRole.CHARACTER_THEME,
@@ -81,6 +87,7 @@ object MusicCatalog {
     fun roleDescriptionRes(role: MusicRole): Int = when (role) {
         MusicRole.MORNING -> R.string.music_role_morning
         MusicRole.MAIN_DAY -> R.string.music_role_main_day
+        MusicRole.CITY -> R.string.music_role_city
         MusicRole.SPORT -> R.string.music_role_sport
         MusicRole.HOME_EVENING -> R.string.music_role_home_evening
         MusicRole.CHARACTER_THEME -> R.string.music_role_character_theme

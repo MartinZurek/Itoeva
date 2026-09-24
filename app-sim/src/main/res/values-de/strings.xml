@@ -751,6 +751,7 @@
     <string name="music_library_empty">Für diese Rolle ist noch kein Stück ausgeliefert.</string>
     <string name="music_role_morning">Früher Morgen</string>
     <string name="music_role_main_day">Der normale Tag</string>
+    <string name="music_role_city">Unterwegs in der Stadt – Straße, Stadt und Laden</string>
     <string name="music_role_sport">Bewegung am Sportplatz</string>
     <string name="music_role_home_evening">Ruhiger Abend, Nacht und stille Naturorte</string>
     <string name="music_role_character_theme">Das eigene Thema des anwesenden Wesens, einmal am Tag</string>
@@ -764,6 +765,11 @@
     <string name="music_title_main_day_03">Der verpixelste Tag meines Lebens</string>
     <string name="music_title_sport_01">Full Stride</string>
     <string name="music_title_sport_02">Second Wind</string>
+    <string name="music_title_sport_03">99 Pixels</string>
+    <string name="music_title_sport_04">Now We Are Pixels</string>
+    <string name="music_title_city_01">Bitter Pixel Symphony</string>
+    <string name="music_title_city_02">Pixel Supernova</string>
+    <string name="music_title_city_03">La Mélancolie des Pixels</string>
     <string name="music_title_home_evening_01">Quiet Lanterns</string>
     <string name="music_title_home_evening_02">Late Windows</string>
     <string name="music_title_theme_puffling">Puffling\'s Theme</string>

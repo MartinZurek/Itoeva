@@ -664,6 +664,43 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-24 - Musik, zweite Welle: fuenf Hommagen, Stadtmusik, nahtlose Loops
+
+**Wunsch des Nutzers:** Mehr Stuecke als Hommage an die Essenz grosser Vorbilder - Britpop-Hymnen,
+eine melancholische Streicher-Schleife, harter Rap, franzoesischer Rap-Beat mit melancholischen
+Drums, epische Filmmusik, gern kombiniert - "als Audio-Profi mit Film-, Pop- und Hip-Hop-Erfahrung".
+Dazu: Game- und Music-Engine noch einmal ansehen und optimieren.
+
+**Fuenf neue Prompts** (je nur Essenz, eigene Melodie/Akkorde/Tempi, keine Namen im Prompt, weiche
+8-Bit-Stimme als Pixel-Signatur, kein Ein-/Ausblenden):
+
+| Stueck | Rolle | Essenz |
+|---|---|---|
+| Bitter Pixel Symphony (`city-01`) | Stadt | endlose Streicher-Schleife ueber lassigem Puls, stolz und gebrochen |
+| Pixel Supernova (`city-02`) | Stadt | Britpop-Hymne: Akustikgitarren, E-Gitarren-Melodie, Tamburin |
+| La Mélancolie des Pixels (`city-03`) | Stadt | franzoesischer Rap-Beat: Moll-Klavier, Akkordeon, schwere Drums |
+| 99 Pixels (`sport-03`) | Sport | harter Rap-Rock: trockener Break, Gitarrenriff, Stabs |
+| Now We Are Pixels (`sport-04`) | Sport | Orchester trifft Hip-Hop: Ostinato, Hornthema, grosse Drums |
+
+**Engine:**
+
+- **Neue Rolle `CITY`** (`MusicResolver`): Strasse, Stadt und Laden klangen bisher wie das
+  Wohnzimmer, weil alles auf `MAIN_DAY` fiel. Mittags und abends unterwegs steht jetzt die Stadt
+  vorn; morgens bleibt der Morgen vorn; nachts gilt weiterhin nur der Abend. Fehlt ein
+  Stadtstueck, klingt alles wie bisher. `generate_music.py` kennt die Rolle (Pflicht-Abgleich).
+- **Nahtlose Loops** (`PlayMusicLoop`, rein, getestet): Gemessen am 2026-09-24 blenden elf von
+  siebzehn Stuecken trotz Verbot in den letzten zwei bis sieben Sekunden aus - die harte Schleife
+  des Players spielte dieses Loch jedes Mal. Jetzt beginnt 7,5 s vor Dateiende der naechste
+  Durchlauf auf einem zweiten Player mit Ueberblendung; der Ausklang wird nie gespielt.
+- **Rotation an der Naht statt mitten im Takt:** Der Wechsel zu einem anderen Stueck derselben
+  Stimmung faellt jetzt am Ende eines Durchlaufs (8 s Blende), nicht irgendwann mittendrin.
+- **Begruessung angepasst:** `PlayCharacterTheme.GREETING_MS` endet vor der Naht des Themas
+  (76 statt 86 s), damit das eigene Stueck nicht ein zweites Mal ansetzt.
+- 12 neue Tests (Suite 545 -> 557), dazu Offline-Attrappen fuer `Handler`/`Looper`.
+
+**Rueckweg:** `scheduleSeam` in `PlayMusic` nicht aufrufen - dann schleift der Player wie vorher.
+Die Stadt-Rolle faellt ohne Stadtstuecke von selbst auf den Tag zurueck.
+
 ### 2026-09-23 - Zwei weitere Hommagen: "The Last Evo" (morning-03) und "Ita Stella" (dream-01)
 
 **Wunsch des Nutzers:** Nach "Der verpixelste Tag meines Lebens" zwei weitere Stuecke in derselben

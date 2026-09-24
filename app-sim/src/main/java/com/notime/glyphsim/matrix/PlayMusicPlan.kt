@@ -51,6 +51,13 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
      */
     MAIN_DAY("main_day_background", "itoeva_main_day"),
 
+    /**
+     * Unterwegs in der Stadt - Strasse, Stadt und Laden. Bis 2026-09-24 klangen diese Orte wie
+     * das Wohnzimmer, weil beide auf [MAIN_DAY] fielen. Die Stadt bekommt eigene Stuecke mit mehr
+     * Puls und mehr Weite (Britpop, Hip-Hop, Streicher-Schleifen); fehlen sie, bleibt es beim Tag.
+     */
+    CITY("city_background", "itoeva_city"),
+
     /** Ruhige Abend- und Nachtstunden zu Hause und an stillen Naturorten. */
     HOME_EVENING("home_evening_background", "itoeva_home_evening"),
 
@@ -169,6 +176,12 @@ object MusicResolver {
      * Orte, an denen ein Abend leise ist. Drinnen plus die stillen Aussenorte - der Sportplatz,
      * die Stadt und die Strasse stehen bewusst nicht hier.
      */
+    private val CITY_PLACES = setOf(
+        PlayScene.Place.STREET,
+        PlayScene.Place.CITY,
+        PlayScene.Place.SHOP
+    )
+
     private val QUIET_PLACES = setOf(
         PlayScene.Place.BEDROOM,
         PlayScene.Place.BATH,
@@ -224,17 +237,24 @@ object MusicResolver {
                     add(MusicRole.HOME_EVENING)
                     add(MusicRole.MAIN_DAY)
                 } else {
-                    // Abends noch unterwegs: Der Tag klingt nach, der Abendtrack ist der Rueckfall.
+                    // Abends noch unterwegs: Die Stadt klingt nach Stadt, der Tag klingt nach,
+                    // der Abendtrack ist der Rueckfall.
+                    if (context.place in CITY_PLACES) add(MusicRole.CITY)
                     add(MusicRole.MAIN_DAY)
                     add(MusicRole.HOME_EVENING)
                 }
 
             PlayAmbientActivity.DayPhase.MORNING -> {
+                // Der Morgen hat Vorrang auch in der Stadt - er ist die seltenere Stimmung.
                 add(MusicRole.MORNING)
+                if (context.place in CITY_PLACES) add(MusicRole.CITY)
                 add(MusicRole.MAIN_DAY)
             }
 
-            PlayAmbientActivity.DayPhase.MIDDAY -> add(MusicRole.MAIN_DAY)
+            PlayAmbientActivity.DayPhase.MIDDAY -> {
+                if (context.place in CITY_PLACES) add(MusicRole.CITY)
+                add(MusicRole.MAIN_DAY)
+            }
         }
     }
 
