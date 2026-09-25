@@ -196,6 +196,13 @@ object MusicResolver {
      * Orte, an denen ein Abend leise ist. Drinnen plus die stillen Aussenorte - der Sportplatz,
      * die Stadt und die Strasse stehen bewusst nicht hier.
      */
+    /** Beschaeftigungen, zu denen tagsueber die ruhige Musik gehoert - siehe [candidates]. */
+    val CALM_TOPICS: Set<AnimationType> = setOf(
+        AnimationType.REST,
+        AnimationType.SLEEP,
+        AnimationType.MINDFULNESS
+    )
+
     private val NATURE_PLACES = setOf(
         PlayScene.Place.FOREST,
         PlayScene.Place.MEADOW,
@@ -292,6 +299,13 @@ object MusicResolver {
             }
 
             PlayAmbientActivity.DayPhase.MIDDAY -> {
+                // **Die Musik hoert, was die Figur tut, nicht nur wo sie ist.** Ruht sie mittags
+                // auf dem Sofa oder sammelt sich im Park, lief bisher trotzdem der Tages-Track.
+                // Jetzt kommt an einem ruhigen Ort zuerst die ruhige Musik; der Tag bleibt der
+                // Rueckfall. Morgens nicht - der Morgen-Track ist ohnehin der leisere.
+                if (context.topic in CALM_TOPICS && context.place in QUIET_PLACES) {
+                    add(MusicRole.HOME_EVENING)
+                }
                 addPlaceRoles(context.place)
                 add(MusicRole.MAIN_DAY)
             }
