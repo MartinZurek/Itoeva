@@ -686,9 +686,17 @@ durch".
   Morgens und an lauten Orten bleibt alles wie bisher. Bewusste Ausnahme vom Grundsatz
   "mittags kein Abendstueck": Er gilt weiter fuer alles ausser Ruhe, Schlaf und Achtsamkeit.
 
-**Offen (naechste Schritte):** Gegenstaende in den Reaktionen sind oft nur 2-4 Pixel gross und
-sitzen in den Ohrenzeilen (Kontaktboegen); eigener Durchgang. Drachensteigen ohne eigene Musik
-(Stufe 2 in `WELTAUSBAU.md`).
+- **Die kleinsten Gegenstaende in Reaktionen werden erkennbar.** Gemessen (neue Pixel je Motiv,
+  alle sechs Spezies): Haustier 1, Komet 2, Pfote 3, Anrufen 3, Seifenblase 3 - Punkte statt
+  Dinge. Sie sassen zudem in den Zeilen 0-4, wo die Ohren liegen. Neu gezeichnet als kleine
+  Symbole (Wesen mit Beinchen, Komet mit Schweif, Pfotenabdruecke, Hoerer mit Klingelboegen,
+  Ring) in der Kopffreiheit (y -4..-1), die bei keiner Spezies belegt ist. Genau fuenf Zeilen in
+  `reaction-fingerprint.txt` erneuert: `LIB:Bubble`, `LIB:Call`, `LIB:Comet`, `LIB:Paw`,
+  `LIB:Pet`. In den Kontaktboegen (Puffling) geprueft.
+
+**Offen (naechste Schritte):** Weitere Motive mit kleinen Gegenstaenden (Feder, Kerze, Musik,
+Katze, Haken; 4-6 Pixel bei der kleinsten Spezies). Drachensteigen ohne eigene Musik (Stufe 2 in
+`WELTAUSBAU.md`).
 
 ### 2026-09-25 - Freizeit draussen
 
