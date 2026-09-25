@@ -4,15 +4,26 @@ nineties hip hop summer. 95 BPM in 4/4 with a tight, head-nodding boom bap
 groove on every beat from the first bar to the last.
 
 A funky slap bass plays one catchy two-bar riff in E minor, and the same
-riff returns for the whole piece. A bright horn section answers every
-second bar with short, punchy stabs. A clean electric guitar plays muted
-funk chords on the off-beats over E minor 7 and A 7, and the drums are
-crisp and snappy: fat kick, cracking snare on two and four, open hi-hat
-accents and hand claps on the snare.
+riff returns for the whole piece. A warm horn section answers every second
+bar with short, punchy stabs. A clean electric guitar plays muted funk
+chords on the off-beats over E minor 7 and A 7, and the drums are crisp
+and snappy: fat kick, cracking snare on two and four, open hi-hat accents
+and hand claps on the snare.
 
-On every second pass a soft 8-bit square-wave voice doubles the bass riff
-one octave higher, like a scoreboard flashing in pixels. The sound is
-punchy, bright and tight, clear in the mid range, never muddy.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+bass riff with its own short phrase in the same middle register, like a
+scoreboard flashing in pixels, taking turns with the lead rather than
+playing along with it. Halfway through, a contrasting four-bar B phrase at
+the same energy gives the main melody a rest - a different lead instrument
+and a new chord colour from the same key - and then the main melody
+returns. The sound is punchy, warm and tight, clear in the mid range,
+never muddy.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

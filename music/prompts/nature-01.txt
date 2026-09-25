@@ -1,19 +1,29 @@
 Warm, wondering instrumental piece for a pixel forest in the sunlight -
-childlike curiosity, gentle magic and a little nostalgia, like a hand-drawn
-animated film about a hidden forest spirit. 92 BPM in a lilting 3/4 waltz
-with a soft, clearly audible pulse on every beat from the first bar to the
-last.
+childlike curiosity, gentle magic and a little nostalgia, like a
+hand-drawn animated film about a hidden forest spirit. 92 BPM in a lilting
+3/4 waltz with a soft, clearly audible pulse on every beat from the first
+bar to the last.
 
-A clear piano plays one simple, singable eight-bar melody in F major, and
+A soft piano plays one simple, singable eight-bar melody in F major, and
 the same melody returns for the whole piece. A warm string section holds
 the chords underneath: F major, D minor, B flat major, C major. A light
 wooden flute answers each phrase with a short echo, a harp plays gentle
 broken chords on every beat, and soft pizzicato cellos mark the first beat
 of every bar.
 
-On every second pass a soft 8-bit square-wave voice doubles the piano
-melody one octave higher, like a firefly made of pixels. The sound is
-warm, airy and bright, clear in the mid range, never harsh.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+melody with its own short phrase in the same middle register, like a
+firefly made of pixels, taking turns with the lead rather than playing
+along with it. Halfway through, a contrasting four-bar B phrase at the
+same energy gives the main melody a rest - a different lead instrument and
+a new chord colour from the same key - and then the main melody returns.
+The sound is warm and airy, clear in the mid range, never harsh.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

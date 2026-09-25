@@ -3,15 +3,25 @@ reflections, a last round before closing time, a little nostalgia. 100 BPM
 in 4/4 with a steady, clearly audible drum-machine pulse on every beat
 from the first bar to the last.
 
-A bright analog synth lead plays one simple, singable eight-bar melody in
-A minor, and the same melody returns for the whole piece. Warm pad chords
-hold A minor, F major, C major, G major, a pulsing synth bass plays steady
-eighth notes on the roots, and gated drum-machine drums keep time: kick on
-every beat, big snare on two and four, closed hi-hats.
+A warm, rounded analog synth lead plays one simple, singable eight-bar
+melody in A minor, and the same melody returns for the whole piece. Warm
+pad chords hold A minor, F major, C major, G major, a pulsing synth bass
+plays steady eighth notes on the roots, and gated drum-machine drums keep
+time: kick on every beat, big snare on two and four, closed hi-hats.
 
-On every second pass a soft 8-bit square-wave voice doubles the melody
-one octave higher, like a high score blinking in pixels. The sound is
-warm, wide and clear in the mid range, never harsh.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+melody with its own short phrase in the same middle register, like a high
+score blinking in pixels, taking turns with the lead rather than playing
+along with it. Halfway through, a contrasting four-bar B phrase at the
+same energy gives the main melody a rest - a different lead instrument and
+a new chord colour from the same key - and then the main melody returns.
+The sound is warm, wide and clear in the mid range, never harsh.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second
