@@ -126,6 +126,14 @@ class PlayVisitWindowTest {
         assertTrue(draussen.first > drinnen.last)
     }
 
+    /** Auch nach dem Gespraech gehoert die Szene dem Besuch, bis der letzte Gast gegangen ist. */
+    @Test
+    fun `autonome Regungen warten bis der letzte Gast gegangen ist`() {
+        assertFalse(PlayVisitWindow.pausesHost(0))
+        assertTrue(PlayVisitWindow.pausesHost(1))
+        assertTrue(PlayVisitWindow.pausesHost(3))
+    }
+
     /**
      * Wer eben gegangen ist, kommt nicht gleich wieder - sonst wechselten sich zwei Bewohner
      * endlos ab, sobald der naechste Gast binnen Sekunden dazukommen darf.
@@ -150,4 +158,3 @@ class PlayVisitWindowTest {
         )
     }
 }
-
