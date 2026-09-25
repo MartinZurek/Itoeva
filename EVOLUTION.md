@@ -664,6 +664,30 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-25 - Freizeit draussen
+
+**Freigabe des Nutzers:** "Ja, Freizeit draussen umsetzen" - der offene Vorschlag aus "Belebte
+Orte" (Ursache 3: Bewohner tagsueber zu rund 60 % zu Hause).
+
+**Geaendert:**
+- `Planner.planFor` und `LivingSimulation.step` bekommen `leisureSite`: Wo eine Freizeit- oder
+  Entwicklungsbeschaeftigung OHNE eigenen Ort stattfindet (Lesen, Herstellen, Sammeln,
+  Beschaeftigung), und wohin geht, wer allein Gesellschaft sucht. `null` = wie bisher.
+  Beschaeftigungen mit eigenem Ort (Bewegung) behalten ihn.
+- `LivingPopulation.leisureSiteFor`: Bewohner verbringen ihre Freizeit zwischen 8 und 20 Uhr
+  draussen, sofern sie in ihrem Anwesenheitsfenster sind.
+
+**Gemessen (Woche, 8-20 Uhr, alle 5 Minuten):** Zu Hause 42 statt 60 % im Mittel. Drei oder mehr
+zusammen: Park 9 % (vorher 2 %), Strasse 10 % (vorher 2 %); vier zusammen kommen vor. Stadt
+mit zwei oder mehr: 20 % statt 2 %.
+
+**Bewusst nur fuer die Bewohner:** Die Hauptfigur ruft den Kern ohne `leisureSite` auf. Ihre
+sichtbare Freizeit waehlt die gewichtete Tagesablaufwahl, die Bewegung und Natur ohnehin
+hinausfuehrt; ein zusaetzlicher Weg nach draussen im Kern wuerde sie erst auf die Strasse und
+dann zum Lesen wieder hineinschicken. Der Schalter ist da, falls das spaeter gewuenscht ist.
+
+**Ruhen bleibt zu Hause** (28 % der Tageszeit) - das ist ein Beduerfnis, keine Ortswahl.
+
 ### 2026-09-25 - Blick in Laufrichtung
 
 **Meldung des Nutzers:** Geht die Figur nach links, ist sie trotzdem nach rechts geneigt - der

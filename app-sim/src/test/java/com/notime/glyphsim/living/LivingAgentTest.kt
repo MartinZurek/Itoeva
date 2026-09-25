@@ -691,4 +691,43 @@ class LivingAgentTest {
         )
     }
 
+
+    /**
+     * **Freizeit draussen** - freigegeben vom Nutzer, zuschaltbar ueber `leisureSite`.
+     *
+     * Ohne Angabe bleibt alles wie vorher: Lesen findet statt, wo man gerade ist. Mit Angabe
+     * geht der Weg zuerst hinaus. Eine Beschaeftigung mit eigenem Ort (Bewegung) behaelt ihn.
+     */
+    @Test
+    fun `ortlose Freizeit findet draussen statt, wenn ein Freizeitort gesetzt ist`() {
+        val zuHause = welt(site = LivingSite.HOME)
+        val wieBisher = Planner.planFor(GoalKind.HAVE_FUN, zuHause, interest = ActionKind.READ)!!
+        assertEquals(listOf(ActionKind.READ), wieBisher.kinds)
+
+        val draussen = Planner.planFor(
+            GoalKind.HAVE_FUN, zuHause, interest = ActionKind.READ, leisureSite = LivingSite.OUTSIDE
+        )!!
+        assertEquals(listOf(ActionKind.TRAVEL, ActionKind.READ), draussen.kinds)
+
+        // Wer schon draussen ist, geht nirgends hin.
+        val schonDa = Planner.planFor(
+            GoalKind.DEVELOP, welt(site = LivingSite.OUTSIDE),
+            interest = ActionKind.READ, leisureSite = LivingSite.OUTSIDE
+        )!!
+        assertEquals(listOf(ActionKind.READ), schonDa.kinds)
+    }
+
+    @Test
+    fun `wer allein Gesellschaft sucht, geht dorthin, wo man jemanden trifft`() {
+        val zuHause = welt(site = LivingSite.HOME)
+        assertEquals(
+            listOf(ActionKind.SHOW_AFFECTION),
+            Planner.planFor(GoalKind.CONNECT_WITH, zuHause)!!.kinds
+        )
+        assertEquals(
+            listOf(ActionKind.TRAVEL, ActionKind.SHOW_AFFECTION),
+            Planner.planFor(GoalKind.CONNECT_WITH, zuHause, leisureSite = LivingSite.OUTSIDE)!!.kinds
+        )
+    }
 }
+

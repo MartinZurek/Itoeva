@@ -146,7 +146,8 @@ object LivingPopulation {
             val result = LivingSimulation.step(
                 agent = agent,
                 world = synchronised(world),
-                interest = interestFor(resident, agent.goal, world)
+                interest = interestFor(resident, agent.goal, world),
+                leisureSite = leisureSiteFor(resident, world)
             )
             // Ein Schritt, der die Zeit NICHT bewegt, wuerde die Schleife nur leerlaufen lassen.
             // Der Kern laesst das nicht zu (auch Leerlauf kostet Minuten), aber verlassen wird
@@ -160,6 +161,28 @@ object LivingPopulation {
         }
         return ResidentState(agent, synchronised(world))
     }
+
+    /**
+     * Wo ein Bewohner seine Freizeit verbringt: tagsueber draussen, sonst dort, wo er ist.
+     *
+     * **Freigegeben vom Nutzer ("Freizeit draussen umsetzen").** Gemessen waren die Bewohner
+     * zwischen 8 und 20 Uhr zu rund 60 Prozent zu Hause, 17 Prozent davon mit Freizeit und Lernen,
+     * die keinen Ort brauchen. Drei zugleich an einem Ort gab es deshalb kaum. Die Entscheidung,
+     * OB Freizeit dran ist, bleibt beim Kern; hier steht nur, wo sie stattfindet - und nur in
+     * [OUTDOOR_LEISURE_HOURS] und im eigenen Anwesenheitsfenster, damit abends niemand draussen
+     * liest, den man nicht sehen kann.
+     */
+    fun leisureSiteFor(resident: LivingResident, world: WorldState): LivingSite? {
+        val minute = world.minuteOfDay
+        return if (minute / 60 in OUTDOOR_LEISURE_HOURS && resident.isActiveAt(minute)) {
+            LivingSite.OUTSIDE
+        } else {
+            null
+        }
+    }
+
+    /** Die Stunden, in denen Freizeit draussen stattfindet. */
+    val OUTDOOR_LEISURE_HOURS = 8 until 20
 
     /** Der Blick von aussen auf die ganze Bevoelkerung, in fester Reihenfolge. */
     fun snapshot(states: Map<String, ResidentState>): List<ResidentSnapshot> =
