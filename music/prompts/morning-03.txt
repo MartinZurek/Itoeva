@@ -10,9 +10,19 @@ the chords underneath: D minor, B flat major, G minor, A major. Deep taiko
 drums mark the first beat of every bar with a softer hit on beat three,
 and a plucked koto keeps a gentle eighth-note movement.
 
-On every second pass a soft 8-bit square-wave voice doubles the melody one
-octave higher, quiet and warm, like the same memory seen in pixels. The
-mix is full and warm, clear in the mid range, never harsh.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+melody with its own short phrase in the same middle register, like the
+same memory seen in pixels, taking turns with the lead rather than playing
+along with it. Halfway through, a contrasting four-bar B phrase at the
+same energy gives the main melody a rest - a different lead instrument and
+a new chord colour from the same key - and then the main melody returns.
+The mix is full and warm, clear in the mid range, never harsh.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

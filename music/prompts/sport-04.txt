@@ -11,10 +11,20 @@ The drums are big hip hop drums with orchestral weight: deep kick, a
 massive snare on two and four, and low orchestral percussion hits on the
 first beat of every bar.
 
-On every second pass a soft 8-bit square-wave voice doubles the horn
-theme one octave higher, like a hero drawn in pixels. The sound is
-powerful and wide but clear, never harsh, and stays at the same strong
-energy from start to end.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+horn theme with its own short phrase in the same middle register, like a
+hero drawn in pixels, taking turns with the lead rather than playing along
+with it. Halfway through, a contrasting four-bar B phrase at the same
+energy gives the main melody a rest - a different lead instrument and a
+new chord colour from the same key - and then the main melody returns. The
+sound is powerful and wide but clear, never harsh, and stays at the same
+strong energy from start to end.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

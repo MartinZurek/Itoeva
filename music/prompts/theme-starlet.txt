@@ -1,20 +1,26 @@
 Tender, steady instrumental character theme for a quiet, attentive pixel
-creature that looks inward - thoughtful and a little melancholic, but warm,
-never sad or heavy. 72 BPM in 4/4 with a soft, clearly audible pulse on
-every beat from the first bar to the last.
+creature that looks inward - thoughtful and a little melancholic, but
+warm, never sad or heavy. 72 BPM in 4/4 with a soft, clearly audible pulse
+on every beat from the first bar to the last.
 
 A clear felt piano plays one simple, singable five-note motif in A minor,
 and the same motif returns every two bars for the whole piece. On every
-second return a soft celesta doubles it one octave higher, like small
-lights coming on. Warm sustained strings hold the chords underneath: A
-minor, F major, C major, G major, repeating every four bars. A round, soft
-bass plays one note on beats one and three. Light brushes keep time: a
-brushed snare on two and four and a quiet shaker on the offbeats.
+second return a soft vibraphone answers it in the same register, like
+small lights coming on. Warm sustained strings hold the chords underneath:
+A minor, F major, C major, G major, repeating every four bars. A round,
+soft bass plays one note on beats one and three. Light brushes keep time:
+a brushed snare on two and four and a quiet shaker on the offbeats.
 
 Each return of the motif changes at most one small detail - one note held
 longer, later the original shape restored - so the tune stays instantly
 recognizable. The sound is intimate and close, clear in the mid range,
 with no deep rumble and no low drone.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

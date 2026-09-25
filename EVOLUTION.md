@@ -664,6 +664,41 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-25 - Musik: schraege Hoehen harmonisch machen
+
+**Anlass:** Hoerbericht des Nutzers: auf Dauer "schraeg", hohe Klaviertoene "uebersteuert", "wie
+Katzenjammer"; die Musik soll harmonisch, abwechslungsreich und angenehm fuer langes Zuhoeren
+sein.
+
+**Messung (keine Hoerbehauptung):** Alle 29 Takes des Hoertest-Stands, je Energie 2-5 kHz gegen
+100-1000 Hz und Rauigkeit der Teiltoene oberhalb 900 Hz (Plomp-Levelt nach Sethares). Zwei
+Prompt-Gewohnheiten fallen zusammen mit den Ausreissern: die 8-Bit-Stimme, die die Melodie eine
+Oktave hoeher verdoppelt (13 Prompts; im Mittel +5,8 dB Hoehenenergie), und Saettigung/Overdrive
+als Klangfarbe (10 Prompts; rund +75 % Rauigkeit in den Hoehen). Am rauesten: 99 Pixels,
+Wyrmling's Theme, Pixel Hoops, Second Wind, Full Stride, La Melancolie des Pixels. Die Zahlen sind
+von Klangfarbe mitbestimmt (eine absichtlich angezerrte Gitarre misst rau) und deshalb Hinweis,
+kein Urteil.
+
+**Geaendert:**
+- 28 Prompts (alle ausser Gloops geschuetztem Thema): Oktav-Verdopplung durch eine antwortende,
+  weiche Dreieckswellen-Stimme im selben Register ersetzt; Saettigung, Overdrive, Fuzz und
+  "gritty" gestrichen (Gitarren-Stuecke: maessig angezerrt, Powerchords aus Grundton und Quinte);
+  Glockenspiel, Celesta und Kalimba durch Vibraphon/Marimba ersetzt; Unisono-Verdopplungen durch
+  Antwortphrasen; "bright" als Klangwort durch "warm". Jeder Prompt traegt den Absatz "Harmony and
+  tone" - positiv formuliert, weil es bei cfg 1 keinen Negativ-Prompt gibt.
+- Hommagen: kontrastierende B-Phrase in der Mitte, gegen Monotonie bei langem Zuhoeren.
+- Seeds unveraendert, damit ein Unterschied am Prompt liegt.
+- `tools/music/test_prompt_harmony.py` haelt die Regeln fest (schlaegt auf allen alten Prompts an,
+  57 Faelle). `tools/music/harmony_report.py` misst einen neuen Take gegen seinen Vorgaenger.
+
+**Nicht geaendert:** Inferenzmodus 8/1, `audio_polish.py`, Workflow, vorhandene Audiodateien.
+Neue Takes entstehen erst nach dem Merge ueber **Generate Itoeva Music**; jeder kommt als eigener
+Audio-PR in die Hoertest-APK und ersetzt ein Stueck erst nach Einzelfreigabe.
+
+**Offen:** Ob die Regeln hoerbar tragen, entscheidet der Hoertest je Stueck; die Messung vergleicht
+danach alt gegen neu. Denkbarer naechster Hebel fuer langes Spielen: Atempausen zwischen Stuecken
+in der Engine (bisher laeuft Musik ohne Pause durch).
+
 ### 2026-09-25 - Lebendigkeit: sichtbare Taetigkeiten, Hinaus-und-tun, Musik nach Taetigkeit
 
 **Anlass:** Durchsicht auf Wunsch des Nutzers ("ob alles fliessend in den visuellen und
