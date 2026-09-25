@@ -689,6 +689,15 @@ Wer einkauft, steht im Laden. Steht schon ein Gast im Bild und ist noch jemand d
 naechste nach 5 bis 14 Sekunden dazu (`PlayVisitWindow.intervalMs`); Gaeste bleiben nach dem
 Gespraech draussen 15 bis 30 Sekunden, drinnen 3 bis 6 (`lingerMs`).
 
+**Review-Funde und Korrektur:** Zwei gleichzeitig eintreffende Gaeste konnten ihren Austausch
+noch aus demselben alten Wirtszustand berechnen; der spaetere Commit haette dadurch die
+Beziehungserfahrung des ersten ueberschrieben. Das sichtbare Gespraechsschild umfasst jetzt die
+gesamte Folge Lesen, Austausch und Speichern. Ausserdem pausieren autonome Regungen des Wirts bis
+der letzte Gast nach dem Verweilen wirklich das Bild verlassen hat. So wandert er nicht mitten aus
+dem sichtbaren Grueppchen fort. `bash tools/reaction-preview/tests.sh`: 586 Tests gruen, darunter
+der neue Beleg fuer die Pause bei einem und mehreren anwesenden Gaesten. Compose, Lint und R8
+bleiben Aufgabe des PR-Gates.
+
 **Verworfen:** Ein erster Entwurf verteilte jeden Bewohner in eigenem Takt ueber seine
 Besuchsorte. Gemessen hatte der Park danach noch seltener Besuch (16 statt 25 %) - Verteilen
 bringt niemanden zusammen.
