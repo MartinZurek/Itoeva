@@ -35,9 +35,9 @@ package com.notime.glyphsim.matrix
  * der Flanke, von der sie KOMMT. Wer nach rechts laeuft, ist hinten links beschattet; wer nach
  * links laeuft, hinten rechts. Beim Anhalten verschwindet er wieder.
  *
- * Damit traegt er zwei Dinge auf einmal: dass sich die Figur bewegt, und wohin. Das Sprite wird
- * nirgends gespiegelt (geprueft) - die Kante ist also das Einzige, woran man die Richtung
- * ueberhaupt ablesen kann.
+ * Damit traegt er zwei Dinge auf einmal: dass sich die Figur bewegt, und wohin. Seit
+ * [AvatarFacing] wird die Figur beim Gang nach links zusaetzlich gespiegelt - vorher war diese
+ * Kante das Einzige, woran man die Richtung ablesen konnte.
  *
  * ## Wo das angewandt wird
  *
