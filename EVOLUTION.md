@@ -664,6 +664,25 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-25 - Blick in Laufrichtung
+
+**Meldung des Nutzers:** Geht die Figur nach links, ist sie trotzdem nach rechts geneigt - der
+Blick sollte in die Richtung gehen, in die sie geht; im Stand darf er rechts bleiben.
+
+**Befund (nachgemessen):** Die Gesichter sind frontal gezeichnet; die Neigung steckt in Beinen
+und Schwanz des Gang-Bildes, die nach rechts ausschlagen (Koerperschwerpunkt bei FENNEC 0,33,
+WYRMLING 0,31, PUFFLING 0,21 Zellen rechts der Gesichtsmitte). Das Sprite wurde nirgends
+gespiegelt - wer nach links lief, lief rueckwaerts.
+
+**Geaendert:** `AvatarFacing` spiegelt die Figur beim Gang nach links (Schattenseite RIGHT),
+beim Zeichnen in `AvatarSpriteView` und `PlayClipRenderer`, jeweils vor Gesichtssuche und
+Schattierung. Gilt fuer Bewohner und Gaeste gleichermassen.
+
+**Bewusst nicht gespiegelt:** Stand und Handlungen. Viele Handlungen stehen neben einem
+Gegenstand, der zur rechts blickenden Pose passt (Angel, Tisch, Automat) - gespiegelt griffe die
+Figur ins Leere. Die Animationsdaten bleiben unveraendert, die Vergleichsbilder der
+Reaktionspruefung gueltig. 4 neue Tests (`AvatarFacingTest`).
+
 ### 2026-09-24 - Belebte Orte: Treffpunkte, Gaeste kommen dazu und bleiben
 
 **Meldung des Nutzers:** Seit mehr Besucher gleichzeitig erlaubt sind (Deckel vier draussen,
