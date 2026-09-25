@@ -93,7 +93,7 @@ fun AvatarSpriteView(
 }
 
 private fun DrawScope.drawSprite(
-    rawFrame: IntArray,
+    unorientedFrame: IntArray,
     brightnessScale: Float,
     species: AvatarSpecies?,
     shadeSide: AvatarShading.Side
@@ -109,6 +109,9 @@ private fun DrawScope.drawSprite(
     // Die Augen bekommen denselben Ton, nur heller - ein Glanzlicht statt einer zweiten Farbe
     // (siehe AvatarAccent.eyesIn).
     val eyeColor = lerpColor(accentColor, Color.White, EYE_GLINT_FRACTION)
+    // Erst in Laufrichtung drehen (siehe [AvatarFacing]), dann alles Weitere an der gedrehten
+    // Form - sonst saessen Gesicht und Schatten auf der falschen Seite.
+    val rawFrame = AvatarFacing.orient(unorientedFrame, shadeSide)
     val frame = AvatarShading.shade(rawFrame, side = shadeSide)
     // Das Gesicht wird an der ROHEN Form gesucht: Die Schattierung aendert Helligkeiten, nicht
     // die Silhouette, und ein Loch bleibt ein Loch - aber so haengt der Fund nicht daran.

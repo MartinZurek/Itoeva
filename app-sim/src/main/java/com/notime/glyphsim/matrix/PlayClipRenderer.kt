@@ -198,9 +198,11 @@ object PlayClipRenderer {
         // Koerper weiss, Farbe im Gesicht - wie auf dem Bildschirm (siehe AvatarAccent).
         val avatarAccent = AvatarPalette.tintFor(frame.species)
         val avatarEyeAccent = lightened(avatarAccent, EYE_GLINT_FRACTION)
-        val avatarFace = AvatarAccent.facesIn(frame.avatarFrame)
-        val avatarEyes = AvatarAccent.eyesIn(frame.avatarFrame)
-        val avatarFrame = AvatarShading.shade(frame.avatarFrame, side = frame.shadeSide)
+        // In Laufrichtung gedreht wie auf dem Bildschirm (siehe AvatarFacing).
+        val avatarOriented = AvatarFacing.orient(frame.avatarFrame, frame.shadeSide)
+        val avatarFace = AvatarAccent.facesIn(avatarOriented)
+        val avatarEyes = AvatarAccent.eyesIn(avatarOriented)
+        val avatarFrame = AvatarShading.shade(avatarOriented, side = frame.shadeSide)
         for (y in 0 until AvatarGeometry.HEIGHT) {
             for (x in 0 until AvatarGeometry.SIZE) {
                 val index = y * AvatarGeometry.SIZE + x
@@ -286,9 +288,10 @@ object PlayClipRenderer {
             // weil AvatarShading skaliert statt zu ersetzen.
             val gastAccent = AvatarPalette.tintFor(guest.species)
             val gastEyeAccent = lightened(gastAccent, EYE_GLINT_FRACTION)
-            val gastFace = AvatarAccent.facesIn(guest.frame)
-            val gastEyes = AvatarAccent.eyesIn(guest.frame)
-            val gastFrame = AvatarShading.shade(guest.frame, side = guest.shadeSide)
+            val gastOriented = AvatarFacing.orient(guest.frame, guest.shadeSide)
+            val gastFace = AvatarAccent.facesIn(gastOriented)
+            val gastEyes = AvatarAccent.eyesIn(gastOriented)
+            val gastFrame = AvatarShading.shade(gastOriented, side = guest.shadeSide)
             for (y in 0 until AvatarGeometry.HEIGHT) {
                 for (x in 0 until AvatarGeometry.SIZE) {
                     val index = y * AvatarGeometry.SIZE + x
