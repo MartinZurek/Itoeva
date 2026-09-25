@@ -3674,6 +3674,12 @@ fun DockScreen(
             }
         }
 
+        // Die Bewegungsfolgen der Hintergrundfiguren je Spezies und Haltung - einmal gebaut statt
+        // bei jedem Bildtakt neu (eine Handlung rechnet ihre Ueberblendungen aus, siehe
+        // AvatarAnimations.reactionFor).
+        val residentSequences = remember {
+            HashMap<Pair<AvatarSpecies, LivingPopulationLayout.ResidentPose>, AvatarAnimations.AvatarSequence>()
+        }
         // Eine gemeinsame Beschreibung fuer Bildschirm und Aufnahme. Die Einwohner behalten
         // ihren eigenen Zeitversatz auch in der Ruhebewegung; `scenePhase` allein liesse alle
         // drei wie ein einziges vervielfachtes Uhrwerk atmen.
@@ -3710,10 +3716,23 @@ fun DockScreen(
                         )
                     }
                 } else {
-                    AvatarAnimations.idleSequence(
-                        placement.resident.species,
-                        AvatarMood.NEUTRAL
-                    )
+                    // Was der Einwohner gerade tut, statt immer derselben Ruhe - siehe
+                    // LivingPopulationLayout.poseFor.
+                    val species = placement.resident.species
+                    val pose = LivingPopulationLayout.poseFor(placement.resident)
+                    residentSequences.getOrPut(species to pose) {
+                        when (pose) {
+                            is LivingPopulationLayout.ResidentPose.Doing ->
+                                AvatarAnimations.reactionFor(species, pose.topic)
+                            LivingPopulationLayout.ResidentPose.LookingAround ->
+                                AvatarAnimations.fidgetSequence(
+                                    species,
+                                    AvatarAnimations.Fidget.LOOK_AROUND
+                                )
+                            LivingPopulationLayout.ResidentPose.Idle ->
+                                AvatarAnimations.idleSequence(species, AvatarMood.NEUTRAL)
+                        }
+                    }
                 }
                 val index = LivingPopulationLayout.idleFrameIndex(
                     holdsMs = idle.holdsMs,

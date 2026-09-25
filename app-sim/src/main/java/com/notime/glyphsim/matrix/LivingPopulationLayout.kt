@@ -1,5 +1,6 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.living.ActionKind
 import kotlin.math.max
 
@@ -192,6 +193,54 @@ object LivingPopulationLayout {
         PlayRoutines.SpecialActivity.TRAINING,
         PlayRoutines.SpecialActivity.BASKETBALL
     )
+
+    /** Wie eine Hintergrundfigur gerade aussieht - siehe [poseFor]. */
+    sealed interface ResidentPose {
+        /** Sie tut sichtbar etwas: dieselbe Handlung, die der Hauptavatar zu diesem Thema spielt. */
+        data class Doing(val topic: AnimationType) : ResidentPose
+
+        /** Sie ist unterwegs und sieht sich um (Erkunden). */
+        data object LookingAround : ResidentPose
+
+        /** Sie steht einfach da - unterwegs, zwischen zwei Dingen, oder nichts Zeigbares. */
+        data object Idle : ResidentPose
+    }
+
+    /**
+     * **Was eine Hintergrundfigur gerade TUT - statt immer nur dazustehen.**
+     *
+     * Gemeldet: "Man erkennt nicht, was die tatsaechlich machen." Die Bevoelkerung wusste es
+     * laengst - ein Einwohner im Park liest, sammelt sich oder zeigt Zuneigung -, gezeichnet
+     * wurde trotzdem jeder mit derselben Ruhe-Animation. Gemessen (Woche, 8-20 Uhr) hatten die
+     * sichtbaren Einwohner zu gut zwei Dritteln eine zeigbare Handlung.
+     *
+     * Die Zuordnung benutzt dieselben Themen wie der Hauptavatar (siehe
+     * `LivingRuntimeAdapter.prepare`), damit Lesen im Hintergrund genauso aussieht wie Lesen im
+     * Vordergrund. Medizin bleibt aussen vor - das ist eine Erinnerungsfunktion des Nutzers und
+     * nichts, was man einem Nachbarn ansieht.
+     */
+    fun poseFor(snapshot: ResidentSnapshot): ResidentPose = when (snapshot.currentAction) {
+        ActionKind.READ -> ResidentPose.Doing(AnimationType.BOOK)
+        ActionKind.CREATE -> ResidentPose.Doing(AnimationType.CREATIVITY)
+        ActionKind.CONCENTRATE -> ResidentPose.Doing(AnimationType.FOCUS)
+        ActionKind.SETTLE -> ResidentPose.Doing(AnimationType.MINDFULNESS)
+        ActionKind.MOVE_BODY -> ResidentPose.Doing(AnimationType.MOVE)
+        ActionKind.SHOW_AFFECTION,
+        ActionKind.INVITE_TO_PLAY -> ResidentPose.Doing(AnimationType.LOVE)
+        ActionKind.WORK -> ResidentPose.Doing(AnimationType.WORK)
+        ActionKind.PURSUE_INTEREST -> ResidentPose.Doing(AnimationType.GENERAL)
+        ActionKind.REST -> ResidentPose.Doing(AnimationType.REST)
+        ActionKind.EAT -> ResidentPose.Doing(AnimationType.DRINK)
+        ActionKind.EXPLORE -> ResidentPose.LookingAround
+        ActionKind.TEND_SELF,
+        ActionKind.INSPECT_FOOD,
+        ActionKind.BUY_FOOD,
+        ActionKind.TRAVEL,
+        ActionKind.RESPOND_TO_INVITE,
+        ActionKind.RECEIVE_RESPONSE,
+        ActionKind.TRAIN_TOGETHER,
+        null -> ResidentPose.Idle
+    }
 
     /**
      * Waehlt ein Ruhebild mit den echten Haltezeiten und einem Versatz aus der Einwohnerzeit.
