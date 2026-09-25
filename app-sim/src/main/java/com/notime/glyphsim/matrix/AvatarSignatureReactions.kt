@@ -119,17 +119,28 @@ internal object AvatarSignatureReactions {
 
     // ================= PUFFLING: der neugierige Optimist =================
 
-    /** Blase schwebt heran, er stupst sie an - sie platzt, er freut sich ueber das Nichts. */
-    private fun AvatarAnimations.bubble(body: AvatarBody): List<Beat> = listOf(
-        creatureFrame(body, prop = listOf(8 to 1)).beat(BEAT_MS),
-        creatureFrame(body, prop = listOf(7 to 1, 8 to 1, 7 to 2, 8 to 2)).beat(BEAT_MS),
-        // Anstupsen: Kopf hoch, Mund auf.
-        creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(7 to 2, 8 to 2, 7 to 3, 8 to 3)).beat(FAST_MS),
-        // Geplatzt - nur noch Spritzer.
-        creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(5 to 1, 10 to 1, 5 to 4, 10 to 4)).beat(FAST_MS),
-        creatureFrame(body, accentPhase = 1, mouthHoles = body.mouthOpen, prop = listOf(4 to 0, 11 to 0)).beat(BEAT_MS),
-        creatureFrame(body, accentPhase = -1).beat(SETTLE_MS)
-    )
+    /**
+     * Blase schwebt heran, er stupst sie an - sie platzt, er freut sich ueber das Nichts.
+     *
+     * Die Blase ist jetzt ein Ring (acht Pixel) statt eines Klumpens aus einem bis vier - vorher
+     * gemessen kaum vom Kopf zu unterscheiden. Sie schwebt durch die Kopffreiheit (y < 0).
+     */
+    private fun AvatarAnimations.bubble(body: AvatarBody): List<Beat> {
+        fun ring(x: Int, y: Int) = listOf(
+            (x + 1) to y, (x + 2) to y, x to (y + 1), (x + 3) to (y + 1),
+            x to (y + 2), (x + 3) to (y + 2), (x + 1) to (y + 3), (x + 2) to (y + 3)
+        )
+        return listOf(
+            creatureFrame(body, prop = ring(12, -1)).beat(BEAT_MS),
+            creatureFrame(body, prop = ring(9, -3)).beat(BEAT_MS),
+            // Anstupsen: Kopf hoch, Mund auf.
+            creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = ring(6, -4)).beat(FAST_MS),
+            // Geplatzt - nur noch Spritzer.
+            creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(4 to -4, 11 to -4, 5 to -1, 10 to -1, 3 to -2, 12 to -2)).beat(FAST_MS),
+            creatureFrame(body, accentPhase = 1, mouthHoles = body.mouthOpen, prop = listOf(2 to -3, 13 to -3)).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = -1).beat(SETTLE_MS)
+        )
+    }
 
     /** Falter zieht von links nach rechts, er dreht den Kopf mit - reine Neugier, kein Fangen. */
     private fun AvatarAnimations.butterfly(body: AvatarBody): List<Beat> = listOf(
@@ -175,16 +186,27 @@ internal object AvatarSignatureReactions {
 
     // ================= STARLET: die freundliche Traeumerin =================
 
-    /** Der Komet zieht ueber sie hinweg; sie schaut ihm nach, bis nur noch Funken bleiben. */
-    private fun AvatarAnimations.comet(body: AvatarBody): List<Beat> = listOf(
-        creatureFrame(body, prop = listOf(1 to 0, 2 to 1)).beat(FAST_MS),
-        creatureFrame(body, dy = -1, prop = listOf(4 to 1, 3 to 0, 5 to 2)).beat(FAST_MS),
-        creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(8 to 2, 7 to 1, 6 to 0)).beat(BEAT_MS),
-        creatureFrame(body, mouthHoles = body.mouthOpen, prop = listOf(12 to 3, 11 to 2, 10 to 1)).beat(BEAT_MS),
-        // Nachschauen, waehrend der Schweif zerfaellt.
-        creatureFrame(body, accentPhase = 1, prop = listOf(14 to 4, 12 to 2)).beat(SLOW_MS),
-        creatureFrame(body, eyeHoles = body.eyesHalf, accentPhase = -1).beat(SETTLE_MS)
-    )
+    /**
+     * Der Komet zieht ueber sie hinweg; sie schaut ihm nach, bis nur noch Funken bleiben.
+     *
+     * Kopf aus vier Pixeln plus Schweif statt zwei, drei Punkten, und die Bahn liegt in der
+     * Kopffreiheit - vorher kreuzte sie die Ohrenzeilen und ging dort unter.
+     */
+    private fun AvatarAnimations.comet(body: AvatarBody): List<Beat> {
+        fun komet(x: Int, y: Int) = listOf(
+            x to y, (x + 1) to y, x to (y + 1), (x + 1) to (y + 1),
+            (x - 1) to y, (x - 2) to (y - 1), (x - 3) to (y - 1)
+        )
+        return listOf(
+            creatureFrame(body, prop = komet(2, -3)).beat(FAST_MS),
+            creatureFrame(body, dy = -1, prop = komet(5, -3)).beat(FAST_MS),
+            creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = komet(8, -3)).beat(BEAT_MS),
+            creatureFrame(body, mouthHoles = body.mouthOpen, prop = komet(11, -2)).beat(BEAT_MS),
+            // Nachschauen, waehrend der Schweif zerfaellt.
+            creatureFrame(body, accentPhase = 1, prop = listOf(14 to -1, 12 to -2, 10 to -3)).beat(SLOW_MS),
+            creatureFrame(body, eyeHoles = body.eyesHalf, accentPhase = -1).beat(SETTLE_MS)
+        )
+    }
 
     /** Sie lehnt sich ans warme Licht und wird ruhiger, statt sich zu freuen. */
     private fun AvatarAnimations.lantern(body: AvatarBody): List<Beat> = listOf(
@@ -310,15 +332,28 @@ internal object AvatarSignatureReactions {
         creatureFrame(body, accentPhase = -1).beat(SETTLE_MS)
     )
 
-    /** Eine Spur zieht an ihm vorbei; er tritt auf der Stelle mit, ohne ihr zu folgen. */
-    private fun AvatarAnimations.paw(body: AvatarBody): List<Beat> = listOf(
-        creatureFrame(body, prop = listOf(1 to 4)).beat(BEAT_MS),
-        creatureFrame(body, feetSpread = 1, accentPhase = 1, prop = listOf(1 to 4, 3 to 3)).beat(FAST_MS),
-        creatureFrame(body, dy = -1, prop = listOf(1 to 4, 3 to 3, 5 to 2)).beat(FAST_MS),
-        creatureFrame(body, feetSpread = 1, accentPhase = -1, prop = listOf(3 to 3, 5 to 2, 7 to 1)).beat(FAST_MS),
-        creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(5 to 2, 7 to 1, 9 to 0)).beat(BEAT_MS),
-        creatureFrame(body, accentPhase = 1, prop = listOf(9 to 0)).beat(SETTLE_MS)
-    )
+    /**
+     * Eine Spur zieht an ihm vorbei; er tritt auf der Stelle mit, ohne ihr zu folgen.
+     *
+     * Jeder Abdruck ist jetzt ein Pfotenabdruck (zwei Zehen, Ballen, sechs Pixel) statt eines
+     * einzelnen Punkts - vorher gemessen drei neue Pixel, keine Pfote zu erkennen. Die Spur
+     * laeuft ueber ihn hinweg durch die Kopffreiheit.
+     */
+    private fun AvatarAnimations.paw(body: AvatarBody): List<Beat> {
+        fun pfote(x: Int, y: Int) = listOf(
+            x to y, (x + 2) to y,
+            x to (y + 1), (x + 1) to (y + 1), (x + 2) to (y + 1),
+            (x + 1) to (y + 2)
+        )
+        return listOf(
+            creatureFrame(body, prop = pfote(0, -2)).beat(BEAT_MS),
+            creatureFrame(body, feetSpread = 1, accentPhase = 1, prop = pfote(0, -2) + pfote(4, -4)).beat(FAST_MS),
+            creatureFrame(body, dy = -1, prop = pfote(4, -4) + pfote(8, -3)).beat(FAST_MS),
+            creatureFrame(body, feetSpread = 1, accentPhase = -1, prop = pfote(8, -3) + pfote(12, -4)).beat(FAST_MS),
+            creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = pfote(12, -4)).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
+        )
+    }
 
     /** Er legt sich schuetzend ueber das Nest und wird ganz ruhig - der einzige Abschluss nach unten. */
     private fun AvatarAnimations.nest(body: AvatarBody): List<Beat> = listOf(

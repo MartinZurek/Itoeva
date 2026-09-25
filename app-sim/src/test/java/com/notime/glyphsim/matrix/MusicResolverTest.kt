@@ -471,4 +471,30 @@ class MusicResolverTest {
             .copy(activity = PlayRoutines.SpecialActivity.BASKETBALL, characterTheme = AvatarSpecies.WYRMLING)
         assertEquals(MusicRole.CHARACTER_THEME, MusicResolver.resolve(lage, MusicRole.entries.toSet()))
     }
+
+    /**
+     * **Die Musik hoert, was die Figur tut.** Ruht sie mittags auf dem Sofa oder sammelt sich im
+     * Park, kommt zuerst die ruhige Musik - nicht der Tages-Track. An lauten Orten (Stadt,
+     * Sportplatz) und morgens bleibt alles wie bisher, und ohne ruhige Beschaeftigung auch.
+     */
+    @Test
+    fun `wer mittags ruht, hoert die ruhige Musik`() {
+        val mittag = PlayAmbientActivity.DayPhase.MIDDAY
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.candidates(ctx(mittag, PlayScene.Place.LIVING, AnimationType.REST)).first()
+        )
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.candidates(ctx(mittag, PlayScene.Place.PARK, AnimationType.MINDFULNESS)).first()
+        )
+        // Ohne ruhige Beschaeftigung, an einem lauten Ort oder am Morgen: unveraendert.
+        assertEquals(MusicRole.MAIN_DAY, MusicResolver.candidates(ctx(mittag, PlayScene.Place.LIVING)).first())
+        assertTrue(MusicRole.HOME_EVENING !in MusicResolver.candidates(ctx(mittag, PlayScene.Place.CITY, AnimationType.REST)))
+        assertEquals(
+            MusicRole.MORNING,
+            MusicResolver.candidates(ctx(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.LIVING, AnimationType.REST)).first()
+        )
+    }
 }
+
