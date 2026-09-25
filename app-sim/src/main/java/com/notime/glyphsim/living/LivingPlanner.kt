@@ -242,11 +242,21 @@ object Planner {
      * Unbekannt oder unpassend heisst [ActionKind.PURSUE_INTEREST] - die Beschaeftigung ohne
      * naeher benannte Absicht. Damit bleibt ein Aufruf ohne Angabe genau das, was er vorher war.
      */
+    /**
+     * [leisureSite] sagt, WO eine Freizeitbeschaeftigung ohne eigenen Ort stattfinden soll -
+     * `null` heisst: dort, wo der Agent gerade ist (das Verhalten vor diesem Parameter).
+     *
+     * **Gemeldet als "die Welt ist zu leer".** Lesen, etwas herstellen, sich sammeln kennen keinen
+     * Ort, also blieb, wer nach dem Ruhen zu Hause war, fuer die ganze Freizeit dort - gemessen
+     * waren Bewohner tagsueber zu rund 60 Prozent zu Hause. Wer den Parameter setzt, schickt die
+     * Freizeit hinaus; eine Beschaeftigung mit eigenem Ort (Bewegung: draussen) behaelt ihren.
+     */
     fun planFor(
         goal: GoalKind,
         world: WorldState,
         agent: AgentState? = null,
-        interest: ActionKind? = null
+        interest: ActionKind? = null,
+        leisureSite: LivingSite? = null
     ): Plan? {
         val schritte = when (goal) {
             GoalKind.GET_FOOD -> foodSteps(world)
@@ -263,6 +273,7 @@ object Planner {
                     .filterIsInstance<Requirement.At>()
                     .firstOrNull()
                     ?.site
+                    ?: leisureSite
                 (ort?.let { goTo(it, world) } ?: emptyList()) + beschaeftigung
             }
             // **Auch allein laesst sich etwas gegen Einsamkeit tun** (NT-074).
@@ -278,7 +289,10 @@ object Planner {
                 .sorted()
                 .firstOrNull()
                 ?.let { listOf(ActionCatalog.inviteToPlay(it)) }
-                ?: listOf(ActionCatalog[ActionKind.SHOW_AFFECTION])
+                // Wer Gesellschaft sucht und niemanden bei sich hat, geht dorthin, wo man
+                // jemanden trifft - sofern ein Freizeitort gesetzt ist (siehe [leisureSite]).
+                ?: ((leisureSite?.let { goTo(it, world) } ?: emptyList()) +
+                    ActionCatalog[ActionKind.SHOW_AFFECTION])
 
             GoalKind.EXPLORE -> goTo(LivingSite.OUTSIDE, world) + ActionCatalog[ActionKind.EXPLORE]
 

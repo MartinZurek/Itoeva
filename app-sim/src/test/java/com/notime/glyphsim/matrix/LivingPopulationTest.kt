@@ -554,5 +554,49 @@ class LivingPopulationTest {
         }
         assertTrue("groesstes Grueppchen: $groesstesGrueppchen", groesstesGrueppchen >= 3)
     }
+
+    /**
+     * **Freizeit draussen: aus der Ausnahme wird ein Nachmittag.** Seit die Bewohner tagsueber
+     * ihre Freizeit draussen verbringen, stehen zwischen 8 und 20 Uhr in einem spuerbaren Teil
+     * der Zeit drei oder mehr an einem Ort unter freiem Himmel (gemessen: Park 9 %, Strasse
+     * 10 %), und auch vier zusammen kommen vor. Vorher waren es drei hoechstens ein- oder zweimal
+     * in der Woche.
+     */
+    @Test
+    fun `tagsueber treffen sich draussen oft drei und manchmal vier`() {
+        var states = LivingPopulation.initial(start)
+        var minute = start
+        val ende = start + 7 * WorldState.MINUTES_PER_DAY
+        var stichproben = 0
+        var mitDreien = 0
+        var groesstesGrueppchen = 0
+        while (minute < ende) {
+            minute += 5
+            states = LivingPopulation.advance(states, minute)
+            val stunde = (minute % WorldState.MINUTES_PER_DAY) / 60
+            if (stunde !in LivingPopulation.OUTDOOR_LEISURE_HOURS) continue
+            stichproben++
+            val groesste = LivingPopulation.snapshot(states)
+                .filter { it.publiclyPresent && it.place != null && PlayScene.isOutdoors(it.place!!) }
+                .groupingBy { it.place }
+                .eachCount()
+                .values.maxOrNull() ?: 0
+            if (groesste >= 3) mitDreien++
+            groesstesGrueppchen = maxOf(groesstesGrueppchen, groesste)
+        }
+        assertTrue("drei zusammen in $mitDreien von $stichproben", mitDreien * 10 >= stichproben)
+        assertTrue("groesstes Grueppchen: $groesstesGrueppchen", groesstesGrueppchen >= 4)
+    }
+
+    @Test
+    fun `Freizeit draussen nur tagsueber und nur im eigenen Anwesenheitsfenster`() {
+        val puffling = LivingResidents.all.first { it.species == AvatarSpecies.PUFFLING }
+        assertEquals(
+            LivingSite.OUTSIDE,
+            LivingPopulation.leisureSiteFor(puffling, LivingResidents.initialWorld(puffling, 14 * 60))
+        )
+        assertNull(LivingPopulation.leisureSiteFor(puffling, LivingResidents.initialWorld(puffling, 21 * 60)))
+        assertNull(LivingPopulation.leisureSiteFor(puffling, LivingResidents.initialWorld(puffling, 7 * 60)))
+    }
 }
 

@@ -258,7 +258,9 @@ object LivingSimulation {
         world: WorldState,
         influence: GoalInfluence? = null,
         /** Wie eine Freizeit- oder Entwicklungsphase aussehen soll - siehe [Planner.planFor]. */
-        interest: ActionKind? = null
+        interest: ActionKind? = null,
+        /** Wo ortlose Freizeit stattfindet - siehe [Planner.planFor]; `null` = wo man gerade ist. */
+        leisureSite: LivingSite? = null
     ): StepResult {
         val ereignisse = mutableListOf<LivingEvent>()
         var zustand = agent
@@ -295,7 +297,7 @@ object LivingSimulation {
 
         // 2. Plan besorgen, falls keiner steht.
         if (zustand.plan == null || zustand.plan?.isDone == true) {
-            val plan = Planner.planFor(ziel, welt, zustand, interest)
+            val plan = Planner.planFor(ziel, welt, zustand, interest, leisureSite)
             if (plan == null) {
                 val ohneWeg = event(welt, LivingEventKind.NO_PLAN, goal = ziel)
                 return StepResult(
