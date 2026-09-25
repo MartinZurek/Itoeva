@@ -212,7 +212,22 @@ object LivingRuntimeAdapter {
                 }
                 LivingSite.OUTSIDE -> {
                     topic = AnimationType.MOVE
-                    routine = PlayRoutine(listOf(RoutineStep.GoToPlace(PlayScene.Place.STREET)))
+                    // **Hinaus UND dort etwas tun - in einem Ablauf.** Vorher bestand diese Runde
+                    // nur aus dem Weg auf die Strasse; die Bewegung oder das Erkunden, fuer das
+                    // die Figur hinausging, kam erst eine ganze Pause spaeter. Dazwischen stand
+                    // sie ohne erkennbaren Grund draussen. Dasselbe Zusammenziehen wie beim
+                    // Einkaufen (Weg, Kauf, Heimweg, Essen) und bei der Arbeit.
+                    routine = when (result.agent.plan?.next?.kind) {
+                        ActionKind.MOVE_BODY -> {
+                            result = advanceExpected(result, listOf(ActionKind.MOVE_BODY))
+                            moveBodyRoutine(footballTrickLearned, recentSpecials, random)
+                        }
+                        ActionKind.EXPLORE -> {
+                            result = advanceExpected(result, listOf(ActionKind.EXPLORE))
+                            exploreRoutine(footballTrickLearned, recentSpecials, random)
+                        }
+                        else -> PlayRoutine(listOf(RoutineStep.GoToPlace(PlayScene.Place.STREET)))
+                    }
                 }
             }
             ActionKind.WORK -> {
@@ -276,31 +291,11 @@ object LivingRuntimeAdapter {
             }
             ActionKind.MOVE_BODY -> {
                 topic = AnimationType.MOVE
-                routine = atPlace(
-                    PlayScene.forTopic(AnimationType.MOVE),
-                    PlayRoutines.forTopic(
-                        topic = AnimationType.MOVE,
-                        footballTrickLearned = footballTrickLearned,
-                        recentSpecials = recentSpecials,
-                        random = random
-                    )
-                )
+                routine = moveBodyRoutine(footballTrickLearned, recentSpecials, random)
             }
             ActionKind.EXPLORE -> {
                 topic = AnimationType.MOVE
-                // **Erkunden sieht anders aus als Bewegung, obwohl beides hinausfuehrt** (NT-074).
-                //
-                // Bevorzugt werden die Ablaeufe, die den ORT wechseln - Strasse, Wald, Wiese.
-                // Genau das macht aus einem Weg eine Strecke: Man kommt an etwas vorbei, statt
-                // vor der Haustuer im Kreis zu gehen. Wer sich nur bewegt, bleibt haeufiger in
-                // der Naehe; wer erkundet, geht weiter weg.
-                routine = PlayRoutines.forTopic(
-                    topic = AnimationType.MOVE,
-                    footballTrickLearned = footballTrickLearned,
-                    recentSpecials = recentSpecials,
-                    preferPlaceChange = true,
-                    random = random
-                )
+                routine = exploreRoutine(footballTrickLearned, recentSpecials, random)
             }
             ActionKind.TEND_SELF -> {
                 topic = AnimationType.MEDICINE
@@ -387,6 +382,40 @@ object LivingRuntimeAdapter {
         }
         return result
     }
+
+    /** Sich bewegen: ein Bewegungsablauf am Bewegungsort. */
+    private fun moveBodyRoutine(
+        footballTrickLearned: Boolean,
+        recentSpecials: List<PlayRoutines.SpecialActivity>,
+        random: Random
+    ): PlayRoutine = atPlace(
+        PlayScene.forTopic(AnimationType.MOVE),
+        PlayRoutines.forTopic(
+            topic = AnimationType.MOVE,
+            footballTrickLearned = footballTrickLearned,
+            recentSpecials = recentSpecials,
+            random = random
+        )
+    )
+
+    /**
+     * **Erkunden sieht anders aus als Bewegung, obwohl beides hinausfuehrt** (NT-074).
+     *
+     * Bevorzugt werden die Ablaeufe, die den ORT wechseln - Strasse, Wald, Wiese. Genau das macht
+     * aus einem Weg eine Strecke: Man kommt an etwas vorbei, statt vor der Haustuer im Kreis zu
+     * gehen. Wer sich nur bewegt, bleibt haeufiger in der Naehe; wer erkundet, geht weiter weg.
+     */
+    private fun exploreRoutine(
+        footballTrickLearned: Boolean,
+        recentSpecials: List<PlayRoutines.SpecialActivity>,
+        random: Random
+    ): PlayRoutine = PlayRoutines.forTopic(
+        topic = AnimationType.MOVE,
+        footballTrickLearned = footballTrickLearned,
+        recentSpecials = recentSpecials,
+        preferPlaceChange = true,
+        random = random
+    )
 
     private fun completedActions(result: StepResult): List<ActionKind> = result.events
         .filter {
