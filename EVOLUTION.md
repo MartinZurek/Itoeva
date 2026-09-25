@@ -664,6 +664,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-25 - Lebendigkeit: sichtbare Taetigkeiten, Hinaus-und-tun, Musik nach Taetigkeit
+
+**Anlass:** Durchsicht auf Wunsch des Nutzers ("ob alles fliessend in den visuellen und
+Audio-Kontext uebergeht"). Die Kette Beduerfnis -> Ziel -> Plan -> Handlung -> Ablauf haelt; die
+Luecken lagen an den Raendern, wo sie ins Bild und in den Ton uebergeht. Freigegeben mit "Zieh
+durch".
+
+**Geaendert:**
+- **Hintergrundfiguren zeigen, was sie tun.** Die Einwohner wurden immer mit derselben
+  Ruhe-Animation gezeichnet, obwohl die Bevoelkerung wusste, dass sie gerade lesen, sich sammeln
+  oder Zuneigung zeigen. `ResidentSnapshot.currentAction` (die zuletzt abgeschlossene Handlung -
+  die eigene Uhr steht dann noch in ihr) und `LivingPopulationLayout.poseFor` bilden sie auf
+  dieselben Themen ab wie beim Hauptavatar. Gemessen: gut zwei Drittel der sichtbaren Einwohner
+  tun etwas Zeigbares.
+- **Hinaus und dort etwas tun, in einem Ablauf.** Ging die Figur zum Bewegen oder Erkunden
+  hinaus, bestand die Runde nur aus dem Weg auf die Strasse; die eigentliche Handlung kam eine
+  Pause spaeter. Der Adapter zieht beides jetzt zusammen wie beim Einkaufen.
+- **Die Musik hoert, was die Figur tut.** Ruht sie mittags oder sammelt sich an einem ruhigen
+  Ort, kommt zuerst die ruhige Musik statt des Tages-Tracks (`MusicResolver.CALM_TOPICS`).
+  Morgens und an lauten Orten bleibt alles wie bisher. Bewusste Ausnahme vom Grundsatz
+  "mittags kein Abendstueck": Er gilt weiter fuer alles ausser Ruhe, Schlaf und Achtsamkeit.
+
+- **Die kleinsten Gegenstaende in Reaktionen werden erkennbar.** Gemessen (neue Pixel je Motiv,
+  alle sechs Spezies): Haustier 1, Komet 2, Pfote 3, Anrufen 3, Seifenblase 3 - Punkte statt
+  Dinge. Sie sassen zudem in den Zeilen 0-4, wo die Ohren liegen. Neu gezeichnet als kleine
+  Symbole (Wesen mit Beinchen, Komet mit Schweif, Pfotenabdruecke, Hoerer mit Klingelboegen,
+  Ring) in der Kopffreiheit (y -4..-1), die bei keiner Spezies belegt ist. Genau fuenf Zeilen in
+  `reaction-fingerprint.txt` erneuert: `LIB:Bubble`, `LIB:Call`, `LIB:Comet`, `LIB:Paw`,
+  `LIB:Pet`. In den Kontaktboegen (Puffling) geprueft.
+
+**Offen (naechste Schritte):** Weitere Motive mit kleinen Gegenstaenden (Feder, Kerze, Musik,
+Katze, Haken; 4-6 Pixel bei der kleinsten Spezies). Drachensteigen ohne eigene Musik (Stufe 2 in
+`WELTAUSBAU.md`).
+
 ### 2026-09-25 - Freizeit draussen
 
 **Freigabe des Nutzers:** "Ja, Freizeit draussen umsetzen" - der offene Vorschlag aus "Belebte

@@ -70,7 +70,17 @@ data class ResidentSnapshot(
      * zurueckgenommen hat (siehe `EVOLUTION.md`). Der Wert ist deterministisch aus Einwohner und
      * Simulationstag hergeleitet, nie aus Rolle allein und nie gewuerfelt.
      */
-    val nextSpecialActivity: PlayRoutines.SpecialActivity?
+    val nextSpecialActivity: PlayRoutines.SpecialActivity?,
+    /**
+     * Was der Einwohner gerade TUT - die zuletzt abgeschlossene Handlung.
+     *
+     * Nicht [nextAction]: Eine Handlung laeuft im Kern in einem Schritt ab und schiebt die eigene
+     * Uhr des Einwohners um ihre Dauer vor (Lesen 60 Minuten). Solange seine Uhr vor der Weltuhr
+     * steht, ist er also noch mitten in genau dieser Handlung - `nextAction` ist dann schon der
+     * Schritt danach oder `null`. Gebraucht fuer die sichtbare Figur (siehe
+     * [LivingPopulationLayout.activityTopicFor]).
+     */
+    val currentAction: ActionKind? = null
 )
 
 /**
@@ -208,7 +218,10 @@ object LivingPopulation {
                     specialActivityFor(resident, state.world)
                 } else {
                     null
-                }
+                },
+                currentAction = state.agent.lastEvent
+                    ?.takeIf { it.kind == LivingEventKind.ACTION_DONE }
+                    ?.action
             )
         }
 

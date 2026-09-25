@@ -598,5 +598,37 @@ class LivingPopulationTest {
         assertNull(LivingPopulation.leisureSiteFor(puffling, LivingResidents.initialWorld(puffling, 21 * 60)))
         assertNull(LivingPopulation.leisureSiteFor(puffling, LivingResidents.initialWorld(puffling, 7 * 60)))
     }
+
+    /**
+     * **Die sichtbaren Einwohner tun meistens etwas Erkennbares.** Gemessen ueber eine Woche
+     * (8-20 Uhr) haben gut zwei Drittel der oeffentlich anwesenden Einwohner eine Handlung, die
+     * sich zeigen laesst - vorher standen alle mit derselben Ruhe-Animation da. Der Test haelt
+     * die Haelfte als Untergrenze fest und prueft, dass die Handlung aus dem eigenen Ereignis
+     * des Einwohners stammt.
+     */
+    @Test
+    fun `sichtbare Einwohner zeigen meistens eine Handlung`() {
+        var states = LivingPopulation.initial(start)
+        var minute = start
+        val ende = start + 7 * WorldState.MINUTES_PER_DAY
+        var sichtbar = 0
+        var tunEtwas = 0
+        while (minute < ende) {
+            minute += 5
+            states = LivingPopulation.advance(states, minute)
+            val stunde = (minute % WorldState.MINUTES_PER_DAY) / 60
+            if (stunde !in LivingPopulation.OUTDOOR_LEISURE_HOURS) continue
+            for (s in LivingPopulation.snapshot(states)) {
+                if (!s.publiclyPresent) continue
+                sichtbar++
+                val zustand = states.getValue(s.profileId)
+                if (s.currentAction != null) {
+                    assertEquals(zustand.agent.lastEvent?.action, s.currentAction)
+                }
+                if (LivingPopulationLayout.poseFor(s) is LivingPopulationLayout.ResidentPose.Doing) tunEtwas++
+            }
+        }
+        assertTrue("$tunEtwas von $sichtbar", tunEtwas * 2 >= sichtbar)
+    }
 }
 

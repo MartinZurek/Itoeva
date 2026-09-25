@@ -318,4 +318,38 @@ class LivingRuntimeAdapterTest {
 
         assertTrue("Besuch ohne Einwohner: $uncovered", uncovered.isEmpty())
     }
+
+    /**
+     * **Hinaus und dort etwas tun - in einem Ablauf.** Vorher bestand die Runde nur aus dem Weg
+     * auf die Strasse; das Erkunden, fuer das die Figur hinausging, kam erst eine Pause spaeter,
+     * und dazwischen stand sie grundlos draussen.
+     */
+    @Test
+    fun `wer zum Erkunden hinausgeht, erkundet in derselben Runde`() {
+        val neugierig = AgentState(
+            profileId = "PUFFLING",
+            personality = Personality(),
+            needs = Needs.of(NeedKind.CURIOSITY to 0.95),
+            goal = GoalKind.EXPLORE,
+            plan = com.notime.glyphsim.living.Plan(
+                GoalKind.EXPLORE,
+                listOf(
+                    com.notime.glyphsim.living.ActionCatalog.travelTo(LivingSite.OUTSIDE),
+                    com.notime.glyphsim.living.ActionCatalog[ActionKind.EXPLORE]
+                )
+            )
+        )
+        val prepared = LivingRuntimeAdapter.prepare(
+            agent = neugierig,
+            world = world(site = LivingSite.HOME),
+            renderedPlace = PlayScene.Place.LIVING,
+            interestTopic = AnimationType.MOVE,
+            random = Random(3)
+        )
+        assertEquals(listOf(ActionKind.TRAVEL, ActionKind.EXPLORE), prepared.completedActions)
+        assertEquals(AnimationType.MOVE, prepared.topic)
+        // Nicht mehr nur der eine Schritt "auf die Strasse".
+        assertTrue(prepared.routine!!.steps.size > 1)
+    }
 }
+

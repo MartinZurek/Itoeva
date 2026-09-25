@@ -550,21 +550,29 @@ internal object AvatarMotifReactions {
         )
     }
 
-    /** Das Signal kommt schraeg aus der oberen rechten Ecke; er nimmt ab und redet. */
-    private fun AvatarAnimations.call(body: AvatarBody): List<Beat> = listOf(
-        creatureFrame(body, prop = listOf(15 to 2)).beat(FAST_MS),
-        creatureFrame(body, accentPhase = 1, prop = listOf(14 to 1, 15 to 2)).beat(FAST_MS),
-        creatureFrame(
-            body, mouthHoles = body.mouthOpen, prop = listOf(13 to 0, 14 to 1, 15 to 2)
-        ).beat(BEAT_MS),
-        creatureFrame(
-            body, accentPhase = -1, mouthHoles = body.mouthOpen, prop = listOf(13 to 0, 15 to 2)
-        ).beat(SLOW_MS),
-        creatureFrame(
-            body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(14 to 1)
-        ).beat(BEAT_MS),
-        creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
-    )
+    /**
+     * Das Telefon klingelt oben rechts; er nimmt ab und redet.
+     *
+     * **Vorher ein bis drei Punkte** - gemessen der kleinste Gegenstand aller Motive, kein Telefon
+     * zu erkennen. Jetzt ein Hoerer mit Klingelboegen, gezeichnet in der Kopffreiheit (y -4..-1),
+     * die bei keiner Spezies von Ohren oder Kopf belegt ist.
+     */
+    private fun AvatarAnimations.call(body: AvatarBody): List<Beat> {
+        val hoerer = listOf(12 to -4, 13 to -4, 12 to -3, 12 to -2, 12 to -1, 13 to -1)
+        val klingelKlein = listOf(14 to -3, 14 to -2)
+        val klingelGross = listOf(15 to -4, 15 to -1) + klingelKlein
+        val amOhr = hoerer.map { (x, y) -> (x - 2) to (y + 1) }
+        return listOf(
+            creatureFrame(body, prop = hoerer + klingelKlein).beat(FAST_MS),
+            creatureFrame(body, accentPhase = 1, prop = hoerer + klingelGross).beat(FAST_MS),
+            creatureFrame(body, prop = hoerer + klingelKlein).beat(FAST_MS),
+            // Abgenommen: der Hoerer kommt naeher, er spricht.
+            creatureFrame(body, mouthHoles = body.mouthOpen, prop = amOhr).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = -1, prop = amOhr + listOf(8 to -2)).beat(SLOW_MS),
+            creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = amOhr + listOf(7 to -3, 8 to -2)).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
+        )
+    }
 
     /** Sie kommt am Boden von rechts heran - und er geht zu ihr hinunter, statt hochzusehen. */
     private fun AvatarAnimations.cat(body: AvatarBody): List<Beat> = listOf(
@@ -580,15 +588,23 @@ internal object AvatarMotifReactions {
         creatureFrame(body, accentPhase = -1, prop = listOf(10 to 4)).beat(SETTLE_MS)
     )
 
-    /** Der kleine Gefaehrte umrundet ihn - rechts hoch, oben herueber, links wieder herunter. */
-    private fun AvatarAnimations.pet(body: AvatarBody): List<Beat> = listOf(
-        creatureFrame(body, prop = listOf(12 to 3)).beat(FAST_MS),
-        creatureFrame(body, accentPhase = 1, prop = listOf(12 to 1)).beat(FAST_MS),
-        creatureFrame(body, mouthHoles = body.mouthOpen, prop = listOf(8 to 0)).beat(BEAT_MS),
-        creatureFrame(body, accentPhase = -1, prop = listOf(4 to 1)).beat(FAST_MS),
-        creatureFrame(
-            body, dy = -1, mouthHoles = body.mouthOpen, prop = listOf(4 to 3)
-        ).beat(BEAT_MS),
-        creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
-    )
+    /**
+     * Der kleine Gefaehrte umrundet ihn - rechts hoch, oben herueber, links wieder herunter.
+     *
+     * **Vorher ein einzelner Punkt** (gemessen: ein neues Pixel je Bild, das kleinste aller
+     * Motive). Jetzt ein Wesen mit Beinchen, fuenf Pixel, und die Runde fuehrt durch die
+     * Kopffreiheit statt durch die Ohrenzeilen.
+     */
+    private fun AvatarAnimations.pet(body: AvatarBody): List<Beat> {
+        fun gefaehrte(x: Int, y: Int) =
+            listOf(x to y, (x + 2) to y, x to (y + 1), (x + 1) to (y + 1), (x + 2) to (y + 1))
+        return listOf(
+            creatureFrame(body, prop = gefaehrte(12, 2)).beat(FAST_MS),
+            creatureFrame(body, accentPhase = 1, prop = gefaehrte(12, -2)).beat(FAST_MS),
+            creatureFrame(body, mouthHoles = body.mouthOpen, prop = gefaehrte(7, -4)).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = -1, prop = gefaehrte(1, -2)).beat(FAST_MS),
+            creatureFrame(body, dy = -1, mouthHoles = body.mouthOpen, prop = gefaehrte(1, 2)).beat(BEAT_MS),
+            creatureFrame(body, accentPhase = 1).beat(SETTLE_MS)
+        )
+    }
 }

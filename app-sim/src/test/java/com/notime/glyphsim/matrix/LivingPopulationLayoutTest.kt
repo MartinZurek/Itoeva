@@ -322,4 +322,30 @@ class LivingPopulationLayoutTest {
 
         assertTrue(cases.all { it == null })
     }
+
+    /**
+     * **Hintergrundfiguren zeigen, was sie tun** - gemeldet: "man erkennt nicht, was die
+     * tatsaechlich machen". Dieselben Themen wie beim Hauptavatar, damit Lesen im Hintergrund
+     * genauso aussieht wie im Vordergrund.
+     */
+    @Test
+    fun `eine Hintergrundfigur zeigt ihre laufende Handlung`() {
+        fun pose(action: ActionKind?) =
+            LivingPopulationLayout.poseFor(resident(0, PlayScene.Place.PARK).copy(currentAction = action))
+        assertEquals(
+            LivingPopulationLayout.ResidentPose.Doing(com.notime.glyphcore.data.AnimationType.BOOK),
+            pose(ActionKind.READ)
+        )
+        assertEquals(
+            LivingPopulationLayout.ResidentPose.Doing(com.notime.glyphcore.data.AnimationType.LOVE),
+            pose(ActionKind.SHOW_AFFECTION)
+        )
+        assertEquals(LivingPopulationLayout.ResidentPose.LookingAround, pose(ActionKind.EXPLORE))
+        // Unterwegs oder nichts Zeigbares: sie steht einfach da.
+        assertEquals(LivingPopulationLayout.ResidentPose.Idle, pose(ActionKind.TRAVEL))
+        assertEquals(LivingPopulationLayout.ResidentPose.Idle, pose(null))
+        // Medizin ist eine Erinnerungsfunktion des Nutzers, nichts fuer die Nachbarn.
+        assertEquals(LivingPopulationLayout.ResidentPose.Idle, pose(ActionKind.TEND_SELF))
+    }
 }
+
