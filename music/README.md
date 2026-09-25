@@ -223,6 +223,39 @@ Weil das Gate diesen Mangel strukturell nicht messen kann (er ist eine Eigenscha
 nicht des Pegels), bleibt die Vorbeugung im Prompt-Text die einzige Verteidigung - siehe
 EVOLUTION.md zum 2026-09-20 fuer die vollstaendige Herleitung.
 
+### Ein fuenfter Mangel: schraege, uebersteuerte Hoehen
+
+Gemeldet am 2026-09-25: Auf Dauer klinge die Musik "schraeg", hohe Klaviertoene "uebersteuert",
+"wie Katzenjammer". Auch das faengt das Gate nicht - es misst Pegel, nicht Tonhoehen. Eine
+Messung aller 29 Takes (`tools/music/harmony_report.py`) fand zwei Prompt-Gewohnheiten:
+
+1. **Eine zweite helle Stimme verdoppelt die Melodie eine Oktave hoeher.** Dreizehn Hommagen
+   baten um "a soft 8-bit square-wave voice doubles the melody one octave higher". Das Modell
+   stimmt die beiden Stimmen nicht aufeinander ab; in der Oktave ueber der Melodie schwebt schon
+   eine Abweichung von wenigen Cent hoerbar. Diese Takes trugen im Mittel 5,8 dB mehr Energie
+   zwischen 2 und 5 kHz als die uebrigen.
+2. **Saettigung und Overdrive als Klangfarbe.** "Warm analog saturation", "crunchy overdriven",
+   "gritty", "fuzzy". Verzerrung erzeugt Mischprodukte neben dem Halbtonraster; diese Takes waren
+   oberhalb 900 Hz rund 75 % rauer.
+
+**Die Regeln seitdem** (geprueft von `tools/music/test_prompt_harmony.py`):
+
+- Keine Stimme verdoppelt eine andere ueber ihr. Die Pixel-Stimme ist eine weiche Dreieckswelle,
+  die im selben Register **antwortet**, statt mitzuspielen.
+- Keine Saettigung, kein Overdrive, kein Fuzz als Textur. Wo eine Gitarre Biss braucht: maessig
+  angezerrt, Einzeltoene und Powerchords (Grundton und Quinte), keine verzerrten vollen Akkorde.
+- Keine glockenartigen Leitinstrumente (Glockenspiel, Celesta, Kalimba, Spieluhr) - ihre
+  Obertoene liegen nicht harmonisch. Vibraphon und Marimba sind gestimmt und bleiben erlaubt.
+- Jeder Prompt ausser Gloops Thema traegt den Absatz "Harmony and tone": eine Tonart, konsonante
+  Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen.
+- **Positiv formulieren.** Mit `cfg_scale=1` gibt es keinen Negativ-Prompt; ein Textencoder greift
+  ein genanntes Wort ("saturation", "octave higher") auch hinter einem "no" leicht auf. Die neuen
+  Absaetze beschreiben deshalb, was klingen soll, nicht was fehlen soll.
+
+Fuer mehr Abwechslung ueber lange Spielzeit haben die Hommagen zusaetzlich eine kontrastierende
+B-Phrase in der Mitte: anderes Leitinstrument, neue Akkordfarbe aus derselben Tonart, dann kehrt
+die Melodie zurueck.
+
 ## Mehrere Stuecke je Rolle
 
 **Eine Rolle ist kein Dateiname.** Sie kann von mehreren Stuecken erfuellt werden, und seit

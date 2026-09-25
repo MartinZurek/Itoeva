@@ -4,15 +4,25 @@ with their arms in the air. 84 BPM in 4/4 with a full, steady rock beat on
 every beat from the first bar to the last.
 
 Strummed acoustic guitars play the chords G major, D major, E minor, C
-major in a repeating four-bar cycle. A warm, slightly overdriven electric
-guitar plays one simple, singable eight-bar melody on top, and the same
-melody returns for the whole piece. A piano doubles the chords, a
-tambourine shakes on two and four, and a round bass drives straight
-eighth notes under full, open drums.
+major in a repeating four-bar cycle. A warm, clean electric guitar plays
+one simple, singable eight-bar melody on top, and the same melody returns
+for the whole piece. A piano plays soft chords in the middle register, a
+tambourine shakes on two and four, and a round bass drives straight eighth
+notes under full, open drums.
 
-On every second pass a soft 8-bit square-wave voice doubles the guitar
-melody one octave higher, like the chorus remembered in pixels. The sound
-is warm, full and bright, clear in the mid range, never harsh.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+melody with its own short phrase in the same middle register, like the
+chorus remembered in pixels, taking turns with the lead rather than
+playing along with it. Halfway through, a contrasting four-bar B phrase at
+the same energy gives the main melody a rest - a different lead instrument
+and a new chord colour from the same key - and then the main melody
+returns. The sound is warm and full, clear in the mid range, never harsh.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

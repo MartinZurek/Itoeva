@@ -1,17 +1,27 @@
-Bright, open instrumental folk piece for a pixel meadow on a windy summer
+Sunny, open instrumental folk piece for a pixel meadow on a windy summer
 day - freedom, fresh air and a light heart, walking through tall grass
 toward the hills. 104 BPM in 6/8 with a light, bouncing pulse on every
 beat from the first bar to the last.
 
-A tin whistle plays one simple, catchy eight-bar melody in D major, and
+A low whistle plays one simple, catchy eight-bar melody in D major, and
 the same melody returns for the whole piece. A fingerpicked acoustic
 guitar plays the chords D major, G major, B minor, A major in a repeating
-cycle, a fiddle doubles the melody on every second phrase, and a soft
+cycle, a fiddle answers the melody on every second phrase, and a soft
 frame drum with a round bass keeps the rolling rhythm.
 
-On every second pass a soft 8-bit square-wave voice doubles the whistle
-melody one octave higher, like the wind drawn in pixels. The sound is
-light, airy and warm, clear in the mid range, never harsh.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+melody with its own short phrase in the same middle register, like the
+wind drawn in pixels, taking turns with the lead rather than playing along
+with it. Halfway through, a contrasting four-bar B phrase at the same
+energy gives the main melody a rest - a different lead instrument and a
+new chord colour from the same key - and then the main melody returns. The
+sound is light, airy and warm, clear in the mid range, never harsh.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

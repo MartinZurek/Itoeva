@@ -3,16 +3,26 @@ swagger, focus and pure determination, nothing can stop you today. 92 BPM
 in 4/4 with a loud, dry, punchy drum break on every beat from the first
 bar to the last.
 
-A crunchy overdriven electric guitar plays one short, catchy two-bar riff
-in E minor, and the same riff returns for the whole piece, answered by
-heavy power-chord stabs on the off-beats. A thick bass locks onto the
-kick drum; the drums are big and tight: booming kick, cracking snare on
-two and four, busy hi-hats and a short cowbell accent at the end of every
-fourth bar.
+A moderately driven electric guitar with a warm crunch plays one short,
+catchy two-bar single-note riff in E minor, and the same riff returns for
+the whole piece, answered by power-chord stabs (root and fifth only) on
+the off-beats. A thick bass locks onto the kick drum; the drums are big
+and tight: booming kick, cracking snare on two and four, busy hi-hats and
+a short cowbell accent at the end of every fourth bar.
 
-On every second pass a soft 8-bit square-wave voice doubles the guitar
-riff one octave higher, like the same move replayed in pixels. The sound
-is loud, tight and punchy, clear in the mid range, never muddy.
+In the second half, a soft, rounded triangle-wave 8-bit voice answers the
+riff with its own short phrase in the same middle register, like the same
+move replayed in pixels, taking turns with the lead rather than playing
+along with it. Halfway through, a contrasting four-bar B phrase at the
+same energy gives the main melody a rest - a different lead instrument and
+a new chord colour from the same key - and then the main melody returns.
+The sound is loud, tight and punchy, clear in the mid range, never muddy.
+
+Harmony and tone: one key from the first bar to the last, riffs built from
+single notes and power chords (root and fifth only), every voice perfectly
+in tune with every other. The guitar drive stays moderate and warm, so
+every note keeps a clear, clean pitch, and the top end stays gentle and
+soft.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second

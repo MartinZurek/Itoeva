@@ -1,17 +1,27 @@
-Bright, catchy instrumental chiptune for a pixel arcade - the thrill of the
-first coin, blinking lights and a new high score within reach. 132 BPM in
-4/4 with a punchy, clearly audible pulse on every beat from the first bar
-to the last.
+Cheerful, catchy instrumental chiptune for a pixel arcade - the thrill of
+the first coin, blinking lights and a new high score within reach. 132 BPM
+in 4/4 with a punchy, clearly audible pulse on every beat from the first
+bar to the last.
 
-A square-wave lead plays one short, instantly memorable four-bar melody in
-C major, and the same melody returns for the whole piece. A second pulse
-voice answers each phrase with a quick arpeggio. A triangle-wave bass
-bounces on the root and fifth of the chords C major, A minor, F major, G
-major, and noise-channel drums keep a tight beat: kick on one and three,
-snare on two and four, fast hi-hat ticks.
+A soft, rounded pulse-wave lead plays one short, instantly memorable
+four-bar melody in C major, and the same melody returns for the whole
+piece. A second pulse voice answers each phrase with a quick arpeggio in
+the same register, never above the lead. A triangle-wave bass bounces on
+the root and fifth of the chords C major, A minor, F major, G major, and
+noise-channel drums keep a tight beat: kick on one and three, snare on two
+and four, fast hi-hat ticks.
 
 Every sound is clean 8-bit chip music, perfectly in tune and in time. The
-mix is bright and crisp, clear in the mid range, never harsh.
+mix is warm and crisp, clear in the mid range, never harsh. Halfway
+through, a contrasting four-bar B phrase at the same energy gives the main
+melody a rest - a different lead instrument and a new chord colour from
+the same key - and then the main melody returns.
+
+Harmony and tone: one key from the first bar to the last, simple diatonic
+chords in consonant voicings, every voice perfectly in tune with every
+other. The lead and the keys stay in the warm middle register, and the few
+high notes are soft and rounded. A clean, open tone with generous headroom
+and a gentle, soft top end.
 
 The piece starts at full level and keeps it: no intro, no ending, no
 fade-out. The last bar leads straight back into the first so the 90-second
