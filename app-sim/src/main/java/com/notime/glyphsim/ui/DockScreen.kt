@@ -89,6 +89,7 @@ import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarShading
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.AvatarWatchdog
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.skilltree.ActivityContext
@@ -639,6 +640,9 @@ fun DockScreen(
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
         val avatarDim = remember { Animatable(1f) }
+        // Ob gerade gewollt eine Tuer durchschritten wird - nur dann sind [avatarHidden] und ein
+        // gedaempftes [avatarDim] richtig. Der Waechter (siehe AvatarWatchdog) liest das.
+        var doorTransit by remember { mutableStateOf(false) }
         // Gaeste, die gerade durchs Bild laufen - siehe runVisit. Mehrere gleichzeitig moeglich
         // (Deckel je Ort in LivingPopulationLayout.visitorCapFor), jeder eigenstaendig per
         // profileId gefuehrt statt einer einzelnen Variable.
@@ -1232,6 +1236,15 @@ fun DockScreen(
             // sah man nicht. Jetzt geht die Tuer auf, die Figur verblasst IN den Rahmen hinein
             // (sie tritt hindurch), und drueben kommt sie aus dem Rahmen wieder hervor. Erst
             // dieses Verblassen an genau der Stelle macht aus dem Wechsel einen Weg.
+            //
+            // **Alles bis zum Hervortreten steht in einem try/finally** (gemeldet am 26.09. als
+            // "der Avatar ist dunkel geworden" bzw. "es war keiner mehr da"). Eine eintreffende
+            // Erinnerung bricht den Ablauf ueber den Schluessel der Play-Schleife ab - traf das
+            // genau diesen Durchgang, blieb die Figur abgedunkelt oder ganz ausgeblendet stehen,
+            // bis zufaellig der naechste Raumwechsel sie wieder hervorholte. Die offene
+            // Erinnerung liess sich dann auf niemanden mehr ziehen.
+            doorTransit = true
+            try {
             activeStation = PlayScene.Station.DOOR   // Tuer geht auf
             delay(DOOR_OPEN_MS)
             avatarDim.animateTo(0f, tween(DOOR_STEP_MS))
@@ -1256,6 +1269,19 @@ fun DockScreen(
             // Aus dem Rahmen hervortreten, dann faellt die Tuer zu.
             avatarDim.animateTo(1f, tween(DOOR_STEP_MS))
             activeStation = null
+            } finally {
+                doorTransit = false
+                if (avatarHidden || avatarDim.value < 1f || activeStation == PlayScene.Station.DOOR) {
+                    // Abgebrochen: sofort wieder voll sichtbar, ohne Animation. snapTo ist
+                    // suspendierend und laeuft deshalb NonCancellable - und zwar hier, nicht
+                    // ueber [scope] nachgereicht: Ein spaeter eintreffendes snapTo wuerde das
+                    // Abblenden des NAECHSTEN Durchgangs unterbrechen und damit dessen Ablauf
+                    // beenden.
+                    avatarHidden = false
+                    activeStation = null
+                    withContext(NonCancellable) { avatarDim.snapTo(1f) }
+                }
+            }
             if (walkAvatarTo(
                     avatarSpot(
                         PlayScene.screenFraction(PlayScene.avatarAnchorX(target), sceneWidthCells),
@@ -2431,6 +2457,93 @@ fun DockScreen(
                 }
             }
 
+            // **Der Waechter ueber die Figur** (siehe [AvatarWatchdog]). Die einzelnen Ursachen
+            // vom 26.09. sind an ihrer Stelle behoben; dieser Takt sichert das ERGEBNIS ab: Wie
+            // auch immer ein kuenftiger Abbruch die Figur liegen laesst - unsichtbar, dunkel,
+            // ausserhalb des Bildes oder erstarrt -, nach rund drei Sekunden ist sie wieder da.
+            // Ein durchlaufender Stream hat keinen Nutzer, der den Spielmodus kurz verlaesst.
+            //
+            // Jede Reparatur wird protokolliert: Sie ist ein Hinweis auf eine noch unbekannte
+            // Ursache, nicht der Normalbetrieb.
+            val watchWidthPx by rememberUpdatedState(maxWidthPx)
+            val watchHeightPx by rememberUpdatedState(maxHeightPx)
+            val watchOnlyNow by rememberUpdatedState(watchOnly)
+            // Die Figur mit den Massen der JETZIGEN Komposition hinstellen, nicht mit denen beim
+            // Start dieses Takts - Uhrgroesse und Bildschirm koennen sich seitdem geaendert haben.
+            val respawnAvatar by rememberUpdatedState<suspend () -> AvatarState> { spawnAmbientAvatar() }
+            LaunchedEffect(Unit) {
+                var previous = emptySet<AvatarWatchdog.Problem>()
+                var lastFrame: IntArray? = null
+                var frameSinceMs = SystemClock.elapsedRealtime()
+                while (isActive) {
+                    delay(AvatarWatchdog.CHECK_INTERVAL_MS)
+                    if (watchOnlyNow) {
+                        previous = emptySet()
+                        continue
+                    }
+                    val now = SystemClock.elapsedRealtime()
+                    val current = avatar
+                    if (current?.frame !== lastFrame) {
+                        lastFrame = current?.frame
+                        frameSinceMs = now
+                    }
+                    val px = current?.let { with(density) { it.sizeDp.dp.toPx() } } ?: 0f
+                    val found = AvatarWatchdog.problems(
+                        AvatarWatchdog.Observation(
+                            present = current != null,
+                            left = current?.offset?.x ?: 0f,
+                            top = current?.offset?.y ?: 0f,
+                            sizePx = px,
+                            screenWidthPx = watchWidthPx,
+                            screenHeightPx = watchHeightPx,
+                            hidden = avatarHidden,
+                            brightness = avatarDim.value,
+                            doorTransit = doorTransit,
+                            reacting = current?.fed == true,
+                            moving = avatarWalking || avatarSettling,
+                            idleLoopActive = avatarIdleJob?.isActive == true,
+                            animatedElsewhere = routineRunning || visitingProfileIds.isNotEmpty() ||
+                                groupGame != null || dreamRecapMode,
+                            frameUnchangedMs = now - frameSinceMs
+                        )
+                    )
+                    val confirmed = AvatarWatchdog.confirmed(previous, found)
+                    previous = found
+                    if (confirmed.isEmpty()) continue
+                    Log.w(DOCK_TAG, "Avatar-Waechter repariert: $confirmed")
+                    if (AvatarWatchdog.Problem.MISSING in confirmed) {
+                        avatar = respawnAvatar()
+                        previous = emptySet()
+                        continue
+                    }
+                    if (AvatarWatchdog.Problem.HIDDEN in confirmed ||
+                        AvatarWatchdog.Problem.DIMMED in confirmed
+                    ) {
+                        avatarHidden = false
+                        avatarDim.snapTo(1f)
+                    }
+                    if (AvatarWatchdog.Problem.OFF_SCREEN in confirmed) {
+                        avatar?.let { lost ->
+                            occupiedStation = null
+                            avatar = lost.copy(
+                                offset = avatarSpot(
+                                    AvatarWatchdog.recoveryFraction(lost.offset.x, px, watchWidthPx),
+                                    px, watchWidthPx, floorYPxNow, lost.species
+                                )
+                            )
+                        }
+                    }
+                    if (AvatarWatchdog.Problem.FROZEN in confirmed) {
+                        avatar?.let { still ->
+                            startAvatarIdleLoop(
+                                still.species, AvatarMoodSnapshot.forSpecies(context, still.species)
+                            )
+                        }
+                    }
+                    previous = emptySet()
+                }
+            }
+
             // Besuchstakt: deutlich seltener als die eigenen Regungen. Kaeme staendig jemand
             // vorbei, waere es keine Begegnung mehr, sondern Verkehr.
             //
@@ -2862,6 +2975,8 @@ fun DockScreen(
                 slotIndexByOccurrence = null
             }
             scope.launch {
+                // Wo die Figur vor der Reaktion stand - dorthin kehrt sie danach zurueck.
+                var reactionHome = current.offset
                 try {
                     val result = withContext(Dispatchers.IO) {
                         AvatarFeeding.logFeedEvent(context, current.occurrenceId)
@@ -2898,7 +3013,11 @@ fun DockScreen(
                     ) {
                         PlayFootballSkill.learn(context, presenceProfileId)
                     }
-                    avatar = current.copy(fed = true)
+                    // Vom JETZIGEN Stand aus, nicht von [current]: Der wurde vor dem Datenbankgang
+                    // eingefangen, und seitdem kann die Figur ein Stueck gegangen sein.
+                    val reactionBase = avatar ?: current
+                    reactionHome = reactionBase.offset
+                    avatar = reactionBase.copy(fed = true)
                     clockAnimJob?.cancel()
                     avatarIdleJob?.cancel()
                     isPlayingAnimation = false
@@ -2911,7 +3030,7 @@ fun DockScreen(
                         screenWidthPx = maxWidthPx,
                         screenHeightPx = maxHeightPx,
                         onFrame = { f -> avatar = avatar?.copy(frame = f) },
-                        onOffset = { o -> avatar = avatar?.copy(offset = current.offset + o) }
+                        onOffset = { o -> avatar = avatar?.copy(offset = reactionBase.offset + o) }
                     )
                 } catch (cancellation: kotlinx.coroutines.CancellationException) {
                     throw cancellation
@@ -2933,16 +3052,32 @@ fun DockScreen(
                     // wuerde sie faelschlich wieder loeschen.
                     if (avatar?.fed == true && avatar?.occurrenceId == current.occurrenceId) {
                         if (playMode) {
-                            // Der Avatar bleibt im Play-Modus stehen (an der Stelle, an die ihn
-                            // die Reaktion zuletzt bewegt hat) statt wie im normalen Dock zu
+                            // Der Avatar bleibt im Play-Modus stehen statt wie im normalen Dock zu
                             // verschwinden - er geht nur zurueck in die Idle-Schleife.
-                            avatar = avatar?.copy(
-                                reminderId = null,
-                                occurrenceId = null,
-                                animationType = null,
-                                libraryAnimationLabel = null,
-                                fed = false
-                            )
+                            //
+                            // **Und zwar wieder auf dem Boden, nicht dort, wo die Reaktion endete.**
+                            // Hier stand frueher "an der Stelle, an die ihn die Reaktion zuletzt
+                            // bewegt hat". Fuer fast alle Reaktionen ist das die Startstelle - fuer
+                            // die Rakete aber 1,6 Bildhoehen UEBER dem oberen Rand (siehe
+                            // AvatarAnimations.rocketFlightOffsets): Im normalen Dock verschwindet
+                            // die Figur danach ohnehin, im Spielmodus blieb sie dort oben stehen.
+                            // Gemeldet am 26.09.: "Erinnerung auf ihn gezogen, dann ist er aus dem
+                            // Bild gegangen und es war keiner mehr da." Die Rakete fliegt weiter
+                            // hinaus - danach steht die Figur wieder an ihrem Platz.
+                            avatar = avatar?.let { landed ->
+                                val px = with(density) { landed.sizeDp.dp.toPx() }
+                                landed.copy(
+                                    reminderId = null,
+                                    occurrenceId = null,
+                                    animationType = null,
+                                    libraryAnimationLabel = null,
+                                    fed = false,
+                                    offset = avatarSpot(
+                                        AvatarWatchdog.recoveryFraction(reactionHome.x, px, maxWidthPx),
+                                        px, maxWidthPx, floorYPxNow, landed.species
+                                    )
+                                )
+                            }
                             val mood = AvatarMoodSnapshot.forSpecies(context, current.species)
                             startAvatarIdleLoop(current.species, mood)
                             // Eine ECHTE Erinnerung darf dasselbe bewirken wie eine Bitte im
@@ -3201,6 +3336,7 @@ fun DockScreen(
                 pendingExternalImpulse?.impulseId
             ) {
                 val species = avatar?.species ?: return@LaunchedEffect
+                try {
 
                 // Ein genauer Skill-/Reminder-Knoten geht vor dem groben Thema. Die Entscheidung
                 // liest ausschliesslich bereits vorhandenen Zustand und liefert eine bestehende
@@ -3808,6 +3944,23 @@ fun DockScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+                } finally {
+                    // Wird diese Schleife abgebrochen (eine Erinnerung trifft ein, eine Bitte
+                    // kommt, die Spezies wechselt), steht sie oft mitten in einer Regung, die die
+                    // Ruhe-Schleife vorher angehalten hat - FLOURISH, FIDGET, ein Gang, ein Act.
+                    // Niemand startete sie danach wieder: Die Figur stand bis zur naechsten
+                    // Regung starr da, gemeldet am 26.09. als "bewegt sich nicht mehr". Waehrend
+                    // einer offenen Erinnerung kann das Minuten dauern. Nicht-suspendierend und
+                    // ueber [scope] gestartet, darf das deshalb auch im Abbruchfall laufen.
+                    avatar?.takeIf { !it.fed }?.let { standing ->
+                        if (avatarIdleJob?.isActive != true) {
+                            startAvatarIdleLoop(
+                                standing.species,
+                                AvatarMoodSnapshot.forSpecies(context, standing.species)
+                            )
                         }
                     }
                 }

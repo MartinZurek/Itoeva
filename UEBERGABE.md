@@ -24,6 +24,28 @@ wissen muss:
   und `bash tools/decision-policy/train.sh` laufen - sonst weist die App das alte Modell ab (und
   faellt sauber zurueck).
 
+## 0b. Neu am 26.09.: Avatar-Waechter (Branch `claude/avatar-visibility-bugs-iqeyxn`)
+
+Gemeldet: Im Spielmodus wurde der Avatar dunkel, blieb stehen oder verschwand nach einer auf ihn
+gezogenen Erinnerung aus dem Bild; nur Verlassen und Wiederbetreten half. Drei Ursachen, alle in
+`DockScreen.kt`, alle von derselben Form - ein Ablauf veraendert die Figur voruebergehend und wird
+abgebrochen, bevor er sie zuruecksetzt:
+
+- `moveToPlace`: Abbruch mitten im Tuerdurchgang liess `avatarHidden`/`avatarDim` stehen
+  (unsichtbar bzw. dunkel). Jetzt try/finally.
+- Play-Schleife: Abbruch mitten in FLOURISH/FIDGET/Gang/Act liess die Ruhe-Schleife aus (Figur
+  erstarrt). Jetzt startet ein finally sie neu.
+- `feedAvatarNow`: Die Raketen-Reaktion fliegt 1,6 Bildhoehen ueber den Rand; im Spielmodus blieb
+  die Figur dort. Jetzt steht sie danach wieder auf dem Boden.
+
+Dazu `matrix/AvatarWatchdog.kt` (rein, offline getestet): Alle 1,5 s wird geprueft, ob die Figur
+fehlt, ausgeblendet, abgedunkelt, ausserhalb des Bildes oder erstarrt ist; was bei zwei Pruefungen
+hintereinander besteht, wird repariert und als `Avatar-Waechter repariert: ...` geloggt. **Taucht
+diese Logzeile im Stream-Messlauf auf, gibt es eine weitere, noch unbekannte Ursache** - der
+Waechter ist das Sicherheitsnetz, nicht die Loesung. Wer einen neuen gewollten Zustand einfuehrt,
+in dem die Figur unsichtbar, dunkel, ausserhalb oder lange reglos ist, muss ihn dem Waechter als
+Ausnahme mitteilen (`doorTransit`, `reacting`, `moving`, `animatedElsewhere`).
+
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
 **Stand 18.09.: NT-091 und NT-093 (Basketball) sowie ein zweites, unabhaengig ebenfalls
