@@ -114,7 +114,7 @@
       "prompt_file": "music/prompts/city-03.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 2102026,
+      "seed": 26091016,
       "notes": "Drittes Stueck der Rolle city_background, gewuenscht vom Nutzer: die Essenz melancholischer franzoesischer Rap-Beats - trauriges Klavier, Streicher, ein Musette-Akkordeon als Antwort, schwere staubige Boom-Bap-Drums. c-Moll, c-As-Es-G, 88 BPM. Ausdruecklich tonhoehenstabil (siehe home-evening-01 fuer den Wow-Befund). Hommage wie main-day-03: nur die Essenz, keine Nachbildung; Melodie, Akkorde, Tempo und Besetzung sind eigene Vorgaben, der Prompt nennt weder Kuenstler noch Stueck. Weiche 8-Bit-Stimme als Pixel-Signatur, Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden). Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
