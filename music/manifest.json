@@ -310,7 +310,7 @@
       "prompt_file": "music/prompts/dream-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 29092026,
+      "seed": 26091042,
       "notes": "Erstes Stueck der Rolle dream_background, gewuenscht vom Nutzer als Hommage im Stil von main-day-03: das Gefuehl eines grossen Weltraum-Filmthemas - Staunen, Sehnsucht, leise Hoffnung, eine tickende Uhr. Ausdruecklich KEINE Nachbildung: Muster, Melodie, Akkordfolge (e-C-G-D), Tempo (72 BPM) und Besetzung (Pfeifenorgel mit gebrochenen Akkorden, Klavier, Streicher, Holz-Tick) sind eigene Vorgaben; der Prompt nennt weder Film, Komponist noch Stueck. Weiche 8-Bit-Stimme wie ein blinkender Stern. Mit diesem Stueck bekommt die Rolle DREAM erstmals einen Platz im Spiel: nachts im Schlafzimmer (MusicResolver), damit die Nacht nicht mehr wie der Abend klingt. Kein Schlagzeug, kein Ein- und kein Ausblenden. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
