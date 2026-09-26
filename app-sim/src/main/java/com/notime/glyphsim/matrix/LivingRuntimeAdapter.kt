@@ -138,6 +138,12 @@ object LivingRuntimeAdapter {
      * [interestTopic] kommt aus der bisherigen gewichteten Tagesablaufwahl. Sie entscheidet
      * nicht mehr, OB ein Grundbeduerfnis uebergangen wird, sondern nur noch, WIE eine vom Kern
      * gewaehlte Freizeit- oder Entwicklungsphase aussieht.
+     *
+     * [preferredRoutine] ist die Wahl der Decision Policy (siehe `decision/`). Sie wird **nur**
+     * uebernommen, wenn sie zu den Ablaeufen gehoert, die dieser Kernschritt ohnehin zeigen darf
+     * ([options]) - die Policy waehlt zwischen erlaubten Ausformungen, sie erweitert sie nie.
+     * Passt sie nicht (die Welt hat sich zwischen Bewertung und Ausfuehrung geaendert), gilt der
+     * bisherige Wurf. Ohne Vorwahl verbraucht [random] genau dieselben Zahlen wie vorher.
      */
     fun prepare(
         agent: AgentState,
@@ -148,8 +154,86 @@ object LivingRuntimeAdapter {
         recentSpecials: List<PlayRoutines.SpecialActivity> = emptyList(),
         random: Random = Random.Default,
         nearbyProfiles: Set<String> = emptySet(),
-        goalInfluence: GoalInfluence? = null
+        goalInfluence: GoalInfluence? = null,
+        preferredRoutine: PlayRoutine? = null,
+        sleepAdmissible: Boolean = false,
+        chosenGoal: GoalKind? = null
     ): PreparedLivingRoutine {
+        val (result, branch) = resolve(
+            agent, world, renderedPlace, interestTopic, footballTrickLearned, recentSpecials,
+            nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal
+        )
+        if (branch == null) return PreparedLivingRoutine(result, null, null, emptyList())
+        // Das Thema kommt von der gewaehlten Option: Nachts kann aus "ausruhen" der Schlaf im
+        // Bett werden, und dann muss auch Musik und Erinnerung SLEEP sehen und nicht REST.
+        val vorgewaehlt = preferredRoutine?.let { wunsch -> branch.options.firstOrNull { it.routine == wunsch } }
+        val routine = vorgewaehlt?.routine ?: branch.sample(random)
+        val topic = vorgewaehlt?.topic ?: branch.topic
+        return PreparedLivingRoutine(result, topic, routine, completedActions(result))
+    }
+
+    /**
+     * Ein sichtbarer Ablauf, den der naechste Kernschritt zeigen darf - mit der Wahrscheinlichkeit,
+     * die ihm die bisherige Wahl gibt (0 heisst: erlaubt, aber bisher nie gezogen).
+     */
+    data class RoutineOption(
+        val topic: AnimationType,
+        val routine: PlayRoutine,
+        val probability: Double,
+        /** Die Kernhandlung, deren Wirkung dieser Ablauf zeigt - Quelle der Action Features. */
+        val coreAction: ActionKind
+    )
+
+    /**
+     * **Alle sichtbaren Ablaeufe, die aus dem naechsten Kernschritt werden koennen.**
+     *
+     * Rechnet denselben reinen Kernschritt wie [prepare] und fuehrt denselben Zweig aus, wuerfelt
+     * aber nicht. Das ist die Kandidatenquelle der Decision Policy: Was hier nicht steht, kann sie
+     * nicht waehlen - Oeffnungszeiten, Vorrat, Geld und das Ziel des Kerns gelten also weiter.
+     */
+    fun options(
+        agent: AgentState,
+        world: WorldState,
+        renderedPlace: PlayScene.Place,
+        interestTopic: AnimationType,
+        footballTrickLearned: Boolean = false,
+        recentSpecials: List<PlayRoutines.SpecialActivity> = emptyList(),
+        nearbyProfiles: Set<String> = emptySet(),
+        goalInfluence: GoalInfluence? = null,
+        sleepAdmissible: Boolean = false,
+        chosenGoal: GoalKind? = null
+    ): List<RoutineOption> = resolve(
+        agent, world, renderedPlace, interestTopic, footballTrickLearned, recentSpecials,
+        nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal
+    ).second?.options ?: emptyList()
+
+    /** Ein Zweig: welches Thema, welche Ablaeufe erlaubt, und wie bisher gewuerfelt wird. */
+    private class Branch(
+        val topic: AnimationType,
+        val options: List<RoutineOption>,
+        val sample: (Random) -> PlayRoutine
+    )
+
+    private fun single(topic: AnimationType, routine: PlayRoutine, core: ActionKind) =
+        Branch(topic, listOf(RoutineOption(topic, routine, 1.0, core))) { routine }
+
+    /**
+     * Die gemeinsame Rechnung von [prepare] und [options]. Nur hier steht, welcher Kernschritt
+     * zu welchem sichtbaren Zweig fuehrt - zwei Kopien davon liefen frueher oder spaeter
+     * auseinander, und die Policy bewertete dann Ablaeufe, die die Welt gar nicht zeigt.
+     */
+    private fun resolve(
+        agent: AgentState,
+        world: WorldState,
+        renderedPlace: PlayScene.Place,
+        interestTopic: AnimationType,
+        footballTrickLearned: Boolean,
+        recentSpecials: List<PlayRoutines.SpecialActivity>,
+        nearbyProfiles: Set<String>,
+        goalInfluence: GoalInfluence?,
+        sleepAdmissible: Boolean,
+        chosenGoal: GoalKind?
+    ): Pair<StepResult, Branch?> {
         val startWorld = synchroniseWorld(world, renderedPlace, nearbyProfiles)
         // **Die Ausformung geht VOR der Entscheidung mit hinein** (NT-072).
         //
@@ -161,22 +245,19 @@ object LivingRuntimeAdapter {
             agent,
             startWorld,
             goalInfluence,
-            interestActionFor(safeInterestTopic(agent.goal, interestTopic))
+            interestActionFor(safeInterestTopic(agent.goal, interestTopic)),
+            chosenGoal = chosenGoal
         )
-        val firstAction = completedActions(result).firstOrNull()
-            ?: return PreparedLivingRoutine(result, null, null, emptyList())
+        val firstAction = completedActions(result).firstOrNull() ?: return result to null
 
-        val topic: AnimationType
-        val routine: PlayRoutine
-        when (firstAction) {
+        val branch: Branch = when (firstAction) {
             ActionKind.TRAVEL -> when (result.world.site) {
                 LivingSite.WORKPLACE -> {
                     result = advanceExpected(result, listOf(ActionKind.WORK))
-                    topic = AnimationType.WORK
-                    routine = if (ActionKind.WORK in completedActions(result)) {
-                        workRoutine(renderedPlace)
+                    if (ActionKind.WORK in completedActions(result)) {
+                        workBranch(renderedPlace)
                     } else {
-                        closedSiteRoutine(PlayScene.Place.WORK)
+                        single(AnimationType.WORK, closedSiteRoutine(PlayScene.Place.WORK), ActionKind.TRAVEL)
                     }
                 }
                 LivingSite.MARKET -> {
@@ -189,82 +270,64 @@ object LivingRuntimeAdapter {
                             ActionKind.EAT
                         )
                     )
-                    topic = AnimationType.DRINK
-                    routine = if (ActionKind.BUY_FOOD in completedActions(result)) {
-                        shoppingRoutine(renderedPlace)
+                    if (ActionKind.BUY_FOOD in completedActions(result)) {
+                        single(AnimationType.DRINK, shoppingRoutine(renderedPlace), ActionKind.BUY_FOOD)
                     } else {
-                        closedSiteRoutine(PlayScene.Place.SHOP)
+                        single(AnimationType.DRINK, closedSiteRoutine(PlayScene.Place.SHOP), ActionKind.TRAVEL)
                     }
                 }
                 LivingSite.HOME -> {
                     if (result.agent.plan?.next?.kind == ActionKind.REST) {
                         result = advanceExpected(result, listOf(ActionKind.REST))
-                        topic = AnimationType.REST
-                        routine = atPlace(PlayScene.Place.LIVING, restRoutine())
+                        restBranch(sleepAdmissible)
                     } else {
                         result = advanceExpected(
                             result,
                             listOf(ActionKind.INSPECT_FOOD, ActionKind.EAT)
                         )
-                        topic = AnimationType.DRINK
-                        routine = atPlace(PlayScene.Place.KITCHEN, eatingRoutine())
+                        eatingBranch()
                     }
                 }
-                LivingSite.OUTSIDE -> {
-                    topic = AnimationType.MOVE
-                    // **Hinaus UND dort etwas tun - in einem Ablauf.** Vorher bestand diese Runde
-                    // nur aus dem Weg auf die Strasse; die Bewegung oder das Erkunden, fuer das
-                    // die Figur hinausging, kam erst eine ganze Pause spaeter. Dazwischen stand
-                    // sie ohne erkennbaren Grund draussen. Dasselbe Zusammenziehen wie beim
-                    // Einkaufen (Weg, Kauf, Heimweg, Essen) und bei der Arbeit.
-                    routine = when (result.agent.plan?.next?.kind) {
-                        ActionKind.MOVE_BODY -> {
-                            result = advanceExpected(result, listOf(ActionKind.MOVE_BODY))
-                            moveBodyRoutine(footballTrickLearned, recentSpecials, random)
-                        }
-                        ActionKind.EXPLORE -> {
-                            result = advanceExpected(result, listOf(ActionKind.EXPLORE))
-                            exploreRoutine(footballTrickLearned, recentSpecials, random)
-                        }
-                        else -> PlayRoutine(listOf(RoutineStep.GoToPlace(PlayScene.Place.STREET)))
+                // **Hinaus UND dort etwas tun - in einem Ablauf.** Vorher bestand diese Runde
+                // nur aus dem Weg auf die Strasse; die Bewegung oder das Erkunden, fuer das
+                // die Figur hinausging, kam erst eine ganze Pause spaeter. Dazwischen stand
+                // sie ohne erkennbaren Grund draussen. Dasselbe Zusammenziehen wie beim
+                // Einkaufen (Weg, Kauf, Heimweg, Essen) und bei der Arbeit.
+                LivingSite.OUTSIDE -> when (result.agent.plan?.next?.kind) {
+                    ActionKind.MOVE_BODY -> {
+                        result = advanceExpected(result, listOf(ActionKind.MOVE_BODY))
+                        moveBodyBranch(footballTrickLearned, recentSpecials)
                     }
+                    ActionKind.EXPLORE -> {
+                        result = advanceExpected(result, listOf(ActionKind.EXPLORE))
+                        exploreBranch(footballTrickLearned, recentSpecials)
+                    }
+                    else -> single(
+                        AnimationType.MOVE,
+                        PlayRoutine(listOf(RoutineStep.GoToPlace(PlayScene.Place.STREET))),
+                        ActionKind.TRAVEL
+                    )
                 }
             }
-            ActionKind.WORK -> {
-                topic = AnimationType.WORK
-                routine = workRoutine(renderedPlace)
-            }
+            ActionKind.WORK -> workBranch(renderedPlace)
             ActionKind.BUY_FOOD -> {
                 result = advanceExpected(
                     result,
                     listOf(ActionKind.TRAVEL, ActionKind.INSPECT_FOOD, ActionKind.EAT)
                 )
-                topic = AnimationType.DRINK
-                routine = shoppingRoutine(renderedPlace)
+                single(AnimationType.DRINK, shoppingRoutine(renderedPlace), ActionKind.BUY_FOOD)
             }
             ActionKind.INSPECT_FOOD -> {
                 result = advanceExpected(result, listOf(ActionKind.EAT))
-                topic = AnimationType.DRINK
-                routine = atPlace(PlayScene.Place.KITCHEN, eatingRoutine())
+                eatingBranch()
             }
-            ActionKind.EAT -> {
-                topic = AnimationType.DRINK
-                routine = atPlace(PlayScene.Place.KITCHEN, eatingRoutine())
-            }
-            ActionKind.REST -> {
-                topic = AnimationType.REST
-                routine = atPlace(PlayScene.Place.LIVING, restRoutine())
-            }
+            ActionKind.EAT -> eatingBranch()
+            ActionKind.REST -> restBranch(sleepAdmissible)
             ActionKind.PURSUE_INTEREST -> {
-                topic = safeInterestTopic(result.agent.goal, interestTopic)
-                routine = atPlace(
-                    PlayScene.forTopic(topic),
-                    PlayRoutines.forTopic(
-                        topic = topic,
-                        footballTrickLearned = footballTrickLearned,
-                        recentSpecials = recentSpecials,
-                        random = random
-                    )
+                val topic = safeInterestTopic(result.agent.goal, interestTopic)
+                topicBranch(
+                    topic, PlayScene.forTopic(topic), ActionKind.PURSUE_INTEREST,
+                    footballTrickLearned, recentSpecials
                 )
             }
             // ---- Die sieben benannten Beschaeftigungen (NT-072) ----
@@ -273,58 +336,26 @@ object LivingRuntimeAdapter {
             // sichtbare Routine. Dass dieser `when` sie erzwingt, ist der Grund, warum eine
             // neue Kernhandlung nicht stillschweigend unsichtbar bleiben kann: Wer sie
             // hinzufuegt, muss hier sagen, wie sie aussieht, sonst faellt der Build.
-            ActionKind.READ -> {
-                topic = AnimationType.BOOK
-                routine = topicRoutine(AnimationType.BOOK, random)
-            }
-            ActionKind.CREATE -> {
-                topic = AnimationType.CREATIVITY
-                routine = topicRoutine(AnimationType.CREATIVITY, random)
-            }
-            ActionKind.CONCENTRATE -> {
-                topic = AnimationType.FOCUS
-                routine = topicRoutine(AnimationType.FOCUS, random)
-            }
-            ActionKind.SETTLE -> {
-                topic = AnimationType.MINDFULNESS
-                routine = topicRoutine(AnimationType.MINDFULNESS, random)
-            }
-            ActionKind.MOVE_BODY -> {
-                topic = AnimationType.MOVE
-                routine = moveBodyRoutine(footballTrickLearned, recentSpecials, random)
-            }
-            ActionKind.EXPLORE -> {
-                topic = AnimationType.MOVE
-                routine = exploreRoutine(footballTrickLearned, recentSpecials, random)
-            }
-            ActionKind.TEND_SELF -> {
-                topic = AnimationType.MEDICINE
-                routine = topicRoutine(AnimationType.MEDICINE, random)
-            }
-            ActionKind.SHOW_AFFECTION -> {
-                topic = AnimationType.LOVE
-                routine = topicRoutine(AnimationType.LOVE, random)
-            }
-            ActionKind.INVITE_TO_PLAY -> {
-                topic = AnimationType.LOVE
-                routine = atPlace(
-                    PlayScene.Place.LIVING,
-                    PlayRoutines.forTopic(AnimationType.LOVE, random = random)
-                )
-            }
+            ActionKind.READ -> topicBranch(AnimationType.BOOK, ActionKind.READ)
+            ActionKind.CREATE -> topicBranch(AnimationType.CREATIVITY, ActionKind.CREATE)
+            ActionKind.CONCENTRATE -> topicBranch(AnimationType.FOCUS, ActionKind.CONCENTRATE)
+            ActionKind.SETTLE -> topicBranch(AnimationType.MINDFULNESS, ActionKind.SETTLE)
+            ActionKind.MOVE_BODY -> moveBodyBranch(footballTrickLearned, recentSpecials)
+            ActionKind.EXPLORE -> exploreBranch(footballTrickLearned, recentSpecials)
+            ActionKind.TEND_SELF -> topicBranch(AnimationType.MEDICINE, ActionKind.TEND_SELF)
+            ActionKind.SHOW_AFFECTION -> topicBranch(AnimationType.LOVE, ActionKind.SHOW_AFFECTION)
+            ActionKind.INVITE_TO_PLAY -> topicBranch(
+                AnimationType.LOVE, PlayScene.Place.LIVING, ActionKind.INVITE_TO_PLAY
+            )
             ActionKind.RESPOND_TO_INVITE,
-            ActionKind.RECEIVE_RESPONSE -> {
-                topic = AnimationType.GENERAL
-                routine = atPlace(
-                    PlayScene.Place.LIVING,
-                    PlayRoutines.forTopic(AnimationType.GENERAL, random = random)
-                )
-            }
+            ActionKind.RECEIVE_RESPONSE -> topicBranch(
+                AnimationType.GENERAL, PlayScene.Place.LIVING, firstAction
+            )
             ActionKind.TRAIN_TOGETHER -> error(
                 "TRAIN_TOGETHER is a completed-scene effect, not a standalone routine"
             )
         }
-        return PreparedLivingRoutine(result, topic, routine, completedActions(result))
+        return result to branch
     }
 
     /**
@@ -384,19 +415,28 @@ object LivingRuntimeAdapter {
     }
 
     /** Sich bewegen: ein Bewegungsablauf am Bewegungsort. */
-    private fun moveBodyRoutine(
+    private fun moveBodyBranch(
         footballTrickLearned: Boolean,
-        recentSpecials: List<PlayRoutines.SpecialActivity>,
-        random: Random
-    ): PlayRoutine = atPlace(
-        PlayScene.forTopic(AnimationType.MOVE),
-        PlayRoutines.forTopic(
-            topic = AnimationType.MOVE,
-            footballTrickLearned = footballTrickLearned,
-            recentSpecials = recentSpecials,
-            random = random
-        )
-    )
+        recentSpecials: List<PlayRoutines.SpecialActivity>
+    ): Branch {
+        val ort = PlayScene.forTopic(AnimationType.MOVE)
+        val options = PlayRoutines.distributionFor(
+            AnimationType.MOVE, footballTrickLearned, recentSpecials
+        ).map { (routine, p) ->
+            RoutineOption(AnimationType.MOVE, atPlace(ort, routine), p, ActionKind.MOVE_BODY)
+        }
+        return Branch(AnimationType.MOVE, merged(options)) { random ->
+            atPlace(
+                ort,
+                PlayRoutines.forTopic(
+                    topic = AnimationType.MOVE,
+                    footballTrickLearned = footballTrickLearned,
+                    recentSpecials = recentSpecials,
+                    random = random
+                )
+            )
+        }
+    }
 
     /**
      * **Erkunden sieht anders aus als Bewegung, obwohl beides hinausfuehrt** (NT-074).
@@ -405,17 +445,114 @@ object LivingRuntimeAdapter {
      * aus einem Weg eine Strecke: Man kommt an etwas vorbei, statt vor der Haustuer im Kreis zu
      * gehen. Wer sich nur bewegt, bleibt haeufiger in der Naehe; wer erkundet, geht weiter weg.
      */
-    private fun exploreRoutine(
+    private fun exploreBranch(
         footballTrickLearned: Boolean,
-        recentSpecials: List<PlayRoutines.SpecialActivity>,
-        random: Random
-    ): PlayRoutine = PlayRoutines.forTopic(
-        topic = AnimationType.MOVE,
-        footballTrickLearned = footballTrickLearned,
-        recentSpecials = recentSpecials,
-        preferPlaceChange = true,
-        random = random
-    )
+        recentSpecials: List<PlayRoutines.SpecialActivity>
+    ): Branch {
+        val options = PlayRoutines.distributionFor(
+            AnimationType.MOVE, footballTrickLearned, recentSpecials, preferPlaceChange = true
+        ).map { (routine, p) -> RoutineOption(AnimationType.MOVE, routine, p, ActionKind.EXPLORE) }
+        return Branch(AnimationType.MOVE, merged(options)) { random ->
+            PlayRoutines.forTopic(
+                topic = AnimationType.MOVE,
+                footballTrickLearned = footballTrickLearned,
+                recentSpecials = recentSpecials,
+                preferPlaceChange = true,
+                random = random
+            )
+        }
+    }
+
+    /** Thema, Ort und sichtbarer Ablauf aus einer Hand - fuer die benannten Beschaeftigungen. */
+    private fun topicBranch(topic: AnimationType, core: ActionKind): Branch =
+        topicBranch(topic, PlayScene.forTopic(topic), core, false, emptyList())
+
+    private fun topicBranch(topic: AnimationType, place: PlayScene.Place, core: ActionKind): Branch =
+        topicBranch(topic, place, core, false, emptyList())
+
+    private fun topicBranch(
+        topic: AnimationType,
+        place: PlayScene.Place,
+        core: ActionKind,
+        footballTrickLearned: Boolean,
+        recentSpecials: List<PlayRoutines.SpecialActivity>
+    ): Branch {
+        val options = PlayRoutines.distributionFor(topic, footballTrickLearned, recentSpecials)
+            .map { (routine, p) -> RoutineOption(topic, atPlace(place, routine), p, core) }
+        return Branch(topic, merged(options)) { random ->
+            atPlace(
+                place,
+                PlayRoutines.forTopic(
+                    topic = topic,
+                    footballTrickLearned = footballTrickLearned,
+                    recentSpecials = recentSpecials,
+                    random = random
+                )
+            )
+        }
+    }
+
+    /**
+     * Essen daheim. Bisher immer der erste Kuechenablauf; die uebrigen (etwa der Becher) sind
+     * dieselbe Mahlzeit in anderer Form und stehen der Policy mit Wahrscheinlichkeit 0 offen.
+     */
+    private fun eatingBranch(): Branch {
+        val kueche = PlayScene.Place.KITCHEN
+        val options = eatingRoutines().mapIndexed { index, routine ->
+            RoutineOption(
+                AnimationType.DRINK, atPlace(kueche, routine), if (index == 0) 1.0 else 0.0,
+                ActionKind.EAT
+            )
+        }
+        return Branch(AnimationType.DRINK, merged(options)) { atPlace(kueche, eatingRoutine()) }
+    }
+
+    /**
+     * Ausruhen daheim, wie bisher auf dem ersten Sofa-Ablauf. **Nachts ([sleepAdmissible]) darf
+     * die Policy stattdessen ins Bett** - die Schlafroutine gab es bisher nur als beantwortete
+     * Erinnerung, obwohl sie genau das zeigt, was ein muedes Wesen um Mitternacht tut.
+     * Tagsueber bleibt sie gesperrt: [RoutineStep.SleepUntilMorning] endet ausserhalb der Nacht
+     * sofort, und ein Mittagsschlaf im Bett waere dort nur ein Hinlegen und Aufstehen.
+     */
+    private fun restBranch(sleepAdmissible: Boolean): Branch {
+        val wohnzimmer = PlayScene.Place.LIVING
+        val sofa = PlayRoutines.allFor(AnimationType.REST).mapIndexed { index, routine ->
+            RoutineOption(
+                AnimationType.REST, atPlace(wohnzimmer, routine), if (index == 0) 1.0 else 0.0,
+                ActionKind.REST
+            )
+        }
+        val bett = if (sleepAdmissible) {
+            PlayRoutines.allFor(AnimationType.SLEEP).map { routine ->
+                RoutineOption(
+                    AnimationType.SLEEP,
+                    atPlace(PlayScene.forTopic(AnimationType.SLEEP), routine),
+                    0.0,
+                    ActionKind.REST
+                )
+            }
+        } else {
+            emptyList()
+        }
+        return Branch(AnimationType.REST, merged(sofa + bett)) { atPlace(wohnzimmer, restRoutine()) }
+    }
+
+    /** Arbeit, wie bisher auf dem ersten Arbeitsweg; die anderen Wege stehen der Policy offen. */
+    private fun workBranch(renderedPlace: PlayScene.Place): Branch {
+        val options = PlayRoutines.allFor(AnimationType.WORK).mapIndexed { index, routine ->
+            RoutineOption(
+                AnimationType.WORK, workRoutine(renderedPlace, routine), if (index == 0) 1.0 else 0.0,
+                ActionKind.WORK
+            )
+        }
+        return Branch(AnimationType.WORK, merged(options)) { workRoutine(renderedPlace) }
+    }
+
+    /** Gleiche Ablaeufe aus verschiedenen Quellen zu einer Option zusammenfassen. */
+    private fun merged(options: List<RoutineOption>): List<RoutineOption> =
+        options.groupBy { it.routine }.map { (_, gleiche) ->
+            gleiche.first().copy(probability = gleiche.sumOf { it.probability })
+        }
 
     private fun completedActions(result: StepResult): List<ActionKind> = result.events
         .filter {
@@ -438,7 +575,9 @@ object LivingRuntimeAdapter {
         return PlayRoutine(shopping.steps.drop(atRack.coerceAtLeast(0)))
     }
 
-    private fun eatingRoutine(): PlayRoutine = PlayRoutines.allFor(AnimationType.DRINK).first {
+    private fun eatingRoutine(): PlayRoutine = eatingRoutines().first()
+
+    private fun eatingRoutines(): List<PlayRoutine> = PlayRoutines.allFor(AnimationType.DRINK).filter {
         candidate -> candidate.steps.none {
             it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP
         }
@@ -454,8 +593,11 @@ object LivingRuntimeAdapter {
         )
     )
 
-    private fun workRoutine(renderedPlace: PlayScene.Place): PlayRoutine {
-        val steps = PlayRoutines.allFor(AnimationType.WORK).first().steps
+    private fun workRoutine(
+        renderedPlace: PlayScene.Place,
+        base: PlayRoutine = PlayRoutines.allFor(AnimationType.WORK).first()
+    ): PlayRoutine {
+        val steps = base.steps
         val lastWork = steps.indexOfLast {
             it is RoutineStep.Act && it.topic == AnimationType.WORK
         }
@@ -587,12 +729,6 @@ object LivingRuntimeAdapter {
         AnimationType.SLEEP,
         AnimationType.MEDICINE -> null
     }
-
-    /** Thema, Ort und sichtbarer Ablauf aus einer Hand - fuer die benannten Beschaeftigungen. */
-    private fun topicRoutine(topic: AnimationType, random: Random): PlayRoutine = atPlace(
-        PlayScene.forTopic(topic),
-        PlayRoutines.forTopic(topic = topic, random = random)
-    )
 
     private fun travelIfNeeded(site: LivingSite, world: WorldState): List<Action> =
         if (world.site == site) emptyList() else listOf(ActionCatalog.travelTo(site))

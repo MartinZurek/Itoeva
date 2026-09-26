@@ -39,6 +39,7 @@ SIM="$ROOT/app-sim/src/main/java/com/notime/glyphsim/matrix"
 SK="$ROOT/app-sim/src/main/java/com/notime/glyphsim/skilltree"
 LIV="$ROOT/app-sim/src/main/java/com/notime/glyphsim/living"
 STREAM="$ROOT/app-sim/src/main/java/com/notime/glyphsim/stream"
+DEC="$ROOT/app-sim/src/main/java/com/notime/glyphsim/decision"
 TEST="$ROOT/app-sim/src/test/java/com/notime/glyphsim"
 
 # R-Platzhalter wie bei den Nachbarskripten: gelesen statt gepflegt.
@@ -99,6 +100,10 @@ SRCS=(
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayMusic.kt"
   # XP nach Wirkung (NT-072) - reine Zahlenarbeit, kein Android.
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayModeXp.kt"
+  # Die Decision Policy - reines Kotlin samt ONNX-Leser, deshalb hier und nicht erst in der CI.
+  "$DEC/DecisionPolicy.kt" "$DEC/DecisionHistory.kt" "$DEC/DecisionCandidates.kt"
+  "$DEC/DecisionFeatures.kt" "$DEC/ExistingUtilityPolicy.kt" "$DEC/OnnxModel.kt"
+  "$DEC/OnnxDecisionPolicy.kt"
 )
 
 TEST_SRCS=(
@@ -169,6 +174,13 @@ TEST_SRCS=(
   "$TEST/data/LivingAgentStoreTest.kt"
   "$TEST/data/LivingMemoryContinuityTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
+  # Die Decision Policy: Lehrer und Mehrtagessimulation sind Werkzeug (auch fuer
+  # tools/decision-policy), die Tests daneben pruefen Kandidaten, Merkmale, Modell und Rueckfall.
+  "$TEST/decision/DecisionTeacher.kt" "$TEST/decision/DecisionSimulation.kt"
+  "$TEST/decision/DecisionTestSupport.kt" "$TEST/decision/DecisionCandidatesTest.kt"
+  "$TEST/decision/DecisionCoverageTest.kt" "$TEST/decision/DecisionFeaturesTest.kt"
+  "$TEST/decision/OnnxDecisionPolicyTest.kt" "$TEST/decision/DecisionBehaviourTest.kt"
+  "$TEST/matrix/PlayRoutineDistributionTest.kt"
 )
 
 TEST_CLASSES=(
@@ -231,6 +243,12 @@ TEST_CLASSES=(
   com.notime.glyphsim.data.LivingAgentStoreTest
   com.notime.glyphsim.data.LivingMemoryContinuityTest
   com.notime.glyphsim.settings.SettingsCatalogTest
+  com.notime.glyphsim.matrix.PlayRoutineDistributionTest
+  com.notime.glyphsim.decision.DecisionCandidatesTest
+  com.notime.glyphsim.decision.DecisionCoverageTest
+  com.notime.glyphsim.decision.DecisionFeaturesTest
+  com.notime.glyphsim.decision.OnnxDecisionPolicyTest
+  com.notime.glyphsim.decision.DecisionBehaviourTest
 )
 
 echo "Uebersetzen ..."
@@ -239,6 +257,11 @@ echo "Uebersetzen ..."
   "$HERE/src/MediaStubs.kt" "$HERE/src/AnimatorStubs.kt" \
   "$HERE/src/SettingsStoreStub.kt" "$HERE/src/LogStub.kt" \
   "$WORK"/gen/R_*.kt "${SRCS[@]}" "${TEST_SRCS[@]}"
+
+# Nur uebersetzen - fuer Werkzeuge, die auf diesen Klassen aufbauen (tools/decision-policy).
+if [ "${COMPILE_ONLY:-0}" = "1" ]; then
+  exit 0
+fi
 
 echo "Laufen lassen ..."
 # Aus :app-sim heraus, weil ReactionFingerprintTest seine Golden-Datei unter

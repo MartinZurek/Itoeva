@@ -1,10 +1,28 @@
-# Uebergabe: Stand am 23. September 2026
+# Uebergabe: Stand am 26. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
 [`CLOUD_CODE_BRIEFING.md`](CLOUD_CODE_BRIEFING.md) (Produktvision) und nicht
 [`evolutions/BACKLOG.md`](evolutions/BACKLOG.md) (die Arbeitsliste), sondern sagt, **wo genau der
 Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
+
+## 0. Neu am 26.09.: Decision Policy (Branch `claude/itoeva-decision-policy-kwlk4h`)
+
+Ein kleines lokales Netz (ONNX, 21 KB, 4 641 Parameter) waehlt, WIE eine Absicht des Kerns sichtbar
+wird - zwischen allen Ablaeufen, die der Kern gerade zulaesst, samt Gruppenspiel und knapp
+unterlegenen Zielen. Alles Weitere steht in `tools/decision-policy/README.md`. Drei Dinge, die man
+wissen muss:
+
+- **Gueltigkeit steckt in `DecisionCandidates`, nicht im Modell.** Wer eine Regel einfuehrt
+  (Nachtruhe, Vorrang, Ausschluss), fuehrt sie dort ein - dann gilt sie auch fuer jedes kuenftige
+  Modell.
+- **Rueckfall = altes Verhalten.** `ExistingUtilityPolicy` ist mathematisch die alte Wuerfelkette
+  (`DecisionCandidatesTest` prueft das). Fehlt das Asset oder passt das Schema nicht, laeuft die App
+  wie vor der Policy.
+- **Neue Aktion = neuer Ablauf in `PlayRoutines.allFor`.** Sie wird automatisch Kandidat.
+  Aendert sich `DecisionFeatures` (Anzahl, Reihenfolge, Bedeutung), muss `SCHEMA_VERSION` steigen
+  und `bash tools/decision-policy/train.sh` laufen - sonst weist die App das alte Modell ab (und
+  faellt sauber zurueck).
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
@@ -303,7 +321,8 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 465 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 661 Tests, ~12 s
+bash tools/decision-policy/train.sh           # Decision Policy neu trainieren (~1 min)
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 

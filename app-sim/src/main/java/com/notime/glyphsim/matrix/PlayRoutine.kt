@@ -258,6 +258,62 @@ object PlayRoutines {
         return pool[random.nextInt(pool.size)]
     }
 
+    /**
+     * **Dieselbe Wahl wie [forTopic], als Verteilung statt als Wurf.**
+     *
+     * Die Decision Policy (siehe `decision/`) muss jeden Ablauf kennen, den [forTopic] liefern
+     * KANN, und mit welcher Wahrscheinlichkeit - sonst liesse sich die bisherige Wahl weder als
+     * Rueckfall nachbilden noch mit der neuen vergleichen. Deshalb steht die Rechnung direkt neben
+     * dem Wurf und folgt ihm Zeile fuer Zeile; `PlayRoutineDistributionTest` wuerfelt [forTopic]
+     * nach und haelt beide zusammen. [forTopic] selbst bleibt unveraendert, damit sich an der
+     * Wahl ohne Policy nichts verschiebt.
+     *
+     * Ablaeufe mit Wahrscheinlichkeit 0 fehlen - Einkauf und Sonderaktivitaeten ausserhalb der
+     * Bewegung zieht [forTopic] nie.
+     */
+    fun distributionFor(
+        topic: AnimationType,
+        footballTrickLearned: Boolean = false,
+        recentSpecials: List<SpecialActivity> = emptyList(),
+        preferPlaceChange: Boolean = false
+    ): List<Pair<PlayRoutine, Double>> {
+        val alle = allFor(topic)
+        val options = if (preferPlaceChange) {
+            alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
+                .ifEmpty { alle }
+        } else {
+            alle
+        }
+        val special = options.filter { specialOf(it) != null }
+        val everyday = options.filterNot { routine ->
+            routine in special || routine.steps.any {
+                it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP
+            }
+        }
+        val pool = everyday.ifEmpty { options }
+        val verteilung = LinkedHashMap<PlayRoutine, Double>()
+        fun add(routine: PlayRoutine, p: Double) {
+            verteilung[routine] = (verteilung[routine] ?: 0.0) + p
+        }
+        val alltag = if (topic == AnimationType.MOVE && special.isNotEmpty()) {
+            val chance = SPECIAL_ACTIVITY_CHANCE_PERCENT / 100.0
+            val feld = special.filter { specialOf(it) !in recentSpecials }.ifEmpty { special }
+            for (chosen in feld) {
+                val routine = if (chosen.steps.any { it is RoutineStep.Football }) {
+                    footballRoutine(footballTrickLearned)
+                } else {
+                    chosen
+                }
+                add(routine, chance / feld.size)
+            }
+            1.0 - chance
+        } else {
+            1.0
+        }
+        for (routine in pool) add(routine, alltag / pool.size)
+        return verteilung.entries.map { it.key to it.value }
+    }
+
     private const val SPECIAL_ACTIVITY_CHANCE_PERCENT = 70
 
     fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(

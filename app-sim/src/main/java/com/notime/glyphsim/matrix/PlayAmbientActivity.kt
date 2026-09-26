@@ -298,12 +298,38 @@ object PlayAmbientActivity {
         random: Random = Random
     ): AnimationType =
         pickWeighted(
-            combinedWeights(
+            topicWeights(
                 phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic,
                 recentTopics, holdOutdoors, afterglow, movementUrge
             ),
             random
         )
+
+    /**
+     * **Die Gewichte, aus denen [nextTopic] zieht** - dieselben neun Signale, ohne den Wurf.
+     *
+     * Die Decision Policy (siehe `decision/`) braucht sie aus zwei Gruenden: Die Schluessel sind
+     * die Themen, die zu dieser Stunde ueberhaupt in Frage kommen (nachts nur Schlaf, nie
+     * Medizin, bei laufendem Aufenthalt draussen nur Aussenthemen) - also eine Gueltigkeitsregel,
+     * die kein Modell umgehen darf. Und die Werte sind die bisherige Wahl, die als Rueckfall und
+     * als Vergleichsgrundlage bestehen bleibt.
+     */
+    fun topicWeights(
+        phase: DayPhase,
+        boostedTopics: Set<AnimationType> = emptySet(),
+        stayAt: PlayScene.Place? = null,
+        leaning: Set<AnimationType> = emptySet(),
+        plannedTopic: AnimationType? = null,
+        justPlayed: AnimationType? = null,
+        signatureTopic: AnimationType? = null,
+        recentTopics: List<AnimationType> = emptyList(),
+        holdOutdoors: Boolean = false,
+        afterglow: Map<AnimationType, Int> = emptyMap(),
+        movementUrge: Int = 0
+    ): Map<AnimationType, Int> = combinedWeights(
+        phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic,
+        recentTopics, holdOutdoors, afterglow, movementUrge
+    )
 
     /**
      * **Wie sehr es die Figur nach Bewegung draengt**, als Zuschlag fuer MOVE.

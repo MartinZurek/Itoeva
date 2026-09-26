@@ -70,6 +70,11 @@ import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AvatarFeedEvent
 import com.notime.glyphsim.data.LivingAgentStore
 import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
+import com.notime.glyphsim.decision.DecisionCandidates
+import com.notime.glyphsim.decision.DecisionEngine
+import com.notime.glyphsim.decision.DecisionHistory
+import com.notime.glyphsim.decision.DecisionState
+import com.notime.glyphsim.decision.TopicSignals
 import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.LivingSimulation
@@ -3431,7 +3436,11 @@ fun DockScreen(
                             // nicht mehr als Entscheidung ueber Grundbeduerfnisse: Der Living
                             // Agent entscheidet, OB Freizeit gerade traegt; diese Wahl sagt nur,
                             // WIE eine solche Phase in der vorhandenen Welt aussieht.
-                            val ordinaryInterestTopic = PlayAmbientActivity.nextTopic(
+                            // **Dieselben neun Signale wie bisher - jetzt als Eingabe der Decision
+                            // Policy** (siehe decision/DecisionPolicy.kt). Ihre Gewichte bestimmen,
+                            // welche Themen zu dieser Stunde ueberhaupt in Frage kommen, und sie
+                            // bleiben die bisherige Wahl, auf die zurueckgefallen wird.
+                            val signals = TopicSignals(
                                 boostedTopics = boostedTopics,
                                 stayAt = currentPlace.takeIf {
                                     stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS
@@ -3480,7 +3489,7 @@ fun DockScreen(
                                     // wurde genau das: dass die Figur zu lange bei derselben Art
                                     // von Verhalten bleibt, obwohl der Einzelschritt-Daempfer
                                     // laengst wirkt.
-                                    recentTopics = recentTopics,
+                                    recentTopics = recentTopics.toList(),
                                     // **Der Nachklang.** Kurz nach einer Antwort stark genug, dass
                                     // aus der einen angeforderten Routine eine zusammenhaengende
                                     // Weile wird; danach nur noch eine Faerbung des Tages.
@@ -3507,21 +3516,63 @@ fun DockScreen(
                             )
 
                             val externalImpulse = pendingExternalImpulse
-                            val interestTopic = externalImpulse?.animationType ?: ordinaryInterestTopic
                             val nearbyProfiles = visitors.map { it.profileId }.toSet()
                             val (baseAgent, baseWorld) = livingStateFor(species)
+                            val footballTrick = PlayFootballSkill.isLearned(context, presenceProfileId)
+                            val goalInfluence = StreamInteractions.influenceFor(externalImpulse)
+                            val phaseJetzt = PlayAmbientActivity.currentDayPhase()
+                            // **Die Decision Policy waehlt, WIE die Absicht aussieht** (siehe
+                            // decision/DecisionPolicy.kt). Der Kern bleibt, was er war: Er bewertet
+                            // die Ziele, plant und prueft jede Voraussetzung. Die Policy waehlt nur
+                            // zwischen den Ablaeufen, die er gerade zulaesst - einschliesslich eines
+                            // knapp unterlegenen Ziels, nie gegen ein dringendes Beduerfnis. Fehlt
+                            // das Modell oder passt es nicht, entscheidet dieselbe Kette wie
+                            // bisher (ExistingUtilityPolicy, gleiche Wahrscheinlichkeiten).
+                            val jetztMinute = PlayTimeLapse.absoluteMinute().toLong()
+                            val verlauf = PlayDecisionPolicy.history(context, presenceProfileId)
+                            val lage = DecisionState(
+                                agent = baseAgent,
+                                world = baseWorld,
+                                phase = phaseJetzt,
+                                currentPlace = currentPlace,
+                                signals = signals,
+                                presence = DecisionCandidates.presenceByPlace(residentSnapshots, currentPlace, nearbyProfiles),
+                                history = verlauf,
+                                nowMinute = jetztMinute,
+                                minutesSinceMove = PlayMovementLog.minutesSinceMove(context, presenceProfileId),
+                                minutesSinceOutdoors = verlauf.lastOutdoor()
+                                    ?.let { (jetztMinute - it).coerceAtLeast(0L) },
+                                impulseTopic = externalImpulse?.animationType,
+                                goalInfluence = goalInfluence,
+                                nearbyProfiles = nearbyProfiles,
+                                footballTrickLearned = footballTrick,
+                                recentSpecials = recentSpecials.toList()
+                            )
+                            val policy = PlayDecisionPolicy.loaded(context)
+                            val entscheidung = DecisionEngine.decide(
+                                state = lage,
+                                candidates = DecisionCandidates.generate(lage),
+                                policy = policy.policy,
+                                random = Random.Default,
+                                temperature = policy.temperature
+                            )
+                            // Ohne Kandidaten (der Kern will gerade nichts) wie bisher: ein Wurf
+                            // aus denselben Gewichten, der den Leerlaufschritt nicht beeinflusst.
+                            val interestTopic = entscheidung?.candidate?.interestTopic
+                                ?: externalImpulse?.animationType
+                                ?: signals.draw(phaseJetzt)
                             val prepared = LivingRuntimeAdapter.prepare(
                                 agent = baseAgent,
                                 world = baseWorld,
                                 renderedPlace = currentPlace,
                                 interestTopic = interestTopic,
-                                footballTrickLearned = PlayFootballSkill.isLearned(
-                                    context,
-                                    presenceProfileId
-                                ),
+                                footballTrickLearned = footballTrick,
                                 recentSpecials = recentSpecials,
                                 nearbyProfiles = nearbyProfiles,
-                                goalInfluence = StreamInteractions.influenceFor(externalImpulse)
+                                goalInfluence = goalInfluence,
+                                preferredRoutine = entscheidung?.candidate?.routine,
+                                sleepAdmissible = phaseJetzt == PlayAmbientActivity.DayPhase.NIGHT,
+                                chosenGoal = entscheidung?.candidate?.goal
                             )
                             val topic = prepared.topic
                             val gewaehlt = prepared.routine
@@ -3551,10 +3602,14 @@ fun DockScreen(
                             // PlayGroupGame). Gemeldet: Morgens standen vier Figuren im Park, nur eine
                             // tat etwas, ohne Musik. Solche Szenen sollen den Alltag aufbrechen und
                             // haben deshalb Vorrang vor dem Einzelsport.
+                            // Der Kandidat, den die Policy gewaehlt hat - sofern der Kern ihn
+                            // wirklich so ausfuehrt. Er bringt das Gruppenspiel schon mit.
+                            val gewaehlterKandidat = entscheidung?.candidate?.takeIf { it.routine == gewaehlt }
                             val othersPresent =
                                 residentSnapshots.any { it.publiclyPresent && it.place == place } ||
                                     (place == currentPlace && visitors.isNotEmpty())
                             val spiel = if (
+                                gewaehlterKandidat == null &&
                                 PlayGroupGame.shouldPlay(
                                     topicIsMove = topic == AnimationType.MOVE,
                                     place = place,
@@ -3567,7 +3622,7 @@ fun DockScreen(
                             } else {
                                 null
                             }
-                            val ablauf = spiel?.let { kind ->
+                            val ablauf = gewaehlterKandidat?.visibleRoutine ?: spiel?.let { kind ->
                                 PlayGroupGame.routine(
                                     kind,
                                     gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>().firstOrNull()?.place
@@ -3593,6 +3648,25 @@ fun DockScreen(
                                 }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
                             rememberShown(topic, ablauf)
+                            // Der Verlauf der Policy: Neuheit, Wiederholung und "das haben wir
+                            // schon einmal zusammen gemacht" (siehe DecisionHistory).
+                            PlayDecisionPolicy.save(
+                                context,
+                                presenceProfileId,
+                                verlauf.recorded(
+                                    DecisionHistory.Entry(
+                                        minute = jetztMinute,
+                                        key = gewaehlterKandidat?.key ?: DecisionCandidates.keyOf(topic, ablauf),
+                                        family = gewaehlterKandidat?.family
+                                            ?: DecisionCandidates.familyOf(topic, ablauf, spiel),
+                                        topic = topic.name,
+                                        partners = gewaehlterKandidat?.partners ?: emptySet(),
+                                        outdoor = ablauf.steps.any {
+                                            it is RoutineStep.GoToPlace && PlayScene.isOutdoors(it.place)
+                                        }
+                                    )
+                                )
+                            )
 
                             // Nicht mehr EINE Animation, sondern ein mehrschrittiger Ablauf:
                             // hingehen, benutzen, handeln, verweilen, aufstehen (siehe

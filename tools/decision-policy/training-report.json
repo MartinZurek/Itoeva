@@ -1,0 +1,56 @@
+{
+  "policy_model_version": 1,
+  "feature_schema_version": 1,
+  "features": 127,
+  "chosen_architecture": "127-32-16-1",
+  "chosen_because": "kleineres Netz reicht",
+  "parameters": 4641,
+  "onnx_bytes": 21042,
+  "onnx_sha256": "edd8cc510dc1a0ba04bec1d1f05c51c8875d1c0d80fe599a4f85d31753173eee",
+  "onnxruntime_vs_numpy_max_abs_diff": 3.180651598100326e-06,
+  "dataset": {
+    "rows": 97764,
+    "decisions": 9554,
+    "days": 24,
+    "seeds": 3
+  },
+  "holdout_decisions": 1592,
+  "epochs": 40,
+  "seed": 20260926,
+  "candidates": {
+    "64-32": {
+      "parameters": 10305,
+      "train": {
+        "decisions": 7962,
+        "mean_kl": 0.00029982824768552555,
+        "top1_agreement": 0.9554132127606129,
+        "centered_r2": 0.9986292780979357,
+        "mean_total_variation": 0.006436490175654862
+      },
+      "holdout": {
+        "decisions": 1592,
+        "mean_kl": 0.0003695086034679901,
+        "top1_agreement": 0.9491206030150754,
+        "centered_r2": 0.9983698490355443,
+        "mean_total_variation": 0.00718574261184868
+      }
+    },
+    "32-16": {
+      "parameters": 4641,
+      "train": {
+        "decisions": 7962,
+        "mean_kl": 0.000507084862139656,
+        "top1_agreement": 0.9316754584275307,
+        "centered_r2": 0.9978485601313374,
+        "mean_total_variation": 0.008460137015187354
+      },
+      "holdout": {
+        "decisions": 1592,
+        "mean_kl": 0.0005535232669602136,
+        "top1_agreement": 0.9315326633165829,
+        "centered_r2": 0.9976507192289683,
+        "mean_total_variation": 0.008933241090761357
+      }
+    }
+  }
+}

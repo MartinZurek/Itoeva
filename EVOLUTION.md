@@ -664,6 +664,57 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Decision Policy: ein kleines lokales Netz waehlt zwischen erlaubten Ablaeufen
+
+**Anlass:** Auftrag, das Living-Agent-System um eine kleine lokale Decision Policy zu erweitern -
+ohne LLM, Cloud oder Netz, mit demselben Modell fuer App und Stream, mit der bisherigen Logik als
+Rueckfall und so, dass jede sichtbare Aktion grundsaetzlich bewertet wird und neue Aktionen ohne
+Modellumbau hinzukommen.
+
+**Befund:** Welche sichtbare Aktion lief, entschieden bisher drei Wuerfel hintereinander: das Thema
+(`PlayAmbientActivity.nextTopic`), der Ablauf (`PlayRoutines.forTopic`, gleichverteilt bzw. 70 %
+Sonderaktivitaet) und die Gruppenspiel-Umwandlung in DockScreen. Keiner davon kannte den einzelnen
+Ablauf - ob genau dieser Weg gerade dreimal lief, ob die Freundin im Park gestern schon mitspielte.
+Drei sichtbare Ablaeufe wurden autonom nie gezogen (zweites Sofa, Becher, zwei Arbeitswege), das
+Bett nur als beantwortete Erinnerung.
+
+**Geaendert:**
+- Neues Paket `app-sim/.../decision/`: `DecisionCandidates` (Gueltigkeitsschicht, aus Kern und
+  Ablaufkatalog abgeleitet), `DecisionFeatures`/`ActionTraits` (Schema v1, 127 benannte Merkmale,
+  aus den Ablaufschritten abgeleitet), `ExistingUtilityPolicy` (bisherige Kette als
+  Log-Wahrscheinlichkeit - Temperatur 1 = exakt das alte Verhalten), `OnnxModel` +
+  `OnnxDecisionPolicy` (reines Kotlin, keine neue Abhaengigkeit), `DecisionSelector` (Softmax,
+  gesetzter Zufall), `DecisionEngine` (NaN/Ausnahme -> Rueckfall), `DecisionHistory`
+  (SharedPreferences, keine Room-Aenderung).
+- Kern, eng: `UtilitySelector.eligible`, `LivingSimulation.nextGoal`/`keepsGoal`, und `step`
+  nimmt ein `chosenGoal` nur an, wenn es ohnehin zulaessig ist. `LivingRuntimeAdapter` legt seine
+  Zweige als `options` offen und uebernimmt eine Vorwahl nur, wenn sie dazugehoert; ohne Vorwahl
+  verbraucht er denselben Zufall wie vorher. `PlayRoutines.distributionFor` beschreibt den
+  Ablaufwurf als Verteilung. Nachts darf aus "ausruhen" das Bett werden.
+- DockScreen fragt die Policy an genau einer Stelle (PERFORM-Regung), das Gruppenspiel kommt als
+  Kandidat mit. Modell `assets/decision_policy_v1.onnx` (127-32-16-1, 4 641 Parameter, 21 KB).
+- Werkzeug `tools/decision-policy/` (Lehrer, Mehrtagessimulation, numpy-Training, ONNX-Export,
+  Vergleich, Messung); byte-gleich reproduzierbar.
+
+**Grenzen, bewusst:** Dringender Hunger und dringende Muedigkeit, laufende Plaene, Nachtruhe,
+Medizin-Ausschluss, Mindestdauer draussen und Gruppenspiel-Vorrang bleiben Regeln der
+Kandidatenerzeugung. Andere Ziele als das des Kerns nur mit hoechstens 0,25 Abstand. `EARN_MONEY`
+gewinnt weiterhin nie (NT-087).
+
+**Wirkung (Simulation, 14 Tage x 6 Spezies x 3 Startwerte):** direkte Wiederholungen 10,4 % ->
+5,1 %, verschiedene Ablaeufe je Ingame-Tag 9,8 -> 11,3, Entropie 3,86 -> 4,24 Bit, Gruppenspiele
+4,2 % -> 5,2 %; 92 % der Wahlen folgen weiter dem Ziel des Kerns, der mittlere Beduerfnisdruck des
+verfolgten Ziels bleibt gleich, nachts nicht haeufiger draussen.
+
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 661 Tests gruen (44 neu: Kandidaten und
+  Regeln, exakter Rueckfall gegen die alte Kette, Abdeckung aller sichtbaren Ablaeufe, Merkmale,
+  ONNX-Paritaet mit onnxruntime, Rueckfall bei fehlendem/fremdem Modell und NaN, Reproduzierbarkeit,
+  Mehrtagesverhalten).
+- **Ungeprueft:** DockScreen-Anbindung und Laufzeit am Geraet (nur CI-Build); APK-Zuwachs nur
+  geschaetzt (Modell 21 KB + Code).
+- **Naechster Schritt:** Am Geraet beobachten, ob die Abwechslung spuerbar und plausibel ist; danach
+  den Lehrer mit echten Beobachtungen (Nutzerreaktion, Zuschauerimpulse) statt nur Regeln speisen.
+
 ### 2026-09-26 - Bewegungsdrang: wer lange still war, will wieder los
 
 **Anlass:** Nach dem Gruppenspiel gewuenscht: ausgewogen bleiben - das Spiel soll nicht wirken,
