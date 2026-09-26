@@ -260,7 +260,13 @@ object LivingSimulation {
         /** Wie eine Freizeit- oder Entwicklungsphase aussehen soll - siehe [Planner.planFor]. */
         interest: ActionKind? = null,
         /** Wo ortlose Freizeit stattfindet - siehe [Planner.planFor]; `null` = wo man gerade ist. */
-        leisureSite: LivingSite? = null
+        leisureSite: LivingSite? = null,
+        /**
+         * Die Wahl der Decision Policy fuer ein NEUES Ziel. Gilt nur, wenn ohnehin neu gewaehlt
+         * wird und das Ziel zu [UtilitySelector.eligible] gehoert - ein laufendes Ziel bleibt,
+         * und ein Ziel ohne Druck oder ohne Weg laesst sich nicht hineinreichen.
+         */
+        chosenGoal: GoalKind? = null
     ): StepResult {
         val ereignisse = mutableListOf<LivingEvent>()
         var zustand = agent
@@ -268,15 +274,13 @@ object LivingSimulation {
 
         // 1. Ziel pruefen und gegebenenfalls neu waehlen.
         val altesZiel = zustand.goal
-        val planIstAbgeschlossen = zustand.plan == null || zustand.plan?.isDone == true
-        if (
-            altesZiel == null ||
-            (planIstAbgeschlossen && zustand.needs.pressure(altesZiel.drivenBy) < SATISFIED_BELOW)
-        ) {
+        if (!keepsGoal(zustand)) {
             if (altesZiel != null) {
                 ereignisse += event(welt, LivingEventKind.GOAL_REACHED, goal = altesZiel)
             }
-            val neu = UtilitySelector.choose(zustand, welt, influence)
+            val neu = chosenGoal?.takeIf { wahl ->
+                UtilitySelector.eligible(zustand, welt, influence).any { it.goal == wahl }
+            } ?: UtilitySelector.choose(zustand, welt, influence)
             zustand = zustand.copy(goal = neu, plan = null)
             if (neu == null) {
                 // Nichts draengt. Der Agent tut nichts und die Zeit laeuft trotzdem weiter -
@@ -350,6 +354,22 @@ object LivingSimulation {
             ereignisse + angewandt.event,
             listOfNotNull(angewandt.message)
         )
+    }
+
+    /**
+     * **Welches Ziel der naechste [step] verfolgen wird** - ohne ihn auszufuehren.
+     *
+     * Fuer die Decision Policy: Sie waehlt zwischen den sichtbaren Ausformungen EINES Ziels und
+     * muss es deshalb vorher kennen. Dieselbe Bedingung wie in [step], nicht nachgebaut.
+     */
+    fun nextGoal(agent: AgentState, world: WorldState, influence: GoalInfluence? = null): GoalKind? =
+        if (keepsGoal(agent)) agent.goal else UtilitySelector.choose(agent, world, influence)
+
+    /** Ob das laufende Ziel bleibt: Es gibt eins, und es ist weder gestillt noch ohne Plan fertig. */
+    fun keepsGoal(agent: AgentState): Boolean {
+        val ziel = agent.goal ?: return false
+        val planIstAbgeschlossen = agent.plan == null || agent.plan.isDone
+        return !(planIstAbgeschlossen && agent.needs.pressure(ziel.drivenBy) < SATISFIED_BELOW)
     }
 
     /** [count] Schritte am Stueck - fuer Mehrtageslaeufe im Test. */

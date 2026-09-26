@@ -1,0 +1,7 @@
+model bytes: 21042   parameters: 4641   features: 127
+load + validate: 0.184 ms
+candidates per decision: mean 7.7  max 32
+candidate generation (DecisionCandidates)    mean   307.7 us   p95  1091.4 us   (n=92)
+ONNX scoring incl. features (all candidates) mean   308.3 us   p95   964.3 us   (n=92)
+baseline scoring (all candidates)            mean     1.1 us   p95     1.5 us   (n=92)
+heap per loaded model (rough): 15.0 KB

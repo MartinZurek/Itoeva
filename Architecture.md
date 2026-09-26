@@ -217,6 +217,14 @@ weder Agent noch Welt. Damit kann ein spaeteres Overlay Wunsch, Grund, Handlung,
 Hindernis, wirksame Erinnerungen und das wichtigste juengste Ereignis lesen, ohne in die
 Simulation zurueckzuschreiben.
 
+Seit dem 2026-09-26 sitzt zwischen Kern und Ablaufwahl die **Decision Policy**
+(`app-sim/.../decision/`, siehe `tools/decision-policy/README.md`): `DecisionCandidates` leitet
+aus `LivingRuntimeAdapter.options` alle zulaessigen sichtbaren Ablaeufe ab (Gueltigkeitsschicht),
+`OnnxDecisionPolicy` bewertet sie mit einem kleinen ONNX-Netz (reines Kotlin, keine neue
+Abhaengigkeit, dasselbe Asset in App und Stream-Variante), `DecisionSelector` waehlt per Softmax.
+`ExistingUtilityPolicy` ist die bisherige Wuerfelkette als Rueckfall. Der Kern bleibt Taktgeber;
+`LivingSimulation.step` nimmt ein `chosenGoal` nur an, wenn es ohnehin zulaessig ist.
+
 Es entsteht keine zweite Engine und kein `StoryManager`. Der Kern wird zuerst mit
 deterministischen JVM-Tests bewiesen, profilbezogen persistiert und gezielt an `DockScreen`
 angeschlossen. Eine eventuelle Auslagerung der Welt in ein neues Bibliotheksmodul bleibt bis zu
