@@ -589,6 +589,8 @@ fun DockScreen(
 
         /** Traegt nach, was gerade gelaufen ist - vorn einfuegen, hinten abschneiden. */
         fun rememberShown(topic: AnimationType, routine: PlayRoutine?) {
+            // Bewegung setzt den Bewegungsdrang zurueck (siehe PlayMovementLog).
+            if (topic == AnimationType.MOVE) PlayMovementLog.moved(context, presenceProfileId)
             recentTopics.add(0, topic)
             while (recentTopics.size > RECENT_MEMORY) recentTopics.removeAt(recentTopics.lastIndex)
             val special = routine?.let { PlayRoutines.specialOf(it) } ?: return
@@ -3493,6 +3495,14 @@ fun DockScreen(
                                     outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
                                         else System.currentTimeMillis() - outdoorsSinceMs,
                                     phase = PlayAmbientActivity.currentDayPhase()
+                                ),
+                                // **Der Bewegungsdrang** (siehe PlayAmbientActivity.movementUrge):
+                                // Wer lange still war, bekommt wieder Lust auf Bewegung; wer
+                                // Bewegung mag - von Natur aus oder ueber seinen Pfad -, frueher.
+                                movementUrge = PlayAmbientActivity.movementUrge(
+                                    minutesSinceMove = PlayMovementLog.minutesSinceMove(context, presenceProfileId),
+                                    likesMovement = species.signatureTopic == AnimationType.MOVE ||
+                                        AnimationType.MOVE in leaningTopics
                                 )
                             )
 

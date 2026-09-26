@@ -664,6 +664,27 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Bewegungsdrang: wer lange still war, will wieder los
+
+**Anlass:** Nach dem Gruppenspiel gewuenscht: ausgewogen bleiben - das Spiel soll nicht wirken,
+als ginge es nur um Sport. Aber wer sich laenger nicht bewegt hat, soll wieder Lust darauf
+bekommen, und wer gern Sport macht, oefter. Am Ende soll das motivieren.
+
+**Befund:** Die Themenwahl (`PlayAmbientActivity.nextTopic`) kannte Tageszeit, Plan, Neigung,
+Spezies-Vorliebe, Verweilen, Nachklang und Abwechslung - aber kein Gedaechtnis dafuer, wie lange
+die Figur schon still war. Ein Wesen, das den ganzen Nachmittag gelesen und gearbeitet hat, zog
+Sport genauso selten wie eines, das eben vom Platz kam.
+
+**Geaendert:**
+- `PlayAmbientActivity.movementUrge`: ab 60 Weltminuten ohne Bewegung (30, wenn es Bewegung mag:
+  Spezies-Vorliebe oder Sport-Pfad) alle 15 Minuten +1 auf MOVE, hoechstens +5. Mittags hebt das
+  MOVE von rund einem Fuenftel auf gut zwei Fuenftel - spuerbar, nie Pflicht. Nachts wirkungslos.
+- `PlayMovementLog` (neu): letzte Bewegung je Wesen in Weltminuten, dauerhaft - wer nachmittags
+  wiederkommt, trifft ein Wesen, das seit dem Morgen still war.
+- Jede Bewegungs-Routine (auch das Gruppenspiel) setzt den Drang zurueck; der vorhandene
+  Wiederholungs- und Vielfaltsdaempfer sorgt danach fuer anderes.
+- 3 neue Tests (Kurve, Ausgewogenheit, Nachtruhe).
+
 ### 2026-09-26 - Gruppenspiel: alle spielen mit, mit Musik
 
 **Anlass:** Gemeldet: Morgens lief Sport "mit der Gruppe" - vier Figuren im Park, vor dem
