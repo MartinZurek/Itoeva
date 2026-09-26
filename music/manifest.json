@@ -338,7 +338,7 @@
       "prompt_file": "music/prompts/nature-02.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 6102026,
+      "seed": 26091045,
       "notes": "Zweites Stueck der Rolle nature_background: offener, heller Folk fuer eine windige Sommerwiese - Tin Whistle, Fingerpicking-Gitarre, Fiedel, Rahmentrommel. D-Dur, 6/8, 104 BPM. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden), weiche 8-Bit-Stimme als Pixel-Signatur wie bei den Hommagen; der Prompt nennt weder Kuenstler noch Werk. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase; Unisono-/Oktavverdopplung durch Antwortphrasen ersetzt. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
