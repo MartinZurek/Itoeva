@@ -142,6 +142,28 @@ class PostTrainedSettingsTest(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "post-trained"):
             self.generator.validate_track(track)
 
+    def test_seed_override_reaches_the_resolved_track(self):
+        """Best-of-N: --seed replaces only the seed, never prompt or inference mode."""
+        result = subprocess.run(
+            [sys.executable, str(GENERATOR), "--track-id", "main-day-01", "--dry-run",
+             "--seed", "4242"],
+            cwd=REPO, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        resolved = json.loads(result.stdout)
+        self.assertEqual(4242, resolved["seed"])
+        self.assertEqual("override", resolved["seed_source"])
+        self.assertEqual(self.generator.POST_TRAINED_STEPS, resolved["steps"])
+        self.assertEqual(self.generator.POST_TRAINED_CFG_SCALE, resolved["cfg_scale"])
+
+    def test_negative_seed_is_rejected(self):
+        result = subprocess.run(
+            [sys.executable, str(GENERATOR), "--track-id", "main-day-01", "--dry-run",
+             "--seed", "-3"],
+            cwd=REPO, capture_output=True, text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+
     def test_cfg_above_one_is_rejected_for_the_post_trained_checkpoint(self):
         track = copy.deepcopy(self.manifest["tracks"][0])
         track["cfg_scale"] = 5

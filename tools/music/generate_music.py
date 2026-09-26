@@ -157,9 +157,20 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, default=Path("generated/music"))
     parser.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda", "mps"])
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Use this seed instead of the manifest's, for best-of-N candidate takes "
+        "(see tools/music/best_take.py). Prompt, model and 8/1 mode stay as in the manifest.",
+    )
     args = parser.parse_args()
 
     manifest, track = load_track(args.manifest, args.track_id)
+    if args.seed is not None:
+        if args.seed < 0:
+            raise SystemExit(f"--seed must be zero or positive, got {args.seed}")
+        track = dict(track, seed=args.seed)
     validate_track(track)
 
     prompt_path = Path(track["prompt_file"])
@@ -189,6 +200,7 @@ def main() -> int:
         "steps": int(track["steps"]),
         "cfg_scale": float(track["cfg_scale"]),
         "seed": int(track["seed"]),
+        "seed_source": "override" if args.seed is not None else "manifest",
         "requested_device": args.device,
         "output_path": str(output_path),
     }
