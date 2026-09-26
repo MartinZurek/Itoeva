@@ -643,6 +643,45 @@ object AvatarAnimations {
     }
 
     /**
+     * **Die Haltung eines Mitspielers im Gruppenspiel** (siehe [PlayGroupGame]) - ein Bild je
+     * Takt, gerechnet statt als Schleife gespielt, weil das Spiel und nicht eine Uhr bestimmt,
+     * wer gerade wirft.
+     *
+     * Die Figuren haben keine Arme; was sie mit dem Ball tun, muss der ganze Koerper sagen:
+     * - **READY** - federnd auf den Fuessen, bereit (alle zwei Takte eine Zelle Auf und Ab).
+     * - **THROW** - streckt sich hoch, Mund auf, Ohren/Fluegel hoch: der Ball verlaesst ihn.
+     * - **CATCH** - springt ihm entgegen, Fuesse gespreizt.
+     * - **CHEER** - huepft vor Freude (Treffer beim Korbwurf).
+     * - **WATCH** - schaut zu und wedelt dabei, statt steif dazustehen.
+     */
+    fun gamePose(species: AvatarSpecies, pose: PlayGroupGame.Pose, tick: Int): IntArray {
+        val phase = Math.floorMod(tick, 4)
+        return gamePoseCache.getOrPut(Triple(species, pose, phase)) {
+            val body = AvatarBodies.forSpecies(species)
+            val points = when (pose) {
+                PlayGroupGame.Pose.READY ->
+                    if (phase < 2) creatureFrame(body, feetSpread = 1)
+                    else creatureFrame(body, feetSpread = 1, dy = -1, tailWag = 1)
+                PlayGroupGame.Pose.THROW ->
+                    creatureFrame(body, dy = -1, accentPhase = 1, tailWag = 1, mouthHoles = body.mouthOpen)
+                PlayGroupGame.Pose.CATCH ->
+                    creatureFrame(body, dy = -2, feetSpread = 1, accentPhase = 1, tailWag = -1)
+                PlayGroupGame.Pose.CHEER ->
+                    if (phase % 2 == 0) {
+                        creatureFrame(body, dy = -3, feetSpread = 1, accentPhase = 1, tailWag = 1, mouthHoles = body.mouthOpen)
+                    } else {
+                        creatureFrame(body, accentPhase = -1, tailWag = -1, mouthHoles = body.mouthOpen)
+                    }
+                PlayGroupGame.Pose.WATCH ->
+                    if (phase < 2) creatureFrame(body) else creatureFrame(body, tailWag = 1, accentPhase = 1)
+            }
+            FrameCrossfade.withCrossfades(GRID, AvatarGeometry.HEIGHT, listOf(points), steps = 0, loop = false).first()
+        }
+    }
+
+    private val gamePoseCache = HashMap<Triple<AvatarSpecies, PlayGroupGame.Pose, Int>, IntArray>()
+
+    /**
      * **Der Mund bewegt sich, solange die Figur spricht.**
      *
      * Beim Besuch erscheinen ueber dem Sprecher erst ein, zwei, drei Sprechpunkte und dann die

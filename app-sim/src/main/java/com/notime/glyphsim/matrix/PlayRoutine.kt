@@ -69,6 +69,12 @@ sealed interface RoutineStep {
     /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
     data class Linger(val millis: Long) : RoutineStep
 
+    /**
+     * Ein Spiel mit allen, die gerade da sind (siehe [PlayGroupGame]) - dauert
+     * [PlayGroupGame.DURATION_MS]. Wer mitspielt, entscheidet die Oberflaeche in jedem Takt neu.
+     */
+    data class GroupGame(val kind: PlayGroupGame.Kind) : RoutineStep
+
     /** Exklusiver Schlaf: Im Bett bleiben, bis die Nacht endet. */
     data object SleepUntilMorning : RoutineStep
 

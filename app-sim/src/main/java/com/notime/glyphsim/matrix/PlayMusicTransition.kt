@@ -55,8 +55,14 @@ object PlayMusicTransition {
         else -> ROLE_SETTLE_MS
     }
 
-    /** Rollen, die an einer laufenden Handlung haengen und nicht an einem Ort. */
-    val ACTIVITY_ROLES: Set<MusicRole> = setOf(MusicRole.FISHING, MusicRole.BALLGAME)
+    /**
+     * Rollen, die an einer laufenden Handlung haengen und nicht an einem Ort.
+     *
+     * SPORT gehoert seit dem Gruppenspiel dazu (siehe [PlayGroupGame]): Es dauert eine Minute,
+     * und zehn Sekunden Wartezeit waeren ein Sechstel davon ohne seine Musik. Auch auf dem
+     * Sportplatz gilt SPORT nur, solange wirklich Bewegung laeuft - also ebenfalls eine Handlung.
+     */
+    val ACTIVITY_ROLES: Set<MusicRole> = setOf(MusicRole.FISHING, MusicRole.BALLGAME, MusicRole.SPORT)
 
     /**
      * Entscheidet, ob der Player jetzt auf [wanted] wechseln soll, und fuehrt die Vormerkung

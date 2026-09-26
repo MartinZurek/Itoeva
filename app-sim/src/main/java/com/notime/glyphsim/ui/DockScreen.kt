@@ -78,6 +78,7 @@ import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
+import com.notime.glyphsim.matrix.AvatarFacing
 import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarMood
@@ -123,6 +124,7 @@ import com.notime.glyphsim.matrix.PlayDreamMemory
 import com.notime.glyphsim.matrix.PlayDreams
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
+import com.notime.glyphsim.matrix.PlayGroupGame
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayCharacterTheme
@@ -613,6 +615,13 @@ fun DockScreen(
         var basketballSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Krafttrainingsphase mit Hantel. */
         var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
+        /**
+         * Das laufende Gruppenspiel (siehe [PlayGroupGame]) - solange gesetzt, spielen alle mit,
+         * die gerade da sind, und ihre Haltung kommt aus dem Spiel statt aus ihrer Schleife.
+         */
+        var groupGame by remember { mutableStateOf<PlayGroupGame.Kind?>(null) }
+        /** Der Stand von [scenePhase] beim Anpfiff - wie [footballSince]. */
+        var groupGameSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Musikphase mit Gitarre und Noten. */
         var musicPhase by remember { mutableStateOf<PlayEffects.MusicPhase?>(null) }
         /** Sichtbare Malphase mit wachsendem Bild. */
@@ -948,7 +957,7 @@ fun DockScreen(
          * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
          * allein [PlayMusic]; welche passt, allein der Resolver.
          */
-        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies) {
+        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies, groupGame) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
                 return@LaunchedEffect
@@ -964,7 +973,8 @@ fun DockScreen(
                         place = currentPlace,
                         topic = currentTopic,
                         activity = currentActivity,
-                        characterTheme = themeSpecies
+                        characterTheme = themeSpecies,
+                        groupGame = groupGame
                     )
                 )
                 delay(faellig?.coerceIn(MUSIC_SETTLE_TICK_MS, MUSIC_RECHECK_MS) ?: MUSIC_RECHECK_MS)
@@ -1605,6 +1615,20 @@ fun DockScreen(
                         startAvatarIdleLoop(species, mood)
                     }
 
+                    is RoutineStep.GroupGame -> {
+                        // Die Haltungen aller Mitspieler rechnet die Oberflaeche aus dem Spiel
+                        // (siehe gameMoment unten); hier laeuft nur die Uhr.
+                        avatarIdleJob?.cancel()
+                        groupGameSince = scenePhase
+                        groupGame = step.kind
+                        try {
+                            delay(PlayGroupGame.DURATION_MS)
+                        } finally {
+                            groupGame = null
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
                     is RoutineStep.Training -> {
                         trainingPhase = step.phase
                         avatarIdleJob?.cancel()
@@ -2036,7 +2060,9 @@ fun DockScreen(
                 // bis NACH dem Speichern bestehen. Sonst koennen zwei Gaeste denselben alten
                 // Wirtszustand lesen und der zweite Commit ueberschreibt die Beziehungserfahrung
                 // des ersten, obwohl die Gespraeche im Bild nacheinander erscheinen.
-                while (conversationOwnerProfileId != null) {
+                // Waehrend eines Gruppenspiels wird gespielt, nicht geredet - der Gast spielt mit
+                // (siehe gameMoment) und haelt sein Gespraech danach.
+                while (conversationOwnerProfileId != null || groupGame != null) {
                     delay(VISIT_WAIT_TICK_MS)
                 }
                 conversationOwnerProfileId = guestProfileId
@@ -3511,6 +3537,32 @@ fun DockScreen(
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
                             val place = gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>()
                                 .firstOrNull()?.place ?: PlayScene.forTopic(topic)
+                            // **Ist noch jemand da, wird aus Bewegung ein Spiel mit allen** (siehe
+                            // PlayGroupGame). Gemeldet: Morgens standen vier Figuren im Park, nur eine
+                            // tat etwas, ohne Musik. Solche Szenen sollen den Alltag aufbrechen und
+                            // haben deshalb Vorrang vor dem Einzelsport.
+                            val othersPresent =
+                                residentSnapshots.any { it.publiclyPresent && it.place == place } ||
+                                    (place == currentPlace && visitors.isNotEmpty())
+                            val spiel = if (
+                                PlayGroupGame.shouldPlay(
+                                    topicIsMove = topic == AnimationType.MOVE,
+                                    place = place,
+                                    othersPresent = othersPresent,
+                                    night = PlayAmbientActivity.currentDayPhase() ==
+                                        PlayAmbientActivity.DayPhase.NIGHT
+                                )
+                            ) {
+                                PlayGroupGame.kindFor(place, PlayRoutines.specialOf(gewaehlt), Random.nextInt(1_000))
+                            } else {
+                                null
+                            }
+                            val ablauf = spiel?.let { kind ->
+                                PlayGroupGame.routine(
+                                    kind,
+                                    gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>().firstOrNull()?.place
+                                )
+                            } ?: gewaehlt
                             currentTopic = topic
                             // **Er zeigt, was er will** - aus der Erklaerung DIESES Schrittes,
                             // nicht aus einem Wuerfel. Das beantwortet die Frage, die man sich
@@ -3530,7 +3582,7 @@ fun DockScreen(
                                     LivingSymbols.of(prepared.result.explain())
                                 }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
-                            rememberShown(topic, gewaehlt)
+                            rememberShown(topic, ablauf)
 
                             // Nicht mehr EINE Animation, sondern ein mehrschrittiger Ablauf:
                             // hingehen, benutzen, handeln, verweilen, aufstehen (siehe
@@ -3551,7 +3603,7 @@ fun DockScreen(
                                     snapshots = residentSnapshots,
                                     place = place,
                                     hostCompletedActions = prepared.completedActions,
-                                    specialActivity = PlayRoutines.specialOf(gewaehlt)
+                                    specialActivity = PlayRoutines.specialOf(ablauf)
                                 ) ?: return@withLock null
                                 val state = residentStates[partner.profileId]
                                     ?: return@withLock null
@@ -3559,9 +3611,9 @@ fun DockScreen(
                                 partner to state
                             }
                             try {
-                                currentActivity = PlayRoutines.specialOf(gewaehlt)
+                                currentActivity = PlayRoutines.specialOf(ablauf)
                                 val completed = runRoutine(
-                                    gewaehlt,
+                                    ablauf,
                                     species,
                                     // ActionOutcome hat die Wirkung bereits vorbereitet. Die alte
                                     // globale Wirtschaft darf sie nicht ein zweites Mal verbuchen.
@@ -3687,7 +3739,9 @@ fun DockScreen(
         // Eine gemeinsame Beschreibung fuer Bildschirm und Aufnahme. Die Einwohner behalten
         // ihren eigenen Zeitversatz auch in der Ruhebewegung; `scenePhase` allein liesse alle
         // drei wie ein einziges vervielfachtes Uhrwerk atmen.
-        val residentFigures = avatar?.takeIf {
+        // Wo die Hintergrundfiguren stehen - vor [residentFigures] ausgerechnet, weil das
+        // Gruppenspiel ihre Plaetze braucht, bevor ihre Bilder feststehen.
+        val residentPlacements = avatar?.takeIf {
             playMode && maxWidthPx > 0f && sceneCellPx > 0f
         }?.let { host ->
             val hostPx = with(density) { host.sizeDp.dp.toPx() }
@@ -3699,7 +3753,67 @@ fun DockScreen(
                 place = renderedPlace,
                 hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f),
                 hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f)
-            ).map { placement ->
+            )
+        }.orEmpty()
+
+        // **Das Gruppenspiel in diesem Takt** (siehe PlayGroupGame): Mitspieler sind der
+        // Bewohner, jeder Gast, der gerade steht (wer noch hereinkommt oder schon geht, laeuft
+        // weiter), und die Hintergrundfiguren. Wer kommt oder geht, ist in der naechsten Runde
+        // dabei bzw. nicht mehr - ohne Sonderfall.
+        val gameMoment: PlayGroupGame.Moment? = groupGame?.let { kind ->
+            val host = avatar?.takeIf { playMode && sceneCellPx > 0f && !avatarHidden } ?: return@let null
+            val cell = sceneCellPx
+            val players = buildList {
+                val hostPx = with(density) { host.sizeDp.dp.toPx() }
+                add(
+                    PlayGroupGame.Player(
+                        GAME_HOST_ID,
+                        (host.offset.x / cell).roundToInt(),
+                        (host.offset.y / cell).roundToInt(),
+                        (hostPx / cell).roundToInt()
+                    )
+                )
+                visitors.filter { it.facing == AvatarShading.Side.NONE }.forEach { guest ->
+                    val guestPx = with(density) { guest.sizeDp.dp.toPx() }
+                    add(
+                        PlayGroupGame.Player(
+                            guest.profileId,
+                            (guest.offset.x / cell).roundToInt(),
+                            (guest.offset.y / cell).roundToInt(),
+                            (guestPx / cell).roundToInt()
+                        )
+                    )
+                }
+                residentPlacements.forEach { placement ->
+                    val residentPx = maxWidthPx * placement.widthFraction
+                    val top = AvatarFooting.topFor(
+                        floorYPx,
+                        residentPx,
+                        AvatarBodies.forSpecies(placement.resident.species).groundRow()
+                    )
+                    add(
+                        PlayGroupGame.Player(
+                            gameResidentId(placement.resident.profileId),
+                            (maxWidthPx * placement.leftFraction / cell).roundToInt(),
+                            (top / cell).roundToInt(),
+                            (residentPx / cell).roundToInt().coerceAtLeast(4)
+                        )
+                    )
+                }
+            }
+            PlayGroupGame.momentAt(kind, players, scenePhase - groupGameSince, sceneWidthCells, floorYCells)
+        }
+
+        /** Das Bild eines Mitspielers im Spiel - oder [fallback], wenn er gerade nicht mitspielt. */
+        fun gameFrame(id: String, species: AvatarSpecies, fallback: IntArray): IntArray {
+            val moment = gameMoment ?: return fallback
+            val pose = moment.poses[id] ?: return fallback
+            val frame = AvatarAnimations.gamePose(species, pose, scenePhase)
+            // Jeder schaut dem Ball hinterher; die Posen blicken nach rechts.
+            return if (moment.facesLeft[id] == true) AvatarFacing.mirror(frame) else frame
+        }
+
+        val residentFigures = residentPlacements.map { placement ->
                 // Der zweite Teilnehmer benutzt dieselbe bestehende Koerperregung wie der
                 // Hauptavatar. Weil [residentFigures] Bildschirm, Schnappschuss und Clip speist,
                 // bleibt die gemeinsame Phase in allen drei Ausgaben dieselbe. Basketball kennt
@@ -3745,13 +3859,16 @@ fun DockScreen(
                     phaseTickMs = SCENE_PHASE_TICK_MS.toInt()
                 ).coerceIn(idle.frames.indices)
                 PlayClipRenderer.ResidentFigure(
-                    frame = idle.frames[index],
+                    frame = gameFrame(
+                        gameResidentId(placement.resident.profileId),
+                        placement.resident.species,
+                        idle.frames[index]
+                    ),
                     species = placement.resident.species,
                     leftFraction = placement.leftFraction,
                     widthFraction = placement.widthFraction
                 )
-            }
-        }.orEmpty()
+        }
 
         // Was der Kreis gerade zeigt - Erinnerung vor Traum vor Mond vor Uhrzeit.
         //
@@ -3782,7 +3899,7 @@ fun DockScreen(
                 place = renderedPlace,
                 species = current.species,
                 dayPhase = PlayAmbientActivity.currentDayPhase(),
-                avatarFrame = current.frame,
+                avatarFrame = gameFrame(GAME_HOST_ID, current.species, current.frame),
                 avatarAnchorX = (current.offset.x / boundX).coerceIn(0f, 1f),
                 // Muss mit in den Film, sonst laeuft die Kreatur in der Aufnahme anders herum
                 // als auf dem Bildschirm.
@@ -3798,7 +3915,7 @@ fun DockScreen(
                 carried = carried,
                 visitors = visitors.map { guest ->
                     PlayClipRenderer.VisitorFrame(
-                        frame = guest.frame,
+                        frame = gameFrame(guest.profileId, guest.species, guest.frame),
                         species = guest.species,
                         shadeSide = guest.facing,
                         anchorX = (guest.offset.x / boundX).coerceIn(0f, 1f)
@@ -4079,7 +4196,7 @@ fun DockScreen(
         visitors.forEach { guest ->
             key(guest.profileId) {
                 AvatarSpriteView(
-                    frame = guest.frame,
+                    frame = gameFrame(guest.profileId, guest.species, guest.frame),
                     showBackground = false,
                     // Durchgehend zurueckgenommen: So bleibt der eigene Avatar auch dann die
                     // hellste Figur im Bild, wenn sich die beiden ueberdecken - und das laesst
@@ -4241,7 +4358,7 @@ fun DockScreen(
                 stringResource(current.species.labelRes)
             }
             AvatarSpriteView(
-                frame = current.frame,
+                frame = gameFrame(GAME_HOST_ID, current.species, current.frame),
                 brightnessScale = avatarDim.value,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
@@ -4453,6 +4570,7 @@ fun DockScreen(
                         )
                     )
                 }
+                gameMoment?.let { addAll(it.ballCells) }
                 sparkAt?.let { spot ->
                     addAll(PlayEffects.sparkCells(spot.centerX, spot.groundY, sparkProgress.value))
                 }
@@ -5217,6 +5335,12 @@ private fun stationOffset(
  * alles regt sich gleichzeitig, und genau das nimmt der Umgebung das Lebendige.
  */
 private const val SCENE_PHASE_TICK_MS = 200L
+
+/** Die Kennung des Bewohners im Gruppenspiel - Gaeste und Einwohner tragen ihre Profil-Kennung. */
+private const val GAME_HOST_ID = "host"
+
+/** Hintergrundfiguren bekommen ein Praefix, damit sie nie mit einem gleichnamigen Gast kollidieren. */
+private fun gameResidentId(profileId: String) = "resident:$profileId"
 
 private const val SCENE_FADE_OUT_MS = 220
 private const val SCENE_FADE_IN_MS = 380
