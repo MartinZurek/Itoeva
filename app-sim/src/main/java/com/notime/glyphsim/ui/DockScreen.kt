@@ -155,6 +155,7 @@ import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -2083,26 +2084,29 @@ fun DockScreen(
                         intents: Set<SymbolicIntent>,
                         movement: AvatarAnimations.AvatarSequence
                     ) {
+                        // Wer spricht, bewegt dabei den Mund (siehe AvatarAnimations.talkSequence)
+                        // - statt mit geschlossenem Mund weiter zu ruhen wie der Zuhoerer. Die
+                        // Ruhe-Schleife des Sprechers endet dafuer schon hier; nach den Symbolen
+                        // folgt ohnehin seine Koerperregung.
+                        val toGuest: (IntArray) -> Unit = { f -> updateVisitor(guestProfileId) { it.copy(frame = f) } }
+                        val toHost: (IntArray) -> Unit = { f -> avatar = avatar?.copy(frame = f) }
+                        val speakerFrame = if (guestSpeaks) toGuest else toHost
+                        if (guestSpeaks) guestIdle.cancel() else hostIdleWhileListening.cancel()
+                        val talk = AvatarAnimations.talkSequence(if (guestSpeaks) guestSpecies else host.species)
+                        val talking = launch {
+                            while (isActive) MatrixAnimator.playTimed(talk.frames, talk.holdsMs, speakerFrame)
+                        }
                         // Sprechzeichen laufen mit: erst ein Punkt, dann zwei, dann drei.
                         for (dot in 0..2) {
                             speakerIsGuest = guestSpeaks
                             speechStep = dot
                             delay(SPEECH_DOT_MS)
                         }
+                        talking.cancelAndJoin()
                         speechStep = -1
                         socialMessage = intents
                         // Wer spricht, unterstreicht die Bedeutung mit einer Koerperregung.
-                        if (guestSpeaks) {
-                            guestIdle.cancel()
-                            MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
-                                updateVisitor(guestProfileId) { it.copy(frame = f) }
-                            }
-                        } else {
-                            hostIdleWhileListening.cancel()
-                            MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
-                                avatar = avatar?.copy(frame = f)
-                            }
-                        }
+                        MatrixAnimator.playTimed(movement.frames, movement.holdsMs, speakerFrame)
                         delay(SOCIAL_SYMBOL_HOLD_MS)
                         socialMessage = null
                     }

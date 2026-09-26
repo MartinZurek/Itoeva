@@ -186,6 +186,14 @@ object AvatarAnimations {
     private const val IDLE_WINK_MS = 110L
     /** Getragenes Lid der grossaeugigen Spezies (STARLET, GLOOP). */
     private const val IDLE_LID_MS = 200L
+    /**
+     * Wie lange die kleinen Augen (PUFFLING, WYRMLING) beim Blinzeln ganz zu sind.
+     *
+     * Vorher [IDLE_LID_MS] - das getragene Lid der Grossaeugigen. Mit den beiden Halbstufen
+     * dauerte der Lidschlag damit 420 ms und las sich schlaefrig statt wie ein Blinzeln; FENNEC
+     * und HOOTLET blinzeln seit jeher in rund 300 ms.
+     */
+    private const val IDLE_BLINK_SHUT_MS = 120L
 
     /**
      * Ruhe-Schleife des Avatars - **pro Spezies eine eigene**, nicht mehr eine gemeinsame fuer
@@ -242,7 +250,7 @@ object AvatarAnimations {
                 creatureFrame(body, dy = -1).beat(340L),
                 creatureFrame(body).beat(IDLE_REST_MS),
                 creatureFrame(body, eyeHoles = body.eyesHalf).beat(IDLE_WINK_MS),
-                creatureFrame(body, eyeHoles = body.eyesClosed).beat(IDLE_LID_MS),
+                creatureFrame(body, eyeHoles = body.eyesClosed).beat(IDLE_BLINK_SHUT_MS),
                 creatureFrame(body, eyeHoles = body.eyesHalf).beat(IDLE_WINK_MS)
             )
 
@@ -271,7 +279,7 @@ object AvatarAnimations {
                 creatureFrame(body, tailWag = 1).beat(360L),
                 creatureFrame(body).beat(800L),
                 creatureFrame(body, eyeHoles = body.eyesHalf).beat(IDLE_WINK_MS),
-                creatureFrame(body, eyeHoles = body.eyesClosed).beat(IDLE_LID_MS),
+                creatureFrame(body, eyeHoles = body.eyesClosed).beat(IDLE_BLINK_SHUT_MS),
                 creatureFrame(body, eyeHoles = body.eyesHalf).beat(IDLE_WINK_MS)
             )
 
@@ -622,13 +630,56 @@ object AvatarAnimations {
             // Stelle nicht zu unterscheiden. Jetzt hebt abwechselnd einer ab, waehrend der
             // andere steht, und dazwischen liegt je ein Bild mit beiden am Boden: abheben,
             // aufsetzen, abheben mit dem anderen, aufsetzen.
-            creatureFrame(body, feetSpread = 1, feetLift = 1, tailWag = 1).beat(WALK_STEP_MS),
+            //
+            // Der VORDERE (rechte) Fuss hebt ab, waehrend der Schwanz hinten ausschwingt - so
+            // kommen sich Fuss und Schwanz auf der Rueckseite nie in die Quere.
+            creatureFrame(body, feetSpread = 1, feetLift = -1, tailWag = 1).beat(WALK_STEP_MS),
             creatureFrame(body, dy = -1, accentPhase = 1).beat(WALK_STEP_MS),
-            creatureFrame(body, feetSpread = 1, feetLift = -1, tailWag = -1).beat(WALK_STEP_MS),
-            creatureFrame(body, dy = -1, accentPhase = -1).beat(WALK_STEP_MS)
+            creatureFrame(body, feetSpread = 1, feetLift = 1, tailWag = -1).beat(WALK_STEP_MS),
+            creatureFrame(body, dy = -1, accentPhase = walkBackSwing(species)).beat(WALK_STEP_MS)
         ).mergeRepeats()
         val frames = FrameCrossfade.withCrossfades(GRID, AvatarGeometry.HEIGHT, beats.map { it.points }, steps = CROSSFADE_STEPS, loop = true)
         return AvatarSequence(frames, beats.map { it.holdMs })
+    }
+
+    /**
+     * **Der Mund bewegt sich, solange die Figur spricht.**
+     *
+     * Beim Besuch erscheinen ueber dem Sprecher erst ein, zwei, drei Sprechpunkte und dann die
+     * Symbole - der Sprecher lief dabei seine gewoehnliche Ruhe-Schleife weiter, mit
+     * geschlossenem Mund. Wer spricht, sah also aus wie jemand, der zuhoert.
+     *
+     * Silben statt Metronom: offen und zu im Wechsel, aber mit ungleichen Standzeiten (90 bis
+     * 180 ms, rund fuenf Silben pro Sekunde). Ein gleichmaessiges Auf-Zu im selben Takt liest
+     * sich als Klappern. Augen, Koerper und Schwanz bleiben still, damit die Bewegung eindeutig
+     * dem Mund gehoert.
+     */
+    fun talkSequence(species: AvatarSpecies): AvatarSequence {
+        val body = AvatarBodies.forSpecies(species)
+        val beats = listOf(
+            creatureFrame(body, mouthHoles = body.mouthOpen).beat(120L),
+            creatureFrame(body).beat(90L),
+            creatureFrame(body, mouthHoles = body.mouthOpen).beat(160L),
+            creatureFrame(body).beat(110L),
+            creatureFrame(body, mouthHoles = body.mouthOpen).beat(100L),
+            creatureFrame(body).beat(180L)
+        ).mergeRepeats()
+        val frames = FrameCrossfade.withCrossfades(GRID, AvatarGeometry.HEIGHT, beats.map { it.points }, steps = CROSSFADE_STEPS, loop = true)
+        return AvatarSequence(frames, beats.map { it.holdMs })
+    }
+
+    /**
+     * Der Akzent im zweiten Schwung des Gangs.
+     *
+     * Fluegel, Sternzopf und Schleim duerfen gegenlaeufig schlagen (+1/-1): Das ist ihr Takt.
+     * Ohren nicht. Bei PUFFLING und FENNEC heisst -1 "angelegt/seitlich weggeklappt"; im Wechsel
+     * mit +1 klappten die Ohren alle 110 ms zwischen aufgestellt und flach hin und her - ein
+     * Flackern, kein Gang. Ein laufendes Tier traegt die Ohren aufgestellt und laesst sie nur mit
+     * dem Koerper wippen.
+     */
+    private fun walkBackSwing(species: AvatarSpecies): Int = when (species) {
+        AvatarSpecies.PUFFLING, AvatarSpecies.FENNEC -> 1
+        else -> -1
     }
 
     /**
