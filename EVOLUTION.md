@@ -688,6 +688,9 @@ unprofessionell wirkt (Schwanz, Augen, Mund), ohne Nebenbaustellen.
 - `talkSequence` neu: Mund auf/zu mit ungleichen Standzeiten (90-180 ms); `DockScreen` spielt
   sie waehrend der Sprechpunkte fuer den Sprecher.
 - Kleine Augen: Lid 120 statt 200 ms geschlossen.
+- Ruheplatz im Arbeitszimmer eine Zelle nach rechts (`avatarAnchorX(WORK)` 0,20 -> 0,22): Der
+  nun hinten haengende Schwanz ragte beim PUFFLING in den Schreibtisch (31 % der Figur im Moebel,
+  Grenze 30 %, `SceneCompositionTest`); jetzt hoechstens 22 %.
 - `AvatarFacingTest` auf die neue Regel umgestellt, `talkingMovesOnlyTheMouth` neu.
   `reaction-fingerprint.txt`: alle 83 Zeilen neu, weil der Schwanz in jeder Reaktion steckt
   und der Abdruck ueber alle sechs Spezies gebildet wird; Kontaktboegen auf Kollisionen mit
