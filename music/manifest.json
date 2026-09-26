@@ -58,7 +58,7 @@
       "prompt_file": "music/prompts/main-day-02.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 6092026,
+      "seed": 26091007,
       "notes": "Zweite Variante derselben Rolle wie main-day-01, nicht deren Ersatz. Gemeldet: innerhalb eines stabilen Zustands bleibt dieselbe Musik zu lange unveraendert. Gleiche musikalische Familie - warmer, japanisch gefaerbter jazzy Lo-Fi -, aber etwas leichter und bewegter: 88 statt 82 BPM, gebuerstete Snare, jeweils nur ein melodiefuehrendes Instrument. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Welche der Varianten laeuft, entscheidet PlayMusicRotation nach der Rolle, nicht statt ihrer. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; Saettigung/Overdrive als Klangfarbe gestrichen. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
