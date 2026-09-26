@@ -184,7 +184,7 @@
       "prompt_file": "music/prompts/morning-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 25092032,
+      "seed": 26091025,
       "notes": "Erster Track der bisher unbelegten Rolle morning_background. MusicResolver.candidates() waehlt diese Rolle bereits am fruehen Morgen vor main_day_background (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie, aber luftiger und langsamer (72 BPM), mit Kalimba/Mallet-Melodie statt Rhodes im Vordergrund. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; glockenartiges Leitinstrument durch Vibraphon/Marimba im mittleren Register ersetzt; Unisono-/Oktavverdopplung durch Antwortphrasen ersetzt. Seed unveraendert, damit der Unterschied am Prompt liegt. Am 2026-09-25 Seed 20092026 -> 25092032: der erste Take nach der Harmonie-Ueberarbeitung scheiterte am Loop-Gate (Stille am Ende)."
     },
     {
