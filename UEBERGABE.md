@@ -97,6 +97,11 @@ dem Loop-Punkt. Als Pilot ist nur `theme-hootlet.txt` neu gefasst (Seed und 8/1 
 naechste Schritt ist genau ein manueller Lauf von **Generate Itoeva Music** mit `theme-hootlet`,
 danach Hoertest und Messvergleich - erst dann die uebrigen vier einzeln angehen.
 
+**Musik-Release (26.09.):** Alle 28 Stuecke des Hoertest-Stands (21 Best-of-3-Gewinner, 7
+unveraendert, dazu Gloop) sind nach A/B-Freigabe auf `main`; die Einzel-Audio-PRs sind abgeloest.
+Die Engine waehlt Varianten nach Verlauf (`PlayMusicRotation.pickVariant`, Plattenkiste). Der
+Hoertest-Branch traegt danach nur noch, was neu erzeugt und noch nicht freigegeben ist.
+
 **Lautheit (24.09.):** Nach jedem neu erzeugten Stueck `python3 tools/music/loudness_table.py`
 laufen lassen (auf dem Hoertest-Branch, wo alle Dateien liegen) und `MusicLoudnessTable.kt`
 mitcommitten - sonst spielt das neue Stueck ohne Ausgleich, also in seiner Rohlautstaerke.

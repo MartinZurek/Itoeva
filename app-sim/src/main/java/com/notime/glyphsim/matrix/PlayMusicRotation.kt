@@ -66,16 +66,34 @@ object PlayMusicRotation {
 
     /**
      * Waehlt eine Variante aus [available] - **nie dieselbe wie [current]**, solange es eine
-     * Alternative gibt.
+     * Alternative gibt, und **zuerst die, die am laengsten nicht lief**.
      *
-     * Ohne diese Zusicherung koennte ein Wechsel beim selben Stueck landen, und der Nutzer haette
-     * eine Ueberblendung gehoert, die nichts veraendert - schlechter als gar kein Wechsel, weil
-     * sie nach einem Fehler klingt.
+     * Ohne die erste Zusicherung koennte ein Wechsel beim selben Stueck landen, und der Nutzer
+     * haette eine Ueberblendung gehoert, die nichts veraendert - schlechter als gar kein Wechsel,
+     * weil sie nach einem Fehler klingt.
+     *
+     * Die zweite kam mit dem Release vom 2026-09-26 dazu: Seitdem tragen Morgen, Tag und Stadt
+     * je drei Stuecke und der Sport vier. Eine reine Zufallswahl pendelt dort leicht zwischen zwei
+     * Stuecken, waehrend das dritte eine Stunde lang nicht drankommt - und wer spaeter an einen
+     * Ort zurueckkehrt, hoert mit einiger Wahrscheinlichkeit wieder genau das Stueck vom letzten
+     * Mal. [lastHeardAt] (Variante -> Zeitpunkt, zu dem sie zuletzt begann) macht daraus eine
+     * Plattenkiste: Noch nie gehoerte Stuecke kommen zuerst, danach das am laengsten
+     * zurueckliegende. Der Zufall entscheidet nur noch zwischen Gleichrangigen - ohne Verlauf
+     * (leere Map) verhaelt sich die Wahl also genau wie vorher.
      */
-    fun pickVariant(available: List<Int>, current: Int?, random: Random = Random): Int? {
+    fun pickVariant(
+        available: List<Int>,
+        current: Int?,
+        lastHeardAt: Map<Int, Long> = emptyMap(),
+        random: Random = Random
+    ): Int? {
         if (available.isEmpty()) return null
         val andere = available.filter { it != current }
         val feld = andere.ifEmpty { available }
-        return feld[random.nextInt(feld.size)]
+        val nieGehoert = feld.filter { it !in lastHeardAt }
+        if (nieGehoert.isNotEmpty()) return nieGehoert[random.nextInt(nieGehoert.size)]
+        val aeltester = feld.minOf { lastHeardAt.getValue(it) }
+        val kandidaten = feld.filter { lastHeardAt.getValue(it) == aeltester }
+        return kandidaten[random.nextInt(kandidaten.size)]
     }
 }
