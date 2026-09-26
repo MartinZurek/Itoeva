@@ -750,9 +750,6 @@
          nennen laesst statt auf einen internen Ressourcennamen zu zeigen. Siehe MusicCatalog.kt. -->
     <string name="music_library_title">Musik-Bibliothek</string>
     <string name="music_library_empty">Für diese Rolle ist noch kein Stück ausgeliefert.</string>
-    <string name="music_library_take_hint">A = bisherige Fassung, B = neue Auswahl (beste von 3)</string>
-    <string name="music_library_take_old">A · alt</string>
-    <string name="music_library_take_new">B · neu</string>
     <string name="music_role_morning">Früher Morgen</string>
     <string name="music_role_main_day">Der normale Tag</string>
     <string name="music_role_city">Unterwegs in der Stadt – Straße, Stadt und Laden</string>
@@ -769,7 +766,7 @@
     <string name="music_title_morning_02">Paper Dawn</string>
     <string name="music_title_morning_03">The Last Evo</string>
     <string name="music_title_dream_01">Ita Stella</string>
-    <string name="music_title_main_day_01">Quiet Rooftops</string>
+    <string name="music_title_main_day_01">Lantern Streets</string>
     <string name="music_title_main_day_02">Paper Bridges</string>
     <string name="music_title_main_day_03">Der verpixelste Tag meines Lebens</string>
     <string name="music_title_sport_01">Full Stride</string>
@@ -786,14 +783,14 @@
     <string name="music_title_ballgame_01">Pixel Hoops</string>
     <string name="music_title_arcade_01">Insert Coin</string>
     <string name="music_title_arcade_02">Continue?</string>
-    <string name="music_title_home_evening_01">Amber Windows</string>
-    <string name="music_title_home_evening_02">Late Windows (neu)</string>
+    <string name="music_title_home_evening_01">Quiet Lanterns</string>
+    <string name="music_title_home_evening_02">Late Windows</string>
     <string name="music_title_theme_puffling">Puffling\'s Theme</string>
-    <string name="music_title_theme_starlet">Starlet\'s Theme (neu)</string>
+    <string name="music_title_theme_starlet">Starlet\'s Theme</string>
     <string name="music_title_theme_wyrmling">Wyrmling\'s Theme</string>
     <string name="music_title_theme_fennec">Fennec\'s Theme</string>
     <string name="music_title_theme_gloop">Gloop\'s Theme</string>
-    <string name="music_title_theme_hootlet">Hootlet\'s Theme (neu)</string>
+    <string name="music_title_theme_hootlet">Hootlet\'s Theme</string>
     <string name="a11y_music_play_track">%1$s abspielen</string>
     <string name="a11y_music_stop_track">%1$s anhalten</string>
 </resources>

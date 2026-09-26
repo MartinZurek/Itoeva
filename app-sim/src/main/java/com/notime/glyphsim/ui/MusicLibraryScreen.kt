@@ -1,6 +1,5 @@
 package com.notime.glyphsim.ui
 
-import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +18,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -68,11 +65,6 @@ import com.notime.glyphsim.matrix.MusicRole
  * Loop absichtlich AN, genau wie in der Welt (`MediaPlayer.isLooping = true`): Ein spuerbarer
  * Ruckler an der Schleifennaht ist selbst eine Qualitaetsfrage, die sich nur im Loop pruefen
  * laesst.
- *
- * **A/B-Vergleich (nur Hoertest-Paket, 26.09.):** Liegt neben einem Stueck eine Datei
- * `<name>_alt.ogg`, zeigt die Zeile zwei Knoepfe - A spielt die bisherige Fassung, B die neue.
- * Gewuenscht, weil nach einer Neuerzeugung sonst nicht zu erkennen war, welche Fassung man
- * gerade hoert. Die Welt selbst findet `_alt` nie: [PlayMusic] sucht genau `itoeva_<rolle>_NN`.
  */
 @Composable
 fun MusicLibraryDialog(onDismiss: () -> Unit) {
@@ -85,8 +77,8 @@ fun MusicLibraryDialog(onDismiss: () -> Unit) {
 @Composable
 fun MusicLibraryScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    // Welche (Rolle, Variante, Fassung) gerade ueber DIESEN Bildschirm laeuft - null heisst "keine".
-    var playing by remember { mutableStateOf<Take?>(null) }
+    // Welche (Rolle, Variante) gerade ueber DIESEN Bildschirm laeuft - null heisst "keine".
+    var playing by remember { mutableStateOf<Pair<MusicRole, Int>?>(null) }
     var player by remember { mutableStateOf<MediaPlayer?>(null) }
 
     fun stopPreview() {
@@ -98,7 +90,7 @@ fun MusicLibraryScreen(onBack: () -> Unit) {
         playing = null
     }
 
-    fun playPreview(take: Take, resId: Int) {
+    fun playPreview(role: MusicRole, variant: Int, resId: Int) {
         stopPreview()
         runCatching {
             val next = MediaPlayer.create(context, resId) ?: return
@@ -112,11 +104,11 @@ fun MusicLibraryScreen(onBack: () -> Unit) {
             // Derselbe Lautheitsausgleich wie im Spiel (siehe MusicLoudness): Beim Vergleichen
             // soll kein Stueck nur deshalb besser klingen, weil es lauter erzeugt wurde.
             val lautstaerke =
-                (PREVIEW_VOLUME * MusicLoudness.gainFor(take.resourceName)).coerceIn(0f, 1f)
+                (PREVIEW_VOLUME * MusicLoudness.gainFor(role.variantResource(variant))).coerceIn(0f, 1f)
             next.setVolume(lautstaerke, lautstaerke)
             next.start()
             player = next
-            playing = take
+            playing = role to variant
         }
     }
 
@@ -147,8 +139,8 @@ fun MusicLibraryScreen(onBack: () -> Unit) {
             items(MusicCatalog.DISPLAY_ORDER, key = { it.name }) { role ->
                 RoleSection(
                     role = role,
-                    playing = playing?.takeIf { it.role == role },
-                    onPlay = ::playPreview,
+                    playingVariant = playing?.takeIf { it.first == role }?.second,
+                    onPlay = { variant, resId -> playPreview(role, variant, resId) },
                     onStop = ::stopPreview
                 )
             }
@@ -159,8 +151,8 @@ fun MusicLibraryScreen(onBack: () -> Unit) {
 @Composable
 private fun RoleSection(
     role: MusicRole,
-    playing: Take?,
-    onPlay: (Take, Int) -> Unit,
+    playingVariant: Int?,
+    onPlay: (Int, Int) -> Unit,
     onStop: () -> Unit
 ) {
     val context = LocalContext.current
@@ -186,9 +178,8 @@ private fun RoleSection(
                         role = role,
                         variant = variant,
                         resId = resId,
-                        altResId = alternateResId(context, role, variant),
-                        playing = playing?.takeIf { it.variant == variant },
-                        onPlay = onPlay,
+                        isPlaying = playingVariant == variant,
+                        onPlay = { onPlay(variant, resId) },
                         onStop = onStop
                     )
                 }
@@ -202,9 +193,8 @@ private fun TrackRow(
     role: MusicRole,
     variant: Int,
     resId: Int,
-    altResId: Int?,
-    playing: Take?,
-    onPlay: (Take, Int) -> Unit,
+    isPlaying: Boolean,
+    onPlay: () -> Unit,
     onStop: () -> Unit
 ) {
     val titleRes = MusicCatalog.titleRes(role, variant)
@@ -232,125 +222,31 @@ private fun TrackRow(
                     )
                 }
             }
-            if (altResId == null) {
-                PlayStopButton(
-                    isPlaying = playing != null,
-                    playDescription = playDescription,
-                    stopDescription = stopDescription,
-                    onPlay = { onPlay(Take(role, variant, alt = false), resId) },
-                    onStop = onStop
-                )
-            }
-        }
-        if (altResId != null) {
-            Column(modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 12.dp)) {
-                Text(
-                    stringResource(R.string.music_library_take_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            if (isPlaying) {
+                IconButton(
+                    onClick = onStop,
+                    modifier = Modifier.semantics { contentDescription = stopDescription }
                 ) {
-                    TakeButton(
-                        label = stringResource(R.string.music_library_take_old),
-                        title = title,
-                        isPlaying = playing?.alt == true,
-                        onPlay = { onPlay(Take(role, variant, alt = true), altResId) },
-                        onStop = onStop,
-                        modifier = Modifier.weight(1f)
+                    // Kein "Stop"-Symbol in material-icons-core (siehe HomeScreen.kt fuer
+                    // dieselbe Grenze) - ein gefuelltes Quadrat als Text ist hier die vorhandene
+                    // Ausweichloesung statt des groesseren -extended-Artefakts.
+                    Text(
+                        "■",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                    TakeButton(
-                        label = stringResource(R.string.music_library_take_new),
-                        title = title,
-                        isPlaying = playing?.alt == false,
-                        onPlay = { onPlay(Take(role, variant, alt = false), resId) },
-                        onStop = onStop,
-                        modifier = Modifier.weight(1f)
-                    )
+                }
+            } else {
+                IconButton(
+                    onClick = onPlay,
+                    modifier = Modifier.semantics { contentDescription = playDescription }
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
                 }
             }
         }
     }
 }
-
-@Composable
-private fun PlayStopButton(
-    isPlaying: Boolean,
-    playDescription: String,
-    stopDescription: String,
-    onPlay: () -> Unit,
-    onStop: () -> Unit
-) {
-    if (isPlaying) {
-        IconButton(
-            onClick = onStop,
-            modifier = Modifier.semantics { contentDescription = stopDescription }
-        ) {
-            // Kein "Stop"-Symbol in material-icons-core (siehe HomeScreen.kt fuer
-            // dieselbe Grenze) - ein gefuelltes Quadrat als Text ist hier die vorhandene
-            // Ausweichloesung statt des groesseren -extended-Artefakts.
-            Text(
-                "■",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    } else {
-        IconButton(
-            onClick = onPlay,
-            modifier = Modifier.semantics { contentDescription = playDescription }
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-        }
-    }
-}
-
-/** Ein Knopf je Fassung: gefuellt, solange genau diese Fassung laeuft. */
-@Composable
-private fun TakeButton(
-    label: String,
-    title: String,
-    isPlaying: Boolean,
-    onPlay: () -> Unit,
-    onStop: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val named = "$title - $label"
-    if (isPlaying) {
-        val description = stringResource(R.string.a11y_music_stop_track, named)
-        FilledTonalButton(
-            onClick = onStop,
-            modifier = modifier.semantics { contentDescription = description }
-        ) {
-            Text("■  $label")
-        }
-    } else {
-        val description = stringResource(R.string.a11y_music_play_track, named)
-        OutlinedButton(
-            onClick = onPlay,
-            modifier = modifier.semantics { contentDescription = description }
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-            Text(label, modifier = Modifier.padding(start = 4.dp))
-        }
-    }
-}
-
-/** Was die Vorschau gerade spielt: ein Stueck in einer seiner Fassungen. */
-private data class Take(val role: MusicRole, val variant: Int, val alt: Boolean) {
-    val resourceName: String
-        get() = role.variantResource(variant) + if (alt) ALT_SUFFIX else ""
-}
-
-/** Die bisherige Fassung eines Stuecks, falls das Hoertest-Paket sie mitliefert. */
-private fun alternateResId(context: Context, role: MusicRole, variant: Int): Int? =
-    context.resources
-        .getIdentifier(role.variantResource(variant) + ALT_SUFFIX, "raw", context.packageName)
-        .takeIf { it != 0 }
-
-private const val ALT_SUFFIX = "_alt"
 
 /**
  * Grundlautstaerke der Vorschau. Unter 1, damit der Lautheitsausgleich leise Stuecke auch anheben
