@@ -100,7 +100,7 @@
       "prompt_file": "music/prompts/city-02.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 1102026,
+      "seed": 26091014,
       "notes": "Zweites Stueck der Rolle city_background, gewuenscht vom Nutzer: die Essenz grosser Britpop-Hymnen - geschrammelte Akustikgitarren, warme E-Gitarren-Melodie statt Gesang, Tamburin, das Gefuehl eines mitsingenden Stadions. G-Dur, G-D-e-C, 84 BPM. Hommage wie main-day-03: nur die Essenz, keine Nachbildung; Melodie, Akkorde, Tempo und Besetzung sind eigene Vorgaben, der Prompt nennt weder Kuenstler noch Stueck. Weiche 8-Bit-Stimme als Pixel-Signatur, Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden). Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase; Saettigung/Overdrive als Klangfarbe gestrichen. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
