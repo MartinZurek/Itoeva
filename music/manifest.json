@@ -72,7 +72,7 @@
       "prompt_file": "music/prompts/main-day-03.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 27092026,
+      "seed": 26091009,
       "notes": "Dritte Variante der Rolle main_day_background, gewuenscht vom Nutzer als Hommage: das melancholische, bittersuesse Gefuehl eines deutschen Rap-Beats, den er mag - ausdruecklich NICHT dessen Nachbildung. Uebernommen wird nur die Haltung (Rueckblick auf einen schoenen Tag, warm und ein wenig traurig, hoffnungsvoll darunter) und die Gattung (Boom-Bap mit Klavierloop und Streichern). Melodie, Akkordfolge, Tempo und Klangfarben sind eigene Vorgaben; der Prompt nennt weder Kuenstler noch Stueck. Die Pixelwelt steckt in einer weichen 8-Bit-Rechteckstimme, die jede zweite Runde die Klaviermelodie eine Oktave hoeher verdoppelt. Aufbau nach dem Hootlet-Pilotmuster: Tempo, Puls und Motiv zuerst, kein Ein- und kein Ausblenden. Gleichzeitig die erste dritte Tagesvariante - MAIN_DAY traegt den Mittag ueberall und ist Rueckfall fuer Morgen und Abend (siehe Track-Abdeckung in EVOLUTION.md). Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
