@@ -20,6 +20,7 @@ Aufruf:
 
     python3 tools/music/harmony_report.py                 # alle ausgelieferten Stuecke
     python3 tools/music/harmony_report.py pfad/zu/take.ogg
+    python3 tools/music/harmony_report.py --pick take_a.ogg take_b.ogg take_c.ogg  # Best-of-N
 """
 from __future__ import annotations
 
@@ -79,8 +80,21 @@ def measure(path: Path) -> dict:
 
 
 def main(argv: list[str]) -> int:
+    pick_mode = bool(argv) and argv[0] == "--pick"
+    if pick_mode:
+        argv = argv[1:]
     files = [Path(a) for a in argv] or sorted(RAW.glob("itoeva_*.ogg"))
     rows = [measure(p) for p in files]
+    if pick_mode:
+        # Takes EINES Stuecks: Gewinner nach der Regel in best_take.py.
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from best_take import Take, pick
+
+        takes = [Take(str(p), r["scharf_db"], r["rau_hoch"]) for p, r in zip(files, rows)]
+        for t in takes:
+            print(f"{t.name}  scharf_db={t.scharf_db:.1f}  rau_hoch={t.rau_hoch:.4f}")
+        print(f"gewinner: {pick(takes).name}")
+        return 0
     print(f"{'datei':32} {'scharf_db':>9} {'rau_hoch':>9}")
     for r in sorted(rows, key=lambda r: -r["rau_hoch"]):
         print(f"{r['datei']:32} {r['scharf_db']:9.1f} {r['rau_hoch']:9.4f}")

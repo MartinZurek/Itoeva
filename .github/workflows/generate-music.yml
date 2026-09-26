@@ -13,6 +13,16 @@ on:
         required: true
         default: true
         type: boolean
+      seed:
+        description: Optional seed instead of the manifest's (best-of-N candidate takes)
+        required: false
+        default: ''
+        type: string
+      candidate:
+        description: Push the take to a candidates/ branch without opening a PR (best-of-N)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -86,12 +96,20 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           TRACK_ID: ${{ inputs.track_id }}
+          SEED: ${{ inputs.seed }}
           CI: 'true'
-        run: >-
-          python tools/music/generate_music.py
-          --track-id "$TRACK_ID"
-          --device cpu
-          --output-dir generated/music
+        run: |
+          set -euo pipefail
+          seed_args=()
+          if [ -n "$SEED" ]; then
+            case "$SEED" in (*[!0-9]*) echo "::error::seed must be a non-negative integer"; exit 1;; esac
+            seed_args=(--seed "$SEED")
+          fi
+          python tools/music/generate_music.py \
+            --track-id "$TRACK_ID" \
+            --device cpu \
+            --output-dir generated/music \
+            "${seed_args[@]}"
 
       - name: Resolve generated filenames
         id: track
@@ -126,7 +144,7 @@ jobs:
           retention-days: 30
 
       - name: Create game-asset branch and pull request
-        if: ${{ success() && inputs.create_pr }}
+        if: ${{ success() && (inputs.create_pr || inputs.candidate) }}
         env:
           # **Dieselbe Sperre wie in claude-primary-run.yml** - siehe die ausfuehrliche
           # Begruendung am Schritt "Pull Request eroeffnen" dort und PR #95.
@@ -145,11 +163,19 @@ jobs:
           TRACK_ID: ${{ inputs.track_id }}
           RESOURCE: ${{ steps.track.outputs.resource }}
           FORMAT: ${{ steps.track.outputs.format }}
+          SEED: ${{ inputs.seed }}
+          CANDIDATE: ${{ inputs.candidate }}
         run: |
           set -euo pipefail
 
           safe_track_id="${TRACK_ID//[^a-zA-Z0-9._-]/-}"
-          branch="generated/music-${safe_track_id}-${GITHUB_RUN_ID}"
+          if [ "$CANDIDATE" = "true" ]; then
+            # Best-of-N: jeder Kandidat liegt auf einem eigenen Branch, ohne PR. Der Gewinner
+            # (tools/music/best_take.py) bekommt seinen PR danach aus genau diesem Branch.
+            branch="candidates/music-${safe_track_id}-s${SEED:-manifest}-${GITHUB_RUN_ID}"
+          else
+            branch="generated/music-${safe_track_id}-${GITHUB_RUN_ID}"
+          fi
           audio="generated/music/${RESOURCE}.${FORMAT}"
           metadata="generated/music/${RESOURCE}.json"
           target="app-sim/src/main/res/raw/${RESOURCE}.${FORMAT}"
@@ -165,9 +191,29 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$SEED" ]; then
+            # Der ueberschriebene Seed gehoert ins Manifest desselben Commits - sonst erzeugte
+            # eine Neuerzeugung nach dem Merge einen anderen Take als den gehoerten.
+            python - <<'PY'
+          import json, os
+          from pathlib import Path
+          path = Path('music/manifest.json')
+          manifest = json.loads(path.read_text(encoding='utf-8'))
+          for track in manifest['tracks']:
+              if track['id'] == os.environ['TRACK_ID']:
+                  track['seed'] = int(os.environ['SEED'])
+          path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+          PY
+            git add music/manifest.json
+          fi
           git add "$target" "$provenance"
-          git commit -m "Add generated Itoeva track ${TRACK_ID}"
+          git commit -m "Add generated Itoeva track ${TRACK_ID}${SEED:+ (seed $SEED)}"
           git push --set-upstream origin "$branch"
+
+          if [ "$CANDIDATE" = "true" ]; then
+            echo "Candidate take pushed to $branch - no pull request (best-of-N)."
+            exit 0
+          fi
 
           if [ "${EIGENES_PR_TOKEN}" != "true" ]; then
             echo "::warning::EVOLUTION_PR_TOKEN fehlt oder heisst anders. Der Pull Request gehoert damit github-actions[bot], und seine Pruefungen starten nicht - im Actions-Tab ist dann 'Approve and run' noetig."
