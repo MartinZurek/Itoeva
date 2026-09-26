@@ -664,6 +664,41 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Figuren: Schwanz hinten, ruhige Ohren im Gang, Mund beim Sprechen
+
+**Anlass:** Gemeldet: Nach links laufen soll rechts wedeln, nach rechts laufen links - kongruent
+wie der Schatten. Dazu der Auftrag, den Bewegungsfluss gezielt dort zu verbessern, wo er
+unprofessionell wirkt (Schwanz, Augen, Mund), ohne Nebenbaustellen.
+
+**Befund (an gerenderten Bildfolgen, nicht geschaetzt):**
+- Die Posen blicken nach rechts ([AvatarFacing]), der Schwanz von PUFFLING, WYRMLING und FENNEC
+  sass aber rechts, also vorn. Beim gespiegelten Gang nach links zeigte er ebenfalls nach vorn.
+  `AvatarFacingTest` hielt genau das als "Neigung nach rechts" fest.
+- Im Gang klappten die Ohren von PUFFLING und FENNEC alle 110 ms zwischen aufgestellt und flach
+  (Akzent +1/-1) - ein Flackern.
+- Beim Besuch lief der Sprecher waehrend der Sprechpunkte seine Ruhe-Schleife mit geschlossenem
+  Mund weiter und sah aus wie der Zuhoerer.
+- PUFFLING und WYRMLING blinzelten 420 ms lang (Lid 200 ms zu), das las sich schlaefrig.
+
+**Geaendert:**
+- Schwanz aller drei Spezies auf die linke Seite gespiegelt (hinten). Im Gang hebt beim
+  Ausschwingen des Schwanzes der vordere Fuss ab, damit sich hinten nichts draengt.
+- `walkSequence`: Ohr-Spezies tragen die Ohren im zweiten Schwung aufgestellt; Fluegel, Zopf und
+  Schleim schlagen weiter gegenlaeufig.
+- `talkSequence` neu: Mund auf/zu mit ungleichen Standzeiten (90-180 ms); `DockScreen` spielt
+  sie waehrend der Sprechpunkte fuer den Sprecher.
+- Kleine Augen: Lid 120 statt 200 ms geschlossen.
+- Ruheplatz im Arbeitszimmer eine Zelle nach rechts (`avatarAnchorX(WORK)` 0,20 -> 0,22): Der
+  nun hinten haengende Schwanz ragte beim PUFFLING in den Schreibtisch (31 % der Figur im Moebel,
+  Grenze 30 %, `SceneCompositionTest`); jetzt hoechstens 22 %.
+- `AvatarFacingTest` auf die neue Regel umgestellt, `talkingMovesOnlyTheMouth` neu.
+  `reaction-fingerprint.txt`: alle 83 Zeilen neu, weil der Schwanz in jeder Reaktion steckt
+  und der Abdruck ueber alle sechs Spezies gebildet wird; Kontaktboegen auf Kollisionen mit
+  Requisiten gesichtet.
+
+**Nicht geaendert:** Spiegelregel, Schatten, Choreografien der Reaktionen, Ruhe-Schleifen
+ausser der Lidzeit, Timing des Gangs.
+
 ### 2026-09-26 - Musik-Release: 28 freigegebene Stuecke im Spiel, Engine mit Plattenkiste
 
 **Anlass:** Nach dem A/B-Hoertest (A = bisherige, B = neue Fassung in der Musik-Bibliothek des

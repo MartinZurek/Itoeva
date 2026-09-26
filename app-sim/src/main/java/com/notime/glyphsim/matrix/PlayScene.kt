@@ -529,7 +529,9 @@ object PlayScene {
         Place.POND -> 0.24f
         Place.SHOP -> 0.34f
         Place.BATH -> 0.42f
-        Place.WORK -> 0.20f
+        // Eine Zelle weiter rechts als frueher (0,20): Seit der Schwanz hinten, also links haengt
+        // (2026-09-26), ragte er beim PUFFLING in den Schreibtisch - 31 % der Figur im Moebel.
+        Place.WORK -> 0.22f
         // Auf der Strasse weit LINKS: Sie ist ein Weg, kein Aufenthaltsort - wer sie betritt, ist
         // unterwegs, und ein Anfang am Rand macht daraus eine Strecke statt einer Buehne.
         Place.STREET -> 0.08f

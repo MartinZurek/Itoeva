@@ -146,6 +146,26 @@ class AvatarAnimationsTest {
     }
 
     /**
+     * **Wer spricht, bewegt den Mund** (siehe [AvatarAnimations.talkSequence]) - bei jeder
+     * Spezies, in jedem Bild, auch an der Naht der Schleife. Und NUR den Mund: Augen und Koerper
+     * bleiben still, sonst gehoerte die Bewegung nicht eindeutig dem Sprechen.
+     */
+    @Test
+    fun talkingMovesOnlyTheMouth() {
+        for (species in AvatarSpecies.entries) {
+            val talk = AvatarAnimations.talkSequence(species)
+            assertTrue("$species spricht mit starrem Mund", talk.frames.size > 1)
+            assertEquals(talk.frames.size, talk.holdsMs.size)
+            for (i in talk.frames.indices) {
+                val previous = talk.frames[if (i == 0) talk.frames.lastIndex else i - 1]
+                val changed = changedPixels(previous, talk.frames[i])
+                assertTrue("Stillstand beim Sprechen von $species bei Frame $i", changed > 0)
+                assertTrue("$species bewegt beim Sprechen mehr als den Mund ($changed Zellen)", changed <= 4)
+            }
+        }
+    }
+
+    /**
      * Dieselbe Stillstands-Invariante fuer die Alltagsregungen
      * ([AvatarAnimations.fidgetSequence]) - und hier aus demselben Grund heikel wie beim Gang:
      * Sie sind aus Fuss-, Schwanz- und Akzent-Stellungen gebaut, von denen einzelne Spezies
