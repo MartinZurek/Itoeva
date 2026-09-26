@@ -115,6 +115,58 @@ class PlayMusicRotationTest {
         assertNull(PlayMusicRotation.pickVariant(emptyList(), current = null, random = Random(8)))
     }
 
+    // ================= Die Plattenkiste =================
+
+    /**
+     * **Erst alle, dann Wiederholung.** Mit drei Stuecken und Verlauf laeuft jedes einmal, bevor
+     * eines wiederkommt - eine reine Zufallswahl koennte zwischen zweien pendeln.
+     */
+    @Test
+    fun `mit Verlauf kommt jedes Stueck dran bevor eines wiederkommt`() {
+        val random = Random(9)
+        repeat(50) {
+            val gehoert = mutableMapOf<Int, Long>()
+            var jetzt: Int? = null
+            val folge = (1..3).map { schritt ->
+                val naechste = PlayMusicRotation.pickVariant(listOf(1, 2, 3), jetzt, gehoert, random)!!
+                gehoert[naechste] = schritt.toLong()
+                jetzt = naechste
+                naechste
+            }
+            assertEquals("Reihenfolge $folge", setOf(1, 2, 3), folge.toSet())
+        }
+    }
+
+    /** Sind alle schon gelaufen, kommt das am laengsten zurueckliegende. */
+    @Test
+    fun `das am laengsten nicht gehoerte Stueck kommt zuerst`() {
+        val gehoert = mapOf(1 to 300L, 2 to 100L, 3 to 200L, 4 to 400L)
+        repeat(100) {
+            assertEquals(2, PlayMusicRotation.pickVariant(listOf(1, 2, 3, 4), 4, gehoert, Random(it)))
+        }
+    }
+
+    /**
+     * **Rueckkehr an einen Ort.** Beim Rollenwechsel laeuft nichts ([current] ist `null`) - und
+     * trotzdem soll nicht das Stueck vom letzten Besuch kommen, sondern das naechste der Kiste.
+     */
+    @Test
+    fun `bei der Rueckkehr beginnt nicht das Stueck vom letzten Mal`() {
+        val gehoert = mapOf(1 to 100L, 2 to 500L, 3 to 900L)
+        repeat(100) {
+            assertEquals(1, PlayMusicRotation.pickVariant(listOf(1, 2, 3), null, gehoert, Random(it)))
+        }
+    }
+
+    /** Die laufende Variante bleibt ausgeschlossen, auch wenn sie am laengsten nicht lief. */
+    @Test
+    fun `der Verlauf hebt den Ausschluss der laufenden Variante nicht auf`() {
+        val gehoert = mapOf(1 to 10L, 2 to 500L, 3 to 900L)
+        repeat(100) {
+            assertEquals(2, PlayMusicRotation.pickVariant(listOf(1, 2, 3), 1, gehoert, Random(it)))
+        }
+    }
+
     // ================= Der Vertrag zu den Dateinamen =================
 
     /**
