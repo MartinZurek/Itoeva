@@ -175,7 +175,12 @@ data class MusicContext(
      * eine Dauerschleife. Gesetzt ist dieses Feld nur, solange der Anlass laeuft, den
      * [PlayCharacterTheme] beschreibt.
      */
-    val characterTheme: AvatarSpecies? = null
+    val characterTheme: AvatarSpecies? = null,
+    /**
+     * Das Gruppenspiel, das gerade laeuft (siehe [PlayGroupGame]), oder `null`. Wie [activity]
+     * nur waehrend des Spiels gesetzt.
+     */
+    val groupGame: PlayGroupGame.Kind? = null
 )
 
 /**
@@ -247,6 +252,20 @@ object MusicResolver {
         // **Die laufende Aktivitaet vor dem Ort** - aber nie nachts. Angeln klingt nach Angeln,
         // egal an welchem Ufer; ein Ballspiel nach Streetball, egal auf welchem Platz.
         val nachts = context.dayPhase == PlayAmbientActivity.DayPhase.NIGHT
+        // **Ein Gruppenspiel hat Vorrang vor allem ausser dem eigenen Thema** - auch vor dem
+        // Morgen. Gemeldet: Die Gruppe spielte morgens ohne jede Musik, und genau diese Szenen
+        // sollen den Alltag aufbrechen. Korb und Fussball klingen nach Streetball, Ball und
+        // Frisbee nach Sport; die jeweils andere Rolle ist der Rueckfall.
+        val spiel = context.groupGame
+        if (spiel != null && !nachts) {
+            if (spiel == PlayGroupGame.Kind.HOOPS || spiel == PlayGroupGame.Kind.KICKABOUT) {
+                add(MusicRole.BALLGAME)
+                add(MusicRole.SPORT)
+            } else {
+                add(MusicRole.SPORT)
+                add(MusicRole.BALLGAME)
+            }
+        }
         if (!nachts) {
             when (context.activity) {
                 PlayRoutines.SpecialActivity.FISHING -> add(MusicRole.FISHING)

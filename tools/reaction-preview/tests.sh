@@ -66,7 +66,7 @@ SRCS=(
   "$SIM/AvatarShading.kt" "$SIM/AvatarFacing.kt" "$SIM/AvatarAccent.kt" "$SIM/AvatarPalette.kt" "$SIM/MatrixColors.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
-  "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
+  "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt" "$SIM/PlayGroupGame.kt"
   "$SIM/LivingRuntimeAdapter.kt" "$SIM/LivingResidents.kt" "$SIM/LivingPopulation.kt"
   "$SIM/LivingPopulationLayout.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
@@ -149,7 +149,7 @@ TEST_SRCS=(
   # liefen bis dahin NUR in der CI. Genau diese Luecke hat in NT-078 schon einmal einen roten
   # Lauf erzeugt: Ein Test, der hier nicht uebersetzt wird, meldet eine Signaturaenderung erst
   # Minuten spaeter aus der CI.
-  "$TEST/matrix/PlayEffectsTest.kt"
+  "$TEST/matrix/PlayEffectsTest.kt" "$TEST/matrix/PlayGroupGameTest.kt"
   "$TEST/matrix/PlayInkTest.kt"
   "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/matrix/CreatureFrameSizeTest.kt"
@@ -211,6 +211,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReactionDwellTest
   com.notime.glyphsim.matrix.PlayMotifLegibilityTest
   com.notime.glyphsim.matrix.PlayEffectsTest
+  com.notime.glyphsim.matrix.PlayGroupGameTest
   com.notime.glyphsim.matrix.PlayInkTest
   com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.matrix.CreatureFrameSizeTest

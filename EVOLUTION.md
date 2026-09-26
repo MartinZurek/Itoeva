@@ -664,6 +664,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Gruppenspiel: alle spielen mit, mit Musik
+
+**Anlass:** Gemeldet: Morgens lief Sport "mit der Gruppe" - vier Figuren im Park, vor dem
+Hauptavatar baute sich ein Geraet aus Pixeln auf, die anderen drei taten nichts, nach kurzer Zeit
+gingen alle. Keine Musik, nicht erkennbar, welcher Sport. Gewuenscht: dass sie wirklich
+miteinander spielen (Ball zuwerfen, Frisbee, Korbwurf nacheinander, Fussball) und dass eine
+coole Musik darunter liegt - solche Szenen brechen den Alltag auf und haben hoechste Prioritaet.
+
+**Befund:** Sonderaktivitaeten kannten nur eine Figur; Ball, Hantel und Korb hingen am
+Hauptavatar. Ein Einwohner durfte hoechstens dieselbe allgemeine Koerperregung mitmachen, Gaeste
+standen in ihrer Ruhe-Schleife daneben. Musik: TRAINING und KITE loesten nichts aus, und morgens
+lag MORNING vor dem Ort.
+
+**Geaendert:**
+- `PlayGroupGame` (neu, rein): vier Spiele - CATCH (hoher Bogen), FRISBEE (flach, kippelnd),
+  KICKABOUT (am Boden, kleine Hopser), HOOPS (nacheinander auf den Korb, jeder dritte Wurf
+  daneben, Treffer werden bejubelt). Liefert je Takt Ball und Haltung jedes Mitspielers;
+  Passfolge ohne direktes Zurueckspielen; allein wirft man sich den Ball selbst zu. 60 s.
+- `AvatarAnimations.gamePose`: READY (federnd), THROW, CATCH (springt entgegen), CHEER (huepft),
+  WATCH (wedelt beim Zuschauen). Jeder blickt dem Ball hinterher.
+- Routinewahl: Bewegung auf Park, Sportplatz oder Wiese wird zum Gruppenspiel, sobald noch
+  jemand da ist (Gast oder Einwohner) - tagsueber immer. Basketball -> Korbwurf, Fussball ->
+  Zuspielen, sonst nach Ort.
+- `DockScreen`: Mitspieler sind Bewohner, stehende Gaeste und Hintergrundfiguren; ihre Bilder
+  kommen waehrend des Spiels aus dem Spiel (Bildschirm, Schnappschuss und Film gleich). Ein
+  Gast, der dazukommt, spielt mit; Gespraeche warten bis nach dem Spiel.
+- Musik: `MusicContext.groupGame`; Korb/Fussball -> BALLGAME, Ball/Frisbee -> SPORT, jeweils die
+  andere als Rueckfall, vor dem Morgen, nie nachts. SPORT setzt jetzt wie BALLGAME sofort ein.
+- `PlayEffects.hoopCells` aus dem Basketball ausgelagert (unveraenderte Zeichnung).
+- 11 neue Tests (`PlayGroupGameTest`, `MusicResolverTest`).
+
+**Nicht geaendert:** Einzelsport ohne Mitspieler, die Sonderaktivitaeten selbst, Rotation und
+Uebergaenge der Musik ausser dem sofortigen Einsatz von SPORT.
+
 ### 2026-09-26 - Figuren: Schwanz hinten, ruhige Ohren im Gang, Mund beim Sprechen
 
 **Anlass:** Gemeldet: Nach links laufen soll rechts wedeln, nach rechts laufen links - kongruent
