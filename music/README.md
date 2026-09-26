@@ -256,6 +256,25 @@ Fuer mehr Abwechslung ueber lange Spielzeit haben die Hommagen zusaetzlich eine 
 B-Phrase in der Mitte: anderes Leitinstrument, neue Akkordfarbe aus derselben Tonart, dann kehrt
 die Melodie zurueck.
 
+### Best-of-N: mehrere Seeds, der sauberste Take gewinnt
+
+Die Messung nach der Harmonie-Ueberarbeitung zeigte, dass die Takes dieses Modells bei 8/1 von
+Seed zu Seed staerker streuen, als der Prompt sie lenkt. Freigegeben am 2026-09-26: Je Stueck
+werden mehrere Seeds erzeugt, und nur der Take mit den saubersten Hoehen geht in die
+Hoertest-APK. Das Ohr entscheidet danach wie bisher; die Messung trifft nur die Vorauswahl.
+
+- **Erzeugen:** **Generate Itoeva Music** mit `seed` (anderer Seed als im Manifest) und
+  `candidate: true`. Der Take landet auf `candidates/music-<id>-s<seed>-<lauf>`, ohne PR.
+  Prompt, Modell und 8/1 bleiben wie im Manifest; der Seed wird im selben Commit ins Manifest
+  geschrieben, damit der gehoerte Take reproduzierbar bleibt.
+- **Auswaehlen:** `python3 tools/music/harmony_report.py --pick a.ogg b.ogg c.ogg`. Die Regel steht
+  in `tools/music/best_take.py`: Loop-Gate bestanden, dumpfe Takes (mehr als 6 dB unter der
+  Schaerfe der Geschwister) scheiden aus, dann gewinnt die geringste Rauigkeit oberhalb 900 Hz.
+- **Weiter:** Nur der Gewinner bekommt einen Audio-PR (aus seinem Kandidaten-Branch).
+
+Was die Messung nicht kann: Melodie, Groove und Spass hoeren. Sie findet den Take mit den
+saubersten Hoehen, nicht den schoensten.
+
 ## Mehrere Stuecke je Rolle
 
 **Eine Rolle ist kein Dateiname.** Sie kann von mehreren Stuecken erfuellt werden, und seit

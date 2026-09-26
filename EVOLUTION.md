@@ -664,6 +664,29 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Musik: Best-of-N statt eines einzigen Takes
+
+**Anlass:** Die Messung der 28 neu erzeugten Takes nach #243 zeigte im Mittel keine glatteren
+Hoehen: 13 von 26 massen rauer als ihre Vorgaenger, andere deutlich glatter (99 Pixels -19 %,
+Paper Bridges -37 %). Die Streuung von Seed zu Seed ist groesser als die Wirkung des Prompts.
+Der Nutzer hat die Variante "automatisch" freigegeben, samt der dafuer noetigen
+Workflow-Aenderung.
+
+**Geaendert:**
+- `generate_music.py --seed`: ueberschreibt nur den Seed (8/1 und Prompt bleiben), vermerkt
+  `seed_source` in den Metadaten.
+- `generate-music.yml`: optionale Eingaben `seed` und `candidate`. Ein Kandidat wird auf
+  `candidates/...` gepusht, ohne PR; ein ueberschriebener Seed wird im selben Commit ins Manifest
+  geschrieben.
+- `tools/music/best_take.py` (Regel, ohne Abhaengigkeiten, 6 Tests) und
+  `harmony_report.py --pick`.
+
+**Nicht geaendert:** 8/1, keine bezahlte API, keine zweite Pipeline, `audio_polish.py`, Gate,
+Audiodateien. Jeder Gewinner kommt als eigener Audio-PR und ersetzt ein Stueck erst nach
+Einzelfreigabe.
+
+**Offen:** Die Messung hoert keine Melodie; ein glatter, aber langweiliger Take kann gewinnen.
+
 ### 2026-09-25 - Musik: schraege Hoehen harmonisch machen
 
 **Anlass:** Hoerbericht des Nutzers: auf Dauer "schraeg", hohe Klaviertoene "uebersteuert", "wie
