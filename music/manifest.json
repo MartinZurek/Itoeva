@@ -44,7 +44,7 @@
       "prompt_file": "music/prompts/main-day-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 25092031,
+      "seed": 26091005,
       "notes": "Musikalische Hauptidentitaet fuer den normalen Tagesablauf: instrumental, warm und zurueckhaltend. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Als Ogg/Vorbis erzeugt und seit PR #89 ausgeliefert. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt. Am 2026-09-21 gemeldet als 'vollkommen schraeg' und 'nicht gut': Prompt VOLLSTAENDIG neu geschrieben, mit klarer achttaktiger Frage-Antwort-Melodie, ohne die mehrdeutige '11th voicing'-Formulierung und mit neuer Seed. Die zugleich versuchten Inferenzwerte 50/5 waren fuer das post-trainierte small-music-Modell falsch und erzeugten in PR #195 verzerrtes Rauschen; seit 2026-09-23 gilt wieder der dokumentierte Modellmodus 8/1. Prompt und neuer Seed bleiben fuer die korrekte Neuerzeugung erhalten. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; Saettigung/Overdrive als Klangfarbe gestrichen. Seed unveraendert, damit der Unterschied am Prompt liegt. Am 2026-09-25 Seed 24092026 -> 25092031: der erste Take nach der Harmonie-Ueberarbeitung scheiterte am Loop-Gate (Stille am Ende)."
     },
     {
