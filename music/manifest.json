@@ -408,7 +408,7 @@
       "prompt_file": "music/prompts/arcade-02.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 11102026,
+      "seed": 26091056,
       "notes": "Zweites Stueck der Rolle arcade_background: Synthwave fuer die Spielhalle am Abend - analoger Synth-Lead, warme Flaechen, pulsierender Bass, Drumcomputer, 8-Bit-Doppelung als Pixel-Signatur. a-Moll, 100 BPM. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden); der Prompt nennt weder Spiel noch Komponist. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
     }
   ]
