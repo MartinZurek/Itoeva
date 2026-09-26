@@ -128,7 +128,7 @@
       "prompt_file": "music/prompts/sport-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 19092026,
+      "seed": 26091018,
       "notes": "Erster Track der bisher unbelegten Rolle sport_background. MusicResolver.candidates() setzt diese Rolle bereits ganz vorn ein, sobald am Sportplatz wirklich MOVE laeuft (siehe PlayMusicPlan.kt) - der Track wird also unmittelbar hoerbar, sobald er gemergt ist, ohne dass an der Auswahllogik etwas zu aendern waere. Dieselbe warme japanisch gepraegte Jazz-/Lo-Fi-Familie wie main_day_background, aber schneller und energischer (100 statt 82 BPM), mit gechopptem gefiltertem Rhodes und Blaeser-Antworten statt gehaltener Akkorde. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Am 2026-09-20 die Prompt-Formulierung 'gentle wow and flutter' vorsorglich entfernt (siehe home-evening-01 fuer den Befund) - dieses Stueck wurde nicht als betroffen gemeldet und deshalb noch NICHT neu erzeugt, die ausgelieferte Datei ist unveraendert. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; Saettigung/Overdrive als Klangfarbe gestrichen. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
