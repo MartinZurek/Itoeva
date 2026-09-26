@@ -394,7 +394,7 @@
       "prompt_file": "music/prompts/arcade-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 10102026,
+      "seed": 26091054,
       "notes": "Erstes Stueck der Rolle arcade_background (Spielhalle, Weltausbau Stufe 3): die Essenz klassischer Automaten-Chipmusik - Rechteck-Lead, Arpeggien, Dreieck-Bass, Rausch-Schlagzeug. C-Dur, 132 BPM, ohne Spielgeraeusche. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden); der Prompt nennt weder Spiel noch Komponist. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; Rechteck-Lead durch weichen, runden Pulse-Lead ersetzt, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
