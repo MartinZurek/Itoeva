@@ -320,4 +320,62 @@ class PlayAmbientActivityTest {
         }
         return wiederholungen
     }
+
+    // ---- Der Bewegungsdrang (2026-09-26) ------------------------------------------------------
+
+    /** Gleich nach dem Sport kein Drang; danach waechst er stetig bis zur Obergrenze. */
+    @Test
+    fun `der Bewegungsdrang waechst mit der stillen Zeit`() {
+        assertEquals(0, PlayAmbientActivity.movementUrge(null, false))
+        assertEquals(0, PlayAmbientActivity.movementUrge(10, false))
+        assertEquals(0, PlayAmbientActivity.movementUrge(59, false))
+        assertEquals(1, PlayAmbientActivity.movementUrge(60, false))
+        assertEquals(2, PlayAmbientActivity.movementUrge(75, false))
+        assertEquals(PlayAmbientActivity.MAX_MOVEMENT_URGE, PlayAmbientActivity.movementUrge(600, false))
+        // Wer Bewegung mag, wird frueher unruhig.
+        assertEquals(0, PlayAmbientActivity.movementUrge(29, true))
+        assertEquals(1, PlayAmbientActivity.movementUrge(30, true))
+        assertTrue(PlayAmbientActivity.movementUrge(60, true) > PlayAmbientActivity.movementUrge(60, false))
+    }
+
+    /**
+     * **Ausgewogen:** Mit vollem Drang wird Sport deutlich haeufiger, aber nie zur Regel - die
+     * Figur soll motivieren, nicht nur noch Sport machen.
+     */
+    @Test
+    fun `voller Drang macht Sport haeufiger, aber nicht zur Regel`() {
+        fun anteil(urge: Int): Double {
+            val random = Random(42)
+            val n = 4000
+            val move = (1..n).count {
+                PlayAmbientActivity.nextTopic(
+                    phase = PlayAmbientActivity.DayPhase.MIDDAY,
+                    movementUrge = urge,
+                    random = random
+                ) == AnimationType.MOVE
+            }
+            return move.toDouble() / n
+        }
+        val ohne = anteil(0)
+        val voll = anteil(PlayAmbientActivity.MAX_MOVEMENT_URGE)
+        assertTrue("ohne Drang $ohne", ohne in 0.12..0.26)
+        assertTrue("voller Drang $voll hebt kaum", voll > ohne * 1.8)
+        assertTrue("voller Drang $voll macht nur noch Sport", voll < 0.5)
+    }
+
+    /** Nachts bleibt es beim Schlaf - der Drang fuehrt kein Thema ein. */
+    @Test
+    fun `nachts weckt der Bewegungsdrang niemanden`() {
+        val random = Random(7)
+        repeat(500) {
+            assertEquals(
+                AnimationType.SLEEP,
+                PlayAmbientActivity.nextTopic(
+                    phase = PlayAmbientActivity.DayPhase.NIGHT,
+                    movementUrge = PlayAmbientActivity.MAX_MOVEMENT_URGE,
+                    random = random
+                )
+            )
+        }
+    }
 }
