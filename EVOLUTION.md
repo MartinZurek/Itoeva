@@ -664,6 +664,56 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Avatar-Waechter: die Figur bleibt im Spielmodus sichtbar, hell und in Bewegung
+
+**Anlass:** Gemeldet vom Nutzer: Im Spielmodus wurde der Avatar teils dunkel, blieb reglos stehen
+oder lief nach einer auf ihn gezogenen Erinnerung aus dem Bild, danach war niemand mehr zu sehen.
+Nur Verlassen und Wiederbetreten des Spielmodus half. In einem durchlaufenden Stream gibt es
+diesen Ausweg nicht.
+
+**Befund (`FACT`, aus dem Code):** Drei Stellen in `DockScreen` mit derselben Form - ein Ablauf
+veraendert die Figur voruebergehend und wird abgebrochen (meist ueber den Schluessel der
+Play-Schleife, wenn eine Erinnerung eintrifft), bevor er sie zuruecksetzt:
+- `moveToPlace`: Abbruch im Tuerdurchgang liess `avatarHidden`/`avatarDim` stehen - unsichtbar
+  bzw. abgedunkelt bis zum naechsten Raumwechsel; die offene Erinnerung liess sich auf niemanden
+  mehr ziehen.
+- Play-Schleife: Abbruch mitten in FLOURISH/FIDGET/Gang/Act liess die Ruhe-Schleife aus - die
+  Figur stand bis zur naechsten Regung starr da, bei offener Erinnerung minutenlang.
+- `feedAvatarNow`: Die Raketen-Reaktion fliegt gewollt 1,6 Bildhoehen ueber den oberen Rand. Im
+  Dock verschwindet die Figur danach ohnehin, im Spielmodus blieb sie dort oben stehen.
+
+**Geaendert (Game Loop, Reminder-Antwort):**
+- `moveToPlace` in try/finally; im Abbruchfall sofort voll sichtbar (`NonCancellable`-`snapTo`).
+- Die Play-Schleife startet im finally die Ruhe-Schleife neu, wenn keine laeuft.
+- Nach jeder Fuetter-Reaktion steht die Figur im Spielmodus wieder auf dem Boden an ihrer
+  Ausgangsstelle; die Reaktion startet vom aktuellen statt vom vor dem Datenbankgang
+  eingefangenen Stand. Die Reminder-SEMANTIK (was gefuettert, verbucht, abgelegt wird) ist
+  unveraendert.
+- Neu `matrix/AvatarWatchdog.kt` (rein) plus ein Takt in `DockScreen`: alle 1,5 s wird geprueft,
+  ob die Figur fehlt, ausgeblendet, abgedunkelt, ausserhalb des Bildes oder erstarrt ist. Was bei
+  zwei Pruefungen hintereinander besteht, wird repariert und als `Avatar-Waechter repariert: ...`
+  geloggt. Gewollte Zustaende (Tuerdurchgang, Fuetter-Reaktion, Gang/Hinsetzen, Tagesablauf,
+  Besuch, Gruppenspiel, Traum) sind ausgenommen.
+
+**Verworfen:** Nur den Waechter bauen - er haette die Symptome nach drei Sekunden behoben, die
+Ursachen aber stehen lassen und jeden Stream-Zuschauer das Flackern sehen lassen. Umgekehrt nur
+die drei Stellen reparieren - jede kuenftige Abbruchstelle haette dasselbe wieder ausgeloest.
+
+**Migration:** keine; kein Datenmodell, keine Preference, kein oeffentlicher Text.
+
+**Ruecksetzweg:** Revert des Commits. Ohne Waechter und try/finally gilt wieder das alte
+Verhalten inklusive der gemeldeten Fehler; gespeicherte Staende sind nicht betroffen.
+
+- **Tests (`TESTED BEHAVIOR`):** `bash tools/reaction-preview/tests.sh` - 679 Tests gruen, davon
+  18 neu in `AvatarWatchdogTest` (Raketen-Endpunkt, Tuerdurchgang, Schlaf im Ablauf,
+  Entprellung, Rueckkehrstelle). DockScreen-Anbindung nur ueber den CI-Build geprueft.
+- **Ungeprueft (`UNVERIFIED`):** Am Geraet - Erinnerung mitten im Raumwechsel, Raketen-Erinnerung
+  im Spielmodus, und ob der Waechter im Stream-Messlauf (NT-058) je anschlaegt. Taucht die
+  Logzeile dort auf, gibt es eine weitere, unbekannte Ursache.
+- **Naechster Schritt:** Beim Stream-Messlauf die Logzeile beobachten; neue gewollte Zustaende,
+  in denen die Figur unsichtbar, dunkel, ausserhalb oder lange reglos ist, dem Waechter als
+  Ausnahme mitteilen.
+
 ### 2026-09-26 - Decision Policy: ein kleines lokales Netz waehlt zwischen erlaubten Ablaeufen
 
 **Anlass:** Auftrag, das Living-Agent-System um eine kleine lokale Decision Policy zu erweitern -
