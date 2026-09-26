@@ -30,7 +30,7 @@
       "prompt_file": "music/prompts/home-evening-02.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 22092026,
+      "seed": 26091003,
       "notes": "Zweite Variante der Rolle home_evening_background, nicht deren Ersatz - siehe main-day-02 fuer dasselbe Muster. Gemeldet: Abends wurde kaum Variation bemerkt, weil diese Rolle bis dahin nur EIN Stueck kannte. Gleiche warme, japanisch gefaerbte Lo-Fi-Familie wie home-evening-01, aber sparsamer und naechtlicher: Glockenspiel/Music-Box-Melodie statt Rhodes im Vordergrund, Bass nur auf ausgewaehlten Schlaegen, kaum gespieltes Schlagzeug. Von Anfang an ohne die Tonhoehen-Instabilitaets-Formulierung erzeugt (PR #187). Der danach versuchte Wert 32/4 beruhte auf derselben falschen Annahme wie die spaeteren 50/5-Laeufe; seit 2026-09-23 gilt auch hier der dokumentierte post-trainierte Modellmodus 8/1. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; glockenartiges Leitinstrument durch Vibraphon/Marimba im mittleren Register ersetzt; Saettigung/Overdrive als Klangfarbe gestrichen. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
