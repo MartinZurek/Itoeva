@@ -664,6 +664,28 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Musik-Release: 28 freigegebene Stuecke im Spiel, Engine mit Plattenkiste
+
+**Anlass:** Nach dem A/B-Hoertest (A = bisherige, B = neue Fassung in der Musik-Bibliothek des
+Hoertest-Pakets) hat der Nutzer alle 21 B-Fassungen und die 7 unveraendert gebliebenen Stuecke
+fuer das Spiel freigegeben, mit dem Auftrag, dass die Musik-Engine sie "intelligent" einsetzt.
+
+**Geaendert:**
+- 28 Audiodateien byte-gleich aus dem freigegebenen Hoertest-Stand, samt
+  `music/generated/*.json`, den Gewinner-Seeds im Manifest (je ein Vermerk in `notes`) und neu
+  gemessener `MusicLoudnessTable`. Ein gemeinsamer PR statt 28 einzelner: Jeder Audio-PR schreibt
+  seinen Seed in `music/manifest.json`, nacheinander gemergt haetten sie sich dort gegenseitig
+  in Konflikt gebracht. Die Einzel-PRs sind damit abgeloest.
+- `PlayMusicRotation.pickVariant` waehlt nach Verlauf statt rein zufaellig: noch nie gehoerte
+  Stuecke zuerst, sonst das am laengsten zurueckliegende. Morgen, Tag und Stadt haben jetzt je
+  drei Stuecke, der Sport vier - reiner Zufall pendelte dort leicht zwischen zweien, und wer an
+  einen Ort zurueckkam, hoerte oft wieder dasselbe. `PlayMusic` fuehrt den Verlauf je Rolle und
+  Variante im Prozess, ueber `stop()` hinweg. Ohne Verlauf verhaelt sich die Wahl wie vorher.
+  4 neue Tests.
+
+**Nicht geaendert:** Rollen, Rangfolge im `MusicResolver`, Rotationsfenster (3-5 min), Naht,
+Uebergaenge, Charakterthemen (feste Variante), 8/1, `audio_polish.py`. Gloops Thema bleibt.
+
 ### 2026-09-26 - Musik: Best-of-N statt eines einzigen Takes
 
 **Anlass:** Die Messung der 28 neu erzeugten Takes nach #243 zeigte im Mittel keine glatteren

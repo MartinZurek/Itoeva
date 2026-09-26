@@ -131,6 +131,18 @@ object PlayMusic {
     /** Seit wann die aktuelle ROLLE laeuft. Ein Variantenwechsel setzt das bewusst NICHT zurueck. */
     private var roleStartedAtMs: Long = 0L
 
+    /**
+     * Wann jedes Stueck zuletzt begann - die Plattenkiste, aus der [PlayMusicRotation.pickVariant]
+     * das am laengsten nicht gehoerte waehlt. Ueberlebt [stop] absichtlich: Wer den Spielmodus
+     * verlaesst und zurueckkommt, soll nicht wieder mit demselben Stueck empfangen werden. Lebt
+     * nur im Prozess - nach einem Neustart der App beginnt die Kiste von vorn, und das ist
+     * harmlos.
+     */
+    private val lastHeardAt = HashMap<Pair<MusicRole, Int>, Long>()
+
+    private fun heardIn(role: MusicRole): Map<Int, Long> =
+        lastHeardAt.filterKeys { it.first == role }.mapKeys { it.key.second }
+
     /** Ein Rollenwechsel, der noch auf Bestaetigung wartet - siehe [PlayMusicTransition.settle]. */
     private var pendingRole: PlayMusicTransition.Pending? = null
 
@@ -319,7 +331,7 @@ object PlayMusic {
             if (seamTask != null || varianten.size < 2) return null
             val gelaufen = System.currentTimeMillis() - roleStartedAtMs
             if (!PlayMusicRotation.rotationDue(gelaufen, varianten.size)) return null
-            val naechste = PlayMusicRotation.pickVariant(varianten, playingVariant) ?: return null
+            val naechste = PlayMusicRotation.pickVariant(varianten, playingVariant, heardIn(wanted)) ?: return null
             if (naechste == playingVariant) return null
             switchTo(context, wanted, naechste, rollenwechsel = false)
             return null
@@ -333,7 +345,9 @@ object PlayMusic {
         )
         pendingRole = settle.pending
         if (!settle.switchNow) return settle.recheckInMs
-        val start = fest ?: PlayMusicRotation.pickVariant(varianten, current = null) ?: return null
+        val start = fest
+            ?: PlayMusicRotation.pickVariant(varianten, current = null, lastHeardAt = heardIn(wanted))
+            ?: return null
         switchTo(context, wanted, start, rollenwechsel = true)
         return null
     }
@@ -383,6 +397,7 @@ object PlayMusic {
             playerVolume = 0f
             playingRole = role
             playingVariant = variant
+            lastHeardAt[role to variant] = System.currentTimeMillis()
             // Nur beim ROLLENwechsel neu stellen - siehe die Begruendung in [apply].
             if (rollenwechsel) roleStartedAtMs = System.currentTimeMillis()
             scheduleSeam(context, role, variant, next)
@@ -458,7 +473,7 @@ object PlayMusic {
             fixedVariant = if (role == MusicRole.CHARACTER_THEME) variant else null,
             rotate = PlayMusicRotation.rotationDue(gelaufenBeiNaht, varianten.size),
             variantFadeMs = PlayMusicTransition.fadeMs(role, role, variantOnly = true),
-            pickOther = { verfuegbar, jetzt -> PlayMusicRotation.pickVariant(verfuegbar, jetzt) }
+            pickOther = { verfuegbar, jetzt -> PlayMusicRotation.pickVariant(verfuegbar, jetzt, heardIn(role)) }
         ) ?: return
         val appContext = context.applicationContext
         val task = Runnable {
