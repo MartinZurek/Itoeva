@@ -268,7 +268,7 @@
       "prompt_file": "music/prompts/theme-fennec.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 12092026,
+      "seed": 26091037,
       "notes": "Persoenliches Stueck des FENNEC, Variante 04 der Rolle character_theme_background. FENNEC hat signatureTopic DRINK - der ruhige, verlaessliche Beschuetzer; musikalisch deshalb das waermste und sozialste der sechs Themen: mittleres Tempo, gebuerstetes Schlagzeug, weiches Rhodes und eine kleine, gespraechige Besetzung. Die Melodie ist eigenstaendig und ausdruecklich singbar angelegt: Fernziel ist, die sechs Stuecke je Charakter live zu singen. Trotzdem instrumental erzeugt, kein Gesang in der Datei. Beschreibt Eigenschaften und Instrumente, keinen konkreten Kuenstler und kein konkretes Stueck. Anders als bei main_day_background rotiert diese Variante nicht - sie gehoert fest diesem Wesen. Am 2026-09-19 qualitativ nachgezogen: das Rhodes bekam denselben sanften Tiefpassfilter wie die neuen Rollen-Tracks, Charakter und Instrumentierung bleiben unveraendert. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
