@@ -16,7 +16,7 @@
       "prompt_file": "music/prompts/home-evening-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 23092026,
+      "seed": 26091001,
       "notes": "First Itoeva identity track: warm, unobtrusive, loop-friendly jazz/lo-fi background for calm home and evening scenes. Generated with Stable Audio 3 Small Music open weights; no Stability API credits. Shipped as Ogg/Vorbis: ~1 MB instead of ~16 MB, and Opus is ruled out by minSdk 26. Seed changed from 9042026 am 2026-09-19 (Stille am Ende ueber dem Gate-Limit). Am 2026-09-20 der Prompt von 'subtle tape and vinyl texture' auf ausdruecklich pitch-stabil umgestellt (wow-and-flutter-Befund). Am 2026-09-21, nach Hoertest ueber die neue Musik-Bibliothek: Gemeldet als 'mega langweilig und blechig'. Der Prompt bat weiterhin um 'gently low-pass filtered' Rhodes-Flaechenklaenge ohne festen melodischen Kern ('small organic variations' statt einer klaren Melodie) bei niedrigem Tempo (78 BPM). Prompt VOLLSTAENDIG neu geschrieben statt nachgebessert: klare achttaktige singbare Melodie mit Frage-Antwort-Struktur, waermeres Leitinstrument, Tempo 86 BPM und durchgehend hoerbarer Groove. Die zugleich versuchten Inferenzwerte 50/5 waren fuer das post-trainierte small-music-Modell falsch und erzeugten in PR #194 verzerrtes Rauschen; seit 2026-09-23 gilt wieder der dokumentierte Modellmodus 8/1. Prompt und neuer Seed bleiben fuer die korrekte Neuerzeugung erhalten. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; Saettigung/Overdrive als Klangfarbe gestrichen. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
