@@ -757,6 +757,9 @@
          nennen laesst statt auf einen internen Ressourcennamen zu zeigen. Siehe MusicCatalog.kt. -->
     <string name="music_library_title">Music library</string>
     <string name="music_library_empty">No track shipped for this role yet.</string>
+    <string name="music_library_take_hint">A = previous take, B = the new pick (best of 3)</string>
+    <string name="music_library_take_old">A · old</string>
+    <string name="music_library_take_new">B · new</string>
     <string name="music_role_morning">Early morning</string>
     <string name="music_role_main_day">The normal day</string>
     <string name="music_role_city">Out in town - street, city and shop</string>

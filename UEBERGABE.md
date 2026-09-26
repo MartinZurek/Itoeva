@@ -113,6 +113,12 @@ nimmt sie ohne Codeaenderung in Rotation bzw. als Thema; neu ist je Stueck nur d
 (`MusicCatalog.TITLES` + `strings.xml` DE/EN). Nach `main` geht Audio weiterhin erst nach dem
 Hoertest.
 
+**A/B im Hoertest-Paket (26.09.):** Liegt `itoeva_<name>_alt.ogg` neben einem Stueck, zeigt die
+Musik-Bibliothek zwei Knoepfe - A die bisherige, B die neue Fassung. Die `_alt`-Dateien gibt es
+nur auf dem Hoertest-Branch, nie auf `main`; die Welt findet sie nicht (`PlayMusic` sucht genau
+`itoeva_<rolle>_NN`). Nach Martins Urteil je Stueck die `_alt`-Datei loeschen und
+`loudness_table.py` neu laufen lassen.
+
 **Musik-Engine, Stand 23.09. nachts:** Gaeste spielen beim Hereinkommen ihr Thema kurz an
 (`PlayMusicCue`), Rollenwechsel bestaetigen sich 10 s (`PlayMusicTransition`). Engine und neuer
 Starlet-Prompt sind auf `main`; die ungehoerten Audiodateien bleiben im Hoertest-Paket (PR #213).
