@@ -212,7 +212,7 @@
       "prompt_file": "music/prompts/morning-03.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 28092026,
+      "seed": 26091030,
       "notes": "Dritte Variante der Rolle morning_background, gewuenscht vom Nutzer als Hommage im Stil von main-day-03: das Gefuehl eines grossen, edlen Filmthemas mit japanischer Faerbung - stiller Stolz, tiefe Ruhe, ein wenig Trauer um etwas Vergehendes, darunter aufsteigende Hoffnung. Ausdruecklich KEINE Nachbildung: Melodie, Akkordfolge (d-B-g-A), Tempo (70 BPM) und Besetzung (Cello, Bambusfloete, Taiko, Koto, Streicher) sind eigene Vorgaben; der Prompt nennt weder Film, Komponist noch Stueck. Die Pixelwelt steckt wie bei main-day-03 in einer weichen 8-Bit-Stimme, die jede zweite Runde die Melodie verdoppelt. Morgen, weil der Sonnenaufgang das Bild dieses Gefuehls ist. Aufbau nach dem Hootlet-Pilotmuster: Tempo, Puls und Motiv zuerst, kein Ein- und kein Ausblenden. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
