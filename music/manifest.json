@@ -366,7 +366,7 @@
       "prompt_file": "music/prompts/fishing-01.txt",
       "steps": 8,
       "cfg_scale": 1,
-      "seed": 8102026,
+      "seed": 26091049,
       "notes": "Erstes Stueck der Rolle fishing_background (waehrend das Wesen angelt): faul, sonnig, geduldig - Lap-Slide-Gitarre, Ukulele, Kontrabass, Besen. G-Dur, 76 BPM. Ohne Pfeifen und ohne Wassergeraeusche. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden), weiche 8-Bit-Stimme als Pixel-Signatur wie bei den Hommagen; der Prompt nennt weder Kuenstler noch Werk. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
     },
     {
