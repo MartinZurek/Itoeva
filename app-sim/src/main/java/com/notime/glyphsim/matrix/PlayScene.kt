@@ -137,7 +137,17 @@ object PlayScene {
          * mit Spielautomaten und Neonschild. Bewusst hinten angehaengt: Gespeicherte Orte
          * bleiben gueltig, und alle bisherigen Ordnungszahlen aendern sich nicht.
          */
-        ARCADE
+        ARCADE,
+
+        /**
+         * **Der Weltausbau vom 26.09.2026** (siehe [PlayWorld]): Dschungel, Gebirge, Sumpf, Ebene
+         * und Strand. Wie die Spielhalle hinten angehaengt, damit gespeicherte Orte gueltig
+         * bleiben.
+         */
+        JUNGLE, MOUNTAINS, SWAMP, PLAINS, BEACH,
+
+        /** Das Cafe (Weltausbau Stufe 4) - ein Innenraum in der Stadt, man trifft sich dort. */
+        CAFE
     }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
@@ -154,7 +164,8 @@ object PlayScene {
      */
     fun isOutdoors(place: Place): Boolean =
         place == Place.PARK || place == Place.SPORT || place == Place.POND || place == Place.STREET ||
-            place == Place.FOREST || place == Place.MEADOW || place == Place.CITY
+            place == Place.FOREST || place == Place.MEADOW || place == Place.CITY ||
+            place in PlayWorld.NATURE
 
     /**
      * Ob an diesem Ort ueberhaupt jemand vorbeikommen kann (siehe runVisit in DockScreen).
@@ -174,8 +185,10 @@ object PlayScene {
         // wirkt eher beunruhigend als belebt.
         // Die STADT gehoert dazu wie die Strasse - ein Platz, an dem Leute ohnehin unterwegs sind.
         // Die SPIELHALLE erst recht: Man geht dorthin, um unter Leuten zu sein.
+        // Am STRAND ist man unter Leuten wie im Park.
         Place.PARK, Place.SPORT, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY,
-        Place.ARCADE -> true
+        // Im CAFE trifft man sich - dafuer geht man hin.
+        Place.ARCADE, Place.BEACH, Place.CAFE -> true
         // Die eigene Ecke ([Place.CRAFT]) ausdruecklich NICHT: Wer dort sitzt, hat sich
         // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
         //
@@ -184,6 +197,9 @@ object PlayScene {
         // Angelplatz zum Ausspannen, keine Begegnungsstaette.
         Place.BEDROOM, Place.BATH, Place.DESK, Place.KITCHEN, Place.NOOK, Place.CRAFT,
         Place.FOREST, Place.MEADOW, Place.POND -> false
+        // Dschungel, Gebirge, Sumpf und Ebene sind Wildnis wie der Wald - dorthin geht man, um
+        // allein zu sein.
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS -> false
     }
 
     /**
@@ -529,7 +545,9 @@ object PlayScene {
         Place.POND -> 0.24f
         Place.SHOP -> 0.34f
         Place.BATH -> 0.42f
-        Place.WORK -> 0.20f
+        // Eine Zelle weiter rechts als frueher (0,20): Seit der Schwanz hinten, also links haengt
+        // (2026-09-26), ragte er beim PUFFLING in den Schreibtisch - 31 % der Figur im Moebel.
+        Place.WORK -> 0.22f
         // Auf der Strasse weit LINKS: Sie ist ein Weg, kein Aufenthaltsort - wer sie betritt, ist
         // unterwegs, und ein Anfang am Rand macht daraus eine Strecke statt einer Buehne.
         Place.STREET -> 0.08f
@@ -541,6 +559,8 @@ object PlayScene {
         // Zwischen den beiden Automaten - in Ruhe steht die Figur und sieht sich um. Bei 0,46
         // ragte sie in der Vorschau in den zweiten Automaten hinein.
         Place.ARCADE -> 0.36f
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAFE ->
+            PlayWorld.avatarAnchorX(place) ?: 0.1f
     }
 
     /**
@@ -626,13 +646,31 @@ object PlayScene {
             }
         }
 
+        // **Der ferne Hintergrund zuerst** (siehe [PlayWorld.background]): Berge, Blaetterdach,
+        // Meer, Skyline, im Laden die Regalwand - alles, wovor etwas steht.
+        val fitted = fitting(placementsFor(place, species, acquisitions), widthCells, floorY)
+        val foregroundSpans = fitted.filterNot { it.behind }.map { placement ->
+            val ox = originX(placement, widthCells)
+            (ox until ox + placement.prop.width) to originY(placement, floorY)
+        }
+        cells += PlayWorld.background(place, phase, widthCells, floorY, dayPhase, foregroundSpans)
         // VOR den Requisiten: Beiwerk am Boden (Gras) liegt in derselben Zeile, in der die
         // Requisiten aufsetzen. Zeichnete man es danach, stanzte ein Grasbueschel dem Baumstamm
         // und dem Strauch eine dunklere Kerbe in die Silhouette - spaeter gezeichnete Zellen
         // ueberschreiben frueher gezeichnete.
         cells += groundDetail(place, widthCells, floorY, species)
 
-        for (placement in fitting(placementsFor(place, species, acquisitions), widthCells, floorY)) {
+        // **Erst alles, was hinten steht, dann die Leute, dann der Vordergrund.** Vorher wurde
+        // in der Reihenfolge der Einrichtung gezeichnet - und die stellt Stationen nach vorn.
+        // Die Hausfassaden der Stadt kamen dadurch NACH Bank und Briefkasten und uebermalten
+        // sie: Die Bank der Stadt war im Bild gar nicht zu sehen. Jetzt liegt Hinten hinten.
+        val ordered = fitted.filter { it.behind } + fitted.filterNot { it.behind }
+        var midgroundDrawn = false
+        for (placement in ordered) {
+            if (!placement.behind && !midgroundDrawn) {
+                cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted)
+                midgroundDrawn = true
+            }
             val originX = originX(placement, widthCells)
             val originY = originY(placement, floorY)
             // Oberkanten heller als der Rest der Form - **der Unterschied zwischen einem Moebel
@@ -675,7 +713,9 @@ object PlayScene {
             }
         }
 
+        if (!midgroundDrawn) cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted)
         cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species, acquisitions)
+        cells += PlayWorld.ambient(place, phase, widthCells, floorY, dayPhase, fitted)
         cells += housePet(place, phase, widthCells, floorY)
         cells += weather(
             place, fitting(placementsFor(place, species, acquisitions), widthCells, floorY),
@@ -736,7 +776,7 @@ object PlayScene {
      * Eine Requisite in ihrem eigenen kleinen Raster ([width] x [height], y = 0 oben) - so
      * gezeichnet, dass die UNTERSTE Zeile auf dem Boden aufsetzt.
      */
-    private data class Prop(
+    internal data class Prop(
         val width: Int,
         val height: Int,
         val art: List<Pair<Int, Int>>,
@@ -803,7 +843,7 @@ object PlayScene {
      * 1 = ganz rechts). [liftCells] hebt sie vom Boden ab - nur fuers Fenster, das an der Wand
      * haengt statt auf dem Boden zu stehen.
      */
-    private data class Placement(
+    internal data class Placement(
         val prop: Prop,
         val anchorX: Float,
         val liftCells: Int = 0,
@@ -865,7 +905,7 @@ object PlayScene {
     /** Luft zwischen Tuerrahmen und dem naechsten Moebel - ohne sie stossen beide aneinander. */
     private const val DOOR_MARGIN = 2
 
-    private fun originX(placement: Placement, widthCells: Int): Int {
+    internal fun originX(placement: Placement, widthCells: Int): Int {
         // Die Einrichtung steht im ZIMMER, nicht auf dem ganzen Bild - siehe [roomWidth].
         val room = roomWidth(widthCells)
         val shift = (widthCells - room) / 2
@@ -879,7 +919,7 @@ object PlayScene {
         return x.coerceIn(0, (widthCells - placement.prop.width).coerceAtLeast(0))
     }
 
-    private fun originY(placement: Placement, floorY: Int): Int =
+    internal fun originY(placement: Placement, floorY: Int): Int =
         floorY - placement.prop.height - placement.liftCells
 
     /**
@@ -1221,6 +1261,11 @@ object PlayScene {
             Placement(LAMPPOST, anchorX = 0.74f, station = Station.LAMP),
             Placement(LAMPPOST, anchorX = 0.94f)
         )
+
+        // Die fuenf neuen Landschaften stehen in [PlayWorld].
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH ->
+            PlayWorld.furnishing(place).orEmpty()
+        Place.CAFE -> besideDoor(PlayWorld.furnishing(place).orEmpty())
         }
     }
 
@@ -1300,7 +1345,7 @@ object PlayScene {
         Place.CITY -> (0 until widthCells)
             .filter { it % 3 == 0 }
             .map { SceneCell(it, floorY, (STRUCTURE * 1.4f).roundToInt()) }
-        else -> emptyList()
+        else -> PlayWorld.groundDetail(place, widthCells, floorY).orEmpty()
     }
 
     /**
@@ -1508,12 +1553,12 @@ object PlayScene {
             placement.prop.art.map { (px, py) -> (ox + px) to (oy + py) }
         }
 
-    private fun rect(x0: Int, y0: Int, x1: Int, y1: Int): List<Pair<Int, Int>> =
+    internal fun rect(x0: Int, y0: Int, x1: Int, y1: Int): List<Pair<Int, Int>> =
         (y0..y1).flatMap { y -> (x0..x1).map { x -> x to y } }
 
-    private fun hLine(x0: Int, x1: Int, y: Int): List<Pair<Int, Int>> = (x0..x1).map { it to y }
+    internal fun hLine(x0: Int, x1: Int, y: Int): List<Pair<Int, Int>> = (x0..x1).map { it to y }
 
-    private fun vLine(x: Int, y0: Int, y1: Int): List<Pair<Int, Int>> = (y0..y1).map { x to it }
+    internal fun vLine(x: Int, y0: Int, y1: Int): List<Pair<Int, Int>> = (y0..y1).map { x to it }
 
     /**
      * Bett: hohes Kopfteil, aufgeschuettetes Kissen, zwei Zeilen Matratze, Fuesse.
@@ -3462,7 +3507,7 @@ object PlayScene {
      * Grundtakt ist deshalb fein (siehe SCENE_PHASE_TICK_MS in ui/DockScreen.kt), und jedes
      * Detail nimmt sich daraus sein eigenes Vielfaches.
      */
-    private fun beat(phase: Int, everyTicks: Int): Int = phase / everyTicks.coerceAtLeast(1)
+    internal fun beat(phase: Int, everyTicks: Int): Int = phase / everyTicks.coerceAtLeast(1)
 
     /**
      * Lichtschein auf dem Boden unter einer Lichtquelle.
@@ -3866,6 +3911,10 @@ object PlayScene {
             // Schalter statt zu einer Geste ohne Folgen.
             Place.NOOK -> standingLights(placements, widthCells, floorY, phase, lampOn)
 
+            // Das Cafe: die Haengelampen brennen immer (niemand schaltet sie hier), der Dampf
+            // kommt aus PlayWorld.ambient.
+            Place.CAFE -> standingLights(placements, widthCells, floorY, phase, lampOn = true)
+
             // Die eigene Ecke: ihre Leuchte, dazu das Glutbett der Esse - die einzige Werkstatt,
             // die selbst leuchtet. Gezeichnet wird, was die Requisite an leuchtender Flaeche
             // mitbringt; wer keine hat, bekommt hier auch keine.
@@ -3888,11 +3937,14 @@ object PlayScene {
             // Alle fuenf Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
             // WETTER, nicht zum Ort. Getrennt gepflegte Himmel waeren die sicherste Art, dass
             // ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
-            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND -> {
+            Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND,
+            Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 // Was hinter einem Haus steht, sieht man nicht - siehe [facadeMask]. Einmal
-                // berechnet: Sternbild UND Sternschnuppe brauchen dieselbe Maske.
-                val verdeckt = facadeMask(placements, widthCells, floorY)
+                // berechnet: Sternbild UND Sternschnuppe brauchen dieselbe Maske. Dazu kommt, was
+                // der ferne Hintergrund verdeckt (Berge, Blaetterdach, Skyline).
+                val verdeckt = facadeMask(placements, widthCells, floorY) +
+                    PlayWorld.skyMask(place, widthCells, floorY)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
                     // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:
                     // ein Sternbild aus sieben Sternen, jeder auf
@@ -3940,10 +3992,13 @@ object PlayScene {
                     // aus wie ein Gegenstand, der vorbeigeschoben wird.
                     val slowDrift = beat(phase, CLOUD_TICKS * 2) % (widthCells + CLOUD_WIDTH) - CLOUD_WIDTH
                     val highY = (skyY - 6).coerceAtLeast(0)
-                    hLine(0, 5, skyY).map { (dx, y) -> SceneCell(drift + dx, y, FURNITURE) } +
+                    // Wolken ziehen hinter Bergen und Hochhaeusern vorbei; unter dem geschlossenen
+                    // Blaetterdach des Dschungels sieht man keine.
+                    (hLine(0, 5, skyY).map { (dx, y) -> SceneCell(drift + dx, y, FURNITURE) } +
                         hLine(1, 4, skyY - 1).map { (dx, y) -> SceneCell(drift + dx, y, FURNITURE) } +
                         hLine(0, 3, highY).map { (dx, y) -> SceneCell(slowDrift + dx, y, BACKDROP) } +
-                        hLine(1, 2, highY - 1).map { (dx, y) -> SceneCell(slowDrift + dx, y, BACKDROP) }
+                        hLine(1, 2, highY - 1).map { (dx, y) -> SceneCell(slowDrift + dx, y, BACKDROP) })
+                        .filterNot { place == Place.JUNGLE || (it.x to it.y) in verdeckt }
                 } + parkBird(phase, widthCells, floorY, dayPhase) +
                     // Auch die Sternschnuppe zieht HINTER den Haeusern durch, nicht davor.
                     shootingStar(phase, widthCells, floorY, dayPhase)

@@ -45,3 +45,8 @@ tools/reaction-preview/.work/
 
 # Python-Bytecode der Musik-Werkzeuge - Ergebnis, keine Quelle.
 __pycache__/
+
+# Datensatz und Zwischenstaende des Policy-Trainings (`tools/decision-policy/train.sh`).
+# Jederzeit aus festem Startwert neu erzeugbar und dafuer zu gross; eingecheckt werden nur das
+# Modell unter app-sim/src/main/assets/ und der Trainingsbericht.
+tools/decision-policy/.work/

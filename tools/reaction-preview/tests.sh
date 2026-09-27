@@ -39,6 +39,7 @@ SIM="$ROOT/app-sim/src/main/java/com/notime/glyphsim/matrix"
 SK="$ROOT/app-sim/src/main/java/com/notime/glyphsim/skilltree"
 LIV="$ROOT/app-sim/src/main/java/com/notime/glyphsim/living"
 STREAM="$ROOT/app-sim/src/main/java/com/notime/glyphsim/stream"
+DEC="$ROOT/app-sim/src/main/java/com/notime/glyphsim/decision"
 TEST="$ROOT/app-sim/src/test/java/com/notime/glyphsim"
 
 # R-Platzhalter wie bei den Nachbarskripten: gelesen statt gepflegt.
@@ -66,11 +67,11 @@ SRCS=(
   "$SIM/AvatarShading.kt" "$SIM/AvatarFacing.kt" "$SIM/AvatarAccent.kt" "$SIM/AvatarPalette.kt" "$SIM/MatrixColors.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
-  "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt"
+  "$SIM/PlayScene.kt" "$SIM/PlayWorld.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt" "$SIM/PlayGroupGame.kt"
   "$SIM/LivingRuntimeAdapter.kt" "$SIM/LivingResidents.kt" "$SIM/LivingPopulation.kt"
   "$SIM/LivingPopulationLayout.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
-  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt"
+  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt" "$SIM/AvatarWatchdog.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Der reine Living-Agent-Kern (NT-063/NT-067) - kein Android, keine Uhr, kein Zufall.
@@ -99,6 +100,10 @@ SRCS=(
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayMusic.kt"
   # XP nach Wirkung (NT-072) - reine Zahlenarbeit, kein Android.
   "$ROOT/app-sim/src/main/java/com/notime/glyphsim/ui/PlayModeXp.kt"
+  # Die Decision Policy - reines Kotlin samt ONNX-Leser, deshalb hier und nicht erst in der CI.
+  "$DEC/DecisionPolicy.kt" "$DEC/DecisionHistory.kt" "$DEC/DecisionCandidates.kt"
+  "$DEC/DecisionFeatures.kt" "$DEC/ExistingUtilityPolicy.kt" "$DEC/OnnxModel.kt"
+  "$DEC/OnnxDecisionPolicy.kt"
 )
 
 TEST_SRCS=(
@@ -137,6 +142,8 @@ TEST_SRCS=(
   "$TEST/matrix/ReminderActionsTest.kt"
   "$TEST/matrix/OutdoorsAndDreamsTest.kt"
   "$TEST/matrix/PlayVisitWindowTest.kt"
+  "$TEST/matrix/AvatarWatchdogTest.kt"
+  "$TEST/matrix/PlayWorldTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
   "$TEST/matrix/PlayAmbientActivityTest.kt"
@@ -149,7 +156,7 @@ TEST_SRCS=(
   # liefen bis dahin NUR in der CI. Genau diese Luecke hat in NT-078 schon einmal einen roten
   # Lauf erzeugt: Ein Test, der hier nicht uebersetzt wird, meldet eine Signaturaenderung erst
   # Minuten spaeter aus der CI.
-  "$TEST/matrix/PlayEffectsTest.kt"
+  "$TEST/matrix/PlayEffectsTest.kt" "$TEST/matrix/PlayGroupGameTest.kt"
   "$TEST/matrix/PlayInkTest.kt"
   "$TEST/matrix/ReactionFingerprintTest.kt"
   "$TEST/matrix/CreatureFrameSizeTest.kt"
@@ -169,6 +176,13 @@ TEST_SRCS=(
   "$TEST/data/LivingAgentStoreTest.kt"
   "$TEST/data/LivingMemoryContinuityTest.kt"
   "$TEST/settings/SettingsCatalogTest.kt"
+  # Die Decision Policy: Lehrer und Mehrtagessimulation sind Werkzeug (auch fuer
+  # tools/decision-policy), die Tests daneben pruefen Kandidaten, Merkmale, Modell und Rueckfall.
+  "$TEST/decision/DecisionTeacher.kt" "$TEST/decision/DecisionSimulation.kt"
+  "$TEST/decision/DecisionTestSupport.kt" "$TEST/decision/DecisionCandidatesTest.kt"
+  "$TEST/decision/DecisionCoverageTest.kt" "$TEST/decision/DecisionFeaturesTest.kt"
+  "$TEST/decision/OnnxDecisionPolicyTest.kt" "$TEST/decision/DecisionBehaviourTest.kt"
+  "$TEST/matrix/PlayRoutineDistributionTest.kt"
 )
 
 TEST_CLASSES=(
@@ -202,6 +216,8 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReminderActionsTest
   com.notime.glyphsim.matrix.OutdoorsAndDreamsTest
   com.notime.glyphsim.matrix.PlayVisitWindowTest
+  com.notime.glyphsim.matrix.AvatarWatchdogTest
+  com.notime.glyphsim.matrix.PlayWorldTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest
   com.notime.glyphsim.matrix.PlayAmbientActivityTest
@@ -211,6 +227,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.ReactionDwellTest
   com.notime.glyphsim.matrix.PlayMotifLegibilityTest
   com.notime.glyphsim.matrix.PlayEffectsTest
+  com.notime.glyphsim.matrix.PlayGroupGameTest
   com.notime.glyphsim.matrix.PlayInkTest
   com.notime.glyphsim.matrix.ReactionFingerprintTest
   com.notime.glyphsim.matrix.CreatureFrameSizeTest
@@ -230,6 +247,12 @@ TEST_CLASSES=(
   com.notime.glyphsim.data.LivingAgentStoreTest
   com.notime.glyphsim.data.LivingMemoryContinuityTest
   com.notime.glyphsim.settings.SettingsCatalogTest
+  com.notime.glyphsim.matrix.PlayRoutineDistributionTest
+  com.notime.glyphsim.decision.DecisionCandidatesTest
+  com.notime.glyphsim.decision.DecisionCoverageTest
+  com.notime.glyphsim.decision.DecisionFeaturesTest
+  com.notime.glyphsim.decision.OnnxDecisionPolicyTest
+  com.notime.glyphsim.decision.DecisionBehaviourTest
 )
 
 echo "Uebersetzen ..."
@@ -238,6 +261,11 @@ echo "Uebersetzen ..."
   "$HERE/src/MediaStubs.kt" "$HERE/src/AnimatorStubs.kt" \
   "$HERE/src/SettingsStoreStub.kt" "$HERE/src/LogStub.kt" \
   "$WORK"/gen/R_*.kt "${SRCS[@]}" "${TEST_SRCS[@]}"
+
+# Nur uebersetzen - fuer Werkzeuge, die auf diesen Klassen aufbauen (tools/decision-policy).
+if [ "${COMPILE_ONLY:-0}" = "1" ]; then
+  exit 0
+fi
 
 echo "Laufen lassen ..."
 # Aus :app-sim heraus, weil ReactionFingerprintTest seine Golden-Datei unter

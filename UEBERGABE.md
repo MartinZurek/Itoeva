@@ -1,10 +1,81 @@
-# Uebergabe: Stand am 23. September 2026
+# Uebergabe: Stand am 26. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht
 [`CLOUD_CODE_BRIEFING.md`](CLOUD_CODE_BRIEFING.md) (Produktvision) und nicht
 [`evolutions/BACKLOG.md`](evolutions/BACKLOG.md) (die Arbeitsliste), sondern sagt, **wo genau der
 Faden liegt** und **welche Fallen auf dem Weg dahin schon zugeschnappt sind**.
+
+## 0. Neu am 26.09.: Decision Policy (Branch `claude/itoeva-decision-policy-kwlk4h`)
+
+Ein kleines lokales Netz (ONNX, 21 KB, 4 641 Parameter) waehlt, WIE eine Absicht des Kerns sichtbar
+wird - zwischen allen Ablaeufen, die der Kern gerade zulaesst, samt Gruppenspiel und knapp
+unterlegenen Zielen. Alles Weitere steht in `tools/decision-policy/README.md`. Drei Dinge, die man
+wissen muss:
+
+- **Gueltigkeit steckt in `DecisionCandidates`, nicht im Modell.** Wer eine Regel einfuehrt
+  (Nachtruhe, Vorrang, Ausschluss), fuehrt sie dort ein - dann gilt sie auch fuer jedes kuenftige
+  Modell.
+- **Rueckfall = altes Verhalten.** `ExistingUtilityPolicy` ist mathematisch die alte Wuerfelkette
+  (`DecisionCandidatesTest` prueft das). Fehlt das Asset oder passt das Schema nicht, laeuft die App
+  wie vor der Policy.
+- **Neue Aktion = neuer Ablauf in `PlayRoutines.allFor`.** Sie wird automatisch Kandidat.
+  Aendert sich `DecisionFeatures` (Anzahl, Reihenfolge, Bedeutung), muss `SCHEMA_VERSION` steigen
+  und `bash tools/decision-policy/train.sh` laufen - sonst weist die App das alte Modell ab (und
+  faellt sauber zurueck).
+
+## 0b. Neu am 26.09.: Avatar-Waechter (Branch `claude/avatar-visibility-bugs-iqeyxn`)
+
+Gemeldet: Im Spielmodus wurde der Avatar dunkel, blieb stehen oder verschwand nach einer auf ihn
+gezogenen Erinnerung aus dem Bild; nur Verlassen und Wiederbetreten half. Drei Ursachen, alle in
+`DockScreen.kt`, alle von derselben Form - ein Ablauf veraendert die Figur voruebergehend und wird
+abgebrochen, bevor er sie zuruecksetzt:
+
+- `moveToPlace`: Abbruch mitten im Tuerdurchgang liess `avatarHidden`/`avatarDim` stehen
+  (unsichtbar bzw. dunkel). Jetzt try/finally.
+- Play-Schleife: Abbruch mitten in FLOURISH/FIDGET/Gang/Act liess die Ruhe-Schleife aus (Figur
+  erstarrt). Jetzt startet ein finally sie neu.
+- `feedAvatarNow`: Die Raketen-Reaktion fliegt 1,6 Bildhoehen ueber den Rand; im Spielmodus blieb
+  die Figur dort. Jetzt steht sie danach wieder auf dem Boden.
+
+Dazu `matrix/AvatarWatchdog.kt` (rein, offline getestet): Alle 1,5 s wird geprueft, ob die Figur
+fehlt, ausgeblendet, abgedunkelt, ausserhalb des Bildes oder erstarrt ist; was bei zwei Pruefungen
+hintereinander besteht, wird repariert und als `Avatar-Waechter repariert: ...` geloggt. **Taucht
+diese Logzeile im Stream-Messlauf auf, gibt es eine weitere, noch unbekannte Ursache** - der
+Waechter ist das Sicherheitsnetz, nicht die Loesung. Wer einen neuen gewollten Zustand einfuehrt,
+in dem die Figur unsichtbar, dunkel, ausserhalb oder lange reglos ist, muss ihn dem Waechter als
+Ausnahme mitteilen (`doorTransit`, `reacting`, `moving`, `animatedElsewhere`).
+
+## 0c. Neu am 26.09.: Weltausbau - Natur, Stadt, Supermarkt
+
+Alles Neue steht in `matrix/PlayWorld.kt` (nicht in `PlayScene.kt`). Vier Ebenen: `background`
+(Berge, Blaetterdach, Meer, Skyline, Regalwand), `furnishing` (Requisiten der fuenf neuen Orte),
+`midground` (Passanten mit Hund, Autos, Bus, Kundschaft - zwischen hinteren Requisiten und
+Vordergrund) und `ambient` (Tiere, Luftschiff, Drohnen). Drei Dinge:
+
+- **Neue Orte sind hinten an `PlayScene.Place` angehaengt** (JUNGLE, MOUNTAINS, SWAMP, PLAINS,
+  BEACH). Wer einen weiteren Ort baut: `PlayWorld.NATURE`/`furnishing`/`avatarAnchorX`,
+  `LivingRuntimeAdapter.siteFor`, `PlayTalkPanel.placeTextFor` + beide `strings.xml`.
+- **Nachts keine Ausfluege in die Wildnis** - Regel in `PlayRoutines.admissible`, von
+  `LivingRuntimeAdapter` ueber `sleepAdmissible` durchgereicht, damit Wahl und Verteilung (und
+  damit der Rueckfall der Decision Policy) uebereinstimmen.
+- **Die Policy ist neu trainiert** (`bash tools/decision-policy/train.sh`), weil fuenf Ablaeufe
+  dazukamen; `DecisionBehaviourTest` laeuft ueber 14 statt 7 Tage (siehe dort).
+
+Vorschau ohne Geraet: `PlayScene.build(...)` als PNG rendern - so sind alle Bilder dieses Schnitts
+entstanden. Am Geraet `UNVERIFIED`: Lesbarkeit der Leute (7 Zellen hoch) und des Meeres.
+
+## 0d. Neu am 27.09.: Cafe und Musikrollen fuer Strand, Gebirge und Cafe
+
+- `PlayScene.Place.CAFE` (Innenraum, in `PlayWorld`), Ablauf `PlayRoutines.cafeRoutine` unter LOVE.
+- **Nachts geschlossen**: `PlayRoutines.NIGHT_CLOSED` (Wildnis + Cafe). Die Nacht wird jetzt auch in
+  `LivingRuntimeAdapter.topicBranch` durchgereicht, nicht nur bei Bewegung/Erkunden.
+- Musikrollen `BEACH`, `MOUNTAINS`, `CAFE` mit Rueckfall auf Natur bzw. Stadt. Prompts
+  `beach-01`, `mountains-01`, `cafe-01` stehen im Manifest, **Audio fehlt noch**: nach dem Merge je
+  einen Lauf **Generate Itoeva Music** (der Workflow liest `main`), Ergebnis sofort in die
+  Hoertest-APK (Regel oben), danach `loudness_table.py`. Bis dahin klingen die Orte wie vorher.
+- `DecisionBehaviourTest` rechnet mit drei Startwerten je Spezies; `DecisionCandidatesTest` ruft
+  `prepare` wie DockScreen mit `sleepAdmissible` auf.
 
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
@@ -303,7 +374,8 @@ Vom Auftraggeber gesetzt, hier woertlich, weil sie sich nicht aus dem Code ergeb
 ### Die Offline-Strecke
 
 ```
-bash tools/reaction-preview/tests.sh          # derzeit 465 Tests, ~2 s
+bash tools/reaction-preview/tests.sh          # derzeit 661 Tests, ~12 s
+bash tools/decision-policy/train.sh           # Decision Policy neu trainieren (~1 min)
 python3 -m unittest discover --start-directory tools/music   # 15 Tests
 ```
 

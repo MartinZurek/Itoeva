@@ -771,6 +771,22 @@ object PlayEffects {
 
         // Der Korb wird nur fuer Basketball eingeblendet. Fussball und Training behalten damit
         // denselben freien Platz statt dauerhaft vor einer falschen Requisite stattzufinden.
+        //
+        // **Der Ball steht vorn** - genau wie beim Fussball. `distinctBy` behaelt den ersten
+        // Eintrag; stand der Korb zuerst, verschwand der Ball in Ring und Netz, und der Treffer
+        // war nicht zu sehen.
+        return (ball.render(grounded = false) + trail.render(carve = false) +
+            hoopCells(hoopX, hoopY, groundY, widthCells, floorY))
+            .filter { it.x in 0 until widthCells }
+            .distinctBy { it.x to it.y }
+    }
+
+    /**
+     * Der Korb samt Pfosten und Netz - ausgelagert, weil ihn seit dem Gruppenspiel zwei Szenen
+     * brauchen (siehe [PlayGroupGame]). [hoopX]/[hoopY] ist die Brettkante, [groundY] der Boden,
+     * auf dem der Pfosten steht.
+     */
+    internal fun hoopCells(hoopX: Int, hoopY: Int, groundY: Int, widthCells: Int, floorY: Int): List<SceneCell> {
         val hoop = PlayInk.Sketch(hoopX, hoopY - 5, 1, widthCells, floorY)
         hoop.line(4, 0, 4, groundY - (hoopY - 5), PlayInk.BODY)
         hoop.box(0, 0, 4, 2, PlayInk.BODY)
@@ -783,13 +799,7 @@ object PlayEffects {
             hoop.dot(1 - inset, localY, PlayInk.DETAIL)
             if (dy % 2 == 0) hoop.dot(-1, localY, PlayInk.DETAIL)
         }
-
-        // **Der Ball steht vorn** - genau wie beim Fussball. `distinctBy` behaelt den ersten
-        // Eintrag; stand der Korb zuerst, verschwand der Ball in Ring und Netz, und der Treffer
-        // war nicht zu sehen.
-        return (ball.render(grounded = false) + trail.render(carve = false) + hoop.render(grounded = false))
-            .filter { it.x in 0 until widthCells }
-            .distinctBy { it.x to it.y }
+        return hoop.render(grounded = false)
     }
 
     fun trainingCells(

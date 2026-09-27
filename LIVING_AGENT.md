@@ -484,6 +484,18 @@ gemacht hat. Zwei Folgen stoerten beim Zusehen:
 das Wohlbefinden. Am Grundsatz aendert das nichts: kein Verhungern, keine Strafe. Auch bei
 vollstaendigem Elend ist `SAD` das Ende der Skala - trueber, nie verloren.
 
+### Die Decision Policy waehlt die Ausformung (26.09.)
+
+Der Kern entscheidet weiterhin, WAS ein Wesen will, und prueft jede Voraussetzung. WIE die Absicht
+sichtbar wird, wuerfelten bisher drei unabhaengige Zufallsziehungen (Thema, Ablauf, Gruppenspiel).
+Seit dem 26.09. bewertet eine kleine lokale Policy (`app-sim/.../decision/`, ONNX-Modell in
+`assets/`) jeden Ablauf, den der naechste Kernschritt zulaesst, aus Zustand, Merkmalen des Ablaufs,
+Verlauf und Gesellschaft - und darf zwischen dem Lieblingsziel des Kerns und knapp unterlegenen,
+zulaessigen Zielen abwaegen. Dringende Grundbeduerfnisse, laufende Plaene, Nachtruhe,
+Medizin-Ausschluss und Gruppenspiel-Vorrang bleiben Regeln der Kandidatenerzeugung; kein Modell
+kann sie umgehen. Fehlt das Modell, gilt exakt die alte Wahl. Einzelheiten, Zahlen und Training:
+`tools/decision-policy/README.md`.
+
 ## Leitidee
 
 Itoeva schreibt keine Geschichten vor. Die Simulation fuehrt Beduerfnisse, Weltzustand,

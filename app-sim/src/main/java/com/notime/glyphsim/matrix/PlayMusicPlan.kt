@@ -73,6 +73,15 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
     /** In der Spielhalle - Chiptune, die Musik der Automaten selbst. */
     ARCADE("arcade_background", "itoeva_arcade"),
 
+    /** Am Strand (Weltausbau) - sonniger Surf- und Tropical-Klang. Fehlt er, klingt es nach Natur. */
+    BEACH("beach_background", "itoeva_beach"),
+
+    /** Im Gebirge (Weltausbau) - weit, ruhig, erhaben. Fehlt es, klingt es nach Natur. */
+    MOUNTAINS("mountains_background", "itoeva_mountains"),
+
+    /** Im Cafe (Weltausbau Stufe 4) - warme Musette und Kaffeehaus-Jazz. Fehlt es, klingt es nach Stadt. */
+    CAFE("cafe_background", "itoeva_cafe"),
+
     /** Ruhige Abend- und Nachtstunden zu Hause und an stillen Naturorten. */
     HOME_EVENING("home_evening_background", "itoeva_home_evening"),
 
@@ -175,7 +184,12 @@ data class MusicContext(
      * eine Dauerschleife. Gesetzt ist dieses Feld nur, solange der Anlass laeuft, den
      * [PlayCharacterTheme] beschreibt.
      */
-    val characterTheme: AvatarSpecies? = null
+    val characterTheme: AvatarSpecies? = null,
+    /**
+     * Das Gruppenspiel, das gerade laeuft (siehe [PlayGroupGame]), oder `null`. Wie [activity]
+     * nur waehrend des Spiels gesetzt.
+     */
+    val groupGame: PlayGroupGame.Kind? = null
 )
 
 /**
@@ -206,13 +220,20 @@ object MusicResolver {
     private val NATURE_PLACES = setOf(
         PlayScene.Place.FOREST,
         PlayScene.Place.MEADOW,
-        PlayScene.Place.POND
+        PlayScene.Place.POND,
+        // Die fuenf Landschaften des Weltausbaus (siehe PlayWorld) klingen wie die uebrige Natur.
+        PlayScene.Place.JUNGLE,
+        PlayScene.Place.MOUNTAINS,
+        PlayScene.Place.SWAMP,
+        PlayScene.Place.PLAINS,
+        PlayScene.Place.BEACH
     )
 
     private val CITY_PLACES = setOf(
         PlayScene.Place.STREET,
         PlayScene.Place.CITY,
-        PlayScene.Place.SHOP
+        PlayScene.Place.SHOP,
+        PlayScene.Place.CAFE
     )
 
     private val QUIET_PLACES = setOf(
@@ -226,7 +247,12 @@ object MusicResolver {
         PlayScene.Place.POND,
         PlayScene.Place.FOREST,
         PlayScene.Place.MEADOW,
-        PlayScene.Place.PARK
+        PlayScene.Place.PARK,
+        PlayScene.Place.JUNGLE,
+        PlayScene.Place.MOUNTAINS,
+        PlayScene.Place.SWAMP,
+        PlayScene.Place.PLAINS,
+        PlayScene.Place.BEACH
     )
 
     /**
@@ -247,6 +273,20 @@ object MusicResolver {
         // **Die laufende Aktivitaet vor dem Ort** - aber nie nachts. Angeln klingt nach Angeln,
         // egal an welchem Ufer; ein Ballspiel nach Streetball, egal auf welchem Platz.
         val nachts = context.dayPhase == PlayAmbientActivity.DayPhase.NIGHT
+        // **Ein Gruppenspiel hat Vorrang vor allem ausser dem eigenen Thema** - auch vor dem
+        // Morgen. Gemeldet: Die Gruppe spielte morgens ohne jede Musik, und genau diese Szenen
+        // sollen den Alltag aufbrechen. Korb und Fussball klingen nach Streetball, Ball und
+        // Frisbee nach Sport; die jeweils andere Rolle ist der Rueckfall.
+        val spiel = context.groupGame
+        if (spiel != null && !nachts) {
+            if (spiel == PlayGroupGame.Kind.HOOPS || spiel == PlayGroupGame.Kind.KICKABOUT) {
+                add(MusicRole.BALLGAME)
+                add(MusicRole.SPORT)
+            } else {
+                add(MusicRole.SPORT)
+                add(MusicRole.BALLGAME)
+            }
+        }
         if (!nachts) {
             when (context.activity) {
                 PlayRoutines.SpecialActivity.FISHING -> add(MusicRole.FISHING)
@@ -285,6 +325,7 @@ object MusicResolver {
                     // Abends noch unterwegs: Die Stadt klingt nach Stadt, der Tag klingt nach,
                     // der Abendtrack ist der Rueckfall.
                     if (context.place == PlayScene.Place.ARCADE) add(MusicRole.ARCADE)
+                    if (context.place == PlayScene.Place.CAFE) add(MusicRole.CAFE)
                     if (context.place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
                     if (context.place in CITY_PLACES) add(MusicRole.CITY)
                     add(MusicRole.MAIN_DAY)
@@ -318,7 +359,11 @@ object MusicResolver {
      */
     private fun MutableList<MusicRole>.addPlaceRoles(place: PlayScene.Place) {
         if (place == PlayScene.Place.ARCADE) add(MusicRole.ARCADE)
+        if (place == PlayScene.Place.CAFE) add(MusicRole.CAFE)
         if (place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
+        // Strand und Gebirge vor der allgemeinen Natur - fehlen ihre Stuecke, bleibt es dabei.
+        if (place == PlayScene.Place.BEACH) add(MusicRole.BEACH)
+        if (place == PlayScene.Place.MOUNTAINS) add(MusicRole.MOUNTAINS)
         if (place in CITY_PLACES) add(MusicRole.CITY)
         if (place in NATURE_PLACES) add(MusicRole.NATURE)
     }

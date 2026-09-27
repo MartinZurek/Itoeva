@@ -69,6 +69,12 @@ sealed interface RoutineStep {
     /** Einen Moment nichts tun (Ruhe-Schleife laeuft weiter). */
     data class Linger(val millis: Long) : RoutineStep
 
+    /**
+     * Ein Spiel mit allen, die gerade da sind (siehe [PlayGroupGame]) - dauert
+     * [PlayGroupGame.DURATION_MS]. Wer mitspielt, entscheidet die Oberflaeche in jedem Takt neu.
+     */
+    data class GroupGame(val kind: PlayGroupGame.Kind) : RoutineStep
+
     /** Exklusiver Schlaf: Im Bett bleiben, bis die Nacht endet. */
     data object SleepUntilMorning : RoutineStep
 
@@ -201,9 +207,16 @@ object PlayRoutines {
          * Ablauf darf ein Ziel nicht unerreichbar machen.
          */
         preferPlaceChange: Boolean = false,
+        /**
+         * **Nachts geht niemand in Dschungel, Sumpf oder Gebirge.** Die Ausfluege des
+         * Weltausbaus (siehe [excursion]) fallen dann weg - an derselben Stelle fuer die
+         * Wahl und fuer ihre Verteilung ([distributionFor]), damit der Rueckfall der Decision
+         * Policy exakt bleibt.
+         */
+        night: Boolean = false,
         random: Random = Random
     ): PlayRoutine {
-        val alle = allFor(topic)
+        val alle = admissible(topic, night)
         val options = if (preferPlaceChange) {
             alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
                 .ifEmpty { alle }
@@ -252,7 +265,78 @@ object PlayRoutines {
         return pool[random.nextInt(pool.size)]
     }
 
+    /**
+     * **Dieselbe Wahl wie [forTopic], als Verteilung statt als Wurf.**
+     *
+     * Die Decision Policy (siehe `decision/`) muss jeden Ablauf kennen, den [forTopic] liefern
+     * KANN, und mit welcher Wahrscheinlichkeit - sonst liesse sich die bisherige Wahl weder als
+     * Rueckfall nachbilden noch mit der neuen vergleichen. Deshalb steht die Rechnung direkt neben
+     * dem Wurf und folgt ihm Zeile fuer Zeile; `PlayRoutineDistributionTest` wuerfelt [forTopic]
+     * nach und haelt beide zusammen. [forTopic] selbst bleibt unveraendert, damit sich an der
+     * Wahl ohne Policy nichts verschiebt.
+     *
+     * Ablaeufe mit Wahrscheinlichkeit 0 fehlen - Einkauf und Sonderaktivitaeten ausserhalb der
+     * Bewegung zieht [forTopic] nie.
+     */
+    fun distributionFor(
+        topic: AnimationType,
+        footballTrickLearned: Boolean = false,
+        recentSpecials: List<SpecialActivity> = emptyList(),
+        preferPlaceChange: Boolean = false,
+        night: Boolean = false
+    ): List<Pair<PlayRoutine, Double>> {
+        val alle = admissible(topic, night)
+        val options = if (preferPlaceChange) {
+            alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
+                .ifEmpty { alle }
+        } else {
+            alle
+        }
+        val special = options.filter { specialOf(it) != null }
+        val everyday = options.filterNot { routine ->
+            routine in special || routine.steps.any {
+                it is RoutineStep.GoToPlace && it.place == PlayScene.Place.SHOP
+            }
+        }
+        val pool = everyday.ifEmpty { options }
+        val verteilung = LinkedHashMap<PlayRoutine, Double>()
+        fun add(routine: PlayRoutine, p: Double) {
+            verteilung[routine] = (verteilung[routine] ?: 0.0) + p
+        }
+        val alltag = if (topic == AnimationType.MOVE && special.isNotEmpty()) {
+            val chance = SPECIAL_ACTIVITY_CHANCE_PERCENT / 100.0
+            val feld = special.filter { specialOf(it) !in recentSpecials }.ifEmpty { special }
+            for (chosen in feld) {
+                val routine = if (chosen.steps.any { it is RoutineStep.Football }) {
+                    footballRoutine(footballTrickLearned)
+                } else {
+                    chosen
+                }
+                add(routine, chance / feld.size)
+            }
+            1.0 - chance
+        } else {
+            1.0
+        }
+        for (routine in pool) add(routine, alltag / pool.size)
+        return verteilung.entries.map { it.key to it.value }
+    }
+
     private const val SPECIAL_ACTIVITY_CHANCE_PERCENT = 70
+
+    /**
+     * Wohin man nachts nicht geht: in die Wildnis nicht, und das Cafe hat geschlossen.
+     */
+    val NIGHT_CLOSED: Set<PlayScene.Place> = PlayWorld.NATURE + PlayScene.Place.CAFE
+
+    /** [allFor] ohne die Ablaeufe an nachts geschlossene Orte, wenn es Nacht ist - siehe [forTopic]. */
+    private fun admissible(topic: AnimationType, night: Boolean): List<PlayRoutine> {
+        val alle = allFor(topic)
+        if (!night) return alle
+        return alle.filterNot { routine ->
+            routine.steps.any { it is RoutineStep.GoToPlace && it.place in NIGHT_CLOSED }
+        }.ifEmpty { alle }
+    }
 
     fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(
         buildList {
@@ -325,6 +409,68 @@ object PlayRoutines {
      * Ueber [RoutineStep.Switch] statt ueber eine eigene Sonderaktivitaet: Der Bildschirm ist ein
      * Geraet wie der Fernseher, und der Automat braucht keine zweite Effektmaschine, um zu leuchten.
      */
+    /**
+     * Ein Ausflug in eine der Landschaften des Weltausbaus: ueber die Strasse hinaus, ankommen,
+     * umsehen, am Sitzplatz verweilen, zum Schluss noch ein Stueck weiter.
+     */
+    fun excursion(
+        place: PlayScene.Place,
+        arrival: AvatarAnimations.Fidget,
+        restMillis: Long
+    ): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(PlayScene.Place.STREET),
+            RoutineStep.Stroll(0.66f),
+            RoutineStep.Linger(4_000L),
+            RoutineStep.GoToPlace(place),
+            RoutineStep.Stir(arrival),
+            RoutineStep.Linger(7_000L),
+            RoutineStep.Stroll(0.24f),
+            RoutineStep.Act(AnimationType.MOVE),
+            RoutineStep.Linger(5_000L),
+            RoutineStep.GoTo(PlayScene.Station.BENCH),
+            RoutineStep.Occupy(PlayScene.Station.BENCH),
+            RoutineStep.Linger(restMillis),
+            RoutineStep.Daydream,
+            RoutineStep.Rise,
+            RoutineStep.Stroll(0.12f),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Linger(6_000L)
+        )
+    )
+
+    /**
+     * **Ins Cafe** (Weltausbau Stufe 4): ueber die Strasse, an der Theke einen Kakao holen,
+     * sich damit in den Sessel setzen, verweilen. Unter Leuten sein, ohne dass etwas passieren
+     * muss - der Barista arbeitet, am Nachbartisch sitzt jemand, ab und zu kommt ein Gast
+     * herein, und Einwohner koennen hier zu Besuch kommen.
+     */
+    fun cafeRoutine(): PlayRoutine = PlayRoutine(
+        listOf(
+            // Draussen ein richtiger Aufenthalt, kein Durchgang (siehe PlayRoutineTest): erst
+            // ein Stueck die Strasse entlang, umsehen, dann hinein.
+            RoutineStep.GoToPlace(PlayScene.Place.STREET),
+            RoutineStep.Stroll(0.60f),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.GoToPlace(PlayScene.Place.CAFE),
+            RoutineStep.Stroll(0.62f),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Act(AnimationType.DRINK),
+            RoutineStep.Linger(3_000L),
+            RoutineStep.GoTo(PlayScene.Station.SEAT),
+            RoutineStep.Occupy(PlayScene.Station.SEAT),
+            RoutineStep.Linger(14_000L),
+            RoutineStep.Act(AnimationType.LOVE),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.Daydream,
+            RoutineStep.Rise,
+            RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+            RoutineStep.Linger(4_000L)
+        )
+    )
+
     fun arcadeRoutine(): PlayRoutine = PlayRoutine(
         listOf(
             RoutineStep.GoToPlace(PlayScene.Place.ARCADE),
@@ -487,7 +633,8 @@ object PlayRoutines {
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
                     RoutineStep.Switch(PlayScene.Station.TV, on = false)
                 )
-            )
+            ),
+            cafeRoutine()
         )
 
         // ---- Sich etwas holen: Kuehlschrank, dann Tisch. Der Weg dazwischen IST die Handlung. ----
@@ -814,6 +961,19 @@ object PlayRoutines {
                     RoutineStep.Linger(7_000L)
                 )
             ),
+            // ---- Ausfluege in die neuen Landschaften (Weltausbau, siehe PlayWorld) ----
+            //
+            // Jeder beginnt auf der Strasse: Man geht hinaus, bevor man irgendwo ankommt - dieselbe
+            // Regel wie beim Waldspaziergang. Danach haben alle dieselbe Gestalt (ankommen,
+            // umsehen, zum Sitzplatz, verweilen, weiter), aber jeder an einem Ort mit eigenem
+            // Leben: Adler ueber den Gipfeln, Papageien und Wasserfall im Dschungel,
+            // Gluehwuermchen im Sumpf, Kuehe und Windmuehle auf der Ebene, Moewen und Wellen am
+            // Strand.
+            excursion(PlayScene.Place.MOUNTAINS, AvatarAnimations.Fidget.STRETCH, restMillis = 16_000L),
+            excursion(PlayScene.Place.JUNGLE, AvatarAnimations.Fidget.LOOK_AROUND, restMillis = 14_000L),
+            excursion(PlayScene.Place.SWAMP, AvatarAnimations.Fidget.LOOK_AROUND, restMillis = 12_000L),
+            excursion(PlayScene.Place.PLAINS, AvatarAnimations.Fidget.STRETCH, restMillis = 15_000L),
+            excursion(PlayScene.Place.BEACH, AvatarAnimations.Fidget.YAWN, restMillis = 18_000L),
             // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
             footballRoutine(trickLearned = false),
             // Korb und Ball erscheinen nur fuer diesen Ablauf; der Platz bleibt sonst offen.

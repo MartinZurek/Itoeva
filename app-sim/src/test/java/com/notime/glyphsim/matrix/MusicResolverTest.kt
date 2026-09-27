@@ -496,5 +496,36 @@ class MusicResolverTest {
             MusicResolver.candidates(ctx(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.LIVING, AnimationType.REST)).first()
         )
     }
+
+    /**
+     * **Ein Gruppenspiel klingt nach Sport - auch morgens.** Gemeldet: Die Gruppe spielte am
+     * Morgen ohne jede Musik. Korb und Fussball bekommen Streetball, Ball und Frisbee die
+     * Sportstuecke; nachts gibt es kein Spiel und keine Spielmusik.
+     */
+    @Test
+    fun `ein Gruppenspiel hat seine Musik, auch am Morgen`() {
+        val morgen = MusicContext(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.PARK, AnimationType.MOVE)
+        assertEquals(
+            MusicRole.SPORT,
+            MusicResolver.resolve(morgen.copy(groupGame = PlayGroupGame.Kind.CATCH), alleRollen)
+        )
+        assertEquals(
+            MusicRole.BALLGAME,
+            MusicResolver.resolve(morgen.copy(groupGame = PlayGroupGame.Kind.HOOPS), alleRollen)
+        )
+        assertEquals(
+            MusicRole.SPORT,
+            MusicResolver.resolve(morgen.copy(groupGame = PlayGroupGame.Kind.HOOPS), alleRollen - MusicRole.BALLGAME)
+        )
+        val nacht = morgen.copy(dayPhase = PlayAmbientActivity.DayPhase.NIGHT, groupGame = PlayGroupGame.Kind.CATCH)
+        assertTrue(MusicRole.SPORT !in MusicResolver.candidates(nacht))
+    }
+
+    /** Die Spielmusik setzt sofort ein - eine Minute Spiel vertraegt keine zehn Sekunden Warten. */
+    @Test
+    fun `Spielmusik wartet nicht`() {
+        assertEquals(0L, PlayMusicTransition.settleMs(MusicRole.MORNING, MusicRole.SPORT))
+        assertEquals(0L, PlayMusicTransition.settleMs(MusicRole.MAIN_DAY, MusicRole.BALLGAME))
+    }
 }
 

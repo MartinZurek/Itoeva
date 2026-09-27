@@ -70,6 +70,11 @@ import com.notime.glyphsim.R
 import com.notime.glyphsim.data.AvatarFeedEvent
 import com.notime.glyphsim.data.LivingAgentStore
 import com.notime.glyphsim.data.SharedPreferencesLivingAgentStorage
+import com.notime.glyphsim.decision.DecisionCandidates
+import com.notime.glyphsim.decision.DecisionEngine
+import com.notime.glyphsim.decision.DecisionHistory
+import com.notime.glyphsim.decision.DecisionState
+import com.notime.glyphsim.decision.TopicSignals
 import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.LivingSimulation
@@ -78,11 +83,13 @@ import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBodies
+import com.notime.glyphsim.matrix.AvatarFacing
 import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
 import com.notime.glyphsim.matrix.AvatarMood
 import com.notime.glyphsim.matrix.AvatarShading
 import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.AvatarWatchdog
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.skilltree.ActivityContext
@@ -123,6 +130,7 @@ import com.notime.glyphsim.matrix.PlayDreamMemory
 import com.notime.glyphsim.matrix.PlayDreams
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayRoutine
+import com.notime.glyphsim.matrix.PlayGroupGame
 import com.notime.glyphsim.matrix.PlayRoutines
 import com.notime.glyphsim.matrix.PlayChime
 import com.notime.glyphsim.matrix.PlayCharacterTheme
@@ -155,6 +163,7 @@ import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -586,6 +595,8 @@ fun DockScreen(
 
         /** Traegt nach, was gerade gelaufen ist - vorn einfuegen, hinten abschneiden. */
         fun rememberShown(topic: AnimationType, routine: PlayRoutine?) {
+            // Bewegung setzt den Bewegungsdrang zurueck (siehe PlayMovementLog).
+            if (topic == AnimationType.MOVE) PlayMovementLog.moved(context, presenceProfileId)
             recentTopics.add(0, topic)
             while (recentTopics.size > RECENT_MEMORY) recentTopics.removeAt(recentTopics.lastIndex)
             val special = routine?.let { PlayRoutines.specialOf(it) } ?: return
@@ -612,6 +623,13 @@ fun DockScreen(
         var basketballSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Krafttrainingsphase mit Hantel. */
         var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
+        /**
+         * Das laufende Gruppenspiel (siehe [PlayGroupGame]) - solange gesetzt, spielen alle mit,
+         * die gerade da sind, und ihre Haltung kommt aus dem Spiel statt aus ihrer Schleife.
+         */
+        var groupGame by remember { mutableStateOf<PlayGroupGame.Kind?>(null) }
+        /** Der Stand von [scenePhase] beim Anpfiff - wie [footballSince]. */
+        var groupGameSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Musikphase mit Gitarre und Noten. */
         var musicPhase by remember { mutableStateOf<PlayEffects.MusicPhase?>(null) }
         /** Sichtbare Malphase mit wachsendem Bild. */
@@ -622,6 +640,9 @@ fun DockScreen(
         var avatarHidden by remember { mutableStateOf(false) }
         // Daempfung der Figur beim Durchschreiten einer Tuer - siehe moveToPlace.
         val avatarDim = remember { Animatable(1f) }
+        // Ob gerade gewollt eine Tuer durchschritten wird - nur dann sind [avatarHidden] und ein
+        // gedaempftes [avatarDim] richtig. Der Waechter (siehe AvatarWatchdog) liest das.
+        var doorTransit by remember { mutableStateOf(false) }
         // Gaeste, die gerade durchs Bild laufen - siehe runVisit. Mehrere gleichzeitig moeglich
         // (Deckel je Ort in LivingPopulationLayout.visitorCapFor), jeder eigenstaendig per
         // profileId gefuehrt statt einer einzelnen Variable.
@@ -947,7 +968,7 @@ fun DockScreen(
          * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
          * allein [PlayMusic]; welche passt, allein der Resolver.
          */
-        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies) {
+        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies, groupGame) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
                 return@LaunchedEffect
@@ -963,7 +984,8 @@ fun DockScreen(
                         place = currentPlace,
                         topic = currentTopic,
                         activity = currentActivity,
-                        characterTheme = themeSpecies
+                        characterTheme = themeSpecies,
+                        groupGame = groupGame
                     )
                 )
                 delay(faellig?.coerceIn(MUSIC_SETTLE_TICK_MS, MUSIC_RECHECK_MS) ?: MUSIC_RECHECK_MS)
@@ -1214,6 +1236,15 @@ fun DockScreen(
             // sah man nicht. Jetzt geht die Tuer auf, die Figur verblasst IN den Rahmen hinein
             // (sie tritt hindurch), und drueben kommt sie aus dem Rahmen wieder hervor. Erst
             // dieses Verblassen an genau der Stelle macht aus dem Wechsel einen Weg.
+            //
+            // **Alles bis zum Hervortreten steht in einem try/finally** (gemeldet am 26.09. als
+            // "der Avatar ist dunkel geworden" bzw. "es war keiner mehr da"). Eine eintreffende
+            // Erinnerung bricht den Ablauf ueber den Schluessel der Play-Schleife ab - traf das
+            // genau diesen Durchgang, blieb die Figur abgedunkelt oder ganz ausgeblendet stehen,
+            // bis zufaellig der naechste Raumwechsel sie wieder hervorholte. Die offene
+            // Erinnerung liess sich dann auf niemanden mehr ziehen.
+            doorTransit = true
+            try {
             activeStation = PlayScene.Station.DOOR   // Tuer geht auf
             delay(DOOR_OPEN_MS)
             avatarDim.animateTo(0f, tween(DOOR_STEP_MS))
@@ -1238,6 +1269,19 @@ fun DockScreen(
             // Aus dem Rahmen hervortreten, dann faellt die Tuer zu.
             avatarDim.animateTo(1f, tween(DOOR_STEP_MS))
             activeStation = null
+            } finally {
+                doorTransit = false
+                if (avatarHidden || avatarDim.value < 1f || activeStation == PlayScene.Station.DOOR) {
+                    // Abgebrochen: sofort wieder voll sichtbar, ohne Animation. snapTo ist
+                    // suspendierend und laeuft deshalb NonCancellable - und zwar hier, nicht
+                    // ueber [scope] nachgereicht: Ein spaeter eintreffendes snapTo wuerde das
+                    // Abblenden des NAECHSTEN Durchgangs unterbrechen und damit dessen Ablauf
+                    // beenden.
+                    avatarHidden = false
+                    activeStation = null
+                    withContext(NonCancellable) { avatarDim.snapTo(1f) }
+                }
+            }
             if (walkAvatarTo(
                     avatarSpot(
                         PlayScene.screenFraction(PlayScene.avatarAnchorX(target), sceneWidthCells),
@@ -1600,6 +1644,20 @@ fun DockScreen(
                         val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
                         MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
                             avatar = avatar?.copy(frame = f)
+                        }
+                        startAvatarIdleLoop(species, mood)
+                    }
+
+                    is RoutineStep.GroupGame -> {
+                        // Die Haltungen aller Mitspieler rechnet die Oberflaeche aus dem Spiel
+                        // (siehe gameMoment unten); hier laeuft nur die Uhr.
+                        avatarIdleJob?.cancel()
+                        groupGameSince = scenePhase
+                        groupGame = step.kind
+                        try {
+                            delay(PlayGroupGame.DURATION_MS)
+                        } finally {
+                            groupGame = null
                         }
                         startAvatarIdleLoop(species, mood)
                     }
@@ -2035,7 +2093,9 @@ fun DockScreen(
                 // bis NACH dem Speichern bestehen. Sonst koennen zwei Gaeste denselben alten
                 // Wirtszustand lesen und der zweite Commit ueberschreibt die Beziehungserfahrung
                 // des ersten, obwohl die Gespraeche im Bild nacheinander erscheinen.
-                while (conversationOwnerProfileId != null) {
+                // Waehrend eines Gruppenspiels wird gespielt, nicht geredet - der Gast spielt mit
+                // (siehe gameMoment) und haelt sein Gespraech danach.
+                while (conversationOwnerProfileId != null || groupGame != null) {
                     delay(VISIT_WAIT_TICK_MS)
                 }
                 conversationOwnerProfileId = guestProfileId
@@ -2083,26 +2143,29 @@ fun DockScreen(
                         intents: Set<SymbolicIntent>,
                         movement: AvatarAnimations.AvatarSequence
                     ) {
+                        // Wer spricht, bewegt dabei den Mund (siehe AvatarAnimations.talkSequence)
+                        // - statt mit geschlossenem Mund weiter zu ruhen wie der Zuhoerer. Die
+                        // Ruhe-Schleife des Sprechers endet dafuer schon hier; nach den Symbolen
+                        // folgt ohnehin seine Koerperregung.
+                        val toGuest: (IntArray) -> Unit = { f -> updateVisitor(guestProfileId) { it.copy(frame = f) } }
+                        val toHost: (IntArray) -> Unit = { f -> avatar = avatar?.copy(frame = f) }
+                        val speakerFrame = if (guestSpeaks) toGuest else toHost
+                        if (guestSpeaks) guestIdle.cancel() else hostIdleWhileListening.cancel()
+                        val talk = AvatarAnimations.talkSequence(if (guestSpeaks) guestSpecies else host.species)
+                        val talking = launch {
+                            while (isActive) MatrixAnimator.playTimed(talk.frames, talk.holdsMs, speakerFrame)
+                        }
                         // Sprechzeichen laufen mit: erst ein Punkt, dann zwei, dann drei.
                         for (dot in 0..2) {
                             speakerIsGuest = guestSpeaks
                             speechStep = dot
                             delay(SPEECH_DOT_MS)
                         }
+                        talking.cancelAndJoin()
                         speechStep = -1
                         socialMessage = intents
                         // Wer spricht, unterstreicht die Bedeutung mit einer Koerperregung.
-                        if (guestSpeaks) {
-                            guestIdle.cancel()
-                            MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
-                                updateVisitor(guestProfileId) { it.copy(frame = f) }
-                            }
-                        } else {
-                            hostIdleWhileListening.cancel()
-                            MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
-                                avatar = avatar?.copy(frame = f)
-                            }
-                        }
+                        MatrixAnimator.playTimed(movement.frames, movement.holdsMs, speakerFrame)
                         delay(SOCIAL_SYMBOL_HOLD_MS)
                         socialMessage = null
                     }
@@ -2391,6 +2454,93 @@ fun DockScreen(
                 while (isActive) {
                     delay(SCENE_PHASE_TICK_MS)
                     scenePhase++
+                }
+            }
+
+            // **Der Waechter ueber die Figur** (siehe [AvatarWatchdog]). Die einzelnen Ursachen
+            // vom 26.09. sind an ihrer Stelle behoben; dieser Takt sichert das ERGEBNIS ab: Wie
+            // auch immer ein kuenftiger Abbruch die Figur liegen laesst - unsichtbar, dunkel,
+            // ausserhalb des Bildes oder erstarrt -, nach rund drei Sekunden ist sie wieder da.
+            // Ein durchlaufender Stream hat keinen Nutzer, der den Spielmodus kurz verlaesst.
+            //
+            // Jede Reparatur wird protokolliert: Sie ist ein Hinweis auf eine noch unbekannte
+            // Ursache, nicht der Normalbetrieb.
+            val watchWidthPx by rememberUpdatedState(maxWidthPx)
+            val watchHeightPx by rememberUpdatedState(maxHeightPx)
+            val watchOnlyNow by rememberUpdatedState(watchOnly)
+            // Die Figur mit den Massen der JETZIGEN Komposition hinstellen, nicht mit denen beim
+            // Start dieses Takts - Uhrgroesse und Bildschirm koennen sich seitdem geaendert haben.
+            val respawnAvatar by rememberUpdatedState<suspend () -> AvatarState> { spawnAmbientAvatar() }
+            LaunchedEffect(Unit) {
+                var previous = emptySet<AvatarWatchdog.Problem>()
+                var lastFrame: IntArray? = null
+                var frameSinceMs = SystemClock.elapsedRealtime()
+                while (isActive) {
+                    delay(AvatarWatchdog.CHECK_INTERVAL_MS)
+                    if (watchOnlyNow) {
+                        previous = emptySet()
+                        continue
+                    }
+                    val now = SystemClock.elapsedRealtime()
+                    val current = avatar
+                    if (current?.frame !== lastFrame) {
+                        lastFrame = current?.frame
+                        frameSinceMs = now
+                    }
+                    val px = current?.let { with(density) { it.sizeDp.dp.toPx() } } ?: 0f
+                    val found = AvatarWatchdog.problems(
+                        AvatarWatchdog.Observation(
+                            present = current != null,
+                            left = current?.offset?.x ?: 0f,
+                            top = current?.offset?.y ?: 0f,
+                            sizePx = px,
+                            screenWidthPx = watchWidthPx,
+                            screenHeightPx = watchHeightPx,
+                            hidden = avatarHidden,
+                            brightness = avatarDim.value,
+                            doorTransit = doorTransit,
+                            reacting = current?.fed == true,
+                            moving = avatarWalking || avatarSettling,
+                            idleLoopActive = avatarIdleJob?.isActive == true,
+                            animatedElsewhere = routineRunning || visitingProfileIds.isNotEmpty() ||
+                                groupGame != null || dreamRecapMode,
+                            frameUnchangedMs = now - frameSinceMs
+                        )
+                    )
+                    val confirmed = AvatarWatchdog.confirmed(previous, found)
+                    previous = found
+                    if (confirmed.isEmpty()) continue
+                    Log.w(DOCK_TAG, "Avatar-Waechter repariert: $confirmed")
+                    if (AvatarWatchdog.Problem.MISSING in confirmed) {
+                        avatar = respawnAvatar()
+                        previous = emptySet()
+                        continue
+                    }
+                    if (AvatarWatchdog.Problem.HIDDEN in confirmed ||
+                        AvatarWatchdog.Problem.DIMMED in confirmed
+                    ) {
+                        avatarHidden = false
+                        avatarDim.snapTo(1f)
+                    }
+                    if (AvatarWatchdog.Problem.OFF_SCREEN in confirmed) {
+                        avatar?.let { lost ->
+                            occupiedStation = null
+                            avatar = lost.copy(
+                                offset = avatarSpot(
+                                    AvatarWatchdog.recoveryFraction(lost.offset.x, px, watchWidthPx),
+                                    px, watchWidthPx, floorYPxNow, lost.species
+                                )
+                            )
+                        }
+                    }
+                    if (AvatarWatchdog.Problem.FROZEN in confirmed) {
+                        avatar?.let { still ->
+                            startAvatarIdleLoop(
+                                still.species, AvatarMoodSnapshot.forSpecies(context, still.species)
+                            )
+                        }
+                    }
+                    previous = emptySet()
                 }
             }
 
@@ -2825,6 +2975,8 @@ fun DockScreen(
                 slotIndexByOccurrence = null
             }
             scope.launch {
+                // Wo die Figur vor der Reaktion stand - dorthin kehrt sie danach zurueck.
+                var reactionHome = current.offset
                 try {
                     val result = withContext(Dispatchers.IO) {
                         AvatarFeeding.logFeedEvent(context, current.occurrenceId)
@@ -2861,7 +3013,11 @@ fun DockScreen(
                     ) {
                         PlayFootballSkill.learn(context, presenceProfileId)
                     }
-                    avatar = current.copy(fed = true)
+                    // Vom JETZIGEN Stand aus, nicht von [current]: Der wurde vor dem Datenbankgang
+                    // eingefangen, und seitdem kann die Figur ein Stueck gegangen sein.
+                    val reactionBase = avatar ?: current
+                    reactionHome = reactionBase.offset
+                    avatar = reactionBase.copy(fed = true)
                     clockAnimJob?.cancel()
                     avatarIdleJob?.cancel()
                     isPlayingAnimation = false
@@ -2874,7 +3030,7 @@ fun DockScreen(
                         screenWidthPx = maxWidthPx,
                         screenHeightPx = maxHeightPx,
                         onFrame = { f -> avatar = avatar?.copy(frame = f) },
-                        onOffset = { o -> avatar = avatar?.copy(offset = current.offset + o) }
+                        onOffset = { o -> avatar = avatar?.copy(offset = reactionBase.offset + o) }
                     )
                 } catch (cancellation: kotlinx.coroutines.CancellationException) {
                     throw cancellation
@@ -2896,16 +3052,32 @@ fun DockScreen(
                     // wuerde sie faelschlich wieder loeschen.
                     if (avatar?.fed == true && avatar?.occurrenceId == current.occurrenceId) {
                         if (playMode) {
-                            // Der Avatar bleibt im Play-Modus stehen (an der Stelle, an die ihn
-                            // die Reaktion zuletzt bewegt hat) statt wie im normalen Dock zu
+                            // Der Avatar bleibt im Play-Modus stehen statt wie im normalen Dock zu
                             // verschwinden - er geht nur zurueck in die Idle-Schleife.
-                            avatar = avatar?.copy(
-                                reminderId = null,
-                                occurrenceId = null,
-                                animationType = null,
-                                libraryAnimationLabel = null,
-                                fed = false
-                            )
+                            //
+                            // **Und zwar wieder auf dem Boden, nicht dort, wo die Reaktion endete.**
+                            // Hier stand frueher "an der Stelle, an die ihn die Reaktion zuletzt
+                            // bewegt hat". Fuer fast alle Reaktionen ist das die Startstelle - fuer
+                            // die Rakete aber 1,6 Bildhoehen UEBER dem oberen Rand (siehe
+                            // AvatarAnimations.rocketFlightOffsets): Im normalen Dock verschwindet
+                            // die Figur danach ohnehin, im Spielmodus blieb sie dort oben stehen.
+                            // Gemeldet am 26.09.: "Erinnerung auf ihn gezogen, dann ist er aus dem
+                            // Bild gegangen und es war keiner mehr da." Die Rakete fliegt weiter
+                            // hinaus - danach steht die Figur wieder an ihrem Platz.
+                            avatar = avatar?.let { landed ->
+                                val px = with(density) { landed.sizeDp.dp.toPx() }
+                                landed.copy(
+                                    reminderId = null,
+                                    occurrenceId = null,
+                                    animationType = null,
+                                    libraryAnimationLabel = null,
+                                    fed = false,
+                                    offset = avatarSpot(
+                                        AvatarWatchdog.recoveryFraction(reactionHome.x, px, maxWidthPx),
+                                        px, maxWidthPx, floorYPxNow, landed.species
+                                    )
+                                )
+                            }
                             val mood = AvatarMoodSnapshot.forSpecies(context, current.species)
                             startAvatarIdleLoop(current.species, mood)
                             // Eine ECHTE Erinnerung darf dasselbe bewirken wie eine Bitte im
@@ -3164,6 +3336,7 @@ fun DockScreen(
                 pendingExternalImpulse?.impulseId
             ) {
                 val species = avatar?.species ?: return@LaunchedEffect
+                try {
 
                 // Ein genauer Skill-/Reminder-Knoten geht vor dem groben Thema. Die Entscheidung
                 // liest ausschliesslich bereits vorhandenen Zustand und liefert eine bestehende
@@ -3399,7 +3572,11 @@ fun DockScreen(
                             // nicht mehr als Entscheidung ueber Grundbeduerfnisse: Der Living
                             // Agent entscheidet, OB Freizeit gerade traegt; diese Wahl sagt nur,
                             // WIE eine solche Phase in der vorhandenen Welt aussieht.
-                            val ordinaryInterestTopic = PlayAmbientActivity.nextTopic(
+                            // **Dieselben neun Signale wie bisher - jetzt als Eingabe der Decision
+                            // Policy** (siehe decision/DecisionPolicy.kt). Ihre Gewichte bestimmen,
+                            // welche Themen zu dieser Stunde ueberhaupt in Frage kommen, und sie
+                            // bleiben die bisherige Wahl, auf die zurueckgefallen wird.
+                            val signals = TopicSignals(
                                 boostedTopics = boostedTopics,
                                 stayAt = currentPlace.takeIf {
                                     stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS
@@ -3448,7 +3625,7 @@ fun DockScreen(
                                     // wurde genau das: dass die Figur zu lange bei derselben Art
                                     // von Verhalten bleibt, obwohl der Einzelschritt-Daempfer
                                     // laengst wirkt.
-                                    recentTopics = recentTopics,
+                                    recentTopics = recentTopics.toList(),
                                     // **Der Nachklang.** Kurz nach einer Antwort stark genug, dass
                                     // aus der einen angeforderten Routine eine zusammenhaengende
                                     // Weile wird; danach nur noch eine Faerbung des Tages.
@@ -3463,25 +3640,75 @@ fun DockScreen(
                                     outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
                                         else System.currentTimeMillis() - outdoorsSinceMs,
                                     phase = PlayAmbientActivity.currentDayPhase()
+                                ),
+                                // **Der Bewegungsdrang** (siehe PlayAmbientActivity.movementUrge):
+                                // Wer lange still war, bekommt wieder Lust auf Bewegung; wer
+                                // Bewegung mag - von Natur aus oder ueber seinen Pfad -, frueher.
+                                movementUrge = PlayAmbientActivity.movementUrge(
+                                    minutesSinceMove = PlayMovementLog.minutesSinceMove(context, presenceProfileId),
+                                    likesMovement = species.signatureTopic == AnimationType.MOVE ||
+                                        AnimationType.MOVE in leaningTopics
                                 )
                             )
 
                             val externalImpulse = pendingExternalImpulse
-                            val interestTopic = externalImpulse?.animationType ?: ordinaryInterestTopic
                             val nearbyProfiles = visitors.map { it.profileId }.toSet()
                             val (baseAgent, baseWorld) = livingStateFor(species)
+                            val footballTrick = PlayFootballSkill.isLearned(context, presenceProfileId)
+                            val goalInfluence = StreamInteractions.influenceFor(externalImpulse)
+                            val phaseJetzt = PlayAmbientActivity.currentDayPhase()
+                            // **Die Decision Policy waehlt, WIE die Absicht aussieht** (siehe
+                            // decision/DecisionPolicy.kt). Der Kern bleibt, was er war: Er bewertet
+                            // die Ziele, plant und prueft jede Voraussetzung. Die Policy waehlt nur
+                            // zwischen den Ablaeufen, die er gerade zulaesst - einschliesslich eines
+                            // knapp unterlegenen Ziels, nie gegen ein dringendes Beduerfnis. Fehlt
+                            // das Modell oder passt es nicht, entscheidet dieselbe Kette wie
+                            // bisher (ExistingUtilityPolicy, gleiche Wahrscheinlichkeiten).
+                            val jetztMinute = PlayTimeLapse.absoluteMinute().toLong()
+                            val verlauf = PlayDecisionPolicy.history(context, presenceProfileId)
+                            val lage = DecisionState(
+                                agent = baseAgent,
+                                world = baseWorld,
+                                phase = phaseJetzt,
+                                currentPlace = currentPlace,
+                                signals = signals,
+                                presence = DecisionCandidates.presenceByPlace(residentSnapshots, currentPlace, nearbyProfiles),
+                                history = verlauf,
+                                nowMinute = jetztMinute,
+                                minutesSinceMove = PlayMovementLog.minutesSinceMove(context, presenceProfileId),
+                                minutesSinceOutdoors = verlauf.lastOutdoor()
+                                    ?.let { (jetztMinute - it).coerceAtLeast(0L) },
+                                impulseTopic = externalImpulse?.animationType,
+                                goalInfluence = goalInfluence,
+                                nearbyProfiles = nearbyProfiles,
+                                footballTrickLearned = footballTrick,
+                                recentSpecials = recentSpecials.toList()
+                            )
+                            val policy = PlayDecisionPolicy.loaded(context)
+                            val entscheidung = DecisionEngine.decide(
+                                state = lage,
+                                candidates = DecisionCandidates.generate(lage),
+                                policy = policy.policy,
+                                random = Random.Default,
+                                temperature = policy.temperature
+                            )
+                            // Ohne Kandidaten (der Kern will gerade nichts) wie bisher: ein Wurf
+                            // aus denselben Gewichten, der den Leerlaufschritt nicht beeinflusst.
+                            val interestTopic = entscheidung?.candidate?.interestTopic
+                                ?: externalImpulse?.animationType
+                                ?: signals.draw(phaseJetzt)
                             val prepared = LivingRuntimeAdapter.prepare(
                                 agent = baseAgent,
                                 world = baseWorld,
                                 renderedPlace = currentPlace,
                                 interestTopic = interestTopic,
-                                footballTrickLearned = PlayFootballSkill.isLearned(
-                                    context,
-                                    presenceProfileId
-                                ),
+                                footballTrickLearned = footballTrick,
                                 recentSpecials = recentSpecials,
                                 nearbyProfiles = nearbyProfiles,
-                                goalInfluence = StreamInteractions.influenceFor(externalImpulse)
+                                goalInfluence = goalInfluence,
+                                preferredRoutine = entscheidung?.candidate?.routine,
+                                sleepAdmissible = phaseJetzt == PlayAmbientActivity.DayPhase.NIGHT,
+                                chosenGoal = entscheidung?.candidate?.goal
                             )
                             val topic = prepared.topic
                             val gewaehlt = prepared.routine
@@ -3507,6 +3734,36 @@ fun DockScreen(
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
                             val place = gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>()
                                 .firstOrNull()?.place ?: PlayScene.forTopic(topic)
+                            // **Ist noch jemand da, wird aus Bewegung ein Spiel mit allen** (siehe
+                            // PlayGroupGame). Gemeldet: Morgens standen vier Figuren im Park, nur eine
+                            // tat etwas, ohne Musik. Solche Szenen sollen den Alltag aufbrechen und
+                            // haben deshalb Vorrang vor dem Einzelsport.
+                            // Der Kandidat, den die Policy gewaehlt hat - sofern der Kern ihn
+                            // wirklich so ausfuehrt. Er bringt das Gruppenspiel schon mit.
+                            val gewaehlterKandidat = entscheidung?.candidate?.takeIf { it.routine == gewaehlt }
+                            val othersPresent =
+                                residentSnapshots.any { it.publiclyPresent && it.place == place } ||
+                                    (place == currentPlace && visitors.isNotEmpty())
+                            val spiel = if (
+                                gewaehlterKandidat == null &&
+                                PlayGroupGame.shouldPlay(
+                                    topicIsMove = topic == AnimationType.MOVE,
+                                    place = place,
+                                    othersPresent = othersPresent,
+                                    night = PlayAmbientActivity.currentDayPhase() ==
+                                        PlayAmbientActivity.DayPhase.NIGHT
+                                )
+                            ) {
+                                PlayGroupGame.kindFor(place, PlayRoutines.specialOf(gewaehlt), Random.nextInt(1_000))
+                            } else {
+                                null
+                            }
+                            val ablauf = gewaehlterKandidat?.visibleRoutine ?: spiel?.let { kind ->
+                                PlayGroupGame.routine(
+                                    kind,
+                                    gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>().firstOrNull()?.place
+                                )
+                            } ?: gewaehlt
                             currentTopic = topic
                             // **Er zeigt, was er will** - aus der Erklaerung DIESES Schrittes,
                             // nicht aus einem Wuerfel. Das beantwortet die Frage, die man sich
@@ -3526,7 +3783,26 @@ fun DockScreen(
                                     LivingSymbols.of(prepared.result.explain())
                                 }
                             stayedRounds = if (place == currentPlace) stayedRounds + 1 else 0
-                            rememberShown(topic, gewaehlt)
+                            rememberShown(topic, ablauf)
+                            // Der Verlauf der Policy: Neuheit, Wiederholung und "das haben wir
+                            // schon einmal zusammen gemacht" (siehe DecisionHistory).
+                            PlayDecisionPolicy.save(
+                                context,
+                                presenceProfileId,
+                                verlauf.recorded(
+                                    DecisionHistory.Entry(
+                                        minute = jetztMinute,
+                                        key = gewaehlterKandidat?.key ?: DecisionCandidates.keyOf(topic, ablauf),
+                                        family = gewaehlterKandidat?.family
+                                            ?: DecisionCandidates.familyOf(topic, ablauf, spiel),
+                                        topic = topic.name,
+                                        partners = gewaehlterKandidat?.partners ?: emptySet(),
+                                        outdoor = ablauf.steps.any {
+                                            it is RoutineStep.GoToPlace && PlayScene.isOutdoors(it.place)
+                                        }
+                                    )
+                                )
+                            )
 
                             // Nicht mehr EINE Animation, sondern ein mehrschrittiger Ablauf:
                             // hingehen, benutzen, handeln, verweilen, aufstehen (siehe
@@ -3547,7 +3823,7 @@ fun DockScreen(
                                     snapshots = residentSnapshots,
                                     place = place,
                                     hostCompletedActions = prepared.completedActions,
-                                    specialActivity = PlayRoutines.specialOf(gewaehlt)
+                                    specialActivity = PlayRoutines.specialOf(ablauf)
                                 ) ?: return@withLock null
                                 val state = residentStates[partner.profileId]
                                     ?: return@withLock null
@@ -3555,9 +3831,9 @@ fun DockScreen(
                                 partner to state
                             }
                             try {
-                                currentActivity = PlayRoutines.specialOf(gewaehlt)
+                                currentActivity = PlayRoutines.specialOf(ablauf)
                                 val completed = runRoutine(
-                                    gewaehlt,
+                                    ablauf,
                                     species,
                                     // ActionOutcome hat die Wirkung bereits vorbereitet. Die alte
                                     // globale Wirtschaft darf sie nicht ein zweites Mal verbuchen.
@@ -3671,6 +3947,23 @@ fun DockScreen(
                         }
                     }
                 }
+                } finally {
+                    // Wird diese Schleife abgebrochen (eine Erinnerung trifft ein, eine Bitte
+                    // kommt, die Spezies wechselt), steht sie oft mitten in einer Regung, die die
+                    // Ruhe-Schleife vorher angehalten hat - FLOURISH, FIDGET, ein Gang, ein Act.
+                    // Niemand startete sie danach wieder: Die Figur stand bis zur naechsten
+                    // Regung starr da, gemeldet am 26.09. als "bewegt sich nicht mehr". Waehrend
+                    // einer offenen Erinnerung kann das Minuten dauern. Nicht-suspendierend und
+                    // ueber [scope] gestartet, darf das deshalb auch im Abbruchfall laufen.
+                    avatar?.takeIf { !it.fed }?.let { standing ->
+                        if (avatarIdleJob?.isActive != true) {
+                            startAvatarIdleLoop(
+                                standing.species,
+                                AvatarMoodSnapshot.forSpecies(context, standing.species)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -3683,7 +3976,9 @@ fun DockScreen(
         // Eine gemeinsame Beschreibung fuer Bildschirm und Aufnahme. Die Einwohner behalten
         // ihren eigenen Zeitversatz auch in der Ruhebewegung; `scenePhase` allein liesse alle
         // drei wie ein einziges vervielfachtes Uhrwerk atmen.
-        val residentFigures = avatar?.takeIf {
+        // Wo die Hintergrundfiguren stehen - vor [residentFigures] ausgerechnet, weil das
+        // Gruppenspiel ihre Plaetze braucht, bevor ihre Bilder feststehen.
+        val residentPlacements = avatar?.takeIf {
             playMode && maxWidthPx > 0f && sceneCellPx > 0f
         }?.let { host ->
             val hostPx = with(density) { host.sizeDp.dp.toPx() }
@@ -3695,7 +3990,67 @@ fun DockScreen(
                 place = renderedPlace,
                 hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f),
                 hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f)
-            ).map { placement ->
+            )
+        }.orEmpty()
+
+        // **Das Gruppenspiel in diesem Takt** (siehe PlayGroupGame): Mitspieler sind der
+        // Bewohner, jeder Gast, der gerade steht (wer noch hereinkommt oder schon geht, laeuft
+        // weiter), und die Hintergrundfiguren. Wer kommt oder geht, ist in der naechsten Runde
+        // dabei bzw. nicht mehr - ohne Sonderfall.
+        val gameMoment: PlayGroupGame.Moment? = groupGame?.let { kind ->
+            val host = avatar?.takeIf { playMode && sceneCellPx > 0f && !avatarHidden } ?: return@let null
+            val cell = sceneCellPx
+            val players = buildList {
+                val hostPx = with(density) { host.sizeDp.dp.toPx() }
+                add(
+                    PlayGroupGame.Player(
+                        GAME_HOST_ID,
+                        (host.offset.x / cell).roundToInt(),
+                        (host.offset.y / cell).roundToInt(),
+                        (hostPx / cell).roundToInt()
+                    )
+                )
+                visitors.filter { it.facing == AvatarShading.Side.NONE }.forEach { guest ->
+                    val guestPx = with(density) { guest.sizeDp.dp.toPx() }
+                    add(
+                        PlayGroupGame.Player(
+                            guest.profileId,
+                            (guest.offset.x / cell).roundToInt(),
+                            (guest.offset.y / cell).roundToInt(),
+                            (guestPx / cell).roundToInt()
+                        )
+                    )
+                }
+                residentPlacements.forEach { placement ->
+                    val residentPx = maxWidthPx * placement.widthFraction
+                    val top = AvatarFooting.topFor(
+                        floorYPx,
+                        residentPx,
+                        AvatarBodies.forSpecies(placement.resident.species).groundRow()
+                    )
+                    add(
+                        PlayGroupGame.Player(
+                            gameResidentId(placement.resident.profileId),
+                            (maxWidthPx * placement.leftFraction / cell).roundToInt(),
+                            (top / cell).roundToInt(),
+                            (residentPx / cell).roundToInt().coerceAtLeast(4)
+                        )
+                    )
+                }
+            }
+            PlayGroupGame.momentAt(kind, players, scenePhase - groupGameSince, sceneWidthCells, floorYCells)
+        }
+
+        /** Das Bild eines Mitspielers im Spiel - oder [fallback], wenn er gerade nicht mitspielt. */
+        fun gameFrame(id: String, species: AvatarSpecies, fallback: IntArray): IntArray {
+            val moment = gameMoment ?: return fallback
+            val pose = moment.poses[id] ?: return fallback
+            val frame = AvatarAnimations.gamePose(species, pose, scenePhase)
+            // Jeder schaut dem Ball hinterher; die Posen blicken nach rechts.
+            return if (moment.facesLeft[id] == true) AvatarFacing.mirror(frame) else frame
+        }
+
+        val residentFigures = residentPlacements.map { placement ->
                 // Der zweite Teilnehmer benutzt dieselbe bestehende Koerperregung wie der
                 // Hauptavatar. Weil [residentFigures] Bildschirm, Schnappschuss und Clip speist,
                 // bleibt die gemeinsame Phase in allen drei Ausgaben dieselbe. Basketball kennt
@@ -3741,13 +4096,16 @@ fun DockScreen(
                     phaseTickMs = SCENE_PHASE_TICK_MS.toInt()
                 ).coerceIn(idle.frames.indices)
                 PlayClipRenderer.ResidentFigure(
-                    frame = idle.frames[index],
+                    frame = gameFrame(
+                        gameResidentId(placement.resident.profileId),
+                        placement.resident.species,
+                        idle.frames[index]
+                    ),
                     species = placement.resident.species,
                     leftFraction = placement.leftFraction,
                     widthFraction = placement.widthFraction
                 )
-            }
-        }.orEmpty()
+        }
 
         // Was der Kreis gerade zeigt - Erinnerung vor Traum vor Mond vor Uhrzeit.
         //
@@ -3778,7 +4136,7 @@ fun DockScreen(
                 place = renderedPlace,
                 species = current.species,
                 dayPhase = PlayAmbientActivity.currentDayPhase(),
-                avatarFrame = current.frame,
+                avatarFrame = gameFrame(GAME_HOST_ID, current.species, current.frame),
                 avatarAnchorX = (current.offset.x / boundX).coerceIn(0f, 1f),
                 // Muss mit in den Film, sonst laeuft die Kreatur in der Aufnahme anders herum
                 // als auf dem Bildschirm.
@@ -3794,7 +4152,7 @@ fun DockScreen(
                 carried = carried,
                 visitors = visitors.map { guest ->
                     PlayClipRenderer.VisitorFrame(
-                        frame = guest.frame,
+                        frame = gameFrame(guest.profileId, guest.species, guest.frame),
                         species = guest.species,
                         shadeSide = guest.facing,
                         anchorX = (guest.offset.x / boundX).coerceIn(0f, 1f)
@@ -4075,7 +4433,7 @@ fun DockScreen(
         visitors.forEach { guest ->
             key(guest.profileId) {
                 AvatarSpriteView(
-                    frame = guest.frame,
+                    frame = gameFrame(guest.profileId, guest.species, guest.frame),
                     showBackground = false,
                     // Durchgehend zurueckgenommen: So bleibt der eigene Avatar auch dann die
                     // hellste Figur im Bild, wenn sich die beiden ueberdecken - und das laesst
@@ -4237,7 +4595,7 @@ fun DockScreen(
                 stringResource(current.species.labelRes)
             }
             AvatarSpriteView(
-                frame = current.frame,
+                frame = gameFrame(GAME_HOST_ID, current.species, current.frame),
                 brightnessScale = avatarDim.value,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
@@ -4449,6 +4807,7 @@ fun DockScreen(
                         )
                     )
                 }
+                gameMoment?.let { addAll(it.ballCells) }
                 sparkAt?.let { spot ->
                     addAll(PlayEffects.sparkCells(spot.centerX, spot.groundY, sparkProgress.value))
                 }
@@ -5213,6 +5572,12 @@ private fun stationOffset(
  * alles regt sich gleichzeitig, und genau das nimmt der Umgebung das Lebendige.
  */
 private const val SCENE_PHASE_TICK_MS = 200L
+
+/** Die Kennung des Bewohners im Gruppenspiel - Gaeste und Einwohner tragen ihre Profil-Kennung. */
+private const val GAME_HOST_ID = "host"
+
+/** Hintergrundfiguren bekommen ein Praefix, damit sie nie mit einem gleichnamigen Gast kollidieren. */
+private fun gameResidentId(profileId: String) = "resident:$profileId"
 
 private const val SCENE_FADE_OUT_MS = 220
 private const val SCENE_FADE_IN_MS = 380

@@ -120,7 +120,9 @@ object LivingResidents {
             visitPlaces = setOf(
                 PlayScene.Place.PARK,
                 PlayScene.Place.STREET,
-                PlayScene.Place.CITY
+                PlayScene.Place.CITY,
+                // Wer gern draussen unter Leuten ist, trifft man auch am Strand.
+                PlayScene.Place.BEACH
             ),
             activeFromMinute = 7 * 60,
             activeUntilMinute = 22 * 60
@@ -157,7 +159,9 @@ object LivingResidents {
                 PlayScene.Place.STREET,
                 PlayScene.Place.SHOP,
                 // Der Nachbar aus der Stadt schaut in der Spielhalle vorbei - sie liegt um die Ecke.
-                PlayScene.Place.ARCADE
+                PlayScene.Place.ARCADE,
+                // ... und trinkt seinen Kakao im Cafe.
+                PlayScene.Place.CAFE
             ),
             activeFromMinute = 6 * 60,
             activeUntilMinute = 22 * 60

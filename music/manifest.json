@@ -410,6 +410,48 @@
       "cfg_scale": 1,
       "seed": 11102026,
       "notes": "Zweites Stueck der Rolle arcade_background: Synthwave fuer die Spielhalle am Abend - analoger Synth-Lead, warme Flaechen, pulsierender Bass, Drumcomputer, 8-Bit-Doppelung als Pixel-Signatur. a-Moll, 100 BPM. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden); der Prompt nennt weder Spiel noch Komponist. Am 2026-09-25 Harmonie-Ueberarbeitung nach Hoerbericht ('schraeg', hohe Klaviertoene 'uebersteuert'): Absatz 'Harmony and tone' (eine Tonart, konsonante Stimmfuehrung, Fuehrung im mittleren Register, weiche Hoehen) ergaenzt; die 8-Bit-Stimme verdoppelt die Melodie nicht mehr eine Oktave hoeher, sondern antwortet als weiche Dreieckswelle im selben Register, dazu eine kontrastierende B-Phrase. Seed unveraendert, damit der Unterschied am Prompt liegt."
+    },
+    {
+      "id": "beach-01",
+      "title": "Pixel Tide",
+      "role": "beach_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_beach_01",
+      "prompt_file": "music/prompts/beach-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 27092601,
+      "notes": "Erstes Stueck der Rolle beach_background (Strand, Weltausbau 2026-09-26): sonniger Surf- und Insel-Klang - klare E-Gitarre, Ukulele, Marimba, E-Bass, Bongos und Shaker. F-Dur, 112 BPM. Aufbau nach dem Hootlet-Pilotmuster (Tempo, Puls, Motiv zuerst, kein Ein- und Ausblenden) mit Absatz 'Harmony and tone' und weicher 8-Bit-Antwortstimme im selben Register; der Prompt nennt weder Kuenstler noch Werk. Noch nicht erzeugt und nicht gehoert."
+    },
+    {
+      "id": "mountains-01",
+      "title": "Summit Air",
+      "role": "mountains_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_mountains_01",
+      "prompt_file": "music/prompts/mountains-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 27092602,
+      "notes": "Erstes Stueck der Rolle mountains_background (Gebirge, Weltausbau 2026-09-26): weit, ruhig, erhaben - Waldhorn, Fingerpicking-Gitarre, Cello, Streicherflaechen, Rahmentrommel. G-Dur, 3/4, 84 BPM. Aufbau nach dem Hootlet-Pilotmuster mit Absatz 'Harmony and tone' und weicher 8-Bit-Antwortstimme im selben Register; ohne epische Perkussion. Noch nicht erzeugt und nicht gehoert."
+    },
+    {
+      "id": "cafe-01",
+      "title": "Pixel Crema",
+      "role": "cafe_background",
+      "model": "small-music",
+      "duration_seconds": 90,
+      "output_format": "ogg",
+      "android_resource": "itoeva_cafe_01",
+      "prompt_file": "music/prompts/cafe-01.txt",
+      "steps": 8,
+      "cfg_scale": 1,
+      "seed": 27092603,
+      "notes": "Erstes Stueck der Rolle cafe_background (Cafe, Weltausbau Stufe 4): warme Musette und Kaffeehaus-Swing - Akkordeon, Nylongitarre, Kontrabass, Vibraphon, Besen. B-Dur (B-flat), 96 BPM. Aufbau nach dem Hootlet-Pilotmuster mit Absatz 'Harmony and tone' und weicher 8-Bit-Antwortstimme im selben Register; ohne Cafe-Geraeusche. Noch nicht erzeugt und nicht gehoert."
     }
   ]
 }

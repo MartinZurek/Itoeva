@@ -51,11 +51,42 @@ mit – das Wesen spielt selbst ein Spiel.
 - [x] Musik: Rolle `ARCADE` mit *Insert Coin* (Chiptune) und *Continue?* (Synthwave).
 - [ ] Später: Highscore als Erinnerung in der Welt.
 
-## Stufe 4 – Neuer Ort: das Café
+## Stufe 3b – Mehr Natur, mehr Stadt, mehr Leben (2026-09-26, umgesetzt)
 
-- Sozialer Treffpunkt: Bewohner sitzen dort, man trifft sich auf einen Kakao.
-- Interaktion: bestellen, sitzen, mit einem Gast reden (nutzt die vorhandene Gesprächslogik).
-- Musik: warmer Lo-Fi-Jazz / Café-Musette.
+Auftrag: „mehr Natur … Dschungel, Wald, Berge, Sümpfe, eine Ebene, Gebirge, Strand … mehr Stadt
+mit mehr Bewohnern und Fahrzeugen, technische Gadgets, die in der Luft fliegen … der Supermarkt ist
+leer … Menschen, die mit ihren Tieren Gassi gehen“. Umgesetzt in `matrix/PlayWorld.kt`.
+
+- [x] Fünf neue Orte: **Dschungel** (Blätterdach, Lianen, Wasserfall, Palme, Bambus, Papageien,
+      Glühwürmchen), **Gebirge** (zwei Bergketten mit Schnee, Rastfelsen, Wegweiser, Adler),
+      **Sumpf** (Mangrove, Steg, kahle Bäume, Blasen, Nebel, Frosch, Irrlichter), **Ebene**
+      (Hügel, Gehöft, Windmühle mit drehenden Flügeln, Heuballen, grasende Kühe) und **Strand**
+      (Meer mit laufenden Wellen, Sonne, Segelboot, Palme, Sonnenschirm, Liegestuhl, Sandburg,
+      Möwen, Krabbe). Je ein Ausflug über die Straße (`PlayRoutines.excursion`), nachts nicht.
+- [x] Stadt: Skyline aus Hochhäusern mit nachts erleuchteten Fenstern und Warnlicht, Autos mit
+      Scheinwerfern, ein Bus, Passanten mit Hund, Luftschiff, Drohnen, fliegendes Auto.
+- [x] Straße, Park, Wiese, Ebene, Strand: Leute, die ihren Hund ausführen.
+- [x] Supermarkt: Regalwand mit Gemüsetheke, Getränken, Kühlregal, Brot, Dosen und Kartons,
+      Gangschilder, Deckenlicht, Kundschaft mit Einkaufswagen. Spielhalle: Besucher.
+- [x] Zeichenreihenfolge: Hinten → Leute/Fahrzeuge → Vordergrund. Nebenbei behoben: Die Bank und
+      der Briefkasten der Stadt wurden von den Fassaden übermalt.
+- [x] Café (Stufe 4) und eigene Musikrollen für Strand und Gebirge - siehe unten.
+- [ ] Später: Einwohner, die in den neuen Landschaften wohnen.
+
+## Stufe 4 – Neuer Ort: das Café (2026-09-27, umgesetzt)
+
+- [x] Ort `CAFE` (Innenraum): Theke mit Espressomaschine und Gebäckvitrine, dampfender Siebträger,
+      Kreidetafel, zwei Hängelampen mit Lichtschein, Sessel am Tischchen, Fliesenboden. Die Barista
+      arbeitet hinter der Theke, am Tischchen sitzt ein Gast, ab und zu kommt jemand herein.
+- [x] Interaktion `PlayRoutines.cafeRoutine` (im Thema „Beisammensein“): über die Straße hinein,
+      Kakao an der Theke, im Sessel verweilen, tagträumen. Einwohner kommen zu Besuch (Gloop).
+      Nachts geschlossen (`PlayRoutines.NIGHT_CLOSED`).
+- [x] Musik: Rolle `cafe_background` mit Prompt *Pixel Crema* (Musette/Kaffeehaus-Swing,
+      Akkordeon). Rückfall: Stadt.
+- [x] Musik für die neuen Landschaften: Rollen `beach_background` (*Pixel Tide*, Surf/Insel) und
+      `mountains_background` (*Summit Air*, Waldhorn, 3/4). Rückfall: Natur.
+- [ ] Die drei Stücke erzeugen (**Generate Itoeva Music**, je ein Lauf, erst nach dem Merge -
+      der Workflow liest `main`), in die Hörtest-APK, hören; erst danach nach `main`.
 
 ## Stufe 5 – Neuer Ort: das Seeufer / der Strand
 

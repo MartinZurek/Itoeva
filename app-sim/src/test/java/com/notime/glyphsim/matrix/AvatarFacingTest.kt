@@ -49,24 +49,37 @@ class AvatarFacingTest {
 
     /**
      * **Der eigentliche Befund, an allen sechs Kreaturen.** Die Gesichter sind frontal gezeichnet
-     * - die Neigung steckt in Beinen und Schwanz des Gang-Bildes, die nach rechts ausschlagen
-     * (gemessen: Koerperschwerpunkt bei FENNEC 0,33 Zellen, bei WYRMLING 0,31 und bei PUFFLING
-     * 0,21 rechts der Augen). Beim Gang nach links muss dieselbe Neigung nach links zeigen.
+     * - die Neigung steckt im Schwanz des Gang-Bildes. Beim Gang nach links muss sie genau
+     * gespiegelt sein.
      */
     @Test
-    fun `beim Gang nach links neigt sich jede Kreatur nach links`() {
+    fun `beim Gang nach links ist jede Kreatur genau gespiegelt`() {
         for (species in AvatarSpecies.entries) {
             val gang = AvatarAnimations.walkSequence(species).frames.first()
             val nachRechts = neigung(gang)
             val nachLinks = neigung(AvatarFacing.orient(gang, AvatarShading.Side.RIGHT))
             assertEquals("$species", -nachRechts, nachLinks, 1e-9)
         }
-        // Und wo die Neigung deutlich ist, zeigt sie gezeichnet nach rechts - sonst waere die
-        // ganze Spiegelung verkehrt herum.
+    }
+
+    /**
+     * **Der Schwanz haengt hinten** (gemeldet am 2026-09-26): nach rechts laufen heisst links
+     * wedeln, nach links laufen rechts wedeln - dieselbe Seite wie der Schatten, der auf der
+     * Flanke liegt, von der die Figur kommt (siehe [AvatarShading]).
+     *
+     * Bis dahin sass der Schwanz rechts, auf der Seite, in die die Posen blicken. Die fruehere
+     * Fassung dieses Tests verlangte genau das ("die Neigung zeigt nach rechts") und hielt damit
+     * den Fehler fest: Die Kreatur lief ihrem Schwanz hinterher.
+     */
+    @Test
+    fun `der Schwanz haengt beim Gehen hinten`() {
         for (species in listOf(AvatarSpecies.FENNEC, AvatarSpecies.WYRMLING, AvatarSpecies.PUFFLING)) {
             val gang = AvatarAnimations.walkSequence(species).frames.first()
-            assertTrue("$species", neigung(gang) > 0.1)
-            assertTrue("$species", neigung(AvatarFacing.orient(gang, AvatarShading.Side.RIGHT)) < -0.1)
+            assertTrue("$species nach rechts: Schwanz links", neigung(gang) < -0.1)
+            assertTrue(
+                "$species nach links: Schwanz rechts",
+                neigung(AvatarFacing.orient(gang, AvatarShading.Side.RIGHT)) > 0.1
+            )
         }
     }
 

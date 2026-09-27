@@ -186,6 +186,21 @@ object UtilitySelector {
         .firstOrNull { it.needPressure >= MIN_PRESSURE || it.externalInfluence > 0.0 }
         ?.goal
 
+    /**
+     * **Die Ziele, zwischen denen gewaehlt werden DARF** - genug Druck (oder ein Anstoss von
+     * aussen) und ein Weg dorthin, absteigend nach [GoalScore.total].
+     *
+     * [choose] nimmt daraus weiterhin das erste. Die Decision Policy darf zwischen den vorderen
+     * waehlen (siehe `decision/DecisionCandidates`); was hier fehlt, kann sie nie waehlen.
+     */
+    fun eligible(
+        agent: AgentState,
+        world: WorldState,
+        influence: GoalInfluence? = null
+    ): List<GoalScore> = rank(agent, world, influence).filter {
+        (it.needPressure >= MIN_PRESSURE || it.externalInfluence > 0.0) && it.cost < Planner.UNREACHABLE
+    }
+
     private const val RECENT_EPISODES = 6
     private const val MEMORY_WEIGHT = 0.015
     private const val RELATIONSHIP_WEIGHT = 0.05

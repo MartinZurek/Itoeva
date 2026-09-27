@@ -543,6 +543,12 @@
     <string name="talk_place_meadow">auf der Wiese</string>
     <string name="talk_place_city">in der Stadt</string>
     <string name="talk_place_arcade">in der Spielhalle</string>
+    <string name="talk_place_jungle">tief im Dschungel</string>
+    <string name="talk_place_mountains">oben in den Bergen</string>
+    <string name="talk_place_swamp">draußen im Sumpf</string>
+    <string name="talk_place_plains">draußen auf der weiten Ebene</string>
+    <string name="talk_place_beach">am Strand</string>
+    <string name="talk_place_cafe">im Café bei einem Kakao</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. Jeder Satz haengt an einem
          Zustand der Welt, keiner ist erfunden. -->
@@ -758,6 +764,9 @@
     <string name="music_role_fishing">Beim Angeln</string>
     <string name="music_role_ballgame">Beim Ballspiel – Basketball und Fußball</string>
     <string name="music_role_arcade">In der Spielhalle</string>
+    <string name="music_role_beach">Am Strand</string>
+    <string name="music_role_mountains">Oben in den Bergen</string>
+    <string name="music_role_cafe">Im Café</string>
     <string name="music_role_sport">Bewegung am Sportplatz</string>
     <string name="music_role_home_evening">Ruhiger Abend, Nacht und stille Naturorte</string>
     <string name="music_role_character_theme">Das eigene Thema des anwesenden Wesens, einmal am Tag</string>
@@ -783,6 +792,9 @@
     <string name="music_title_ballgame_01">Pixel Hoops</string>
     <string name="music_title_arcade_01">Insert Coin</string>
     <string name="music_title_arcade_02">Continue?</string>
+    <string name="music_title_beach_01">Pixel Tide</string>
+    <string name="music_title_mountains_01">Summit Air</string>
+    <string name="music_title_cafe_01">Pixel Crema</string>
     <string name="music_title_home_evening_01">Quiet Lanterns</string>
     <string name="music_title_home_evening_02">Late Windows</string>
     <string name="music_title_theme_puffling">Puffling\'s Theme</string>

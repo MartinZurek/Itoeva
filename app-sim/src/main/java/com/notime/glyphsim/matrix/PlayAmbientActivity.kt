@@ -285,15 +285,86 @@ object PlayAmbientActivity {
          * nie endet.
          */
         afterglow: Map<AnimationType, Int> = emptyMap(),
+        /**
+         * **Der Bewegungsdrang** - wie lange die Figur schon still war, als Zuschlag fuer MOVE
+         * (siehe [movementUrge]). Das neunte Signal.
+         *
+         * Gewuenscht am 2026-09-26: ausgewogen, nicht "das Spiel dreht sich nur um Sport" - aber
+         * wer sich laenger nicht bewegt hat, soll wieder Lust darauf bekommen, und wer gern Sport
+         * macht, oefter. Wie Neigung und Nachklang darf der Drang kein Thema EINFUEHREN: nachts
+         * bleibt es beim Schlaf.
+         */
+        movementUrge: Int = 0,
         random: Random = Random
     ): AnimationType =
         pickWeighted(
-            combinedWeights(
+            topicWeights(
                 phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic,
-                recentTopics, holdOutdoors, afterglow
+                recentTopics, holdOutdoors, afterglow, movementUrge
             ),
             random
         )
+
+    /**
+     * **Die Gewichte, aus denen [nextTopic] zieht** - dieselben neun Signale, ohne den Wurf.
+     *
+     * Die Decision Policy (siehe `decision/`) braucht sie aus zwei Gruenden: Die Schluessel sind
+     * die Themen, die zu dieser Stunde ueberhaupt in Frage kommen (nachts nur Schlaf, nie
+     * Medizin, bei laufendem Aufenthalt draussen nur Aussenthemen) - also eine Gueltigkeitsregel,
+     * die kein Modell umgehen darf. Und die Werte sind die bisherige Wahl, die als Rueckfall und
+     * als Vergleichsgrundlage bestehen bleibt.
+     */
+    fun topicWeights(
+        phase: DayPhase,
+        boostedTopics: Set<AnimationType> = emptySet(),
+        stayAt: PlayScene.Place? = null,
+        leaning: Set<AnimationType> = emptySet(),
+        plannedTopic: AnimationType? = null,
+        justPlayed: AnimationType? = null,
+        signatureTopic: AnimationType? = null,
+        recentTopics: List<AnimationType> = emptyList(),
+        holdOutdoors: Boolean = false,
+        afterglow: Map<AnimationType, Int> = emptyMap(),
+        movementUrge: Int = 0
+    ): Map<AnimationType, Int> = combinedWeights(
+        phase, boostedTopics, stayAt, leaning, plannedTopic, justPlayed, signatureTopic,
+        recentTopics, holdOutdoors, afterglow, movementUrge
+    )
+
+    /**
+     * **Wie sehr es die Figur nach Bewegung draengt**, als Zuschlag fuer MOVE.
+     *
+     * Gleich nach dem Sport: nichts - der Wiederholungs- und der Vielfaltsdaempfer senken MOVE
+     * dann ohnehin. Danach eine Weile ebenfalls nichts; wer vor einer halben Stunde gelaufen ist,
+     * muss nicht schon wieder. Ab [URGE_ONSET_MINUTES] waechst der Drang alle
+     * [URGE_STEP_MINUTES] um eins, bis [MAX_MOVEMENT_URGE]. Wer Bewegung mag
+     * ([likesMovement]: Spezies-Vorliebe oder Sport-Pfad), wird frueher unruhig.
+     *
+     * Mittags heisst das: MOVE liegt ohne Drang bei rund einem Fuenftel der Wahl, mit vollem Drang
+     * bei gut zwei Fuenfteln - klar spuerbar, aber nie eine Gewissheit. `null` (noch nie bewegt,
+     * etwa nach einer frischen Installation) zaehlt als "kein Anlass", nicht als "ewig still".
+     */
+    fun movementUrge(minutesSinceMove: Long?, likesMovement: Boolean): Int {
+        if (minutesSinceMove == null || minutesSinceMove < 0) return 0
+        val onset = if (likesMovement) URGE_ONSET_MINUTES_EAGER else URGE_ONSET_MINUTES
+        if (minutesSinceMove < onset) return 0
+        return (1 + ((minutesSinceMove - onset) / URGE_STEP_MINUTES).toInt()).coerceAtMost(MAX_MOVEMENT_URGE)
+    }
+
+    /** Ab wann die Figur unruhig wird, wenn sie still war. */
+    const val URGE_ONSET_MINUTES = 60L
+
+    /** Dasselbe fuer eine Figur, die Bewegung mag. */
+    const val URGE_ONSET_MINUTES_EAGER = 30L
+
+    /** Alle wie viele Minuten der Drang um eins waechst. */
+    const val URGE_STEP_MINUTES = 15L
+
+    /**
+     * Die Obergrenze - so gross wie [STAY_BONUS]. Staerker, und der Drang uebertoente Ort,
+     * Tageszeit und Plan; dann waere es wieder "nur Sport".
+     */
+    const val MAX_MOVEMENT_URGE = 5
 
     /**
      * Ob nach der gerade gespielten Handlung noch eine **Einlage aus dem Skillbaum** kommt (siehe
@@ -399,7 +470,8 @@ object PlayAmbientActivity {
         signatureTopic: AnimationType? = null,
         recentTopics: List<AnimationType> = emptyList(),
         holdOutdoors: Boolean = false,
-        afterglow: Map<AnimationType, Int> = emptyMap()
+        afterglow: Map<AnimationType, Int> = emptyMap(),
+        movementUrge: Int = 0
     ): Map<AnimationType, Int> {
         val base = weightsFor(phase)
         val relevantBoosts = boostedTopics - AnimationType.MEDICINE
@@ -409,7 +481,7 @@ object PlayAmbientActivity {
         val relevantSignature = signatureTopic?.takeIf { it != AnimationType.MEDICINE }
         if (relevantBoosts.isEmpty() && stayAt == null && leaning.isEmpty() && relevantPlan == null &&
             justPlayed == null && relevantSignature == null && recentTopics.isEmpty() &&
-            !holdOutdoors && afterglow.isEmpty()
+            !holdOutdoors && afterglow.isEmpty() && movementUrge <= 0
         ) {
             return base
         }
@@ -451,6 +523,13 @@ object PlayAmbientActivity {
         // ein Thema herbeirufen, das dort gar kein Grundgewicht hat.
         if (relevantSignature != null && relevantSignature in base.keys) {
             combined[relevantSignature] = (combined[relevantSignature] ?: 0) + SIGNATURE_BONUS
+        }
+        // **Der Bewegungsdrang** - dieselbe Zurueckhaltung: nur wenn MOVE zur Tageszeit ohnehin
+        // vorkommt, also nie nachts. Vor den Daempfern, damit ein gerade gelaufener Sport auch
+        // bei vollem Drang (der dann ohnehin zurueckgesetzt ist) nicht sofort wiederkommt.
+        if (movementUrge > 0 && AnimationType.MOVE in base.keys) {
+            combined[AnimationType.MOVE] = (combined[AnimationType.MOVE] ?: 0) +
+                movementUrge.coerceAtMost(MAX_MOVEMENT_URGE)
         }
         if (stayAt != null) {
             // NUR was ohnehin schon zur Tageszeit passt: Ein Thema, das in dieser Phase gar nicht

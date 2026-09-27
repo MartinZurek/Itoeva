@@ -152,11 +152,16 @@ object AvatarBodies {
         // gelesen, nicht als Schwanz). [wag] schwingt ihn jetzt ein und aus statt ihn nur
         // senkrecht zu wippen: negativ = fast eingezogen, null = ruhig angelegt, positiv =
         // sichtbar ausgeschwungen.
+        //
+        // **Links, also HINTEN** (seit 2026-09-26): Die Posen blicken nach rechts (siehe
+        // [AvatarFacing]). Bis dahin sass der Schwanz rechts - die Kreatur lief ihm hinterher,
+        // und beim gespiegelten Gang nach links zeigte er ebenfalls nach vorn. Gemeldet: nach
+        // links laufen heisst rechts wedeln, nach rechts laufen links wedeln.
         tail = { wag ->
             when {
-                wag <= -1 -> listOf(10 to 12)
-                wag == 0 -> listOf(10 to 12, 11 to 13)
-                else -> listOf(10 to 12, 11 to 12, 12 to 13)
+                wag <= -1 -> listOf(5 to 12)
+                wag == 0 -> listOf(5 to 12, 4 to 13)
+                else -> listOf(5 to 12, 4 to 12, 3 to 13)
             }
         },
         // Ohrenspitzen zucken: die Ohren sitzen bei (5,5)/(10,5), die Spitze wandert je nach
@@ -226,12 +231,12 @@ object AvatarBodies {
         feet = stepping(left = 6, right = 9, row = 13),
         // Am unteren Ruecken statt auf Augenhoehe (dieselbe Umgestaltung wie bei PUFFLING/FENNEC,
         // siehe deren Kommentar) - ein Drache mit dem Schwanz direkt neben dem Kopf sah aus wie
-        // ein drittes Fluegelpaar, nicht wie ein Schwanz.
+        // ein drittes Fluegelpaar, nicht wie ein Schwanz. Links = hinten, siehe PUFFLING.
         tail = { wag ->
             when {
-                wag <= -1 -> listOf(10 to 11)
-                wag == 0 -> listOf(10 to 11, 11 to 12)
-                else -> listOf(10 to 11, 11 to 11, 12 to 12, 13 to 12)
+                wag <= -1 -> listOf(5 to 11)
+                wag == 0 -> listOf(5 to 11, 4 to 12)
+                else -> listOf(5 to 11, 4 to 11, 3 to 12, 2 to 12)
             }
         },
         // Fluegelschlag: die Fluegel sitzen bei (3,8)/(2,9) bzw. (12,8)/(13,9) - je nach Phase
@@ -266,12 +271,12 @@ object AvatarBodies {
         feet = stepping(left = 6, right = 9, row = 14),
         // Am unteren Ruecken statt auf Augenhoehe (dieselbe Umgestaltung wie bei PUFFLING/
         // WYRMLING, siehe deren Kommentar) - eine buschige Fuchsschwanz-Andeutung passt ohnehin
-        // besser unten am Koerper als seitlich am Kopf.
+        // besser unten am Koerper als seitlich am Kopf. Links = hinten, siehe PUFFLING.
         tail = { wag ->
             when {
-                wag <= -1 -> listOf(10 to 11)
-                wag == 0 -> listOf(10 to 11, 11 to 12)
-                else -> listOf(10 to 11, 11 to 11, 12 to 12, 12 to 13)
+                wag <= -1 -> listOf(5 to 11)
+                wag == 0 -> listOf(5 to 11, 4 to 12)
+                else -> listOf(5 to 11, 4 to 11, 3 to 12, 3 to 13)
             }
         },
         // Spitze Ohren (Accessory bei (5,1)/(5,2) bzw. (10,1)/(10,2)) stellen sich auf oder

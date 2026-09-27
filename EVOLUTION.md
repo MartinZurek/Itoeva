@@ -664,6 +664,273 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-27 - Cafe und Musikrollen fuer Strand, Gebirge und Cafe
+
+**Anlass:** Nutzerauftrag: "Jetzt das Cafe und Musik fuer Strand und Gebirge bauen" (Weltausbau
+Stufe 4 und der offene Punkt aus Stufe 3b).
+
+**Geaendert:**
+- Neuer Innenraum `CAFE` (`PlayWorld`): Theke mit Espressomaschine und Dampf, Gebaeckvitrine,
+  Kreidetafel, Haengelampen, Sessel (`Station.SEAT`) am Tischchen, Fliesen; Barista, sitzender Gast
+  und gelegentliche Kundschaft. Besuch erlaubt, Gloop kommt dorthin.
+- Game Loop: `PlayRoutines.cafeRoutine` im Thema LOVE (Strasse mit 12 s Aufenthalt, Kakao an der
+  Theke, Sessel, Tagtraum). Nachts geschlossen: `PlayRoutines.NIGHT_CLOSED` ersetzt die reine
+  Wildnis-Regel und wird jetzt auch ueber `topicBranch` durchgereicht.
+- Musik: Rollen `BEACH`, `MOUNTAINS`, `CAFE` (Resolver: vor Natur bzw. Stadt, die bleiben Rueckfall),
+  Titel, Rollenbeschreibungen, Prompts `beach-01` *Pixel Tide*, `mountains-01` *Summit Air*,
+  `cafe-01` *Pixel Crema* nach den Harmonieregeln, Manifest mit 8/1. **Audio noch nicht erzeugt.**
+- Decision Policy neu trainiert. `DecisionBehaviourTest` mit drei Startwerten je Spezies (der
+  Nachtanteil schwankte bei einem Startwert allein durch den verschobenen Zufallsstrom; gemessen
+  im Bericht: nachts draussen Basis 11,5 %, Policy 13,2 %). `DecisionCandidatesTest` bildet
+  DockScreen jetzt treu nach (`sleepAdmissible` nachts).
+
+**Migration:** keine; `CAFE` ist hinten an `Place` angehaengt.
+
+- **Tests (`TESTED BEHAVIOR`):** 694 Offline-Tests gruen, lokal mit `SceneCompositionTest` 710.
+  Neu: Cafe als Innenraum mit Sessel, Tuer und Leuten; Cafe-Ablauf setzt sich wirklich; eigene
+  Musikrollen mit Rueckfall; Cafe nachts geschlossen. `tools/music`: 36 Tests gruen, Dry-Run fuer
+  alle drei neuen Tracks.
+- **Ungeprueft (`UNVERIFIED`):** Klang der drei Stuecke (noch nicht erzeugt), Cafe am Geraet.
+- **Naechster Schritt:** Nach dem Merge je ein Lauf *Generate Itoeva Music* fuer `beach-01`,
+  `mountains-01`, `cafe-01`, Hoertest-APK, hoeren.
+
+### 2026-09-26 - Weltausbau: Natur, Stadtleben und ein richtiger Supermarkt
+
+**Anlass:** Nutzerauftrag: „mehr Natur - Dschungel, Wald, Berge, Sümpfe, eine Ebene, Gebirge,
+Strand … mehr Stadt mit mehr Bewohnern und Fahrzeugen, technische Gadgets, die in der Luft
+fliegen … der Supermarkt ist leer … Menschen, die mit ihren Tieren Gassi gehen. Die Welt sollte
+aussehen wie eine richtige Welt.“
+
+**Befund (`FACT`, Vorschau gerendert):** Ueber der Bodenlinie lag an jedem Ort ein halber Bildschirm
+leerer Himmel; Aussenorte bestanden aus drei, vier Requisiten; niemand ging in der Stadt spazieren;
+der Laden war ein Regal und eine Kasse. Dazu ein Zeichenfehler: Die Einrichtung stellt Stationen
+nach vorn, dadurch wurden die (hinteren) Hausfassaden der Stadt NACH Bank und Briefkasten gezeichnet
+und uebermalten sie vollstaendig.
+
+**Geaendert:**
+- Neu `matrix/PlayWorld.kt`: fuenf Orte (Dschungel, Gebirge, Sumpf, Ebene, Strand) mit fernem
+  Hintergrund, eigener Einrichtung samt Sitzplatz (`Station.BENCH`), Boden und Tierleben; Skyline,
+  Verkehr, Passanten mit Hund, Luftschiff, Drohnen und fliegendes Auto fuer Stadt und Strasse;
+  Regalwand, Kuehlregal, Gemuesetheke, Gangschilder, Deckenlicht und Kundschaft im Laden.
+- `PlayScene.build` zeichnet jetzt Hintergrund → hintere Requisiten → Leute/Fahrzeuge →
+  Vordergrund; Sterne und Wolken verschwinden hinter Bergen, Blaetterdach und Skyline.
+- Game Loop: fuenf Ausfluege (`PlayRoutines.excursion`) im Bewegungsthema, nachts ausgeschlossen
+  (`PlayRoutines.admissible`). Strand und Ebene sind Spielorte fuer das Gruppenspiel, der Strand
+  erlaubt Besuch (die Parkstammgaestin kommt auch dorthin). Musik: die neuen Orte zaehlen als Natur.
+- Decision Policy neu trainiert (gleiches Schema v1, 21 KB); `DecisionBehaviourTest` ueber 14 statt
+  7 Tage, weil der Nachtanteil bei sieben Tagen auf rund siebzig Wahlen beruhte und schon am
+  verschobenen Zufallsstrom kippte (gemessen: nachts draussen Basis 13,2 %, Policy 14,2 %).
+
+**Verworfen:** Die Einrichtung des Ladens als weitere Einzelrequisiten - bei 40 Spalten stuenden
+sie ineinander und `fitting` liesse sie wortlos fallen; die Regalwand ist deshalb prozedural und
+spart nur die Vordergrund-Requisiten aus. Leute so hell wie Moebel - sie wuerden mit der Figur
+konkurrieren; sie liegen unter `FURNITURE`.
+
+**Migration:** keine Datenaenderung. Neue `Place`-Werte sind hinten angehaengt, gespeicherte Orte
+bleiben gueltig. Ein Revert laesst gespeicherte neue Ortsnamen zurueck - `PlayPresence` liest nur
+gueltige Namen (Rueckfall auf die Tageszeit).
+
+- **Tests (`TESTED BEHAVIOR`):** `tools/reaction-preview/tests.sh` gruen, dazu `SceneCompositionTest`
+  lokal (nichts steht ineinander, jeder Ruheplatz frei). Neu `PlayWorldTest` (12): Sitzplatz bei
+  jeder Breite, jeder Ort wird besucht, nachts keine Wildnis, eigener Hintergrund je Landschaft,
+  nichts ueberstrahlt die Figur, Leben kommt vorbei - aber nicht ununterbrochen, Regalwand nicht in
+  Kasse/Regal, die Bank der Stadt ist wieder sichtbar, Sterne hinter den Bergen.
+- **Ungeprueft (`UNVERIFIED`):** am Geraet - Lesbarkeit der sieben Zellen hohen Passanten, des
+  Meeres und der Regalwand; ob die neuen Ausfluege im Tagesablauf zu oft oder zu selten kommen.
+- **Naechster Schritt:** Am Geraet ansehen; danach Cafe (Stufe 4) und eigene Musik fuer Strand
+  und Gebirge.
+
+### 2026-09-26 - Avatar-Waechter: die Figur bleibt im Spielmodus sichtbar, hell und in Bewegung
+
+**Anlass:** Gemeldet vom Nutzer: Im Spielmodus wurde der Avatar teils dunkel, blieb reglos stehen
+oder lief nach einer auf ihn gezogenen Erinnerung aus dem Bild, danach war niemand mehr zu sehen.
+Nur Verlassen und Wiederbetreten des Spielmodus half. In einem durchlaufenden Stream gibt es
+diesen Ausweg nicht.
+
+**Befund (`FACT`, aus dem Code):** Drei Stellen in `DockScreen` mit derselben Form - ein Ablauf
+veraendert die Figur voruebergehend und wird abgebrochen (meist ueber den Schluessel der
+Play-Schleife, wenn eine Erinnerung eintrifft), bevor er sie zuruecksetzt:
+- `moveToPlace`: Abbruch im Tuerdurchgang liess `avatarHidden`/`avatarDim` stehen - unsichtbar
+  bzw. abgedunkelt bis zum naechsten Raumwechsel; die offene Erinnerung liess sich auf niemanden
+  mehr ziehen.
+- Play-Schleife: Abbruch mitten in FLOURISH/FIDGET/Gang/Act liess die Ruhe-Schleife aus - die
+  Figur stand bis zur naechsten Regung starr da, bei offener Erinnerung minutenlang.
+- `feedAvatarNow`: Die Raketen-Reaktion fliegt gewollt 1,6 Bildhoehen ueber den oberen Rand. Im
+  Dock verschwindet die Figur danach ohnehin, im Spielmodus blieb sie dort oben stehen.
+
+**Geaendert (Game Loop, Reminder-Antwort):**
+- `moveToPlace` in try/finally; im Abbruchfall sofort voll sichtbar (`NonCancellable`-`snapTo`).
+- Die Play-Schleife startet im finally die Ruhe-Schleife neu, wenn keine laeuft.
+- Nach jeder Fuetter-Reaktion steht die Figur im Spielmodus wieder auf dem Boden an ihrer
+  Ausgangsstelle; die Reaktion startet vom aktuellen statt vom vor dem Datenbankgang
+  eingefangenen Stand. Die Reminder-SEMANTIK (was gefuettert, verbucht, abgelegt wird) ist
+  unveraendert.
+- Neu `matrix/AvatarWatchdog.kt` (rein) plus ein Takt in `DockScreen`: alle 1,5 s wird geprueft,
+  ob die Figur fehlt, ausgeblendet, abgedunkelt, ausserhalb des Bildes oder erstarrt ist. Was bei
+  zwei Pruefungen hintereinander besteht, wird repariert und als `Avatar-Waechter repariert: ...`
+  geloggt. Gewollte Zustaende (Tuerdurchgang, Fuetter-Reaktion, Gang/Hinsetzen, Tagesablauf,
+  Besuch, Gruppenspiel, Traum) sind ausgenommen.
+
+**Verworfen:** Nur den Waechter bauen - er haette die Symptome nach drei Sekunden behoben, die
+Ursachen aber stehen lassen und jeden Stream-Zuschauer das Flackern sehen lassen. Umgekehrt nur
+die drei Stellen reparieren - jede kuenftige Abbruchstelle haette dasselbe wieder ausgeloest.
+
+**Migration:** keine; kein Datenmodell, keine Preference, kein oeffentlicher Text.
+
+**Ruecksetzweg:** Revert des Commits. Ohne Waechter und try/finally gilt wieder das alte
+Verhalten inklusive der gemeldeten Fehler; gespeicherte Staende sind nicht betroffen.
+
+- **Tests (`TESTED BEHAVIOR`):** `bash tools/reaction-preview/tests.sh` - 679 Tests gruen, davon
+  18 neu in `AvatarWatchdogTest` (Raketen-Endpunkt, Tuerdurchgang, Schlaf im Ablauf,
+  Entprellung, Rueckkehrstelle). DockScreen-Anbindung nur ueber den CI-Build geprueft.
+- **Ungeprueft (`UNVERIFIED`):** Am Geraet - Erinnerung mitten im Raumwechsel, Raketen-Erinnerung
+  im Spielmodus, und ob der Waechter im Stream-Messlauf (NT-058) je anschlaegt. Taucht die
+  Logzeile dort auf, gibt es eine weitere, unbekannte Ursache.
+- **Naechster Schritt:** Beim Stream-Messlauf die Logzeile beobachten; neue gewollte Zustaende,
+  in denen die Figur unsichtbar, dunkel, ausserhalb oder lange reglos ist, dem Waechter als
+  Ausnahme mitteilen.
+
+### 2026-09-26 - Decision Policy: ein kleines lokales Netz waehlt zwischen erlaubten Ablaeufen
+
+**Anlass:** Auftrag, das Living-Agent-System um eine kleine lokale Decision Policy zu erweitern -
+ohne LLM, Cloud oder Netz, mit demselben Modell fuer App und Stream, mit der bisherigen Logik als
+Rueckfall und so, dass jede sichtbare Aktion grundsaetzlich bewertet wird und neue Aktionen ohne
+Modellumbau hinzukommen.
+
+**Befund:** Welche sichtbare Aktion lief, entschieden bisher drei Wuerfel hintereinander: das Thema
+(`PlayAmbientActivity.nextTopic`), der Ablauf (`PlayRoutines.forTopic`, gleichverteilt bzw. 70 %
+Sonderaktivitaet) und die Gruppenspiel-Umwandlung in DockScreen. Keiner davon kannte den einzelnen
+Ablauf - ob genau dieser Weg gerade dreimal lief, ob die Freundin im Park gestern schon mitspielte.
+Drei sichtbare Ablaeufe wurden autonom nie gezogen (zweites Sofa, Becher, zwei Arbeitswege), das
+Bett nur als beantwortete Erinnerung.
+
+**Geaendert:**
+- Neues Paket `app-sim/.../decision/`: `DecisionCandidates` (Gueltigkeitsschicht, aus Kern und
+  Ablaufkatalog abgeleitet), `DecisionFeatures`/`ActionTraits` (Schema v1, 127 benannte Merkmale,
+  aus den Ablaufschritten abgeleitet), `ExistingUtilityPolicy` (bisherige Kette als
+  Log-Wahrscheinlichkeit - Temperatur 1 = exakt das alte Verhalten), `OnnxModel` +
+  `OnnxDecisionPolicy` (reines Kotlin, keine neue Abhaengigkeit), `DecisionSelector` (Softmax,
+  gesetzter Zufall), `DecisionEngine` (NaN/Ausnahme -> Rueckfall), `DecisionHistory`
+  (SharedPreferences, keine Room-Aenderung).
+- Kern, eng: `UtilitySelector.eligible`, `LivingSimulation.nextGoal`/`keepsGoal`, und `step`
+  nimmt ein `chosenGoal` nur an, wenn es ohnehin zulaessig ist. `LivingRuntimeAdapter` legt seine
+  Zweige als `options` offen und uebernimmt eine Vorwahl nur, wenn sie dazugehoert; ohne Vorwahl
+  verbraucht er denselben Zufall wie vorher. `PlayRoutines.distributionFor` beschreibt den
+  Ablaufwurf als Verteilung. Nachts darf aus "ausruhen" das Bett werden.
+- DockScreen fragt die Policy an genau einer Stelle (PERFORM-Regung), das Gruppenspiel kommt als
+  Kandidat mit. Modell `assets/decision_policy_v1.onnx` (127-32-16-1, 4 641 Parameter, 21 KB).
+- Werkzeug `tools/decision-policy/` (Lehrer, Mehrtagessimulation, numpy-Training, ONNX-Export,
+  Vergleich, Messung); byte-gleich reproduzierbar.
+
+**Grenzen, bewusst:** Dringender Hunger und dringende Muedigkeit, laufende Plaene, Nachtruhe,
+Medizin-Ausschluss, Mindestdauer draussen und Gruppenspiel-Vorrang bleiben Regeln der
+Kandidatenerzeugung. Andere Ziele als das des Kerns nur mit hoechstens 0,25 Abstand. `EARN_MONEY`
+gewinnt weiterhin nie (NT-087).
+
+**Wirkung (Simulation, 14 Tage x 6 Spezies x 3 Startwerte):** direkte Wiederholungen 10,4 % ->
+5,1 %, verschiedene Ablaeufe je Ingame-Tag 9,8 -> 11,3, Entropie 3,86 -> 4,24 Bit, Gruppenspiele
+4,2 % -> 5,2 %; 92 % der Wahlen folgen weiter dem Ziel des Kerns, der mittlere Beduerfnisdruck des
+verfolgten Ziels bleibt gleich, nachts nicht haeufiger draussen.
+
+- **Tests:** `bash tools/reaction-preview/tests.sh` - 661 Tests gruen (44 neu: Kandidaten und
+  Regeln, exakter Rueckfall gegen die alte Kette, Abdeckung aller sichtbaren Ablaeufe, Merkmale,
+  ONNX-Paritaet mit onnxruntime, Rueckfall bei fehlendem/fremdem Modell und NaN, Reproduzierbarkeit,
+  Mehrtagesverhalten).
+- **Ungeprueft:** DockScreen-Anbindung und Laufzeit am Geraet (nur CI-Build); APK-Zuwachs nur
+  geschaetzt (Modell 21 KB + Code).
+- **Naechster Schritt:** Am Geraet beobachten, ob die Abwechslung spuerbar und plausibel ist; danach
+  den Lehrer mit echten Beobachtungen (Nutzerreaktion, Zuschauerimpulse) statt nur Regeln speisen.
+
+### 2026-09-26 - Bewegungsdrang: wer lange still war, will wieder los
+
+**Anlass:** Nach dem Gruppenspiel gewuenscht: ausgewogen bleiben - das Spiel soll nicht wirken,
+als ginge es nur um Sport. Aber wer sich laenger nicht bewegt hat, soll wieder Lust darauf
+bekommen, und wer gern Sport macht, oefter. Am Ende soll das motivieren.
+
+**Befund:** Die Themenwahl (`PlayAmbientActivity.nextTopic`) kannte Tageszeit, Plan, Neigung,
+Spezies-Vorliebe, Verweilen, Nachklang und Abwechslung - aber kein Gedaechtnis dafuer, wie lange
+die Figur schon still war. Ein Wesen, das den ganzen Nachmittag gelesen und gearbeitet hat, zog
+Sport genauso selten wie eines, das eben vom Platz kam.
+
+**Geaendert:**
+- `PlayAmbientActivity.movementUrge`: ab 60 Weltminuten ohne Bewegung (30, wenn es Bewegung mag:
+  Spezies-Vorliebe oder Sport-Pfad) alle 15 Minuten +1 auf MOVE, hoechstens +5. Mittags hebt das
+  MOVE von rund einem Fuenftel auf gut zwei Fuenftel - spuerbar, nie Pflicht. Nachts wirkungslos.
+- `PlayMovementLog` (neu): letzte Bewegung je Wesen in Weltminuten, dauerhaft - wer nachmittags
+  wiederkommt, trifft ein Wesen, das seit dem Morgen still war.
+- Jede Bewegungs-Routine (auch das Gruppenspiel) setzt den Drang zurueck; der vorhandene
+  Wiederholungs- und Vielfaltsdaempfer sorgt danach fuer anderes.
+- 3 neue Tests (Kurve, Ausgewogenheit, Nachtruhe).
+
+### 2026-09-26 - Gruppenspiel: alle spielen mit, mit Musik
+
+**Anlass:** Gemeldet: Morgens lief Sport "mit der Gruppe" - vier Figuren im Park, vor dem
+Hauptavatar baute sich ein Geraet aus Pixeln auf, die anderen drei taten nichts, nach kurzer Zeit
+gingen alle. Keine Musik, nicht erkennbar, welcher Sport. Gewuenscht: dass sie wirklich
+miteinander spielen (Ball zuwerfen, Frisbee, Korbwurf nacheinander, Fussball) und dass eine
+coole Musik darunter liegt - solche Szenen brechen den Alltag auf und haben hoechste Prioritaet.
+
+**Befund:** Sonderaktivitaeten kannten nur eine Figur; Ball, Hantel und Korb hingen am
+Hauptavatar. Ein Einwohner durfte hoechstens dieselbe allgemeine Koerperregung mitmachen, Gaeste
+standen in ihrer Ruhe-Schleife daneben. Musik: TRAINING und KITE loesten nichts aus, und morgens
+lag MORNING vor dem Ort.
+
+**Geaendert:**
+- `PlayGroupGame` (neu, rein): vier Spiele - CATCH (hoher Bogen), FRISBEE (flach, kippelnd),
+  KICKABOUT (am Boden, kleine Hopser), HOOPS (nacheinander auf den Korb, jeder dritte Wurf
+  daneben, Treffer werden bejubelt). Liefert je Takt Ball und Haltung jedes Mitspielers;
+  Passfolge ohne direktes Zurueckspielen; allein wirft man sich den Ball selbst zu. 60 s.
+- `AvatarAnimations.gamePose`: READY (federnd), THROW, CATCH (springt entgegen), CHEER (huepft),
+  WATCH (wedelt beim Zuschauen). Jeder blickt dem Ball hinterher.
+- Routinewahl: Bewegung auf Park, Sportplatz oder Wiese wird zum Gruppenspiel, sobald noch
+  jemand da ist (Gast oder Einwohner) - tagsueber immer. Basketball -> Korbwurf, Fussball ->
+  Zuspielen, sonst nach Ort.
+- `DockScreen`: Mitspieler sind Bewohner, stehende Gaeste und Hintergrundfiguren; ihre Bilder
+  kommen waehrend des Spiels aus dem Spiel (Bildschirm, Schnappschuss und Film gleich). Ein
+  Gast, der dazukommt, spielt mit; Gespraeche warten bis nach dem Spiel.
+- Musik: `MusicContext.groupGame`; Korb/Fussball -> BALLGAME, Ball/Frisbee -> SPORT, jeweils die
+  andere als Rueckfall, vor dem Morgen, nie nachts. SPORT setzt jetzt wie BALLGAME sofort ein.
+- `PlayEffects.hoopCells` aus dem Basketball ausgelagert (unveraenderte Zeichnung).
+- 11 neue Tests (`PlayGroupGameTest`, `MusicResolverTest`).
+
+**Nicht geaendert:** Einzelsport ohne Mitspieler, die Sonderaktivitaeten selbst, Rotation und
+Uebergaenge der Musik ausser dem sofortigen Einsatz von SPORT.
+
+### 2026-09-26 - Figuren: Schwanz hinten, ruhige Ohren im Gang, Mund beim Sprechen
+
+**Anlass:** Gemeldet: Nach links laufen soll rechts wedeln, nach rechts laufen links - kongruent
+wie der Schatten. Dazu der Auftrag, den Bewegungsfluss gezielt dort zu verbessern, wo er
+unprofessionell wirkt (Schwanz, Augen, Mund), ohne Nebenbaustellen.
+
+**Befund (an gerenderten Bildfolgen, nicht geschaetzt):**
+- Die Posen blicken nach rechts ([AvatarFacing]), der Schwanz von PUFFLING, WYRMLING und FENNEC
+  sass aber rechts, also vorn. Beim gespiegelten Gang nach links zeigte er ebenfalls nach vorn.
+  `AvatarFacingTest` hielt genau das als "Neigung nach rechts" fest.
+- Im Gang klappten die Ohren von PUFFLING und FENNEC alle 110 ms zwischen aufgestellt und flach
+  (Akzent +1/-1) - ein Flackern.
+- Beim Besuch lief der Sprecher waehrend der Sprechpunkte seine Ruhe-Schleife mit geschlossenem
+  Mund weiter und sah aus wie der Zuhoerer.
+- PUFFLING und WYRMLING blinzelten 420 ms lang (Lid 200 ms zu), das las sich schlaefrig.
+
+**Geaendert:**
+- Schwanz aller drei Spezies auf die linke Seite gespiegelt (hinten). Im Gang hebt beim
+  Ausschwingen des Schwanzes der vordere Fuss ab, damit sich hinten nichts draengt.
+- `walkSequence`: Ohr-Spezies tragen die Ohren im zweiten Schwung aufgestellt; Fluegel, Zopf und
+  Schleim schlagen weiter gegenlaeufig.
+- `talkSequence` neu: Mund auf/zu mit ungleichen Standzeiten (90-180 ms); `DockScreen` spielt
+  sie waehrend der Sprechpunkte fuer den Sprecher.
+- Kleine Augen: Lid 120 statt 200 ms geschlossen.
+- Ruheplatz im Arbeitszimmer eine Zelle nach rechts (`avatarAnchorX(WORK)` 0,20 -> 0,22): Der
+  nun hinten haengende Schwanz ragte beim PUFFLING in den Schreibtisch (31 % der Figur im Moebel,
+  Grenze 30 %, `SceneCompositionTest`); jetzt hoechstens 22 %.
+- `AvatarFacingTest` auf die neue Regel umgestellt, `talkingMovesOnlyTheMouth` neu.
+  `reaction-fingerprint.txt`: alle 83 Zeilen neu, weil der Schwanz in jeder Reaktion steckt
+  und der Abdruck ueber alle sechs Spezies gebildet wird; Kontaktboegen auf Kollisionen mit
+  Requisiten gesichtet.
+
+**Nicht geaendert:** Spiegelregel, Schatten, Choreografien der Reaktionen, Ruhe-Schleifen
+ausser der Lidzeit, Timing des Gangs.
+
 ### 2026-09-26 - Musik-Release: 28 freigegebene Stuecke im Spiel, Engine mit Plattenkiste
 
 **Anlass:** Nach dem A/B-Hoertest (A = bisherige, B = neue Fassung in der Musik-Bibliothek des
