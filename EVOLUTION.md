@@ -664,6 +664,39 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-27 - Stream-Befund: Fussball zu Ende gebaut, stumme Figuren und Motive entfernt
+
+**Anlass:** Stream-Video (Build d723101) mit zwei Befunden. Auf dem Sportplatz lag ein Ball neben
+der Figur, ab 0:18 kam ein Tor dazu, geschossen wurde nie. In der Fennec-Savanne standen kleine
+graue Figuren mit Antennen herum, dazu "gestapelte Balken mit einem kleinen Ding". Nutzerfreigabe
+nach Befundbericht: "Ok".
+
+**Befund:**
+- Ball und Tor sind kein Rest-Requisit, sondern die bestehende Fussball-Routine
+  (`PlayRoutines.footballRoutine`, `PlayEffects.footballCells`). Die Figur spielte dabei aber nur
+  eine allgemeine MOVE-Regung und stand dann 16 s reglos. Der Schuss kam erst danach und wurde im
+  Video vorher abgebrochen.
+- Die grauen Figuren sind Hintergrund-Einwohner (Park-Stammgaeste Puffling und Starlet,
+  `LivingPopulationLayout.place`, `RESIDENT_DIM`), kein Besuch (`runVisit`).
+- Die Balken sind das MOVE-Motiv (`PlayEffects.activityCells`, Fussabdruecke und Tempolinien) aus
+  dem Park-Ablauf "Sport: quer durch den Park" - neben einer Figur, die dabei stillsteht.
+
+**Geaendert:**
+- Game Loop: Die Figur dribbelt jetzt gehend (auf dem Sportplatz zweimal aufs Feld und zurueck),
+  holt zum Schuss aus (`AvatarAnimations.kickSequence`). Erst dann fliegt der Ball, danach jubelt
+  sie. Wartezeiten 12/4/8 s auf 3/2/7 s.
+- Game Loop: Im Park-Sportablauf ersetzt ein Dehnen (`Stir(STRETCH)`) die beiden `Act(MOVE)`. Das
+  MOVE-Motiv selbst bleibt fuer die Ausfluege unveraendert.
+- Darstellung: `SHOW_BACKGROUND_RESIDENTS = false` in `DockScreen` blendet herumstehende
+  Einwohner aus. Mitspieler im Gruppenspiel und Trainingspartner bleiben sichtbar, Besuche sind
+  unberuehrt. Mit `true` ist alles wie vorher.
+
+**Migration:** keine.
+
+- **Tests (`TESTED BEHAVIOR`):** 694 Offline-Tests gruen. Fussball-Kontaktbogen offline gerendert
+  (Dribbeln, Ausholen, Flug, Ball im Netz, Jubel).
+- **Ungeprueft (`UNVERIFIED`):** Ablauf am Geraet bzw. im Stream.
+
 ### 2026-09-27 - Cafe und Musikrollen fuer Strand, Gebirge und Cafe
 
 **Anlass:** Nutzerauftrag: "Jetzt das Cafe und Musik fuer Strand und Gebirge bauen" (Weltausbau

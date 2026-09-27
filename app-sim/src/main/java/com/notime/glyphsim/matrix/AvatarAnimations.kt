@@ -643,6 +643,32 @@ object AvatarAnimations {
     }
 
     /**
+     * **Der Torschuss beim Fussball** - zwei Teile, weil der Ball genau zwischen ihnen losfliegt.
+     *
+     * [windUp]: Gewicht zurueck, der rechte Fuss hebt ab (der Ball liegt rechts, siehe
+     * PlayEffects.footballCells). [strike]: der Koerper geht nach vorn und hoch, der Fuss bleibt
+     * oben - das Nachschwingen, an dem man einen Schuss erst als Schuss erkennt. Vorher spielte
+     * die Figur hier nur die allgemeine MOVE-Regung und stand neben einem Ball, der von allein
+     * losflog.
+     */
+    fun kickSequence(species: AvatarSpecies): Pair<AvatarSequence, AvatarSequence> {
+        val body = AvatarBodies.forSpecies(species)
+        fun frames(points: List<List<Pair<Int, Int>>>) =
+            FrameCrossfade.withCrossfades(GRID, AvatarGeometry.HEIGHT, points, steps = 0, loop = false)
+        val windUp = listOf(
+            creatureFrame(body, feetSpread = 1),
+            creatureFrame(body, dx = -1, feetLift = -1, tailWag = -1)
+        )
+        val strike = listOf(
+            creatureFrame(body, dx = 1, feetLift = -1, accentPhase = 1, tailWag = 1),
+            creatureFrame(body, dx = 1, dy = -1, feetLift = -1, accentPhase = 1, mouthHoles = body.mouthOpen),
+            creatureFrame(body, feetSpread = 1)
+        )
+        return AvatarSequence(frames(windUp), listOf(260L, 320L)) to
+            AvatarSequence(frames(strike), listOf(180L, 420L, 300L))
+    }
+
+    /**
      * **Die Haltung eines Mitspielers im Gruppenspiel** (siehe [PlayGroupGame]) - ein Bild je
      * Takt, gerechnet statt als Schleife gespielt, weil das Spiel und nicht eine Uhr bestimmt,
      * wer gerade wirft.
