@@ -986,7 +986,8 @@ fun DockScreen(
                         topic = currentTopic,
                         activity = currentActivity,
                         characterTheme = themeSpecies,
-                        groupGame = groupGame
+                        groupGame = groupGame,
+                        weather = PlayWeather.current()
                     )
                 )
                 delay(faellig?.coerceIn(MUSIC_SETTLE_TICK_MS, MUSIC_RECHECK_MS) ?: MUSIC_RECHECK_MS)

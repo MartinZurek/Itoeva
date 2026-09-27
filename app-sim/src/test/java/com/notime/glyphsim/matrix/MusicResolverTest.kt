@@ -527,5 +527,42 @@ class MusicResolverTest {
         assertEquals(0L, PlayMusicTransition.settleMs(MusicRole.MORNING, MusicRole.SPORT))
         assertEquals(0L, PlayMusicTransition.settleMs(MusicRole.MAIN_DAY, MusicRole.BALLGAME))
     }
+
+    // ================= Regentag =================
+
+    private val alles = MusicRole.entries.toSet()
+
+    private fun regen(phase: PlayAmbientActivity.DayPhase, place: PlayScene.Place) =
+        MusicContext(phase, place, weather = PlayWeather.RAIN)
+
+    @Test
+    fun `drinnen klingt ein Regenmittag ruhig`() {
+        assertEquals(MusicRole.MAIN_DAY, MusicResolver.resolve(ctx(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.LIVING), alles))
+        assertEquals(MusicRole.HOME_EVENING, MusicResolver.resolve(regen(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.LIVING), alles))
+    }
+
+    @Test
+    fun `ein verregneter Morgen bleibt zuerst Morgen`() {
+        assertEquals(MusicRole.MORNING, MusicResolver.resolve(regen(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.KITCHEN), alles))
+        assertEquals(
+            MusicRole.HOME_EVENING,
+            MusicResolver.resolve(regen(PlayAmbientActivity.DayPhase.MORNING, PlayScene.Place.KITCHEN), alles - MusicRole.MORNING)
+        )
+    }
+
+    @Test
+    fun `draussen im Regen bleibt die Musik des Ortes`() {
+        assertEquals(MusicRole.CITY, MusicResolver.resolve(regen(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.CITY), alles))
+        assertEquals(MusicRole.BEACH, MusicResolver.resolve(regen(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.BEACH), alles))
+    }
+
+    @Test
+    fun `ein laufendes Spiel schlaegt den Regen`() {
+        val spiel = MusicContext(
+            PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.SPORT, AnimationType.MOVE,
+            activity = PlayRoutines.SpecialActivity.FOOTBALL, weather = PlayWeather.RAIN
+        )
+        assertEquals(MusicRole.BALLGAME, MusicResolver.resolve(spiel, alles))
+    }
 }
 
