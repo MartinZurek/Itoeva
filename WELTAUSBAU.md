@@ -51,6 +51,27 @@ mit – das Wesen spielt selbst ein Spiel.
 - [x] Musik: Rolle `ARCADE` mit *Insert Coin* (Chiptune) und *Continue?* (Synthwave).
 - [ ] Später: Highscore als Erinnerung in der Welt.
 
+## Stufe 3b – Mehr Natur, mehr Stadt, mehr Leben (2026-09-26, umgesetzt)
+
+Auftrag: „mehr Natur … Dschungel, Wald, Berge, Sümpfe, eine Ebene, Gebirge, Strand … mehr Stadt
+mit mehr Bewohnern und Fahrzeugen, technische Gadgets, die in der Luft fliegen … der Supermarkt ist
+leer … Menschen, die mit ihren Tieren Gassi gehen“. Umgesetzt in `matrix/PlayWorld.kt`.
+
+- [x] Fünf neue Orte: **Dschungel** (Blätterdach, Lianen, Wasserfall, Palme, Bambus, Papageien,
+      Glühwürmchen), **Gebirge** (zwei Bergketten mit Schnee, Rastfelsen, Wegweiser, Adler),
+      **Sumpf** (Mangrove, Steg, kahle Bäume, Blasen, Nebel, Frosch, Irrlichter), **Ebene**
+      (Hügel, Gehöft, Windmühle mit drehenden Flügeln, Heuballen, grasende Kühe) und **Strand**
+      (Meer mit laufenden Wellen, Sonne, Segelboot, Palme, Sonnenschirm, Liegestuhl, Sandburg,
+      Möwen, Krabbe). Je ein Ausflug über die Straße (`PlayRoutines.excursion`), nachts nicht.
+- [x] Stadt: Skyline aus Hochhäusern mit nachts erleuchteten Fenstern und Warnlicht, Autos mit
+      Scheinwerfern, ein Bus, Passanten mit Hund, Luftschiff, Drohnen, fliegendes Auto.
+- [x] Straße, Park, Wiese, Ebene, Strand: Leute, die ihren Hund ausführen.
+- [x] Supermarkt: Regalwand mit Gemüsetheke, Getränken, Kühlregal, Brot, Dosen und Kartons,
+      Gangschilder, Deckenlicht, Kundschaft mit Einkaufswagen. Spielhalle: Besucher.
+- [x] Zeichenreihenfolge: Hinten → Leute/Fahrzeuge → Vordergrund. Nebenbei behoben: Die Bank und
+      der Briefkasten der Stadt wurden von den Fassaden übermalt.
+- [ ] Später: Café (Stufe 4), eigene Musik für Strand und Gebirge, Einwohner, die dort wohnen.
+
 ## Stufe 4 – Neuer Ort: das Café
 
 - Sozialer Treffpunkt: Bewohner sitzen dort, man trifft sich auf einen Kakao.

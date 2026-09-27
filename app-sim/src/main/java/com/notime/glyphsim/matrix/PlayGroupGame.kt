@@ -132,7 +132,10 @@ object PlayGroupGame {
     val PLAYGROUNDS: Set<PlayScene.Place> = setOf(
         PlayScene.Place.PARK,
         PlayScene.Place.SPORT,
-        PlayScene.Place.MEADOW
+        PlayScene.Place.MEADOW,
+        // Ball am Strand, Fangen auf der weiten Ebene.
+        PlayScene.Place.BEACH,
+        PlayScene.Place.PLAINS
     )
 
     /**

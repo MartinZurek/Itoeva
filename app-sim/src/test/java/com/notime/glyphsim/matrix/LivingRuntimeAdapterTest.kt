@@ -52,7 +52,12 @@ class LivingRuntimeAdapterTest {
                 PlayScene.Place.FOREST,
                 PlayScene.Place.MEADOW,
                 PlayScene.Place.CITY,
-                PlayScene.Place.ARCADE
+                PlayScene.Place.ARCADE,
+                PlayScene.Place.JUNGLE,
+                PlayScene.Place.MOUNTAINS,
+                PlayScene.Place.SWAMP,
+                PlayScene.Place.PLAINS,
+                PlayScene.Place.BEACH
             ),
             grouped.getValue(LivingSite.OUTSIDE).toSet()
         )

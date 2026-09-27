@@ -46,6 +46,25 @@ Waechter ist das Sicherheitsnetz, nicht die Loesung. Wer einen neuen gewollten Z
 in dem die Figur unsichtbar, dunkel, ausserhalb oder lange reglos ist, muss ihn dem Waechter als
 Ausnahme mitteilen (`doorTransit`, `reacting`, `moving`, `animatedElsewhere`).
 
+## 0c. Neu am 26.09.: Weltausbau - Natur, Stadt, Supermarkt
+
+Alles Neue steht in `matrix/PlayWorld.kt` (nicht in `PlayScene.kt`). Vier Ebenen: `background`
+(Berge, Blaetterdach, Meer, Skyline, Regalwand), `furnishing` (Requisiten der fuenf neuen Orte),
+`midground` (Passanten mit Hund, Autos, Bus, Kundschaft - zwischen hinteren Requisiten und
+Vordergrund) und `ambient` (Tiere, Luftschiff, Drohnen). Drei Dinge:
+
+- **Neue Orte sind hinten an `PlayScene.Place` angehaengt** (JUNGLE, MOUNTAINS, SWAMP, PLAINS,
+  BEACH). Wer einen weiteren Ort baut: `PlayWorld.NATURE`/`furnishing`/`avatarAnchorX`,
+  `LivingRuntimeAdapter.siteFor`, `PlayTalkPanel.placeTextFor` + beide `strings.xml`.
+- **Nachts keine Ausfluege in die Wildnis** - Regel in `PlayRoutines.admissible`, von
+  `LivingRuntimeAdapter` ueber `sleepAdmissible` durchgereicht, damit Wahl und Verteilung (und
+  damit der Rueckfall der Decision Policy) uebereinstimmen.
+- **Die Policy ist neu trainiert** (`bash tools/decision-policy/train.sh`), weil fuenf Ablaeufe
+  dazukamen; `DecisionBehaviourTest` laeuft ueber 14 statt 7 Tage (siehe dort).
+
+Vorschau ohne Geraet: `PlayScene.build(...)` als PNG rendern - so sind alle Bilder dieses Schnitts
+entstanden. Am Geraet `UNVERIFIED`: Lesbarkeit der Leute (7 Zellen hoch) und des Meeres.
+
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
 **Stand 18.09.: NT-091 und NT-093 (Basketball) sowie ein zweites, unabhaengig ebenfalls

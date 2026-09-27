@@ -13,7 +13,12 @@ import org.junit.Test
 class DecisionBehaviourTest {
 
     private val loaded = DecisionTestSupport.bundled
-    private val tage = 7
+    // 14 statt 7 Tage, seit dem Weltausbau (2026-09-26): Mit sieben Tagen stuetzte sich der
+    // Nachtanteil auf rund siebzig Nachtwahlen, und schon zwei, drei Wahlen mehr oder weniger - aus
+    // einem durch neue Ablaeufe verschobenen Zufallsstrom, nicht aus neuem Verhalten - kippten die
+    // 3-Prozentpunkte-Grenze. Vierzehn Tage entsprechen dem ausfuehrlichen Vergleich im Bericht und
+    // kosten hier gut eine Sekunde.
+    private val tage = 14
 
     private fun runs(policy: DecisionPolicy, t: Double) = AvatarSpecies.entries.map { species ->
         DecisionSimulation.run(DecisionSimulation.Config(species, tage, 900L + species.ordinal, policy, t)).records

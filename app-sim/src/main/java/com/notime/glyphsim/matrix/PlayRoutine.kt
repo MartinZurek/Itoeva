@@ -207,9 +207,16 @@ object PlayRoutines {
          * Ablauf darf ein Ziel nicht unerreichbar machen.
          */
         preferPlaceChange: Boolean = false,
+        /**
+         * **Nachts geht niemand in Dschungel, Sumpf oder Gebirge.** Die Ausfluege des
+         * Weltausbaus (siehe [excursion]) fallen dann weg - an derselben Stelle fuer die
+         * Wahl und fuer ihre Verteilung ([distributionFor]), damit der Rueckfall der Decision
+         * Policy exakt bleibt.
+         */
+        night: Boolean = false,
         random: Random = Random
     ): PlayRoutine {
-        val alle = allFor(topic)
+        val alle = admissible(topic, night)
         val options = if (preferPlaceChange) {
             alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
                 .ifEmpty { alle }
@@ -275,9 +282,10 @@ object PlayRoutines {
         topic: AnimationType,
         footballTrickLearned: Boolean = false,
         recentSpecials: List<SpecialActivity> = emptyList(),
-        preferPlaceChange: Boolean = false
+        preferPlaceChange: Boolean = false,
+        night: Boolean = false
     ): List<Pair<PlayRoutine, Double>> {
-        val alle = allFor(topic)
+        val alle = admissible(topic, night)
         val options = if (preferPlaceChange) {
             alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
                 .ifEmpty { alle }
@@ -315,6 +323,15 @@ object PlayRoutines {
     }
 
     private const val SPECIAL_ACTIVITY_CHANCE_PERCENT = 70
+
+    /** [allFor] ohne die Ausfluege in die Wildnis, wenn es Nacht ist - siehe [forTopic]. */
+    private fun admissible(topic: AnimationType, night: Boolean): List<PlayRoutine> {
+        val alle = allFor(topic)
+        if (!night) return alle
+        return alle.filterNot { routine ->
+            routine.steps.any { it is RoutineStep.GoToPlace && it.place in PlayWorld.NATURE }
+        }.ifEmpty { alle }
+    }
 
     fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(
         buildList {
@@ -387,6 +404,36 @@ object PlayRoutines {
      * Ueber [RoutineStep.Switch] statt ueber eine eigene Sonderaktivitaet: Der Bildschirm ist ein
      * Geraet wie der Fernseher, und der Automat braucht keine zweite Effektmaschine, um zu leuchten.
      */
+    /**
+     * Ein Ausflug in eine der Landschaften des Weltausbaus: ueber die Strasse hinaus, ankommen,
+     * umsehen, am Sitzplatz verweilen, zum Schluss noch ein Stueck weiter.
+     */
+    fun excursion(
+        place: PlayScene.Place,
+        arrival: AvatarAnimations.Fidget,
+        restMillis: Long
+    ): PlayRoutine = PlayRoutine(
+        listOf(
+            RoutineStep.GoToPlace(PlayScene.Place.STREET),
+            RoutineStep.Stroll(0.66f),
+            RoutineStep.Linger(4_000L),
+            RoutineStep.GoToPlace(place),
+            RoutineStep.Stir(arrival),
+            RoutineStep.Linger(7_000L),
+            RoutineStep.Stroll(0.24f),
+            RoutineStep.Act(AnimationType.MOVE),
+            RoutineStep.Linger(5_000L),
+            RoutineStep.GoTo(PlayScene.Station.BENCH),
+            RoutineStep.Occupy(PlayScene.Station.BENCH),
+            RoutineStep.Linger(restMillis),
+            RoutineStep.Daydream,
+            RoutineStep.Rise,
+            RoutineStep.Stroll(0.12f),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Linger(6_000L)
+        )
+    )
+
     fun arcadeRoutine(): PlayRoutine = PlayRoutine(
         listOf(
             RoutineStep.GoToPlace(PlayScene.Place.ARCADE),
@@ -876,6 +923,19 @@ object PlayRoutines {
                     RoutineStep.Linger(7_000L)
                 )
             ),
+            // ---- Ausfluege in die neuen Landschaften (Weltausbau, siehe PlayWorld) ----
+            //
+            // Jeder beginnt auf der Strasse: Man geht hinaus, bevor man irgendwo ankommt - dieselbe
+            // Regel wie beim Waldspaziergang. Danach haben alle dieselbe Gestalt (ankommen,
+            // umsehen, zum Sitzplatz, verweilen, weiter), aber jeder an einem Ort mit eigenem
+            // Leben: Adler ueber den Gipfeln, Papageien und Wasserfall im Dschungel,
+            // Gluehwuermchen im Sumpf, Kuehe und Windmuehle auf der Ebene, Moewen und Wellen am
+            // Strand.
+            excursion(PlayScene.Place.MOUNTAINS, AvatarAnimations.Fidget.STRETCH, restMillis = 16_000L),
+            excursion(PlayScene.Place.JUNGLE, AvatarAnimations.Fidget.LOOK_AROUND, restMillis = 14_000L),
+            excursion(PlayScene.Place.SWAMP, AvatarAnimations.Fidget.LOOK_AROUND, restMillis = 12_000L),
+            excursion(PlayScene.Place.PLAINS, AvatarAnimations.Fidget.STRETCH, restMillis = 15_000L),
+            excursion(PlayScene.Place.BEACH, AvatarAnimations.Fidget.YAWN, restMillis = 18_000L),
             // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
             footballRoutine(trickLearned = false),
             // Korb und Ball erscheinen nur fuer diesen Ablauf; der Platz bleibt sonst offen.
