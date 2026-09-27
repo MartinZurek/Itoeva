@@ -159,7 +159,9 @@ object LivingResidents {
                 PlayScene.Place.STREET,
                 PlayScene.Place.SHOP,
                 // Der Nachbar aus der Stadt schaut in der Spielhalle vorbei - sie liegt um die Ecke.
-                PlayScene.Place.ARCADE
+                PlayScene.Place.ARCADE,
+                // ... und trinkt seinen Kakao im Cafe.
+                PlayScene.Place.CAFE
             ),
             activeFromMinute = 6 * 60,
             activeUntilMinute = 22 * 60

@@ -117,6 +117,8 @@ internal object PlayWorld {
         PlayScene.Place.SWAMP -> 0.06f
         PlayScene.Place.PLAINS -> 0.10f
         PlayScene.Place.BEACH -> 0.14f
+        // Mitten im Raum, zwischen Tischchen und Theke.
+        PlayScene.Place.CAFE -> 0.44f
         else -> null
     }
 
@@ -159,6 +161,17 @@ internal object PlayWorld {
             Placement(HAYBALE, anchorX = 0.44f, station = PlayScene.Station.BENCH),
             Placement(WILDFLOWERS, anchorX = 0.64f),
             Placement(PASTURE_FENCE, anchorX = 0.98f)
+        )
+        // CAFE: links der Sessel am Tischchen (dort sitzt man), rechts die Theke mit der
+        // Espressomaschine, an der Wand die Tafel, von der Decke zwei Haengelampen. Die Tuer
+        // setzt PlayScene dazu (besideDoor).
+        PlayScene.Place.CAFE -> listOf(
+            Placement(MENU_BOARD, anchorX = 0.34f, liftCells = 9, brightness = PlayScene.BACKDROP, behind = true),
+            Placement(PENDANT, anchorX = 0.16f, liftCells = 14, brightness = PlayScene.BACKDROP, behind = true),
+            Placement(PENDANT, anchorX = 0.78f, liftCells = 14, brightness = PlayScene.BACKDROP, behind = true),
+            Placement(ARMCHAIR, anchorX = 0.02f, station = PlayScene.Station.SEAT),
+            Placement(COUNTER_BAR, anchorX = 1f),
+            Placement(CAFE_TABLE, anchorX = 0.27f)
         )
         // STRAND: Palme und Sonnenschirm hinten, davor der Liegestuhl, eine Sandburg.
         PlayScene.Place.BEACH -> listOf(
@@ -478,6 +491,83 @@ internal object PlayWorld {
         )
     )
 
+    // ---- Das Cafe ----
+
+    /** Sessel - hohe Lehne links, Polster, man sitzt darin wie auf dem Sofa. */
+    internal val ARMCHAIR = Prop(
+        width = 8, height = 7,
+        art = art(
+            "##......",
+            "##......",
+            "##......",
+            "##.....#",
+            "########",
+            "########",
+            "#......#"
+        ),
+        frontArt = PlayScene.rect(3, 4, 7, 5) + (7 to 3),
+        useSpot = 4 to 4
+    )
+
+    /** Rundes Tischchen mit zwei Tassen darauf. */
+    private val CAFE_TABLE = Prop(
+        width = 6, height = 6,
+        art = art(
+            ".#..#.",
+            "######",
+            "..##..",
+            "..##..",
+            "..##..",
+            ".####."
+        )
+    )
+
+    /**
+     * Die Theke: oben die Espressomaschine mit Siebtraeger, daneben Tassen, vorn eine Vitrine mit
+     * Gebaeck. Der Dampf steigt ueber [CAFE_STEAM_AT] auf (siehe [ambient]).
+     */
+    private val COUNTER_BAR = Prop(
+        width = 14, height = 10,
+        art = art(
+            "..####........",
+            "..#..#........",
+            "..####..#.#.#.",
+            "..#.#...#.#.#.",
+            "##############",
+            "#............#",
+            "#.##.##.##.#.#",
+            "#............#",
+            "##############",
+            "#............#"
+        )
+    )
+    private val CAFE_STEAM_AT = 3 to 0
+
+    /** Kreidetafel mit Karte - drei Zeilen und ein Tassen-Symbol. */
+    private val MENU_BOARD = Prop(
+        width = 9, height = 6,
+        art = art(
+            "#########",
+            "#.##.#..#",
+            "#.###...#",
+            "#..##.#.#",
+            "#.#..##.#",
+            "#########"
+        )
+    )
+
+    /** Haengelampe - Kabel von der Decke, Schirm, darunter das Licht. */
+    private val PENDANT = Prop(
+        width = 5, height = 4,
+        art = art(
+            "..#..",
+            "..#..",
+            ".###.",
+            "#####"
+        ),
+        lightAt = 2 to 4
+    )
+
     // ---------------------------------------------------------------------------------------
     // Boden
     // ---------------------------------------------------------------------------------------
@@ -508,6 +598,9 @@ internal object PlayWorld {
                 if (x % 9 == 5) add(SceneCell(x, floorY - 2, PlayScene.STRUCTURE))
             }
         }
+        // Cafe: Fliesen im Schachbrett - jede zweite Fuge hell.
+        PlayScene.Place.CAFE -> (0 until widthCells).filter { it % 2 == 0 }
+            .map { SceneCell(it, floorY, (PlayScene.STRUCTURE * 1.5f).roundToInt()) }
         // Strand: feine Sandrippel und ab und zu eine Muschel.
         PlayScene.Place.BEACH -> (0 until widthCells).flatMap { x ->
             buildList {
@@ -1056,7 +1149,8 @@ internal object PlayWorld {
         phase: Int,
         widthCells: Int,
         floorY: Int,
-        dayPhase: PlayAmbientActivity.DayPhase
+        dayPhase: PlayAmbientActivity.DayPhase,
+        placements: List<Placement> = emptyList()
     ): List<SceneCell> {
         if (widthCells <= 0 || floorY < 8) return emptyList()
         val night = isNight(dayPhase)
@@ -1084,6 +1178,12 @@ internal object PlayWorld {
             PlayScene.Place.SHOP -> {
                 cells += shopper(phase, widthCells, floorY, slot = 0, rightward = true)
                 cells += shopper(phase, widthCells, floorY, slot = 1, rightward = false)
+            }
+            // Im Cafe: die Barista hinter der Theke, ein Gast am Tischchen, ab und zu jemand,
+            // der hereinkommt.
+            PlayScene.Place.CAFE -> {
+                cells += cafeRegulars(phase, widthCells, floorY, placements)
+                cells += walker(phase, widthCells, floorY, slot = 6, withDog = false, rightward = false)
             }
             // In der Spielhalle: Leute, die zwischen den Automaten umhergehen.
             PlayScene.Place.ARCADE ->
@@ -1160,6 +1260,38 @@ internal object PlayWorld {
         val cart = if (rightward) CART else mirror(CART, 5)
         val cartX = if (rightward) x + 3 else x - 5
         cells += place(cart, cartX, floorY - 5, MID - 150)
+        return cells
+    }
+
+    /** Ein Gast im Sitzen - Kopf, Oberkoerper, angewinkelte Beine. */
+    private val SITTER = art(".#.", "###", "###", ".##", ".#.#")
+
+    /**
+     * Die Barista hinter der Theke (von der Theke halb verdeckt, sie arbeitet an der Maschine)
+     * und ein Gast am Tischchen, der ab und zu die Tasse hebt.
+     */
+    private fun cafeRegulars(
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        placements: List<Placement>
+    ): List<SceneCell> {
+        val cells = mutableListOf<SceneCell>()
+        placements.firstOrNull { it.prop === COUNTER_BAR }?.let { counter ->
+            val ox = PlayScene.originX(counter, widthCells)
+            // Geht an der Maschine hin und her.
+            val step = PlayScene.beat(phase, 9) % 6
+            val x = ox + 6 + (if (step < 3) step else 6 - step)
+            val arm = if (PlayScene.beat(phase, 4) % 2 == 0) 0 else 1
+            cells += place(WALKER_B, x, floorY - 14, MID - 150)
+            cells += SceneCell(x - 1, floorY - 12 - arm, MID - 150)
+        }
+        placements.firstOrNull { it.prop === CAFE_TABLE }?.let { table ->
+            val ox = PlayScene.originX(table, widthCells)
+            val sip = PlayScene.beat(phase, 13) % 5 == 0
+            cells += place(SITTER, ox + 5, floorY - 6, MID - 150)
+            if (sip) cells += SceneCell(ox + 5, floorY - 6, MID - 50)
+        }
         return cells
     }
 
@@ -1269,6 +1401,14 @@ internal object PlayWorld {
                 cells += flyingCar(phase, widthCells, floorY, dayPhase)
             }
             PlayScene.Place.STREET -> cells += drone(phase, widthCells, floorY, dayPhase, slot = 2)
+            // Dampf ueber der Espressomaschine.
+            PlayScene.Place.CAFE -> placements.firstOrNull { it.prop === COUNTER_BAR }?.let { counter ->
+                val sx = PlayScene.originX(counter, widthCells) + CAFE_STEAM_AT.first
+                val sy = PlayScene.originY(counter, floorY) + CAFE_STEAM_AT.second
+                val rise = PlayScene.beat(phase, 3) % 4
+                cells += SceneCell(sx + rise % 2, sy - 1 - rise, PlayScene.GLOW - 900 - rise * 250, isLight = true)
+                cells += SceneCell(sx + 1 - rise % 2, sy - 2 - rise, PlayScene.GLOW - 1300 - rise * 200, isLight = true)
+            }
             else -> Unit
         }
         return cells.filter { it.x in 0 until widthCells && it.y >= 0 }

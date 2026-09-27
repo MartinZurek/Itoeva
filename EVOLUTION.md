@@ -664,6 +664,36 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-27 - Cafe und Musikrollen fuer Strand, Gebirge und Cafe
+
+**Anlass:** Nutzerauftrag: "Jetzt das Cafe und Musik fuer Strand und Gebirge bauen" (Weltausbau
+Stufe 4 und der offene Punkt aus Stufe 3b).
+
+**Geaendert:**
+- Neuer Innenraum `CAFE` (`PlayWorld`): Theke mit Espressomaschine und Dampf, Gebaeckvitrine,
+  Kreidetafel, Haengelampen, Sessel (`Station.SEAT`) am Tischchen, Fliesen; Barista, sitzender Gast
+  und gelegentliche Kundschaft. Besuch erlaubt, Gloop kommt dorthin.
+- Game Loop: `PlayRoutines.cafeRoutine` im Thema LOVE (Strasse mit 12 s Aufenthalt, Kakao an der
+  Theke, Sessel, Tagtraum). Nachts geschlossen: `PlayRoutines.NIGHT_CLOSED` ersetzt die reine
+  Wildnis-Regel und wird jetzt auch ueber `topicBranch` durchgereicht.
+- Musik: Rollen `BEACH`, `MOUNTAINS`, `CAFE` (Resolver: vor Natur bzw. Stadt, die bleiben Rueckfall),
+  Titel, Rollenbeschreibungen, Prompts `beach-01` *Pixel Tide*, `mountains-01` *Summit Air*,
+  `cafe-01` *Pixel Crema* nach den Harmonieregeln, Manifest mit 8/1. **Audio noch nicht erzeugt.**
+- Decision Policy neu trainiert. `DecisionBehaviourTest` mit drei Startwerten je Spezies (der
+  Nachtanteil schwankte bei einem Startwert allein durch den verschobenen Zufallsstrom; gemessen
+  im Bericht: nachts draussen Basis 11,5 %, Policy 13,2 %). `DecisionCandidatesTest` bildet
+  DockScreen jetzt treu nach (`sleepAdmissible` nachts).
+
+**Migration:** keine; `CAFE` ist hinten an `Place` angehaengt.
+
+- **Tests (`TESTED BEHAVIOR`):** 694 Offline-Tests gruen, lokal mit `SceneCompositionTest` 710.
+  Neu: Cafe als Innenraum mit Sessel, Tuer und Leuten; Cafe-Ablauf setzt sich wirklich; eigene
+  Musikrollen mit Rueckfall; Cafe nachts geschlossen. `tools/music`: 36 Tests gruen, Dry-Run fuer
+  alle drei neuen Tracks.
+- **Ungeprueft (`UNVERIFIED`):** Klang der drei Stuecke (noch nicht erzeugt), Cafe am Geraet.
+- **Naechster Schritt:** Nach dem Merge je ein Lauf *Generate Itoeva Music* fuer `beach-01`,
+  `mountains-01`, `cafe-01`, Hoertest-APK, hoeren.
+
 ### 2026-09-26 - Weltausbau: Natur, Stadtleben und ein richtiger Supermarkt
 
 **Anlass:** Nutzerauftrag: „mehr Natur - Dschungel, Wald, Berge, Sümpfe, eine Ebene, Gebirge,

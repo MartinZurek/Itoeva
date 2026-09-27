@@ -79,6 +79,10 @@ class PlayWorldTest {
             )
             assertFalse(gewaehlt.steps.any { it is RoutineStep.GoToPlace && it.place in PlayWorld.NATURE })
         }
+        // Das Cafe hat nachts geschlossen.
+        for ((routine, _) in PlayRoutines.distributionFor(AnimationType.LOVE, night = true)) {
+            assertFalse(routine.steps.any { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.CAFE })
+        }
         // Tagsueber dagegen schon - sonst waere die Regel ein Verbot.
         val tags = PlayRoutines.distributionFor(AnimationType.MOVE).map { it.first }
         assertTrue(tags.any { r -> r.steps.any { it is RoutineStep.GoToPlace && it.place in PlayWorld.NATURE } })
@@ -198,5 +202,50 @@ class PlayWorldTest {
             )
             assertTrue("Phase $phase: $cells", cells.isEmpty())
         }
+    }
+
+    @Test
+    fun `das Cafe ist ein Innenraum mit Sessel, Tuer und Leuten`() {
+        val cafe = PlayScene.Place.CAFE
+        assertFalse(PlayScene.isOutdoors(cafe))
+        assertTrue(PlayScene.allowsVisitors(cafe))
+        assertTrue(PlayScene.Station.SEAT in PlayScene.stationsAt(cafe))
+        assertTrue(PlayScene.Station.DOOR in PlayScene.stationsAt(cafe))
+        assertTrue(PlayScene.isOccupiable(cafe, PlayScene.Station.SEAT))
+        // Barista und Gast sind immer da, nicht nur ab und zu - erkennbar an der Helligkeit, auf
+        // der PlayWorld sie zeichnet (keine Requisite traegt diesen Wert).
+        for (phase in 0 until 500 step 11) {
+            assertTrue(
+                "Phase $phase: niemand im Cafe",
+                build(cafe, phase).count { it.brightness == PlayWorld.MID - 150 } >= 10
+            )
+        }
+    }
+
+    @Test
+    fun `ins Cafe fuehrt ein Ablauf, der dort wirklich sitzt`() {
+        val routine = PlayRoutines.cafeRoutine()
+        assertTrue(routine in PlayRoutines.allFor(AnimationType.LOVE))
+        val nachCafe = routine.steps.dropWhile { !(it is RoutineStep.GoToPlace && it.place == PlayScene.Place.CAFE) }
+        assertTrue(nachCafe.any { it is RoutineStep.Occupy && it.station == PlayScene.Station.SEAT })
+    }
+
+    @Test
+    fun `Strand, Gebirge und Cafe haben eigene Musik mit Rueckfall`() {
+        fun rollen(place: PlayScene.Place) =
+            MusicResolver.candidates(MusicContext(PlayAmbientActivity.DayPhase.MIDDAY, place))
+        assertEquals(MusicRole.BEACH, rollen(PlayScene.Place.BEACH).first())
+        assertTrue(MusicRole.NATURE in rollen(PlayScene.Place.BEACH))
+        assertEquals(MusicRole.MOUNTAINS, rollen(PlayScene.Place.MOUNTAINS).first())
+        assertTrue(MusicRole.NATURE in rollen(PlayScene.Place.MOUNTAINS))
+        assertEquals(MusicRole.CAFE, rollen(PlayScene.Place.CAFE).first())
+        assertTrue(MusicRole.CITY in rollen(PlayScene.Place.CAFE))
+        // Solange die Stuecke fehlen, klingt es wie bisher.
+        val ohne = MusicRole.entries.toSet() - MusicRole.BEACH - MusicRole.MOUNTAINS - MusicRole.CAFE -
+            MusicRole.CHARACTER_THEME
+        assertEquals(
+            MusicRole.NATURE,
+            MusicResolver.resolve(MusicContext(PlayAmbientActivity.DayPhase.MIDDAY, PlayScene.Place.BEACH), ohne)
+        )
     }
 }

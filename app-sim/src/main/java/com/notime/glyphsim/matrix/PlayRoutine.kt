@@ -324,12 +324,17 @@ object PlayRoutines {
 
     private const val SPECIAL_ACTIVITY_CHANCE_PERCENT = 70
 
-    /** [allFor] ohne die Ausfluege in die Wildnis, wenn es Nacht ist - siehe [forTopic]. */
+    /**
+     * Wohin man nachts nicht geht: in die Wildnis nicht, und das Cafe hat geschlossen.
+     */
+    val NIGHT_CLOSED: Set<PlayScene.Place> = PlayWorld.NATURE + PlayScene.Place.CAFE
+
+    /** [allFor] ohne die Ablaeufe an nachts geschlossene Orte, wenn es Nacht ist - siehe [forTopic]. */
     private fun admissible(topic: AnimationType, night: Boolean): List<PlayRoutine> {
         val alle = allFor(topic)
         if (!night) return alle
         return alle.filterNot { routine ->
-            routine.steps.any { it is RoutineStep.GoToPlace && it.place in PlayWorld.NATURE }
+            routine.steps.any { it is RoutineStep.GoToPlace && it.place in NIGHT_CLOSED }
         }.ifEmpty { alle }
     }
 
@@ -431,6 +436,38 @@ object PlayRoutines {
             RoutineStep.Stroll(0.12f),
             RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
             RoutineStep.Linger(6_000L)
+        )
+    )
+
+    /**
+     * **Ins Cafe** (Weltausbau Stufe 4): ueber die Strasse, an der Theke einen Kakao holen,
+     * sich damit in den Sessel setzen, verweilen. Unter Leuten sein, ohne dass etwas passieren
+     * muss - der Barista arbeitet, am Nachbartisch sitzt jemand, ab und zu kommt ein Gast
+     * herein, und Einwohner koennen hier zu Besuch kommen.
+     */
+    fun cafeRoutine(): PlayRoutine = PlayRoutine(
+        listOf(
+            // Draussen ein richtiger Aufenthalt, kein Durchgang (siehe PlayRoutineTest): erst
+            // ein Stueck die Strasse entlang, umsehen, dann hinein.
+            RoutineStep.GoToPlace(PlayScene.Place.STREET),
+            RoutineStep.Stroll(0.60f),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.GoToPlace(PlayScene.Place.CAFE),
+            RoutineStep.Stroll(0.62f),
+            RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            RoutineStep.Act(AnimationType.DRINK),
+            RoutineStep.Linger(3_000L),
+            RoutineStep.GoTo(PlayScene.Station.SEAT),
+            RoutineStep.Occupy(PlayScene.Station.SEAT),
+            RoutineStep.Linger(14_000L),
+            RoutineStep.Act(AnimationType.LOVE),
+            RoutineStep.Linger(6_000L),
+            RoutineStep.Daydream,
+            RoutineStep.Rise,
+            RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
+            RoutineStep.Linger(4_000L)
         )
     )
 
@@ -596,7 +633,8 @@ object PlayRoutines {
                     RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
                     RoutineStep.Switch(PlayScene.Station.TV, on = false)
                 )
-            )
+            ),
+            cafeRoutine()
         )
 
         // ---- Sich etwas holen: Kuehlschrank, dann Tisch. Der Weg dazwischen IST die Handlung. ----

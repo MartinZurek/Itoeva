@@ -71,9 +71,11 @@ class DecisionCandidatesTest {
             val n = 10_000
             repeat(n) {
                 val thema = state.signals.draw(state.phase, random)
+                // Genau wie DockScreen: nachts ist das Bett zulaessig und die Wildnis nicht.
                 val prepared = LivingRuntimeAdapter.prepare(
                     state.agent, state.world, state.currentPlace, thema,
-                    recentSpecials = state.recentSpecials, random = random
+                    recentSpecials = state.recentSpecials, random = random,
+                    sleepAdmissible = state.phase == PlayAmbientActivity.DayPhase.NIGHT
                 )
                 val routine = prepared.routine ?: return@repeat
                 val topic = prepared.topic!!

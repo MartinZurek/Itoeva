@@ -65,6 +65,18 @@ Vordergrund) und `ambient` (Tiere, Luftschiff, Drohnen). Drei Dinge:
 Vorschau ohne Geraet: `PlayScene.build(...)` als PNG rendern - so sind alle Bilder dieses Schnitts
 entstanden. Am Geraet `UNVERIFIED`: Lesbarkeit der Leute (7 Zellen hoch) und des Meeres.
 
+## 0d. Neu am 27.09.: Cafe und Musikrollen fuer Strand, Gebirge und Cafe
+
+- `PlayScene.Place.CAFE` (Innenraum, in `PlayWorld`), Ablauf `PlayRoutines.cafeRoutine` unter LOVE.
+- **Nachts geschlossen**: `PlayRoutines.NIGHT_CLOSED` (Wildnis + Cafe). Die Nacht wird jetzt auch in
+  `LivingRuntimeAdapter.topicBranch` durchgereicht, nicht nur bei Bewegung/Erkunden.
+- Musikrollen `BEACH`, `MOUNTAINS`, `CAFE` mit Rueckfall auf Natur bzw. Stadt. Prompts
+  `beach-01`, `mountains-01`, `cafe-01` stehen im Manifest, **Audio fehlt noch**: nach dem Merge je
+  einen Lauf **Generate Itoeva Music** (der Workflow liest `main`), Ergebnis sofort in die
+  Hoertest-APK (Regel oben), danach `loudness_table.py`. Bis dahin klingen die Orte wie vorher.
+- `DecisionBehaviourTest` rechnet mit drei Startwerten je Spezies; `DecisionCandidatesTest` ruft
+  `prepare` wie DockScreen mit `sleepAdmissible` auf.
+
 ## 1. Der offene Faden: Living Agent System und Darstellung
 
 **Stand 18.09.: NT-091 und NT-093 (Basketball) sowie ein zweites, unabhaengig ebenfalls

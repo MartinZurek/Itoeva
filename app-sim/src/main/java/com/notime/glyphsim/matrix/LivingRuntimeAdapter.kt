@@ -61,7 +61,8 @@ object LivingRuntimeAdapter {
         PlayScene.Place.MOUNTAINS,
         PlayScene.Place.SWAMP,
         PlayScene.Place.PLAINS,
-        PlayScene.Place.BEACH -> LivingSite.OUTSIDE
+        PlayScene.Place.BEACH,
+        PlayScene.Place.CAFE -> LivingSite.OUTSIDE
         PlayScene.Place.BEDROOM,
         PlayScene.Place.BATH,
         PlayScene.Place.DESK,
@@ -332,7 +333,7 @@ object LivingRuntimeAdapter {
                 val topic = safeInterestTopic(result.agent.goal, interestTopic)
                 topicBranch(
                     topic, PlayScene.forTopic(topic), ActionKind.PURSUE_INTEREST,
-                    footballTrickLearned, recentSpecials
+                    footballTrickLearned, recentSpecials, sleepAdmissible
                 )
             }
             // ---- Die sieben benannten Beschaeftigungen (NT-072) ----
@@ -341,20 +342,20 @@ object LivingRuntimeAdapter {
             // sichtbare Routine. Dass dieser `when` sie erzwingt, ist der Grund, warum eine
             // neue Kernhandlung nicht stillschweigend unsichtbar bleiben kann: Wer sie
             // hinzufuegt, muss hier sagen, wie sie aussieht, sonst faellt der Build.
-            ActionKind.READ -> topicBranch(AnimationType.BOOK, ActionKind.READ)
-            ActionKind.CREATE -> topicBranch(AnimationType.CREATIVITY, ActionKind.CREATE)
-            ActionKind.CONCENTRATE -> topicBranch(AnimationType.FOCUS, ActionKind.CONCENTRATE)
-            ActionKind.SETTLE -> topicBranch(AnimationType.MINDFULNESS, ActionKind.SETTLE)
+            ActionKind.READ -> topicBranch(AnimationType.BOOK, ActionKind.READ, sleepAdmissible)
+            ActionKind.CREATE -> topicBranch(AnimationType.CREATIVITY, ActionKind.CREATE, sleepAdmissible)
+            ActionKind.CONCENTRATE -> topicBranch(AnimationType.FOCUS, ActionKind.CONCENTRATE, sleepAdmissible)
+            ActionKind.SETTLE -> topicBranch(AnimationType.MINDFULNESS, ActionKind.SETTLE, sleepAdmissible)
             ActionKind.MOVE_BODY -> moveBodyBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
             ActionKind.EXPLORE -> exploreBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
-            ActionKind.TEND_SELF -> topicBranch(AnimationType.MEDICINE, ActionKind.TEND_SELF)
-            ActionKind.SHOW_AFFECTION -> topicBranch(AnimationType.LOVE, ActionKind.SHOW_AFFECTION)
+            ActionKind.TEND_SELF -> topicBranch(AnimationType.MEDICINE, ActionKind.TEND_SELF, sleepAdmissible)
+            ActionKind.SHOW_AFFECTION -> topicBranch(AnimationType.LOVE, ActionKind.SHOW_AFFECTION, sleepAdmissible)
             ActionKind.INVITE_TO_PLAY -> topicBranch(
-                AnimationType.LOVE, PlayScene.Place.LIVING, ActionKind.INVITE_TO_PLAY
+                AnimationType.LOVE, PlayScene.Place.LIVING, ActionKind.INVITE_TO_PLAY, sleepAdmissible
             )
             ActionKind.RESPOND_TO_INVITE,
             ActionKind.RECEIVE_RESPONSE -> topicBranch(
-                AnimationType.GENERAL, PlayScene.Place.LIVING, firstAction
+                AnimationType.GENERAL, PlayScene.Place.LIVING, firstAction, sleepAdmissible
             )
             ActionKind.TRAIN_TOGETHER -> error(
                 "TRAIN_TOGETHER is a completed-scene effect, not a standalone routine"
@@ -475,20 +476,26 @@ object LivingRuntimeAdapter {
     }
 
     /** Thema, Ort und sichtbarer Ablauf aus einer Hand - fuer die benannten Beschaeftigungen. */
-    private fun topicBranch(topic: AnimationType, core: ActionKind): Branch =
-        topicBranch(topic, PlayScene.forTopic(topic), core, false, emptyList())
+    private fun topicBranch(topic: AnimationType, core: ActionKind, night: Boolean = false): Branch =
+        topicBranch(topic, PlayScene.forTopic(topic), core, false, emptyList(), night)
 
-    private fun topicBranch(topic: AnimationType, place: PlayScene.Place, core: ActionKind): Branch =
-        topicBranch(topic, place, core, false, emptyList())
+    private fun topicBranch(
+        topic: AnimationType,
+        place: PlayScene.Place,
+        core: ActionKind,
+        night: Boolean = false
+    ): Branch = topicBranch(topic, place, core, false, emptyList(), night)
 
     private fun topicBranch(
         topic: AnimationType,
         place: PlayScene.Place,
         core: ActionKind,
         footballTrickLearned: Boolean,
-        recentSpecials: List<PlayRoutines.SpecialActivity>
+        recentSpecials: List<PlayRoutines.SpecialActivity>,
+        // Nachts keine Ablaeufe an geschlossene Orte (Cafe, Wildnis) - PlayRoutines.NIGHT_CLOSED.
+        night: Boolean = false
     ): Branch {
-        val options = PlayRoutines.distributionFor(topic, footballTrickLearned, recentSpecials)
+        val options = PlayRoutines.distributionFor(topic, footballTrickLearned, recentSpecials, night = night)
             .map { (routine, p) -> RoutineOption(topic, atPlace(place, routine), p, core) }
         return Branch(topic, merged(options)) { random ->
             atPlace(
@@ -497,6 +504,7 @@ object LivingRuntimeAdapter {
                     topic = topic,
                     footballTrickLearned = footballTrickLearned,
                     recentSpecials = recentSpecials,
+                    night = night,
                     random = random
                 )
             )

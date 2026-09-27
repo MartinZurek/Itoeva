@@ -50,6 +50,9 @@ object MusicCatalog {
         (MusicRole.BALLGAME to 1) to R.string.music_title_ballgame_01,
         (MusicRole.ARCADE to 1) to R.string.music_title_arcade_01,
         (MusicRole.ARCADE to 2) to R.string.music_title_arcade_02,
+        (MusicRole.BEACH to 1) to R.string.music_title_beach_01,
+        (MusicRole.MOUNTAINS to 1) to R.string.music_title_mountains_01,
+        (MusicRole.CAFE to 1) to R.string.music_title_cafe_01,
         (MusicRole.HOME_EVENING to 1) to R.string.music_title_home_evening_01,
         (MusicRole.HOME_EVENING to 2) to R.string.music_title_home_evening_02,
         (MusicRole.DREAM to 1) to R.string.music_title_dream_01,
@@ -70,7 +73,10 @@ object MusicCatalog {
         MusicRole.MORNING,
         MusicRole.MAIN_DAY,
         MusicRole.NATURE,
+        MusicRole.BEACH,
+        MusicRole.MOUNTAINS,
         MusicRole.CITY,
+        MusicRole.CAFE,
         MusicRole.SHOP,
         MusicRole.ARCADE,
         MusicRole.FISHING,
@@ -105,6 +111,9 @@ object MusicCatalog {
         MusicRole.FISHING -> R.string.music_role_fishing
         MusicRole.BALLGAME -> R.string.music_role_ballgame
         MusicRole.ARCADE -> R.string.music_role_arcade
+        MusicRole.BEACH -> R.string.music_role_beach
+        MusicRole.MOUNTAINS -> R.string.music_role_mountains
+        MusicRole.CAFE -> R.string.music_role_cafe
         MusicRole.SPORT -> R.string.music_role_sport
         MusicRole.HOME_EVENING -> R.string.music_role_home_evening
         MusicRole.CHARACTER_THEME -> R.string.music_role_character_theme
