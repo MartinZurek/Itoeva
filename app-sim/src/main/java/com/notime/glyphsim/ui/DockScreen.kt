@@ -5497,8 +5497,11 @@ private const val SHOW_BACKGROUND_RESIDENTS = false
 /** Bis wohin die Figur den Ball beim Dribbeln treibt (Anteil der Bildbreite, siehe Stroll). */
 private const val FOOTBALL_DRIBBLE_TO = 0.34f
 
-/** So lange fliegt der geschossene Ball, bis er im Netz liegt (PlayEffects.SHOT_TICKS Takte). */
-private const val FOOTBALL_FLIGHT_MS = 8 * SCENE_PHASE_TICK_MS
+/**
+ * So lange fliegt der geschossene Ball, bis er im Netz liegt: PlayEffects.SHOT_TICKS (8) Takte zu
+ * je SCENE_PHASE_TICK_MS (200 ms). Als Zahl, weil jene Konstante weiter unten in der Datei steht.
+ */
+private const val FOOTBALL_FLIGHT_MS = 1_600L
 
 /** Jubel nach dem Treffer: so viele Spruenge, so lang je Sprung. */
 private const val FOOTBALL_CHEER_BEATS = 6
