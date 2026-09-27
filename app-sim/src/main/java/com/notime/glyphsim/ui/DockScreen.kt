@@ -127,6 +127,7 @@ import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlayClipRenderer
 import com.notime.glyphsim.matrix.ResidentPassage
 import com.notime.glyphsim.matrix.MusicContext
+import com.notime.glyphsim.matrix.PlayAmbience
 import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayDreamMemory
 import com.notime.glyphsim.matrix.PlayDreams
@@ -907,6 +908,7 @@ fun DockScreen(
                 // Wechsel zurueck in den Erinnerungs-Modus. Die EINSTELLUNG bleibt davon
                 // unberuehrt - siehe PlayMusic.
                 PlayMusic.stop()
+                PlayAmbienceSound.stop()
             }
         }
         /**
@@ -973,6 +975,7 @@ fun DockScreen(
         LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies, groupGame) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
+                PlayAmbienceSound.stop()
                 return@LaunchedEffect
             }
             while (true) {
@@ -990,6 +993,16 @@ fun DockScreen(
                         groupGame = groupGame,
                         weather = PlayWeather.current()
                     )
+                )
+                // **Der Ort klingt mit** (siehe PlayAmbience) - leise unter der Musik und nur,
+                // solange sie wirklich laeuft: dieselben Sperren, kein eigener Schalter.
+                PlayAmbienceSound.apply(
+                    PlayAmbience.kindFor(
+                        currentPlace,
+                        PlayAmbientActivity.currentDayPhase(),
+                        PlayWeather.current()
+                    ),
+                    allowed = PlayMusic.isPlaying()
                 )
                 delay(faellig?.coerceIn(MUSIC_SETTLE_TICK_MS, MUSIC_RECHECK_MS) ?: MUSIC_RECHECK_MS)
             }

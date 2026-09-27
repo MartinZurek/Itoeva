@@ -1311,7 +1311,11 @@ private fun SettingsDialog(onDismiss: () -> Unit, onOpenMusicLibrary: () -> Unit
                                 PlayMusic.setEnabled(context, enabled)
                                 // Sofort hoerbar statt erst beim naechsten Betreten - wer den
                                 // Schalter umlegt, will wissen, ob etwas passiert.
-                                if (!enabled) PlayMusic.stop()
+                                if (!enabled) {
+                                    PlayMusic.stop()
+                                    // Die Atmo haengt an der Musik (siehe PlayAmbienceSound).
+                                    PlayAmbienceSound.stop()
+                                }
                             }
                         )
                     }
