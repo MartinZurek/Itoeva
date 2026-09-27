@@ -474,7 +474,9 @@ object PlayScene {
         floorY: Int,
         dayPhase: PlayAmbientActivity.DayPhase,
         fade: Float = 1f,
-        species: AvatarSpecies = AvatarSpecies.PUFFLING
+        species: AvatarSpecies = AvatarSpecies.PUFFLING,
+        /** Siehe [build] - dieselbe Daemmerung fuer die vordere Ebene. */
+        minuteOfDay: Int? = null
     ): List<SceneCell> {
         if (station == null || widthCells <= 0 || floorY <= 0 || fade <= 0f) return emptyList()
         val placement = fitting(placementsFor(place, species), widthCells, floorY)
@@ -482,7 +484,7 @@ object PlayScene {
         if (placement.prop.frontArt.isEmpty()) return emptyList()
         val originX = originX(placement, widthCells)
         val originY = originY(placement, floorY)
-        val factor = atmosphere(dayPhase) * fade
+        val factor = atmosphere(dayPhase, minuteOfDay) * fade
         return placement.prop.frontArt.mapNotNull { (px, py) ->
             val x = originX + px
             val brightness = (placement.brightness * factor).roundToInt()
@@ -608,7 +610,13 @@ object PlayScene {
          * Was sich im Lauf der Zeit angesammelt hat (siehe [Acquisition]) - leer heisst: eine
          * Wohnung wie am ersten Tag.
          */
-        acquisitions: Set<Acquisition> = emptySet()
+        acquisitions: Set<Acquisition> = emptySet(),
+        /**
+         * Die Minute des Tages, wenn bekannt - dann daemmert der Raum gleitend und die Fenster der
+         * Strasse gehen einzeln an und aus (siehe [PlayDaylight]). `null` heisst: nur die Phase
+         * ist bekannt (Vorschau, Clip), dann gelten die vier Stufen wie bisher.
+         */
+        minuteOfDay: Int? = null
     ): List<SceneCell> {
         if (widthCells <= 0 || floorY <= 0 || fade <= 0f) return emptyList()
 
@@ -714,7 +722,12 @@ object PlayScene {
         }
 
         if (!midgroundDrawn) cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted)
-        cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species, acquisitions)
+        // Die tief stehende Sonne - VOR allem Uebrigen im Himmel berechnet, aber nur dort
+        // gezeichnet, wo noch nichts steht: Sie geht HINTER Baum, Bank und Haus unter, nicht davor.
+        minuteOfDay?.let { minute ->
+            cells += lowSun(place, minute, widthCells, floorY, cells, species, acquisitions)
+        }
+        cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species, acquisitions, minuteOfDay)
         cells += PlayWorld.ambient(place, phase, widthCells, floorY, dayPhase, fitted)
         cells += housePet(place, phase, widthCells, floorY)
         cells += weather(
@@ -723,7 +736,7 @@ object PlayScene {
         )
 
         // Materie folgt der Tageszeit, Licht nicht (siehe [SceneCell.isLight]).
-        val roomFactor = atmosphere(dayPhase) * fade
+        val roomFactor = atmosphere(dayPhase, minuteOfDay) * fade
         return cells.mapNotNull { cell ->
             val scaled = (cell.brightness * if (cell.isLight) fade else roomFactor).roundToInt()
             if (scaled <= 0 || cell.x < 0 || cell.x >= widthCells || cell.y < 0) null
@@ -741,15 +754,58 @@ object PlayScene {
      * etwas anderes, ohne dass ein zweiter Satz Pixel-Art noetig waere. Nebenbei ist ein Dock, das
      * nachts von selbst zurueckfaehrt, genau das, was man auf einem Nachttisch will.
      */
-    private fun atmosphere(dayPhase: PlayAmbientActivity.DayPhase): Float = when (dayPhase) {
-        PlayAmbientActivity.DayPhase.MIDDAY -> 1f
-        PlayAmbientActivity.DayPhase.MORNING -> 0.92f
-        PlayAmbientActivity.DayPhase.EVENING -> 0.74f
-        // Nicht tiefer: Bei 0,5 sank die Bodenlinie unter die Sichtbarkeitsschwelle, und die Figur
-        // schien nachts wieder im Schwarzen zu schweben - genau der Zustand, den die Kulisse
-        // beheben sollte. Der Raum darf zurueckweichen, aber der Boden muss bleiben.
-        PlayAmbientActivity.DayPhase.NIGHT -> 0.58f
+    private fun atmosphere(dayPhase: PlayAmbientActivity.DayPhase, minuteOfDay: Int?): Float =
+        minuteOfDay?.let(PlayDaylight::atmosphere) ?: PlayDaylight.atmosphere(dayPhase)
+
+    /**
+     * **Die Sonne am Rand des Tages** (siehe [PlayDaylight.sun]).
+     *
+     * Eine Scheibe aus fuenf mal vier Zellen und zwei kurze Strahlen auf Hoehe ihrer Mitte - das
+     * stilisierte Abendrot eines Pixelhimmels. Sie ist Licht ([SceneCell.isLight]) und dimmt
+     * deshalb nicht mit dem Raum: Waehrend die Welt ringsum in die Daemmerung sinkt, bleibt sie
+     * das Hellste am Himmel.
+     *
+     * Nur unter freiem Himmel, nur bei klarem Wetter, nicht unter dem Blaetterdach des Dschungels.
+     * Was schon steht ([occupied]) und was Fassaden oder ferner Hintergrund verdecken, bleibt
+     * frei - dort ist sie hinter etwas.
+     */
+    private fun lowSun(
+        place: Place,
+        minuteOfDay: Int,
+        widthCells: Int,
+        floorY: Int,
+        occupied: List<SceneCell>,
+        species: AvatarSpecies,
+        acquisitions: Set<Acquisition>
+    ): List<SceneCell> {
+        if (!isOutdoors(place) || place == Place.JUNGLE) return emptyList()
+        if (PlayWeather.current().isFalling) return emptyList()
+        val sun = PlayDaylight.sun(minuteOfDay) ?: return emptyList()
+        val cx = (widthCells * sun.xFraction).toInt()
+        val cy = floorY - 1 - sun.cellsAboveFloor
+        val placements = fitting(placementsFor(place, species, acquisitions), widthCells, floorY)
+        val hidden = occupied.mapTo(HashSet()) { it.x to it.y } +
+            facadeMask(placements, widthCells, floorY) +
+            PlayWorld.skyMask(place, widthCells, floorY)
+        val disc = listOf(
+            -1 to -2, 0 to -2, 1 to -2,
+            -2 to -1, -1 to -1, 0 to -1, 1 to -1, 2 to -1,
+            -2 to 0, -1 to 0, 0 to 0, 1 to 0, 2 to 0,
+            -1 to 1, 0 to 1, 1 to 1
+        ).map { (dx, dy) -> SceneCell(cx + dx, cy + dy, SUN_CORE, isLight = true) }
+        val rays = listOf(-5, -4, 4, 5).map { dx ->
+            SceneCell(cx + dx, cy, SUN_RAY, isLight = true)
+        }
+        return (disc + rays).filter {
+            it.x in 0 until widthCells && it.y in 0 until floorY && (it.x to it.y) !in hidden
+        }
     }
+
+    /** Die Sonnenscheibe: hell, aber unter dem Mond-Glanz - sie steht tief und schwach. */
+    private const val SUN_CORE = GLOW - 500
+
+    /** Die Strahlen zu beiden Seiten - nur ein Hauch. */
+    private const val SUN_RAY = GLOW - 1500
 
     /** Seitliches Ausblenden des Bodens, siehe [build]. */
     private fun edgeFalloff(x: Int, widthCells: Int): Float {
@@ -3713,13 +3769,18 @@ object PlayScene {
         widthCells: Int,
         floorY: Int,
         dayPhase: PlayAmbientActivity.DayPhase,
-        phase: Int
+        phase: Int,
+        minuteOfDay: Int? = null
     ): List<SceneCell> {
         // Die Stadt hat dieselben Fassaden wie die Strasse (siehe [furnishing]) und geht abends
         // genauso an.
         if (place != Place.STREET && place != Place.CITY) return emptyList()
         val night = dayPhase == PlayAmbientActivity.DayPhase.NIGHT
-        if (!night && dayPhase != PlayAmbientActivity.DayPhase.EVENING) return emptyList()
+        // Mit Uhrzeit: jedes Fenster nach seiner eigenen Gewohnheit (siehe PlayDaylight.windowLit)
+        // - abends nach und nach an, nachts nach und nach aus, morgens die Fruehaufsteher.
+        if (minuteOfDay == null && !night && dayPhase != PlayAmbientActivity.DayPhase.EVENING) {
+            return emptyList()
+        }
 
         return placements.filter { it.prop === HOUSE || it.prop === HOUSE_LOW }
             .flatMapIndexed { houseIndex: Int, house: Placement ->
@@ -3727,9 +3788,12 @@ object PlayScene {
                 val oy = originY(house, floorY)
                 val openings = facadeOpenings(house.prop)
                 openings.filterIndexed { index, _ ->
-                    // Aus Haus- und Fensternummer gerechnet: fest, aber ungleichmaessig verteilt.
-                    val awake = (houseIndex * 3 + index * 5) % (if (night) 4 else 3) != 0
-                    awake
+                    if (minuteOfDay != null) {
+                        PlayDaylight.windowLit(minuteOfDay, houseIndex * 64 + index)
+                    } else {
+                        // Aus Haus- und Fensternummer gerechnet: fest, aber ungleichmaessig verteilt.
+                        (houseIndex * 3 + index * 5) % (if (night) 4 else 3) != 0
+                    }
                 }.flatMap { (col, rows) ->
                     rows.map { row ->
                         SceneCell(
@@ -3858,7 +3922,8 @@ object PlayScene {
         lampOn: Boolean,
         tvOn: Boolean,
         species: AvatarSpecies,
-        acquisitions: Set<Acquisition> = emptySet()
+        acquisitions: Set<Acquisition> = emptySet(),
+        minuteOfDay: Int? = null
     ): List<SceneCell> {
         // Dieselbe Auswahl wie beim Zeichnen: Ein Fenster, das auf schmalem Bild weggefallen ist,
         // darf auch keinen Mond mehr bekommen.
@@ -4004,7 +4069,7 @@ object PlayScene {
                     shootingStar(phase, widthCells, floorY, dayPhase)
                         .filterNot { (it.x to it.y) in verdeckt } +
                     parkLantern(placements, widthCells, floorY, dayPhase) +
-                    litWindows(place, placements, widthCells, floorY, dayPhase, phase)
+                    litWindows(place, placements, widthCells, floorY, dayPhase, phase, minuteOfDay)
             }
 
             // Bad: ein Tropfen faellt in unregelmaessigen Abstaenden vom Hahn. Das eine Geraeusch,

@@ -4306,7 +4306,10 @@ fun DockScreen(
                     species = avatar?.species ?: AvatarSpeciesPrefs.get(context),
                     // Was er sich im Lauf seiner Entwicklung zugelegt hat (siehe PlayPath) - der
                     // Teil des Fortschritts, den man nicht liest, sondern sieht.
-                    acquisitions = acquisitions
+                    acquisitions = acquisitions,
+                    // Gleitende Daemmerung, einzeln erleuchtete Fenster, Sonnenauf- und -untergang
+                    // (siehe PlayDaylight). Der Bildtakt baut die Kulisse ohnehin neu.
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
                 )
             }
             PlaySceneView(
@@ -4753,7 +4756,8 @@ fun DockScreen(
                     floorY = floorYCells,
                     dayPhase = PlayAmbientActivity.currentDayPhase(),
                     fade = sceneFade.value,
-                    species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
+                    species = avatar?.species ?: AvatarSpeciesPrefs.get(context),
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
                 )
             }
             PlaySceneView(
