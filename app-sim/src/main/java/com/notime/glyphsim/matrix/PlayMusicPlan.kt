@@ -211,7 +211,13 @@ object MusicResolver {
     private val NATURE_PLACES = setOf(
         PlayScene.Place.FOREST,
         PlayScene.Place.MEADOW,
-        PlayScene.Place.POND
+        PlayScene.Place.POND,
+        // Die fuenf Landschaften des Weltausbaus (siehe PlayWorld) klingen wie die uebrige Natur.
+        PlayScene.Place.JUNGLE,
+        PlayScene.Place.MOUNTAINS,
+        PlayScene.Place.SWAMP,
+        PlayScene.Place.PLAINS,
+        PlayScene.Place.BEACH
     )
 
     private val CITY_PLACES = setOf(
@@ -231,7 +237,12 @@ object MusicResolver {
         PlayScene.Place.POND,
         PlayScene.Place.FOREST,
         PlayScene.Place.MEADOW,
-        PlayScene.Place.PARK
+        PlayScene.Place.PARK,
+        PlayScene.Place.JUNGLE,
+        PlayScene.Place.MOUNTAINS,
+        PlayScene.Place.SWAMP,
+        PlayScene.Place.PLAINS,
+        PlayScene.Place.BEACH
     )
 
     /**

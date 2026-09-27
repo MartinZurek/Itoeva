@@ -56,7 +56,12 @@ object LivingRuntimeAdapter {
         PlayScene.Place.CITY,
         // Die Spielhalle ist fuer die Entscheidungen des Kerns "unterwegs" - weder Zuhause noch
         // Arbeit noch Markt.
-        PlayScene.Place.ARCADE -> LivingSite.OUTSIDE
+        PlayScene.Place.ARCADE,
+        PlayScene.Place.JUNGLE,
+        PlayScene.Place.MOUNTAINS,
+        PlayScene.Place.SWAMP,
+        PlayScene.Place.PLAINS,
+        PlayScene.Place.BEACH -> LivingSite.OUTSIDE
         PlayScene.Place.BEDROOM,
         PlayScene.Place.BATH,
         PlayScene.Place.DESK,
@@ -296,11 +301,11 @@ object LivingRuntimeAdapter {
                 LivingSite.OUTSIDE -> when (result.agent.plan?.next?.kind) {
                     ActionKind.MOVE_BODY -> {
                         result = advanceExpected(result, listOf(ActionKind.MOVE_BODY))
-                        moveBodyBranch(footballTrickLearned, recentSpecials)
+                        moveBodyBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
                     }
                     ActionKind.EXPLORE -> {
                         result = advanceExpected(result, listOf(ActionKind.EXPLORE))
-                        exploreBranch(footballTrickLearned, recentSpecials)
+                        exploreBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
                     }
                     else -> single(
                         AnimationType.MOVE,
@@ -340,8 +345,8 @@ object LivingRuntimeAdapter {
             ActionKind.CREATE -> topicBranch(AnimationType.CREATIVITY, ActionKind.CREATE)
             ActionKind.CONCENTRATE -> topicBranch(AnimationType.FOCUS, ActionKind.CONCENTRATE)
             ActionKind.SETTLE -> topicBranch(AnimationType.MINDFULNESS, ActionKind.SETTLE)
-            ActionKind.MOVE_BODY -> moveBodyBranch(footballTrickLearned, recentSpecials)
-            ActionKind.EXPLORE -> exploreBranch(footballTrickLearned, recentSpecials)
+            ActionKind.MOVE_BODY -> moveBodyBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
+            ActionKind.EXPLORE -> exploreBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
             ActionKind.TEND_SELF -> topicBranch(AnimationType.MEDICINE, ActionKind.TEND_SELF)
             ActionKind.SHOW_AFFECTION -> topicBranch(AnimationType.LOVE, ActionKind.SHOW_AFFECTION)
             ActionKind.INVITE_TO_PLAY -> topicBranch(
@@ -417,11 +422,13 @@ object LivingRuntimeAdapter {
     /** Sich bewegen: ein Bewegungsablauf am Bewegungsort. */
     private fun moveBodyBranch(
         footballTrickLearned: Boolean,
-        recentSpecials: List<PlayRoutines.SpecialActivity>
+        recentSpecials: List<PlayRoutines.SpecialActivity>,
+        // Nachts keine Ausfluege in die Wildnis - siehe PlayRoutines.forTopic(night).
+        night: Boolean
     ): Branch {
         val ort = PlayScene.forTopic(AnimationType.MOVE)
         val options = PlayRoutines.distributionFor(
-            AnimationType.MOVE, footballTrickLearned, recentSpecials
+            AnimationType.MOVE, footballTrickLearned, recentSpecials, night = night
         ).map { (routine, p) ->
             RoutineOption(AnimationType.MOVE, atPlace(ort, routine), p, ActionKind.MOVE_BODY)
         }
@@ -432,6 +439,7 @@ object LivingRuntimeAdapter {
                     topic = AnimationType.MOVE,
                     footballTrickLearned = footballTrickLearned,
                     recentSpecials = recentSpecials,
+                    night = night,
                     random = random
                 )
             )
@@ -447,10 +455,12 @@ object LivingRuntimeAdapter {
      */
     private fun exploreBranch(
         footballTrickLearned: Boolean,
-        recentSpecials: List<PlayRoutines.SpecialActivity>
+        recentSpecials: List<PlayRoutines.SpecialActivity>,
+        night: Boolean
     ): Branch {
         val options = PlayRoutines.distributionFor(
-            AnimationType.MOVE, footballTrickLearned, recentSpecials, preferPlaceChange = true
+            AnimationType.MOVE, footballTrickLearned, recentSpecials, preferPlaceChange = true,
+            night = night
         ).map { (routine, p) -> RoutineOption(AnimationType.MOVE, routine, p, ActionKind.EXPLORE) }
         return Branch(AnimationType.MOVE, merged(options)) { random ->
             PlayRoutines.forTopic(
@@ -458,6 +468,7 @@ object LivingRuntimeAdapter {
                 footballTrickLearned = footballTrickLearned,
                 recentSpecials = recentSpecials,
                 preferPlaceChange = true,
+                night = night,
                 random = random
             )
         }

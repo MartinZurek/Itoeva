@@ -5,11 +5,11 @@
   "chosen_architecture": "127-32-16-1",
   "chosen_because": "kleineres Netz reicht",
   "parameters": 4641,
-  "onnx_bytes": 21042,
-  "onnx_sha256": "edd8cc510dc1a0ba04bec1d1f05c51c8875d1c0d80fe599a4f85d31753173eee",
-  "onnxruntime_vs_numpy_max_abs_diff": 3.180651598100326e-06,
+  "onnx_bytes": 21043,
+  "onnx_sha256": "b485d435d6543cf6ddd0ca31c8068d29da00e027c8a5e3514de8fdf123ef98eb",
+  "onnxruntime_vs_numpy_max_abs_diff": 3.386572497987572e-06,
   "dataset": {
-    "rows": 97764,
+    "rows": 113951,
     "decisions": 9554,
     "days": 24,
     "seeds": 3
@@ -22,34 +22,34 @@
       "parameters": 10305,
       "train": {
         "decisions": 7962,
-        "mean_kl": 0.00029982824768552555,
-        "top1_agreement": 0.9554132127606129,
-        "centered_r2": 0.9986292780979357,
-        "mean_total_variation": 0.006436490175654862
+        "mean_kl": 0.0002918301462957203,
+        "top1_agreement": 0.9526500879176086,
+        "centered_r2": 0.998502197052452,
+        "mean_total_variation": 0.006307849775174168
       },
       "holdout": {
         "decisions": 1592,
-        "mean_kl": 0.0003695086034679901,
-        "top1_agreement": 0.9491206030150754,
-        "centered_r2": 0.9983698490355443,
-        "mean_total_variation": 0.00718574261184868
+        "mean_kl": 0.00038578798992315914,
+        "top1_agreement": 0.9447236180904522,
+        "centered_r2": 0.9982960889609903,
+        "mean_total_variation": 0.0072612883814573825
       }
     },
     "32-16": {
       "parameters": 4641,
       "train": {
         "decisions": 7962,
-        "mean_kl": 0.000507084862139656,
-        "top1_agreement": 0.9316754584275307,
-        "centered_r2": 0.9978485601313374,
-        "mean_total_variation": 0.008460137015187354
+        "mean_kl": 0.0004734441474886685,
+        "top1_agreement": 0.9442351168048229,
+        "centered_r2": 0.9977911977502545,
+        "mean_total_variation": 0.00797382771994415
       },
       "holdout": {
         "decisions": 1592,
-        "mean_kl": 0.0005535232669602136,
-        "top1_agreement": 0.9315326633165829,
-        "centered_r2": 0.9976507192289683,
-        "mean_total_variation": 0.008933241090761357
+        "mean_kl": 0.0005693242273609973,
+        "top1_agreement": 0.9434673366834171,
+        "centered_r2": 0.9975919983313455,
+        "mean_total_variation": 0.008554812869495417
       }
     }
   }

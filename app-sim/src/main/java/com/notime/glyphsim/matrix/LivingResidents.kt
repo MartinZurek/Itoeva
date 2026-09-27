@@ -120,7 +120,9 @@ object LivingResidents {
             visitPlaces = setOf(
                 PlayScene.Place.PARK,
                 PlayScene.Place.STREET,
-                PlayScene.Place.CITY
+                PlayScene.Place.CITY,
+                // Wer gern draussen unter Leuten ist, trifft man auch am Strand.
+                PlayScene.Place.BEACH
             ),
             activeFromMinute = 7 * 60,
             activeUntilMinute = 22 * 60

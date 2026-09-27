@@ -664,6 +664,52 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-26 - Weltausbau: Natur, Stadtleben und ein richtiger Supermarkt
+
+**Anlass:** Nutzerauftrag: „mehr Natur - Dschungel, Wald, Berge, Sümpfe, eine Ebene, Gebirge,
+Strand … mehr Stadt mit mehr Bewohnern und Fahrzeugen, technische Gadgets, die in der Luft
+fliegen … der Supermarkt ist leer … Menschen, die mit ihren Tieren Gassi gehen. Die Welt sollte
+aussehen wie eine richtige Welt.“
+
+**Befund (`FACT`, Vorschau gerendert):** Ueber der Bodenlinie lag an jedem Ort ein halber Bildschirm
+leerer Himmel; Aussenorte bestanden aus drei, vier Requisiten; niemand ging in der Stadt spazieren;
+der Laden war ein Regal und eine Kasse. Dazu ein Zeichenfehler: Die Einrichtung stellt Stationen
+nach vorn, dadurch wurden die (hinteren) Hausfassaden der Stadt NACH Bank und Briefkasten gezeichnet
+und uebermalten sie vollstaendig.
+
+**Geaendert:**
+- Neu `matrix/PlayWorld.kt`: fuenf Orte (Dschungel, Gebirge, Sumpf, Ebene, Strand) mit fernem
+  Hintergrund, eigener Einrichtung samt Sitzplatz (`Station.BENCH`), Boden und Tierleben; Skyline,
+  Verkehr, Passanten mit Hund, Luftschiff, Drohnen und fliegendes Auto fuer Stadt und Strasse;
+  Regalwand, Kuehlregal, Gemuesetheke, Gangschilder, Deckenlicht und Kundschaft im Laden.
+- `PlayScene.build` zeichnet jetzt Hintergrund → hintere Requisiten → Leute/Fahrzeuge →
+  Vordergrund; Sterne und Wolken verschwinden hinter Bergen, Blaetterdach und Skyline.
+- Game Loop: fuenf Ausfluege (`PlayRoutines.excursion`) im Bewegungsthema, nachts ausgeschlossen
+  (`PlayRoutines.admissible`). Strand und Ebene sind Spielorte fuer das Gruppenspiel, der Strand
+  erlaubt Besuch (die Parkstammgaestin kommt auch dorthin). Musik: die neuen Orte zaehlen als Natur.
+- Decision Policy neu trainiert (gleiches Schema v1, 21 KB); `DecisionBehaviourTest` ueber 14 statt
+  7 Tage, weil der Nachtanteil bei sieben Tagen auf rund siebzig Wahlen beruhte und schon am
+  verschobenen Zufallsstrom kippte (gemessen: nachts draussen Basis 13,2 %, Policy 14,2 %).
+
+**Verworfen:** Die Einrichtung des Ladens als weitere Einzelrequisiten - bei 40 Spalten stuenden
+sie ineinander und `fitting` liesse sie wortlos fallen; die Regalwand ist deshalb prozedural und
+spart nur die Vordergrund-Requisiten aus. Leute so hell wie Moebel - sie wuerden mit der Figur
+konkurrieren; sie liegen unter `FURNITURE`.
+
+**Migration:** keine Datenaenderung. Neue `Place`-Werte sind hinten angehaengt, gespeicherte Orte
+bleiben gueltig. Ein Revert laesst gespeicherte neue Ortsnamen zurueck - `PlayPresence` liest nur
+gueltige Namen (Rueckfall auf die Tageszeit).
+
+- **Tests (`TESTED BEHAVIOR`):** `tools/reaction-preview/tests.sh` gruen, dazu `SceneCompositionTest`
+  lokal (nichts steht ineinander, jeder Ruheplatz frei). Neu `PlayWorldTest` (12): Sitzplatz bei
+  jeder Breite, jeder Ort wird besucht, nachts keine Wildnis, eigener Hintergrund je Landschaft,
+  nichts ueberstrahlt die Figur, Leben kommt vorbei - aber nicht ununterbrochen, Regalwand nicht in
+  Kasse/Regal, die Bank der Stadt ist wieder sichtbar, Sterne hinter den Bergen.
+- **Ungeprueft (`UNVERIFIED`):** am Geraet - Lesbarkeit der sieben Zellen hohen Passanten, des
+  Meeres und der Regalwand; ob die neuen Ausfluege im Tagesablauf zu oft oder zu selten kommen.
+- **Naechster Schritt:** Am Geraet ansehen; danach Cafe (Stufe 4) und eigene Musik fuer Strand
+  und Gebirge.
+
 ### 2026-09-26 - Avatar-Waechter: die Figur bleibt im Spielmodus sichtbar, hell und in Bewegung
 
 **Anlass:** Gemeldet vom Nutzer: Im Spielmodus wurde der Avatar teils dunkel, blieb reglos stehen

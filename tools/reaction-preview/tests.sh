@@ -67,7 +67,7 @@ SRCS=(
   "$SIM/AvatarShading.kt" "$SIM/AvatarFacing.kt" "$SIM/AvatarAccent.kt" "$SIM/AvatarPalette.kt" "$SIM/MatrixColors.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
-  "$SIM/PlayScene.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt" "$SIM/PlayGroupGame.kt"
+  "$SIM/PlayScene.kt" "$SIM/PlayWorld.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt" "$SIM/PlayGroupGame.kt"
   "$SIM/LivingRuntimeAdapter.kt" "$SIM/LivingResidents.kt" "$SIM/LivingPopulation.kt"
   "$SIM/LivingPopulationLayout.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
@@ -143,6 +143,7 @@ TEST_SRCS=(
   "$TEST/matrix/OutdoorsAndDreamsTest.kt"
   "$TEST/matrix/PlayVisitWindowTest.kt"
   "$TEST/matrix/AvatarWatchdogTest.kt"
+  "$TEST/matrix/PlayWorldTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
   "$TEST/matrix/PlayAmbientActivityTest.kt"
@@ -216,6 +217,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.OutdoorsAndDreamsTest
   com.notime.glyphsim.matrix.PlayVisitWindowTest
   com.notime.glyphsim.matrix.AvatarWatchdogTest
+  com.notime.glyphsim.matrix.PlayWorldTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest
   com.notime.glyphsim.matrix.PlayAmbientActivityTest

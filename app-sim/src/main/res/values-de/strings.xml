@@ -543,6 +543,11 @@
     <string name="talk_place_meadow">auf der Wiese</string>
     <string name="talk_place_city">in der Stadt</string>
     <string name="talk_place_arcade">in der Spielhalle</string>
+    <string name="talk_place_jungle">tief im Dschungel</string>
+    <string name="talk_place_mountains">oben in den Bergen</string>
+    <string name="talk_place_swamp">draußen im Sumpf</string>
+    <string name="talk_place_plains">draußen auf der weiten Ebene</string>
+    <string name="talk_place_beach">am Strand</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. Jeder Satz haengt an einem
          Zustand der Welt, keiner ist erfunden. -->

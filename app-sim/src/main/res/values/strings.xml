@@ -559,6 +559,11 @@
     <string name="talk_place_meadow">out in the meadow</string>
     <string name="talk_place_city">in the city</string>
     <string name="talk_place_arcade">at the arcade</string>
+    <string name="talk_place_jungle">deep in the jungle</string>
+    <string name="talk_place_mountains">up in the mountains</string>
+    <string name="talk_place_swamp">out in the swamp</string>
+    <string name="talk_place_plains">out on the open plains</string>
+    <string name="talk_place_beach">at the beach</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. -->
     <string name="remark_rain">It is raining outside. Sounds quite good at the window.</string>
