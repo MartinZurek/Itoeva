@@ -70,13 +70,23 @@ leer … Menschen, die mit ihren Tieren Gassi gehen“. Umgesetzt in `matrix/Pla
       Gangschilder, Deckenlicht, Kundschaft mit Einkaufswagen. Spielhalle: Besucher.
 - [x] Zeichenreihenfolge: Hinten → Leute/Fahrzeuge → Vordergrund. Nebenbei behoben: Die Bank und
       der Briefkasten der Stadt wurden von den Fassaden übermalt.
-- [ ] Später: Café (Stufe 4), eigene Musik für Strand und Gebirge, Einwohner, die dort wohnen.
+- [x] Café (Stufe 4) und eigene Musikrollen für Strand und Gebirge - siehe unten.
+- [ ] Später: Einwohner, die in den neuen Landschaften wohnen.
 
-## Stufe 4 – Neuer Ort: das Café
+## Stufe 4 – Neuer Ort: das Café (2026-09-27, umgesetzt)
 
-- Sozialer Treffpunkt: Bewohner sitzen dort, man trifft sich auf einen Kakao.
-- Interaktion: bestellen, sitzen, mit einem Gast reden (nutzt die vorhandene Gesprächslogik).
-- Musik: warmer Lo-Fi-Jazz / Café-Musette.
+- [x] Ort `CAFE` (Innenraum): Theke mit Espressomaschine und Gebäckvitrine, dampfender Siebträger,
+      Kreidetafel, zwei Hängelampen mit Lichtschein, Sessel am Tischchen, Fliesenboden. Die Barista
+      arbeitet hinter der Theke, am Tischchen sitzt ein Gast, ab und zu kommt jemand herein.
+- [x] Interaktion `PlayRoutines.cafeRoutine` (im Thema „Beisammensein“): über die Straße hinein,
+      Kakao an der Theke, im Sessel verweilen, tagträumen. Einwohner kommen zu Besuch (Gloop).
+      Nachts geschlossen (`PlayRoutines.NIGHT_CLOSED`).
+- [x] Musik: Rolle `cafe_background` mit Prompt *Pixel Crema* (Musette/Kaffeehaus-Swing,
+      Akkordeon). Rückfall: Stadt.
+- [x] Musik für die neuen Landschaften: Rollen `beach_background` (*Pixel Tide*, Surf/Insel) und
+      `mountains_background` (*Summit Air*, Waldhorn, 3/4). Rückfall: Natur.
+- [ ] Die drei Stücke erzeugen (**Generate Itoeva Music**, je ein Lauf, erst nach dem Merge -
+      der Workflow liest `main`), in die Hörtest-APK, hören; erst danach nach `main`.
 
 ## Stufe 5 – Neuer Ort: das Seeufer / der Strand
 

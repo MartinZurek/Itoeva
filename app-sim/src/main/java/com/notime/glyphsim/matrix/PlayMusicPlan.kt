@@ -73,6 +73,15 @@ enum class MusicRole(val manifestName: String, val resourceBase: String) {
     /** In der Spielhalle - Chiptune, die Musik der Automaten selbst. */
     ARCADE("arcade_background", "itoeva_arcade"),
 
+    /** Am Strand (Weltausbau) - sonniger Surf- und Tropical-Klang. Fehlt er, klingt es nach Natur. */
+    BEACH("beach_background", "itoeva_beach"),
+
+    /** Im Gebirge (Weltausbau) - weit, ruhig, erhaben. Fehlt es, klingt es nach Natur. */
+    MOUNTAINS("mountains_background", "itoeva_mountains"),
+
+    /** Im Cafe (Weltausbau Stufe 4) - warme Musette und Kaffeehaus-Jazz. Fehlt es, klingt es nach Stadt. */
+    CAFE("cafe_background", "itoeva_cafe"),
+
     /** Ruhige Abend- und Nachtstunden zu Hause und an stillen Naturorten. */
     HOME_EVENING("home_evening_background", "itoeva_home_evening"),
 
@@ -223,7 +232,8 @@ object MusicResolver {
     private val CITY_PLACES = setOf(
         PlayScene.Place.STREET,
         PlayScene.Place.CITY,
-        PlayScene.Place.SHOP
+        PlayScene.Place.SHOP,
+        PlayScene.Place.CAFE
     )
 
     private val QUIET_PLACES = setOf(
@@ -315,6 +325,7 @@ object MusicResolver {
                     // Abends noch unterwegs: Die Stadt klingt nach Stadt, der Tag klingt nach,
                     // der Abendtrack ist der Rueckfall.
                     if (context.place == PlayScene.Place.ARCADE) add(MusicRole.ARCADE)
+                    if (context.place == PlayScene.Place.CAFE) add(MusicRole.CAFE)
                     if (context.place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
                     if (context.place in CITY_PLACES) add(MusicRole.CITY)
                     add(MusicRole.MAIN_DAY)
@@ -348,7 +359,11 @@ object MusicResolver {
      */
     private fun MutableList<MusicRole>.addPlaceRoles(place: PlayScene.Place) {
         if (place == PlayScene.Place.ARCADE) add(MusicRole.ARCADE)
+        if (place == PlayScene.Place.CAFE) add(MusicRole.CAFE)
         if (place == PlayScene.Place.SHOP) add(MusicRole.SHOP)
+        // Strand und Gebirge vor der allgemeinen Natur - fehlen ihre Stuecke, bleibt es dabei.
+        if (place == PlayScene.Place.BEACH) add(MusicRole.BEACH)
+        if (place == PlayScene.Place.MOUNTAINS) add(MusicRole.MOUNTAINS)
         if (place in CITY_PLACES) add(MusicRole.CITY)
         if (place in NATURE_PLACES) add(MusicRole.NATURE)
     }

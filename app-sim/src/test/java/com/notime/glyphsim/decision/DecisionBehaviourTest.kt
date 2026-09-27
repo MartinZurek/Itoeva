@@ -20,8 +20,16 @@ class DecisionBehaviourTest {
     // kosten hier gut eine Sekunde.
     private val tage = 14
 
-    private fun runs(policy: DecisionPolicy, t: Double) = AvatarSpecies.entries.map { species ->
-        DecisionSimulation.run(DecisionSimulation.Config(species, tage, 900L + species.ordinal, policy, t)).records
+    // Drei Startwerte je Spezies wie im ausfuehrlichen Bericht (seit dem Cafe, 2026-09-27): Mit
+    // einem Startwert stuetzte sich der Nachtanteil auf wenige Dutzend Wahlen, und ein neuer
+    // Ablauf verschob den Zufallsstrom so, dass dieselben Park- und Sportplatzwahlen die Grenze
+    // mal knapp ueber-, mal unterschritten. Gemessen wird dasselbe, nur mit genug Stichprobe.
+    private val startwerte = listOf(900L, 1900L, 2900L)
+
+    private fun runs(policy: DecisionPolicy, t: Double) = startwerte.flatMap { basis ->
+        AvatarSpecies.entries.map { species ->
+            DecisionSimulation.run(DecisionSimulation.Config(species, tage, basis + species.ordinal, policy, t)).records
+        }
     }
 
     private val baseline by lazy { runs(ExistingUtilityPolicy, 1.0) }

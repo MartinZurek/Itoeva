@@ -144,7 +144,10 @@ object PlayScene {
          * und Strand. Wie die Spielhalle hinten angehaengt, damit gespeicherte Orte gueltig
          * bleiben.
          */
-        JUNGLE, MOUNTAINS, SWAMP, PLAINS, BEACH
+        JUNGLE, MOUNTAINS, SWAMP, PLAINS, BEACH,
+
+        /** Das Cafe (Weltausbau Stufe 4) - ein Innenraum in der Stadt, man trifft sich dort. */
+        CAFE
     }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
@@ -184,7 +187,8 @@ object PlayScene {
         // Die SPIELHALLE erst recht: Man geht dorthin, um unter Leuten zu sein.
         // Am STRAND ist man unter Leuten wie im Park.
         Place.PARK, Place.SPORT, Place.SHOP, Place.LIVING, Place.WORK, Place.STREET, Place.CITY,
-        Place.ARCADE, Place.BEACH -> true
+        // Im CAFE trifft man sich - dafuer geht man hin.
+        Place.ARCADE, Place.BEACH, Place.CAFE -> true
         // Die eigene Ecke ([Place.CRAFT]) ausdruecklich NICHT: Wer dort sitzt, hat sich
         // zurueckgezogen. Ein Fremder, der einem beim Toepfern zusieht, ist das Gegenteil davon.
         //
@@ -555,7 +559,7 @@ object PlayScene {
         // Zwischen den beiden Automaten - in Ruhe steht die Figur und sieht sich um. Bei 0,46
         // ragte sie in der Vorschau in den zweiten Automaten hinein.
         Place.ARCADE -> 0.36f
-        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH ->
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAFE ->
             PlayWorld.avatarAnchorX(place) ?: 0.1f
     }
 
@@ -664,7 +668,7 @@ object PlayScene {
         var midgroundDrawn = false
         for (placement in ordered) {
             if (!placement.behind && !midgroundDrawn) {
-                cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase)
+                cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted)
                 midgroundDrawn = true
             }
             val originX = originX(placement, widthCells)
@@ -709,7 +713,7 @@ object PlayScene {
             }
         }
 
-        if (!midgroundDrawn) cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase)
+        if (!midgroundDrawn) cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted)
         cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species, acquisitions)
         cells += PlayWorld.ambient(place, phase, widthCells, floorY, dayPhase, fitted)
         cells += housePet(place, phase, widthCells, floorY)
@@ -1261,6 +1265,7 @@ object PlayScene {
         // Die fuenf neuen Landschaften stehen in [PlayWorld].
         Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH ->
             PlayWorld.furnishing(place).orEmpty()
+        Place.CAFE -> besideDoor(PlayWorld.furnishing(place).orEmpty())
         }
     }
 
@@ -3905,6 +3910,10 @@ object PlayScene {
             // dunkler: Erst dass das Ausschalten etwas WEGNIMMT, macht den Schalter zu einem
             // Schalter statt zu einer Geste ohne Folgen.
             Place.NOOK -> standingLights(placements, widthCells, floorY, phase, lampOn)
+
+            // Das Cafe: die Haengelampen brennen immer (niemand schaltet sie hier), der Dampf
+            // kommt aus PlayWorld.ambient.
+            Place.CAFE -> standingLights(placements, widthCells, floorY, phase, lampOn = true)
 
             // Die eigene Ecke: ihre Leuchte, dazu das Glutbett der Esse - die einzige Werkstatt,
             // die selbst leuchtet. Gezeichnet wird, was die Requisite an leuchtender Flaeche

@@ -6,50 +6,50 @@
   "chosen_because": "kleineres Netz reicht",
   "parameters": 4641,
   "onnx_bytes": 21043,
-  "onnx_sha256": "b485d435d6543cf6ddd0ca31c8068d29da00e027c8a5e3514de8fdf123ef98eb",
-  "onnxruntime_vs_numpy_max_abs_diff": 3.386572497987572e-06,
+  "onnx_sha256": "05a198238af5372dc5c2c520abd581484f8c0cb71a6804cb50bf5c6b362c105a",
+  "onnxruntime_vs_numpy_max_abs_diff": 2.8706458792271405e-06,
   "dataset": {
-    "rows": 113951,
-    "decisions": 9554,
+    "rows": 117847,
+    "decisions": 9695,
     "days": 24,
     "seeds": 3
   },
-  "holdout_decisions": 1592,
+  "holdout_decisions": 1615,
   "epochs": 40,
   "seed": 20260926,
   "candidates": {
     "64-32": {
       "parameters": 10305,
       "train": {
-        "decisions": 7962,
-        "mean_kl": 0.0002918301462957203,
-        "top1_agreement": 0.9526500879176086,
-        "centered_r2": 0.998502197052452,
-        "mean_total_variation": 0.006307849775174168
+        "decisions": 8080,
+        "mean_kl": 0.00030112122338293043,
+        "top1_agreement": 0.9551980198019802,
+        "centered_r2": 0.9985170883624245,
+        "mean_total_variation": 0.00684602361955032
       },
       "holdout": {
-        "decisions": 1592,
-        "mean_kl": 0.00038578798992315914,
-        "top1_agreement": 0.9447236180904522,
-        "centered_r2": 0.9982960889609903,
-        "mean_total_variation": 0.0072612883814573825
+        "decisions": 1615,
+        "mean_kl": 0.00036815708527188274,
+        "top1_agreement": 0.9541795665634675,
+        "centered_r2": 0.9984867850790242,
+        "mean_total_variation": 0.007431990794713213
       }
     },
     "32-16": {
       "parameters": 4641,
       "train": {
-        "decisions": 7962,
-        "mean_kl": 0.0004734441474886685,
-        "top1_agreement": 0.9442351168048229,
-        "centered_r2": 0.9977911977502545,
-        "mean_total_variation": 0.00797382771994415
+        "decisions": 8080,
+        "mean_kl": 0.0005058989344849296,
+        "top1_agreement": 0.9563118811881188,
+        "centered_r2": 0.9977688554334821,
+        "mean_total_variation": 0.008754088908204212
       },
       "holdout": {
-        "decisions": 1592,
-        "mean_kl": 0.0005693242273609973,
-        "top1_agreement": 0.9434673366834171,
-        "centered_r2": 0.9975919983313455,
-        "mean_total_variation": 0.008554812869495417
+        "decisions": 1615,
+        "mean_kl": 0.0005133924710419032,
+        "top1_agreement": 0.951702786377709,
+        "centered_r2": 0.9979336646805882,
+        "mean_total_variation": 0.008741543213375395
       }
     }
   }
