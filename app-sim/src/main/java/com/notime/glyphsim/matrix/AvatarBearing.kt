@@ -15,7 +15,7 @@ import com.notime.glyphsim.living.Needs
  *
  * Zwei Hebel, beide reine Rechnung und damit offline pruefbar:
  *
- * - [paceFactor] - das Gehtempo. Muedigkeit bremst, Wohlbefinden beschwingt. Der Ausschlag ist
+ * - [paceFactor] - das Gehtempo. Muedigkeit bremst, Wohlbefinden beschwingt, Regen treibt an. Der Ausschlag ist
  *   mit 0,72 bis 1,14 bewusst klein: Er soll auffallen, wenn man zwei Gaenge vergleicht, aber
  *   nie wie ein Zeitlupen- oder Zeitraffereffekt wirken.
  * - [idleFidget] - eine spontane Regung zwischen zwei Durchlaeufen der Ruhe-Schleife: gaehnen,
@@ -32,6 +32,12 @@ object AvatarBearing {
 
     /** Beschwingtester Gang (alles gestillt, heller Tag). */
     const val MAX_PACE = 1.14f
+
+    /** Wer im Regen draussen ist, geht schneller - bis hierher, auch wenn er muede ist. */
+    const val HURRY_MAX_PACE = 1.30f
+
+    /** Wie viel schneller es im Regen draussen geht. */
+    private const val HURRY_BOOST = 0.18
 
     /**
      * Wie viele Ruhe-Durchlaeufe mindestens zwischen zwei spontanen Regungen liegen. Eine
@@ -63,7 +69,16 @@ object AvatarBearing {
      * `null` fuer [needs] heisst: Die Simulation ist noch nicht geladen - dann entscheidet allein
      * die Tageszeit, und tagsueber ist das genau 1.
      */
-    fun paceFactor(needs: Needs?, dayPhase: PlayAmbientActivity.DayPhase): Float {
+    fun paceFactor(
+        needs: Needs?,
+        dayPhase: PlayAmbientActivity.DayPhase,
+        /**
+         * **Im Regen draussen.** Niemand schlendert durch den Regen - der Gang wird eiliger, auch
+         * bei einem muden Wesen. Genau daran sieht man einen Regentag schon, bevor man den Regen
+         * bemerkt.
+         */
+        hurry: Boolean = false
+    ): Float {
         val tired = tiredness(needs, dayPhase)
         // Unter 0,45 merkt man Muedigkeit noch nicht im Gang - erst darueber wird er schwerer.
         val drag = 0.28 * smoothstep(0.45, 0.95, tired)
@@ -72,6 +87,9 @@ object AvatarBearing {
             wellbeing > 0.75 -> 0.12 * ((wellbeing - 0.75) / 0.25)
             wellbeing < 0.35 -> -0.08 * ((0.35 - wellbeing) / 0.35)
             else -> 0.0
+        }
+        if (hurry) {
+            return (1.0 - drag + lift + HURRY_BOOST).toFloat().coerceIn(MIN_PACE, HURRY_MAX_PACE)
         }
         return (1.0 - drag + lift).toFloat().coerceIn(MIN_PACE, MAX_PACE)
     }

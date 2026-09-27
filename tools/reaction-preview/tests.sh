@@ -145,6 +145,7 @@ TEST_SRCS=(
   "$TEST/matrix/AvatarWatchdogTest.kt"
   "$TEST/matrix/AvatarBearingTest.kt"
   "$TEST/matrix/PlayDaylightTest.kt"
+  "$TEST/matrix/PlayRoutineWeatherTest.kt"
   "$TEST/matrix/PlayWorldTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
@@ -221,6 +222,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.AvatarWatchdogTest
   com.notime.glyphsim.matrix.AvatarBearingTest
   com.notime.glyphsim.matrix.PlayDaylightTest
+  com.notime.glyphsim.matrix.PlayRoutineWeatherTest
   com.notime.glyphsim.matrix.PlayWorldTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest

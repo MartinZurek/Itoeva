@@ -1174,7 +1174,8 @@ fun DockScreen(
             // gestreckt - sonst trippelte ein langsames Wesen mit schnellen Fuessen.
             val pace = AvatarBearing.paceFactor(
                 livingAgent?.needs,
-                PlayAmbientActivity.currentDayPhase()
+                PlayAmbientActivity.currentDayPhase(),
+                hurry = PlayWeather.current().isFalling && PlayScene.isOutdoors(currentPlace)
             )
             try {
             coroutineScope {
@@ -1247,6 +1248,9 @@ fun DockScreen(
          */
         suspend fun moveToPlace(target: PlayScene.Place, species: AvatarSpecies) {
             if (target == currentPlace) return
+            // Ob die Figur gerade aus dem Regen hereinkommt - siehe das Abschuetteln unten.
+            val fromRain = PlayWeather.current().isFalling &&
+                PlayScene.isOutdoors(currentPlace) && !PlayScene.isOutdoors(target)
             val hasDoorHere = PlayScene.Station.DOOR in PlayScene.stationsAt(currentPlace, species)
             val hasDoorThere = PlayScene.Station.DOOR in PlayScene.stationsAt(target, species)
             if (hasDoorHere) {
@@ -1314,6 +1318,18 @@ fun DockScreen(
                     activeStation = null
                     withContext(NonCancellable) { avatarDim.snapTo(1f) }
                 }
+            }
+            // **Aus dem Regen herein: erst einmal abschuetteln** - an der Tuer, bevor sie in den
+            // Raum geht. Eine Regung, die jeder kennt und die ohne ein Wort sagt, wie es draussen
+            // ist.
+            if (fromRain) {
+                avatarIdleJob?.cancel()
+                val shake = AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.SHAKE)
+                MatrixAnimator.playTimed(shake.frames, shake.holdsMs) { f ->
+                    avatar = avatar?.copy(frame = f)
+                }
+                // Gleich wieder in Ruhe - geht sie danach nicht los, stuende sie sonst starr.
+                startAvatarIdleLoop(species, AvatarMoodSnapshot.forSpecies(context, species))
             }
             if (walkAvatarTo(
                     avatarSpot(
@@ -3765,7 +3781,8 @@ fun DockScreen(
                                 goalInfluence = goalInfluence,
                                 nearbyProfiles = nearbyProfiles,
                                 footballTrickLearned = footballTrick,
-                                recentSpecials = recentSpecials.toList()
+                                recentSpecials = recentSpecials.toList(),
+                                weather = PlayWeather.current()
                             )
                             val policy = PlayDecisionPolicy.loaded(context)
                             val entscheidung = DecisionEngine.decide(
@@ -3791,7 +3808,10 @@ fun DockScreen(
                                 goalInfluence = goalInfluence,
                                 preferredRoutine = entscheidung?.candidate?.routine,
                                 sleepAdmissible = phaseJetzt == PlayAmbientActivity.DayPhase.NIGHT,
-                                chosenGoal = entscheidung?.candidate?.goal
+                                chosenGoal = entscheidung?.candidate?.goal,
+                                // Regen und Schnee: kein Ausflug in die Wildnis, kein Drachen,
+                                // dafuer der Blick aus dem Fenster (siehe PlayRoutines.rainyDay).
+                                weather = PlayWeather.current()
                             )
                             val topic = prepared.topic
                             val gewaehlt = prepared.routine

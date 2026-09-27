@@ -163,11 +163,13 @@ object LivingRuntimeAdapter {
         goalInfluence: GoalInfluence? = null,
         preferredRoutine: PlayRoutine? = null,
         sleepAdmissible: Boolean = false,
-        chosenGoal: GoalKind? = null
+        chosenGoal: GoalKind? = null,
+        /** Das Wetter draussen - bei Regen und Schnee faellt weg, was man dann nicht tut. */
+        weather: PlayWeather = PlayWeather.CLEAR
     ): PreparedLivingRoutine {
         val (result, branch) = resolve(
             agent, world, renderedPlace, interestTopic, footballTrickLearned, recentSpecials,
-            nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal
+            nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal, weather
         )
         if (branch == null) return PreparedLivingRoutine(result, null, null, emptyList())
         // Das Thema kommt von der gewaehlten Option: Nachts kann aus "ausruhen" der Schlaf im
@@ -207,11 +209,19 @@ object LivingRuntimeAdapter {
         nearbyProfiles: Set<String> = emptySet(),
         goalInfluence: GoalInfluence? = null,
         sleepAdmissible: Boolean = false,
-        chosenGoal: GoalKind? = null
+        chosenGoal: GoalKind? = null,
+        weather: PlayWeather = PlayWeather.CLEAR
     ): List<RoutineOption> = resolve(
         agent, world, renderedPlace, interestTopic, footballTrickLearned, recentSpecials,
-        nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal
+        nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal, weather
     ).second?.options ?: emptyList()
+
+    /**
+     * Was draussen gerade ist: Nacht und Wetter - beides schliesst Ablaeufe aus (siehe
+     * [PlayRoutines.forTopic]). Zusammengefasst, damit ein drittes Merkmal nicht jede
+     * Zweigfunktion um einen weiteren Parameter verlaengert.
+     */
+    private data class Conditions(val night: Boolean, val weather: PlayWeather)
 
     /** Ein Zweig: welches Thema, welche Ablaeufe erlaubt, und wie bisher gewuerfelt wird. */
     private class Branch(
@@ -238,8 +248,10 @@ object LivingRuntimeAdapter {
         nearbyProfiles: Set<String>,
         goalInfluence: GoalInfluence?,
         sleepAdmissible: Boolean,
-        chosenGoal: GoalKind?
+        chosenGoal: GoalKind?,
+        weather: PlayWeather
     ): Pair<StepResult, Branch?> {
+        val conditions = Conditions(night = sleepAdmissible, weather = weather)
         val startWorld = synchroniseWorld(world, renderedPlace, nearbyProfiles)
         // **Die Ausformung geht VOR der Entscheidung mit hinein** (NT-072).
         //
@@ -302,11 +314,11 @@ object LivingRuntimeAdapter {
                 LivingSite.OUTSIDE -> when (result.agent.plan?.next?.kind) {
                     ActionKind.MOVE_BODY -> {
                         result = advanceExpected(result, listOf(ActionKind.MOVE_BODY))
-                        moveBodyBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
+                        moveBodyBranch(footballTrickLearned, recentSpecials, conditions)
                     }
                     ActionKind.EXPLORE -> {
                         result = advanceExpected(result, listOf(ActionKind.EXPLORE))
-                        exploreBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
+                        exploreBranch(footballTrickLearned, recentSpecials, conditions)
                     }
                     else -> single(
                         AnimationType.MOVE,
@@ -333,7 +345,7 @@ object LivingRuntimeAdapter {
                 val topic = safeInterestTopic(result.agent.goal, interestTopic)
                 topicBranch(
                     topic, PlayScene.forTopic(topic), ActionKind.PURSUE_INTEREST,
-                    footballTrickLearned, recentSpecials, sleepAdmissible
+                    footballTrickLearned, recentSpecials, conditions
                 )
             }
             // ---- Die sieben benannten Beschaeftigungen (NT-072) ----
@@ -342,20 +354,20 @@ object LivingRuntimeAdapter {
             // sichtbare Routine. Dass dieser `when` sie erzwingt, ist der Grund, warum eine
             // neue Kernhandlung nicht stillschweigend unsichtbar bleiben kann: Wer sie
             // hinzufuegt, muss hier sagen, wie sie aussieht, sonst faellt der Build.
-            ActionKind.READ -> topicBranch(AnimationType.BOOK, ActionKind.READ, sleepAdmissible)
-            ActionKind.CREATE -> topicBranch(AnimationType.CREATIVITY, ActionKind.CREATE, sleepAdmissible)
-            ActionKind.CONCENTRATE -> topicBranch(AnimationType.FOCUS, ActionKind.CONCENTRATE, sleepAdmissible)
-            ActionKind.SETTLE -> topicBranch(AnimationType.MINDFULNESS, ActionKind.SETTLE, sleepAdmissible)
-            ActionKind.MOVE_BODY -> moveBodyBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
-            ActionKind.EXPLORE -> exploreBranch(footballTrickLearned, recentSpecials, sleepAdmissible)
-            ActionKind.TEND_SELF -> topicBranch(AnimationType.MEDICINE, ActionKind.TEND_SELF, sleepAdmissible)
-            ActionKind.SHOW_AFFECTION -> topicBranch(AnimationType.LOVE, ActionKind.SHOW_AFFECTION, sleepAdmissible)
+            ActionKind.READ -> topicBranch(AnimationType.BOOK, ActionKind.READ, conditions)
+            ActionKind.CREATE -> topicBranch(AnimationType.CREATIVITY, ActionKind.CREATE, conditions)
+            ActionKind.CONCENTRATE -> topicBranch(AnimationType.FOCUS, ActionKind.CONCENTRATE, conditions)
+            ActionKind.SETTLE -> topicBranch(AnimationType.MINDFULNESS, ActionKind.SETTLE, conditions)
+            ActionKind.MOVE_BODY -> moveBodyBranch(footballTrickLearned, recentSpecials, conditions)
+            ActionKind.EXPLORE -> exploreBranch(footballTrickLearned, recentSpecials, conditions)
+            ActionKind.TEND_SELF -> topicBranch(AnimationType.MEDICINE, ActionKind.TEND_SELF, conditions)
+            ActionKind.SHOW_AFFECTION -> topicBranch(AnimationType.LOVE, ActionKind.SHOW_AFFECTION, conditions)
             ActionKind.INVITE_TO_PLAY -> topicBranch(
-                AnimationType.LOVE, PlayScene.Place.LIVING, ActionKind.INVITE_TO_PLAY, sleepAdmissible
+                AnimationType.LOVE, PlayScene.Place.LIVING, ActionKind.INVITE_TO_PLAY, conditions
             )
             ActionKind.RESPOND_TO_INVITE,
             ActionKind.RECEIVE_RESPONSE -> topicBranch(
-                AnimationType.GENERAL, PlayScene.Place.LIVING, firstAction, sleepAdmissible
+                AnimationType.GENERAL, PlayScene.Place.LIVING, firstAction, conditions
             )
             ActionKind.TRAIN_TOGETHER -> error(
                 "TRAIN_TOGETHER is a completed-scene effect, not a standalone routine"
@@ -424,12 +436,13 @@ object LivingRuntimeAdapter {
     private fun moveBodyBranch(
         footballTrickLearned: Boolean,
         recentSpecials: List<PlayRoutines.SpecialActivity>,
-        // Nachts keine Ausfluege in die Wildnis - siehe PlayRoutines.forTopic(night).
-        night: Boolean
+        // Nachts keine Ausfluege in die Wildnis, bei Regen auch nicht - siehe PlayRoutines.forTopic.
+        conditions: Conditions
     ): Branch {
         val ort = PlayScene.forTopic(AnimationType.MOVE)
         val options = PlayRoutines.distributionFor(
-            AnimationType.MOVE, footballTrickLearned, recentSpecials, night = night
+            AnimationType.MOVE, footballTrickLearned, recentSpecials,
+            night = conditions.night, weather = conditions.weather
         ).map { (routine, p) ->
             RoutineOption(AnimationType.MOVE, atPlace(ort, routine), p, ActionKind.MOVE_BODY)
         }
@@ -440,7 +453,8 @@ object LivingRuntimeAdapter {
                     topic = AnimationType.MOVE,
                     footballTrickLearned = footballTrickLearned,
                     recentSpecials = recentSpecials,
-                    night = night,
+                    night = conditions.night,
+                    weather = conditions.weather,
                     random = random
                 )
             )
@@ -457,11 +471,11 @@ object LivingRuntimeAdapter {
     private fun exploreBranch(
         footballTrickLearned: Boolean,
         recentSpecials: List<PlayRoutines.SpecialActivity>,
-        night: Boolean
+        conditions: Conditions
     ): Branch {
         val options = PlayRoutines.distributionFor(
             AnimationType.MOVE, footballTrickLearned, recentSpecials, preferPlaceChange = true,
-            night = night
+            night = conditions.night, weather = conditions.weather
         ).map { (routine, p) -> RoutineOption(AnimationType.MOVE, routine, p, ActionKind.EXPLORE) }
         return Branch(AnimationType.MOVE, merged(options)) { random ->
             PlayRoutines.forTopic(
@@ -469,22 +483,23 @@ object LivingRuntimeAdapter {
                 footballTrickLearned = footballTrickLearned,
                 recentSpecials = recentSpecials,
                 preferPlaceChange = true,
-                night = night,
+                night = conditions.night,
+                weather = conditions.weather,
                 random = random
             )
         }
     }
 
     /** Thema, Ort und sichtbarer Ablauf aus einer Hand - fuer die benannten Beschaeftigungen. */
-    private fun topicBranch(topic: AnimationType, core: ActionKind, night: Boolean = false): Branch =
-        topicBranch(topic, PlayScene.forTopic(topic), core, false, emptyList(), night)
+    private fun topicBranch(topic: AnimationType, core: ActionKind, conditions: Conditions): Branch =
+        topicBranch(topic, PlayScene.forTopic(topic), core, false, emptyList(), conditions)
 
     private fun topicBranch(
         topic: AnimationType,
         place: PlayScene.Place,
         core: ActionKind,
-        night: Boolean = false
-    ): Branch = topicBranch(topic, place, core, false, emptyList(), night)
+        conditions: Conditions
+    ): Branch = topicBranch(topic, place, core, false, emptyList(), conditions)
 
     private fun topicBranch(
         topic: AnimationType,
@@ -492,10 +507,14 @@ object LivingRuntimeAdapter {
         core: ActionKind,
         footballTrickLearned: Boolean,
         recentSpecials: List<PlayRoutines.SpecialActivity>,
-        // Nachts keine Ablaeufe an geschlossene Orte (Cafe, Wildnis) - PlayRoutines.NIGHT_CLOSED.
-        night: Boolean = false
+        // Nachts keine Ablaeufe an geschlossene Orte (Cafe, Wildnis) - PlayRoutines.NIGHT_CLOSED;
+        // bei Regen und Schnee nichts, was man nur bei klarem Himmel tut - WEATHER_CLOSED.
+        conditions: Conditions
     ): Branch {
-        val options = PlayRoutines.distributionFor(topic, footballTrickLearned, recentSpecials, night = night)
+        val options = PlayRoutines.distributionFor(
+            topic, footballTrickLearned, recentSpecials,
+            night = conditions.night, weather = conditions.weather
+        )
             .map { (routine, p) -> RoutineOption(topic, atPlace(place, routine), p, core) }
         return Branch(topic, merged(options)) { random ->
             atPlace(
@@ -504,7 +523,8 @@ object LivingRuntimeAdapter {
                     topic = topic,
                     footballTrickLearned = footballTrickLearned,
                     recentSpecials = recentSpecials,
-                    night = night,
+                    night = conditions.night,
+                    weather = conditions.weather,
                     random = random
                 )
             )

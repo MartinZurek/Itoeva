@@ -114,7 +114,9 @@ data class DecisionState(
     /** Wer am aktuellen Ort als Gast steht - fuer den Kern (`nearbyProfiles`). */
     val nearbyProfiles: Set<String> = emptySet(),
     val footballTrickLearned: Boolean = false,
-    val recentSpecials: List<PlayRoutines.SpecialActivity> = emptyList()
+    val recentSpecials: List<PlayRoutines.SpecialActivity> = emptyList(),
+    /** Das Wetter draussen - bei Regen und Schnee fallen Schoenwetter-Ablaeufe weg. */
+    val weather: com.notime.glyphsim.matrix.PlayWeather = com.notime.glyphsim.matrix.PlayWeather.CLEAR
 ) {
     /** Die bisherige Themengewichtung dieses Moments. */
     val topicWeights: Map<AnimationType, Int> by lazy {
