@@ -125,6 +125,7 @@ import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlayClipRenderer
+import com.notime.glyphsim.matrix.ResidentPassage
 import com.notime.glyphsim.matrix.MusicContext
 import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayDreamMemory
@@ -4077,6 +4078,9 @@ fun DockScreen(
         val residentSequences = remember {
             HashMap<Pair<AvatarSpecies, LivingPopulationLayout.ResidentPose>, AvatarAnimations.AvatarSequence>()
         }
+        // Der Gang der vorbeikommenden Nachbarn (siehe ResidentPassage) - getrennt von den
+        // Haltungen oben, weil er keine Haltung ist.
+        val residentWalks = remember { HashMap<AvatarSpecies, AvatarAnimations.AvatarSequence>() }
         // Eine gemeinsame Beschreibung fuer Bildschirm und Aufnahme. Die Einwohner behalten
         // ihren eigenen Zeitversatz auch in der Ruhebewegung; `scenePhase` allein liesse alle
         // drei wie ein einziges vervielfachtes Uhrwerk atmen.
@@ -4090,10 +4094,7 @@ fun DockScreen(
             // den Hintergrundfiguren herausgefiltert, damit niemand doppelt im Bild steht.
             val visitingIds = visitors.map { it.profileId }.toSet()
             LivingPopulationLayout.place(
-                snapshots = residentSnapshots.filterNot { it.profileId in visitingIds }.filter {
-                    SHOW_BACKGROUND_RESIDENTS || groupGame != null ||
-                        it.profileId == sharedActivityProfileId
-                },
+                snapshots = residentSnapshots.filterNot { it.profileId in visitingIds },
                 place = renderedPlace,
                 hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f),
                 hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f)
@@ -4157,7 +4158,43 @@ fun DockScreen(
             return if (moment.facesLeft[id] == true) AvatarFacing.mirror(frame) else frame
         }
 
-        val residentFigures = residentPlacements.map { placement ->
+        // Die Lage des Wesens, neben dem ein vorbeikommender Nachbar zum Gruss anhaelt.
+        val hostSpan = avatar?.takeIf { maxWidthPx > 0f }?.let { host ->
+            val hostPx = with(density) { host.sizeDp.dp.toPx() }
+            (host.offset.x / maxWidthPx).coerceIn(0f, 1f) to (hostPx / maxWidthPx).coerceIn(0f, 1f)
+        }
+        val residentFigures = residentPlacements.mapNotNull { placement ->
+                // **Wer nichts mit dem Wesen tut, kommt vorbei, statt herumzustehen** (siehe
+                // ResidentPassage und SHOW_BACKGROUND_RESIDENTS): quer durchs Bild, kurzer
+                // Gruss neben dem Wesen, weiter. Mitspieler und Trainingspartner stehen wie
+                // bisher an ihrem Platz - sie haben dort etwas zu tun.
+                val involved = groupGame != null ||
+                    placement.resident.profileId == sharedActivityProfileId
+                if (!SHOW_BACKGROUND_RESIDENTS && !involved) {
+                    val span = hostSpan ?: return@mapNotNull null
+                    val moment = ResidentPassage.momentAt(
+                        profileId = placement.resident.profileId,
+                        nowMs = scenePhase * SCENE_PHASE_TICK_MS,
+                        widthFraction = placement.widthFraction,
+                        hostLeftFraction = span.first,
+                        hostWidthFraction = span.second
+                    ) ?: return@mapNotNull null
+                    val species = placement.resident.species
+                    val frame = if (moment.walking) {
+                        val walk = residentWalks.getOrPut(species) { AvatarAnimations.walkSequence(species) }
+                        walk.frames[Math.floorMod(scenePhase, walk.frames.size)]
+                    } else {
+                        // Der Gruss: ein kleiner Freudensprung - dieselbe Haltung, mit der im
+                        // Gruppenspiel ein Treffer gefeiert wird.
+                        AvatarAnimations.gamePose(species, PlayGroupGame.Pose.CHEER, scenePhase / 2)
+                    }
+                    return@mapNotNull PlayClipRenderer.ResidentFigure(
+                        frame = if (moment.facingLeft) AvatarFacing.mirror(frame) else frame,
+                        species = species,
+                        leftFraction = moment.leftFraction,
+                        widthFraction = placement.widthFraction
+                    )
+                }
                 // Der zweite Teilnehmer benutzt dieselbe bestehende Koerperregung wie der
                 // Hauptavatar. Weil [residentFigures] Bildschirm, Schnappschuss und Clip speist,
                 // bleibt die gemeinsame Phase in allen drei Ausgaben dieselbe. Basketball kennt
@@ -5547,6 +5584,10 @@ private const val RESIDENT_DIM = 0.66f
 /**
  * **Schalter fuer die Hintergrundfiguren** - die kleinen, gedimmten Einwohner, die an einem Ort
  * nur herumstehen (siehe LivingPopulationLayout.place).
+ *
+ * Seit dem Nachbarschafts-Schnitt heisst `false` nicht mehr "unsichtbar": Wer nichts mit dem Wesen
+ * tut, kommt stattdessen in eigenem Takt vorbei, gruesst und geht weiter (siehe ResidentPassage).
+ * `true` stellt die alten stehenden Figuren wieder her.
  *
  * Aus, seit sie im Stream als "kleine graue Figuren mit Antennen, bei denen nichts passiert"
  * auffielen (Savanne, 27.09.): Ohne erkennbare Handlung lesen sie sich als Stoerung, nicht als
