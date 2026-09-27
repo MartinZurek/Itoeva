@@ -345,16 +345,20 @@ object PlayRoutines {
             // einem schmalen Bild direkt davor, und zwischen Ball und Pfosten lag kein Feld
             // mehr, ueber das sich schiessen liesse (siehe PlayEffects.RUN_UP).
             add(RoutineStep.Stroll(0.15f))
+            // **Gedribbelt wird im Gehen** (siehe DockScreen, RoutineStep.Football): Die Figur
+            // treibt den Ball ein Stueck aufs Feld und holt ihn zurueck. Die Wartezeiten danach
+            // sind deshalb kurz - vorher stand sie 16 Sekunden reglos neben einem Ball, und wer
+            // in dieser Zeit wegsah oder die Szene verliess, bekam den Schuss nie zu sehen.
             add(RoutineStep.Football(PlayEffects.FootballPhase.DRIBBLE))
-            add(RoutineStep.Linger(12_000L))
+            add(RoutineStep.Linger(3_000L))
             add(RoutineStep.Football(PlayEffects.FootballPhase.AIM))
-            add(RoutineStep.Linger(4_000L))
+            add(RoutineStep.Linger(2_000L))
             if (trickLearned) {
                 add(RoutineStep.Football(PlayEffects.FootballPhase.TRICK))
                 add(RoutineStep.Linger(5_000L))
             }
             add(RoutineStep.Football(PlayEffects.FootballPhase.KICK))
-            add(RoutineStep.Linger(8_000L))
+            add(RoutineStep.Linger(7_000L))
         }
     )
 
@@ -857,14 +861,19 @@ object PlayRoutines {
                     RoutineStep.Linger(2_500L)
                 )
             ),
-            // Sport: quer durch den Park und zurueck, mit Bewegung an beiden Enden.
+            // Sport: quer durch den Park und zurueck, an beiden Enden ein Dehnen.
+            //
+            // **Dehnen statt Act(MOVE).** Das MOVE-Motiv (Fussabdruecke und Tempolinien, siehe
+            // PlayEffects.activityCells) stand hier neben einer Figur, die gerade stillsteht -
+            // im Stream als "gestapelte Balken mit einem kleinen Ding" gemeldet, deren Sinn
+            // niemand erkennen konnte. Das Dehnen zeigt die Figur selbst.
             PlayRoutine(
                 listOf(
                     RoutineStep.Stroll(0.12f),
-                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
                     RoutineStep.Linger(5_000L),
                     RoutineStep.Stroll(0.80f),
-                    RoutineStep.Act(AnimationType.MOVE),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH),
                     RoutineStep.Linger(6_000L),
                     RoutineStep.Stroll(0.45f),
                     RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE),

@@ -1627,12 +1627,62 @@ fun DockScreen(
                     }
 
                     is RoutineStep.Football -> {
-                        footballPhase = step.phase
-                        footballSince = scenePhase
                         avatarIdleJob?.cancel()
-                        val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
-                        MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
+                        when {
+                            // **Dribbeln heisst: mit dem Ball gehen.** Vorher stand die Figur
+                            // zwoelf Sekunden neben einem Ball, der am Fuss hin- und herrollte -
+                            // im Stream als "Ball liegt da, nichts passiert" gemeldet. Jetzt
+                            // treibt sie ihn ein Stueck aufs Feld und holt ihn zurueck; der Ball
+                            // haengt am Fuss (PlayEffects.footballCells), geht also von selbst mit.
+                            // Zurueck auf den Ausgangspunkt, weil das Tor fuer den Schuss Platz
+                            // vor ihr braucht (siehe PlayRoutines.footballRoutine).
+                            step.phase == PlayEffects.FootballPhase.DRIBBLE &&
+                                currentPlace == PlayScene.Place.SPORT -> {
+                                footballPhase = step.phase
+                                footballSince = scenePhase
+                                val home = avatar?.offset
+                                val field = avatarSpot(
+                                    PlayScene.screenFraction(FOOTBALL_DRIBBLE_TO, sceneWidthCells),
+                                    avatarPx, maxWidthPx, floorYPx, species
+                                )
+                                if (home != null) {
+                                    repeat(2) {
+                                        walkAvatarTo(field)
+                                        walkAvatarTo(home)
+                                    }
+                                }
+                            }
+                            // **Der Schuss kommt aus der Figur.** Ausholen, erst dann fliegt der
+                            // Ball (KICK zaehlt seine Flugbahn ab footballSince), dann das
+                            // Nachschwingen und - wenn der Ball im Netz liegt - Jubel.
+                            step.phase == PlayEffects.FootballPhase.KICK -> {
+                                val (windUp, strike) = AvatarAnimations.kickSequence(species)
+                                MatrixAnimator.playTimed(windUp.frames, windUp.holdsMs) { f ->
+                                    avatar = avatar?.copy(frame = f)
+                                }
+                                footballPhase = step.phase
+                                footballSince = scenePhase
+                                MatrixAnimator.playTimed(strike.frames, strike.holdsMs) { f ->
+                                    avatar = avatar?.copy(frame = f)
+                                }
+                                delay(FOOTBALL_FLIGHT_MS)
+                                repeat(FOOTBALL_CHEER_BEATS) { beat ->
+                                    avatar = avatar?.copy(
+                                        frame = AvatarAnimations.gamePose(
+                                            species, PlayGroupGame.Pose.CHEER, beat
+                                        )
+                                    )
+                                    delay(FOOTBALL_CHEER_BEAT_MS)
+                                }
+                            }
+                            else -> {
+                                footballPhase = step.phase
+                                footballSince = scenePhase
+                                val motion = AvatarAnimations.reactionFor(species, AnimationType.MOVE)
+                                MatrixAnimator.playTimed(motion.frames, motion.holdsMs) { f ->
+                                    avatar = avatar?.copy(frame = f)
+                                }
+                            }
                         }
                         startAvatarIdleLoop(species, mood)
                     }
@@ -3986,7 +4036,10 @@ fun DockScreen(
             // den Hintergrundfiguren herausgefiltert, damit niemand doppelt im Bild steht.
             val visitingIds = visitors.map { it.profileId }.toSet()
             LivingPopulationLayout.place(
-                snapshots = residentSnapshots.filterNot { it.profileId in visitingIds },
+                snapshots = residentSnapshots.filterNot { it.profileId in visitingIds }.filter {
+                    SHOW_BACKGROUND_RESIDENTS || groupGame != null ||
+                        it.profileId == sharedActivityProfileId
+                },
                 place = renderedPlace,
                 hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f),
                 hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f)
@@ -5428,6 +5481,31 @@ private const val VISITOR_DIM = 0.78f
 
 /** Hintergrundwesen bleiben sichtbar, ohne den begleiteten Avatar oder einen Gast zu uebertoenen. */
 private const val RESIDENT_DIM = 0.66f
+
+/**
+ * **Schalter fuer die Hintergrundfiguren** - die kleinen, gedimmten Einwohner, die an einem Ort
+ * nur herumstehen (siehe LivingPopulationLayout.place).
+ *
+ * Aus, seit sie im Stream als "kleine graue Figuren mit Antennen, bei denen nichts passiert"
+ * auffielen (Savanne, 27.09.): Ohne erkennbare Handlung lesen sie sich als Stoerung, nicht als
+ * Nachbarn. Wer gerade MIT der Figur etwas tut - Gruppenspiel oder gemeinsames Training -, bleibt
+ * trotzdem sichtbar, sonst liefen diese Ablaeufe mit einem unsichtbaren Partner. Besuche
+ * (runVisit) sind davon unberuehrt. Zum Wiedereinschalten genuegt `true`.
+ */
+private const val SHOW_BACKGROUND_RESIDENTS = false
+
+/** Bis wohin die Figur den Ball beim Dribbeln treibt (Anteil der Bildbreite, siehe Stroll). */
+private const val FOOTBALL_DRIBBLE_TO = 0.34f
+
+/**
+ * So lange fliegt der geschossene Ball, bis er im Netz liegt: PlayEffects.SHOT_TICKS (8) Takte zu
+ * je SCENE_PHASE_TICK_MS (200 ms). Als Zahl, weil jene Konstante weiter unten in der Datei steht.
+ */
+private const val FOOTBALL_FLIGHT_MS = 1_600L
+
+/** Jubel nach dem Treffer: so viele Spruenge, so lang je Sprung. */
+private const val FOOTBALL_CHEER_BEATS = 6
+private const val FOOTBALL_CHEER_BEAT_MS = 260L
 
 /** Abstand beim Stehenbleiben, in Vielfachen der Figurenbreite - eine volle Breite plus etwas
  *  Luft, damit sich die Silhouetten sicher nicht beruehren. */
