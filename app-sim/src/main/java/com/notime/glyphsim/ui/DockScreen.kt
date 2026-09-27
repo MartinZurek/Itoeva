@@ -82,6 +82,7 @@ import com.notime.glyphsim.living.StepResult
 import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
+import com.notime.glyphsim.matrix.AvatarBearing
 import com.notime.glyphsim.matrix.AvatarBodies
 import com.notime.glyphsim.matrix.AvatarFacing
 import com.notime.glyphsim.matrix.AvatarFooting
@@ -1094,9 +1095,33 @@ fun DockScreen(
             avatarIdleJob?.cancel()
             avatarIdleJob = scope.launch {
                 val idle = AvatarAnimations.idleSequence(species, mood)
+                // Durchlaeufe seit der letzten spontanen Regung (siehe AvatarBearing.idleFidget):
+                // Zwischen zwei Ruhe-Schleifen darf das Wesen gaehnen, sich strecken, sich
+                // umsehen - je nachdem, wie es ihm gerade geht.
+                var loopsSinceFidget = 0
                 while (isActive) {
                     MatrixAnimator.playTimed(idle.frames, idle.holdsMs) { f ->
                         avatar = avatar?.copy(frame = f)
+                    }
+                    loopsSinceFidget++
+                    val fidget = AvatarBearing.idleFidget(
+                        needs = livingAgent?.needs,
+                        dayPhase = PlayAmbientActivity.currentDayPhase(),
+                        loopsSinceLast = loopsSinceFidget,
+                        roll = Random.nextFloat()
+                    )
+                    // Im Bett nur gaehnen: Wer liegt, sieht sich nicht um und streckt sich nicht -
+                    // die Decke deckt ihn ohnehin bis auf den Kopf zu (siehe buildFront).
+                    val fits = fidget != null && (
+                        occupiedStation != PlayScene.Station.BED ||
+                            fidget == AvatarAnimations.Fidget.YAWN
+                        )
+                    if (fits && fidget != null) {
+                        val move = AvatarAnimations.fidgetSequence(species, fidget)
+                        MatrixAnimator.playTimed(move.frames, move.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        loopsSinceFidget = 0
                     }
                 }
             }
@@ -1144,12 +1169,20 @@ fun DockScreen(
             // Waehrend eines Gangs darf niemand sonst die Figur versetzen - siehe das
             // Nachfuehren des Bodens weiter unten.
             avatarWalking = true
+            // **Der Gang erzaehlt den Zustand** (siehe AvatarBearing.paceFactor): muede
+            // langsamer, zufrieden beschwingter. Schritttakt und Weg werden mit demselben Faktor
+            // gestreckt - sonst trippelte ein langsames Wesen mit schnellen Fuessen.
+            val pace = AvatarBearing.paceFactor(
+                livingAgent?.needs,
+                PlayAmbientActivity.currentDayPhase()
+            )
             try {
             coroutineScope {
                 val gait = launch {
                     val walk = AvatarAnimations.walkSequence(current.species)
+                    val stepHolds = walk.holdsMs.map { (it / pace).toLong() }
                     while (isActive) {
-                        MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
+                        MatrixAnimator.playTimed(walk.frames, stepHolds) { f ->
                             avatar = avatar?.copy(frame = f)
                         }
                     }
@@ -1157,7 +1190,7 @@ fun DockScreen(
                 animate(
                     initialValue = current.offset.x,
                     targetValue = destination.x,
-                    animationSpec = tween(walkDurationMs(distance, avatarPx), easing = FastOutSlowInEasing)
+                    animationSpec = tween(walkDurationMs(distance, avatarPx, pace), easing = FastOutSlowInEasing)
                 ) { value, _ ->
                     // Die Hoehe wird NICHT mitanimiert, sondern Bild fuer Bild aus dem jetzigen
                     // Boden geholt: Gegangen wird immer auf dem Boden, und der kann sich waehrend
@@ -5399,14 +5432,18 @@ private suspend fun animateBurnInDrift(
  * Die Grenzen fangen beide Enden ab: ein sehr kurzer Weg soll nicht unnatuerlich hetzen, ein Weg
  * ueber die volle Bildschirmbreite nicht zur Wanderung werden.
  */
-private fun walkDurationMs(distancePx: Float, avatarPx: Float): Int {
+private fun walkDurationMs(distancePx: Float, avatarPx: Float, paceFactor: Float = 1f): Int {
     if (avatarPx <= 0f) return WALK_MIN_MS
     // Leichte Streuung des Tempos von Weg zu Weg: exakt gleich schnell zu gehen ist eine
     // Eigenschaft von Maschinen. Der Ausschlag ist klein genug, dass man ihn nicht als Zufall
     // bemerkt - nur das Fehlen des Metronoms.
-    val pace = WALK_BODIES_PER_SECOND * (1f + (Random.nextFloat() - 0.5f) * WALK_PACE_SPREAD)
+    val pace = WALK_BODIES_PER_SECOND * paceFactor *
+        (1f + (Random.nextFloat() - 0.5f) * WALK_PACE_SPREAD)
     val seconds = distancePx / (avatarPx * pace)
-    return (seconds * 1000f).roundToInt().coerceIn(WALK_MIN_MS, WALK_MAX_MS)
+    // Die Obergrenze waechst mit: Ein muedes Wesen braucht fuer die ganze Bildbreite laenger,
+    // sonst schluckte die Deckelung genau den Unterschied, um den es geht.
+    return (seconds * 1000f).roundToInt()
+        .coerceIn(WALK_MIN_MS, (WALK_MAX_MS / paceFactor.coerceAtLeast(0.1f)).roundToInt())
 }
 
 /** Koerperbreiten pro Sekunde - gemuetliches, aber nicht schleppendes Gehtempo. */
