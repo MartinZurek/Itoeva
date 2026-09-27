@@ -189,7 +189,9 @@ data class MusicContext(
      * Das Gruppenspiel, das gerade laeuft (siehe [PlayGroupGame]), oder `null`. Wie [activity]
      * nur waehrend des Spiels gesetzt.
      */
-    val groupGame: PlayGroupGame.Kind? = null
+    val groupGame: PlayGroupGame.Kind? = null,
+    /** Regen oder Schnee - drinnen klingt ein Regentag leiser (siehe [MusicResolver.candidates]). */
+    val weather: PlayWeather = PlayWeather.CLEAR
 )
 
 /**
@@ -335,6 +337,9 @@ object MusicResolver {
             PlayAmbientActivity.DayPhase.MORNING -> {
                 // Der Morgen hat Vorrang auch in der Stadt - er ist die seltenere Stimmung.
                 add(MusicRole.MORNING)
+                // Ein verregneter Morgen daheim: nach dem Morgen die ruhige Musik, nicht der
+                // helle Tag (siehe [rainyIndoors]).
+                if (rainyIndoors(context)) add(MusicRole.HOME_EVENING)
                 addPlaceRoles(context.place)
                 add(MusicRole.MAIN_DAY)
             }
@@ -344,7 +349,10 @@ object MusicResolver {
                 // auf dem Sofa oder sammelt sich im Park, lief bisher trotzdem der Tages-Track.
                 // Jetzt kommt an einem ruhigen Ort zuerst die ruhige Musik; der Tag bleibt der
                 // Rueckfall. Morgens nicht - der Morgen-Track ist ohnehin der leisere.
-                if (context.topic in CALM_TOPICS && context.place in QUIET_PLACES) {
+                if (
+                    (context.topic in CALM_TOPICS && context.place in QUIET_PLACES) ||
+                    rainyIndoors(context)
+                ) {
                     add(MusicRole.HOME_EVENING)
                 }
                 addPlaceRoles(context.place)
@@ -357,6 +365,19 @@ object MusicResolver {
      * Die Rollen, die ein Ort tagsueber mitbringt, vom Spezifischsten zum Allgemeinsten: der
      * Laden vor der Stadt, die Natur fuer sich.
      */
+    /**
+     * **Ein Regentag klingt drinnen anders.**
+     *
+     * Draussen im Regen bleibt die Musik die des Ortes - eine Stadt im Regen ist immer noch eine
+     * Stadt. Drinnen dagegen, wenn es gegen die Scheibe regnet oder draussen Schnee faellt, ist
+     * der helle Tages-Track die falsche Farbe: Die Welt wird still, und die Musik geht mit. Der
+     * ruhige Abendtrack ist genau diese Farbe; der Tag bleibt der Rueckfall. Kein eigenes
+     * Regenstueck - die Stimmung entsteht aus der Wahl, nicht aus einer weiteren Datei.
+     */
+    private fun rainyIndoors(context: MusicContext): Boolean =
+        context.weather.isFalling && !PlayScene.isOutdoors(context.place) &&
+            context.place in QUIET_PLACES
+
     private fun MutableList<MusicRole>.addPlaceRoles(place: PlayScene.Place) {
         if (place == PlayScene.Place.ARCADE) add(MusicRole.ARCADE)
         if (place == PlayScene.Place.CAFE) add(MusicRole.CAFE)

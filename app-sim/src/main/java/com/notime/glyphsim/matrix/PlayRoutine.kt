@@ -214,9 +214,16 @@ object PlayRoutines {
          * Policy exakt bleibt.
          */
         night: Boolean = false,
+        /**
+         * **Bei Regen und Schnee bleibt man lieber drinnen.** Was nur bei klarem Himmel Sinn
+         * ergibt - Ausfluege in die Wildnis, Drachensteigen -, faellt weg ([WEATHER_CLOSED]);
+         * dafuer kommt der Blick aus dem Fenster dazu ([rainyDay]). Wie [night] an derselben
+         * Stelle fuer Wahl und Verteilung.
+         */
+        weather: PlayWeather = PlayWeather.CLEAR,
         random: Random = Random
     ): PlayRoutine {
-        val alle = admissible(topic, night)
+        val alle = admissible(topic, night, weather)
         val options = if (preferPlaceChange) {
             alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
                 .ifEmpty { alle }
@@ -283,9 +290,10 @@ object PlayRoutines {
         footballTrickLearned: Boolean = false,
         recentSpecials: List<SpecialActivity> = emptyList(),
         preferPlaceChange: Boolean = false,
-        night: Boolean = false
+        night: Boolean = false,
+        weather: PlayWeather = PlayWeather.CLEAR
     ): List<Pair<PlayRoutine, Double>> {
-        val alle = admissible(topic, night)
+        val alle = admissible(topic, night, weather)
         val options = if (preferPlaceChange) {
             alle.filter { routine -> routine.steps.any { it is RoutineStep.GoToPlace } }
                 .ifEmpty { alle }
@@ -329,13 +337,57 @@ object PlayRoutines {
      */
     val NIGHT_CLOSED: Set<PlayScene.Place> = PlayWorld.NATURE + PlayScene.Place.CAFE
 
-    /** [allFor] ohne die Ablaeufe an nachts geschlossene Orte, wenn es Nacht ist - siehe [forTopic]. */
-    private fun admissible(topic: AnimationType, night: Boolean): List<PlayRoutine> {
-        val alle = allFor(topic)
-        if (!night) return alle
-        return alle.filterNot { routine ->
-            routine.steps.any { it is RoutineStep.GoToPlace && it.place in NIGHT_CLOSED }
-        }.ifEmpty { alle }
+    /**
+     * Wohin man bei Regen und Schnee nicht aufbricht: die Landschaften des Weltausbaus. Park,
+     * Strasse und Sportplatz bleiben offen - wer dort ist, geht eben schneller (siehe
+     * AvatarBearing) -, aber zu einem Ausflug an den Strand bricht niemand im Regen auf.
+     */
+    val WEATHER_CLOSED: Set<PlayScene.Place> = PlayWorld.NATURE
+
+    /**
+     * **Der Regentag am Fenster** - nur, wenn es draussen regnet oder schneit.
+     *
+     * Im Arbeitszimmer ist das Fenster in jedem Zuhause dasselbe (siehe PlayScene, DESK), und
+     * durch dieses Fenster sieht man das Wetter (siehe PlayScene.weather). Die Figur geht hin,
+     * bleibt stehen, sieht hinaus, traeumt ein wenig. Nichts daran erklaert sich mit Worten - und
+     * gerade deshalb erzaehlt es einen Regentag besser als jede Anzeige.
+     */
+    fun rainyDay(topic: AnimationType): List<PlayRoutine> = when (topic) {
+        AnimationType.FOCUS -> listOf(
+            PlayRoutine(
+                listOf(
+                    RoutineStep.Stroll(0.02f),
+                    RoutineStep.Linger(5_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                    RoutineStep.Linger(7_000L),
+                    RoutineStep.Daydream,
+                    RoutineStep.Linger(3_000L),
+                    RoutineStep.Stir(AvatarAnimations.Fidget.STRETCH)
+                )
+            )
+        )
+        else -> emptyList()
+    }
+
+    /**
+     * [allFor] ohne die Ablaeufe an nachts geschlossene Orte, wenn es Nacht ist, und ohne
+     * Schoenwetter-Ablaeufe bei Regen oder Schnee - siehe [forTopic].
+     */
+    private fun admissible(topic: AnimationType, night: Boolean, weather: PlayWeather): List<PlayRoutine> {
+        val alle = allFor(topic) + if (weather.isFalling) rainyDay(topic) else emptyList()
+        val nachts = if (!night) {
+            alle
+        } else {
+            alle.filterNot { routine ->
+                routine.steps.any { it is RoutineStep.GoToPlace && it.place in NIGHT_CLOSED }
+            }.ifEmpty { alle }
+        }
+        if (!weather.isFalling) return nachts
+        return nachts.filterNot { routine ->
+            routine.steps.any {
+                (it is RoutineStep.GoToPlace && it.place in WEATHER_CLOSED) || it is RoutineStep.Kite
+            }
+        }.ifEmpty { nachts }
     }
 
     fun footballRoutine(trickLearned: Boolean): PlayRoutine = PlayRoutine(

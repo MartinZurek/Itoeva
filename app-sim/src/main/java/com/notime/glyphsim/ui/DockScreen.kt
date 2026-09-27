@@ -82,6 +82,7 @@ import com.notime.glyphsim.living.StepResult
 import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
+import com.notime.glyphsim.matrix.AvatarBearing
 import com.notime.glyphsim.matrix.AvatarBodies
 import com.notime.glyphsim.matrix.AvatarFacing
 import com.notime.glyphsim.matrix.AvatarFooting
@@ -124,7 +125,9 @@ import com.notime.glyphsim.matrix.MoonFrame
 import com.notime.glyphsim.matrix.PlayAmbientActivity
 import com.notime.glyphsim.matrix.PlayClipRecorder
 import com.notime.glyphsim.matrix.PlayClipRenderer
+import com.notime.glyphsim.matrix.ResidentPassage
 import com.notime.glyphsim.matrix.MusicContext
+import com.notime.glyphsim.matrix.PlayAmbience
 import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayDreamMemory
 import com.notime.glyphsim.matrix.PlayDreams
@@ -905,6 +908,7 @@ fun DockScreen(
                 // Wechsel zurueck in den Erinnerungs-Modus. Die EINSTELLUNG bleibt davon
                 // unberuehrt - siehe PlayMusic.
                 PlayMusic.stop()
+                PlayAmbienceSound.stop()
             }
         }
         /**
@@ -971,6 +975,7 @@ fun DockScreen(
         LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies, groupGame) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
+                PlayAmbienceSound.stop()
                 return@LaunchedEffect
             }
             while (true) {
@@ -985,8 +990,19 @@ fun DockScreen(
                         topic = currentTopic,
                         activity = currentActivity,
                         characterTheme = themeSpecies,
-                        groupGame = groupGame
+                        groupGame = groupGame,
+                        weather = PlayWeather.current()
                     )
+                )
+                // **Der Ort klingt mit** (siehe PlayAmbience) - leise unter der Musik und nur,
+                // solange sie wirklich laeuft: dieselben Sperren, kein eigener Schalter.
+                PlayAmbienceSound.apply(
+                    PlayAmbience.kindFor(
+                        currentPlace,
+                        PlayAmbientActivity.currentDayPhase(),
+                        PlayWeather.current()
+                    ),
+                    allowed = PlayMusic.isPlaying()
                 )
                 delay(faellig?.coerceIn(MUSIC_SETTLE_TICK_MS, MUSIC_RECHECK_MS) ?: MUSIC_RECHECK_MS)
             }
@@ -1094,9 +1110,33 @@ fun DockScreen(
             avatarIdleJob?.cancel()
             avatarIdleJob = scope.launch {
                 val idle = AvatarAnimations.idleSequence(species, mood)
+                // Durchlaeufe seit der letzten spontanen Regung (siehe AvatarBearing.idleFidget):
+                // Zwischen zwei Ruhe-Schleifen darf das Wesen gaehnen, sich strecken, sich
+                // umsehen - je nachdem, wie es ihm gerade geht.
+                var loopsSinceFidget = 0
                 while (isActive) {
                     MatrixAnimator.playTimed(idle.frames, idle.holdsMs) { f ->
                         avatar = avatar?.copy(frame = f)
+                    }
+                    loopsSinceFidget++
+                    val fidget = AvatarBearing.idleFidget(
+                        needs = livingAgent?.needs,
+                        dayPhase = PlayAmbientActivity.currentDayPhase(),
+                        loopsSinceLast = loopsSinceFidget,
+                        roll = Random.nextFloat()
+                    )
+                    // Im Bett nur gaehnen: Wer liegt, sieht sich nicht um und streckt sich nicht -
+                    // die Decke deckt ihn ohnehin bis auf den Kopf zu (siehe buildFront).
+                    val fits = fidget != null && (
+                        occupiedStation != PlayScene.Station.BED ||
+                            fidget == AvatarAnimations.Fidget.YAWN
+                        )
+                    if (fits && fidget != null) {
+                        val move = AvatarAnimations.fidgetSequence(species, fidget)
+                        MatrixAnimator.playTimed(move.frames, move.holdsMs) { f ->
+                            avatar = avatar?.copy(frame = f)
+                        }
+                        loopsSinceFidget = 0
                     }
                 }
             }
@@ -1144,12 +1184,21 @@ fun DockScreen(
             // Waehrend eines Gangs darf niemand sonst die Figur versetzen - siehe das
             // Nachfuehren des Bodens weiter unten.
             avatarWalking = true
+            // **Der Gang erzaehlt den Zustand** (siehe AvatarBearing.paceFactor): muede
+            // langsamer, zufrieden beschwingter. Schritttakt und Weg werden mit demselben Faktor
+            // gestreckt - sonst trippelte ein langsames Wesen mit schnellen Fuessen.
+            val pace = AvatarBearing.paceFactor(
+                livingAgent?.needs,
+                PlayAmbientActivity.currentDayPhase(),
+                hurry = PlayWeather.current().isFalling && PlayScene.isOutdoors(currentPlace)
+            )
             try {
             coroutineScope {
                 val gait = launch {
                     val walk = AvatarAnimations.walkSequence(current.species)
+                    val stepHolds = walk.holdsMs.map { (it / pace).toLong() }
                     while (isActive) {
-                        MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
+                        MatrixAnimator.playTimed(walk.frames, stepHolds) { f ->
                             avatar = avatar?.copy(frame = f)
                         }
                     }
@@ -1157,7 +1206,7 @@ fun DockScreen(
                 animate(
                     initialValue = current.offset.x,
                     targetValue = destination.x,
-                    animationSpec = tween(walkDurationMs(distance, avatarPx), easing = FastOutSlowInEasing)
+                    animationSpec = tween(walkDurationMs(distance, avatarPx, pace), easing = FastOutSlowInEasing)
                 ) { value, _ ->
                     // Die Hoehe wird NICHT mitanimiert, sondern Bild fuer Bild aus dem jetzigen
                     // Boden geholt: Gegangen wird immer auf dem Boden, und der kann sich waehrend
@@ -1214,6 +1263,9 @@ fun DockScreen(
          */
         suspend fun moveToPlace(target: PlayScene.Place, species: AvatarSpecies) {
             if (target == currentPlace) return
+            // Ob die Figur gerade aus dem Regen hereinkommt - siehe das Abschuetteln unten.
+            val fromRain = PlayWeather.current().isFalling &&
+                PlayScene.isOutdoors(currentPlace) && !PlayScene.isOutdoors(target)
             val hasDoorHere = PlayScene.Station.DOOR in PlayScene.stationsAt(currentPlace, species)
             val hasDoorThere = PlayScene.Station.DOOR in PlayScene.stationsAt(target, species)
             if (hasDoorHere) {
@@ -1281,6 +1333,18 @@ fun DockScreen(
                     activeStation = null
                     withContext(NonCancellable) { avatarDim.snapTo(1f) }
                 }
+            }
+            // **Aus dem Regen herein: erst einmal abschuetteln** - an der Tuer, bevor sie in den
+            // Raum geht. Eine Regung, die jeder kennt und die ohne ein Wort sagt, wie es draussen
+            // ist.
+            if (fromRain) {
+                avatarIdleJob?.cancel()
+                val shake = AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.SHAKE)
+                MatrixAnimator.playTimed(shake.frames, shake.holdsMs) { f ->
+                    avatar = avatar?.copy(frame = f)
+                }
+                // Gleich wieder in Ruhe - geht sie danach nicht los, stuende sie sonst starr.
+                startAvatarIdleLoop(species, AvatarMoodSnapshot.forSpecies(context, species))
             }
             if (walkAvatarTo(
                     avatarSpot(
@@ -3732,7 +3796,8 @@ fun DockScreen(
                                 goalInfluence = goalInfluence,
                                 nearbyProfiles = nearbyProfiles,
                                 footballTrickLearned = footballTrick,
-                                recentSpecials = recentSpecials.toList()
+                                recentSpecials = recentSpecials.toList(),
+                                weather = PlayWeather.current()
                             )
                             val policy = PlayDecisionPolicy.loaded(context)
                             val entscheidung = DecisionEngine.decide(
@@ -3758,7 +3823,10 @@ fun DockScreen(
                                 goalInfluence = goalInfluence,
                                 preferredRoutine = entscheidung?.candidate?.routine,
                                 sleepAdmissible = phaseJetzt == PlayAmbientActivity.DayPhase.NIGHT,
-                                chosenGoal = entscheidung?.candidate?.goal
+                                chosenGoal = entscheidung?.candidate?.goal,
+                                // Regen und Schnee: kein Ausflug in die Wildnis, kein Drachen,
+                                // dafuer der Blick aus dem Fenster (siehe PlayRoutines.rainyDay).
+                                weather = PlayWeather.current()
                             )
                             val topic = prepared.topic
                             val gewaehlt = prepared.routine
@@ -4023,6 +4091,9 @@ fun DockScreen(
         val residentSequences = remember {
             HashMap<Pair<AvatarSpecies, LivingPopulationLayout.ResidentPose>, AvatarAnimations.AvatarSequence>()
         }
+        // Der Gang der vorbeikommenden Nachbarn (siehe ResidentPassage) - getrennt von den
+        // Haltungen oben, weil er keine Haltung ist.
+        val residentWalks = remember { HashMap<AvatarSpecies, AvatarAnimations.AvatarSequence>() }
         // Eine gemeinsame Beschreibung fuer Bildschirm und Aufnahme. Die Einwohner behalten
         // ihren eigenen Zeitversatz auch in der Ruhebewegung; `scenePhase` allein liesse alle
         // drei wie ein einziges vervielfachtes Uhrwerk atmen.
@@ -4036,10 +4107,7 @@ fun DockScreen(
             // den Hintergrundfiguren herausgefiltert, damit niemand doppelt im Bild steht.
             val visitingIds = visitors.map { it.profileId }.toSet()
             LivingPopulationLayout.place(
-                snapshots = residentSnapshots.filterNot { it.profileId in visitingIds }.filter {
-                    SHOW_BACKGROUND_RESIDENTS || groupGame != null ||
-                        it.profileId == sharedActivityProfileId
-                },
+                snapshots = residentSnapshots.filterNot { it.profileId in visitingIds },
                 place = renderedPlace,
                 hostLeftFraction = (host.offset.x / maxWidthPx).coerceIn(0f, 1f),
                 hostWidthFraction = (hostPx / maxWidthPx).coerceIn(0f, 1f)
@@ -4103,7 +4171,43 @@ fun DockScreen(
             return if (moment.facesLeft[id] == true) AvatarFacing.mirror(frame) else frame
         }
 
-        val residentFigures = residentPlacements.map { placement ->
+        // Die Lage des Wesens, neben dem ein vorbeikommender Nachbar zum Gruss anhaelt.
+        val hostSpan = avatar?.takeIf { maxWidthPx > 0f }?.let { host ->
+            val hostPx = with(density) { host.sizeDp.dp.toPx() }
+            (host.offset.x / maxWidthPx).coerceIn(0f, 1f) to (hostPx / maxWidthPx).coerceIn(0f, 1f)
+        }
+        val residentFigures = residentPlacements.mapNotNull { placement ->
+                // **Wer nichts mit dem Wesen tut, kommt vorbei, statt herumzustehen** (siehe
+                // ResidentPassage und SHOW_BACKGROUND_RESIDENTS): quer durchs Bild, kurzer
+                // Gruss neben dem Wesen, weiter. Mitspieler und Trainingspartner stehen wie
+                // bisher an ihrem Platz - sie haben dort etwas zu tun.
+                val involved = groupGame != null ||
+                    placement.resident.profileId == sharedActivityProfileId
+                if (!SHOW_BACKGROUND_RESIDENTS && !involved) {
+                    val span = hostSpan ?: return@mapNotNull null
+                    val moment = ResidentPassage.momentAt(
+                        profileId = placement.resident.profileId,
+                        nowMs = scenePhase * SCENE_PHASE_TICK_MS,
+                        widthFraction = placement.widthFraction,
+                        hostLeftFraction = span.first,
+                        hostWidthFraction = span.second
+                    ) ?: return@mapNotNull null
+                    val species = placement.resident.species
+                    val frame = if (moment.walking) {
+                        val walk = residentWalks.getOrPut(species) { AvatarAnimations.walkSequence(species) }
+                        walk.frames[Math.floorMod(scenePhase, walk.frames.size)]
+                    } else {
+                        // Der Gruss: ein kleiner Freudensprung - dieselbe Haltung, mit der im
+                        // Gruppenspiel ein Treffer gefeiert wird.
+                        AvatarAnimations.gamePose(species, PlayGroupGame.Pose.CHEER, scenePhase / 2)
+                    }
+                    return@mapNotNull PlayClipRenderer.ResidentFigure(
+                        frame = if (moment.facingLeft) AvatarFacing.mirror(frame) else frame,
+                        species = species,
+                        leftFraction = moment.leftFraction,
+                        widthFraction = placement.widthFraction
+                    )
+                }
                 // Der zweite Teilnehmer benutzt dieselbe bestehende Koerperregung wie der
                 // Hauptavatar. Weil [residentFigures] Bildschirm, Schnappschuss und Clip speist,
                 // bleibt die gemeinsame Phase in allen drei Ausgaben dieselbe. Basketball kennt
@@ -4273,7 +4377,10 @@ fun DockScreen(
                     species = avatar?.species ?: AvatarSpeciesPrefs.get(context),
                     // Was er sich im Lauf seiner Entwicklung zugelegt hat (siehe PlayPath) - der
                     // Teil des Fortschritts, den man nicht liest, sondern sieht.
-                    acquisitions = acquisitions
+                    acquisitions = acquisitions,
+                    // Gleitende Daemmerung, einzeln erleuchtete Fenster, Sonnenauf- und -untergang
+                    // (siehe PlayDaylight). Der Bildtakt baut die Kulisse ohnehin neu.
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
                 )
             }
             PlaySceneView(
@@ -4720,7 +4827,8 @@ fun DockScreen(
                     floorY = floorYCells,
                     dayPhase = PlayAmbientActivity.currentDayPhase(),
                     fade = sceneFade.value,
-                    species = avatar?.species ?: AvatarSpeciesPrefs.get(context)
+                    species = avatar?.species ?: AvatarSpeciesPrefs.get(context),
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
                 )
             }
             PlaySceneView(
@@ -5399,14 +5507,18 @@ private suspend fun animateBurnInDrift(
  * Die Grenzen fangen beide Enden ab: ein sehr kurzer Weg soll nicht unnatuerlich hetzen, ein Weg
  * ueber die volle Bildschirmbreite nicht zur Wanderung werden.
  */
-private fun walkDurationMs(distancePx: Float, avatarPx: Float): Int {
+private fun walkDurationMs(distancePx: Float, avatarPx: Float, paceFactor: Float = 1f): Int {
     if (avatarPx <= 0f) return WALK_MIN_MS
     // Leichte Streuung des Tempos von Weg zu Weg: exakt gleich schnell zu gehen ist eine
     // Eigenschaft von Maschinen. Der Ausschlag ist klein genug, dass man ihn nicht als Zufall
     // bemerkt - nur das Fehlen des Metronoms.
-    val pace = WALK_BODIES_PER_SECOND * (1f + (Random.nextFloat() - 0.5f) * WALK_PACE_SPREAD)
+    val pace = WALK_BODIES_PER_SECOND * paceFactor *
+        (1f + (Random.nextFloat() - 0.5f) * WALK_PACE_SPREAD)
     val seconds = distancePx / (avatarPx * pace)
-    return (seconds * 1000f).roundToInt().coerceIn(WALK_MIN_MS, WALK_MAX_MS)
+    // Die Obergrenze waechst mit: Ein muedes Wesen braucht fuer die ganze Bildbreite laenger,
+    // sonst schluckte die Deckelung genau den Unterschied, um den es geht.
+    return (seconds * 1000f).roundToInt()
+        .coerceIn(WALK_MIN_MS, (WALK_MAX_MS / paceFactor.coerceAtLeast(0.1f)).roundToInt())
 }
 
 /** Koerperbreiten pro Sekunde - gemuetliches, aber nicht schleppendes Gehtempo. */
@@ -5485,6 +5597,10 @@ private const val RESIDENT_DIM = 0.66f
 /**
  * **Schalter fuer die Hintergrundfiguren** - die kleinen, gedimmten Einwohner, die an einem Ort
  * nur herumstehen (siehe LivingPopulationLayout.place).
+ *
+ * Seit dem Nachbarschafts-Schnitt heisst `false` nicht mehr "unsichtbar": Wer nichts mit dem Wesen
+ * tut, kommt stattdessen in eigenem Takt vorbei, gruesst und geht weiter (siehe ResidentPassage).
+ * `true` stellt die alten stehenden Figuren wieder her.
  *
  * Aus, seit sie im Stream als "kleine graue Figuren mit Antennen, bei denen nichts passiert"
  * auffielen (Savanne, 27.09.): Ohne erkennbare Handlung lesen sie sich als Stoerung, nicht als

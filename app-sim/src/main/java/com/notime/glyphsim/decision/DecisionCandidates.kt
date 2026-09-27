@@ -100,7 +100,8 @@ object DecisionCandidates {
                     nearbyProfiles = state.nearbyProfiles,
                     goalInfluence = state.goalInfluence,
                     sleepAdmissible = night,
-                    chosenGoal = ziel
+                    chosenGoal = ziel,
+                    weather = state.weather
                 )
                 for (option in optionen) {
                     val s = gesammelt.getOrPut(option.routine to ziel) { Sammlung(option, ziel, thema) }

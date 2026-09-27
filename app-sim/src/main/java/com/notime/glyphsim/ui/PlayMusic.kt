@@ -454,6 +454,13 @@ object PlayMusic {
     fun stop() = release()
 
     /**
+     * Ob gerade Szenenmusik laeuft - die Antwort, an die sich die Atmo haengt (siehe
+     * [PlayAmbienceSound]): Laeuft keine Musik, weil der Nutzer sie ausgeschaltet hat, fremder Ton
+     * laeuft oder das Geraet stumm ist, schweigt auch der Ort.
+     */
+    fun isPlaying(): Boolean = player != null
+
+    /**
      * Plant, wann das gerade gestartete Stueck [forPlayer] in seinen naechsten Durchlauf
      * uebergeht - vor seinem Ausklang, und gegebenenfalls in ein anderes Stueck derselben
      * Stimmung (siehe [PlayMusicLoop]).

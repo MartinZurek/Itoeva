@@ -664,6 +664,48 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-27 - Atmosphaere: erzaehlen durch Bild und Klang, ohne Text
+
+**Anlass:** Nach der ersten Twitch-Session fragte der Nutzer nach Hebeln, die das Zuschauen
+spannender machen. Vorgaben: Das Spiel wird nicht fuer den Stream veraendert, gestreamt wird genau
+die App; kein Text; die Geschichte der Wesen und die Atmosphaere sollen allein ueber Bild und
+Klang erzaehlt werden. Freigabe fuer alle sechs Vorschlaege: "Zieh alles durch".
+
+**Geaendert (App und Stream gleichermassen):**
+- **Koerpersprache** (`AvatarBearing`): Muedigkeit (Energiedruck, Tageszeit als Boden) bremst
+  den Gang bis 0,72, Wohlbefinden beschwingt bis 1,14, Regen draussen treibt an. Zwischen den
+  Ruhe-Schleifen spontane Regungen je Zustand (gaehnen, morgens strecken, unruhig umsehen,
+  zufrieden schuetteln) mit Mindestabstand.
+- **Daemmerung** (`PlayDaylight`): Raumhelligkeit als Kurve ueber die Minute des Tages, an den
+  Phasenmitten auf den alten Stufen. Strassen- und Stadtfenster haben je eigene Gewohnheiten
+  (heimkommen, schlafen gehen, Nachteulen, Fruehaufsteher, leere Wohnungen). Morgens steigt links,
+  abends sinkt rechts eine tiefe Sonne, hinter allem, was schon steht.
+- **Wetter wirkt aufs Verhalten**: Bei Regen und Schnee fallen Ausfluege in die Landschaften und
+  das Drachensteigen weg (`PlayRoutines.WEATHER_CLOSED`); dafuer gibt es den Regentag am Fenster
+  im Arbeitszimmer (`rainyDay`). Durchgereicht wie die Nachtregel bis in `DecisionState`, mit
+  `CLEAR` als Voreinstellung. Wer aus dem Regen hereinkommt, schuettelt sich an der Tuer ab.
+- **Musik folgt dem Wetter**: Drinnen an ruhigen Orten waehlt der Resolver bei Regen und Schnee
+  zuerst den ruhigen Abendtrack statt des hellen Tages. Draussen bleibt die Musik des Ortes.
+- **Nachbarn kommen vorbei** (`ResidentPassage`): Wer laut Simulation am Ort ist und nichts mit
+  dem Wesen tut, geht in eigenem Takt quer durchs Bild, haelt neben dem Wesen an, huepft zum Gruss
+  und geht weiter. `SHOW_BACKGROUND_RESIDENTS = true` stellt die alten stehenden Figuren wieder her.
+- **Umgebungsklang** (`PlayAmbience`, `PlayAmbienceSound`): Regen (draussen/an der Scheibe),
+  Wind, Brandung, Voegel, Grillen, Froesche, Stadt, Cafe - leise unter der Musik, gerechnet statt
+  aufgenommen (Hausregel aus `PlayMusic`: nur der Score ist eine Datei). Keine zweite
+  Erzeugungs-Pipeline. Nur zu hoeren, solange Musik laeuft, und damit unter denselben Sperren.
+
+**Migration:** keine.
+
+- **Tests (`TESTED BEHAVIOR`):** 743 Offline-Tests gruen (49 neu: Gang und Regungen, Daemmerung,
+  Fenster, Sonnenlauf, Wetterregeln fuer Wahl und Verteilung, Regenmusik, Vorbeigang, Atmo-Wahl,
+  Schleifennaht, Pegel). Offline gerendert: Stadt von 17:30 bis 23:00, Park mit sinkender Sonne,
+  Vorbeigang mit Gruss. Atmo-Schleifen als WAV exportiert und per Spektrum geprueft (Cafe-Gemurmel
+  mit Silbenrhythmus 2 bis 5 Hz, Regen an der Scheibe hoehenarm).
+- **Ungeprueft (`UNVERIFIED`):** Klang der Atmo am Geraet und im Stream-Mix, Wirkung der
+  Nachbarn in allen Orten.
+- **Offene Entscheidung:** Die Atmo haengt am Musikschalter. Ein eigener Schalter waere eine
+  Einstellungsfrage fuer den Nutzer.
+
 ### 2026-09-27 - Stream-Befund: Fussball zu Ende gebaut, stumme Figuren und Motive entfernt
 
 **Anlass:** Stream-Video (Build d723101) mit zwei Befunden. Auf dem Sportplatz lag ein Ball neben
