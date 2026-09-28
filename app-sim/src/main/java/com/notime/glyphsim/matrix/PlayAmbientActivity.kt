@@ -124,6 +124,32 @@ object PlayAmbientActivity {
         else -> DayPhase.NIGHT
     }
 
+    /** Ab dieser Stunde wird geschlafen (siehe [activityPhase]). */
+    const val BEDTIME_HOUR = 2
+
+    /**
+     * **Die Tageszeit fuers HANDELN** - im Unterschied zu [currentDayPhase], der Tageszeit fuers
+     * SEHEN und HOEREN.
+     *
+     * Gemeldet am 28.09., 22:30 Uhr: "Er hockt abends nur zu Hause rum und tut nichts - schlafen
+     * erst ab 2 bis 3 Uhr, davor soll er noch aktiv etwas tun." Bis dahin war um 23 Uhr alles
+     * vorbei: Die Nacht liess nur noch Schlaf zu, und schon ab 21 Uhr stand im Tagesplan Ruhe und
+     * Innehalten. Fuer ein Wesen, das in einem Stream lebt, ist aber gerade der spaete Abend die
+     * Zeit, in der zugeschaut wird.
+     *
+     * Deshalb zwei Uhren: Licht, Sterne, Mond und Musik folgen weiter der wirklichen Nacht ab
+     * 23 Uhr - es IST dunkel. Was das Wesen TUT, richtet sich nach dieser hier: Bis zwei Uhr ist
+     * noch Abend, erst dann geht es schlafen.
+     */
+    fun activityPhase(now: LocalTime = PlayTimeLapse.now()): DayPhase = when (now.hour) {
+        in 23..23, in 0 until BEDTIME_HOUR -> DayPhase.EVENING
+        else -> currentDayPhase(now)
+    }
+
+    /** Ob gerade die spaete Stunde ist: sichtbar Nacht, aber noch wach (23 bis 2 Uhr). */
+    fun isLateEvening(now: LocalTime = PlayTimeLapse.now()): Boolean =
+        currentDayPhase(now) == DayPhase.NIGHT && activityPhase(now) == DayPhase.EVENING
+
     /**
      * Was zu dieser Stunde eigentlich ANSTEHT - der feine Tagesplan hinter den vier groben Phasen.
      *
@@ -143,7 +169,11 @@ object PlayAmbientActivity {
      * Klassendoku und [combinedWeights]).
      */
     fun plannedTopicFor(hour: Int): AnimationType = when (hour) {
-        in 0..5 -> AnimationType.SLEEP
+        // Der spaete Abend gehoert noch dem Wachsein (siehe [activityPhase]): nach Mitternacht
+        // noch lesen, dann ausklingen, ab zwei Uhr schlafen.
+        0 -> AnimationType.BOOK
+        1 -> AnimationType.REST
+        in BEDTIME_HOUR..5 -> AnimationType.SLEEP
         6 -> AnimationType.GENERAL
         7 -> AnimationType.DRINK
         8 -> AnimationType.MOVE
@@ -157,9 +187,12 @@ object PlayAmbientActivity {
         17 -> AnimationType.MOVE
         18 -> AnimationType.DRINK
         19 -> AnimationType.LOVE
-        20 -> AnimationType.BOOK
-        21 -> AnimationType.REST
-        22 -> AnimationType.MINDFULNESS
+        // Der Abend ist unterwegs, nicht auf dem Sofa: noch einmal hinaus, etwas machen, jemanden
+        // treffen, ein Nachtspaziergang unter den Sternen.
+        20 -> AnimationType.MOVE
+        21 -> AnimationType.CREATIVITY
+        22 -> AnimationType.LOVE
+        23 -> AnimationType.MOVE
         else -> AnimationType.SLEEP
     }
 
@@ -415,18 +448,20 @@ object PlayAmbientActivity {
             AnimationType.BOOK to 1,
             AnimationType.CREATIVITY to 1
         )
+        // Seit der Abend bis zwei Uhr reicht (siehe [activityPhase]), ist er die lebhafteste Zeit
+        // des Tages und nicht mehr die ruhigste: weniger Sofa, mehr hinaus, mehr zusammen.
         DayPhase.EVENING -> mapOf(
-            AnimationType.REST to 3,
-            AnimationType.LOVE to 2,
+            AnimationType.REST to 2,
+            AnimationType.LOVE to 3,
             // **Der Abendspaziergang.** Vorher stand hier gar kein MOVE, und damit war der Abend
             // vollstaendig drinnen - dabei ist es die Tageszeit, zu der jemand tatsaechlich noch
             // einmal vor die Tuer geht. Zusammen mit dem Licht in den Fenstern (siehe
             // PlayScene.litWindows) ist das die schoenste Szene, die diese Welt zu bieten hat,
             // und sie kam bis dahin nie vor.
-            AnimationType.MOVE to 4,
+            AnimationType.MOVE to 5,
             AnimationType.BOOK to 2,
-            AnimationType.CREATIVITY to 2,
-            AnimationType.MINDFULNESS to 2,
+            AnimationType.CREATIVITY to 3,
+            AnimationType.MINDFULNESS to 1,
             AnimationType.DRINK to 1,
             AnimationType.GENERAL to 1
         )

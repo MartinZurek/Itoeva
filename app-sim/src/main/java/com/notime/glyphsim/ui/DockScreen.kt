@@ -3753,7 +3753,7 @@ fun DockScreen(
                                 holdOutdoors = PlayOutdoorStay.holdsOutdoors(
                                     outdoorsForMs = if (outdoorsSinceMs == 0L) -1L
                                         else System.currentTimeMillis() - outdoorsSinceMs,
-                                    phase = PlayAmbientActivity.currentDayPhase()
+                                    phase = PlayAmbientActivity.activityPhase()
                                 ),
                                 // **Der Bewegungsdrang** (siehe PlayAmbientActivity.movementUrge):
                                 // Wer lange still war, bekommt wieder Lust auf Bewegung; wer
@@ -3770,7 +3770,10 @@ fun DockScreen(
                             val (baseAgent, baseWorld) = livingStateFor(species)
                             val footballTrick = PlayFootballSkill.isLearned(context, presenceProfileId)
                             val goalInfluence = StreamInteractions.influenceFor(externalImpulse)
-                            val phaseJetzt = PlayAmbientActivity.currentDayPhase()
+                            // **Die Tageszeit fuers Handeln** (siehe PlayAmbientActivity.activityPhase):
+                            // Bis zwei Uhr ist das Wesen wach und unterwegs, erst dann ist Nacht.
+                            val phaseJetzt = PlayAmbientActivity.activityPhase()
+                            val spaeteStunde = PlayAmbientActivity.isLateEvening()
                             // **Die Decision Policy waehlt, WIE die Absicht aussieht** (siehe
                             // decision/DecisionPolicy.kt). Der Kern bleibt, was er war: Er bewertet
                             // die Ziele, plant und prueft jede Voraussetzung. Die Policy waehlt nur
@@ -3797,7 +3800,8 @@ fun DockScreen(
                                 nearbyProfiles = nearbyProfiles,
                                 footballTrickLearned = footballTrick,
                                 recentSpecials = recentSpecials.toList(),
-                                weather = PlayWeather.current()
+                                weather = PlayWeather.current(),
+                                lateEvening = spaeteStunde
                             )
                             val policy = PlayDecisionPolicy.loaded(context)
                             val entscheidung = DecisionEngine.decide(
@@ -3826,7 +3830,10 @@ fun DockScreen(
                                 chosenGoal = entscheidung?.candidate?.goal,
                                 // Regen und Schnee: kein Ausflug in die Wildnis, kein Drachen,
                                 // dafuer der Blick aus dem Fenster (siehe PlayRoutines.rainyDay).
-                                weather = PlayWeather.current()
+                                weather = PlayWeather.current(),
+                                // Cafe und Wildnis schliessen mit der sichtbaren Nacht um 23 Uhr,
+                                // auch wenn das Wesen noch wach ist.
+                                nightClosed = phaseJetzt == PlayAmbientActivity.DayPhase.NIGHT || spaeteStunde
                             )
                             val topic = prepared.topic
                             val gewaehlt = prepared.routine
@@ -3868,7 +3875,8 @@ fun DockScreen(
                                     topicIsMove = topic == AnimationType.MOVE,
                                     place = place,
                                     othersPresent = othersPresent,
-                                    night = PlayAmbientActivity.currentDayPhase() ==
+                                    // Gespielt wird, solange das Wesen wach ist - bis zwei Uhr.
+                                    night = PlayAmbientActivity.activityPhase() ==
                                         PlayAmbientActivity.DayPhase.NIGHT
                                 )
                             ) {

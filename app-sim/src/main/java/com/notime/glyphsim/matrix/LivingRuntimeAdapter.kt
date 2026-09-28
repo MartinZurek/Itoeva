@@ -165,11 +165,17 @@ object LivingRuntimeAdapter {
         sleepAdmissible: Boolean = false,
         chosenGoal: GoalKind? = null,
         /** Das Wetter draussen - bei Regen und Schnee faellt weg, was man dann nicht tut. */
-        weather: PlayWeather = PlayWeather.CLEAR
+        weather: PlayWeather = PlayWeather.CLEAR,
+        /**
+         * Ob Cafe und Wildnis geschlossen haben. Bisher dasselbe wie [sleepAdmissible]; seit das
+         * Wesen bis zwei Uhr wach ist (siehe PlayAmbientActivity.activityPhase), schliessen sie
+         * weiterhin mit der sichtbaren Nacht um 23 Uhr, geschlafen wird erst spaeter.
+         */
+        nightClosed: Boolean = sleepAdmissible
     ): PreparedLivingRoutine {
         val (result, branch) = resolve(
             agent, world, renderedPlace, interestTopic, footballTrickLearned, recentSpecials,
-            nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal, weather
+            nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal, weather, nightClosed
         )
         if (branch == null) return PreparedLivingRoutine(result, null, null, emptyList())
         // Das Thema kommt von der gewaehlten Option: Nachts kann aus "ausruhen" der Schlaf im
@@ -210,10 +216,11 @@ object LivingRuntimeAdapter {
         goalInfluence: GoalInfluence? = null,
         sleepAdmissible: Boolean = false,
         chosenGoal: GoalKind? = null,
-        weather: PlayWeather = PlayWeather.CLEAR
+        weather: PlayWeather = PlayWeather.CLEAR,
+        nightClosed: Boolean = sleepAdmissible
     ): List<RoutineOption> = resolve(
         agent, world, renderedPlace, interestTopic, footballTrickLearned, recentSpecials,
-        nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal, weather
+        nearbyProfiles, goalInfluence, sleepAdmissible, chosenGoal, weather, nightClosed
     ).second?.options ?: emptyList()
 
     /**
@@ -249,9 +256,10 @@ object LivingRuntimeAdapter {
         goalInfluence: GoalInfluence?,
         sleepAdmissible: Boolean,
         chosenGoal: GoalKind?,
-        weather: PlayWeather
+        weather: PlayWeather,
+        nightClosed: Boolean
     ): Pair<StepResult, Branch?> {
-        val conditions = Conditions(night = sleepAdmissible, weather = weather)
+        val conditions = Conditions(night = nightClosed, weather = weather)
         val startWorld = synchroniseWorld(world, renderedPlace, nearbyProfiles)
         // **Die Ausformung geht VOR der Entscheidung mit hinein** (NT-072).
         //

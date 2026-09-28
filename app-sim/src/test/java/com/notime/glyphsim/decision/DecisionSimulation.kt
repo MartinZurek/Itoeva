@@ -99,9 +99,11 @@ object DecisionSimulation {
                 val wer = com.notime.glyphsim.matrix.LivingResidents.all.random(presenceRandom).profileId
                 presence[ort] = (presence[ort] ?: emptySet()) + wer
             }
-            val phase = PlayAmbientActivity.currentDayPhase(
-                LocalTime.of(world.minuteOfDay / 60, world.minuteOfDay % 60)
-            )
+            // Wie DockScreen: gehandelt wird nach der Tageszeit fuers Handeln (bis zwei Uhr Abend),
+            // Cafe und Wildnis schliessen mit der sichtbaren Nacht.
+            val uhrzeit = LocalTime.of(world.minuteOfDay / 60, world.minuteOfDay % 60)
+            val phase = PlayAmbientActivity.activityPhase(uhrzeit)
+            val spaet = PlayAmbientActivity.isLateEvening(uhrzeit)
             val signals = TopicSignals(
                 stayAt = place.takeIf { stayedRounds < PlayAmbientActivity.MAX_STAY_ROUNDS },
                 plannedTopic = PlayAmbientActivity.plannedTopicFor(world.minuteOfDay / 60),
@@ -125,7 +127,8 @@ object DecisionSimulation {
                 nowMinute = now,
                 minutesSinceMove = lastMove?.let { now - it },
                 minutesSinceOutdoors = lastOutdoors?.let { now - it },
-                recentSpecials = recentSpecials.toList()
+                recentSpecials = recentSpecials.toList(),
+                lateEvening = spaet
             )
             val candidates = DecisionCandidates.generate(state)
             val decision = DecisionEngine.decide(
@@ -140,7 +143,8 @@ object DecisionSimulation {
                 random = random,
                 preferredRoutine = decision?.candidate?.routine,
                 sleepAdmissible = phase == PlayAmbientActivity.DayPhase.NIGHT,
-                chosenGoal = decision?.candidate?.goal
+                chosenGoal = decision?.candidate?.goal,
+                nightClosed = phase == PlayAmbientActivity.DayPhase.NIGHT || spaet
             )
             val vorher = world.absoluteMinute
             agent = prepared.result.agent

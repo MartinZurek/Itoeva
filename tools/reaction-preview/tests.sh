@@ -167,6 +167,7 @@ TEST_SRCS=(
   "$TEST/matrix/CreatureFrameSizeTest.kt"
   "$TEST/ui/PlayMusicTest.kt"
   "$TEST/living/LivingAgentTest.kt"
+  "$TEST/living/LivingRhythmTest.kt"
   "$TEST/living/LivingSymbolsTest.kt"
   "$TEST/living/LivingDriveTest.kt"
   "$TEST/ui/LivingSymbolFramesTest.kt"
@@ -243,6 +244,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.CreatureFrameSizeTest
   com.notime.glyphsim.ui.PlayMusicTest
   com.notime.glyphsim.living.LivingAgentTest
+  com.notime.glyphsim.living.LivingRhythmTest
   com.notime.glyphsim.living.LivingSymbolsTest
   com.notime.glyphsim.living.LivingDriveTest
   com.notime.glyphsim.ui.LivingSymbolFramesTest

@@ -92,11 +92,16 @@ data class GoalScore(
     /** Wert einer vorhandenen Beziehung fuer ein soziales Ziel. */
     val socialValue: Double = 0.0,
     /** Begrenzter Anstoss von ausserhalb der Simulation, niemals ein Befehl. */
-    val externalInfluence: Double = 0.0
+    val externalInfluence: Double = 0.0,
+    /** Der Tagesrhythmus - abends wach, siehe [UtilitySelector.rhythm]. */
+    val rhythm: Double = 0.0
 ) {
     val total: Double
         get() = needPressure + bias + learnedPreference + memoryInfluence + socialValue +
-            externalInfluence - cost
+            externalInfluence + rhythm - cost
+
+    /** Der Druck mit Tagesrhythmus - er entscheidet, ob ein Ziel ueberhaupt in Frage kommt. */
+    val effectivePressure: Double get() = needPressure + rhythm
 }
 
 /**
@@ -172,7 +177,8 @@ object UtilitySelector {
                     externalInfluence = influence
                         ?.takeIf { it.goal == goal }
                         ?.weight
-                        ?: 0.0
+                        ?: 0.0,
+                    rhythm = rhythm(goal, agent.needs.pressure(goal.drivenBy), world.minuteOfDay)
                 )
             }
             .sortedWith(compareByDescending<GoalScore> { it.total }.thenBy { it.goal.ordinal })
@@ -183,7 +189,7 @@ object UtilitySelector {
         world: WorldState,
         influence: GoalInfluence? = null
     ): GoalKind? = rank(agent, world, influence)
-        .firstOrNull { it.needPressure >= MIN_PRESSURE || it.externalInfluence > 0.0 }
+        .firstOrNull { it.effectivePressure >= MIN_PRESSURE || it.externalInfluence > 0.0 }
         ?.goal
 
     /**
@@ -198,8 +204,43 @@ object UtilitySelector {
         world: WorldState,
         influence: GoalInfluence? = null
     ): List<GoalScore> = rank(agent, world, influence).filter {
-        (it.needPressure >= MIN_PRESSURE || it.externalInfluence > 0.0) && it.cost < Planner.UNREACHABLE
+        (it.effectivePressure >= MIN_PRESSURE || it.externalInfluence > 0.0) && it.cost < Planner.UNREACHABLE
     }
+
+    /**
+     * **Abends ist man wach - auch wenn man muede ist.**
+     *
+     * Gemeldet am 28.09.: "Abends hockt er nur zu Hause rum; schlafen erst ab 2 bis 3 Uhr, davor
+     * soll er noch etwas tun." Gemessen stimmte das: Zwischen 20 und 2 Uhr war rund die Haelfte
+     * aller Handlungen AUSRUHEN. Der Grund lag im Kern, nicht im Tagesplan - die Muedigkeit waechst
+     * den ganzen Tag, und gegen 22 Uhr gewinnt REST jede Wahl.
+     *
+     * Menschen und Wesen haben aber einen Tagesrhythmus: Abends ist man wacher, als die Muedigkeit
+     * allein sagen wuerde, und geht trotzdem noch hinaus. Deshalb zaehlt REST zwischen 18 und
+     * 2 Uhr um [EVENING_ALERTNESS] weniger - solange es nicht wirklich dringend ist
+     * ([URGENT_TIREDNESS]). Ab zwei Uhr gilt die Muedigkeit wieder voll, und das Wesen geht
+     * schlafen. Das Beduerfnis selbst bleibt unangetastet: Es waechst weiter und wird nachts
+     * gestillt.
+     */
+    fun rhythm(goal: GoalKind, pressure: Double, minuteOfDay: Int): Double {
+        val stunde = Math.floorMod(minuteOfDay, 24 * 60) / 60
+        val abends = stunde >= EVENING_FROM_HOUR || stunde < BEDTIME_HOUR
+        if (!abends) return 0.0
+        return when (goal) {
+            GoalKind.REST -> if (pressure >= URGENT_TIREDNESS) 0.0 else -EVENING_ALERTNESS
+            // **Die Abendlust.** Die Messung zeigte noch etwas: Abends war oft KEIN Beduerfnis
+            // dringend genug, und dann blieb Ausruhen als einziges Ziel uebrig - stundenlang. Ein
+            // wacher Abend zieht dagegen hinaus, zu anderen, zu etwas Neuem.
+            GoalKind.HAVE_FUN, GoalKind.EXPLORE, GoalKind.CONNECT_WITH -> EVENING_ZEST
+            else -> 0.0
+        }
+    }
+
+    const val EVENING_ALERTNESS = 0.3
+    const val EVENING_ZEST = 0.15
+    const val URGENT_TIREDNESS = 0.9
+    private const val EVENING_FROM_HOUR = 18
+    private const val BEDTIME_HOUR = 2
 
     private const val RECENT_EPISODES = 6
     private const val MEMORY_WEIGHT = 0.015
