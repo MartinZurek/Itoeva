@@ -33,7 +33,7 @@ import com.notime.glyphsim.matrix.RoutineStep.Take
  *
  * ## Was bleibt
  *
- * Jede Quest hinterlaesst etwas ([Reward]): die Truhe im Wohnzimmer, den Zauberstab und die
+ * Jede Quest hinterlaesst etwas ([Reward]): die Truhe in der Werkstatt, den Zauberstab und die
  * Faehigkeit zu zaubern, einen neuen Ort, ein Drachenjunges. Das Drachenei ist die einzige Quest
  * ueber drei Tage - es muss gewaermt werden, bekommt Risse und schluepft.
  *
@@ -51,7 +51,7 @@ object PlayQuests {
 
     /** Was eine Quest hinterlaesst. */
     enum class Reward {
-        /** Die Truhe im Wohnzimmer. */
+        /** Die Truhe in der Werkstatt. */
         TREASURE_CHEST,
 
         /** Der Zauberstab - und die Faehigkeit zu zaubern. */
@@ -174,6 +174,33 @@ object PlayQuests {
         )
     }
 
+    /**
+     * **Der Stand als eine Zeile** - fuer die Ablage (siehe PlayQuestLog). Unbekanntes oder
+     * Beschaedigtes liest sich als frischer Anfang statt als Absturz.
+     */
+    fun encode(progress: Progress): String = listOf(
+        progress.quest.name,
+        progress.dayOfQuest.toString(),
+        progress.questDayNumber.toString(),
+        progress.stagesDone.toString(),
+        progress.rewards.joinToString(",") { it.name },
+        progress.round.toString()
+    ).joinToString(";")
+
+    fun decode(text: String?): Progress {
+        val parts = text?.split(";") ?: return Progress()
+        if (parts.size != 6) return Progress()
+        val quest = Quest.entries.firstOrNull { it.name == parts[0] } ?: return Progress()
+        return Progress(
+            quest = quest,
+            dayOfQuest = parts[1].toIntOrNull()?.coerceIn(0, quest.days - 1) ?: 0,
+            questDayNumber = parts[2].toLongOrNull() ?: Long.MIN_VALUE,
+            stagesDone = parts[3].toIntOrNull()?.coerceIn(0, STAGE_HOURS.size) ?: 0,
+            rewards = parts[4].split(",").mapNotNull { n -> Reward.entries.firstOrNull { it.name == n } }.toSet(),
+            round = parts[5].toIntOrNull()?.coerceAtLeast(0) ?: 0
+        )
+    }
+
     /** Die Faehigkeit zu zaubern - seit der Zauberlehre. */
     fun canCastMagic(rewards: Set<Reward>): Boolean = Reward.MAGIC in rewards
 
@@ -228,7 +255,7 @@ object PlayQuests {
             Stroll(0.7f), Quest(Effect.DIG), Linger(5_000L), Quest(null),
             Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L)
         ) to null,
-        // Abends am Strand: die Karte stimmt. Die Truhe steigt aus dem Sand und wird heimgetragen.
+        // Abends am Strand: die Karte stimmt. Die Truhe steigt aus dem Sand und kommt in die Werkstatt.
         r(
             GoToPlace(PlayScene.Place.STREET), Take(PlayEffects.Carried.MAP),
             GoToPlace(PlayScene.Place.BEACH), Stroll(0.5f),
@@ -236,7 +263,7 @@ object PlayQuests {
             Quest(Effect.DIG), Linger(6_000L),
             Quest(Effect.CHEST_FOUND), Linger(8_000L), Quest(null),
             Stir(AvatarAnimations.Fidget.SHAKE), Take(PlayEffects.Carried.CHEST),
-            GoToPlace(PlayScene.Place.STREET), GoToPlace(PlayScene.Place.LIVING), Stroll(0.4f),
+            GoToPlace(PlayScene.Place.STREET), GoToPlace(PlayScene.Place.CRAFT), Stroll(0.5f),
             RoutineStep.Drop, Stir(AvatarAnimations.Fidget.SHAKE), Linger(3_000L)
         ) to Reward.TREASURE_CHEST
     )
@@ -299,7 +326,7 @@ object PlayQuests {
 
     /** Beim Nest im Schlafzimmer (siehe PlayScene.Acquisition.DRAGON_EGG) waermen. */
     private fun warm(extra: Array<RoutineStep> = emptyArray()) = r(
-        GoToPlace(PlayScene.Place.BEDROOM), Stroll(0.22f),
+        GoToPlace(PlayScene.Place.BEDROOM), Stroll(0.5f),
         Quest(Effect.EGG_WARM), Linger(8_000L), Quest(null),
         *extra, Stir(AvatarAnimations.Fidget.LOOK_AROUND)
     )
@@ -312,7 +339,7 @@ object PlayQuests {
                 Stir(AvatarAnimations.Fidget.LOOK_AROUND),
                 Quest(Effect.EGG_FOUND), Linger(6_000L), Quest(null),
                 Take(PlayEffects.Carried.EGG),
-                GoToPlace(PlayScene.Place.STREET), GoToPlace(PlayScene.Place.BEDROOM), Stroll(0.22f),
+                GoToPlace(PlayScene.Place.STREET), GoToPlace(PlayScene.Place.BEDROOM), Stroll(0.5f),
                 RoutineStep.Drop, Quest(Effect.EGG_WARM), Linger(4_000L), Quest(null)
             ) to Reward.DRAGON_EGG,
             warm() to null,
@@ -329,7 +356,7 @@ object PlayQuests {
             warm() to null,
             warm() to null,
             r(
-                GoToPlace(PlayScene.Place.BEDROOM), Stroll(0.22f),
+                GoToPlace(PlayScene.Place.BEDROOM), Stroll(0.5f),
                 Quest(Effect.EGG_WARM), Linger(3_000L),
                 Quest(Effect.EGG_HATCH), Linger(12_000L), Quest(null),
                 Stir(AvatarAnimations.Fidget.SHAKE), Linger(3_000L)

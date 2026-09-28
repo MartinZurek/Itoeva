@@ -297,20 +297,23 @@ object PlayScene {
         SIGNALRIG(Place.BEDROOM, 0.58f),
 
         // ---- Aus den Quests (siehe PlayQuests) - unabhaengig vom Entwicklungspfad ----
-        /** Die Schatztruhe aus der Schatzsuche. */
-        TREASURE_CHEST(Place.LIVING, 0.30f),
+        /**
+         * Die Schatztruhe aus der Schatzsuche - in der Werkstatt-Ecke, weil nur dort bei allen
+         * sechs Wohnungen, jeder Bildbreite und jedem Entwicklungspfad Platz ist (PlayQuestsTest).
+         */
+        TREASURE_CHEST(Place.CRAFT, 0.84f),
 
         /** Der Zauberstab an der Wand ueber dem Schreibtisch - seit die Zauberlehre gelang. */
-        MAGIC_WAND(Place.DESK, 0.62f, liftCells = 10),
+        MAGIC_WAND(Place.DESK, 0.78f, liftCells = 10),
 
-        /** Das Drachenei im Nest, neben dem Bett - dort ist es warm. */
-        DRAGON_EGG(Place.BEDROOM, 0.34f),
+        /** Das Drachenei im Nest an der Tuerseite des Schlafzimmers - dieselbe Pruefung. */
+        DRAGON_EGG(Place.BEDROOM, 0.92f),
 
         /** Dasselbe Ei mit Rissen - es wird bald schluepfen. */
-        DRAGON_EGG_CRACKED(Place.BEDROOM, 0.34f),
+        DRAGON_EGG_CRACKED(Place.BEDROOM, 0.92f),
 
         /** Das geschluepfte Drachenjunge - es wohnt jetzt mit. */
-        DRAGONLING(Place.BEDROOM, 0.34f)
+        DRAGONLING(Place.BEDROOM, 0.92f)
     }
 
     /**

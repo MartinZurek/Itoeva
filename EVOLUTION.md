@@ -221,8 +221,11 @@ Balancing-, UI- und Fortschrittslogik und damit eine Entscheidung mit größerer
 bisher freigegebenen Inhaltsergänzungen. Eine solche Struktur darf nicht ohne bewusste
 menschliche Entscheidung eingeführt werden.
 
-**OPEN DECISION:** Eine größere lineare Handlung oder Quest-Struktur ist nicht belegt. Die
-vorhandene Story ist episodisches Worldbuilding.
+**ENTSCHIEDEN (2026-09-28):** Quest-Struktur. Der Nutzer hat ausdrücklich **feste
+Questketten** gewählt (Schatzsuche, Zauberlehre, Expedition, Drachenei), je Tag drei Stufen, mit
+dauerhaften Belohnungen (Gegenstand zu Hause, neue Fähigkeit, neuer Ort, schlüpfendes Drachenei).
+Siehe Evolution History zum 2026-09-28. Eine übergreifende lineare Handlung oder ein
+Sieg-/Niederlage-Zustand bleibt weiterhin **OPEN DECISION**.
 
 ### Living Agent System (entschieden 2026-09-10)
 
@@ -232,7 +235,9 @@ groesseren Architektur-Meilenstein freigegeben. Voller Umfang und PR-Grenzen ste
 
 - Geschichten entstehen aus Beduerfnissen, Weltbedingungen, Zielen, Erinnerungen,
   Persoenlichkeit, Beziehungen und Folgen. Ein `StoryManager`, Plot-Skripte oder vorgefertigte
-  Gespraechsfolgen sind nicht Teil der Freigabe.
+  Gespraechsfolgen sind nicht Teil der Freigabe. **Ausnahme seit 2026-09-28, vom Nutzer
+  entschieden:** die festen Questketten in `PlayQuests` - sie laufen neben dem Kern, nicht an
+  seiner Stelle.
 - Der erste Schnitt ist deterministisch und inspizierbar. Dringende Grundbeduerfnisse duerfen
   Freizeit verdraengen; bei gedeckten Grundlagen schaffen Utility-Regeln Raum fuer Spiel, Musik,
   Neugier, soziale Naehe und Entwicklung.
@@ -663,6 +668,51 @@ sein:
 
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
+
+### 2026-09-28 - Abends wach bis zwei, und jeden Tag eine Quest
+
+**Anlass:** Der Nutzer beobachtete, dass das Wesen abends (22:30) nur zu Hause sitzt. Schlafen
+soll es erst ab zwei, drei Uhr, davor aktiv sein - und zwar nicht nur Sport und Trinken, sondern
+Expeditionen, Entdeckungen, Schatzsuche, Zaubern lernen, groessere Quests mit Belohnungen fuer
+seine Entwicklung; "einmal am Tag etwas Neues", das sich durch den Tag zieht. Rueckfrage mit
+Antwort: **feste Questketten** (nicht emergent); Belohnungen: **schluepfendes Drachenei, neue
+Faehigkeit, Gegenstand zu Hause, neuer Ort** (alle vier).
+
+**Produktentscheidung (`DOCUMENTED INTENT`, vom Nutzer):** Die bisherige OPEN DECISION zur
+Quest-Struktur ist entschieden, und die Regel "kein StoryManager, keine Plot-Skripte" aus der
+Living-Agent-Freigabe ist fuer die Quests ausdruecklich aufgehoben. Ebenso freigegeben: eine durch
+Fortschritt freigeschaltete Faehigkeit (Zaubern) und ein freigeschalteter Ort (Kristallgrotte).
+Verworfene Alternative: Quests, die allein aus Beduerfnissen und Zufall entstehen.
+
+**Geaendert:**
+- **Tagesrhythmus** (`PlayAmbientActivity.activityPhase`, `BEDTIME_HOUR = 2`): Bis zwei Uhr gilt
+  zum Handeln noch Abend; Schlaf ist erst danach zulaessig (`nightClosed` bis in
+  `LivingRuntimeAdapter`/`DecisionState.lateEvening`). Der Stundenplan fuellt 20-23 Uhr mit
+  Unterwegssein, Kreativem und Naehe statt Ruhe. Im Kern daempft ein Tagesrhythmus-Term
+  (`UtilitySelector.rhythm`) zwischen 18 und 2 Uhr das Ausruhen und hebt Spass, Erkunden und
+  Naehe - ausser bei echter Erschoepfung. Gemessen: Ruheanteil abends von 50-66 % auf 32-40 %.
+- **Quests** (`PlayQuests`, rein gerechnet; `PlayQuestLog`, SharedPreferences `play_quests` je
+  Profil): Schatzsuche, Zauberlehre, Expedition (je ein Tag), Drachenei (drei Tage: finden,
+  waermen, Risse, schluepfen). Je Tag drei Stufen ab 9, 14 und 20 Uhr, faellig bis zwei Uhr; ein
+  Questtag beginnt um sechs. Eine unfertige Quest wird am naechsten Tag fortgesetzt, nicht
+  uebersprungen. Danach wiederholen sich die drei Tagesquests, das Drachenei nicht. Zwischen zwei
+  Stufen liegen mindestens acht Minuten normales Leben.
+- **Erzaehlt ohne Text** (`PlayQuestEffects`): Karte flattert aus dem Buch, Graben, Truhe steigt
+  aus dem Sand, Zauberrauch, Funken, Sternenregen, Kristallglitzern, Entdeckung, Ei, Waerme,
+  Schluepfen. Getragen werden Karte, Ei und Truhe (`PlayEffects.Carried`).
+- **Belohnungen:** Truhe in der Werkstatt, Zauberstab ueber dem Schreibtisch und danach gelegentlich
+  Funken beim Malen, Innehalten und Kuscheln, die Kristallgrotte als neuer Ort (eigene Kulisse,
+  eigene Atmo `CAVE`, ruhige Naturmusik, erst nach Entdeckung in den Ausfluegen), das Drachenei im
+  Schlafzimmer, das zum Drachenjungen wird.
+
+**Migration:** keine Datenbank-Aenderung; neuer Preference-Schluessel `play_quests`. Bestehende
+Staende beginnen mit der Schatzsuche.
+
+- **Tests (`TESTED BEHAVIOR`):** 764 Offline-Tests gruen (neu: Tagesrhythmus, Abend bis zwei,
+  Quest-Fortschritt, Faelligkeit, Wiederholung, Ablage, Effekte im Bild, Grotten-Atmo). Offline
+  gerendert: alle Quest-Bilder, Belohnungen zu Hause fuer alle sechs Wesen.
+- **Ungeprueft (`UNVERIFIED`):** Ablauf der Stufen am Geraet und im Stream ueber einen ganzen Tag.
+- **Weiterhin offen:** eine uebergreifende Handlung jenseits der Questketten; weitere Quests.
 
 ### 2026-09-27 - Atmosphaere: erzaehlen durch Bild und Klang, ohne Text
 

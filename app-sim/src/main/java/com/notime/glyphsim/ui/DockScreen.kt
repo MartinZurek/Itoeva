@@ -132,6 +132,9 @@ import com.notime.glyphsim.matrix.PlayEffects
 import com.notime.glyphsim.matrix.PlayDreamMemory
 import com.notime.glyphsim.matrix.PlayDreams
 import com.notime.glyphsim.matrix.PlayPantry
+import com.notime.glyphsim.matrix.PlayQuestEffects
+import com.notime.glyphsim.matrix.PlayQuestLog
+import com.notime.glyphsim.matrix.PlayQuests
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayGroupGame
 import com.notime.glyphsim.matrix.PlayRoutines
@@ -788,6 +791,22 @@ fun DockScreen(
         var leaningTopics by remember { mutableStateOf(emptySet<AnimationType>()) }
         /** Was sich im Lauf der Entwicklung in seiner Wohnung angesammelt hat - siehe PlayPath. */
         var acquisitions by remember { mutableStateOf(emptySet<PlayScene.Acquisition>()) }
+        /**
+         * **Die Quest, die sich durch den Tag zieht** (siehe PlayQuests) - `null`, bis der Stand
+         * dieses Profils geladen ist. Gerechnet wird in PlayQuests, abgelegt in PlayQuestLog.
+         */
+        var questProgress by remember(presenceProfileId) { mutableStateOf<PlayQuests.Progress?>(null) }
+        /** Das Quest-Bild neben der Figur (Karte, Funken, Ei ...) und seit wann es laeuft. */
+        var questEffect by remember { mutableStateOf<PlayQuestEffects.Effect?>(null) }
+        var questEffectSince by remember { mutableIntStateOf(0) }
+        /** Wann zuletzt eine Quest-Stufe begann - damit Stufen nicht Schlag auf Schlag kommen. */
+        var lastQuestStageMs by remember(presenceProfileId) { mutableStateOf(0L) }
+        LaunchedEffect(playMode, presenceProfileId) {
+            if (!playMode) return@LaunchedEffect
+            val stand = withContext(Dispatchers.IO) { PlayQuestLog.load(context, presenceProfileId) }
+            PlayRoutines.grottoDiscovered = PlayQuests.grottoDiscovered(stand.rewards)
+            questProgress = stand
+        }
         /**
          * Zaehlt jede Fuetterung mit - der Ausloeser dafuer, die Entwicklung neu nachzusehen.
          *
@@ -1656,6 +1675,22 @@ fun DockScreen(
                             avatar = avatar?.copy(frame = f)
                         }
                         startAvatarIdleLoop(species, mood)
+                        // **Seit der Zauberlehre kann er zaubern** (siehe PlayQuests.Reward.MAGIC):
+                        // Beim Malen, Innehalten oder Zaertlichsein funkelt es manchmal um ihn.
+                        if (step.topic in MAGIC_TOPICS &&
+                            questProgress?.let { PlayQuests.canCastMagic(it.rewards) } == true &&
+                            Random.nextFloat() < MAGIC_CHANCE
+                        ) {
+                            questEffect = PlayQuestEffects.Effect.SPELL_SPARKS
+                            questEffectSince = scenePhase
+                            delay((MAGIC_SPARKS_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
+                            questEffect = null
+                        }
+                    }
+
+                    is RoutineStep.Quest -> {
+                        questEffect = step.effect
+                        questEffectSince = scenePhase
                     }
 
                     is RoutineStep.Stir -> {
@@ -2007,6 +2042,7 @@ fun DockScreen(
                 // Dasselbe fuer Getragenes: Bricht der Ablauf zwischen Take und Drop ab, trueg
                 // die Figur das Buch sonst durch alle folgenden Szenen mit sich herum.
                 carried = null
+                questEffect = null
                 kitePhase = null
                 footballPhase = null
                 basketballPhase = null
@@ -3600,6 +3636,32 @@ fun DockScreen(
                         delay(PlayAmbientActivity.nextPauseMillis())
                         continue
                     }
+                    // **Die Quest des Tages** (siehe PlayQuests): Ist eine Stufe faellig, hat sie
+                    // Vorrang vor der naechsten gewoehnlichen Regung - aber nicht vor einem
+                    // Zuschauerimpuls, und nie Schlag auf Schlag (QUEST_STAGE_GAP_MS).
+                    val questStand = questProgress
+                    if (!evaluateExternalImpulse && questStand != null) {
+                        val gerollt = PlayQuests.rollTo(
+                            questStand,
+                            PlayQuests.questDayOf(PlayTimeLapse.absoluteMinute().toLong())
+                        )
+                        if (gerollt != questStand) {
+                            questProgress = gerollt
+                            withContext(Dispatchers.IO) { PlayQuestLog.save(context, presenceProfileId, gerollt) }
+                        }
+                        val stufe = PlayQuests.due(gerollt, PlayTimeLapse.now().let { it.hour * 60 + it.minute })
+                        val abstand = (QUEST_STAGE_GAP_MS * PlayTimeLapse.paceFactor()).toLong()
+                        if (stufe != null && System.currentTimeMillis() - lastQuestStageMs >= abstand) {
+                            lastQuestStageMs = System.currentTimeMillis()
+                            if (runRoutine(stufe.routine, species, applyLegacyEconomy = false)) {
+                                val weiter = PlayQuests.completed(gerollt, stufe)
+                                questProgress = weiter
+                                PlayRoutines.grottoDiscovered = PlayQuests.grottoDiscovered(weiter.rewards)
+                                withContext(Dispatchers.IO) { PlayQuestLog.save(context, presenceProfileId, weiter) }
+                            }
+                            continue
+                        }
+                    }
                     val ambientAction = if (evaluateExternalImpulse) {
                         evaluateExternalImpulse = false
                         PlayAmbientActivity.Action.PERFORM
@@ -4364,13 +4426,25 @@ fun DockScreen(
         // keine Gesten ab (siehe PlaySceneView), das Ziehen der Uhr auf den Avatar bleibt also
         // unveraendert die einzige Interaktion auf diesem Bildschirm.
         if (playMode) {
+            // Was die Quests hinterlassen haben, steht neben dem, was der Entwicklungspfad
+            // gebracht hat. Waehrend das Ei schluepft, zeichnet das Quest-Bild es selbst; beim
+            // ersten Waermen steht es schon im Nest, bevor die Stufe abgeschlossen ist.
+            val questRewards = questProgress?.rewards.orEmpty()
+            val sceneAcquisitions = acquisitions + when (questEffect) {
+                PlayQuestEffects.Effect.EGG_HATCH -> PlayQuests.acquisitions(questRewards).filterNot {
+                    it == PlayScene.Acquisition.DRAGON_EGG || it == PlayScene.Acquisition.DRAGON_EGG_CRACKED
+                }.toSet()
+                PlayQuestEffects.Effect.EGG_WARM ->
+                    PlayQuests.acquisitions(questRewards + PlayQuests.Reward.DRAGON_EGG)
+                else -> PlayQuests.acquisitions(questRewards)
+            }
             val sceneCells = remember(
                 renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value,
                 lampOn, tvOn, activeStation, avatar?.species,
                 // Sonst bliebe die Kulisse stehen, wie sie war, bis sich zufaellig etwas anderes
                 // aendert - und das neu erworbene Stueck taucht erst beim naechsten Ortswechsel
                 // auf statt in dem Moment, in dem es dazukommt.
-                acquisitions
+                sceneAcquisitions
             ) {
                 PlayScene.build(
                     place = renderedPlace,
@@ -4385,7 +4459,7 @@ fun DockScreen(
                     species = avatar?.species ?: AvatarSpeciesPrefs.get(context),
                     // Was er sich im Lauf seiner Entwicklung zugelegt hat (siehe PlayPath) - der
                     // Teil des Fortschritts, den man nicht liest, sondern sieht.
-                    acquisitions = acquisitions,
+                    acquisitions = sceneAcquisitions,
                     // Gleitende Daemmerung, einzeln erleuchtete Fenster, Sonnenauf- und -untergang
                     // (siehe PlayDaylight). Der Bildtakt baut die Kulisse ohnehin neu.
                     minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
@@ -4878,6 +4952,18 @@ fun DockScreen(
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             gaitPhase = scenePhase,
                             moving = avatarFacing != AvatarShading.Side.NONE
+                        )
+                    )
+                }
+                val quest = questEffect
+                if (current != null && quest != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayQuestEffects.cells(
+                            effect = quest,
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            age = scenePhase - questEffectSince,
+                            widthCells = sceneWidthCells
                         )
                     )
                 }
@@ -5679,6 +5765,17 @@ private const val RECENT_MEMORY = 4
  * gestreckt - das ist Ablaufsteuerung, keine vergehende Zeit.
  */
 private const val VISIT_WAIT_TICK_MS = 250L
+
+/**
+ * Mindestabstand zwischen zwei Quest-Stufen (echte Zeit, im Zeitraffer mitgestaucht). Wer die App
+ * erst abends oeffnet, sieht die verpassten Stufen nacheinander - aber mit Tag dazwischen.
+ */
+private const val QUEST_STAGE_GAP_MS = 8L * 60L * 1000L
+
+/** Wobei es seit der Zauberlehre funkeln kann, wie oft, und wie lange. */
+private val MAGIC_TOPICS = setOf(AnimationType.CREATIVITY, AnimationType.MINDFULNESS, AnimationType.LOVE)
+private const val MAGIC_CHANCE = 0.35f
+private const val MAGIC_SPARKS_MS = 3_000L
 
 
 /** Wo an der Figur ein Zugriff aufblitzt - auf Handhoehe, seitlich vorn (16x16-Raster). */

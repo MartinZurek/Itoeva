@@ -147,4 +147,53 @@ class PlayQuestsTest {
             assertTrue("$effect laeuft aus dem Bild", alle.all { it.x in 0 until 54 && it.y >= 0 })
         }
     }
+
+    @Test
+    fun `der Stand uebersteht Ablegen und Laden`() {
+        val stand = PlayQuests.Progress(
+            quest = PlayQuests.Quest.DRAGON_EGG, dayOfQuest = 1, questDayNumber = 20_123L,
+            stagesDone = 2, rewards = setOf(PlayQuests.Reward.MAGIC, PlayQuests.Reward.DRAGON_EGG), round = 0
+        )
+        assertEquals(stand, PlayQuests.decode(PlayQuests.encode(stand)))
+        assertEquals(PlayQuests.Progress(), PlayQuests.decode(null))
+        assertEquals(PlayQuests.Progress(), PlayQuests.decode("kaputt;1"))
+        assertEquals(emptySet<PlayQuests.Reward>(), PlayQuests.decode(PlayQuests.encode(PlayQuests.Progress())).rewards)
+    }
+
+    /**
+     * Was eine Quest hinterlaesst, muss man sehen - bei jedem Wesen, jeder Bildbreite und neben
+     * allem, was ein Entwicklungspfad schon ins Zimmer gestellt hat. Sonst faellt es in
+     * PlayScene.fitting lautlos weg, und die Belohnung waere unsichtbar.
+     */
+    @Test
+    fun `jede Quest-Belohnung ist zu Hause zu sehen`() {
+        val fehlend = mutableListOf<String>()
+        // Die vollen Saetze der vier Entwicklungspfade (PlayPath.acquisitionsUpTo(pfad, 3)) - hier
+        // ausgeschrieben, weil PlayPath an Android haengt und offline nicht mitkompiliert wird.
+        val pfade: List<Set<PlayScene.Acquisition>> = listOf(
+            emptySet(),
+            setOf(PlayScene.Acquisition.BACKPACK, PlayScene.Acquisition.WALLMAP, PlayScene.Acquisition.SCOOTER),
+            setOf(PlayScene.Acquisition.FEEDBOWL, PlayScene.Acquisition.PETBASKET, PlayScene.Acquisition.SLEEPING_PET),
+            setOf(PlayScene.Acquisition.BLANKET, PlayScene.Acquisition.MOBILE, PlayScene.Acquisition.STARJAR),
+            setOf(PlayScene.Acquisition.TOOLBOX, PlayScene.Acquisition.CONTRAPTION, PlayScene.Acquisition.SIGNALRIG)
+        )
+        for (belohnung in PlayQuests.acquisitions(Reward.entries.toSet()) + PlayScene.Acquisition.DRAGON_EGG +
+            PlayScene.Acquisition.DRAGON_EGG_CRACKED
+        ) {
+            for (breite in listOf(PlayScene.MIN_SCENE_CELLS, 46, 54, 64, 72)) {
+                for (species in AvatarSpecies.entries) for (boden in listOf(24, 82)) for (pfad in pfade) {
+                    val ohne = PlayScene.build(
+                        belohnung.place, 0, breite, boden, PlayAmbientActivity.DayPhase.MIDDAY,
+                        species = species, acquisitions = pfad
+                    ).map { it.x to it.y }.toSet()
+                    val mit = PlayScene.build(
+                        belohnung.place, 0, breite, boden, PlayAmbientActivity.DayPhase.MIDDAY,
+                        species = species, acquisitions = pfad + belohnung
+                    ).map { it.x to it.y }.toSet()
+                    if ((mit - ohne).size < 8) fehlend += "$belohnung/$species/$breite/${pfad.size}"
+                }
+            }
+        }
+        assertEquals(emptyList<String>(), fehlend.distinct().take(10))
+    }
 }
