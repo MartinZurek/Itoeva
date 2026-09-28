@@ -655,6 +655,7 @@ private fun placeTextFor(place: PlayScene.Place): Int = when (place) {
     PlayScene.Place.SWAMP -> R.string.talk_place_swamp
     PlayScene.Place.PLAINS -> R.string.talk_place_plains
     PlayScene.Place.BEACH -> R.string.talk_place_beach
+    PlayScene.Place.GROTTO -> R.string.talk_place_grotto
     PlayScene.Place.CAFE -> R.string.talk_place_cafe
 }
 

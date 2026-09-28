@@ -103,7 +103,7 @@ data class ActionTraits(
             is RoutineStep.Basketball, is RoutineStep.Training, is RoutineStep.Music,
             is RoutineStep.Painting, is RoutineStep.Fishing, is RoutineStep.GroupGame,
             is RoutineStep.Switch, is RoutineStep.Occupy, is RoutineStep.Take,
-            RoutineStep.SleepUntilMorning, RoutineStep.Daydream -> true
+            RoutineStep.SleepUntilMorning, RoutineStep.Daydream, is RoutineStep.Quest -> true
             is RoutineStep.GoTo, is RoutineStep.Stroll, is RoutineStep.Stir,
             is RoutineStep.Linger, is RoutineStep.GoToPlace, RoutineStep.Rise,
             RoutineStep.Drop -> false
@@ -166,6 +166,8 @@ data class ActionTraits(
                 PlayEffects.Carried.BOOK -> setOf(Trait.LEARN, Trait.OBJECT)
                 PlayEffects.Carried.GUITAR -> setOf(Trait.MUSIC, Trait.OBJECT)
                 PlayEffects.Carried.EASEL -> setOf(Trait.CREATIVE, Trait.OBJECT)
+                PlayEffects.Carried.MAP, PlayEffects.Carried.EGG, PlayEffects.Carried.CHEST ->
+                    setOf(Trait.OBJECT)
             }
             is RoutineStep.Occupy -> if (step.station == PlayScene.Station.BED) {
                 setOf(Trait.SLEEP, Trait.REST)
@@ -174,6 +176,8 @@ data class ActionTraits(
             }
             RoutineStep.SleepUntilMorning -> setOf(Trait.SLEEP, Trait.REST)
             RoutineStep.Daydream -> setOf(Trait.CALM)
+            // Quest-Bilder laufen ausserhalb der Entscheidung (siehe PlayQuests) - ohne Merkmal.
+            is RoutineStep.Quest,
             is RoutineStep.Act, is RoutineStep.GoTo, is RoutineStep.Stroll, is RoutineStep.Stir,
             is RoutineStep.Linger, is RoutineStep.GoToPlace, RoutineStep.Rise,
             RoutineStep.Drop -> emptySet()
@@ -188,7 +192,8 @@ data class ActionTraits(
             is RoutineStep.GoTo, is RoutineStep.Stroll -> 3.0
             is RoutineStep.Act, is RoutineStep.Kite, is RoutineStep.Football,
             is RoutineStep.Basketball, is RoutineStep.Training, is RoutineStep.Music,
-            is RoutineStep.Painting, is RoutineStep.Fishing, RoutineStep.Daydream -> 3.0
+            is RoutineStep.Painting, is RoutineStep.Fishing, RoutineStep.Daydream,
+            is RoutineStep.Quest -> 3.0
             is RoutineStep.Stir, is RoutineStep.Switch, is RoutineStep.Occupy,
             is RoutineStep.Take, RoutineStep.Rise, RoutineStep.Drop -> 1.5
         }

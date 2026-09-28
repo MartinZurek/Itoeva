@@ -116,7 +116,12 @@ data class DecisionState(
     val footballTrickLearned: Boolean = false,
     val recentSpecials: List<PlayRoutines.SpecialActivity> = emptyList(),
     /** Das Wetter draussen - bei Regen und Schnee fallen Schoenwetter-Ablaeufe weg. */
-    val weather: com.notime.glyphsim.matrix.PlayWeather = com.notime.glyphsim.matrix.PlayWeather.CLEAR
+    val weather: com.notime.glyphsim.matrix.PlayWeather = com.notime.glyphsim.matrix.PlayWeather.CLEAR,
+    /**
+     * Die spaete Stunde (23 bis 2 Uhr): [phase] ist dann noch Abend, weil das Wesen wach ist -
+     * Cafe und Wildnis haben aber schon zu (siehe PlayAmbientActivity.activityPhase).
+     */
+    val lateEvening: Boolean = false
 ) {
     /** Die bisherige Themengewichtung dieses Moments. */
     val topicWeights: Map<AnimationType, Int> by lazy {

@@ -71,11 +71,13 @@ class DecisionCandidatesTest {
             val n = 10_000
             repeat(n) {
                 val thema = state.signals.draw(state.phase, random)
-                // Genau wie DockScreen: nachts ist das Bett zulaessig und die Wildnis nicht.
+                // Genau wie DockScreen: nachts ist das Bett zulaessig und die Wildnis nicht; in der
+                // spaeten Stunde ist das Wesen noch wach, Cafe und Wildnis haben aber schon zu.
                 val prepared = LivingRuntimeAdapter.prepare(
                     state.agent, state.world, state.currentPlace, thema,
                     recentSpecials = state.recentSpecials, random = random,
-                    sleepAdmissible = state.phase == PlayAmbientActivity.DayPhase.NIGHT
+                    sleepAdmissible = state.phase == PlayAmbientActivity.DayPhase.NIGHT,
+                    nightClosed = state.phase == PlayAmbientActivity.DayPhase.NIGHT || state.lateEvening
                 )
                 val routine = prepared.routine ?: return@repeat
                 val topic = prepared.topic!!
@@ -128,7 +130,7 @@ class DecisionCandidatesTest {
                 if (k.goal == beste) continue
                 val g = state.goalRanking.first { it.goal == k.goal }
                 assertTrue("${k.goal} ${g.total} vs $beste $summe", g.total >= summe - DecisionCandidates.GOAL_MARGIN - 1e-9)
-                assertTrue(g.needPressure >= com.notime.glyphsim.living.UtilitySelector.MIN_PRESSURE || g.externalInfluence > 0)
+                assertTrue(g.effectivePressure >= com.notime.glyphsim.living.UtilitySelector.MIN_PRESSURE || g.externalInfluence > 0)
             }
         }
     }

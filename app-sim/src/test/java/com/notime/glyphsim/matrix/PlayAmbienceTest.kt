@@ -27,6 +27,12 @@ class PlayAmbienceTest {
     }
 
     @Test
+    fun inDerGrotteHallenTropfenAuchBeiRegen() {
+        assertEquals(Kind.CAVE, PlayAmbience.kindFor(Place.GROTTO, DayPhase.MIDDAY, PlayWeather.CLEAR))
+        assertEquals(Kind.CAVE, PlayAmbience.kindFor(Place.GROTTO, DayPhase.NIGHT, PlayWeather.RAIN))
+    }
+
+    @Test
     fun eineWohnungKlingtNachNichts() {
         for (place in listOf(Place.LIVING, Place.BEDROOM, Place.KITCHEN, Place.BATH, Place.DESK)) {
             assertNull(PlayAmbience.kindFor(place, DayPhase.MIDDAY, PlayWeather.CLEAR))

@@ -147,7 +147,13 @@ object PlayScene {
         JUNGLE, MOUNTAINS, SWAMP, PLAINS, BEACH,
 
         /** Das Cafe (Weltausbau Stufe 4) - ein Innenraum in der Stadt, man trifft sich dort. */
-        CAFE
+        CAFE,
+
+        /**
+         * Die Kristallgrotte - entdeckt auf der Expeditionsquest (siehe [PlayQuests]). Erst danach
+         * gehoert sie zu den Ausfluegen.
+         */
+        GROTTO
     }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
@@ -199,7 +205,7 @@ object PlayScene {
         Place.FOREST, Place.MEADOW, Place.POND -> false
         // Dschungel, Gebirge, Sumpf und Ebene sind Wildnis wie der Wald - dorthin geht man, um
         // allein zu sein.
-        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS -> false
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.GROTTO -> false
     }
 
     /**
@@ -238,6 +244,11 @@ object PlayScene {
         Acquisition.TOOLBOX -> PROP_TOOLBOX
         Acquisition.CONTRAPTION -> PROP_CONTRAPTION
         Acquisition.SIGNALRIG -> PROP_SIGNALRIG
+        Acquisition.TREASURE_CHEST -> PlayWorld.QUEST_CHEST
+        Acquisition.MAGIC_WAND -> PlayWorld.QUEST_WAND
+        Acquisition.DRAGON_EGG -> PlayWorld.QUEST_EGG
+        Acquisition.DRAGON_EGG_CRACKED -> PlayWorld.QUEST_EGG_CRACKED
+        Acquisition.DRAGONLING -> PlayWorld.QUEST_DRAGONLING
     }
 
     /**
@@ -283,7 +294,26 @@ object PlayScene {
         // ---- Der Macher: Technik ----
         TOOLBOX(Place.CRAFT, 0.44f),
         CONTRAPTION(Place.LIVING, 0.46f),
-        SIGNALRIG(Place.BEDROOM, 0.58f)
+        SIGNALRIG(Place.BEDROOM, 0.58f),
+
+        // ---- Aus den Quests (siehe PlayQuests) - unabhaengig vom Entwicklungspfad ----
+        /**
+         * Die Schatztruhe aus der Schatzsuche - in der Werkstatt-Ecke, weil nur dort bei allen
+         * sechs Wohnungen, jeder Bildbreite und jedem Entwicklungspfad Platz ist (PlayQuestsTest).
+         */
+        TREASURE_CHEST(Place.CRAFT, 0.84f),
+
+        /** Der Zauberstab an der Wand ueber dem Schreibtisch - seit die Zauberlehre gelang. */
+        MAGIC_WAND(Place.DESK, 0.78f, liftCells = 10),
+
+        /** Das Drachenei im Nest an der Tuerseite des Schlafzimmers - dieselbe Pruefung. */
+        DRAGON_EGG(Place.BEDROOM, 0.92f),
+
+        /** Dasselbe Ei mit Rissen - es wird bald schluepfen. */
+        DRAGON_EGG_CRACKED(Place.BEDROOM, 0.92f),
+
+        /** Das geschluepfte Drachenjunge - es wohnt jetzt mit. */
+        DRAGONLING(Place.BEDROOM, 0.92f)
     }
 
     /**
@@ -561,7 +591,7 @@ object PlayScene {
         // Zwischen den beiden Automaten - in Ruhe steht die Figur und sieht sich um. Bei 0,46
         // ragte sie in der Vorschau in den zweiten Automaten hinein.
         Place.ARCADE -> 0.36f
-        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAFE ->
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAFE, Place.GROTTO ->
             PlayWorld.avatarAnchorX(place) ?: 0.1f
     }
 
@@ -778,7 +808,7 @@ object PlayScene {
         species: AvatarSpecies,
         acquisitions: Set<Acquisition>
     ): List<SceneCell> {
-        if (!isOutdoors(place) || place == Place.JUNGLE) return emptyList()
+        if (!isOutdoors(place) || place == Place.JUNGLE || place == Place.GROTTO) return emptyList()
         if (PlayWeather.current().isFalling) return emptyList()
         val sun = PlayDaylight.sun(minuteOfDay) ?: return emptyList()
         val cx = (widthCells * sun.xFraction).toInt()
@@ -1319,7 +1349,7 @@ object PlayScene {
         )
 
         // Die fuenf neuen Landschaften stehen in [PlayWorld].
-        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH ->
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.GROTTO ->
             PlayWorld.furnishing(place).orEmpty()
         Place.CAFE -> besideDoor(PlayWorld.furnishing(place).orEmpty())
         }
@@ -3675,6 +3705,8 @@ object PlayScene {
     ): List<SceneCell> {
         val today = PlayWeather.current()
         if (!today.isFalling || widthCells <= 0) return emptyList()
+        // In der Grotte regnet es nicht - sie hat eine Decke aus Fels.
+        if (place == Place.GROTTO) return emptyList()
 
         // Wo Himmel zu sehen ist: draussen alles oberhalb des Bodens, drinnen das Fenster.
         val (left, right, top, bottom) = if (isOutdoors(place)) {
@@ -4002,6 +4034,10 @@ object PlayScene {
             // Alle fuenf Orte unter freiem Himmel teilen sich diesen Himmel - er gehoert zum
             // WETTER, nicht zum Ort. Getrennt gepflegte Himmel waeren die sicherste Art, dass
             // ueber dem Park bald andere Wolken zoegen als ueber der Strasse.
+            // In der Grotte gibt es keinen Himmel - ihr Leben (Tropfen, Kristallfunkeln) kommt
+            // aus PlayWorld.ambient.
+            Place.GROTTO -> emptyList()
+
             Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND,
             Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)

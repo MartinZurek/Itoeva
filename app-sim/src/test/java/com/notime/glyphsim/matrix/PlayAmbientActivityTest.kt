@@ -130,11 +130,41 @@ class PlayAmbientActivityTest {
                 PlayAmbientActivity.plannedTopicFor(hour) != AnimationType.MEDICINE
             )
         }
-        // Eckpunkte des dokumentierten Ablaufs - Fruehstueck, Arbeitsbeginn, Abendlektuere, Nacht.
+        // Eckpunkte des dokumentierten Ablaufs - Fruehstueck, Arbeitsbeginn, Abend unterwegs,
+        // Lektuere nach Mitternacht, Schlaf erst ab zwei (gemeldet am 28.09.).
         assertEquals(AnimationType.DRINK, PlayAmbientActivity.plannedTopicFor(7))
         assertEquals(AnimationType.WORK, PlayAmbientActivity.plannedTopicFor(10))
-        assertEquals(AnimationType.BOOK, PlayAmbientActivity.plannedTopicFor(20))
+        assertEquals(AnimationType.MOVE, PlayAmbientActivity.plannedTopicFor(20))
+        assertEquals(AnimationType.MOVE, PlayAmbientActivity.plannedTopicFor(23))
+        assertEquals(AnimationType.BOOK, PlayAmbientActivity.plannedTopicFor(0))
+        assertEquals(AnimationType.SLEEP, PlayAmbientActivity.plannedTopicFor(2))
         assertEquals(AnimationType.SLEEP, PlayAmbientActivity.plannedTopicFor(3))
+    }
+
+    /** Gemeldet am 28.09.: abends nur herumsitzen. Bis zwei Uhr wird gehandelt, danach geschlafen. */
+    @Test
+    fun `bis zwei Uhr ist zum Handeln noch Abend`() {
+        fun at(h: Int, m: Int = 0) = java.time.LocalTime.of(h, m)
+        assertEquals(PlayAmbientActivity.DayPhase.EVENING, PlayAmbientActivity.activityPhase(at(22, 30)))
+        assertEquals(PlayAmbientActivity.DayPhase.EVENING, PlayAmbientActivity.activityPhase(at(23, 30)))
+        assertEquals(PlayAmbientActivity.DayPhase.EVENING, PlayAmbientActivity.activityPhase(at(1, 59)))
+        assertEquals(PlayAmbientActivity.DayPhase.NIGHT, PlayAmbientActivity.activityPhase(at(2, 0)))
+        assertEquals(PlayAmbientActivity.DayPhase.MORNING, PlayAmbientActivity.activityPhase(at(7, 0)))
+        // Sichtbar bleibt es ab 23 Uhr Nacht - Sterne und Mond kommen wie bisher.
+        assertEquals(PlayAmbientActivity.DayPhase.NIGHT, PlayAmbientActivity.currentDayPhase(at(23, 30)))
+        assertTrue(PlayAmbientActivity.isLateEvening(at(0, 30)))
+        assertTrue(!PlayAmbientActivity.isLateEvening(at(21, 0)))
+        assertTrue(!PlayAmbientActivity.isLateEvening(at(3, 0)))
+    }
+
+    @Test
+    fun `abends ueberwiegt Unterwegssein das Sofa`() {
+        val gewichte = (0 until 4000).groupingBy {
+            PlayAmbientActivity.nextTopic(PlayAmbientActivity.DayPhase.EVENING, random = kotlin.random.Random(it))
+        }.eachCount()
+        val aktiv = listOf(AnimationType.MOVE, AnimationType.LOVE, AnimationType.CREATIVITY).sumOf { gewichte[it] ?: 0 }
+        val ruhig = listOf(AnimationType.REST, AnimationType.MINDFULNESS).sumOf { gewichte[it] ?: 0 }
+        assertTrue("aktiv $aktiv, ruhig $ruhig", aktiv > 3 * ruhig)
     }
 
     /**
