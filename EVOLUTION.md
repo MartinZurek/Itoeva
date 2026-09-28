@@ -669,6 +669,47 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-28 - Quests als Reisen: den ganzen Tag unterwegs (Stufe 1 von 4)
+
+**Anlass:** Die erste Fassung der Quests (Eintrag darunter) erzaehlte jede Quest in drei
+Auftritten von je einer halben bis anderthalb Minuten. Rueckmeldung des Nutzers: Gemeint war
+keine Animation, sondern "eine tatsaechlich realistische Geschichte ueber den Tag, wo der Avatar
+reisen geht, dort Sachen erlebt, wie im wahren Leben ueber einen Tag hinweg und sogar ueber
+mehrere Tage". Vorgeschlagen und freigegeben: Umsetzung in vier Stufen; Rhythmus **zwei
+Reisetage, dann ein Tag daheim** (`DOCUMENTED INTENT`, Entscheidung des Nutzers).
+
+**Geaendert (Stufe 1 - Reisezustand und Tagesreise):**
+- `PlayQuests` rechnet jetzt Tagesplaene statt drei Stufen: Aufbruch am Morgen (Karte beim
+  Fruehstueck, Rucksack in der Kueche), drei bis vier **Stationen**, an denen das Wesen jeweils
+  2 bis 6 Stunden bleibt, Momente der Geschichte zu festen Zeiten an der Station, Heimkehr am
+  Abend. Unterwegs sind es 10 bis 13 Stunden.
+  - Schatzsuche: Ebene, Wald (zweimal vergeblich gegraben), Gebirge, Strand (die Truhe).
+  - Zauberlehre: Wiese (Rauch), Wald (erste Funken), Teich, Park (Sternenregen).
+  - Expedition: Ebene, Sumpf, Gebirge (Kristallschimmer), Grotte (Entdeckung).
+  - Drachenei: Ebene, Wald, Gebirge (das Ei), heim ins Nest.
+- **Zwischen den Momenten lebt das Wesen an der Station** (`PlayQuests.wayside`): Proviant bei
+  Hunger, Rast auf der Bank bei Muedigkeit oder Regen, sonst erkunden, in die Weite sehen,
+  skizzieren, lesen, Drachen steigen lassen, angeln - je nach Ort. Was dabei gestillt wird, geht
+  in den Living-Kern ein; seine Entscheidung wird unterwegs nicht gefragt, weil sie das Wesen zum
+  Essen nach Hause schicken wuerde (im Kern gibt es Essen nur daheim).
+- **Das Drachenei ueber mehrere Tage:** an den Tagen nach dem Fund morgens und abends gewaermt,
+  am ersten Abend Risse, am zweiten schluepft es.
+- **Verpasstes:** Wer spaet einschaltet, sieht den Rest der Reise; Momente ohne Belohnung, deren
+  Station vorbei ist, fallen weg, Momente mit Belohnung (die Grotte) nie. Ein Aufbruch nach der
+  Heimkehrzeit findet nicht statt; die Reise wird am naechsten Reisetag angetreten.
+- Die Quest-Ablage (`play_quests`) hat ein neues Format; der Stand der ersten Fassung behaelt
+  Quest, Belohnungen und Runde.
+
+**Grenzen dieser Stufe:** Das Ei wird zwischen Fund und Heimkehr nicht getragen gezeigt; ein
+Zuschauerimpuls wird unterwegs zurueckgestellt; Wetter wirkt nur ueber Rast statt Drachen.
+Stufe 2 (Erlebnisse unterwegs: Wetter, Begegnungen, Rueckschlaege), Stufe 3 (mehrtaegige Reisen
+mit Lager) und Stufe 4 (Feinschliff im Stream) folgen.
+
+- **Tests (`TESTED BEHAVIOR`):** 767 Offline-Tests gruen (neu: Rhythmus, Dauer und Stationen jeder
+  Reise, Moment am richtigen Ort, spaetes Einschalten, Belohnung nie uebersprungen, Reise
+  verschoben, Reihenfolge ueber Tage, Ei ueber Tage, Leben an der Station, Weiterziehen, Ablage).
+- **Ungeprueft (`UNVERIFIED`):** ein ganzer Reisetag am Geraet und im Stream.
+
 ### 2026-09-28 - Abends wach bis zwei, und jeden Tag eine Quest
 
 **Anlass:** Der Nutzer beobachtete, dass das Wesen abends (22:30) nur zu Hause sitzt. Schlafen
