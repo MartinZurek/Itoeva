@@ -18,8 +18,11 @@ class PlayPresenceTest {
         assertEquals(AnimationType.DRINK, topics[7])
         assertEquals(AnimationType.WORK, topics[11])
         assertEquals(AnimationType.MOVE, topics[17])
-        assertEquals(AnimationType.BOOK, topics[20])
-        assertEquals(AnimationType.SLEEP, topics[23])
+        // Seit 2026-09-28 ist bis zwei Uhr noch Abend (PlayAmbientActivity.BEDTIME_HOUR):
+        // abends unterwegs, geschlafen wird danach.
+        assertEquals(AnimationType.MOVE, topics[20])
+        assertEquals(AnimationType.MOVE, topics[23])
+        assertEquals(AnimationType.SLEEP, topics[2])
     }
 
     @Test
@@ -49,7 +52,7 @@ class PlayPresenceTest {
         val result = PlayPresence.resolve(
             snapshot = PlayPresence.Snapshot(PlayScene.Place.PARK, AnimationType.MOVE, savedAt),
             nowMillis = savedAt + PlayPresence.SHORT_RETURN_MS + 1,
-            now = LocalDateTime.of(2026, 8, 23, 23, 0)
+            now = LocalDateTime.of(2026, 8, 23, 3, 0)
         )
 
         assertEquals(PlayScene.Place.BEDROOM, result.place)
