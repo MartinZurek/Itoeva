@@ -78,6 +78,7 @@ import com.notime.glyphsim.decision.TopicSignals
 import com.notime.glyphsim.living.ActionCatalog
 import com.notime.glyphsim.living.AgentState
 import com.notime.glyphsim.living.LivingSimulation
+import com.notime.glyphsim.living.NeedKind
 import com.notime.glyphsim.living.StepResult
 import com.notime.glyphsim.living.SymbolicIntent
 import com.notime.glyphsim.living.WorldState
@@ -799,8 +800,6 @@ fun DockScreen(
         /** Das Quest-Bild neben der Figur (Karte, Funken, Ei ...) und seit wann es laeuft. */
         var questEffect by remember { mutableStateOf<PlayQuestEffects.Effect?>(null) }
         var questEffectSince by remember { mutableIntStateOf(0) }
-        /** Wann zuletzt eine Quest-Stufe begann - damit Stufen nicht Schlag auf Schlag kommen. */
-        var lastQuestStageMs by remember(presenceProfileId) { mutableStateOf(0L) }
         LaunchedEffect(playMode, presenceProfileId) {
             if (!playMode) return@LaunchedEffect
             val stand = withContext(Dispatchers.IO) { PlayQuestLog.load(context, presenceProfileId) }
@@ -3636,9 +3635,11 @@ fun DockScreen(
                         delay(PlayAmbientActivity.nextPauseMillis())
                         continue
                     }
-                    // **Die Quest des Tages** (siehe PlayQuests): Ist eine Stufe faellig, hat sie
-                    // Vorrang vor der naechsten gewoehnlichen Regung - aber nicht vor einem
-                    // Zuschauerimpuls, und nie Schlag auf Schlag (QUEST_STAGE_GAP_MS).
+                    // **Die Reise des Tages** (siehe PlayQuests): Ist ein Schritt der Geschichte
+                    // faellig - Aufbruch, ein Moment unterwegs, Heimkehr, das Ei waermen -, hat er
+                    // Vorrang vor der naechsten gewoehnlichen Regung, aber nicht vor einem
+                    // Zuschauerimpuls. Unterwegs zieht das Wesen zur Station, an der die Reise um
+                    // diese Zeit ist; dort lebt es weiter (siehe den PERFORM-Zweig unten).
                     val questStand = questProgress
                     if (!evaluateExternalImpulse && questStand != null) {
                         val gerollt = PlayQuests.rollTo(
@@ -3649,16 +3650,28 @@ fun DockScreen(
                             questProgress = gerollt
                             withContext(Dispatchers.IO) { PlayQuestLog.save(context, presenceProfileId, gerollt) }
                         }
-                        val stufe = PlayQuests.due(gerollt, PlayTimeLapse.now().let { it.hour * 60 + it.minute })
-                        val abstand = (QUEST_STAGE_GAP_MS * PlayTimeLapse.paceFactor()).toLong()
-                        if (stufe != null && System.currentTimeMillis() - lastQuestStageMs >= abstand) {
-                            lastQuestStageMs = System.currentTimeMillis()
-                            if (runRoutine(stufe.routine, species, applyLegacyEconomy = false)) {
-                                val weiter = PlayQuests.completed(gerollt, stufe)
+                        val minuteJetzt = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
+                        when (val schritt = PlayQuests.next(gerollt, minuteJetzt)) {
+                            PlayQuests.Next.Skip -> {
+                                val weiter = PlayQuests.skipped(gerollt)
                                 questProgress = weiter
-                                PlayRoutines.grottoDiscovered = PlayQuests.grottoDiscovered(weiter.rewards)
                                 withContext(Dispatchers.IO) { PlayQuestLog.save(context, presenceProfileId, weiter) }
+                                continue
                             }
+                            is PlayQuests.Next.Run -> {
+                                if (runRoutine(schritt.step.routine, species, applyLegacyEconomy = false)) {
+                                    val weiter = PlayQuests.completed(gerollt, schritt.step)
+                                    questProgress = weiter
+                                    PlayRoutines.grottoDiscovered = PlayQuests.grottoDiscovered(weiter.rewards)
+                                    withContext(Dispatchers.IO) { PlayQuestLog.save(context, presenceProfileId, weiter) }
+                                }
+                                continue
+                            }
+                            null -> Unit
+                        }
+                        val station = PlayQuests.stationAt(gerollt, minuteJetzt)
+                        if (station != null && currentPlace != station.place) {
+                            runRoutine(PlayQuests.travel(currentPlace, station.place), species, applyLegacyEconomy = false)
                             continue
                         }
                     }
@@ -3715,6 +3728,46 @@ fun DockScreen(
                             }
                         }
                         PlayAmbientActivity.Action.PERFORM -> {
+                            // **Unterwegs lebt das Wesen an der Station** (siehe
+                            // PlayQuests.wayside): Proviant, Rast, erkunden - statt einer
+                            // Entscheidung, die es nach Hause zum Kuehlschrank schicken wuerde.
+                            // Was dabei gestillt wird, geht in den Living-Kern ein.
+                            val reiseStation = questProgress?.let {
+                                PlayQuests.stationAt(it, PlayTimeLapse.now().let { t -> t.hour * 60 + t.minute })
+                            }
+                            if (reiseStation != null && currentPlace == reiseStation.place) {
+                                val (unterwegsAgent, unterwegsWelt) = livingStateFor(species)
+                                val rast = PlayQuests.wayside(
+                                    place = currentPlace,
+                                    hunger = unterwegsAgent.needs.pressure(NeedKind.HUNGER),
+                                    energy = unterwegsAgent.needs.pressure(NeedKind.ENERGY),
+                                    rainy = PlayWeather.current().isFalling,
+                                    roll = Random.nextInt(1_000)
+                                )
+                                try {
+                                    currentActivity = PlayRoutines.specialOf(rast.routine)
+                                    if (runRoutine(rast.routine, species, applyLegacyEconomy = false)) {
+                                        // Der Kern schreibt seine Zeit sonst nur ueber eigene
+                                        // Handlungen fort. Unterwegs vergeht sie trotzdem: Hunger
+                                        // und Muedigkeit wachsen mit der gespielten Zeit (hoechstens
+                                        // drei Stunden auf einmal), dann stillt die Rast.
+                                        val vergangen = (PlayTimeLapse.absoluteMinute() - unterwegsWelt.absoluteMinute)
+                                            .coerceIn(0, MAX_JOURNEY_CATCH_UP_MINUTES)
+                                        val erleichtert = unterwegsAgent.copy(
+                                            needs = unterwegsAgent.needs
+                                                .advanced(vergangen, unterwegsAgent.personality)
+                                                .relieved(rast.relief)
+                                        )
+                                        val weiterGelebt = unterwegsWelt.advanced(vergangen)
+                                        livingAgent = erleichtert
+                                        livingWorld = weiterGelebt
+                                        withContext(Dispatchers.IO) { livingStore.save(erleichtert, weiterGelebt) }
+                                    }
+                                } finally {
+                                    currentActivity = null
+                                }
+                                continue
+                            }
                             // Die eigentliche Tagesablauf-Szene: dieselbe Reaktions-Bibliothek wie
                             // bei einer echten gefuetterten Erinnerung (siehe AvatarFeeding/
                             // feedAvatarNow), nur autonom ausgeloest und ohne dass irgendetwas
@@ -5766,11 +5819,8 @@ private const val RECENT_MEMORY = 4
  */
 private const val VISIT_WAIT_TICK_MS = 250L
 
-/**
- * Mindestabstand zwischen zwei Quest-Stufen (echte Zeit, im Zeitraffer mitgestaucht). Wer die App
- * erst abends oeffnet, sieht die verpassten Stufen nacheinander - aber mit Tag dazwischen.
- */
-private const val QUEST_STAGE_GAP_MS = 8L * 60L * 1000L
+/** Wie viel gespielte Zeit eine Rast unterwegs hoechstens nachholt (siehe PlayQuests.wayside). */
+private const val MAX_JOURNEY_CATCH_UP_MINUTES = 180
 
 /** Wobei es seit der Zauberlehre funkeln kann, wie oft, und wie lange. */
 private val MAGIC_TOPICS = setOf(AnimationType.CREATIVITY, AnimationType.MINDFULNESS, AnimationType.LOVE)
