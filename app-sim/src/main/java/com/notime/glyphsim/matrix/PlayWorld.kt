@@ -101,13 +101,18 @@ internal object PlayWorld {
     // Die neuen Orte
     // ---------------------------------------------------------------------------------------
 
-    /** Die fuenf neuen Landschaften - alle unter freiem Himmel. */
+    /**
+     * Die Landschaften des Weltausbaus. Die Kristallgrotte gehoert dazu, obwohl sie ein Hoehlen-
+     * raum ist: Man geht hinaus, um hinzukommen, sie schliesst nachts und bei Regen wie die uebrige
+     * Wildnis. Himmel, Wetter und Sonne blendet [skyMask] bzw. PlayScene fuer sie aus.
+     */
     val NATURE: Set<PlayScene.Place> = setOf(
         PlayScene.Place.JUNGLE,
         PlayScene.Place.MOUNTAINS,
         PlayScene.Place.SWAMP,
         PlayScene.Place.PLAINS,
-        PlayScene.Place.BEACH
+        PlayScene.Place.BEACH,
+        PlayScene.Place.GROTTO
     )
 
     /** Wo die Figur in Ruhe steht - immer vorn links, wo nichts ihren Platz belegt. */
@@ -117,6 +122,7 @@ internal object PlayWorld {
         PlayScene.Place.SWAMP -> 0.06f
         PlayScene.Place.PLAINS -> 0.10f
         PlayScene.Place.BEACH -> 0.14f
+        PlayScene.Place.GROTTO -> 0.08f
         // Mitten im Raum, zwischen Tischchen und Theke.
         PlayScene.Place.CAFE -> 0.44f
         else -> null
@@ -180,8 +186,107 @@ internal object PlayWorld {
             Placement(DECKCHAIR, anchorX = 0.54f, station = PlayScene.Station.BENCH),
             Placement(SANDCASTLE, anchorX = 0.90f)
         )
+        // KRISTALLGROTTE (Expeditionsquest, siehe PlayQuests): leuchtende Kristalle, ein
+        // Felsblock zum Sitzen, Tropfsteine. Die Hoehlendecke kommt aus [background].
+        PlayScene.Place.GROTTO -> listOf(
+            Placement(CRYSTAL_CLUSTER, anchorX = 0.34f, brightness = PlayScene.BACKDROP, behind = true),
+            Placement(STONE_SEAT, anchorX = 0.52f, station = PlayScene.Station.BENCH),
+            Placement(CRYSTAL_CLUSTER, anchorX = 0.80f),
+            Placement(STALAGMITE, anchorX = 0.97f)
+        )
         else -> null
     }
+
+    // ---- Kristallgrotte und Quest-Belohnungen ----
+
+    /** Ein Buendel Kristalle, die von innen leuchten. */
+    private val CRYSTAL_CLUSTER = Prop(
+        width = 7, height = 7,
+        art = art(
+            "..#....",
+            "..##.#.",
+            ".###.#.",
+            ".#.#.##",
+            "##.#.#.",
+            "#..###.",
+            "#######"
+        ),
+        lightAt = 2 to 2
+    )
+
+    /** Ein Tropfstein vom Boden. */
+    private val STALAGMITE = Prop(
+        width = 3, height = 6,
+        art = art(".#.", ".#.", ".#.", "###", "###", "###")
+    )
+
+    /** Die Schatztruhe - heimgebracht aus der Schatzsuche, sie steht im Wohnzimmer. */
+    internal val QUEST_CHEST = Prop(
+        width = 7, height = 5,
+        art = art(
+            ".#####.",
+            "#######",
+            "#.###.#",
+            "#######",
+            "#######"
+        ),
+        lightAt = 3 to 2
+    )
+
+    /** Der Zauberstab an der Wand - seit die Zauberlehre gelungen ist. */
+    internal val QUEST_WAND = Prop(
+        width = 5, height = 5,
+        art = art(
+            "....#",
+            "...#.",
+            "..#..",
+            ".#...",
+            "#...."
+        ),
+        lightAt = 4 to 0
+    )
+
+    /** Das Drachenei im Nest. */
+    internal val QUEST_EGG = Prop(
+        width = 7, height = 6,
+        art = art(
+            "..##...",
+            ".####..",
+            ".####..",
+            "..##...",
+            "#.....#",
+            "#######"
+        ),
+        lightAt = 2 to 1
+    )
+
+    /** Dasselbe Ei mit Rissen - am zweiten Tag des Waermens. */
+    internal val QUEST_EGG_CRACKED = Prop(
+        width = 7, height = 6,
+        art = art(
+            "..#....",
+            ".##.#..",
+            ".#.##..",
+            "..##...",
+            "#.....#",
+            "#######"
+        ),
+        lightAt = 3 to 1
+    )
+
+    /** Das Drachenjunge, geschluepft - es wohnt jetzt mit. */
+    internal val QUEST_DRAGONLING = Prop(
+        width = 7, height = 6,
+        art = art(
+            ".##....",
+            "###.#.#",
+            "..####.",
+            "..###..",
+            "..#.#.#",
+            ".##.##."
+        ),
+        lightAt = 1 to 0
+    )
 
     // ---- Requisiten der neuen Landschaften ----
 
@@ -638,6 +743,7 @@ internal object PlayWorld {
         PlayScene.Place.SWAMP -> swampBackdrop(widthCells, floorY)
         PlayScene.Place.PLAINS -> rollingHills(widthCells, floorY)
         PlayScene.Place.BEACH -> sea(phase, widthCells, floorY, dayPhase)
+        PlayScene.Place.GROTTO -> caveVault(widthCells, floorY)
         PlayScene.Place.CITY -> skyline(phase, widthCells, floorY, dayPhase)
         PlayScene.Place.SHOP -> shopBackWall(phase, widthCells, floorY, foreground)
         else -> emptyList()
@@ -652,6 +758,10 @@ internal object PlayWorld {
         PlayScene.Place.MOUNTAINS, PlayScene.Place.JUNGLE, PlayScene.Place.CITY ->
             background(place, 0, widthCells, floorY, PlayAmbientActivity.DayPhase.MIDDAY)
                 .mapTo(HashSet()) { it.x to it.y }
+        // In der Grotte gibt es keinen Himmel: alles ueber dem Boden ist Fels.
+        PlayScene.Place.GROTTO -> (0 until widthCells).flatMapTo(HashSet()) { x ->
+            (0 until floorY).map { y -> x to y }
+        }
         else -> emptySet()
     }
 
@@ -790,6 +900,29 @@ internal object PlayWorld {
         // Wasserlinie hinten - eine unterbrochene, blasse Spiegelung.
         for (wx in 0 until widthCells) {
             if (wx % 3 != 1) cells += SceneCell(wx, floorY - 1, FAR - 60)
+        }
+        return cells.filter { it.x in 0 until widthCells && it.y >= 0 }
+    }
+
+    /**
+     * Das Hoehlengewoelbe: ein unregelmaessiger Bogen aus Fels, von dem Tropfsteine haengen, und
+     * dahinter die Dunkelheit. Kein Himmel - dafuer leuchten die Kristalle (siehe [furnishing]).
+     */
+    private fun caveVault(widthCells: Int, floorY: Int): List<SceneCell> {
+        if (widthCells <= 0 || floorY < 12) return emptyList()
+        val cells = mutableListOf<SceneCell>()
+        val top = skyRoom(floorY, 22)
+        for (x in 0 until widthCells) {
+            // Die Decke haengt tief und wellig; zu den Seiten laeuft sie als Wand herunter.
+            val edge = minOf(x, widthCells - 1 - x)
+            val ceiling = floorY - top + (hash(x, 31) % 3) + (if (edge < 4) 0 else 2)
+            for (y in (ceiling - 2).coerceAtLeast(0)..ceiling) cells += SceneCell(x, y, FAR + 80)
+            if (edge < 3) for (y in ceiling until floorY) cells += SceneCell(x, y, FAR + 40)
+            // Tropfsteine von der Decke, jeder vierte bis siebte Spalte.
+            if (hash(x, 32) % 6 == 0 && edge >= 3) {
+                val len = 1 + hash(x, 33) % 4
+                for (d in 1..len) cells += SceneCell(x, ceiling + d, FAR + 40)
+            }
         }
         return cells.filter { it.x in 0 until widthCells && it.y >= 0 }
     }
@@ -1394,6 +1527,11 @@ internal object PlayWorld {
                 if (!night) cells += gull(phase, widthCells, floorY)
                 cells += crab(phase, widthCells, floorY)
             }
+            // Die Grotte: Tropfen fallen von der Decke und glitzern, die Kristalle funkeln.
+            PlayScene.Place.GROTTO -> {
+                cells += drips(phase, widthCells, floorY)
+                cells += fireflies(phase, widthCells, floorY, count = 4)
+            }
             PlayScene.Place.CITY -> {
                 cells += airship(phase, widthCells, floorY, dayPhase)
                 cells += drone(phase, widthCells, floorY, dayPhase, slot = 0)
@@ -1465,6 +1603,15 @@ internal object PlayWorld {
             val baseY = floorY - 3 - hash(i, 42) % 12
             val wobble = (PlayScene.beat(phase, 4) + i) % 3 - 1
             SceneCell(baseX + wobble, baseY + (i + PlayScene.beat(phase, 6)) % 2, PlayScene.GLOW - 400, isLight = true)
+        }
+
+    /** Tropfen in der Grotte: fallen in eigenem Takt von der Decke bis zum Boden. */
+    private fun drips(phase: Int, widthCells: Int, floorY: Int): List<SceneCell> =
+        (0 until 3).mapNotNull { i ->
+            val x = (widthCells * (0.22f + i * 0.27f)).toInt()
+            val fall = (PlayScene.beat(phase, 1) + i * 7) % 20
+            val y = floorY - 16 + fall
+            if (fall > 15) null else SceneCell(x, y, PlayScene.GLOW - 1300, isLight = true)
         }
 
     private fun bubbles(phase: Int, widthCells: Int, floorY: Int): List<SceneCell> =

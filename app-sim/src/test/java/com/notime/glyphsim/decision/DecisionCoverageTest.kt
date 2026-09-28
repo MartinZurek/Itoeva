@@ -46,6 +46,23 @@ class DecisionCoverageTest {
         ActionKind.TEND_SELF
     )
 
+    /**
+     * Die Kristallgrotte gibt es erst nach der Expeditionsquest (siehe PlayQuests). Die Abdeckung
+     * prueft die Welt, wie sie danach ist - fuer jeden Test dieser Klasse, und danach zurueck.
+     */
+    private var grottoVorher = false
+
+    @org.junit.Before
+    fun grotteEntdeckt() {
+        grottoVorher = PlayRoutines.grottoDiscovered
+        PlayRoutines.grottoDiscovered = true
+    }
+
+    @org.junit.After
+    fun grotteZurueck() {
+        PlayRoutines.grottoDiscovered = grottoVorher
+    }
+
     private val lagen by lazy {
         DecisionTestSupport.sweep(days = 10, seeds = 2) + besondereLagen()
     }

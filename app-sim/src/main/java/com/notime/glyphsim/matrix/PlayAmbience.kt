@@ -55,7 +55,10 @@ object PlayAmbience {
         CITY(10, 0.35f),
 
         /** Im Cafe: Stimmengemurmel und ein Loeffel an der Tasse. */
-        CAFE(10, 0.35f)
+        CAFE(10, 0.35f),
+
+        /** In der Kristallgrotte: ein tiefes Summen und einzelne, hallende Tropfen. */
+        CAVE(8, 0.40f)
     }
 
     /** Dieselbe Abtastrate wie der Klang des Wesens (siehe [PlayChime.SAMPLE_RATE]). */
@@ -78,6 +81,8 @@ object PlayAmbience {
         dayPhase: PlayAmbientActivity.DayPhase,
         weather: PlayWeather
     ): Kind? {
+        // Die Grotte hat eine Decke - Regen und Schnee hoert man dort nicht.
+        if (place == PlayScene.Place.GROTTO) return Kind.CAVE
         val outdoors = PlayScene.isOutdoors(place)
         val night = dayPhase == PlayAmbientActivity.DayPhase.NIGHT
         if (weather == PlayWeather.RAIN) return if (outdoors) Kind.RAIN else Kind.RAIN_WINDOW
@@ -147,6 +152,7 @@ object PlayAmbience {
         Kind.FROGS -> add(wind(total, loop, random, gusts = 1, level = 0.15f), frogs(total, loop, random))
         Kind.CITY -> city(total, loop, random)
         Kind.CAFE -> cafe(total, loop, random)
+        Kind.CAVE -> cave(total, loop, random)
     }
 
     private fun add(a: FloatArray, b: FloatArray) = FloatArray(a.size) { a[it] + b[it] }
@@ -284,6 +290,25 @@ object PlayAmbience {
             val car = if (d < carLen) sin(PI * d / carLen).pow(2.0).toFloat() else 0f
             rumble.next(x) * 5f + swoosh.next(x) * 0.8f * car
         }
+    }
+
+    private fun cave(total: Int, loop: Int, random: Random): FloatArray {
+        // Das Summen: sehr tiefes, ruhiges Rauschen - der Raum selbst.
+        val hum = Lowpass(0.004f)
+        val out = FloatArray(total) { hum.next(noise(random)) * 7f }
+        // Tropfen: ein kurzer, heller Ton, der lange nachhallt - drei, vier je Durchlauf.
+        repeat(3 + random.nextInt(2)) {
+            val at = random.nextInt(loop)
+            val hz = 1300.0 + random.nextDouble() * 900.0
+            val len = (SAMPLE_RATE * 0.6).toInt()
+            stamp(out, loop, at, len) { k ->
+                val env = exp(-k / (SAMPLE_RATE * 0.12))
+                // Der Ton faellt beim Aufprall ein wenig - daran erkennt man einen Tropfen.
+                val glide = hz * (1.0 + 0.25 * exp(-k / (SAMPLE_RATE * 0.01)))
+                (0.35 * env * sin(2 * PI * glide * k / SAMPLE_RATE)).toFloat()
+            }
+        }
+        return out
     }
 
     /** Verstaerkung der Silbenkurve im Cafe - so gewaehlt, dass zwischen Silben Luecken bleiben. */

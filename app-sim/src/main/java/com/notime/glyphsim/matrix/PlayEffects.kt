@@ -30,7 +30,18 @@ object PlayEffects {
 
     /** Was sich tragen laesst. Bewusst wenige, klar unterscheidbare Formen - auf drei mal drei
      *  Zellen ist alles darueber hinaus nicht mehr auseinanderzuhalten. */
-    enum class Carried { BOOK, FOOD, CUP, GUITAR, EASEL }
+    enum class Carried {
+        BOOK, FOOD, CUP, GUITAR, EASEL,
+
+        /** Die Schatzkarte, zusammengerollt (siehe [PlayQuests]). */
+        MAP,
+
+        /** Ein Drachenei - nach Hause getragen, um es zu waermen. */
+        EGG,
+
+        /** Die gefundene Truhe auf dem Heimweg. */
+        CHEST
+    }
 
     /** Lesbare Phasen einer Drachen-Szene: auspacken, hochziehen, fliegen, einholen. */
     enum class KitePhase { PREPARE, LAUNCH, FLY, LAND }
@@ -1284,6 +1295,18 @@ object PlayEffects {
         Carried.GUITAR -> s.art(0, -1, " # ", " # ", "###", "#+#", "###")
         // Staffelei: aufgespannte Leinwand ueber einem Dreibein.
         Carried.EASEL -> s.art(0, 0, "####", "#++#", "####", "# # ")
+        // Schatzkarte: eine Rolle mit Band in der Mitte.
+        Carried.MAP -> s.art(0, 1, "####", "#+##")
+        // Drachenei: oval, gesprenkelt, mit einem Glanzpunkt.
+        Carried.EGG -> {
+            s.art(0, 0, " ## ", "#+##", "####", " ## ")
+            s.spark(2, 1)
+        }
+        // Truhe: Deckel, Beschlag, Kasten.
+        Carried.CHEST -> {
+            s.art(0, 0, "####", "#++#", "####")
+            s.spark(1, 1)
+        }
     }
 
     /**

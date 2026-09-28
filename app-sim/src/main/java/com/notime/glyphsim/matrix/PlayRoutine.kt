@@ -70,6 +70,12 @@ sealed interface RoutineStep {
     data class Linger(val millis: Long) : RoutineStep
 
     /**
+     * Ein Bild einer Queststufe (siehe [PlayQuests], [PlayQuestEffects]) - es bleibt stehen, bis
+     * der naechste Quest-Schritt es ersetzt oder der Ablauf endet. `null` blendet es aus.
+     */
+    data class Quest(val effect: PlayQuestEffects.Effect?) : RoutineStep
+
+    /**
      * Ein Spiel mit allen, die gerade da sind (siehe [PlayGroupGame]) - dauert
      * [PlayGroupGame.DURATION_MS]. Wer mitspielt, entscheidet die Oberflaeche in jedem Takt neu.
      */
@@ -370,11 +376,23 @@ object PlayRoutines {
     }
 
     /**
+     * **Ob die Kristallgrotte schon entdeckt ist** (Expeditionsquest, siehe PlayQuests).
+     *
+     * Gesetzt von der Oberflaeche aus dem gespeicherten Queststand. Vorher gibt es keinen Ausflug
+     * dorthin - man kann nicht an einen Ort wollen, den man nicht kennt.
+     */
+    @Volatile
+    var grottoDiscovered: Boolean = false
+
+    /**
      * [allFor] ohne die Ablaeufe an nachts geschlossene Orte, wenn es Nacht ist, und ohne
      * Schoenwetter-Ablaeufe bei Regen oder Schnee - siehe [forTopic].
      */
     private fun admissible(topic: AnimationType, night: Boolean, weather: PlayWeather): List<PlayRoutine> {
-        val alle = allFor(topic) + if (weather.isFalling) rainyDay(topic) else emptyList()
+        val bekannt = allFor(topic).filter { routine ->
+            grottoDiscovered || routine.steps.none { it is RoutineStep.GoToPlace && it.place == PlayScene.Place.GROTTO }
+        }
+        val alle = bekannt + if (weather.isFalling) rainyDay(topic) else emptyList()
         val nachts = if (!night) {
             alle
         } else {
@@ -1035,6 +1053,9 @@ object PlayRoutines {
             excursion(PlayScene.Place.SWAMP, AvatarAnimations.Fidget.LOOK_AROUND, restMillis = 12_000L),
             excursion(PlayScene.Place.PLAINS, AvatarAnimations.Fidget.STRETCH, restMillis = 15_000L),
             excursion(PlayScene.Place.BEACH, AvatarAnimations.Fidget.YAWN, restMillis = 18_000L),
+            // Die Kristallgrotte - erst, wenn die Expedition sie entdeckt hat (siehe
+            // [grottoDiscovered] und PlayQuests).
+            excursion(PlayScene.Place.GROTTO, AvatarAnimations.Fidget.LOOK_AROUND, restMillis = 16_000L),
             // Eigener Sportplatz; der gelernte Trick wird erst bei der Laufzeit-Auswahl ergänzt.
             footballRoutine(trickLearned = false),
             // Korb und Ball erscheinen nur fuer diesen Ablauf; der Platz bleibt sonst offen.
