@@ -669,6 +669,35 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-29 - Reisen, Stufe 2: Erlebnisse unterwegs
+
+**Anlass:** Freigabe des Nutzers fuer Stufe 2 des Reiseplans ("Go fuer Stufe 2"): Wetter, das die
+Reise veraendert, Begegnungen, kleine Rueckschlaege, und das Gefundene bleibt bis zur Heimkehr
+sichtbar.
+
+**Geaendert:**
+- **Begegnungen** (`PlayQuests.StepKind.ENCOUNTER`): Auf jeder Reise bleibt das Wesen einmal an
+  einer Station stehen, und ein Bewohner kommt dazu - ueber denselben Besuchsweg wie jeder Besuch
+  (`DockScreen.runVisit(anyResident = true)`), nur dass in der Wildnis irgendein freier Bewohner
+  kommen darf statt nur einer, der laut Simulation gerade dort ist. Solange er bleibt, wartet das
+  Wesen (bestehende Regel aus PlayVisitWindow).
+- **Wetter haelt auf** (`holdsForWeather`): Regnet oder schneit es, wenn die Reise zur naechsten
+  Station weiterziehen will, bleibt das Wesen an der vorigen und stellt sich unter - hoechstens
+  eine Stunde, dann geht es weiter. Beim Rasten im Regen gibt es das Unterstellen (sitzen, in den
+  Regen sehen, abschuetteln).
+- **Das Gefundene bleibt in der Hand** (`carriedOnJourney`): die Karte der Schatzsuche, nach dem
+  Fund die Truhe, auf der Dracheneireise das Ei - beim Weiterziehen, beim Rasten und bei den
+  Momenten. Wer etwas traegt, packt beim Rasten nichts anderes aus.
+- Rueckschlaege stecken weiter in den Geschichten selbst (vergeblich gegraben, Zauber, die nur
+  qualmen, die erste Suche nach dem Ei ohne Erfolg); das Wetter kommt als ungeplanter dazu.
+
+- **Tests (`TESTED BEHAVIOR`):** 771 Offline-Tests gruen (neu: eine Begegnung je Reise am richtigen
+  Ort, Getragenes bis zur Heimkehr, Wetter haelt hoechstens eine Stunde auf, nichts Zweites in
+  der Hand).
+- **Ungeprueft (`UNVERIFIED`):** Begegnungen am Geraet, vor allem wer kommt und wie lange.
+- **Weiterhin offen:** Stufe 3 (mehrtaegige Reisen mit Lager) und Stufe 4 (Feinschliff im Stream);
+  ein Zuschauerimpuls wird unterwegs weiter zurueckgestellt.
+
 ### 2026-09-29 - Landschaften als Pixel-Art: jeder Ort ein Bild, das man wiedererkennt
 
 **Anlass:** Der Nutzer bat, die Landschaften "als Pixel-Animationsdesigner" aus Sicht eines

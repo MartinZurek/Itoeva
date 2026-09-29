@@ -2082,7 +2082,14 @@ fun DockScreen(
          * Der Besuch bleibt aus, solange eine echte Erinnerung offen ist oder gefuettert wird: In
          * diesen Momenten gehoert die Aufmerksamkeit dem Nutzer, nicht der Kulisse.
          */
-        suspend fun runVisit() {
+        suspend fun runVisit(
+            /**
+             * Eine Begegnung auf der Reise (siehe PlayQuests.StepKind.ENCOUNTER): Dann kommt
+             * irgendein Bewohner dazu, nicht nur einer, der laut Simulation gerade hier ist - in
+             * der Wildnis ist sonst nie jemand.
+             */
+            anyResident: Boolean = false
+        ) {
             val (host, resident, residentState) = residentPersistenceMutex.withLock {
                 if (sharedActivityProfileId != null) return@withLock null
                 if (visitingProfileIds.size >= LivingPopulationLayout.visitorCapFor(currentPlace)) {
@@ -2096,12 +2103,17 @@ fun DockScreen(
                 // direkt aus dem veroeffentlichten Zustand statt aus einem moeglicherweise noch
                 // aelteren Store-Snapshot. Bereits laufende Besuche werden ausgeschlossen, damit
                 // derselbe Bewohner nicht zweimal gleichzeitig als eigenstaendiger Gast auftaucht.
-                val residentSnapshot = LivingPopulationLayout.nextVisitor(
-                    residentSnapshots,
-                    currentPlace,
-                    lastResidentProfileId,
-                    excludeProfileIds = unavailableGuests()
-                ) ?: return@withLock null
+                val residentSnapshot = if (anyResident) {
+                    val frei = residentSnapshots.filterNot { it.profileId in unavailableGuests() }
+                    frei.firstOrNull { it.profileId != lastResidentProfileId } ?: frei.firstOrNull()
+                } else {
+                    LivingPopulationLayout.nextVisitor(
+                        residentSnapshots,
+                        currentPlace,
+                        lastResidentProfileId,
+                        excludeProfileIds = unavailableGuests()
+                    )
+                } ?: return@withLock null
                 val currentResident = LivingResidents.all.firstOrNull {
                     it.profileId == residentSnapshot.profileId
                 } ?: return@withLock null
@@ -3659,6 +3671,19 @@ fun DockScreen(
                                 continue
                             }
                             is PlayQuests.Next.Run -> {
+                                // Eine Begegnung: Waehrend das Wesen stehen bleibt, kommt jemand
+                                // dazu - ueber denselben Weg wie jeder Besuch.
+                                if (schritt.step.kind == PlayQuests.StepKind.ENCOUNTER) {
+                                    launch {
+                                        delay((ENCOUNTER_ARRIVAL_MS * PlayTimeLapse.paceFactor()).toLong())
+                                        runVisit(anyResident = true)
+                                    }
+                                }
+                                if (schritt.step.kind == PlayQuests.StepKind.EXPERIENCE ||
+                                    schritt.step.kind == PlayQuests.StepKind.ENCOUNTER
+                                ) {
+                                    carried = PlayQuests.carriedOnJourney(gerollt)
+                                }
                                 if (runRoutine(schritt.step.routine, species, applyLegacyEconomy = false)) {
                                     val weiter = PlayQuests.completed(gerollt, schritt.step)
                                     questProgress = weiter
@@ -3670,8 +3695,15 @@ fun DockScreen(
                             null -> Unit
                         }
                         val station = PlayQuests.stationAt(gerollt, minuteJetzt)
-                        if (station != null && currentPlace != station.place) {
-                            runRoutine(PlayQuests.travel(currentPlace, station.place), species, applyLegacyEconomy = false)
+                        // Regnet es, wartet das Wesen an der vorigen Station das Wetter ab
+                        // (hoechstens eine Stunde, siehe PlayQuests.holdsForWeather).
+                        val wartet = PlayQuests.holdsForWeather(
+                            gerollt, minuteJetzt, currentPlace, PlayWeather.current().isFalling
+                        )
+                        if (station != null && currentPlace != station.place && !wartet) {
+                            val reise = PlayQuests.travel(currentPlace, station.place)
+                            carried = PlayQuests.carriedOnJourney(gerollt)
+                            runRoutine(reise, species, applyLegacyEconomy = false)
                             continue
                         }
                     }
@@ -3732,19 +3764,28 @@ fun DockScreen(
                             // PlayQuests.wayside): Proviant, Rast, erkunden - statt einer
                             // Entscheidung, die es nach Hause zum Kuehlschrank schicken wuerde.
                             // Was dabei gestillt wird, geht in den Living-Kern ein.
-                            val reiseStation = questProgress?.let {
-                                PlayQuests.stationAt(it, PlayTimeLapse.now().let { t -> t.hour * 60 + t.minute })
-                            }
-                            if (reiseStation != null && currentPlace == reiseStation.place) {
+                            val reiseStand = questProgress
+                            val reiseMinute = PlayTimeLapse.now().let { t -> t.hour * 60 + t.minute }
+                            val reiseStation = reiseStand?.let { PlayQuests.stationAt(it, reiseMinute) }
+                            val regen = PlayWeather.current().isFalling
+                            if (reiseStand != null && reiseStation != null && (
+                                    currentPlace == reiseStation.place ||
+                                        PlayQuests.holdsForWeather(reiseStand, reiseMinute, currentPlace, regen)
+                                    )
+                            ) {
                                 val (unterwegsAgent, unterwegsWelt) = livingStateFor(species)
+                                // Was unterwegs gefunden wurde, bleibt in der Hand (Karte, Ei, Truhe).
+                                val inDerHand = PlayQuests.carriedOnJourney(reiseStand)
                                 val rast = PlayQuests.wayside(
                                     place = currentPlace,
                                     hunger = unterwegsAgent.needs.pressure(NeedKind.HUNGER),
                                     energy = unterwegsAgent.needs.pressure(NeedKind.ENERGY),
-                                    rainy = PlayWeather.current().isFalling,
-                                    roll = Random.nextInt(1_000)
+                                    rainy = regen,
+                                    roll = Random.nextInt(1_000),
+                                    holding = inDerHand != null
                                 )
                                 try {
+                                    carried = inDerHand
                                     currentActivity = PlayRoutines.specialOf(rast.routine)
                                     if (runRoutine(rast.routine, species, applyLegacyEconomy = false)) {
                                         // Der Kern schreibt seine Zeit sonst nur ueber eigene
@@ -5818,6 +5859,9 @@ private const val RECENT_MEMORY = 4
  * gestreckt - das ist Ablaufsteuerung, keine vergehende Zeit.
  */
 private const val VISIT_WAIT_TICK_MS = 250L
+
+/** Nach so viel Stehenbleiben kommt bei einer Begegnung unterwegs der andere dazu. */
+private const val ENCOUNTER_ARRIVAL_MS = 2_500L
 
 /** Wie viel gespielte Zeit eine Rast unterwegs hoechstens nachholt (siehe PlayQuests.wayside). */
 private const val MAX_JOURNEY_CATCH_UP_MINUTES = 180
