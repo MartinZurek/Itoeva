@@ -669,6 +669,45 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-29 - Landschaften als Pixel-Art: jeder Ort ein Bild, das man wiedererkennt
+
+**Anlass:** Der Nutzer bat, die Landschaften "als Pixel-Animationsdesigner" aus Sicht eines
+Twitch-Zuschauers durchzugehen: hochwertige Pixel-Art, an der man jeden Ort wiedererkennt und die
+man sich einpraegt; jede Grafik mit Sinn und Zweck, "liebevolles Design", zusammen mit der Musik
+geniessbar. Genannt wurden Wuestenregionen und Gebirge.
+
+**Befund (`FACT`, gerendert mit geraeteechter Helligkeit):** Die meisten Landschaften bestanden aus
+drei, vier Requisiten auf der Bodenlinie unter viel schwarzem Himmel. Teich, Wald, Wiese und Park
+hatten gar keinen Hintergrund - am Teich war kein Wasser zu sehen. Gebirge, Ebene und Sumpf waren
+schachbrettartig gerastert, was auf der Punktmatrix als Rauschen erscheint. Kein Ort hatte ein
+Wahrzeichen.
+
+**Geaendert (`PlayWorld`):** Jede Landschaft ist ein Bild in Tiefenebenen - fern flaechig und dunkel,
+nah mit hellen Kanten - mit genau einem Wahrzeichen:
+- **Gebirge:** ein Horn mit Schneekappe und Schneezungen, Lichtseite und Schattenseite, davor
+  dunkle Tannenhuegel und eine Almhuette, deren Fenster abends leuchten.
+- **Wueste** (Park des Wuestenfuchses): dunkler Tafelberg mit Gesteinsschichten, helle Duenen mit
+  scharfem Kamm und Windrippeln, eine Karawane ueber dem fernen Kamm, Hitzeflimmern.
+- **Strand:** ein gestreifter Leuchtturm auf der Landzunge, nachts mit kreisendem Strahl.
+- **Teich:** ein See mit anderem Ufer, Bootshaus und Steg, Spiegelung, treibenden Wellen, Seerosen.
+- **Wald / hoher Wald der Eule:** drei Tannenreihen hintereinander, nach hinten dunkler.
+- **Wiese / Blumenwiese:** Wiesenbuckel mit einer grossen Eiche auf dem Scheitel.
+- **Ebene:** Felder in Streifen, ein Hof mit Scheune und Silo, Pappeln am Weg.
+- **Felsnadeln** (Park des Drachen), **Stadtpark** (Pufflings Park: Stadt hinter den Baumkronen,
+  abends Fenster), **Sumpf** (kahle Baeume mit Moosfaeden, ziehende Nebelbaender).
+- Eine gemeinsame Tonleiter (`PlayWorld.Tone`) statt Rasterung; der Hintergrund bleibt unter der
+  Moebelhelligkeit (bestehende Regel, weiter geprueft). Wolken und Sterne ziehen hinter allen neuen
+  Silhouetten vorbei.
+
+**Tests:** 767 Offline-Tests gruen. Angepasst (`PlayWorldTest`): Der Vergleich "zwei Landschaften
+sehen gleich aus" prueft jetzt gleichen Ton an gleicher Stelle statt nur belegte Zellen - seit
+mehrere Hintergruende die untere Flaeche ganz fuellen, hielt der alte Vergleich jeden flachen
+Hintergrund fuer im Gebirge enthalten. Die Fenster der Almhuette zaehlen nicht als Stern vor dem
+Berg.
+
+- **Ungeprueft (`UNVERIFIED`):** Wirkung am Geraet und im Stream; Lesbarkeit auf sehr schmalen
+  Bildern. Dschungel und Grotte sind unveraendert.
+
 ### 2026-09-28 - Quests als Reisen: den ganzen Tag unterwegs (Stufe 1 von 4)
 
 **Anlass:** Die erste Fassung der Quests (Eintrag darunter) erzaehlte jede Quest in drei
