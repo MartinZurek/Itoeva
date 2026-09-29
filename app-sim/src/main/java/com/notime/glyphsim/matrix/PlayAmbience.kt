@@ -58,7 +58,10 @@ object PlayAmbience {
         CAFE(10, 0.35f),
 
         /** In der Kristallgrotte: ein tiefes Summen und einzelne, hallende Tropfen. */
-        CAVE(8, 0.40f)
+        CAVE(8, 0.40f),
+
+        /** Im Lager: das Feuer - ein leises Rauschen, Knistern, dahinter die Grillen. */
+        CAMPFIRE(8, 0.45f)
     }
 
     /** Dieselbe Abtastrate wie der Klang des Wesens (siehe [PlayChime.SAMPLE_RATE]). */
@@ -86,6 +89,8 @@ object PlayAmbience {
         val outdoors = PlayScene.isOutdoors(place)
         val night = dayPhase == PlayAmbientActivity.DayPhase.NIGHT
         if (weather == PlayWeather.RAIN) return if (outdoors) Kind.RAIN else Kind.RAIN_WINDOW
+        // Im Lager brennt das Feuer - bei Schnee ebenso wie in klarer Nacht.
+        if (place == PlayScene.Place.CAMP) return Kind.CAMPFIRE
         // Schnee ist leise - draussen hoert man nur den Wind, drinnen nichts.
         if (weather == PlayWeather.SNOW) return if (outdoors) Kind.WIND else null
         return when {
@@ -153,6 +158,23 @@ object PlayAmbience {
         Kind.CITY -> city(total, loop, random)
         Kind.CAFE -> cafe(total, loop, random)
         Kind.CAVE -> cave(total, loop, random)
+        Kind.CAMPFIRE -> add(campfire(total, loop, random), crickets(total, loop).also { c -> for (i in c.indices) c[i] *= 0.5f })
+    }
+
+    private fun campfire(total: Int, loop: Int, random: Random): FloatArray {
+        // Das Feuer atmet: ein tiefes Rauschen, das zweimal je Durchlauf anschwillt.
+        val roar = Lowpass(0.02f)
+        val out = FloatArray(total) { i -> roar.next(noise(random)) * 3.2f * (0.6f + 0.4f * periodic(i, loop, 2)) }
+        // Knistern: viele kurze, trockene Knackser, einzelne davon lauter (ein Scheit knackt).
+        repeat(40 + random.nextInt(20)) {
+            val at = random.nextInt(loop)
+            val loud = random.nextInt(8) == 0
+            val amp = if (loud) 0.55f + random.nextFloat() * 0.25f else 0.12f + random.nextFloat() * 0.18f
+            val decay = SAMPLE_RATE * (if (loud) 0.006 else 0.002)
+            val len = (decay * 6).toInt()
+            stamp(out, loop, at, len) { k -> (amp * exp(-k / decay) * noise(random)).toFloat() }
+        }
+        return out
     }
 
     private fun add(a: FloatArray, b: FloatArray) = FloatArray(a.size) { a[it] + b[it] }

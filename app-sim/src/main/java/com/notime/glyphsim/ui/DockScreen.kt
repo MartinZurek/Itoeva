@@ -3782,7 +3782,10 @@ fun DockScreen(
                                     energy = unterwegsAgent.needs.pressure(NeedKind.ENERGY),
                                     rainy = regen,
                                     roll = Random.nextInt(1_000),
-                                    holding = inDerHand != null
+                                    holding = inDerHand != null,
+                                    // Im Lager wird ab 23 Uhr im Zelt geschlafen, nicht daheim.
+                                    night = PlayAmbientActivity.currentDayPhase() ==
+                                        PlayAmbientActivity.DayPhase.NIGHT
                                 )
                                 try {
                                     carried = inDerHand

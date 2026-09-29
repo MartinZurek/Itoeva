@@ -471,6 +471,10 @@ class PlayRoutineTest {
                     }
                 }
             }
+            // Das Lager erreicht man nur auf einer Reise (siehe PlayQuests).
+            for (routine in PlayQuests.journeyRoutines()) {
+                for (step in routine.steps) if (step is RoutineStep.GoToPlace) add(step.place)
+            }
         }
         for (place in PlayScene.Place.entries.filter { PlayScene.isOutdoors(it) }) {
             assertTrue(

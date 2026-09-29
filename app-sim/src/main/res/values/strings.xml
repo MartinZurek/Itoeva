@@ -565,6 +565,7 @@
     <string name="talk_place_plains">out on the open plains</string>
     <string name="talk_place_beach">at the beach</string>
     <string name="talk_place_grotto">in the crystal grotto</string>
+    <string name="talk_place_camp">at the camp</string>
     <string name="talk_place_cafe">in the café, over a cocoa</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. -->

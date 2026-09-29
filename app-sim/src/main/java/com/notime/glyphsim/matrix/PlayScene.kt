@@ -153,7 +153,13 @@ object PlayScene {
          * Die Kristallgrotte - entdeckt auf der Expeditionsquest (siehe [PlayQuests]). Erst danach
          * gehoert sie zu den Ausfluegen.
          */
-        GROTTO
+        GROTTO,
+
+        /**
+         * Das Lager unterwegs - Zelt, Feuer, Sitzstamm. Nur auf mehrtaegigen Reisen (siehe
+         * [PlayQuests]), kein Ziel eines Tagesausflugs.
+         */
+        CAMP
     }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
@@ -170,7 +176,7 @@ object PlayScene {
      */
     fun isOutdoors(place: Place): Boolean =
         place == Place.PARK || place == Place.SPORT || place == Place.POND || place == Place.STREET ||
-            place == Place.FOREST || place == Place.MEADOW || place == Place.CITY ||
+            place == Place.FOREST || place == Place.MEADOW || place == Place.CITY || place == Place.CAMP ||
             place in PlayWorld.NATURE
 
     /**
@@ -206,6 +212,8 @@ object PlayScene {
         // Dschungel, Gebirge, Sumpf und Ebene sind Wildnis wie der Wald - dorthin geht man, um
         // allein zu sein.
         Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.GROTTO -> false
+        // Das Lager gehoert dem Reisenden - wer dort vorbeikommt, kommt nur auf einer Begegnung.
+        Place.CAMP -> false
     }
 
     /**
@@ -591,8 +599,8 @@ object PlayScene {
         // Zwischen den beiden Automaten - in Ruhe steht die Figur und sieht sich um. Bei 0,46
         // ragte sie in der Vorschau in den zweiten Automaten hinein.
         Place.ARCADE -> 0.36f
-        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAFE, Place.GROTTO ->
-            PlayWorld.avatarAnchorX(place) ?: 0.1f
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAFE, Place.GROTTO,
+        Place.CAMP -> PlayWorld.avatarAnchorX(place) ?: 0.1f
     }
 
     /**
@@ -1349,7 +1357,7 @@ object PlayScene {
         )
 
         // Die fuenf neuen Landschaften stehen in [PlayWorld].
-        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.GROTTO ->
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.GROTTO, Place.CAMP ->
             PlayWorld.furnishing(place).orEmpty()
         Place.CAFE -> besideDoor(PlayWorld.furnishing(place).orEmpty())
         }
@@ -4039,7 +4047,7 @@ object PlayScene {
             Place.GROTTO -> emptyList()
 
             Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND,
-            Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH -> {
+            Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAMP -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 // Was hinter einem Haus steht, sieht man nicht - siehe [facadeMask]. Einmal
                 // berechnet: Sternbild UND Sternschnuppe brauchen dieselbe Maske. Dazu kommt, was

@@ -230,7 +230,9 @@ object MusicResolver {
         PlayScene.Place.PLAINS,
         PlayScene.Place.BEACH,
         // Die Kristallgrotte klingt wie die uebrige Wildnis, aus der man dorthin kommt.
-        PlayScene.Place.GROTTO
+        PlayScene.Place.GROTTO,
+        // Das Lager unterwegs ebenso.
+        PlayScene.Place.CAMP
     )
 
     private val CITY_PLACES = setOf(
@@ -257,7 +259,8 @@ object MusicResolver {
         PlayScene.Place.SWAMP,
         PlayScene.Place.PLAINS,
         PlayScene.Place.BEACH,
-        PlayScene.Place.GROTTO
+        PlayScene.Place.GROTTO,
+        PlayScene.Place.CAMP
     )
 
     /**
