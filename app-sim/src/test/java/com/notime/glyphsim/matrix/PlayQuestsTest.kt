@@ -189,6 +189,53 @@ class PlayQuestsTest {
     }.toSet()
 
     @Test
+    fun `auf jeder Reise gibt es eine Begegnung - an der Station, an der das Wesen gerade ist`() {
+        for (quest in Quest.entries) {
+            val plan = PlayQuests.planFor(Progress(quest = quest, questDayNumber = reisetag))
+            val begegnungen = plan.steps.filter { it.kind == StepKind.ENCOUNTER }
+            assertEquals("$quest", 1, begegnungen.size)
+            val step = begegnungen.single()
+            val ort = plan.stations.last { it.fromMinute <= step.atMinute }.place
+            assertEquals(quest.name, ort, step.routine.steps.filterIsInstance<RoutineStep.GoToPlace>().single().place)
+            // Die Figur bleibt lange genug stehen, dass jemand dazukommen kann.
+            assertTrue(step.routine.steps.any { it is RoutineStep.Linger && it.millis >= 20_000L })
+        }
+    }
+
+    @Test
+    fun `was unterwegs gefunden wird, bleibt bis zur Heimkehr in der Hand`() {
+        // Schatzsuche: erst die Karte, nach dem Fund die Truhe, daheim nichts mehr.
+        assertNull(PlayQuests.carriedOnJourney(PlayQuests.rollTo(Progress(), reisetag)))
+        assertEquals(PlayEffects.Carried.MAP, PlayQuests.carriedOnJourney(liveDay(Progress(), reisetag, until = at(12))))
+        assertEquals(PlayEffects.Carried.CHEST, PlayQuests.carriedOnJourney(liveDay(Progress(), reisetag, until = at(20))))
+        assertNull(PlayQuests.carriedOnJourney(liveDay(Progress(), reisetag)))
+        // Drachenei: erst nach dem Fund.
+        val ei = Progress(quest = Quest.DRAGON_EGG)
+        assertNull(PlayQuests.carriedOnJourney(liveDay(ei, reisetag, until = at(14))))
+        assertEquals(PlayEffects.Carried.EGG, PlayQuests.carriedOnJourney(liveDay(ei, reisetag, until = at(17))))
+    }
+
+    @Test
+    fun `Regen haelt das Weiterziehen hoechstens eine Stunde auf`() {
+        val p = liveDay(Progress(), reisetag, until = at(10, 50)) // Schatzsuche, noch auf der Ebene
+        assertTrue(PlayQuests.holdsForWeather(p, at(11, 10), Place.PLAINS, falling = true))
+        assertFalse("ohne Regen geht es weiter", PlayQuests.holdsForWeather(p, at(11, 10), Place.PLAINS, falling = false))
+        assertFalse("nach einer Stunde geht es trotzdem weiter", PlayQuests.holdsForWeather(p, at(12, 5), Place.PLAINS, falling = true))
+        assertFalse("nur an einer Station der Reise", PlayQuests.holdsForWeather(p, at(11, 10), Place.LIVING, falling = true))
+    }
+
+    @Test
+    fun `wer schon etwas traegt, nimmt beim Rasten nichts anderes in die Hand`() {
+        for (ort in STATIONEN) for (roll in 0 until 12) for (hunger in listOf(0.0, 0.8)) {
+            val w = PlayQuests.wayside(ort, hunger, 0.0, rainy = false, roll = roll, holding = true)
+            assertTrue("$ort", w.routine.steps.none { it is RoutineStep.Take || it == RoutineStep.Drop })
+        }
+        // Und bei Regen gibt es das Unterstellen.
+        val beiRegen = (0 until 24).map { PlayQuests.wayside(Place.FOREST, 0.0, 0.0, rainy = true, roll = it).routine }
+        assertTrue(beiRegen.any { r -> r.steps.any { it == RoutineStep.Stir(AvatarAnimations.Fidget.SHAKE) } })
+    }
+
+    @Test
     fun `der Questtag beginnt um sechs`() {
         val tag = 24L * 60L
         assertEquals(PlayQuests.questDayOf(5 * tag + 23 * 60), PlayQuests.questDayOf(6 * tag + 60))

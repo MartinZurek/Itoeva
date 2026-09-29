@@ -82,6 +82,12 @@ object PlayQuests {
         /** Ein Moment der Geschichte an einer Station. */
         EXPERIENCE,
 
+        /**
+         * Eine Begegnung unterwegs: Das Wesen bleibt stehen, und ein Bewohner kommt dazu (der
+         * Besuch selbst laeuft ueber denselben Weg wie jeder Besuch, siehe DockScreen.runVisit).
+         */
+        ENCOUNTER,
+
         /** Heimkehr am Abend. */
         RETURN,
 
@@ -224,11 +230,13 @@ object PlayQuests {
         // dieser Zeit schon an einer anderen Station ist (sonst liefe er zurueck in den Wald).
         val stationNow = plan.stations.lastOrNull { it.fromMinute <= m }?.place
         val placeOfStep = step.routine.steps.filterIsInstance<GoToPlace>().firstOrNull()?.place
-        val leftBehind = step.kind == StepKind.EXPERIENCE && stationNow != null && placeOfStep != stationNow
+        val leftBehind = (step.kind == StepKind.EXPERIENCE || step.kind == StepKind.ENCOUNTER) &&
+            stationNow != null && placeOfStep != stationNow
         val overtaken = step.reward == null && (nextAt != null && m >= nextAt || leftBehind)
         return when (step.kind) {
             StepKind.DEPART -> if (m >= (plan.returnMinute ?: Int.MAX_VALUE)) Next.Skip else Next.Run(step)
-            StepKind.EXPERIENCE -> if (!progress.departed || overtaken) Next.Skip else Next.Run(step)
+            StepKind.EXPERIENCE, StepKind.ENCOUNTER ->
+                if (!progress.departed || overtaken) Next.Skip else Next.Run(step)
             StepKind.RETURN -> if (!progress.departed) Next.Skip else Next.Run(step)
             StepKind.CARE -> if (overtaken) Next.Skip else Next.Run(step)
         }
@@ -262,6 +270,46 @@ object PlayQuests {
         val m = questMinute(minuteOfDay)
         return plan.stations.lastOrNull { it.fromMinute <= m } ?: plan.stations.firstOrNull()
     }
+
+    /**
+     * **Was das Wesen unterwegs in der Hand traegt** - die Karte der Schatzsuche, nach dem Fund die
+     * Truhe, auf der Dracheneireise das Ei. Sonst verschwaende es zwischen Fund und Heimkehr, als
+     * haette es nie etwas gefunden.
+     */
+    fun carriedOnJourney(progress: Progress): PlayEffects.Carried? {
+        if (!progress.departed || progress.journeyDone) return null
+        val plan = planFor(progress)
+        if (plan.kind != DayKind.TRAVEL) return null
+        val done = plan.steps.take(progress.stepsDone)
+        fun found(effect: Effect) = done.any { step -> step.routine.steps.any { it is RoutineStep.Quest && it.effect == effect } }
+        return when (progress.quest) {
+            Quest.TREASURE -> if (found(Effect.CHEST_FOUND)) PlayEffects.Carried.CHEST else PlayEffects.Carried.MAP
+            Quest.DRAGON_EGG -> if (found(Effect.EGG_FOUND)) PlayEffects.Carried.EGG else null
+            else -> null
+        }
+    }
+
+    /**
+     * **Das Wetter haelt auf.** Regnet oder schneit es, wenn die Reise zur naechsten Station
+     * weiterziehen will, stellt sich das Wesen unter und wartet - hoechstens [WEATHER_DELAY_MINUTES]
+     * Minuten, dann geht es trotzdem weiter.
+     */
+    fun waitsOutWeather(station: Station, minuteOfDay: Int, falling: Boolean): Boolean =
+        falling && questMinute(minuteOfDay) - station.fromMinute < WEATHER_DELAY_MINUTES
+
+    /**
+     * Ob das Wesen wegen des Wetters an der vorigen Station bleibt, statt weiterzuziehen - nur
+     * wenn es tatsaechlich an einer Station dieser Reise steht.
+     */
+    fun holdsForWeather(progress: Progress, minuteOfDay: Int, currentPlace: Place, falling: Boolean): Boolean {
+        val station = stationAt(progress, minuteOfDay) ?: return false
+        if (currentPlace == station.place) return false
+        if (planFor(progress).stations.none { it.place == currentPlace }) return false
+        return waitsOutWeather(station, minuteOfDay, falling)
+    }
+
+    /** Wie lange schlechtes Wetter das Weiterziehen hoechstens aufhaelt. */
+    const val WEATHER_DELAY_MINUTES = 60
 
     /** Die Faehigkeit zu zaubern - seit der Zauberlehre. */
     fun canCastMagic(rewards: Set<Reward>): Boolean = Reward.MAGIC in rewards
@@ -341,7 +389,15 @@ object PlayQuests {
      * [hunger] und [energy] sind die Drucke des Living-Kerns (0 = satt/ausgeruht); [roll] waehlt
      * unter dem, was an diesem Ort passt.
      */
-    fun wayside(place: Place, hunger: Double, energy: Double, rainy: Boolean, roll: Int): Wayside {
+    fun wayside(
+        place: Place,
+        hunger: Double,
+        energy: Double,
+        rainy: Boolean,
+        roll: Int,
+        /** Ob schon etwas in der Hand ist (Karte, Ei, Truhe) - dann wird nichts anderes genommen. */
+        holding: Boolean = false
+    ): Wayside {
         val bench = PlayScene.Station.BENCH in PlayScene.stationsAt(place)
         fun sitDown(): List<RoutineStep> = if (bench) {
             listOf(RoutineStep.GoTo(PlayScene.Station.BENCH), RoutineStep.Occupy(PlayScene.Station.BENCH))
@@ -352,9 +408,10 @@ object PlayQuests {
 
         if (hunger >= HUNGRY) {
             return Wayside(
-                r(*(sitDown() + listOf(Take(PlayEffects.Carried.FOOD), RoutineStep.Act(AnimationType.DRINK),
-                    Linger(8_000L), RoutineStep.Drop) + standUp() + Stir(AvatarAnimations.Fidget.STRETCH))
-                    .toTypedArray()),
+                r(*(sitDown() + (if (holding) emptyList() else listOf(Take(PlayEffects.Carried.FOOD))) +
+                    listOf(RoutineStep.Act(AnimationType.DRINK), Linger(8_000L)) +
+                    (if (holding) emptyList() else listOf(RoutineStep.Drop)) + standUp() +
+                    Stir(AvatarAnimations.Fidget.STRETCH)).toTypedArray()),
                 mapOf(NeedKind.HUNGER to 0.6)
             )
         }
@@ -372,7 +429,8 @@ object PlayQuests {
             if (place in SKETCH_PLACES) add(sketch())
             if (place in KITE_PLACES && !rainy) add(kite())
             if (place == Place.POND) add(fishing())
-            if (bench) add(read(sitDown(), standUp()))
+            if (bench && !holding) add(read(sitDown(), standUp()))
+            if (rainy) add(shelter(sitDown(), standUp()))
         }
         return choices[Math.floorMod(roll, choices.size)]
     }
@@ -430,6 +488,13 @@ object PlayQuests {
         mapOf(NeedKind.FUN to 0.3, NeedKind.COMFORT to 0.1)
     )
 
+    /** Unterstellen: sitzen, in den Regen sehen, sich danach abschuetteln. */
+    private fun shelter(sitDown: List<RoutineStep>, standUp: List<RoutineStep>) = Wayside(
+        r(*(sitDown + listOf(Linger(10_000L), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(8_000L)) +
+            standUp + Stir(AvatarAnimations.Fidget.SHAKE)).toTypedArray()),
+        mapOf(NeedKind.COMFORT to 0.15, NeedKind.ENERGY to 0.15)
+    )
+
     private fun read(sitDown: List<RoutineStep>, standUp: List<RoutineStep>) = Wayside(
         r(*(listOf<RoutineStep>(Take(PlayEffects.Carried.BOOK)) + sitDown +
             listOf(RoutineStep.Act(AnimationType.BOOK), Linger(12_000L)) + standUp + RoutineStep.Drop).toTypedArray()),
@@ -459,6 +524,21 @@ object PlayQuests {
     private fun depart(at: Int, routine: PlayRoutine) = Step(StepKind.DEPART, at, routine)
     private fun moment(at: Int, place: Place, vararg steps: RoutineStep, reward: Reward? = null) =
         Step(StepKind.EXPERIENCE, at, PlayRoutine(listOf(GoToPlace(place)) + steps), reward)
+    /**
+     * Eine Begegnung: stehen bleiben, sich umsehen, warten - in diesem Verweilen kommt der
+     * Bewohner dazu, und solange er bleibt, wartet der Ablauf (siehe PlayVisitWindow).
+     */
+    private fun encounter(at: Int, place: Place) = Step(
+        StepKind.ENCOUNTER, at,
+        r(
+            GoToPlace(place), Stroll(0.34f), Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+            Linger(ENCOUNTER_WAIT_MS), Stir(AvatarAnimations.Fidget.SHAKE), Linger(3_000L)
+        )
+    )
+
+    /** So lange wartet das Wesen bei einer Begegnung auf den anderen. */
+    const val ENCOUNTER_WAIT_MS = 24_000L
+
     private fun homecoming(at: Int, routine: PlayRoutine, reward: Reward? = null) =
         Step(StepKind.RETURN, at, routine, reward)
 
@@ -520,6 +600,7 @@ object PlayQuests {
                 Take(PlayEffects.Carried.MAP), Quest(Effect.MAP_STUDY), Linger(5_000L), Quest(null),
                 Stir(AvatarAnimations.Fidget.STRETCH)
             ),
+            encounter(h(16, 45), Place.MOUNTAINS),
             moment(
                 h(18, 30), Place.BEACH,
                 Take(PlayEffects.Carried.MAP), Stroll(0.5f), Quest(Effect.MAP_STUDY), Linger(3_000L),
@@ -581,6 +662,7 @@ object PlayQuests {
                 Stroll(0.4f), RoutineStep.Act(AnimationType.MINDFULNESS), Linger(2_000L),
                 Quest(Effect.SPELL_SPARKS), Linger(6_000L), Quest(null), Stir(AvatarAnimations.Fidget.SHAKE)
             ),
+            encounter(h(14, 15), Place.FOREST),
             moment(
                 h(16), Place.POND,
                 Stroll(0.5f), Quest(Effect.SPELL_SPARKS), Linger(6_000L), Quest(null),
@@ -628,6 +710,7 @@ object PlayQuests {
                 Stroll(0.8f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(5_000L),
                 Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L)
             ),
+            encounter(h(10), Place.PLAINS),
             moment(
                 h(11, 30), Place.SWAMP,
                 Stroll(0.5f), Stir(AvatarAnimations.Fidget.SHAKE), Linger(3_000L),
@@ -683,6 +766,7 @@ object PlayQuests {
                 Stroll(0.5f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L),
                 Stir(AvatarAnimations.Fidget.STRETCH)
             ),
+            encounter(h(12), Place.FOREST),
             moment(
                 h(13, 30), Place.MOUNTAINS,
                 Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L),
