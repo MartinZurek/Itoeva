@@ -133,7 +133,7 @@ data class DecisionState(
      * die bisherige Wahl, und die einzige, solange ein laufender Plan noch nicht fertig ist.
      */
     val goal: GoalKind? by lazy {
-        com.notime.glyphsim.living.LivingSimulation.nextGoal(agent, world, goalInfluence)
+        com.notime.glyphsim.living.LivingSimulation.nextGoal(agent, world, goalInfluence, insteadOfWaiting = true)
     }
 
     /** Die Zielbewertung des Kerns, fuer Zulaessigkeit und Merkmale. */

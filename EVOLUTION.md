@@ -669,6 +669,33 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-29 - Abends kein Stillstand mehr
+
+**Anlass:** Beobachtung des Nutzers: Abends tat das Wesen etwas, blieb dann stehen, huepfte ab und
+zu, ging nirgends mehr hin und tat nichts mehr - "zu langweilig, ich glaube, das ist ein Fehler".
+
+**Befund (gemessen mit dem echten Entscheidungsweg ueber sechs Wesen und je sechs Tage):**
+Zwischen 20 und 24 Uhr blieb rund ein Drittel aller Runden leer. Fast immer wollte der Kern essen,
+hatte weder Vorrat noch Geld, und Laden und Arbeit waren zu. Das Ziel blieb stehen, weil der
+Hunger blieb; jede Runde scheiterte erneut am fehlenden Weg - bis zum Morgen. Sichtbar blieben
+nur die Zwischenregungen (Freudenhuepfer, Umsehen).
+
+**Geaendert:**
+- `LivingSimulation.step(..., insteadOfWaiting = true)`: Gibt es zum Ziel keinen Weg, weicht es
+  fuer diese Runde dem naechstbesten Ziel, fuer das es einen gibt. `nextGoal` rechnet denselben
+  Ausweg, damit die Decision Policy dasselbe Ziel sieht. Nur fuer das Wesen im Bild - die
+  Einwohner im Hintergrund warten weiter, ihr Herumstehen draussen ist dort das Beisammensein
+  (LivingPopulationTest).
+- Drangt gar nichts, beschaeftigt sich das Wesen an Ort und Stelle mit dem Thema der Tageswahl
+  (`PlayMap.onTheSpot`) statt still zu stehen - ohne Ortswechsel, ohne Wirkung im Kern; nachts
+  nicht.
+
+- **Tests (`TESTED BEHAVIOR`):** 786 Offline-Tests gruen (neu: ohne Weg zum Essen tut das Wesen
+  etwas anderes; Abdeckung um die Lage "Weg zur schliessenden Arbeit" ergaenzt, die vorher nur
+  nebenbei durch den Stillstand entstand). Leere Abendrunden 20-24 Uhr: vorher ~35 %, danach ~20 %
+  im Kern - und diese zeigen jetzt eine Beschaeftigung vor Ort.
+- **Ungeprueft (`UNVERIFIED`):** der Abend am Geraet.
+
 ### 2026-09-29 - Die Weltkarte: logische Wege und Handeln vor Ort
 
 **Anlass:** Beobachtung des Nutzers: Das Wesen war auf der Expedition im Gebirge und stand im
