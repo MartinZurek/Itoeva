@@ -669,6 +669,45 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-29 - Die Weltkarte: logische Wege und Handeln vor Ort
+
+**Anlass:** Beobachtung des Nutzers: Das Wesen war auf der Expedition im Gebirge und stand im
+naechsten Bild auf dem Sportplatz beim Hanteltraining; nach einer gefuetterten Trink-Erinnerung
+ging es aus der Wildnis nach Hause, um sich dort etwas zu holen. "Es muss eine Art Mappe geben,
+wo er sich gerade befindet, und dann gibt es nur logische Wege irgendwo anders hin." Entschieden:
+erst Wegenetz und Handeln vor Ort, danach die sichtbare Karte; lange Wege werden **richtig
+gereist**.
+
+**Geaendert:**
+- **`PlayMap` - die Karte als Wegenetz:** vier Gegenden (daheim, Stadt, Gruen, Wildnis), jeder Ort
+  mit festen Nachbarn. Aus der Wohnung geht es nur durchs Wohnzimmer auf die Strasse; das Gruen
+  liegt hinter dem Park, die Wildnis hinter Wiese und Wald; Grotte und Lager am Gebirge.
+- **Kein Sprung mehr:** `DockScreen.moveToPlace` geht den kuerzesten Weg Ort fuer Ort
+  (`stepToPlace`). Draussen bleibt das Wesen an jedem Zwischenort stehen, sieht sich um und geht
+  zum anderen Bildrand weiter (`passThrough`); durch Zimmer und Strassen geht es zuegig.
+- **Vor Ort statt heimlaufen** (`PlayMap.fromHere`): Wer im Gruen oder in der Wildnis ist und
+  etwas tun will, das mindestens drei Orte weiter drinnen stattfaende, tut es an Ort und Stelle -
+  trinken aus dem Proviant, rasten und lesen auf Bank oder Stein, Achtsamkeit mit Blick,
+  skizzieren. Schlafen, Arbeiten und der Schreibtisch bleiben Wege. Das gilt fuer die eigene Wahl
+  wie fuer erbetene und gefuetterte Themen.
+- **Sport ohne Sportplatz:** sprinten und springen, Saltos (neue Regung `Fidget.FLIP`, die Figur
+  dreht sich in Vierteln um ihre Mitte), oder etwas stemmen, das da liegt - im Gebirge und am
+  Strand ein Stein, im Wald und am Lager ein Stamm (`TrainingGear`). Auch die Skillbaum-Erinnerung
+  "Kraft & Ausdauer" und der Ballsport ueben fern vom Sportplatz vor Ort; Musik spielt draussen,
+  wo das Wesen gerade ist.
+- **Umwege fallen weg** (`PlayMap.trimmedFrom`): Ablaeufe, die fuer den Start daheim geschrieben
+  sind (erst auf die Strasse, dann hinaus), fuehren von draussen direkt zum Ziel.
+
+- **Tests (`TESTED BEHAVIOR`):** 785 Offline-Tests gruen (neu `PlayMapTest`: alles erreichbar, nur
+  Nachbarschritte, keine Gegend uebersprungen, Gebirge -> Sportplatz ueber Wiese und Park, Durst
+  im Gebirge ohne Heimweg, Ausflug ohne Stadt-Umweg, Vor-Ort-Varianten ohne Ortswechsel; Kraft &
+  Ausdauer mit Stein/Stamm). Der Salto erfuellt die Rasterregeln aus `AvatarAnimationsTest`
+  (lokal nachgeprueft, der Test selbst laeuft nur in der CI).
+- **Ungeprueft (`UNVERIFIED`):** Wie sich lange Wege am Geraet anfuehlen (Dauer, Musikwechsel an
+  Zwischenorten); Stein und Stamm im Bild.
+- **Weiterhin offen:** Stufe C - die Karte zum Anschauen (Pixelkarte ohne Text, eingeblendet beim
+  Aufbruch in eine andere Gegend und zur Orientierung).
+
 ### 2026-09-29 - Reisen, Stufe 3: mehrtaegige Reisen mit Lager
 
 **Anlass:** Freigabe des Nutzers fuer Stufe 3 des Reiseplans ("Go fuer Stufe 3"): Reisen, die

@@ -55,6 +55,13 @@ object PlayEffects {
     /** Krafttraining mit einer Hantel. */
     enum class TrainingPhase { WARM_UP, LIFT, REST }
 
+    /**
+     * **Was gestemmt wird.** Auf dem Sportplatz die Hantel; draussen, fern von jedem Sportplatz,
+     * das, was da liegt - ein Stein im Gebirge und am Strand, ein Stamm im Wald (siehe
+     * [PlayMap.gearAt]).
+     */
+    enum class TrainingGear { DUMBBELL, STONE, LOG }
+
     /** Gitarre stimmen, spielen und mit einem Akkord enden. */
     enum class MusicPhase { TUNE, PLAY, FINALE }
 
@@ -817,8 +824,10 @@ object PlayEffects {
         avatarCellX: Int,
         avatarCellY: Int,
         phase: TrainingPhase,
-        scenePhase: Int
+        scenePhase: Int,
+        gear: TrainingGear = TrainingGear.DUMBBELL
     ): List<SceneCell> {
+        if (gear != TrainingGear.DUMBBELL) return naturalWeightCells(avatarCellX, avatarCellY, phase, scenePhase, gear)
         val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
         val floorY = groundY + 1
         // **Zwei Bilder im Sekundentakt.** Der alte `pulse` kannte nur 0 und 1 und wechselte
@@ -880,6 +889,55 @@ object PlayEffects {
 
         return (mat.render(carve = false) + bar.render(grounded = false) + extra)
             .distinctBy { it.x to it.y }
+    }
+
+    /**
+     * Stein oder Stamm statt Hantel: dieselbe Bewegung (vor der Brust wippen, ueber den Kopf
+     * stemmen, ablegen), aber ohne Matte - es ist ja kein Sportplatz. Beim Ablegen liegt das
+     * Stueck neben der Figur am Boden.
+     */
+    private fun naturalWeightCells(
+        avatarCellX: Int,
+        avatarCellY: Int,
+        phase: TrainingPhase,
+        scenePhase: Int,
+        gear: TrainingGear
+    ): List<SceneCell> {
+        val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val floorY = groundY + 1
+        val hub = when (phase) {
+            TrainingPhase.WARM_UP -> (PlayInk.swing(scenePhase, 8) * 3).toInt()
+            TrainingPhase.LIFT -> (PlayInk.swing(scenePhase, 14) * 6).toInt()
+            TrainingPhase.REST -> 0
+        }
+        val centerX = if (phase == TrainingPhase.REST) avatarCellX + 20 else avatarCellX + 8
+        val centerY = when (phase) {
+            TrainingPhase.WARM_UP -> groundY - 4 - hub
+            TrainingPhase.LIFT -> groundY - 14 - hub
+            TrainingPhase.REST -> groundY - 2
+        }
+        val piece = PlayInk.Sketch(centerX, centerY, 1, UNBOUNDED, floorY)
+        when (gear) {
+            TrainingGear.STONE -> piece.art(
+                -4, -2,
+                "  #####  ",
+                " ##+####  ",
+                "####+####",
+                "#########",
+                " ####### "
+            )
+            else -> piece.art(
+                -8, -1,
+                " ############### ",
+                "#+#+#+#+#+#+#+#+##",
+                " ############### "
+            )
+        }
+        if (phase == TrainingPhase.LIFT) {
+            piece.spark(-6, -4)
+            piece.spark(6, -4)
+        }
+        return piece.render(grounded = phase == TrainingPhase.REST).distinctBy { it.x to it.y }
     }
 
     fun musicCells(

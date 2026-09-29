@@ -55,7 +55,11 @@ sealed interface RoutineStep {
     data class Basketball(val phase: PlayEffects.BasketballPhase) : RoutineStep
 
     /** Eine Phase des Krafttrainings auf dem Sportplatz. */
-    data class Training(val phase: PlayEffects.TrainingPhase) : RoutineStep
+    data class Training(
+        val phase: PlayEffects.TrainingPhase,
+        /** Hantel auf dem Sportplatz, draussen Stein oder Stamm (siehe [PlayMap.gearAt]). */
+        val gear: PlayEffects.TrainingGear = PlayEffects.TrainingGear.DUMBBELL
+    ) : RoutineStep
 
     /** Eine Phase des Musizierens mit Gitarre und sichtbaren Noten. */
     data class Music(val phase: PlayEffects.MusicPhase) : RoutineStep

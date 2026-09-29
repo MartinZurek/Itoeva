@@ -4,6 +4,7 @@ import com.notime.glyphcore.data.AnimationNode
 import com.notime.glyphcore.data.AnimationTree
 import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.matrix.PlayEffects
+import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.PlayRoutine
 import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.RoutineStep
@@ -185,7 +186,10 @@ object AvatarActivityPlans {
         val dribblingLearned = DRIBBLING_NODE in unlocked
         val shotLearned = SHOT_NODE in unlocked
 
-        val localPractice = context.place in LOCAL_SPORT_PLACES
+        // Fern vom Sportplatz (Gebirge, Wald, Strand ...) wird vor Ort geuebt, statt den ganzen
+        // Weg zurueck in die Stadt zu gehen (siehe PlayMap.staysLocal).
+        val localPractice = context.place in LOCAL_SPORT_PLACES ||
+            PlayMap.staysLocal(context.place, PlayScene.Place.SPORT)
         val targetPlace = if (localPractice) context.place else PlayScene.Place.SPORT
         val anchor = anchorFor(targetPlace)
 
@@ -260,13 +264,18 @@ object AvatarActivityPlans {
         val strengthLearned = STRENGTH_NODE in unlocked
         val liftLearned = LIFT_NODE in unlocked
 
-        val localPractice = context.place in LOCAL_SPORT_PLACES
+        // Fern vom Sportplatz (Gebirge, Wald, Strand ...) wird vor Ort geuebt, statt den ganzen
+        // Weg zurueck in die Stadt zu gehen (siehe PlayMap.staysLocal).
+        val localPractice = context.place in LOCAL_SPORT_PLACES ||
+            PlayMap.staysLocal(context.place, PlayScene.Place.SPORT)
         val targetPlace = if (localPractice) context.place else PlayScene.Place.SPORT
         val anchor = anchorFor(targetPlace)
+        // Draussen, fern vom Sportplatz: ein Stein oder Stamm statt der Hantel.
+        val gear = PlayMap.gearAt(targetPlace)
 
         val skill = buildList {
             if (liftLearned) {
-                add(RoutineStep.Training(PlayEffects.TrainingPhase.LIFT))
+                add(RoutineStep.Training(PlayEffects.TrainingPhase.LIFT, gear))
                 add(RoutineStep.Linger(5_000L))
             }
         }
@@ -280,12 +289,12 @@ object AvatarActivityPlans {
             }
             add(RoutineStep.Stroll(anchor))
 
-            add(RoutineStep.Training(PlayEffects.TrainingPhase.WARM_UP))
+            add(RoutineStep.Training(PlayEffects.TrainingPhase.WARM_UP, gear))
             add(RoutineStep.Linger(if (strengthLearned) 4_000L else 2_500L))
 
             addAll(skill)
 
-            add(RoutineStep.Training(PlayEffects.TrainingPhase.REST))
+            add(RoutineStep.Training(PlayEffects.TrainingPhase.REST, gear))
             add(RoutineStep.Linger(3_000L))
         }
 
@@ -339,7 +348,10 @@ object AvatarActivityPlans {
         val musicLearned = MUSIC_NODE in unlocked
         val singLearned = SING_NODE in unlocked
 
-        val localStage = context.place in LOCAL_MUSIC_PLACES
+        // Draussen in der Wildnis wird dort gespielt, wo das Wesen gerade ist - am Lagerfeuer,
+        // am Strand -, statt fuer ein Lied in den Park zurueckzulaufen.
+        val localStage = context.place in LOCAL_MUSIC_PLACES ||
+            PlayMap.staysLocal(context.place, PlayScene.Place.PARK)
         val targetPlace = if (localStage) context.place else PlayScene.Place.PARK
         val anchor = anchorFor(targetPlace)
 
