@@ -69,13 +69,27 @@ class DecisionCoverageTest {
 
     private val kandidaten by lazy { lagen.flatMap { it.second } }
 
-    /** Zwei Lagen, die ein Tag ohne Gaeste nie herstellt: ein Gast im Wohnzimmer, Einsamkeit. */
+    /** Lagen, die die simulierten Tage nicht von selbst herstellen: ein Gast im Wohnzimmer, der Weg zur schliessenden Arbeit. */
     private fun besondereLagen(): List<Pair<DecisionState, List<ActionCandidate>>> {
         val gast = DecisionTestSupport.state(
             minuteOfDay = 19 * 60,
             needs = mapOf(NeedKind.SOCIAL to 0.9)
         ).let { it.copy(nearbyProfiles = setOf("resident:park:puffling"), world = it.world.copy(nearbyProfiles = setOf("resident:park:puffling"))) }
-        return listOf(gast to DecisionCandidates.generate(gast))
+        // Hungrig, ohne Geld und Vorrat, kurz vor Feierabend: Der Weg zur Arbeit endet vor
+        // verschlossener Tuer (TRAVEL ohne Arbeit). Frueher entstand diese Lage nebenbei, weil das
+        // Wesen abends auf einem Ziel ohne Weg haengen blieb - seit es dann etwas anderes tut
+        // (LivingSimulation.step, insteadOfWaiting), kommt sie in den Tagen hier nicht mehr vor.
+        val feierabend = DecisionTestSupport.state(
+            minuteOfDay = 17 * 60 + 45,
+            place = PlayScene.Place.CRAFT,
+            needs = NeedKind.entries.associateWith { if (it == NeedKind.HUNGER) 1.0 else 0.0 },
+            coins = 0,
+            portions = 0
+        )
+        return listOf(
+            gast to DecisionCandidates.generate(gast),
+            feierabend to DecisionCandidates.generate(feierabend)
+        )
     }
 
     /** Die Aktivitaetsschritte eines Ablaufs - bleiben bei Ortsvorsatz und Arbeitsweg-Zuschnitt erhalten. */

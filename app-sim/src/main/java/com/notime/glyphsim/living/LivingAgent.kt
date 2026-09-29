@@ -266,7 +266,14 @@ object LivingSimulation {
          * wird und das Ziel zu [UtilitySelector.eligible] gehoert - ein laufendes Ziel bleibt,
          * und ein Ziel ohne Druck oder ohne Weg laesst sich nicht hineinreichen.
          */
-        chosenGoal: GoalKind? = null
+        chosenGoal: GoalKind? = null,
+        /**
+         * Ob ein Ziel ohne Weg fuer diese Runde einem erreichbaren weicht (siehe unten), statt zu
+         * warten. Fuer das Wesen im Bild ja; die Einwohner im Hintergrund warten weiter - ihr
+         * Herumstehen draussen ist dort genau das Beisammensein, das die Bevoelkerung zeigen soll
+         * (siehe LivingPopulationTest).
+         */
+        insteadOfWaiting: Boolean = false
     ): StepResult {
         val ereignisse = mutableListOf<LivingEvent>()
         var zustand = agent
@@ -302,7 +309,30 @@ object LivingSimulation {
         // 2. Plan besorgen, falls keiner steht.
         if (zustand.plan == null || zustand.plan?.isDone == true) {
             val plan = Planner.planFor(ziel, welt, zustand, interest, leisureSite)
-            if (plan == null) {
+            // **Kein Weg zum Ziel heisst nicht: nichts tun.** Gemeldet am 29.09.: Abends stand
+            // das Wesen nur noch da und huepfte ab und zu. Gemessen: Zwischen 20 und 24 Uhr
+            // blieb rund ein Drittel aller Runden leer - fast immer mit dem Ziel ESSEN, ohne
+            // Vorrat, ohne Geld, Laden und Arbeit zu. Das Ziel blieb stehen, weil der Hunger
+            // blieb, und jede Runde scheiterte erneut an derselben Stelle, bis zum Morgen.
+            // Jetzt wird es fuer diese Runde zurueckgestellt, und das naechstbeste Ziel, fuer
+            // das es einen Weg gibt, kommt dran. Erst wenn es gar keines gibt, wird gewartet.
+            val ausweg = if (plan == null && insteadOfWaiting) {
+                UtilitySelector.eligible(zustand, welt, influence)
+                    .asSequence()
+                    .filter { it.goal != ziel }
+                    .mapNotNull { score ->
+                        Planner.planFor(score.goal, welt, zustand, interest, leisureSite)?.let { score.goal to it }
+                    }
+                    .firstOrNull()
+            } else {
+                null
+            }
+            if (plan == null && ausweg != null) {
+                ereignisse += event(welt, LivingEventKind.NO_PLAN, goal = ziel)
+                ereignisse += event(welt, LivingEventKind.GOAL_CHOSEN, goal = ausweg.first)
+                ereignisse += event(welt, LivingEventKind.PLAN_MADE, goal = ausweg.first)
+                zustand = zustand.copy(goal = ausweg.first, plan = ausweg.second)
+            } else if (plan == null) {
                 val ohneWeg = event(welt, LivingEventKind.NO_PLAN, goal = ziel)
                 return StepResult(
                     agent = zustand.copy(
@@ -313,21 +343,24 @@ object LivingSimulation {
                     world = welt.advanced(IDLE_MINUTES),
                     events = ereignisse + ohneWeg
                 )
+            } else {
+                zustand = zustand.copy(plan = plan)
+                ereignisse += event(welt, LivingEventKind.PLAN_MADE, goal = ziel)
             }
-            zustand = zustand.copy(plan = plan)
-            ereignisse += event(welt, LivingEventKind.PLAN_MADE, goal = ziel)
         }
 
         // 3. Naechsten Schritt pruefen - jetzt, nicht beim Planen.
+        // Das Ziel kann oben gewechselt haben (Ausweg), deshalb frisch gelesen.
+        val verfolgt = zustand.goal ?: ziel
         val plan = zustand.plan ?: error("Plan wurde soeben gesetzt")
         val schritt = plan.next ?: error("Ein fertiger Plan wurde oben ersetzt")
         val hindernis = schritt.blockedBy(welt)
         if (hindernis != null) {
             val blockiert = event(
                 welt, LivingEventKind.ACTION_BLOCKED,
-                goal = ziel, action = schritt.kind, blockedBy = hindernis
+                goal = verfolgt, action = schritt.kind, blockedBy = hindernis
             )
-            val verworfen = event(welt, LivingEventKind.PLAN_ABANDONED, goal = ziel)
+            val verworfen = event(welt, LivingEventKind.PLAN_ABANDONED, goal = verfolgt)
             // Der Plan faellt, das Ziel bleibt. Der naechste Schritt leitet aus derselben
             // Absicht einen neuen Weg ab - oder meldet, dass es keinen gibt.
             val episode = Episode.from(blockiert, valence = -1)
@@ -345,7 +378,7 @@ object LivingSimulation {
 
         // 4. Ausfuehren. Jede Wirkung - auch Erinnerung, Geschmack und Beziehung - laeuft
         // durch ActionOutcome und genau diesen Action.applyTo-Aufruf.
-        val angewandt = schritt.applyTo(zustand, welt, ziel)
+        val angewandt = schritt.applyTo(zustand, welt, verfolgt)
         zustand = angewandt.agent.copy(plan = plan.advanced())
         welt = angewandt.world
         return StepResult(
@@ -362,8 +395,23 @@ object LivingSimulation {
      * Fuer die Decision Policy: Sie waehlt zwischen den sichtbaren Ausformungen EINES Ziels und
      * muss es deshalb vorher kennen. Dieselbe Bedingung wie in [step], nicht nachgebaut.
      */
-    fun nextGoal(agent: AgentState, world: WorldState, influence: GoalInfluence? = null): GoalKind? =
-        if (keepsGoal(agent)) agent.goal else UtilitySelector.choose(agent, world, influence)
+    fun nextGoal(
+        agent: AgentState,
+        world: WorldState,
+        influence: GoalInfluence? = null,
+        insteadOfWaiting: Boolean = false
+    ): GoalKind? {
+        val ziel = (if (keepsGoal(agent)) agent.goal else UtilitySelector.choose(agent, world, influence))
+            ?: return null
+        if (!insteadOfWaiting) return ziel
+        // Derselbe Ausweg wie in [step]: Laeuft kein Plan und gibt es keinen Weg zum Ziel, kommt
+        // das naechstbeste erreichbare Ziel dran.
+        val laeuft = agent.goal == ziel && agent.plan != null && !agent.plan.isDone
+        if (laeuft || Planner.planFor(ziel, world, agent) != null) return ziel
+        return UtilitySelector.eligible(agent, world, influence)
+            .firstOrNull { it.goal != ziel && Planner.planFor(it.goal, world, agent) != null }
+            ?.goal ?: ziel
+    }
 
     /** Ob das laufende Ziel bleibt: Es gibt eins, und es ist weder gestillt noch ohne Plan fertig. */
     fun keepsGoal(agent: AgentState): Boolean {

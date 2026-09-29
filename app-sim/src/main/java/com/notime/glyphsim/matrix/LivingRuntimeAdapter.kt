@@ -274,7 +274,9 @@ object LivingRuntimeAdapter {
             startWorld,
             goalInfluence,
             interestActionFor(safeInterestTopic(agent.goal, interestTopic)),
-            chosenGoal = chosenGoal
+            chosenGoal = chosenGoal,
+            // Das Wesen im Bild wartet nie auf ein Ziel ohne Weg (siehe LivingSimulation.step).
+            insteadOfWaiting = true
         )
         val firstAction = completedActions(result).firstOrNull() ?: return result to null
 

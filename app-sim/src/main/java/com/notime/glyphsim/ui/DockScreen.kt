@@ -4066,6 +4066,22 @@ fun DockScreen(
                                 livingWorld = prepared.result.world
                                 livingStore.save(prepared.result.agent, prepared.result.world)
                                 LivingObservationFeed.record(prepared.result)
+                                // **Nichts draengt - dann eben etwas Kleines, hier.** Gemeldet am
+                                // 29.09.: Abends stand das Wesen minutenlang nur da und huepfte ab
+                                // und zu. Der Kern hatte in solchen Runden kein Ziel (oder keines
+                                // mit Weg), und dann geschah schlicht nichts. Jetzt beschaeftigt es
+                                // sich an Ort und Stelle mit dem, was die Tageswahl ohnehin
+                                // ausgesucht hat (siehe PlayMap.onTheSpot) - ohne Ortswechsel und
+                                // ohne Wirkung im Kern, nur damit keine leere Weile entsteht.
+                                // Nachts nicht: Dann wird geschlafen.
+                                if (phaseJetzt != PlayAmbientActivity.DayPhase.NIGHT) {
+                                    val muesse = PlayMap.onTheSpot(interestTopic, currentPlace, Random.nextInt(1_000))
+                                        ?: PlayMap.onTheSpot(AnimationType.GENERAL, currentPlace, Random.nextInt(1_000))
+                                    if (muesse != null) {
+                                        currentTopic = interestTopic
+                                        runRoutine(muesse, species, applyLegacyEconomy = false)
+                                    }
+                                }
                                 continue
                             }
 

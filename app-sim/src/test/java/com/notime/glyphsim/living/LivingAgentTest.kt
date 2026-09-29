@@ -206,6 +206,26 @@ class LivingAgentTest {
         assertTrue("Die Zeit muss trotzdem laufen", ergebnis.world.absoluteMinute > nachts.absoluteMinute)
     }
 
+    /**
+     * Gemeldet am 29.09.: Abends stand das Wesen nur noch herum. Es wollte essen, hatte weder
+     * Vorrat noch Geld, Laden und Arbeit waren zu - und wartete bis zum Morgen. Das Wesen im Bild
+     * tut dann etwas anderes, fuer das es einen Weg gibt.
+     */
+    @Test
+    fun `ohne Weg zum Essen tut das Wesen im Bild etwas anderes`() {
+        val nachts = welt(coins = 0, portions = 0, openSites = setOf(LivingSite.HOME))
+        val hungrigUndGelangweilt = agent(0.95, AvatarSpecies.PUFFLING, NeedKind.FUN to 0.8)
+            .copy(goal = GoalKind.GET_FOOD)
+        val ergebnis = LivingSimulation.step(hungrigUndGelangweilt, nachts, insteadOfWaiting = true)
+        assertTrue(ergebnis.events.any { it.kind == LivingEventKind.NO_PLAN })
+        assertTrue("Es wird etwas getan", ergebnis.events.any { it.kind == LivingEventKind.ACTION_DONE })
+        assertTrue(ergebnis.agent.goal != GoalKind.GET_FOOD)
+        assertEquals(
+            ergebnis.agent.goal,
+            LivingSimulation.nextGoal(hungrigUndGelangweilt, nachts, insteadOfWaiting = true)
+        )
+    }
+
     // ================= Erklaerbarkeit =================
 
     @Test
