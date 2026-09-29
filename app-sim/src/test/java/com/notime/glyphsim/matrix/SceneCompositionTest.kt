@@ -413,11 +413,16 @@ class SceneCompositionTest {
         // absichtlich dieselbe (sie laeuft durchs ganze Bild, damit kein Kasten entsteht). Sie
         // mitzuzaehlen verwaesserte jeden Vergleich - zwei voellig verschiedene Landschaften
         // haetten allein dadurch schon die halbe Flaeche gemeinsam.
+        //
+        // Gleich heisst: an derselben Stelle DERSELBE TON. Seit jeder Park einen flaechigen
+        // Hintergrund hat (Wueste, Felsnadeln, Stadt, Wald ...), ist in jeder Landschaft fast jede
+        // Zelle ueber dem Boden belegt - ein Vergleich nur der Belegung hielte dann alle sechs fuer
+        // dieselbe. Verglichen wird deshalb ueber die Vereinigung beider Bilder.
         val drawn = AvatarSpecies.entries.associateWith { species ->
             PlayScene.build(
                 PlayScene.Place.PARK, 0, width, floorY,
                 PlayAmbientActivity.DayPhase.MIDDAY, species = species
-            ).filter { it.y < floorY }.map { it.x to it.y }.toSet()
+            ).filter { it.y < floorY }.associate { (it.x to it.y) to it.brightness }
         }
 
         for (a in AvatarSpecies.entries) {
@@ -425,8 +430,10 @@ class SceneCompositionTest {
                 if (a.ordinal >= b.ordinal) continue
                 val cellsA = drawn.getValue(a)
                 val cellsB = drawn.getValue(b)
-                val shared = cellsA.count { it in cellsB }
-                val overlap = shared.toFloat() / minOf(cellsA.size, cellsB.size)
+                val shared = cellsA.count { (pos, hell) ->
+                    cellsB[pos]?.let { kotlin.math.abs(it - hell) < 60 } == true
+                }
+                val overlap = shared.toFloat() / (cellsA.keys + cellsB.keys).size
                 assertTrue(
                     "Die Landschaften von $a und $b stimmen zu ${(overlap * 100).toInt()} % " +
                         "ueberein - dann ist es dieselbe Landschaft mit anderer Figur." +
