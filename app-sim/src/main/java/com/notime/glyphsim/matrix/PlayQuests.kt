@@ -91,6 +91,12 @@ object PlayQuests {
         /** Heimkehr am Abend. */
         RETURN,
 
+        /** Auf mehrtaegigen Reisen: das Nachtlager aufschlagen, statt heimzugehen. */
+        CAMP,
+
+        /** Am Morgen danach: das Lager abbrechen und weiterziehen. */
+        BREAK_CAMP,
+
         /** Das Ei waermen - zu Hause, morgens und abends. */
         CARE
     }
@@ -114,6 +120,9 @@ object PlayQuests {
         val steps: List<Step>
     ) {
         val returnMinute: Int? get() = steps.firstOrNull { it.kind == StepKind.RETURN }?.atMinute
+
+        /** Wann der Tag unterwegs endet - mit der Heimkehr oder im Nachtlager. */
+        val endMinute: Int? get() = steps.firstOrNull { it.kind == StepKind.RETURN || it.kind == StepKind.CAMP }?.atMinute
     }
 
     /**
@@ -130,7 +139,9 @@ object PlayQuests {
         /** Wie oft alle Reisen schon durchlaufen sind - danach wiederholen sie sich. */
         val round: Int = 0,
         /** Der Questtag, an dem das Ei nach Hause kam. */
-        val eggFoundDay: Long = Long.MIN_VALUE
+        val eggFoundDay: Long = Long.MIN_VALUE,
+        /** Der wievielte Tag der Reise ([quest]) heute ist - 0 am Tag des Aufbruchs. */
+        val journeyDay: Int = 0
     )
 
     /** Was jetzt zu tun ist: einen Schritt spielen, oder einen verpassten ueberspringen. */
@@ -179,9 +190,20 @@ object PlayQuests {
             departed = false,
             journeyDone = false
         )
-        if (!progress.journeyDone) return fresh
-        val (next, round) = nextQuest(progress.quest, progress.round)
-        return fresh.copy(quest = next, round = round)
+        if (progress.journeyDone) {
+            val (next, round) = nextQuest(progress.quest, progress.round)
+            return fresh.copy(quest = next, round = round, journeyDay = 0)
+        }
+        // Mehrtaegige Reisen: Wer draussen ist, wacht draussen auf. Nach dem Aufbruch geht es am
+        // naechsten Morgen mit dem naechsten Reisetag weiter (auch wenn die App die Nacht ueber
+        // aus war - dann hat das Wesen eben ohne Zuschauer gelagert); am letzten Tag bleibt es
+        // draussen, bis die Heimkehr gespielt ist.
+        val days = journeyFor(progress.quest).days.size
+        if (progress.departed && progress.journeyDay < days - 1) {
+            return fresh.copy(journeyDay = progress.journeyDay + 1, departed = true)
+        }
+        if (progress.journeyDay > 0) return fresh.copy(departed = true)
+        return fresh
     }
 
     /**
@@ -200,15 +222,19 @@ object PlayQuests {
 
     /** Der Plan des Tages, auf dem [progress] steht. */
     fun planFor(progress: Progress): DayPlan {
-        val kind = dayKind(progress.questDayNumber)
-        val care = careSteps(progress, kind)
+        // Wer auf einer mehrtaegigen Reise draussen ist, hat keinen Tag daheim.
+        val out = progress.journeyDay > 0
+        val kind = if (out) DayKind.TRAVEL else dayKind(progress.questDayNumber)
+        val days = journeyFor(progress.quest).days
+        val today = days[progress.journeyDay.coerceIn(0, days.size - 1)]
+        val homeTonight = kind == DayKind.HOME || today.steps.any { it.kind == StepKind.RETURN }
+        val care = careSteps(progress, kind, homeMorning = !out, homeEvening = homeTonight)
         if (kind == DayKind.HOME) return DayPlan(kind, null, emptyList(), care)
-        val journey = journeyFor(progress.quest)
         return DayPlan(
             kind,
             progress.quest,
-            journey.stations,
-            (journey.steps + care).sortedBy { it.atMinute }
+            today.stations,
+            (today.steps + care).sortedBy { it.atMinute }
         )
     }
 
@@ -234,10 +260,11 @@ object PlayQuests {
             stationNow != null && placeOfStep != stationNow
         val overtaken = step.reward == null && (nextAt != null && m >= nextAt || leftBehind)
         return when (step.kind) {
-            StepKind.DEPART -> if (m >= (plan.returnMinute ?: Int.MAX_VALUE)) Next.Skip else Next.Run(step)
+            StepKind.DEPART -> if (m >= (plan.endMinute ?: Int.MAX_VALUE)) Next.Skip else Next.Run(step)
             StepKind.EXPERIENCE, StepKind.ENCOUNTER ->
                 if (!progress.departed || overtaken) Next.Skip else Next.Run(step)
-            StepKind.RETURN -> if (!progress.departed) Next.Skip else Next.Run(step)
+            StepKind.RETURN, StepKind.CAMP -> if (!progress.departed) Next.Skip else Next.Run(step)
+            StepKind.BREAK_CAMP -> Next.Run(step)
             StepKind.CARE -> if (overtaken) Next.Skip else Next.Run(step)
         }
     }
@@ -280,7 +307,9 @@ object PlayQuests {
         if (!progress.departed || progress.journeyDone) return null
         val plan = planFor(progress)
         if (plan.kind != DayKind.TRAVEL) return null
-        val done = plan.steps.take(progress.stepsDone)
+        // Was an frueheren Tagen dieser Reise gefunden wurde, zaehlt ebenso wie das von heute.
+        val earlier = journeyFor(progress.quest).days.take(progress.journeyDay).flatMap { it.steps }
+        val done = earlier + plan.steps.take(progress.stepsDone)
         fun found(effect: Effect) = done.any { step -> step.routine.steps.any { it is RoutineStep.Quest && it.effect == effect } }
         return when (progress.quest) {
             Quest.TREASURE -> if (found(Effect.CHEST_FOUND)) PlayEffects.Carried.CHEST else PlayEffects.Carried.MAP
@@ -346,7 +375,8 @@ object PlayQuests {
         progress.journeyDone.toString(),
         progress.rewards.joinToString(",") { it.name },
         progress.round.toString(),
-        progress.eggFoundDay.toString()
+        progress.eggFoundDay.toString(),
+        progress.journeyDay.toString()
     ).joinToString(";")
 
     fun decode(text: String?): Progress {
@@ -355,7 +385,7 @@ object PlayQuests {
         fun rewardsOf(field: String) =
             field.split(",").mapNotNull { n -> Reward.entries.firstOrNull { it.name == n } }.toSet()
         return when (parts.size) {
-            8 -> Progress(
+            8, 9 -> Progress(
                 quest = quest,
                 questDayNumber = parts[1].toLongOrNull() ?: Long.MIN_VALUE,
                 stepsDone = parts[2].toIntOrNull()?.coerceAtLeast(0) ?: 0,
@@ -363,7 +393,9 @@ object PlayQuests {
                 journeyDone = parts[4] == "true",
                 rewards = rewardsOf(parts[5]),
                 round = parts[6].toIntOrNull()?.coerceAtLeast(0) ?: 0,
-                eggFoundDay = parts[7].toLongOrNull() ?: Long.MIN_VALUE
+                eggFoundDay = parts[7].toLongOrNull() ?: Long.MIN_VALUE,
+                // Ein Stand von vor den mehrtaegigen Reisen (acht Felder) steht am ersten Tag.
+                journeyDay = parts.getOrNull(8)?.toIntOrNull()?.coerceAtLeast(0) ?: 0
             )
             // Die erste Fassung (drei Stufen je Tag): Quest, Tag der Quest, Questtag, Stufen,
             // Belohnungen, Runde. Der Tagesstand passt nicht mehr - er beginnt neu.
@@ -396,8 +428,11 @@ object PlayQuests {
         rainy: Boolean,
         roll: Int,
         /** Ob schon etwas in der Hand ist (Karte, Ei, Truhe) - dann wird nichts anderes genommen. */
-        holding: Boolean = false
+        holding: Boolean = false,
+        /** Ob es Nacht ist - im Lager wird dann im Zelt geschlafen (siehe [campNight]). */
+        night: Boolean = false
     ): Wayside {
+        if (place == Place.CAMP && night) return campNight()
         val bench = PlayScene.Station.BENCH in PlayScene.stationsAt(place)
         fun sitDown(): List<RoutineStep> = if (bench) {
             listOf(RoutineStep.GoTo(PlayScene.Station.BENCH), RoutineStep.Occupy(PlayScene.Station.BENCH))
@@ -434,6 +469,20 @@ object PlayQuests {
         }
         return choices[Math.floorMod(roll, choices.size)]
     }
+
+    /**
+     * **Die Nacht im Lager.** Zum Zelt, gaehnen, sich hinlegen - und bis zum Morgen draussen
+     * schlafen, waehrend das Feuer herunterbrennt. Dieselbe Schlafhandlung wie daheim im Bett,
+     * nur ohne Bett: [RoutineStep.SleepUntilMorning] haelt die Pose, solange es Nacht ist.
+     */
+    private fun campNight() = Wayside(
+        r(
+            Stroll(0.78f), Stir(AvatarAnimations.Fidget.YAWN),
+            RoutineStep.Act(AnimationType.SLEEP), RoutineStep.SleepUntilMorning,
+            Stir(AvatarAnimations.Fidget.STRETCH), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+        ),
+        mapOf(NeedKind.ENERGY to 1.0, NeedKind.COMFORT to 0.2)
+    )
 
     /** Ab diesem Hungerdruck wird Proviant ausgepackt. */
     private const val HUNGRY = 0.55
@@ -517,7 +566,11 @@ object PlayQuests {
 
     // ---- Die Reisen ----
 
-    private data class Journey(val stations: List<Station>, val steps: List<Step>)
+    /** Ein Tag einer Reise: wo das Wesen wann ist, und was geschieht. */
+    private data class JourneyDay(val stations: List<Station>, val steps: List<Step>)
+
+    /** Eine Reise - ein Tag, oder mehrere mit Naechten im Lager dazwischen. */
+    private data class Journey(val days: List<JourneyDay>)
 
     private fun r(vararg steps: RoutineStep) = PlayRoutine(steps.toList())
 
@@ -552,18 +605,60 @@ object PlayQuests {
     )
 
     private fun journeyFor(quest: Quest): Journey = when (quest) {
-        Quest.TREASURE -> treasure()
-        Quest.MAGIC -> magic()
+        Quest.TREASURE -> Journey(listOf(treasure()))
+        Quest.MAGIC -> Journey(listOf(magic()))
         Quest.EXPEDITION -> expedition()
         Quest.DRAGON_EGG -> dragonEgg()
     }
+
+    /**
+     * Alle Ablaeufe aller Reisen - fuer die Pruefung, dass jeder Ort und jeder Platz, den eine
+     * Reise ansteuert, tatsaechlich besucht wird und benutzbar ist (siehe PlayRoutineTest).
+     */
+    fun journeyRoutines(): List<PlayRoutine> =
+        Quest.entries.flatMap { quest -> journeyFor(quest).days.flatMap { day -> day.steps.map { it.routine } } }
+
+    /** Wie viele Tage die Reise [quest] dauert. */
+    fun daysOf(quest: Quest): Int = journeyFor(quest).days.size
+
+    /**
+     * **Das Nachtlager aufschlagen** - am Ende eines Reisetags, nach dem es nicht heimgeht: weiter
+     * zum Lagerplatz, das Zelt aufstellen, Feuer machen, sich umsehen.
+     */
+    private fun pitchCamp(at: Int) = Step(
+        StepKind.CAMP, at,
+        r(
+            Stroll(0.92f), GoToPlace(Place.CAMP), Stroll(0.74f),
+            Stir(AvatarAnimations.Fidget.STRETCH), Linger(3_000L),
+            Stir(AvatarAnimations.Fidget.STRETCH), Linger(2_000L),
+            Stroll(0.30f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L)
+        )
+    )
+
+    /** **Am Feuer:** hinsetzen, in die Flammen sehen, zu den Sternen, ein wenig traeumen. */
+    private fun evenAtTheFire(at: Int, vararg extra: RoutineStep) = moment(
+        at, Place.CAMP,
+        RoutineStep.GoTo(PlayScene.Station.BENCH), RoutineStep.Occupy(PlayScene.Station.BENCH),
+        Linger(8_000L), *extra, Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(6_000L),
+        RoutineStep.Daydream, RoutineStep.Rise
+    )
+
+    /** **Das Lager abbrechen:** aufwachen, sich strecken, das Zelt abbauen. */
+    private fun breakCamp(at: Int) = Step(
+        StepKind.BREAK_CAMP, at,
+        r(
+            GoToPlace(Place.CAMP), Stir(AvatarAnimations.Fidget.YAWN), Linger(2_000L),
+            Stroll(0.74f), Stir(AvatarAnimations.Fidget.STRETCH), Linger(2_500L),
+            Stir(AvatarAnimations.Fidget.STRETCH), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+        )
+    )
 
     /**
      * **Die Schatzsuche.** Beim Fruehstueck flattert eine Karte aus einem Buch. Ueber die Ebene in
      * den Wald - dort wird zweimal vergeblich gegraben -, auf den Berg, von dem aus man das Meer
      * sieht, und am Abend am Strand: Die Karte stimmt, die Truhe steigt aus dem Sand.
      */
-    private fun treasure() = Journey(
+    private fun treasure() = JourneyDay(
         stations = listOf(
             Station(Place.PLAINS, h(8)),
             Station(Place.FOREST, h(11)),
@@ -630,7 +725,7 @@ object PlayQuests {
      * Rauch, im Wald die ersten Funken, am Teich schon sicherer, und abends im Park gelingt der
      * Sternenregen. Den Zauberstab haengt er zu Hause ueber den Schreibtisch.
      */
-    private fun magic() = Journey(
+    private fun magic() = JourneyDay(
         stations = listOf(
             Station(Place.MEADOW, h(8, 30)),
             Station(Place.FOREST, h(12)),
@@ -692,105 +787,184 @@ object PlayQuests {
     )
 
     /**
-     * **Die Expedition.** Frueh los, weit ueber die Ebene, durch den Sumpf, ins Gebirge - wo es
-     * aus dem Fels blitzt -, und am Abend der Eingang zu einer Grotte voller Kristalle. Dort bleibt
-     * er eine Weile sitzen, bevor er heimgeht.
+     * **Die Expedition - zwei Tage.** Frueh los ueber die Ebene und durch den Sumpf ins Gebirge, wo
+     * es aus dem Fels blitzt. Die Nacht im Lager am Feuer. Am zweiten Tag dem Schimmer nach: Hinter
+     * dem Gebirge liegt eine Grotte voller Kristalle. Dort bleibt es eine Weile, dann geht es heim.
      */
     private fun expedition() = Journey(
-        stations = listOf(
-            Station(Place.PLAINS, h(7, 45)),
-            Station(Place.SWAMP, h(10, 30)),
-            Station(Place.MOUNTAINS, h(13)),
-            Station(Place.GROTTO, h(17))
-        ),
-        steps = listOf(
-            depart(h(7, 45), packAndLeave(Place.PLAINS)),
-            moment(
-                h(9), Place.PLAINS,
-                Stroll(0.8f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(5_000L),
-                Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L)
+        listOf(
+            JourneyDay(
+                stations = listOf(
+                    Station(Place.PLAINS, h(7, 45)),
+                    Station(Place.SWAMP, h(10, 30)),
+                    Station(Place.MOUNTAINS, h(13)),
+                    Station(Place.CAMP, h(19, 30))
+                ),
+                steps = listOf(
+                    depart(h(7, 45), packAndLeave(Place.PLAINS)),
+                    moment(
+                        h(9), Place.PLAINS,
+                        Stroll(0.8f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(5_000L),
+                        Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L)
+                    ),
+                    encounter(h(10), Place.PLAINS),
+                    moment(
+                        h(11, 30), Place.SWAMP,
+                        Stroll(0.5f), Stir(AvatarAnimations.Fidget.SHAKE), Linger(3_000L),
+                        Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L)
+                    ),
+                    moment(
+                        h(14, 30), Place.MOUNTAINS,
+                        Stroll(0.4f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L),
+                        Quest(Effect.CRYSTAL_GLINT), Linger(8_000L), Quest(null),
+                        Stroll(0.7f), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+                    ),
+                    moment(
+                        h(17), Place.MOUNTAINS,
+                        Stroll(0.8f), Quest(Effect.CRYSTAL_GLINT), Linger(6_000L), Quest(null),
+                        Stir(AvatarAnimations.Fidget.STRETCH), Linger(2_000L)
+                    ),
+                    pitchCamp(h(19, 30)),
+                    evenAtTheFire(h(21))
+                )
             ),
-            encounter(h(10), Place.PLAINS),
-            moment(
-                h(11, 30), Place.SWAMP,
-                Stroll(0.5f), Stir(AvatarAnimations.Fidget.SHAKE), Linger(3_000L),
-                Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L)
-            ),
-            moment(
-                h(14, 30), Place.MOUNTAINS,
-                Stroll(0.4f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L),
-                Quest(Effect.CRYSTAL_GLINT), Linger(8_000L), Quest(null),
-                Stroll(0.7f), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
-            ),
-            moment(
-                h(16, 15), Place.MOUNTAINS,
-                Stroll(0.8f), Quest(Effect.CRYSTAL_GLINT), Linger(6_000L), Quest(null),
-                Stir(AvatarAnimations.Fidget.STRETCH), Linger(2_000L)
-            ),
-            moment(
-                h(17, 15), Place.GROTTO,
-                Quest(Effect.DISCOVERY), Linger(7_000L), Quest(null), Stir(AvatarAnimations.Fidget.LOOK_AROUND),
-                reward = Reward.GROTTO
-            ),
-            moment(
-                h(18, 30), Place.GROTTO,
-                RoutineStep.GoTo(PlayScene.Station.BENCH), RoutineStep.Occupy(PlayScene.Station.BENCH),
-                Linger(8_000L), RoutineStep.Daydream, RoutineStep.Rise, Linger(2_000L)
-            ),
-            homecoming(
-                h(20),
-                r(
-                    Stroll(0.92f), GoToPlace(Place.MOUNTAINS), Stroll(0.9f),
-                    GoToPlace(Place.STREET), Stroll(0.5f),
-                    GoToPlace(Place.LIVING), Stroll(0.4f), Stir(AvatarAnimations.Fidget.STRETCH)
+            JourneyDay(
+                stations = listOf(
+                    Station(Place.CAMP, 0),
+                    Station(Place.MOUNTAINS, h(8)),
+                    Station(Place.GROTTO, h(11)),
+                    Station(Place.PLAINS, h(16))
+                ),
+                steps = listOf(
+                    breakCamp(h(7, 30)),
+                    moment(
+                        h(9, 30), Place.MOUNTAINS,
+                        Stroll(0.6f), Quest(Effect.CRYSTAL_GLINT), Linger(6_000L), Quest(null),
+                        Stroll(0.9f), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+                    ),
+                    moment(
+                        h(11, 15), Place.GROTTO,
+                        Quest(Effect.DISCOVERY), Linger(7_000L), Quest(null), Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                        reward = Reward.GROTTO
+                    ),
+                    moment(
+                        h(13), Place.GROTTO,
+                        RoutineStep.GoTo(PlayScene.Station.BENCH), RoutineStep.Occupy(PlayScene.Station.BENCH),
+                        Linger(8_000L), RoutineStep.Daydream, RoutineStep.Rise, Linger(2_000L)
+                    ),
+                    moment(
+                        h(17), Place.PLAINS,
+                        Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L)
+                    ),
+                    homecoming(
+                        h(19, 30),
+                        r(
+                            Stroll(0.92f), GoToPlace(Place.STREET), Stroll(0.5f),
+                            GoToPlace(Place.LIVING), Stroll(0.4f), Stir(AvatarAnimations.Fidget.STRETCH)
+                        )
+                    )
                 )
             )
         )
     )
 
     /**
-     * **Das Drachenei.** Durch Ebene und Wald ins Gebirge; am Nachmittag liegt dort ein
-     * schimmerndes Ei. Er waermt es, und am Abend traegt er es heim ins Nest. In den Tagen danach
-     * wird es gewaermt ([careSteps]), bekommt Risse und schluepft.
+     * **Das Drachenei - drei Tage.** Durch Ebene und Wald ins Gebirge, die erste Nacht im Lager.
+     * Am zweiten Tag lange Suche, am Nachmittag liegt dort ein schimmerndes Ei; abends wird es am
+     * Feuer gewaermt. Am dritten Tag geht es heim ins Nest. In den Tagen danach wird es gewaermt
+     * ([careSteps]), bekommt Risse und schluepft.
      */
     private fun dragonEgg() = Journey(
-        stations = listOf(
-            Station(Place.PLAINS, h(8)),
-            Station(Place.FOREST, h(10)),
-            Station(Place.MOUNTAINS, h(12, 30))
-        ),
-        steps = listOf(
-            depart(h(8), packAndLeave(Place.PLAINS)),
-            moment(
-                h(11), Place.FOREST,
-                Stroll(0.5f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L),
-                Stir(AvatarAnimations.Fidget.STRETCH)
-            ),
-            encounter(h(12), Place.FOREST),
-            moment(
-                h(13, 30), Place.MOUNTAINS,
-                Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L),
-                Stroll(0.8f), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
-            ),
-            moment(
-                h(15, 30), Place.MOUNTAINS,
-                Stroll(0.5f), Stir(AvatarAnimations.Fidget.LOOK_AROUND),
-                Quest(Effect.EGG_FOUND), Linger(7_000L), Quest(null),
-                Stir(AvatarAnimations.Fidget.SHAKE), Linger(2_000L)
-            ),
-            moment(
-                h(16, 30), Place.MOUNTAINS,
-                Stroll(0.5f), Quest(Effect.EGG_WARM), Linger(6_000L), Quest(null)
-            ),
-            homecoming(
-                h(18, 30),
-                r(
-                    GoToPlace(Place.MOUNTAINS), Take(PlayEffects.Carried.EGG), Stroll(0.92f),
-                    GoToPlace(Place.STREET), Stroll(0.5f),
-                    GoToPlace(Place.BEDROOM), Stroll(0.5f), RoutineStep.Drop,
-                    Quest(Effect.EGG_WARM), Linger(5_000L), Quest(null)
+        listOf(
+            JourneyDay(
+                stations = listOf(
+                    Station(Place.PLAINS, h(8)),
+                    Station(Place.FOREST, h(10)),
+                    Station(Place.MOUNTAINS, h(13)),
+                    Station(Place.CAMP, h(19))
                 ),
-                Reward.DRAGON_EGG
+                steps = listOf(
+                    depart(h(8), packAndLeave(Place.PLAINS)),
+                    moment(
+                        h(11), Place.FOREST,
+                        Stroll(0.5f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L),
+                        Stir(AvatarAnimations.Fidget.STRETCH)
+                    ),
+                    encounter(h(12), Place.FOREST),
+                    moment(
+                        h(14), Place.MOUNTAINS,
+                        Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L),
+                        Stroll(0.8f), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+                    ),
+                    moment(
+                        h(16), Place.MOUNTAINS,
+                        Stroll(0.6f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L),
+                        Stir(AvatarAnimations.Fidget.SHAKE)
+                    ),
+                    pitchCamp(h(19)),
+                    evenAtTheFire(h(21))
+                )
+            ),
+            JourneyDay(
+                stations = listOf(
+                    Station(Place.CAMP, 0),
+                    Station(Place.MOUNTAINS, h(8)),
+                    Station(Place.CAMP, h(19))
+                ),
+                steps = listOf(
+                    breakCamp(h(7, 30)),
+                    moment(
+                        h(9, 30), Place.MOUNTAINS,
+                        Stroll(0.3f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L),
+                        Stroll(0.8f), Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+                    ),
+                    moment(
+                        h(12), Place.MOUNTAINS,
+                        Stroll(0.5f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(3_000L),
+                        Stir(AvatarAnimations.Fidget.SHAKE), Linger(2_000L)
+                    ),
+                    moment(
+                        h(15, 30), Place.MOUNTAINS,
+                        Stroll(0.5f), Stir(AvatarAnimations.Fidget.LOOK_AROUND),
+                        Quest(Effect.EGG_FOUND), Linger(7_000L), Quest(null),
+                        Stir(AvatarAnimations.Fidget.SHAKE), Linger(2_000L)
+                    ),
+                    moment(
+                        h(16, 30), Place.MOUNTAINS,
+                        Stroll(0.5f), Quest(Effect.EGG_WARM), Linger(6_000L), Quest(null)
+                    ),
+                    pitchCamp(h(19)),
+                    evenAtTheFire(h(21), Quest(Effect.EGG_WARM), Linger(6_000L), Quest(null))
+                )
+            ),
+            JourneyDay(
+                stations = listOf(
+                    Station(Place.CAMP, 0),
+                    Station(Place.FOREST, h(8, 30)),
+                    Station(Place.PLAINS, h(12))
+                ),
+                steps = listOf(
+                    breakCamp(h(7, 30)),
+                    moment(
+                        h(10), Place.FOREST,
+                        Stroll(0.5f), Quest(Effect.EGG_WARM), Linger(5_000L), Quest(null),
+                        Stir(AvatarAnimations.Fidget.LOOK_AROUND)
+                    ),
+                    moment(
+                        h(13, 30), Place.PLAINS,
+                        Stroll(0.6f), Stir(AvatarAnimations.Fidget.LOOK_AROUND), Linger(4_000L)
+                    ),
+                    homecoming(
+                        h(16),
+                        r(
+                            Take(PlayEffects.Carried.EGG), Stroll(0.92f),
+                            GoToPlace(Place.STREET), Stroll(0.5f),
+                            GoToPlace(Place.BEDROOM), Stroll(0.5f), RoutineStep.Drop,
+                            Quest(Effect.EGG_WARM), Linger(5_000L), Quest(null)
+                        ),
+                        Reward.DRAGON_EGG
+                    )
+                )
             )
         )
     )
@@ -814,7 +988,7 @@ object PlayQuests {
      * Tagen daheim um neun und um acht. Am Abend nach dem ersten ganzen Tag bekommt es Risse, am
      * Abend danach schluepft es.
      */
-    private fun careSteps(progress: Progress, kind: DayKind): List<Step> {
+    private fun careSteps(progress: Progress, kind: DayKind, homeMorning: Boolean, homeEvening: Boolean): List<Step> {
         val rewards = progress.rewards
         if (Reward.DRAGON_EGG !in rewards || Reward.DRAGONLING in rewards) return emptyList()
         if (progress.eggFoundDay == Long.MIN_VALUE || progress.questDayNumber <= progress.eggFoundDay) {
@@ -827,6 +1001,10 @@ object PlayQuests {
         } else {
             Step(StepKind.CARE, evening, warm(Stir(AvatarAnimations.Fidget.SHAKE), RoutineStep.Daydream), Reward.DRAGON_EGG_CRACKED)
         }
-        return listOf(Step(StepKind.CARE, morning, warm()), eveningStep)
+        // Wer draussen im Lager aufwacht oder schlaeft, kann das Ei daheim nicht waermen.
+        return listOfNotNull(
+            Step(StepKind.CARE, morning, warm()).takeIf { homeMorning },
+            eveningStep.takeIf { homeEvening }
+        )
     }
 }

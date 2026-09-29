@@ -21,6 +21,7 @@ class PlayQuestsTest {
 
     /** Ein Reisetag im Rhythmus zwei Reisetage, ein Tag daheim. */
     private val reisetag = 0L
+    private val otherThanDragon = setOf(PlayScene.Acquisition.TREASURE_CHEST, PlayScene.Acquisition.MAGIC_WAND)
 
     /** Spielt einen Tag durch, alle zehn Minuten von [from] bis [until] (Minute des Questtags). */
     private fun liveDay(start: Progress, day: Long, from: Int = at(6), until: Int = at(25, 50)): Progress {
@@ -54,24 +55,56 @@ class PlayQuestsTest {
     @Test
     fun `jede Reise dauert den ganzen Tag, mit Stationen ueber Stunden`() {
         for (quest in Quest.entries) {
-            val plan = PlayQuests.planFor(Progress(quest = quest, questDayNumber = reisetag))
-            val kinds = plan.steps.map { it.kind }
-            assertEquals("$quest", StepKind.DEPART, kinds.first())
-            assertEquals("$quest", StepKind.RETURN, kinds.last())
-            assertTrue("$quest: Erlebnisse unterwegs", kinds.count { it == StepKind.EXPERIENCE } >= 4)
-            val unterwegs = plan.returnMinute!! - plan.steps.first().atMinute
-            assertTrue("$quest ist nur ${unterwegs / 60} Stunden unterwegs", unterwegs >= 10 * 60)
-            assertTrue("$quest: mindestens drei Stationen", plan.stations.size >= 3)
-            // Jede Station traegt mindestens anderthalb Stunden.
-            val grenzen = plan.stations.map { it.fromMinute } + plan.returnMinute!!
-            grenzen.zipWithNext().forEach { (a, b) -> assertTrue("$quest: Station zu kurz", b - a >= 90) }
-            // Jeder Moment spielt an der Station, an der das Wesen zu dieser Zeit ist.
-            for (step in plan.steps.filter { it.kind == StepKind.EXPERIENCE }) {
-                val ort = plan.stations.last { it.fromMinute <= step.atMinute }.place
-                val ziel = step.routine.steps.filterIsInstance<RoutineStep.GoToPlace>().single().place
-                assertEquals("$quest um ${step.atMinute / 60}:${step.atMinute % 60}", ort, ziel)
+            val days = PlayQuests.daysOf(quest)
+            var erlebnisse = 0
+            for (d in 0 until days) {
+                val plan = PlayQuests.planFor(
+                    Progress(quest = quest, questDayNumber = reisetag, journeyDay = d, departed = d > 0)
+                )
+                val kinds = plan.steps.map { it.kind }
+                assertEquals("$quest Tag $d", if (d == 0) StepKind.DEPART else StepKind.BREAK_CAMP, kinds.first())
+                // Der letzte Tag endet daheim, die anderen im Lager.
+                assertEquals("$quest Tag $d", d == days - 1, StepKind.RETURN in kinds)
+                assertEquals("$quest Tag $d", d < days - 1, StepKind.CAMP in kinds)
+                erlebnisse += kinds.count { it == StepKind.EXPERIENCE }
+                val unterwegs = plan.endMinute!! - plan.steps.first().atMinute
+                assertTrue("$quest Tag $d ist nur ${unterwegs / 60} Stunden unterwegs", unterwegs >= 8 * 60)
+                // Jede Station unterwegs (nicht das Lager) traegt mindestens anderthalb Stunden.
+                val wege = plan.stations.filter { it.place != Place.CAMP }
+                val grenzen = wege.map { it.fromMinute } + plan.endMinute!!
+                grenzen.zipWithNext().forEach { (a, b) -> assertTrue("$quest Tag $d: Station zu kurz", b - a >= 90) }
+                // Jeder Moment spielt an der Station, an der das Wesen zu dieser Zeit ist.
+                for (step in plan.steps.filter { it.kind == StepKind.EXPERIENCE }) {
+                    val ort = plan.stations.last { it.fromMinute <= step.atMinute }.place
+                    val ziel = step.routine.steps.filterIsInstance<RoutineStep.GoToPlace>().first().place
+                    assertEquals("$quest Tag $d um ${step.atMinute / 60}:${step.atMinute % 60}", ort, ziel)
+                }
             }
+            assertTrue("$quest: Erlebnisse unterwegs", erlebnisse >= 4)
         }
+        // Zwei Reisen dauern mehrere Tage.
+        assertEquals(2, PlayQuests.daysOf(Quest.EXPEDITION))
+        assertEquals(3, PlayQuests.daysOf(Quest.DRAGON_EGG))
+    }
+
+    @Test
+    fun `auf einer mehrtaegigen Reise schlaeft das Wesen draussen im Lager`() {
+        // Expedition, erster Tag: abends das Lager, und bis zum Abbruch am Morgen bleibt es dort.
+        val abends = liveDay(Progress(quest = Quest.EXPEDITION), reisetag)
+        assertFalse(abends.journeyDone)
+        assertEquals(Place.CAMP, PlayQuests.stationAt(abends, at(23))?.place)
+        assertEquals(Place.CAMP, PlayQuests.stationAt(abends, at(1, 30))?.place)
+        // Der naechste Morgen: draussen aufgewacht, noch im Lager, dann weiter.
+        val morgen = PlayQuests.rollTo(abends, reisetag + 1)
+        assertEquals(1, morgen.journeyDay)
+        assertTrue(morgen.departed)
+        assertEquals(Place.CAMP, PlayQuests.stationAt(morgen, at(7))?.place)
+        assertEquals(StepKind.BREAK_CAMP, (PlayQuests.next(morgen, at(7, 30)) as Next.Run).step.kind)
+        // ... und abends daheim.
+        val heim = liveDay(abends, reisetag + 1)
+        assertTrue(heim.journeyDone)
+        assertTrue(Reward.GROTTO in heim.rewards)
+        assertNull(PlayQuests.stationAt(heim, at(21)))
     }
 
     @Test
@@ -103,8 +136,9 @@ class PlayQuestsTest {
 
     @Test
     fun `ein Moment mit Belohnung wird nie uebersprungen`() {
-        // Expedition, erst um 19 Uhr eingeschaltet: die Entdeckung der Grotte kommt trotzdem.
-        val p = liveDay(Progress(quest = Quest.EXPEDITION), reisetag, from = at(19), until = at(19))
+        // Expedition, zweiter Tag, erst um 18 Uhr eingeschaltet: die Entdeckung der Grotte kommt trotzdem.
+        val draussen = Progress(quest = Quest.EXPEDITION, questDayNumber = reisetag, journeyDay = 1, departed = true)
+        val p = liveDay(draussen, reisetag, from = at(18), until = at(18))
         assertTrue(Reward.GROTTO in p.rewards)
     }
 
@@ -125,25 +159,30 @@ class PlayQuestsTest {
 
     @Test
     fun `die Reisen folgen aufeinander, daheim wird nicht gereist`() {
-        val tage = liveDays(6)
+        val tage = liveDays(10)
         assertEquals(
-            listOf(Quest.TREASURE, Quest.MAGIC, Quest.EXPEDITION, Quest.EXPEDITION, Quest.DRAGON_EGG),
-            tage.take(5).map { it.quest }
+            listOf(
+                Quest.TREASURE to 0, Quest.MAGIC to 0,
+                Quest.EXPEDITION to 0, // daheim
+                Quest.EXPEDITION to 0, Quest.EXPEDITION to 1,
+                Quest.DRAGON_EGG to 0, // daheim
+                Quest.DRAGON_EGG to 0, Quest.DRAGON_EGG to 1,
+                Quest.DRAGON_EGG to 2 // eigentlich ein Tag daheim - aber wer draussen ist, kommt erst heim
+            ),
+            tage.take(9).map { it.quest to it.journeyDay }
         )
         assertFalse("daheim kein Aufbruch", tage[2].departed)
-        assertTrue(tage[3].journeyDone && tage[4].journeyDone)
+        assertTrue(tage[4].journeyDone && tage[8].journeyDone)
     }
 
     @Test
     fun `das Ei bekommt erst Risse, dann schluepft es - ueber Tage`() {
-        // Reise 4 (Tag 4) bringt das Ei; Tag 5 daheim: Risse; Tag 6: es schluepft.
-        val tage = liveDays(7)
-        assertEquals(setOf(PlayScene.Acquisition.DRAGON_EGG), PlayQuests.acquisitions(tage[4].rewards) - otherThanDragon)
-        assertEquals(setOf(PlayScene.Acquisition.DRAGON_EGG_CRACKED), PlayQuests.acquisitions(tage[5].rewards) - otherThanDragon)
-        assertEquals(setOf(PlayScene.Acquisition.DRAGONLING), PlayQuests.acquisitions(tage[6].rewards) - otherThanDragon)
+        // Am dritten Tag der Dracheneireise (Tag 8) kommt das Ei ins Nest; Tag 9: Risse; Tag 10: es schluepft.
+        val tage = liveDays(11)
+        assertEquals(setOf(PlayScene.Acquisition.DRAGON_EGG), PlayQuests.acquisitions(tage[8].rewards) - otherThanDragon)
+        assertEquals(setOf(PlayScene.Acquisition.DRAGON_EGG_CRACKED), PlayQuests.acquisitions(tage[9].rewards) - otherThanDragon)
+        assertEquals(setOf(PlayScene.Acquisition.DRAGONLING), PlayQuests.acquisitions(tage[10].rewards) - otherThanDragon)
     }
-
-    private val otherThanDragon = setOf(PlayScene.Acquisition.TREASURE_CHEST, PlayScene.Acquisition.MAGIC_WAND)
 
     @Test
     fun `belohnungen bleiben, und nach der ersten Runde kein zweites Drachenei`() {
@@ -173,6 +212,21 @@ class PlayQuestsTest {
         for (ort in STATIONEN) {
             val arten = (0 until 12).map { PlayQuests.wayside(ort, 0.0, 0.0, false, it).routine }.toSet()
             assertTrue("$ort: nur ${arten.size} Arten", arten.size >= 3)
+        }
+    }
+
+    @Test
+    fun `nachts wird im Lager geschlafen, tagsueber nicht`() {
+        for (roll in 0 until 12) for (regen in listOf(false, true)) {
+            val nacht = PlayQuests.wayside(Place.CAMP, 0.8, 0.0, regen, roll, night = true)
+            assertTrue(RoutineStep.SleepUntilMorning in nacht.routine.steps)
+            assertTrue(nacht.routine.steps.none { it is RoutineStep.GoToPlace })
+            assertTrue(NeedKind.ENERGY in nacht.relief)
+            val tag = PlayQuests.wayside(Place.CAMP, 0.0, 0.0, regen, roll)
+            assertTrue(RoutineStep.SleepUntilMorning !in tag.routine.steps)
+            // Nur das Lager ist ein Nachtlager - an einer anderen Station wird nicht geschlafen.
+            val anderswo = PlayQuests.wayside(Place.MOUNTAINS, 0.0, 0.0, regen, roll, night = true)
+            assertTrue(RoutineStep.SleepUntilMorning !in anderswo.routine.steps)
         }
     }
 
@@ -209,10 +263,12 @@ class PlayQuestsTest {
         assertEquals(PlayEffects.Carried.MAP, PlayQuests.carriedOnJourney(liveDay(Progress(), reisetag, until = at(12))))
         assertEquals(PlayEffects.Carried.CHEST, PlayQuests.carriedOnJourney(liveDay(Progress(), reisetag, until = at(20))))
         assertNull(PlayQuests.carriedOnJourney(liveDay(Progress(), reisetag)))
-        // Drachenei: erst nach dem Fund.
-        val ei = Progress(quest = Quest.DRAGON_EGG)
-        assertNull(PlayQuests.carriedOnJourney(liveDay(ei, reisetag, until = at(14))))
-        assertEquals(PlayEffects.Carried.EGG, PlayQuests.carriedOnJourney(liveDay(ei, reisetag, until = at(17))))
+        // Drachenei: am zweiten Tag gefunden, dann bis zur Heimkehr am dritten Tag in der Hand.
+        val tag1 = liveDay(Progress(quest = Quest.DRAGON_EGG), reisetag)
+        assertNull(PlayQuests.carriedOnJourney(liveDay(tag1, reisetag + 1, until = at(14))))
+        val tag2 = liveDay(tag1, reisetag + 1)
+        assertEquals(PlayEffects.Carried.EGG, PlayQuests.carriedOnJourney(tag2))
+        assertEquals(PlayEffects.Carried.EGG, PlayQuests.carriedOnJourney(liveDay(tag2, reisetag + 2, until = at(12))))
     }
 
     @Test

@@ -549,6 +549,7 @@
     <string name="talk_place_plains">draußen auf der weiten Ebene</string>
     <string name="talk_place_beach">am Strand</string>
     <string name="talk_place_grotto">in der Kristallgrotte</string>
+    <string name="talk_place_camp">im Lager</string>
     <string name="talk_place_cafe">im Café bei einem Kakao</string>
 
     <!-- Was er von sich aus erzaehlt - siehe PlayTalk.Remark. Jeder Satz haengt an einem

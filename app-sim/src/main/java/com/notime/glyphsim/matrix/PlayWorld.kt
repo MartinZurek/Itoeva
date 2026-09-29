@@ -124,6 +124,7 @@ internal object PlayWorld {
         PlayScene.Place.PLAINS -> 0.10f
         PlayScene.Place.BEACH -> 0.14f
         PlayScene.Place.GROTTO -> 0.08f
+        PlayScene.Place.CAMP -> 0.08f
         // Mitten im Raum, zwischen Tischchen und Theke.
         PlayScene.Place.CAFE -> 0.44f
         else -> null
@@ -194,6 +195,14 @@ internal object PlayWorld {
             Placement(STONE_SEAT, anchorX = 0.52f, station = PlayScene.Station.BENCH),
             Placement(CRYSTAL_CLUSTER, anchorX = 0.80f),
             Placement(STALAGMITE, anchorX = 0.97f)
+        )
+        // LAGER (mehrtaegige Reisen): in der Mitte das Feuer, rechts davon der Stamm zum Sitzen -
+        // man sitzt mit Blick in die Flammen -, dahinter das Zelt, am Rand der Rucksack.
+        PlayScene.Place.CAMP -> listOf(
+            Placement(TENT, anchorX = 0.82f, brightness = PlayScene.BACKDROP + 200, behind = true),
+            Placement(CAMPFIRE, anchorX = 0.36f),
+            Placement(CAMP_LOG, anchorX = 0.56f, station = PlayScene.Station.BENCH),
+            Placement(PACK, anchorX = 0.97f)
         )
         else -> null
     }
@@ -287,6 +296,53 @@ internal object PlayWorld {
             ".##.##."
         ),
         lightAt = 1 to 0
+    )
+
+    // ---- Das Lager (mehrtaegige Reisen, siehe PlayQuests) ----
+
+    /** Das Zelt: ein Dreieck mit dunklem Eingang - daran erkennt man es auch klein. */
+    private val TENT = Prop(
+        width = 15, height = 8,
+        art = art(
+            ".......#.......",
+            "......###......",
+            ".....#####.....",
+            "....###.###....",
+            "...###...###...",
+            "..###.....###..",
+            ".####.....####.",
+            "#####.....#####"
+        )
+    )
+
+    /** Die Feuerstelle: gekreuzte Scheite im Steinkreis. Die Flammen zeichnet [ambient]. */
+    private val CAMPFIRE = Prop(
+        width = 7, height = 2,
+        art = art(
+            "..#.#..",
+            "#######"
+        )
+    )
+
+    /** Ein Stamm am Feuer zum Sitzen. */
+    private val CAMP_LOG = Prop(
+        width = 7, height = 2,
+        art = art(
+            ".#####.",
+            "#######"
+        ),
+        useSpot = 3 to -1
+    )
+
+    /** Der abgestellte Rucksack. */
+    private val PACK = Prop(
+        width = 4, height = 4,
+        art = art(
+            ".##.",
+            "####",
+            "#..#",
+            "####"
+        )
     )
 
     // ---- Requisiten der neuen Landschaften ----
@@ -752,6 +808,7 @@ internal object PlayWorld {
         PlayScene.Place.POND -> lakeShore(phase, widthCells, floorY, dayPhase)
         PlayScene.Place.FOREST -> forestLayers(phase, widthCells, floorY, dayPhase, dense = false)
         PlayScene.Place.MEADOW -> meadowHill(widthCells, floorY, flowers = false)
+        PlayScene.Place.CAMP -> campBackdrop(widthCells, floorY)
         PlayScene.Place.PARK -> habitatBackdrop(species, phase, widthCells, floorY, dayPhase)
         else -> emptyList()
     }
@@ -785,7 +842,7 @@ internal object PlayWorld {
     ): Set<Pair<Int, Int>> = when (place) {
         PlayScene.Place.MOUNTAINS, PlayScene.Place.JUNGLE, PlayScene.Place.CITY, PlayScene.Place.PLAINS,
         PlayScene.Place.POND, PlayScene.Place.FOREST, PlayScene.Place.MEADOW, PlayScene.Place.PARK,
-        PlayScene.Place.SWAMP ->
+        PlayScene.Place.SWAMP, PlayScene.Place.CAMP ->
             background(place, 0, widthCells, floorY, PlayAmbientActivity.DayPhase.MIDDAY, species = species)
                 .mapTo(HashSet()) { it.x to it.y }
         // In der Grotte gibt es keinen Himmel: alles ueber dem Boden ist Fels.
@@ -1502,6 +1559,70 @@ internal object PlayWorld {
     }
 
     /**
+     * **Das Lager:** flache Huegel und eine niedrige Baumreihe - der Himmel bleibt weit offen,
+     * damit nachts die Sterne ueber dem Feuer stehen. Mehr braucht es nicht: Das Bild traegt das
+     * Feuer.
+     */
+    private fun campBackdrop(widthCells: Int, floorY: Int): List<SceneCell> {
+        val maxH = skyRoom(floorY, 24)
+        if (widthCells <= 0 || maxH < 8) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        sheet.ridge(wave(widthCells, maxH * 0.34f, Triple(0.11, maxH * 0.08f, 1.9)), Tone.EDGE - 200, Tone.DEEP - 60)
+        val row = Sheet(widthCells, floorY)
+        var x = 2
+        while (x < widthCells) {
+            row.pine(x, ground, (maxH * 0.30f).roundToInt() + hash(x, 101) % 3, 1, 1)
+            x += 5 + hash(x, 102) % 3
+        }
+        for (cell in row.cells()) {
+            val outline = row.at(cell.x, cell.y - 1) == null || row.at(cell.x - 1, cell.y) == null
+            sheet.put(cell.x, cell.y, if (outline) Tone.EDGE - 120 else Tone.VOID)
+        }
+        return sheet.cells()
+    }
+
+    /**
+     * **Das Lagerfeuer:** Flammen in drei Formen, die sich abloesen, ein heller Kern, ab und zu ein
+     * Funke, der aufsteigt. Abends und nachts faellt ein warmer Schein auf den Boden. Alles Licht
+     * ([SceneCell.isLight]) - das Feuer dimmt nicht mit der Nacht, es ist das, was sie erhellt.
+     */
+    private fun flames(phase: Int, cx: Int, floorY: Int, dark: Boolean): List<SceneCell> {
+        val frames = listOf(
+            // Zwei, drei Zungen, die sich abwechselnd strecken - ein Kegel saehe aus wie ein Zelt.
+            art("..#....", "..#..#.", ".##..#.", ".##.##.", ".#####.", "#######", ".#####."),
+            art("....#..", ".#..#..", ".#.##..", ".####.#", ".######", "#######", ".#####."),
+            art("...#...", "#..#...", "#.##.#.", "#.####.", ".#####.", "#######", ".#####.")
+        )
+        val frame = frames[PlayScene.beat(phase, 1) % frames.size]
+        val top = floorY - 8
+        val outer = if (dark) PlayScene.GLOW - 600 else PlayScene.FURNITURE
+        val inner = if (dark) PlayScene.GLOW else PlayScene.FURNITURE + 400
+        val cells = mutableListOf<SceneCell>()
+        for ((px, py) in frame) {
+            val core = py >= 4 && px in 2..4
+            cells += SceneCell(cx - 3 + px, top + py, if (core) inner else outer, isLight = true)
+        }
+        // Ein Funke steigt auf und verlischt.
+        val spark = phase % 8
+        if (spark < 5) {
+            val sx = cx + (hash(phase / 8, 103) % 3) - 1
+            cells += SceneCell(sx, top - 1 - spark, (outer - spark * 250).coerceAtLeast(400), isLight = true)
+        }
+        // Der Schein auf dem Boden.
+        if (dark) {
+            for (dx in -9..9) {
+                val b = PlayScene.GLOW - 900 - abs(dx) * 140
+                if (b > 300) {
+                    cells += SceneCell(cx + dx, floorY, b, isLight = true)
+                    cells += SceneCell(cx + dx, floorY + 1, b / 2, isLight = true)
+                }
+            }
+        }
+        return cells.filter { it.x >= 0 && it.y >= 0 }
+    }
+
+    /**
      * **Der Stadtpark** - Pufflings Park: hinter den Baumkronen am Parkrand steht die Stadt, damit
      * man weiss, dass dies ein Park IN der Stadt ist. Abends gehen dort einzelne Fenster an.
      */
@@ -2175,6 +2296,22 @@ internal object PlayWorld {
             PlayScene.Place.GROTTO -> {
                 cells += drips(phase, widthCells, floorY)
                 cells += fireflies(phase, widthCells, floorY, count = 4)
+            }
+            PlayScene.Place.CAMP -> {
+                placements.firstOrNull { it.prop === CAMPFIRE }?.let { fire ->
+                    cells += flames(phase, PlayScene.originX(fire, widthCells) + CAMPFIRE.width / 2, floorY, dark)
+                }
+                // Abends brennt im Zelt eine Laterne: Der Eingang leuchtet warm.
+                if (dark) placements.firstOrNull { it.prop === TENT }?.let { tent ->
+                    val ox = PlayScene.originX(tent, widthCells)
+                    val oy = PlayScene.originY(tent, floorY)
+                    for (row in 4..7) for (col in 7 - (row - 3)..7 + (row - 3)) {
+                        if ((col to row) !in TENT.art) {
+                            cells += SceneCell(ox + col, oy + row, PlayScene.GLOW - 1100 - (7 - row) * 100, isLight = true)
+                        }
+                    }
+                }
+                if (dark) cells += fireflies(phase, widthCells, floorY, count = 3)
             }
             PlayScene.Place.CITY -> {
                 cells += airship(phase, widthCells, floorY, dayPhase)

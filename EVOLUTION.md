@@ -669,6 +669,34 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-29 - Reisen, Stufe 3: mehrtaegige Reisen mit Lager
+
+**Anlass:** Freigabe des Nutzers fuer Stufe 3 des Reiseplans ("Go fuer Stufe 3"): Reisen, die
+ueber Nacht draussen bleiben - Zelt, Lagerfeuer, Schlaf unter freiem Himmel, am Morgen weiter.
+
+**Geaendert:**
+- **Neuer Ort `Place.CAMP`, das Lager:** Huegel und eine Reihe niedriger Kiefern, davor Zelt,
+  Lagerfeuer, ein Baumstamm als Sitz und der Rucksack. Das Feuer flackert in drei Flammenbildern
+  mit Funken; nachts leuchtet es den Boden an, am Zelteingang haengt eine Laterne, Gluehwuermchen
+  fliegen. Eigener Umgebungsklang (Feuerrauschen, Knacken, Grillen); Musik wie an den ruhigen
+  Naturorten.
+- **Reisen ueber mehrere Tage** (`PlayQuests.Journey`, `Progress.journeyDay`): Die Expedition
+  dauert zwei Tage (Nacht im Lager unter den Bergen, am zweiten Tag die Grotte), die
+  Dracheneireise drei (zwei Naechte im Lager; das Ei wird am zweiten Tag gefunden und am
+  Lagerfeuer gewaermt, am dritten heimgetragen). Schatzsuche und Zauberlehre bleiben Tagesreisen.
+- **Der Ablauf eines Lagertages:** Lager aufschlagen am Abend, am Feuer sitzen, nachts im Zelt
+  schlafen (`wayside(..., night = true)` -> Schlafpose bis zum Morgen), morgens das Lager abbrechen
+  und weiterziehen. Wer draussen uebernachtet, macht morgens und abends keine Pflege daheim.
+- Eine mehrtaegige Reise ersetzt den Tag daheim, der sonst auf zwei Reisetage folgen wuerde; ein
+  nicht zu Ende gebrachter Reisetag geht am naechsten Tag draussen weiter.
+
+- **Tests (`TESTED BEHAVIOR`):** 773 Offline-Tests gruen (neu: Nacht im Lager statt im Bett,
+  mehrtaegige Reisefolge, Ei ueber drei Tage getragen, Belohnung auch bei spaetem Einstieg am
+  letzten Reisetag, Lager nur nachts zum Schlafen).
+- **Ungeprueft (`UNVERIFIED`):** Das Lager am Geraet, vor allem Feuerschein und Schlafpose vor
+  dem Zelt.
+- **Weiterhin offen:** Stufe 4 (Feinschliff im Stream).
+
 ### 2026-09-29 - Reisen, Stufe 2: Erlebnisse unterwegs
 
 **Anlass:** Freigabe des Nutzers fuer Stufe 2 des Reiseplans ("Go fuer Stufe 2"): Wetter, das die
