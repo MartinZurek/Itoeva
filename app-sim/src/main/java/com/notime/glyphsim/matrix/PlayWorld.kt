@@ -5,6 +5,7 @@ import com.notime.glyphsim.matrix.PlayScene.Prop
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 /**
  * **Der Weltausbau: mehr Natur, mehr Stadt, mehr Leben** (Auftrag des Nutzers vom 26.09.2026:
@@ -736,27 +737,56 @@ internal object PlayWorld {
         widthCells: Int,
         floorY: Int,
         dayPhase: PlayAmbientActivity.DayPhase,
-        foreground: List<Pair<IntRange, Int>> = emptyList()
+        foreground: List<Pair<IntRange, Int>> = emptyList(),
+        /** Wessen Park es ist - jedes Wesen hat dort seine eigene Landschaft (PlayScene.habitatPlacements). */
+        species: AvatarSpecies = AvatarSpecies.PUFFLING
     ): List<SceneCell> = when (place) {
-        PlayScene.Place.MOUNTAINS -> mountainRange(widthCells, floorY)
+        PlayScene.Place.MOUNTAINS -> mountainRange(widthCells, floorY, dayPhase)
         PlayScene.Place.JUNGLE -> jungleCanopy(phase, widthCells, floorY)
-        PlayScene.Place.SWAMP -> swampBackdrop(widthCells, floorY)
-        PlayScene.Place.PLAINS -> rollingHills(widthCells, floorY)
+        PlayScene.Place.SWAMP -> swampBackdrop(phase, widthCells, floorY)
+        PlayScene.Place.PLAINS -> farmland(widthCells, floorY, dayPhase)
         PlayScene.Place.BEACH -> sea(phase, widthCells, floorY, dayPhase)
         PlayScene.Place.GROTTO -> caveVault(widthCells, floorY)
         PlayScene.Place.CITY -> skyline(phase, widthCells, floorY, dayPhase)
         PlayScene.Place.SHOP -> shopBackWall(phase, widthCells, floorY, foreground)
+        PlayScene.Place.POND -> lakeShore(phase, widthCells, floorY, dayPhase)
+        PlayScene.Place.FOREST -> forestLayers(phase, widthCells, floorY, dayPhase, dense = false)
+        PlayScene.Place.MEADOW -> meadowHill(widthCells, floorY, flowers = false)
+        PlayScene.Place.PARK -> habitatBackdrop(species, phase, widthCells, floorY, dayPhase)
         else -> emptyList()
+    }
+
+    /** Der ferne Hintergrund des Parks - je nach Wesen eine andere Landschaft. */
+    private fun habitatBackdrop(
+        species: AvatarSpecies,
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase
+    ): List<SceneCell> = when (species) {
+        AvatarSpecies.PUFFLING -> cityPark(widthCells, floorY, dayPhase)
+        AvatarSpecies.STARLET -> meadowHill(widthCells, floorY, flowers = true)
+        AvatarSpecies.WYRMLING -> crags(widthCells, floorY)
+        AvatarSpecies.FENNEC -> desert(phase, widthCells, floorY, dayPhase)
+        AvatarSpecies.GLOOP -> swampBackdrop(phase, widthCells, floorY)
+        AvatarSpecies.HOOTLET -> forestLayers(phase, widthCells, floorY, dayPhase, dense = true)
     }
 
     /**
      * Welche Himmelszellen der Hintergrund verdeckt - Sterne und Wolken ziehen HINTER Bergen,
-     * Blaetterdach und Hochhaeusern vorbei, nicht davor (dieselbe Regel wie bei den Fassaden,
-     * siehe PlayScene.facadeMask).
+     * Huegeln, Baeumen und Hochhaeusern vorbei, nicht davor (dieselbe Regel wie bei den Fassaden,
+     * siehe PlayScene.facadeMask). Das Meer bleibt offen: Ueber dem Horizont ist Himmel.
      */
-    fun skyMask(place: PlayScene.Place, widthCells: Int, floorY: Int): Set<Pair<Int, Int>> = when (place) {
-        PlayScene.Place.MOUNTAINS, PlayScene.Place.JUNGLE, PlayScene.Place.CITY ->
-            background(place, 0, widthCells, floorY, PlayAmbientActivity.DayPhase.MIDDAY)
+    fun skyMask(
+        place: PlayScene.Place,
+        widthCells: Int,
+        floorY: Int,
+        species: AvatarSpecies = AvatarSpecies.PUFFLING
+    ): Set<Pair<Int, Int>> = when (place) {
+        PlayScene.Place.MOUNTAINS, PlayScene.Place.JUNGLE, PlayScene.Place.CITY, PlayScene.Place.PLAINS,
+        PlayScene.Place.POND, PlayScene.Place.FOREST, PlayScene.Place.MEADOW, PlayScene.Place.PARK,
+        PlayScene.Place.SWAMP ->
+            background(place, 0, widthCells, floorY, PlayAmbientActivity.DayPhase.MIDDAY, species = species)
                 .mapTo(HashSet()) { it.x to it.y }
         // In der Grotte gibt es keinen Himmel: alles ueber dem Boden ist Fels.
         PlayScene.Place.GROTTO -> (0 until widthCells).flatMapTo(HashSet()) { x ->
@@ -766,56 +796,168 @@ internal object PlayWorld {
     }
 
     /**
-     * Zwei Bergketten hintereinander: die ferne hoeher und blasser, die nahe niedriger und
-     * kraeftiger. Auf den hoechsten Gipfeln liegt Schnee. Aus der Bildbreite gerechnet, damit
-     * es im Hoch- und Querformat dieselben Berge sind.
+     * **Das Gebirge: ein Horn, das man wiedererkennt.**
+     *
+     * Vorher zwei gleichfoermige Zacken-Ketten, schachbrettartig gerastert - auf der Punktmatrix
+     * las sich das als Rauschen, und kein Berg war "der Berg". Jetzt ist es ein Bild in vier
+     * Ebenen, jede mit einer Aufgabe:
+     *
+     * 1. **Die ferne Kette** - flach, fast nur Umriss: Tiefe, sonst nichts.
+     * 2. **Das Horn** - EIN hoher, schiefer Gipfel mit Schneekappe, links im Licht, rechts im
+     *    Schatten. Das ist das Wahrzeichen: Wer es einmal gesehen hat, weiss, wo das Wesen ist.
+     * 3. **Die Waldhuegel davor** - dunkel, mit einer Zackenkante aus Tannenspitzen. Dunkel vor
+     *    hell stellt das Horn frei, statt es zu verdecken.
+     * 4. **Die Almhuette** am Hang - der Ort, an dem man rastet; abends brennt Licht im Fenster.
+     *
+     * Flaechen sind durchgehend gefuellt statt gerastert: Auf einem Punkteraster ist eine ruhige,
+     * gleichmaessig schwache Flaeche lesbarer als ein Muster.
      */
-    private fun mountainRange(widthCells: Int, floorY: Int): List<SceneCell> {
-        val maxH = skyRoom(floorY, 34)
-        if (maxH < 4 || widthCells <= 0) return emptyList()
-        fun ridge(peaks: List<Triple<Float, Float, Float>>, x: Int): Int = peaks.maxOf { (at, height, slope) ->
-            (maxH * height - abs(x - widthCells * at) * slope).roundToInt()
-        }.coerceAtLeast(0)
-        val far = listOf(
-            Triple(0.10f, 0.78f, 1.1f), Triple(0.36f, 1.00f, 1.25f),
-            Triple(0.62f, 0.84f, 1.0f), Triple(0.90f, 0.95f, 1.2f)
-        )
-        val near = listOf(
-            Triple(0.22f, 0.52f, 0.9f), Triple(0.52f, 0.44f, 0.8f), Triple(0.80f, 0.58f, 1.0f)
-        )
-        val cells = mutableListOf<SceneCell>()
+    private fun mountainRange(
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase = PlayAmbientActivity.DayPhase.MIDDAY
+    ): List<SceneCell> {
+        val maxH = skyRoom(floorY, 40)
+        if (maxH < 6 || widthCells <= 0) return emptyList()
+        val ground = floorY - 1
+        val grid = HashMap<Pair<Int, Int>, SceneCell>()
+        fun put(x: Int, y: Int, b: Int, light: Boolean = false) {
+            if (x in 0 until widthCells && y in 0 until floorY) grid[x to y] = SceneCell(x, y, b, isLight = light)
+        }
+
+        // 1. Die ferne Kette: sanfte Wellen, nur Kammlinie und eine ganz schwache Flaeche.
+        val far = IntArray(widthCells) { x ->
+            val u = x / widthCells.toFloat()
+            (maxH * (0.40f + 0.07f * sin(u * 9.0 + 0.6).toFloat() + 0.05f * sin(u * 23.0 + 2.0).toFloat()))
+                .roundToInt()
+        }
         for (x in 0 until widthCells) {
-            val hNear = ridge(near, x)
-            val hFar = ridge(far, x)
-            val topNear = floorY - 1 - hNear
-            val topFar = floorY - 1 - hFar
-            // Ferne Kette nur, wo sie ueber die nahe hinausragt.
-            if (hFar > hNear) {
-                for (y in topFar until topNear) {
-                    val depth = y - topFar
-                    val b = when {
-                        depth == 0 -> FAR + 120
-                        // Schnee auf den hohen Gipfeln - die obersten Zeilen hell.
-                        hFar > maxH * 0.72f && depth <= 2 -> PlayScene.FURNITURE - 300
-                        (x + y) % 3 == 0 -> FAR - 80
-                        else -> 0
-                    }
-                    if (b > 0) cells += SceneCell(x, y, b)
-                }
-            }
-            for (y in topNear until floorY - 1) {
-                val depth = y - topNear
+            val top = ground - far[x]
+            put(x, top, Tone.EDGE - 120)
+            for (y in top + 1 until ground) put(x, y, Tone.DEEP)
+        }
+
+        // 2. Das Horn: Spitze bei 62 %, links die lange Flanke im Licht, rechts steil im Schatten.
+        val apexX = (widthCells * 0.62f).roundToInt()
+        val leftSpan = widthCells * 0.36f
+        val rightSpan = widthCells * 0.24f
+        val horn = IntArray(widthCells) { x ->
+            val dx = x - apexX
+            val t = if (dx <= 0) -dx / leftSpan else dx / rightSpan
+            // Nach innen gewoelbt (die Spitze sticht), mit kleinen Absaetzen im linken Grat.
+            val shoulder = if (dx < -2 && hash(x, 41) % 4 == 0) 1 else 0
+            val v = (1f - t).coerceAtLeast(0f)
+            ((maxH * (0.5f * v + 0.5f * (1f - (1f - v) * (1f - v)))).roundToInt() - shoulder)
+                .coerceAtLeast(0)
+        }
+        val snowLine = maxH * 0.58f
+        for (x in 0 until widthCells) {
+            val h = horn[x]
+            if (h <= far[x]) continue
+            val top = ground - h
+            val lit = x < apexX
+            // Die Schneegrenze franst aus, und in den Rinnen zieht der Schnee in Zungen hinab.
+            val tongue = if (hash(x / 3, 44) % 3 == 0) 2 + hash(x, 45) % 3 else 0
+            val snowDepth = (h - snowLine + 1.8f * sin(x * 0.9).toFloat()).roundToInt() + tongue
+            for (y in top until ground) {
+                val depth = y - top
                 val b = when {
-                    depth == 0 -> NEAR + 120
-                    hNear > maxH * 0.5f && depth <= 1 -> PlayScene.FURNITURE - 400
-                    (x + 2 * y) % 4 == 0 -> NEAR - 120
-                    (x + y) % 5 == 0 -> FAR - 100
-                    else -> 0
+                    depth < snowDepth && lit -> if (depth == 0) Tone.GLINT else Tone.SNOW
+                    depth < snowDepth -> if (depth == 0) Tone.SNOW - 200 else Tone.LIT - 80
+                    // Felsrippen auf der Lichtseite: wenige lange, schraege Grate.
+                    lit && Math.floorMod(x + depth, 9) == 0 -> Tone.EDGE
+                    lit -> Tone.HAZE
+                    else -> Tone.DEEP - 40
                 }
-                if (b > 0) cells += SceneCell(x, y, b)
+                put(x, y, b)
             }
         }
-        return cells
+        // Der Grat von der Spitze nach links: die beleuchtete Kante.
+        for (x in 0..apexX.coerceAtMost(widthCells - 1)) {
+            val h = horn[x]
+            if (h > far[x] + 1) put(x, ground - h, if (h > snowLine) Tone.GLINT else Tone.LIT)
+        }
+
+        // 3. Die Waldhuegel davor: fast schwarz, die Oberkante aus Tannenspitzen.
+        val hill = IntArray(widthCells) { x ->
+            val u = x / widthCells.toFloat()
+            (maxH * (0.22f + 0.07f * sin(u * 7.5 + 4.0).toFloat())).roundToInt()
+        }
+        for (x in 0 until widthCells) {
+            val tip = when (Math.floorMod(x + hash(x / 3, 43) % 2, 3)) {
+                1 -> 2
+                else -> 1
+            }
+            val top = ground - hill[x] - tip
+            put(x, top, Tone.EDGE)
+            for (y in top + 1 until ground) put(x, y, Tone.VOID)
+        }
+
+        // 4. Die Almhuette auf dem Waldhuegel, links vom Horn.
+        val hutX = (widthCells * 0.28f).roundToInt()
+        if (hutX + 9 < widthCells && maxH >= 14) {
+            val base = ground - hill[hutX + 4]
+            val roof = art(
+                "....#....",
+                "...###...",
+                "..#####..",
+                ".#######.",
+                "#########"
+            )
+            val wall = art(
+                ".#######.",
+                ".#######.",
+                ".#######."
+            )
+            for ((px, py) in wall) put(hutX + px, base - 3 + py, Tone.HAZE)
+            // Das Dach: die Traufe und die linke Schraege im Licht.
+            for ((px, py) in roof) {
+                put(hutX + px, base - 8 + py, if (py == 4 || px == 4 - py) Tone.LIT else Tone.EDGE)
+            }
+            // Zwei Fenster und die Tuer: tagsueber dunkel, abends ein warmes Licht.
+            val lit = isDark(dayPhase)
+            for (wx in listOf(2, 6)) put(hutX + wx, base - 2, if (lit) Tone.WINDOW else Tone.VOID, light = lit)
+            put(hutX + 4, base - 2, Tone.VOID)
+            put(hutX + 4, base - 1, Tone.VOID)
+            // Rauch aus dem Kamin, schraeg vom Wind.
+            put(hutX + 6, base - 9, Tone.HAZE)
+            put(hutX + 7, base - 10, Tone.DEEP + 60)
+            put(hutX + 7, base - 11, Tone.DEEP)
+        }
+        return grid.values.filter { it.brightness > 0 }
+    }
+
+    /**
+     * **Die Toene der Landschaften**, am Geraet abgelesen: Eine Zelle leuchtet dort mit
+     * Helligkeit/4095 der LED-Farbe (siehe PlaySceneView). Unter rund 200 verschwindet sie auf dem
+     * schwarzen Grund; nach oben begrenzt die Moebelhelligkeit (PlayScene.FURNITURE): Der
+     * Hintergrund darf nie heller sein als das, was vor ihm steht. Dazwischen liegen die
+     * Stufen, mit denen Landschaft Tiefe bekommt: fern und flaechig dunkel, nah an den Kanten hell.
+     */
+    private object Tone {
+        /** Silhouetten ganz vorn - fast schwarz, sie stellen das Helle dahinter frei. */
+        const val VOID = 180
+
+        /** Ferne Flaechen. */
+        const val DEEP = 330
+
+        /** Flaechen im Mittelgrund. */
+        const val HAZE = 520
+
+        /** Kammlinien und Umrisse. */
+        const val EDGE = 740
+
+        /** Beleuchtete Kanten. */
+        const val LIT = 1000
+
+        /** Schnee, Schaumkronen, helles Holz. */
+        const val SNOW = 1150
+
+        /** Die hellste Stelle eines Bildes - hoechstens ein paar Zellen, klar unter der Figur. */
+        const val GLINT = 1260
+
+        /** Ein warm erleuchtetes Fenster (Licht, dimmt nachts nicht). */
+        const val WINDOW = 2300
     }
 
     /**
@@ -878,30 +1020,528 @@ internal object PlayWorld {
         return cells.filter { it.x in 0 until widthCells && it.y >= 0 }
     }
 
-    /** Der Sumpf: ferne, kahle Baeume ueber dunklem Wasser. */
-    private fun swampBackdrop(widthCells: Int, floorY: Int): List<SceneCell> {
-        if (widthCells <= 0 || floorY < 12) return emptyList()
-        val cells = mutableListOf<SceneCell>()
+    /**
+     * **Der Sumpf: kahle Baeume, Moos und Nebel.**
+     *
+     * Hinten eine niedrige, dunkle Baumlinie; davor drei knorrige, kahle Baeume, von deren Aesten
+     * Moos in langen Faeden haengt - das ist die Silhouette, an der man einen Sumpf erkennt. Ueber
+     * dem Wasser ziehen zwei Nebelbaender langsam gegeneinander, und das Wasser spiegelt die
+     * Staemme gebrochen.
+     */
+    private fun swampBackdrop(phase: Int, widthCells: Int, floorY: Int): List<SceneCell> {
+        val maxH = skyRoom(floorY, 30)
+        if (widthCells <= 0 || maxH < 8) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        // Die ferne Baumlinie: runde, dichte Kronen, kaum mehr als ein Saum.
+        sheet.ridge(
+            IntArray(widthCells) { x ->
+                (maxH * 0.20f + 1.5f * sin(x * 0.7).toFloat() + (hash(x / 2, 21) % 2)).roundToInt()
+            },
+            edge = Tone.DEEP + 60, fill = Tone.VOID
+        )
+        // Die kahlen Baeume: ein krummer Stamm, zwei, drei Aeste, Moosfaeden daran.
+        val trees = listOf(0.18f to 0.78f, 0.50f to 0.62f, 0.84f to 0.92f)
+        for ((i, pair) in trees.withIndex()) {
+            val (at, tall) = pair
+            val x0 = (widthCells * at).roundToInt()
+            val h = (maxH * tall).roundToInt()
+            var x = x0
+            for (d in 0 until h) {
+                // Der Stamm neigt sich im oberen Drittel.
+                if (d == h * 2 / 3) x += if (i % 2 == 0) 1 else -1
+                sheet.put(x, ground - d, Tone.EDGE - 80)
+                if (d < 3) sheet.put(x + 1, ground - d, Tone.DEEP + 40)
+            }
+            val top = ground - h
+            for ((side, len, at2) in listOf(Triple(-1, 5, 3), Triple(1, 6, 6), Triple(-1, 4, 9))) {
+                val by = top + at2
+                if (by >= ground - 3) continue
+                for (k in 1..len) {
+                    val bx = x + side * k
+                    val bey = by - k / 2
+                    sheet.put(bx, bey, Tone.EDGE - 120)
+                    // Moos: von jeder zweiten Astzelle ein Faden nach unten.
+                    if (k % 2 == 0) {
+                        val strand = 2 + hash(bx, i + 22) % 4
+                        for (m in 1..strand) sheet.put(bx, bey + m, Tone.DEEP + 30)
+                    }
+                }
+            }
+        }
+        // Nebel: zwei Baender, die langsam gegeneinander ziehen.
+        val drift = PlayScene.beat(phase, 9)
+        for ((row, dir) in listOf((maxH * 0.18f).roundToInt() to 1, (maxH * 0.34f).roundToInt() to -1)) {
+            val y = ground - row
+            for (x in 0 until widthCells) {
+                if (Math.floorMod(x + dir * drift, 13) < 7 && sheet.at(x, y) == null) sheet.put(x, y, Tone.DEEP + 20)
+            }
+        }
+        // Das Wasser: gebrochene Spiegelung der Staemme in der untersten Zeile.
+        for (x in 0 until widthCells) {
+            if (Math.floorMod(x + drift, 3) != 0) sheet.put(x, ground, Tone.DEEP + 60)
+        }
+        return sheet.cells()
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Neue Landschaftsbilder (Ueberarbeitung 29.09.2026)
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Ein Zeichenblatt fuer eine Landschaft: Spaeter Gesetztes liegt vorn, gezeichnet wird nur
+     * ueber dem Boden.
+     */
+    private class Sheet(val width: Int, val floorY: Int) {
+        private val grid = HashMap<Pair<Int, Int>, SceneCell>()
+
+        fun put(x: Int, y: Int, b: Int, light: Boolean = false) {
+            if (x in 0 until width && y in 0 until floorY && b > 0) grid[x to y] = SceneCell(x, y, b, isLight = light)
+        }
+
+        fun at(x: Int, y: Int): SceneCell? = grid[x to y]
+
+        fun shape(cells: List<Pair<Int, Int>>, x: Int, y: Int, b: Int, light: Boolean = false) {
+            for ((px, py) in cells) put(x + px, y + py, b, light)
+        }
+
+        /** Eine Flaeche vom Profil [heights] bis zum Boden: Oberkante [edge], darunter [fill]. */
+        fun ridge(heights: IntArray, edge: Int, fill: Int) {
+            val ground = floorY - 1
+            for (x in 0 until width) {
+                val h = heights.getOrElse(x) { 0 }
+                if (h <= 0) continue
+                put(x, ground - h, edge)
+                for (y in ground - h + 1 until ground) put(x, y, fill)
+            }
+        }
+
+        fun cells(): List<SceneCell> = grid.values.toList()
+    }
+
+    /** Ein Profil aus Wellen: Grundhoehe [base] plus Sinusse (Frequenz, Hoehe, Versatz). */
+    private fun wave(widthCells: Int, base: Float, vararg parts: Triple<Double, Float, Double>): IntArray =
+        IntArray(widthCells) { x ->
+            (base + parts.sumOf { (f, a, p) -> (a * sin(x * f + p)).toDouble() }.toFloat()).roundToInt()
+        }
+
+    /**
+     * Eine Tanne als Silhouette: Stufen, die nach unten breiter werden. [x] ist die Mitte, [base]
+     * die Zeile, auf der sie steht.
+     */
+    private fun Sheet.pine(x: Int, base: Int, height: Int, edge: Int, fill: Int) {
+        val widest = (height / 3).coerceAtLeast(1)
+        for (d in 0 until height) {
+            val y = base - height + d
+            // Vier Zeilen je Stufe; jede Stufe setzt schmaler an, als die vorige endete - daran
+            // erkennt man eine Tanne und nicht bloss ein Dreieck.
+            val half = (d / 4 + (d % 4) * 2 / 3).coerceAtMost(widest)
+            for (dx in -half..half) put(x + dx, y, if (dx == -half || d == 0) edge else fill)
+        }
+        put(x, base, fill)
+    }
+
+    /**
+     * **Die Wueste des Wuestenfuchses** (sein Park, siehe PlayScene.habitatPlacements).
+     *
+     * Ein Tafelberg mit Gesteinsschichten weit hinten, ein Duenenmeer davor und eine Karawane,
+     * die ueber den fernen Kamm zieht. Die nahen Duenen haben die typische Form: flach im Wind,
+     * steil im Lee, die Kante scharf beleuchtet. Tagsueber flimmert die Luft ueber dem Sand.
+     */
+    private fun desert(
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase
+    ): List<SceneCell> {
+        val maxH = skyRoom(floorY, 36)
+        if (widthCells <= 0 || maxH < 8) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+
+        // Der Tafelberg: flache Kuppe, steile Flanken, waagerechte Schichten.
+        val mesaFrom = (widthCells * 0.52f).roundToInt()
+        val mesaTo = (widthCells * 0.90f).roundToInt()
+        val mesaH = (maxH * 0.55f).roundToInt()
+        for (x in mesaFrom..mesaTo) {
+            val fromEdge = minOf(x - mesaFrom, mesaTo - x)
+            val h = (mesaH - (3 - fromEdge).coerceAtLeast(0) * 3 - if (hash(x, 51) % 7 == 0) 1 else 0)
+                .coerceAtLeast(0)
+            val top = ground - h
+            for (y in top until ground) {
+                val depth = y - top
+                val b = when {
+                    // Fern und dunkel: eine Silhouette, vor der der helle Sand steht.
+                    depth == 0 -> Tone.EDGE - 160
+                    x - mesaFrom < 2 -> Tone.DEEP + 60 // die Lichtkante links
+                    depth % 5 == 3 -> Tone.DEEP + 20 // Gesteinsschichten
+                    else -> Tone.VOID
+                }
+                sheet.put(x, y, b)
+            }
+        }
+
+        // Die fernen Duenen, und darueber die Karawane.
+        val far = wave(widthCells, maxH * 0.20f, Triple(0.16, maxH * 0.05f, 0.4), Triple(0.41, maxH * 0.02f, 1.7))
+        sheet.ridge(far, edge = Tone.EDGE - 60, fill = Tone.DEEP + 40)
+        val camel = art(
+            "..#.#...#",
+            ".######.#",
+            ".#######.",
+            ".#.#.#.#."
+        )
+        val span = widthCells + 30
+        for (i in 0 until 2) {
+            val cx = Math.floorMod(PlayScene.beat(phase, 14) + i * 11 + (widthCells * 0.58f).roundToInt() + 15, span) - 15
+            val crest = far.getOrElse((cx + 4).coerceIn(0, widthCells - 1)) { 0 }
+            sheet.shape(camel, cx, ground - crest - 4, Tone.EDGE + 40)
+        }
+
+        // Die nahen Duenen: flach im Wind (links), steil im Lee (rechts).
+        // Die Kaemme liegen dort, wo weder die Figur (0,20) noch eine Akazie davorsteht.
+        val dunes = listOf(Triple(0.50f, 0.30f, 0.28f), Triple(0.99f, 0.22f, 0.24f))
+        val near = IntArray(widthCells) { x ->
+            dunes.maxOf { (at, height, windward) ->
+                val crest = widthCells * at
+                val lee = widthCells * 0.07f
+                val t = if (x <= crest) (crest - x) / (widthCells * windward) else (x - crest) / lee
+                if (t >= 1f) 0 else (maxH * height * (1f - t * t)).roundToInt()
+            }
+        }
+        for (x in 0 until widthCells) {
+            val h = near[x]
+            if (h <= 0) continue
+            val top = ground - h
+            val lee = x > 0 && x < widthCells - 1 && near[x + 1] < h - 1
+            for (y in top until ground) {
+                val depth = y - top
+                val b = when {
+                    // Heller Sand in der Sonne, der Lee-Hang im Schatten.
+                    depth == 0 -> if (lee) Tone.LIT - 100 else Tone.GLINT - 60
+                    lee -> Tone.DEEP
+                    // Windrippel auf der Luvseite: kurze schraege Striche.
+                    Math.floorMod(x - depth * 2, 7) == 0 -> Tone.LIT - 120
+                    else -> Tone.EDGE - 110
+                }
+                sheet.put(x, y, b)
+            }
+        }
+
+        // Hitzeflimmern ueber dem fernen Sand - nur tagsueber.
+        if (!isDark(dayPhase)) {
+            val shimmer = PlayScene.beat(phase, 2)
+            val y = ground - (maxH * 0.30f).roundToInt()
+            for (x in 0 until widthCells) {
+                if (Math.floorMod(x + shimmer, 9) < 2 && sheet.at(x, y) == null) sheet.put(x, y, Tone.DEEP - 40)
+            }
+        }
+        return sheet.cells()
+    }
+
+    /**
+     * **Der Teich als See.** Hinten das andere Ufer mit einer Baumlinie und einem Bootshaus; davor
+     * die Wasserflaeche, in der sich die Baeume gebrochen spiegeln und kleine Wellen treiben. Vorher
+     * stand am Teich nur Schilf auf der Bodenlinie - Wasser war nicht zu sehen.
+     */
+    private fun lakeShore(
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase
+    ): List<SceneCell> {
+        val maxH = skyRoom(floorY, 30)
+        if (widthCells <= 0 || maxH < 10) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        val waterRows = (maxH * 0.42f).roundToInt().coerceAtLeast(4)
+        val horizon = ground - waterRows
+
+        // Das andere Ufer: Baumkronen als runde Buckel, dazwischen einzelne Tannen.
+        val shore = IntArray(widthCells) { x ->
+            val bump = (1.8f * sin(x * 0.55 + 0.3)).roundToInt() + if (hash(x / 3, 61) % 3 == 0) 1 else 0
+            (maxH * 0.16f).roundToInt() + bump
+        }
+        for (x in 0 until widthCells) {
+            val top = horizon - shore[x]
+            sheet.put(x, top, Tone.EDGE - 60)
+            for (y in top + 1 until horizon) sheet.put(x, y, Tone.DEEP)
+            // Die Uferlinie: wo Wasser und Land sich treffen, glaenzt es.
+            sheet.put(x, horizon, Tone.EDGE + 40)
+        }
+        for (at in listOf(0.14f, 0.36f, 0.88f)) {
+            sheet.pine((widthCells * at).roundToInt(), horizon - shore[(widthCells * at).roundToInt().coerceIn(0, widthCells - 1)] + 1,
+                (maxH * 0.18f).roundToInt().coerceAtLeast(5), Tone.EDGE - 40, Tone.DEEP)
+        }
+        // Das Bootshaus am Ufer, mit Steg ins Wasser.
+        val bx = (widthCells * 0.60f).roundToInt()
+        sheet.shape(art("...#...", "..###..", ".#####.", "#######"), bx, horizon - 8, Tone.LIT - 200)
+        sheet.shape(art(".#####.", ".#####.", ".##.##.", ".##.##."), bx, horizon - 4, Tone.HAZE + 40)
+        sheet.put(bx + 2, horizon - 3, if (isDark(dayPhase)) Tone.WINDOW else Tone.VOID, light = isDark(dayPhase))
+        for (dx in -5..0) sheet.put(bx + dx, horizon, Tone.LIT - 250)
+
+        // Das Wasser: Spiegelung der Uferlinie, darunter treibende Wellen, nach vorn heller.
+        val drift = PlayScene.beat(phase, 6)
+        for (x in 0 until widthCells) {
+            val reflect = shore[x].coerceAtMost(waterRows - 2)
+            for (d in 1..reflect) {
+                if (Math.floorMod(x + d + drift, 4) != 0) sheet.put(x, horizon + d, Tone.VOID)
+            }
+        }
+        for (row in 2 until waterRows step 2) {
+            val y = horizon + row
+            val spacing = 9 - row / 3
+            val dir = if (row % 4 == 0) 1 else -1
+            for (x in 0 until widthCells) {
+                if (Math.floorMod(x + dir * drift + row * 5, spacing.coerceAtLeast(5)) == 0) {
+                    for (k in 0..2) sheet.put(x + k, y, Tone.EDGE - 120 + row * 15)
+                }
+            }
+        }
+        // Seerosen nah am Ufer.
+        for (at in listOf(0.26f, 0.58f, 0.76f)) {
+            val lx = (widthCells * at).roundToInt()
+            sheet.shape(art(".##.", "####"), lx, ground - 2, Tone.LIT - 280)
+        }
+        return sheet.cells()
+    }
+
+    /**
+     * **Der Wald in Staffeln.** Drei Reihen Tannen hintereinander, nach hinten kleiner und
+     * dunkler - erst dadurch wird aus drei Baeumen auf einer Linie ein Wald, in den man
+     * hineinsieht. Im hohen Wald der Eule ([dense]) stehen die Reihen enger und hoeher.
+     */
+    private fun forestLayers(
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase,
+        dense: Boolean
+    ): List<SceneCell> {
+        val maxH = skyRoom(floorY, if (dense) 38 else 32)
+        if (widthCells <= 0 || maxH < 10) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        // Hinten ein Hang, damit die hinterste Reihe nicht auf der Bodenlinie steht.
+        sheet.ridge(wave(widthCells, maxH * 0.22f, Triple(0.12, maxH * 0.05f, 1.0)), Tone.DEEP + 40, Tone.VOID)
+        val rows = listOf(
+            Triple(0.55f, 0.42f, Tone.DEEP + 40 to Tone.DEEP - 60),
+            Triple(0.78f, 0.24f, Tone.EDGE - 160 to Tone.DEEP),
+            Triple(1.0f, 0.10f, Tone.EDGE - 60 to Tone.VOID)
+        )
+        for ((r, row) in rows.withIndex()) {
+            val (tall, lift, tones) = row
+            val step = if (dense) 5 + r else 7 + r * 2
+            // Erst die ganze Reihe als eine Flaeche sammeln, dann nur ihren Umriss aufhellen -
+            // sonst zeichnen die Lichtkanten der einzelnen Baeume Schraffuren in die Nachbarn.
+            val row = Sheet(widthCells, floorY)
+            var x = (hash(r, 71) % step)
+            while (x < widthCells + 4) {
+                val h = (maxH * tall * (0.75f + (hash(x, r + 72) % 25) / 100f)).roundToInt()
+                row.pine(x, ground - (maxH * lift).roundToInt(), h, 1, 1)
+                x += step + hash(x, r + 73) % 3
+            }
+            for (cell in row.cells()) {
+                val outline = row.at(cell.x, cell.y - 1) == null || row.at(cell.x - 1, cell.y) == null
+                sheet.put(cell.x, cell.y, if (outline) tones.first else tones.second)
+            }
+        }
+        return sheet.cells()
+    }
+
+    /**
+     * **Die Wiese mit der alten Eiche.** Hinten sanfte Huegel, davor ein breiter Wiesenbuckel und
+     * auf seinem Scheitel eine einzelne, grosse Eiche - das Wahrzeichen, an dem man die Wiese
+     * erkennt. Auf der Blumenwiese ([flowers]) ist der Hang mit Bluetenpunkten besetzt.
+     */
+    private fun meadowHill(widthCells: Int, floorY: Int, flowers: Boolean): List<SceneCell> {
+        val maxH = skyRoom(floorY, 30)
+        if (widthCells <= 0 || maxH < 10) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        sheet.ridge(
+            wave(widthCells, maxH * 0.30f, Triple(0.10, maxH * 0.06f, 2.2), Triple(0.27, maxH * 0.02f, 0.5)),
+            Tone.EDGE - 160, Tone.DEEP - 30
+        )
+        val crest = (widthCells * 0.62f).roundToInt()
+        val halfWidth = widthCells * 0.46f
+        val hill = IntArray(widthCells) { x ->
+            val t = (x - crest) / halfWidth
+            (maxH * (0.06f + 0.18f * (1f - t * t).coerceAtLeast(0f))).roundToInt()
+        }
+        sheet.ridge(hill, Tone.LIT - 250, Tone.VOID + 30)
+        if (flowers) {
+            for (x in 0 until widthCells) {
+                for (d in 1 until hill[x] - 1) {
+                    if (hash(x, d + 81) % 9 == 0) sheet.put(x, ground - hill[x] + d, Tone.EDGE)
+                }
+            }
+        }
+        // Die Eiche auf dem Scheitel: kraeftiger Stamm, runde Krone, oben links im Licht.
+        val base = ground - hill[crest]
+        val crownR = (maxH * 0.16f).roundToInt().coerceIn(3, 7)
+        val trunkH = crownR + 1
+        for (d in 1..trunkH) {
+            sheet.put(crest, base - d, Tone.EDGE - 40)
+            sheet.put(crest + 1, base - d, Tone.DEEP + 60)
+        }
+        val cy = base - trunkH - crownR + 1
+        for (dy in -crownR..crownR) for (dx in -crownR - 2..crownR + 2) {
+            val nx = dx / (crownR + 2f)
+            val ny = dy / crownR.toFloat()
+            val r = nx * nx + ny * ny
+            if (r > 1f || (r > 0.8f && hash(crest + dx, dy + 82) % 3 == 0)) continue
+            val b = when {
+                nx + ny < -0.7f -> Tone.LIT - 150
+                nx + ny > 0.6f -> Tone.DEEP + 20
+                else -> Tone.HAZE
+            }
+            sheet.put(crest + dx, cy + dy, b)
+        }
+        return sheet.cells()
+    }
+
+    /**
+     * **Das Ackerland der Ebene.** Hinten flache Huegel, davor Felder als Streifen - gepfluegt,
+     * Stoppeln, Getreide -, ein Hof mit Scheune und Silo und eine Pappelreihe am Weg. Die
+     * Windmuehle steht als eigene Requisite davor (siehe [furnishing]).
+     */
+    private fun farmland(
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase
+    ): List<SceneCell> {
+        val maxH = skyRoom(floorY, 30)
+        if (widthCells <= 0 || maxH < 8) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        val hills = wave(widthCells, maxH * 0.44f, Triple(0.09, maxH * 0.05f, 0.8), Triple(0.23, maxH * 0.02f, 2.0))
+        sheet.ridge(hills, Tone.EDGE - 60, Tone.DEEP + 10)
+        // Felder: drei Streifen uebereinander, jeder mit eigenem Muster.
+        val fieldTop = ground - (maxH * 0.30f).roundToInt()
+        for (y in fieldTop until ground) {
+            val band = (y - fieldTop) * 3 / (ground - fieldTop).coerceAtLeast(1)
+            for (x in 0 until widthCells) {
+                val b = when (band) {
+                    0 -> if (x % 2 == 0) Tone.HAZE + 80 else Tone.DEEP + 40 // Getreide
+                    1 -> if (y % 2 == 0) Tone.EDGE - 220 else Tone.DEEP - 40 // gepfluegt
+                    else -> if (x % 3 == 0) Tone.HAZE else Tone.VOID + 50 // Stoppeln
+                }
+                sheet.put(x, y, b)
+            }
+        }
+        for (x in 0 until widthCells) sheet.put(x, fieldTop, Tone.EDGE)
+        // Der Hof: Wohnhaus, Scheune, daneben das Silo - mitten im Bild, ueber dem Heuballen,
+        // wo weder die Figur noch die Windmuehle davorstehen.
+        val fx = (widthCells * 0.40f).roundToInt()
+        sheet.shape(art("..#..", ".###.", "#####"), fx, fieldTop - 6, Tone.LIT - 100)
+        sheet.shape(art("#####", "#####", "##.##"), fx, fieldTop - 3, Tone.HAZE + 80)
+        if (isDark(dayPhase)) sheet.put(fx + 1, fieldTop - 2, Tone.WINDOW, light = true)
+        sheet.shape(art("..###..", ".#####.", "#######"), fx + 6, fieldTop - 8, Tone.EDGE + 40)
+        sheet.shape(art("#######", "#######", "#######", "#######", "###.###"), fx + 6, fieldTop - 5, Tone.EDGE - 180)
+        sheet.shape(art(".##.", "####", "####", "####", "####", "####", "####", "####"), fx + 14, fieldTop - 8, Tone.HAZE + 100)
+        sheet.shape(art(".##.", "#...", "#...", "#..."), fx + 14, fieldTop - 8, Tone.LIT)
+        // Pappeln am Feldweg: schlanke, hohe Kronen.
+        for (at in listOf(0.18f, 0.24f, 0.72f, 0.78f)) {
+            val px = (widthCells * at).roundToInt()
+            val h = (maxH * 0.30f).roundToInt().coerceAtLeast(7)
+            for (d in 0 until h) {
+                val y = fieldTop - 1 - d
+                sheet.put(px, y, if (d == h - 1) Tone.EDGE else Tone.DEEP + 90)
+                if (d in 2 until h - 2) sheet.put(px - 1, y, Tone.DEEP)
+                if (d in 3 until h - 3) sheet.put(px + 1, y, Tone.VOID + 40)
+            }
+        }
+        return sheet.cells()
+    }
+
+    /**
+     * **Felsnadeln** - der Park des Drachen (siehe PlayScene.habitatPlacements): hohe, schmale,
+     * leicht geneigte Felstuerme mit ausgefransten Flanken und Rissen, hinten ein Dunstband. Eine
+     * Landschaft zum Hinaufklettern - und bewusst ohne gerade Kanten, sonst lesen sich die Nadeln
+     * als Hochhaeuser.
+     */
+    private fun crags(widthCells: Int, floorY: Int): List<SceneCell> {
+        val maxH = skyRoom(floorY, 38)
+        if (widthCells <= 0 || maxH < 10) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        sheet.ridge(wave(widthCells, maxH * 0.30f, Triple(0.21, maxH * 0.05f, 0.3)), Tone.DEEP + 60, Tone.VOID + 20)
+        val spires = listOf(
+            Triple(0.18f, 0.72f, 5), Triple(0.30f, 0.52f, 4), Triple(0.58f, 0.98f, 6),
+            Triple(0.68f, 0.66f, 5), Triple(0.90f, 0.82f, 5)
+        )
+        for ((n, spire) in spires.withIndex()) {
+            val (at, tall, width) = spire
+            val cx = (widthCells * at).roundToInt()
+            val h = (maxH * tall).roundToInt()
+            // Leicht geneigt, nach oben spitz zulaufend, die Flanken ausgefranst - Fels, kein Haus.
+            val lean = if (n % 2 == 0) 1 else -1
+            for (d in 0 until h) {
+                val y = ground - h + d
+                val t = d / h.toFloat()
+                val half = (width * sqrt(t) + (hash(d, n + 94) % 3 - 1) * 0.6f).roundToInt().coerceAtLeast(0)
+                val shift = lean * ((h - d) / 7)
+                val left = cx + shift - half
+                val right = cx + shift + half + (hash(d / 2, n + 95) % 2)
+                for (x in left..right) {
+                    val b = when {
+                        x == left -> Tone.LIT - 120 // Lichtkante links
+                        x >= right - 1 -> Tone.DEEP // Schattenflanke
+                        // Risse: kurze, senkrechte dunkle Linien.
+                        hash(x, n + 96) % 5 == 0 && d % 6 < 4 -> Tone.DEEP + 30
+                        else -> Tone.HAZE - 60
+                    }
+                    sheet.put(x, y, b)
+                }
+            }
+        }
+        // Ein Dunstband zwischen den Nadeln.
+        val hazeY = ground - (maxH * 0.22f).roundToInt()
+        for (x in 0 until widthCells) if (x % 3 != 0) sheet.put(x, hazeY, Tone.DEEP + 30)
+        return sheet.cells()
+    }
+
+    /**
+     * **Der Stadtpark** - Pufflings Park: hinter den Baumkronen am Parkrand steht die Stadt, damit
+     * man weiss, dass dies ein Park IN der Stadt ist. Abends gehen dort einzelne Fenster an.
+     */
+    private fun cityPark(
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase
+    ): List<SceneCell> {
+        val maxH = skyRoom(floorY, 30)
+        if (widthCells <= 0 || maxH < 10) return emptyList()
+        val sheet = Sheet(widthCells, floorY)
+        val ground = floorY - 1
+        var x = 0
         var i = 0
-        var x = 4
         while (x < widthCells) {
-            val height = 9 + hash(i, 21) % 8
-            val baseY = floorY - 1
-            for (d in 0 until height) cells += SceneCell(x, baseY - d, FAR)
-            // Zwei kahle Aeste je Baum.
-            val branchY = baseY - height + 2 + hash(i, 22) % 3
-            cells += SceneCell(x - 1, branchY, FAR)
-            cells += SceneCell(x - 2, branchY - 1, FAR)
-            cells += SceneCell(x + 1, branchY + 2, FAR)
-            cells += SceneCell(x + 2, branchY + 1, FAR)
-            x += 9 + hash(i, 23) % 6
+            val w = 4 + hash(i, 91) % 4
+            val h = (maxH * (0.34f + (hash(i, 92) % 30) / 100f)).roundToInt()
+            for (cx in x until (x + w).coerceAtMost(widthCells)) {
+                for (y in ground - h until ground) {
+                    val edge = y == ground - h || cx == x
+                    val window = (cx - x) % 2 == 1 && (y - (ground - h)) % 3 == 1 && !edge
+                    when {
+                        edge -> sheet.put(cx, y, Tone.DEEP + 70)
+                        window && isDark(dayPhase) && hash(cx * 5 + i, y) % 4 == 0 ->
+                            sheet.put(cx, y, Tone.WINDOW - 700, light = true)
+                        else -> sheet.put(cx, y, Tone.VOID)
+                    }
+                }
+            }
+            x += w + 1
             i++
         }
-        // Wasserlinie hinten - eine unterbrochene, blasse Spiegelung.
-        for (wx in 0 until widthCells) {
-            if (wx % 3 != 1) cells += SceneCell(wx, floorY - 1, FAR - 60)
-        }
-        return cells.filter { it.x in 0 until widthCells && it.y >= 0 }
+        // Die Baumkronen am Parkrand davor: runde Buckel.
+        sheet.ridge(
+            IntArray(widthCells) { cx ->
+                (maxH * 0.20f + 2.2f * abs(sin(cx * 0.42)).toFloat()).roundToInt()
+            },
+            Tone.EDGE - 80, Tone.DEEP - 30
+        )
+        return sheet.cells()
     }
 
     /**
@@ -925,34 +1565,6 @@ internal object PlayWorld {
             }
         }
         return cells.filter { it.x in 0 until widthCells && it.y >= 0 }
-    }
-
-    /** Weite, sanfte Huegel und ein fernes Gehoeft. */
-    private fun rollingHills(widthCells: Int, floorY: Int): List<SceneCell> {
-        if (widthCells <= 0 || floorY < 10) return emptyList()
-        val cells = mutableListOf<SceneCell>()
-        val amp = skyRoom(floorY, 8)
-        val heights = IntArray(widthCells) { x ->
-            (3 + amp * 0.5f * (1 + sin(x * 0.13)) + amp * 0.3f * sin(x * 0.051 + 1.3)).roundToInt()
-        }
-        for (x in 0 until widthCells) {
-            val top = floorY - 1 - heights[x]
-            cells += SceneCell(x, top, NEAR)
-            for (y in top + 1 until floorY - 1) if ((x + y) % 4 == 0) cells += SceneCell(x, y, FAR - 60)
-        }
-        // Fernes Gehoeft auf dem Huegel.
-        val fx = (widthCells * 0.32f).toInt()
-        if (fx + 6 < widthCells) {
-            val ground = floorY - 1 - heights[fx + 3]
-            cells += place(art(
-                "...#...",
-                "..###..",
-                ".#####.",
-                ".#.#.#.",
-                ".#####."
-            ), fx, ground - 5, FAR + 80)
-        }
-        return cells
     }
 
     /**
@@ -1015,6 +1627,38 @@ internal object PlayWorld {
             "######",
             ".####."
         ), boatX - 4, horizon - 5, NEAR + 120)
+        // **Der Leuchtturm auf der Landzunge** - das Wahrzeichen des Strandes. Gestreift, damit man
+        // ihn auch klein als Leuchtturm liest; nachts kreist sein Licht, der Strahl zeigt
+        // abwechselnd aufs Meer hinaus und ueber das Land.
+        val capeFrom = (widthCells * 0.80f).roundToInt()
+        for (x in capeFrom until widthCells) {
+            val h = ((x - capeFrom) * 0.7f).roundToInt().coerceAtMost(5)
+            for (y in horizon - h..horizon) cells += SceneCell(x, y, if (y == horizon - h) Tone.EDGE - 100 else Tone.DEEP)
+        }
+        val towerX = (widthCells * 0.91f).roundToInt()
+        val towerBase = horizon - 5
+        for (d in 0 until 10) {
+            for (dx in -1..1) {
+                val band = if ((d / 2) % 2 == 0) Tone.LIT - 250 else Tone.HAZE - 80
+                cells += SceneCell(towerX + dx, towerBase - d, if (dx == 1) band - 120 else band)
+            }
+        }
+        val lampY = towerBase - 11
+        cells += SceneCell(towerX - 1, lampY + 1, Tone.EDGE)
+        cells += SceneCell(towerX + 1, lampY + 1, Tone.EDGE)
+        cells += SceneCell(towerX, lampY - 1, Tone.EDGE)
+        if (isDark(dayPhase)) {
+            cells += SceneCell(towerX, lampY, PlayScene.GLOW, isLight = true)
+            val turn = PlayScene.beat(phase, 4) % 4
+            val dir = when (turn) { 0 -> -1; 2 -> 1; else -> 0 }
+            if (dir != 0) {
+                for (k in 1..(if (dir < 0) 9 else 4)) {
+                    cells += SceneCell(towerX + dir * k, lampY, (PlayScene.GLOW - 300 - k * 140).coerceAtLeast(300), isLight = true)
+                }
+            }
+        } else {
+            cells += SceneCell(towerX, lampY, Tone.LIT)
+        }
         return cells.filter { it.x in 0 until widthCells && it.y >= 0 }
     }
 

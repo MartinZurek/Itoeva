@@ -98,14 +98,17 @@ class PlayWorldTest {
     fun `jede Landschaft hat einen eigenen fernen Hintergrund`() {
         val bilder = PlayWorld.NATURE.associateWith { place ->
             PlayWorld.background(place, 0, width, floorY, PlayAmbientActivity.DayPhase.MIDDAY)
-                .map { it.x to it.y }.toSet()
+                .associate { (it.x to it.y) to it.brightness }
         }
         for ((place, zellen) in bilder) assertTrue("$place hat keinen Hintergrund", zellen.size > 60)
         val liste = bilder.entries.toList()
+        // Gleich aussehen heisst: an derselben Stelle derselbe Ton. Nur die belegten Zellen zu
+        // vergleichen reicht nicht mehr, seit mehrere Landschaften die untere Flaeche ganz fuellen.
         for (i in liste.indices) for (j in i + 1 until liste.size) {
             val a = liste[i].value
             val b = liste[j].value
-            val gemeinsam = a.count { it in b }.toDouble() / minOf(a.size, b.size)
+            val gleich = a.count { (pos, hell) -> b[pos]?.let { kotlin.math.abs(it - hell) < 60 } == true }
+            val gemeinsam = gleich.toDouble() / (a.keys + b.keys).size
             assertTrue("${liste[i].key} und ${liste[j].key} sehen gleich aus", gemeinsam < 0.6)
         }
     }
@@ -188,7 +191,11 @@ class PlayWorldTest {
         val maske = PlayWorld.skyMask(PlayScene.Place.MOUNTAINS, width, floorY)
         assertTrue(maske.isNotEmpty())
         val nacht = build(PlayScene.Place.MOUNTAINS, dayPhase = PlayAmbientActivity.DayPhase.NIGHT)
-        val sterne = nacht.filter { it.isLight && it.y < floorY - 2 }
+        // Die Fenster der Almhuette leuchten nachts - sie gehoeren zum Berg, sie sind kein Stern.
+        val eigeneLichter = PlayWorld.background(
+            PlayScene.Place.MOUNTAINS, 0, width, floorY, PlayAmbientActivity.DayPhase.NIGHT
+        ).filter { it.isLight }.map { it.x to it.y }.toSet()
+        val sterne = nacht.filter { it.isLight && it.y < floorY - 2 && (it.x to it.y) !in eigeneLichter }
         for (stern in sterne) assertFalse("Stern vor dem Berg bei ${stern.x to stern.y}", (stern.x to stern.y) in maske)
     }
 

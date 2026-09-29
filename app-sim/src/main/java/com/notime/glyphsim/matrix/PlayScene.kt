@@ -691,7 +691,7 @@ object PlayScene {
             val ox = originX(placement, widthCells)
             (ox until ox + placement.prop.width) to originY(placement, floorY)
         }
-        cells += PlayWorld.background(place, phase, widthCells, floorY, dayPhase, foregroundSpans)
+        cells += PlayWorld.background(place, phase, widthCells, floorY, dayPhase, foregroundSpans, species)
         // VOR den Requisiten: Beiwerk am Boden (Gras) liegt in derselben Zeile, in der die
         // Requisiten aufsetzen. Zeichnete man es danach, stanzte ein Grasbueschel dem Baumstamm
         // und dem Strauch eine dunklere Kerbe in die Silhouette - spaeter gezeichnete Zellen
@@ -816,7 +816,7 @@ object PlayScene {
         val placements = fitting(placementsFor(place, species, acquisitions), widthCells, floorY)
         val hidden = occupied.mapTo(HashSet()) { it.x to it.y } +
             facadeMask(placements, widthCells, floorY) +
-            PlayWorld.skyMask(place, widthCells, floorY)
+            PlayWorld.skyMask(place, widthCells, floorY, species)
         val disc = listOf(
             -1 to -2, 0 to -2, 1 to -2,
             -2 to -1, -1 to -1, 0 to -1, 1 to -1, 2 to -1,
@@ -4045,7 +4045,7 @@ object PlayScene {
                 // berechnet: Sternbild UND Sternschnuppe brauchen dieselbe Maske. Dazu kommt, was
                 // der ferne Hintergrund verdeckt (Berge, Blaetterdach, Skyline).
                 val verdeckt = facadeMask(placements, widthCells, floorY) +
-                    PlayWorld.skyMask(place, widthCells, floorY)
+                    PlayWorld.skyMask(place, widthCells, floorY, species)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
                     // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:
                     // ein Sternbild aus sieben Sternen, jeder auf
