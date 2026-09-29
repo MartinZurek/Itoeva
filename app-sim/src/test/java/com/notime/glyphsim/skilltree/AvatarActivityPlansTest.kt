@@ -257,6 +257,27 @@ class AvatarActivityPlansTest {
         )
     }
 
+    /**
+     * Gemeldet am 29.09.: Aus dem Gebirge ging das Wesen fuer eine Sport-Erinnerung zum
+     * Sportplatz. Fern vom Sportplatz wird vor Ort geuebt - mit dem, was da liegt.
+     */
+    @Test
+    fun `fern vom Sportplatz wird vor Ort mit Stein oder Stamm geuebt`() {
+        for ((place, gear) in listOf(
+            PlayScene.Place.MOUNTAINS to PlayEffects.TrainingGear.STONE,
+            PlayScene.Place.BEACH to PlayEffects.TrainingGear.STONE,
+            PlayScene.Place.CAMP to PlayEffects.TrainingGear.LOG
+        )) {
+            val resolved = strength(place, emptySet(), "sport/kraft-ausdauer")!!
+            assertTrue(place.name, resolved.routine.steps.none { it is RoutineStep.GoToPlace })
+            assertTrue(place.name, resolved.routine.steps.filterIsInstance<RoutineStep.Training>().all { it.gear == gear })
+        }
+        // Auf dem Sportplatz bleibt es die Hantel, aus der Wohnung geht es weiter dorthin.
+        val daheim = strength(PlayScene.Place.LIVING, emptySet(), "sport/kraft-ausdauer")!!
+        assertTrue(daheim.routine.steps.contains(RoutineStep.GoToPlace(PlayScene.Place.SPORT)))
+        assertTrue(daheim.routine.steps.filterIsInstance<RoutineStep.Training>().all { it.gear == PlayEffects.TrainingGear.DUMBBELL })
+    }
+
     /** Erst der echte Knoten bringt das Heben - nicht ein Level, nicht die Spezies. */
     @Test
     fun `Heben erscheint erst nach echter Freischaltung`() {

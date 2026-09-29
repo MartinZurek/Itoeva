@@ -93,6 +93,7 @@ import com.notime.glyphsim.matrix.AvatarShading
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarWatchdog
 import com.notime.glyphsim.data.AppDatabase
+import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.skilltree.ActivityContext
 import com.notime.glyphsim.skilltree.AvatarActivityBus
@@ -630,6 +631,7 @@ fun DockScreen(
         var basketballSince by remember { mutableIntStateOf(0) }
         /** Sichtbare Krafttrainingsphase mit Hantel. */
         var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
+        var trainingGear by remember { mutableStateOf(PlayEffects.TrainingGear.DUMBBELL) }
         /**
          * Das laufende Gruppenspiel (siehe [PlayGroupGame]) - solange gesetzt, spielen alle mit,
          * die gerade da sind, und ihre Haltung kommt aus dem Spiel statt aus ihrer Schleife.
@@ -1278,8 +1280,10 @@ fun DockScreen(
          *
          * Der Park hat keine Tuer (man geht nach draussen, nicht in ein Zimmer); dorthin und von
          * dort wird weiterhin ueberblendet.
+         *
+         * Nur EIN Schritt zum Nachbarort - den ganzen Weg geht [moveToPlace] (siehe PlayMap).
          */
-        suspend fun moveToPlace(target: PlayScene.Place, species: AvatarSpecies) {
+        suspend fun stepToPlace(target: PlayScene.Place, species: AvatarSpecies) {
             if (target == currentPlace) return
             // Ob die Figur gerade aus dem Regen hereinkommt - siehe das Abschuetteln unten.
             val fromRain = PlayWeather.current().isFalling &&
@@ -1373,6 +1377,46 @@ fun DockScreen(
                 )
             ) {
                 startAvatarIdleLoop(species, AvatarMoodSnapshot.forSpecies(context, species))
+            }
+        }
+
+        /**
+         * Ein Zwischenort auf der Durchreise: draussen kurz stehen bleiben und sich umsehen
+         * ("richtig reisen", siehe PlayMap.lingersAt), dann zum anderen Bildrand weiter. Drinnen
+         * fuehrt der naechste Schritt ohnehin zur Tuer.
+         */
+        suspend fun passThrough(place: PlayScene.Place, species: AvatarSpecies) {
+            if (PlayMap.lingersAt(place)) {
+                avatarIdleJob?.cancel()
+                val look = AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.LOOK_AROUND)
+                MatrixAnimator.playTimed(look.frames, look.holdsMs) { f ->
+                    avatar = avatar?.copy(frame = f)
+                }
+                startAvatarIdleLoop(species, AvatarMoodSnapshot.forSpecies(context, species))
+                delay((PASS_THROUGH_LINGER_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
+            }
+            if (!PlayScene.isOutdoors(place)) return
+            val px = with(density) { (avatar?.sizeDp ?: worldAvatarSizeDp).dp.toPx() }
+            if (walkAvatarTo(
+                    avatarSpot(PlayScene.screenFraction(0.04f, sceneWidthCells), px, maxWidthPx, floorYPx, species)
+                )
+            ) {
+                startAvatarIdleLoop(species, AvatarMoodSnapshot.forSpecies(context, species))
+            }
+        }
+
+        /**
+         * **Der ganze Weg an einen Ort, ueber die Karte** (siehe PlayMap): Liegt das Ziel nicht
+         * nebenan, geht die Figur den Weg Ort fuer Ort ([stepToPlace]) - vom Gebirge zum
+         * Sportplatz ueber Wiese und Park, nicht mehr in einem Sprung. Draussen bleibt sie an
+         * jedem Zwischenort kurz stehen und sieht sich um ([passThrough]).
+         */
+        suspend fun moveToPlace(target: PlayScene.Place, species: AvatarSpecies) {
+            if (target == currentPlace) return
+            val weg = PlayMap.route(currentPlace, target).ifEmpty { listOf(target) }
+            for (ort in weg) {
+                stepToPlace(ort, species)
+                if (ort != target) passThrough(ort, species)
             }
         }
 
@@ -1812,6 +1856,7 @@ fun DockScreen(
 
                     is RoutineStep.Training -> {
                         trainingPhase = step.phase
+                        trainingGear = step.gear
                         avatarIdleJob?.cancel()
                         val movement = if (step.phase == PlayEffects.TrainingPhase.REST) {
                             AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.STRETCH)
@@ -3554,18 +3599,33 @@ fun DockScreen(
                     val requestedFrom = currentPlace
                     val (baseAgent, baseWorld) = livingStateFor(species)
                     currentTopic = topic
-                    moveToPlace(PlayScene.forTopic(topic), species)
+                    // **Vor Ort statt heimlaufen** (siehe PlayMap.fromHere): Wer im Gebirge ist
+                    // und etwas trinken soll, trinkt dort aus dem Proviant.
+                    val gebetenVonHier = PlayMap.fromHere(
+                        PlayRoutines.forTopic(
+                            topic = topic,
+                            needsShopping = baseWorld.portions <= 0 &&
+                                baseWorld.coins >= ActionCatalog.GROCERY_COST,
+                            footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
+                        ),
+                        topic,
+                        currentPlace,
+                        Random.nextInt(1_000)
+                    )
+                    // Beginnt der Ablauf selbst mit einem Ortswechsel (Ausflug, Einkauf), geht er
+                    // von hier aus los - sonst liefe das Wesen erst zum Ort des Themas und von
+                    // dort wieder hinaus.
+                    if (!gebetenVonHier.local &&
+                        gebetenVonHier.routine.steps.firstOrNull() !is RoutineStep.GoToPlace
+                    ) {
+                        moveToPlace(PlayScene.forTopic(topic), species)
+                    }
                     // **Ohne `recentSpecials`, mit Absicht.** Eine ausdrueckliche Bitte des
                     // Nutzers ist kein Baustein des Tagesablaufs, den man auf Abwechslung
                     // trimmen darf - wer zweimal dasselbe erbittet, soll zweimal dasselbe
                     // bekommen. Mitgefuehrt wird es trotzdem: Fuer die FOLGENDEN autonomen
                     // Regungen war es sehr wohl zu sehen.
-                    val gebeten = PlayRoutines.forTopic(
-                        topic = topic,
-                        needsShopping = baseWorld.portions <= 0 &&
-                            baseWorld.coins >= ActionCatalog.GROCERY_COST,
-                        footballTrickLearned = PlayFootballSkill.isLearned(context, presenceProfileId)
-                    )
+                    val gebeten = gebetenVonHier.routine
                     rememberShown(topic, gebeten)
                     val completed = runRoutine(
                         gebeten,
@@ -3995,7 +4055,12 @@ fun DockScreen(
                                 nightClosed = phaseJetzt == PlayAmbientActivity.DayPhase.NIGHT || spaeteStunde
                             )
                             val topic = prepared.topic
-                            val gewaehlt = prepared.routine
+                            // **Von hier aus** (siehe PlayMap.fromHere): Umwege ueber die Stadt
+                            // fallen weg, und liegt das Ziel fuer eine Kleinigkeit zu weit -
+                            // Trinken in der Kueche, Hanteln auf dem Sportplatz, waehrend das Wesen
+                            // im Gebirge ist -, wird es an Ort und Stelle getan.
+                            val vonHier = prepared.routine?.let { PlayMap.fromHere(it, topic, currentPlace, Random.nextInt(1_000)) }
+                            val gewaehlt = vonHier?.routine
                             if (topic == null || gewaehlt == null) {
                                 livingAgent = prepared.result.agent
                                 livingWorld = prepared.result.world
@@ -4016,8 +4081,7 @@ fun DockScreen(
                             // (siehe LaunchedEffect(currentPlace) oben, laeuft in eigener
                             // Coroutine), und waehrend er geht, blendet der alte Raum weg und der
                             // neue um ihn herum auf. Genau darin liegt der Ortswechsel.
-                            val place = gewaehlt.steps.filterIsInstance<RoutineStep.GoToPlace>()
-                                .firstOrNull()?.place ?: PlayScene.forTopic(topic)
+                            val place = if (vonHier?.local == true) currentPlace else PlayMap.destinationOf(gewaehlt, topic)
                             // **Ist noch jemand da, wird aus Bewegung ein Spiel mit allen** (siehe
                             // PlayGroupGame). Gemeldet: Morgens standen vier Figuren im Park, nur eine
                             // tat etwas, ohne Musik. Solche Szenen sollen den Alltag aufbrechen und
@@ -5119,7 +5183,8 @@ fun DockScreen(
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             phase = training,
-                            scenePhase = scenePhase
+                            scenePhase = scenePhase,
+                            gear = trainingGear
                         )
                     )
                 }
@@ -5748,6 +5813,9 @@ private fun shareClipFile(context: android.content.Context, file: java.io.File) 
 
 /** Wie lange die Tuer offen steht, bevor er hindurchgeht. */
 private const val DOOR_OPEN_MS = 380L
+
+/** Wie lange die Figur an einem Zwischenort draussen stehen bleibt und sich umsieht (siehe PlayMap). */
+private const val PASS_THROUGH_LINGER_MS = 4_000L
 
 /** Wie lange das Hinein- und Heraustreten aus dem Tuerrahmen dauert. */
 private const val DOOR_STEP_MS = 420

@@ -767,7 +767,15 @@ object AvatarAnimations {
      * Fuesse, Schwanz, Akzent, Augen, Mund) statt aus neuer Pixel-Art. Damit gelten sie sofort
      * fuer alle sechs Grundformen, und wer eine siebte hinzufuegt, bekommt sie geschenkt.
      */
-    enum class Fidget { LOOK_AROUND, STRETCH, YAWN, SHAKE }
+    enum class Fidget {
+        LOOK_AROUND, STRETCH, YAWN, SHAKE,
+
+        /**
+         * **Ein Salto** - Sport ohne Sportplatz (siehe [PlayMap.onTheSpot]). Kein Leerlauf-Fidget:
+         * [PlayAmbientActivity.nextFidget] zieht ihn nie, er kommt nur als Schritt eines Ablaufs.
+         */
+        FLIP
+    }
 
     fun fidgetSequence(species: AvatarSpecies, fidget: Fidget): AvatarSequence {
         val body = AvatarBodies.forSpecies(species)
@@ -811,6 +819,19 @@ object AvatarAnimations {
                 creatureFrame(body, dx = -1, accentPhase = 1).beat(FAST_MS),
                 creatureFrame(body, dx = 1, tailWag = 1).beat(FAST_MS),
                 creatureFrame(body, tailWag = -1).beat(SETTLE_MS)
+            )
+
+            // Salto: in die Knie, abspringen, sich in der Luft einmal ganz drehen, landen -
+            // Staub. Die Drehung ist die ganze Figur um ihre Mitte, in Vierteln.
+            Fidget.FLIP -> listOf(
+                creatureFrame(body, feetSpread = 1, eyeHoles = body.eyesHalf).beat(BEAT_MS),
+                creatureFrame(body, dy = -2, feetSpread = 1, mouthHoles = body.mouthOpen).beat(FAST_MS),
+                turned(creatureFrame(body, dy = -3, mouthHoles = body.mouthOpen), quarter = 1, dy = -3).beat(FAST_MS),
+                turned(creatureFrame(body, dy = -3, mouthHoles = body.mouthOpen), quarter = 2, dy = -3).beat(FAST_MS),
+                turned(creatureFrame(body, dy = -3, mouthHoles = body.mouthOpen), quarter = 3, dy = -3).beat(FAST_MS),
+                creatureFrame(body, dy = -1, feetSpread = 2, mouthHoles = body.mouthOpen).beat(FAST_MS),
+                creatureFrame(body, feetSpread = 1, prop = dust(0)).beat(BEAT_MS),
+                creatureFrame(body, tailWag = 1).beat(SETTLE_MS)
             )
         }.mergeRepeats()
         val frames = FrameCrossfade.withCrossfades(GRID, AvatarGeometry.HEIGHT, beats.map { it.points }, steps = CROSSFADE_STEPS, loop = false)
@@ -917,6 +938,30 @@ object AvatarAnimations {
      * unsichtbar auf dem Koerper lag. [dx] verschiebt die Wolke mit dem Landepunkt.
      */
     private fun dust(dx: Int) = listOf((4 + dx) to 15, (11 + dx) to 15)
+
+    /**
+     * Die fertige Pose um [quarter] Vierteldrehungen (im Uhrzeigersinn) um die Mitte des
+     * Koerpers gedreht - fuer den Salto. [dy] ist der Versatz, um den die Pose schon angehoben
+     * ist. Was dabei aus dem Raster oder in die oberste Zeile ragen wuerde (Schwanz- und
+     * Fussspitzen), faellt weg: Die oberste Zeile muss frei bleiben (siehe AvatarGeometry.HEADROOM).
+     */
+    private fun turned(points: List<Pair<Int, Int>>, quarter: Int, dy: Int): List<Pair<Int, Int>> {
+        // Mitte des 16x16-Koerpers: x 7.5, y 7.5 + Kopffreiheit + Versatz. Doppelt gerechnet,
+        // damit die halben Koordinaten ganzzahlig bleiben.
+        val cx2 = GRID - 1
+        val cy2 = GRID - 1 + 2 * (AvatarGeometry.HEADROOM + dy)
+        return points.map { (x, y) ->
+            val rx = 2 * x - cx2
+            val ry = 2 * y - cy2
+            val (tx, ty) = when (Math.floorMod(quarter, 4)) {
+                1 -> -ry to rx
+                2 -> -rx to -ry
+                3 -> ry to -rx
+                else -> rx to ry
+            }
+            (tx + cx2) / 2 to (ty + cy2) / 2
+        }.filter { (x, y) -> x in 0 until GRID && y in 1 until AvatarGeometry.HEIGHT }
+    }
 
     // Die Bilder sind unveraendert, der RHYTHMUS nicht. Vorher stand jedes einzelne 90 ms
     // ([FAST_MS]) - bei diesem Tempo loest das Auge die Posen nicht auf, und aus drei Spruengen
