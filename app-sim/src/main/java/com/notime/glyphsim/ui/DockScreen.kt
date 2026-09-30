@@ -94,6 +94,7 @@ import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarWatchdog
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.PlayMap
+import com.notime.glyphsim.matrix.PlayPastime
 import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.skilltree.ActivityContext
 import com.notime.glyphsim.skilltree.AvatarActivityBus
@@ -632,6 +633,9 @@ fun DockScreen(
         /** Sichtbare Krafttrainingsphase mit Hantel. */
         var trainingPhase by remember { mutableStateOf<PlayEffects.TrainingPhase?>(null) }
         var trainingGear by remember { mutableStateOf(PlayEffects.TrainingGear.DUMBBELL) }
+        /** Was das Wesen gerade beobachtet (siehe PlayPastime) - Vogel oder Schmetterling. */
+        var watching by remember { mutableStateOf<Pair<PlayEffects.WatchKind, PlayEffects.WatchPhase>?>(null) }
+        var watchingSince by remember { mutableIntStateOf(0) }
         /**
          * Das laufende Gruppenspiel (siehe [PlayGroupGame]) - solange gesetzt, spielen alle mit,
          * die gerade da sind, und ihre Haltung kommt aus dem Spiel statt aus ihrer Schleife.
@@ -1869,6 +1873,13 @@ fun DockScreen(
                         startAvatarIdleLoop(species, mood)
                     }
 
+                    is RoutineStep.Watch -> {
+                        // Das Beobachtete bewegt sich, die Figur haelt still - ihre Ruhe-Schleife
+                        // laeuft weiter. Nur die Uhr der Phase beginnt von vorn.
+                        watching = step.kind to step.phase
+                        watchingSince = scenePhase
+                    }
+
                     is RoutineStep.Music -> {
                         musicPhase = step.phase
                         avatarIdleJob?.cancel()
@@ -2091,6 +2102,7 @@ fun DockScreen(
                 footballPhase = null
                 basketballPhase = null
                 trainingPhase = null
+                watching = null
                 activeActivity = null
                 musicPhase = null
                 paintingPhase = null
@@ -3771,7 +3783,17 @@ fun DockScreen(
                         evaluateExternalImpulse = false
                         PlayAmbientActivity.Action.PERFORM
                     } else {
-                        PlayAmbientActivity.nextAction()
+                        PlayAmbientActivity.nextAction().let { gewuerfelt ->
+                            // Nachts wird geschlafen, nicht Voegeln zugesehen: Die ruhige Szene
+                            // wird dann zur gewoehnlichen Entscheidung, die das Bett kennt.
+                            if (gewuerfelt == PlayAmbientActivity.Action.PASTIME &&
+                                PlayAmbientActivity.activityPhase() == PlayAmbientActivity.DayPhase.NIGHT
+                            ) {
+                                PlayAmbientActivity.Action.PERFORM
+                            } else {
+                                gewuerfelt
+                            }
+                        }
                     }
                     when (ambientAction) {
                         PlayAmbientActivity.Action.FLOURISH -> {
@@ -3782,6 +3804,20 @@ fun DockScreen(
                             }
                             val mood = AvatarMoodSnapshot.forSpecies(context, species)
                             startAvatarIdleLoop(species, mood)
+                        }
+                        PlayAmbientActivity.Action.PASTIME -> {
+                            // **Etwas Ruhiges, aber etwas** (siehe PlayPastime): einen Vogel
+                            // beobachten, in die Weite sehen, sich setzen und nachdenken - an Ort
+                            // und Stelle, ohne Wirkung im Living-Kern. Unterwegs bleibt das
+                            // Gefundene in der Hand.
+                            val szene = PlayPastime.scene(
+                                place = currentPlace,
+                                phase = PlayAmbientActivity.currentDayPhase(),
+                                falling = PlayWeather.current().isFalling,
+                                roll = Random.nextInt(1_000)
+                            )
+                            carried = questProgress?.let { PlayQuests.carriedOnJourney(it) }
+                            runRoutine(szene, species, applyLegacyEconomy = false)
                         }
                         PlayAmbientActivity.Action.FIDGET -> {
                             // Die haeufigste Regung und absichtlich die unscheinbarste: Sich
@@ -5188,6 +5224,19 @@ fun DockScreen(
                             avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
                             avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
                             scenePhase = scenePhase,
+                            widthCells = sceneWidthCells
+                        )
+                    )
+                }
+                val beobachtet = watching
+                if (current != null && beobachtet != null && !avatarHidden && sceneCellPx > 0f) {
+                    addAll(
+                        PlayEffects.watchCells(
+                            kind = beobachtet.first,
+                            phase = beobachtet.second,
+                            avatarCellX = (current.offset.x / sceneCellPx).roundToInt(),
+                            avatarCellY = (current.offset.y / sceneCellPx).roundToInt(),
+                            age = scenePhase - watchingSince,
                             widthCells = sceneWidthCells
                         )
                     )

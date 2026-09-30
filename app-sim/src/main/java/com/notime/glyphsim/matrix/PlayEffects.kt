@@ -52,6 +52,16 @@ object PlayEffects {
     /** Basketball vom Prellen bis zum Treffer. */
     enum class BasketballPhase { DRIBBLE, AIM, SHOOT, SCORE }
 
+    /**
+     * **Etwas beobachten** - die ruhigen Beschaeftigungen zwischen den grossen (siehe
+     * [PlayPastime]): ein Vogel, der sich neben das Wesen setzt und pickt, ein Schmetterling, der
+     * um es herumflattert.
+     */
+    enum class WatchKind { BIRD, BUTTERFLY }
+
+    /** Ankommen, dableiben, wieder fort. */
+    enum class WatchPhase { COME, STAY, GO }
+
     /** Krafttraining mit einer Hantel. */
     enum class TrainingPhase { WARM_UP, LIFT, REST }
 
@@ -939,6 +949,78 @@ object PlayEffects {
         }
         return piece.render(grounded = phase == TrainingPhase.REST).distinctBy { it.x to it.y }
     }
+
+    /**
+     * Was das Wesen beobachtet ([WatchKind]) - [age] in Szenentakten seit Beginn der Phase.
+     *
+     * Der Vogel kommt von oben rechts in einem Bogen herunter, landet eine Handbreit neben der
+     * Figur, pickt und huepft, und fliegt am Ende schraeg nach oben davon. Der Schmetterling
+     * flattert in einer liegenden Acht um den Kopf. Beide sind klein (drei Zellen breit) und
+     * hell: Sie sollen auffallen, ohne der Figur die Buehne zu nehmen.
+     */
+    fun watchCells(
+        kind: WatchKind,
+        phase: WatchPhase,
+        avatarCellX: Int,
+        avatarCellY: Int,
+        age: Int,
+        widthCells: Int
+    ): List<SceneCell> {
+        val groundY = avatarCellY + AvatarGeometry.HEIGHT - 1
+        val floorY = groundY + 1
+        val flap = age % 2 == 0
+        return when (kind) {
+            WatchKind.BIRD -> {
+                val landX = avatarCellX + 19
+                val landY = groundY - 1
+                val t = (age / WATCH_FLIGHT_TICKS.toFloat()).coerceIn(0f, 1f)
+                val (x, y, flying) = when (phase) {
+                    // Im Bogen herunter: waagerecht gleichmaessig, senkrecht erst schnell, dann sanft.
+                    WatchPhase.COME -> Triple(
+                        landX + ((1f - t) * 22f).toInt(),
+                        landY - ((1f - t) * (1f - t) * 16f).toInt(),
+                        t < 1f
+                    )
+                    // Am Boden: alle paar Takte ein kleiner Hopser zur Seite, dazwischen picken.
+                    WatchPhase.STAY -> Triple(landX + (age / 6) % 3 - 1, landY, false)
+                    WatchPhase.GO -> Triple(
+                        landX + (t * 24f).toInt(),
+                        landY - (t * 18f).toInt(),
+                        true
+                    )
+                }
+                val bird = PlayInk.Sketch(x, y, 1, widthCells, floorY)
+                when {
+                    flying && flap -> bird.art(-1, -1, "#.#", ".#.")
+                    flying -> bird.art(-1, -1, "...", "###")
+                    // Pickend: Kopf unten, sonst aufrecht mit hellem Auge.
+                    (age / 3) % 2 == 0 -> bird.art(-1, -1, ".#*", "##.")
+                    else -> bird.art(-1, -1, "##.", ".##")
+                }
+                bird.render(carve = false, grounded = !flying)
+            }
+            WatchKind.BUTTERFLY -> {
+                val cx = avatarCellX + 8
+                val cy = avatarCellY + AvatarGeometry.HEADROOM - 1
+                val t = (age / WATCH_FLIGHT_TICKS.toFloat()).coerceIn(0f, 1f)
+                val a = age * 0.35f
+                // Liegende Acht um den Kopf; beim Kommen und Gehen von der Seite her.
+                val ox = (kotlin.math.sin(a) * 9f).toInt()
+                val oy = (kotlin.math.sin(2f * a) * 3f).toInt()
+                val off = when (phase) {
+                    WatchPhase.COME -> ((1f - t) * 26f).toInt()
+                    WatchPhase.STAY -> 0
+                    WatchPhase.GO -> -(t * 26f).toInt()
+                }
+                val fly = PlayInk.Sketch(cx + ox + off, cy + oy - if (phase == WatchPhase.GO) (t * 10f).toInt() else 0, 1, widthCells, floorY)
+                if (flap) fly.art(-1, 0, "#*#") else fly.art(-1, 0, "+*+")
+                fly.render(carve = false)
+            }
+        }
+    }
+
+    /** So viele Szenentakte dauert der Anflug oder Abflug. */
+    private const val WATCH_FLIGHT_TICKS = 12
 
     fun musicCells(
         avatarCellX: Int,

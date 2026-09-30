@@ -669,6 +669,36 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-30 - Kein Herumstehen mehr: ruhige Szenen statt leerer Pausen
+
+**Anlass:** Beobachtung des Nutzers: Beim Reinschalten tut das Wesen ab und zu etwas (Training),
+"und danach steht da einfach nur ein Bild, als haette er kein Ziel". Entspannen sei in Ordnung,
+aber dann solle man sehen, WAS er tut - einen Vogel beobachten, die Aussicht, sich hinsetzen und
+nachdenken.
+
+**Befund:** Zwischen zwei Regungen lag eine feste Pause von 18-36 s (abends x1,4), und nur jede
+zweite Regung war eine Handlung; der Rest waren Zucker von ein, zwei Sekunden. Rechnerisch stand
+das Wesen damit gut die Haelfte der Zeit (abends fast zwei Drittel) regungslos da.
+
+**Geaendert:**
+- **`PlayPastime` - ruhige Szenen mit Inhalt:** draussen am Tag einen Vogel beobachten, der
+  neben dem Wesen landet, pickt und davonfliegt; im Gruenen ein Schmetterling um den Kopf; in die
+  Weite sehen; abends zu den Sternen sehen; im Regen unterstellen und zusehen; drinnen ans Fenster,
+  ein wenig aufraeumen; ueberall sich setzen und nachdenken (Gedankenblase). Ohne Ortswechsel, ohne
+  Wirkung im Living-Kern. Neuer Schritt `RoutineStep.Watch` mit Bild `PlayEffects.watchCells`.
+- **Neuer Takt:** Pause zwischen zwei Dingen nur noch 5-10 s (ein Durchatmen). Aktionsgewichte:
+  Handlung 7, ruhige Szene 6 (neu), Regung 2, Umherlaufen 1, Freudensprung 1. Der Takt der grossen
+  Handlungen bleibt etwa gleich (vorher ~alle 100 s, jetzt ~alle 85 s); was dazwischen lag, ist
+  jetzt eine Szene statt Leerlauf. Nachts wird statt einer ruhigen Szene wie bisher entschieden
+  (Schlaf).
+
+- **Tests (`TESTED BEHAVIOR`):** 791 Offline-Tests gruen (neu `PlayPastimeTest`: ueberall eine
+  Szene ohne Ortswechsel und nur mit vorhandenen Plaetzen, Vogel nur draussen am Tag ohne Regen,
+  was kommt geht auch, Vogel landet am Boden und fliegt nach oben davon, >70 % der Wuerfe mit
+  Inhalt).
+- **Ungeprueft (`UNVERIFIED`):** Vogel und Schmetterling im Bild am Geraet; ob der neue Takt zu
+  unruhig wirkt.
+
 ### 2026-09-29 - Abends kein Stillstand mehr
 
 **Anlass:** Beobachtung des Nutzers: Abends tat das Wesen etwas, blieb dann stehen, huepfte ab und
