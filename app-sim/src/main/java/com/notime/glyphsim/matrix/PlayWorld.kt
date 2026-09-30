@@ -813,6 +813,27 @@ internal object PlayWorld {
         else -> emptyList()
     }
 
+    /**
+     * **Wo das Wasser beginnt** - die Zeile der Wasserlinie, wenn der Ort eine offene
+     * Wasserflaeche hat (Teich, Meer), sonst `null`. Dieselbe Rechnung wie beim Zeichnen
+     * ([lakeShore], [sea]), damit Spiegelungen genau auf dem Wasser liegen (siehe
+     * PlayScene.reflections).
+     */
+    fun waterSurface(place: PlayScene.Place, floorY: Int): Int? = when (place) {
+        PlayScene.Place.POND -> {
+            val maxH = skyRoom(floorY, 30)
+            if (maxH < 10) null else (floorY - 1) - (maxH * 0.42f).roundToInt().coerceAtLeast(4)
+        }
+        PlayScene.Place.BEACH -> if (floorY < 12) null else floorY - 16
+        else -> null
+    }
+
+    /** Bis zu welcher Zeile das Wasser reicht (darunter Ufer, Gischt, Sand). */
+    fun waterBottom(place: PlayScene.Place, floorY: Int): Int = when (place) {
+        PlayScene.Place.BEACH -> floorY - 4
+        else -> floorY - 3
+    }
+
     /** Der ferne Hintergrund des Parks - je nach Wesen eine andere Landschaft. */
     private fun habitatBackdrop(
         species: AvatarSpecies,

@@ -4651,9 +4651,25 @@ fun DockScreen(
                     PlayQuests.acquisitions(questRewards + PlayQuests.Reward.DRAGON_EGG)
                 else -> PlayQuests.acquisitions(questRewards)
             }
+            // **Die Kamera folgt der Figur** - fuer die Parallaxe (siehe PlayScene.PARALLAX_FAR):
+            // -1 am linken Rand, 1 am rechten. In Stufen einer Zelle Verschiebung, damit die
+            // Kulisse nicht bei jedem Schrittbild neu gebaut wird.
+            val kameraZiel = avatar?.let { a ->
+                val px = with(density) { a.sizeDp.dp.toPx() }
+                (((a.offset.x + px / 2f) / maxWidthPx.coerceAtLeast(1f)) * 2f - 1f).coerceIn(-1f, 1f)
+            } ?: 0f
+            // **Weiche Kamerafahrt** (Anregung: HD-2D): Die Kamera gleitet der Figur nach, statt
+            // mitzuspringen. Kommt sie an einem neuen Ort am Bildrand herein, schwenkt die Ferne
+            // in gut einer Sekunde mit - ein kleiner Kameraschwenk beim Ankommen.
+            val kameraWeich by animateFloatAsState(
+                targetValue = kameraZiel,
+                animationSpec = tween(CAMERA_GLIDE_MS, easing = FastOutSlowInEasing),
+                label = "kamera"
+            )
+            val kamera = (kameraWeich * PlayScene.PARALLAX_FAR).roundToInt() / PlayScene.PARALLAX_FAR.toFloat()
             val sceneCells = remember(
                 renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value,
-                lampOn, tvOn, activeStation, avatar?.species,
+                lampOn, tvOn, activeStation, avatar?.species, kamera,
                 // Sonst bliebe die Kulisse stehen, wie sie war, bis sich zufaellig etwas anderes
                 // aendert - und das neu erworbene Stueck taucht erst beim naechsten Ortswechsel
                 // auf statt in dem Moment, in dem es dazukommt.
@@ -4675,7 +4691,8 @@ fun DockScreen(
                     acquisitions = sceneAcquisitions,
                     // Gleitende Daemmerung, einzeln erleuchtete Fenster, Sonnenauf- und -untergang
                     // (siehe PlayDaylight). Der Bildtakt baut die Kulisse ohnehin neu.
-                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute },
+                    camera = kamera
                 )
             }
             PlaySceneView(
@@ -5107,6 +5124,30 @@ fun DockScreen(
                         }
                     )
             )
+        }
+
+        // **Die Ebene vor der Figur** (siehe PlayScene.buildForeground): Grasbueschel an den
+        // Bildraendern, Pollen und fallende Blaetter - NACH dem Avatar gezeichnet, damit er durch
+        // das Gras hindurchlaeuft. Draussen im Gruenen; drinnen und in der Stadt leer.
+        if (playMode) {
+            val vorneCells = remember(renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value) {
+                PlayScene.buildForeground(
+                    place = renderedPlace,
+                    phase = scenePhase,
+                    widthCells = sceneWidthCells,
+                    floorY = floorYCells,
+                    dayPhase = PlayAmbientActivity.currentDayPhase(),
+                    fade = sceneFade.value,
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
+                )
+            }
+            if (vorneCells.isNotEmpty()) {
+                PlaySceneView(
+                    cells = vorneCells,
+                    cellPx = sceneCellPx,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
 
         // Die VORDERE Kulissen-Ebene - als einziges NACH dem Avatar gezeichnet und nur fuer die
@@ -5878,6 +5919,9 @@ private fun shareClipFile(context: android.content.Context, file: java.io.File) 
 
 /** Wie lange die Tuer offen steht, bevor er hindurchgeht. */
 private const val DOOR_OPEN_MS = 380L
+
+/** Wie lange die Kamera braucht, um der Figur nachzugleiten (Parallaxe, siehe PlayScene). */
+private const val CAMERA_GLIDE_MS = 1_400
 
 /** Wie lange die Figur an einem Zwischenort draussen stehen bleibt und sich umsieht (siehe PlayMap). */
 private const val PASS_THROUGH_LINGER_MS = 4_000L
