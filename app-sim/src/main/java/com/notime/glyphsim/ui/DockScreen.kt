@@ -4651,9 +4651,17 @@ fun DockScreen(
                     PlayQuests.acquisitions(questRewards + PlayQuests.Reward.DRAGON_EGG)
                 else -> PlayQuests.acquisitions(questRewards)
             }
+            // **Die Kamera folgt der Figur** - fuer die Parallaxe (siehe PlayScene.PARALLAX_FAR):
+            // -1 am linken Rand, 1 am rechten. In Stufen einer Zelle Verschiebung, damit die
+            // Kulisse nicht bei jedem Schrittbild neu gebaut wird.
+            val kamera = avatar?.let { a ->
+                val px = with(density) { a.sizeDp.dp.toPx() }
+                val mitte = ((a.offset.x + px / 2f) / maxWidthPx.coerceAtLeast(1f)) * 2f - 1f
+                (mitte.coerceIn(-1f, 1f) * PlayScene.PARALLAX_FAR).roundToInt() / PlayScene.PARALLAX_FAR.toFloat()
+            } ?: 0f
             val sceneCells = remember(
                 renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value,
-                lampOn, tvOn, activeStation, avatar?.species,
+                lampOn, tvOn, activeStation, avatar?.species, kamera,
                 // Sonst bliebe die Kulisse stehen, wie sie war, bis sich zufaellig etwas anderes
                 // aendert - und das neu erworbene Stueck taucht erst beim naechsten Ortswechsel
                 // auf statt in dem Moment, in dem es dazukommt.
@@ -4675,7 +4683,8 @@ fun DockScreen(
                     acquisitions = sceneAcquisitions,
                     // Gleitende Daemmerung, einzeln erleuchtete Fenster, Sonnenauf- und -untergang
                     // (siehe PlayDaylight). Der Bildtakt baut die Kulisse ohnehin neu.
-                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute },
+                    camera = kamera
                 )
             }
             PlaySceneView(

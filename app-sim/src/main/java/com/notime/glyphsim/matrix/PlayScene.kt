@@ -654,9 +654,21 @@ object PlayScene {
          * Strasse gehen einzeln an und aus (siehe [PlayDaylight]). `null` heisst: nur die Phase
          * ist bekannt (Vorschau, Clip), dann gelten die vier Stufen wie bisher.
          */
-        minuteOfDay: Int? = null
+        minuteOfDay: Int? = null,
+        /**
+         * **Wo die Figur im Bild steht**, von -1 (linker Rand) bis 1 (rechter Rand) - fuer die
+         * Parallaxe (siehe [PARALLAX_FAR]). 0 heisst: keine Verschiebung.
+         */
+        camera: Float = 0f
     ): List<SceneCell> {
         if (widthCells <= 0 || floorY <= 0 || fade <= 0f) return emptyList()
+        // **Tiefe durch Ebenen** (Anregung: der HD-2D-Stil von Final Fantasy Resonance). Draussen
+        // folgt der ferne Hintergrund der Figur um ein paar Punkte, die mittlere Ebene um einen,
+        // der Vordergrund steht. Wer nach rechts laeuft, sieht die Berge langsam mitwandern -
+        // wie aus einem fahrenden Zug. Der Himmel bleibt fest (Sterne sind unendlich weit weg).
+        val parallax = isOutdoors(place) && place != Place.GROTTO
+        val farShift = if (parallax) (camera.coerceIn(-1f, 1f) * PARALLAX_FAR).roundToInt() else 0
+        val midShift = if (parallax) (camera.coerceIn(-1f, 1f) * PARALLAX_MID).roundToInt() else 0
 
         val cells = mutableListOf<SceneCell>()
 
@@ -699,7 +711,10 @@ object PlayScene {
             val ox = originX(placement, widthCells)
             (ox until ox + placement.prop.width) to originY(placement, floorY)
         }
-        cells += PlayWorld.background(place, phase, widthCells, floorY, dayPhase, foregroundSpans, species)
+        cells += shiftedLayer(
+            PlayWorld.background(place, phase, widthCells, floorY, dayPhase, foregroundSpans, species),
+            farShift, widthCells
+        )
         // VOR den Requisiten: Beiwerk am Boden (Gras) liegt in derselben Zeile, in der die
         // Requisiten aufsetzen. Zeichnete man es danach, stanzte ein Grasbueschel dem Baumstamm
         // und dem Strauch eine dunklere Kerbe in die Silhouette - spaeter gezeichnete Zellen
@@ -714,7 +729,7 @@ object PlayScene {
         var midgroundDrawn = false
         for (placement in ordered) {
             if (!placement.behind && !midgroundDrawn) {
-                cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted)
+                cells += shiftedLayer(PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted), midShift, widthCells)
                 midgroundDrawn = true
             }
             val originX = originX(placement, widthCells)
@@ -759,13 +774,15 @@ object PlayScene {
             }
         }
 
-        if (!midgroundDrawn) cells += PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted)
+        if (!midgroundDrawn) {
+            cells += shiftedLayer(PlayWorld.midground(place, phase, widthCells, floorY, dayPhase, fitted), midShift, widthCells)
+        }
         // Die tief stehende Sonne - VOR allem Uebrigen im Himmel berechnet, aber nur dort
         // gezeichnet, wo noch nichts steht: Sie geht HINTER Baum, Bank und Haus unter, nicht davor.
         minuteOfDay?.let { minute ->
-            cells += lowSun(place, minute, widthCells, floorY, cells, species, acquisitions)
+            cells += lowSun(place, minute, widthCells, floorY, cells, species, acquisitions, farShift)
         }
-        cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species, acquisitions, minuteOfDay)
+        cells += ambient(place, phase, widthCells, floorY, dayPhase, lampOn, tvOn, species, acquisitions, minuteOfDay, farShift)
         cells += PlayWorld.ambient(place, phase, widthCells, floorY, dayPhase, fitted)
         cells += housePet(place, phase, widthCells, floorY)
         cells += weather(
@@ -775,13 +792,113 @@ object PlayScene {
 
         // Materie folgt der Tageszeit, Licht nicht (siehe [SceneCell.isLight]).
         val roomFactor = atmosphere(dayPhase, minuteOfDay) * fade
+        // **Licht, das die Umgebung erhellt** (Anregung: HD-2D). Bisher war Licht nur hell an der
+        // Stelle, an der es sitzt; der Raum drumherum dunkelte gleichmaessig ab. Jetzt holt jede
+        // Lichtquelle ihre Umgebung weich zurueck ins Helle - Laterne, Lagerfeuer, Fenster,
+        // Leuchtturm werfen eine Lichtinsel auf Boden und Dinge. Tagsueber ohne Wirkung.
+        val lit = illumination(cells, roomFactor, widthCells, floorY)
         return cells.mapNotNull { cell ->
-            val scaled = (cell.brightness * if (cell.isLight) fade else roomFactor).roundToInt()
+            val factor = if (cell.isLight) {
+                fade
+            } else {
+                val glow = if (lit != null && cell.x in 0 until widthCells && cell.y in 0 until floorY + 2) {
+                    lit[cell.y * widthCells + cell.x]
+                } else {
+                    0f
+                }
+                roomFactor + (fade * LIGHT_MAX - roomFactor).coerceAtLeast(0f) * glow
+            }
+            val scaled = (cell.brightness * factor).roundToInt().let { b ->
+                // Angestrahltes bleibt dunkler als das Licht selbst.
+                if (!cell.isLight && b > cell.brightness) b.coerceAtMost(LIT_CEILING) else b
+            }
             if (scaled <= 0 || cell.x < 0 || cell.x >= widthCells || cell.y < 0) null
             else if (scaled == cell.brightness) cell
             else cell.copy(brightness = scaled)
         }
     }
+
+    /** Wie weit der ferne Hintergrund der Figur folgt, in Zellen (an den Bildraendern). */
+    const val PARALLAX_FAR = 3
+
+    /** Wie weit die mittlere Ebene (Tiere, Fahrzeuge) der Figur folgt. */
+    const val PARALLAX_MID = 1
+
+    /**
+     * Eine Ebene um [dx] Zellen verschoben. Was dabei am Rand frei wird, fuellt die aeusserste
+     * Spalte der Ebene auf - sonst klaffte dort ein leerer Streifen, wo gerade noch Berg war.
+     */
+    fun shiftedLayer(layer: List<SceneCell>, dx: Int, widthCells: Int): List<SceneCell> {
+        if (dx == 0 || layer.isEmpty()) return layer
+        val moved = layer.map { it.copy(x = it.x + dx) }.filter { it.x in 0 until widthCells }
+        val edge = if (dx > 0) 0 else widthCells - 1
+        val edgeColumn = layer.filter { it.x == edge }
+        val filler = (1..kotlin.math.abs(dx)).flatMap { k ->
+            val x = if (dx > 0) k - 1 else widthCells - k
+            edgeColumn.map { it.copy(x = x) }
+        }
+        return filler + moved
+    }
+
+    /** Dieselbe Verschiebung fuer eine Verdeckungsmaske (Sterne hinter den Bergen). */
+    fun shiftedMask(mask: Set<Pair<Int, Int>>, dx: Int, widthCells: Int): Set<Pair<Int, Int>> {
+        if (dx == 0) return mask
+        return shiftedLayer(mask.map { (x, y) -> SceneCell(x, y, 1) }, dx, widthCells)
+            .mapTo(HashSet()) { it.x to it.y }
+    }
+
+    /**
+     * **Wie viel Licht an jeder Stelle ankommt** - 0 (nichts) bis 1 (wie am Tag), als Raster
+     * `y * widthCells + x`; `null`, wenn es hell genug ist, dass Licht nichts ausmacht.
+     *
+     * Jede Lichtzelle strahlt mit ihrer Helligkeit weich nach aussen ([LIGHT_RADIUS], quadratisch
+     * abnehmend). Eine einzelne Zelle (ein Stern) traegt kaum etwas bei; erst eine Gruppe - ein
+     * Lampenschirm, ein Feuer, ein Fenster - ergibt eine sichtbare Lichtinsel. Genau so soll es
+     * sein: Ein Stern erhellt nicht den Berg, eine Laterne aber den Weg darunter.
+     */
+    fun illumination(cells: List<SceneCell>, roomFactor: Float, widthCells: Int, floorY: Int): FloatArray? {
+        if (roomFactor >= 0.97f) return null
+        val sources = cells.filter { it.isLight && it.brightness >= LIGHT_SOURCE_MIN }
+        if (sources.isEmpty()) return null
+        val height = floorY + 2
+        val out = FloatArray(widthCells * height)
+        val r = LIGHT_RADIUS
+        for (s in sources) {
+            val strength = LIGHT_PER_CELL * (s.brightness.toFloat() / GLOW)
+            for (dy in -r..r) {
+                val y = s.y + dy
+                if (y < 0 || y >= height) continue
+                for (dx in -r..r) {
+                    val x = s.x + dx
+                    if (x < 0 || x >= widthCells) continue
+                    val d = kotlin.math.sqrt((dx * dx + dy * dy).toFloat())
+                    if (d >= r) continue
+                    val f = 1f - d / r
+                    out[y * widthCells + x] += strength * f * f
+                }
+            }
+        }
+        for (i in out.indices) if (out[i] > 1f) out[i] = 1f
+        return out
+    }
+
+    /**
+     * Wie hell Angestrahltes hoechstens wird, gemessen am Tageslicht: Direkt am Feuer ist es
+     * heller als am Mittag - so sieht Feuerschein aus.
+     */
+    private const val LIGHT_MAX = 1.25f
+
+    /** Obergrenze fuer Angestrahltes - es bleibt dunkler als jede Lichtquelle. */
+    private const val LIT_CEILING = GLOW - 800
+
+    /** Ab dieser Helligkeit wirft eine Lichtzelle Licht auf ihre Umgebung. */
+    private const val LIGHT_SOURCE_MIN = 900
+
+    /** So weit reicht das Licht einer Quelle, in Zellen. */
+    private const val LIGHT_RADIUS = 9
+
+    /** Was eine einzelne Lichtzelle voller Staerke an ihrer eigenen Stelle beitraegt. */
+    private const val LIGHT_PER_CELL = 0.16f
 
     /**
      * Wie hell der RAUM zur jeweiligen Tageszeit steht.
@@ -814,7 +931,8 @@ object PlayScene {
         floorY: Int,
         occupied: List<SceneCell>,
         species: AvatarSpecies,
-        acquisitions: Set<Acquisition>
+        acquisitions: Set<Acquisition>,
+        farShift: Int = 0
     ): List<SceneCell> {
         if (!isOutdoors(place) || place == Place.JUNGLE || place == Place.GROTTO) return emptyList()
         if (PlayWeather.current().isFalling) return emptyList()
@@ -824,7 +942,7 @@ object PlayScene {
         val placements = fitting(placementsFor(place, species, acquisitions), widthCells, floorY)
         val hidden = occupied.mapTo(HashSet()) { it.x to it.y } +
             facadeMask(placements, widthCells, floorY) +
-            PlayWorld.skyMask(place, widthCells, floorY, species)
+            shiftedMask(PlayWorld.skyMask(place, widthCells, floorY, species), farShift, widthCells)
         val disc = listOf(
             -1 to -2, 0 to -2, 1 to -2,
             -2 to -1, -1 to -1, 0 to -1, 1 to -1, 2 to -1,
@@ -3963,7 +4081,8 @@ object PlayScene {
         tvOn: Boolean,
         species: AvatarSpecies,
         acquisitions: Set<Acquisition> = emptySet(),
-        minuteOfDay: Int? = null
+        minuteOfDay: Int? = null,
+        farShift: Int = 0
     ): List<SceneCell> {
         // Dieselbe Auswahl wie beim Zeichnen: Ein Fenster, das auf schmalem Bild weggefallen ist,
         // darf auch keinen Mond mehr bekommen.
@@ -4053,7 +4172,7 @@ object PlayScene {
                 // berechnet: Sternbild UND Sternschnuppe brauchen dieselbe Maske. Dazu kommt, was
                 // der ferne Hintergrund verdeckt (Berge, Blaetterdach, Skyline).
                 val verdeckt = facadeMask(placements, widthCells, floorY) +
-                    PlayWorld.skyMask(place, widthCells, floorY, species)
+                    shiftedMask(PlayWorld.skyMask(place, widthCells, floorY, species), farShift, widthCells)
                 if (dayPhase == PlayAmbientActivity.DayPhase.NIGHT) {
                     // Ueber der gemeinsamen Bodenlinie ist Platz fuer einen richtigen Himmel:
                     // ein Sternbild aus sieben Sternen, jeder auf

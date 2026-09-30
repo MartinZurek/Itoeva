@@ -669,6 +669,33 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-30 - Licht und Tiefe (Anregung: HD-2D aus Final Fantasy Resonance)
+
+**Anlass:** Der Nutzer fragte, was vom HD-2D-Stil von Final Fantasy Resonance zu Itoeva passt.
+Einschaetzung: Farbe, echte 3D-Modelle und Unschaerfe gehen auf dem einfarbigen Punkteraster nicht;
+Licht und Tiefe schon. Freigegeben: zuerst Licht und Parallaxe.
+
+**Geaendert:**
+- **Licht, das die Umgebung erhellt** (`PlayScene.illumination`): Jede Lichtzelle strahlt weich
+  nach aussen (Radius 9 Zellen, quadratisch abnehmend). Nachts holt das Lagerfeuer Zelt, Stamm und
+  Boden zurueck ins Helle, direkt am Feuer etwas heller als am Tag (Feuerschein); Laternen werfen
+  eine Lichtinsel, Stadtfenster und Leuchtturm erhellen ihre Umgebung. Eine einzelne Zelle (ein
+  Stern) traegt kaum etwas bei. Angestrahltes bleibt dunkler als jede Lichtquelle. Tagsueber ohne
+  Wirkung.
+- **Parallaxe** (`PlayScene.build(camera)`, `shiftedLayer`): Draussen folgt der ferne Hintergrund
+  der Figur um bis zu 3 Zellen, die mittlere Ebene um 1, Boden und Requisiten stehen, der Himmel
+  bleibt fest. Die Verdeckung der Sterne (skyMask) wandert mit. DockScreen gibt die Position der
+  Figur als Kamera mit, in Stufen einer Zelle.
+
+- **Tests (`TESTED BEHAVIOR`):** 797 Offline-Tests gruen (neu `PlayLightTest`: am Feuer heller als
+  fern, tagsueber keine Wirkung, Angestrahltes unter jeder Lichtquelle, Berge wandern und Boden
+  steht, drinnen keine Parallaxe, kein leerer Rand beim Verschieben). Vorschau-Bilder geprueft
+  (Lager, Strasse, Stadt nachts; Gebirge mit Kamera links/rechts).
+- **Ungeprueft (`UNVERIFIED`):** die Wirkung am Geraet, besonders ob die Parallaxe beim Laufen
+  ruhig genug wirkt; die Bettdecke (vordere Ebene) bekommt noch kein Lampenlicht.
+- **Weiterhin offen:** Dunst und Tiefenschaerfe-Ersatz, Vordergrundebene, Spiegelungen, weiche
+  Kamerabewegungen.
+
 ### 2026-09-30 - Kein Herumstehen mehr: ruhige Szenen statt leerer Pausen
 
 **Anlass:** Beobachtung des Nutzers: Beim Reinschalten tut das Wesen ab und zu etwas (Training),
