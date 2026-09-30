@@ -257,6 +257,10 @@ object PlayScene {
         Acquisition.DRAGON_EGG -> PlayWorld.QUEST_EGG
         Acquisition.DRAGON_EGG_CRACKED -> PlayWorld.QUEST_EGG_CRACKED
         Acquisition.DRAGONLING -> PlayWorld.QUEST_DRAGONLING
+        Acquisition.BIRDHOUSE -> PlayWorld.GOAL_BIRDHOUSE
+        Acquisition.HERB_SPROUT -> PlayWorld.GOAL_HERB_SPROUT
+        Acquisition.HERB_BUSH -> PlayWorld.GOAL_HERB_BUSH
+        Acquisition.KITE_WALL -> PlayWorld.GOAL_KITE
     }
 
     /**
@@ -321,7 +325,27 @@ object PlayScene {
         DRAGON_EGG_CRACKED(Place.BEDROOM, 0.92f),
 
         /** Das geschluepfte Drachenjunge - es wohnt jetzt mit. */
-        DRAGONLING(Place.BEDROOM, 0.92f)
+        DRAGONLING(Place.BEDROOM, 0.92f),
+
+        // ---- Aus den Vorhaben (siehe PlayGoals) ----
+        /** Das selbstgebaute Vogelhaus auf der Wiese hinter dem Park. */
+        BIRDHOUSE(Place.MEADOW, 0.97f),
+
+        /**
+         * Der Kraeutertopf in der Kueche - erst ein Keimling ...
+         *
+         * Er steht auf dem Tisch: Am Boden war zwischen Zeile, Regal und Kleinzeug bei manchen
+         * Breiten kein Platz, und er fiel als Erworbenes lautlos weg. Die Tischplatte ist bei
+         * jeder Art und Breite frei (sieben Zellen hoch; die niedrigen Tische tragen ihn als
+         * haengende Ampel).
+         */
+        HERB_SPROUT(Place.KITCHEN, 0.9f, liftCells = 7),
+
+        /** ... dann ein ganzer Busch. */
+        HERB_BUSH(Place.KITCHEN, 0.9f, liftCells = 7),
+
+        /** Der selbstgebaute Drachen an der Wand der Leseecke. */
+        KITE_WALL(Place.NOOK, 0.74f, liftCells = 12)
     }
 
     /**

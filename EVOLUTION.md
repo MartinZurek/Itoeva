@@ -669,6 +669,28 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-09-30 - Eigene Vorhaben: lange Projekte und kleine Tagesabsichten
+
+**Anlass:** Der Nutzer meldete, der Avatar wirke ziellos, und wuenschte sich "etwas Langfristiges
+und Kurzfristiges". Freigegeben: "Mach als Naechstes die lang- und kurzfristigen Ziele".
+
+**Geaendert:**
+- **Projekte ueber mehrere Tage** (`PlayGoals`): Vogelhaus (Holz im Wald holen, zweimal an der
+  Werkbank, am Ende auf die Wiese tragen), Kraeutertopf (Samen im Laden, in der Kueche giessen,
+  ernten) und ein eigener Drachen (bauen, auf der Wiese steigen lassen). Hoechstens ein
+  Arbeitsgang pro Tag, draussen nur 15-18 Uhr, drinnen bis 21:30. Danach beginnt das naechste.
+- **Das Ergebnis bleibt sichtbar:** Vogelhaus auf der Wiese, Kraeutertopf auf dem Kuechentisch
+  (erst Keimling, dann Busch), Drachen an der Wand der Leseecke. Ein Test prueft das fuer jede Art,
+  Bildbreite und jeden Entwicklungspfad.
+- **Ein kleines Vorhaben am Tag daheim**, reihum: Pilze sammeln (10-13), Angeln (10-13),
+  Sonnenuntergang (18:30-19:30), Sterne (22-23:30).
+- Unterwegs auf einer Reise ruht alles; an Reisetagen gibt es kein Tagesvorhaben. Die Reise hat
+  Vorrang, ein Zuschauerimpuls auch. Stand je Profil in `PlayGoalLog` (SharedPreferences
+  `play_goals`); keine Datenbankaenderung.
+
+**Geschuetzt:** Erinnerungen, Fuettern, Reise-Quests und die Living-Entscheidung bleiben
+unveraendert; die Vorhaben fuellen nur Zeit, die sonst Leerlauf waere. Keine Texteinblendungen.
+
 ### 2026-09-30 - Licht und Tiefe (Anregung: HD-2D aus Final Fantasy Resonance)
 
 **Anlass:** Der Nutzer fragte, was vom HD-2D-Stil von Final Fantasy Resonance zu Itoeva passt.

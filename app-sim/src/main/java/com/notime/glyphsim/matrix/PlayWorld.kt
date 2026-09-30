@@ -243,6 +243,61 @@ internal object PlayWorld {
         lightAt = 3 to 2
     )
 
+    /** Das Vogelhaus auf seiner Stange (siehe PlayGoals). */
+    internal val GOAL_BIRDHOUSE = Prop(
+        width = 3, height = 8,
+        art = art(
+            ".#.",
+            "###",
+            "#.#",
+            "###",
+            ".#.",
+            ".#.",
+            ".#.",
+            ".#."
+        )
+    )
+
+    /** Der Kraeutertopf mit Keimling. */
+    internal val GOAL_HERB_SPROUT = Prop(
+        width = 4, height = 6,
+        art = art(
+            "..#.",
+            ".##.",
+            "..#.",
+            "####",
+            "####",
+            ".##."
+        )
+    )
+
+    /** Der Kraeutertopf, voll ausgewachsen. */
+    internal val GOAL_HERB_BUSH = Prop(
+        width = 5, height = 6,
+        art = art(
+            "#.#.#",
+            "#####",
+            ".###.",
+            "..#..",
+            "#####",
+            ".###."
+        )
+    )
+
+    /** Der selbstgebaute Drachen an der Wand, mit Schwanz. */
+    internal val GOAL_KITE = Prop(
+        width = 5, height = 7,
+        art = art(
+            "..#..",
+            ".###.",
+            "#####",
+            ".###.",
+            "..#..",
+            "...#.",
+            "..#.."
+        )
+    )
+
     /** Der Zauberstab an der Wand - seit die Zauberlehre gelungen ist. */
     internal val QUEST_WAND = Prop(
         width = 5, height = 5,

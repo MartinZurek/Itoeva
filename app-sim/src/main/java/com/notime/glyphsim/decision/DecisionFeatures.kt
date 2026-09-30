@@ -167,8 +167,10 @@ data class ActionTraits(
                 PlayEffects.Carried.BOOK -> setOf(Trait.LEARN, Trait.OBJECT)
                 PlayEffects.Carried.GUITAR -> setOf(Trait.MUSIC, Trait.OBJECT)
                 PlayEffects.Carried.EASEL -> setOf(Trait.CREATIVE, Trait.OBJECT)
-                PlayEffects.Carried.MAP, PlayEffects.Carried.EGG, PlayEffects.Carried.CHEST ->
+                PlayEffects.Carried.MAP, PlayEffects.Carried.EGG, PlayEffects.Carried.CHEST,
+                PlayEffects.Carried.WOOD, PlayEffects.Carried.SEEDS, PlayEffects.Carried.BIRDHOUSE ->
                     setOf(Trait.OBJECT)
+                PlayEffects.Carried.BASKET -> setOf(Trait.EAT, Trait.OBJECT)
             }
             is RoutineStep.Occupy -> if (step.station == PlayScene.Station.BED) {
                 setOf(Trait.SLEEP, Trait.REST)

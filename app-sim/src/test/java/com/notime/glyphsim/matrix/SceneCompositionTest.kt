@@ -187,12 +187,16 @@ class SceneCompositionTest {
                 val without = PlayScene.build(
                     acquisition.place, 0, width, floorY,
                     PlayAmbientActivity.DayPhase.MIDDAY, species = species
-                ).map { it.x to it.y }.toSet()
+                ).associate { (it.x to it.y) to it.brightness }
                 val with = PlayScene.build(
                     acquisition.place, 0, width, floorY,
                     PlayAmbientActivity.DayPhase.MIDDAY, species = species,
                     acquisitions = setOf(acquisition)
-                ).map { it.x to it.y }.toSet()
+                ).associate { (it.x to it.y) to it.brightness }
+                // Nach Helligkeit verglichen, nicht nur nach Belegung: Draussen (das Vogelhaus
+                // auf der Wiese) fuellt der Hintergrund die Stellen ohnehin, ein Ding davor
+                // aendert dort nur den Ton. Drinnen zaehlt jede neu belegte Zelle wie bisher.
+                val changed = with.count { (pos, brightness) -> without[pos] != brightness }
 
                 assertTrue(
                     "$acquisition ist bei $species an ${acquisition.place} nicht zu sehen - " +
@@ -201,7 +205,7 @@ class SceneCompositionTest {
                             acquisition.place, species, showAvatar = false,
                             acquisitions = setOf(acquisition)
                         ),
-                    (with - without).size >= MIN_VISIBLE_CELLS
+                    changed >= MIN_VISIBLE_CELLS
                 )
             }
         }
