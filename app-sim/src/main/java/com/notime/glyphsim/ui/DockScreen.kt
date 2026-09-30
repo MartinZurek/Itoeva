@@ -136,6 +136,8 @@ import com.notime.glyphsim.matrix.PlayDreamMemory
 import com.notime.glyphsim.matrix.PlayDreams
 import com.notime.glyphsim.matrix.PlayPantry
 import com.notime.glyphsim.matrix.PlayQuestEffects
+import com.notime.glyphsim.matrix.PlayGoalLog
+import com.notime.glyphsim.matrix.PlayGoals
 import com.notime.glyphsim.matrix.PlayQuestLog
 import com.notime.glyphsim.matrix.PlayQuests
 import com.notime.glyphsim.matrix.PlayRoutine
@@ -806,6 +808,12 @@ fun DockScreen(
         /** Das Quest-Bild neben der Figur (Karte, Funken, Ei ...) und seit wann es laeuft. */
         var questEffect by remember { mutableStateOf<PlayQuestEffects.Effect?>(null) }
         var questEffectSince by remember { mutableIntStateOf(0) }
+        /** Der Stand der eigenen Vorhaben (siehe PlayGoals) - `null`, bis er geladen ist. */
+        var goalsProgress by remember(presenceProfileId) { mutableStateOf<PlayGoals.Progress?>(null) }
+        LaunchedEffect(playMode, presenceProfileId) {
+            if (!playMode) return@LaunchedEffect
+            goalsProgress = withContext(Dispatchers.IO) { PlayGoalLog.load(context, presenceProfileId) }
+        }
         LaunchedEffect(playMode, presenceProfileId) {
             if (!playMode) return@LaunchedEffect
             val stand = withContext(Dispatchers.IO) { PlayQuestLog.load(context, presenceProfileId) }
@@ -3779,6 +3787,30 @@ fun DockScreen(
                             continue
                         }
                     }
+                    // **Die eigenen Vorhaben** (siehe PlayGoals): ein Arbeitsgang am laufenden
+                    // Projekt - Vogelhaus, Kraeutertopf, Drachen - oder das kleine Vorhaben des
+                    // Tages, Pilze, Angeln, Sonnenuntergang, Sterne. Nach der Reise, vor der
+                    // gewoehnlichen Regung; unterwegs ruhen die Vorhaben.
+                    val zielStand = goalsProgress
+                    if (!evaluateExternalImpulse && zielStand != null) {
+                        val jetzt = PlayTimeLapse.absoluteMinute().toLong()
+                        val tag = PlayQuests.questDayOf(jetzt)
+                        val minuteJetzt = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
+                        val reiseStand = questProgress?.let { PlayQuests.rollTo(it, tag) }
+                        val daheimTag = reiseStand == null ||
+                            PlayQuests.planFor(reiseStand).kind == PlayQuests.DayKind.HOME
+                        val unterwegs = reiseStand != null && PlayQuests.stationAt(reiseStand, minuteJetzt) != null
+                        val vorhaben = PlayGoals.due(zielStand, tag, minuteJetzt, daheimTag, unterwegs)
+                        if (vorhaben != null) {
+                            if (runRoutine(vorhaben.routine, species, applyLegacyEconomy = false)) {
+                                val weiter = PlayGoals.completed(zielStand, vorhaben, tag)
+                                goalsProgress = weiter
+                                withContext(Dispatchers.IO) { PlayGoalLog.save(context, presenceProfileId, weiter) }
+                            }
+                            carried = null
+                            continue
+                        }
+                    }
                     val ambientAction = if (evaluateExternalImpulse) {
                         evaluateExternalImpulse = false
                         PlayAmbientActivity.Action.PERFORM
@@ -4650,7 +4682,7 @@ fun DockScreen(
                 PlayQuestEffects.Effect.EGG_WARM ->
                     PlayQuests.acquisitions(questRewards + PlayQuests.Reward.DRAGON_EGG)
                 else -> PlayQuests.acquisitions(questRewards)
-            }
+            } + goalsProgress?.let { PlayGoals.acquisitions(it) }.orEmpty()
             // **Die Kamera folgt der Figur** - fuer die Parallaxe (siehe PlayScene.PARALLAX_FAR):
             // -1 am linken Rand, 1 am rechten. In Stufen einer Zelle Verschiebung, damit die
             // Kulisse nicht bei jedem Schrittbild neu gebaut wird.

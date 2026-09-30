@@ -40,7 +40,19 @@ object PlayEffects {
         EGG,
 
         /** Die gefundene Truhe auf dem Heimweg. */
-        CHEST
+        CHEST,
+
+        /** Holz fuer das Vogelhaus (siehe [PlayGoals]). */
+        WOOD,
+
+        /** Ein Saeckchen Kraeutersamen. */
+        SEEDS,
+
+        /** Ein Korb voll Pilze. */
+        BASKET,
+
+        /** Das fertige Vogelhaus auf dem Weg zur Wiese. */
+        BIRDHOUSE
     }
 
     /** Lesbare Phasen einer Drachen-Szene: auspacken, hochziehen, fliegen, einholen. */
@@ -1447,6 +1459,17 @@ object PlayEffects {
             s.art(0, 0, "####", "#++#", "####")
             s.spark(1, 1)
         }
+        // Zwei Bretter uebereinander, mit Maserung.
+        Carried.WOOD -> s.art(0, 1, "#####", "#+#+#", "#####")
+        // Ein zugebundenes Saeckchen.
+        Carried.SEEDS -> s.art(0, 0, " # ", "###", "#+#", "###")
+        // Korb mit Henkel, obenauf die Pilzhuete.
+        Carried.BASKET -> {
+            s.art(0, 0, " ## ", "#++#", "####", " ## ")
+            s.spark(1, 1)
+        }
+        // Das Vogelhaus: Dach, Einflugloch, Stange.
+        Carried.BIRDHOUSE -> s.art(0, -1, " ## ", "####", "#+##", "####", " #  ")
     }
 
     /**
