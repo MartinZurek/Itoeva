@@ -423,6 +423,10 @@ jobs:
              "dist/${{ steps.version.outputs.archive_stream }}"
 
       - uses: actions/upload-artifact@v4
+        # **Die Rueckfallebene darf die Ablieferung nicht verhindern.** Am 30.09. war der
+        # Artefaktspeicher des Repos voll; der Lauf brach hier ab, und die fertige APK kam nie
+        # in Drive an. Scheitert nur diese Sicherung, geht es trotzdem weiter nach Drive.
+        continue-on-error: true
         with:
           name: itoeva-apk-${{ steps.version.outputs.name }}
           path: dist/*.apk

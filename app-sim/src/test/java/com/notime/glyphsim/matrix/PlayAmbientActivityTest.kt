@@ -102,8 +102,9 @@ class PlayAmbientActivityTest {
     fun `Pausen bleiben im vorgesehenen Rahmen`() {
         repeat(200) {
             val pause = PlayAmbientActivity.nextPauseMillis(PlayAmbientActivity.DayPhase.MIDDAY)
-            assertTrue("Pause $pause zu kurz", pause >= 18_000L)
-            assertTrue("Pause $pause zu lang", pause <= 36_000L)
+            // Nur noch ein Durchatmen - verweilt wird in einer sichtbaren Szene (PlayPastime).
+            assertTrue("Pause $pause zu kurz", pause >= 5_000L)
+            assertTrue("Pause $pause zu lang", pause <= 10_000L)
         }
     }
 

@@ -152,6 +152,11 @@ jobs:
       # sind sie interessant.
       - name: Berichte sichern
         if: always()
+        # Die Berichte sind Beiwerk, das Ergebnis ist der Schritt davor. Ist der
+        # Artefaktspeicher des Repos voll (30.09.: "Artifact storage quota has been hit"),
+        # darf das den Lauf nicht rot machen - sonst sagt der Haken nichts mehr ueber die
+        # Software.
+        continue-on-error: true
         uses: actions/upload-artifact@v6
         with:
           name: reports
@@ -292,6 +297,8 @@ jobs:
 
       - name: Berichte sichern
         if: always()
+        # Wie oben: ein voller Artefaktspeicher ist kein Testergebnis.
+        continue-on-error: true
         uses: actions/upload-artifact@v6
         with:
           name: instrumented-reports-api${{ matrix.api-level }}

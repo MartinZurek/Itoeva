@@ -61,6 +61,9 @@ sealed interface RoutineStep {
         val gear: PlayEffects.TrainingGear = PlayEffects.TrainingGear.DUMBBELL
     ) : RoutineStep
 
+    /** Etwas beobachten - ein Vogel, ein Schmetterling (siehe [PlayPastime]). */
+    data class Watch(val kind: PlayEffects.WatchKind, val phase: PlayEffects.WatchPhase) : RoutineStep
+
     /** Eine Phase des Musizierens mit Gitarre und sichtbaren Noten. */
     data class Music(val phase: PlayEffects.MusicPhase) : RoutineStep
 

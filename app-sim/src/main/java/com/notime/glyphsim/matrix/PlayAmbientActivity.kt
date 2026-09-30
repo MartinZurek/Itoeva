@@ -53,13 +53,24 @@ object PlayAmbientActivity {
      * gekuemmert. Ueberwiegend PERFORM, damit der Tagesablauf auch tatsaechlich zu sehen ist -
      * FLOURISH/WANDER bleiben als leichtere Auflockerung dazwischen.
      */
-    enum class Action { FLOURISH, WANDER, PERFORM, FIDGET }
+    enum class Action {
+        FLOURISH, WANDER, PERFORM, FIDGET,
+
+        /**
+         * Eine ruhige Szene mit erkennbarem Inhalt (siehe [PlayPastime]): einen Vogel beobachten,
+         * in die Weite sehen, sich hinsetzen und nachdenken. Fuellt die Zeit zwischen den
+         * grossen Handlungen, die vorher leer stand.
+         */
+        PASTIME
+    }
 
     fun nextAction(random: Random = Random): Action {
         val roll = random.nextInt(ACTION_WEIGHT_TOTAL)
         var remaining = roll
         remaining -= ACTION_WEIGHT_PERFORM
         if (remaining < 0) return Action.PERFORM
+        remaining -= ACTION_WEIGHT_PASTIME
+        if (remaining < 0) return Action.PASTIME
         remaining -= ACTION_WEIGHT_FIDGET
         if (remaining < 0) return Action.FIDGET
         remaining -= ACTION_WEIGHT_WANDER
@@ -651,9 +662,14 @@ object PlayAmbientActivity {
      * Wartezeit bis zur naechsten Regung.
      *
      * Kurze Abstaende von 6-14s machten aus dem Tagesablauf eine Demonstrationsschleife: Die Figur
-     * war fast staendig unterwegs oder begann schon die naechste Sache. 18-36s lassen eine Szene
-     * erst als Aufenthalt lesbar werden. Laengere Routinen tragen ihre eigene Zeit und werden
-     * deshalb nicht durch kuenstlich kurze Zwischenpausen verdichtet.
+     * war fast staendig unterwegs oder begann schon die naechste Sache. 18-36s sollten eine Szene
+     * als Aufenthalt lesbar machen.
+     *
+     * **Nachgeschaerft am 30.09.:** Der Aufenthalt war damit aber LEER. Gemessen stand das Wesen
+     * gut die Haelfte der Zeit nur da ("als haette er kein Ziel"). Das Verweilen gibt es weiter -
+     * nur jetzt als sichtbare ruhige Szene ([Action.PASTIME], siehe [PlayPastime]) statt als
+     * Pause. Die Pause selbst ist nur noch ein kurzes Durchatmen zwischen zwei Dingen. Der Takt
+     * der grossen Handlungen bleibt dabei etwa derselbe wie vorher.
      */
     fun nextPauseMillis(phase: DayPhase = currentDayPhase()): Long =
         (PAUSE_RANGE_MS.random() * restfulness(phase) * PlayTimeLapse.paceFactor())
@@ -675,7 +691,7 @@ object PlayAmbientActivity {
         DayPhase.NIGHT -> 3.2f
     }
 
-    private val PAUSE_RANGE_MS = 18_000L..36_000L
+    private val PAUSE_RANGE_MS = 5_000L..10_000L
 
     private const val HABIT_BOOST = 4
 
@@ -783,7 +799,10 @@ object PlayAmbientActivity {
     private const val PLAN_BONUS = 4
 
     private const val ACTION_WEIGHT_PERFORM = 7
-    private const val ACTION_WEIGHT_FIDGET = 5
+
+    /** Die ruhigen Szenen ([PlayPastime]) - fast so haeufig wie die grossen Handlungen. */
+    private const val ACTION_WEIGHT_PASTIME = 6
+    private const val ACTION_WEIGHT_FIDGET = 2
     private const val ACTION_WEIGHT_WANDER = 1
 
     /**
@@ -795,5 +814,6 @@ object PlayAmbientActivity {
      */
     private const val ACTION_WEIGHT_FLOURISH = 1
     private const val ACTION_WEIGHT_TOTAL =
-        ACTION_WEIGHT_PERFORM + ACTION_WEIGHT_FIDGET + ACTION_WEIGHT_WANDER + ACTION_WEIGHT_FLOURISH
+        ACTION_WEIGHT_PERFORM + ACTION_WEIGHT_PASTIME + ACTION_WEIGHT_FIDGET + ACTION_WEIGHT_WANDER +
+            ACTION_WEIGHT_FLOURISH
 }

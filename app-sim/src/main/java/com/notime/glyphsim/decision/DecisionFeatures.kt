@@ -102,7 +102,7 @@ data class ActionTraits(
             is RoutineStep.Act, is RoutineStep.Kite, is RoutineStep.Football,
             is RoutineStep.Basketball, is RoutineStep.Training, is RoutineStep.Music,
             is RoutineStep.Painting, is RoutineStep.Fishing, is RoutineStep.GroupGame,
-            is RoutineStep.Switch, is RoutineStep.Occupy, is RoutineStep.Take,
+            is RoutineStep.Switch, is RoutineStep.Occupy, is RoutineStep.Take, is RoutineStep.Watch,
             RoutineStep.SleepUntilMorning, RoutineStep.Daydream, is RoutineStep.Quest -> true
             is RoutineStep.GoTo, is RoutineStep.Stroll, is RoutineStep.Stir,
             is RoutineStep.Linger, is RoutineStep.GoToPlace, RoutineStep.Rise,
@@ -152,6 +152,7 @@ data class ActionTraits(
                 setOf(Trait.PHYSICAL, Trait.SPORT, Trait.GAME, Trait.OBJECT)
             is RoutineStep.Training -> setOf(Trait.PHYSICAL, Trait.SPORT, Trait.OBJECT)
             is RoutineStep.Fishing -> setOf(Trait.CALM, Trait.OBJECT)
+            is RoutineStep.Watch -> setOf(Trait.CALM)
             is RoutineStep.Music -> setOf(Trait.MUSIC, Trait.CREATIVE, Trait.OBJECT)
             is RoutineStep.Painting -> setOf(Trait.CREATIVE, Trait.OBJECT)
             is RoutineStep.GroupGame -> setOf(Trait.PHYSICAL, Trait.SPORT, Trait.GAME, Trait.SOCIAL)
@@ -193,7 +194,7 @@ data class ActionTraits(
             is RoutineStep.Act, is RoutineStep.Kite, is RoutineStep.Football,
             is RoutineStep.Basketball, is RoutineStep.Training, is RoutineStep.Music,
             is RoutineStep.Painting, is RoutineStep.Fishing, RoutineStep.Daydream,
-            is RoutineStep.Quest -> 3.0
+            is RoutineStep.Quest, is RoutineStep.Watch -> 3.0
             is RoutineStep.Stir, is RoutineStep.Switch, is RoutineStep.Occupy,
             is RoutineStep.Take, RoutineStep.Rise, RoutineStep.Drop -> 1.5
         }
