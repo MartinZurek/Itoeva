@@ -68,4 +68,37 @@ class PlayLightTest {
             assertEquals((0 until w).toSet(), verschoben.map { it.x }.toSet())
         }
     }
+
+    @Test
+    fun `die Abendsonne spiegelt sich im Meer, nur auf dem Wasser`() {
+        val cells = PlayScene.build(Place.BEACH, 0, w, floor, DayPhase.EVENING, minuteOfDay = 1150)
+        val spiegel = PlayScene.reflections(Place.BEACH, cells, 0, w, floor)
+        assertTrue("keine Spiegelung", spiegel.size >= 4)
+        val oben = cells.filter { it.isLight && it.brightness >= 900 }.minOf { it.y }
+        assertTrue(spiegel.all { it.y > oben && it.y < floor - 2 })
+        // Wo kein Wasser ist, spiegelt sich nichts.
+        assertTrue(PlayScene.reflections(Place.MEADOW, cells, 0, w, floor).isEmpty())
+    }
+
+    @Test
+    fun `im Gruenen steht Gras vor der Figur, in der Stadt nicht`() {
+        val wiese = PlayScene.buildForeground(Place.MEADOW, 0, w, floor, DayPhase.MIDDAY)
+        assertTrue(wiese.any { it.x < 5 && it.y < floor } && wiese.any { it.x >= w - 5 && it.y < floor })
+        // Das Gras bleibt an den Raendern und dunkel - die Figur in der Mitte bleibt frei.
+        val gras = wiese.filter { it.y >= floor - 5 }
+        assertTrue(gras.all { it.x <= 5 || it.x >= w - 6 })
+        assertTrue(wiese.all { it.brightness < PlayScene.FURNITURE })
+        assertTrue(PlayScene.buildForeground(Place.STREET, 0, w, floor, DayPhase.MIDDAY).isEmpty())
+        assertTrue(PlayScene.buildForeground(Place.LIVING, 0, w, floor, DayPhase.MIDDAY).isEmpty())
+    }
+
+    @Test
+    fun `in der Ferne liegt Dunst, morgens mehr als nachts`() {
+        fun gipfel(day: DayPhase) = PlayScene.build(Place.MOUNTAINS, 0, w, floor, day)
+            .filter { !it.isLight && it.y < floor / 2 }.sumOf { it.brightness }
+        // Gleiche Zeichnung, anderer Dunst - verglichen gegen die Raumhelligkeit der Tageszeit.
+        val morgen = gipfel(DayPhase.MORNING) / PlayDaylight.atmosphere(DayPhase.MORNING)
+        val mittag = gipfel(DayPhase.MIDDAY) / PlayDaylight.atmosphere(DayPhase.MIDDAY)
+        assertTrue("Morgendunst fehlt ($morgen vs $mittag)", morgen < mittag)
+    }
 }

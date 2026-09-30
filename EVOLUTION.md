@@ -693,8 +693,20 @@ Licht und Tiefe schon. Freigegeben: zuerst Licht und Parallaxe.
   (Lager, Strasse, Stadt nachts; Gebirge mit Kamera links/rechts).
 - **Ungeprueft (`UNVERIFIED`):** die Wirkung am Geraet, besonders ob die Parallaxe beim Laufen
   ruhig genug wirkt; die Bettdecke (vordere Ebene) bekommt noch kein Lampenlicht.
-- **Weiterhin offen:** Dunst und Tiefenschaerfe-Ersatz, Vordergrundebene, Spiegelungen, weiche
-  Kamerabewegungen.
+- **Nachgezogen am selben Abend (Freigabe des Nutzers fuer die offenen Punkte):**
+  - **Dunst** (`PlayScene.hazed`): Die ferne Kulisse wird nach oben hin blasser, morgens am
+    staerksten (Morgendunst), nachts kaum; Lichter bleiben unberuehrt.
+  - **Vordergrund** (`PlayScene.buildForeground`, in DockScreen NACH der Figur gezeichnet): dunkle
+    Grasbueschel an beiden Bildraendern, durch die das Wesen hindurchlaeuft, dazu Pollen im
+    Gruenen und fallende Blaetter in Wald, Dschungel und Lager - nur bei Tag, nur draussen im
+    Gruenen und in der Wildnis.
+  - **Spiegelungen** (`PlayScene.reflections`, `PlayWorld.waterSurface`): Was ueber Teich und Meer
+    leuchtet - Abendsonne, Bootshausfenster, Leuchtturm, Sterne -, liegt gebrochen, gestaucht und
+    schwaecher auf dem Wasser und wandert mit den Wellen.
+  - **Weiche Kamerafahrt:** Die Parallaxe gleitet der Figur in 1,4 s nach, statt zu springen; beim
+    Ankommen am Bildrand eines neuen Ortes schwenkt die Ferne dadurch sichtbar mit.
+  - Tests: 800 gruen (neu: Sonnenbahn nur auf dem Wasser, Gras nur am Rand und dunkel, drinnen
+    und in der Stadt kein Vordergrund, Morgendunst).
 
 ### 2026-09-30 - Kein Herumstehen mehr: ruhige Szenen statt leerer Pausen
 

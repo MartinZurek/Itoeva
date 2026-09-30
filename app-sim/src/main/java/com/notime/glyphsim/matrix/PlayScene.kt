@@ -712,7 +712,10 @@ object PlayScene {
             (ox until ox + placement.prop.width) to originY(placement, floorY)
         }
         cells += shiftedLayer(
-            PlayWorld.background(place, phase, widthCells, floorY, dayPhase, foregroundSpans, species),
+            hazed(
+                PlayWorld.background(place, phase, widthCells, floorY, dayPhase, foregroundSpans, species),
+                parallax, floorY, dayPhase
+            ),
             farShift, widthCells
         )
         // VOR den Requisiten: Beiwerk am Boden (Gras) liegt in derselben Zeile, in der die
@@ -791,6 +794,7 @@ object PlayScene {
         )
 
         // Materie folgt der Tageszeit, Licht nicht (siehe [SceneCell.isLight]).
+        cells += reflections(place, cells, phase, widthCells, floorY)
         val roomFactor = atmosphere(dayPhase, minuteOfDay) * fade
         // **Licht, das die Umgebung erhellt** (Anregung: HD-2D). Bisher war Licht nur hell an der
         // Stelle, an der es sitzt; der Raum drumherum dunkelte gleichmaessig ab. Jetzt holt jede
@@ -817,6 +821,130 @@ object PlayScene {
             else cell.copy(brightness = scaled)
         }
     }
+
+    /**
+     * **Dunst in der Ferne** (Anregung: HD-2D). Was weit hinten liegt, wird nach oben hin blasser -
+     * die Luft zwischen Betrachter und Berg. Morgens staerker (Morgendunst), nachts kaum. Lichter
+     * (Fenster, Leuchtturm) bleiben unberuehrt.
+     */
+    private fun hazed(
+        layer: List<SceneCell>,
+        outdoors: Boolean,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase
+    ): List<SceneCell> {
+        if (!outdoors || layer.isEmpty() || floorY <= 0) return layer
+        val staerke = when (dayPhase) {
+            PlayAmbientActivity.DayPhase.MORNING -> HAZE_MORNING
+            PlayAmbientActivity.DayPhase.MIDDAY -> HAZE_DAY
+            PlayAmbientActivity.DayPhase.EVENING -> HAZE_DAY
+            PlayAmbientActivity.DayPhase.NIGHT -> HAZE_NIGHT
+        }
+        return layer.map { cell ->
+            if (cell.isLight) return@map cell
+            val hoehe = ((floorY - 1 - cell.y).toFloat() / floorY).coerceIn(0f, 1f)
+            val b = (cell.brightness * (1f - staerke * hoehe)).roundToInt()
+            if (b == cell.brightness) cell else cell.copy(brightness = b.coerceAtLeast(1))
+        }
+    }
+
+    private const val HAZE_MORNING = 0.5f
+    private const val HAZE_DAY = 0.35f
+    private const val HAZE_NIGHT = 0.15f
+
+    /**
+     * **Spiegelungen im Wasser** (Anregung: HD-2D). Was ueber dem Wasser leuchtet - die tief
+     * stehende Sonne, das Fenster im Bootshaus, der Leuchtturm -, liegt gebrochen und schwaecher
+     * darunter auf der Wasserflaeche: in Streifen, die mit den Wellen wandern.
+     */
+    fun reflections(place: Place, cells: List<SceneCell>, phase: Int, widthCells: Int, floorY: Int): List<SceneCell> {
+        val surface = PlayWorld.waterSurface(place, floorY) ?: return emptyList()
+        val bottom = PlayWorld.waterBottom(place, floorY)
+        val wave = beat(phase, 4)
+        val out = LinkedHashMap<Pair<Int, Int>, SceneCell>()
+        for (c in cells) {
+            if (!c.isLight || c.brightness < REFLECT_MIN || c.y >= surface) continue
+            val y = surface + ((surface - c.y) * REFLECT_SQUEEZE).roundToInt().coerceAtLeast(1)
+            if (y > bottom) continue
+            // Nur jede zweite Zeile, im Takt der Wellen seitlich versetzt: gebrochenes Wasser.
+            if (Math.floorMod(y + wave, 2) != 0) continue
+            val x = c.x + if (Math.floorMod(y + wave, 4) == 0) 1 else -1
+            if (x !in 0 until widthCells) continue
+            val b = (c.brightness * REFLECT_STRENGTH).roundToInt()
+            val prev = out[x to y]
+            if (prev == null || prev.brightness < b) out[x to y] = SceneCell(x, y, b, isLight = true)
+        }
+        return out.values.toList()
+    }
+
+    private const val REFLECT_MIN = 900
+    private const val REFLECT_SQUEEZE = 0.7f
+    private const val REFLECT_STRENGTH = 0.55f
+
+    /**
+     * **Die Ebene VOR der Figur** (Anregung: HD-2D) - gezeichnet nach dem Wesen: dunkle
+     * Grasbueschel an den Bildraendern, durch die es hindurchlaeuft, und was in der Luft treibt -
+     * Pollen im Gruenen, fallende Blaetter im Wald. Sehr dunkel und sparsam, damit sie Tiefe geben
+     * und nie die Figur verdecken, die man sehen will.
+     */
+    fun buildForeground(
+        place: Place,
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase,
+        fade: Float = 1f,
+        minuteOfDay: Int? = null
+    ): List<SceneCell> {
+        if (widthCells <= 0 || floorY <= 0 || fade <= 0f || place !in FRONT_GREEN) return emptyList()
+        val cells = mutableListOf<SceneCell>()
+        // Grasbueschel an beiden Raendern: Halme verschiedener Hoehe, im Wind leicht geneigt.
+        val sway = if (beat(phase, 7) % 2 == 0) 0 else 1
+        for (x in (0 until FRONT_GRASS) + (widthCells - FRONT_GRASS until widthCells)) {
+            if (x !in 0 until widthCells) continue
+            val h = 1 + Math.floorMod(x * 7 + 3, 4)
+            for (d in 0 until h) {
+                val lean = if (d == h - 1) sway else 0
+                cells += SceneCell(x + lean, floorY - 1 - d, FRONT_GRASS_TONE)
+            }
+        }
+        // Was in der Luft treibt - nur bei Tag.
+        val hell = dayPhase != PlayAmbientActivity.DayPhase.NIGHT
+        if (hell) {
+            val blaetter = place == Place.FOREST || place == Place.JUNGLE || place == Place.CAMP
+            val anzahl = if (blaetter) 3 else 4
+            val spanY = (floorY - 4).coerceAtLeast(1)
+            for (i in 0 until anzahl) {
+                val t = phase + i * 97
+                if (blaetter) {
+                    // Ein Blatt faellt langsam und pendelt dabei.
+                    val y = Math.floorMod(t / 2 + i * 13, spanY)
+                    val x = Math.floorMod(i * 29 + (kotlin.math.sin(t * 0.25) * 3).roundToInt(), widthCells)
+                    cells += SceneCell(x, y, FRONT_MOTE_TONE)
+                    cells += SceneCell((x + 1).coerceAtMost(widthCells - 1), y, FRONT_MOTE_TONE - 150)
+                } else {
+                    // Pollen schweben seitlich und heben und senken sich kaum merklich.
+                    val x = Math.floorMod(t / 3 + i * 23, widthCells)
+                    val y = (floorY * 0.45f).roundToInt() + i * 3 + (kotlin.math.sin(t * 0.18 + i) * 2).roundToInt()
+                    if (y in 0 until floorY) cells += SceneCell(x, y, FRONT_MOTE_TONE)
+                }
+            }
+        }
+        val factor = atmosphere(dayPhase, minuteOfDay) * fade
+        return cells.mapNotNull { c ->
+            val b = (c.brightness * factor).roundToInt()
+            if (b <= 0 || c.x !in 0 until widthCells || c.y < 0) null else c.copy(brightness = b)
+        }
+    }
+
+    /** Wo Gras und Pollen vor der Figur liegen: ueberall im Gruenen und in der Wildnis. */
+    private val FRONT_GREEN = setOf(
+        Place.PARK, Place.MEADOW, Place.FOREST, Place.POND, Place.PLAINS, Place.JUNGLE, Place.SWAMP,
+        Place.CAMP, Place.MOUNTAINS, Place.SPORT
+    )
+    private const val FRONT_GRASS = 5
+    private const val FRONT_GRASS_TONE = 420
+    private const val FRONT_MOTE_TONE = 1200
 
     /** Wie weit der ferne Hintergrund der Figur folgt, in Zellen (an den Bildraendern). */
     const val PARALLAX_FAR = 3
