@@ -698,6 +698,11 @@ das Wesen damit gut die Haelfte der Zeit (abends fast zwei Drittel) regungslos d
   Inhalt).
 - **Ungeprueft (`UNVERIFIED`):** Vogel und Schmetterling im Bild am Geraet; ob der neue Takt zu
   unruhig wirkt.
+- **CI, mit Freigabe des Nutzers:** Der Artefaktspeicher des Repos war voll; alle Pruefungen
+  waren inhaltlich gruen, scheiterten aber beim Hochladen der Berichte, und die Stream-APK kam
+  nicht in Drive an. Die Berichts-Uploads in `verify.yml` und die Artefakt-Sicherung in
+  `deliver-apk.yml` duerfen jetzt scheitern (`continue-on-error`), ohne den Lauf rot zu machen
+  oder die Drive-Ablieferung zu verhindern.
 
 ### 2026-09-29 - Abends kein Stillstand mehr
 
