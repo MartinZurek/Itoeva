@@ -94,6 +94,7 @@ import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.AvatarWatchdog
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.PlayMap
+import com.notime.glyphsim.matrix.PlayMapScene
 import com.notime.glyphsim.matrix.PlayPastime
 import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.skilltree.ActivityContext
@@ -658,6 +659,14 @@ fun DockScreen(
         // Ob gerade gewollt eine Tuer durchschritten wird - nur dann sind [avatarHidden] und ein
         // gedaempftes [avatarDim] richtig. Der Waechter (siehe AvatarWatchdog) liest das.
         var doorTransit by remember { mutableStateOf(false) }
+        /**
+         * **Die Karte vor einem weiten Weg** (siehe PlayMapScene): Ausgangsort und Weg, solange
+         * sie gezeigt wird, sonst `null`. [mapDrawn] ist, wie weit der Weg nachgezogen ist,
+         * [mapBlink] der Takt fuer das blinkende Ziel.
+         */
+        var mapView by remember { mutableStateOf<Pair<PlayScene.Place, List<PlayScene.Place>>?>(null) }
+        var mapDrawn by remember { mutableFloatStateOf(0f) }
+        var mapBlink by remember { mutableStateOf(false) }
         // Gaeste, die gerade durchs Bild laufen - siehe runVisit. Mehrere gleichzeitig moeglich
         // (Deckel je Ort in LivingPopulationLayout.visitorCapFor), jeder eigenstaendig per
         // profileId gefuehrt statt einer einzelnen Variable.
@@ -1418,6 +1427,49 @@ fun DockScreen(
         }
 
         /**
+         * **Vor einem weiten Weg ein Blick auf die Karte** (siehe PlayMapScene): Die Figur tritt
+         * zurueck, die Kulisse blendet zur Karte ueber, der Weg zieht sich Ort fuer Ort bis zum
+         * Ziel, das Ziel blinkt - dann zurueck in die Kulisse, und der Weg wird gegangen.
+         *
+         * Wie der Tuerdurchgang ganz in try/finally: Bricht eine Erinnerung die Karte ab, ist
+         * sofort wieder die Kulisse mit der Figur da.
+         */
+        suspend fun showMap(from: PlayScene.Place, weg: List<PlayScene.Place>) {
+            doorTransit = true
+            try {
+                avatarDim.animateTo(0f, tween(DOOR_STEP_MS))
+                avatarHidden = true
+                sceneFade.animateTo(0f, tween(SCENE_FADE_OUT_MS))
+                mapDrawn = 0f
+                mapBlink = true
+                mapView = from to weg
+                sceneFade.animateTo(1f, tween(SCENE_FADE_IN_MS))
+                var t = 0L
+                while (t < MAP_DRAW_MS + MAP_HOLD_MS) {
+                    mapDrawn = (t.toFloat() / MAP_DRAW_MS).coerceAtMost(1f)
+                    mapBlink = (t / MAP_BLINK_MS) % 2L == 0L
+                    delay(MAP_TICK_MS)
+                    t += MAP_TICK_MS
+                }
+                sceneFade.animateTo(0f, tween(SCENE_FADE_OUT_MS))
+                mapView = null
+                sceneFade.animateTo(1f, tween(SCENE_FADE_IN_MS))
+                avatarHidden = false
+                avatarDim.animateTo(1f, tween(DOOR_STEP_MS))
+            } finally {
+                doorTransit = false
+                if (mapView != null || avatarHidden || avatarDim.value < 1f || sceneFade.value < 1f) {
+                    mapView = null
+                    avatarHidden = false
+                    withContext(NonCancellable) {
+                        avatarDim.snapTo(1f)
+                        sceneFade.snapTo(1f)
+                    }
+                }
+            }
+        }
+
+        /**
          * **Der ganze Weg an einen Ort, ueber die Karte** (siehe PlayMap): Liegt das Ziel nicht
          * nebenan, geht die Figur den Weg Ort fuer Ort ([stepToPlace]) - vom Gebirge zum
          * Sportplatz ueber Wiese und Park, nicht mehr in einem Sprung. Draussen bleibt sie an
@@ -1426,6 +1478,7 @@ fun DockScreen(
         suspend fun moveToPlace(target: PlayScene.Place, species: AvatarSpecies) {
             if (target == currentPlace) return
             val weg = PlayMap.route(currentPlace, target).ifEmpty { listOf(target) }
+            if (PlayMap.showsMap(currentPlace, target)) showMap(currentPlace, weg)
             for (ort in weg) {
                 stepToPlace(ort, species)
                 if (ort != target) passThrough(ort, species)
@@ -4699,7 +4752,16 @@ fun DockScreen(
                 label = "kamera"
             )
             val kamera = (kameraWeich * PlayScene.PARALLAX_FAR).roundToInt() / PlayScene.PARALLAX_FAR.toFloat()
-            val sceneCells = remember(
+            val karte = mapView
+            val sceneCells = if (karte != null) {
+                remember(karte, mapDrawn, mapBlink, sceneWidthCells, floorYCells, sceneFade.value) {
+                    val fade = sceneFade.value
+                    PlayMapScene.build(karte.first, karte.second, sceneWidthCells, floorYCells, mapDrawn, mapBlink)
+                        .mapNotNull { cell ->
+                            (cell.brightness * fade).toInt().takeIf { it > 0 }?.let { cell.copy(brightness = it) }
+                        }
+                }
+            } else remember(
                 renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value,
                 lampOn, tvOn, activeStation, avatar?.species, kamera,
                 // Sonst bliebe die Kulisse stehen, wie sie war, bis sich zufaellig etwas anderes
@@ -5161,7 +5223,7 @@ fun DockScreen(
         // **Die Ebene vor der Figur** (siehe PlayScene.buildForeground): Grasbueschel an den
         // Bildraendern, Pollen und fallende Blaetter - NACH dem Avatar gezeichnet, damit er durch
         // das Gras hindurchlaeuft. Draussen im Gruenen; drinnen und in der Stadt leer.
-        if (playMode) {
+        if (playMode && mapView == null) {
             val vorneCells = remember(renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value) {
                 PlayScene.buildForeground(
                     place = renderedPlace,
@@ -5957,6 +6019,16 @@ private const val CAMERA_GLIDE_MS = 1_400
 
 /** Wie lange die Figur an einem Zwischenort draussen stehen bleibt und sich umsieht (siehe PlayMap). */
 private const val PASS_THROUGH_LINGER_MS = 4_000L
+
+/** Die Karte vor einem weiten Weg (siehe showMap): so lange zieht sich der Weg ... */
+private const val MAP_DRAW_MS = 3_200L
+
+/** ... so lange bleibt sie danach mit blinkendem Ziel stehen ... */
+private const val MAP_HOLD_MS = 2_400L
+
+/** ... in diesem Takt blinkt es, und so oft wird das Bild erneuert. */
+private const val MAP_BLINK_MS = 400L
+private const val MAP_TICK_MS = 100L
 
 /** Wie lange das Hinein- und Heraustreten aus dem Tuerrahmen dauert. */
 private const val DOOR_STEP_MS = 420

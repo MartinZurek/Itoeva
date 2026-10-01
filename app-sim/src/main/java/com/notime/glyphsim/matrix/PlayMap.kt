@@ -130,6 +130,17 @@ object PlayMap {
         return path.reversed()
     }
 
+    /**
+     * Ob vor diesem Weg die Karte erscheint (siehe [PlayMapScene]): bei weiten Wegen, die in eine
+     * andere Gegend fuehren. Von Zimmer zu Zimmer oder vom Park zum Teich braucht es keinen Blick
+     * auf die Karte - sie soll ein Ereignis bleiben, kein Vorspann vor jedem Schritt.
+     */
+    fun showsMap(from: Place, to: Place): Boolean =
+        regionOf(from) != regionOf(to) && hops(from, to) >= MAP_MIN_HOPS
+
+    /** Ab so vielen Orten Weg erscheint die Karte. */
+    const val MAP_MIN_HOPS = 3
+
     /** Wie viele Wege zwischen [from] und [to] liegen. */
     fun hops(from: Place, to: Place): Int = route(from, to).size
 

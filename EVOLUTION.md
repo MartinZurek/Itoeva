@@ -669,6 +669,26 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-01 - Die Weltkarte im Bild
+
+**Anlass:** Gewuenscht am 29.09. ("eine Art Mappe, wo er sich gerade befindet"), am 01.10.
+freigegeben: "Ja, mach die Weltkarte im Spiel". Die Wege gab es seit `PlayMap`; zu sehen war die
+Karte bisher nicht.
+
+**Geaendert:**
+- **`PlayMapScene`**: die Welt als Pixel-Karte auf dem Raster - daheim links, Stadt, Gruen,
+  Wildnis rechts; jeder Ort ein kleines Zeichen (Haus, Stadthaus, Baum, Wasser, Berg, Zelt), die
+  Wege gepunktet. Alle Zimmer sind ein Haus.
+- **Vor einem weiten Weg** (andere Gegend, mindestens drei Orte, `PlayMap.showsMap`) tritt die
+  Figur zurueck, die Kulisse blendet zur Karte ueber, von der eigenen Stelle zieht sich der Weg Ort
+  fuer Ort bis zum Ziel (gut drei Sekunden), das Ziel blinkt gerahmt - dann zurueck, und der Weg
+  wird wie bisher Ort fuer Ort gegangen.
+- Kein Text (Stream-Vorgabe: nur Bild und Ton). Bricht eine Erinnerung die Karte ab, ist sofort
+  wieder die Kulisse mit der Figur da (try/finally wie beim Tuerdurchgang).
+
+**Geschuetzt:** Wege, Ziele und Ablaeufe bleiben unveraendert; kurze Wege (Zimmer, Park-Teich)
+zeigen keine Karte.
+
 ### 2026-09-30 - Eigene Vorhaben: lange Projekte und kleine Tagesabsichten
 
 **Anlass:** Der Nutzer meldete, der Avatar wirke ziellos, und wuenschte sich "etwas Langfristiges
