@@ -669,6 +669,21 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Leiserer Stream-Hintergrund
+
+**Version:** `stream-background-gain-v1`, Ausgangspunkt `c1032be`.
+**DOCUMENTED INTENT:** Nutzer empfindet Hintergrundmusik und Regen/andere Atmo als zu laut.
+**Entscheidung:** Ausgangspegel fuer alle Musikspuren und Atmo im Stream-Build halbiert
+(ca. -6 dB), kurze Avatar-/Aktionsklaenge unveraendert. Normale App behaelt ihren Pegel.
+**Betroffen:** PlayMusic.gainOf und PlayAmbienceSound.VOLUME, Stream-Anleitung.
+BuildConfig wird generiert, um die Pegelabsenkung auf den Stream-Build zu begrenzen.
+Keine Preferences, Migration oder Aenderung an Spiel- oder Reminder-Semantik. Vorhandene
+Normalisierung, Ein-/Ausblendungen und Tonfreigaben bleiben bestehen.
+**Ruecksetzweg:** Vorige APK am PC bzw. vorheriger Commit; keine Datenaenderung.
+**TESTED BEHAVIOR:** Stream-Build und 57 vorhandene Musik-/Atmo-Tests erfolgreich; APK
+auf dem Stream-PC aktualisiert und App gestartet. Subjektive Lautstaerke bleibt beim
+Nutzer. Keine neue offene Produktentscheidung.
+
 ### 2026-10-02 - Uebergebener Reminder bleibt aus dem Slot ausgeblendet
 
 **Version:** `twitch-empty-offered-slot-v1`, Ausgangspunkt `6ae1290`.

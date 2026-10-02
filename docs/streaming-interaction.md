@@ -107,6 +107,11 @@ welche Abstaende sich richtig anfuehlen.
 
 ## Was im Bild steht
 
+Auf dem eingerichteten Stream-PC sind Hintergrundmusik und Atmo (Regen, Wind, Brandung,
+Stadt usw.) seit 2026-10-02 auf Nutzerwunsch um 6 dB abgesenkt. Nur der Stream-Build
+wendet diesen Faktor 0,5 an; kurze Avatar-/Aktionsklaenge behalten ihren Pegel. Musik-
+Normalisierung, Ueberblendungen und der Musikschalter bleiben wirksam.
+
 Rechts die vier Plaetze, jeder mit seinem Buchstaben - **auch der leere**, damit ein
 "Platz C ist leer" im Zusammenhang steht statt wie eine Fehlermeldung zu wirken.
 

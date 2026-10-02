@@ -120,7 +120,8 @@ object PlayMusic {
      */
     private val gains = HashMap<MediaPlayer, Float>()
 
-    private fun gainOf(value: MediaPlayer): Float = gains[value] ?: 1f
+    private fun gainOf(value: MediaPlayer): Float = (gains[value] ?: 1f) *
+        if (com.notime.glyphsim.BuildConfig.BUILD_TYPE == "stream") 0.5f else 1f
 
     /** Welche Rolle gerade klingt - die Grundlage dafuer, sie NICHT neu zu starten. */
     private var playingRole: MusicRole? = null

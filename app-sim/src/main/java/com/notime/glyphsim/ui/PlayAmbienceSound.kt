@@ -35,7 +35,7 @@ object PlayAmbienceSound {
     private const val TAG = "PlayAmbience"
 
     /** Wie laut die Atmo unter der Musik liegt - sie traegt, sie fuehrt nie. */
-    private const val VOLUME = 0.22f
+    private val VOLUME = if (com.notime.glyphsim.BuildConfig.BUILD_TYPE == "stream") 0.11f else 0.22f
 
     /** Die Ueberblendung zwischen zwei Klangbildern. */
     private const val FADE_MS = 2_500L
