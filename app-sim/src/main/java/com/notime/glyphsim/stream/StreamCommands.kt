@@ -95,7 +95,7 @@ internal data class StreamCommandConfig(
 
     /** Die Zeile, die im Bild steht. Sie wird aus derselben Quelle gebaut wie der Parser. */
     fun hint(): String = (1..ACTION_SLOT_COUNT).joinToString("  ") { slotId ->
-        "$prefix$dropKeyword ${StreamCommandParser.letterFor(slotId)}"
+        StreamCommandParser.letterFor(slotId).toString()
     }
 }
 
@@ -118,15 +118,23 @@ internal object StreamCommandParser {
     }
 
     /**
-     * Erlaubt sind `!drop A` bis `!drop D` und - als Nachsicht gegenueber dem, was Leute
-     * tatsaechlich tippen - `!drop 1` bis `!drop 4`.
+     * Einzelne Nachrichten `A` bis `D` waehlen direkt einen Platz. Nur ein einzelner Buchstabe
+     * zaehlt: Saetze wie `A bitte` und Satzzeichen bleiben gewoehnlicher Chat.
+     * Die bisherigen Befehle `!drop A` bis `!drop D` und `!drop 1` bis `!drop 4` bleiben erlaubt.
      *
      * Gross- und Kleinschreibung sind egal, zusaetzlicher Leerraum ebenso. Was dahinter noch
      * folgt, wird verworfen statt den Befehl ungueltig zu machen: `!drop a bitte!!` ist
      * erkennbar gemeint und soll nicht an einem Ausrufezeichen scheitern.
      */
     fun parse(message: String, config: StreamCommandConfig = StreamCommandConfig()): StreamInteraction? {
-        val words = message.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val text = message.trim()
+        if (text.length == 1) {
+            val letter = text[0].uppercaseChar()
+            if (letter in FIRST_LETTER..(FIRST_LETTER + ACTION_SLOT_COUNT - 1)) {
+                return StreamInteraction.DropSafeSlot(letter - FIRST_LETTER + 1)
+            }
+        }
+        val words = text.split(Regex("\\s+")).filter { it.isNotEmpty() }
         if (words.size < 2) return null
         val head = words[0].lowercase()
         if (head != (config.prefix + config.dropKeyword).lowercase()) return null

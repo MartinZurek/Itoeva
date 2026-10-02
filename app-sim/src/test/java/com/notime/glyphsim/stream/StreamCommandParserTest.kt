@@ -18,6 +18,21 @@ class StreamCommandParserTest {
         (StreamCommandParser.parse(message) as? StreamInteraction.DropSafeSlot)?.slotId
 
     @Test
+    fun `einzelne Buchstaben waehlen Plaetze ohne Befehlspraefix`() {
+        for ((index, letter) in listOf("A", "B", "C", "D").withIndex()) {
+            assertEquals(index + 1, slotOf(letter))
+            assertEquals(index + 1, slotOf("  ${letter.lowercase()}\t"))
+        }
+    }
+
+    @Test
+    fun `Kurzbefehle verlangen genau einen Buchstaben`() {
+        for (message in listOf("A bitte", "A!", "A.", "AB", "E", "1", "4", "ich waehle A")) {
+            assertNull("'$message' ist kein einzelner Slot-Buchstabe", slotOf(message))
+        }
+    }
+
+    @Test
     fun `die vier Buchstaben treffen die vier Plaetze`() {
         assertEquals(1, slotOf("!drop A"))
         assertEquals(2, slotOf("!drop B"))
@@ -86,10 +101,11 @@ class StreamCommandParserTest {
     }
 
     @Test
-    fun `ein anderes Praefix wirkt auf Parser und Anzeige zugleich`() {
+    fun `anderes Praefix wirkt auf Langbefehle und laesst Kurzbefehle gleich`() {
         val config = StreamCommandConfig(prefix = "?", dropKeyword = "wirf")
         assertEquals(1, (StreamCommandParser.parse("?wirf A", config) as? StreamInteraction.DropSafeSlot)?.slotId)
         assertNull(StreamCommandParser.parse("!drop A", config))
-        assertEquals(true, config.hint().startsWith("?wirf A"))
+        assertEquals("A  B  C  D", config.hint())
+        assertEquals(4, (StreamCommandParser.parse("d", config) as? StreamInteraction.DropSafeSlot)?.slotId)
     }
 }

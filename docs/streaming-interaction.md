@@ -1,8 +1,8 @@
 # Zuschauer-Interaktion im Itoeva-Stream
 
-Status: **umgesetzt (NT-070); echte Twitch-Verbindung noch nicht an einem Kanal erprobt**
+Status: **umgesetzt (NT-070); Stream-Kanal fennec_itoeva konfiguriert, Publikumstest noch offen**
 Gilt fuer: den Build-Typ `stream` von `:app-sim`
-Letzte Pruefung: 2026-09-12
+Letzte Pruefung: 2026-10-02
 
 Dieses Dokument beschreibt, wie Zuschauer kostenlos Einfluss auf die laufende Itoeva-Instanz
 nehmen, und vor allem, **warum die Schichten so geschnitten sind**. Der Schnitt ist der eigentliche
@@ -39,7 +39,7 @@ spaeter jemand die Bezahlfrage in die Auswahl oder in den Agenten traegt, wird d
 
 Ein angenommenes Angebot setzt **kein Ziel** und fuehrt **keine Handlung** aus. Es wird zu einem
 `GoalInfluence` - einem Vorschlag, den dieselbe Utility-Auswahl ueberstimmen darf wie jeden anderen
-Anreiz. Wer `!drop A` tippt, waehrend das Wesen kurz vorm Umfallen ist, sieht es schlafen gehen.
+Anreiz. Wer `A` tippt, waehrend das Wesen kurz vorm Umfallen ist, sieht es schlafen gehen.
 
 Das ist Absicht und der Kern der Sendung: Zuschauer stupsen ein Lebewesen an, sie bedienen keine
 Marionette. Erst wenn die Kernhandlung wirklich gelaufen ist (`StreamInteractions.wasHandled`),
@@ -49,8 +49,12 @@ wird der Platz geleert - ein abgelehnter Vorschlag laesst ihn liegen.
 
 | Befehl | Wirkung |
 |---|---|
-| `!drop A` | wirft dem Wesen hin, was in Platz A liegt |
-| `!drop B` `!drop C` `!drop D` | dasselbe fuer die uebrigen Plaetze |
+| `A` | bietet dem Wesen die Erinnerung aus Platz A an |
+| `B`, `C`, `D` | dasselbe fuer die uebrigen Plaetze |
+
+Die ganze Nachricht muss genau ein Buchstabe sein; Kleinbuchstaben und Leerraum am Rand sind
+erlaubt. `A bitte`, `A!`, `AB`, `E` und einzelne Zahlen loesen nichts aus. Nur belegte,
+oeffentlich sichere Plaetze koennen ausgewaehlt werden. Die bisherigen Langbefehle bleiben:
 
 Nachsicht, weil Leute tippen, wie sie tippen: Gross-/Kleinschreibung egal, zusaetzlicher Leerraum
 egal, `!drop 1` bis `!drop 4` erlaubt, angehaengte Satzzeichen (`!drop a!`) und Text dahinter
@@ -93,14 +97,17 @@ Rechts die vier Plaetze, jeder mit seinem Buchstaben - **auch der leere**, damit
 Unten links drei Zeilen (`StreamViewerOverlay`):
 
 ```
-CHAT · itoeva
-!drop A  !drop B  !drop C  !drop D
+CHAT · fennec_itoeva
+A  B  C  D
 lea → Platz B
 ```
 
 Die dritte Zeile war anfangs nicht vorgesehen und ist die wichtigste. Ohne sie ist eine Ablehnung
 im Stream nicht von einem Absturz zu unterscheiden: Man tippt, und nichts geschieht. Mit ihr wird
 der Abstand sichtbar und Teil des Spiels statt ein Verdacht.
+
+Auf dem eingerichteten Stream-PC ist dieser untere Textbereich auf Nutzerwunsch in OBS
+ausgeschnitten. Die Chat-Verbindung arbeitet trotzdem; der Status ist am Emulator sichtbar.
 
 ## Ohne Twitch testen
 
@@ -121,13 +128,13 @@ von acht Sekunden ist damit am Geraet spuerbar, der Einzelabstand nicht - den pr
 
 Offline, ohne Geraet und ohne Emulator: `tools/reaction-preview/tests.sh`.
 
-## Was fuer echte Zuschauer noch fehlt
+## Verbindung zum echten Kanal
 
-Genau ein Eintrag - der Kanalname in
+Der Kanalname steht ausschliesslich fuer den Stream-Build in
 `app-sim/src/stream/res/values/stream_mode.xml`:
 
 ```xml
-<string name="stream_twitch_channel" translatable="false">deinkanal</string>
+<string name="stream_twitch_channel" translatable="false">fennec_itoeva</string>
 ```
 
 Danach `./gradlew :app-sim:assembleStream`. Mehr ist nicht noetig, **insbesondere kein Token**:
@@ -144,8 +151,10 @@ Itoeva-App bekommt sie **nicht** und kann damit gar keine Verbindung aufbauen - 
 Vereinbarung zwischen Entwicklern, sondern eine Zusicherung des Betriebssystems, und
 `StreamBoundaryTest` haelt sie fest.
 
-Noch nicht erprobt ist der Lauf an einem echten Kanal mit echtem Publikum. Das ist Teil von
-NT-058 und braucht einen Menschen an einem Rechner mit Android Studio.
+Am 2026-10-02 wurden TLS-Verbindung, anonyme Anmeldung und Kanalbeitritt vom Stream-PC
+bestaetigt. Alle 55 Stream-Tests und der APK-Build sind erfolgreich; die aktualisierte App
+ist im Emulator installiert. Noch offen ist eine echte Zuschauer-Nachricht bis zur sichtbaren
+Handlung und ein laengerer Publikumslauf (NT-058).
 
 ## Wo spaeter Bits angeschlossen wuerden
 

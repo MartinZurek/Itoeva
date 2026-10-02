@@ -669,6 +669,37 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Twitch-Buchstaben fuer die vier Speicherplaetze
+
+**Version:** `twitch-letter-slots-v1`, stabiler Ausgangspunkt
+`3c5ecacb14b10e2c7945e7297ae4e446edc23ef8`.
+
+**Anlass / DOCUMENTED INTENT:** Nutzer will, dass Zuschauer mit `A`, `B`, `C` oder `D`
+im Twitch-Chat die Erinnerung im jeweiligen Speicherplatz dem Avatar anbieten. Bisher erkannte
+der Parser nur `!drop`; der installierte Stream-Build hatte keinen Kanal und blieb offline.
+
+**Entscheidung:** Genau ein Buchstabe als ganze Nachricht, Gross-/Kleinschreibung und Rand-Leerraum
+egal. Langbefehle bleiben kompatibel. Keine Satzinterpretation und keine erzwungene Handlung:
+der vorhandene Weg ueber ViewerCommand, Gate, ExternalImpulse und GoalInfluence bleibt bestehen.
+Stream-only Kanal `fennec_itoeva` kommt aus der auf diesem PC eingerichteten Twitch-Verbindung.
+
+**Betroffen:** StreamCommands, Stream-Ressource, Parser-/Kettentests und Streaming-Dokumentation.
+Keine neuen Preferences, Datenmodelle oder Migration. Reminder-Semantik, Charakter, Story,
+Game Loop und Balancing bleiben gleich. Einzelabstand 60 s, Gesamt-Abstand 8 s,
+ein laufender Impuls sowie Ausschluss privater/medizinischer Erinnerungen bleiben erhalten.
+
+**TESTED BEHAVIOR:** 55 Stream-Tests erfolgreich, einschliesslich aller vier Kurzbefehle durch
+IRC-Parser, Gate und Slot-Auswahl bis zum Zielvorschlag; Stream-APK gebaut und auf dem
+eingerichteten Emulator per Update installiert. **FACT:** TLS, anonyme Anmeldung und
+Kanalbeitritt am PC bestaetigt. **UNVERIFIED:** echte Zuschauer-Nachricht bis zur sichtbaren
+Avatar-Handlung und Publikum-Dauerlauf. Keine neue offene Produktentscheidung.
+
+**Ruecksetzweg:** Vorherige APK auf dem Stream-PC gesichert, Update erhaelt vorhandene Daten.
+Code kann auf den Ausgangscommit zurueckgesetzt und neu gebaut werden; ein leerer Kanalname
+deaktiviert nur den Twitch-Eingang. Bereits ausgefuehrte Reminder-Handlungen werden dadurch
+nicht rueckgaengig. Die fruehere Aussage "Kanal noch leer / nur Demo" ist mit dieser Version
+ueberholt; die allgemeine Publikumsmessung bleibt offen.
+
 ### 2026-10-02 - Das Objektiv: Vignette, Lichtstrahlen, Lichthoefe
 
 **Anlass:** Nach dem Leuchtturm-Fix gefragt, was vom Look von Final Fantasy Resonance (HD-2D) noch

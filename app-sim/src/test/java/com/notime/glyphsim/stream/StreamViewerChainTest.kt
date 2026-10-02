@@ -42,6 +42,21 @@ class StreamViewerChainTest {
         ":$nick!$nick@$nick.tmi.twitch.tv PRIVMSG #itoeva :$text"
 
     @Test
+    fun `alle vier Kurzbefehle laufen von Twitch bis zum Slot-Impuls`() {
+        for ((index, letter) in listOf("A", "b", "C", "d").withIndex()) {
+            val chat = TwitchIrc.parseLine(chatZeile("lea", letter)) as TwitchIrc.Line.Chat
+            val command = viewerCommandOf(chat.viewerId, chat.text, ExternalImpulseSource.TWITCH_CHAT_FREE, 0L)!!
+            val admitted = StreamCommandGate.admit(StreamGateState(), command, welt) as StreamGateDecision.Accepted
+            assertEquals(index + 1, admitted.slotId)
+            val selected = StreamInteractions.select(welt, admitted.slotId, 720, command.origin) as StreamSelection.Accepted
+            assertEquals(index + 1, selected.impulse.savedSlotId)
+            assertEquals(index + 1L, selected.impulse.occurrenceId)
+            assertEquals(ExternalImpulseSource.TWITCH_CHAT_FREE, selected.impulse.source)
+            assertNotNull(StreamInteractions.influenceFor(selected.impulse))
+        }
+    }
+
+    @Test
     fun `eine Chat-Zeile wird zu einem Zielvorschlag fuer den Living Agent`() {
         // 1. Serverzeile lesen
         val gelesen = TwitchIrc.parseLine(chatZeile("lea", "!drop B")) as TwitchIrc.Line.Chat
