@@ -669,6 +669,37 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Lesbare Querformat-Buehne fuer den Stream
+
+**Version:** `stream-stage-v1`, Ausgangspunkt `0d3889e`.
+**DOCUMENTED INTENT:** Nutzer beauftragt die vorgeschlagenen ersten Verbesserungen:
+mehr Buehne fuer Fennec, lesbare Nacht und unmittelbare sichtbare Angebotsreaktion.
+**Entscheidung:** Nur der Stream-Build startet im Querformat. Die Uhr zeigt dauerhaft
+die Ortszeit, 48 dp gross, 12 dp vom oberen/linken Rand; die Figur skaliert unabhaengig
+von ihr mit der Hoehe (88-132 dp). Plaetze rechts sind 48 dp gross. Der Chat-/Demo-Fuss
+ist im Querformat ausgeblendet. Nacht-Materie wird heller, Lichtquellen bleiben gleich;
+leere Zellen und Szenen-Ausblendungen bleiben erhalten. Bei angenommenen Angeboten
+zeigt die Figur eine kurze Abwaerts-/Aufwaertsbewegung, parallel zur Symbol-Uebergabe.
+Ein neuer Reaktionszustand im Game Loop wurde zugunsten einer reinen Anzeige verworfen.
+**Betroffen:** DockScreen, OrientationPrefs, StreamPresentation, StreamReminderTransfer,
+Stream-Manifest, Streaming-Dokumentation und lokale OBS-/Emulator-Einrichtung.
+Keine neue Preference, Migration, Texte oder Aenderung an Reminder-Abschluss, autonomer
+Auswahl, Charakter, Story, Balancing oder Progression. Normale App bleibt unveraendert.
+**Ruecksetzweg:** APK vor dieser Aenderung bzw. Commit `0d3889e`, dazu vorheriger
+Hochformat-OBS-Zuschnitt (oben 185, unten 160) und Emulator-Ausrichtung. Spielstand
+bleibt bei APK-Update erhalten; eine Datensicherung wird hierdurch nicht ersetzt.
+**TESTED BEHAVIOR:** Stream-Tests, StreamPresentationTest, SceneCompositionTest,
+PlaySceneTest und Stream-APK-Build erfolgreich. APK auf dem Stream-PC installiert;
+Querformat und Nachtkulisse in OBS bei laufender Uebertragung visuell geprueft.
+94 Tests erfolgreich. Der x86_64-Emulator brach im debug-instrumentierten runRoutine
+mit SIGBUS/SIGABRT ab (auch vor dieser Darstellungsaenderung). Stream jetzt ohne
+Debugger-Instrumentierung, weiterhin mit derselben Signatur; am PC vorab mit dem
+Android-Compilerfilter speed kompiliert. A/B-Uebergaben und weiterer Betrieb danach
+ohne erneuten Absturz geprueft. Dies ist eine Laufzeit-Abhilfe, kein Beweis fuer eine
+generelle Behebung des ART-Problems auf allen Android-Versionen.
+**UNVERIFIED:** Langzeitwirkung beim Publikum; Nachtlesbarkeit in allen Wetterlagen.
+Keine neue offene Produktentscheidung.
+
 ### 2026-10-02 - Leiserer Stream-Hintergrund
 
 **Version:** `stream-background-gain-v1`, Ausgangspunkt `c1032be`.

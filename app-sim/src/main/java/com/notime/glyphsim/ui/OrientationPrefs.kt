@@ -31,7 +31,9 @@ object OrientationPrefs {
      * ohnehin erlaubt".
      */
     fun apply(activity: Activity, allowed: Boolean = isRotationAllowed(activity)) {
-        activity.requestedOrientation = if (allowed) {
+        activity.requestedOrientation = if (com.notime.glyphsim.BuildConfig.BUILD_TYPE == "stream") {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else if (allowed) {
             ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         } else {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT

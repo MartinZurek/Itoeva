@@ -172,6 +172,9 @@ android {
          */
         create("stream") {
             initWith(getByName("debug"))
+            // A broadcast runs the full routine engine, without debugger instrumentation.
+            // Keep the same signing key so existing emulator worlds can be updated in place.
+            isDebuggable = false
             matchingFallbacks += listOf("debug")
             applicationIdSuffix = ".stream"
             versionNameSuffix = "-stream"

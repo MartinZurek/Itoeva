@@ -32,6 +32,7 @@ internal fun StreamReminderTransfer(
     from: Offset,
     avatarOffset: Offset,
     avatarSizeDp: Float,
+    sizeDp: Float = 56f,
     onFinished: () -> Unit
 ) {
     val travel = remember { Animatable(0f) }
@@ -42,13 +43,13 @@ internal fun StreamReminderTransfer(
         absorb.animateTo(1f, tween(120))
         finished.value()
     }
-    val sizePx = with(LocalDensity.current) { 56.dp.toPx() }
+    val sizePx = with(LocalDensity.current) { sizeDp.dp.toPx() }
     val avatarPx = with(LocalDensity.current) { avatarSizeDp.dp.toPx() }
     // Recomputed while travelling, so a walking avatar remains the visible destination.
     val target = avatarOffset + Offset((avatarPx - sizePx) / 2f, (avatarPx - sizePx) / 2f)
     Box(
         Modifier
-            .size(56.dp)
+            .size(sizeDp.dp)
             .graphicsLayer {
                 // Animate the drawing layer, without remeasuring or recomposing the symbol
                 // on every frame. Avatar movement may still update the destination normally.

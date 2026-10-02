@@ -181,6 +181,21 @@ Publikumslauf (NT-058). Nach der Rueckmeldung ueber A wurde der schnelle Wechsel
 Emulator aufgezeichnet: beide Angebote angenommen, beide Bewegungen sichtbar, Markierungen
 anschliessend verschwunden. Derselbe Zuschauer-Wechsel nach 1500 ms ist automatisiert getestet.
 
+## Stream-Buehne
+
+Der Stream-Build startet im Querformat. Die Uhr links oben zeigt dauerhaft die Ortszeit
+in 48 dp; Mond und Traum bleiben Teil der Welt, ersetzen aber nicht die Stream-Uhr.
+Die Figur ist unabhaengig von der Uhr 88-132 dp gross, passend zur Bildschirmhoehe.
+Die vier Speicherplaetze stehen rechts in 48 dp. Der Chat-/Demo-Fuss ist im Querformat
+ausgeblendet, die Chat-Anbindung bleibt aktiv. OBS verwendet das ganze Querformat-Fenster
+ohne den bisherigen Hochformat-Zuschnitt.
+
+Nacht-Materie ist fuer die Uebertragung heller; Lichtquellen, leere Zellen und Szenen-
+Ausblendungen werden erhalten. Bei angenommenen Angeboten bewegt sich Fennec kurz
+abwaerts und wieder aufwaerts, gleichzeitig mit dem fliegenden Reminder. Diese sichtbare
+Bestaetigung aendert weder die autonome Auswahl noch den Abschluss der Erinnerung.
+Die normale App und ihre gespeicherten Einstellungen sind davon unberuehrt.
+
 ## Wo spaeter Bits angeschlossen wuerden
 
 An genau einer Stelle: ein neuer `StreamInteractionProvider` neben

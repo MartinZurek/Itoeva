@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -289,7 +290,7 @@ fun DockScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(if (streamMode) Color(0xFF070B12) else Color.Black)
     ) {
         val density = LocalDensity.current
         val initialClockPx = with(density) { clockSizeDp.dp.toPx() }
@@ -390,8 +391,9 @@ fun DockScreen(
         // derselben Avatar-Groesse abgeleitet, damit Figur und Welt sichtbar zur selben
         // Pixelwelt gehoeren. Eine eigene Kulissen-Zellgroesse waere sofort als zwei
         // uebereinandergelegte Grafiken aufgefallen.
-        val worldAvatarSizeDp = (clockSizeDp * AVATAR_TO_CLOCK_RATIO)
-            .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.DEFAULT_SIZE_DP)
+        val worldAvatarSizeDp = if (streamMode) StreamPresentation.avatarSizeDp(maxHeight.value)
+            else (clockSizeDp * AVATAR_TO_CLOCK_RATIO)
+                .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.DEFAULT_SIZE_DP)
         val worldAvatarPx = with(density) { worldAvatarSizeDp.dp.toPx() }
         // Die Zelle wird notfalls kleiner, damit die Szene nie unter PlayScene.MIN_SCENE_CELLS
         // Spalten faellt - sonst stehen auf einem kleinen Geraet mit gross gezogener Uhr Sofa,
@@ -482,11 +484,18 @@ fun DockScreen(
         var streamSlotTransfer by remember(actionSlotProfileId) {
             mutableStateOf<StreamSlotTransfer?>(null)
         }
+        val streamAcknowledgement = remember { Animatable(1f) }
+        LaunchedEffect(latestExternalImpulse?.impulseId) {
+            if (streamMode && latestExternalImpulse != null) {
+                streamAcknowledgement.snapTo(0f)
+                streamAcknowledgement.animateTo(1f, tween(700))
+            }
+        }
 
         // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
         // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
-        val slotSizePx = with(density) { 56.dp.toPx() }
-        val slotGapPx = with(density) { 14.dp.toPx() }
+        val slotSizePx = with(density) { (if (streamMode) 48.dp else 56.dp).toPx() }
+        val slotGapPx = with(density) { (if (streamMode) 8.dp else 14.dp).toPx() }
         val slotsRightMarginPx = with(density) { 8.dp.toPx() }
         val slotsTotalHeightPx = ACTION_SLOT_COUNT * slotSizePx + (ACTION_SLOT_COUNT - 1) * slotGapPx
         val slotsTopPx = ((maxHeightPx - slotsTotalHeightPx) / 2f).coerceAtLeast(0f)
@@ -4648,7 +4657,7 @@ fun DockScreen(
         // dann ein eingefrorenes Kreis-Symbol, waehrend der Bildschirm daneben weiterlief (Fund
         // aus dem Review zu PR #162). Als Funktion liest jeder Aufruf `animationFrame` &Co. frisch
         // - genau das Muster, das `current = avatar` in `describeScreen()` schon nutzt.
-        fun currentWatchFrame(): IntArray = animationFrame ?: dreamWatchFrame
+        fun currentWatchFrame(): IntArray = if (streamMode) clockFrame else animationFrame ?: dreamWatchFrame
             ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
 
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
@@ -4802,7 +4811,10 @@ fun DockScreen(
                 }
             }
             PlaySceneView(
-                cells = sceneCells,
+                cells = if (streamMode) StreamPresentation.readableNight(
+                    sceneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT,
+                    sceneFade.value
+                ) else sceneCells,
                 cellPx = sceneCellPx,
                 modifier = Modifier.fillMaxSize()
             )
@@ -4827,7 +4839,10 @@ fun DockScreen(
             // diese Praezisierung haette die Uhr hier staendig eine Erinnerung angesagt, obwohl
             // sie nur die aktuelle Uhrzeit zeigt.
             val currentDreamTopic = dreamWatchTopic
-            val clockContentDescription = if (activeAvatar?.occurrenceId != null) {
+            val clockContentDescription = if (streamMode) {
+                val now = LocalTime.now()
+                stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
+            } else if (activeAvatar?.occurrenceId != null) {
                 val topicLabel = activeAvatar.libraryAnimationLabel
                     ?: activeAvatar.animationType?.let { stringResource(it.labelRes) }
                     ?: stringResource(R.string.a11y_reminder_generic)
@@ -4850,11 +4865,11 @@ fun DockScreen(
                 label = "watch-scene"
             )
             val watchModifier = Modifier
-                .size((clockSizeDp * watchScale).dp)
+                .size((if (streamMode) 48f else clockSizeDp * watchScale).dp)
                 .offset {
                     IntOffset(
-                        (clockOffset.x + driftOffset.x).roundToInt(),
-                        (clockOffset.y + driftOffset.y).roundToInt()
+                        (if (streamMode) with(density) { 12.dp.toPx() } else clockOffset.x + driftOffset.x).roundToInt(),
+                        (if (streamMode) with(density) { 12.dp.toPx() } else clockOffset.y + driftOffset.y).roundToInt()
                     )
                 }
                 .pointerInput(Unit) {
@@ -5191,6 +5206,11 @@ fun DockScreen(
                     .width(current.sizeDp.dp)
                     .height(current.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
                     .offset { IntOffset(current.offset.x.roundToInt(), current.offset.y.roundToInt()) }
+                    .graphicsLayer {
+                        if (streamMode) translationY =
+                            kotlin.math.sin(streamAcknowledgement.value * kotlin.math.PI).toFloat() *
+                                with(density) { 6.dp.toPx() }
+                    }
                     // **Antippen im Play-Modus oeffnet das Gespraech** (siehe PlayTalkPanel).
                     //
                     // Nur dort und nur, wenn keine Erinnerung offen ist: Steht eine an, ist das
@@ -5249,7 +5269,9 @@ fun DockScreen(
             }
             if (vorneCells.isNotEmpty()) {
                 PlaySceneView(
-                    cells = vorneCells,
+                    cells = if (streamMode) StreamPresentation.readableNight(
+                        vorneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT, sceneFade.value
+                    ) else vorneCells,
                     cellPx = sceneCellPx,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -5274,7 +5296,9 @@ fun DockScreen(
                 )
             }
             PlaySceneView(
-                cells = frontCells,
+                cells = if (streamMode) StreamPresentation.readableNight(
+                    frontCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT, sceneFade.value
+                ) else frontCells,
                 cellPx = sceneCellPx,
                 modifier = Modifier.fillMaxSize()
             )
@@ -5689,13 +5713,14 @@ fun DockScreen(
                             from = slotOffsetPx(transfer.slotIndex),
                             avatarOffset = recipient.offset,
                             avatarSizeDp = recipient.sizeDp,
+                            sizeDp = 48f,
                             onFinished = {
                                 if (streamSlotTransfer == transfer) streamSlotTransfer = null
                             }
                         )
                     }
                 }
-                StreamViewerOverlay(
+                if (maxWidthPx <= maxHeightPx) StreamViewerOverlay(
                     config = streamConfig,
                     chatStatus = chatStatus,
                     channel = twitchChannel,
