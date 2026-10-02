@@ -169,6 +169,29 @@ class StreamInteractionTest {
         assertTrue(privateLabel.slots.all { it == null })
     }
 
+    @Test
+    fun `B ersetzt A ohne eine Erinnerung oder ein altes Ergebnis zu verbrauchen`() {
+        val world = StreamInteractionState(slots = listOf(action(1), action(2), null, null))
+        val a = StreamInteractions.select(world, 1, 720) as StreamSelection.Accepted
+        val b = StreamInteractions.select(a.state, 2, 720, replacePending = true) as StreamSelection.Accepted
+        assertEquals(2L, b.state.pending?.occurrenceId)
+        assertEquals(world.slots, b.state.slots)
+        assertSame(b.state, StreamInteractions.clearHandled(b.state, a.impulse))
+        assertEquals(StreamSelection.Busy, StreamInteractions.select(b.state, 2, 721, replacePending = true))
+        val cleared = StreamInteractions.clearHandled(b.state, b.impulse)
+        assertEquals(1L, cleared.slots[0]?.occurrenceId)
+        assertNull(cleared.slots[1])
+    }
+
+    @Test
+    fun `leerer oder privater Ersatz laesst A unveraendert`() {
+        val world = StreamInteractionState(slots = listOf(action(1), action(2, AnimationType.MEDICINE), null, null))
+        val a = StreamInteractions.select(world, 1, 720) as StreamSelection.Accepted
+        assertEquals(StreamSelection.Missing, StreamInteractions.select(a.state, 2, 720, replacePending = true))
+        assertEquals(StreamSelection.Missing, StreamInteractions.select(a.state, 3, 720, replacePending = true))
+        assertEquals(1L, a.state.pending?.occurrenceId)
+    }
+
     private fun selected(type: AnimationType): StreamSelection.Accepted {
         val state = StreamInteractions.autoSave(
             true,

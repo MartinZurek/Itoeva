@@ -111,7 +111,7 @@ class StreamCommandGateTest {
     }
 
     @Test
-    fun `waehrend ein Anstoss laeuft kommt kein zweiter durch`() {
+    fun `derselbe bereits angebotene Platz wird nicht erneut gestartet`() {
         val laufend = vollbesetzt().let {
             it.copy(
                 pending = ExternalImpulse(
@@ -125,11 +125,31 @@ class StreamCommandGateTest {
                 )
             )
         }
-        val entschieden = admit(StreamGateState(), "kim", slotId = 2, atMillis = 0L, world = laufend)
+        val entschieden = admit(StreamGateState(), "kim", slotId = 1, atMillis = 0L, world = laufend)
         assertEquals(
             StreamRejection.IMPULSE_PENDING,
             (entschieden as StreamGateDecision.Rejected).reason
         )
+    }
+
+    @Test
+    fun `derselbe Zuschauer kann nach eineinhalb Sekunden von A zu B wechseln`() {
+        val first = admit(StreamGateState(), "lea", 1, 0L) as StreamGateDecision.Accepted
+        val running = (StreamInteractions.select(vollbesetzt(), 1, 720) as StreamSelection.Accepted).state
+        val switched = admit(first.state, "lea", 2, 1_500L, running)
+        assertTrue(switched is StreamGateDecision.Accepted)
+        assertEquals(2, (switched as StreamGateDecision.Accepted).slotId)
+        assertEquals(750L, config.globalCooldownMillis)
+    }
+
+    @Test
+    fun `Ersetzen laesst sich deaktivieren`() {
+        val running = (StreamInteractions.select(vollbesetzt(), 1, 720) as StreamSelection.Accepted).state
+        val result = StreamCommandGate.admit(
+            StreamGateState(), befehl("lea", 2, 0L), running,
+            config.copy(replacePendingImpulse = false)
+        ) as StreamGateDecision.Rejected
+        assertEquals(StreamRejection.IMPULSE_PENDING, result.reason)
     }
 
     @Test

@@ -669,6 +669,36 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Chat-Auswahl loest den bisherigen Vorschlag ab
+
+**Version:** `twitch-responsive-slots-v1`, Ausgangspunkt `e855322`.
+**DOCUMENTED INTENT:** Nutzer meldet bei A haengende Markierung, abgewiesenes B sowie zu
+langsame und unfluessige Bedienung. **FACT:** Die vorige Version markierte den wartenden
+Impuls unbegrenzt und verweigerte jeden weiteren Platz bis zur Bearbeitung; ausserdem
+galten noch 60 s Einzelabstand und 8 s Gesamtabstand. Das war eine falsche Rueckmeldung.
+**Entscheidung:** Einzelabstand 1500 ms, Gesamtabstand 750 ms. Eine andere gueltige Auswahl
+ersetzt das bisher wartende Angebot. Der bisherige Reminder bleibt gespeichert und wird
+nicht als erledigt verbucht. Derselbe bereits angebotene Platz startet nicht erneut;
+leere und private Ersatzplaetze lassen den bisherigen Impuls bestehen. Keine Warteschlange.
+Die bestehende einzelne Routine-Coroutine reagiert wie bisher auf eine neue Impulskennung.
+Der Avatar behaelt seine Beduerfnisentscheidung; kein erzwungenes Ziel.
+**Darstellung:** Markierung nur fuer die Uebergabe, 450 ms Weg plus 120 ms Ausblenden.
+Translation und Ausblenden lesen Animationswerte direkt in der Grafikschicht; das Symbol
+wird nicht pro Frame neu komponiert oder vermessen.
+**Betroffen:** Stream-Konfiguration, Gate, Slot-Auswahl, DockScreen, Transfer-Komponente,
+Gate-/Interaktions-/Kettentests, Streaming-Anleitung. Keine Migration oder neuen Preferences.
+Reminder-Semantik und private/medizinische Ausschluesse bleiben erhalten; Eingabe-Balancing
+und Ablosen eines wartenden Impulses aendern sich auf ausdruecklichen Nutzerwunsch.
+**TESTED BEHAVIOR:** 59 Stream-Tests und APK-Build erfolgreich, Emulator aktualisiert.
+Regressionen pruefen A->B nach 1500 ms, Erhalt von A, Schutz von B vor einem alten A-Abschluss,
+leeren/privaten Ersatz sowie weiterhin wirksame Spam-Abstaende.
+Aufnahme am Emulator bestaetigt A->B ueber denselben Demo-Eingang, zwei kurze Uebergaben
+und anschliessend keine bleibende gruene Markierung. B wurde als `demo-2 -> slot B` angenommen.
+**Ruecksetzweg:** Vorige APK am PC gesichert, oder vorheriger Commit; keine Datenaenderung.
+Bereits bearbeitete Erinnerungen lassen sich dadurch nicht wiederherstellen.
+**UNVERIFIED:** Dauerlauf mit Publikum und subjektive Fluessigkeit im Twitch-Videoplayer.
+Keine neue offene Produktentscheidung.
+
 ### 2026-10-02 - Sichtbare Uebergabe vom Speicherplatz zum Avatar
 
 **Version:** `twitch-slot-transfer-v1`, Ausgangspunkt `9dc791bb3650e373e85a6b8a31d2da8f8e7830ac`.

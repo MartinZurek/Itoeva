@@ -56,11 +56,13 @@ Die ganze Nachricht muss genau ein Buchstabe sein; Kleinbuchstaben und Leerraum 
 erlaubt. `A bitte`, `A!`, `AB`, `E` und einzelne Zahlen loesen nichts aus. Nur belegte,
 oeffentlich sichere Plaetze koennen ausgewaehlt werden.
 
-Bei Annahme wandert das Erinnerungssymbol in gut einer Sekunde sichtbar vom Speicherplatz
+Bei Annahme wandert das Erinnerungssymbol in 450 ms sichtbar vom Speicherplatz
 zum Avatar und blendet bei ihm aus. Das Ziel folgt der aktuellen Position, auch wenn der
 Avatar gerade laeuft. Der Platzrahmen und sein Buchstabe bleiben rechts stehen; der
 Reminder wird weiterhin erst nach tatsaechlicher Bearbeitung geleert. Abgewiesene Befehle
-starten keine Bewegung. Demo-Tippen und Chat nehmen denselben Weg.
+starten keine Bewegung. Es blendet in weiteren 120 ms am Avatar aus. Die gruene Markierung
+am Herkunftsplatz gilt nur fuer diese Uebergabe und bleibt nicht bis zum Ende einer Routine.
+Demo-Tippen und Chat nehmen denselben Weg.
 
 Die bisherigen Langbefehle bleiben. Nachsicht, weil Leute tippen, wie sie tippen:
 Gross-/Kleinschreibung egal, zusaetzlicher Leerraum
@@ -79,17 +81,21 @@ Zentral konfigurierbar in `StreamCommandConfig`, mit diesen Voreinstellungen:
 
 | Stellschraube | Wert | Warum |
 |---|---|---|
-| `perViewerCooldownMillis` | 60 000 | damit der knappe Durchsatz nicht einem schnellen Tipper gehoert |
-| `globalCooldownMillis` | 8 000 | hoechstens ~7 Anstoesse pro Minute; eine Handlung laeuft ueber mehrere simulierte Minuten |
+| `perViewerCooldownMillis` | 1 500 | kurze Spam-Bremse, schneller Wechsel desselben Zuschauers moeglich |
+| `globalCooldownMillis` | 750 | keine gleichzeitig fliegenden Angebote |
+| `replacePendingImpulse` | true | neue gueltige Auswahl ersetzt das bisher wartende Angebot |
 | `logCapacity` | 40 | genug, um im Stream nachzuvollziehen, wer warum abgewiesen wurde |
 
-Dazu ohne Zahl: ungueltige Befehle werden ignoriert, und waehrend ein Anstoss laeuft kommt kein
-zweiter durch (`IMPULSE_PENDING`) - zwei gleichzeitige Ablaeufe wuerden dieselbe Figur an zwei Orte
-schieben.
+Dazu ohne Zahl: ungueltige Befehle werden ignoriert. Ein neuer belegter Platz ersetzt den
+bisher angebotenen Platz; dessen Reminder bleibt erhalten. Es laeuft weiterhin nur eine
+Routine, deren bisheriger Anstoss bei einer neuen Auswahl abgeloest wird. Derselbe bereits
+angebotene Platz wird nicht erneut gestartet (`IMPULSE_PENDING`). Wer z. B. A und nach
+1,5 Sekunden B schreibt, sieht die Uebergabe von B, auch wenn A noch nicht bearbeitet war.
+Leere oder private Ersatzplaetze aendern den bisherigen Impuls nicht.
 
 **Reihenfolge der Pruefungen: erst die Abstaende, dann der Weltzustand.** Wer auf Abstand steht,
 wird abgewiesen, egal was in den Plaetzen liegt. Wer dagegen einen leeren Platz nennt, verliert
-seinen Abstand **nicht** - er hat nur danebengegriffen, und eine Minute Schweigen als Strafe fuer
+seinen Abstand **nicht** - er hat nur danebengegriffen, und eine Wartezeit als Strafe fuer
 einen Tippfehler waere die falsche Lehre fuer ein neues Publikum.
 
 Die Werte sind bewusst Vermutungen. Was der erste oeffentliche Lauf herausfinden soll, steht in
@@ -131,7 +137,7 @@ wuerde (`!drop B`), und nimmt denselben Weg durch Parser, Tor und Auswahl. Sonst
 Vorfuehrung am Geraet eine Strecke, die es im Stream gar nicht gibt.
 
 Jedes Tippen zaehlt als **ein anderer** Zuschauer (`demo-1`, `demo-2`, …). Der gemeinsame Abstand
-von acht Sekunden ist damit am Geraet spuerbar, der Einzelabstand nicht - den pruefen die Tests.
+von 750 ms ist damit am Geraet spuerbar, der Einzelabstand nicht - den pruefen die Tests.
 
 Offline, ohne Geraet und ohne Emulator: `tools/reaction-preview/tests.sh`.
 
@@ -159,11 +165,13 @@ Vereinbarung zwischen Entwicklern, sondern eine Zusicherung des Betriebssystems,
 `StreamBoundaryTest` haelt sie fest.
 
 Am 2026-10-02 wurden TLS-Verbindung, anonyme Anmeldung und Kanalbeitritt vom Stream-PC
-bestaetigt. Alle 55 Stream-Tests und der APK-Build sind erfolgreich; die aktualisierte App
+bestaetigt. Alle 59 Stream-Tests und der APK-Build sind erfolgreich; die aktualisierte App
 ist im Emulator installiert. Ein echter Chatbefehl aus `fennec_itoeva` wurde als
 `fennec_itoeva -> slot A` angenommen; Platz A war gruen markiert und wurde nach der
 Bearbeitung geleert. OBS uebertrug dabei weiter mit App-Ton. Noch offen ist ein laengerer
-Publikumslauf (NT-058).
+Publikumslauf (NT-058). Nach der Rueckmeldung ueber A wurde der schnelle Wechsel A->B im
+Emulator aufgezeichnet: beide Angebote angenommen, beide Bewegungen sichtbar, Markierungen
+anschliessend verschwunden. Derselbe Zuschauer-Wechsel nach 1500 ms ist automatisiert getestet.
 
 ## Wo spaeter Bits angeschlossen wuerden
 

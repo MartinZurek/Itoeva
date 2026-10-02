@@ -154,7 +154,7 @@ class StreamViewerChainTest {
     }
 
     @Test
-    fun `ein zweites Angebot waehrend eines laufenden Anstosses wird abgewiesen`() {
+    fun `ein anderer Zuschauer kann nach kurzem Abstand ein neues Angebot setzen`() {
         val erst = viewerCommandOf("lea", "!drop A", ExternalImpulseSource.TWITCH_CHAT_FREE, 0L)!!
         val angenommen = StreamCommandGate.admit(StreamGateState(), erst, welt) as StreamGateDecision.Accepted
         val laufend = (StreamInteractions.select(welt, angenommen.slotId, 720) as StreamSelection.Accepted).state
@@ -166,9 +166,13 @@ class StreamViewerChainTest {
             atMillis = StreamCommandConfig().globalCooldownMillis
         )!!
         val entschieden = StreamCommandGate.admit(angenommen.state, zweit, laufend)
-        assertEquals(
-            StreamRejection.IMPULSE_PENDING,
-            (entschieden as StreamGateDecision.Rejected).reason
-        )
+        assertTrue(entschieden is StreamGateDecision.Accepted)
+        val replaced = StreamInteractions.select(
+            laufend, (entschieden as StreamGateDecision.Accepted).slotId, 720,
+            zweit.origin, replacePending = true
+        ) as StreamSelection.Accepted
+        assertEquals(3, replaced.state.pending?.savedSlotId)
+        assertEquals(laufend.slots, replaced.state.slots)
+        assertEquals(replaced.state, StreamInteractions.clearHandled(replaced.state, laufend.pending!!))
     }
 }

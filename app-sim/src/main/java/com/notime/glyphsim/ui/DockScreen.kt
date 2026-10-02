@@ -3477,7 +3477,7 @@ fun DockScreen(
             index: Int,
             source: ExternalImpulseSource = ExternalImpulseSource.LOCAL_VIEWER_SIMULATOR
         ) {
-            if (!streamMode || pendingExternalImpulse != null) return
+            if (!streamMode) return
             val saved = slots.getOrNull(index) ?: return
             scope.launch {
                 val exists = withContext(Dispatchers.IO) {
@@ -3499,7 +3499,8 @@ fun DockScreen(
                     state,
                     slotId = index + 1,
                     atMinute = PlayTimeLapse.absoluteMinute(),
-                    source = source
+                    source = source,
+                    replacePending = streamConfig.replacePendingImpulse
                 )) {
                     is StreamSelection.Accepted -> {
                         if (avatar != null) streamSlotTransfer = StreamSlotTransfer(index, saved)
@@ -5566,7 +5567,7 @@ fun DockScreen(
                     // haette jeden leeren Platz faelschlich hervorgehoben - gemeldet als "Reminder
                     // Slots werden bunt mit diesem hellgruenen Kreis gehighlightet".
                     val matchesPendingImpulse = saved != null &&
-                        pendingExternalImpulse?.occurrenceId == saved.occurrenceId
+                        streamSlotTransfer?.saved?.occurrenceId == saved.occurrenceId
                     Box(
                         modifier = Modifier
                             .size(with(density) { slotSizePx.toDp() })

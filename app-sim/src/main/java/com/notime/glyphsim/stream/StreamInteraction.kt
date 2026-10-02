@@ -96,9 +96,12 @@ internal object StreamInteractions {
         state: StreamInteractionState,
         slotId: Int,
         atMinute: Int,
-        source: ExternalImpulseSource = ExternalImpulseSource.LOCAL_VIEWER_SIMULATOR
+        source: ExternalImpulseSource = ExternalImpulseSource.LOCAL_VIEWER_SIMULATOR,
+        replacePending: Boolean = false
     ): StreamSelection {
-        if (state.pending != null) return StreamSelection.Busy
+        if (state.pending != null && (!replacePending || state.pending.savedSlotId == slotId)) {
+            return StreamSelection.Busy
+        }
         val index = slotId - 1
         val saved = state.slots.getOrNull(index) ?: return StreamSelection.Missing
         val type = saved.animationType ?: return StreamSelection.Missing
