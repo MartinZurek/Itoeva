@@ -119,4 +119,55 @@ class PlayLightTest {
             )
         }
     }
+
+    // ---- Das Objektiv (PlayScene.lens): Vignette, Lichtstrahlen, Lichthoefe ----
+
+    @Test
+    fun `die Vignette dunkelt die Ecken ab, nicht die Mitte und kein Licht`() {
+        val w = 46
+        val f = 30
+        val flaeche = (0 until w).flatMap { x -> (0..f).map { y -> SceneCell(x, y, 1000) } } +
+            SceneCell(0, 0, PlayScene.GLOW, isLight = true)
+        val bild = PlayScene.vignette(flaeche, w, f)
+        val hell = bild.groupBy { it.x to it.y }
+        val ecke = hell.getValue(0 to f).first().brightness
+        val mitte = hell.getValue(w / 2 to (f * 0.55f).toInt()).first().brightness
+        assertEquals(1000, mitte)
+        assertTrue("Ecke $ecke nicht dunkler", ecke < 800)
+        assertTrue(bild.any { it.isLight && it.x == 0 && it.y == 0 && it.brightness == PlayScene.GLOW })
+    }
+
+    @Test
+    fun `Lichtstrahlen fallen bei Tag durchs Laub, nachts und auf der Wiese nicht`() {
+        fun zusatz(place: Place, phase: DayPhase): Int {
+            val roh = PlayScene.build(place, 0, 46, 30, phase)
+            return PlayScene.shafts(place, roh, 0, 46, 30, phase).sumOf { it.brightness } - roh.sumOf { it.brightness }
+        }
+        assertTrue(zusatz(Place.FOREST, DayPhase.MORNING) > 0)
+        assertTrue(zusatz(Place.FOREST, DayPhase.MORNING) > zusatz(Place.FOREST, DayPhase.MIDDAY))
+        assertEquals(0, zusatz(Place.FOREST, DayPhase.NIGHT))
+        assertEquals(0, zusatz(Place.MEADOW, DayPhase.MORNING))
+        assertEquals(0, zusatz(Place.KITCHEN, DayPhase.MORNING))
+    }
+
+    @Test
+    fun `ein Licht aus mehreren Zellen hat einen Hof, ein Stern nicht`() {
+        val laterne = listOf(SceneCell(10, 10, PlayScene.GLOW, true), SceneCell(11, 10, PlayScene.GLOW, true))
+        val stern = listOf(SceneCell(30, 5, PlayScene.GLOW, true))
+        val hof = PlayScene.bloom(laterne + stern, 46, 30)
+        assertTrue(hof.isNotEmpty())
+        assertTrue(hof.all { kotlin.math.abs(it.x - 10) <= 3 && kotlin.math.abs(it.y - 10) <= 2 })
+        assertTrue(hof.none { (it.x to it.y) in setOf(10 to 10, 11 to 10) })
+        assertTrue(hof.all { it.brightness < PlayScene.GLOW / 2 })
+    }
+
+    @Test
+    fun `das Objektiv bleibt im Bild`() {
+        for (place in Place.entries) for (phase in DayPhase.entries) {
+            val roh = PlayScene.build(place, 0, 40, 24, phase)
+            val tiefste = maxOf(25, roh.maxOfOrNull { it.y } ?: 0)
+            val bild = PlayScene.lens(place, roh, 0, 40, 24, phase)
+            assertTrue("$place/$phase", bild.all { it.x in 0 until 40 && it.y in 0..tiefste && it.brightness in 1..4095 })
+        }
+    }
 }

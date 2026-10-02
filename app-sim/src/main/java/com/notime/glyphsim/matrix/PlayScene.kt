@@ -865,6 +865,169 @@ object PlayScene {
     }
 
     /**
+     * **Das Objektiv** (Anregung: HD-2D aus Final Fantasy Resonance, freigegeben am 02.10.):
+     * was eine Kamera dem fertigen Bild hinzufuegt, in dieser Reihenfolge -
+     *
+     * 1. **Lichtstrahlen durchs Laub** ([shafts]): morgens und mittags im Wald, Dschungel, Park
+     *    und Sumpf schraege, schwach helle Bahnen, die langsam weiterziehen.
+     * 2. **Ein Hof um jedes Licht** ([bloom]): Laterne, Feuer, Fenster, Sonne und Leuchtturm
+     *    strahlen auch in die leere Luft um sich - bisher endete ein Licht an seiner Zelle, wo
+     *    nichts stand, das es haette anstrahlen koennen.
+     * 3. **Vignette** ([vignette]): Zu den Raendern, vor allem den Ecken, wird es sanft dunkler.
+     *    Das ist der Diorama-Blick dieser Spiele - das Auge bleibt in der Mitte bei der Figur,
+     *    und auch die Ablage-Slots am rechten Rand liegen ruhiger auf dem Bild.
+     *
+     * Lichtquellen selbst werden von der Vignette nicht gedaempft; ein Licht bleibt ein Licht.
+     *
+     * **Bewusst nicht Teil von [build]**, sondern beim Zeichnen angewandt (DockScreen,
+     * PlayClipRenderer): Die Kompositions-Pruefungen lesen aus [build] die Helligkeit einzelner
+     * Dinge - eine Bank am Bildrand, die die Vignette abdunkelt, ist trotzdem ganz zu sehen.
+     */
+    fun lens(
+        place: Place,
+        cells: List<SceneCell>,
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase,
+        fade: Float = 1f
+    ): List<SceneCell> {
+        if (widthCells <= 0 || floorY <= 0) return cells
+        val withShafts = shafts(place, cells, phase, widthCells, floorY, dayPhase, fade)
+        val withBloom = withShafts + bloom(withShafts, widthCells, floorY)
+        return vignette(withBloom, widthCells, floorY)
+    }
+
+    /** Wo Licht durch Blaetter faellt. */
+    private val SHAFT_PLACES = setOf(Place.FOREST, Place.JUNGLE, Place.PARK, Place.SWAMP)
+
+    /** Abstand der Lichtbahnen, ihre Breite, und um wie viel sie aufhellen. */
+    private const val SHAFT_PERIOD = 15
+    private const val SHAFT_WIDTH = 3
+    private const val SHAFT_TONE_MORNING = 320
+    private const val SHAFT_TONE_MIDDAY = 170
+
+    /** Alle so viele Bildtakte rueckt das Licht eine Zelle weiter. */
+    private const val SHAFT_DRIFT_TICKS = 60
+
+    /**
+     * Schraege Lichtbahnen von links oben nach rechts unten. Oben am hellsten, zum Boden hin
+     * verblassend; leere Stellen in der Bahn werden zu schwachem Licht in der Luft, Vorhandenes
+     * wird heller. Nur bei Tag und nur dort, wo Blaetter das Licht in Bahnen teilen.
+     */
+    fun shafts(
+        place: Place,
+        cells: List<SceneCell>,
+        phase: Int,
+        widthCells: Int,
+        floorY: Int,
+        dayPhase: PlayAmbientActivity.DayPhase,
+        fade: Float = 1f
+    ): List<SceneCell> {
+        if (place !in SHAFT_PLACES) return cells
+        val tone = when (dayPhase) {
+            PlayAmbientActivity.DayPhase.MORNING -> SHAFT_TONE_MORNING
+            PlayAmbientActivity.DayPhase.MIDDAY -> SHAFT_TONE_MIDDAY
+            else -> return cells
+        }
+        val drift = beat(phase, SHAFT_DRIFT_TICKS)
+        fun strength(x: Int, y: Int): Int {
+            if (y < 0 || y >= floorY) return 0
+            val pos = Math.floorMod(x - y / 2 - drift, SHAFT_PERIOD)
+            if (pos >= SHAFT_WIDTH) return 0
+            // Die mittlere Spalte der Bahn am hellsten, die Raender halb.
+            val core = if (pos == SHAFT_WIDTH / 2) 1f else 0.55f
+            val depth = 1f - 0.7f * y / floorY
+            return (tone * core * depth * fade).roundToInt()
+        }
+        val present = HashSet<Long>(cells.size * 2)
+        val out = ArrayList<SceneCell>(cells.size + widthCells * floorY / SHAFT_PERIOD * SHAFT_WIDTH)
+        for (cell in cells) {
+            present += key(cell.x, cell.y)
+            val add = if (cell.isLight) 0 else strength(cell.x, cell.y)
+            out += if (add > 0) cell.copy(brightness = (cell.brightness + add).coerceAtMost(LIT_CEILING)) else cell
+        }
+        for (y in 0 until floorY) for (x in 0 until widthCells) {
+            if (key(x, y) in present) continue
+            val add = strength(x, y)
+            if (add > 0) out += SceneCell(x, y, add)
+        }
+        return out
+    }
+
+    private fun key(x: Int, y: Int): Long = (y.toLong() shl 32) or (x.toLong() and 0xffffffffL)
+
+    /** Ab dieser Helligkeit hat ein Licht einen Hof, so weit reicht er, so hell ist er innen. */
+    private const val BLOOM_SOURCE_MIN = 1800
+    private const val BLOOM_RADIUS = 2
+    private const val BLOOM_SHARE = 0.18f
+    private const val BLOOM_MAX = 520
+
+    /**
+     * Der Hof um helle Lichter - nur in leere Luft, damit er nichts uebermalt. Er wird auf das
+     * fertige, schon abgedunkelte Bild gelegt und folgt der Helligkeit seiner Quelle.
+     */
+    fun bloom(cells: List<SceneCell>, widthCells: Int, floorY: Int): List<SceneCell> {
+        val hell = cells.filter { it.isLight && it.brightness >= BLOOM_SOURCE_MIN }
+        if (hell.isEmpty()) return emptyList()
+        // Nur Lichter aus mehr als einer Zelle - Feuer, Laterne, Fenster, Sonne. Ein Stern
+        // bleibt ein Punkt; mit Hof wurde der Nachthimmel zu einem Feld aus Flecken.
+        val hellSet = hell.mapTo(HashSet()) { key(it.x, it.y) }
+        val sources = hell.filter { c ->
+            (-1..1).any { dx -> (-1..1).any { dy -> (dx != 0 || dy != 0) && key(c.x + dx, c.y + dy) in hellSet } }
+        }
+        if (sources.isEmpty()) return emptyList()
+        val present = HashSet<Long>(cells.size * 2)
+        for (cell in cells) present += key(cell.x, cell.y)
+        val halo = HashMap<Long, Int>()
+        val r = BLOOM_RADIUS
+        for (s in sources) {
+            for (dy in -r..r) for (dx in -r..r) {
+                if (dx == 0 && dy == 0) continue
+                val x = s.x + dx
+                val y = s.y + dy
+                if (x < 0 || x >= widthCells || y < 0 || y > floorY + 1) continue
+                val k = key(x, y)
+                if (k in present) continue
+                val d = kotlin.math.sqrt((dx * dx + dy * dy).toFloat())
+                if (d > r) continue
+                val f = 1f - (d - 1f).coerceAtLeast(0f) / r
+                val b = (s.brightness * BLOOM_SHARE * f * f).roundToInt().coerceAtMost(BLOOM_MAX)
+                if (b > (halo[k] ?: 0)) halo[k] = b
+            }
+        }
+        return halo.mapNotNull { (k, b) ->
+            if (b <= 0) null else SceneCell((k and 0xffffffffL).toInt(), (k shr 32).toInt(), b)
+        }
+    }
+
+    /** Wie stark die Ecken abdunkeln, und ab welchem Abstand von der Mitte es beginnt. */
+    private const val VIGNETTE_STRENGTH = 0.38f
+    private const val VIGNETTE_INNER = 0.55f
+
+    /**
+     * Sanft dunklere Raender. Der Abstand wird elliptisch gemessen - in Breite und Hoehe der
+     * Szene je auf 1 normiert -, damit ein schmales Bild nicht nur oben und unten abdunkelt.
+     */
+    fun vignette(cells: List<SceneCell>, widthCells: Int, floorY: Int): List<SceneCell> {
+        val cx = (widthCells - 1) / 2f
+        val cy = (floorY + 1) * 0.55f
+        val rx = widthCells / 2f
+        val ry = (floorY + 2) * 0.62f
+        return cells.mapNotNull { cell ->
+            if (cell.isLight) return@mapNotNull cell
+            val nx = (cell.x - cx) / rx
+            val ny = (cell.y - cy) / ry
+            val d = kotlin.math.sqrt(nx * nx + ny * ny)
+            if (d <= VIGNETTE_INNER) return@mapNotNull cell
+            val t = ((d - VIGNETTE_INNER) / (1.4f - VIGNETTE_INNER)).coerceIn(0f, 1f)
+            val factor = 1f - VIGNETTE_STRENGTH * t * t * (3f - 2f * t)
+            val b = (cell.brightness * factor).roundToInt()
+            if (b <= 0) null else if (b == cell.brightness) cell else cell.copy(brightness = b)
+        }
+    }
+
+    /**
      * **Dunst in der Ferne** (Anregung: HD-2D). Was weit hinten liegt, wird nach oben hin blasser -
      * die Luft zwischen Betrachter und Berg. Morgens staerker (Morgendunst), nachts kaum. Lichter
      * (Fenster, Leuchtturm) bleiben unberuehrt.

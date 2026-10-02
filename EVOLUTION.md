@@ -669,6 +669,23 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Das Objektiv: Vignette, Lichtstrahlen, Lichthoefe
+
+**Anlass:** Nach dem Leuchtturm-Fix gefragt, was vom Look von Final Fantasy Resonance (HD-2D) noch
+passt. Vorgeschlagen und freigegeben ("Leg los und zieh durch"): Vignette, Lichtstrahlen durchs
+Laub, ein Hof um Lichter.
+
+**Geaendert** (`PlayScene.lens`, beim Zeichnen angewandt in DockScreen und PlayClipRenderer):
+- **Vignette**: zu den Raendern und vor allem den Ecken sanft dunkler (bis 38 %), die Mitte
+  unveraendert, Lichtquellen unberuehrt - der Diorama-Blick; auch die Slots am Rand liegen ruhiger.
+- **Lichtstrahlen durchs Laub**: morgens (staerker) und mittags in Wald, Dschungel, Park und Sumpf
+  schraege helle Bahnen, oben am hellsten, die langsam weiterziehen.
+- **Lichthof**: Lichter aus mehreren Zellen (Feuer, Laterne, Fenster, Sonne) strahlen zwei
+  Zellen weit in die leere Luft; einzelne Sterne bleiben Punkte.
+
+**Geschuetzt:** `PlayScene.build` bleibt unveraendert - die Kompositions-Pruefungen lesen dort die
+Helligkeit einzelner Dinge. Keine Texteinblendungen.
+
 ### 2026-10-02 - Der Leuchtturm steht links
 
 **Anlass:** Gemeldet: Am Strand verschwand der Leuchtturm unter den vier runden Ablage-Slots am

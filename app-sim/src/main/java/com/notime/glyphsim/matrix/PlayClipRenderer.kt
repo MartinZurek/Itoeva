@@ -175,7 +175,10 @@ object PlayClipRenderer {
                 tvOn = frame.tvOn,
                 activeStation = frame.station,
                 species = frame.species
-            )
+            ).let { kulisse ->
+                // Dasselbe Objektiv wie auf dem Bildschirm (siehe PlayScene.lens).
+                PlayScene.lens(frame.place, kulisse, frame.scenePhase, widthCells, floorY, frame.dayPhase)
+            }
         )
 
         // Figur: entweder an ihrem Platz an einer Requisite oder frei auf dem Boden.

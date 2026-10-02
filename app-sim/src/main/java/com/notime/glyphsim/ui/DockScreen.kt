@@ -4769,12 +4769,13 @@ fun DockScreen(
                 // auf statt in dem Moment, in dem es dazukommt.
                 sceneAcquisitions
             ) {
+                val tageszeit = PlayAmbientActivity.currentDayPhase()
                 PlayScene.build(
                     place = renderedPlace,
                     phase = scenePhase,
                     widthCells = sceneWidthCells,
                     floorY = floorYCells,
-                    dayPhase = PlayAmbientActivity.currentDayPhase(),
+                    dayPhase = tageszeit,
                     fade = sceneFade.value,
                     lampOn = lampOn,
                     tvOn = tvOn,
@@ -4787,7 +4788,13 @@ fun DockScreen(
                     // (siehe PlayDaylight). Der Bildtakt baut die Kulisse ohnehin neu.
                     minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute },
                     camera = kamera
-                )
+                ).let { kulisse ->
+                    // Lichtstrahlen, Lichthoefe, Vignette (siehe PlayScene.lens).
+                    PlayScene.lens(
+                        renderedPlace, kulisse, scenePhase, sceneWidthCells, floorYCells,
+                        tageszeit, sceneFade.value
+                    )
+                }
             }
             PlaySceneView(
                 cells = sceneCells,
