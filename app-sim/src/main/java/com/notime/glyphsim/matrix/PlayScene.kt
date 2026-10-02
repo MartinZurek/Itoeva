@@ -388,6 +388,24 @@ object PlayScene {
     const val MIN_SCENE_CELLS = 40
 
     /**
+     * **Wo die Ablage-Slots liegen** - vier runde Felder am rechten Rand, senkrecht in der
+     * Bildmitte (siehe DockScreen, slotsXPx). Sie stehen ueber der Welt und verdecken, was dort
+     * gezeichnet ist. Ein Wahrzeichen (Leuchtturm, Windmuehle, Turm) gehoert deshalb nicht in die
+     * rechten [SLOT_ZONE_FRACTION] der Breite zwischen [SLOT_ZONE_TOP] und [SLOT_ZONE_BOTTOM] der
+     * Bodenhoehe; Rahmenbaeume am Rand duerfen dort stehen, sie sollen ja angeschnitten sein.
+     *
+     * Gemessen: 56 + 8 dp bei rund 400 dp Bildbreite sind gut 16 %; die Slots sind 266 dp hoch und
+     * mittig, der Boden liegt bei 80 % der Hoehe.
+     */
+    const val SLOT_ZONE_FRACTION = 0.17f
+    const val SLOT_ZONE_TOP = 0.40f
+    const val SLOT_ZONE_BOTTOM = 0.85f
+
+    /** Ob die Zelle ([x], [y]) unter den Ablage-Slots liegt - siehe [SLOT_ZONE_FRACTION]. */
+    fun underSlots(x: Int, y: Int, widthCells: Int, floorY: Int): Boolean =
+        x >= widthCells * (1f - SLOT_ZONE_FRACTION) && y >= floorY * SLOT_ZONE_TOP && y <= floorY * SLOT_ZONE_BOTTOM
+
+    /**
      * **So breit wird ein ZIMMER hoechstens - egal, wie breit das Bild ist.**
      *
      * Gemeldet als "im Querformat steht alles sehr weit auseinander", und genau so war es: Die

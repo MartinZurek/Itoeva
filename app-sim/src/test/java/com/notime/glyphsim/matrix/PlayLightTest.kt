@@ -101,4 +101,22 @@ class PlayLightTest {
         val mittag = gipfel(DayPhase.MIDDAY) / PlayDaylight.atmosphere(DayPhase.MIDDAY)
         assertTrue("Morgendunst fehlt ($morgen vs $mittag)", morgen < mittag)
     }
+
+    /**
+     * Gemeldet am 02.10.: Der Leuchtturm stand rechts und verschwand unter den vier runden
+     * Ablage-Slots. Sein Feuer - die hellste Lichtquelle am Strand - muss frei bleiben.
+     */
+    @Test
+    fun `der Leuchtturm steht nicht unter den Ablage-Slots`() {
+        for (breite in listOf(PlayScene.MIN_SCENE_CELLS, 46, 54, 64, 72)) for (boden in listOf(40, 56, 82)) {
+            val feuer = PlayScene.build(Place.BEACH, 0, breite, boden, DayPhase.NIGHT)
+                .filter { it.isLight && it.brightness >= PlayScene.GLOW }
+            assertTrue("kein Leuchtfeuer bei $breite/$boden", feuer.isNotEmpty())
+            assertTrue(
+                "Leuchtfeuer unter den Slots bei $breite/$boden: $feuer",
+                feuer.none { PlayScene.underSlots(it.x, it.y, breite, boden) } &&
+                    feuer.all { it.x < breite * (1f - PlayScene.SLOT_ZONE_FRACTION) }
+            )
+        }
+    }
 }
