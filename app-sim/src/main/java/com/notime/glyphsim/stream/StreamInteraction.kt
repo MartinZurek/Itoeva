@@ -80,6 +80,11 @@ internal sealed interface StreamSelection {
  */
 internal object StreamInteractions {
 
+    /** The offered reminder is already at the avatar, even while its stored entry is reserved. */
+    fun visibleSlots(state: StreamInteractionState): List<SavedAction?> = state.slots.map { saved ->
+        saved?.takeUnless { it.occurrenceId == state.pending?.occurrenceId }
+    }
+
     fun autoSave(
         streamMode: Boolean,
         state: StreamInteractionState,

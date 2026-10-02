@@ -5521,13 +5521,18 @@ fun DockScreen(
         // fuer einen Screenreader nicht sinnvoll bedienen, dasselbe Muster wie beim Fuettern per
         // Uhr-Ziehen weiter oben.
         if (playMode) {
+            val visibleSlots = if (streamMode) {
+                StreamInteractions.visibleSlots(
+                    StreamInteractionState(slots, pendingExternalImpulse, latestExternalImpulse)
+                )
+            } else slots
             Column(
                 modifier = Modifier
                     .offset { IntOffset(slotsXPx.roundToInt(), slotsTopPx.roundToInt()) },
                 verticalArrangement = Arrangement.spacedBy(with(density) { slotGapPx.toDp() })
             ) {
                 repeat(ACTION_SLOT_COUNT) { index ->
-                    val saved = slots.getOrNull(index)
+                    val saved = visibleSlots.getOrNull(index)
                     val slotLabel = if (saved != null) {
                         val topicLabel = saved.libraryAnimationLabel
                             ?: saved.animationType?.let { stringResource(it.labelRes) }
@@ -5566,8 +5571,8 @@ fun DockScreen(
                     // LEEREN Platz ausserhalb des Stream-Modus ebenfalls null und "null == null"
                     // haette jeden leeren Platz faelschlich hervorgehoben - gemeldet als "Reminder
                     // Slots werden bunt mit diesem hellgruenen Kreis gehighlightet".
-                    val matchesPendingImpulse = saved != null &&
-                        streamSlotTransfer?.saved?.occurrenceId == saved.occurrenceId
+                    val matchesPendingImpulse = slots.getOrNull(index) != null &&
+                        streamSlotTransfer?.saved?.occurrenceId == slots.getOrNull(index)?.occurrenceId
                     Box(
                         modifier = Modifier
                             .size(with(density) { slotSizePx.toDp() })

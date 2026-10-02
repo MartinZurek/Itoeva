@@ -669,6 +669,26 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Uebergebener Reminder bleibt aus dem Slot ausgeblendet
+
+**Version:** `twitch-empty-offered-slot-v1`, Ausgangspunkt `6ae1290`.
+**DOCUMENTED INTENT:** Nutzer meldet, dass der Reminder nach dem Wegziehen wieder im
+Speicherplatz erscheint. Der Platz soll sofort sichtbar leer bleiben.
+**Entscheidung:** Die Anzeige blendet den aktuell angebotenen Reminder vom Beginn der
+Uebergabe bis zur Bearbeitung aus. Rahmen und Buchstabe bleiben sichtbar; das Symbol
+wird weiterhin in der fliegenden Vorschau gezeigt. Intern bleibt der Snapshot erhalten,
+bis die Handlung wirklich bearbeitet ist. Ein durch eine andere Auswahl abgeloestes
+Angebot kehrt in seinen Platz zurueck. Keine vorzeitige Erledigung und kein Datenverlust.
+**Betroffen:** StreamInteractions.visibleSlots, DockScreen, Regressionstests und Anleitung.
+Keine Migration, Preference-Aenderung oder Aenderung an Reminder-Semantik, Game Loop,
+Beduerfnisentscheidung und Cooldowns. Nur die Stream-Anzeige aendert sich.
+**Pruefung:** Stream-Build und 61 Stream-Tests; neue Tests sichern sofortige leere Anzeige,
+Erhalt des internen Reminders und Rueckkehr bei Ersetzen. APK installiert; im Emulator
+wurde A angenommen und nach Ende der Uebergabe als leerer Rahmen ohne Symbol beobachtet.
+**Ruecksetzweg:** Vorherige APK gesichert bzw. vorheriger Commit. Keine Datenaenderungen.
+Ein Prozessneustart verwirft wie bisher den fluechtigen Impuls; die gespeicherte Erinnerung
+ist dann wieder im Platz sichtbar. Dauerlauf bleibt UNVERIFIED. Keine neue offene Entscheidung.
+
 ### 2026-10-02 - Chat-Auswahl loest den bisherigen Vorschlag ab
 
 **Version:** `twitch-responsive-slots-v1`, Ausgangspunkt `e855322`.

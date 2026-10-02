@@ -58,8 +58,11 @@ oeffentlich sichere Plaetze koennen ausgewaehlt werden.
 
 Bei Annahme wandert das Erinnerungssymbol in 450 ms sichtbar vom Speicherplatz
 zum Avatar und blendet bei ihm aus. Das Ziel folgt der aktuellen Position, auch wenn der
-Avatar gerade laeuft. Der Platzrahmen und sein Buchstabe bleiben rechts stehen; der
-Reminder wird weiterhin erst nach tatsaechlicher Bearbeitung geleert. Abgewiesene Befehle
+Avatar gerade laeuft. Der Platzrahmen und sein Buchstabe bleiben rechts stehen; das Symbol
+verschwindet dort sofort und bleibt nach der Uebergabe ausgeblendet. Intern bleibt der
+Reminder bis zur tatsaechlichen Bearbeitung gespeichert. Wird das Angebot durch einen
+anderen Platz ersetzt, kehrt der bisher nicht bearbeitete Reminder in seinen Platz zurueck.
+Abgewiesene Befehle
 starten keine Bewegung. Es blendet in weiteren 120 ms am Avatar aus. Die gruene Markierung
 am Herkunftsplatz gilt nur fuer diese Uebergabe und bleibt nicht bis zum Ende einer Routine.
 Demo-Tippen und Chat nehmen denselben Weg.
@@ -165,7 +168,7 @@ Vereinbarung zwischen Entwicklern, sondern eine Zusicherung des Betriebssystems,
 `StreamBoundaryTest` haelt sie fest.
 
 Am 2026-10-02 wurden TLS-Verbindung, anonyme Anmeldung und Kanalbeitritt vom Stream-PC
-bestaetigt. Alle 59 Stream-Tests und der APK-Build sind erfolgreich; die aktualisierte App
+bestaetigt. Alle 61 Stream-Tests und der APK-Build sind erfolgreich; die aktualisierte App
 ist im Emulator installiert. Ein echter Chatbefehl aus `fennec_itoeva` wurde als
 `fennec_itoeva -> slot A` angenommen; Platz A war gruen markiert und wurde nach der
 Bearbeitung geleert. OBS uebertrug dabei weiter mit App-Ton. Noch offen ist ein laengerer
