@@ -669,6 +669,17 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Der Leuchtturm steht links
+
+**Anlass:** Gemeldet: Am Strand verschwand der Leuchtturm unter den vier runden Ablage-Slots am
+rechten Rand.
+
+**Geaendert:** Landzunge und Leuchtturm stehen jetzt links (9 % statt 91 % der Breite), der lange
+Strahl geht nachts nach rechts aufs Meer. `PlayScene.SLOT_ZONE_FRACTION`/`underSlots` beschreiben
+die verdeckte Zone (rechte 17 %, 40-85 % der Bodenhoehe); ein Test haelt das Leuchtfeuer bei allen
+Breiten und Hoehen ausserhalb. Geprueft fuer alle Orte: Sonst liegen dort nur Rahmenbaeume und
+einzelne Lichtpunkte (Gluehwuermchen, Fenster, Kristalle), kein Wahrzeichen.
+
 ### 2026-10-01 - Die Weltkarte im Bild
 
 **Anlass:** Gewuenscht am 29.09. ("eine Art Mappe, wo er sich gerade befindet"), am 01.10.

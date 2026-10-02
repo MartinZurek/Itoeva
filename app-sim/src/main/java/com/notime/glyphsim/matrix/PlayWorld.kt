@@ -1827,12 +1827,16 @@ internal object PlayWorld {
         // **Der Leuchtturm auf der Landzunge** - das Wahrzeichen des Strandes. Gestreift, damit man
         // ihn auch klein als Leuchtturm liest; nachts kreist sein Licht, der Strahl zeigt
         // abwechselnd aufs Meer hinaus und ueber das Land.
-        val capeFrom = (widthCells * 0.80f).roundToInt()
-        for (x in capeFrom until widthCells) {
-            val h = ((x - capeFrom) * 0.7f).roundToInt().coerceAtMost(5)
+        //
+        // **Links, nicht rechts** (gemeldet am 02.10.): Am rechten Rand stehen in Bildmitte die
+        // vier runden Ablage-Slots fuer die Erinnerungen (siehe PlayScene.SLOT_ZONE_FRACTION) -
+        // dort verschwand der Turm samt Licht ganz unter ihnen.
+        val capeTo = (widthCells * 0.20f).roundToInt()
+        for (x in 0..capeTo) {
+            val h = ((capeTo - x) * 0.7f).roundToInt().coerceAtMost(5)
             for (y in horizon - h..horizon) cells += SceneCell(x, y, if (y == horizon - h) Tone.EDGE - 100 else Tone.DEEP)
         }
-        val towerX = (widthCells * 0.91f).roundToInt()
+        val towerX = (widthCells * 0.09f).roundToInt()
         val towerBase = horizon - 5
         for (d in 0 until 10) {
             for (dx in -1..1) {
@@ -1849,7 +1853,8 @@ internal object PlayWorld {
             val turn = PlayScene.beat(phase, 4) % 4
             val dir = when (turn) { 0 -> -1; 2 -> 1; else -> 0 }
             if (dir != 0) {
-                for (k in 1..(if (dir < 0) 9 else 4)) {
+                // Der lange Strahl geht aufs Meer hinaus - jetzt, wo der Turm links steht, nach rechts.
+                for (k in 1..(if (dir > 0) 9 else 4)) {
                     cells += SceneCell(towerX + dir * k, lampY, (PlayScene.GLOW - 300 - k * 140).coerceAtLeast(300), isLight = true)
                 }
             }
