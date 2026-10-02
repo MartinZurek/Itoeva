@@ -1,6 +1,6 @@
 # Zuschauer-Interaktion im Itoeva-Stream
 
-Status: **umgesetzt (NT-070); Stream-Kanal fennec_itoeva konfiguriert, Publikumstest noch offen**
+Status: **umgesetzt (NT-070); Live-Befehl im Kanal fennec_itoeva erfolgreich, Dauerlauf noch offen**
 Gilt fuer: den Build-Typ `stream` von `:app-sim`
 Letzte Pruefung: 2026-10-02
 
@@ -153,8 +153,10 @@ Vereinbarung zwischen Entwicklern, sondern eine Zusicherung des Betriebssystems,
 
 Am 2026-10-02 wurden TLS-Verbindung, anonyme Anmeldung und Kanalbeitritt vom Stream-PC
 bestaetigt. Alle 55 Stream-Tests und der APK-Build sind erfolgreich; die aktualisierte App
-ist im Emulator installiert. Noch offen ist eine echte Zuschauer-Nachricht bis zur sichtbaren
-Handlung und ein laengerer Publikumslauf (NT-058).
+ist im Emulator installiert. Ein echter Chatbefehl aus `fennec_itoeva` wurde als
+`fennec_itoeva -> slot A` angenommen; Platz A war gruen markiert und wurde nach der
+Bearbeitung geleert. OBS uebertrug dabei weiter mit App-Ton. Noch offen ist ein laengerer
+Publikumslauf (NT-058).
 
 ## Wo spaeter Bits angeschlossen wuerden
 

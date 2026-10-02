@@ -691,8 +691,11 @@ ein laufender Impuls sowie Ausschluss privater/medizinischer Erinnerungen bleibe
 **TESTED BEHAVIOR:** 55 Stream-Tests erfolgreich, einschliesslich aller vier Kurzbefehle durch
 IRC-Parser, Gate und Slot-Auswahl bis zum Zielvorschlag; Stream-APK gebaut und auf dem
 eingerichteten Emulator per Update installiert. **FACT:** TLS, anonyme Anmeldung und
-Kanalbeitritt am PC bestaetigt. **UNVERIFIED:** echte Zuschauer-Nachricht bis zur sichtbaren
-Avatar-Handlung und Publikum-Dauerlauf. Keine neue offene Produktentscheidung.
+Kanalbeitritt am PC bestaetigt. Ein echter Chatbefehl aus `fennec_itoeva` wurde im laufenden
+Emulator als Slot A angenommen (gruen markiert); anschliessend wurde A nach Bearbeitung geleert.
+OBS uebertrug weiter mit App-Ton. **UNVERIFIED:** Publikum-Dauerlauf und Live-Auswahl der
+weiteren drei Plaetze (deren Zuordnung ist automatisiert getestet). Keine neue offene
+Produktentscheidung.
 
 **Ruecksetzweg:** Vorherige APK auf dem Stream-PC gesichert, Update erhaelt vorhandene Daten.
 Code kann auf den Ausgangscommit zurueckgesetzt und neu gebaut werden; ein leerer Kanalname
