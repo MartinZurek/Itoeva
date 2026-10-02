@@ -815,4 +815,8 @@
     <string name="music_title_theme_hootlet">Hootlet\'s Theme</string>
     <string name="a11y_music_play_track">Play %1$s</string>
     <string name="a11y_music_stop_track">Stop %1$s</string>
+    <string name="stream_story_birdhouse">Birdhouse project</string>
+    <string name="stream_story_herbs">Herb garden project</string>
+    <string name="stream_story_kite">Kite project</string>
+    <string name="stream_story_progress">%1$s, progress %2$d of %3$d</string>
 </resources>

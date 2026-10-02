@@ -455,6 +455,37 @@ fun DockScreen(
         var latestExternalImpulse by remember(actionSlotProfileId) {
             mutableStateOf<ExternalImpulse?>(null)
         }
+        LaunchedEffect(streamMode, actionSlotProfileId, slots) {
+            if (!streamMode) return@LaunchedEffect
+            // Leave completed slots visibly empty briefly, then offer a different public topic.
+            delay(3_000)
+            for (index in StreamOfferDeck.duplicateIndices(slots, pendingExternalImpulse?.occurrenceId)) {
+                val saved = slots[index] ?: continue
+                val publicGameEvent = withContext(Dispatchers.IO) {
+                    StreamOfferDeck.canDefer(
+                        AppDatabase.getInstance(context).avatarFeedEventDao().getById(saved.occurrenceId),
+                        actionSlotProfileId
+                    )
+                }
+                if (!publicGameEvent) continue
+                ActionSlotStore.deferForStream(context, actionSlotProfileId, saved)
+                ActionSlotStore.write(context, actionSlotProfileId, index, null)
+                slots = slots.toMutableList().also { it[index] = null }
+            }
+            while (isActive) {
+                val topic = StreamOfferDeck.nextTopic(slots) ?: break
+                val index = slots.indexOfFirst { it == null }
+                val saved = withContext(Dispatchers.IO) {
+                    StreamOfferDeck.create(context, actionSlotProfileId, topic)
+                }
+                if (saved != null && slots.getOrNull(index) == null) {
+                    ActionSlotStore.write(context, actionSlotProfileId, index, saved)
+                    slots = slots.toMutableList().also { it[index] = saved }
+                    ActionSlotStore.removeDeferred(context, actionSlotProfileId, saved.occurrenceId)
+                }
+                delay(3_000)
+            }
+        }
 
         // ---- Die Zuschauer-Eingangsschicht (NT-070) ----
         //
@@ -616,6 +647,21 @@ fun DockScreen(
          * `MusicContext.activity`). Nur fuer die Dauer des Ablaufs gesetzt.
          */
         var currentActivity by remember { mutableStateOf<PlayRoutines.SpecialActivity?>(null) }
+        val streamAttention = remember { Animatable(1f) }
+        val streamImportantMoment = streamMode &&
+            (streamSlotTransfer != null || activeActivity != null || currentActivity != null)
+        LaunchedEffect(streamImportantMoment) {
+            streamAttention.animateTo(if (streamImportantMoment) 0.45f else 1f, tween(if (streamImportantMoment) 120 else 650)) {
+                PlayMusic.setStreamAttention(value)
+                PlayAmbienceSound.setStreamAttention(value)
+            }
+        }
+        DisposableEffect(streamMode) {
+            onDispose {
+                PlayMusic.setStreamAttention(1f)
+                PlayAmbienceSound.setStreamAttention(1f)
+            }
+        }
 
         /** Traegt nach, was gerade gelaufen ist - vorn einfuegen, hinten abschneiden. */
         fun rememberShown(topic: AnimationType, routine: PlayRoutine?) {
@@ -849,6 +895,17 @@ fun DockScreen(
          * erworbenes Stueck erst beim naechsten Einkauf.
          */
         var fedCount by remember { mutableStateOf(0) }
+        var seenStreamStory by remember(presenceProfileId) { mutableStateOf<Triple<Int, Int, Int>?>(null) }
+        LaunchedEffect(goalsProgress, questProgress) {
+            if (!streamMode) return@LaunchedEffect
+            val goal = goalsProgress ?: return@LaunchedEffect
+            val quest = questProgress ?: return@LaunchedEffect
+            val story = Triple(goal.project, goal.session, quest.stepsDone)
+            if (seenStreamStory != null && seenStreamStory != story) {
+                avatar?.let { PlaySound.playStreamReceipt(context, it.species, scope) }
+            }
+            seenStreamStory = story
+        }
         // Auch auf die STUFE hoeren, nicht nur auf Geld und Vorrat: Ein Aufstieg ist genau der
         // Moment, in dem ein neues Stueck dazukommt - haenge das nur am Wirtschafts-Zaehler,
         // erschiene es erst beim naechsten Einkauf.
@@ -3492,7 +3549,7 @@ fun DockScreen(
                 val exists = withContext(Dispatchers.IO) {
                     AppDatabase.getInstance(context).avatarFeedEventDao()
                         .getById(saved.occurrenceId)
-                        ?.fedAtMillis == null
+                        ?.let { it.fedAtMillis == null } == true
                 }
                 if (!exists) {
                     ActionSlotStore.write(context, actionSlotProfileId, index, null)
@@ -3512,6 +3569,7 @@ fun DockScreen(
                     replacePending = streamConfig.replacePendingImpulse
                 )) {
                     is StreamSelection.Accepted -> {
+                        avatar?.let { PlaySound.playStreamReceipt(context, it.species, scope) }
                         if (avatar != null) streamSlotTransfer = StreamSlotTransfer(index, saved)
                         pendingExternalImpulse = selected.impulse
                         latestExternalImpulse = selected.impulse
@@ -4275,7 +4333,7 @@ fun DockScreen(
                             // Zurueckhaltung stammt aus PlaySpeech und ist der eine Teil davon,
                             // der bleibt.
                             wishSymbols =
-                                if (PlayAmbientActivity.currentDayPhase() ==
+                                if (!streamMode && PlayAmbientActivity.currentDayPhase() ==
                                     PlayAmbientActivity.DayPhase.NIGHT
                                 ) {
                                     null
@@ -4815,6 +4873,10 @@ fun DockScreen(
                     sceneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT,
                     sceneFade.value
                 ) else sceneCells,
+                materialColor = if (streamMode) Color(0xFFDDE6EF) else Color(0xFFF3F1EA),
+                lightColor = if (streamMode) {
+                    if (PlayScene.isOutdoors(renderedPlace)) Color(0xFFD6E8FF) else Color(0xFFFFDEA0)
+                } else Color(0xFFF3F1EA),
                 cellPx = sceneCellPx,
                 modifier = Modifier.fillMaxSize()
             )
@@ -5505,9 +5567,9 @@ fun DockScreen(
                     maxWidthPx = maxWidthPx
                 )
             }
-            LaunchedEffect(symbole) {
+            LaunchedEffect(symbole, pendingExternalImpulse?.impulseId) {
                 delay((WISH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
-                wishSymbols = null
+                if (!streamMode || pendingExternalImpulse == null) wishSymbols = null
             }
         }
 
@@ -5704,6 +5766,11 @@ fun DockScreen(
                 }
             }
             if (streamMode) {
+                StreamStoryOverlay(
+                    goalsProgress, questProgress, livingAgent,
+                    PlayQuests.questDayOf(PlayTimeLapse.absoluteMinute().toLong()),
+                    Modifier.align(Alignment.TopCenter).padding(top = 12.dp)
+                )
                 val transfer = streamSlotTransfer
                 val recipient = avatar
                 if (transfer != null && recipient != null) {

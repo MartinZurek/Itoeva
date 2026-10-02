@@ -79,6 +79,9 @@ object PlayGoals {
     fun currentProject(progress: Progress): Project =
         Project.entries[Math.floorMod(progress.project, Project.entries.size)]
 
+    /** Visible progress uses the same session count as completion. */
+    fun sessionCount(project: Project): Int = sessionsOf(project).size
+
     /**
      * **Was jetzt dran ist** - oder `null`.
      *

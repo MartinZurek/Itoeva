@@ -124,6 +124,18 @@ object PlaySound {
      * und liegt schon vollstaendig vor - es einmal in den Puffer zu legen und abzuspielen ist
      * einfacher und braucht keinen mitlaufenden Schreiber.
      */
+    internal fun playStreamReceipt(context: Context, species: AvatarSpecies, scope: CoroutineScope) {
+        if (com.notime.glyphsim.BuildConfig.BUILD_TYPE != "stream" || !isEnabled(context)) return
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        if (audio?.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
+        if (audio.isMusicActive && !PlayMusic.isPlaying()) return
+        scope.launch(Dispatchers.Default) {
+            val motif = PlayChime.motifFor(species, PlayChime.Event.FEED).take(2)
+            val samples = PlayChime.render(motif).map { (it * 0.25f).toInt().toShort() }.toShortArray()
+            runCatching { emit(samples) }.onFailure { Log.w(TAG, "Stream receipt sound failed", it) }
+        }
+    }
+
     private fun emit(samples: ShortArray) {
         if (samples.isEmpty()) return
         val bytes = samples.size * 2

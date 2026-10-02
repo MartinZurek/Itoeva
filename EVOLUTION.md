@@ -669,6 +669,47 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Unterschiedliche Angebote und sichtbare Kontinuitaet im Stream
+
+**Version:** `stream-continuity-v1`, Ausgangspunkt `26d0fe7`.
+**DOCUMENTED INTENT:** Nutzer beauftragt alle sechs vorgeschlagenen Verbesserungen und
+wiederholte Sichtpruefungen. Die erste Stufe betraf Buehne, Nacht und Angebotsreaktion.
+**Entscheidung:** Freie Stream-Plaetze werden nach drei Sekunden mit fehlenden Themen aus
+Trinken, Ruhe, Lesen und Bewegung ergaenzt. Doppelte oeffentliche Angebote werden als vollstaendige Abzuege dauerhaft zurueckgestellt. Ein wartendes Angebot bleibt im aktiven Platz. Der Bestand wird beim Nachfuellen seines Themas zuerst wiederverwendet, nie als beantwortet markiert. Neue Angebote sind oeffentliche Spiel-Ausloesungen mit echter Room-ID,
+Eigentuemer und Themenknoten, ueber die bereits existierende Spiel-Erinnerung. Der normale
+Abschlussweg bleibt verbindlich; ein Angebot erzeugt weder XP noch vorgetaeuschten Erfolg.
+Private und medizinische Themen werden nicht erzeugt. Die Auswahl bleibt autonom.
+
+Leise Symbole zeigen den gespeicherten Projektfortschritt, Tagesreise bzw. Tagesvorhaben,
+tatsaechlich gewachsene Naehe und gelernte Vorlieben. Statt neue Geschichten und Belohnungen
+zu erfinden, wird die vorhandene Welt lesbar. Projektpunkte verwenden dieselbe Anzahl
+Arbeitsgaenge wie die echte Fertigstellung. Das Absichtssymbol bleibt bei wartendem Angebot
+sichtbar, auch nachts; es erzaehlt die wirkliche Entscheidung, keine erfundene Begruendung.
+Kuehles Mondlicht und warme Innenlichtquellen ergaenzen die hellere Nachtkulisse.
+
+Angenommene Angebote und Fortschrittsaenderungen bekommen zwei leise gerechnete Motivtoene
+(kein Sample). Musik- und Stummschalter bleiben wirksam. Bei Uebergaben und Handlungen
+sinken Musik und Atmo mit separatem Faktor auf 45 % des bereits abgesenkten Pegels ab
+(120 ms hinein, 650 ms zurueck); vorhandene Normalisierung und Cue-Uebergaenge bleiben intakt.
+**Betroffen:** StreamOfferDeck, ActionSlotStore, StreamStoryOverlay, DockScreen, PlayMusic, PlayAmbienceSound,
+PlaySound, PlaySceneView, lesender PlayGoals.sessionCount-Zugriff und A11y-Texte EN/DE.
+Keine neue Einstellung, Room-Migration, Balance oder Veraenderung des normalen App-Ablaufs. Der Stream-only Preference-Schluessel stream_waiting_<profile> bewahrt komplette zurueckgestellte Abzuege auf. Pflegebuch-Zuruecksetzen leert auch diesen Bestand.
+Die Stream-Spiel-Ausloesungen sind zusaetzliche echte Feed-Event-Zeilen; ihr Abschluss kann
+ueber den normalen Spielweg vorhandenen Fortschritt ausloesen. Die Anzeige selbst tut es nie.
+**Ruecksetzweg:** Commit/APK `26d0fe7`; gespeicherte Angebote sind weiterhin normale
+SavedAction-Abzuege und funktionieren auch ohne automatisches Nachfuellen. Die vorige APK zeigt den zurueckgestellten Bestand nicht an; dieser bleibt gespeichert und wird nach erneuter Installation dieser Version wieder angeboten. Ein bereits
+erspielter Fortschritt wird beim Ruecksetzen der APK nicht zurueckgedreht.
+**UNVERIFIED:** Langfristige Wirkung auf Publikum und Rhythmus ueber mehrere Kalendertage.
+**TESTED BEHAVIOR:** 166 Tests (Stream-Eingang, Angebotsvielfalt, Reservierung/Privatgrenze,
+Projektfortschritt, Szenen, Musik/Cues/Uebergaenge und Atmo), Stream-Build und Vital-Lint
+erfolgreich. APK installiert und mit Androids speed-Filter kompiliert. A-D als unterschiedliche
+Themen in OBS sichtbar; C->D-Uebergaben mit sofort leerem Herkunftsplatz aufgezeichnet.
+166 Tests ohne Fehler. Weitere Sichtpruefung nach APK-/Prozessneustart: Uhr, Angebote und
+Story-Symbole erhalten. 83,47 s OBS-Aufnahme: 2504 Bilder in 1920x1080 bei 30 fps,
+AAC-App-Ton mit 48 kHz; kein Clipping (Spitze -28,17 dBFS). Die Motivtoene sind messbar,
+die subjektive musikalische Qualitaet wurde hier nicht live abgehoert. Seit dem Wechsel
+auf den nicht instrumentierten Stream-Build kein neuer nativer Absturz im Pruefzeitraum.
+
 ### 2026-10-02 - Lesbare Querformat-Buehne fuer den Stream
 
 **Version:** `stream-stage-v1`, Ausgangspunkt `0d3889e`.

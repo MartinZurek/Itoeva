@@ -11,6 +11,24 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PlayGoalsTest {
+    @Test
+    fun `visible session count matches real project completion`() {
+        for (project in PlayGoals.Project.entries) {
+            var progress = PlayGoals.Progress(project = project.ordinal)
+            repeat(PlayGoals.sessionCount(project)) { session ->
+                val day = session.toLong() + 10
+                val step = PlayGoals.due(progress, day, 16 * 60, homeDay = false, away = false)!!
+                progress = PlayGoals.completed(progress, step, day)
+                if (session + 1 < PlayGoals.sessionCount(project)) {
+                    assertEquals(project, PlayGoals.currentProject(progress))
+                    assertEquals(session + 1, progress.session)
+                }
+            }
+            assertTrue(project in progress.finished)
+            assertEquals(0, progress.session)
+            assertEquals(project.ordinal + 1, progress.project)
+        }
+    }
 
     /** Ein Leben im Zeitraffer: jede Viertelstunde fragen, was dran ist, und es tun. */
     private fun leben(tage: Int, heimtag: (Long) -> Boolean = { true }): Pair<Progress, List<Pair<Long, PlayGoals.Step>>> {

@@ -196,6 +196,25 @@ abwaerts und wieder aufwaerts, gleichzeitig mit dem fliegenden Reminder. Diese s
 Bestaetigung aendert weder die autonome Auswahl noch den Abschluss der Erinnerung.
 Die normale App und ihre gespeicherten Einstellungen sind davon unberuehrt.
 
+### Angebote, Geschichten und Klang
+
+Leere Plaetze werden nach drei Sekunden mit fehlenden Themen aus Trinken, Ruhe, Lesen
+und Bewegung ergaenzt. Dazu entsteht eine oeffentliche Spiel-Ausloesung mit echter Room-ID;
+sie wird ueber denselben autonomen Bearbeitungsweg abgeschlossen wie andere Angebote.
+Gleiche oeffentliche Angebote werden als vollstaendige Abzuege dauerhaft zurueckgestellt, nie als beantwortet markiert. Ein wartendes Angebot bleibt im aktiven Platz. Beim spaeteren Nachfuellen seines Themas wird der Bestand zuerst wiederverwendet. A-D werden dadurch verschieden, ohne den alten Ausloeser zu verlieren. Private Abzuege werden nicht umgeordnet.
+
+Oben zeigen kleine Symbole das echte laufende Projekt mit seinen Arbeitsgaengen und die
+Tagesreise bzw. das Tagesvorhaben. Naehe und gelernte Vorliebe erscheinen erst, wenn sie
+im Living-Zustand vorhanden sind. Es werden keine Story-Erfolge oder Beziehungen erfunden.
+Bei wartenden Angeboten bleibt das aktuelle Absichtssymbol ueber dem Avatar lesbar, auch
+nachts. Die Szene nutzt kuehle Aussen- und warme Innenlichtquellen.
+
+Ein angenommener Anstoss und ein veraenderter Projekt-/Reisefortschritt bekommen zwei
+leise gerechnete Motivtoene, sofern Ton erlaubt ist. Musik und Wetter sinken waehrend
+Uebergaben und Handlungen kurz auf 45 % des schon leiseren Stream-Pegels ab. Normalisierung,
+Einspieler, Ueberblendungen und Stummschalter bleiben wirksam. Beim Verlassen wird der
+zusaetzliche Faktor zurueckgesetzt. Andere App-Builds behalten ihr bisheriges Klangverhalten.
+
 ## Wo spaeter Bits angeschlossen wuerden
 
 An genau einer Stelle: ein neuer `StreamInteractionProvider` neben

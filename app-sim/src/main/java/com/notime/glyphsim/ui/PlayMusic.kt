@@ -121,7 +121,20 @@ object PlayMusic {
     private val gains = HashMap<MediaPlayer, Float>()
 
     private fun gainOf(value: MediaPlayer): Float = (gains[value] ?: 1f) *
-        if (com.notime.glyphsim.BuildConfig.BUILD_TYPE == "stream") 0.5f else 1f
+        if (com.notime.glyphsim.BuildConfig.BUILD_TYPE == "stream") 0.5f * streamAttention else 1f
+
+    private var streamAttention = 1f
+
+    /** A separate multiplier preserves existing cue ducking, normalization and crossfades. */
+    internal fun setStreamAttention(value: Float) {
+        if (com.notime.glyphsim.BuildConfig.BUILD_TYPE != "stream") return
+        streamAttention = value.coerceIn(0f, 1f)
+        refreshBaseVolumes()
+        cuePlayer?.let { cue ->
+            val volume = cueVolume * gainOf(cue)
+            runCatching { cue.setVolume(volume, volume) }
+        }
+    }
 
     /** Welche Rolle gerade klingt - die Grundlage dafuer, sie NICHT neu zu starten. */
     private var playingRole: MusicRole? = null
