@@ -54,9 +54,16 @@ wird der Platz geleert - ein abgelehnter Vorschlag laesst ihn liegen.
 
 Die ganze Nachricht muss genau ein Buchstabe sein; Kleinbuchstaben und Leerraum am Rand sind
 erlaubt. `A bitte`, `A!`, `AB`, `E` und einzelne Zahlen loesen nichts aus. Nur belegte,
-oeffentlich sichere Plaetze koennen ausgewaehlt werden. Die bisherigen Langbefehle bleiben:
+oeffentlich sichere Plaetze koennen ausgewaehlt werden.
 
-Nachsicht, weil Leute tippen, wie sie tippen: Gross-/Kleinschreibung egal, zusaetzlicher Leerraum
+Bei Annahme wandert das Erinnerungssymbol in gut einer Sekunde sichtbar vom Speicherplatz
+zum Avatar und blendet bei ihm aus. Das Ziel folgt der aktuellen Position, auch wenn der
+Avatar gerade laeuft. Der Platzrahmen und sein Buchstabe bleiben rechts stehen; der
+Reminder wird weiterhin erst nach tatsaechlicher Bearbeitung geleert. Abgewiesene Befehle
+starten keine Bewegung. Demo-Tippen und Chat nehmen denselben Weg.
+
+Die bisherigen Langbefehle bleiben. Nachsicht, weil Leute tippen, wie sie tippen:
+Gross-/Kleinschreibung egal, zusaetzlicher Leerraum
 egal, `!drop 1` bis `!drop 4` erlaubt, angehaengte Satzzeichen (`!drop a!`) und Text dahinter
 (`!drop a bitte`) werden verworfen statt den Befehl zu zerstoeren. Alles Uebrige ist kein Befehl
 und loest nichts aus.

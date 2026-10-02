@@ -479,6 +479,9 @@ fun DockScreen(
             }
         }
         var chatStatus by remember { mutableStateOf(TwitchChatStatus.OFF) }
+        var streamSlotTransfer by remember(actionSlotProfileId) {
+            mutableStateOf<StreamSlotTransfer?>(null)
+        }
 
         // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
         // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
@@ -3499,6 +3502,7 @@ fun DockScreen(
                     source = source
                 )) {
                     is StreamSelection.Accepted -> {
+                        if (avatar != null) streamSlotTransfer = StreamSlotTransfer(index, saved)
                         pendingExternalImpulse = selected.impulse
                         latestExternalImpulse = selected.impulse
                     }
@@ -5640,7 +5644,7 @@ fun DockScreen(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (saved != null) {
+                        if (saved != null && streamSlotTransfer?.saved?.occurrenceId != saved.occurrenceId) {
                             SimulatedMatrixView(
                                 frame = ActionSlotSymbols.frameFor(saved),
                                 showPuck = false,
@@ -5670,6 +5674,21 @@ fun DockScreen(
                 }
             }
             if (streamMode) {
+                val transfer = streamSlotTransfer
+                val recipient = avatar
+                if (transfer != null && recipient != null) {
+                    key(transfer.saved.occurrenceId) {
+                        StreamReminderTransfer(
+                            saved = transfer.saved,
+                            from = slotOffsetPx(transfer.slotIndex),
+                            avatarOffset = recipient.offset,
+                            avatarSizeDp = recipient.sizeDp,
+                            onFinished = {
+                                if (streamSlotTransfer == transfer) streamSlotTransfer = null
+                            }
+                        )
+                    }
+                }
                 StreamViewerOverlay(
                     config = streamConfig,
                     chatStatus = chatStatus,

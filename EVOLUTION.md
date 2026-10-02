@@ -669,6 +669,28 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-02 - Sichtbare Uebergabe vom Speicherplatz zum Avatar
+
+**Version:** `twitch-slot-transfer-v1`, Ausgangspunkt `9dc791bb3650e373e85a6b8a31d2da8f8e7830ac`.
+**DOCUMENTED INTENT:** Nach dem Live-Test verlangt der Nutzer das sichtbare Schieben auf den
+Avatar wie beim Ziehen im Spiel, damit der Beginn im Stream erkennbar wird.
+**Entscheidung:** Angenommene Slot-Angebote zeigen eine 1100-ms-Bewegung des vorhandenen
+Reminder-Symbols zum aktuellen Avatar-Mittelpunkt und 220 ms Ausblenden dort.
+Die Zielposition folgt dem laufenden Avatar. Der Herkunftsplatz
+zeigt waehrenddessen nur Rahmen und Buchstabe. Keine Bewegung fuer abgewiesene Befehle.
+**Betroffen:** DockScreen und neue UI-Komponente StreamReminderTransfer; Stream-Anleitung.
+Kein Datenmodell, keine Preferences oder Migration. Reminder-Semantik, Beduerfnisentscheidung,
+Game Loop, Cooldowns und tatsaechliches Leeren nach Bearbeitung bleiben unveraendert.
+**Ruecksetzweg:** Vorherige Stream-APK oder vorheriger Commit; reine fluechtige Darstellung,
+keine gespeicherten Animationsdaten. Bereits bearbeitete Erinnerungen bleiben bearbeitet.
+**TESTED BEHAVIOR:** Stream-Build und 55 Stream-Tests erfolgreich, APK im Emulator aktualisiert.
+Ein Demo-Angebot fuer A wurde aufgezeichnet: Symbol verlaesst den Herkunftsplatz und bewegt
+sich zur aktuellen Avatar-Position, waehrend der Platzrahmen stehen bleibt. Abweisung eines
+weiteren Angebots bei laufendem Impuls ebenfalls beobachtet. Ein echter Chatbefehl fuer B
+wurde mit der neuen Version angenommen; dessen kurze Bewegung wurde nicht aufgezeichnet.
+**UNVERIFIED:** aufgezeichnete Twitch-Uebergabe und Publikum-Dauerlauf.
+Keine neue offene Produktentscheidung.
+
 ### 2026-10-02 - Twitch-Buchstaben fuer die vier Speicherplaetze
 
 **Version:** `twitch-letter-slots-v1`, stabiler Ausgangspunkt
