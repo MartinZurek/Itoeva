@@ -41,8 +41,11 @@ wieder starten. Ein gueltiger Zugang nur mit `channel:read:stream_key` reicht ni
 Chat-Antworten; in diesem Fall die eigene Public-App-Verbindung unten verwenden.
 
 Alternativ in der Twitch-Konsole eine eigene **Public**-App mit Weiterleitung
-`http://localhost:18766/callback` registrieren. Die lokale Seite nimmt deren oeffentliche
-Client-ID und startet Twitchs Anmeldung mit `user:write:chat`. Der Mensch meldet sich an und
+`http://localhost:18766/callback` registrieren. Twitch verlangt vor der Registrierung eine
+aktivierte Zwei-Faktor-Anmeldung;
+diese richtet der Kontoinhaber selbst unter Sicherheit und Privatsphaere ein. Danach die
+Entwicklerkonsole aktualisieren. Die lokale Seite verwendet die oeffentliche Client-ID der
+App und startet Twitchs Anmeldung mit `user:write:chat`. Der Mensch meldet sich an und
 bestaetigt die Berechtigung. Die Webseite nimmt das Token aus dem Fragment, entfernt es aus
 der URL und speichert es nur im angegebenen privaten State-Pfad. Die Anmeldung ist zeitlich
 begrenzt; nach Ablauf neu verbinden. Keine automatische Kontoerstellung oder bezahlte API.

@@ -679,6 +679,9 @@ jedoch nur `channel:read:stream_key`, kein Chat-Schreiben. Stream und Aufnahme w
 gestartet und sichtbar mit 4667 kbps bestaetigt. Die Einrichtungsseite benennt jetzt fehlenden
 Schreibzugriff statt vorschnell eine abgelaufene Anmeldung zu behaupten; Anleitung erklaert
 den notwendigen Speicher-Schritt. Die eigene Chat-Verbindung bleibt ausstehend.
+Die Registrierung der vorbereiteten Public-App wird von Twitch mit fehlender Zwei-Faktor-
+Anmeldung abgelehnt. Die Sicherheitsseite wurde fuer den Kontoinhaber geoeffnet; keine
+Sicherheitsoption, Telefonnummer oder Authentifizierungs-App wurde automatisch geaendert.
 
 **Version:** `stream-fennec-chat-v1`, Ausgangspunkt `8a8dfdb`.
 **DOCUMENTED INTENT:** Nutzer beauftragt Antworten auf direkte Ansprache wie
