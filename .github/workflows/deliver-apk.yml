@@ -209,6 +209,7 @@ jobs:
             echo "sha=$SHA"
             echo "archive=itoeva-dev-$(date -u +%Y%m%d)-$SHA.apk"
             echo "archive_stream=itoeva-stream-$(date -u +%Y%m%d)-$SHA.apk"
+            echo "archive_game=itoeva2-$(date -u +%Y%m%d)-$SHA.apk"
           } >> "$GITHUB_OUTPUT"
           echo "versionCode $CODE, versionName 1.0.$CODE, Stand $SHA"
 
@@ -314,9 +315,13 @@ jobs:
       # eigener applicationId (siehe app-sim/build.gradle.kts). Er entsteht hier, weil er
       # sonst nur auf dem Rechner dessen existiert, der ihn zufaellig baut - und NT-058
       # verlangt genau ihn im Emulator.
-      - name: assembleDebug und assembleStream
+      #
+      # `game` ist Itoeva 2 (seit 03.10.): das aktive Spiel mit eigener applicationId, das sich
+      # neben der bisherigen App installiert. Vorerst nur als Artefakt; ein Drive-Weg braucht
+      # eine eigene Datei und Variable (wie beim Stream) und ist noch nicht eingerichtet.
+      - name: assembleDebug, assembleStream und assembleGame
         run: >
-          ./gradlew :app-sim:assembleDebug :app-sim:assembleStream
+          ./gradlew :app-sim:assembleDebug :app-sim:assembleStream :app-sim:assembleGame
           -PitoevaVersionCode=${{ steps.version.outputs.code }}
           -PitoevaVersionName=${{ steps.version.outputs.name }}
           --stacktrace
@@ -358,7 +363,8 @@ jobs:
             exit 1
           fi
           for APK in app-sim/build/outputs/apk/debug/app-sim-debug.apk \
-                     app-sim/build/outputs/apk/stream/app-sim-stream.apk; do
+                     app-sim/build/outputs/apk/stream/app-sim-stream.apk \
+                     app-sim/build/outputs/apk/game/app-sim-game.apk; do
             if [ ! -f "$APK" ]; then
               echo "::error::$APK wurde nicht erzeugt."
               exit 1
@@ -389,7 +395,7 @@ jobs:
               exit 1
             fi
           done
-          echo "Beide Pakete tragen das Zertifikat der installierten App."
+          echo "Alle Pakete tragen das Zertifikat der installierten App."
 
       - name: Schluesselreste entfernen
         if: always()
@@ -421,6 +427,9 @@ jobs:
           # daneben ist fuer den bequemen Fall gedacht, nicht als einzige Quelle.
           cp app-sim/build/outputs/apk/stream/app-sim-stream.apk \
              "dist/${{ steps.version.outputs.archive_stream }}"
+          # Itoeva 2 (Build-Typ `game`) - vorerst nur hier abholbar.
+          cp app-sim/build/outputs/apk/game/app-sim-game.apk \
+             "dist/${{ steps.version.outputs.archive_game }}"
 
       - uses: actions/upload-artifact@v4
         # **Die Rueckfallebene darf die Ablieferung nicht verhindern.** Am 30.09. war der

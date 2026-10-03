@@ -54,6 +54,12 @@ for pkg in com.notime.glyphcore com.notime.glyphsim; do
     echo "} }"
   } > "$WORK/gen/R_${pkg##*.}.kt"
 done
+# BuildConfig-Platzhalter: Seit dem Stream-Umbau fragen einzelne Dateien den Build-Typ ab
+# (BuildConfig.BUILD_TYPE). Offline laeuft immer die gewoehnliche App.
+{
+  echo "package com.notime.glyphsim"
+  echo "object BuildConfig { const val BUILD_TYPE = \"debug\" }"
+} > "$WORK/gen/R_buildconfig.kt"
 
 # Ausdrueckliche Listen statt Platzhalter - aus demselben Grund wie in render.sh: Ein `*.kt`
 # zoege Dateien mit herein, deren Abhaengigkeiten hier gar nicht uebersetzt werden, und der
@@ -71,7 +77,7 @@ SRCS=(
   "$SIM/LivingRuntimeAdapter.kt" "$SIM/LivingResidents.kt" "$SIM/LivingPopulation.kt"
   "$SIM/LivingPopulationLayout.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
-  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt" "$SIM/AvatarWatchdog.kt" "$SIM/AvatarBearing.kt" "$SIM/PlayDaylight.kt" "$SIM/PlayQuestEffects.kt" "$SIM/PlayQuests.kt" "$SIM/PlayMap.kt" "$SIM/PlayPastime.kt" "$SIM/PlayGoals.kt" "$SIM/PlayMapScene.kt" "$SIM/ResidentPassage.kt" "$SIM/PlayAmbience.kt"
+  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt" "$SIM/AvatarWatchdog.kt" "$SIM/AvatarBearing.kt" "$SIM/PlayDaylight.kt" "$SIM/PlayQuestEffects.kt" "$SIM/PlayQuests.kt" "$SIM/PlayMap.kt" "$SIM/PlayPastime.kt" "$SIM/PlayGoals.kt" "$SIM/PlayMapScene.kt" "$SIM/PlayControl.kt" "$SIM/ResidentPassage.kt" "$SIM/PlayAmbience.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Der reine Living-Agent-Kern (NT-063/NT-067) - kein Android, keine Uhr, kein Zufall.
@@ -154,6 +160,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayLightTest.kt"
   "$TEST/matrix/PlayGoalsTest.kt"
   "$TEST/matrix/PlayMapSceneTest.kt"
+  "$TEST/matrix/PlayControlTest.kt"
   "$TEST/matrix/PlayWorldTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
@@ -240,6 +247,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayLightTest
   com.notime.glyphsim.matrix.PlayGoalsTest
   com.notime.glyphsim.matrix.PlayMapSceneTest
+  com.notime.glyphsim.matrix.PlayControlTest
   com.notime.glyphsim.matrix.PlayWorldTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest

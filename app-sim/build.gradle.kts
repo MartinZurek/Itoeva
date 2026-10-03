@@ -180,6 +180,22 @@ android {
             versionNameSuffix = "-stream"
             signingConfig = signingConfigs.getByName("debug")
         }
+
+        /**
+         * **Itoeva 2** - das aktive Spiel (entschieden am 03.10.).
+         *
+         * Eigene applicationId: Sie installiert sich NEBEN der bisherigen App und ueberschreibt
+         * weder sie noch ihre Daten. Welt, Orte, Grafik und Musik sind dieselben; der Schalter
+         * `game_mode` (src/game/res) nimmt Erinnerungen und Uhr heraus und gibt die Figur in die
+         * Hand des Spielers. Der letzte Stand davor liegt im Branch `itoeva-1`.
+         */
+        create("game") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            applicationIdSuffix = ".itoeva2"
+            versionNameSuffix = "-itoeva2"
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
     compileOptions {

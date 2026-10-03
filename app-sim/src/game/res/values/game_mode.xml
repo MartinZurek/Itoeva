@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Itoeva 2: das aktive Spiel. Siehe den Build-Typ `game` in app-sim/build.gradle.kts. -->
+    <bool name="game_mode">true</bool>
+    <string name="app_name" translatable="false">Itoeva 2</string>
+</resources>

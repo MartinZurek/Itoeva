@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Itoeva 2 (aktives Spiel, Spieler steuert die Figur) - gesetzt nur im Build-Typ `game`
+        (app-sim/src/game/res/values/game_mode.xml). Hier die Voreinstellung fuer alle anderen.
+    -->
+    <bool name="game_mode">false</bool>
+</resources>

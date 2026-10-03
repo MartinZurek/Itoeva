@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Itoeva 2 laeuft im Querformat - eine Seitenansicht, in der man laeuft, braucht Breite.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <activity android:name="com.notime.glyphsim.ui.MainActivity"
+            android:screenOrientation="landscape"
+            tools:replace="android:screenOrientation" />
+    </application>
+</manifest>

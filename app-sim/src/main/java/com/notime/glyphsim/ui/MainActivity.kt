@@ -80,6 +80,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val streamMode = resources.getBoolean(R.bool.stream_mode)
+        // Itoeva 2: das aktive Spiel (Build-Typ `game`). Keine Erinnerungen, keine Uhr - der
+        // Spieler steuert die Figur selbst (siehe PlayControl).
+        val gameMode = resources.getBoolean(R.bool.game_mode)
         // Ein gemeinsamer Stream braucht auch fuer den autonomen Tag dieselbe Kanalzone.
         // Ein Emulator-Neustart darf nicht unbemerkt auf GMT zurueckfallen.
         if (streamMode) TimeZone.setDefault(TimeZone.getTimeZone(StreamTime.channelZone))
@@ -130,7 +133,10 @@ class MainActivity : ComponentActivity() {
         // Der Stream-Client ist eine dauerhafte Praesentation und darf nicht auf einen
         // Einstellungszustand der normalen App zurueckfallen. Seine eigene applicationId haelt
         // Daten und Preferences dennoch vollstaendig von der persoenlichen App getrennt.
-        applyDockModeFlags(streamMode || DockModePrefs.isEnabled(this))
+        applyDockModeFlags(streamMode || (!gameMode && DockModePrefs.isEnabled(this)))
+        // Ein Spiel bleibt an, solange man spielt - aber es zeigt sich nicht ueber der
+        // Sperre wie die Dock-Uhr.
+        if (gameMode) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Testschalter aus den Einstellungen uebernehmen - PlayTimeLapse haelt seinen Zustand im
         // Speicher, damit die beschleunigte Uhr im Zeichenpfad ohne Dateizugriff auskommt.
@@ -189,7 +195,16 @@ class MainActivity : ComponentActivity() {
                     // herueberreicht, will das Ergebnis sehen und nicht auf einem schwarzen
                     // Uhrenbildschirm landen.
                     // Geteilter Text hat weiterhin Vorrang vor der Dock-Darstellung.
-                    if (streamMode) {
+                    if (gameMode) {
+                        // Bewusst OHNE PlayModeViewModel: Der wuerde Spiel-Erinnerungen planen.
+                        // Itoeva 2 braucht nur die Welt, und die zeigt der Spielbildschirm selbst.
+                        DockScreen(
+                            playMode = true,
+                            gameMode = true,
+                            watchOnly = false,
+                            onExit = {}
+                        )
+                    } else if (streamMode) {
                         val playViewModel: PlayModeViewModel = viewModel()
                         LaunchedEffect(Unit) {
                             if (!PlayModePrefs.isActive(this@MainActivity)) {
