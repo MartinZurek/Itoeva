@@ -753,6 +753,9 @@ fun DockScreen(
         /** Itoeva 2: wo die Figur steht (siehe PlayControl) und welche Richtung gedrueckt ist. */
         var gamePos by remember { mutableStateOf(PlayControl.Pos()) }
         var gameDir by remember { mutableStateOf<PlayControl.Dir?>(null) }
+        /** Der Platz in Reichweite (fuer die Aktionstaste) und ob gerade eine Handlung laeuft. */
+        var gameStation by remember { mutableStateOf<PlayScene.Station?>(null) }
+        var gameActing by remember { mutableStateOf(false) }
         /**
          * **Die Karte vor einem weiten Weg** (siehe PlayMapScene): Ausgangsort und Weg, solange
          * sie gezeigt wird, sonst `null`. [mapDrawn] ist, wie weit der Weg nachgezogen ist,
@@ -3794,6 +3797,20 @@ fun DockScreen(
         // gespeichert - so stimmt sie auch nach Drehen oder Groessenwechsel.
         if (playMode && gameMode) {
             val gameGeometry by rememberUpdatedState(Triple(maxWidthPx, maxHeightPx, worldAvatarPx))
+            val gameScene by rememberUpdatedState(Triple(sceneWidthCells, floorYCells, sceneCellPx))
+            /** Welcher Platz gerade in Reichweite ist - nach jedem Schritt und Ortswechsel neu. */
+            fun refreshGameStation() {
+                val current = avatar ?: return
+                val (widthPx, _, avatarPx) = gameGeometry
+                val (cells, floorCells, cellPx) = gameScene
+                if (widthPx <= 0f || cellPx <= 0f) return
+                val centers = PlayScene.stationsAt(currentPlace, current.species).mapNotNull { station ->
+                    PlayScene.stationSpot(currentPlace, station, cells, floorCells, current.species)
+                        ?.let { station to (it.centerX + 0.5f) * cellPx / widthPx }
+                }.toMap()
+                gameStation = PlayControl.stationInReach((current.offset.x + avatarPx / 2f) / widthPx, centers)
+            }
+            LaunchedEffect(currentPlace, sceneWidthCells, avatar == null) { refreshGameStation() }
             fun gameOffsetFor(pos: PlayControl.Pos, species: AvatarSpecies): Offset {
                 val (widthPx, heightPx, avatarPx) = gameGeometry
                 return avatarSpot(
@@ -3811,14 +3828,18 @@ fun DockScreen(
                     val now = withFrameMillis { it }
                     val dt = now - last
                     last = now
-                    val dir = gameDir
+                    // Waehrend einer Handlung (Aktionstaste) gehoert die Figur dem Ablauf.
+                    val dir = gameDir.takeUnless { gameActing }
                     val current = avatar
                     if (current == null || dir == null) {
                         if (gait != null) {
                             gait.cancel()
                             gait = null
                             avatarWalking = false
-                            current?.let { startAvatarIdleLoop(it.species, AvatarMoodSnapshot.forSpecies(context, it.species)) }
+                            // Beginnt gerade eine Handlung, spielt sie ihre eigenen Bilder.
+                            if (!gameActing) {
+                                current?.let { startAvatarIdleLoop(it.species, AvatarMoodSnapshot.forSpecies(context, it.species)) }
+                            }
                         }
                         continue
                     }
@@ -3854,6 +3875,7 @@ fun DockScreen(
                     }
                     gamePos = pos
                     avatar = avatar?.copy(offset = gameOffsetFor(pos, current.species))
+                    refreshGameStation()
                 }
             }
         }
@@ -5819,7 +5841,38 @@ fun DockScreen(
 
         // Itoeva 2: Tastatur/Gamepad und das Steuerkreuz unten links (siehe GameControls).
         if (playMode && gameMode) {
-            GameKeys(onDir = { gameDir = it })
+            /**
+             * **Die Aktionstaste**: Am Platz in Reichweite das tun, wofuer er da ist (siehe
+             * PlayControl.actionAt) - mit denselben Ablaeufen wie im autonomen Leben. Danach
+             * steht die Figur dort, wo der Ablauf sie gelassen hat, hinten an der Bodenlinie.
+             */
+            fun gameAction() {
+                val station = gameStation ?: return
+                val species = avatar?.species ?: return
+                if (gameActing) return
+                val routine = PlayControl.actionAt(station, lampOn, tvOn) ?: return
+                gameActing = true
+                scope.launch {
+                    try {
+                        runRoutine(routine, species, applyLegacyEconomy = false)
+                    } finally {
+                        gameActing = false
+                        avatar?.let { done ->
+                            val px = with(density) { done.sizeDp.dp.toPx() }
+                            gamePos = PlayControl.Pos(AvatarFooting.fractionOf(done.offset.x, px, maxWidthPx), 0f)
+                            startAvatarIdleLoop(done.species, AvatarMoodSnapshot.forSpecies(context, done.species))
+                        }
+                    }
+                }
+            }
+            GameKeys(onDir = { gameDir = it }, onAction = { gameAction() })
+            GameActionButton(
+                enabled = gameStation != null && !gameActing,
+                onPress = { gameAction() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 28.dp, bottom = 40.dp)
+            )
             GameDpad(
                 onDir = { gameDir = it },
                 modifier = Modifier

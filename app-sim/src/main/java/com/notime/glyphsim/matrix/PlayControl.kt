@@ -1,6 +1,9 @@
 package com.notime.glyphsim.matrix
 
+import com.notime.glyphcore.data.AnimationType
 import com.notime.glyphsim.matrix.PlayScene.Place
+import com.notime.glyphsim.matrix.PlayScene.Station
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 /**
@@ -100,5 +103,53 @@ object PlayControl {
         Dir.RIGHT -> Pos(0f, from.depth)
         Dir.UP -> Pos(from.x, 1f)
         Dir.DOWN -> Pos(from.x, 0f)
+    }
+
+    // ---- Handeln vor Ort: die Aktionstaste ----
+
+    /** So nah (Bruchteil der Bildbreite, Mitte zu Mitte) muss man an einem Platz stehen. */
+    const val REACH = 0.12f
+
+    /**
+     * Der Platz, an dem man gerade steht - der naechste innerhalb von [REACH], oder `null`.
+     * [stations] ordnet jedem Platz seine waagerechte Mitte als Bruchteil der Bildbreite zu;
+     * [avatarCenter] ist die Mitte der Figur im selben Mass. Tueren zaehlen nicht: Durch die
+     * geht man, indem man an den Rand laeuft.
+     */
+    fun stationInReach(avatarCenter: Float, stations: Map<Station, Float>): Station? =
+        stations.filterKeys { it != Station.DOOR }
+            .mapValues { abs(it.value - avatarCenter) }
+            .filterValues { it <= REACH }
+            .minByOrNull { it.value }?.key
+
+    /**
+     * **Was die Figur an diesem Platz tut**, wenn man die Aktionstaste drueckt - ein kurzer
+     * Ablauf aus den vorhandenen Schritten, also mit denselben Bildern wie im autonomen Leben:
+     * ins Bett legen und schlafen, sich auf die Bank setzen, am Schreibtisch arbeiten, ein Buch
+     * aus dem Regal nehmen, Licht und Fernseher an und aus. [lampOn]/[tvOn] sind der jetzige
+     * Zustand der Geraete. `null` fuer einen Platz, an dem es nichts zu tun gibt.
+     */
+    fun actionAt(station: Station, lampOn: Boolean = false, tvOn: Boolean = false): PlayRoutine? {
+        fun sitAnd(topic: AnimationType, lingerMs: Long) = PlayRoutine(listOf(
+            RoutineStep.GoTo(station), RoutineStep.Occupy(station),
+            RoutineStep.Act(topic), RoutineStep.Linger(lingerMs), RoutineStep.Rise
+        ))
+        fun standAnd(topic: AnimationType) = PlayRoutine(listOf(
+            RoutineStep.GoTo(station), RoutineStep.Act(topic), RoutineStep.Linger(1_500L)
+        ))
+        return when (station) {
+            Station.BED -> sitAnd(AnimationType.SLEEP, 4_000L)
+            Station.SEAT, Station.BENCH -> sitAnd(AnimationType.MINDFULNESS, 3_000L)
+            Station.TUB -> sitAnd(AnimationType.REST, 3_000L)
+            Station.DESK, Station.WORKPLACE -> standAnd(AnimationType.WORK)
+            Station.TABLE, Station.FRIDGE -> standAnd(AnimationType.DRINK)
+            Station.BOOKSHELF -> standAnd(AnimationType.BOOK)
+            Station.CRAFT -> standAnd(AnimationType.CREATIVITY)
+            Station.ARCADE -> standAnd(AnimationType.FOCUS)
+            Station.BASIN, Station.RACK, Station.CHECKOUT -> standAnd(AnimationType.GENERAL)
+            Station.LAMP -> PlayRoutine(listOf(RoutineStep.GoTo(station), RoutineStep.Switch(station, !lampOn)))
+            Station.TV -> PlayRoutine(listOf(RoutineStep.GoTo(station), RoutineStep.Switch(station, !tvOn)))
+            Station.DOOR -> null
+        }
     }
 }

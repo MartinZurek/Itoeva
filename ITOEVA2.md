@@ -28,9 +28,17 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
   Anhalten in ihrer Blickrichtung stehen und atmet.
 - Querformat wie der Stream, Figurgroesse wie im Stream (88-132 dp).
 
+## Stufe 2 - Handeln vor Ort (umgesetzt)
+
+- Aktionstaste unten rechts (Ring mit Punkt, ohne Schrift), dazu Leertaste/Enter/E/Gamepad-A.
+  Hell, sobald ein Platz in Reichweite ist (`PlayControl.stationInReach`, 12 % der Bildbreite).
+- `PlayControl.actionAt`: Bett = hinlegen und schlafen, Sitz/Bank = hinsetzen und ruhen, Wanne,
+  Schreibtisch/Arbeitsplatz = arbeiten, Tisch/Kuehlschrank = trinken, Regal = lesen, Werkbank,
+  Spielautomat, Laden, Lampe und Fernseher an/aus. Dieselben Ablaeufe wie im autonomen Leben.
+- Waehrend der Handlung gehoert die Figur dem Ablauf; danach geht es von dort aus weiter.
+
 ## Naechste Stufen (Vorschlag, nicht freigegeben)
 
-1. Handeln vor Ort: Taste "Aktion" an Stationen (Bank, Bett, Herd, Werkbank ...).
-2. Begegnungen und Gespraeche mit den Bewohnern.
-3. Kampf/Strategie im Stil der Vorlage (rundenbasiert), Gruppe, Faehigkeiten.
-4. Fortschritt ohne Erinnerungen: Vorhaben und Reisen als Quests, die man selbst spielt.
+1. Begegnungen und Gespraeche mit den Bewohnern.
+2. Kampf/Strategie im Stil der Vorlage (rundenbasiert), Gruppe, Faehigkeiten.
+3. Fortschritt ohne Erinnerungen: Vorhaben und Reisen als Quests, die man selbst spielt.

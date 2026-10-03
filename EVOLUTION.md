@@ -669,6 +669,16 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Itoeva 2: Handeln mit der Aktionstaste
+
+**Anlass:** "Mach weiter" - die naechste Stufe aus [ITOEVA2.md](ITOEVA2.md): an Plaetzen etwas tun.
+
+**Geaendert:** Aktionstaste (unten rechts; Leertaste/Enter/E/Gamepad-A), hell sobald ein Platz in
+Reichweite ist. `PlayControl.stationInReach` und `PlayControl.actionAt` waehlen Platz und
+Ablauf (Bett, Bank, Wanne, Schreibtisch, Tisch, Kuehlschrank, Regal, Werkbank, Automat, Laden,
+Lampe/Fernseher an und aus) aus den vorhandenen Schritten; die Darstellung laeuft ueber denselben
+`runRoutine` wie das autonome Leben. Waehrend der Handlung ruht die Steuerung.
+
 ### 2026-10-03 - Itoeva 2: Der Spieler steuert
 
 **Anlass:** Der Nutzer stellt um: weg vom Erinnerungsspiel, hin zu einem aktiven Spiel auf dem

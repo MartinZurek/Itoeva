@@ -110,7 +110,11 @@ internal fun GameDpad(
  * Eine unsichtbare, fokussierte Flaeche; Beruehrungen gehen durch sie hindurch.
  */
 @Composable
-internal fun GameKeys(onDir: (PlayControl.Dir?) -> Unit, modifier: Modifier = Modifier) {
+internal fun GameKeys(
+    onDir: (PlayControl.Dir?) -> Unit,
+    onAction: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     val focus = remember { FocusRequester() }
     val held = remember { mutableListOf<PlayControl.Dir>() }
     Box(
@@ -119,6 +123,12 @@ internal fun GameKeys(onDir: (PlayControl.Dir?) -> Unit, modifier: Modifier = Mo
             .focusRequester(focus)
             .focusable()
             .onKeyEvent { event ->
+                if (event.key == Key.Spacebar || event.key == Key.Enter || event.key == Key.E ||
+                    event.key == Key.ButtonA
+                ) {
+                    if (event.type == KeyEventType.KeyDown) onAction()
+                    return@onKeyEvent true
+                }
                 val dir = when (event.key) {
                     Key.DirectionLeft, Key.A -> PlayControl.Dir.LEFT
                     Key.DirectionRight, Key.D -> PlayControl.Dir.RIGHT
@@ -144,3 +154,49 @@ internal fun GameKeys(onDir: (PlayControl.Dir?) -> Unit, modifier: Modifier = Mo
     LaunchedEffect(Unit) { focus.requestFocus() }
 }
 
+/**
+ * **Die Aktionstaste** unten rechts: hell, wenn ein Platz in Reichweite ist (Bett, Bank, Regal
+ * ...), sonst gedaempft. Druecken laesst die Figur dort handeln (siehe PlayControl.actionAt).
+ */
+@Composable
+internal fun GameActionButton(
+    enabled: Boolean,
+    onPress: () -> Unit,
+    modifier: Modifier = Modifier,
+    buttonSize: Dp = 64.dp
+) {
+    var down by remember { mutableStateOf(false) }
+    Box(
+        modifier
+            .size(buttonSize)
+            .clip(CircleShape)
+            .background(
+                when {
+                    down -> Color(0x997FD1A6)
+                    enabled -> Color(0x667FD1A6)
+                    else -> Color(0x22FFFFFF)
+                }
+            )
+            .semantics { contentDescription = "A" }
+            .pointerInput(enabled) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    down = true
+                    if (enabled) onPress()
+                    waitForUpOrCancellation()
+                    down = false
+                }
+            }
+    ) {
+        Canvas(Modifier.fillMaxSize().padding(20.dp)) {
+            // Ein Ring mit Punkt - die Hand, die zugreift. Ohne Schrift (Vorgabe: Bild statt Text).
+            val r = size.minDimension / 2f
+            drawCircle(
+                color = if (enabled) Color(0xFFDDF5E8) else Color(0x66FFFFFF),
+                radius = r,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = r * 0.28f)
+            )
+            drawCircle(color = if (enabled) Color(0xFFDDF5E8) else Color(0x66FFFFFF), radius = r * 0.35f)
+        }
+    }
+}
