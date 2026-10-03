@@ -6311,7 +6311,7 @@ fun DockScreen(
 
         // Itoeva 2: Menue, Karte und Rucksack ueber allem (siehe GameOverlays).
         if (playMode && gameMode) {
-            val german = java.util.Locale.getDefault().language == "de"
+            val german = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "de"
             if (gameMenuOpen) {
                 GameAvatarMenu(
                     german = german,
