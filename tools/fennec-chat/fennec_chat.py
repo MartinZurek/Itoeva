@@ -256,13 +256,13 @@ PAGE = """<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewp
 <p id="status">Verbindung wird geprüft …</p><p>Die Antworten entstehen hier auf dem PC mit Ollama. Keine API-Kosten. Ohne Twitch-Anmeldung ist meine Antwort zunächst nur im Bild sichtbar.</p>
 <button id="obs">Erneuerte OBS-Anmeldung übernehmen</button>
 <p><button id="preview">Animation und Antwort testen</button><br><small>Lokale Vorschau im Streambild, ohne Nachricht an Twitch.</small></p>
-<p><small>Falls die OBS-Anmeldung abgelaufen ist: in OBS unter Einstellungen → Stream dein Twitch-Konto erneut verbinden. Danach diesen Knopf drücken. Der laufende Stream wird hier nicht gestoppt.</small></p>
+<p><small>Nach einer erneuten Kontoverbindung unter OBS → Einstellungen → Stream muss OBS vollständig beendet und neu geöffnet werden, damit es die neue Anmeldung speichert. Das unterbricht Stream und Aufnahme. Danach diesen Knopf drücken. OBS-Anmeldungen mit ausschließlich Stream-Rechten brauchen zusätzlich die eigene Chat-Anmeldung unten.</small></p>
 <details><summary>Eigene Twitch-Anmeldung einrichten</summary><p>Falls OBS keine Chat-Schreibrechte besitzt, erstelle in der <a href="https://dev.twitch.tv/console/apps" target="_blank" rel="noreferrer">Twitch-Konsole</a> eine App (Kategorie Chat Bot, Client-Typ Public). OAuth-Weiterleitung: <b>http://localhost:18766/callback</b>. Trage deren öffentliche Client-ID ein. Ein Client-Secret ist nicht nötig.</p>
 <input id="client" placeholder="Twitch App Client-ID" autocomplete="off"><button id="connect">Mit Twitch verbinden</button></details>
 <p><small>Fennec antwortet als fennec_itoeva mit dem Zusatz [Fennec]. Nur direkt angesprochene Fragen werden gelesen. Höchstens eine Antwort je 10 Sekunden, je Zuschauer 30 Sekunden. Chat kann keine Spielbefehle durch KI ausführen.</small></p>
 <script>const nonce=__NONCE__;
 async function post(path,data){let r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,nonce})});return r.json()}
-async function status(){let s=await(await fetch('/status')).json();document.getElementById('status').textContent=s.connected?'Twitch verbunden · Fennec kann im Chat antworten':'Twitch-Anmeldung fehlt oder ist abgelaufen · Animation und Antwort im Bild sind bereit'}
+async function status(){let s=await(await fetch('/status')).json();document.getElementById('status').textContent=s.connected?'Twitch verbunden · Fennec kann im Chat antworten':'Twitch-Schreibzugriff fehlt · Animation und Antwort im Bild sind bereit'}
 document.getElementById('obs').onclick=async()=>{await post('/auth/obs',{});await status()};
 document.getElementById('preview').onclick=async()=>{let s=await post('/preview',{});if(!s.ok)alert('Bitte den Itoeva-Emulator öffnen.');};
 document.getElementById('connect').onclick=async()=>{let s=await post('/auth/start',{client_id:document.getElementById('client').value.trim()});if(s.url)location.href=s.url;else alert('Bitte eine gültige Client-ID eintragen.')};

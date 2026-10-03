@@ -671,6 +671,15 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 
 ### 2026-10-03 - Fennec antwortet auf direkte Zuschaueransprache
 
+**Betriebsnachtrag:** Die menschlich erneuerte OBS-Anmeldung war zunaechst nur im Speicher.
+Im offiziellen OBS-32.2.2-Code speichern die Stream-Einstellungen die neue Auth-Instanz,
+`Auth::Save()` wird fuer diesen Weg aber erst beim vollstaendigen Beenden ausgefuehrt.
+Nach ausdruecklich erlaubtem Neustart ist die Freigabe auf der Festplatte gueltig, erlaubt
+jedoch nur `channel:read:stream_key`, kein Chat-Schreiben. Stream und Aufnahme wurden wieder
+gestartet und sichtbar mit 4667 kbps bestaetigt. Die Einrichtungsseite benennt jetzt fehlenden
+Schreibzugriff statt vorschnell eine abgelaufene Anmeldung zu behaupten; Anleitung erklaert
+den notwendigen Speicher-Schritt. Die eigene Chat-Verbindung bleibt ausstehend.
+
 **Version:** `stream-fennec-chat-v1`, Ausgangspunkt `8a8dfdb`.
 **DOCUMENTED INTENT:** Nutzer beauftragt Antworten auf direkte Ansprache wie
 "hey fennec how are you?", mit sichtbarer Chat-Animation und KI oder anderer Antwortmoeglichkeit.

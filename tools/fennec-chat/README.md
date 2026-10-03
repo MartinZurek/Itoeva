@@ -35,6 +35,10 @@ Der PC liest auf Wunsch die vorhandene OBS-Twitch-Anmeldung. Sie muss noch guelt
 zum Kanal `fennec_itoeva` gehoeren und `chat:read`+`chat:edit` oder `user:write:chat` erlauben.
 Keine Refresh-Tokens oder Client-Secrets werden gelesen. Ein abgelaufener OBS-Zugang kann
 waehrend des Livebetriebs nicht ueber die dort deaktivierte Kontoseite erneuert werden.
+OBS 32.2.2 speichert die erneuerte Kontofreigabe erst beim vollstaendigen Beenden, nicht
+bereits mit OK in den Stream-Einstellungen. Danach OBS neu oeffnen und Stream/Aufnahme
+wieder starten. Ein gueltiger Zugang nur mit `channel:read:stream_key` reicht nicht fuer
+Chat-Antworten; in diesem Fall die eigene Public-App-Verbindung unten verwenden.
 
 Alternativ in der Twitch-Konsole eine eigene **Public**-App mit Weiterleitung
 `http://localhost:18766/callback` registrieren. Die lokale Seite nimmt deren oeffentliche
