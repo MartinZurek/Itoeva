@@ -42,6 +42,21 @@ class StreamViewerChainTest {
         ":$nick!$nick@$nick.tmi.twitch.tv PRIVMSG #itoeva :$text"
 
     @Test
+    fun `alle vier Kurzbefehle laufen von Twitch bis zum Slot-Impuls`() {
+        for ((index, letter) in listOf("A", "b", "C", "d").withIndex()) {
+            val chat = TwitchIrc.parseLine(chatZeile("lea", letter)) as TwitchIrc.Line.Chat
+            val command = viewerCommandOf(chat.viewerId, chat.text, ExternalImpulseSource.TWITCH_CHAT_FREE, 0L)!!
+            val admitted = StreamCommandGate.admit(StreamGateState(), command, welt) as StreamGateDecision.Accepted
+            assertEquals(index + 1, admitted.slotId)
+            val selected = StreamInteractions.select(welt, admitted.slotId, 720, command.origin) as StreamSelection.Accepted
+            assertEquals(index + 1, selected.impulse.savedSlotId)
+            assertEquals(index + 1L, selected.impulse.occurrenceId)
+            assertEquals(ExternalImpulseSource.TWITCH_CHAT_FREE, selected.impulse.source)
+            assertNotNull(StreamInteractions.influenceFor(selected.impulse))
+        }
+    }
+
+    @Test
     fun `eine Chat-Zeile wird zu einem Zielvorschlag fuer den Living Agent`() {
         // 1. Serverzeile lesen
         val gelesen = TwitchIrc.parseLine(chatZeile("lea", "!drop B")) as TwitchIrc.Line.Chat
@@ -139,7 +154,7 @@ class StreamViewerChainTest {
     }
 
     @Test
-    fun `ein zweites Angebot waehrend eines laufenden Anstosses wird abgewiesen`() {
+    fun `ein anderer Zuschauer kann nach kurzem Abstand ein neues Angebot setzen`() {
         val erst = viewerCommandOf("lea", "!drop A", ExternalImpulseSource.TWITCH_CHAT_FREE, 0L)!!
         val angenommen = StreamCommandGate.admit(StreamGateState(), erst, welt) as StreamGateDecision.Accepted
         val laufend = (StreamInteractions.select(welt, angenommen.slotId, 720) as StreamSelection.Accepted).state
@@ -151,9 +166,13 @@ class StreamViewerChainTest {
             atMillis = StreamCommandConfig().globalCooldownMillis
         )!!
         val entschieden = StreamCommandGate.admit(angenommen.state, zweit, laufend)
-        assertEquals(
-            StreamRejection.IMPULSE_PENDING,
-            (entschieden as StreamGateDecision.Rejected).reason
-        )
+        assertTrue(entschieden is StreamGateDecision.Accepted)
+        val replaced = StreamInteractions.select(
+            laufend, (entschieden as StreamGateDecision.Accepted).slotId, 720,
+            zweit.origin, replacePending = true
+        ) as StreamSelection.Accepted
+        assertEquals(3, replaced.state.pending?.savedSlotId)
+        assertEquals(laufend.slots, replaced.state.slots)
+        assertEquals(replaced.state, StreamInteractions.clearHandled(replaced.state, laufend.pending!!))
     }
 }

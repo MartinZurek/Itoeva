@@ -8,7 +8,7 @@ internal enum class StreamRejection {
     /** Der gemeinsame Mindestabstand aller Zuschauer ist noch nicht abgelaufen. */
     GLOBAL_COOLDOWN,
 
-    /** Ein Anstoss laeuft noch; zwei gleichzeitig wuerden dieselbe Figur zerreissen. */
+    /** Derselbe Platz ist bereits angeboten, oder Ersetzen ist ausdruecklich deaktiviert. */
     IMPULSE_PENDING,
 
     /** In dem genannten Platz liegt gerade nichts. */
@@ -112,7 +112,8 @@ internal object StreamCommandGate {
         if (lastGlobal != null && nowMillis - lastGlobal < config.globalCooldownMillis) {
             return reject(state, viewerId, origin, slotId, StreamRejection.GLOBAL_COOLDOWN, nowMillis, config)
         }
-        if (world.pending != null) {
+        if (world.pending != null &&
+            (!config.replacePendingImpulse || world.pending.savedSlotId == slotId)) {
             return reject(state, viewerId, origin, slotId, StreamRejection.IMPULSE_PENDING, nowMillis, config)
         }
         if (world.slots.getOrNull(slotId - 1) == null) {

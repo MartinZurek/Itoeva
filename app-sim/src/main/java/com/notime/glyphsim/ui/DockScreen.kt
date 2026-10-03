@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -117,6 +118,11 @@ import com.notime.glyphsim.stream.StreamInteractions
 import com.notime.glyphsim.stream.StreamSelection
 import com.notime.glyphsim.stream.TwitchChatInteractionProvider
 import com.notime.glyphsim.stream.TwitchChatStatus
+import com.notime.glyphsim.stream.FennecConversation
+import com.notime.glyphsim.stream.FennecReplyClient
+import com.notime.glyphsim.stream.FennecWorld
+import com.notime.glyphsim.stream.StreamTime
+import com.notime.glyphsim.stream.FennecPreview
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
@@ -268,7 +274,8 @@ fun DockScreen(
     // dafuer an drei Stellen der Uhr-Frame von Hand neu gebaut werden.
     var isPlayingAnimation by remember { mutableStateOf(false) }
     var animationFrame by remember { mutableStateOf<IntArray?>(null) }
-    val clockFrame by rememberClockFrame(paused = isPlayingAnimation)
+    val clockFrame by rememberClockFrame(paused = isPlayingAnimation && !streamMode,
+        zone = if (streamMode) StreamTime.channelZone else null)
     // Mond-Szene: In der Park-Nacht wird die Uhr zur Sichel und steigt in den Himmel. Bewusst
     // NICHT jede Nacht - eine Ausnahme, die jedes Mal kaeme, waere keine mehr.
     var moonMode by remember { mutableStateOf(false) }
@@ -289,7 +296,7 @@ fun DockScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(if (streamMode) Color(0xFF070B12) else Color.Black)
     ) {
         val density = LocalDensity.current
         val initialClockPx = with(density) { clockSizeDp.dp.toPx() }
@@ -390,8 +397,9 @@ fun DockScreen(
         // derselben Avatar-Groesse abgeleitet, damit Figur und Welt sichtbar zur selben
         // Pixelwelt gehoeren. Eine eigene Kulissen-Zellgroesse waere sofort als zwei
         // uebereinandergelegte Grafiken aufgefallen.
-        val worldAvatarSizeDp = (clockSizeDp * AVATAR_TO_CLOCK_RATIO)
-            .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.DEFAULT_SIZE_DP)
+        val worldAvatarSizeDp = if (streamMode) StreamPresentation.avatarSizeDp(maxHeight.value)
+            else (clockSizeDp * AVATAR_TO_CLOCK_RATIO)
+                .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.DEFAULT_SIZE_DP)
         val worldAvatarPx = with(density) { worldAvatarSizeDp.dp.toPx() }
         // Die Zelle wird notfalls kleiner, damit die Szene nie unter PlayScene.MIN_SCENE_CELLS
         // Spalten faellt - sonst stehen auf einem kleinen Geraet mit gross gezogener Uhr Sofa,
@@ -453,6 +461,37 @@ fun DockScreen(
         var latestExternalImpulse by remember(actionSlotProfileId) {
             mutableStateOf<ExternalImpulse?>(null)
         }
+        LaunchedEffect(streamMode, actionSlotProfileId, slots) {
+            if (!streamMode) return@LaunchedEffect
+            // Leave completed slots visibly empty briefly, then offer a different public topic.
+            delay(3_000)
+            for (index in StreamOfferDeck.duplicateIndices(slots, pendingExternalImpulse?.occurrenceId)) {
+                val saved = slots[index] ?: continue
+                val publicGameEvent = withContext(Dispatchers.IO) {
+                    StreamOfferDeck.canDefer(
+                        AppDatabase.getInstance(context).avatarFeedEventDao().getById(saved.occurrenceId),
+                        actionSlotProfileId
+                    )
+                }
+                if (!publicGameEvent) continue
+                ActionSlotStore.deferForStream(context, actionSlotProfileId, saved)
+                ActionSlotStore.write(context, actionSlotProfileId, index, null)
+                slots = slots.toMutableList().also { it[index] = null }
+            }
+            while (isActive) {
+                val topic = StreamOfferDeck.nextTopic(slots) ?: break
+                val index = slots.indexOfFirst { it == null }
+                val saved = withContext(Dispatchers.IO) {
+                    StreamOfferDeck.create(context, actionSlotProfileId, topic)
+                }
+                if (saved != null && slots.getOrNull(index) == null) {
+                    ActionSlotStore.write(context, actionSlotProfileId, index, saved)
+                    slots = slots.toMutableList().also { it[index] = saved }
+                    ActionSlotStore.removeDeferred(context, actionSlotProfileId, saved.occurrenceId)
+                }
+                delay(3_000)
+            }
+        }
 
         // ---- Die Zuschauer-Eingangsschicht (NT-070) ----
         //
@@ -479,11 +518,39 @@ fun DockScreen(
             }
         }
         var chatStatus by remember { mutableStateOf(TwitchChatStatus.OFF) }
+        val fennecDialogueGate = remember { FennecConversation.Gate() }
+        var fennecViewer by remember { mutableStateOf<String?>(null) }
+        var fennecReply by remember { mutableStateOf<String?>(null) }
+        var fennecTalkFrame by remember { mutableStateOf<IntArray?>(null) }
+        var fennecMap by remember { mutableStateOf<FennecWorld.Presentation?>(null) }
+        var fennecMapGerman by remember { mutableStateOf(false) }
+        var fennecMapViewer by remember { mutableStateOf("") }
+        var fennecMapReply by remember { mutableStateOf("") }
+        var fennecMapExpiry by remember { mutableStateOf<Job?>(null) }
+        var fennecSpeechExpiry by remember { mutableStateOf<Job?>(null) }
+        var fennecNotice by remember { mutableStateOf<String?>(null) }
+        var fennecNoticeJob by remember { mutableStateOf<Job?>(null) }
+        var fennecNoticeAt by remember { mutableStateOf(0L) }
+        val fennecPreview = remember { FennecPreview() }
+        DisposableEffect(streamMode, playMode) {
+            if (streamMode && playMode) fennecPreview.register(context)
+            onDispose { if (streamMode && playMode) fennecPreview.unregister(context) }
+        }
+        var streamSlotTransfer by remember(actionSlotProfileId) {
+            mutableStateOf<StreamSlotTransfer?>(null)
+        }
+        val streamAcknowledgement = remember { Animatable(1f) }
+        LaunchedEffect(latestExternalImpulse?.impulseId) {
+            if (streamMode && latestExternalImpulse != null) {
+                streamAcknowledgement.snapTo(0f)
+                streamAcknowledgement.animateTo(1f, tween(700))
+            }
+        }
 
         // Feste Position rechts, vertikal zentriert - reines Pixel-Offset/Groessen-Paar wie
         // clockOffset/avatar.offset, damit sich [isColliding] unveraendert wiederverwenden laesst.
-        val slotSizePx = with(density) { 56.dp.toPx() }
-        val slotGapPx = with(density) { 14.dp.toPx() }
+        val slotSizePx = with(density) { (if (streamMode) 48.dp else 56.dp).toPx() }
+        val slotGapPx = with(density) { (if (streamMode) 8.dp else 14.dp).toPx() }
         val slotsRightMarginPx = with(density) { 8.dp.toPx() }
         val slotsTotalHeightPx = ACTION_SLOT_COUNT * slotSizePx + (ACTION_SLOT_COUNT - 1) * slotGapPx
         val slotsTopPx = ((maxHeightPx - slotsTotalHeightPx) / 2f).coerceAtLeast(0f)
@@ -604,6 +671,21 @@ fun DockScreen(
          * `MusicContext.activity`). Nur fuer die Dauer des Ablaufs gesetzt.
          */
         var currentActivity by remember { mutableStateOf<PlayRoutines.SpecialActivity?>(null) }
+        val streamAttention = remember { Animatable(1f) }
+        val streamImportantMoment = streamMode &&
+            (streamSlotTransfer != null || activeActivity != null || currentActivity != null)
+        LaunchedEffect(streamImportantMoment) {
+            streamAttention.animateTo(if (streamImportantMoment) 0.45f else 1f, tween(if (streamImportantMoment) 120 else 650)) {
+                PlayMusic.setStreamAttention(value)
+                PlayAmbienceSound.setStreamAttention(value)
+            }
+        }
+        DisposableEffect(streamMode) {
+            onDispose {
+                PlayMusic.setStreamAttention(1f)
+                PlayAmbienceSound.setStreamAttention(1f)
+            }
+        }
 
         /** Traegt nach, was gerade gelaufen ist - vorn einfuegen, hinten abschneiden. */
         fun rememberShown(topic: AnimationType, routine: PlayRoutine?) {
@@ -837,6 +919,17 @@ fun DockScreen(
          * erworbenes Stueck erst beim naechsten Einkauf.
          */
         var fedCount by remember { mutableStateOf(0) }
+        var seenStreamStory by remember(presenceProfileId) { mutableStateOf<Triple<Int, Int, Int>?>(null) }
+        LaunchedEffect(goalsProgress, questProgress) {
+            if (!streamMode) return@LaunchedEffect
+            val goal = goalsProgress ?: return@LaunchedEffect
+            val quest = questProgress ?: return@LaunchedEffect
+            val story = Triple(goal.project, goal.session, quest.stepsDone)
+            if (seenStreamStory != null && seenStreamStory != story) {
+                avatar?.let { PlaySound.playStreamReceipt(context, it.species, scope) }
+            }
+            seenStreamStory = story
+        }
         // Auch auf die STUFE hoeren, nicht nur auf Geld und Vorrat: Ein Aufstieg ist genau der
         // Moment, in dem ein neues Stueck dazukommt - haenge das nur am Wirtschafts-Zaehler,
         // erschiene es erst beim naechsten Einkauf.
@@ -934,6 +1027,15 @@ fun DockScreen(
          * spaeter nicht mehr zu sehen, welche Zeile wofuer da ist.
          */
         var screenVisible by remember { mutableStateOf(true) }
+        DisposableEffect(streamMode, playMode, screenVisible, avatar?.species) {
+            onDispose {
+                fennecMapExpiry?.cancel()
+                fennecMap = null
+                fennecSpeechExpiry?.cancel()
+                fennecNoticeJob?.cancel()
+                fennecNotice = null
+            }
+        }
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
@@ -3474,13 +3576,13 @@ fun DockScreen(
             index: Int,
             source: ExternalImpulseSource = ExternalImpulseSource.LOCAL_VIEWER_SIMULATOR
         ) {
-            if (!streamMode || pendingExternalImpulse != null) return
+            if (!streamMode) return
             val saved = slots.getOrNull(index) ?: return
             scope.launch {
                 val exists = withContext(Dispatchers.IO) {
                     AppDatabase.getInstance(context).avatarFeedEventDao()
                         .getById(saved.occurrenceId)
-                        ?.fedAtMillis == null
+                        ?.let { it.fedAtMillis == null } == true
                 }
                 if (!exists) {
                     ActionSlotStore.write(context, actionSlotProfileId, index, null)
@@ -3496,9 +3598,12 @@ fun DockScreen(
                     state,
                     slotId = index + 1,
                     atMinute = PlayTimeLapse.absoluteMinute(),
-                    source = source
+                    source = source,
+                    replacePending = streamConfig.replacePendingImpulse
                 )) {
                     is StreamSelection.Accepted -> {
+                        avatar?.let { PlaySound.playStreamReceipt(context, it.species, scope) }
+                        if (avatar != null) streamSlotTransfer = StreamSlotTransfer(index, saved)
                         pendingExternalImpulse = selected.impulse
                         latestExternalImpulse = selected.impulse
                     }
@@ -3547,6 +3652,84 @@ fun DockScreen(
             twitchChat?.let { chat ->
                 launch { chat.status.collect { chatStatus = it } }
                 launch { chat.listen() }
+            }
+            launch {
+                    listOfNotNull(twitchChat?.addresses, fennecPreview.addresses).merge().collect { address ->
+                        if (avatar?.species != AvatarSpecies.FENNEC || !screenVisible) return@collect
+                        val now = System.currentTimeMillis()
+                        if (!fennecDialogueGate.admit(address, now)) {
+                            val remaining = fennecDialogueGate.retryAfterMs(address, now) ?: return@collect
+                            if (remaining > 0 && now - fennecNoticeAt >= 2_000L) {
+                                fennecNoticeAt = now
+                                fennecNoticeJob?.cancel()
+                                fennecNoticeJob = scope.launch {
+                                    val until = now + remaining
+                                    while (System.currentTimeMillis() < until) {
+                                        val seconds = ((until - System.currentTimeMillis() + 999L) / 1_000L).coerceAtLeast(1L)
+                                        fennecNotice = "@${address.viewerId} · ⏳ ${seconds}s"
+                                        delay(500)
+                                    }
+                                    fennecNotice = null
+                                }
+                            }
+                            return@collect
+                        }
+                        twitchChat?.acknowledge(address, now)
+                        fennecSpeechExpiry?.cancelAndJoin()
+                        fennecNoticeJob?.cancel()
+                        fennecNotice = null
+                        fennecMapExpiry?.cancel()
+                        fennecMap = null
+                        fennecViewer = address.viewerId
+                        fennecReply = null
+                        var speechHandedOff = false
+                        try {
+                            // Nur eine Renderprojektion: Der echte Ablauf schreibt weiter seinen Frame.
+                            // Dialog darf weder einen Reminder abschliessen noch eine Routine abbrechen.
+                            val talking = launch {
+                                val sequence = AvatarAnimations.talkSequence(AvatarSpecies.FENNEC)
+                                while (isActive) MatrixAnimator.playTimed(sequence.frames, sequence.holdsMs) {
+                                    fennecTalkFrame = it
+                                }
+                            }
+                            try {
+                                val reply = FennecReplyClient.reply(
+                                    address, currentPlace.name, if (avatarWalking) "WALKING" else
+                                        currentActivity?.name ?: activeActivity?.name ?: "IDLE",
+                                    java.time.LocalTime.now().hour
+                                )
+                                fennecReply = reply?.text ?: "I'm here, but my chat connection needs a moment."
+                                fennecMap = reply?.presentation
+                                fennecMapGerman = reply?.german == true
+                                fennecMapViewer = address.viewerId
+                                fennecMapReply = fennecReply.orEmpty()
+                                if (fennecMap != null) fennecMapExpiry = scope.launch {
+                                    delay(14_000L)
+                                    fennecMap = null
+                                }
+                                val holdMs = (fennecReply!!.length * 40L).coerceIn(3_000L, 6_000L)
+                                fennecSpeechExpiry = launch {
+                                    try {
+                                        delay(holdMs)
+                                    } finally {
+                                        talking.cancel()
+                                        fennecTalkFrame = null
+                                        fennecViewer = null
+                                        fennecReply = null
+                                    }
+                                }
+                                speechHandedOff = true
+                            } finally {
+                                if (!speechHandedOff) talking.cancelAndJoin()
+                            }
+                        } finally {
+                            if (!speechHandedOff) {
+                                fennecTalkFrame = null
+                                fennecViewer = null
+                                fennecReply = null
+                            }
+                        }
+                    }
             }
             listOfNotNull(localViewers.commands, twitchChat?.commands).merge().collect { command ->
                 val decision = StreamCommandGate.admit(
@@ -4261,7 +4444,7 @@ fun DockScreen(
                             // Zurueckhaltung stammt aus PlaySpeech und ist der eine Teil davon,
                             // der bleibt.
                             wishSymbols =
-                                if (PlayAmbientActivity.currentDayPhase() ==
+                                if (!streamMode && PlayAmbientActivity.currentDayPhase() ==
                                     PlayAmbientActivity.DayPhase.NIGHT
                                 ) {
                                     null
@@ -4643,7 +4826,7 @@ fun DockScreen(
         // dann ein eingefrorenes Kreis-Symbol, waehrend der Bildschirm daneben weiterlief (Fund
         // aus dem Review zu PR #162). Als Funktion liest jeder Aufruf `animationFrame` &Co. frisch
         // - genau das Muster, das `current = avatar` in `describeScreen()` schon nutzt.
-        fun currentWatchFrame(): IntArray = animationFrame ?: dreamWatchFrame
+        fun currentWatchFrame(): IntArray = if (streamMode) clockFrame else animationFrame ?: dreamWatchFrame
             ?: if (moonMode) MoonFrame.build(moonPhase) else clockFrame
 
         // Was gerade zu sehen ist als Beschreibung - Kulisse, Figuren, Uhr und Getragenes.
@@ -4797,10 +4980,22 @@ fun DockScreen(
                 }
             }
             PlaySceneView(
-                cells = sceneCells,
+                cells = if (streamMode) StreamPresentation.readableNight(
+                    sceneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT,
+                    sceneFade.value
+                ) else sceneCells,
+                materialColor = if (streamMode) Color(0xFFDDE6EF) else Color(0xFFF3F1EA),
+                lightColor = if (streamMode) {
+                    if (PlayScene.isOutdoors(renderedPlace)) Color(0xFFD6E8FF) else Color(0xFFFFDEA0)
+                } else Color(0xFFF3F1EA),
                 cellPx = sceneCellPx,
                 modifier = Modifier.fillMaxSize()
             )
+        }
+
+        if (streamMode && playMode) {
+            Text(StreamTime.label(), color = Color(0xFFAEC5D0), fontSize = 10.sp,
+                lineHeight = 14.sp, modifier = Modifier.align(Alignment.TopStart).padding(start = 68.dp, top = 18.dp))
         }
 
         // Sobald gefuettert wurde, verschwindet die Uhr fuer die Dauer der Reaktion.
@@ -4822,7 +5017,10 @@ fun DockScreen(
             // diese Praezisierung haette die Uhr hier staendig eine Erinnerung angesagt, obwohl
             // sie nur die aktuelle Uhrzeit zeigt.
             val currentDreamTopic = dreamWatchTopic
-            val clockContentDescription = if (activeAvatar?.occurrenceId != null) {
+            val clockContentDescription = if (streamMode) {
+                val now = StreamTime.channelTime()
+                stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
+            } else if (activeAvatar?.occurrenceId != null) {
                 val topicLabel = activeAvatar.libraryAnimationLabel
                     ?: activeAvatar.animationType?.let { stringResource(it.labelRes) }
                     ?: stringResource(R.string.a11y_reminder_generic)
@@ -4845,11 +5043,11 @@ fun DockScreen(
                 label = "watch-scene"
             )
             val watchModifier = Modifier
-                .size((clockSizeDp * watchScale).dp)
+                .size((if (streamMode) 48f else clockSizeDp * watchScale).dp)
                 .offset {
                     IntOffset(
-                        (clockOffset.x + driftOffset.x).roundToInt(),
-                        (clockOffset.y + driftOffset.y).roundToInt()
+                        (if (streamMode) with(density) { 12.dp.toPx() } else clockOffset.x + driftOffset.x).roundToInt(),
+                        (if (streamMode) with(density) { 12.dp.toPx() } else clockOffset.y + driftOffset.y).roundToInt()
                     )
                 }
                 .pointerInput(Unit) {
@@ -5168,7 +5366,8 @@ fun DockScreen(
                 stringResource(current.species.labelRes)
             }
             AvatarSpriteView(
-                frame = gameFrame(GAME_HOST_ID, current.species, current.frame),
+                frame = fennecTalkFrame?.takeIf { current.species == AvatarSpecies.FENNEC }
+                    ?: gameFrame(GAME_HOST_ID, current.species, current.frame),
                 brightnessScale = avatarDim.value,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
@@ -5186,6 +5385,11 @@ fun DockScreen(
                     .width(current.sizeDp.dp)
                     .height(current.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
                     .offset { IntOffset(current.offset.x.roundToInt(), current.offset.y.roundToInt()) }
+                    .graphicsLayer {
+                        if (streamMode) translationY =
+                            kotlin.math.sin(streamAcknowledgement.value * kotlin.math.PI).toFloat() *
+                                with(density) { 6.dp.toPx() }
+                    }
                     // **Antippen im Play-Modus oeffnet das Gespraech** (siehe PlayTalkPanel).
                     //
                     // Nur dort und nur, wenn keine Erinnerung offen ist: Steht eine an, ist das
@@ -5244,7 +5448,9 @@ fun DockScreen(
             }
             if (vorneCells.isNotEmpty()) {
                 PlaySceneView(
-                    cells = vorneCells,
+                    cells = if (streamMode) StreamPresentation.readableNight(
+                        vorneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT, sceneFade.value
+                    ) else vorneCells,
                     cellPx = sceneCellPx,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -5269,7 +5475,9 @@ fun DockScreen(
                 )
             }
             PlaySceneView(
-                cells = frontCells,
+                cells = if (streamMode) StreamPresentation.readableNight(
+                    frontCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT, sceneFade.value
+                ) else frontCells,
                 cellPx = sceneCellPx,
                 modifier = Modifier.fillMaxSize()
             )
@@ -5476,9 +5684,9 @@ fun DockScreen(
                     maxWidthPx = maxWidthPx
                 )
             }
-            LaunchedEffect(symbole) {
+            LaunchedEffect(symbole, pendingExternalImpulse?.impulseId) {
                 delay((WISH_HOLD_MS * PlayTimeLapse.paceFactor()).toLong().coerceAtLeast(600L))
-                wishSymbols = null
+                if (!streamMode || pendingExternalImpulse == null) wishSymbols = null
             }
         }
 
@@ -5504,6 +5712,22 @@ fun DockScreen(
             }
         }
 
+        if (streamMode && playMode && avatar?.species == AvatarSpecies.FENNEC) {
+            fennecMap?.let { presentation ->
+                StreamFennecMap(currentPlace, presentation, fennecMapGerman,
+                    fennecMapViewer, fennecMapReply,
+                    Modifier.align(Alignment.TopCenter).padding(start = 24.dp, end = 80.dp, top = 68.dp))
+            }
+            fennecNotice?.let { notice ->
+                Text(notice, color = Color(0xFF9DDAC7), fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = 16.dp, top = 56.dp))
+            }
+            fennecViewer?.takeIf { fennecMap == null }?.let { viewer ->
+                StreamFennecBubble(viewer, fennecReply,
+                    Modifier.align(Alignment.TopCenter).padding(top = 64.dp))
+            }
+        }
+
         // ---- Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt) ----
         //
         // Die Plaetze selbst stehen fest wie die Kulisse - nur ihr INHALT laesst sich ziehen, auf
@@ -5516,13 +5740,18 @@ fun DockScreen(
         // fuer einen Screenreader nicht sinnvoll bedienen, dasselbe Muster wie beim Fuettern per
         // Uhr-Ziehen weiter oben.
         if (playMode) {
+            val visibleSlots = if (streamMode) {
+                StreamInteractions.visibleSlots(
+                    StreamInteractionState(slots, pendingExternalImpulse, latestExternalImpulse)
+                )
+            } else slots
             Column(
                 modifier = Modifier
                     .offset { IntOffset(slotsXPx.roundToInt(), slotsTopPx.roundToInt()) },
                 verticalArrangement = Arrangement.spacedBy(with(density) { slotGapPx.toDp() })
             ) {
                 repeat(ACTION_SLOT_COUNT) { index ->
-                    val saved = slots.getOrNull(index)
+                    val saved = visibleSlots.getOrNull(index)
                     val slotLabel = if (saved != null) {
                         val topicLabel = saved.libraryAnimationLabel
                             ?: saved.animationType?.let { stringResource(it.labelRes) }
@@ -5561,8 +5790,8 @@ fun DockScreen(
                     // LEEREN Platz ausserhalb des Stream-Modus ebenfalls null und "null == null"
                     // haette jeden leeren Platz faelschlich hervorgehoben - gemeldet als "Reminder
                     // Slots werden bunt mit diesem hellgruenen Kreis gehighlightet".
-                    val matchesPendingImpulse = saved != null &&
-                        pendingExternalImpulse?.occurrenceId == saved.occurrenceId
+                    val matchesPendingImpulse = slots.getOrNull(index) != null &&
+                        streamSlotTransfer?.saved?.occurrenceId == slots.getOrNull(index)?.occurrenceId
                     Box(
                         modifier = Modifier
                             .size(with(density) { slotSizePx.toDp() })
@@ -5640,7 +5869,7 @@ fun DockScreen(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (saved != null) {
+                        if (saved != null && streamSlotTransfer?.saved?.occurrenceId != saved.occurrenceId) {
                             SimulatedMatrixView(
                                 frame = ActionSlotSymbols.frameFor(saved),
                                 showPuck = false,
@@ -5670,7 +5899,28 @@ fun DockScreen(
                 }
             }
             if (streamMode) {
-                StreamViewerOverlay(
+                StreamStoryOverlay(
+                    goalsProgress, questProgress, livingAgent,
+                    PlayQuests.questDayOf(PlayTimeLapse.absoluteMinute().toLong()),
+                    Modifier.align(Alignment.TopCenter).padding(top = 12.dp)
+                )
+                val transfer = streamSlotTransfer
+                val recipient = avatar
+                if (transfer != null && recipient != null) {
+                    key(transfer.saved.occurrenceId) {
+                        StreamReminderTransfer(
+                            saved = transfer.saved,
+                            from = slotOffsetPx(transfer.slotIndex),
+                            avatarOffset = recipient.offset,
+                            avatarSizeDp = recipient.sizeDp,
+                            sizeDp = 48f,
+                            onFinished = {
+                                if (streamSlotTransfer == transfer) streamSlotTransfer = null
+                            }
+                        )
+                    }
+                }
+                if (maxWidthPx <= maxHeightPx) StreamViewerOverlay(
                     config = streamConfig,
                     chatStatus = chatStatus,
                     channel = twitchChannel,

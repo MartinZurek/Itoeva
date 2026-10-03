@@ -29,6 +29,31 @@ internal object ActionSlotStore {
         }.apply()
     }
 
+    /** Stream-only waiting stock: full snapshots are retained, never marked completed. */
+    internal fun deferForStream(context: Context, profileId: String, action: SavedAction) {
+        val stock = deferredForStream(context, profileId)
+        if (stock.any { it.occurrenceId == action.occurrenceId }) return
+        writeDeferred(context, profileId, stock + action)
+    }
+
+    internal fun deferredForStream(context: Context, profileId: String): List<SavedAction> =
+        runCatching {
+            val raw = JSONArray(prefs(context).getString("stream_waiting_$profileId", "[]"))
+            List(raw.length()) { decode(raw.getString(it)) }
+        }.getOrDefault(emptyList())
+
+    internal fun removeDeferred(context: Context, profileId: String, occurrenceId: Long) {
+        val stock = deferredForStream(context, profileId)
+        if (stock.none { it.occurrenceId == occurrenceId }) return
+        writeDeferred(context, profileId, stock.filterNot { it.occurrenceId == occurrenceId })
+    }
+
+    private fun writeDeferred(context: Context, profileId: String, stock: List<SavedAction>) {
+        val raw = JSONArray().apply { stock.forEach { put(encode(it)) } }
+        // Persist the waiting stock before removing a visible slot, including across process death.
+        check(prefs(context).edit().putString("stream_waiting_$profileId", raw.toString()).commit())
+    }
+
     /**
      * Leert alle Speicherplaetze eines Wesens - fuer den "Pflegebuch zuruecksetzen"-Pfad in
      * [FeedStatsDialog]: der loescht dort saemtliche `avatar_feed_events`-Zeilen des Wesens, auf
@@ -40,6 +65,7 @@ internal object ActionSlotStore {
     fun clear(context: Context, profileId: String) {
         prefs(context).edit().apply {
             repeat(ACTION_SLOT_COUNT) { index -> remove(key(profileId, index)) }
+            remove("stream_waiting_$profileId")
         }.apply()
     }
 

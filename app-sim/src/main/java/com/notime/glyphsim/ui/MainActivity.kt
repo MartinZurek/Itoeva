@@ -31,6 +31,8 @@ import com.notime.glyphcore.reminder.ReminderScheduler
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.PlayTimeLapse
 import com.notime.glyphsim.matrix.PlayWeather
+import com.notime.glyphsim.stream.StreamTime
+import java.util.TimeZone
 import com.notime.glyphsim.reminder.ReminderTrigger
 import com.notime.glyphsim.state.Presentation
 import com.notime.glyphsim.state.TamaStateMapping
@@ -78,6 +80,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val streamMode = resources.getBoolean(R.bool.stream_mode)
+        // Ein gemeinsamer Stream braucht auch fuer den autonomen Tag dieselbe Kanalzone.
+        // Ein Emulator-Neustart darf nicht unbemerkt auf GMT zurueckfallen.
+        if (streamMode) TimeZone.setDefault(TimeZone.getTimeZone(StreamTime.channelZone))
 
         // Frueher stand hier ein einmaliger Anstoss, die Exact-Alarm-Berechtigung zu erteilen.
         // Die App deklariert sie nicht mehr (Begruendung im Manifest): sie zeigt Erinnerungen

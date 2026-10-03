@@ -35,7 +35,7 @@ object PlayAmbienceSound {
     private const val TAG = "PlayAmbience"
 
     /** Wie laut die Atmo unter der Musik liegt - sie traegt, sie fuehrt nie. */
-    private const val VOLUME = 0.22f
+    private val VOLUME = if (com.notime.glyphsim.BuildConfig.BUILD_TYPE == "stream") 0.11f else 0.22f
 
     /** Die Ueberblendung zwischen zwei Klangbildern. */
     private const val FADE_MS = 2_500L
@@ -50,6 +50,17 @@ object PlayAmbienceSound {
     private val volumes = HashMap<AudioTrack, Float>()
     private var currentKind: PlayAmbience.Kind? = null
     private var job: Job? = null
+    @Volatile private var streamAttention = 1f
+
+    @Synchronized
+    internal fun setStreamAttention(value: Float) {
+        if (com.notime.glyphsim.BuildConfig.BUILD_TYPE != "stream") return
+        streamAttention = value.coerceIn(0f, 1f)
+        current?.let { track ->
+            val raw = synchronized(volumes) { volumes[track] } ?: VOLUME
+            setVolume(track, raw)
+        }
+    }
 
     /**
      * Stellt das Klangbild [kind] ein - `null` blendet aus. [allowed] ist die Antwort der Musik
@@ -98,7 +109,7 @@ object PlayAmbienceSound {
 
     private fun setVolume(track: AudioTrack, value: Float) {
         synchronized(volumes) { volumes[track] = value }
-        runCatching { track.setVolume(value) }
+        runCatching { track.setVolume(value * streamAttention) }
     }
 
     private fun samplesFor(kind: PlayAmbience.Kind): ShortArray =

@@ -29,7 +29,9 @@ private val LED_ON_COLOR = Color(MatrixColors.LED_ON)
 fun PlaySceneView(
     cells: List<SceneCell>,
     cellPx: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    materialColor: Color = LED_ON_COLOR,
+    lightColor: Color = LED_ON_COLOR
 ) {
     Canvas(modifier = modifier) {
         if (cellPx <= 0f) return@Canvas
@@ -42,11 +44,12 @@ fun PlaySceneView(
             val fraction = cell.brightness
                 .coerceIn(0, AvatarGeometry.MAX_BRIGHTNESS)
                 .toFloat() / AvatarGeometry.MAX_BRIGHTNESS
+            val tint = if (cell.isLight) lightColor else materialColor
             drawRect(
                 color = Color(
-                    red = LED_ON_COLOR.red * fraction,
-                    green = LED_ON_COLOR.green * fraction,
-                    blue = LED_ON_COLOR.blue * fraction,
+                    red = tint.red * fraction,
+                    green = tint.green * fraction,
+                    blue = tint.blue * fraction,
                     alpha = 1f
                 ),
                 topLeft = Offset(cell.x * cellPx, cell.y * cellPx),

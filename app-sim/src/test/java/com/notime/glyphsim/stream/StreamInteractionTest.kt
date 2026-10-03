@@ -169,6 +169,53 @@ class StreamInteractionTest {
         assertTrue(privateLabel.slots.all { it == null })
     }
 
+    @Test
+    fun `B ersetzt A ohne eine Erinnerung oder ein altes Ergebnis zu verbrauchen`() {
+        val world = StreamInteractionState(slots = listOf(action(1), action(2), null, null))
+        val a = StreamInteractions.select(world, 1, 720) as StreamSelection.Accepted
+        val b = StreamInteractions.select(a.state, 2, 720, replacePending = true) as StreamSelection.Accepted
+        assertEquals(2L, b.state.pending?.occurrenceId)
+        assertEquals(world.slots, b.state.slots)
+        assertSame(b.state, StreamInteractions.clearHandled(b.state, a.impulse))
+        assertEquals(StreamSelection.Busy, StreamInteractions.select(b.state, 2, 721, replacePending = true))
+        val cleared = StreamInteractions.clearHandled(b.state, b.impulse)
+        assertEquals(1L, cleared.slots[0]?.occurrenceId)
+        assertNull(cleared.slots[1])
+    }
+
+    @Test
+    fun `leerer oder privater Ersatz laesst A unveraendert`() {
+        val world = StreamInteractionState(slots = listOf(action(1), action(2, AnimationType.MEDICINE), null, null))
+        val a = StreamInteractions.select(world, 1, 720) as StreamSelection.Accepted
+        assertEquals(StreamSelection.Missing, StreamInteractions.select(a.state, 2, 720, replacePending = true))
+        assertEquals(StreamSelection.Missing, StreamInteractions.select(a.state, 3, 720, replacePending = true))
+        assertEquals(1L, a.state.pending?.occurrenceId)
+    }
+
+    @Test
+    fun `uebergebene Erinnerung verschwindet sofort aus der Anzeige ohne verbraucht zu werden`() {
+        val world = StreamInteractionState(slots = listOf(action(1), action(2), null, null))
+        val offered = StreamInteractions.select(world, 1, 720) as StreamSelection.Accepted
+        val visible = StreamInteractions.visibleSlots(offered.state)
+        assertNull(visible[0])
+        assertEquals(2L, visible[1]?.occurrenceId)
+        assertEquals(world.slots, offered.state.slots)
+        assertEquals(1L, offered.state.pending?.occurrenceId)
+        assertEquals(world.slots, StreamInteractions.visibleSlots(world))
+    }
+
+    @Test
+    fun `ersetztes Angebot kehrt zurueck und neuer Reminder bleibt aus der Anzeige entfernt`() {
+        val world = StreamInteractionState(slots = listOf(action(1), action(2), null, null))
+        val a = StreamInteractions.select(world, 1, 720) as StreamSelection.Accepted
+        val b = StreamInteractions.select(a.state, 2, 720, replacePending = true) as StreamSelection.Accepted
+        val visible = StreamInteractions.visibleSlots(b.state)
+        assertEquals(1L, visible[0]?.occurrenceId)
+        assertNull(visible[1])
+        val done = StreamInteractions.clearHandled(b.state, b.impulse)
+        assertNull(StreamInteractions.visibleSlots(done)[1])
+    }
+
     private fun selected(type: AnimationType): StreamSelection.Accepted {
         val state = StreamInteractions.autoSave(
             true,

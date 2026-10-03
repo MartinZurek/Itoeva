@@ -669,6 +669,440 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Fennecs Modell wird getrennt vom Zuschauerchat vorgeladen
+
+**Version:** `stream-fennec-warmup-v1`, Ausgangspunkt `aa13473`.
+**DOCUMENTED INTENT:** Stundenauswertung folgt dem zuvor belegten Kaltstart-Problem.
+**FACT:** Nach einer weiteren Ruhephase war Ollamas Modellliste wieder leer. Der Stream lief
+seit rund 117 Minuten mit 30 FPS und null verlorenen Netzwerkframes; Uhrzone/UTC waren richtig.
+Die zuvor gemessenen 18,17 Sekunden Modellstart ueberstiegen die Chatfrist und fuehrten zu
+wiederholtem Abbruch beim Laden. Eine Erhoehung der Zuschauerfrist wuerde nur laengeres Warten
+verschieben, statt die Ursache vorzubereiten.
+
+**Entscheidung:** Ein einzelner PC-Hintergrundfaden laedt das vorhandene qwen3:1.7b beim
+Dienststart mit einem leeren Generate-Aufruf, ohne Prompt, Zuschauertext oder Twitch-Versand.
+Er erneuert alle fuenf Minuten die 15-Minuten-Haltefrist mit denselben 4096 Kontexttokens und
+vier Threads wie der Chat. Laden hat separat 60 Sekunden Zeit, ein Fehler fuehrt zu 30 Sekunden
+Pause vor Wiederholung; keine heisse Schleife, kein Download und keine Antwortwarteschlange.
+Der HTTP-Dienst bleibt erreichbar; die zwoelfsekundige Antwortfrist bleibt erhalten.
+Die lokale Einrichtungsseite und `model_ready`/`model_loading` unterscheiden Modellbereitschaft
+von Twitch-Anmeldung. Dienstende beendet die Auffrischung; Ollama darf danach wieder entladen.
+
+**Betroffen:** ModelWarmup im lokalen PC-Dienst, lokaler Statustext und Regressionstests/Anleitung.
+Keine APK-, Spielstand-, Kontoberechtigungs-, Reminder-, Routine-, Charakter-, Story-, XP-,
+Uhr- oder Audioaenderung; keine Migration. Drei neue Tests pruefen textfreies Laden und
+Bereitschaftsablauf, Fehler/Retryabstaende sowie eine unabhaengige Antwort bei blockiertem Laden
+und beendbaren Faden; alle 35 Python-Tests erfolgreich. Ruecksetzweg: gesicherte PC-Datei
+`Fennec-before-warmup-aa13473.py` bzw. Quellstand `aa13473`; kein OBS-Neustart.
+**TESTED BEHAVIOR:** Dienst eingesetzt; gleiche SHA256 fuer Quell- und Laufzeitdatei.
+Der reale leere Ladeaufruf endete diesmal nach 6,78 Sekunden; der Status wechselte von
+ladend/nicht bereit zu bereit. Danach zeigte die lokale Weltkarten-Vorschau mit Quelle Ollama
+nach 1,98 Sekunden eine Antwort und lesbare Karte, bei weiterlaufender Figur und richtiger Uhr.
+Keine Twitch-Testnachricht (`sent=0`). OBS lief danach ueber zwei Stunden mit 30 FPS weiter,
+weiterhin null verlorene Netzwerkframes, Crashpuffer leer.
+**Grenzen:** Beim allerersten Laden koennen bereits eingehende Fragen noch den bisherigen
+lokalen Rueckfall verwenden. Ollama-Ausfall oder manueller Modellwechsel kann bis zum naechsten
+Auffrischen unbemerkt bleiben. Laengerer Dauerbetrieb der Auffrischung bleibt zu beobachten;
+der vorherige Eintrag mit nur einmaligem Vorladen wird durch diesen Stand ueberholt.
+
+### 2026-10-03 - Kurze Pruef-Netzausfaelle trennen Fennecs Chat nicht sofort
+
+**Version:** `stream-fennec-auth-grace-v1`, Ausgangspunkt `4d834cf`.
+**DOCUMENTED INTENT:** Stundenauswertung soll belegte kleine Verbesserungen ohne Unterbrechung
+der laufenden Uebertragung einsetzen.
+**FACT:** OBS lief seit rund 57 Minuten mit 30 FPS und null verlorenen Netzwerkframes.
+Berlin/UTC entsprachen Windows und Emulator; Crashpuffer leer. Der PC-Status wechselte
+kurz von verbunden auf getrennt und zurueck. Eine unabhaengige Token-Pruefung bestaetigte
+weiterhin das richtige Konto, Chat-Schreibrecht und ueber fuenf Millionen Sekunden Restlaufzeit.
+Der bisherige Code loeschte die bestaetigte Identitaet vor jeder erneuten Netzpruefung;
+auch ein Timeout verhinderte dadurch fuer 30 Sekunden alle Antworten im Chat.
+
+**Entscheidung:** Nur dieselbe erfolgreich bestaetigte Anmeldung ueberbrueckt Timeout,
+Verbindungsfehler, HTTP 429 oder Serverfehler fuer hoechstens 120 Sekunden seit ihrer letzten
+erfolgreichen Pruefung, begrenzt auf 30 Sekunden vor dem bekannten Ablauf. Fehler verschieben
+die Frist nicht. HTTP 401 bei Pruefung oder Versand sperrt sofort; unbestaetigte/neue Tokens
+erhalten keinen Puffer. Keine Wiederholung oder neue Warteschlange fuer Nachrichten.
+Die kleine Toleranz ersetzt keine erreichbare Twitch-API und keine erneute Anmeldung.
+
+**Betroffen:** Nur ChatAuth im lokalen PC-Dienst, seine Regressionstests und Anleitung.
+APK, Kontoberechtigungen, private State-Datei, Reminder, Weltablauf, Uhr, Audio und XP bleiben
+unveraendert; keine Migration. Vier neue Regressionstests pruefen Grenzen, echte Ablehnung,
+Ablauf und 401 beim Versand; alle 32 Python-Tests erfolgreich. Ruecksetzweg ist die gesicherte
+PC-Datei `Fennec-before-auth-cache-4d834cf.py` bzw. die Quellversion `4d834cf`; kein OBS-Neustart.
+Der neue Dienst wurde mit bestehender Anmeldung eingesetzt, Quell-/Laufzeitdatei stimmen
+per SHA256 ueberein. Die Uebertragung lief danach ueber 65 Minuten mit 30 FPS weiter,
+weiterhin null verlorene Netzwerkframes. Lokale Vorschau ohne Twitch-Versand geprueft.
+**Weitere Beobachtung / naechster Hebel:** Nach Leerlauf war das Modell entladen. Der Vulkan-
+Kaltstart dauerte 18,17 Sekunden, laenger als die zwoelfsekundige Antwortfrist: normale
+Chat-Versuche brachen deshalb wiederholt den Ladevorgang ab und lieferten nur den Rueckfall.
+Einmaliges separates Vorladen ueber Ollamas Generate-Endpunkt stellte die Modellbereitschaft
+wieder her. Dauerhaftes Vorladen ist damit noch nicht geloest; der naechste Schnitt soll diesen
+belegten Kaltstart getrennt von den Publikumsfragen vorbereiten, ohne die Antwortfrist zu erhoehen.
+
+### 2026-10-03 - Fluessigere Folgefragen und eine eindeutige Kanalzeit
+
+**Version:** `stream-fennec-dialog-time-v2`, Ausgangspunkt `5fcb466`.
+**DOCUMENTED INTENT:** Nutzer beauftragt die Optimierung von Zuschauerchat/Avatar und eine
+Loesung fuer die weiterhin falsche Uhrzeit bei weltweit unterschiedlichen Zuschauerzonen.
+**FACT:** Windows zeigte 11:00 CEST, der Emulator gleichzeitig 09:00 GMT; der Zeitpunkt war
+richtig, seine Zone falsch. Die Emulatorzone wurde auf Europe/Berlin korrigiert.
+
+**Entscheidung:** Ein gemeinsames Videobild zeigt eine gekennzeichnete Berliner Kanalzeit,
+darunter UTC. Die Stream-App bindet Uhr und eigenen Tagesablauf an Europe/Berlin, auch nach
+einem Emulator-Rueckfall auf GMT. Sommerzeit und lokale Datumswechsel kommen aus IANA-Zonen.
+Explizite Ortsfragen erhalten frische Uhrwerte fuer Berlin, UTC, New York, London, Tokyo,
+Los Angeles, Sydney und Kolkata. Das Modell waehlt nur die Frageart/Stadt; belegte Texte
+verwenden den Snapshot. Kein Raten des Zuschauerstandorts, keine Geolokalisierung und keine
+zusammenfallenden Ortszeiten in der gemeinsamen Uhr. Die private App behaelt ihre Geraetezone.
+
+Nach angenommener Ansprache gilt ein 45-Sekunden-Fenster fuer passende kurze Folgefragen,
+getrennt je Zuschauer. Der PC haelt nur den letzten oeffentlichen Kartenort, keinen Chat-Verlauf.
+Damit zeigt "How do I get there?" den Weg zum zuvor gezeigten Ort. Globale Abstaende sinken
+von 10 auf 4 Sekunden, persoenliche von 30 auf 8 Sekunden; der PC hat 500 ms Transporttoleranz.
+Zu fruehe frische Fragen erhalten eine kleine Warteanzeige im Bild. A-D, fremde @Gespraeche
+und eigene Bot-Antworten bleiben getrennt. Kartenanzeige (14 Sekunden), Sprechdarstellung
+(3-6 Sekunden) und Eingang sind entkoppelt; angenommene neue Fragen ersetzen die alte Ansicht.
+Mundframes sind auf Fennec beschraenkte Renderprojektionen. Reminder-Bearbeitung, Routine,
+Charakter, Story, XP und Fortschritt erhalten keine neue Chat-Schreibwirkung; keine Migration
+oder neuen Preference-Schluessel. Die gewaehlte Kanalzone betrifft die Stream-Tageszeiten.
+
+**Betroffen:** StreamTime, ClockTick, MainActivity, FennecConversation, Twitch-Leseprovider,
+FennecReplyClient, DockScreen, PC-Dienst und zugehoerige Anleitungen/Architektur.
+**TESTED BEHAVIOR:** 74 Stream-JVM-Tests plus sechs ClockTick-Tests und 28 Python-Tests
+erfolgreich; Stream-APK und Vital-Lint erfolgreich. Tests pruefen Zuschauertrennung,
+Abstaende, TTL, Stadtvalidierung, frische Uhrwerte, Sommerzeitluecken/doppelte Herbststunde
+und Datumswechsel. Zehn echte Modellfragen pruefen den bisherigen Kartenkatalog; weitere
+echte Modellfragen pruefen Ortszeit, unbekannten Zuschauerstandort und deutsche/englische
+Wegfolgefragen. Ein anfangs als Reisebefehl verstandenes "How do I get there?" wurde durch
+explizite Katalogbeispiele korrigiert und mit dem echten Modell erneut geprueft.
+
+Im echten Twitch-Kanal bestaetigten Helix und ein unabhaengiger IRC-Leser drei Antworten:
+New York 05:42, Berlin 11:42, UTC 09:42 sowie "Where is the beach?" und "How do I get there?"
+ohne erneute Ansprache. Screenshots zeigen lesbare Uhrzone, Antwort und wirkliche Wegvorschau
+bei weiterlaufender Figur. APK installiert und speed-kompiliert; Crashpuffer leer.
+Die abschliessende lokale Vorschau prueft zwei schnelle Fragen: Nur eine Antwort entsteht,
+die zweite zeigt einen lesbaren Sechs-Sekunden-Countdown; kein Twitch-Versand. Nach dem
+spaeteren Kaltstart zeigte die Uhr korrekt Berlin 14:43 und UTC 12:43. Der auf Nutzerwunsch
+neu gestartete Stream wurde ueber Helix als live bestaetigt. OBS meldete einen separaten
+Fehler beim Erneuern seiner Kontoanmeldung, uebertraegt aber mit dem vorhandenen Streamzugang.
+**Grenzen:** Begrenzter Staedtekatalog und kleines lokales Modell; der laengere Publikumsbetrieb
+bleibt ungeprueft. Twitch-Netzversand kann weiterhin scheitern, ohne sichtbare Antwort zu blockieren.
+**Ruecksetzweg:** Gesicherte Weltkarten-APK `5fcb466` und vorherigen PC-Dienst wiederherstellen;
+bestehende Spielstaende sind kompatibel. Die absichtlich korrigierte Emulatorzone kann Berlin bleiben.
+
+### 2026-10-03 - Fennec kennt die echte Karte und zeigt erlaubte Ansichten
+
+**Version:** `stream-fennec-world-v1`, Ausgangspunkt `dede688`.
+**DOCUMENTED INTENT:** Nutzer beauftragt, Bitten wie "show me your world" mit wirklichen
+Spielmoeglichkeiten zu verbinden: Karte zeigen und belegte Orte erklaeren. Freigegeben ist
+dieser lokale Stream-Dialog, keine beliebige Fernsteuerung oder neue Simulationspipeline.
+
+**Entscheidung:** Android liefert nur Ort, Aktivitaet und den oeffentlichen `PlayMap`-Graphen.
+Ein kurzer Ollama-Klassifikator waehlt Karte, Ort/Weg, Aktivitaet, Hilfe oder normalen Dialog
+als validiertes JSON. Unbekannte IDs und nicht benannte Ziele werden verworfen. Kartentexte
+verwenden echte Regionen/Nachbarn; die sichtbare Wegvorschau verwendet `PlayMap.route` und
+den vorhandenen `PlayMapScene`-Renderer. Beschriftung und Antwort bilden eine kompakte Ansicht,
+der Standort folgt der wirklichen Figur. Keine Aenderung an Ort, Routine, Reminder oder XP.
+Die Karte verschwindet nach 14 Sekunden. Mundframes bleiben reine Renderprojektion.
+
+Twitch-Versand laeuft separat mit hoechstens einem Versuch gleichzeitig, ohne Warteschlange
+oder Wiederholung: Ein langsamer Netzversuch hielt zuvor auch die sichtbare Antwort auf.
+`send_pending` bedeutet nur laufenden Versuch, `/status.sent` zaehlt bestaetigte Sendungen.
+Die private App, Anmeldung und Datenbank bleiben unveraendert; keine Migration.
+
+**Betroffen:** FennecWorld, FennecReplyClient, StreamFennecMap, DockScreen, PlayMapScene.labels,
+PC-Dienst und Stream-Anleitungen/Architektur.
+**TESTED BEHAVIOR:** 68 Stream-JVM-Tests, 24 Python-Tests, Stream-APK und Vital-Lint erfolgreich.
+Zehn echte lokale Modellfragen pruefen Welt-/Ortsbitten, Deutsch, Alltag, Hilfe, normalen
+Dialog, Negation, unbekannten Ort und unzulaessige Reise: erwartete Aktionskategorien.
+Warme Kartenauswahl etwa 0,45-0,56 Sekunden; normale Antworten im Einzeltest bis etwa 3 Sekunden.
+"Fennec, show me your world" erschien mit Antwort im echten Twitch-Kanal (unabhaengiger
+IRC-Leser, Helix-Bestaetigung) und mit lesbarer Karte im Spiel. Orts-/Wegvorschau zum Strand
+lokal ohne Versand geprueft; aktueller Punkt, Zwischenorte, Ziel und Avatar sind sichtbar.
+APK installiert und speed-kompiliert; Bildueberlappung aus Erstpruefung korrigiert.
+**Grenzen:** Einzelne Twitch-Versuche scheiterten weiterhin am Netz; keine Erfolgsbehauptung
+dafuer. Freier Dialog, mehr Sprachen und laengerer Publikumsbetrieb bleiben Pilot-Grenzen.
+**Ruecksetzweg:** Gesicherte APK `dede688` und vorherigen PC-Dienst zurueckspielen.
+
+### 2026-10-03 - Direkte Ansprache mit Hej und Satzzeichen
+
+**Version:** `stream-fennec-address-v2`, Ausgangspunkt `81c9e34`.
+**DOCUMENTED INTENT:** Die Zuschauerfrage "Hej Fennec; what are you?" blieb ohne Antwort.
+Der beobachtete Chat-Eingang enthielt `Hej`, die Erkennung unterstuetzte bisher nur `Hey`.
+Die direkte Ansprache akzeptiert jetzt auch `Hej` und uebliche Satzzeichen nach dem Gruss.
+Wortgrenzen, eigene Antworten und nicht direkt adressierte Unterhaltung bleiben geschuetzt;
+Abstaende, Weltablauf, Reminder, Spielstand und private App bleiben unveraendert.
+
+**Betroffen:** FennecConversation, gezielter Regressionstest und Stream-Anleitungen.
+**TESTED BEHAVIOR:** Alle 65 Stream-JVM-Tests, Stream-APK und Vital-Lint erfolgreich.
+APK installiert und mit speed kompiliert. Die genaue Frage wurde im echten Twitch-Chat
+verarbeitet; Helix bestaetigte den Versand, ein unabhaengiger IRC-Leser beobachtete die
+Ollama-Antwort mit `[Fennec]`, die Sprechblase war im Spiel sichtbar und visuell geprueft.
+**Grenzen:** Andere bisher nicht erfasste Ansprachen sowie bestehende Abstaende koennen
+weiterhin ohne Antwort bleiben; allgemeine Dialogqualitaet bleibt eine Pilot-Grenze.
+**Ruecksetzweg:** Gesicherte APK `81c9e34` wieder installieren; keine Datenmigration.
+
+### 2026-10-03 - Fennec antwortet auf direkte Zuschaueransprache
+
+**Betriebsnachtrag:** Die menschlich erneuerte OBS-Anmeldung war zunaechst nur im Speicher.
+Im offiziellen OBS-32.2.2-Code speichern die Stream-Einstellungen die neue Auth-Instanz,
+`Auth::Save()` wird fuer diesen Weg aber erst beim vollstaendigen Beenden ausgefuehrt.
+Nach ausdruecklich erlaubtem Neustart ist die Freigabe auf der Festplatte gueltig, erlaubt
+jedoch nur `channel:read:stream_key`, kein Chat-Schreiben. Stream und Aufnahme wurden wieder
+gestartet und sichtbar mit 4667 kbps bestaetigt. Die Einrichtungsseite benennt jetzt fehlenden
+Schreibzugriff statt vorschnell eine abgelaufene Anmeldung zu behaupten; Anleitung erklaert
+den notwendigen Speicher-Schritt. Die eigene Chat-Verbindung bleibt ausstehend.
+Die Registrierung der vorbereiteten Public-App wird von Twitch mit fehlender Zwei-Faktor-
+Anmeldung abgelehnt. Die Sicherheitsseite wurde fuer den Kontoinhaber geoeffnet; keine
+Sicherheitsoption, Telefonnummer oder Authentifizierungs-App wurde automatisch geaendert.
+Nach menschlicher Zwei-Faktor-Einrichtung und Entwicklerfreigabe wurde die Public-App
+`Itoeva Fennec Chat` mit lokaler Rueckleitung registriert. Der Mensch hat das Schreiben als
+`fennec_itoeva` ausdruecklich freigegeben; der gespeicherte Zugang erlaubt nur `user:write:chat`.
+Zwei echte Twitch-Testansprachen wurden per Helix bestaetigt und vom anonymen Chat-Eingang
+verarbeitet. Ein unabhaengiger IRC-Leser beobachtete beide `[Fennec]`-Rueckantworten im Kanal;
+die Ortsantwort und die frei formulierte Ollama-Antwort standen gleichzeitig im Streambild.
+Dienststatus: zwei Antworten, zwei bestaetigte Sendungen, letzte Quelle `ollama`. Screenshots
+wurden visuell geprueft. Keine Zugangsdaten im Repository oder in Lieferdateien.
+
+**Version:** `stream-fennec-chat-v1`, Ausgangspunkt `8a8dfdb`.
+**DOCUMENTED INTENT:** Nutzer beauftragt Antworten auf direkte Ansprache wie
+"hey fennec how are you?", mit sichtbarer Chat-Animation und KI oder anderer Antwortmoeglichkeit.
+Die Wahl des Kontos wird delegiert; fuer diesen lokalen Stand dient das bestehende Stream-Konto
+mit sichtbarem Zusatz `[Fennec]`. Keine automatische Kontoerstellung und keine Bezahl-API.
+
+**Entscheidung:** Ein eigener, eng erkannter Ansprache-Eingang trennt Dialog von A-D.
+Der vorhandene Sprechablauf liefert nur projizierte Mundframes; autonome Routinen schreiben
+ihren echten Zustand weiter. Sprechpunkte und eine kurze Antwort stehen unterhalb der
+Fortschrittszeichen. Keine Wiederholung alter Fragen, global zehn Sekunden Abstand und pro
+Zuschauer dreissig Sekunden. Eigene Antworten werden verworfen, die lokale Vorschau schreibt
+niemals an Twitch. Kein Chat-Historien-, XP-, Beziehungs- oder Reminder-Effekt.
+
+Der PC-Dienst spricht ein lokales Ollama-Modell (`qwen3:1.7b`) an. Nur direkte Frage, aktueller
+oeffentlicher Ort und laufende Aktivitaet werden uebertragen; keine Room-, Reminder-, Lore-
+oder Profildaten. Zustandsfragen verwenden belegte Orts-Saetze, weitere harmlose Fragen
+koennen kurz frei formuliert werden. Ausfall, unbrauchbare Ausgabe oder erkannte sensible
+Themen haben eine lokale Rueckfallantwort. Das kleine Modell und die einfachen Filter sind
+keine vollstaendige Moderation; unpassende Formulierungen bleiben eine Pilot-Grenze.
+
+**Betroffen:** FennecConversation, FennecReplyClient, FennecPreview, Twitch-Leseprovider,
+DockScreen, StreamFennecBubble, Stream-only Netzwerk-Konfiguration und `tools/fennec-chat`.
+Nur Loopback darf HTTP; Twitch bleibt TLS. PC-Dienst auf 127.0.0.1, Verbindung per adb reverse.
+Kontotoken liegen ausschliesslich im ausdruecklich angegebenen privaten PC-State-Pfad oder
+werden aus einer gueltigen OBS-Anmeldung gelesen. Keine neuen Android-Preferences oder
+Room-Migrationen, keine Aenderung des privaten Begleiters. Die DUMP-geschuetzte Vorschau wird
+nur im Stream-Spiel registriert und nach Verlassen wieder entfernt.
+
+**TESTED BEHAVIOR:** 64 Stream-JVM-Tests sowie 13 Python-Tests erfolgreich; Stream-APK und
+Vital-Lint erfolgreich. APK auf dem laufenden Stream-PC installiert und mit speed kompiliert.
+Lokale Testansprache nimmt denselben Dialogweg: Mundbewegung und lesbare Orts-Antwort im
+Emulator sichtbar, ohne Twitch-Schreibversuch. Freie KI-Antwort ("I like quiet places and a
+nice sip of water.") samt Mundbewegung ebenfalls im Streambild geprueft und aufgezeichnet.
+Das geladene Modell antwortet im warmen Test
+in rund 0,53 Sekunden; Kaltstart kann bis zur zwoelfsekundigen Rueckfallgrenze dauern.
+**FACT (Erstpruefung):** Die damalige OBS-Anmeldung wurde von Twitch mit 401 abgewiesen.
+Die Kontoseite in OBS war waehrend des laufenden Streams deaktiviert. Der Dienst zeigte
+fehlenden Schreibzugang an; die lokale Antwort blieb sichtbar. Freigabe und Versand wurden
+anschliessend wie im Betriebsnachtrag beschrieben erfolgreich eingerichtet und geprueft.
+**UNVERIFIED:** Mehrsprachigkeit und Dialogqualitaet
+ueber laengeren Publikumsbetrieb sind noch nicht nachgewiesen.
+**Ruecksetzweg:** APK `8a8dfdb` und PC-Dienst beenden; Spielstand bleibt unveraendert.
+Private Token-Datei separat entfernen bzw. App-Berechtigung im Twitch-Konto widerrufen.
+**Naechster Schritt:** Publikumsbetrieb beobachten. Ein separates Bot-Konto, automatische
+Anmeldeerneuerung und Produktions-Moderation sind weiterhin offene Betriebsschritte.
+
+### 2026-10-03 - Unterschiedliche Angebote und sichtbare Kontinuitaet im Stream
+
+**Version:** `stream-continuity-v1`, Ausgangspunkt `26d0fe7`.
+**DOCUMENTED INTENT:** Nutzer beauftragt alle sechs vorgeschlagenen Verbesserungen und
+wiederholte Sichtpruefungen. Die erste Stufe betraf Buehne, Nacht und Angebotsreaktion.
+**Entscheidung:** Freie Stream-Plaetze werden nach drei Sekunden mit fehlenden Themen aus
+Trinken, Ruhe, Lesen und Bewegung ergaenzt. Doppelte oeffentliche Angebote werden als vollstaendige Abzuege dauerhaft zurueckgestellt. Ein wartendes Angebot bleibt im aktiven Platz. Der Bestand wird beim Nachfuellen seines Themas zuerst wiederverwendet, nie als beantwortet markiert. Neue Angebote sind oeffentliche Spiel-Ausloesungen mit echter Room-ID,
+Eigentuemer und Themenknoten, ueber die bereits existierende Spiel-Erinnerung. Der normale
+Abschlussweg bleibt verbindlich; ein Angebot erzeugt weder XP noch vorgetaeuschten Erfolg.
+Private und medizinische Themen werden nicht erzeugt. Die Auswahl bleibt autonom.
+
+Leise Symbole zeigen den gespeicherten Projektfortschritt, Tagesreise bzw. Tagesvorhaben,
+tatsaechlich gewachsene Naehe und gelernte Vorlieben. Statt neue Geschichten und Belohnungen
+zu erfinden, wird die vorhandene Welt lesbar. Projektpunkte verwenden dieselbe Anzahl
+Arbeitsgaenge wie die echte Fertigstellung. Das Absichtssymbol bleibt bei wartendem Angebot
+sichtbar, auch nachts; es erzaehlt die wirkliche Entscheidung, keine erfundene Begruendung.
+Kuehles Mondlicht und warme Innenlichtquellen ergaenzen die hellere Nachtkulisse.
+
+Angenommene Angebote und Fortschrittsaenderungen bekommen zwei leise gerechnete Motivtoene
+(kein Sample). Musik- und Stummschalter bleiben wirksam. Bei Uebergaben und Handlungen
+sinken Musik und Atmo mit separatem Faktor auf 45 % des bereits abgesenkten Pegels ab
+(120 ms hinein, 650 ms zurueck); vorhandene Normalisierung und Cue-Uebergaenge bleiben intakt.
+**Betroffen:** StreamOfferDeck, ActionSlotStore, StreamStoryOverlay, DockScreen, PlayMusic, PlayAmbienceSound,
+PlaySound, PlaySceneView, lesender PlayGoals.sessionCount-Zugriff und A11y-Texte EN/DE.
+Keine neue Einstellung, Room-Migration, Balance oder Veraenderung des normalen App-Ablaufs. Der Stream-only Preference-Schluessel stream_waiting_<profile> bewahrt komplette zurueckgestellte Abzuege auf. Pflegebuch-Zuruecksetzen leert auch diesen Bestand.
+Die Stream-Spiel-Ausloesungen sind zusaetzliche echte Feed-Event-Zeilen; ihr Abschluss kann
+ueber den normalen Spielweg vorhandenen Fortschritt ausloesen. Die Anzeige selbst tut es nie.
+**Ruecksetzweg:** Commit/APK `26d0fe7`; gespeicherte Angebote sind weiterhin normale
+SavedAction-Abzuege und funktionieren auch ohne automatisches Nachfuellen. Die vorige APK zeigt den zurueckgestellten Bestand nicht an; dieser bleibt gespeichert und wird nach erneuter Installation dieser Version wieder angeboten. Ein bereits
+erspielter Fortschritt wird beim Ruecksetzen der APK nicht zurueckgedreht.
+**UNVERIFIED:** Langfristige Wirkung auf Publikum und Rhythmus ueber mehrere Kalendertage.
+**TESTED BEHAVIOR:** 166 Tests (Stream-Eingang, Angebotsvielfalt, Reservierung/Privatgrenze,
+Projektfortschritt, Szenen, Musik/Cues/Uebergaenge und Atmo), Stream-Build und Vital-Lint
+erfolgreich. APK installiert und mit Androids speed-Filter kompiliert. A-D als unterschiedliche
+Themen in OBS sichtbar; C->D-Uebergaben mit sofort leerem Herkunftsplatz aufgezeichnet.
+166 Tests ohne Fehler. Weitere Sichtpruefung nach APK-/Prozessneustart: Uhr, Angebote und
+Story-Symbole erhalten. 83,47 s OBS-Aufnahme: 2504 Bilder in 1920x1080 bei 30 fps,
+AAC-App-Ton mit 48 kHz; kein Clipping (Spitze -28,17 dBFS). Die Motivtoene sind messbar,
+die subjektive musikalische Qualitaet wurde hier nicht live abgehoert. Seit dem Wechsel
+auf den nicht instrumentierten Stream-Build kein neuer nativer Absturz im Pruefzeitraum.
+
+### 2026-10-02 - Lesbare Querformat-Buehne fuer den Stream
+
+**Version:** `stream-stage-v1`, Ausgangspunkt `0d3889e`.
+**DOCUMENTED INTENT:** Nutzer beauftragt die vorgeschlagenen ersten Verbesserungen:
+mehr Buehne fuer Fennec, lesbare Nacht und unmittelbare sichtbare Angebotsreaktion.
+**Entscheidung:** Nur der Stream-Build startet im Querformat. Die Uhr zeigt dauerhaft
+die Ortszeit, 48 dp gross, 12 dp vom oberen/linken Rand; die Figur skaliert unabhaengig
+von ihr mit der Hoehe (88-132 dp). Plaetze rechts sind 48 dp gross. Der Chat-/Demo-Fuss
+ist im Querformat ausgeblendet. Nacht-Materie wird heller, Lichtquellen bleiben gleich;
+leere Zellen und Szenen-Ausblendungen bleiben erhalten. Bei angenommenen Angeboten
+zeigt die Figur eine kurze Abwaerts-/Aufwaertsbewegung, parallel zur Symbol-Uebergabe.
+Ein neuer Reaktionszustand im Game Loop wurde zugunsten einer reinen Anzeige verworfen.
+**Betroffen:** DockScreen, OrientationPrefs, StreamPresentation, StreamReminderTransfer,
+Stream-Manifest, Streaming-Dokumentation und lokale OBS-/Emulator-Einrichtung.
+Keine neue Preference, Migration, Texte oder Aenderung an Reminder-Abschluss, autonomer
+Auswahl, Charakter, Story, Balancing oder Progression. Normale App bleibt unveraendert.
+**Ruecksetzweg:** APK vor dieser Aenderung bzw. Commit `0d3889e`, dazu vorheriger
+Hochformat-OBS-Zuschnitt (oben 185, unten 160) und Emulator-Ausrichtung. Spielstand
+bleibt bei APK-Update erhalten; eine Datensicherung wird hierdurch nicht ersetzt.
+**TESTED BEHAVIOR:** Stream-Tests, StreamPresentationTest, SceneCompositionTest,
+PlaySceneTest und Stream-APK-Build erfolgreich. APK auf dem Stream-PC installiert;
+Querformat und Nachtkulisse in OBS bei laufender Uebertragung visuell geprueft.
+94 Tests erfolgreich. Der x86_64-Emulator brach im debug-instrumentierten runRoutine
+mit SIGBUS/SIGABRT ab (auch vor dieser Darstellungsaenderung). Stream jetzt ohne
+Debugger-Instrumentierung, weiterhin mit derselben Signatur; am PC vorab mit dem
+Android-Compilerfilter speed kompiliert. A/B-Uebergaben und weiterer Betrieb danach
+ohne erneuten Absturz geprueft. Dies ist eine Laufzeit-Abhilfe, kein Beweis fuer eine
+generelle Behebung des ART-Problems auf allen Android-Versionen.
+**UNVERIFIED:** Langzeitwirkung beim Publikum; Nachtlesbarkeit in allen Wetterlagen.
+Keine neue offene Produktentscheidung.
+
+### 2026-10-02 - Leiserer Stream-Hintergrund
+
+**Version:** `stream-background-gain-v1`, Ausgangspunkt `c1032be`.
+**DOCUMENTED INTENT:** Nutzer empfindet Hintergrundmusik und Regen/andere Atmo als zu laut.
+**Entscheidung:** Ausgangspegel fuer alle Musikspuren und Atmo im Stream-Build halbiert
+(ca. -6 dB), kurze Avatar-/Aktionsklaenge unveraendert. Normale App behaelt ihren Pegel.
+**Betroffen:** PlayMusic.gainOf und PlayAmbienceSound.VOLUME, Stream-Anleitung.
+BuildConfig wird generiert, um die Pegelabsenkung auf den Stream-Build zu begrenzen.
+Keine Preferences, Migration oder Aenderung an Spiel- oder Reminder-Semantik. Vorhandene
+Normalisierung, Ein-/Ausblendungen und Tonfreigaben bleiben bestehen.
+**Ruecksetzweg:** Vorige APK am PC bzw. vorheriger Commit; keine Datenaenderung.
+**TESTED BEHAVIOR:** Stream-Build und 57 vorhandene Musik-/Atmo-Tests erfolgreich; APK
+auf dem Stream-PC aktualisiert und App gestartet. Subjektive Lautstaerke bleibt beim
+Nutzer. Keine neue offene Produktentscheidung.
+
+### 2026-10-02 - Uebergebener Reminder bleibt aus dem Slot ausgeblendet
+
+**Version:** `twitch-empty-offered-slot-v1`, Ausgangspunkt `6ae1290`.
+**DOCUMENTED INTENT:** Nutzer meldet, dass der Reminder nach dem Wegziehen wieder im
+Speicherplatz erscheint. Der Platz soll sofort sichtbar leer bleiben.
+**Entscheidung:** Die Anzeige blendet den aktuell angebotenen Reminder vom Beginn der
+Uebergabe bis zur Bearbeitung aus. Rahmen und Buchstabe bleiben sichtbar; das Symbol
+wird weiterhin in der fliegenden Vorschau gezeigt. Intern bleibt der Snapshot erhalten,
+bis die Handlung wirklich bearbeitet ist. Ein durch eine andere Auswahl abgeloestes
+Angebot kehrt in seinen Platz zurueck. Keine vorzeitige Erledigung und kein Datenverlust.
+**Betroffen:** StreamInteractions.visibleSlots, DockScreen, Regressionstests und Anleitung.
+Keine Migration, Preference-Aenderung oder Aenderung an Reminder-Semantik, Game Loop,
+Beduerfnisentscheidung und Cooldowns. Nur die Stream-Anzeige aendert sich.
+**Pruefung:** Stream-Build und 61 Stream-Tests; neue Tests sichern sofortige leere Anzeige,
+Erhalt des internen Reminders und Rueckkehr bei Ersetzen. APK installiert; im Emulator
+wurde A angenommen und nach Ende der Uebergabe als leerer Rahmen ohne Symbol beobachtet.
+**Ruecksetzweg:** Vorherige APK gesichert bzw. vorheriger Commit. Keine Datenaenderungen.
+Ein Prozessneustart verwirft wie bisher den fluechtigen Impuls; die gespeicherte Erinnerung
+ist dann wieder im Platz sichtbar. Dauerlauf bleibt UNVERIFIED. Keine neue offene Entscheidung.
+
+### 2026-10-02 - Chat-Auswahl loest den bisherigen Vorschlag ab
+
+**Version:** `twitch-responsive-slots-v1`, Ausgangspunkt `e855322`.
+**DOCUMENTED INTENT:** Nutzer meldet bei A haengende Markierung, abgewiesenes B sowie zu
+langsame und unfluessige Bedienung. **FACT:** Die vorige Version markierte den wartenden
+Impuls unbegrenzt und verweigerte jeden weiteren Platz bis zur Bearbeitung; ausserdem
+galten noch 60 s Einzelabstand und 8 s Gesamtabstand. Das war eine falsche Rueckmeldung.
+**Entscheidung:** Einzelabstand 1500 ms, Gesamtabstand 750 ms. Eine andere gueltige Auswahl
+ersetzt das bisher wartende Angebot. Der bisherige Reminder bleibt gespeichert und wird
+nicht als erledigt verbucht. Derselbe bereits angebotene Platz startet nicht erneut;
+leere und private Ersatzplaetze lassen den bisherigen Impuls bestehen. Keine Warteschlange.
+Die bestehende einzelne Routine-Coroutine reagiert wie bisher auf eine neue Impulskennung.
+Der Avatar behaelt seine Beduerfnisentscheidung; kein erzwungenes Ziel.
+**Darstellung:** Markierung nur fuer die Uebergabe, 450 ms Weg plus 120 ms Ausblenden.
+Translation und Ausblenden lesen Animationswerte direkt in der Grafikschicht; das Symbol
+wird nicht pro Frame neu komponiert oder vermessen.
+**Betroffen:** Stream-Konfiguration, Gate, Slot-Auswahl, DockScreen, Transfer-Komponente,
+Gate-/Interaktions-/Kettentests, Streaming-Anleitung. Keine Migration oder neuen Preferences.
+Reminder-Semantik und private/medizinische Ausschluesse bleiben erhalten; Eingabe-Balancing
+und Ablosen eines wartenden Impulses aendern sich auf ausdruecklichen Nutzerwunsch.
+**TESTED BEHAVIOR:** 59 Stream-Tests und APK-Build erfolgreich, Emulator aktualisiert.
+Regressionen pruefen A->B nach 1500 ms, Erhalt von A, Schutz von B vor einem alten A-Abschluss,
+leeren/privaten Ersatz sowie weiterhin wirksame Spam-Abstaende.
+Aufnahme am Emulator bestaetigt A->B ueber denselben Demo-Eingang, zwei kurze Uebergaben
+und anschliessend keine bleibende gruene Markierung. B wurde als `demo-2 -> slot B` angenommen.
+**Ruecksetzweg:** Vorige APK am PC gesichert, oder vorheriger Commit; keine Datenaenderung.
+Bereits bearbeitete Erinnerungen lassen sich dadurch nicht wiederherstellen.
+**UNVERIFIED:** Dauerlauf mit Publikum und subjektive Fluessigkeit im Twitch-Videoplayer.
+Keine neue offene Produktentscheidung.
+
+### 2026-10-02 - Sichtbare Uebergabe vom Speicherplatz zum Avatar
+
+**Version:** `twitch-slot-transfer-v1`, Ausgangspunkt `9dc791bb3650e373e85a6b8a31d2da8f8e7830ac`.
+**DOCUMENTED INTENT:** Nach dem Live-Test verlangt der Nutzer das sichtbare Schieben auf den
+Avatar wie beim Ziehen im Spiel, damit der Beginn im Stream erkennbar wird.
+**Entscheidung:** Angenommene Slot-Angebote zeigen eine 1100-ms-Bewegung des vorhandenen
+Reminder-Symbols zum aktuellen Avatar-Mittelpunkt und 220 ms Ausblenden dort.
+Die Zielposition folgt dem laufenden Avatar. Der Herkunftsplatz
+zeigt waehrenddessen nur Rahmen und Buchstabe. Keine Bewegung fuer abgewiesene Befehle.
+**Betroffen:** DockScreen und neue UI-Komponente StreamReminderTransfer; Stream-Anleitung.
+Kein Datenmodell, keine Preferences oder Migration. Reminder-Semantik, Beduerfnisentscheidung,
+Game Loop, Cooldowns und tatsaechliches Leeren nach Bearbeitung bleiben unveraendert.
+**Ruecksetzweg:** Vorherige Stream-APK oder vorheriger Commit; reine fluechtige Darstellung,
+keine gespeicherten Animationsdaten. Bereits bearbeitete Erinnerungen bleiben bearbeitet.
+**TESTED BEHAVIOR:** Stream-Build und 55 Stream-Tests erfolgreich, APK im Emulator aktualisiert.
+Ein Demo-Angebot fuer A wurde aufgezeichnet: Symbol verlaesst den Herkunftsplatz und bewegt
+sich zur aktuellen Avatar-Position, waehrend der Platzrahmen stehen bleibt. Abweisung eines
+weiteren Angebots bei laufendem Impuls ebenfalls beobachtet. Ein echter Chatbefehl fuer B
+wurde mit der neuen Version angenommen; dessen kurze Bewegung wurde nicht aufgezeichnet.
+**UNVERIFIED:** aufgezeichnete Twitch-Uebergabe und Publikum-Dauerlauf.
+Keine neue offene Produktentscheidung.
+
+### 2026-10-02 - Twitch-Buchstaben fuer die vier Speicherplaetze
+
+**Version:** `twitch-letter-slots-v1`, stabiler Ausgangspunkt
+`3c5ecacb14b10e2c7945e7297ae4e446edc23ef8`.
+
+**Anlass / DOCUMENTED INTENT:** Nutzer will, dass Zuschauer mit `A`, `B`, `C` oder `D`
+im Twitch-Chat die Erinnerung im jeweiligen Speicherplatz dem Avatar anbieten. Bisher erkannte
+der Parser nur `!drop`; der installierte Stream-Build hatte keinen Kanal und blieb offline.
+
+**Entscheidung:** Genau ein Buchstabe als ganze Nachricht, Gross-/Kleinschreibung und Rand-Leerraum
+egal. Langbefehle bleiben kompatibel. Keine Satzinterpretation und keine erzwungene Handlung:
+der vorhandene Weg ueber ViewerCommand, Gate, ExternalImpulse und GoalInfluence bleibt bestehen.
+Stream-only Kanal `fennec_itoeva` kommt aus der auf diesem PC eingerichteten Twitch-Verbindung.
+
+**Betroffen:** StreamCommands, Stream-Ressource, Parser-/Kettentests und Streaming-Dokumentation.
+Keine neuen Preferences, Datenmodelle oder Migration. Reminder-Semantik, Charakter, Story,
+Game Loop und Balancing bleiben gleich. Einzelabstand 60 s, Gesamt-Abstand 8 s,
+ein laufender Impuls sowie Ausschluss privater/medizinischer Erinnerungen bleiben erhalten.
+
+**TESTED BEHAVIOR:** 55 Stream-Tests erfolgreich, einschliesslich aller vier Kurzbefehle durch
+IRC-Parser, Gate und Slot-Auswahl bis zum Zielvorschlag; Stream-APK gebaut und auf dem
+eingerichteten Emulator per Update installiert. **FACT:** TLS, anonyme Anmeldung und
+Kanalbeitritt am PC bestaetigt. Ein echter Chatbefehl aus `fennec_itoeva` wurde im laufenden
+Emulator als Slot A angenommen (gruen markiert); anschliessend wurde A nach Bearbeitung geleert.
+OBS uebertrug weiter mit App-Ton. **UNVERIFIED:** Publikum-Dauerlauf und Live-Auswahl der
+weiteren drei Plaetze (deren Zuordnung ist automatisiert getestet). Keine neue offene
+Produktentscheidung.
+
+**Ruecksetzweg:** Vorherige APK auf dem Stream-PC gesichert, Update erhaelt vorhandene Daten.
+Code kann auf den Ausgangscommit zurueckgesetzt und neu gebaut werden; ein leerer Kanalname
+deaktiviert nur den Twitch-Eingang. Bereits ausgefuehrte Reminder-Handlungen werden dadurch
+nicht rueckgaengig. Die fruehere Aussage "Kanal noch leer / nur Demo" ist mit dieser Version
+ueberholt; die allgemeine Publikumsmessung bleibt offen.
+
 ### 2026-10-02 - Das Objektiv: Vignette, Lichtstrahlen, Lichthoefe
 
 **Anlass:** Nach dem Leuchtturm-Fix gefragt, was vom Look von Final Fantasy Resonance (HD-2D) noch
