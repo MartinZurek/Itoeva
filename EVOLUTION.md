@@ -669,6 +669,57 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Fluessigere Folgefragen und eine eindeutige Kanalzeit
+
+**Version:** `stream-fennec-dialog-time-v2`, Ausgangspunkt `5fcb466`.
+**DOCUMENTED INTENT:** Nutzer beauftragt die Optimierung von Zuschauerchat/Avatar und eine
+Loesung fuer die weiterhin falsche Uhrzeit bei weltweit unterschiedlichen Zuschauerzonen.
+**FACT:** Windows zeigte 11:00 CEST, der Emulator gleichzeitig 09:00 GMT; der Zeitpunkt war
+richtig, seine Zone falsch. Die Emulatorzone wurde auf Europe/Berlin korrigiert.
+
+**Entscheidung:** Ein gemeinsames Videobild zeigt eine gekennzeichnete Berliner Kanalzeit,
+darunter UTC. Die Stream-App bindet Uhr und eigenen Tagesablauf an Europe/Berlin, auch nach
+einem Emulator-Rueckfall auf GMT. Sommerzeit und lokale Datumswechsel kommen aus IANA-Zonen.
+Explizite Ortsfragen erhalten frische Uhrwerte fuer Berlin, UTC, New York, London, Tokyo,
+Los Angeles, Sydney und Kolkata. Das Modell waehlt nur die Frageart/Stadt; belegte Texte
+verwenden den Snapshot. Kein Raten des Zuschauerstandorts, keine Geolokalisierung und keine
+zusammenfallenden Ortszeiten in der gemeinsamen Uhr. Die private App behaelt ihre Geraetezone.
+
+Nach angenommener Ansprache gilt ein 45-Sekunden-Fenster fuer passende kurze Folgefragen,
+getrennt je Zuschauer. Der PC haelt nur den letzten oeffentlichen Kartenort, keinen Chat-Verlauf.
+Damit zeigt "How do I get there?" den Weg zum zuvor gezeigten Ort. Globale Abstaende sinken
+von 10 auf 4 Sekunden, persoenliche von 30 auf 8 Sekunden; der PC hat 500 ms Transporttoleranz.
+Zu fruehe frische Fragen erhalten eine kleine Warteanzeige im Bild. A-D, fremde @Gespraeche
+und eigene Bot-Antworten bleiben getrennt. Kartenanzeige (14 Sekunden), Sprechdarstellung
+(3-6 Sekunden) und Eingang sind entkoppelt; angenommene neue Fragen ersetzen die alte Ansicht.
+Mundframes sind auf Fennec beschraenkte Renderprojektionen. Reminder-Bearbeitung, Routine,
+Charakter, Story, XP und Fortschritt erhalten keine neue Chat-Schreibwirkung; keine Migration
+oder neuen Preference-Schluessel. Die gewaehlte Kanalzone betrifft die Stream-Tageszeiten.
+
+**Betroffen:** StreamTime, ClockTick, MainActivity, FennecConversation, Twitch-Leseprovider,
+FennecReplyClient, DockScreen, PC-Dienst und zugehoerige Anleitungen/Architektur.
+**TESTED BEHAVIOR:** 74 Stream-JVM-Tests plus sechs ClockTick-Tests und 28 Python-Tests
+erfolgreich; Stream-APK und Vital-Lint erfolgreich. Tests pruefen Zuschauertrennung,
+Abstaende, TTL, Stadtvalidierung, frische Uhrwerte, Sommerzeitluecken/doppelte Herbststunde
+und Datumswechsel. Zehn echte Modellfragen pruefen den bisherigen Kartenkatalog; weitere
+echte Modellfragen pruefen Ortszeit, unbekannten Zuschauerstandort und deutsche/englische
+Wegfolgefragen. Ein anfangs als Reisebefehl verstandenes "How do I get there?" wurde durch
+explizite Katalogbeispiele korrigiert und mit dem echten Modell erneut geprueft.
+
+Im echten Twitch-Kanal bestaetigten Helix und ein unabhaengiger IRC-Leser drei Antworten:
+New York 05:42, Berlin 11:42, UTC 09:42 sowie "Where is the beach?" und "How do I get there?"
+ohne erneute Ansprache. Screenshots zeigen lesbare Uhrzone, Antwort und wirkliche Wegvorschau
+bei weiterlaufender Figur. APK installiert und speed-kompiliert; Crashpuffer leer.
+Die abschliessende lokale Vorschau prueft zwei schnelle Fragen: Nur eine Antwort entsteht,
+die zweite zeigt einen lesbaren Sechs-Sekunden-Countdown; kein Twitch-Versand. Nach dem
+spaeteren Kaltstart zeigte die Uhr korrekt Berlin 14:43 und UTC 12:43. Der auf Nutzerwunsch
+neu gestartete Stream wurde ueber Helix als live bestaetigt. OBS meldete einen separaten
+Fehler beim Erneuern seiner Kontoanmeldung, uebertraegt aber mit dem vorhandenen Streamzugang.
+**Grenzen:** Begrenzter Staedtekatalog und kleines lokales Modell; der laengere Publikumsbetrieb
+bleibt ungeprueft. Twitch-Netzversand kann weiterhin scheitern, ohne sichtbare Antwort zu blockieren.
+**Ruecksetzweg:** Gesicherte Weltkarten-APK `5fcb466` und vorherigen PC-Dienst wiederherstellen;
+bestehende Spielstaende sind kompatibel. Die absichtlich korrigierte Emulatorzone kann Berlin bleiben.
+
 ### 2026-10-03 - Fennec kennt die echte Karte und zeigt erlaubte Ansichten
 
 **Version:** `stream-fennec-world-v1`, Ausgangspunkt `dede688`.

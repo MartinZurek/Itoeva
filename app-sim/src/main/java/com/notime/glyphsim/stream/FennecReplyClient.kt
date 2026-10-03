@@ -29,6 +29,12 @@ internal object FennecReplyClient {
                             .put("region", PlayMap.regionOf(node).name)
                             .put("neighbors", JSONArray(PlayMap.neighbors(node).map { it.name })) }
                     )))
+                val now = java.time.Instant.now()
+                body.put("clock", JSONObject().put("at", now.toString()).put("times", JSONArray(
+                    StreamTime.readings(now).map { time -> JSONObject().put("id", time.id)
+                        .put("label", time.label).put("time", time.time).put("date", time.date).put("offset", time.offset) }
+                )))
+                body.put("followup", address.followup)
                 connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
                 if (connection.responseCode != 200) return@withContext null
                 val result = connection.inputStream.bufferedReader().use { it.readText() }

@@ -28,10 +28,40 @@ class FennecConversationTest {
         val gate = FennecConversation.Gate()
         fun ask(viewer: String, at: Long) = FennecConversation.Address(viewer, "hi fennec", at)
         assertTrue(gate.admit(ask("lea", 0), 0))
-        assertFalse(gate.admit(ask("kim", 9_999), 9_999))
-        assertTrue(gate.admit(ask("kim", 10_000), 10_000))
-        assertFalse(gate.admit(ask("lea", 20_000), 20_000))
-        assertTrue(gate.admit(ask("lea", 30_000), 30_000))
+        assertFalse(gate.admit(ask("kim", 3_999), 3_999))
+        assertTrue(gate.admit(ask("kim", 4_000), 4_000))
+        assertFalse(gate.admit(ask("lea", 7_999), 7_999))
+        assertTrue(gate.admit(ask("lea", 8_000), 8_000))
         assertFalse(gate.admit(ask("ben", 35_000), 41_000))
+    }
+
+    @Test fun `Folgefragen brauchen eine angenommene Ansprache und bleiben je Zuschauer getrennt`() {
+        val session = FennecConversation.Session()
+        assertNull(session.read("lea", "Where is the beach?", 0))
+        assertNotNull(session.read("lea", "Fennec, show me your world", 0))
+        assertNull(session.read("lea", "Where is the beach?", 1))
+        session.activate("lea", 2)
+        assertTrue(session.read("lea", "Where is the beach?", 8_002)!!.followup)
+        assertNull(session.read("kim", "Where is the beach?", 8_002))
+        assertNull(session.read("lea", "Where is the beach?", 45_003))
+        assertNotNull(session.read("lea", "Fennec, where is the beach?", 45_003))
+    }
+
+    @Test fun `Folgefenster uebernimmt weder Befehle noch Antworten oder fremde Gespraeche`() {
+        val session = FennecConversation.Session()
+        session.activate("lea", 0)
+        listOf("A", "B", "!fennec", "@kim how are you?", "[Fennec] Where is the beach?",
+            "I am chatting with Kim", "what\nare you?").forEach { assertNull(it, session.read("lea", it, 8_000)) }
+        assertNotNull(session.read("lea", "Danke!", 8_000))
+        assertNotNull(FennecConversation.address("lea", "Show me your world, Fennec", 8_000))
+    }
+
+    @Test fun `Wartezeit sagt nur frische Fragen voraus und veraendert keine Zulassung`() {
+        val gate = FennecConversation.Gate()
+        val first = FennecConversation.Address("lea", "hi fennec", 0)
+        assertTrue(gate.admit(first, 0))
+        assertEquals(6_000L, gate.retryAfterMs(first.copy(receivedAtMs = 2_000), 2_000))
+        assertNull(gate.retryAfterMs(first, 6_000))
+        assertTrue(gate.admit(first.copy(receivedAtMs = 8_000), 8_000))
     }
 }

@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notime.glyphsim.matrix.ClockFrameSim
 import java.time.LocalTime
+import java.time.ZoneId
 import kotlinx.coroutines.delay
 
 /**
@@ -31,15 +32,15 @@ import kotlinx.coroutines.delay
  * beim naechsten Tick, der jetzt bis zu eine Minute entfernt sein kann.
  */
 @Composable
-fun rememberClockFrame(paused: Boolean): State<IntArray> {
+fun rememberClockFrame(paused: Boolean, zone: ZoneId? = null): State<IntArray> {
     val context = LocalContext.current
     val style by ClockStylePrefs.observe(context).collectAsStateWithLifecycle(initialValue = ClockStylePrefs.get(context))
-    val frameState = remember { mutableStateOf(ClockFrameSim.buildFrame(style = style)) }
+    val frameState = remember { mutableStateOf(ClockFrameSim.buildFrame(time = LocalTime.now(zone ?: ZoneId.systemDefault()), style = style)) }
 
-    LaunchedEffect(style, paused) {
+    LaunchedEffect(style, paused, zone) {
         if (paused) return@LaunchedEffect
         while (true) {
-            frameState.value = ClockFrameSim.buildFrame(style = style)
+            frameState.value = ClockFrameSim.buildFrame(time = LocalTime.now(zone ?: ZoneId.systemDefault()), style = style)
             delay(millisUntilNextMinute())
         }
     }

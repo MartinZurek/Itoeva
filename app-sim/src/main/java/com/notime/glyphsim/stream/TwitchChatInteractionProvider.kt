@@ -68,6 +68,10 @@ internal class TwitchChatInteractionProvider(
 
     private val speechStream = MutableSharedFlow<FennecConversation.Address>(extraBufferCapacity = 1)
     val addresses: Flow<FennecConversation.Address> = speechStream.asSharedFlow()
+    private val conversation = FennecConversation.Session()
+    fun acknowledge(address: FennecConversation.Address, now: Long) {
+        if (!address.preview) conversation.activate(address.viewerId, now)
+    }
 
     private val statusState = MutableStateFlow(TwitchChatStatus.OFF)
 
@@ -127,11 +131,11 @@ internal class TwitchChatInteractionProvider(
     /**
      * Uebersetzt eine Chat-Zeile und legt sie ab - oder verwirft sie.
      *
-     * Freitext verlaesst diese Stelle nur nach ausdruecklicher Ansprache von Fennec,
+     * Freitext verlaesst diese Stelle nur nach Ansprache oder als kurze passende Folgefrage,
      * getrennt von den Spielbefehlen und ohne Zugriff auf deren Wirkung.
      */
     private fun emit(line: TwitchIrc.Line.Chat) {
-        FennecConversation.address(line.viewerId, line.text, clock())?.let(speechStream::tryEmit)
+        conversation.read(line.viewerId, line.text, clock())?.let(speechStream::tryEmit)
         val command = viewerCommandOf(line.viewerId, line.text, origin, clock(), config) ?: return
         stream.tryEmit(command)
     }

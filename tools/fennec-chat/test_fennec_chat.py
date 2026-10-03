@@ -4,6 +4,7 @@ import tempfile
 import threading
 import unittest
 import json
+from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
@@ -34,6 +35,68 @@ class FennecChatTests(unittest.TestCase):
 
     def choice(self, action, target="", text="It's nice to have you here!"):
         return {"message": {"content": json.dumps({"action": action, "target": target, "text": text})}, "done_reason": "stop"}
+
+    def clock(self):
+        at = datetime.now(timezone.utc)
+        times = []
+        for ident, (label, offsets, _) in bot.TIMEZONES.items():
+            offset = offsets[0]
+            minutes = 0 if offset == "Z" else (int(offset[1:3])*60 + int(offset[4:6])) * (-1 if offset[0] == "-" else 1)
+            local = at.astimezone(timezone(timedelta(minutes=minutes)))
+            times.append({"id": ident, "label": label, "time": local.strftime("%H:%M"),
+                          "date": local.strftime("%Y-%m-%d"), "offset": offset})
+        return {"at": at.isoformat(), "times": times}
+
+    def test_city_time_uses_actual_snapshot_and_never_model_invented_clock(self):
+        data = self.request(message="Fennec, what time is it in New York?")
+        data.update(world=self.world(), clock=self.clock(), preview=True)
+        with patch.object(bot, "json_request", return_value=self.choice("explain_time", "NEW_YORK", "It's 99:99")):
+            code, result = self.service.reply(data)
+        self.assertEqual(200, code)
+        self.assertIn("New York", result["text"])
+        self.assertIn("Berlin", result["text"])
+        self.assertIn("UTC", result["text"])
+        self.assertNotIn("99:99", result["text"])
+
+    def test_clock_protocol_rejects_stale_false_or_arbitrary_readings(self):
+        for mutation in [lambda c: c.update(at="2000-01-01T00:00:00Z"),
+                         lambda c: c["times"][0].update(time="25:00"),
+                         lambda c: c["times"][0].update(id="VIEWER_HOME"),
+                         lambda c: c["times"][0].update(offset=[]),
+                         lambda c: c["times"][0].update(label="Private city")]:
+            data = self.request()
+            clock = self.clock()
+            mutation(clock)
+            data["clock"] = clock
+            self.assertEqual(400, self.service.reply(data)[0])
+
+    def test_time_without_city_explains_channel_time_without_guessing_viewer_location(self):
+        times = bot.clock_readings(self.clock())
+        with patch.object(bot, "json_request", return_value=self.choice("explain_time")):
+            text, _, action, _ = bot.respond("Fennec, what is my time?", "PARK", "IDLE", self.world(), times=times)
+        self.assertEqual("explain_time", action)
+        self.assertIn("stream uses Berlin", text)
+        self.assertIn("Name a city", text)
+        with patch.object(bot, "json_request", return_value=self.choice("explain_time", "TOKYO")):
+            text, _, action, _ = bot.respond("Fennec, what time in New York?", "PARK", "IDLE", self.world(), times=times)
+        self.assertEqual("none", action)
+        self.assertNotIn(times["TOKYO"]["time"], text)
+
+    def test_map_reference_belongs_to_this_viewer_and_expires(self):
+        data = self.request(message="Fennec, where is the beach?")
+        data.update(world=self.world(), preview=True)
+        with patch.object(bot, "json_request", return_value=self.choice("show_place", "BEACH")):
+            with patch.object(bot.time, "monotonic", return_value=100):
+                self.assertEqual("show_place", self.service.reply(data)[1]["action"])
+            data["message"] = "How do I get there?"
+            with patch.object(bot.time, "monotonic", return_value=108):
+                self.assertEqual("show_place", self.service.reply(data)[1]["action"])
+            data["viewer"] = "kim"
+            with patch.object(bot.time, "monotonic", return_value=112):
+                self.assertEqual("none", self.service.reply(data)[1]["action"])
+            data["viewer"] = "lea"
+            with patch.object(bot.time, "monotonic", return_value=200):
+                self.assertEqual("none", self.service.reply(data)[1]["action"])
 
     def test_world_request_returns_map_and_grounded_description(self):
         data = self.request(message="Fennec, show me your world")
@@ -165,7 +228,7 @@ class FennecChatTests(unittest.TestCase):
         with patch.object(self.auth, "send", return_value=True), patch.object(bot.time, "monotonic", return_value=100):
             self.assertEqual(200, self.service.reply(self.request())[0])
             self.assertEqual(429, self.service.reply(self.request("kim"))[0])
-        with patch.object(self.auth, "send", return_value=True), patch.object(bot.time, "monotonic", return_value=111):
+        with patch.object(self.auth, "send", return_value=True), patch.object(bot.time, "monotonic", return_value=104):
             self.assertEqual(429, self.service.reply(self.request())[0])
             self.assertEqual(200, self.service.reply(self.request("kim"))[0])
 

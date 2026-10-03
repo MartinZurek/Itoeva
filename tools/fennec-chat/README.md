@@ -24,7 +24,7 @@ Die Stream-APK liefert einen oeffentlichen Snapshot mit Ort, Aktivitaet und dem 
 `PlayMap`-Graphen. Keine Reminder-Texte, Historien, Profile oder privaten Daten.
 Das lokale Modell waehlt aus einem festen Katalog und liefert validiertes JSON (maximal 64
 Auswahltokens; normale Antworten anschliessend maximal 96 Tokens; 4096 Kontexttokens): normale Antwort, Weltkarte, Orts-/Wegvorschau,
-Aktivitaet erklaeren oder Chat-Moeglichkeiten erklaeren. Nach 12 Sekunden oder unbrauchbarer Ausgabe folgt eine lokale
+Aktivitaet, belegte Uhrzeit oder Chat-Moeglichkeiten erklaeren. Nach 12 Sekunden oder unbrauchbarer Ausgabe folgt eine lokale
 Antwort. Links, erkannte Instruktionsangriffe und sensible Themen haben eine ruhige Rueckfallantwort.
 Diese einfachen Filter sind keine vollstaendige Moderationsloesung fuer beliebigen Publikumsverkehr.
 KI-Ausgaben koennen unpassend sein; der lokale Pilot braucht Beobachtung.
@@ -33,14 +33,30 @@ Beispiele: `Fennec, show me your world`, `Fennec, where is the beach?`,
 `Fennec, zeig mir den Wald`, `Fennec, was machst du?`, `Fennec, what can I ask you to do?`.
 Kartenansichten verwenden den bestehenden `PlayMapScene`-Renderer mit lesbaren Ortsnamen,
 aktueller Standortmarkierung und gegebenenfalls animierter Route. Sie verschwinden nach
-14 Sekunden. Der echte Ort, laufende Routinen, Ziele und Reminder werden nicht veraendert.
+14 Sekunden, unabhaengig von der 3-6 Sekunden langen Sprechdarstellung; eine neue angenommene
+Frage ersetzt die alte Karte. Der echte Ort, laufende Routinen, Ziele und Reminder werden nicht veraendert.
 Karten- und Wegtexte werden aus belegten Daten formuliert; unbekannte Werkzeugnamen und
 Ziele loesen keine Darstellung aus. Bei Modellausfall bleibt eine Ortsantwort ohne Karte.
 Es gibt keine freie Werkzeugausfuehrung, Reise auf Chat-Befehl oder Schreibrechte auf Spielstand.
 
-Globale Grenze: eine Antwort pro 10 Sekunden, pro Nutzer 30 Sekunden. Keine Warteschlange,
+Globale Grenze im Spiel: eine Antwort pro 4 Sekunden, pro Nutzer 8 Sekunden. Der PC verwendet
+500 ms Toleranz fuer schwankende Uebertragungszeiten. Zu fruehe Fragen zeigen eine kurze
+Warteanzeige im Bild. Nach einer angenommenen Ansprache sind passende kurze Folgefragen
+45 Sekunden lang ohne erneutes Fennec moeglich, getrennt je Zuschauer. Der PC behaelt nur
+den letzten oeffentlichen Kartenort fuer diese Zeit, etwa fuer `How do I get there?`.
+Keine Warteschlange,
 keine Wiederholung nach Schreibfehlern, keine Logs von Fragen/Antworten und keine Chat-Historie.
 Eigene Nachrichten tragen `[Fennec]` und werden als Eingang verworfen.
+
+Die gemeinsame Stream-Uhr zeigt **Berlin** mit aktueller UTC-Abweichung und einer zweiten
+UTC-Zeile. `StreamTime` verwendet IANA-Zonen einschliesslich Sommerzeit und Datumswechsel;
+die Stream-App setzt auch ihren autonomen Tag auf Berlin, selbst wenn der Emulator GMT meldet.
+Die normale App behaelt die Geraetezone. Ein gemeinsames Videobild kann nicht pro Zuschauer
+eine andere Uhr zeigen. `Fennec, what time is it in New York?` nennt deshalb die explizit
+gefragte Ortszeit aus einem frischen Android-Snapshot, keine vom Modell erfundene Uhrzeit.
+Unterstuetzt: Berlin, UTC, New York, London, Tokyo/Tokio, Los Angeles, Sydney und Kolkata.
+Ohne genannte Stadt erklaert Fennec die Kanalzeit und fragt nach der gewuenschten Stadt;
+er errät weder Standort noch Zeitzone des Zuschauers.
 
 Der PC liest auf Wunsch die vorhandene OBS-Twitch-Anmeldung. Sie muss noch gueltig sein,
 zum Kanal `fennec_itoeva` gehoeren und `chat:read`+`chat:edit` oder `user:write:chat` erlauben.

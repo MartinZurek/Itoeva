@@ -215,6 +215,11 @@ zusammen mit Ort und Aktivitaet an den PC-Dienst. Ollama waehlt ausschliesslich 
 validierten Darstellungskatalog; `FennecWorld` prueft Kartenaktionen und Ziele erneut in
 Android. `StreamFennecMap` verwendet `PlayMapScene` und `PlayMap.route`, unabhaengig vom
 vorhandenen Reiseablauf. Die Darstellung veraendert keine Welt-/Reminder-Zustaende.
+Kurze Folgefragen haben ein 45-Sekunden-Fenster je Zuschauer, ohne gespeicherten Chat-Verlauf;
+der PC behaelt nur einen oeffentlichen Kartenort. Sprech- und Kartenanzeige haben getrennte
+Lebenszeiten. `StreamTime` liefert Berlin als feste Kanalzeit plus UTC und frische Ortszeiten
+aus acht IANA-Zonen. Nur die Stream-App setzt ihre Standardzone auf Berlin; die private App
+bleibt bei der Geraetezone. Das Modell waehlt die Ortsfrage, berechnet aber keine Uhrzeit.
 `LivingObservationSource` bietet ausschliesslich den aktuellen typisierten
 `LivingObservation`-Snapshot je Profil. `LivingObservationFeed` nimmt nur abgeschlossene
 Runtime-Ergebnisse auf, haelt ein begrenztes Ereignisfenster ohne Leerlauf-Ticks und veraendert

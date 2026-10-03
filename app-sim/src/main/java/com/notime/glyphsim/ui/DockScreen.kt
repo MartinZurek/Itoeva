@@ -121,6 +121,7 @@ import com.notime.glyphsim.stream.TwitchChatStatus
 import com.notime.glyphsim.stream.FennecConversation
 import com.notime.glyphsim.stream.FennecReplyClient
 import com.notime.glyphsim.stream.FennecWorld
+import com.notime.glyphsim.stream.StreamTime
 import com.notime.glyphsim.stream.FennecPreview
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
@@ -273,7 +274,8 @@ fun DockScreen(
     // dafuer an drei Stellen der Uhr-Frame von Hand neu gebaut werden.
     var isPlayingAnimation by remember { mutableStateOf(false) }
     var animationFrame by remember { mutableStateOf<IntArray?>(null) }
-    val clockFrame by rememberClockFrame(paused = isPlayingAnimation)
+    val clockFrame by rememberClockFrame(paused = isPlayingAnimation && !streamMode,
+        zone = if (streamMode) StreamTime.channelZone else null)
     // Mond-Szene: In der Park-Nacht wird die Uhr zur Sichel und steigt in den Himmel. Bewusst
     // NICHT jede Nacht - eine Ausnahme, die jedes Mal kaeme, waere keine mehr.
     var moonMode by remember { mutableStateOf(false) }
@@ -522,6 +524,13 @@ fun DockScreen(
         var fennecTalkFrame by remember { mutableStateOf<IntArray?>(null) }
         var fennecMap by remember { mutableStateOf<FennecWorld.Presentation?>(null) }
         var fennecMapGerman by remember { mutableStateOf(false) }
+        var fennecMapViewer by remember { mutableStateOf("") }
+        var fennecMapReply by remember { mutableStateOf("") }
+        var fennecMapExpiry by remember { mutableStateOf<Job?>(null) }
+        var fennecSpeechExpiry by remember { mutableStateOf<Job?>(null) }
+        var fennecNotice by remember { mutableStateOf<String?>(null) }
+        var fennecNoticeJob by remember { mutableStateOf<Job?>(null) }
+        var fennecNoticeAt by remember { mutableStateOf(0L) }
         val fennecPreview = remember { FennecPreview() }
         DisposableEffect(streamMode, playMode) {
             if (streamMode && playMode) fennecPreview.register(context)
@@ -1018,6 +1027,15 @@ fun DockScreen(
          * spaeter nicht mehr zu sehen, welche Zeile wofuer da ist.
          */
         var screenVisible by remember { mutableStateOf(true) }
+        DisposableEffect(streamMode, playMode, screenVisible, avatar?.species) {
+            onDispose {
+                fennecMapExpiry?.cancel()
+                fennecMap = null
+                fennecSpeechExpiry?.cancel()
+                fennecNoticeJob?.cancel()
+                fennecNotice = null
+            }
+        }
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
@@ -3637,10 +3655,34 @@ fun DockScreen(
             }
             launch {
                     listOfNotNull(twitchChat?.addresses, fennecPreview.addresses).merge().collect { address ->
-                        if (avatar?.species != AvatarSpecies.FENNEC || !screenVisible ||
-                            !fennecDialogueGate.admit(address, System.currentTimeMillis())) return@collect
+                        if (avatar?.species != AvatarSpecies.FENNEC || !screenVisible) return@collect
+                        val now = System.currentTimeMillis()
+                        if (!fennecDialogueGate.admit(address, now)) {
+                            val remaining = fennecDialogueGate.retryAfterMs(address, now) ?: return@collect
+                            if (remaining > 0 && now - fennecNoticeAt >= 2_000L) {
+                                fennecNoticeAt = now
+                                fennecNoticeJob?.cancel()
+                                fennecNoticeJob = scope.launch {
+                                    val until = now + remaining
+                                    while (System.currentTimeMillis() < until) {
+                                        val seconds = ((until - System.currentTimeMillis() + 999L) / 1_000L).coerceAtLeast(1L)
+                                        fennecNotice = "@${address.viewerId} · ⏳ ${seconds}s"
+                                        delay(500)
+                                    }
+                                    fennecNotice = null
+                                }
+                            }
+                            return@collect
+                        }
+                        twitchChat?.acknowledge(address, now)
+                        fennecSpeechExpiry?.cancelAndJoin()
+                        fennecNoticeJob?.cancel()
+                        fennecNotice = null
+                        fennecMapExpiry?.cancel()
+                        fennecMap = null
                         fennecViewer = address.viewerId
                         fennecReply = null
+                        var speechHandedOff = false
                         try {
                             // Nur eine Renderprojektion: Der echte Ablauf schreibt weiter seinen Frame.
                             // Dialog darf weder einen Reminder abschliessen noch eine Routine abbrechen.
@@ -3659,16 +3701,33 @@ fun DockScreen(
                                 fennecReply = reply?.text ?: "I'm here, but my chat connection needs a moment."
                                 fennecMap = reply?.presentation
                                 fennecMapGerman = reply?.german == true
-                                delay(if (fennecMap != null) 14_000L else
-                                    (fennecReply!!.length * 55L).coerceIn(4_000L, 8_000L))
+                                fennecMapViewer = address.viewerId
+                                fennecMapReply = fennecReply.orEmpty()
+                                if (fennecMap != null) fennecMapExpiry = scope.launch {
+                                    delay(14_000L)
+                                    fennecMap = null
+                                }
+                                val holdMs = (fennecReply!!.length * 40L).coerceIn(3_000L, 6_000L)
+                                fennecSpeechExpiry = launch {
+                                    try {
+                                        delay(holdMs)
+                                    } finally {
+                                        talking.cancel()
+                                        fennecTalkFrame = null
+                                        fennecViewer = null
+                                        fennecReply = null
+                                    }
+                                }
+                                speechHandedOff = true
                             } finally {
-                                talking.cancelAndJoin()
+                                if (!speechHandedOff) talking.cancelAndJoin()
                             }
                         } finally {
-                            fennecTalkFrame = null
-                            fennecViewer = null
-                            fennecReply = null
-                            fennecMap = null
+                            if (!speechHandedOff) {
+                                fennecTalkFrame = null
+                                fennecViewer = null
+                                fennecReply = null
+                            }
                         }
                     }
             }
@@ -4934,6 +4993,11 @@ fun DockScreen(
             )
         }
 
+        if (streamMode && playMode) {
+            Text(StreamTime.label(), color = Color(0xFFAEC5D0), fontSize = 10.sp,
+                lineHeight = 14.sp, modifier = Modifier.align(Alignment.TopStart).padding(start = 68.dp, top = 18.dp))
+        }
+
         // Sobald gefuettert wurde, verschwindet die Uhr fuer die Dauer der Reaktion.
         //
         // Vorher blieb sie stehen, wo der Finger sie hingezogen hatte - also genau ueber dem
@@ -4954,7 +5018,7 @@ fun DockScreen(
             // sie nur die aktuelle Uhrzeit zeigt.
             val currentDreamTopic = dreamWatchTopic
             val clockContentDescription = if (streamMode) {
-                val now = LocalTime.now()
+                val now = StreamTime.channelTime()
                 stringResource(R.string.a11y_clock_time, "%02d:%02d".format(now.hour, now.minute))
             } else if (activeAvatar?.occurrenceId != null) {
                 val topicLabel = activeAvatar.libraryAnimationLabel
@@ -5302,7 +5366,8 @@ fun DockScreen(
                 stringResource(current.species.labelRes)
             }
             AvatarSpriteView(
-                frame = fennecTalkFrame ?: gameFrame(GAME_HOST_ID, current.species, current.frame),
+                frame = fennecTalkFrame?.takeIf { current.species == AvatarSpecies.FENNEC }
+                    ?: gameFrame(GAME_HOST_ID, current.species, current.frame),
                 brightnessScale = avatarDim.value,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
@@ -5647,11 +5712,15 @@ fun DockScreen(
             }
         }
 
-        if (streamMode && playMode) {
+        if (streamMode && playMode && avatar?.species == AvatarSpecies.FENNEC) {
             fennecMap?.let { presentation ->
                 StreamFennecMap(currentPlace, presentation, fennecMapGerman,
-                    fennecViewer.orEmpty(), fennecReply.orEmpty(),
+                    fennecMapViewer, fennecMapReply,
                     Modifier.align(Alignment.TopCenter).padding(start = 24.dp, end = 80.dp, top = 68.dp))
+            }
+            fennecNotice?.let { notice ->
+                Text(notice, color = Color(0xFF9DDAC7), fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = 16.dp, top = 56.dp))
             }
             fennecViewer?.takeIf { fennecMap == null }?.let { viewer ->
                 StreamFennecBubble(viewer, fennecReply,

@@ -16,6 +16,7 @@ import subprocess
 import threading
 import time
 import unicodedata
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
@@ -31,6 +32,7 @@ The supplied place and activity describe YOU, Fennec, never the viewer. You know
 the viewer's location, feelings or actions. The supplied public snapshot and map are the facts about your world. Do not invent actions,
 memories, rewards, relationships, progress, weather or health. You can show a world map,
 highlight a place and the existing route, explain your present activity, or explain chat interaction.
+Use ONLY supplied clock readings for time questions. Never guess a viewer's city or local time.
 These are displays, not travel or changes to the simulation. Never claim to go somewhere on command,
 complete reminders, change music, or use capabilities outside the supplied catalog.
 You are an AI character, and may say so if asked. Never claim to be a human.
@@ -70,9 +72,70 @@ def german(message):
     return bool(re.search(r"\b(?:hallo|wie|geht|dir|was|machst|bist|du|danke|trink|warum|zeig|zeige|welt|karte|landkarte|wo|kannst|erkläre|erklaere|mir|bitte|dein|deine|erzähl|erzähle|erzaehl|erzaehle)\b", message, re.I))
 
 
-ACTIONS = ("none", "show_world", "show_place", "explain_activity", "help")
+TIMEZONES = {
+    "BERLIN": ("Berlin", ("+01:00", "+02:00"), ("berlin",)),
+    "UTC": ("UTC", ("Z",), ("utc", "gmt")),
+    "NEW_YORK": ("New York", ("-04:00", "-05:00"), ("new york", "newyork", "nyc")),
+    "LONDON": ("London", ("Z", "+01:00"), ("london",)),
+    "TOKYO": ("Tokyo", ("+09:00",), ("tokyo", "tokio")),
+    "LOS_ANGELES": ("Los Angeles", ("-07:00", "-08:00"), ("los angeles",)),
+    "SYDNEY": ("Sydney", ("+10:00", "+11:00"), ("sydney",)),
+    "KOLKATA": ("Kolkata", ("+05:30",), ("kolkata", "calcutta"))}
+
+
+def clock_readings(clock):
+    if not isinstance(clock, dict) or not isinstance(clock.get("at"), str) or len(clock["at"]) > 40:
+        return None
+    try:
+        at = datetime.fromisoformat(clock["at"].replace("Z", "+00:00"))
+        if at.utcoffset() != timedelta(0) or abs((datetime.now(timezone.utc) - at).total_seconds()) > 60:
+            return None
+        entries = clock.get("times")
+        if not isinstance(entries, list) or len(entries) != len(TIMEZONES):
+            return None
+        result = {}
+        for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("id"), str) or entry["id"] not in TIMEZONES or entry["id"] in result:
+                return None
+            ident = entry["id"]
+            label, offsets, _ = TIMEZONES[ident]
+            offset = entry.get("offset")
+            if entry.get("label") != label or offset not in offsets:
+                return None
+            minutes = 0 if offset == "Z" else (int(offset[1:3]) * 60 + int(offset[4:6])) * (-1 if offset[0] == "-" else 1)
+            local = at.astimezone(timezone(timedelta(minutes=minutes)))
+            if entry.get("time") != local.strftime("%H:%M") or entry.get("date") != local.strftime("%Y-%m-%d"):
+                return None
+            result[ident] = {"id": ident, "label": label, "time": entry["time"], "date": entry["date"], "offset": offset}
+        return result
+    except (ValueError, TypeError, OverflowError):
+        return None
+
+
+def time_named(message, ident):
+    return any(re.search(r"(?<!\w)" + re.escape(alias) + r"(?!\w)", message.casefold())
+               for alias in TIMEZONES[ident][2])
+
+
+def time_reply(times, target, de):
+    if not times:
+        return "Meine Uhr braucht gerade einen frischen Zeitwert." if de else "My clock needs a fresh time reading."
+    channel, utc = times["BERLIN"], times["UTC"]
+    if not target or target == "BERLIN":
+        return (f"Im Stream gilt Berlin: {channel['time']} Uhr am {channel['date']} (UTC{channel['offset']}). Das entspricht {utc['time']} UTC. Nenne eine Stadt für ihre Ortszeit." if de else
+                f"The stream uses Berlin: {channel['time']} on {channel['date']} (UTC{channel['offset']}). That's {utc['time']} UTC. Name a city for its local time.")
+    local = times[target]
+    zone = "UTC" if local["offset"] == "Z" else "UTC" + local["offset"]
+    return (f"{local['label']}: {local['time']} Uhr am {local['date']} ({zone}). Im Stream gilt Berlin {channel['time']}; UTC {utc['time']}." if de else
+            f"It's {local['time']} on {local['date']} in {local['label']} ({zone}). The stream uses Berlin {channel['time']}; UTC {utc['time']}.")
+
+
+ACTIONS = ("none", "show_world", "show_place", "explain_activity", "explain_time", "help")
 INTENTS = ACTIONS + ("unsupported",)
 CATALOG = """Classify a viewer's request to Fennec. Return ONLY JSON {action,target}.
+Time/clock question -> explain_time; target=explicit supported city ID, otherwise empty for channel time.
+Question about the route TO previous_place ("How do I get there?", "Wie komme ich dahin?")
+-> show_place, target=previous_place. This is a map question, not a command to travel.
 Priority: a request to show/locate an existing named place -> show_place, target=that place ID.
 Otherwise a request to see the world/map or tour its places -> show_world, target="".
 Question about CURRENT activity -> explain_activity, target="".
@@ -86,10 +149,15 @@ Examples:
 "zeig mir den Wald" -> show_place, FOREST
 "what are you doing?" / "was machst du?" -> explain_activity
 "what can I ask you to do?" / "was kannst du?" -> help
+"what time is it?" -> explain_time
+"what time is it in New York?" -> explain_time, NEW_YORK
+With previous_place=BEACH: "How do I get there?" -> show_place, BEACH
+With previous_place=FOREST: "Wie komme ich dahin?" -> show_place, FOREST
 "what are you?" / "who are you?" -> none
 "do not show the map" -> none
 "walk to the shop now" / "where is the moon palace?" / "sing me a song" -> unsupported
-Never invent an ID. target must be empty for all actions except show_place.
+An explicit reference to the previously shown place may use previous_place as target.
+Never invent an ID. target must be empty except for show_place and explain_time.
 """
 
 
@@ -171,16 +239,18 @@ def presentation_reply(action, target, place, activity, nodes, de):
     return None
 
 
-def respond(message, place, activity, world, model=MODEL):
+def respond(message, place, activity, world, model=MODEL, times=None, previous_target=""):
     nodes = world_nodes(world)
     if not nodes or BLOCKED.search(message):
         text, source = answer(message, place, activity, model)
         return text, source, "none", ""
     schema = {"type": "object", "properties": {
         "action": {"type": "string", "enum": list(INTENTS)},
-        "target": {"type": "string", "enum": [""] + list(nodes)}},
+        "target": {"type": "string", "enum": [""] + list(nodes) + list(TIMEZONES)}},
         "required": ["action", "target"], "additionalProperties": False}
     context = json.dumps({"places": {p: [place_name(p), place_name(p, True)] for p in nodes},
+                          "timezones": {p: TIMEZONES[p][2] for p in TIMEZONES} if times else {},
+                          "previous_place": previous_target,
                           "viewer_question": message}, ensure_ascii=False)
     deadline = time.monotonic() + 12
     try:
@@ -195,19 +265,33 @@ def respond(message, place, activity, world, model=MODEL):
         if not isinstance(choice, dict) or choice.get("action") not in INTENTS or not isinstance(choice.get("target"), str):
             raise ValueError()
         action, target = choice["action"], choice["target"]
-        if (action == "show_place" and target not in nodes) or (action != "show_place" and target):
+        if ((action == "show_place" and target not in nodes) or
+                (action == "explain_time" and target and target not in TIMEZONES) or
+                (action not in {"show_place", "explain_time"} and target)):
             raise ValueError()
+        if action == "explain_time":
+            named = [ident for ident in TIMEZONES if time_named(message, ident)]
+            if not target and len(named) == 1:
+                target = named[0]
+            if target and not time_named(message, target) and not (target == "BERLIN" and not named):
+                return ("Nenne bitte die Stadt, deren Ortszeit du wissen möchtest." if german(message) else
+                        "Please name the city whose local time you want to know."), "local", "none", ""
+            return time_reply(times, target, german(message)), "local", "explain_time", target
         if action == "unsupported":
+            if re.search(r"\b(?:time|clock|uhrzeit|zeit|spät|spaet)\b", message, re.I):
+                return ("Nenne bitte eine unterstützte Stadt: Berlin, London, New York, Los Angeles, Tokyo, Sydney oder Kolkata. UTC ist ebenfalls verfügbar." if german(message) else
+                        "Please name a supported city: Berlin, London, New York, Los Angeles, Tokyo, Sydney or Kolkata. UTC is available too."), "local", "none", ""
             return ("Das kann ich nicht auf Zuruf ausführen. Ich kann meine echte Karte und Wege zeigen oder meinen Alltag erklären; meine Reisen wähle ich selbst." if german(message) else
                     "I can't do that on command. I can show my real map and routes or explain my day; I choose my own journeys."), "local", "none", ""
-        if action == "show_place" and not target_named(message, target):
+        reference = previous_target == target and bool(re.search(r"\b(?:there|that place|that route|dort|diesen ort|den ort|dahin)\b", message, re.I))
+        if action == "show_place" and not target_named(message, target) and not reference:
             # Das kleine Modell kann unbekannte Namen auf einen existierenden Ort abbilden.
             # Eine gueltige ID allein belegt noch nicht, dass dieser Ort gemeint war.
             return ("Diesen Ort kenne ich auf meiner Karte nicht. Frag gern nach meiner Weltkarte." if german(message) else
                     "I don't know that place on my map. You can ask me to show my world map."), "local", "none", ""
         text = presentation_reply(action, target, place, activity, nodes, german(message))
         if action == "none":
-            text, source = answer(message, place, activity, model, nodes, max(.1, deadline - time.monotonic()))
+            text, source = answer(message, place, activity, model, nodes, max(.1, deadline - time.monotonic()), times)
             return text, source, "none", ""
         text = clean_reply(text)
         if text:
@@ -238,7 +322,7 @@ def fallback(message, place):
     return f"I'm in {words[0]}, taking the day at my own pace. It's nice to have you here!"
 
 
-def answer(message, place, activity, model=MODEL, nodes=None, timeout=12):
+def answer(message, place, activity, model=MODEL, nodes=None, timeout=12, times=None):
     if BLOCKED.search(message):
         return ("Bleiben wir bei meiner kleinen Pixelwelt. Schoen, dass du da bist!" if german(message)
                 else "Let's keep things cosy in my little pixel world. It's nice to have you here!"), "local"
@@ -250,6 +334,8 @@ def answer(message, place, activity, model=MODEL, nodes=None, timeout=12):
     if nodes:
         context += "\nReal map (ONLY these places exist): " + json.dumps(list(nodes.values()))
         context += "\nCapabilities: show world map, highlight a place/route, explain activity, explain A-D saved reminders. No direct travel or game changes. Unknown places cannot be shown."
+    if times:
+        context += "\nActual clock readings for this question: " + json.dumps(list(times.values()))
     try:
         response = json_request("http://127.0.0.1:11434/api/chat", {
             "model": model, "stream": False, "think": False, "keep_alive": "15m",
@@ -377,6 +463,7 @@ class Service:
         self.sent = 0
         self.last_source = ""
         self.send_lock = threading.Lock()
+        self.focus = {}
 
     def dispatch(self, viewer, text):
         # Der Twitch-Versand kann bei Netzproblemen Sekunden dauern. Er haelt weder die
@@ -402,16 +489,27 @@ class Service:
             return 400, {"error": "invalid"}
         if "world" in data and world_nodes(data["world"]) is None:
             return 400, {"error": "world"}
+        times = clock_readings(data.get("clock"))
+        if "clock" in data and times is None:
+            return 400, {"error": "clock"}
         if not self.lock.acquire(blocking=False):
             return 429, {"error": "busy"}
         try:
             now = time.monotonic()
-            if ((self.last_global is not None and now - self.last_global < 10) or
-                    (viewer in self.viewers and now - self.viewers[viewer] < 30)):
+            if ((self.last_global is not None and now - self.last_global < 3.5) or
+                    (viewer in self.viewers and now - self.viewers[viewer] < 7.5)):
                 return 429, {"error": "cooldown"}
             self.last_global = self.viewers[viewer] = now
-            self.viewers = {k: v for k, v in self.viewers.items() if now - v < 30}
-            text, source, action, target = respond(message, place, activity, data.get("world"), self.model)
+            self.viewers = {k: v for k, v in self.viewers.items() if now - v < 8}
+            self.focus = {k: v for k, v in self.focus.items() if now - v[0] < 45}
+            previous_target = self.focus.get(viewer, (0, ""))[1]
+            text, source, action, target = respond(message, place, activity, data.get("world"), self.model, times, previous_target)
+            if action == "show_place":
+                self.focus[viewer] = (now, target)
+            elif action == "show_world":
+                self.focus.pop(viewer, None)
+            while len(self.focus) > 32:
+                self.focus.pop(next(iter(self.focus)))
             pending = False if data.get("preview") is True else self.dispatch(viewer, text)
             self.replies += 1
             self.last_source = source
@@ -430,7 +528,7 @@ PAGE = """<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewp
 <p><small>Nach einer erneuten Kontoverbindung unter OBS → Einstellungen → Stream muss OBS vollständig beendet und neu geöffnet werden, damit es die neue Anmeldung speichert. Das unterbricht Stream und Aufnahme. Danach diesen Knopf drücken. OBS-Anmeldungen mit ausschließlich Stream-Rechten brauchen zusätzlich die eigene Chat-Anmeldung unten.</small></p>
 <details><summary>Eigene Twitch-Anmeldung einrichten</summary><p>Falls OBS keine Chat-Schreibrechte besitzt, erstelle in der <a href="https://dev.twitch.tv/console/apps" target="_blank" rel="noreferrer">Twitch-Konsole</a> eine App (Kategorie Chat Bot, Client-Typ Public). OAuth-Weiterleitung: <b>http://localhost:18766/callback</b>. Trage deren öffentliche Client-ID ein. Ein Client-Secret ist nicht nötig.</p>
 <input id="client" placeholder="Twitch App Client-ID" autocomplete="off"><button id="connect">Mit Twitch verbinden</button></details>
-<p><small>Fennec antwortet als fennec_itoeva mit dem Zusatz [Fennec]. Frag etwa: Fennec, show me your world. Er kann die Karte und Wege zeigen und seinen Alltag erklären. Höchstens eine Antwort je 10 Sekunden, je Zuschauer 30 Sekunden.</small></p>
+<p><small>Fennec antwortet als fennec_itoeva mit dem Zusatz [Fennec]. Frag etwa: Fennec, show me your world. Oder: Fennec, what time is it in New York? Kurze Folgefragen sind 45 Sekunden ohne erneute Ansprache möglich. Höchstens eine Antwort je 4 Sekunden, je Zuschauer 8 Sekunden.</small></p>
 <script>const nonce=__NONCE__;
 async function post(path,data){let r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,nonce})});return r.json()}
 async function status(){let s=await(await fetch('/status')).json();document.getElementById('status').textContent=s.connected?'Twitch verbunden · Fennec kann im Chat antworten':'Twitch-Schreibzugriff fehlt · Animation und Antwort im Bild sind bereit'}
