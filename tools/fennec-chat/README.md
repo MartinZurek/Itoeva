@@ -1,7 +1,7 @@
 # Fennec im Twitch-Chat
 
 Stream-only Erweiterung der vorhandenen Runtime. Direkte Ansprache (`hey fennec how are you?`,
-`Hallo Fennec`, `@fennec_itoeva`, `How are you, Fennec?`) fuehrt zu vorhandenen Mundframes,
+`Hej Fennec; what are you?`, `Hallo Fennec`, `@fennec_itoeva`, `How are you, Fennec?`) fuehrt zu vorhandenen Mundframes,
 Sprechpunkten und einer kurzen Antwort im Bild. Der eigentliche Weltablauf laeuft weiter.
 A-D und Reminder gehen weiterhin ausschliesslich durch das bisherige Impulstor.
 

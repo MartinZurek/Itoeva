@@ -669,6 +669,24 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Direkte Ansprache mit Hej und Satzzeichen
+
+**Version:** `stream-fennec-address-v2`, Ausgangspunkt `81c9e34`.
+**DOCUMENTED INTENT:** Die Zuschauerfrage "Hej Fennec; what are you?" blieb ohne Antwort.
+Der beobachtete Chat-Eingang enthielt `Hej`, die Erkennung unterstuetzte bisher nur `Hey`.
+Die direkte Ansprache akzeptiert jetzt auch `Hej` und uebliche Satzzeichen nach dem Gruss.
+Wortgrenzen, eigene Antworten und nicht direkt adressierte Unterhaltung bleiben geschuetzt;
+Abstaende, Weltablauf, Reminder, Spielstand und private App bleiben unveraendert.
+
+**Betroffen:** FennecConversation, gezielter Regressionstest und Stream-Anleitungen.
+**TESTED BEHAVIOR:** Alle 65 Stream-JVM-Tests, Stream-APK und Vital-Lint erfolgreich.
+APK installiert und mit speed kompiliert. Die genaue Frage wurde im echten Twitch-Chat
+verarbeitet; Helix bestaetigte den Versand, ein unabhaengiger IRC-Leser beobachtete die
+Ollama-Antwort mit `[Fennec]`, die Sprechblase war im Spiel sichtbar und visuell geprueft.
+**Grenzen:** Andere bisher nicht erfasste Ansprachen sowie bestehende Abstaende koennen
+weiterhin ohne Antwort bleiben; allgemeine Dialogqualitaet bleibt eine Pilot-Grenze.
+**Ruecksetzweg:** Gesicherte APK `81c9e34` wieder installieren; keine Datenmigration.
+
 ### 2026-10-03 - Fennec antwortet auf direkte Zuschaueransprache
 
 **Betriebsnachtrag:** Die menschlich erneuerte OBS-Anmeldung war zunaechst nur im Speicher.

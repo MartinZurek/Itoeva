@@ -4,7 +4,7 @@ package com.notime.glyphsim.stream
 internal object FennecConversation {
     data class Address(val viewerId: String, val text: String, val receivedAtMs: Long, val preview: Boolean = false)
 
-    private val opening = Regex("^(?:(?:hey|hi|hello|hallo|huhu|yo)[,! ]+)?@?fennec(?:_itoeva)?\\b", RegexOption.IGNORE_CASE)
+    private val opening = Regex("^(?:(?:hey|hej|hi|hello|hallo|huhu|yo)[,;:!?.\\s]+)?@?fennec(?:_itoeva)?\\b", RegexOption.IGNORE_CASE)
     private val closing = Regex("[, ]+fennec[!? .]*$", RegexOption.IGNORE_CASE)
     private val mention = Regex("(?:^|\\s)@fennec(?:_itoeva)?\\b", RegexOption.IGNORE_CASE)
 

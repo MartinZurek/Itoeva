@@ -48,6 +48,7 @@ wird der Platz geleert - ein abgelehnter Vorschlag laesst ihn liegen.
 ## Die Befehle
 
 Direkte Ansprache von Fennec ist ein getrennter Dialogweg: `hey fennec how are you?`,
+`Hej Fennec; what are you?`,
 `Hallo Fennec` oder `@fennec_itoeva`. Er zeigt vorhandene Mundbewegungen, Sprechpunkte
 und eine kurze Antwort. Der lokale PC-Dienst formuliert mit Ollama bzw. belegten
 Rueckfallantworten; Twitch-Schreiben braucht eine gueltige Anmeldung des Stream-Kontos.

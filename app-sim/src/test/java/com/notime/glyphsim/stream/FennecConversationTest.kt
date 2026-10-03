@@ -16,6 +16,14 @@ class FennecConversationTest {
             assertNull(it, FennecConversation.address("lea", it, 100))
         }
     }
+    @Test fun `Hej und Satzzeichen nach dem Gruss bleiben direkte Ansprache`() {
+        listOf("Hej Fennec; what are you?", "hej, Fennec: who are you?", "Hey! Fennec, hello!",
+            "Hallo: Fennec, wie geht's?", "Hi. @fennec_itoeva, hello").forEach {
+            assertNotNull(it, FennecConversation.address("fennec_itoeva", it, 100))
+        }
+        assertNull(FennecConversation.address("lea", "Hej Fennecology", 100))
+        assertNull(FennecConversation.address("lea", "I said hej to Fennec", 100))
+    }
     @Test fun `globale und einzelne Abstaende verhindern Flut ohne nachtraegliche Antwort`() {
         val gate = FennecConversation.Gate()
         fun ask(viewer: String, at: Long) = FennecConversation.Address(viewer, "hi fennec", at)
