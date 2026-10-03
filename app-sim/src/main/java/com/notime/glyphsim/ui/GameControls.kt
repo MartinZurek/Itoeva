@@ -1,113 +1,127 @@
 package com.notime.glyphsim.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.notime.glyphsim.matrix.PlayControl
 
 /**
- * **Das Steuerkreuz von Itoeva 2** (siehe [PlayControl]).
+ * **Die Fingersteuerung von Itoeva 2** (gewuenscht am 03.10. statt Steuerkreuz und Aktionsknopf).
  *
- * Vier Tasten im Kreuz, unten links ueber der Welt. Gedrueckt halten heisst gehen, loslassen
- * heisst stehen bleiben. Werden zwei gehalten, gilt die zuletzt gedrueckte - und laesst man sie
- * los, wieder die andere. Halb durchsichtig, damit die Welt dahinter sichtbar bleibt.
+ * Finger irgendwo aufsetzen und ziehen: Die Figur laeuft in die Richtung, in die gezogen wird,
+ * solange der Finger liegt - wie ein unsichtbarer Joystick, der dort entsteht, wo man den Daumen
+ * aufsetzt (ein Ring zeigt ihn an, solange man zieht). Loslassen heisst stehen bleiben.
+ *
+ * Ohne Ziehen ist es ein Tipp: [onTap] bei einem einfachen Tipp (die Figur antippen oeffnet ihr
+ * Menue), [onDoubleTap] bei zwei kurz hintereinander an derselben Stelle (dort handeln, durch eine
+ * Tuer gehen). Alle Positionen in Pixeln dieses Bildschirms.
  */
 @Composable
-internal fun GameDpad(
+internal fun GameTouch(
     onDir: (PlayControl.Dir?) -> Unit,
-    modifier: Modifier = Modifier,
-    buttonSize: Dp = 54.dp
+    onTap: (Offset) -> Unit,
+    onDoubleTap: (Offset) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val held = remember { mutableListOf<PlayControl.Dir>() }
-    fun press(dir: PlayControl.Dir) {
-        held.remove(dir)
-        held += dir
-        onDir(dir)
-    }
-    fun release(dir: PlayControl.Dir) {
-        held.remove(dir)
-        onDir(held.lastOrNull())
-    }
-    Box(modifier.size(buttonSize * 3)) {
-        for (dir in PlayControl.Dir.entries) {
-            val align = when (dir) {
-                PlayControl.Dir.LEFT -> Alignment.CenterStart
-                PlayControl.Dir.RIGHT -> Alignment.CenterEnd
-                PlayControl.Dir.UP -> Alignment.TopCenter
-                PlayControl.Dir.DOWN -> Alignment.BottomCenter
-            }
-            var down by remember { mutableStateOf(false) }
-            Box(
-                Modifier
-                    .align(align)
-                    .size(buttonSize)
-                    .clip(CircleShape)
-                    .background(if (down) Color(0x667FD1A6) else Color(0x33FFFFFF))
-                    .semantics { contentDescription = dir.name }
-                    .pointerInput(dir) {
-                        awaitEachGesture {
-                            awaitFirstDown()
-                            down = true
-                            press(dir)
-                            waitForUpOrCancellation()
-                            down = false
-                            release(dir)
+    val density = LocalDensity.current
+    val deadZonePx = with(density) { 18.dp.toPx() }
+    val doubleTapSlopPx = with(density) { 48.dp.toPx() }
+    val dirNow by rememberUpdatedState(onDir)
+    val tapNow by rememberUpdatedState(onTap)
+    val doubleNow by rememberUpdatedState(onDoubleTap)
+    var stickOrigin by remember { mutableStateOf<Offset?>(null) }
+    var stickKnob by remember { mutableStateOf(Offset.Zero) }
+    var lastTapAt by remember { mutableLongStateOf(0L) }
+    var lastTapPos by remember { mutableStateOf(Offset.Zero) }
+    Box(
+        modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val origin = down.position
+                    var dragging = false
+                    var current: PlayControl.Dir? = null
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        val delta = change.position - origin
+                        val dir = PlayControl.swipeDir(delta.x, delta.y, deadZonePx)
+                        if (dir != null) dragging = true
+                        if (dragging) {
+                            stickOrigin = origin
+                            stickKnob = delta
+                            if (dir != current) {
+                                current = dir
+                                dirNow(dir)
+                            }
+                            change.consume()
+                        }
+                        if (!change.pressed) break
+                    }
+                    if (dragging) {
+                        stickOrigin = null
+                        dirNow(null)
+                    } else {
+                        val now = down.uptimeMillis
+                        val again = now - lastTapAt <= DOUBLE_TAP_MS &&
+                            (origin - lastTapPos).getDistance() <= doubleTapSlopPx
+                        if (again) {
+                            lastTapAt = 0L
+                            doubleNow(origin)
+                        } else {
+                            lastTapAt = now
+                            lastTapPos = origin
+                            tapNow(origin)
                         }
                     }
-            ) {
-                Canvas(Modifier.fillMaxSize().padding(16.dp)) {
-                    val w = size.width
-                    val h = size.height
-                    val path = Path().apply {
-                        when (dir) {
-                            PlayControl.Dir.LEFT -> { moveTo(0f, h / 2); lineTo(w, 0f); lineTo(w, h) }
-                            PlayControl.Dir.RIGHT -> { moveTo(w, h / 2); lineTo(0f, 0f); lineTo(0f, h) }
-                            PlayControl.Dir.UP -> { moveTo(w / 2, 0f); lineTo(w, h); lineTo(0f, h) }
-                            PlayControl.Dir.DOWN -> { moveTo(w / 2, h); lineTo(0f, 0f); lineTo(w, 0f) }
-                        }
-                        close()
-                    }
-                    drawPath(path, if (down) Color(0xFFDDF5E8) else Color(0xCCFFFFFF))
                 }
+            }
+    ) {
+        stickOrigin?.let { origin ->
+            Canvas(Modifier.fillMaxSize()) {
+                val ring = 34.dp.toPx()
+                drawCircle(Color(0x55FFFFFF), radius = ring, center = origin, style = Stroke(width = 2.dp.toPx()))
+                val len = stickKnob.getDistance()
+                val knob = if (len > ring) stickKnob * (ring / len) else stickKnob
+                drawCircle(Color(0x88DDF5E8), radius = 12.dp.toPx(), center = origin + knob)
             }
         }
     }
 }
 
+/** Zwei Tipps innerhalb dieser Zeit gelten als Doppeltipp. */
+private const val DOUBLE_TAP_MS = 320L
+
 /**
- * Pfeiltasten und WASD fuer Tastatur, Gamepad und Emulator - dieselbe Logik wie das Kreuz.
- * Eine unsichtbare, fokussierte Flaeche; Beruehrungen gehen durch sie hindurch.
+ * Pfeiltasten und WASD fuer Tastatur, Gamepad und Emulator - dieselbe Logik wie das Wischen.
+ * Leertaste/Enter/E/Gamepad-A handeln am Platz in Reichweite. Eine unsichtbare, fokussierte
+ * Flaeche; Beruehrungen gehen durch sie hindurch.
  */
 @Composable
 internal fun GameKeys(
@@ -152,51 +166,4 @@ internal fun GameKeys(
             }
     )
     LaunchedEffect(Unit) { focus.requestFocus() }
-}
-
-/**
- * **Die Aktionstaste** unten rechts: hell, wenn ein Platz in Reichweite ist (Bett, Bank, Regal
- * ...), sonst gedaempft. Druecken laesst die Figur dort handeln (siehe PlayControl.actionAt).
- */
-@Composable
-internal fun GameActionButton(
-    enabled: Boolean,
-    onPress: () -> Unit,
-    modifier: Modifier = Modifier,
-    buttonSize: Dp = 64.dp
-) {
-    var down by remember { mutableStateOf(false) }
-    Box(
-        modifier
-            .size(buttonSize)
-            .clip(CircleShape)
-            .background(
-                when {
-                    down -> Color(0x997FD1A6)
-                    enabled -> Color(0x667FD1A6)
-                    else -> Color(0x22FFFFFF)
-                }
-            )
-            .semantics { contentDescription = "A" }
-            .pointerInput(enabled) {
-                awaitEachGesture {
-                    awaitFirstDown()
-                    down = true
-                    if (enabled) onPress()
-                    waitForUpOrCancellation()
-                    down = false
-                }
-            }
-    ) {
-        Canvas(Modifier.fillMaxSize().padding(20.dp)) {
-            // Ein Ring mit Punkt - die Hand, die zugreift. Ohne Schrift (Vorgabe: Bild statt Text).
-            val r = size.minDimension / 2f
-            drawCircle(
-                color = if (enabled) Color(0xFFDDF5E8) else Color(0x66FFFFFF),
-                radius = r,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = r * 0.28f)
-            )
-            drawCircle(color = if (enabled) Color(0xFFDDF5E8) else Color(0x66FFFFFF), radius = r * 0.35f)
-        }
-    }
 }

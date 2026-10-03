@@ -37,6 +37,24 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
   Spielautomat, Laden, Lampe und Fernseher an/aus. Dieselben Ablaeufe wie im autonomen Leben.
 - Waehrend der Handlung gehoert die Figur dem Ablauf; danach geht es von dort aus weiter.
 
+## Stufe 3 - Finger, Wege, Karte, Rucksack, Musik (umgesetzt, Rueckmeldung vom 03.10.)
+
+- **Ziehen statt Steuerkreuz** (`GameTouch`): Finger aufsetzen und in die Richtung ziehen, in die
+  die Figur gehen soll; sie laeuft, solange der Finger liegt. Ein Ring zeigt den Daumen-Joystick.
+- **Doppeltipp statt Aktionsknopf**: zweimal kurz auf Bett, Bank, Regal, Kuehlschrank ... - die
+  Figur geht hin und handelt. Doppeltipp auf eine Tuer geht hindurch (`PlayControl.doorTarget`:
+  Zimmer -> Flur, Wohnzimmer -> Strasse, Laden/Cafe/Arbeit/Spielhalle -> nach draussen).
+- **Sichtbare Wege** (`PlayControl.exitMarks`): pulsierende Pfeile mit Steinspur an jedem Rand,
+  an dem es weitergeht (links, rechts, nach hinten, nach vorn), und ueber jeder Tuer.
+- **Figur antippen = Menue**: Karte, Rucksack, Musik an/aus.
+- **Karte** (`GameMapOverlay`): die Weltkarte mit Ortsnamen, eigener Standort hervorgehoben;
+  einen Ort antippen zeigt den Weg dorthin.
+- **Rucksack** (`PlayBackpack`, 8 Plaetze, gespeichert): Fundstuecke aus Handlungen (Kuehlschrank
+  -> Essen, Tisch -> Becher, Regal -> Buch, Ladenregal -> Samen, Kasse -> Korb, Werkbank -> Holz).
+  Antippen nimmt ein Ding in die Hand, nochmal antippen legt es zurueck.
+- **Musik und Ton** sind beim ersten Start an (ab Werk stehen sie aus), danach Schalter im Menue.
+  Hinweis: Bei Lautlos/Vibration am Geraet schweigt die Musik bewusst.
+
 ## Naechste Stufen (Vorschlag, nicht freigegeben)
 
 1. Begegnungen und Gespraeche mit den Bewohnern.

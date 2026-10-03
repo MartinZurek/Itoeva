@@ -152,4 +152,94 @@ object PlayControl {
             Station.DOOR -> null
         }
     }
+
+    // ---- Wischen statt Steuerkreuz ----
+
+    /**
+     * Die Richtung, in die der Finger seit dem Aufsetzen gezogen wurde - oder `null`, solange
+     * er noch nah am Aufsetzpunkt ist ([deadZone], gleiche Einheit wie [dx]/[dy]). Es zaehlt die
+     * staerkere Achse: Ein Zug schraeg nach rechts oben ist "rechts", wenn er mehr rechts ist.
+     * Bildschirm-y waechst nach unten, also ist ein Zug nach oben ([dy] < 0) [Dir.UP].
+     */
+    fun swipeDir(dx: Float, dy: Float, deadZone: Float): Dir? {
+        if (dx * dx + dy * dy < deadZone * deadZone) return null
+        return if (abs(dx) >= abs(dy)) {
+            if (dx > 0) Dir.RIGHT else Dir.LEFT
+        } else {
+            if (dy > 0) Dir.DOWN else Dir.UP
+        }
+    }
+
+    // ---- Tueren ----
+
+    /**
+     * Wohin eine Tuer fuehrt: aus jedem Zimmer in den Flur (das Wohnzimmer), aus dem Wohnzimmer
+     * auf die Strasse, aus Laden, Cafe, Arbeit und Spielhalle zurueck nach draussen.
+     */
+    fun doorTarget(place: Place): Place? = when {
+        place == Place.LIVING -> Place.STREET
+        place in HOUSE -> Place.LIVING
+        else -> PlayMap.neighbors(place).firstOrNull()
+    }
+
+    // ---- Sichtbare Wege ----
+
+    /**
+     * **Wohin man von hier gehen kann - im Bild.** Fuer jede Richtung, in der ein Nachbarort
+     * liegt ([neighbor]), ein pulsierender Pfeil am Rand mit einer Spur aus Steinen dorthin:
+     * links und rechts auf halber Bodentiefe, nach hinten an der Bodenlinie in der Bildmitte,
+     * nach vorn am unteren Rand. Ueber einer Tuer ([doorTop], Zelle ueber ihrer Oberkante)
+     * ein Pfeil nach oben. Ohne Schrift.
+     *
+     * [floorY] ist die Bodenlinie, [frontRow] die vorderste Zeile des begehbaren Bodens.
+     */
+    fun exitMarks(
+        place: Place,
+        widthCells: Int,
+        floorY: Int,
+        frontRow: Int,
+        phase: Int,
+        doorTop: Pair<Int, Int>? = null
+    ): List<SceneCell> {
+        if (widthCells < 12 || floorY < 6) return emptyList()
+        val pulse = 0.65f + 0.35f * kotlin.math.sin(phase / 6.0).toFloat()
+        val bright = (MARK_TONE * pulse).toInt()
+        val stone = (MARK_TONE * 0.45f).toInt()
+        val cells = mutableListOf<SceneCell>()
+        val midRow = (floorY + frontRow) / 2
+        val centerX = widthCells / 2
+        fun chevron(x: Int, y: Int, dir: Dir) {
+            // Ein Winkel aus drei Zellen, die Spitze zeigt in [dir].
+            val points = when (dir) {
+                Dir.LEFT -> listOf(1 to -1, 0 to 0, 1 to 1)
+                Dir.RIGHT -> listOf(-1 to -1, 0 to 0, -1 to 1)
+                Dir.UP -> listOf(-1 to 1, 0 to 0, 1 to 1)
+                Dir.DOWN -> listOf(-1 to -1, 0 to 0, 1 to -1)
+            }
+            for ((px, py) in points) cells += SceneCell(x + px, y + py, bright, isLight = true)
+        }
+        if (neighbor(place, Dir.LEFT) != null) {
+            chevron(1, midRow, Dir.LEFT)
+            for (x in 4..9 step 2) cells += SceneCell(x, midRow, stone)
+        }
+        if (neighbor(place, Dir.RIGHT) != null) {
+            chevron(widthCells - 2, midRow, Dir.RIGHT)
+            for (x in widthCells - 10..widthCells - 5 step 2) cells += SceneCell(x, midRow, stone)
+        }
+        if (neighbor(place, Dir.UP) != null) {
+            chevron(centerX, floorY - 2, Dir.UP)
+            for (y in floorY + 1..frontRow step 2) cells += SceneCell(centerX, y, stone)
+        }
+        if (neighbor(place, Dir.DOWN) != null) {
+            chevron(centerX, frontRow, Dir.DOWN)
+            for (y in floorY + 1 until frontRow - 1 step 2) cells += SceneCell(centerX + 3, y, stone)
+        }
+        if (doorTop != null && doorTarget(place) != null) {
+            chevron(doorTop.first, doorTop.second - 1, Dir.UP)
+        }
+        return cells.filter { it.x in 0 until widthCells && it.y >= 0 }
+    }
+
+    /** Helligkeit der Wegmarken (Pfeile) - deutlich, aber unter einer Lampe. */
+    private const val MARK_TONE = 2_200
 }
