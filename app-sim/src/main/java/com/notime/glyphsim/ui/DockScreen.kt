@@ -120,6 +120,7 @@ import com.notime.glyphsim.stream.TwitchChatInteractionProvider
 import com.notime.glyphsim.stream.TwitchChatStatus
 import com.notime.glyphsim.stream.FennecConversation
 import com.notime.glyphsim.stream.FennecReplyClient
+import com.notime.glyphsim.stream.FennecWorld
 import com.notime.glyphsim.stream.FennecPreview
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
@@ -519,6 +520,8 @@ fun DockScreen(
         var fennecViewer by remember { mutableStateOf<String?>(null) }
         var fennecReply by remember { mutableStateOf<String?>(null) }
         var fennecTalkFrame by remember { mutableStateOf<IntArray?>(null) }
+        var fennecMap by remember { mutableStateOf<FennecWorld.Presentation?>(null) }
+        var fennecMapGerman by remember { mutableStateOf(false) }
         val fennecPreview = remember { FennecPreview() }
         DisposableEffect(streamMode, playMode) {
             if (streamMode && playMode) fennecPreview.register(context)
@@ -3654,7 +3657,10 @@ fun DockScreen(
                                     java.time.LocalTime.now().hour
                                 )
                                 fennecReply = reply?.text ?: "I'm here, but my chat connection needs a moment."
-                                delay((fennecReply!!.length * 55L).coerceIn(4_000L, 8_000L))
+                                fennecMap = reply?.presentation
+                                fennecMapGerman = reply?.german == true
+                                delay(if (fennecMap != null) 14_000L else
+                                    (fennecReply!!.length * 55L).coerceIn(4_000L, 8_000L))
                             } finally {
                                 talking.cancelAndJoin()
                             }
@@ -3662,6 +3668,7 @@ fun DockScreen(
                             fennecTalkFrame = null
                             fennecViewer = null
                             fennecReply = null
+                            fennecMap = null
                         }
                     }
             }
@@ -5641,7 +5648,12 @@ fun DockScreen(
         }
 
         if (streamMode && playMode) {
-            fennecViewer?.let { viewer ->
+            fennecMap?.let { presentation ->
+                StreamFennecMap(currentPlace, presentation, fennecMapGerman,
+                    fennecViewer.orEmpty(), fennecReply.orEmpty(),
+                    Modifier.align(Alignment.TopCenter).padding(start = 24.dp, end = 80.dp, top = 68.dp))
+            }
+            fennecViewer?.takeIf { fennecMap == null }?.let { viewer ->
                 StreamFennecBubble(viewer, fennecReply,
                     Modifier.align(Alignment.TopCenter).padding(top = 64.dp))
             }

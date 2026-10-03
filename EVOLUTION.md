@@ -669,6 +669,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Fennec kennt die echte Karte und zeigt erlaubte Ansichten
+
+**Version:** `stream-fennec-world-v1`, Ausgangspunkt `dede688`.
+**DOCUMENTED INTENT:** Nutzer beauftragt, Bitten wie "show me your world" mit wirklichen
+Spielmoeglichkeiten zu verbinden: Karte zeigen und belegte Orte erklaeren. Freigegeben ist
+dieser lokale Stream-Dialog, keine beliebige Fernsteuerung oder neue Simulationspipeline.
+
+**Entscheidung:** Android liefert nur Ort, Aktivitaet und den oeffentlichen `PlayMap`-Graphen.
+Ein kurzer Ollama-Klassifikator waehlt Karte, Ort/Weg, Aktivitaet, Hilfe oder normalen Dialog
+als validiertes JSON. Unbekannte IDs und nicht benannte Ziele werden verworfen. Kartentexte
+verwenden echte Regionen/Nachbarn; die sichtbare Wegvorschau verwendet `PlayMap.route` und
+den vorhandenen `PlayMapScene`-Renderer. Beschriftung und Antwort bilden eine kompakte Ansicht,
+der Standort folgt der wirklichen Figur. Keine Aenderung an Ort, Routine, Reminder oder XP.
+Die Karte verschwindet nach 14 Sekunden. Mundframes bleiben reine Renderprojektion.
+
+Twitch-Versand laeuft separat mit hoechstens einem Versuch gleichzeitig, ohne Warteschlange
+oder Wiederholung: Ein langsamer Netzversuch hielt zuvor auch die sichtbare Antwort auf.
+`send_pending` bedeutet nur laufenden Versuch, `/status.sent` zaehlt bestaetigte Sendungen.
+Die private App, Anmeldung und Datenbank bleiben unveraendert; keine Migration.
+
+**Betroffen:** FennecWorld, FennecReplyClient, StreamFennecMap, DockScreen, PlayMapScene.labels,
+PC-Dienst und Stream-Anleitungen/Architektur.
+**TESTED BEHAVIOR:** 68 Stream-JVM-Tests, 24 Python-Tests, Stream-APK und Vital-Lint erfolgreich.
+Zehn echte lokale Modellfragen pruefen Welt-/Ortsbitten, Deutsch, Alltag, Hilfe, normalen
+Dialog, Negation, unbekannten Ort und unzulaessige Reise: erwartete Aktionskategorien.
+Warme Kartenauswahl etwa 0,45-0,56 Sekunden; normale Antworten im Einzeltest bis etwa 3 Sekunden.
+"Fennec, show me your world" erschien mit Antwort im echten Twitch-Kanal (unabhaengiger
+IRC-Leser, Helix-Bestaetigung) und mit lesbarer Karte im Spiel. Orts-/Wegvorschau zum Strand
+lokal ohne Versand geprueft; aktueller Punkt, Zwischenorte, Ziel und Avatar sind sichtbar.
+APK installiert und speed-kompiliert; Bildueberlappung aus Erstpruefung korrigiert.
+**Grenzen:** Einzelne Twitch-Versuche scheiterten weiterhin am Netz; keine Erfolgsbehauptung
+dafuer. Freier Dialog, mehr Sprachen und laengerer Publikumsbetrieb bleiben Pilot-Grenzen.
+**Ruecksetzweg:** Gesicherte APK `dede688` und vorherigen PC-Dienst zurueckspielen.
+
 ### 2026-10-03 - Direkte Ansprache mit Hej und Satzzeichen
 
 **Version:** `stream-fennec-address-v2`, Ausgangspunkt `81c9e34`.

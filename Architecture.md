@@ -210,6 +210,11 @@ den Zustand vor dem ersten Gespraech wieder her. Oeffnungszeiten werden vor jede
 Routine zusammengefassten Kernschritt erneut bestimmt.
 
 Seit NT-066 liegt die Praesentationsgrenze unter `app-sim/.../stream/`.
+Der lokale Fennec-Chat-Pilot liefert seit 2026-10-03 den oeffentlichen `PlayMap`-Graphen
+zusammen mit Ort und Aktivitaet an den PC-Dienst. Ollama waehlt ausschliesslich aus einem
+validierten Darstellungskatalog; `FennecWorld` prueft Kartenaktionen und Ziele erneut in
+Android. `StreamFennecMap` verwendet `PlayMapScene` und `PlayMap.route`, unabhaengig vom
+vorhandenen Reiseablauf. Die Darstellung veraendert keine Welt-/Reminder-Zustaende.
 `LivingObservationSource` bietet ausschliesslich den aktuellen typisierten
 `LivingObservation`-Snapshot je Profil. `LivingObservationFeed` nimmt nur abgeschlossene
 Runtime-Ergebnisse auf, haelt ein begrenztes Ereignisfenster ohne Leerlauf-Ticks und veraendert

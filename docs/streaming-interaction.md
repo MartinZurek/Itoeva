@@ -55,6 +55,11 @@ Rueckfallantworten; Twitch-Schreiben braucht eine gueltige Anmeldung des Stream-
 Ohne sie bleibt die Antwort im Bild. Einrichtung, Tests und konkrete Pilot-Grenzen stehen
 in [tools/fennec-chat/README.md](../tools/fennec-chat/README.md).
 Kein Dialog kann A-D, Reminder, Ziele, Fortschritt oder private Daten veraendern.
+Bitten wie `Fennec, show me your world` zeigen voruebergehend die echte Weltkarte.
+`Fennec, where is the beach?` hebt den Ort samt Weg vom aktuellen Standort hervor.
+Die KI kennt den oeffentlichen Karten-Graphen und einen festen Katalog erlaubter
+Darstellungen; die Simulation reist dabei nicht auf Befehl. Fragen nach dem Alltag
+oder den Chat-Moeglichkeiten verwenden die aktuelle Aktivitaet und vorhandene Interaktionen.
 
 | Befehl | Wirkung |
 |---|---|

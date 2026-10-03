@@ -20,12 +20,23 @@ Broadcast und schreibt niemals an Twitch. Nur der aktuell sichtbare Fennec reagi
 
 ## Antworten und Anmeldung
 
-Zustandsfragen verwenden belegte Orts-Saetze. Weitere harmlose Fragen gehen an das lokale
-Sprachmodell, mit festen Rollen, begrenztem Kontext und maximal 96 Antworttokens. Keine Tools,
-Spielzugriffe oder private Daten. Nach 12 Sekunden oder unbrauchbarer Ausgabe folgt eine lokale
+Die Stream-APK liefert einen oeffentlichen Snapshot mit Ort, Aktivitaet und dem aktuellen
+`PlayMap`-Graphen. Keine Reminder-Texte, Historien, Profile oder privaten Daten.
+Das lokale Modell waehlt aus einem festen Katalog und liefert validiertes JSON (maximal 64
+Auswahltokens; normale Antworten anschliessend maximal 96 Tokens; 4096 Kontexttokens): normale Antwort, Weltkarte, Orts-/Wegvorschau,
+Aktivitaet erklaeren oder Chat-Moeglichkeiten erklaeren. Nach 12 Sekunden oder unbrauchbarer Ausgabe folgt eine lokale
 Antwort. Links, erkannte Instruktionsangriffe und sensible Themen haben eine ruhige Rueckfallantwort.
 Diese einfachen Filter sind keine vollstaendige Moderationsloesung fuer beliebigen Publikumsverkehr.
 KI-Ausgaben koennen unpassend sein; der lokale Pilot braucht Beobachtung.
+
+Beispiele: `Fennec, show me your world`, `Fennec, where is the beach?`,
+`Fennec, zeig mir den Wald`, `Fennec, was machst du?`, `Fennec, what can I ask you to do?`.
+Kartenansichten verwenden den bestehenden `PlayMapScene`-Renderer mit lesbaren Ortsnamen,
+aktueller Standortmarkierung und gegebenenfalls animierter Route. Sie verschwinden nach
+14 Sekunden. Der echte Ort, laufende Routinen, Ziele und Reminder werden nicht veraendert.
+Karten- und Wegtexte werden aus belegten Daten formuliert; unbekannte Werkzeugnamen und
+Ziele loesen keine Darstellung aus. Bei Modellausfall bleibt eine Ortsantwort ohne Karte.
+Es gibt keine freie Werkzeugausfuehrung, Reise auf Chat-Befehl oder Schreibrechte auf Spielstand.
 
 Globale Grenze: eine Antwort pro 10 Sekunden, pro Nutzer 30 Sekunden. Keine Warteschlange,
 keine Wiederholung nach Schreibfehlern, keine Logs von Fragen/Antworten und keine Chat-Historie.
@@ -54,6 +65,9 @@ Helix `POST /helix/chat/messages` bestaetigt `is_sent`. Bei bestehenden IRC-Rech
 der Dienst TLS-IRC; dessen Schreiben hat keine API-Bestaetigung. Die UI behauptet daher
 keinen erfolgreichen Versand. `/status` zaehlt Antworten und Schreibversuche ohne Geheimnisse.
 Eine fehlende/abgelaufene Anmeldung laesst Antworten im Bild weiterhin zu, schreibt aber nichts.
+Versand laeuft nach der sichtbaren Antwort separat, mit hoechstens einem laufenden Versuch und
+ohne Warteschlange. `/reply` meldet anfangs `sent=false` und gegebenenfalls `send_pending=true`;
+erst `/status.sent` zaehlt bestaetigte Sendungen. Ein langsamer Twitch-Versand blockiert keine Karte.
 
 ## Ruecksetzen und Pruefen
 
@@ -66,4 +80,5 @@ Private Anmeldedatei separat entfernen bzw. die Twitch-App-Berechtigung im eigen
 
 Quellen: [Twitch Chat-Anmeldung](https://dev.twitch.tv/docs/chat/authenticating/),
 [Send Chat Message](https://dev.twitch.tv/docs/api/reference/#send-chat-message),
-[Ollama Chat API](https://docs.ollama.com/api/chat).
+[Ollama Chat API](https://docs.ollama.com/api/chat),
+[Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs).

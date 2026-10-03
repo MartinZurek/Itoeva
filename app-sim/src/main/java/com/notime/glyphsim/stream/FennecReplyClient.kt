@@ -5,10 +5,13 @@ import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import org.json.JSONArray
+import com.notime.glyphsim.matrix.PlayMap
+import com.notime.glyphsim.matrix.PlayScene.Place
 
 /** Der PC verwaltet KI und Twitch-Anmeldung; in der APK steht kein Kontogeheimnis. */
 internal object FennecReplyClient {
-    data class Reply(val text: String, val sent: Boolean)
+    data class Reply(val text: String, val sent: Boolean, val presentation: FennecWorld.Presentation?, val german: Boolean)
 
     suspend fun reply(address: FennecConversation.Address, place: String, activity: String, hour: Int): Reply? =
         withContext(Dispatchers.IO) {
@@ -21,6 +24,11 @@ internal object FennecReplyClient {
                 connection.setRequestProperty("Content-Type", "application/json")
                 val body = JSONObject().put("viewer", address.viewerId).put("message", address.text)
                     .put("place", place).put("activity", activity).put("hour", hour).put("preview", address.preview)
+                    .put("world", JSONObject().put("version", FennecWorld.VERSION).put("nodes", JSONArray(
+                        Place.entries.map { node -> JSONObject().put("id", node.name)
+                            .put("region", PlayMap.regionOf(node).name)
+                            .put("neighbors", JSONArray(PlayMap.neighbors(node).map { it.name })) }
+                    )))
                 connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
                 if (connection.responseCode != 200) return@withContext null
                 val result = connection.inputStream.bufferedReader().use { it.readText() }
@@ -28,7 +36,9 @@ internal object FennecReplyClient {
                 val json = JSONObject(result)
                 val text = json.optString("text").trim()
                 if (text.isBlank() || text.length > 320 || text.any { it.isISOControl() }) null
-                else Reply(text, json.optBoolean("sent"))
+                else Reply(text, json.optBoolean("sent"),
+                    FennecWorld.presentation(json.optString("action"), json.optString("target")),
+                    json.optString("language") == "de")
             } catch (_: java.io.IOException) {
                 null
             } catch (_: org.json.JSONException) {

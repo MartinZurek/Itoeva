@@ -89,6 +89,13 @@ object PlayMapScene {
         return x to y
     }
 
+    /** Beschriftungen der Stream-Kartenansicht teilen genau das Raster des bestehenden Bildes. */
+    fun labels(widthCells: Int, floorY: Int): Map<Place, Pair<Int, Int>> {
+        val mapHeight = minOf(floorY, (widthCells * 0.6f).roundToInt()).coerceAtLeast(GRID_H + 6)
+        val top = ((floorY - mapHeight) / 2).coerceAtLeast(0)
+        return SHOWN.associateWith { centerOf(it, widthCells, top, mapHeight) }
+    }
+
     /** Die Zellen einer geraden Linie von [a] nach [b], beide Enden eingeschlossen. */
     private fun line(a: Pair<Int, Int>, b: Pair<Int, Int>): List<Pair<Int, Int>> {
         val steps = max(abs(b.first - a.first), abs(b.second - a.second))
