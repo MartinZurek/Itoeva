@@ -5895,7 +5895,7 @@ fun DockScreen(
                     .putString(GAME_BACKPACK_KEY, PlayBackpack.encode(next)).apply()
             }
             /** Nach einer Handlung: Stelle aus dem Ablauf uebernehmen, wieder in Ruhe gehen. */
-            fun settleAfterAction() {
+            suspend fun settleAfterAction() {
                 avatar?.let { done ->
                     val px = with(density) { done.sizeDp.dp.toPx() }
                     gamePos = PlayControl.Pos(AvatarFooting.fractionOf(done.offset.x, px, maxWidthPx), 0f)
