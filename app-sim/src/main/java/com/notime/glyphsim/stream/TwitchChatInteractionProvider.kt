@@ -66,6 +66,9 @@ internal class TwitchChatInteractionProvider(
 
     override val commands: Flow<ViewerCommand> = stream.asSharedFlow()
 
+    private val speechStream = MutableSharedFlow<FennecConversation.Address>(extraBufferCapacity = 1)
+    val addresses: Flow<FennecConversation.Address> = speechStream.asSharedFlow()
+
     private val statusState = MutableStateFlow(TwitchChatStatus.OFF)
 
     val status: StateFlow<TwitchChatStatus> = statusState.asStateFlow()
@@ -124,10 +127,11 @@ internal class TwitchChatInteractionProvider(
     /**
      * Uebersetzt eine Chat-Zeile und legt sie ab - oder verwirft sie.
      *
-     * Der Chat-Text selbst verlaesst diese Stelle nie. Weitergegeben wird nur, was verstanden
-     * wurde: ein Platz und der Name, gegen den der Abstand zaehlt.
+     * Freitext verlaesst diese Stelle nur nach ausdruecklicher Ansprache von Fennec,
+     * getrennt von den Spielbefehlen und ohne Zugriff auf deren Wirkung.
      */
     private fun emit(line: TwitchIrc.Line.Chat) {
+        FennecConversation.address(line.viewerId, line.text, clock())?.let(speechStream::tryEmit)
         val command = viewerCommandOf(line.viewerId, line.text, origin, clock(), config) ?: return
         stream.tryEmit(command)
     }

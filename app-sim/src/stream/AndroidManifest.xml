@@ -15,7 +15,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
-    <application>
+    <application android:networkSecurityConfig="@xml/stream_network_security">
         <activity android:name="com.notime.glyphsim.ui.MainActivity"
             android:screenOrientation="landscape"
             tools:replace="android:screenOrientation" />

@@ -669,6 +669,56 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Fennec antwortet auf direkte Zuschaueransprache
+
+**Version:** `stream-fennec-chat-v1`, Ausgangspunkt `8a8dfdb`.
+**DOCUMENTED INTENT:** Nutzer beauftragt Antworten auf direkte Ansprache wie
+"hey fennec how are you?", mit sichtbarer Chat-Animation und KI oder anderer Antwortmoeglichkeit.
+Die Wahl des Kontos wird delegiert; fuer diesen lokalen Stand dient das bestehende Stream-Konto
+mit sichtbarem Zusatz `[Fennec]`. Keine automatische Kontoerstellung und keine Bezahl-API.
+
+**Entscheidung:** Ein eigener, eng erkannter Ansprache-Eingang trennt Dialog von A-D.
+Der vorhandene Sprechablauf liefert nur projizierte Mundframes; autonome Routinen schreiben
+ihren echten Zustand weiter. Sprechpunkte und eine kurze Antwort stehen unterhalb der
+Fortschrittszeichen. Keine Wiederholung alter Fragen, global zehn Sekunden Abstand und pro
+Zuschauer dreissig Sekunden. Eigene Antworten werden verworfen, die lokale Vorschau schreibt
+niemals an Twitch. Kein Chat-Historien-, XP-, Beziehungs- oder Reminder-Effekt.
+
+Der PC-Dienst spricht ein lokales Ollama-Modell (`qwen3:1.7b`) an. Nur direkte Frage, aktueller
+oeffentlicher Ort und laufende Aktivitaet werden uebertragen; keine Room-, Reminder-, Lore-
+oder Profildaten. Zustandsfragen verwenden belegte Orts-Saetze, weitere harmlose Fragen
+koennen kurz frei formuliert werden. Ausfall, unbrauchbare Ausgabe oder erkannte sensible
+Themen haben eine lokale Rueckfallantwort. Das kleine Modell und die einfachen Filter sind
+keine vollstaendige Moderation; unpassende Formulierungen bleiben eine Pilot-Grenze.
+
+**Betroffen:** FennecConversation, FennecReplyClient, FennecPreview, Twitch-Leseprovider,
+DockScreen, StreamFennecBubble, Stream-only Netzwerk-Konfiguration und `tools/fennec-chat`.
+Nur Loopback darf HTTP; Twitch bleibt TLS. PC-Dienst auf 127.0.0.1, Verbindung per adb reverse.
+Kontotoken liegen ausschliesslich im ausdruecklich angegebenen privaten PC-State-Pfad oder
+werden aus einer gueltigen OBS-Anmeldung gelesen. Keine neuen Android-Preferences oder
+Room-Migrationen, keine Aenderung des privaten Begleiters. Die DUMP-geschuetzte Vorschau wird
+nur im Stream-Spiel registriert und nach Verlassen wieder entfernt.
+
+**TESTED BEHAVIOR:** 64 Stream-JVM-Tests sowie 13 Python-Tests erfolgreich; Stream-APK und
+Vital-Lint erfolgreich. APK auf dem laufenden Stream-PC installiert und mit speed kompiliert.
+Lokale Testansprache nimmt denselben Dialogweg: Mundbewegung und lesbare Orts-Antwort im
+Emulator sichtbar, ohne Twitch-Schreibversuch. Freie KI-Antwort ("I like quiet places and a
+nice sip of water.") samt Mundbewegung ebenfalls im Streambild geprueft und aufgezeichnet.
+Das geladene Modell antwortet im warmen Test
+in rund 0,53 Sekunden; Kaltstart kann bis zur zwoelfsekundigen Rueckfallgrenze dauern.
+**FACT:** Die vorhandene OBS-Anmeldung wird von Twitch mit 401 abgewiesen. Kontoseite in OBS
+ist waehrend des laufenden Streams deaktiviert. Der Dienst zeigt fehlenden Schreibzugang an,
+die lokale Antwort bleibt sichtbar.
+**UNVERIFIED:** End-to-End-Versand an Twitch bleibt bis zu einer gueltigen menschlichen
+Anmeldung ausstehend. Eigene Public-App-Anmeldung mit `user:write:chat` ist vorbereitet;
+Kontozugriff und Bestaetigung erfolgen durch den Menschen. Mehrsprachigkeit und Dialogqualitaet
+ueber laengeren Publikumsbetrieb sind noch nicht nachgewiesen.
+**Ruecksetzweg:** APK `8a8dfdb` und PC-Dienst beenden; Spielstand bleibt unveraendert.
+Private Token-Datei separat entfernen bzw. App-Berechtigung im Twitch-Konto widerrufen.
+**Naechster Schritt:** Gueltigen Twitch-Schreibzugang verbinden und eine echte Ansprache samt
+Rueckantwort im Kanal pruefen. Eigene Kontoidentitaet, dauerhafte Anmeldung und Produktions-
+Moderation sind weiterhin offene Betriebsschritte.
+
 ### 2026-10-03 - Unterschiedliche Angebote und sichtbare Kontinuitaet im Stream
 
 **Version:** `stream-continuity-v1`, Ausgangspunkt `26d0fe7`.

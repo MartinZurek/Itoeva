@@ -118,6 +118,9 @@ import com.notime.glyphsim.stream.StreamInteractions
 import com.notime.glyphsim.stream.StreamSelection
 import com.notime.glyphsim.stream.TwitchChatInteractionProvider
 import com.notime.glyphsim.stream.TwitchChatStatus
+import com.notime.glyphsim.stream.FennecConversation
+import com.notime.glyphsim.stream.FennecReplyClient
+import com.notime.glyphsim.stream.FennecPreview
 import com.notime.glyphsim.matrix.AvatarSpriteView
 import com.notime.glyphsim.matrix.MatrixAnimator
 import com.notime.glyphsim.matrix.LivingRuntimeAdapter
@@ -512,6 +515,15 @@ fun DockScreen(
             }
         }
         var chatStatus by remember { mutableStateOf(TwitchChatStatus.OFF) }
+        val fennecDialogueGate = remember { FennecConversation.Gate() }
+        var fennecViewer by remember { mutableStateOf<String?>(null) }
+        var fennecReply by remember { mutableStateOf<String?>(null) }
+        var fennecTalkFrame by remember { mutableStateOf<IntArray?>(null) }
+        val fennecPreview = remember { FennecPreview() }
+        DisposableEffect(streamMode, playMode) {
+            if (streamMode && playMode) fennecPreview.register(context)
+            onDispose { if (streamMode && playMode) fennecPreview.unregister(context) }
+        }
         var streamSlotTransfer by remember(actionSlotProfileId) {
             mutableStateOf<StreamSlotTransfer?>(null)
         }
@@ -3620,6 +3632,39 @@ fun DockScreen(
                 launch { chat.status.collect { chatStatus = it } }
                 launch { chat.listen() }
             }
+            launch {
+                    listOfNotNull(twitchChat?.addresses, fennecPreview.addresses).merge().collect { address ->
+                        if (avatar?.species != AvatarSpecies.FENNEC || !screenVisible ||
+                            !fennecDialogueGate.admit(address, System.currentTimeMillis())) return@collect
+                        fennecViewer = address.viewerId
+                        fennecReply = null
+                        try {
+                            // Nur eine Renderprojektion: Der echte Ablauf schreibt weiter seinen Frame.
+                            // Dialog darf weder einen Reminder abschliessen noch eine Routine abbrechen.
+                            val talking = launch {
+                                val sequence = AvatarAnimations.talkSequence(AvatarSpecies.FENNEC)
+                                while (isActive) MatrixAnimator.playTimed(sequence.frames, sequence.holdsMs) {
+                                    fennecTalkFrame = it
+                                }
+                            }
+                            try {
+                                val reply = FennecReplyClient.reply(
+                                    address, currentPlace.name, if (avatarWalking) "WALKING" else
+                                        currentActivity?.name ?: activeActivity?.name ?: "IDLE",
+                                    java.time.LocalTime.now().hour
+                                )
+                                fennecReply = reply?.text ?: "I'm here, but my chat connection needs a moment."
+                                delay((fennecReply!!.length * 55L).coerceIn(4_000L, 8_000L))
+                            } finally {
+                                talking.cancelAndJoin()
+                            }
+                        } finally {
+                            fennecTalkFrame = null
+                            fennecViewer = null
+                            fennecReply = null
+                        }
+                    }
+            }
             listOfNotNull(localViewers.commands, twitchChat?.commands).merge().collect { command ->
                 val decision = StreamCommandGate.admit(
                     gateState,
@@ -5250,7 +5295,7 @@ fun DockScreen(
                 stringResource(current.species.labelRes)
             }
             AvatarSpriteView(
-                frame = gameFrame(GAME_HOST_ID, current.species, current.frame),
+                frame = fennecTalkFrame ?: gameFrame(GAME_HOST_ID, current.species, current.frame),
                 brightnessScale = avatarDim.value,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
@@ -5592,6 +5637,13 @@ fun DockScreen(
                     avatarSizeDp = speakerSize,
                     maxWidthPx = maxWidthPx
                 )
+            }
+        }
+
+        if (streamMode && playMode) {
+            fennecViewer?.let { viewer ->
+                StreamFennecBubble(viewer, fennecReply,
+                    Modifier.align(Alignment.TopCenter).padding(top = 64.dp))
             }
         }
 
