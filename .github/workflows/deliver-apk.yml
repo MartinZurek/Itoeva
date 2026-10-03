@@ -209,6 +209,7 @@ jobs:
             echo "sha=$SHA"
             echo "archive=itoeva-dev-$(date -u +%Y%m%d)-$SHA.apk"
             echo "archive_stream=itoeva-stream-$(date -u +%Y%m%d)-$SHA.apk"
+            echo "archive_game=itoeva2-$(date -u +%Y%m%d)-$SHA.apk"
           } >> "$GITHUB_OUTPUT"
           echo "versionCode $CODE, versionName 1.0.$CODE, Stand $SHA"
 
@@ -314,9 +315,13 @@ jobs:
       # eigener applicationId (siehe app-sim/build.gradle.kts). Er entsteht hier, weil er
       # sonst nur auf dem Rechner dessen existiert, der ihn zufaellig baut - und NT-058
       # verlangt genau ihn im Emulator.
-      - name: assembleDebug und assembleStream
+      #
+      # `game` ist Itoeva 2 (seit 03.10.): das aktive Spiel mit eigener applicationId, das sich
+      # neben der bisherigen App installiert. Nach Drive geht sie als Itoeva2-debug.apk
+      # (siehe "Itoeva-2-APK nach Drive legen").
+      - name: assembleDebug, assembleStream und assembleGame
         run: >
-          ./gradlew :app-sim:assembleDebug :app-sim:assembleStream
+          ./gradlew :app-sim:assembleDebug :app-sim:assembleStream :app-sim:assembleGame
           -PitoevaVersionCode=${{ steps.version.outputs.code }}
           -PitoevaVersionName=${{ steps.version.outputs.name }}
           --stacktrace
@@ -358,7 +363,8 @@ jobs:
             exit 1
           fi
           for APK in app-sim/build/outputs/apk/debug/app-sim-debug.apk \
-                     app-sim/build/outputs/apk/stream/app-sim-stream.apk; do
+                     app-sim/build/outputs/apk/stream/app-sim-stream.apk \
+                     app-sim/build/outputs/apk/game/app-sim-game.apk; do
             if [ ! -f "$APK" ]; then
               echo "::error::$APK wurde nicht erzeugt."
               exit 1
@@ -389,7 +395,7 @@ jobs:
               exit 1
             fi
           done
-          echo "Beide Pakete tragen das Zertifikat der installierten App."
+          echo "Alle Pakete tragen das Zertifikat der installierten App."
 
       - name: Schluesselreste entfernen
         if: always()
@@ -421,6 +427,9 @@ jobs:
           # daneben ist fuer den bequemen Fall gedacht, nicht als einzige Quelle.
           cp app-sim/build/outputs/apk/stream/app-sim-stream.apk \
              "dist/${{ steps.version.outputs.archive_stream }}"
+          # Itoeva 2 (Build-Typ `game`) - vorerst nur hier abholbar.
+          cp app-sim/build/outputs/apk/game/app-sim-game.apk \
+             "dist/${{ steps.version.outputs.archive_game }}"
 
       - uses: actions/upload-artifact@v4
         # **Die Rueckfallebene darf die Ablieferung nicht verhindern.** Am 30.09. war der
@@ -464,8 +473,18 @@ jobs:
           # eine Rueckfrage, ohne dass irgendetwas kaputt war. Wer beides akzeptiert, spart
           # jedem Kuenftigen dieselbe Viertelstunde; die Variable bleibt der dokumentierte Weg.
           STREAM_FILE_ID: ${{ vars.GDRIVE_STREAM_APK_FILE_ID || secrets.GDRIVE_STREAM_APK_FILE_ID }}
+          # Itoeva 2: Die Datei Itoeva2-debug.apk liegt im selben Ordner und ist demselben
+          # Service-Konto freigegeben (angelegt am 03.10.). Ihre Id steht als Rueckfallwert hier,
+          # weil eine Drive-Datei-Id nichts Geheimes ist (siehe oben); eine Variable
+          # GDRIVE_GAME_APK_FILE_ID hat Vorrang, falls die Datei einmal ersetzt wird.
+          GAME_FILE_ID: ${{ vars.GDRIVE_GAME_APK_FILE_ID || '1cyDsKNstKS7HFCPZTKsFvWXGGF2Wah10' }}
         run: |
           set -euo pipefail
+          if [ -n "${SA_JSON}" ] && [ -n "${GAME_FILE_ID}" ]; then
+            echo "game_configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "game_configured=false" >> "$GITHUB_OUTPUT"
+          fi
           if [ -n "${SA_JSON}" ] && [ -n "${FILE_ID}" ]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
             echo "Drive-Zugang eingerichtet - die APK wird abgeliefert."
@@ -511,7 +530,10 @@ jobs:
       # die Begruendung, warum hier nicht google-github-actions/auth steht.
       - name: Zugriffstoken holen
         id: token
-        if: steps.drive.outputs.configured == 'true' || steps.drive.outputs.stream_configured == 'true'
+        if: >-
+          steps.drive.outputs.configured == 'true' ||
+          steps.drive.outputs.stream_configured == 'true' ||
+          steps.drive.outputs.game_configured == 'true'
         env:
           SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
         run: |
@@ -725,3 +747,31 @@ jobs:
             -o /dev/null
 
           echo "Stream-APK in Drive aktualisiert: ${VERSION}-stream (${SHA})"
+
+      # Itoeva 2 (Build-Typ `game`) - dieselbe Ablieferung in die eigene Datei Itoeva2-debug.apk.
+      - name: Itoeva-2-APK nach Drive legen
+        if: steps.drive.outputs.game_configured == 'true'
+        env:
+          TOKEN: ${{ steps.token.outputs.token }}
+          FILE_ID: ${{ vars.GDRIVE_GAME_APK_FILE_ID || '1cyDsKNstKS7HFCPZTKsFvWXGGF2Wah10' }}
+          VERSION: ${{ steps.version.outputs.name }}
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          set -euo pipefail
+          APK=app-sim/build/outputs/apk/game/app-sim-game.apk
+
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @"$APK" \
+            "https://www.googleapis.com/upload/drive/v3/files/${FILE_ID}?uploadType=media&supportsAllDrives=true" \
+            -o /dev/null
+
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"description\":\"Itoeva 2 ${VERSION}-itoeva2 (${SHA}), applicationId com.notime.glyphminderwatch.itoeva2, das aktive Spiel (Spieler steuert), gebaut von deliver-apk.yml, Lauf ${GITHUB_RUN_ID}\"}" \
+            "https://www.googleapis.com/drive/v3/files/${FILE_ID}?supportsAllDrives=true" \
+            -o /dev/null
+
+          echo "Itoeva-2-APK in Drive aktualisiert: ${VERSION}-itoeva2 (${SHA})"

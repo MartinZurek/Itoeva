@@ -40,6 +40,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -96,6 +97,7 @@ import com.notime.glyphsim.matrix.AvatarWatchdog
 import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.PlayMapScene
+import com.notime.glyphsim.matrix.PlayControl
 import com.notime.glyphsim.matrix.PlayPastime
 import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.skilltree.ActivityContext
@@ -243,6 +245,13 @@ fun DockScreen(
      * Choreografie, Persistenz und Rendering bleiben dieselben wie im normalen Spielmodus.
      */
     streamMode: Boolean = false,
+    /**
+     * **Itoeva 2: das aktive Spiel** (Build-Typ `game`, entschieden am 03.10.).
+     *
+     * Dieselbe Welt, aber der Spieler steuert die Figur (siehe [PlayControl]): keine
+     * Erinnerungen, keine Uhr, keine Speicherplaetze, und die Figur tut nichts von selbst.
+     */
+    gameMode: Boolean = false,
     /**
      * **Nur die Uhr** - kein Wesen, keine Wohnung, keine Erinnerung (siehe [WatchModePrefs]).
      *
@@ -397,7 +406,7 @@ fun DockScreen(
         // derselben Avatar-Groesse abgeleitet, damit Figur und Welt sichtbar zur selben
         // Pixelwelt gehoeren. Eine eigene Kulissen-Zellgroesse waere sofort als zwei
         // uebereinandergelegte Grafiken aufgefallen.
-        val worldAvatarSizeDp = if (streamMode) StreamPresentation.avatarSizeDp(maxHeight.value)
+        val worldAvatarSizeDp = if (streamMode || gameMode) StreamPresentation.avatarSizeDp(maxHeight.value)
             else (clockSizeDp * AVATAR_TO_CLOCK_RATIO)
                 .coerceIn(DockLayoutPrefs.MIN_SIZE_DP, DockLayoutPrefs.DEFAULT_SIZE_DP)
         val worldAvatarPx = with(density) { worldAvatarSizeDp.dp.toPx() }
@@ -741,6 +750,12 @@ fun DockScreen(
         // Ob gerade gewollt eine Tuer durchschritten wird - nur dann sind [avatarHidden] und ein
         // gedaempftes [avatarDim] richtig. Der Waechter (siehe AvatarWatchdog) liest das.
         var doorTransit by remember { mutableStateOf(false) }
+        /** Itoeva 2: wo die Figur steht (siehe PlayControl) und welche Richtung gedrueckt ist. */
+        var gamePos by remember { mutableStateOf(PlayControl.Pos()) }
+        var gameDir by remember { mutableStateOf<PlayControl.Dir?>(null) }
+        /** Der Platz in Reichweite (fuer die Aktionstaste) und ob gerade eine Handlung laeuft. */
+        var gameStation by remember { mutableStateOf<PlayScene.Station?>(null) }
+        var gameActing by remember { mutableStateOf(false) }
         /**
          * **Die Karte vor einem weiten Weg** (siehe PlayMapScene): Ausgangsort und Weg, solange
          * sie gezeigt wird, sonst `null`. [mapDrawn] ist, wie weit der Weg nachgezogen ist,
@@ -2310,6 +2325,9 @@ fun DockScreen(
              */
             anyResident: Boolean = false
         ) {
+            // Itoeva 2: Besuche spielen den Gastgeber an (Begruessung, gemeinsame Regung) - das
+            // wuerde dem Spieler die Figur aus der Hand nehmen. Vorerst ohne Besuche.
+            if (gameMode) return
             val (host, resident, residentState) = residentPersistenceMutex.withLock {
                 if (sharedActivityProfileId != null) return@withLock null
                 if (visitingProfileIds.size >= LivingPopulationLayout.visitorCapFor(currentPlace)) {
@@ -2750,7 +2768,7 @@ fun DockScreen(
             // **Die Buchfuehrung steht bewusst NACH dieser Pruefung.** Stand sie davor, merkte sich
             // ein uebersprungener Lauf trotzdem die neuen Masse - die naechste Drehung rechnete
             // ihren Bruchteil dann gegen eine Breite, gegen die die Figur nie gestanden hat.
-            if (!playMode || current == null || avatarWalking || avatarSettling) {
+            if (!playMode || gameMode || current == null || avatarWalking || avatarSettling) {
                 return@LaunchedEffect
             }
             val previousAvatarPx = lastAvatarPx
@@ -3097,6 +3115,7 @@ fun DockScreen(
             // Die waagerechte Position wird als Bruchteil uebernommen statt neu gewuerfelt,
             // damit er beim Skalieren nicht quer durchs Bild springt.
             LaunchedEffect(worldAvatarSizeDp) {
+                if (gameMode) return@LaunchedEffect
                 val current = avatar ?: return@LaunchedEffect
                 if (current.fed || current.sizeDp == worldAvatarSizeDp) return@LaunchedEffect
                 val oldBoundX = (maxWidthPx - with(density) { current.sizeDp.dp.toPx() }).coerceAtLeast(0f)
@@ -3168,7 +3187,8 @@ fun DockScreen(
         // dazu, sie liefe ab und zaehlte anschliessend als verpasst. Ein Modus, der still
         // Fehlschlaege ins Pflegebuch schreibt, waere schlimmer als einer, der nichts tut.
         LaunchedEffect(watchOnly) {
-            if (watchOnly) return@LaunchedEffect
+            // Itoeva 2 kennt keine Erinnerungen.
+            if (watchOnly || gameMode) return@LaunchedEffect
             ReminderAnimationBus.events.onSubscription {
                 val open = OpenReminderLookup.find(context, PresentCompanion.profileId(context))
                     ?: return@onSubscription
@@ -3771,6 +3791,95 @@ fun DockScreen(
             }
         }
 
+        // **Itoeva 2: der Spieler steuert** (siehe PlayControl). Ein Bildtakt-genauer Takt liest
+        // die gedrueckte Richtung, rueckt die Figur weiter, laesst sie dabei gehen und bringt sie
+        // am Rand zum Nachbarort. Die Stelle wird aus [gamePos] gerechnet und nicht im Offset
+        // gespeichert - so stimmt sie auch nach Drehen oder Groessenwechsel.
+        if (playMode && gameMode) {
+            val gameGeometry by rememberUpdatedState(Triple(maxWidthPx, maxHeightPx, worldAvatarPx))
+            val gameScene by rememberUpdatedState(Triple(sceneWidthCells, floorYCells, sceneCellPx))
+            /** Welcher Platz gerade in Reichweite ist - nach jedem Schritt und Ortswechsel neu. */
+            fun refreshGameStation() {
+                val current = avatar ?: return
+                val (widthPx, _, avatarPx) = gameGeometry
+                val (cells, floorCells, cellPx) = gameScene
+                if (widthPx <= 0f || cellPx <= 0f) return
+                val centers = PlayScene.stationsAt(currentPlace, current.species).mapNotNull { station ->
+                    PlayScene.stationSpot(currentPlace, station, cells, floorCells, current.species)
+                        ?.let { station to (it.centerX + 0.5f) * cellPx / widthPx }
+                }.toMap()
+                gameStation = PlayControl.stationInReach((current.offset.x + avatarPx / 2f) / widthPx, centers)
+            }
+            LaunchedEffect(currentPlace, sceneWidthCells, avatar == null) { refreshGameStation() }
+            fun gameOffsetFor(pos: PlayControl.Pos, species: AvatarSpecies): Offset {
+                val (widthPx, heightPx, avatarPx) = gameGeometry
+                return avatarSpot(
+                    pos.x, avatarPx, widthPx, floorYPxNow + pos.depth * heightPx * GAME_DEPTH_BAND, species
+                )
+            }
+            LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx, floorYPx, avatar == null) {
+                val current = avatar ?: return@LaunchedEffect
+                avatar = current.copy(sizeDp = worldAvatarSizeDp, offset = gameOffsetFor(gamePos, current.species))
+            }
+            LaunchedEffect(Unit) {
+                var last = withFrameMillis { it }
+                var gait: Job? = null
+                while (isActive) {
+                    val now = withFrameMillis { it }
+                    val dt = now - last
+                    last = now
+                    // Waehrend einer Handlung (Aktionstaste) gehoert die Figur dem Ablauf.
+                    val dir = gameDir.takeUnless { gameActing }
+                    val current = avatar
+                    if (current == null || dir == null) {
+                        if (gait != null) {
+                            gait.cancel()
+                            gait = null
+                            avatarWalking = false
+                            // Beginnt gerade eine Handlung, spielt sie ihre eigenen Bilder.
+                            if (!gameActing) {
+                                current?.let { startAvatarIdleLoop(it.species, AvatarMoodSnapshot.forSpecies(context, it.species)) }
+                            }
+                        }
+                        continue
+                    }
+                    if (gait == null) {
+                        avatarIdleJob?.cancel()
+                        occupiedStation = null
+                        avatarWalking = true
+                        gait = launch {
+                            val walk = AvatarAnimations.walkSequence(current.species)
+                            while (isActive) {
+                                MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
+                                    avatar = avatar?.copy(frame = f)
+                                }
+                            }
+                        }
+                    }
+                    // Die Blickrichtung bleibt nach dem Anhalten, wie sie war.
+                    when (dir) {
+                        PlayControl.Dir.LEFT -> avatarFacing = AvatarShading.Side.RIGHT
+                        PlayControl.Dir.RIGHT -> avatarFacing = AvatarShading.Side.LEFT
+                        else -> Unit
+                    }
+                    val step = PlayControl.step(gamePos, dir, dt)
+                    var pos = step.pos
+                    step.exit?.let { exit ->
+                        val next = PlayControl.neighbor(currentPlace, exit)
+                        pos = if (next != null) {
+                            currentPlace = next
+                            PlayControl.entry(exit, step.pos)
+                        } else {
+                            step.pos.copy(pushMs = 0L)
+                        }
+                    }
+                    gamePos = pos
+                    avatar = avatar?.copy(offset = gameOffsetFor(pos, current.species))
+                    refreshGameStation()
+                }
+            }
+        }
+
         // Play-Modus: kleine autonome Regungen zwischen zwei echten Ausloesungen (die je nach
         // Spezies/Level mehrere Minuten auseinander liegen koennen, siehe PlayGamePlan) - sonst
         // stuende der Avatar dazwischen nur unveraendert idle da. Rein kosmetisch (keine
@@ -3797,6 +3906,8 @@ fun DockScreen(
                 requestedNodeId,
                 pendingExternalImpulse?.impulseId
             ) {
+                // Itoeva 2: Die Figur tut nichts von selbst - der Spieler steuert sie.
+                if (gameMode) return@LaunchedEffect
                 val species = avatar?.species ?: return@LaunchedEffect
                 try {
 
@@ -5008,7 +5119,7 @@ fun DockScreen(
         //
         // Bewusst komplett aus der Komposition genommen statt nur durchsichtig geschaltet - eine
         // unsichtbare Uhr wuerde weiter Tipp- und Ziehgesten schlucken.
-        if (avatar?.fed != true) {
+        if (avatar?.fed != true && !gameMode) {
             // Siehe HomeScreen fuer dieselbe Begruendung: ohne Beschreibung haette TalkBack keine
             // Information darueber, was hier gezeichnet wird.
             val activeAvatar = avatar
@@ -5728,6 +5839,48 @@ fun DockScreen(
             }
         }
 
+        // Itoeva 2: Tastatur/Gamepad und das Steuerkreuz unten links (siehe GameControls).
+        if (playMode && gameMode) {
+            /**
+             * **Die Aktionstaste**: Am Platz in Reichweite das tun, wofuer er da ist (siehe
+             * PlayControl.actionAt) - mit denselben Ablaeufen wie im autonomen Leben. Danach
+             * steht die Figur dort, wo der Ablauf sie gelassen hat, hinten an der Bodenlinie.
+             */
+            fun gameAction() {
+                val station = gameStation ?: return
+                val species = avatar?.species ?: return
+                if (gameActing) return
+                val routine = PlayControl.actionAt(station, lampOn, tvOn) ?: return
+                gameActing = true
+                scope.launch {
+                    try {
+                        runRoutine(routine, species, applyLegacyEconomy = false)
+                    } finally {
+                        gameActing = false
+                        avatar?.let { done ->
+                            val px = with(density) { done.sizeDp.dp.toPx() }
+                            gamePos = PlayControl.Pos(AvatarFooting.fractionOf(done.offset.x, px, maxWidthPx), 0f)
+                            startAvatarIdleLoop(done.species, AvatarMoodSnapshot.forSpecies(context, done.species))
+                        }
+                    }
+                }
+            }
+            GameKeys(onDir = { gameDir = it }, onAction = { gameAction() })
+            GameActionButton(
+                enabled = gameStation != null && !gameActing,
+                onPress = { gameAction() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 28.dp, bottom = 40.dp)
+            )
+            GameDpad(
+                onDir = { gameDir = it },
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 20.dp, bottom = 16.dp)
+            )
+        }
+
         // ---- Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt) ----
         //
         // Die Plaetze selbst stehen fest wie die Kulisse - nur ihr INHALT laesst sich ziehen, auf
@@ -5739,7 +5892,7 @@ fun DockScreen(
         // hat. Fuer TalkBack bleibt zusaetzlich die Zusatzaktion "Anwenden" - Ziehen laesst sich
         // fuer einen Screenreader nicht sinnvoll bedienen, dasselbe Muster wie beim Fuettern per
         // Uhr-Ziehen weiter oben.
-        if (playMode) {
+        if (playMode && !gameMode) {
             val visibleSlots = if (streamMode) {
                 StreamInteractions.visibleSlots(
                     StreamInteractionState(slots, pendingExternalImpulse, latestExternalImpulse)
@@ -6276,6 +6429,13 @@ private const val CAMERA_GLIDE_MS = 1_400
 
 /** Wie lange die Figur an einem Zwischenort draussen stehen bleibt und sich umsieht (siehe PlayMap). */
 private const val PASS_THROUGH_LINGER_MS = 4_000L
+
+/**
+ * Itoeva 2: Wie tief der Boden ist, in den man hineinlaufen kann - als Anteil der Bildhoehe
+ * unter der Bodenlinie (siehe PlayControl.Pos.depth). Die Bodenlinie liegt bei 80 %, ganz vorn
+ * stehen die Fuesse damit bei 94 %.
+ */
+private const val GAME_DEPTH_BAND = 0.14f
 
 /** Die Karte vor einem weiten Weg (siehe showMap): so lange zieht sich der Weg ... */
 private const val MAP_DRAW_MS = 3_200L

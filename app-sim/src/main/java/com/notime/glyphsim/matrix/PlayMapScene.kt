@@ -58,6 +58,13 @@ object PlayMapScene {
         Place.JUNGLE -> Spot(13, 5)
     }
 
+    /**
+     * Die Lage eines Ortes auf der Karte (Spalte, Zeile) - fuer die Steuerung in Itoeva 2
+     * (siehe [PlayControl]): Wer nach rechts aus dem Bild laeuft, kommt an den Nachbarort, der auf
+     * der Karte rechts liegt. Alle Zimmer liegen am selben Fleck, dem Haus.
+     */
+    fun gridOf(place: Place): Pair<Int, Int> = spotOf(place).let { it.gx to it.gy }
+
     /** Das Zeichen eines Ortes, 3 x 3 Zellen. */
     private fun glyphOf(place: Place): List<String> = when (place) {
         Place.STREET -> listOf("...", ".#.", "...")

@@ -669,6 +669,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Itoeva 2: Handeln mit der Aktionstaste
+
+**Anlass:** "Mach weiter" - die naechste Stufe aus [ITOEVA2.md](ITOEVA2.md): an Plaetzen etwas tun.
+
+**Geaendert:** Aktionstaste (unten rechts; Leertaste/Enter/E/Gamepad-A), hell sobald ein Platz in
+Reichweite ist. `PlayControl.stationInReach` und `PlayControl.actionAt` waehlen Platz und
+Ablauf (Bett, Bank, Wanne, Schreibtisch, Tisch, Kuehlschrank, Regal, Werkbank, Automat, Laden,
+Lampe/Fernseher an und aus) aus den vorhandenen Schritten; die Darstellung laeuft ueber denselben
+`runRoutine` wie das autonome Leben. Waehrend der Handlung ruht die Steuerung.
+
+### 2026-10-03 - Itoeva 2: Der Spieler steuert
+
+**Anlass:** Der Nutzer stellt um: weg vom Erinnerungsspiel, hin zu einem aktiven Spiel auf dem
+Handy, in dem man den Avatar selbst steuert - links, rechts, hoch, runter. Fernziel ein
+Fantasy-Strategiespiel im Stil der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva,
+ohne Erinnerungen und ohne Uhr. Der Stream zeigt weiter den Avatar, der sich selbst steuert.
+Die bisherige App soll nicht ueberschrieben werden. Entschieden: eigene App-Variante, hoch/runter
+als Tiefe im Bild, Codex' Stream-PR #322 vorher mergen, APK zunaechst als CI-Artefakt; auf Wunsch danach auch nach Drive.
+
+**Geaendert:**
+- Itoeva 1 eingefroren im Branch `itoeva-1` (ein Tag liess der Zugang nicht zu).
+- Build-Typ `game` = **Itoeva 2** mit eigener applicationId und Name, Querformat,
+  `R.bool.game_mode`. Plan und Stand: [ITOEVA2.md](ITOEVA2.md).
+- `PlayControl` (Bewegung, Tiefe, Ausgang am Rand zum Nachbarort nach der Weltkarte, Zimmer am
+  Flur) mit Tests; `PlayMapScene.gridOf` liefert die Kartenlage.
+- `GameControls`: Steuerkreuz und Pfeiltasten/WASD. DockScreen im Spielmodus ohne Erinnerungen,
+  Uhr, Speicherplaetze, autonome Schleife und Besuche.
+- `deliver-apk` baut `assembleGame` mit, legt `itoeva2-*.apk` als Artefakt ab und liefert sie als
+  `Itoeva2-debug.apk` in denselben Drive-Ordner (eigene Datei, demselben Service-Konto freigegeben).
+- Offline-Tests: Platzhalter fuer `BuildConfig` (seit #322 fragt `PlayMusic` den Build-Typ ab).
+
+**Geschuetzt:** Gewoehnliche App und Stream bleiben unveraendert; ihre Daten sind durch die
+eigene applicationId von Itoeva 2 getrennt.
+
 ### 2026-10-03 - Fennecs Modell wird getrennt vom Zuschauerchat vorgeladen
 
 **Version:** `stream-fennec-warmup-v1`, Ausgangspunkt `aa13473`.
