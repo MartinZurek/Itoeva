@@ -682,6 +682,14 @@ den notwendigen Speicher-Schritt. Die eigene Chat-Verbindung bleibt ausstehend.
 Die Registrierung der vorbereiteten Public-App wird von Twitch mit fehlender Zwei-Faktor-
 Anmeldung abgelehnt. Die Sicherheitsseite wurde fuer den Kontoinhaber geoeffnet; keine
 Sicherheitsoption, Telefonnummer oder Authentifizierungs-App wurde automatisch geaendert.
+Nach menschlicher Zwei-Faktor-Einrichtung und Entwicklerfreigabe wurde die Public-App
+`Itoeva Fennec Chat` mit lokaler Rueckleitung registriert. Der Mensch hat das Schreiben als
+`fennec_itoeva` ausdruecklich freigegeben; der gespeicherte Zugang erlaubt nur `user:write:chat`.
+Zwei echte Twitch-Testansprachen wurden per Helix bestaetigt und vom anonymen Chat-Eingang
+verarbeitet. Ein unabhaengiger IRC-Leser beobachtete beide `[Fennec]`-Rueckantworten im Kanal;
+die Ortsantwort und die frei formulierte Ollama-Antwort standen gleichzeitig im Streambild.
+Dienststatus: zwei Antworten, zwei bestaetigte Sendungen, letzte Quelle `ollama`. Screenshots
+wurden visuell geprueft. Keine Zugangsdaten im Repository oder in Lieferdateien.
 
 **Version:** `stream-fennec-chat-v1`, Ausgangspunkt `8a8dfdb`.
 **DOCUMENTED INTENT:** Nutzer beauftragt Antworten auf direkte Ansprache wie
@@ -718,18 +726,16 @@ Emulator sichtbar, ohne Twitch-Schreibversuch. Freie KI-Antwort ("I like quiet p
 nice sip of water.") samt Mundbewegung ebenfalls im Streambild geprueft und aufgezeichnet.
 Das geladene Modell antwortet im warmen Test
 in rund 0,53 Sekunden; Kaltstart kann bis zur zwoelfsekundigen Rueckfallgrenze dauern.
-**FACT:** Die vorhandene OBS-Anmeldung wird von Twitch mit 401 abgewiesen. Kontoseite in OBS
-ist waehrend des laufenden Streams deaktiviert. Der Dienst zeigt fehlenden Schreibzugang an,
-die lokale Antwort bleibt sichtbar.
-**UNVERIFIED:** End-to-End-Versand an Twitch bleibt bis zu einer gueltigen menschlichen
-Anmeldung ausstehend. Eigene Public-App-Anmeldung mit `user:write:chat` ist vorbereitet;
-Kontozugriff und Bestaetigung erfolgen durch den Menschen. Mehrsprachigkeit und Dialogqualitaet
+**FACT (Erstpruefung):** Die damalige OBS-Anmeldung wurde von Twitch mit 401 abgewiesen.
+Die Kontoseite in OBS war waehrend des laufenden Streams deaktiviert. Der Dienst zeigte
+fehlenden Schreibzugang an; die lokale Antwort blieb sichtbar. Freigabe und Versand wurden
+anschliessend wie im Betriebsnachtrag beschrieben erfolgreich eingerichtet und geprueft.
+**UNVERIFIED:** Mehrsprachigkeit und Dialogqualitaet
 ueber laengeren Publikumsbetrieb sind noch nicht nachgewiesen.
 **Ruecksetzweg:** APK `8a8dfdb` und PC-Dienst beenden; Spielstand bleibt unveraendert.
 Private Token-Datei separat entfernen bzw. App-Berechtigung im Twitch-Konto widerrufen.
-**Naechster Schritt:** Gueltigen Twitch-Schreibzugang verbinden und eine echte Ansprache samt
-Rueckantwort im Kanal pruefen. Eigene Kontoidentitaet, dauerhafte Anmeldung und Produktions-
-Moderation sind weiterhin offene Betriebsschritte.
+**Naechster Schritt:** Publikumsbetrieb beobachten. Ein separates Bot-Konto, automatische
+Anmeldeerneuerung und Produktions-Moderation sind weiterhin offene Betriebsschritte.
 
 ### 2026-10-03 - Unterschiedliche Angebote und sichtbare Kontinuitaet im Stream
 
