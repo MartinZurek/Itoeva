@@ -77,7 +77,7 @@ SRCS=(
   "$SIM/LivingRuntimeAdapter.kt" "$SIM/LivingResidents.kt" "$SIM/LivingPopulation.kt"
   "$SIM/LivingPopulationLayout.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
-  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt" "$SIM/AvatarWatchdog.kt" "$SIM/AvatarBearing.kt" "$SIM/PlayDaylight.kt" "$SIM/PlayQuestEffects.kt" "$SIM/PlayQuests.kt" "$SIM/PlayMap.kt" "$SIM/PlayPastime.kt" "$SIM/PlayGoals.kt" "$SIM/PlayMapScene.kt" "$SIM/PlayControl.kt" "$SIM/ResidentPassage.kt" "$SIM/PlayAmbience.kt"
+  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt" "$SIM/AvatarWatchdog.kt" "$SIM/AvatarBearing.kt" "$SIM/PlayDaylight.kt" "$SIM/PlayQuestEffects.kt" "$SIM/PlayQuests.kt" "$SIM/PlayMap.kt" "$SIM/PlayPastime.kt" "$SIM/PlayGoals.kt" "$SIM/PlayMapScene.kt" "$SIM/PlayControl.kt" "$SIM/PlayBackpack.kt" "$SIM/ResidentPassage.kt" "$SIM/PlayAmbience.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Der reine Living-Agent-Kern (NT-063/NT-067) - kein Android, keine Uhr, kein Zufall.
@@ -161,6 +161,7 @@ TEST_SRCS=(
   "$TEST/matrix/PlayGoalsTest.kt"
   "$TEST/matrix/PlayMapSceneTest.kt"
   "$TEST/matrix/PlayControlTest.kt"
+  "$TEST/matrix/PlayBackpackTest.kt"
   "$TEST/matrix/PlayWorldTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
   "$TEST/matrix/PlayDreamsTest.kt"
@@ -248,6 +249,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayGoalsTest
   com.notime.glyphsim.matrix.PlayMapSceneTest
   com.notime.glyphsim.matrix.PlayControlTest
+  com.notime.glyphsim.matrix.PlayBackpackTest
   com.notime.glyphsim.matrix.PlayWorldTest
   com.notime.glyphsim.matrix.SleepRoutineTest
   com.notime.glyphsim.matrix.PlayDreamsTest

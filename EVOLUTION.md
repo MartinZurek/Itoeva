@@ -669,6 +669,20 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Itoeva 2: Finger, sichtbare Wege, Karte, Rucksack, Musik
+
+**Anlass:** Rueckmeldung nach dem ersten Spielen: keine Musik zu hoeren; Steuerkreuz und
+Aktionsknopf funktionieren, sind aber nicht intuitiv - lieber Finger ziehen und auf Dinge doppelt
+tippen; Wege nach oben/unten und Tueren sind nicht zu sehen; Karte ueber den Avatar; ein Rucksack.
+
+**Geaendert:** Musik/Ton beim ersten Start eingeschaltet (ab Werk aus, Itoeva 2 hat keinen
+Einstellungsbildschirm) und Schalter im Menue. `GameTouch`: Ziehen = laufen (Joystick am
+Aufsetzpunkt), Tipp auf die Figur = Menue, Doppeltipp auf ein Ding = handeln, auf eine Tuer =
+hindurch. Steuerkreuz und Aktionsknopf entfallen (Tastatur bleibt). `PlayControl.exitMarks`
+zeigt Ausgaenge als Pfeile mit Steinspur, `doorTarget` wohin Tueren fuehren. Kartenansicht mit
+Ortsnamen und Wegvorschau, Rucksack mit acht Plaetzen (`PlayBackpack`), Fundstuecke aus
+Handlungen, Dinge in die Hand nehmen. Plan und Stand: [ITOEVA2.md](ITOEVA2.md).
+
 ### 2026-10-03 - Itoeva 2: Handeln mit der Aktionstaste
 
 **Anlass:** "Mach weiter" - die naechste Stufe aus [ITOEVA2.md](ITOEVA2.md): an Plaetzen etwas tun.

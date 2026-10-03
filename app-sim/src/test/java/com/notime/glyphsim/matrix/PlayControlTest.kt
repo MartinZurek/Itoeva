@@ -116,4 +116,42 @@ class PlayControlTest {
             assertTrue("$place", plaetze.all { PlayControl.actionAt(it) != null })
         }
     }
+
+    @Test
+    fun `wischen nach rechts geht nach rechts, nah am Daumen passiert nichts`() {
+        assertNull(PlayControl.swipeDir(5f, 3f, 20f))
+        assertEquals(Dir.RIGHT, PlayControl.swipeDir(40f, 10f, 20f))
+        assertEquals(Dir.LEFT, PlayControl.swipeDir(-40f, 25f, 20f))
+        assertEquals(Dir.UP, PlayControl.swipeDir(10f, -40f, 20f))
+        assertEquals(Dir.DOWN, PlayControl.swipeDir(-10f, 40f, 20f))
+    }
+
+    @Test
+    fun `Tueren fuehren in den Flur, auf die Strasse oder nach draussen`() {
+        assertEquals(Place.LIVING, PlayControl.doorTarget(Place.BEDROOM))
+        assertEquals(Place.STREET, PlayControl.doorTarget(Place.LIVING))
+        assertEquals(Place.CITY, PlayControl.doorTarget(Place.CAFE))
+        assertEquals(Place.STREET, PlayControl.doorTarget(Place.SHOP))
+        for (place in Place.entries) {
+            if (PlayScene.Station.DOOR in PlayScene.stationsAt(place)) {
+                assertTrue("$place: Tuer ohne Ziel", PlayControl.doorTarget(place) != null)
+            }
+        }
+    }
+
+    @Test
+    fun `die Wegmarken zeigen genau die Richtungen, in die es weitergeht`() {
+        val w = 60
+        fun marken(place: Place) = PlayControl.exitMarks(place, w, 30, 36, 0).filter { it.isLight }
+        // Daheim im Schlafzimmer geht es nur nach rechts (zum Bad).
+        val schlaf = marken(Place.BEDROOM)
+        assertTrue(schlaf.isNotEmpty() && schlaf.all { it.x > w / 2 })
+        // Auf der Strasse: links nach Hause, rechts zum Park, hoch zur Stadt, runter zum Laden.
+        val strasse = marken(Place.STREET)
+        assertTrue(strasse.any { it.x < 4 })
+        assertTrue(strasse.any { it.x > w - 4 })
+        assertTrue(strasse.any { it.y < 30 })
+        assertTrue(strasse.any { it.y >= 35 })
+        assertTrue(PlayControl.exitMarks(Place.STREET, w, 30, 36, 0).all { it.x in 0 until w && it.y >= 0 })
+    }
 }

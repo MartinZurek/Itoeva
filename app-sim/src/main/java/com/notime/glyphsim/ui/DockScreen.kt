@@ -98,6 +98,10 @@ import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.PlayMapScene
 import com.notime.glyphsim.matrix.PlayControl
+import android.content.Context
+import com.notime.glyphsim.settings.SettingsCatalog
+import com.notime.glyphsim.settings.SettingsStore
+import com.notime.glyphsim.matrix.PlayBackpack
 import com.notime.glyphsim.matrix.PlayPastime
 import com.notime.glyphsim.matrix.ReactionTrigger
 import com.notime.glyphsim.skilltree.ActivityContext
@@ -756,6 +760,33 @@ fun DockScreen(
         /** Der Platz in Reichweite (fuer die Aktionstaste) und ob gerade eine Handlung laeuft. */
         var gameStation by remember { mutableStateOf<PlayScene.Station?>(null) }
         var gameActing by remember { mutableStateOf(false) }
+        /** Menue der Figur, Karte und Rucksack (Itoeva 2, siehe GameOverlays). */
+        var gameMenuOpen by remember { mutableStateOf(false) }
+        var gameMapOpen by remember { mutableStateOf(false) }
+        var gameBackpackOpen by remember { mutableStateOf(false) }
+        var gameBackpack by remember {
+            mutableStateOf(
+                PlayBackpack.decode(context.getSharedPreferences(GAME_PREFS, Context.MODE_PRIVATE).getString(GAME_BACKPACK_KEY, null))
+            )
+        }
+        /** Zaehlt hoch, wenn die Figur ausserhalb des Laufens versetzt wurde (Tuer, Handlung). */
+        var gameSnap by remember { mutableIntStateOf(0) }
+        /**
+         * Musik in Itoeva 2: Es gibt dort keinen Einstellungsbildschirm, und Musik und Ton stehen
+         * ab Werk auf AUS (siehe SettingsCatalog). Beim ersten Start werden sie deshalb EINMAL
+         * eingeschaltet; danach gilt der Schalter im Menue der Figur.
+         */
+        var gameMusicOn by remember { mutableStateOf(PlayMusic.isEnabled(context)) }
+        LaunchedEffect(gameMode) {
+            if (!gameMode) return@LaunchedEffect
+            val prefs = context.getSharedPreferences(GAME_PREFS, Context.MODE_PRIVATE)
+            if (!prefs.getBoolean(GAME_AUDIO_INIT_KEY, false)) {
+                PlayMusic.setEnabled(context, true)
+                SettingsStore.write(context, SettingsCatalog.SoundEnabled, true)
+                prefs.edit().putBoolean(GAME_AUDIO_INIT_KEY, true).apply()
+                gameMusicOn = true
+            }
+        }
         /**
          * **Die Karte vor einem weiten Weg** (siehe PlayMapScene): Ausgangsort und Weg, solange
          * sie gezeigt wird, sonst `null`. [mapDrawn] ist, wie weit der Weg nachgezogen ist,
@@ -1130,7 +1161,7 @@ fun DockScreen(
          * Hier steht bewusst kein zweites Regelwerk: Ob ueberhaupt Musik laufen darf, entscheidet
          * allein [PlayMusic]; welche passt, allein der Resolver.
          */
-        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies, groupGame) {
+        LaunchedEffect(playMode, screenVisible, currentPlace, currentTopic, currentActivity, themeSpecies, groupGame, gameMusicOn) {
             if (!playMode || !screenVisible) {
                 PlayMusic.stop()
                 PlayAmbienceSound.stop()
@@ -3817,7 +3848,7 @@ fun DockScreen(
                     pos.x, avatarPx, widthPx, floorYPxNow + pos.depth * heightPx * GAME_DEPTH_BAND, species
                 )
             }
-            LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx, floorYPx, avatar == null) {
+            LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx, floorYPx, avatar == null, gameSnap) {
                 val current = avatar ?: return@LaunchedEffect
                 avatar = current.copy(sizeDp = worldAvatarSizeDp, offset = gameOffsetFor(gamePos, current.species))
             }
@@ -5088,6 +5119,21 @@ fun DockScreen(
                         renderedPlace, kulisse, scenePhase, sceneWidthCells, floorYCells,
                         tageszeit, sceneFade.value
                     )
+                }.let { bild ->
+                    // Itoeva 2: Wohin es weitergeht - Pfeile und Steine (siehe PlayControl.exitMarks).
+                    if (!gameMode || sceneCellPx <= 0f) bild else {
+                        val frontRow = floorYCells + (maxHeightPx * GAME_DEPTH_BAND / sceneCellPx).toInt()
+                        val tuer = PlayScene.propCellsAt(
+                            renderedPlace, PlayScene.Station.DOOR, sceneWidthCells, floorYCells,
+                            avatar?.species ?: AvatarSpeciesPrefs.get(context)
+                        ).takeIf { it.isNotEmpty() }?.let { zellen ->
+                            val oben = zellen.minOf { it.second }
+                            (zellen.minOf { it.first } + zellen.maxOf { it.first }) / 2 to oben
+                        }
+                        bild + PlayControl.exitMarks(
+                            renderedPlace, sceneWidthCells, floorYCells, frontRow, scenePhase, tuer
+                        )
+                    }
                 }
             }
             PlaySceneView(
@@ -5839,45 +5885,86 @@ fun DockScreen(
             }
         }
 
-        // Itoeva 2: Tastatur/Gamepad und das Steuerkreuz unten links (siehe GameControls).
+        // **Itoeva 2: Finger statt Knoepfe** (siehe GameControls/GameOverlays, gewuenscht am 03.10.).
+        // Ziehen = laufen, Figur antippen = Menue (Karte, Rucksack, Musik), Doppeltipp auf ein
+        // Ding = dort handeln, auf eine Tuer = hindurchgehen. Tastatur und Gamepad gehen weiter.
         if (playMode && gameMode) {
+            fun saveBackpack(next: PlayBackpack.Backpack) {
+                gameBackpack = next
+                context.getSharedPreferences(GAME_PREFS, Context.MODE_PRIVATE).edit()
+                    .putString(GAME_BACKPACK_KEY, PlayBackpack.encode(next)).apply()
+            }
+            /** Nach einer Handlung: Stelle aus dem Ablauf uebernehmen, wieder in Ruhe gehen. */
+            suspend fun settleAfterAction() {
+                avatar?.let { done ->
+                    val px = with(density) { done.sizeDp.dp.toPx() }
+                    gamePos = PlayControl.Pos(AvatarFooting.fractionOf(done.offset.x, px, maxWidthPx), 0f)
+                    startAvatarIdleLoop(done.species, AvatarMoodSnapshot.forSpecies(context, done.species))
+                }
+            }
             /**
-             * **Die Aktionstaste**: Am Platz in Reichweite das tun, wofuer er da ist (siehe
-             * PlayControl.actionAt) - mit denselben Ablaeufen wie im autonomen Leben. Danach
-             * steht die Figur dort, wo der Ablauf sie gelassen hat, hinten an der Bodenlinie.
+             * Am Platz [station] das tun, wofuer er da ist (siehe PlayControl.actionAt) - mit
+             * denselben Ablaeufen wie im autonomen Leben. Was es dort zu finden gibt, kommt in den
+             * Rucksack (siehe PlayBackpack.lootAt), solange Platz ist.
              */
-            fun gameAction() {
-                val station = gameStation ?: return
+            fun gameActAt(station: PlayScene.Station) {
                 val species = avatar?.species ?: return
                 if (gameActing) return
+                if (station == PlayScene.Station.DOOR) {
+                    val target = PlayControl.doorTarget(currentPlace) ?: return
+                    gameActing = true
+                    scope.launch {
+                        try {
+                            runRoutine(PlayRoutine(listOf(RoutineStep.GoTo(PlayScene.Station.DOOR))), species, applyLegacyEconomy = false)
+                            currentPlace = target
+                            gamePos = PlayControl.Pos(0.5f, 0.4f)
+                            gameSnap++
+                        } finally {
+                            gameActing = false
+                            avatar?.let { startAvatarIdleLoop(it.species, AvatarMoodSnapshot.forSpecies(context, it.species)) }
+                        }
+                    }
+                    return
+                }
                 val routine = PlayControl.actionAt(station, lampOn, tvOn) ?: return
                 gameActing = true
                 scope.launch {
                     try {
                         runRoutine(routine, species, applyLegacyEconomy = false)
+                        PlayBackpack.lootAt(station)?.let { found ->
+                            if (!gameBackpack.isFull) saveBackpack(PlayBackpack.add(gameBackpack, found))
+                        }
                     } finally {
                         gameActing = false
-                        avatar?.let { done ->
-                            val px = with(density) { done.sizeDp.dp.toPx() }
-                            gamePos = PlayControl.Pos(AvatarFooting.fractionOf(done.offset.x, px, maxWidthPx), 0f)
-                            startAvatarIdleLoop(done.species, AvatarMoodSnapshot.forSpecies(context, done.species))
-                        }
+                        settleAfterAction()
                     }
                 }
             }
-            GameKeys(onDir = { gameDir = it }, onAction = { gameAction() })
-            GameActionButton(
-                enabled = gameStation != null && !gameActing,
-                onPress = { gameAction() },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 28.dp, bottom = 40.dp)
-            )
-            GameDpad(
+            /** Welcher Platz unter [tap] liegt (Bildschirmpixel) - der naechste in einer Zelle Abstand. */
+            fun gameStationUnder(tap: Offset): PlayScene.Station? {
+                if (sceneCellPx <= 0f) return null
+                val cx = (tap.x / sceneCellPx).toInt()
+                val cy = (tap.y / sceneCellPx).toInt()
+                val species = avatar?.species ?: return null
+                return PlayScene.stationsAt(currentPlace, species).mapNotNull { station ->
+                    PlayScene.propCellsAt(currentPlace, station, sceneWidthCells, floorYCells, species)
+                        .minOfOrNull { (x, y) -> maxOf(abs(x - cx), abs(y - cy)) }
+                        ?.takeIf { it <= 1 }
+                        ?.let { station to it }
+                }.minByOrNull { it.second }?.first
+            }
+            GameKeys(onDir = { gameDir = it }, onAction = { gameStation?.let { gameActAt(it) } })
+            GameTouch(
                 onDir = { gameDir = it },
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 20.dp, bottom = 16.dp)
+                onTap = { tap ->
+                    avatar?.let { current ->
+                        val px = with(density) { current.sizeDp.dp.toPx() }
+                        val hit = tap.x in current.offset.x..(current.offset.x + px) &&
+                            tap.y in current.offset.y..(current.offset.y + px * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
+                        if (hit && !gameActing) gameMenuOpen = true
+                    }
+                },
+                onDoubleTap = { tap -> gameStationUnder(tap)?.let { gameActAt(it) } }
             )
         }
 
@@ -6222,6 +6309,38 @@ fun DockScreen(
             }
         }
 
+        // Itoeva 2: Menue, Karte und Rucksack ueber allem (siehe GameOverlays).
+        if (playMode && gameMode) {
+            val german = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "de"
+            if (gameMenuOpen) {
+                GameAvatarMenu(
+                    german = german,
+                    musicOn = gameMusicOn,
+                    onMap = { gameMenuOpen = false; gameMapOpen = true },
+                    onBackpack = { gameMenuOpen = false; gameBackpackOpen = true },
+                    onToggleMusic = {
+                        val next = !gameMusicOn
+                        PlayMusic.setEnabled(context, next)
+                        gameMusicOn = next
+                    },
+                    onDismiss = { gameMenuOpen = false }
+                )
+            }
+            if (gameMapOpen) {
+                GameMapOverlay(currentPlace, german, scenePhase, onClose = { gameMapOpen = false })
+            }
+            if (gameBackpackOpen) {
+                GameBackpackOverlay(
+                    backpack = gameBackpack,
+                    held = carried,
+                    german = german,
+                    onTake = { item -> carried = item; gameBackpackOpen = false },
+                    onPutAway = { carried = null },
+                    onClose = { gameBackpackOpen = false }
+                )
+            }
+        }
+
         // Kurzes Aufhellen als Bestaetigung fuer einen Schnappschuss - dieselbe Rueckmeldung wie
         // bei jeder Kamera. Ohne sie bliebe voellig offen, ob der Griff etwas bewirkt hat: Das
         // Bild wandert in die Sammlung, und auf dem Bildschirm aendert sich sonst nichts.
@@ -6436,6 +6555,11 @@ private const val PASS_THROUGH_LINGER_MS = 4_000L
  * stehen die Fuesse damit bei 94 %.
  */
 private const val GAME_DEPTH_BAND = 0.14f
+
+/** Itoeva 2: eigene Ablage fuer Rucksack und den einmaligen Ton-Start. */
+private const val GAME_PREFS = "itoeva2"
+private const val GAME_BACKPACK_KEY = "backpack"
+private const val GAME_AUDIO_INIT_KEY = "audio_initialized"
 
 /** Die Karte vor einem weiten Weg (siehe showMap): so lange zieht sich der Weg ... */
 private const val MAP_DRAW_MS = 3_200L
