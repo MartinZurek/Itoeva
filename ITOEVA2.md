@@ -9,7 +9,7 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 
 - **Itoeva 1** ist eingefroren im Branch `itoeva-1` (Stand nach PR #322: Erinnerungsspiel,
   Uhr, Stream mit A-D und Fennec-Chat).
-- **Itoeva 2** ist der Build-Typ `game` von `:app-sim` (`./gradlew :app-sim:assembleGame`):
+- **Itoeva 2** (in Drive: `Itoeva2-debug.apk`) ist der Build-Typ `game` von `:app-sim` (`./gradlew :app-sim:assembleGame`):
   eigene applicationId (`com.notime.glyphminderwatch.itoeva2`), Name "Itoeva 2", installiert
   sich **neben** der bisherigen App. Schalter: `R.bool.game_mode` (`app-sim/src/game/res`).
 - **Der Stream** (Build-Typ `stream`) bleibt autonom: Dort steuert sich der Avatar selbst.

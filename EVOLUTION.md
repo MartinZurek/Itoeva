@@ -686,7 +686,7 @@ Handy, in dem man den Avatar selbst steuert - links, rechts, hoch, runter. Fernz
 Fantasy-Strategiespiel im Stil der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva,
 ohne Erinnerungen und ohne Uhr. Der Stream zeigt weiter den Avatar, der sich selbst steuert.
 Die bisherige App soll nicht ueberschrieben werden. Entschieden: eigene App-Variante, hoch/runter
-als Tiefe im Bild, Codex' Stream-PR #322 vorher mergen, APK zunaechst als CI-Artefakt.
+als Tiefe im Bild, Codex' Stream-PR #322 vorher mergen, APK zunaechst als CI-Artefakt; auf Wunsch danach auch nach Drive.
 
 **Geaendert:**
 - Itoeva 1 eingefroren im Branch `itoeva-1` (ein Tag liess der Zugang nicht zu).
@@ -696,7 +696,8 @@ als Tiefe im Bild, Codex' Stream-PR #322 vorher mergen, APK zunaechst als CI-Art
   Flur) mit Tests; `PlayMapScene.gridOf` liefert die Kartenlage.
 - `GameControls`: Steuerkreuz und Pfeiltasten/WASD. DockScreen im Spielmodus ohne Erinnerungen,
   Uhr, Speicherplaetze, autonome Schleife und Besuche.
-- `deliver-apk` baut `assembleGame` mit und legt `itoeva2-*.apk` als Artefakt ab.
+- `deliver-apk` baut `assembleGame` mit, legt `itoeva2-*.apk` als Artefakt ab und liefert sie als
+  `Itoeva2-debug.apk` in denselben Drive-Ordner (eigene Datei, demselben Service-Konto freigegeben).
 - Offline-Tests: Platzhalter fuer `BuildConfig` (seit #322 fragt `PlayMusic` den Build-Typ ab).
 
 **Geschuetzt:** Gewoehnliche App und Stream bleiben unveraendert; ihre Daten sind durch die
