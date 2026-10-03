@@ -81,6 +81,12 @@ Helix `POST /helix/chat/messages` bestaetigt `is_sent`. Bei bestehenden IRC-Rech
 der Dienst TLS-IRC; dessen Schreiben hat keine API-Bestaetigung. Die UI behauptet daher
 keinen erfolgreichen Versand. `/status` zaehlt Antworten und Schreibversuche ohne Geheimnisse.
 Eine fehlende/abgelaufene Anmeldung laesst Antworten im Bild weiterhin zu, schreibt aber nichts.
+Bei Statusabfragen und Versand wird eine mehr als 30 Sekunden alte Pruefung erneuert. Bei Timeout,
+Verbindungsfehler, HTTP 429 oder Serverfehler kann nur dieselbe zuletzt bestaetigte Anmeldung
+bis maximal 120 Sekunden seit der letzten erfolgreichen Pruefung weiterverwendet werden,
+hoechstens bis 30 Sekunden vor ihrem bekannten Ablauf. Der Puffer verlaengert sich durch
+Fehler nicht. HTTP 401 bei Pruefung oder Versand sperrt die Sitzung unmittelbar; neue oder
+unbestaetigte Tokens erhalten keinen Puffer. Keine automatische Wiederholung einer Nachricht.
 Versand laeuft nach der sichtbaren Antwort separat, mit hoechstens einem laufenden Versuch und
 ohne Warteschlange. `/reply` meldet anfangs `sent=false` und gegebenenfalls `send_pending=true`;
 erst `/status.sent` zaehlt bestaetigte Sendungen. Ein langsamer Twitch-Versand blockiert keine Karte.
@@ -95,6 +101,7 @@ Private Anmeldedatei separat entfernen bzw. die Twitch-App-Berechtigung im eigen
 `./gradlew :app-sim:testStreamUnitTest --tests 'com.notime.glyphsim.stream.*' :app-sim:assembleStream`
 
 Quellen: [Twitch Chat-Anmeldung](https://dev.twitch.tv/docs/chat/authenticating/),
+[Token-Pruefung](https://dev.twitch.tv/docs/authentication/validate-tokens/),
 [Send Chat Message](https://dev.twitch.tv/docs/api/reference/#send-chat-message),
 [Ollama Chat API](https://docs.ollama.com/api/chat),
 [Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs).

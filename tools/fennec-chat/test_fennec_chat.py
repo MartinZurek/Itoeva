@@ -285,6 +285,40 @@ class FennecChatTests(unittest.TestCase):
         self.assertTrue(self.auth.path.exists())
         self.assertTrue(self.auth.ready())
 
+    def verified_auth(self, expires=3600):
+        identity = {"login": bot.CHANNEL, "scopes": ["user:write:chat"], "expires_in": expires,
+                    "user_id": "123", "client_id": "public"}
+        with patch.object(bot.time, "monotonic", return_value=100), patch.object(bot, "json_request", return_value=identity):
+            self.assertTrue(self.auth.connect("a" * 30))
+
+    def test_transient_validation_failure_keeps_only_bounded_verified_session(self):
+        self.verified_auth()
+        for now, expected in [(131, True), (162, True), (193, True), (219, True), (220, False), (224, False)]:
+            with patch.object(bot.time, "monotonic", return_value=now), patch.object(bot, "json_request", side_effect=TimeoutError):
+                self.assertEqual(expected, self.auth.ready())
+        self.assertEqual(100, self.auth.last_verified)
+
+    def test_transient_failure_never_enables_new_or_expired_auth(self):
+        self.verified_auth(expires=60)
+        with patch.object(bot.time, "monotonic", return_value=131), patch.object(bot, "json_request", side_effect=OSError):
+            self.assertFalse(self.auth.ready())
+            self.assertFalse(self.auth.connect("b" * 30, tolerate_transient=True))
+
+    def test_validation_401_clears_session_but_server_failure_can_use_verified_cache(self):
+        for status, expected in [(503, True), (429, True), (401, False), (403, False)]:
+            self.verified_auth()
+            with patch.object(bot.time, "monotonic", return_value=131), patch.object(bot, "json_request",
+                    side_effect=HTTPError("https://id.twitch.tv/oauth2/validate", status, "test", {}, None)):
+                self.assertEqual(expected, self.auth.ready())
+
+    def test_send_401_invalidates_verified_session_without_retry(self):
+        self.verified_auth()
+        with patch.object(bot.time, "monotonic", return_value=110), patch.object(bot, "json_request",
+                side_effect=HTTPError("https://api.twitch.tv/helix/chat/messages", 401, "test", {}, None)) as request:
+            self.assertFalse(self.auth.send("lea", "Hello"))
+            self.assertFalse(self.auth.ready())
+            self.assertEqual(1, request.call_count)
+
     def test_browser_origins_and_setup_nonce_are_required(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), bot.handler_for(self.service))
         thread = threading.Thread(target=server.serve_forever, daemon=True)

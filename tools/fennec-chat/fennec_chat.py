@@ -358,6 +358,8 @@ class ChatAuth:
         self.token = ""
         self.identity = None
         self.last_check = 0
+        self.last_verified = 0
+        self.valid_until = 0
         self.client_id = ""
         self.nonce = secrets.token_urlsafe(32)
         self.lock = threading.RLock()
@@ -382,7 +384,18 @@ class ChatAuth:
         except (OSError, configparser.Error):
             return False
 
-    def connect(self, token, persist=True):
+    def cached_ready(self, token):
+        # Nur dieselbe bereits bestaetigte Anmeldung darf kurze Netzausfaelle ueberbruecken.
+        # Fehlende Erreichbarkeit ist keine bestaetigte Abmeldung; die Frist wird nicht verlaengert.
+        with self.lock:
+            now = time.monotonic()
+            available = (token == self.token and self.identity is not None and
+                         now < self.valid_until and now - self.last_verified < 120)
+            if available:
+                self.last_check = now
+            return available
+
+    def connect(self, token, persist=True, tolerate_transient=False):
         if not isinstance(token, str) or not re.fullmatch(r"[a-zA-Z0-9]{15,200}", token):
             return False
         try:
@@ -394,22 +407,30 @@ class ChatAuth:
                 return False
             with self.lock:
                 self.token, self.identity, self.last_check = token, identity, time.monotonic()
+                self.last_verified = self.last_check
+                self.valid_until = self.last_verified + int(identity["expires_in"]) - 30
                 if persist:
                     self.path.parent.mkdir(parents=True, exist_ok=True)
                     temp = self.path.with_suffix(".tmp")
                     temp.write_text(json.dumps({"token": token, "client_id": self.client_id}), encoding="utf-8")
                     temp.replace(self.path)
             return True
-        except (HTTPError, URLError, TimeoutError, OSError, ValueError):
+        except HTTPError as error:
+            return (tolerate_transient and (error.code == 429 or error.code >= 500)
+                    and self.cached_ready(token))
+        except (URLError, TimeoutError, OSError):
+            return tolerate_transient and self.cached_ready(token)
+        except (ValueError, TypeError):
             return False
 
     def ready(self):
         with self.lock:
             if time.monotonic() - self.last_check < 30:
-                return self.identity is not None
-            self.identity = None
-            if self.token and self.connect(self.token, persist=False):
+                now = time.monotonic()
+                return self.identity is not None and now < self.valid_until and now - self.last_verified < 120
+            if self.token and self.connect(self.token, persist=False, tolerate_transient=True):
                 return True
+            self.identity = None
             available = self.load_obs()
             self.last_check = time.monotonic()
             return available
@@ -427,7 +448,14 @@ class ChatAuth:
                 }, {"Authorization": "Bearer " + token, "Client-Id": identity["client_id"]})
                 return bool(result.get("data", [{}])[0].get("is_sent"))
             return self.send_irc(token, message)
-        except (HTTPError, URLError, TimeoutError, OSError, ValueError, KeyError):
+        except HTTPError as error:
+            if error.code == 401:
+                with self.lock:
+                    if self.token == token:
+                        self.identity = None
+                        self.last_check = time.monotonic()
+            return False
+        except (URLError, TimeoutError, OSError, ValueError, KeyError):
             return False
 
     @staticmethod

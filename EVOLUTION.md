@@ -669,6 +669,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Kurze Pruef-Netzausfaelle trennen Fennecs Chat nicht sofort
+
+**Version:** `stream-fennec-auth-grace-v1`, Ausgangspunkt `4d834cf`.
+**DOCUMENTED INTENT:** Stundenauswertung soll belegte kleine Verbesserungen ohne Unterbrechung
+der laufenden Uebertragung einsetzen.
+**FACT:** OBS lief seit rund 57 Minuten mit 30 FPS und null verlorenen Netzwerkframes.
+Berlin/UTC entsprachen Windows und Emulator; Crashpuffer leer. Der PC-Status wechselte
+kurz von verbunden auf getrennt und zurueck. Eine unabhaengige Token-Pruefung bestaetigte
+weiterhin das richtige Konto, Chat-Schreibrecht und ueber fuenf Millionen Sekunden Restlaufzeit.
+Der bisherige Code loeschte die bestaetigte Identitaet vor jeder erneuten Netzpruefung;
+auch ein Timeout verhinderte dadurch fuer 30 Sekunden alle Antworten im Chat.
+
+**Entscheidung:** Nur dieselbe erfolgreich bestaetigte Anmeldung ueberbrueckt Timeout,
+Verbindungsfehler, HTTP 429 oder Serverfehler fuer hoechstens 120 Sekunden seit ihrer letzten
+erfolgreichen Pruefung, begrenzt auf 30 Sekunden vor dem bekannten Ablauf. Fehler verschieben
+die Frist nicht. HTTP 401 bei Pruefung oder Versand sperrt sofort; unbestaetigte/neue Tokens
+erhalten keinen Puffer. Keine Wiederholung oder neue Warteschlange fuer Nachrichten.
+Die kleine Toleranz ersetzt keine erreichbare Twitch-API und keine erneute Anmeldung.
+
+**Betroffen:** Nur ChatAuth im lokalen PC-Dienst, seine Regressionstests und Anleitung.
+APK, Kontoberechtigungen, private State-Datei, Reminder, Weltablauf, Uhr, Audio und XP bleiben
+unveraendert; keine Migration. Vier neue Regressionstests pruefen Grenzen, echte Ablehnung,
+Ablauf und 401 beim Versand; alle 32 Python-Tests erfolgreich. Ruecksetzweg ist die gesicherte
+PC-Datei `Fennec-before-auth-cache-4d834cf.py` bzw. die Quellversion `4d834cf`; kein OBS-Neustart.
+Der neue Dienst wurde mit bestehender Anmeldung eingesetzt, Quell-/Laufzeitdatei stimmen
+per SHA256 ueberein. Die Uebertragung lief danach ueber 65 Minuten mit 30 FPS weiter,
+weiterhin null verlorene Netzwerkframes. Lokale Vorschau ohne Twitch-Versand geprueft.
+**Weitere Beobachtung / naechster Hebel:** Nach Leerlauf war das Modell entladen. Der Vulkan-
+Kaltstart dauerte 18,17 Sekunden, laenger als die zwoelfsekundige Antwortfrist: normale
+Chat-Versuche brachen deshalb wiederholt den Ladevorgang ab und lieferten nur den Rueckfall.
+Einmaliges separates Vorladen ueber Ollamas Generate-Endpunkt stellte die Modellbereitschaft
+wieder her. Dauerhaftes Vorladen ist damit noch nicht geloest; der naechste Schnitt soll diesen
+belegten Kaltstart getrennt von den Publikumsfragen vorbereiten, ohne die Antwortfrist zu erhoehen.
+
 ### 2026-10-03 - Fluessigere Folgefragen und eine eindeutige Kanalzeit
 
 **Version:** `stream-fennec-dialog-time-v2`, Ausgangspunkt `5fcb466`.
