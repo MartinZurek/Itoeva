@@ -220,6 +220,8 @@ der PC behaelt nur einen oeffentlichen Kartenort. Sprech- und Kartenanzeige habe
 Lebenszeiten. `StreamTime` liefert Berlin als feste Kanalzeit plus UTC und frische Ortszeiten
 aus acht IANA-Zonen. Nur die Stream-App setzt ihre Standardzone auf Berlin; die private App
 bleibt bei der Geraetezone. Das Modell waehlt die Ortsfrage, berechnet aber keine Uhrzeit.
+Der PC-Dienst haelt das vorhandene Modell mit einem einzelnen textfreien Ladefaden bereit;
+Kaltstart/Auffrischung und deren Status bleiben getrennt von Zuschauerantworten und Twitch-Versand.
 `LivingObservationSource` bietet ausschliesslich den aktuellen typisierten
 `LivingObservation`-Snapshot je Profil. `LivingObservationFeed` nimmt nur abgeschlossene
 Runtime-Ergebnisse auf, haelt ein begrenztes Ereignisfenster ohne Leerlauf-Ticks und veraendert

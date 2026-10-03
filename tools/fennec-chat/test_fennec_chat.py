@@ -285,6 +285,58 @@ class FennecChatTests(unittest.TestCase):
         self.assertTrue(self.auth.path.exists())
         self.assertTrue(self.auth.ready())
 
+    def test_warmup_loads_without_viewer_text_or_chat_and_readiness_expires(self):
+        warm = self.service.warmup
+        with patch.object(bot.time, "monotonic", return_value=100), patch.object(bot, "json_request",
+                return_value={"done": True, "done_reason": "load"}) as request, patch.object(self.auth, "send") as send:
+            self.assertTrue(warm.warm_once())
+            self.assertTrue(warm.ready)
+        url, data = request.call_args.args
+        self.assertEqual("http://127.0.0.1:11434/api/generate", url)
+        self.assertNotIn("prompt", data)
+        self.assertNotIn("messages", data)
+        self.assertEqual("15m", data["keep_alive"])
+        send.assert_not_called()
+        with patch.object(bot.time, "monotonic", return_value=1000):
+            self.assertFalse(warm.ready)
+
+    def test_failed_warmup_is_bounded_and_never_claims_model_is_ready(self):
+        warm = self.service.warmup
+        for outcome in [TimeoutError(), {"done": False}, {"done": True, "done_reason": "stop"}, None]:
+            with patch.object(bot, "json_request", side_effect=outcome if isinstance(outcome, Exception) else None,
+                    return_value=outcome) as request:
+                self.assertFalse(warm.warm_once())
+                self.assertFalse(warm.ready)
+                self.assertFalse(warm.loading)
+                self.assertEqual(60, request.call_args.kwargs["timeout"])
+        with patch.object(warm, "warm_once", side_effect=[False, True]), patch.object(warm.stop_event, "wait",
+                side_effect=[False, True]) as wait:
+            warm.run()
+        self.assertEqual([unittest.mock.call(30), unittest.mock.call(300)], wait.call_args_list)
+
+    def test_slow_background_warmup_does_not_block_visible_reply_and_can_stop(self):
+        warm = self.service.warmup
+        entered, release = threading.Event(), threading.Event()
+        def slow_load(*args, **kwargs):
+            entered.set()
+            release.wait(2)
+            return {"done": True, "done_reason": "load"}
+        with patch.object(bot, "json_request", side_effect=slow_load), patch.object(bot, "respond",
+                return_value=("I am here.", "local", "none", "")), patch.object(self.auth, "send") as send:
+            warm.start()
+            try:
+                self.assertTrue(entered.wait(1))
+                data = self.request()
+                data["preview"] = True
+                self.assertEqual(200, self.service.reply(data)[0])
+                self.assertTrue(warm.loading)
+                send.assert_not_called()
+            finally:
+                warm.stop()
+                release.set()
+                warm.thread.join(2)
+            self.assertFalse(warm.thread.is_alive())
+
     def verified_auth(self, expires=3600):
         identity = {"login": bot.CHANNEL, "scopes": ["user:write:chat"], "expires_in": expires,
                     "user_id": "123", "client_id": "public"}

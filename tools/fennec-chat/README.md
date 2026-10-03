@@ -29,6 +29,14 @@ Antwort. Links, erkannte Instruktionsangriffe und sensible Themen haben eine ruh
 Diese einfachen Filter sind keine vollstaendige Moderationsloesung fuer beliebigen Publikumsverkehr.
 KI-Ausgaben koennen unpassend sein; der lokale Pilot braucht Beobachtung.
 
+Beim Dienststart laedt ein einzelner Hintergrundfaden das vorhandene Modell ohne Prompt oder
+Zuschauertext vor. Er erneuert alle fuenf Minuten die 15-Minuten-Haltefrist mit einem leeren
+Generate-Aufruf (gleiche 4096 Kontexttokens, vier Threads). Der Kaltstart hat separat 60 Sekunden
+Zeit; die zwoelfsekundige Antwortfrist bleibt bestehen. Bei Fehlern wartet er 30 Sekunden vor
+dem naechsten Versuch, ohne Modell-Download, Twitch-Nachricht oder Antwortwarteschlange.
+Die lokale Seite zeigt die KI-Bereitschaft; `/status` liefert `model_ready` und `model_loading`.
+Bei Dienstende endet die Auffrischung, danach darf Ollama das Modell wieder entladen.
+
 Beispiele: `Fennec, show me your world`, `Fennec, where is the beach?`,
 `Fennec, zeig mir den Wald`, `Fennec, was machst du?`, `Fennec, what can I ask you to do?`.
 Kartenansichten verwenden den bestehenden `PlayMapScene`-Renderer mit lesbaren Ortsnamen,

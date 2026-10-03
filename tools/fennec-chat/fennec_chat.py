@@ -481,9 +481,53 @@ class ChatAuth:
         return False
 
 
+class ModelWarmup:
+    """Kaltstart ausserhalb der Zuschauerfrist; keine Texte, Antworten oder Twitch-Aufrufe."""
+    def __init__(self, model):
+        self.model = model
+        self.last_ok = None
+        self.loading = False
+        self.stop_event = threading.Event()
+        self.thread = threading.Thread(target=self.run, daemon=True, name="fennec-model-warmup")
+
+    @property
+    def ready(self):
+        return self.last_ok is not None and time.monotonic() - self.last_ok < 900
+
+    def warm_once(self):
+        self.loading = True
+        try:
+            result = json_request("http://127.0.0.1:11434/api/generate", {
+                "model": self.model, "stream": False, "keep_alive": "15m",
+                "options": {"num_ctx": 4096, "num_thread": 4}
+            }, timeout=60)
+            if result.get("done") is True and result.get("done_reason") == "load":
+                self.last_ok = time.monotonic()
+                return True
+        except (HTTPError, URLError, TimeoutError, OSError, ValueError, AttributeError):
+            pass
+        finally:
+            self.loading = False
+        return False
+
+    def run(self):
+        while not self.stop_event.is_set():
+            # Die Haltefrist bleibt laenger als die Auffrischung. Fehler drehen keine heisse Schleife.
+            wait = 300 if self.warm_once() else 30
+            if self.stop_event.wait(wait):
+                break
+
+    def start(self):
+        self.thread.start()
+
+    def stop(self):
+        self.stop_event.set()
+
+
 class Service:
     def __init__(self, auth, model=MODEL):
         self.auth, self.model = auth, model
+        self.warmup = ModelWarmup(model)
         self.lock = threading.Lock()
         self.last_global = None
         self.viewers = {}
@@ -559,7 +603,7 @@ PAGE = """<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewp
 <p><small>Fennec antwortet als fennec_itoeva mit dem Zusatz [Fennec]. Frag etwa: Fennec, show me your world. Oder: Fennec, what time is it in New York? Kurze Folgefragen sind 45 Sekunden ohne erneute Ansprache möglich. Höchstens eine Antwort je 4 Sekunden, je Zuschauer 8 Sekunden.</small></p>
 <script>const nonce=__NONCE__;
 async function post(path,data){let r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,nonce})});return r.json()}
-async function status(){let s=await(await fetch('/status')).json();document.getElementById('status').textContent=s.connected?'Twitch verbunden · Fennec kann im Chat antworten':'Twitch-Schreibzugriff fehlt · Animation und Antwort im Bild sind bereit'}
+async function status(){let s=await(await fetch('/status')).json();document.getElementById('status').textContent=(s.connected?'Twitch verbunden':'Twitch-Schreibzugriff fehlt')+(s.model_ready?' · Fennecs KI ist bereit':' · Fennecs KI wird vorbereitet; kurze Ortsantworten sind verfügbar')}
 document.getElementById('obs').onclick=async()=>{await post('/auth/obs',{});await status()};
 document.getElementById('preview').onclick=async()=>{let s=await post('/preview',{});if(!s.ok)alert('Bitte den Itoeva-Emulator öffnen.');};
 document.getElementById('connect').onclick=async()=>{let s=await post('/auth/start',{client_id:document.getElementById('client').value.trim()});if(s.url)location.href=s.url;else alert('Bitte eine gültige Client-ID eintragen.')};
@@ -595,6 +639,7 @@ def handler_for(service):
             path = urlparse(self.path).path
             if path == "/status":
                 return self.write(200, {"connected": service.auth.ready(), "model": service.model,
+                                       "model_ready": service.warmup.ready, "model_loading": service.warmup.loading,
                                        "replies": service.replies, "sent": service.sent,
                                        "source": service.last_source, "send_pending": service.send_lock.locked()})
             if path in {"/", "/callback"}:
@@ -664,11 +709,13 @@ def main():
     server = ThreadingHTTPServer(("127.0.0.1", PORT), handler_for(service))
     server.daemon_threads = True
     print(f"Fennec-Chat bereit: http://localhost:{PORT}", flush=True)
+    service.warmup.start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
+        service.warmup.stop()
         server.server_close()
 
 

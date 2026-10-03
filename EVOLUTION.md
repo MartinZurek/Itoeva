@@ -669,6 +669,42 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-03 - Fennecs Modell wird getrennt vom Zuschauerchat vorgeladen
+
+**Version:** `stream-fennec-warmup-v1`, Ausgangspunkt `aa13473`.
+**DOCUMENTED INTENT:** Stundenauswertung folgt dem zuvor belegten Kaltstart-Problem.
+**FACT:** Nach einer weiteren Ruhephase war Ollamas Modellliste wieder leer. Der Stream lief
+seit rund 117 Minuten mit 30 FPS und null verlorenen Netzwerkframes; Uhrzone/UTC waren richtig.
+Die zuvor gemessenen 18,17 Sekunden Modellstart ueberstiegen die Chatfrist und fuehrten zu
+wiederholtem Abbruch beim Laden. Eine Erhoehung der Zuschauerfrist wuerde nur laengeres Warten
+verschieben, statt die Ursache vorzubereiten.
+
+**Entscheidung:** Ein einzelner PC-Hintergrundfaden laedt das vorhandene qwen3:1.7b beim
+Dienststart mit einem leeren Generate-Aufruf, ohne Prompt, Zuschauertext oder Twitch-Versand.
+Er erneuert alle fuenf Minuten die 15-Minuten-Haltefrist mit denselben 4096 Kontexttokens und
+vier Threads wie der Chat. Laden hat separat 60 Sekunden Zeit, ein Fehler fuehrt zu 30 Sekunden
+Pause vor Wiederholung; keine heisse Schleife, kein Download und keine Antwortwarteschlange.
+Der HTTP-Dienst bleibt erreichbar; die zwoelfsekundige Antwortfrist bleibt erhalten.
+Die lokale Einrichtungsseite und `model_ready`/`model_loading` unterscheiden Modellbereitschaft
+von Twitch-Anmeldung. Dienstende beendet die Auffrischung; Ollama darf danach wieder entladen.
+
+**Betroffen:** ModelWarmup im lokalen PC-Dienst, lokaler Statustext und Regressionstests/Anleitung.
+Keine APK-, Spielstand-, Kontoberechtigungs-, Reminder-, Routine-, Charakter-, Story-, XP-,
+Uhr- oder Audioaenderung; keine Migration. Drei neue Tests pruefen textfreies Laden und
+Bereitschaftsablauf, Fehler/Retryabstaende sowie eine unabhaengige Antwort bei blockiertem Laden
+und beendbaren Faden; alle 35 Python-Tests erfolgreich. Ruecksetzweg: gesicherte PC-Datei
+`Fennec-before-warmup-aa13473.py` bzw. Quellstand `aa13473`; kein OBS-Neustart.
+**TESTED BEHAVIOR:** Dienst eingesetzt; gleiche SHA256 fuer Quell- und Laufzeitdatei.
+Der reale leere Ladeaufruf endete diesmal nach 6,78 Sekunden; der Status wechselte von
+ladend/nicht bereit zu bereit. Danach zeigte die lokale Weltkarten-Vorschau mit Quelle Ollama
+nach 1,98 Sekunden eine Antwort und lesbare Karte, bei weiterlaufender Figur und richtiger Uhr.
+Keine Twitch-Testnachricht (`sent=0`). OBS lief danach ueber zwei Stunden mit 30 FPS weiter,
+weiterhin null verlorene Netzwerkframes, Crashpuffer leer.
+**Grenzen:** Beim allerersten Laden koennen bereits eingehende Fragen noch den bisherigen
+lokalen Rueckfall verwenden. Ollama-Ausfall oder manueller Modellwechsel kann bis zum naechsten
+Auffrischen unbemerkt bleiben. Laengerer Dauerbetrieb der Auffrischung bleibt zu beobachten;
+der vorherige Eintrag mit nur einmaligem Vorladen wird durch diesen Stand ueberholt.
+
 ### 2026-10-03 - Kurze Pruef-Netzausfaelle trennen Fennecs Chat nicht sofort
 
 **Version:** `stream-fennec-auth-grace-v1`, Ausgangspunkt `4d834cf`.
