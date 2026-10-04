@@ -6441,8 +6441,22 @@ fun DockScreen(
                         PlayMusic.setEnabled(context, next)
                         gameMusicOn = next
                     },
+                    onSettings = { gameMenuOpen = false; onExit() },
                     onDismiss = { gameMenuOpen = false }
                 )
+            }
+            // Sichtbarer Weg aus dem Spiel: oben links, solange kein Fenster offen ist.
+            if (!gameMenuOpen && !gameMapOpen && !gameBackpackOpen) {
+                GameSettingsButton(german, onClick = { gameMenuOpen = true }, modifier = Modifier.align(Alignment.TopStart))
+            }
+            // Die Zurueck-Geste schliesst erst offene Fenster, dann oeffnet sie das Menue.
+            androidx.activity.compose.BackHandler {
+                when {
+                    gameMapOpen -> gameMapOpen = false
+                    gameBackpackOpen -> gameBackpackOpen = false
+                    gameMenuOpen -> gameMenuOpen = false
+                    else -> gameMenuOpen = true
+                }
             }
             if (gameMapOpen) {
                 GameMapOverlay(currentPlace, german, scenePhase, onClose = { gameMapOpen = false })

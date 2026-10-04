@@ -57,6 +57,7 @@ internal fun GameAvatarMenu(
     onMap: () -> Unit,
     onBackpack: () -> Unit,
     onToggleMusic: () -> Unit,
+    onSettings: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Box(
@@ -80,7 +81,40 @@ internal fun GameAvatarMenu(
                 if (german) (if (musicOn) "Musik aus" else "Musik an") else (if (musicOn) "Music off" else "Music on"),
                 onToggleMusic
             )
+            MenuButton(if (german) "Einstellungen" else "Settings", onSettings)
         }
+    }
+}
+
+/**
+ * **Immer sichtbarer Knopf oben links** (Itoeva 2): fuehrt zurueck zum Startbildschirm mit
+ * Wesenwahl und Musik (siehe [GameStartScreen]). Wunsch vom 04.10.: Aus dem Spiel heraus muss
+ * man sichtbar zurueckkommen.
+ */
+@Composable
+internal fun GameSettingsButton(german: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .padding(12.dp)
+            .background(PANEL, RoundedCornerShape(12.dp))
+            .border(1.dp, ACCENT, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(if (german) "☰ Menü" else "☰ Menu", color = INK, fontSize = 14.sp)
+    }
+}
+
+/** Sichtbarer Zurueck-Knopf in Karte und Rucksack - frueher schloss nur ein Tipp daneben. */
+@Composable
+private fun CloseButton(german: Boolean, onClose: () -> Unit) {
+    Box(
+        Modifier
+            .border(1.dp, ACCENT, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClose)
+            .padding(horizontal = 14.dp, vertical = 6.dp)
+    ) {
+        Text(if (german) "← Zurück" else "← Back", color = INK, fontSize = 14.sp)
     }
 }
 
@@ -128,7 +162,10 @@ internal fun GameMapOverlay(current: Place, german: Boolean, phase: Int, onClose
             val title = target?.let {
                 (if (german) "Weg von $here nach " else "Route from $here to ") + FennecWorld.name(it, german)
             } ?: ((if (german) "Hier bist du: " else "You are here: ") + here)
-            Text(title, color = ACCENT, fontSize = 14.sp)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(title, color = ACCENT, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                CloseButton(german, onClose)
+            }
             Text(
                 if (german) "Tippe einen Ort an, um den Weg zu sehen." else "Tap a place to see the way.",
                 color = DIM, fontSize = 11.sp
@@ -213,10 +250,13 @@ internal fun GameBackpackOverlay(
                 .pointerInput(Unit) { detectTapGestures { } }
                 .padding(16.dp)
         ) {
-            Text(
-                (if (german) "Rucksack" else "Backpack") + "  ${backpack.items.size}/${PlayBackpack.CAPACITY}",
-                color = ACCENT, fontSize = 14.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    (if (german) "Rucksack" else "Backpack") + "  ${backpack.items.size}/${PlayBackpack.CAPACITY}",
+                    color = ACCENT, fontSize = 14.sp
+                )
+                CloseButton(german, onClose)
+            }
             if (backpack.items.isEmpty()) {
                 Text(
                     if (german) "Noch leer - am Kuehlschrank, im Regal oder im Laden findet sich etwas."

@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -196,14 +197,26 @@ class MainActivity : ComponentActivity() {
                     // Uhrenbildschirm landen.
                     // Geteilter Text hat weiterhin Vorrang vor der Dock-Darstellung.
                     if (gameMode) {
-                        // Bewusst OHNE PlayModeViewModel: Der wuerde Spiel-Erinnerungen planen.
-                        // Itoeva 2 braucht nur die Welt, und die zeigt der Spielbildschirm selbst.
-                        DockScreen(
-                            playMode = true,
-                            gameMode = true,
-                            watchOnly = false,
-                            onExit = {}
-                        )
+                        // Erst der Startbildschirm (Wesen waehlen, Musik), dann das Spiel. Aus dem
+                        // Spiel fuehrt onExit zurueck hierher (Knopf oben links, Figurmenue).
+                        var gameSetup by rememberSaveable { mutableStateOf(true) }
+                        val gameSpecies by AvatarSpeciesPrefs.selected(this@MainActivity)
+                            .collectAsStateWithLifecycle()
+                        if (gameSetup) {
+                            GameStartScreen(onStart = { gameSetup = false })
+                        } else {
+                            // Bewusst OHNE PlayModeViewModel: Der wuerde Spiel-Erinnerungen planen.
+                            // Itoeva 2 braucht nur die Welt, und die zeigt der Spielbildschirm selbst.
+                            // key: ein anderes Wesen baut den Spielbildschirm frisch auf.
+                            key(gameSpecies) {
+                                DockScreen(
+                                    playMode = true,
+                                    gameMode = true,
+                                    watchOnly = false,
+                                    onExit = { gameSetup = true }
+                                )
+                            }
+                        }
                     } else if (streamMode) {
                         val playViewModel: PlayModeViewModel = viewModel()
                         LaunchedEffect(Unit) {

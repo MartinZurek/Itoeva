@@ -76,6 +76,17 @@ fuer Hoch-/Runtergehen sowie Schrittbilder; links/rechts benutzen die vorhandene
 gespiegelte Seitenansicht. Die Lichtschicht ist eine 2D-Naeherung, keine vollstaendige
 Schattenberechnung aller Kulissenobjekte. Geraetepruefung und Clip-Paritaet stehen aus.
 
+## Startbildschirm und Wege zurueck (Wunsch vom 04.10.)
+
+- **Startbildschirm** (`GameStartScreen`): Beim Oeffnen von Itoeva 2 waehlt man zuerst sein
+  Wesen (alle sechs mit Bild, das gewaehlte atmet) und schaltet die Musik; "Spielen" startet.
+  Die Wahl landet in `AvatarSpeciesPrefs`, ein anderes Wesen baut den Spielbildschirm frisch auf.
+- **Zurueck aus dem Spiel**: Knopf "☰ Menue" oben links (immer sichtbar), im Menue der Punkt
+  "Einstellungen" fuehrt zum Startbildschirm. Die Zurueck-Geste schliesst offene Fenster, sonst
+  oeffnet sie das Menue.
+- **Karte und Rucksack** haben einen sichtbaren Knopf "← Zurueck"; ein Tipp daneben schliesst sie
+  weiterhin.
+
 ## Naechste Stufen (Vorschlag, nicht freigegeben)
 
 1. Begegnungen und Gespraeche mit den Bewohnern.
