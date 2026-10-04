@@ -151,7 +151,7 @@ private fun SpeciesCard(
     chosenTick: Long,
     onClick: () -> Unit
 ) {
-    // Feiner Bogen (96er-Bilder): eigene Ruheschleife; einfacher Bogen: Atmen im Wechsel.
+    // Feiner Bogen (128er-Bilder): eigene Ruheschleife; einfacher Bogen: Atmen im Wechsel.
     val rich = sheet?.height == CreatureSprites.Rich.FRAME
     val frameSize = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
     val frame = when {

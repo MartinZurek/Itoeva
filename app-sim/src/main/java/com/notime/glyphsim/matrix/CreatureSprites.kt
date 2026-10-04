@@ -147,16 +147,18 @@ object CreatureSprites {
     }
 
     /**
-     * **Der feine Bogen** (96 x 96 je Bild, `tools/character-art/rich_sheets.py`): Figuren, die als
-     * Formen im Raum gebaut sind, haben eigene Bewegungsablaeufe - Atmen mit Ohrzucken, ein
-     * Gang mit acht Bildern, ein Sprung von Ausholen bis Landung, Zwischenansichten fuer Drehungen.
-     * Ohren, Schwanz und Umhang schwingen darin nach (Federn, siehe `motion.py`).
+     * **Der feine Bogen** (128 x 128 je Bild, `tools/character-art/rich_sheets.py`): Die gemalte
+     * Figur aus dem Key-Design, als Puppe bewegt (`puppet.py`, `fennec_key.py`) - Atmen mit
+     * Ohrzucken, ein Gang mit acht Bildern, ein Sprung von Ausholen bis Landung, Schlaf,
+     * Rueckansicht, Zwischenbilder fuer Drehungen. Ohren, Schwanz und Mantelzipfel schwingen darin
+     * nach (Federn, siehe `motion.py`).
      * Welcher Bogen vorliegt, entscheidet seine Hoehe.
      */
     object Rich {
-        const val FRAME = 96
-        const val FEET = 94
-        const val SCALE = 1.05f
+        const val FRAME = 128
+        const val FEET = 126
+        /** Die Figur fuellt ihr Bild fast ganz aus - kleiner zeichnen, damit sie so gross wirkt wie die anderen. */
+        const val SCALE = 0.82f
         const val IDLE_FIRST = 0
         const val IDLE_COUNT = 8
         const val BLINK = 8

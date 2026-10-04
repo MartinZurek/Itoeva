@@ -78,3 +78,18 @@ Pixel-Art gerendert - so entstehen echte Drehungen und Bewegungen mit Nachschwin
 `CreatureSprites.lookRich` waehlt die Bilder, `CreatureSprites.Turn` spielt beim Richtungswechsel
 die Drehung (rechts -> halb vorn -> vorn -> halb vorn -> links). Welcher Bogen vorliegt, erkennt
 das Spiel an seiner Hoehe; die anderen Wesen bleiben vorerst beim einfachen Bogen.
+
+## Fennec aus dem Key-Design als Puppe (ersetzt die 3D-Probe, 04.10. spaet)
+
+Rueckmeldung zur 3D-Probe: "steif wie eine Puppe, sieht nicht aus wie das Key-Design". Deshalb
+kommt Fennec jetzt direkt aus der gemalten Figur des Key-Design-Blatts:
+
+| Datei | Inhalt |
+|---|---|
+| `source/fennec_key.png` | die grosse Figur oben links im Blatt, freigestellt (rembg mit isnet, Schwanz aus BiRefNet ergaenzt), Augen und Nase leicht nachgezogen, Rest des Luchsschwanzes entfernt |
+| `puppet.py` | Puppe: Teile mit weichen Gewichten, Drehung um Gelenke, Vorwaerts-Abbildung mit Ueberabtastung; `pixelize` erhaelt Tuschelinien (Augen, Konturen) beim Verkleinern |
+| `fennec_key.py` | Teile und Gelenke, Augen-zu-Variante, Rueckansicht, Bewegungen (Gang, Ruhe, Sprung, Schlaf, Drehung) |
+
+Ohren, Schwanz und Mantelzipfel schwingen ueber die Federn aus `motion.py` nach. Der Bogen hat
+jetzt 128 x 128 je Bild (Fuesse auf Zeile 125). `python3 rich_sheets.py` schreibt ihn;
+rembg wird dafuer nicht gebraucht, die freigestellte Quelle liegt im Repository.

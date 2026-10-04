@@ -1,5 +1,7 @@
-"""Baut die feinen Bilderboegen (96 x 96 je Bild, 39 Bilder) fuer die Wesen, die schon als
-3D-Figur vorliegen (bisher: Fennec). Reihenfolge siehe motion.py.
+"""Baut die feinen Bilderboegen (128 x 128 je Bild, 39 Bilder). Reihenfolge siehe motion.py.
+
+Fennec kommt seit dem 04.10. abends aus der gemalten Key-Design-Figur (fennec_key.py, Puppe aus
+puppet.py); die 3D-Formenfigur (fennec3d.py) bleibt als Werkzeug, wird aber nicht mehr geschrieben.
 
   python3 rich_sheets.py                      # nach app-sim/src/main/assets/creatures
   python3 rich_sheets.py --preview out.png    # Bogen vergroessert auf Wiesengruen
@@ -10,18 +12,19 @@ import numpy as np
 from PIL import Image
 import rig3d as R
 import motion as Mo
-import fennec3d
+import fennec_key
 
-FIGURES = {'fennec': fennec3d}
-FRAME = 96
-FOOT_ROW = 93            # y = 0 der Figur; die Kontur liegt darunter, erste freie Zeile 94
+FIGURES = {'fennec': fennec_key}
+FRAME = 128
 
 
 def frames(mod):
+    if hasattr(mod, 'frames'):
+        return mod.frames()
     tex = R.stroke_texture([mod.FUR, mod.CREAM, mod.CAPE, mod.EARIN])
     out = []
     for pose, yaw in Mo.sheet_plan(mod.Pose):
-        buf = R.render(mod.build(pose), yaw, size=FRAME, foot_row=FOOT_ROW)
+        buf = R.render(mod.build(pose), yaw, size=96, foot_row=93)
         img, mi, d = R.to_pixels(buf, mod.RAMPS, texture=tex, flat=mod.FLAT)
         out.append(R.outline(img, mi, d, mod.RAMPS))
     return out

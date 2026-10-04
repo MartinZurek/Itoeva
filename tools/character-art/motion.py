@@ -6,7 +6,7 @@ beim Auftreten ab, schwingen die Ohren nach, die Schwanzglieder folgen einander 
 der Umhang wird vom Fahrtwind nach hinten gedrueckt und flattert. Die Federn laufen ueber mehrere
 Zyklen, bis sie eingeschwungen sind; gezeigt wird der letzte, damit die Schleife nahtlos ist.
 
-Bogen (96 x 96 je Bild, Reihenfolge muss zu CreatureSprites.kt passen):
+Bogen (128 x 128 je Bild, Reihenfolge muss zu CreatureSprites.kt passen):
   0..7  Ruhe (Atmen, Ohrzucken, Schwanzwiegen)   8 Blinzeln
   9..16 Gehen seitlich                           17..22 Sprung (Ausholen .. Landung)
   23..26 Schlaf                                  27 vorn, 28..31 vorn gehen
