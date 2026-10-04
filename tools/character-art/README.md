@@ -93,3 +93,16 @@ kommt Fennec jetzt direkt aus der gemalten Figur des Key-Design-Blatts:
 Ohren, Schwanz und Mantelzipfel schwingen ueber die Federn aus `motion.py` nach. Der Bogen hat
 jetzt 128 x 128 je Bild (Fuesse auf Zeile 125). `python3 rich_sheets.py` schreibt ihn;
 rembg wird dafuer nicht gebraucht, die freigestellte Quelle liegt im Repository.
+
+## Bodenkontakt und Wenden (05.10., Folge-PR)
+
+`fennec_key.py` zerlegt jedes Bein in Oberschenkel, Unterschenkel und Stiefel.
+Eine Zwei-Segment-Loesung verfolgt die Boden- und Schwungphase ohne Laengenstauchung.
+Die gemalte Quelle bleibt erhalten. Wendeposen werden nicht mehr horizontal zusammengestaucht;
+waehrend des Gehens hat die Gangfolge Vorrang vor statischen Zwischenbildern. Ein eigener
+monotoner Gangtakt startet bei Kontakt, stoppt mit der Bewegung und begrenzt Pausenspruenge.
+
+Pruefung: `python3 -m unittest test_fennec_gait -v`, dann `python3 rich_sheets.py`.
+Vorschau: [Fennec-Gang](fennec-gait-preview.gif). Die Vorschau zeigt die Sprite-Bewegung,
+keine Aufnahme aus der APK. Die Rasterung erlaubt einen Pixel Abweichung am Bodenkontakt.
+Echte neue Profilzeichnungen und streckenabhaengige Schrittphasen sind weiterhin offen.

@@ -133,23 +133,48 @@ class CreatureSpritesTest {
     }
 
     @Test
-    fun `Richtungswechsel spielt die Zwischenbilder und endet in der neuen Richtung`() {
+    fun `Richtungswechsel im Stand spielt Zwischenbilder und endet in der neuen Richtung`() {
         val turn = CreatureSprites.Turn()
-        val walk = AvatarAnimations.walkSequence(AvatarSpecies.FENNEC).frames.first()
-        val rechts = CreatureSprites.lookRich(walk, AvatarSpecies.FENNEC, AvatarShading.Side.LEFT, 0L, turn = turn)
+        val walk = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        val rechts = CreatureSprites.lookRich(walk, AvatarSpecies.FENNEC, AvatarShading.Side.LEFT, 0L, moving = false, turn = turn)
         assertFalse(rechts.mirrored)
         val t0 = 1000L
         val seen = (0 until 6).map {
             CreatureSprites.lookRich(walk, AvatarSpecies.FENNEC, AvatarShading.Side.RIGHT,
-                t0 + it * CreatureSprites.Rich.TURN_STEP_MS, turn = turn)
+                t0 + it * CreatureSprites.Rich.TURN_STEP_MS, moving = false, turn = turn)
         }
         assertEquals(CreatureSprites.Rich.TURN_FRONT, seen[0].frame)
         assertFalse(seen[0].mirrored)
         assertEquals(CreatureSprites.Rich.FRONT, seen[1].frame)
         assertEquals(CreatureSprites.Rich.TURN_FRONT, seen[2].frame)
         assertTrue(seen[2].mirrored)
-        assertTrue(seen[3].frame in CreatureSprites.Rich.WALK_FIRST until CreatureSprites.Rich.WALK_FIRST + CreatureSprites.Rich.WALK_COUNT)
+        assertTrue(seen[3].frame in CreatureSprites.Rich.IDLE_FIRST until CreatureSprites.Rich.IDLE_FIRST + CreatureSprites.Rich.IDLE_COUNT)
         assertTrue(seen[3].mirrored)
+    }
+
+    @Test
+    fun `Umkehren beim Gehen behaelt den Gang und hebt nicht beide Fuesse an`() {
+        val turn = CreatureSprites.Turn()
+        val raw = AvatarAnimations.walkSequence(AvatarSpecies.FENNEC).frames.first()
+        CreatureSprites.lookRich(raw, AvatarSpecies.FENNEC, AvatarShading.Side.LEFT, 1000L,
+            moving = true, turn = turn)
+        for (i in 0..5) {
+            val look = CreatureSprites.lookRich(raw, AvatarSpecies.FENNEC, AvatarShading.Side.RIGHT,
+                1045L + i * 45, moving = true, turn = turn)
+            assertTrue(look.frame in CreatureSprites.Rich.WALK_FIRST until CreatureSprites.Rich.WALK_FIRST + CreatureSprites.Rich.WALK_COUNT)
+            assertTrue(look.mirrored)
+            assertEquals(0, look.liftCells)
+        }
+    }
+
+    @Test
+    fun `Gang startet am Kontakt und pausierte Zeit erzeugt keinen Sprung`() {
+        val gait = CreatureSprites.GaitClock()
+        assertEquals(0L, gait.update(true, 5100L))
+        assertEquals(45L, gait.update(true, 5145L))
+        assertEquals(145L, gait.update(true, 9000L))
+        assertEquals(0L, gait.update(false, 9045L))
+        assertEquals(0L, gait.update(true, 12000L))
     }
 
     /**
@@ -213,3 +238,4 @@ class CreatureSpritesTest {
         }
     }
 }
+

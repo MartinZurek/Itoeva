@@ -24,6 +24,9 @@ HIP_L = (172, 288)
 HIP_R = (222, 288)
 TAIL = (150, 296)
 PELVIS = (196, 282)
+KNEE_L, KNEE_R = (145, 328), (248, 328)
+ANKLE_L, ANKLE_R = (113, 365), (277, 365)
+SOLE_Y = {"l": 374, "r": 378}
 
 
 def source():
@@ -42,6 +45,11 @@ def build(img=None):
           HIP_L, 'torso', z=1)
     p.add('leg_r', p.poly([(208, 286), (244, 286), (262, 318), (290, 340), (315, 380), (252, 380), (244, 342), (218, 316)]),
           HIP_R, 'torso', z=1)
+    # Knie und Stiefel erben das Oberschenkelgelenk, drehen aber unabhaengig.
+    for side, knee, ankle in [('l', KNEE_L, ANKLE_L), ('r', KNEE_R, ANKLE_R)]:
+        leg = p.parts['leg_' + side].mask
+        p.add('shin_' + side, leg & (yy >= knee[1] - 3), knee, 'leg_' + side, z=1)
+        p.add('boot_' + side, leg & (yy >= ankle[1] - 8), ankle, 'shin_' + side, z=1)
     p.add('flap', p.poly([(258, 206), (346, 220), (346, 305), (296, 305), (268, 246), (256, 232)]), FLAP, 'torso', z=3)
     p.add('arm_l', p.poly([(76, 232), (146, 212), (152, 246), (112, 274), (76, 272)]), SHOULDER_L, 'torso', z=4)
     p.add('arm_r', p.poly([(236, 222), (272, 218), (282, 272), (236, 280)]), SHOULDER_R, 'torso', z=4)
@@ -137,7 +145,7 @@ SCALE = 0.315
 def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
          leg_l=0.0, lift_l=0.0, leg_r=0.0, lift_r=0.0,
          arm_l=0.0, arm_r=0.0, head=0.0, head_dy=0.0,
-         ear_l=0.0, ear_r=0.0, tail=0.0, flap=0.0):
+         ear_l=0.0, ear_r=0.0, tail=0.0, flap=0.0, gait=None):
     """Gelenkwinkel in Grad (positiv = im Uhrzeigersinn), Wege in Bildpunkten der Quelle.
     bob > 0 senkt den Koerper; die Beine beugen sich dabei, die Fuesse bleiben am Boden."""
     root = affine(lean, FEET) @ affine(0, FEET, sx=sx, sy=squash)
@@ -146,7 +154,7 @@ def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
     def leg(rot, lift, hip):
         sy = max(0.35, (LEG_LEN - bob - lift) / LEG_LEN)
         return affine(rot, hip, sy=sy)
-    return {
+    result = {
         'torso': torso,
         'leg_l': leg(leg_l, lift_l, HIP_L),
         'leg_r': leg(leg_r, lift_r, HIP_R),
@@ -158,6 +166,54 @@ def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
         'ear_l': affine(ear_l, EAR_L),
         'ear_r': affine(ear_r, EAR_R),
     }
+    if gait is not None:
+        for side, hip, knee, ankle, phase in [
+            ('l', HIP_L, KNEE_L, ANKLE_L, gait),
+            ('r', HIP_R, KNEE_R, ANKLE_R, gait + 0.5),
+        ]:
+            target, foot_angle = foot_path(phase)
+            target = (target[0], target[1] + FEET[1] - 1 - SOLE_Y[side])
+            # Ziel im Bodenraum, dann ins bewegte Hueftsystem zurueckrechnen.
+            local_target = np.linalg.inv(torso) @ np.array([*target, 1.0])
+            upper, lower = solve_leg(hip, knee, ankle, local_target[:2])
+            result['leg_' + side] = affine(upper, hip)
+            result['shin_' + side] = affine(lower - upper, knee)
+            result['boot_' + side] = affine(foot_angle - lower - lean, ankle)
+    return result
+
+
+def foot_path(phase):
+    """Eine Haelfte steht am Boden, die andere fuehrt den Fuss nach vorn.
+
+    Waehrend der Standphase wandert der Fuss relativ zum vorwaerts gehenden Rumpf linear
+    nach hinten; beim Vorschwingen hebt er ab. Kein Drehen der ganzen Zeichnung.
+    """
+    phase %= 1.0
+    stride = 24.0
+    if phase < 0.5:
+        t = phase / 0.5
+        return (195.0 + stride * (1 - 2 * t), 365.0), 0.0
+    t = (phase - 0.5) / 0.5
+    ease = t * t * (3 - 2 * t)
+    return (195.0 + stride * (2 * ease - 1), 365.0 - 23.0 * np.sin(np.pi * t)), -14.0 * np.sin(2 * np.pi * t)
+
+
+def solve_leg(hip, knee, ankle, target):
+    """Zwei starre Segmente statt Skalierung eines ganzen Beins (Winkel in Grad)."""
+    hip, knee, ankle, target = map(lambda p: np.asarray(p, dtype=float), (hip, knee, ankle, target))
+    upper = np.linalg.norm(knee - hip)
+    lower = np.linalg.norm(ankle - knee)
+    delta = target - hip
+    distance = np.clip(np.linalg.norm(delta), abs(upper - lower) + 1e-5, upper + lower - 1e-5)
+    base = np.arctan2(delta[1], delta[0])
+    angle = np.arccos(np.clip((upper**2 + distance**2 - lower**2) / (2 * upper * distance), -1, 1))
+    # Das Knie beugt sich in Laufrichtung. Die Materiallaengen bleiben erhalten.
+    a = base - angle
+    joint = hip + upper * np.array([np.cos(a), np.sin(a)])
+    b = np.arctan2(target[1] - joint[1], target[0] - joint[0])
+    return (np.degrees(a - np.arctan2(*(knee-hip)[::-1])),
+            np.degrees(b - np.arctan2(*(ankle-knee)[::-1])))
+
 
 
 def walk(n=8, steps=64, turn=1.0, lean=3.0):
@@ -172,7 +228,7 @@ def walk(n=8, steps=64, turn=1.0, lean=3.0):
         i = f * steps // n
         p = ph[i]
         out.append(dict(
-            bob=bob[i], lean=(lean + 1.0 * np.sin(2 * p)) * turn,
+            bob=2.0 + 2.0 * np.cos(2 * p), lean=0.0, gait=f / n if turn else None,
             leg_l=12 * np.cos(p) * turn, lift_l=22 * max(0.0, np.sin(p)) ** 1.2,
             leg_r=-12 * np.cos(p) * turn, lift_r=22 * max(0.0, -np.sin(p)) ** 1.2,
             arm_l=-14 - 9 * np.cos(p), arm_r=6 * np.cos(p),
@@ -235,8 +291,10 @@ def plan():
     P += [('open', front[k]) for k in (0, 2, 4, 6)]
     P.append(('back', {}))
     P += [('back', front[k]) for k in (0, 2, 4, 6)]
-    P.append(('open', dict(sx=0.55)))
-    P.append(('back', dict(sx=0.55)))
+    # Kein falsches Raumdrehen durch horizontales Stauchen. Wendeposen verlagern das
+    # Gewicht und lassen Kopf/Mantel nachfolgen; vollstaendige Profilzeichnungen fehlen noch.
+    P.append(('open', dict(bob=2, head=-4, arm_l=-6, flap=8, tail=-3)))
+    P.append(('back', dict(bob=2, head=4, arm_l=6, flap=-8, tail=3)))
     assert len(P) == Mo.COUNT
     return P
 
@@ -262,9 +320,10 @@ def frames():
         fr[ty[ok], tx[ok]] = sm[ys[ok], xs[ok]]
         if variant == 'back':
             fr = fr[:, ::-1]
-        # Auf die Fusslinie setzen: tiefste Zeile = FOOT_ROW (Spruenge hebt das Spiel selbst an)
+        # Der seitliche Gang hat geloeste Bodenanker; nicht danach den ganzen Koerper
+        # verschieben. Sonstige Posen behalten die bisherige Fussnormierung.
         rows = np.nonzero(fr[..., 3].any(1))[0]
-        shift = FOOT_ROW - rows.max()
+        shift = 0 if par.get("gait") is not None else FOOT_ROW - rows.max()
         fr = np.roll(fr, shift, axis=0)
         if shift > 0:
             fr[:shift] = 0
@@ -272,3 +331,4 @@ def frames():
             fr[shift:] = 0
         out.append(fr)
     return out
+

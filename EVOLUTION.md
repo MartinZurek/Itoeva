@@ -669,6 +669,36 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-05 - Fennecs Gang: Pfotenkontakt statt flacher Wendepuppe
+
+**Anlass:** Martin gefaellt die gemalte Fennec-Figur, aber nicht ihr Sticker-Effekt beim Gehen
+und Umkehren. Die Wendebilder skalierten dieselbe Quelle auf 55 Prozent Breite; waehrenddessen
+bewegte die Spielsteuerung die starre Zwischenpose weiter.
+
+**Entscheidung:** Der bestehende Key-Design-Rig bekommt Knie- und Stiefelgelenke mit einer
+Zwei-Segment-Loesung. Eine Pfote steht waehrend der halben Periode auf der Bodenlinie und
+wandert relativ zum Rumpf zurueck, die andere schwingt angehoben vor. Die Laengen bleiben fest.
+Die gemalten Sohlen haben unterschiedliche Hoehen; deren Anker werden getrennt ausgeglichen.
+Der Bogen bleibt bei 39 Bildern mit 128 Pixeln. Das Zusammendruecken der Wendeposen entfaellt.
+Beim Gehen ueberschreiben Wendebilder nicht mehr die Gangfolge. Ein eigener monotoner
+Gangtakt beginnt am Kontakt und setzt sich beim Anhalten zurueck; der alte Raster-Huepfer
+wird fuer feine Gehbilder nicht noch einmal auf die komplette Figur angewendet.
+
+**Beleg:** Vier lokale Python-Tests pruefen Stand-/Schwungphase, konstant lange Segmente,
+erreichte Pfotenziele und Wendeposen ohne Breitenstauchung. Der neu gerenderte Bogen wurde
+visuell geprueft; die unteren Pixel der Gangbilder liegen durch Rasterung auf Zeile 124–126.
+Kotlin-Regressionen fuer Umkehren ohne Gleitpose und den Gangtakt ergaenzt; Android-Checks
+folgen in CI. Animierte Vorschau: `tools/character-art/fennec-gait-preview.gif`.
+
+**Grenzen:** Weiterhin ein gegliederter 2D-Rig aus der freigegebenen Zeichnung, kein fertiges
+3D-Modell. Echte separat gezeichnete Profile und eine vollstaendige raeumliche Drehung stehen
+aus. Links/rechts spiegeln noch; Gangtempo ist zeitgetaktet, nicht an gemessene Wegstrecke
+gekoppelt. Die Aenderung ersetzt keine Sichtpruefung am Handy.
+
+**Ruecksetzweg / naechster Schritt:** Generator, Fennec-Bogen und Auswahlregel gemeinsam
+zuruecksetzen; Spielstand bleibt kompatibel. Als Naechstes Gehbewegung am Geraet beurteilen,
+danach separate Profil-/Rueckenquellen und streckenabhaengige Schrittphase.
+
 ### 2026-10-04 - Itoeva 2: Landschaften aus Konzeptbuch Band 2, Licht-PR uebernommen
 
 **Anlass:** Martin: weniger generisch, eins zu eins wie die Concept Art. Inzwischen liegen fuer alle

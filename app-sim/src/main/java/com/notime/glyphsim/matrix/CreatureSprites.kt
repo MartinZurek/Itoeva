@@ -240,6 +240,23 @@ object CreatureSprites {
         }
     }
 
+    /** Beim Losgehen am Bodenkontakt beginnen, statt mitten in einer globalen Uhrphase. */
+    class GaitClock {
+        private var previous: Long? = null
+        private var elapsed = 0L
+
+        fun update(moving: Boolean, timeMs: Long): Long {
+            if (!moving) {
+                previous = null
+                elapsed = 0L
+                return 0L
+            }
+            previous?.let { elapsed += (timeMs - it).coerceIn(0L, 100L) }
+            previous = timeMs
+            return elapsed
+        }
+    }
+
     /** Bild im feinen Bogen; [turn] (optional) spielt Drehungen beim Richtungswechsel. */
     fun lookRich(
         raw: IntArray,
@@ -248,7 +265,8 @@ object CreatureSprites {
         timeMs: Long,
         direction: PlayControl.Dir? = null,
         moving: Boolean? = null,
-        turn: Turn? = null
+        turn: Turn? = null,
+        gaitTimeMs: Long = timeMs
     ): Look {
         val (act, lift, mirrored) = classify(raw, species, side, timeMs, direction, moving)
         val facing = when (act) {
@@ -258,18 +276,25 @@ object CreatureSprites {
         }
         // Im Schlaf und im Sprung keine Drehung einschieben - nur merken, wohin sie schaut.
         val step = turn?.update(facing, timeMs)
-        if (step != null && act != Activity.SLEEP && act != Activity.JOY) return Look(step.frame, lift, step.mirrored)
+        val locomotion = act == Activity.WALK || act == Activity.FRONT_WALK || act == Activity.BACK_WALK
+        // Ein Wendebild darf den laufenden Gang nicht durch eine starre Gleitpose ersetzen.
+        if (step != null && !locomotion && act != Activity.SLEEP && act != Activity.JOY) {
+            return Look(step.frame, lift, step.mirrored)
+        }
         val frame = when (act) {
             Activity.SLEEP -> Rich.SLEEP_FIRST + ((timeMs / Rich.SLEEP_MS) % Rich.SLEEP_COUNT).toInt()
             Activity.BACK -> Rich.BACK
-            Activity.BACK_WALK -> Rich.BACK_WALK_FIRST + ((timeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
+            Activity.BACK_WALK -> Rich.BACK_WALK_FIRST + ((gaitTimeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
             Activity.FRONT -> Rich.FRONT
-            Activity.FRONT_WALK -> Rich.FRONT_WALK_FIRST + ((timeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
-            Activity.WALK -> Rich.WALK_FIRST + ((timeMs / Rich.WALK_MS) % Rich.WALK_COUNT).toInt()
+            Activity.FRONT_WALK -> Rich.FRONT_WALK_FIRST + ((gaitTimeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
+            Activity.WALK -> Rich.WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % Rich.WALK_COUNT).toInt()
             Activity.JOY -> Rich.JOY_FIRST + ((timeMs / Rich.JOY_MS) % Rich.JOY_COUNT).toInt()
             Activity.BLINK -> Rich.BLINK
             Activity.IDLE -> Rich.idleFrame(timeMs)
         }
-        return Look(frame, lift, mirrored)
+        // Der feine Gang enthaelt seine Gewichtsverlagerung bereits. Der alte Raster-Huepfer
+        // wuerde zusaetzlich beide Pfoten vom Boden anheben.
+        return Look(frame, if (locomotion) 0 else lift, mirrored)
     }
 }
+
