@@ -6,12 +6,13 @@ sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
 from roomkit import CozyRoom, W, H
 from px import rgb, MaskPen
+import props as P
 
 
 def build(out):
     lights = [(np.array([-0.2, 1.0, 2.3]), rgb('#ffb060'), 1.5),
               (np.array([0.2, 1.3, 1.6]), rgb('#ffc080'), 0.7)]
-    r = CozyRoom(seed=71, lights=lights, plaster=('#ccb08c', '#dcc09a'), wood=('#5a3a28', '#6e4630', '#80563a'))
+    r = CozyRoom(seed=71, lights=lights, plaster=('#a8604a', '#c07458'), walls='brick', wood=('#5a3a28', '#6e4630', '#80563a'), wainscot=False)
     door = r.door_back(0.6, 0.94, 0.98)
     r.window(0.0, 0.42, 0.66, 1.12, view='night')
     # Lochwand mit Werkzeug
@@ -54,12 +55,28 @@ def build(out):
     r.box(-0.76, -0.3, 0.3, 0.34, 1.48, 1.78, '#c89a68', top='#e0b880', edge='#fff0d0')
     r.rug(-0.3, 0.5, 1.6, 2.2, c1='#6a4a2a', c2='#c8a060', c3='#3a2a1a')
     r.candle(0.4, 0.04, 1.42)
-    r.plant(0.5, 2.55, size=0.8)
+    # Spaene auf dem Boden, Farbtoepfe, Besen, Plaene an der Wand
+    rr = np.random.default_rng(3)
+    for _ in range(80):
+        X, Z = rr.uniform(-0.9, 0.0), rr.uniform(1.8, 2.3)
+        p = r.room.proj(X, 0.0, Z)
+        r.cv.paint(MaskPen(W, H).line([p, (p[0] + rr.uniform(-2, 2), p[1] + rr.uniform(-1, 1))]).a > 0, rgb(rr.choice(['#e0c08a', '#c8a070', '#f0d8a8'])))
+    for k, (X, c) in enumerate(((0.12, '#3a6aa8'), (0.22, '#c84a3a'), (0.3, '#e8c040'))):
+        r.box(X - 0.04, X + 0.04, 0.0, 0.1, 2.5, 2.58, '#8a8a90', top=c, edge='#d8d8e0')
+    a, b = r.room.proj(0.55, 0.0, 2.6), r.room.proj(0.5, 0.7, 2.68)
+    r.cv.paint(MaskPen(W, H).line([a, b], 1).a > 0, rgb('#8a6a40'))
+    r.cv.paint(MaskPen(W, H).poly([(a[0] - 4, a[1]), (a[0] + 4, a[1]), (a[0] + 2, a[1] - 8), (a[0] - 2, a[1] - 8)]).a > 0, rgb('#c8a060'))
+    x0, y0, x1, y1 = r.rect_on_back(0.08, 0.5, 1.15, 1.32)
+    r.cv.paint((r.xx >= x0) & (r.xx <= x1) & (r.yy >= y0) & (r.yy <= y1), rgb('#e8dcc0'))
+    r.cv.paint((r.xx >= x0) & (r.xx <= x1) & (r.yy >= y0) & (r.yy <= y1) & (((r.xx - x0) % 6 == 0) | ((r.yy - y0) % 5 == 0)), rgb('#5a7aa8'))
+    P.wall_shelf_clutter(r, -0.9, -0.3, 1.24)
+    P.basket(r, -0.2, 1.65, fill='logs')
+    P.plant(r, 0.5, 2.55, kind='palm', size=0.9)
     r.hanging_plant(70, 30, 26)
     r.walk(farLeft=146, farRight=326, nearLeft=40, nearRight=430)
     r.spot_box('CRAFT', r.proj_box(-0.9, -0.02, 0.0, 1.12, 2.3, 2.66), *r.stand(-0.46, 2.2))
     r.spot_box('DOOR', door, *r.stand(0.77, 2.2))
-    return r.finish(out, colors=150)
+    return r.finish(out, colors=200)
 
 
 if __name__ == '__main__':

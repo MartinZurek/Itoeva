@@ -4,6 +4,7 @@ Regale mit Rollen und Ordnern, Tageslicht durch hohe Fenster; Tuer hinten links.
 import sys
 sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
+import props as P
 from roomkit import CozyRoom, W, H
 from px import rgb, MaskPen
 
@@ -12,7 +13,7 @@ def build(out):
     lights = [(np.array([0.2, 1.0, 2.6]), rgb('#f0f0ff'), 1.0),
               (np.array([-0.2, 1.3, 1.7]), rgb('#ffd8a0'), 1.0),
               (np.array([0.75, 0.8, 1.9]), rgb('#ffb060'), 0.6)]
-    r = CozyRoom(seed=101, lights=lights, plaster=('#dcccb0', '#e8dcc4'), ambient='#6a6060')
+    r = CozyRoom(seed=101, lights=lights, plaster=('#dcccb0', '#e8dcc4'), ambient='#6a6060', walls='plaster', floor='planks')
     r.meta['blocked'] = []
     door = r.door_back(-0.94, -0.62, 0.98)
     r.window(-0.4, 0.05, 0.42, 1.1, view='day')
@@ -42,14 +43,23 @@ def build(out):
     r.cv.paint(MaskPen(W, H).poly(lp).a > 0, rgb('#5a8a5a'))
     r.glow_at(0.66, 0.78, 1.74, r=12, color='#ffa050', k=0.35)
     r.chair(0.48, 1.9, back_h=0.48)
-    r.plant(-0.9, 1.25, size=1.1)
-    r.plant(0.12, 2.58, size=0.8)
+    P.plant(r, -0.9, 1.25, kind='ficus', size=1.1)
+    P.plant(r, 0.12, 2.58, kind='snake', size=0.8)
+    P.painting(r, 0.76, 0.98, 0.78, 1.0, kind='mountain')
+    P.clock(r, -0.6, 1.12, rad=0.05)
+    P.mug(r, 0.0, 0.45, 1.8, steam=True)
+    P.book_stack(r, 0.3, 0.0, 2.35, n=5)
+    # Kartenrollen im Korb, Globus auf dem Regal
+    m = P.basket(r, -0.75, 1.62, w=0.16, h=0.16)
+    for k in range(5):
+        a = r.room.proj(-0.8 + k * 0.025, 0.16, 1.62)
+        r.cv.paint(MaskPen(W, H).line([a, (a[0] + k - 2, a[1] - 14)], 2).a > 0, rgb(['#e8dcc0', '#d8c8a0', '#f0e6d0'][k % 3]))
     r.pendant(-0.15, 1.22, 1.9)
     r.walk(farLeft=150, farRight=322, nearLeft=40, nearRight=430)
     r.spot_box('TABLE', r.proj_box(-0.55, 0.25, 0.0, 0.46, 1.72, 2.12), *r.stand(-0.2, 1.55))
     r.spot_box('WORKPLACE', r.bbox(desk), *r.stand(0.42, 1.6))
     r.spot_box('DOOR', door, *r.stand(-0.78, 2.2))
-    return r.finish(out, colors=150)
+    return r.finish(out, colors=200)
 
 
 if __name__ == '__main__':

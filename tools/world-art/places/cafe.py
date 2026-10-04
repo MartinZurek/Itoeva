@@ -4,6 +4,7 @@ Fenster zum Abend; hinten rechts die Tuer zum Platz."""
 import sys
 sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
+import props as P
 from roomkit import CozyRoom, W, H
 from px import rgb, MaskPen
 
@@ -18,7 +19,7 @@ def build(out):
     lights = [(np.array([-0.4, 1.25, 1.8]), rgb('#ffb868'), 1.1),
               (np.array([0.4, 1.25, 1.8]), rgb('#ffb868'), 1.1),
               (np.array([0.0, 0.9, 2.5]), rgb('#ffd090'), 0.5)]
-    r = CozyRoom(seed=91, lights=lights, plaster=('#d8c0a0', '#e8d0b0'), wood=('#5a3a28', '#6e4630', '#80563a'))
+    r = CozyRoom(seed=91, lights=lights, plaster=('#d8c0a0', '#e8d0b0'), wood=('#5a3a28', '#6e4630', '#80563a'), floor='checker', floor2='#e0d4bc', walls='wallpaper', pattern='#5a8a7a')
     r.meta['blocked'] = []
     door = r.door_back(0.6, 0.94, 0.98)
     # Kreidetafel und Regal mit Tassen hinter der Theke
@@ -48,8 +49,17 @@ def build(out):
         seats |= round_table(r, X, Z)
         r.cup(X - 0.05, 0.41, Z - 0.04, '#f0ece4')
         r.box(X + 0.03, X + 0.11, 0.41, 0.44, Z - 0.03, Z + 0.05, '#e8c080', top='#f0d090')
-    r.plant(-0.92, 1.4, size=1.2)
-    r.plant(0.92, 2.2, size=1.0)
+    P.plant(r, -0.92, 1.4, kind='monstera', size=1.2)
+    P.plant(r, 0.92, 2.2, kind='palm', size=1.1)
+    P.string_lights(r, -1.0, 1.0, 1.36, 2.6, n=18)
+    P.painting(r, 0, 0, 0.55, 0.9, kind='sunset', side=-1, Z0=1.7, Z1=2.1)
+    P.painting(r, 0, 0, 0.6, 0.85, kind='sea', side=1, Z0=1.5, Z1=1.75, frame='#c8a050')
+    P.clock(r, 0.5, 1.12, rad=0.05)
+    for X, Z in ((-0.5, 1.98), (0.35, 1.75)):
+        P.vase(r, X + 0.08, 0.41, Z + 0.06, flowers=('#f4f0e0', '#e8506a'), col='#e8e0d0')
+    # Kuchenteller und Zuckerdose auf der Theke
+    P.teapot(r, -0.86, 0.48, 2.42, col='#e8e0d0')
+    P.fruit_bowl(r, 0.36, 0.48, 2.38)
     r.hanging_plant(110, 20, 30)
     r.hanging_plant(370, 24, 30)
     r.pendant(-0.4, 1.18, 1.8)
@@ -57,7 +67,7 @@ def build(out):
     r.walk(farLeft=146, farRight=326, nearLeft=40, nearRight=430)
     r.spot_box('SEAT', r.proj_box(0.18, 0.52, 0.0, 0.6, 1.58, 2.0), *r.stand(0.12, 1.6))
     r.spot_box('DOOR', door, *r.stand(0.77, 2.2))
-    return r.finish(out, colors=150)
+    return r.finish(out, colors=200)
 
 
 if __name__ == '__main__':

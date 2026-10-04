@@ -772,24 +772,24 @@
   "spots": [
    {
     "box": [
-     294.0,
-     132.0,
-     308.0,
-     196.0
+     296.0,
+     128.0,
+     317.0,
+     204.0
     ],
-    "standX": 304.0,
-    "standY": 206.0,
+    "standX": 308.0,
+    "standY": 212.0,
     "station": "LAMP"
    },
    {
     "box": [
      358.0,
-     180.0,
+     186.0,
      402.0,
-     202.0
+     208.0
     ],
     "standX": 380.0,
-    "standY": 210.0,
+    "standY": 216.0,
     "station": "BENCH"
    }
   ],
@@ -797,11 +797,11 @@
    "farHeight": 46,
    "farLeft": 90,
    "farRight": 440,
-   "farY": 200,
+   "farY": 206,
    "nearHeight": 62,
    "nearLeft": 30,
    "nearRight": 440,
-   "nearY": 246
+   "nearY": 248
   }
  },
  "swamp": {

@@ -4,6 +4,7 @@ hinten rechts die Tuer. Gleiche Bauweise wie die Zimmer, nur bei Nacht und bunt.
 import sys
 sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
+import props as P
 from roomkit import CozyRoom, W, H, FLOOR
 from px import rgb, MaskPen, glow, lerp
 
@@ -80,11 +81,21 @@ def build(out):
     for X, Z in ((-0.5, 2.1), (0.0, 2.05)):
         r.box(X - 0.02, X + 0.02, 0.0, 0.26, Z - 0.02, Z + 0.02, '#8a8aa0')
         r.box(X - 0.09, X + 0.09, 0.26, 0.3, Z - 0.09, Z + 0.09, '#d84a6a', top='#f06a8a', edge='#ffa0c0')
-    r.plant(-0.92, 1.4, size=1.0)
+    P.plant(r, -0.92, 1.4, kind='palm', size=1.0)
+    # Poster an den Waenden
+    for side, z0, z1, c in ((-1, 1.6, 1.95, '#e86ad0'), (-1, 2.05, 2.35, '#5ab0f0'), (1, 2.05, 2.4, '#f0d060')):
+        m = r.wall_side(side, z0, z1, 0.55, 1.0, rgb('#1a1430'))
+        inner = r.wall_side(side, z0 + 0.03, z1 - 0.03, 0.58, 0.97, rgb(c) * 0.7)
+        r.cv.paint(inner & (((r.xx + r.yy) % 5) == 0), rgb(c))
+        r.cv.paint(inner & ((r.yy % 7) == 0), rgb('#f4f0e0'))
+    # Tickets, Muenzbecher
+    for k in range(12):
+        p = r.room.proj(-0.6 + k * 0.05, 0.0, 1.5 + (k % 3) * 0.1)
+        r.cv.paint(MaskPen(W, H).rect(p[0], p[1] - 1, p[0] + 2, p[1]).a > 0, rgb('#f0c040') if k % 2 else rgb('#e86a8a'))
     r.walk(farLeft=150, farRight=322, nearLeft=40, nearRight=430)
     r.spot_box('ARCADE', r.bbox(machines), *r.stand(-0.4, 2.2))
     r.spot_box('DOOR', door, *r.stand(0.78, 2.2))
-    return r.finish(out, colors=150)
+    return r.finish(out, colors=200)
 
 
 if __name__ == '__main__':

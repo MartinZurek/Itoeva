@@ -9,6 +9,7 @@ from px import rgb
 
 
 def build(out):
+    rng = np.random.default_rng(31)
     s = Scene('meadow', horizon=130, seed=31)
     s.sky(top='#5a9ad8', mid='#94c4ea', low='#e4f0ee', warm='#f8ecd0')
     s.hills([(0, 480, 72, '#8aa0c8', '#c0d0e4', 41, 0.45), (180, 480, 92, '#7a96b0', '#a8bcd0', 42, 0.35)])
@@ -18,19 +19,10 @@ def build(out):
     # Trampelpfad
     s.stone_path([(0.15, 6.0), (-0.1, 3.0), (0.25, 1.6), (0.05, 1.0)], 0.22,
                  tone=('#9a8a6a', '#b4a07c', '#ccb890', '#e0d0a8'))
-    # Bluetenteppich: dichte Punkte, vorn groesser
-    rr = np.random.default_rng(3)
-    cols = ['#f4f0e0', '#f0c850', '#e88aa0', '#9a88e0', '#e86a50']
-    from px import noise
-    patch = noise(W, H, 30, 7, 3)
-    for _ in range(4000):
-        y = int(132 + (H - 133) * rr.random() ** 0.7)
-        x = int(rr.uniform(0, W - 2))
-        if patch[y, x] < 0.55:
-            continue
-        sz = 1 + int((y - 130) / 50)
-        c = cols[int(rr.integers(0, len(cols)))]
-        s.paint(s.rect(x, y, x + sz - 1, y + max(0, sz - 2)), c)
+    # Bluetenteppich in Gruppen, wie Wildblumen wachsen
+    import nature as N
+    for kind, n, p in (('daisy', 260, 10), ('buttercup', 200, 8), ('poppy', 90, 6), ('lupine', 60, 5), ('bell', 90, 6)):
+        N.flowers(s.cv, 136, 266, rng, n, kind, patches=p)
     for x in (60, 150, 330, 420):
         s.bush(x, 150 + (x % 7), 9, seed=x, flowers=('#f4f0e0', '#e88aa0'))
     # Eiche rechts mit Baumstamm darunter

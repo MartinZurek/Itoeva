@@ -5,7 +5,9 @@ import sys
 sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
 from kit import Scene, W, H
-from px import rgb
+from px import rgb, lerp
+import nature as N
+import town as T
 
 
 def stall(s, x0, x1, base):
@@ -44,8 +46,8 @@ def build(out):
     s.sky(top='#2a3666', mid='#7a6aa0', low='#f0a878', warm='#ffd8a0', clouds=False)
     s.clouds(n=4, ymin=10, ymax=50, lit='#ffc8a0', mid='#e8a0a0', shade='#9a7aa8', base='#7a6a9a')
     sky = s.cv.c.copy()
-    s.hills([(0, 480, 84, '#6a6a98', '#9a90b8', 3, 0.4), (120, 460, 60, '#7a9a7a', '#a8c098', 8, 0.15)])
-    s.town(150, 420, 64, 140, n=110, k=0.9, tower=(286, 52, 24), lit=True)
+    s.hills([(0, 480, 84, '#6a6a98', '#9a90b8', 3, 0.4), (120, 460, 60, '#6a8a6a', '#94b088', 8, 0.15)])
+    s.town(150, 420, 64, 140, n=170, k=0.9, tower=(286, 52, 24), lit=True)
     for x in range(160, 420, 19):
         s.tree(x, 128 + (x * 11) % 18, 20 + (x * 7) % 10, seed=x, kind='cypress')
     aq = s.rect(330, 110, 470, 118)
@@ -54,11 +56,13 @@ def build(out):
         s.paint(s.ellipse(x + 4, 118, 4, 6) & (s.yy >= 113), '#7a7aa0')
     s.grass(150, flowers=False)
     # Hintere Hausreihe
-    s.facade(-10, 120, 54, 176, shutters='#4e8a86', floors=2, shop=True, seed=5)
-    s.awning(-6, 116, 126, depth=12, c1='#3e7a6a', c2='#3e7a6a')
-    s.facade(330, 490, 48, 176, wall=('#c4a888', '#d8bc98', '#e8d0ac', '#f2e2c4'), shutters='#7a5a8a',
-             floors=2, shop=True, door_x=444, seed=6)
-    s.awning(334, 436, 118, depth=12, c1='#d8a060', c2='#f4ead6')
+    rng = np.random.default_rng(24)
+    T.facade(s, -10, 120, 54, 176, rng, shutters='#4e8a86', floors=2, shop='cafe', lit=True)
+    T.awning(s, -6, 116, 124, depth=12, c1='#3e7a6a', c2='#4a8a78')
+    T.facade(s, 330, 490, 48, 176, rng, wall=('#c4a888', '#d8bc98', '#e8d0ac', '#f2e2c4'), shutters='#7a5a8a',
+             floors=2, shop='books', door_x=444, lit=True)
+    T.awning(s, 334, 436, 116, depth=12, c1='#d8a060', c2='#f4ead6')
+    T.hanging_sign(s, 120, 100, icon='cup', col='#3e7a6a')
     # Platz
     s.cobble(s.yy >= 172, tone=('#a88a70', '#bca088', '#d2b89c', '#e6d0b4'), size=0.11)
     s.paint(s.rect(120, 168, 330, 176), '#8a8278')
@@ -66,15 +70,17 @@ def build(out):
         s.bush(x + 10, 174, 8 + (x % 5), seed=x, flowers=('#f4f0e0', '#e88aa0') if x % 52 == 0 else None)
     lamps = stall(s, 168, 286, 204)
     s.tree(116, 196, 96, seed=51, kind='round')
-    for x in (300, 140):
-        s.planter(x, 206, 16, s=0.9)
     s.bunting([(-4, 70), (180, 92)])
     s.bunting([(290, 90), (484, 64)], colors=('#4e7aa8', '#e8b440', '#f4ead6', '#d8644a'))
-    lamp = s.lamp(344, 210, s=1.05, lit=True)
-    lamp2 = s.lamp(40, 214, s=1.05, lit=True)
+    for x, kind in ((152, 'lavender'), (166, 'geranium'), (296, 'olive'), (310, 'box'), (24, 'fern')):
+        T.potted(s, x, 210 if x > 100 else 214, rng, size=1.1, kind=kind)
+    T.cafe_set(s, 74, 222, rng, scale=1.1)
+    T.chalkboard(s, 100, 216)
+    lamp = T.ornate_lamp(s, 344, 212, h=62, lit=True)
+    lamp2 = T.ornate_lamp(s, 40, 216, h=62, lit=True, banner='#c8644a')
     bench = s.bench(398, 214, s=1.0)
     windows = [(4, 98, 108, 172), (338, 98, 436, 172)]
-    lights = lamps + [(lamp[0] + 7, lamp[1] + 6, 8), (lamp2[0] + 7, lamp2[1] + 6, 8)]
+    lights = lamps + [(344, 212 - 62 - 5, 9), (40, 216 - 62 - 5, 9), (114, 154, 5), (438, 150, 5)]
     s.dusk(k=0.55, tint='#5a5a9a', sky=sky, lights=lights, windows=windows)
     s.walk(farY=206, nearY=248, farLeft=40, farRight=450, nearLeft=20, nearRight=460, farH=46, nearH=60)
     s.spot('LAMP', lamp, 350, 214)

@@ -4,6 +4,7 @@ Mitte, Ladentisch mit Kasse und Glocke rechts, Schaufenster mit Tageslicht; Tuer
 import sys
 sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
+import props as P
 from roomkit import CozyRoom, W, H
 from px import rgb, MaskPen
 
@@ -11,7 +12,7 @@ from px import rgb, MaskPen
 def build(out):
     lights = [(np.array([0.0, 1.3, 1.8]), rgb('#ffd090'), 1.3),
               (np.array([0.3, 0.9, 2.6]), rgb('#e8f0ff'), 0.7)]
-    r = CozyRoom(seed=81, lights=lights, plaster=('#e0caa8', '#ecd8b8'), ambient='#6a5a50')
+    r = CozyRoom(seed=81, lights=lights, plaster=('#e0caa8', '#ecd8b8'), ambient='#6a5a50', floor='stone', wood=('#8a7a68', '#a8967e', '#c0ae94'))
     r.meta['blocked'] = []
     door = r.door_back(-0.94, -0.62, 0.98)
     r.window(-0.1, 0.7, 0.42, 1.08, view='day')
@@ -45,12 +46,26 @@ def build(out):
     r.plant(0.25, 2.58, size=0.8)
     r.hanging_plant(250, 18, 26)
     r.pendant(-0.15, 1.24, 1.7)
+    P.basket(r, -0.55, 1.62, fill='yarn')
+    P.basket(r, 0.28, 2.3, w=0.16, fill='logs')
+    P.plant(r, 0.2, 2.6, kind='palm', size=0.9)
+    P.vase(r, 0.84, 0.46, 1.85, flowers=('#f0c040', '#f4f0e0', '#e8506a'))
+    P.book_stack(r, 0.7, 0.46, 1.62, n=3)
+    P.string_lights(r, -1.0, 1.0, 1.36, 2.66, n=18)
+    P.painting(r, 0.78, 0.96, 0.62, 0.84, kind='sea', frame='#c8a050')
+    # Preisschilder und Saecke am Regal
+    for k, x in enumerate((-0.38, -0.22, -0.06)):
+        q = r.room.proj(x + 0.07, 0.36, 1.97)
+        r.cv.paint(MaskPen(W, H).rect(q[0] - 3, q[1], q[0] + 3, q[1] + 3).a > 0, rgb('#f4ecd8'))
+        r.cv.c[int(q[1]) + 1, int(q[0])] = rgb('#3a2a20')
+    for k, x in enumerate((-0.8, -0.66)):
+        r.box(x, x + 0.12, 0.0, 0.2, 1.75 + k * 0.05, 1.85 + k * 0.05, '#c8b088', top='#a88a60', edge='#e8d0a8')
     r.pendant(0.55, 1.24, 2.0)
     r.walk(farLeft=150, farRight=322, nearLeft=40, nearRight=430)
     r.spot_box('RACK', r.bbox(rack), *r.stand(-0.15, 1.8))
     r.spot_box('CHECKOUT', r.bbox(counter), *r.stand(0.36, 1.6))
     r.spot_box('DOOR', door, *r.stand(-0.78, 2.2))
-    return r.finish(out, colors=150)
+    return r.finish(out, colors=200)
 
 
 if __name__ == '__main__':

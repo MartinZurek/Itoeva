@@ -299,12 +299,12 @@ internal object GameSceneCatalog {
         Scene(
             place = Place.STREET,
             asset = "scenes/street.png",
-            farY = 200f, nearY = 246f,
+            farY = 206f, nearY = 248f,
             farLeft = 90f, farRight = 440f, nearLeft = 30f, nearRight = 440f,
             farHeight = 46f, nearHeight = 62f,
             spots = listOf(
-                Spot(Station.LAMP, Box(294f, 132f, 308f, 196f), 304f, 206f),
-                Spot(Station.BENCH, Box(358f, 180f, 402f, 202f), 380f, 210f)
+                Spot(Station.LAMP, Box(296f, 128f, 317f, 204f), 308f, 212f),
+                Spot(Station.BENCH, Box(358f, 186f, 402f, 208f), 380f, 216f)
             ),
             exits = mapOf(),
             cropTop = 0.8f

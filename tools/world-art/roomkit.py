@@ -14,7 +14,8 @@ FLOOR, CEIL, LEFT, RIGHT, BACK = range(5)
 
 class CozyRoom:
     def __init__(self, seed=1, plaster=('#d8b890', '#e6c8a0'), wood=('#6a4430', '#7e5238', '#8e6040'),
-                 lights=None, ambient='#5a4440'):
+                 lights=None, ambient='#5a4440', walls='plaster', floor='planks', pattern='#c89a7a',
+                 ceiling='beams', frame=True, wainscot=True, floor2=None):
         self.cv = Canvas(W, H)
         self.yy, self.xx = self.cv.yy, self.cv.xx
         self.rng = np.random.default_rng(seed)
@@ -28,6 +29,8 @@ class CozyRoom:
         self.meta = {'walk': dict(farY=172, nearY=236, farLeft=136, farRight=336, nearLeft=26, nearRight=440,
                                   farHeight=42, nearHeight=78),
                      'spots': [], 'blocked': ['UP', 'DOWN'], 'cropTop': 0.7}
+        self.style = dict(walls=walls, floor=floor, pattern=pattern, ceiling=ceiling, frame=frame,
+                          wainscot=wainscot, floor2=floor2)
         self._planes(plaster, wood)
 
     # ------------------------------------------------------------------ Ebenen
@@ -36,41 +39,147 @@ class CozyRoom:
 
     def _planes(self, plaster, wood):
         X, Y, Z, which = self.X, self.Y, self.Z, self.which
+        st = self.style
+        r = np.random.default_rng(self.seed + 5)
         fl = which == FLOOR
-        plank = np.floor(X / 0.13).astype(int)
-        off = ((plank * 2654435761) % 997) / 997
-        joint = np.floor(Z / 0.8 + off).astype(int)
-        pv = (((plank * 7919 + joint * 104729) * 2654435761) % 997) / 997
-        woodc = ramp([(0, wood[0]), (0.5, wood[1]), (1, wood[2])], pv)
-        self._shade(fl, woodc, (0, 1, 0))
-        gx = np.abs(X / 0.13 - np.round(X / 0.13)) * 0.13
-        gz = np.abs((Z / 0.8 + off) - np.round(Z / 0.8 + off)) * 0.8
-        pw = Z / self.room.f
-        self.cv.paint(fl & ((gx < pw * 0.7) | (gz < pw * 0.6)), self.cv.c * 0.6)
-        # Waende: warmer Putz, nur leicht wolkig; Fachwerk aus dunklem Holz
+        pw = Z / self.room.f                     # Weltgroesse eines Pixels
+        # ---------------- Boden
+        if st['floor'] == 'planks':
+            # Dielen verschieden breit, jede mit eigener Toenung, Maserung, Astloechern, Naegeln
+            edges = np.cumsum(r.uniform(0.09, 0.16, 40)) - 2.2
+            plank = np.searchsorted(edges, X)
+            off = ((plank * 2654435761) % 997) / 997
+            ln = 0.6 + ((plank * 40503) % 97) / 97 * 0.6
+            joint = np.floor(Z / ln + off).astype(int)
+            pid = plank * 7919 + joint * 104729
+            pv = ((pid * 2654435761) % 997) / 997
+            woodc = ramp([(0, wood[0]), (0.5, wood[1]), (1, wood[2])], pv * 0.9 + 0.05)
+            grain = np.sin(X * 260 + np.sin(Z * 5 + plank) * 2.2 + off * 20)
+            woodc = woodc * (1 + (grain[..., None] > 0.9) * -0.1 + (grain[..., None] < -0.94) * 0.05)
+            wear = np.exp(-((X - 0.0) / 0.45) ** 2) * np.clip((2.4 - Z) / 1.4, 0, 1)
+            woodc = lerp(woodc, woodc * 1.18, (wear * 0.5)[..., None])
+            self._shade(fl, woodc, (0, 1, 0))
+            lo = np.concatenate([[-9], edges])[np.clip(plank, 0, len(edges))]
+            gx = np.minimum(np.abs(X - lo), np.abs(X - edges[np.clip(plank, 0, len(edges) - 1)]))
+            gz = np.abs((Z / ln + off) - np.round(Z / ln + off)) * ln
+            self.cv.paint(fl & ((gx < pw * 0.7) | (gz < pw * 0.6)), self.cv.c * 0.55)
+            knot_c = ((pid * 69069) % 1000) / 1000
+            kz = (joint + 0.3 + knot_c * 0.4 - off) * ln
+            kx = lo + (edges[np.clip(plank, 0, len(edges) - 1)] - lo) * (0.3 + 0.4 * ((pid * 31) % 7) / 7)
+            knot = fl & (knot_c > 0.7) & (((X - kx) / 0.02) ** 2 + ((Z - kz) / 0.05) ** 2 < 1)
+            self.cv.paint(knot, self.cv.c * 0.62)
+            nail = fl & (gz < pw * 2.2) & (gz > pw * 0.8) & (np.abs(gx - 0.025) < pw * 0.9) & (Z < 2.2)
+            self.cv.paint(nail, self.cv.c * 0.5)
+        elif st['floor'] == 'checker':
+            c1, c2 = rgb(wood[2]), rgb(st['floor2'] or '#e8e0d0')
+            ti, tj = np.floor(X / 0.16).astype(int), np.floor(Z / 0.16).astype(int)
+            var = (((ti * 73856093) ^ (tj * 19349663)) % 1000) / 1000
+            col = np.where(((ti + tj) % 2 == 0)[..., None], c1, c2) * (0.92 + var[..., None] * 0.12)
+            self._shade(fl, col, (0, 1, 0))
+            gx = np.abs(X / 0.16 - np.round(X / 0.16)) * 0.16
+            gz = np.abs(Z / 0.16 - np.round(Z / 0.16)) * 0.16
+            self.cv.paint(fl & ((gx < pw * 0.6) | (gz < pw * 0.5)), self.cv.c * 0.75)
+            chip = fl & (var > 0.93) & (gx < 0.03) & (gz < 0.03)
+            self.cv.paint(chip, self.cv.c * 0.7)
+        else:   # Steinplatten
+            S = 0.19
+            gi, gj = np.floor(X / S).astype(int), np.floor(Z / S).astype(int)
+            best = np.full(X.shape, 9.0)
+            second = np.full(X.shape, 9.0)
+            cid = np.zeros(X.shape, np.int64)
+            for di in (-1, 0, 1):
+                for dj in (-1, 0, 1):
+                    ci, cj = gi + di, gj + dj
+                    hh = (ci * 73856093) ^ (cj * 19349663)
+                    sx = (ci + 0.2 + ((hh * 2654435761) % 1000) / 1000 * 0.6) * S
+                    sz = (cj + 0.2 + ((hh * 40503 + 12345) % 1000) / 1000 * 0.6) * S
+                    dd = np.maximum(np.abs(X - sx), np.abs(Z - sz) * 0.9)
+                    closer = dd < best
+                    second = np.where(closer, best, np.minimum(second, dd))
+                    cid = np.where(closer, hh, cid)
+                    best = np.minimum(best, dd)
+            var = ((cid * 2246822519) % 1000) / 1000
+            col = ramp([(0, wood[0]), (0.5, wood[1]), (1, wood[2])], var)
+            self._shade(fl, col, (0, 1, 0))
+            self.cv.paint(fl & ((second - best) < pw * 1.2), self.cv.c * 0.6)
+        # ---------------- Waende
         nz = noise(W, H, 9, self.seed + 9, 2)
+        walls = (which == BACK) | (which == LEFT) | (which == RIGHT)
+        u = np.where(which == BACK, X, Z)
         for side, n in ((BACK, (0, 0, -1)), (LEFT, (1, 0, 0)), (RIGHT, (-1, 0, 0))):
             m = which == side
             pl = lerp(rgb(plaster[0]), rgb(plaster[1]), np.clip(nz * 1.4 - 0.2, 0, 1)[..., None])
+            if st['walls'] == 'wallpaper':
+                stripe = (np.floor(u / 0.08) % 2 == 0)
+                pl = np.where(stripe[..., None], pl, pl * 0.94)
+                motif = ((np.abs(((u / 0.16) % 1) - 0.5) < 0.12) & (np.abs(((Y / 0.16 + np.floor(u / 0.16) * 0.5) % 1) - 0.5) < 0.1))
+                pl = np.where(motif[..., None], lerp(pl, rgb(st['pattern']), 0.55), pl)
+            elif st['walls'] == 'brick':
+                row = np.floor(Y / 0.07).astype(int)
+                bid = np.floor(u / 0.18 + (row % 2) * 0.5).astype(int)
+                var = (((bid * 73856093) ^ (row * 19349663)) % 1000) / 1000
+                pl = lerp(rgb(plaster[0]), rgb(plaster[1]), var[..., None]) * (0.9 + 0.15 * nz[..., None])
+                mortar = (np.abs(Y / 0.07 - np.round(Y / 0.07)) * 0.07 < 0.006) | \
+                         (np.abs((u / 0.18 + (row % 2) * 0.5) - np.round(u / 0.18 + (row % 2) * 0.5)) * 0.18 < 0.006)
+                pl = np.where(mortar[..., None], rgb('#c8b8a0') * 0.8, pl)
+            elif st['walls'] == 'boards':
+                bi = np.floor(u / 0.12).astype(int)
+                var = ((bi * 2654435761) % 997) / 997
+                pl = lerp(rgb(plaster[0]), rgb(plaster[1]), var[..., None])
+                grain = np.sin(Y * 45 + bi * 3 + np.sin(Y * 7 + bi) * 2) > 0.85
+                pl = np.where(grain[..., None], pl * 0.9, pl)
+                pl = np.where((np.abs(u / 0.12 - np.round(u / 0.12)) * 0.12 < 0.005)[..., None], pl * 0.6, pl)
+            elif st['walls'] == 'tiles':
+                ti, tj = np.floor(u / 0.1).astype(int), np.floor(Y / 0.1).astype(int)
+                var = (((ti * 73856093) ^ (tj * 19349663)) % 1000) / 1000
+                pl = lerp(rgb(plaster[0]), rgb(plaster[1]), var[..., None])
+                grout = (np.abs(u / 0.1 - np.round(u / 0.1)) * 0.1 < 0.005) | (np.abs(Y / 0.1 - np.round(Y / 0.1)) * 0.1 < 0.005)
+                pl = np.where(grout[..., None], rgb('#d8d0c0'), pl)
             self._shade(m, pl, n)
+        if st['walls'] == 'plaster':
+            # Haarrisse und Wasserflecken
+            for _ in range(10):
+                side = r.choice([BACK, LEFT, RIGHT])
+                pts = [(r.uniform(-1, 1) if side == BACK else r.uniform(1.2, 2.6), r.uniform(0.5, 1.2))]
+                for _ in range(5):
+                    pts.append((pts[-1][0] + r.uniform(-0.04, 0.04), pts[-1][1] - r.uniform(0.01, 0.04)))
+                for (ua, ya), (ub, yb) in zip(pts, pts[1:]):
+                    seg = (which == side) & (np.abs(u - ua) < 0.004 + pw * 0.6) & (Y < ya) & (Y > yb)
+                    self.cv.paint(seg, self.cv.c * 0.8)
+            stain = walls & (Y < 0.5) & (noise(W, H, 6, self.seed + 31, 2) > 0.75)
+            self.cv.paint(stain, self.cv.c * 0.94)
         beam = rgb('#4e3224')
-        walls = (which == BACK) | (which == LEFT) | (which == RIGHT)
-        # senkrechte Pfosten an den Zimmerecken und in den Seitenwaenden, ein Riegel auf Brusthoehe
-        corner = (which == BACK) & ((np.abs(X + 1.05) < 0.05) | (np.abs(X - 1.05) < 0.05))
-        posts = ((which == LEFT) | (which == RIGHT)) & (np.abs(((Z - 0.35) / 0.9) % 1 - 0.5) > 0.47)
-        rail = walls & (np.abs(Y - 1.22) < 0.03)
-        self._shade(corner | posts | rail, beam, (0, 0, -1))
-        self._shade(walls & (np.abs(Y - 1.25) < 0.004 + Z * 0.001), rgb('#8a5a3a'), (0, 1, 0))
-        # Holzvertaefelung unten
-        panel = walls & (Y < 0.34)
-        pv = np.abs((np.where(which == BACK, X, Z) / 0.22) % 1 - 0.5) > 0.45
-        self._shade(panel, np.where(pv[..., None], rgb(wood[0]) * 0.75, rgb(wood[1])), (0, 0, -1))
-        self._shade(walls & (np.abs(Y - 0.34) < 0.018), rgb(wood[2]) * 1.2, (0, 1, 0))
+        if st['frame']:
+            corner = (which == BACK) & ((np.abs(X + 1.05) < 0.05) | (np.abs(X - 1.05) < 0.05))
+            posts = ((which == LEFT) | (which == RIGHT)) & (np.abs(((Z - 0.35) / 0.9) % 1 - 0.5) > 0.47)
+            rail = walls & (np.abs(Y - 1.22) < 0.03)
+            bm = corner | posts | rail
+            bgrain = np.sin((np.where(rail, u, Y)) * 60 + nz * 6) > 0.7
+            self._shade(bm, np.where(bgrain[..., None], beam * 0.85, beam), (0, 0, -1))
+            self._shade(walls & (np.abs(Y - 1.25) < 0.004 + Z * 0.001), rgb('#8a5a3a'), (0, 1, 0))
+        if st['wainscot']:
+            panel = walls & (Y < 0.34)
+            pv = np.abs((u / 0.22) % 1 - 0.5) > 0.45
+            inner = (np.abs((u / 0.22) % 1 - 0.5) < 0.38) & (Y > 0.08) & (Y < 0.28)
+            pc = np.where(pv[..., None], rgb(wood[0]) * 0.75, rgb(wood[1]))
+            pc = np.where(inner[..., None], rgb(wood[1]) * 0.9, pc)
+            self._shade(panel, pc, (0, 0, -1))
+            self._shade(panel & ((np.abs(Y - 0.28) < 0.006) | (np.abs(Y - 0.08) < 0.006)) & ~pv, rgb(wood[2]) * 1.1, (0, 1, 0))
+            self._shade(walls & (np.abs(Y - 0.34) < 0.018), rgb(wood[2]) * 1.2, (0, 1, 0))
         skirt = walls & (Y < 0.04)
         self._shade(skirt, rgb('#4a2e20'), (0, 0, -1))
         ce = which == CEIL
-        beams = np.abs(((X / 0.45) % 1) - 0.5) > 0.36
-        self._shade(ce, np.where(beams[..., None], rgb('#4a2e22'), rgb('#7a5640')), (0, -1, 0))
+        if st['ceiling'] == 'beams':
+            beams = np.abs(((X / 0.45) % 1) - 0.5) > 0.36
+            g = np.sin(Z * 30 + np.floor(X / 0.45) * 2) > 0.8
+            cc = np.where(beams[..., None], np.where(g[..., None], rgb('#3e2618'), rgb('#4a2e22')), rgb('#7a5640'))
+            boards = (~beams) & (np.abs(X / 0.09 - np.round(X / 0.09)) * 0.09 < pw * 0.6)
+            cc = np.where(boards[..., None], rgb('#5e4232'), cc)
+            self._shade(ce, cc, (0, -1, 0))
+        else:
+            self._shade(ce, lerp(rgb(plaster[1]), rgb('#ffffff'), 0.1), (0, -1, 0))
+            mold = walls & (Y > 1.38)
+            self._shade(mold, rgb(plaster[1]) * 1.05, (0, 0, -1))
 
     # ------------------------------------------------------------------ Bauteile
     def rect_on_back(self, X0, X1, Y0, Y1):
@@ -280,14 +389,24 @@ class CozyRoom:
             self.cv.paint(MaskPen(W, H).ellipse(p[0] - 1, p[1] - 1, p[0] + 1, p[1] + 1).a > 0, rgb(knob))
         return m
 
-    def bed(self, X0, X1, Z0, Z1, blanket='#6a8a5a', pattern='#e8c890', wood='#6a4230'):
-        """Holzbett mit Kopfteil hinten (bei Z1), Decke mit Karomuster, Kissen."""
+    def bed(self, X0, X1, Z0, Z1, blanket='#6a8a5a', pattern='#e8c890', wood='#6a4230', quilt=None):
+        """Holzbett mit Kopfteil hinten (bei Z1), Decke mit Karomuster oder Flickenmuster, Kissen."""
         self.box(X0, X1, 0.0, 0.7, Z1 - 0.06, Z1, wood, top='#8a5a3e', edge='#d09868')
         self.box(X0, X1, 0.0, 0.34, Z0, Z0 + 0.05, wood, top='#8a5a3e', edge='#d09868')
         self.box(X0 + 0.02, X1 - 0.02, 0.1, 0.24, Z0 + 0.05, Z1 - 0.06, '#e8dcc8', top='#f4ecdc')
         m = self.box(X0 + 0.01, X1 - 0.01, 0.12, 0.32, Z0 + 0.03, Z1 - 0.3, blanket, top=blanket, edge=rgb(blanket) * 1.4)
         ys, xs = np.nonzero(m)
-        if len(xs):
+        if quilt and len(xs):
+            pi = (self.xx // 5) * 31 + (self.yy // 4) * 17
+            cols = np.array([rgb(c) for c in quilt])
+            pc = cols[(pi * 2654435761 % 997) % len(cols)]
+            light = self.room.light_at(np.array([(X0 + X1) / 2, 0.32, (Z0 + Z1) / 2]), (0, 1, -0.3))
+            self.cv.paint(m, pc * light * 1.25)
+            seam = m & (((self.xx % 5) == 0) | ((self.yy % 4) == 0))
+            self.cv.paint(seam, self.cv.c * 0.8)
+            stitch = m & ~seam & ((self.xx + self.yy) % 7 == 0)
+            self.cv.paint(stitch, lerp(self.cv.c, rgb('#ffffff'), 0.3))
+        elif len(xs):
             chk = m & ((((self.xx // 4) + (self.yy // 3)) % 2) == 0)
             self.cv.paint(chk, self.cv.c * 0.82)
             self.cv.paint(m & (((self.xx - xs.min()) % 8) == 0) & (((self.yy) % 3) != 0), lerp(self.cv.c, rgb(pattern), 0.35))
@@ -400,7 +519,9 @@ class CozyRoom:
 
     def finish(self, path, colors=150):
         vig = np.hypot((self.xx - W / 2) / (W * 0.6), (self.yy - H * 0.5) / (H * 0.7))
-        self.cv.c *= np.clip(1.1 - vig ** 2 * 0.5, 0.5, 1.15)[..., None]
+        from px import BAYER4
+        by = np.tile(BAYER4, (H // 4 + 1, W // 4 + 1))[:H, :W]
+        self.cv.c *= np.clip(1.1 - vig ** 2 * 0.5 + by * 0.035, 0.5, 1.15)[..., None]
         self.cv.c = quantize(self.cv.c, colors)
         self.cv.save(path)
         return self.meta

@@ -10,6 +10,7 @@ auseinanderlaufen.
 """
 import numpy as np
 from scipy import ndimage
+import nature as N
 from px import Canvas, rgb, ramp, dramp, noise, glow, quantize, lerp, MaskPen, BAYER4
 
 W, H = 480, 270
@@ -105,30 +106,16 @@ class Scene:
             self.clouds()
 
     def clouds(self, n=5, ymin=12, ymax=None, lit='#ffffff', mid='#eef2f6', shade='#c6d2e2', base='#aebdd2'):
+        """Haufenwolken, jede aus eigenen Tuermen (nature.cumulus), dazu ein paar Federwolken."""
         ymax = ymax or self.HY - 30
-        r = self.rng
-        cn = noise(W * 2, H, 14, self.seed + 70, octaves=4)[:, ::2][:, :W]
-        mass = np.zeros((H, W))
-        for _ in range(n):
-            cx, cy = r.uniform(20, 460), r.uniform(ymin, ymax)
-            rx, ry = r.uniform(30, 70), r.uniform(7, 14)
-            mass = np.maximum(mass, np.clip(1 - np.hypot((self.xx - cx) / rx, (self.yy - cy) / ry), 0, 1))
-        dens = mass * 0.9 + cn * 0.45 * (mass > 0.05)
-        cloud = (dens > 0.55) & (self.yy < self.HY - 6)
-        # Licht von oben: Abstand zur Oberkante bestimmt den Ton (Kumulus: oben hell, unten Schatten)
-        above = np.zeros((H, W))
-        run = np.zeros(W)
-        for y in range(H):
-            run = np.where(cloud[y], run + 1, 0)
-            above[y] = run
-        below = np.zeros((H, W))
-        run = np.zeros(W)
-        for y in range(H - 1, -1, -1):
-            run = np.where(cloud[y], run + 1, 0)
-            below[y] = run
-        tone = np.clip(1 - (above - 1) / 7, 0, 1) * 0.75 + np.clip((below - 1) / 6, 0, 1) * 0.25
-        col = dramp([(0, base), (0.35, shade), (0.7, mid), (1, lit)], tone, 6)
-        self.cv.paint(cloud, col)
+        r = np.random.default_rng(self.seed + 70)
+        xs = np.sort(r.uniform(10, 470, n))
+        for x in xs:
+            y = r.uniform(ymin + 14, max(ymin + 15, ymax))
+            w = r.uniform(50, 130) * (0.6 + 0.6 * (y - ymin) / max(1, ymax - ymin + 1))
+            N.cumulus(self.cv, x, y, w, r, cols=(base, shade, mid, lit))
+        for _ in range(int(r.integers(1, 3))):
+            N.cirrus(self.cv, r.uniform(0, 380), r.uniform(6, ymin + 20), r.uniform(60, 140), r, col=mid, k=0.45)
 
     # ------------------------------------------------------------------ Ferne
     def ridge(self, x0, x1, base, peak, seed, rough=0.35, scale=40):
@@ -162,64 +149,92 @@ class Scene:
         return msk
 
     def house(self, x, y, w, h, roof='#c8664a', wall='#ecdcc2', side=None, k=1.0, windows=True,
-              shutters=None, lit=False):
-        """Mediterranes Haus in Dreiviertelansicht: helle Wand zur Sonne (links), Seite im Schatten,
-        Ziegeldach mit heller Kante."""
-        sw = max(1, int(w * 0.4))
-        wc = rgb(wall) * k
+              shutters=None, lit=False, rng=None):
+        """Fernes Haus als Einzelstueck: Dreiviertelansicht mit Sonnen- und Schattenseite, Dach als
+        Sattel, Walm oder flach mit Bruestung, mal Kamin, mal Bogentuer, Fenster unregelmaessig."""
+        r = rng or self.rng
+        sw = max(1, int(w * r.uniform(0.3, 0.5)))
+        wc = rgb(wall) * k * r.uniform(0.92, 1.05)
         self.paint(self.rect(x, y, x + w - 1, y + h - 1), wc)
-        self.paint(self.rect(x + w, y + 1, x + w + sw - 1, y + h - 1), wc * 0.72 + rgb('#3a4a6a') * 0.08)
-        rh = max(2, int(w * 0.35))
-        self.paint(self.poly([(x - 1, y + 1), (x + w * 0.5, y - rh), (x + w + sw, y + 1)]), rgb(roof) * k)
-        self.paint(self.m().line([(x - 1, y + 1), (x + w * 0.5, y - rh)]).a > 0, lerp(rgb(roof), rgb('#ffd8b0'), 0.45) * k)
+        self.paint(self.rect(x + w, y + 1, x + w + sw - 1, y + h - 1), wc * 0.7 + rgb('#3a4a6a') * 0.08)
+        rc = rgb(roof) * k * r.uniform(0.88, 1.1)
+        kind = r.choice(['gable', 'gable', 'hip', 'flat'])
+        rh = max(2, int(w * r.uniform(0.25, 0.45)))
+        if kind == 'gable':
+            self.paint(self.poly([(x - 1, y + 1), (x + w * 0.5, y - rh), (x + w + sw, y + 1)]), rc)
+            self.paint(self.m().line([(x - 1, y + 1), (x + w * 0.5, y - rh)]).a > 0, lerp(rc, rgb('#ffd8b0'), 0.45))
+        elif kind == 'hip':
+            self.paint(self.poly([(x - 1, y + 1), (x + 2, y - rh + 1), (x + w + sw - 3, y - rh + 1), (x + w + sw, y + 1)]), rc)
+            self.paint(self.rect(x + 2, y - rh + 1, x + w + sw - 3, y - rh + 1), lerp(rc, rgb('#ffd8b0'), 0.4))
+            self.paint(self.poly([(x + w, y + 1), (x + w + sw - 3, y - rh + 1), (x + w + sw, y + 1)]), rc * 0.75)
+        else:
+            self.paint(self.rect(x - 1, y - 1, x + w + sw - 1, y), lerp(wc, rgb('#ffffff'), 0.2))
+        if r.random() < 0.3 and kind != 'flat':
+            cx = int(x + w * r.uniform(0.2, 0.7))
+            self.paint(self.rect(cx, y - rh - 1, cx + 1, y - rh // 2), wc * 0.85)
         if windows and w >= 4:
-            for wx in range(x + 1, x + w - 1, 3):
+            for wx in range(x + 1, x + w - 1, int(r.integers(2, 4))):
                 for wy in range(y + 2, y + h - 1, 3):
-                    c = '#ffd27a' if lit and self.rng.random() < 0.5 else '#4a5a72'
+                    if r.random() < 0.2:
+                        continue
+                    c = '#ffd27a' if lit and r.random() < 0.55 else ('#4a5a72' if r.random() < 0.8 else '#6a5040')
                     self.paint(self.rect(wx, wy, wx, wy + (1 if h > 6 else 0)), c)
                     if shutters and w > 6:
                         self.paint(self.rect(wx - 1, wy, wx - 1, wy + 1), shutters)
+        if h > 6 and r.random() < 0.3:
+            dx = int(x + w * r.uniform(0.2, 0.6))
+            self.paint(self.rect(dx, y + h - 3, dx + 1, y + h - 1), '#5a3a28')
 
-    def town(self, x0, x1, ytop, ybase, n=60, k=0.85, roofs=('#c8664a', '#b85a42', '#d47a54'),
-             walls=('#efe2c8', '#e6d2b4', '#f4ead6'), tower=None, lit=False):
-        r = self.rng
+    def town(self, x0, x1, ytop, ybase, n=60, k=0.85, roofs=('#c8664a', '#b85a42', '#d47a54', '#a84a36', '#d88a60'),
+             walls=('#efe2c8', '#e6d2b4', '#f4ead6', '#e8c8a0', '#dcd0c0', '#f0dcc0'), tower=None, lit=False):
+        """Stadt am Hang: Haeuser in Reihen hinter- und uebereinander, verschieden gross und
+        gedeckt, dazwischen Gaerten, Mauern und Baeume, oben eine Kirche mit Turm."""
+        r = np.random.default_rng(self.seed + 401)
+        # Hang: Terrassenmauern und Olivenhaine zwischen den Haeusern
+        for _ in range(int((x1 - x0) * 1.6)):
+            x = r.uniform(x0, x1)
+            yt = np.interp(x, [x0, (x0 + x1) / 2, x1], [ybase, ytop, ybase])
+            y = r.uniform(min(yt + 2, ybase - 1), ybase)
+            if r.random() < 0.35:
+                ln = r.uniform(4, 12)
+                self.paint(self.rect(int(x), int(y), int(x + ln), int(y)), lerp(rgb('#c8bca0'), rgb('#8a9a78'), 0.4) * k)
+            else:
+                c = rgb(['#4a6a44', '#5a7a4c', '#6a8a58', '#7a9a62'][int(r.integers(0, 4))]) * k
+                self.paint(self.rect(int(x), int(y), int(x) + 1, int(y)), c)
+                self.paint(self.rect(int(x), int(y) - 1, int(x), int(y) - 1), c * 1.2)
         spots = []
         for _ in range(n):
             x = int(r.uniform(x0, x1))
             yt = np.interp(x, [x0, (x0 + x1) / 2, x1], [ybase, ytop, ybase])
             y = int(r.uniform(yt, ybase))
             spots.append((y, x))
-        for y, x in sorted(spots):
-            w = int(r.integers(4, 9))
-            h = int(r.integers(4, 7))
+        for i, (y, x) in enumerate(sorted(spots)):
+            d = (y - ytop) / max(1, ybase - ytop)
+            w = int(r.integers(4, 8) + d * 5)
+            h = int(r.integers(4, 6) + d * 3)
+            if r.random() < 0.12:
+                N.leaf_mass(self.cv, x + w / 2, y + 1, 2 + d * 3, r, cols=('#2a3e2a', '#3a5236', '#4e6a42', '#668050', '#86985e', '#a0aa70'))
+                continue
             self.house(x, y, w, h, roof=roofs[int(r.integers(0, len(roofs)))],
-                       wall=walls[int(r.integers(0, len(walls)))], k=k * (0.9 + 0.1 * (y - ytop) / max(1, ybase - ytop)), lit=lit)
+                       wall=walls[int(r.integers(0, len(walls)))], k=k * (0.88 + 0.12 * d), lit=lit, rng=r)
+            if r.random() < 0.15:
+                self.paint(self.rect(x - 4, y + h - 2, x - 1, y + h - 1), rgb('#d8ccb4') * k)
         if tower:
             tx, ty, th = tower
+            self.paint(self.rect(tx - 6, ty + th - 8, tx + 12, ty + th), rgb('#ece0c8') * k)
+            self.paint(self.poly([(tx - 7, ty + th - 8), (tx + 3, ty + th - 14), (tx + 13, ty + th - 8)]), rgb('#b85a42') * k)
             self.paint(self.rect(tx, ty, tx + 4, ty + th), rgb('#efe2c8') * k)
             self.paint(self.rect(tx + 5, ty + 1, tx + 6, ty + th), rgb('#c8b496') * k)
-            self.paint(self.poly([(tx - 1, ty), (tx + 3, ty - 7), (tx + 7, ty)]), rgb('#b85a42') * k)
-            self.paint(self.rect(tx + 2, ty + 3, tx + 2, ty + 5), '#4a5a72')
+            self.paint(self.poly([(tx - 1, ty), (tx + 3, ty - 9), (tx + 7, ty)]), rgb('#b85a42') * k)
+            self.paint(self.rect(tx + 1, ty + 3, tx + 3, ty + 6), '#3a3a4a')
+            self.paint(self.rect(tx + 2, ty + 3, tx + 2, ty + 6), '#c8a050')
+            self.paint(self.rect(tx + 2, ty + 10, tx + 2, ty + 12), '#4a5a72')
 
     # ------------------------------------------------------------------ Baeume
     def leafy(self, cx, cy, r, seed, ramp_cols=('#1c3222', '#2a4a2c', '#3e6a36', '#62924a', '#9cc068'),
               squash=0.85, light=(-0.7, -0.8)):
-        """Laubkrone aus Buescheln, Licht von oben links, ein paar Lichtflecken auf der Sonnenseite."""
-        rr = np.random.default_rng(seed)
-        mask = np.zeros((H, W), bool)
-        for _ in range(int(6 + r * 0.7)):
-            a = rr.uniform(0, 2 * np.pi)
-            d = rr.uniform(0, r * 0.7)
-            bx, by = cx + np.cos(a) * d * 1.15, cy + np.sin(a) * d * squash
-            br = rr.uniform(r * 0.32, r * 0.55)
-            mask |= self.ellipse(bx, by, br, br * 0.92)
-        mask &= self.yy < H
-        self.shade(mask, list(ramp_cols), light=light, fur=0.55, seed=seed, bulge=1.3, gamma=1.7)
-        # Bueschelkanten: kleine helle Blattgruppen oben links
-        spark = mask & (noise(W, H, 2, seed + 11, 1) > 0.8) & (self.yy < cy) & (self.xx < cx + r * 0.3)
-        self.paint(spark, ramp_cols[-1])
-        self.outline(mask, '#1e2a1e', 0.35)
-        return mask
+        """Laubmasse aus Bueschen mit Blattstruktur (nature.leaf_mass), jedes Mal anders."""
+        return N.leaf_mass(self.cv, cx, cy, r, np.random.default_rng(abs(int(seed)) + 1), cols=ramp_cols, squash=squash)
 
     def trunk(self, x, base, top, w, col=('#3e2c22', '#5e4232', '#7e5c44', '#9a7656'), branches=True):
         """Stamm mit Wurzelanlauf, leicht geschwungen, Rinde in senkrechten Rissen, zwei Aeste."""
@@ -266,46 +281,62 @@ class Scene:
         self.cv.c = np.where(spots[..., None], np.minimum(self.cv.c * 1.12, 1), self.cv.c)
 
     def foliage(self, corner, size, seed, cols=('#1a2e22', '#24402c', '#36583a', '#4e7646', '#6e9452')):
-        """Grosse Blaetter im Vordergrund an einer Bildecke ('bl' oder 'br') - Bildrahmen."""
+        """Vordergrund-Blattwerk an einer Bildecke ('bl' oder 'br'): einzelne Blaetter mit Mittelrippe,
+        Seitenadern und eigener Toenung, dazwischen Graeser und ein paar Blueten."""
         rr = np.random.default_rng(seed)
         bx = 0 if corner == 'bl' else W
         sign = 1 if corner == 'bl' else -1
-        for _ in range(int(size * 0.6)):
-            ang = rr.uniform(-1.4, -0.2) if corner == 'bl' else rr.uniform(-2.9, -1.7)
-            ln = rr.uniform(size * 0.4, size)
-            x0 = bx + sign * rr.uniform(0, size * 0.6)
-            y0 = H + 4
+        cols = [rgb(c) if isinstance(c, str) else c for c in cols]
+        N.grass_tufts(self.cv, H - size * 0.5, H, rr, int(size * 1.5), cols=(cols[0], cols[1], cols[3], cols[4]),
+                      x0=(0 if corner == 'bl' else W - size * 1.4), x1=(size * 1.4 if corner == 'bl' else W),
+                      scale_y=lambda y: 2.2)
+        for i in range(int(size * 0.45)):
+            ang = rr.uniform(-1.45, -0.25) if corner == 'bl' else rr.uniform(-2.9, -1.7)
+            ln = rr.uniform(size * 0.35, size * 0.95)
+            x0 = bx + sign * rr.uniform(-4, size * 0.7)
+            y0 = H + rr.uniform(0, 8)
+            wid = rr.uniform(0.12, 0.2)
             cx, cy = x0 + np.cos(ang) * ln * 0.5, y0 + np.sin(ang) * ln * 0.5
-            leaf = self.ellipse(cx, cy, ln * 0.5, ln * 0.13, rot=-ang)
-            self.shade(leaf, list(cols), light=(-0.7, -0.8), seed=int(cx))
-            self.paint(self.m().line([(x0, y0), (cx + np.cos(ang) * ln * 0.4, cy + np.sin(ang) * ln * 0.4)]).a > 0 & leaf, cols[1])
+            leaf = self.ellipse(cx, cy, ln * 0.5, ln * wid, rot=-ang)
+            tone = N.jitter_ramp(cols, rr, hue=0.08, val=0.15)
+            self.shade(leaf, [tuple(c) for c in tone], light=(-0.7, -0.8), seed=int(cx) + i)
+            tip = (x0 + np.cos(ang) * ln * 0.95, y0 + np.sin(ang) * ln * 0.95)
+            self.paint((self.m().line([(x0, y0), tip]).a > 0) & leaf, tone[3])
+            for k in range(2, 9):
+                t = k / 10
+                px_, py_ = x0 + np.cos(ang) * ln * t, y0 + np.sin(ang) * ln * t
+                for sd in (1, -1):
+                    a2 = ang + sd * 0.9
+                    q = (px_ + np.cos(a2) * ln * wid * 0.9, py_ + np.sin(a2) * ln * wid * 0.9)
+                    self.paint((self.m().line([(px_, py_), q]).a > 0) & leaf, tone[1])
+            self.outline(leaf, strength=0.35)
+        if rr.random() < 0.7:
+            N.flowers(self.cv, H - size * 0.6, H - 4, rr, int(size * 0.4), rr.choice(['daisy', 'bell', 'buttercup']),
+                      x0=(0 if corner == 'bl' else W - size), x1=(size if corner == 'bl' else W))
 
-    def tree(self, x, base, height, seed, kind='round', crown=None, trunk_col=None):
-        s = height / 60.0
+    def tree(self, x, base, height, seed, kind='round', crown=None, trunk_col=None, haze=None, k=0.0):
+        """Ein Baum als Einzelstueck (nature.py): Laubbaum mit Astwerk, Tanne aus Etagen, Zypresse,
+        Birke. [haze]/[k] mischen Ferne-Dunst hinein."""
+        rr = np.random.default_rng(abs(int(seed)) * 7919 + 13)
         if kind == 'round':
+            leaf = crown if crown and len(crown) >= 5 else N.OAK
+            if crown and len(crown) == 5:
+                leaf = tuple(crown) + ('#c8e080',)
             self.dapple(x + height * 0.15, base + 1, height * 0.42, height * 0.07, seed)
-            self.trunk(x, base, base - height * 0.5, max(1.5, 3 * s), trunk_col or ('#3e2c22', '#5e4232', '#7e5c44'))
-            for k, (dx, dy, rf) in enumerate(((0, -0.68, 0.36), (-0.22, -0.55, 0.26), (0.22, -0.58, 0.27))):
-                self.leafy(x + dx * height, base + dy * height, rf * height, seed + k,
-                           ramp_cols=crown or ('#1c3222', '#2a4a2c', '#3e6a36', '#62924a', '#9cc068'))
+            N.oak(self.cv, x, base, height, rr, leaf=leaf, bark=trunk_col or N.BARK)
         elif kind == 'pine':
+            cols = crown if crown else N.PINE
+            if len(cols) == 4:
+                cols = (cols[0],) + tuple(cols)
             self.shadow(x + height * 0.1, base, height * 0.2, height * 0.04)
-            self.trunk(x, base, base - height * 0.2, max(1, 1.6 * s))
-            for k in range(5):
-                f = k / 5
-                yb = base - height * (0.12 + 0.17 * k)
-                wdt = height * 0.28 * (1 - f * 0.75)
-                m = self.poly([(x - wdt, yb), (x, yb - height * 0.3), (x + wdt, yb)])
-                self.shade(m, list(crown or ('#1e3a32', '#2c5040', '#3e6a4e', '#5a8a5e')), light=(-0.8, -0.5))
+            N.pine(self.cv, x, base, height, rr, cols=cols, haze=haze, k=k)
         elif kind == 'cypress':
-            m = self.ellipse(x, base - height * 0.5, height * 0.11, height * 0.5)
-            self.shade(m, list(crown or ('#22382c', '#2e4c38', '#406448', '#5a7c54')), fur=0.4, seed=seed)
+            cols = crown if crown else ('#1a2e24', '#26402e', '#36583c', '#4a7048', '#66885a')
+            if len(cols) == 4:
+                cols = (cols[0],) + tuple(cols)
+            N.cypress(self.cv, x, base, height, rr, cols=cols)
         elif kind == 'birch':
-            self.trunk(x, base, base - height * 0.85, max(1, 1.4 * s), ('#a8a49a', '#d8d4c8', '#f0ece2'))
-            for yy_ in range(int(base - height * 0.8), int(base), 4):
-                self.paint(self.rect(int(x - 1), yy_, int(x), yy_), '#3a3430')
-            self.leafy(x, base - height * 0.78, height * 0.28, seed,
-                       ramp_cols=crown or ('#6a6a2a', '#8a8a34', '#b0a844', '#d8c45e', '#f0dc84'))
+            N.birch(self.cv, x, base, height, rr)
 
     # ------------------------------------------------------------------ Boden
     def project(self, u, z):
@@ -328,21 +359,22 @@ class Scene:
         col = dramp([(0, base[1]), (0.5, base[2]), (1, base[3])], np.clip(n * 0.8 + (1 - t) * 0.15, 0, 1), 4)
         col = lerp(col, rgb(haze), ((1 - t) ** 3 * 0.45)[..., None])
         self.cv.paint(msk, col)
-        # Halmbueschel
+        # Hellere und dunklere Flecken (Klee, Moos, trockene Stellen)
         r = self.rng
-        for _ in range(int(900 * (H - y0) / 150)):
-            y = int(r.uniform(y0 + 2, H))
-            x = int(r.uniform(0, W))
-            s = self.depth(y)
-            hgt = max(1, int(r.uniform(1, 4) * s * 1.6))
-            c = base[0] if r.random() < 0.5 else base[3]
-            self.paint(self.rect(x, y - hgt, x, y), c)
+        pn = noise(W, H, 14, self.seed + 23, 3)
+        self.cv.paint(msk & (pn > 0.68), lerp(col, rgb(base[0]), 0.35))
+        self.cv.paint(msk & (pn < 0.22), lerp(col, rgb('#c8c070'), 0.22))
+        clover = msk & (noise(W, H, 5, self.seed + 24, 2) > 0.74) & ((self.xx + self.yy * 3) % 4 == 0)
+        self.paint(clover, lerp(rgb(base[3]), rgb('#ffffff'), 0.15))
+        # Halmbueschel, einzeln geformt, vorn groesser
+        scale = lambda y: 0.25 + 1.75 * self.depth(y) ** 1.2
+        N.grass_tufts(self.cv, y0 + 2, H, r, int(700 * (H - y0) / 150),
+                      cols=(base[0], base[1], base[2], lerp(rgb(base[3]), rgb('#f0f0b0'), 0.25)), scale_y=scale)
         if flowers:
-            for _ in range(int(160 * (H - y0) / 150)):
-                y = int(r.uniform(y0 + 4, H))
-                x = int(r.uniform(0, W))
-                c = ['#f4f0e0', '#f0d060', '#e88aa0', '#b8a0e8'][int(r.integers(0, 4))]
-                self.paint(self.rect(x, y, x, y), c)
+            kinds = [('daisy', 70, 7), ('buttercup', 60, 6), ('lupine', 18, 3), ('poppy', 14, 3), ('bell', 24, 4)]
+            for kind, n_, p_ in kinds:
+                N.flowers(self.cv, y0 + 6, H, r, int(n_ * (H - y0) / 150), kind, patches=p_)
+        N.pebbles(self.cv, msk & (self.yy > y0 + 20), r, int(40 * (H - y0) / 150))
         return msk
 
     def stone_path(self, pts_world, width, tone=('#8c7e70', '#a8988a', '#c4b4a2', '#dccebc')):
@@ -380,16 +412,38 @@ class Scene:
                 second = np.where(closer, best, np.minimum(second, dd))
                 cid = np.where(closer, hh, cid)
                 best = np.minimum(best, dd)
-        edge = (second - best) < 0.012 * z ** 0.6
+        gapw = 0.012 * z ** 0.6
+        ed = second - best                       # Abstand zur Fuge
+        edge = ed < gapw
         var = ((cid * 2246822519) % 1000) / 1000
+        var2 = ((cid * 3266489917) % 1000) / 1000
         col = dramp([(0, tone[0]), (0.35, tone[1]), (0.7, tone[2]), (1, tone[3])], var * 0.8 + 0.1, 4)
+        # Jeder Stein leicht anders getoent (waermer/kuehler), mit Woelbung: Licht oben links
+        col = col * (1 + (var2[..., None] - 0.5) * np.array([0.10, 0.04, -0.06]))
+        hgt = np.clip(ed / (S * 0.35), 0, 1) ** 0.6
+        gy, gx = np.gradient(ndimage.gaussian_filter(hgt, 0.6))
+        litv = np.clip(-gy * 1.2 - gx * 0.8, -1, 1)
+        col = col * (1 + litv[..., None] * 0.22 * (z < 4)[..., None])
+        tex = (noise(W, H, 1, self.seed + 77, 1) - 0.5) * 0.12
+        col = col * (1 + tex[..., None])
         hz = np.clip((z - 1) / 2.5, 0, 1)
         col = lerp(col, rgb('#c8c0b4'), (hz * 0.45)[..., None])
-        edge = edge & (z < 3.2)
+        edge = edge & (z < 4.5)
         self.cv.paint(mask, col)
         self.cv.paint(mask & edge, rgb(gap))
-        top = mask & ~edge & np.roll(edge, 1, axis=0)
-        self.cv.paint(top, lerp(col, rgb('#fff6e0'), 0.35))
+        # Moos und Gras in manchen Fugen, Risse in manchen Steinen, Laub
+        mossy = mask & edge & (noise(W, H, 6, self.seed + 78, 2) > 0.62) & (z < 3)
+        self.cv.paint(mossy, lerp(rgb('#4e6a34'), rgb('#6a8a40'), var[..., None]))
+        crack = mask & ~edge & (var2 > 0.88) & (np.abs(np.sin(u * 60 + z * 40)) < 0.06)
+        self.cv.paint(crack, rgb(gap))
+        if z.min() < 2:
+            r = np.random.default_rng(self.seed + 79)
+            ys, xs = np.nonzero(mask & (self.yy > self.HY + 30))
+            for i in r.integers(0, max(1, len(xs)), 60 if len(xs) else 0):
+                c = rgb(['#c8783a', '#a85a2a', '#d8a050', '#8a6a2a'][int(r.integers(0, 4))])
+                self.cv.c[ys[i], xs[i]] = c
+                if xs[i] + 1 < W:
+                    self.cv.c[ys[i], xs[i] + 1] = c * 0.8
 
     def water(self, y0, y1, x0=0, x1=W, deep='#3e7aa0', mid='#5a9ac0', light='#a8d4e8', sky='#d8eef4',
               sun=None):
@@ -585,15 +639,17 @@ class Scene:
     # ------------------------------------------------------------------ Spielangaben
     # ------------------------------------------------------------------ Wildnis
     def rock(self, x, y, rx, ry, cols=('#4a4a48', '#6a6a60', '#8a867a', '#b0a894'), seed=0, moss=None):
-        m = self.ellipse(x, y - ry * 0.6, rx, ry)
-        m &= self.yy <= y
-        self.shadow(x + rx * 0.2, y, rx * 1.1, max(1.5, ry * 0.25))
-        self.shade(m, list(cols), seed=seed, bulge=1.2)
-        if moss:
-            top = m & ~np.roll(m, 2, axis=0)
-            self.paint(top, moss)
-        self.outline(m, strength=0.4)
-        return m
+        """Einzelner Stein mit Facetten, Rissen und optional Moos (nature.stone)."""
+        cols = tuple(cols) if len(cols) >= 5 else tuple(cols) + ('#d0c8b8',)
+        rr = np.random.default_rng(abs(int(seed)) * 31 + int(x) * 7 + int(y))
+        m = N.stone(self.cv, x, y, rx, ry, rr, cols=cols, moss=moss)
+        full = np.zeros((H, W), bool)
+        if m is not None:
+            ys, xs = np.nonzero(m)
+            win_x0 = max(0, int(np.floor(x - rx * 1.6)))
+            win_y0 = max(0, int(np.floor(y - ry * 2.2)))
+            full[ys + win_y0, xs + win_x0] = True
+        return full
 
     def log_seat(self, x, y, s=1.0, bark=('#3e2c22', '#5e4232', '#7e5c44', '#9a7656')):
         """Liegender Baumstamm als Sitzplatz, Vorderkante auf y; gibt die Trefferflaeche zurueck."""
@@ -716,7 +772,7 @@ class Scene:
     # ------------------------------------------------------------------ Abschluss
     def finish(self, path, colors=160, vignette=0.35):
         vig = np.hypot((self.xx - W / 2) / (W * 0.62), (self.yy - H * 0.5) / (H * 0.75))
-        self.cv.c *= np.clip(1.06 - vig ** 2 * vignette, 0.6, 1.08)[..., None]
+        self.cv.c *= np.clip(1.06 - vig ** 2 * vignette + self.by * 0.035, 0.6, 1.08)[..., None]
         self.cv.c = quantize(self.cv.c, colors)
         self.cv.save(path)
         return self.meta

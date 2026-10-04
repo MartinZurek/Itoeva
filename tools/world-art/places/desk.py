@@ -6,13 +6,17 @@ sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
 from roomkit import CozyRoom, W, H
 from px import rgb, MaskPen, dramp
+import props as P
 
 
 def build(out):
     lights = [(np.array([0.1, 0.8, 2.4]), rgb('#ffb060'), 1.5),
               (np.array([0.0, 1.3, 1.6]), rgb('#ffc080'), 0.7)]
-    r = CozyRoom(seed=61, lights=lights)
+    r = CozyRoom(seed=61, lights=lights, walls='boards', plaster=('#8a6a4a', '#a07a54'), wainscot=False)
     r.window(-0.3, 0.3, 0.62, 1.14, view='night')
+    P.curtains(r, -0.3, 0.3, 0.62, 1.14, col='#3e5a3a')
+    P.painting(r, -0.62, -0.42, 0.78, 0.98, kind='mountain')
+    P.clock(r, 0.44, 1.12, rad=0.05)
     door = r.door_back(0.6, 0.94, 0.98)
     # Karte an der Wand rechts
     m = r.wall_side(1, 1.5, 2.05, 0.5, 0.98, rgb('#8a6a3a'))
@@ -47,15 +51,27 @@ def build(out):
     r.cv.paint(MaskPen(W, H).line([lp[0], lp[1]]).a > 0, rgb('#fff0c0'))
     r.glow_at(-0.02, 0.6, 2.4, r=16, color='#ff9a40', k=0.3)
     r.chair(0.12, 2.0, back_h=0.42)
+    # Zettel an der Wand, Pinnwand mit Notizen
+    x0, y0, x1, y1 = r.rect_on_back(0.36, 0.52, 0.62, 0.86)
+    r.cv.paint((r.xx >= x0) & (r.xx <= x1) & (r.yy >= y0) & (r.yy <= y1), rgb('#b88a5a'))
+    for k, c in enumerate(('#f4ecd0', '#f0e080', '#c8e0f0', '#f4c8c8')):
+        px_, py_ = x0 + 2 + (k % 2) * ((x1 - x0) // 2), y0 + 2 + (k // 2) * ((y1 - y0) // 2)
+        r.cv.paint((r.xx >= px_) & (r.xx <= px_ + 4) & (r.yy >= py_) & (r.yy <= py_ + 5), rgb(c))
+        r.cv.c[py_, px_ + 2] = rgb('#c83a3a')
+    P.book_stack(r, -0.3, 0.0, 1.9, n=5)
+    P.basket(r, 0.3, 2.35, w=0.12, h=0.16)
+    P.mug(r, 0.26, 0.47, 2.32, steam=True)
+    P.string_lights(r, -0.3, 0.3, 1.2, 2.66, n=10, sag=0.04)
     # Buecherwand links
     r.wall_shelf(-1, 1.4, 2.6, Y1=1.25, boards=5)
-    r.plant(0.5, 2.55, size=0.9)
-    r.plant(0.86, 1.35, size=1.2)
+    P.plant(r, 0.5, 2.55, kind='monstera', size=0.9)
+    P.plant(r, 0.86, 1.4, kind='ficus', size=1.0, pot='#a85a3a')
+    P.plant(r, -0.36, 2.55, kind='cactus', size=0.5, Y=0.47)
     r.hanging_plant(400, 24, 30)
     r.walk(farLeft=146, farRight=326, nearLeft=40, nearRight=430)
     r.spot_box('DESK', r.proj_box(-0.42, 0.42, 0.0, 0.84, 2.2, 2.6), *r.stand(0.0, 1.85))
     r.spot_box('DOOR', door, *r.stand(0.77, 2.2))
-    return r.finish(out, colors=150)
+    return r.finish(out, colors=200)
 
 
 if __name__ == '__main__':
