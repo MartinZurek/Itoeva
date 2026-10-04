@@ -16,7 +16,7 @@ Waldsee, Uferviertel).
 | `concept.py` | liest die Studien aus dem Concept-Art-Branch, nimmt Figuren aus dem Bild und setzt Gegenstaende aus den Objektspalten ein |
 | `nature.py`, `town.py` | Einzelstuecke fuer draussen: Wolken, Baeume, Graeser, Blumen, Steine; Haeuser, Fenster, Markisen, Laternen, Toepfe |
 | `places/<ort>.py` | ein Skript je Ort (`build(out)` malt das Bild und gibt die Spielangaben zurueck) |
-| `overview.png`, `rooms_preview.png` | Uebersicht der gemalten Orte; Wohn- und Schlafzimmer in doppelter Groesse |
+| `overview.png`, `rooms_preview.png` | Uebersicht der gemalten Orte; die sechs Orte aus den Studien |
 | `build_all.py` | rendert die Orte nach `app-sim/src/game/assets/scenes/` und schreibt `GameSceneCatalog.kt` |
 | `park.py`, `reading_room.py`, `hero.py` | erste Studien vom 04.10. (Park am Meer, Lesezimmer = Ort `NOOK`, Fuchs) |
 
@@ -38,9 +38,10 @@ Ein Ort darf nur Plaetze haben, die er im Spiel schon hat (`PlayScene.stationsAt
 | Ort | Vorlage | Plaetze |
 |---|---|---|
 | Wohnzimmer, Schlafzimmer | Wohnraum-Studie, eins zu eins uebersetzt (Seitenansicht) | Sofa, Klavier (Platz TV), Bett, Tuer |
-| Strasse, Marktplatz (Abend) | Uferviertel | Laterne, Bank |
-| Park, Sportplatz | Park mit Sportplatz | Bank |
-| Waldsee | Waldsee | - |
+| Strasse | Uferviertel, eins zu eins uebersetzt (Cafe, Buchladen, Promenade) | Laterne, Bank |
+| Marktplatz (Abend) | frei nach dem Uferviertel | Laterne, Bank |
+| Park, Sportplatz | Park mit Sportplatz, eins zu eins uebersetzt | Bank |
+| Waldsee | Waldsee, eins zu eins uebersetzt (Steg, See, Insel) | - |
 | Wiese, Wald, Berge, Ebene, Lager, Strand, Dschungel, Sumpf, Grotte | frei im selben Stil | Sitzplatz (Stamm oder Steinbank) |
 
 Benoetigt Python 3 mit `numpy`, `scipy`, `Pillow`. Der Wald braucht knapp eine Minute (viele

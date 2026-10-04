@@ -33,6 +33,17 @@ OBJECTS = {
     'rug': (1334, 815, 1448, 862),
     'hanging_plant': (1452, 802, 1510, 868),
     'lamp': (1385, 692, 1430, 740),
+    # PARK-Spalte
+    'bench': (1105, 100, 1200, 160),
+    'street_lamp': (1215, 85, 1240, 190),
+    'hoop': (1260, 82, 1305, 190),
+    'planter': (1322, 87, 1388, 145),
+    'park_tree': (1402, 52, 1520, 165),
+    'fence': (1100, 167, 1210, 218),
+    'signpost': (1290, 152, 1318, 225),
+    'fountain': (1335, 150, 1438, 215),
+    'flowers': (1220, 195, 1283, 233),
+    'flowers2': (1440, 175, 1513, 230),
 }
 
 
@@ -53,6 +64,10 @@ def sprite(name, scale=1.0):
     rgb = np.asarray(im, dtype=float) / 255
     d = np.abs(rgb - PAPER).sum(-1)
     m = d > 0.16
+    # weiche graue Bodenschatten der Objektzeichnungen weglassen
+    mx, mn = rgb.max(-1), rgb.min(-1)
+    sat = (mx - mn) / np.maximum(mx, 1e-6)
+    m &= ~((mx > 0.55) & (sat < 0.16))
     m = ndimage.binary_opening(m, np.ones((2, 2)))
     m = ndimage.binary_fill_holes(m)
     lab, n = ndimage.label(m)
@@ -117,3 +132,36 @@ def hue_mask(img, box, hues, sat=0.25, val=0.15):
     full = np.zeros(img.shape[:2], bool)
     full[y0:y1, x0:x1] = m
     return full
+
+
+def native(name, box):
+    """Ausschnitt in Studienaufloesung (fuer Retusche vor dem Verkleinern)."""
+    return np.asarray(study(name).crop(box), dtype=float) / 255
+
+
+def fit(img, size):
+    im = Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))
+    return np.asarray(im.resize(size, Image.LANCZOS), dtype=float) / 255
+
+
+def clone_fill(img, mask, dx, dy=0, feather=4):
+    """Luecke mit dem um (dx, dy) versetzten Bildinhalt fuellen - fuer Flaechen, die sich
+    fortsetzen (Weg, Zaun, Wiese, Spielfeld). Rand weich verblendet."""
+    H, W = mask.shape
+    yy, xx = np.mgrid[0:H, 0:W]
+    sy, sx = np.clip(yy + dy, 0, H - 1), np.clip(xx + dx, 0, W - 1)
+    src = img[sy, sx]
+    out = img.copy()
+    out[mask] = src[mask]
+    if feather:
+        ring = ndimage.binary_dilation(mask, iterations=feather) & ~ndimage.binary_erosion(mask, iterations=feather)
+        sm = ndimage.uniform_filter(out, size=(3, 3, 1))
+        out[ring] = sm[ring]
+    return out
+
+
+def poly_mask(shape, pts, grow=2):
+    from px import MaskPen
+    H, W = shape
+    m = MaskPen(W, H).poly(pts).a > 0
+    return ndimage.binary_dilation(m, iterations=grow) if grow else m

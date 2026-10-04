@@ -140,14 +140,14 @@ internal object GameSceneCatalog {
         Scene(
             place = Place.PARK,
             asset = "scenes/park.png",
-            farY = 200f, nearY = 240f,
-            farLeft = 96f, farRight = 470f, nearLeft = 40f, nearRight = 440f,
-            farHeight = 40f, nearHeight = 58f,
+            farY = 186f, nearY = 216f,
+            farLeft = 150f, farRight = 470f, nearLeft = 30f, nearRight = 470f,
+            farHeight = 60f, nearHeight = 72f,
             spots = listOf(
-                Spot(Station.BENCH, Box(97f, 185f, 139f, 206f), 118f, 214f)
+                Spot(Station.BENCH, Box(62f, 134f, 212f, 191f), 150f, 192f)
             ),
             exits = mapOf(),
-            cropTop = 0.8f
+            cropTop = 0.6f
         ),
         Scene(
             place = Place.PLAINS,
@@ -164,35 +164,35 @@ internal object GameSceneCatalog {
         Scene(
             place = Place.POND,
             asset = "scenes/pond.png",
-            farY = 222f, nearY = 250f,
-            farLeft = 100f, farRight = 420f, nearLeft = 40f, nearRight = 430f,
-            farHeight = 46f, nearHeight = 58f,
+            farY = 165f, nearY = 188f,
+            farLeft = 10f, farRight = 318f, nearLeft = 4f, nearRight = 240f,
+            farHeight = 56f, nearHeight = 64f,
             spots = listOf(),
             exits = mapOf(),
-            cropTop = 0.8f
+            cropTop = 0.6f
         ),
         Scene(
             place = Place.SPORT,
             asset = "scenes/sport.png",
-            farY = 176f, nearY = 244f,
-            farLeft = 150f, farRight = 410f, nearLeft = 40f, nearRight = 440f,
-            farHeight = 34f, nearHeight = 60f,
+            farY = 184f, nearY = 222f,
+            farLeft = 40f, farRight = 440f, nearLeft = 20f, nearRight = 460f,
+            farHeight = 60f, nearHeight = 72f,
             spots = listOf(),
             exits = mapOf(),
-            cropTop = 0.8f
+            cropTop = 0.6f
         ),
         Scene(
             place = Place.STREET,
             asset = "scenes/street.png",
-            farY = 206f, nearY = 248f,
-            farLeft = 90f, farRight = 440f, nearLeft = 30f, nearRight = 440f,
-            farHeight = 46f, nearHeight = 62f,
+            farY = 196f, nearY = 212f,
+            farLeft = 4f, farRight = 470f, nearLeft = 0f, nearRight = 476f,
+            farHeight = 60f, nearHeight = 66f,
             spots = listOf(
-                Spot(Station.LAMP, Box(296f, 128f, 317f, 204f), 308f, 212f),
-                Spot(Station.BENCH, Box(358f, 186f, 402f, 208f), 380f, 216f)
+                Spot(Station.LAMP, Box(70f, 60f, 96f, 100f), 84f, 204f),
+                Spot(Station.BENCH, Box(436f, 158f, 480f, 210f), 452f, 204f)
             ),
             exits = mapOf(),
-            cropTop = 0.8f
+            cropTop = 0.5f
         ),
         Scene(
             place = Place.SWAMP,

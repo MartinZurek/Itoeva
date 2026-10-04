@@ -321,29 +321,29 @@
  },
  "park": {
   "blocked": [],
-  "cropTop": 0.8,
+  "cropTop": 0.6,
   "spots": [
    {
     "box": [
-     97.0,
-     185.0,
-     139.0,
-     206.0
+     62,
+     134,
+     212,
+     191
     ],
-    "standX": 118.0,
-    "standY": 214.0,
+    "standX": 150,
+    "standY": 192,
     "station": "BENCH"
    }
   ],
   "walk": {
-   "farHeight": 40,
-   "farLeft": 96,
+   "farHeight": 60,
+   "farLeft": 150,
    "farRight": 470,
-   "farY": 200,
-   "nearHeight": 58,
-   "nearLeft": 40,
-   "nearRight": 440,
-   "nearY": 240
+   "farY": 186,
+   "nearHeight": 72,
+   "nearLeft": 30,
+   "nearRight": 470,
+   "nearY": 216
   }
  },
  "plains": {
@@ -375,70 +375,70 @@
  },
  "pond": {
   "blocked": [],
-  "cropTop": 0.8,
+  "cropTop": 0.6,
   "spots": [],
   "walk": {
-   "farHeight": 46,
-   "farLeft": 100,
-   "farRight": 420,
-   "farY": 222,
-   "nearHeight": 58,
-   "nearLeft": 40,
-   "nearRight": 430,
-   "nearY": 250
+   "farHeight": 56,
+   "farLeft": 10,
+   "farRight": 318,
+   "farY": 165,
+   "nearHeight": 64,
+   "nearLeft": 4,
+   "nearRight": 240,
+   "nearY": 188
   }
  },
  "sport": {
   "blocked": [],
-  "cropTop": 0.8,
+  "cropTop": 0.6,
   "spots": [],
   "walk": {
-   "farHeight": 34,
-   "farLeft": 150,
-   "farRight": 410,
-   "farY": 176,
-   "nearHeight": 60,
-   "nearLeft": 40,
-   "nearRight": 440,
-   "nearY": 244
+   "farHeight": 60,
+   "farLeft": 40,
+   "farRight": 440,
+   "farY": 184,
+   "nearHeight": 72,
+   "nearLeft": 20,
+   "nearRight": 460,
+   "nearY": 222
   }
  },
  "street": {
   "blocked": [],
-  "cropTop": 0.8,
+  "cropTop": 0.5,
   "spots": [
    {
     "box": [
-     296.0,
-     128.0,
-     317.0,
-     204.0
+     70,
+     60,
+     96,
+     100
     ],
-    "standX": 308.0,
-    "standY": 212.0,
+    "standX": 84,
+    "standY": 204,
     "station": "LAMP"
    },
    {
     "box": [
-     358.0,
-     186.0,
-     402.0,
-     208.0
+     436,
+     158,
+     480,
+     210
     ],
-    "standX": 380.0,
-    "standY": 216.0,
+    "standX": 452,
+    "standY": 204,
     "station": "BENCH"
    }
   ],
   "walk": {
-   "farHeight": 46,
-   "farLeft": 90,
-   "farRight": 440,
-   "farY": 206,
-   "nearHeight": 62,
-   "nearLeft": 30,
-   "nearRight": 440,
-   "nearY": 248
+   "farHeight": 60,
+   "farLeft": 4,
+   "farRight": 470,
+   "farY": 196,
+   "nearHeight": 66,
+   "nearLeft": 0,
+   "nearRight": 476,
+   "nearY": 212
   }
  },
  "swamp": {
