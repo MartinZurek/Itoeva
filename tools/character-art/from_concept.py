@@ -325,7 +325,11 @@ def to_image(fr):
 
 def build(out_dir):
     os.makedirs(out_dir, exist_ok=True)
+    # Wesen, die schon als 3D-Figur mit feinem Bogen vorliegen (rich_sheets.py), nicht ueberschreiben
+    from rich_sheets import FIGURES
     for name in ORDER:
+        if name in FIGURES:
+            continue
         to_image(frames(name)).save(os.path.join(out_dir, f'{name}.png'), optimize=True)
 
 

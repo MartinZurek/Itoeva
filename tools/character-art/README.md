@@ -62,3 +62,19 @@ waehrend die Schrittphase endet. Links/rechts verwenden weiterhin die Seitenansi
 
 Pruefung: `python3 -m unittest test_directions.py`; Bildbogen mit
 `python3 sheets.py --preview /tmp/figuren-richtungen.png` ansehen.
+
+## Feine 3D-Figuren mit Bewegung (Probe: Fennec, seit 04.10. abends)
+
+Nach den Key-Design-Blaettern wird ein Wesen als Figur aus Formen im Raum gebaut und daraus in
+Pixel-Art gerendert - so entstehen echte Drehungen und Bewegungen mit Nachschwingen:
+
+| Datei | Inhalt |
+|---|---|
+| `rig3d.py` | Renderer: Ellipsoide aus jedem Blickwinkel, vierfach ueberabgetastet, je Pixel Material und Lichtstufe, dann Handpalette (Mehrheit je 4x4-Block), Fellstriche, Verdeckungsschatten, selektive Kontur |
+| `fennec3d.py` | Fennec: Formen, Farbrampen, `Pose` (Gelenke, Ohren, Schwanzglieder, Umhang) |
+| `motion.py` | Gang (8 Bilder), Ruhe mit Ohrzucken, Sprung (Ausholen bis Landung), Schlaf, Vorder-/Rueckansicht, Drehbilder; Ohren, Schwanz und Umhang als gedaempfte Federn |
+| `rich_sheets.py` | schreibt den feinen Bogen (96 x 96, 39 Bilder) |
+
+`CreatureSprites.lookRich` waehlt die Bilder, `CreatureSprites.Turn` spielt beim Richtungswechsel
+die Drehung (rechts -> halb vorn -> vorn -> halb vorn -> links). Welcher Bogen vorliegt, erkennt
+das Spiel an seiner Hoehe; die anderen Wesen bleiben vorerst beim einfachen Bogen.

@@ -95,25 +95,178 @@ object CreatureSprites {
         direction: PlayControl.Dir? = null,
         moving: Boolean? = null
     ): Look {
+        val (act, lift, mirrored) = classify(raw, species, side, timeMs, direction, moving)
+        val frame = when (act) {
+            Activity.SLEEP -> SLEEP_FIRST + ((timeMs / SLEEP_MS) % 2).toInt()
+            Activity.BACK -> BACK
+            Activity.BACK_WALK -> BACK_WALK_FIRST + ((timeMs / WALK_MS) % 2).toInt()
+            Activity.FRONT -> FRONT
+            Activity.FRONT_WALK -> FRONT_WALK_FIRST + ((timeMs / WALK_MS) % 2).toInt()
+            Activity.WALK -> WALK_FIRST + ((timeMs / WALK_MS) % 4).toInt()
+            Activity.JOY -> JOY_FIRST + ((timeMs / JOY_MS) % 2).toInt()
+            Activity.BLINK -> BLINK
+            Activity.IDLE -> if ((timeMs / BREATH_MS) % 2 == 0L) IDLE else IDLE_BREATH
+        }
+        return Look(frame, lift, mirrored)
+    }
+
+    /** Was die Figur gerade tut - gemeinsam fuer den einfachen und den feinen Bogen. */
+    enum class Activity { SLEEP, BACK, BACK_WALK, FRONT, FRONT_WALK, WALK, JOY, BLINK, IDLE }
+
+    internal data class Classified(val activity: Activity, val lift: Int, val mirrored: Boolean)
+
+    internal fun classify(
+        raw: IntArray,
+        species: AvatarSpecies,
+        side: AvatarShading.Side,
+        timeMs: Long,
+        direction: PlayControl.Dir?,
+        moving: Boolean?
+    ): Classified {
         val mirrored = direction != PlayControl.Dir.UP && direction != PlayControl.Dir.DOWN && AvatarFacing.mirrors(side)
         val box = bounds(raw, AvatarGeometry.SIZE, AvatarGeometry.HEIGHT)
-            ?: return Look(IDLE, 0, mirrored)
+            ?: return Classified(Activity.IDLE, 0, mirrored)
         val ground = AvatarBodies.forSpecies(species).groundRow()
         val lift = (ground - box[1]).coerceAtLeast(0)
         val eyesOpen = AvatarAccent.eyesIn(raw).any { it }
         val lying = box[1] - box[0] + 1 < standHeightOf(species) * LYING
         val walking = moving ?: (side != AvatarShading.Side.NONE)
-        val frame = when {
-            !eyesOpen && lying -> SLEEP_FIRST + ((timeMs / SLEEP_MS) % 2).toInt()
-            direction == PlayControl.Dir.UP -> if (walking) BACK_WALK_FIRST + ((timeMs / WALK_MS) % 2).toInt() else BACK
-            direction == PlayControl.Dir.DOWN -> if (walking) FRONT_WALK_FIRST + ((timeMs / WALK_MS) % 2).toInt() else FRONT
+        val activity = when {
+            !eyesOpen && lying -> Activity.SLEEP
+            direction == PlayControl.Dir.UP -> if (walking) Activity.BACK_WALK else Activity.BACK
+            direction == PlayControl.Dir.DOWN -> if (walking) Activity.FRONT_WALK else Activity.FRONT
             // Gehen zuerst: Der alte Gang huepft selbst eine Zelle - das ist kein Jubel.
-            walking -> WALK_FIRST + ((timeMs / WALK_MS) % 4).toInt()
+            walking -> Activity.WALK
             // Erst ein richtiger Sprung ist Freude; ein kleiner Wipper im Stand bleibt Ruhe.
-            lift >= JUMP -> JOY_FIRST + ((timeMs / JOY_MS) % 2).toInt()
-            !eyesOpen -> BLINK
-            timeMs % BLINK_EVERY_MS < BLINK_MS -> BLINK
-            else -> if ((timeMs / BREATH_MS) % 2 == 0L) IDLE else IDLE_BREATH
+            lift >= JUMP -> Activity.JOY
+            !eyesOpen -> Activity.BLINK
+            timeMs % BLINK_EVERY_MS < BLINK_MS -> Activity.BLINK
+            else -> Activity.IDLE
+        }
+        return Classified(activity, lift, mirrored)
+    }
+
+    /**
+     * **Der feine Bogen** (96 x 96 je Bild, `tools/character-art/rich_sheets.py`): Figuren, die als
+     * Formen im Raum gebaut sind, haben eigene Bewegungsablaeufe - Atmen mit Ohrzucken, ein
+     * Gang mit acht Bildern, ein Sprung von Ausholen bis Landung, Zwischenansichten fuer Drehungen.
+     * Ohren, Schwanz und Umhang schwingen darin nach (Federn, siehe `motion.py`).
+     * Welcher Bogen vorliegt, entscheidet seine Hoehe.
+     */
+    object Rich {
+        const val FRAME = 96
+        const val FEET = 94
+        const val SCALE = 1.05f
+        const val IDLE_FIRST = 0
+        const val IDLE_COUNT = 8
+        const val BLINK = 8
+        const val WALK_FIRST = 9
+        const val WALK_COUNT = 8
+        const val JOY_FIRST = 17
+        const val JOY_COUNT = 6
+        const val SLEEP_FIRST = 23
+        const val SLEEP_COUNT = 4
+        const val FRONT = 27
+        const val FRONT_WALK_FIRST = 28
+        const val BACK = 32
+        const val BACK_WALK_FIRST = 33
+        const val DIR_WALK_COUNT = 4
+        const val TURN_FRONT = 37
+        const val TURN_BACK = 38
+        const val FRAME_COUNT = 39
+
+        const val IDLE_MS = 200L
+        const val WALK_MS = 95L
+        const val JOY_MS = 110L
+        const val SLEEP_MS = 700L
+        const val DIR_WALK_MS = 120L
+        const val TURN_STEP_MS = 85L
+
+        fun idleFrame(timeMs: Long): Int = IDLE_FIRST + ((timeMs / IDLE_MS) % IDLE_COUNT).toInt()
+    }
+
+    /** Blickrichtung fuer Drehungen. */
+    enum class Facing { RIGHT, LEFT, FRONT, BACK }
+
+    /** Ein Bild einer Drehung. */
+    data class Step(val frame: Int, val mirrored: Boolean)
+
+    /**
+     * Die Zwischenbilder, wenn sich die Figur von [from] nach [to] dreht: Von rechts nach links
+     * dreht sie sich ueber die halb zugewandte Ansicht und vorn herum, statt umzuklappen.
+     */
+    fun turnSteps(from: Facing, to: Facing): List<Step> {
+        fun tf(f: Facing) = Step(Rich.TURN_FRONT, f == Facing.LEFT)
+        fun tb(f: Facing) = Step(Rich.TURN_BACK, f == Facing.LEFT)
+        val sides = setOf(Facing.LEFT, Facing.RIGHT)
+        return when {
+            from == to -> emptyList()
+            from in sides && to in sides -> listOf(tf(from), Step(Rich.FRONT, false), tf(to))
+            from in sides && to == Facing.FRONT -> listOf(tf(from))
+            from in sides && to == Facing.BACK -> listOf(tb(from))
+            from == Facing.FRONT && to in sides -> listOf(tf(to))
+            from == Facing.BACK && to in sides -> listOf(tb(to))
+            from == Facing.FRONT -> listOf(tf(Facing.RIGHT), Step(Rich.IDLE_FIRST, false), tb(Facing.RIGHT))
+            else -> listOf(tb(Facing.RIGHT), Step(Rich.IDLE_FIRST, false), tf(Facing.RIGHT))
+        }
+    }
+
+    /** Merkt sich die letzte Blickrichtung einer Figur und spielt bei einem Wechsel die Drehung. */
+    class Turn {
+        private var facing: Facing? = null
+        private var steps: List<Step> = emptyList()
+        private var since = 0L
+
+        fun update(now: Facing, timeMs: Long): Step? {
+            val last = facing
+            if (last == null) {
+                facing = now
+                return null
+            }
+            if (now != last) {
+                steps = turnSteps(last, now)
+                facing = now
+                since = timeMs
+            }
+            if (steps.isEmpty()) return null
+            val i = ((timeMs - since) / Rich.TURN_STEP_MS).toInt()
+            if (i < 0 || i >= steps.size) {
+                steps = emptyList()
+                return null
+            }
+            return steps[i]
+        }
+    }
+
+    /** Bild im feinen Bogen; [turn] (optional) spielt Drehungen beim Richtungswechsel. */
+    fun lookRich(
+        raw: IntArray,
+        species: AvatarSpecies,
+        side: AvatarShading.Side,
+        timeMs: Long,
+        direction: PlayControl.Dir? = null,
+        moving: Boolean? = null,
+        turn: Turn? = null
+    ): Look {
+        val (act, lift, mirrored) = classify(raw, species, side, timeMs, direction, moving)
+        val facing = when (act) {
+            Activity.BACK, Activity.BACK_WALK -> Facing.BACK
+            Activity.FRONT, Activity.FRONT_WALK -> Facing.FRONT
+            else -> if (mirrored) Facing.LEFT else Facing.RIGHT
+        }
+        // Im Schlaf und im Sprung keine Drehung einschieben - nur merken, wohin sie schaut.
+        val step = turn?.update(facing, timeMs)
+        if (step != null && act != Activity.SLEEP && act != Activity.JOY) return Look(step.frame, lift, step.mirrored)
+        val frame = when (act) {
+            Activity.SLEEP -> Rich.SLEEP_FIRST + ((timeMs / Rich.SLEEP_MS) % Rich.SLEEP_COUNT).toInt()
+            Activity.BACK -> Rich.BACK
+            Activity.BACK_WALK -> Rich.BACK_WALK_FIRST + ((timeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
+            Activity.FRONT -> Rich.FRONT
+            Activity.FRONT_WALK -> Rich.FRONT_WALK_FIRST + ((timeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
+            Activity.WALK -> Rich.WALK_FIRST + ((timeMs / Rich.WALK_MS) % Rich.WALK_COUNT).toInt()
+            Activity.JOY -> Rich.JOY_FIRST + ((timeMs / Rich.JOY_MS) % Rich.JOY_COUNT).toInt()
+            Activity.BLINK -> Rich.BLINK
+            Activity.IDLE -> Rich.idleFrame(timeMs)
         }
         return Look(frame, lift, mirrored)
     }

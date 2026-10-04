@@ -89,13 +89,67 @@ class CreatureSpritesTest {
             val file = File(root, CreatureSprites.assetFor(species))
             assertTrue("$file fehlt", file.isFile)
             val img = Png.read(file.readBytes())
-            assertEquals(CreatureSprites.FRAME * CreatureSprites.FRAME_COUNT, img.width)
-            assertEquals(CreatureSprites.FRAME, img.height)
+            // Einfacher Bogen (64er, 17 Bilder) oder feiner Bogen (96er, 39 Bilder)
+            val rich = img.height == CreatureSprites.Rich.FRAME
+            val size = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
+            val count = if (rich) CreatureSprites.Rich.FRAME_COUNT else CreatureSprites.FRAME_COUNT
+            val feet = if (rich) CreatureSprites.Rich.FEET else CreatureSprites.FEET
+            assertEquals(size * count, img.width)
+            assertEquals(size, img.height)
             // Die Fuesse stehen auf der vereinbarten Zeile: darueber etwas, ab ihr nichts mehr.
-            val fuesse = (0 until CreatureSprites.FRAME).any { x -> img.alpha(x, CreatureSprites.FEET - 1) > 0 }
+            val fuesse = (0 until size).any { x -> img.alpha(x, feet - 1) > 0 }
             assertTrue("$species ohne Fuesse", fuesse)
-            for (x in 0 until CreatureSprites.FRAME) assertEquals(0, img.alpha(x, CreatureSprites.FEET))
+            if (feet < size) for (x in 0 until size) assertEquals(0, img.alpha(x, feet))
         }
+    }
+
+    @Test
+    fun `feiner Bogen - Ruhe, Gehen und Sprung haben eigene Schleifen`() {
+        for (species in AvatarSpecies.entries) {
+            val idle = CreatureSprites.lookRich(AvatarAnimations.idlePose(species), species, AvatarShading.Side.NONE, 1000L)
+            assertTrue(idle.frame in CreatureSprites.Rich.IDLE_FIRST until CreatureSprites.Rich.IDLE_FIRST + CreatureSprites.Rich.IDLE_COUNT ||
+                idle.frame == CreatureSprites.Rich.BLINK)
+            for (frame in AvatarAnimations.walkSequence(species).frames) {
+                val look = CreatureSprites.lookRich(frame, species, AvatarShading.Side.LEFT, 500L)
+                assertTrue(look.frame in CreatureSprites.Rich.WALK_FIRST until CreatureSprites.Rich.WALK_FIRST + CreatureSprites.Rich.WALK_COUNT)
+            }
+        }
+    }
+
+    @Test
+    fun `Drehung von rechts nach links laeuft vorn herum`() {
+        val steps = CreatureSprites.turnSteps(CreatureSprites.Facing.RIGHT, CreatureSprites.Facing.LEFT)
+        assertEquals(
+            listOf(
+                CreatureSprites.Step(CreatureSprites.Rich.TURN_FRONT, false),
+                CreatureSprites.Step(CreatureSprites.Rich.FRONT, false),
+                CreatureSprites.Step(CreatureSprites.Rich.TURN_FRONT, true)
+            ),
+            steps
+        )
+        assertEquals(listOf(CreatureSprites.Step(CreatureSprites.Rich.TURN_BACK, true)),
+            CreatureSprites.turnSteps(CreatureSprites.Facing.LEFT, CreatureSprites.Facing.BACK))
+        assertTrue(CreatureSprites.turnSteps(CreatureSprites.Facing.FRONT, CreatureSprites.Facing.FRONT).isEmpty())
+    }
+
+    @Test
+    fun `Richtungswechsel spielt die Zwischenbilder und endet in der neuen Richtung`() {
+        val turn = CreatureSprites.Turn()
+        val walk = AvatarAnimations.walkSequence(AvatarSpecies.FENNEC).frames.first()
+        val rechts = CreatureSprites.lookRich(walk, AvatarSpecies.FENNEC, AvatarShading.Side.LEFT, 0L, turn = turn)
+        assertFalse(rechts.mirrored)
+        val t0 = 1000L
+        val seen = (0 until 6).map {
+            CreatureSprites.lookRich(walk, AvatarSpecies.FENNEC, AvatarShading.Side.RIGHT,
+                t0 + it * CreatureSprites.Rich.TURN_STEP_MS, turn = turn)
+        }
+        assertEquals(CreatureSprites.Rich.TURN_FRONT, seen[0].frame)
+        assertFalse(seen[0].mirrored)
+        assertEquals(CreatureSprites.Rich.FRONT, seen[1].frame)
+        assertEquals(CreatureSprites.Rich.TURN_FRONT, seen[2].frame)
+        assertTrue(seen[2].mirrored)
+        assertTrue(seen[3].frame in CreatureSprites.Rich.WALK_FIRST until CreatureSprites.Rich.WALK_FIRST + CreatureSprites.Rich.WALK_COUNT)
+        assertTrue(seen[3].mirrored)
     }
 
     /**

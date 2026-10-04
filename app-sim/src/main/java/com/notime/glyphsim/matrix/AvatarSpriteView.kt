@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -98,6 +99,8 @@ fun AvatarSpriteView(
     // bestimmt weiter, WAS die Figur tut; der Takt hier nur Atmen, Schritte und Blinzeln.
     val context = LocalContext.current
     val sheet = species?.let { CreatureSheets.get(context, it) }
+    // Drehungen brauchen ein Gedaechtnis fuer die letzte Blickrichtung (nur feine Boegen).
+    val turn = remember(species) { CreatureSprites.Turn() }
     val tick by produceState(0L, sheet != null) {
         if (sheet == null) return@produceState
         while (true) {
@@ -121,15 +124,15 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving)
+                gameDirection, gameMoving, turn)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide)
         }
     }
 }
 
-/** Wie oft die feinen Figuren ihr Bild pruefen - fein genug fuer Schritte (140 ms). */
-private const val CREATURE_TICK_MS = 70L
+/** Wie oft die feinen Figuren ihr Bild pruefen - fein genug fuer Schritte (95 ms im feinen Bogen). */
+private const val CREATURE_TICK_MS = 45L
 
 /** Laedt die Bilderboegen der Kreaturen einmal und haelt sie (je einige Kilobyte). */
 internal object CreatureSheets {
@@ -153,23 +156,31 @@ private fun DrawScope.drawCreature(
     shadeSide: AvatarShading.Side,
     timeMs: Long,
     gameDirection: PlayControl.Dir?,
-    gameMoving: Boolean?
+    gameMoving: Boolean?,
+    turn: CreatureSprites.Turn
 ) {
-    val look = CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
+    val rich = sheet.height == CreatureSprites.Rich.FRAME
+    val frameSize = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
+    val feet = if (rich) CreatureSprites.Rich.FEET else CreatureSprites.FEET
+    val look = if (rich) {
+        CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, gameMoving, turn)
+    } else {
+        CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
+    }
     val cell = size.width / AvatarGeometry.SIZE
-    val drawn = size.width * CreatureSprites.SCALE
+    val drawn = size.width * (if (rich) CreatureSprites.Rich.SCALE else CreatureSprites.SCALE)
     // Die Fuesse stehen dort, wo die grobe Figur aufsetzt (siehe AvatarFooting) - angehoben um
     // so viel, wie die grobe Pose gerade abhebt.
     val feetY = (AvatarBodies.forSpecies(species).groundRow() + 1 - look.liftCells) * cell
-    val top = feetY - drawn * CreatureSprites.FEET / CreatureSprites.FRAME
+    val top = feetY - drawn * feet / frameSize
     val left = (size.width - drawn) / 2f
     val dim = brightnessScale.coerceIn(0f, 1f)
     val filter = if (dim < 1f) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(dim, dim, dim, 1f) }) else null
     scale(scaleX = if (look.mirrored) -1f else 1f, scaleY = 1f, pivot = Offset(size.width / 2f, size.height / 2f)) {
         drawImage(
             image = sheet,
-            srcOffset = IntOffset(look.frame * CreatureSprites.FRAME, 0),
-            srcSize = IntSize(CreatureSprites.FRAME, CreatureSprites.FRAME),
+            srcOffset = IntOffset(look.frame * frameSize, 0),
+            srcSize = IntSize(frameSize, frameSize),
             dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
             dstSize = IntSize(drawn.roundToInt(), drawn.roundToInt()),
             colorFilter = filter,

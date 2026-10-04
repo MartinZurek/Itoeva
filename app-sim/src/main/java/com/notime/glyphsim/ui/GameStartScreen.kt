@@ -115,9 +115,7 @@ fun GameStartScreen(onStart: () -> Unit) {
                             species = species,
                             sheet = CreatureSheets.get(context, species),
                             chosen = species == selected,
-                            frame = if (species == selected) {
-                                if ((tick / 900) % 2 == 0L) CreatureSprites.IDLE else CreatureSprites.IDLE_BREATH
-                            } else CreatureSprites.IDLE,
+                            chosenTick = if (species == selected) tick else 0L,
                             onClick = { selected = species }
                         )
                     }
@@ -150,9 +148,17 @@ private fun SpeciesCard(
     species: AvatarSpecies,
     sheet: ImageBitmap?,
     chosen: Boolean,
-    frame: Int,
+    chosenTick: Long,
     onClick: () -> Unit
 ) {
+    // Feiner Bogen (96er-Bilder): eigene Ruheschleife; einfacher Bogen: Atmen im Wechsel.
+    val rich = sheet?.height == CreatureSprites.Rich.FRAME
+    val frameSize = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
+    val frame = when {
+        rich -> CreatureSprites.Rich.idleFrame(chosenTick)
+        chosen && (chosenTick / 900) % 2 == 1L -> CreatureSprites.IDLE_BREATH
+        else -> CreatureSprites.IDLE
+    }
     Column(
         Modifier
             .width(150.dp)
@@ -167,8 +173,8 @@ private fun SpeciesCard(
                 val px = size.minDimension.toInt()
                 drawImage(
                     image = sheet,
-                    srcOffset = IntOffset(frame * CreatureSprites.FRAME, 0),
-                    srcSize = IntSize(CreatureSprites.FRAME, CreatureSprites.FRAME),
+                    srcOffset = IntOffset(frame * frameSize, 0),
+                    srcSize = IntSize(frameSize, frameSize),
                     dstOffset = IntOffset(((size.width - px) / 2).toInt(), 0),
                     dstSize = IntSize(px, px),
                     filterQuality = FilterQuality.None
