@@ -17,5 +17,4 @@ Der junge Reisende aus der Gebirgsstudie ist als neuer Charakter ausgearbeitet. 
 
 Beginne mit genau einer der sechs bestehenden Figuren, bei der die neue Richtung einen sichtbaren Nutzen bringt und deine laufende Arbeit sinnvoll ergaenzt. Setze den begrenzten Schritt in deinem Arbeitsbranch um und zeige einen Vorher-/Nachher-Vergleich im echten Spielmassstab. Dokumentiere, was aus den Studien uebernommen wurde und welche Details wegen Lesbarkeit oder vorhandener Technik vereinfacht wurden. Nutze passende bestehende Tests und dokumentiere die Aenderung nach den Projektregeln.
 
-Die aktive Steuerung in Itoeva 2 und die Autonomie des Streams bleiben jeweils erhalten. Zusaetzliche Landschaftsstudien aus dem spaeteren World-Konzeptbuch sind noch nicht Teil dieser Freigabe. Merge erst nach meinem ausdruecklichen „mergen“.
-
+Die aktive Steuerung in Itoeva 2 und die Autonomie des Streams bleiben jeweils erhalten. Die zusaetzlichen Landschafts- und Kampfstudien wurden inzwischen als Referenz unter `docs/concept-art/world-conceptbook-v2/` und `docs/concept-art/combat-conceptbook/` hinterlegt; beachte dafuer `CLAUDE_COMBAT_WORLD_PROMPT.md`. Das Hochladen der Studien ist noch keine Freigabe zur Implementierung aller neuen Orte und Kampfregeln. Merge erst nach meinem ausdruecklichen „mergen“.

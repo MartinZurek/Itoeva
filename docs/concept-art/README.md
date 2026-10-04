@@ -19,6 +19,8 @@ Die Einzelstudien sind verlustfreie Ausschnitte der Gesamtuebersicht, keine unab
 
 ## World Studies
 
+Neue Landschafts- und Kampfbaende: [Weltstudien Band 2 und 4](world-conceptbook-v2/README.md) mit neun Landschaften sowie Aschegrenze, Gluthof und Glasgarten; [Kampfsystem und Gegner](combat-conceptbook/README.md) mit den sechs bekannten Figuren, Daemonen und Artefaktmaschinen. Der ausfuehrliche [Claude-Prompt](CLAUDE_COMBAT_WORLD_PROMPT.md) erklaert einen begrenzten naechsten Umsetzungsschritt. Diese Baende wurden nach Martins Freigabe am 4. Oktober 2026 ergaenzt; die urspruenglichen Studien unten bleiben als fruehere Fassung erhalten.
+
 | Datei | Inhalt |
 |---|---|
 | [Riverside Quarter](world-studies/itoeva-riverside-quarter-concept-v1.png) | Cafe, Buchladen, Markt, Bruecke, Pflanzen, Objektstudien und Abendvariante |
@@ -48,4 +50,3 @@ Drei mit Imagegen erzeugte Originalstudien aus der Sitzung vom 2026-10-04; sechs
 ## Neuer Character-Band: Fantasy-Varianten (04.10.2026)
 
 [Character-Konzeptbuch mit neun Bildtafeln](character-conceptbook/README.md): die sechs bekannten Wesen, der junge Reisende sowie Bramble und Luma als neue Vorschlaege. [Claude-Prompt](CLAUDE_CHARACTER_PROMPT.md). Die erste Umsetzung und bereits verbesserte Figuren vor jedem weiteren Schritt abgleichen.
-
