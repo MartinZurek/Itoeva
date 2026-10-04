@@ -1,4 +1,283 @@
 {
+ "bath": {
+  "blocked": [
+   "UP",
+   "DOWN"
+  ],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     270.0,
+     115.0,
+     369.0,
+     175.0
+    ],
+    "standX": 272.8888888888889,
+    "standY": 179.22222222222223,
+    "station": "TUB"
+   },
+   {
+    "box": [
+     202.9512195121951,
+     44.772357723577244,
+     247.95934959349594,
+     158.96747967479675
+    ],
+    "standX": 224.6818181818182,
+    "standY": 172.0,
+    "station": "BASIN"
+   },
+   {
+    "box": [
+     152.0,
+     67.0,
+     185.0,
+     153.0
+    ],
+    "standX": 153.5909090909091,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 146,
+   "farRight": 320,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 420,
+   "nearY": 236
+  }
+ },
+ "bedroom": {
+  "blocked": [
+   "UP",
+   "DOWN"
+  ],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     251.59701492537312,
+     89.41666666666667,
+     350.39583333333337,
+     175.27083333333331
+    ],
+    "standX": 317.18518518518516,
+    "standY": 188.02469135802468,
+    "station": "BED"
+   },
+   {
+    "box": [
+     152.0,
+     67.0,
+     185.0,
+     153.0
+    ],
+    "standX": 153.5909090909091,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 146,
+   "farRight": 326,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
+  }
+ },
+ "craft": {
+  "blocked": [
+   "UP",
+   "DOWN"
+  ],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     141.0,
+     48.999999999999986,
+     231.27067669172934,
+     163.0
+    ],
+    "standX": 183.9090909090909,
+    "standY": 172.0,
+    "station": "CRAFT"
+   },
+   {
+    "box": [
+     281.0,
+     67.0,
+     314.0,
+     153.0
+    ],
+    "standX": 312.5,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 146,
+   "farRight": 326,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
+  }
+ },
+ "desk": {
+  "blocked": [
+   "UP",
+   "DOWN"
+  ],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     187.0909090909091,
+     76.0,
+     276.9090909090909,
+     165.8181818181818
+    ],
+    "standX": 232.0,
+    "standY": 177.0810810810811,
+    "station": "DESK"
+   },
+   {
+    "box": [
+     281.0,
+     67.0,
+     314.0,
+     153.0
+    ],
+    "standX": 312.5,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 146,
+   "farRight": 326,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
+  }
+ },
+ "kitchen": {
+  "blocked": [
+   "UP",
+   "DOWN"
+  ],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     298.0,
+     70.0,
+     354.0,
+     174.0
+    ],
+    "standX": 296.64864864864865,
+    "standY": 177.0810810810811,
+    "station": "FRIDGE"
+   },
+   {
+    "box": [
+     161.72289156626505,
+     119.9090909090909,
+     249.6265060240964,
+     186.90361445783134
+    ],
+    "standX": 201.33333333333334,
+    "standY": 195.06666666666666,
+    "station": "TABLE"
+   },
+   {
+    "box": [
+     152.0,
+     67.0,
+     185.0,
+     153.0
+    ],
+    "standX": 153.5909090909091,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 146,
+   "farRight": 318,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 420,
+   "nearY": 236
+  }
+ },
+ "living": {
+  "blocked": [
+   "UP",
+   "DOWN"
+  ],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     132.140350877193,
+     99.0,
+     205.53731343283582,
+     163.5438596491228
+    ],
+    "standX": 160.7,
+    "standY": 172.0,
+    "station": "SEAT"
+   },
+   {
+    "box": [
+     310.0,
+     76.0,
+     381.0,
+     190.0
+    ],
+    "standX": 317.18518518518516,
+    "standY": 188.02469135802468,
+    "station": "TV"
+   },
+   {
+    "box": [
+     278.0,
+     66.0,
+     312.0,
+     153.0
+    ],
+    "standX": 306.22727272727275,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 150,
+   "farRight": 322,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
+  }
+ },
  "nook": {
   "blocked": [
    "UP",

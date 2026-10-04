@@ -12,6 +12,93 @@ import com.notime.glyphsim.matrix.PlayScene.Station
 internal object GameSceneCatalog {
     val ALL: List<Scene> = listOf(
         Scene(
+            place = Place.BATH,
+            asset = "scenes/bath.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 146f, farRight = 320f, nearLeft = 40f, nearRight = 420f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.TUB, Box(270f, 115f, 369f, 175f), 272.889f, 179.222f),
+                Spot(Station.BASIN, Box(202.951f, 44.7724f, 247.959f, 158.967f), 224.682f, 172f),
+                Spot(Station.DOOR, Box(152f, 67f, 185f, 153f), 153.591f, 172f)
+            ),
+            exits = mapOf(Dir.UP to null, Dir.DOWN to null),
+            door = PlayControl.doorTarget(Place.BATH),
+            cropTop = 0.7f
+        ),
+        Scene(
+            place = Place.BEDROOM,
+            asset = "scenes/bedroom.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 146f, farRight = 326f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.BED, Box(251.597f, 89.4167f, 350.396f, 175.271f), 317.185f, 188.025f),
+                Spot(Station.DOOR, Box(152f, 67f, 185f, 153f), 153.591f, 172f)
+            ),
+            exits = mapOf(Dir.UP to null, Dir.DOWN to null),
+            door = PlayControl.doorTarget(Place.BEDROOM),
+            cropTop = 0.7f
+        ),
+        Scene(
+            place = Place.CRAFT,
+            asset = "scenes/craft.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 146f, farRight = 326f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.CRAFT, Box(141f, 49f, 231.271f, 163f), 183.909f, 172f),
+                Spot(Station.DOOR, Box(281f, 67f, 314f, 153f), 312.5f, 172f)
+            ),
+            exits = mapOf(Dir.UP to null, Dir.DOWN to null),
+            door = PlayControl.doorTarget(Place.CRAFT),
+            cropTop = 0.7f
+        ),
+        Scene(
+            place = Place.DESK,
+            asset = "scenes/desk.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 146f, farRight = 326f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.DESK, Box(187.091f, 76f, 276.909f, 165.818f), 232f, 177.081f),
+                Spot(Station.DOOR, Box(281f, 67f, 314f, 153f), 312.5f, 172f)
+            ),
+            exits = mapOf(Dir.UP to null, Dir.DOWN to null),
+            door = PlayControl.doorTarget(Place.DESK),
+            cropTop = 0.7f
+        ),
+        Scene(
+            place = Place.KITCHEN,
+            asset = "scenes/kitchen.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 146f, farRight = 318f, nearLeft = 40f, nearRight = 420f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.FRIDGE, Box(298f, 70f, 354f, 174f), 296.649f, 177.081f),
+                Spot(Station.TABLE, Box(161.723f, 119.909f, 249.627f, 186.904f), 201.333f, 195.067f),
+                Spot(Station.DOOR, Box(152f, 67f, 185f, 153f), 153.591f, 172f)
+            ),
+            exits = mapOf(Dir.UP to null, Dir.DOWN to null),
+            door = PlayControl.doorTarget(Place.KITCHEN),
+            cropTop = 0.7f
+        ),
+        Scene(
+            place = Place.LIVING,
+            asset = "scenes/living.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 150f, farRight = 322f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.SEAT, Box(132.14f, 99f, 205.537f, 163.544f), 160.7f, 172f),
+                Spot(Station.TV, Box(310f, 76f, 381f, 190f), 317.185f, 188.025f),
+                Spot(Station.DOOR, Box(278f, 66f, 312f, 153f), 306.227f, 172f)
+            ),
+            exits = mapOf(Dir.UP to null, Dir.DOWN to null),
+            door = PlayControl.doorTarget(Place.LIVING),
+            cropTop = 0.7f
+        ),
+        Scene(
             place = Place.NOOK,
             asset = "scenes/nook.png",
             farY = 172f, nearY = 236f,

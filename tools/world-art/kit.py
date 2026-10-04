@@ -583,6 +583,22 @@ class Scene:
             self.paint(self.ellipse(x + 2, y + depth + 1, 2.5, 1.6), c1 if ((x - x0) // 5) % 2 == 0 else c2)
 
     # ------------------------------------------------------------------ Spielangaben
+    def dusk(self, k=0.5, tint='#5a5a9a', sky=None, lights=(), windows=()):
+        """Abendstimmung: alles ausser dem Himmel kuehl abgedunkelt, dann warme Lichter darueber.
+        [sky] ist ein Abzug der Leinwand direkt nach dem Himmel - was sich seither nicht geaendert
+        hat, ist Himmel und bleibt, wie er ist. [lights] sind (x, y, radius) fuer Lichthoefe,
+        [windows] Rechtecke, die warm leuchten."""
+        keep = np.all(np.abs(self.cv.c - sky) < 1e-6, axis=-1) if sky is not None else np.zeros((H, W), bool)
+        old = self.cv.c.copy()
+        self.cv.c = self.cv.c * lerp(np.ones(3), rgb(tint) * 1.5, k)
+        self.cv.c[keep] = old[keep]
+        for x0, y0, x1, y1 in windows:
+            m = self.rect(x0, y0, x1, y1)
+            self.cv.c[m] = np.maximum(self.cv.c[m], old[m] * rgb('#ffd8a0') * 1.15)
+        for x, y, r in lights:
+            self.cv.add(glow(W, H, [(x, y, 1.0)], r, '#ffa850', 0.45, steps=3))
+            self.cv.add(glow(W, H, [(x, y, 1.0)], max(1.5, r / 4), '#fff0c0', 0.6, steps=2))
+
     def walk(self, farY, nearY, farLeft, farRight, nearLeft, nearRight, farH, nearH):
         self.meta['walk'] = dict(farY=farY, nearY=nearY, farLeft=farLeft, farRight=farRight,
                                  nearLeft=nearLeft, nearRight=nearRight, farHeight=farH, nearHeight=nearH)

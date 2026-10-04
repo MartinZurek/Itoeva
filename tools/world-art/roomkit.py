@@ -13,8 +13,8 @@ FLOOR, CEIL, LEFT, RIGHT, BACK = range(5)
 
 
 class CozyRoom:
-    def __init__(self, seed=1, plaster=('#b89a7a', '#c8aa88'), wood=('#6a4430', '#7e5238', '#8e6040'),
-                 lights=None, ambient='#46363a'):
+    def __init__(self, seed=1, plaster=('#d8b890', '#e6c8a0'), wood=('#6a4430', '#7e5238', '#8e6040'),
+                 lights=None, ambient='#5a4440'):
         self.cv = Canvas(W, H)
         self.yy, self.xx = self.cv.yy, self.cv.xx
         self.rng = np.random.default_rng(seed)
@@ -47,21 +47,30 @@ class CozyRoom:
         gz = np.abs((Z / 0.8 + off) - np.round(Z / 0.8 + off)) * 0.8
         pw = Z / self.room.f
         self.cv.paint(fl & ((gx < pw * 0.7) | (gz < pw * 0.6)), self.cv.c * 0.6)
-        # Waende: warmer Putz mit leichter Wolkigkeit, Holzbalken als Rahmen
-        nz = noise(W, H, 5, self.seed + 9, 2)
+        # Waende: warmer Putz, nur leicht wolkig; Fachwerk aus dunklem Holz
+        nz = noise(W, H, 9, self.seed + 9, 2)
         for side, n in ((BACK, (0, 0, -1)), (LEFT, (1, 0, 0)), (RIGHT, (-1, 0, 0))):
             m = which == side
-            pl = lerp(rgb(plaster[0]), rgb(plaster[1]), (nz > 0.5)[..., None] * 0.6 + nz[..., None] * 0.2)
+            pl = lerp(rgb(plaster[0]), rgb(plaster[1]), np.clip(nz * 1.4 - 0.2, 0, 1)[..., None])
             self._shade(m, pl, n)
         beam = rgb('#4e3224')
-        # senkrechte Pfosten an den Zimmerecken und eine Fussleiste
-        corner = ((which == BACK) & ((np.abs(X + 1.05) < 0.05) | (np.abs(X - 1.05) < 0.05)))
-        self._shade(corner, beam, (0, 0, -1))
-        skirt = (which != FLOOR) & (which != CEIL) & (Y < 0.06)
-        self._shade(skirt, rgb('#5a3a28'), (0, 0, -1))
+        walls = (which == BACK) | (which == LEFT) | (which == RIGHT)
+        # senkrechte Pfosten an den Zimmerecken und in den Seitenwaenden, ein Riegel auf Brusthoehe
+        corner = (which == BACK) & ((np.abs(X + 1.05) < 0.05) | (np.abs(X - 1.05) < 0.05))
+        posts = ((which == LEFT) | (which == RIGHT)) & (np.abs(((Z - 0.35) / 0.9) % 1 - 0.5) > 0.47)
+        rail = walls & (np.abs(Y - 1.22) < 0.03)
+        self._shade(corner | posts | rail, beam, (0, 0, -1))
+        self._shade(walls & (np.abs(Y - 1.25) < 0.004 + Z * 0.001), rgb('#8a5a3a'), (0, 1, 0))
+        # Holzvertaefelung unten
+        panel = walls & (Y < 0.34)
+        pv = np.abs((np.where(which == BACK, X, Z) / 0.22) % 1 - 0.5) > 0.45
+        self._shade(panel, np.where(pv[..., None], rgb(wood[0]) * 0.75, rgb(wood[1])), (0, 0, -1))
+        self._shade(walls & (np.abs(Y - 0.34) < 0.018), rgb(wood[2]) * 1.2, (0, 1, 0))
+        skirt = walls & (Y < 0.04)
+        self._shade(skirt, rgb('#4a2e20'), (0, 0, -1))
         ce = which == CEIL
         beams = np.abs(((X / 0.45) % 1) - 0.5) > 0.36
-        self._shade(ce, np.where(beams[..., None], rgb('#4a2e22'), rgb('#6e4c38')), (0, -1, 0))
+        self._shade(ce, np.where(beams[..., None], rgb('#4a2e22'), rgb('#7a5640')), (0, -1, 0))
 
     # ------------------------------------------------------------------ Bauteile
     def rect_on_back(self, X0, X1, Y0, Y1):
@@ -117,13 +126,25 @@ class CozyRoom:
         self.cv.paint((self.xx == x1 - 3) & (self.yy == (y0 + y1) // 2), rgb('#e8c070'))
         return (x0 - 2, y0 - 2, x1 + 2, y1)
 
-    def rug(self, X0, X1, Z0, Z1, c1='#8a3a32', c2='#d8a050', c3='#2e3a5a'):
+    def rug(self, X0, X1, Z0, Z1, c1='#8a3a32', c2='#d8a050', c3='#2e3a5a', round_=False):
+        """Teppich mit Rand, Borduere und Rautenmuster (oder rund mit Ringen)."""
         fl = self.which == FLOOR
-        m = fl & (self.X > X0) & (self.X < X1) & (self.Z > Z0) & (self.Z < Z1)
         ru, rz = (self.X - X0) / (X1 - X0), (self.Z - Z0) / (Z1 - Z0)
-        r = np.hypot(ru - 0.5, (rz - 0.5) * 1.2)
-        col = np.where((r % 0.16 < 0.05)[..., None], rgb(c2), rgb(c1))
-        col = np.where(((ru < 0.06) | (ru > 0.94) | (rz < 0.08) | (rz > 0.92))[..., None], rgb(c3), col)
+        if round_:
+            r = np.hypot(ru - 0.5, rz - 0.5) * 2
+            m = fl & (r < 1)
+            col = np.where(((r * 7) % 1 < 0.28)[..., None], rgb(c2), rgb(c1))
+            col = np.where((r > 0.86)[..., None], rgb(c3), col)
+        else:
+            m = fl & (ru > 0) & (ru < 1) & (rz > 0) & (rz < 1)
+            edge = np.minimum(np.minimum(ru, 1 - ru), np.minimum(rz, 1 - rz))
+            diamond = np.abs(ru - 0.5) * 1.2 + np.abs(rz - 0.5) < 0.24
+            motif = (np.abs(((ru * 7) % 1) - 0.5) + np.abs(((rz * 5) % 1) - 0.5)) < 0.16
+            col = np.where(motif[..., None], rgb(c2) * 0.8, rgb(c1))
+            col = np.where(diamond[..., None], rgb(c3), col)
+            col = np.where((np.abs(np.abs(ru - 0.5) * 1.2 + np.abs(rz - 0.5) - 0.24) < 0.025)[..., None], rgb(c2), col)
+            col = np.where((edge < 0.11)[..., None], rgb(c2), col)
+            col = np.where((edge < 0.07)[..., None], rgb(c3), col)
         self._shade(m, col, (0, 1, 0))
 
     def box(self, *a, **k):
@@ -181,21 +202,21 @@ class CozyRoom:
         self.box(X0, X1, h - 0.04, h, Z0, Z1, wood, top=top, edge='#d09868')
 
     def sofa(self, X0, X1, Z0, Z1, color='#b85a4a', light='#d8826a', cushions=('#e8c890', '#6a8a5a')):
-        """Sofa mit Rueckenlehne hinten (bei Z1), Armlehnen und Kissen."""
+        """Sofa mit Rueckenlehne hinten (bei Z1), runden Armlehnen, Sitzpolstern und Kissen."""
         c, l = rgb(color), rgb(light)
-        d = Z1 - Z0
-        self.box(X0, X1, 0.06, 0.62, Z1 - d * 0.28, Z1, c * 0.9, top=l, edge=l * 1.15)
-        self.box(X0 + 0.08, X1 - 0.08, 0.06, 0.3, Z0, Z1 - d * 0.2, c, top=l, edge=l * 1.2)
-        n = max(2, int((X1 - X0) / 0.32))
-        w = (X1 - X0 - 0.16) / n
+        self.box(X0 + 0.04, X1 - 0.04, 0.06, 0.52, Z1 - 0.12, Z1, c * 0.85, top=l * 0.95, edge=l * 1.2)
+        self.box(X0 + 0.06, X1 - 0.06, 0.06, 0.2, Z0 + 0.02, Z1 - 0.1, c * 0.8, top=l)
+        n = max(2, int(round((X1 - X0 - 0.2) / 0.3)))
+        w = (X1 - X0 - 0.2) / n
         for k in range(n):
-            x = X0 + 0.08 + k * w
-            self.box(x + 0.01, x + w - 0.01, 0.3, 0.36, Z0 + 0.02, Z1 - d * 0.3, c * 1.05, top=l * 1.05, edge=l * 1.25)
-        for x in (X0, X1 - 0.09):
-            self.box(x, x + 0.09, 0.06, 0.44, Z0, Z1, c * 0.85, top=l, edge=l * 1.2)
+            x = X0 + 0.1 + k * w
+            self.box(x + 0.006, x + w - 0.006, 0.2, 0.27, Z0 + 0.01, Z1 - 0.12, c * 1.05, top=l * 1.08, edge=l * 1.3)
         for k, cc in enumerate(cushions):
-            x = X0 + 0.14 + k * (X1 - X0 - 0.42)
-            self.box(x, x + 0.16, 0.34, 0.52, Z1 - d * 0.36, Z1 - d * 0.3, cc, top=rgb(cc) * 1.1, edge=rgb(cc) * 1.25)
+            x = X0 + 0.13 + k * (X1 - X0 - 0.42)
+            cr = rgb(cc)
+            self.box(x, x + 0.16, 0.27, 0.44, Z1 - 0.2, Z1 - 0.14, cr * 0.95, top=cr * 1.1, edge=cr * 1.3)
+        for x in (X0, X1 - 0.1):
+            self.box(x, x + 0.1, 0.06, 0.36, Z0, Z1, c * 0.9, top=l * 1.05, edge=l * 1.3)
         for x in (X0 + 0.02, X1 - 0.06):
             self.box(x, x + 0.04, 0.0, 0.06, Z0 + 0.02, Z0 + 0.05, '#3a2418')
 
@@ -233,6 +254,51 @@ class CozyRoom:
             p = self.room.proj((X0 + X1) / 2, Y1 * (k + 0.5) / drawers, Z0)
             self.cv.paint(MaskPen(W, H).ellipse(p[0] - 1, p[1] - 1, p[0] + 1, p[1] + 1).a > 0, rgb(knob))
         return m
+
+    def bed(self, X0, X1, Z0, Z1, blanket='#6a8a5a', pattern='#e8c890', wood='#6a4230'):
+        """Holzbett mit Kopfteil hinten (bei Z1), Decke mit Karomuster, Kissen."""
+        self.box(X0, X1, 0.0, 0.7, Z1 - 0.06, Z1, wood, top='#8a5a3e', edge='#d09868')
+        self.box(X0, X1, 0.0, 0.34, Z0, Z0 + 0.05, wood, top='#8a5a3e', edge='#d09868')
+        self.box(X0 + 0.02, X1 - 0.02, 0.1, 0.24, Z0 + 0.05, Z1 - 0.06, '#e8dcc8', top='#f4ecdc')
+        m = self.box(X0 + 0.01, X1 - 0.01, 0.12, 0.32, Z0 + 0.03, Z1 - 0.3, blanket, top=blanket, edge=rgb(blanket) * 1.4)
+        ys, xs = np.nonzero(m)
+        if len(xs):
+            chk = m & ((((self.xx // 4) + (self.yy // 3)) % 2) == 0)
+            self.cv.paint(chk, self.cv.c * 0.82)
+            self.cv.paint(m & (((self.xx - xs.min()) % 8) == 0) & (((self.yy) % 3) != 0), lerp(self.cv.c, rgb(pattern), 0.35))
+        for k in range(2 if X1 - X0 > 0.6 else 1):
+            x = X0 + 0.06 + k * (X1 - X0) / 2
+            self.box(x, x + min(0.26, (X1 - X0) / 2 - 0.1), 0.24, 0.36, Z1 - 0.28, Z1 - 0.1, '#e8d0b0', top='#f8e8cc', edge='#fff4e0')
+
+    def chair(self, X, Z, wood='#7a4a30', back=True, back_h=0.56):
+        self.legs(X - 0.1, X + 0.1, Z - 0.1, Z + 0.1, 0.24, color=wood)
+        self.box(X - 0.11, X + 0.11, 0.22, 0.26, Z - 0.11, Z + 0.11, wood, top='#9a6444', edge='#d09868')
+        if back:
+            self.box(X - 0.11, X + 0.11, 0.26, back_h, Z + 0.08, Z + 0.11, wood, top='#9a6444', edge='#d09868')
+
+    def counter(self, X0, X1, Z0, Z1, Y1=0.46, top='#c8b898', wood='#5a7a6a'):
+        """Kuechenzeile: Unterschraenke mit Tueren und heller Arbeitsplatte."""
+        m = self.box(X0, X1, 0.0, Y1 - 0.03, Z0, Z1, wood, top=wood, side=rgb(wood) * 1.05)
+        n = max(1, int(round((X1 - X0) / 0.25)))
+        for k in range(1, n):
+            x = X0 + (X1 - X0) * k / n
+            a, b = self.room.proj(x, 0.04, Z0), self.room.proj(x, Y1 - 0.06, Z0)
+            self.cv.paint(MaskPen(W, H).line([a, b]).a > 0, rgb('#2e4038'))
+        for k in range(n):
+            p = self.room.proj(X0 + (X1 - X0) * (k + 0.5) / n, Y1 - 0.1, Z0)
+            self.cv.paint(MaskPen(W, H).rect(p[0] - 2, p[1], p[0] + 2, p[1]).a > 0, rgb('#e8c070'))
+        m |= self.box(X0 - 0.02, X1 + 0.02, Y1 - 0.03, Y1, Z0 - 0.02, Z1, top, top=top, edge='#fff4e0')
+        return m
+
+    def jar_row(self, X0, X1, Y, Z, colors=('#c8a060', '#a85a3a', '#5a8a6a', '#e8e0d0')):
+        x = X0
+        k = 0
+        while x < X1 - 0.06:
+            c = rgb(colors[k % len(colors)])
+            h = 0.06 + 0.04 * ((k * 7) % 3)
+            self.box(x, x + 0.06, Y, Y + h, Z - 0.03, Z + 0.03, c, top=c * 0.7, edge=c * 1.3)
+            x += 0.09
+            k += 1
 
     def cup(self, X, Y, Z, color='#e8e0d0'):
         self.box(X - 0.025, X + 0.025, Y, Y + 0.06, Z - 0.025, Z + 0.025, color, top=rgb(color) * 0.6, edge=rgb(color) * 1.1)
