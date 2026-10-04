@@ -21,3 +21,12 @@ Die Identitaeten (Namen, Rollen, Entscheidungslogik) bleiben unveraendert.
 (11 Bilder: Ruhe, Ruhe eingeatmet, Blinzeln, 4 x Laufen, 2 x Freude, 2 x Schlafen; Reihenfolge
 wie in `CreatureSprites.kt`). Die Figuren stehen dort auf Zeile 61. Welches Bild gezeigt wird,
 entscheidet `CreatureSprites.look` aus der groben Pose der bestehenden Ablaeufe.
+
+## Fantasy-Varianten (Character-Konzeptbuch, seit 04.10.)
+
+Die Figuren werden einzeln nach `docs/concept-art/character-conceptbook/` weiterentwickelt, je eine
+Figur pro Schritt. Umgesetzt: alle sechs - **Wyrmling** (getrennte Fluegelhaeute, Halstuch mit
+Bernstein, eigene Schlafpose), **Fennec** (Reisemantel, Wegstein, Flasche), **Gloop** (Blattschulter,
+Samenstein, Tasche), **Starlet** (Himmelskragen, Mondanhaenger), **Puffling** (Kapuze, Blattschliesse),
+**Hootlet** (Sternenumhang, Messingschliesse, Kartenrolle). Eine eigene
+Schlafpose meldet eine Figur in `sheets.OWN_SLEEP` an; die anderen sinken zusammen (`curled`).

@@ -7,14 +7,19 @@ from PIL import Image
 from sprite import Sprite, Pose
 
 # Rampen dunkel -> hell, farblich verschoben (Schatten waermer/violetter, Licht gelblicher)
-FUR_ORANGE = ['#7a3a22', '#a8542c', '#d07a3a', '#e89a52', '#f6bd78']
-CREAM = ['#b88a6a', '#d8b08c', '#efd2b0', '#fbe8cf']
+# Fennec nach der Fantasy-Studie (briefs/fennec.md): #49372F #955033 #CF7D45 #E3AC6B #F2D7A4,
+# Akzente #687B60 (Flasche) und #66A6A0 (Wegstein).
+FUR_ORANGE = ['#7a3e24', '#a85a30', '#cf7d45', '#e3ac6b', '#f2d0a0']
+CREAM = ['#b8957a', '#d8b896', '#f2d7a4', '#faebcb']
+MANTLE = ['#5a2a1e', '#7c3826', '#955033', '#b8643c']
 PINK_EAR = ['#c06a6a', '#e09088', '#f2b4a8']
-DARK_PAW = ['#2e1c18', '#46302a', '#5e4436']
+DARK_PAW = ['#2e2420', '#49372f', '#5e4a3e']
 SCARF = ['#5a1e1c', '#7e2e26', '#a2442e', '#c06038']
 
-MOSS = ['#3a5a2a', '#557a36', '#76993f', '#9cb85a', '#c4d884']
-MOSS_DARK = ['#2c4422', '#3e5e2a', '#557a36']
+# Gloop nach der Fantasy-Studie (briefs/gloop.md): #35493B #5D754B #8FA565 #BCC58B #DDE0AF,
+# Tasche #9A7957, Innenlicht #B8D6BB, Creme #F0EBC8.
+MOSS = ['#35493b', '#5d754b', '#8fa565', '#bcc58b', '#dde0af']
+MOSS_DARK = ['#2c3e30', '#3e5a3a', '#557040']
 SPROUT = ['#3e6a2a', '#6a9a3a', '#9cc860']
 
 
@@ -46,17 +51,23 @@ def fennec(p=None):
     s.part(head, FUR_ORANGE, fur=0.3, seed=7)
     muzzle = s.ellipse(31.5, 34.5, 7.5, 4.5) | s.ellipse(25, 33, 4, 3) | s.ellipse(38, 33, 4, 3)
     s.part(muzzle & head, CREAM, line=False, lift=0.15)
-    # Schal mit Muster und Zipfel
-    scarf = s.ellipse(31.5, 40.5, 11, 3.2) | s.poly([(36, 41), (41, 41), (40, 50), (35, 49)])
-    s.part(scarf, SCARF)
-    for x in range(23, 41, 3):
-        s.px(x, 40, '#d88a4a')
-    s.px(36, 47, '#d88a4a'), s.px(38, 45, '#d88a4a')
+    # Kurze Flasche an der Seite, unter dem Mantel hervor
+    flask = s.ellipse(45, 47, 3.2, 4)
+    s.part(flask, ['#3e4a38', '#56684c', '#687b60', '#8a9a78'])
+    s.paint((s.xx >= 44) & (s.xx <= 46) & (s.yy == 42), '#5e4a3e')
+    # Kurzer rostroter Reisemantel ueber den Schultern, Saum mit Zickzack, endet ueber den Pfoten
+    mantle = s.poly([(19, 38), (44, 38), (47, 45), (42, 47), (37, 45), (32, 47), (27, 45), (22, 47), (17, 45)])
+    s.part(mantle, MANTLE, seed=8)
+    for x in range(20, 45, 2):
+        s.px(x, 44 + (x // 2) % 2, '#e3ac6b')
+    # Wegstein als Schliesse
+    s.part(s.ellipse(31.5, 39.5, 2.2, 2), ['#2e5a58', '#4a8a86', '#66a6a0', '#9ad2c8'], line=False)
+    s.px(31, 39, '#d8f4ee')
     # Vorderpfoten halten zusammen
     if s.pose.joy:
         s.part(s.ellipse(17, 39, 3, 3.5) | s.ellipse(46, 39, 3, 3.5), CREAM)
     else:
-        s.part(s.ellipse(27, 51, 3.2, 3) | s.ellipse(36, 51, 3.2, 3), CREAM)
+        s.part(s.ellipse(27, 52, 3.2, 3) | s.ellipse(36, 52, 3.2, 3), CREAM)
     # Gesicht
     s.eye(24, 27, 5, 6, iris='#2a1610', low='#6a3a22')
     s.eye(34, 27, 5, 6, iris='#2a1610', low='#6a3a22')
@@ -74,10 +85,12 @@ def gloop(p=None):
     body = s.ellipse(32, 42, 17, 16) | s.ellipse(32, 54, 22, 7)
     body &= s.yy <= 61
     s.part(body, MOSS, bulge=1.3, seed=1)
-    # Glanz der feuchten Oberflaeche: zwei helle Bogen oben links
-    shine = s.ellipse(24, 34, 4, 6, rot=0.5) & ~s.ellipse(25.5, 35, 3, 5.5, rot=0.5)
-    s.paint(shine & body, '#e2eeb0')
-    s.px(21, 30, '#f4f8d8'), s.px(22, 29, '#f4f8d8')
+    # Durchscheinend nur ueber eine helle Innenkante oben links - kein Glasglanz
+    edge = s.ellipse(32, 42, 15, 14) & ~s.ellipse(33, 43, 15, 14) & (s.xx < 30) & (s.yy < 44)
+    s.paint(edge & body, '#b8d6bb')
+    # Samenstein im Inneren: matter Bernstein, durch den Koerper gedaempft
+    s.paint(s.ellipse(37, 52, 2.6, 2.2), '#c8a050')
+    s.paint(s.ellipse(36.5, 51.5, 1.2, 1), '#e8c878')
     # Moosflecken mit Struktur
     rng = np.random.default_rng(4)
     moss = np.zeros_like(body)
@@ -86,6 +99,15 @@ def gloop(p=None):
     moss &= body
     tex = rng.random(moss.shape) > 0.35
     s.part(moss & tex, MOSS_DARK, line=False, fur=0.6, seed=5)
+    # Blattschulter: ein paar Blaetter mit einer Bluete ueber der linken Schulter
+    for cx, cy, rot in ((18, 37, 0.8), (21, 32, 0.3), (26, 29, -0.2), (16, 43, 1.2)):
+        s.part(s.ellipse(cx, cy, 3.6, 2, rot=rot), ['#3e5a2a', '#5d7a3a', '#8aa856', '#b0c878'], line=True)
+    for dx, dy in ((0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)):
+        s.px(22 + dx, 34 + dy, '#f6f0d8' if (dx, dy) != (0, 0) else '#e8c060')
+    # Seitliche Tasche
+    s.part((s.xx >= 44) & (s.xx <= 50) & (s.yy >= 46) & (s.yy <= 52), ['#5e4632', '#7a5e42', '#9a7957', '#b8966e'])
+    s.paint((s.xx >= 44) & (s.xx <= 50) & (s.yy == 46), '#c8a878')
+    s.paint(s.pen().line([(44, 46), (36, 33)]).m, '#6a4e36')
     # Spross oben
     stem = s.pen().line([(33, 27), (34, 21), (35, 17)], 1).m
     s.paint(stem, '#4e7a2e')
@@ -102,16 +124,23 @@ def gloop(p=None):
     return s
 
 
-GOLD = ['#9a5a1c', '#c8802a', '#eaac3c', '#f7cc5a', '#fff0a2']
-CLOUD = ['#a89888', '#d2c4ae', '#ece2ce', '#fbf6ea', '#ffffff']
-CLOUD_BLUE = ['#46669a', '#6a8cc0', '#93b2da', '#bcd2ee']
-SATCHEL = ['#4a2c1a', '#6e4428', '#946038', '#b47e4c']
+# Starlet nach der Fantasy-Studie (briefs/starlet.md): #67523A #B68543 #E8B857 #F5D782 #FFF0BA,
+# Himmelskragen #536783 / #8A9CB5, Mond #CFA47C.
+GOLD = ['#8a6436', '#b68543', '#e8b857', '#f5d782', '#fff0ba']
+# Puffling nach der Fantasy-Studie (briefs/puffling.md): #52616A #8598A2 #B7C6C8 #DDE0D1 #F7EBCF,
+# Kapuze #80947A, Tasche #AA825A, Bluete #E6C58B.
+CLOUD = ['#a8a496', '#cfcbb8', '#e6e2d0', '#f7ebcf', '#fffaee']
+CLOUD_BLUE = ['#4e6a92', '#7898c0', '#a4c0e0', '#cadcf0']
+HOOD = ['#4e5e48', '#6a7c60', '#80947a', '#a3b39a']
+SATCHEL = ['#5a3e26', '#7e5a38', '#aa825a', '#c8a074']
 DRAGON = ['#2c4630', '#43623c', '#5e7f4e', '#7fa268', '#a6c28a']
 RUST = ['#5e2418', '#8c3c24', '#b85a34', '#d8804c']
 BELLY = ['#a88a62', '#cdb488', '#e8d6aa', '#f6ead0']
-VIOLET = ['#382a58', '#523f7c', '#7260a2', '#9584c4', '#bcaee0']
-CLOAK = ['#2a2048', '#3e3068', '#584894', '#7464b0']
-FACE = ['#bca488', '#dcc8ae', '#f2e6d4', '#fdf8ee']
+# Hootlet nach der Fantasy-Studie (briefs/hootlet.md): #403E59 #686184 #968AAF #C0B3C8 #E9DBC2,
+# Messing #B69761, Kartenrolle #F4E8CA.
+VIOLET = ['#403e59', '#5a5480', '#7c72a6', '#9a8ec0', '#c0b3d8']
+CLOAK = ['#262640', '#33335a', '#45457a', '#5c5c94']
+FACE = ['#c4b49c', '#dcccb4', '#e9dbc2', '#f8f0e2']
 BEAK = ['#8a4a1a', '#c8782a', '#eea040']
 
 
@@ -137,6 +166,18 @@ def starlet(p=None):
         s.px(x, y, '#fff6c0')
         for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             s.px(x + dx, y + dy, '#f0c860')
+    # Kleiner indigoblauer Himmelskragen mit Sternpunkten - laesst alle fuenf Spitzen frei
+    collar = s.ellipse(32, 47, 12, 6.5) & ~s.ellipse(32, 43, 12, 6.5) & star
+    s.part(collar, ['#3e4c6a', '#536783', '#6a7ea0', '#8a9cb5'], line=False)
+    s.paint(collar & ~np.roll(collar, -1, axis=0), '#2e3a52')
+    for x in (25, 29, 35, 39):
+        ys = np.nonzero(collar[:, x])[0]
+        if len(ys):
+            s.px(x, int(ys.mean()), '#f5d782')
+    # Mondanhaenger knapp unter dem Kragen
+    moon = s.ellipse(32, 55, 2.4, 2.4) & ~s.ellipse(33.3, 54.3, 2, 2)
+    s.paint(moon, '#cfa47c')
+    s.px(31, 54, '#f0d8a8')
     s.eye(24, 34, 5, 7, iris='#3a2214', low='#8a5428')
     s.eye(35, 34, 5, 7, iris='#3a2214', low='#8a5428')
     for x in (21, 22, 42, 43):
@@ -156,6 +197,10 @@ def puffling(p=None):
     for x, y, r in ((32, 39, 16), (18, 42, 9), (46, 42, 9), (25, 28, 10), (39, 28, 10), (32, 49, 12), (21, 51, 7), (43, 51, 7), (12, 37, 5), (52, 39, 5)):
         cloud |= s.ellipse(x, y, r, r * 0.95)
     s.part(soft(s, cloud), CLOUD, fur=0.7, seed=2)
+    # Leichte salbeifarbene Kapuze, hinter den Kopf gefallen: liegt auf der linken Rueckseite
+    hood = soft(s, s.ellipse(15, 33, 5.5, 8, rot=0.35) | s.ellipse(20, 25, 6, 4, rot=0.5)) & ~s.ellipse(33, 37, 14, 13)
+    s.part(hood, HOOD, seed=6)
+    s.paint(s.pen().line([(14, 39), (20, 41), (26, 42)]).m, '#6a7c60')
     # blaue Tupfen vorn an den Seiten
     s.part(soft(s, s.ellipse(11, 44, 3.5, 4.5) | s.ellipse(53, 45, 3.5, 4.5) | s.ellipse(22, 23, 4, 3)), CLOUD_BLUE, fur=0.5, seed=3)
     # Fuesschen
@@ -168,6 +213,9 @@ def puffling(p=None):
     s.paint((s.xx >= 27) & (s.xx <= 37) & (s.yy == 44), '#c8925a')
     s.px(32, 47, '#e8c070')
     s.part(s.ellipse(25, 47, 3, 1.8, rot=-0.6), ['#3e6a2a', '#6a9a3a', '#9cc860'])
+    # Blattschliesse der Kapuze
+    s.part(s.ellipse(27, 41, 2.4, 1.4, rot=0.5) | s.ellipse(31, 41, 2.4, 1.4, rot=-0.5), ['#4e6a34', '#6e8a46', '#94ac64'], line=False)
+    s.px(29, 41, '#e6c58b')
     s.eye(24, 31, 4, 6, iris='#1e2a48', low='#4a6a9a')
     s.eye(36, 31, 4, 6, iris='#1e2a48', low='#4a6a9a')
     for x in (21, 22, 42, 43):
@@ -177,41 +225,130 @@ def puffling(p=None):
     return s
 
 
+# Wyrmling nach der Fantasy-Studie vom 04.10. (character-conceptbook/briefs/wyrmling.md):
+# Startpalette #354C43 #607C57 #98AC72 #D2CA92 #875B43 #BC7D51 #D9A06A #EEE0B1.
+JADE = ['#2c4038', '#3f5a48', '#5a7652', '#7c955f', '#9cb075']
+JADE_SPOT = '#b2c084'
+WING = ['#7a3a26', '#a8583a', '#cf7e4c', '#e8a46c']
+HORN = ['#5a3a28', '#875b43', '#a8724a']
+CREAM_BELLY = ['#a8986a', '#cfc48e', '#e8dcac', '#f2e8c4']
+WRAP = ['#a69a7c', '#cfc3a2', '#eee0b1']
+
+
+def _wyrm_wing(s, shoulder, wrist, tips, back=False):
+    """Ein Fledermausfluegel als getrennte Flaeche: Oberarm zur Handwurzel, von dort Fingerknochen
+    zu den Spitzen, dazwischen die Haut in Bogen bis zurueck an den Koerper. Der hintere Fluegel
+    ist dunkler, damit beide getrennt lesbar bleiben."""
+    sx, sy = shoulder
+    wx, wy = wrist
+    pts = [(sx, sy), (wx, wy)]
+    for k, (tx, ty) in enumerate(tips):
+        pts.append((tx, ty))
+        nxt = tips[k + 1] if k + 1 < len(tips) else (sx - 2, sy + 9)
+        # Bogen der Haut zwischen zwei Fingern: nach innen eingezogen
+        pts.append(((tx + nxt[0]) / 2 + 2.5, (ty + nxt[1]) / 2 + 0.5))
+    pts.append((sx - 2, sy + 9))
+    m = s.poly(pts)
+    s.part(m, WING[:3] if back else WING, seed=31 if back else 32)
+    bone = '#4e2a1e' if back else '#6a3a28'
+    for tx, ty in tips:
+        s.paint(s.pen().line([(wx, wy), (tx, ty)]).m & m, bone)
+    s.paint(s.pen().line([(sx, sy), (wx, wy)], 2).m, HORN[1] if back else HORN[2])
+    s.px(wx, wy, '#d9a06a')
+    return m
+
+
 def wyrmling(p=None):
     s = Sprite(pose=p)
-    # Fluegel hinten, rostrot, mit Spannrippen
-    wing = s.poly([(22, 34), (10, 20), (13, 30), (6, 30), (12, 38), (22, 42)])
-    s.part(wing, RUST, seed=1)
-    for a, b in (((11, 22), (21, 35)), ((8, 30), (21, 38))):
-        s.paint(s.pen().line([a, b]).m & wing, '#5e2418')
-    # Schwanz, der sich am Boden ringelt
-    tail = s.pen().line([(30, 58), (14, 58), (6, 54), (5, 48)], 5).m
-    s.part(tail, DRAGON, seed=2)
-    s.part(s.poly([(5, 47), (1, 43), (8, 44)]), RUST)
-    # Koerper sitzend
-    body = s.ellipse(33, 46, 12, 14)
-    s.part(body, DRAGON, fur=0.25, seed=3)
-    s.part(s.ellipse(37, 47, 6, 11) & body, BELLY, line=False)
-    for y in range(40, 58, 3):
-        s.paint((s.yy == y) & s.ellipse(37, 47, 6, 11), '#c4a87e')
-    # Rueckenzacken
-    for x, y in ((24, 35), (22, 41), (21, 47)):
-        s.part(s.poly([(x, y - 3), (x - 4, y), (x, y + 2)]), RUST, line=False)
-    # Beine und Arme
-    s.part(s.ellipse(29, 58 - s.pose.foot_lift(0), 5, 2.5) | s.ellipse(42, 58 - s.pose.foot_lift(1), 4.5, 2.5), DRAGON)
-    s.part(s.ellipse(43, 43, 2.5, 4.5, rot=-0.5), DRAGON)
-    # Kopf mit Schnauze nach rechts
-    # Hoerner und Kopfzacken hinter dem Kopf
-    s.part(s.poly([(28, 18), (19, 6), (33, 15)]), RUST)
-    s.part(s.poly([(37, 15), (39, 4), (42, 16)]), RUST)
-    s.part(s.poly([(24, 22), (15, 20), (24, 28)]), RUST)
-    head = s.ellipse(35, 25, 12, 10.5) | s.ellipse(46, 29, 8, 6)
-    s.part(head, DRAGON, fur=0.2, seed=4)
-    s.part(s.ellipse(46, 32, 7, 2.8) & head, BELLY, line=False)
-    s.eye(38, 21, 5, 6, iris='#3a2008', low='#d08a1e')
-    s.px(52, 28, '#1e2a14'), s.px(51, 27, '#1e2a14')
-    s.px(46, 34, '#5a3a2a'), s.px(47, 34, '#5a3a2a'), s.px(48, 33, '#5a3a2a')
-    s.px(43, 29, '#e89a7a'), s.px(44, 29, '#e89a7a')
+    if s.pose.eyes == 'closed' and getattr(s.pose, 'sleep', False):
+        return _wyrmling_asleep(s)
+    joy = s.pose.joy
+    # Fluegel hinter dem Koerper, durch Freiraum vom Ruecken getrennt
+    if joy:
+        # gestreckt: Fluegel als Balance weit nach oben geoeffnet
+        _wyrm_wing(s, (31, 33), (24, 6), [(19, 3), (14, 9), (13, 17)], back=True)
+        _wyrm_wing(s, (26, 35), (13, 10), [(4, 9), (1, 19), (5, 28), (13, 34)])
+    else:
+        _wyrm_wing(s, (29, 34), (21, 16), [(16, 13), (12, 19), (13, 27)], back=True)
+        _wyrm_wing(s, (25, 36), (13, 21), [(4, 21), (2, 30), (6, 37), (14, 42)])
+    # Schwanz: am Boden nach links, Spitze hochgebogen, kleine Kammzacken
+    tail = s.pen().line([(28, 57), (16, 58), (8, 55), (4, 49)], 5).m | s.pen().line([(5, 49), (6, 45)], 3).m
+    s.part(tail, JADE, seed=2)
+    for x, y in ((20, 54), (13, 53), (7, 49)):
+        s.part(s.poly([(x - 2, y + 1), (x, y - 3), (x + 2, y + 1)]), WING[1:], line=False)
+    s.part(s.poly([(4, 45), (7, 40), (9, 45)]), WING[1:])
+    # Hinterbeine (vor dem Schwanz)
+    for i, (x, w) in enumerate(((29, 5), (40, 4.5))):
+        lift = s.pose.foot_lift(i)
+        s.part(s.ellipse(x, 54 - lift, w, 5), JADE, seed=5 + i)
+        s.part(s.ellipse(x + 1, 59 - lift, w + 1, 2.2), JADE[:3])
+        for k in (0, 2):
+            s.px(x + int(w) - 1 + k, 60 - lift, '#2c4038')
+    # Rumpf: aufrecht, birnenfoermig, mit hellem Bauch nach vorn
+    body = s.ellipse(34, 45, 10.5, 12.5)
+    s.part(body, JADE, fur=0.2, seed=3)
+    belly = s.ellipse(38, 47, 5.5, 10) & body
+    s.part(belly, CREAM_BELLY, line=False)
+    for y in range(41, 57, 3):
+        s.paint(belly & (s.yy == y), '#bfb07e')
+    # Flecken auf den Schuppen: wenige grosse statt Rauschen
+    for x, y in ((27, 42), (30, 48), (26, 50), (31, 39)):
+        s.paint(s.ellipse(x, y, 1.6, 1.2) & body & ~belly, JADE_SPOT)
+    # Arm, vom Rumpf durch die Trennlinie abgesetzt
+    arm_y = 40 if joy else 44
+    arm = s.ellipse(43, arm_y, 2.6, 4.6, rot=-0.6 if not joy else 0.6)
+    s.part(arm, JADE, seed=9)
+    s.px(45, arm_y + 3, '#ded6b0') if not joy else s.px(45, arm_y - 4, '#ded6b0')
+    # Kopf: gross, rund, Schnauze nach rechts
+    # Kammfransen hinter dem Kopf: drei breite rostrote Blaetter
+    for (x0, y0), (x1, y1), (x2, y2) in (((25, 18), (19, 12), (31, 16)), ((24, 23), (17, 21), (26, 28)),
+                                         ((29, 15), (27, 8), (35, 15))):
+        s.part(s.poly([(x0, y0), (x1, y1), (x2, y2), ((x0 + x2) / 2 + 1, (y0 + y2) / 2 + 2)]), WING[1:])
+    # Zwei kurze, nach hinten gebogene Hoerner mit runder Spitze
+    s.part(s.poly([(33, 17), (30, 9), (31, 5), (34, 6), (38, 15)]), HORN)
+    s.part(s.poly([(39, 16), (38, 7), (40, 4), (43, 6), (44, 16)]), HORN)
+    head = s.ellipse(37, 25, 11.5, 10) | s.ellipse(48, 28.5, 7.5, 5.5)
+    s.part(head, JADE, fur=0.15, seed=4, lift=0.08)
+    s.part((s.ellipse(47, 32, 6.5, 2) | s.ellipse(40, 33, 4, 2.5)) & head, CREAM_BELLY, line=False)
+    for x, y in ((31, 20), (34, 18), (29, 25)):
+        s.paint(s.ellipse(x, y, 1.3, 1) & head, JADE_SPOT)
+    # Halstuch mit kupfernem Riemen und mattem Bernsteinanhaenger
+    wrap = s.ellipse(37, 37, 9.5, 3) | s.poly([(30, 37), (27, 43), (31, 42)])
+    s.part(wrap, ['#9a8c6c', '#c8b88e', '#dccb9e'])
+    s.paint(s.pen().line([(28, 39), (45, 39)]).m & s.ellipse(37, 38, 10, 4), '#875b43')
+    s.part(s.ellipse(41, 42, 2, 2.2), ['#875b43', '#bc7d51', '#d9a06a'], line=False)
+    s.px(40, 41, '#f4d494')
+    # Gesicht
+    s.eye(39, 21, 5, 6, iris='#3a2008', low='#d08a1e')
+    s.px(54, 27, '#1e2a14'), s.px(53, 27, '#1e2a14')
+    if s.pose.eyes == 'happy':
+        s.paint(s.pen().line([(46, 33), (49, 34), (52, 32)]).m, '#5a3a2a')
+    else:
+        s.paint(s.pen().line([(47, 33), (50, 33), (52, 32)]).m, '#5a3a2a')
+    s.px(44, 29, '#e89a7a'), s.px(45, 29, '#e89a7a')
+    s.outline()
+    return s
+
+
+def _wyrmling_asleep(s):
+    """Eingerollt schlafend wie auf der Tafel: Koerper liegend, Fluegel als Decke, Schwanz ums
+    Gesicht gelegt. Eigener Bodenanker - die Fuesse stehen nicht, der Bauch liegt auf."""
+    body = s.ellipse(31, 52, 19, 9)
+    s.part(body, JADE, fur=0.2, seed=13)
+    wing = s.poly([(14, 50), (22, 38), (36, 36), (48, 44), (44, 48), (32, 46), (22, 50)])
+    s.part(wing, WING, seed=14)
+    for b in (((22, 39), (28, 47)), ((36, 37), (36, 46))):
+        s.paint(s.pen().line(b).m & wing, '#6a3a28')
+    tail = s.pen().line([(13, 56), (24, 60), (44, 60), (54, 57)], 4).m
+    s.part(tail, JADE, seed=15)
+    s.part(s.poly([(54, 55), (59, 54), (56, 58)]), WING[1:])
+    head = s.ellipse(47, 50, 8.5, 6.5) | s.ellipse(54, 53, 5, 4)
+    s.part(head, JADE, seed=16, lift=0.08)
+    s.part(s.poly([(43, 45), (39, 38), (46, 44)]), HORN)
+    s.part(s.poly([(48, 44), (49, 37), (51, 45)]), HORN)
+    s.part(s.ellipse(54, 55.5, 4.5, 1.6) & head, CREAM_BELLY, line=False)
+    s.eye(47, 48, 5, 4)          # geschlossen (Pose.eyes == 'closed')
+    s.paint(s.ellipse(40, 55, 4, 2) & body, WRAP[2])
     s.outline()
     return s
 
@@ -234,18 +371,30 @@ def hootlet(p=None):
     # Umhang
     cloak = (s.ellipse(32, 46, 17, 14) & ~s.ellipse(32, 52, 10, 12)) & (s.yy >= 38)
     s.part(cloak, CLOAK, seed=5)
-    s.paint(s.ellipse(32, 39, 2.2, 2.2), '#e8b440')
-    s.px(31, 38, '#fff0b0')
+    # Sternstiche und goldener Saum
+    for x, y in ((19, 44), (23, 49), (42, 47), (45, 42), (40, 52)):
+        s.paint(cloak & (s.xx == x) & (s.yy == y), '#d8bc78')
+    hem = cloak & ~np.roll(cloak, -1, axis=0)
+    s.paint(hem, '#b69761')
+    # Messingschliesse als kleine Mondsichel
+    s.paint(s.ellipse(32, 39, 2.4, 2.4) & ~s.ellipse(33.2, 38.4, 2, 2), '#b69761')
+    s.px(31, 38, '#f0dca0')
+    # Kartenrolle an der Seite
+    roll = (s.xx >= 44) & (s.xx <= 52) & (s.yy >= 48) & (s.yy <= 51)
+    s.part(roll, ['#b8a888', '#dccca8', '#f4e8ca'])
+    s.paint((s.xx == 52) & (s.yy >= 48) & (s.yy <= 51), '#c8b48c')
+    s.paint(s.pen().line([(44, 48), (38, 40)]).m, '#6a4e36')
     # Gesichtsscheibe
     face = s.ellipse(25, 31, 8.5, 8) | s.ellipse(39, 31, 8.5, 8) | s.ellipse(32, 36, 6, 4)
     s.part(face, FACE, line=True, lift=0.25)
 
     # Brille: runde goldene Ringe
+    # Brille stark vereinfacht: duenne Messingringe
     for cx in (25, 39):
-        ring = s.ellipse(cx, 30, 6.5, 6.5) & ~s.ellipse(cx, 30, 5.2, 5.2)
-        s.paint(ring, '#c89a3a')
-        s.paint(ring & (s.yy < 28) & (s.xx < cx), '#f0d070')
-    s.paint((s.yy == 29) & (s.xx >= 31) & (s.xx <= 33), '#c89a3a')
+        ring = s.ellipse(cx, 30, 6.5, 6.5) & ~s.ellipse(cx, 30, 5.6, 5.6)
+        s.paint(ring, '#b69761')
+        s.paint(ring & (s.yy < 28) & (s.xx < cx), '#e8d090')
+    s.paint((s.yy == 29) & (s.xx >= 31) & (s.xx <= 33), '#b69761')
     s.eye(22, 27, 5, 6, iris='#2a1e14', low='#7a5228')
     s.eye(37, 27, 5, 6, iris='#2a1e14', low='#7a5228')
     # Schnabel
