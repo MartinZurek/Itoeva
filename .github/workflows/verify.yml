@@ -14,9 +14,6 @@ on:
   push:
     branches: [main, master]
   pull_request:
-    # ready_for_review: Beim Umschalten eines Entwurfs auf "bereit" laufen die teuren Jobs
-    # nach, die fuer Entwuerfe ausgelassen werden (siehe `full` unten).
-    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 # Ein neuer Push macht den laufenden Prueflauf desselben Branches gegenstandslos - abbrechen
@@ -241,15 +238,10 @@ jobs:
   # Pflegebuch, Beziehungskapitel und Fortschritt mit. Dagegen sind elf gesparte Minuten kein
   # Argument. Der Pfadfilter oben greift weiterhin - eine reine Textaenderung startet auch
   # hier keinen Emulator.
-  # **Entwuerfe sparen die Emulator-Jobs** (04.10.2026): Das Freikontingent war nach vier
-  # Tagen Oktober aufgebraucht, weil jeder Push auf einen Entwurfs-PR zwei Emulatoren anwarf -
-  # der mit Abstand teuerste Teil. Fuer Entwuerfe laufen jetzt nur `verify` (Tests, Lint, R8)
-  # und der billige Torwaechter; die Emulatoren kommen, sobald der PR auf "bereit" steht, bei
-  # jedem Push nach main und auf Knopfdruck (workflow_dispatch).
   migrations:
     name: Instrumentiert (${{ matrix.module }}, API ${{ matrix.api-level }})
     needs: changes
-    if: needs.changes.outputs.app_code == 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
+    if: needs.changes.outputs.app_code == 'true'
     runs-on: ubuntu-latest
     # Ein haengender Emulator wuerde sonst bis zum GitHub-Standard von sechs Stunden
     # weiterlaufen und entsprechend Actions-Minuten verbrauchen. Ein gesunder Lauf bleibt
