@@ -70,7 +70,7 @@ SRCS=(
   "$CORE/LibraryAnimation.kt" "$CORE/DefaultLibraryAnimations.kt" "$CORE/FrameCodec.kt"
   "$CORE/AvatarSignatureAnimations.kt" "$CORE/SkillTreeAnimations.kt"
   "$CORE/FrameCrossfade.kt" "$CORE/FrameSprite.kt" "$CORE/ReminderFrameGrid.kt"
-  "$SIM/AvatarShading.kt" "$SIM/AvatarFacing.kt" "$SIM/AvatarAccent.kt" "$SIM/AvatarPalette.kt" "$SIM/MatrixColors.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
+  "$SIM/AvatarShading.kt" "$SIM/AvatarFacing.kt" "$SIM/AvatarAccent.kt" "$SIM/AvatarPalette.kt" "$SIM/CreatureSprites.kt" "$SIM/MatrixColors.kt" "$SIM/AvatarAnimations.kt" "$SIM/AvatarBody.kt" "$SIM/AvatarGeometry.kt"
   "$SIM/AvatarReactions.kt" "$SIM/AvatarSignatureReactions.kt" "$SIM/AvatarMotifReactions.kt"
   "$SIM/AvatarSpecies.kt" "$SIM/AvatarMood.kt" "$SIM/ReactionTrigger.kt" "$SIM/GloopShape.kt"
   "$SIM/PlayScene.kt" "$SIM/PlayWorld.kt" "$SIM/PlayEffects.kt" "$SIM/PlayRoutine.kt" "$SIM/PlayInk.kt" "$SIM/PlayGroupGame.kt"
@@ -121,6 +121,7 @@ TEST_SRCS=(
   "$TEST/matrix/AvatarShadingTest.kt"
   "$TEST/matrix/AvatarFacingTest.kt"
   "$TEST/matrix/AvatarPaletteTest.kt"
+  "$TEST/matrix/CreatureSpritesTest.kt"
   "$TEST/matrix/AvatarAccentTest.kt"
   "$TEST/matrix/FacadeTest.kt"
   # PlaySceneTest kam mit NT-078 dazu: Eine Signaturaenderung an AvatarBody.feet lief hier
@@ -214,6 +215,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.AvatarShadingTest
   com.notime.glyphsim.matrix.AvatarFacingTest
   com.notime.glyphsim.matrix.AvatarPaletteTest
+  com.notime.glyphsim.matrix.CreatureSpritesTest
   com.notime.glyphsim.matrix.AvatarAccentTest
   com.notime.glyphsim.matrix.FacadeTest
   com.notime.glyphsim.matrix.PlaySceneTest

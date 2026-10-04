@@ -1,10 +1,10 @@
 """Die sechs Wesen von Itoeva, neu gezeichnet nach den Charakterstudien vom 04.10.
-(docs/concept-art/character-art-studies/). Jede Figur 64 x 64 Pixel, Fuesse auf Zeile 60.
+(docs/concept-art/character-art-studies/). Jede Figur 64 x 64 Pixel; der Bogen stellt sie auf Zeile 61 (sheets.py).
 """
 import sys
 import numpy as np
 from PIL import Image
-from sprite import Sprite
+from sprite import Sprite, Pose
 
 # Rampen dunkel -> hell, farblich verschoben (Schatten waermer/violetter, Licht gelblicher)
 FUR_ORANGE = ['#7a3a22', '#a8542c', '#d07a3a', '#e89a52', '#f6bd78']
@@ -18,8 +18,8 @@ MOSS_DARK = ['#2c4422', '#3e5e2a', '#557a36']
 SPROUT = ['#3e6a2a', '#6a9a3a', '#9cc860']
 
 
-def fennec():
-    s = Sprite()
+def fennec(p=None):
+    s = Sprite(pose=p)
     # Schwanz hinten rechts, buschig mit heller Spitze
     tail = s.ellipse(47, 48, 12, 8, rot=-0.5) | s.ellipse(53, 40, 7, 6, rot=-0.5)
     s.part(tail, FUR_ORANGE, fur=0.5, seed=1)
@@ -29,8 +29,8 @@ def fennec():
     s.part(body, FUR_ORANGE, fur=0.45, seed=3)
     s.part(s.ellipse(31, 50, 7, 9) & body, CREAM, fur=0.35, seed=4, line=False)
     # Hinterpfoten
-    for x in (24, 38):
-        s.part(s.ellipse(x, 58, 4.5, 2.6), DARK_PAW)
+    for i, x in enumerate((24, 38)):
+        s.part(s.ellipse(x, 58 - s.pose.foot_lift(i), 4.5, 2.6), DARK_PAW)
     # Ohren - riesig, das Erkennungszeichen
     le = s.ellipse(20, 21, 8, 9, rot=0.45) | s.poly([(13, 18), (8, 1), (27, 15)])
     re = s.ellipse(43, 21, 8, 9, rot=-0.45) | s.poly([(36, 15), (55, 1), (50, 18)])
@@ -53,7 +53,10 @@ def fennec():
         s.px(x, 40, '#d88a4a')
     s.px(36, 47, '#d88a4a'), s.px(38, 45, '#d88a4a')
     # Vorderpfoten halten zusammen
-    s.part(s.ellipse(27, 51, 3.2, 3) | s.ellipse(36, 51, 3.2, 3), CREAM)
+    if s.pose.joy:
+        s.part(s.ellipse(17, 39, 3, 3.5) | s.ellipse(46, 39, 3, 3.5), CREAM)
+    else:
+        s.part(s.ellipse(27, 51, 3.2, 3) | s.ellipse(36, 51, 3.2, 3), CREAM)
     # Gesicht
     s.eye(24, 27, 5, 6, iris='#2a1610', low='#6a3a22')
     s.eye(34, 27, 5, 6, iris='#2a1610', low='#6a3a22')
@@ -65,8 +68,8 @@ def fennec():
     return s
 
 
-def gloop():
-    s = Sprite()
+def gloop(p=None):
+    s = Sprite(pose=p)
     # Weicher Tropfen, unten breit auslaufend
     body = s.ellipse(32, 42, 17, 16) | s.ellipse(32, 54, 22, 7)
     body &= s.yy <= 61
@@ -86,8 +89,9 @@ def gloop():
     # Spross oben
     stem = s.pen().line([(33, 27), (34, 21), (35, 17)], 1).m
     s.paint(stem, '#4e7a2e')
-    s.part(s.ellipse(29.5, 16, 5, 2.6, rot=0.4), SPROUT)
-    s.part(s.ellipse(40, 15, 5, 2.6, rot=-0.4), SPROUT)
+    tilt = 0.9 if s.pose.joy else 0.4
+    s.part(s.ellipse(29.5, 16 - (2 if s.pose.joy else 0), 5, 2.6, rot=tilt), SPROUT)
+    s.part(s.ellipse(40, 15 - (2 if s.pose.joy else 0), 5, 2.6, rot=-tilt), SPROUT)
     # Gesicht
     s.eye(24, 37, 5, 6, iris='#1e2414', low='#3e5226')
     s.eye(35, 37, 5, 6, iris='#1e2414', low='#3e5226')
@@ -117,8 +121,8 @@ def soft(s, mask, r=1.2):
     return ndimage.gaussian_filter(mask.astype(float), r) > 0.5
 
 
-def starlet():
-    s = Sprite()
+def starlet(p=None):
+    s = Sprite(pose=p)
     cx, cy = 32, 37
     pts = []
     for k in range(10):
@@ -128,7 +132,8 @@ def starlet():
     star = soft(s, s.poly(pts), 1.6)
     s.part(star, GOLD, bulge=1.4)
     # Funkeln um sie herum
-    for x, y in ((8, 14), (55, 12), (58, 30)):
+    sparks = ((8, 14), (55, 12), (58, 30)) + (((4, 34), (30, 5), (60, 48)) if s.pose.joy else ())
+    for x, y in sparks:
         s.px(x, y, '#fff6c0')
         for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             s.px(x + dx, y + dy, '#f0c860')
@@ -141,8 +146,8 @@ def starlet():
     return s
 
 
-def puffling():
-    s = Sprite()
+def puffling(p=None):
+    s = Sprite(pose=p)
     # blaue Tupfen hinten
     back = s.ellipse(17, 26, 7, 6) | s.ellipse(29, 17, 8, 6) | s.ellipse(43, 20, 7, 6) | s.ellipse(50, 32, 5, 7)
     s.part(soft(s, back), CLOUD_BLUE, fur=0.6, seed=1)
@@ -154,8 +159,8 @@ def puffling():
     # blaue Tupfen vorn an den Seiten
     s.part(soft(s, s.ellipse(11, 44, 3.5, 4.5) | s.ellipse(53, 45, 3.5, 4.5) | s.ellipse(22, 23, 4, 3)), CLOUD_BLUE, fur=0.5, seed=3)
     # Fuesschen
-    for x in (25, 39):
-        s.part(s.ellipse(x, 59, 3.5, 2.2), CLOUD_BLUE)
+    for i, x in enumerate((25, 39)):
+        s.part(s.ellipse(x, 59 - s.pose.foot_lift(i), 3.5, 2.2), CLOUD_BLUE)
     # Umhaengetasche mit Riemen und Blatt
     strap = s.pen().line([(42, 33), (36, 45)], 1).m
     s.paint(strap, '#6e4428')
@@ -172,8 +177,8 @@ def puffling():
     return s
 
 
-def wyrmling():
-    s = Sprite()
+def wyrmling(p=None):
+    s = Sprite(pose=p)
     # Fluegel hinten, rostrot, mit Spannrippen
     wing = s.poly([(22, 34), (10, 20), (13, 30), (6, 30), (12, 38), (22, 42)])
     s.part(wing, RUST, seed=1)
@@ -193,7 +198,7 @@ def wyrmling():
     for x, y in ((24, 35), (22, 41), (21, 47)):
         s.part(s.poly([(x, y - 3), (x - 4, y), (x, y + 2)]), RUST, line=False)
     # Beine und Arme
-    s.part(s.ellipse(29, 58, 5, 2.5) | s.ellipse(42, 58, 4.5, 2.5), DRAGON)
+    s.part(s.ellipse(29, 58 - s.pose.foot_lift(0), 5, 2.5) | s.ellipse(42, 58 - s.pose.foot_lift(1), 4.5, 2.5), DRAGON)
     s.part(s.ellipse(43, 43, 2.5, 4.5, rot=-0.5), DRAGON)
     # Kopf mit Schnauze nach rechts
     # Hoerner und Kopfzacken hinter dem Kopf
@@ -211,11 +216,13 @@ def wyrmling():
     return s
 
 
-def hootlet():
-    s = Sprite()
+def hootlet(p=None):
+    s = Sprite(pose=p)
     # Koerper rund
     body = s.ellipse(32, 41, 16, 18)
     s.part(body, VIOLET, fur=0.5, seed=1)
+    if s.pose.joy:
+        s.part(s.ellipse(12, 36, 6, 9, rot=0.9) | s.ellipse(52, 36, 6, 9, rot=-0.9), VIOLET, fur=0.4, seed=9)
     # Federohren
     s.part(soft(s, s.poly([(17, 27), (12, 16), (17, 18), (19, 14), (25, 25)]), 0.8), VIOLET, fur=0.4, seed=2)
     s.part(soft(s, s.poly([(47, 27), (52, 16), (47, 18), (45, 14), (39, 25)]), 0.8), VIOLET, fur=0.4, seed=3)
@@ -244,8 +251,8 @@ def hootlet():
     # Schnabel
     s.part(s.poly([(30, 34), (34, 34), (32, 39)]), BEAK, line=False)
     # Fuesse
-    for x in (26, 38):
-        s.part(s.ellipse(x, 59, 3.5, 2), BEAK)
+    for i, x in enumerate((26, 38)):
+        s.part(s.ellipse(x, 59 - s.pose.foot_lift(i), 3.5, 2), BEAK)
     s.outline()
     return s
 

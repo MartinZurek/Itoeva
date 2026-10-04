@@ -669,6 +669,37 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-04 - Die Wesen in feiner Pixel-Art nach den Charakterstudien
+
+**Anlass:** Martin hat Charakter- und Weltstudien abgelegt (`docs/concept-art/`, PR #326) und
+wuenscht ausdruecklich einen Neuentwurf der Figuren in feinerer Pixel-Art nah an diesen Studien -
+keine Uebersetzung der bisherigen 16x19-Formen. Design am 04.10. freigegeben ("Super").
+
+**Geaendert (Charakterdarstellung):** Alle sechs Wesen sind neu gezeichnet (`tools/character-art`,
+64 x 64 Pixel): Fennec mit grossen Ohren und Schal, Gloop als Moosglibber mit Spross, Starlet als
+goldener Stern, Puffling als Wolke mit Tasche, Wyrmling als jadegruener Drache mit rostroten
+Fluegeln, Hootlet als violette Eule mit Brille und Umhang. Je Wesen ein Bogen aus elf Bildern
+(`assets/creatures/`): Ruhe mit Atmen, Blinzeln, vier Laufbilder, Freude, Schlafen.
+`AvatarSpriteView` zeichnet fuer jede Kreatur das passende Bild statt der groben Zellen.
+
+**Was gleich bleibt (TESTED BEHAVIOR):** Namen, Rollen, Entscheidungslogik, alle Ablaeufe und die
+Vergleichsbilder der Reaktionspruefung. Die groben Posen aus `AvatarAnimations` steuern weiter, was
+geschieht; `CreatureSprites.look` liest daran nur ab, welches neue Bild passt (Gehen ueber die
+Schattenseite, Springen ueber das Abheben vom Boden, Schlafen ueber geschlossene Augen im Liegen)
+und hebt das Bild so hoch, wie die grobe Pose abhebt. Fuesse auf derselben Bodenzeile wie vorher.
+
+**Verworfen:** Die alten Formen nur einzufaerben (Tonrampe und Kontur auf 16x19) - begonnen, auf
+Wunsch verworfen, weil es die Grobkoernigkeit behielt.
+
+**Grenzen / UNVERIFIED:** Am Geraet ungeprueft (Groesse neben der Kulisse, Takt). Der Clip-Export
+(`PlayClipRenderer`) zeichnet die Figuren noch im alten Stil. Eigene Bilder fuer Essen,
+Gesten und Gegenstaende in der Hand fehlen; solche Momente zeigen das naechstliegende Bild. Die
+Kulisse ist noch die LED-Welt. **Ruecksetzweg:** Bogen-Dateien entfernen - ohne Bogen faellt
+`AvatarSpriteView` auf die alte Zeichnung zurueck.
+
+**Tests:** `bash tools/reaction-preview/tests.sh` gruen, neu `CreatureSpritesTest` (Bildwahl je
+Zustand, Bogen vollstaendig, Fusszeile).
+
 ### 2026-10-03 - Itoeva 2: Finger, sichtbare Wege, Karte, Rucksack, Musik
 
 **Anlass:** Rueckmeldung nach dem ersten Spielen: keine Musik zu hoeren; Steuerkreuz und

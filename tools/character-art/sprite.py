@@ -12,6 +12,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
 
+__all__ = ['Sprite', 'Pose', 'hexrgb']
+
 BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16 - 0.5
 
 
@@ -20,8 +22,25 @@ def hexrgb(h):
     return np.array([int(h[i:i + 2], 16) for i in (0, 2, 4)], dtype=float) / 255
 
 
+class Pose:
+    """Was eine Figur gerade tut: Augen offen/zu/froh, welcher Fuss oben ist (Laufphase 0..3,
+    -1 = stehen), Freude (Arme, Fluegel, Ohren hoch)."""
+
+    def __init__(self, eyes='open', step=-1, joy=False):
+        self.eyes, self.step, self.joy = eyes, step, joy
+
+    def foot_lift(self, i):
+        """Wie weit Fuss [i] (0 = links, 1 = rechts) gerade gehoben ist."""
+        if self.step == 1:
+            return 2 if i == 0 else 0
+        if self.step == 3:
+            return 2 if i == 1 else 0
+        return 0
+
+
 class Sprite:
-    def __init__(self, w=64, h=64):
+    def __init__(self, w=64, h=64, pose=None):
+        self.pose = pose or Pose()
         self.w, self.h = w, h
         self.rgb = np.zeros((h, w, 3))
         self.a = np.zeros((h, w), bool)
@@ -98,7 +117,19 @@ class Sprite:
 
     def eye(self, x, y, w=4, h=5, iris='#2a1a14', shine='#ffffff', low=None):
         """Ein grosses, glaenzendes Auge wie in den Studien: abgerundetes Rechteck, oben links ein
-        grosser Glanzpunkt, unten ein waermerer Iriston."""
+        grosser Glanzpunkt, unten ein waermerer Iriston. Geschlossen (Schlaf, Blinzeln) ein
+        nach unten gebogener Strich, froh ein nach oben gebogener."""
+        mode = self.pose.eyes
+        if mode != 'open':
+            mid = y + h - 2
+            for i in range(w):
+                edge = i == 0 or i == w - 1
+                if mode == 'closed':
+                    yy = mid - 1 if edge else mid
+                else:
+                    yy = mid if edge else mid - 1
+                self.px(x + i, yy, iris)
+            return
         m = (self.xx >= x) & (self.xx < x + w) & (self.yy >= y) & (self.yy < y + h)
         corners = ((self.xx == x) | (self.xx == x + w - 1)) & ((self.yy == y) | (self.yy == y + h - 1))
         m &= ~corners
