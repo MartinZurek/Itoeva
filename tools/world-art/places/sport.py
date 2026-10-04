@@ -4,7 +4,9 @@ import sys
 sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
 from kit import Scene, W, H
-from px import rgb, lerp
+from px import rgb, lerp, noise
+import nature as N
+import town as T
 
 
 def build(out):
@@ -35,7 +37,17 @@ def build(out):
     court = s.ground_poly([(-1.0, 1.0), (1.05, 1.0), (1.05, 2.9), (-1.0, 2.9)])
     u, z = s.ground_uv()
     col = lerp(np.array([0.70, 0.40, 0.32]), np.array([0.80, 0.52, 0.40]), np.clip((z - 1) / 2, 0, 1)[..., None])
+    # Belag mit Abrieb, Flicken, Rissen, Laub und Kreide
+    wear = noise(W, H, 8, 51, 3)
+    col = col * (0.9 + 0.2 * wear[..., None])
+    scuff = (np.abs(u - 0.02) < 0.35) & (np.abs(z - 1.95) < 0.5)
+    col = np.where(scuff[..., None], col * 1.06, col)
     s.cv.paint(court, col)
+    s.cv.paint(court & (noise(W, H, 3, 52, 2) > 0.78), col * 0.88)
+    crack = court & (np.abs(np.sin(u * 9 + np.sin(z * 4) * 1.5)) < 0.015) & (z < 2.4)
+    s.cv.paint(crack, col * 0.65)
+    crack2 = court & (np.abs(u + 0.6 + (z - 1.3) * 0.4 + np.sin(z * 9) * 0.03) < 0.006)
+    s.cv.paint(crack2, col * 0.65)
     line = np.zeros((H, W), bool)
     for (a, b) in [((-0.95, 1.05), (1.0, 1.05)), ((-0.95, 2.85), (1.0, 2.85)), ((-0.95, 1.05), (-0.95, 2.85)),
                    ((1.0, 1.05), (1.0, 2.85)), ((0.02, 1.05), (0.02, 2.85))]:
@@ -43,7 +55,27 @@ def build(out):
     # Korbraum und Mittelkreis
     line |= s.m().line([s.project(0.55, 2.85), s.project(0.55, 2.3), s.project(0.85, 2.3), s.project(0.85, 2.85)]).a > 0
     ring = (np.hypot((u - 0.02) / 0.25, (z - 1.95) / 0.25) < 1) & ~(np.hypot((u - 0.02) / 0.22, (z - 1.95) / 0.22) < 1)
-    s.paint((line | ring) & court, '#f4ece0')
+    lines_m = (line | ring) & court
+    s.paint(lines_m, '#f4ece0')
+    s.cv.paint(lines_m & (noise(W, H, 2, 53, 2) > 0.7), col * 1.1)
+    rng = np.random.default_rng(22)
+    ys, xs = np.nonzero(court)
+    for i in rng.integers(0, len(xs), 70):
+        c = rgb(['#c8783a', '#a85a2a', '#d8a050', '#7a8a3a'][int(rng.integers(0, 4))])
+        s.cv.c[ys[i], xs[i]] = c
+    # Kreidezeichnung (Himmel und Hoelle) und Springseil
+    for k in range(4):
+        a, b = s.project(-0.75, 1.15 + k * 0.12), s.project(-0.55, 1.15 + k * 0.12)
+        s.paint(s.m().line([a, b]).a > 0, ['#f4ece0', '#f0c0d0', '#c0d8f0', '#f4ece0'][k])
+    a = s.project(-0.75, 1.15); b = s.project(-0.75, 1.51); c_ = s.project(-0.55, 1.51); d = s.project(-0.55, 1.15)
+    s.paint(s.m().line([a, b]).a > 0 | (s.m().line([c_, d]).a > 0), '#f4ece0')
+    pts = [s.project(0.3 + 0.1 * np.sin(t * 6), 1.2 + t * 0.3) for t in np.linspace(0, 1, 12)]
+    s.paint(s.m().line(pts).a > 0, '#3a8ae8')
+    # Trinkflasche und Sporttasche am Rand
+    bx_, by_ = s.project(-1.15, 1.4)
+    s.paint(s.rect(int(bx_), int(by_) - 7, int(bx_) + 2, int(by_)), '#3a8ae8')
+    s.paint(s.ellipse(bx_ + 12, by_ - 4, 8, 4), '#c84a3a')
+    s.paint(s.rect(int(bx_) + 6, int(by_) - 6, int(bx_) + 18, int(by_) - 6), '#2a2a2a')
     # Korb hinten rechts
     px, py = s.project(0.7, 2.95)
     s.paint(s.rect(int(px) + 6, int(py) - 48, int(px) + 8, int(py)), '#2e5a4a')
@@ -60,7 +92,7 @@ def build(out):
     s.paint(s.m().line([(bx - 4, by - 4), (bx + 4, by - 4)]).a > 0 & s.ellipse(bx, by - 4, 4.5, 4.5), '#4a2010')
     # Laternen, Bank am Rand, Vordergrund
     for x, y in ((40, 200), (452, 196)):
-        s.lamp(x, y, s=0.95)
+        T.ornate_lamp(s, x, y, h=52, banner='#3e5a8a' if x < 200 else '#c8644a')
     s.bench(30, 250, s=1.1)
     s.flowerbed(-10, 120, 270, s=1.4, seed=21)
     s.foliage('br', 80, 22)
