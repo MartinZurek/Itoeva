@@ -12,6 +12,20 @@ import com.notime.glyphsim.matrix.PlayScene.Station
 internal object GameSceneCatalog {
     val ALL: List<Scene> = listOf(
         Scene(
+            place = Place.ARCADE,
+            asset = "scenes/arcade.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 150f, farRight = 322f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.ARCADE, Box(135f, 69f, 280f, 161f), 190.182f, 172f),
+                Spot(Station.DOOR, Box(283f, 67f, 314f, 153f), 313.545f, 172f)
+            ),
+            exits = mapOf(),
+            door = PlayControl.doorTarget(Place.ARCADE),
+            cropTop = 0.7f
+        ),
+        Scene(
             place = Place.BATH,
             asset = "scenes/bath.png",
             farY = 172f, nearY = 236f,
@@ -39,6 +53,33 @@ internal object GameSceneCatalog {
             exits = mapOf(Dir.UP to null, Dir.DOWN to null),
             door = PlayControl.doorTarget(Place.BEDROOM),
             cropTop = 0.7f
+        ),
+        Scene(
+            place = Place.CAFE,
+            asset = "scenes/cafe.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 146f, farRight = 326f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.SEAT, Box(251.7f, 101.3f, 308.696f, 191.253f), 249.25f, 189.125f),
+                Spot(Station.DOOR, Box(281f, 67f, 314f, 153f), 312.5f, 172f)
+            ),
+            exits = mapOf(),
+            door = PlayControl.doorTarget(Place.CAFE),
+            cropTop = 0.7f
+        ),
+        Scene(
+            place = Place.CITY,
+            asset = "scenes/city.png",
+            farY = 206f, nearY = 248f,
+            farLeft = 40f, farRight = 450f, nearLeft = 20f, nearRight = 460f,
+            farHeight = 46f, nearHeight = 60f,
+            spots = listOf(
+                Spot(Station.LAMP, Box(337f, 143f, 352f, 210f), 350f, 214f),
+                Spot(Station.BENCH, Box(376f, 194f, 420f, 216f), 398f, 222f)
+            ),
+            exits = mapOf(),
+            cropTop = 0.8f
         ),
         Scene(
             place = Place.CRAFT,
@@ -135,6 +176,21 @@ internal object GameSceneCatalog {
             cropTop = 0.8f
         ),
         Scene(
+            place = Place.SHOP,
+            asset = "scenes/shop.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 150f, farRight = 322f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.RACK, Box(182f, 95f, 245f, 175f), 212.833f, 179.222f),
+                Spot(Station.CHECKOUT, Box(288f, 98f, 372f, 197f), 283.75f, 189.125f),
+                Spot(Station.DOOR, Box(150f, 67f, 181f, 153f), 154f, 172f)
+            ),
+            exits = mapOf(),
+            door = PlayControl.doorTarget(Place.SHOP),
+            cropTop = 0.7f
+        ),
+        Scene(
             place = Place.SPORT,
             asset = "scenes/sport.png",
             farY = 176f, nearY = 244f,
@@ -156,6 +212,21 @@ internal object GameSceneCatalog {
             ),
             exits = mapOf(),
             cropTop = 0.8f
+        ),
+        Scene(
+            place = Place.WORK,
+            asset = "scenes/work.png",
+            farY = 172f, nearY = 236f,
+            farLeft = 150f, farRight = 322f, nearLeft = 40f, nearRight = 430f,
+            farHeight = 42f, nearHeight = 78f,
+            spots = listOf(
+                Spot(Station.TABLE, Box(157.453f, 116.358f, 266.43f, 183.907f), 202.323f, 192f),
+                Spot(Station.WORKPLACE, Box(290f, 95f, 372f, 185f), 292.375f, 189.125f),
+                Spot(Station.DOOR, Box(150f, 67f, 181f, 153f), 154f, 172f)
+            ),
+            exits = mapOf(),
+            door = PlayControl.doorTarget(Place.WORK),
+            cropTop = 0.7f
         ),
     )
 }

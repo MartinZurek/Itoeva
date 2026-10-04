@@ -1,4 +1,42 @@
 {
+ "arcade": {
+  "blocked": [],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     135.0,
+     69.0,
+     280.0,
+     161.0
+    ],
+    "standX": 190.1818181818182,
+    "standY": 172.0,
+    "station": "ARCADE"
+   },
+   {
+    "box": [
+     283.0,
+     67.0,
+     314.0,
+     153.0
+    ],
+    "standX": 313.54545454545456,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 150,
+   "farRight": 322,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
+  }
+ },
  "bath": {
   "blocked": [
    "UP",
@@ -90,6 +128,82 @@
    "nearLeft": 40,
    "nearRight": 430,
    "nearY": 236
+  }
+ },
+ "cafe": {
+  "blocked": [],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     251.7,
+     101.3,
+     308.69620253164555,
+     191.25316455696202
+    ],
+    "standX": 249.25,
+    "standY": 189.125,
+    "station": "SEAT"
+   },
+   {
+    "box": [
+     281.0,
+     67.0,
+     314.0,
+     153.0
+    ],
+    "standX": 312.5,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 146,
+   "farRight": 326,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
+  }
+ },
+ "city": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     337.0,
+     143.0,
+     352.0,
+     210.0
+    ],
+    "standX": 350.0,
+    "standY": 214.0,
+    "station": "LAMP"
+   },
+   {
+    "box": [
+     376.0,
+     194.0,
+     420.0,
+     216.0
+    ],
+    "standX": 398.0,
+    "standY": 222.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 46,
+   "farLeft": 40,
+   "farRight": 450,
+   "farY": 206,
+   "nearHeight": 60,
+   "nearLeft": 20,
+   "nearRight": 460,
+   "nearY": 248
   }
  },
  "craft": {
@@ -372,6 +486,55 @@
    "nearY": 250
   }
  },
+ "shop": {
+  "blocked": [],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     182.0,
+     95.0,
+     245.0,
+     175.0
+    ],
+    "standX": 212.83333333333334,
+    "standY": 179.22222222222223,
+    "station": "RACK"
+   },
+   {
+    "box": [
+     288.0,
+     98.0,
+     372.0,
+     197.0
+    ],
+    "standX": 283.75,
+    "standY": 189.125,
+    "station": "CHECKOUT"
+   },
+   {
+    "box": [
+     150.0,
+     67.0,
+     181.0,
+     153.0
+    ],
+    "standX": 154.0,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 150,
+   "farRight": 322,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
+  }
+ },
  "sport": {
   "blocked": [],
   "cropTop": 0.8,
@@ -423,6 +586,55 @@
    "nearLeft": 30,
    "nearRight": 440,
    "nearY": 246
+  }
+ },
+ "work": {
+  "blocked": [],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     157.45348837209303,
+     116.35849056603773,
+     266.43023255813955,
+     183.90697674418604
+    ],
+    "standX": 202.32258064516128,
+    "standY": 192.0,
+    "station": "TABLE"
+   },
+   {
+    "box": [
+     290.0,
+     95.0,
+     372.0,
+     185.0
+    ],
+    "standX": 292.375,
+    "standY": 189.125,
+    "station": "WORKPLACE"
+   },
+   {
+    "box": [
+     150.0,
+     67.0,
+     181.0,
+     153.0
+    ],
+    "standX": 154.0,
+    "standY": 172.0,
+    "station": "DOOR"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 150,
+   "farRight": 322,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 236
   }
  }
 }

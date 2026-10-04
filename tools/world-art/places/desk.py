@@ -48,8 +48,7 @@ def build(out):
     r.glow_at(-0.02, 0.6, 2.4, r=16, color='#ff9a40', k=0.3)
     r.chair(0.12, 2.0, back_h=0.42)
     # Buecherwand links
-    r.shelf(-1.02, -0.62, 1.55, 1.75, 1.2, boards=4)
-    r.shelf(-1.02, -0.62, 1.75, 1.95, 1.2, boards=4)
+    r.wall_shelf(-1, 1.4, 2.6, Y1=1.25, boards=5)
     r.plant(0.5, 2.55, size=0.9)
     r.plant(0.86, 1.35, size=1.2)
     r.hanging_plant(400, 24, 30)

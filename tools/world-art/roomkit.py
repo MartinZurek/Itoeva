@@ -243,6 +243,31 @@ class CozyRoom:
         for x in (X0 - 0.03, X1):
             self.box(x, x + 0.03, 0.0, Y1 + 0.02, Z0, Z1, wood, side='#8a5a3a', edge='#d09868')
 
+    def wall_shelf(self, side, Z0, Z1, Y1=1.3, depth=0.24, boards=5, wood='#6a4230'):
+        """Buecherwand an der linken (-1) oder rechten (+1) Wand: Buchruecken zum Raum hin.
+        Gibt die Maske zurueck."""
+        w = self.room.half_w
+        X0, X1 = (-w, -w + depth) if side < 0 else (w - depth, w)
+        cols = ['#8a2a2e', '#2a4a7a', '#3a6a4a', '#c08a3a', '#6a3a6a', '#a85a3a', '#2a5a6a', '#d0b070', '#4a2a3a']
+        ys = list(np.linspace(0.02, Y1 - 0.06, boards + 1))
+        total = np.zeros((H, W), bool)
+        for b0, b1 in zip(ys[:-1], ys[1:]):
+            z = Z1 - 0.02
+            while z > Z0 + 0.03:
+                th = self.rng.uniform(0.025, 0.05)
+                if self.rng.random() < 0.08:
+                    z -= 0.07
+                    continue
+                ht = self.rng.uniform(0.6, 0.85) * (b1 - b0)
+                col = rgb(cols[self.rng.integers(0, len(cols))]) * self.rng.uniform(0.85, 1.1)
+                total |= self.box(X0 + 0.02, X1 - 0.03, b0 + 0.025, b0 + 0.025 + ht, z - th, z, col, top=col * 0.8, side=col)
+                z -= th + 0.004
+        for b in ys:
+            total |= self.box(X0, X1, b, b + 0.025, Z0, Z1, wood, top='#8a5a3e', edge='#c08458')
+        total |= self.box(X0, X1 + 0.005 * side, 0.0, Y1, Z0 - 0.02, Z0, '#7a4a32', side='#8a5a3a', edge='#d09868')
+        total |= self.box(X0, X1, Y1, Y1 + 0.05, Z0 - 0.04, Z1, wood, side='#8a5a3e', edge='#d09868')
+        return total
+
     def cabinet(self, X0, X1, Y1, Z0, Z1, wood='#7a4a30', drawers=3, knob='#e8c070'):
         """Kommode mit Schubladen; gibt die Maske zurueck."""
         m = self.box(X0, X1, 0.0, Y1, Z0, Z1, wood, top='#9a6444', edge='#e0a070')
