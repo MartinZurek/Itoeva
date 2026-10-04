@@ -3,14 +3,29 @@ package com.notime.glyphsim.matrix
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
+import android.content.Context
+import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 
 private val LED_OFF_COLOR = Color(MatrixColors.LED_OFF)
 private val LED_ON_COLOR = Color(MatrixColors.LED_ON)
@@ -74,6 +89,18 @@ fun AvatarSpriteView(
      */
     shadeSide: AvatarShading.Side = AvatarShading.Side.NONE
 ) {
+    // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
+    // Bogen, wird statt der groben Zellen das passende Bild daraus gezeichnet. Die grobe Pose
+    // bestimmt weiter, WAS die Figur tut; der Takt hier nur Atmen, Schritte und Blinzeln.
+    val context = LocalContext.current
+    val sheet = species?.let { CreatureSheets.get(context, it) }
+    val tick by produceState(0L, sheet != null) {
+        if (sheet == null) return@produceState
+        while (true) {
+            value = System.currentTimeMillis()
+            delay(CREATURE_TICK_MS)
+        }
+    }
     Canvas(
         modifier = modifier
             // Hoeher als breit: Das Raster hat oberhalb der Figur Kopffreiheit, damit Spruenge
@@ -88,7 +115,60 @@ fun AvatarSpriteView(
                 }
             )
     ) {
-        drawSprite(frame, brightnessScale, species, shadeSide)
+        if (sheet != null && species != null) {
+            drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L)
+        } else {
+            drawSprite(frame, brightnessScale, species, shadeSide)
+        }
+    }
+}
+
+/** Wie oft die feinen Figuren ihr Bild pruefen - fein genug fuer Schritte (140 ms). */
+private const val CREATURE_TICK_MS = 70L
+
+/** Laedt die Bilderboegen der Kreaturen einmal und haelt sie (je einige Kilobyte). */
+internal object CreatureSheets {
+    private val cache = HashMap<AvatarSpecies, ImageBitmap?>()
+
+    fun get(context: Context, species: AvatarSpecies): ImageBitmap? = synchronized(cache) {
+        cache.getOrPut(species) {
+            runCatching {
+                context.assets.open(CreatureSprites.assetFor(species)).use { BitmapFactory.decodeStream(it) }
+                    ?.asImageBitmap()
+            }.getOrNull()
+        }
+    }
+}
+
+private fun DrawScope.drawCreature(
+    sheet: ImageBitmap,
+    frame: IntArray,
+    brightnessScale: Float,
+    species: AvatarSpecies,
+    shadeSide: AvatarShading.Side,
+    timeMs: Long
+) {
+    val look = CreatureSprites.look(frame, species, shadeSide, timeMs)
+    val cell = size.width / AvatarGeometry.SIZE
+    val drawn = size.width * CreatureSprites.SCALE
+    // Die Fuesse stehen dort, wo die grobe Figur aufsetzt (siehe AvatarFooting) - angehoben um
+    // so viel, wie die grobe Pose gerade abhebt.
+    val feetY = (AvatarBodies.forSpecies(species).groundRow() + 1 - look.liftCells) * cell
+    val top = feetY - drawn * CreatureSprites.FEET / CreatureSprites.FRAME
+    val left = (size.width - drawn) / 2f
+    val dim = brightnessScale.coerceIn(0f, 1f)
+    val filter = if (dim < 1f) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(dim, dim, dim, 1f) }) else null
+    scale(scaleX = if (look.mirrored) -1f else 1f, scaleY = 1f, pivot = Offset(size.width / 2f, size.height / 2f)) {
+        drawImage(
+            image = sheet,
+            srcOffset = IntOffset(look.frame * CreatureSprites.FRAME, 0),
+            srcSize = IntSize(CreatureSprites.FRAME, CreatureSprites.FRAME),
+            dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
+            dstSize = IntSize(drawn.roundToInt(), drawn.roundToInt()),
+            colorFilter = filter,
+            // Ohne Glaettung: Jeder Pixel des Bogens bleibt ein scharfes Quadrat.
+            filterQuality = FilterQuality.None
+        )
     }
 }
 
