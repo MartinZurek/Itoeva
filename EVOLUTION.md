@@ -669,6 +669,37 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-04 - Itoeva 2: Alle Orte nach der Concept Art
+
+**Anlass:** Martin: "Mach mal alle Figuren und alle Orte so gut es geht wie in der Concept Art
+Vorlage". Die Figuren stehen in #328; hier die Orte, nach den Weltstudien in
+`docs/concept-art/world-studies/` (Wohnraum, Park mit Sportplatz, Waldsee, Uferviertel).
+
+**Geaendert (nur Spiel-Variante):** Alle 25 Orte sind gemalt (480 x 270, `tools/world-art/places/`):
+- **Daheim**, nach der Wohnraum-Studie (Fachwerk, Vertaefelung, Lampenlicht): Wohnzimmer mit Sofa,
+  Fernsehmoebel und Haustuer, Schlafzimmer, Kueche, Bad, Schreibzimmer, Werkstatt, Leseecke.
+- **Stadt**, nach dem Uferviertel: Strasse am Fluss, Marktplatz am Abend, Laden, Cafe, Arbeitsstube,
+  Spielhalle.
+- **Gruen**, nach Park- und Waldsee-Studie: Park, Sportplatz, Waldsee.
+- **Wildnis**, frei im selben Stil: Wiese, Wald, Berge, Ebene, Lager, Strand, Dschungel, Sumpf,
+  Grotte.
+
+Jedes Skript liefert mit dem Bild die Spielangaben (Gehflaeche, Plaetze, gesperrte Raender);
+`build_all.py` schreibt daraus `GameSceneCatalog.kt`. Die Plaetze sind genau die, die der Ort
+schon hatte (`PlayScene.stationsAt`) - keine neue Handlung, kein neuer Ort, keine neue Mechanik.
+Tueren fuehren wie bisher (`PlayControl.doorTarget`).
+
+**Vereinfacht gegenueber den Studien:** keine Figuren im Bild, Moebel als Quader in Zentral-
+perspektive, je Ort eine feste Tageszeit, Wildnis ohne eigene Vorlage.
+
+**Grenzen / UNVERIFIED:** Am Geraet ungeprueft (Treffer, Gehflaeche je Bildschirmformat).
+**Ruecksetzweg:** Bild und Katalog-Eintrag entfernen - ohne Bild faellt ein Ort auf die
+Zellen-Kulisse zurueck.
+
+**Tests:** `bash tools/reaction-preview/tests.sh` gruen; `GameScenesTest` prueft jetzt jeden
+gemalten Ort (Bild vorhanden, Platz erlaubt, erreichbar und auf begehbarem Boden, kein Ort
+abgeschnitten, jeder Ort gemalt).
+
 ### 2026-10-04 - Itoeva 2: Gemalte Orte mit Tiefe
 
 **Anlass:** Rueckmeldung zur Farbpalette auf der LED-Kulisse: zu grob, zu flach - gewuenscht sind

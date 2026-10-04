@@ -59,11 +59,11 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 
 Weg von der groben LED-Kulisse: Orte als feine Pixel-Art mit Tiefe, gemalt als Code
 (`tools/world-art`, 480 x 270 Bildpixel, nur in der Spiel-Variante unter
-`src/game/assets/scenes`). Bisher **Park am Meer** (Abendrot) und **Lesezimmer** (Wohnzimmer).
+`src/game/assets/scenes`). Seit dem 04.10. sind **alle 25 Orte** gemalt, nach den Weltstudien in
+`docs/concept-art/world-studies/` (siehe `tools/world-art/README.md`).
 `GameScenes` beschreibt je Bild Gehflaeche (Trapez in die Tiefe), Figurgroesse nach Tiefe,
-antippbare Plaetze und Ausgaenge (Zimmer <-> Park); Doppeltipp laesst die Figur selbst hingehen.
-Orte ohne Bild bleiben wie bisher. Offen: weitere Orte, Tageszeiten, Figur `hero.png` (Fuchs) ist
-gezeichnet, aber nicht eingebaut - die Wesen selbst sind seit #327 in feiner Pixel-Art.
+antippbare Plaetze und Ausgaenge; die Angaben stehen im generierten `GameSceneCatalog`.
+Doppeltipp laesst die Figur selbst hingehen. Offen: Tageszeiten je Ort, Pruefung am Geraet.
 
 ## Naechste Stufen (Vorschlag, nicht freigegeben)
 

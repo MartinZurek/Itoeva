@@ -89,6 +89,33 @@
    "nearY": 236
   }
  },
+ "beach": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     295.0,
+     225.0,
+     347.0,
+     240.0
+    ],
+    "standX": 320.0,
+    "standY": 244.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 44,
+   "farLeft": 30,
+   "farRight": 430,
+   "farY": 206,
+   "nearHeight": 60,
+   "nearLeft": 20,
+   "nearRight": 440,
+   "nearY": 250
+  }
+ },
  "bedroom": {
   "blocked": [
    "UP",
@@ -166,6 +193,33 @@
    "nearLeft": 40,
    "nearRight": 430,
    "nearY": 236
+  }
+ },
+ "camp": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     305.0,
+     201.0,
+     357.0,
+     216.0
+    ],
+    "standX": 330.0,
+    "standY": 222.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 50,
+   "farRight": 430,
+   "farY": 196,
+   "nearHeight": 60,
+   "nearLeft": 20,
+   "nearRight": 450,
+   "nearY": 248
   }
  },
  "city": {
@@ -288,6 +342,87 @@
    "nearY": 236
   }
  },
+ "forest": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     343.0,
+     215.0,
+     399.0,
+     230.0
+    ],
+    "standX": 370.0,
+    "standY": 234.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 60,
+   "farRight": 420,
+   "farY": 196,
+   "nearHeight": 60,
+   "nearLeft": 30,
+   "nearRight": 440,
+   "nearY": 248
+  }
+ },
+ "grotto": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     278.0,
+     211.0,
+     321.0,
+     228.0
+    ],
+    "standX": 300.0,
+    "standY": 232.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 44,
+   "farLeft": 60,
+   "farRight": 420,
+   "farY": 214,
+   "nearHeight": 58,
+   "nearLeft": 40,
+   "nearRight": 440,
+   "nearY": 250
+  }
+ },
+ "jungle": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     305.0,
+     219.0,
+     357.0,
+     234.0
+    ],
+    "standX": 330.0,
+    "standY": 238.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 44,
+   "farLeft": 70,
+   "farRight": 410,
+   "farY": 214,
+   "nearHeight": 60,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 250
+  }
+ },
  "kitchen": {
   "blocked": [
    "UP",
@@ -392,6 +527,60 @@
    "nearY": 236
   }
  },
+ "meadow": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     305.0,
+     201.0,
+     357.0,
+     216.0
+    ],
+    "standX": 330.0,
+    "standY": 222.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 50,
+   "farRight": 430,
+   "farY": 196,
+   "nearHeight": 60,
+   "nearLeft": 20,
+   "nearRight": 440,
+   "nearY": 248
+  }
+ },
+ "mountains": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     306.0,
+     206.0,
+     354.0,
+     224.0
+    ],
+    "standX": 330.0,
+    "standY": 228.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 40,
+   "farLeft": 60,
+   "farRight": 420,
+   "farY": 196,
+   "nearHeight": 60,
+   "nearLeft": 30,
+   "nearRight": 440,
+   "nearY": 248
+  }
+ },
  "nook": {
   "blocked": [
    "UP",
@@ -469,6 +658,33 @@
    "nearLeft": 40,
    "nearRight": 440,
    "nearY": 240
+  }
+ },
+ "plains": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     125.0,
+     211.0,
+     177.0,
+     226.0
+    ],
+    "standX": 150.0,
+    "standY": 232.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 40,
+   "farLeft": 50,
+   "farRight": 430,
+   "farY": 192,
+   "nearHeight": 60,
+   "nearLeft": 20,
+   "nearRight": 450,
+   "nearY": 248
   }
  },
  "pond": {
@@ -586,6 +802,33 @@
    "nearLeft": 30,
    "nearRight": 440,
    "nearY": 246
+  }
+ },
+ "swamp": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     345.0,
+     209.0,
+     397.0,
+     224.0
+    ],
+    "standX": 370.0,
+    "standY": 228.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 44,
+   "farLeft": 60,
+   "farRight": 420,
+   "farY": 210,
+   "nearHeight": 58,
+   "nearLeft": 30,
+   "nearRight": 440,
+   "nearY": 250
   }
  },
  "work": {

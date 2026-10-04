@@ -235,7 +235,7 @@ class Scene:
             pts_r.append((cx + wd, y))
         m = self.poly(pts_l + pts_r[::-1])
         self.shade(m, list(col), light=(-1, -0.15))
-        bark = m & (noise(W, H, 2, int(x) + 5, 1) > 0.62) & ((self.xx + self.yy // 6) % 3 == 0)
+        bark = m & (noise(W, H, 2, abs(int(x)) + 5, 1) > 0.62) & ((self.xx + self.yy // 6) % 3 == 0)
         self.cv.paint(bark, self.cv.c * 0.78)
         if branches and hgt > 40:
             for side, f in ((-1, 0.7), (1, 0.82)):
@@ -583,6 +583,109 @@ class Scene:
             self.paint(self.ellipse(x + 2, y + depth + 1, 2.5, 1.6), c1 if ((x - x0) // 5) % 2 == 0 else c2)
 
     # ------------------------------------------------------------------ Spielangaben
+    # ------------------------------------------------------------------ Wildnis
+    def rock(self, x, y, rx, ry, cols=('#4a4a48', '#6a6a60', '#8a867a', '#b0a894'), seed=0, moss=None):
+        m = self.ellipse(x, y - ry * 0.6, rx, ry)
+        m &= self.yy <= y
+        self.shadow(x + rx * 0.2, y, rx * 1.1, max(1.5, ry * 0.25))
+        self.shade(m, list(cols), seed=seed, bulge=1.2)
+        if moss:
+            top = m & ~np.roll(m, 2, axis=0)
+            self.paint(top, moss)
+        self.outline(m, strength=0.4)
+        return m
+
+    def log_seat(self, x, y, s=1.0, bark=('#3e2c22', '#5e4232', '#7e5c44', '#9a7656')):
+        """Liegender Baumstamm als Sitzplatz, Vorderkante auf y; gibt die Trefferflaeche zurueck."""
+        w, h = int(46 * s), int(9 * s)
+        self.shadow(x + 3, y, w * 0.55, 2.5 * s, 0.6)
+        body = self.rect(x - w // 2, y - h, x + w // 2, y)
+        self.shade(body, list(bark), light=(-0.3, -1))
+        for k in range(x - w // 2 + 3, x + w // 2 - 4, 5):
+            self.paint(self.rect(k, y - h + 2, k + 2, y - h + 2), bark[0])
+        end = self.ellipse(x + w // 2, y - h / 2, 3 * s, h / 2 + 0.5)
+        self.paint(end, '#c8a070')
+        self.paint(self.ellipse(x + w // 2, y - h / 2, 1.5 * s, h / 4), '#9a7048')
+        self.paint(self.rect(x - w // 2 + 4, y - h - 1, x + w // 2 - 4, y - h), '#5a8a3a')
+        return (x - w // 2 - 2, y - h - 4, x + w // 2 + 4, y + 2)
+
+    def stone_seat(self, x, y, s=1.0):
+        self.rock(x - 10 * s, y, 12 * s, 8 * s, seed=3)
+        self.rock(x + 10 * s, y + 1, 10 * s, 7 * s, seed=4)
+        slab = self.rect(int(x - 22 * s), int(y - 12 * s), int(x + 22 * s), int(y - 8 * s))
+        self.shade(slab, ['#5a5852', '#7a766c', '#9a948a', '#c4bcae'], light=(-0.3, -1))
+        return (int(x - 24 * s), int(y - 16 * s), int(x + 24 * s), y + 2)
+
+    def campfire(self, x, y, s=1.0):
+        for k in range(8):
+            a = k / 8 * 2 * np.pi
+            self.rock(int(x + np.cos(a) * 9 * s), int(y + np.sin(a) * 3 * s), 3 * s, 2.5 * s, seed=k)
+        for d in (-1, 1):
+            self.paint(self.m().line([(x - 7 * s, y - 1), (x + 7 * s, y - 4 * s * d - 1)], max(1, int(2 * s))).a > 0, '#5a3a26')
+        flame = self.poly([(x - 5 * s, y - 2), (x - 2 * s, y - 14 * s), (x, y - 8 * s), (x + 2 * s, y - 17 * s), (x + 5 * s, y - 2)])
+        self.paint(flame, '#e8602a')
+        self.paint(self.poly([(x - 3 * s, y - 2), (x, y - 11 * s), (x + 3 * s, y - 2)]), '#f8c040')
+        self.paint(self.poly([(x - 1.5 * s, y - 2), (x, y - 6 * s), (x + 1.5 * s, y - 2)]), '#fff4c0')
+        self.cv.add(glow(W, H, [(x, y - 6 * s, 1.0)], 24 * s, '#ff8a30', 0.4, steps=4))
+
+    def tent(self, x, y, w=60, h=40, cloth=('#7a4a2a', '#a8683a', '#c8884a', '#e0a860')):
+        body = self.poly([(x - w / 2, y), (x, y - h), (x + w / 2, y)])
+        self.shade(body, list(cloth), light=(-1, -0.2))
+        door = self.poly([(x - w * 0.14, y), (x, y - h * 0.62), (x + w * 0.14, y)])
+        self.paint(door, '#3a2418')
+        self.cv.add(glow(W, H, [(x, y - h * 0.2, 1.0)], 6, '#ffb050', 0.4, steps=3))
+        self.paint(self.m().line([(x, y - h), (x, y - h - 6)]).a > 0, '#5a3a26')
+        self.paint(self.m().line([(x - w / 2, y), (x - w / 2 - 8, y + 2)]).a > 0, '#c8b898')
+        self.paint(self.m().line([(x + w / 2, y), (x + w / 2 + 8, y + 2)]).a > 0, '#c8b898')
+        self.outline(body, strength=0.35)
+
+    def palm(self, x, base, h, seed=0, lean=0.25):
+        pts = [(x + lean * h * (t ** 1.5), base - h * t) for t in np.linspace(0, 1, 12)]
+        for k, (px_, py_) in enumerate(pts[:-1]):
+            self.paint(self.m().line([(px_, py_), pts[k + 1]], max(2, int(h / 22))).a > 0,
+                       ['#7a5a3a', '#9a7448'][k % 2])
+        tx, ty = pts[-1]
+        r = np.random.default_rng(seed)
+        for k in range(8):
+            a = -np.pi / 2 + (k - 3.5) / 3.5 * 2.2 + r.uniform(-0.15, 0.15)
+            ln = h * r.uniform(0.35, 0.5)
+            p = [(tx + np.cos(a) * ln * t, ty + np.sin(a) * ln * t + ln * 0.5 * t * t) for t in np.linspace(0, 1, 8)]
+            self.paint(self.m().line(p, max(2, int(h / 25))).a > 0, ['#2e5a2a', '#3e7a34', '#5a9a40'][k % 3])
+            for j, (qx, qy) in enumerate(p[1:]):
+                if j % 2 == 0:
+                    self.paint(self.m().line([(qx, qy), (qx + 3 * np.cos(a + 1.2), qy + 4)]).a > 0, '#3e7a34')
+        self.paint(self.ellipse(tx, ty + 2, 3, 2), '#6a4a2a')
+
+    def mushroom(self, x, y, s=1.0, cap='#c84a3a', glow_c=None):
+        self.paint(self.rect(int(x - 1 * s), int(y - 5 * s), int(x + 1 * s), y), '#f0e6d0')
+        capm = self.ellipse(x, y - 5 * s, 4 * s, 2.5 * s) & (self.yy <= y - 5 * s + 0.5)
+        self.paint(capm, cap)
+        self.paint(self.rect(int(x - 2 * s), int(y - 7 * s), int(x - 1 * s), int(y - 7 * s)), '#f4f0e0')
+        if glow_c:
+            self.cv.add(glow(W, H, [(x, y - 5 * s, 1.0)], 5 * s, glow_c, 0.4, steps=3))
+
+    def crystal(self, x, y, h, col=('#3a5aa8', '#5a8ae0', '#8ac0f0', '#d8f0ff'), glow_c='#6ab0ff'):
+        m = self.poly([(x - h * 0.18, y), (x - h * 0.12, y - h * 0.8), (x, y - h), (x + h * 0.14, y - h * 0.75), (x + h * 0.18, y)])
+        self.shade(m, list(col), light=(-1, -0.3))
+        self.paint((self.m().line([(x, y - h), (x, y)]).a > 0) & m, col[3])
+        self.cv.add(glow(W, H, [(x, y - h * 0.5, 1.0)], h * 0.6, glow_c, 0.35, steps=3))
+
+    def reeds(self, x0, x1, y0, y1, seed=0, col='#6a7a3a', head='#7a4a2a', density=3):
+        rr = np.random.default_rng(seed)
+        for x in range(int(x0), int(x1), density):
+            h = int(rr.uniform(12, 32))
+            base = int(rr.uniform(y0, y1))
+            self.paint(self.m().line([(x, base), (x + rr.uniform(-2, 2), base - h)]).a > 0, col)
+            if rr.random() < 0.3:
+                self.paint(self.ellipse(x, base - h + 2, 1, 3), head)
+
+    def fireflies(self, n, x0, x1, y0, y1, seed=0, col='#f0f080'):
+        rr = np.random.default_rng(seed)
+        pts = [(rr.uniform(x0, x1), rr.uniform(y0, y1), 1.0) for _ in range(n)]
+        for x, y, _ in pts:
+            self.cv.c[int(y), int(x)] = rgb('#ffffe0')
+        self.cv.add(glow(W, H, pts, 2.5, col, 0.6, steps=2))
+
     def dusk(self, k=0.5, tint='#5a5a9a', sky=None, lights=(), windows=()):
         """Abendstimmung: alles ausser dem Himmel kuehl abgedunkelt, dann warme Lichter darueber.
         [sky] ist ein Abzug der Leinwand direkt nach dem Himmel - was sich seither nicht geaendert
