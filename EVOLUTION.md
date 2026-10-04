@@ -669,6 +669,50 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-04 - Fennec, Gloop, Starlet, Puffling, Hootlet nach den Fantasy-Studien
+
+**Anlass:** Martin: "Mach mal alle Figuren ... so gut es geht wie in der Concept Art Vorlage" - die
+uebrigen fuenf Wesen nach demselben Vorgehen wie Wyrmling (Briefs in
+`docs/concept-art/character-conceptbook/briefs/`).
+
+**Uebernommen:** je die Startpalette des Briefs und die Reiseakzente - Fennec: kurzer rostroter
+Reisemantel mit Zickzacksaum statt Schal, tuerkiser Wegstein als Schliesse, kleine Flasche;
+Gloop: Blattschulter mit Bluete, matter Samenstein im Inneren, seitliche Tasche, Glasglanz
+ersetzt durch eine helle Innenkante (Vorgabe des Briefs); Starlet: indigoblauer Himmelskragen
+mit Sternpunkten und Mondanhaenger, alle fuenf Spitzen frei; Puffling: salbeifarbene Kapuze
+hinter dem Kopf mit Blattschliesse, Tasche bleibt klein; Hootlet: indigofarbener Sternenumhang
+mit Goldsaum, Mondsichel-Schliesse aus Messing, Kartenrolle, Brille auf duenne Ringe vereinfacht.
+
+**Vereinfacht:** Muster (Mantelzacken, Sternstiche) auf wenige Pixel; keine eigenen Front- und
+Rueckansichten; Silhouetten, Gesichter, Groessen und Fusszeile unveraendert. **UNVERIFIED:** am
+Geraet ungeprueft. **Ruecksetzweg:** Boegen aus `main` zurueckholen. **Tests:**
+`bash tools/reaction-preview/tests.sh` gruen.
+
+### 2026-10-04 - Wyrmling nach der Fantasy-Studie
+
+**Anlass:** Character-Konzeptbuch (`docs/concept-art/character-conceptbook/`, PR #326) mit
+fantasyhafteren Varianten der sechs Wesen. Auftrag: genau eine Figur vorsichtig weiterentwickeln.
+Gewaehlt Wyrmling, weil seine bisherige Fassung am schlechtesten las: ein grosser, zackiger Fluegel
+verschmolz mit Ruecken und Hoernern, Arm und Rumpf waren nicht getrennt.
+
+**Uebernommen aus der Studie:** Startpalette des Briefs (Jade #354C43..#98AC72, Rost #875B43..#D9A06A,
+Creme #D2CA92/#EEE0B1); zwei getrennte Fluegelhaeute mit Handwurzel und Fingerknochen, durch
+Freiraum vom Ruecken abgesetzt, der hintere dunkler; kurze, nach hinten gebogene Hoerner mit
+rostroten Kammfransen; kurzes Halstuch mit kupfernem Riemen und mattem Bernsteinanhaenger;
+Kammzacken auf dem Schwanz; eigene Schlafpose (eingerollt, Fluegel als Decke) statt der
+zusammengesunkenen Sitzfigur; Freude als Strecken mit weit geoeffneten Fluegeln.
+
+**Vereinfacht (Lesbarkeit/Technik):** Schuppenmuster auf wenige grosse Flecken; Halstuch ohne
+Faltenwurf; keine Krallen; nur die rechts blickende Ansicht (das Spiel spiegelt beim Gehen nach
+links), keine Front- und Rueckansicht; das Tragen eines Buendels hat kein eigenes Bild, weil das
+Bildwahl-System (`CreatureSprites`) dafuer keinen Zustand kennt. Groesse unveraendert (nicht auf die
+relative 68 der Studie skaliert), Bodenzeile und Bogenformat gleich.
+
+**Was gleich bleibt:** Name, Rolle, Entscheidungslogik, Ablaeufe; die anderen fuenf Boegen sind
+byteidentisch. **UNVERIFIED:** am Geraet ungeprueft. **Ruecksetzweg:** alten Bogen
+`assets/creatures/wyrmling.png` zurueckholen. **Tests:** `bash tools/reaction-preview/tests.sh`
+gruen (`CreatureSpritesTest` prueft Bogen, Bildzahl und Fusszeile).
+
 ### 2026-10-04 - Itoeva 2: Gemalte Orte mit Tiefe
 
 **Anlass:** Rueckmeldung zur Farbpalette auf der LED-Kulisse: zu grob, zu flach - gewuenscht sind
