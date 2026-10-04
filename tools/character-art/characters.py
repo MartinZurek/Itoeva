@@ -177,41 +177,130 @@ def puffling(p=None):
     return s
 
 
+# Wyrmling nach der Fantasy-Studie vom 04.10. (character-conceptbook/briefs/wyrmling.md):
+# Startpalette #354C43 #607C57 #98AC72 #D2CA92 #875B43 #BC7D51 #D9A06A #EEE0B1.
+JADE = ['#2c4038', '#3f5a48', '#5a7652', '#7c955f', '#9cb075']
+JADE_SPOT = '#b2c084'
+WING = ['#7a3a26', '#a8583a', '#cf7e4c', '#e8a46c']
+HORN = ['#5a3a28', '#875b43', '#a8724a']
+CREAM_BELLY = ['#a8986a', '#cfc48e', '#e8dcac', '#f2e8c4']
+WRAP = ['#a69a7c', '#cfc3a2', '#eee0b1']
+
+
+def _wyrm_wing(s, shoulder, wrist, tips, back=False):
+    """Ein Fledermausfluegel als getrennte Flaeche: Oberarm zur Handwurzel, von dort Fingerknochen
+    zu den Spitzen, dazwischen die Haut in Bogen bis zurueck an den Koerper. Der hintere Fluegel
+    ist dunkler, damit beide getrennt lesbar bleiben."""
+    sx, sy = shoulder
+    wx, wy = wrist
+    pts = [(sx, sy), (wx, wy)]
+    for k, (tx, ty) in enumerate(tips):
+        pts.append((tx, ty))
+        nxt = tips[k + 1] if k + 1 < len(tips) else (sx - 2, sy + 9)
+        # Bogen der Haut zwischen zwei Fingern: nach innen eingezogen
+        pts.append(((tx + nxt[0]) / 2 + 2.5, (ty + nxt[1]) / 2 + 0.5))
+    pts.append((sx - 2, sy + 9))
+    m = s.poly(pts)
+    s.part(m, WING[:3] if back else WING, seed=31 if back else 32)
+    bone = '#4e2a1e' if back else '#6a3a28'
+    for tx, ty in tips:
+        s.paint(s.pen().line([(wx, wy), (tx, ty)]).m & m, bone)
+    s.paint(s.pen().line([(sx, sy), (wx, wy)], 2).m, HORN[1] if back else HORN[2])
+    s.px(wx, wy, '#d9a06a')
+    return m
+
+
 def wyrmling(p=None):
     s = Sprite(pose=p)
-    # Fluegel hinten, rostrot, mit Spannrippen
-    wing = s.poly([(22, 34), (10, 20), (13, 30), (6, 30), (12, 38), (22, 42)])
-    s.part(wing, RUST, seed=1)
-    for a, b in (((11, 22), (21, 35)), ((8, 30), (21, 38))):
-        s.paint(s.pen().line([a, b]).m & wing, '#5e2418')
-    # Schwanz, der sich am Boden ringelt
-    tail = s.pen().line([(30, 58), (14, 58), (6, 54), (5, 48)], 5).m
-    s.part(tail, DRAGON, seed=2)
-    s.part(s.poly([(5, 47), (1, 43), (8, 44)]), RUST)
-    # Koerper sitzend
-    body = s.ellipse(33, 46, 12, 14)
-    s.part(body, DRAGON, fur=0.25, seed=3)
-    s.part(s.ellipse(37, 47, 6, 11) & body, BELLY, line=False)
-    for y in range(40, 58, 3):
-        s.paint((s.yy == y) & s.ellipse(37, 47, 6, 11), '#c4a87e')
-    # Rueckenzacken
-    for x, y in ((24, 35), (22, 41), (21, 47)):
-        s.part(s.poly([(x, y - 3), (x - 4, y), (x, y + 2)]), RUST, line=False)
-    # Beine und Arme
-    s.part(s.ellipse(29, 58 - s.pose.foot_lift(0), 5, 2.5) | s.ellipse(42, 58 - s.pose.foot_lift(1), 4.5, 2.5), DRAGON)
-    s.part(s.ellipse(43, 43, 2.5, 4.5, rot=-0.5), DRAGON)
-    # Kopf mit Schnauze nach rechts
-    # Hoerner und Kopfzacken hinter dem Kopf
-    s.part(s.poly([(28, 18), (19, 6), (33, 15)]), RUST)
-    s.part(s.poly([(37, 15), (39, 4), (42, 16)]), RUST)
-    s.part(s.poly([(24, 22), (15, 20), (24, 28)]), RUST)
-    head = s.ellipse(35, 25, 12, 10.5) | s.ellipse(46, 29, 8, 6)
-    s.part(head, DRAGON, fur=0.2, seed=4)
-    s.part(s.ellipse(46, 32, 7, 2.8) & head, BELLY, line=False)
-    s.eye(38, 21, 5, 6, iris='#3a2008', low='#d08a1e')
-    s.px(52, 28, '#1e2a14'), s.px(51, 27, '#1e2a14')
-    s.px(46, 34, '#5a3a2a'), s.px(47, 34, '#5a3a2a'), s.px(48, 33, '#5a3a2a')
-    s.px(43, 29, '#e89a7a'), s.px(44, 29, '#e89a7a')
+    if s.pose.eyes == 'closed' and getattr(s.pose, 'sleep', False):
+        return _wyrmling_asleep(s)
+    joy = s.pose.joy
+    # Fluegel hinter dem Koerper, durch Freiraum vom Ruecken getrennt
+    if joy:
+        # gestreckt: Fluegel als Balance weit nach oben geoeffnet
+        _wyrm_wing(s, (31, 33), (24, 6), [(19, 3), (14, 9), (13, 17)], back=True)
+        _wyrm_wing(s, (26, 35), (13, 10), [(4, 9), (1, 19), (5, 28), (13, 34)])
+    else:
+        _wyrm_wing(s, (29, 34), (21, 16), [(16, 13), (12, 19), (13, 27)], back=True)
+        _wyrm_wing(s, (25, 36), (13, 21), [(4, 21), (2, 30), (6, 37), (14, 42)])
+    # Schwanz: am Boden nach links, Spitze hochgebogen, kleine Kammzacken
+    tail = s.pen().line([(28, 57), (16, 58), (8, 55), (4, 49)], 5).m | s.pen().line([(5, 49), (6, 45)], 3).m
+    s.part(tail, JADE, seed=2)
+    for x, y in ((20, 54), (13, 53), (7, 49)):
+        s.part(s.poly([(x - 2, y + 1), (x, y - 3), (x + 2, y + 1)]), WING[1:], line=False)
+    s.part(s.poly([(4, 45), (7, 40), (9, 45)]), WING[1:])
+    # Hinterbeine (vor dem Schwanz)
+    for i, (x, w) in enumerate(((29, 5), (40, 4.5))):
+        lift = s.pose.foot_lift(i)
+        s.part(s.ellipse(x, 54 - lift, w, 5), JADE, seed=5 + i)
+        s.part(s.ellipse(x + 1, 59 - lift, w + 1, 2.2), JADE[:3])
+        for k in (0, 2):
+            s.px(x + int(w) - 1 + k, 60 - lift, '#2c4038')
+    # Rumpf: aufrecht, birnenfoermig, mit hellem Bauch nach vorn
+    body = s.ellipse(34, 45, 10.5, 12.5)
+    s.part(body, JADE, fur=0.2, seed=3)
+    belly = s.ellipse(38, 47, 5.5, 10) & body
+    s.part(belly, CREAM_BELLY, line=False)
+    for y in range(41, 57, 3):
+        s.paint(belly & (s.yy == y), '#bfb07e')
+    # Flecken auf den Schuppen: wenige grosse statt Rauschen
+    for x, y in ((27, 42), (30, 48), (26, 50), (31, 39)):
+        s.paint(s.ellipse(x, y, 1.6, 1.2) & body & ~belly, JADE_SPOT)
+    # Arm, vom Rumpf durch die Trennlinie abgesetzt
+    arm_y = 40 if joy else 44
+    arm = s.ellipse(43, arm_y, 2.6, 4.6, rot=-0.6 if not joy else 0.6)
+    s.part(arm, JADE, seed=9)
+    s.px(45, arm_y + 3, '#ded6b0') if not joy else s.px(45, arm_y - 4, '#ded6b0')
+    # Kopf: gross, rund, Schnauze nach rechts
+    # Kammfransen hinter dem Kopf: drei breite rostrote Blaetter
+    for (x0, y0), (x1, y1), (x2, y2) in (((25, 18), (19, 12), (31, 16)), ((24, 23), (17, 21), (26, 28)),
+                                         ((29, 15), (27, 8), (35, 15))):
+        s.part(s.poly([(x0, y0), (x1, y1), (x2, y2), ((x0 + x2) / 2 + 1, (y0 + y2) / 2 + 2)]), WING[1:])
+    # Zwei kurze, nach hinten gebogene Hoerner mit runder Spitze
+    s.part(s.poly([(33, 17), (30, 9), (31, 5), (34, 6), (38, 15)]), HORN)
+    s.part(s.poly([(39, 16), (38, 7), (40, 4), (43, 6), (44, 16)]), HORN)
+    head = s.ellipse(37, 25, 11.5, 10) | s.ellipse(48, 28.5, 7.5, 5.5)
+    s.part(head, JADE, fur=0.15, seed=4, lift=0.08)
+    s.part((s.ellipse(47, 32, 6.5, 2) | s.ellipse(40, 33, 4, 2.5)) & head, CREAM_BELLY, line=False)
+    for x, y in ((31, 20), (34, 18), (29, 25)):
+        s.paint(s.ellipse(x, y, 1.3, 1) & head, JADE_SPOT)
+    # Halstuch mit kupfernem Riemen und mattem Bernsteinanhaenger
+    wrap = s.ellipse(37, 37, 9.5, 3) | s.poly([(30, 37), (27, 43), (31, 42)])
+    s.part(wrap, ['#9a8c6c', '#c8b88e', '#dccb9e'])
+    s.paint(s.pen().line([(28, 39), (45, 39)]).m & s.ellipse(37, 38, 10, 4), '#875b43')
+    s.part(s.ellipse(41, 42, 2, 2.2), ['#875b43', '#bc7d51', '#d9a06a'], line=False)
+    s.px(40, 41, '#f4d494')
+    # Gesicht
+    s.eye(39, 21, 5, 6, iris='#3a2008', low='#d08a1e')
+    s.px(54, 27, '#1e2a14'), s.px(53, 27, '#1e2a14')
+    if s.pose.eyes == 'happy':
+        s.paint(s.pen().line([(46, 33), (49, 34), (52, 32)]).m, '#5a3a2a')
+    else:
+        s.paint(s.pen().line([(47, 33), (50, 33), (52, 32)]).m, '#5a3a2a')
+    s.px(44, 29, '#e89a7a'), s.px(45, 29, '#e89a7a')
+    s.outline()
+    return s
+
+
+def _wyrmling_asleep(s):
+    """Eingerollt schlafend wie auf der Tafel: Koerper liegend, Fluegel als Decke, Schwanz ums
+    Gesicht gelegt. Eigener Bodenanker - die Fuesse stehen nicht, der Bauch liegt auf."""
+    body = s.ellipse(31, 52, 19, 9)
+    s.part(body, JADE, fur=0.2, seed=13)
+    wing = s.poly([(14, 50), (22, 38), (36, 36), (48, 44), (44, 48), (32, 46), (22, 50)])
+    s.part(wing, WING, seed=14)
+    for b in (((22, 39), (28, 47)), ((36, 37), (36, 46))):
+        s.paint(s.pen().line(b).m & wing, '#6a3a28')
+    tail = s.pen().line([(13, 56), (24, 60), (44, 60), (54, 57)], 4).m
+    s.part(tail, JADE, seed=15)
+    s.part(s.poly([(54, 55), (59, 54), (56, 58)]), WING[1:])
+    head = s.ellipse(47, 50, 8.5, 6.5) | s.ellipse(54, 53, 5, 4)
+    s.part(head, JADE, seed=16, lift=0.08)
+    s.part(s.poly([(43, 45), (39, 38), (46, 44)]), HORN)
+    s.part(s.poly([(48, 44), (49, 37), (51, 45)]), HORN)
+    s.part(s.ellipse(54, 55.5, 4.5, 1.6) & head, CREAM_BELLY, line=False)
+    s.eye(47, 48, 5, 4)          # geschlossen (Pose.eyes == 'closed')
+    s.paint(s.ellipse(40, 55, 4, 2) & body, WRAP[2])
     s.outline()
     return s
 

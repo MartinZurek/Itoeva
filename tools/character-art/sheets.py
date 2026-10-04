@@ -17,6 +17,7 @@ SPECIES = {
     'puffling': C.puffling, 'wyrmling': C.wyrmling, 'hootlet': C.hootlet,
 }
 FOOT = 62   # erste Zeile unter den Fuessen
+OWN_SLEEP = {C.wyrmling}
 
 
 def lifted(img, n):
@@ -49,7 +50,8 @@ def curled(img):
 def frames(fn):
     walk = [fn(Pose(step=k)) for k in range(4)]
     joy = fn(Pose(eyes='happy', joy=True))
-    sleep = curled(fn(Pose(eyes='closed')).image())
+    # Wer eine eigene Schlafpose hat (Wyrmling), zeichnet sie selbst; die anderen sinken zusammen.
+    sleep = fn(Pose(eyes='closed', sleep=True)).image() if fn in OWN_SLEEP else curled(fn(Pose(eyes='closed')).image())
     idle = fn(Pose()).image()
     return [
         idle,

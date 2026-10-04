@@ -26,8 +26,8 @@ class Pose:
     """Was eine Figur gerade tut: Augen offen/zu/froh, welcher Fuss oben ist (Laufphase 0..3,
     -1 = stehen), Freude (Arme, Fluegel, Ohren hoch)."""
 
-    def __init__(self, eyes='open', step=-1, joy=False):
-        self.eyes, self.step, self.joy = eyes, step, joy
+    def __init__(self, eyes='open', step=-1, joy=False, sleep=False):
+        self.eyes, self.step, self.joy, self.sleep = eyes, step, joy, sleep
 
     def foot_lift(self, i):
         """Wie weit Fuss [i] (0 = links, 1 = rechts) gerade gehoben ist."""
