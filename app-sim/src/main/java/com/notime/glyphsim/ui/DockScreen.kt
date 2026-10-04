@@ -98,6 +98,7 @@ import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.PlayMapScene
 import com.notime.glyphsim.matrix.PlayControl
+import com.notime.glyphsim.matrix.GameScenes
 import android.content.Context
 import com.notime.glyphsim.settings.SettingsCatalog
 import com.notime.glyphsim.settings.SettingsStore
@@ -760,6 +761,11 @@ fun DockScreen(
         /** Der Platz in Reichweite (fuer die Aktionstaste) und ob gerade eine Handlung laeuft. */
         var gameStation by remember { mutableStateOf<PlayScene.Station?>(null) }
         var gameActing by remember { mutableStateOf(false) }
+        /**
+         * In der gemalten Welt (siehe GameScenes): wohin die Figur fuer eine Handlung von selbst
+         * geht. Der Bildtakt fuehrt sie hin und setzt es danach wieder auf `null`.
+         */
+        var gameWalkTarget by remember { mutableStateOf<PlayControl.Pos?>(null) }
         /** Menue der Figur, Karte und Rucksack (Itoeva 2, siehe GameOverlays). */
         var gameMenuOpen by remember { mutableStateOf(false) }
         var gameMapOpen by remember { mutableStateOf(false) }
@@ -3834,6 +3840,10 @@ fun DockScreen(
                 val current = avatar ?: return
                 val (widthPx, _, avatarPx) = gameGeometry
                 val (cells, floorCells, cellPx) = gameScene
+                GameScenes.of(currentPlace)?.let { bild ->
+                    gameStation = GameScenes.spotInReach(bild, gamePos)?.station
+                    return
+                }
                 if (widthPx <= 0f || cellPx <= 0f) return
                 val centers = PlayScene.stationsAt(currentPlace, current.species).mapNotNull { station ->
                     PlayScene.stationSpot(currentPlace, station, cells, floorCells, current.species)
@@ -3848,9 +3858,32 @@ fun DockScreen(
                     pos.x, avatarPx, widthPx, floorYPxNow + pos.depth * heightPx * GAME_DEPTH_BAND, species
                 )
             }
-            LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx, floorYPx, avatar == null, gameSnap) {
-                val current = avatar ?: return@LaunchedEffect
-                avatar = current.copy(sizeDp = worldAvatarSizeDp, offset = gameOffsetFor(gamePos, current.species))
+            /**
+             * Wo und wie gross die Figur steht. In der gemalten Welt (siehe GameScenes) waechst sie
+             * nach vorn und schrumpft nach hinten - das ist die Tiefe; sonst wie bisher.
+             */
+            fun gamePlacement(pos: PlayControl.Pos, species: AvatarSpecies): Pair<Offset, Float> {
+                val (widthPx, heightPx, _) = gameGeometry
+                val bild = GameScenes.of(currentPlace)
+                if (bild == null || widthPx <= 0f || heightPx <= 0f) {
+                    return gameOffsetFor(pos, species) to worldAvatarSizeDp
+                }
+                val fit = GameScenes.fit(bild, widthPx, heightPx)
+                val (fx, fy) = GameScenes.feet(bild, pos)
+                val (sx, sy) = fit.toScreen(fx, fy)
+                val avatarPx = GameScenes.avatarHeight(bild, pos) * fit.scale / GAME_FIGURE_FILL
+                val groundRow = AvatarBodies.forSpecies(species).groundRow()
+                val offset = Offset(sx - avatarPx / 2f, AvatarFooting.topFor(sy, avatarPx, groundRow))
+                return offset to with(density) { avatarPx.toDp().value }
+            }
+            fun placeGameAvatar(pos: PlayControl.Pos) {
+                val current = avatar ?: return
+                val (offset, sizeDp) = gamePlacement(pos, current.species)
+                avatar = current.copy(offset = offset, sizeDp = sizeDp)
+            }
+            LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx, floorYPx, avatar == null, gameSnap, currentPlace) {
+                placeGameAvatar(gamePos)
+                refreshGameStation()
             }
             LaunchedEffect(Unit) {
                 var last = withFrameMillis { it }
@@ -3861,8 +3894,9 @@ fun DockScreen(
                     last = now
                     // Waehrend einer Handlung (Aktionstaste) gehoert die Figur dem Ablauf.
                     val dir = gameDir.takeUnless { gameActing }
+                    val target = gameWalkTarget
                     val current = avatar
-                    if (current == null || dir == null) {
+                    if (current == null || (dir == null && target == null)) {
                         if (gait != null) {
                             gait.cancel()
                             gait = null
@@ -3887,6 +3921,17 @@ fun DockScreen(
                             }
                         }
                     }
+                    // Zu einem Platz in der gemalten Welt geht sie von selbst (siehe gameActAt).
+                    if (target != null) {
+                        val next = GameScenes.approach(gamePos, target, dt)
+                        if (next.x < gamePos.x) avatarFacing = AvatarShading.Side.RIGHT
+                        if (next.x > gamePos.x) avatarFacing = AvatarShading.Side.LEFT
+                        gamePos = next
+                        placeGameAvatar(next)
+                        if (next.x == target.x && next.depth == target.depth) gameWalkTarget = null
+                        continue
+                    }
+                    if (dir == null) continue
                     // Die Blickrichtung bleibt nach dem Anhalten, wie sie war.
                     when (dir) {
                         PlayControl.Dir.LEFT -> avatarFacing = AvatarShading.Side.RIGHT
@@ -3896,7 +3941,8 @@ fun DockScreen(
                     val step = PlayControl.step(gamePos, dir, dt)
                     var pos = step.pos
                     step.exit?.let { exit ->
-                        val next = PlayControl.neighbor(currentPlace, exit)
+                        val bild = GameScenes.of(currentPlace)
+                        val next = if (bild != null) GameScenes.exit(bild, exit) else PlayControl.neighbor(currentPlace, exit)
                         pos = if (next != null) {
                             currentPlace = next
                             PlayControl.entry(exit, step.pos)
@@ -3905,7 +3951,7 @@ fun DockScreen(
                         }
                     }
                     gamePos = pos
-                    avatar = avatar?.copy(offset = gameOffsetFor(pos, current.species))
+                    placeGameAvatar(pos)
                     refreshGameStation()
                 }
             }
@@ -5121,7 +5167,7 @@ fun DockScreen(
                     )
                 }.let { bild ->
                     // Itoeva 2: Wohin es weitergeht - Pfeile und Steine (siehe PlayControl.exitMarks).
-                    if (!gameMode || sceneCellPx <= 0f) bild else {
+                    if (!gameMode || sceneCellPx <= 0f || GameScenes.of(renderedPlace) != null) bild else {
                         val frontRow = floorYCells + (maxHeightPx * GAME_DEPTH_BAND / sceneCellPx).toInt()
                         val tuer = PlayScene.propCellsAt(
                             renderedPlace, PlayScene.Station.DOOR, sceneWidthCells, floorYCells,
@@ -5136,7 +5182,12 @@ fun DockScreen(
                     }
                 }
             }
-            PlaySceneView(
+            // Itoeva 2: wo es schon ein gemaltes Bild gibt, steht es statt der Zellen-Kulisse.
+            val gemalt = if (gameMode && karte == null) GameScenes.of(renderedPlace) else null
+            val gemaltBild = rememberGameSceneImage(gemalt)
+            if (gemalt != null && gemaltBild != null) {
+                GameSceneView(gemalt, gemaltBild, sceneFade.value, Modifier.fillMaxSize())
+            } else PlaySceneView(
                 cells = if (streamMode) StreamPresentation.readableNight(
                     sceneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT,
                     sceneFade.value
@@ -5591,7 +5642,7 @@ fun DockScreen(
         // **Die Ebene vor der Figur** (siehe PlayScene.buildForeground): Grasbueschel an den
         // Bildraendern, Pollen und fallende Blaetter - NACH dem Avatar gezeichnet, damit er durch
         // das Gras hindurchlaeuft. Draussen im Gruenen; drinnen und in der Stadt leer.
-        if (playMode && mapView == null) {
+        if (playMode && mapView == null && !(gameMode && GameScenes.of(renderedPlace) != null)) {
             val vorneCells = remember(renderedPlace, scenePhase, sceneWidthCells, floorYCells, sceneFade.value) {
                 PlayScene.buildForeground(
                     place = renderedPlace,
@@ -5618,7 +5669,7 @@ fun DockScreen(
         // Requisite, die er gerade benutzt: Bettdecke ueber dem Liegenden, Sitzkante vor dem
         // Sitzenden. Genau diese Ueberdeckung ersetzt die sonst noetigen Lieg- und Sitzhaltungen
         // (siehe PlayScene.buildFront) - was verdeckt ist, muss nicht gezeichnet werden.
-        if (playMode && occupiedStation != null) {
+        if (playMode && occupiedStation != null && !(gameMode && GameScenes.of(renderedPlace) != null)) {
             val frontCells = remember(renderedPlace, occupiedStation, sceneWidthCells, floorYCells, sceneFade.value, avatar?.species) {
                 PlayScene.buildFront(
                     place = renderedPlace,
@@ -5910,6 +5961,37 @@ fun DockScreen(
             fun gameActAt(station: PlayScene.Station) {
                 val species = avatar?.species ?: return
                 if (gameActing) return
+                // In der gemalten Welt: hingehen, dann handeln (siehe GameScenes).
+                GameScenes.of(currentPlace)?.let { bild ->
+                    val spot = bild.spots.firstOrNull { it.station == station } ?: return
+                    gameActing = true
+                    scope.launch {
+                        try {
+                            gameWalkTarget = GameScenes.posAt(bild, spot.standX, spot.standY)
+                            snapshotFlow { gameWalkTarget }.first { it == null }
+                            val door = bild.door
+                            if (station == PlayScene.Station.DOOR && door != null) {
+                                currentPlace = door
+                                gamePos = PlayControl.Pos(0.5f, 0.5f)
+                                gameSnap++
+                            } else {
+                                PlayBackpack.lootAt(station)?.let { found ->
+                                    if (!gameBackpack.isFull) saveBackpack(PlayBackpack.add(gameBackpack, found))
+                                }
+                                // Kurze Freude ueber das, was es dort gab.
+                                repeat(GAME_CHEER_FRAMES) { tick ->
+                                    avatar = avatar?.copy(frame = AvatarAnimations.gamePose(species, PlayGroupGame.Pose.CHEER, tick))
+                                    delay(GAME_CHEER_FRAME_MS)
+                                }
+                            }
+                        } finally {
+                            gameWalkTarget = null
+                            gameActing = false
+                            avatar?.let { startAvatarIdleLoop(it.species, AvatarMoodSnapshot.forSpecies(context, it.species)) }
+                        }
+                    }
+                    return
+                }
                 if (station == PlayScene.Station.DOOR) {
                     val target = PlayControl.doorTarget(currentPlace) ?: return
                     gameActing = true
@@ -5942,6 +6024,11 @@ fun DockScreen(
             }
             /** Welcher Platz unter [tap] liegt (Bildschirmpixel) - der naechste in einer Zelle Abstand. */
             fun gameStationUnder(tap: Offset): PlayScene.Station? {
+                GameScenes.of(currentPlace)?.let { bild ->
+                    val fit = GameScenes.fit(bild, maxWidthPx, maxHeightPx)
+                    val (ix, iy) = fit.toImage(tap.x, tap.y)
+                    return GameScenes.spotAt(bild, ix, iy)?.station
+                }
                 if (sceneCellPx <= 0f) return null
                 val cx = (tap.x / sceneCellPx).toInt()
                 val cy = (tap.y / sceneCellPx).toInt()
@@ -6555,6 +6642,16 @@ private const val PASS_THROUGH_LINGER_MS = 4_000L
  * stehen die Fuesse damit bei 94 %.
  */
 private const val GAME_DEPTH_BAND = 0.14f
+
+/**
+ * Itoeva 2, gemalte Welt: welchen Teil der Sprite-Hoehe die Figur selbst einnimmt - darueber
+ * liegt Luft fuer Ohren und Spruenge. Damit wird die Figurhoehe aus GameScenes zur Sprite-Groesse.
+ */
+private const val GAME_FIGURE_FILL = 0.8f
+
+/** Itoeva 2: die kurze Freude nach einer Handlung - so viele Bilder, so lange je Bild. */
+private const val GAME_CHEER_FRAMES = 8
+private const val GAME_CHEER_FRAME_MS = 110L
 
 /** Itoeva 2: eigene Ablage fuer Rucksack und den einmaligen Ton-Start. */
 private const val GAME_PREFS = "itoeva2"
