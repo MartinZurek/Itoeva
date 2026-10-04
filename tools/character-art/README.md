@@ -15,7 +15,28 @@ Benoetigt Python 3 mit `numpy`, `scipy`, `Pillow`.
 
 Die Identitaeten (Namen, Rollen, Entscheidungslogik) bleiben unveraendert.
 
-## Im Spiel (seit 04.10.)
+## Aus den Konzeptblaettern (aktueller Stand im Spiel)
+
+Seit dem zweiten Durchgang am 04.10. stammen die Boegen in `app-sim/src/main/assets/creatures/`
+aus `from_concept.py`: Die gemalten Posen der Konzeptblaetter
+(`docs/concept-art/character-conceptbook/`, Branch `art/concept-studies-2026-10-04`) werden
+ausgeschnitten, vom Papier freigestellt, verkleinert, auf eine gemeinsame Palette je Wesen gebracht
+und mit einer dunklen Einpixel-Kontur versehen - Fell, Umhang, Taschen und die lebendigen Haltungen
+der Studien bleiben so erhalten. Bogenformat und Fusslinie sind unveraendert (17 Bilder, Zeile 61),
+der Spielcode bleibt gleich.
+
+```
+python3 from_concept.py                       # Boegen schreiben
+python3 from_concept.py --preview /tmp/a.png  # alle Boegen vergroessert
+python3 from_concept.py --poses /tmp/b.png    # die freigestellten Posen
+python3 -m unittest test_from_concept.py
+```
+
+Posen je Wesen stehen in `POSES` (Rechteck im Blatt, gespiegelt ja/nein); `IDLE` waehlt fuer die
+runden Wesen eine halb zugewandte Ruhepose, damit das Gesicht sichtbar bleibt.
+Die gezeichneten Figuren (`characters.py`, `sheets.py`) bleiben als Werkzeug erhalten.
+
+## Im Spiel (erster Durchgang, 04.10.)
 
 `python3 sheets.py` schreibt je Wesen einen Bogen nach `app-sim/src/main/assets/creatures/`
 (11 Bilder: Ruhe, Ruhe eingeatmet, Blinzeln, 4 x Laufen, 2 x Freude, 2 x Schlafen; Reihenfolge
