@@ -669,6 +669,22 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-04 - Itoeva 2: Gemalte Orte mit Tiefe
+
+**Anlass:** Rueckmeldung zur Farbpalette auf der LED-Kulisse: zu grob, zu flach - gewuenscht sind
+feine Pixel-Art, kraeftige Farben und echte Tiefe in der Qualitaet der Konzeptbilder.
+
+**Geaendert (nur Spiel-Variante):** Park am Meer und Lesezimmer als gemalte Bilder
+(`tools/world-art`), gezeichnet statt der Zellen-Kulisse. Die Figur waechst nach vorn und schrumpft
+nach hinten (`GameScenes`), Doppeltipp auf Bank, Kiosk, Blumen, Regal, Tisch oder Sessel laesst sie
+hingehen und handeln, die Treppe im Park fuehrt ins Haus. Itoeva 1 und Stream unveraendert.
+
+**Grenzen / UNVERIFIED:** Nur zwei Orte und nur Abendlicht; am Geraet ungeprueft (Treffer,
+Gehflaeche je Bildschirmformat). **Ruecksetzweg:** Bilder aus `src/game/assets/scenes` entfernen -
+ohne Bild faellt jeder Ort auf die Zellen-Kulisse zurueck.
+
+**Tests:** `bash tools/reaction-preview/tests.sh` gruen, neu `GameScenesTest`. Plan: [ITOEVA2.md](ITOEVA2.md).
+
 ### 2026-10-04 - Die Wesen in feiner Pixel-Art nach den Charakterstudien
 
 **Anlass:** Martin hat Charakter- und Weltstudien abgelegt (`docs/concept-art/`, PR #326) und

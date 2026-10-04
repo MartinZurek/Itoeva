@@ -55,6 +55,16 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 - **Musik und Ton** sind beim ersten Start an (ab Werk stehen sie aus), danach Schalter im Menue.
   Hinweis: Bei Lautlos/Vibration am Geraet schweigt die Musik bewusst.
 
+## Stufe 4 - Gemalte Welt (umgesetzt, Wunsch vom 04.10.)
+
+Weg von der groben LED-Kulisse: Orte als feine Pixel-Art mit Tiefe, gemalt als Code
+(`tools/world-art`, 480 x 270 Bildpixel, nur in der Spiel-Variante unter
+`src/game/assets/scenes`). Bisher **Park am Meer** (Abendrot) und **Lesezimmer** (Wohnzimmer).
+`GameScenes` beschreibt je Bild Gehflaeche (Trapez in die Tiefe), Figurgroesse nach Tiefe,
+antippbare Plaetze und Ausgaenge (Zimmer <-> Park); Doppeltipp laesst die Figur selbst hingehen.
+Orte ohne Bild bleiben wie bisher. Offen: weitere Orte, Tageszeiten, Figur `hero.png` (Fuchs) ist
+gezeichnet, aber nicht eingebaut - die Wesen selbst sind seit #327 in feiner Pixel-Art.
+
 ## Naechste Stufen (Vorschlag, nicht freigegeben)
 
 1. Begegnungen und Gespraeche mit den Bewohnern.
