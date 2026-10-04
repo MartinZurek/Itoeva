@@ -669,6 +669,37 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-04 - Itoeva 2: Blickrichtungen und lebendige Lichtschicht (Entwurf-PR)
+
+**Anlass:** Martin sieht die gemalten Hintergruende als zu unbewegliche Bilder. Beim Gehen nach hinten
+und vorn zeigt der bisherige Figurenbogen nur die seitlich gedachte Pose; Lampen, Bildtiefe und
+Schatten sind in der PNG-Kulisse eingebrannt.
+
+**Entscheidung:** Der gemalte Spielmodus bekommt eine kleine Echtzeit-Darstellungsschicht:
+Sonnenlicht folgt der Uhrzeit, schaltbare Laternen und Fernseher wirken als Lichtpunkte mit
+Distanzabfall, das Lagerfeuer flackert. Ein aus der Position berechneter Bodenschatten bewegt
+sich mit dem Wesen und weist vom dominanten Licht weg. Wenige Blaetter und Wasserreflexe
+bewegen sich deterministisch im Szenentakt. Der Bildausschnitt folgt bei tatsaechlichem
+Ueberstand leicht der Position und Tiefe; Bild, Fusspunkt und Trefferflaechen benutzen denselben
+`GameScenes.fit`. Sechs zusaetzliche 64x64-Ansichten je Wesen zeigen vorn und hinten mit je
+zwei Schrittphasen. Links/rechts bleiben die bestehenden Seitenbilder mit Spiegelung.
+
+**Abgrenzung:** Nur der aktive `:app-sim`-Spielmodus gibt Blickrichtung, Bewegung und
+Szenenlichter an die neue Darstellung weiter. Keine neue Bewegungskollision, Ort, Handlung,
+Avatarentscheidung, Datenbank oder Streamsteuerung. Es ist eine 2D-Lichtprojektion mit
+Avatar-Schlagschatten; Gegenstaende im gemalten Bild werfen noch keine vollstaendig
+berechneten Okklusionsschatten, und die im Grundbild gemalten Highlights verschwinden
+beim Ausschalten noch nicht. Exportclips erhalten die neue Lichtschicht noch nicht.
+
+**Erster Beleg:** Jeder der sechs generierten Boegen enthaelt 17 statt 11 Bilder; die
+Vorder- und Rueckansichten unterscheiden sich und bleiben am Fussanker. Reine
+`GameScenesTest`-Faelle pruefen Kamerakoordinaten, Distanzabfall, Schalter und die
+Schattenrichtung. Pixelbogen-Test lokal gruen; Android-Compose-Build und Geraeteeindruck
+noch ueber CI/Apk zu pruefen.
+
+**Ruecksetzweg:** Licht-Overlay und zusaetzliche Bildindizes entfernen, die sechs Boegen aus
+dem vorherigen Stand wiederherstellen. Der Spielzustand bleibt kompatibel.
+
 ### 2026-10-04 - Itoeva 2: Alle Orte nach der Concept Art
 
 **Anlass:** Martin: "Mach mal alle Figuren und alle Orte so gut es geht wie in der Concept Art

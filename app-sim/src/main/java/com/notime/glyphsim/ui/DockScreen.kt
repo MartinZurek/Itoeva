@@ -758,6 +758,7 @@ fun DockScreen(
         /** Itoeva 2: wo die Figur steht (siehe PlayControl) und welche Richtung gedrueckt ist. */
         var gamePos by remember { mutableStateOf(PlayControl.Pos()) }
         var gameDir by remember { mutableStateOf<PlayControl.Dir?>(null) }
+        var gameFacing by remember { mutableStateOf(PlayControl.Dir.DOWN) }
         /** Der Platz in Reichweite (fuer die Aktionstaste) und ob gerade eine Handlung laeuft. */
         var gameStation by remember { mutableStateOf<PlayScene.Station?>(null) }
         var gameActing by remember { mutableStateOf(false) }
@@ -3868,7 +3869,7 @@ fun DockScreen(
                 if (bild == null || widthPx <= 0f || heightPx <= 0f) {
                     return gameOffsetFor(pos, species) to worldAvatarSizeDp
                 }
-                val fit = GameScenes.fit(bild, widthPx, heightPx)
+                val fit = GameScenes.fit(bild, widthPx, heightPx, pos.x, pos.depth)
                 val (fx, fy) = GameScenes.feet(bild, pos)
                 val (sx, sy) = fit.toScreen(fx, fy)
                 val avatarPx = GameScenes.avatarHeight(bild, pos) * fit.scale / GAME_FIGURE_FILL
@@ -3924,8 +3925,10 @@ fun DockScreen(
                     // Zu einem Platz in der gemalten Welt geht sie von selbst (siehe gameActAt).
                     if (target != null) {
                         val next = GameScenes.approach(gamePos, target, dt)
-                        if (next.x < gamePos.x) avatarFacing = AvatarShading.Side.RIGHT
-                        if (next.x > gamePos.x) avatarFacing = AvatarShading.Side.LEFT
+                        if (next.x < gamePos.x) { avatarFacing = AvatarShading.Side.RIGHT; gameFacing = PlayControl.Dir.LEFT }
+                        else if (next.x > gamePos.x) { avatarFacing = AvatarShading.Side.LEFT; gameFacing = PlayControl.Dir.RIGHT }
+                        else if (next.depth < gamePos.depth) gameFacing = PlayControl.Dir.UP
+                        else if (next.depth > gamePos.depth) gameFacing = PlayControl.Dir.DOWN
                         gamePos = next
                         placeGameAvatar(next)
                         if (next.x == target.x && next.depth == target.depth) gameWalkTarget = null
@@ -3933,6 +3936,7 @@ fun DockScreen(
                     }
                     if (dir == null) continue
                     // Die Blickrichtung bleibt nach dem Anhalten, wie sie war.
+                    gameFacing = dir
                     when (dir) {
                         PlayControl.Dir.LEFT -> avatarFacing = AvatarShading.Side.RIGHT
                         PlayControl.Dir.RIGHT -> avatarFacing = AvatarShading.Side.LEFT
@@ -5186,7 +5190,12 @@ fun DockScreen(
             val gemalt = if (gameMode && karte == null) GameScenes.of(renderedPlace) else null
             val gemaltBild = rememberGameSceneImage(gemalt)
             if (gemalt != null && gemaltBild != null) {
-                GameSceneView(gemalt, gemaltBild, sceneFade.value, Modifier.fillMaxSize())
+                GameSceneView(
+                    scene = gemalt, image = gemaltBild, fade = sceneFade.value,
+                    minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute },
+                    lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
+                    modifier = Modifier.fillMaxSize()
+                )
             } else PlaySceneView(
                 cells = if (streamMode) StreamPresentation.readableNight(
                     sceneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT,
@@ -5576,7 +5585,15 @@ fun DockScreen(
             AvatarSpriteView(
                 frame = fennecTalkFrame?.takeIf { current.species == AvatarSpecies.FENNEC }
                     ?: gameFrame(GAME_HOST_ID, current.species, current.frame),
-                brightnessScale = avatarDim.value,
+                brightnessScale = if (gameMode) {
+                    GameScenes.of(renderedPlace)?.let { scene ->
+                        val minute = PlayTimeLapse.now().let { it.hour * 60 + it.minute }
+                        val (fx, fy) = GameScenes.feet(scene, gamePos)
+                        val lights = com.notime.glyphsim.matrix.GameSceneLighting.sources(scene, minute, lampOn, tvOn, scenePhase)
+                        (avatarDim.value * (1f - com.notime.glyphsim.matrix.GameSceneLighting.darkness(scene, minute) * 0.45f +
+                            com.notime.glyphsim.matrix.GameSceneLighting.illuminationAt(fx, fy, lights))).coerceIn(0.55f, 1f)
+                    } ?: avatarDim.value
+                } else avatarDim.value,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
                 // Dock-Modus nur aus schwarzer Flaeche und Uhr bestand, war das unsichtbar. Seit
@@ -5587,6 +5604,8 @@ fun DockScreen(
                 contentDescription = avatarContentDescription,
                 species = current.species,
                 shadeSide = avatarFacing,
+                gameDirection = if (gameMode) gameFacing else null,
+                gameMoving = if (gameMode) avatarWalking else null,
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
                     // Quadratgroesse das Raster und die Figur waere zu klein.
@@ -6037,7 +6056,7 @@ fun DockScreen(
             /** Welcher Platz unter [tap] liegt (Bildschirmpixel) - der naechste in einer Zelle Abstand. */
             fun gameStationUnder(tap: Offset): PlayScene.Station? {
                 GameScenes.of(currentPlace)?.let { bild ->
-                    val fit = GameScenes.fit(bild, maxWidthPx, maxHeightPx)
+                    val fit = GameScenes.fit(bild, maxWidthPx, maxHeightPx, gamePos.x, gamePos.depth)
                     val (ix, iy) = fit.toImage(tap.x, tap.y)
                     return GameScenes.spotAt(bild, ix, iy)?.station
                 }

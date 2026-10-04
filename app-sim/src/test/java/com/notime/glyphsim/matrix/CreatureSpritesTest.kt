@@ -37,6 +37,24 @@ class CreatureSpritesTest {
     }
 
     @Test
+    fun `hoch und runter zeigen eigene Ansichten und halten beim Anhalten an`() {
+        for (species in AvatarSpecies.entries) {
+            val idle = AvatarAnimations.idlePose(species)
+            val up = CreatureSprites.look(idle, species, AvatarShading.Side.NONE, 500L,
+                PlayControl.Dir.UP, moving = false)
+            val down = CreatureSprites.look(idle, species, AvatarShading.Side.NONE, 500L,
+                PlayControl.Dir.DOWN, moving = false)
+            assertEquals(CreatureSprites.BACK, up.frame)
+            assertEquals(CreatureSprites.FRONT, down.frame)
+            assertFalse(up.mirrored)
+            assertTrue(CreatureSprites.look(idle, species, AvatarShading.Side.NONE, 500L,
+                PlayControl.Dir.UP, moving = true).frame in CreatureSprites.BACK_WALK_FIRST..CreatureSprites.BACK_WALK_FIRST + 1)
+            assertTrue(CreatureSprites.look(idle, species, AvatarShading.Side.RIGHT, 500L,
+                PlayControl.Dir.LEFT, moving = false).frame in listOf(CreatureSprites.IDLE, CreatureSprites.IDLE_BREATH))
+        }
+    }
+
+    @Test
     fun `ein Sprung aus einer Reaktion wird Freude und bleibt angehoben`() {
         for (species in AvatarSpecies.entries) {
             val looks = AvatarAnimations.reactionFor(species, AnimationType.MOVE).frames
