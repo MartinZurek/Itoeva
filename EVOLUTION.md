@@ -669,6 +669,25 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-04 - Fennec, Gloop, Starlet, Puffling, Hootlet nach den Fantasy-Studien
+
+**Anlass:** Martin: "Mach mal alle Figuren ... so gut es geht wie in der Concept Art Vorlage" - die
+uebrigen fuenf Wesen nach demselben Vorgehen wie Wyrmling (Briefs in
+`docs/concept-art/character-conceptbook/briefs/`).
+
+**Uebernommen:** je die Startpalette des Briefs und die Reiseakzente - Fennec: kurzer rostroter
+Reisemantel mit Zickzacksaum statt Schal, tuerkiser Wegstein als Schliesse, kleine Flasche;
+Gloop: Blattschulter mit Bluete, matter Samenstein im Inneren, seitliche Tasche, Glasglanz
+ersetzt durch eine helle Innenkante (Vorgabe des Briefs); Starlet: indigoblauer Himmelskragen
+mit Sternpunkten und Mondanhaenger, alle fuenf Spitzen frei; Puffling: salbeifarbene Kapuze
+hinter dem Kopf mit Blattschliesse, Tasche bleibt klein; Hootlet: indigofarbener Sternenumhang
+mit Goldsaum, Mondsichel-Schliesse aus Messing, Kartenrolle, Brille auf duenne Ringe vereinfacht.
+
+**Vereinfacht:** Muster (Mantelzacken, Sternstiche) auf wenige Pixel; keine eigenen Front- und
+Rueckansichten; Silhouetten, Gesichter, Groessen und Fusszeile unveraendert. **UNVERIFIED:** am
+Geraet ungeprueft. **Ruecksetzweg:** Boegen aus `main` zurueckholen. **Tests:**
+`bash tools/reaction-preview/tests.sh` gruen.
+
 ### 2026-10-04 - Wyrmling nach der Fantasy-Studie
 
 **Anlass:** Character-Konzeptbuch (`docs/concept-art/character-conceptbook/`, PR #326) mit

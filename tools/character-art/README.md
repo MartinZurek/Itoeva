@@ -25,6 +25,8 @@ entscheidet `CreatureSprites.look` aus der groben Pose der bestehenden Ablaeufe.
 ## Fantasy-Varianten (Character-Konzeptbuch, seit 04.10.)
 
 Die Figuren werden einzeln nach `docs/concept-art/character-conceptbook/` weiterentwickelt, je eine
-Figur pro Schritt und erst nach Rueckmeldung die naechste. Bisher: **Wyrmling** (Palette des
-Briefs, getrennte Fluegelhaeute, Halstuch mit Bernstein, eigene Schlafpose). Eine eigene
+Figur pro Schritt. Umgesetzt: alle sechs - **Wyrmling** (getrennte Fluegelhaeute, Halstuch mit
+Bernstein, eigene Schlafpose), **Fennec** (Reisemantel, Wegstein, Flasche), **Gloop** (Blattschulter,
+Samenstein, Tasche), **Starlet** (Himmelskragen, Mondanhaenger), **Puffling** (Kapuze, Blattschliesse),
+**Hootlet** (Sternenumhang, Messingschliesse, Kartenrolle). Eine eigene
 Schlafpose meldet eine Figur in `sheets.OWN_SLEEP` an; die anderen sinken zusammen (`curled`).
