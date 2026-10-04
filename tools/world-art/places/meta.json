@@ -1,0 +1,149 @@
+{
+ "nook": {
+  "blocked": [
+   "UP",
+   "DOWN"
+  ],
+  "cropTop": 0.7,
+  "spots": [
+   {
+    "box": [
+     286,
+     95,
+     404,
+     206
+    ],
+    "standX": 330,
+    "standY": 210,
+    "station": "SEAT"
+   },
+   {
+    "box": [
+     118,
+     25,
+     170,
+     178
+    ],
+    "standX": 166,
+    "standY": 182,
+    "station": "BOOKSHELF"
+   },
+   {
+    "box": [
+     300,
+     40,
+     360,
+     100
+    ],
+    "standX": 300,
+    "standY": 200,
+    "station": "LAMP"
+   }
+  ],
+  "walk": {
+   "farHeight": 42,
+   "farLeft": 140,
+   "farRight": 342,
+   "farY": 172,
+   "nearHeight": 78,
+   "nearLeft": 26,
+   "nearRight": 440,
+   "nearY": 236
+  }
+ },
+ "park": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     97.0,
+     185.0,
+     139.0,
+     206.0
+    ],
+    "standX": 118.0,
+    "standY": 214.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 40,
+   "farLeft": 96,
+   "farRight": 470,
+   "farY": 200,
+   "nearHeight": 58,
+   "nearLeft": 40,
+   "nearRight": 440,
+   "nearY": 240
+  }
+ },
+ "pond": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [],
+  "walk": {
+   "farHeight": 46,
+   "farLeft": 100,
+   "farRight": 420,
+   "farY": 222,
+   "nearHeight": 58,
+   "nearLeft": 40,
+   "nearRight": 430,
+   "nearY": 250
+  }
+ },
+ "sport": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [],
+  "walk": {
+   "farHeight": 34,
+   "farLeft": 150,
+   "farRight": 410,
+   "farY": 176,
+   "nearHeight": 60,
+   "nearLeft": 40,
+   "nearRight": 440,
+   "nearY": 244
+  }
+ },
+ "street": {
+  "blocked": [],
+  "cropTop": 0.8,
+  "spots": [
+   {
+    "box": [
+     294.0,
+     132.0,
+     308.0,
+     196.0
+    ],
+    "standX": 304.0,
+    "standY": 206.0,
+    "station": "LAMP"
+   },
+   {
+    "box": [
+     358.0,
+     180.0,
+     402.0,
+     202.0
+    ],
+    "standX": 380.0,
+    "standY": 210.0,
+    "station": "BENCH"
+   }
+  ],
+  "walk": {
+   "farHeight": 46,
+   "farLeft": 90,
+   "farRight": 440,
+   "farY": 200,
+   "nearHeight": 62,
+   "nearLeft": 30,
+   "nearRight": 440,
+   "nearY": 246
+  }
+ }
+}
