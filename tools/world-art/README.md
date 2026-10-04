@@ -16,7 +16,7 @@ Waldsee, Uferviertel).
 | `concept.py` | liest die Studien aus dem Concept-Art-Branch, nimmt Figuren aus dem Bild und setzt Gegenstaende aus den Objektspalten ein |
 | `nature.py`, `town.py` | Einzelstuecke fuer draussen: Wolken, Baeume, Graeser, Blumen, Steine; Haeuser, Fenster, Markisen, Laternen, Toepfe |
 | `places/<ort>.py` | ein Skript je Ort (`build(out)` malt das Bild und gibt die Spielangaben zurueck) |
-| `overview.png` | Uebersicht aller Orte (5 x 5) |
+| `overview.png`, `rooms_preview.png` | Uebersicht der gemalten Orte; Wohn- und Schlafzimmer in doppelter Groesse |
 | `build_all.py` | rendert die Orte nach `app-sim/src/game/assets/scenes/` und schreibt `GameSceneCatalog.kt` |
 | `park.py`, `reading_room.py`, `hero.py` | erste Studien vom 04.10. (Park am Meer, Lesezimmer = Ort `NOOK`, Fuchs) |
 
