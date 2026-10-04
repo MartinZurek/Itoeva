@@ -23,11 +23,6 @@ class GameScenesTest {
     }
 
     @Test
-    fun `jeder Ort der Welt ist gemalt`() {
-        assertEquals(Place.entries.toSet(), GameScenes.painted)
-    }
-
-    @Test
     fun `hinten ist die Figur kleiner als vorn`() {
         for (scene in scenes) {
             assertTrue(scene.place.name, GameScenes.avatarHeight(scene, Pos(0.5f, 0f)) < GameScenes.avatarHeight(scene, Pos(0.5f, 1f)))

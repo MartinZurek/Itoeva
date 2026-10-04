@@ -1,72 +1,42 @@
-"""BEDROOM - das Schlafzimmer nach world-studies/cozy-home (rechte Haelfte): Holzbett mit gruener
-Karodecke unter einem hellen Vorhang, Nachttisch mit Lampe, Mondfenster, Kommode, Truhe am
-Fussende, Haengepflanzen; hinten links die Tuer ins Wohnzimmer."""
+"""BEDROOM - das Schlafzimmer aus der Wohnraum-Studie (world-studies/cozy-home, rechte Haelfte),
+eins zu eins in Pixel-Art uebersetzt (pixelate.py): grosses Fenster mit Mond und Tannen,
+Fensterbank mit Laterne und Pflanzen, Kommode, Stuhl, Truhe, Bett unter dem Vorhang, Nachttisch
+mit Lampe, Schlafboden mit Leiter, Efeu. Stern und Gloop sind aus dem Bild genommen: auf der
+Fensterbank steht eine Topfpflanze, im Bett liegen Kissen und Decke aus dem Bett der Objektspalte."""
 import sys
 sys.path.insert(0, __file__.rsplit('/', 2)[0])
 import numpy as np
-from roomkit import CozyRoom, W, H, LEFT, RIGHT, BACK
-from px import rgb, MaskPen, lerp
-import props as P
+from scipy import ndimage
+from px import MaskPen
+import concept as C
+import pixelate as P
+
+STAR = [(28, 130), (44, 120), (52, 104), (60, 120), (78, 124), (68, 138), (72, 154), (52, 148), (34, 156), (36, 138)]
+GLOOP = [(270, 172), (272, 150), (285, 128), (305, 120), (330, 124), (345, 140), (356, 160), (352, 178),
+         (336, 172), (318, 170), (300, 176)]
 
 
 def build(out):
-    lights = [(np.array([0.05, 0.75, 2.45]), rgb('#ffb060'), 1.2),
-              (np.array([0.0, 1.3, 1.6]), rgb('#ffc080'), 0.8)]
-    r = CozyRoom(seed=31, lights=lights, plaster=('#c8b4c0', '#d8c4cc'), walls='wallpaper', pattern='#8a7aa8', wood=('#5e3e2c', '#734c36', '#86583e'))
-    r.window(-0.42, 0.0, 0.5, 1.08, view='night')
-    P.curtains(r, -0.42, 0.0, 0.5, 1.08, col='#5a6a9a')
-    door = r.door_back(-0.92, -0.58, 0.98)
-    P.painting(r, 0.42, 0.62, 0.86, 1.04, kind='sunset')
-    P.painting(r, 0.68, 0.8, 0.9, 1.04, kind='forest', frame='#c8a050')
-    P.clock(r, -0.24, 1.2, rad=0.05)
-    # Vorhang am Bett: helle Bahnen in Falten, an einer Stange
-    for X0, X1 in ((0.16, 0.34), (0.88, 1.04)):
-        x0, y0, x1, y1 = r.rect_on_back(X0, X1, 0.2, 1.18)
-        cur = (r.xx >= x0) & (r.xx <= x1) & (r.yy >= y0) & (r.yy <= y1)
-        fold = (np.sin((r.xx - x0) * 1.2) + 1) / 2
-        col = lerp(rgb('#c8b0a0'), rgb('#f4e8dc'), fold[..., None])
-        r.cv.paint(cur, col * r.room.light_at(np.array([0.6, 0.7, 2.7]), (0, 0, -1)))
-    x0, y0, x1, y1 = r.rect_on_back(0.14, 1.05, 1.18, 1.2)
-    r.cv.paint((r.xx >= x0) & (r.xx <= x1) & (r.yy >= y0 - 1) & (r.yy <= y1 + 1), rgb('#4a2e20'))
-    r.rug(-0.5, 0.3, 1.35, 2.15, c1='#6a3a5a', c2='#e8c890', c3='#2e3a5a', round_=True)
-    r.bed(0.24, 0.98, 1.92, 2.68, blanket='#5a8a5a', pattern='#e8d8a0', quilt=('#5a8a5a', '#c86a4a', '#e8c890', '#3e5a8a', '#a85a7a', '#7aa86a', '#e8a060'))
-    P.cushion(r, 0.62, 0.8, 0.3, 0.44, 2.36, 2.42, '#c86a4a', 'dots')
-    # Nachttisch mit Lampe und Buch
-    r.cabinet(0.02, 0.2, 0.4, 2.46, 2.66, drawers=2)
-    r.box(0.09, 0.13, 0.4, 0.5, 2.54, 2.58, '#3a2418')
-    lp = [r.room.proj(0.03, 0.5, 2.56), r.room.proj(0.19, 0.5, 2.56), r.room.proj(0.16, 0.62, 2.56), r.room.proj(0.06, 0.62, 2.56)]
-    r.cv.paint(MaskPen(W, H).poly(lp).a > 0, rgb('#f8c070'))
-    r.glow_at(0.11, 0.55, 2.56, r=12, color='#ff9a40', k=0.35)
-    P.book_stack(r, 0.12, 0.4, 2.52, n=2)
-    P.mug(r, 0.06, 0.4, 2.5, col='#e8e0d0')
-    # Kommode links mit Kerze und Spiegel
-    r.cabinet(-1.04, -0.84, 0.42, 1.3, 1.6, drawers=3)
-    r.candle(-0.92, 0.42, 1.42)
-    P.vase(r, -0.95, 0.42, 1.52, flowers=('#f4f0e0', '#e88aa0', '#c8a0e8'), col='#c8b8a0')
-    r.wall_side(-1, 1.32, 1.58, 0.62, 0.98, rgb('#7a5a3a'))
-    r.wall_side(-1, 1.35, 1.55, 0.65, 0.95, rgb('#8aa8c0') * 0.8)
-    P.plant(r, -0.32, 2.56, kind='fern', size=1.0)
-    P.plant(r, -0.9, 2.45, kind='ficus', size=1.4)
-    P.basket(r, -0.1, 1.95, fill='yarn')
-    P.book_stack(r, 0.12, 0.0, 1.85, n=4)
-    P.wall_shelf_clutter(r, 0.3, 0.9, 1.26)
-    # Hausschuhe vor dem Bett
-    for x in (0.4, 0.5):
-        r.box(x, x + 0.06, 0.0, 0.03, 1.66, 1.8, '#a85a4a', top='#c8786a', edge='#e8a090')
-    r.hanging_plant(80, 22, 34)
-    r.hanging_plant(418, 30, 28)
-    # Sterne-Girlande ueber dem Fenster
-    a, b = r.room.proj(-0.46, 1.16, 2.7), r.room.proj(0.04, 1.16, 2.7)
-    for k in range(9):
-        t = k / 8
-        x = a[0] + (b[0] - a[0]) * t
-        y = a[1] + 4 * np.sin(np.pi * t)
-        r.cv.paint(MaskPen(W, H).ellipse(x - 1, y - 1, x + 1, y + 1).a > 0, rgb('#ffe090'))
-        r.glow_at(-0.46 + 0.5 * t, 1.16 - 0.02 * np.sin(np.pi * t), 2.69, r=3, color='#ffc060', k=0.3)
-    r.walk(farLeft=146, farRight=326, nearLeft=40, nearRight=430)
-    r.spot_box('BED', r.proj_box(0.24, 0.98, 0.0, 0.7, 1.92, 2.68), *r.stand(0.6, 1.62))
-    r.spot_box('DOOR', door, *r.stand(-0.75, 2.2))
-    return r.finish(out, colors=200)
+    img = C.crop('home', (552, 0, 1085, 300), (P.W, P.H))
+    star = ndimage.binary_dilation(MaskPen(P.W, P.H).poly(STAR).a > 0, iterations=2)
+    gloop = ndimage.binary_dilation(MaskPen(P.W, P.H).poly(GLOOP).a > 0, iterations=2)
+    img = C.inpaint(img, star | gloop)
+    # Fensterkreuz hinter dem Stern wieder einziehen
+    img[95:150, 39:41] = img[95:150, 98:100]
+    img[127:129, 0:95] = img[127:129, 0:95].mean(0)
+    C.paste(img, C.sprite('plant', 0.75), 52, 151, shadow=0.2, tint=(0.95, 0.85, 0.7))
+    C.paste(img, C.sprite('bed', 1.3), 262, 233, shadow=0, tint=(0.8, 0.7, 0.58), clip=gloop)
+    P.save(P.translate(img), out)
+    return {
+        'walk': dict(farY=212, nearY=234, farLeft=20, farRight=372, nearLeft=14, nearRight=378,
+                     farHeight=64, nearHeight=70),
+        'spots': [
+            dict(station='BED', box=[215, 120, 362, 232], standX=285, standY=222),
+            dict(station='DOOR', box=[0, 40, 26, 232], standX=26, standY=222),
+        ],
+        'blocked': ['UP', 'DOWN'],
+        'cropTop': 0.5,
+    }
 
 
 if __name__ == '__main__':

@@ -12,7 +12,9 @@ Waldsee, Uferviertel).
 | `px.py` | Werkzeugkasten: Leinwand, Masken, Rauschen, gerasterte Verlaeufe und Lichthoefe, Palette |
 | `kit.py` | Baukasten fuer draussen: Himmel, Huegel, Baeume, Wiese, Pflaster, Wasser mit Spiegelung, Fassaden, Bank, Laterne, Felsen, Zelt, Palme, Kristall, Abendstimmung (`dusk`) |
 | `room3d.py` | Zimmer in Zentralperspektive: Ebenen per Pixel zurueckgerechnet, Moebel als Quader, Licht |
-| `roomkit.py` | Baukasten fuer drinnen nach der Wohnraum-Studie: Fachwerk, Vertaefelung, Fenster, Tuer, Teppich, Sofa, Bett, Regale, Kuechenzeile, Lampen |
+| `pixelate.py` | uebersetzt einen Studienausschnitt in Pixel-Art: Flaechen beruhigen, Bleistiftkonturen als Pixellinien, eigene Palette, Ausreisser weg |
+| `concept.py` | liest die Studien aus dem Concept-Art-Branch, nimmt Figuren aus dem Bild und setzt Gegenstaende aus den Objektspalten ein |
+| `nature.py`, `town.py` | Einzelstuecke fuer draussen: Wolken, Baeume, Graeser, Blumen, Steine; Haeuser, Fenster, Markisen, Laternen, Toepfe |
 | `places/<ort>.py` | ein Skript je Ort (`build(out)` malt das Bild und gibt die Spielangaben zurueck) |
 | `overview.png` | Uebersicht aller Orte (5 x 5) |
 | `build_all.py` | rendert die Orte nach `app-sim/src/game/assets/scenes/` und schreibt `GameSceneCatalog.kt` |
@@ -35,11 +37,21 @@ Ein Ort darf nur Plaetze haben, die er im Spiel schon hat (`PlayScene.stationsAt
 
 | Ort | Vorlage | Plaetze |
 |---|---|---|
-| Wohnzimmer, Schlafzimmer, Kueche, Bad, Schreibzimmer, Werkstatt, Leseecke | Wohnraum-Studie | je nach Zimmer; Tuer ins Wohnzimmer, von dort auf die Strasse |
-| Strasse, Marktplatz (Abend), Laden, Cafe, Arbeitsstube, Spielhalle | Uferviertel | Laterne, Bank, Regal, Kasse, Tische, Automaten |
+| Wohnzimmer, Schlafzimmer | Wohnraum-Studie, eins zu eins uebersetzt (Seitenansicht) | Sofa, Klavier (Platz TV), Bett, Tuer |
+| Strasse, Marktplatz (Abend) | Uferviertel | Laterne, Bank |
 | Park, Sportplatz | Park mit Sportplatz | Bank |
 | Waldsee | Waldsee | - |
 | Wiese, Wald, Berge, Ebene, Lager, Strand, Dschungel, Sumpf, Grotte | frei im selben Stil | Sitzplatz (Stamm oder Steinbank) |
 
 Benoetigt Python 3 mit `numpy`, `scipy`, `Pillow`. Der Wald braucht knapp eine Minute (viele
 Tannen), alle anderen Orte wenige Sekunden.
+
+## Innenraeume aus den Studien (seit 04.10. abends)
+
+Die frueheren Zimmer in Zentralperspektive sind verworfen - zu konstruiert. Innenraeume entstehen
+jetzt direkt aus der Wohnraum-Studie in deren Seitenansicht: Ausschnitt laden, Figuren mit einer
+Hand gezeichneten Maske herausnehmen, Luecke fuellen, mit Gegenstaenden aus der Objektspalte
+desselben Blatts ergaenzen, dann `pixelate.translate`. Dazu muss der Branch
+`art/concept-studies-2026-10-04` geholt sein (`git fetch origin art/concept-studies-2026-10-04`).
+Kueche, Bad, Schreibzimmer, Werkstatt, Leseecke, Laden, Cafe, Arbeitsstube und Spielhalle haben
+noch keine Studie und zeigen bis dahin die alte Kulisse.
