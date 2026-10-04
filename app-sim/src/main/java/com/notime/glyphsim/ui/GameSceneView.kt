@@ -38,6 +38,28 @@ fun rememberGameSceneImage(scene: GameScenes.Scene?): ImageBitmap? {
 }
 
 /**
+ * Die Bewegungs- und Lichtebenen eines Ortes (siehe `tools/world-art/animate.py`):
+ * [strip] - mehrere Bilder nebeneinander, in denen Laub, Wasser und Lichter sich bewegen;
+ * [glow] - was nachts leuchtet (Lampen, Fenster, Feuer) samt Lichthof. Beides fehlt bei Orten
+ * ohne diese Dateien; dann bleibt das ruhende Bild.
+ */
+class GameSceneLayers(val strip: ImageBitmap?, val glow: ImageBitmap?) {
+    val frames: Int get() = strip?.let { (it.width / GameScenes.IMAGE_W).coerceAtLeast(1) } ?: 1
+}
+
+@Composable
+fun rememberGameSceneLayers(scene: GameScenes.Scene?): GameSceneLayers {
+    val context = LocalContext.current
+    return remember(scene?.asset) {
+        fun load(path: String): ImageBitmap? = runCatching {
+            context.assets.open(path).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
+        }.getOrNull()
+        val base = scene?.asset?.removeSuffix(".png")
+        GameSceneLayers(base?.let { load("${it}_anim.png") }, base?.let { load("${it}_glow.png") })
+    }
+}
+
+/**
  * Zeichnet das gemalte Bild bildschirmfuellend, **ohne Glaettung** - jeder Bildpixel bleibt ein
  * scharfes Quadrat, sonst waere es keine Pixel-Art mehr. [fade] blendet beim Ortswechsel ins
  * Schwarze.
@@ -52,7 +74,8 @@ fun GameSceneView(
     tvOn: Boolean,
     avatarPos: PlayControl.Pos,
     phase: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    layers: GameSceneLayers? = null
 ) {
     Canvas(modifier = modifier) {
         val fit = GameScenes.fit(scene, size.width, size.height, avatarPos.x, avatarPos.depth)
@@ -63,10 +86,13 @@ fun GameSceneView(
             return Offset(sx, sy)
         }
         drawRect(Color.Black)
+        // Bewegung: aus dem Streifen das Bild zum Takt (Laub wiegt, Wasser kraeuselt, Licht flackert).
+        val strip = layers?.strip
+        val frame = if (strip != null) Math.floorMod(phase, layers?.frames ?: 1) else 0
         drawImage(
-            image = image,
-            srcOffset = IntOffset.Zero,
-            srcSize = IntSize(image.width, image.height),
+            image = strip ?: image,
+            srcOffset = IntOffset(frame * GameScenes.IMAGE_W, 0),
+            srcSize = IntSize(GameScenes.IMAGE_W, GameScenes.IMAGE_H),
             dstOffset = IntOffset(fit.left.roundToInt(), fit.top.roundToInt()),
             dstSize = IntSize(
                 (GameScenes.IMAGE_W * fit.scale).roundToInt(),
@@ -77,7 +103,27 @@ fun GameSceneView(
         )
         // Die Illustration bleibt die Materialbasis. Licht und Schatten werden dagegen in
         // denselben Bildkoordinaten wie Laufweg und Avatar pro Bildtakt berechnet.
-        drawRect(Color.Black.copy(alpha = GameSceneLighting.darkness(scene, minuteOfDay) * visible))
+        val dark = GameSceneLighting.darkness(scene, minuteOfDay)
+        // Abendrot und Morgenrot: warmer Schleier um Sonnenauf- und -untergang (nur draussen).
+        val dusk = GameSceneLighting.dusk(scene, minuteOfDay)
+        if (dusk > 0f) drawRect(Color(0xFFFF8A4A).copy(alpha = dusk * 0.16f * visible))
+        drawRect(Color(0xFF0A1030).copy(alpha = dark * visible))
+        // Was leuchtet, bleibt hell: Lampen, Fenster, Feuer ueber die Abdunkelung legen.
+        layers?.glow?.let { glow ->
+            val glowAlpha = (dark / GameSceneLighting.MAX_DARK).coerceIn(0f, 1f)
+            if (glowAlpha > 0.02f) drawImage(
+                image = glow,
+                srcOffset = IntOffset.Zero,
+                srcSize = IntSize(glow.width, glow.height),
+                dstOffset = IntOffset(fit.left.roundToInt(), fit.top.roundToInt()),
+                dstSize = IntSize(
+                    (GameScenes.IMAGE_W * fit.scale).roundToInt(),
+                    (GameScenes.IMAGE_H * fit.scale).roundToInt()
+                ),
+                alpha = glowAlpha * visible * (0.9f + 0.1f * sin(phase * 0.9f)),
+                filterQuality = FilterQuality.None
+            )
+        }
         lights.forEach { light ->
             val center = point(light.x, light.y)
             val radius = light.radius * fit.scale

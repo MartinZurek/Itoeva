@@ -26,9 +26,24 @@ object GameSceneLighting {
         }
     }
 
+    /** Groesste Abdunkelung (draussen, tiefe Nacht). */
+    const val MAX_DARK = 0.6f
+
+    /**
+     * Wie dunkel die Szene ueber dem Bild liegt: draussen nachts deutlich (Lampen und Fenster
+     * leuchten dann ueber die Glow-Ebene weiter), drinnen gedaempfter.
+     */
     fun darkness(scene: GameScenes.Scene, minuteOfDay: Int): Float {
         val outside = PlayScene.isOutdoors(scene.place)
-        return if (outside) 0.32f * (1f - daylight(minuteOfDay)) else 0.12f + 0.17f * (1f - daylight(minuteOfDay))
+        val night = 1f - daylight(minuteOfDay)
+        return if (outside) MAX_DARK * night else 0.1f + 0.32f * night
+    }
+
+    /** Abend- und Morgenrot: 0..1, am staerksten mitten in der Daemmerung, nur draussen. */
+    fun dusk(scene: GameScenes.Scene, minuteOfDay: Int): Float {
+        if (!PlayScene.isOutdoors(scene.place)) return 0f
+        val day = daylight(minuteOfDay)
+        return (1f - kotlin.math.abs(day - 0.5f) * 2f).coerceIn(0f, 1f) * if (day in 0.01f..0.99f) 1f else 0f
     }
 
     /** Lichtpunkte stehen am gezeichneten Leuchtkoerper, nicht am Standort des Spielers. */

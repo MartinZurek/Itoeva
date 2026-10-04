@@ -5189,12 +5189,13 @@ fun DockScreen(
             // Itoeva 2: wo es schon ein gemaltes Bild gibt, steht es statt der Zellen-Kulisse.
             val gemalt = if (gameMode && karte == null) GameScenes.of(renderedPlace) else null
             val gemaltBild = rememberGameSceneImage(gemalt)
+            val gemaltEbenen = rememberGameSceneLayers(gemalt)
             if (gemalt != null && gemaltBild != null) {
                 GameSceneView(
                     scene = gemalt, image = gemaltBild, fade = sceneFade.value,
                     minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute },
                     lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(), layers = gemaltEbenen
                 )
             } else PlaySceneView(
                 cells = if (streamMode) StreamPresentation.readableNight(

@@ -65,6 +65,20 @@ def kotlin(metas):
     return '\n'.join(lines)
 
 
+# Bewegung je Ort (siehe animate.py): Wasserzeilen, Feuerstellen, Bereiche ohne Wind.
+ANIM = {
+    'pond': dict(water_band=(140, 262), water_any=True, exclude=[(0, 120, 330, 270)]),
+    'beach': dict(water_band=(86, 200)),
+    'swamp': dict(water_band=(104, 215)),
+    'park': dict(water_band=(232, 270)),
+    'camp': dict(water_band=(104, 160), fire=[[(108, 168), (152, 168), (152, 212), (108, 212)]]),
+    'grotto': dict(water_band=(176, 215)),
+    'living': dict(fire=[[(70, 150), (110, 150), (110, 190), (70, 190)]], sway=0.6, glow_add=[(270, 30, 325, 60)]),
+    'street': dict(glow_exclude=[(380, 0, 480, 150)]),
+    'bedroom': dict(sway=0.6),
+}
+
+
 def main(names):
     metas = json.load(open(META)) if os.path.exists(META) else {}
     os.makedirs(ASSETS, exist_ok=True)
@@ -72,7 +86,12 @@ def main(names):
                            if n.endswith('.py') and not n.startswith('_'))
     for name in todo:
         print('rendere', name)
-        metas[name] = load(name).build(os.path.join(ASSETS, name + '.png'))
+        png = os.path.join(ASSETS, name + '.png')
+        metas[name] = load(name).build(png)
+        import animate
+        animate.animate_file(png, os.path.join(ASSETS, name + '_anim.png'), **ANIM.get(name, {}))
+        animate.glow_file(png, os.path.join(ASSETS, name + '_glow.png'), **ANIM.get(name, {}))
+        metas[name]['animFrames'] = animate.FRAMES
     json.dump(metas, open(META, 'w'), indent=1, sort_keys=True)
     open(CATALOG, 'w').write(kotlin(metas))
     print(f'{len(metas)} Orte im Katalog.')

@@ -76,3 +76,15 @@ nimmt die Figuren heraus (Umgebung versetzt hineinkopiert) und bringt das Bild m
 `pixelate.translate` sanft auf die Spielpalette. Je Ort steht im Skript der Ausschnitt `BOX` in
 Tafelkoordinaten (1024 x 683). Das Lagerfeuer-Licht in `GameSceneLighting` (Folge-PR #330 von
 Codex) liegt auf dem Feuer dieses Bildes (`CAMP_FIRE_X/Y`).
+
+## Bewegung und Nachtlicht (`animate.py`, seit 04.10. abends)
+
+Jeder Ort bekommt neben dem Bild zwei Ebenen, die `build_all.py` (oder `animate_all.py` fuer die
+vorhandenen Bilder) erzeugt:
+- `<ort>_anim.png`: acht Bilder nebeneinander. Laub und Gras wiegen sich um einen Pixel (eine Boe
+  laeuft durchs Bild), Wasser kraeuselt sich zeilenweise und glitzert, Lampen und Feuer flackern.
+  Das Spiel zeigt sie im Szenentakt (200 ms je Bild).
+- `<ort>_glow.png`: was nachts leuchtet (Lampen, Fenster, Feuer, Kerzen) mit gestuftem Lichthof.
+  Das Spiel legt sie ueber die naechtliche Abdunkelung, damit Lampen hell bleiben.
+Je Ort lassen sich in `build_all.ANIM` Wasserzeilen, Feuerstellen, zusaetzliche und
+ausgeschlossene Leuchtflaechen und die Windstaerke setzen.
