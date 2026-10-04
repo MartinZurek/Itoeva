@@ -48,13 +48,34 @@ class GameScenesTest {
     }
 
     @Test
-    fun `Zimmer und Park sind verbunden, das Gelaender nicht`() {
-        assertEquals(Place.PARK, GameScenes.exit(GameScenes.LIVING, Dir.RIGHT))
-        assertEquals(Place.LIVING, GameScenes.exit(GameScenes.PARK, Dir.LEFT))
+    fun `Gelaender und Waende sperren, die Treppe fuehrt ins Haus`() {
         assertNull(GameScenes.exit(GameScenes.PARK, Dir.UP))
         assertNull(GameScenes.exit(GameScenes.LIVING, Dir.UP))
+        assertNull(GameScenes.exit(GameScenes.LIVING, Dir.DOWN))
+        assertEquals(PlayControl.neighbor(Place.LIVING, Dir.RIGHT), GameScenes.exit(GameScenes.LIVING, Dir.RIGHT))
         assertEquals(Place.LIVING, GameScenes.PARK.door)
         assertEquals(Station.DOOR, GameScenes.spotAt(GameScenes.PARK, 80f, 170f)?.station)
+    }
+
+    @Test
+    fun `die gemalten Orte schneiden keinen Ort von daheim ab`() {
+        fun next(place: Place, dir: Dir): Place? =
+            GameScenes.of(place)?.let { GameScenes.exit(it, dir) } ?: if (GameScenes.of(place) == null) PlayControl.neighbor(place, dir) else null
+        fun reach(step: (Place, Dir) -> Place?, doors: Boolean): Set<Place> {
+            val seen = mutableSetOf(Place.LIVING)
+            val todo = ArrayDeque(listOf(Place.LIVING))
+            while (todo.isNotEmpty()) {
+                val at = todo.removeFirst()
+                val targets = Dir.entries.mapNotNull { step(at, it) } +
+                    listOfNotNull(if (doors) GameScenes.of(at)?.door else null)
+                for (t in targets) if (seen.add(t)) todo.add(t)
+            }
+            return seen
+        }
+        val vorher = reach({ p, d -> PlayControl.neighbor(p, d) }, doors = false)
+        val jetzt = reach(::next, doors = true)
+        assertTrue(Place.STREET in jetzt)
+        assertTrue("abgeschnitten: ${vorher - jetzt}", jetzt.containsAll(vorher))
     }
 
     @Test

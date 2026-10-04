@@ -19,7 +19,8 @@ import kotlin.math.max
  * - **wo man gehen kann**: ein Trapez auf dem Boden, hinten schmaler als vorn;
  * - **wie gross die Figur wo ist**: hinten klein, vorn gross - das ist die Tiefe;
  * - **was man antippen kann**: Plaetze mit Trefferflaeche und Standort davor;
- * - **wohin die Raender fuehren**, wo sie von [PlayControl.neighbor] abweichen.
+ * - **wohin die Raender fuehren**, wo sie von [PlayControl.neighbor] abweichen (bisher nur:
+ *   gesperrte Raender - Waende, Gelaender).
  *
  * Alle Masse in Bildpixeln. Reine Rechnung ohne Android.
  */
@@ -76,7 +77,10 @@ object GameScenes {
             Spot(Station.DOOR, Box(0f, 40f, 126f, 206f), 104f, 213f),
             Spot(Station.RACK, Box(0f, 234f, 112f, 270f), 60f, 248f)
         ),
-        exits = mapOf(Dir.LEFT to Place.LIVING, Dir.UP to null),
+        // Nach hinten ist das Gelaender. Links und rechts fuehren die Raender wie auf der Karte -
+        // eine eigene Abkuerzung zum Zimmer haette den einzigen Weg zur Strasse ersetzt und die
+        // ganze Stadt unerreichbar gemacht. Ins Haus geht es ueber die Treppe ([door]).
+        exits = mapOf(Dir.UP to null),
         door = Place.LIVING
     )
 
@@ -92,7 +96,8 @@ object GameScenes {
             Spot(Station.SEAT, Box(286f, 95f, 404f, 206f), 330f, 210f),
             Spot(Station.BOOKSHELF, Box(118f, 25f, 170f, 178f), 166f, 182f)
         ),
-        exits = mapOf(Dir.RIGHT to Place.PARK, Dir.UP to null, Dir.DOWN to null),
+        // Rechts geht es wie bisher hinaus auf die Strasse; nach hinten und vorn sind Waende.
+        exits = mapOf(Dir.UP to null, Dir.DOWN to null),
         cropTop = 0.7f
     )
 

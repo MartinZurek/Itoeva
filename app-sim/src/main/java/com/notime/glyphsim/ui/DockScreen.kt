@@ -5975,13 +5975,25 @@ fun DockScreen(
                                 gamePos = PlayControl.Pos(0.5f, 0.5f)
                                 gameSnap++
                             } else {
-                                PlayBackpack.lootAt(station)?.let { found ->
-                                    if (!gameBackpack.isFull) saveBackpack(PlayBackpack.add(gameBackpack, found))
+                                // Dieselbe Handlung wie ueberall (sitzen und durchatmen, lesen,
+                                // trinken ...), nur ohne die Schritte, die die Figur nach der
+                                // Zellen-Kulisse versetzen (GoTo, Occupy, Rise) - hier steht sie
+                                // schon am gemalten Platz.
+                                PlayControl.actionAt(station, lampOn, tvOn)?.let { routine ->
+                                    val vorOrt = routine.steps.filter { it is RoutineStep.Act || it is RoutineStep.Linger }
+                                    if (vorOrt.isNotEmpty()) {
+                                        runRoutine(PlayRoutine(vorOrt), species, applyLegacyEconomy = false)
+                                    }
                                 }
-                                // Kurze Freude ueber das, was es dort gab.
-                                repeat(GAME_CHEER_FRAMES) { tick ->
-                                    avatar = avatar?.copy(frame = AvatarAnimations.gamePose(species, PlayGroupGame.Pose.CHEER, tick))
-                                    delay(GAME_CHEER_FRAME_MS)
+                                PlayBackpack.lootAt(station)?.let { found ->
+                                    if (!gameBackpack.isFull) {
+                                        saveBackpack(PlayBackpack.add(gameBackpack, found))
+                                        // Kurze Freude ueber das, was es dort gab.
+                                        repeat(GAME_CHEER_FRAMES) { tick ->
+                                            avatar = avatar?.copy(frame = AvatarAnimations.gamePose(species, PlayGroupGame.Pose.CHEER, tick))
+                                            delay(GAME_CHEER_FRAME_MS)
+                                        }
+                                    }
                                 }
                             }
                         } finally {
