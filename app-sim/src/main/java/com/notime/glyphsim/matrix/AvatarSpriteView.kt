@@ -87,7 +87,11 @@ fun AvatarSpriteView(
      * Beschattete Flanke (siehe [AvatarShading.Side]) - im Stand [AvatarShading.Side.NONE],
      * beim Gehen die Seite, von der die Kreatur KOMMT.
      */
-    shadeSide: AvatarShading.Side = AvatarShading.Side.NONE
+    shadeSide: AvatarShading.Side = AvatarShading.Side.NONE,
+    /** Im aktiven Spiel: vorne/hinten erhalten eigene gezeichnete Ansichten. */
+    gameDirection: PlayControl.Dir? = null,
+    /** Im aktiven Spiel bleibt die Ansicht beim Anhalten, ohne weiterzulaufen. */
+    gameMoving: Boolean? = null
 ) {
     // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
     // Bogen, wird statt der groben Zellen das passende Bild daraus gezeichnet. Die grobe Pose
@@ -116,7 +120,8 @@ fun AvatarSpriteView(
             )
     ) {
         if (sheet != null && species != null) {
-            drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L)
+            drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
+                gameDirection, gameMoving)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide)
         }
@@ -146,9 +151,11 @@ private fun DrawScope.drawCreature(
     brightnessScale: Float,
     species: AvatarSpecies,
     shadeSide: AvatarShading.Side,
-    timeMs: Long
+    timeMs: Long,
+    gameDirection: PlayControl.Dir?,
+    gameMoving: Boolean?
 ) {
-    val look = CreatureSprites.look(frame, species, shadeSide, timeMs)
+    val look = CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
     val cell = size.width / AvatarGeometry.SIZE
     val drawn = size.width * CreatureSprites.SCALE
     // Die Fuesse stehen dort, wo die grobe Figur aufsetzt (siehe AvatarFooting) - angehoben um

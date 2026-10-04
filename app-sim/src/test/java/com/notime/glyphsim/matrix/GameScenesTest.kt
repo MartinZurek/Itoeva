@@ -108,4 +108,41 @@ class GameScenesTest {
         assertEquals(target.x, pos.x, 1e-4f)
         assertEquals(target.depth, pos.depth, 1e-4f)
     }
+
+    @Test
+    fun `kamera folgt der Tiefe nur wenn ein Bildueberstand vorhanden ist`() {
+        val scene = scenes.first()
+        val wide = GameScenes.fit(scene, 2400f, 1080f, 0.1f, 0.1f)
+        val near = GameScenes.fit(scene, 2400f, 1080f, 0.9f, 0.9f)
+        assertEquals(0f, wide.left, 1e-3f)
+        assertEquals(wide.left, near.left, 1e-3f)
+        assertTrue(near.top < wide.top)
+        val square = GameScenes.fit(scene, 1080f, 1080f, 0.1f, 0.5f)
+        val squareRight = GameScenes.fit(scene, 1080f, 1080f, 0.9f, 0.5f)
+        assertTrue(squareRight.left < square.left)
+    }
+
+    @Test
+    fun `laterne erhellt den Boden nur wenn sie eingeschaltet ist`() {
+        val street = GameScenes.of(Place.STREET)!!
+        val off = GameSceneLighting.sources(street, 23 * 60, lampOn = false, tvOn = false, phase = 0)
+        val on = GameSceneLighting.sources(street, 23 * 60, lampOn = true, tvOn = false, phase = 0)
+        assertTrue(off.none { it.tone == GameSceneLighting.Tone.WARM })
+        assertTrue(on.any { it.tone == GameSceneLighting.Tone.WARM })
+        val lamp = on.first { it.tone == GameSceneLighting.Tone.WARM }
+        assertTrue(GameSceneLighting.illuminationAt(lamp.x, lamp.y, on) >
+            GameSceneLighting.illuminationAt(lamp.x + 150f, lamp.y, on))
+        assertEquals(0f, GameSceneLighting.daylight(23 * 60), 1e-4f)
+    }
+
+    @Test
+    fun `bewegter Schatten liegt vom Licht abgewandt und folgt dem Fusspunkt`() {
+        val street = GameScenes.of(Place.STREET)!!
+        val light = GameSceneLighting.Light(50f, 120f, 180f, 0.5f, GameSceneLighting.Tone.WARM)
+        val a = GameSceneLighting.shadow(street, Pos(0.3f, 0.5f), listOf(light))
+        val b = GameSceneLighting.shadow(street, Pos(0.8f, 0.5f), listOf(light))
+        assertTrue(a.tipX > a.footX)
+        assertTrue(b.tipX > b.footX)
+        assertTrue(b.footX > a.footX)
+    }
 }

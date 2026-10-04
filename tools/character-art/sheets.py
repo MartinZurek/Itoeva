@@ -1,7 +1,8 @@
-"""Baut je Wesen einen Bilderbogen fuer das Spiel: 11 Bilder zu 64 x 64 Pixeln nebeneinander.
+"""Baut je Wesen einen Bilderbogen fuer das Spiel: 17 Bilder zu 64 x 64 Pixeln nebeneinander.
 
 Reihenfolge (muss zu `CreatureSprites.kt` passen):
   0 Ruhe, 1 Ruhe eingeatmet, 2 Blinzeln, 3..6 Laufen, 7..8 Freude, 9..10 Schlafen
+  11 vorn, 12 hinten, 13..14 vorn gehen, 15..16 hinten gehen
 
 Ausgabe: app-sim/src/main/assets/creatures/<wesen>.png
 """
@@ -11,6 +12,7 @@ import numpy as np
 from PIL import Image
 from sprite import Pose
 import characters as C
+from directions import draw as directional
 
 SPECIES = {
     'fennec': C.fennec, 'gloop': C.gloop, 'starlet': C.starlet,
@@ -47,7 +49,7 @@ def curled(img):
     return Image.fromarray(b)
 
 
-def frames(fn):
+def frames(fn, name):
     walk = [fn(Pose(step=k)) for k in range(4)]
     joy = fn(Pose(eyes='happy', joy=True))
     # Wer eine eigene Schlafpose hat (Wyrmling), zeichnet sie selbst; die anderen sinken zusammen.
@@ -61,6 +63,9 @@ def frames(fn):
         lifted(walk[2].image(), 0), lifted(walk[3].image(), 1),
         joy.image(), breath(joy.image()),
         sleep, breath(sleep),
+        directional(name), directional(name, back=True),
+        directional(name, step=1), directional(name, step=3),
+        directional(name, back=True, step=1), directional(name, back=True, step=3),
     ]
 
 
@@ -70,12 +75,19 @@ def grounded(fr):
     bottom = np.nonzero(a.any(axis=1))[0].max()
     shift = (FOOT - 1) - bottom
     out = []
-    for f in fr:
+    for i, f in enumerate(fr):
         arr = np.roll(np.array(f), shift, axis=0)
         if shift > 0:
             arr[:shift] = 0
         elif shift < 0:
             arr[shift:] = 0
+        if i >= 11:
+            # Neue Blickrichtungen bekommen denselben Fussanker wie die bestehende Ruhepose.
+            bottom = np.nonzero((arr[..., 3] > 0).any(axis=1))[0].max()
+            if bottom > FOOT - 1:
+                up = bottom - (FOOT - 1)
+                arr = np.roll(arr, -up, axis=0)
+                arr[-up:] = 0
         out.append(Image.fromarray(arr))
     return out
 
@@ -83,7 +95,7 @@ def grounded(fr):
 def build(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     for name, fn in SPECIES.items():
-        fr = grounded(frames(fn))
+        fr = grounded(frames(fn, name))
         sheet = Image.new('RGBA', (64 * len(fr), 64), (0, 0, 0, 0))
         for i, f in enumerate(fr):
             sheet.alpha_composite(f, (i * 64, 0))
@@ -91,11 +103,11 @@ def build(out_dir):
 
 
 def preview(path):
-    rows = [grounded(frames(fn)) for fn in SPECIES.values()]
-    out = Image.new('RGBA', (64 * 11 + 24, 66 * len(rows) + 8), (232, 222, 200, 255))
+    rows = [grounded(frames(fn, name)) for name, fn in SPECIES.items()]
+    out = Image.new('RGBA', (64 * 17 + 32, 66 * len(rows) + 8), (232, 222, 200, 255))
     for r, fr in enumerate(rows):
         for i, f in enumerate(fr):
-            out.alpha_composite(f, (8 + i * 64 + (i > 2) * 4 + (i > 6) * 4 + (i > 8) * 4, 4 + r * 66))
+            out.alpha_composite(f, (8 + i * 64, 4 + r * 66))
     out.resize((out.width * 3, out.height * 3), Image.NEAREST).save(path)
 
 

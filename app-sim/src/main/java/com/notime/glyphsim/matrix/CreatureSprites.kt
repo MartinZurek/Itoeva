@@ -39,7 +39,11 @@ object CreatureSprites {
     const val WALK_FIRST = 3
     const val JOY_FIRST = 7
     const val SLEEP_FIRST = 9
-    const val FRAME_COUNT = 11
+    const val FRONT = 11
+    const val BACK = 12
+    const val FRONT_WALK_FIRST = 13
+    const val BACK_WALK_FIRST = 15
+    const val FRAME_COUNT = 17
 
     private const val BREATH_MS = 900L
     private const val WALK_MS = 140L
@@ -83,18 +87,28 @@ object CreatureSprites {
      * Das Bild zur groben Pose [raw] (noch nicht gespiegelt), zur Laufrichtung [side] und zur
      * Uhrzeit [timeMs] (fuer Atmen, Schritte und Blinzeln im eigenen Takt).
      */
-    fun look(raw: IntArray, species: AvatarSpecies, side: AvatarShading.Side, timeMs: Long): Look {
-        val mirrored = AvatarFacing.mirrors(side)
+    fun look(
+        raw: IntArray,
+        species: AvatarSpecies,
+        side: AvatarShading.Side,
+        timeMs: Long,
+        direction: PlayControl.Dir? = null,
+        moving: Boolean? = null
+    ): Look {
+        val mirrored = direction != PlayControl.Dir.UP && direction != PlayControl.Dir.DOWN && AvatarFacing.mirrors(side)
         val box = bounds(raw, AvatarGeometry.SIZE, AvatarGeometry.HEIGHT)
             ?: return Look(IDLE, 0, mirrored)
         val ground = AvatarBodies.forSpecies(species).groundRow()
         val lift = (ground - box[1]).coerceAtLeast(0)
         val eyesOpen = AvatarAccent.eyesIn(raw).any { it }
         val lying = box[1] - box[0] + 1 < standHeightOf(species) * LYING
+        val walking = moving ?: (side != AvatarShading.Side.NONE)
         val frame = when {
-            // Gehen zuerst: Der alte Gang huepft selbst eine Zelle - das ist kein Jubel.
-            side != AvatarShading.Side.NONE -> WALK_FIRST + ((timeMs / WALK_MS) % 4).toInt()
             !eyesOpen && lying -> SLEEP_FIRST + ((timeMs / SLEEP_MS) % 2).toInt()
+            direction == PlayControl.Dir.UP -> if (walking) BACK_WALK_FIRST + ((timeMs / WALK_MS) % 2).toInt() else BACK
+            direction == PlayControl.Dir.DOWN -> if (walking) FRONT_WALK_FIRST + ((timeMs / WALK_MS) % 2).toInt() else FRONT
+            // Gehen zuerst: Der alte Gang huepft selbst eine Zelle - das ist kein Jubel.
+            walking -> WALK_FIRST + ((timeMs / WALK_MS) % 4).toInt()
             // Erst ein richtiger Sprung ist Freude; ein kleiner Wipper im Stand bleibt Ruhe.
             lift >= JUMP -> JOY_FIRST + ((timeMs / JOY_MS) % 2).toInt()
             !eyesOpen -> BLINK

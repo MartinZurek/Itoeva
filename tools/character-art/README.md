@@ -30,3 +30,14 @@ Bernstein, eigene Schlafpose), **Fennec** (Reisemantel, Wegstein, Flasche), **Gl
 Samenstein, Tasche), **Starlet** (Himmelskragen, Mondanhaenger), **Puffling** (Kapuze, Blattschliesse),
 **Hootlet** (Sternenumhang, Messingschliesse, Kartenrolle). Eine eigene
 Schlafpose meldet eine Figur in `sheets.OWN_SLEEP` an; die anderen sinken zusammen (`curled`).
+
+## Blickrichtung im aktiven Spiel
+
+`directions.py` zeichnet fuer jedes der sechs Wesen eine eigene Vorder- und Rueckansicht mit
+Fussanker auf Zeile 61. `sheets.py` haengt diese sechs Bilder an den bisherigen Bogen an;
+die ersten elf Bilder bleiben pixelgenau identisch. `CreatureSprites.look` waehlt sie nur
+fuer Hoch-/Runtergehen in Itoeva 2. Nach dem Anhalten bleibt die Blickrichtung stehen,
+waehrend die Schrittphase endet. Links/rechts verwenden weiterhin die Seitenansicht.
+
+Pruefung: `python3 -m unittest test_directions.py`; Bildbogen mit
+`python3 sheets.py --preview /tmp/figuren-richtungen.png` ansehen.

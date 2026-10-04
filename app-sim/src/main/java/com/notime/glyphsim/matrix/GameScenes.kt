@@ -128,11 +128,15 @@ object GameScenes {
         fun toImage(x: Float, y: Float): Pair<Float, Float> = ((x - left) / scale) to ((y - top) / scale)
     }
 
-    fun fit(scene: Scene, screenW: Float, screenH: Float): Fit {
+    fun fit(scene: Scene, screenW: Float, screenH: Float, focusX: Float = 0.5f, focusDepth: Float = 0.5f): Fit {
         val scale = max(screenW / IMAGE_W, screenH / IMAGE_H)
         val overW = IMAGE_W * scale - screenW
         val overH = IMAGE_H * scale - screenH
-        return Fit(scale, -overW / 2f, -overH * scene.cropTop)
+        // Nur den tatsaechlich ueberstehenden Teil verschieben: Bild, Trefferflaechen und
+        // Fusspunkt benutzen denselben Fit. Bei 16:9 bleibt die Kamera deshalb exakt ruhig.
+        val xCrop = (0.35f + 0.3f * focusX.coerceIn(0f, 1f)).coerceIn(0f, 1f)
+        val yCrop = (scene.cropTop + 0.25f * (focusDepth.coerceIn(0f, 1f) - 0.5f)).coerceIn(0f, 1f)
+        return Fit(scale, -overW * xCrop, -overH * yCrop)
     }
 
     /**

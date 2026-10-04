@@ -56,3 +56,14 @@ desselben Blatts ergaenzen, dann `pixelate.translate`. Dazu muss der Branch
 `art/concept-studies-2026-10-04` geholt sein (`git fetch origin art/concept-studies-2026-10-04`).
 Kueche, Bad, Schreibzimmer, Werkstatt, Leseecke, Laden, Cafe, Arbeitsstube und Spielhalle haben
 noch keine Studie und zeigen bis dahin die alte Kulisse.
+
+## Laufzeit-Licht und Bewegung (Folge-PR)
+
+`GameSceneLighting` rechnet die im Bildkoordinatensystem liegenden Lichtquellen aus Uhrzeit,
+Lampenschalter, Fernseher und Lagerfeuer. `GameSceneView` legt fallende Lichtfelder und einen
+mit dem Avatar bewegten Bodenschatten ueber die gemalte Szene; wenige Blaetter und
+Wasserreflexe bewegen sich im vorhandenen Szenentakt. Die Kamera verwendet nur tatsaechlich
+ueberstehende Bildteile und denselben `GameScenes.fit` fuer Bild, Avatar und Trefferflaechen.
+Das ist ein 2D-Lichtmodell: die in PNGs eingebrannten Highlights und Schatten von
+Kulissenobjekten bleiben vorerst statisch. Der Exportclip zeichnet diese neue Schicht noch
+nicht mit. Geraeteansicht und Performance sind noch zu pruefen.
