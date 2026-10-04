@@ -669,6 +669,20 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-04 - Itoeva 2: Landschaften aus Konzeptbuch Band 2, Licht-PR uebernommen
+
+**Anlass:** Martin: weniger generisch, eins zu eins wie die Concept Art. Inzwischen liegen fuer alle
+neun Wildnis-Orte Landschaftstafeln vor (Band 2), und Codex hat in #330 Laufzeitlicht,
+Bodenschatten und Vorder-/Rueckansichten der Wesen auf diesem Branch aufgebaut.
+
+**Geaendert:** #330 ist in den Orte-Branch gemischt. Wald, Wiese, Berge, Ebene, Lager, Strand,
+Dschungel, Sumpf und Grotte sind jetzt die Tafeln aus Band 2 im Spielformat (Figuren
+herausgenommen); die frei gemalten Fassungen sind ersetzt. Das Lagerfeuer-Licht sitzt auf dem
+Feuer des neuen Lagerbildes. Gehflaeche und Sitzplatz je Bild neu gesetzt, Plaetze unveraendert
+(je ein BENCH).
+
+**Grenzen / UNVERIFIED:** Am Geraet ungeprueft. Die Laufstreifen sind schmal (Seitenansicht).
+
 ### 2026-10-04 - Itoeva 2: Blickrichtungen und lebendige Lichtschicht (Entwurf-PR)
 
 **Anlass:** Martin sieht die gemalten Hintergruende als zu unbewegliche Bilder. Beim Gehen nach hinten

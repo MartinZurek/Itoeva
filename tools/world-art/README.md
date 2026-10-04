@@ -42,7 +42,7 @@ Ein Ort darf nur Plaetze haben, die er im Spiel schon hat (`PlayScene.stationsAt
 | Marktplatz (Abend) | frei nach dem Uferviertel | Laterne, Bank |
 | Park, Sportplatz | Park mit Sportplatz, eins zu eins uebersetzt | Bank |
 | Waldsee | Waldsee, eins zu eins uebersetzt (Steg, See, Insel) | - |
-| Wiese, Wald, Berge, Ebene, Lager, Strand, Dschungel, Sumpf, Grotte | frei im selben Stil | Sitzplatz (Stamm oder Steinbank) |
+| Wiese, Wald, Berge, Ebene, Lager, Strand, Dschungel, Sumpf, Grotte | Konzeptbuch Band 2 (`world-conceptbook-v2/images/*-pixel-concept-v1.jpg`), eins zu eins uebernommen ueber `places/_landscape.py` | Sitzplatz (Stamm, Bank, Heuballen, Liegestuhl, Steinplatte) |
 
 Benoetigt Python 3 mit `numpy`, `scipy`, `Pillow`. Der Wald braucht knapp eine Minute (viele
 Tannen), alle anderen Orte wenige Sekunden.
@@ -67,3 +67,12 @@ ueberstehende Bildteile und denselben `GameScenes.fit` fuer Bild, Avatar und Tre
 Das ist ein 2D-Lichtmodell: die in PNGs eingebrannten Highlights und Schatten von
 Kulissenobjekten bleiben vorerst statisch. Der Exportclip zeichnet diese neue Schicht noch
 nicht mit. Geraeteansicht und Performance sind noch zu pruefen.
+
+## Landschaften aus Konzeptbuch Band 2
+
+Die neun Wildnis-Orte kommen seit dem 04.10. abends aus den Landschaftstafeln von Band 2. Die
+Tafeln sind schon Pixel-Art; `_landscape.render` schneidet die Szene im Spielformat (16:9) aus,
+nimmt die Figuren heraus (Umgebung versetzt hineinkopiert) und bringt das Bild mit
+`pixelate.translate` sanft auf die Spielpalette. Je Ort steht im Skript der Ausschnitt `BOX` in
+Tafelkoordinaten (1024 x 683). Das Lagerfeuer-Licht in `GameSceneLighting` (Folge-PR #330 von
+Codex) liegt auf dem Feuer dieses Bildes (`CAMP_FIRE_X/Y`).

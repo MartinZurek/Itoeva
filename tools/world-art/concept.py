@@ -19,6 +19,8 @@ STUDIES = {
     'lake': 'docs/concept-art/world-studies/woodland-lake-world-study-v1.png',
     'river': 'docs/concept-art/world-studies/itoeva-riverside-quarter-concept-v1.png',
 }
+for _n in ('beach', 'camp', 'forest', 'grotto', 'jungle', 'meadow', 'mountains', 'plains', 'swamp'):
+    STUDIES['v2_' + _n] = f'docs/concept-art/world-conceptbook-v2/images/{_n}-pixel-concept-v1.jpg'
 PAPER = np.array([248, 237, 221]) / 255
 
 # Objekte aus der HOME-Spalte des Blatts "Places to live" (Koordinaten im Blatt, 1536 x 1024)
@@ -132,6 +134,15 @@ def hue_mask(img, box, hues, sat=0.25, val=0.15):
     full = np.zeros(img.shape[:2], bool)
     full[y0:y1, x0:x1] = m
     return full
+
+
+def remove_text(img, box):
+    """Schriftzug der Tafel (z. B. 'ITOEVA / FOREST') ueberdecken: Zeilen oberhalb und unterhalb
+    verblenden. box in Bildkoordinaten von img."""
+    x0, y0, x1, y1 = box
+    m = np.zeros(img.shape[:2], bool)
+    m[y0:y1, x0:x1] = True
+    return inpaint(img, m)
 
 
 def native(name, box):

@@ -9,6 +9,10 @@ import kotlin.math.hypot
 object GameSceneLighting {
     enum class Tone { SUN, WARM, COOL }
     data class Light(val x: Float, val y: Float, val radius: Float, val power: Float, val tone: Tone)
+    /** Das Lagerfeuer im Bild des Lagers (camp.png aus Konzeptbuch Band 2, Bildpixel). */
+    const val CAMP_FIRE_X = 130f
+    const val CAMP_FIRE_Y = 198f
+
     data class Shadow(val footX: Float, val footY: Float, val tipX: Float, val tipY: Float, val width: Float)
 
     /** Zwischen sechs und acht Uhr hellt der Himmel auf, zwischen achtzehn und zwanzig ab. */
@@ -43,7 +47,7 @@ object GameSceneLighting {
                 result += Light(x, y, 88f, 0.42f * flicker, Tone.WARM)
             }
         }
-        if (scene.place == Place.CAMP) result += Light(256f, 224f, 95f,
+        if (scene.place == Place.CAMP) result += Light(CAMP_FIRE_X, CAMP_FIRE_Y, 95f,
             0.48f + 0.04f * kotlin.math.sin(phase * 0.63).toFloat(), Tone.WARM)
         if (tvOn) scene.spots.filter { it.station == Station.TV }.forEach { spot ->
             result += Light((spot.hit.x0 + spot.hit.x1) / 2f, spot.hit.y0 + 18f, 80f, 0.28f, Tone.COOL)
