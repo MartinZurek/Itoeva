@@ -1,0 +1,206 @@
+{
+  "title": "Itoeva World - Character-Konzeptbuch",
+  "volume": 3,
+  "date": "2026-10-04",
+  "status": "Am 04.10.2026 zur Ablage als Referenz auf GitHub freigegeben; Umsetzung neuer Figuren weiter offen.",
+  "characters": [
+    {
+      "id": "fennec",
+      "name": "Fennec",
+      "status": "Bestehendes Wesen / Fantasy-Variante",
+      "height": 58,
+      "core": "Große aufrechte Ohren, orange-cremefarbenes Fell und buschiger Schwanz.",
+      "fantasy": "Kurzer rostfarbener Reisemantel, türkisfarbener Wegstein als Schließe und kleine Trinkflasche.",
+      "motion": "Ruhiger federnder Schritt, Ohren reagieren vor dem Kopf; Schwanz schwingt mit leichter Verzögerung.",
+      "pixel": "Ohren und helle Schwanzspitze zuerst lesbar halten. Mantel nicht mit Vorderpfoten verschmelzen lassen.",
+      "palette": [
+        "#49372F",
+        "#955033",
+        "#CF7D45",
+        "#E3AC6B",
+        "#F2D7A4",
+        "#687B60",
+        "#66A6A0",
+        "#FAEBCB"
+      ],
+      "subject": "Fennec, recognizable same orange and cream large-eared little desert fox from reference top-left. Quiet reliable guardian. Add a short rust-red travel mantle secured by one modest turquoise waystone clasp and small water flask, no armor. Keep four-legged fox anatomy for walk views, front paws usable when seated. Huge upright ears, cream tail tip, same gentle face.",
+      "actions": "walking on four paws, seated drinking, attentive listening, curled sleeping"
+    },
+    {
+      "id": "gloop",
+      "name": "Gloop",
+      "status": "Bestehendes Wesen / Fantasy-Variante",
+      "height": 38,
+      "core": "Niedrige runde Moosgrün-Silhouette, sanfte dunkle Augen, weiche Körpermasse.",
+      "fantasy": "Kleine Blattschulter, winziger Samenstein im durchscheinenden Körper und seitliche Tasche.",
+      "motion": "Langsames Stauchen und Strecken mit stabilem Bodenkontakt; kurze Pausen vor Richtungswechseln.",
+      "pixel": "Keine glasartigen Vollflächenreflexe. Außenkontur, Gesicht und eine helle Innenkante genügen für Transparenz.",
+      "palette": [
+        "#35493B",
+        "#5D754B",
+        "#8FA565",
+        "#BCC58B",
+        "#DDE0AF",
+        "#9A7957",
+        "#B8D6BB",
+        "#F0EBC8"
+      ],
+      "subject": "Gloop, same moss-green soft rounded gelatinous being from reference top-middle. Calm slightly chaotic, thoughtful cozy personality. Subtle fantasy with little leaf shoulder wrap, tiny amber seed-stone visible inside semi-translucent moss body, single small side pouch. Retain low domed silhouette, simple gentle dark eyes, no humanoid legs or arms as permanent limbs, temporary soft pseudopods allowed for holding a book.",
+      "actions": "soft squash-and-stretch travel, holding an open book, resting on ground, curious lean"
+    },
+    {
+      "id": "starlet",
+      "name": "Starlet",
+      "status": "Bestehendes Wesen / Fantasy-Variante",
+      "height": 36,
+      "core": "Fünf klare Sternspitzen, goldgelbe Fläche und kleines freundliches Gesicht.",
+      "fantasy": "Kleiner indigoblauer Himmelskragen und ein dezenter Mondanhänger.",
+      "motion": "Sanftes Wippen nahe am Boden; Emotionen durch Neigung und Spitzenstellung statt hektischer Drehung.",
+      "pixel": "Alle fünf Spitzen müssen getrennt bleiben. Leuchten nur als kleiner Akzent; Gesicht nicht überstrahlen.",
+      "palette": [
+        "#67523A",
+        "#B68543",
+        "#E8B857",
+        "#F5D782",
+        "#FFF0BA",
+        "#536783",
+        "#8A9CB5",
+        "#CFA47C"
+      ],
+      "subject": "Starlet, same golden-yellow five-point star creature from reference top-right, kind dreamy calm face. Add tiny indigo celestial collar and small moon pendant without covering any point. Subtle sparse stardust and faint engraved constellation detail only on large illustration. No human body, keep five-point star anatomy with two lower points grounding stance; gentle near-ground buoyancy possible, no huge glowing aura.",
+      "actions": "gentle walking with lower points, looking upward, shy happy tilt, peaceful sleep"
+    },
+    {
+      "id": "puffling",
+      "name": "Puffling",
+      "status": "Bestehendes Wesen / Fantasy-Variante",
+      "height": 42,
+      "core": "Runde wolkige Silhouette, cremefarbener Flaum mit blaugrauen Schatten und kleine Füße.",
+      "fantasy": "Leichte salbeifarbene Kapuze, Blattschließe und kompakte Sammeltasche.",
+      "motion": "Kurze neugierige Schritte, Flaum folgt weich; Kopf dreht sich leicht vor dem Körper.",
+      "pixel": "Vier bis sechs große Flaumbögen statt einzelner Haare. Tasche darf die Rundform nicht zerschneiden.",
+      "palette": [
+        "#52616A",
+        "#8598A2",
+        "#B7C6C8",
+        "#DDE0D1",
+        "#F7EBCF",
+        "#80947A",
+        "#AA825A",
+        "#E6C58B"
+      ],
+      "subject": "Puffling, same round fluffy cream and pale-blue cloud creature from reference bottom-left. Curious optimistic explorer. Add a light sage hood draped behind head with leaf clasp and compact brown collecting satchel. Keep round cloudlike furry body, tiny feet and dark oval eyes, no tall human anatomy. Fabric touches natural cloud silhouette without hiding it.",
+      "actions": "small eager walk, inspecting a leaf, reaching into satchel, curling up asleep"
+    },
+    {
+      "id": "wyrmling",
+      "name": "Wyrmling",
+      "status": "Bestehendes Wesen / Fantasy-Variante",
+      "height": 68,
+      "core": "Kleiner jadegrüner Drache, rostfarbene Flügelhäute und gut sichtbarer Schwanz.",
+      "fantasy": "Kurzes kupferfarbenes Schulterband und ein einzelner matter Bernsteinanhänger.",
+      "motion": "Geerdeter energischer Gang, Flügel als Balancehilfe; Schwanzspitze bleibt beim Tragen frei.",
+      "pixel": "Flügel, Arm und Rumpf durch Negativraum trennen. Große Horn- und Schuppenformen; keine Rüstungsschichten.",
+      "palette": [
+        "#354C43",
+        "#607C57",
+        "#98AC72",
+        "#D2CA92",
+        "#875B43",
+        "#BC7D51",
+        "#D9A06A",
+        "#EEE0B1"
+      ],
+      "subject": "Wyrmling, same small friendly jade dragon with rust-orange wing membranes from reference bottom-middle. Positive steady motivator. Add short copper-colored shoulder strap and a single matte amber pendant, simple travel wrap only. Preserve two arms, two legs, two wings and one tail consistently. Rounded horns, kind expressive face, no menacing claws, no armor, no weapons.",
+      "actions": "grounded two-legged walk, balanced stretch with wings, carrying a small bundle, curled sleeping with tail"
+    },
+    {
+      "id": "hootlet",
+      "name": "Hootlet",
+      "status": "Bestehendes Wesen / Fantasy-Variante",
+      "height": 46,
+      "core": "Kleine Eule, violett-cremefarbene Federflächen, große Augen und kurzer Körper.",
+      "fantasy": "Kurzer indigofarbener Sternenumhang, Messingschließe und kleine Kartenrolle.",
+      "motion": "Geduldiger Blickwechsel, Kopfneigung und ruhige Schritte; Flügel öffnen nur für klar lesbare Gesten.",
+      "pixel": "Augen und Gesichtsscheibe führen. Brillenränder und Federpunkte bei kleinen Sprites stark vereinfachen.",
+      "palette": [
+        "#403E59",
+        "#686184",
+        "#968AAF",
+        "#C0B3C8",
+        "#E9DBC2",
+        "#B69761",
+        "#697F88",
+        "#F4E8CA"
+      ],
+      "subject": "Hootlet, same tiny gentle violet and cream owl from reference bottom-right, patient observant. Short indigo star-cloak, brass clasp, little rolled map at side, subtle round spectacles. Keep small owl body, face disk, two wings and two tiny feet. Scholarly fantasy wayfinder, no oversized pointed wizard hat. Small constellation stitch details, simplified silhouette.",
+      "actions": "small walking steps, studying unfolded map, observant head tilt, drowsy closed eyes"
+    },
+    {
+      "id": "young-traveler",
+      "name": "Der junge Reisende",
+      "status": "Neuer Charaktervorschlag / noch ohne Namen",
+      "height": 100,
+      "core": "Braunes zerzaustes Haar, moosgrüne Reisekleidung, kurzer Umhang und brauner Rucksack.",
+      "fantasy": "Messingschließe, abgenutzte Karte, kleine Laterne und schlichte Wanderstiefel.",
+      "motion": "Neugieriger, bodennaher Gang; beim Anhalten leichtes Nachschwingen von Umhang und Rucksack.",
+      "pixel": "Klare Haarform und farbiger Schulterblock. Hände und Stiefel sichtbar; Gepäck nicht größer als der Rumpf.",
+      "palette": [
+        "#3F3B34",
+        "#725840",
+        "#A5845E",
+        "#D8AF86",
+        "#F1D1A6",
+        "#5E7863",
+        "#95A383",
+        "#E6C481"
+      ],
+      "subject": "Develop the young boy traveler seated in the mountain reference into a complete consistent original character. Brown tousled hair, friendly curious face, age roughly 12-14, fully clothed in moss-green tunic and short olive travel cape, cream shirt sleeves, brown trousers, practical leather ankle boots and compact brown backpack with rolled blanket. Brass clasp, small lantern and worn folded map. Wholesome young fantasy adventurer, warm illustrated proportions about 4.5 heads tall. Retain brown hair, green clothing and brown backpack from tiny mountain reference. No weapons, no armor, no elf ears. NOT another creature, just this boy in all views.",
+      "actions": "walking profile carrying backpack, sitting on stone studying map as in reference, raising lantern, resting asleep beside backpack"
+    },
+    {
+      "id": "bramble",
+      "name": "Bramble",
+      "status": "Neue Idee / Arbeitsname",
+      "height": 62,
+      "core": "Kleines vierbeiniges Waldwesen mit Rehform, kurzen Asthörnern und rindenbraunem Fell.",
+      "fantasy": "Moosgrüner Nackenkranz und wenige kupferfarbene Blattspitzen an den Asthörnern.",
+      "motion": "Vorsichtige leichte Schritte, kurze neugierige Stopps; Ohren und Blätter reagieren verzögert.",
+      "pixel": "Zwei einfache verzweigte Hörner, vier klar getrennte Beine und ein kurzer Schwanz. Kein dichter Laubbusch am Kopf.",
+      "palette": [
+        "#403D32",
+        "#756148",
+        "#A18A5D",
+        "#D1BC8B",
+        "#EBDFC0",
+        "#5E7652",
+        "#94A36A",
+        "#BF8353"
+      ],
+      "subject": "NEW OPTIONAL original character BRAMBLE, working name: a small gentle woodland deer spirit, four-legged fawn body, bark-brown and warm cream fur, short symmetrical twig antlers with only two branches each, moss-green neck ruff and just a few copper leaf tips. Round kind face and alert ears. Anatomically clear four legs and little tail. Cozy original fantasy companion, distinct from fox, owl and dragon. Same warm fine-pencil and colored-pencil world, no human anatomy, no weapons, no huge antler forest.",
+      "actions": "careful four-legged walk, sniffing a seedling, attentive ears, curled rest"
+    },
+    {
+      "id": "luma",
+      "name": "Luma",
+      "status": "Neue Idee / Arbeitsname",
+      "height": 34,
+      "core": "Kleines mondfalterartiges Wesen mit rundem Körper, zwei Fühlern und breiten Doppelflügeln.",
+      "fantasy": "Cremefarbener Flaum, türkis-lavendelfarbene Flügel und ein dezentes Mondmuster.",
+      "motion": "Langsame klare Flügelschläge und ruhiges Landen; Bewegung bleibt vom Leuchten getrennt.",
+      "pixel": "Zwei Fühler und vier Flügelflächen als große Formgruppen. Licht bleibt klein; Kontur auch ohne Glow erkennbar.",
+      "palette": [
+        "#3B5260",
+        "#63888D",
+        "#95BCB7",
+        "#CADCCB",
+        "#EEE7CB",
+        "#8A84AA",
+        "#B9A9CB",
+        "#F4DFA4"
+      ],
+      "subject": "NEW OPTIONAL original character LUMA, working name: small gentle moon-moth spirit with a round cream fluffy body, two short antennae, four broad moth wing lobes arranged as two symmetrical fore/hind pairs, muted turquoise and lavender, very simple crescent marking. Tiny dark eyes, tiny tucked feet, insect-like but warm and approachable. Subtle small warm inner glow, not full glowing aura. Different silhouette from star, cloud and owl, graceful wide wings. Keep identical wing topology across poses.",
+      "actions": "resting with folded wings, slow hovering wingbeat, landing beside tiny lantern, sleeping with wings wrapped"
+    }
+  ]
+}

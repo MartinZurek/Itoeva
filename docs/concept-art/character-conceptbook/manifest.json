@@ -1,0 +1,107 @@
+[
+  {
+    "path": "CHARACTER_ART_DIRECTION.md",
+    "bytes": 7463,
+    "sha256": "9effd94bea9b149da724d2c1aad5ae4235e7e1bd4a021b65aceb28be0f2f0b98"
+  },
+  {
+    "path": "README.md",
+    "bytes": 2765,
+    "sha256": "365936b23798980f4e467dc229badbd416474a99a7f548916d07e635c7449548"
+  },
+  {
+    "path": "briefs/bramble.md",
+    "bytes": 996,
+    "sha256": "c6700df642ec02f72ef4e1ba2e879adf9802cc11ca5b41818cd636a3d40b59bc"
+  },
+  {
+    "path": "briefs/fennec.md",
+    "bytes": 1000,
+    "sha256": "2c3fd37499777be1b555ca6c6fa68ebb6501b2c00cd7e8cca786240fa4f19882"
+  },
+  {
+    "path": "briefs/gloop.md",
+    "bytes": 1004,
+    "sha256": "f7d4a66f3047571fde3fdf7eef099fccf69e7a0fc0971f4a08109f7a60964c31"
+  },
+  {
+    "path": "briefs/hootlet.md",
+    "bytes": 998,
+    "sha256": "59b3ca5a5fe65804261cc16e5c2e74c7cf88031cf1bbed03b5ac7b3e36b08164"
+  },
+  {
+    "path": "briefs/luma.md",
+    "bytes": 990,
+    "sha256": "5171b08b9db371bac1849a51dda1999f805116000a13deebba5b04e190317ed9"
+  },
+  {
+    "path": "briefs/puffling.md",
+    "bytes": 979,
+    "sha256": "7ab980e5b37525e989c4e49187b9a08ff9d22a858386565750e21faaf1b35563"
+  },
+  {
+    "path": "briefs/starlet.md",
+    "bytes": 980,
+    "sha256": "879ae2a7cd5698d32d8b770a9edfe6812bbc5ee31d79acd89d6c93ab240ceae4"
+  },
+  {
+    "path": "briefs/wyrmling.md",
+    "bytes": 994,
+    "sha256": "b253b498823dc04f7f971ba90bf8716188940cb0fa4cac658cd6a799b8281f24"
+  },
+  {
+    "path": "briefs/young-traveler.md",
+    "bytes": 1022,
+    "sha256": "1502d9bbb83df9c260920c0b6b15a67f568d6cc4331aa1ca11971d4cd8afba98"
+  },
+  {
+    "path": "characters.json",
+    "bytes": 12200,
+    "sha256": "a1b86966f81c35c2941624da63e46576cc5a70bcf4ffd7ef516e55831160a5d5"
+  },
+  {
+    "path": "images/bramble-character-fantasy-study-v1.png",
+    "bytes": 2971977,
+    "sha256": "f234c40b4791c027b046f7c4ca3c737851889d14b69f6ce6aa47a6d0b2a4545b"
+  },
+  {
+    "path": "images/fennec-character-fantasy-study-v1.png",
+    "bytes": 3086913,
+    "sha256": "4b9372034c1ef7f2e2fb01143a0bf7857bda5179304cfc5d14bbb2d476feb0e1"
+  },
+  {
+    "path": "images/gloop-character-fantasy-study-v1.png",
+    "bytes": 3080104,
+    "sha256": "b1300c38aa94286734aaf1807542e162fe419211e5746d00a494d5aa1ac564c7"
+  },
+  {
+    "path": "images/hootlet-character-fantasy-study-v1.png",
+    "bytes": 3138081,
+    "sha256": "afb119bb3a3a16a352966b7e03fb567367ed4e4e733da22eec7e7c4c810be7eb"
+  },
+  {
+    "path": "images/luma-character-fantasy-study-v1.png",
+    "bytes": 2879310,
+    "sha256": "d45a508cfe923153a2779bfa411b11e9bb4a3069df745e875af37d175292c420"
+  },
+  {
+    "path": "images/puffling-character-fantasy-study-v1.png",
+    "bytes": 3016250,
+    "sha256": "5c218d375294915015c9f15cdd0dcfe0bccf5c7f2d8cd06249c0997e7fe7f831"
+  },
+  {
+    "path": "images/starlet-character-fantasy-study-v1.png",
+    "bytes": 2898826,
+    "sha256": "2341a163a742495ee10a4c91de24e826443b5e91705dc1bc60dfaf6b0f1897a6"
+  },
+  {
+    "path": "images/wyrmling-character-fantasy-study-v1.png",
+    "bytes": 3115531,
+    "sha256": "45be2a2401578e865c0e5acc7ffac65417312f06186b98824ef859593371916f"
+  },
+  {
+    "path": "images/young-traveler-character-fantasy-study-v1.png",
+    "bytes": 3098532,
+    "sha256": "1770afb95fbe369d09539af27bc8688fde2fd32d2a8c3f76a7b52225e38367f8"
+  }
+]

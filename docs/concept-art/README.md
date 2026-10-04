@@ -43,3 +43,9 @@ Einstiegsprompt: [CLAUDE_ART_DIRECTION_PROMPT.md](CLAUDE_ART_DIRECTION_PROMPT.md
 ## Herkunft und Versionierung
 
 Drei mit Imagegen erzeugte Originalstudien aus der Sitzung vom 2026-10-04; sechs Charakterausschnitte und drei Ortsausschnitte daraus. Alle Originale bleiben unveraendert erhalten. Kuenftige Varianten als v2, v3 usw. ablegen. Manifest mit Dateigroessen und SHA-256: [manifest.json](manifest.json).
+
+
+## Neuer Character-Band: Fantasy-Varianten (04.10.2026)
+
+[Character-Konzeptbuch mit neun Bildtafeln](character-conceptbook/README.md): die sechs bekannten Wesen, der junge Reisende sowie Bramble und Luma als neue Vorschlaege. [Claude-Prompt](CLAUDE_CHARACTER_PROMPT.md). Die erste Umsetzung und bereits verbesserte Figuren vor jedem weiteren Schritt abgleichen.
+
