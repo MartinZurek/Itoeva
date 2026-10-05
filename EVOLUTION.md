@@ -669,6 +669,34 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-05 - Fennecs Beinbewegung: gezeichneter Profilgang (fennec-walk-art-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin meldet, dass die Beinbewegung trotz v2
+weiterhin falsch aussieht. Ausgangsstand `3050fda` des offenen PR #331.
+
+**FACT / Entscheidung:** Die breitbeinige Standzeichnung ist keine tragfaehige
+Quelle fuer den Seitengang: auswaerts gerichtete Stiefel und gebeugte Knie blieben
+auch bei korrekt geloesten Fusszielen sichtbar. Acht eigens gezeichnete Profilposen
+ersetzen die seitlichen Gehbilder 9–16. `fennec_walk.py` registriert sie an Schmuck
+und Boden mit gemeinsamer Palette und einheitlichem Massstab. Der bestehende
+68-Frame-Vertrag bleibt erhalten. Links/rechts nutzen dieselbe Folge gespiegelt.
+
+**TESTED BEHAVIOR:** Drei neue Tests pruefen die tatsaechlichen Gehbilder statt nur
+der IK-Matrizen: Kontakt in jeder Phase, stabile Hoehe, angehobene Durchgangsfuesse
+und rueckwaertige Standbewegung. Zusammen mit den neun bisherigen Tests zwoelf
+lokale Python-Tests gruen. Quelle, genaue Bildgenerierungsanweisung, Importer und
+Sprite-/Gangvorschau versioniert. Android-CI folgt nach Upload.
+
+**UNVERIFIED / Grenzen:** Noch keine Sichtpruefung der APK; Ruhe und Reaktionen
+sowie Front-/Rueckgang bleiben aus dem bisherigen Rig. Der Uebergang von diesen
+Posen zum Profilgang muss am Geraet beurteilt werden. Zeitgetaktete Bilderfolge,
+noch keine an Weg, Geschwindigkeit oder Wind gekoppelte Vollkoerperphysik.
+Die bestehenden IK-Tests belegen nur das erhaltene Werkzeug.
+
+**Ruecksetzweg / Bereiche:** Generator, Profilquelle und Fennec-Asset gemeinsam
+auf `3050fda` zuruecksetzen. Kein Eingriff in Story, Reminder, Datenmodelle oder
+Nutzerstaende. Naechster Schritt: visuelle Beurteilung von Gang und Uebergaengen.
+
 ### 2026-10-05 - Fennecs Halsansatz und Laufrichtung (fennec-expression-v2)
 
 **DOCUMENTED INTENT:** Martin meldet einen sanduhrfoermig abgeschnuerten, zu hohen

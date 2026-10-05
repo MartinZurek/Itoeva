@@ -143,3 +143,28 @@ unter dem Mantelkragen. Eigene Fussspuren je Huefte statt sich kreuzender Beine;
 geringere Schritthoehe. Die Vorschau zeigt rechts und links nebeneinander.
 Explizite Laufrichtung bestimmt die Spiegelung auch beim Anhalten; die Schattenseite
 ist nur noch der Rueckfall fuer Ablaeufe ohne explizite Richtung.
+
+## Seitlicher Gang aus eigenen Zeichnungen (05.10., nach erneutem Gangfeedback)
+
+Die zuvor geloesten IK-Ziele machten die breitbeinige Ausgangszeichnung nicht zu
+einem guten Gang: Stiefel blieben auswaerts orientiert, die Figur wirkte hockend.
+`fennec_walk.py` ersetzt deshalb **nur die acht seitlichen Gehbilder 9–16** durch
+separate gezeichnete Profilposen aus `source/fennec-walk-profile-atlas.png`.
+Gemeinsame Palette und ein einziger Massstab gelten fuer alle acht Bilder;
+Registrierung am tuerkisen Schmuck und an der Bodenzeile statt an der Breite der
+Silhouette. Neue Knie-/Stiefelposen enthalten das Abrollen und Vorschwingen.
+
+`test_fennec_walk.py` prueft das gerenderte aktive Asset: Bodenkontakt in allen
+Bildern, stabile Koerperhoehe, angehobene Durchgangsfuesse und rueckwaertige
+Standbewegung relativ zum Koerper. Die bisherigen neun Tests laufen weiterhin;
+die IK-Tests betreffen nun das erhaltene Werkzeug, nicht den aktiven Seitengang.
+Insgesamt zwoelf Python-Tests gruen. Ausfuehren mit:
+
+```bash
+python3 -m unittest test_fennec_faces test_fennec_gait test_fennec_walk -v
+```
+
+Quelle und exakter ImageGen-Prompt: `source/fennec-walk-profile-prompt.md`.
+Die Front-/Rueckgaenge und Ruhe-/Reaktionsposen nutzen weiterhin den vorhandenen
+Rig; der Wechsel zur seitlichen Gangzeichnung braucht noch Beurteilung in der APK.
+Der Gang ist zeitgetaktet, keine Laufzeit-Stoff- oder Vollkoerperphysik.

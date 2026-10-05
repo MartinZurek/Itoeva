@@ -10,6 +10,7 @@ from PIL import Image
 from scipy import ndimage
 from puppet import Puppet
 import fennec_faces as Faces
+import fennec_walk as WalkArt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FEET = (195, 376)          # Mitte zwischen den Stiefeln, Bodenlinie
@@ -352,4 +353,7 @@ def frames():
         elif shift < 0:
             fr[shift:] = 0
         out.append(fr)
+    # Seitliches Gehen nutzt gezeichnete Profilposen statt des verformten
+    # breitbeinigen Standbilds. Die anderen Aktivitaeten behalten ihren Rig.
+    out[9:17] = WalkArt.frames(pal)
     return out
