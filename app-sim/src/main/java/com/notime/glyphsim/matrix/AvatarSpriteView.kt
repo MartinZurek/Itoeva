@@ -192,7 +192,7 @@ private fun DrawScope.drawCreature(
         CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
     }
     val cell = size.width / AvatarGeometry.SIZE
-    val drawn = size.width * (if (rich) CreatureSprites.Rich.SCALE else CreatureSprites.SCALE)
+    val drawn = size.width * (if (rich) CreatureSprites.Rich.scaleFor(species) else CreatureSprites.SCALE)
     // Die Fuesse stehen dort, wo die grobe Figur aufsetzt (siehe AvatarFooting) - angehoben um
     // so viel, wie die grobe Pose gerade abhebt.
     val feetY = (AvatarBodies.forSpecies(species).groundRow() + 1 - look.liftCells) * cell

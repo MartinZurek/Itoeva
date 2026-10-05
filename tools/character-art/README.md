@@ -257,3 +257,71 @@ Android-Kompilierung von Debug, Game und AndroidTest lokal erfolgreich.
 Die sechs neuen instrumentierten Tests sind kompiliert, ihre Ausfuehrung wartet
 auf einen GitHub-Runner; der erste Controller-Lauf scheiterte vor dem Start
 an fehlender Runner-Zuteilung.
+
+
+## Alle fuenf weiteren Wesen animiert (06.10.2026)
+
+`ensemble_motion.py` ersetzt Gloop, Puffling, Wyrmling, Starlet und Hootlet durch
+feine Boegen mit je **138 Rollen zu 128 x 128**. Es sind 32 neue gezeichnete
+Quellposen je Wesen plus registrierte Regungen und Aktionszwischenbilder, keine
+138 unabhaengigen Zeichnungen. Die Konzeptstudien dienen als Identitaetsreferenz.
+Fennecs ausgeliefertes Asset bleibt bytegleich zum gemergten PR #332.
+
+| Wesen | Eigene Bewegungssprache |
+|---|---|
+| Gloop | Niedrige Stauch-/Streckwelle ohne Beine, Spross und Tasche folgen versetzt |
+| Puffling | Kleine federnde Schritte, Flaum und Kapuze folgen dem Koerper |
+| Wyrmling | Geerdeter Drachengang, schneller niedriger Lauf, Fluegel und Schwanz balancieren |
+| Starlet | Zwei untere Sternspitzen setzen wechselnd auf, seitliche Spitzen geben Gestik |
+| Hootlet | Kleine Krallenschritte, geduldige Kopfneigung, Federn und Sternenumhang folgen |
+
+```bash
+cd tools/character-art
+python3 ensemble_motion.py
+python3 ensemble_motion.py --preview ensemble-motion-preview.gif
+python3 -m unittest test_ensemble_motion -v
+```
+
+Die Bildwahl und alle MotionCue-/Tempo-/Gangartuebergaenge verwenden dieselben
+Rollen wie Fennec. Vorder-/Rueckgang hat je vier gezeichnete Phasen, die je zwei
+Takte halten. Schnelle Seitenbewegung hat vier Rollen; Gloop/Wyrmling verwenden
+drei gueltige Phasen mit einer wiederholten Uebergangsphase, weil die vierte
+Quellpose die Augen schliesst und als Sprint unpassend ist. Der Importmanifest
+benennt diese Auswahl. Gerichtetes Schnellgehen verwendet vorerst die eigenen
+Front-/Rueckschritte im schnelleren Spieltakt; keine neuen Flugrechte.
+
+Ruhe bewegt Kopf, Spitzen/Spross und Saum getrennt, waehrend der Bodenkontakt
+fest bleibt. Buecken, gerichtetes Sitzen, Knien und Aufstehen nutzen vorhandene
+Skelettverformung; Strecken, Greifen, seitliches Sitzen, Schlaf und eingerollte
+Rolle haben gezeichnete Quellen. Die Rolle dreht die eigene kompakte Haltung.
+Treten nutzt vorerst die nach vorn reichende Koerperpose, kein eigener Fussball-
+Schussbogen. Vorder-/Rueckwenden verwendet die Front-/Rueckbilder statt neuer
+Dreiviertelzeichnungen. Diese Grenzen nicht als 138 neue Vollkoerperzeichnungen
+oder vollstaendige Richtungsmobilitaet beschreiben.
+
+`source/ensemble-front-blink-atlas.png` ergaenzt echte Front-Lider. Nur die
+verifizierten Augenfenster werden importiert; Hootlets Brille und Wyrmlings
+Fluegel bleiben pixelgleich. Unvollstaendige Quellen, Randanschnitte und unklare
+Zeilenordnung werden abgelehnt. Ein Massstab fuer den gesamten Quellatlas
+verhindert, dass kurze Sitz-/Laufposen ungewollt auf Standhoehe gedehnt werden.
+Alpha-Halos werden beim Import verworfen; fertige Sprites haben harten Alpha.
+
+`CreatureSprites.Rich.scaleFor` erhaelt die gemessene bisherige Standhoehe der
+fuenf Wesen. Wyrmlings Schwanz begrenzt die Importgroesse besonders stark;
+deshalb erhaelt er einen eigenen Darstellungsfaktor. Die Vorschau zeigt diese
+Weltgroessen, ist aber eine Sprite-Schleife und **keine APK-Aufnahme**.
+
+Alle sechs Wesen zusammen haben etwa 54 MiB unkomprimierte Einzelbilddaten
+(138 x 128 x 128 x 4 je Wesen); Android laedt sie ueber den vorhandenen kleinen
+Bitmap-Cache nur bei Bedarf. Kein grosser Atlas als GPU-Textur und kein neuer
+Bildspeicher im Zeichentakt. Geraete-Speicherverbrauch noch nicht gemessen.
+
+Validierung: acht Tests am ausgelieferten Bogen, achtzehn Fennec-Regressionen,
+893 lokale Kotlin-Tests gruen. Android-CI und physische APK-Sichtpruefung stehen
+aus. Generatoren `from_concept.py` und `sheets.py` sind historische Werkzeuge und
+wuerden beim Schreiben die feinen Boegen ersetzen; fuer den aktuellen Stand
+`rich_sheets.py` fuer Fennec und `ensemble_motion.py` fuer die anderen benutzen.
+
+Exakte Prompts, Atlasbilder und Importmanifest unter `source/ensemble-*` und
+`source/<wesen>-motion-atlas.png`. Ruecksetzen: gesamten Charakter-PR gemeinsam
+auf `dc443b6d586d3a6a158ff900fadf57b952f54760`; keine Spielstandmigration.

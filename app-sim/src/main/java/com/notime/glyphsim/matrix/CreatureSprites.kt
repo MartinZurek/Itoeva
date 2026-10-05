@@ -159,11 +159,11 @@ object CreatureSprites {
     }
 
     /**
-     * **Der feine Bogen** (128 x 128 je Bild, `tools/character-art/rich_sheets.py`): Die gemalte
-     * Figur aus dem Key-Design, als Puppe bewegt (`puppet.py`, `fennec_key.py`) - Atmen mit
-     * Ohrzucken, ein Gang mit acht Bildern, ein Sprung von Ausholen bis Landung, Schlaf,
-     * Rueckansicht, Zwischenbilder fuer Drehungen. Ohren, Schwanz und Mantelzipfel schwingen darin
-     * nach (Federn, siehe `motion.py`).
+     * **Der feine Bogen** (128 x 128, 138 Rollen je Wesen): Fennec aus `rich_sheets.py`,
+     * die anderen fuenf Wesen aus `ensemble_motion.py`. Eigene gezeichnete Gangphasen,
+     * Richtungsansichten, schnelle Fortbewegung und Koerperposen ersetzen Stand-Sticker.
+     * Kopf, Spross, Flaum, Federn und Kleidung bekommen vorberechnete kleine Regungen
+     * ueber das bestehende Puppet-Werkzeug. Kein neuer Laufzeit-Rig oder Verhaltenskern.
      * Welcher Bogen vorliegt, entscheidet seine Hoehe.
      */
     object Rich {
@@ -171,6 +171,18 @@ object CreatureSprites {
         const val FEET = 126
         /** Die Figur fuellt ihr Bild fast ganz aus - kleiner zeichnen, damit sie so gross wirkt wie die anderen. */
         const val SCALE = 0.82f
+        /**
+         * Am vorherigen Standbild gemessene Weltgroesse. Wyrmlings langer Schwanz
+         * begrenzt den Importmassstab, darf aber nicht seinen Rumpf halbieren.
+         */
+        fun scaleFor(species: AvatarSpecies): Float = when (species) {
+            AvatarSpecies.FENNEC -> SCALE
+            AvatarSpecies.GLOOP -> 0.92f
+            AvatarSpecies.PUFFLING -> 0.97f
+            AvatarSpecies.WYRMLING -> 1.71f
+            AvatarSpecies.STARLET -> 0.90f
+            AvatarSpecies.HOOTLET -> 1.05f
+        }
         const val IDLE_FIRST = 0
         const val IDLE_COUNT = 8
         const val BLINK = 8
@@ -354,7 +366,7 @@ object CreatureSprites {
         // Im Schlaf und im Sprung keine Drehung einschieben - nur merken, wohin sie schaut.
         val step = turn?.update(facing, timeMs)
         val locomotion = act == Activity.WALK || act == Activity.FRONT_WALK || act == Activity.BACK_WALK
-        if (motionCue != null && !locomotion && species == AvatarSpecies.FENNEC) {
+        if (motionCue != null && !locomotion) {
             // Strecken, Greifen und Aufstehen sind Bodenbewegungen. Das alte Raster
             // hebt dort den ganzen Koerper an; die Zeichnung enthaelt die Haltung bereits.
             return Look(motionFrame(motionCue, facing),
@@ -365,7 +377,7 @@ object CreatureSprites {
             return Look(step.frame, lift, step.mirrored)
         }
         val blend = (runBlend ?: if (tempo >= 1.7f) 1f else 0f).coerceIn(0f, 1f)
-        val running = species == AvatarSpecies.FENNEC && blend > 0f
+        val running = blend > 0f
         val frame = when (act) {
             Activity.SLEEP -> Rich.SLEEP_FIRST + ((timeMs / Rich.SLEEP_MS) % Rich.SLEEP_COUNT).toInt()
             Activity.BACK -> Rich.BACK_IDLE_FIRST + ((timeMs / Rich.IDLE_MS) % Rich.IDLE_COUNT).toInt()

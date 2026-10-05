@@ -12,6 +12,59 @@ import org.junit.Test
 class CreatureSpritesTest {
 
     @Test
+    fun `alle Wesen nutzen eigene schnelle Gangart und deren Ueberblendung`() {
+        for (species in AvatarSpecies.entries) for (direction in PlayControl.Dir.entries) {
+            val raw = AvatarAnimations.idlePose(species)
+            val fast = CreatureSprites.lookRich(raw, species, AvatarShading.Side.NONE,
+                500L, direction, true, gaitTimeMs = 0L, runBlend = .5f)
+            val first = when (direction) {
+                PlayControl.Dir.UP -> CreatureSprites.Rich.BACK_RUN_FIRST
+                PlayControl.Dir.DOWN -> CreatureSprites.Rich.FRONT_RUN_FIRST
+                else -> CreatureSprites.Rich.RUN_FIRST
+            }
+            assertEquals(first, fast.frame)
+            assertTrue(fast.blendFrame != null)
+            assertEquals(.5f, fast.blend, 0f)
+            assertEquals(0, fast.liftCells)
+            assertEquals(direction == PlayControl.Dir.LEFT, fast.mirrored)
+        }
+    }
+
+    @Test
+    fun `alle Wesen behalten Sitzen und Aufstehen in jeder Blickrichtung`() {
+        for (species in AvatarSpecies.entries) for (direction in PlayControl.Dir.entries) {
+            val raw = AvatarAnimations.idlePose(species)
+            for (motion in CreatureSprites.Motion.entries) {
+                val look = CreatureSprites.lookRich(raw, species, AvatarShading.Side.NONE,
+                    500L, direction, false, motionCue = CreatureSprites.MotionCue(motion, 1f))
+                assertTrue(look.frame in CreatureSprites.Rich.ACTION_FIRST until CreatureSprites.Rich.FRAME_COUNT)
+                assertEquals(0, look.liftCells)
+            }
+        }
+    }
+
+    @Test
+    fun `auch andere Wesen gehen trotz Handlungsdarstellung und springen mit echter Hoehe`() {
+        for (species in AvatarSpecies.entries) {
+            val raw = AvatarAnimations.idlePose(species)
+            val lifted = raw.copyOf()
+            // Drei Rasterzeilen nach oben, mit unveraenderter Anatomie.
+            for (y in 0 until AvatarGeometry.HEIGHT) for (x in 0 until AvatarGeometry.SIZE) {
+                lifted[y * AvatarGeometry.SIZE + x] = raw.getOrElse((y+3)*AvatarGeometry.SIZE+x) { 0 }
+            }
+            val cue = CreatureSprites.MotionCue(CreatureSprites.Motion.JUMP, .5f)
+            val jump = CreatureSprites.lookRich(lifted, species, AvatarShading.Side.NONE,
+                500L, moving = false, motionCue = cue)
+            assertEquals(CreatureSprites.liftOf(lifted, species), jump.liftCells)
+            assertTrue(jump.liftCells >= 3)
+            val walking = CreatureSprites.lookRich(raw, species, AvatarShading.Side.NONE,
+                500L, PlayControl.Dir.UP, true, gaitTimeMs = 0L, motionCue = cue)
+            assertEquals(CreatureSprites.Rich.DRAWN_BACK_WALK_FIRST, walking.frame)
+            assertEquals(0, walking.liftCells)
+        }
+    }
+
+    @Test
     fun `hohes Tempo verwendet eigene Vierbeiner in jeder Richtung und niedrigeres geht`() {
         val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
         for (direction in PlayControl.Dir.entries) {
