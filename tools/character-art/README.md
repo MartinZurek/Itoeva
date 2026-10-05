@@ -171,7 +171,7 @@ Der Gang ist zeitgetaktet, keine Laufzeit-Stoff- oder Vollkoerperphysik.
 
 ## Fennecs Bewegungsrepertoire (05.10., Folge auf den gemergten PR #331)
 
-Der aktuelle Bogen hat **114 Bilder zu 128 x 128**. Eigene Ganzkoerperzeichnungen
+Der aktuelle Bogen hat **138 Bilder zu 128 x 128**. Eigene Ganzkoerperzeichnungen
 ersetzen nun auch Front-/Rueckgang, gerichteten Stand und die Sprung-/Schlafposen.
 Die ersten 68 Rollen bleiben erhalten; 68–75: Frontgang, 76–83: Rueckgang,
 84–99: Profilaktionen, 100–106: Frontaktionen, 107–113: Rueckenaktionen.
@@ -206,7 +206,7 @@ python3 -m unittest test_fennec_faces test_fennec_gait test_fennec_walk test_fen
 [Bewegungsvorschau](fennec-mobility-preview.gif): gerenderte Sprite-Folgen, keine
 APK-Aufnahme. Exakte Generierungsanweisungen und Quellenzuordnung stehen unter
 `source/fennec-mobility-prompts.md`. Bildgenerierung mit dem integrierten ImageGen.
-17 lokale Python-Tests bestehen; vier neue Kotlin-Verhaltenstests pruefen
+18 lokale Python-Tests bestehen; Kotlin-Verhaltenstests pruefen
 Bildwahl, Richtung, Hoehe, Endposen und ungueltigen Fortschritt in Android-CI.
 
 Grenzen: Front-/Rueckansicht teilen die Hockpose fuer Ausholen und Landung;
@@ -217,3 +217,38 @@ APK-Uebergaenge, Haende an Requisiten und Sitzhoehen muessen am Geraet beurteilt
 Die bestehende Clip-Aufzeichnung verwendet weiterhin das grobe Raster.
 Ruecksetzen: Generator, PNG, Auswahlregel und Routine-Hinweise gemeinsam auf
 `97f767d514c66b41ad69963e7ace5e953cbe092e`; keine Datenmigration.
+
+
+## Analoge Smartphone-Steuerung und schnelle Bewegungen
+
+Der Bewegungsbogen ergaenzt 114–121: Vierbeiner im Profil (8 Phasen),
+122–125: Vierbeiner vorn, 126–129: Vierbeiner hinten (je 4 Phasen) und
+130–137: Ausweichrolle. Front-/Ruecklauf halten jedes Bild zwei Schrittphasen,
+so bleibt die volle Zyklusdauer gleich. Originalprofilgang 9–16 bleibt pixelgleich.
+Quellen und exakte Built-in-ImageGen-Prompts: `source/fennec-controller-prompts.md`.
+
+Links unten analog ziehen: innerer Ring = Gehen, weiter ziehen = schneller,
+aussen = vierbeiniger Lauf. Diagonalen sind normiert. Rechts tippen = Sprung,
+waagerecht wischen = Rolle in Wischrichtung, nach oben wischen = Sprung,
+nach unten wischen oder 500 ms halten = Sitzen/Ruhe. Erneutes Halten oder
+links ziehen steht wieder auf. Beide Pointer-IDs bleiben unabhaengig;
+Abbruch, Menue und Hintergrund geben Eingaben frei. Tastatur: WASD/Pfeile,
+Shift schnell, Space Sprung, Q Rolle, R Ruhe, E/Enter Interaktion.
+Gamepad-D-Pad und A/X/B/Y entsprechen Bewegung/Sprung/Rolle/Ruhe/Interaktion.
+
+`GameMovement` ist reine Rechnung im vorhandenen Bildtakt. Beschleunigung und
+Abbremsen, Gangphase, kurze Gangart-Ueberblendung und Hysterese teilen denselben
+Zustand. Einmalig ausgeschnittene 128-px-Bitmaps vermeiden Android-Texturlimits; keine
+Bitmap-Erzeugung je Bild. Standflaechen werden pro Layout gemerkt.
+Ein Sprung hilft zur naechsten erreichbaren Standflaeche in Zug-/Blickrichtung.
+Teetisch im gemalten Wohnzimmer, niedrige Kiste im Park, Tischplatten der
+Zellenzimmer sind ausdruecklich definiert. Keine beliebige Bildpixel-Erkennung.
+Auf der Oberkante bleibt die Hoehe erhalten, Kanten fuehren monoton zum Boden;
+zu hohe Gegenstaende bleiben gesperrt. Rollen kollidiert am Boden und verleiht
+keine Unverwundbarkeit. Ruhe ist freiwillig und veraendert keine Beduerfnisse/XP.
+
+Die neue Rolle ist eine Profilzeichnung; Vorwaerts-/Rueckwaertsrollen hat noch
+keinen eigenen Richtungsbogen. Physische Telefon-Latenz, Ueberblendung, Kamerafahrt
+und alle Moebelanker sind weiterhin an der APK zu bewerten. Die GIF zeigt nur
+Spritefolgen. Fuenf instrumentierte Tests pruefen zwei Finger, Wischen, Halten
+und Eingabeabbruch; ein Bitmap-Test prueft kleinen, pixelgleichen Cache. JVM-Tests pruefen Tempo, Diagonalen, Landen, Kanten und Ruhe.

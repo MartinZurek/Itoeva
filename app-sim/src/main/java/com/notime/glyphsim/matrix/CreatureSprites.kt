@@ -62,7 +62,8 @@ object CreatureSprites {
     fun assetFor(species: AvatarSpecies): String = "creatures/${species.name.lowercase()}.png"
 
     /** Welches Bild, wie hoch angehoben (in Zellen des alten Rasters) und ob gespiegelt. */
-    data class Look(val frame: Int, val liftCells: Int, val mirrored: Boolean)
+    data class Look(val frame: Int, val liftCells: Int, val mirrored: Boolean,
+        val blendFrame: Int? = null, val blend: Float = 1f)
 
     private val standHeight = HashMap<AvatarSpecies, Int>()
 
@@ -197,7 +198,14 @@ object CreatureSprites {
         const val ACTION_FIRST = 84
         const val FRONT_ACTION_FIRST = 100
         const val BACK_ACTION_FIRST = 107
-        const val FRAME_COUNT = 114
+        const val RUN_FIRST = 114
+        const val RUN_COUNT = 8
+        const val FRONT_RUN_FIRST = 122
+        const val BACK_RUN_FIRST = 126
+        const val DIR_RUN_COUNT = 4
+        const val ROLL_FIRST = 130
+        const val ROLL_COUNT = 8
+        const val FRAME_COUNT = 138
 
         const val IDLE_MS = 420L
         const val WALK_MS = 95L
@@ -210,7 +218,7 @@ object CreatureSprites {
     }
 
     /** Darstellung einer vorhandenen Handlung, ohne Reminder oder Spielablauf zu veraendern. */
-    enum class Motion { JUMP, BEND, KNEEL, SIT, RISE, STRETCH, REACH, KICK }
+    enum class Motion { JUMP, BEND, KNEEL, SIT, RISE, STRETCH, REACH, KICK, ROLL }
 
     /** Fortschritt kommt aus dem laufenden Ablauf, nicht aus der zufaelligen Wanduhrphase. */
     data class MotionCue(val motion: Motion, val progress: Float)
@@ -219,6 +227,10 @@ object CreatureSprites {
         ?.let { (AvatarBodies.forSpecies(species).groundRow() - it[1]).coerceAtLeast(0) } ?: 0
 
     internal fun motionFrame(cue: MotionCue, facing: Facing): Int {
+        if (cue.motion == Motion.ROLL) {
+            val progress = if (cue.progress.isFinite()) cue.progress.coerceIn(0f, 1f) else 0f
+            return Rich.ROLL_FIRST + (progress * Rich.ROLL_COUNT).toInt().coerceAtMost(Rich.ROLL_COUNT - 1)
+        }
         val side = when (cue.motion) {
             Motion.JUMP -> intArrayOf(0, 1, 2, 2, 3, 11)
             Motion.BEND -> intArrayOf(11, 4, 5, 4, 11)
@@ -228,6 +240,7 @@ object CreatureSprites {
             Motion.STRETCH -> intArrayOf(11, 12, 12, 11)
             Motion.REACH -> intArrayOf(11, 13, 13, 11)
             Motion.KICK -> intArrayOf(11, 0, 14, 14, 11)
+            Motion.ROLL -> error("Rolle hat eigenen Zyklus")
         }
         val directed = when (cue.motion) {
             Motion.JUMP -> intArrayOf(0, 1, 2, 2, 0, 4)
@@ -235,7 +248,7 @@ object CreatureSprites {
             Motion.SIT -> intArrayOf(4, 0, 3)
             Motion.RISE -> intArrayOf(3, 0, 4)
             Motion.STRETCH, Motion.REACH -> intArrayOf(4, 6, 6, 4)
-            Motion.KICK -> null  // Fuer diesen gerichteten Schuss gibt es nur Profilzeichnungen.
+            Motion.KICK, Motion.ROLL -> null  // Fuer diesen gerichteten Schuss gibt es nur Profilzeichnungen.
         }
         val useDirected = directed != null && facing in setOf(Facing.FRONT, Facing.BACK)
         val clip = if (useDirected) directed!! else side
@@ -327,7 +340,9 @@ object CreatureSprites {
         moving: Boolean? = null,
         turn: Turn? = null,
         gaitTimeMs: Long = timeMs,
-        motionCue: MotionCue? = null
+        motionCue: MotionCue? = null,
+        tempo: Float = 1f,
+        runBlend: Float? = null
     ): Look {
         val (act, lift, mirrored) = classify(raw, species, side, timeMs, direction, moving)
         val facing = when {
@@ -349,13 +364,17 @@ object CreatureSprites {
         if (step != null && !locomotion && act != Activity.SLEEP && act != Activity.JOY) {
             return Look(step.frame, lift, step.mirrored)
         }
+        val blend = (runBlend ?: if (tempo >= 1.7f) 1f else 0f).coerceIn(0f, 1f)
+        val running = species == AvatarSpecies.FENNEC && blend > 0f
         val frame = when (act) {
             Activity.SLEEP -> Rich.SLEEP_FIRST + ((timeMs / Rich.SLEEP_MS) % Rich.SLEEP_COUNT).toInt()
             Activity.BACK -> Rich.BACK_IDLE_FIRST + ((timeMs / Rich.IDLE_MS) % Rich.IDLE_COUNT).toInt()
-            Activity.BACK_WALK -> Rich.DRAWN_BACK_WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % Rich.DRAWN_DIR_WALK_COUNT).toInt()
+            Activity.BACK_WALK -> if (running) Rich.BACK_RUN_FIRST + ((gaitTimeMs / (Rich.WALK_MS * 2)) % Rich.DIR_RUN_COUNT).toInt()
+                else Rich.DRAWN_BACK_WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % Rich.DRAWN_DIR_WALK_COUNT).toInt()
             Activity.FRONT -> Rich.FRONT_IDLE_FIRST + ((timeMs / Rich.IDLE_MS) % Rich.IDLE_COUNT).toInt()
-            Activity.FRONT_WALK -> Rich.DRAWN_FRONT_WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % Rich.DRAWN_DIR_WALK_COUNT).toInt()
-            Activity.WALK -> Rich.WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % Rich.WALK_COUNT).toInt()
+            Activity.FRONT_WALK -> if (running) Rich.FRONT_RUN_FIRST + ((gaitTimeMs / (Rich.WALK_MS * 2)) % Rich.DIR_RUN_COUNT).toInt()
+                else Rich.DRAWN_FRONT_WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % Rich.DRAWN_DIR_WALK_COUNT).toInt()
+            Activity.WALK -> (if (running) Rich.RUN_FIRST else Rich.WALK_FIRST) + ((gaitTimeMs / Rich.WALK_MS) % Rich.WALK_COUNT).toInt()
             Activity.JOY -> (when (facing) {
                 Facing.FRONT -> Rich.FRONT_JOY_FIRST
                 Facing.BACK -> Rich.BACK_JOY_FIRST
@@ -370,6 +389,11 @@ object CreatureSprites {
         }
         // Der feine Gang enthaelt seine Gewichtsverlagerung bereits. Der alte Raster-Huepfer
         // wuerde zusaetzlich beide Pfoten vom Boden anheben.
-        return Look(frame, if (locomotion) 0 else lift, mirrored)
+        val walkFrame = if (running && locomotion && blend < 1f) when (act) {
+            Activity.FRONT_WALK -> Rich.DRAWN_FRONT_WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % 8).toInt()
+            Activity.BACK_WALK -> Rich.DRAWN_BACK_WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % 8).toInt()
+            else -> Rich.WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % 8).toInt()
+        } else null
+        return Look(frame, if (locomotion) 0 else lift, mirrored, walkFrame, blend)
     }
 }

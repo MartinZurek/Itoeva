@@ -11,6 +11,39 @@ import org.junit.Test
 
 class CreatureSpritesTest {
 
+    @Test
+    fun `hohes Tempo verwendet eigene Vierbeiner in jeder Richtung und niedrigeres geht`() {
+        val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        for (direction in PlayControl.Dir.entries) {
+            val first = when (direction) {
+                PlayControl.Dir.UP -> CreatureSprites.Rich.BACK_RUN_FIRST
+                PlayControl.Dir.DOWN -> CreatureSprites.Rich.FRONT_RUN_FIRST
+                else -> CreatureSprites.Rich.RUN_FIRST
+            }
+            val count = if (direction.dy == 0) 8 else 4
+            for (phase in 0 until count) {
+                val run = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                    500L, direction, true, gaitTimeMs = phase * CreatureSprites.Rich.WALK_MS * (if (direction.dy == 0) 1 else 2), tempo = 2f)
+                assertEquals(first + phase, run.frame)
+                assertEquals(0, run.liftCells)
+                val walk = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                    500L, direction, true, gaitTimeMs = phase * CreatureSprites.Rich.WALK_MS, tempo = 1f)
+                assertTrue(walk.frame < CreatureSprites.Rich.RUN_FIRST)
+            }
+        }
+    }
+
+    @Test
+    fun `Rolle verwendet den ganzen gezeichneten Zyklus ohne zusaetzliches Anheben`() {
+        val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        for (phase in 0 until 8) {
+            val look = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                500L, PlayControl.Dir.RIGHT, false, motionCue = CreatureSprites.MotionCue(CreatureSprites.Motion.ROLL, phase / 8f))
+            assertEquals(CreatureSprites.Rich.ROLL_FIRST + phase, look.frame)
+            assertEquals(0, look.liftCells)
+        }
+    }
+
     private val walkFrames = CreatureSprites.WALK_FIRST until CreatureSprites.WALK_FIRST + 4
     private val joyFrames = CreatureSprites.JOY_FIRST..CreatureSprites.JOY_FIRST + 1
 

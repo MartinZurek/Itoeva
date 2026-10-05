@@ -99,6 +99,8 @@ import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.PlayMapScene
 import com.notime.glyphsim.matrix.PlayControl
+import com.notime.glyphsim.matrix.GameMovement
+import com.notime.glyphsim.matrix.GameSurfaces
 import com.notime.glyphsim.matrix.GameScenes
 import android.content.Context
 import com.notime.glyphsim.settings.SettingsCatalog
@@ -758,8 +760,17 @@ fun DockScreen(
         var doorTransit by remember { mutableStateOf(false) }
         /** Itoeva 2: wo die Figur steht (siehe PlayControl) und welche Richtung gedrueckt ist. */
         var gamePos by remember { mutableStateOf(PlayControl.Pos()) }
-        var gameDir by remember { mutableStateOf<PlayControl.Dir?>(null) }
+        var gameTouchStick by remember { mutableStateOf(PlayControl.Stick()) }
+        var gameKeyStick by remember { mutableStateOf(PlayControl.Stick()) }
+        var gameMovement by remember { mutableStateOf(GameMovement.State()) }
+        fun gameInput() = if (gameTouchStick.strength > 0f) gameTouchStick else gameKeyStick
         var gameFacing by remember { mutableStateOf(PlayControl.Dir.DOWN) }
+        val gameSurfaceList by rememberUpdatedState(remember(gameMode, currentPlace, avatar?.species,
+            sceneWidthCells, floorYCells, maxWidthPx, maxHeightPx, worldAvatarPx, sceneCellPx) {
+            if (!gameMode) emptyList() else GameScenes.of(currentPlace)?.let { GameSurfaces.painted(it) }
+                ?: GameSurfaces.tables(currentPlace, avatar?.species ?: AvatarSpecies.FENNEC,
+                    sceneWidthCells, floorYCells, maxWidthPx, worldAvatarPx, sceneCellPx, maxHeightPx * GAME_DEPTH_BAND)
+        })
         /** Der Platz in Reichweite (fuer die Aktionstaste) und ob gerade eine Handlung laeuft. */
         var gameStation by remember { mutableStateOf<PlayScene.Station?>(null) }
         var gameActing by remember { mutableStateOf(false) }
@@ -1094,7 +1105,11 @@ fun DockScreen(
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
                     Lifecycle.Event.ON_START -> screenVisible = true
-                    Lifecycle.Event.ON_STOP -> screenVisible = false
+                    Lifecycle.Event.ON_STOP -> {
+                        screenVisible = false
+                        gameTouchStick = PlayControl.Stick()
+                        gameKeyStick = PlayControl.Stick()
+                    }
                     else -> Unit
                 }
             }
@@ -3953,76 +3968,84 @@ fun DockScreen(
                 placeGameAvatar(gamePos)
                 refreshGameStation()
             }
+            LaunchedEffect(currentPlace, gameSnap, avatar?.species) {
+                gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
+            }
+            DisposableEffect(Unit) {
+                onDispose {
+                    gameTouchStick = PlayControl.Stick()
+                    gameKeyStick = PlayControl.Stick()
+                    gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
+                }
+            }
             LaunchedEffect(Unit) {
                 var last = withFrameMillis { it }
-                var gait: Job? = null
+                var wasMoving = false
                 while (isActive) {
                     val now = withFrameMillis { it }
                     val dt = now - last
                     last = now
-                    // Waehrend einer Handlung (Aktionstaste) gehoert die Figur dem Ablauf.
-                    val dir = gameDir.takeUnless { gameActing }
+                    val current = avatar ?: continue
                     val target = gameWalkTarget
-                    val current = avatar
-                    if (current == null || (dir == null && target == null)) {
-                        if (gait != null) {
-                            gait.cancel()
-                            gait = null
-                            avatarWalking = false
-                            // Beginnt gerade eine Handlung, spielt sie ihre eigenen Bilder.
-                            if (!gameActing) {
-                                current?.let { startAvatarIdleLoop(it.species, AvatarMoodSnapshot.forSpecies(context, it.species)) }
-                            }
-                        }
-                        continue
-                    }
-                    if (gait == null) {
-                        avatarIdleJob?.cancel()
-                        occupiedStation = null
-                        avatarWalking = true
-                        gait = launch {
-                            val walk = AvatarAnimations.walkSequence(current.species)
-                            while (isActive) {
-                                MatrixAnimator.playTimed(walk.frames, walk.holdsMs) { f ->
-                                    avatar = avatar?.copy(frame = f)
-                                }
-                            }
-                        }
-                    }
-                    // Zu einem Platz in der gemalten Welt geht sie von selbst (siehe gameActAt).
                     if (target != null) {
                         val next = GameScenes.approach(gamePos, target, dt)
-                        if (next.x < gamePos.x) { avatarFacing = AvatarShading.Side.RIGHT; gameFacing = PlayControl.Dir.LEFT }
-                        else if (next.x > gamePos.x) { avatarFacing = AvatarShading.Side.LEFT; gameFacing = PlayControl.Dir.RIGHT }
-                        else if (next.depth < gamePos.depth) gameFacing = PlayControl.Dir.UP
-                        else if (next.depth > gamePos.depth) gameFacing = PlayControl.Dir.DOWN
+                        gameFacing = PlayControl.swipeDir(next.x - gamePos.x, (next.depth - gamePos.depth) * 0.25f, 0f) ?: gameFacing
+                        avatarFacing = if (gameFacing == PlayControl.Dir.LEFT) AvatarShading.Side.RIGHT else AvatarShading.Side.LEFT
+                        avatarWalking = true
                         gamePos = next
                         placeGameAvatar(next)
-                        if (next.x == target.x && next.depth == target.depth) gameWalkTarget = null
+                        if (next.x == target.x && next.depth == target.depth) {
+                            gameWalkTarget = null
+                            avatarWalking = false
+                        }
                         continue
                     }
-                    if (dir == null) continue
-                    // Die Blickrichtung bleibt nach dem Anhalten, wie sie war.
-                    gameFacing = dir
-                    when (dir) {
-                        PlayControl.Dir.LEFT -> avatarFacing = AvatarShading.Side.RIGHT
-                        PlayControl.Dir.RIGHT -> avatarFacing = AvatarShading.Side.LEFT
-                        else -> Unit
+                    val busy = !screenVisible || gameActing || current.fed || gameMenuOpen || gameMapOpen || gameBackpackOpen || talkOpen
+                    if (busy) {
+                        if (wasMoving) avatarWalking = false
+                        wasMoving = false
+                        continue
                     }
-                    val step = PlayControl.step(gamePos, dir, dt)
-                    var pos = step.pos
-                    step.exit?.let { exit ->
-                        val bild = GameScenes.of(currentPlace)
-                        val next = if (bild != null) GameScenes.exit(bild, exit) else PlayControl.neighbor(currentPlace, exit)
-                        pos = if (next != null) {
+                    if (gameMovement.pos != gamePos) {
+                        gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
+                    }
+                    val (widthPx, heightPx, avatarPx) = gameGeometry
+                    val scene = GameScenes.of(currentPlace)
+                    val result = GameMovement.tick(gameMovement, gameInput(), dt, gameSurfaceList)
+                    gameMovement = result.state
+                    gamePos = gameMovement.pos
+                    gameFacing = gameMovement.facing
+                    avatarFacing = when (gameFacing) {
+                        PlayControl.Dir.LEFT -> AvatarShading.Side.RIGHT
+                        PlayControl.Dir.RIGHT -> AvatarShading.Side.LEFT
+                        else -> AvatarShading.Side.NONE
+                    }
+                    val motionActive = gameMovement.moving || gameMovement.action != null
+                    if (motionActive && !wasMoving) {
+                        avatarIdleJob?.cancel()
+                        occupiedStation = null
+                        avatar = avatar?.copy(frame = AvatarAnimations.idlePose(current.species))
+                    }
+                    avatarWalking = gameMovement.moving
+                    if (!motionActive && wasMoving) startAvatarIdleLoop(current.species, AvatarMoodSnapshot.forSpecies(context, current.species))
+                    wasMoving = motionActive
+                    result.exit?.let { exit ->
+                        val next = scene?.let { GameScenes.exit(it, exit) } ?: if (scene == null) PlayControl.neighbor(currentPlace, exit) else null
+                        if (next != null) {
                             currentPlace = next
-                            PlayControl.entry(exit, step.pos)
+                            gamePos = PlayControl.entry(exit, gamePos)
+                            gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
                         } else {
-                            step.pos.copy(pushMs = 0L)
+                            gamePos = gamePos.copy(pushMs = 0L)
+                            gameMovement = gameMovement.copy(pos = gamePos)
                         }
                     }
-                    gamePos = pos
-                    placeGameAvatar(pos)
+                    placeGameAvatar(gamePos)
+                    // Die Flughoehe wird genau einmal auf den Welt-Fusspunkt angewandt.
+                    val liftPx = GameScenes.of(currentPlace)?.let {
+                        gameMovement.height * GameScenes.fit(it, widthPx, heightPx, gamePos.x, gamePos.depth).scale
+                    } ?: (gameMovement.height * avatarPx / 64f)
+                    if (liftPx != 0f) avatar = avatar?.let { it.copy(offset = it.offset - Offset(0f, liftPx)) }
                     refreshGameStation()
                 }
             }
@@ -5264,6 +5287,7 @@ fun DockScreen(
                     lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
                     modifier = Modifier.fillMaxSize(), layers = gemaltEbenen
                 )
+                GameSurfaceView(gemalt, gamePos, sceneFade.value, Modifier.fillMaxSize())
             } else PlaySceneView(
                 cells = if (streamMode) StreamPresentation.readableNight(
                     sceneCells, PlayAmbientActivity.currentDayPhase() == PlayAmbientActivity.DayPhase.NIGHT,
@@ -5674,8 +5698,18 @@ fun DockScreen(
                 shadeSide = avatarFacing,
                 gameDirection = if (gameMode) gameFacing else null,
                 gameMoving = if (gameMode) avatarWalking else null,
+                gameTempo = if (gameMode && !gameActing) gameMovement.tempo else 1f,
+                gameGaitMs = if (gameMode && !gameActing) gameMovement.gaitMs.toLong() else null,
+                gameRunBlend = if (gameMode && !gameActing) gameMovement.runBlend else null,
                 motionCue = if (current.fed || current.occurrenceId != null || groupGame != null) null else
-                    creatureMotionCue ?: occupiedStation?.takeIf {
+                    (if (gameMode && !gameActing) gameMovement.action?.let { action ->
+                        CreatureSprites.MotionCue(when (action) {
+                            GameMovement.Action.JUMP -> CreatureSprites.Motion.JUMP
+                            GameMovement.Action.ROLL -> CreatureSprites.Motion.ROLL
+                            GameMovement.Action.SIT, GameMovement.Action.REST -> CreatureSprites.Motion.SIT
+                            GameMovement.Action.RISE -> CreatureSprites.Motion.RISE
+                        }, gameMovement.progress)
+                    } else null) ?: creatureMotionCue ?: occupiedStation?.takeIf {
                         it != PlayScene.Station.BED && !avatarWalking && !avatarSettling
                     }?.let { CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f) },
                 modifier = Modifier
@@ -6051,7 +6085,8 @@ fun DockScreen(
              */
             fun gameActAt(station: PlayScene.Station) {
                 val species = avatar?.species ?: return
-                if (gameActing) return
+                if (gameActing || gameMovement.action == GameMovement.Action.JUMP ||
+                    gameMovement.action == GameMovement.Action.ROLL || gameMovement.height > 0f) return
                 // In der gemalten Welt: hingehen, dann handeln (siehe GameScenes).
                 GameScenes.of(currentPlace)?.let { bild ->
                     val spot = bild.spots.firstOrNull { it.station == station } ?: return
@@ -6143,9 +6178,17 @@ fun DockScreen(
                         ?.let { station to it }
                 }.minByOrNull { it.second }?.first
             }
-            GameKeys(onDir = { gameDir = it }, onAction = { gameStation?.let { gameActAt(it) } })
+            val controlsEnabled = screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !talkOpen
+            fun gameCommand(command: GameMovement.Command, direction: PlayControl.Stick?) {
+                if (!controlsEnabled || avatar == null) return
+                gameMovement = GameMovement.command(gameMovement.copy(pos = gamePos), command, direction ?: gameInput(), gameSurfaceList)
+            }
+            if (controlsEnabled) GameKeys(onStick = { gameKeyStick = it },
+                onAction = { gameStation?.let { gameActAt(it) } }, onCommand = ::gameCommand)
             GameTouch(
-                onDir = { gameDir = it },
+                onStick = { gameTouchStick = it },
+                onCommand = ::gameCommand,
+                enabled = controlsEnabled,
                 onTap = { tap ->
                     avatar?.let { current ->
                         val px = with(density) { current.sizeDp.dp.toPx() }

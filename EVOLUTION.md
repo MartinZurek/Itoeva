@@ -669,6 +669,55 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-05 - Zwei Daumen fuer Fennecs Weltentdeckung (fennec-controller-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin bestaetigt die Bewegungsvorschau und
+beauftragt analoges Smartphone-Tempo von Gehen bis Vierbeiner, Spruenge auf
+Gegenstaende, Ausweichrollen und freiwillige Ruhe. Kein Jump-and-Run-Ziel.
+
+**FACT / Entscheidung:** Links ein radial normierter Analogkreis mit weicher
+Beschleunigung, schnellem Abbremsen, Diagonalen und ruhiger Blickrichtungswahl.
+Rechts Tipp/aufwaerts = Sprung, waagerechtes Wischen = Rolle, Halten 500 ms oder
+abwaerts = Sitzen/Ruhe. Erneute Ruhe oder linker Zug steht auf. Zwei Pointer-IDs
+bleiben unabhaengig, Menue/Hintergrund/Abbruch geben Eingaben frei. Tastatur und
+D-Pad bleiben nutzbar, Shift aktiviert schnelles Tempo.
+
+**FACT / Architektur und Charakterwirkung:** `GameMovement` erweitert den
+bestehenden Bildtakt, `GameSurfaces` benennt wirkliche niedrige Standflaechen:
+Teetisch im gemalten Wohnzimmer, gezeichnete Kiste im Park, vorhandene Tischplatten
+der Zellenzimmer. Sprunghilfe nur in Zug-/Blickrichtung und Reichweite; kein
+Praezisions-Plattformspiel. Landen haelt die Oberkante, Kanten gehen monoton zum
+Boden, Hindernisse blockieren bodennahe Wege. Rolle ohne Unverwundbarkeit.
+Gangphase folgt dem geglaetteten Tempo; Hysterese und 160-ms-Ueberblendung vermeiden
+Gangartflackern. Der Fennec-Bogen waechst auf 138 Bilder, mit gezeichnetem
+Vierbeiner und Rolle. Einmaliges Laden teilt den Bogen in gecachte 128-px-Einzeltexturen statt einer
+17664-px-GPU-Textur; Flaechen werden pro Layout berechnet.
+Kein neues Datenmodell, keine Migration, keine Reminder-/XP-/Story-Aenderung.
+
+**TESTED BEHAVIOR:** 18 lokale Python-Tests fuer ausgelieferte Bilder, vollstaendige
+Quellen und echte niedrigere/rotierende Silhouetten. 49 JVM-Tests der betroffenen
+Steuerungs-/Darstellungsklassen lokal gruen; darunter normierte Diagonalen, Tempo,
+Stoppen, Sprunglandung, erneutes Huepfen auf einer Flaeche, zu hohe Hindernisse,
+Rollen/Kollision, Tiefe auf Platten, monotoner Abstieg, Hysterese und Sitzen/Aufstehen.
+Zweiter Agent pruefte den Code; seine konkreten Landungs-, Kanten-, Gangart- und
+Besitzfehler wurden mit Regressionen korrigiert. Fuenf Emulator-Tests fuer echte
+Pointer-IDs, Wischen, Halten und Abbruch sowie ein Bitmap-Test fuer kleine, pixelgleiche, wiederverwendete
+GPU-Bilder sind hinzugefuegt; Android-CI steht aus.
+Der vorherige Verify-Lauf ist nach Wiederholung des Lint-Heap-Fehlers komplett
+gruen (Tests/Lint/R8 und API26/API35); fuer den neuen Controller steht CI aus.
+
+**UNVERIFIED / Grenzen:** Kein physischer Smartphone-Messlauf. Die wahrgenommene
+Latenz, Gangart-Ueberblendung, Kamera, Handanker und Flaechenlage brauchen APK-QA.
+Rolle nur als Profil gezeichnet, Front-/Ruecklauf vier statt acht eigene Zeichnungen
+mit gleicher Zyklusdauer. Nur benannte Standflaechen, keine allgemeine Erkennung
+aller gemalten Objekte. Kein Sprintverbrauch, Kampf, Fallverlust oder Spielziel.
+
+**Bereiche / Ruecksetzweg:** `:app-sim` GameControls, vorhandener Bildtakt,
+Standflaechen/Renderer, `tools/character-art`, lokale Testliste, Architektur und
+Evolution History. Gesamten PR auf `97f767d514c66b41ad69963e7ace5e953cbe092e`
+zuruecksetzen; bestehende Nutzerstaende bleiben gueltig. Naechster Schritt:
+gruene Android-CI und Controller-/Moebel-Sichtpruefung in der Game-APK. Unmerged.
+
 ### 2026-10-05 - Fennecs gerichteter Gang und Bewegungsrepertoire (fennec-mobility-v1)
 
 **DOCUMENTED INTENT / Anlass:** Martin hat PR #331 gemergt und wuenscht als

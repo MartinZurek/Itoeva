@@ -59,10 +59,20 @@ class MobilityTest(unittest.TestCase):
         self.assertLessEqual(np.abs(bounds(55)-bounds(27)).max(), 3)
         self.assertNotEqual(self.frames[55].tobytes(), self.frames[27].tobytes())
 
+    def test_run_and_roll_are_drawn_body_changes_with_unique_frames(self):
+        def height(i):
+            y = np.nonzero(self.frames[i][..., 3] > 128)[0]
+            return y.max()-y.min()
+        self.assertGreater(height(95)-height(114), 20)
+        for first, count in [(114, 8), (122, 4), (126, 4), (130, 8)]:
+            self.assertEqual(count, len({f.tobytes() for f in self.frames[first:first+count]}))
+        self.assertLess(height(133), height(137))
+
     def test_source_drawings_are_complete_and_directional_views_are_distinct(self):
         for file, cols, rows in [('fennec-walk-directions-atlas.png', 4, 4),
                                  ('fennec-actions-atlas.png', 4, 4),
-                                 ('fennec-actions-directions-atlas.png', 7, 2)]:
+                                 ('fennec-actions-directions-atlas.png', 7, 2),
+                                 ('fennec-run-atlas.png', 4, 4), ('fennec-roll-atlas.png', 4, 2)]:
             self.assertEqual(cols*rows, len(M.drawings(file, cols, rows)))
         self.assertNotEqual(self.frames[68].tobytes(), self.frames[76].tobytes())
         self.assertNotEqual(self.frames[104].tobytes(), self.frames[111].tobytes())

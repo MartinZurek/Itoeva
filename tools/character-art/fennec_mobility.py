@@ -13,7 +13,7 @@ from puppet import Puppet, affine, pixelize
 HERE = Path(__file__).resolve().parent
 FRAME, GROUND = 128, 125
 DIRECTION_FIRST, ACTION_FIRST, DIRECTION_ACTION_FIRST = 68, 84, 100
-FRAME_COUNT = 114
+FRAME_COUNT = 138
 
 
 def drawings(filename, columns, rows):
@@ -122,6 +122,9 @@ def apply(existing, palette):
     existing[55] = rasterize([blink], scale, palette, True)[0]
     existing[56:62] = [directional[i] for i in (0, 1, 2, 2, 0, 4)]
     existing[62:68] = [directional[i] for i in (7, 8, 9, 9, 7, 11)]
-    result = existing + directions + actions + directional
+    # Ein fester Massstab pro Quelle; der Vierbeiner wird durch seine Haltung niedriger.
+    run = rasterize(drawings('fennec-run-atlas.png', 4, 4), .40, palette)
+    roll = rasterize(drawings('fennec-roll-atlas.png', 4, 2), .28, palette)
+    result = existing + directions + actions + directional + run + roll
     assert len(result) == FRAME_COUNT
     return result
