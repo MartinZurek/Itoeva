@@ -700,11 +700,16 @@ Steuerungs-/Darstellungsklassen lokal gruen; darunter normierte Diagonalen, Temp
 Stoppen, Sprunglandung, erneutes Huepfen auf einer Flaeche, zu hohe Hindernisse,
 Rollen/Kollision, Tiefe auf Platten, monotoner Abstieg, Hysterese und Sitzen/Aufstehen.
 Zweiter Agent pruefte den Code; seine konkreten Landungs-, Kanten-, Gangart- und
-Besitzfehler wurden mit Regressionen korrigiert. Fuenf Emulator-Tests fuer echte
-Pointer-IDs, Wischen, Halten und Abbruch sowie ein Bitmap-Test fuer kleine, pixelgleiche, wiederverwendete
-GPU-Bilder sind hinzugefuegt; Android-CI steht aus.
+Besitzfehler wurden mit Regressionen korrigiert. Sechs instrumentierte Tests fuer echte
+Pointer-IDs, Wischen, Halten, Abbruch und kleine, pixelgleiche, wiederverwendete
+GPU-Bilder sind hinzugefuegt. Android-Kompilierung lokal gruen fuer Debug, Game
+und AndroidTest (`compileDebugKotlin`, `compileGameKotlin`,
+`compileDebugAndroidTestKotlin`). Die Kompilierung fand zwei korrigierte
+Einbindungen: Key-Value-Class ohne vararg, Charakterauswahl mit Einzelbild-Cache.
+Der neue GitHub-Lauf startete keinen Runner und scheiterte an dessen fehlender
+Zuteilung; Wiederholung angestossen, Emulator-Ausfuehrung noch ungeprueft.
 Der vorherige Verify-Lauf ist nach Wiederholung des Lint-Heap-Fehlers komplett
-gruen (Tests/Lint/R8 und API26/API35); fuer den neuen Controller steht CI aus.
+gruen (Tests/Lint/R8 und API26/API35); CI und Emulator-Ausfuehrung fuer den neuen Controller stehen weiterhin aus.
 
 **UNVERIFIED / Grenzen:** Kein physischer Smartphone-Messlauf. Die wahrgenommene
 Latenz, Gangart-Ueberblendung, Kamera, Handanker und Flaechenlage brauchen APK-QA.

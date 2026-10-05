@@ -252,3 +252,8 @@ keinen eigenen Richtungsbogen. Physische Telefon-Latenz, Ueberblendung, Kamerafa
 und alle Moebelanker sind weiterhin an der APK zu bewerten. Die GIF zeigt nur
 Spritefolgen. Fuenf instrumentierte Tests pruefen zwei Finger, Wischen, Halten
 und Eingabeabbruch; ein Bitmap-Test prueft kleinen, pixelgleichen Cache. JVM-Tests pruefen Tempo, Diagonalen, Landen, Kanten und Ruhe.
+
+Android-Kompilierung von Debug, Game und AndroidTest lokal erfolgreich.
+Die sechs neuen instrumentierten Tests sind kompiliert, ihre Ausfuehrung wartet
+auf einen GitHub-Runner; der erste Controller-Lauf scheiterte vor dem Start
+an fehlender Runner-Zuteilung.

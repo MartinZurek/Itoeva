@@ -226,7 +226,7 @@ internal fun GameKeys(
     val stickNow by rememberUpdatedState(onStick)
     DisposableEffect(Unit) { onDispose { held.clear(); stickNow(PlayControl.Stick()) } }
     fun update() {
-        fun any(vararg keys: Key) = keys.any { it in held }
+        fun any(a: Key, b: Key) = a in held || b in held
         val x = (if (any(Key.DirectionRight, Key.D)) 1f else 0f) - (if (any(Key.DirectionLeft, Key.A)) 1f else 0f)
         val y = (if (any(Key.DirectionDown, Key.S)) 1f else 0f) - (if (any(Key.DirectionUp, Key.W)) 1f else 0f)
         val raw = PlayControl.stick(x, y, 1f, 0f)

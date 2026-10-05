@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -146,13 +145,13 @@ fun GameStartScreen(onStart: () -> Unit) {
 @Composable
 private fun SpeciesCard(
     species: AvatarSpecies,
-    sheet: ImageBitmap?,
+    sheet: CreatureSheets.Sheet?,
     chosen: Boolean,
     chosenTick: Long,
     onClick: () -> Unit
 ) {
     // Feiner Bogen (128er-Bilder): eigene Ruheschleife; einfacher Bogen: Atmen im Wechsel.
-    val rich = sheet?.height == CreatureSprites.Rich.FRAME
+    val rich = sheet?.frameSize == CreatureSprites.Rich.FRAME
     val frameSize = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
     val frame = when {
         rich -> CreatureSprites.Rich.idleFrame(chosenTick)
@@ -172,8 +171,8 @@ private fun SpeciesCard(
             if (sheet != null) {
                 val px = size.minDimension.toInt()
                 drawImage(
-                    image = sheet,
-                    srcOffset = IntOffset(frame * frameSize, 0),
+                    image = sheet.frames[frame],
+                    srcOffset = IntOffset.Zero,
                     srcSize = IntSize(frameSize, frameSize),
                     dstOffset = IntOffset(((size.width - px) / 2).toInt(), 0),
                     dstSize = IntSize(px, px),
