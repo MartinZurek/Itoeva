@@ -1,4 +1,4 @@
-"""Baut die feinen Bilderboegen (128 x 128 je Bild, Fennec: 68 Bilder). Plan: fennec_key.py.
+"""Baut die feinen Bilderboegen (128 x 128 je Bild, Fennec: 114 Bilder). Plan: fennec_key.py.
 
 Fennec kommt seit dem 04.10. abends aus der gemalten Key-Design-Figur (fennec_key.py, Puppe aus
 puppet.py); die 3D-Formenfigur (fennec3d.py) bleibt als Werkzeug, wird aber nicht mehr geschrieben.
@@ -69,9 +69,38 @@ def expression_preview(path):
     rendered[0].save(path,save_all=True,append_images=rendered[1:],duration=105,loop=0)
 
 
+def mobility_preview(path):
+    from PIL import ImageDraw
+    # Derselbe ausgelieferte Bogen, aber keine Aufnahme aus der Android-Laufzeit.
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../app-sim/src/main/assets/creatures/fennec.png')
+    sheet = Image.open(root).convert('RGBA')
+    clips = [list(range(68,76)), list(range(76,84)), [84,85,86,86,87,95,95,95],
+             [95,88,89,89,88,95,95,95], [95,92,93,93,93,94,95,95],
+             [95,96,96,96,95,95,95,95], [95,97,97,97,95,95,95,95],
+             [95,84,98,98,95,95,95,95]]
+    labels = ['Gang vorn', 'Gang hinten', 'Sprung / Landung', 'Buecken',
+              'Sitzen / Aufstehen', 'Strecken', 'Greifen', 'Treten']
+    rendered = []
+    for tick in range(32):
+        bg = Image.new('RGBA', (4*FRAME, 360), (89,108,94,255))
+        d = ImageDraw.Draw(bg)
+        for col, clip in enumerate(clips):
+            phase = (tick if col < 2 else tick//2) % len(clip)
+            x, y = col%4*FRAME, col//4*180
+            d.text((x+4,y+6),labels[col],fill=(239,229,211))
+            d.line((x+4,y+158,x+124,y+158),fill=(140,154,139))
+            lift = [0,12,22,22,0,0,0,0][phase] if col == 2 else 0
+            image = sheet.crop((clip[phase]*FRAME,0,(clip[phase]+1)*FRAME,FRAME))
+            bg.alpha_composite(image,(x,y+32-lift))
+        rendered.append(bg.convert('RGB').resize((4*FRAME*2,720),Image.Resampling.NEAREST))
+    rendered[0].save(path,save_all=True,append_images=rendered[1:],duration=130,loop=0,optimize=True)
+
+
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__))
-    if len(sys.argv) > 2 and sys.argv[1] == '--expressions':
+    if len(sys.argv) > 2 and sys.argv[1] == '--mobility':
+        mobility_preview(sys.argv[2])
+    elif len(sys.argv) > 2 and sys.argv[1] == '--expressions':
         expression_preview(sys.argv[2])
     elif len(sys.argv) > 2 and sys.argv[1] == '--preview':
         preview(sys.argv[2])

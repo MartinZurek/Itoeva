@@ -669,6 +669,52 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-05 - Fennecs gerichteter Gang und Bewegungsrepertoire (fennec-mobility-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin hat PR #331 gemergt und wuenscht als
+Fortsetzung Gehen nach vorne/hinten sowie Huepfen, Buecken und weitere passende
+Koerperbewegungen. Basis ist der gemergte Fennec `97f767d`.
+
+**FACT / Entscheidung:** Front- und Rueckgang bekommen je acht eigene
+Ganzkoerperzeichnungen mit gemeinsamem Massstab und Bodenanker. Weitere Quellen
+zeigen Ausholen, Absprung, Flug, Landung, Buecken, Knien, Sitzen, Aufstehen,
+Strecken, Greifen, Treten und eingerollten Schlaf. Der Bogen waechst auf 114
+Bilder, alte Rollen bleiben erhalten, der Profilgang ist pixelgleich erhalten.
+Der Import verwirft angeschnittene Figuren und verwendet das wirkliche Atlaslayout;
+ein erster Richtungsbogen mit angeschnittenen Stiefeln wurde verworfen.
+
+**FACT / Architektur:** Ein optionaler `MotionCue` verbindet vorhandene
+Routine-Schritte mit gezeichneten Haltungen. Der Fortschritt kommt aus der
+Orts-/Reaktionsanimation. Bodenaktionen bekommen keinen zweiten Raster-Huepfer;
+Spruenge behalten ihre wirkliche Hoehe. Hinsetzen und Aufstehen verwenden die
+bestehende Moebelbewegung; die Sitzhaltung bleibt beim Verweilen sichtbar.
+Strecken, Aufnehmen, Abstellen, Schalten, Training und Schuss zeigen eigene
+Koerperposen. Ein Abbruch gibt den Hinweis frei, ohne eine neuere Regung zu
+loeschen. Echte Reminder und Gruppenspiel haben Vorrang. Keine neue Aktivitaet,
+kein Eingabeknopf, keine Ziel-/Reminder-/Story-/XP-/Balancing-Aenderung.
+
+**TESTED BEHAVIOR:** 17 lokale Python-Tests pruefen Kopfanker, bestehende
+IK-Werkzeuge, pixelgleichen Seitengang, vollstaendige Quellen, acht verschiedene
+Front-/Rueck-Beinphasen, Bodenkontakt, stabile Hoehe, kleiner werdende Sitz-/Bueck-
+und Schlafsilhouetten und die passende Front-Blinzelgroesse. Vier neue
+Kotlin-Regressionen pruefen acht Richtungsbilder, bodenfeste Gestik, Sitz-/Stand-
+Endposen, Fortschrittsgrenzen und Sprunghoehe. Android-Pruefung folgt in CI.
+Sprite-Vorschau und exakte Bildgenerierungsanweisungen sind versioniert.
+
+**UNVERIFIED / Grenzen:** Noch keine APK-Sichtpruefung fuer diesen Schnitt;
+Uebergaenge, Requisiten-/Handanker und Sitzhoehen sind am Geraet zu beurteilen.
+Front-/Ruecklandung teilen die Hockpose, gerichtetes Knien die Bueckpose und
+Greifen die Streckpose. Schuss nur im Profil. Kein eigener Lauf-, Schleich- oder
+Saltozyklus, kein an den Weg gekoppelter Gang und keine Windphysik. Der vorhandene
+Clip-Exporter zeigt weiterhin das grobe Raster. Die Vorschau ist keine APK-Aufnahme.
+
+**Bereiche / Ruecksetzweg:** `:app-sim`-Darstellung und Routine-Grenze,
+`tools/character-art`, Evolution History. Generator, Asset, Auswahlregel und
+Routine-Hinweise gemeinsam auf `97f767d514c66b41ad69963e7ace5e953cbe092e`
+zuruecksetzen. Keine Datenmodelle/Preference-Schluessel/Migration, Nutzerstaende
+bleiben gueltig. Naechster Schritt: gruene Android-CI und Handy-Sichtpruefung;
+Richtungsvarianten von Knien/Greifen und schneller Gang folgen erst nach Bewertung.
+
 ### 2026-10-05 - Fennecs Beinbewegung: gezeichneter Profilgang (fennec-walk-art-v1)
 
 **DOCUMENTED INTENT / Anlass:** Martin meldet, dass die Beinbewegung trotz v2

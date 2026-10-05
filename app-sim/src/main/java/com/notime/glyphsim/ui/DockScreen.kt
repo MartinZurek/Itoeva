@@ -87,6 +87,7 @@ import com.notime.glyphsim.living.WorldState
 import com.notime.glyphsim.matrix.AvatarAnimations
 import com.notime.glyphsim.matrix.AvatarBearing
 import com.notime.glyphsim.matrix.AvatarBodies
+import com.notime.glyphsim.matrix.CreatureSprites
 import com.notime.glyphsim.matrix.AvatarFacing
 import com.notime.glyphsim.matrix.AvatarFooting
 import com.notime.glyphsim.matrix.AvatarGeometry
@@ -1302,8 +1303,52 @@ fun DockScreen(
         // PlayAmbientActivity), statt wie im normalen Dock nur einmal beim Spawn. Ueber [scope]
         // statt der jeweils aufrufenden LaunchedEffect gestartet, damit die Schleife laenger lebt
         // als der einzelne Aufruf, der sie angestossen hat.
+        var creatureMotionCue by remember { mutableStateOf<CreatureSprites.MotionCue?>(null) }
+        var creatureMotionOwner by remember { mutableStateOf<Any?>(null) }
+
+        // Die groben Posen koennen Strecken und Springen gleich aussehen lassen.
+        // Der vorhandene Ablauf kennt die Handlung und liefert hier ihren Fortschritt.
+        suspend fun playCreatureMotion(
+            sequence: AvatarAnimations.AvatarSequence,
+            motion: CreatureSprites.Motion
+        ) {
+            val owner = Any()
+            creatureMotionOwner = owner
+            var index = 0
+            var previousLift = 0
+            try {
+                MatrixAnimator.playTimed(sequence.frames, sequence.holdsMs) { f ->
+                    val species = avatar?.species ?: AvatarSpecies.FENNEC
+                    val lift = CreatureSprites.liftOf(f, species)
+                    val progress = if (motion == CreatureSprites.Motion.JUMP) {
+                        when {
+                            lift >= 3 -> 0.45f
+                            lift > 0 && lift < previousLift -> 0.6f
+                            lift > 0 -> 0.2f
+                            previousLift > 0 -> 0.8f
+                            index == sequence.frames.lastIndex -> 1f
+                            else -> 0f
+                        }
+                    } else index.toFloat() / sequence.frames.lastIndex.coerceAtLeast(1)
+                    creatureMotionCue = CreatureSprites.MotionCue(motion, progress)
+                    avatar = avatar?.copy(frame = f)
+                    previousLift = lift
+                    index++
+                }
+            } finally {
+                // Eine abgebrochene Ruhe-Coroutine darf die bereits gestartete
+                // naechste Handlung nicht nachtraeglich ausblenden.
+                if (creatureMotionOwner === owner) {
+                    creatureMotionCue = null
+                    creatureMotionOwner = null
+                }
+            }
+        }
+
         fun startAvatarIdleLoop(species: AvatarSpecies, mood: AvatarMood) {
             avatarIdleJob?.cancel()
+            creatureMotionOwner = null
+            creatureMotionCue = null
             avatarIdleJob = scope.launch {
                 val idle = AvatarAnimations.idleSequence(species, mood)
                 // Durchlaeufe seit der letzten spontanen Regung (siehe AvatarBearing.idleFidget):
@@ -1329,8 +1374,12 @@ fun DockScreen(
                         )
                     if (fits && fidget != null) {
                         val move = AvatarAnimations.fidgetSequence(species, fidget)
-                        MatrixAnimator.playTimed(move.frames, move.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
+                        if (fidget == AvatarAnimations.Fidget.STRETCH) {
+                            playCreatureMotion(move, CreatureSprites.Motion.STRETCH)
+                        } else {
+                            MatrixAnimator.playTimed(move.frames, move.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
                         }
                         loopsSinceFidget = 0
                     }
@@ -1874,8 +1923,14 @@ fun DockScreen(
                         // Figur sich hineinlegt, nicht erst danach.
                         occupiedStation = step.station
                         avatarSettling = true
+                        creatureMotionOwner = null
                         try {
                             animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
+                                if (occupiedStation != PlayScene.Station.BED) {
+                                    creatureMotionCue = CreatureSprites.MotionCue(
+                                        CreatureSprites.Motion.SIT, t
+                                    )
+                                }
                                 avatar = avatar?.copy(
                                     offset = Offset(
                                         from.x + (target.x - from.x) * t,
@@ -1885,6 +1940,7 @@ fun DockScreen(
                             }
                         } finally {
                             avatarSettling = false
+                            creatureMotionCue = null
                         }
                     }
 
@@ -1899,8 +1955,14 @@ fun DockScreen(
                         )
                         val from = standing.offset
                         avatarSettling = true
+                        creatureMotionOwner = null
                         try {
                             animate(0f, 1f, animationSpec = tween(SETTLE_INTO_MS, easing = FastOutSlowInEasing)) { t, _ ->
+                                if (occupiedStation != PlayScene.Station.BED) {
+                                    creatureMotionCue = CreatureSprites.MotionCue(
+                                        CreatureSprites.Motion.RISE, t
+                                    )
+                                }
                                 avatar = avatar?.copy(
                                     offset = Offset(
                                         from.x + (onFloor.x - from.x) * t,
@@ -1910,6 +1972,7 @@ fun DockScreen(
                             }
                         } finally {
                             avatarSettling = false
+                            creatureMotionCue = null
                         }
                         // **Erst NACH dem Hinunter, nicht schon davor** - das spiegelbildliche
                         // Gegenstueck zu [RoutineStep.Occupy] oben: Solange die Figur noch aus dem
@@ -1934,8 +1997,12 @@ fun DockScreen(
                         avatarIdleJob?.cancel()
                         delay(ARRIVAL_SETTLE_MS)
                         val performance = AvatarAnimations.reactionFor(species, step.topic)
-                        MatrixAnimator.playTimed(performance.frames, performance.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
+                        if (step.topic == AnimationType.MOVE) {
+                            playCreatureMotion(performance, CreatureSprites.Motion.JUMP)
+                        } else {
+                            MatrixAnimator.playTimed(performance.frames, performance.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
                         }
                         startAvatarIdleLoop(species, mood)
                         // **Seit der Zauberlehre kann er zaubern** (siehe PlayQuests.Reward.MAGIC):
@@ -1959,8 +2026,12 @@ fun DockScreen(
                     is RoutineStep.Stir -> {
                         avatarIdleJob?.cancel()
                         val fidget = AvatarAnimations.fidgetSequence(species, step.fidget)
-                        MatrixAnimator.playTimed(fidget.frames, fidget.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
+                        if (step.fidget == AvatarAnimations.Fidget.STRETCH) {
+                            playCreatureMotion(fidget, CreatureSprites.Motion.STRETCH)
+                        } else {
+                            MatrixAnimator.playTimed(fidget.frames, fidget.holdsMs) { f ->
+                                avatar = avatar?.copy(frame = f)
+                            }
                         }
                         startAvatarIdleLoop(species, mood)
                     }
@@ -2024,9 +2095,7 @@ fun DockScreen(
                                 }
                                 footballPhase = step.phase
                                 footballSince = scenePhase
-                                MatrixAnimator.playTimed(strike.frames, strike.holdsMs) { f ->
-                                    avatar = avatar?.copy(frame = f)
-                                }
+                                playCreatureMotion(strike, CreatureSprites.Motion.KICK)
                                 delay(FOOTBALL_FLIGHT_MS)
                                 repeat(FOOTBALL_CHEER_BEATS) { beat ->
                                     avatar = avatar?.copy(
@@ -2083,9 +2152,11 @@ fun DockScreen(
                         } else {
                             AvatarAnimations.reactionFor(species, AnimationType.MOVE)
                         }
-                        MatrixAnimator.playTimed(movement.frames, movement.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
-                        }
+                        playCreatureMotion(movement, when (step.phase) {
+                            PlayEffects.TrainingPhase.REST -> CreatureSprites.Motion.STRETCH
+                            PlayEffects.TrainingPhase.WARM_UP -> CreatureSprites.Motion.BEND
+                            else -> CreatureSprites.Motion.KNEEL
+                        })
                         startAvatarIdleLoop(species, mood)
                     }
 
@@ -2243,9 +2314,7 @@ fun DockScreen(
                         // Ereignis, dann das Ergebnis - so liest sich eine Ursache.
                         avatarIdleJob?.cancel()
                         val reach = AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.STRETCH)
-                        MatrixAnimator.playTimed(reach.frames, reach.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
-                        }
+                        playCreatureMotion(reach, CreatureSprites.Motion.REACH)
                         flashAt(avatar)
                         carried = step.item
                         startAvatarIdleLoop(species, mood)
@@ -2273,9 +2342,7 @@ fun DockScreen(
                             }
                             avatarIdleJob?.cancel()
                             val put = AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.STRETCH)
-                            MatrixAnimator.playTimed(put.frames, put.holdsMs) { f ->
-                                avatar = avatar?.copy(frame = f)
-                            }
+                            playCreatureMotion(put, CreatureSprites.Motion.BEND)
                             flashAt(avatar)
                             carried = null
                             startAvatarIdleLoop(species, mood)
@@ -2287,9 +2354,7 @@ fun DockScreen(
                         // Zustandswechsel eine sichtbare Handlung statt eines Sprungs im Bild.
                         avatarIdleJob?.cancel()
                         val reach = AvatarAnimations.fidgetSequence(species, AvatarAnimations.Fidget.STRETCH)
-                        MatrixAnimator.playTimed(reach.frames, reach.holdsMs) { f ->
-                            avatar = avatar?.copy(frame = f)
-                        }
+                        playCreatureMotion(reach, CreatureSprites.Motion.REACH)
                         when (step.device) {
                             // Der Spielautomat ist ein Bildschirm wie der Fernseher: Eingeschaltet
                             // zeigt er das laufende Spiel (siehe PlayScene.ambient).
@@ -2308,6 +2373,8 @@ fun DockScreen(
                 // weiterhin ueber ihr, waehrend sie laengst woanders steht - und zwar so lange,
                 // bis zufaellig irgendein spaeterer Ablauf mit einem Rise endet.
                 routineRunning = false
+                creatureMotionOwner = null
+                creatureMotionCue = null
                 occupiedStation = null
                 avatarSettling = false
                 // Dasselbe fuer Getragenes: Bricht der Ablauf zwischen Take und Drop ab, trueg
@@ -5607,6 +5674,10 @@ fun DockScreen(
                 shadeSide = avatarFacing,
                 gameDirection = if (gameMode) gameFacing else null,
                 gameMoving = if (gameMode) avatarWalking else null,
+                motionCue = if (current.fed || current.occurrenceId != null || groupGame != null) null else
+                    creatureMotionCue ?: occupiedStation?.takeIf {
+                        it != PlayScene.Station.BED && !avatarWalking && !avatarSettling
+                    }?.let { CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f) },
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
                     // Quadratgroesse das Raster und die Figur waere zu klein.

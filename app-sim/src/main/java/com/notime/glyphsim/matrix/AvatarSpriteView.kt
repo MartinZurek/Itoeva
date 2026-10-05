@@ -93,7 +93,8 @@ fun AvatarSpriteView(
     /** Im aktiven Spiel: vorne/hinten erhalten eigene gezeichnete Ansichten. */
     gameDirection: PlayControl.Dir? = null,
     /** Im aktiven Spiel bleibt die Ansicht beim Anhalten, ohne weiterzulaufen. */
-    gameMoving: Boolean? = null
+    gameMoving: Boolean? = null,
+    motionCue: CreatureSprites.MotionCue? = null
 ) {
     // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
     // Bogen, wird statt der groben Zellen das passende Bild daraus gezeichnet. Die grobe Pose
@@ -126,7 +127,7 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn, gait)
+                gameDirection, gameMoving, turn, gait, motionCue)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide)
         }
@@ -160,14 +161,15 @@ private fun DrawScope.drawCreature(
     gameDirection: PlayControl.Dir?,
     gameMoving: Boolean?,
     turn: CreatureSprites.Turn,
-    gait: CreatureSprites.GaitClock
+    gait: CreatureSprites.GaitClock,
+    motionCue: CreatureSprites.MotionCue?
 ) {
     val rich = sheet.height == CreatureSprites.Rich.FRAME
     val frameSize = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
     val feet = if (rich) CreatureSprites.Rich.FEET else CreatureSprites.FEET
     val look = if (rich) {
         CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, gameMoving, turn,
-            gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs))
+            gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs), motionCue)
     } else {
         CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
     }
@@ -252,4 +254,3 @@ private fun lerpColor(from: Color, to: Color, fraction: Float): Color = Color(
     blue = from.blue + (to.blue - from.blue) * fraction,
     alpha = 1f
 )
-

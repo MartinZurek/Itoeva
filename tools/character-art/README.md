@@ -168,3 +168,52 @@ Quelle und exakter ImageGen-Prompt: `source/fennec-walk-profile-prompt.md`.
 Die Front-/Rueckgaenge und Ruhe-/Reaktionsposen nutzen weiterhin den vorhandenen
 Rig; der Wechsel zur seitlichen Gangzeichnung braucht noch Beurteilung in der APK.
 Der Gang ist zeitgetaktet, keine Laufzeit-Stoff- oder Vollkoerperphysik.
+
+## Fennecs Bewegungsrepertoire (05.10., Folge auf den gemergten PR #331)
+
+Der aktuelle Bogen hat **114 Bilder zu 128 x 128**. Eigene Ganzkoerperzeichnungen
+ersetzen nun auch Front-/Rueckgang, gerichteten Stand und die Sprung-/Schlafposen.
+Die ersten 68 Rollen bleiben erhalten; 68–75: Frontgang, 76–83: Rueckgang,
+84–99: Profilaktionen, 100–106: Frontaktionen, 107–113: Rueckenaktionen.
+Die alten vier Richtungs-Gangplaetze bleiben als kompatible Aliasbilder im Bogen.
+Der seitliche Gang aus PR #331 ist pixelgleich erhalten.
+
+`fennec_mobility.py` isoliert die Zeichnungen als Zusammenhangskomponenten, sortiert
+sie nach wirklichem Zeilenlayout und verwirft angeschnittene Figuren. Jede Quelle
+hat einen festen Massstab; Front-/Rueckgang werden am Kopf und an der Bodenzeile
+registriert, damit der wechselnde Schwanz nicht den Rumpf mitzieht. Gerichtete
+Ruhe nutzt das vorhandene Puppet-Werkzeug fuer kleine Kopf-/Ohr-/Saumregungen mit
+festen Stiefeln. Der eigene Front-Lidschlag ersetzt die alte breite Frontpose.
+
+`CreatureSprites.MotionCue` beschreibt die Darstellung einer vorhandenen Handlung:
+Sprung, Buecken, Knien, Hinsetzen, Aufstehen, Strecken, Greifen, Treten. `DockScreen`
+liefert den Fortschritt beim Hinsetzen/Aufstehen, im Training, beim Greifen,
+Abstellen, Schalten, Strecken und Schuss. Sprungphasen folgen den wirklichen
+Raster-Hoehen, statt die ganze Freudenfolge irgendwo in der Luft zu beginnen.
+Abbruch gibt den Hinweis frei; ein alter Coroutine-Abschluss darf die naechste
+Handlung nicht loeschen. Sitzpose bleibt beim Verweilen sichtbar. Echte Reminder
+und Gruppenspiel koennen diese Routine-Darstellung uebersteuern.
+
+Die Zeichnungen enthalten Bodenbewegungen selbst: Strecken und Greifen bekommen
+keinen zusaetzlichen Raster-Huepfer. Fortbewegung hat Vorrang vor Handgestik.
+
+```bash
+python3 rich_sheets.py
+python3 rich_sheets.py --mobility fennec-mobility-preview.gif
+python3 -m unittest test_fennec_faces test_fennec_gait test_fennec_walk test_fennec_mobility -v
+```
+
+[Bewegungsvorschau](fennec-mobility-preview.gif): gerenderte Sprite-Folgen, keine
+APK-Aufnahme. Exakte Generierungsanweisungen und Quellenzuordnung stehen unter
+`source/fennec-mobility-prompts.md`. Bildgenerierung mit dem integrierten ImageGen.
+17 lokale Python-Tests bestehen; vier neue Kotlin-Verhaltenstests pruefen
+Bildwahl, Richtung, Hoehe, Endposen und ungueltigen Fortschritt in Android-CI.
+
+Grenzen: Front-/Rueckansicht teilen die Hockpose fuer Ausholen und Landung;
+gerichtetes Knien verwendet vorerst Buecken, gerichtetes Greifen die Streckpose.
+Der Schuss hat nur eine Profilzeichnung. Kein eigener Lauf-/Schleich-/Saltozyklus,
+kein neues Bewegungsrecht oder Eingabeknopf und keine Weg-/Windphysik.
+APK-Uebergaenge, Haende an Requisiten und Sitzhoehen muessen am Geraet beurteilt werden.
+Die bestehende Clip-Aufzeichnung verwendet weiterhin das grobe Raster.
+Ruecksetzen: Generator, PNG, Auswahlregel und Routine-Hinweise gemeinsam auf
+`97f767d514c66b41ad69963e7ace5e953cbe092e`; keine Datenmigration.
