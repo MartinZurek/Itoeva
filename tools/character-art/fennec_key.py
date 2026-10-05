@@ -9,6 +9,8 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 from puppet import Puppet
+import fennec_faces as Faces
+import fennec_walk as WalkArt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FEET = (195, 376)          # Mitte zwischen den Stiefeln, Bodenlinie
@@ -24,6 +26,9 @@ HIP_L = (172, 288)
 HIP_R = (222, 288)
 TAIL = (150, 296)
 PELVIS = (196, 282)
+KNEE_L, KNEE_R = (145, 328), (248, 328)
+ANKLE_L, ANKLE_R = (113, 365), (277, 365)
+SOLE_Y = {"l": 374, "r": 378}
 
 
 def source():
@@ -42,6 +47,11 @@ def build(img=None):
           HIP_L, 'torso', z=1)
     p.add('leg_r', p.poly([(208, 286), (244, 286), (262, 318), (290, 340), (315, 380), (252, 380), (244, 342), (218, 316)]),
           HIP_R, 'torso', z=1)
+    # Knie und Stiefel erben das Oberschenkelgelenk, drehen aber unabhaengig.
+    for side, knee, ankle in [('l', KNEE_L, ANKLE_L), ('r', KNEE_R, ANKLE_R)]:
+        leg = p.parts['leg_' + side].mask
+        p.add('shin_' + side, leg & (yy >= knee[1] - 3), knee, 'leg_' + side, z=1)
+        p.add('boot_' + side, leg & (yy >= ankle[1] - 8), ankle, 'shin_' + side, z=1)
     p.add('flap', p.poly([(258, 206), (346, 220), (346, 305), (296, 305), (268, 246), (256, 232)]), FLAP, 'torso', z=3)
     p.add('arm_l', p.poly([(76, 232), (146, 212), (152, 246), (112, 274), (76, 272)]), SHOULDER_L, 'torso', z=4)
     p.add('arm_r', p.poly([(236, 222), (272, 218), (282, 272), (236, 280)]), SHOULDER_R, 'torso', z=4)
@@ -49,6 +59,10 @@ def build(img=None):
     p.add('head', head, NECK, 'torso', z=5)
     p.add('ear_l', p.poly([(80, 10), (140, 40), (192, 118), (172, 140), (130, 138), (96, 84)]), EAR_L, 'head', z=6)
     p.add('ear_r', p.poly([(272, 20), (284, 60), (256, 128), (226, 130), (214, 112), (240, 58)]), EAR_R, 'head', z=6)
+    p.add('tail_tip', tail & (xx < 72), (75, 292), 'tail', z=0)
+    p.add('flap_tip', p.parts['flap'].mask & (xx > 300), (301, 246), 'flap', z=3)
+    p.add('forelock', p.poly([(179, 108), (196, 86), (216, 103), (216, 127), (190, 133)]),
+          (201, 128), 'head', z=7)
     p.finish('torso')
     return p
 
@@ -137,7 +151,8 @@ SCALE = 0.315
 def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
          leg_l=0.0, lift_l=0.0, leg_r=0.0, lift_r=0.0,
          arm_l=0.0, arm_r=0.0, head=0.0, head_dy=0.0,
-         ear_l=0.0, ear_r=0.0, tail=0.0, flap=0.0):
+         ear_l=0.0, ear_r=0.0, tail=0.0, flap=0.0, gait=None,
+         tail_tip=0.0, flap_tip=0.0, forelock=0.0):
     """Gelenkwinkel in Grad (positiv = im Uhrzeigersinn), Wege in Bildpunkten der Quelle.
     bob > 0 senkt den Koerper; die Beine beugen sich dabei, die Fuesse bleiben am Boden."""
     root = affine(lean, FEET) @ affine(0, FEET, sx=sx, sy=squash)
@@ -146,7 +161,7 @@ def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
     def leg(rot, lift, hip):
         sy = max(0.35, (LEG_LEN - bob - lift) / LEG_LEN)
         return affine(rot, hip, sy=sy)
-    return {
+    result = {
         'torso': torso,
         'leg_l': leg(leg_l, lift_l, HIP_L),
         'leg_r': leg(leg_r, lift_r, HIP_R),
@@ -157,7 +172,58 @@ def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
         'head': affine(head, NECK, t=(0, head_dy - 1.2 * breath)),
         'ear_l': affine(ear_l, EAR_L),
         'ear_r': affine(ear_r, EAR_R),
+        'tail_tip': affine(tail_tip, (75, 292)),
+        'flap_tip': affine(flap_tip, (301, 246)),
+        'forelock': affine(forelock, (201, 128)),
     }
+    if gait is not None:
+        for side, hip, knee, ankle, phase in [
+            ('l', HIP_L, KNEE_L, ANKLE_L, gait),
+            ('r', HIP_R, KNEE_R, ANKLE_R, gait + 0.5),
+        ]:
+            target, foot_angle = foot_path(phase, center=hip[0])
+            target = (target[0], target[1] + FEET[1] - 1 - SOLE_Y[side])
+            # Ziel im Bodenraum, dann ins bewegte Hueftsystem zurueckrechnen.
+            local_target = np.linalg.inv(torso) @ np.array([*target, 1.0])
+            upper, lower = solve_leg(hip, knee, ankle, local_target[:2])
+            result['leg_' + side] = affine(upper, hip)
+            result['shin_' + side] = affine(lower - upper, knee)
+            result['boot_' + side] = affine(foot_angle - lower - lean, ankle)
+    return result
+
+
+def foot_path(phase, center=195.0):
+    """Eine Haelfte steht am Boden, die andere fuehrt den Fuss nach vorn.
+
+    Waehrend der Standphase wandert der Fuss relativ zum vorwaerts gehenden Rumpf linear
+    nach hinten; beim Vorschwingen hebt er ab. Kein Drehen der ganzen Zeichnung.
+    """
+    phase %= 1.0
+    stride = 22.0
+    if phase < 0.5:
+        t = phase / 0.5
+        return (center + stride * (1 - 2 * t), 365.0), 0.0
+    t = (phase - 0.5) / 0.5
+    ease = t * t * (3 - 2 * t)
+    return (center + stride * (2 * ease - 1), 365.0 - 16.0 * np.sin(np.pi * t)), -10.0 * np.sin(2 * np.pi * t)
+
+
+def solve_leg(hip, knee, ankle, target):
+    """Zwei starre Segmente statt Skalierung eines ganzen Beins (Winkel in Grad)."""
+    hip, knee, ankle, target = map(lambda p: np.asarray(p, dtype=float), (hip, knee, ankle, target))
+    upper = np.linalg.norm(knee - hip)
+    lower = np.linalg.norm(ankle - knee)
+    delta = target - hip
+    distance = np.clip(np.linalg.norm(delta), abs(upper - lower) + 1e-5, upper + lower - 1e-5)
+    base = np.arctan2(delta[1], delta[0])
+    angle = np.arccos(np.clip((upper**2 + distance**2 - lower**2) / (2 * upper * distance), -1, 1))
+    # Das Knie beugt sich in Laufrichtung. Die Materiallaengen bleiben erhalten.
+    a = base - angle
+    joint = hip + upper * np.array([np.cos(a), np.sin(a)])
+    b = np.arctan2(target[1] - joint[1], target[0] - joint[0])
+    return (np.degrees(a - np.arctan2(*(knee-hip)[::-1])),
+            np.degrees(b - np.arctan2(*(ankle-knee)[::-1])))
+
 
 
 def walk(n=8, steps=64, turn=1.0, lean=3.0):
@@ -172,13 +238,15 @@ def walk(n=8, steps=64, turn=1.0, lean=3.0):
         i = f * steps // n
         p = ph[i]
         out.append(dict(
-            bob=bob[i], lean=(lean + 1.0 * np.sin(2 * p)) * turn,
+            bob=2.0 + 2.0 * np.cos(2 * p), lean=0.0, gait=f / n if turn else None,
             leg_l=12 * np.cos(p) * turn, lift_l=22 * max(0.0, np.sin(p)) ** 1.2,
             leg_r=-12 * np.cos(p) * turn, lift_r=22 * max(0.0, -np.sin(p)) ** 1.2,
             arm_l=-14 - 9 * np.cos(p), arm_r=6 * np.cos(p),
             head=-1.5 * np.sin(2 * p - 0.6), head_dy=1.5 * np.cos(2 * p - 0.8),
             ear_l=-ear[i] * 0.5, ear_r=ear[i] * 0.5,
             tail=-3 + tail[i] * 0.05, flap=(32 if turn else 14) + flap[i] * 0.05,
+            tail_tip=5 * np.sin(p - 1.0), flap_tip=9 * np.sin(2*p - 0.9),
+            forelock=2 * np.sin(2*p - 0.7),
         ))
     return out
 
@@ -197,7 +265,9 @@ def idle(n=8, steps=64):
             head=0.8 * np.sin(p + 0.6),
             ear_l=-1.0 * np.sin(p - 0.5), ear_r=1.0 * np.sin(p - 0.5) + twitch[i] * 0.25,
             tail=3 * np.sin(p - 0.9), flap=2.5 * np.sin(p - 1.3),
-            arm_l=2 * np.sin(p - 0.3), arm_r=-1.5 * np.sin(p - 0.3),
+            arm_l=5 * np.sin(p - 0.3), arm_r=-3 * np.sin(p - 0.3) + 32 * max(0, np.sin(p - 0.8)),
+            tail_tip=4 * np.sin(p - 1.6), flap_tip=5 * np.sin(p - 1.9),
+            forelock=1.5 * np.sin(p - 0.7),
         ))
     return out
 
@@ -222,32 +292,43 @@ def sleep(n=4):
     return out
 
 
+# Die ersten 39 Indizes bleiben kompatibel. Neue Richtungs-Ruhe und Freude folgen.
+EXPRESSION_COUNT = 68
+
+
 def plan():
-    """(Variante, Groessen, gespiegelt) je Bild, Reihenfolge wie motion.py / CreatureSprites.Rich."""
+    """Kopfzeichnung und gegliederte Koerperpose ergeben gemeinsam ein Animationsbild."""
     I, Wk = idle(), walk()
     front = walk(turn=0.0)
-    P = [('open', x) for x in I]
-    P.append(('closed', I[0]))
-    P += [('open', x) for x in Wk]
-    P += [('open', x) for x in joy()]
-    P += [('closed', x) for x in sleep()]
-    P.append(('open', {}))
-    P += [('open', front[k]) for k in (0, 2, 4, 6)]
+    faces = ['neutral', 'neutral', 'curious', 'profile', 'profile', 'curious', 'neutral', 'neutral']
+    P = [(faces[i], x) for i, x in enumerate(I)]
+    P.append(('blink', I[0]))
+    P += [('focused', x) for x in Wk]
+    P += [('happy', x) for x in joy()]
+    P += [('blink', x) for x in sleep()]
+    P.append(('front', {}))
+    P += [('front', front[k]) for k in (0, 2, 4, 6)]
     P.append(('back', {}))
     P += [('back', front[k]) for k in (0, 2, 4, 6)]
-    P.append(('open', dict(sx=0.55)))
-    P.append(('back', dict(sx=0.55)))
-    assert len(P) == Mo.COUNT
+    P.append(('neutral', dict(bob=2, head=-4, arm_l=-6, flap=8, tail=-3)))
+    P.append(('back', dict(bob=2, head=4, arm_l=6, flap=-8, tail=3)))
+    P += [('front', x) for x in I]                  # 39..46
+    P += [('back', x) for x in I]                   # 47..54
+    P.append(('front_blink', I[0]))                 # 55
+    P += [('front_happy', x) for x in joy()]         # 56..61
+    P += [('back', x) for x in joy()]               # 62..67
+    assert len(P) == EXPRESSION_COUNT
     return P
 
 
 def frames():
     src = source()
-    puppets = {'open': build(src), 'closed': build(closed_eyes(src)), 'back': build(back_view(src))}
-    pal = palette_of(puppets['open'].img, k=56)
+    puppets = {name: build(Faces.attach(back_view(src) if name == 'back' else src, name))
+               for name in {name for name, _ in plan()}}
+    pal = palette_of(puppets['neutral'].img, k=56)
     pal = np.concatenate([pal, palette_of(puppets['back'].img, k=16)])
     off = (60, 30)
-    cw, ch = puppets['open'].W + 120, puppets['open'].H + 40
+    cw, ch = puppets['neutral'].W + 120, puppets['neutral'].H + 40
     out = []
     for variant, par in plan():
         p = puppets[variant]
@@ -262,13 +343,17 @@ def frames():
         fr[ty[ok], tx[ok]] = sm[ys[ok], xs[ok]]
         if variant == 'back':
             fr = fr[:, ::-1]
-        # Auf die Fusslinie setzen: tiefste Zeile = FOOT_ROW (Spruenge hebt das Spiel selbst an)
+        # Der seitliche Gang hat geloeste Bodenanker; nicht danach den ganzen Koerper
+        # verschieben. Sonstige Posen behalten die bisherige Fussnormierung.
         rows = np.nonzero(fr[..., 3].any(1))[0]
-        shift = FOOT_ROW - rows.max()
+        shift = 0 if par.get("gait") is not None else FOOT_ROW - rows.max()
         fr = np.roll(fr, shift, axis=0)
         if shift > 0:
             fr[:shift] = 0
         elif shift < 0:
             fr[shift:] = 0
         out.append(fr)
+    # Seitliches Gehen nutzt gezeichnete Profilposen statt des verformten
+    # breitbeinigen Standbilds. Die anderen Aktivitaeten behalten ihren Rig.
+    out[9:17] = WalkArt.frames(pal)
     return out

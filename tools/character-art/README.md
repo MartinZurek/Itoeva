@@ -93,3 +93,78 @@ kommt Fennec jetzt direkt aus der gemalten Figur des Key-Design-Blatts:
 Ohren, Schwanz und Mantelzipfel schwingen ueber die Federn aus `motion.py` nach. Der Bogen hat
 jetzt 128 x 128 je Bild (Fuesse auf Zeile 125). `python3 rich_sheets.py` schreibt ihn;
 rembg wird dafuer nicht gebraucht, die freigestellte Quelle liegt im Repository.
+
+## Bodenkontakt und Wenden (05.10., Folge-PR)
+
+`fennec_key.py` zerlegt jedes Bein in Oberschenkel, Unterschenkel und Stiefel.
+Eine Zwei-Segment-Loesung verfolgt die Boden- und Schwungphase ohne Laengenstauchung.
+Die gemalte Quelle bleibt erhalten. Wendeposen werden nicht mehr horizontal zusammengestaucht;
+waehrend des Gehens hat die Gangfolge Vorrang vor statischen Zwischenbildern. Ein eigener
+monotoner Gangtakt startet bei Kontakt, stoppt mit der Bewegung und begrenzt Pausenspruenge.
+
+Pruefung: `python3 -m unittest test_fennec_gait -v`, dann `python3 rich_sheets.py`.
+Vorschau: [Fennec-Gang](fennec-gait-preview.gif). Die Vorschau zeigt die Sprite-Bewegung,
+keine Aufnahme aus der APK. Die Rasterung erlaubt einen Pixel Abweichung am Bodenkontakt.
+Der damalige Stand hatte noch keine neuen Profilzeichnungen. Die folgende Erweiterung
+ergaenzt Kopfansichten; volle Koerperprofile und Wegkopplung bleiben offen.
+
+## Mimik, Umschauen und Gestik (05.10., Erweiterung desselben PR)
+
+Fennecs aktueller Bogen hat **68 Bilder zu 128 x 128 Pixeln**. Neu gezeichnete Koepfe
+ersetzen das starre Gesicht: Dreiviertelblick, Profil, Vorder-/Rueckansicht, Blinzeln,
+Neugier, Konzentration und Freude. `fennec_faces.py` isoliert die Hauptkomponente jeder
+Atlaszelle und registriert Mimikvarianten auf gemeinsame Ansichtsmasse und Halsanker.
+Der Koerper bekommt eine Handbewegung zum Mantel sowie versetzte Bewegung von
+Fellsträhne, Schwanzspitze und Mantelzipfel. Das sind vorberechnete 2D-Animationen,
+noch keine an das Wetter gekoppelte Stoffsimulation.
+
+Die ersten 39 Indizes behalten ihre Rollen. 39–46: Ruhe vorn; 47–54: Ruhe hinten;
+55: Blinzeln vorn; 56–61: Freude vorn; 62–67: Freude hinten.
+Die Auswahlregel laesst Blinzeln und Freude auch bei gemerkter Vorderansicht zu.
+Kopfprofile sind neue Zeichnungen; seitliche Koerper und Links-/Rechts-Spiegelung
+stammen weiterhin aus dem bestehenden Rig.
+
+Quellen: `source/fennec-head-atlas.png`, `source/fennec-head-expressions.png`.
+Vorschau: [Mimik und Gestik](fennec-expression-preview.gif), gerenderte Sprites,
+keine Aufnahme aus der APK. Die Gangvorschau oben dokumentiert die vorherige Version.
+
+```bash
+python3 rich_sheets.py
+python3 rich_sheets.py --expressions fennec-expression-preview.gif
+python3 -m unittest test_fennec_faces test_fennec_gait -v
+```
+
+Neun lokale Python-Tests gruen; Kotlin-Regressionen ergaenzt, Android-Pruefung ueber CI.
+Naechster Schritt: Wirkung in der APK pruefen, danach eigene seitliche Koerperzeichnungen
+und streckenabhaengige Schritte. Weitere Wesen folgen nach Beurteilung dieser Figur.
+
+Korrektur nach Martins Sichtpruefung: Kopf 24 Quellpixel tiefer, Hals-/Brustspitze
+unter dem Mantelkragen. Eigene Fussspuren je Huefte statt sich kreuzender Beine;
+geringere Schritthoehe. Die Vorschau zeigt rechts und links nebeneinander.
+Explizite Laufrichtung bestimmt die Spiegelung auch beim Anhalten; die Schattenseite
+ist nur noch der Rueckfall fuer Ablaeufe ohne explizite Richtung.
+
+## Seitlicher Gang aus eigenen Zeichnungen (05.10., nach erneutem Gangfeedback)
+
+Die zuvor geloesten IK-Ziele machten die breitbeinige Ausgangszeichnung nicht zu
+einem guten Gang: Stiefel blieben auswaerts orientiert, die Figur wirkte hockend.
+`fennec_walk.py` ersetzt deshalb **nur die acht seitlichen Gehbilder 9–16** durch
+separate gezeichnete Profilposen aus `source/fennec-walk-profile-atlas.png`.
+Gemeinsame Palette und ein einziger Massstab gelten fuer alle acht Bilder;
+Registrierung am tuerkisen Schmuck und an der Bodenzeile statt an der Breite der
+Silhouette. Neue Knie-/Stiefelposen enthalten das Abrollen und Vorschwingen.
+
+`test_fennec_walk.py` prueft das gerenderte aktive Asset: Bodenkontakt in allen
+Bildern, stabile Koerperhoehe, angehobene Durchgangsfuesse und rueckwaertige
+Standbewegung relativ zum Koerper. Die bisherigen neun Tests laufen weiterhin;
+die IK-Tests betreffen nun das erhaltene Werkzeug, nicht den aktiven Seitengang.
+Insgesamt zwoelf Python-Tests gruen. Ausfuehren mit:
+
+```bash
+python3 -m unittest test_fennec_faces test_fennec_gait test_fennec_walk -v
+```
+
+Quelle und exakter ImageGen-Prompt: `source/fennec-walk-profile-prompt.md`.
+Die Front-/Rueckgaenge und Ruhe-/Reaktionsposen nutzen weiterhin den vorhandenen
+Rig; der Wechsel zur seitlichen Gangzeichnung braucht noch Beurteilung in der APK.
+Der Gang ist zeitgetaktet, keine Laufzeit-Stoff- oder Vollkoerperphysik.

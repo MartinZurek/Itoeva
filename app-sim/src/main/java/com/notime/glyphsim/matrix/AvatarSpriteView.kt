@@ -3,6 +3,7 @@ package com.notime.glyphsim.matrix
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
+import android.os.SystemClock
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
@@ -101,10 +102,11 @@ fun AvatarSpriteView(
     val sheet = species?.let { CreatureSheets.get(context, it) }
     // Drehungen brauchen ein Gedaechtnis fuer die letzte Blickrichtung (nur feine Boegen).
     val turn = remember(species) { CreatureSprites.Turn() }
+    val gait = remember(species) { CreatureSprites.GaitClock() }
     val tick by produceState(0L, sheet != null) {
         if (sheet == null) return@produceState
         while (true) {
-            value = System.currentTimeMillis()
+            value = SystemClock.uptimeMillis()
             delay(CREATURE_TICK_MS)
         }
     }
@@ -124,7 +126,7 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn)
+                gameDirection, gameMoving, turn, gait)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide)
         }
@@ -157,13 +159,15 @@ private fun DrawScope.drawCreature(
     timeMs: Long,
     gameDirection: PlayControl.Dir?,
     gameMoving: Boolean?,
-    turn: CreatureSprites.Turn
+    turn: CreatureSprites.Turn,
+    gait: CreatureSprites.GaitClock
 ) {
     val rich = sheet.height == CreatureSprites.Rich.FRAME
     val frameSize = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
     val feet = if (rich) CreatureSprites.Rich.FEET else CreatureSprites.FEET
     val look = if (rich) {
-        CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, gameMoving, turn)
+        CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, gameMoving, turn,
+            gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs))
     } else {
         CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
     }
@@ -248,3 +252,4 @@ private fun lerpColor(from: Color, to: Color, fraction: Float): Color = Color(
     blue = from.blue + (to.blue - from.blue) * fraction,
     alpha = 1f
 )
+

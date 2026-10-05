@@ -669,6 +669,116 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-05 - Fennecs Beinbewegung: gezeichneter Profilgang (fennec-walk-art-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin meldet, dass die Beinbewegung trotz v2
+weiterhin falsch aussieht. Ausgangsstand `3050fda` des offenen PR #331.
+
+**FACT / Entscheidung:** Die breitbeinige Standzeichnung ist keine tragfaehige
+Quelle fuer den Seitengang: auswaerts gerichtete Stiefel und gebeugte Knie blieben
+auch bei korrekt geloesten Fusszielen sichtbar. Acht eigens gezeichnete Profilposen
+ersetzen die seitlichen Gehbilder 9–16. `fennec_walk.py` registriert sie an Schmuck
+und Boden mit gemeinsamer Palette und einheitlichem Massstab. Der bestehende
+68-Frame-Vertrag bleibt erhalten. Links/rechts nutzen dieselbe Folge gespiegelt.
+
+**TESTED BEHAVIOR:** Drei neue Tests pruefen die tatsaechlichen Gehbilder statt nur
+der IK-Matrizen: Kontakt in jeder Phase, stabile Hoehe, angehobene Durchgangsfuesse
+und rueckwaertige Standbewegung. Zusammen mit den neun bisherigen Tests zwoelf
+lokale Python-Tests gruen. Quelle, genaue Bildgenerierungsanweisung, Importer und
+Sprite-/Gangvorschau versioniert. Android-CI folgt nach Upload.
+
+**UNVERIFIED / Grenzen:** Noch keine Sichtpruefung der APK; Ruhe und Reaktionen
+sowie Front-/Rueckgang bleiben aus dem bisherigen Rig. Der Uebergang von diesen
+Posen zum Profilgang muss am Geraet beurteilt werden. Zeitgetaktete Bilderfolge,
+noch keine an Weg, Geschwindigkeit oder Wind gekoppelte Vollkoerperphysik.
+Die bestehenden IK-Tests belegen nur das erhaltene Werkzeug.
+
+**Ruecksetzweg / Bereiche:** Generator, Profilquelle und Fennec-Asset gemeinsam
+auf `3050fda` zuruecksetzen. Kein Eingriff in Story, Reminder, Datenmodelle oder
+Nutzerstaende. Naechster Schritt: visuelle Beurteilung von Gang und Uebergaengen.
+
+### 2026-10-05 - Fennecs Halsansatz und Laufrichtung (fennec-expression-v2)
+
+**DOCUMENTED INTENT:** Martin meldet einen sanduhrfoermig abgeschnuerten, zu hohen
+Hals und einen schief wirkenden Links-/Rechtsgang. Ausgangsstand `e946aca` in PR #331.
+
+**FACT / Korrektur:** Der Kopf sitzt 24 Quellpixel (rund acht Spritepixel) tiefer.
+Die Brustspitze wird vom vorhandenen Mantelkragen ueberdeckt, statt oberhalb davon
+einen zweiten schmalen Hals zu bilden. Die Beine behalten eigene, nicht kreuzende
+Fussspuren unter ihren Hueften; geringere Schritthoehe beruhigt den Gang.
+Explizites LEFT/RIGHT steuert nun die Spiegelung unmittelbar, auch bei NONE oder
+abweichender Schattenseite. Die Aufrufer waren nicht vertauscht; vorher bezeichnete
+die zur Spiegelung verwendete Schattenseite die Herkunftsseite der Bewegung.
+
+**TESTED BEHAVIOR:** Neun Python-Tests fuer Halsbreite, Ansichten, Mimik, Fusskontakt,
+getrennte Spuren und rueckwaertige Standphase. Kotlin-Test fuer beide Richtungen in
+Ruhe und Bewegung unabhaengig von der Schattenseite ergaenzt. Android-CI fuer v1
+erfolgreich; v2 wird nach Upload geprueft. Vorschau zeigt beide Gangrichtungen.
+
+**UNVERIFIED / Grenzen:** Noch keine Sichtpruefung in der APK; seitlicher Koerper
+bleibt aus der Dreiviertelzeichnung abgeleitet, vollstaendige Profilkoerper fehlen.
+Ruecksetzweg: Quellen/Generator, Sprite und Auswahlregel gemeinsam auf e946aca;
+keine Migration oder Aenderung an Nutzerstaenden. Naechster Schritt: Gang am Geraet
+beurteilen, dann echte Koerperprofile ausarbeiten.
+
+### 2026-10-05 - Fennecs Mimik und Gestik (fennec-expression-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin fordert eine lebendige ganze Figur mit Gesicht,
+Kopfbewegung und nachschwingendem Fell/Mantel. Erweiterung des offenen Gang-PR #331,
+Ausgangsstand `db64b529595fb8d6317cef4cbcbf19a150aa227c`.
+
+**FACT / Entscheidung:** Neu gezeichnete Kopfansichten und Ausdruecke werden mit dem
+bestehenden gegliederten Koerper animiert. Der Fennec-Bogen waechst von 39 auf 68 Bilder:
+Ruhe, Blinzeln und Freude bekommen passende Vorder-/Rueckansichten. Armgestik,
+Fellsträhne, Mantel- und Schwanzspitze erhalten versetzte Bewegungen. Die Auswahlregel
+priorisiert Reaktionen vor einer lediglich gemerkten Blickrichtung. Quellen, Generator,
+Sprite, Auswahlregel und Vorschau werden gemeinsam versioniert.
+
+**TESTED BEHAVIOR:** Acht lokale Python-Tests pruefen Halsregistrierung, unterscheidbare
+Zeichnungen, Richtungs-/Reaktionsfolgen, bewegte Ruhe und den bisherigen Bodenkontakt.
+Gerenderte Frames visuell kontrolliert. Kotlin-Regressionen fuer frontales Blinzeln/Freude
+und gerichtete Ruhe ergaenzt. Android-CI des vorherigen Gang-Commits erfolgreich;
+Pruefung dieser Erweiterung folgt nach Upload.
+
+**UNVERIFIED / Grenzen:** Keine Handy-Sichtpruefung. Neue Profile betreffen den Kopf;
+vollstaendige seitliche Koerperzeichnungen fehlen. Links/rechts spiegeln weiterhin.
+Sekundaerbewegung ist vorberechnet, noch nicht wetterabhaengig. Keine fertige 3D-Figur.
+
+**Bereiche / Ruecksetzweg:** `CreatureSprites`, dessen Tests und `tools/character-art`
+sowie Fennec-Asset. Keine Migration oder Aenderung an Remindern, Story oder Progression.
+Generator, Asset und Auswahlregel gemeinsam auf den Ausgangscommit zuruecksetzen;
+Nutzerstaende bleiben kompatibel. Naechster Schritt: APK-Sichtpruefung und Koerperprofile.
+
+### 2026-10-05 - Fennecs Gang: Pfotenkontakt statt flacher Wendepuppe
+
+**Anlass:** Martin gefaellt die gemalte Fennec-Figur, aber nicht ihr Sticker-Effekt beim Gehen
+und Umkehren. Die Wendebilder skalierten dieselbe Quelle auf 55 Prozent Breite; waehrenddessen
+bewegte die Spielsteuerung die starre Zwischenpose weiter.
+
+**Entscheidung:** Der bestehende Key-Design-Rig bekommt Knie- und Stiefelgelenke mit einer
+Zwei-Segment-Loesung. Eine Pfote steht waehrend der halben Periode auf der Bodenlinie und
+wandert relativ zum Rumpf zurueck, die andere schwingt angehoben vor. Die Laengen bleiben fest.
+Die gemalten Sohlen haben unterschiedliche Hoehen; deren Anker werden getrennt ausgeglichen.
+Der Bogen bleibt bei 39 Bildern mit 128 Pixeln. Das Zusammendruecken der Wendeposen entfaellt.
+Beim Gehen ueberschreiben Wendebilder nicht mehr die Gangfolge. Ein eigener monotoner
+Gangtakt beginnt am Kontakt und setzt sich beim Anhalten zurueck; der alte Raster-Huepfer
+wird fuer feine Gehbilder nicht noch einmal auf die komplette Figur angewendet.
+
+**Beleg:** Vier lokale Python-Tests pruefen Stand-/Schwungphase, konstant lange Segmente,
+erreichte Pfotenziele und Wendeposen ohne Breitenstauchung. Der neu gerenderte Bogen wurde
+visuell geprueft; die unteren Pixel der Gangbilder liegen durch Rasterung auf Zeile 124–126.
+Kotlin-Regressionen fuer Umkehren ohne Gleitpose und den Gangtakt ergaenzt; Android-Checks
+folgen in CI. Animierte Vorschau: `tools/character-art/fennec-gait-preview.gif`.
+
+**Grenzen:** Weiterhin ein gegliederter 2D-Rig aus der freigegebenen Zeichnung, kein fertiges
+3D-Modell. Echte separat gezeichnete Profile und eine vollstaendige raeumliche Drehung stehen
+aus. Links/rechts spiegeln noch; Gangtempo ist zeitgetaktet, nicht an gemessene Wegstrecke
+gekoppelt. Die Aenderung ersetzt keine Sichtpruefung am Handy.
+
+**Ruecksetzweg / naechster Schritt:** Generator, Fennec-Bogen und Auswahlregel gemeinsam
+zuruecksetzen; Spielstand bleibt kompatibel. Als Naechstes Gehbewegung am Geraet beurteilen,
+danach separate Profil-/Rueckenquellen und streckenabhaengige Schrittphase.
+
 ### 2026-10-04 - Itoeva 2: Landschaften aus Konzeptbuch Band 2, Licht-PR uebernommen
 
 **Anlass:** Martin: weniger generisch, eins zu eins wie die Concept Art. Inzwischen liegen fuer alle
