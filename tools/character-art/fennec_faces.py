@@ -61,5 +61,9 @@ def attach(body, name):
     arr[:193] = 0
     base = Image.fromarray(arr)
     art, neck_x = head(name)
-    base.alpha_composite(art, (198 - neck_x, 13))
-    return base
+    # Die auslaufende Hals-/Brustspitze gehoert UNTER den Mantelkragen.
+    # Zuvor sass sie oberhalb des Kragens und bildete einen Sanduhrhals.
+    composed = Image.new('RGBA', base.size)
+    composed.alpha_composite(art, (198 - neck_x, 37))
+    composed.alpha_composite(base)
+    return composed

@@ -15,6 +15,22 @@ class CreatureSpritesTest {
     private val joyFrames = CreatureSprites.JOY_FIRST..CreatureSprites.JOY_FIRST + 1
 
     @Test
+    fun `explizite Links Rechts Richtung gilt auch ohne oder gegen Schattenseite`() {
+        val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        for (side in AvatarShading.Side.entries) {
+            for (moving in listOf(false, true)) {
+                val left = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, side,
+                    500L, PlayControl.Dir.LEFT, moving = moving)
+                val right = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, side,
+                    500L, PlayControl.Dir.RIGHT, moving = moving)
+                assertTrue(left.mirrored)
+                assertFalse(right.mirrored)
+                assertEquals(left.frame, right.frame)
+            }
+        }
+    }
+
+    @Test
     fun `im Stand Ruhe, ohne Anheben und ungespiegelt`() {
         for (species in AvatarSpecies.entries) {
             val look = CreatureSprites.look(AvatarAnimations.idlePose(species), species, AvatarShading.Side.NONE, 1000L)
@@ -266,4 +282,3 @@ class CreatureSpritesTest {
         }
     }
 }
-

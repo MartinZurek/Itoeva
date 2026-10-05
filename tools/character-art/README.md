@@ -134,6 +134,12 @@ python3 rich_sheets.py --expressions fennec-expression-preview.gif
 python3 -m unittest test_fennec_faces test_fennec_gait -v
 ```
 
-Acht lokale Python-Tests gruen; Kotlin-Regressionen ergaenzt, Android-Pruefung ueber CI.
+Neun lokale Python-Tests gruen; Kotlin-Regressionen ergaenzt, Android-Pruefung ueber CI.
 Naechster Schritt: Wirkung in der APK pruefen, danach eigene seitliche Koerperzeichnungen
 und streckenabhaengige Schritte. Weitere Wesen folgen nach Beurteilung dieser Figur.
+
+Korrektur nach Martins Sichtpruefung: Kopf 24 Quellpixel tiefer, Hals-/Brustspitze
+unter dem Mantelkragen. Eigene Fussspuren je Huefte statt sich kreuzender Beine;
+geringere Schritthoehe. Die Vorschau zeigt rechts und links nebeneinander.
+Explizite Laufrichtung bestimmt die Spiegelung auch beim Anhalten; die Schattenseite
+ist nur noch der Rueckfall fuer Ablaeufe ohne explizite Richtung.

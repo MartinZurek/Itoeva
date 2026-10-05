@@ -16,6 +16,8 @@ class FaceAtlasTest(unittest.TestCase):
             self.assertLess(neck, art.width)
             assembled = np.array(F.attach(K.source(), name))
             self.assertTrue((assembled[189:193, 190:206, 3] > 128).any(), name)
+            # Ein breiter Uebergang am Kragen statt der alten isolierten Halsspitze.
+            self.assertGreater(np.count_nonzero(assembled[190, 170:225, 3] > 128), 40, name)
 
     def test_orientations_and_expressions_are_distinct_drawings(self):
         variants = [np.array(F.attach(K.source(), name))[:193].tobytes() for name in F.HEADS]

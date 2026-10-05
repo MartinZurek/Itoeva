@@ -49,21 +49,23 @@ def preview(path, scale=3):
 
 def expression_preview(path):
     images = frames(FIGURES['fennec'])
-    # Vier synchrone Streifen: Umschauen/Gestik, Gehen, frontale Ruhe, Freude.
-    clips = [list(range(8)), list(range(9,17)), list(range(39,47)), [17,18,19,20,21,22,0,0]]
+    # Beide Laufrichtungen nebeneinander machen Spiegelung und Schritte pruefbar.
+    clips = [list(range(8)), list(range(9,17)), list(range(9,17)), list(range(39,47)), [17,18,19,20,21,22,0,0]]
     rendered = []
     for i in range(32):
-        bg = Image.new('RGBA', (FRAME*4, FRAME+24), (99,112,101,255))
+        bg = Image.new('RGBA', (FRAME*5, FRAME+24), (99,112,101,255))
         for col, clip in enumerate(clips):
             # Ruhe langsam, Gang in Originalkadenz, Freude laesst sich in Folge lesen.
-            step = (i//4 if col in (0,2) else i) % len(clip)
+            step = (i//4 if col in (0,3) else i) % len(clip)
             fr = to_image([images[clip[step]]])
+            if col == 2:
+                fr = fr.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
             bg.alpha_composite(fr, (col*FRAME, 24))
         from PIL import ImageDraw
         d = ImageDraw.Draw(bg)
-        for col, title in enumerate(['Umschauen / Gestik','Gang','Ruhe vorn','Freude']):
+        for col, title in enumerate(['Umschauen / Gestik','Gang rechts','Gang links','Ruhe vorn','Freude']):
             d.text((col*FRAME+6,6), title, fill=(235,223,196))
-        rendered.append(bg.convert('RGB').resize((FRAME*8,(FRAME+24)*2),Image.Resampling.NEAREST))
+        rendered.append(bg.convert('RGB').resize((FRAME*10,(FRAME+24)*2),Image.Resampling.NEAREST))
     rendered[0].save(path,save_all=True,append_images=rendered[1:],duration=105,loop=0)
 
 

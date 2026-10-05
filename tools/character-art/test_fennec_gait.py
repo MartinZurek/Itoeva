@@ -10,7 +10,7 @@ class FennecGaitTest(unittest.TestCase):
             point, angle = F.foot_path(phase)
             self.assertEqual(365., point[1])
             self.assertEqual(0., angle)
-        self.assertLess(F.foot_path(.75)[0][1], 345.)
+        self.assertLess(F.foot_path(.75)[0][1], 350.)
         np.testing.assert_allclose(F.foot_path(0)[0], F.foot_path(1)[0])
 
     def test_two_joint_leg_reaches_ground_target_in_every_frame(self):
@@ -19,7 +19,8 @@ class FennecGaitTest(unittest.TestCase):
             world = puppet.world(F.mats(**par))
             for side, ankle, phase in [('l', F.ANKLE_L, par['gait']), ('r', F.ANKLE_R, par['gait']+.5)]:
                 actual = world['boot_'+side] @ np.array([*ankle, 1.])
-                expected, _ = F.foot_path(phase)
+                hip = F.HIP_L if side == 'l' else F.HIP_R
+                expected, _ = F.foot_path(phase, center=hip[0])
                 expected = (expected[0], expected[1] + F.FEET[1] - 1 - F.SOLE_Y[side])
                 np.testing.assert_allclose(actual[:2], expected, atol=1e-5)
                 # Die Beinsegmente werden gedreht und nicht kuenstlich zusammengestaucht.
@@ -33,6 +34,14 @@ class FennecGaitTest(unittest.TestCase):
         for phase in np.linspace(0, 1, 64, endpoint=False):
             ys = [F.foot_path(phase)[0][1], F.foot_path(phase+.5)[0][1]]
             self.assertAlmostEqual(365., max(ys))
+
+    def test_feet_keep_separate_tracks_and_stance_moves_backwards(self):
+        for phase in np.linspace(0, 1, 64, endpoint=False):
+            left = F.foot_path(phase, center=F.HIP_L[0])[0]
+            right = F.foot_path(phase+.5, center=F.HIP_R[0])[0]
+            self.assertGreater(right[0]-left[0], 0)
+        stance_x = [F.foot_path(t)[0][0] for t in np.linspace(0,.49,20)]
+        self.assertTrue(all(b < a for a,b in zip(stance_x,stance_x[1:])))
 
 if __name__ == '__main__':
     unittest.main()

@@ -180,7 +180,7 @@ def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
             ('l', HIP_L, KNEE_L, ANKLE_L, gait),
             ('r', HIP_R, KNEE_R, ANKLE_R, gait + 0.5),
         ]:
-            target, foot_angle = foot_path(phase)
+            target, foot_angle = foot_path(phase, center=hip[0])
             target = (target[0], target[1] + FEET[1] - 1 - SOLE_Y[side])
             # Ziel im Bodenraum, dann ins bewegte Hueftsystem zurueckrechnen.
             local_target = np.linalg.inv(torso) @ np.array([*target, 1.0])
@@ -191,20 +191,20 @@ def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
     return result
 
 
-def foot_path(phase):
+def foot_path(phase, center=195.0):
     """Eine Haelfte steht am Boden, die andere fuehrt den Fuss nach vorn.
 
     Waehrend der Standphase wandert der Fuss relativ zum vorwaerts gehenden Rumpf linear
     nach hinten; beim Vorschwingen hebt er ab. Kein Drehen der ganzen Zeichnung.
     """
     phase %= 1.0
-    stride = 24.0
+    stride = 22.0
     if phase < 0.5:
         t = phase / 0.5
-        return (195.0 + stride * (1 - 2 * t), 365.0), 0.0
+        return (center + stride * (1 - 2 * t), 365.0), 0.0
     t = (phase - 0.5) / 0.5
     ease = t * t * (3 - 2 * t)
-    return (195.0 + stride * (2 * ease - 1), 365.0 - 23.0 * np.sin(np.pi * t)), -14.0 * np.sin(2 * np.pi * t)
+    return (center + stride * (2 * ease - 1), 365.0 - 16.0 * np.sin(np.pi * t)), -10.0 * np.sin(2 * np.pi * t)
 
 
 def solve_leg(hip, knee, ankle, target):
@@ -353,4 +353,3 @@ def frames():
             fr[shift:] = 0
         out.append(fr)
     return out
-

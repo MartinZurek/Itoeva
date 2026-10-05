@@ -127,7 +127,13 @@ object CreatureSprites {
         direction: PlayControl.Dir?,
         moving: Boolean?
     ): Classified {
-        val mirrored = direction != PlayControl.Dir.UP && direction != PlayControl.Dir.DOWN && AvatarFacing.mirrors(side)
+        // Aktive Laufrichtung ist eindeutig; die Schattenseite bezeichnet dagegen,
+        // woher die Figur kommt, und kann im Stand NONE sein.
+        val mirrored = when (direction) {
+            PlayControl.Dir.LEFT -> true
+            PlayControl.Dir.RIGHT, PlayControl.Dir.UP, PlayControl.Dir.DOWN -> false
+            null -> AvatarFacing.mirrors(side)
+        }
         val box = bounds(raw, AvatarGeometry.SIZE, AvatarGeometry.HEIGHT)
             ?: return Classified(Activity.IDLE, 0, mirrored)
         val ground = AvatarBodies.forSpecies(species).groundRow()
@@ -316,4 +322,3 @@ object CreatureSprites {
         return Look(frame, if (locomotion) 0 else lift, mirrored)
     }
 }
-

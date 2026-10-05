@@ -669,6 +669,30 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-05 - Fennecs Halsansatz und Laufrichtung (fennec-expression-v2)
+
+**DOCUMENTED INTENT:** Martin meldet einen sanduhrfoermig abgeschnuerten, zu hohen
+Hals und einen schief wirkenden Links-/Rechtsgang. Ausgangsstand `e946aca` in PR #331.
+
+**FACT / Korrektur:** Der Kopf sitzt 24 Quellpixel (rund acht Spritepixel) tiefer.
+Die Brustspitze wird vom vorhandenen Mantelkragen ueberdeckt, statt oberhalb davon
+einen zweiten schmalen Hals zu bilden. Die Beine behalten eigene, nicht kreuzende
+Fussspuren unter ihren Hueften; geringere Schritthoehe beruhigt den Gang.
+Explizites LEFT/RIGHT steuert nun die Spiegelung unmittelbar, auch bei NONE oder
+abweichender Schattenseite. Die Aufrufer waren nicht vertauscht; vorher bezeichnete
+die zur Spiegelung verwendete Schattenseite die Herkunftsseite der Bewegung.
+
+**TESTED BEHAVIOR:** Neun Python-Tests fuer Halsbreite, Ansichten, Mimik, Fusskontakt,
+getrennte Spuren und rueckwaertige Standphase. Kotlin-Test fuer beide Richtungen in
+Ruhe und Bewegung unabhaengig von der Schattenseite ergaenzt. Android-CI fuer v1
+erfolgreich; v2 wird nach Upload geprueft. Vorschau zeigt beide Gangrichtungen.
+
+**UNVERIFIED / Grenzen:** Noch keine Sichtpruefung in der APK; seitlicher Koerper
+bleibt aus der Dreiviertelzeichnung abgeleitet, vollstaendige Profilkoerper fehlen.
+Ruecksetzweg: Quellen/Generator, Sprite und Auswahlregel gemeinsam auf e946aca;
+keine Migration oder Aenderung an Nutzerstaenden. Naechster Schritt: Gang am Geraet
+beurteilen, dann echte Koerperprofile ausarbeiten.
+
 ### 2026-10-05 - Fennecs Mimik und Gestik (fennec-expression-v1)
 
 **DOCUMENTED INTENT / Anlass:** Martin fordert eine lebendige ganze Figur mit Gesicht,
