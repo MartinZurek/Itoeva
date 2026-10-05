@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import android.os.SystemClock
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -93,7 +94,11 @@ fun AvatarSpriteView(
     /** Im aktiven Spiel: vorne/hinten erhalten eigene gezeichnete Ansichten. */
     gameDirection: PlayControl.Dir? = null,
     /** Im aktiven Spiel bleibt die Ansicht beim Anhalten, ohne weiterzulaufen. */
-    gameMoving: Boolean? = null
+    gameMoving: Boolean? = null,
+    motionCue: CreatureSprites.MotionCue? = null,
+    gameTempo: Float = 1f,
+    gameGaitMs: Long? = null,
+    gameRunBlend: Float? = null
 ) {
     // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
     // Bogen, wird statt der groben Zellen das passende Bild daraus gezeichnet. Die grobe Pose
@@ -126,7 +131,7 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn, gait)
+                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide)
         }
@@ -134,24 +139,35 @@ fun AvatarSpriteView(
 }
 
 /** Wie oft die feinen Figuren ihr Bild pruefen - fein genug fuer Schritte (95 ms im feinen Bogen). */
-private const val CREATURE_TICK_MS = 45L
+private const val CREATURE_TICK_MS = 16L
 
-/** Laedt die Bilderboegen der Kreaturen einmal und haelt sie (je einige Kilobyte). */
+/** Kleine GPU-Texturen statt eines Streifens jenseits der Android-Texturlimits. */
 internal object CreatureSheets {
-    private val cache = HashMap<AvatarSpecies, ImageBitmap?>()
+    data class Sheet(val frameSize: Int, val frames: List<ImageBitmap>)
+    private val cache = HashMap<AvatarSpecies, Sheet?>()
 
-    fun get(context: Context, species: AvatarSpecies): ImageBitmap? = synchronized(cache) {
+    fun get(context: Context, species: AvatarSpecies): Sheet? = synchronized(cache) {
         cache.getOrPut(species) {
             runCatching {
-                context.assets.open(CreatureSprites.assetFor(species)).use { BitmapFactory.decodeStream(it) }
-                    ?.asImageBitmap()
+                val bitmap = context.assets.open(CreatureSprites.assetFor(species))
+                    .use { BitmapFactory.decodeStream(it) } ?: return@runCatching null
+                val frameSize = bitmap.height
+                if (bitmap.width == frameSize) return@runCatching Sheet(frameSize, listOf(bitmap.asImageBitmap()))
+                try {
+                    require(frameSize in setOf(CreatureSprites.FRAME, CreatureSprites.Rich.FRAME) && bitmap.width % frameSize == 0)
+                    Sheet(frameSize, List(bitmap.width / frameSize) { index ->
+                        Bitmap.createBitmap(bitmap, index * frameSize, 0, frameSize, frameSize).asImageBitmap()
+                    })
+                } finally {
+                    bitmap.recycle()
+                }
             }.getOrNull()
         }
     }
 }
 
 private fun DrawScope.drawCreature(
-    sheet: ImageBitmap,
+    sheet: CreatureSheets.Sheet,
     frame: IntArray,
     brightnessScale: Float,
     species: AvatarSpecies,
@@ -160,14 +176,18 @@ private fun DrawScope.drawCreature(
     gameDirection: PlayControl.Dir?,
     gameMoving: Boolean?,
     turn: CreatureSprites.Turn,
-    gait: CreatureSprites.GaitClock
+    gait: CreatureSprites.GaitClock,
+    motionCue: CreatureSprites.MotionCue?,
+    gameTempo: Float,
+    gameGaitMs: Long?,
+    gameRunBlend: Float?
 ) {
-    val rich = sheet.height == CreatureSprites.Rich.FRAME
-    val frameSize = if (rich) CreatureSprites.Rich.FRAME else CreatureSprites.FRAME
+    val rich = sheet.frameSize == CreatureSprites.Rich.FRAME
+    val frameSize = sheet.frameSize
     val feet = if (rich) CreatureSprites.Rich.FEET else CreatureSprites.FEET
     val look = if (rich) {
         CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, gameMoving, turn,
-            gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs))
+            gameGaitMs ?: gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs), motionCue, gameTempo, gameRunBlend)
     } else {
         CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
     }
@@ -181,12 +201,23 @@ private fun DrawScope.drawCreature(
     val dim = brightnessScale.coerceIn(0f, 1f)
     val filter = if (dim < 1f) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(dim, dim, dim, 1f) }) else null
     scale(scaleX = if (look.mirrored) -1f else 1f, scaleY = 1f, pivot = Offset(size.width / 2f, size.height / 2f)) {
-        drawImage(
-            image = sheet,
-            srcOffset = IntOffset(look.frame * frameSize, 0),
+        if (look.blendFrame != null) drawImage(
+            image = sheet.frames[look.blendFrame],
+            srcOffset = IntOffset.Zero,
             srcSize = IntSize(frameSize, frameSize),
             dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
             dstSize = IntSize(drawn.roundToInt(), drawn.roundToInt()),
+            alpha = 1f - look.blend,
+            colorFilter = filter,
+            filterQuality = FilterQuality.None
+        )
+        drawImage(
+            image = sheet.frames[look.frame],
+            srcOffset = IntOffset.Zero,
+            srcSize = IntSize(frameSize, frameSize),
+            dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
+            dstSize = IntSize(drawn.roundToInt(), drawn.roundToInt()),
+            alpha = if (look.blendFrame == null) 1f else look.blend,
             colorFilter = filter,
             // Ohne Glaettung: Jeder Pixel des Bogens bleibt ein scharfes Quadrat.
             filterQuality = FilterQuality.None
@@ -252,4 +283,3 @@ private fun lerpColor(from: Color, to: Color, fraction: Float): Color = Color(
     blue = from.blue + (to.blue - from.blue) * fraction,
     alpha = 1f
 )
-

@@ -44,6 +44,52 @@ object PlayControl {
     /** So lange muss man gegen einen Rand druecken, bevor es hinausgeht. */
     const val EXIT_PUSH_MS = 260L
 
+    /** Radial statt achsenweise: diagonales Ziehen darf keine Extra-Geschwindigkeit geben. */
+    data class Stick(val x: Float = 0f, val y: Float = 0f) {
+        val strength: Float get() = sqrt(x * x + y * y).coerceAtMost(1f)
+        fun direction(previous: Dir = Dir.DOWN): Dir? {
+            if (strength < 0.01f) return null
+            // Nahe der Diagonalen nicht bei jedem Fingerzittern Vorder-/Seitenansicht wechseln.
+            if (previous.dx != 0 && abs(x) >= abs(y) * 0.85f) return if (x > 0) Dir.RIGHT else Dir.LEFT
+            if (previous.dy != 0 && abs(y) >= abs(x) * 0.85f) return if (y > 0) Dir.DOWN else Dir.UP
+            return swipeDir(x, y, 0f)
+        }
+    }
+
+    fun stick(dx: Float, dy: Float, radius: Float, deadZone: Float = 0.14f): Stick {
+        if (!dx.isFinite() || !dy.isFinite() || radius <= 0f || !radius.isFinite()) return Stick()
+        val length = sqrt(dx * dx + dy * dy)
+        val zone = deadZone.coerceIn(0f, 0.9f)
+        val amount = ((length / radius - zone) / (1f - zone)).coerceIn(0f, 1f)
+        return if (length <= 0f || amount == 0f) Stick() else Stick(dx / length * amount, dy / length * amount)
+    }
+
+    /** Bei halbem Ausschlag normales Gehen, am Rand 2,5-faches Tempo auf allen Vieren. */
+    fun tempo(strength: Float): Float {
+        val s = strength.coerceIn(0f, 1f)
+        return if (s <= 0.55f) s / 0.55f else 1f + (s - 0.55f) / 0.45f * 1.5f
+    }
+
+    fun step(pos: Pos, stick: Stick, dtMs: Long): Step {
+        val amount = stick.strength
+        if (amount < 0.01f) return Step(pos.copy(pushMs = 0L))
+        val dt = dtMs.coerceIn(0L, 100L) / 1000f
+        val speed = tempo(amount)
+        val nx = pos.x + stick.x / amount * SPEED_X * speed * dt
+        val nd = pos.depth + stick.y / amount * SPEED_DEPTH * speed * dt
+        val exit = when {
+            nx < 0f -> Dir.LEFT
+            nx > 1f -> Dir.RIGHT
+            nd < 0f -> Dir.UP
+            nd > 1f -> Dir.DOWN
+            else -> null
+        }
+        val clamped = Pos(nx.coerceIn(0f, 1f), nd.coerceIn(0f, 1f))
+        if (exit == null) return Step(clamped)
+        val pushed = pos.pushMs + dtMs.coerceIn(0L, 100L)
+        return if (pushed >= EXIT_PUSH_MS) Step(clamped, exit) else Step(clamped.copy(pushMs = pushed))
+    }
+
     /** Ein Schritt in Richtung [dir] ueber [dtMs] Millisekunden. */
     fun step(pos: Pos, dir: Dir, dtMs: Long): Step {
         val dt = dtMs.coerceIn(0L, 100L) / 1000f

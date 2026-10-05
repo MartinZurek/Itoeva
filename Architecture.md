@@ -329,6 +329,21 @@ geprüft. Stream-Keys gehören ausschließlich in
 lokale beziehungsweise spätere Cloud-Secrets und niemals in Repository, Logs oder
 PR-Beschreibungen.
 
+## Aktive Smartphone-Steuerung (05.10.2026)
+
+`ui/GameControls.kt` verfolgt zwei Pointer-IDs unabhaengig und meldet einen radial
+normierten `PlayControl.Stick` plus freiwillige Sprung-/Roll-/Ruhe-Befehle.
+`matrix/GameMovement.kt` berechnet im bestehenden `withFrameMillis`-Takt
+Beschleunigung, Gangphase, freiwillige Aktionen und Bodenkontakt. `DockScreen`
+wendet die Hoehe genau einmal auf den vorhandenen Welt-Fusspunkt an; Routinen,
+Fuetterung und Dialoge behalten die Darstellungshoheit. Standflaechen kommen aus
+`GameSurfaces`: vorhandene Tischplatten, der Teetisch im gemalten Wohnzimmer und
+eine gemeinsam gezeichnete/kollidierte Kiste im Park (`GameSurfaceView`). Keine
+zweite Reminder-, Persistenz- oder Weltpipeline. Die feinen Sprite-Boegen erhalten
+Tempo/Gangphase und Aktionsfortschritt, ohne Bilder im Lauf neu zu erzeugen.
+`CreatureSheets` zerlegt jeden Bogen einmal in gecachte 64-/128-px-Einzelbilder;
+der 138er-Fennec-Streifen wird nie als 17664-px-GPU-Textur hochgeladen.
+
 ## Größte Dateien (Kandidaten für Aufteilung)
 
 Nach Zeilenzahl, `.kt`-Dateien unter `src/main`, ohne Tests:
@@ -408,3 +423,4 @@ Nicht als Entscheidung, sondern als Diskussionsgrundlage für NextTasks.md:
 
 Keiner dieser Punkte ist dringend oder blockierend. Sie sind hier festgehalten, damit sie nicht
 bei jeder neuen Analyse erneut entdeckt werden müssen.
+

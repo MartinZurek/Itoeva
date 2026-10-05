@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 import fennec_faces as F
 import fennec_key as K
+import fennec_mobility as M
 
 
 class FaceAtlasTest(unittest.TestCase):
@@ -34,7 +35,7 @@ class FaceAtlasTest(unittest.TestCase):
     def test_generated_sheet_has_moving_front_and_back_idle(self):
         path = Path(__file__).resolve().parents[2] / 'app-sim/src/main/assets/creatures/fennec.png'
         sheet = Image.open(path)
-        self.assertEqual((68*128, 128), sheet.size)
+        self.assertEqual((M.FRAME_COUNT*128, 128), sheet.size)
         for first in (0,39,47):
             frames = [sheet.crop((i*128,0,(i+1)*128,128)).tobytes() for i in range(first,first+8)]
             self.assertGreater(len(set(frames)), 4)

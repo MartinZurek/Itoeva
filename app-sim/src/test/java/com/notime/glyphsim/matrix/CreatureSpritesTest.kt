@@ -11,6 +11,39 @@ import org.junit.Test
 
 class CreatureSpritesTest {
 
+    @Test
+    fun `hohes Tempo verwendet eigene Vierbeiner in jeder Richtung und niedrigeres geht`() {
+        val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        for (direction in PlayControl.Dir.entries) {
+            val first = when (direction) {
+                PlayControl.Dir.UP -> CreatureSprites.Rich.BACK_RUN_FIRST
+                PlayControl.Dir.DOWN -> CreatureSprites.Rich.FRONT_RUN_FIRST
+                else -> CreatureSprites.Rich.RUN_FIRST
+            }
+            val count = if (direction.dy == 0) 8 else 4
+            for (phase in 0 until count) {
+                val run = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                    500L, direction, true, gaitTimeMs = phase * CreatureSprites.Rich.WALK_MS * (if (direction.dy == 0) 1 else 2), tempo = 2f)
+                assertEquals(first + phase, run.frame)
+                assertEquals(0, run.liftCells)
+                val walk = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                    500L, direction, true, gaitTimeMs = phase * CreatureSprites.Rich.WALK_MS, tempo = 1f)
+                assertTrue(walk.frame < CreatureSprites.Rich.RUN_FIRST)
+            }
+        }
+    }
+
+    @Test
+    fun `Rolle verwendet den ganzen gezeichneten Zyklus ohne zusaetzliches Anheben`() {
+        val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        for (phase in 0 until 8) {
+            val look = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                500L, PlayControl.Dir.RIGHT, false, motionCue = CreatureSprites.MotionCue(CreatureSprites.Motion.ROLL, phase / 8f))
+            assertEquals(CreatureSprites.Rich.ROLL_FIRST + phase, look.frame)
+            assertEquals(0, look.liftCells)
+        }
+    }
+
     private val walkFrames = CreatureSprites.WALK_FIRST until CreatureSprites.WALK_FIRST + 4
     private val joyFrames = CreatureSprites.JOY_FIRST..CreatureSprites.JOY_FIRST + 1
 
@@ -219,6 +252,70 @@ class CreatureSpritesTest {
             assertTrue(seen.all { it in first until first + CreatureSprites.Rich.IDLE_COUNT })
             assertTrue(seen.toSet().size > 1)
         }
+    }
+
+    @Test
+    fun `Front und Rueckgang nutzen alle acht eigenen Bilder ohne doppelten Huepfer`() {
+        val raw = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        for ((direction, first) in listOf(
+            PlayControl.Dir.DOWN to CreatureSprites.Rich.DRAWN_FRONT_WALK_FIRST,
+            PlayControl.Dir.UP to CreatureSprites.Rich.DRAWN_BACK_WALK_FIRST
+        )) {
+            val seen = (0 until 8).map { phase ->
+                val look = CreatureSprites.lookRich(raw, AvatarSpecies.FENNEC,
+                    AvatarShading.Side.NONE, 500L, direction, moving = true,
+                    gaitTimeMs = phase * CreatureSprites.Rich.WALK_MS)
+                assertEquals(0, look.liftCells)
+                assertFalse(look.mirrored)
+                look.frame
+            }
+            assertEquals((first until first+8).toList(), seen)
+        }
+    }
+
+    @Test
+    fun `Strecken und Buecken bleiben am Boden auch wenn das alte Raster abhebt`() {
+        val raw = AvatarAnimations.reactionFor(AvatarSpecies.FENNEC, AnimationType.MOVE).frames
+            .first { CreatureSprites.liftOf(it, AvatarSpecies.FENNEC) >= 2 }
+        for (motion in CreatureSprites.Motion.entries.filter { it != CreatureSprites.Motion.JUMP }) {
+            for (direction in listOf(PlayControl.Dir.LEFT, PlayControl.Dir.DOWN, PlayControl.Dir.UP)) {
+                val look = CreatureSprites.lookRich(raw, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                    500L, direction, moving = false, motionCue = CreatureSprites.MotionCue(motion, .5f))
+                assertEquals(0, look.liftCells)
+                assertTrue(look.frame in CreatureSprites.Rich.ACTION_FIRST until CreatureSprites.Rich.FRAME_COUNT)
+                assertEquals(direction == PlayControl.Dir.LEFT, look.mirrored)
+            }
+        }
+    }
+
+    @Test
+    fun `Sitzen bleibt sitzen und Aufstehen endet im Stand`() {
+        assertEquals(CreatureSprites.Rich.ACTION_FIRST+9, CreatureSprites.motionFrame(
+            CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f), CreatureSprites.Facing.RIGHT))
+        assertEquals(CreatureSprites.Rich.ACTION_FIRST+11, CreatureSprites.motionFrame(
+            CreatureSprites.MotionCue(CreatureSprites.Motion.RISE, 1f), CreatureSprites.Facing.RIGHT))
+        assertEquals(CreatureSprites.Rich.FRONT_ACTION_FIRST+3, CreatureSprites.motionFrame(
+            CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f), CreatureSprites.Facing.FRONT))
+        for (motion in CreatureSprites.Motion.entries) for (facing in CreatureSprites.Facing.entries) {
+            for (progress in listOf(-1f, 0f, .5f, 1f, 2f, Float.NaN)) {
+                assertTrue(CreatureSprites.motionFrame(CreatureSprites.MotionCue(motion, progress), facing)
+                    in CreatureSprites.Rich.ACTION_FIRST until CreatureSprites.Rich.FRAME_COUNT)
+            }
+        }
+    }
+
+    @Test
+    fun `Sprung behaelt die wirkliche Hoehe waehrend Gehen Vorrang vor Gestik hat`() {
+        val raw = AvatarAnimations.reactionFor(AvatarSpecies.FENNEC, AnimationType.MOVE).frames
+            .first { CreatureSprites.liftOf(it, AvatarSpecies.FENNEC) >= 2 }
+        val cue = CreatureSprites.MotionCue(CreatureSprites.Motion.JUMP, .5f)
+        val jump = CreatureSprites.lookRich(raw, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+            500L, moving = false, motionCue = cue)
+        assertEquals(CreatureSprites.liftOf(raw, AvatarSpecies.FENNEC), jump.liftCells)
+        val walking = CreatureSprites.lookRich(raw, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+            500L, PlayControl.Dir.UP, moving = true, gaitTimeMs = 0L, motionCue = cue)
+        assertEquals(CreatureSprites.Rich.DRAWN_BACK_WALK_FIRST, walking.frame)
+        assertEquals(0, walking.liftCells)
     }
 
     /**
