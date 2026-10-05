@@ -105,4 +105,35 @@ monotoner Gangtakt startet bei Kontakt, stoppt mit der Bewegung und begrenzt Pau
 Pruefung: `python3 -m unittest test_fennec_gait -v`, dann `python3 rich_sheets.py`.
 Vorschau: [Fennec-Gang](fennec-gait-preview.gif). Die Vorschau zeigt die Sprite-Bewegung,
 keine Aufnahme aus der APK. Die Rasterung erlaubt einen Pixel Abweichung am Bodenkontakt.
-Echte neue Profilzeichnungen und streckenabhaengige Schrittphasen sind weiterhin offen.
+Der damalige Stand hatte noch keine neuen Profilzeichnungen. Die folgende Erweiterung
+ergaenzt Kopfansichten; volle Koerperprofile und Wegkopplung bleiben offen.
+
+## Mimik, Umschauen und Gestik (05.10., Erweiterung desselben PR)
+
+Fennecs aktueller Bogen hat **68 Bilder zu 128 x 128 Pixeln**. Neu gezeichnete Koepfe
+ersetzen das starre Gesicht: Dreiviertelblick, Profil, Vorder-/Rueckansicht, Blinzeln,
+Neugier, Konzentration und Freude. `fennec_faces.py` isoliert die Hauptkomponente jeder
+Atlaszelle und registriert Mimikvarianten auf gemeinsame Ansichtsmasse und Halsanker.
+Der Koerper bekommt eine Handbewegung zum Mantel sowie versetzte Bewegung von
+Fellsträhne, Schwanzspitze und Mantelzipfel. Das sind vorberechnete 2D-Animationen,
+noch keine an das Wetter gekoppelte Stoffsimulation.
+
+Die ersten 39 Indizes behalten ihre Rollen. 39–46: Ruhe vorn; 47–54: Ruhe hinten;
+55: Blinzeln vorn; 56–61: Freude vorn; 62–67: Freude hinten.
+Die Auswahlregel laesst Blinzeln und Freude auch bei gemerkter Vorderansicht zu.
+Kopfprofile sind neue Zeichnungen; seitliche Koerper und Links-/Rechts-Spiegelung
+stammen weiterhin aus dem bestehenden Rig.
+
+Quellen: `source/fennec-head-atlas.png`, `source/fennec-head-expressions.png`.
+Vorschau: [Mimik und Gestik](fennec-expression-preview.gif), gerenderte Sprites,
+keine Aufnahme aus der APK. Die Gangvorschau oben dokumentiert die vorherige Version.
+
+```bash
+python3 rich_sheets.py
+python3 rich_sheets.py --expressions fennec-expression-preview.gif
+python3 -m unittest test_fennec_faces test_fennec_gait -v
+```
+
+Acht lokale Python-Tests gruen; Kotlin-Regressionen ergaenzt, Android-Pruefung ueber CI.
+Naechster Schritt: Wirkung in der APK pruefen, danach eigene seitliche Koerperzeichnungen
+und streckenabhaengige Schritte. Weitere Wesen folgen nach Beurteilung dieser Figur.

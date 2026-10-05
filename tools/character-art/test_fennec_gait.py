@@ -26,7 +26,7 @@ class FennecGaitTest(unittest.TestCase):
                 self.assertAlmostEqual(1., np.linalg.det(world['shin_'+side][:2,:2]), places=6)
 
     def test_turns_do_not_squeeze_the_source(self):
-        for _, params in F.plan()[-2:]:
+        for _, params in F.plan()[37:39]:
             self.assertEqual(1., params.get('sx', 1.))
 
     def test_each_phase_keeps_a_supporting_foot(self):

@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 from puppet import Puppet
+import fennec_faces as Faces
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FEET = (195, 376)          # Mitte zwischen den Stiefeln, Bodenlinie
@@ -57,6 +58,10 @@ def build(img=None):
     p.add('head', head, NECK, 'torso', z=5)
     p.add('ear_l', p.poly([(80, 10), (140, 40), (192, 118), (172, 140), (130, 138), (96, 84)]), EAR_L, 'head', z=6)
     p.add('ear_r', p.poly([(272, 20), (284, 60), (256, 128), (226, 130), (214, 112), (240, 58)]), EAR_R, 'head', z=6)
+    p.add('tail_tip', tail & (xx < 72), (75, 292), 'tail', z=0)
+    p.add('flap_tip', p.parts['flap'].mask & (xx > 300), (301, 246), 'flap', z=3)
+    p.add('forelock', p.poly([(179, 108), (196, 86), (216, 103), (216, 127), (190, 133)]),
+          (201, 128), 'head', z=7)
     p.finish('torso')
     return p
 
@@ -145,7 +150,8 @@ SCALE = 0.315
 def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
          leg_l=0.0, lift_l=0.0, leg_r=0.0, lift_r=0.0,
          arm_l=0.0, arm_r=0.0, head=0.0, head_dy=0.0,
-         ear_l=0.0, ear_r=0.0, tail=0.0, flap=0.0, gait=None):
+         ear_l=0.0, ear_r=0.0, tail=0.0, flap=0.0, gait=None,
+         tail_tip=0.0, flap_tip=0.0, forelock=0.0):
     """Gelenkwinkel in Grad (positiv = im Uhrzeigersinn), Wege in Bildpunkten der Quelle.
     bob > 0 senkt den Koerper; die Beine beugen sich dabei, die Fuesse bleiben am Boden."""
     root = affine(lean, FEET) @ affine(0, FEET, sx=sx, sy=squash)
@@ -165,6 +171,9 @@ def mats(bob=0.0, lean=0.0, squash=1.0, sx=1.0, breath=0.0,
         'head': affine(head, NECK, t=(0, head_dy - 1.2 * breath)),
         'ear_l': affine(ear_l, EAR_L),
         'ear_r': affine(ear_r, EAR_R),
+        'tail_tip': affine(tail_tip, (75, 292)),
+        'flap_tip': affine(flap_tip, (301, 246)),
+        'forelock': affine(forelock, (201, 128)),
     }
     if gait is not None:
         for side, hip, knee, ankle, phase in [
@@ -235,6 +244,8 @@ def walk(n=8, steps=64, turn=1.0, lean=3.0):
             head=-1.5 * np.sin(2 * p - 0.6), head_dy=1.5 * np.cos(2 * p - 0.8),
             ear_l=-ear[i] * 0.5, ear_r=ear[i] * 0.5,
             tail=-3 + tail[i] * 0.05, flap=(32 if turn else 14) + flap[i] * 0.05,
+            tail_tip=5 * np.sin(p - 1.0), flap_tip=9 * np.sin(2*p - 0.9),
+            forelock=2 * np.sin(2*p - 0.7),
         ))
     return out
 
@@ -253,7 +264,9 @@ def idle(n=8, steps=64):
             head=0.8 * np.sin(p + 0.6),
             ear_l=-1.0 * np.sin(p - 0.5), ear_r=1.0 * np.sin(p - 0.5) + twitch[i] * 0.25,
             tail=3 * np.sin(p - 0.9), flap=2.5 * np.sin(p - 1.3),
-            arm_l=2 * np.sin(p - 0.3), arm_r=-1.5 * np.sin(p - 0.3),
+            arm_l=5 * np.sin(p - 0.3), arm_r=-3 * np.sin(p - 0.3) + 32 * max(0, np.sin(p - 0.8)),
+            tail_tip=4 * np.sin(p - 1.6), flap_tip=5 * np.sin(p - 1.9),
+            forelock=1.5 * np.sin(p - 0.7),
         ))
     return out
 
@@ -278,34 +291,43 @@ def sleep(n=4):
     return out
 
 
+# Die ersten 39 Indizes bleiben kompatibel. Neue Richtungs-Ruhe und Freude folgen.
+EXPRESSION_COUNT = 68
+
+
 def plan():
-    """(Variante, Groessen, gespiegelt) je Bild, Reihenfolge wie motion.py / CreatureSprites.Rich."""
+    """Kopfzeichnung und gegliederte Koerperpose ergeben gemeinsam ein Animationsbild."""
     I, Wk = idle(), walk()
     front = walk(turn=0.0)
-    P = [('open', x) for x in I]
-    P.append(('closed', I[0]))
-    P += [('open', x) for x in Wk]
-    P += [('open', x) for x in joy()]
-    P += [('closed', x) for x in sleep()]
-    P.append(('open', {}))
-    P += [('open', front[k]) for k in (0, 2, 4, 6)]
+    faces = ['neutral', 'neutral', 'curious', 'profile', 'profile', 'curious', 'neutral', 'neutral']
+    P = [(faces[i], x) for i, x in enumerate(I)]
+    P.append(('blink', I[0]))
+    P += [('focused', x) for x in Wk]
+    P += [('happy', x) for x in joy()]
+    P += [('blink', x) for x in sleep()]
+    P.append(('front', {}))
+    P += [('front', front[k]) for k in (0, 2, 4, 6)]
     P.append(('back', {}))
     P += [('back', front[k]) for k in (0, 2, 4, 6)]
-    # Kein falsches Raumdrehen durch horizontales Stauchen. Wendeposen verlagern das
-    # Gewicht und lassen Kopf/Mantel nachfolgen; vollstaendige Profilzeichnungen fehlen noch.
-    P.append(('open', dict(bob=2, head=-4, arm_l=-6, flap=8, tail=-3)))
+    P.append(('neutral', dict(bob=2, head=-4, arm_l=-6, flap=8, tail=-3)))
     P.append(('back', dict(bob=2, head=4, arm_l=6, flap=-8, tail=3)))
-    assert len(P) == Mo.COUNT
+    P += [('front', x) for x in I]                  # 39..46
+    P += [('back', x) for x in I]                   # 47..54
+    P.append(('front_blink', I[0]))                 # 55
+    P += [('front_happy', x) for x in joy()]         # 56..61
+    P += [('back', x) for x in joy()]               # 62..67
+    assert len(P) == EXPRESSION_COUNT
     return P
 
 
 def frames():
     src = source()
-    puppets = {'open': build(src), 'closed': build(closed_eyes(src)), 'back': build(back_view(src))}
-    pal = palette_of(puppets['open'].img, k=56)
+    puppets = {name: build(Faces.attach(back_view(src) if name == 'back' else src, name))
+               for name in {name for name, _ in plan()}}
+    pal = palette_of(puppets['neutral'].img, k=56)
     pal = np.concatenate([pal, palette_of(puppets['back'].img, k=16)])
     off = (60, 30)
-    cw, ch = puppets['open'].W + 120, puppets['open'].H + 40
+    cw, ch = puppets['neutral'].W + 120, puppets['neutral'].H + 40
     out = []
     for variant, par in plan():
         p = puppets[variant]

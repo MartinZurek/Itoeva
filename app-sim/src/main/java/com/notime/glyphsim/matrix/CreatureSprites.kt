@@ -104,7 +104,11 @@ object CreatureSprites {
             Activity.FRONT_WALK -> FRONT_WALK_FIRST + ((timeMs / WALK_MS) % 2).toInt()
             Activity.WALK -> WALK_FIRST + ((timeMs / WALK_MS) % 4).toInt()
             Activity.JOY -> JOY_FIRST + ((timeMs / JOY_MS) % 2).toInt()
-            Activity.BLINK -> BLINK
+            Activity.BLINK -> when (direction) {
+                PlayControl.Dir.UP -> BACK
+                PlayControl.Dir.DOWN -> FRONT
+                else -> BLINK
+            }
             Activity.IDLE -> if ((timeMs / BREATH_MS) % 2 == 0L) IDLE else IDLE_BREATH
         }
         return Look(frame, lift, mirrored)
@@ -133,14 +137,15 @@ object CreatureSprites {
         val walking = moving ?: (side != AvatarShading.Side.NONE)
         val activity = when {
             !eyesOpen && lying -> Activity.SLEEP
-            direction == PlayControl.Dir.UP -> if (walking) Activity.BACK_WALK else Activity.BACK
-            direction == PlayControl.Dir.DOWN -> if (walking) Activity.FRONT_WALK else Activity.FRONT
-            // Gehen zuerst: Der alte Gang huepft selbst eine Zelle - das ist kein Jubel.
+            walking && direction == PlayControl.Dir.UP -> Activity.BACK_WALK
+            walking && direction == PlayControl.Dir.DOWN -> Activity.FRONT_WALK
             walking -> Activity.WALK
-            // Erst ein richtiger Sprung ist Freude; ein kleiner Wipper im Stand bleibt Ruhe.
+            // Reaktionen haben Vorrang vor der gemerkten Blickrichtung. Sonst verschluckt
+            // ein stehender, nach vorne blickender Fennec jeden Sprung und jedes Blinzeln.
             lift >= JUMP -> Activity.JOY
-            !eyesOpen -> Activity.BLINK
-            timeMs % BLINK_EVERY_MS < BLINK_MS -> Activity.BLINK
+            !eyesOpen || timeMs % BLINK_EVERY_MS < BLINK_MS -> Activity.BLINK
+            direction == PlayControl.Dir.UP -> Activity.BACK
+            direction == PlayControl.Dir.DOWN -> Activity.FRONT
             else -> Activity.IDLE
         }
         return Classified(activity, lift, mirrored)
@@ -175,9 +180,14 @@ object CreatureSprites {
         const val DIR_WALK_COUNT = 4
         const val TURN_FRONT = 37
         const val TURN_BACK = 38
-        const val FRAME_COUNT = 39
+        const val FRONT_IDLE_FIRST = 39
+        const val BACK_IDLE_FIRST = 47
+        const val FRONT_BLINK = 55
+        const val FRONT_JOY_FIRST = 56
+        const val BACK_JOY_FIRST = 62
+        const val FRAME_COUNT = 68
 
-        const val IDLE_MS = 200L
+        const val IDLE_MS = 420L
         const val WALK_MS = 95L
         const val JOY_MS = 110L
         const val SLEEP_MS = 700L
@@ -269,10 +279,11 @@ object CreatureSprites {
         gaitTimeMs: Long = timeMs
     ): Look {
         val (act, lift, mirrored) = classify(raw, species, side, timeMs, direction, moving)
-        val facing = when (act) {
-            Activity.BACK, Activity.BACK_WALK -> Facing.BACK
-            Activity.FRONT, Activity.FRONT_WALK -> Facing.FRONT
-            else -> if (mirrored) Facing.LEFT else Facing.RIGHT
+        val facing = when {
+            direction == PlayControl.Dir.UP -> Facing.BACK
+            direction == PlayControl.Dir.DOWN -> Facing.FRONT
+            mirrored -> Facing.LEFT
+            else -> Facing.RIGHT
         }
         // Im Schlaf und im Sprung keine Drehung einschieben - nur merken, wohin sie schaut.
         val step = turn?.update(facing, timeMs)
@@ -283,13 +294,21 @@ object CreatureSprites {
         }
         val frame = when (act) {
             Activity.SLEEP -> Rich.SLEEP_FIRST + ((timeMs / Rich.SLEEP_MS) % Rich.SLEEP_COUNT).toInt()
-            Activity.BACK -> Rich.BACK
+            Activity.BACK -> Rich.BACK_IDLE_FIRST + ((timeMs / Rich.IDLE_MS) % Rich.IDLE_COUNT).toInt()
             Activity.BACK_WALK -> Rich.BACK_WALK_FIRST + ((gaitTimeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
-            Activity.FRONT -> Rich.FRONT
+            Activity.FRONT -> Rich.FRONT_IDLE_FIRST + ((timeMs / Rich.IDLE_MS) % Rich.IDLE_COUNT).toInt()
             Activity.FRONT_WALK -> Rich.FRONT_WALK_FIRST + ((gaitTimeMs / Rich.DIR_WALK_MS) % Rich.DIR_WALK_COUNT).toInt()
             Activity.WALK -> Rich.WALK_FIRST + ((gaitTimeMs / Rich.WALK_MS) % Rich.WALK_COUNT).toInt()
-            Activity.JOY -> Rich.JOY_FIRST + ((timeMs / Rich.JOY_MS) % Rich.JOY_COUNT).toInt()
-            Activity.BLINK -> Rich.BLINK
+            Activity.JOY -> (when (facing) {
+                Facing.FRONT -> Rich.FRONT_JOY_FIRST
+                Facing.BACK -> Rich.BACK_JOY_FIRST
+                else -> Rich.JOY_FIRST
+            }) + ((timeMs / Rich.JOY_MS) % Rich.JOY_COUNT).toInt()
+            Activity.BLINK -> when (facing) {
+                Facing.FRONT -> Rich.FRONT_BLINK
+                Facing.BACK -> Rich.BACK_IDLE_FIRST + ((timeMs / Rich.IDLE_MS) % Rich.IDLE_COUNT).toInt()
+                else -> Rich.BLINK
+            }
             Activity.IDLE -> Rich.idleFrame(timeMs)
         }
         // Der feine Gang enthaelt seine Gewichtsverlagerung bereits. Der alte Raster-Huepfer

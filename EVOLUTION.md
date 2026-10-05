@@ -669,6 +669,34 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-05 - Fennecs Mimik und Gestik (fennec-expression-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin fordert eine lebendige ganze Figur mit Gesicht,
+Kopfbewegung und nachschwingendem Fell/Mantel. Erweiterung des offenen Gang-PR #331,
+Ausgangsstand `db64b529595fb8d6317cef4cbcbf19a150aa227c`.
+
+**FACT / Entscheidung:** Neu gezeichnete Kopfansichten und Ausdruecke werden mit dem
+bestehenden gegliederten Koerper animiert. Der Fennec-Bogen waechst von 39 auf 68 Bilder:
+Ruhe, Blinzeln und Freude bekommen passende Vorder-/Rueckansichten. Armgestik,
+Fellsträhne, Mantel- und Schwanzspitze erhalten versetzte Bewegungen. Die Auswahlregel
+priorisiert Reaktionen vor einer lediglich gemerkten Blickrichtung. Quellen, Generator,
+Sprite, Auswahlregel und Vorschau werden gemeinsam versioniert.
+
+**TESTED BEHAVIOR:** Acht lokale Python-Tests pruefen Halsregistrierung, unterscheidbare
+Zeichnungen, Richtungs-/Reaktionsfolgen, bewegte Ruhe und den bisherigen Bodenkontakt.
+Gerenderte Frames visuell kontrolliert. Kotlin-Regressionen fuer frontales Blinzeln/Freude
+und gerichtete Ruhe ergaenzt. Android-CI des vorherigen Gang-Commits erfolgreich;
+Pruefung dieser Erweiterung folgt nach Upload.
+
+**UNVERIFIED / Grenzen:** Keine Handy-Sichtpruefung. Neue Profile betreffen den Kopf;
+vollstaendige seitliche Koerperzeichnungen fehlen. Links/rechts spiegeln weiterhin.
+Sekundaerbewegung ist vorberechnet, noch nicht wetterabhaengig. Keine fertige 3D-Figur.
+
+**Bereiche / Ruecksetzweg:** `CreatureSprites`, dessen Tests und `tools/character-art`
+sowie Fennec-Asset. Keine Migration oder Aenderung an Remindern, Story oder Progression.
+Generator, Asset und Auswahlregel gemeinsam auf den Ausgangscommit zuruecksetzen;
+Nutzerstaende bleiben kompatibel. Naechster Schritt: APK-Sichtpruefung und Koerperprofile.
+
 ### 2026-10-05 - Fennecs Gang: Pfotenkontakt statt flacher Wendepuppe
 
 **Anlass:** Martin gefaellt die gemalte Fennec-Figur, aber nicht ihr Sticker-Effekt beim Gehen

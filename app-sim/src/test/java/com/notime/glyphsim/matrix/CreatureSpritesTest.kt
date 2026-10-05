@@ -177,6 +177,34 @@ class CreatureSpritesTest {
         assertEquals(0L, gait.update(true, 12000L))
     }
 
+    @Test
+    fun `vordere Blickrichtung laesst Blinzeln und Freude durch`() {
+        val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        val blink = CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+            0L, PlayControl.Dir.DOWN, moving = false)
+        assertEquals(CreatureSprites.Rich.FRONT_BLINK, blink.frame)
+        val joy = AvatarAnimations.reactionFor(AvatarSpecies.FENNEC, AnimationType.MOVE).frames.map {
+            CreatureSprites.lookRich(it, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                500L, PlayControl.Dir.DOWN, moving = false)
+        }.filter { it.frame in CreatureSprites.Rich.FRONT_JOY_FIRST until CreatureSprites.Rich.FRONT_JOY_FIRST + CreatureSprites.Rich.JOY_COUNT }
+        assertTrue("Vordere Blickrichtung verschluckt die Reaktion", joy.isNotEmpty())
+        assertTrue(joy.all { it.liftCells >= 2 })
+    }
+
+    @Test
+    fun `vordere und hintere Ruhe bleiben animiert ohne Gehen`() {
+        val idle = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        for ((dir, first) in listOf(PlayControl.Dir.DOWN to CreatureSprites.Rich.FRONT_IDLE_FIRST,
+            PlayControl.Dir.UP to CreatureSprites.Rich.BACK_IDLE_FIRST)) {
+            val seen = (1..7).map { i ->
+                CreatureSprites.lookRich(idle, AvatarSpecies.FENNEC, AvatarShading.Side.NONE,
+                    i * CreatureSprites.Rich.IDLE_MS + 200L, dir, moving = false).frame
+            }
+            assertTrue(seen.all { it in first until first + CreatureSprites.Rich.IDLE_COUNT })
+            assertTrue(seen.toSet().size > 1)
+        }
+    }
+
     /**
      * Ein kleiner PNG-Leser nur fuer diesen Test: 8 Bit RGBA, ohne Zeilensprung - so schreibt
      * `tools/character-art/sheets.py`. `javax.imageio` gibt es in den Android-Unit-Tests nicht.
