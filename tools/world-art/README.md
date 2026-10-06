@@ -88,3 +88,48 @@ vorhandenen Bilder) erzeugt:
   Das Spiel legt sie ueber die naechtliche Abdunkelung, damit Lampen hell bleiben.
 Je Ort lassen sich in `build_all.ANIM` Wasserzeilen, Feuerstellen, zusaetzliche und
 ausgeschlossene Leuchtflaechen und die Windstaerke setzen.
+
+## Bewegliche Raeume und Materialkontakte (06.10.2026)
+
+Die 16 bestehenden Bilder bekommen kontinuierlich animierte, alpha-maskierte
+Bildteile. Pflanzen und Baumkronen schwingen um ihren unteren Anker; der Vorhang
+haengt oben. Wolken ziehen langsam hin und her, Wasserstreifen stroemen innerhalb
+ihrer Ufer, Strandwellen laufen zum Strand, Flammen und Glut bewegen sich. Gras
+liegt vor der Figur, Blattsilhouetten loesen sich vom Hintergrund. Originale und
+bisherige Nacht-Lichtebenen bleiben erhalten.
+
+```sh
+python3 tools/world-art/living_layers.py             # aus vorhandenen PNGs, kein Neumalen
+python3 tools/world-art/living_layers.py beach swamp # nur diese; Katalog bleibt vollstaendig
+python3 -m unittest discover -s tools/world-art -p test_living_layers.py -v
+bash tools/reaction-preview/tests.sh
+bash tools/world-art/preview_living.sh               # braucht zusaetzlich ffmpeg
+```
+
+`build_all.py` erzeugt die neuen Ebenen ebenfalls, wenn ein Original neu gerendert
+wird. `living_parts.json` und `GameRoomCatalog.kt` sind generierte Ausgaben.
+Die Zonen in `living_layers.py` sind bewusst je Illustration begrenzt: weder der
+Liegestuhl noch die Stegbohlen sind Wasser, helle Waende sind keine Wolken.
+Jeder Atlas ist hoechstens 1024 x 2048; Grundbild, Atlas und Raster zusammen
+brauchen je aktivem Ort weniger als 4 MiB dekodiert. Alte Animationsstreifen
+werden im neuen Renderer nicht parallel geladen.
+
+Das Materialraster erzeugt echte Schrittspuren in Sand und Matsch, kleine
+Grasbewegungen, Staub und bei nassen Kontakten Wellenringe. Eine Landung erzeugt
+staerkere Spritzer mit Flugbahn und Gravitation. Der Kontaktpunkt folgt dem
+Spiel-Fuss und nicht einer fest vorgezeichneten Wasserlinie. Kein Kontakt im
+Flug, Stillstand oder bei Druck gegen eine Wand. Beim Gehen auf dem Steg spritzt
+das Wasser darunter nicht. Kontakte laufen aus und sind auf 128 begrenzt;
+keine Speicherung im Spielstand und keine neuen wirtschaftlichen Effekte.
+
+`GameSurfaces.painted` definiert niedrige, bespringbare Oberkanten im Bild:
+Teetisch/Sofa, Bett, Parkbank/Kiste, Wald- und Lagerstamm, Strandstuhl und
+Sumpfsteg. Die Aktionsplaetze liegen davor; Hinlaufen fuehrt um diese Koerper.
+Strand und Sumpf reichen bis ins flache Wasser. Tiefes Wasser ist Dekoration;
+es gibt in diesem Schritt weder Schwimmen noch bewegliche Moebel.
+
+`living-preview.mp4` zeigt sechs Orte mit der echten Kotlin-Posenrechnung,
+ohne Android. Die eingezeichneten Wasser-Ringe demonstrieren erreichbare nasse
+Bildpunkte. Figuren, Tageslicht, Brandung und interaktive Kontaktpartikel
+werden in dieser Desktop-Vorschau nicht vollstaendig wiedergegeben; am Telefon
+muessen deren Darstellung, Leistung und Kollisionen gesondert geprueft werden.

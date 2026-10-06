@@ -344,6 +344,38 @@ Tempo/Gangphase und Aktionsfortschritt, ohne Bilder im Lauf neu zu erzeugen.
 `CreatureSheets` zerlegt jeden Bogen einmal in gecachte 64-/128-px-Einzelbilder;
 der 138er-Fennec-Streifen wird nie als 17664-px-GPU-Textur hochgeladen.
 
+## Lebendige gemalte Raeume (06.10.2026)
+
+`GameEnvironment` laeuft im bestehenden Steuerungstakt. Seine Uhr treibt einzeln
+verankerte Bildteile; Bodenkontakte entstehen aus dem tatsaechlichen Weg und dem
+Materialraster in Bildkoordinaten. Sprungboegen melden einen Kontakt beim Landen,
+auch zwischen gepufferten Spruengen. Unterstuetzte Flaechen erzeugen keine
+Wassereffekte durch den Boden hindurch. Spuren und Partikel sind kosmetischer
+Sitzungszustand: 128 Kontakte maximal, Wasser 2,4 s, Staub 0,6 s, Gras 1,2 s,
+Matsch 45 s und Sand 60 s. Ortswechsel behalten kurzlebige Spuren, Versetzen setzt
+die Abtastung zurueck. Unsichtbare Bildschirme pausieren den Raumtakt.
+
+`tools/world-art/living_layers.py` extrahiert alpha-maskierte Kronen, Gras,
+Wolken, Vorhang, Flammen und ausschliesslich nasse Wasserstreifen aus den
+vorhandenen Illustrationen. Je Ort: bereinigte Grundebene, gepackter RGBA-Atlas
+(max. 1024 x 2048) und 480 x 270 Byte Materialraster; gemeinsamer generierter
+`GameRoomCatalog`. Neutral zusammengesetzt sind die Bilder pixelgenau identisch
+mit den Originalen. `build_all.py` zieht die Ebenen bei Bildaenderungen mit nach.
+`GameRoomLayers` laedt sie einmal. Hintergrundteile, Brandung und Bodenspuren
+liegen vor der bestehenden Tageslichtrechnung; vorderes Gras, Blaetter, Glut und
+Tropfen kommen nach dem Avatar. Alle Ebenen benutzen `GameScenes.fit`; keine
+Bitmap-Erzeugung, Farbsegmentierung oder Zufallsberechnung je Bildschirmbild.
+Der bisherige Achtbildstreifen bleibt Rueckfall fuer Orte ohne neue Ebenen und
+wird bei vollstaendigen Live-Ebenen nicht zusaetzlich dekodiert.
+
+`GameSurfaces.painted` erweitert dieselbe Sprung-/Kollisionsrechnung um Sofa,
+Bett, Baenke, Baumstaemme, Liegestuhl und Sumpfsteg. Oberkante und Hoehe bleiben
+bei wechselnder Tiefe deckungsgleich. Die stationaeren Aktionsplaetze liegen
+vor den Moebelkoerpern; der automatische Weg waehlt bei Bedarf kurze sichtbare
+Kanten um deren Rechtecke. Strand und Sumpf erhalten erreichbare seichte
+Uferbereiche. Das ist eine interaktive 2,5D-Illustration mit festen Requisiten;
+keine frei drehbare 3D-Welt, schwimmenden Figuren oder verformbarer Bodenmesh.
+
 ## Größte Dateien (Kandidaten für Aufteilung)
 
 Nach Zeilenzahl, `.kt`-Dateien unter `src/main`, ohne Tests:

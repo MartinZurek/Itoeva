@@ -94,6 +94,16 @@ def main(names):
         metas[name]['animFrames'] = animate.FRAMES
     json.dump(metas, open(META, 'w'), indent=1, sort_keys=True)
     open(CATALOG, 'w').write(kotlin(metas))
+    import living_layers
+    parts_meta = os.path.join(HERE, 'living_parts.json')
+    rooms = json.load(open(parts_meta)) if os.path.exists(parts_meta) else {}
+    for name in todo:
+        if name in living_layers.ROOMS:
+            rooms[name] = living_layers.extract(name)
+    with open(parts_meta, 'w') as output:
+        json.dump(rooms, output, indent=2)
+        output.write('\n')
+    living_layers.write_catalog(rooms)
     print(f'{len(metas)} Orte im Katalog.')
 
 

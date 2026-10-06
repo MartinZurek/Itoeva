@@ -11,15 +11,15 @@
      210.6
     ],
     "standX": 354.4,
-    "standY": 215.1,
+    "standY": 222.0,
     "station": "BENCH"
    }
   ],
   "walk": {
-   "farHeight": 48,
+   "farHeight": 42,
    "farLeft": 20,
    "farRight": 460,
-   "farY": 215.1,
+   "farY": 158.0,
    "nearHeight": 58,
    "nearLeft": 10,
    "nearRight": 470,
@@ -41,7 +41,7 @@
      232
     ],
     "standX": 285,
-    "standY": 222,
+    "standY": 234.0,
     "station": "BED"
    },
    {
@@ -79,7 +79,7 @@
      221.3
     ],
     "standX": 248.5,
-    "standY": 225.3,
+    "standY": 241.0,
     "station": "BENCH"
    }
   ],
@@ -144,7 +144,7 @@
      223.6
     ],
     "standX": 369.6,
-    "standY": 227.6,
+    "standY": 238.0,
     "station": "BENCH"
    }
   ],
@@ -228,7 +228,7 @@
      205
     ],
     "standX": 230,
-    "standY": 212,
+    "standY": 219.0,
     "station": "SEAT"
    },
    {
@@ -331,7 +331,7 @@
      191
     ],
     "standX": 150,
-    "standY": 192,
+    "standY": 205.0,
     "station": "BENCH"
    }
   ],
@@ -453,15 +453,15 @@
      218.1
     ],
     "standX": 286.2,
-    "standY": 222.1,
+    "standY": 234.0,
     "station": "BENCH"
    }
   ],
   "walk": {
-   "farHeight": 48,
+   "farHeight": 44,
    "farLeft": 20,
    "farRight": 460,
-   "farY": 218.1,
+   "farY": 195.0,
    "nearHeight": 58,
    "nearLeft": 10,
    "nearRight": 470,

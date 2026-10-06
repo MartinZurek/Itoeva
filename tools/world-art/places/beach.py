@@ -13,9 +13,9 @@ def build(out):
     img = L.render('beach', BOX, clones=[([(505, 315), (573, 315), (575, 370), (505, 370)], -90, 0)], figures=[], text=(395, 6, 630, 26))
     P.save(img, out)
     return {
-        'walk': dict(farY=215.1, nearY=246.0, farLeft=20, farRight=460, nearLeft=10, nearRight=470,
-                     farHeight=48, nearHeight=58),
-        'spots': [dict(station='BENCH', box=[328.3, 163.0, 380.4, 210.6], standX=354.4, standY=215.1)],
+        'walk': dict(farY=158.0, nearY=246.0, farLeft=20, farRight=460, nearLeft=10, nearRight=470,
+                     farHeight=42, nearHeight=58),
+        'spots': [dict(station='BENCH', box=[328.3, 163.0, 380.4, 210.6], standX=354.4, standY=222.0)],
         'blocked': [],
         'cropTop': 0.7,
     }

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import com.notime.glyphsim.matrix.GameEnvironment
 import com.notime.glyphsim.matrix.GameScenes
 import com.notime.glyphsim.matrix.GameSceneLighting
 import com.notime.glyphsim.matrix.PlayControl
@@ -48,14 +49,14 @@ class GameSceneLayers(val strip: ImageBitmap?, val glow: ImageBitmap?) {
 }
 
 @Composable
-fun rememberGameSceneLayers(scene: GameScenes.Scene?): GameSceneLayers {
+fun rememberGameSceneLayers(scene: GameScenes.Scene?, animated: Boolean = true): GameSceneLayers {
     val context = LocalContext.current
-    return remember(scene?.asset) {
+    return remember(scene?.asset, animated) {
         fun load(path: String): ImageBitmap? = runCatching {
             context.assets.open(path).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
         }.getOrNull()
         val base = scene?.asset?.removeSuffix(".png")
-        GameSceneLayers(base?.let { load("${it}_anim.png") }, base?.let { load("${it}_glow.png") })
+        GameSceneLayers(base?.takeIf { animated }?.let { load("${it}_anim.png") }, base?.let { load("${it}_glow.png") })
     }
 }
 
@@ -75,7 +76,9 @@ fun GameSceneView(
     avatarPos: PlayControl.Pos,
     phase: Int,
     modifier: Modifier = Modifier,
-    layers: GameSceneLayers? = null
+    layers: GameSceneLayers? = null,
+    roomLayers: GameRoomLayers? = null,
+    environment: GameEnvironment.State = GameEnvironment.State()
 ) {
     Canvas(modifier = modifier) {
         val fit = GameScenes.fit(scene, size.width, size.height, avatarPos.x, avatarPos.depth)
@@ -87,10 +90,11 @@ fun GameSceneView(
         }
         drawRect(Color.Black)
         // Bewegung: aus dem Streifen das Bild zum Takt (Laub wiegt, Wasser kraeuselt, Licht flackert).
-        val strip = layers?.strip
+        val live = roomLayers?.takeIf { it.base != null && it.atlas != null }
+        val strip = if (live == null) layers?.strip else null
         val frame = if (strip != null) Math.floorMod(phase, layers?.frames ?: 1) else 0
         drawImage(
-            image = strip ?: image,
+            image = live?.base ?: strip ?: image,
             srcOffset = IntOffset(frame * GameScenes.IMAGE_W, 0),
             srcSize = IntSize(GameScenes.IMAGE_W, GameScenes.IMAGE_H),
             dstOffset = IntOffset(fit.left.roundToInt(), fit.top.roundToInt()),
@@ -101,6 +105,11 @@ fun GameSceneView(
             alpha = visible,
             filterQuality = FilterQuality.None
         )
+        if (live != null) {
+            roomParts(scene, live, environment, fit, visible, false)
+            roomShore(scene, live, environment, fit, visible)
+            roomContacts(scene, environment, fit, visible)
+        }
         // Die Illustration bleibt die Materialbasis. Licht und Schatten werden dagegen in
         // denselben Bildkoordinaten wie Laufweg und Avatar pro Bildtakt berechnet.
         val dark = GameSceneLighting.darkness(scene, minuteOfDay)
@@ -153,21 +162,5 @@ fun GameSceneView(
             size = androidx.compose.ui.geometry.Size(shadow.width * 2f * fit.scale, 5f * fit.scale),
             alpha = visible
         )
-        // Kleine Bewegungen auf der Materialebene, ohne zufaellige Pixel pro Rekomposition.
-        if (scene.place == PlayScene.Place.FOREST || scene.place == PlayScene.Place.JUNGLE) {
-            repeat(7) { i ->
-                val x = 35f + i * 67f + sin(phase * 0.11f + i * 1.7f) * 8f
-                val y = 65f + ((phase * 0.6f + i * 29f) % 145f)
-                val p = point(x, y)
-                drawRect(Color(0x88C6A66C), p, androidx.compose.ui.geometry.Size(2f * fit.scale, 2f * fit.scale), alpha = visible)
-            }
-        }
-        if (scene.place == PlayScene.Place.POND || scene.place == PlayScene.Place.BEACH) {
-            repeat(5) { i ->
-                val p = point(45f + i * 91f + sin(phase * 0.16f + i) * 7f, 225f + i % 2 * 8f)
-                drawLine(Color(0x88B7DAE7), p, Offset(p.x + 7f * fit.scale, p.y),
-                    strokeWidth = fit.scale, alpha = visible)
-            }
-        }
     }
 }

@@ -177,7 +177,7 @@ class GameMovementTest {
         val feet = GameScenes.feet(scene, PlayControl.Pos(0.72f, 0.75f))
         assertEquals(crate.top, feet.second - crate.surface.heightAt(PlayControl.Pos(0.72f, 0.75f)), 0.0001f)
         val living = GameScenes.of(PlayScene.Place.LIVING)!!
-        val table = GameSurfaces.painted(living).single()
+        val table = GameSurfaces.painted(living).single { it.id == "living-tea-table" }
         val middle = table.closest(GameScenes.posAt(living, 176f, 212f))
         assertEquals(184f, GameScenes.feet(living, middle).second - table.heightAt(middle), 0.0001f)
         val tables = GameSurfaces.tables(PlayScene.Place.KITCHEN, AvatarSpecies.FENNEC,
