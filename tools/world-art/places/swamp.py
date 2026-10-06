@@ -13,9 +13,9 @@ def build(out):
     img = L.render('swamp', BOX, clones=[([(478, 302), (516, 302), (516, 331), (478, 331)], -60, 0)], figures=[], text=None)
     P.save(img, out)
     return {
-        'walk': dict(farY=218.1, nearY=246.0, farLeft=20, farRight=460, nearLeft=10, nearRight=470,
-                     farHeight=48, nearHeight=58),
-        'spots': [dict(station='BENCH', box=[202.4, 190.3, 370.0, 218.1], standX=286.2, standY=222.1)],
+        'walk': dict(farY=195.0, nearY=246.0, farLeft=20, farRight=460, nearLeft=10, nearRight=470,
+                     farHeight=44, nearHeight=58),
+        'spots': [dict(station='BENCH', box=[202.4, 190.3, 370.0, 218.1], standX=286.2, standY=234.0)],
         'blocked': [],
         'cropTop': 0.7,
     }

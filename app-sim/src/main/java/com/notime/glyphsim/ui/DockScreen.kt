@@ -99,6 +99,7 @@ import com.notime.glyphsim.data.AppDatabase
 import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.PlayMapScene
 import com.notime.glyphsim.matrix.PlayControl
+import com.notime.glyphsim.matrix.GameEnvironment
 import com.notime.glyphsim.matrix.GameMovement
 import com.notime.glyphsim.matrix.GameSurfaces
 import com.notime.glyphsim.matrix.GameScenes
@@ -763,6 +764,10 @@ fun DockScreen(
         var gameTouchStick by remember { mutableStateOf(PlayControl.Stick()) }
         var gameKeyStick by remember { mutableStateOf(PlayControl.Stick()) }
         var gameMovement by remember { mutableStateOf(GameMovement.State()) }
+        var gameEnvironment by remember { mutableStateOf(GameEnvironment.State()) }
+        val gameRoomLayers by rememberUpdatedState(rememberGameRoomLayers(if (gameMode) GameScenes.of(currentPlace) else null))
+        val renderedRoomLayers = if (currentPlace == renderedPlace) gameRoomLayers
+            else rememberGameRoomLayers(if (gameMode) GameScenes.of(renderedPlace) else null)
         fun gameInput() = if (gameTouchStick.strength > 0f) gameTouchStick else gameKeyStick
         var gameFacing by remember { mutableStateOf(PlayControl.Dir.DOWN) }
         val gameSurfaceList by rememberUpdatedState(remember(gameMode, currentPlace, avatar?.species,
@@ -3969,6 +3974,7 @@ fun DockScreen(
                 refreshGameStation()
             }
             LaunchedEffect(currentPlace, gameSnap, avatar?.species) {
+                gameEnvironment = GameEnvironment.resetSampling(gameEnvironment)
                 gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
             }
             DisposableEffect(Unit) {
@@ -3985,10 +3991,16 @@ fun DockScreen(
                     val now = withFrameMillis { it }
                     val dt = now - last
                     last = now
+                    if (!screenVisible) continue
                     val current = avatar ?: continue
+                    val environmentScene = GameScenes.of(currentPlace)
                     val target = gameWalkTarget
                     if (target != null) {
-                        val next = GameScenes.approach(gamePos, target, dt)
+                        val next = environmentScene?.let { GameSurfaces.approach(it, gamePos, target, dt) }
+                            ?: GameScenes.approach(gamePos, target, dt)
+                        gameEnvironment = if (environmentScene != null) GameEnvironment.tick(gameEnvironment,
+                            environmentScene, GameMovement.State(pos = gamePos), GameMovement.State(pos = next), dt, gameRoomLayers.grid)
+                            else GameEnvironment.advance(gameEnvironment, dt)
                         gameFacing = PlayControl.swipeDir(next.x - gamePos.x, (next.depth - gamePos.depth) * 0.25f, 0f) ?: gameFacing
                         avatarFacing = if (gameFacing == PlayControl.Dir.LEFT) AvatarShading.Side.RIGHT else AvatarShading.Side.LEFT
                         avatarWalking = true
@@ -4002,6 +4014,7 @@ fun DockScreen(
                     }
                     val busy = !screenVisible || gameActing || current.fed || gameMenuOpen || gameMapOpen || gameBackpackOpen || talkOpen
                     if (busy) {
+                        gameEnvironment = GameEnvironment.advance(gameEnvironment, dt)
                         if (wasMoving) avatarWalking = false
                         wasMoving = false
                         continue
@@ -4011,7 +4024,10 @@ fun DockScreen(
                     }
                     val (widthPx, heightPx, avatarPx) = gameGeometry
                     val scene = GameScenes.of(currentPlace)
+                    val beforeMovement = gameMovement
                     val result = GameMovement.tick(gameMovement, gameInput(), dt, gameSurfaceList)
+                    gameEnvironment = if (scene != null) GameEnvironment.tick(gameEnvironment, scene,
+                        beforeMovement, result.state, dt, gameRoomLayers.grid) else GameEnvironment.advance(gameEnvironment, dt)
                     gameMovement = result.state
                     gamePos = gameMovement.pos
                     gameFacing = gameMovement.facing
@@ -5279,13 +5295,14 @@ fun DockScreen(
             // Itoeva 2: wo es schon ein gemaltes Bild gibt, steht es statt der Zellen-Kulisse.
             val gemalt = if (gameMode && karte == null) GameScenes.of(renderedPlace) else null
             val gemaltBild = rememberGameSceneImage(gemalt)
-            val gemaltEbenen = rememberGameSceneLayers(gemalt)
+            val gemaltEbenen = rememberGameSceneLayers(gemalt, animated = renderedRoomLayers.base == null || renderedRoomLayers.atlas == null)
             if (gemalt != null && gemaltBild != null) {
                 GameSceneView(
                     scene = gemalt, image = gemaltBild, fade = sceneFade.value,
                     minuteOfDay = PlayTimeLapse.now().let { it.hour * 60 + it.minute },
                     lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
-                    modifier = Modifier.fillMaxSize(), layers = gemaltEbenen
+                    modifier = Modifier.fillMaxSize(), layers = gemaltEbenen,
+                    roomLayers = renderedRoomLayers, environment = gameEnvironment
                 )
                 GameSurfaceView(gemalt, gamePos, sceneFade.value, Modifier.fillMaxSize())
             } else PlaySceneView(
@@ -5762,6 +5779,13 @@ fun DockScreen(
                         }
                     )
             )
+        }
+
+        if (gameMode && mapView == null) {
+            GameScenes.of(renderedPlace)?.let { scene ->
+                GameRoomForegroundView(scene, renderedRoomLayers, gameEnvironment, gamePos,
+                    sceneFade.value, PlayTimeLapse.now().let { it.hour * 60 + it.minute }, Modifier.fillMaxSize())
+            }
         }
 
         // **Die Ebene vor der Figur** (siehe PlayScene.buildForeground): Grasbueschel an den

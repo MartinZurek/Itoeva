@@ -27,7 +27,7 @@ def build(out):
         'walk': dict(farY=208, nearY=228, farLeft=132, farRight=444, nearLeft=126, nearRight=450,
                      farHeight=64, nearHeight=70),
         'spots': [
-            dict(station='SEAT', box=[150, 145, 305, 205], standX=230, standY=212),
+            dict(station='SEAT', box=[150, 145, 305, 205], standX=230, standY=219.0),
             dict(station='TV', box=[345, 128, 448, 224], standX=398, standY=216),
             dict(station='DOOR', box=[56, 104, 132, 214], standX=140, standY=212),
         ],

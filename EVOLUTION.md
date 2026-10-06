@@ -669,6 +669,60 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-06 - Lebendige gemalte Raeume (living-rooms-v1)
+
+**DOCUMENTED INTENT:** Martin beauftragt nach den Charakteranimationen eine neue
+APK und interaktive Raeume aus den vorhandenen Bildern: Wind, bewegtes Laub,
+Wolken, Meerwellen, Fussabdruecke im Matsch sowie Spruenge auf Moebel und Spritzer
+im Wasser. Letzter stabiler Ausgang: Charakterstand
+`b444bd5b6388f541877373795b3cb8903cf55f64`, Android-Verify #830 gruen.
+
+**FACT / Produktentscheidung:** Alle 16 gemalten Orte erhalten bewegliche
+Bildteile in einer 2,5D-Welt. Die vorhandenen Illustrationen behalten ihre
+Identitaet. Blattsilhouetten, Vorhang und Wolken bewegen sich vor einem
+bereinigten Untergrund; Wellen bleiben im Wasser. Materialkontakte reagieren
+auf den echten Laufweg und auf Landungen. Sofa, Bett, Baenke, Baumstaemme,
+Strandstuhl und Sumpfsteg ergaenzen die bestehenden bespringbaren Flaechen.
+Aktionsplaetze liegen vor ihnen, der automatische Weg umgeht ihre Koerper.
+Strand/Sumpf erhalten begehbare seichte Uferbereiche. Kein Ersatz der Welt durch
+ein neues 3D-System; Figurensteuerung und Tageslicht nutzen ihre bestehende
+Koordinatenrechnung.
+
+**FACT / Bereiche:** Neue reine `GameEnvironment`-Rechnung, generierter
+`GameRoomCatalog`, Android-Ebenen in `GameRoomLayers`/`GameSceneView`, schmale
+Integration in `DockScreen`, Flaechen in `GameSurfaces`, Szenenmetadaten,
+Exporter/Quellzonen/Assets/Tests und Vorschau unter `tools/world-art`.
+Keine Preference-Schluessel, Datenmigration, Reminder-, Charakter-, Story-,
+Balancing-, XP- oder Progressionsaenderung. Spuren sind begrenzter, fluechtiger
+Sitzungszustand. Raum-Uhr pausiert bei unsichtbarem Bildschirm; ein offenes
+Menue erzeugt keine Schritte. Ein Ortswechsel verbindet keine Spur quer durchs
+Bild, vorhandene Spuren koennen bei Rueckkehr noch sichtbar sein.
+
+**TESTED BEHAVIOR:** 904 Kotlin-Tests lokal gruen (893 Basis plus elf Raum-Faelle),
+alle acht neuen Bildtests gruen; `git diff --check` sauber.
+Die Bildtests rekonstruieren alle Originale pixelgenau, pruefen Alpha-Kanten,
+Materialzuordnung, Wasser ohne Steg/Stuhl, erreichbare nasse Ufer und begrenzte
+Texturgroessen. Kotlin-Faelle pruefen bildratenunabhaengige Schrittorte, Stillstand,
+Flug, gepufferte Landung, Plattformkontakte, Ablauf/Grenzen der Spuren,
+Moebel-Oberkanten, Sprunghilfe und automatische Wege. Desktop-Vorschau verwendet
+die echte Kotlin-Posenrechnung, keine APK-Aufnahme.
+
+**UNVERIFIED / Grenzen:** Android-CI und Telefon-Sichtpruefung werden separat
+nachgehalten. Speicher-/GPU-Profil am Telefon steht aus. Wolken pendeln in einer
+begrenzten Sky-Zone statt einer endlosen Wetterwelt. Farbauswahl und kleine
+Untergrund-Ergaenzung koennen bei starkem Wind an Maskenraendern sichtbar werden.
+Feste Bild-Requisiten, keine frei drehbare Kamera, kein Schwimmen, kein
+verformbarer Schlamm oder physikalisch simuliertes Meer. Nicht gemalte Orte
+behalten ihre bereits animierte Zellenkulisse. APK-Auslieferung nutzt den
+bestehenden Workflow mit dessen Version und Signaturschutz; noch kein neuer
+APK-Lauf gestartet, da die sichere Browser-Anmeldung nicht abgeschlossen wurde.
+
+**Ruecksetzweg / naechster Schritt:** Gesamten Raum-Schritt auf den obigen
+Charakterstand zuruecksetzen, keine Nutzerdaten-Rueckmigration erforderlich.
+Eigener Branch `codex/living-rooms`, gestapelter PR auf dem Charakterbranch.
+Kein Merge ohne ausdruecklichen Merge-Auftrag. Android-Prueflauf, dann mit
+bestehender Signatur neue APK und Telefon-Sichtpruefung.
+
 ### 2026-10-06 - Eigene animierte Koerper fuer die fuenf weiteren Wesen
 
 **DOCUMENTED INTENT / Anlass:** Martin hat Fennec (#332) gemergt und die APK

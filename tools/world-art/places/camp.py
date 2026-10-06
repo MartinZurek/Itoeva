@@ -15,7 +15,7 @@ def build(out):
     return {
         'walk': dict(farY=196.0, nearY=246.0, farLeft=20, farRight=460, nearLeft=10, nearRight=470,
                      farHeight=48, nearHeight=58),
-        'spots': [dict(station='BENCH', box=[174.3, 180.2, 322.7, 221.3], standX=248.5, standY=225.3)],
+        'spots': [dict(station='BENCH', box=[174.3, 180.2, 322.7, 221.3], standX=248.5, standY=241.0)],
         'blocked': [],
         'cropTop': 0.7,
     }

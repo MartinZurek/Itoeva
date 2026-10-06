@@ -1,0 +1,2842 @@
+{
+  "beach": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 17,
+        "w": 25,
+        "h": 34,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 80,
+        "w": 118,
+        "h": 26,
+        "foreground": false,
+        "sx": 149,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 135,
+        "y": 83,
+        "w": 4,
+        "h": 5,
+        "foreground": false,
+        "sx": 269,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 178,
+        "w": 114,
+        "h": 80,
+        "foreground": false,
+        "sx": 275,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 258,
+        "w": 114,
+        "h": 12,
+        "foreground": true,
+        "sx": 391,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 463,
+        "y": 0,
+        "w": 17,
+        "h": 20,
+        "foreground": false,
+        "sx": 507,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 428,
+        "y": 8,
+        "w": 34,
+        "h": 11,
+        "foreground": false,
+        "sx": 526,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 124,
+        "y": 9,
+        "w": 356,
+        "h": 58,
+        "foreground": false,
+        "sx": 562,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 405,
+        "y": 100,
+        "w": 75,
+        "h": 3,
+        "foreground": false,
+        "sx": 920,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 123,
+        "y": 105,
+        "w": 198,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 105,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 200,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 123,
+        "y": 110,
+        "w": 198,
+        "h": 3,
+        "foreground": false,
+        "sx": 301,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 110,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 501,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 126,
+        "y": 115,
+        "w": 26,
+        "h": 3,
+        "foreground": false,
+        "sx": 602,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 174,
+        "y": 115,
+        "w": 147,
+        "h": 3,
+        "foreground": false,
+        "sx": 630,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 115,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 779,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 202,
+        "y": 120,
+        "w": 116,
+        "h": 3,
+        "foreground": false,
+        "sx": 880,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 120,
+        "w": 27,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 410,
+        "y": 120,
+        "w": 70,
+        "h": 3,
+        "foreground": false,
+        "sx": 29,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 181,
+        "y": 125,
+        "w": 138,
+        "h": 3,
+        "foreground": false,
+        "sx": 101,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 411,
+        "y": 125,
+        "w": 69,
+        "h": 3,
+        "foreground": false,
+        "sx": 241,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 173,
+        "y": 130,
+        "w": 148,
+        "h": 3,
+        "foreground": false,
+        "sx": 312,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 425,
+        "y": 130,
+        "w": 55,
+        "h": 3,
+        "foreground": false,
+        "sx": 462,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 183,
+        "y": 135,
+        "w": 138,
+        "h": 3,
+        "foreground": false,
+        "sx": 519,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 431,
+        "y": 135,
+        "w": 49,
+        "h": 3,
+        "foreground": false,
+        "sx": 659,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 161,
+        "y": 140,
+        "w": 160,
+        "h": 3,
+        "foreground": false,
+        "sx": 710,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 140,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 872,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 152,
+        "y": 145,
+        "w": 169,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 145,
+        "w": 40,
+        "h": 3,
+        "foreground": false,
+        "sx": 171,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 423,
+        "y": 145,
+        "w": 57,
+        "h": 3,
+        "foreground": false,
+        "sx": 213,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 163,
+        "y": 150,
+        "w": 158,
+        "h": 3,
+        "foreground": false,
+        "sx": 272,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 150,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 432,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 213,
+        "y": 155,
+        "w": 108,
+        "h": 3,
+        "foreground": false,
+        "sx": 533,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 155,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 643,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 222,
+        "y": 160,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 744,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 160,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 845,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 270,
+        "y": 165,
+        "w": 51,
+        "h": 3,
+        "foreground": false,
+        "sx": 946,
+        "sy": 92
+      },
+      {
+        "kind": "WATER",
+        "x": 381,
+        "y": 165,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 97
+      },
+      {
+        "kind": "WATER",
+        "x": 419,
+        "y": 170,
+        "w": 61,
+        "h": 3,
+        "foreground": false,
+        "sx": 101,
+        "sy": 97
+      }
+    ],
+    "material": "SAND"
+  },
+  "bedroom": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 183,
+        "y": 49,
+        "w": 13,
+        "h": 18,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 269,
+        "y": 17,
+        "w": 87,
+        "h": 12,
+        "foreground": false,
+        "sx": 15,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 361,
+        "y": 17,
+        "w": 78,
+        "h": 55,
+        "foreground": false,
+        "sx": 104,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 38,
+        "y": 104,
+        "w": 29,
+        "h": 35,
+        "foreground": false,
+        "sx": 184,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 387,
+        "y": 71,
+        "w": 54,
+        "h": 59,
+        "foreground": false,
+        "sx": 215,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 402,
+        "y": 151,
+        "w": 76,
+        "h": 73,
+        "foreground": false,
+        "sx": 271,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 380,
+        "y": 224,
+        "w": 97,
+        "h": 16,
+        "foreground": false,
+        "sx": 349,
+        "sy": 0
+      },
+      {
+        "kind": "CURTAIN",
+        "x": 216,
+        "y": 78,
+        "w": 62,
+        "h": 85,
+        "foreground": false,
+        "sx": 448,
+        "sy": 0
+      }
+    ],
+    "material": "WOOD"
+  },
+  "camp": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 224,
+        "y": 27,
+        "w": 75,
+        "h": 78,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 224,
+        "y": 119,
+        "w": 75,
+        "h": 33,
+        "foreground": false,
+        "sx": 77,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 426,
+        "y": 3,
+        "w": 35,
+        "h": 36,
+        "foreground": false,
+        "sx": 154,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 459,
+        "y": 88,
+        "w": 21,
+        "h": 22,
+        "foreground": false,
+        "sx": 191,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 237,
+        "w": 120,
+        "h": 33,
+        "foreground": true,
+        "sx": 214,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 250,
+        "w": 120,
+        "h": 20,
+        "foreground": true,
+        "sx": 336,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 240,
+        "y": 231,
+        "w": 120,
+        "h": 38,
+        "foreground": true,
+        "sx": 458,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 360,
+        "y": 229,
+        "w": 120,
+        "h": 41,
+        "foreground": true,
+        "sx": 580,
+        "sy": 0
+      },
+      {
+        "kind": "FIRE",
+        "x": 111,
+        "y": 178,
+        "w": 37,
+        "h": 33,
+        "foreground": false,
+        "sx": 702,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 0,
+        "y": 130,
+        "w": 99,
+        "h": 3,
+        "foreground": false,
+        "sx": 741,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 102,
+        "y": 130,
+        "w": 43,
+        "h": 3,
+        "foreground": false,
+        "sx": 842,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 148,
+        "y": 130,
+        "w": 45,
+        "h": 3,
+        "foreground": false,
+        "sx": 887,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 0,
+        "y": 135,
+        "w": 190,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 80
+      },
+      {
+        "kind": "WATER",
+        "x": 0,
+        "y": 140,
+        "w": 134,
+        "h": 3,
+        "foreground": false,
+        "sx": 192,
+        "sy": 80
+      },
+      {
+        "kind": "WATER",
+        "x": 157,
+        "y": 140,
+        "w": 31,
+        "h": 3,
+        "foreground": false,
+        "sx": 328,
+        "sy": 80
+      },
+      {
+        "kind": "WATER",
+        "x": 0,
+        "y": 145,
+        "w": 135,
+        "h": 3,
+        "foreground": false,
+        "sx": 361,
+        "sy": 80
+      },
+      {
+        "kind": "WATER",
+        "x": 154,
+        "y": 145,
+        "w": 31,
+        "h": 3,
+        "foreground": false,
+        "sx": 498,
+        "sy": 80
+      },
+      {
+        "kind": "WATER",
+        "x": 0,
+        "y": 150,
+        "w": 124,
+        "h": 3,
+        "foreground": false,
+        "sx": 531,
+        "sy": 80
+      },
+      {
+        "kind": "WATER",
+        "x": 154,
+        "y": 150,
+        "w": 29,
+        "h": 3,
+        "foreground": false,
+        "sx": 657,
+        "sy": 80
+      }
+    ],
+    "material": "STONE"
+  },
+  "city": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 54,
+        "y": 92,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 174,
+        "y": 115,
+        "w": 21,
+        "h": 57,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 130,
+        "y": 172,
+        "w": 29,
+        "h": 3,
+        "foreground": false,
+        "sx": 145,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 303,
+        "y": 4,
+        "w": 19,
+        "h": 16,
+        "foreground": false,
+        "sx": 176,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 325,
+        "y": 13,
+        "w": 25,
+        "h": 21,
+        "foreground": false,
+        "sx": 197,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 122,
+        "y": 22,
+        "w": 8,
+        "h": 5,
+        "foreground": false,
+        "sx": 224,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 142,
+        "y": 33,
+        "w": 5,
+        "h": 3,
+        "foreground": false,
+        "sx": 234,
+        "sy": 0
+      }
+    ],
+    "material": "STONE"
+  },
+  "forest": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 244,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 366,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 80,
+        "w": 120,
+        "h": 77,
+        "foreground": false,
+        "sx": 488,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 80,
+        "w": 120,
+        "h": 77,
+        "foreground": false,
+        "sx": 610,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 80,
+        "w": 120,
+        "h": 77,
+        "foreground": false,
+        "sx": 732,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 80,
+        "w": 120,
+        "h": 77,
+        "foreground": false,
+        "sx": 854,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 185,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 185,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 82
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 185,
+        "w": 20,
+        "h": 73,
+        "foreground": false,
+        "sx": 244,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 2,
+        "y": 265,
+        "w": 118,
+        "h": 5,
+        "foreground": true,
+        "sx": 266,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 265,
+        "w": 97,
+        "h": 5,
+        "foreground": true,
+        "sx": 386,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 320,
+        "y": 224,
+        "w": 120,
+        "h": 46,
+        "foreground": true,
+        "sx": 485,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 440,
+        "y": 224,
+        "w": 40,
+        "h": 46,
+        "foreground": true,
+        "sx": 607,
+        "sy": 82
+      }
+    ],
+    "material": "GRASS"
+  },
+  "grotto": {
+    "parts": [
+      {
+        "kind": "WATER",
+        "x": 97,
+        "y": 180,
+        "w": 213,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 95,
+        "y": 185,
+        "w": 228,
+        "h": 3,
+        "foreground": false,
+        "sx": 215,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 93,
+        "y": 190,
+        "w": 244,
+        "h": 3,
+        "foreground": false,
+        "sx": 445,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 91,
+        "y": 195,
+        "w": 259,
+        "h": 3,
+        "foreground": false,
+        "sx": 691,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 89,
+        "y": 200,
+        "w": 275,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 5
+      },
+      {
+        "kind": "WATER",
+        "x": 87,
+        "y": 205,
+        "w": 290,
+        "h": 3,
+        "foreground": false,
+        "sx": 277,
+        "sy": 5
+      },
+      {
+        "kind": "WATER",
+        "x": 85,
+        "y": 210,
+        "w": 246,
+        "h": 3,
+        "foreground": false,
+        "sx": 569,
+        "sy": 5
+      }
+    ],
+    "material": "STONE"
+  },
+  "jungle": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 244,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 366,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 80,
+        "w": 120,
+        "h": 50,
+        "foreground": false,
+        "sx": 488,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 80,
+        "w": 120,
+        "h": 50,
+        "foreground": false,
+        "sx": 610,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 80,
+        "w": 120,
+        "h": 50,
+        "foreground": false,
+        "sx": 732,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 80,
+        "w": 120,
+        "h": 50,
+        "foreground": false,
+        "sx": 854,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 137,
+        "w": 91,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 217,
+        "w": 91,
+        "h": 53,
+        "foreground": false,
+        "sx": 93,
+        "sy": 82
+      },
+      {
+        "kind": "LEAF",
+        "x": 364,
+        "y": 129,
+        "w": 115,
+        "h": 58,
+        "foreground": false,
+        "sx": 186,
+        "sy": 82
+      },
+      {
+        "kind": "LEAF",
+        "x": 364,
+        "y": 187,
+        "w": 116,
+        "h": 80,
+        "foreground": false,
+        "sx": 303,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 381,
+        "y": 267,
+        "w": 92,
+        "h": 3,
+        "foreground": true,
+        "sx": 421,
+        "sy": 82
+      }
+    ],
+    "material": "GRASS"
+  },
+  "living": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 25,
+        "y": 0,
+        "w": 98,
+        "h": 79,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 127,
+        "y": 9,
+        "w": 30,
+        "h": 52,
+        "foreground": false,
+        "sx": 100,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 10,
+        "y": 80,
+        "w": 84,
+        "h": 10,
+        "foreground": false,
+        "sx": 132,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 158,
+        "y": 88,
+        "w": 23,
+        "h": 47,
+        "foreground": false,
+        "sx": 218,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 209,
+        "y": 33,
+        "w": 33,
+        "h": 55,
+        "foreground": false,
+        "sx": 243,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 331,
+        "y": 97,
+        "w": 83,
+        "h": 50,
+        "foreground": false,
+        "sx": 278,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 302,
+        "y": 142,
+        "w": 51,
+        "h": 47,
+        "foreground": false,
+        "sx": 363,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 40,
+        "y": 209,
+        "w": 66,
+        "h": 10,
+        "foreground": false,
+        "sx": 416,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 213,
+        "w": 15,
+        "h": 32,
+        "foreground": false,
+        "sx": 484,
+        "sy": 0
+      },
+      {
+        "kind": "FIRE",
+        "x": 72,
+        "y": 154,
+        "w": 31,
+        "h": 29,
+        "foreground": false,
+        "sx": 501,
+        "sy": 0
+      }
+    ],
+    "material": "WOOD"
+  },
+  "meadow": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 80,
+        "w": 112,
+        "h": 80,
+        "foreground": false,
+        "sx": 114,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 160,
+        "w": 112,
+        "h": 20,
+        "foreground": false,
+        "sx": 228,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 399,
+        "y": 0,
+        "w": 81,
+        "h": 80,
+        "foreground": false,
+        "sx": 342,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 399,
+        "y": 80,
+        "w": 81,
+        "h": 80,
+        "foreground": false,
+        "sx": 425,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 399,
+        "y": 160,
+        "w": 81,
+        "h": 12,
+        "foreground": false,
+        "sx": 508,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 195,
+        "w": 120,
+        "h": 75,
+        "foreground": false,
+        "sx": 591,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 195,
+        "w": 120,
+        "h": 75,
+        "foreground": false,
+        "sx": 713,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 195,
+        "w": 120,
+        "h": 75,
+        "foreground": false,
+        "sx": 835,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 195,
+        "w": 120,
+        "h": 75,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "CLOUD",
+        "x": 104,
+        "y": 0,
+        "w": 293,
+        "h": 57,
+        "foreground": false,
+        "sx": 122,
+        "sy": 82
+      }
+    ],
+    "material": "GRASS"
+  },
+  "mountains": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 327,
+        "y": 107,
+        "w": 67,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 315,
+        "y": 187,
+        "w": 70,
+        "h": 2,
+        "foreground": false,
+        "sx": 69,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 223,
+        "w": 120,
+        "h": 47,
+        "foreground": true,
+        "sx": 141,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 223,
+        "w": 120,
+        "h": 47,
+        "foreground": true,
+        "sx": 263,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 240,
+        "y": 229,
+        "w": 120,
+        "h": 41,
+        "foreground": true,
+        "sx": 385,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 360,
+        "y": 223,
+        "w": 120,
+        "h": 47,
+        "foreground": true,
+        "sx": 507,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 0,
+        "y": 5,
+        "w": 480,
+        "h": 53,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "CLOUD",
+        "x": 449,
+        "y": 11,
+        "w": 15,
+        "h": 5,
+        "foreground": false,
+        "sx": 482,
+        "sy": 82
+      },
+      {
+        "kind": "CLOUD",
+        "x": 427,
+        "y": 16,
+        "w": 8,
+        "h": 4,
+        "foreground": false,
+        "sx": 499,
+        "sy": 82
+      }
+    ],
+    "material": "STONE"
+  },
+  "park": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 99,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 141,
+        "y": 0,
+        "w": 99,
+        "h": 80,
+        "foreground": false,
+        "sx": 101,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 0,
+        "w": 40,
+        "h": 80,
+        "foreground": false,
+        "sx": 202,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 80,
+        "w": 118,
+        "h": 58,
+        "foreground": false,
+        "sx": 244,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 124,
+        "y": 80,
+        "w": 116,
+        "h": 58,
+        "foreground": false,
+        "sx": 364,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 80,
+        "w": 40,
+        "h": 58,
+        "foreground": false,
+        "sx": 482,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 305,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 524,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 425,
+        "y": 0,
+        "w": 49,
+        "h": 31,
+        "foreground": false,
+        "sx": 646,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 327,
+        "y": 80,
+        "w": 98,
+        "h": 35,
+        "foreground": false,
+        "sx": 697,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 425,
+        "y": 83,
+        "w": 54,
+        "h": 32,
+        "foreground": false,
+        "sx": 797,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 203,
+        "w": 120,
+        "h": 67,
+        "foreground": false,
+        "sx": 853,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 203,
+        "w": 120,
+        "h": 67,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 240,
+        "y": 204,
+        "w": 120,
+        "h": 66,
+        "foreground": false,
+        "sx": 122,
+        "sy": 82
+      },
+      {
+        "kind": "GRASS",
+        "x": 360,
+        "y": 208,
+        "w": 105,
+        "h": 48,
+        "foreground": false,
+        "sx": 244,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 416,
+        "y": 235,
+        "w": 18,
+        "h": 3,
+        "foreground": false,
+        "sx": 351,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 441,
+        "y": 235,
+        "w": 39,
+        "h": 3,
+        "foreground": false,
+        "sx": 371,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 412,
+        "y": 240,
+        "w": 59,
+        "h": 3,
+        "foreground": false,
+        "sx": 412,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 410,
+        "y": 245,
+        "w": 63,
+        "h": 3,
+        "foreground": false,
+        "sx": 473,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 316,
+        "y": 250,
+        "w": 27,
+        "h": 3,
+        "foreground": false,
+        "sx": 538,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 402,
+        "y": 250,
+        "w": 75,
+        "h": 3,
+        "foreground": false,
+        "sx": 567,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 335,
+        "y": 255,
+        "w": 27,
+        "h": 3,
+        "foreground": false,
+        "sx": 644,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 401,
+        "y": 255,
+        "w": 79,
+        "h": 3,
+        "foreground": false,
+        "sx": 673,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 318,
+        "y": 260,
+        "w": 23,
+        "h": 3,
+        "foreground": false,
+        "sx": 754,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 412,
+        "y": 260,
+        "w": 68,
+        "h": 3,
+        "foreground": false,
+        "sx": 779,
+        "sy": 82
+      }
+    ],
+    "material": "GRASS"
+  },
+  "plains": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 0,
+        "w": 78,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 80,
+        "w": 120,
+        "h": 39,
+        "foreground": false,
+        "sx": 202,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 122,
+        "y": 80,
+        "w": 76,
+        "h": 39,
+        "foreground": false,
+        "sx": 324,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 206,
+        "w": 120,
+        "h": 64,
+        "foreground": false,
+        "sx": 402,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 206,
+        "w": 120,
+        "h": 64,
+        "foreground": false,
+        "sx": 524,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 240,
+        "y": 206,
+        "w": 120,
+        "h": 64,
+        "foreground": false,
+        "sx": 646,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 360,
+        "y": 206,
+        "w": 120,
+        "h": 64,
+        "foreground": false,
+        "sx": 768,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 166,
+        "y": 4,
+        "w": 314,
+        "h": 87,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      }
+    ],
+    "material": "GRASS"
+  },
+  "pond": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 0,
+        "w": 78,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 3,
+        "y": 80,
+        "w": 117,
+        "h": 62,
+        "foreground": false,
+        "sx": 202,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 86,
+        "w": 75,
+        "h": 56,
+        "foreground": false,
+        "sx": 321,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 217,
+        "w": 120,
+        "h": 53,
+        "foreground": false,
+        "sx": 398,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 217,
+        "w": 120,
+        "h": 53,
+        "foreground": false,
+        "sx": 520,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 240,
+        "y": 217,
+        "w": 120,
+        "h": 51,
+        "foreground": false,
+        "sx": 642,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 360,
+        "y": 238,
+        "w": 118,
+        "h": 32,
+        "foreground": false,
+        "sx": 764,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 367,
+        "y": 135,
+        "w": 30,
+        "h": 3,
+        "foreground": false,
+        "sx": 884,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 292,
+        "y": 140,
+        "w": 21,
+        "h": 3,
+        "foreground": false,
+        "sx": 916,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 323,
+        "y": 140,
+        "w": 24,
+        "h": 3,
+        "foreground": false,
+        "sx": 939,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 390,
+        "y": 140,
+        "w": 19,
+        "h": 3,
+        "foreground": false,
+        "sx": 965,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 324,
+        "y": 145,
+        "w": 23,
+        "h": 3,
+        "foreground": false,
+        "sx": 986,
+        "sy": 0
+      },
+      {
+        "kind": "WATER",
+        "x": 389,
+        "y": 145,
+        "w": 36,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 404,
+        "y": 150,
+        "w": 19,
+        "h": 3,
+        "foreground": false,
+        "sx": 38,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 403,
+        "y": 155,
+        "w": 21,
+        "h": 3,
+        "foreground": false,
+        "sx": 59,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 348,
+        "y": 160,
+        "w": 25,
+        "h": 3,
+        "foreground": false,
+        "sx": 82,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 380,
+        "y": 160,
+        "w": 18,
+        "h": 3,
+        "foreground": false,
+        "sx": 109,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 404,
+        "y": 160,
+        "w": 41,
+        "h": 3,
+        "foreground": false,
+        "sx": 129,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 368,
+        "y": 165,
+        "w": 67,
+        "h": 3,
+        "foreground": false,
+        "sx": 172,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 386,
+        "y": 180,
+        "w": 36,
+        "h": 3,
+        "foreground": false,
+        "sx": 241,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 345,
+        "y": 185,
+        "w": 65,
+        "h": 3,
+        "foreground": false,
+        "sx": 279,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 347,
+        "y": 190,
+        "w": 28,
+        "h": 3,
+        "foreground": false,
+        "sx": 346,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 380,
+        "y": 190,
+        "w": 24,
+        "h": 3,
+        "foreground": false,
+        "sx": 376,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 349,
+        "y": 195,
+        "w": 27,
+        "h": 3,
+        "foreground": false,
+        "sx": 402,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 379,
+        "y": 195,
+        "w": 25,
+        "h": 3,
+        "foreground": false,
+        "sx": 431,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 32,
+        "y": 200,
+        "w": 23,
+        "h": 3,
+        "foreground": false,
+        "sx": 458,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 323,
+        "y": 200,
+        "w": 52,
+        "h": 3,
+        "foreground": false,
+        "sx": 483,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 447,
+        "y": 200,
+        "w": 33,
+        "h": 3,
+        "foreground": false,
+        "sx": 537,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 17,
+        "y": 205,
+        "w": 20,
+        "h": 3,
+        "foreground": false,
+        "sx": 572,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 328,
+        "y": 205,
+        "w": 36,
+        "h": 3,
+        "foreground": false,
+        "sx": 594,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 425,
+        "y": 205,
+        "w": 22,
+        "h": 3,
+        "foreground": false,
+        "sx": 632,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 450,
+        "y": 210,
+        "w": 30,
+        "h": 3,
+        "foreground": false,
+        "sx": 656,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 331,
+        "y": 215,
+        "w": 34,
+        "h": 3,
+        "foreground": false,
+        "sx": 688,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 383,
+        "y": 215,
+        "w": 57,
+        "h": 3,
+        "foreground": false,
+        "sx": 724,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 448,
+        "y": 215,
+        "w": 32,
+        "h": 3,
+        "foreground": false,
+        "sx": 783,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 376,
+        "y": 220,
+        "w": 69,
+        "h": 3,
+        "foreground": false,
+        "sx": 817,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 414,
+        "y": 225,
+        "w": 29,
+        "h": 3,
+        "foreground": false,
+        "sx": 888,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 461,
+        "y": 225,
+        "w": 19,
+        "h": 3,
+        "foreground": false,
+        "sx": 919,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 334,
+        "y": 230,
+        "w": 18,
+        "h": 3,
+        "foreground": false,
+        "sx": 940,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 361,
+        "y": 230,
+        "w": 24,
+        "h": 3,
+        "foreground": false,
+        "sx": 960,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 447,
+        "y": 230,
+        "w": 22,
+        "h": 3,
+        "foreground": false,
+        "sx": 986,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 367,
+        "y": 235,
+        "w": 24,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 398,
+        "y": 235,
+        "w": 46,
+        "h": 3,
+        "foreground": false,
+        "sx": 26,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 447,
+        "y": 235,
+        "w": 24,
+        "h": 3,
+        "foreground": false,
+        "sx": 74,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 378,
+        "y": 240,
+        "w": 58,
+        "h": 3,
+        "foreground": false,
+        "sx": 100,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 296,
+        "y": 245,
+        "w": 48,
+        "h": 3,
+        "foreground": false,
+        "sx": 160,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 424,
+        "y": 245,
+        "w": 19,
+        "h": 3,
+        "foreground": false,
+        "sx": 210,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 354,
+        "y": 250,
+        "w": 23,
+        "h": 3,
+        "foreground": false,
+        "sx": 231,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 427,
+        "y": 250,
+        "w": 22,
+        "h": 3,
+        "foreground": false,
+        "sx": 256,
+        "sy": 87
+      },
+      {
+        "kind": "WATER",
+        "x": 417,
+        "y": 255,
+        "w": 32,
+        "h": 3,
+        "foreground": false,
+        "sx": 280,
+        "sy": 87
+      }
+    ],
+    "material": "WOOD"
+  },
+  "sport": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 130,
+        "y": 4,
+        "w": 120,
+        "h": 76,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 256,
+        "y": 0,
+        "w": 62,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 130,
+        "y": 80,
+        "w": 120,
+        "h": 48,
+        "foreground": false,
+        "sx": 186,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 250,
+        "y": 80,
+        "w": 68,
+        "h": 48,
+        "foreground": false,
+        "sx": 308,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 404,
+        "y": 0,
+        "w": 76,
+        "h": 80,
+        "foreground": false,
+        "sx": 378,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 404,
+        "y": 80,
+        "w": 76,
+        "h": 75,
+        "foreground": false,
+        "sx": 456,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 212,
+        "w": 120,
+        "h": 58,
+        "foreground": false,
+        "sx": 534,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 214,
+        "w": 120,
+        "h": 56,
+        "foreground": false,
+        "sx": 656,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 240,
+        "y": 230,
+        "w": 119,
+        "h": 40,
+        "foreground": false,
+        "sx": 778,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 360,
+        "y": 212,
+        "w": 120,
+        "h": 58,
+        "foreground": false,
+        "sx": 899,
+        "sy": 0
+      },
+      {
+        "kind": "CLOUD",
+        "x": 0,
+        "y": 0,
+        "w": 158,
+        "h": 48,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      }
+    ],
+    "material": "STONE"
+  },
+  "street": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 244,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 0,
+        "w": 120,
+        "h": 75,
+        "foreground": false,
+        "sx": 366,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 80,
+        "w": 120,
+        "h": 70,
+        "foreground": false,
+        "sx": 488,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 80,
+        "w": 120,
+        "h": 70,
+        "foreground": false,
+        "sx": 610,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 80,
+        "w": 120,
+        "h": 70,
+        "foreground": false,
+        "sx": 732,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 80,
+        "w": 118,
+        "h": 70,
+        "foreground": false,
+        "sx": 854,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 155,
+        "w": 120,
+        "h": 59,
+        "foreground": false,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 155,
+        "w": 120,
+        "h": 57,
+        "foreground": false,
+        "sx": 122,
+        "sy": 82
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 155,
+        "w": 120,
+        "h": 59,
+        "foreground": false,
+        "sx": 244,
+        "sy": 82
+      },
+      {
+        "kind": "LEAF",
+        "x": 360,
+        "y": 155,
+        "w": 120,
+        "h": 55,
+        "foreground": false,
+        "sx": 366,
+        "sy": 82
+      }
+    ],
+    "material": "STONE"
+  },
+  "swamp": {
+    "parts": [
+      {
+        "kind": "LEAF",
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 0,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 0,
+        "w": 120,
+        "h": 80,
+        "foreground": false,
+        "sx": 122,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 0,
+        "w": 42,
+        "h": 80,
+        "foreground": false,
+        "sx": 244,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 4,
+        "y": 80,
+        "w": 116,
+        "h": 45,
+        "foreground": false,
+        "sx": 288,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 120,
+        "y": 80,
+        "w": 120,
+        "h": 45,
+        "foreground": false,
+        "sx": 406,
+        "sy": 0
+      },
+      {
+        "kind": "LEAF",
+        "x": 240,
+        "y": 80,
+        "w": 40,
+        "h": 36,
+        "foreground": false,
+        "sx": 528,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 0,
+        "y": 226,
+        "w": 120,
+        "h": 44,
+        "foreground": true,
+        "sx": 570,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 120,
+        "y": 226,
+        "w": 120,
+        "h": 44,
+        "foreground": true,
+        "sx": 692,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 240,
+        "y": 226,
+        "w": 120,
+        "h": 44,
+        "foreground": true,
+        "sx": 814,
+        "sy": 0
+      },
+      {
+        "kind": "GRASS",
+        "x": 360,
+        "y": 226,
+        "w": 120,
+        "h": 44,
+        "foreground": true,
+        "sx": 0,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 240,
+        "y": 150,
+        "w": 57,
+        "h": 3,
+        "foreground": false,
+        "sx": 122,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 318,
+        "y": 150,
+        "w": 22,
+        "h": 3,
+        "foreground": false,
+        "sx": 181,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 240,
+        "y": 155,
+        "w": 51,
+        "h": 3,
+        "foreground": false,
+        "sx": 205,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 302,
+        "y": 155,
+        "w": 37,
+        "h": 3,
+        "foreground": false,
+        "sx": 258,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 408,
+        "y": 155,
+        "w": 46,
+        "h": 3,
+        "foreground": false,
+        "sx": 297,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 196,
+        "y": 160,
+        "w": 19,
+        "h": 3,
+        "foreground": false,
+        "sx": 345,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 227,
+        "y": 160,
+        "w": 67,
+        "h": 3,
+        "foreground": false,
+        "sx": 366,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 312,
+        "y": 160,
+        "w": 37,
+        "h": 3,
+        "foreground": false,
+        "sx": 435,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 383,
+        "y": 160,
+        "w": 66,
+        "h": 3,
+        "foreground": false,
+        "sx": 474,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 221,
+        "y": 165,
+        "w": 84,
+        "h": 3,
+        "foreground": false,
+        "sx": 542,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 311,
+        "y": 165,
+        "w": 68,
+        "h": 3,
+        "foreground": false,
+        "sx": 628,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 380,
+        "y": 165,
+        "w": 35,
+        "h": 3,
+        "foreground": false,
+        "sx": 698,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 194,
+        "y": 170,
+        "w": 97,
+        "h": 3,
+        "foreground": false,
+        "sx": 735,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 295,
+        "y": 170,
+        "w": 81,
+        "h": 3,
+        "foreground": false,
+        "sx": 834,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 258,
+        "y": 175,
+        "w": 23,
+        "h": 3,
+        "foreground": false,
+        "sx": 917,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 292,
+        "y": 175,
+        "w": 58,
+        "h": 3,
+        "foreground": false,
+        "sx": 942,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 192,
+        "y": 180,
+        "w": 18,
+        "h": 3,
+        "foreground": false,
+        "sx": 1002,
+        "sy": 82
+      },
+      {
+        "kind": "WATER",
+        "x": 236,
+        "y": 180,
+        "w": 27,
+        "h": 3,
+        "foreground": false,
+        "sx": 0,
+        "sy": 128
+      },
+      {
+        "kind": "WATER",
+        "x": 274,
+        "y": 180,
+        "w": 67,
+        "h": 3,
+        "foreground": false,
+        "sx": 29,
+        "sy": 128
+      },
+      {
+        "kind": "WATER",
+        "x": 361,
+        "y": 180,
+        "w": 54,
+        "h": 3,
+        "foreground": false,
+        "sx": 98,
+        "sy": 128
+      }
+    ],
+    "material": "MUD"
+  }
+}

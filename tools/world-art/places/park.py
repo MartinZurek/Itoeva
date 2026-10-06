@@ -34,7 +34,7 @@ def build(out):
     return {
         'walk': dict(farY=186, nearY=216, farLeft=150, farRight=470, nearLeft=30, nearRight=470,
                      farHeight=60, nearHeight=72),
-        'spots': [dict(station='BENCH', box=[62, 134, 212, 191], standX=150, standY=192)],
+        'spots': [dict(station='BENCH', box=[62, 134, 212, 191], standX=150, standY=205.0)],
         'blocked': [],
         'cropTop': 0.6,
     }

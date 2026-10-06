@@ -31,7 +31,7 @@ def build(out):
         'walk': dict(farY=212, nearY=234, farLeft=20, farRight=372, nearLeft=14, nearRight=378,
                      farHeight=64, nearHeight=70),
         'spots': [
-            dict(station='BED', box=[215, 120, 362, 232], standX=285, standY=222),
+            dict(station='BED', box=[215, 120, 362, 232], standX=285, standY=234.0),
             dict(station='DOOR', box=[0, 40, 26, 232], standX=26, standY=222),
         ],
         'blocked': ['UP', 'DOWN'],

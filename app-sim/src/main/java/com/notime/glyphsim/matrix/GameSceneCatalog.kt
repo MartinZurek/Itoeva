@@ -14,11 +14,11 @@ internal object GameSceneCatalog {
         Scene(
             place = Place.BEACH,
             asset = "scenes/beach.png",
-            farY = 215.1f, nearY = 246f,
+            farY = 158f, nearY = 246f,
             farLeft = 20f, farRight = 460f, nearLeft = 10f, nearRight = 470f,
-            farHeight = 48f, nearHeight = 58f,
+            farHeight = 42f, nearHeight = 58f,
             spots = listOf(
-                Spot(Station.BENCH, Box(328.3f, 163f, 380.4f, 210.6f), 354.4f, 215.1f)
+                Spot(Station.BENCH, Box(328.3f, 163f, 380.4f, 210.6f), 354.4f, 222f)
             ),
             exits = mapOf(),
             cropTop = 0.7f
@@ -30,7 +30,7 @@ internal object GameSceneCatalog {
             farLeft = 20f, farRight = 372f, nearLeft = 14f, nearRight = 378f,
             farHeight = 64f, nearHeight = 70f,
             spots = listOf(
-                Spot(Station.BED, Box(215f, 120f, 362f, 232f), 285f, 222f),
+                Spot(Station.BED, Box(215f, 120f, 362f, 232f), 285f, 234f),
                 Spot(Station.DOOR, Box(0f, 40f, 26f, 232f), 26f, 222f)
             ),
             exits = mapOf(Dir.UP to null, Dir.DOWN to null),
@@ -44,7 +44,7 @@ internal object GameSceneCatalog {
             farLeft = 20f, farRight = 460f, nearLeft = 10f, nearRight = 470f,
             farHeight = 48f, nearHeight = 58f,
             spots = listOf(
-                Spot(Station.BENCH, Box(174.3f, 180.2f, 322.7f, 221.3f), 248.5f, 225.3f)
+                Spot(Station.BENCH, Box(174.3f, 180.2f, 322.7f, 221.3f), 248.5f, 241f)
             ),
             exits = mapOf(),
             cropTop = 0.7f
@@ -69,7 +69,7 @@ internal object GameSceneCatalog {
             farLeft = 20f, farRight = 460f, nearLeft = 10f, nearRight = 470f,
             farHeight = 48f, nearHeight = 58f,
             spots = listOf(
-                Spot(Station.BENCH, Box(260.1f, 164.7f, 479f, 223.6f), 369.6f, 227.6f)
+                Spot(Station.BENCH, Box(260.1f, 164.7f, 479f, 223.6f), 369.6f, 238f)
             ),
             exits = mapOf(),
             cropTop = 0.7f
@@ -105,7 +105,7 @@ internal object GameSceneCatalog {
             farLeft = 132f, farRight = 444f, nearLeft = 126f, nearRight = 450f,
             farHeight = 64f, nearHeight = 70f,
             spots = listOf(
-                Spot(Station.SEAT, Box(150f, 145f, 305f, 205f), 230f, 212f),
+                Spot(Station.SEAT, Box(150f, 145f, 305f, 205f), 230f, 219f),
                 Spot(Station.TV, Box(345f, 128f, 448f, 224f), 398f, 216f),
                 Spot(Station.DOOR, Box(56f, 104f, 132f, 214f), 140f, 212f)
             ),
@@ -144,7 +144,7 @@ internal object GameSceneCatalog {
             farLeft = 150f, farRight = 470f, nearLeft = 30f, nearRight = 470f,
             farHeight = 60f, nearHeight = 72f,
             spots = listOf(
-                Spot(Station.BENCH, Box(62f, 134f, 212f, 191f), 150f, 192f)
+                Spot(Station.BENCH, Box(62f, 134f, 212f, 191f), 150f, 205f)
             ),
             exits = mapOf(),
             cropTop = 0.6f
@@ -197,11 +197,11 @@ internal object GameSceneCatalog {
         Scene(
             place = Place.SWAMP,
             asset = "scenes/swamp.png",
-            farY = 218.1f, nearY = 246f,
+            farY = 195f, nearY = 246f,
             farLeft = 20f, farRight = 460f, nearLeft = 10f, nearRight = 470f,
-            farHeight = 48f, nearHeight = 58f,
+            farHeight = 44f, nearHeight = 58f,
             spots = listOf(
-                Spot(Station.BENCH, Box(202.4f, 190.3f, 370f, 218.1f), 286.2f, 222.1f)
+                Spot(Station.BENCH, Box(202.4f, 190.3f, 370f, 218.1f), 286.2f, 234f)
             ),
             exits = mapOf(),
             cropTop = 0.7f
