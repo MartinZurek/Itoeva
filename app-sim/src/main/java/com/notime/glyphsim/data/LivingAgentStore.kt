@@ -54,9 +54,9 @@ interface LivingAgentStorage {
  * Ein Blob statt vieler Preferences-Schluessel macht den Snapshot atomar: Ein Prozessabbruch
  * kann nicht neue Beduerfnisse mit alten Beziehungen hinterlassen.
  */
-class SharedPreferencesLivingAgentStorage(context: Context) : LivingAgentStorage {
+class SharedPreferencesLivingAgentStorage(context: Context, preferencesName: String = PREFERENCES) : LivingAgentStorage {
     private val preferences = context.applicationContext.getSharedPreferences(
-        PREFERENCES,
+        preferencesName,
         Context.MODE_PRIVATE
     )
 

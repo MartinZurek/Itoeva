@@ -6,12 +6,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -56,6 +59,7 @@ internal fun GameAvatarMenu(
     musicOn: Boolean,
     onMap: () -> Unit,
     onBackpack: () -> Unit,
+    onChronicle: () -> Unit,
     onToggleMusic: () -> Unit,
     onSettings: () -> Unit,
     onDismiss: () -> Unit
@@ -67,21 +71,26 @@ internal fun GameAvatarMenu(
             .pointerInput(Unit) { detectTapGestures { onDismiss() } },
         contentAlignment = Alignment.Center
     ) {
-        Row(
+        Column(
             Modifier
                 .background(PANEL, RoundedCornerShape(16.dp))
                 // Tipps auf das Feld selbst schliessen es nicht.
                 .pointerInput(Unit) { detectTapGestures { } }
                 .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MenuButton(if (german) "Karte" else "Map", onMap)
             MenuButton(if (german) "Rucksack" else "Backpack", onBackpack)
+            MenuButton(if (german) "Chronik" else "Chronicle", onChronicle)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MenuButton(
                 if (german) (if (musicOn) "Musik aus" else "Musik an") else (if (musicOn) "Music off" else "Music on"),
                 onToggleMusic
             )
             MenuButton(if (german) "Einstellungen" else "Settings", onSettings)
+            }
         }
     }
 }
@@ -136,8 +145,8 @@ private fun MenuButton(label: String, onClick: () -> Unit) {
  * ([PlayMap.route]); gegangen wird er weiterhin selbst. Ein Tipp ausserhalb schliesst sie.
  */
 @Composable
-internal fun GameMapOverlay(current: Place, german: Boolean, phase: Int, onClose: () -> Unit) {
-    var target by remember { mutableStateOf<Place?>(null) }
+internal fun GameMapOverlay(current: Place, german: Boolean, phase: Int, initialTarget: Place? = null, onClose: () -> Unit) {
+    var target by remember { mutableStateOf(initialTarget) }
     val labels = remember { PlayMapScene.labels(MAP_W, MAP_H) }
     val route = remember(current, target) { target?.let { PlayMap.route(current, it) }.orEmpty() }
     val paint = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER } }
@@ -224,8 +233,8 @@ private const val MAP_W = 100
 private const val MAP_H = 50
 
 /**
- * **Der Rucksack** (Itoeva 2): acht Plaetze. Ein Ding antippen nimmt es in die Hand (die Figur
- * traegt es sichtbar); das gerade gehaltene ist umrandet, nochmal antippen legt es zurueck.
+ * **Der Rucksack** (Itoeva 2): acht Plaetze und reversible Ablage. Ein Ding antippen waehlt es;
+ * Tragen oder Ablegen folgt bewusst. Das gerade gehaltene Ding ist umrandet.
  * Ein Tipp ausserhalb schliesst ihn.
  */
 @Composable
@@ -235,8 +244,12 @@ internal fun GameBackpackOverlay(
     german: Boolean,
     onTake: (PlayEffects.Carried) -> Unit,
     onPutAway: () -> Unit,
+    stowed: List<PlayEffects.Carried>,
+    onStow: (Int) -> Unit,
+    onRetrieve: (Int) -> Unit,
     onClose: () -> Unit
 ) {
+    var selected by remember(backpack) { mutableStateOf<Int?>(null) }
     Box(
         Modifier
             .fillMaxSize()
@@ -249,6 +262,7 @@ internal fun GameBackpackOverlay(
                 .background(PANEL, RoundedCornerShape(16.dp))
                 .pointerInput(Unit) { detectTapGestures { } }
                 .padding(16.dp)
+                .heightIn(max = 320.dp).verticalScroll(rememberScrollState())
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
@@ -276,7 +290,7 @@ internal fun GameBackpackOverlay(
                                 .border(if (inHand) 2.dp else 1.dp, if (inHand) GOLD else Color(0xFF45616F), RoundedCornerShape(10.dp))
                                 .clickable(enabled = item != null) {
                                     if (item == null) return@clickable
-                                    if (inHand) onPutAway() else onTake(item)
+                                    selected = row * (PlayBackpack.CAPACITY / 2) + col
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -285,13 +299,31 @@ internal fun GameBackpackOverlay(
                     }
                 }
             }
+            selected?.let { index -> backpack.items.getOrNull(index)?.let { item ->
+                Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MenuButton(if (german) "Tragen" else "Carry") { onTake(item) }
+                    MenuButton(if (german) "In die Ablage" else "Store") { onStow(index); selected = null }
+                }
+            } }
+            if (held != null) Text(if (german) "Aus der Hand zurück in den Rucksack" else "Put held item away",
+                color = DIM, modifier = Modifier.clickable(onClick = onPutAway).padding(top = 8.dp))
+            Text(if (german) "Ablage: Dinge bleiben gespeichert. Antippen holt sie zurück." else "Storage: items are kept. Tap to retrieve.",
+                color = DIM, fontSize = 11.sp, modifier = Modifier.padding(top = 10.dp))
+            stowed.chunked(4).forEachIndexed { row, items ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
+                    items.forEachIndexed { col, item ->
+                        ItemIcon(item, Modifier.size(44.dp).clickable { onRetrieve(row * 4 + col) })
+                    }
+                }
+            }
+
         }
     }
 }
 
 /** Das Bild eines Dings, so gezeichnet wie in der Hand der Figur. */
 @Composable
-private fun ItemIcon(item: PlayEffects.Carried, modifier: Modifier) {
+internal fun ItemIcon(item: PlayEffects.Carried, modifier: Modifier) {
     val cells = remember(item) { PlayBackpack.iconCells(item) }
     Canvas(modifier) {
         if (cells.isEmpty()) return@Canvas

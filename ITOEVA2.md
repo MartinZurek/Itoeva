@@ -24,7 +24,7 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
   ganz rechts geht es auf die Strasse. Jeder Ort ist zu Fuss erreichbar.
 - `GameControls.kt`: Steuerkreuz unten links (halten = gehen) sowie Pfeiltasten/WASD.
 - DockScreen im Spielmodus: keine Erinnerungen, keine Uhr, keine Speicherplaetze, keine
-  autonome Schleife, keine Besuche; die Figur geht im Takt der Eingabe, bleibt nach dem
+  autonome Hauptfigur-Schleife; Bewohner leben unabhängig davon; die Figur geht im Takt der Eingabe, bleibt nach dem
   Anhalten in ihrer Blickrichtung stehen und atmet.
 - Querformat wie der Stream, Figurgroesse wie im Stream (88-132 dp).
 
@@ -51,7 +51,7 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
   einen Ort antippen zeigt den Weg dorthin.
 - **Rucksack** (`PlayBackpack`, 8 Plaetze, gespeichert): Fundstuecke aus Handlungen (Kuehlschrank
   -> Essen, Tisch -> Becher, Regal -> Buch, Ladenregal -> Samen, Kasse -> Korb, Werkbank -> Holz).
-  Antippen nimmt ein Ding in die Hand, nochmal antippen legt es zurueck.
+  Antippen wählt ein Ding. „Tragen“ nimmt es in die Hand; „In die Ablage“ schafft reversibel Platz.
 - **Musik und Ton** sind beim ersten Start an (ab Werk stehen sie aus), danach Schalter im Menue.
   Hinweis: Bei Lautlos/Vibration am Geraet schweigt die Musik bewusst.
 
@@ -59,13 +59,13 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 
 Weg von der groben LED-Kulisse: Orte als feine Pixel-Art mit Tiefe, gemalt als Code
 (`tools/world-art`, 480 x 270 Bildpixel, nur in der Spiel-Variante unter
-`src/game/assets/scenes`). Im aktuellen offenen Welt-PR sind **16 Orte** als Bild und Katalogeintrag vorhanden; neun weitere Orte zeigen noch die ältere Kulisse, nach den Weltstudien in
+`src/game/assets/scenes`). Nach dem gemergten Welt-PR #334 sind **16 Orte** als Bild und Katalogeintrag vorhanden; neun weitere Orte zeigen noch die ältere Kulisse, nach den Weltstudien in
 `docs/concept-art/world-studies/` (siehe `tools/world-art/README.md`).
 `GameScenes` beschreibt je Bild Gehflaeche (Trapez in die Tiefe), Figurgroesse nach Tiefe,
 antippbare Plaetze und Ausgaenge; die Angaben stehen im generierten `GameSceneCatalog`.
 Doppeltipp laesst die Figur selbst hingehen. Offen: Tageszeiten je Ort, Pruefung am Geraet.
 
-## Stufe 4a - Lebendige Darstellung (offener Folge-PR)
+## Stufe 4a - Lebendige Darstellung (implementiert, Geräteabnahme offen)
 
 Im gemalten Spielmodus liegen Laufweg, Kamera und Bildausschnitt auf derselben
 480x270-Koordinatenbasis. Tageslicht, schaltbare Laternen, Fernseher und Lagerfeuer
@@ -87,8 +87,14 @@ Schattenberechnung aller Kulissenobjekte. Geraetepruefung und Clip-Paritaet steh
 - **Karte und Rucksack** haben einen sichtbaren Knopf "← Zurueck"; ein Tipp daneben schliesst sie
   weiterhin.
 
-## Naechste Stufen (Vorschlag, nicht freigegeben)
+## Stufe 5 - Spielbare Welt (freigegeben am 06.10., erster Implementierungsschnitt)
 
-1. Begegnungen und Gespraeche mit den Bewohnern.
-2. Kampf/Strategie im Stil der Vorlage (rundenbasiert), Gruppe, Faehigkeiten.
-3. Fortschritt ohne Erinnerungen: Vorhaben und Reisen als Quests, die man selbst spielt.
+Versionierter Spielstand, einmalige Wald- und Stationsfunde, reversible Ablage, Pflanzen und
+Reparaturen mit dauerhaftem Gegenstandsverbrauch, freiwillige Bewohnergespräche und Chronik.
+Bewohner bewegen sich in derselben Bildgeometrie wie der Spieler. Eine gespeicherte Spielzeit
+verbindet Licht, Außenregen und Klang; Menüs und Abwesenheit pausieren sie. Der gemeinsame
+Weltstand bleibt beim Wechsel des wählbaren Wesens erhalten.
+
+Umfang, technische Entscheidungen, offene Abnahmen und die Pakete WB-01 bis WB-10 stehen in
+[docs/itoeva2-worldbuilding.md](docs/itoeva2-worldbuilding.md). Die nächsten Innenraumbilder,
+beidseitige Beziehungen und taktischer Kampf werden dort als Folgeetappen geführt.
