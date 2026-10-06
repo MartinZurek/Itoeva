@@ -669,6 +669,68 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-06 - Eigene animierte Koerper fuer die fuenf weiteren Wesen
+
+**DOCUMENTED INTENT / Anlass:** Martin hat Fennec (#332) gemergt und die APK
+gebaut. Derselbe Schritt ist fuer alle anderen Charaktere beauftragt: weg vom
+Konzeptausschnitt als Sticker, hin zu animiertem Character-Design mit eigenen
+Bewegungen passend zur jeweiligen Identitaet.
+
+**FACT / Entscheidung:** Gloop, Puffling, Wyrmling, Starlet und Hootlet erhalten
+je 32 neue gezeichnete Quellposen, daraus 138 vorberechnete Bildrollen im
+bestehenden Fennec-Format. Profilgang hat acht Zeichnungen, Front-/Rueckgang
+je vier; eigene schnelle Seitenbewegung, Sprung, Sitzen, Schlaf, Strecken,
+Greifen, Freude und kompakte Rollhaltung. Ruhe bewegt Koerperteile mit festem
+Bodenanker. Gloop bleibt beinlos/elastisch, Puffling flaumig und federnd,
+Wyrmling geerdet mit Fluegel-/Schwanzbalance, Starlet bewegt Sternspitzen,
+Hootlet Krallen, Kopf und Federn. Konzeptkunst dient nur als Identitaetsreferenz.
+
+**FACT / Architektur:** `ensemble_motion.py` verwendet das bestehende Puppet-
+und Pixelisierungswerkzeug. Ein Massstab je Atlas; Komponentenregistrierung,
+Alpha-Bereinigung, abgesicherte Quellzuordnung. Front-Lider sind separat
+gezeichnet und werden nur in verifizierten Augenfenstern importiert. Die
+Fennec-Sonderbedingungen fuer MotionCue und schnelle Gangart entfallen in
+`lookRich`; alle Wesen nutzen dieselben Eingaben und Bildrollen. Geraete-Cache,
+Steuerung, Kollisions-/Sprunghilfe, Reminder, LAS, XP und Persistenz behalten ihre
+bestehenden Ablaufe. Speziesfaktoren erhalten die gemessene bisherige Standhoehe.
+Fennec-PNG unveraendert, keine Datenmigration.
+
+**TESTED BEHAVIOR:** 893 Kotlin-Tests lokal gruen (890 Basis plus drei
+speziesuebergreifende Faelle fuer schnelle Gangart/Ueberblendung, Aktionsposen,
+Gehenvorrang und echte Sprunghoehe). Acht neue Tests an den ausgelieferten Bildern
+pruefen Vollstaendigkeit/Alpha, feste Bodenzeile, echte Gang-Silhouettenaenderung,
+Richtungsfolgen, Atmen mit ruhigem Fussbereich, ausschliessliche Augenveraenderung,
+eigene schnelle Posen und rotierende kompakte Rolle. Achtzehn bestehende
+Fennec-Bildtests ebenfalls gruen. Alle Quellboegen und gerenderten Stand-/Blinzel-
+Kontaktbilder visuell geprueft, gemeinsame animierte Vorschau erstellt.
+
+**CI-Nachtrag (PR #333):** Lauf #828 bestand die Emulator-Tests auf API 26/35
+und den Release-Torwaechter. `gradlew verify` scheiterte mit Java-Heap-Ueberlauf
+bei `lintAnalyzeDebugUnitTest` / `DecisionCoverageTest.kt` (2 GiB).
+Der Verify-Schritt bekommt deshalb nur in CI 4 GiB und hoechstens zwei Worker;
+keine Pruefung wird entfernt oder abgeschwaecht. Voller Nachlauf #829 auf
+`3bcfe19c9111e010b2ba7f7b5234f0e3c7505aa2` gruen: Tests/Lint/R8,
+Release-Torwaechter und Emulator-Tests API 26/35. Die folgenden Aenderungen
+dokumentieren nur das Ergebnis, keine weiteren Laufzeit-/CI-Aenderungen.
+
+**UNVERIFIED / Grenzen:** Smartphone-Sichtpruefung und Speicherprofil stehen aus.
+Front-/Ruecksprint nutzt gerichtete Gehzeichnungen im schnelleren Takt; keine
+Flugmechanik. Buecken, Knien, gerichtetes Sitzen/Aufstehen sind Rig-Zwischenposen;
+Treten verwendet vorerst die Vorwaerts-Greifhaltung. Rolle bleibt Profilhaltung
+mit vorberechneter Drehung; Wenden hat keine neuen Dreiviertelzeichnungen.
+Gloop/Wyrmling nutzen drei statt vier schnelle Quellzeichnungen, weil die
+vierte als Schlafmoment ungeeignet war. Die GIF zeigt vorberechnete Sprites,
+keine APK. Handanker, groesserer Bitmap-Cache und Uebergaenge am Geraet pruefen.
+
+**Bereiche / Ruecksetzweg:** fuenf `creatures`-Assets, Rich-Bildwahl und Skalierung,
+Importer/Quellen/Test/Vorschau, Charakter-README, Architektur und diese Historie.
+Gesamten Schritt auf `dc443b6d586d3a6a158ff900fadf57b952f54760` zuruecksetzen.
+PR #333 steht auf `claude/world-concept-places`, volle Android-CI gruen.
+Naechster Schritt: APK-Sichtpruefung. Martin hat am 2026-10-06 den Upload
+und das Erstellen des PR ausdruecklich
+freigegeben. Ein Merge wurde nicht beauftragt.
+Kein Merge in dieser Sitzung.
+
 ### 2026-10-05 - Zwei Daumen fuer Fennecs Weltentdeckung (fennec-controller-v1)
 
 **DOCUMENTED INTENT / Anlass:** Martin bestaetigt die Bewegungsvorschau und

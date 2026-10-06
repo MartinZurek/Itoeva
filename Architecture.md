@@ -424,3 +424,18 @@ Nicht als Entscheidung, sondern als Diskussionsgrundlage für NextTasks.md:
 Keiner dieser Punkte ist dringend oder blockierend. Sie sind hier festgehalten, damit sie nicht
 bei jeder neuen Analyse erneut entdeckt werden müssen.
 
+
+
+### Individuelle feine Charakteranimationen (06.10.2026)
+
+Alle sechs `CreatureSprites`-Boegen verwenden 138 Rollen zu 128 x 128. Fennec
+bleibt in `rich_sheets.py`, die fuenf weiteren Wesen entstehen mit
+`ensemble_motion.py` aus eigenen Zeichnungen und vorhandener Puppet-Interpolation.
+Die Laufzeit waehlt dieselben MotionCue-, Richtungs- und Gangartrollen je Spezies;
+keine weitere Animations-/Spielpipeline. Die individuelle Darstellungsbreite in
+`Rich.scaleFor` kompensiert unterschiedliche Schwanz-/Fluegelanteile und behaelt
+die bisherige Standhoehe. Android nutzt weiterhin den einmaligen Einzelbild-
+Cache; keine Bitmap-Erzeugung pro Bild. Die rohe Bildmenge betraegt bei allen
+sechs geladenen Boegen etwa 54 MiB, Geraete-Speicherprofil noch ungeprueft.
+Quellen, exakte Prompts, Grenzen, Regeneration und Sichtvorschau:
+`tools/character-art/README.md`, Abschnitt "Alle fuenf weiteren Wesen animiert".
