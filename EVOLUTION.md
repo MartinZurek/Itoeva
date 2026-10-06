@@ -704,7 +704,13 @@ eigene schnelle Posen und rotierende kompakte Rolle. Achtzehn bestehende
 Fennec-Bildtests ebenfalls gruen. Alle Quellboegen und gerenderten Stand-/Blinzel-
 Kontaktbilder visuell geprueft, gemeinsame animierte Vorschau erstellt.
 
-**UNVERIFIED / Grenzen:** Keine Android-CI, kein Emulator-/Smartphone-Messlauf.
+**CI-Nachtrag (PR #333):** Lauf #828 bestand die Emulator-Tests auf API 26/35
+und den Release-Torwaechter. `gradlew verify` scheiterte mit Java-Heap-Ueberlauf
+bei `lintAnalyzeDebugUnitTest` / `DecisionCoverageTest.kt` (2 GiB).
+Der Verify-Schritt bekommt deshalb nur in CI 4 GiB und hoechstens zwei Worker;
+keine Pruefung wird entfernt oder abgeschwaecht. Erneuter voller Lauf folgt.
+
+**UNVERIFIED / Grenzen:** Voller Verify-Erfolg und Smartphone-Messlauf stehen aus.
 Front-/Ruecksprint nutzt gerichtete Gehzeichnungen im schnelleren Takt; keine
 Flugmechanik. Buecken, Knien, gerichtetes Sitzen/Aufstehen sind Rig-Zwischenposen;
 Treten verwendet vorerst die Vorwaerts-Greifhaltung. Rolle bleibt Profilhaltung

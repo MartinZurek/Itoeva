@@ -317,8 +317,10 @@ Bitmap-Cache nur bei Bedarf. Kein grosser Atlas als GPU-Textur und kein neuer
 Bildspeicher im Zeichentakt. Geraete-Speicherverbrauch noch nicht gemessen.
 
 Validierung: acht Tests am ausgelieferten Bogen, achtzehn Fennec-Regressionen,
-893 lokale Kotlin-Tests gruen. Android-CI und physische APK-Sichtpruefung stehen
-aus. Generatoren `from_concept.py` und `sheets.py` sind historische Werkzeuge und
+893 lokale Kotlin-Tests gruen. PR #333: Emulator-Tests API 26/35 und Release-
+Torwaechter gruen. Erster Verify-Lauf scheiterte an Lint-Java-Heap (2 GiB);
+CI-spezifisch 4 GiB und zwei Worker, voller Nachlauf steht aus. Physische
+APK-Sichtpruefung bleibt offen. Generatoren `from_concept.py` und `sheets.py` sind historische Werkzeuge und
 wuerden beim Schreiben die feinen Boegen ersetzen; fuer den aktuellen Stand
 `rich_sheets.py` fuer Fennec und `ensemble_motion.py` fuer die anderen benutzen.
 
