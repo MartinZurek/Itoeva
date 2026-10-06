@@ -145,8 +145,11 @@ jobs:
             printf 'PK\005\006%.0s' 1 | head -c 22 > app/libs/glyphsdk.aar
           fi
 
+      # Lint teilt sich den Gradle-Heap mit den grossen Kotlin-Testquellen. Lauf #828
+      # erschoepfte 2 GiB bei DecisionCoverageTest.kt. Nur diese CI-Stufe bekommt
+      # 4 GiB und zwei Worker; lokale Vorgaben und alle Pruefungen bleiben erhalten.
       - name: gradlew verify
-        run: ./gradlew verify --stacktrace
+        run: ./gradlew verify --stacktrace --max-workers=2 '-Dorg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8'
 
       # Berichte auch dann einsammeln, wenn der Schritt davor fehlgeschlagen ist - gerade dann
       # sind sie interessant.

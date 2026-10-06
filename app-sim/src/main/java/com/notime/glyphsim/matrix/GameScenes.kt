@@ -11,8 +11,8 @@ import kotlin.math.max
  * **Die gemalte Welt von Itoeva 2.**
  *
  * Wunsch vom 04.10.: weg von der groben, flachen LED-Kulisse, hin zu einer Pixel-Welt in der Art
- * der Konzeptbilder (Kuestenpark im Abendrot, Lesezimmer zur blauen Stunde) - feine Pixel,
- * kraeftige Farben, echte Tiefe. Die Bilder entstehen mit `tools/world-art` (480 x 270 Pixel,
+ * der Konzeptbilder und Weltstudien (`docs/concept-art/world-studies/`) - feine Pixel, warme
+ * Farben, echte Tiefe. Die Bilder entstehen mit `tools/world-art` (480 x 270 Pixel,
  * gemalt in Perspektive) und liegen nur in der Spiel-Variante (`src/game/assets/scenes`).
  *
  * Hier steht, was das Spiel ueber ein Bild wissen muss:
@@ -64,44 +64,13 @@ object GameScenes {
         val cropTop: Float = 0.8f
     )
 
-    /** Der Park am Meer im Abendrot - Plattenplatz vor dem Gelaender, Kiosk, Bank, Haus. */
-    val PARK = Scene(
-        place = Place.PARK,
-        asset = "scenes/park.png",
-        farY = 212f, nearY = 250f,
-        farLeft = 104f, farRight = 398f, nearLeft = 22f, nearRight = 458f,
-        farHeight = 44f, nearHeight = 62f,
-        spots = listOf(
-            Spot(Station.BENCH, Box(264f, 196f, 336f, 226f), 300f, 226f),
-            Spot(Station.CHECKOUT, Box(402f, 150f, 480f, 218f), 410f, 222f),
-            Spot(Station.DOOR, Box(0f, 40f, 126f, 206f), 104f, 213f),
-            Spot(Station.RACK, Box(0f, 234f, 112f, 270f), 60f, 248f)
-        ),
-        // Nach hinten ist das Gelaender. Links und rechts fuehren die Raender wie auf der Karte -
-        // eine eigene Abkuerzung zum Zimmer haette den einzigen Weg zur Strasse ersetzt und die
-        // ganze Stadt unerreichbar gemacht. Ins Haus geht es ueber die Treppe ([door]).
-        exits = mapOf(Dir.UP to null),
-        door = Place.LIVING
-    )
-
-    /** Das Lesezimmer (das Wohnzimmer daheim) - Regal, Sessel, Beistelltisch, Fenster zum Park. */
-    val LIVING = Scene(
-        place = Place.LIVING,
-        asset = "scenes/living.png",
-        farY = 172f, nearY = 236f,
-        farLeft = 140f, farRight = 342f, nearLeft = 26f, nearRight = 440f,
-        farHeight = 42f, nearHeight = 78f,
-        spots = listOf(
-            Spot(Station.TABLE, Box(248f, 110f, 290f, 210f), 262f, 214f),
-            Spot(Station.SEAT, Box(286f, 95f, 404f, 206f), 330f, 210f),
-            Spot(Station.BOOKSHELF, Box(118f, 25f, 170f, 178f), 166f, 182f)
-        ),
-        // Rechts geht es wie bisher hinaus auf die Strasse; nach hinten und vorn sind Waende.
-        exits = mapOf(Dir.UP to null, Dir.DOWN to null),
-        cropTop = 0.7f
-    )
-
-    private val ALL = listOf(PARK, LIVING).associateBy { it.place }
+    /**
+     * Die Orte selbst stehen im generierten [GameSceneCatalog]: Jedes Szenen-Skript in
+     * `tools/world-art/places/` liefert mit dem Bild auch Gehflaeche, Plaetze und gesperrte Raender,
+     * `build_all.py` schreibt daraus den Katalog. Ein Platz [Station.DOOR] fuehrt dorthin, wohin
+     * die Tuer des Ortes auch sonst fuehrt ([PlayControl.doorTarget]).
+     */
+    private val ALL: Map<Place, Scene> by lazy { GameSceneCatalog.ALL.associateBy { it.place } }
 
     /** Das gemalte Bild zu [place], falls es schon eines gibt. */
     fun of(place: Place): Scene? = ALL[place]
@@ -159,11 +128,15 @@ object GameScenes {
         fun toImage(x: Float, y: Float): Pair<Float, Float> = ((x - left) / scale) to ((y - top) / scale)
     }
 
-    fun fit(scene: Scene, screenW: Float, screenH: Float): Fit {
+    fun fit(scene: Scene, screenW: Float, screenH: Float, focusX: Float = 0.5f, focusDepth: Float = 0.5f): Fit {
         val scale = max(screenW / IMAGE_W, screenH / IMAGE_H)
         val overW = IMAGE_W * scale - screenW
         val overH = IMAGE_H * scale - screenH
-        return Fit(scale, -overW / 2f, -overH * scene.cropTop)
+        // Nur den tatsaechlich ueberstehenden Teil verschieben: Bild, Trefferflaechen und
+        // Fusspunkt benutzen denselben Fit. Bei 16:9 bleibt die Kamera deshalb exakt ruhig.
+        val xCrop = (0.35f + 0.3f * focusX.coerceIn(0f, 1f)).coerceIn(0f, 1f)
+        val yCrop = (scene.cropTop + 0.25f * (focusDepth.coerceIn(0f, 1f) - 0.5f)).coerceIn(0f, 1f)
+        return Fit(scale, -overW * xCrop, -overH * yCrop)
     }
 
     /**

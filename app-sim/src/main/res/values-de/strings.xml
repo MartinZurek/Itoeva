@@ -811,4 +811,9 @@
     <string name="stream_story_herbs">Kräutertopf-Projekt</string>
     <string name="stream_story_kite">Drachen-Projekt</string>
     <string name="stream_story_progress">%1$s, Fortschritt %2$d von %3$d</string>
+    <string name="game_control_jump">Springen</string>
+    <string name="game_control_roll">Rollen</string>
+    <string name="game_control_rest">Hinsetzen oder aufstehen</string>
+    <string name="game_control_pace">Gehen ↔ Rennen</string>
+    <string name="game_control_gestures">Tipp: Sprung · Wisch: Rolle · Halten: Ruhe</string>
 </resources>

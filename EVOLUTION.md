@@ -669,6 +669,407 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-06 - Lebendige gemalte Raeume (living-rooms-v1)
+
+**DOCUMENTED INTENT:** Martin beauftragt nach den Charakteranimationen eine neue
+APK und interaktive Raeume aus den vorhandenen Bildern: Wind, bewegtes Laub,
+Wolken, Meerwellen, Fussabdruecke im Matsch sowie Spruenge auf Moebel und Spritzer
+im Wasser. Letzter stabiler Ausgang: Charakterstand
+`b444bd5b6388f541877373795b3cb8903cf55f64`, Android-Verify #830 gruen.
+
+**FACT / Produktentscheidung:** Alle 16 gemalten Orte erhalten bewegliche
+Bildteile in einer 2,5D-Welt. Die vorhandenen Illustrationen behalten ihre
+Identitaet. Blattsilhouetten, Vorhang und Wolken bewegen sich vor einem
+bereinigten Untergrund; Wellen bleiben im Wasser. Materialkontakte reagieren
+auf den echten Laufweg und auf Landungen. Sofa, Bett, Baenke, Baumstaemme,
+Strandstuhl und Sumpfsteg ergaenzen die bestehenden bespringbaren Flaechen.
+Aktionsplaetze liegen vor ihnen, der automatische Weg umgeht ihre Koerper.
+Strand/Sumpf erhalten begehbare seichte Uferbereiche. Kein Ersatz der Welt durch
+ein neues 3D-System; Figurensteuerung und Tageslicht nutzen ihre bestehende
+Koordinatenrechnung.
+
+**FACT / Bereiche:** Neue reine `GameEnvironment`-Rechnung, generierter
+`GameRoomCatalog`, Android-Ebenen in `GameRoomLayers`/`GameSceneView`, schmale
+Integration in `DockScreen`, Flaechen in `GameSurfaces`, Szenenmetadaten,
+Exporter/Quellzonen/Assets/Tests und Vorschau unter `tools/world-art`.
+Keine Preference-Schluessel, Datenmigration, Reminder-, Charakter-, Story-,
+Balancing-, XP- oder Progressionsaenderung. Spuren sind begrenzter, fluechtiger
+Sitzungszustand. Raum-Uhr pausiert bei unsichtbarem Bildschirm; ein offenes
+Menue erzeugt keine Schritte. Ein Ortswechsel verbindet keine Spur quer durchs
+Bild, vorhandene Spuren koennen bei Rueckkehr noch sichtbar sein.
+
+**TESTED BEHAVIOR:** 904 Kotlin-Tests lokal gruen (893 Basis plus elf Raum-Faelle),
+alle acht neuen Bildtests gruen; `git diff --check` sauber.
+Die Bildtests rekonstruieren alle Originale pixelgenau, pruefen Alpha-Kanten,
+Materialzuordnung, Wasser ohne Steg/Stuhl, erreichbare nasse Ufer und begrenzte
+Texturgroessen. Kotlin-Faelle pruefen bildratenunabhaengige Schrittorte, Stillstand,
+Flug, gepufferte Landung, Plattformkontakte, Ablauf/Grenzen der Spuren,
+Moebel-Oberkanten, Sprunghilfe und automatische Wege. Desktop-Vorschau verwendet
+die echte Kotlin-Posenrechnung, keine APK-Aufnahme.
+
+**UNVERIFIED / Grenzen:** Android-CI und Telefon-Sichtpruefung werden separat
+nachgehalten. Speicher-/GPU-Profil am Telefon steht aus. Wolken pendeln in einer
+begrenzten Sky-Zone statt einer endlosen Wetterwelt. Farbauswahl und kleine
+Untergrund-Ergaenzung koennen bei starkem Wind an Maskenraendern sichtbar werden.
+Feste Bild-Requisiten, keine frei drehbare Kamera, kein Schwimmen, kein
+verformbarer Schlamm oder physikalisch simuliertes Meer. Nicht gemalte Orte
+behalten ihre bereits animierte Zellenkulisse. APK-Auslieferung nutzt den
+bestehenden Workflow mit dessen Version und Signaturschutz; noch kein neuer
+APK-Lauf gestartet, da die sichere Browser-Anmeldung nicht abgeschlossen wurde.
+
+**Ruecksetzweg / naechster Schritt:** Gesamten Raum-Schritt auf den obigen
+Charakterstand zuruecksetzen, keine Nutzerdaten-Rueckmigration erforderlich.
+Eigener Branch `codex/living-rooms`, gestapelter PR auf dem Charakterbranch.
+Kein Merge ohne ausdruecklichen Merge-Auftrag. Android-Prueflauf, dann mit
+bestehender Signatur neue APK und Telefon-Sichtpruefung.
+
+### 2026-10-06 - Eigene animierte Koerper fuer die fuenf weiteren Wesen
+
+**DOCUMENTED INTENT / Anlass:** Martin hat Fennec (#332) gemergt und die APK
+gebaut. Derselbe Schritt ist fuer alle anderen Charaktere beauftragt: weg vom
+Konzeptausschnitt als Sticker, hin zu animiertem Character-Design mit eigenen
+Bewegungen passend zur jeweiligen Identitaet.
+
+**FACT / Entscheidung:** Gloop, Puffling, Wyrmling, Starlet und Hootlet erhalten
+je 32 neue gezeichnete Quellposen, daraus 138 vorberechnete Bildrollen im
+bestehenden Fennec-Format. Profilgang hat acht Zeichnungen, Front-/Rueckgang
+je vier; eigene schnelle Seitenbewegung, Sprung, Sitzen, Schlaf, Strecken,
+Greifen, Freude und kompakte Rollhaltung. Ruhe bewegt Koerperteile mit festem
+Bodenanker. Gloop bleibt beinlos/elastisch, Puffling flaumig und federnd,
+Wyrmling geerdet mit Fluegel-/Schwanzbalance, Starlet bewegt Sternspitzen,
+Hootlet Krallen, Kopf und Federn. Konzeptkunst dient nur als Identitaetsreferenz.
+
+**FACT / Architektur:** `ensemble_motion.py` verwendet das bestehende Puppet-
+und Pixelisierungswerkzeug. Ein Massstab je Atlas; Komponentenregistrierung,
+Alpha-Bereinigung, abgesicherte Quellzuordnung. Front-Lider sind separat
+gezeichnet und werden nur in verifizierten Augenfenstern importiert. Die
+Fennec-Sonderbedingungen fuer MotionCue und schnelle Gangart entfallen in
+`lookRich`; alle Wesen nutzen dieselben Eingaben und Bildrollen. Geraete-Cache,
+Steuerung, Kollisions-/Sprunghilfe, Reminder, LAS, XP und Persistenz behalten ihre
+bestehenden Ablaufe. Speziesfaktoren erhalten die gemessene bisherige Standhoehe.
+Fennec-PNG unveraendert, keine Datenmigration.
+
+**TESTED BEHAVIOR:** 893 Kotlin-Tests lokal gruen (890 Basis plus drei
+speziesuebergreifende Faelle fuer schnelle Gangart/Ueberblendung, Aktionsposen,
+Gehenvorrang und echte Sprunghoehe). Acht neue Tests an den ausgelieferten Bildern
+pruefen Vollstaendigkeit/Alpha, feste Bodenzeile, echte Gang-Silhouettenaenderung,
+Richtungsfolgen, Atmen mit ruhigem Fussbereich, ausschliessliche Augenveraenderung,
+eigene schnelle Posen und rotierende kompakte Rolle. Achtzehn bestehende
+Fennec-Bildtests ebenfalls gruen. Alle Quellboegen und gerenderten Stand-/Blinzel-
+Kontaktbilder visuell geprueft, gemeinsame animierte Vorschau erstellt.
+
+**CI-Nachtrag (PR #333):** Lauf #828 bestand die Emulator-Tests auf API 26/35
+und den Release-Torwaechter. `gradlew verify` scheiterte mit Java-Heap-Ueberlauf
+bei `lintAnalyzeDebugUnitTest` / `DecisionCoverageTest.kt` (2 GiB).
+Der Verify-Schritt bekommt deshalb nur in CI 4 GiB und hoechstens zwei Worker;
+keine Pruefung wird entfernt oder abgeschwaecht. Voller Nachlauf #829 auf
+`3bcfe19c9111e010b2ba7f7b5234f0e3c7505aa2` gruen: Tests/Lint/R8,
+Release-Torwaechter und Emulator-Tests API 26/35. Die folgenden Aenderungen
+dokumentieren nur das Ergebnis, keine weiteren Laufzeit-/CI-Aenderungen.
+
+**UNVERIFIED / Grenzen:** Smartphone-Sichtpruefung und Speicherprofil stehen aus.
+Front-/Ruecksprint nutzt gerichtete Gehzeichnungen im schnelleren Takt; keine
+Flugmechanik. Buecken, Knien, gerichtetes Sitzen/Aufstehen sind Rig-Zwischenposen;
+Treten verwendet vorerst die Vorwaerts-Greifhaltung. Rolle bleibt Profilhaltung
+mit vorberechneter Drehung; Wenden hat keine neuen Dreiviertelzeichnungen.
+Gloop/Wyrmling nutzen drei statt vier schnelle Quellzeichnungen, weil die
+vierte als Schlafmoment ungeeignet war. Die GIF zeigt vorberechnete Sprites,
+keine APK. Handanker, groesserer Bitmap-Cache und Uebergaenge am Geraet pruefen.
+
+**Bereiche / Ruecksetzweg:** fuenf `creatures`-Assets, Rich-Bildwahl und Skalierung,
+Importer/Quellen/Test/Vorschau, Charakter-README, Architektur und diese Historie.
+Gesamten Schritt auf `dc443b6d586d3a6a158ff900fadf57b952f54760` zuruecksetzen.
+PR #333 steht auf `claude/world-concept-places`, volle Android-CI gruen.
+Naechster Schritt: APK-Sichtpruefung. Martin hat am 2026-10-06 den Upload
+und das Erstellen des PR ausdruecklich
+freigegeben. Ein Merge wurde nicht beauftragt.
+Kein Merge in dieser Sitzung.
+
+### 2026-10-05 - Zwei Daumen fuer Fennecs Weltentdeckung (fennec-controller-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin bestaetigt die Bewegungsvorschau und
+beauftragt analoges Smartphone-Tempo von Gehen bis Vierbeiner, Spruenge auf
+Gegenstaende, Ausweichrollen und freiwillige Ruhe. Kein Jump-and-Run-Ziel.
+
+**FACT / Entscheidung:** Links ein radial normierter Analogkreis mit weicher
+Beschleunigung, schnellem Abbremsen, Diagonalen und ruhiger Blickrichtungswahl.
+Rechts Tipp/aufwaerts = Sprung, waagerechtes Wischen = Rolle, Halten 500 ms oder
+abwaerts = Sitzen/Ruhe. Erneute Ruhe oder linker Zug steht auf. Zwei Pointer-IDs
+bleiben unabhaengig, Menue/Hintergrund/Abbruch geben Eingaben frei. Tastatur und
+D-Pad bleiben nutzbar, Shift aktiviert schnelles Tempo.
+
+**FACT / Architektur und Charakterwirkung:** `GameMovement` erweitert den
+bestehenden Bildtakt, `GameSurfaces` benennt wirkliche niedrige Standflaechen:
+Teetisch im gemalten Wohnzimmer, gezeichnete Kiste im Park, vorhandene Tischplatten
+der Zellenzimmer. Sprunghilfe nur in Zug-/Blickrichtung und Reichweite; kein
+Praezisions-Plattformspiel. Landen haelt die Oberkante, Kanten gehen monoton zum
+Boden, Hindernisse blockieren bodennahe Wege. Rolle ohne Unverwundbarkeit.
+Gangphase folgt dem geglaetteten Tempo; Hysterese und 160-ms-Ueberblendung vermeiden
+Gangartflackern. Der Fennec-Bogen waechst auf 138 Bilder, mit gezeichnetem
+Vierbeiner und Rolle. Einmaliges Laden teilt den Bogen in gecachte 128-px-Einzeltexturen statt einer
+17664-px-GPU-Textur; Flaechen werden pro Layout berechnet.
+Kein neues Datenmodell, keine Migration, keine Reminder-/XP-/Story-Aenderung.
+
+**TESTED BEHAVIOR:** 18 lokale Python-Tests fuer ausgelieferte Bilder, vollstaendige
+Quellen und echte niedrigere/rotierende Silhouetten. 49 JVM-Tests der betroffenen
+Steuerungs-/Darstellungsklassen lokal gruen; darunter normierte Diagonalen, Tempo,
+Stoppen, Sprunglandung, erneutes Huepfen auf einer Flaeche, zu hohe Hindernisse,
+Rollen/Kollision, Tiefe auf Platten, monotoner Abstieg, Hysterese und Sitzen/Aufstehen.
+Zweiter Agent pruefte den Code; seine konkreten Landungs-, Kanten-, Gangart- und
+Besitzfehler wurden mit Regressionen korrigiert. Sechs instrumentierte Tests fuer echte
+Pointer-IDs, Wischen, Halten, Abbruch und kleine, pixelgleiche, wiederverwendete
+GPU-Bilder sind hinzugefuegt. Android-Kompilierung lokal gruen fuer Debug, Game
+und AndroidTest (`compileDebugKotlin`, `compileGameKotlin`,
+`compileDebugAndroidTestKotlin`). Die Kompilierung fand zwei korrigierte
+Einbindungen: Key-Value-Class ohne vararg, Charakterauswahl mit Einzelbild-Cache.
+Der neue GitHub-Lauf startete keinen Runner und scheiterte an dessen fehlender
+Zuteilung; Wiederholung angestossen, Emulator-Ausfuehrung noch ungeprueft.
+Der vorherige Verify-Lauf ist nach Wiederholung des Lint-Heap-Fehlers komplett
+gruen (Tests/Lint/R8 und API26/API35); CI und Emulator-Ausfuehrung fuer den neuen Controller stehen weiterhin aus.
+
+**UNVERIFIED / Grenzen:** Kein physischer Smartphone-Messlauf. Die wahrgenommene
+Latenz, Gangart-Ueberblendung, Kamera, Handanker und Flaechenlage brauchen APK-QA.
+Rolle nur als Profil gezeichnet, Front-/Ruecklauf vier statt acht eigene Zeichnungen
+mit gleicher Zyklusdauer. Nur benannte Standflaechen, keine allgemeine Erkennung
+aller gemalten Objekte. Kein Sprintverbrauch, Kampf, Fallverlust oder Spielziel.
+
+**Bereiche / Ruecksetzweg:** `:app-sim` GameControls, vorhandener Bildtakt,
+Standflaechen/Renderer, `tools/character-art`, lokale Testliste, Architektur und
+Evolution History. Gesamten PR auf `97f767d514c66b41ad69963e7ace5e953cbe092e`
+zuruecksetzen; bestehende Nutzerstaende bleiben gueltig. Naechster Schritt:
+gruene Android-CI und Controller-/Moebel-Sichtpruefung in der Game-APK. Unmerged.
+
+### 2026-10-05 - Fennecs gerichteter Gang und Bewegungsrepertoire (fennec-mobility-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin hat PR #331 gemergt und wuenscht als
+Fortsetzung Gehen nach vorne/hinten sowie Huepfen, Buecken und weitere passende
+Koerperbewegungen. Basis ist der gemergte Fennec `97f767d`.
+
+**FACT / Entscheidung:** Front- und Rueckgang bekommen je acht eigene
+Ganzkoerperzeichnungen mit gemeinsamem Massstab und Bodenanker. Weitere Quellen
+zeigen Ausholen, Absprung, Flug, Landung, Buecken, Knien, Sitzen, Aufstehen,
+Strecken, Greifen, Treten und eingerollten Schlaf. Der Bogen waechst auf 114
+Bilder, alte Rollen bleiben erhalten, der Profilgang ist pixelgleich erhalten.
+Der Import verwirft angeschnittene Figuren und verwendet das wirkliche Atlaslayout;
+ein erster Richtungsbogen mit angeschnittenen Stiefeln wurde verworfen.
+
+**FACT / Architektur:** Ein optionaler `MotionCue` verbindet vorhandene
+Routine-Schritte mit gezeichneten Haltungen. Der Fortschritt kommt aus der
+Orts-/Reaktionsanimation. Bodenaktionen bekommen keinen zweiten Raster-Huepfer;
+Spruenge behalten ihre wirkliche Hoehe. Hinsetzen und Aufstehen verwenden die
+bestehende Moebelbewegung; die Sitzhaltung bleibt beim Verweilen sichtbar.
+Strecken, Aufnehmen, Abstellen, Schalten, Training und Schuss zeigen eigene
+Koerperposen. Ein Abbruch gibt den Hinweis frei, ohne eine neuere Regung zu
+loeschen. Echte Reminder und Gruppenspiel haben Vorrang. Keine neue Aktivitaet,
+kein Eingabeknopf, keine Ziel-/Reminder-/Story-/XP-/Balancing-Aenderung.
+
+**TESTED BEHAVIOR:** 17 lokale Python-Tests pruefen Kopfanker, bestehende
+IK-Werkzeuge, pixelgleichen Seitengang, vollstaendige Quellen, acht verschiedene
+Front-/Rueck-Beinphasen, Bodenkontakt, stabile Hoehe, kleiner werdende Sitz-/Bueck-
+und Schlafsilhouetten und die passende Front-Blinzelgroesse. Vier neue
+Kotlin-Regressionen pruefen acht Richtungsbilder, bodenfeste Gestik, Sitz-/Stand-
+Endposen, Fortschrittsgrenzen und Sprunghoehe. Android-Pruefung folgt in CI.
+Sprite-Vorschau und exakte Bildgenerierungsanweisungen sind versioniert.
+
+**UNVERIFIED / Grenzen:** Noch keine APK-Sichtpruefung fuer diesen Schnitt;
+Uebergaenge, Requisiten-/Handanker und Sitzhoehen sind am Geraet zu beurteilen.
+Front-/Ruecklandung teilen die Hockpose, gerichtetes Knien die Bueckpose und
+Greifen die Streckpose. Schuss nur im Profil. Kein eigener Lauf-, Schleich- oder
+Saltozyklus, kein an den Weg gekoppelter Gang und keine Windphysik. Der vorhandene
+Clip-Exporter zeigt weiterhin das grobe Raster. Die Vorschau ist keine APK-Aufnahme.
+
+**Bereiche / Ruecksetzweg:** `:app-sim`-Darstellung und Routine-Grenze,
+`tools/character-art`, Evolution History. Generator, Asset, Auswahlregel und
+Routine-Hinweise gemeinsam auf `97f767d514c66b41ad69963e7ace5e953cbe092e`
+zuruecksetzen. Keine Datenmodelle/Preference-Schluessel/Migration, Nutzerstaende
+bleiben gueltig. Naechster Schritt: gruene Android-CI und Handy-Sichtpruefung;
+Richtungsvarianten von Knien/Greifen und schneller Gang folgen erst nach Bewertung.
+
+### 2026-10-05 - Fennecs Beinbewegung: gezeichneter Profilgang (fennec-walk-art-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin meldet, dass die Beinbewegung trotz v2
+weiterhin falsch aussieht. Ausgangsstand `3050fda` des offenen PR #331.
+
+**FACT / Entscheidung:** Die breitbeinige Standzeichnung ist keine tragfaehige
+Quelle fuer den Seitengang: auswaerts gerichtete Stiefel und gebeugte Knie blieben
+auch bei korrekt geloesten Fusszielen sichtbar. Acht eigens gezeichnete Profilposen
+ersetzen die seitlichen Gehbilder 9–16. `fennec_walk.py` registriert sie an Schmuck
+und Boden mit gemeinsamer Palette und einheitlichem Massstab. Der bestehende
+68-Frame-Vertrag bleibt erhalten. Links/rechts nutzen dieselbe Folge gespiegelt.
+
+**TESTED BEHAVIOR:** Drei neue Tests pruefen die tatsaechlichen Gehbilder statt nur
+der IK-Matrizen: Kontakt in jeder Phase, stabile Hoehe, angehobene Durchgangsfuesse
+und rueckwaertige Standbewegung. Zusammen mit den neun bisherigen Tests zwoelf
+lokale Python-Tests gruen. Quelle, genaue Bildgenerierungsanweisung, Importer und
+Sprite-/Gangvorschau versioniert. Android-CI folgt nach Upload.
+
+**UNVERIFIED / Grenzen:** Noch keine Sichtpruefung der APK; Ruhe und Reaktionen
+sowie Front-/Rueckgang bleiben aus dem bisherigen Rig. Der Uebergang von diesen
+Posen zum Profilgang muss am Geraet beurteilt werden. Zeitgetaktete Bilderfolge,
+noch keine an Weg, Geschwindigkeit oder Wind gekoppelte Vollkoerperphysik.
+Die bestehenden IK-Tests belegen nur das erhaltene Werkzeug.
+
+**Ruecksetzweg / Bereiche:** Generator, Profilquelle und Fennec-Asset gemeinsam
+auf `3050fda` zuruecksetzen. Kein Eingriff in Story, Reminder, Datenmodelle oder
+Nutzerstaende. Naechster Schritt: visuelle Beurteilung von Gang und Uebergaengen.
+
+### 2026-10-05 - Fennecs Halsansatz und Laufrichtung (fennec-expression-v2)
+
+**DOCUMENTED INTENT:** Martin meldet einen sanduhrfoermig abgeschnuerten, zu hohen
+Hals und einen schief wirkenden Links-/Rechtsgang. Ausgangsstand `e946aca` in PR #331.
+
+**FACT / Korrektur:** Der Kopf sitzt 24 Quellpixel (rund acht Spritepixel) tiefer.
+Die Brustspitze wird vom vorhandenen Mantelkragen ueberdeckt, statt oberhalb davon
+einen zweiten schmalen Hals zu bilden. Die Beine behalten eigene, nicht kreuzende
+Fussspuren unter ihren Hueften; geringere Schritthoehe beruhigt den Gang.
+Explizites LEFT/RIGHT steuert nun die Spiegelung unmittelbar, auch bei NONE oder
+abweichender Schattenseite. Die Aufrufer waren nicht vertauscht; vorher bezeichnete
+die zur Spiegelung verwendete Schattenseite die Herkunftsseite der Bewegung.
+
+**TESTED BEHAVIOR:** Neun Python-Tests fuer Halsbreite, Ansichten, Mimik, Fusskontakt,
+getrennte Spuren und rueckwaertige Standphase. Kotlin-Test fuer beide Richtungen in
+Ruhe und Bewegung unabhaengig von der Schattenseite ergaenzt. Android-CI fuer v1
+erfolgreich; v2 wird nach Upload geprueft. Vorschau zeigt beide Gangrichtungen.
+
+**UNVERIFIED / Grenzen:** Noch keine Sichtpruefung in der APK; seitlicher Koerper
+bleibt aus der Dreiviertelzeichnung abgeleitet, vollstaendige Profilkoerper fehlen.
+Ruecksetzweg: Quellen/Generator, Sprite und Auswahlregel gemeinsam auf e946aca;
+keine Migration oder Aenderung an Nutzerstaenden. Naechster Schritt: Gang am Geraet
+beurteilen, dann echte Koerperprofile ausarbeiten.
+
+### 2026-10-05 - Fennecs Mimik und Gestik (fennec-expression-v1)
+
+**DOCUMENTED INTENT / Anlass:** Martin fordert eine lebendige ganze Figur mit Gesicht,
+Kopfbewegung und nachschwingendem Fell/Mantel. Erweiterung des offenen Gang-PR #331,
+Ausgangsstand `db64b529595fb8d6317cef4cbcbf19a150aa227c`.
+
+**FACT / Entscheidung:** Neu gezeichnete Kopfansichten und Ausdruecke werden mit dem
+bestehenden gegliederten Koerper animiert. Der Fennec-Bogen waechst von 39 auf 68 Bilder:
+Ruhe, Blinzeln und Freude bekommen passende Vorder-/Rueckansichten. Armgestik,
+Fellsträhne, Mantel- und Schwanzspitze erhalten versetzte Bewegungen. Die Auswahlregel
+priorisiert Reaktionen vor einer lediglich gemerkten Blickrichtung. Quellen, Generator,
+Sprite, Auswahlregel und Vorschau werden gemeinsam versioniert.
+
+**TESTED BEHAVIOR:** Acht lokale Python-Tests pruefen Halsregistrierung, unterscheidbare
+Zeichnungen, Richtungs-/Reaktionsfolgen, bewegte Ruhe und den bisherigen Bodenkontakt.
+Gerenderte Frames visuell kontrolliert. Kotlin-Regressionen fuer frontales Blinzeln/Freude
+und gerichtete Ruhe ergaenzt. Android-CI des vorherigen Gang-Commits erfolgreich;
+Pruefung dieser Erweiterung folgt nach Upload.
+
+**UNVERIFIED / Grenzen:** Keine Handy-Sichtpruefung. Neue Profile betreffen den Kopf;
+vollstaendige seitliche Koerperzeichnungen fehlen. Links/rechts spiegeln weiterhin.
+Sekundaerbewegung ist vorberechnet, noch nicht wetterabhaengig. Keine fertige 3D-Figur.
+
+**Bereiche / Ruecksetzweg:** `CreatureSprites`, dessen Tests und `tools/character-art`
+sowie Fennec-Asset. Keine Migration oder Aenderung an Remindern, Story oder Progression.
+Generator, Asset und Auswahlregel gemeinsam auf den Ausgangscommit zuruecksetzen;
+Nutzerstaende bleiben kompatibel. Naechster Schritt: APK-Sichtpruefung und Koerperprofile.
+
+### 2026-10-05 - Fennecs Gang: Pfotenkontakt statt flacher Wendepuppe
+
+**Anlass:** Martin gefaellt die gemalte Fennec-Figur, aber nicht ihr Sticker-Effekt beim Gehen
+und Umkehren. Die Wendebilder skalierten dieselbe Quelle auf 55 Prozent Breite; waehrenddessen
+bewegte die Spielsteuerung die starre Zwischenpose weiter.
+
+**Entscheidung:** Der bestehende Key-Design-Rig bekommt Knie- und Stiefelgelenke mit einer
+Zwei-Segment-Loesung. Eine Pfote steht waehrend der halben Periode auf der Bodenlinie und
+wandert relativ zum Rumpf zurueck, die andere schwingt angehoben vor. Die Laengen bleiben fest.
+Die gemalten Sohlen haben unterschiedliche Hoehen; deren Anker werden getrennt ausgeglichen.
+Der Bogen bleibt bei 39 Bildern mit 128 Pixeln. Das Zusammendruecken der Wendeposen entfaellt.
+Beim Gehen ueberschreiben Wendebilder nicht mehr die Gangfolge. Ein eigener monotoner
+Gangtakt beginnt am Kontakt und setzt sich beim Anhalten zurueck; der alte Raster-Huepfer
+wird fuer feine Gehbilder nicht noch einmal auf die komplette Figur angewendet.
+
+**Beleg:** Vier lokale Python-Tests pruefen Stand-/Schwungphase, konstant lange Segmente,
+erreichte Pfotenziele und Wendeposen ohne Breitenstauchung. Der neu gerenderte Bogen wurde
+visuell geprueft; die unteren Pixel der Gangbilder liegen durch Rasterung auf Zeile 124–126.
+Kotlin-Regressionen fuer Umkehren ohne Gleitpose und den Gangtakt ergaenzt; Android-Checks
+folgen in CI. Animierte Vorschau: `tools/character-art/fennec-gait-preview.gif`.
+
+**Grenzen:** Weiterhin ein gegliederter 2D-Rig aus der freigegebenen Zeichnung, kein fertiges
+3D-Modell. Echte separat gezeichnete Profile und eine vollstaendige raeumliche Drehung stehen
+aus. Links/rechts spiegeln noch; Gangtempo ist zeitgetaktet, nicht an gemessene Wegstrecke
+gekoppelt. Die Aenderung ersetzt keine Sichtpruefung am Handy.
+
+**Ruecksetzweg / naechster Schritt:** Generator, Fennec-Bogen und Auswahlregel gemeinsam
+zuruecksetzen; Spielstand bleibt kompatibel. Als Naechstes Gehbewegung am Geraet beurteilen,
+danach separate Profil-/Rueckenquellen und streckenabhaengige Schrittphase.
+
+### 2026-10-04 - Itoeva 2: Landschaften aus Konzeptbuch Band 2, Licht-PR uebernommen
+
+**Anlass:** Martin: weniger generisch, eins zu eins wie die Concept Art. Inzwischen liegen fuer alle
+neun Wildnis-Orte Landschaftstafeln vor (Band 2), und Codex hat in #330 Laufzeitlicht,
+Bodenschatten und Vorder-/Rueckansichten der Wesen auf diesem Branch aufgebaut.
+
+**Geaendert:** #330 ist in den Orte-Branch gemischt. Wald, Wiese, Berge, Ebene, Lager, Strand,
+Dschungel, Sumpf und Grotte sind jetzt die Tafeln aus Band 2 im Spielformat (Figuren
+herausgenommen); die frei gemalten Fassungen sind ersetzt. Das Lagerfeuer-Licht sitzt auf dem
+Feuer des neuen Lagerbildes. Gehflaeche und Sitzplatz je Bild neu gesetzt, Plaetze unveraendert
+(je ein BENCH).
+
+**Grenzen / UNVERIFIED:** Am Geraet ungeprueft. Die Laufstreifen sind schmal (Seitenansicht).
+
+### 2026-10-04 - Itoeva 2: Blickrichtungen und lebendige Lichtschicht (Entwurf-PR)
+
+**Anlass:** Martin sieht die gemalten Hintergruende als zu unbewegliche Bilder. Beim Gehen nach hinten
+und vorn zeigt der bisherige Figurenbogen nur die seitlich gedachte Pose; Lampen, Bildtiefe und
+Schatten sind in der PNG-Kulisse eingebrannt.
+
+**Entscheidung:** Der gemalte Spielmodus bekommt eine kleine Echtzeit-Darstellungsschicht:
+Sonnenlicht folgt der Uhrzeit, schaltbare Laternen und Fernseher wirken als Lichtpunkte mit
+Distanzabfall, das Lagerfeuer flackert. Ein aus der Position berechneter Bodenschatten bewegt
+sich mit dem Wesen und weist vom dominanten Licht weg. Wenige Blaetter und Wasserreflexe
+bewegen sich deterministisch im Szenentakt. Der Bildausschnitt folgt bei tatsaechlichem
+Ueberstand leicht der Position und Tiefe; Bild, Fusspunkt und Trefferflaechen benutzen denselben
+`GameScenes.fit`. Sechs zusaetzliche 64x64-Ansichten je Wesen zeigen vorn und hinten mit je
+zwei Schrittphasen. Links/rechts bleiben die bestehenden Seitenbilder mit Spiegelung.
+
+**Abgrenzung:** Nur der aktive `:app-sim`-Spielmodus gibt Blickrichtung, Bewegung und
+Szenenlichter an die neue Darstellung weiter. Keine neue Bewegungskollision, Ort, Handlung,
+Avatarentscheidung, Datenbank oder Streamsteuerung. Es ist eine 2D-Lichtprojektion mit
+Avatar-Schlagschatten; Gegenstaende im gemalten Bild werfen noch keine vollstaendig
+berechneten Okklusionsschatten, und die im Grundbild gemalten Highlights verschwinden
+beim Ausschalten noch nicht. Exportclips erhalten die neue Lichtschicht noch nicht.
+
+**Erster Beleg:** Jeder der sechs generierten Boegen enthaelt 17 statt 11 Bilder; die
+Vorder- und Rueckansichten unterscheiden sich und bleiben am Fussanker. Reine
+`GameScenesTest`-Faelle pruefen Kamerakoordinaten, Distanzabfall, Schalter und die
+Schattenrichtung. Pixelbogen-Test lokal gruen; Android-Compose-Build und Geraeteeindruck
+noch ueber CI/Apk zu pruefen.
+
+**Ruecksetzweg:** Licht-Overlay und zusaetzliche Bildindizes entfernen, die sechs Boegen aus
+dem vorherigen Stand wiederherstellen. Der Spielzustand bleibt kompatibel.
+
+### 2026-10-04 - Itoeva 2: Alle Orte nach der Concept Art
+
+**Anlass:** Martin: "Mach mal alle Figuren und alle Orte so gut es geht wie in der Concept Art
+Vorlage". Die Figuren stehen in #328; hier die Orte, nach den Weltstudien in
+`docs/concept-art/world-studies/` (Wohnraum, Park mit Sportplatz, Waldsee, Uferviertel).
+
+**Geaendert (nur Spiel-Variante):** Alle 25 Orte sind gemalt (480 x 270, `tools/world-art/places/`):
+- **Daheim**, nach der Wohnraum-Studie (Fachwerk, Vertaefelung, Lampenlicht): Wohnzimmer mit Sofa,
+  Fernsehmoebel und Haustuer, Schlafzimmer, Kueche, Bad, Schreibzimmer, Werkstatt, Leseecke.
+- **Stadt**, nach dem Uferviertel: Strasse am Fluss, Marktplatz am Abend, Laden, Cafe, Arbeitsstube,
+  Spielhalle.
+- **Gruen**, nach Park- und Waldsee-Studie: Park, Sportplatz, Waldsee.
+- **Wildnis**, frei im selben Stil: Wiese, Wald, Berge, Ebene, Lager, Strand, Dschungel, Sumpf,
+  Grotte.
+
+Jedes Skript liefert mit dem Bild die Spielangaben (Gehflaeche, Plaetze, gesperrte Raender);
+`build_all.py` schreibt daraus `GameSceneCatalog.kt`. Die Plaetze sind genau die, die der Ort
+schon hatte (`PlayScene.stationsAt`) - keine neue Handlung, kein neuer Ort, keine neue Mechanik.
+Tueren fuehren wie bisher (`PlayControl.doorTarget`).
+
+**Vereinfacht gegenueber den Studien:** keine Figuren im Bild, Moebel als Quader in Zentral-
+perspektive, je Ort eine feste Tageszeit, Wildnis ohne eigene Vorlage.
+
+**Grenzen / UNVERIFIED:** Am Geraet ungeprueft (Treffer, Gehflaeche je Bildschirmformat).
+**Ruecksetzweg:** Bild und Katalog-Eintrag entfernen - ohne Bild faellt ein Ort auf die
+Zellen-Kulisse zurueck.
+
+**Tests:** `bash tools/reaction-preview/tests.sh` gruen; `GameScenesTest` prueft jetzt jeden
+gemalten Ort (Bild vorhanden, Platz erlaubt, erreichbar und auf begehbarem Boden, kein Ort
+abgeschnitten, jeder Ort gemalt).
 ### 2026-10-04 - Fennec, Gloop, Starlet, Puffling, Hootlet nach den Fantasy-Studien
 
 **Anlass:** Martin: "Mach mal alle Figuren ... so gut es geht wie in der Concept Art Vorlage" - die

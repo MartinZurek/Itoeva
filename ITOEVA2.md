@@ -59,11 +59,33 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 
 Weg von der groben LED-Kulisse: Orte als feine Pixel-Art mit Tiefe, gemalt als Code
 (`tools/world-art`, 480 x 270 Bildpixel, nur in der Spiel-Variante unter
-`src/game/assets/scenes`). Bisher **Park am Meer** (Abendrot) und **Lesezimmer** (Wohnzimmer).
+`src/game/assets/scenes`). Im aktuellen offenen Welt-PR sind **16 Orte** als Bild und Katalogeintrag vorhanden; neun weitere Orte zeigen noch die ältere Kulisse, nach den Weltstudien in
+`docs/concept-art/world-studies/` (siehe `tools/world-art/README.md`).
 `GameScenes` beschreibt je Bild Gehflaeche (Trapez in die Tiefe), Figurgroesse nach Tiefe,
-antippbare Plaetze und Ausgaenge (Zimmer <-> Park); Doppeltipp laesst die Figur selbst hingehen.
-Orte ohne Bild bleiben wie bisher. Offen: weitere Orte, Tageszeiten, Figur `hero.png` (Fuchs) ist
-gezeichnet, aber nicht eingebaut - die Wesen selbst sind seit #327 in feiner Pixel-Art.
+antippbare Plaetze und Ausgaenge; die Angaben stehen im generierten `GameSceneCatalog`.
+Doppeltipp laesst die Figur selbst hingehen. Offen: Tageszeiten je Ort, Pruefung am Geraet.
+
+## Stufe 4a - Lebendige Darstellung (offener Folge-PR)
+
+Im gemalten Spielmodus liegen Laufweg, Kamera und Bildausschnitt auf derselben
+480x270-Koordinatenbasis. Tageslicht, schaltbare Laternen, Fernseher und Lagerfeuer
+erzeugen Laufzeit-Lichtfelder; die Figur bekommt einen mitwandernden Bodenschatten und
+eine zur Beleuchtung passende Helligkeit. Waldlaub und Wasser erhalten wenige
+deterministische Bewegungen. Die sechs Figuren haben eigene Front- und Rueckansichten
+fuer Hoch-/Runtergehen sowie Schrittbilder; links/rechts benutzen die vorhandene
+gespiegelte Seitenansicht. Die Lichtschicht ist eine 2D-Naeherung, keine vollstaendige
+Schattenberechnung aller Kulissenobjekte. Geraetepruefung und Clip-Paritaet stehen aus.
+
+## Startbildschirm und Wege zurueck (Wunsch vom 04.10.)
+
+- **Startbildschirm** (`GameStartScreen`): Beim Oeffnen von Itoeva 2 waehlt man zuerst sein
+  Wesen (alle sechs mit Bild, das gewaehlte atmet) und schaltet die Musik; "Spielen" startet.
+  Die Wahl landet in `AvatarSpeciesPrefs`, ein anderes Wesen baut den Spielbildschirm frisch auf.
+- **Zurueck aus dem Spiel**: Knopf "☰ Menue" oben links (immer sichtbar), im Menue der Punkt
+  "Einstellungen" fuehrt zum Startbildschirm. Die Zurueck-Geste schliesst offene Fenster, sonst
+  oeffnet sie das Menue.
+- **Karte und Rucksack** haben einen sichtbaren Knopf "← Zurueck"; ein Tipp daneben schliesst sie
+  weiterhin.
 
 ## Naechste Stufen (Vorschlag, nicht freigegeben)
 
