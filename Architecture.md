@@ -471,3 +471,20 @@ Cache; keine Bitmap-Erzeugung pro Bild. Die rohe Bildmenge betraegt bei allen
 sechs geladenen Boegen etwa 54 MiB, Geraete-Speicherprofil noch ungeprueft.
 Quellen, exakte Prompts, Grenzen, Regeneration und Sichtvorschau:
 `tools/character-art/README.md`, Abschnitt "Alle fuenf weiteren Wesen animiert".
+
+## Aktives Worldbuilding in Itoeva 2 (06.10.2026)
+
+`GameAdventure` bündelt die reine Zustands-/Aktionslogik des aktiven Spiels. `GameSaveStore`
+speichert einen versionierten Snapshot samt Legacy-Rucksack atomar, schützt unbekannte Versionen
+und lässt dadurch keine halben Inventar-/Weltänderungen sichtbar werden. `DockScreen` koordiniert
+Commit, Checkpoints und die pausierbare Spielzeit. Der Snapshot ist eine gemeinsame Kampagne
+für die wählbaren Figuren, kein Reminder-Profil und keine neue Room-Tabelle.
+
+`GameResidents` verwendet echte `LivingPopulation`-Snapshots, die vorhandene Geometrie und
+Wegsuche. Der separate Population-Store `itoeva2_population` folgt der gespeicherten Spielzeit.
+`GameAdventureUI` projiziert Requisiten, Chronik, Bewohner und Außenregen; NPCs werden nach
+Tiefe hinter/vor der Hauptfigur gezeichnet. Licht, Musik und Atmo lesen dieselbe Spielzeit.
+App 1 und Stream behalten reale Zeit und ihre bisherigen Persistenzpfade.
+
+Die Abnahme und verbliebenen Ausbaupakete stehen in
+[docs/itoeva2-worldbuilding.md](docs/itoeva2-worldbuilding.md).
