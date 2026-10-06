@@ -708,9 +708,12 @@ Kontaktbilder visuell geprueft, gemeinsame animierte Vorschau erstellt.
 und den Release-Torwaechter. `gradlew verify` scheiterte mit Java-Heap-Ueberlauf
 bei `lintAnalyzeDebugUnitTest` / `DecisionCoverageTest.kt` (2 GiB).
 Der Verify-Schritt bekommt deshalb nur in CI 4 GiB und hoechstens zwei Worker;
-keine Pruefung wird entfernt oder abgeschwaecht. Erneuter voller Lauf folgt.
+keine Pruefung wird entfernt oder abgeschwaecht. Voller Nachlauf #829 auf
+`3bcfe19c9111e010b2ba7f7b5234f0e3c7505aa2` gruen: Tests/Lint/R8,
+Release-Torwaechter und Emulator-Tests API 26/35. Die folgenden Aenderungen
+dokumentieren nur das Ergebnis, keine weiteren Laufzeit-/CI-Aenderungen.
 
-**UNVERIFIED / Grenzen:** Voller Verify-Erfolg und Smartphone-Messlauf stehen aus.
+**UNVERIFIED / Grenzen:** Smartphone-Sichtpruefung und Speicherprofil stehen aus.
 Front-/Ruecksprint nutzt gerichtete Gehzeichnungen im schnelleren Takt; keine
 Flugmechanik. Buecken, Knien, gerichtetes Sitzen/Aufstehen sind Rig-Zwischenposen;
 Treten verwendet vorerst die Vorwaerts-Greifhaltung. Rolle bleibt Profilhaltung
@@ -722,8 +725,9 @@ keine APK. Handanker, groesserer Bitmap-Cache und Uebergaenge am Geraet pruefen.
 **Bereiche / Ruecksetzweg:** fuenf `creatures`-Assets, Rich-Bildwahl und Skalierung,
 Importer/Quellen/Test/Vorschau, Charakter-README, Architektur und diese Historie.
 Gesamten Schritt auf `dc443b6d586d3a6a158ff900fadf57b952f54760` zuruecksetzen.
-Naechster Schritt: GitHub-PR auf `claude/world-concept-places`, Android-CI und
-anschliessende APK-Sichtpruefung. Martin hat am 2026-10-06 den Upload und das Erstellen des PR ausdruecklich
+PR #333 steht auf `claude/world-concept-places`, volle Android-CI gruen.
+Naechster Schritt: APK-Sichtpruefung. Martin hat am 2026-10-06 den Upload
+und das Erstellen des PR ausdruecklich
 freigegeben. Ein Merge wurde nicht beauftragt.
 Kein Merge in dieser Sitzung.
 
