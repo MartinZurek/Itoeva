@@ -669,6 +669,47 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-06 - Aktives Worldbuilding (worldbuilding-playable-v1)
+
+**DOCUMENTED INTENT:** Martin lässt nach den Living Maps prüfen, was für eine lebendige,
+schöne Welt sowie den späteren Strategie-/Historienausbau fehlt. Den daraus erstellten
+Strategieplan gibt er mit „Ja bitte setze diesen Plan um“ frei. Der Plan beginnt mit einem
+zusammenhängenden Gebiet; weitere Innenraumbilder und Kampf folgen nach dessen Qualitätsprüfung.
+
+**FACT / Implementierung:** Versionierter App-2-Spielstand mit sicherer Bodenposition,
+Richtung, Inventar/Ablage, pausierbarer Spielzeit, Lichtschaltern, Weltfolgen und Bekanntschaften.
+Funde sind pro Quelle einmalig; Samen pflanzen und Holzreparaturen verbrauchen Material mit
+Weltänderung in einem Commit. Eine reversible Ablage schützt volle Altinventare vor Sackgassen.
+Ein alter Wegstein mit Blattzeichen ist der erste neue Lore-Hinweis, keine Behauptung über
+bereits dokumentierte Weltgeschichte. Die Chronik hält tatsächlich abgeschlossene Entdeckungen
+in ihrer Reihenfolge fest. Begrenztes Holz kann im Park oder Lager eingesetzt werden; weiteres
+Werkbankholz lässt beide Ziele weiterhin abschließen.
+
+**FACT / Bewohner und Umwelt:** Bestehende Population über gemeinsame Bildgeometrie/Wegsuche,
+Tätigkeitsanker und getrennte Slots; freiwillige Gespräche erkennen Wiedersehen und Weltfolgen.
+Bekanntschaften liegen zunächst beim Spieler, noch nicht als beidseitige Agenten-Erinnerung.
+Ein Tag dauert 48 aktive Minuten; Menü, Gespräch und Hintergrund pausieren die Welt. Licht,
+Außenregen, Musik und Atmo verwenden diesen Zustand. App 1/Stream behalten ihre reale Zeit und
+Stores. Keine Änderungen an Reminder-, XP-, Room- oder Skillbaum-Semantik.
+
+**FACT / Persistenzentscheidung:** Wie der bisherige App-2-Rucksack bleibt die Kampagne beim
+Spezieswechsel gemeinsam. Kein stiller Reset und kein neues Eigentumsmodell für eine spätere
+Gruppe. Unlesbare/neue Spielstände bleiben geschützt; Ausgang ist auch bei Speicherfehler möglich.
+Bestätigte Objektaktionen sind atomar, Positionscheckpoints erfolgen alle zwei Sekunden sowie
+beim Hintergrundwechsel/Verlassen. Harte Prozessbeendigung kann die letzte Bewegung verlieren.
+
+**FACT / Prüfung:** 922 reine Kotlin-Tests erfolgreich, darunter Neustart, Quellen-Duplikate,
+Verbrauch, voller Legacy-Rucksack mit Ablage, Chronikreihenfolge, Ankerwege und NPC-Platzierung.
+Zweiter Agent hat die Umsetzung geprüft; gefundene Speicher-, Ausgangs-, Touch-, Abbruch- und
+NPC-Integrationsfehler sind korrigiert. Sauberer Android-Build mit
+`:app-sim:compileGameKotlin` und `:app-sim:compileDebugKotlin` erfolgreich.
+
+**UNGEPRÜFT / Nächster Schritt:** Echte Telefonansicht, Touch, Lifecycle-Abbruch und längere
+Sitzung messen. Sitzhaltung/Möbelüberdeckung, Fensterregen/Bodenwetter, soziale Übergabe,
+beidseitige Erinnerung und neun fehlende Innenräume sind Folgepakete. Kampfregeln, Gruppe und
+Kampfklassen bleiben offen. Status und ausführlicher Gerätetest:
+[docs/itoeva2-worldbuilding.md](docs/itoeva2-worldbuilding.md).
+
 ### 2026-10-06 - Lebendige gemalte Raeume (living-rooms-v1)
 
 **DOCUMENTED INTENT:** Martin beauftragt nach den Charakteranimationen eine neue
