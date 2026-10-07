@@ -26,23 +26,23 @@ PROFILE = {
     'starlet': dict(head=1.4, tip=2.6, cloth=1.5, breath=.018),
     'hootlet': dict(head=3.4, tip=1.2, cloth=1.8, breath=.008),
 }
-WORLD_SCALE = dict(gloop=.92, puffling=.97, wyrmling=1.71, starlet=.90, hootlet=1.05)
+WORLD_SCALE = dict(gloop=.92, puffling=.97, wyrmling=1.13, starlet=.90, hootlet=1.05)
 
 
-def drawings(name):
+def drawings(name, *, source=None, count=32, columns=4):
     """Quellkomponenten nach Zeilen ordnen und Alpha-Halos verwerfen.
 
     Feste Zellen genuegen bei generierter Kunst nicht: Ihre Lage kann abweichen.
     Eine explizite Zuordnung in manifest.json kann eine fehlerhafte Quellenpose
     ausschliessen, ohne sie als angeblich korrekte Bewegung auszuliefern.
     """
-    rgba = np.asarray(Image.open(HERE / 'source' / f'{name}-motion-atlas.png').convert('RGBA'))
+    rgba = np.asarray(Image.open(source or HERE / 'source' / f'{name}-motion-atlas.png').convert('RGBA'))
     mask = rgba[..., 3] > 200
     labels, _ = ndimage.label(mask)
     sizes = np.bincount(labels.ravel())
     ids = [i for i in np.flatnonzero(sizes > 1200) if i]
-    if len(ids) != 32:
-        raise ValueError(f'{name}: {len(ids)} statt 32 vollstaendige Figuren')
+    if count % columns or len(ids) != count:
+        raise ValueError(f'{name}: {len(ids)} statt {count} vollstaendige Figuren')
     figures = []
     for i in ids:
         ys, xs = np.nonzero(labels == i)
@@ -57,19 +57,19 @@ def drawings(name):
         figures.append((int(ys.mean()), int(xs.mean()), cropped))
     figures.sort(key=lambda f: f[0])
     ordered = []
-    for row in range(8):
-        group = sorted(figures[row*4:row*4+4], key=lambda f: f[1])
-        if max(f[0] for f in group) - min(f[0] for f in group) > rgba.shape[0]/12:
+    for row in range(count // columns):
+        group = sorted(figures[row*columns:row*columns+columns], key=lambda f: f[1])
+        if max(f[0] for f in group) - min(f[0] for f in group) > rgba.shape[0]/(count // columns * 1.5):
             raise ValueError(f'{name}: unklare Zeilenordnung {row}')
         ordered.extend(f[2] for f in group)
     return ordered
 
 
-def register(arts):
+def register(arts, *, palette_size=40):
     # Ein Massstab fuer den GESAMTEN Atlas. Laufende und sitzende Figuren duerfen
     # nicht anhand ihrer momentanen Silhouette auf eine Standhoehe gedehnt werden.
     scale = min(110/max(a.shape[1] for a in arts), 113/max(a.shape[0] for a in arts))
-    palette = palette_of(np.concatenate([a.reshape(-1, 1, 4) for a in arts]), k=40)
+    palette = palette_of(np.concatenate([a.reshape(-1, 1, 4) for a in arts]), k=palette_size)
     frames = []
     for art in arts:
         small = pixelize(art, scale, palette)
@@ -140,7 +140,7 @@ def posture(frame, name, palette, bend=0, compress=1, reach=0):
 EYE_WINDOWS = {
     'gloop': ((53, 83, 63, 98), (77, 83, 87, 98)),
     'puffling': ((47, 66, 60, 83), (74, 66, 86, 82)),
-    'wyrmling': ((55, 78, 63, 87), (67, 78, 75, 87)),
+    'wyrmling': ((53, 55, 63, 63), (70, 55, 78, 63)),
     'starlet': ((45, 72, 58, 90), (71, 72, 84, 90)),
     'hootlet': ((52, 72, 64, 84), (70, 72, 81, 84)),
 }
@@ -200,6 +200,9 @@ def rolled(curl, palette):
 
 
 def frames(name):
+    if name == 'wyrmling':
+        from wyrmling_motion import frames as wyrmling_frames
+        return wyrmling_frames()
     manifest=json.loads((HERE/'source/ensemble-motion-manifest.json').read_text())
     art,pal,scale=register(drawings(name))
     indexes=manifest[name]
@@ -245,8 +248,8 @@ def frames(name):
     return result
 
 
-def build():
-    for name in NAMES:
+def build(names=NAMES):
+    for name in names:
         strip=np.concatenate(frames(name),axis=1)
         Image.fromarray(np.uint8(np.clip(strip,0,1)*255),'RGBA').save(ASSETS/f'{name}.png',optimize=True)
         print(f'{name}: {COUNT} Bilder')
@@ -283,5 +286,6 @@ def preview(path):
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--preview',type=Path)
+    parser.add_argument('--species', choices=NAMES)
     args=parser.parse_args()
-    preview(args.preview) if args.preview else build()
+    preview(args.preview) if args.preview else build((args.species,) if args.species else NAMES)

@@ -472,6 +472,13 @@ sechs geladenen Boegen etwa 54 MiB, Geraete-Speicherprofil noch ungeprueft.
 Quellen, exakte Prompts, Grenzen, Regeneration und Sichtvorschau:
 `tools/character-art/README.md`, Abschnitt "Alle fuenf weiteren Wesen animiert".
 
+Wyrmlings Folgepolitur verwendet `wyrmling_motion.py` mit 32 schlankeren
+Bewegungszeichnungen und 16 Gelenk-/Lidzeichnungen. Gemeinsamer Importmassstab,
+Kopf-/Vorderpfotenanker und eigene Sitzbilder ersetzen Koerperstauchung. Die
+Laufzeit verwendet weiter dieselben 138 Rollen; Faktor 1.13 erhaelt seine
+bisherige Weltgroesse bei hoeherer Rohbild-Standhoehe. Andere Charakterassets
+bleiben unveraendert; Details und Sichtvergleich stehen im Character-Art-README.
+
 ## Aktives Worldbuilding in Itoeva 2 (06.10.2026)
 
 `GameAdventure` bündelt die reine Zustands-/Aktionslogik des aktiven Spiels. `GameSaveStore`
