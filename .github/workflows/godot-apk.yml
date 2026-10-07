@@ -134,9 +134,10 @@ jobs:
             echo "::error::Godot hat keine APK erzeugt - siehe Log oben."
             exit 1
           fi
-          if grep -qE "^ERROR|SCRIPT ERROR" build/export.log; then
-            echo "::warning::Export-Log enthaelt Fehlerzeilen - bitte ansehen."
-          fi
+          # Fehlerzeilen als Anmerkung, damit sie ohne Log-Download sichtbar sind
+          grep -E -A1 "ERROR" build/export.log | head -12 | while IFS= read -r line; do
+            echo "::warning::export: ${line}"
+          done
           ls -la build/itoeva-godot.apk
           sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           bt="$(ls -d "$sdk"/build-tools/* | sort -V | tail -1)"
