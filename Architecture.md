@@ -477,7 +477,20 @@ Bewegungszeichnungen und 16 Gelenk-/Lidzeichnungen. Gemeinsamer Importmassstab,
 Kopf-/Vorderpfotenanker und eigene Sitzbilder ersetzen Koerperstauchung. Die
 Laufzeit verwendet weiter dieselben 138 Rollen; Faktor 1.13 erhaelt seine
 bisherige Weltgroesse bei hoeherer Rohbild-Standhoehe. Andere Charakterassets
-bleiben unveraendert; Details und Sichtvergleich stehen im Character-Art-README.
+blieben in diesem Schnitt unveraendert; Details und Sichtvergleich stehen im Character-Art-README.
+
+Die Ensemble-Folgepolitur (07.10.2026) importiert Gloop, Puffling, Starlet und
+Hootlet ueber `refined_motion.py`: je 32 Hauptzeichnungen und 16 Gelenk-/Lidposen,
+64 Farben, gleiche 138 Bildrollen. Side-/Front-Standreferenzen kalibrieren jeweils
+den Zusatzbogen; Sitzhoehen bestimmen nie den Massstab. Kopf- und Standflaechen-
+anker vermeiden Taschen-/Schwanzversatz, nur registrierte Lidfenster blinzeln.
+Gloop bleibt beinlos, Starlet bewegt seine fuenf Spitzen, Puffling faltet kurze
+Beine, Hootlet seine Vogelgelenke. Die vier Weltfaktoren bewahren die Standhoehe.
+Fennec korrigiert gezielt sechs Rollen: Profil-Sitzfolge samt Abschlussstand und
+Freudeabschluss sowie Frontlider. Seine uebrigen 132 Rollen und Wyrmling bleiben
+pixelgleich. Angeschnittene unbenutzte Quellbilder werden ausdruecklich nicht
+importiert; aktive Bilder muessen die unveraenderte Beschnittpruefung bestehen.
+Keine neue Laufzeitinterpolation, Steuerung oder Spielstandaenderung.
 
 ## Aktives Worldbuilding in Itoeva 2 (06.10.2026)
 

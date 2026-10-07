@@ -69,9 +69,12 @@ class EnsembleMotionTest(unittest.TestCase):
                 self.assertEqual(125,int(ys.max()),name)
                 self.assertLessEqual(xs.max()-xs.min(),111,name)
 
-    def test_existing_fennec_asset_is_byte_identical(self):
-        expected='4fb896d3c96c9a7158c50d66c7faf11c1038ef8e2db21cbb94550337818eff40'
-        self.assertEqual(expected,hashlib.sha256((E.ASSETS/'fennec.png').read_bytes()).hexdigest())
+    def test_unaffected_fennec_roles_remain_pixel_identical(self):
+        sheet=np.asarray(Image.open(E.ASSETS/'fennec.png').convert('RGBA')).reshape(128,138,128,4).transpose(1,0,2,3)
+        unchanged=[i for i in range(138) if i not in (22,55,92,93,94,95)]
+        self.assertEqual('05ae41247042a5552f56a4276f30dd6d31fabf6fb56de5897327268dbb9dbdaf',
+                         hashlib.sha256(sheet[unchanged].tobytes()).hexdigest())
+
 
 
 if __name__=='__main__':unittest.main()

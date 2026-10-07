@@ -669,6 +669,36 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-07 - Ensemble: eigene Gelenkposen und feinere Charakterdetails
+
+**DOCUMENTED INTENT:** Martin laesst nach Wyrmling die verbleibenden Charaktere
+im gleichen Stil verbessern und gemeinsame Fehler bei Fennec/Gremlin pruefen.
+Kein Gremlin ist im Ensemble definiert; Gloop und Wyrmling wurden mitgeprueft.
+
+**FACT / Entscheidung:** Gloop, Puffling, Starlet und Hootlet erhalten je 32
+Hauptzeichnungen und 16 Gelenk-/Lidzeichnungen. Eigene Anatomie statt gestauchtem
+Standkoerper: beinlose Schleimloben, gefaltete kurze Beine, gebeugte Sternspitzen
+und Vogelgelenke. Fennecs Sitzfolge und Frontblink werden gezielt korrigiert.
+
+**FACT / Architektur:** Getrennte Ansichts-Kalibrierung anhand gleicher
+Standanatomie, feste Boden-/Koerperachsen und begrenzte Lidfenster. Neue Faktoren
+erhalten die Weltgroesse innerhalb 2 Pixeln. Alle 138 Rollen bleiben erhalten.
+Nur Fennec-Rollen 22,55,92–95 aendern sich; seine anderen 132 und Wyrmling bleiben
+pixelgleich. Angeschnittene unbenutzte Quellbilder werden nicht importiert.
+Keine Migration, Steuerungs-, XP-, Reminder- oder Verhaltensaenderung.
+
+**FACT / Pruefung:** 41 Python-Tests und 922 Kotlin-Tests sind auch nach
+Wiederherstellung des unterbrochenen Uploads erneut gruen. Zweiter Agent bestaetigt
+den finalen Stand ohne blockierenden Befund und fuehrt zehn relevante Tests selbst aus. Vorher/Nachher-Spritevorschau mit
+gleicher Weltgroesse, keine APK-Aufnahme. Quellen/Prompts und Regeneration sind
+versioniert. Lokale Android-Kompilierung scheiterte am Abruf des bestehenden
+AGP-Plugins 8.13.1; daraus wird kein erfolgreicher Android-Build abgeleitet.
+
+**UNGEPRUEFT / Naechster Schritt:** Android-Build und Telefon-Sichtpruefung von
+Sitzen, Aufstehen, Gang, Eingabe und Moebelankern. PR baut auf Wyrmling-PR337 auf.
+Keine neue Merge-/APK-Freigabe aus frueheren Auftraegen abgeleitet. Schneller
+gerichteter Gang und Rolle behalten die im Character-Art-README genannten Grenzen.
+
 ### 2026-10-06 - Wyrmling: schlankere Anatomie und gezeichnetes Hinsetzen
 
 **DOCUMENTED INTENT:** Martin zieht Character-Design vor die Bewohnerbeziehung.
