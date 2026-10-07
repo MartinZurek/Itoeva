@@ -267,6 +267,9 @@ Quellposen je Wesen plus registrierte Regungen und Aktionszwischenbilder, keine
 138 unabhaengigen Zeichnungen. Die Konzeptstudien dienen als Identitaetsreferenz.
 Fennecs ausgeliefertes Asset bleibt bytegleich zum gemergten PR #332.
 
+Wyrmlings Quellen, Sitzanatomie und Darstellungsfaktor wurden danach ersetzt;
+fuer seinen aktuellen Stand gilt der Abschnitt "Wyrmling: schlankere Anatomie" unten.
+
 | Wesen | Eigene Bewegungssprache |
 |---|---|
 | Gloop | Niedrige Stauch-/Streckwelle ohne Beine, Spross und Tasche folgen versetzt |
@@ -329,3 +332,45 @@ wuerden beim Schreiben die feinen Boegen ersetzen; fuer den aktuellen Stand
 Exakte Prompts, Atlasbilder und Importmanifest unter `source/ensemble-*` und
 `source/<wesen>-motion-atlas.png`. Ruecksetzen: gesamten Charakter-PR gemeinsam
 auf `dc443b6d586d3a6a158ff900fadf57b952f54760`; keine Spielstandmigration.
+
+## Wyrmling: schlankere Anatomie (06.10.2026, nach APK-Rueckmeldung)
+
+Martin kritisiert den aufgeplusterten Rumpf und schlecht animierte Glieder beim
+Hinsetzen. `wyrmling_motion.py` importiert deshalb 32 neue schlankere Zeichnungen
+aus `source/wyrmling-refined-atlas.png` und 16 zusaetzliche Gelenk-/Lidzeichnungen
+aus `source/wyrmling-posture-atlas.png`. Die enger angelegten Fluegel, schmalere
+Taille, Pfoten, Schuppen und Stoffdetails erhalten die Drachenidentitaet samt
+Halstuch und Bernstein. Die gemeinsame Palette enthaelt 64 statt 40 Farben.
+
+Sitz-/Aufstehbilder beugen Hinterbeine und stuetzen die Brust auf den Vorderpfoten.
+Profil: 95 → 92 → 93, danach 93 → 94 → 95; Front: 104 → 100 → 103 und rueckwaerts;
+Ruecken: 111 → 107 → 110 und rueckwaerts. Es gibt hier keine vertikale Stauchung
+eines Standkoerpers. Die gerichtete Zwischenpose dient weiter zugleich dem
+Sprung-Ausholen. Nicht jede der 48 Quellzeichnungen bekommt eine eigene Bildrolle;
+Front-/Rueckaufstehen verwendet die Absenkung rueckwaerts. Der Bogen hat weiter 138 Rollen.
+
+Die identische Front-Standpose kalibriert den Zusatzbogen auf den Hauptbogen;
+anschliessend gilt ein gemeinsamer Massstab fuer alle Quellen. Vorderpfoten
+bleiben beim Profil-Sitzen auf demselben Bodenpunkt. Front-/Rueckbilder werden
+an der Kopfachse ausgerichtet, damit der wechselnde Schwanz den Rumpf nicht zieht.
+Neue Lider werden nur in den abgenommenen Augenfenstern eingesetzt. Standhoehe
+im Rohbild: 92 Pixel; Darstellungsfaktor 1.13 ersetzt 1.71 und erhaelt die bisherige
+Weltgroesse innerhalb der Rastertoleranz. Andere fuenf Assets bleiben bytegleich.
+
+```bash
+cd tools/character-art
+python3 ensemble_motion.py --species wyrmling
+python3 wyrmling_preview.py wyrmling-refinement-preview.gif
+python3 -m unittest test_ensemble_motion test_wyrmling_motion test_fennec_faces test_fennec_gait test_fennec_walk test_fennec_mobility -v
+```
+
+[Vorher/Nachher](wyrmling-refinement-preview.gif) zeigt gerenderte Spritefolgen in
+derselben Weltgroesse, keine APK-Aufnahme. Exakte Built-in-ImageGen-Prompts und
+Quellenzuordnung: [wyrmling-refinement-prompts.md](source/wyrmling-refinement-prompts.md).
+32 Python-Tests gruen, darunter feste Stuetzpfote, Kopfachse, gefaltete Hinterbeine,
+Lidfenster, Weltmassstab und pixelgleiche Regeneration.
+922 Kotlin-Tests und Android-Game-Kompilierung erfolgreich; zweiter Agent findet
+keine blockierenden Befunde. Die aktuelle Telefonansicht,
+Sitzhoehen an Moebeln und Uebergaenge unter echter Eingabe bleiben abzunehmen.
+Schneller Front-/Ruecklauf nutzt weiterhin Gehphasen; Rolle bleibt eine gedrehte
+kompakte Zeichnung. Kein neues Flugrecht oder neues Eingabeverhalten.

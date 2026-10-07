@@ -669,6 +669,38 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-06 - Wyrmling: schlankere Anatomie und gezeichnetes Hinsetzen
+
+**DOCUMENTED INTENT:** Martin zieht Character-Design vor die Bewohnerbeziehung.
+Der kleine Drache wirkt zu aufgeplustert; besonders beim Hinsetzen sind Glieder
+unzureichend animiert und zu wenig detailreich. Fokus dieses Schnitts: Wyrmling.
+
+**FACT / Entscheidung:** Neuer schlankerer Bewegungsbogen mit enger angelegten
+Fluegeln und deutlicheren Pfoten, Schuppen und Kleidung. 32 neue Hauptzeichnungen
+plus 16 Gelenk-/Lidzeichnungen ersetzen die alten Wyrmling-Quellen. Profil-,
+Front- und Ruecksitzen beugen die Hinterbeine statt den Standkoerper vertikal
+zusammenzudruecken. Die gerichtete Absenkung bleibt zugleich Sprung-Ausholen und
+wird beim Aufstehen rueckwaerts verwendet. 138 Rollen bleiben erhalten.
+
+**FACT / Architektur:** Zusatzquelle am gleichen Frontstand kalibriert, ein
+Massstab fuer alle Posen. Feste Profil-Vorderpfote und Kopfachse fuer Front/Ruecken
+vermeiden Schwanz-bedingtes Verrutschen. Nur Lidfenster werden beim Blinzeln
+ersetzt. 64-Farb-Palette; Faktor 1.13 ersetzt 1.71 und bewahrt die Weltgroesse.
+Andere fuenf Charakterassets, Steuerung, Spielstaende, LAS und Reminder bleiben
+unveraendert. Quellen und Prompts sind versioniert, keine neue Grafikpipeline.
+
+**FACT / Pruefung:** 922 Kotlin-Tests und 32 Python-Tests gruen, einschliesslich Regeneration des
+ausgelieferten PNGs, Kontaktpunkt, Kopfachse, Gelenksilhouette und Weltmassstab.
+Vorher/Nachher-Spritevorschau im Character-Art-Ordner; keine APK-Aufnahme.
+Zweiter Agent prueft Code, Quellen und Sichtvergleich ohne blockierenden Befund.
+Android-Game-Kompilierung (`:app-sim:compileGameKotlin`) lokal erfolgreich.
+
+**UNGEPRUEFT / Naechster Schritt:** Telefon-Sichtpruefung von Profil-/Front-/
+Ruecksitzen, Aufstehen, Gehen und Moebelankern. Schneller gerichteter Gang und
+Rolle behalten ihre bisherigen Grenzen. Regeneration, Quellen und Rueckmeldung
+stehen in `tools/character-art/README.md`. Kein Merge-/APK-Auftrag fuer diesen
+neuen Schnitt aus dem frueheren PR #335 abgeleitet.
+
 ### 2026-10-06 - Aktives Worldbuilding (worldbuilding-playable-v1)
 
 **DOCUMENTED INTENT:** Martin lässt nach den Living Maps prüfen, was für eine lebendige,

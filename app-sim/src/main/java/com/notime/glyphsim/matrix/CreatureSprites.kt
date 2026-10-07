@@ -172,14 +172,14 @@ object CreatureSprites {
         /** Die Figur fuellt ihr Bild fast ganz aus - kleiner zeichnen, damit sie so gross wirkt wie die anderen. */
         const val SCALE = 0.82f
         /**
-         * Am vorherigen Standbild gemessene Weltgroesse. Wyrmlings langer Schwanz
-         * begrenzt den Importmassstab, darf aber nicht seinen Rumpf halbieren.
+         * Am vorherigen Standbild gemessene Weltgroesse. Wyrmlings neuer Bogen
+         * hat 92 statt 61 Pixel Standhoehe; 1.13 erhaelt die bisherige Weltgroesse.
          */
         fun scaleFor(species: AvatarSpecies): Float = when (species) {
             AvatarSpecies.FENNEC -> SCALE
             AvatarSpecies.GLOOP -> 0.92f
             AvatarSpecies.PUFFLING -> 0.97f
-            AvatarSpecies.WYRMLING -> 1.71f
+            AvatarSpecies.WYRMLING -> 1.13f
             AvatarSpecies.STARLET -> 0.90f
             AvatarSpecies.HOOTLET -> 1.05f
         }
