@@ -1,6 +1,5 @@
 package com.notime.glyphsim.ui
 
-import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,15 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.notime.glyphsim.matrix.GameWorld
+import com.notime.glyphsim.matrix.PlayControl
 import com.notime.glyphsim.matrix.PlayBackpack
 import com.notime.glyphsim.matrix.PlayEffects
-import com.notime.glyphsim.matrix.PlayMap
-import com.notime.glyphsim.matrix.PlayMapScene
 import com.notime.glyphsim.matrix.PlayScene.Place
 import com.notime.glyphsim.stream.FennecWorld
 
@@ -140,17 +137,14 @@ private fun MenuButton(label: String, onClick: () -> Unit) {
 }
 
 /**
- * **Die Weltkarte** (Itoeva 2): dieselbe Pixel-Karte wie vor weiten Wegen ([PlayMapScene]), mit
+ * **Die Weltkarte** (Itoeva 2): Landschaft und die tatsaechlichen Ausgaenge, mit
  * Ortsnamen. Der eigene Standort blinkt. Tippt man einen Ort an, zeigt sie den Weg dorthin
- * ([PlayMap.route]); gegangen wird er weiterhin selbst. Ein Tipp ausserhalb schliesst sie.
+ * ([GameWorld.route]); gegangen wird er weiterhin selbst. Ein Tipp ausserhalb schliesst sie.
  */
 @Composable
-internal fun GameMapOverlay(current: Place, german: Boolean, phase: Int, initialTarget: Place? = null, onClose: () -> Unit) {
+internal fun GameMapOverlay(current: Place, german: Boolean, phase: Int, initialTarget: Place? = null, onClose: () -> Unit, pos: PlayControl.Pos = PlayControl.Pos()) {
     var target by remember { mutableStateOf(initialTarget) }
-    val labels = remember { PlayMapScene.labels(MAP_W, MAP_H) }
-    val route = remember(current, target) { target?.let { PlayMap.route(current, it) }.orEmpty() }
-    val paint = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER } }
-    val fontPx = with(LocalDensity.current) { 10.sp.toPx() }
+    val route = remember(current, target) { target?.let { GameWorld.route(current, it) }.orEmpty() }
     Box(
         Modifier
             .fillMaxSize()
@@ -179,58 +173,12 @@ internal fun GameMapOverlay(current: Place, german: Boolean, phase: Int, initial
                 if (german) "Tippe einen Ort an, um den Weg zu sehen." else "Tap a place to see the way.",
                 color = DIM, fontSize = 11.sp
             )
-            Canvas(
-                Modifier
-                    .fillMaxWidth()
-                    .height(260.dp)
-                    .padding(top = 8.dp)
-                    .pointerInput(labels) {
-                        detectTapGestures { tap ->
-                            val cellX = size.width / MAP_W.toFloat()
-                            val cellY = size.height / MAP_H.toFloat()
-                            target = labels.minByOrNull { (_, pos) ->
-                                val dx = (pos.first + 0.5f) * cellX - tap.x
-                                val dy = (pos.second + 0.5f) * cellY - tap.y
-                                dx * dx + dy * dy
-                            }?.key?.takeIf { it != current }
-                        }
-                    }
-            ) {
-                val cellX = size.width / MAP_W.toFloat()
-                val cellY = size.height / MAP_H.toFloat()
-                val blink = (phase / 4) % 2 == 0
-                for (cell in PlayMapScene.build(current, route, MAP_W, MAP_H, 1f, blink)) {
-                    val color = when {
-                        cell.isLight -> GOLD
-                        cell.brightness > 1_300 -> ACCENT
-                        cell.brightness > 600 -> DIM
-                        else -> Color(0xFF45616F)
-                    }
-                    drawRect(color, Offset(cell.x * cellX, cell.y * cellY), Size(cellX * 0.8f, cellY * 0.8f))
-                }
-                paint.textSize = fontPx
-                for ((place, pos) in labels) {
-                    val isHere = place == current ||
-                        (place == Place.LIVING && PlayMap.regionOf(current) == PlayMap.Region.HOME)
-                    paint.color = when {
-                        place == target -> 0xFFFFD88A.toInt()
-                        isHere -> 0xFF9DDAC7.toInt()
-                        else -> 0xFFDAE7EE.toInt()
-                    }
-                    drawContext.canvas.nativeCanvas.drawText(
-                        FennecWorld.name(place, german),
-                        (pos.first + 0.5f) * cellX,
-                        (pos.second + 3.6f) * cellY + fontPx / 2,
-                        paint
-                    )
-                }
-            }
+            GameWorldMap(current, pos, target, route, german, { target = it },
+                Modifier.fillMaxWidth().height(260.dp).padding(top = 8.dp))
         }
     }
 }
 
-private const val MAP_W = 100
-private const val MAP_H = 50
 
 /**
  * **Der Rucksack** (Itoeva 2): acht Plaetze und reversible Ablage. Ein Ding antippen waehlt es;

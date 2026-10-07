@@ -669,6 +669,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-07 - Gemeinsame Landschaft und folgende Kamera (continuous-world-v1)
+
+- **DOCUMENTED INTENT:** Martin moechte die alten Orte und Karte erneuern, kleinere Orte zu
+  begehbaren Gegenden verbinden und die Kamera folgen sowie situationsabhaengig zoomen lassen.
+  Freigegebener erster Schnitt: Strasse -> Park -> Wiese -> Wald.
+- **FACT:** Vier Orts-IDs benutzen jetzt ein einziges gemaltes Panorama und einen gemeinsamen
+  Boden. An den inneren Raendern entfallen Schwarzblende, Randwartezeit und Bewegungsneustart.
+  Alle bisherigen Orte bleiben erreichbar. Gebaeude und groessere Gebiete behalten ihre Grenze.
+- **TESTED BEHAVIOR:** Kameraprojektion und Touch-Umkehrung teilen dieselbe immutable Rechnung;
+  Nachlauf ist bildratenunabhaengig, Zoom hat Hysterese. Randuebertritte erhalten Fussposition,
+  Groesse, Geschwindigkeit, Gangart und Gangphase. Neue Sicherheitsanker, vorhandene Funde,
+  Routen und Speicherformat werden getestet. Ein Einwohner erscheint in der gemeinsamen Welt
+  beim Ortswechsel genau einmal.
+- **Architektur:** `GameWorld`, `GameCamera` und Game-spezifische Renderer; die bestehende
+  Bewegungsphysik und Population bleiben die einzigen Quellen. Karte folgt Game-Ausgaengen.
+  Alte App, Stream, Reminder, XP, Musikregeln und Room-Schemas werden nicht umgebaut.
+- **Migration/Ruecksetzung:** Ortsnamen und Codec-Version bleiben erhalten. Spielpositionen
+  werden gegen die aktive Geometrie geprueft. Ruecknahme des Weltcommits nach `4fad98d` braucht
+  keine Rueckmigration, kann die Figur gegen alte Moebel auf einen freien Bodenpunkt setzen.
+- **UNVERIFIED:** Android-/Telefon-Touch, Lifecycle, Moebelanker und GPU/Bildrate. Die
+  Kotlin-basierte Vorschau ist keine APK-Aufnahme. Neun Innenraeume und die uebrige Wildnis
+  sind Folgegebiete, noch nicht durch dieses Panorama ersetzt.
+- **Pruefung/Naechster Schritt:** 937 reine Kotlin-Tests gruen, Desktop-Vorschau mit echter
+  Bewegung/Kamera gerendert, Diff-Check sauber. Android-Kompilierung nicht bestaetigt:
+  Online-Netzwerkfreigabe beendet, offline fehlen Build-Abhaengigkeiten. Push/PR wurde von der
+  automatischen Freigabepruefung zunaechst blockiert. Martin hat das Hochladen nach
+  `MartinZurek/Itoeva` und Anlegen des PRs am 07.10.2026 freigegeben. Finaler CI-Stand im PR;
+  Runbook und Grenzen: `docs/itoeva2-continuous-world.md`.
+  Danach Android-CI und Telefonabnahme, erst dann weitere gemeinsame Gebiete anschliessen.
+- **CI-Korrektur:** Verify #842 bestaetigt Android-Kompilierung und Emulatorpruefungen auf
+  API 26/35, scheitert aber beim Uebersetzen des neuen Asset-Unit-Tests an `javax.imageio`.
+  Dieser Desktop-Import ist aus dem Android-Test entfernt; PNG-Signatur und IHDR-Abmessungen
+  werden direkt gelesen. Produktcode und Bild bleiben gleich. Finales CI-Ergebnis im PR #340.
+
 ### 2026-10-07 - Ensemble: eigene Gelenkposen und feinere Charakterdetails
 
 **DOCUMENTED INTENT:** Martin laesst nach Wyrmling die verbleibenden Charaktere

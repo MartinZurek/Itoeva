@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.IntSize
 import com.notime.glyphsim.matrix.GameEnvironment
 import com.notime.glyphsim.matrix.GameRoomCatalog
 import com.notime.glyphsim.matrix.GameSceneLighting
+import com.notime.glyphsim.matrix.GameCamera
+import com.notime.glyphsim.matrix.GameWorld
 import com.notime.glyphsim.matrix.GameScenes
 import com.notime.glyphsim.matrix.PlayControl
 import kotlin.math.PI
@@ -38,6 +40,7 @@ class GameRoomLayers(val base: ImageBitmap?, val atlas: ImageBitmap?, val grid: 
 fun rememberGameRoomLayers(scene: GameScenes.Scene?): GameRoomLayers {
     val context = LocalContext.current
     return remember(scene?.asset) {
+        if (scene != null && GameWorld.isWorld(scene)) return@remember GameRoomLayers(null, null, null)
         val stem = scene?.asset?.removeSuffix(".png")
         fun load(suffix: String): ImageBitmap? = stem?.let {
             runCatching { context.assets.open("${it}_$suffix.png").use { BitmapFactory.decodeStream(it) }?.asImageBitmap() }.getOrNull()
@@ -180,9 +183,10 @@ internal fun DrawScope.roomShore(scene: GameScenes.Scene, layers: GameRoomLayers
 @Composable
 fun GameRoomForegroundView(scene: GameScenes.Scene, layers: GameRoomLayers,
     state: GameEnvironment.State, avatarPos: PlayControl.Pos, fade: Float, minuteOfDay: Int,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier, camera: GameCamera.State? = null) {
+    if (GameWorld.isWorld(scene)) return
     Canvas(modifier) {
-        val fit = GameScenes.fit(scene, size.width, size.height, avatarPos.x, avatarPos.depth)
+        val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, avatarPos.x, avatarPos.depth)
         val alpha = fade.coerceIn(0f, 1f)
         roomParts(scene, layers, state, fit, alpha, true, GameSceneLighting.darkness(scene, minuteOfDay))
         roomContacts(scene, state, fit, alpha * (1f - GameSceneLighting.darkness(scene, minuteOfDay)), true)

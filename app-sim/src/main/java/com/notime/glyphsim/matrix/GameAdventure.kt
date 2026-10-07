@@ -50,7 +50,7 @@ object GameAdventure {
         val x = requested.x.takeIf { it.isFinite() }?.coerceIn(.025f, .975f) ?: .5f
         val d = requested.depth.takeIf { it.isFinite() }?.coerceIn(.025f, .975f) ?: .65f
         val pos = PlayControl.Pos(x, d)
-        val obstacles = surfaces ?: GameScenes.of(place)?.let { GameSurfaces.painted(it) }.orEmpty()
+        val obstacles = surfaces ?: GameWorld.scene(place)?.let { GameSurfaces.painted(it) }.orEmpty()
         if (obstacles.none { it.contains(pos) && it.heightAt(pos) > 1f }) return pos
         return (1..19).flatMap { ix -> (1..19).map { iy -> PlayControl.Pos(ix / 20f, iy / 20f) } }
             .filter { p -> obstacles.none { it.contains(p) && it.heightAt(p) > 1f } }
@@ -117,7 +117,7 @@ object GameAdventure {
         val requested = if (id == ObjectId.BENCH || id == ObjectId.CAMP) bench?.let {
             GameScenes.posAt(scene, it.standX, it.standY)
         } ?: id.pos else id.pos
-        return safePosition(scene.place, requested)
+        return safePosition(scene.place, requested, GameSurfaces.painted(scene))
     }
 
     fun meet(state: State, profile: String): State = if (LivingResidents.all.any { it.profileId == profile })

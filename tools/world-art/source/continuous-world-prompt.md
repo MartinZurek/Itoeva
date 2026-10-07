@@ -1,0 +1,10 @@
+# Gemeinsame Landschaft - Originalprompt
+
+Erzeugt am 07.10.2026 mit dem eingebauten Imagegen-Werkzeug. Stilreferenz:
+`tools/world-art/overview.png`. Asset: `app-sim/src/game/assets/world/street-park-forest.png`.
+Originalgroesse 2172 x 724; virtuelle Weltkoordinaten 1920 x 640, gleiches Seitenverhaeltnis.
+Keine nachtraegliche Retusche, kein kostenpflichtiger externer API-Aufruf.
+
+```text
+Use case: stylized-concept. Asset type: final playable panoramic environment background for Itoeva 2, a 2.5D exploration game. Reference image: the attached overview only defines the established painterly fine pixel art style and warm natural palette; do NOT copy its grid or panels. Create ONE absolutely continuous wide panoramic landscape at 3:1 aspect ratio, ideally 3072x1024, no panels, no borders. A side-view countryside promenade runs continuously left to right in the bottom fifth of the image, at the same height and depth all the way across. Four consecutive areas each about one quarter of width: far left a small cozy street with a warm timber/stone house, bookshop and cafe storefronts and a street lamp; next a landscaped park with one wooden bench and flower beds; next an open flowering meadow with distant trees and low hills; last a quiet woodland with a low fallen log, ferns and birch/pine trunks. Buildings behind the path only. Upper area contains the sky, background hills and canopy; bottom 15% is clear, walkable dirt/stone/grass ground spanning every inch of width, no obstacles or water cutting the path. Clear shared side-view perspective, restrained painterly pixel textures, beautiful detailed game background, soft daylight. Bench centered around 36% of total image width, its seat at roughly 77% of image height; fallen log around 91% width same height. NO characters, no NPCs, no text or words, no UI, no arrows, no map symbols, no frame. This is the actual game environment, not a concept sheet. Keep foreground path straight and continuous so a character can walk from street to park to meadow to forest without any visual transition.
+```

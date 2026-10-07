@@ -10,13 +10,15 @@ object GameResidents {
 
     fun tick(scene: GameScenes.Scene, actors: Map<String, Actor>, snapshots: List<ResidentSnapshot>,
         millis: Long, clock: Long, talking: String?): Map<String, Actor> {
+        val surfaces = GameSurfaces.painted(scene)
+        fun safe(pos: PlayControl.Pos) = GameAdventure.safePosition(scene.place, pos, surfaces)
         val here = snapshots.filter { it.publiclyPresent && it.place == scene.place }.associateBy { it.profileId }
         val ids = (actors.keys + here.keys).sorted()
         val occupied = mutableListOf<PlayControl.Pos>()
         return ids.mapNotNull { id ->
             val snapshot = here[id] ?: actors[id]?.snapshot ?: return@mapNotNull null
             val index = LivingResidents.all.indexOfFirst { it.profileId == id }.coerceAtLeast(0)
-            val old = actors[id] ?: Actor(snapshot, GameAdventure.safePosition(scene.place, PlayControl.Pos(.025f, .5f)))
+            val old = actors[id] ?: Actor(snapshot, safe(PlayControl.Pos(.025f, .5f)))
             val leaving = id !in here
             val preferred = when (snapshot.currentAction) {
                 ActionKind.READ -> listOf(Station.BOOKSHELF, Station.BENCH, Station.SEAT)
@@ -34,11 +36,10 @@ object GameResidents {
                 else -> PlayControl.Pos(if ((clock / 25_000L + index) % 2L == 0L) .25f + index * .055f else .70f - index * .035f,
                     .35f + (index % 3) * .2f)
             }
-            val origin = GameAdventure.safePosition(scene.place, destination)
+            val origin = safe(destination)
             val target = if (leaving || id == talking) origin else {
                 val candidates = sequenceOf(0f, .13f, -.13f, .26f, -.26f).flatMap { dx ->
-                    sequenceOf(0f, .18f, -.18f).map { dd -> GameAdventure.safePosition(scene.place,
-                        PlayControl.Pos(origin.x + dx, origin.depth + dd)) }
+                    sequenceOf(0f, .18f, -.18f).map { dd -> safe(PlayControl.Pos(origin.x + dx, origin.depth + dd)) }
                 }
                 candidates.firstOrNull { candidate -> occupied.all { other ->
                     val dx = candidate.x - other.x; val dd = (candidate.depth - other.depth) * .25f

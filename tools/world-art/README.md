@@ -133,3 +133,14 @@ ohne Android. Die eingezeichneten Wasser-Ringe demonstrieren erreichbare nasse
 Bildpunkte. Figuren, Tageslicht, Brandung und interaktive Kontaktpartikel
 werden in dieser Desktop-Vorschau nicht vollstaendig wiedergegeben; am Telefon
 muessen deren Darstellung, Leistung und Kollisionen gesondert geprueft werden.
+
+## Gemeinsame Landschaft (07.10.2026)
+
+`app-sim/src/game/assets/world/street-park-forest.png` ist ein einziges Panorama fuer den
+Game-Weg Strasse -> Park -> Wiese -> Wald. Eingebautes Imagegen, Stilreferenz `overview.png`,
+Originalprompt in `source/continuous-world-prompt.md`. Keine Retusche nach der Erzeugung.
+`GameWorld` beschreibt Boden und Ortsanker; der bisherige generierte Katalog bleibt erhalten.
+
+`preview_world.kt` rendert die echte Kotlin-Kamera und Bewegung in
+`continuous-world-preview.mp4`, mit dem aktuellen Fennec. Das ist keine APK-Aufnahme.
+Aufruf, Geraetepruefung und naechste Bildpakete: `docs/itoeva2-continuous-world.md`.

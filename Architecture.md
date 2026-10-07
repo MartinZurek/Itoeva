@@ -508,3 +508,16 @@ App 1 und Stream behalten reale Zeit und ihre bisherigen Persistenzpfade.
 
 Die Abnahme und verbliebenen Ausbaupakete stehen in
 [docs/itoeva2-worldbuilding.md](docs/itoeva2-worldbuilding.md).
+
+### Itoeva 2: gemeinsame Landschaft und Kamera (07.10.2026)
+
+`GameWorld` liefert nur dem Game-Client eine gemeinsame Panorama-Geometrie fuer Strasse, Park,
+Wiese und Wald. Orts-IDs bleiben fuer Persistenz, Bewohner und Aktionen erhalten. `GameCamera`
+rechnet pro Bildtakt eine Projektion fuer Hintergrund, Figur, Sprung, Schatten, Requisiten,
+Bewohner und Trefferflaechen. Die vier Teilbilder werden nicht mehr gewechselt: ein gecachtes
+Panorama steht hinter allen Abschnitten. Der alte `GameScenes`-Katalog bleibt unveraendert.
+
+`GameMovement` behaelt Beschleunigung und Kollisionsphysik; bei einem gemeinsamen Rand wird nur
+die lokale Position umgesetzt. Population-Snapshots bleiben die eine Bewohnerquelle, ein
+profilbezogener Filter verhindert Doppelbilder beim Ortswechsel. Die neue Game-Karte folgt den
+Game-Ausgaengen. Test- und Ruecksetzvertrag: `docs/itoeva2-continuous-world.md`.

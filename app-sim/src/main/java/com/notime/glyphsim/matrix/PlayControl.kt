@@ -70,7 +70,8 @@ object PlayControl {
         return if (s <= 0.55f) s / 0.55f else 1f + (s - 0.55f) / 0.45f * 1.5f
     }
 
-    fun step(pos: Pos, stick: Stick, dtMs: Long): Step {
+    fun step(pos: Pos, stick: Stick, dtMs: Long, exitDelayMs: Long = EXIT_PUSH_MS,
+        immediateExits: Set<Dir> = emptySet()): Step {
         val amount = stick.strength
         if (amount < 0.01f) return Step(pos.copy(pushMs = 0L))
         val dt = dtMs.coerceIn(0L, 100L) / 1000f
@@ -87,7 +88,7 @@ object PlayControl {
         val clamped = Pos(nx.coerceIn(0f, 1f), nd.coerceIn(0f, 1f))
         if (exit == null) return Step(clamped)
         val pushed = pos.pushMs + dtMs.coerceIn(0L, 100L)
-        return if (pushed >= EXIT_PUSH_MS) Step(clamped, exit) else Step(clamped.copy(pushMs = pushed))
+        return if (exit in immediateExits || pushed >= exitDelayMs) Step(clamped, exit) else Step(clamped.copy(pushMs = pushed))
     }
 
     /** Ein Schritt in Richtung [dir] ueber [dtMs] Millisekunden. */
