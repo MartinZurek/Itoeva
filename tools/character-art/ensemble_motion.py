@@ -1,13 +1,12 @@
 """Gezeichnete Gangphasen der fuenf Wesen in Fennecs bestehenden Bogen importieren.
 
 Die Konzeptbilder sind Identitaetsreferenzen, keine ausgeschnittenen Spielposen.
-Der Atlas enthaelt neue Zeichnungen. Nur kleine Regungen und die Zwischenposen
-der Aktionen entstehen mit dem vorhandenen Puppet-Werkzeug. Alle Bilder sind
+Der Atlas enthaelt neue Zeichnungen. Nur kleine Regungen und die Drehung der
+kompakten Rollpose entstehen mit dem vorhandenen Puppet-Werkzeug. Alle Bilder sind
 vorberechnet; Android erzeugt im Zeichentakt keine Bitmaps oder neuen Skelette.
 """
 from pathlib import Path
 import argparse
-import json
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
@@ -26,7 +25,7 @@ PROFILE = {
     'starlet': dict(head=1.4, tip=2.6, cloth=1.5, breath=.018),
     'hootlet': dict(head=3.4, tip=1.2, cloth=1.8, breath=.008),
 }
-WORLD_SCALE = dict(gloop=.92, puffling=.97, wyrmling=1.13, starlet=.90, hootlet=1.05)
+WORLD_SCALE = dict(gloop=1.16, puffling=1.28, wyrmling=1.13, starlet=.98, hootlet=1.18)
 
 
 def drawings(name, *, source=None, count=32, columns=4):
@@ -125,59 +124,14 @@ def idle(frame, name, palette, n=8, sleeping=False):
     return result
 
 
-def posture(frame, name, palette, bend=0, compress=1, reach=0):
-    p, (cx,hy) = rig(frame, name)
-    return render_rig(p, {
-        'body': affine(pivot=(cx,GROUND-6), sy=compress, sx=1+(1-compress)*.18),
-        'head': affine(bend, (cx,hy), t=(reach,0)),
-        'tip': affine(-bend*.2, (cx,hy-20)),
-        'cloth': affine(-bend*.4, (cx-10,hy)),
-    }, palette)
-
-
-# Verifizierte Augenfenster der registrierten Frontbilder. Die Brillenringe
-# bleiben ausserhalb; Material an Fluegeln kann nie als Auge klassifiziert werden.
+# Lidfenster aus den registrierten neuen Zeichnungen; Brillenringe bleiben fest.
 EYE_WINDOWS = {
-    'gloop': ((53, 83, 63, 98), (77, 83, 87, 98)),
-    'puffling': ((47, 66, 60, 83), (74, 66, 86, 82)),
+    'gloop': ((48, 91, 57, 104), (71, 91, 79, 104)),
+    'puffling': ((50, 81, 59, 93), (72, 81, 80, 93)),
     'wyrmling': ((53, 55, 63, 63), (70, 55, 78, 63)),
-    'starlet': ((45, 72, 58, 90), (71, 72, 84, 90)),
-    'hootlet': ((52, 72, 64, 84), (70, 72, 81, 84)),
+    'starlet': ((47, 75, 58, 88), (73, 75, 83, 89)),
+    'hootlet': ((52, 78, 61, 89), (69, 78, 77, 88)),
 }
-
-
-def front_blink(front, palette, name):
-    """Neu gezeichnete Lider importieren, nur innerhalb verifizierter Augenfenster.
-
-    ImageGen hat den Korrekturbogen leicht neu angeordnet. Registrierung am
-    gesamten Frontkoerper gleicht das aus; ausserhalb der Augen bleibt jeder
-    Originalpixel unveraendert. Keine geometrische Augen-Erkennung am Umhang.
-    """
-    rgba=np.asarray(Image.open(HERE/'source/ensemble-front-blink-atlas.png').convert('RGBA'))
-    labels,_=ndimage.label(rgba[...,3]>200)
-    sizes=np.bincount(labels.ravel())
-    figures=[]
-    for label in np.flatnonzero(sizes>1200):
-        if not label:continue
-        ys,xs=np.nonzero(labels==label)
-        isolated=rgba.copy();isolated[labels!=label]=0
-        figures.append((ys.mean(),xs.mean(),isolated[ys.min():ys.max()+1,xs.min():xs.max()+1]/255.))
-    if len(figures)!=10:raise ValueError('Lidschlagquelle hat nicht zehn Figuren')
-    figures.sort(key=lambda f:f[0])
-    art=sorted(figures[5:],key=lambda f:f[1])[NAMES.index(name)][2]
-    ys,xs=np.nonzero(front[...,3]>.5)
-    scale=(ys.max()-ys.min()-1)/art.shape[0]
-    small=pixelize(art,scale,palette)
-    yy,xx=np.nonzero(small[...,3]>.5)
-    dx=round((xs.min()+xs.max())/2-(xx.min()+xx.max())/2)
-    dy=GROUND-yy.max()
-    mapped=np.zeros_like(front);mapped[yy+dy,xx+dx]=small[yy,xx]
-    out=front.copy()
-    for x0,y0,x1,y1 in EYE_WINDOWS[name]:
-        patch=mapped[y0:y1,x0:x1]
-        if not (patch[...,3]>.5).all():raise ValueError(f'{name}: unvollstaendiges Augenfenster')
-        out[y0:y1,x0:x1]=patch
-    return out
 
 
 def rolled(curl, palette):
@@ -203,49 +157,8 @@ def frames(name):
     if name == 'wyrmling':
         from wyrmling_motion import frames as wyrmling_frames
         return wyrmling_frames()
-    manifest=json.loads((HERE/'source/ensemble-motion-manifest.json').read_text())
-    art,pal,scale=register(drawings(name))
-    indexes=manifest[name]
-    stand,front,back,blink=[art[i] for i in indexes['neutral']]
-    walk=[art[i] for i in indexes['walk']]
-    fw=[art[i] for i in indexes['front_walk']]
-    bw=[art[i] for i in indexes['back_walk']]
-    run=[art[i] for i in indexes['run']]
-    crouch,jump,sit,sleep,stretch,reach,curl,joy=[art[i] for i in indexes['actions']]
-    neutral=idle(stand,name,pal)
-    fi,bi=idle(front,name,pal),idle(back,name,pal)
-    landing=posture(crouch,name,pal,compress=.97)
-    # Die alte grobe Freude darf ein wirklich freudiges Gesicht zeigen. Ein
-    # gesteuerter Sprung verwendet weiterhin die eigenen Aktionsrollen 84-87.
-    joy_clip=[crouch,joy,joy,jump,landing,stand]
-    result=neutral+[blink]+walk+joy_clip+idle(sleep,name,pal,n=4,sleeping=True)
-    result += [front]+fw+[back]+bw+[front,back]+fi+bi+[front_blink(front,pal,name)]
-    # Freude ist beim Sprung eine zur Hoehe passende Haltung; Auf/Ab kommen vom Spiel.
-    fj=[posture(front,name,pal,compress=.90),front,posture(front,name,pal,compress=1.02),front,front,front]
-    bj=[posture(back,name,pal,compress=.90),back,posture(back,name,pal,compress=1.02),back,back,back]
-    result += fj+bj
-    result += [fw[i//2] for i in range(8)]+[bw[i//2] for i in range(8)]
-    # Dieselben sechzehn Aktionsrollen wie Fennec, mit anatomisch eigener Quelle.
-    result += [crouch,jump,jump,landing,
-               posture(stand,name,pal,bend=9,compress=.94),
-               posture(stand,name,pal,bend=17,compress=.86),
-               posture(crouch,name,pal,bend=4),crouch,
-               posture(sit,name,pal,compress=1.08),sit,
-               posture(stand,name,pal,compress=.95),stand,stretch,reach,
-               posture(reach,name,pal,bend=-6),sleep]
-    for base in (front,back):
-        result += [posture(base,name,pal,compress=.85),
-                   posture(base,name,pal,compress=1.02),base,
-                   posture(base,name,pal,compress=.72),base,
-                   posture(base,name,pal,bend=8,compress=.88),
-                   posture(base,name,pal,compress=1.04)]
-    result += [run[i//2] for i in range(8)]
-    # Gerichtetes schnelles Gehen behaelt die eigene Front-/Rueckanatomie.
-    # Bis zu eigenen Sprintzeichnungen sind es die gerichteten Schritte, ohne Flugrecht.
-    result += fw+bw+rolled(curl,pal)
-    if len(result)!=COUNT:
-        raise ValueError(f'{name}: {len(result)} statt {COUNT} Rollen')
-    return result
+    from refined_motion import frames as refined_frames
+    return refined_frames(name)
 
 
 def build(names=NAMES):

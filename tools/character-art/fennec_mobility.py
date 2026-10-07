@@ -14,9 +14,10 @@ HERE = Path(__file__).resolve().parent
 FRAME, GROUND = 128, 125
 DIRECTION_FIRST, ACTION_FIRST, DIRECTION_ACTION_FIRST = 68, 84, 100
 FRAME_COUNT = 138
+FRONT_EYES = ((52, 52, 62, 62), (65, 52, 75, 62))
 
 
-def drawings(filename, columns, rows):
+def drawings(filename, columns, rows, active=None):
     a = np.asarray(Image.open(HERE / 'source' / filename).convert('RGBA'))
     labels, _ = ndimage.label(a[..., 3] > 128)
     sizes = np.bincount(labels.ravel())
@@ -27,19 +28,21 @@ def drawings(filename, columns, rows):
     figures = []
     for label in ids:
         ys, xs = np.nonzero(labels == label)
-        if xs.min() == 0 or ys.min() == 0 or xs.max() == a.shape[1]-1 or ys.max() == a.shape[0]-1:
-            raise ValueError(f'{filename}: angeschnittene Figur')
+        clipped = xs.min() == 0 or ys.min() == 0 or xs.max() == a.shape[1]-1 or ys.max() == a.shape[0]-1
         mask = ndimage.binary_dilation(labels == label, iterations=2)
         isolated = a.copy()
         isolated[~mask] = 0
         box = (max(0, xs.min()-3), max(0, ys.min()-3),
                min(a.shape[1], xs.max()+4), min(a.shape[0], ys.max()+4))
-        figures.append((ys.min(), xs.min(), isolated[box[1]:box[3], box[0]:box[2]] / 255.0))
+        figures.append((ys.min(), xs.min(), isolated[box[1]:box[3], box[0]:box[2]] / 255.0, clipped))
     figures.sort(key=lambda item: item[0])
     ordered = []
     for row in range(rows):
         ordered += sorted(figures[row*columns:(row+1)*columns], key=lambda item: item[1])
-    return [item[2] for item in ordered]
+    selected = ordered if active is None else [ordered[i] for i in active]
+    if any(item[3] for item in selected):
+        raise ValueError(f'{filename}: angeschnittene aktive Figur')
+    return [item[2] for item in selected]
 
 
 def rasterize(drawings, scale, palette, head_anchor=False):
@@ -105,6 +108,26 @@ def gentle_idle(frame, palette):
 
 def apply(existing, palette):
     directions, actions, directional = frames(palette)
+    # Nur die vollstaendige erste Sitzzeile ist freigegeben. Der unbenutzte
+    # Lidschlag der zweiten Quellzeile ist am Rand angeschnitten und bleibt aus.
+    source = drawings('fennec-posture-refined-atlas.png', 4, 2, active=range(4))
+    reference_y = np.nonzero(existing[0][..., 3] > .5)[0]
+    # Ein Massstab aus dem Stand, nicht aus einer niedrigen Sitzsilhouette.
+    scale = (reference_y.max()-reference_y.min()-1)/source[0].shape[0]
+    seated = rasterize(source[:4], scale, palette)
+    actions[8:12] = [seated[i] for i in (1, 2, 3, 0)]
+    # Der Schwanz darf die Sitzfolge nicht seitlich ziehen. Der vordere
+    # Stiefel bleibt auf demselben Kontakt, waehrend Knie und Huefte beugen.
+    support_y, support_x = np.nonzero(existing[0][..., 3] > .5)
+    target = int(support_x[support_y >= GROUND-3].max())
+    for i in (8, 9, 10, 11):
+        y, x = np.nonzero(actions[i][..., 3] > .5)
+        dx = target-int(x[y >= GROUND-3].max())
+        if (x+dx).min() <= 0 or (x+dx).max() >= FRAME-1:
+            raise ValueError('Fennec: Sitzanker schneidet Zeichnung an')
+        moved = np.zeros_like(actions[i])
+        moved[y, x+dx] = actions[i][y, x]
+        actions[i] = moved
     existing[28:32] = [directions[i] for i in (0, 2, 4, 6)]
     existing[33:37] = [directions[i+8] for i in (0, 2, 4, 6)]
     existing[27], existing[32] = directional[4], directional[11]
@@ -119,7 +142,14 @@ def apply(existing, palette):
     blink = drawings('fennec-front-blink.png', 1, 1)[0]
     reference = np.nonzero(directional[4][..., 3] > .5)[0]
     scale = (reference.max()-reference.min()-1) / blink.shape[0]
-    existing[55] = rasterize([blink], scale, palette, True)[0]
+    lids = rasterize([blink], scale, palette, True)[0]
+    existing[55] = directional[4].copy()
+    for x0, y0, x1, y1 in FRONT_EYES:
+        # Kopf/Lider der Quelle liegen zwei Rasterzeilen tiefer.
+        patch = lids[y0+2:y1+2, x0:x1]
+        if not (patch[..., 3] > .5).all():
+            raise ValueError('Fennec: unvollstaendiges Lidfenster')
+        existing[55][y0:y1, x0:x1] = patch
     existing[56:62] = [directional[i] for i in (0, 1, 2, 2, 0, 4)]
     existing[62:68] = [directional[i] for i in (7, 8, 9, 9, 7, 11)]
     # Ein fester Massstab pro Quelle; der Vierbeiner wird durch seine Haltung niedriger.

@@ -177,11 +177,11 @@ object CreatureSprites {
          */
         fun scaleFor(species: AvatarSpecies): Float = when (species) {
             AvatarSpecies.FENNEC -> SCALE
-            AvatarSpecies.GLOOP -> 0.92f
-            AvatarSpecies.PUFFLING -> 0.97f
+            AvatarSpecies.GLOOP -> 1.16f
+            AvatarSpecies.PUFFLING -> 1.28f
             AvatarSpecies.WYRMLING -> 1.13f
-            AvatarSpecies.STARLET -> 0.90f
-            AvatarSpecies.HOOTLET -> 1.05f
+            AvatarSpecies.STARLET -> 0.98f
+            AvatarSpecies.HOOTLET -> 1.18f
         }
         const val IDLE_FIRST = 0
         const val IDLE_COUNT = 8

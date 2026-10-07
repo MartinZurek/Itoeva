@@ -374,3 +374,57 @@ keine blockierenden Befunde. Die aktuelle Telefonansicht,
 Sitzhoehen an Moebeln und Uebergaenge unter echter Eingabe bleiben abzunehmen.
 Schneller Front-/Ruecklauf nutzt weiterhin Gehphasen; Rolle bleibt eine gedrehte
 kompakte Zeichnung. Kein neues Flugrecht oder neues Eingabeverhalten.
+
+## Ensemble: eigene Gelenke und feinere Details (07.10.2026)
+
+Gloop, Puffling, Starlet und Hootlet erhalten je 32 Hauptzeichnungen und 16
+Gelenk-/Lidzeichnungen, importiert durch `refined_motion.py`. Gloop sinkt in
+seine beinlosen Schleimloben, Puffling faltet kurze Beine, Starlet beugt die
+unteren Sternspitzen, Hootlet hockt auf gebeugten Vogelgelenken. Blattadern,
+Flaum, Sternfacetten, Federn, Kleidung und Schmuck nutzen eine 64-Farb-Palette.
+
+Die ersten 32 Figuren aus `<wesen>-refined-atlas.png` sind aktiv. Die letzten
+16 in Gloop/Puffling/Hootlets Hauptbogen werden durch `<wesen>-posture-atlas.png`
+ersetzt; Starlets korrigierter Hauptbogen hat genau 32 Figuren. Die gleiche
+Standanatomie kalibriert den Zusatzbogen getrennt fuer Profil und Front.
+Sitzfiguren behalten den Massstab ihrer Ansicht, statt auf Standhoehe gedehnt
+zu werden. Die alte Stand-Stauchung ist entfernt. Bodenmitte und obere
+Koerperachse bleiben beim Sitzen fest. Blinzeln aendert nur gepruefte Lidfenster.
+Zwei Hootlet-Gangphasen und eine Gloop-Schnellphase bekommen offene Quellaugen;
+Koerper und Gangzeichnung dieser Phasen bleiben erhalten.
+
+| Wesen | Bisherige Welt-Standhoehe | Neuer Faktor |
+|---|---:|---:|
+| Gloop | 80.96 | 1.16 |
+| Puffling | 83.42 | 1.28 |
+| Starlet | 80.10 | 0.98 |
+| Hootlet | 76.65 | 1.18 |
+
+Profil-Sitzfolge: 95 → 92 → 93, Aufstehen 93 → 94 → 95. Front: 104 → 100 → 103;
+Ruecken: 111 → 107 → 110; Aufstehen dort rueckwaerts. Alle 138 Rollen bleiben.
+Fennecs neue Profilposen nutzen explizit nur die ersten vier vollstaendigen
+Figuren von `fennec-posture-refined-atlas.png`; der angeschnittene unbenutzte
+Lidschlag in Zeile zwei wird nicht importiert. Ein gemeinsamer Standmassstab
+und fester vorderer Stiefelkontakt verhindern Verschieben und Groessenspruenge.
+Frontblink 55 aendert nur Lider. Genau Rollen 22,55,92–95 aendern sich, die
+anderen 132 bleiben pixelgleich. Wyrmling bleibt bytegleich.
+
+```bash
+cd tools/character-art
+python3 ensemble_motion.py --species gloop
+python3 ensemble_motion.py --species puffling
+python3 ensemble_motion.py --species starlet
+python3 ensemble_motion.py --species hootlet
+python3 rich_sheets.py
+python3 refined_preview.py ensemble-refinement-preview.gif
+python3 -m unittest test_ensemble_motion test_refined_motion test_wyrmling_motion test_fennec_faces test_fennec_gait test_fennec_walk test_fennec_mobility -v
+```
+
+[Vorher/Nachher](ensemble-refinement-preview.gif) zeigt Sitzen/Aufstehen aus drei
+Ansichten und Gehen in gleicher Weltgroesse, 1.5-fach vergroessert. Es ist ein
+Spritevergleich, keine APK-Aufnahme. [Quellen und Built-in-ImageGen-Prompts](source/ensemble-refinement-prompts.md)
+dokumentieren die Zeichenboegen und Auswahl. 41 Python-Tests und 922 Kotlin-Tests
+sind auch nach Wiederherstellung des unterbrochenen Uploads erneut gruen. Lokale Android-Kompilierung konnte das bereits
+vorhandene AGP-Plugin 8.13.1 nicht abrufen; Android-Build und Telefon-Sichtpruefung
+bleiben offen. Schneller gerichteter Lauf nutzt Gehphasen; Rolle bleibt eine
+gedrehte kompakte Zeichnung. Keine Steuerungs-, Reminder- oder Spielstandaenderung.
