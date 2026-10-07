@@ -6509,3 +6509,33 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Naechster Schritt:** Die sichtbare Bewegung am Geraet zusammen mit Schlafrueckblick und den
   motiveigenen Reaktionen beurteilen. Fuer die Weltlogik bleibt NT-088 der naechste offene
   Schnitt; NT-089 rendert danach mehrere anwesende Einwohner.
+
+### 2026-10-07 - Gemalte Räume werden ein begehbarer Godot-Ausschnitt
+
+- **Ausgangsproblem:** Der Godot-Prototyp aus PR #341 bewies Android-Export und räumliche
+  Steuerung, zeigte aber ein abgeschlossenes Wohnzimmer aus kantigen Formen und kleinen
+  Pixeltexturen. Die gemalten Räume und Landschaften sollten räumlich übersetzt werden;
+  willkürliche Ortswechsel und versperrte Rückwege sollten verschwinden.
+- **Entscheidung:** Ein begrenzter, visuell ausgearbeiteter Ausschnitt verbindet Wohnzimmer,
+  Haustür, Gartenweg, Strand und flaches Wasser auf demselben Boden. Gemalte Materialien und
+  Pflanzen, gerundete Polstermöbel, Bogenfenster, lokale Beleuchtung und eine kontextabhängige
+  Kamera übersetzen den Bildstil in echte 3D-/2.5D-Geometrie.
+- **Erster Beleg:** Der Godot-Probelauf geht durch die tatsächliche Türöffnung bis ins Wasser
+  und durch dieselbe Öffnung zurück. Er prüft Bodenkollision, Waten und Sprung/Landung.
+  Gerenderte Ansichten aus zwei Raumwinkeln zeigen dieselbe räumliche Einrichtung.
+- **Architekturentscheidungen:** Statische Kollisionen liefern ein gemeinsames NavigationMesh.
+  Zielorte planen Wege; sie teleportieren nicht. Direkte Touchbewegung und Tastatur verwenden
+  denselben CharacterBody3D mit Schwerkraft. Ausgeblendete Wände behalten Kollision und
+  Schatten, werden für das Antippen des sichtbaren Bodens gezielt übersprungen. Die vorhandene
+  Fennec-Bildfolge und die separate Android-Paketidentität werden weiterverwendet.
+- **Abgrenzung:** Kleiner Godot-Prototyp, keine vollständige Portierung der bisherigen Welt,
+  kein automatisches 3D-Modell aus einem einzelnen Bild. Kein Umbau von Reminder-Semantik,
+  Pflegebuch, Spielstand, Living Agent, Musik oder Stream. Kein Merge ohne Martins Auftrag.
+- **Betroffene Bereiche:** `godot-prototype/`, dessen Material-/Pflanzenassets, Dokumentation
+  und Godot-APK-Workflow. Der Workflow stoppt bei Import- oder Verhaltensfehlern vor dem Export.
+- **Tests:** Godot 4.4.1: Headless-Import und `--validate`; Software-OpenGL/Xvfb: `--probe`
+  mit echten Screenshots und derselben Weltprüfung. Android-Export und Drive-Upload werden
+  im zugehörigen GitHub-Lauf separat belegt. Gerätebildrate und physische Touchbedienung
+  sind ohne das Telefon noch ungeprüft.
+- **Nächster Schritt:** Martins Geräteprüfung dieses kleinen Ausschnitts; anschließend
+  weitere Zimmer und angrenzende Orte auf derselben Raum-/Navigationsgrundlage ausbauen.

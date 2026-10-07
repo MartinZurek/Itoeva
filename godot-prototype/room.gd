@@ -1,6 +1,5 @@
 extends Node3D
-## Das Wohnzimmer, ganz aus Grundformen gebaut; Texturen entstehen beim Start als kleine
-## Pixelbilder (64 px je Meter), damit Boden, Tapete und Teppich zur Pixel-Art der Wesen passen.
+## Begehbares Haus mit offener Tuer, fein gemalten Materialtexturen und echter Fensterbeleuchtung.
 ##
 ## Raum: x von -W/2 bis W/2 (links/rechts), z von -D/2 (hinten, Fensterwand) bis D/2 (vorn).
 
@@ -14,17 +13,26 @@ var walls: Array = []
 
 var _wood_dark: StandardMaterial3D
 var _wood: StandardMaterial3D
+var door_hinge: Node3D
+var door_angle := 0.0
+var beams: Array[MeshInstance3D] = []
+var pick_walls: Array[StaticBody3D] = []
+var door_frames: Array[MeshInstance3D] = []
 
 
 func _ready() -> void:
-	_wood = _flat(Color(0.55, 0.34, 0.2))
+	_wood = _tiled(_planks(), .65)
 	_wood_dark = _flat(Color(0.33, 0.19, 0.11))
 	_floor()
 	_walls()
 	_window()
 	_ceiling()
 	_furniture()
+	_beams()
 	_dust()
+	var fill := OmniLight3D.new(); fill.position = Vector3(0,2.3,-.7)
+	fill.light_color = Color(1,.86,.70); fill.light_energy = .24; fill.omni_range = 7.0; fill.omni_attenuation = 1.3
+	add_child(fill)
 
 
 # --- Texturen --------------------------------------------------------------------------
@@ -34,86 +42,14 @@ static func _tex(img: Image) -> ImageTexture:
 
 
 func _planks() -> Image:
-	var img := Image.create_empty(64, 64, false, Image.FORMAT_RGBA8)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 7
-	for row in 4:
-		var seam := rng.randi_range(8, 56)
-		var base := Color(0.62, 0.4, 0.24).darkened(rng.randf_range(0.0, 0.18))
-		for y in range(row * 16, row * 16 + 16):
-			for x in 64:
-				var c := base
-				# Maserung: lange, leicht wellige Linien
-				var g := sin(x * 0.21 + row * 3.0 + sin(y * 0.9) * 1.5)
-				if g > 0.86:
-					c = c.darkened(0.12)
-				if y == row * 16:
-					c = Color(0.24, 0.13, 0.08)
-				elif y == row * 16 + 1:
-					c = c.lightened(0.1)
-				if x == seam:
-					c = Color(0.3, 0.17, 0.1)
-				img.set_pixel(x, y, c)
-	return img
-
+	return (load("res://assets/materials/wood.webp") as Texture2D).get_image()
 
 func _wallpaper() -> Image:
-	var img := Image.create_empty(32, 32, false, Image.FORMAT_RGBA8)
-	var base := Color(0.55, 0.62, 0.5)
-	for y in 32:
-		for x in 32:
-			var c := base
-			if x % 16 == 0:
-				c = base.darkened(0.1)
-			elif x % 16 == 8 and (y % 8 == 0 or y % 8 == 1):
-				c = Color(0.85, 0.72, 0.45)  # kleine Blueten
-			elif x % 16 == 7 or x % 16 == 9:
-				if y % 8 == 0:
-					c = Color(0.78, 0.6, 0.38)
-			img.set_pixel(x, y, c)
-	return img
+	return (load("res://assets/materials/plaster.webp") as Texture2D).get_image()
 
 
 func _rug() -> Image:
-	var img := Image.create_empty(64, 44, false, Image.FORMAT_RGBA8)
-	var red := Color(0.62, 0.22, 0.17)
-	var cream := Color(0.9, 0.8, 0.6)
-	var teal := Color(0.18, 0.42, 0.42)
-	for y in 44:
-		for x in 64:
-			var e: int = min(min(x, 63 - x), min(y, 43 - y))
-			var c := red
-			if e < 2:
-				c = cream
-			elif e < 5:
-				c = teal
-			elif e == 5:
-				c = cream
-			else:
-				var dx: int = abs(x - 32)
-				var dy: int = abs(y - 22)
-				var dd := dx + dy * 2
-				if dd % 12 < 2:
-					c = cream
-				elif dd % 12 < 4:
-					c = teal
-			img.set_pixel(x, y, c)
-	return img
-
-
-func _sky() -> Image:
-	var img := Image.create_empty(16, 32, false, Image.FORMAT_RGBA8)
-	for y in 32:
-		var t := y / 31.0
-		var c := Color(0.45, 0.62, 0.85).lerp(Color(1.0, 0.75, 0.45), t)
-		for x in 16:
-			img.set_pixel(x, y, c)
-	# ein paar Baumkronen unten
-	for x in 16:
-		var top := 24 + int(2.5 * sin(x * 1.3))
-		for y in range(top, 32):
-			img.set_pixel(x, y, Color(0.22, 0.38, 0.25).lerp(Color(0.12, 0.24, 0.16), (y - top) / 8.0))
-	return img
+	return (load("res://assets/materials/rug.webp") as Texture2D).get_image()
 
 
 func _blob() -> Image:
@@ -137,7 +73,7 @@ static func _flat(c: Color) -> StandardMaterial3D:
 static func _tiled(img: Image, per_meter: float) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = _tex(img)
-	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	m.uv1_triplanar = true
 	m.uv1_world_triplanar = true
 	m.uv1_scale = Vector3.ONE * per_meter
@@ -158,7 +94,7 @@ func box(size: Vector3, pos: Vector3, mat: Material, solid := false, parent: Nod
 	return mi
 
 
-func _collider(size: Vector3, pos: Vector3, parent: Node3D = self) -> void:
+func _collider(size: Vector3, pos: Vector3, parent: Node3D = self, pick_normal: Vector3=Vector3.ZERO) -> void:
 	var body := StaticBody3D.new()
 	var cs := CollisionShape3D.new()
 	var bs := BoxShape3D.new()
@@ -167,6 +103,18 @@ func _collider(size: Vector3, pos: Vector3, parent: Node3D = self) -> void:
 	body.position = pos
 	body.add_child(cs)
 	parent.add_child(body)
+	if pick_normal != Vector3.ZERO:
+		body.set_meta("pick_normal",pick_normal)
+		pick_walls.append(body)
+
+
+func picking_exclusions(cam_local: Vector3, open_view: bool) -> Array[RID]:
+	var exclusions: Array[RID] = []
+	if open_view:
+		for wall in pick_walls:
+			if (cam_local-wall.position).dot(wall.get_meta("pick_normal"))<0:
+				exclusions.append(wall.get_rid())
+	return exclusions
 
 
 func cyl(top: float, bottom: float, h: float, pos: Vector3, mat: Material, parent: Node3D = self) -> MeshInstance3D:
@@ -175,7 +123,7 @@ func cyl(top: float, bottom: float, h: float, pos: Vector3, mat: Material, paren
 	cm.top_radius = top
 	cm.bottom_radius = bottom
 	cm.height = h
-	cm.radial_segments = 12
+	cm.radial_segments = 32
 	mi.mesh = cm
 	mi.material_override = mat
 	mi.position = pos
@@ -188,8 +136,8 @@ func ball(r: float, pos: Vector3, mat: Material, parent: Node3D = self) -> MeshI
 	var sm := SphereMesh.new()
 	sm.radius = r
 	sm.height = r * 2.0
-	sm.radial_segments = 10
-	sm.rings = 6
+	sm.radial_segments = 24
+	sm.rings = 12
 	mi.mesh = sm
 	mi.material_override = mat
 	mi.position = pos
@@ -197,17 +145,50 @@ func ball(r: float, pos: Vector3, mat: Material, parent: Node3D = self) -> MeshI
 	return mi
 
 
+func soft_box(size: Vector3, pos: Vector3, radius: float, mat: Material, parent: Node3D=self) -> MeshInstance3D:
+	var base := BoxMesh.new()
+	base.size = size
+	base.subdivide_width = 8; base.subdivide_height = 8; base.subdivide_depth = 8
+	var arrays := base.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var inner := size*.5-Vector3.ONE*radius
+	for i in vertices.size():
+		var v := vertices[i]
+		var core := Vector3(clampf(v.x,-inner.x,inner.x),clampf(v.y,-inner.y,inner.y),clampf(v.z,-inner.z,inner.z))
+		var normal := (v-core).normalized()
+		vertices[i] = core+normal*radius
+		normals[i] = normal
+	arrays[Mesh.ARRAY_VERTEX] = vertices; arrays[Mesh.ARRAY_NORMAL] = normals
+	var mesh := ArrayMesh.new(); mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+	var m := MeshInstance3D.new(); m.mesh = mesh; m.position = pos; m.material_override = mat
+	parent.add_child(m); return m
+
+func _fabric(name: String, tint: Color=Color.WHITE) -> StandardMaterial3D:
+	var m := _tiled((load("res://assets/materials/%s.webp" % name) as Texture2D).get_image(),1.4)
+	m.albedo_color = tint
+	return m
+
+func _plant(p: Vector3, size: Vector2, parent: Node3D=self) -> void:
+	var m := ShaderMaterial.new(); m.shader = preload("res://shaders/foliage.gdshader")
+	m.set_shader_parameter("leaves",load("res://assets/plants/shrub.webp"))
+	m.set_shader_parameter("wind",.015)
+	for angle in [0.0,PI/2]:
+		var leaf := MeshInstance3D.new(); var mesh := QuadMesh.new(); mesh.size = size
+		leaf.mesh = mesh; leaf.position = p; leaf.rotation.y = angle; leaf.material_override = m; parent.add_child(leaf)
+
+
 # --- Raum -------------------------------------------------------------------------------
 
 func _floor() -> void:
-	box(Vector3(W, 0.1, D), Vector3(0, -0.05, 0), _tiled(_planks(), 1.0))
+	box(Vector3(W, 0.1, D), Vector3(0, -0.05, 0), _tiled(_planks(), .5), true)
 	var rug := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = Vector2(3.2, 2.2)
 	rug.mesh = pm
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = _tex(_rug())
-	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	m.roughness = 1.0
 	rug.material_override = m
 	rug.position = Vector3(-0.3, 0.006, 0.0)
@@ -245,19 +226,40 @@ func _walls() -> void:
 	_wall_piece(Vector3(1.6, H, T), Vector3(3.2, y, bz), n, paper, panel, back)
 	_wall_piece(Vector3(1.8, 0.9, T), Vector3(1.5, 0.45, bz), n, paper, panel, back)
 	_wall_piece(Vector3(1.8, 0.7, T), Vector3(1.5, 2.65, bz), n, paper, panel, back)
-	_collider(Vector3(W, H, T), Vector3(0, y, bz))
+	_collider(Vector3(W, H, T), Vector3(0, y, bz),self,n)
 	walls.append({"node": back, "center": Vector3(0, y, -D / 2.0), "normal": n})
-	# vorn, links, rechts
-	for spec in [
-		[Vector3(W + 2 * T, H, T), Vector3(0, y, D / 2.0 + T / 2.0), Vector3(0, 0, -1)],
-		[Vector3(T, H, D), Vector3(-W / 2.0 - T / 2.0, y, 0), Vector3(1, 0, 0)],
-		[Vector3(T, H, D), Vector3(W / 2.0 + T / 2.0, y, 0), Vector3(-1, 0, 0)],
-	]:
-		var g := Node3D.new()
-		add_child(g)
-		_wall_piece(spec[0], spec[1], spec[2], paper, panel, g)
-		_collider(spec[0], spec[1])
-		walls.append({"node": g, "center": spec[1] - spec[2] * T / 2.0, "normal": spec[2]})
+	# Vordere Wand besitzt eine echte 1.8 m breite Oeffnung im Mesh UND in der Kollision.
+	var front := Node3D.new(); add_child(front)
+	for x in [-2.45, 2.45]:
+		var size := Vector3(3.1,H,T); var p := Vector3(x,y,D/2.0+T/2.0)
+		_wall_piece(size,p,Vector3(0,0,-1),paper,panel,front); _collider(size,p,self,Vector3(0,0,-1))
+	var header := Vector3(1.8,.65,T); var hp := Vector3(0,2.675,D/2.0+T/2.0)
+	_wall_piece(header,hp,Vector3(0,0,-1),paper,panel,front); _collider(header,hp,self,Vector3(0,0,-1))
+	walls.append({"node":front,"center":Vector3(0,y,D/2.0),"normal":Vector3(0,0,-1)})
+	for x in [-W/2.0-T/2.0,W/2.0+T/2.0]:
+		var g := Node3D.new(); add_child(g)
+		var size := Vector3(T,H,D); var p := Vector3(x,y,0)
+		var normal := Vector3(1 if x<0 else -1,0,0)
+		if x < 0:
+			# Large arched side window, inspired by the painted living room.
+			for spec in [[Vector3(T,H,1.0),Vector3(x,y,-2.5)],[Vector3(T,H,3.0),Vector3(x,y,1.5)],
+				[Vector3(T,.75,2.0),Vector3(x,.375,-1.0)],[Vector3(T,.4,2.0),Vector3(x,2.8,-1.0)]]:
+				_wall_piece(spec[0],spec[1],normal,paper,panel,g)
+		else: _wall_piece(size,p,normal,paper,panel,g)
+		_collider(size,p,self,normal)
+		walls.append({"node":g,"center":p-normal*T/2.0,"normal":normal})
+	for x in [-.95,.95]: door_frames.append(box(Vector3(.12,2.4,.25),Vector3(x,1.2,D/2.0),_wood_dark))
+	door_frames.append(box(Vector3(2.0,.14,.25),Vector3(0,2.35,D/2.0),_wood_dark))
+	door_hinge = Node3D.new(); door_hinge.position = Vector3(-.88,0,D/2.0+.16); add_child(door_hinge)
+	box(Vector3(1.73,2.24,.07),Vector3(.865,1.12,0),_wood,false,door_hinge)
+	for y0 in [.58,1.57]: box(Vector3(1.45,.72,.045),Vector3(.865,y0,.06),_wood_dark,false,door_hinge)
+	ball(.04,Vector3(1.56,1.0,.10),_flat(Color(.83,.65,.31)),door_hinge)
+
+
+func update_door(avatar_local: Vector3, dt: float) -> void:
+	var opening := avatar_local.distance_to(Vector3(0,0,D/2.0)) < 2.5
+	door_angle = lerpf(door_angle,-deg_to_rad(110.0) if opening else 0.0,1.0-exp(-dt*5.0))
+	door_hinge.rotation.y = door_angle
 
 
 func _window() -> void:
@@ -271,23 +273,36 @@ func _window() -> void:
 	box(Vector3(0.05, 1.4, 0.05), Vector3(1.5, 1.6, z - 0.05), _wood_dark, false, g)
 	box(Vector3(1.8, 0.05, 0.05), Vector3(1.5, 1.65, z - 0.05), _wood_dark, false, g)
 	box(Vector3(2.1, 0.06, 0.4), Vector3(1.5, 0.87, z + 0.12), _wood, false, g)
-	# Blick nach draussen: leuchtende Flaeche hinter der Oeffnung, wirft keinen Schatten
-	var sky := MeshInstance3D.new()
-	var qm := QuadMesh.new()
-	qm.size = Vector2(3.0, 2.4)
-	sky.mesh = qm
-	var m := StandardMaterial3D.new()
-	m.albedo_texture = _tex(_sky())
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	sky.material_override = m
-	sky.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	sky.position = Vector3(1.5, 1.6, z - 0.9)
-	sky.set_meta("glass", true)
-	g.add_child(sky)
+	var side: Node3D = walls[2]["node"]
+	box(Vector3(.28,.08,2.15),Vector3(-4,.75,-1),_wood,false,side)
+	for z0 in [-2.0,0.0]: box(Vector3(.18,1.0,.09),Vector3(-4,1.25,z0),_wood_dark,false,side)
+	for i in 48:
+		var a := Vector3(-4,1.75+sin(i*PI/48)*.8,-1+cos(i*PI/48))
+		var b := Vector3(-4,1.75+sin((i+1)*PI/48)*.8,-1+cos((i+1)*PI/48))
+		var frame := cyl(.052,.052,a.distance_to(b)+.01,(a+b)*.5,_wood_dark,side)
+		frame.quaternion = Quaternion(Vector3.UP,(b-a).normalized())
+	box(Vector3(.1,1.78,.055),Vector3(-4,1.6,-1),_wood_dark,false,side)
+	box(Vector3(.1,.06,1.92),Vector3(-4,1.70,-1),_wood_dark,false,side)
+	var cloth := _fabric("linen")
+	for z0 in [-2.13,.13]:
+		for i in 4:
+			soft_box(Vector3(.12,1.82,.10),Vector3(-3.91+(i%2)*.028,1.64,z0+(i-1.5)*.068),.044,cloth,side)
+	# The arched corners are filled up to the wall header, not left as holes.
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in 24:
+		var z0 := -2.0+i/12.0; var z1 := z0+1.0/12
+		var y0 := 1.75+sqrt(maxf(0,1-pow(z0+1,2)))*.8
+		var y1 := 1.75+sqrt(maxf(0,1-pow(z1+1,2)))*.8
+		for v in [Vector3(-4,y0,z0),Vector3(-4,2.6,z0),Vector3(-4,y1,z1),Vector3(-4,y1,z1),Vector3(-4,2.6,z0),Vector3(-4,2.6,z1)]:
+			st.set_uv(Vector2(v.z,v.y)); st.add_vertex(v)
+	st.generate_normals()
+	var infill := MeshInstance3D.new(); infill.mesh = st.commit(); infill.material_override = _tiled(_wallpaper(),2)
+	infill.material_override.cull_mode = BaseMaterial3D.CULL_DISABLED
+	side.add_child(infill)
+	# Die Fensteroeffnung zeigt jetzt dieselbe echte Landschaft wie die Haustuer.
 	# Pflanze auf der Fensterbank
 	cyl(0.1, 0.08, 0.16, Vector3(2.05, 0.98, z + 0.12), _flat(Color(0.7, 0.36, 0.22)), g)
-	ball(0.14, Vector3(2.05, 1.14, z + 0.12), _flat(Color(0.3, 0.52, 0.28)), g)
+	_plant(Vector3(2.05,1.22,z+.12),Vector2(.38,.38),g)
 
 
 func _ceiling() -> void:
@@ -297,32 +312,46 @@ func _ceiling() -> void:
 
 
 func _furniture() -> void:
-	var terracotta := _flat(Color(0.66, 0.32, 0.22))
-	var cushion := _flat(Color(0.82, 0.5, 0.32))
-	var teal := _flat(Color(0.2, 0.44, 0.44))
-	var cream := _flat(Color(0.9, 0.82, 0.62))
-	# Sofa hinten links
-	var sx := -2.0
-	var sz := -2.4
-	box(Vector3(2.4, 0.42, 0.95), Vector3(sx, 0.21, sz), terracotta)
-	box(Vector3(2.4, 0.55, 0.22), Vector3(sx, 0.69, sz - 0.37), terracotta)
-	box(Vector3(0.22, 0.62, 0.95), Vector3(sx - 1.1, 0.31, sz), terracotta)
-	box(Vector3(0.22, 0.62, 0.95), Vector3(sx + 1.1, 0.31, sz), terracotta)
-	box(Vector3(0.95, 0.12, 0.68), Vector3(sx - 0.5, 0.48, sz + 0.07), cushion)
-	box(Vector3(0.95, 0.12, 0.68), Vector3(sx + 0.5, 0.48, sz + 0.07), cushion)
-	box(Vector3(0.4, 0.34, 0.12), Vector3(sx - 0.7, 0.68, sz - 0.2), teal)
-	_collider(Vector3(2.4, 0.9, 1.0), Vector3(sx, 0.45, sz))
-	# Couchtisch
-	box(Vector3(1.2, 0.06, 0.65), Vector3(-0.3, 0.42, -0.2), _wood)
-	for lx in [-0.82, 0.22]:
-		for lz in [-0.45, 0.05]:
-			box(Vector3(0.06, 0.4, 0.06), Vector3(lx, 0.2, lz), _wood_dark)
-	box(Vector3(0.3, 0.05, 0.22), Vector3(-0.5, 0.47, -0.2), cream)  # Buch
-	cyl(0.05, 0.05, 0.1, Vector3(0.0, 0.5, -0.1), _flat(Color(0.85, 0.85, 0.8)))  # Tasse
-	_collider(Vector3(1.2, 0.5, 0.65), Vector3(-0.3, 0.25, -0.2))
+	var terracotta := _fabric("terracotta",Color(.93,.80,.72))
+	var cushion := _fabric("terracotta",Color(1,.94,.82))
+	var teal := _fabric("sage")
+	var cream := _fabric("linen")
+	# Rounded, upholstered sofa with rolled arms, seam piping and carved feet.
+	var sx := -1.9
+	var sz := -2.25
+	soft_box(Vector3(2.75,.38,1.12),Vector3(sx,.36,sz),.13,terracotta)
+	soft_box(Vector3(2.55,.72,.26),Vector3(sx,.90,sz-.44),.12,terracotta)
+	for dx in [-1.23,1.23]:
+		soft_box(Vector3(.30,.52,1.10),Vector3(sx+dx,.67,sz),.14,terracotta)
+		var roll := cyl(.18,.18,1.06,Vector3(sx+dx,.88,sz),terracotta)
+		roll.rotation.x = PI/2
+	for dx in [-.57,.57]:
+		soft_box(Vector3(1.06,.19,.83),Vector3(sx+dx,.59,sz+.05),.08,cushion)
+		var back := soft_box(Vector3(1.05,.56,.19),Vector3(sx+dx,.96,sz-.27),.085,cushion)
+		back.rotation.x = -.12
+	for dx in [-1.08,1.08]:
+		for dz in [-.38,.38]: cyl(.055,.08,.25,Vector3(sx+dx,.135,sz+dz),_wood_dark)
+	for spec in [[-.82,teal],[.80,cream]]:
+		var pillow := soft_box(Vector3(.43,.42,.19),Vector3(sx+spec[0],.93,sz-.04),.08,spec[1])
+		pillow.rotation.z = -.2 if spec[0]<0 else .16
+	_collider(Vector3(2.8,1.22,1.15),Vector3(sx,.61,sz))
+	# Round wooden tea table with ring edging, tapered legs and pottery.
+	cyl(.72,.72,.09,Vector3(-.3,.55,-.2),_wood)
+	cyl(.735,.735,.025,Vector3(-.3,.51,-.2),_wood_dark)
+	for a in [0.0,TAU/3,TAU*2/3]:
+		var leg := cyl(.045,.075,.48,Vector3(-.3+cos(a)*.46,.26,-.2+sin(a)*.46),_wood_dark)
+		leg.rotation.z = -.08*cos(a); leg.rotation.x = .08*sin(a)
+	box(Vector3(.29,.045,.22),Vector3(-.55,.62,-.2),cream)
+	box(Vector3(.30,.014,.23),Vector3(-.55,.65,-.2),teal)
+	cyl(.065,.046,.11,Vector3(-.03,.65,-.12),cream)
+	var handle := MeshInstance3D.new(); var ring := TorusMesh.new()
+	ring.inner_radius = .025; ring.outer_radius = .039; ring.rings = 16; ring.ring_segments = 8
+	handle.mesh = ring; handle.material_override = cream; handle.position = Vector3(.048,.66,-.12); handle.rotation.x = PI/2; add_child(handle)
+	cyl(.16,.17,.025,Vector3(.08,.61,-.38),cream)
+	_collider(Vector3(1.46,.58,1.46),Vector3(-.3,.29,-.2))
 	# Bücherregal rechts
 	var bx := W / 2.0 - 0.22
-	var rg: Node3D = walls[3]["node"]  # steht an der rechten Wand und verschwindet mit ihr
+	var rg: Node3D = self  # The shelf remains visible when the wall is cut away.
 	box(Vector3(0.4, 2.1, 1.5), Vector3(bx, 1.05, -1.0), _wood_dark, false, rg)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
@@ -337,11 +366,14 @@ func _furniture() -> void:
 			box(Vector3(0.28, h, w), Vector3(bx - 0.08, y + 0.02 + h / 2.0, z + w / 2.0), _flat(colors[rng.randi() % colors.size()]), false, rg)
 			z += w + 0.01
 	_collider(Vector3(0.45, 2.1, 1.5), Vector3(bx, 1.05, -1.0))
-	# Sessel vorn rechts
-	box(Vector3(0.9, 0.4, 0.85), Vector3(2.4, 0.2, 1.5), teal)
-	box(Vector3(0.9, 0.5, 0.18), Vector3(2.4, 0.65, 1.84), teal)
-	box(Vector3(0.75, 0.1, 0.62), Vector3(2.4, 0.45, 1.42), cream)
-	_collider(Vector3(0.95, 0.8, 0.9), Vector3(2.4, 0.4, 1.55))
+	# A sage linen reading chair with soft arms and a cream cushion.
+	soft_box(Vector3(1.0,.36,1.0),Vector3(2.4,.30,1.5),.14,teal)
+	soft_box(Vector3(1.0,.66,.22),Vector3(2.4,.85,1.86),.10,teal)
+	soft_box(Vector3(.73,.16,.71),Vector3(2.4,.54,1.42),.07,cream)
+	for x in [1.96,2.84]: soft_box(Vector3(.20,.36,.97),Vector3(x,.66,1.47),.095,teal)
+	for x in [2.04,2.76]:
+		for z in [1.14,1.84]: cyl(.04,.055,.21,Vector3(x,.12,z),_wood_dark)
+	_collider(Vector3(1.04,1.16,1.06),Vector3(2.4,.58,1.55))
 	# Stehlampe neben dem Sofa, echtes Licht mit Schatten
 	var lx := -3.55
 	var lz := -2.55
@@ -356,8 +388,8 @@ func _furniture() -> void:
 	sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var lamp := OmniLight3D.new()
 	lamp.light_color = Color(1.0, 0.72, 0.42)
-	lamp.light_energy = 1.6
-	lamp.omni_range = 5.5
+	lamp.light_energy = .7
+	lamp.omni_range = 4.2
 	lamp.omni_attenuation = 1.2
 	lamp.shadow_enabled = true
 	lamp.position = Vector3(lx + 0.05, 1.5, lz + 0.05)
@@ -366,16 +398,17 @@ func _furniture() -> void:
 	# Pflanzen
 	for p in [Vector3(3.45, 0, -2.55), Vector3(-3.45, 0, 2.45)]:
 		cyl(0.22, 0.17, 0.4, p + Vector3(0, 0.2, 0), _flat(Color(0.7, 0.36, 0.22)))
-		ball(0.32, p + Vector3(0, 0.68, 0), _flat(Color(0.28, 0.5, 0.27)))
-		ball(0.22, p + Vector3(0.15, 0.95, 0.05), _flat(Color(0.35, 0.58, 0.3)))
-		ball(0.18, p + Vector3(-0.14, 0.9, -0.08), _flat(Color(0.24, 0.44, 0.24)))
+		_plant(p+Vector3(0,.91,0),Vector2(.93,1.10))
 		_collider(Vector3(0.5, 1.0, 0.5), p + Vector3(0, 0.5, 0))
 	# Bilder an der Rueckwand
 	for spec in [[Vector3(-2.6, 1.9, 0), Vector2(0.7, 0.5), Color(0.85, 0.6, 0.35)], [Vector3(-1.4, 2.0, 0), Vector2(0.45, 0.6), Color(0.35, 0.55, 0.6)]]:
 		var c: Vector3 = spec[0]
 		var s: Vector2 = spec[1]
 		box(Vector3(s.x + 0.08, s.y + 0.08, 0.04), Vector3(c.x, c.y, -D / 2.0 + 0.02), _wood_dark, false, walls[0]["node"])
-		box(Vector3(s.x, s.y, 0.02), Vector3(c.x, c.y, -D / 2.0 + 0.045), _flat(spec[2]), false, walls[0]["node"])
+		var art := StandardMaterial3D.new(); art.albedo_texture = load("res://assets/materials/painting.webp")
+		var quad := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = s
+		quad.mesh = qm; quad.material_override = art; quad.position = Vector3(c.x,c.y,-D/2.0+.055)
+		(walls[0]["node"] as Node3D).add_child(quad)
 
 
 func _dust() -> void:
@@ -415,9 +448,16 @@ func blob_material() -> StandardMaterial3D:
 
 ## Waende zwischen Kamera und Raum werden unsichtbar, werfen aber weiter Schatten
 ## (Puppenhaus-Schnitt).
-func cut_away(cam_pos: Vector3) -> void:
+func cut_away(cam_pos: Vector3, inside: bool=true) -> void:
+	var front_cut := inside and cam_pos.z>D/2
+	for frame in door_frames:
+		frame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if front_cut else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	for part in door_hinge.get_children():
+		part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if front_cut else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	for beam in beams:
+		beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if inside else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	for w in walls:
-		var outside: bool = (cam_pos - w["center"]).dot(w["normal"]) < 0.0
+		var outside: bool = inside and (cam_pos - w["center"]).dot(w["normal"]) < 0.0
 		for mi in (w["node"] as Node3D).get_children():
 			if mi.has_meta("glass"):
 				mi.visible = not outside
@@ -425,3 +465,11 @@ func cut_away(cam_pos: Vector3) -> void:
 			(mi as GeometryInstance3D).cast_shadow = (
 				GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if outside
 				else GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+
+
+func _beams() -> void:
+	for z in [-2.85,0.0,2.85]:
+		var b := box(Vector3(8.15,.17,.18),Vector3(0,2.87,z),_wood)
+		beams.append(b)
+	for x in [-3.94,3.94]:
+		box(Vector3(.14,2.85,.15),Vector3(x,1.425,-2.88),_wood,false,walls[0]["node"])

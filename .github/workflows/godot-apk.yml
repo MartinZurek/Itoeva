@@ -128,7 +128,16 @@ jobs:
           set -euo pipefail
           cd godot-prototype
           mkdir -p build
-          "$GODOT" --headless --path . --import 2>&1 | tail -5 || true
+          "$GODOT" --headless --path . --import 2>&1 | tee build/import.log | tail -10
+          if grep -E 'SCRIPT ERROR:|Parse Error:|ERROR:' build/import.log; then
+            echo "::error::Godot-Import fehlgeschlagen."
+            exit 1
+          fi
+          "$GODOT" --headless --path . --audio-driver Dummy -- --validate 2>&1 | tee build/validation.log
+          if grep -E 'SCRIPT ERROR:|CHECK FAILED:|ERROR:' build/validation.log; then
+            echo "::error::Welt-/Eingabepruefung fehlgeschlagen."
+            exit 1
+          fi
           "$GODOT" --headless --path . --export-debug "Android" build/itoeva-godot.apk 2>&1 | tee build/export.log | tail -40
           if [ ! -s build/itoeva-godot.apk ]; then
             echo "::error::Godot hat keine APK erzeugt - siehe Log oben."
@@ -141,7 +150,7 @@ jobs:
           ls -la build/itoeva-godot.apk
           sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           bt="$(ls -d "$sdk"/build-tools/* | sort -V | tail -1)"
-          "$bt/apksigner" verify --print-certs build/itoeva-godot.apk | grep -E "SHA-256|Signer" || true
+          "$bt/apksigner" verify --print-certs build/itoeva-godot.apk | grep -E "SHA-256|Signer"
 
       - name: Schluesselreste entfernen
         if: always()
@@ -194,3 +203,4 @@ jobs:
             "https://www.googleapis.com/drive/v3/files/${FILE_ID}?supportsAllDrives=true" \
             -o /dev/null
           echo "Godot-APK in Drive aktualisiert: ${VERSION} (${SHA})"
+
