@@ -98,3 +98,12 @@ Weltstand bleibt beim Wechsel des wählbaren Wesens erhalten.
 Umfang, technische Entscheidungen, offene Abnahmen und die Pakete WB-01 bis WB-10 stehen in
 [docs/itoeva2-worldbuilding.md](docs/itoeva2-worldbuilding.md). Die nächsten Innenraumbilder,
 beidseitige Beziehungen und taktischer Kampf werden dort als Folgeetappen geführt.
+
+## Stufe 6 - Gemeinsame Landschaft und Kamera (erster Schnitt, 07.10.)
+
+Strasse, Park, Wiese und Wald bilden einen begehbaren Landschaftsweg ohne Szenenblende an den
+inneren Raendern. Kamera mit Nachlauf, Blickvorlauf und sanftem Nah-/Laufzoom; Figur und
+Touch-Ziele teilen dieselbe Projektion. Neue Landschaftskarte statt der alten LED-Zeichen.
+Alle Orts-IDs und Spielstaende bleiben lesbar. Gebaeude und die anderen Gegenden behalten
+vorerst ihre Uebergaenge; die neun alten Innenraeume sind noch das naechste Bildpaket.
+Abnahme, Vorschau, Grenzen und Ruecksetzung: [Gemeinsame Landschaft](docs/itoeva2-continuous-world.md).

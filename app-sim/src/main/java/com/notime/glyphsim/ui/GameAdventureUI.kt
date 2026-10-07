@@ -70,9 +70,9 @@ internal fun residentDialogue(resident: LivingResident, state: GameAdventure.Sta
 /** Kleine ortsfeste Requisiten und bleibende Folgen in denselben Koordinaten wie die Figur. */
 @Composable
 internal fun GameAdventureObjects(scene: GameScenes.Scene, pos: PlayControl.Pos, state: GameAdventure.State,
-    phase: Int, modifier: Modifier) {
+    phase: Int, modifier: Modifier, camera: GameCamera.State? = null) {
     Canvas(modifier) {
-        val fit = GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
+        val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
         val brightness = (1f - GameSceneLighting.darkness(scene, state.minuteOfDay) * .6f)
         withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
             for (id in GameAdventure.ObjectId.entries.filter { it.place == scene.place && GameAdventure.visible(state, it) }) {
@@ -127,12 +127,12 @@ internal fun GameAdventureObjects(scene: GameScenes.Scene, pos: PlayControl.Pos,
 /** NPC-Fuesse, Groesse und Kamera verwenden die Bildgeometrie des Spielers. */
 @Composable
 internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos, actors: Collection<GameResidents.Actor>,
-    phase: Int, minute: Int, modifier: Modifier) {
+    phase: Int, minute: Int, modifier: Modifier, camera: GameCamera.State? = null) {
     val density = LocalDensity.current
     BoxWithConstraints(modifier) {
         val w = with(density) { maxWidth.toPx() }
         val h = with(density) { maxHeight.toPx() }
-        val fit = GameScenes.fit(scene, w, h, host.x, host.depth)
+        val fit = camera?.let { GameCamera.fit(it, scene, w, h) } ?: GameScenes.fit(scene, w, h, host.x, host.depth)
         for (actor in actors.sortedBy { it.pos.depth }) {
             val species = actor.snapshot.species
             val task = LivingPopulationLayout.poseFor(actor.snapshot)
@@ -169,15 +169,19 @@ internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos,
 
 /** Außenregen benutzt dieselbe Wetterlage wie die Atmo; Fenster-Masken folgen mit den Innenräumen. */
 @Composable
-internal fun GameWeatherView(scene: GameScenes.Scene, pos: PlayControl.Pos, state: GameAdventure.State, modifier: Modifier) {
+internal fun GameWeatherView(scene: GameScenes.Scene, pos: PlayControl.Pos, state: GameAdventure.State, modifier: Modifier, camera: GameCamera.State? = null) {
     Canvas(modifier) {
         if (state.weather != PlayWeather.RAIN) return@Canvas
         val outdoors = PlayScene.isOutdoors(scene.place)
         if (!outdoors) return@Canvas // Ohne Fenster-Maske kein Regen quer durch Zimmer.
-        val fit = GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
-        repeat(60) { i ->
-            val x = ((i * 79L + state.elapsed / 45L) % 480L).toFloat()
-            val y = ((i * 43L + state.elapsed / 9L) % 270L).toFloat()
+        val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
+        val world = GameWorld.isWorld(scene)
+        val span = if (world) 1920L else 480L
+        val tall = if (world) 640L else 270L
+        val origin = if (world) GameWorld.origin(scene.place) else 0f
+        repeat(if (world) 150 else 60) { i ->
+            val x = ((i * 79L + state.elapsed / 45L) % span).toFloat() - origin
+            val y = ((i * 43L + state.elapsed / 9L) % tall).toFloat()
             val (sx, sy) = fit.toScreen(x, y)
             drawLine(Color(0xFFBFD4D7).copy(alpha = .35f), Offset(sx, sy), Offset(sx - 2f * fit.scale, sy + 5f * fit.scale), fit.scale)
         }

@@ -6,16 +6,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import com.notime.glyphsim.matrix.GameCamera
 import com.notime.glyphsim.matrix.GameScenes
 import com.notime.glyphsim.matrix.GameSurfaces
 import com.notime.glyphsim.matrix.PlayControl
 
 /** Native Pixelzeichnung: ihre Oberkante ist zugleich die getestete Landeflaeche. */
 @Composable
-internal fun GameSurfaceView(scene: GameScenes.Scene, pos: PlayControl.Pos, fade: Float, modifier: Modifier = Modifier) {
+internal fun GameSurfaceView(scene: GameScenes.Scene, pos: PlayControl.Pos, fade: Float, modifier: Modifier = Modifier, camera: GameCamera.State? = null) {
     val crate = GameSurfaces.crate(scene) ?: return
     Canvas(modifier) {
-        val fit = GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
+        val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
         fun rect(x: Float, y: Float, w: Float, h: Float, color: Long) {
             val (sx, sy) = fit.toScreen(x, y)
             drawRect(Color(color).copy(alpha = fade), Offset(sx, sy), Size(w * fit.scale, h * fit.scale))

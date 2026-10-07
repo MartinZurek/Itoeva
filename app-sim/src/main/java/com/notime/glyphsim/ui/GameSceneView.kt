@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.notime.glyphsim.matrix.GameEnvironment
+import com.notime.glyphsim.matrix.GameCamera
+import com.notime.glyphsim.matrix.GameWorld
 import com.notime.glyphsim.matrix.GameScenes
 import com.notime.glyphsim.matrix.GameSceneLighting
 import com.notime.glyphsim.matrix.PlayControl
@@ -78,10 +80,15 @@ fun GameSceneView(
     modifier: Modifier = Modifier,
     layers: GameSceneLayers? = null,
     roomLayers: GameRoomLayers? = null,
-    environment: GameEnvironment.State = GameEnvironment.State()
+    environment: GameEnvironment.State = GameEnvironment.State(),
+    camera: GameCamera.State? = null
 ) {
+    if (GameWorld.isWorld(scene) && camera != null) {
+        GameWorldView(scene, image, camera, minuteOfDay, lampOn, phase, environment, avatarPos, fade, modifier)
+        return
+    }
     Canvas(modifier = modifier) {
-        val fit = GameScenes.fit(scene, size.width, size.height, avatarPos.x, avatarPos.depth)
+        val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, avatarPos.x, avatarPos.depth)
         val visible = fade.coerceIn(0f, 1f)
         val lights = GameSceneLighting.sources(scene, minuteOfDay, lampOn, tvOn, phase)
         fun point(x: Float, y: Float): Offset {

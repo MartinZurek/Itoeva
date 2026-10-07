@@ -107,7 +107,8 @@ object GameMovement {
         return from.copy(pushMs = 0L)
     }
 
-    fun tick(state: State, input: PlayControl.Stick, dtMs: Long, surfaces: List<Surface> = emptyList()): Result {
+    fun tick(state: State, input: PlayControl.Stick, dtMs: Long, surfaces: List<Surface> = emptyList(),
+        exitDelayMs: Long = PlayControl.EXIT_PUSH_MS, immediateExits: Set<PlayControl.Dir> = emptySet()): Result {
         val dt = dtMs.coerceIn(0L, 50L)
         if (dt == 0L) return Result(state)
         val elapsed = state.elapsed + dt
@@ -147,9 +148,10 @@ object GameMovement {
         val change = dt / if (input.strength < state.velocity.strength) 75f else 135f
         fun ease(a: Float, b: Float) = a + (b - a).coerceIn(-change, change)
         val velocity = PlayControl.Stick(ease(state.velocity.x, input.x), ease(state.velocity.y, input.y))
-        val step = PlayControl.step(state.pos, velocity, dt)
+        val step = PlayControl.step(state.pos, velocity, dt, exitDelayMs, immediateExits)
         val pos = collide(state.pos, step.pos, state.height, surfaces, state.support)
-        val actual = distance(state.pos, pos) > 0.00001f
+        val actual = distance(state.pos, pos) > 0.00001f ||
+            (step.exit != null && (exitDelayMs == 0L || step.exit in immediateExits) && pos == step.pos)
         val tempo = PlayControl.tempo(velocity.strength)
         val running = actual && if (state.running) tempo > 1.5f else tempo >= 1.85f
         val runBlend = (state.runBlend + (if (running) 1f else -1f) * dt / 160f).coerceIn(0f, 1f)

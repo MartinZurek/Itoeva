@@ -60,12 +60,12 @@ class GameAdventureTest {
     }
     @Test fun `alle Weltanker und gespeicherte Positionen sind frei von Moebelkoerpern`() {
         for (id in ObjectId.entries) {
-            val scene = GameScenes.of(id.place)!!
+            val scene = GameWorld.scene(id.place)!!
             val pos = GameAdventure.safePosition(id.place, id.pos)
             assertTrue(GameSurfaces.painted(scene).none { it.contains(pos) && it.heightAt(pos) > 1 })
         }
         for (place in GameScenes.painted) {
-            val scene = GameScenes.of(place)!!
+            val scene = GameWorld.scene(place)!!
             for (surface in GameSurfaces.painted(scene)) {
                 val pos = GameAdventure.safePosition(place, PlayControl.Pos((surface.x0 + surface.x1) / 2, (surface.d0 + surface.d1) / 2))
                 assertTrue(GameSurfaces.painted(scene).none { it.contains(pos) && it.heightAt(pos) > 1 })

@@ -19,6 +19,7 @@ object GameSurfaces {
     }
 
     fun painted(scene: GameScenes.Scene): List<GameMovement.Surface> {
+        if (GameWorld.isWorld(scene)) return GameWorld.surfaces(scene) + listOfNotNull(crate(scene)?.surface)
         val table = if (scene.place == PlayScene.Place.LIVING) {
             // Der niedrige Teetisch links vor dem Sofa im bestehenden living.png.
             val ground = 212f
