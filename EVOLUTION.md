@@ -6539,3 +6539,29 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   sind ohne das Telefon noch ungeprüft.
 - **Nächster Schritt:** Martins Geräteprüfung dieses kleinen Ausschnitts; anschließend
   weitere Zimmer und angrenzende Orte auf derselben Raum-/Navigationsgrundlage ausbauen.
+
+### 2026-10-08 · Godot-Prototyp zurück zu originaler gemalter 2D-Welt
+
+- **Auslöser:** Martin verwirft die generische 3D-Anmutung. Die ursprünglichen malerischen
+  Landschaften und Pixelart sollen in Godot 2D mit Tiefe, durchgehenden Wegen und Rückwegen
+  funktionieren. Vor Umsetzung soll die kommerzielle Nutzbarkeit von Godot geklärt werden.
+- **Lizenzentscheidung:** Offizielle MIT-Lizenz erlaubt kommerzielle Nutzung ohne Lizenzgebühren
+  und ohne Offenlegung des eigenen Spielcodes. Engine- und Drittanbieterhinweise sind über
+  eine Offline-Lizenzansicht aus den tatsächlich verwendeten Engine-Texten zugänglich.
+- **Umsetzung:** Originale Küste, großes Wohnzimmer und Fennec unverändert. Residente Bilder,
+  Grundflächen und Möbelgrundrisse ersetzen die 3D-Geometrie. Figurengröße nach Bodentiefe,
+  Y-sortierte Bildausschnitte als Vordergrund, Schwerkraft für die unabhängige Sprunghöhe,
+  sichtbares Waten und behutsame Bildanimation erzeugen Tiefe mit dem ursprünglichen Stil.
+- **Zusammenhang:** Küste und Innenansicht teilen einen Eingangspunkt. Beim Öffnen/Schließen
+  der Innenansicht bleibt die Figur auf derselben Koordinate; Ortswahl plant Wege statt zu
+  teleportieren. Bilder/Nodes bleiben geladen. Die Innenkamera zeigt den gesamten Raum in
+  der Grundansicht; die Außenkamera folgt innerhalb des Panoramas.
+- **Betroffene Bereiche:** Godot-Prototyp, dessen Bilder/Shader und Dokumentation. Alte
+  3D-Skripte, Materialtexturen und Pflanzen-Billboards werden in diesem Prototyp entfernt.
+- **Prüfung:** Godot 4.4.1, tatsächliche Navigation Strand–Steg–Wald–Wasser–Haus–Strand,
+  Eingang in beide Richtungen, gleichbleibende Ressourcen, Tiefenskalierung, Vordergrund,
+  Touch-Joystick und Sprunghöhe. Software-OpenGL liefert echte Renderbilder. Die bestehende
+  Android-Pipeline prüft Import/Verhalten und Signatur vor dem Upload der separaten APK.
+- **Grenze / nächster Schritt:** Erster Ausschnitt mit einem Innenraum. Weitere Räume und
+  angrenzende Weltteile sind noch nicht portiert. Physische Touchbedienung und Bildrate
+  bleiben Geräteprüfungen. Kein Merge ohne Martins Auftrag.

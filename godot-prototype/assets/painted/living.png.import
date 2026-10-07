@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dbrq3mcciq8tr"
-path="res://.godot/imported/plaster.webp-019b4201efef9233ca750c65bbdaf9a6.ctex"
+uid="uid://epbv6do8f2ct"
+path="res://.godot/imported/living.png-29fbca9483b5bc98ec651f7ba6ead4a2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/materials/plaster.webp"
-dest_files=["res://.godot/imported/plaster.webp-019b4201efef9233ca750c65bbdaf9a6.ctex"]
+source_file="res://assets/painted/living.png"
+dest_files=["res://.godot/imported/living.png-29fbca9483b5bc98ec651f7ba6ead4a2.ctex"]
 
 [params]
 
@@ -21,7 +21,7 @@ compress/lossy_quality=0.7
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

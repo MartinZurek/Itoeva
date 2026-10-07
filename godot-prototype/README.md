@@ -1,45 +1,47 @@
-# Itoeva: gemaltes Haus und begehbare Küste in Godot
+# Itoeva: gemalte 2D-Welt mit begehbarer Tiefe
 
-Kleiner 3D-Ausschnitt auf dem Android-Prototyp aus PR #341. Ein gemeinsamer Boden verbindet
-Wohnzimmer, Haustür, Gartenweg, Strand und flaches Wasser. Man läuft durch dieselbe Tür zurück;
-Ortsknöpfe planen einen Weg und versetzen die Figur nicht. Die separate APK behält ihre ID
-`com.notime.glyphminderwatch.godotproto` und kann den bisherigen Godot-Prototyp aktualisieren.
+Dieser kleine Godot-Ausschnitt verwendet **die originalen Itoeva-Bilder unverändert**:
+Küstenpanorama, Wohnzimmer und animierter Fennec. Haus, Strand, Stege, Waldweg und Wasser
+sind begehbar. Beide Bilder und sämtliche Vordergrundstücke werden einmal beim Start geladen.
+Das Wohnzimmer öffnet sich als Innenansicht an der gemeinsamen Haustür. Beim Betreten und
+Verlassen bleiben die Koordinaten der Figur unverändert; es gibt keinen Szenenwechsel.
 
-## Visuelle Übersetzung
+Die ursprüngliche Beleuchtung der Bilder bleibt erhalten. Vordergrundstücke verwenden dieselben
+Bildpixel, stehen aber abhängig von der Fußposition vor oder hinter der Figur. Begehbare
+Bodenflächen, Möbelgrundrisse, Sprunghöhe und perspektivische Figurengröße geben dem flachen
+Bild räumliche Tiefe. Feine Wasserbewegung, Eintauchen und schwingende Pflanzenspitzen beleben
+es. Die Figur läuft nicht über die gesamte Bildfläche: Wände, Möbel, Felsen und Bildhorizont
+begrenzen diesen Ausschnitt. Berge und die ferne Ortschaft sind hier Hintergrund.
 
-Die gemalten Wohnzimmer- und Küstenbilder geben Farbpalette, Stoffe, Materialien und Einrichtung
-vor. Dielen, Putz, Terrakotta, Leinen, Teppich, Kalkstein, Pflaster und Dachziegel sind neu erzeugte,
-feine Materialtexturen. Sofa und Sessel haben gerundete Polster und Armrollen; Tisch, Bücher,
-Keramik, Fensterrahmen, Vorhänge und Pflanzen besitzen eigene räumliche Formen. Das Küstenbild
-hängt als kleines gerahmtes Bild im Zimmer. Ein ganzes Zimmerbild dient nicht als flache Wand.
+## Bedienung
 
-Der Raum erhält Sonnenlicht durch echte Fensteröffnungen, darunter ein Bogenfenster. Warmes
-Lampenlicht und dezentes Fülllicht halten die Möbel lesbar. Kamera und Wände arbeiten zusammen:
-Dach, Veranda, nahe Wände und Deckenbalken werden für den Innenblick zu unsichtbaren
-Schattenwerfern. Möbel bleiben sichtbar. Der Fußboden kann durch diese unsichtbaren Wände
-angetippt werden; ihre physische Kollision bleibt bestehen.
+- Tippen auf den Boden: gehen; Doppeltipp: laufen; Figur antippen: Freude.
+- Steuerkreis links: freie Bewegung nach links/rechts und nach hinten/vorne; außen: laufen.
+- Zwei Finger auseinanderziehen: näher ansehen; **Ansicht**: Überblick wiederherstellen.
+- **Orte**: einen Weg zum Wohnzimmer, zur Tür, zum Strand, Steg, Wald oder Wasser planen.
+- **Ins Haus / Zur Küste**: durch dieselbe Tür hinein- oder hinausgehen.
+- **Sitzen**, **Hüpfen**; am Rechner WASD/Pfeile, Umschalt, Leertaste und Mausrad.
 
-Die Figur bleibt bewusst der vorhandene animierte Fennec als Billboard. Pflanzen verwenden
-transparente gemalte Blätter auf gekreuzten 3D-Flächen; Gelände, Haus, Möbel und Wasser sind
-räumliche Geometrie. Dies ist eine 3D-/2.5D-Umsetzung, keine automatische Bild-zu-3D-Rekonstruktion.
-Volle Renderauflösung mit geglätteten Texturen ersetzt das grobe Pixel-Hochskalieren.
+Die Kamera folgt draußen auf dem Panorama. Innen zeigt sie in der Grundansicht das ganze
+Zimmer, auch bei breiteren Telefonformaten. Beim Zoomen folgt sie innerhalb dessen Grenzen.
+Im Wasser wird die Figur langsamer, ihre unteren Körperteile werden entsprechend der Tiefe
+verdeckt. Wege laufen um Hindernisse; die Ortsauswahl teleportiert die Figur nicht.
 
-## Bewegung und Kamera
+## Lizenz
 
-- Tippen: navigiert um Möbel, Baumstämme, Brunnen und Felsen; Doppeltipp: laufen.
-- Steuerkreis links: direkte Bewegung; weit nach außen ziehen: laufen.
-- Zwei Finger: Kamera drehen und zoomen; Pfeiltasten oben: 45° drehen; Kamera: Ansicht zurücksetzen.
-- Orte: zum Wohnzimmer, zur Haustür, in den Garten, zum Strand oder ins Wasser gehen.
-- Sitzen: am Boden ruhen; Hüpfen: echter Sprung mit Schwerkraft.
-- Am Rechner: WASD/Pfeiltasten, Umschalt zum Laufen, Leertaste zum Hüpfen, Mausrad zum Zoomen.
+Godot ist unter der MIT-Lizenz veröffentlicht: kommerzielle Spiele sind erlaubt, ohne
+Lizenzgebühr oder Umsatzbeteiligung; der eigene Spielcode muss nicht offengelegt werden.
+Die Engine-Lizenz und Hinweise zu mitgelieferten Komponenten müssen verfügbar sein.
+Die Schaltfläche **Lizenzen** enthält die Texte aus der tatsächlich verwendeten Engine,
+inklusive Copyrightangaben und Drittanbieter-Lizenztexten, offline in der APK.
+Bilder, Musik und zusätzlich eingebaute Assets haben jeweils eigene Rechtebedingungen.
 
-Innen zeigt die Kamera den gesamten Raum, draußen folgt sie der Figur mit Blick in die
-Laufrichtung. Das Ufer fällt kontinuierlich ab. Im Wasser werden Beine verdeckt und die
-Bewegung langsamer. Zäune und eine Bojenleine markieren die Grenzen dieses kleinen Ausschnitts.
+Offizielle Quellen: https://godotengine.org/license/ und
+https://docs.godotengine.org/en/stable/about/complying_with_licenses.html
 
 ## Bauen und prüfen
 
-Godot **4.4.1**, Compatibility/OpenGL, Querformat 1280×720 als Basis.
+Godot **4.4.1**, Compatibility/OpenGL, Querformat, 1280×720 als Basis:
 
 ```sh
 godot --headless --path godot-prototype --import
@@ -47,21 +49,22 @@ godot --headless --path godot-prototype --audio-driver Dummy -- --validate
 godot --path godot-prototype --audio-driver Dummy -- --probe
 ```
 
-`--validate` prüft echte Navigation, alle fünf Zielorte, Hin- und Rückweg durch die Tür,
-Bodenkollision, Wassertiefe, Waten, Sprung/Landung, Tippen durch ausgeblendete Wände und
-Steuerkreis-Eingaben (Headless: Eingabehandler; mit Fenster: Viewport-Ereignisse). Bei einem Fehler endet der Prozess mit Code 1.
-`--probe` führt dieselben Prüfungen mit echten Screenshots (`user://world_*.png`) aus.
-`--gallery` ist eine reine Entwickleransicht mit versetzter Figur und ersetzt keinen Wegtest.
+`--validate` prüft tatsächliche Hin-/Rückwege zu den Orten, Ein-/Austritt ohne Versetzen,
+Wassertiefe, perspektivische Größe, Weg hinter eine Vordergrundpflanze, Touch-Joystick,
+Sprunghöhe und gleichbleibende Bildidentitäten/Anzahl der Nodes. Bei Fehlern endet es mit Code 1.
+Mit Fenster führt `--probe` dieselben Prüfungen über den Viewport aus und speichert echte
+Renderbilder unter `user://2d_*.png`. Headless-Eingaben benutzen den identischen Eingabehandler.
+Die APK-Pipeline prüft Import und Weltverhalten vor Export und Signaturprüfung.
 
-`.github/workflows/godot-apk.yml` prüft Import und Navigation vor dem Export, prüft die APK-Signatur
-und legt `Itoeva-Godot-Prototyp.apk` am bisherigen Drive-Ziel und als GitHub-Artefakt ab.
+[Echte Godot-Ansichten](../docs/godot-prototype/README.md).
 
-[Echte Renderbilder aus Godot](../docs/godot-prototype/README.md).
+## Umfang
 
-## Umfang und nächste Arbeit
+Dieser Prototyp ersetzt den 3D-Versuch. Die 3D-Szenen und zugehörigen Material-/Pflanzenassets
+sind daraus entfernt. Er ist ein erster begehbarer 2D-Ausschnitt, keine vollständige Portierung
+aller bisherigen Räume. Weitere Innenräume, angrenzende Panoramen, Spielstand, Living Agent
+und Reminder sind noch nicht portiert. Die übrigen Android-Apps bleiben separat.
 
-Dieser Ausschnitt belegt die visuelle und räumliche Umsetzung des Hauses und seiner Küste.
-Die übrigen bisherigen Orte, zusätzliche Zimmer, Spielstand, Living Agent, Erinnerungen und
-Charakterwahl sind noch nicht in Godot portiert. Die vorhandenen Android-Apps bleiben separat.
-Als Nächstes müssen Aussehen, Touchgefühl und Bildrate auf Martins Telefon beurteilt werden;
-danach kann derselbe Aufbau um Schlafzimmer, Bad und benachbarte Außenbereiche wachsen.
+Die APK verwendet weiterhin `com.notime.glyphminderwatch.godotproto` und aktualisiert den
+Godot-Prototyp. Bildrate und physische Touchbedienung auf Martins Telefon müssen dort geprüft
+werden. Der nächste Ausbau kann dieselbe residente Welt und eindeutig zugeordnete Türen nutzen.
