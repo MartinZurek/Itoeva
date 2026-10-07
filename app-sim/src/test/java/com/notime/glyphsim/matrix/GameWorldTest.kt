@@ -22,10 +22,17 @@ class GameWorldTest {
     }
     @Test fun `das Panorama ist vorhanden und hat die gemeinsame Perspektive`() {
         val root = listOf(java.io.File("src/game/assets"), java.io.File("app-sim/src/game/assets")).first { it.isDirectory }
-        val image = javax.imageio.ImageIO.read(java.io.File(root, GameWorld.ASSET))
-        assertNotNull(image)
-        assertEquals(GameWorld.WIDTH / GameWorld.HEIGHT, image.width.toFloat() / image.height, .001f)
-        assertTrue(image.width <= 4096 && image.height <= 4096)
+        // Android-JVM-Tests haben keine AWT-/ImageIO-Klassen. PNG-IHDR direkt lesen.
+        java.io.DataInputStream(java.io.File(root, GameWorld.ASSET).inputStream()).use { png ->
+            val signature = ByteArray(8).also(png::readFully)
+            assertArrayEquals(byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a), signature)
+            assertEquals(13, png.readInt())
+            assertEquals(0x49484452, png.readInt()) // IHDR
+            val width = png.readInt(); val height = png.readInt()
+            assertTrue(width > 0 && height > 0)
+            assertEquals(GameWorld.WIDTH / GameWorld.HEIGHT, width.toFloat() / height, .001f)
+            assertTrue(width <= 4096 && height <= 4096)
+        }
     }
     @Test fun `gemeinsame Raender erhalten Fusspunkt Groesse Geschwindigkeit und Gangphase`() {
         for ((from, to) in GameWorld.places.zipWithNext()) for (depth in listOf(0f, .5f, 1f)) {

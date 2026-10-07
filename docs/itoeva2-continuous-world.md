@@ -39,10 +39,15 @@ Der alte Stream behaelt seine eigene Kartenansicht.
 ## Validierung
 
 Am 07.10.2026 liefen alle **937 Kotlin-Tests erfolgreich**, einschliesslich der neuen Welt-
-und Kameratests. `git diff --check` ist sauber. Der Android-Build ist **nicht bestaetigt**:
-der Online-Lauf wurde vor der Netzwerkfreigabe beendet, der Offline-Lauf scheitert an fehlenden
-Gradle-/Android-Abhaengigkeiten vor der Quellcode-Kompilierung. Es gibt noch keine neue APK
+und Kameratests. `git diff --check` ist sauber. Die lokale Android-Kompilierung erreichte hier
+den Quellcode nicht: der Online-Lauf wurde vor der Netzwerkfreigabe beendet, offline fehlten
+Gradle-/Android-Abhaengigkeiten. Es gibt noch keine neue APK
 und keine Telefonabnahme dieses Schnitts.
+
+Remote-CI im PR #340: App-Kompilierung und instrumentierte Tests auf API 26/35 bestehen.
+Der erste Verify-Lauf #842 fand im neuen Asset-Test einen Android-Test-Klassenpfadfehler:
+`javax.imageio` ist dort nicht vorhanden. Der Test liest deshalb jetzt die PNG-Signatur und
+IHDR-Abmessungen direkt, ohne Desktop-Bildbibliothek. Der finale Verify-Stand steht im PR.
 
 Die Kotlin-Strecke prueft geometrisch identische Naehte, Momentum/Gangphase, Kameraprojektion
 und inverse Touch-Koordinaten, Nachlauf bei verschiedenen Bildraten, Zoom-Hysterese,

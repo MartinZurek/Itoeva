@@ -15,9 +15,8 @@ erreichbar; Gebaeude und weitere Gebiete behalten ihre Uebergaenge.
 
 - Branch: `codex/continuous-world-camera`; Basis ist der aktuelle lokale Charaktercommit
   `4fad98d` auf `codex/ensemble-design-polish`.
-- Geplanter PR gegen `codex/ensemble-design-polish`, damit die Charakteraenderungen separat
-  reviewbar bleiben. Falls der Charakterstand zuerst gemergt wird, anschliessend auf `main`
-  umstellen. Es wurde nichts gemergt.
+- Charakter-PR #339 wurde inzwischen auf GitHub gemergt. Welt-PR #340 ist angelegt und deshalb
+  von `codex/ensemble-design-polish` auf `main` umgestellt. Er bleibt als Draft offen.
 - Betroffen: Game-Weltgeometrie, Kamera, Renderer/Touch-Projektion, Weltkarte, Sicherheitsanker,
   Offline-Testharness und Dokumentation. Neues Panorama und reproduzierbare Kotlin-Vorschau.
 - Orts-IDs und Spielstandformat bleiben erhalten; keine Preference-/Room-Migration.
@@ -31,8 +30,11 @@ erreichbar; Gebaeude und weitere Gebiete behalten ihre Uebergaenge.
 - 20-Sekunden-Desktop-Vorschau aus den echten `GameWorld`-/`GameMovement`-/`GameCamera`-Klassen,
   dem neuen Panorama und dem aktuellen Fennec: `tools/world-art/continuous-world-preview.mp4`.
   Dies ist keine Aufnahme der Android-App.
-- **Android-Kompilierung offen:** Online-Lauf vor Netzwerkfreigabe beendet; Offline-Lauf
-  scheitert vor der Quellcode-Kompilierung an fehlenden Build-Abhaengigkeiten.
+- Die lokale Android-Kompilierung scheiterte vor dem Quellcode an Build-Abhaengigkeiten.
+  Remote-Verify #842 bestaetigt Debug-Kompilierung und Emulatorpruefungen auf API 26/35.
+  Sein Unit-Test-Compile fand einen unzulaessigen Desktop-Import im neuen PNG-Asset-Test;
+  die Korrektur liest PNG-Signatur und IHDR direkt. Danach erneut 937 Kotlin-Tests gruen.
+  Der finale Tests-/Lint-/R8-Stand wird im PR #340 festgehalten.
 - Der erste Push wurde von der automatischen Freigabepruefung wegen nicht ausdruecklich
   freigegebenem GitHub-Ziel `MartinZurek/Itoeva` blockiert. Martin hat das Hochladen und Anlegen
   des Pull Requests am 07.10.2026 freigegeben. Android-/CI-Ergebnisse stehen im Remote-PR;
@@ -40,9 +42,7 @@ erreichbar; Gebaeude und weitere Gebiete behalten ihre Uebergaenge.
 
 ## Naechster Schritt und Grenzen
 
-Die Freigabe zum Hochladen liegt vor. Charakterbasis und diesen Branch nach `MartinZurek/Itoeva`
-pushen, den
-gestapelten PR anlegen und Android-CI pruefen. Danach am Telefon Kamera/Touch, zwei Daumen,
+Welt-PR #340 ist hochgeladen. Den korrigierten Android-CI-Lauf abschliessen. Danach am Telefon Kamera/Touch, zwei Daumen,
 Bank/Stamm/Kiste, Gespraech, Neustart auf beiden Seiten jeder Naht sowie GPU/Speicher/Bildrate
 abnehmen. Diese Fassung ist noch kein geraetegepruefter Release.
 

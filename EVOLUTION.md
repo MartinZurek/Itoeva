@@ -698,6 +698,10 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   `MartinZurek/Itoeva` und Anlegen des PRs am 07.10.2026 freigegeben. Finaler CI-Stand im PR;
   Runbook und Grenzen: `docs/itoeva2-continuous-world.md`.
   Danach Android-CI und Telefonabnahme, erst dann weitere gemeinsame Gebiete anschliessen.
+- **CI-Korrektur:** Verify #842 bestaetigt Android-Kompilierung und Emulatorpruefungen auf
+  API 26/35, scheitert aber beim Uebersetzen des neuen Asset-Unit-Tests an `javax.imageio`.
+  Dieser Desktop-Import ist aus dem Android-Test entfernt; PNG-Signatur und IHDR-Abmessungen
+  werden direkt gelesen. Produktcode und Bild bleiben gleich. Finales CI-Ergebnis im PR #340.
 
 ### 2026-10-07 - Ensemble: eigene Gelenkposen und feinere Charakterdetails
 
