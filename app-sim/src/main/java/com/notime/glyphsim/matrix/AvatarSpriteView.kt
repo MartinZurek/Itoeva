@@ -100,7 +100,8 @@ fun AvatarSpriteView(
     gameGaitMs: Long? = null,
     gameRunBlend: Float? = null,
     gameLight: GameSceneLighting.CharacterLight? = null,
-    gameWind: Float = 0f
+    gameWind: Float = 0f,
+    gameFabric: GameFabric.Pose? = null
 ) {
     // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
     // Bogen, wird statt der groben Zellen das passende Bild daraus gezeichnet. Die grobe Pose
@@ -152,7 +153,7 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind)
+                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind, gameFabric)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide, gameLight)
         }
@@ -203,7 +204,8 @@ private fun DrawScope.drawCreature(
     gameGaitMs: Long?,
     gameRunBlend: Float?,
     gameFilters: List<ColorFilter>?,
-    gameWind: Float
+    gameWind: Float,
+    gameFabric: GameFabric.Pose?
 ) {
     val rich = sheet.frameSize == CreatureSprites.Rich.FRAME
     val frameSize = sheet.frameSize
@@ -233,21 +235,29 @@ private fun DrawScope.drawCreature(
         }
         // Farbfilter wirken nur auf die Sprite-Pixel, einschliesslich deren Alpha.
         // Kein Offscreen-Rechteck, das die Ohren oder den Sprung abschneiden koennte.
-        val rows = 6
-        repeat(6) { column ->
+        val rows = if (gameFabric == null) 6 else 12
+        val columns = if (gameFabric == null) 6 else 12
+        repeat(columns) { column ->
             repeat(rows) { row ->
-                val x0 = column * frameSize / 6; val x1 = (column + 1) * frameSize / 6
+                val x0 = column * frameSize / columns; val x1 = (column + 1) * frameSize / columns
                 val y0 = row * frameSize / rows; val y1 = (row + 1) * frameSize / rows
                 val v = (row + .5f) / rows
-                val physicalColumn = if (look.mirrored) 5 - column else column
-                val color = gameFilters[row * 6 + physicalColumn]
+                val filterColumn = column * 6 / columns
+                val physicalColumn = if (look.mirrored) 5 - filterColumn else filterColumn
+                val color = gameFilters[row * 6 / rows * 6 + physicalColumn]
                 val tips = ((.55f - v) / .55f).coerceIn(0f, 1f)
-                val wind = gameWind * drawn * tips * tips * if (look.mirrored) -1f else 1f
-                val dx0 = (left + drawn * x0 / frameSize + wind).roundToInt()
-                val dx1 = (left + drawn * x1 / frameSize + wind).roundToInt()
+                val cloth = gameFabric?.let { GameFabric.offset(it, (column + .5f) / columns, v) } ?: 0f
+                val wind = (gameWind * tips * tips + cloth) * drawn * if (look.mirrored) -1f else 1f
+                // Inverses Sampling fuellt feste Zielzellen: bewegte Stoffkacheln reissen keine Spalten auf.
+                val sourceShift = if (gameFabric != null) (wind * frameSize / drawn).roundToInt() else 0
+                val sourceX0 = (x0 - sourceShift).coerceIn(0,frameSize-1)
+                val sourceX1 = (x1 - sourceShift).coerceIn(sourceX0+1,frameSize)
+                val translate = if (gameFabric == null) wind else 0f
+                val dx0 = (left + drawn * x0 / frameSize + translate).roundToInt()
+                val dx1 = (left + drawn * x1 / frameSize + translate).roundToInt()
                 val dy0 = (top + drawn * y0 / frameSize).roundToInt()
                 val dy1 = (top + drawn * y1 / frameSize).roundToInt()
-                if (dx1 > dx0 && dy1 > dy0) drawImage(image, IntOffset(x0, y0), IntSize(x1 - x0, y1 - y0),
+                if (dx1 > dx0 && dy1 > dy0) drawImage(image, IntOffset(sourceX0, y0), IntSize(sourceX1 - sourceX0, y1 - y0),
                     IntOffset(dx0, dy0), IntSize(dx1 - dx0, dy1 - dy0), alpha = alpha,
                     colorFilter = color, filterQuality = FilterQuality.None)
             }

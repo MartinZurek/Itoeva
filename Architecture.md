@@ -568,3 +568,20 @@ GameAtmosphere und GameAtmosphereView bewegen kleine vorhandene Bildausschnitte,
 Sprite-Spitzen und ortsgebundene Schatten/Reflexe/Staub/Dunst mit der Game-Zeit;
 keine Textur-Neuerzeugung, Netzwerk- oder Persistenzarbeit im Zeichentakt.
 Pruefvertrag und Cloud-Code-Uebergabe: docs/itoeva2-light-and-environment.md.
+
+### Game: Weltkonturen, Sitzpose und gemeinsame Erinnerungen (08.10.2026)
+
+GameFurniture erweitert die elf Innenbilder um feste Koerper und Sitzflaechen. GameSeating
+trennt Anlaufpunkt, gerenderte Sitzposition, Fusslift und Schattenempfaenger; dieselbe Pose
+bestimmt NPC-Tap und Tiefensortierung. Die Haltephase laesst Aktivitaetsanimationen durch.
+GameWorldShadows verbindet grosse Kulissenanker mit Sonne und Figurenabschattung. GameGroundLight
+berechnet einmalig ein begrenztes Boden-Helligkeitsfeld im Hintergrund; GameFabric bewegt
+bestehende Stoff-/Feder-/Blattdetails und Vorhaenge, ohne weitere Bilder zu erzeugen.
+
+GameEncounters verwendet den bestehenden Action-/Episode-/Relationship-Kern. Besitz beider
+Seiten und beide Erinnerungen sind in einem GameAdventure-V2-Snapshot atomar gespeichert;
+der Bewohneranteil wird in die vorhandene Population projiziert. GAME_* sind abgeschlossene
+Spielerbegegnungen, keine autonomen Kandidaten. V1 wird erhalten und migriert; alte APKs lesen
+V2 nicht, deshalb muss ein Rueckbau den V2-Reader behalten. Room, App 1, Stream und Reminder
+behalten ihre bestehenden Pfade. Pruef- und Ruecksetzvertrag:
+docs/itoeva2-world-polish-and-encounters.md.

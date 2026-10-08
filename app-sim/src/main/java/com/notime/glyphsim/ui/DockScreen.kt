@@ -100,6 +100,8 @@ import com.notime.glyphsim.matrix.PlayMap
 import com.notime.glyphsim.matrix.PlayMapScene
 import com.notime.glyphsim.matrix.PlayControl
 import com.notime.glyphsim.matrix.GameEnvironment
+import com.notime.glyphsim.matrix.GameEncounters
+import com.notime.glyphsim.matrix.GameSeating
 import com.notime.glyphsim.matrix.GameMovement
 import com.notime.glyphsim.matrix.GameSurfaces
 import com.notime.glyphsim.matrix.GameCamera
@@ -780,6 +782,7 @@ fun DockScreen(
         var gameEnvironment by remember { mutableStateOf(GameEnvironment.State()) }
         var gameCamera by remember { mutableStateOf(GameCamera.State()) }
         val gamePaintedImages = rememberGameSceneImages(gameMode)
+        val gameImagesReady by rememberUpdatedState(gamePaintedImages.isNotEmpty())
         var gameWorldActors by remember { mutableStateOf<Map<PlayScene.Place, Map<String, GameResidents.Actor>>>(emptyMap()) }
         var gameWorldEnvironments by remember { mutableStateOf<Map<PlayScene.Place, GameEnvironment.State>>(emptyMap()) }
         val gameRoomLayers by rememberUpdatedState(rememberGameRoomLayers(if (gameMode) GameWorld.scene(currentPlace) else null))
@@ -796,6 +799,8 @@ fun DockScreen(
         } else null) }
         var gameChronicleOpen by remember { mutableStateOf(false) }
         var gameTalking by remember { mutableStateOf<String?>(null) }
+        var gameMeeting by remember { mutableStateOf<String?>(null) }
+        var gameHandoffId by remember { mutableStateOf<String?>(null) }
         var gameActionCancelled by remember { mutableStateOf(false) }
         var gameMapTarget by remember { mutableStateOf<PlayScene.Place?>(null) }
         var gameAlreadyKnown by remember { mutableStateOf(false) }
@@ -809,6 +814,7 @@ fun DockScreen(
         /** Der Platz in Reichweite (fuer die Aktionstaste) und ob gerade eine Handlung laeuft. */
         var gameStation by remember { mutableStateOf<PlayScene.Station?>(null) }
         var gameActing by remember { mutableStateOf(false) }
+        var gameSeat by remember { mutableStateOf<GameSeating.State?>(null) }
         /**
          * In der gemalten Welt (siehe GameScenes): wohin die Figur fuer eine Handlung von selbst
          * geht. Der Bildtakt fuehrt sie hin und setzt es danach wieder auf `null`.
@@ -944,6 +950,26 @@ fun DockScreen(
          */
         var sharedActivityProfileId by remember { mutableStateOf<String?>(null) }
 
+            suspend fun commitGameEncounter(id: String, gift: Int? = null, waymark: Boolean = false): GameEncounters.Outcome? =
+                residentPersistenceMutex.withLock {
+                    val resident = residentStates[id] ?: return@withLock GameEncounters.Outcome.ABSENT
+                    val given = gift?.let { gameBackpack.items.getOrNull(it) }
+                    var result: GameEncounters.Result? = null
+                    val saved = saveGame { before ->
+                        val actor = gameActors[id]
+                        val outcome = when {
+                            waymark -> GameEncounters.waymark(before, avatar?.species ?: AvatarSpecies.FENNEC, resident, actor)
+                            gift != null -> GameEncounters.give(before, avatar?.species ?: AvatarSpecies.FENNEC, resident, actor, gift)
+                            else -> GameEncounters.meet(before, avatar?.species ?: AvatarSpecies.FENNEC, resident, actor)
+                        }
+                        result = outcome; outcome.state
+                    }
+                    if (!saved) return@withLock null
+                    if (result?.outcome == GameEncounters.Outcome.CHANGED && given != null && carried == given) carried = null
+                    residentStates = residentStates + (id to GameEncounters.restore(gameAdventure,resident))
+                    residentSnapshots = LivingPopulation.snapshot(residentStates)
+                    result?.outcome
+                }
         /**
          * Stellt denselben Living-Zustand fuer Handeln und Gespraech bereit.
          *
@@ -1332,13 +1358,15 @@ fun DockScreen(
                     )?.let { ResidentState(it.agent, it.world) } ?: fallback
                 }
             }
+            if (gameMode) residentStates = residentStates.mapValues { (_, state) -> GameEncounters.restore(gameAdventure,state) }
             residentSnapshots = LivingPopulation.snapshot(residentStates)
             while (isActive) {
                 if (visitingProfileIds.isEmpty() && sharedActivityProfileId == null) {
                     val targetMinute = if (gameMode) gameMinuteNow else PlayTimeLapse.absoluteMinute()
                     val currentResidents = residentStates
                     val advanced = withContext(Dispatchers.Default) {
-                        LivingPopulation.advance(currentResidents, targetMinute)
+                        LivingPopulation.advance(if (gameMode) currentResidents.mapValues { (_, state) -> GameEncounters.restore(gameAdventure,state) }
+                            else currentResidents, targetMinute)
                     }
                     // Ein Besuch kann waehrend der Hintergrundrechnung beginnen. Dann wird
                     // dessen sichtbarer Abschluss zur Wahrheit; der vorher berechnete Stand
@@ -4060,16 +4088,16 @@ fun DockScreen(
                     last = now
                     if (!screenVisible) continue
                     val current = avatar ?: continue
-                    val worldPaused = gameMenuOpen || gameMapOpen || gameBackpackOpen || gameChronicleOpen || gameTalking != null || talkOpen
+                    val worldPaused = !gameImagesReady || gameMenuOpen || gameMapOpen || gameBackpackOpen || gameChronicleOpen || gameTalking != null || talkOpen
                     if (!worldPaused) gameElapsed = GameAdventure.tick(gameAdventure.copy(elapsed = gameElapsed), dt, true).elapsed
                     val environmentScene = GameWorld.scene(currentPlace)
                     if (environmentScene != null && !worldPaused) {
                         if (GameWorld.isWorld(environmentScene)) {
-                            gameWorldActors = GameWorld.residents(gameWorldActors, residentSnapshots, dt.coerceIn(0, 50), gameElapsed, gameTalking)
+                            gameWorldActors = GameWorld.residents(gameWorldActors, residentSnapshots, dt.coerceIn(0, 50), gameElapsed, gameTalking ?: gameMeeting, setOfNotNull(gameSeat?.piece?.id))
                             gameActors = gameWorldActors[currentPlace].orEmpty()
                             gameWorldEnvironments = gameWorldEnvironments.mapValues { (_, value) -> GameEnvironment.advance(value, dt) }
                         } else gameActors = GameResidents.tick(environmentScene, gameActors, residentSnapshots,
-                            dt.coerceIn(0, 50), gameElapsed, gameTalking)
+                            dt.coerceIn(0, 50), gameElapsed, gameTalking ?: gameMeeting, setOfNotNull(gameSeat?.piece?.id))
                     }
                     environmentScene?.let { scene ->
                         if (!worldPaused && (!gameActing || gameWalkTarget != null) && !current.fed) {
@@ -4101,6 +4129,20 @@ fun DockScreen(
                             gameWalkTarget = null
                             avatarWalking = false
                         }
+                        continue
+                    }
+                    if (environmentScene != null && gameSeat != null && !worldPaused) {
+                        val seat = gameSeat!!
+                        val pose = GameSeating.frame(environmentScene, current.species, seat, gameElapsed)
+                        gamePos = pose.pos
+                        gameMovement = GameMovement.State(pos = pose.pos, facing = gameFacing,
+                            height = pose.lift, support = seat.piece.id)
+                        avatarWalking = false
+                        placeGameAvatar(gamePos)
+                        val seatScale = GameCamera.fit(gameCamera, environmentScene,
+                            gameGeometry.first, gameGeometry.second).scale
+                        avatar = avatar?.let { it.copy(offset = it.offset - Offset(0f, pose.lift * seatScale)) }
+                        if (pose.complete) { gameSeat = null; gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing) }
                         continue
                     }
                     val busy = !screenVisible || gameActing || current.fed || gameMenuOpen || gameMapOpen || gameBackpackOpen || gameChronicleOpen || gameTalking != null || talkOpen
@@ -5633,14 +5675,17 @@ fun DockScreen(
         if (playMode && gameMode && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
             val casters = mutableListOf<GameShadowCaster>()
             avatar?.takeIf { !avatarHidden }?.let { current ->
-                val receiver = if (gameMovement.action == GameMovement.Action.JUMP) 0f else gameMovement.height
+                val receiver = gameSeat?.let { GameSeating.frame(scene, current.species, it, gameElapsed).receiver }
+                    ?: if (gameMovement.action == GameMovement.Action.JUMP) 0f else gameMovement.height
                 casters += GameShadowCaster(scene, gamePos, current.species, gameMovement.height, receiver)
             }
             for (place in GameWorld.visiblePlaces(scene)) {
                 val section = GameWorld.scene(place)!!
                 val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
                 if (gameRenderedPlace == currentPlace) actors.values.forEach {
-                    casters += GameShadowCaster(section, it.pos, it.snapshot.species)
+                    val seat = it.seat?.let { state -> GameSeating.frame(section, it.snapshot.species, state, gameElapsed) }
+                    casters += GameShadowCaster(section, seat?.pos ?: it.pos, it.snapshot.species,
+                        seat?.lift ?: 0f, seat?.receiver ?: 0f)
                 }
             }
             GameCharacterShadows(casters, gameCamera, gameWorldNow.minuteOfDay, lampOn, tvOn,
@@ -5651,8 +5696,9 @@ fun DockScreen(
                 GameAdventureObjects(section, gamePos, gameWorldNow, scenePhase, Modifier.fillMaxSize(), gameCamera)
                 if (GameWorld.isWorld(section)) GameSurfaceView(section, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
                 val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
-                if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth <= gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
-                    lampOn, tvOn, gameElapsed, gameWorldNow.weather)
+                if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.renderPos(section, gameElapsed).depth <= gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
+                    lampOn, tvOn, gameElapsed, gameWorldNow.weather, gameWorldNow.residentItems,
+                        gameHandoffId?.let { id -> creatureMotionCue?.let { cue -> id to cue } })
             }
         }
 
@@ -5838,6 +5884,13 @@ fun DockScreen(
                     com.notime.glyphsim.matrix.GameAtmosphere.figureBend(scene, current.species, 0f,
                         gameElapsed, x, gameWorldNow.weather)
                 } ?: 0f else 0f,
+                gameFabric = if (gameMode) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+                    com.notime.glyphsim.matrix.GameFabric.Pose(current.species,
+                        if (GameWorld.isWorld(scene) && scene.place != PlayScene.Place.GROTTO)
+                            com.notime.glyphsim.matrix.GameAtmosphere.wind(GameWorld.origin(scene.place) +
+                                GameScenes.feet(scene, gamePos).first, gameElapsed, gameWorldNow.weather) else .12f,
+                        gameElapsed, if (avatarWalking) gameMovement.tempo.coerceAtMost(2f) else 0f)
+                } else null,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
                 // Dock-Modus nur aus schwarzer Flaeche und Uhr bestand, war das unsichtbar. Seit
@@ -5854,7 +5907,9 @@ fun DockScreen(
                 gameGaitMs = if (gameMode && !gameActing) gameMovement.gaitMs.toLong() else null,
                 gameRunBlend = if (gameMode && !gameActing) gameMovement.runBlend else null,
                 motionCue = if (current.fed || current.occurrenceId != null || groupGame != null) null else
-                    (if (gameMode && !gameActing) gameMovement.action?.let { action ->
+                    gameSeat?.let { seat -> GameWorld.scene(gameRenderedPlace)?.let {
+                        GameSeating.frame(it, current.species, seat, gameElapsed).motion
+                    } } ?: (if (gameMode && !gameActing) gameMovement.action?.let { action ->
                         CreatureSprites.MotionCue(when (action) {
                             GameMovement.Action.JUMP -> CreatureSprites.Motion.JUMP
                             GameMovement.Action.ROLL -> CreatureSprites.Motion.ROLL
@@ -5862,7 +5917,7 @@ fun DockScreen(
                             GameMovement.Action.RISE -> CreatureSprites.Motion.RISE
                         }, gameMovement.progress)
                     } else null) ?: creatureMotionCue ?: occupiedStation?.takeIf {
-                        it != PlayScene.Station.BED && !avatarWalking && !avatarSettling
+                        it != PlayScene.Station.BED && (!gameMode || activeActivity == null) && !avatarWalking && !avatarSettling
                     }?.let { CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f) },
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
@@ -5931,8 +5986,9 @@ fun DockScreen(
                 for (place in visiblePlaces) {
                     val section = GameWorld.scene(place)!!
                     val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
-                    if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth > gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
-                    lampOn, tvOn, gameElapsed, gameWorldNow.weather)
+                    if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.renderPos(section, gameElapsed).depth > gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
+                    lampOn, tvOn, gameElapsed, gameWorldNow.weather, gameWorldNow.residentItems,
+                        gameHandoffId?.let { id -> creatureMotionCue?.let { cue -> id to cue } })
                 }
                 GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize())
                 if (GameWorld.isWorld(scene)) GameWorldForeground(scene, gameCamera,
@@ -6312,7 +6368,8 @@ fun DockScreen(
                     gameActionCancelled = false
                     scope.launch {
                         try {
-                            gameWalkTarget = GameAdventure.safePosition(currentPlace, GameScenes.posAt(bild, spot.standX, spot.standY), gameSurfaceList)
+                            gameWalkTarget = GameSeating.approach(bild, station, gameActors.values.mapNotNull { it.seat?.piece?.id }.toSet())
+                                ?: GameAdventure.safePosition(currentPlace, GameScenes.posAt(bild, spot.standX, spot.standY), gameSurfaceList)
                             if (!awaitGameWalk()) return@launch
                             val door = bild.door
                             if (station == PlayScene.Station.DOOR && door != null) {
@@ -6325,6 +6382,10 @@ fun DockScreen(
                                 // trinken ...), nur ohne die Schritte, die die Figur nach der
                                 // Zellen-Kulisse versetzen (GoTo, Occupy, Rise) - hier steht sie
                                 // schon am gemalten Platz.
+                                gameSeat = GameSeating.begin(bild, station, gamePos, gameElapsed, gameActors.values.mapNotNull { it.seat?.piece?.id }.toSet())
+                                if (gameSeat != null) {
+                                    while (gameElapsed - gameSeat!!.start < GameSeating.ENTER_MS) withFrameMillis { }
+                                }
                                 PlayControl.actionAt(station, lampOn, tvOn)?.let { routine ->
                                     val vorOrt = routine.steps.filter { it is RoutineStep.Act || it is RoutineStep.Linger }
                                     if (vorOrt.isNotEmpty()) {
@@ -6332,8 +6393,15 @@ fun DockScreen(
                                     }
                                 }
                                 collectGame(station)
+                                gameSeat?.let { seat ->
+                                    gameSeat = seat.copy(rise = gameElapsed)
+                                    while (gameSeat != null) withFrameMillis { }
+                                }
                             }
                         } finally {
+                            gameSeat?.let { gamePos = it.from }
+                            gameSeat = null
+                            gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
                             gameWalkTarget = null
                             gameActing = false
                             avatar?.let { startAvatarIdleLoop(it.species, AvatarMoodSnapshot.forSpecies(context, it.species)) }
@@ -6393,12 +6461,25 @@ fun DockScreen(
                 }
             }
             fun gameTalkTo(id: String) {
+                if (gameActing || gameMovement.action != null || gameMovement.height > 0f) return
                 val actor = gameActors[id]?.takeIf { !it.leaving } ?: return
-                gameAlreadyKnown = id in gameAdventure.met
-                gameTalking = id
-                gameTouchStick = PlayControl.Stick()
-                gameKeyStick = PlayControl.Stick()
-                scope.launch { saveGame { GameAdventure.meet(it, actor.snapshot.profileId) } }
+                val scene = GameWorld.scene(currentPlace) ?: return
+                gameTouchStick = PlayControl.Stick(); gameKeyStick = PlayControl.Stick()
+                gameActing = true; gameMeeting = id; sharedActivityProfileId = id; gameActionCancelled = false
+                scope.launch {
+                    try {
+                        gameWalkTarget = GameAdventure.safePosition(currentPlace,
+                            actor.pos.copy(x=(actor.pos.x-.09f).coerceIn(.025f,.975f),
+                                depth=(actor.pos.depth+.10f).coerceIn(.025f,.975f)),GameSurfaces.painted(scene))
+                        if (!awaitGameWalk()) return@launch
+                        gameAlreadyKnown = GameEncounters.knows(gameAdventure,avatar?.species ?: AvatarSpecies.FENNEC,id)
+                        val outcome = commitGameEncounter(id)
+                        if (outcome == GameEncounters.Outcome.CHANGED || outcome == GameEncounters.Outcome.KNOWN) gameTalking = id
+                        else if (outcome != null) gameNotice = encounterText(outcome, context.resources.configuration.locales[0].language == "de")
+                    } finally {
+                        gameWalkTarget = null;gameMeeting = null;sharedActivityProfileId = null;gameActing = false
+                    }
+                }
             }
             fun gameObjectUnder(tap: Offset): GameAdventure.ObjectId? {
                 val scene = GameWorld.scene(currentPlace) ?: return null
@@ -6413,8 +6494,8 @@ fun DockScreen(
                 val scene = GameWorld.scene(currentPlace) ?: return null
                 val fit = GameCamera.fit(gameCamera, scene, maxWidthPx, maxHeightPx)
                 val (x, y) = fit.toImage(tap.x, tap.y)
-                return gameActors.entries.sortedByDescending { it.value.pos.depth }.firstOrNull { (_, actor) ->
-                    (x to y) in GameCharacterScale.hitBox(scene, actor.pos, actor.snapshot.species)
+                return gameActors.entries.sortedByDescending { it.value.renderPos(scene, gameElapsed).depth }.firstOrNull { (_, actor) ->
+                    (x to y) in actor.hitBox(scene, gameElapsed)
                 }?.key
             }
             /** Welcher Platz unter [tap] liegt (Bildschirmpixel) - der naechste in einer Zelle Abstand. */
@@ -6435,7 +6516,7 @@ fun DockScreen(
                         ?.let { station to it }
                 }.minByOrNull { it.second }?.first
             }
-            val controlsEnabled = screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen && gameTalking == null && !talkOpen
+            val controlsEnabled = gameImagesReady && screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen && gameTalking == null && !talkOpen
             fun gameCommand(command: GameMovement.Command, direction: PlayControl.Stick?) {
                 if (!controlsEnabled || avatar == null) return
                 gameMovement = GameMovement.command(gameMovement.copy(pos = gamePos), command,
@@ -6861,7 +6942,7 @@ fun DockScreen(
             // Die Zurueck-Geste schliesst erst offene Fenster, dann oeffnet sie das Menue.
             androidx.activity.compose.BackHandler {
                 when {
-                    gameTalking != null -> gameTalking = null
+                    gameTalking != null -> if (gameHandoffId == null) gameTalking = null
                     gameChronicleOpen -> gameChronicleOpen = false
                     gameMapOpen -> gameMapOpen = false
                     gameBackpackOpen -> gameBackpackOpen = false
@@ -6872,12 +6953,48 @@ fun DockScreen(
             if (gameChronicleOpen) GameChronicle(gameAdventure, german) { gameChronicleOpen = false }
             gameTalking?.let { id ->
                 LivingResidents.all.firstOrNull { it.profileId == id }?.let { resident ->
-                    GameWorldPanel(stringResource(resident.species.labelRes), { gameTalking = null }) {
+                    fun handoff(index: Int? = null, waymark: Boolean = false) {
+                        if (gameHandoffId != null) return
+                        val species=avatar?.species ?: return
+                        val other=residentStates[id] ?: return
+                        val preview=if (waymark) GameEncounters.waymark(gameWorldNow,species,other,gameActors[id])
+                            else GameEncounters.give(gameWorldNow,species,other,gameActors[id],index ?: -1)
+                        if (preview.outcome != GameEncounters.Outcome.CHANGED) {
+                            gameNotice=encounterText(preview.outcome,german);return
+                        }
+                        gameHandoffId=id;avatarIdleJob?.cancel()
+                        scope.launch {
+                            try {
+                                playCreatureMotion(AvatarAnimations.reactionFor(species,
+                                    if(waymark) AnimationType.CREATIVITY else AnimationType.LOVE),
+                                    if(waymark) CreatureSprites.Motion.KNEEL else CreatureSprites.Motion.REACH)
+                                commitGameEncounter(id,index,waymark)?.let { outcome -> gameNotice=encounterText(outcome,german) }
+                            } finally {
+                                gameHandoffId=null
+                                avatar?.let { startAvatarIdleLoop(it.species,AvatarMoodSnapshot.forSpecies(context,it.species)) }
+                            }
+                        }
+                    }
+                    if (gameHandoffId != null) Text(if(german) "Die beiden handeln gemeinsam …" else "They are acting together …",
+                        color = Color.White, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
+                            .background(Color(0xCC17201D)).padding(12.dp))
+                    else GameWorldPanel(stringResource(resident.species.labelRes), { gameTalking = null }) {
                         Text(residentDialogue(resident, gameAdventure, gameAlreadyKnown, german), color = Color(0xFFE0EBD8))
-                        GameActionButton(if (german) "Weg ansehen" else "Show route", {
-                            gameMapTarget = if (GameAdventure.Event.FOREST_SEEDS in gameAdventure.events) PlayScene.Place.PARK else PlayScene.Place.FOREST
-                            gameTalking = null; gameMapOpen = true
-                        }, Modifier.padding(top = 12.dp))
+                            for ((index,item) in gameBackpack.items.withIndex()) Row(verticalAlignment=Alignment.CenterVertically) {
+                                ItemIcon(item,Modifier.size(28.dp))
+                                GameActionButton((if(german) "Übergeben: " else "Give: ")+gameItemName(item,german),
+                                    { handoff(index) },Modifier.padding(4.dp))
+                            }
+                            val received=GameEncounters.received(gameAdventure,id)
+                            if(received.isNotEmpty()) Text((if(german) "Bei diesem Bewohner: " else "This resident has: ")+
+                                received.joinToString { gameItemName(it,german) },color=Color(0xFFE0EBD8))
+                            if(currentPlace==PlayScene.Place.PARK && GameAdventure.Event.WAYMARKED !in gameAdventure.events)
+                                GameActionButton(if(german) "Gemeinsam Wegweiser bauen · 1 übergebenes Holz" else "Build waymarks together · 1 given wood",
+                                    { handoff(waymark=true) },Modifier.padding(top=8.dp))
+                            GameActionButton(if (german) "Weg ansehen" else "Show route", {
+                                gameMapTarget = if (GameAdventure.Event.FOREST_SEEDS in gameAdventure.events) PlayScene.Place.PARK else PlayScene.Place.FOREST
+                                gameTalking = null; gameMapOpen = true
+                            }, Modifier.padding(top = 12.dp))
                     }
                 }
             }
@@ -6885,6 +7002,8 @@ fun DockScreen(
                 GameActionButton(message, { gameNotice = null }, Modifier.align(Alignment.TopCenter).padding(top = 12.dp))
                 LaunchedEffect(message) { if (gameSaveStore.error == null) { delay(5500); gameNotice = null } }
             }
+            if (!gameImagesReady) Text(if (german) "Die Landschaften werden vorbereitet …" else "Preparing the landscapes …",
+                color = Color.White, modifier = Modifier.align(Alignment.Center).background(Color(0xCC17201D)).padding(20.dp))
             if (gameMapOpen) {
                 GameMapOverlay(currentPlace, german, scenePhase, initialTarget = gameMapTarget, onClose = { gameMapOpen = false }, pos = gamePos)
             }

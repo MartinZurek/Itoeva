@@ -14,7 +14,7 @@ object GameSceneLighting {
     data class Light(val x: Float, val y: Float, val radius: Float, val power: Float, val tone: Tone,
         val groundY: Float = y + 90f, val height: Float = 90f, val kind: Kind = Kind.LAMP,
         val directionX: Float = 0f, val directionY: Float = .28f,
-        val fadeStart: Float = 0f, val fadeWidth: Float = 0f) {
+        val fadeStart: Float = 0f, val fadeWidth: Float = 0f, val shadowClock: Long = 0L) {
         val directional get() = kind == Kind.SKY
     }
     const val CAMP_FIRE_X = 130f
@@ -88,7 +88,7 @@ object GameSceneLighting {
         phase: Int): List<Light> {
         if (GameWorld.isWorld(scene)) {
             val origin = GameWorld.origin(scene.place)
-            return worldSources(minuteOfDay, lampOn, phase).map { it.copy(x = it.x - origin, fadeStart = it.fadeStart - origin) }
+            return worldSources(minuteOfDay, lampOn, phase).map { it.copy(x = it.x - origin, fadeStart = it.fadeStart - origin, shadowClock = phase.toLong() * 200L) }
         }
         val day = daylight(minuteOfDay)
         val room = GameLightingCatalog.rooms[scene.place].takeIf { scene.asset.startsWith("interiors/") }
@@ -127,7 +127,7 @@ object GameSceneLighting {
 
     /** Ein niedriger Gegenstand blockiert nur den Strahlanteil unter seiner Oberkante. */
     fun transmission(scene: GameScenes.Scene, light: Light, x: Float, floorY: Float, z: Float): Float {
-        if (light.directional) return 1f
+        if (light.directional) return GameWorldShadows.transmission(scene, light, x, floorY, z)
         var result = 1f
         for (piece in GameFurniture.pieces(scene)) {
             var enter = 0f; var leave = 1f

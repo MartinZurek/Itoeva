@@ -239,6 +239,7 @@ object LivingPopulationLayout {
         ActionKind.RESPOND_TO_INVITE,
         ActionKind.RECEIVE_RESPONSE,
         ActionKind.TRAIN_TOGETHER,
+        ActionKind.GAME_MEET, ActionKind.GAME_GIVE, ActionKind.GAME_WAYMARK,
         null -> ResidentPose.Idle
     }
 

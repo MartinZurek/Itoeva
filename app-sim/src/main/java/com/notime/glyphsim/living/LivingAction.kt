@@ -146,7 +146,9 @@ enum class ActionKind {
      * Laden ist zu) und sind in der Ereignisfolge zu sehen. Ein Plan, der den Agenten
      * unbemerkt versetzt, waere in der Anzeige spaeter nicht erklaerbar.
      */
-    TRAVEL
+    TRAVEL,
+    /** Bereits sichtbare Begegnung in Itoeva 2; keine autonome Zielwahl und keine XP. */
+    GAME_MEET, GAME_GIVE, GAME_WAYMARK
 }
 
 /**

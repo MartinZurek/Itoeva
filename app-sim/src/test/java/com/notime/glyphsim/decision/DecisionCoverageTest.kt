@@ -43,6 +43,10 @@ class DecisionCoverageTest {
         ActionKind.RESPOND_TO_INVITE,
         ActionKind.RECEIVE_RESPONSE,
         ActionKind.TRAIN_TOGETHER,
+        // Abgeschlossene, vom Spieler ausgeloeste Begegnungen; keine autonomen Routinen.
+        ActionKind.GAME_MEET,
+        ActionKind.GAME_GIVE,
+        ActionKind.GAME_WAYMARK,
         ActionKind.TEND_SELF
     )
 

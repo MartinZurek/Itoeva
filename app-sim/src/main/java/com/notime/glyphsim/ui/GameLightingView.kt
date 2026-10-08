@@ -147,3 +147,27 @@ internal fun GameCharacterShadows(casters: List<GameShadowCaster>, camera: GameC
         }
     }
 }
+
+
+/** Schatten werden einmal in absoluten Weltkoordinaten gezeichnet, auch ueber Bildanschluesse. */
+internal fun DrawScope.paintWorldShadows(scene: GameScenes.Scene, fit: GameScenes.Fit,
+    minute: Int, clock: Long, alpha: Float) {
+    val origin = GameWorld.origin(scene.place)
+    val sun = GameSceneLighting.sources(scene, minute, false, false, (clock / 200L).toInt())
+        .firstOrNull { it.directional }?.let { it.copy(x = it.x + origin, fadeStart = it.fadeStart + origin) } ?: return
+    withTransform({ translate(fit.left - origin * fit.scale, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
+        for (caster in GameWorldShadows.casters) {
+            val cast = GameWorldShadows.project(caster, sun, clock)
+            if (cast.alpha <= .001f) continue
+            val minX = cast.points.minOf { it.first }; val maxX = cast.points.maxOf { it.first }
+            if (fit.left + (maxX-origin)*fit.scale < 0f || fit.left + (minX-origin)*fit.scale > size.width) continue
+            val path = Path().apply {
+                cast.points.forEachIndexed { i, p -> if (i == 0) moveTo(p.first,p.second) else lineTo(p.first,p.second) }
+                close()
+            }
+            repeat(3) { pass -> drawPath(path, Color(0xFF172C35).copy(alpha = cast.alpha * alpha * .14f),
+                style = Stroke(cast.softness * (3-pass))) }
+            drawPath(path, Color(0xFF172C35).copy(alpha = cast.alpha * alpha * .58f))
+        }
+    }
+}

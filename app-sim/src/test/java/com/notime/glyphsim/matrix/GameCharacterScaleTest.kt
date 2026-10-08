@@ -97,14 +97,14 @@ class GameCharacterScaleTest {
 
     @Test fun `beide gemalten Tische sind mit dem neuen Game-Massstab erreichbar`() {
         for (place in listOf(Place.KITCHEN,Place.CAFE)) {
-            val scene=GameWorld.scene(place)!!; val surface=GameSurfaces.painted(scene).single()
+            val scene=GameWorld.scene(place)!!; val surface=GameSurfaces.painted(scene).single { it.id == "${place.name.lowercase()}-table" }
             val start=GameMovement.State(Pos((surface.x0+surface.x1)/2f,surface.d1+.015f),facing=PlayControl.Dir.UP)
             val jump=GameMovement.command(start,GameMovement.Command.JUMP,PlayControl.Stick(0f,-.5f),listOf(surface),GameCharacterScale.MAX_STEP_HEIGHT)
             assertEquals(surface.id,jump.arc!!.surface)
             var state=jump
             repeat(14) { state=GameMovement.tick(state,PlayControl.Stick(),50L,listOf(surface),maxStepHeight=GameCharacterScale.MAX_STEP_HEIGHT).state }
             assertEquals(surface.id,state.support)
-            assertEquals(GameFurniture.pieces(scene).single().top,GameScenes.feet(scene,state.pos).second-state.height,.001f)
+            assertEquals(GameFurniture.pieces(scene).single { it.id == "${place.name.lowercase()}-table" }.top,GameScenes.feet(scene,state.pos).second-state.height,.001f)
         }
     }
 
@@ -113,7 +113,7 @@ class GameCharacterScaleTest {
             val scene=GameWorld.scene(place)!!; val spot=scene.spots.first { it.station==PlayScene.Station.TABLE }
             val pos=GameScenes.posAt(scene,spot.standX,spot.standY)
             val crown=spot.standY-GameScenes.avatarHeight(scene,pos)
-            assertTrue(crown < GameFurniture.pieces(scene).single().top)
+            assertTrue(crown < GameFurniture.pieces(scene).single { it.id == "${place.name.lowercase()}-table" }.top)
         }
     }
 }
