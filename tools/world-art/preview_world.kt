@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
 /** Echte Welt-, Bewegungs- und Kamerarechnung; Vorschau ist keine APK-Aufnahme. */
 fun main(args: Array<String>) {
     val root = File(args[0]); val output = File(args[1]).apply { mkdirs() }
-    val world = ImageIO.read(File(root, "app-sim/src/game/assets/${GameWorld.ASSET}"))
+    val worlds = GameWorld.regions.associate { it.asset to ImageIO.read(File(root,"app-sim/src/game/assets/${it.asset}")) }
     val sheet = ImageIO.read(File(root, "app-sim/src/main/assets/creatures/fennec.png"))
     var place = PlayScene.Place.STREET
     var movement = GameMovement.State(PlayControl.Pos(.22f, .40f))
@@ -19,7 +19,7 @@ fun main(args: Array<String>) {
         val stick = if (frame < 35 || frame > 270 || (place == PlayScene.Place.FOREST && movement.pos.x > .78f)) PlayControl.Stick() else PlayControl.Stick(.75f, 0f)
         repeat(2) {
             val result = GameMovement.tick(movement, stick, 33, GameSurfaces.painted(GameWorld.scene(place)!!),
-                immediateExits = GameWorld.immediateExits(place))
+                immediateExits = GameWorld.immediateExits(place), horizontalScale = GameWorld.horizontalScale(place))
             movement = result.state
             result.exit?.let { dir ->
                 val next = GameScenes.exit(GameWorld.scene(place)!!, dir)
@@ -35,8 +35,9 @@ fun main(args: Array<String>) {
         val image = BufferedImage(960, 540, BufferedImage.TYPE_INT_RGB)
         val g = image.createGraphics()
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-        g.drawImage(world, worldLeft.roundToInt(), fit.top.roundToInt(),
-            (GameWorld.WIDTH * fit.scale).roundToInt(), (GameWorld.HEIGHT * fit.scale).roundToInt(), null)
+        for (region in GameWorld.regions) g.drawImage(worlds.getValue(region.asset),
+            (worldLeft + GameWorld.regionOrigin(region) * fit.scale).roundToInt(), fit.top.roundToInt(),
+            (region.width * fit.scale).roundToInt(), (GameWorld.HEIGHT * fit.scale).roundToInt(), null)
         val (x, y) = GameScenes.feet(currentScene, movement.pos)
         val (sx, sy) = fit.toScreen(x, y)
         val px = GameScenes.avatarHeight(currentScene, movement.pos) * fit.scale / .8f

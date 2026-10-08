@@ -48,6 +48,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -778,6 +780,7 @@ fun DockScreen(
         var gameMovement by remember { mutableStateOf(GameMovement.State()) }
         var gameEnvironment by remember { mutableStateOf(GameEnvironment.State()) }
         var gameCamera by remember { mutableStateOf(GameCamera.State()) }
+        val gamePaintedImages = rememberGameSceneImages(gameMode)
         var gameWorldActors by remember { mutableStateOf<Map<PlayScene.Place, Map<String, GameResidents.Actor>>>(emptyMap()) }
         var gameWorldEnvironments by remember { mutableStateOf<Map<PlayScene.Place, GameEnvironment.State>>(emptyMap()) }
         val gameRoomLayers by rememberUpdatedState(rememberGameRoomLayers(if (gameMode) GameWorld.scene(currentPlace) else null))
@@ -4116,7 +4119,8 @@ fun DockScreen(
                     val scene = GameWorld.scene(currentPlace)
                     val beforeMovement = gameMovement
                     val result = GameMovement.tick(gameMovement, gameInput(), dt, gameSurfaceList,
-                        immediateExits = GameWorld.immediateExits(currentPlace))
+                        immediateExits = GameWorld.immediateExits(currentPlace),
+                        horizontalScale = GameWorld.horizontalScale(currentPlace))
                     gameEnvironment = if (scene != null) GameEnvironment.tick(gameEnvironment, scene,
                         beforeMovement, result.state, dt, gameRoomLayers.grid) else GameEnvironment.advance(gameEnvironment, dt)
                     gameMovement = result.state
@@ -4137,7 +4141,7 @@ fun DockScreen(
                     if (!motionActive && wasMoving) startAvatarIdleLoop(current.species, AvatarMoodSnapshot.forSpecies(context, current.species))
                     wasMoving = motionActive
                     result.exit?.let { exit ->
-                        val next = scene?.let { GameScenes.exit(it, exit) } ?: if (scene == null) PlayControl.neighbor(currentPlace, exit) else null
+                        val next = scene?.let { GameWorld.exitAt(currentPlace, exit, gamePos) } ?: if (scene == null) PlayControl.neighbor(currentPlace, exit) else null
                         if (next != null) {
                             val carried = GameWorld.transfer(currentPlace, next, exit, gameMovement)
                             if (carried != null) {
@@ -4148,7 +4152,7 @@ fun DockScreen(
                                 gameActors = gameWorldActors[next].orEmpty()
                             } else {
                                 gameActors = emptyMap()
-                                gamePos = GameAdventure.safePosition(next, PlayControl.entry(exit, gamePos),
+                                gamePos = GameAdventure.safePosition(next, GameWorld.passages(currentPlace).firstOrNull { it.to == next }?.let(GameWorld::arrival) ?: PlayControl.entry(exit, gamePos),
                                     GameWorld.scene(next)?.let { GameSurfaces.painted(it) })
                                 gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
                             }
@@ -5396,7 +5400,7 @@ fun DockScreen(
             }
             // Itoeva 2: wo es schon ein gemaltes Bild gibt, steht es statt der Zellen-Kulisse.
             val gemalt = if (gameMode && karte == null) GameWorld.scene(gameRenderedPlace) else null
-            val gemaltBild = rememberGameSceneImage(gemalt)
+            val gemaltBild = gamePaintedImages[gemalt?.asset]
             val gemaltEbenen = rememberGameSceneLayers(gemalt, animated = renderedRoomLayers.base == null || renderedRoomLayers.atlas == null)
             if (gemalt != null && gemaltBild != null) {
                 GameSceneView(
@@ -5404,8 +5408,9 @@ fun DockScreen(
                     minuteOfDay = gameWorldNow.minuteOfDay,
                     lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
                     modifier = Modifier.fillMaxSize(), layers = gemaltEbenen,
-                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera
+                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages
                 )
+                GamePassageView(gemalt, gameCamera, gameGerman, sceneFade.value, Modifier.fillMaxSize())
                 if (!GameWorld.isWorld(gemalt)) GameSurfaceView(gemalt, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
             } else PlaySceneView(
                 cells = if (streamMode) StreamPresentation.readableNight(
@@ -5627,7 +5632,7 @@ fun DockScreen(
         }
 
         if (playMode && gameMode && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
-            val visiblePlaces = if (GameWorld.isWorld(scene)) GameWorld.places else listOf(scene.place)
+            val visiblePlaces = GameWorld.visiblePlaces(scene)
             for (place in visiblePlaces) {
                 val section = GameWorld.scene(place)!!
                 GameAdventureObjects(section, gamePos, gameWorldNow, scenePhase, Modifier.fillMaxSize(), gameCamera)
@@ -5845,6 +5850,10 @@ fun DockScreen(
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
                     // Quadratgroesse das Raster und die Figur waere zu klein.
+                    .drawWithContent {
+                        val wet = if (gameMode && gameMovement.height == 0f) GameWorld.scene(gameRenderedPlace)?.let { GameWorld.wetness(it, gamePos) } ?: 0f else 0f
+                        clipRect(bottom = size.height * (1f - wet * AvatarGeometry.SIZE / AvatarGeometry.HEIGHT)) { this@drawWithContent.drawContent() }
+                    }
                     .width(current.sizeDp.dp)
                     .height(current.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
                     .offset { IntOffset(current.offset.x.roundToInt(), current.offset.y.roundToInt()) }
@@ -5896,17 +5905,20 @@ fun DockScreen(
 
         if (gameMode && mapView == null) {
             GameWorld.scene(gameRenderedPlace)?.let { scene ->
-                val visiblePlaces = if (GameWorld.isWorld(scene)) GameWorld.places else listOf(scene.place)
+                val visiblePlaces = GameWorld.visiblePlaces(scene)
                 for (place in visiblePlaces) {
                     val section = GameWorld.scene(place)!!
                     val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
                     if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth > gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera)
                 }
+                GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize())
                 if (GameWorld.isWorld(scene)) GameWorldForeground(scene, gameCamera,
                     gameWorldEnvironments + (currentPlace to gameEnvironment), gameElapsed,
                     gameWorldNow.minuteOfDay, sceneFade.value, Modifier.fillMaxSize())
             }
             GameWorld.scene(gameRenderedPlace)?.let { scene ->
+                GamePaintedForeground(scene, gamePaintedImages[scene.asset], gameMovement, gameCamera,
+                    sceneFade.value, gameWorldNow.minuteOfDay, lampOn, tvOn, scenePhase, Modifier.fillMaxSize())
                 GameRoomForegroundView(scene, renderedRoomLayers, gameEnvironment, gamePos,
                     sceneFade.value, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera)
             }
@@ -6246,6 +6258,28 @@ fun DockScreen(
              * denselben Ablaeufen wie im autonomen Leben. Was es dort zu finden gibt, kommt in den
              * Rucksack (siehe PlayBackpack.lootAt), solange Platz ist.
              */
+            fun gameEnter(passage: GameWorld.Passage) {
+                if (gameActing || gameMovement.action != null || gameMovement.height > 0f || passage.from != currentPlace) return
+                gameActing = true
+                gameActionCancelled = false
+                scope.launch {
+                    try {
+                        gameWalkTarget = GameAdventure.safePosition(currentPlace, passage.pos, gameSurfaceList)
+                        if (!awaitGameWalk() || currentPlace != passage.from) return@launch
+                        val arrival = GameAdventure.safePosition(passage.to, GameWorld.arrival(passage))
+                        gameTouchStick = PlayControl.Stick(); gameKeyStick = PlayControl.Stick()
+                        currentPlace = passage.to
+                        gamePos = arrival
+                        gameMovement = GameMovement.State(pos = arrival, facing = gameFacing)
+                        gameActors = emptyMap(); gameSnap++
+                    } finally { gameWalkTarget = null; gameActing = false }
+                }
+            }
+            fun gamePassageUnder(tap: Offset): GameWorld.Passage? {
+                val scene = GameWorld.scene(currentPlace) ?: return null
+                val (x, y) = GameCamera.fit(gameCamera, scene, maxWidthPx, maxHeightPx).toImage(tap.x, tap.y)
+                return GameWorld.passageAt(scene, x, y)
+            }
             fun gameActAt(station: PlayScene.Station) {
                 val species = avatar?.species ?: return
                 if (gameActing || gameMovement.action == GameMovement.Action.JUMP ||
@@ -6395,11 +6429,13 @@ fun DockScreen(
                     val p = GameAdventure.position(scene, it)
                     abs(p.x - gamePos.x) + abs(p.depth - gamePos.depth) * .25f < .14f
                 }
+                val passage = GameWorld.inReach(currentPlace, gamePos)
                 val nearestNpc = gameActors.entries.filter { !it.value.leaving }.minByOrNull {
                     abs(it.value.pos.x - gamePos.x) + abs(it.value.pos.depth - gamePos.depth) * .25f
                 }?.takeIf { abs(it.value.pos.x - gamePos.x) + abs(it.value.pos.depth - gamePos.depth) * .25f < .16f }
                 val de = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "de"
                 when {
+                    passage != null -> GameActionButton(com.notime.glyphsim.stream.FennecWorld.name(passage.to, de), { gameEnter(passage) }, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
                     nearest != null -> GameActionButton(objectName(nearest, de), { gameActObject(nearest) }, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
                     nearestNpc != null -> GameActionButton(if (de) "Begegnen" else "Meet", { gameTalkTo(nearestNpc.key) }, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
                 }
@@ -6410,7 +6446,7 @@ fun DockScreen(
                 }, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
             }
             if (controlsEnabled) GameKeys(onStick = { gameKeyStick = it },
-                onAction = { gameStation?.let { gameActAt(it) } }, onCommand = ::gameCommand)
+                onAction = { GameWorld.inReach(currentPlace, gamePos)?.let(::gameEnter) ?: gameStation?.let { gameActAt(it) } }, onCommand = ::gameCommand)
             GameTouch(
                 onStick = { gameTouchStick = it },
                 onCommand = ::gameCommand,
@@ -6425,8 +6461,10 @@ fun DockScreen(
                     }
                 },
                 onDoubleTap = { tap ->
+                    val passage = gamePassageUnder(tap)
                     val obj = gameObjectUnder(tap)
-                    if (obj != null) gameActObject(obj)
+                    if (passage != null) gameEnter(passage)
+                    else if (obj != null) gameActObject(obj)
                     else gameResidentUnder(tap)?.let(::gameTalkTo) ?: gameStationUnder(tap)?.let(::gameActAt)
                 }
             )

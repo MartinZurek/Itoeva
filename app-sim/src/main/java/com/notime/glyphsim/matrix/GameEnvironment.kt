@@ -50,7 +50,7 @@ object GameEnvironment {
         val dy = by - ay
         val distance = sqrt(dx * dx + dy * dy)
         fun material(x: Float, y: Float, support: String?) = if (support != null) Material.WOOD
-            else grid?.at(x, y) ?: GameRoomCatalog.rooms[scene.place]?.material ?: Material.STONE
+            else GameWorld.material(scene, x, y) ?: grid?.at(x, y) ?: GameRoomCatalog.rooms[scene.place]?.material ?: Material.STONE
         val contacts = next.contacts.toMutableList()
         var foot = next.foot
         fun contact(x: Float, y: Float, support: String?, height: Float, impact: Float) {

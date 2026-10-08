@@ -20,6 +20,21 @@ object GameSurfaces {
 
     fun painted(scene: GameScenes.Scene): List<GameMovement.Surface> {
         if (GameWorld.isWorld(scene)) return GameWorld.surfaces(scene) + listOfNotNull(crate(scene)?.surface)
+        if (scene.asset.startsWith("interiors/")) {
+            fun surface(id: String, left: Float, right: Float, top: Float, ground: Float,
+                back: Float, front: Float): GameMovement.Surface {
+                val center = GameScenes.posAt(scene, (left+right)/2f, ground)
+                return GameMovement.Surface(id, GameScenes.posAt(scene,left,ground).x,
+                    GameScenes.posAt(scene,right,ground).x, GameScenes.posAt(scene,left,back).depth,
+                    GameScenes.posAt(scene,right,front).depth, ground-top, scene.nearY-scene.farY,center.depth)
+            }
+            return when (scene.place) {
+                PlayScene.Place.LIVING -> listOf(surface("living-sofa",180f,292f,128f,164f,161f,167f),
+                    surface("living-tea-table",170f,220f,149f,166f,164f,169f))
+                PlayScene.Place.BEDROOM -> listOf(surface("bedroom-bed",234f,342f,166f,201f,197f,207f))
+                else -> emptyList()
+            }
+        }
         val table = if (scene.place == PlayScene.Place.LIVING) {
             // Der niedrige Teetisch links vor dem Sofa im bestehenden living.png.
             val ground = 212f

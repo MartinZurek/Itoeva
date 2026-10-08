@@ -10,7 +10,7 @@ class GameCameraTest {
     private val scene = GameWorld.scene(Place.PARK)!!
     @Test fun `Kamera und Touchprojektion sind in allen Zoomstufen invers`() {
         for (zoom in listOf(1.4f, 1.55f, 1.85f)) for (w in listOf(1280f, 2400f)) {
-            val state = GameCamera.State(GameWorld.ASSET, 830f, 407f, zoom)
+            val state = GameCamera.State(GameWorld.CAMERA_KEY, 830f, 407f, zoom)
             for (place in GameWorld.places) {
                 val fit = GameCamera.fit(state, GameWorld.scene(place)!!, w, 1080f)
                 val point = GameScenes.feet(GameWorld.scene(place)!!, Pos(.45f, .7f))
@@ -24,7 +24,7 @@ class GameCameraTest {
         val camera = GameCamera.tick(GameCamera.State(), scene, Pos(.95f, .5f), Stick(1f, 0f), 1920f, 1080f, 16L)
         for ((from, to) in GameWorld.places.zipWithNext()) {
             val a = GameCamera.fit(camera, GameWorld.scene(from)!!, 1920f, 1080f)
-                .toScreen(480f, 533f)
+                .toScreen(GameWorld.region(from)!!.section, 533f)
             val b = GameCamera.fit(camera, GameWorld.scene(to)!!, 1920f, 1080f)
                 .toScreen(0f, 533f)
             assertEquals(a.first, b.first, .001f); assertEquals(a.second, b.second, .001f)
@@ -59,7 +59,7 @@ class GameCameraTest {
                 val fit = GameCamera.fit(initial, s, w, h)
                 val left = fit.left - if (world) GameWorld.origin(place) * fit.scale else 0f
                 assertTrue(left <= .01f); assertTrue(fit.top <= .01f)
-                assertTrue(left + (if (world) GameWorld.WIDTH else 480f) * fit.scale >= w - .01f)
+                assertTrue(left + (if (world) GameWorld.totalWidth else 480f) * fit.scale >= w - .01f)
                 assertTrue(fit.top + (if (world) GameWorld.HEIGHT else 270f) * fit.scale >= h - .01f)
             }
         }

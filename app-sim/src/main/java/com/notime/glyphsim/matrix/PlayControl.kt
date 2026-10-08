@@ -71,12 +71,12 @@ object PlayControl {
     }
 
     fun step(pos: Pos, stick: Stick, dtMs: Long, exitDelayMs: Long = EXIT_PUSH_MS,
-        immediateExits: Set<Dir> = emptySet()): Step {
+        immediateExits: Set<Dir> = emptySet(), horizontalScale: Float = 1f): Step {
         val amount = stick.strength
         if (amount < 0.01f) return Step(pos.copy(pushMs = 0L))
         val dt = dtMs.coerceIn(0L, 100L) / 1000f
         val speed = tempo(amount)
-        val nx = pos.x + stick.x / amount * SPEED_X * speed * dt
+        val nx = pos.x + stick.x / amount * SPEED_X * speed * dt * horizontalScale
         val nd = pos.depth + stick.y / amount * SPEED_DEPTH * speed * dt
         val exit = when {
             nx < 0f -> Dir.LEFT

@@ -34,14 +34,14 @@ object GameSceneLighting {
      * leuchten dann ueber die Glow-Ebene weiter), drinnen gedaempfter.
      */
     fun darkness(scene: GameScenes.Scene, minuteOfDay: Int): Float {
-        val outside = PlayScene.isOutdoors(scene.place)
+        val outside = PlayScene.isOutdoors(scene.place) && scene.place != Place.GROTTO
         val night = 1f - daylight(minuteOfDay)
         return if (outside) MAX_DARK * night else 0.1f + 0.32f * night
     }
 
     /** Abend- und Morgenrot: 0..1, am staerksten mitten in der Daemmerung, nur draussen. */
     fun dusk(scene: GameScenes.Scene, minuteOfDay: Int): Float {
-        if (!PlayScene.isOutdoors(scene.place)) return 0f
+        if (!PlayScene.isOutdoors(scene.place) || scene.place == Place.GROTTO) return 0f
         val day = daylight(minuteOfDay)
         return (1f - kotlin.math.abs(day - 0.5f) * 2f).coerceIn(0f, 1f) * if (day in 0.01f..0.99f) 1f else 0f
     }
@@ -50,7 +50,7 @@ object GameSceneLighting {
     fun sources(scene: GameScenes.Scene, minuteOfDay: Int, lampOn: Boolean, tvOn: Boolean, phase: Int): List<Light> {
         val result = mutableListOf<Light>()
         val day = daylight(minuteOfDay)
-        if (PlayScene.isOutdoors(scene.place) && day > 0f) {
+        if (PlayScene.isOutdoors(scene.place) && scene.place != Place.GROTTO && day > 0f) {
             val progress = ((Math.floorMod(minuteOfDay, 1440) - 360) / 840f).coerceIn(0f, 1f)
             result += Light(60f + progress * 360f, 22f, 325f, day * 0.11f, Tone.SUN)
         }
@@ -62,8 +62,15 @@ object GameSceneLighting {
                 result += Light(x, y, 88f, 0.42f * flicker, Tone.WARM)
             }
         }
-        if (scene.place == Place.CAMP) result += Light(CAMP_FIRE_X, CAMP_FIRE_Y, 95f,
+        if (scene.place == Place.CAMP) result += Light(if (GameWorld.isWorld(scene)) 280f else CAMP_FIRE_X,
+            if (GameWorld.isWorld(scene)) 445f else CAMP_FIRE_Y, if (GameWorld.isWorld(scene)) 240f else 95f,
             0.48f + 0.04f * kotlin.math.sin(phase * 0.63).toFloat(), Tone.WARM)
+        if (GameWorld.isWorld(scene) && scene.place == Place.GROTTO)
+            result += Light(590f, 420f, 380f, .38f, Tone.COOL)
+        if (scene.place in GameInteriorCatalog.scenes) {
+            result += Light(325f, 100f, 260f, .20f * day, Tone.SUN)
+            result += Light(240f, 120f, 210f, .24f, Tone.WARM)
+        }
         if (tvOn) scene.spots.filter { it.station == Station.TV }.forEach { spot ->
             result += Light((spot.hit.x0 + spot.hit.x1) / 2f, spot.hit.y0 + 18f, 80f, 0.28f, Tone.COOL)
         }

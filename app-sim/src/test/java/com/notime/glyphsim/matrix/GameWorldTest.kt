@@ -103,9 +103,39 @@ class GameWorldTest {
             assertEquals(original.events, restored.events); assertEquals(original.elapsed, restored.elapsed)
         }
     }
-    @Test fun `App eins behält die alten Szenenbilder und deren Koordinaten`() {
+    @Test fun `alte Geometrie bleibt nur Metadaten die aktive Welt verwendet neue Bilder`() {
         assertEquals("scenes/street.png", GameScenes.of(Place.STREET)!!.asset)
         assertEquals(196f, GameScenes.of(Place.STREET)!!.farY, 0f)
-        assertSame(GameScenes.of(Place.LIVING), GameWorld.scene(Place.LIVING))
+        assertEquals("interiors/living.png", GameWorld.scene(Place.LIVING)!!.asset)
+        for (place in Place.entries) assertFalse(GameWorld.scene(place)!!.asset.startsWith("scenes/"))
+    }
+    @Test fun `Tiefe verlaesst keinen Aussenort und jede Tuer fuehrt zum selben Ort zurueck`() {
+        for (place in GameWorld.places) {
+            assertNull(GameWorld.exitAt(place, Dir.UP, Pos(.5f, 0f)))
+            assertNull(GameWorld.exitAt(place, Dir.DOWN, Pos(.5f, 1f)))
+        }
+        for (place in Place.entries) for (door in GameWorld.passages(place).filter { it.door }) {
+            val reverse = GameWorld.passages(door.to).single { it.to == place }
+            assertTrue(reverse.door)
+            assertEquals(reverse.pos.x, GameWorld.arrival(door).x, .001f)
+            assertTrue(GameWorld.arrival(door).depth in .12f.. .88f)
+        }
+    }
+    @Test fun `breite Abschnitte behalten das physische Lauftempo`() {
+        fun distance(place: Place): Float {
+            val state = GameMovement.State(Pos(.3f,.5f), PlayControl.Stick(.5f,0f))
+            val next = GameMovement.tick(state, state.velocity, 50L,
+                horizontalScale = GameWorld.horizontalScale(place)).state
+            return GameWorld.feet(place,next.pos).first - GameWorld.feet(place,state.pos).first
+        }
+        assertEquals(distance(Place.STREET), distance(Place.CAMP), .001f)
+    }
+    @Test fun `alle Aussenorte teilen die Kamera und tieferes Wasser oeffnet die Nahansicht`() {
+        assertEquals(1, GameWorld.places.map { GameCamera.key(GameWorld.scene(it)!!) }.distinct().size)
+        val beach = GameWorld.scene(Place.BEACH)!!
+        val back = GameCamera.tick(GameCamera.State(), beach, Pos(.5f,0f), PlayControl.Stick(),960f,540f,0L)
+        val front = GameCamera.tick(GameCamera.State(), beach, Pos(.5f,1f), PlayControl.Stick(),960f,540f,0L)
+        assertTrue(GameWorld.wetness(beach,Pos(.5f,1f)) > GameWorld.wetness(beach,Pos(.5f,0f)))
+        assertTrue(front.zoom > back.zoom)
     }
 }

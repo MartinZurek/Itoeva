@@ -19,7 +19,10 @@ class GameScenesTest {
     fun `es gibt gemalte Orte und jeder hat sein Bild`() {
         assertTrue(scenes.isNotEmpty())
         val root = listOf(File("src/game/assets"), File("app-sim/src/game/assets")).first { it.isDirectory }
-        for (scene in scenes) assertTrue("${scene.asset} fehlt", File(root, scene.asset).isFile)
+        for (scene in scenes) {
+            val active = GameWorld.scene(scene.place)!!
+            assertTrue("${active.asset} fehlt", File(root, active.asset).isFile)
+        }
     }
 
     @Test
