@@ -60,7 +60,10 @@ class LivingRuntimeAdapterTest {
                 PlayScene.Place.BEACH,
                 PlayScene.Place.CAFE,
                 PlayScene.Place.GROTTO,
-                PlayScene.Place.CAMP
+                PlayScene.Place.CAMP,
+                PlayScene.Place.COAST_PATH,
+                PlayScene.Place.VILLAGE_EDGE,
+                PlayScene.Place.MOUNTAIN_PASS
             ),
             grouped.getValue(LivingSite.OUTSIDE).toSet()
         )

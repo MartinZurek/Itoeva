@@ -6509,3 +6509,57 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Naechster Schritt:** Die sichtbare Bewegung am Geraet zusammen mit Schlafrueckblick und den
   motiveigenen Reaktionen beurteilen. Fuer die Weltlogik bleibt NT-088 der naechste offene
   Schnitt; NT-089 rendert danach mehrere anwesende Einwohner.
+
+### 2026-10-08 – Logische begehbare Welt statt Ortsraster (coherent-world-v2)
+
+- **DOCUMENTED INTENT:** Martin setzt die native Entwicklung fort und möchte vom Haus aus
+  eine zusammenhängende gemalte Welt mit verständlichen Hin- und Rückwegen, Raumtiefe
+  und Uferbewegung. Godot wird für diesen Schnitt nicht eingesetzt.
+- **FACT:** Vier vorhandene gemalte Panoramen bilden eine gemeinsame Außenfläche mit
+  14 Orts-IDs. Links/rechts verbinden unmittelbar benachbarte Abschnitte; Tiefe ist
+  Bewegung innerhalb des Ortes. Elf gemalte Innenräume haben ausdrücklich betätigte,
+  beschriftete Türen mit Gegeneingängen. Der aktive Katalog enthält alle 25 Orte.
+  Die kleinen alten Game-Bilder und ihre Zusatzatlanten sind entfernt. Große Hausbilder
+  bleiben vollständig erhalten, Sofa und Tisch erhalten Vorderkonturen.
+- **Architektur:** Ein gemeinsamer Kameraschlüssel, gemeinsam gehaltene Bilddaten und
+  dieselbe Weltprojektion verhindern Bildwechsel und Kameraneustart an Außenrändern.
+  Die vorhandene Physik normalisiert Geh-/Rollstrecken in breiteren Abschnitten.
+  Ufermaterial, Wasserlinie, Beinverdeckung und Kamera verwenden dieselbe Wassertiefe.
+- **TESTED BEHAVIOR:** Welt-/Kameratests prüfen alle erreichbaren Orte und Rückwege,
+  sämtliche gemeinsamen Fußränder, Laufzustand, Türgegenstellen, konsistente Gehstrecke,
+  Wasserzoom sowie Projektion und Speicherwiederherstellung. Der abschließende
+  Test- und Android-CI-Stand steht im Pull Request.
+- **Grenzen:** Die vier Illustrationen haben noch sichtbare Bildnähte. Die übrigen
+  Möbelkonturen und exakten Stationsanker brauchen eine visuelle Abnahme; Telefon-
+  und Touchprüfung sind offen. Die Desktop-Vorschau ist keine Android-Aufnahme.
+- **Migration/Rücksetzung:** Orts-IDs und Codec bleiben gleich; kein Room-/Preference-
+  Umbau. Rücknahme des Commits stellt die entfernten Bilder wieder her. Gespeicherte
+  Positionen werden von jedem Client gegen dessen Geometrie geprüft.
+- **Betroffene Bereiche:** Game-Welt, Kamera, native Renderer und Türbedienung,
+  Game-Assets, Welt-/Kameratests und `docs/itoeva2-continuous-world.md`.
+
+
+### 2026-10-08 – Zwischenorte verbinden Landschaften (landscape-transitions-v1)
+
+- **DOCUMENTED INTENT:** Martin möchte vor Merge und APK interessante begehbare
+  Zwischenorte, wo Meer, Wald, Häuser oder Gebirge sonst unmittelbar aneinanderstoßen.
+- **FACT:** Küstenweg mit Bachbrücke verbindet Dschungel und Wohnstraße; ein Dorfrand
+  mit Obstgarten verbindet Wald und Marktplatz; der Bergpass führt vom Gebirge zum Lager.
+  Bestehende stimmige Verbindungen innerhalb der Panoramen bleiben erhalten.
+  Sieben Panoramen teilen Geometrie und Kamera; sechs separat nachgemalte Anschlussbilder
+  verbinden Weg, Vegetation und Gebäude an den Bildrändern. Nur die äußeren Ränder
+  dieser ortsfesten Korrekturen laufen weich aus. Neue Ortswerte sind hinten angehängt,
+  samt Namen und Karte.
+- **Architektur:** Ein Bodenprofil hält die Figur auf dem gemalten Brückenweg. Füße
+  und Touchprojektion lesen dieselbe Fläche. Routenziele und Bewohnerbedürfnisse werden
+  nicht erweitert; die Zwischenorte sind zunächst manuell durchlaufene Game-Orte.
+- **TESTED BEHAVIOR:** Neue Tests prüfen Hin-/Rückrouten, Brücken-Touchprojektion,
+  trockenen Brückenboden, Bilddimensionen, stabile alte Ortsnummern und Nahtverlauf.
+  Gesamter Kotlin-/CI-Stand wird im Pull Request dokumentiert; Vorschau mit echter
+  Kotlin-Bewegung und Kamera, keine APK-Aufnahme.
+- **Grenzen:** Telefonprüfung von Touch, GPU, Speicher und visueller Wirkung steht aus.
+  Die Desktop-Vorschau prüft die Anschlüsse in Bewegung; die generierten Außenränder
+  sind keine pixelidentischen Kopien und werden deshalb weich in die Basisbilder eingebettet.
+- **Migration/Rücksetzung:** Keine Room-Migration. Alte IDs unverändert, neue Namen im
+  bestehenden Codec. Rücknahme dieses Schnitts entfernt die drei Orte und ihre Assets;
+  ältere Clients behandeln unbekannte neue Ortsnamen über ihren vorhandenen Rückfall.

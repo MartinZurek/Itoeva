@@ -70,7 +70,7 @@ fun GameStartScreen(onStart: () -> Unit) {
     var musicOn by remember { mutableStateOf(PlayMusic.isEnabled(context)) }
     val backdrop = remember {
         runCatching {
-            context.assets.open("scenes/living.png").use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
+            context.assets.open("interiors/living.png").use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
         }.getOrNull()
     }
     // Eigener Takt fuer das Atmen der Wesen in der Auswahl.

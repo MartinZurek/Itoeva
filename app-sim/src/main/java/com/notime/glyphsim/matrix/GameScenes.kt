@@ -61,8 +61,23 @@ object GameScenes {
          * Welcher Anteil des Ueberstands oben abgeschnitten wird, wenn das Bild hoeher ist als der
          * Bildschirm (0 = nur unten, 1 = nur oben). Der Boden ist wichtiger als der Himmel.
          */
-        val cropTop: Float = 0.8f
+        val cropTop: Float = 0.8f,
+        /** Nur gemalte Wege mit Hoehenprofil: x normalisiert, hintere/vordere Bodenkante. */
+        val walkBand: List<WalkBand> = emptyList()
     )
+
+    data class WalkBand(val x: Float, val far: Float, val near: Float)
+
+    fun floorBand(scene: Scene, x: Float): Pair<Float, Float> {
+        val points = scene.walkBand
+        if (points.isEmpty()) return scene.farY to scene.nearY
+        val t = x.coerceIn(0f, 1f)
+        val b = points.indexOfFirst { it.x >= t }.coerceAtLeast(0)
+        if (b == 0) return points.first().far to points.first().near
+        val a = points[b - 1]; val next = points[b]
+        val fraction = (t - a.x) / (next.x - a.x)
+        return lerp(a.far, next.far, fraction) to lerp(a.near, next.near, fraction)
+    }
 
     /**
      * Die Orte selbst stehen im generierten [GameSceneCatalog]: Jedes Szenen-Skript in
@@ -84,7 +99,8 @@ object GameScenes {
         val d = pos.depth.coerceIn(0f, 1f)
         val left = lerp(scene.farLeft, scene.nearLeft, d)
         val right = lerp(scene.farRight, scene.nearRight, d)
-        return lerp(left, right, pos.x.coerceIn(0f, 1f)) to lerp(scene.farY, scene.nearY, d)
+        val band = floorBand(scene, pos.x)
+        return lerp(left, right, pos.x.coerceIn(0f, 1f)) to lerp(band.first, band.second, d)
     }
 
     /** Wie hoch die Figur an dieser Stelle ist (Bildpixel) - hinten klein, vorn gross. */
@@ -93,7 +109,8 @@ object GameScenes {
 
     /** Die Stelle zu einem Fusspunkt im Bild - die Umkehrung von [feet]. */
     fun posAt(scene: Scene, x: Float, y: Float): Pos {
-        val d = ((y - scene.farY) / (scene.nearY - scene.farY)).coerceIn(0f, 1f)
+        val band = floorBand(scene, (x - scene.farLeft) / (scene.farRight - scene.farLeft))
+        val d = ((y - band.first) / (band.second - band.first)).coerceIn(0f, 1f)
         val left = lerp(scene.farLeft, scene.nearLeft, d)
         val right = lerp(scene.farRight, scene.nearRight, d)
         return Pos(((x - left) / (right - left)).coerceIn(0f, 1f), d)

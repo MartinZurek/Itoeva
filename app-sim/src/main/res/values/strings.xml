@@ -824,4 +824,7 @@
     <string name="game_control_rest">Sit down or stand up</string>
     <string name="game_control_pace">Walk ↔ Run</string>
     <string name="game_control_gestures">Tap: jump · Swipe: roll · Hold: rest</string>
+    <string name="talk_place_coast_path">Coastal path</string>
+    <string name="talk_place_village_edge">Village edge</string>
+    <string name="talk_place_mountain_pass">Mountain pass</string>
 </resources>

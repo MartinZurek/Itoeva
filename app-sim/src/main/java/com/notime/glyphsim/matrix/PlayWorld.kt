@@ -137,6 +137,8 @@ internal object PlayWorld {
      * Prinzip wie beim Baumstamm im Wald.
      */
     fun furnishing(place: PlayScene.Place): List<Placement>? = when (place) {
+        PlayScene.Place.COAST_PATH, PlayScene.Place.VILLAGE_EDGE, PlayScene.Place.MOUNTAIN_PASS ->
+            furnishing(PlayScene.Place.MOUNTAINS)
         // DSCHUNGEL: Palme und Bambus hinten, davor ein Wurzelbogen zum Sitzen und riesige
         // Blaetter. Das Blaetterdach selbst kommt aus [background].
         PlayScene.Place.JUNGLE -> listOf(

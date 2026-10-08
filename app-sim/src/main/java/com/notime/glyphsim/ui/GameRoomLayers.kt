@@ -40,7 +40,7 @@ class GameRoomLayers(val base: ImageBitmap?, val atlas: ImageBitmap?, val grid: 
 fun rememberGameRoomLayers(scene: GameScenes.Scene?): GameRoomLayers {
     val context = LocalContext.current
     return remember(scene?.asset) {
-        if (scene != null && GameWorld.isWorld(scene)) return@remember GameRoomLayers(null, null, null)
+        if (scene != null && (GameWorld.isWorld(scene) || scene.asset.startsWith("interiors/"))) return@remember GameRoomLayers(null, null, null)
         val stem = scene?.asset?.removeSuffix(".png")
         fun load(suffix: String): ImageBitmap? = stem?.let {
             runCatching { context.assets.open("${it}_$suffix.png").use { BitmapFactory.decodeStream(it) }?.asImageBitmap() }.getOrNull()

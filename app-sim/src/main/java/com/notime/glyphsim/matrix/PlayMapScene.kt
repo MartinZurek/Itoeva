@@ -56,6 +56,9 @@ object PlayMapScene {
         Place.SWAMP -> Spot(12, 3)
         Place.BEACH -> Spot(11, 6)
         Place.JUNGLE -> Spot(13, 5)
+        Place.COAST_PATH -> Spot(12, 6)
+        Place.VILLAGE_EDGE -> Spot(3, 3)
+        Place.MOUNTAIN_PASS -> Spot(10, 2)
     }
 
     /**

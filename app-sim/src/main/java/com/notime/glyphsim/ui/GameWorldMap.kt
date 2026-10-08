@@ -98,16 +98,11 @@ internal fun GameWorldMap(current: Place, pos: PlayControl.Pos, target: Place?, 
             // Heller Saum haelt Namen auch ueber Wald und Wegen lesbar.
             paint.style = Paint.Style.STROKE; paint.strokeWidth = 3.dp.toPx(); paint.color = 0xFFDEDABB.toInt()
             val label = FennecWorld.name(place, german)
-            drawContext.canvas.nativeCanvas.drawText(label, p.x, p.y + r * 2.5f, paint)
+            drawContext.canvas.nativeCanvas.drawText(label, p.x, p.y + r * 2.5f + (if (GameWorld.places.indexOf(place) % 2 == 0) 0f else 15.dp.toPx()), paint)
             paint.style = Paint.Style.FILL; paint.color = 0xFF273F34.toInt()
-            drawContext.canvas.nativeCanvas.drawText(label, p.x, p.y + r * 2.5f, paint)
+            drawContext.canvas.nativeCanvas.drawText(label, p.x, p.y + r * 2.5f + (if (GameWorld.places.indexOf(place) % 2 == 0) 0f else 15.dp.toPx()), paint)
         }
-        val here = if (GameWorld.contains(current)) {
-            val i = GameWorld.places.indexOf(current)
-            val a = at(current)
-            val b = at(GameWorld.places.getOrElse(i + 1) { Place.MOUNTAINS })
-            a + (b - a) * pos.x
-        } else at(current)
+        val here = point(GameWorld.mapPoint(current, pos))
         drawCircle(Color(0xFFFCF5D1), 6.dp.toPx(), here)
         drawCircle(Color(0xFFB14E37), 4.dp.toPx(), here)
     }

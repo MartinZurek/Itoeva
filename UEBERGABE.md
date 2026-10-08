@@ -1,4 +1,13 @@
-# Uebergabe: Stand am 26. September 2026
+# Uebergabe
+
+## Aktuell: Itoeva-2-Zwischenorte (08.10.2026)
+
+Die Fortsetzung des vollen Android-Chats und der konkrete Prüf-/APK-Stand stehen in
+[`docs/itoeva2-map-handoff.md`](docs/itoeva2-map-handoff.md), PR #344,
+Remote-Branch `codex/coherent-painted-world`. Diese Übergabe zuerst lesen, wenn der
+Auftrag Karten, Zwischenorte oder Bildnähte betrifft. Der ältere Projektkontext folgt.
+
+## Projektkontext: Stand am 26. September 2026
 
 Diese Datei ist fuer den, der als Naechstes weitermacht - Mensch oder Agent, ausdruecklich auch
 ein anderes Modell als das, das sie geschrieben hat. Sie ersetzt nicht

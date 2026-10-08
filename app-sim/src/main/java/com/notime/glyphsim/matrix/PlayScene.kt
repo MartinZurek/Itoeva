@@ -159,7 +159,10 @@ object PlayScene {
          * Das Lager unterwegs - Zelt, Feuer, Sitzstamm. Nur auf mehrtaegigen Reisen (siehe
          * [PlayQuests]), kein Ziel eines Tagesausflugs.
          */
-        CAMP
+        CAMP,
+
+        /** Begehbare Zwischenorte; am Ende, damit bestehende Ortsnummern stabil bleiben. */
+        COAST_PATH, VILLAGE_EDGE, MOUNTAIN_PASS
     }
 
     /** Draussen gibt es keine Wand und keinen Zimmerboden - siehe [build]. */
@@ -177,7 +180,7 @@ object PlayScene {
     fun isOutdoors(place: Place): Boolean =
         place == Place.PARK || place == Place.SPORT || place == Place.POND || place == Place.STREET ||
             place == Place.FOREST || place == Place.MEADOW || place == Place.CITY || place == Place.CAMP ||
-            place in PlayWorld.NATURE
+            place in PlayWorld.NATURE || place in setOf(Place.COAST_PATH, Place.VILLAGE_EDGE, Place.MOUNTAIN_PASS)
 
     /**
      * Ob an diesem Ort ueberhaupt jemand vorbeikommen kann (siehe runVisit in DockScreen).
@@ -213,7 +216,7 @@ object PlayScene {
         // allein zu sein.
         Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.GROTTO -> false
         // Das Lager gehoert dem Reisenden - wer dort vorbeikommt, kommt nur auf einer Begegnung.
-        Place.CAMP -> false
+        Place.CAMP, Place.COAST_PATH, Place.VILLAGE_EDGE, Place.MOUNTAIN_PASS -> false
     }
 
     /**
@@ -642,7 +645,7 @@ object PlayScene {
         // ragte sie in der Vorschau in den zweiten Automaten hinein.
         Place.ARCADE -> 0.36f
         Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAFE, Place.GROTTO,
-        Place.CAMP -> PlayWorld.avatarAnchorX(place) ?: 0.1f
+        Place.CAMP, Place.COAST_PATH, Place.VILLAGE_EDGE, Place.MOUNTAIN_PASS -> PlayWorld.avatarAnchorX(place) ?: 0.1f
     }
 
     /**
@@ -1808,7 +1811,7 @@ object PlayScene {
         )
 
         // Die fuenf neuen Landschaften stehen in [PlayWorld].
-        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.GROTTO, Place.CAMP ->
+        Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.GROTTO, Place.CAMP, Place.COAST_PATH, Place.VILLAGE_EDGE, Place.MOUNTAIN_PASS ->
             PlayWorld.furnishing(place).orEmpty()
         Place.CAFE -> besideDoor(PlayWorld.furnishing(place).orEmpty())
         }
@@ -4499,7 +4502,7 @@ object PlayScene {
             Place.GROTTO -> emptyList()
 
             Place.PARK, Place.STREET, Place.FOREST, Place.MEADOW, Place.CITY, Place.SPORT, Place.POND,
-            Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAMP -> {
+            Place.JUNGLE, Place.MOUNTAINS, Place.SWAMP, Place.PLAINS, Place.BEACH, Place.CAMP, Place.COAST_PATH, Place.VILLAGE_EDGE, Place.MOUNTAIN_PASS -> {
                 val skyY = (floorY - 13).coerceAtLeast(0)
                 // Was hinter einem Haus steht, sieht man nicht - siehe [facadeMask]. Einmal
                 // berechnet: Sternbild UND Sternschnuppe brauchen dieselbe Maske. Dazu kommt, was

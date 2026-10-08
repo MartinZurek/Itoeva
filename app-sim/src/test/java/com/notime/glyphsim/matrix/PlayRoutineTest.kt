@@ -476,7 +476,8 @@ class PlayRoutineTest {
                 for (step in routine.steps) if (step is RoutineStep.GoToPlace) add(step.place)
             }
         }
-        for (place in PlayScene.Place.entries.filter { PlayScene.isOutdoors(it) }) {
+        // Die drei Zwischenorte werden im Game-Client manuell durchlaufen, nicht als Routineziel.
+        for (place in PlayScene.Place.entries.filter { PlayScene.isOutdoors(it) && it !in GameWorld.transitionPlaces }) {
             assertTrue(
                 "$place kommt in keinem Ablauf vor - die Kulisse waere nie zu sehen",
                 place in reachable

@@ -29,14 +29,14 @@ import kotlin.math.roundToInt
  * dieser Variante keines gibt: Die Bilder liegen nur in der Spiel-Variante.
  */
 @Composable
-fun rememberGameSceneImage(scene: GameScenes.Scene?): ImageBitmap? {
-    val context = LocalContext.current
-    return remember(scene?.asset) {
-        scene?.let { s ->
-            runCatching {
-                context.assets.open(s.asset).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
-            }.getOrNull()
-        }
+internal fun rememberGameSceneImages(enabled: Boolean): Map<String, ImageBitmap?> {
+    val assets = LocalContext.current.assets
+    return remember(assets, enabled) {
+        if (!enabled) emptyMap() else
+            (GameWorld.regions.map { it.asset } + GameWorld.seams.map { it.asset } + com.notime.glyphsim.matrix.GameInteriorCatalog.scenes.values.map { it.asset })
+                .distinct().associateWith { asset -> runCatching {
+                    assets.open(asset).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
+                }.getOrNull() }
     }
 }
 
@@ -54,6 +54,7 @@ class GameSceneLayers(val strip: ImageBitmap?, val glow: ImageBitmap?) {
 fun rememberGameSceneLayers(scene: GameScenes.Scene?, animated: Boolean = true): GameSceneLayers {
     val context = LocalContext.current
     return remember(scene?.asset, animated) {
+        if (scene != null && (GameWorld.isWorld(scene) || scene.asset.startsWith("interiors/"))) return@remember GameSceneLayers(null, null)
         fun load(path: String): ImageBitmap? = runCatching {
             context.assets.open(path).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
         }.getOrNull()
@@ -81,10 +82,11 @@ fun GameSceneView(
     layers: GameSceneLayers? = null,
     roomLayers: GameRoomLayers? = null,
     environment: GameEnvironment.State = GameEnvironment.State(),
-    camera: GameCamera.State? = null
+    camera: GameCamera.State? = null,
+    images: Map<String, ImageBitmap?> = emptyMap()
 ) {
     if (GameWorld.isWorld(scene) && camera != null) {
-        GameWorldView(scene, image, camera, minuteOfDay, lampOn, phase, environment, avatarPos, fade, modifier)
+        GameWorldView(scene, images, camera, minuteOfDay, lampOn, phase, environment, avatarPos, fade, modifier)
         return
     }
     Canvas(modifier = modifier) {
@@ -103,14 +105,14 @@ fun GameSceneView(
         drawImage(
             image = live?.base ?: strip ?: image,
             srcOffset = IntOffset(frame * GameScenes.IMAGE_W, 0),
-            srcSize = IntSize(GameScenes.IMAGE_W, GameScenes.IMAGE_H),
+            srcSize = if (live == null && strip == null) IntSize(image.width, image.height) else IntSize(GameScenes.IMAGE_W, GameScenes.IMAGE_H),
             dstOffset = IntOffset(fit.left.roundToInt(), fit.top.roundToInt()),
             dstSize = IntSize(
                 (GameScenes.IMAGE_W * fit.scale).roundToInt(),
                 (GameScenes.IMAGE_H * fit.scale).roundToInt()
             ),
             alpha = visible,
-            filterQuality = FilterQuality.None
+            filterQuality = if (scene.place in com.notime.glyphsim.matrix.GameInteriorCatalog.scenes) FilterQuality.Low else FilterQuality.None
         )
         if (live != null) {
             roomParts(scene, live, environment, fit, visible, false)
@@ -137,7 +139,7 @@ fun GameSceneView(
                     (GameScenes.IMAGE_H * fit.scale).roundToInt()
                 ),
                 alpha = glowAlpha * visible * (0.9f + 0.1f * sin(phase * 0.9f)),
-                filterQuality = FilterQuality.None
+                filterQuality = if (scene.place in com.notime.glyphsim.matrix.GameInteriorCatalog.scenes) FilterQuality.Low else FilterQuality.None
             )
         }
         lights.forEach { light ->

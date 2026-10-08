@@ -108,7 +108,7 @@ object GameMovement {
     }
 
     fun tick(state: State, input: PlayControl.Stick, dtMs: Long, surfaces: List<Surface> = emptyList(),
-        exitDelayMs: Long = PlayControl.EXIT_PUSH_MS, immediateExits: Set<PlayControl.Dir> = emptySet()): Result {
+        exitDelayMs: Long = PlayControl.EXIT_PUSH_MS, immediateExits: Set<PlayControl.Dir> = emptySet(), horizontalScale: Float = 1f): Result {
         val dt = dtMs.coerceIn(0L, 50L)
         if (dt == 0L) return Result(state)
         val elapsed = state.elapsed + dt
@@ -129,7 +129,7 @@ object GameMovement {
                     queuedJumpMs = (state.queuedJumpMs - dt).coerceAtLeast(0L)))
             }
             Action.ROLL -> {
-                val step = PlayControl.step(state.pos, state.velocity, dt)
+                val step = PlayControl.step(state.pos, state.velocity, dt, horizontalScale = horizontalScale)
                 val pos = collide(state.pos, step.pos.copy(pushMs = 0L), state.height, surfaces, state.support)
                 val result = state.copy(pos = pos, height = surfaces.firstOrNull { it.id == state.support }?.heightAt(pos) ?: state.height, elapsed = elapsed,
                     action = if (elapsed >= 460L) null else Action.ROLL,
@@ -148,7 +148,7 @@ object GameMovement {
         val change = dt / if (input.strength < state.velocity.strength) 75f else 135f
         fun ease(a: Float, b: Float) = a + (b - a).coerceIn(-change, change)
         val velocity = PlayControl.Stick(ease(state.velocity.x, input.x), ease(state.velocity.y, input.y))
-        val step = PlayControl.step(state.pos, velocity, dt, exitDelayMs, immediateExits)
+        val step = PlayControl.step(state.pos, velocity, dt, exitDelayMs, immediateExits, horizontalScale)
         val pos = collide(state.pos, step.pos, state.height, surfaces, state.support)
         val actual = distance(state.pos, pos) > 0.00001f ||
             (step.exit != null && (exitDelayMs == 0L || step.exit in immediateExits) && pos == step.pos)
