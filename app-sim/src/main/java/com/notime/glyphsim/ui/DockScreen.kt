@@ -6475,7 +6475,7 @@ fun DockScreen(
                         gameAlreadyKnown = GameEncounters.knows(gameAdventure,avatar?.species ?: AvatarSpecies.FENNEC,id)
                         val outcome = commitGameEncounter(id)
                         if (outcome == GameEncounters.Outcome.CHANGED || outcome == GameEncounters.Outcome.KNOWN) gameTalking = id
-                        else if (outcome != null) gameNotice = encounterText(outcome, context.resources.configuration.locales[0].language == "de")
+                        else if (outcome != null) gameNotice = encounterText(outcome, gameGerman)
                     } finally {
                         gameWalkTarget = null;gameMeeting = null;sharedActivityProfileId = null;gameActing = false
                     }
