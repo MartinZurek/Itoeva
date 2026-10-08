@@ -15,8 +15,11 @@ fun main(args: Array<String>) {
     // Jeweils echte Hin- und Rueckbewegung an allen sechs Bildgrenzen, dazu der Gang ins Wasser.
     val cases = listOf(PlayScene.Place.JUNGLE, PlayScene.Place.COAST_PATH, PlayScene.Place.FOREST,
         PlayScene.Place.VILLAGE_EDGE, PlayScene.Place.MOUNTAINS, PlayScene.Place.MOUNTAIN_PASS, PlayScene.Place.BEACH)
-    var frame = 0
-    for (start in cases) {
+    val selectedCases = args.getOrNull(2)?.split(",")?.map { it.toInt() }?.toSet()
+    for ((caseIndex, start) in cases.withIndex()) {
+        if (selectedCases != null && caseIndex !in selectedCases) continue
+        var frame = caseIndex * 150
+        val crossed = mutableSetOf<PlayControl.Dir>()
         var place = start
         var movement = GameMovement.State(PlayControl.Pos(if(start == PlayScene.Place.BEACH) .5f else .72f,.35f))
         var camera = GameCamera.State()
@@ -28,7 +31,7 @@ fun main(args: Array<String>) {
                     immediateExits = GameWorld.immediateExits(place),horizontalScale = GameWorld.horizontalScale(place))
                 movement = result.state
                 result.exit?.let { dir -> GameWorld.exitAt(place,dir,movement.pos)?.let { next ->
-                    GameWorld.transfer(place,next,dir,movement)?.let { movement = it; place = next }
+                    GameWorld.transfer(place,next,dir,movement)?.let { movement = it; place = next; crossed += dir }
                 } }
                 camera = GameCamera.tick(camera,GameWorld.scene(place)!!,movement.pos,stick,960f,540f,33L)
             }
@@ -76,5 +79,9 @@ fun main(args: Array<String>) {
             g.color = Color(242,234,214); g.drawString("Desktop-Test | $place | ${if(index<75) "Hinweg" else "Rueckweg"} | Zoom %.2f".format(camera.zoom),24,34)
             g.dispose(); ImageIO.write(image,"png",File(output,"frame-%04d.png".format(frame++)))
         }
+        if (start != PlayScene.Place.BEACH) check(crossed.containsAll(listOf(PlayControl.Dir.RIGHT, PlayControl.Dir.LEFT))) {
+            "$start: Die Vorschau hat die Bildgrenze nicht in beiden Richtungen durchlaufen: $crossed"
+        }
+        println("$start: ${if (start == PlayScene.Place.BEACH) "Uferbewegung" else "Hin-/Rueckgrenze $crossed"}")
     }
 }

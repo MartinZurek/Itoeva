@@ -15,7 +15,7 @@ GitHub gesichert werden, damit ein neuer Chat ihn ohne alte Scratch-Dateien übe
 - 17 Außenorte und elf Innenräume; sieben gemeinsame Außenpanoramen, sechs nachgemalte
   Anschlussbilder. Alte Ortsnummern bleiben stabil; neue Werte stehen am Enum-Ende.
 - Der Brückenboden hebt/verengt den Laufweg. Füße und Touchprojektion teilen das Profil.
-- Anschlussbilder 4/5 waren vertauscht und wurden bei der Fortsetzung richtig zugeordnet:
+- Anschlussbilder anhand der Einzeldateien und Bewegung geprüft:
   4 = Gebirge → Bergpass; 5 = Bergpass → Lager. Originalbilder wurden nicht retuschiert.
 
 ## Relevante Dateien
@@ -27,15 +27,29 @@ GitHub gesichert werden, damit ein neuer Chat ihn ohne alte Scratch-Dateien übe
   und `world/seams/0.png` bis `5.png`.
 - Dokumentation: `docs/itoeva2-continuous-world.md`, `tools/world-art/README.md`,
   `tools/world-art/source/landscape-transitions-prompt.md`, aktueller EVOLUTION-Eintrag.
-- Vorschau: `tools/world-art/coherent-world-overview.png`, `coherent-world-preview.mp4`;
-  erzeugt durch `preview_geography.kt` und `preview_walk.kt`. Desktop, keine APK-Aufnahme.
+- Vorschau: `tools/world-art/coherent-world-overview.png` (alle 28 Orte) und
+  `coherent-world-preview.mp4` (70 Sekunden); erzeugt durch `preview_geography.kt`
+  und `preview_walk.kt`. Aktualisiert und stichprobenweise visuell geprüft,
+  einschließlich beider endgültiger Bergpass-Anschlüsse. Desktop, keine APK-Aufnahme.
 
 ## Prüfstand und offene Schritte
 
-Das übernommene lokale Testprotokoll bestätigt 944 bestandene Kotlin-Tests.
+Der erneute vollständige lokale Lauf bestätigt 944 bestandene Kotlin-Tests (08.10.).
 Der frühere Android-Verify-Lauf 37733498319 ist grün, gilt aber nur für den älteren
 PR-Kopf `843c0bf1e5fb91495198f1a4a2d5c2aa7f153cf0`, nicht für die Zwischenorte.
-Aktueller Android-CI-/Vorschaustand wird nach dem Upload in PR und dieser Datei ergänzt.
+Laufzeitcode und Assets sind auf GitHub gesichert. Sie entsprechen dem korrigierten
+Stand `584fe66ba3a64254c8cc04c854470439c3a0c75c`; die folgenden Änderungen erneuern
+Vorschauen, deren Prüflogik und diese Übergabe. Maßgeblich ist der **aktuelle PR-Kopf**.
+Der abschließende Android-CI-Link und Status stehen in der PR-Beschreibung.
+Sicherungscommit `955945b`
+enthielt zwischenzeitlich falsch zugeordnete Anschlüsse 4/5; dafür `584fe66` oder
+einen neueren PR-Kopf verwenden. Nicht den Sicherungscommit allein übernehmen.
+
+Die erneuerte Vorschau weist für Berge → Bergpass und Bergpass → Lager jeweils
+`[RIGHT, LEFT]` aus; beide Grenzen werden mit echter Bewegungsphysik hin und zurück
+überquert. Optionaler dritter Parameter `4,5` erneuert nur diese beiden Fälle,
+behält die ursprünglichen Frame-Nummern und überschreibt Frames 600–899.
+Ohne diesen Parameter werden alle sieben Fälle und 1050 Frames neu erzeugt.
 
 1. `git status` und PR-Kopf prüfen; bei abweichendem Remote-Stand zuerst dessen Diff lesen.
 2. `bash tools/reaction-preview/tests.sh` führt die reinen Kotlin-Tests aus.

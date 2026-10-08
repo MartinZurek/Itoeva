@@ -47,7 +47,7 @@ Geräteprüfung sind zusätzliche, getrennte Prüfungen.
 
 `tools/world-art/preview_geography.kt` zeigt alle 28 Orte. `preview_walk.kt` rendert
 mit der echten Kotlin-Physik Hin- und Rückbewegung über die sechs Panoramagrenzen und
-vom Strand ins Wasser. Die Vorschau ist eine Desktop-Darstellung, keine APK-Aufnahme.
+vom Strand ins Wasser. Die 70-Sekunden-Vorschau ist eine Desktop-Darstellung, keine APK-Aufnahme.
 
 Die drei bislang abrupten Landschaftssprünge haben eigene Zwischenorte: Küstenweg mit
 Bachbrücke, Dorfrand mit Obstgarten und Bergpass zum geschützten Lager. Die Bilder
@@ -76,3 +76,6 @@ ffmpeg -y -framerate 15 -i "$TASK_CACHE/world-preview/frames/frame-%04d.png" -c:
 Rücksetzung: den zusammenhängenden Weltcommit zurücknehmen. Die vorherigen Bilder
 werden dabei aus Git wiederhergestellt. Eine Datenmigration ist nicht erforderlich;
 alte Clients prüfen gespeicherte Positionen gegen ihre eigene Geometrie.
+
+Aktueller GitHub-/CI-/APK-Stand und Fortsetzung in einem neuen Chat:
+[`itoeva2-map-handoff.md`](itoeva2-map-handoff.md), PR #344.
