@@ -3,6 +3,7 @@ package com.notime.glyphsim.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,9 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -83,14 +87,7 @@ internal fun GameTouch(
         }
     }
     DisposableEffect(Unit) { onDispose { stickNow(PlayControl.Stick()) } }
-    Box(modifier.fillMaxSize().semantics {
-        customActions = listOf(
-            CustomAccessibilityAction(jumpLabel) { commandNow(GameMovement.Command.JUMP, null); true },
-            CustomAccessibilityAction(rollLabel) { commandNow(GameMovement.Command.ROLL, null); true },
-            CustomAccessibilityAction(restLabel) { commandNow(GameMovement.Command.REST, null); true }
-        )
-    }.pointerInput(enabled, radius, slop, bottom) {
-        if (!enabled) return@pointerInput
+    val touchInput = if(enabled) Modifier.pointerInput(enabled, radius, slop, bottom) {
         var left: PointerId? = null
         var right: PointerId? = null
         val taps = mutableMapOf<PointerId, Pair<Offset, Long>>()
@@ -175,14 +172,24 @@ internal fun GameTouch(
             actionOrigin = null
             stickNow(PlayControl.Stick())
         }
-    }) {
+    } else Modifier
+    Box(modifier.fillMaxSize().semantics {
+        if(!enabled) disabled()
+        customActions = listOf(
+            CustomAccessibilityAction(jumpLabel) { if(enabled) commandNow(GameMovement.Command.JUMP,null);enabled },
+            CustomAccessibilityAction(rollLabel) { if(enabled) commandNow(GameMovement.Command.ROLL,null);enabled },
+            CustomAccessibilityAction(restLabel) { if(enabled) commandNow(GameMovement.Command.REST,null);enabled }
+        )
+    }.then(touchInput)) {
         Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text(stringResource(R.string.game_control_pace), color = Color(0xAADDF5E8), fontSize = 10.sp)
             Text(stringResource(R.string.game_control_gestures), color = Color(0xAADDF5E8), fontSize = 10.sp)
         }
+        Box(Modifier.align(Alignment.BottomEnd).padding(end=28.dp,bottom=45.2.dp).size(89.6.dp)
+            .testTag("game-action-pad").semantics { contentDescription="$jumpLabel · $rollLabel · $restLabel" })
         Canvas(Modifier.fillMaxSize()) {
-            val alpha = if (enabled) 1f else 0.3f
+            val alpha = if (enabled) 1f else 0.65f
             val home = Offset(radius * 1.3f, size.height - bottom)
             val origin = stickOrigin ?: home
             drawCircle(Color(0x337EBBA4).copy(alpha = 0.20f * alpha), radius, origin)
@@ -194,8 +201,8 @@ internal fun GameTouch(
             val knob = if (stickOrigin == null) Offset.Zero else if (len > radius) stickKnob * (radius / len) else stickKnob
             drawCircle(Color(0xCCDDF5E8).copy(alpha = 0.7f * alpha), 14.dp.toPx(), origin + knob)
             val action = Offset(size.width - radius * 1.3f, size.height - bottom)
-            drawCircle(Color(0x337EBBA4).copy(alpha = 0.20f * alpha), radius * 0.8f, action)
-            drawCircle(Color(0xAADDF5E8).copy(alpha = 0.65f * alpha), radius * 0.8f, action,
+            drawCircle(Color(0xFF152E35).copy(alpha = 0.78f * alpha), radius * 0.8f, action)
+            drawCircle(Color(0xFFDDF5E8).copy(alpha = 0.95f * alpha), radius * 0.8f, action,
                 style = Stroke(if (actionOrigin == null) 2.dp.toPx() else 4.dp.toPx()))
             val ink = Color(0xFFDDF5E8).copy(alpha = 0.8f * alpha)
             val w = 3.dp.toPx()

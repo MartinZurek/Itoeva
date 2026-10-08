@@ -55,12 +55,12 @@ object GameWorld {
     data class Passage(val from: Place, val to: Place, val dir: Dir, val pos: Pos, val door: Boolean = false) {
         fun hit(scene: GameScenes.Scene): GameScenes.Box {
             val (x, y) = GameScenes.feet(scene, pos)
-            return GameScenes.Box(x - 22f, y - if (door) 95f else 20f, x + 22f, y + 12f)
+            return if (door) GameDoors.aperture(from,to) else GameScenes.Box(x - 22f,y - 20f,x + 22f,y + 12f)
         }
     }
     private val links = mutableListOf<Passage>().apply {
         fun join(a: Place, b: Place, d: Dir, pa: Pos, pb: Pos, door: Boolean = false) {
-            add(Passage(a, b, d, pa, door)); add(Passage(b, a, opposite(d), pb, door))
+            add(Passage(a, b, d, if (door) GameDoors.anchor(a,b) else pa, door)); add(Passage(b, a, opposite(d), if (door) GameDoors.anchor(b,a) else pb, door))
         }
         for (r in regions) for ((a, b) in r.places.zipWithNext())
             join(a, b, Dir.RIGHT, Pos(1f, .55f), Pos(0f, .55f))
@@ -107,11 +107,11 @@ object GameWorld {
                 val spots = when (place) {
                     Place.STREET -> listOf(GameScenes.Spot(Station.LAMP, GameScenes.Box(428f,238f,457f,500f),442f,530f))
                     Place.PARK -> listOf(GameScenes.Spot(Station.BENCH,GameScenes.Box(180f,414f,357f,501f),267f,526f))
-                    Place.FOREST -> listOf(GameScenes.Spot(Station.BENCH,GameScenes.Box(75f,443f,370f,513f),222f,532f))
-                    Place.CITY -> listOf(seat(380f))
+                    Place.FOREST -> listOf(GameScenes.Spot(Station.BENCH,GameScenes.Box(24f,468f,240f,518f),120f,533f))
+                    Place.CITY -> emptyList()
                     Place.MOUNTAINS -> listOf(seat(275f))
-                    Place.CAMP, Place.GROTTO -> listOf(seat())
-                    Place.BEACH, Place.SWAMP -> listOf(seat(235f))
+                    Place.CAMP -> listOf(GameScenes.Spot(Station.BENCH,GameScenes.Box(202.5f,472f,365f,520f),282.5f,537f))
+                    Place.BEACH, Place.SWAMP, Place.GROTTO -> emptyList()
                     else -> emptyList()
                 }
                 val first = place == places.first(); val last = place == places.last()
@@ -171,13 +171,12 @@ object GameWorld {
         return path.reversed()
     }
     /** Ufer und trockene Stege folgen den Koordinaten des neuen Kuestenbildes. */
-    fun shoreY(worldX: Float) = 491f + 20f * sin(worldX / WIDTH * 13f)
+    fun shoreY(worldX: Float) = GameWater.shoreY(worldX)
     fun material(scene: GameScenes.Scene, x: Float, y: Float): GameEnvironment.Material? {
         if (!isWorld(scene)) return if (scene.place in GameInteriorCatalog.scenes) GameEnvironment.Material.WOOD else null
         if (scene.asset == "world/coast.png") {
             val wx = origin(scene.place) + x
-            val pier = (wx in 124f..354f && y in 420f..518f) || (wx in 1136f..1292f && y in 419f..478f)
-            if (!pier && y > shoreY(wx)) return GameEnvironment.Material.WATER
+            if (GameWater.contains(scene,x,y)) return GameEnvironment.Material.WATER
             return when (scene.place) {
                 Place.POND, Place.BEACH -> GameEnvironment.Material.SAND
                 Place.SWAMP -> GameEnvironment.Material.MUD
@@ -186,7 +185,7 @@ object GameWorld {
         }
         return when (scene.place) {
             Place.CITY, Place.STREET, Place.GROTTO, Place.COAST_PATH -> GameEnvironment.Material.STONE
-            Place.CAMP -> GameEnvironment.Material.WOOD
+            Place.CAMP -> GameEnvironment.Material.GRASS
             else -> GameEnvironment.Material.GRASS
         }
     }

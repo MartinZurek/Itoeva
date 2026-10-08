@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.notime.glyphsim.matrix.GameMovement
@@ -116,4 +117,17 @@ class GameTouchTest {
             assertEquals(PlayControl.Stick(), stick)
         }
     }
+    @Test fun rechteAktionsflaecheBleibtAuchBeimGesperrtenSpielSichtbar() {
+        show()
+        compose.onNodeWithTag("game-action-pad",useUnmergedTree=true).assertIsDisplayed()
+        compose.runOnIdle { enabled.value=false }
+        compose.waitForIdle()
+        compose.onNodeWithTag("game-action-pad",useUnmergedTree=true).assertIsDisplayed()
+        val radius=px(56f);val bottom=px(90f)
+        compose.onNodeWithTag("controls").performTouchInput {
+            down(Offset(width-radius*1.3f,height-bottom));up()
+        }
+        compose.runOnIdle { assertTrue(commands.isEmpty()) }
+    }
+
 }

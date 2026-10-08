@@ -6666,3 +6666,38 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Grenze einer vollständigen physikalischen Kulissensimulation.
 - **Übergabe:** docs/itoeva2-world-polish-and-encounters.md; preview_polish.kt/.sh samt
   Kontur-/Sitz-/Schattenbildern und Bewegungsvideo. Basis nach #346: be25d5d503c62007fdae71c653255ac3adb4a605.
+
+### 2026-10-09 – Wasser, Bodenbegrenzung, Türen und Startvorbereitung (world-physics-loading-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt nach den gemergten Maßstabs-/Licht-/Konturschnitten
+  einen sichtbaren Physikcheck. Zusätzlich: kein altes Raster beim Start, Ladefortschritt,
+  Vorladen/ruhige Arbeitsfenster, natürliche Laufpause und das fehlende rechte Aktionspad.
+  Martin übernimmt weiterhin Merge und APK mit Cloud Code.
+- **FACT:** Alle 28 Orte wurden anhand sieben Landschaften, sechs Anschlussbildern und elf
+  Innenbildern betrachtet. Gemalter Boden begrenzt Gehen; feste Stege/Felsen/Stämme bleiben
+  trocken bzw. kollidierbar. Wasser besitzt Widerstand, Maskenbewegung, Zugpose, artspezifischen
+  Auftrieb, Wasserlinie und Bewegungskontakte. Türen öffnen vor dem Wechsel am Bilddurchgang.
+  Sprünge prüfen den durchlaufenen Weg; Druck gegen Grenzen erzeugt keinen Laufzyklus.
+- **Architektur/Produktentscheidung:** GameTerrain adaptiert den bestehenden Motor;
+  GameWater/GameDoors teilen Material-/Bild-/Trefferanker. Der Loader bereitet 24 Bilder und
+  sechs Figurensheets vor. Eine deckende Kunst-/Fortschrittsfläche ersetzt das Start-Raster;
+  optionale Bodenlichtkopien folgen blockweise im Stand, nicht vor der Freigabe des Spiels.
+  Ersetzte Rohbilder werden nicht bis zum Ende festgehalten. GameBreath bleibt lokale,
+  ungespeicherte Spielausdauer ohne neue Agentenbedürfnisse oder bestrafende Folgen.
+  Keine künstliche Ladepause als Ausdauer. Das rechte Pad erhält stärkere Kontraste.
+- **TESTED BEHAVIOR:** 1.009 reine Kotlin-Tests, darunter 20 neue Fälle für alte Positionen,
+  Außennaht, Wasser/Stege, Wege/Türen/Brückenanlauf, Flugkollision, Kontakte, Ausdauer und Vorladeplan.
+  Native Compose-Tests erweitern vorhandene Mehrfingerbedienung um Pad-Sichtbarkeit,
+  deckenden Fortschritt/Retry und Pointer-Klicks auf beide Flurziele. Zweite Lesekontrolle
+  korrigiert Rohbild-Retention, Lade-Back-Blockade und Auswahl unter Touchsteuerung.
+- **UNVERIFIED/Grenzen:** Native Prüfungen am letzten PR-Kopf und Telefon/GPU-Abnahme sind
+  Voraussetzung für die Übergabe. Desktopvorschauen sind keine APK-Aufnahmen. Schwimmen
+  verwendet vorhandene Richtungs-/Streckframes; keine neue handgezeichnete Spriteserie.
+  Fernes Flusswasser bewegt sich optisch, ist keine neue Schwimmzone. Nicht jedes Dekorpixel
+  ist ein Körper; kein vollständiger Flüssigkeits-, Stoff- oder 3D-Simulator.
+- **Migration/Rücksetzung:** Keine Spielstand-/Room-/Orts-ID-/Workflowänderung. Alte Positionen
+  werden vom V2-Codec erhalten, erst der aktive Client begrenzt Gehen/Speichern. App 1 behält
+  den bisherigen Bewegungsstandard. Visueller Rückbau lässt den V2-Begegnungsreader bestehen.
+- **Übergabe:** docs/itoeva2-world-physics-and-loading.md, preview_physics.kt/.sh, sechs
+  Schwimmspezies, sieben Bodenbandbilder und Bewegungsvideo. Basis: main `3b3da11` plus
+  Cloud Codes schnelle Rohbildanzeige `b8d4428`.

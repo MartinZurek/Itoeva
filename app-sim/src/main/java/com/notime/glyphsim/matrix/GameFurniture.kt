@@ -88,6 +88,21 @@ object GameFurniture {
                 else -> piece
             }
         }
+        if (GameWorld.isWorld(scene)) {
+            val outdoor = when(scene.place) {
+                PlayScene.Place.FOREST -> listOf(body("forest-fallen-log",28f,232f,478f,518f,493f,setOf(S.BENCH)))
+                PlayScene.Place.MOUNTAINS -> listOf(body("mountain-stone-seat",196f,332f,477f,515f,491f,setOf(S.BENCH)))
+                PlayScene.Place.CAMP -> listOf(body("camp-fallen-log",414f,718f,479f,520f,499f,setOf(S.BENCH)))
+                PlayScene.Place.POND -> listOf(body("pond-pier",145f,380f,457f,498f),
+                    body("pond-shore-rock",0f,92f,447f,535f))
+                PlayScene.Place.SWAMP -> listOf(body("swamp-pier",140f,385f,425f,454f))
+                PlayScene.Place.BEACH -> listOf(body("beach-water-rock",0f,85f,570f,632f))
+                PlayScene.Place.JUNGLE -> listOf(body("jungle-water-rock",135f,270f,586f,625f),
+                    body("jungle-shore-rock",400f,480f,515f,625f))
+                else -> emptyList()
+            }
+            return original + outdoor
+        }
         if (!scene.asset.startsWith("interiors/")) return original
         val extra = when (scene.place) {
             PlayScene.Place.LIVING -> listOf(

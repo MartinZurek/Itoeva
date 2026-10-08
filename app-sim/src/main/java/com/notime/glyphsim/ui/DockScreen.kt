@@ -779,10 +779,14 @@ fun DockScreen(
         var gameTouchStick by remember { mutableStateOf(PlayControl.Stick()) }
         var gameKeyStick by remember { mutableStateOf(PlayControl.Stick()) }
         var gameMovement by remember { mutableStateOf(GameMovement.State()) }
+        var gameBreath by remember { mutableStateOf(com.notime.glyphsim.matrix.GameBreath.State()) }
         var gameEnvironment by remember { mutableStateOf(GameEnvironment.State()) }
         var gameCamera by remember { mutableStateOf(GameCamera.State()) }
-        val gamePaintedImages = rememberGameSceneImages(gameMode)
-        val gameImagesReady by rememberUpdatedState(gamePaintedImages.isNotEmpty())
+        var gameLoadRetry by remember { mutableIntStateOf(0) }
+        val gameAssets = rememberGameAssets(gameMode,currentPlace,!avatarWalking && gameMovement.action==null,gameLoadRetry)
+        val gamePaintedImages = gameAssets.images
+        val gameImagesReady by rememberUpdatedState(gameAssets.ready)
+        val gameDisplayReady = gameImagesReady && gameCamera.key.isNotEmpty() && avatar != null
         var gameWorldActors by remember { mutableStateOf<Map<PlayScene.Place, Map<String, GameResidents.Actor>>>(emptyMap()) }
         var gameWorldEnvironments by remember { mutableStateOf<Map<PlayScene.Place, GameEnvironment.State>>(emptyMap()) }
         val gameRoomLayers by rememberUpdatedState(rememberGameRoomLayers(if (gameMode) GameWorld.scene(currentPlace) else null))
@@ -799,6 +803,8 @@ fun DockScreen(
         } else null) }
         var gameChronicleOpen by remember { mutableStateOf(false) }
         var gameTalking by remember { mutableStateOf<String?>(null) }
+        var gameDoorChoices by remember { mutableStateOf<List<GameWorld.Passage>>(emptyList()) }
+        var gameDoor by remember { mutableStateOf<com.notime.glyphsim.matrix.GameDoors.State?>(null) }
         var gameMeeting by remember { mutableStateOf<String?>(null) }
         var gameHandoffId by remember { mutableStateOf<String?>(null) }
         var gameActionCancelled by remember { mutableStateOf(false) }
@@ -4057,7 +4063,13 @@ fun DockScreen(
                 val (offset, sizeDp) = gamePlacement(pos, current.species)
                 avatar = current.copy(offset = offset, sizeDp = sizeDp)
             }
-            LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx, floorYPx, avatar == null, gameSnap, currentPlace) {
+            LaunchedEffect(worldAvatarSizeDp, maxWidthPx, maxHeightPx, floorYPx, avatar == null, gameSnap, currentPlace, gameImagesReady) {
+                // Der erste Kamerarahmen darf nicht von einem offenen Fenster abhaengen.
+                if (gameImagesReady && gameCamera.key.isEmpty()) {
+                    GameWorld.scene(currentPlace)?.let { scene ->
+                        gameCamera = GameCamera.tick(gameCamera, scene, gamePos, PlayControl.Stick(), maxWidthPx, maxHeightPx, 0L)
+                    }
+                }
                 placeGameAvatar(gamePos)
                 refreshGameStation()
             }
@@ -4088,16 +4100,27 @@ fun DockScreen(
                     last = now
                     if (!screenVisible) continue
                     val current = avatar ?: continue
-                    val worldPaused = !gameImagesReady || gameMenuOpen || gameMapOpen || gameBackpackOpen || gameChronicleOpen || gameTalking != null || talkOpen
+                    val worldPaused = gameDoorChoices.isNotEmpty() || !gameImagesReady || gameMenuOpen || gameMapOpen || gameBackpackOpen || gameChronicleOpen || gameTalking != null || talkOpen
                     if (!worldPaused) gameElapsed = GameAdventure.tick(gameAdventure.copy(elapsed = gameElapsed), dt, true).elapsed
                     val environmentScene = GameWorld.scene(currentPlace)
                     if (environmentScene != null && !worldPaused) {
                         if (GameWorld.isWorld(environmentScene)) {
+                            val oldActors = gameWorldActors
                             gameWorldActors = GameWorld.residents(gameWorldActors, residentSnapshots, dt.coerceIn(0, 50), gameElapsed, gameTalking ?: gameMeeting, setOfNotNull(gameSeat?.piece?.id))
                             gameActors = gameWorldActors[currentPlace].orEmpty()
-                            gameWorldEnvironments = gameWorldEnvironments.mapValues { (_, value) -> GameEnvironment.advance(value, dt) }
-                        } else gameActors = GameResidents.tick(environmentScene, gameActors, residentSnapshots,
-                            dt.coerceIn(0, 50), gameElapsed, gameTalking ?: gameMeeting, setOfNotNull(gameSeat?.piece?.id))
+                            gameWorldEnvironments = GameWorld.places.associateWith { place ->
+                                val state=GameEnvironment.advance(gameWorldEnvironments[place] ?: GameEnvironment.State(clock=gameEnvironment.clock),dt)
+                                GameEnvironment.residentContacts(state,GameWorld.scene(place)!!,oldActors[place].orEmpty(),
+                                    gameWorldActors[place].orEmpty(),gameElapsed,dt)
+                            }
+                            gameEnvironment=GameEnvironment.residentContacts(gameEnvironment,environmentScene,
+                                oldActors[currentPlace].orEmpty(),gameActors,gameElapsed,dt)
+                        } else {
+                            val oldActors=gameActors
+                            gameActors = GameResidents.tick(environmentScene, gameActors, residentSnapshots,
+                                dt.coerceIn(0, 50), gameElapsed, gameTalking ?: gameMeeting, setOfNotNull(gameSeat?.piece?.id))
+                            gameEnvironment=GameEnvironment.residentContacts(gameEnvironment,environmentScene,oldActors,gameActors,gameElapsed,dt)
+                        }
                     }
                     environmentScene?.let { scene ->
                         if (!worldPaused && (!gameActing || gameWalkTarget != null) && !current.fed) {
@@ -4145,7 +4168,7 @@ fun DockScreen(
                         if (pose.complete) { gameSeat = null; gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing) }
                         continue
                     }
-                    val busy = !screenVisible || gameActing || current.fed || gameMenuOpen || gameMapOpen || gameBackpackOpen || gameChronicleOpen || gameTalking != null || talkOpen
+                    val busy = worldPaused || !screenVisible || gameActing || current.fed
                     if (busy) {
                         gameEnvironment = GameEnvironment.advance(gameEnvironment, dt)
                         if (wasMoving) avatarWalking = false
@@ -4158,13 +4181,13 @@ fun DockScreen(
                     val (widthPx, heightPx, avatarPx) = gameGeometry
                     val scene = GameWorld.scene(currentPlace)
                     val beforeMovement = gameMovement
-                    val result = GameMovement.tick(gameMovement, gameInput(), dt, gameSurfaceList,
-                        immediateExits = GameWorld.immediateExits(currentPlace),
-                        horizontalScale = GameWorld.horizontalScale(currentPlace),
-                        maxStepHeight = GameCharacterScale.MAX_STEP_HEIGHT)
+                    val result = if (scene != null) com.notime.glyphsim.matrix.GameTerrain.tick(scene,current.species,
+                        gameMovement,com.notime.glyphsim.matrix.GameBreath.input(gameBreath,gameInput()),dt,gameSurfaceList)
+                        else GameMovement.tick(gameMovement,com.notime.glyphsim.matrix.GameBreath.input(gameBreath,gameInput()),dt,gameSurfaceList)
                     gameEnvironment = if (scene != null) GameEnvironment.tick(gameEnvironment, scene,
                         beforeMovement, result.state, dt, gameRoomLayers.grid) else GameEnvironment.advance(gameEnvironment, dt)
                     gameMovement = result.state
+                    gameBreath = com.notime.glyphsim.matrix.GameBreath.tick(gameBreath,gameMovement.running,gameMovement.moving,dt)
                     gamePos = gameMovement.pos
                     gameFacing = gameMovement.facing
                     avatarFacing = when (gameFacing) {
@@ -5381,7 +5404,7 @@ fun DockScreen(
             )
             val kamera = (kameraWeich * PlayScene.PARALLAX_FAR).roundToInt() / PlayScene.PARALLAX_FAR.toFloat()
             val karte = mapView
-            val sceneCells = if (karte != null) {
+            val sceneCells = if (gameMode) emptyList() else if (karte != null) {
                 remember(karte, mapDrawn, mapBlink, sceneWidthCells, floorYCells, sceneFade.value) {
                     val fade = sceneFade.value
                     PlayMapScene.build(karte.first, karte.second, sceneWidthCells, floorYCells, mapDrawn, mapBlink)
@@ -5451,7 +5474,7 @@ fun DockScreen(
                     modifier = Modifier.fillMaxSize(), layers = gemaltEbenen,
                     roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages, clock = gameElapsed
                 )
-                GamePassageView(gemalt, gameCamera, gameGerman, sceneFade.value, Modifier.fillMaxSize())
+                GamePassageView(gemalt, gameCamera, gameGerman, sceneFade.value, Modifier.fillMaxSize(), gameDoor, gameElapsed, gamePaintedImages)
                 if (!GameWorld.isWorld(gemalt)) GameSurfaceView(gemalt, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
             } else PlaySceneView(
                 cells = if (streamMode) StreamPresentation.readableNight(
@@ -5672,9 +5695,9 @@ fun DockScreen(
             }
         }
 
-        if (playMode && gameMode && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+        if (playMode && gameMode && gameImagesReady && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
             val casters = mutableListOf<GameShadowCaster>()
-            avatar?.takeIf { !avatarHidden }?.let { current ->
+            avatar?.takeIf { !avatarHidden && (!gameMode || gameImagesReady) }?.let { current ->
                 val receiver = gameSeat?.let { GameSeating.frame(scene, current.species, it, gameElapsed).receiver }
                     ?: if (gameMovement.action == GameMovement.Action.JUMP) 0f else gameMovement.height
                 casters += GameShadowCaster(scene, gamePos, current.species, gameMovement.height, receiver)
@@ -5860,7 +5883,7 @@ fun DockScreen(
 
         }
 
-        avatar?.takeIf { !avatarHidden }?.let { current ->
+        avatar?.takeIf { !avatarHidden && (!gameMode || gameImagesReady) }?.let { current ->
             val feedActionLabel = stringResource(R.string.a11y_feed_action)
             // "wartet aufs Fuettern" stimmt nur, solange tatsaechlich eine Erinnerung offen ist -
             // im Play-Modus idlet der Avatar die meiste Zeit ohne eine (siehe occurrenceId).
@@ -5905,6 +5928,9 @@ fun DockScreen(
                 gameMoving = if (gameMode) avatarWalking else null,
                 gameTempo = if (gameMode && !gameActing) gameMovement.tempo else 1f,
                 gameGaitMs = if (gameMode && !gameActing) gameMovement.gaitMs.toLong() else null,
+                gameSwim = if (gameMode && !current.fed && gameSeat == null) GameWorld.scene(gameRenderedPlace)?.let {
+                    com.notime.glyphsim.matrix.GameWater.swim(it,gamePos,gameMovement.height,gameFacing,avatarWalking,gameElapsed,current.species)
+                } else null,
                 gameRunBlend = if (gameMode && !gameActing) gameMovement.runBlend else null,
                 motionCue = if (current.fed || current.occurrenceId != null || groupGame != null) null else
                     gameSeat?.let { seat -> GameWorld.scene(gameRenderedPlace)?.let {
@@ -5916,7 +5942,8 @@ fun DockScreen(
                             GameMovement.Action.SIT, GameMovement.Action.REST -> CreatureSprites.Motion.SIT
                             GameMovement.Action.RISE -> CreatureSprites.Motion.RISE
                         }, gameMovement.progress)
-                    } else null) ?: creatureMotionCue ?: occupiedStation?.takeIf {
+                    } else null) ?: creatureMotionCue ?: (if(gameMode && !gameActing)
+                        com.notime.glyphsim.matrix.GameBreath.cue(gameBreath) else null) ?: occupiedStation?.takeIf {
                         it != PlayScene.Station.BED && (!gameMode || activeActivity == null) && !avatarWalking && !avatarSettling
                     }?.let { CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f) },
                 modifier = Modifier
@@ -5980,7 +6007,7 @@ fun DockScreen(
             )
         }
 
-        if (gameMode && mapView == null) {
+        if (gameMode && gameImagesReady && mapView == null) {
             GameWorld.scene(gameRenderedPlace)?.let { scene ->
                 val visiblePlaces = GameWorld.visiblePlaces(scene)
                 for (place in visiblePlaces) {
@@ -5990,7 +6017,7 @@ fun DockScreen(
                     lampOn, tvOn, gameElapsed, gameWorldNow.weather, gameWorldNow.residentItems,
                         gameHandoffId?.let { id -> creatureMotionCue?.let { cue -> id to cue } })
                 }
-                GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize())
+                GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize(), gameElapsed, avatarWalking, gameFacing)
                 if (GameWorld.isWorld(scene)) GameWorldForeground(scene, gameCamera,
                     gameWorldEnvironments + (currentPlace to gameEnvironment), gameElapsed,
                     gameWorldNow.minuteOfDay, sceneFade.value, Modifier.fillMaxSize())
@@ -6027,7 +6054,7 @@ fun DockScreen(
             }
         }
 
-        if (playMode && gameMode && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+        if (playMode && gameMode && gameImagesReady && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
             GameWeatherView(scene, gamePos, gameWorldNow, Modifier.fillMaxSize(), gameCamera)
         }
         // Die VORDERE Kulissen-Ebene - als einziges NACH dem Avatar gezeichnet und nur fuer die
@@ -6304,7 +6331,7 @@ fun DockScreen(
         // **Itoeva 2: Finger statt Knoepfe** (siehe GameControls/GameOverlays, gewuenscht am 03.10.).
         // Ziehen = laufen, Figur antippen = Menue (Karte, Rucksack, Musik), Doppeltipp auf ein
         // Ding = dort handeln, auf eine Tuer = hindurchgehen. Tastatur und Gamepad gehen weiter.
-        if (playMode && gameMode) {
+        if (playMode && gameMode) DockSection {
             suspend fun collectGame(station: PlayScene.Station) {
                 var outcome = GameAdventure.Outcome.ALREADY
                 saveGame { before -> GameAdventure.collect(before, station).also { outcome = it.outcome }.state }
@@ -6335,7 +6362,7 @@ fun DockScreen(
              * denselben Ablaeufen wie im autonomen Leben. Was es dort zu finden gibt, kommt in den
              * Rucksack (siehe PlayBackpack.lootAt), solange Platz ist.
              */
-            fun gameEnter(passage: GameWorld.Passage) {
+            fun gameEnterChosen(passage: GameWorld.Passage) {
                 if (gameActing || gameMovement.action != null || gameMovement.height > 0f || passage.from != currentPlace) return
                 gameActing = true
                 gameActionCancelled = false
@@ -6343,14 +6370,27 @@ fun DockScreen(
                     try {
                         gameWalkTarget = GameAdventure.safePosition(currentPlace, passage.pos, gameSurfaceList)
                         if (!awaitGameWalk() || currentPlace != passage.from) return@launch
+                        doorTransit = true
+                        gameDoor = com.notime.glyphsim.matrix.GameDoors.State(passage,gameElapsed)
+                        val openedAt = gameElapsed
+                        snapshotFlow { gameElapsed }.first { it-openedAt >= com.notime.glyphsim.matrix.GameDoors.OPEN_MS }
+                        if (gameActionCancelled) return@launch
                         val arrival = GameAdventure.safePosition(passage.to, GameWorld.arrival(passage))
                         gameTouchStick = PlayControl.Stick(); gameKeyStick = PlayControl.Stick()
                         currentPlace = passage.to
                         gamePos = arrival
                         gameMovement = GameMovement.State(pos = arrival, facing = gameFacing)
                         gameActors = emptyMap(); gameSnap++
-                    } finally { gameWalkTarget = null; gameActing = false }
+                        val reverse = GameWorld.passages(passage.to).first { it.to == passage.from }
+                        gameDoor = com.notime.glyphsim.matrix.GameDoors.State(reverse,gameElapsed,true)
+                        val arrivedAt = gameElapsed
+                        snapshotFlow { gameElapsed }.first { it-arrivedAt >= com.notime.glyphsim.matrix.GameDoors.CLOSE_MS }
+                    } finally { doorTransit = false; gameDoor = null; gameWalkTarget = null; gameActing = false }
                 }
+            }
+            fun gameEnter(passage: GameWorld.Passage) {
+                val choices=com.notime.glyphsim.matrix.GameDoors.choices(passage)
+                if(choices.size>1) gameDoorChoices=choices else gameEnterChosen(passage)
             }
             fun gamePassageUnder(tap: Offset): GameWorld.Passage? {
                 val scene = GameWorld.scene(currentPlace) ?: return null
@@ -6516,11 +6556,14 @@ fun DockScreen(
                         ?.let { station to it }
                 }.minByOrNull { it.second }?.first
             }
-            val controlsEnabled = gameImagesReady && screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen && gameTalking == null && !talkOpen
+            val controlsEnabled = gameDoorChoices.isEmpty() && gameImagesReady && screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen && gameTalking == null && !talkOpen
             fun gameCommand(command: GameMovement.Command, direction: PlayControl.Stick?) {
                 if (!controlsEnabled || avatar == null) return
-                gameMovement = GameMovement.command(gameMovement.copy(pos = gamePos), command,
-                    direction ?: gameInput(), gameSurfaceList, GameCharacterScale.MAX_STEP_HEIGHT)
+                gameMovement = GameWorld.scene(currentPlace)?.let { scene ->
+                    com.notime.glyphsim.matrix.GameTerrain.command(scene,gameMovement.copy(pos=gamePos),command,
+                        direction ?: gameInput(),gameSurfaceList)
+                } ?: GameMovement.command(gameMovement.copy(pos=gamePos),command,
+                    direction ?: gameInput(),gameSurfaceList,GameCharacterScale.MAX_STEP_HEIGHT)
             }
             if (controlsEnabled) {
                 val scene = GameWorld.scene(currentPlace)
@@ -6570,7 +6613,14 @@ fun DockScreen(
                     else gameResidentUnder(tap)?.let(::gameTalkTo) ?: gameStationUnder(tap)?.let(::gameActAt)
                 }
             )
+            // Die Auswahl muss ueber der vollflaechigen Daumensteuerung liegen.
+            if(gameDoorChoices.isNotEmpty()) GameDoorChoicePanel(gameDoorChoices,gameGerman,
+                onSelect={ passage -> gameDoorChoices=emptyList();gameEnterChosen(passage) },
+                onClose={ gameDoorChoices=emptyList() })
         }
+
+        if(gameMode && !gameDisplayReady) GameLoadingScreen(gameAssets,gameGerman,
+            onRetry={ gameLoadRetry++ },onExit=onExit)
 
         // ---- Vier feste Speicherplaetze, nur im Spielmodus (siehe ActionSlots.kt) ----
         //
@@ -6944,6 +6994,8 @@ fun DockScreen(
             // Die Zurueck-Geste schliesst erst offene Fenster, dann oeffnet sie das Menue.
             androidx.activity.compose.BackHandler {
                 when {
+                    !gameDisplayReady -> onExit()
+                    gameDoorChoices.isNotEmpty() -> gameDoorChoices=emptyList()
                     gameTalking != null -> if (gameHandoffId == null) gameTalking = null
                     gameChronicleOpen -> gameChronicleOpen = false
                     gameMapOpen -> gameMapOpen = false
