@@ -288,3 +288,29 @@ internal fun encounterText(outcome: GameEncounters.Outcome, de: Boolean): String
     GameEncounters.Outcome.ALREADY -> if(de) "Die Wegweiser stehen bereits." else "The waymarks are already there."
     GameEncounters.Outcome.KNOWN -> if(de) "Schön, dich wiederzusehen." else "Good to see you again."
 }
+
+
+/**
+ * Gespraech mit einem Bewohner: Uebergaben, gemeinsamer Wegweiser, Weg ansehen. Eigene Funktion
+ * statt Inhalt von DockScreen - dessen Inhalts-Lambda lag sonst ueber der JVM-Grenze von 64 KB
+ * je Methode ("Method too large").
+ */
+@Composable
+internal fun GameResidentTalkPanel(title: String, dialogue: String, items: List<PlayEffects.Carried>,
+    received: List<PlayEffects.Carried>, canWaymark: Boolean, german: Boolean,
+    onGive: (Int) -> Unit, onWaymark: () -> Unit, onRoute: () -> Unit, onClose: () -> Unit) {
+    GameWorldPanel(title, onClose) {
+        Text(dialogue, color = Color(0xFFE0EBD8))
+        for ((index, item) in items.withIndex()) Row(verticalAlignment = Alignment.CenterVertically) {
+            ItemIcon(item, Modifier.size(28.dp))
+            GameActionButton((if (german) "Übergeben: " else "Give: ") + gameItemName(item, german),
+                { onGive(index) }, Modifier.padding(4.dp))
+        }
+        if (received.isNotEmpty()) Text((if (german) "Bei diesem Bewohner: " else "This resident has: ") +
+            received.joinToString { gameItemName(it, german) }, color = Color(0xFFE0EBD8))
+        if (canWaymark)
+            GameActionButton(if (german) "Gemeinsam Wegweiser bauen · 1 übergebenes Holz" else "Build waymarks together · 1 given wood",
+                onWaymark, Modifier.padding(top = 8.dp))
+        GameActionButton(if (german) "Weg ansehen" else "Show route", onRoute, Modifier.padding(top = 12.dp))
+    }
+}

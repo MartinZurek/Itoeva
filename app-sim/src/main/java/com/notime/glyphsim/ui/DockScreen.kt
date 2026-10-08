@@ -16,7 +16,6 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -6979,24 +6978,15 @@ fun DockScreen(
                     if (gameHandoffId != null) Text(if(german) "Die beiden handeln gemeinsam …" else "They are acting together …",
                         color = Color.White, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
                             .background(Color(0xCC17201D)).padding(12.dp))
-                    else GameWorldPanel(stringResource(resident.species.labelRes), { gameTalking = null }) {
-                        Text(residentDialogue(resident, gameAdventure, gameAlreadyKnown, german), color = Color(0xFFE0EBD8))
-                            for ((index,item) in gameBackpack.items.withIndex()) Row(verticalAlignment=Alignment.CenterVertically) {
-                                ItemIcon(item,Modifier.size(28.dp))
-                                GameActionButton((if(german) "Übergeben: " else "Give: ")+gameItemName(item,german),
-                                    { handoff(index) },Modifier.padding(4.dp))
-                            }
-                            val received=GameEncounters.received(gameAdventure,id)
-                            if(received.isNotEmpty()) Text((if(german) "Bei diesem Bewohner: " else "This resident has: ")+
-                                received.joinToString { gameItemName(it,german) },color=Color(0xFFE0EBD8))
-                            if(currentPlace==PlayScene.Place.PARK && GameAdventure.Event.WAYMARKED !in gameAdventure.events)
-                                GameActionButton(if(german) "Gemeinsam Wegweiser bauen · 1 übergebenes Holz" else "Build waymarks together · 1 given wood",
-                                    { handoff(waymark=true) },Modifier.padding(top=8.dp))
-                            GameActionButton(if (german) "Weg ansehen" else "Show route", {
-                                gameMapTarget = if (GameAdventure.Event.FOREST_SEEDS in gameAdventure.events) PlayScene.Place.PARK else PlayScene.Place.FOREST
-                                gameTalking = null; gameMapOpen = true
-                            }, Modifier.padding(top = 12.dp))
-                    }
+                    else GameResidentTalkPanel(stringResource(resident.species.labelRes),
+                        residentDialogue(resident, gameAdventure, gameAlreadyKnown, german),
+                        gameBackpack.items, GameEncounters.received(gameAdventure, id),
+                        canWaymark = currentPlace == PlayScene.Place.PARK && GameAdventure.Event.WAYMARKED !in gameAdventure.events,
+                        german = german, onGive = { handoff(it) }, onWaymark = { handoff(waymark = true) },
+                        onRoute = {
+                            gameMapTarget = if (GameAdventure.Event.FOREST_SEEDS in gameAdventure.events) PlayScene.Place.PARK else PlayScene.Place.FOREST
+                            gameTalking = null; gameMapOpen = true
+                        }, onClose = { gameTalking = null })
                 }
             }
             gameNotice?.let { message ->
