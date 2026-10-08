@@ -48,8 +48,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -175,6 +173,7 @@ import com.notime.glyphsim.matrix.PlayScene
 import com.notime.glyphsim.matrix.CompanionChapter
 import com.notime.glyphsim.data.GameSaveStore
 import com.notime.glyphsim.matrix.GameAdventure
+import com.notime.glyphsim.matrix.GameCharacterScale
 import com.notime.glyphsim.matrix.GameResidents
 import com.notime.glyphsim.matrix.PlayWeather
 import com.notime.glyphsim.matrix.PlayFootballSkill
@@ -4021,9 +4020,8 @@ fun DockScreen(
                 val fit = GameCamera.fit(gameCamera, bild, widthPx, heightPx)
                 val (fx, fy) = GameScenes.feet(bild, pos)
                 val (sx, sy) = fit.toScreen(fx, fy)
-                val avatarPx = GameScenes.avatarHeight(bild, pos) * fit.scale / GAME_FIGURE_FILL
-                val groundRow = AvatarBodies.forSpecies(species).groundRow()
-                val offset = Offset(sx - avatarPx / 2f, AvatarFooting.topFor(sy, avatarPx, groundRow))
+                val avatarPx = GameCharacterScale.layoutWidth(bild, pos, species) * fit.scale
+                val offset = Offset(sx - avatarPx / 2f, GameCharacterScale.layoutTop(sy, avatarPx, species))
                 return offset to with(density) { avatarPx.toDp().value }
             }
             fun placeGameAvatar(pos: PlayControl.Pos) {
@@ -4120,7 +4118,8 @@ fun DockScreen(
                     val beforeMovement = gameMovement
                     val result = GameMovement.tick(gameMovement, gameInput(), dt, gameSurfaceList,
                         immediateExits = GameWorld.immediateExits(currentPlace),
-                        horizontalScale = GameWorld.horizontalScale(currentPlace))
+                        horizontalScale = GameWorld.horizontalScale(currentPlace),
+                        maxStepHeight = GameCharacterScale.MAX_STEP_HEIGHT)
                     gameEnvironment = if (scene != null) GameEnvironment.tick(gameEnvironment, scene,
                         beforeMovement, result.state, dt, gameRoomLayers.grid) else GameEnvironment.advance(gameEnvironment, dt)
                     gameMovement = result.state
@@ -5408,7 +5407,7 @@ fun DockScreen(
                     minuteOfDay = gameWorldNow.minuteOfDay,
                     lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
                     modifier = Modifier.fillMaxSize(), layers = gemaltEbenen,
-                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages
+                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages, clock = gameElapsed
                 )
                 GamePassageView(gemalt, gameCamera, gameGerman, sceneFade.value, Modifier.fillMaxSize())
                 if (!GameWorld.isWorld(gemalt)) GameSurfaceView(gemalt, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
@@ -5632,13 +5631,28 @@ fun DockScreen(
         }
 
         if (playMode && gameMode && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+            val casters = mutableListOf<GameShadowCaster>()
+            avatar?.takeIf { !avatarHidden }?.let { current ->
+                val receiver = if (gameMovement.action == GameMovement.Action.JUMP) 0f else gameMovement.height
+                casters += GameShadowCaster(scene, gamePos, current.species, gameMovement.height, receiver)
+            }
+            for (place in GameWorld.visiblePlaces(scene)) {
+                val section = GameWorld.scene(place)!!
+                val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
+                if (gameRenderedPlace == currentPlace) actors.values.forEach {
+                    casters += GameShadowCaster(section, it.pos, it.snapshot.species)
+                }
+            }
+            GameCharacterShadows(casters, gameCamera, gameWorldNow.minuteOfDay, lampOn, tvOn,
+                (gameElapsed / SCENE_PHASE_TICK_MS).toInt(), sceneFade.value, Modifier.fillMaxSize())
             val visiblePlaces = GameWorld.visiblePlaces(scene)
             for (place in visiblePlaces) {
                 val section = GameWorld.scene(place)!!
                 GameAdventureObjects(section, gamePos, gameWorldNow, scenePhase, Modifier.fillMaxSize(), gameCamera)
                 if (GameWorld.isWorld(section)) GameSurfaceView(section, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
                 val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
-                if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth <= gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera)
+                if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth <= gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
+                    lampOn, tvOn, gameElapsed, gameWorldNow.weather)
             }
         }
 
@@ -5812,15 +5826,18 @@ fun DockScreen(
             AvatarSpriteView(
                 frame = fennecTalkFrame?.takeIf { current.species == AvatarSpecies.FENNEC }
                     ?: gameFrame(GAME_HOST_ID, current.species, current.frame),
-                brightnessScale = if (gameMode) {
-                    GameWorld.scene(gameRenderedPlace)?.let { scene ->
-                        val minute = gameWorldNow.minuteOfDay
-                        val (fx, fy) = GameScenes.feet(scene, gamePos)
-                        val lights = com.notime.glyphsim.matrix.GameSceneLighting.sources(scene, minute, lampOn, tvOn, scenePhase)
-                        (avatarDim.value * (1f - com.notime.glyphsim.matrix.GameSceneLighting.darkness(scene, minute) * 0.45f +
-                            com.notime.glyphsim.matrix.GameSceneLighting.illuminationAt(fx, fy, lights))).coerceIn(0.55f, 1f)
-                    } ?: avatarDim.value
-                } else avatarDim.value,
+                brightnessScale = avatarDim.value,
+                gameLight = if (gameMode) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+                    com.notime.glyphsim.matrix.GameSceneLighting.character(scene, gamePos, current.species,
+                        gameWorldNow.minuteOfDay,
+                        com.notime.glyphsim.matrix.GameSceneLighting.sources(scene, gameWorldNow.minuteOfDay,
+                            lampOn, tvOn, (gameElapsed / SCENE_PHASE_TICK_MS).toInt()), gameMovement.height)
+                } else null,
+                gameWind = if (gameMode) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+                    val x = GameWorld.origin(scene.place) + GameScenes.feet(scene, gamePos).first
+                    com.notime.glyphsim.matrix.GameAtmosphere.figureBend(scene, current.species, 0f,
+                        gameElapsed, x, gameWorldNow.weather)
+                } ?: 0f else 0f,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
                 // Dock-Modus nur aus schwarzer Flaeche und Uhr bestand, war das unsichtbar. Seit
@@ -5850,13 +5867,18 @@ fun DockScreen(
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
                     // Quadratgroesse das Raster und die Figur waere zu klein.
-                    .drawWithContent {
-                        val wet = if (gameMode && gameMovement.height == 0f) GameWorld.scene(gameRenderedPlace)?.let { GameWorld.wetness(it, gamePos) } ?: 0f else 0f
-                        clipRect(bottom = size.height * (1f - wet * AvatarGeometry.SIZE / AvatarGeometry.HEIGHT)) { this@drawWithContent.drawContent() }
-                    }
                     .width(current.sizeDp.dp)
                     .height(current.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
                     .offset { IntOffset(current.offset.x.roundToInt(), current.offset.y.roundToInt()) }
+                    // Im Wasser verschwindet der untere Teil der Figur. Der Ausschnitt muss NACH
+                    // dem offset stehen: davor laege er an der unverschobenen Stelle oben links,
+                    // und die verschobene Figur waere ganz weggeschnitten (nur der Schatten blieb).
+                    // Nur unten begrenzt - Ohren, Schweif und Sprung duerfen ueber den Rahmen ragen.
+                    .then(if (gameMode) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+                        Modifier.gameCharacterOcclusion(scene, gamePos, current.species,
+                            gameMovement.support, gameMovement.height,
+                            GameCamera.fit(gameCamera, scene, maxWidthPx, maxHeightPx), current.offset)
+                    } ?: Modifier else Modifier)
                     .graphicsLayer {
                         if (streamMode) translationY =
                             kotlin.math.sin(streamAcknowledgement.value * kotlin.math.PI).toFloat() *
@@ -5909,7 +5931,8 @@ fun DockScreen(
                 for (place in visiblePlaces) {
                     val section = GameWorld.scene(place)!!
                     val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
-                    if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth > gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera)
+                    if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth > gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
+                    lampOn, tvOn, gameElapsed, gameWorldNow.weather)
                 }
                 GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize())
                 if (GameWorld.isWorld(scene)) GameWorldForeground(scene, gameCamera,
@@ -5917,8 +5940,6 @@ fun DockScreen(
                     gameWorldNow.minuteOfDay, sceneFade.value, Modifier.fillMaxSize())
             }
             GameWorld.scene(gameRenderedPlace)?.let { scene ->
-                GamePaintedForeground(scene, gamePaintedImages[scene.asset], gameMovement, gameCamera,
-                    sceneFade.value, gameWorldNow.minuteOfDay, lampOn, tvOn, scenePhase, Modifier.fillMaxSize())
                 GameRoomForegroundView(scene, renderedRoomLayers, gameEnvironment, gamePos,
                     sceneFade.value, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera)
             }
@@ -6393,8 +6414,7 @@ fun DockScreen(
                 val fit = GameCamera.fit(gameCamera, scene, maxWidthPx, maxHeightPx)
                 val (x, y) = fit.toImage(tap.x, tap.y)
                 return gameActors.entries.sortedByDescending { it.value.pos.depth }.firstOrNull { (_, actor) ->
-                    val (nx, ny) = GameScenes.feet(scene, actor.pos)
-                    abs(x - nx) < 20f && y in ny - GameScenes.avatarHeight(scene, actor.pos)..ny + 3f
+                    (x to y) in GameCharacterScale.hitBox(scene, actor.pos, actor.snapshot.species)
                 }?.key
             }
             /** Welcher Platz unter [tap] liegt (Bildschirmpixel) - der naechste in einer Zelle Abstand. */
@@ -6418,7 +6438,8 @@ fun DockScreen(
             val controlsEnabled = screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen && gameTalking == null && !talkOpen
             fun gameCommand(command: GameMovement.Command, direction: PlayControl.Stick?) {
                 if (!controlsEnabled || avatar == null) return
-                gameMovement = GameMovement.command(gameMovement.copy(pos = gamePos), command, direction ?: gameInput(), gameSurfaceList)
+                gameMovement = GameMovement.command(gameMovement.copy(pos = gamePos), command,
+                    direction ?: gameInput(), gameSurfaceList, GameCharacterScale.MAX_STEP_HEIGHT)
             }
             if (controlsEnabled) {
                 val scene = GameWorld.scene(currentPlace)
@@ -7098,12 +7119,6 @@ private const val PASS_THROUGH_LINGER_MS = 4_000L
  * stehen die Fuesse damit bei 94 %.
  */
 private const val GAME_DEPTH_BAND = 0.14f
-
-/**
- * Itoeva 2, gemalte Welt: welchen Teil der Sprite-Hoehe die Figur selbst einnimmt - darueber
- * liegt Luft fuer Ohren und Spruenge. Damit wird die Figurhoehe aus GameScenes zur Sprite-Groesse.
- */
-private const val GAME_FIGURE_FILL = 0.8f
 
 /** Itoeva 2: die kurze Freude nach einer Handlung - so viele Bilder, so lange je Bild. */
 private const val GAME_CHEER_FRAMES = 8

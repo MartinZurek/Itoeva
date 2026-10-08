@@ -6563,3 +6563,67 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Migration/Rücksetzung:** Keine Room-Migration. Alte IDs unverändert, neue Namen im
   bestehenden Codec. Rücknahme dieses Schnitts entfernt die drei Orte und ihre Assets;
   ältere Clients behandeln unbekannte neue Ortsnamen über ihren vorhandenen Rückfall.
+
+
+### 2026-10-08 – Figuren und Moebel teilen einen sichtbaren Massstab (character-scale-v1)
+
+- **DOCUMENTED INTENT:** Martin meldet Fennec als zu klein neben der Parkbank und
+  beauftragt eine gemeinsame Groessenkalibrierung, passende Moebelanker und laufende
+  Zwischenberichte.
+- **FACT:** GameCharacterScale normiert die sechs Standbilder mit gemessenen
+  Silhouetten und festen relativen Hoehen. Fennecs Koerpermass trennt Scheitel und
+  Ohren. Spieler und NPCs verwenden dieselbe Groesse, Fussverankerung und Trefferbox.
+  Im Park steigt seine Standhoehe von rund 73 auf 110 Weltpixel. Alle Aussenorte
+  teilen unveraenderte Tiefenwerte; Innenraeume sind anhand ihrer Moebel kalibriert.
+- **Architektur:** GameFurniture liefert gemeinsame Ober-/Bodenkanten fuer Parkbank,
+  Sofa, Teetisch, Bett, Kuechen- und Cafetisch. Jeder Charakter wird separat an
+  diesen Konturen ausgeschnitten; ein NPC vor dem Moebel wird dadurch nicht vom
+  Vordergrund des Spielers uebermalt. Wasserlinie und Fussanker bleiben deckungsgleich.
+  Anker aller elf Innenraeume sind am ausgelieferten Bild ausgerichtet. Im Game
+  betraegt die erreichbare Hoehendifferenz 78 statt 52 Bildpixel, damit die beiden
+  neu vermessenen Tischplatten erreichbar bleiben. Andere Clients behalten 52.
+- **TESTED BEHAVIOR:** 954 reine Kotlin-Tests bestanden, darunter zehn neue Tests
+  fuer Referenzhoehen, saemtliche Ortsraender mit allen Spezies, ungeklemmte
+  Fussanker, Trefferflaechen, Wasserlinie, Moebelkonturen und echte Tischlandungen.
+  Desktop-Vorschauen verwenden diese Kotlin-Klassen und die vorhandenen Bildassets.
+  Android-CI wird am aktuellen PR-Kopf separat geprueft.
+- **Grenzen:** Keine Telefonaufnahme. Die uebrigen Moebel besitzen korrigierte
+  Aktionsanker, aber noch keine vollstaendigen ausgeschnittenen Konturen. Es gibt
+  keine neue Sitzchoreografie oder Veraenderung der Illustrationen/Sprite-Boegen.
+- **Migration/Ruecksetzung:** Keine Daten-/Orts-ID-Aenderung. Ruecknahme des Commits
+  stellt die bisherigen Game-Masse und Geometrie wieder her. App 1 und Stream
+  behalten ihre bisherige Figurengroesse. Basis ist die Sichtbarkeitskorrektur #345.
+- **Uebergabe:** docs/itoeva2-character-scale.md, tools/world-art/preview_scale.kt
+  und die drei character-scale-Vorschauen; PR und aktueller CI-Stand sind massgeblich.
+
+### 2026-10-08 – Ortslicht verbindet Figuren, Schatten und Regungen (world-light-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt nach Landschaft/Massstab lokales Licht,
+  Schatten, Figurenbeleuchtung und Umgebungsbewegung als Erweiterung von PR #346.
+  Er uebernimmt Merge und APK-Bau ueber Cloud Code; laufende Zwischenberichte sind gewuenscht.
+- **FACT:** Elf Innenraeume besitzen vermessene Fenster-/Lampenanker. Sonne und
+  Aussenquellen teilen absolute Weltkoordinaten; Licht und Figurenfarben bleiben an
+  Aussenrändern stetig. Hoehlensonne faellt am Eingang raeumlich ab. Nachtfenster,
+  Fensterstrahlen, warmes Feuer und kuehle Kristalle lesen dieselben Quellen.
+  Spieler und Bewohner haben ortsabhaengige Farbseiten und weiche Bodenschatten.
+  Blickwechsel dreht keine Lichtseite; Springen hebt nicht den Bodenempfaenger an.
+  Die vermessenen Moebel schatten niedrige lokale Strahlen ab und werfen Bodenschatten.
+- **Architektur:** GameSceneLighting bleibt die reine Lichtrechnung. GameLightingCatalog
+  liefert Bildanker, GameAtmosphere stetigen Wind und ortsgebundene Kosmetik.
+  Native Canvas-Ebenen verwenden die vorhandene Kamera/Fussprojektion und Bildassets.
+  Farbfilter erhalten Sprite-Alpha und werden im Stand wiederverwendet. Begrenzte
+  Pflanz-/Stoffausschnitte, obere Figurenbereiche, Laubschatten, Lichtstaub, Wasserreflexe,
+  Feuerfunken und Dunst bewegen sich ohne zweite Simulations- oder Speicherpipeline.
+- **TESTED BEHAVIOR:** 970 Kotlin-Tests gruen, darunter 16 neue Tests fuer Anker,
+  Schalter, Weltquellen, alle Aussenraender/Spezies/Tageszeiten, Farbseiten, Schatten,
+  Sprung-/Plattformkontakt, Moebelabschattung und raeumlich/zeitlich stetige Regungen.
+  Native Android-Kompilierung/Lint/R8/Emulatoren werden am letzten PR-Kopf geprueft.
+  Desktop-Vorschauen verwenden die Kotlin-Rechnung, keine APK-Aufnahme.
+- **Grenzen:** Stilisierte 2D-Naeherung; gemalte Kulissenschatten bleiben im Bild.
+  Weitere Moebel haben keine vollstaendigen Lichtblocker. Kein neuer Umhang,
+  Stoffsimulator oder 3D-Licht-Baking. Telefon-/GPU-Abnahme bleibt bei Martin.
+- **Migration/Ruecksetzung:** Keine Spielstand-/Room-/Orts-ID-/Workflow-Aenderung.
+  App 1/Stream erhalten keine neue Darstellung. Ruecknahme des Erweiterungscommits
+  behaelt den bisherigen #346-Massstabs-/Moebelschnitt.
+- **Uebergabe:** docs/itoeva2-light-and-environment.md, preview_lighting.kt,
+  Vergleichsbilder und Bewegungsvideo. Martin mergt und baut die APK mit Cloud Code.

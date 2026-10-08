@@ -98,7 +98,9 @@ fun AvatarSpriteView(
     motionCue: CreatureSprites.MotionCue? = null,
     gameTempo: Float = 1f,
     gameGaitMs: Long? = null,
-    gameRunBlend: Float? = null
+    gameRunBlend: Float? = null,
+    gameLight: GameSceneLighting.CharacterLight? = null,
+    gameWind: Float = 0f
 ) {
     // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
     // Bogen, wird statt der groben Zellen das passende Bild daraus gezeichnet. Die grobe Pose
@@ -113,6 +115,25 @@ fun AvatarSpriteView(
         while (true) {
             value = SystemClock.uptimeMillis()
             delay(CREATURE_TICK_MS)
+        }
+    }
+    // Im Stand bleiben die 36 Farbfilter im Cache; der 16-ms-Schritt der Sprite-Animation
+    // soll nicht pro Bewohner neue Matrizen und Filter anlegen.
+    val gameFilters = remember(gameLight, brightnessScale, species, sheet?.frameSize) {
+        if (gameLight == null || species == null) null else {
+            val frameSize = sheet?.frameSize ?: CreatureSprites.Rich.FRAME
+            val feet = if (frameSize == CreatureSprites.Rich.FRAME) CreatureSprites.Rich.FEET else CreatureSprites.FEET
+            val reference = GameCharacterScale.reference(species)
+            List(36) { index ->
+                val u = (index % 6 + .5f) / 6f
+                val v = (index / 6 + .5f) / 6f
+                val bodyV = ((v * frameSize - reference.top) / (feet - reference.top)).coerceIn(0f, 1f)
+                val light = gameLight.at(u, bodyV)
+                ColorFilter.colorMatrix(ColorMatrix().apply {
+                    val dim = brightnessScale.coerceIn(0f, 1f)
+                    setToScale(light.r * dim, light.g * dim, light.b * dim, 1f)
+                })
+            }
         }
     }
     Canvas(
@@ -131,9 +152,9 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend)
+                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind)
         } else {
-            drawSprite(frame, brightnessScale, species, shadeSide)
+            drawSprite(frame, brightnessScale, species, shadeSide, gameLight)
         }
     }
 }
@@ -180,7 +201,9 @@ private fun DrawScope.drawCreature(
     motionCue: CreatureSprites.MotionCue?,
     gameTempo: Float,
     gameGaitMs: Long?,
-    gameRunBlend: Float?
+    gameRunBlend: Float?,
+    gameFilters: List<ColorFilter>?,
+    gameWind: Float
 ) {
     val rich = sheet.frameSize == CreatureSprites.Rich.FRAME
     val frameSize = sheet.frameSize
@@ -200,28 +223,39 @@ private fun DrawScope.drawCreature(
     val left = (size.width - drawn) / 2f
     val dim = brightnessScale.coerceIn(0f, 1f)
     val filter = if (dim < 1f) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(dim, dim, dim, 1f) }) else null
+    fun paint(index: Int, alpha: Float) {
+        val image = sheet.frames[index]
+        if (gameFilters == null) {
+            drawImage(image, IntOffset.Zero, IntSize(frameSize, frameSize),
+                IntOffset(left.roundToInt(), top.roundToInt()), IntSize(drawn.roundToInt(), drawn.roundToInt()),
+                alpha = alpha, colorFilter = filter, filterQuality = FilterQuality.None)
+            return
+        }
+        // Farbfilter wirken nur auf die Sprite-Pixel, einschliesslich deren Alpha.
+        // Kein Offscreen-Rechteck, das die Ohren oder den Sprung abschneiden koennte.
+        val rows = 6
+        repeat(6) { column ->
+            repeat(rows) { row ->
+                val x0 = column * frameSize / 6; val x1 = (column + 1) * frameSize / 6
+                val y0 = row * frameSize / rows; val y1 = (row + 1) * frameSize / rows
+                val v = (row + .5f) / rows
+                val physicalColumn = if (look.mirrored) 5 - column else column
+                val color = gameFilters[row * 6 + physicalColumn]
+                val tips = ((.55f - v) / .55f).coerceIn(0f, 1f)
+                val wind = gameWind * drawn * tips * tips * if (look.mirrored) -1f else 1f
+                val dx0 = (left + drawn * x0 / frameSize + wind).roundToInt()
+                val dx1 = (left + drawn * x1 / frameSize + wind).roundToInt()
+                val dy0 = (top + drawn * y0 / frameSize).roundToInt()
+                val dy1 = (top + drawn * y1 / frameSize).roundToInt()
+                if (dx1 > dx0 && dy1 > dy0) drawImage(image, IntOffset(x0, y0), IntSize(x1 - x0, y1 - y0),
+                    IntOffset(dx0, dy0), IntSize(dx1 - dx0, dy1 - dy0), alpha = alpha,
+                    colorFilter = color, filterQuality = FilterQuality.None)
+            }
+        }
+    }
     scale(scaleX = if (look.mirrored) -1f else 1f, scaleY = 1f, pivot = Offset(size.width / 2f, size.height / 2f)) {
-        if (look.blendFrame != null) drawImage(
-            image = sheet.frames[look.blendFrame],
-            srcOffset = IntOffset.Zero,
-            srcSize = IntSize(frameSize, frameSize),
-            dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
-            dstSize = IntSize(drawn.roundToInt(), drawn.roundToInt()),
-            alpha = 1f - look.blend,
-            colorFilter = filter,
-            filterQuality = FilterQuality.None
-        )
-        drawImage(
-            image = sheet.frames[look.frame],
-            srcOffset = IntOffset.Zero,
-            srcSize = IntSize(frameSize, frameSize),
-            dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
-            dstSize = IntSize(drawn.roundToInt(), drawn.roundToInt()),
-            alpha = if (look.blendFrame == null) 1f else look.blend,
-            colorFilter = filter,
-            // Ohne Glaettung: Jeder Pixel des Bogens bleibt ein scharfes Quadrat.
-            filterQuality = FilterQuality.None
-        )
+        look.blendFrame?.let { paint(it, 1f - look.blend) }
+        paint(look.frame, if (look.blendFrame == null) 1f else look.blend)
     }
 }
 
@@ -229,7 +263,8 @@ private fun DrawScope.drawSprite(
     unorientedFrame: IntArray,
     brightnessScale: Float,
     species: AvatarSpecies?,
-    shadeSide: AvatarShading.Side
+    shadeSide: AvatarShading.Side,
+    gameLight: GameSceneLighting.CharacterLight?
 ) {
     // **Hier und nicht in den Animationsdaten** (siehe [AvatarShading]): Die Posen bleiben reine
     // Punktmengen, Ueberblendungen rechnen unveraendert weiter, und die abgelegten
@@ -269,7 +304,10 @@ private fun DrawScope.drawSprite(
                 AvatarGeometry.MAX_BRIGHTNESS) * brightnessScale.coerceIn(0f, 1f)
             val ziel = if (imAuge) eyeColor else if (imGesicht) accentColor else LED_ON_COLOR
             drawRect(
-                color = lerpColor(LED_OFF_COLOR, ziel, fraction),
+                color = lerpColor(LED_OFF_COLOR, ziel, fraction).let { raw ->
+                    val light = gameLight?.at((x + .5f) / AvatarGeometry.SIZE, y.toFloat() / AvatarGeometry.HEIGHT)
+                    if (light == null) raw else Color(raw.red * light.r, raw.green * light.g, raw.blue * light.b, raw.alpha)
+                },
                 topLeft = Offset(x * cell, y * cell),
                 size = cellSize
             )

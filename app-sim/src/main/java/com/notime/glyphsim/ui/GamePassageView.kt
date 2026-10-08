@@ -60,7 +60,7 @@ internal fun GameWaterForeground(scene: GameScenes.Scene, camera: GameCamera.Sta
         val fit = GameCamera.fit(camera, scene, size.width, size.height)
         val (fx, fy) = GameScenes.feet(scene, pos)
         val (x,y) = fit.toScreen(fx, fy)
-        val waterY = y - GameScenes.avatarHeight(scene, pos) * wet * fit.scale
+        val waterY = y - GameCharacterScale.waterRise(scene, pos) * fit.scale
         drawOval(Color(0xFFDEF4EB).copy(alpha = .55f * fade),
             Offset(x - 21f * fit.scale, waterY - 2f * fit.scale), Size(42f * fit.scale, 7f * fit.scale),
             style = Stroke(1.2f * fit.scale))

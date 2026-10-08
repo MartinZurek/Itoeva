@@ -127,7 +127,8 @@ internal fun GameAdventureObjects(scene: GameScenes.Scene, pos: PlayControl.Pos,
 /** NPC-Fuesse, Groesse und Kamera verwenden die Bildgeometrie des Spielers. */
 @Composable
 internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos, actors: Collection<GameResidents.Actor>,
-    phase: Int, minute: Int, modifier: Modifier, camera: GameCamera.State? = null) {
+    phase: Int, minute: Int, modifier: Modifier, camera: GameCamera.State? = null,
+    lampOn: Boolean = false, tvOn: Boolean = false, clock: Long = 0L, weather: PlayWeather = PlayWeather.CLEAR) {
     val density = LocalDensity.current
     BoxWithConstraints(modifier) {
         val w = with(density) { maxWidth.toPx() }
@@ -146,14 +147,22 @@ internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos,
             val frame = sequence.frames[Math.floorMod(phase + species.ordinal * 3, sequence.frames.size)]
             val (x, y) = GameScenes.feet(scene, actor.pos)
             val (sx, sy) = fit.toScreen(x, y)
-            val px = GameScenes.avatarHeight(scene, actor.pos) * fit.scale / .8f
+            val px = GameCharacterScale.layoutWidth(scene, actor.pos, species) * fit.scale
+            if (sx + px < 0f || sx - px > w || sy + px < 0f || sy - px > h) continue
             val dp = with(density) { px.toDp() }
+            val offset = Offset(sx - px / 2f, GameCharacterScale.layoutTop(sy, px, species))
             AvatarSpriteView(frame = frame, species = species, showBackground = false,
-                brightnessScale = 1f - GameSceneLighting.darkness(scene, minute) * .35f,
+                brightnessScale = 1f,
+                gameLight = GameSceneLighting.character(scene, actor.pos, species, minute,
+                    GameSceneLighting.sources(scene, minute, lampOn, tvOn, (clock / 200L).toInt())),
+                gameWind = GameAtmosphere.figureBend(scene, species, 0f, clock,
+                    GameWorld.origin(scene.place) + x, weather),
                 gameDirection = actor.facing, gameMoving = actor.moving,
                 contentDescription = stringResource(species.labelRes),
                 modifier = Modifier.width(dp).height(dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
-                    .offset { IntOffset((sx - px / 2f).roundToInt(), AvatarFooting.topFor(sy, px, AvatarBodies.forSpecies(species).groundRow()).roundToInt()) })
+                    .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
+                    .gameCharacterOcclusion(scene, actor.pos, species, null, 0f,
+                        fit, offset))
             val item = if (!actor.moving && task is LivingPopulationLayout.ResidentPose.Doing) when (task.topic) {
                 AnimationType.BOOK -> PlayEffects.Carried.BOOK
                 AnimationType.DRINK -> PlayEffects.Carried.CUP
@@ -176,13 +185,15 @@ internal fun GameWeatherView(scene: GameScenes.Scene, pos: PlayControl.Pos, stat
         if (!outdoors) return@Canvas // Ohne Fenster-Maske kein Regen quer durch Zimmer.
         val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
         val world = GameWorld.isWorld(scene)
-        val span = if (world) 1920L else 480L
+        val span = if (world) GameWorld.totalWidth.toLong() else 480L
         val tall = if (world) 640L else 270L
         val origin = if (world) GameWorld.origin(scene.place) else 0f
-        repeat(if (world) 150 else 60) { i ->
-            val x = ((i * 79L + state.elapsed / 45L) % span).toFloat() - origin
+        repeat(if (world) 1050 else 60) { i ->
+            val x = ((i * 197L + state.elapsed / 45L) % span).toFloat() - origin
             val y = ((i * 43L + state.elapsed / 9L) % tall).toFloat()
+            if (world && x + origin >= GameWorld.origin(PlayScene.Place.GROTTO)) return@repeat
             val (sx, sy) = fit.toScreen(x, y)
+            if (sx < 0f || sx > size.width || sy < 0f || sy > size.height) return@repeat
             drawLine(Color(0xFFBFD4D7).copy(alpha = .35f), Offset(sx, sy), Offset(sx - 2f * fit.scale, sy + 5f * fit.scale), fit.scale)
         }
     }

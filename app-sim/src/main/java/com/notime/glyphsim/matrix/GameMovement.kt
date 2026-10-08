@@ -60,16 +60,16 @@ object GameMovement {
     }
 
     /** Kleine Landekorrektur nur zu einer erreichbaren Flaeche in der gewuenschten Richtung. */
-    fun jumpTarget(state: State, input: PlayControl.Stick, surfaces: List<Surface>): Surface? {
+    fun jumpTarget(state: State, input: PlayControl.Stick, surfaces: List<Surface>, maxStepHeight: Float = 52f): Surface? {
         val wish = if (input.strength > 0.1f) input else vector(state.facing)
-        return surfaces.filter { it.id != state.support && it.heightAt(it.closest(state.pos)) - state.height <= 52f }
+        return surfaces.filter { it.id != state.support && it.heightAt(it.closest(state.pos)) - state.height <= maxStepHeight }
             .map { it to it.closest(state.pos) }
             .filter { (_, p) -> distance(state.pos, p) <= 0.20f &&
                 (p.x - state.pos.x) * wish.x + (p.depth - state.pos.depth) * wish.y * 0.25f >= -0.015f }
             .minByOrNull { (_, p) -> distance(state.pos, p) }?.first
     }
 
-    fun command(state: State, command: Command, input: PlayControl.Stick, surfaces: List<Surface>): State {
+    fun command(state: State, command: Command, input: PlayControl.Stick, surfaces: List<Surface>, maxStepHeight: Float = 52f): State {
         if (state.action == Action.JUMP) {
             // Ein Tipp kurz vor der Landung wird behalten, hektisches Halten erzeugt keine Kette.
             return if (command == Command.JUMP && state.progress > 0.78f) state.copy(queuedJumpMs = 140L) else state
@@ -83,7 +83,7 @@ object GameMovement {
         val wish = if (input.strength > 0.1f) input else vector(state.facing)
         if (command == Command.ROLL) return state.copy(action = Action.ROLL, elapsed = 0L,
             velocity = PlayControl.stick(wish.x, wish.y, 1f, 0f), facing = wish.direction(state.facing) ?: state.facing)
-        val target = jumpTarget(state, wish, surfaces)
+        val target = jumpTarget(state, wish, surfaces, maxStepHeight)
         val stride = PlayControl.tempo(input.strength) * 0.325f
         val freeLanding = PlayControl.Pos(
             (state.pos.x + input.x / input.strength.coerceAtLeast(0.01f) * PlayControl.SPEED_X * stride).coerceIn(0f, 1f),
@@ -108,7 +108,8 @@ object GameMovement {
     }
 
     fun tick(state: State, input: PlayControl.Stick, dtMs: Long, surfaces: List<Surface> = emptyList(),
-        exitDelayMs: Long = PlayControl.EXIT_PUSH_MS, immediateExits: Set<PlayControl.Dir> = emptySet(), horizontalScale: Float = 1f): Result {
+        exitDelayMs: Long = PlayControl.EXIT_PUSH_MS, immediateExits: Set<PlayControl.Dir> = emptySet(), horizontalScale: Float = 1f,
+        maxStepHeight: Float = 52f): Result {
         val dt = dtMs.coerceIn(0L, 50L)
         if (dt == 0L) return Result(state)
         val elapsed = state.elapsed + dt
@@ -122,7 +123,7 @@ object GameMovement {
                     val landed = state.copy(pos = pos, height = arc.toHeight, support = arc.surface,
                         action = null, arc = null, elapsed = 0L, queuedJumpMs = 0L)
                     return Result(if (state.queuedJumpMs > 0L)
-                        command(landed, Command.JUMP, input, surfaces) else landed)
+                        command(landed, Command.JUMP, input, surfaces, maxStepHeight) else landed)
                 }
                 return Result(state.copy(pos = pos, elapsed = elapsed,
                     height = lerp(arc.fromHeight, arc.toHeight, flight) + 4f * flight * (1f - flight) * arc.apex,

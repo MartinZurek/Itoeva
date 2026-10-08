@@ -5,9 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -83,20 +81,17 @@ fun GameSceneView(
     roomLayers: GameRoomLayers? = null,
     environment: GameEnvironment.State = GameEnvironment.State(),
     camera: GameCamera.State? = null,
-    images: Map<String, ImageBitmap?> = emptyMap()
+    images: Map<String, ImageBitmap?> = emptyMap(),
+    clock: Long = 0L
 ) {
     if (GameWorld.isWorld(scene) && camera != null) {
-        GameWorldView(scene, images, camera, minuteOfDay, lampOn, phase, environment, avatarPos, fade, modifier)
+        GameWorldView(scene, images, camera, minuteOfDay, lampOn, phase, environment, avatarPos, fade, modifier, clock)
         return
     }
     Canvas(modifier = modifier) {
         val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, avatarPos.x, avatarPos.depth)
         val visible = fade.coerceIn(0f, 1f)
-        val lights = GameSceneLighting.sources(scene, minuteOfDay, lampOn, tvOn, phase)
-        fun point(x: Float, y: Float): Offset {
-            val (sx, sy) = fit.toScreen(x, y)
-            return Offset(sx, sy)
-        }
+        val lights = GameSceneLighting.sources(scene, minuteOfDay, lampOn, tvOn, (clock / 200L).toInt())
         drawRect(Color.Black)
         // Bewegung: aus dem Streifen das Bild zum Takt (Laub wiegt, Wasser kraeuselt, Licht flackert).
         val live = roomLayers?.takeIf { it.base != null && it.atlas != null }
@@ -119,6 +114,7 @@ fun GameSceneView(
             roomShore(scene, live, environment, fit, visible)
             roomContacts(scene, environment, fit, visible)
         }
+        paintPaintedMotion(scene, image, fit, clock, visible)
         // Die Illustration bleibt die Materialbasis. Licht und Schatten werden dagegen in
         // denselben Bildkoordinaten wie Laufweg und Avatar pro Bildtakt berechnet.
         val dark = GameSceneLighting.darkness(scene, minuteOfDay)
@@ -142,34 +138,6 @@ fun GameSceneView(
                 filterQuality = if (scene.place in com.notime.glyphsim.matrix.GameInteriorCatalog.scenes) FilterQuality.Low else FilterQuality.None
             )
         }
-        lights.forEach { light ->
-            val center = point(light.x, light.y)
-            val radius = light.radius * fit.scale
-            val tint = when (light.tone) {
-                GameSceneLighting.Tone.SUN -> Color(0xFFFFEDC6)
-                GameSceneLighting.Tone.WARM -> Color(0xFFFFB96A)
-                GameSceneLighting.Tone.COOL -> Color(0xFF78C8E6)
-            }
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(tint.copy(alpha = light.power * 0.55f), Color.Transparent),
-                    center = center,
-                    radius = radius
-                ),
-                radius = radius,
-                center = center,
-                alpha = visible
-            )
-        }
-        val shadow = GameSceneLighting.shadow(scene, avatarPos, lights)
-        val foot = point(shadow.footX, shadow.footY)
-        val tip = point(shadow.tipX, shadow.tipY)
-        drawLine(Color(0x990E1720), foot, tip, strokeWidth = shadow.width * fit.scale, alpha = visible)
-        drawOval(
-            color = Color(0x660B1821),
-            topLeft = Offset(foot.x - shadow.width * fit.scale, foot.y - 2f * fit.scale),
-            size = androidx.compose.ui.geometry.Size(shadow.width * 2f * fit.scale, 5f * fit.scale),
-            alpha = visible
-        )
+        paintSceneLights(scene, lights, fit, clock, visible)
     }
 }
