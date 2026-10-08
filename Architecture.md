@@ -535,3 +535,19 @@ Nur ihre äußeren 128 Weltpixel laufen in die ursprünglichen Panoramen aus; Ka
 Boden bleiben ortsfest. Sieben Panoramen und sechs Anschlussbilder werden gemeinsam
 geladen (rund 78 MiB dekodiert insgesamt, etwa 54 MiB mehr als vorher).
 Android- und GPU-Abnahme sind getrennt von den reinen Kotlin-Tests.
+
+
+### Game-Massstab und vermessene Moebel (08.10.2026)
+
+GameCharacterScale rechnet die sichtbare Standhoehe statt der transparenten
+Sprite-Rahmengroesse. Gemessene, feste Referenzen aller sechs Wesen ersetzen
+GAME_FIGURE_FILL fuer den Game-Client; Spieler, NPCs und Trefferflaechen teilen
+diese Rechnung. AvatarSpriteView und Rich.scaleFor bleiben fuer App 1/Stream
+unveraendert. Game-Fussanker werden am oberen Bildschirmrand nicht geklemmt.
+
+GameFurniture liefert gemeinsame Plattformhoehen und Konturen fuer Bank, Sofa,
+Teetisch, Bett sowie die beiden grossen Innenraumtische. gameCharacterOcclusion
+schneidet pro Figur deren verdeckte Teile aus, statt das Moebel nach allen NPCs
+erneut ueber das Bild zu malen. Der Wasser-Ausschnitt steht weiterhin nach dem
+Offset. GameMovement erhaelt die hoehere Sprungreichweite nur vom Game-Client.
+Pruefung, Bilder und Fortsetzung: docs/itoeva2-character-scale.md.

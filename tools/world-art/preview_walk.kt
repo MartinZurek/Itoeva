@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
             }
             g.composite=java.awt.AlphaComposite.SrcOver
             val (fx,fy) = GameScenes.feet(scene,movement.pos); val (x,y) = fit.toScreen(fx,fy)
-            val drawn = GameScenes.avatarHeight(scene,movement.pos)*fit.scale/.8f*CreatureSprites.Rich.scaleFor(AvatarSpecies.FENNEC)
+            val drawn = GameCharacterScale.layoutWidth(scene,movement.pos,AvatarSpecies.FENNEC)*fit.scale*CreatureSprites.Rich.scaleFor(AvatarSpecies.FENNEC)
             val sprite = CreatureSprites.Rich.WALK_FIRST + ((movement.gaitMs / 120).toInt() % 8)
             val source = sheet.getSubimage(sprite*128,0,128,128)
             val wet = GameWorld.wetness(scene,movement.pos)

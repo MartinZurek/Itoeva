@@ -146,14 +146,17 @@ internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos,
             val frame = sequence.frames[Math.floorMod(phase + species.ordinal * 3, sequence.frames.size)]
             val (x, y) = GameScenes.feet(scene, actor.pos)
             val (sx, sy) = fit.toScreen(x, y)
-            val px = GameScenes.avatarHeight(scene, actor.pos) * fit.scale / .8f
+            val px = GameCharacterScale.layoutWidth(scene, actor.pos, species) * fit.scale
             val dp = with(density) { px.toDp() }
+            val offset = Offset(sx - px / 2f, GameCharacterScale.layoutTop(sy, px, species))
             AvatarSpriteView(frame = frame, species = species, showBackground = false,
                 brightnessScale = 1f - GameSceneLighting.darkness(scene, minute) * .35f,
                 gameDirection = actor.facing, gameMoving = actor.moving,
                 contentDescription = stringResource(species.labelRes),
                 modifier = Modifier.width(dp).height(dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
-                    .offset { IntOffset((sx - px / 2f).roundToInt(), AvatarFooting.topFor(sy, px, AvatarBodies.forSpecies(species).groundRow()).roundToInt()) })
+                    .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
+                    .gameCharacterOcclusion(scene, actor.pos, species, null, 0f,
+                        fit, offset))
             val item = if (!actor.moving && task is LivingPopulationLayout.ResidentPose.Doing) when (task.topic) {
                 AnimationType.BOOK -> PlayEffects.Carried.BOOK
                 AnimationType.DRINK -> PlayEffects.Carried.CUP

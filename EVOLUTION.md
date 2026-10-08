@@ -6563,3 +6563,35 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Migration/Rücksetzung:** Keine Room-Migration. Alte IDs unverändert, neue Namen im
   bestehenden Codec. Rücknahme dieses Schnitts entfernt die drei Orte und ihre Assets;
   ältere Clients behandeln unbekannte neue Ortsnamen über ihren vorhandenen Rückfall.
+
+
+### 2026-10-08 – Figuren und Moebel teilen einen sichtbaren Massstab (character-scale-v1)
+
+- **DOCUMENTED INTENT:** Martin meldet Fennec als zu klein neben der Parkbank und
+  beauftragt eine gemeinsame Groessenkalibrierung, passende Moebelanker und laufende
+  Zwischenberichte.
+- **FACT:** GameCharacterScale normiert die sechs Standbilder mit gemessenen
+  Silhouetten und festen relativen Hoehen. Fennecs Koerpermass trennt Scheitel und
+  Ohren. Spieler und NPCs verwenden dieselbe Groesse, Fussverankerung und Trefferbox.
+  Im Park steigt seine Standhoehe von rund 73 auf 110 Weltpixel. Alle Aussenorte
+  teilen unveraenderte Tiefenwerte; Innenraeume sind anhand ihrer Moebel kalibriert.
+- **Architektur:** GameFurniture liefert gemeinsame Ober-/Bodenkanten fuer Parkbank,
+  Sofa, Teetisch, Bett, Kuechen- und Cafetisch. Jeder Charakter wird separat an
+  diesen Konturen ausgeschnitten; ein NPC vor dem Moebel wird dadurch nicht vom
+  Vordergrund des Spielers uebermalt. Wasserlinie und Fussanker bleiben deckungsgleich.
+  Anker aller elf Innenraeume sind am ausgelieferten Bild ausgerichtet. Im Game
+  betraegt die erreichbare Hoehendifferenz 78 statt 52 Bildpixel, damit die beiden
+  neu vermessenen Tischplatten erreichbar bleiben. Andere Clients behalten 52.
+- **TESTED BEHAVIOR:** 954 reine Kotlin-Tests bestanden, darunter zehn neue Tests
+  fuer Referenzhoehen, saemtliche Ortsraender mit allen Spezies, ungeklemmte
+  Fussanker, Trefferflaechen, Wasserlinie, Moebelkonturen und echte Tischlandungen.
+  Desktop-Vorschauen verwenden diese Kotlin-Klassen und die vorhandenen Bildassets.
+  Android-CI wird am aktuellen PR-Kopf separat geprueft.
+- **Grenzen:** Keine Telefonaufnahme. Die uebrigen Moebel besitzen korrigierte
+  Aktionsanker, aber noch keine vollstaendigen ausgeschnittenen Konturen. Es gibt
+  keine neue Sitzchoreografie oder Veraenderung der Illustrationen/Sprite-Boegen.
+- **Migration/Ruecksetzung:** Keine Daten-/Orts-ID-Aenderung. Ruecknahme des Commits
+  stellt die bisherigen Game-Masse und Geometrie wieder her. App 1 und Stream
+  behalten ihre bisherige Figurengroesse. Basis ist die Sichtbarkeitskorrektur #345.
+- **Uebergabe:** docs/itoeva2-character-scale.md, tools/world-art/preview_scale.kt
+  und die drei character-scale-Vorschauen; PR und aktueller CI-Stand sind massgeblich.

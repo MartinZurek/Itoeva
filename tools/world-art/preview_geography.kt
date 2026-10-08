@@ -55,7 +55,7 @@ fun main(args: Array<String>) {
             g.composite=java.awt.AlphaComposite.SrcOver
         }
         val (fx,fy) = GameScenes.feet(scene,pos); val (x,y) = fit.toScreen(fx,fy)
-        val drawn = GameScenes.avatarHeight(scene,pos)*fit.scale/.8f*CreatureSprites.Rich.scaleFor(AvatarSpecies.FENNEC)
+        val drawn = GameCharacterScale.layoutWidth(scene,pos,AvatarSpecies.FENNEC)*fit.scale*CreatureSprites.Rich.scaleFor(AvatarSpecies.FENNEC)
         val waterY = y - GameScenes.avatarHeight(scene,pos)*GameWorld.wetness(scene,pos)*fit.scale
         val oldClip = g.clip
         g.clipRect(0,0,480,waterY.roundToInt())

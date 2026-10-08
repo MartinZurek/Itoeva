@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
             (region.width * fit.scale).roundToInt(), (GameWorld.HEIGHT * fit.scale).roundToInt(), null)
         val (x, y) = GameScenes.feet(currentScene, movement.pos)
         val (sx, sy) = fit.toScreen(x, y)
-        val px = GameScenes.avatarHeight(currentScene, movement.pos) * fit.scale / .8f
+        val px = GameCharacterScale.layoutWidth(currentScene, movement.pos, AvatarSpecies.FENNEC) * fit.scale
         val drawn = px * CreatureSprites.Rich.scaleFor(AvatarSpecies.FENNEC)
         val sprite = if (movement.moving) CreatureSprites.Rich.WALK_FIRST + ((movement.gaitMs / 120).toInt() % 8)
             else CreatureSprites.Rich.IDLE_FIRST + (frame / 8 % 8)
