@@ -6595,3 +6595,35 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   behalten ihre bisherige Figurengroesse. Basis ist die Sichtbarkeitskorrektur #345.
 - **Uebergabe:** docs/itoeva2-character-scale.md, tools/world-art/preview_scale.kt
   und die drei character-scale-Vorschauen; PR und aktueller CI-Stand sind massgeblich.
+
+### 2026-10-08 – Ortslicht verbindet Figuren, Schatten und Regungen (world-light-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt nach Landschaft/Massstab lokales Licht,
+  Schatten, Figurenbeleuchtung und Umgebungsbewegung als Erweiterung von PR #346.
+  Er uebernimmt Merge und APK-Bau ueber Cloud Code; laufende Zwischenberichte sind gewuenscht.
+- **FACT:** Elf Innenraeume besitzen vermessene Fenster-/Lampenanker. Sonne und
+  Aussenquellen teilen absolute Weltkoordinaten; Licht und Figurenfarben bleiben an
+  Aussenrändern stetig. Hoehlensonne faellt am Eingang raeumlich ab. Nachtfenster,
+  Fensterstrahlen, warmes Feuer und kuehle Kristalle lesen dieselben Quellen.
+  Spieler und Bewohner haben ortsabhaengige Farbseiten und weiche Bodenschatten.
+  Blickwechsel dreht keine Lichtseite; Springen hebt nicht den Bodenempfaenger an.
+  Die vermessenen Moebel schatten niedrige lokale Strahlen ab und werfen Bodenschatten.
+- **Architektur:** GameSceneLighting bleibt die reine Lichtrechnung. GameLightingCatalog
+  liefert Bildanker, GameAtmosphere stetigen Wind und ortsgebundene Kosmetik.
+  Native Canvas-Ebenen verwenden die vorhandene Kamera/Fussprojektion und Bildassets.
+  Farbfilter erhalten Sprite-Alpha und werden im Stand wiederverwendet. Begrenzte
+  Pflanz-/Stoffausschnitte, obere Figurenbereiche, Laubschatten, Lichtstaub, Wasserreflexe,
+  Feuerfunken und Dunst bewegen sich ohne zweite Simulations- oder Speicherpipeline.
+- **TESTED BEHAVIOR:** 970 Kotlin-Tests gruen, darunter 16 neue Tests fuer Anker,
+  Schalter, Weltquellen, alle Aussenraender/Spezies/Tageszeiten, Farbseiten, Schatten,
+  Sprung-/Plattformkontakt, Moebelabschattung und raeumlich/zeitlich stetige Regungen.
+  Native Android-Kompilierung/Lint/R8/Emulatoren werden am letzten PR-Kopf geprueft.
+  Desktop-Vorschauen verwenden die Kotlin-Rechnung, keine APK-Aufnahme.
+- **Grenzen:** Stilisierte 2D-Naeherung; gemalte Kulissenschatten bleiben im Bild.
+  Weitere Moebel haben keine vollstaendigen Lichtblocker. Kein neuer Umhang,
+  Stoffsimulator oder 3D-Licht-Baking. Telefon-/GPU-Abnahme bleibt bei Martin.
+- **Migration/Ruecksetzung:** Keine Spielstand-/Room-/Orts-ID-/Workflow-Aenderung.
+  App 1/Stream erhalten keine neue Darstellung. Ruecknahme des Erweiterungscommits
+  behaelt den bisherigen #346-Massstabs-/Moebelschnitt.
+- **Uebergabe:** docs/itoeva2-light-and-environment.md, preview_lighting.kt,
+  Vergleichsbilder und Bewegungsvideo. Martin mergt und baut die APK mit Cloud Code.

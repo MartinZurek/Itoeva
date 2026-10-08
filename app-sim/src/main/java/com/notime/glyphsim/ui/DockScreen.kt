@@ -5407,7 +5407,7 @@ fun DockScreen(
                     minuteOfDay = gameWorldNow.minuteOfDay,
                     lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
                     modifier = Modifier.fillMaxSize(), layers = gemaltEbenen,
-                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages
+                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages, clock = gameElapsed
                 )
                 GamePassageView(gemalt, gameCamera, gameGerman, sceneFade.value, Modifier.fillMaxSize())
                 if (!GameWorld.isWorld(gemalt)) GameSurfaceView(gemalt, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
@@ -5631,13 +5631,28 @@ fun DockScreen(
         }
 
         if (playMode && gameMode && mapView == null) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+            val casters = mutableListOf<GameShadowCaster>()
+            avatar?.takeIf { !avatarHidden }?.let { current ->
+                val receiver = if (gameMovement.action == GameMovement.Action.JUMP) 0f else gameMovement.height
+                casters += GameShadowCaster(scene, gamePos, current.species, gameMovement.height, receiver)
+            }
+            for (place in GameWorld.visiblePlaces(scene)) {
+                val section = GameWorld.scene(place)!!
+                val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
+                if (gameRenderedPlace == currentPlace) actors.values.forEach {
+                    casters += GameShadowCaster(section, it.pos, it.snapshot.species)
+                }
+            }
+            GameCharacterShadows(casters, gameCamera, gameWorldNow.minuteOfDay, lampOn, tvOn,
+                (gameElapsed / SCENE_PHASE_TICK_MS).toInt(), sceneFade.value, Modifier.fillMaxSize())
             val visiblePlaces = GameWorld.visiblePlaces(scene)
             for (place in visiblePlaces) {
                 val section = GameWorld.scene(place)!!
                 GameAdventureObjects(section, gamePos, gameWorldNow, scenePhase, Modifier.fillMaxSize(), gameCamera)
                 if (GameWorld.isWorld(section)) GameSurfaceView(section, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
                 val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
-                if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth <= gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera)
+                if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth <= gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
+                    lampOn, tvOn, gameElapsed, gameWorldNow.weather)
             }
         }
 
@@ -5811,15 +5826,18 @@ fun DockScreen(
             AvatarSpriteView(
                 frame = fennecTalkFrame?.takeIf { current.species == AvatarSpecies.FENNEC }
                     ?: gameFrame(GAME_HOST_ID, current.species, current.frame),
-                brightnessScale = if (gameMode) {
-                    GameWorld.scene(gameRenderedPlace)?.let { scene ->
-                        val minute = gameWorldNow.minuteOfDay
-                        val (fx, fy) = GameScenes.feet(scene, gamePos)
-                        val lights = com.notime.glyphsim.matrix.GameSceneLighting.sources(scene, minute, lampOn, tvOn, scenePhase)
-                        (avatarDim.value * (1f - com.notime.glyphsim.matrix.GameSceneLighting.darkness(scene, minute) * 0.45f +
-                            com.notime.glyphsim.matrix.GameSceneLighting.illuminationAt(fx, fy, lights))).coerceIn(0.55f, 1f)
-                    } ?: avatarDim.value
-                } else avatarDim.value,
+                brightnessScale = avatarDim.value,
+                gameLight = if (gameMode) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+                    com.notime.glyphsim.matrix.GameSceneLighting.character(scene, gamePos, current.species,
+                        gameWorldNow.minuteOfDay,
+                        com.notime.glyphsim.matrix.GameSceneLighting.sources(scene, gameWorldNow.minuteOfDay,
+                            lampOn, tvOn, (gameElapsed / SCENE_PHASE_TICK_MS).toInt()), gameMovement.height)
+                } else null,
+                gameWind = if (gameMode) GameWorld.scene(gameRenderedPlace)?.let { scene ->
+                    val x = GameWorld.origin(scene.place) + GameScenes.feet(scene, gamePos).first
+                    com.notime.glyphsim.matrix.GameAtmosphere.figureBend(scene, current.species, 0f,
+                        gameElapsed, x, gameWorldNow.weather)
+                } ?: 0f else 0f,
                 // OHNE eigene Flaeche - und das ist im Play-Modus zwingend, nicht kosmetisch:
                 // [AvatarSpriteView] fuellt sein Sprite-Quadrat sonst schwarz aus. Solange der
                 // Dock-Modus nur aus schwarzer Flaeche und Uhr bestand, war das unsichtbar. Seit
@@ -5913,7 +5931,8 @@ fun DockScreen(
                 for (place in visiblePlaces) {
                     val section = GameWorld.scene(place)!!
                     val actors = if (GameWorld.isWorld(section)) gameWorldActors[place].orEmpty() else gameActors
-                    if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth > gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera)
+                    if (gameRenderedPlace == currentPlace) GameResidentSprites(section, gamePos, actors.values.filter { it.pos.depth > gamePos.depth }, scenePhase, gameWorldNow.minuteOfDay, Modifier.fillMaxSize(), gameCamera,
+                    lampOn, tvOn, gameElapsed, gameWorldNow.weather)
                 }
                 GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize())
                 if (GameWorld.isWorld(scene)) GameWorldForeground(scene, gameCamera,

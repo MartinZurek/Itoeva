@@ -551,3 +551,21 @@ schneidet pro Figur deren verdeckte Teile aus, statt das Moebel nach allen NPCs
 erneut ueber das Bild zu malen. Der Wasser-Ausschnitt steht weiterhin nach dem
 Offset. GameMovement erhaelt die hoehere Sprungreichweite nur vom Game-Client.
 Pruefung, Bilder und Fortsetzung: docs/itoeva2-character-scale.md.
+
+### Game: ortsfestes Licht und Umgebungsbewegung (08.10.2026)
+
+GameLightingCatalog haelt die normierten Fenster-/Lampenanker der elf Innenbilder.
+GameSceneLighting liefert in derselben Geometrie absolute Aussenquellen, lokale
+Fenster-/Feuer-/Kristalllichter, weiche gerichtete Schatten und vier Farbwerte pro
+Figur. Innenraum-Moebel begrenzen niedrige Strahlen. Aussenabdunkelung und Sonnen-
+filter am Hoehleneintritt werden raeumlich interpoliert, nicht am Ortsnamen geschaltet.
+GameLightingView zeichnet Strahlen, Nachtfenster und Schatten; alle Figuren
+verwenden dieselbe Rechnung und ihre eigene Fuss-/Plattformprojektion.
+
+AvatarSpriteView erhaelt die Game-Farbfilter optional, mit unveraendertem Alpha.
+Ein Blickwechsel kehrt die physischen Farbseiten nicht um. Im Stand werden die
+36 Filter pro Figur wiederverwendet. Andere Clients behalten ihren bisherigen Pfad.
+GameAtmosphere und GameAtmosphereView bewegen kleine vorhandene Bildausschnitte,
+Sprite-Spitzen und ortsgebundene Schatten/Reflexe/Staub/Dunst mit der Game-Zeit;
+keine Textur-Neuerzeugung, Netzwerk- oder Persistenzarbeit im Zeichentakt.
+Pruefvertrag und Cloud-Code-Uebergabe: docs/itoeva2-light-and-environment.md.

@@ -14,13 +14,12 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.notime.glyphsim.matrix.*
 import kotlin.math.roundToInt
-import kotlin.math.sin
 
 /** Ein einziges Panorama: an Ortsgrenzen wird weder das Bild geladen noch ausgetauscht. */
 @Composable
 internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitmap?>, camera: GameCamera.State,
     minute: Int, lampOn: Boolean, phase: Int, environment: GameEnvironment.State,
-    pos: PlayControl.Pos, fade: Float, modifier: Modifier) {
+    pos: PlayControl.Pos, fade: Float, modifier: Modifier, clock: Long) {
     Canvas(modifier) {
         val local = GameCamera.fit(camera, scene, size.width, size.height)
         val fit = local.copy(left = local.left - GameWorld.origin(scene.place) * local.scale)
@@ -59,6 +58,15 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
                 strip(b, width, GameWorld.seamAlpha(b + width / 2f))
             }
         }
+        for (place in GameWorld.visiblePlaces(scene)) {
+            val section = GameWorld.scene(place)!!
+            val image = images[section.asset] ?: continue
+            val sectionFit = GameCamera.fit(camera, section, size.width, size.height)
+            val span = GameWorld.region(place)!!.section
+            if (sectionFit.left + span * sectionFit.scale < 0f || sectionFit.left > size.width) continue
+            paintPaintedMotion(section, image, sectionFit, clock, fade, images)
+            paintAtmosphere(section, sectionFit, clock, minute, fade, false)
+        }
         val dark = GameSceneLighting.darkness(scene, minute)
         val dusk = GameSceneLighting.dusk(scene, minute)
         if (dusk > 0f) drawRect(Color(0xFFFF9C57).copy(alpha = dusk * .12f * fade))
@@ -79,21 +87,7 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
                     Offset(x, 0f), Size(sectionWidth, GameWorld.height(scene)))
             }
         }
-        GameWorld.visiblePlaces(scene).forEach { place ->
-            val section = GameWorld.scene(place)!!
-            for (light in GameSceneLighting.sources(section, minute, lampOn, false, phase)
-                .filter { it.tone != GameSceneLighting.Tone.SUN }) {
-                val (x, y) = fit.toScreen(GameWorld.origin(place) + light.x, light.y)
-                val center = Offset(x, y)
-                val radius = light.radius * fit.scale
-                drawCircle(Brush.radialGradient(listOf((if (light.tone == GameSceneLighting.Tone.COOL) Color(0xFF83D9FA) else Color(0xFFEDBC76)).copy(alpha = light.power * fade), Color.Transparent),
-                    center, radius), radius, center)
-            }
-        }
-        val (x, y) = GameScenes.feet(scene, pos)
-        val (sx, sy) = local.toScreen(x, y)
-        drawOval(Color(0x660B1821).copy(alpha = .4f * fade), Offset(sx - 15f * local.scale, sy - 2f * local.scale),
-            Size(30f * local.scale, 6f * local.scale))
+        paintSceneLights(scene, GameSceneLighting.sources(scene, minute, lampOn, false, (clock / 200L).toInt()), local, clock, fade)
         roomContacts(scene, environment, local, (1f - dark) * fade, false)
     }
 }
@@ -105,28 +99,13 @@ internal fun GameWorldForeground(scene: GameScenes.Scene, camera: GameCamera.Sta
     fade: Float, modifier: Modifier) {
     Canvas(modifier) {
         val local = GameCamera.fit(camera, scene, size.width, size.height)
-        val fit = local.copy(left = local.left - GameWorld.origin(scene.place) * local.scale)
         val dark = GameSceneLighting.darkness(scene, minute)
-        withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
-            for (region in GameWorld.regions) {
-                val baseX = GameWorld.regionOrigin(region)
-                if (fit.left + (baseX + region.width) * fit.scale < 0f || fit.left + baseX * fit.scale > size.width) continue
-                if (region.asset != "world/coast.png") repeat(46) { i ->
-                    val x = baseX + 475f + i * 31f
-                    val y = 571f + (i % 4) * 4f
-                    val sway = sin(clock / 750f + i * .7f) * 2.4f
-                    drawLine(Color(0xFF798C47).copy(alpha = (1f - dark) * .8f * fade), Offset(x, y),
-                        Offset(x + sway, y - 9f - i % 3), 1.2f)
-                }
-                repeat(14) { i ->
-                    val time = clock / 1000f
-                    val x = baseX + 500f + ((i * 103f + time * 12f) % 1400f)
-                    if (region.asset == "world/expedition.png" && x >= baseX + 960f) return@repeat
-                    val y = ((i * 67f + time * (10f + i % 3)) % 515f)
-                    drawOval(Color(0xFFBEA758).copy(alpha = .7f * (1f - dark) * fade),
-                        Offset(x + sin(time + i) * 8f, y), Size(3.5f, 2f))
-                }
-            }
+        for (place in GameWorld.visiblePlaces(scene)) {
+            val section = GameWorld.scene(place)!!
+            val sectionFit = GameCamera.fit(camera, section, size.width, size.height)
+            val span = GameWorld.region(place)!!.section
+            if (sectionFit.left + span * sectionFit.scale < 0f || sectionFit.left > size.width) continue
+            paintAtmosphere(section, sectionFit, clock, minute, fade, true)
         }
         environments.filterKeys { it in GameWorld.visiblePlaces(scene) }.forEach { (place, state) ->
             roomContacts(GameWorld.scene(place)!!, state, GameCamera.fit(camera, GameWorld.scene(place)!!,
