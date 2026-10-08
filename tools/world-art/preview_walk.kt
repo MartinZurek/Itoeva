@@ -10,10 +10,11 @@ import kotlin.math.roundToInt
 /** Desktop-Vorschau mit derselben Welt, Bewegungsphysik und Kamera wie im Spiel. */
 fun main(args: Array<String>) {
     val root = File(args[0]); val output = File(args[1]).apply { mkdirs() }
-    val images = GameWorld.regions.associate { it.asset to ImageIO.read(File(root,"app-sim/src/game/assets/${it.asset}")) }
+    val images = (GameWorld.regions.map { it.asset } + GameWorld.seams.map { it.asset }).associateWith { ImageIO.read(File(root,"app-sim/src/game/assets/$it")) }
     val sheet = ImageIO.read(File(root,"app-sim/src/main/assets/creatures/fennec.png"))
-    // Jeweils echte Hin- und Rueckbewegung an allen drei Bildgrenzen, dazu der Gang ins Wasser.
-    val cases = listOf(PlayScene.Place.JUNGLE,PlayScene.Place.FOREST,PlayScene.Place.MOUNTAINS,PlayScene.Place.BEACH)
+    // Jeweils echte Hin- und Rueckbewegung an allen sechs Bildgrenzen, dazu der Gang ins Wasser.
+    val cases = listOf(PlayScene.Place.JUNGLE, PlayScene.Place.COAST_PATH, PlayScene.Place.FOREST,
+        PlayScene.Place.VILLAGE_EDGE, PlayScene.Place.MOUNTAINS, PlayScene.Place.MOUNTAIN_PASS, PlayScene.Place.BEACH)
     var frame = 0
     for (start in cases) {
         var place = start
@@ -40,6 +41,27 @@ fun main(args: Array<String>) {
             for(region in GameWorld.regions) g.drawImage(images.getValue(region.asset),
                 (left+GameWorld.regionOrigin(region)*fit.scale).roundToInt(),fit.top.roundToInt(),
                 (region.width*fit.scale).roundToInt(),(GameWorld.HEIGHT*fit.scale).roundToInt(),null)
+            for (seam in GameWorld.seams) {
+                if (left+(seam.x+GameWorld.SEAM_HALF)*fit.scale < 0f || left+(seam.x-GameWorld.SEAM_HALF)*fit.scale > 960f) continue
+                val patch=images.getValue(seam.asset)
+                fun strip(offset: Float, width: Float, alpha: Float) {
+                    val sx0=((offset+GameWorld.SEAM_HALF)/(2f*GameWorld.SEAM_HALF)*patch.width).roundToInt()
+                    val sx1=((offset+width+GameWorld.SEAM_HALF)/(2f*GameWorld.SEAM_HALF)*patch.width).roundToInt()
+                    val x0=(left+(seam.x+offset)*fit.scale).roundToInt()
+                    val x1=(left+(seam.x+offset+width)*fit.scale).roundToInt()
+                    g.composite=java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER,alpha)
+                    g.drawImage(patch,x0,fit.top.roundToInt(),x1,(fit.top+GameWorld.HEIGHT*fit.scale).roundToInt(),sx0,0,sx1,patch.height,null)
+                }
+                val edge=GameWorld.SEAM_HALF-GameWorld.SEAM_FEATHER
+                strip(-edge,2f*edge,1f)
+                repeat(16) { i ->
+                    val width=GameWorld.SEAM_FEATHER/16f
+                    val a=-GameWorld.SEAM_HALF+i*width; val b=edge+i*width
+                    strip(a,width,GameWorld.seamAlpha(a+width/2f))
+                    strip(b,width,GameWorld.seamAlpha(b+width/2f))
+                }
+            }
+            g.composite=java.awt.AlphaComposite.SrcOver
             val (fx,fy) = GameScenes.feet(scene,movement.pos); val (x,y) = fit.toScreen(fx,fy)
             val drawn = GameScenes.avatarHeight(scene,movement.pos)*fit.scale/.8f*CreatureSprites.Rich.scaleFor(AvatarSpecies.FENNEC)
             val sprite = CreatureSprites.Rich.WALK_FIRST + ((movement.gaitMs / 120).toInt() % 8)

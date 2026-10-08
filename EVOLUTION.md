@@ -6537,3 +6537,29 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Positionen werden von jedem Client gegen dessen Geometrie geprüft.
 - **Betroffene Bereiche:** Game-Welt, Kamera, native Renderer und Türbedienung,
   Game-Assets, Welt-/Kameratests und `docs/itoeva2-continuous-world.md`.
+
+
+### 2026-10-08 – Zwischenorte verbinden Landschaften (landscape-transitions-v1)
+
+- **DOCUMENTED INTENT:** Martin möchte vor Merge und APK interessante begehbare
+  Zwischenorte, wo Meer, Wald, Häuser oder Gebirge sonst unmittelbar aneinanderstoßen.
+- **FACT:** Küstenweg mit Bachbrücke verbindet Dschungel und Wohnstraße; ein Dorfrand
+  mit Obstgarten verbindet Wald und Marktplatz; der Bergpass führt vom Gebirge zum Lager.
+  Bestehende stimmige Verbindungen innerhalb der Panoramen bleiben erhalten.
+  Sieben Panoramen teilen Geometrie und Kamera; sechs separat nachgemalte Anschlussbilder
+  verbinden Weg, Vegetation und Gebäude an den Bildrändern. Nur die äußeren Ränder
+  dieser ortsfesten Korrekturen laufen weich aus. Neue Ortswerte sind hinten angehängt,
+  samt Namen und Karte.
+- **Architektur:** Ein Bodenprofil hält die Figur auf dem gemalten Brückenweg. Füße
+  und Touchprojektion lesen dieselbe Fläche. Routenziele und Bewohnerbedürfnisse werden
+  nicht erweitert; die Zwischenorte sind zunächst manuell durchlaufene Game-Orte.
+- **TESTED BEHAVIOR:** Neue Tests prüfen Hin-/Rückrouten, Brücken-Touchprojektion,
+  trockenen Brückenboden, Bilddimensionen, stabile alte Ortsnummern und Nahtverlauf.
+  Gesamter Kotlin-/CI-Stand wird im Pull Request dokumentiert; Vorschau mit echter
+  Kotlin-Bewegung und Kamera, keine APK-Aufnahme.
+- **Grenzen:** Telefonprüfung von Touch, GPU, Speicher und visueller Wirkung steht aus.
+  Die Desktop-Vorschau prüft die Anschlüsse in Bewegung; die generierten Außenränder
+  sind keine pixelidentischen Kopien und werden deshalb weich in die Basisbilder eingebettet.
+- **Migration/Rücksetzung:** Keine Room-Migration. Alte IDs unverändert, neue Namen im
+  bestehenden Codec. Rücknahme dieses Schnitts entfernt die drei Orte und ihre Assets;
+  ältere Clients behandeln unbekannte neue Ortsnamen über ihren vorhandenen Rückfall.

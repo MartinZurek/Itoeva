@@ -42,8 +42,9 @@ object PlayMap {
             Region.HOME
         Place.STREET, Place.SHOP, Place.CITY, Place.WORK, Place.CAFE, Place.ARCADE -> Region.TOWN
         Place.PARK, Place.SPORT, Place.POND, Place.MEADOW, Place.FOREST -> Region.GREEN
-        Place.PLAINS, Place.BEACH, Place.SWAMP, Place.JUNGLE, Place.MOUNTAINS, Place.GROTTO, Place.CAMP ->
+        Place.PLAINS, Place.BEACH, Place.SWAMP, Place.JUNGLE, Place.MOUNTAINS, Place.GROTTO, Place.CAMP, Place.MOUNTAIN_PASS ->
             Region.WILD
+        Place.VILLAGE_EDGE, Place.COAST_PATH -> Region.GREEN
     }
 
     private val ROOMS = listOf(
@@ -87,6 +88,13 @@ object PlayMap {
         add(Place.MOUNTAINS to Place.CAMP)
         add(Place.FOREST to Place.CAMP)
         add(Place.PLAINS to Place.CAMP)
+        // Die Game-Zwischenorte bleiben auch ausserhalb des Game-Clients erreichbar.
+        add(Place.JUNGLE to Place.COAST_PATH)
+        add(Place.COAST_PATH to Place.STREET)
+        add(Place.FOREST to Place.VILLAGE_EDGE)
+        add(Place.VILLAGE_EDGE to Place.CITY)
+        add(Place.MOUNTAINS to Place.MOUNTAIN_PASS)
+        add(Place.MOUNTAIN_PASS to Place.CAMP)
     }
 
     private val NEIGHBORS: Map<Place, List<Place>> = Place.entries.associateWith { place ->

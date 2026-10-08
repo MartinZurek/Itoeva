@@ -7,6 +7,54 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GameWorldTest {
+    @Test fun `Zwischenorte ersetzen genau die drei abrupten Landschaftsspruenge`() {
+        for ((from, via, to) in listOf(
+            Triple(Place.JUNGLE, Place.COAST_PATH, Place.STREET),
+            Triple(Place.FOREST, Place.VILLAGE_EDGE, Place.CITY),
+            Triple(Place.MOUNTAINS, Place.MOUNTAIN_PASS, Place.CAMP))) {
+            assertEquals(listOf(via, to), GameWorld.route(from, to))
+            assertEquals(listOf(via, from), GameWorld.route(to, from))
+            assertFalse(to in GameWorld.neighbors(from))
+            assertTrue(GameWorld.region(via)!!.section >= 960f)
+            assertTrue(PlayScene.isOutdoors(via))
+        }
+        assertEquals(24, Place.CAMP.ordinal)
+        assertEquals(28, Place.entries.size)
+    }
+    @Test fun `die Bruecke fuehrt ueber dem Bach mit umkehrbarer Touchprojektion`() {
+        val scene = GameWorld.scene(Place.COAST_PATH)!!
+        for (x in listOf(0f, .12f, .3f, .43f, .58f, .78f, 1f)) for (depth in listOf(0f,.5f,1f)) {
+            val pos = Pos(x,depth); val feet = GameScenes.feet(scene,pos)
+            val roundtrip = GameScenes.posAt(scene,feet.first,feet.second)
+            assertEquals(pos.x,roundtrip.x,.0001f); assertEquals(pos.depth,roundtrip.depth,.0001f)
+            assertEquals(GameEnvironment.Material.STONE,GameWorld.material(scene,feet.first,feet.second))
+        }
+        assertTrue(GameScenes.feet(scene,Pos(.43f,1f)).second < 450f)
+        assertEquals(0f,GameWorld.wetness(scene,Pos(.43f,1f)),0f)
+    }
+    @Test fun `alle sieben Bilder sind vorhanden mit passender Perspektive und Texturgroesse`() {
+        val root = listOf(java.io.File("src/game/assets"), java.io.File("app-sim/src/game/assets")).first { it.isDirectory }
+        for (region in GameWorld.regions) java.io.DataInputStream(java.io.File(root,region.asset).inputStream()).use { png ->
+            png.skipBytes(16); val width=png.readInt(); val height=png.readInt()
+            assertEquals(region.width/GameWorld.HEIGHT,width.toFloat()/height,.001f)
+            assertTrue(width <= 4096 && height <= 4096)
+        }
+        for (seam in GameWorld.seams) java.io.DataInputStream(java.io.File(root,seam.asset).inputStream()).use { png ->
+            png.skipBytes(16); val width=png.readInt(); val height=png.readInt()
+            assertEquals(2f*GameWorld.SEAM_HALF/GameWorld.HEIGHT,width.toFloat()/height,.001f)
+            assertTrue(width <= 4096 && height <= 4096)
+        }
+        assertEquals(6,GameWorld.seams.size)
+        assertEquals(13440f,GameWorld.totalWidth,0f)
+    }
+    @Test fun `die Nahtkorrektur endet ohne Farbsprung und bleibt ortsfest`() {
+        assertEquals(0f,GameWorld.seamAlpha(-GameWorld.SEAM_HALF),0f)
+        assertEquals(0f,GameWorld.seamAlpha(GameWorld.SEAM_HALF),0f)
+        assertEquals(1f,GameWorld.seamAlpha(0f),0f)
+        val alphas=(-480..0).map { GameWorld.seamAlpha(it.toFloat()) }
+        assertTrue(alphas.zipWithNext().all { (a,b) -> b >= a && b-a < .04f })
+        for (seam in GameWorld.seams) assertEquals(GameWorld.origin(seam.right.places.first()),seam.x,0f)
+    }
     @Test fun `beim Bewohnerwechsel gibt es genau eine sichtbare Identitaet`() {
         val profile = LivingResidents.all.first()
         val snapshot = ResidentSnapshot(profile.profileId, profile.role, profile.species, Place.PARK,

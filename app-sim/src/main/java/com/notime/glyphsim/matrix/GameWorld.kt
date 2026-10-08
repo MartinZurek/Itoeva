@@ -13,21 +13,34 @@ object GameWorld {
     const val WIDTH = 1920f
     const val HEIGHT = 640f
     const val SECTION = 480f
-    data class Region(val asset: String, val places: List<Place>) {
-        val width get() = WIDTH
+    data class Region(val asset: String, val places: List<Place>, val width: Float = WIDTH) {
         val section get() = width / places.size
     }
     val regions = listOf(
         Region("world/coast.png", listOf(Place.POND, Place.BEACH, Place.SWAMP, Place.JUNGLE)),
+        Region("world/coast-path.png", listOf(Place.COAST_PATH)),
         Region(ASSET, listOf(Place.STREET, Place.PARK, Place.MEADOW, Place.FOREST)),
+        Region("world/village-edge.png", listOf(Place.VILLAGE_EDGE)),
         Region("world/uplands.png", listOf(Place.CITY, Place.SPORT, Place.PLAINS, Place.MOUNTAINS)),
+        Region("world/mountain-pass.png", listOf(Place.MOUNTAIN_PASS)),
         Region("world/expedition.png", listOf(Place.CAMP, Place.GROTTO)))
+    val transitionPlaces = setOf(Place.COAST_PATH, Place.VILLAGE_EDGE, Place.MOUNTAIN_PASS)
     val places = regions.flatMap { it.places }
     val home = listOf(Place.BEDROOM, Place.BATH, Place.DESK, Place.NOOK, Place.LIVING, Place.KITCHEN, Place.CRAFT)
     fun region(place: Place) = regions.firstOrNull { place in it.places }
-    const val CAMERA_KEY = "mainland-panorama-v2"
-    val totalWidth get() = regions.size * WIDTH
-    fun regionOrigin(region: Region) = regions.indexOf(region) * WIDTH
+    const val CAMERA_KEY = "mainland-panorama-v3"
+    val totalWidth get() = regions.sumOf { it.width.toDouble() }.toFloat()
+    fun regionOrigin(region: Region) = regions.take(regions.indexOf(region)).sumOf { it.width.toDouble() }.toFloat()
+    /** Nachgemalte Anschluesse erhalten beide Nachbarbilder und ihre Weltanker. */
+    data class Seam(val left: Region, val right: Region, val x: Float, val asset: String)
+    val seams by lazy { regions.zipWithNext().mapIndexed { i, (a, b) ->
+        Seam(a, b, regionOrigin(b), "world/seams/$i.png") } }
+    const val SEAM_HALF = 480f
+    const val SEAM_FEATHER = 128f
+    fun seamAlpha(offset: Float): Float {
+        val t = ((SEAM_HALF - abs(offset)) / SEAM_FEATHER).coerceIn(0f, 1f)
+        return t * t * (3f - 2f * t)
+    }
     fun horizontalScale(place: Place) = region(place)?.let { SECTION / it.section } ?: 1f
     fun visiblePlaces(scene: GameScenes.Scene) = if (isWorld(scene)) places else listOf(scene.place)
     fun contains(place: Place) = region(place) != null
@@ -105,7 +118,15 @@ object GameWorld {
                 val factor = r.section / SECTION
                 val left = if (first) 65f * factor else 0f; val right = if (last) r.section - 65f * factor else r.section
                 val scaledSpots = spots.map { it.copy(hit = it.hit.copy(x0 = it.hit.x0 * factor, x1 = it.hit.x1 * factor), standX = it.standX * factor) }
-                GameScenes.Scene(place, r.asset, 450f, 625f, left, right, left, right, 65f, 108f, scaledSpots, exits(place))
+                GameScenes.Scene(place, r.asset, 450f, 625f, left, right, left, right, 65f, 108f, scaledSpots, exits(place),
+                    walkBand = if (place == Place.COAST_PATH) listOf(
+                        GameScenes.WalkBand(0f, 450f, 625f),
+                        GameScenes.WalkBand(.12f, 450f, 510f),
+                        GameScenes.WalkBand(.30f, 435f, 478f),
+                        GameScenes.WalkBand(.43f, 408f, 449f),
+                        GameScenes.WalkBand(.58f, 435f, 485f),
+                        GameScenes.WalkBand(.78f, 450f, 535f),
+                        GameScenes.WalkBand(1f, 450f, 625f)) else emptyList())
             } else {
                 val original = GameInteriorCatalog.scenes.getValue(place)
                 original.copy(exits = exits(place), spots = original.spots.filter { it.station != Station.DOOR }, door = null)
@@ -164,7 +185,7 @@ object GameWorld {
             }
         }
         return when (scene.place) {
-            Place.CITY, Place.STREET, Place.GROTTO -> GameEnvironment.Material.STONE
+            Place.CITY, Place.STREET, Place.GROTTO, Place.COAST_PATH -> GameEnvironment.Material.STONE
             Place.CAMP -> GameEnvironment.Material.WOOD
             else -> GameEnvironment.Material.GRASS
         }

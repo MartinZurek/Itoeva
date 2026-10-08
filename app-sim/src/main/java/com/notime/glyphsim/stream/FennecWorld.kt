@@ -44,6 +44,9 @@ internal object FennecWorld {
             Place.PLAINS -> "Plains" to "Ebene"
             Place.GROTTO -> "Grotto" to "Grotte"
             Place.CAMP -> "Camp" to "Lager"
+            Place.COAST_PATH -> "Coastal path" to "Küstenweg"
+            Place.VILLAGE_EDGE -> "Village edge" to "Dorfrand"
+            Place.MOUNTAIN_PASS -> "Mountain pass" to "Bergpass"
         }
         return if (german) names.second else names.first
     }

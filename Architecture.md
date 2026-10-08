@@ -521,3 +521,17 @@ Panorama steht hinter allen Abschnitten. Der alte `GameScenes`-Katalog bleibt un
 die lokale Position umgesetzt. Population-Snapshots bleiben die eine Bewohnerquelle, ein
 profilbezogener Filter verhindert Doppelbilder beim Ortswechsel. Die neue Game-Karte folgt den
 Game-Ausgaengen. Test- und Ruecksetzvertrag: `docs/itoeva2-continuous-world.md`.
+
+
+### Begehbare Zwischenorte (08.10.2026)
+
+`GameWorld` ergänzt Küstenweg, Dorfrand und Bergpass zwischen den vier bisherigen
+Panoramen. Die drei `Place`-Werte stehen am Enum-Ende; bestehende IDs bleiben stabil.
+Die Weltprojektion summiert Regionsbreiten, Karte/Routen enthalten die Zwischenorte.
+Der Küstenweg besitzt ein `GameScenes.walkBand`: Füße und Touch-Umkehrprojektion
+folgen derselben Brückenfläche. Leere Profile behalten die bisherige Geometrie.
+Sechs nachgemalte Anschlussbilder überdecken je 960 Weltpixel rund um die Bildnähte.
+Nur ihre äußeren 128 Weltpixel laufen in die ursprünglichen Panoramen aus; Kamera und
+Boden bleiben ortsfest. Sieben Panoramen und sechs Anschlussbilder werden gemeinsam
+geladen (rund 78 MiB dekodiert insgesamt, etwa 54 MiB mehr als vorher).
+Android- und GPU-Abnahme sind getrennt von den reinen Kotlin-Tests.

@@ -33,7 +33,7 @@ internal fun rememberGameSceneImages(enabled: Boolean): Map<String, ImageBitmap?
     val assets = LocalContext.current.assets
     return remember(assets, enabled) {
         if (!enabled) emptyMap() else
-            (GameWorld.regions.map { it.asset } + com.notime.glyphsim.matrix.GameInteriorCatalog.scenes.values.map { it.asset })
+            (GameWorld.regions.map { it.asset } + GameWorld.seams.map { it.asset } + com.notime.glyphsim.matrix.GameInteriorCatalog.scenes.values.map { it.asset })
                 .distinct().associateWith { asset -> runCatching {
                     assets.open(asset).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
                 }.getOrNull() }

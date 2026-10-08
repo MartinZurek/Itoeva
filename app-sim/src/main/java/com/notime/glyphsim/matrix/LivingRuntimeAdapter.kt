@@ -63,6 +63,9 @@ object LivingRuntimeAdapter {
         PlayScene.Place.PLAINS,
         PlayScene.Place.BEACH,
         PlayScene.Place.GROTTO,
+        PlayScene.Place.COAST_PATH,
+        PlayScene.Place.VILLAGE_EDGE,
+        PlayScene.Place.MOUNTAIN_PASS,
         PlayScene.Place.CAMP,
         PlayScene.Place.CAFE -> LivingSite.OUTSIDE
         PlayScene.Place.BEDROOM,

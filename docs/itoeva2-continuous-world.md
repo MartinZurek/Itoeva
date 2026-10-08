@@ -3,9 +3,9 @@
 Stand 08.10.2026. Dieser Schnitt führt die native Kotlin-/Compose-Welt fort.
 
 Vom Wohnzimmer führt der seitliche Ausgang zur Straße. Rechts folgen Park, Wiese,
-Wald, Marktplatz, Sportplatz, Ebene, Berge, Lager und Höhle. Links folgen Dschungel,
-Feuchtgebiet, Strand und Teich. Die 14 Außenorte liegen auf einer gemeinsamen,
-7680 × 640 großen Fläche mit derselben Bodenprojektion und Kamera. Die vier gemalten
+Wald, Dorfrand mit Obstgarten, Marktplatz, Sportplatz, Ebene, Berge, Bergpass, Lager und Höhle. Links folgen Küstenweg, Dschungel,
+Feuchtgebiet, Strand und Teich. Die 17 Außenorte liegen auf einer gemeinsamen,
+13440 × 640 großen Fläche mit derselben Bodenprojektion und Kamera. Die sieben gemalten
 Panoramen bleiben gemeinsam geladen; Ortsgrenzen lösen keine Bildladung, Blende oder
 neue Laufphase aus. Jeder Abschnitt hat denselben Hin- und Rückweg.
 
@@ -39,18 +39,26 @@ Routenvorschau lesen dieselben tatsächlichen Durchgänge wie die Steuerung.
 
 ## Prüfung und offene Abnahme
 
-Am 08.10.2026 bestehen lokal **940 Kotlin-Tests**. Die Teststrecke prüft alle 25 Hin- und Rückwege, identische Fußpunkte und
+Am 08.10.2026 bestehen lokal **944 Kotlin-Tests**. Die Teststrecke prüft alle 28 Orte mit Hin- und Rückwegen, identische Fußpunkte und
 Figurgrößen an sämtlichen Außenrändern, Erhalt von Tempo und Laufphase, Kamera und
 Touchprojektion, Tür-Gegenstellen, Materialkontakte und Wasserzoom. Der letzte
 vollständige Stand wird im Pull Request festgehalten; Android-Kompilierung und
 Geräteprüfung sind zusätzliche, getrennte Prüfungen.
 
-`tools/world-art/preview_geography.kt` zeigt alle 25 Orte. `preview_walk.kt` rendert
-mit der echten Kotlin-Physik Hin- und Rückbewegung über die drei Panoramagrenzen und
+`tools/world-art/preview_geography.kt` zeigt alle 28 Orte. `preview_walk.kt` rendert
+mit der echten Kotlin-Physik Hin- und Rückbewegung über die sechs Panoramagrenzen und
 vom Strand ins Wasser. Die Vorschau ist eine Desktop-Darstellung, keine APK-Aufnahme.
 
-Die vier Bilder sind noch eigenständige Illustrationen: Ihre sichtbaren Bildnähte
-brauchen gestalterische Nacharbeit. Weitere Möbelsilhouetten, präzise Anker aller
+Die drei bislang abrupten Landschaftssprünge haben eigene Zwischenorte: Küstenweg mit
+Bachbrücke, Dorfrand mit Obstgarten und Bergpass zum geschützten Lager. Die Bilder
+übernehmen Vegetation, Horizont, Licht und Wegmaterial ihrer jeweiligen Nachbarn.
+Sechs nachgemalte Anschlussbilder (`world/seams/0.png` bis `5.png`) verbinden die
+beiden Landschaften auf jeweils 960 Weltpixeln. Die äußeren 128 Weltpixel laufen
+weich in die Basisbilder aus. Alle Bilder bleiben an ihrer Weltposition verankert;
+Türen, Fußanker und Kamera verwenden weiter dieselbe Geometrie.
+Das Bodenprofil des Küstenwegs verengt und hebt die Gehfläche über dem Brückenbogen;
+Touchprojektion und Füße verwenden dieselbe Geometrie. Die sechs Anschlüsse werden
+in der Desktop-Bewegungsvorschau geprüft. Weitere Möbelsilhouetten, präzise Anker aller
 kleinen Innenräume und die Touch-/Speicher-/GPU-Abnahme am Telefon stehen aus.
 Die durchgehende Bewegung ist bereits unabhängig von diesen Bildnähten organisiert.
 Gebäudeeintritte behalten einen bewussten Raumwechsel mit Überblendung.

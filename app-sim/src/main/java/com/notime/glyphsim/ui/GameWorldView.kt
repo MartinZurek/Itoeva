@@ -33,6 +33,32 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
                 IntSize((region.width*fit.scale).roundToInt(), (GameWorld.HEIGHT*fit.scale).roundToInt()),
                 alpha = fade.coerceIn(0f,1f), filterQuality = FilterQuality.Low)
         }
+        // Die Naht selbst ist nachgemalt; nur ihre unveraenderten Aussenraender laufen weich aus.
+        for (seam in GameWorld.seams) {
+            val start = seam.x - GameWorld.SEAM_HALF
+            val end = seam.x + GameWorld.SEAM_HALF
+            if (fit.left + end * fit.scale < 0f || fit.left + start * fit.scale > size.width) continue
+            val patch = images[seam.asset] ?: continue
+            fun strip(offset: Float, width: Float, alpha: Float) {
+                val sx0 = ((offset + GameWorld.SEAM_HALF) / (2f * GameWorld.SEAM_HALF) * patch.width).roundToInt()
+                val sx1 = ((offset + width + GameWorld.SEAM_HALF) / (2f * GameWorld.SEAM_HALF) * patch.width).roundToInt()
+                val x0 = (fit.left + (seam.x + offset) * fit.scale).roundToInt()
+                val x1 = (fit.left + (seam.x + offset + width) * fit.scale).roundToInt()
+                if (x1 <= x0 || sx1 <= sx0) return
+                drawImage(patch, IntOffset(sx0, 0), IntSize(sx1 - sx0, patch.height),
+                    IntOffset(x0, fit.top.roundToInt()), IntSize(x1 - x0, (GameWorld.HEIGHT * fit.scale).roundToInt()),
+                    alpha = alpha * fade.coerceIn(0f, 1f), filterQuality = FilterQuality.Low)
+            }
+            val edge = GameWorld.SEAM_HALF - GameWorld.SEAM_FEATHER
+            strip(-edge, 2f * edge, 1f)
+            repeat(16) { i ->
+                val width = GameWorld.SEAM_FEATHER / 16f
+                val a = -GameWorld.SEAM_HALF + i * width
+                val b = edge + i * width
+                strip(a, width, GameWorld.seamAlpha(a + width / 2f))
+                strip(b, width, GameWorld.seamAlpha(b + width / 2f))
+            }
+        }
         val dark = GameSceneLighting.darkness(scene, minute)
         val dusk = GameSceneLighting.dusk(scene, minute)
         if (dusk > 0f) drawRect(Color(0xFFFF9C57).copy(alpha = dusk * .12f * fade))

@@ -144,3 +144,17 @@ Originalprompt in `source/continuous-world-prompt.md`. Keine Retusche nach der E
 `preview_world.kt` rendert die echte Kotlin-Kamera und Bewegung in
 `continuous-world-preview.mp4`, mit dem aktuellen Fennec. Das ist keine APK-Aufnahme.
 Aufruf, Geraetepruefung und naechste Bildpakete: `docs/itoeva2-continuous-world.md`.
+
+
+## Zwischenorte (08.10.2026)
+
+`world/coast-path.png`, `world/village-edge.png` und `world/mountain-pass.png`
+verbinden die vier bestehenden Panoramen. Erzeugt mit eingebautem Imagegen,
+Original-PNGs unverändert; Referenzen und Generierungsbriefs stehen in
+`source/landscape-transitions-prompt.md`. Der Küstenweg hat einen tatsächlich
+begehbaren Brückenbogen in `GameScenes.walkBand`, keine Wasserfläche unter den Füßen.
+`world/seams/0.png` bis `5.png` sind mit Imagegen nachgemalte Anschlüsse, jeweils
+1536 × 1024 unverändert übernommen. Sie liegen über den letzten/ersten 480 Weltpixeln
+benachbarter Panoramen; nur die äußeren 128 Weltpixel laufen weich aus.
+`preview_walk.kt` zeigt alle sechs Anschlüsse mit derselben Projektion und Randkurve
+wie der Compose-Renderer. `coherent-world-preview.mp4` ist eine Desktop-Vorschau.
