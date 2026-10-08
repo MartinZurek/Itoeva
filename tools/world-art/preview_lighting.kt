@@ -96,6 +96,9 @@ fun main(args: Array<String>) {
             val span = GameWorld.region(place2)!!.section
             repeat(32) { i ->
                 val x = (i + .5f) * span / 32f
+                val dusk = if (old) OldGameSceneLighting.dusk(scene, minute) else GameSceneLighting.duskAt(section, x, minute)
+                g.color = color(0xFF9C57, dusk * .12f)
+                g.fill(Rectangle2D.Float(start + i * span / 32f, 0f, span / 32f + 1f, 640f))
                 val dark = GameSceneLighting.darknessAt(section, x, minute)
                 g.color = color(0x0A1030, dark)
                 g.fill(Rectangle2D.Float(start + i * span / 32f, 0f, span / 32f + 1f, 640f))

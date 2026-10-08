@@ -47,17 +47,20 @@ object GameSceneLighting {
         return if (PlayScene.isOutdoors(scene.place) && scene.place != Place.GROTTO) MAX_DARK * night
             else .1f + .32f * night
     }
-    /** Dieselbe stueckweise lineare Abdunkelung wie das durchgehende Panorama. */
-    fun darknessAt(scene: GameScenes.Scene, x: Float, minute: Int): Float {
-        if (!GameWorld.isWorld(scene)) return darkness(scene, minute)
+    /** Dieselbe stueckweise lineare Projektion wie die beiden Panorama-Farbebenen. */
+    private fun spatial(scene: GameScenes.Scene, x: Float, minute: Int,
+        value: (GameScenes.Scene, Int) -> Float): Float {
+        if (!GameWorld.isWorld(scene)) return value(scene, minute)
         val i = GameWorld.places.indexOf(scene.place)
-        val here = darkness(scene, minute)
-        val before = darkness(GameWorld.scene(GameWorld.places.getOrElse(i - 1) { scene.place })!!, minute)
-        val after = darkness(GameWorld.scene(GameWorld.places.getOrElse(i + 1) { scene.place })!!, minute)
+        val here = value(scene, minute)
+        val before = value(GameWorld.scene(GameWorld.places.getOrElse(i - 1) { scene.place })!!, minute)
+        val after = value(GameWorld.scene(GameWorld.places.getOrElse(i + 1) { scene.place })!!, minute)
         val t = (x / GameWorld.region(scene.place)!!.section).coerceIn(0f, 1f)
         return if (t < .5f) (here + before) * .5f + (here - before) * t
             else here + (after - here) * (t - .5f)
     }
+    fun darknessAt(scene: GameScenes.Scene, x: Float, minute: Int) = spatial(scene, x, minute, ::darkness)
+    fun duskAt(scene: GameScenes.Scene, x: Float, minute: Int) = spatial(scene, x, minute, ::dusk)
     fun dusk(scene: GameScenes.Scene, minuteOfDay: Int): Float {
         if (!PlayScene.isOutdoors(scene.place) || scene.place == Place.GROTTO) return 0f
         val day = daylight(minuteOfDay)

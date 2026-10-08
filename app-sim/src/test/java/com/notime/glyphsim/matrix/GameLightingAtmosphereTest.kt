@@ -45,6 +45,8 @@ class GameLightingAtmosphereTest {
             for (species in AvatarSpecies.entries) {
                 val sa = scene(a); val sb = scene(b)
                 val pa = Pos(1f, .6f); val pb = Pos(0f, .6f)
+                assertEquals(GameSceneLighting.duskAt(sa, GameWorld.region(a)!!.section, minute),
+                    GameSceneLighting.duskAt(sb, 0f, minute), .001f)
                 val ca = GameSceneLighting.character(sa, pa, species, minute, lights(a, minute))
                 val cb = GameSceneLighting.character(sb, pb, species, minute, lights(b, minute))
                 val aa = ca.at(.25f, .75f); val bb = cb.at(.25f, .75f)

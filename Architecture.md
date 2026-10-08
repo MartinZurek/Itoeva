@@ -557,8 +557,7 @@ Pruefung, Bilder und Fortsetzung: docs/itoeva2-character-scale.md.
 GameLightingCatalog haelt die normierten Fenster-/Lampenanker der elf Innenbilder.
 GameSceneLighting liefert in derselben Geometrie absolute Aussenquellen, lokale
 Fenster-/Feuer-/Kristalllichter, weiche gerichtete Schatten und vier Farbwerte pro
-Figur. Innenraum-Moebel begrenzen niedrige Strahlen. Aussenabdunkelung und Sonnen-
-filter am Hoehleneintritt werden raeumlich interpoliert, nicht am Ortsnamen geschaltet.
+Figur. Innenraum-Moebel begrenzen niedrige Strahlen. Abdunkelung, Daemmerungsfarbton und Sonnenfilter am Hoehleneintritt werden raeumlich interpoliert, nicht am Ortsnamen geschaltet.
 GameLightingView zeichnet Strahlen, Nachtfenster und Schatten; alle Figuren
 verwenden dieselbe Rechnung und ihre eigene Fuss-/Plattformprojektion.
 

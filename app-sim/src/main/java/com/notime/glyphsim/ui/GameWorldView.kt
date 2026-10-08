@@ -68,8 +68,6 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
             paintAtmosphere(section, sectionFit, clock, minute, fade, false)
         }
         val dark = GameSceneLighting.darkness(scene, minute)
-        val dusk = GameSceneLighting.dusk(scene, minute)
-        if (dusk > 0f) drawRect(Color(0xFFFF9C57).copy(alpha = dusk * .12f * fade))
         // Die Hoehle bleibt dunkel, auch wenn der aktive Ortsname noch Lager ist.
         val visible = GameWorld.visiblePlaces(scene)
 
@@ -80,6 +78,14 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
                 val after = GameSceneLighting.darkness(GameWorld.scene(visible.getOrElse(index + 1) { place })!!, minute)
                 val sectionWidth = GameWorld.region(place)!!.section
                 val x = GameWorld.origin(place)
+                val duskStart = GameSceneLighting.duskAt(GameWorld.scene(place)!!, 0f, minute)
+                val duskMiddle = GameSceneLighting.duskAt(GameWorld.scene(place)!!, sectionWidth / 2f, minute)
+                val duskEnd = GameSceneLighting.duskAt(GameWorld.scene(place)!!, sectionWidth, minute)
+                drawRect(Brush.horizontalGradient(listOf(
+                    Color(0xFFFF9C57).copy(alpha = duskStart * .12f * fade),
+                    Color(0xFFFF9C57).copy(alpha = duskMiddle * .12f * fade),
+                    Color(0xFFFF9C57).copy(alpha = duskEnd * .12f * fade)), x, x + sectionWidth),
+                    Offset(x, 0f), Size(sectionWidth, GameWorld.height(scene)))
                 drawRect(Brush.horizontalGradient(listOf(
                     Color(0xFF0A1030).copy(alpha = (here + before) * .5f * fade),
                     Color(0xFF0A1030).copy(alpha = here * fade),

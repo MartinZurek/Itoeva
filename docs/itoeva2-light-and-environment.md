@@ -16,7 +16,8 @@ Merge und APK erstellt Martin anschliessend mit Cloud Code.
    aller elf Innenbilder. Quellen besitzen Bildposition, Bodenanker und Montagehoehe.
    Sonnenrichtung wandert ueber den Tag. Aussenlicht verwendet absolute Weltanker;
    benachbarte Ortsnamen erzeugen weder doppelte Quellen noch einen neuen Lichttakt.
-   Der Hoehleneingang filtert die Sonne raeumlich. Fenster erhellen tagsueber die
+   Der Hoehleneingang filtert die Sonne raeumlich. Auch der Daemmerungsfarbton
+   wird entlang des Panoramas interpoliert und springt nicht am Ortsnamen. Fenster erhellen tagsueber die
    Bodenflaeche; nachts werden ihre Scheiben kuehl abgedunkelt. Die schaltbare
    Wohnzimmerlampe erlischt tatsaechlich; andere gemalte Raumleuchten bleiben eigene
    Quellen. Feuer flackert warm, Kristalle leuchten kuehl.
