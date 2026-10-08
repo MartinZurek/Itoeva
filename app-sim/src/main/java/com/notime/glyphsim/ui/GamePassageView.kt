@@ -40,17 +40,16 @@ internal fun GamePassageView(scene: GameScenes.Scene, camera: GameCamera.State, 
                     val active=door?.takeIf { it.passage.from==passage.from &&
                         GameDoors.aperture(it.passage.from,it.passage.to)==aperture }
                     val opening=GameDoors.opening(active,active?.passage ?: passage,clock)
-                    if(opening>0f) {
+                    val sample=if(opening>0f) GameDoors.sample(passage) else null
+                    if(opening>0f && sample!=null) {
                         val (ax,ay)=fit.toScreen(aperture.x0,aperture.y0)
                         val width=(aperture.x1-aperture.x0)*scale
                         val height=(aperture.y1-aperture.y0)*scale
                         drawRect(Color(0xFF17201C).copy(alpha=fade),Offset(ax,ay),Size(width,height))
                         val leafWidth=(width*cos(opening*1.48f)).coerceAtLeast(scale)
-                        images[section.asset]?.let { image ->
-                            val region=GameWorld.region(place)
-                            val offset=if(region!=null) GameWorld.origin(place)-GameWorld.regionOrigin(region) else 0f
-                            val sx=image.width/(region?.width ?: 480f); val sy=image.height/GameWorld.height(section)
-                            val sourceX=((aperture.x0+offset)*sx).roundToInt().coerceIn(0,image.width-1)
+                        images[sample.asset]?.let { image ->
+                            val sx=image.width/sample.width; val sy=image.height/sample.height
+                            val sourceX=((aperture.x0+sample.offset)*sx).roundToInt().coerceIn(0,image.width-1)
                             val sourceY=(aperture.y0*sy).roundToInt().coerceIn(0,image.height-1)
                             drawImage(image,IntOffset(sourceX,sourceY),IntSize(
                                 ((aperture.x1-aperture.x0)*sx).roundToInt().coerceIn(1,image.width-sourceX),

@@ -44,6 +44,12 @@ object GameDoors {
     fun choices(passage: GameWorld.Passage) = GameWorld.passages(passage.from).filter {
         it.door && aperture(it.from,it.to)==aperture(passage.from,passage.to)
     }
+    /** Die bewegte Tuer nimmt dieselben Pixel wie die sichtbare Kulisse, auch an Weltnaehten. */
+    fun sample(passage: GameWorld.Passage): GameAtmosphere.Sample? {
+        val box=aperture(passage.from,passage.to)
+        return GameAtmosphere.sample(GameWorld.scene(passage.from)!!,
+            GameAtmosphere.Patch(box.x0,box.y0,box.x1-box.x0,box.y1-box.y0,0))
+    }
     fun anchor(from: Place,to: Place): PlayControl.Pos {
         val box=aperture(from,to)
         val scene=if(GameWorld.contains(from)) null else GameInteriorCatalog.scenes.getValue(from)

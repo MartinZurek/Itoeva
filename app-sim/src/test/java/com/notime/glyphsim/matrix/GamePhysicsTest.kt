@@ -6,6 +6,21 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GamePhysicsTest {
+    @Test fun `Alle Tuerblaetter lesen das sichtbare Anschlussbild und einen gueltigen Ausschnitt`() {
+        for(passage in Place.entries.flatMap { GameWorld.passages(it) }.filter { it.door }) {
+            val sample=GameDoors.sample(passage)!!
+            val box=GameDoors.aperture(passage.from,passage.to)
+            assertTrue(box.x0+sample.offset>=0f)
+            assertTrue(box.x1+sample.offset<=sample.width)
+            assertTrue(box.y0>=0f && box.y1<=sample.height)
+            if(GameWorld.contains(passage.from)) {
+                val seam=GameWorld.seams.first { it.asset==sample.asset }
+                assertEquals(GameWorld.origin(passage.from)+box.x0-(seam.x-GameWorld.SEAM_HALF),
+                    box.x0+sample.offset,.001f)
+                assertNotEquals(GameWorld.scene(passage.from)!!.asset,sample.asset)
+            } else assertEquals(GameWorld.scene(passage.from)!!.asset,sample.asset)
+        }
+    }
     @Test fun `Automatischer Anlauf folgt dem Brueckenboden statt durch den Fluss zu schneiden`() {
         val scene=GameWorld.scene(Place.COAST_PATH)!!
         var pos=GameTerrain.clamp(scene,PlayControl.Pos(.04f,.85f))

@@ -6685,7 +6685,7 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Ersetzte Rohbilder werden nicht bis zum Ende festgehalten. GameBreath bleibt lokale,
   ungespeicherte Spielausdauer ohne neue Agentenbedürfnisse oder bestrafende Folgen.
   Keine künstliche Ladepause als Ausdauer. Das rechte Pad erhält stärkere Kontraste.
-- **TESTED BEHAVIOR:** 1.009 reine Kotlin-Tests, darunter 20 neue Fälle für alte Positionen,
+- **TESTED BEHAVIOR:** 1.010 reine Kotlin-Tests, darunter 21 neue Fälle für alte Positionen,
   Außennaht, Wasser/Stege, Wege/Türen/Brückenanlauf, Flugkollision, Kontakte, Ausdauer und Vorladeplan.
   Native Compose-Tests erweitern vorhandene Mehrfingerbedienung um Pad-Sichtbarkeit,
   deckenden Fortschritt/Retry und Pointer-Klicks auf beide Flurziele. Zweite Lesekontrolle
@@ -6701,3 +6701,6 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Übergabe:** docs/itoeva2-world-physics-and-loading.md, preview_physics.kt/.sh, sechs
   Schwimmspezies, sieben Bodenbandbilder und Bewegungsvideo. Basis: main `3b3da11` plus
   Cloud Codes schnelle Rohbildanzeige `b8d4428`.
+  Die automatische PR-Review hat zusätzlich die Außentür-Textur an Weltanschlüssen gefunden:
+  Türblätter verwenden jetzt die sichtbare Nahtquelle statt des verdeckten Grundbilds;
+  eine Regression prüft die Quellkoordinaten aller 22 Türseiten.

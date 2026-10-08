@@ -37,6 +37,8 @@ müssen weiterhin in der APK geprüft werden.
   bewegen sich; Land/Steg bleiben fest. Spieler und Bewohner teilen Zugpose/Wasserlinie;
   echte Bewohnerbewegung erzeugt begrenzte Kontakte. Explizite Übergaben behalten Vorrang.
 - `GameDoors` teilt Bildöffnung, Trefferfläche, Anlaufpunkt und Animationsuhr.
+  Bewegte Türblätter lesen dasselbe sichtbare Anschlussbild wie Wasser-/Stoffausschnitte;
+  alle 22 Türseiten besitzen dafür geprüfte Quellkoordinaten.
   Die Zielauswahl liegt über der Daumensteuerung. Deaktivierte Steuerung hält keinen
   vollflächigen Pointer-Input-Layer fest.
 - Sprungkollision läuft nur im Game-Client über zwölf Wegproben; App 1 behält den bisherigen
@@ -73,7 +75,7 @@ Telefon reproduziert; Sichtbarkeit, Eingabesemantik und Mehrfingerbedienung werd
 
 ## Prüfung und Rückbau
 
-- Reine Kotlin-Suite: 1.009 Tests, darunter 20 neue Physik-/Ladeplan-/Ausdauerregressionen.
+- Reine Kotlin-Suite: 1.010 Tests, darunter 21 neue Physik-/Ladeplan-/Ausdauerregressionen.
   Sie prüfen Außenränder, alte Positionsdaten, Stege, Wasser, Sprungkörper, Raumgrenzen,
   alle 22 Türwege, Kontakte, Zugpose, Material, Ausdauer und Vorladeplan.
 - Native Compose-Tests prüfen Mehrfinger-/Sprung-/Roll-/Halte-/Abbruchbedienung, sichtbares

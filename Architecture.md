@@ -593,6 +593,8 @@ im Game-Client durchlaufene Sprungkollision. GameWater teilt Ufer/Steg-/Felsmate
 einmalig vermessene Wasserausschnitte und die Schwimmpose von Spieler/Bewohnern. Kontakte
 folgen wirklicher Bewegung. GameDoors verbindet gemalte Oeffnung, Treffer, Anlauf und
 420/320-ms-Tuerbewegung; gemeinsame Flurtueren verwenden eine Auswahl oberhalb der Touchsteuerung.
+Bewegte Tuerblaetter teilen mit GameAtmosphere die tatsaechlich sichtbare Bildquelle samt
+Naht-Offset; das verdeckte Regionsbild wird an deckenden Anschluessen nicht eingesetzt.
 
 GameAssetPlan/Loader laden die 24 Welt-/Anschluss-/Innenbilder und sechs Figuren-Sheets vor
 dem ersten sichtbaren Spielrahmen ausserhalb des UI-Threads. GameLoadingScreen ist deckend;
