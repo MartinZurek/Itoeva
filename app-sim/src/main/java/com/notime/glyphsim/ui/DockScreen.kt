@@ -5850,13 +5850,19 @@ fun DockScreen(
                 modifier = Modifier
                     // Hoeher als breit wegen der Kopffreiheit - sonst staucht die feste
                     // Quadratgroesse das Raster und die Figur waere zu klein.
-                    .drawWithContent {
-                        val wet = if (gameMode && gameMovement.height == 0f) GameWorld.scene(gameRenderedPlace)?.let { GameWorld.wetness(it, gamePos) } ?: 0f else 0f
-                        clipRect(bottom = size.height * (1f - wet * AvatarGeometry.SIZE / AvatarGeometry.HEIGHT)) { this@drawWithContent.drawContent() }
-                    }
                     .width(current.sizeDp.dp)
                     .height(current.sizeDp.dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
                     .offset { IntOffset(current.offset.x.roundToInt(), current.offset.y.roundToInt()) }
+                    // Im Wasser verschwindet der untere Teil der Figur. Der Ausschnitt muss NACH
+                    // dem offset stehen: davor laege er an der unverschobenen Stelle oben links,
+                    // und die verschobene Figur waere ganz weggeschnitten (nur der Schatten blieb).
+                    // Nur unten begrenzt - Ohren, Schweif und Sprung duerfen ueber den Rahmen ragen.
+                    .drawWithContent {
+                        val wet = if (gameMode && gameMovement.height == 0f) GameWorld.scene(gameRenderedPlace)?.let { GameWorld.wetness(it, gamePos) } ?: 0f else 0f
+                        if (wet <= 0f) drawContent()
+                        else clipRect(left = -size.width, top = -size.height, right = size.width * 2f,
+                            bottom = size.height * (1f - wet * AvatarGeometry.SIZE / AvatarGeometry.HEIGHT)) { this@drawWithContent.drawContent() }
+                    }
                     .graphicsLayer {
                         if (streamMode) translationY =
                             kotlin.math.sin(streamAcknowledgement.value * kotlin.math.PI).toFloat() *
