@@ -110,7 +110,7 @@ class GameLightingAtmosphereTest {
         assertTrue(airborne.softness > grounded.softness)
     }
     @Test fun `Plattformsupport hebt den Empfaenger bis zur vermessenen Oberkante`() {
-        val room = scene(Place.KITCHEN); val piece = GameFurniture.pieces(room).single()
+        val room = scene(Place.KITCHEN); val piece = GameFurniture.pieces(room).single { it.id == "kitchen-table" }
         val pos = GameScenes.posAt(room, 195f, piece.ground)
         val height = piece.surface(room).heightAt(pos)
         val shadow = GameSceneLighting.shadows(room, pos, lights(Place.KITCHEN), lift = height, receiverHeight = height).first()

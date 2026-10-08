@@ -141,7 +141,7 @@ data class ActionTraits(
             ActionKind.CREATE -> setOf(Trait.CREATIVE)
             ActionKind.SETTLE, ActionKind.TEND_SELF -> setOf(Trait.CALM)
             ActionKind.SHOW_AFFECTION, ActionKind.INVITE_TO_PLAY, ActionKind.RESPOND_TO_INVITE,
-            ActionKind.RECEIVE_RESPONSE, ActionKind.TRAIN_TOGETHER -> setOf(Trait.SOCIAL)
+            ActionKind.RECEIVE_RESPONSE, ActionKind.TRAIN_TOGETHER, ActionKind.GAME_MEET, ActionKind.GAME_GIVE, ActionKind.GAME_WAYMARK -> setOf(Trait.SOCIAL)
             ActionKind.PURSUE_INTEREST, ActionKind.TRAVEL -> emptySet()
         }
 
@@ -409,7 +409,7 @@ object DecisionFeatures {
     fun coreActionOf(kind: ActionKind): com.notime.glyphsim.living.Action = when (kind) {
         ActionKind.TRAVEL -> ActionCatalog.travelTo(LivingSite.OUTSIDE)
         ActionKind.INVITE_TO_PLAY -> ActionCatalog.inviteToPlay(PLACEHOLDER_ID)
-        ActionKind.TRAIN_TOGETHER -> ActionCatalog.trainTogether(PLACEHOLDER_ID)
+        ActionKind.TRAIN_TOGETHER, ActionKind.GAME_MEET, ActionKind.GAME_GIVE, ActionKind.GAME_WAYMARK -> ActionCatalog.trainTogether(PLACEHOLDER_ID)
         ActionKind.RESPOND_TO_INVITE -> ActionCatalog.respondToInvite(
             PLACEHOLDER_ID, setOf(com.notime.glyphsim.living.SymbolicIntent.YES), true
         )
@@ -434,7 +434,7 @@ object DecisionFeatures {
         ActionKind.EXPLORE -> GoalKind.EXPLORE
         ActionKind.SETTLE, ActionKind.TEND_SELF -> GoalKind.SEEK_COMFORT
         ActionKind.SHOW_AFFECTION, ActionKind.INVITE_TO_PLAY, ActionKind.RESPOND_TO_INVITE,
-        ActionKind.RECEIVE_RESPONSE, ActionKind.TRAIN_TOGETHER -> GoalKind.CONNECT_WITH
+        ActionKind.RECEIVE_RESPONSE, ActionKind.TRAIN_TOGETHER, ActionKind.GAME_MEET, ActionKind.GAME_GIVE, ActionKind.GAME_WAYMARK -> GoalKind.CONNECT_WITH
         ActionKind.TRAVEL -> null
     }
 

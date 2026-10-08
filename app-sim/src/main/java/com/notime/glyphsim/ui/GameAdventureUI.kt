@@ -43,6 +43,7 @@ internal fun eventText(event: GameAdventure.Event, de: Boolean): String = when (
     GameAdventure.Event.PLANTED -> if (de) "Im Park wächst nun eine junge Pflanze." else "A young plant now grows in the park."
     GameAdventure.Event.BENCH_REPAIRED -> if (de) "Die Parkbank hat eine neue Verstärkung erhalten." else "The park bench has a new reinforcement."
     GameAdventure.Event.CAMP_REPAIRED -> if (de) "Der Sitzplatz im Lager ist wieder hergerichtet." else "Restored the camp seat."
+    GameAdventure.Event.WAYMARKED -> if (de) "Gemeinsam mit einem Bewohner Holz zu Wegweisern für den Waldweg verarbeitet." else "Worked with a resident to turn wood into forest waymarks."
 }
 
 internal fun residentDialogue(resident: LivingResident, state: GameAdventure.State, known: Boolean, de: Boolean): String {
@@ -64,7 +65,9 @@ internal fun residentDialogue(resident: LivingResident, state: GameAdventure.Sta
         else -> if (de) "Im Park wartet eine Pflanzstelle auf Samen. Im Wald findest du welche und einen alten Wegstein mit Blattzeichen."
             else "There is a planting spot in the park. Find seeds and a leaf-marked waystone in the forest."
     }
-    return greeting + response
+    val goods=GameEncounters.received(state,resident.profileId)
+    val memory=if(goods.isNotEmpty()) (if(de) " Bei mir liegt jetzt: ${gameItemName(goods.last(),true)}." else " I am now holding: ${gameItemName(goods.last(),false)}.") else ""
+    return greeting + response + memory
 }
 
 /** Kleine ortsfeste Requisiten und bleibende Folgen in denselben Koordinaten wie die Figur. */
@@ -75,6 +78,17 @@ internal fun GameAdventureObjects(scene: GameScenes.Scene, pos: PlayControl.Pos,
         val fit = camera?.let { GameCamera.fit(it, scene, size.width, size.height) } ?: GameScenes.fit(scene, size.width, size.height, pos.x, pos.depth)
         val brightness = (1f - GameSceneLighting.darkness(scene, state.minuteOfDay) * .6f)
         withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
+            if (GameAdventure.Event.WAYMARKED in state.events && scene.place in setOf(PlayScene.Place.PARK,PlayScene.Place.FOREST)) {
+                val (sx,sy)=GameScenes.feet(scene,PlayControl.Pos(.88f,.47f))
+                drawLine(Color(0xFF876141),Offset(sx,sy),Offset(sx,sy-29f),3f)
+                val sign=androidx.compose.ui.graphics.Path().apply {
+                    moveTo(sx-14f,sy-27f);lineTo(sx+11f,sy-27f);lineTo(sx+18f,sy-22f)
+                    lineTo(sx+11f,sy-17f);lineTo(sx-14f,sy-17f);close()
+                }
+                drawPath(sign,Color(0xFFB18C55))
+                drawLine(Color(0xFF426B45),Offset(sx-7f,sy-22f),Offset(sx+7f,sy-22f),1.5f)
+                drawLine(Color(0xFF426B45),Offset(sx+2f,sy-25f),Offset(sx+7f,sy-22f),1.5f)
+            }
             for (id in GameAdventure.ObjectId.entries.filter { it.place == scene.place && GameAdventure.visible(state, it) }) {
                 val anchor = GameAdventure.position(scene, id)
                 val (x, y) = GameScenes.feet(scene, anchor)
@@ -128,13 +142,15 @@ internal fun GameAdventureObjects(scene: GameScenes.Scene, pos: PlayControl.Pos,
 @Composable
 internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos, actors: Collection<GameResidents.Actor>,
     phase: Int, minute: Int, modifier: Modifier, camera: GameCamera.State? = null,
-    lampOn: Boolean = false, tvOn: Boolean = false, clock: Long = 0L, weather: PlayWeather = PlayWeather.CLEAR) {
+    lampOn: Boolean = false, tvOn: Boolean = false, clock: Long = 0L, weather: PlayWeather = PlayWeather.CLEAR,
+    received: Map<String,List<PlayEffects.Carried>> = emptyMap(),
+    handoff: Pair<String,CreatureSprites.MotionCue>? = null) {
     val density = LocalDensity.current
     BoxWithConstraints(modifier) {
         val w = with(density) { maxWidth.toPx() }
         val h = with(density) { maxHeight.toPx() }
         val fit = camera?.let { GameCamera.fit(it, scene, w, h) } ?: GameScenes.fit(scene, w, h, host.x, host.depth)
-        for (actor in actors.sortedBy { it.pos.depth }) {
+        for (actor in actors.sortedBy { it.renderPos(scene, clock).depth }) {
             val species = actor.snapshot.species
             val task = LivingPopulationLayout.poseFor(actor.snapshot)
             val sequence = remember(species, task, actor.moving) {
@@ -145,30 +161,40 @@ internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos,
                 }
             }
             val frame = sequence.frames[Math.floorMod(phase + species.ordinal * 3, sequence.frames.size)]
-            val (x, y) = GameScenes.feet(scene, actor.pos)
-            val (sx, sy) = fit.toScreen(x, y)
-            val px = GameCharacterScale.layoutWidth(scene, actor.pos, species) * fit.scale
+            val seat = actor.seatFrame(scene, clock)
+            val renderPos = seat?.pos ?: actor.pos
+            val (x, y) = GameScenes.feet(scene, renderPos)
+            val (sx, sy) = fit.toScreen(x, y - (seat?.lift ?: 0f))
+            val px = GameCharacterScale.layoutWidth(scene, renderPos, species) * fit.scale
             if (sx + px < 0f || sx - px > w || sy + px < 0f || sy - px > h) continue
             val dp = with(density) { px.toDp() }
             val offset = Offset(sx - px / 2f, GameCharacterScale.layoutTop(sy, px, species))
             AvatarSpriteView(frame = frame, species = species, showBackground = false,
                 brightnessScale = 1f,
-                gameLight = GameSceneLighting.character(scene, actor.pos, species, minute,
-                    GameSceneLighting.sources(scene, minute, lampOn, tvOn, (clock / 200L).toInt())),
+                gameLight = GameSceneLighting.character(scene, renderPos, species, minute,
+                    GameSceneLighting.sources(scene, minute, lampOn, tvOn, (clock / 200L).toInt()), seat?.lift ?: 0f),
                 gameWind = GameAtmosphere.figureBend(scene, species, 0f, clock,
                     GameWorld.origin(scene.place) + x, weather),
+                gameFabric = GameFabric.Pose(species,
+                    if (GameWorld.isWorld(scene) && scene.place != PlayScene.Place.GROTTO)
+                        GameAtmosphere.wind(GameWorld.origin(scene.place) + x, clock, weather) else .12f,
+                    clock, if (actor.moving) 1f else 0f),
                 gameDirection = actor.facing, gameMoving = actor.moving,
+                motionCue = handoff?.takeIf { it.first == actor.snapshot.profileId }?.second ?: seat?.motion ?:
+                    seat?.takeIf { task !is LivingPopulationLayout.ResidentPose.Doing }?.let {
+                        CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f) },
                 contentDescription = stringResource(species.labelRes),
                 modifier = Modifier.width(dp).height(dp * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
                     .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
-                    .gameCharacterOcclusion(scene, actor.pos, species, null, 0f,
+                    .gameCharacterOcclusion(scene, renderPos, species, actor.seat?.piece?.id, seat?.lift ?: 0f,
                         fit, offset))
             val item = if (!actor.moving && task is LivingPopulationLayout.ResidentPose.Doing) when (task.topic) {
                 AnimationType.BOOK -> PlayEffects.Carried.BOOK
                 AnimationType.DRINK -> PlayEffects.Carried.CUP
                 else -> null
             } else null
-            if (item != null) ItemIcon(item, Modifier
+            val heldItem = item ?: received[actor.snapshot.profileId]?.lastOrNull()
+            if (heldItem != null) ItemIcon(heldItem, Modifier
                 .offset { IntOffset((sx + px * .08f).roundToInt(), (sy - px * .36f).roundToInt()) }
                 .size(with(density) { (px * .25f).toDp() }))
 
@@ -234,5 +260,57 @@ internal fun GameWorldPanel(title: String, onClose: () -> Unit, content: @Compos
             }
             content()
         }
+    }
+}
+
+
+internal fun gameItemName(item: PlayEffects.Carried, de: Boolean): String = if (!de) item.name.lowercase().replace('_',' ') else when(item) {
+    PlayEffects.Carried.BOOK -> "Buch"
+    PlayEffects.Carried.FOOD -> "Essen"
+    PlayEffects.Carried.CUP -> "Becher"
+    PlayEffects.Carried.GUITAR -> "Gitarre"
+    PlayEffects.Carried.EASEL -> "Staffelei"
+    PlayEffects.Carried.MAP -> "Karte"
+    PlayEffects.Carried.EGG -> "Ei"
+    PlayEffects.Carried.CHEST -> "Truhe"
+    PlayEffects.Carried.WOOD -> "Holz"
+    PlayEffects.Carried.SEEDS -> "Samen"
+    PlayEffects.Carried.BASKET -> "Korb"
+    PlayEffects.Carried.BIRDHOUSE -> "Vogelhaus"
+}
+internal fun encounterText(outcome: GameEncounters.Outcome, de: Boolean): String = when(outcome) {
+    GameEncounters.Outcome.CHANGED -> if(de) "Die gemeinsame Handlung ist gespeichert. Beide erinnern sich daran." else "Saved the shared action. Both remember it."
+    GameEncounters.Outcome.BUSY -> if(de) "Gerade braucht der Bewohner erst etwas Ruhe oder Essen. Der Gegenstand bleibt bei dir." else "The resident needs rest or food first. You keep the item."
+    GameEncounters.Outcome.FULL -> if(de) "Der Bewohner trägt bereits genug. Der Gegenstand bleibt bei dir." else "The resident already carries enough. You keep the item."
+    GameEncounters.Outcome.NEED_WOOD -> if(de) "Überreiche zuerst 1 Holz für die Wegweiser. Du kannst es auch selbst für eine Bank verwenden." else "Give 1 wood for the waymarks first. You can also use it to repair a bench yourself."
+    GameEncounters.Outcome.TOO_FAR, GameEncounters.Outcome.ABSENT -> if(de) "Der Bewohner ist gerade nicht in Reichweite." else "The resident is not in reach."
+    GameEncounters.Outcome.NO_ITEM -> if(de) "Dieser Gegenstand ist nicht mehr im Rucksack." else "That item is no longer in the backpack."
+    GameEncounters.Outcome.ALREADY -> if(de) "Die Wegweiser stehen bereits." else "The waymarks are already there."
+    GameEncounters.Outcome.KNOWN -> if(de) "Schön, dich wiederzusehen." else "Good to see you again."
+}
+
+
+/**
+ * Gespraech mit einem Bewohner: Uebergaben, gemeinsamer Wegweiser, Weg ansehen. Eigene Funktion
+ * statt Inhalt von DockScreen - dessen Inhalts-Lambda lag sonst ueber der JVM-Grenze von 64 KB
+ * je Methode ("Method too large").
+ */
+@Composable
+internal fun GameResidentTalkPanel(title: String, dialogue: String, items: List<PlayEffects.Carried>,
+    received: List<PlayEffects.Carried>, canWaymark: Boolean, german: Boolean,
+    onGive: (Int) -> Unit, onWaymark: () -> Unit, onRoute: () -> Unit, onClose: () -> Unit) {
+    GameWorldPanel(title, onClose) {
+        Text(dialogue, color = Color(0xFFE0EBD8))
+        for ((index, item) in items.withIndex()) Row(verticalAlignment = Alignment.CenterVertically) {
+            ItemIcon(item, Modifier.size(28.dp))
+            GameActionButton((if (german) "Übergeben: " else "Give: ") + gameItemName(item, german),
+                { onGive(index) }, Modifier.padding(4.dp))
+        }
+        if (received.isNotEmpty()) Text((if (german) "Bei diesem Bewohner: " else "This resident has: ") +
+            received.joinToString { gameItemName(it, german) }, color = Color(0xFFE0EBD8))
+        if (canWaymark)
+            GameActionButton(if (german) "Gemeinsam Wegweiser bauen · 1 übergebenes Holz" else "Build waymarks together · 1 given wood",
+                onWaymark, Modifier.padding(top = 8.dp))
+        GameActionButton(if (german) "Weg ansehen" else "Show route", onRoute, Modifier.padding(top = 12.dp))
     }
 }

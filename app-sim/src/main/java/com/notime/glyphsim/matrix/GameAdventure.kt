@@ -5,9 +5,9 @@ import com.notime.glyphsim.matrix.PlayEffects.Carried
 
 /** Ein Spielstand fuer die aktiv gespielte Welt. Darstellung und Effekte sind daraus abgeleitet. */
 object GameAdventure {
-    const val VERSION = 1
+    const val VERSION = 2
     const val MILLIS_PER_MINUTE = 2000L // Ein Tag dauert 48 aktive Minuten; Menues pausieren ihn.
-    enum class Event { FOREST_SEEDS, FOREST_WOOD, OLD_MARKER, PLANTED, BENCH_REPAIRED, CAMP_REPAIRED }
+    enum class Event { FOREST_SEEDS, FOREST_WOOD, OLD_MARKER, PLANTED, BENCH_REPAIRED, CAMP_REPAIRED, WAYMARKED }
     enum class ObjectId(val place: Place, val pos: PlayControl.Pos) {
         SEEDS(Place.FOREST, PlayControl.Pos(.25f, .72f)),
         WOOD(Place.FOREST, PlayControl.Pos(.78f, .70f)),
@@ -27,7 +27,9 @@ object GameAdventure {
         val met: Set<String> = emptySet(),
         val lampOn: Boolean = true,
         val tvOn: Boolean = false,
-        val stowed: List<Carried> = emptyList()
+        val stowed: List<Carried> = emptyList(),
+        val social: Map<String, String> = emptyMap(),
+        val residentItems: Map<String, List<Carried>> = emptyMap()
     ) {
         val absoluteMinute: Int get() = (480L + elapsed / MILLIS_PER_MINUTE).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val minuteOfDay: Int get() = absoluteMinute % 1440
@@ -127,12 +129,37 @@ object GameAdventure {
     fun encode(s: State): String = listOf("ITOEVA2:$VERSION", s.place.name,
         "${s.pos.x},${s.pos.depth}", s.facing.name, PlayBackpack.encode(s.backpack), s.elapsed.toString(),
         s.collected.sorted().joinToString(","), s.events.joinToString(",") { it.name },
-        s.met.sorted().joinToString(","), "${s.lampOn},${s.tvOn}", s.stowed.joinToString(",") { it.name }).joinToString("\n")
+        s.met.sorted().joinToString(","), "${s.lampOn},${s.tvOn}", s.stowed.joinToString(",") { it.name },
+        s.social.toSortedMap().entries.joinToString(";") { (id, payload) ->
+            "$id@${com.notime.glyphsim.data.LivingAgentSnapshotCodec.encodeText(payload)}" },
+        s.residentItems.toSortedMap().entries.joinToString(";") { (id, items) ->
+            "$id@${items.joinToString(",") { it.name }}" }).joinToString("\n")
 
     fun decode(text: String): State {
-        require(text.length <= 32_000) { "Spielstand zu gross" }
+        require(text.length <= 256_000) { "Spielstand zu gross" }
         val lines = text.split('\n')
-        require(lines.size == 11 && lines[0] == "ITOEVA2:$VERSION") { "Spielstandversion nicht lesbar" }
+        val version = lines.firstOrNull()?.takeIf { it.startsWith("ITOEVA2:") }?.removePrefix("ITOEVA2:")?.toIntOrNull()
+        require((version == 1 && lines.size == 11) || (version == VERSION && lines.size == 13)) {
+            "Spielstandversion nicht lesbar" }
+        fun entries(line: String): Map<String,String> {
+            if (line.isEmpty()) return emptyMap()
+            val pairs=line.split(';').map { token ->
+                val at=token.indexOf('@');require(at>0);token.substring(0,at) to token.substring(at+1)
+            }
+            require(pairs.size<=12 && pairs.map { it.first }.distinct().size==pairs.size)
+            return pairs.toMap()
+        }
+        val social = if (version == 1) emptyMap() else entries(lines[11]).mapValues { (id,payload) ->
+            require(GameEncounters.validProfile(id))
+            val raw=String(java.util.Base64.getUrlDecoder().decode(payload), java.nio.charset.StandardCharsets.UTF_8)
+            require(com.notime.glyphsim.data.LivingAgentSnapshotCodec.decode(raw)?.snapshot?.agent?.profileId == id)
+            raw
+        }
+        val goods = if (version == 1) emptyMap() else entries(lines[12]).mapValues { (id,payload) ->
+            require(LivingResidents.all.any { it.profileId == id })
+            val goods=payload.split(',').filter { it.isNotEmpty() }.map { Carried.valueOf(it) }
+            require(goods.size<=PlayBackpack.CAPACITY);goods
+        }
         val xy = lines[2].split(',').map { it.toFloat() }
         require(xy.size == 2 && xy.all { it.isFinite() }) { "Ungueltige Position" }
         val place = Place.valueOf(lines[1])
@@ -144,9 +171,12 @@ object GameAdventure {
         require(lines[4].split(',').filter { it.isNotEmpty() }.size <= PlayBackpack.CAPACITY)
         val lights = lines[9].split(',').map { it.toBooleanStrict() }
         require(lights.size == 2)
+        val met = values(lines[8]).filter { id -> LivingResidents.all.any { it.profileId == id } }.toSet()
+        val migratedSocial = if (version == 1) GameEncounters.legacyKnowledge(met,
+            (480L + elapsed / MILLIS_PER_MINUTE).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), place) else social
         return State(place, safePosition(place, PlayControl.Pos(xy[0], xy[1])), PlayControl.Dir.valueOf(lines[3]),
             PlayBackpack.decode(lines[4]), elapsed, values(lines[6]), lines[7].split(',').filter { it.isNotEmpty() }.map { Event.valueOf(it) }.distinct(),
-            values(lines[8]).filter { id -> LivingResidents.all.any { it.profileId == id } }.toSet(), lights[0], lights[1],
-            lines[10].split(',').filter { it.isNotEmpty() }.map { Carried.valueOf(it) })
+            met, lights[0], lights[1],
+            lines[10].split(',').filter { it.isNotEmpty() }.map { Carried.valueOf(it) }, migratedSocial, goods)
     }
 }

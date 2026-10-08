@@ -6627,3 +6627,42 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   behaelt den bisherigen #346-Massstabs-/Moebelschnitt.
 - **Uebergabe:** docs/itoeva2-light-and-environment.md, preview_lighting.kt,
   Vergleichsbilder und Bewegungsvideo. Martin mergt und baut die APK mit Cloud Code.
+
+### 2026-10-08 – Sitzflächen, Kulissenschatten und gemeinsame Handlungen (world-polish-encounters-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt die offenen Kontur-/Sitz-/Licht-/Stoffverbesserungen
+  sowie echte beidseitige Bewohnererinnerung, Gegenstandsübergaben und andere Holzverwendungen.
+  Er übernimmt Merge/APK. Neuer Zusatzauftrag: danach sichtbare Welt auf physikalische
+  Eigenschaften, Wasser/Schwimmen, Türen und Bewegungsgrenzen scannen und verbessern.
+- **FACT:** Elf Innenbilder haben zusätzliche gemeinsame Möbelkörper für Kollision,
+  Verdeckung und Lichtblocker. Sitzabläufe teilen Spieler/NPCs samt Reservierung,
+  Schattenempfänger, Trefferposition und Tiefe. Große Kulissenanker werfen Sonnenschatten;
+  begrenzte Boden-Helligkeitskorrektur läuft einmalig außerhalb des UI-Threads.
+  Vorhandene Stoff-/Feder-/Blattdetails und Vorhänge bewegen sich mit festen Befestigungen.
+- **Produktentscheidung:** Begegnung setzt Nähe voraus. Übergaben verschieben genau einen
+  Besitzgegenstand; beide Wesen erinnern denselben echten Vorgang im vorhandenen Agentenkern.
+  Holz kann direkt eine Bank reparieren oder mit einem Parkbewohner Wegweiser schaffen.
+  Wiederholung erzeugt kein Material/XP; Ablehnung bestraft keine Beziehung. Kein neuer
+  Simulationskern, keine erfundene persönliche Erinnerung oder Begleiter-/Kampflogik.
+- **Architektur/Daten:** GameAdventure V2 speichert Bewohnerbestände und validierte fiktionale
+  Game-Host-/Bewohner-Snapshots in demselben Preference-Commit wie Inventar und Weltfolgen.
+  Bestehende Population übernimmt nur den sozialen Anteil idempotent. Neue GAME_* sind
+  Abschlusswirkungen und keine autonomen Routinen. Keine neuen Preference-Schlüssel,
+  Room-Schemas oder Workflows; App 1/Stream/Reminder behalten ihre bisherigen Pfade.
+- **Migration/Rücksetzung:** V1-Besitz, Ablage, Weltfolgen, Schalter und Bekanntschaften bleiben.
+  Legacy-Kenntnis wird als neutrale Relation ohne Episoden/Nähe übernommen. V2 ist in alten
+  APKs nicht lesbar; für verlustfreien visuellen Rückbau V2-Reader und Enumwerte behalten.
+  Unbekannte Versionen werden erhalten und gegen Überschreiben geschützt. Reiner Gesamt-Revert
+  auf V1 ist ausdrücklich kein geprüfter verlustfreier Weg.
+- **TESTED BEHAVIOR:** 989 reine Kotlin-Tests bestanden. Regressionen decken Sitzaktivitäten,
+  NPC-Treffer/Tiefe, alte Bekanntschaften sowie Wege, Stoff, Schatten, Besitz, zwei Erinnerungen,
+  Neustart, Ablehnung und Holzalternativen ab. Drei neue Android-Preference-Tests warten auf
+  Verify. Der verweigerte Editor ist keine echte Plattenfehler-/Rollback-Garantie.
+  Zweite Codeprüfung wurde durchgeführt; ihre drei Befunde sind korrigiert.
+- **UNVERIFIED:** Telefon-/GPU-Abnahme steht aus. Desktopbilder/Video nutzen die produktiven
+  Modelle, sind keine APK-Aufnahmen. Bodenlicht bleibt eine Näherung; generische Außenbänke,
+  kleine Dekorationen und die jetzt beauftragte Wasser-/Tür-/Grenzenprüfung sind noch offen.
+  Dies ersetzt die frühere Aussage, weitere Innenmöbel hätten keinerlei Konturen, nicht die
+  Grenze einer vollständigen physikalischen Kulissensimulation.
+- **Übergabe:** docs/itoeva2-world-polish-and-encounters.md; preview_polish.kt/.sh samt
+  Kontur-/Sitz-/Schattenbildern und Bewegungsvideo. Basis nach #346: be25d5d503c62007fdae71c653255ac3adb4a605.

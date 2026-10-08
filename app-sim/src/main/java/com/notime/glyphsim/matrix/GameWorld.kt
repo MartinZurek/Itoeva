@@ -151,11 +151,11 @@ object GameWorld {
                 if (scene.place == Place.PARK) 47f else 35f, scene.nearY - scene.farY, a.depth)
         }
     fun residents(old: Map<Place, Map<String, GameResidents.Actor>>, snapshots: List<ResidentSnapshot>,
-        dt: Long, clock: Long, talking: String?): Map<Place, Map<String, GameResidents.Actor>> {
+        dt: Long, clock: Long, talking: String?, reservedSeats: Set<String> = emptySet()): Map<Place, Map<String, GameResidents.Actor>> {
         val present = snapshots.filter { it.publiclyPresent && it.place in places }.associate { it.profileId to it.place }
         return places.associateWith { place ->
             val local = old[place].orEmpty().filterKeys { id -> present[id] == null || present[id] == place }
-            GameResidents.tick(scene(place)!!, local, snapshots, dt, clock, talking)
+            GameResidents.tick(scene(place)!!, local, snapshots, dt, clock, talking, reservedSeats)
         }
     }
     fun neighbors(place: Place) = passages(place).map { it.to }.distinct()

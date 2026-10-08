@@ -93,6 +93,7 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
                     Offset(x, 0f), Size(sectionWidth, GameWorld.height(scene)))
             }
         }
+        paintWorldShadows(scene, local, minute, clock, fade)
         paintSceneLights(scene, GameSceneLighting.sources(scene, minute, lampOn, false, (clock / 200L).toInt()), local, clock, fade)
         roomContacts(scene, environment, local, (1f - dark) * fade, false)
     }

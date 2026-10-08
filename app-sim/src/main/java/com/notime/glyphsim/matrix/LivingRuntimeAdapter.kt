@@ -384,8 +384,8 @@ object LivingRuntimeAdapter {
             ActionKind.RECEIVE_RESPONSE -> topicBranch(
                 AnimationType.GENERAL, PlayScene.Place.LIVING, firstAction, conditions
             )
-            ActionKind.TRAIN_TOGETHER -> error(
-                "TRAIN_TOGETHER is a completed-scene effect, not a standalone routine"
+            ActionKind.TRAIN_TOGETHER, ActionKind.GAME_MEET, ActionKind.GAME_GIVE, ActionKind.GAME_WAYMARK -> error(
+                "$firstAction is a completed-scene effect, not a standalone routine"
             )
         }
         return result to branch

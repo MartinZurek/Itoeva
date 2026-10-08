@@ -31,7 +31,9 @@ internal fun DrawScope.paintPaintedMotion(scene: GameScenes.Scene, image: ImageB
                 repeat(12) { i ->
                     val y0 = patch.y + patch.h * i / 12f
                     val y1 = patch.y + patch.h * (i + 1) / 12f
-                    val dx = GameAtmosphere.bend(patch, (i + .5f) / 12f, clock, GameWorld.origin(scene.place))
+                    val dx = if (patch.hanging) GameFabric.hangingOffset((i + .5f) / 12f, .5f,
+                        GameAtmosphere.wind(GameWorld.origin(scene.place) + patch.x, clock) * .65f, clock, patch.seed)
+                        else GameAtmosphere.bend(patch, (i + .5f) / 12f, clock, GameWorld.origin(scene.place))
                     // Umgebende Pixel werden mitgesampelt; es entsteht kein Loch am bewegten Rand.
                     val left = patch.x - 3f
                     val right = patch.x + patch.w + 3f
@@ -59,20 +61,6 @@ internal fun DrawScope.paintAtmosphere(scene: GameScenes.Scene, fit: GameScenes.
     val origin = GameWorld.origin(scene.place)
     val day = GameSceneLighting.daylight(minute)
     withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
-        if (!foreground && scene.place in setOf(PlayScene.Place.FOREST, PlayScene.Place.JUNGLE,
-                PlayScene.Place.VILLAGE_EDGE, PlayScene.Place.SWAMP)) {
-            val light = GameSceneLighting.sources(scene, minute, false, false, 0).firstOrNull { it.directional }
-            if (light != null) repeat(8) { i ->
-                val x = span * (i + .5f) / 8f
-                val sway = GameAtmosphere.wind(origin + x, clock) * 5f
-                val path = Path().apply {
-                    moveTo(x + sway, 455f); lineTo(x + light.directionX * 100f + sway, 620f)
-                    lineTo(x + light.directionX * 100f + 34f + sway, 622f); lineTo(x + 13f + sway, 455f); close()
-                }
-                drawPath(path, Brush.verticalGradient(listOf(Color.Transparent,
-                    Color(0xFF22382E).copy(alpha = day * .085f * alpha)), 450f, 625f))
-            }
-        }
         if (foreground && scene.asset == "world/coast.png") repeat(24) { i ->
             val x = (i + .5f) * span / 24f
             val shore = GameWorld.shoreY(origin + x)
