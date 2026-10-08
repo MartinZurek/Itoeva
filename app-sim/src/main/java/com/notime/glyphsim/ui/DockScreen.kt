@@ -6914,7 +6914,9 @@ fun DockScreen(
         }
 
         // Itoeva 2: Menue, Karte und Rucksack ueber allem (siehe GameOverlays).
-        if (playMode && gameMode) {
+        // Eigene Methode (DockSection), sonst waere der Inhalts-Lambda von BoxWithConstraints
+        // groesser als die 64 KB, die die JVM je Methode erlaubt.
+        if (playMode && gameMode) DockSection {
             val german = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "de"
             if (gameMenuOpen) {
                 GameAvatarMenu(
@@ -7544,3 +7546,11 @@ internal fun randomAvatarOffset(
         sqrt(dx * dx + dy * dy)
     } ?: Offset(0f, 0f)
 }
+
+/**
+ * Fuehrt [content] als eigene Composable-Funktion aus. Der Lambda wird nicht eingebettet, sein
+ * Bytecode landet in einer eigenen Methode - so bleibt der riesige Inhalts-Lambda von
+ * [DockScreen] unter der JVM-Grenze von 64 KB je Methode ("Method too large").
+ */
+@Composable
+private fun DockSection(content: @Composable () -> Unit) = content()
