@@ -60,6 +60,14 @@ Die neue Android-CI wird im PR separat verfolgt. Lokal fehlt das Wrapper-JAR;
 keine Build-/Workflowdatei wurde geaendert. Telefon-Bildrate, Touch-/Musikhoertest
 und das subjektive Schwimm-/Wasserbild bleiben am Geraet abzunehmen.
 
+Nachtrag PR-Kontrolle: Die Musik-Recovery hatte noch eine berechtigte offene
+Review-Anmerkung. `isPlaying` pruefte nur das Vorhandensein eines Players, wodurch
+`player != null && !isPlaying()` nie wahr wurde. Jetzt wird der echte
+`MediaPlayer.isPlaying`-Zustand fehlergeschuetzt abgefragt; gestoppte oder bereits
+freigegebene Decoder gelten als nicht laufend. Der native Wiedergabetest prueft
+vorbereitet, laufend, gestoppt und freigegeben. Die bestehende 30-Sekunden-
+Abgleichsschleife kann damit auch bei unveraenderter Rolle wieder starten.
+
 Regeneration (Kotlin-Compiler und JUnit aus dem vorhandenen Offline-Werkzeug):
 
 ```sh

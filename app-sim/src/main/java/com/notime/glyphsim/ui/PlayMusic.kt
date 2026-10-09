@@ -478,7 +478,10 @@ object PlayMusic {
      * [PlayAmbienceSound]): Laeuft keine Musik, weil der Nutzer sie ausgeschaltet hat, fremder Ton
      * laeuft oder das Geraet stumm ist, schweigt auch der Ort.
      */
-    fun isPlaying(): Boolean = player != null
+    internal fun decoderPlaying(candidate: MediaPlayer?): Boolean =
+        runCatching { candidate?.isPlaying == true }.getOrDefault(false)
+
+    fun isPlaying(): Boolean = decoderPlaying(player)
 
     /**
      * Plant, wann das gerade gestartete Stueck [forPlayer] in seinen naechsten Durchlauf

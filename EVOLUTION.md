@@ -659,6 +659,10 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
   Rumpfverformung. Unterwasserteile bleiben schwach blau lesbar. Wasser bekommt
   Pixelkaemme, Licht-/Schattenhaenge, Uferschaum und bewegungsabhaengige Spur.
   Feste vermessene Wasser-/Landmaske und bestehender Motor bleiben Grundlage.
+- **FACT / Musik-Review:** Recovery prueft jetzt den echten MediaPlayer-Zustand
+  mit Fehlerbehandlung statt nur eine nicht-null Referenz. Native Wiedergabe-
+  pruefung umfasst vorbereitet/laufend/gestoppt/freigegeben. Bestehender
+  30-Sekunden-Abgleich und Medien-/Rollenregeln bleiben erhalten.
 - **FACT / Referenzen:** Elf neue Innenraum-Konzepttafeln mit eigenen
   Architekturen, Moebelstudien und Tag-/Nachtbildern. Noch keine neue
   Raumgeometrie aus diesen Tafeln; sie dienen Martins gewuenschter Orientierung.
