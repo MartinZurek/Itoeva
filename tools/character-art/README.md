@@ -6,6 +6,9 @@ Die Originalboegen bleiben erhalten. Im Game zeichnet ein zusammenhaengendes
 Texturnetz individuelle Statur-/Koerpergewichte und gedaempften Stoffnachlauf.
 Die neue [Bewegungsvorschau](game-motion-preview.gif) liest die produktiven
 Kotlin-Netze, ist aber eine Softwarevorschau und keine APK-Aufnahme.
+Gehen, Rennen und Schwimmzuege werden getrennt gezeigt. Die
+[Raumvorschau](room-space-preview.png) zeigt produktive 2.5D-Moebelkoerper
+und den kleineren Figurenmassstab; ebenfalls keine APK-Aufnahme.
 Details, Regeneration, Tests und Telefon-Pruefplan:
 [`docs/itoeva2-character-motion.md`](../../docs/itoeva2-character-motion.md).
 

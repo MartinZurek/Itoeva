@@ -49,8 +49,8 @@ def preview(folder, target):
     for tick in range(80):
         bg = Image.new('RGBA',(1140,490),(36,49,45,255))
         d = ImageDraw.Draw(bg)
-        title = 'Ruhe / Wind' if tick < 16 else 'Gang / Stoffnachlauf' if tick < 40 else 'Anhalten / Ausschwingen'
-        d.text((14,8),f'{title}   |   links bisher, rechts ueberarbeitet',fill=(246,229,207))
+        title = ('Ruhe / Wind' if tick < 16 else 'Gehen' if tick < 32 else 'Rennen / Flugphase' if tick < 52 else 'Anhalten / Ausschwingen' if tick < 60 else 'Schwimmzug (ohne Wasserverdeckung)')
+        d.text((14,8),f'{title}   |   links Quellpose, rechts Bewegungsnetz',fill=(246,229,207))
         d.text((14,470),'Produktive Kotlin-Netzrechnung; Softwarevorschau, keine APK-Aufnahme.',fill=(174,191,181))
         for panel,n in enumerate(NAMES):
             role,top,relative = map(float,(folder/f'{n}-{tick}.csv').read_text().splitlines()[0].split(','))

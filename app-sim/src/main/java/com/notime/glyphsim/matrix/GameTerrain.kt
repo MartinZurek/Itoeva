@@ -48,9 +48,12 @@ object GameTerrain {
     }
     /** Game-Adapter des bestehenden Motors, keine zweite Bewegungssimulation. */
     fun tick(scene: GameScenes.Scene, species: AvatarSpecies, state: GameMovement.State,
-        input: PlayControl.Stick, dt: Long, surfaces: List<GameMovement.Surface>): GameMovement.Result {
-        val drag=if(state.height>0f) 1f else GameWater.drag(scene,state.pos)
-        val result=GameMovement.tick(state,input.copy(x=input.x*drag,y=input.y*drag),dt,surfaces,
+        input: PlayControl.Stick, dt: Long, surfaces: List<GameMovement.Surface>,
+        request: Pair<GameMovement.Command, PlayControl.Stick>? = null): GameMovement.Result {
+        // Der UI-Befehl wird erst nach Orts-/Positionsabgleich im selben Motorbild verbraucht.
+        val controlled = request?.let { command(scene, state, it.first, it.second, surfaces) } ?: state
+        val drag=if(controlled.height>0f) 1f else GameWater.drag(scene,controlled.pos)
+        val result=GameMovement.tick(controlled,input.copy(x=input.x*drag,y=input.y*drag),dt,surfaces,
             immediateExits=GameWorld.immediateExits(scene.place), horizontalScale=GameWorld.horizontalScale(scene.place),
             maxStepHeight=GameCharacterScale.MAX_STEP_HEIGHT,sweptJumpCollision=true)
         var next=result.state

@@ -16,7 +16,7 @@ class GameWorldPolishTest {
                 assertTrue(surface.x0 <= surface.x1 && surface.d0 <= surface.d1)
                 for (d in listOf(surface.d0, surface.anchorDepth, surface.d1)) {
                     val at = PlayControl.Pos((surface.x0 + surface.x1) / 2f, d)
-                    assertEquals(p.id, p.top, GameScenes.feet(scene, at).second - surface.heightAt(at), .01f)
+                    assertEquals(p.id, p.projectedTop(scene,at), GameScenes.feet(scene, at).second - surface.heightAt(at), .01f)
                 }
             }
             assertSame(pieces, GameFurniture.pieces(scene))

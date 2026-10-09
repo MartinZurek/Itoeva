@@ -230,7 +230,7 @@ object CreatureSprites {
     }
 
     /** Darstellung einer vorhandenen Handlung, ohne Reminder oder Spielablauf zu veraendern. */
-    enum class Motion { JUMP, BEND, KNEEL, SIT, RISE, STRETCH, REACH, KICK, ROLL }
+    enum class Motion { JUMP, BEND, KNEEL, SIT, RISE, STRETCH, REACH, KICK, ROLL, SWIM }
 
     /** Fortschritt kommt aus dem laufenden Ablauf, nicht aus der zufaelligen Wanduhrphase. */
     data class MotionCue(val motion: Motion, val progress: Float)
@@ -251,6 +251,7 @@ object CreatureSprites {
             Motion.RISE -> intArrayOf(9, 10, 11)
             Motion.STRETCH -> intArrayOf(11, 12, 12, 11)
             Motion.REACH -> intArrayOf(11, 13, 13, 11)
+            Motion.SWIM -> intArrayOf(11)
             Motion.KICK -> intArrayOf(11, 0, 14, 14, 11)
             Motion.ROLL -> error("Rolle hat eigenen Zyklus")
         }
@@ -260,6 +261,7 @@ object CreatureSprites {
             Motion.SIT -> intArrayOf(4, 0, 3)
             Motion.RISE -> intArrayOf(3, 0, 4)
             Motion.STRETCH, Motion.REACH -> intArrayOf(4, 6, 6, 4)
+            Motion.SWIM -> intArrayOf(4)
             Motion.KICK, Motion.ROLL -> null  // Fuer diesen gerichteten Schuss gibt es nur Profilzeichnungen.
         }
         val useDirected = directed != null && facing in setOf(Facing.FRONT, Facing.BACK)

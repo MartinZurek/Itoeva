@@ -4,6 +4,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GameEnvironmentTest {
+    @Test fun `Gesteuerter Gang erzeugt Kontakte beim Aufsetzen statt bei jedem Wegpixel`() {
+        val room=GameWorld.scene(PlayScene.Place.PARK)!!
+        var env=GameEnvironment.State(place=room.place)
+        var before=GameMovement.State(pos=PlayControl.Pos(.3f,.7f),velocity=PlayControl.Stick(.55f,0f))
+        repeat(50) {
+            val after=before.copy(pos=before.pos.copy(x=before.pos.x+.002f),gaitMs=before.gaitMs+20)
+            env=GameEnvironment.tick(env,room,before,after,20L,null)
+            before=after
+        }
+        assertEquals(2,env.contacts.size)
+        assertEquals(listOf(0,1),env.contacts.map { it.foot })
+    }
     private val scene = GameScenes.of(PlayScene.Place.BEACH)!!
     private fun grid(m: GameEnvironment.Material) = GameEnvironment.Grid(ByteArray(480 * 270) { m.ordinal.toByte() }, m)
     private fun walk(dt: Long): GameEnvironment.State {

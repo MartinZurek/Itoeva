@@ -7,6 +7,18 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GameLightingAtmosphereTest {
+    @Test fun `Blattnetz bleibt am Ausschnittsrand und an Wurzeln kontinuierlich fest`() {
+        val tree=GameAtmosphere.Patch(70f,80f,40f,90f,1)
+        val curtain=tree.copy(hanging=true)
+        for(clock in 0L..5000L step 73L) for(patch in listOf(tree,curtain)) {
+            assertEquals(0f,GameAtmosphere.motionOffset(patch,67f,100f,clock),0f)
+            assertEquals(0f,GameAtmosphere.motionOffset(patch,113f,100f,clock),0f)
+            assertEquals(0f,GameAtmosphere.motionOffset(patch,90f,77f,clock),0f)
+            assertEquals(0f,GameAtmosphere.motionOffset(patch,90f,173f,clock),0f)
+            assertEquals(0f,GameAtmosphere.motionOffset(patch,90f,if(patch.hanging) 80f else 170f,clock),.001f)
+            assertTrue(kotlin.math.abs(GameAtmosphere.motionOffset(patch,90f,120f,clock,weather=PlayWeather.RAIN))<=1.5f)
+        }
+    }
     private fun scene(place: Place) = GameWorld.scene(place)!!
     private fun lights(place: Place, minute: Int = 1380, lamp: Boolean = true) =
         GameSceneLighting.sources(scene(place), minute, lamp, false, 7)

@@ -18,7 +18,7 @@ internal fun Modifier.gameCharacterOcclusion(scene: GameScenes.Scene?, pos: Play
         val pieces = GameFurniture.pieces(scene).filter { it.hides(feetY, support) }
         val rise = if (lift > 0f) 0f else GameCharacterScale.waterRise(scene, pos) * fit.scale
         val contours = Path().apply {
-            for (piece in pieces) for (points in piece.contours) {
+            for (piece in pieces) for (points in if (GameRoomSpace.enabled(scene)) GameRoomSpace.contours(piece) else piece.contours) {
                 points.forEachIndexed { index, (x, y) ->
                     val (sx, sy) = fit.toScreen(x, y)
                     if (index == 0) moveTo(sx - offset.x, sy - offset.y)

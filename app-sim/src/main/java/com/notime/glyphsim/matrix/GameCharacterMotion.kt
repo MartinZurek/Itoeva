@@ -3,7 +3,7 @@ package com.notime.glyphsim.matrix
 import kotlin.math.exp
 import kotlin.math.sin
 
-/** Sekundaerbewegung der gemalten Game-Figuren; Fussanker und Handlung bleiben beim bestehenden Rig. */
+/** Statur, Stoff und Gang-/Schwimmbewegung; Handlungen und Weltposition bleiben beim bestehenden Motor. */
 object GameCharacterMotion {
     const val COLUMNS = 24
     const val ROWS = 32
@@ -61,18 +61,76 @@ object GameCharacterMotion {
     private fun window(value: Float, from: Float, to: Float, fade: Float): Float =
         smooth((value - from) / fade) * smooth((to - value) / fade)
 
+    /** Stuetzen und freie Rueckholphase teilen sich den Takt der gezeichneten Beine. */
+    data class Stride(val flight: Float, val compression: Float, val leftSwing: Float, val rightSwing: Float)
+    fun stride(gaitMs: Long, running: Boolean): Stride {
+        val phase = Math.floorMod(gaitMs, 760L) / 760f
+        fun swing(p: Float): Float = if (p <= .5f) 0f else
+            sin((p - .5f) * Math.PI * 2).toFloat().coerceAtLeast(0f)
+        val step = (phase * 2f) % 1f
+        val flight = if (running && step > .56f)
+            sin((step - .56f) / .44f * Math.PI).toFloat().coerceAtLeast(0f) else 0f
+        val compression = if (running && step < .30f)
+            sin(step / .30f * Math.PI).toFloat().coerceAtLeast(0f) else 0f
+        return Stride(flight, compression, swing(phase), swing((phase + .5f) % 1f))
+    }
+
+    private fun locomotion(p: Point, species: AvatarSpecies, frame: Int, top: Float,
+        u: Float, v: Float, gaitMs: Long, speed: Float, swim: GameWater.Swim?): Point {
+        val body = ((v - top) / (125f/128f - top).coerceAtLeast(.05f)).coerceIn(0f, 1f)
+        val side = view(frame) == View.SIDE
+        if (swim != null) {
+            val phase = swim.stroke * Math.PI * 2
+            val sweep = sin(phase).toFloat()
+            val recover = kotlin.math.cos(phase).toFloat()
+            val limb = window(body, .40f, .91f, .16f) *
+                (window(u,.22f,.47f,.09f) + window(u,.60f,.84f,.09f))
+            val sign = if (u < .5f) -1f else 1f
+            val paddle = if (swim.moving) 1f else .4f
+            val kick = smooth((body-.80f)/.20f) * window(u,.28f,.82f,.10f)
+            // Schultern bleiben angebunden, Haende streichen zurueck; Beine schlagen unter der Wasserlinie.
+            return Point(p.x + sign * sweep * limb * .024f * paddle,
+                p.y + recover * limb * .015f * paddle - kotlin.math.abs(sweep) * kick * .016f)
+        }
+        val running = frame in 114..129
+        val walking = frame in 9..16 || frame in 68..83
+        if ((!walking && !running) || speed <= 0f) return p
+        val stride = stride(gaitMs, running)
+        val active = speed.safe(0f,1f)
+        val leg = smooth((body-.82f)/.18f)
+        val left = window(u,.28f,.53f,.09f)
+        val right = window(u,.53f,.82f,.09f)
+        val swing = stride.leftSwing * left + stride.rightSwing * right
+        val recoil = if (running) .038f else if (species == AvatarSpecies.STARLET) .022f else .008f
+        val height = when (species) {
+            AvatarSpecies.GLOOP -> .013f
+            AvatarSpecies.PUFFLING, AvatarSpecies.HOOTLET -> .024f
+            else -> .029f
+        }
+        val lean = if (running && side) (if (species == AvatarSpecies.FENNEC) .012f else .032f) else 0f
+        val torsoWeight = smooth((1f-body)/.65f)
+        val x = p.x + lean * torsoWeight * active +
+            (stride.leftSwing * left - stride.rightSwing * right) * leg * recoil * .45f * active
+        // Beim Gehen bleibt die Stuetzspitze fest. Rennen hat Stauchung, Abdruck und echte Flugphase.
+        val y = p.y - swing * leg * recoil * active - stride.flight * height * active +
+            (125f/128f-v) * stride.compression * .055f * active
+        return Point(x,y)
+    }
+
     /** Koerper-/Stoffkoordinaten gehoeren zur ausgewaehlten Zeichnung, nie zur Weltposition. */
     fun point(species: AvatarSpecies, frame: Int, top: Float, u: Float, v: Float,
-        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response): Point {
+        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response,
+        swim: GameWater.Swim? = null): Point {
         val view = view(frame)
-        if (view == View.COMPACT || v >= 120f / 128f) return Point(u, v)
+        if (view == View.COMPACT) return Point(u, v)
+        if (v >= 120f / 128f) return locomotion(Point(u,v),species,frame,top,u,v,gaitMs,speed,swim)
         val bodyV = ((v - top) / (125f / 128f - top).coerceAtLeast(.05f)).coerceIn(0f, 1f)
         val t = Math.floorMod(clock, 600_000L) / 1000.0
         val gait = Math.floorMod(gaitMs, 760L) / 760.0 * Math.PI * 2.0
         val moving = speed.safe(0f, 2f)
         val directed = view != View.SIDE
         // Nur die Taille wird schmaler. Gesicht, Kapuze, Sternspitzen und Boden bleiben frei.
-        val upright = frame in 0..16 || frame in 27..83 || frame == 95 || frame == 104 || frame == 111
+        val upright = frame in 0..16 || frame in 27..83 || frame == 95 || frame == 104 || frame == 111 || frame in 114..129
         val waist = if (upright) window(bodyV, .62f, .95f, .12f) else 0f
         val taper = when (species) {
             AvatarSpecies.PUFFLING -> .13f
@@ -138,16 +196,17 @@ object GameCharacterMotion {
             .coerceIn(-1.8f, 1.8f) * cloth * material * .018f
         x += fabric
         y += sin(t * 3.3 - bodyV * 4.2).toFloat() * cloth * lateral * material * moving * .002f
-        return Point(x, y)
+        return locomotion(Point(x,y),species,frame,top,u,v,gaitMs,speed,swim)
     }
 
     fun fill(vertices: FloatArray, species: AvatarSpecies, frame: Int, top: Float,
-        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response) {
+        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response,
+        swim: GameWater.Swim? = null) {
         require(vertices.size == VERTICES * 2)
         var i = 0
         for (row in 0..ROWS) for (column in 0..COLUMNS) {
             val p = point(species, frame, top, column.toFloat() / COLUMNS, row.toFloat() / ROWS,
-                clock, gaitMs, speed, wind, response)
+                clock, gaitMs, speed, wind, response,swim)
             vertices[i++] = p.x
             vertices[i++] = p.y
         }

@@ -6,6 +6,18 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GamePhysicsTest {
+    @Test fun `Ein UI Sprung wird nach dem Positionsabgleich im Motorbild ausgefuehrt`() {
+        val scene=GameWorld.scene(PlayScene.Place.PARK)!!
+        val surfaces=GameSurfaces.painted(scene)
+        val pos=PlayControl.Pos(.5f,.6f)
+        var state=GameTerrain.tick(scene,AvatarSpecies.FENNEC,GameMovement.State(pos=pos),PlayControl.Stick(),16L,
+            surfaces,GameMovement.Command.JUMP to PlayControl.Stick()).state
+        assertEquals(GameMovement.Action.JUMP,state.action)
+        repeat(20) { state=GameTerrain.tick(scene,AvatarSpecies.FENNEC,state,PlayControl.Stick(),16L,surfaces).state }
+        assertTrue(state.height>20f)
+        repeat(30) { state=GameTerrain.tick(scene,AvatarSpecies.FENNEC,state,PlayControl.Stick(),16L,surfaces).state }
+        assertNull(state.action)
+    }
     @Test fun `Alle Tuerblaetter lesen das sichtbare Anschlussbild und einen gueltigen Ausschnitt`() {
         for(passage in Place.entries.flatMap { GameWorld.passages(it) }.filter { it.door }) {
             val sample=GameDoors.sample(passage)!!
@@ -81,9 +93,9 @@ class GamePhysicsTest {
         val scene=GameWorld.scene(Place.BEACH)!!;val pos=PlayControl.Pos(.5f,.9f)
         val first=GameWater.swim(scene,pos,0f,PlayControl.Dir.RIGHT,true,100)!!
         val next=GameWater.swim(scene,pos,0f,PlayControl.Dir.RIGHT,true,600)!!
-        assertEquals(CreatureSprites.Motion.REACH,first.cue.motion)
+        assertEquals(CreatureSprites.Motion.SWIM,first.cue.motion)
         assertNotEquals(first.stroke,next.stroke);assertNotEquals(first.bob,next.bob)
-        assertTrue(first.angle>20f)
+        assertTrue(first.angle in 5f..12f)
         assertNotNull(GameWater.swim(scene,pos,0f,PlayControl.Dir.DOWN,false,100))
         assertNull(GameWater.swim(scene,pos,10f,PlayControl.Dir.DOWN,true,100))
         assertNull(GameWater.swim(GameWorld.scene(Place.PARK)!!,pos,0f,PlayControl.Dir.DOWN,true,100))

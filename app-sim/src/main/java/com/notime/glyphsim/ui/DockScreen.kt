@@ -779,6 +779,7 @@ fun DockScreen(
         var gameTouchStick by remember { mutableStateOf(PlayControl.Stick()) }
         var gameKeyStick by remember { mutableStateOf(PlayControl.Stick()) }
         var gameMovement by remember { mutableStateOf(GameMovement.State()) }
+        var gamePendingCommand by remember { mutableStateOf<Pair<GameMovement.Command, PlayControl.Stick>?>(null) }
         var gameBreath by remember { mutableStateOf(com.notime.glyphsim.matrix.GameBreath.State()) }
         var gameEnvironment by remember { mutableStateOf(GameEnvironment.State()) }
         var gameCamera by remember { mutableStateOf(GameCamera.State()) }
@@ -1298,7 +1299,8 @@ fun DockScreen(
                         characterTheme = themeSpecies,
                         groupGame = groupGame,
                         weather = if (gameMode) gameWorldNow.weather else PlayWeather.current()
-                    )
+                    ),
+                    gameMode = gameMode
                 )
                 // **Der Ort klingt mit** (siehe PlayAmbience) - leise unter der Musik und nur,
                 // solange sie wirklich laeuft: dieselben Sperren, kein eigener Schalter.
@@ -4086,6 +4088,7 @@ fun DockScreen(
             }
             DisposableEffect(Unit) {
                 onDispose {
+                    gamePendingCommand = null
                     gameTouchStick = PlayControl.Stick()
                     gameKeyStick = PlayControl.Stick()
                     gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
@@ -4098,7 +4101,7 @@ fun DockScreen(
                     val now = withFrameMillis { it }
                     val dt = now - last
                     last = now
-                    if (!screenVisible) continue
+                    if (!screenVisible) { gamePendingCommand = null; continue }
                     val current = avatar ?: continue
                     val worldPaused = gameDoorChoices.isNotEmpty() || !gameImagesReady || gameMenuOpen || gameMapOpen || gameBackpackOpen || gameChronicleOpen || gameTalking != null || talkOpen
                     if (!worldPaused) gameElapsed = GameAdventure.tick(gameAdventure.copy(elapsed = gameElapsed), dt, true).elapsed
@@ -4170,6 +4173,7 @@ fun DockScreen(
                     }
                     val busy = worldPaused || !screenVisible || gameActing || current.fed
                     if (busy) {
+                        gamePendingCommand = null
                         gameEnvironment = GameEnvironment.advance(gameEnvironment, dt)
                         if (wasMoving) avatarWalking = false
                         wasMoving = false
@@ -4181,9 +4185,13 @@ fun DockScreen(
                     val (widthPx, heightPx, avatarPx) = gameGeometry
                     val scene = GameWorld.scene(currentPlace)
                     val beforeMovement = gameMovement
+                    val command = gamePendingCommand
+                    gamePendingCommand = null
                     val result = if (scene != null) com.notime.glyphsim.matrix.GameTerrain.tick(scene,current.species,
-                        gameMovement,com.notime.glyphsim.matrix.GameBreath.input(gameBreath,gameInput()),dt,gameSurfaceList)
-                        else GameMovement.tick(gameMovement,com.notime.glyphsim.matrix.GameBreath.input(gameBreath,gameInput()),dt,gameSurfaceList)
+                        gameMovement,com.notime.glyphsim.matrix.GameBreath.input(gameBreath,gameInput()),dt,gameSurfaceList,command)
+                        else GameMovement.tick(command?.let { GameMovement.command(gameMovement,it.first,it.second,
+                            gameSurfaceList,GameCharacterScale.MAX_STEP_HEIGHT) } ?: gameMovement,
+                            com.notime.glyphsim.matrix.GameBreath.input(gameBreath,gameInput()),dt,gameSurfaceList)
                     gameEnvironment = if (scene != null) GameEnvironment.tick(gameEnvironment, scene,
                         beforeMovement, result.state, dt, gameRoomLayers.grid) else GameEnvironment.advance(gameEnvironment, dt)
                     gameMovement = result.state
@@ -5472,7 +5480,8 @@ fun DockScreen(
                     minuteOfDay = gameWorldNow.minuteOfDay,
                     lampOn = lampOn, tvOn = tvOn, avatarPos = gamePos, phase = scenePhase,
                     modifier = Modifier.fillMaxSize(), layers = gemaltEbenen,
-                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages, clock = gameElapsed
+                    roomLayers = renderedRoomLayers, environment = gameEnvironment, camera = gameCamera, images = gamePaintedImages, clock = gameElapsed,
+                    weather = gameWorldNow.weather
                 )
                 GamePassageView(gemalt, gameCamera, gameGerman, sceneFade.value, Modifier.fillMaxSize(), gameDoor, gameElapsed, gamePaintedImages)
                 if (!GameWorld.isWorld(gemalt)) GameSurfaceView(gemalt, gamePos, sceneFade.value, Modifier.fillMaxSize(), gameCamera)
@@ -6020,7 +6029,7 @@ fun DockScreen(
                 GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize(), gameElapsed, avatarWalking, gameFacing)
                 if (GameWorld.isWorld(scene)) GameWorldForeground(scene, gameCamera,
                     gameWorldEnvironments + (currentPlace to gameEnvironment), gameElapsed,
-                    gameWorldNow.minuteOfDay, sceneFade.value, Modifier.fillMaxSize())
+                    gameWorldNow.minuteOfDay, sceneFade.value, Modifier.fillMaxSize(),gameWorldNow.weather)
             }
             GameWorld.scene(gameRenderedPlace)?.let { scene ->
                 GameRoomForegroundView(scene, renderedRoomLayers, gameEnvironment, gamePos,
@@ -6581,11 +6590,13 @@ fun DockScreen(
             val controlsEnabled = gameDoorChoices.isEmpty() && gameImagesReady && screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen && gameTalking == null && !talkOpen
             fun gameCommand(command: GameMovement.Command, direction: PlayControl.Stick?) {
                 if (!controlsEnabled || avatar == null) return
-                gameMovement = GameWorld.scene(currentPlace)?.let { scene ->
-                    com.notime.glyphsim.matrix.GameTerrain.command(scene,gameMovement.copy(pos=gamePos),command,
-                        direction ?: gameInput(),gameSurfaceList)
-                } ?: GameMovement.command(gameMovement.copy(pos=gamePos),command,
-                    direction ?: gameInput(),gameSurfaceList,GameCharacterScale.MAX_STEP_HEIGHT)
+                gameSeat?.let { seat ->
+                    gamePos = seat.from
+                    gameSeat = null
+                    gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
+                }
+                gamePendingCommand = command to (direction ?: gameInput())
+                avatarIdleJob?.cancel()
             }
             if (controlsEnabled) GameKeys(onStick = { gameKeyStick = it },
                 onAction = { GameWorld.inReach(currentPlace, gamePos)?.let(::gameEnter) ?: gameStation?.let { gameActAt(it) } }, onCommand = ::gameCommand)

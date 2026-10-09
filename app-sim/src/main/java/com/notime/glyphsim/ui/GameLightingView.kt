@@ -37,7 +37,7 @@ internal fun DrawScope.paintShadow(shadow: GameSceneLighting.Shadow, alpha: Floa
 }
 
 private fun furniturePath(scene: GameScenes.Scene): Path = Path().apply {
-    for (piece in GameFurniture.pieces(scene)) for (contour in piece.contours) {
+    for (piece in GameFurniture.pieces(scene)) for (contour in if (GameRoomSpace.enabled(scene)) GameRoomSpace.contours(piece) else piece.contours) {
         contour.forEachIndexed { i, (x, y) -> if (i == 0) moveTo(x, y) else lineTo(x, y) }
         close()
     }

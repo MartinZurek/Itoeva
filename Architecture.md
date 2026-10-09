@@ -464,7 +464,9 @@ Ergaenzung 09.10.: Im aktiven Game rendert `GameCharacterPainter` dieselben
 Einzelbilder als 24x32-Texturnetz. `GameCharacterMotion` berechnet Statur,
 Stoffnachlauf und kleine materialabhaengige Koerperbewegungen rein in Kotlin.
 Ein analytischer zweistufiger Daempfer reagiert auf Gangtempo und lokale
-Windrichtung. Die gemeinsame Bewegungstaktung, Originalbilder, Fussanker und
+Windrichtung. Eigene Lauf-Stauchung/Flugphase und Schwimmzuege ergaenzen die
+Originalposen; der Motor koppelt Schrittlaenge und Fusskontakte an denselben Takt.
+Die gemeinsame Bewegungstaktung, Originalbilder, ruhende Fussanker und
 Aktionsrollen bleiben die Quellen. Vorder-/Rueckansicht haben eigene
 Stoffgewichte; Schlaf und Rolle behalten ihre kompakte Zeichnung.
 Netz- und Farbarrays sowie Paint werden pro Figur wiederverwendet. Die oberen
@@ -618,3 +620,19 @@ GameBreath ist nur lokale Spielausdauer ohne Persistenz/Agentenbedarf/XP-Wirkung
 haben kein neues Asset-IO; die Laufpause wird nie an den Ladefortschritt gekoppelt.
 V2 liest alte Positionen unveraendert, der aktive Client begrenzt sie auf den legalen Boden.
 Pruefvertrag, Scan aller 28 Orte und Telefon-Abnahme: docs/itoeva2-world-physics-and-loading.md.
+
+
+### Game-Raumkoerper und Medienwiedergabe (09.10.2026)
+
+`GameRoomSpace` zeichnet die elf Innenraeume als Boden-/Wandprojektion und einzelne
+Moebelkoerper. `GameFurniture` bleibt Quelle von Grundriss, Sitz-/Stand-/Landekante;
+Konturen der gezeichneten Koerper werden auch fuer Verdeckung und Licht gelesen.
+Der Raumzeichenweg verwendet keine gemalte Hintergrundbitmap. Die 2.5D-Kamera
+behaelt ihren Blickwinkel, mit mehr Boden und kleinerem Figurenmassstab.
+
+Rechte Padbefehle liegen bis zum naechsten Motorbild vor und werden nach dem
+Positionsabgleich in `GameTerrain.tick` verbraucht. `PlayMusic` erstellt den
+nativen Player mit Medienattributen vor der Vorbereitung; Game-Musik folgt der
+Medienlautstaerke statt der Klingelsperre. Bestehende Musik-Aus-/Fremdton-Regeln
+sowie App-1-/Stream-Sperren bleiben bestehen. Details und Pruefgrenzen stehen in
+`docs/itoeva2-character-motion.md`.

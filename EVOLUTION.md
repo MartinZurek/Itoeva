@@ -681,6 +681,40 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
   Front-/Ruecklauf-/Rollgrenzen werden durch Stoffphysik nicht neu gezeichnet.
   Keine neue `OPEN DECISION`, kein Merge-/APK-Auftrag in diesem Schnitt.
 
+### 2026-10-09 – Gangarten, Raumkoerper und Game-Medienstart (game-motion-space-v3)
+
+- **DOCUMENTED INTENT:** Martin beauftragt PR-Upload, glaubwuerdiges Rennen statt
+  schnellerem Gehen, Starlet-Bodenkontakt, plausible Mantel-/Laub-/Wasserbewegung,
+  Musik trotz Music on, sichtbaren Sprung vom rechten Pad und begehbare raeumliche
+  Innenorte mit passendem Figurenmassstab statt flacher Bilder (PR #351 auf #350).
+- **FACT / Entscheidung:** Der bestehende Motor bleibt Quelle der Bewegung.
+  Hoeheres Tempo verlaengert Schritte; Rennnetz hat Belastung/Abdruck/Flugphase.
+  Freie Fussspitzen und Kontakte lesen denselben Takt. `SWIM` verwendet neutrale
+  Ansichten mit Armzug/Rueckholen, Beinschlag und kleiner Neigung statt Superman-
+  Greifpose. Wasser und Laub zeichnen stetige Netze mit festen Ufer-/Wurzelkanten.
+  Das rechte Pad puffert den Befehl bis zum Motorbild nach Positionsabgleich.
+- **FACT / Raeume:** Elf Innenorte werden in 2.5D aus Raum- und Moebelkoerpern
+  gezeichnet; gleiche Geometrie fuer Kollision, Sitzen, Landen und Verdeckung.
+  Freier Boden, kleinere Figur, kein Innen-Nahzoom; Bett/Tische erhalten Tiefe.
+  Der alte Aussenhuetten-Grundriss bleibt bestehen. Keine frei drehbare 3D-Welt.
+- **FACT / Musik:** Medienattribute vor Vorbereitung des Android-Players;
+  ausgefallener Decoder wird neu gestartet. Aktivierte Musik folgt im Game dem
+  Medienregler, nicht stummem Klingeln. Musik-Aus/Fremdton und bisherige App-1-/
+  Stream-Klingelsperre bleiben wirksam. Kein Systemlautstaerke-/Focus-Eingriff.
+- **TESTED BEHAVIOR / Pruefstand:** 1.038 reine Tests im erweiterten Gesamtlauf;
+  finale Resultate/Android-CI im PR. Native Tests fuer Pointerbefehl bis zum
+  Sprungmotor, echte Raum-Canvaszeichnung, alle sechs Spritearten und ausgelieferten
+  Musikdecoder. Softwarevorschauen lesen produktive Kotlin-Netze/Raumkoerper.
+- **Betroffene Bereiche:** Game-Darstellung, Motoradapter, Innenkatalog/Kamera,
+  Medienplayer, Regressionen und Dokumentation. Keine Reminder-, LAS-, XP-,
+  Progressions-, Speicherschema-, Build-/Workflow-/Abhaengigkeitsaenderungen.
+- **Ruecksetzung:** PR-Commits auf #350 (`431bd178`) ruecknehmen; keine Migration.
+- **UNVERIFIED / Naechster Schritt:** Der exakte Handyfehler des Pads ist noch
+  nicht reproduziert; Pointer-/Motor-Test ist kein voller DockScreen-Test.
+  Telefonabnahme von Musiklautsprecher, Gang-/Schwimmwirkung, Raumstil und GPU-
+  Bildrate bleibt erforderlich. Keine Behauptung einer APK-Aufnahme/Hoerabnahme;
+  keine neue OPEN DECISION. Martin baut separat, kein Merge-/APK-Auftrag hier.
+
 Für jede angenommene Evolution müssen mindestens folgende Informationen dauerhaft auffindbar
 sein:
 

@@ -41,14 +41,53 @@ class GameCharacterMotionTest {
         assertTrue(follow.update(Long.MAX_VALUE, 2f, 1f).drag.isFinite())
     }
 
-    @Test fun `Kopf Kragen und alle Fussanker bleiben fest`() {
+    @Test fun `Sekundaerbewegung laesst Kopf Kragen und ruhende Fussanker fest`() {
         for (species in AvatarSpecies.entries) for (frame in listOf(0, 9, 68, 76, 93, 103, 110, 114)) {
             val top = GameCharacterScale.reference(species).top / 128f
             for (u in listOf(.25f, .5f, .75f)) for (v in listOf(top, top + .05f, 120f/128f, 125f/128f, 1f)) {
-                val p = GameCharacterMotion.point(species, frame, top, u, v, 1234, 123, 2f, 1.5f,
+                val p = GameCharacterMotion.point(species, frame, top, u, v, 1234, 123, 0f, 1.5f,
                     GameCharacterMotion.Response(-1.4f, -1.2f))
                 assertEquals(u, p.x, .000001f); assertEquals(v, p.y, .000001f)
             }
+        }
+    }
+
+    @Test fun `Gehen behaelt Bodenkontakt Rennen enthaelt Abdruck und Flug`() {
+        for (t in 0L..760L step 10L) {
+            val walk=GameCharacterMotion.stride(t,false)
+            assertEquals(0f,walk.flight,0f)
+            assertTrue(walk.leftSwing==0f || walk.rightSwing==0f)
+        }
+        assertTrue((0L..760L step 10L).any { GameCharacterMotion.stride(it,true).flight > .8f })
+        assertTrue((0L..760L step 10L).any { GameCharacterMotion.stride(it,true).compression > .8f })
+        for (species in AvatarSpecies.entries) {
+            val top=GameCharacterScale.reference(species).top/128f
+            val walk=GameCharacterMotion.point(species,68,top,.35f,125f/128f,0,120,1f,0f,GameCharacterMotion.Response())
+            assertEquals(125f/128f,walk.y,.00001f)
+            val run=GameCharacterMotion.point(species,122,top,.35f,125f/128f,0,290,2f,0f,GameCharacterMotion.Response())
+            assertTrue(run.y < walk.y-.005f)
+        }
+    }
+
+    @Test fun `Stern hebt die freie Spitze an und belastet die andere`() {
+        val top=44f/128
+        fun foot(u: Float,t: Long)=GameCharacterMotion.point(AvatarSpecies.STARLET,68,top,u,
+            125f/128f,0,t,1f,0f,GameCharacterMotion.Response())
+        assertEquals(125f/128f,foot(.35f,190).y,.00001f)
+        assertTrue(foot(.67f,190).y<125f/128f-.008f)
+        assertTrue(foot(.35f,570).y<125f/128f-.008f)
+        assertEquals(125f/128f,foot(.67f,570).y,.00001f)
+    }
+
+    @Test fun `Schwimmzug bewegt die Gliedmassen statt einer starren Greifpose`() {
+        for(species in AvatarSpecies.entries) {
+            val top=GameCharacterScale.reference(species).top/128f
+            val v=top+(125f/128-top)*.63f
+            fun point(stroke: Float)=GameCharacterMotion.point(species,104,top,.34f,v,0,0,0f,0f,
+                GameCharacterMotion.Response(),GameWater.Swim(stroke,0f,9f,true))
+            assertTrue(abs(point(.25f).x-point(.75f).x)>.02f)
+            assertEquals(104,CreatureSprites.motionFrame(CreatureSprites.MotionCue(CreatureSprites.Motion.SWIM,.5f),
+                CreatureSprites.Facing.FRONT))
         }
     }
 
@@ -103,10 +142,11 @@ class GameCharacterMotionTest {
 
     @Test fun `Das Netz faltet sich bei Boeen und schnellem Gang nicht um`() {
         val vertices = FloatArray(GameCharacterMotion.VERTICES*2)
-        for (species in AvatarSpecies.entries) for (frame in listOf(0, 9, 68, 76, 93, 103, 110, 114, 130))
-            for (clock in listOf(0L, 431L, 1423L, Long.MAX_VALUE)) for (wind in listOf(-1.5f, 1.5f)) {
+        for (species in AvatarSpecies.entries) for (frame in listOf(0, 9, 68, 76, 93, 103, 110, 114, 122, 126, 95, 104, 111, 130))
+            for (clock in listOf(0L, 431L, 1423L, Long.MAX_VALUE)) for (wind in listOf(-1.5f, 1.5f))
+                for(swim in listOf(null,GameWater.Swim(.25f,0f,9f,true),GameWater.Swim(.75f,0f,9f,true))) {
                 GameCharacterMotion.fill(vertices, species, frame, GameCharacterScale.reference(species).top/128f,
-                    clock, clock, 2f, wind, GameCharacterMotion.Response(-2.375f, -.8f, wind*.65f, -wind*.3f))
+                    clock, clock, 2f, wind, GameCharacterMotion.Response(-2.375f, -.8f, wind*.65f, -wind*.3f),swim)
                 for (row in 0 until GameCharacterMotion.ROWS) for (column in 0 until GameCharacterMotion.COLUMNS) {
                     val a = (row*(GameCharacterMotion.COLUMNS+1)+column)*2
                     val b = a+2; val c = a+(GameCharacterMotion.COLUMNS+1)*2; val d = c+2

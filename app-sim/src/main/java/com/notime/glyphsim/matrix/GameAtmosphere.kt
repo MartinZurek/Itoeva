@@ -17,10 +17,22 @@ object GameAtmosphere {
         return (sin(t * .57f - worldX / 2100f) * .68f +
             sin(t * 1.17f - worldX / 3900f) * .22f).toFloat() * weatherScale
     }
-    fun bend(patch: Patch, row: Float, clock: Long, worldOrigin: Float = 0f): Float {
+    fun bend(patch: Patch, row: Float, clock: Long, worldOrigin: Float = 0f, weather: PlayWeather = PlayWeather.CLEAR): Float {
         val weight = if (patch.hanging) row else 1f - row
-        val wave = wind(worldOrigin + patch.x, clock) + .14f * sin(clock / 930f + patch.seed)
+        val wave = wind(worldOrigin + patch.x, clock,weather) + .14f * sin(clock / 930f + patch.seed)
         return wave * weight * weight * if (patch.water) 1.25f else 1.35f
+    }
+    /** Drei Pixel Rand federn in die unveraenderte Malerei aus; kein harter Ausschnitt schiebt mit. */
+    fun motionOffset(patch: Patch,x: Float,y: Float,clock: Long,origin: Float = 0f,
+        weather: PlayWeather = PlayWeather.CLEAR): Float {
+        fun smooth(value: Float)=value.coerceIn(0f,1f).let { it*it*(3f-2f*it) }
+        val edge=smooth((x-patch.x+3f)/3f)*smooth((patch.x+patch.w+3f-x)/3f)*
+            smooth((y-patch.y+3f)/3f)*smooth((patch.y+patch.h+3f-y)/3f)
+        val row=((y-patch.y)/patch.h).coerceIn(0f,1f)
+        val dx=if(patch.hanging) GameFabric.hangingOffset(row,((x-patch.x)/patch.w).coerceIn(0f,1f),
+            wind(origin+patch.x,clock,weather)*.65f,clock,patch.seed)
+            else bend(patch,row,clock,origin,weather)
+        return dx.coerceIn(-1.5f,1.5f)*edge
     }
     fun figureBend(scene: GameScenes.Scene, species: AvatarSpecies, v: Float, clock: Long,
         worldX: Float, weather: PlayWeather): Float {

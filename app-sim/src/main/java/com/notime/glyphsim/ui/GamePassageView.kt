@@ -40,8 +40,19 @@ internal fun GamePassageView(scene: GameScenes.Scene, camera: GameCamera.State, 
                     val active=door?.takeIf { it.passage.from==passage.from &&
                         GameDoors.aperture(it.passage.from,it.passage.to)==aperture }
                     val opening=GameDoors.opening(active,active?.passage ?: passage,clock)
+                    if(GameRoomSpace.enabled(section)) {
+                        val (ax,ay)=fit.toScreen(aperture.x0,aperture.y0)
+                        val width=(aperture.x1-aperture.x0)*scale
+                        val height=(aperture.y1-aperture.y0)*scale
+                        val leafWidth=(width*cos(opening*1.48f)).coerceAtLeast(scale)
+                        drawRect(Color(0xFF302B26).copy(alpha=fade),Offset(ax,ay),Size(width,height))
+                        drawRect(Color(0xFF96734E).copy(alpha=fade),Offset(ax+scale,ay+scale),Size((leafWidth-2f*scale).coerceAtLeast(scale),height-2f*scale))
+                        drawRect(Color(0xFFBE9869).copy(alpha=fade),Offset(ax+5f*scale,ay+8f*scale),
+                            Size((leafWidth-10f*scale).coerceAtLeast(scale),height-18f*scale),style=Stroke(scale))
+                        drawCircle(Color(0xFFE5C988).copy(alpha=fade),1.3f*scale,Offset(ax+leafWidth-5f*scale,ay+height*.58f))
+                    }
                     val sample=if(opening>0f) GameDoors.sample(passage) else null
-                    if(opening>0f && sample!=null) {
+                    if(opening>0f && sample!=null && !GameRoomSpace.enabled(section)) {
                         val (ax,ay)=fit.toScreen(aperture.x0,aperture.y0)
                         val width=(aperture.x1-aperture.x0)*scale
                         val height=(aperture.y1-aperture.y0)*scale

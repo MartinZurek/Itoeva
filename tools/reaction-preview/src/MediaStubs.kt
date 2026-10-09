@@ -23,10 +23,12 @@ class AudioAttributes private constructor() {
 class AudioManager {
     val isMusicActive: Boolean = false
     val ringerMode: Int = 2
+    fun getStreamVolume(stream: Int): Int = 5
 
     companion object {
         const val RINGER_MODE_SILENT = 0
         const val RINGER_MODE_VIBRATE = 1
+        const val STREAM_MUSIC = 3
     }
 }
 
@@ -43,5 +45,8 @@ class MediaPlayer {
     companion object {
         @JvmStatic
         fun create(context: android.content.Context, resId: Int): MediaPlayer? = null
+        @JvmStatic
+        fun create(context: android.content.Context, resId: Int, attributes: AudioAttributes,
+            session: Int): MediaPlayer? = null
     }
 }

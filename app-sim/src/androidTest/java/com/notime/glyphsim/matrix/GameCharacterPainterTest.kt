@@ -17,14 +17,14 @@ import org.junit.runner.RunWith
 /** Der neue native Zeichenweg wird mit echten Android-Bitmaps ausgefuehrt. */
 @RunWith(AndroidJUnit4::class)
 class GameCharacterPainterTest {
-    @Test fun `Alle Wesen behalten transparente Raender und den gemeinsamen Boden`() {
+    @Test fun alleWesenBehaltenTransparenteRaenderUndDenGemeinsamenBoden() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         for (species in AvatarSpecies.entries) {
             val sheet = CreatureSheets.get(context, species)!!
             assertEquals(sheet.frames.size, sheet.tops.size)
             val painter = GameCharacterPainter()
-            painter.update(1234, 456, 2f, 1.5f)
-            for (frame in listOf(0, 9, 27, 32, 68, 76, 93, 103, 110, 114, 125, 137)) {
+            for (frame in listOf(0, 9, 27, 32, 68, 76, 93, 103, 110, 114, 125, 137, 95, 104, 111)) {
+                painter.update(1234,456,2f,1.5f,if(frame in listOf(95,104,111)) GameWater.Swim(.25f,0f,9f,true) else null)
                 val output = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
                 try {
                     CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr,
@@ -44,7 +44,7 @@ class GameCharacterPainterTest {
         }
     }
 
-    @Test fun `Die physische Lichtseite bleibt beim Spiegeln auf derselben Seite`() {
+    @Test fun diePhysischeLichtseiteBleibtBeimSpiegelnAufDerselbenSeite() {
         val source = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888).apply { eraseColor(-1) }
         val light = GameSceneLighting.CharacterLight(GameSceneLighting.Rgb(1f,.2f,.2f),
             GameSceneLighting.Rgb(.2f,.2f,1f))

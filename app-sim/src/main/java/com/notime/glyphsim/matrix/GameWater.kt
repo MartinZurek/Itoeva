@@ -68,7 +68,7 @@ object GameWater {
 
     data class Swim(val stroke: Float, val bob: Float, val angle: Float, val moving: Boolean,
         val buoyancy: Float = if(moving) 28f else 22f) {
-        val cue get() = CreatureSprites.MotionCue(CreatureSprites.Motion.REACH, stroke)
+        val cue get() = CreatureSprites.MotionCue(CreatureSprites.Motion.SWIM, stroke)
     }
     /** Kein Laufzyklus unter Wasser: Ausstrecken, Zug, Zurueckholen und ruhiges Wassertreten. */
     fun swim(scene: GameScenes.Scene, pos: PlayControl.Pos, lift: Float, dir: PlayControl.Dir,
@@ -76,7 +76,7 @@ object GameWater {
         val wet = GameWorld.wetness(scene,pos)
         if (wet < .20f || lift > 0f) return null
         val phase = (clock % if(moving) 900L else 1500L).toFloat() / if(moving) 900f else 1500f
-        val tilt = if(moving) 32f else 5f
+        val tilt = if(moving) 9f else 3f
         val angle = when(dir) { PlayControl.Dir.LEFT -> -tilt; PlayControl.Dir.RIGHT -> tilt; else -> sin(phase*6.283f)*4f }
         val rise = when(species) { AvatarSpecies.WYRMLING -> 14f; AvatarSpecies.STARLET -> 22f; else -> 28f }
         return Swim(phase, sin(phase*6.283f)*1.6f, angle, moving, if(moving) rise else rise*.79f)

@@ -19,16 +19,18 @@ internal class GameCharacterPainter {
     private var wind = 0f
     private var clock = 0L
     private var gait = 0L
+    private var swim: GameWater.Swim? = null
 
-    fun update(clock: Long, gait: Long, speed: Float, wind: Float) {
+    fun update(clock: Long, gait: Long, speed: Float, wind: Float, swim: GameWater.Swim? = null) {
         this.clock = clock; this.gait = gait; this.speed = speed; this.wind = wind
+        this.swim = swim
         response = follow.update(clock, speed, wind)
     }
 
     fun draw(scope: DrawScope, image: ImageBitmap, species: AvatarSpecies, frame: Int, top: Int,
         left: Float, y: Float, size: Float, alpha: Float, dim: Float,
         light: GameSceneLighting.CharacterLight?, mirrored: Boolean) {
-        GameCharacterMotion.fill(vertices, species, frame, top / 128f, clock, gait, speed, wind, response)
+        GameCharacterMotion.fill(vertices, species, frame, top / 128f, clock, gait, speed, wind, response,swim)
         var i = 0
         val referenceTop = GameCharacterScale.reference(species).top
         for (row in 0..GameCharacterMotion.ROWS) for (column in 0..GameCharacterMotion.COLUMNS) {

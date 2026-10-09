@@ -12,10 +12,14 @@ fun main(args: Array<String>) {
     }
     for (tick in 0 until 80) {
         val clock = tick * 50L
-        val speed = if (clock in 800L until 2000L) 1.6f else 0f
+        val speed = when(clock) { in 800L until 1600L -> .8f; in 1600L until 2600L -> 1.9f; else -> 0f }
+        val gait = when { clock<800 -> 0L;clock<1600 -> clock-800;clock<2600 -> 800L+((clock-1600)*GameMovement.cadence(1.9f)).toLong();else -> 2100L }
+        val swim = if(clock>=3000) GameWater.Swim((clock-3000)%900/900f,0f,9f,true) else null
         val role = when {
-            clock < 800L -> (tick / 2) % 8
-            speed > 0 -> 9 + ((clock - 800) / 95 % 8).toInt()
+            swim!=null -> 95
+            clock<800 -> (tick/2)%8
+            clock<1600 -> 9+(gait/95%8).toInt()
+            clock<2600 -> 114+(gait/95%8).toInt()
             else -> 95
         }
         for (species in AvatarSpecies.entries) {
@@ -24,7 +28,7 @@ fun main(args: Array<String>) {
             val vertices = FloatArray(GameCharacterMotion.VERTICES * 2)
             val response = follow.getValue(species).update(clock, speed, .65f)
             GameCharacterMotion.fill(vertices, species, role, top / 128f, clock,
-                if (speed > 0) clock - 800 else 0, speed, .65f, response)
+                gait, speed, .65f, response,swim)
             File(out, "${species.name.lowercase()}-$tick.csv").writeText(
                 "$role,${GameCharacterScale.reference(species).top},${GameCharacterScale.reference(species).relativeHeight}\n" +
                     vertices.joinToString(","))

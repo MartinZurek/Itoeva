@@ -6,6 +6,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -17,45 +20,47 @@ import com.notime.glyphsim.matrix.*
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-/** Begrenzte Zeilenverschiebung der vorhandenen Malerei; keine neuen Vollbild-Texturen. */
+private class MotionTexture(val bitmap: android.graphics.Bitmap) {
+    val vertices=FloatArray(9*17*2)
+    val paint=android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
+}
+private val motionTextures=java.util.WeakHashMap<ImageBitmap,MutableMap<List<Int>,MotionTexture>>()
+
+/** Kleine Ausschnitte werden einmal gecacht und als zusammenhaengende Netze verformt. */
 internal fun DrawScope.paintPaintedMotion(scene: GameScenes.Scene, image: ImageBitmap,
-    fit: GameScenes.Fit, clock: Long, alpha: Float, images: Map<String, ImageBitmap?> = emptyMap()) {
+    fit: GameScenes.Fit, clock: Long, alpha: Float, images: Map<String, ImageBitmap?> = emptyMap(),
+    weather: PlayWeather = PlayWeather.CLEAR) {
+    if(alpha < .995f) return
     withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
         for (patch in GameAtmosphere.patches(scene)) {
-            val sample = GameAtmosphere.sample(scene, patch) ?: continue
-            val source = if (sample.asset == scene.asset) image else images[sample.asset] ?: continue
-            val sourceOffset = sample.offset
-            val sx = source.width / sample.width
-            val sy = source.height / sample.height
-            clipRect(patch.x, patch.y, patch.x + patch.w, patch.y + patch.h) {
-                repeat(12) { i ->
-                    val y0 = patch.y + patch.h * i / 12f
-                    val y1 = patch.y + patch.h * (i + 1) / 12f
-                    val dx = if (patch.hanging) GameFabric.hangingOffset((i + .5f) / 12f, .5f,
-                        GameAtmosphere.wind(GameWorld.origin(scene.place) + patch.x, clock) * .65f, clock, patch.seed)
-                        else GameAtmosphere.bend(patch, (i + .5f) / 12f, clock, GameWorld.origin(scene.place))
-                    // Umgebende Pixel werden mitgesampelt; es entsteht kein Loch am bewegten Rand.
-                    val left = patch.x - 3f
-                    val right = patch.x + patch.w + 3f
-                    val x0 = ((left + sourceOffset) * sx).roundToInt().coerceIn(0, source.width - 1)
-                    val x1 = ((right + sourceOffset) * sx).roundToInt().coerceIn(x0 + 1, source.width)
-                    val py0 = (y0 * sy).roundToInt().coerceIn(0, source.height - 1)
-                    val py1 = (y1 * sy).roundToInt().coerceIn(py0 + 1, source.height)
-                    withTransform({ translate(dx, 0f) }) {
-                        drawImage(source, IntOffset(x0, py0), IntSize(x1 - x0, py1 - py0),
-                            IntOffset(left.roundToInt(), y0.roundToInt()),
-                            IntSize((right - left).roundToInt(), (y1.roundToInt() - y0.roundToInt()).coerceAtLeast(1)),
-                            alpha = alpha, filterQuality = FilterQuality.Low)
-                    }
-                }
+            val sample=GameAtmosphere.sample(scene,patch) ?: continue
+            val source=if(sample.asset==scene.asset) image else images[sample.asset] ?: continue
+            val sx=source.width/sample.width; val sy=source.height/sample.height
+            val x0=((patch.x-3f+sample.offset)*sx).toInt().coerceIn(0,source.width-1)
+            val x1=kotlin.math.ceil((patch.x+patch.w+3f+sample.offset)*sx).toInt().coerceIn(x0+1,source.width)
+            val y0=((patch.y-3f)*sy).toInt().coerceIn(0,source.height-1)
+            val y1=kotlin.math.ceil((patch.y+patch.h+3f)*sy).toInt().coerceIn(y0+1,source.height)
+            val key=listOf(x0,y0,x1,y1)
+            val texture=motionTextures.getOrPut(source) { mutableMapOf() }.getOrPut(key) {
+                MotionTexture(android.graphics.Bitmap.createBitmap(source.asAndroidBitmap(),x0,y0,x1-x0,y1-y0))
             }
+            var i=0
+            for(row in 0..16) for(column in 0..8) {
+                val x=(x0+(x1-x0)*column/8f)/sx-sample.offset
+                val y=(y0+(y1-y0)*row/16f)/sy
+                texture.vertices[i++]=x+GameAtmosphere.motionOffset(patch,x,y,clock,GameWorld.origin(scene.place),weather)
+                texture.vertices[i++]=y
+            }
+            texture.paint.alpha=(alpha.coerceIn(0f,1f)*255f).roundToInt()
+            drawIntoCanvas { canvas -> canvas.nativeCanvas.drawBitmapMesh(texture.bitmap,8,16,
+                texture.vertices,0,null,0,texture.paint) }
         }
     }
 }
 
 /** Regungen folgen Boden, Ufer und Licht; Kamera und aktiver Ortsname verschieben sie nicht. */
 internal fun DrawScope.paintAtmosphere(scene: GameScenes.Scene, fit: GameScenes.Fit,
-    clock: Long, minute: Int, alpha: Float, foreground: Boolean) {
+    clock: Long, minute: Int, alpha: Float, foreground: Boolean, weather: PlayWeather = PlayWeather.CLEAR) {
     if (!GameWorld.isWorld(scene)) return
     val span = GameWorld.region(scene.place)!!.section
     val origin = GameWorld.origin(scene.place)
@@ -86,7 +91,7 @@ internal fun DrawScope.paintAtmosphere(scene: GameScenes.Scene, fit: GameScenes.
                 PlayScene.Place.FOREST, PlayScene.Place.VILLAGE_EDGE)) repeat(10) { i ->
             val x = span * (i + .5f) / 10f
             val y = 576f + i % 4 * 3f
-            val sway = GameAtmosphere.wind(origin + x, clock) * 3f
+            val sway = GameAtmosphere.wind(origin + x, clock,weather) * 3f
             val light = (1f - GameSceneLighting.darknessAt(scene, x, minute)) * alpha
             drawLine(Color(0xFF71834A).copy(alpha = .50f * light), Offset(x, y),
                 Offset(x + sway, y - 7f - i % 3), 1f)

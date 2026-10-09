@@ -246,7 +246,7 @@ private fun DrawScope.drawCreature(
     if (rich && gameFabric != null) characterPainter.update(gameFabric.clock,
         gameGaitMs ?: gait.update(gameMoving ?: false, timeMs),
         if (gameSwim == null) gameFabric.walking else 0f,
-        gameFabric.wind * if (look.mirrored) -1f else 1f)
+        gameFabric.wind * if (look.mirrored) -1f else 1f, gameSwim)
     fun paint(index: Int, alpha: Float) {
         val image = sheet.frames[index]
         if (rich && gameFabric != null) {
