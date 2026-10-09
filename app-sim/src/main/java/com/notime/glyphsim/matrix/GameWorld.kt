@@ -82,6 +82,22 @@ object GameWorld {
     fun passages(place: Place) = links.filter { it.from == place }
     fun passageAt(scene: GameScenes.Scene, x: Float, y: Float) = passages(scene.place)
         .filter { it.door && (x to y) in it.hit(scene) }.minByOrNull { abs(GameScenes.feet(scene, it.pos).first - x) }
+    /** Ein sichtbarer Eingang kann im Nachbarabschnitt desselben Kamerapanoramas liegen. */
+    fun passageAtVisible(scene: GameScenes.Scene, worldX: Float, y: Float): Passage? =
+        visiblePlaces(scene).asSequence().mapNotNull { place ->
+            val section = GameWorld.scene(place)!!
+            val localX = worldX - origin(place)
+            passages(place).firstOrNull { passage ->
+                if (!passage.door) false else {
+                    val box = GameDoors.aperture(passage.from, passage.to)
+                    val feet = GameScenes.feet(section, passage.pos)
+                    val hit = GameScenes.Box(minOf(box.x0, feet.first - 32f),
+                        minOf(box.y0, feet.second - 84f), maxOf(box.x1, feet.first + 32f), box.y1 + 8f)
+                    (localX to y) in hit
+                }
+            }
+        }.firstOrNull()
+
     fun inReach(place: Place, pos: Pos) = passages(place).filter { it.door }
         .minByOrNull { abs(it.pos.x - pos.x) + abs(it.pos.depth - pos.depth) * .4f }
         ?.takeIf { abs(it.pos.x - pos.x) < .10f && abs(it.pos.depth - pos.depth) < .22f }
@@ -121,11 +137,11 @@ object GameWorld {
                 GameScenes.Scene(place, r.asset, 450f, 625f, left, right, left, right, 65f, 108f, scaledSpots, exits(place),
                     walkBand = if (place == Place.COAST_PATH) listOf(
                         GameScenes.WalkBand(0f, 450f, 625f),
-                        GameScenes.WalkBand(.12f, 450f, 510f),
-                        GameScenes.WalkBand(.30f, 435f, 478f),
-                        GameScenes.WalkBand(.43f, 408f, 449f),
-                        GameScenes.WalkBand(.58f, 435f, 485f),
-                        GameScenes.WalkBand(.78f, 450f, 535f),
+                        GameScenes.WalkBand(.12f, 430f, 475f),
+                        GameScenes.WalkBand(.30f, 380f, 415f),
+                        GameScenes.WalkBand(.43f, 370f, 396f),
+                        GameScenes.WalkBand(.58f, 390f, 430f),
+                        GameScenes.WalkBand(.78f, 415f, 465f),
                         GameScenes.WalkBand(1f, 450f, 625f)) else emptyList())
             } else {
                 val original = GameInteriorCatalog.scenes.getValue(place)

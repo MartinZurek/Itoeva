@@ -6363,12 +6363,33 @@ fun DockScreen(
              * Rucksack (siehe PlayBackpack.lootAt), solange Platz ist.
              */
             fun gameEnterChosen(passage: GameWorld.Passage) {
-                if (gameActing || gameMovement.action != null || gameMovement.height > 0f || passage.from != currentPlace) return
+                if (gameActing || !com.notime.glyphsim.matrix.GameDoors.canEnter(gameMovement) ||
+                    (passage.from != currentPlace && !GameWorld.connected(currentPlace, passage.from))) return
+                gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
                 gameActing = true
                 gameActionCancelled = false
                 scope.launch {
                     try {
-                        gameWalkTarget = GameAdventure.safePosition(currentPlace, passage.pos, gameSurfaceList)
+                        while (currentPlace != passage.from) {
+                            val from = currentPlace
+                            val fromIndex = GameWorld.places.indexOf(from)
+                            val forward = GameWorld.places.indexOf(passage.from) > fromIndex
+                            val next = GameWorld.places[fromIndex + if (forward) 1 else -1]
+                            val dir = if (forward) PlayControl.Dir.RIGHT else PlayControl.Dir.LEFT
+                            val scene = GameWorld.scene(from)!!
+                            gameWalkTarget = com.notime.glyphsim.matrix.GameTerrain.clamp(scene,
+                                gamePos.copy(x = if (forward) 1f else 0f, pushMs = 0L))
+                            if (!awaitGameWalk() || currentPlace != from) return@launch
+                            gameWorldEnvironments = gameWorldEnvironments + (from to gameEnvironment)
+                            currentPlace = next
+                            gamePos = com.notime.glyphsim.matrix.GameTerrain.clamp(GameWorld.scene(next)!!,
+                                PlayControl.entry(dir, gamePos).copy(pushMs = 0L))
+                            gameMovement = GameMovement.State(pos = gamePos, facing = gameFacing)
+                            gameEnvironment = gameWorldEnvironments[next] ?: GameEnvironment.State(clock = gameEnvironment.clock)
+                            gameActors = gameWorldActors[next].orEmpty()
+                        }
+                        gameWalkTarget = GameAdventure.safePosition(currentPlace, passage.pos,
+                            GameSurfaces.painted(GameWorld.scene(currentPlace)!!))
                         if (!awaitGameWalk() || currentPlace != passage.from) return@launch
                         doorTransit = true
                         gameDoor = com.notime.glyphsim.matrix.GameDoors.State(passage,gameElapsed)
@@ -6389,13 +6410,14 @@ fun DockScreen(
                 }
             }
             fun gameEnter(passage: GameWorld.Passage) {
+                if (gameActing || !com.notime.glyphsim.matrix.GameDoors.canEnter(gameMovement)) return
                 val choices=com.notime.glyphsim.matrix.GameDoors.choices(passage)
                 if(choices.size>1) gameDoorChoices=choices else gameEnterChosen(passage)
             }
             fun gamePassageUnder(tap: Offset): GameWorld.Passage? {
                 val scene = GameWorld.scene(currentPlace) ?: return null
                 val (x, y) = GameCamera.fit(gameCamera, scene, maxWidthPx, maxHeightPx).toImage(tap.x, tap.y)
-                return GameWorld.passageAt(scene, x, y)
+                return GameWorld.passageAtVisible(scene, GameWorld.origin(scene.place) + x, y)
             }
             fun gameActAt(station: PlayScene.Station) {
                 val species = avatar?.species ?: return
@@ -6565,6 +6587,33 @@ fun DockScreen(
                 } ?: GameMovement.command(gameMovement.copy(pos=gamePos),command,
                     direction ?: gameInput(),gameSurfaceList,GameCharacterScale.MAX_STEP_HEIGHT)
             }
+            if (controlsEnabled) GameKeys(onStick = { gameKeyStick = it },
+                onAction = { GameWorld.inReach(currentPlace, gamePos)?.let(::gameEnter) ?: gameStation?.let { gameActAt(it) } }, onCommand = ::gameCommand)
+            GameTouch(
+                onStick = { gameTouchStick = it },
+                onCommand = ::gameCommand,
+                enabled = controlsEnabled,
+                onTap = { tap ->
+                    val passage = gamePassageUnder(tap)
+                    if (passage != null) gameEnter(passage)
+                    else if (gameObjectUnder(tap) != null) gameObjectUnder(tap)?.let(::gameActObject)
+                    else avatar?.let { current ->
+                        val px = with(density) { current.sizeDp.dp.toPx() }
+                        val hit = tap.x in current.offset.x..(current.offset.x + px) &&
+                            tap.y in current.offset.y..(current.offset.y + px * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
+                        if (hit && !gameActing) gameMenuOpen = true
+                        else if (!gameActing) gameResidentUnder(tap)?.let(::gameTalkTo)
+                            ?: gameStationUnder(tap)?.let(::gameActAt)
+                    }
+                },
+                onDoubleTap = { tap ->
+                    val passage = gamePassageUnder(tap)
+                    val obj = gameObjectUnder(tap)
+                    if (passage != null) gameEnter(passage)
+                    else if (obj != null) gameActObject(obj)
+                    else gameResidentUnder(tap)?.let(::gameTalkTo) ?: gameStationUnder(tap)?.let(::gameActAt)
+                }
+            )
             if (controlsEnabled) {
                 val scene = GameWorld.scene(currentPlace)
                 val nearest = GameAdventure.ObjectId.entries.filter { it.place == currentPlace && GameAdventure.visible(gameAdventure, it) }.minByOrNull {
@@ -6590,29 +6639,6 @@ fun DockScreen(
                     gameActionCancelled = true; gameWalkTarget = null; avatarWalking = false
                 }, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
             }
-            if (controlsEnabled) GameKeys(onStick = { gameKeyStick = it },
-                onAction = { GameWorld.inReach(currentPlace, gamePos)?.let(::gameEnter) ?: gameStation?.let { gameActAt(it) } }, onCommand = ::gameCommand)
-            GameTouch(
-                onStick = { gameTouchStick = it },
-                onCommand = ::gameCommand,
-                enabled = controlsEnabled,
-                onTap = { tap ->
-                    avatar?.let { current ->
-                        val px = with(density) { current.sizeDp.dp.toPx() }
-                        val hit = tap.x in current.offset.x..(current.offset.x + px) &&
-                            tap.y in current.offset.y..(current.offset.y + px * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
-                        if (hit && !gameActing) gameMenuOpen = true
-                        else if (!gameActing) gameResidentUnder(tap)?.let(::gameTalkTo)
-                    }
-                },
-                onDoubleTap = { tap ->
-                    val passage = gamePassageUnder(tap)
-                    val obj = gameObjectUnder(tap)
-                    if (passage != null) gameEnter(passage)
-                    else if (obj != null) gameActObject(obj)
-                    else gameResidentUnder(tap)?.let(::gameTalkTo) ?: gameStationUnder(tap)?.let(::gameActAt)
-                }
-            )
             // Die Auswahl muss ueber der vollflaechigen Daumensteuerung liegen.
             if(gameDoorChoices.isNotEmpty()) GameDoorChoicePanel(gameDoorChoices,gameGerman,
                 onSelect={ passage -> gameDoorChoices=emptyList();gameEnterChosen(passage) },

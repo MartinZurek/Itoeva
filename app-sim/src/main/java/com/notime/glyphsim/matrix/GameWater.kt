@@ -59,8 +59,12 @@ object GameWater {
         return result
     }
     fun runs(asset: String) = masks[asset].orEmpty()
-    fun displacement(x: Float,y: Float,clock: Long): Float =
-        sin(x*.027f+y*.091f-clock/620f)*1.8f + sin(x*.011f-y*.046f+clock/1050f)*.8f
+    /** Vorderes Wasser und Flussstroemung werden binnen weniger Bilder sichtbar, fern bleibt es ruhig. */
+    fun displacement(x: Float,y: Float,clock: Long): Float {
+        val foreground = ((y - 390f) / 160f).coerceIn(0f, 1f)
+        return sin(x*.027f+y*.091f-clock/280f)*(1.8f+foreground*1.8f) +
+            sin(x*.011f-y*.046f+clock/540f)*(0.8f+foreground*.6f)
+    }
 
     data class Swim(val stroke: Float, val bob: Float, val angle: Float, val moving: Boolean,
         val buoyancy: Float = if(moving) 28f else 22f) {

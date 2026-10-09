@@ -69,27 +69,14 @@ internal fun GameTouch(
     val doubleNow by rememberUpdatedState(onDoubleTap)
     var stickOrigin by remember { mutableStateOf<Offset?>(null) }
     var stickKnob by remember { mutableStateOf(Offset.Zero) }
-    var actionOrigin by remember { mutableStateOf<Offset?>(null) }
-    var actionAt by remember { mutableLongStateOf(0L) }
-    var actionFired by remember { mutableStateOf(false) }
     var lastTapAt by remember { mutableLongStateOf(0L) }
     var lastTapPos by remember { mutableStateOf(Offset.Zero) }
     val jumpLabel = stringResource(R.string.game_control_jump)
     val rollLabel = stringResource(R.string.game_control_roll)
     val restLabel = stringResource(R.string.game_control_rest)
-    LaunchedEffect(actionOrigin, actionAt) {
-        if (actionOrigin != null) {
-            delay(500L)
-            if (!actionFired) {
-                actionFired = true
-                commandNow(GameMovement.Command.REST, null)
-            }
-        }
-    }
     DisposableEffect(Unit) { onDispose { stickNow(PlayControl.Stick()) } }
     val touchInput = if(enabled) Modifier.pointerInput(enabled, radius, slop, bottom) {
         var left: PointerId? = null
-        var right: PointerId? = null
         val taps = mutableMapOf<PointerId, Pair<Offset, Long>>()
         val dragged = mutableSetOf<PointerId>()
         try {
@@ -102,15 +89,7 @@ internal fun GameTouch(
                         val cancelledRelease = !change.pressed && change.previousPressed && change.isConsumed
                         if (change.pressed && !change.previousPressed && !change.isConsumed) {
                             val origin = change.position
-                            val actionCenter = Offset(size.width - radius * 1.3f, size.height - bottom)
                             when {
-                                (origin - actionCenter).getDistance() < radius * 1.15f && right == null -> {
-                                    right = change.id
-                                    actionOrigin = origin
-                                    actionAt = change.uptimeMillis
-                                    actionFired = false
-                                    change.consume()
-                                }
                                 origin.x < size.width * 0.5f && origin.y > size.height * 0.52f && left == null -> {
                                     left = change.id
                                     stickOrigin = origin
@@ -127,28 +106,12 @@ internal fun GameTouch(
                             if (delta.getDistance() > slop) dragged += change.id
                             stickNow(PlayControl.stick(delta.x, delta.y, radius))
                             change.consume()
-                        } else if (change.id == right) {
-                            val delta = change.position - (actionOrigin ?: change.position)
-                            if (!actionFired && delta.getDistance() > slop * 1.7f) {
-                                actionFired = true
-                                val command = if (kotlin.math.abs(delta.x) > kotlin.math.abs(delta.y))
-                                    GameMovement.Command.ROLL else if (delta.y < 0f)
-                                    GameMovement.Command.JUMP else GameMovement.Command.REST
-                                commandNow(command, if (command == GameMovement.Command.ROLL)
-                                    PlayControl.stick(delta.x, delta.y, slop, 0f) else null)
-                            }
-                            change.consume()
                         } else {
                             taps[change.id]?.let { (origin, _) ->
                                 if ((change.position - origin).getDistance() > slop) dragged += change.id
                             }
                         }
                         if (!change.pressed && change.previousPressed) {
-                            if (change.id == right) {
-                                if (!actionFired && !cancelledRelease) commandNow(GameMovement.Command.JUMP, null)
-                                right = null
-                                actionOrigin = null
-                            }
                             if (change.id == left) {
                                 left = null
                                 stickOrigin = null
@@ -169,7 +132,6 @@ internal fun GameTouch(
             }
         } finally {
             stickOrigin = null
-            actionOrigin = null
             stickNow(PlayControl.Stick())
         }
     } else Modifier
@@ -186,8 +148,6 @@ internal fun GameTouch(
             Text(stringResource(R.string.game_control_pace), color = Color(0xAADDF5E8), fontSize = 10.sp)
             Text(stringResource(R.string.game_control_gestures), color = Color(0xAADDF5E8), fontSize = 10.sp)
         }
-        Box(Modifier.align(Alignment.BottomEnd).padding(end=28.dp,bottom=45.2.dp).size(89.6.dp)
-            .testTag("game-action-pad").semantics { contentDescription="$jumpLabel · $rollLabel · $restLabel" })
         Canvas(Modifier.fillMaxSize()) {
             val alpha = if (enabled) 1f else 0.65f
             val home = Offset(radius * 1.3f, size.height - bottom)
@@ -200,23 +160,86 @@ internal fun GameTouch(
             val len = stickKnob.getDistance()
             val knob = if (stickOrigin == null) Offset.Zero else if (len > radius) stickKnob * (radius / len) else stickKnob
             drawCircle(Color(0xCCDDF5E8).copy(alpha = 0.7f * alpha), 14.dp.toPx(), origin + knob)
-            val action = Offset(size.width - radius * 1.3f, size.height - bottom)
-            drawCircle(Color(0xFF152E35).copy(alpha = 0.78f * alpha), radius * 0.8f, action)
-            drawCircle(Color(0xFFDDF5E8).copy(alpha = 0.95f * alpha), radius * 0.8f, action,
-                style = Stroke(if (actionOrigin == null) 2.dp.toPx() else 4.dp.toPx()))
-            val ink = Color(0xFFDDF5E8).copy(alpha = 0.8f * alpha)
-            val w = 3.dp.toPx()
-            // Pfeil nach oben fuer den Sprung, seitliche Boegen fuer Rollen, Pause fuer Halten.
-            drawLine(ink, action + Offset(0f, 12.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
-            drawLine(ink, action + Offset(-8.dp.toPx(), -4.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
-            drawLine(ink, action + Offset(8.dp.toPx(), -4.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
-            drawArc(ink, 70f, 220f, false, action + Offset(-30.dp.toPx(), -10.dp.toPx()),
-                androidx.compose.ui.geometry.Size(12.dp.toPx(), 20.dp.toPx()), style = Stroke(w))
-            drawArc(ink, -110f, 220f, false, action + Offset(18.dp.toPx(), -10.dp.toPx()),
-                androidx.compose.ui.geometry.Size(12.dp.toPx(), 20.dp.toPx()), style = Stroke(w))
-            drawLine(ink, action + Offset(-4.dp.toPx(), 24.dp.toPx()), action + Offset(-4.dp.toPx(), 32.dp.toPx()), w)
-            drawLine(ink, action + Offset(4.dp.toPx(), 24.dp.toPx()), action + Offset(4.dp.toPx(), 32.dp.toPx()), w)
         }
+        GameActionPad(enabled, onCommand,
+            Modifier.align(Alignment.BottomEnd).padding(end = 16.8.dp, bottom = 34.dp).size(112.dp))
+    }
+}
+
+/** Eigene Pointer-Flaeche: ein zweiter Daumen wird unabhaengig vom Welt-/Bewegungsgriff erfasst. */
+@Composable
+internal fun GameActionPad(enabled: Boolean, onCommand: (GameMovement.Command, PlayControl.Stick?) -> Unit,
+    modifier: Modifier = Modifier) {
+    val commandNow by rememberUpdatedState(onCommand)
+    val slop = with(LocalDensity.current) { 18.dp.toPx() }
+    var origin by remember { mutableStateOf<Offset?>(null) }
+    var started by remember { mutableLongStateOf(0L) }
+    var fired by remember { mutableStateOf(false) }
+    val jump = stringResource(R.string.game_control_jump)
+    val roll = stringResource(R.string.game_control_roll)
+    val rest = stringResource(R.string.game_control_rest)
+    LaunchedEffect(origin, started, enabled) {
+        if (enabled && origin != null) {
+            delay(500L)
+            if (!fired) { fired = true; commandNow(GameMovement.Command.REST, null) }
+        }
+    }
+    val input = if (enabled) Modifier.pointerInput(enabled, slop) {
+        var finger: PointerId? = null
+        try {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    for (change in event.changes) {
+                        val cancelled = !change.pressed && change.previousPressed && change.isConsumed
+                        if (finger == null && change.pressed && !change.previousPressed && !change.isConsumed) {
+                            finger = change.id; origin = change.position; started = change.uptimeMillis; fired = false
+                        }
+                        if (change.id != finger) continue
+                        val delta = change.position - (origin ?: change.position)
+                        if (change.pressed && !fired && delta.getDistance() > slop * 1.7f) {
+                            fired = true
+                            val command = if (kotlin.math.abs(delta.x) > kotlin.math.abs(delta.y))
+                                GameMovement.Command.ROLL else if (delta.y < 0f) GameMovement.Command.JUMP else GameMovement.Command.REST
+                            commandNow(command, if (command == GameMovement.Command.ROLL)
+                                PlayControl.stick(delta.x, delta.y, slop, 0f) else null)
+                        }
+                        change.consume()
+                        if (!change.pressed && change.previousPressed) {
+                            if (!fired && !cancelled) commandNow(GameMovement.Command.JUMP, null)
+                            finger = null; origin = null
+                        }
+                    }
+                }
+            }
+        } finally { origin = null }
+    } else Modifier
+    Canvas(modifier.testTag("game-action-pad").semantics {
+        contentDescription = "$jump · $roll · $rest"
+        if (!enabled) disabled()
+        customActions = listOf(
+            CustomAccessibilityAction(jump) { if (enabled) commandNow(GameMovement.Command.JUMP, null); enabled },
+            CustomAccessibilityAction(roll) { if (enabled) commandNow(GameMovement.Command.ROLL, null); enabled },
+            CustomAccessibilityAction(rest) { if (enabled) commandNow(GameMovement.Command.REST, null); enabled })
+    }.then(input)) {
+        val alpha = if (enabled) 1f else .65f
+        val action = center
+        val radius = size.minDimension / 2f
+        drawCircle(Color(0x337EBBA4).copy(alpha = .20f * alpha), radius, action)
+        drawCircle(Color(0x88DDF5E8).copy(alpha = .5f * alpha), radius, action,
+            style = Stroke(if (origin == null) 2.dp.toPx() else 4.dp.toPx()))
+        drawCircle(Color(0x55DDF5E8).copy(alpha = .25f * alpha), radius * .55f, action, style = Stroke(1.dp.toPx()))
+        val ink = Color(0xFFDDF5E8).copy(alpha = .8f * alpha)
+        val w = 3.dp.toPx()
+        drawLine(ink, action + Offset(0f, 12.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
+        drawLine(ink, action + Offset(-8.dp.toPx(), -4.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
+        drawLine(ink, action + Offset(8.dp.toPx(), -4.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
+        drawArc(ink, 70f, 220f, false, action + Offset(-30.dp.toPx(), -10.dp.toPx()),
+            androidx.compose.ui.geometry.Size(12.dp.toPx(), 20.dp.toPx()), style = Stroke(w))
+        drawArc(ink, -110f, 220f, false, action + Offset(18.dp.toPx(), -10.dp.toPx()),
+            androidx.compose.ui.geometry.Size(12.dp.toPx(), 20.dp.toPx()), style = Stroke(w))
+        drawLine(ink, action + Offset(-4.dp.toPx(), 24.dp.toPx()), action + Offset(-4.dp.toPx(), 32.dp.toPx()), w)
+        drawLine(ink, action + Offset(4.dp.toPx(), 24.dp.toPx()), action + Offset(4.dp.toPx(), 32.dp.toPx()), w)
     }
 }
 
