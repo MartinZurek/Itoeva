@@ -68,17 +68,9 @@ class GameTouchTest {
         compose.runOnIdle { assertEquals(PlayControl.Stick(), stick) }
     }
 
-    @Test fun rechteWischgesteErzeugtGenauEineRolle() {
+    @Test fun rollKnopfErzeugtGenauEineRolle() {
         show()
-        val radius = px(56f)
-        val bottom = px(90f)
-        compose.onNodeWithTag("controls").performTouchInput {
-            val origin = Offset(width - radius * 1.3f, height - bottom)
-            down(origin)
-            moveTo(origin - Offset(radius, 0f))
-            advanceEventTime(80L)
-            up()
-        }
+        compose.onNodeWithTag("game-roll-button", useUnmergedTree = true).performTouchInput { click() }
         compose.runOnIdle { assertEquals(listOf(GameMovement.Command.ROLL), commands) }
     }
 
@@ -96,32 +88,35 @@ class GameTouchTest {
         compose.onNodeWithTag("controls").performTouchInput { cancel() }
     }
 
-    @Test fun langesHaltenSetztSichHinOhneSprungBeimLoslassen() {
+    @Test fun sitzKnopfSetztSichHinOhneSprung() {
         show()
-        val radius = px(56f)
-        val bottom = px(90f)
-        compose.mainClock.autoAdvance = false
-        compose.onNodeWithTag("controls").performTouchInput {
-            down(Offset(width - radius * 1.3f, height - bottom))
-        }
-        compose.mainClock.advanceTimeBy(600L)
-        compose.onNodeWithTag("controls").performTouchInput { up() }
-        compose.mainClock.autoAdvance = true
+        compose.onNodeWithTag("game-rest-button", useUnmergedTree = true).performTouchInput { click() }
         compose.runOnIdle { assertEquals(listOf(GameMovement.Command.REST), commands) }
     }
 
-    @Test fun systemAbbruchIstKeinSprungOderWeltTipp() {
+    @Test fun sprungFaelltSchonBeimAufsetzenGenauEinmal() {
+        show()
+        val radius = px(56f)
+        val bottom = px(90f)
+        compose.onNodeWithTag("controls").performTouchInput {
+            down(Offset(width - radius * 1.3f, height - bottom))
+        }
+        compose.runOnIdle { assertEquals(listOf(GameMovement.Command.JUMP), commands) }
+        // Ein spaeter abgebrochener Finger (z. B. Systemgeste) nimmt den Sprung nicht zurueck
+        // und loest keinen zweiten aus.
+        compose.onNodeWithTag("controls").performTouchInput { cancel() }
+        compose.runOnIdle { assertEquals(listOf(GameMovement.Command.JUMP), commands) }
+    }
+
+    @Test fun systemAbbruchIstKeinWeltTipp() {
         var taps = 0
         compose.setContent {
             GameTouch(onStick = { stick = it }, onCommand = { command, _ -> commands += command },
                 onTap = { taps++ }, onDoubleTap = { taps++ },
                 modifier = Modifier.fillMaxSize().testTag("controls"))
         }
-        val radius = px(56f)
-        val bottom = px(90f)
         compose.onNodeWithTag("controls").performTouchInput {
             down(0, Offset(width * 0.20f, height * 0.75f))
-            down(1, Offset(width - radius * 1.3f, height - bottom))
             cancel()
         }
         compose.runOnIdle {
