@@ -77,7 +77,7 @@ SRCS=(
   "$SIM/LivingRuntimeAdapter.kt" "$SIM/LivingResidents.kt" "$SIM/LivingPopulation.kt"
   "$SIM/LivingPopulationLayout.kt"
   "$SIM/PlayAmbientActivity.kt" "$SIM/PlayTimeLapse.kt" "$SIM/PlayWeather.kt"
-  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt" "$SIM/AvatarWatchdog.kt" "$SIM/AvatarBearing.kt" "$SIM/PlayDaylight.kt" "$SIM/PlayQuestEffects.kt" "$SIM/PlayQuests.kt" "$SIM/PlayMap.kt" "$SIM/PlayPastime.kt" "$SIM/PlayGoals.kt" "$SIM/PlayMapScene.kt" "$SIM/PlayControl.kt" "$SIM/GameAdventure.kt" "$SIM/GameEncounters.kt" "$SIM/GameResidents.kt" "$SIM/GameEnvironment.kt" "$SIM/GameRoomCatalog.kt" "$SIM/GameMovement.kt" "$SIM/GameSurfaces.kt" "$SIM/PlayBackpack.kt" "$SIM/GameBreath.kt" "$SIM/GameAssetPlan.kt" "$SIM/GameWater.kt" "$SIM/GameTerrain.kt" "$SIM/GameDoors.kt" "$SIM/GameWorld.kt" "$SIM/GameInteriorCatalog.kt" "$SIM/GameCamera.kt" "$SIM/GameCharacterScale.kt" "$SIM/GameFurniture.kt" "$SIM/GameSeating.kt" "$SIM/GameFabric.kt" "$SIM/GameWorldShadows.kt" "$SIM/GameGroundLight.kt" "$SIM/GameScenes.kt" "$SIM/GameSceneLighting.kt" "$SIM/GameLightingCatalog.kt" "$SIM/GameAtmosphere.kt" "$SIM/GameSceneCatalog.kt" "$SIM/ResidentPassage.kt" "$SIM/PlayAmbience.kt"
+  "$SIM/PlayMusicPlan.kt" "$SIM/PlayMusicRotation.kt" "$SIM/MusicCatalog.kt" "$SIM/PlayCharacterTheme.kt" "$SIM/PlayMusicCue.kt" "$SIM/PlayMusicTransition.kt" "$SIM/PlayMusicLoop.kt" "$SIM/MusicLoudness.kt" "$SIM/MusicLoudnessTable.kt" "$SIM/PlayOutdoorStay.kt" "$SIM/PlayAfterglow.kt" "$SIM/PlayVisitWindow.kt" "$SIM/PlayDreams.kt" "$SIM/AvatarWatchdog.kt" "$SIM/AvatarBearing.kt" "$SIM/PlayDaylight.kt" "$SIM/PlayQuestEffects.kt" "$SIM/PlayQuests.kt" "$SIM/PlayMap.kt" "$SIM/PlayPastime.kt" "$SIM/PlayGoals.kt" "$SIM/PlayMapScene.kt" "$SIM/PlayControl.kt" "$SIM/GameAdventure.kt" "$SIM/GameEncounters.kt" "$SIM/GameResidents.kt" "$SIM/GameEnvironment.kt" "$SIM/GameRoomCatalog.kt" "$SIM/GameMovement.kt" "$SIM/GameSurfaces.kt" "$SIM/PlayBackpack.kt" "$SIM/GameBreath.kt" "$SIM/GameAssetPlan.kt" "$SIM/GameWater.kt" "$SIM/GameTerrain.kt" "$SIM/GameDoors.kt" "$SIM/GameWorld.kt" "$SIM/GameInteriorCatalog.kt" "$SIM/GameCamera.kt" "$SIM/GameCharacterScale.kt" "$SIM/GameFurniture.kt" "$SIM/GameSeating.kt" "$SIM/GameFabric.kt" "$SIM/GameCharacterMotion.kt" "$SIM/GameWorldShadows.kt" "$SIM/GameGroundLight.kt" "$SIM/GameScenes.kt" "$SIM/GameSceneLighting.kt" "$SIM/GameLightingCatalog.kt" "$SIM/GameAtmosphere.kt" "$SIM/GameSceneCatalog.kt" "$SIM/ResidentPassage.kt" "$SIM/PlayAmbience.kt"
   "$SK/AvatarActivity.kt" "$SK/UnlockOffer.kt" "$SK/SkillTreeRows.kt"
   "$SK/SkillRepertoire.kt" "$SK/LevelUnlocks.kt"
   # Der reine Living-Agent-Kern (NT-063/NT-067) - kein Android, keine Uhr, kein Zufall.
@@ -166,7 +166,7 @@ TEST_SRCS=(
   "$TEST/matrix/GameEnvironmentTest.kt"
   "$TEST/matrix/GameMovementTest.kt"
   "$TEST/matrix/PlayBackpackTest.kt"
-  "$TEST/matrix/GameLightingAtmosphereTest.kt" "$TEST/matrix/GameCharacterScaleTest.kt" "$TEST/matrix/GameWorldPolishTest.kt" "$TEST/matrix/GameEncountersTest.kt" "$TEST/matrix/GamePhysicsTest.kt" "$TEST/matrix/GameWorldTest.kt" "$TEST/matrix/GameCameraTest.kt"
+  "$TEST/matrix/GameLightingAtmosphereTest.kt" "$TEST/matrix/GameCharacterScaleTest.kt" "$TEST/matrix/GameWorldPolishTest.kt" "$TEST/matrix/GameCharacterMotionTest.kt" "$TEST/matrix/GameEncountersTest.kt" "$TEST/matrix/GamePhysicsTest.kt" "$TEST/matrix/GameWorldTest.kt" "$TEST/matrix/GameCameraTest.kt"
   "$TEST/matrix/GameScenesTest.kt"
   "$TEST/matrix/PlayWorldTest.kt"
   "$TEST/matrix/SleepRoutineTest.kt"
@@ -262,7 +262,7 @@ TEST_CLASSES=(
   com.notime.glyphsim.matrix.PlayBackpackTest
   com.notime.glyphsim.matrix.GameLightingAtmosphereTest
   com.notime.glyphsim.matrix.GameEncountersTest
-  com.notime.glyphsim.matrix.GameWorldPolishTest
+  com.notime.glyphsim.matrix.GameWorldPolishTest com.notime.glyphsim.matrix.GameCharacterMotionTest
   com.notime.glyphsim.matrix.GameCharacterScaleTest
   com.notime.glyphsim.matrix.GamePhysicsTest com.notime.glyphsim.matrix.GameWorldTest
   com.notime.glyphsim.matrix.GameCameraTest

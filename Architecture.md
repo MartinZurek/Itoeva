@@ -460,6 +460,19 @@ bei jeder neuen Analyse erneut entdeckt werden müssen.
 
 ### Individuelle feine Charakteranimationen (06.10.2026)
 
+Ergaenzung 09.10.: Im aktiven Game rendert `GameCharacterPainter` dieselben
+Einzelbilder als 24x32-Texturnetz. `GameCharacterMotion` berechnet Statur,
+Stoffnachlauf und kleine materialabhaengige Koerperbewegungen rein in Kotlin.
+Ein analytischer zweistufiger Daempfer reagiert auf Gangtempo und lokale
+Windrichtung. Die gemeinsame Bewegungstaktung, Originalbilder, Fussanker und
+Aktionsrollen bleiben die Quellen. Vorder-/Rueckansicht haben eigene
+Stoffgewichte; Schlaf und Rolle behalten ihre kompakte Zeichnung.
+Netz- und Farbarrays sowie Paint werden pro Figur wiederverwendet. Die oberen
+Alpha-Grenzen werden je Einzelbild einmal beim Laden ermittelt; keine
+Bitmap-Kopie pro Bild und kein zweiter Texturcache. Vertexfarben interpolieren
+das vorhandene Ortslicht, Bitmapfilterung mildert die harten Skalierungskanten.
+App-1-/Stream-Zeichnung verwendet weiter den bisherigen Zeichenweg.
+
 Alle sechs `CreatureSprites`-Boegen verwenden 138 Rollen zu 128 x 128. Fennec
 bleibt in `rich_sheets.py`, die fuenf weiteren Wesen entstehen mit
 `ensemble_motion.py` aus eigenen Zeichnungen und vorhandener Puppet-Interpolation.

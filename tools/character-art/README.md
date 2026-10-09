@@ -1,5 +1,14 @@
 # character-art – die sechs Wesen in feiner Pixel-Art
 
+## Game-Statur und Stoffnachlauf (09.10.2026)
+
+Die Originalboegen bleiben erhalten. Im Game zeichnet ein zusammenhaengendes
+Texturnetz individuelle Statur-/Koerpergewichte und gedaempften Stoffnachlauf.
+Die neue [Bewegungsvorschau](game-motion-preview.gif) liest die produktiven
+Kotlin-Netze, ist aber eine Softwarevorschau und keine APK-Aufnahme.
+Details, Regeneration, Tests und Telefon-Pruefplan:
+[`docs/itoeva2-character-motion.md`](../../docs/itoeva2-character-motion.md).
+
 Neuentwurf der Figuren nach den Charakterstudien vom 04.10.
 (`docs/concept-art/character-art-studies/`, PR #326). Bewusst **keine Uebersetzung** der
 bisherigen 16x19-Zellen-Figuren, sondern neu gezeichnet: 64 x 64 Pixel je Figur.

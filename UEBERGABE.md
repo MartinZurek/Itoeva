@@ -1,5 +1,14 @@
 # Uebergabe
 
+## Aktuell: Charakterstatur und Stoffnachlauf (09.10.2026)
+
+Martins Auftrag waehrend des separaten APK-Baus aus PR #350 steht in
+[`docs/itoeva2-character-motion.md`](docs/itoeva2-character-motion.md).
+Branch `codex/character-silhouettes-and-cloth` baut auf `431bd178` auf. Die
+Game-Darstellung verwendet ein zusammenhaengendes Texturnetz mit Stoffnachlauf
+und eigenen Koerpergewichten. Originalassets und die anderen Darstellungsmodi
+bleiben erhalten. Vorschau und genaue Pruefgrenzen stehen im Dokument.
+
 ## Aktuell: Bedienung und Brueckenweg (09.10.2026)
 
 Martins Telefonfeedback zu rechtem Pad, Shop-Tueren, Brueckenboden und Wasser wird

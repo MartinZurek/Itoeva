@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -114,6 +115,7 @@ fun AvatarSpriteView(
     // Drehungen brauchen ein Gedaechtnis fuer die letzte Blickrichtung (nur feine Boegen).
     val turn = remember(species) { CreatureSprites.Turn() }
     val gait = remember(species) { CreatureSprites.GaitClock() }
+    val characterPainter = remember(species) { GameCharacterPainter() }
     val tick by produceState(0L, sheet != null) {
         if (sheet == null) return@produceState
         while (true) {
@@ -123,8 +125,9 @@ fun AvatarSpriteView(
     }
     // Im Stand bleiben die 36 Farbfilter im Cache; der 16-ms-Schritt der Sprite-Animation
     // soll nicht pro Bewohner neue Matrizen und Filter anlegen.
-    val gameFilters = remember(gameLight, brightnessScale, species, sheet?.frameSize) {
-        if (gameLight == null || species == null) null else {
+    val meshDrawing = gameFabric != null && sheet?.frameSize == CreatureSprites.Rich.FRAME
+    val gameFilters = remember(gameLight, brightnessScale, species, sheet?.frameSize, meshDrawing) {
+        if (gameLight == null || species == null || meshDrawing) null else {
             val frameSize = sheet?.frameSize ?: CreatureSprites.Rich.FRAME
             val feet = if (frameSize == CreatureSprites.Rich.FRAME) CreatureSprites.Rich.FEET else CreatureSprites.FEET
             val reference = GameCharacterScale.reference(species)
@@ -156,7 +159,8 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind, gameFabric, gameSwim)
+                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind, gameFabric, gameSwim,
+                characterPainter, gameLight)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide, gameLight)
         }
@@ -168,7 +172,7 @@ private const val CREATURE_TICK_MS = 16L
 
 /** Kleine GPU-Texturen statt eines Streifens jenseits der Android-Texturlimits. */
 internal object CreatureSheets {
-    data class Sheet(val frameSize: Int, val frames: List<ImageBitmap>)
+    data class Sheet(val frameSize: Int, val frames: List<ImageBitmap>, val tops: List<Int>)
     private val cache = HashMap<AvatarSpecies, Sheet?>()
 
     fun get(context: Context, species: AvatarSpecies): Sheet? = synchronized(cache) {
@@ -177,10 +181,18 @@ internal object CreatureSheets {
                 val bitmap = context.assets.open(CreatureSprites.assetFor(species))
                     .use { BitmapFactory.decodeStream(it) } ?: return@runCatching null
                 val frameSize = bitmap.height
-                if (bitmap.width == frameSize) return@runCatching Sheet(frameSize, listOf(bitmap.asImageBitmap()))
+                fun sheet(images: List<ImageBitmap>): Sheet {
+                    val pixels = IntArray(frameSize * frameSize)
+                    val tops = images.map { image ->
+                        image.asAndroidBitmap().getPixels(pixels, 0, frameSize, 0, 0, frameSize, frameSize)
+                        pixels.indexOfFirst { (it ushr 24) > 128 }.let { if (it < 0) 0 else it / frameSize }
+                    }
+                    return Sheet(frameSize, images, tops)
+                }
+                if (bitmap.width == frameSize) return@runCatching sheet(listOf(bitmap.asImageBitmap()))
                 try {
                     require(frameSize in setOf(CreatureSprites.FRAME, CreatureSprites.Rich.FRAME) && bitmap.width % frameSize == 0)
-                    Sheet(frameSize, List(bitmap.width / frameSize) { index ->
+                    sheet(List(bitmap.width / frameSize) { index ->
                         Bitmap.createBitmap(bitmap, index * frameSize, 0, frameSize, frameSize).also { it.prepareToDraw() }.asImageBitmap()
                     })
                 } finally {
@@ -209,7 +221,9 @@ private fun DrawScope.drawCreature(
     gameFilters: List<ColorFilter>?,
     gameWind: Float,
     gameFabric: GameFabric.Pose?,
-    gameSwim: GameWater.Swim?
+    gameSwim: GameWater.Swim?,
+    characterPainter: GameCharacterPainter,
+    gameLight: GameSceneLighting.CharacterLight?
 ) {
     val rich = sheet.frameSize == CreatureSprites.Rich.FRAME
     val frameSize = sheet.frameSize
@@ -229,8 +243,17 @@ private fun DrawScope.drawCreature(
     val left = (size.width - drawn) / 2f
     val dim = brightnessScale.coerceIn(0f, 1f)
     val filter = if (dim < 1f) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(dim, dim, dim, 1f) }) else null
+    if (rich && gameFabric != null) characterPainter.update(gameFabric.clock,
+        gameGaitMs ?: gait.update(gameMoving ?: false, timeMs),
+        if (gameSwim == null) gameFabric.walking else 0f,
+        gameFabric.wind * if (look.mirrored) -1f else 1f)
     fun paint(index: Int, alpha: Float) {
         val image = sheet.frames[index]
+        if (rich && gameFabric != null) {
+            characterPainter.draw(this, image, species, index, sheet.tops[index], left, top, drawn,
+                alpha, dim, gameLight, look.mirrored)
+            return
+        }
         if (gameFilters == null) {
             drawImage(image, IntOffset.Zero, IntSize(frameSize, frameSize),
                 IntOffset(left.roundToInt(), top.roundToInt()), IntSize(drawn.roundToInt(), drawn.roundToInt()),

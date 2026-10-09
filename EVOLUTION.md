@@ -648,6 +648,39 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
 
 ## Evolution History – dauerhaft zu dokumentierende Änderungen und Erkenntnisse
 
+### 2026-10-09 – Individuelle Statur und kontinuierlicher Stoffnachlauf (character-motion-v2)
+
+- **DOCUMENTED INTENT:** Martin moechte waehrend des separaten APK-Baus aus PR #350
+  die Hauptfiguren lebendiger und weniger rudimentaer sehen: steifer Fennec-Mantel,
+  zu runde Statur insbesondere Puffling und harte gezeichnete Konturen.
+- **FACT / Entscheidung:** Ein zusammenhaengendes Game-Texturnetz ersetzt die
+  einzeln abgetasteten Stoffkacheln. Subpixel-Bewegungen bleiben erhalten.
+  Analytisch gedaempfter Nachlauf reagiert auf Start/Stopp und Wind; verschiedene
+  Materialgewichte unterscheiden Mantel, Kapuze, Federumhang und Blattkleidung.
+  Pufflings Taille wird maximal 13 Prozent schmaler, Hootlets 5,5 Prozent,
+  Fennecs/Wyrmlings 3,5 Prozent. Kopf, Kapuze und untere sechs Quellzeilen bleiben
+  fest. Gloops Volumenwelle und Starlets Form sind eigenstaendig. Schlaf und Rolle
+  bekommen keine aufrechte Staturverformung. Bilineare Bitmapfilterung mildert
+  Skalierungskanten; eingemalte Konturen werden nicht als neu gezeichnet behauptet.
+- **TESTED BEHAVIOR:** Neun neue reine Kotlin-Tests pruefen bildratenunabhaengigen
+  Nachlauf, Ausschwingen, Hintergrundpause, Kopf-/Fussanker, kompakte Posen,
+  individuelle Statur, Subpixelbewegung und positive Dreiecksflaechen bei
+  Extremboeen. Ein dabei entdecktes Netz-Falten wurde durch begrenzte Auslenkung
+  und breitere Stoffbefestigung korrigiert. Gezielte Regressionen: 67 Tests gruen.
+  Finaler Gesamtlauf: 1.024 reine Kotlin-Tests gruen. Android-CI im PR.
+- **Betroffene Bereiche:** `:app-sim` Game-Spritezeichnung, einmalige
+  Quellbildgrenzen im vorhandenen Cache, Offline-Pruef-/Vorschauwerkzeuge und
+  Uebergabe. Keine neuen Assets, Datenmodelle, Preference-Schluessel, Texte,
+  Reminder-, LAS-, XP-, Musik- oder Eingaberegeln. Keine Migration.
+- **Ruecksetzung:** Diesen Charaktercommit als Ganzes ruecknehmen auf die Basis
+  `431bd178` aus PR #350. Keine Spielstand-Rueckmigration oder Assetreparatur.
+- **UNVERIFIED / Naechster Schritt:** Android-Bitmappruefung und Kompilierung
+  ueber CI; danach Sicht-/GPU-/Bildratenpruefung auf Martins Telefon. Die
+  Vorschau liest die produktiven Kotlin-Netze, rendert sie jedoch in Software;
+  sie ist keine APK-Aufnahme. Eingemalte Anatomiefehler und bisherige
+  Front-/Ruecklauf-/Rollgrenzen werden durch Stoffphysik nicht neu gezeichnet.
+  Keine neue `OPEN DECISION`, kein Merge-/APK-Auftrag in diesem Schnitt.
+
 Für jede angenommene Evolution müssen mindestens folgende Informationen dauerhaft auffindbar
 sein:
 
