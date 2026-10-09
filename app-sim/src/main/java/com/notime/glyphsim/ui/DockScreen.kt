@@ -6588,8 +6588,16 @@ fun DockScreen(
                 }.minByOrNull { it.second }?.first
             }
             val controlsEnabled = gameDoorChoices.isEmpty() && gameImagesReady && screenVisible && !gameActing && avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen && gameTalking == null && !talkOpen
+            // Bewusst KEIN Rueckgriff auf den Wert `controlsEnabled` oben: Die Funktion wird als
+            // Referenz (::gameCommand) an das rechte Pad gereicht, und dort kann eine fruehere
+            // Instanz haengen bleiben - mit dem Wert vom allerersten Bild. Seit dem Laden der
+            // Landschaften ist der dort `false`, und Springen/Rollen taten auf dem Telefon nichts.
+            // Hier werden die Zustaende bei jedem Druck frisch gelesen.
+            fun controlsLive() = gameDoorChoices.isEmpty() && gameImagesReady && screenVisible && !gameActing &&
+                avatar?.fed != true && !gameMenuOpen && !gameMapOpen && !gameBackpackOpen && !gameChronicleOpen &&
+                gameTalking == null && !talkOpen
             fun gameCommand(command: GameMovement.Command, direction: PlayControl.Stick?) {
-                if (!controlsEnabled || avatar == null) return
+                if (!controlsLive() || avatar == null) return
                 gameSeat?.let { seat ->
                     gamePos = seat.from
                     gameSeat = null
