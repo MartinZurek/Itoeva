@@ -1,5 +1,10 @@
 # Itoeva 2: Charaktere, Bewegung, Raum und Musik – 09.10.2026
 
+Fortsetzung 10.10.: Der hier beschriebene erste Schwimmversuch wurde nach Martins
+Boje-/Volumenfeedback durch gezeichnete Schwimmboegen ersetzt. Aktueller Stand,
+Wasserzeichnung und elf neue gemalte Raum-Konzepttafeln:
+[`itoeva2-swimming-water.md`](itoeva2-swimming-water.md).
+
 Basis: PR #350, `431bd178`. Neuer Branch: `codex/character-silhouettes-and-cloth`.
 Martin baut die APK separat; dieser Schnitt erfordert eine spaetere eigene APK.
 

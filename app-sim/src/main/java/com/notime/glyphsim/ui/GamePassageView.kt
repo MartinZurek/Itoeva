@@ -93,13 +93,27 @@ internal fun GameWaterForeground(scene: GameScenes.Scene, camera: GameCamera.Sta
         val (fx, fy) = GameScenes.feet(scene, pos)
         val (x,y) = fit.toScreen(fx, fy)
         val waterY = y - GameCharacterScale.waterRise(scene, pos) * fit.scale
+        if (moving) {
+            val dx=when(dir) { PlayControl.Dir.LEFT -> -1f; PlayControl.Dir.RIGHT -> 1f; else -> 0f }
+            val dy=when(dir) { PlayControl.Dir.UP -> -.55f; PlayControl.Dir.DOWN -> .55f; else -> 0f }
+            // Rueckwaerts offene Spur statt einer unabhaengigen Kreisboje.
+            repeat(3) { ring ->
+                val age=((clock%1200L)/1200f+ring/3f)%1f
+                val back=age*48f*fit.scale
+                val spread=(10f+age*24f)*fit.scale
+                val center=Offset(x-dx*back,waterY-dy*back)
+                val color=Color(0xFFDCEEE5).copy(alpha=(1f-age)*.32f*fade)
+                drawLine(color,center+Offset(-spread,-spread*.16f),center+Offset(-spread*.45f,spread*.18f),fit.scale)
+                drawLine(color,center+Offset(spread,-spread*.16f),center+Offset(spread*.45f,spread*.18f),fit.scale)
+            }
+        }
         val phase=(clock%900L)/900f
         val width=(17f+phase*14f)*fit.scale
-        drawOval(Color(0xFFDEF4EB).copy(alpha=(1f-phase)*.6f*fade),
+        drawOval(Color(0xFFDEF4EB).copy(alpha=(1f-phase)*(if(moving) .22f else .28f)*fade),
             Offset(x-width,waterY-3f*fit.scale),Size(width*2f,(5f+phase*5f)*fit.scale),style=Stroke(fit.scale))
         val stroke=GameWater.swim(scene,pos,height,dir,moving,clock)
         if(stroke!=null) repeat(2) { hand ->
-            val p=(stroke.stroke+hand*.5f)%1f
+            val p=stroke.stroke
             val side=if(hand==0) -1f else 1f
             val spread=(12f+p*18f)*fit.scale
             val hx=x+side*spread

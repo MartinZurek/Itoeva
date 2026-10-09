@@ -76,22 +76,9 @@ object GameCharacterMotion {
     }
 
     private fun locomotion(p: Point, species: AvatarSpecies, frame: Int, top: Float,
-        u: Float, v: Float, gaitMs: Long, speed: Float, swim: GameWater.Swim?): Point {
+        u: Float, v: Float, gaitMs: Long, speed: Float): Point {
         val body = ((v - top) / (125f/128f - top).coerceAtLeast(.05f)).coerceIn(0f, 1f)
         val side = view(frame) == View.SIDE
-        if (swim != null) {
-            val phase = swim.stroke * Math.PI * 2
-            val sweep = sin(phase).toFloat()
-            val recover = kotlin.math.cos(phase).toFloat()
-            val limb = window(body, .40f, .91f, .16f) *
-                (window(u,.22f,.47f,.09f) + window(u,.60f,.84f,.09f))
-            val sign = if (u < .5f) -1f else 1f
-            val paddle = if (swim.moving) 1f else .4f
-            val kick = smooth((body-.80f)/.20f) * window(u,.28f,.82f,.10f)
-            // Schultern bleiben angebunden, Haende streichen zurueck; Beine schlagen unter der Wasserlinie.
-            return Point(p.x + sign * sweep * limb * .024f * paddle,
-                p.y + recover * limb * .015f * paddle - kotlin.math.abs(sweep) * kick * .016f)
-        }
         val running = frame in 114..129
         val walking = frame in 9..16 || frame in 68..83
         if ((!walking && !running) || speed <= 0f) return p
@@ -121,9 +108,12 @@ object GameCharacterMotion {
     fun point(species: AvatarSpecies, frame: Int, top: Float, u: Float, v: Float,
         clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response,
         swim: GameWater.Swim? = null): Point {
+        // Schwimmglieder sind im eigenen Bogen gezeichnet. Eine Rumpfverformung
+        // machte daraus bislang ein Aufblasen und Entleeren statt einen Zug.
+        if (swim != null) return Point(u, v)
         val view = view(frame)
         if (view == View.COMPACT) return Point(u, v)
-        if (v >= 120f / 128f) return locomotion(Point(u,v),species,frame,top,u,v,gaitMs,speed,swim)
+        if (v >= 120f / 128f) return locomotion(Point(u,v),species,frame,top,u,v,gaitMs,speed)
         val bodyV = ((v - top) / (125f / 128f - top).coerceAtLeast(.05f)).coerceIn(0f, 1f)
         val t = Math.floorMod(clock, 600_000L) / 1000.0
         val gait = Math.floorMod(gaitMs, 760L) / 760.0 * Math.PI * 2.0
@@ -196,7 +186,7 @@ object GameCharacterMotion {
             .coerceIn(-1.8f, 1.8f) * cloth * material * .018f
         x += fabric
         y += sin(t * 3.3 - bodyV * 4.2).toFloat() * cloth * lateral * material * moving * .002f
-        return locomotion(Point(x,y),species,frame,top,u,v,gaitMs,speed,swim)
+        return locomotion(Point(x,y),species,frame,top,u,v,gaitMs,speed)
     }
 
     fun fill(vertices: FloatArray, species: AvatarSpecies, frame: Int, top: Float,

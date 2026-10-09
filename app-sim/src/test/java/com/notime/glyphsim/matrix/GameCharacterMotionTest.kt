@@ -79,13 +79,17 @@ class GameCharacterMotionTest {
         assertEquals(125f/128f,foot(.67f,570).y,.00001f)
     }
 
-    @Test fun `Schwimmzug bewegt die Gliedmassen statt einer starren Greifpose`() {
+    @Test fun `Gezeichnete Schwimmphasen erhalten den Rumpf ohne Volumenpuls`() {
         for(species in AvatarSpecies.entries) {
             val top=GameCharacterScale.reference(species).top/128f
             val v=top+(125f/128-top)*.63f
             fun point(stroke: Float)=GameCharacterMotion.point(species,104,top,.34f,v,0,0,0f,0f,
                 GameCharacterMotion.Response(),GameWater.Swim(stroke,0f,9f,true))
-            assertTrue(abs(point(.25f).x-point(.75f).x)>.02f)
+            assertEquals(point(.25f),point(.75f))
+            assertEquals(.34f,point(.25f).x,0f)
+            assertEquals(v,point(.25f).y,0f)
+            assertEquals(5,GameWater.swimFrame(.25f,PlayControl.Dir.DOWN))
+            assertEquals(7,GameWater.swimFrame(.75f,PlayControl.Dir.DOWN))
             assertEquals(104,CreatureSprites.motionFrame(CreatureSprites.MotionCue(CreatureSprites.Motion.SWIM,.5f),
                 CreatureSprites.Facing.FRONT))
         }

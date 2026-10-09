@@ -2,6 +2,8 @@ package com.notime.glyphsim.ui
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -52,6 +54,29 @@ internal fun DrawScope.paintWater(scene: GameScenes.Scene, images: Map<String,Im
             clipRect(left,y,right,y+4f) {
                 drawIntoCanvas { canvas -> canvas.nativeCanvas.drawBitmapMesh(texture.bitmap,texture.columns,1,
                     texture.vertices,0,null,0,texture.paint) }
+                // Getrennte helle Kaemme und dunkle Vorderhaenge lesen sich als Wasser,
+                // statt das gemalte Ufer im Takt hin und her zu schieben.
+                for (row in (y.toInt()/12-1)..(y.toInt()/12)) {
+                    for (column in ((origin+left).toInt()/32-1)..((origin+right).toInt()/32)) {
+                        val wave=GameWater.crest(column,row,clock)
+                        val wx=wave.x-origin
+                        drawRect(Color(0xFF153D52).copy(alpha=wave.light*.6f),
+                            Offset(wx+2f,wave.y+2f),Size(wave.width+2f,2f))
+                        drawRect(Color(0xFFC3E7DC).copy(alpha=wave.light),
+                            Offset(wx,wave.y),Size(wave.width,2f))
+                        drawRect(Color(0xFFEEF4C6).copy(alpha=wave.light*.7f),
+                            Offset(wx+2f,wave.y),Size((wave.width*.4f).coerceAtLeast(2f),1f))
+                    }
+                }
+                if (scene.asset == "world/coast.png" && y > 450f) {
+                    for (x in (left.toInt()/8*8)..right.toInt() step 8) {
+                        val distance=y-GameWater.shoreY(origin+x)
+                        if (distance in 3f..12f) {
+                            val foam=(.12f+.12f*kotlin.math.sin(clock/650.0+x*.07)).toFloat()
+                            drawRect(Color(0xFFD7E9CE).copy(alpha=foam),Offset(x.toFloat(),y),Size(6f,2f))
+                        }
+                    }
+                }
             }
         }
     }

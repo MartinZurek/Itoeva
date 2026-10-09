@@ -6,6 +6,23 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GamePhysicsTest {
+    @Test fun `Schwimmbogen zeigt vier Zugphasen aus jeder Blickrichtung`() {
+        for ((dir,row) in listOf(PlayControl.Dir.LEFT to 0, PlayControl.Dir.RIGHT to 0,
+                PlayControl.Dir.DOWN to 1, PlayControl.Dir.UP to 2)) {
+            assertEquals((row*4 until row*4+4).toList(),
+                listOf(0f,.25f,.5f,.75f).map { GameWater.swimFrame(it,dir) })
+            assertEquals(row*4,GameWater.swimFrame(1f,dir))
+        }
+    }
+    @Test fun `Wellenkaemme sind gerastert zeitabhaengig und endlich`() {
+        val before=(0..60).map { GameWater.crest(it,48,0) }
+        val after=(0..60).map { GameWater.crest(it,48,1000) }
+        assertTrue(before.zip(after).count { (a,b) -> a != b }>40)
+        for (wave in before+after) {
+            assertEquals(0f,wave.x%2f,0f); assertEquals(0f,wave.y%2f,0f)
+            assertTrue(wave.width in 4f..18f); assertTrue(wave.light in 0f.. .30f)
+        }
+    }
     @Test fun `Ein UI Sprung wird nach dem Positionsabgleich im Motorbild ausgefuehrt`() {
         val scene=GameWorld.scene(PlayScene.Place.PARK)!!
         val surfaces=GameSurfaces.painted(scene)

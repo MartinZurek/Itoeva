@@ -648,6 +648,34 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
 
 ## Evolution History – dauerhaft zu dokumentierende Änderungen und Erkenntnisse
 
+### 2026-10-10 – Gezeichnete Schwimmphasen, Pixelwasser und elf Raum-Konzepttafeln
+
+- **DOCUMENTED INTENT:** Martin will zuerst einzelne gemalte Innenraumstudien im
+  bisherigen Landschaftsstil. Weiterhin gemeldetes Schwimmen als aufblasende
+  Boje und Wasser als animierte Flaeche sollen sichtbar korrigiert werden.
+- **FACT / Entscheidung:** Sechs separate Schwimmboegen zeichnen echte Pfoten-,
+  Fluegel- und Sternspitzenphasen; Schwimm-Mesh bleibt volumenkonstant. Ein
+  gemeinsamer Massstab je Wesen und Kopfanker ersetzen keine Glieder durch
+  Rumpfverformung. Unterwasserteile bleiben schwach blau lesbar. Wasser bekommt
+  Pixelkaemme, Licht-/Schattenhaenge, Uferschaum und bewegungsabhaengige Spur.
+  Feste vermessene Wasser-/Landmaske und bestehender Motor bleiben Grundlage.
+- **FACT / Referenzen:** Elf neue Innenraum-Konzepttafeln mit eigenen
+  Architekturen, Moebelstudien und Tag-/Nachtbildern. Noch keine neue
+  Raumgeometrie aus diesen Tafeln; sie dienen Martins gewuenschter Orientierung.
+- **TESTED BEHAVIOR:** 1.043 reine Kotlin-Tests gruen. Neue gerichtete
+  Schwimmbildrollen, konstante Rumpfkoordinaten und Pixelwellen getestet; echte
+  Boegen an produktiver Wasserlinie als Softwarevorschau geprueft. Native
+  Asset-/Cachepruefung ergaenzt. Vorheriger API-26-Raumtest scheiterte an einer
+  zu schmalen Holz-Messlinie; flaechige strengere Materialpruefung korrigiert.
+- **Betroffene Bereiche:** Game-Sprite-/Wasserzeichnung, Vorlader, sechs
+  Asset-Ergaenzungen, Referenzkunst, Offline-Vorschau und zugehoerige Tests.
+  Keine Migration, Reminder-, LAS-, XP-, Musik- oder Eingabesemantikaenderung.
+- **Ruecksetzung:** Diesen Schnitt als Ganzes auf `fd91325` zuruecknehmen.
+- **UNVERIFIED / Naechster Schritt:** Neue Android-CI im PR #351 verfolgen;
+  Telefonabnahme fuer Schwimmlesbarkeit, Wasserwirkung, Speicher und Bildrate.
+  Vier Phasen sind stilisiertes Spiel, keine physikalische Simulation. Kein
+  Merge/APK-Auftrag. Details: `docs/itoeva2-swimming-water.md`.
+
 ### 2026-10-09 – Individuelle Statur und kontinuierlicher Stoffnachlauf (character-motion-v2)
 
 - **DOCUMENTED INTENT:** Martin moechte waehrend des separaten APK-Baus aus PR #350

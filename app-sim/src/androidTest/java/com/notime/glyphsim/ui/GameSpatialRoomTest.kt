@@ -25,8 +25,9 @@ class GameSpatialRoomTest {
                     paintRoomSpace(scene,GameScenes.Fit(1f,0f,0f),1f)
                 }
                 // Neue Materiallagen muessen im echten Android-Canvas statt nur im Export erscheinen.
-                val woodColors=(120..240).map { output.getPixel(it,250) }.distinct()
-                assertTrue(place.name,woodColors.size>4)
+                // Eine einzelne Linie schneidet manchmal nur zwei gleichfarbige Dielen.
+                val woodColors=(235..260).flatMap { y -> (120..360).map { x -> output.getPixel(x,y) } }.distinct()
+                assertTrue(place.name,woodColors.size>12)
                 assertEquals(255,output.getPixel(240,245) ushr 24)
                 assertNotEquals(output.getPixel(240,245),output.getPixel(300,40))
                 val body=GameRoomSpace.bodies(scene).first()

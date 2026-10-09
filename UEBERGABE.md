@@ -1,5 +1,15 @@
 # Uebergabe
 
+## Aktuell: Innenraum-Konzepttafeln und gezeichnetes Schwimmen (10.10.2026)
+
+Elf neue gemalte Tafeln stehen in `docs/concept-art/interior-studies-v1/README.md`.
+Martin will diese zuerst zur Orientierung; noch keine neue Raumgeometrie daraus.
+Sechs Schwimmboegen ersetzen den beanstandeten Rumpf-/Boje-Puls. Wasser hat
+Pixelkaemme, Uferschaum, bewegungsabhaengige Spur und schwach sichtbare blaue
+Unterwasserteile. Tests, Regeneration, Referenzen und offene Geraetepruefung in
+[`docs/itoeva2-swimming-water.md`](docs/itoeva2-swimming-water.md). PR #351.
+
+
 ## Aktuell: Konzeptstil in allen elf Innenorten (09.10.2026)
 
 PR #351 wird auf Claudes Eingabefix `fba7a969` weitergefuehrt. Der neue Schnitt

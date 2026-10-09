@@ -444,3 +444,14 @@ sind auch nach Wiederherstellung des unterbrochenen Uploads erneut gruen. Lokale
 vorhandene AGP-Plugin 8.13.1 nicht abrufen; Android-Build und Telefon-Sichtpruefung
 bleiben offen. Schneller gerichteter Lauf nutzt Gehphasen; Rolle bleibt eine
 gedrehte kompakte Zeichnung. Keine Steuerungs-, Reminder- oder Spielstandaenderung.
+
+## Gezeichnetes Schwimmen (10.10.2026)
+
+`swimming.py` importiert sechs neue Boegen mit 12 Posen (4 Phasen, 3 Ansichten).
+`source/swim-manifest.json` beschreibt Quellen/Prompts. Die WebP-Quellen sind
+verlustfrei, die Runtime-Boegen bleiben PNG. Ein Skalierungsfaktor je Wesen
+und Kopfanker; keine phaseweise Stauchung und kein generierter Rumpfpuls.
+256-Pixel-Rahmen mit 64-Pixel-Rand fuer ausladende Glieder.
+`SwimmingPreview.kt` exportiert produktive Kotlin-Bildrollen, Masken, Wellen
+und Massstab; `swimming_preview.py` zeichnet die Sichtpruefung. Kein APK-Video.
+Details und Grenzen: `docs/itoeva2-swimming-water.md`.

@@ -32,12 +32,14 @@ internal class GameCharacterPainter {
         light: GameSceneLighting.CharacterLight?, mirrored: Boolean) {
         GameCharacterMotion.fill(vertices, species, frame, top / 128f, clock, gait, speed, wind, response,swim)
         var i = 0
-        val referenceTop = GameCharacterScale.reference(species).top
+        val padding = if (swim != null && image.height == 256) 64 else 0
+        val referenceTop = GameCharacterScale.reference(species).top + padding
         for (row in 0..GameCharacterMotion.ROWS) for (column in 0..GameCharacterMotion.COLUMNS) {
             val u = column.toFloat() / GameCharacterMotion.COLUMNS
             val v = row.toFloat() / GameCharacterMotion.ROWS
-            val bodyV = ((v * 128f - referenceTop) / (126f - referenceTop)).coerceIn(0f, 1f)
-            val x = if (mirrored) 1f - u else u
+            val bodyV = ((v * image.height - referenceTop) / (126f + padding - referenceTop)).coerceIn(0f, 1f)
+            val physicalU = ((u * image.width - padding) / 128f).coerceIn(0f,1f)
+            val x = if (mirrored) 1f - physicalU else physicalU
             // Dieselbe bilineare Lichtrechnung ohne vier Rgb-Zwischenobjekte je Netzpunkt.
             fun component(a: Float, b: Float, c: Float, d: Float) =
                 ((a*(1f-x)+b*x)*(1f-bodyV)+(c*(1f-x)+d*x)*bodyV).coerceIn(.18f, 1f)

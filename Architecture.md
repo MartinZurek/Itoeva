@@ -460,6 +460,18 @@ bei jeder neuen Analyse erneut entdeckt werden müssen.
 
 ### Individuelle feine Charakteranimationen (06.10.2026)
 
+Ergaenzung 10.10.: Das beanstandete SWIM-Netz wird durch sechs eigene
+Schwimmboegen ersetzt (vier gezeichnete Zugphasen, drei Ansichten, 256er Rahmen
+mit 64 Pixeln Kopfanker-Rand). Im Schwimmen bleibt das Mesh identisch; vorhandene
+Gang-/Stoffnetze gelten weiter an Land. `CreatureSheets.swimming` haelt die
+zwoelf kleinen GPU-Texturen je Wesen separat, etwa 18 MiB zusaetzlich fuer sechs
+Wesen. Der Game-Vorlader laedt beide Boegen je Wesen vor Game-ready.
+Unterwasserteile zeichnen eine schwache blaue Lage an derselben Wasserlinie.
+`GameWater.crest` berechnet Pixelkaemme in Weltkoordinaten; Licht-/Schattenhang,
+Uferschaum und bewegungsabhaengige Spur ergaenzen die feste Wassermaske.
+Details/Pruefung: `docs/itoeva2-swimming-water.md`. Elf neue gemalte Raumtafeln
+sind Gestaltungsreferenzen, noch keine neue Runtime-Raumgeometrie.
+
 Ergaenzung 09.10.: Im aktiven Game rendert `GameCharacterPainter` dieselben
 Einzelbilder als 24x32-Texturnetz. `GameCharacterMotion` berechnet Statur,
 Stoffnachlauf und kleine materialabhaengige Koerperbewegungen rein in Kotlin.

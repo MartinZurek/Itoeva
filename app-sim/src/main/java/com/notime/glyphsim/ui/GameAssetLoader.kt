@@ -84,6 +84,8 @@ internal fun rememberGameAssets(enabled: Boolean,place: PlayScene.Place,idle: Bo
         for(species in AvatarSpecies.entries) {
             val sheet=withContext(Dispatchers.Default) { CreatureSheets.get(context,species) }
             if(sheet==null) missing+=CreatureSprites.assetFor(species)
+            val swimming=withContext(Dispatchers.Default) { CreatureSheets.swimming(context,species) }
+            if(swimming==null) missing+="creatures/${species.name.lowercase()}-swim.png"
             value=GameAssets(images,++loaded,total,false,missing.toList())
             yield()
         }
