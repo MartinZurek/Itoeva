@@ -75,4 +75,14 @@ class GameRoomSpaceTest {
         assertEquals(supported.height,next.height,.001f)
         assertTrue(GameScenes.feet(scene,next.pos).second-next.height>rearTop)
     }
+
+    @Test fun `Die Badezimmertuer steht frei statt vor einem Schrankkoerper`() {
+        val scene=GameWorld.scene(PlayScene.Place.BEDROOM)!!
+        val door=GameDoors.aperture(scene.place,PlayScene.Place.BATH)
+        for(body in GameRoomSpace.bodies(scene)) {
+            if(body.piece.left<door.x1 && body.piece.right>door.x0) {
+                assertTrue(body.piece.id,body.faces.flatMap { it.points }.minOf { it.second }>door.y1)
+            }
+        }
+    }
 }

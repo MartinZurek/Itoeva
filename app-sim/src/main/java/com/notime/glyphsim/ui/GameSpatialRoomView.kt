@@ -73,8 +73,10 @@ internal fun DrawScope.paintRoomSpace(scene: GameScenes.Scene, fit: GameScenes.F
             val dx=GameFabric.hangingOffset(row/12f,.5f,.10f,clock,scene.place.ordinal)
             rect(x+dx,45f+row*4f,6f,4.1f,shade(Color(palette.accent),if(row%3==0) -1 else 0))
         }
-        rect(184f,65f,69f,4f,Color(palette.trim))
-        for (i in 0..6) rect(190f+i*8f,51f+(i%3)*2f,5f,14f-(i%3)*2f,shade(Color(palette.accent),i%3-1))
+        val shelfX=if(scene.place==PlayScene.Place.LIVING) 151f else 184f
+        val shelfCount=if(scene.place==PlayScene.Place.LIVING) 5 else 7
+        rect(shelfX,65f,shelfCount*8f+5f,4f,Color(palette.trim))
+        for (i in 0 until shelfCount) rect(shelfX+6f+i*8f,51f+(i%3)*2f,5f,14f-(i%3)*2f,shade(Color(palette.accent),i%3-1))
         when(scene.place) {
             PlayScene.Place.CAFE -> {
                 rect(287f,41f,98f,56f,Color(palette.trim))
@@ -85,15 +87,15 @@ internal fun DrawScope.paintRoomSpace(scene: GameScenes.Scene, fit: GameScenes.F
                 }
             }
             PlayScene.Place.BEDROOM -> {
-                rect(322f,43f,43f,48f,Color(palette.trim))
-                rect(326f,47f,35f,40f,Color(0xFFBACACB))
-                face(listOf(326f to 47f,342f to 47f,361f to 77f,361f to 87f),Color(0xFFD6DEDA),false)
+                rect(388f,43f,43f,48f,Color(palette.trim))
+                rect(392f,47f,35f,40f,Color(0xFFBACACB))
+                face(listOf(392f to 47f,408f to 47f,427f to 77f,427f to 87f),Color(0xFFD6DEDA),false)
             }
             else -> {
-                rect(290f,46f,50f,38f,Color(palette.trim))
-                rect(294f,50f,42f,30f,Color(0xFF9AB7AA))
-                face(listOf(294f to 80f,310f to 60f,324f to 74f,336f to 63f,336f to 80f),Color(0xFF63856D),false)
-                rect(321f,53f,5f,5f,Color(0xFFE7CF94))
+                rect(350f,46f,50f,38f,Color(palette.trim))
+                rect(354f,50f,42f,30f,Color(0xFF9AB7AA))
+                face(listOf(354f to 80f,370f to 60f,384f to 74f,396f to 63f,396f to 80f),Color(0xFF63856D),false)
+                rect(381f,53f,5f,5f,Color(0xFFE7CF94))
             }
         }
         for(lamp in GameLightingCatalog.rooms[scene.place]?.lamps.orEmpty()) {

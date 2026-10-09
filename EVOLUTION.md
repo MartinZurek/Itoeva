@@ -701,7 +701,7 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
   ausgefallener Decoder wird neu gestartet. Aktivierte Musik folgt im Game dem
   Medienregler, nicht stummem Klingeln. Musik-Aus/Fremdton und bisherige App-1-/
   Stream-Klingelsperre bleiben wirksam. Kein Systemlautstaerke-/Focus-Eingriff.
-- **TESTED BEHAVIOR / Pruefstand:** 1.038 reine Tests im erweiterten Gesamtlauf;
+- **TESTED BEHAVIOR / Pruefstand:** 1.039 reine Tests im erweiterten Gesamtlauf;
   finale Resultate/Android-CI im PR. Native Tests fuer Pointerbefehl bis zum
   Sprungmotor, echte Raum-Canvaszeichnung, alle sechs Spritearten und ausgelieferten
   Musikdecoder. Softwarevorschauen lesen produktive Kotlin-Netze/Raumkoerper.

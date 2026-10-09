@@ -68,7 +68,7 @@ das Game zeichnet beides zusaetzlich.
 ## Pruefstand und naechster Schritt
 
 Der erste Charakterschnitt hatte 1.024 reine Kotlin-Tests gruen. Die Fortsetzung
-erweitert auf 1.038 Tests; der finale Lauf und Android-CI stehen im PR.
+erweitert auf 1.039 Tests; der finale Lauf und Android-CI stehen im PR.
 Die instrumentierten Zeichentests rendern alle sechs Wesen
 mit echten Android-Bitmaps, pruefen transparente Raender/Boden und die beim
 Spiegeln unveraenderte physische Lichtseite.
@@ -186,5 +186,9 @@ Sprung beobachten. Gehen/Rennen in vier Richtungen mit allen Wesen vergleichen.
 Schwimmen vor/zurueck/seitlich und ohne Eingabe pruefen. In Wohnzimmer, Schlafzimmer
 und Cafe hinter/zwischen Moebeln gehen, sitzen, auf Tisch/Bett springen, Tueren
 wechseln und Licht an/aus pruefen. Pixelstil, Raumweite und Figurenmassstab beurteilen.
-Der native Canvas-Test prueft die Raumzeichnung ohne Hintergrundbitmap. Bildrate,
+Der native Canvas-Test prueft die Raumzeichnung ohne Hintergrundbitmap.
+Android-CI auf `3987cf4`: 116 instrumentierte Game-Tests auf API 26 und die
+App-Tests auf API 35 bestanden; finale Nachpruefung der kleinen Tuer-/Schrank-
+Korrektur auf dem aktuellen PR-Head. Der Schlafzimmerschrank steht neben dem
+Badezimmerdurchgang, Wandregal und Spiegel lassen die Tuerblaetter frei. Bildrate,
 Klang am Lautsprecher und die gemeldete Bedienung auf Martins APK bleiben offen.

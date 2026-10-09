@@ -113,7 +113,7 @@ object GameFurniture {
                 body("living-bookcase", 334f, 404f, 71f, 161f),
                 table("living-side-table", 137f, 174f, 145f, 165f))
             PlayScene.Place.BEDROOM -> listOf(
-                body("bedroom-wardrobe", 334f, 394f, 59f, 156f),
+                body("bedroom-wardrobe", 294f, 331f, 59f, 156f),
                 body("bedroom-dresser", 403f, 445f, 111f, 174f),
                 body("bedroom-footbench", 189f, 282f, 175f, 205f, 180f, setOf(S.SEAT)),
                 table("bedroom-nightstand", 63f, 105f, 133f, 170f))

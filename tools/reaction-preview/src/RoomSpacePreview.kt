@@ -13,6 +13,8 @@ fun main(args: Array<String>) {
             }
             "{\"id\":\"${body.piece.id}\",\"material\":\"${body.material}\",\"top\":${body.piece.top},\"ground\":${body.piece.ground},\"faces\":[$faces]}"
         }
+        val doors=GameWorld.passages(place).filter { it.door }.map { GameDoors.aperture(it.from,it.to) }
+            .distinct().joinToString(",") { "[${it.x0},${it.y0},${it.x1},${it.y1}]" }
         val species=AvatarSpecies.FENNEC
         val positions=listOf(GameScenes.posAt(scene,245f,153f),GameScenes.posAt(scene,245f,245f))
         val avatars=positions.joinToString(",") { p ->
@@ -20,6 +22,6 @@ fun main(args: Array<String>) {
             "{\"x\":$x,\"y\":$y,\"height\":${GameCharacterScale.visibleHeight(scene,p,species)}}"
         }
         File(output,"${place.name.lowercase()}.json").writeText(
-            "{\"place\":\"$place\",\"palette\":[${listOf(palette.wall,palette.side,palette.floor,palette.trim,palette.accent).joinToString(",")}],\"bodies\":[$bodies],\"avatars\":[$avatars]}")
+            "{\"place\":\"$place\",\"palette\":[${listOf(palette.wall,palette.side,palette.floor,palette.trim,palette.accent).joinToString(",")}],\"doors\":[$doors],\"bodies\":[$bodies],\"avatars\":[$avatars]}")
     }
 }

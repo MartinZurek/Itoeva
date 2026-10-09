@@ -42,13 +42,20 @@ def room(data, rear):
     for x in (76,146):
         for row in range(12):
             draw.rectangle((x,45+row*4,x+6,49+row*4),fill=shade(accent,-1 if row%3==0 else 0))
-    draw.rectangle((184,65,253,69),fill=trim)
-    for i in range(7):
-        draw.rectangle((190+i*8,51+(i%3)*2,195+i*8,65),fill=shade(accent,i%3-1))
+    shelf = 151 if data["place"] == "LIVING" else 184
+    count = 5 if data["place"] == "LIVING" else 7
+    draw.rectangle((shelf,65,shelf+count*8+5,69),fill=trim)
+    for i in range(count):
+        draw.rectangle((shelf+6+i*8,51+(i%3)*2,shelf+11+i*8,65),fill=shade(accent,i%3-1))
     materials={'UPHOLSTERY':accent,'LINEN':(155,166,184),'METAL':(171,191,181),'TILE':(185,206,191),'WOOD':(156,118,83)}
     for body in data['bodies']:
         for face in body['faces']:
             draw.polygon([tuple(p) for p in face['points']],fill=shade(materials[body['material']],face['shade']),outline=trim)
+    for x0,y0,x1,y1 in data.get('doors',[]):
+        draw.rectangle((x0,y0,x1,y1),fill=(48,43,38))
+        draw.rectangle((x0+1,y0+1,x1-1,y1-1),fill=(150,115,78))
+        draw.rectangle((x0+5,y0+8,x1-5,y1-10),outline=(190,152,105))
+        draw.ellipse((x1-7,y0+(y1-y0)*.58-1,x1-4,y0+(y1-y0)*.58+2),fill=(229,201,136))
     avatar=data['avatars'][0 if rear else 1]
     sheet=Image.open(ROOT/'app-sim/src/main/assets/creatures/fennec.png').convert('RGBA')
     sprite=sheet.crop((104*128,0,105*128,128))
