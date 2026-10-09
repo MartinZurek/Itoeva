@@ -2,7 +2,6 @@ package com.notime.glyphsim.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.notime.glyphsim.R
 import com.notime.glyphsim.matrix.GameMovement
 import com.notime.glyphsim.matrix.PlayControl
+import kotlinx.coroutines.delay
 
 /** Zwei unabhaengige Daumen; die rechte Hand darf springen, waehrend links weiter gelenkt wird. */
 @Composable
@@ -163,103 +163,83 @@ internal fun GameTouch(
         }
         GameActionPad(enabled, onCommand,
             Modifier.align(Alignment.BottomEnd).padding(end = 16.8.dp, bottom = 34.dp).size(112.dp))
-        // Rollen links neben, Hinsetzen ueber dem Sprungknopf.
-        GameSideButtons(enabled, onCommand,
-            Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 22.dp).size(width = 132.dp, height = 186.dp))
     }
 }
 
-/**
- * Drei getrennte Knoepfe statt einer Wischflaeche: Springen (gross), Rollen, Hinsetzen.
- *
- * Auf dem Telefon kamen Sprung und Rolle aus der frueheren Wischflaeche nicht zuverlaessig an:
- * Der Befehl fiel erst beim Loslassen bzw. nach einer Wischstrecke, und ein Seitwaerts-Wischen
- * am rechten Bildschirmrand ist dort Androids Zurueck-Geste - das System bricht die Beruehrung
- * dann ab. Jetzt loest jeder Knopf schon beim Aufsetzen aus, und die Flaeche ist von den
- * System-Gesten ausgenommen. Jeder Knopf hat eine eigene Pointer-Flaeche; der linke Daumen bleibt
- * unabhaengig davon am Steuern.
- */
+/** Eigene Pointer-Flaeche: ein zweiter Daumen wird unabhaengig vom Welt-/Bewegungsgriff erfasst. */
 @Composable
 internal fun GameActionPad(enabled: Boolean, onCommand: (GameMovement.Command, PlayControl.Stick?) -> Unit,
     modifier: Modifier = Modifier) {
+    val commandNow by rememberUpdatedState(onCommand)
+    val slop = with(LocalDensity.current) { 18.dp.toPx() }
+    var origin by remember { mutableStateOf<Offset?>(null) }
+    var started by remember { mutableLongStateOf(0L) }
+    var fired by remember { mutableStateOf(false) }
     val jump = stringResource(R.string.game_control_jump)
     val roll = stringResource(R.string.game_control_roll)
     val rest = stringResource(R.string.game_control_rest)
-    // 112 dp wie die fruehere Flaeche: der Sprungknopf sitzt an derselben Stelle.
-    Box(modifier.systemGestureExclusion().semantics {
-        contentDescription = "$jump · $roll · $rest"
-        if (!enabled) disabled()
-    }) {
-        GameActionButtonCircle(enabled, GameMovement.Command.JUMP, jump, onCommand,
-            Modifier.align(Alignment.Center).size(84.dp).testTag("game-action-pad")) { c, r, ink, w ->
-            drawLine(ink, c + Offset(0f, r * .42f), c + Offset(0f, -r * .42f), w)
-            drawLine(ink, c + Offset(-r * .3f, -r * .14f), c + Offset(0f, -r * .42f), w)
-            drawLine(ink, c + Offset(r * .3f, -r * .14f), c + Offset(0f, -r * .42f), w)
+    LaunchedEffect(origin, started, enabled) {
+        if (enabled && origin != null) {
+            delay(500L)
+            if (!fired) { fired = true; commandNow(GameMovement.Command.REST, null) }
         }
     }
-}
-
-/** Rollen und Hinsetzen: kleinere Knoepfe neben bzw. ueber dem Sprungknopf. */
-@Composable
-internal fun GameSideButtons(enabled: Boolean, onCommand: (GameMovement.Command, PlayControl.Stick?) -> Unit,
-    modifier: Modifier = Modifier) {
-    val roll = stringResource(R.string.game_control_roll)
-    val rest = stringResource(R.string.game_control_rest)
-    Box(modifier.systemGestureExclusion()) {
-        GameActionButtonCircle(enabled, GameMovement.Command.ROLL, roll, onCommand,
-            Modifier.align(Alignment.BottomStart).size(60.dp).testTag("game-roll-button")) { c, r, ink, w ->
-            drawArc(ink, 200f, 280f, false, c - Offset(r * .42f, r * .42f),
-                androidx.compose.ui.geometry.Size(r * .84f, r * .84f), style = Stroke(w))
-            drawLine(ink, c + Offset(r * .42f, -r * .02f), c + Offset(r * .58f, -r * .22f), w)
-            drawLine(ink, c + Offset(r * .42f, -r * .02f), c + Offset(r * .18f, -r * .12f), w)
-        }
-        GameActionButtonCircle(enabled, GameMovement.Command.REST, rest, onCommand,
-            Modifier.align(Alignment.TopEnd).size(56.dp).testTag("game-rest-button")) { c, r, ink, w ->
-            drawLine(ink, c + Offset(-r * .35f, -r * .12f), c + Offset(0f, r * .22f), w)
-            drawLine(ink, c + Offset(r * .35f, -r * .12f), c + Offset(0f, r * .22f), w)
-            drawLine(ink, c + Offset(-r * .4f, r * .4f), c + Offset(r * .4f, r * .4f), w)
-        }
-    }
-}
-
-/** Ein runder Knopf, der beim Aufsetzen des Fingers genau einmal [command] ausloest. */
-@Composable
-private fun GameActionButtonCircle(enabled: Boolean, command: GameMovement.Command, label: String,
-    onCommand: (GameMovement.Command, PlayControl.Stick?) -> Unit, modifier: Modifier,
-    icon: androidx.compose.ui.graphics.drawscope.DrawScope.(Offset, Float, Color, Float) -> Unit) {
-    val commandNow by rememberUpdatedState(onCommand)
-    var pressed by remember { mutableStateOf(false) }
-    val input = if (enabled) Modifier.pointerInput(command) {
-        awaitPointerEventScope {
-            var finger: PointerId? = null
-            while (true) {
-                val event = awaitPointerEvent()
-                for (change in event.changes) {
-                    if (finger == null && change.pressed && !change.previousPressed) {
-                        finger = change.id
-                        pressed = true
+    val input = if (enabled) Modifier.pointerInput(enabled, slop) {
+        var finger: PointerId? = null
+        try {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    for (change in event.changes) {
+                        val cancelled = !change.pressed && change.previousPressed && change.isConsumed
+                        if (finger == null && change.pressed && !change.previousPressed && !change.isConsumed) {
+                            finger = change.id; origin = change.position; started = change.uptimeMillis; fired = false
+                        }
+                        if (change.id != finger) continue
+                        val delta = change.position - (origin ?: change.position)
+                        if (change.pressed && !fired && delta.getDistance() > slop * 1.7f) {
+                            fired = true
+                            val command = if (kotlin.math.abs(delta.x) > kotlin.math.abs(delta.y))
+                                GameMovement.Command.ROLL else if (delta.y < 0f) GameMovement.Command.JUMP else GameMovement.Command.REST
+                            commandNow(command, if (command == GameMovement.Command.ROLL)
+                                PlayControl.stick(delta.x, delta.y, slop, 0f) else null)
+                        }
                         change.consume()
-                        commandNow(command, null)
-                    } else if (change.id == finger) {
-                        change.consume()
-                        if (!change.pressed) { finger = null; pressed = false }
+                        if (!change.pressed && change.previousPressed) {
+                            if (!fired && !cancelled) commandNow(GameMovement.Command.JUMP, null)
+                            finger = null; origin = null
+                        }
                     }
                 }
             }
-        }
+        } finally { origin = null }
     } else Modifier
-    Canvas(modifier.semantics {
-        contentDescription = label
+    Canvas(modifier.testTag("game-action-pad").semantics {
+        contentDescription = "$jump · $roll · $rest"
         if (!enabled) disabled()
-        customActions = listOf(CustomAccessibilityAction(label) { if (enabled) commandNow(command, null); enabled })
+        customActions = listOf(
+            CustomAccessibilityAction(jump) { if (enabled) commandNow(GameMovement.Command.JUMP, null); enabled },
+            CustomAccessibilityAction(roll) { if (enabled) commandNow(GameMovement.Command.ROLL, null); enabled },
+            CustomAccessibilityAction(rest) { if (enabled) commandNow(GameMovement.Command.REST, null); enabled })
     }.then(input)) {
         val alpha = if (enabled) 1f else .65f
-        val c = center
-        val r = size.minDimension / 2f
-        drawCircle(Color(0x337EBBA4).copy(alpha = (if (pressed) .45f else .20f) * alpha), r, c)
-        drawCircle(Color(0x88DDF5E8).copy(alpha = .6f * alpha), r - 1.dp.toPx(), c,
-            style = Stroke(if (pressed) 4.dp.toPx() else 2.dp.toPx()))
-        icon(c, r, Color(0xFFDDF5E8).copy(alpha = .85f * alpha), 3.dp.toPx())
+        val action = center
+        val radius = size.minDimension / 2f
+        drawCircle(Color(0x337EBBA4).copy(alpha = .20f * alpha), radius, action)
+        drawCircle(Color(0x88DDF5E8).copy(alpha = .5f * alpha), radius, action,
+            style = Stroke(if (origin == null) 2.dp.toPx() else 4.dp.toPx()))
+        drawCircle(Color(0x55DDF5E8).copy(alpha = .25f * alpha), radius * .55f, action, style = Stroke(1.dp.toPx()))
+        val ink = Color(0xFFDDF5E8).copy(alpha = .8f * alpha)
+        val w = 3.dp.toPx()
+        drawLine(ink, action + Offset(0f, 12.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
+        drawLine(ink, action + Offset(-8.dp.toPx(), -4.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
+        drawLine(ink, action + Offset(8.dp.toPx(), -4.dp.toPx()), action + Offset(0f, -12.dp.toPx()), w)
+        drawArc(ink, 70f, 220f, false, action + Offset(-30.dp.toPx(), -10.dp.toPx()),
+            androidx.compose.ui.geometry.Size(12.dp.toPx(), 20.dp.toPx()), style = Stroke(w))
+        drawArc(ink, -110f, 220f, false, action + Offset(18.dp.toPx(), -10.dp.toPx()),
+            androidx.compose.ui.geometry.Size(12.dp.toPx(), 20.dp.toPx()), style = Stroke(w))
+        drawLine(ink, action + Offset(-4.dp.toPx(), 24.dp.toPx()), action + Offset(-4.dp.toPx(), 32.dp.toPx()), w)
+        drawLine(ink, action + Offset(4.dp.toPx(), 24.dp.toPx()), action + Offset(4.dp.toPx(), 32.dp.toPx()), w)
     }
 }
 

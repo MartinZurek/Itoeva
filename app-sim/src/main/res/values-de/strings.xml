@@ -815,7 +815,7 @@
     <string name="game_control_roll">Rollen</string>
     <string name="game_control_rest">Hinsetzen oder aufstehen</string>
     <string name="game_control_pace">Gehen ↔ Rennen</string>
-    <string name="game_control_gestures">↑ Springen · ↻ Rollen · ⌄ Sitzen</string>
+    <string name="game_control_gestures">Tipp: Sprung · Wisch: Rolle · Halten: Ruhe</string>
     <string name="talk_place_coast_path">Küstenweg</string>
     <string name="talk_place_village_edge">Dorfrand</string>
     <string name="talk_place_mountain_pass">Bergpass</string>
