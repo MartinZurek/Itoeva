@@ -13,6 +13,7 @@ setzt dessen Physik-/Ladefunktionen voraus. Merge und APK übernimmt Martin mit 
 - Türen und deren Namen: ein Tipp genügt. Die Trefferprüfung umfasst alle sichtbaren
   Weltabschnitte, nicht nur `currentPlace`. Der Avatar geht zum sichtbaren Eingang
   auch über Abschnittsgrenzen. Ein laufender Weg bleibt abbrechbar.
+  Die Figur behält Tipp-Priorität vor einer überlappenden Tür; ihr Menü bleibt erreichbar.
 - Shop-/Aktions- und Abbruchknöpfe liegen in der Komposition über dem Touchlayer;
   ihr bestehender `zIndex(2f)` bleibt. Gegenstände und Stationen reagieren ebenfalls
   auf einen Tipp. Bodensitzen blockiert einen Türdurchgang nicht mehr; Sprünge,
@@ -31,7 +32,9 @@ setzt dessen Physik-/Ladefunktionen voraus. Merge und APK übernimmt Martin mit 
 - Native Compose: bestehende Mehrfinger-, Roll-, Halte-, Abbruch- und Sperrtests;
   zusätzlich Pointerklick auf einen Aktionsknopf und rechter Pad-Klick → produktiver
   Bewegungsmotor → sichtbare Sprunghöhe → zweiter Sprung nach Neukomposition.
-- Android-CI wird am veröffentlichten PR-Kopf geprüft. Lokale reine Kotlin-Tests
+- Android-CI am ersten Kopf `fb2e925`: beide Emulatorläufe grün, einschließlich
+  111 Tests auf API 26 mit den neuen Pad-/Sprungtests. Ein automatischer P2-Befund
+  zur Menüpriorität vor einer Tür wurde danach korrigiert; der finale Kopf wird erneut geprüft. Lokale reine Kotlin-Tests
   ersetzen weder Compose noch Telefon-/GPU-Abnahme. Hier keine APK erstellt.
 
 ## Nächster Schritt

@@ -6594,16 +6594,20 @@ fun DockScreen(
                 onCommand = ::gameCommand,
                 enabled = controlsEnabled,
                 onTap = { tap ->
-                    val passage = gamePassageUnder(tap)
-                    if (passage != null) gameEnter(passage)
-                    else if (gameObjectUnder(tap) != null) gameObjectUnder(tap)?.let(::gameActObject)
-                    else avatar?.let { current ->
+                    avatar?.let { current ->
                         val px = with(density) { current.sizeDp.dp.toPx() }
                         val hit = tap.x in current.offset.x..(current.offset.x + px) &&
                             tap.y in current.offset.y..(current.offset.y + px * AvatarGeometry.HEIGHT / AvatarGeometry.SIZE)
+                        // Das Menue der Figur muss auch direkt vor einer Tuer erreichbar bleiben.
                         if (hit && !gameActing) gameMenuOpen = true
-                        else if (!gameActing) gameResidentUnder(tap)?.let(::gameTalkTo)
-                            ?: gameStationUnder(tap)?.let(::gameActAt)
+                        else if (!gameActing) {
+                            val passage = gamePassageUnder(tap)
+                            val obj = gameObjectUnder(tap)
+                            if (passage != null) gameEnter(passage)
+                            else if (obj != null) gameActObject(obj)
+                            else gameResidentUnder(tap)?.let(::gameTalkTo)
+                                ?: gameStationUnder(tap)?.let(::gameActAt)
+                        }
                     }
                 },
                 onDoubleTap = { tap ->
