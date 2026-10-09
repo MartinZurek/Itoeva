@@ -9,11 +9,11 @@ object GameRoomSpace {
 
     fun enabled(scene: GameScenes.Scene) = scene.asset.startsWith("interiors/")
     fun palette(place: PlayScene.Place): Palette = when (place) {
-        PlayScene.Place.BEDROOM -> Palette(0xFFD4C3BB,0xFFAEA8B1,0xFFAC8165,0xFF65534B,0xFF847799)
-        PlayScene.Place.BATH -> Palette(0xFFBCD3CE,0xFF89ACA6,0xFFC1C9BD,0xFF486C68,0xFF6B9D98)
-        PlayScene.Place.CAFE -> Palette(0xFFD6C39E,0xFFAF987E,0xFFAA8061,0xFF654C3D,0xFF65836B)
-        PlayScene.Place.ARCADE -> Palette(0xFFAAB0C5,0xFF778297,0xFF8A8291,0xFF41485C,0xFF677EA0)
-        else -> Palette(0xFFD4C7AE,0xFFABA48D,0xFFB38B67,0xFF6C5945,0xFF7D9070)
+        PlayScene.Place.BEDROOM -> Palette(0xFFE1CFAF,0xFFBFA78B,0xFFB28B60,0xFF72573F,0xFF9DAB89)
+        PlayScene.Place.BATH -> Palette(0xFFD8DFC9,0xFFACB99B,0xFFBBAE8D,0xFF64705B,0xFF839D85)
+        PlayScene.Place.CAFE -> Palette(0xFFE2CCA7,0xFFB8A17E,0xFFAD8159,0xFF71553D,0xFF96A080)
+        PlayScene.Place.ARCADE -> Palette(0xFFD1C7B8,0xFFA99DA0,0xFFAA896E,0xFF665A59,0xFF898DA0)
+        else -> Palette(0xFFE3D3B4,0xFFBEAE8F,0xFFB48C60,0xFF70563D,0xFFABA88B)
     }
 
     /** Niedrigere Moebel und mehr freier Boden vermeiden eine Figur direkt vor der Kameralinse. */
@@ -35,6 +35,12 @@ object GameRoomSpace {
     private fun rect(shade: Int,x0: Float,y0: Float,x1: Float,y1: Float) =
         polygon(shade,x0 to y0,x1 to y0,x1 to y1,x0 to y1)
 
+    private fun cushion(shade: Int,x0: Float,y0: Float,x1: Float,y1: Float): Face {
+        val radius=3f.coerceAtMost((y1-y0)/3f).coerceAtLeast(.5f)
+        return polygon(shade,x0+radius to y0,x1-radius to y0,x1 to y0+radius,
+            x1 to y1-radius,x1-radius to y1,x0+radius to y1,x0 to y1-radius,x0 to y0+radius)
+    }
+
     /** Zeichenkonturen werden zugleich fuer Verdeckung verwendet; keine zweite Bild-Moebelliste. */
     private val cache=java.util.concurrent.ConcurrentHashMap<GameFurniture.Piece,Body>()
     fun body(piece: GameFurniture.Piece): Body = cache.getOrPut(piece) { buildBody(piece) }
@@ -52,7 +58,13 @@ object GameRoomSpace {
         val depth=(piece.ground-piece.back).coerceIn(10f,46f)
         val bevel=((x1-x0)*.06f).coerceIn(3f,7f)
         val faces=mutableListOf<Face>()
-        if (table || chair) {
+        if(id.contains("tub")) {
+            // Eine Wanne hat einen offenen Rand und eine gewoelbte Schale, keine Schrankfront.
+            faces+=polygon(-1,x0 to seat,x1 to seat,x1-3 to bottom-12,x1-12 to bottom-3,
+                x1-20 to bottom,x0+20 to bottom,x0+9 to bottom-4,x0+2 to bottom-14)
+            faces+=polygon(1,x0 to seat,x0+5 to seat-depth,x1-5 to seat-depth,x1 to seat)
+            faces+=polygon(2,x0+10 to seat-3,x0+13 to seat-depth+3,x1-13 to seat-depth+3,x1-10 to seat-3)
+        } else if (table || chair) {
             val legWidth=if (chair) 4f else 5f
             for(x in listOf(x0+bevel,x1-bevel-legWidth)) {
                 faces+=rect(-2,x,seat+3f,x+legWidth,bottom)
@@ -66,24 +78,24 @@ object GameRoomSpace {
             faces+=polygon(-1,x0 to seat,x1 to seat,x1-1f to seat+4f,x0+1f to seat+4f)
         } else {
             val top=if(soft || bed) seat else high
-            faces+=rect(-1,x0,top,x1-bevel,bottom)
+            faces+=if(soft) cushion(-1,x0,top,x1-bevel,bottom) else rect(-1,x0,top,x1-bevel,bottom)
             faces+=polygon(-2,x1-bevel to top,x1 to top-depth,x1 to bottom-depth,x1-bevel to bottom)
             faces+=polygon(1,x0 to top,x0+bevel to top-depth,x1 to top-depth,x1-bevel to top)
             if(soft || bed) {
-                if(soft) faces+=rect(0,x0+bevel,high,x1-bevel,seat-depth*.5f)
+                if(soft) faces+=cushion(0,x0+bevel,minOf(high,seat-depth*.5f-17f),x1-bevel,seat-depth*.5f)
                 faces+=polygon(2,x0+bevel to seat-depth*.5f,x1-bevel to seat-depth*.5f,
                     x1-bevel*1.5f to seat+2f,x0+bevel*.7f to seat+2f)
                 if(soft) {
-                    faces+=rect(-1,x0,seat-depth*.8f,x0+bevel,seat+7f)
-                    faces+=rect(-1,x1-bevel,seat-depth*.8f,x1,seat+7f)
+                    faces+=cushion(-1,x0,seat-depth*.8f,x0+bevel,seat+7f)
+                    faces+=cushion(-1,x1-bevel,seat-depth*.8f,x1,seat+7f)
                     val middle=(x0+x1)/2f
                     faces+=rect(-1,middle-.5f,seat-depth*.5f,middle+.5f,seat+1f)
                 } else {
                     // Das Bett hat eine sichtbare Liegeflaeche in die Tiefe, kein schmales Brett.
                     faces+=polygon(2,x0+bevel to seat-depth,x1-bevel to seat-depth,
                         x1-bevel to seat,x0+bevel to seat)
-                    faces+=rect(3,x0+bevel*2f,seat-depth+3f,x0+(x1-x0)*.35f,seat-depth+12f)
-                    faces+=rect(3,x0+(x1-x0)*.39f,seat-depth+3f,x0+(x1-x0)*.64f,seat-depth+12f)
+                    faces+=cushion(3,x0+bevel*2f,seat-depth+3f,x0+(x1-x0)*.35f,seat-depth+12f)
+                    faces+=cushion(3,x0+(x1-x0)*.39f,seat-depth+3f,x0+(x1-x0)*.64f,seat-depth+12f)
                     faces+=rect(-1,x0+bevel,seat-depth+16f,x1-bevel,seat-depth+18f)
                 }
             }

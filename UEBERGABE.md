@@ -1,5 +1,17 @@
 # Uebergabe
 
+## Aktuell: Konzeptstil in allen elf Innenorten (09.10.2026)
+
+PR #351 wird auf Claudes Eingabefix `fba7a969` weitergefuehrt. Der neue Schnitt
+uebertraegt die Cozy-Home-Studien in gemeinsame Pixelgruppen fuer Waende, Holz,
+Bogenfenster, Textilien, Pflanzen und Moebel. Raeumliche Kontakte/Verdeckung
+bleiben erhalten; Wanne und weiche Polster verwenden neue gemeinsame Konturen.
+[`Vorher/Nachher`](tools/character-art/room-concept-comparison.png),
+[`Alle Innenorte`](tools/character-art/room-concept-all-preview.png), Regeneration,
+Pruefstand und offene Telefonabnahme im letzten Abschnitt von
+[`docs/itoeva2-character-motion.md`](docs/itoeva2-character-motion.md).
+Keine APK gebaut, keine Workflow-/Buildaenderung, kein Merge.
+
 ## Aktuell: Charaktere, Lauf-/Schwimmbewegung, Raeume und Musik (09.10.2026)
 
 Martins Auftrag waehrend des separaten APK-Baus aus PR #350 steht in

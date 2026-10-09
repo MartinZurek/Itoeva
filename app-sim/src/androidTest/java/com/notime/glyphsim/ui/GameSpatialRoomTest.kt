@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class GameSpatialRoomTest {
     @Test fun alleRaeumeZeichnenKoerperOhneHintergrundbitmap() {
-        for(place in listOf(PlayScene.Place.LIVING,PlayScene.Place.BEDROOM,PlayScene.Place.CAFE)) {
+        for(place in GameInteriorCatalog.scenes.keys) {
             val scene=GameWorld.scene(place)!!
             val output=Bitmap.createBitmap(480,270,Bitmap.Config.ARGB_8888)
             try {
@@ -24,9 +24,12 @@ class GameSpatialRoomTest {
                     Canvas(output.asImageBitmap()),Size(480f,270f)) {
                     paintRoomSpace(scene,GameScenes.Fit(1f,0f,0f),1f)
                 }
+                // Neue Materiallagen muessen im echten Android-Canvas statt nur im Export erscheinen.
+                val woodColors=(120..240).map { output.getPixel(it,250) }.distinct()
+                assertTrue(place.name,woodColors.size>4)
                 assertEquals(255,output.getPixel(240,245) ushr 24)
                 assertNotEquals(output.getPixel(240,245),output.getPixel(300,40))
-                val body=GameRoomSpace.bodies(scene).first { it.piece.id.endsWith("-table") || it.piece.id.endsWith("-bed") }
+                val body=GameRoomSpace.bodies(scene).first()
                 val x=((body.piece.left+body.piece.right)/2).toInt()
                 assertNotEquals(output.getPixel(x,body.piece.top.toInt()-2),output.getPixel(x,body.piece.ground.toInt()+10))
             } finally { output.recycle() }

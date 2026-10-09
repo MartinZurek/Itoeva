@@ -627,7 +627,12 @@ Pruefvertrag, Scan aller 28 Orte und Telefon-Abnahme: docs/itoeva2-world-physics
 `GameRoomSpace` zeichnet die elf Innenraeume als Boden-/Wandprojektion und einzelne
 Moebelkoerper. `GameFurniture` bleibt Quelle von Grundriss, Sitz-/Stand-/Landekante;
 Konturen der gezeichneten Koerper werden auch fuer Verdeckung und Licht gelesen.
-Der Raumzeichenweg verwendet keine gemalte Hintergrundbitmap. Die 2.5D-Kamera
+`GameRoomArt` uebersetzt die Konzeptfarben/-materialien in deterministische Pixelgruppen
+auf diesen Koerpern. `GameSpatialRoomView` rastert einmal je Raum auf 480x270;
+Materialdekore sind auf ihre Moebelflaechen begrenzt. Tuerblaetter teilen dieselbe
+Holzpalette; nur ihr projizierter Oeffnungswinkel aendert sich. Vorhaenge und
+Ortslicht werden weiter darueber animiert. Die alten gemalten Raum-PNGs werden
+nicht als flacher Hintergrund geladen. Die 2.5D-Kamera
 behaelt ihren Blickwinkel, mit mehr Boden und kleinerem Figurenmassstab.
 
 Rechte Padbefehle liegen bis zum naechsten Motorbild vor und werden nach dem

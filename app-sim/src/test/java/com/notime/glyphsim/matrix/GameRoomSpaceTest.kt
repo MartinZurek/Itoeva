@@ -85,4 +85,28 @@ class GameRoomSpaceTest {
             }
         }
     }
+    @Test fun `Konzeptlagen bleiben deterministisch und an den Raum gebunden`() {
+        for(scene in GameInteriorCatalog.scenes.values) {
+            val marks=GameRoomArt.marks(scene)
+            assertSame(marks,GameRoomArt.marks(scene))
+            assertTrue(marks.isNotEmpty())
+            assertTrue(marks.all { mark -> mark.points.all { it.first.isFinite() && it.second.isFinite() } })
+            // Materialdetails duerfen die freien Luecken unter Tischen nicht durch eine Bildflaeche verdecken.
+            for(body in GameRoomSpace.bodies(scene)) {
+                assertTrue(body.piece.id,body.faces.all { face ->
+                    marks.any { !it.oval && it.points==face.points && it.clip==null }
+                })
+            }
+        }
+    }
+
+    @Test fun `Weiche Moebel zeichnen dieselben abgeschraegten Kanten wie die Verdeckung`() {
+        val scene=GameWorld.scene(PlayScene.Place.LIVING)!!
+        val sofa=GameRoomSpace.bodies(scene).single { it.piece.id=="living-sofa" }
+        val back=sofa.faces.single { it.shade==0 }
+        assertEquals(8,back.points.size)
+        assertTrue(GameRoomSpace.contours(sofa.piece).contains(back.points))
+        assertTrue(GameRoomArt.marks(scene).any { it.points==back.points && it.clip==null })
+    }
+
 }

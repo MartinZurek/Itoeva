@@ -715,6 +715,34 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
   Bildrate bleibt erforderlich. Keine Behauptung einer APK-Aufnahme/Hoerabnahme;
   keine neue OPEN DECISION. Martin baut separat, kein Merge-/APK-Auftrag hier.
 
+### 2026-10-09 – Konzeptstil auf begehbaren Raumkoerpern (room-concept-pixels-v4)
+
+- **DOCUMENTED INTENT:** Martin verlangt fuer die Innenraeume den bestehenden
+  Konzept-Art-Stil; die vorherige Forderung nach raeumlichen, begehbaren Zimmern
+  mit glaubwuerdigen Moebelkontakten gilt weiter. Fortsetzung von PR #351.
+- **FACT / Produktentscheidung:** Cozy-Home-/Park-Lake-Home-Farbwelt wird in
+  Pixelgruppen fuer warme Holzwaende/-balken, Bogenfenster, Pflanzen, Textilien,
+  Teppiche und Lampen uebersetzt. Die vorhandenen elf Orte behalten ihre Geometrie.
+  Polster-/Kissenkanten und offene Wannenform werden zugleich Zeichen- und
+  Verdeckungskontur. Kein Rueckbau zu einer eingemalten Zimmer-Hintergrundflaeche.
+- **FACT / Architektur:** GameRoomArt liefert deterministische Materialprimitive,
+  auf sichtbare Moebelflaechen begrenzt. Android rastert einmal je Raum auf
+  480x270 ohne Bitmapfilter; Vorhaenge, Ortslicht und Tuerbewegung bleiben dynamisch.
+  Vorher-/Nachher-/Gesamtvorschau lesen dieselben Primitive in Software.
+- **TESTED BEHAVIOR:** 1.041 reine Tests bestanden; nach visueller Verfeinerung
+  acht Raumtests erneut gruen. Vorlagen sowie drei Beispielraeume und alle elf
+  Orte visuell geprueft. Native Canvas-Regression auf alle elf Orte erweitert.
+- **Betroffene Bereiche:** Nur Game-Raumdarstellung, gemeinsame Moebelkonturen,
+  Vorschauwerkzeuge und Dokumentation. Keine neue Mechanik, Persistenz, Preference,
+  Reminder-/LAS-/XP-/Progressions-, App-1-/Stream- oder Infrastrukturveraenderung.
+- **Ruecksetzung:** Nur diesen v4-Commit auf fba7a969 ruecknehmen; keine Migration.
+  Vorherige Musik-/Gang-/Schwimm-/Touchkorrekturen bleiben dann erhalten.
+- **UNVERIFIED / Naechster Schritt:** Android-CI im PR; lokaler Gradle-Start wegen
+  fehlendem Wrapper-JAR blockiert. Telefonstil, schmale Pixelnaehte, Wannenrand,
+  Landungen, Sofaverdeckung, Tueroeffnung und erste Raumwechsel-/GPU-Leistung
+  pruefen. Vorschauen enthalten keine Laufzeit-Lichtlagen und sind keine APK-
+  Aufnahmen. Keine neue OPEN DECISION, kein Merge-/APK-Auftrag in diesem Schnitt.
+
 Für jede angenommene Evolution müssen mindestens folgende Informationen dauerhaft auffindbar
 sein:
 

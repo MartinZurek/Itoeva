@@ -11,51 +11,52 @@ def rgb(value):
     return ((value >> 16) & 255, (value >> 8) & 255, value & 255)
 
 
-def shade(color, level):
-    gain = {-2: .63, -1: .81, 1: 1.12, 2: 1.20, 3: 1.38}.get(level, 1.)
-    return tuple(min(255, round(c * gain)) for c in color)
+def paint_art(image, marks):
+    """Rastert die produktive Pixelliste; keine von der App getrennte Raumgestaltung."""
+    from PIL import ImageChops
+    import math
+    for mark in marks:
+        points = mark['points']
+        color = (*rgb(mark['color']), (mark['color'] >> 24) & 255)
+        if not mark['clip'] and color[3] == 255:
+            draw = ImageDraw.Draw(image)
+            if mark['oval']:
+                draw.ellipse(tuple(v for p in points for v in p), fill=color)
+            else:
+                draw.polygon([tuple(p) for p in points], fill=color)
+            continue
+        x0 = math.floor(min(p[0] for p in points))
+        y0 = math.floor(min(p[1] for p in points))
+        x1 = math.ceil(max(p[0] for p in points)) + 1
+        y1 = math.ceil(max(p[1] for p in points)) + 1
+        patch = Image.new('RGBA', (max(1,x1-x0),max(1,y1-y0)))
+        local = [(x-x0,y-y0) for x,y in points]
+        draw = ImageDraw.Draw(patch)
+        if mark['oval']:
+            draw.ellipse(tuple(v for p in local for v in p),fill=color)
+        else:
+            draw.polygon(local,fill=color)
+        if mark['clip']:
+            mask = Image.new('L',patch.size)
+            ImageDraw.Draw(mask).polygon([(x-x0,y-y0) for x,y in mark['clip']],fill=255)
+            patch.putalpha(ImageChops.multiply(patch.getchannel('A'),mask))
+        image.alpha_composite(patch,(x0,y0))
 
 
 def room(data, rear):
-    wall, side, floor, trim, accent = map(rgb, data['palette'])
-    image = Image.new('RGBA', (480, 270), side)
+    image = Image.new('RGBA',(480,270))
+    paint_art(image,data['art'])
     draw = ImageDraw.Draw(image)
-    draw.polygon([(48,116),(432,116),(468,270),(12,270)],fill=floor)
-    for row in range(18):
-        y = 116+154*(row/17)**2
-        end = 116+154*((row+1)/17)**2
-        draw.rectangle((12,y,468,end), fill=shade(floor,-1 if row%3==0 else 0))
-        draw.line((12,y,468,y),fill=shade(floor,-1))
-        for x in range(-1,9):
-            px=x*70+(35 if row%2 else 0)
-            back=240+(px-240)*(.78+row/17*.22)
-            draw.line((back,y,px,end),fill=shade(floor,-1))
-    draw.polygon([(0,12),(48,28),(48,116),(12,270),(0,270)],fill=side,outline=trim)
-    draw.polygon([(432,28),(480,12),(480,270),(468,270),(432,116)],fill=shade(side,-1),outline=trim)
-    draw.rectangle((48,28,432,116),fill=wall,outline=trim)
-    draw.rectangle((48,109,432,116),fill=trim)
-    draw.rectangle((80,44,149,92),fill=trim)
-    draw.rectangle((84,48,145,88),fill=(173,199,188))
-    draw.rectangle((111,48,114,88),fill=trim)
-    draw.rectangle((84,66,145,69),fill=trim)
-    draw.rectangle((75,91,154,95),fill=shade(trim,1))
     for x in (76,146):
-        for row in range(12):
-            draw.rectangle((x,45+row*4,x+6,49+row*4),fill=shade(accent,-1 if row%3==0 else 0))
-    shelf = 151 if data["place"] == "LIVING" else 184
-    count = 5 if data["place"] == "LIVING" else 7
-    draw.rectangle((shelf,65,shelf+count*8+5,69),fill=trim)
-    for i in range(count):
-        draw.rectangle((shelf+6+i*8,51+(i%3)*2,shelf+11+i*8,65),fill=shade(accent,i%3-1))
-    materials={'UPHOLSTERY':accent,'LINEN':(155,166,184),'METAL':(171,191,181),'TILE':(185,206,191),'WOOD':(156,118,83)}
-    for body in data['bodies']:
-        for face in body['faces']:
-            draw.polygon([tuple(p) for p in face['points']],fill=shade(materials[body['material']],face['shade']),outline=trim)
-    for x0,y0,x1,y1 in data.get('doors',[]):
-        draw.rectangle((x0,y0,x1,y1),fill=(48,43,38))
-        draw.rectangle((x0+1,y0+1,x1-1,y1-1),fill=(150,115,78))
-        draw.rectangle((x0+5,y0+8,x1-5,y1-10),outline=(190,152,105))
-        draw.ellipse((x1-7,y0+(y1-y0)*.58-1,x1-4,y0+(y1-y0)*.58+2),fill=(229,201,136))
+        for row in range(11):
+            draw.rectangle((x,45+row*4,x+5,48+row*4),fill=(195,173,135) if row%3==0 else (216,195,156))
+            draw.rectangle((x+1,45+row*4,x+1,48+row*4),fill=(235,220,187))
+    for door in data.get('doorArt',[]):
+        x0,y0,x1,y1=door['box']
+        draw.rectangle((x0-1,y0-1,x1+1,y1+1),fill=(98,73,54))
+        leaf=Image.new('RGBA',(round(x1-x0),round(y1-y0)))
+        paint_art(leaf,door['marks'])
+        image.alpha_composite(leaf,(round(x0),round(y0)))
     avatar=data['avatars'][0 if rear else 1]
     sheet=Image.open(ROOT/'app-sim/src/main/assets/creatures/fennec.png').convert('RGBA')
     sprite=sheet.crop((104*128,0,105*128,128))
@@ -69,7 +70,7 @@ def room(data, rear):
         mask=Image.new('L',image.size,255)
         md=ImageDraw.Draw(mask)
         for body in data['bodies']:
-            if avatar['y'] < body['ground']+3:
+            if avatar['y'] < body['front']:
                 for face in body['faces']:
                     md.polygon([tuple(p) for p in face['points']],fill=0)
         from PIL import ImageChops
@@ -88,6 +89,27 @@ def preview(folder, target):
             draw.text((i*480+12,12+row*292),f'{name} | '+('hinter den Moebeln' if rear else 'vorderer Boden'),fill=(246,229,207))
     draw.text((12,598),'Produktive Kotlin-Raumkoerper; Softwarevorschau von Tiefe, Verdeckung und Massstab. Keine APK-Aufnahme.',fill=(174,191,181))
     canvas.save(target)
+    before=ROOT/'tools/character-art/room-space-preview.png'
+    if before.exists():
+        previous=Image.open(before).convert('RGB')
+        comparison=Image.new('RGB',(1440,624),(36,49,45))
+        cd=ImageDraw.Draw(comparison)
+        cd.text((12,10),'Vorher | Raeumliche Grundkoerper',fill=(246,229,207))
+        comparison.paste(previous.crop((0,324,1440,594)),(0,32))
+        cd.text((12,318),'Jetzt | Konzeptfarben, Holz, Bogenfenster, Polster, Textilien und Pflanzen',fill=(246,229,207))
+        comparison.paste(canvas.crop((0,324,1440,594)),(0,342))
+        cd.text((12,612),'Softwarevorschau aus produktiver Geometrie. Keine APK-Aufnahme; Tageslicht/Atmosphaere nicht enthalten.',fill=(174,191,181))
+        comparison.save(target.with_name('room-concept-comparison.png'))
+    all_rooms=sorted(folder.glob('*.json'))
+    atlas=Image.new('RGB',(1440,32+302*((len(all_rooms)+2)//3)),(36,49,45))
+    draw=ImageDraw.Draw(atlas)
+    draw.text((12,10),'Alle elf begehbaren Innenorte | produktive Pixelgruppen, Softwarevorschau, keine APK-Aufnahme',fill=(246,229,207))
+    for i,source in enumerate(all_rooms):
+        data=json.loads(source.read_text())
+        x=i%3*480;y=32+i//3*302
+        draw.text((x+12,y),source.stem,fill=(246,229,207))
+        atlas.paste(room(data,False).convert('RGB'),(x,y+20))
+    atlas.save(target.with_name('room-concept-all-preview.png'))
 
 
 if __name__ == '__main__':

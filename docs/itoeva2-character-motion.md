@@ -192,3 +192,57 @@ App-Tests auf API 35 bestanden; finale Nachpruefung der kleinen Tuer-/Schrank-
 Korrektur auf dem aktuellen PR-Head. Der Schlafzimmerschrank steht neben dem
 Badezimmerdurchgang, Wandregal und Spiegel lassen die Tuerblaetter frei. Bildrate,
 Klang am Lautsprecher und die gemeldete Bedienung auf Martins APK bleiben offen.
+
+
+## Innenraeume nach den Konzeptstudien (room-concept-pixels-v4)
+
+Martin beauftragt am 09.10. explizit den Konzept-Art-Stil fuer die Innenorte.
+Die Referenzen sind [Cozy Home](https://github.com/MartinZurek/Itoeva/blob/art/concept-studies-2026-10-04/docs/concept-art/world-studies/cozy-home-world-study-v1.png)
+und [Park, Lake, Home](https://github.com/MartinZurek/Itoeva/blob/art/concept-studies-2026-10-04/docs/concept-art/world-studies/itoeva-park-lake-home-concept-v1.png).
+Ihre Farb-/Materialwelt wird in gesetzte Pixelgruppen uebertragen: cremefarbene
+Holzwaende, warme Balken, Bogenfenster mit kuehler Ferne, bernsteinfarbene Lampen,
+Salbei-/Terrakottatextilien, Teppichmuster, Buecherruecken und kleine Pflanzen.
+Sofa/Lehnstuhl und Bettkissen erhalten abgeschraegte weiche Kanten; die Wanne
+einen offenen Rand und eine gerundete Schale. Holzpaneele, Messinggriffe,
+Kaffeegeraet und Spielautomat unterscheiden die vorhandenen Moebel.
+
+`GameRoomArt` beschreibt die Materiallagen als reine Pixelprimitive. Der Android-
+Renderer rastert sie einmal auf 480x270 und zeichnet den Cache ohne Bitmapfilter;
+Tuerblaetter verwenden dieselbe Holzpalette und folgen weiter dem Aufschwingen.
+Bewegte Vorhaenge sowie Tageslicht/Ortslichter bleiben eigene Laufzeitlagen.
+Es werden keine originalen Raum-PNGs als flacher Ersatz geladen. Alle elf
+Innenorte behalten Raumtiefe, ihre vorhandenen Lauf-/Sitz-/Landeflaechen und
+Tueroeffnungen. Die neuen grossen Koerperkonturen sind zugleich Verdeckungskonturen.
+Materialdekore werden auf ihre sichtbaren Moebelflaechen begrenzt; Wandpflanzen
+und flach liegende Teppiche fuehren keine unsichtbaren Bodenhindernisse ein.
+
+[Vorher/Nachher](../tools/character-art/room-concept-comparison.png),
+[drei Raeume mit Verdeckung](../tools/character-art/room-concept-preview.png) und
+[alle elf Innenorte](../tools/character-art/room-concept-all-preview.png) werden
+jetzt aus denselben produktiven Pixelprimitiven wie der Android-Renderer erzeugt.
+Es sind Softwarevorschauen bei geschlossenen Tueren, ohne die zusaetzlichen
+Licht-/Atmosphaerenlagen und ohne animierte Vorhangphase, keine APK-Aufnahmen.
+Pillow und Android unterscheiden sich an einzelnen Rasterkanten.
+
+Regeneration nach `bash tools/reaction-preview/tests.sh`:
+
+```bash
+tools/reaction-preview/.work/kotlinc/bin/kotlinc \
+  tools/reaction-preview/src/RoomSpacePreview.kt \
+  -cp tools/reaction-preview/.work/tests -d tools/reaction-preview/.work/room-concept
+tools/reaction-preview/.work/kotlinc/bin/kotlin \
+  -cp tools/reaction-preview/.work/room-concept:tools/reaction-preview/.work/tests \
+  RoomSpacePreviewKt tools/reaction-preview/.work/rooms-concept
+python3 tools/character-art/room_space_preview.py \
+  tools/reaction-preview/.work/rooms-concept tools/character-art/room-concept-preview.png
+```
+
+Pruefstand: 1.041 reine Kotlin-Tests gruen; nach der visuellen Verfeinerung erneut
+acht Raumtests gruen. Der native Canvas-Test umfasst jetzt alle elf Raeume und
+prueft sichtbare Materialvariation. Android-CI und Telefonabnahme stehen im PR.
+Der lokale Android-Versuch konnte wegen des fehlenden Gradle-Wrapper-JARs nicht
+starten. Auf dem Telefon besonders schmale Vorhang-/Nahtpixel, Wannenrand,
+Sofa-Verdeckung, Landungen, Tueroeffnung und den ersten Raumwechsel pruefen.
+Keine Spielstandmigration. Ruecknahme nur des v4-Commits erhaelt die vorherigen
+Bewegungs-/Musik-/Eingabefixes, insbesondere Claudes frische Freigabepruefung
+vom aktuellen Basis-Head `fba7a969`.

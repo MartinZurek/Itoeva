@@ -9,6 +9,10 @@ Kotlin-Netze, ist aber eine Softwarevorschau und keine APK-Aufnahme.
 Gehen, Rennen und Schwimmzuege werden getrennt gezeigt. Die
 [Raumvorschau](room-space-preview.png) zeigt produktive 2.5D-Moebelkoerper
 und den kleineren Figurenmassstab; ebenfalls keine APK-Aufnahme.
+Die [Konzeptstil-Fortsetzung](room-concept-preview.png) und
+[alle elf Innenorte](room-concept-all-preview.png) rastert die produktiven
+Pixelprimitive aus `GameRoomArt`; [Vorher/Nachher](room-concept-comparison.png)
+vergleicht sie mit den bisherigen Raumkoerpern. Keine APK-Aufnahmen.
 Details, Regeneration, Tests und Telefon-Pruefplan:
 [`docs/itoeva2-character-motion.md`](../../docs/itoeva2-character-motion.md).
 
