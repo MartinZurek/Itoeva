@@ -175,6 +175,7 @@ Farbwerte stammen direkt aus `app-sim/src/main/assets/creatures/{species}.png`; 
 
 Regeneration: `node tools/character-art/living_atlases.js`.
 Prüfung: `node tools/character-art/test_living_atlases.js`.
+CLI-Importprüfung: `node tools/character-art/test_living_import.js`.
 Vergleich inkl. Gang/Blinzeln/Landung: `python tools/character-art/preview_living_coherence.py`.
 Die Vorschau zeigt echte exportierte Bildrollen, keine APK-Aufnahme und keinen Nachweis einer perfekten Anatomie.
 
@@ -185,14 +186,40 @@ Wyrmlings neue Turn-Zeichnungen 9/10 kamen vertauscht zurück und werden beim Im
 Nur Pufflings Sitzbild braucht weiter die bestehende separate Sitzkorrektur; Fennec/Wyrmling nutzen
 jetzt ihre eigenen neuen Sitzzeichnungen. Die alten Gang- und Aktionsbilder sind unverändert.
 
+Rohimport der dokumentierten v2-Bilder:
+`node tools/character-art/living_atlases.js --import RAW_DIRECTORY --posture POSTURE_PNG`.
+Der CLI-Aufruf wendet Wyrmlings Tausch 9/10 und die Sitzkorrektur nur für Puffling standardmäßig an.
+Für künftig anders geordnete Rohbilder kann ein programmatischer `build`-Aufruf diese Optionen
+bewusst überschreiben; ein bereits sortierter Wyrmling darf nicht erneut umsortiert werden.
+
+**Provenienzgrenze:** Die ursprünglichen Wortlaute der drei ImageGen-Aufrufe wurden nicht
+zuverlässig gespeichert. Wiederherstellung über den Gesprächskontext und gespeicherte Dateien
+lieferte keine exakten Texte. Die folgenden vollständigen Korrekturanweisungen sind aus den
+erhaltenen Arbeitsnotizen rekonstruiert, keine wortgetreuen Tool-Logs. Sie dokumentieren die
+Referenzen und beabsichtigten Änderungen für künftige Überarbeitung. Der aktuelle Spiel-Export
+ist dagegen aus den eingecheckten Mastern bytegenau reproduzierbar, ohne neue Bildgenerierung.
+
 ### Fennec: Identitätskorrektur (erster Versuch)
 
-undefined
+Rekonstruierte Anweisung, erster Versuch (nicht als endgültiges Fennec gewählt):
+
+Use case: identity-preserve. Edit the supplied Fennec living atlas to match the ACTUAL existing Itoeva game sprites in the attached identity board. The board shows native 128px side idle, front, back, two walking frames and three-quarter views; use these for anatomy, head size, ears, muzzle, boots, palette and pixel shading. Keep the supplied atlas's 32 motions, exactly FOUR columns and EIGHT rows, separate complete drawings, equal cells, genuine transparent background, 20 percent transparent gutters. Match the original game character rather than redesigning it. Crisp detailed pixel art intended for 128px sprites, no text, symbols, grid, scenery, ground, shadow or glow.
+Fennec is an orange and cream desert fox with huge upright ears, amber eyes, cream muzzle and chest, turquoise round brooch, brown gloves, belt and pouches, compact biped legs with brown boots and long fluffy cream-tipped tail. The rust red cloak is ONE continuous piece attached to both shoulders, falling BEHIND the body to hip height, no sideways flag, rag or streamer beside the hand. Keep accessories on their original anatomical side. All side poses face RIGHT. Preserve the exact old game head-to-torso proportions and leg lengths in every pose, with sitting shorter through joint bending.
+Read left to right: row1 FRONT inhale/top of breath/exhale/rest with planted contacts; row2 RIGHT side back weight/forward transfer/front weight/settling back; row3 right side/three-quarter toward viewer/full front/three-quarter away; row4 RIGHT anticipation/push-off/back-leaning brake/settled stop with secondary lag; row5 planted FRONT lower body looking left/right/up/down; row6 FRONT happy small bounce/sad lowered head and ears/hungry touching belly/tired wide yawn eyes closed; row7 RIGHT compressed landing/rising overshoot/balance wobble/settled stance; row8 animal shake-off/licking paw and wiping ear/friendly viewer greeting/sitting and fidgeting. Distinct subtle posture and secondary motion in every frame, consistent scale and head size, full tail and ears inside every cell. Do not omit or overlap drawings.
 
 ### Fennec: gewählte Proportionskorrektur
 
-undefined
+Rekonstruierte Anweisung, ausgewähltes Ergebnis `exec-f86462fe-cb62-4b33-ba06-38d3f15d35a6.png`:
+
+Use case: identity-preserve, targeted anatomical correction of the supplied Fennec 4x8 atlas. The previous attempt still has a head too large and torso/boots too short compared with the attached ACTUAL native Itoeva game sprite identity board. In EVERY one of the 32 drawings, reduce the complete head INCLUDING THE EARS to approximately 80 percent of its current size. Extend the torso and the compact booted legs to preserve the overall standing height while restoring the original game's head-to-body ratio. Keep the muzzle, amber eyes, ear shape, orange/cream fur, tail, gloves, turquoise brooch, belt/pouches and brown boots faithful to the native game references. Do not simply scale the entire sprite or give it long human legs; knees remain under the pelvis. Sitting must fold the same limbs and remain lower, without enlarged head or boots.
+Preserve the current pose intent and exact FOUR columns, EIGHT equal rows, 32 complete drawings. All side poses RIGHT. Same overall scale, anatomical head size and palette across cells, detailed crisp hand-drawn 128px pixel sprite style. True alpha background, 20 percent empty gutters per cell, no cropping, overlap, symbols, text, ground, shadow, glow or scenery. Rust cloak remains ONE continuous compact piece attached to BOTH SHOULDERS behind the torso to hip height, NO horizontal cloak tail or rag beside the hand. Accessories stay on their same anatomical side.
+Maintain the rows: FRONT four-phase breathing with planted contact; RIGHT four-phase weight shift; right/three-quarter toward/front/three-quarter away turn; RIGHT anticipation/push-off/braking/stop; FRONT planted looking left/right/up/down; FRONT happy/sad/hungry touching belly/yawning; RIGHT compressed landing/overshoot/wobble/settled; shake-off/lick paw and wipe ear/greeting viewer/sitting and fidgeting. Preserve real posture changes and secondary ear, tail and cloak lag; never duplicate a static sticker. Full appendages visible in every cell. The priority of this edit is the smaller complete head and restored torso/boot proportions matching the original native sprites.
 
 ### Wyrmling: gewählte Identitäts-/Proportionskorrektur
 
-undefined
+Rekonstruierte Anweisung, ausgewähltes Ergebnis `exec-61e81e86-7e07-46dc-b13d-fb263c07a9c5.png`:
+
+Use case: identity-preserve. Correct the supplied Wyrmling animation atlas against the attached ACTUAL Itoeva native game sprite identity board: side idle, full front, back, two walking poses and three-quarter. Restore its slim elongated dragon anatomy and original head-to-body ratio. Reduce the oversized head to approximately 80 percent, restore the longer muzzle and neck, slender torso and straight support legs under the pelvis. Keep original curved short horns, rust crest, jade green skin, cream throat/belly, rusty copper bat wings with distinct wing fingers, long tapered rust-spiked tail, copper shoulder strap, amber pendant and small cream scarf. Do not redesign it into a round baby dragon. Upright on TWO hind feet, small forepaws, no flight. Wings and tail counterbalance shifts and braking; accessories stay on their original anatomical side.
+Exactly FOUR columns and EIGHT equal rows, 32 complete separate drawings. All side poses RIGHT, true alpha, full wings/horns/tail inside every cell with 20 percent transparent gutters. Same scale, head size and native-game palette in all drawings, crisp detailed pixel art for 128px game sprites. No text, grid lines, motion symbols, ground, shadows, glow or scenery. Distinct subtle posture, weight transfer and secondary motion; sitting is lower through folded hind legs, never enlarged.
+Row1 strictly FRONT breathing: inhale/top/exhale/rest, eyes open, contacts fixed. Row2 RIGHT back weight/forward transfer/front weight/settling back. Row3 right profile/three-quarter toward viewer/FULL FRONT/three-quarter away rear-right. Row4 RIGHT anticipation leaning forward/push-off/back-leaning brake with wings and tail swinging forward/settled stop with secondary swing back. Row5 planted FRONT body head looks left/right/up/down. Row6 strictly FRONT happy small bounce/sad lowered head and drooping wings/hungry forepaw touching belly/tired wide yawn eyes closed. Row7 RIGHT compressed landing/rising overshoot/balance wobble/settled upright. Row8 grounded body shake with briefly opening wings/cleaning one wing membrane/friendly viewer greeting/sitting with folded hind legs and small tail or claw fidget. Keep all 32 drawings; never overlap or crop. Match the elongated head, neck and slim native body throughout.
+Import note: this generated result returned turn cells 9 and 10 in reverse order; the v2 raw import swaps those zero-based indices before registration. The committed masters already contain the corrected order.

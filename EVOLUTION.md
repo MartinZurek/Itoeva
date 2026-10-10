@@ -690,14 +690,19 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
 - **Evidenz:** Assetpruefung fuer alle 192 Bilder, feste Bodenkontakte, mindestens
   20 Prozent Rand, keine Hochskalierung, identische bestehende Farbwerte,
   Frontgroesse innerhalb acht Prozent der vorhandenen Frontansicht und
-  byte-identische Regeneration. Kotlin-/Android-Ergebnisse stehen im Folge-PR.
+  byte-identische Regeneration. 997 lokale Kotlin-Tests und Android-CI auf dem
+  Bildstand von PR #354 bestanden, inklusive API 26/35, Lint und R8. Ein eigener
+  CLI-Importtest prueft die Wyrmling-Reihenfolge und ausschliesslich Pufflings
+  separate Sitzkorrektur; diese v2-Optionen sind jetzt auch CLI-Standard.
   Der Vergleich zeigt jetzt ausdruecklich alte/neue Bilder im Wechsel, nicht
   nur die neuen Posen isoliert.
 - **UNVERIFIED / Grenzen:** Das sind separat gezeichnete Bilder, kein gemeinsam
   geriggtes Koerpermodell: feine Gesichts-/Zubehoerdetails und einzelne
   Dreiviertel-Blickposen bleiben visuell zu beurteilen. Vorschau ist keine
   APK-Aufnahme; Handyabnahme bleibt offen. Kein Anspruch auf pixelidentische
-  Anatomie allein aus bestandenen technischen Tests.
+  Anatomie allein aus bestandenen technischen Tests. Die urspruenglichen drei
+  Korrekturprompt-Wortlaute waren nicht zuverlaessig gespeichert; die Dokumentation
+  enthaelt daher ausdruecklich rekonstruierte Anweisungen, keine Original-Toollogs.
 - **Ruecksetzung / naechster Schritt:** Ruecknahme dieses Folge-Commits braucht
   keine Migration. Vergleich in `tools/character-art/living-coherence-comparison.png`
   und `living-atlas-preview.gif`, anschliessend dieselben Wechsel am Handy ansehen.

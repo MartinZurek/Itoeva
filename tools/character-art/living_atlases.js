@@ -10,6 +10,9 @@ const NAMES = ['fennec','gloop','puffling','wyrmling','starlet','hootlet'];
 const SOURCE = path.join(HERE,'source');
 const ASSETS = path.resolve(HERE,'../../app-sim/src/main/assets/creatures');
 const FRAME=128, COUNT=32, GROUND=125;
+// Korrekturen fuer die dokumentierten v2-Rohbilder gelten auch beim CLI-Import.
+const V2_IMPORT_OPTIONS={postureNames:['puffling'],order:{wyrmling:
+  Array.from({length:COUNT},(_,i)=>i===9?10:i===10?9:i)}};
 
 function figures(file,count=COUNT,columns=4) {
   const im=PNG.sync.read(fs.readFileSync(file));
@@ -150,6 +153,7 @@ async function save(im,file,canonicalPalette) {
 }
 
 async function build(rawDirectory,postureFile,options={}) {
+  options={...V2_IMPORT_OPTIONS,...options,order:{...V2_IMPORT_OPTIONS.order,...options.order}};
   const postures=postureFile?figures(postureFile,12):null;
   const manifest={version:2,frame:128,columns:4,rows:8,gutter:26,ground:125,masterCell:256,palette:'existing-game',species:{}};
   for(const name of NAMES) {
@@ -160,7 +164,7 @@ async function build(rawDirectory,postureFile,options={}) {
     if(rawDirectory) {
       let art=figures(path.join(rawDirectory,`${name}.png`));
       if(options.order?.[name])art=options.order[name].map(i=>art[i]);
-      if(postures && (options.postureNames||['fennec','puffling','wyrmling']).includes(name)) {
+      if(postures && options.postureNames.includes(name)) {
         const row=['fennec','puffling','wyrmling'].indexOf(name)*4;
         const seated=postures[row+3],factor=art[4].height/postures[row].height;
         const width=Math.round(seated.width*factor),height=Math.round(seated.height*factor);
