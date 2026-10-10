@@ -1,0 +1,30 @@
+config_version=5
+
+[application]
+config/name="Itoeva · Godot-Kampfstudie"
+run/main_scene="res://main.tscn"
+run/max_fps=60
+config/features=PackedStringArray("4.5", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/handheld/orientation=0
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=1
+scaling_3d/scale=0.8
+environment/defaults/default_clear_color=Color(0.14, 0.20, 0.15, 1)
+
+[physics]
+common/physics_ticks_per_second=60
+
+[input_devices]
+pointing/emulate_mouse_from_touch=true

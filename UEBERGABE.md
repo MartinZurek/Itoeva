@@ -1,5 +1,23 @@
 # Uebergabe
 
+## Neu am 10.10.2026: getrennter Godot-Kampfversuch
+
+Martin verwirft auch die zweite echte 3D-Fennec-Fassung als puppenhaft und beauftragt erneut
+Godot, jetzt für gemalte Figuren mit räumlicher Tiefe und flüssige Kampfabläufe.
+`godot-combat-prototype/` auf main `124186c` enthält einen separaten Godot-4.5.1-Test:
+gemalter Fennec, dreidimensionaler Boden/Trainingsstein, Waldwind, Vorstoß, Ausweichen,
+Pause und Demo. Eigene APK `com.notime.itoeva.godotcombat`, keine bestehende App ersetzt.
+Keine Schattenkarte; 80-%-3D-Auflösung, feste Bildressourcen und 36 Effekt-Meshes.
+Headless-/Assetprüfungen fehlerfrei, APK signiert/ausgerichtet. Reale Softwaregrafik:
+25,01 ms Mittel, 30,18 ms p95; Telefon-/Touch-/Dauerlastprüfung steht aus.
+Movie-Maker-Film nutzt festen Zeitschritt und beweist keine Geräte-FPS.
+Quelle/Export/Umfang: [godot-combat-prototype/README.md](godot-combat-prototype/README.md).
+Echte Ansichten und Messbeleg: [docs/godot-combat/README.md](docs/godot-combat/README.md).
+Der frühere 2D-Versuch #343 ist geschlossen und nicht gemergt; kein vollständiger Port
+oder Engine-Wechsel entschieden. Kotlin-3D-Studie #356 bleibt ebenfalls getrennt.
+Wasserentfernung #355 bleibt ein eigener Schnitt; dieser Godot-Test hat kein Schwimmen.
+Nächster Schritt: Martin beurteilt zuerst den Stil und dann die Bildzeiten auf dem Telefon.
+
 ## Aktuell: Itoeva-2-Zwischenorte (08.10.2026)
 
 Die Fortsetzung des vollen Android-Chats und der konkrete Prüf-/APK-Stand stehen in
@@ -470,3 +488,4 @@ man ueber sie wissen muss, bevor man ihr etwas hinlegt:
   Reminderreaktionen.
 - **Die 86 Sekunden Begruessung** aus ITO-0023 lassen sich erst beurteilen, wenn das erste der
   sechs Stuecke erzeugt ist.
+

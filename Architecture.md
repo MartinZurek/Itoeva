@@ -585,3 +585,16 @@ Spielerbegegnungen, keine autonomen Kandidaten. V1 wird erhalten und migriert; a
 V2 nicht, deshalb muss ein Rueckbau den V2-Reader behalten. Room, App 1, Stream und Reminder
 behalten ihre bestehenden Pfade. Pruef- und Ruecksetzvertrag:
 docs/itoeva2-world-polish-and-encounters.md.
+
+
+
+## Getrennter Godot-Kampfprototyp (10.10.2026)
+
+`godot-combat-prototype/` ist ein eigenständig startbarer Godot-4.5.1-/GDScript-Test
+mit Compatibility-Renderer, gemaltem Sprite3D-Fennec und perspektivischer Trainingsbühne.
+Keine Verbindung zu `:app`, `:app-sim`, `:core`, Reminder, LAS oder Spielständen.
+`combat_clock.gd` treibt die einmalige Aktionszeit, `fennec.gd` wählt Zeichnung/Fußanker,
+`arena.gd` steuert räumliche Bewegung und festen Effektpool, `telemetry.gd` erfasst reale
+Viewport-Bildintervalle. Eigene Android-Paketidentität, keine Infrastrukturänderung.
+Dies ist keine Entscheidung über eine vollständige Portierung. Quelle/Prüfgrenzen:
+[Projekt-README](godot-combat-prototype/README.md), [Messbeleg](docs/godot-combat/README.md).

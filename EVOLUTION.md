@@ -6745,3 +6745,38 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Grenze einer vollständigen physikalischen Kulissensimulation.
 - **Übergabe:** docs/itoeva2-world-polish-and-encounters.md; preview_polish.kt/.sh samt
   Kontur-/Sitz-/Schattenbildern und Bewegungsvideo. Basis nach #346: be25d5d503c62007fdae71c653255ac3adb4a605.
+
+
+
+### 2026-10-10 – Godot-Kampfstudie mit gemalten Figuren statt Puppenmodell
+
+- **DOCUMENTED INTENT:** Martin verwirft auch das überarbeitete echte 3D-Modell als Puppe.
+  Nach der HD-2D-Einordnung beauftragt er erneut einen Godot-Test und vermutet dort
+  flüssigere, ruckelfreie Kampfszenen.
+- **Entscheidung:** Getrennte Kampfstudie auf main `124186c`, keine vollständige Portierung.
+  Gemalter Sprite3D-Fennec mit acht neuen Posen, perspektivischer Boden, gemalte Hintergrundfläche,
+  Trainingsstein und räumliche Effekte. Waldwind/Vorstoß/Ausweichen nutzen dieselbe Zeitlinie.
+  Persönliche Reminder, Living Agent, Progression und bestehende Kotlin-Apps bleiben unangebunden.
+- **FACT:** Godot 4.5.1 Standard/Compatibility, feste Ressourcen und 36 wiederverwendete
+  Effekt-Meshes. Gemaltes Figurenlicht, eigene Fußanker, Kontaktfläche als Schatten. Keine
+  Echtzeit-Schattenkarte; 80-%-3D-Auflösung, scharfe Oberfläche, Ziel maximal 60 FPS.
+  Einzelaktionen, Demo, Pause, Tastatur/Touchbuttons und lokale Bildzeitenanzeige.
+  Keine Schwimmfunktion, kein Teich, keine Spielfiguren als echte 3D-Modelle.
+- **TESTED BEHAVIOR:** GDScript-/Assetprüfungen fehlerfrei. Abläufe bei 15/30/60/120 Hz,
+  Zeitsprung, Doppelstart, Rückkehr, Textur-/Poolidentität, Tastatureingabe und Pause geprüft.
+  Tatsächlicher Software-OpenGL-Messlauf: 20 Sekunden, 9 Aktionen, 6 Trainingsstein-Treffer,
+  77 Nodes ohne Wachstum. Letzte 600 Bildintervalle: 25,01 ms Mittel, 30,18 ms p95,
+  10 über 33,34 ms. Erstes Engine-Bild 578 ms mit warmem Dateicache.
+- **Android:** Separate Debug-APK `com.notime.itoeva.godotcombat`, arm64, API 24+, Target 35.
+  Lokaler Export, Signatur v2/v3 und ZIP-Ausrichtung einschließlich 16 KiB geprüft.
+  Separater Testschlüssel, keine vorhandene Signierungs-/Workflow-/Drive-Infrastruktur geändert.
+- **UNVERIFIED:** Keine Messung auf Martins Telefon oder gegen die Kotlin-App. Reale
+  Ruckelfreiheit, Touch, Android-Start und thermische Dauerlast bleiben offen. Film aus dem
+  Godot-Movie-Maker hat festen 60-Hz-Zeitschritt, wurde langsamer als Echtzeit gerendert und
+  beweist keine 60-FPS-Leistung. Acht Zeichnungen/s ersetzen keine zusätzliche Animationsarbeit;
+  Vorstoß/Ausweichen brauchen eigene vollständige Serien. Stein ist kein fertiger Gegner.
+- **Rückbau/Übergabe:** Eigenen Projektordner/Studien-Dokumentation entfernen; keine Datenmigration.
+  `godot-combat-prototype/README.md`, `assets/PROMPTS.md`, `docs/godot-combat/README.md`
+  halten Quelle, echte Engine-Ausgabe, Messdaten, APK-Export und Grenzen fest.
+  Nächster Schritt: Martins visuelle und Leistungsprüfung der separaten APK; erst dann
+  weiteren Godot-Welt-/Kampfausbau entscheiden.
