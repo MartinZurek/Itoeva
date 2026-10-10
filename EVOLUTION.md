@@ -648,6 +648,26 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
 
 ## Evolution History – dauerhaft zu dokumentierende Änderungen und Erkenntnisse
 
+### 2026-10-10 – Puppeneindruck im 3D-Fennec-Prototyp reduzieren
+
+- **DOCUMENTED INTENT:** Martin findet die erste 3D-Fassung puppenhaft.
+- **FACT / Umsetzung:** Kontinuierliche Schaedel-/Wangen-/Schnauzenoberflaeche
+  statt angesetzter Kugeln, schmalere Koerperform, Fellspitzen, gefaltete
+  unregelmaessige Cape und leicht asymmetrische Ruhehaltung. Perlen-Saum und
+  dicker Kragen entfallen. Gemalte Fell-/Stoff-/Ledertexturen ueber echte UVs
+  im GLB; identisch in Kotlin, WebGL und Vorschau. 31.600 Dreiecke, 1,46 MiB GLB
+  einschliesslich Textur. Native Dekodierung mit halber Texturkantenlaenge.
+- **TESTED BEHAVIOR:** Zweite Fassung isoliert uebersetzt, 12 lokale JUnit-
+  Pruefungen einschliesslich UV-/JPEG-Invarianten; glTF ohne Fehler/Warnungen,
+  erwarteter NPOT-Informationshinweis. Browserbedienung und wirkliche gerenderte
+  Geometrie kontrolliert. Die Erstfassung `c312d034` hat Verify-CI bestanden.
+- **UNVERIFIED:** Zweite Android-CI separat, keine Telefonmessung. Weiterhin
+  starre Teilmeshes an Gelenken und vereinfachte Referenzaehnlichkeit;
+  kein weiches Haut-Skinning, keine Produktions- oder Stilabnahme behauptet.
+- **Bereiche/Ruecksetzung:** Fortsetzung im Prototyp-PR #356; Generator,
+  Materialatlas, GLB-Leser/Renderer, Vorschau und Tests. Auf `c312d034`
+  ruecksetzbar, keine Aenderung an Welt, Saves, Reminder oder Engine-Wahl.
+
 ### 2026-10-10 – Echter 3D-Fennec als begrenzter Kotlin-Prototyp
 
 - **DOCUMENTED INTENT:** Martin beauftragt den empfohlenen einzelnen Modelltest

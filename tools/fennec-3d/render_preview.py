@@ -3,7 +3,7 @@
 
 pip install numpy moderngl Pillow; EGL/Mesa fuer headless Linux.
 """
-import json,math,struct,pathlib
+import json,math,struct,pathlib,io
 import numpy as np
 import moderngl
 from PIL import Image,ImageDraw,ImageFont
@@ -12,28 +12,35 @@ ROOT=pathlib.Path(__file__).resolve().parents[2]
 data=(ROOT/'app-sim/src/game/assets/models/fennec-prototype.glb').read_bytes()
 size=struct.unpack_from('<I',data,12)[0];g=json.loads(data[20:20+size]);binary=data[28+size:]
 def array(i):
-    a=g['accessors'][i];v=g['bufferViews'][a['bufferView']];n={'SCALAR':1,'VEC3':3,'VEC4':4}[a['type']]
+    a=g['accessors'][i];v=g['bufferViews'][a['bufferView']];n={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4}[a['type']]
     return np.frombuffer(binary,dtype='<f4' if a['componentType']==5126 else '<u2',count=a['count']*n,
                          offset=v.get('byteOffset',0)+a.get('byteOffset',0)).reshape(-1,n)
 ctx=moderngl.create_standalone_context(backend='egl')
 ctx.enable(moderngl.DEPTH_TEST)
 program=ctx.program(vertex_shader='''#version 330
-in vec3 aPosition; in vec3 aNormal; uniform mat4 uMvp; uniform mat4 uWorld;
-out vec3 vNormal; void main(){vNormal=mat3(uWorld)*aNormal;gl_Position=uMvp*vec4(aPosition,1.0);}
+in vec3 aPosition; in vec3 aNormal; in vec2 aUv; uniform mat4 uMvp; uniform mat4 uWorld;
+out vec3 vNormal;out vec2 vUv; void main(){vUv=aUv;vNormal=mat3(uWorld)*aNormal;gl_Position=uMvp*vec4(aPosition,1.0);}
 ''',fragment_shader='''#version 330
-in vec3 vNormal; uniform vec4 uColor; out vec4 color;
+in vec3 vNormal;in vec2 vUv; uniform vec4 uColor;uniform sampler2D uTexture;uniform float uTextured;out vec4 color;
 void main(){vec3 n=normalize(vNormal);if(!gl_FrontFacing)n=-n;
 float d=max(dot(n,normalize(vec3(-0.6,0.8,0.7))),0.0);
-color=vec4(uColor.rgb*(vec3(.48,.47,.43)+d*vec3(.66,.60,.49)),1.0);}
+vec3 base=uColor.rgb;if(uTextured>.5)base*=texture(uTexture,vUv).rgb;
+color=vec4(base*(vec3(.68,.66,.61)+d*vec3(.37,.34,.29)),1.0);}
 ''')
+image_view=g['bufferViews'][g['images'][0]['bufferView']];off=image_view['byteOffset']
+atlas=Image.open(io.BytesIO(binary[off:off+image_view['byteLength']])).convert('RGB')
+texture=ctx.texture(atlas.size,3,atlas.tobytes());texture.filter=(moderngl.LINEAR,moderngl.LINEAR);texture.use(0)
+program['uTexture'].value=0
 meshes=[]
 for mesh in g['meshes']:
     ps=[]
     for p in mesh['primitives']:
         attrs=p['attributes'];v=ctx.buffer(array(attrs['POSITION']).tobytes());n=ctx.buffer(array(attrs['NORMAL']).tobytes())
         ix=ctx.buffer(array(p['indices']).tobytes())
-        vao=ctx.vertex_array(program,[(v,'3f','aPosition'),(n,'3f','aNormal')],ix,index_element_size=2)
-        ps.append((vao,g['materials'][p['material']]['pbrMetallicRoughness']['baseColorFactor']))
+        uv=ctx.buffer(array(attrs['TEXCOORD_0']).tobytes() if 'TEXCOORD_0' in attrs else np.zeros((len(array(attrs['POSITION'])),2),dtype='f4').tobytes())
+        vao=ctx.vertex_array(program,[(v,'3f','aPosition'),(n,'3f','aNormal'),(uv,'2f','aUv')],ix,index_element_size=2)
+        mat=g['materials'][p['material']]['pbrMetallicRoughness']
+        ps.append((vao,mat['baseColorFactor'], 'baseColorTexture' in mat))
     meshes.append(ps)
 def quat(q):
     x,y,z,w=q
@@ -56,7 +63,8 @@ def disc(radius,height,color):
     v=[[0,height,0]]+[[radius*math.cos(i*math.tau/32),height,radius*math.sin(i*math.tau/32)] for i in range(32)]
     ix=[[0,(i+1)%32+1,i+1] for i in range(32)]
     vao=ctx.vertex_array(program,[(ctx.buffer(np.array(v,dtype='f4').tobytes()),'3f','aPosition'),
-                                 (ctx.buffer(np.array([[0,1,0]]*33,dtype='f4').tobytes()),'3f','aNormal')],
+                                 (ctx.buffer(np.array([[0,1,0]]*33,dtype='f4').tobytes()),'3f','aNormal'),
+                                 (ctx.buffer(np.zeros((33,2),dtype='f4').tobytes()),'2f','aUv')],
                          ctx.buffer(np.array(ix,dtype='u2').tobytes()),index_element_size=2)
     return vao,color
 floor=[disc(1.1,.18,(.20,.245,.205,1)),disc(.34,.182,(.10,.13,.10,1))]
@@ -67,12 +75,12 @@ def render(yaw,clip='idle',t=0):
     root=quat((0,math.sin(math.radians(yaw)/2),0,math.cos(math.radians(yaw)/2)))
     rotations=pose(clip,t)
     program['uMvp'].write(np.array(vp,dtype='f4').T.tobytes());program['uWorld'].write(np.eye(4,dtype='f4').tobytes())
-    for vao,color in floor:program['uColor'].value=color;vao.render()
+    for vao,color in floor:program['uTextured'].value=0;program['uColor'].value=color;vao.render()
     def draw(i,parent):
         node=g['nodes'][i];m=quat(rotations.get(i,[0,0,0,1]));m[:3,3]=node['translation'];world=parent@m
         program['uMvp'].write(np.array(vp@world,dtype='f4').T.tobytes());program['uWorld'].write(np.array(world,dtype='f4').T.tobytes())
-        for vao,color in meshes[node['mesh']] if 'mesh' in node else []:
-            program['uColor'].value=color;vao.render()
+        for vao,color,textured in meshes[node['mesh']] if 'mesh' in node else []:
+            program['uTextured'].value=int(textured);program['uColor'].value=color;vao.render()
         for j in node.get('children',[]):draw(j,world)
     draw(0,root)
     return Image.frombytes('RGB',(640,640),fbo.read(components=3)).transpose(Image.Transpose.FLIP_TOP_BOTTOM)

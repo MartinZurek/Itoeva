@@ -12,7 +12,8 @@ import kotlin.math.sqrt
 /** Kleiner glTF-2-Leser fuer unser eigenes, unkomprimiertes GLB; kein allgemeiner Importer. */
 internal class FennecModel(bytes: ByteArray) {
     data class Part(val positions: FloatBuffer, val normals: FloatBuffer, val indices: ShortBuffer,
-                    val count: Int, val color: FloatArray)
+                    val count: Int, val color: FloatArray, val texcoords: FloatBuffer? = null,
+                    val textured: Boolean = false)
     data class Node(val name: String, val translation: FloatArray, val children: IntArray,
                     val parts: List<Part>, val rotation: FloatArray = floatArrayOf(0f, 0f, 0f, 1f))
     data class Track(val node: Int, val times: FloatArray, val rotations: FloatArray)
@@ -20,6 +21,7 @@ internal class FennecModel(bytes: ByteArray) {
     val nodes: List<Node>
     val roots: IntArray
     val clips: List<Clip>
+    val textureBytes: ByteArray
 
     init {
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
@@ -33,6 +35,9 @@ internal class FennecModel(bytes: ByteArray) {
         val binary = input.slice().order(ByteOrder.LITTLE_ENDIAN)
         val accessors = json.getJSONArray("accessors")
         val views = json.getJSONArray("bufferViews")
+        val imageView = views.getJSONObject(json.getJSONArray("images").getJSONObject(0).getInt("bufferView"))
+        textureBytes = ByteArray(imageView.getInt("byteLength"))
+        binary.duplicate().apply { position(imageView.optInt("byteOffset")); get(textureBytes) }
         fun floats(index: Int, components: Int): FloatArray {
             val a = accessors.getJSONObject(index)
             require(a.getInt("componentType") == 5126)
@@ -58,10 +63,12 @@ internal class FennecModel(bytes: ByteArray) {
                 ib.position(v.optInt("byteOffset") + a.optInt("byteOffset"))
                 val ix = ByteBuffer.allocateDirect(count * 2).order(ByteOrder.nativeOrder()).asShortBuffer()
                 repeat(count) { ix.put(ib.short) }; ix.position(0)
-                val color = materials.getJSONObject(primitive.getInt("material"))
-                    .getJSONObject("pbrMetallicRoughness").getJSONArray("baseColorFactor")
+                val mat = materials.getJSONObject(primitive.getInt("material")).getJSONObject("pbrMetallicRoughness")
+                val color = mat.getJSONArray("baseColorFactor")
                 Part(buffer(floats(attrs.getInt("POSITION"), 3)), buffer(floats(attrs.getInt("NORMAL"), 3)),
-                    ix, count, FloatArray(4) { color.getDouble(it).toFloat() })
+                    ix, count, FloatArray(4) { color.getDouble(it).toFloat() },
+                    if (attrs.has("TEXCOORD_0")) buffer(floats(attrs.getInt("TEXCOORD_0"), 2)) else null,
+                    mat.has("baseColorTexture"))
             }
         }
         val ns = json.getJSONArray("nodes")

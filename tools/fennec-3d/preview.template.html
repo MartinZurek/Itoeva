@@ -17,7 +17,7 @@ small{color:#9bb2a7}#error{color:#ffb7a4}details{margin-top:20px}summary{cursor:
 <div class="controls" id="motion"><button data-clip="0" aria-pressed="true">Stehen</button><button data-clip="1" aria-pressed="false">Gehen</button><button data-clip="2" aria-pressed="false">Laufen</button><button id="pause" aria-pressed="false">Pause</button><button id="turn" aria-pressed="false">Rundum drehen</button></div>
 <label for="angle">Ansicht drehen <span id="degrees"></span></label><input id="angle" type="range" min="-180" max="180" value="-15">
 <div class="controls views"><button data-yaw="28">Vorne</button><button data-yaw="-15">Dreiviertel</button><button data-yaw="-62">Seite</button><button data-yaw="-152">Hinten</button><a id="download" download="fennec-prototype.glb">3D-Modell herunterladen</a></div>
-<details><summary>Was dieser Prototyp zeigt</summary><p>Das ist dasselbe GLB-Modell wie im Kotlin-Test, mit echter Geometrie, Tiefenprüfung und drei Gelenkanimationen. Die Kamera bleibt orthografisch. Körperteile bewegen sich an Gelenken; ein weiches Haut-Rig und der gemalte Oberflächenstil der Vorlage sind weitere Arbeitsschritte. Der Test ersetzt noch keine Figur im Spiel.</p></details></main>
+<details><summary>Was dieser Prototyp zeigt</summary><p>Das ist dasselbe GLB-Modell wie im Kotlin-Test, mit echter Geometrie, Tiefenprüfung und drei Gelenkanimationen. Die Kamera bleibt orthografisch. Kopf und Schnauze bilden eine gemeinsame Oberfläche; Fell und Kleidung tragen gemalte Texturen. Die Körperteile bewegen sich an vereinfachten Gelenken. Weiche Übergänge und eine genauere Ähnlichkeit zur Vorlage brauchen weitere Modellarbeit. Der Test ersetzt noch keine Figur im Spiel.</p></details></main>
 <script>
 'use strict';
 const encoded='__MODEL_BASE64__';
@@ -29,19 +29,25 @@ const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
 if(!gl){error.textContent='Dieser Browser bietet kein WebGL. Bitte in einem Browser mit WebGL öffnen.';throw Error('WebGL unavailable');}
 const header=new DataView(bytes.buffer),jsonSize=header.getUint32(12,true);
 const g=JSON.parse(new TextDecoder().decode(bytes.subarray(20,20+jsonSize))),start=28+jsonSize;
-function accessor(i){const a=g.accessors[i],v=g.bufferViews[a.bufferView],n={SCALAR:1,VEC3:3,VEC4:4}[a.type];return new (a.componentType===5126?Float32Array:Uint16Array)(bytes.buffer,start+(v.byteOffset||0)+(a.byteOffset||0),a.count*n);}
+function accessor(i){const a=g.accessors[i],v=g.bufferViews[a.bufferView],n={SCALAR:1,VEC2:2,VEC3:3,VEC4:4}[a.type];return new (a.componentType===5126?Float32Array:Uint16Array)(bytes.buffer,start+(v.byteOffset||0)+(a.byteOffset||0),a.count*n);}
 function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 const program=gl.createProgram();
 try{
-gl.attachShader(program,shader(gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec3 aNormal;uniform mat4 uMvp;uniform mat4 uWorld;varying vec3 vNormal;void main(){vNormal=mat3(uWorld)*aNormal;gl_Position=uMvp*vec4(aPosition,1.0);}`));
-gl.attachShader(program,shader(gl.FRAGMENT_SHADER,`precision mediump float;varying vec3 vNormal;uniform vec4 uColor;void main(){vec3 n=normalize(vNormal);if(!gl_FrontFacing)n=-n;float d=max(dot(n,normalize(vec3(-.6,.8,.7))),0.0);gl_FragColor=vec4(uColor.rgb*(vec3(.48,.47,.43)+d*vec3(.66,.60,.49)),1.0);}`));
+gl.attachShader(program,shader(gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec3 aNormal;attribute vec2 aUv;uniform mat4 uMvp;uniform mat4 uWorld;varying vec3 vNormal;varying vec2 vUv;void main(){vUv=aUv;vNormal=mat3(uWorld)*aNormal;gl_Position=uMvp*vec4(aPosition,1.0);}`));
+gl.attachShader(program,shader(gl.FRAGMENT_SHADER,`precision mediump float;varying vec3 vNormal;varying vec2 vUv;uniform vec4 uColor;uniform sampler2D uTexture;uniform float uTextured;void main(){vec3 n=normalize(vNormal);if(!gl_FrontFacing)n=-n;float d=max(dot(n,normalize(vec3(-.6,.8,.7))),0.0);vec3 base=uColor.rgb;if(uTextured>.5)base*=texture2D(uTexture,vUv).rgb;gl_FragColor=vec4(base*(vec3(.68,.66,.61)+d*vec3(.37,.34,.29)),1.0);}`));
 gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
 }catch(e){error.textContent='3D-Darstellung konnte nicht starten: '+e.message;throw e;}
 gl.useProgram(program);gl.enable(gl.DEPTH_TEST);gl.clearColor(.105,.15,.15,1);
 const pos=gl.getAttribLocation(program,'aPosition'),norm=gl.getAttribLocation(program,'aNormal'),uMvp=gl.getUniformLocation(program,'uMvp'),uWorld=gl.getUniformLocation(program,'uWorld'),uColor=gl.getUniformLocation(program,'uColor');
+const uvLoc=gl.getAttribLocation(program,'aUv'),uTextured=gl.getUniformLocation(program,'uTextured');
+const texture=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));gl.uniform1i(gl.getUniformLocation(program,'uTexture'),0);
+let textureReady=false;const imageView=g.bufferViews[g.images[0].bufferView],atlasImage=new Image();
+atlasImage.onload=()=>{gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,atlasImage);textureReady=true;};
+atlasImage.onerror=()=>{error.textContent='Materialtextur konnte nicht geladen werden.';};
+atlasImage.src=URL.createObjectURL(new Blob([bytes.subarray(start+imageView.byteOffset,start+imageView.byteOffset+imageView.byteLength)],{type:'image/jpeg'}));
 gl.enableVertexAttribArray(pos);gl.enableVertexAttribArray(norm);
 function buffer(data,target=gl.ARRAY_BUFFER){const b=gl.createBuffer();gl.bindBuffer(target,b);gl.bufferData(target,data,gl.STATIC_DRAW);return b;}
-const meshes=g.meshes.map(m=>m.primitives.map(p=>({pos:buffer(accessor(p.attributes.POSITION)),norm:buffer(accessor(p.attributes.NORMAL)),ix:buffer(accessor(p.indices),gl.ELEMENT_ARRAY_BUFFER),count:g.accessors[p.indices].count,color:g.materials[p.material].pbrMetallicRoughness.baseColorFactor})));
+const meshes=g.meshes.map(m=>m.primitives.map(p=>({pos:buffer(accessor(p.attributes.POSITION)),norm:buffer(accessor(p.attributes.NORMAL)),uv:p.attributes.TEXCOORD_0===undefined?null:buffer(accessor(p.attributes.TEXCOORD_0)),ix:buffer(accessor(p.indices),gl.ELEMENT_ARRAY_BUFFER),count:g.accessors[p.indices].count,color:g.materials[p.material].pbrMetallicRoughness.baseColorFactor,textured:'baseColorTexture' in g.materials[p.material].pbrMetallicRoughness})));
 const I=()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
 function mul(a,b){const c=new Float32Array(16);for(let j=0;j<4;j++)for(let i=0;i<4;i++)for(let k=0;k<4;k++)c[j*4+i]+=a[k*4+i]*b[j*4+k];return c;}
 function quat(q){const[x,y,z,w]=q;return new Float32Array([1-2*(y*y+z*z),2*(x*y+z*w),2*(x*z-y*w),0,2*(x*y-z*w),1-2*(x*x+z*z),2*(y*z+x*w),0,2*(x*z+y*w),2*(y*z-x*w),1-2*(x*x+y*y),0,0,0,0,1]);}
@@ -53,7 +59,7 @@ function disc(r,y,color){const v=[0,y,0],n=[0,1,0],ix=[];for(let i=0;i<32;i++){v
 const ground=[disc(1.1,.18,[.20,.245,.205,1]),disc(.34,.182,[.10,.13,.10,1])];
 const clips=g.animations.map(a=>({tracks:a.channels.map(c=>{const s=a.samplers[c.sampler];return{node:c.target.node,times:accessor(s.input),q:accessor(s.output)};})}));clips.forEach(c=>c.duration=Math.max(...c.tracks.map(t=>t.times[t.times.length-1])));
 function pose(clip,time){const c=clips[clip],t=time%c.duration,out=new Map();for(const track of c.tracks){let k=0;while(k<track.times.length-2&&track.times[k+1]<=t)k++;let f=(t-track.times[k])/(track.times[k+1]-track.times[k]),a=Array.from(track.q.subarray(k*4,k*4+4)),b=Array.from(track.q.subarray((k+1)*4,(k+2)*4));let d=dot(a,b),sign=d<0?-1:1;d=Math.min(1,Math.max(-1,d*sign));let angle=Math.acos(d),w1=d>.9995?1-f:Math.sin((1-f)*angle)/Math.sin(angle),w2=d>.9995?f:Math.sin(f*angle)/Math.sin(angle);out.set(track.node,unit(a.map((x,i)=>x*w1+sign*b[i]*w2)));}return out;}
-function part(p){gl.bindBuffer(gl.ARRAY_BUFFER,p.pos);gl.vertexAttribPointer(pos,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,p.norm);gl.vertexAttribPointer(norm,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,p.ix);gl.uniform4fv(uColor,p.color);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_SHORT,0);}
+function part(p){gl.uniform1f(uTextured,p.textured?1:0);if(p.uv){gl.enableVertexAttribArray(uvLoc);gl.bindBuffer(gl.ARRAY_BUFFER,p.uv);gl.vertexAttribPointer(uvLoc,2,gl.FLOAT,false,0,0);}else{gl.disableVertexAttribArray(uvLoc);gl.vertexAttrib2f(uvLoc,0,0);}gl.bindBuffer(gl.ARRAY_BUFFER,p.pos);gl.vertexAttribPointer(pos,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,p.norm);gl.vertexAttribPointer(norm,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,p.ix);gl.uniform4fv(uColor,p.color);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_SHORT,0);}
 let clip=0,time=0,last=0,paused=false,turn=false,yaw=-15;
 const slider=document.querySelector('#angle');function setYaw(v){yaw=v;slider.value=v;document.querySelector('#degrees').textContent=Math.round(v)+'°';}setYaw(-15);
 slider.addEventListener('input',()=>setYaw(+slider.value));

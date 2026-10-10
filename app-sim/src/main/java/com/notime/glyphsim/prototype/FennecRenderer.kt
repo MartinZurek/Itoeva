@@ -4,6 +4,8 @@ import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
+import android.opengl.GLUtils
+import android.graphics.BitmapFactory
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.microedition.khronos.egl.EGLConfig
@@ -21,6 +23,8 @@ internal class FennecRenderer(private val context: Context, private val error: (
     private var mvpLocation = 0
     private var worldLocation = 0
     private var colorLocation = 0
+    private var uvLocation = 0
+    private var texturedLocation = 0
     private val vp = FloatArray(16)
     private val view = FloatArray(16)
     private val projection = FloatArray(16)
@@ -60,7 +64,21 @@ internal class FennecRenderer(private val context: Context, private val error: (
             mvpLocation = glGetUniformLocation(program, "uMvp")
             worldLocation = glGetUniformLocation(program, "uWorld")
             colorLocation = glGetUniformLocation(program, "uColor")
+            uvLocation = glGetAttribLocation(program, "aUv")
+            texturedLocation = glGetUniformLocation(program, "uTextured")
             model = context.assets.open("models/fennec-prototype.glb").use { FennecModel(it.readBytes()) }
+            val texture = IntArray(1); glGenTextures(1, texture, 0)
+            glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture[0])
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+            // Halbe Kantenlaenge fuer die Telefonvorschau: rund 1,5 MiB statt 6 MiB Texel.
+            val data = model!!.textureBytes
+            val bitmap = requireNotNull(BitmapFactory.decodeByteArray(data, 0, data.size,
+                BitmapFactory.Options().apply { inSampleSize = 2 }))
+            GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0); bitmap.recycle()
+            glUseProgram(program); glUniform1i(glGetUniformLocation(program, "uTexture"), 0)
             local = Array(model!!.nodes.size) { FloatArray(16) }
             world = Array(model!!.nodes.size) { FloatArray(16) }
         } catch (e: Exception) {
@@ -112,6 +130,13 @@ internal class FennecRenderer(private val context: Context, private val error: (
     }
 
     private fun drawPart(part: FennecModel.Part) {
+        glUniform1f(texturedLocation, if (part.textured) 1f else 0f)
+        if (part.texcoords != null) {
+            glEnableVertexAttribArray(uvLocation)
+            glVertexAttribPointer(uvLocation, 2, GL_FLOAT, false, 0, part.texcoords)
+        } else {
+            glDisableVertexAttribArray(uvLocation); glVertexAttrib2f(uvLocation, 0f, 0f)
+        }
         glUniform4fv(colorLocation, 1, part.color, 0)
         glVertexAttribPointer(position, 3, GL_FLOAT, false, 0, part.positions)
         glVertexAttribPointer(normal, 3, GL_FLOAT, false, 0, part.normals)
@@ -150,11 +175,14 @@ internal class FennecRenderer(private val context: Context, private val error: (
         private const val VERTEX = """
             attribute vec3 aPosition;
             attribute vec3 aNormal;
+            attribute vec2 aUv;
             uniform mat4 uMvp;
             uniform mat4 uWorld;
             varying vec3 vNormal;
+            varying vec2 vUv;
             void main() {
                 vNormal = mat3(uWorld) * aNormal;
+                vUv = aUv;
                 gl_Position = uMvp * vec4(aPosition, 1.0);
             }
         """
@@ -162,12 +190,17 @@ internal class FennecRenderer(private val context: Context, private val error: (
             precision mediump float;
             varying vec3 vNormal;
             uniform vec4 uColor;
+            uniform sampler2D uTexture;
+            uniform float uTextured;
+            varying vec2 vUv;
             void main() {
                 vec3 n = normalize(vNormal);
                 if (!gl_FrontFacing) n = -n;
                 float diffuse = max(dot(n, normalize(vec3(-0.6, 0.8, 0.7))), 0.0);
-                vec3 light = vec3(0.48, 0.47, 0.43) + diffuse * vec3(0.66, 0.60, 0.49);
-                gl_FragColor = vec4(uColor.rgb * light, 1.0);
+                vec3 light = vec3(0.68, 0.66, 0.61) + diffuse * vec3(0.37, 0.34, 0.29);
+                vec3 base = uColor.rgb;
+                if (uTextured > 0.5) base *= texture2D(uTexture, vUv).rgb;
+                gl_FragColor = vec4(base * light, 1.0);
             }
         """
     }

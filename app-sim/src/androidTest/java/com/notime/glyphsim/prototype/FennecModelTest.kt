@@ -15,7 +15,7 @@ class FennecModelTest {
     private fun bytes(): ByteArray = InstrumentationRegistry.getInstrumentation().context
         .assets.open("models/fennec-prototype.glb").use { it.readBytes() }
     @Test fun compactAssetHasThreeCompleteClips() {
-        val data = bytes(); assertTrue(data.size < 750_000)
+        val data = bytes(); assertTrue(data.size < 2_000_000)
         val m = FennecModel(data)
         assertEquals(listOf("idle", "walk", "run"), m.clips.map { it.name })
         assertTrue(m.nodes.any { it.name == "head" && it.parts.isNotEmpty() })
@@ -27,6 +27,23 @@ class FennecModelTest {
                 assertEquals(0f, track.times.first(), 0f)
                 assertTrue(track.times.asList().zipWithNext().all { (a, b) -> b > a })
                 assertTrue(track.node in m.nodes.indices)
+            }
+        }
+    }
+    @Test fun paintedTextureHasCoherentUvCoordinates() {
+        val m = FennecModel(bytes())
+        assertTrue(m.textureBytes.size in 100_000..1_000_000)
+        assertEquals(255, m.textureBytes[0].toInt() and 255)
+        assertEquals(216, m.textureBytes[1].toInt() and 255)
+        val textured = m.nodes.flatMap { it.parts }.filter { it.textured }
+        assertTrue(textured.size > 10)
+        textured.forEach { p ->
+            val uv = requireNotNull(p.texcoords)
+            assertEquals(p.positions.capacity() / 3 * 2, uv.capacity())
+            repeat(uv.capacity()) { assertTrue(uv.get(it).isFinite() && uv.get(it) in 0f..1f) }
+            for (axis in 0..1) {
+                val values = (0 until uv.capacity() / 2).map { uv.get(it * 2 + axis) }
+                assertTrue(values.max() - values.min() < .5f)
             }
         }
     }
@@ -43,7 +60,7 @@ class FennecModelTest {
             }
             triangles += p.count / 3
         }
-        assertTrue(triangles in 10_000..35_000)
+        assertTrue(triangles in 10_000..50_000)
         val head = m.nodes.first { it.name == "head" }.parts.flatMap { p ->
             (0 until p.positions.capacity() / 3).map { p.positions.get(it * 3 + 2) }
         }

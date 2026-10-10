@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Reproduzierbares echtes glTF-Modell; keine gerenderten Sprite-Bilder.
 
-Nur Python-Standardbibliothek. Gelenke tragen starre Teilmeshes; kein Skinning.
+Python + NumPy/scikit-image fuer zusammenhaengende Kopfformen.
+Gelenke tragen starre Teilmeshes; kein Skinning.
 Y zeigt nach oben, Z zur Gesichtsvorderseite. Alle Laengen in Modellmetern.
 """
 import json, math, struct, pathlib, base64
 from collections import defaultdict
+import numpy as np
+from skimage.measure import marching_cubes
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / 'app-sim/src/game/assets/models/fennec-prototype.glb'
@@ -16,6 +19,10 @@ COLORS = {'fur': (0.82,.34,.08), 'cream': (.98,.82,.55),
           'ink': (.055,.036,.023), 'eye': (.96,.56,.075),
           'white': (1,.95,.79)}
 nodes, parts, materials = [], defaultdict(list), list(COLORS)
+ATLAS={'fur':(0,0),'cream':(1,0),'cloth':(0,1),'leather':(1,1)}
+def uv(color,u,v):
+    x,y=ATLAS.get(color,(0,0))
+    return ((x+.012+.976*u)*.5,(y+.012+.976*v)*.5)
 
 def node(name, parent=None, t=(0,0,0)):
     i=len(nodes); nodes.append({'name':name,'translation':list(t)})
@@ -45,7 +52,58 @@ def surface(owner, color, fn, rings=16, segments=24, wrap=True):
             n=[norms[a][k]+norms[b][k] for k in range(3)]
             norms[a]=n[:];norms[b]=n[:]
     norms=[tuple(k/(math.sqrt(sum(v*v for v in n)) or 1) for k in n) for n in norms]
-    parts[owner].append((color,verts,norms,faces))
+    tex=[uv(color,i/segments,j/rings) for j in range(rings+1) for i in range(segments+1)]
+    parts[owner].append((color,verts,norms,faces,tex))
+
+def sculpt_head(owner):
+    # Kopf, Kiefer, Wangen und Schnauze verschmelzen geometrisch; keine Kugeln
+    # auf einer Kugel. Das Vorzeichen definiert wirklich eine geschlossene Haut.
+    low=np.array([-.43,-.14,-.29]);high=np.array([.43,.46,.43]);shape=(49,36,41)
+    axes=[np.linspace(low[i],high[i],shape[i]) for i in range(3)]
+    xyz=np.stack(np.meshgrid(*axes,indexing='ij'),axis=-1)
+    def field(center,radius):return (np.sqrt(np.sum(((xyz-center)/radius)**2,axis=-1))-1)*min(radius)
+    d=field((0,.16,-.025),(.285,.245,.205))
+    for c,r in [((-.16,.055,.105),(.13,.105,.135)),((.16,.055,.105),(.13,.105,.135)),
+                ((0,.042,.245),(.126,.080,.139)),((0,-.012,.205),(.133,.057,.133)),
+                ((0,.11,.145),(.125,.12,.12)),
+                ((-.275,.02,.07),(.095,.056,.078)),((.275,.02,.07),(.095,.056,.078))]:
+        b=field(c,r);k=.045;h=np.maximum(k-np.abs(d-b),0)/k;d=np.minimum(d,b)-h*h*k*.25
+    spacing=(high-low)/(np.array(shape)-1)
+    verts,faces,_,_=marching_cubes(d,0,spacing=tuple(spacing),gradient_direction='ascent')
+    verts+=low
+    # Normalen des Dichtefeldes folgen der vereinten Form, einschliesslich Schnauze.
+    norms=np.zeros_like(verts)
+    for face in faces:
+        a,b,c=verts[face];n=np.cross(b-a,c-a)
+        for i in face:norms[i]+=n
+    norms/=np.maximum(np.linalg.norm(norms,axis=1,keepdims=True),1e-12)
+    for color in ('fur','cream'):
+        fs=[]
+        for face in faces:
+            center=verts[face].mean(axis=0);x,y,z=center
+            pale=y<.068+.012*math.sin(x*70) and z>.055 and abs(x)<.38
+            if pale==(color=='cream'):fs.append(tuple(int(i) for i in face))
+        tex=[uv(color,(math.atan2(z,x)/math.tau+.5),max(0,min(1,(y+.13)/.6))) for x,y,z in verts]
+        parts[owner].append((color,[tuple(v) for v in verts],[tuple(n) for n in norms],fs,tex))
+
+def tuft(owner,color,start,end,width):
+    delta=np.array(end)-start;direction=delta/np.linalg.norm(delta)
+    base=np.cross(direction,(0,0,1))
+    if np.linalg.norm(base)<.1:base=np.cross(direction,(0,1,0))
+    base/=np.linalg.norm(base);other=np.cross(direction,base)
+    def fn(v,u):
+        p=np.array(start)+delta*v
+        r=width*math.sin(math.pi*(.18+.82*v))**.8
+        return tuple(p+r*(base*math.cos(u*math.tau)+other*.45*math.sin(u*math.tau)))
+    surface(owner,color,fn,6,10)
+
+def tunic(owner):
+    profile=[(-.35,0,0),(-.30,.205,.15),(-.16,.218,.155),(.02,.20,.145),(.20,.245,.17),(.31,.155,.125),(.35,0,0)]
+    def fn(v,u):
+        k=min(len(profile)-2,int(v*(len(profile)-1)));f=v*(len(profile)-1)-k
+        y,rx,rz=[profile[k][i]*(1-f)+profile[k+1][i]*f for i in range(3)]
+        a=u*math.tau;return(rx*math.cos(a),y,rz*math.sin(a))
+    surface(owner,'leather',fn,24,24)
 
 def ell(owner,color,c,r, rings=12, seg=20, tilt=0):
     def fn(v,u):
@@ -58,29 +116,31 @@ def ear(owner,side):
     # Zwei geschlossene spitz zulaufende Schalen, echte Dicke und Vertiefung.
     def shape(inner=False):
         def fn(v,u):
-            a=u*math.tau; width=(.15 if not inner else .106)*math.sin(math.pi*v)**.75
-            return (side*(.15+.27*v)+width*math.cos(a), .08+.78*v,
-                    .018+(.073 if not inner else .025)*math.sin(math.pi*v)*math.sin(a)+(0.044 if inner else 0))
+            a=u*math.tau;sv=.12+.78*v if inner else v
+            width=(.113 if inner else .16)*math.sin(math.pi*v)**.75
+            return (side*(.15+.30*sv)+width*math.cos(a), .08+.80*sv,
+                    (.086 if inner else .018)+(.012 if inner else .070)*math.sin(math.pi*v)*math.sin(a))
         return fn
     surface(owner,'fur',shape(),18,20)
     surface(owner,'cream',shape(True),18,20)
     ell(owner,'cream',(side*.18,.16,.065),(.08,.18,.046),tilt=-side*.32)
 
 rig=node('Fennec'); hips=node('hips',rig,(0,.92,0)); torso=node('torso',hips,(0,.31,0))
-ell(torso,'leather',(0,0,0),(.255,.39,.175))
-ell(hips,'fur',(0,-.01,.035),(.225,.17,.15))
-ell(torso,'cream',(0,.22,.14),(.15,.23,.085))
+tunic(torso)
+ell(hips,'leather',(0,-.01,.035),(.19,.145,.14))
+for i in range(5):
+    tuft(torso,'cream',((i-2)*.031,.32,.165),((i-2)*.042,.135+.018*abs(i-2),.183),.047)
 ell(torso,'leather',(0,-.12,0),(.272,.051,.194),rings=8)
 ell(torso,'gold',(0,-.12,.20),(.045,.043,.014),rings=8,seg=12)
 for s in (-1,1):
     ell(torso,'leather',(s*.25,-.15,.08),(.058,.085,.072),rings=8)
     leg=node('hip'+str(s),hips,(s*.14,-.05,0))
-    ell(leg,'cream',(0,-.12,0),(.105,.20,.103))
+    ell(leg,'cream',(0,-.10,0),(.094,.18,.088))
     knee=node('knee'+str(s),leg,(0,-.27,0))
     ell(knee,'fur',(0,-.11,.01),(.08,.145,.08))
     foot=node('foot'+str(s),knee,(0,-.25,0))
-    ell(foot,'leather',(0,.015,.026),(.099,.125,.098))
-    ell(foot,'leather',(0,-.08,.10),(.106,.073,.185))
+    ell(foot,'leather',(0,.015,.026),(.087,.125,.090))
+    ell(foot,'leather',(0,-.08,.10),(.094,.073,.161))
     ell(foot,'gold',(0,.046,.094),(.087,.016,.025),rings=6,seg=12)
     arm=node('shoulder'+str(s),torso,(s*.24,.20,0))
     ell(arm,'leather',(s*.07,-.105,0),(.078,.18,.075),tilt=s*.26)
@@ -90,25 +150,25 @@ for s in (-1,1):
     for f in range(3): ell(elbow,'leather',((f-1)*.027,-.27,.037),(.017,.044,.026),rings=6,seg=8)
 
 head=node('head',torso,(0,.43,0))
-ell(head,'fur',(0,.15,0),(.34,.29,.235),rings=20,seg=28)
+sculpt_head(head)
 for s in (-1,1):
     ear(head,s)
-    ell(head,'cream',(s*.22,.01,.134),(.12,.075,.10),tilt=s*.18)
+    for i in range(2):
+        tuft(head,'cream',(s*.30,.027-i*.025,.085-i*.025),(s*(.375+i*.015),.009-i*.027,.076-i*.025),.034)
     # Augen sitzen auf der runden Stirn, nicht auf einer gesichtsweiten Platte.
-    ell(head,'ink',(s*.145,.175,.206),(.088,.052,.032),tilt=-s*.15)
-    ell(head,'eye',(s*.146,.175,.233),(.069,.040,.017),tilt=-s*.15)
-    ell(head,'ink',(s*.146,.176,.248),(.015,.035,.009),rings=8,seg=12)
-    ell(head,'white',(s*.133,.192,.257),(.009,.011,.006),rings=6,seg=8)
-    ell(head,'fur',(s*.15,.233,.208),(.10,.032,.025),tilt=-s*.16)
-ell(head,'cream',(0,.012,.254),(.16,.075,.145))
-ell(head,'ink',(0,.049,.367),(.052,.031,.037),rings=8,seg=12)
-ell(head,'ink',(0,-.025,.35),(.082,.005,.016),rings=6,seg=12)
+    ell(head,'ink',(s*.124,.175,.165),(.079,.043,.034),tilt=-s*.14)
+    ell(head,'eye',(s*.124,.175,.191),(.063,.033,.014),tilt=-s*.14)
+    ell(head,'ink',(s*.124,.176,.204),(.012,.028,.007),rings=8,seg=12)
+    ell(head,'white',(s*.112,.191,.213),(.007,.009,.004),rings=6,seg=8)
+for i in range(3):tuft(head,'fur',((i-1)*.045,.375,-.02),((i-1)*.063-.018,.45-i*.01,.025),.035)
+ell(head,'ink',(0,.054,.370),(.041,.027,.026),rings=8,seg=12)
+ell(head,'ink',(0,-.005,.35),(.062,.004,.014),rings=6,seg=12)
 
 cape=node('cape',torso,(0,.30,-.035))
 def cloth(v,u):
-    a=.72+u*(math.tau-1.44); radius=.25+.28*v
-    fold=.014*math.sin(u*math.pi*12)*v
-    return ((radius+fold)*math.sin(a),-.76*v+.045*math.cos(u*math.pi*10)*v*v,
+    a=.72+u*(math.tau-1.44); radius=.24+.235*v+.035*math.sin(u*math.pi*3)*v*v
+    fold=.033*math.sin(u*math.pi*14)*v
+    return ((radius+fold)*math.sin(a),-.67*v+.065*math.cos(u*math.pi*14)*v*v,
             (radius+fold)*math.cos(a)-.018*v)
 surface(cape,'cloth',cloth,15,32,False)
 # Blattadern sind schmale echte Baender auf dem Stoff, keine aufgeklebte Ansicht.
@@ -118,11 +178,8 @@ for leaf in range(1,8):
         x,y,z=cloth(v,center+(u-.5)*.005)
         return(x*1.012,y,z*1.012)
     surface(cape,'seam',vein,12,1,False)
-# Saum folgt der Kontur und bleibt beim Drehen sichtbar.
-for k in range(17):
-    u=k/16;x,y,z=cloth(.97,u)
-    ell(cape,'seam',(x,y,z),(.018,.027,.018),rings=5,seg=6)
-ell(torso,'cloth',(0,.32,0),(.27,.095,.215))
+# Kein Perlen-Saum: einzelne harte Kuegelchen erzeugten den Puppeneindruck.
+ell(torso,'cloth',(0,.32,0),(.253,.037,.195))
 ell(torso,'gold',(0,.27,.222),(.066,.077,.022),rings=12,seg=20)
 ell(torso,'gem',(0,.27,.241),(.049,.059,.018),rings=12,seg=20)
 
@@ -148,7 +205,7 @@ def accessor(data,fmt,kind,count):
     while len(blob)%4:blob.append(0)
     off=len(blob);blob.extend(struct.pack('<'+fmt*len(data),*data))
     vi=len(views);view={'buffer':0,'byteOffset':off,'byteLength':len(blob)-off}
-    if kind=='VEC3':view['target']=34962
+    if kind in ('VEC2','VEC3'):view['target']=34962
     elif fmt=='H':view['target']=34963
     views.append(view)
     ac={'bufferView':vi,'componentType':5126 if fmt=='f' else 5123,'count':count,'type':kind}
@@ -159,14 +216,15 @@ triangles=0
 for owner, entries in parts.items():
     prim=[]
     for color in dict.fromkeys(e[0] for e in entries):
-        vertices=[];norms=[];ix=[]
-        for c,v,n,f in entries:
+        vertices=[];norms=[];ix=[];tex=[]
+        for c,v,n,f,t in entries:
             if c!=color:continue
-            base=len(vertices);vertices+=v;norms+=n;ix += [i+base for face in f for i in face]
+            base=len(vertices);vertices+=v;norms+=n;tex+=t;ix += [i+base for face in f for i in face]
         triangles+=len(ix)//3
-        prim.append({'attributes':{'POSITION':accessor([x for v in vertices for x in v],'f','VEC3',len(vertices)),
-                                   'NORMAL':accessor([x for n in norms for x in n],'f','VEC3',len(norms))},
-                     'indices':accessor(ix,'H','SCALAR',len(ix)), 'material':materials.index(color)})
+        attrs={'POSITION':accessor([x for v in vertices for x in v],'f','VEC3',len(vertices)),
+               'NORMAL':accessor([x for n in norms for x in n],'f','VEC3',len(norms))}
+        if color in ATLAS:attrs['TEXCOORD_0']=accessor([x for t in tex for x in t],'f','VEC2',len(tex))
+        prim.append({'attributes':attrs, 'indices':accessor(ix,'H','SCALAR',len(ix)), 'material':materials.index(color)})
     nodes[owner]['mesh']=len(meshes);meshes.append({'primitives':prim})
 
 animations=[]
@@ -177,25 +235,36 @@ for name,duration,amplitude in [('idle',3.0,0),('walk',1.15,.48),('run',.70,.80)
         for t in times:
             phase=t/duration*math.tau;s=-1 if nm.endswith('-1') else 1
             a=0;axis='x'
-            if nm.startswith('hip') and nm!='hips':a=s*amplitude*math.sin(phase)
+            if nm.startswith('hip') and nm!='hips':
+                a=s*amplitude*math.sin(phase)
+                if name=='idle':a=s*.045;axis='z'
             elif nm.startswith('knee'):a=-amplitude*1.2*max(0,s*math.sin(phase))
             elif nm.startswith('foot'):a=amplitude*.45*max(0,s*math.sin(phase))
-            elif nm.startswith('shoulder'):a=-s*amplitude*.75*math.sin(phase)
-            elif nm.startswith('elbow'):a=-.16-amplitude*.3*(1+s*math.sin(phase))
+            elif nm.startswith('shoulder'):a=-s*amplitude*.75*math.sin(phase)+(-.16 if s<0 else .05)
+            elif nm.startswith('elbow'):a=(-.33 if s<0 else -.20)-amplitude*.3*(1+s*math.sin(phase))
             elif nm=='tail':a=.08*math.sin(phase);axis='y'
             elif nm=='cape':a=.035*math.sin(phase+.4)
-            elif nm=='head':a=.025*math.sin(phase);axis='y'
+            elif nm=='head':a=.08+.025*math.sin(phase);axis='y'
+            elif nm=='torso':a=-.035;axis='z'
             else:continue
             q=[0,0,0,math.cos(a/2)];q['xyz'.index(axis)]=math.sin(a/2);rots.extend(q)
         if not rots:continue
         samplers.append({'input':ta,'output':accessor(rots,'f','VEC4',len(times)),'interpolation':'LINEAR'})
         channels.append({'sampler':len(samplers)-1,'target':{'node':i,'path':'rotation'}})
     animations.append({'name':name,'samplers':samplers,'channels':channels})
+while len(blob)%4:blob.append(0)
+image_view=len(views);offset=len(blob);atlas=pathlib.Path(__file__).with_name('materials')/'painted-atlas.jpg'
+blob.extend(atlas.read_bytes());views.append({'buffer':0,'byteOffset':offset,'byteLength':len(blob)-offset})
 gltf={'asset':{'version':'2.0','generator':'Itoeva Fennec prototype / build_model.py'},
       'scene':0,'scenes':[{'nodes':[rig]}],'nodes':nodes,'meshes':meshes,
-      'materials':[{'name':c,'doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[*COLORS[c],1],
+      'materials':[{'name':c,'doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':[1,1,1,1] if c in ATLAS else [*COLORS[c],1],
                     'metallicFactor':0,'roughnessFactor':.88}} for c in materials],
       'animations':animations,'buffers':[{'byteLength':len(blob)}],'bufferViews':views,'accessors':accessors}
+gltf['images']=[{'bufferView':image_view,'mimeType':'image/jpeg'}]
+gltf['textures']=[{'source':0,'sampler':0}]
+gltf['samplers']=[{'magFilter':9729,'minFilter':9729,'wrapS':33071,'wrapT':33071}]
+for material in gltf['materials']:
+    if material['name'] in ATLAS:material['pbrMetallicRoughness']['baseColorTexture']={'index':0}
 j=json.dumps(gltf,separators=(',',':')).encode();j+=b' '*((-len(j))%4);blob+=b'\0'*((-len(blob))%4)
 glb=struct.pack('<III',0x46546c67,2,12+8+len(j)+8+len(blob))+struct.pack('<II',len(j),0x4e4f534a)+j+struct.pack('<II',len(blob),0x004e4942)+blob
 OUT.parent.mkdir(parents=True,exist_ok=True);OUT.write_bytes(glb)

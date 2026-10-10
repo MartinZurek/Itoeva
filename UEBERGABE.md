@@ -3,8 +3,11 @@
 ## Aktuell: echter 3D-Fennec als getrennter Kotlin-Test (10.10.2026)
 
 Martin hat den empfohlenen Prototyp beauftragt. Auf PR #355 / `346d6dbf`
-entstehen ein echtes glTF-Modell (0,52 MiB), Gelenkanimationen und eine getrennte
-GLSurfaceView-Testansicht mit fester 2,5D-Kamera. Im Game-Startbildschirm:
+entstehen ein echtes glTF-Modell, Gelenkanimationen und eine getrennte
+GLSurfaceView-Testansicht mit fester 2,5D-Kamera. Nach Martins Puppen-Kritik:
+vereinte Kopf-/Schnauzenform, gefaltete Cape und gemalte UV-Materialien;
+Modell jetzt 1,46 MiB einschliesslich Textur (alte 0,52-MiB-Zahl ueberholt).
+Im Game-Startbildschirm:
 **3D-Fennec testen**. Modell erst dort laden; keine Spielstandaenderung.
 Eine offline bedienbare Vorschau nutzt dasselbe GLB:
 [`docs/fennec-3d/preview.html`](docs/fennec-3d/preview.html).
