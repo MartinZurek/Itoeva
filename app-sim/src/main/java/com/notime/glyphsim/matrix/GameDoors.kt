@@ -4,6 +4,10 @@ import com.notime.glyphsim.matrix.PlayScene.Place
 
 /** Gemalte Durchgaenge statt frei schwebender Tuerrechtecke. Nicht im Spielstand gespeichert. */
 object GameDoors {
+    /** Bodensitzen ist kein gesperrter Weg; ein laufender Sprung/Rollimpuls muss erst enden. */
+    fun canEnter(state: GameMovement.State): Boolean = state.height <= 0f &&
+        state.action !in setOf(GameMovement.Action.JUMP, GameMovement.Action.ROLL, GameMovement.Action.RISE)
+
     const val OPEN_MS = 420L
     const val CLOSE_MS = 320L
     data class State(val passage: GameWorld.Passage, val started: Long, val arriving: Boolean = false)

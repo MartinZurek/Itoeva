@@ -1,5 +1,12 @@
 # Uebergabe
 
+## Aktuell: Bedienung und Brueckenweg (09.10.2026)
+
+Martins Telefonfeedback zu rechtem Pad, Shop-Tueren, Brueckenboden und Wasser wird
+in [`docs/itoeva2-input-and-path-fixes.md`](docs/itoeva2-input-and-path-fixes.md)
+uebergeben. Der Korrekturbranch baut auf PR #349 (`8908a0f`) auf.
+
+
 ## Aktuell: Itoeva-2-Zwischenorte (08.10.2026)
 
 Die Fortsetzung des vollen Android-Chats und der konkrete Prüf-/APK-Stand stehen in

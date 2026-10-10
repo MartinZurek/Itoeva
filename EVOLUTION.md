@@ -6783,3 +6783,24 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Die automatische PR-Review hat zusätzlich die Außentür-Textur an Weltanschlüssen gefunden:
   Türblätter verwenden jetzt die sichtbare Nahtquelle statt des verdeckten Grundbilds;
   eine Regression prüft die Quellkoordinaten aller 22 Türseiten.
+
+
+### 2026-10-09 – Touchpad, Tuereingaben und Brueckenweg korrigiert (world-input-path-fix)
+
+- **DOCUMENTED INTENT:** Martin meldet ein funktionsloses dunkles rechtes Pad, falschen
+  Brueckenboden, nicht reagierende Shop-Tueren und zu langsame Wasserbewegung.
+- **FACT:** Das rechte Pad besitzt jetzt eine eigene Pointer-Flaeche im transparenten Stil
+  des linken Sticks. Tipp/Wischen/Halten benutzen weiterhin den vorhandenen Bewegungsmotor;
+  ein zweiter Finger und Abbruch sind separat abgesichert. Die genaue Telefonursache ist
+  nicht lokal reproduziert. Aktions-/Abbruchknoepfe stehen explizit oberhalb des Touchlayers.
+- **Verhalten:** Tueren, Beschriftungen, Gegenstaende und Stationen reagieren auf einen Tipp.
+  Sichtbare Nachbartueren werden im gesamten Panorama getroffen; die Figur geht ueber die
+  vorhandenen Abschnitte zum Eingang. Bodensitzen sperrt Tueren nicht mehr, Flugbewegungen
+  warten weiterhin. Die Brueckenkrone folgt dem Laufdeck statt der Steinbogenfront.
+  Vorderes Wasser bewegt sich schneller und staerker, starre Bereiche bleiben maskiert.
+- **Pruefvertrag:** Reine Kotlin-Regressionssuite plus native Compose-Tests fuer Pointer,
+  Mehrfingerbedienung, einen tatsaechlichen Sprung und antippbare Aktionsknoepfe.
+  Ergebnisse und offene Telefonabnahme: docs/itoeva2-input-and-path-fixes.md.
+- **Daten/Rueckbau:** Keine Persistenz-, Orts-ID-, Schema-, Workflow- oder Assetaenderungen.
+  Der bestehende V2-Spielstandreader bleibt erhalten. Basis ist PR #349 / `8908a0f`;
+  Martin uebernimmt wie bisher Merge und APK mit Cloud Code.

@@ -1,5 +1,17 @@
 package com.notime.glyphsim.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.notime.glyphsim.matrix.GameWorld
+import com.notime.glyphsim.matrix.GameTerrain
+import com.notime.glyphsim.matrix.GameSurfaces
+import com.notime.glyphsim.matrix.AvatarSpecies
+import com.notime.glyphsim.matrix.PlayScene
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -15,6 +27,7 @@ import com.notime.glyphsim.matrix.GameMovement
 import com.notime.glyphsim.matrix.PlayControl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -128,6 +141,39 @@ class GameTouchTest {
             down(Offset(width-radius*1.3f,height-bottom));up()
         }
         compose.runOnIdle { assertTrue(commands.isEmpty()) }
+    }
+
+    @Test fun antippbarerAktionsknopfLiegtUeberDerDaumensteuerung() {
+        var entered = 0
+        compose.setContent {
+            Box(Modifier.fillMaxSize()) {
+                GameTouch({ stick = it }, { command, _ -> commands += command }, {}, {})
+                GameActionButton("Shop", { entered++ }, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
+            }
+        }
+        compose.onNodeWithText("Shop").performTouchInput { click() }
+        compose.runOnIdle { assertEquals(1, entered); assertTrue(commands.isEmpty()) }
+    }
+    @Test fun sichtbaresRechtesPadStartetWirklichenSprungAuchNachNeukomposition() {
+        val scene = GameWorld.scene(PlayScene.Place.PARK)!!
+        var movement by mutableStateOf(GameMovement.State(pos = PlayControl.Pos(.5f, .6f)))
+        var taps = 0
+        compose.setContent {
+            GameTouch({ stick = it }, { command, direction ->
+                movement = GameTerrain.command(scene, movement, command, direction ?: stick, GameSurfaces.painted(scene))
+            }, { taps++ }, {}, enabled = enabled.value)
+        }
+        compose.onNodeWithTag("game-action-pad", useUnmergedTree = true).performTouchInput { click() }
+        compose.runOnIdle {
+            assertEquals(GameMovement.Action.JUMP, movement.action)
+            repeat(20) { movement = GameTerrain.tick(scene, AvatarSpecies.FENNEC, movement, stick, 16, GameSurfaces.painted(scene)).state }
+            assertTrue(movement.height > 15f)
+            assertEquals(0, taps)
+            repeat(30) { movement = GameTerrain.tick(scene, AvatarSpecies.FENNEC, movement, stick, 16, GameSurfaces.painted(scene)).state }
+            assertNull(movement.action)
+        }
+        compose.onNodeWithTag("game-action-pad", useUnmergedTree = true).performTouchInput { click() }
+        compose.runOnIdle { assertEquals(GameMovement.Action.JUMP, movement.action) }
     }
 
 }

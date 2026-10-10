@@ -39,7 +39,7 @@ class GamePhysicsTest {
                 val feet=GameScenes.feet(scene,p)
                 val band=GameTerrain.band(scene,p.x)
                 assertTrue("$place $p",feet.second>=band.first-.001f && feet.second<=band.second+.001f)
-                assertTrue(feet.second>400f)
+                assertTrue(feet.second >= if (place == Place.COAST_PATH) 370f else 400f)
                 assertEquals(p,GameTerrain.clamp(scene,p))
             }
         }
@@ -222,6 +222,58 @@ class GamePhysicsTest {
         val limited=GameBreath.input(GameBreath.State(.2f,0,true),PlayControl.Stick(.8f,.6f))
         assertEquals(.65f,limited.strength,.0001f)
         assertEquals(4f/3f,limited.x/limited.y,.0001f)
+    }
+
+    @Test fun `Brueckenkrone liegt auf Laufdeck oberhalb des Steinbogens`() {
+        val scene = GameWorld.scene(Place.COAST_PATH)!!
+        for (depth in listOf(0f, .5f, 1f)) {
+            val feet = GameScenes.feet(scene, GameTerrain.clamp(scene, PlayControl.Pos(.43f, depth)))
+            assertTrue("Fuss auf Brueckenwand: $feet", feet.second in 370f..396f)
+        }
+    }
+    @Test fun `Manuelles Gehen und Rennen ueberquert Bruecke in beide Richtungen`() {
+        val scene = GameWorld.scene(Place.COAST_PATH)!!
+        for (direction in listOf(-1f, 1f)) for (strength in listOf(.55f, 1f)) {
+            var state = GameMovement.State(pos = GameTerrain.clamp(scene,
+                PlayControl.Pos(if (direction > 0) .03f else .97f, .6f)))
+            var crossedCrest = false
+            repeat(2400) {
+                state = GameTerrain.tick(scene, AvatarSpecies.FENNEC, state,
+                    PlayControl.Stick(direction * strength, 0f), 16, GameSurfaces.painted(scene)).state
+                assertTrue(GameTerrain.valid(scene, state.pos))
+                if (state.pos.x in .42f.. .44f) {
+                    crossedCrest = true
+                    assertTrue(GameScenes.feet(scene, state.pos).second < 400f)
+                }
+            }
+            assertTrue(crossedCrest)
+            assertEquals(if (direction > 0) 1f else 0f, state.pos.x, .001f)
+        }
+    }
+    @Test fun `Sichtbarer Shop und Tuerschrift reagieren auch aus Nachbarabschnitt`() {
+        val current = GameWorld.scene(Place.PARK)!!
+        val shop = GameWorld.passages(Place.STREET).first { it.to == Place.SHOP }
+        val scene = GameWorld.scene(shop.from)!!
+        val feet = GameScenes.feet(scene, shop.pos)
+        assertEquals(shop, GameWorld.passageAtVisible(current, GameWorld.origin(shop.from) + feet.first, feet.second - 70f))
+        assertEquals(shop, GameWorld.passageAtVisible(current, GameWorld.origin(shop.from) + feet.first + 28f, feet.second - 70f))
+        assertNull(GameWorld.passageAtVisible(current, GameWorld.origin(shop.from) + feet.first, 300f))
+        assertNull(GameWorld.passageAtVisible(GameWorld.scene(Place.BEDROOM)!!, feet.first, feet.second - 70f))
+    }
+    @Test fun `Vorderes Wasser veraendert sich sichtbar innerhalb einer Viertelsekunde`() {
+        val changes = (0..40).map { x ->
+            abs(GameWater.displacement(x * 45f, 590f, 250) - GameWater.displacement(x * 45f, 590f, 0))
+        }
+        assertTrue(changes.average() > 1.5)
+        assertTrue((0..40).all { abs(GameWater.displacement(it * 45f, 590f, 250)) <= 5f })
+    }
+
+    @Test fun `Tuer reagiert auch im Bodensitzen waehrend laufende Spruenge warten`() {
+        assertTrue(GameDoors.canEnter(GameMovement.State(action = GameMovement.Action.REST)))
+        assertTrue(GameDoors.canEnter(GameMovement.State(action = GameMovement.Action.SIT)))
+        for (action in listOf(GameMovement.Action.JUMP, GameMovement.Action.ROLL, GameMovement.Action.RISE))
+            assertFalse(GameDoors.canEnter(GameMovement.State(action = action)))
+        assertFalse(GameDoors.canEnter(GameMovement.State(height = 22f, support = "table")))
     }
 
 }
