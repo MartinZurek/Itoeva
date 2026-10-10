@@ -12,6 +12,130 @@ import org.junit.Test
 class CreatureSpritesTest {
 
     @Test
+    fun `Zusatzboegen enthalten alle 32 vollstaendigen Zeichnungen`() {
+        val root = listOf(File("src/main/assets"), File("app-sim/src/main/assets")).first { it.isDirectory }
+        for (species in AvatarSpecies.entries) {
+            val img = Png.read(File(root, CreatureSprites.Living.assetFor(species)).readBytes())
+            assertEquals(128 * 32, img.width)
+            assertEquals(128, img.height)
+            for (i in 0 until 32) {
+                assertTrue((0 until 128).any { img.alpha(i * 128 + it, 125) > 0 })
+                for (x in 0 until 128) assertEquals(0, img.alpha(i * 128 + x, 126))
+                for (y in 0 until 128) {
+                    assertEquals(0, img.alpha(i * 128, y))
+                    assertEquals(0, img.alpha(i * 128 + 127, y))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `neue Atmung verwendet vier eigene Bilder in beiden Ansichten`() {
+        for (facing in listOf(CreatureSprites.Facing.FRONT, CreatureSprites.Facing.RIGHT)) {
+            val living = CreatureSprites.LivingMotion()
+            living.update(false, 500L, null)
+            val frames = (0..3).map { i ->
+                val time = 500L + i * 850L
+                living.update(false, time, null)
+                living.frame(false, facing, time, null)
+            }
+            val first = CreatureSprites.Living.FIRST + if (facing == CreatureSprites.Facing.RIGHT) 4 else 0
+            assertEquals((first until first + 4).toList(), frames)
+        }
+    }
+
+    @Test
+    fun `Anlaufen und Bremsen beginnen am lokalen Wechsel und geben Gang danach frei`() {
+        val living = CreatureSprites.LivingMotion()
+        val side = CreatureSprites.Facing.RIGHT
+        living.update(false, 500L, null)
+        living.update(true, 1000L, null)
+        assertEquals(CreatureSprites.Living.FIRST + 12, living.frame(true, side, 1000L, null))
+        assertEquals(CreatureSprites.Living.FIRST + 13, living.frame(true, side, 1120L, null))
+        assertEquals(null, living.frame(true, side, 1240L, null))
+        living.update(false, 1500L, null)
+        assertEquals(CreatureSprites.Living.FIRST + 14, living.frame(false, side, 1500L, null))
+        assertEquals(CreatureSprites.Living.FIRST + 15, living.frame(false, side, 1620L, null))
+        assertEquals(CreatureSprites.Living.FIRST + 4, living.frame(false, side, 1740L, null))
+        assertEquals(null, living.frame(true, CreatureSprites.Facing.FRONT, 1500L, null))
+        assertEquals(null, living.frame(false, CreatureSprites.Facing.BACK, 1500L, null))
+    }
+
+    @Test
+    fun `Landung folgt erst dem beendeten Sprung und wird beim Losgehen unterbrochen`() {
+        val living = CreatureSprites.LivingMotion()
+        living.update(false, 500L, CreatureSprites.MotionCue(CreatureSprites.Motion.JUMP, .5f))
+        living.update(false, 600L, null)
+        for (i in 0..3) assertEquals(CreatureSprites.Living.FIRST + 24 + i,
+            living.frame(false, CreatureSprites.Facing.RIGHT, 600L + i * 120L, null))
+        living.update(true, 800L, null)
+        assertEquals(CreatureSprites.Living.FIRST + 12,
+            living.frame(true, CreatureSprites.Facing.RIGHT, 800L, null))
+    }
+
+    @Test
+    fun `lange Pause erzeugt keinen erfundenen Brems oder Landeablauf`() {
+        val living = CreatureSprites.LivingMotion()
+        living.update(true, 500L, CreatureSprites.MotionCue(CreatureSprites.Motion.JUMP, .5f))
+        living.update(false, 10000L, null)
+        assertEquals(CreatureSprites.Living.FIRST + 4,
+            living.frame(false, CreatureSprites.Facing.RIGHT, 10000L, null))
+    }
+
+    @Test
+    fun `Stimmung wird nicht aus Wartezeit erfunden und Seitenrichtung bleibt erhalten`() {
+        val living = CreatureSprites.LivingMotion()
+        living.update(false, 500L, null)
+        // Kleine Zeitschritte wie im Renderer, damit dies keine Lifecycle-Pause ist.
+        for (t in 1000L..4500L step 500L) living.update(false, t, null)
+        for ((mood, offset) in listOf(AvatarMood.HAPPY to 20, AvatarMood.SAD to 21, AvatarMood.HUNGRY to 22)) {
+            assertEquals(CreatureSprites.Living.FIRST + offset,
+                living.frame(false, CreatureSprites.Facing.FRONT, 4500L, mood))
+        }
+        assertTrue(living.frame(false, CreatureSprites.Facing.FRONT, 4500L, null)!! < CreatureSprites.Living.FIRST + 4)
+        assertTrue(living.frame(false, CreatureSprites.Facing.RIGHT, 4500L, AvatarMood.SAD)!! in
+            CreatureSprites.Living.FIRST + 4..CreatureSprites.Living.FIRST + 7)
+    }
+
+    @Test
+    fun `Zusatzbewegung ersetzt weder aktive Handlungen noch Schlaf noch fortgesetztes Rennen`() {
+        for (species in AvatarSpecies.entries) {
+            val raw = AvatarAnimations.idlePose(species)
+            val living = CreatureSprites.LivingMotion()
+            val cue = CreatureSprites.MotionCue(CreatureSprites.Motion.ROLL, .5f)
+            val rolling = CreatureSprites.lookRich(raw, species, AvatarShading.Side.NONE, 500L,
+                PlayControl.Dir.RIGHT, false, motionCue = cue, living = living)
+            assertEquals(CreatureSprites.Rich.ROLL_FIRST + 4, rolling.frame)
+            val running = CreatureSprites.lookRich(raw, species, AvatarShading.Side.NONE, 1000L,
+                PlayControl.Dir.RIGHT, true, gaitTimeMs = 0L, tempo = 2f, living = living)
+            assertEquals(CreatureSprites.Living.FIRST + 12, running.frame)
+            val continued = CreatureSprites.lookRich(raw, species, AvatarShading.Side.NONE, 1300L,
+                PlayControl.Dir.RIGHT, true, gaitTimeMs = 300L, tempo = 2f, living = living)
+            assertTrue(continued.frame in CreatureSprites.Rich.RUN_FIRST until CreatureSprites.Rich.RUN_FIRST + 8)
+            for (sleep in AvatarAnimations.reactionFor(species, AnimationType.SLEEP).frames) {
+                val legacy = CreatureSprites.lookRich(sleep, species, AvatarShading.Side.NONE, 1700L)
+                if (legacy.frame in CreatureSprites.Rich.SLEEP_FIRST until CreatureSprites.Rich.SLEEP_FIRST + 4) {
+                    assertEquals(legacy.frame, CreatureSprites.lookRich(sleep, species, AvatarShading.Side.NONE, 1700L,
+                        moving = false, living = living).frame)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `fertiges seitliches Sitzen verwendet Ruhezeichnung gerichtetes Sitzen behaelt Anatomie`() {
+        val raw = AvatarAnimations.idlePose(AvatarSpecies.FENNEC)
+        val cue = CreatureSprites.MotionCue(CreatureSprites.Motion.SIT, 1f)
+        for (dir in PlayControl.Dir.entries) {
+            val look = CreatureSprites.lookRich(raw, AvatarSpecies.FENNEC, AvatarShading.Side.NONE, 500L,
+                dir, false, motionCue = cue, living = CreatureSprites.LivingMotion())
+            assertEquals(if (dir in setOf(PlayControl.Dir.LEFT, PlayControl.Dir.RIGHT)) CreatureSprites.Living.FIRST + 31
+                else CreatureSprites.motionFrame(cue, if (dir == PlayControl.Dir.UP) CreatureSprites.Facing.BACK else CreatureSprites.Facing.FRONT), look.frame)
+            assertEquals(0, look.liftCells)
+        }
+    }
+
+    @Test
     fun `alle Wesen nutzen eigene schnelle Gangart und deren Ueberblendung`() {
         for (species in AvatarSpecies.entries) for (direction in PlayControl.Dir.entries) {
             val raw = AvatarAnimations.idlePose(species)

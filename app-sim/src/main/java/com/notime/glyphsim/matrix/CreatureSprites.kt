@@ -344,6 +344,107 @@ object CreatureSprites {
         }
     }
 
+    /** Zusatzzeichnungen, nach den 138 bestehenden Rollen eingelesen. */
+    object Living {
+        const val FIRST = Rich.FRAME_COUNT
+        const val COUNT = 32
+        const val TOTAL = FIRST + COUNT
+        fun assetFor(species: AvatarSpecies) = "creatures/${species.name.lowercase()}-living.png"
+
+        // Der Export behaelt die alte Standhoehe auch bei breiten Fluegeln/Schweifen.
+        fun scaleFor(species: AvatarSpecies): Float = when (species) {
+            AvatarSpecies.FENNEC -> 1.048077f
+            AvatarSpecies.GLOOP -> 1f
+            AvatarSpecies.PUFFLING -> 1f
+            AvatarSpecies.WYRMLING -> 1.160494f
+            AvatarSpecies.STARLET -> 1f
+            AvatarSpecies.HOOTLET -> 1f
+        }
+
+        fun turnFrame(frame: Int, species: AvatarSpecies): Int = when (frame) {
+            Rich.TURN_FRONT -> FIRST + 9
+            // Gloops Quelle zeigt hier noch ein Profil statt Ruecken: nicht als Wende ausgeben.
+            Rich.TURN_BACK -> if (species == AvatarSpecies.GLOOP) frame else FIRST + 11
+            Rich.FRONT -> FIRST + 10
+            Rich.IDLE_FIRST -> FIRST + 8
+            else -> frame
+        }
+    }
+
+    /** Nur Bildregie: Bewegung, Beduerfnisse und Handlungsabschluss bleiben bei ihren Besitzern. */
+    class LivingMotion {
+        private var lastMoving: Boolean? = null
+        private var lastTime: Long? = null
+        private var lastMotion: Motion? = null
+        private var since = 0L
+        private var idleSince = 0L
+        private var recoverySince: Long? = null
+
+        fun update(moving: Boolean, timeMs: Long, cue: MotionCue?) {
+            val gap = lastTime?.let { timeMs - it }
+            if (gap == null || gap < 0L || gap > 2000L) {
+                lastMoving = moving
+                since = timeMs - 1000L
+                idleSince = timeMs
+                recoverySince = null
+            } else if (lastMoving != moving) {
+                since = timeMs
+                idleSince = timeMs
+                recoverySince = null
+            }
+            if (gap != null && gap in 0L..2000L && lastMotion == Motion.JUMP && cue?.motion != Motion.JUMP) {
+                recoverySince = timeMs
+                idleSince = timeMs
+            }
+            lastMoving = moving
+            lastMotion = cue?.motion
+            lastTime = timeMs
+            if (cue != null) idleSince = timeMs
+        }
+
+        fun frame(moving: Boolean, facing: Facing, timeMs: Long, mood: AvatarMood?): Int? {
+            if (facing == Facing.BACK) return null
+            val side = facing == Facing.LEFT || facing == Facing.RIGHT
+            val transition = (timeMs - since).coerceAtLeast(0L)
+            if (side && moving && transition < 240L) return Living.FIRST + if (transition < 120L) 12 else 13
+            if (moving) return null
+            recoverySince?.let {
+                val elapsed = timeMs - it
+                if (side && elapsed in 0L..479L) return Living.FIRST + 24 + (elapsed / 120L).toInt()
+            }
+            if (side && transition < 360L) return Living.FIRST + when {
+                transition < 120L -> 14
+                transition < 240L -> 15
+                else -> 4
+            }
+            val elapsed = (timeMs - idleSince).coerceAtLeast(0L)
+            val phase = elapsed % 32000L
+            // Keine zufaellig traurige/hungrige Pose: nur die bereits ermittelte Stimmung.
+            if (!side && phase in 4000L..5499L) {
+                val pose = when (mood) {
+                    AvatarMood.HAPPY -> 20
+                    AvatarMood.SAD -> 21
+                    AvatarMood.HUNGRY -> 22
+                    else -> null
+                }
+                if (pose != null) return Living.FIRST + pose
+            }
+            if (!side && phase in 10000L..12399L) return Living.FIRST + 16 + ((phase - 10000L) / 600L).toInt()
+            if (phase in 14000L..14599L) return Living.FIRST + 28
+            if (phase in 18000L..18999L) return Living.FIRST + 29
+            // Die Begruessung schaut zum Betrachter; davor und danach echte Wendebilder.
+            if (phase in 22000L..23599L) return Living.FIRST + when {
+                side && phase < 22200L -> 9
+                side && phase < 22400L -> 10
+                side && phase >= 23400L -> 9
+                side && phase >= 23200L -> 10
+                else -> 30
+            }
+            if (!side && phase in 27000L..27999L) return Living.FIRST + 23
+            return Living.FIRST + (if (side) 4 else 0) + ((elapsed / 850L) % 4).toInt()
+        }
+    }
+
     /** Bild im feinen Bogen; [turn] (optional) spielt Drehungen beim Richtungswechsel. */
     fun lookRich(
         raw: IntArray,
@@ -356,7 +457,9 @@ object CreatureSprites {
         gaitTimeMs: Long = timeMs,
         motionCue: MotionCue? = null,
         tempo: Float = 1f,
-        runBlend: Float? = null
+        runBlend: Float? = null,
+        living: LivingMotion? = null,
+        livingMood: AvatarMood? = null
     ): Look {
         val (act, lift, mirrored) = classify(raw, species, side, timeMs, direction, moving)
         val facing = when {
@@ -368,15 +471,21 @@ object CreatureSprites {
         // Im Schlaf und im Sprung keine Drehung einschieben - nur merken, wohin sie schaut.
         val step = turn?.update(facing, timeMs)
         val locomotion = act == Activity.WALK || act == Activity.FRONT_WALK || act == Activity.BACK_WALK
+        living?.update(locomotion, timeMs, motionCue)
         if (motionCue != null && !locomotion) {
             // Strecken, Greifen und Aufstehen sind Bodenbewegungen. Das alte Raster
             // hebt dort den ganzen Koerper an; die Zeichnung enthaelt die Haltung bereits.
-            return Look(motionFrame(motionCue, facing),
+            val settledSit = living != null && motionCue.motion == Motion.SIT && motionCue.progress >= 1f &&
+                facing in setOf(Facing.RIGHT, Facing.LEFT)
+            return Look(if (settledSit) Living.FIRST + 31 else motionFrame(motionCue, facing),
                 if (motionCue.motion == Motion.JUMP) lift else 0, mirrored)
         }
         // Ein Wendebild darf den laufenden Gang nicht durch eine starre Gleitpose ersetzen.
         if (step != null && !locomotion && act != Activity.SLEEP && act != Activity.JOY) {
-            return Look(step.frame, lift, step.mirrored)
+            return Look(if (living != null) Living.turnFrame(step.frame, species) else step.frame, lift, step.mirrored)
+        }
+        if (living != null && act in setOf(Activity.IDLE, Activity.FRONT, Activity.WALK, Activity.FRONT_WALK, Activity.BACK_WALK)) {
+            living.frame(locomotion, facing, timeMs, livingMood)?.let { return Look(it, 0, mirrored) }
         }
         val blend = (runBlend ?: if (tempo >= 1.7f) 1f else 0f).coerceIn(0f, 1f)
         val running = blend > 0f
