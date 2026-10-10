@@ -669,6 +669,110 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-10 - Ganze gemalte Welt, Innenraeume und Aktionen in Godot (godot-painted-world-v020)
+
+- **DOCUMENTED INTENT:** Martin erweitert den Godot-Auftrag auf die gesamte vorhandene
+  Karte, Innenraeume, alle Figuren, das Anfangsmenue und bessere Bewegung. Rueckfrage
+  klaert "Spruchmenue" als Sprung/Aktionen. Das originale gemalte Design bleibt verbindlich.
+- **FACT:** Sieben verbundene Panoramen, sechs Original-Uebergaenge, 17 Aussenorte,
+  elf Innenraeume und 22 gerichtete Tueren sind in der separaten Godot-Buehne spielbar.
+  Der Adapter exportiert die nativen Welt-/Raum-/Moebel-/Massstabsanker; 51 Innenkoerper,
+  acht Aussen-Sitzflaechen und die native Pixelkiste liefern Kollision und Verdeckung.
+  Alle sechs Spezies verwenden je 170 pixel-identische Rich-/Living-Zeichnungen.
+  Das Startmenue nutzt das originale Wohnzimmerbild, Wesenwahl und Leitsaetze.
+- **Produktentscheidung:** Godot-InputMap und CharacterBody3D statt externer Steuerungs-
+  Plugins. Zwei unabhaengige Finger, konfigurierbarer Analogstick, stetiges Tempo,
+  Beschleunigen/Bremsen, wegabhaengige Laufzyklen, Richtung, Start/Stopp, Rolle,
+  Sprungpuffer, Landen und gemalte Sitzanker. Raumgrenzen reservieren Figurenbreite;
+  die erreichbaren Tueranker folgen dieser Begrenzung auch fuer grosse Wesen.
+- **Persistenz/Migration:** Eigene atomare Datei user://painted_world_v2.json fuer
+  Einstellungen und Standort je Spezies. Keine Verbindung zu Room, nativen GameAdventure-
+  Snapshots, Remindern, App 1 oder Stream. Parkbewohner sind Darstellung mit Leitsatz,
+  keine erfundenen Agentenerinnerungen, Besitzuebergaben oder LAS-Migration.
+- **TESTED BEHAVIOR:** 76 Funktionschecks; 66 Raum/Spezies-Framingkombinationen mit
+  echten opaken Spritegrenzen; 132 echte Spezies/Tuerpfade; urspruenglicher Ausschnitt-
+  Smoke im Software-OpenGL-Lauf mit 44 Checks. Alle ohne Fehler. 25 Originaldateien
+  byte-identisch, 6x170 Frames pixel-identisch. Desktop-Renderings von Menue, Park,
+  Bruecke, Wohnzimmer, Kueche und Einstellungen visuell geprueft. Zweites CODE-Review
+  fand Preload-, Sitz-, Framing- und Tuerfehler; Korrekturen sind nachgeprueft.
+- **FACT / APK:** Godot 4.5.1, Version 0.2.0 / Code 3, ARM64, Minimum API 24 / Target 35, Querformat,
+  ohne Internetberechtigung. Eigene App Itoeva Godot Welt, Paket
+  com.itoeva.godot.hd2d.world fuer parallele Installation zur frueheren Test-App.
+  78.119.773 Bytes; ZIP, JSON-Katalog, Exportausschluesse, ARM64, 16-KiB-Ausrichtung
+  und APK-Signaturen v2/v3 geprueft. Signierschluessel ausserhalb des Repositorys.
+- **UNVERIFIED / Grenzen:** Telefonstart, FPS, thermisches Verhalten und GPU/Speicher
+  sind nicht gemessen. Gerichtete Reliefbuehne und angenaeherte Konturverdeckung;
+  mehrere Originalraeume sind 480x270. Ortslicht, Stoff/Wasserbewegung, komplette
+  Musikaufloesung, Begegnungs-/Besitzsystem und native Spielstaende sind nicht portiert.
+  Die fruehere Aussage "Innenraeume/Tueren/Bewohner nicht angebunden" gilt jetzt
+  nur noch fuer die urspruengliche Ausschnittszene, nicht fuer full_world.tscn.
+- **Ruecksetzen / Uebergabe:** Isolierten Erweiterungscommit revertieren; alte Godot-
+  Szene bleibt vorhanden, native Daten bleiben lesbar. README nennt Start/Export,
+  Pruefscripte und Grenzen. Naechster Schritt ist Martins APK-Abnahme auf dem Telefon,
+  danach gezielte Tiefenmasken und beauftragte Spielsysteme.
+
+### 2026-10-10 - Godot-Test-APK und passender Fennec-Massstab (godot-painted-hd2d-apk-v012)
+
+- **DOCUMENTED INTENT:** Martin fordert eine APK und die erneute Pruefung von
+  Fennecs Groesse in der vorhandenen gemalten Kulisse.
+- **Beobachteter Fehler / Korrektur:** Der erste Sprite-Massstab 0.012 liess die
+  Figur neben der Bank zu klein wirken. 0.020 beruecksichtigt die Verkuerzung
+  einer aufrechten Karte durch die 35-Grad-Kamera: 83 Quellpixel Kopf/Fuss ergeben
+  rund 87 projizierte Pixel in der 640px-Referenzwelt, innerhalb der nativen
+  65..108px-Tiefenskalierung. Capsule und Bodenschatten wachsen passend mit.
+  Die 138 Zeichnungen und das Figurendesign bleiben pixel-identisch. Seitliche
+  Laufgrenzen reservieren Platz fuer die ganze Figur; die Kamerahoehe wird bei
+  Schwenk am vorderen Weg durch den projizierten Fussanker begrenzt.
+- **FACT / APK:** Godot-4.5.1-Debug-Export, ARM64 ab API 24, Target API 35,
+  Version 0.1.2 / Code 2, Paket `com.itoeva.godot.hd2d`, eigene App Itoeva Godot.
+  Keine Internetberechtigung; Vorschauen, Tests und Captures ausgeschlossen.
+  Debug-Signierung ausserhalb des Repositorys, keine Aenderung an nativen
+  Gradle-/Signing-/Persistenzvertraegen.
+- **TESTED BEHAVIOR:** Originalasset-Vergleich, 43 Godot-Laufzeitchecks inklusive
+  projizierter Koerperhoehe und aller Spritekartenecken in 24 Rand-/Zoom-/Schwenk-/
+  Tiefenkombinationen; aktuelle echte Desktop-Renderings visuell geprueft.
+  APK exportiert, ZIP-Integritaet, ARM64-Bibliotheken, Manifest und v2/v3-Signatur
+  geprueft. Groesse 31.024.552 Bytes. Zweites CODE-Review gemaess Repositoryregel.
+- **UNVERIFIED / Grenze:** Android-Start, GPU-Verhalten und Leistung auf einem
+  echten Telefon sind noch nicht gemessen. Die bekannte Relief-/Verdeckungsgrenze
+  des Prototyps bleibt bestehen. Ruecksetzen durch Revert dieser isolierten
+  Prototype-Aenderungen; keine Datenmigration.
+
+### 2026-10-10 - Gemalter Godot-Ausschnitt mit originaler 2D-Figur (godot-painted-hd2d-v1)
+
+- **DOCUMENTED INTENT / ausdruecklicher Nutzerauftrag:** Martin moechte erneut
+  einen begrenzten Godot-Versuch im HD-2D-Stil: 3D-Welt, gemalte vorhandene Kulisse,
+  vorhandene 2D-Figur. Keine Umgestaltung in animierte 3D-Figuren. Dies ergaenzt
+  die fruehere Entscheidung, den nativen Weltumbau ohne Godot fortzufuehren;
+  die Android-Welt wird damit nicht automatisch migriert.
+- **FACT:** Separates Godot-4.5.1-Projekt unter `prototypes/godot-hd2d`, Basis
+  `124186c77f20954321008b0bf373a1527562f11a`. Originalpanorama Strasse/Park/Wiese/Wald
+  auf Relief, Boden und Steinkante; Original-Fennec als aufrechte 2D-Karte.
+  Kulisse byte-identisch, alle 138 Figurenframes pixel-identisch, lediglich
+  12x12-Atlas statt einer 17664px-Zeile fuer kleinere GPU-Texturlimits.
+- **Aenderung im Prototyp:** Physische Bewegung, gerichteter Gang/Lauf/Sprung,
+  Boden-/Bank-/Randkollisionen, Standflaechenschatten, begrenzte Folge-Kamera,
+  Zoom, kleiner Schwenk und Abendlicht. Zwei Daumen werden getrennt verarbeitet.
+  Gemaltes Licht bleibt Teil der Originalkulisse statt einer vollen PBR-Neubeleuchtung.
+- **TESTED BEHAVIOR:** Godot importiert und startet ohne Scriptfehler. Laufzeittest
+  prueft Bewegung, Bankblockade/-landung, Sprung, Rueckkehr zum Boden, Bodenschatten
+  auf der Bank, Grenzen, Kamerasicht an beiden Kartenenden und Lichtwechsel.
+  Touchtests speisen viewport-lokale ScreenTouch-/Drag-Ereignisse fuer Joystick
+  und einen zweiten Finger ein. Echte Desktop-OpenGL-Renderings visuell geprueft.
+  Zweiter Agent prueft CODE gemaess Repositoryregel; Kamera-, Multitouch- und
+  Schattenbefunde sind korrigiert und mit Laufzeitchecks ergaenzt.
+- **UNVERIFIED / Grenzen:** Keine APK und keine Android-GPU-/Telefonmessung.
+  Schmaler Laufstreifen, Relief statt frei drehbarer Landschaft; statische
+  Blatt-/Wassermalerei, naeherungsweise Bankverdeckung. Innenraeume, Tueren,
+  Bewohner, Kampf und Living Agent sind noch nicht angebunden. Eine komplette
+  Laufzeitmigration ist durch diesen Prototyp nicht vorweggenommen.
+- **Geschuetzt / Migration:** Keine Aenderung an Android-Spielcode, Figurendesign,
+  Agentenzielen, Reminder-Semantik, Balancing, Progression, Room oder Spielstaenden.
+  Keine Datenmigration. Ruecksetzen durch Revert des Prototype-PR oder Entfernen
+  des isolierten Projektordners; der native Client bleibt startbar.
+- **Naechster Schritt:** Stilabnahme des echten Godot-Ausschnitts, danach gezielte
+  Tiefenmasken fuer Bank/Baeume und eine Verbindung zu einem gemalten Innenraum.
+
 ### 2026-10-10 - Zusammenpassende Figuren beim Animationswechsel (living-atlases-v2)
 
 - **DOCUMENTED INTENT:** Martin meldet nach PR #353, dass die Veraenderungen

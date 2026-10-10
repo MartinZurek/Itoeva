@@ -32,6 +32,21 @@ Abschnitt öffnen:
 
 ## Module
 
+### Separater Godot-Grafikprototyp (10.10.2026)
+
+`prototypes/godot-hd2d/` uebertraegt auf ausdruecklichen Nutzerauftrag alle 28
+gemalten Orte und sechs originale 2D-Wesen in begehbare 3D-Reliefbuehnen.
+`prepare_world.py` exportiert die nativen Welt-/Tuer-/Raum-/Moebel-/Massstabsanker
+in einen JSON-Katalog. WorldStage bildet Geometrie und Verdeckung daraus,
+CharacterActor verwendet 170 Rich-/Living-Zeichnungen und echte Godot-Physik.
+WorldApp und AdventureHud liefern Start-/Aktions-/Einstellungsmenues, zwei
+unabhaengige Finger, Analogtempo und eigene atomare lokale Standortdateien.
+Es ist ein separat startbarer Grafik-/Steuerungsversuch, kein Ersatz fuer die
+Android-Runtime. Keine Verbindung zu Room, Remindern, Living-Agent-Persistenz oder
+Gradle. Das Android-Exportpreset liefert eine separate ARM64-Debug-App mit Paket
+`com.itoeva.godot.hd2d.world`; Schluessel und lokale SDK-Pfade liegen ausserhalb des Projekts.
+Start, Originalasset-Nachweis, Tests und Grenzen stehen in dessen README.
+
 Drei Gradle-Module, ein gemeinsamer Kern:
 
 ```
