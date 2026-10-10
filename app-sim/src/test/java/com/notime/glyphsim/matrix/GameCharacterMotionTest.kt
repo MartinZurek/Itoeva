@@ -79,21 +79,7 @@ class GameCharacterMotionTest {
         assertEquals(125f/128f,foot(.67f,570).y,.00001f)
     }
 
-    @Test fun `Gezeichnete Schwimmphasen erhalten den Rumpf ohne Volumenpuls`() {
-        for(species in AvatarSpecies.entries) {
-            val top=GameCharacterScale.reference(species).top/128f
-            val v=top+(125f/128-top)*.63f
-            fun point(stroke: Float)=GameCharacterMotion.point(species,104,top,.34f,v,0,0,0f,0f,
-                GameCharacterMotion.Response(),GameWater.Swim(stroke,0f,9f,true))
-            assertEquals(point(.25f),point(.75f))
-            assertEquals(.34f,point(.25f).x,0f)
-            assertEquals(v,point(.25f).y,0f)
-            assertEquals(5,GameWater.swimFrame(.25f,PlayControl.Dir.DOWN))
-            assertEquals(7,GameWater.swimFrame(.75f,PlayControl.Dir.DOWN))
-            assertEquals(104,CreatureSprites.motionFrame(CreatureSprites.MotionCue(CreatureSprites.Motion.SWIM,.5f),
-                CreatureSprites.Facing.FRONT))
-        }
-    }
+
 
     @Test fun `Schlaf und Rolle erhalten ihre eigene kompakte Anatomie`() {
         for (species in AvatarSpecies.entries) for (frame in listOf(23, 24, 25, 26, 99, 130, 137)) {
@@ -148,9 +134,9 @@ class GameCharacterMotionTest {
         val vertices = FloatArray(GameCharacterMotion.VERTICES*2)
         for (species in AvatarSpecies.entries) for (frame in listOf(0, 9, 68, 76, 93, 103, 110, 114, 122, 126, 95, 104, 111, 130))
             for (clock in listOf(0L, 431L, 1423L, Long.MAX_VALUE)) for (wind in listOf(-1.5f, 1.5f))
-                for(swim in listOf(null,GameWater.Swim(.25f,0f,9f,true),GameWater.Swim(.75f,0f,9f,true))) {
+                {
                 GameCharacterMotion.fill(vertices, species, frame, GameCharacterScale.reference(species).top/128f,
-                    clock, clock, 2f, wind, GameCharacterMotion.Response(-2.375f, -.8f, wind*.65f, -wind*.3f),swim)
+                    clock, clock, 2f, wind, GameCharacterMotion.Response(-2.375f, -.8f, wind*.65f, -wind*.3f))
                 for (row in 0 until GameCharacterMotion.ROWS) for (column in 0 until GameCharacterMotion.COLUMNS) {
                     val a = (row*(GameCharacterMotion.COLUMNS+1)+column)*2
                     val b = a+2; val c = a+(GameCharacterMotion.COLUMNS+1)*2; val d = c+2

@@ -5942,9 +5942,6 @@ fun DockScreen(
                 gameMood = if (gameMode && !current.fed && current.occurrenceId == null) visualMood else null,
                 gameTempo = if (gameMode && !gameActing) gameMovement.tempo else 1f,
                 gameGaitMs = if (gameMode && !gameActing) gameMovement.gaitMs.toLong() else null,
-                gameSwim = if (gameMode && !current.fed && gameSeat == null) GameWorld.scene(gameRenderedPlace)?.let {
-                    com.notime.glyphsim.matrix.GameWater.swim(it,gamePos,gameMovement.height,gameFacing,avatarWalking,gameElapsed,current.species)
-                } else null,
                 gameRunBlend = if (gameMode && !gameActing) gameMovement.runBlend else null,
                 motionCue = if (current.fed || current.occurrenceId != null || groupGame != null) null else
                     gameSeat?.let { seat -> GameWorld.scene(gameRenderedPlace)?.let {
@@ -6031,7 +6028,6 @@ fun DockScreen(
                     lampOn, tvOn, gameElapsed, gameWorldNow.weather, gameWorldNow.residentItems,
                         gameHandoffId?.let { id -> creatureMotionCue?.let { cue -> id to cue } })
                 }
-                GameWaterForeground(scene, gameCamera, gamePos, gameMovement.height, sceneFade.value, Modifier.fillMaxSize(), gameElapsed, avatarWalking, gameFacing)
                 if (GameWorld.isWorld(scene)) GameWorldForeground(scene, gameCamera,
                     gameWorldEnvironments + (currentPlace to gameEnvironment), gameElapsed,
                     gameWorldNow.minuteOfDay, sceneFade.value, Modifier.fillMaxSize(),gameWorldNow.weather)

@@ -61,14 +61,7 @@ class GameCharacterScaleTest {
         }
     }
 
-    @Test fun `Wasserlinie nutzt den Bodenmassstab und keine Sprite-Rahmenhoehe`() {
-        val beach = GameWorld.scene(Place.BEACH)!!
-        for (pos in listOf(Pos(.5f,.4f),Pos(.5f,1f))) {
-            val rise = GameCharacterScale.waterRise(beach,pos)
-            assertEquals(GameScenes.avatarHeight(beach,pos)*GameWorld.wetness(beach,pos),rise,.001f)
-            for (species in AvatarSpecies.entries) assertTrue(rise < GameCharacterScale.visibleHeight(beach,pos,species))
-        }
-    }
+
 
     @Test fun `Plattform und Kontur teilen Oberkante und Vorderboden bei jeder Tiefe`() {
         for (place in listOf(Place.PARK,Place.LIVING,Place.BEDROOM,Place.KITCHEN,Place.CAFE)) {

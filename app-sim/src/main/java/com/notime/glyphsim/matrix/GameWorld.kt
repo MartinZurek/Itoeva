@@ -186,15 +186,8 @@ object GameWorld {
         while (here != from) { path += here; here = previous.getValue(here) ?: break }
         return path.reversed()
     }
-    /** Ufer und trockene Stege folgen den Koordinaten des neuen Kuestenbildes. */
-    fun shoreY(worldX: Float) = GameWater.shoreY(worldX)
     fun material(scene: GameScenes.Scene, x: Float, y: Float): GameEnvironment.Material? =
-        if (GameWater.contains(scene,x,y)) GameEnvironment.Material.WATER else GameWalkingMap.material(scene,x,y)
-    fun wetness(scene: GameScenes.Scene, pos: Pos): Float {
-        val (x,y) = GameScenes.feet(scene,pos)
-        return if (material(scene,x,y) == GameEnvironment.Material.WATER)
-            (.21f+(y-shoreY(origin(scene.place)+x)).coerceAtLeast(0f)/210f).coerceIn(.21f,.72f) else 0f
-    }
+        GameWalkingMap.material(scene,x,y)
     private fun mapX(worldX: Float) = .055f + .89f * worldX / totalWidth
     val mapPositions: Map<Place, Pair<Float, Float>> = buildMap {
         for (place in places) put(place, mapX(origin(place)+region(place)!!.section/2f) to .62f)

@@ -14,9 +14,7 @@ fun main(args: Array<String>) {
         val clock = tick * 50L
         val speed = when(clock) { in 800L until 1600L -> .8f; in 1600L until 2600L -> 1.9f; else -> 0f }
         val gait = when { clock<800 -> 0L;clock<1600 -> clock-800;clock<2600 -> 800L+((clock-1600)*GameMovement.cadence(1.9f)).toLong();else -> 2100L }
-        val swim = if(clock>=3000) GameWater.Swim((clock-3000)%900/900f,0f,9f,true) else null
         val role = when {
-            swim!=null -> 95
             clock<800 -> (tick/2)%8
             clock<1600 -> 9+(gait/95%8).toInt()
             clock<2600 -> 114+(gait/95%8).toInt()
@@ -28,7 +26,7 @@ fun main(args: Array<String>) {
             val vertices = FloatArray(GameCharacterMotion.VERTICES * 2)
             val response = follow.getValue(species).update(clock, speed, .65f)
             GameCharacterMotion.fill(vertices, species, role, top / 128f, clock,
-                gait, speed, .65f, response,swim)
+                gait, speed, .65f, response)
             File(out, "${species.name.lowercase()}-$tick.csv").writeText(
                 "$role,${GameCharacterScale.reference(species).top},${GameCharacterScale.reference(species).relativeHeight}\n" +
                     vertices.joinToString(","))

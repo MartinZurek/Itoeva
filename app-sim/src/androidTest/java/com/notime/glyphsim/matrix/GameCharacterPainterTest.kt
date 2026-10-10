@@ -18,27 +18,17 @@ import org.junit.runner.RunWith
 /** Der neue native Zeichenweg wird mit echten Android-Bitmaps ausgefuehrt. */
 @RunWith(AndroidJUnit4::class)
 class GameCharacterPainterTest {
-    @Test fun gezeichneteSchwimmboegenWerdenEinmalMitAllenAnsichtenGeladen() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        for (species in AvatarSpecies.entries) {
-            CreatureSheets.get(context,species)
-            val sheet=CreatureSheets.swimming(context,species)!!
-            assertSame(sheet,CreatureSheets.swimming(context,species))
-            assertEquals(256,sheet.frameSize); assertEquals(12,sheet.frames.size)
-            for (row in 0..2) {
-                val hashes=(0..3).map { phase ->
-                    val image=sheet.frames[row*4+phase].asAndroidBitmap()
-                    val pixels=IntArray(256*256)
-                    image.getPixels(pixels,0,256,0,0,256,256)
-                    assertTrue(species.name,pixels.count { (it ushr 24)>128 }>300)
-                    assertTrue(pixels.take(256).all { (it ushr 24)==0 })
-                    assertTrue(pixels.takeLast(256).all { (it ushr 24)==0 })
-                    pixels.contentHashCode()
-                }
-                assertEquals("$species: vier echte Posen",4,hashes.distinct().size)
-            }
+    @Test fun gameLaedtNurLandbewegungUndEnthaeltKeineSchwimmAssets() {
+        val context=InstrumentationRegistry.getInstrumentation().targetContext
+        assertTrue(context.assets.list("creatures").orEmpty().none { it.endsWith("-swim.png") })
+        for(species in AvatarSpecies.entries) {
+            val sheet=CreatureSheets.get(context,species)!!
+            assertEquals(128,sheet.frameSize)
+            assertEquals(CreatureSprites.Living.TOTAL,sheet.frames.size)
+            assertSame(sheet,CreatureSheets.get(context,species))
         }
     }
+
     @Test fun alleWesenBehaltenTransparenteRaenderUndDenGemeinsamenBoden() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         for (species in AvatarSpecies.entries) {
@@ -46,7 +36,7 @@ class GameCharacterPainterTest {
             assertEquals(sheet.frames.size, sheet.tops.size)
             val painter = GameCharacterPainter()
             for (frame in listOf(0, 9, 27, 32, 68, 76, 93, 103, 110, 114, 125, 137, 95, 104, 111)) {
-                painter.update(1234,456,2f,1.5f,if(frame in listOf(95,104,111)) GameWater.Swim(.25f,0f,9f,true) else null)
+                painter.update(1234,456,2f,1.5f)
                 val output = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
                 try {
                     CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr,

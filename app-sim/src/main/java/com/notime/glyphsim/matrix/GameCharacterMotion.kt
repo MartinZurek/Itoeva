@@ -106,11 +106,7 @@ object GameCharacterMotion {
 
     /** Koerper-/Stoffkoordinaten gehoeren zur ausgewaehlten Zeichnung, nie zur Weltposition. */
     fun point(species: AvatarSpecies, frame: Int, top: Float, u: Float, v: Float,
-        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response,
-        swim: GameWater.Swim? = null): Point {
-        // Schwimmglieder sind im eigenen Bogen gezeichnet. Eine Rumpfverformung
-        // machte daraus bislang ein Aufblasen und Entleeren statt einen Zug.
-        if (swim != null) return Point(u, v)
+        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response): Point {
         val view = view(frame)
         if (view == View.COMPACT) return Point(u, v)
         if (v >= 120f / 128f) return locomotion(Point(u,v),species,frame,top,u,v,gaitMs,speed)
@@ -190,13 +186,12 @@ object GameCharacterMotion {
     }
 
     fun fill(vertices: FloatArray, species: AvatarSpecies, frame: Int, top: Float,
-        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response,
-        swim: GameWater.Swim? = null) {
+        clock: Long, gaitMs: Long, speed: Float, wind: Float, response: Response) {
         require(vertices.size == VERTICES * 2)
         var i = 0
         for (row in 0..ROWS) for (column in 0..COLUMNS) {
             val p = point(species, frame, top, column.toFloat() / COLUMNS, row.toFloat() / ROWS,
-                clock, gaitMs, speed, wind, response,swim)
+                clock, gaitMs, speed, wind, response)
             vertices[i++] = p.x
             vertices[i++] = p.y
         }

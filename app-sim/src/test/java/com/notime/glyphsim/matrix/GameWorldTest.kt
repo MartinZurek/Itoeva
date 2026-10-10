@@ -30,7 +30,6 @@ class GameWorldTest {
             assertEquals(GameEnvironment.Material.STONE,GameWorld.material(scene,feet.first,feet.second))
         }
         assertTrue(GameScenes.feet(scene,Pos(.43f,1f)).second < 450f)
-        assertEquals(0f,GameWorld.wetness(scene,Pos(.43f,1f)),0f)
     }
     @Test fun `alle sieben Bilder sind vorhanden mit passender Perspektive und Texturgroesse`() {
         val root = listOf(java.io.File("src/game/assets"), java.io.File("app-sim/src/game/assets")).first { it.isDirectory }
@@ -178,12 +177,11 @@ class GameWorldTest {
         }
         assertEquals(distance(Place.STREET), distance(Place.CAMP), .001f)
     }
-    @Test fun `alle Aussenorte teilen die Kamera und tieferes Wasser oeffnet die Nahansicht`() {
+    @Test fun `alle Aussenorte teilen die Kamera ohne Schwimmzoom`() {
         assertEquals(1, GameWorld.places.map { GameCamera.key(GameWorld.scene(it)!!) }.distinct().size)
         val beach = GameWorld.scene(Place.BEACH)!!
         val back = GameCamera.tick(GameCamera.State(), beach, Pos(.5f,0f), PlayControl.Stick(),960f,540f,0L)
         val front = GameCamera.tick(GameCamera.State(), beach, Pos(.5f,1f), PlayControl.Stick(),960f,540f,0L)
-        assertTrue(GameWorld.wetness(beach,Pos(.5f,1f)) > GameWorld.wetness(beach,Pos(.5f,0f)))
-        assertTrue(front.zoom > back.zoom)
+        assertEquals(back.zoom,front.zoom,0f)
     }
 }

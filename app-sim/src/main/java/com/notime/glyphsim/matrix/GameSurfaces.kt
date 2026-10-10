@@ -77,7 +77,7 @@ object GameSurfaces {
         fun along(waypoint: PlayControl.Pos): PlayControl.Pos {
             val dx = waypoint.x - from.x
             val dy = waypoint.depth - from.depth
-            val seconds = dt.coerceIn(0L, 50L) / 1000f * GameWater.drag(scene,from)
+            val seconds = dt.coerceIn(0L, 50L) / 1000f
             val tx = if (kotlin.math.abs(dx) < .00001f) 1f else seconds * PlayControl.SPEED_X / kotlin.math.abs(dx)
             val ty = if (kotlin.math.abs(dy) < .00001f) 1f else seconds * PlayControl.SPEED_DEPTH * .5f / kotlin.math.abs(dy)
             val t = minOf(1f, tx, ty)

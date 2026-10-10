@@ -27,13 +27,6 @@ object GameTerrain {
         }
         val measured=GameWalkingMap.band(scene,x)
         var back=measured?.first ?: 495f; var front=measured?.second ?: 562f
-        if (scene.asset == "world/coast.png") { back=450f; front=615f }
-        // Die letzte Wasserstrecke wird vor der trockenen Anschlussnaht zum Ufer.
-        val wx=GameWorld.origin(scene.place)+x*GameWorld.region(scene.place)!!.section
-        if (scene.asset == "world/coast.png") {
-            val t=((wx-1800f)/120f).coerceIn(0f,1f)
-            back += (495f-back)*t; front += (562f-front)*t
-        }
         for (door in GameWorld.passages(scene.place).filter { it.door }) {
             val p=GameScenes.feet(scene,door.pos)
             val distance=abs(x-door.pos.x)
@@ -77,9 +70,6 @@ object GameTerrain {
     }
     fun command(scene: GameScenes.Scene,state: GameMovement.State,command: GameMovement.Command,
         input: PlayControl.Stick,surfaces: List<GameMovement.Surface>): GameMovement.State {
-        // Im tiefen Wasser ruht man durch Wassertreten; Rollen und Bodensitzen haben dort keinen Halt.
-        if(state.height<=0f && GameWorld.wetness(scene,state.pos)>=.20f && command!=GameMovement.Command.JUMP)
-            return state.copy(action=null,elapsed=0L,velocity=PlayControl.Stick())
         return GameMovement.command(state,command,input,surfaces,GameCharacterScale.MAX_STEP_HEIGHT)
     }
     /** Game-Adapter des bestehenden Motors, keine zweite Bewegungssimulation. */
@@ -88,8 +78,7 @@ object GameTerrain {
         request: Pair<GameMovement.Command, PlayControl.Stick>? = null): GameMovement.Result {
         // Der UI-Befehl wird erst nach Orts-/Positionsabgleich im selben Motorbild verbraucht.
         val controlled = request?.let { command(scene, state, it.first, it.second, surfaces) } ?: state
-        val drag=if(controlled.height>0f) 1f else GameWater.drag(scene,controlled.pos)
-        val result=GameMovement.tick(controlled,input.copy(x=input.x*drag,y=input.y*drag),dt,surfaces,
+        val result=GameMovement.tick(controlled,input,dt,surfaces,
             immediateExits=GameWorld.immediateExits(scene.place), horizontalScale=GameWorld.horizontalScale(scene.place),
             maxStepHeight=GameCharacterScale.MAX_STEP_HEIGHT,sweptJumpCollision=true)
         var next=result.state

@@ -6,6 +6,44 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GamePhysicsTest {
+    @Test fun `Frueheres Schwimmgebiet hat nur trockenen Laufboden und feste Vordergrenze`() {
+        for(place in listOf(Place.POND,Place.BEACH,Place.SWAMP,Place.JUNGLE)) {
+            val scene=GameWorld.scene(place)!!
+            for(i in 0..20) {
+                val x=i/20f
+                val safe=GameTerrain.clamp(scene,PlayControl.Pos(x,1f))
+                assertTrue(GameTerrain.valid(scene,safe))
+                assertTrue(GameScenes.feet(scene,safe).second<=562.001f)
+                assertFalse(GameTerrain.valid(scene,GameScenes.posAt(scene,x*480f,600f)))
+                val feet=GameScenes.feet(scene,safe)
+                assertNotEquals(GameEnvironment.Material.WATER,GameWorld.material(scene,feet.first,feet.second))
+            }
+        }
+    }
+    @Test fun `Alte Schwimmposition bleibt lesbar und wird beim Einstieg auf Land begrenzt`() {
+        val original=GameAdventure.State(place=Place.BEACH,pos=PlayControl.Pos(.5f,.95f))
+        val decoded=GameAdventure.decode(GameAdventure.encode(original))
+        assertEquals(original,decoded)
+        val safe=GameAdventure.safePosition(decoded.place,decoded.pos)
+        assertTrue(GameTerrain.valid(GameWorld.scene(decoded.place)!!,safe))
+        assertTrue(safe.depth<decoded.pos.depth)
+        assertEquals(original.backpack,decoded.backpack)
+    }
+    @Test fun `Trockener Kuestenweg ist in beiden Richtungen durchgehend begehbar`() {
+        for(place in listOf(Place.POND,Place.BEACH,Place.SWAMP,Place.JUNGLE)) {
+            val scene=GameWorld.scene(place)!!
+            for(forward in listOf(true,false)) {
+                val y=when(place) { Place.POND -> 550f; Place.JUNGLE -> 500f; else -> 530f }
+                var pos=GameTerrain.clamp(scene,PlayControl.Pos(if(forward) .02f else .98f,(y-scene.farY)/(scene.nearY-scene.farY)))
+                val target=GameTerrain.clamp(scene,pos.copy(x=if(forward) .98f else .02f))
+                repeat(600) {
+                    val next=GameSurfaces.approach(scene,pos,target,50L)
+                    assertTrue(GameTerrain.valid(scene,next));pos=next
+                }
+                assertEquals("$place/$forward",target,pos)
+            }
+        }
+    }
     @Test fun `Sperrinsel wird auch zwischen zwei legalen Endpunkten erkannt`() {
         val scene=GameWorld.scene(Place.PARK)!!
         val from=GameScenes.posAt(scene,230f,550f)
@@ -33,18 +71,7 @@ class GamePhysicsTest {
         val next=GameMovement.tick(GameMovement.State(pos=from),PlayControl.Stick(1f,0f),50,listOf(thin)).state
         assertTrue(next.pos.x<thin.x0);assertNull(next.support)
     }
-    @Test fun `Wasser beginnt sofort mit Schwimmen statt einem aufrechten Laufschritt`() {
-        val scene=GameWorld.scene(Place.BEACH)!!
-        val x=240f;val shore=GameWater.shoreY(GameWorld.origin(scene.place)+x)
-        val land=GameScenes.posAt(scene,x,shore-.5f)
-        val water=GameScenes.posAt(scene,x,shore+.5f)
-        assertEquals(0f,GameWorld.wetness(scene,land),0f)
-        assertTrue(GameWorld.wetness(scene,water)>=.20f)
-        assertNotNull(GameWater.swim(scene,water,0f,PlayControl.Dir.RIGHT,true,0))
-        val resting=GameTerrain.command(scene,GameMovement.State(pos=water),GameMovement.Command.REST,
-            PlayControl.Stick(),emptyList())
-        assertNull(resting.action)
-    }
+
     @Test fun `Nur vermessenes Gras reagiert und federt nach dem Schritt zurueck`() {
         val scene=GameWorld.scene(Place.PARK)!!
         val x=100f;val y=515f
@@ -71,23 +98,8 @@ class GamePhysicsTest {
         assertFalse(GameTerrain.valid(scene,PlayControl.Pos(.5f,1.05f)))
         assertFalse(GameTerrain.valid(scene,GameScenes.posAt(scene,240f,130f)))
     }
-    @Test fun `Schwimmbogen zeigt vier Zugphasen aus jeder Blickrichtung`() {
-        for ((dir,row) in listOf(PlayControl.Dir.LEFT to 0, PlayControl.Dir.RIGHT to 0,
-                PlayControl.Dir.DOWN to 1, PlayControl.Dir.UP to 2)) {
-            assertEquals((row*4 until row*4+4).toList(),
-                listOf(0f,.25f,.5f,.75f).map { GameWater.swimFrame(it,dir) })
-            assertEquals(row*4,GameWater.swimFrame(1f,dir))
-        }
-    }
-    @Test fun `Wellenkaemme sind gerastert zeitabhaengig und endlich`() {
-        val before=(0..60).map { GameWater.crest(it,48,0) }
-        val after=(0..60).map { GameWater.crest(it,48,1000) }
-        assertTrue(before.zip(after).count { (a,b) -> a != b }>40)
-        for (wave in before+after) {
-            assertEquals(0f,wave.x%2f,0f); assertEquals(0f,wave.y%2f,0f)
-            assertTrue(wave.width in 4f..18f); assertTrue(wave.light in 0f.. .30f)
-        }
-    }
+
+
     @Test fun `Ein UI Sprung wird nach dem Positionsabgleich im Motorbild ausgefuehrt`() {
         val scene=GameWorld.scene(PlayScene.Place.PARK)!!
         val surfaces=GameSurfaces.painted(scene)
@@ -157,40 +169,18 @@ class GamePhysicsTest {
         assertTrue(safe.depth<decoded.pos.depth)
         assertEquals(original.backpack,decoded.backpack)
     }
-    @Test fun `Gemalte Stege und Wasserfelsen spritzen nicht wie Wasser`() {
-        val pond=GameWorld.scene(Place.POND)!!
-        assertFalse(GameWater.contains(pond,200f,480f))
-        assertTrue(GameWater.contains(pond,300f,600f))
-        val beach=GameWorld.scene(Place.BEACH)!!
-        assertFalse(GameWater.contains(beach,30f,610f))
-        assertTrue(GameWater.contains(beach,180f,610f))
-        assertTrue(GameSurfaces.painted(beach).any { it.id=="beach-water-rock" })
-    }
-    @Test fun `Wassertiefe ist an inneren Ortsgrenzen dieselbe`() {
-        val a=GameWorld.scene(Place.BEACH)!!;val b=GameWorld.scene(Place.SWAMP)!!
-        assertEquals(GameWorld.wetness(a,PlayControl.Pos(1f,.8f)),GameWorld.wetness(b,PlayControl.Pos(0f,.8f)),.001f)
-        assertTrue(abs(GameWater.displacement(480f,600f,100)-GameWater.displacement(480f,600f,800))>.1f)
-    }
-    @Test fun `Schwimmen hat Zug und Ruhephase statt Laufschritt und endet beim Sprung`() {
-        val scene=GameWorld.scene(Place.BEACH)!!;val pos=PlayControl.Pos(.5f,.9f)
-        val first=GameWater.swim(scene,pos,0f,PlayControl.Dir.RIGHT,true,100)!!
-        val next=GameWater.swim(scene,pos,0f,PlayControl.Dir.RIGHT,true,600)!!
-        assertEquals(CreatureSprites.Motion.SWIM,first.cue.motion)
-        assertNotEquals(first.stroke,next.stroke);assertNotEquals(first.bob,next.bob)
-        assertTrue(first.angle in 5f..12f)
-        assertNotNull(GameWater.swim(scene,pos,0f,PlayControl.Dir.DOWN,false,100))
-        assertNull(GameWater.swim(scene,pos,10f,PlayControl.Dir.DOWN,true,100))
-        assertNull(GameWater.swim(GameWorld.scene(Place.PARK)!!,pos,0f,PlayControl.Dir.DOWN,true,100))
-    }
-    @Test fun `Wasser bremst die tatsaechliche Bewegung`() {
+
+
+
+    @Test fun `Kuestenweg hat auf beiden Tiefen dasselbe Tempo`() {
         val scene=GameWorld.scene(Place.BEACH)!!;val species=AvatarSpecies.FENNEC
         fun travel(depth: Float): Float {
-            var state=GameMovement.State(pos=PlayControl.Pos(.35f,depth))
+            var state=GameMovement.State(pos=GameTerrain.clamp(scene,PlayControl.Pos(.35f,depth)))
             val start=GameScenes.feet(scene,state.pos).first
             repeat(10) { state=GameTerrain.tick(scene,species,state,PlayControl.Stick(.4f,0f),50,emptyList()).state }
             return GameScenes.feet(scene,state.pos).first-start
         }
-        assertTrue(travel(.9f)<travel(.25f)*.9f)
+        assertEquals(travel(.25f),travel(.9f),.001f)
     }
     @Test fun `Sprung durch hohen Gegenstand stoppt und faellt auf Boden`() {
         val obstacle=GameMovement.Surface("wall",.48f,.51f,0f,1f,160f)
@@ -237,13 +227,7 @@ class GamePhysicsTest {
         assertEquals(0f,GameDoors.opening(closing,reverse,840),0f)
         assertEquals(0f,GameDoors.opening(null,door,1000),0f)
     }
-    @Test fun `Wassermaske laesst Land und starre Stege unveraendert`() {
-        val runs=GameWater.measure("world/coast.png") { _,_ -> 0xFF70B0D0.toInt() }
-        assertTrue(runs.isNotEmpty())
-        assertFalse(runs.any { it.y in 441..494 && 200 in it.x0 until it.x1 })
-        assertFalse(runs.any { it.y<300 })
-        assertTrue(runs.size<4000)
-    }
+
     @Test fun `Randdruck hat weder Laufzyklus noch neue Schrittspuren`() {
         val scene=GameWorld.scene(Place.PARK)!!
         val p=GameTerrain.clamp(scene,PlayControl.Pos(.5f,1f))
@@ -269,23 +253,18 @@ class GamePhysicsTest {
         val landed=falling.copy(action=null,arc=null,height=0f)
         val contact=GameEnvironment.tick(env,scene,falling,landed,16,null).contacts.single()
         assertEquals(GameScenes.feet(scene,landed.pos).first,contact.x,.001f)
-        assertTrue(contact.y<GameScenes.feet(scene,landed.pos).second)
+        assertEquals(GameScenes.feet(scene,landed.pos).second,contact.y,.001f)
     }
-    @Test fun `Gemeinsame Uebergabegeste hat auch im Wasser Vorrang`() {
-        val swim=GameWater.Swim(.2f,1f,32f,true)
-        val gesture=CreatureSprites.MotionCue(CreatureSprites.Motion.KNEEL,.65f)
-        assertEquals(gesture,GameWater.motion(swim,gesture))
-        assertEquals(swim.cue,GameWater.motion(swim,null))
-    }
+
     @Test fun `Kuechenflur verwendet wirkliche Tuer statt Kuehlschrankwand`() {
         val doors=GameWorld.passages(Place.KITCHEN).filter { it.door }
         assertEquals(2,doors.size)
         assertEquals(GameDoors.aperture(Place.KITCHEN,Place.LIVING),GameDoors.aperture(Place.KITCHEN,Place.CRAFT))
         assertEquals(setOf(Place.LIVING,Place.CRAFT),GameDoors.choices(doors.first()).map { it.to }.toSet())
         val scene=GameWorld.scene(Place.BEACH)!!
-        val state=GameMovement.State(pos=PlayControl.Pos(.5f,.9f))
-        assertNull(GameTerrain.command(scene,state,GameMovement.Command.ROLL,PlayControl.Stick(),emptyList()).action)
-        assertNull(GameTerrain.command(scene,state,GameMovement.Command.REST,PlayControl.Stick(),emptyList()).action)
+        val state=GameMovement.State(pos=GameTerrain.clamp(scene,PlayControl.Pos(.5f,.9f)))
+        assertEquals(GameMovement.Action.ROLL,GameTerrain.command(scene,state,GameMovement.Command.ROLL,PlayControl.Stick(),emptyList()).action)
+        assertEquals(GameMovement.Action.SIT,GameTerrain.command(scene,state,GameMovement.Command.REST,PlayControl.Stick(),emptyList()).action)
     }
 
     @Test fun `Vorladereihenfolge enthaelt alle Bilder einmal und beginnt am gespeicherten Ort`() {
@@ -354,13 +333,7 @@ class GamePhysicsTest {
         assertNull(GameWorld.passageAtVisible(current, GameWorld.origin(shop.from) + feet.first, 300f))
         assertNull(GameWorld.passageAtVisible(GameWorld.scene(Place.BEDROOM)!!, feet.first, feet.second - 70f))
     }
-    @Test fun `Vorderes Wasser veraendert sich sichtbar innerhalb einer Viertelsekunde`() {
-        val changes = (0..40).map { x ->
-            abs(GameWater.displacement(x * 45f, 590f, 250) - GameWater.displacement(x * 45f, 590f, 0))
-        }
-        assertTrue(changes.average() > 1.5)
-        assertTrue((0..40).all { abs(GameWater.displacement(it * 45f, 590f, 250)) <= 5f })
-    }
+
 
     @Test fun `Tuer reagiert auch im Bodensitzen waehrend laufende Spruenge warten`() {
         assertTrue(GameDoors.canEnter(GameMovement.State(action = GameMovement.Action.REST)))

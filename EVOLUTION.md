@@ -648,6 +648,29 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
 
 ## Evolution History – dauerhaft zu dokumentierende Änderungen und Erkenntnisse
 
+### 2026-10-10 – Vordergrundteich und Schwimmen entfernen
+
+- **DOCUMENTED INTENT:** Martin will wegen langsamen Ladens und Speicherbedarf
+  den Vordergrundteich, das Schwimmterritorium und alle Schwimmfunktionen entfernen.
+  Angeln bleibt spaeter. Zuerst die Moeglichkeit echter 3D-Figuren pruefen.
+- **FACT / Entscheidung:** Kuestenbild und erster Anschluss zeigen trockenen Boden.
+  Schwimm-Sheets/Cache, Wasserverformung, Auftrieb, Unterwasserverdeckung, Drag,
+  Bugwellen und Schwimmzoom entfallen. Der Laufboden endet vor dem alten Wasserbereich.
+  Alte Positionen bleiben lesbar und werden beim Einstieg auf Land begrenzt.
+- **FACT / 3D:** Das bestehende Bitmapnetz und die Offline-3D-Skripte liefern im
+  Spiel keine echte 3D-Figur. Filament in Kotlin oder Godot koennen echte Modelle
+  darstellen. Ein einzelner Fennec mit fester 2,5D-Kamera ist der empfohlene Test;
+  Modellqualitaet, Rig und Geraeteleistung sind damit noch nicht nachgewiesen.
+- **TESTED BEHAVIOR:** 1.049 reine Kotlin-Tests bestanden; trockene Vordergrenze,
+  gespeicherte Wasserposition, durchgehender Kuestenanlauf, Landtempo und Sitz-/Rollbefehle.
+  Nativer Test fuer fehlende Schwimmassets und erhaltene Land-Sheets.
+- **UNVERIFIED:** Android-CI und Telefonmessung separat; keine gemessene Ladezeit,
+  keine neue APK, kein 3D-Prototyp oder Engine-Umbau. Rechnerisch entfallen 18 MiB
+  ARGB-Pixelpuffer der 72 Schwimmbilder, ohne GPU-/Decoderkopien.
+- **Bereiche/Ruecksetzung:** Game-Darstellung, Bilder, reine Physikadapter und
+  Tests; kein Speicherformat-, Skillbaum-, Reminder- oder Workfloweingriff.
+  Ruecksetzung auf `302d83c`. Details: `docs/itoeva2-remove-swimming.md`.
+
 ### 2026-10-10 – Warme Originalmalerei und detailliertere unsichtbare Laufkarte
 
 - **DOCUMENTED INTENT:** Martin will warme Hobbit-artige Innenraeume passend zur

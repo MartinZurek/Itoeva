@@ -1,5 +1,17 @@
 # Uebergabe
 
+## Aktuell: Vordergrundteich und Schwimmen entfallen (10.10.2026)
+
+Martins neuer Auftrag ersetzt den Vordergrundteich durch trockenes Kuestengelaende
+und entfernt Schwimmterritorium, Schwimmassets und die komplette Game-Schwimmlogik.
+Auf PR #352 / `302d83c` aufgebaut. Alte Wasserpositionen bleiben im Codec erhalten,
+werden beim Spieleinstieg aber auf den trockenen Laufboden gesetzt. Historische
+Schwimmbeschreibungen darunter sind ab diesem Schnitt ueberholt.
+Umsetzung, Pruefgrenzen und 3D-Einordnung:
+[`docs/itoeva2-remove-swimming.md`](docs/itoeva2-remove-swimming.md).
+Echte 3D-Figuren sind mit Filament in Kotlin oder Godot moeglich; noch kein
+Modell-/Engine-Umbau. Angeln bleibt spaeter. CI und Telefonpruefung vor neuer APK.
+
 ## Aktuell: Originalmalerei im Innenraum und Laufkarte (10.10.2026)
 
 Martins anschliessender Auftrag uebertraegt den warmen gemalten Stil tatsaechlich

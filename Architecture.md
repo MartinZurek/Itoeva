@@ -616,8 +616,8 @@ docs/itoeva2-world-polish-and-encounters.md.
 ### Game: Physik und Asset-Vorbereitung (09.10.2026)
 
 GameTerrain begrenzt den bestehenden GameMovement-Motor auf den gemalten Boden und aktiviert
-im Game-Client durchlaufene Sprungkollision. GameWater teilt Ufer/Steg-/Felsmaterial,
-einmalig vermessene Wasserausschnitte und die Schwimmpose von Spieler/Bewohnern. Kontakte
+im Game-Client durchlaufene Sprungkollision. Der Kuestenvordergrund ist seit dem Auftrag vom 10.10. trocken; Schwimmassets,
+Wasserverformung, Schwimmpose und Auftrieb wurden entfernt. Kontakte
 folgen wirklicher Bewegung. GameDoors verbindet gemalte Oeffnung, Treffer, Anlauf und
 420/320-ms-Tuerbewegung; gemeinsame Flurtueren verwenden eine Auswahl oberhalb der Touchsteuerung.
 Bewegte Tuerblaetter teilen mit GameAtmosphere die tatsaechlich sichtbare Bildquelle samt
@@ -645,8 +645,8 @@ animiert. Die Innenraumkamera vergroessert um 1,12 und schneidet leeren Vorderbo
 `GameWalkingMap` teilt unsichtbare Bodenprofile/Sperr-/Graspolygone zwischen
 `GameTerrain`, `GameSurfaces` und Kontaktzeichnung. Der Anlauf benutzt Korridorknoten
 und Sperrinsel-Ecken; Bodenpfade werden durchlaufen, Moebel analytisch entlang des
-Schritts geprueft. Vorhandene Bruecken-, Ufer- und Stegmasken bleiben Grundlage.
-Wasser aktiviert sofort Schwimmen, Gras reagiert auf abklingende Fusskontakte und
+Schritts geprueft. Vorhandene Bruecken- und Stegkoerper bleiben Grundlage.
+Der Kuestenlaufboden endet vor dem ehemaligen Schwimmterritorium; Gras reagiert auf abklingende Fusskontakte und
 verdeckt die Pfoten. Details: `docs/itoeva2-painted-interiors-walking-map.md`.
 
 Rechte Padbefehle liegen bis zum naechsten Motorbild vor und werden nach dem
