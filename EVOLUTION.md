@@ -820,6 +820,44 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-10 - Zusammenpassende Figuren beim Animationswechsel (living-atlases-v2)
+
+- **DOCUMENTED INTENT:** Martin meldet nach PR #353, dass die Veraenderungen
+  der Figuren nicht genau zusammenpassen. Der direkte Vergleich von altem
+  Gang/Blinzeln und neuen Ruheposen bestaetigt Proportions- und Stilbrueche.
+- **Beobachteter Fehler:** Die 128px-Quellzellen begrenzten die Zeichnung auf
+  74px, bevor der Spieleexport sie wieder bis 109px vergroesserte. Ausserdem
+  erhielt die neue Familie eine eigene 63-Farben-Palette, obwohl die vorhandenen
+  gezeichneten Animationen deutlich mehr Farbwerte haben. Besonders Fennecs
+  grosser Kopf/kurzer Koerper und Wyrmlings Kopfform fielen beim Wechsel auf.
+- **Aenderung:** Die sechs 4x8-Master mit 256px-Zellen behalten die Aufloesung
+  bis zum einmaligen Herunterskalieren auf die 128px-Spielbilder. Alle neuen
+  Spiel-/Vorschaubilder nutzen ausschliesslich Farbwerte aus dem vorhandenen
+  Bogen derselben Figur. Fennec und Wyrmling sind anhand echter Spiel-Frames
+  korrigiert; Wyrmlings vertauschte Wendebilder sind einsortiert. Die kleine
+  4x8-Vorschau bleibt vorhanden, ist aber keine Quelle fuer das Spielbild mehr.
+- **Geschuetzt:** Die 138 vorhandenen Rollen, Gang-/Aktionszeiten, Futterwirkung,
+  Reminder, Agentenziele, Spielphysik und Speicherung bleiben unberuehrt.
+- **Evidenz:** Assetpruefung fuer alle 192 Bilder, feste Bodenkontakte, mindestens
+  20 Prozent Rand, keine Hochskalierung, identische bestehende Farbwerte,
+  Frontgroesse innerhalb acht Prozent der vorhandenen Frontansicht und
+  byte-identische Regeneration. 997 lokale Kotlin-Tests und Android-CI auf dem
+  Bildstand von PR #354 bestanden, inklusive API 26/35, Lint und R8. Ein eigener
+  CLI-Importtest prueft die Wyrmling-Reihenfolge und ausschliesslich Pufflings
+  separate Sitzkorrektur; diese v2-Optionen sind jetzt auch CLI-Standard.
+  Der Vergleich zeigt jetzt ausdruecklich alte/neue Bilder im Wechsel, nicht
+  nur die neuen Posen isoliert.
+- **UNVERIFIED / Grenzen:** Das sind separat gezeichnete Bilder, kein gemeinsam
+  geriggtes Koerpermodell: feine Gesichts-/Zubehoerdetails und einzelne
+  Dreiviertel-Blickposen bleiben visuell zu beurteilen. Vorschau ist keine
+  APK-Aufnahme; Handyabnahme bleibt offen. Kein Anspruch auf pixelidentische
+  Anatomie allein aus bestandenen technischen Tests. Die urspruenglichen drei
+  Korrekturprompt-Wortlaute waren nicht zuverlaessig gespeichert; die Dokumentation
+  enthaelt daher ausdruecklich rekonstruierte Anweisungen, keine Original-Toollogs.
+- **Ruecksetzung / naechster Schritt:** Ruecknahme dieses Folge-Commits braucht
+  keine Migration. Vergleich in `tools/character-art/living-coherence-comparison.png`
+  und `living-atlas-preview.gif`, anschliessend dieselben Wechsel am Handy ansehen.
+
 ### 2026-10-10 - Gezeichnete Ruhe und Bewegungsuebergaenge (living-atlases-v1)
 
 - **DOCUMENTED INTENT:** Martin beauftragt sechs neue 4x8-Atlanten nach seinen
