@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fennec_3d_open">Test 3D Fennec</string>
+    <string name="fennec_3d_caption">Fennec · 3D prototype · rotate with the slider</string>
+    <string name="fennec_3d_rotate">Rotate Fennec</string>
+    <string name="fennec_3d_idle">Stand</string>
+    <string name="fennec_3d_walk">Walk</string>
+    <string name="fennec_3d_run">Run</string>
+    <string name="fennec_3d_pause">Pause</string>
+    <string name="fennec_3d_resume">Resume</string>
+    <string name="fennec_3d_back">Back</string>
+    <string name="fennec_3d_error">3D test could not start: %1$s</string>
+</resources>

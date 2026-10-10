@@ -1,6 +1,7 @@
 package com.notime.glyphsim.ui
 
 import android.graphics.BitmapFactory
+import android.content.Intent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import com.notime.glyphsim.matrix.AvatarSpecies
 import com.notime.glyphsim.matrix.CreatureSheets
 import com.notime.glyphsim.matrix.CreatureSprites
+import com.notime.glyphsim.prototype.Fennec3DActivity
+import com.notime.glyphsim.R
 import kotlinx.coroutines.delay
 
 private val PANEL = Color(0xE6101C26)
@@ -137,6 +140,9 @@ fun GameStartScreen(onStart: () -> Unit) {
                     AvatarSpeciesPrefs.set(context, selected)
                     onStart()
                 }
+            }
+            StartButton(stringResource(R.string.fennec_3d_open), highlighted = false) {
+                context.startActivity(Intent(context, Fennec3DActivity::class.java))
             }
         }
     }

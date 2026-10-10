@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Itoeva · 3D-Fennec</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#182322;color:#f2ddbb;font:16px system-ui,sans-serif}
+main{max-width:1080px;margin:auto;padding:24px}header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+h1{font-size:28px;margin:0 0 6px}p{color:#b3c6be;margin:4px 0 16px;line-height:1.5}.tag{font-size:12px;letter-spacing:.12em;color:#84c4ad}
+canvas{display:block;width:100%;height:min(65vh,600px);min-height:300px;border-radius:20px;background:#1b2626}
+.controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:16px 0}button,a{font:inherit;color:#f2ddbb;border:1px solid #587466;background:#25382f;border-radius:10px;padding:10px 16px;cursor:pointer;text-decoration:none}
+button[aria-pressed=true]{background:#3a5c45;border-color:#efd099}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #efd099;outline-offset:3px}label{display:block;color:#b3c6be}input{width:100%;accent-color:#b6d5ad}
+small{color:#9bb2a7}#error{color:#ffb7a4}details{margin-top:20px}summary{cursor:pointer;color:#b3c6be}details p{font-size:14px;margin-top:10px}.views button{font-size:14px;padding:8px 12px}
+@media(max-width:600px){main{padding:14px}header{display:block}h1{font-size:24px}.controls{gap:7px}button,a{padding:9px 11px}}
+</style>
+<main><header><div><div class="tag">ITOEVA · MODELLTEST</div><h1>Fennec in drei Dimensionen</h1></div><small id="size"></small></header>
+<p>Drehe die Figur und prüfe Körper, Ohren, Mantel und Schwanz aus jeder Richtung.</p>
+<canvas id="scene" aria-label="Drehbarer dreidimensionaler Fennec" role="img"></canvas><p id="error" role="alert"></p>
+<div class="controls" id="motion"><button data-clip="0" aria-pressed="true">Stehen</button><button data-clip="1" aria-pressed="false">Gehen</button><button data-clip="2" aria-pressed="false">Laufen</button><button id="pause" aria-pressed="false">Pause</button><button id="turn" aria-pressed="false">Rundum drehen</button></div>
+<label for="angle">Ansicht drehen <span id="degrees"></span></label><input id="angle" type="range" min="-180" max="180" value="-15">
+<div class="controls views"><button data-yaw="28">Vorne</button><button data-yaw="-15">Dreiviertel</button><button data-yaw="-62">Seite</button><button data-yaw="-152">Hinten</button><a id="download" download="fennec-prototype.glb">3D-Modell herunterladen</a></div>
+<details><summary>Was dieser Prototyp zeigt</summary><p>Das ist dasselbe GLB-Modell wie im Kotlin-Test, mit echter Geometrie, Tiefenprüfung und drei Gelenkanimationen. Die Kamera bleibt orthografisch. Körperteile bewegen sich an Gelenken; ein weiches Haut-Rig und der gemalte Oberflächenstil der Vorlage sind weitere Arbeitsschritte. Der Test ersetzt noch keine Figur im Spiel.</p></details></main>
+<script>
+'use strict';
+const encoded='__MODEL_BASE64__';
+const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
+document.querySelector('#size').textContent=(bytes.length/1024/1024).toFixed(2)+' MB · echtes 3D-Modell';
+document.querySelector('#download').href=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));
+const canvas=document.querySelector('canvas'),error=document.querySelector('#error');
+const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
+if(!gl){error.textContent='Dieser Browser bietet kein WebGL. Bitte in einem Browser mit WebGL öffnen.';throw Error('WebGL unavailable');}
+const header=new DataView(bytes.buffer),jsonSize=header.getUint32(12,true);
+const g=JSON.parse(new TextDecoder().decode(bytes.subarray(20,20+jsonSize))),start=28+jsonSize;
+function accessor(i){const a=g.accessors[i],v=g.bufferViews[a.bufferView],n={SCALAR:1,VEC3:3,VEC4:4}[a.type];return new (a.componentType===5126?Float32Array:Uint16Array)(bytes.buffer,start+(v.byteOffset||0)+(a.byteOffset||0),a.count*n);}
+function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+const program=gl.createProgram();
+try{
+gl.attachShader(program,shader(gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec3 aNormal;uniform mat4 uMvp;uniform mat4 uWorld;varying vec3 vNormal;void main(){vNormal=mat3(uWorld)*aNormal;gl_Position=uMvp*vec4(aPosition,1.0);}`));
+gl.attachShader(program,shader(gl.FRAGMENT_SHADER,`precision mediump float;varying vec3 vNormal;uniform vec4 uColor;void main(){vec3 n=normalize(vNormal);if(!gl_FrontFacing)n=-n;float d=max(dot(n,normalize(vec3(-.6,.8,.7))),0.0);gl_FragColor=vec4(uColor.rgb*(vec3(.48,.47,.43)+d*vec3(.66,.60,.49)),1.0);}`));
+gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
+}catch(e){error.textContent='3D-Darstellung konnte nicht starten: '+e.message;throw e;}
+gl.useProgram(program);gl.enable(gl.DEPTH_TEST);gl.clearColor(.105,.15,.15,1);
+const pos=gl.getAttribLocation(program,'aPosition'),norm=gl.getAttribLocation(program,'aNormal'),uMvp=gl.getUniformLocation(program,'uMvp'),uWorld=gl.getUniformLocation(program,'uWorld'),uColor=gl.getUniformLocation(program,'uColor');
+gl.enableVertexAttribArray(pos);gl.enableVertexAttribArray(norm);
+function buffer(data,target=gl.ARRAY_BUFFER){const b=gl.createBuffer();gl.bindBuffer(target,b);gl.bufferData(target,data,gl.STATIC_DRAW);return b;}
+const meshes=g.meshes.map(m=>m.primitives.map(p=>({pos:buffer(accessor(p.attributes.POSITION)),norm:buffer(accessor(p.attributes.NORMAL)),ix:buffer(accessor(p.indices),gl.ELEMENT_ARRAY_BUFFER),count:g.accessors[p.indices].count,color:g.materials[p.material].pbrMetallicRoughness.baseColorFactor})));
+const I=()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+function mul(a,b){const c=new Float32Array(16);for(let j=0;j<4;j++)for(let i=0;i<4;i++)for(let k=0;k<4;k++)c[j*4+i]+=a[k*4+i]*b[j*4+k];return c;}
+function quat(q){const[x,y,z,w]=q;return new Float32Array([1-2*(y*y+z*z),2*(x*y+z*w),2*(x*z-y*w),0,2*(x*y-z*w),1-2*(x*x+z*z),2*(y*z+x*w),0,2*(x*z+y*w),2*(y*z-x*w),1-2*(x*x+y*y),0,0,0,0,1]);}
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>{let n=Math.hypot(...a);return a.map(x=>x/n)},dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+function look(){const eye=[3.2,2.55,6],f=unit([0,1.35,0].map((x,i)=>x-eye[i])),s=unit(cross(f,[0,1,0])),u=cross(s,f);return new Float32Array([s[0],u[0],-f[0],0,s[1],u[1],-f[1],0,s[2],u[2],-f[2],0,-dot(s,eye),-dot(u,eye),dot(f,eye),1]);}
+const view=look();let vp;
+function resize(){const ratio=Math.min(devicePixelRatio||1,1.5),w=Math.floor(canvas.clientWidth*ratio),h=Math.floor(canvas.clientHeight*ratio);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);let aspect=w/h,hh=Math.max(1.62,1.25/aspect),p=I();p[0]=1/(hh*aspect);p[5]=1/hh;p[10]=-2/29.9;p[14]=-30.1/29.9;vp=mul(p,view);}
+function disc(r,y,color){const v=[0,y,0],n=[0,1,0],ix=[];for(let i=0;i<32;i++){v.push(r*Math.cos(i*2*Math.PI/32),y,r*Math.sin(i*2*Math.PI/32));n.push(0,1,0);ix.push(0,(i+1)%32+1,i+1);}return{pos:buffer(new Float32Array(v)),norm:buffer(new Float32Array(n)),ix:buffer(new Uint16Array(ix),gl.ELEMENT_ARRAY_BUFFER),count:ix.length,color};}
+const ground=[disc(1.1,.18,[.20,.245,.205,1]),disc(.34,.182,[.10,.13,.10,1])];
+const clips=g.animations.map(a=>({tracks:a.channels.map(c=>{const s=a.samplers[c.sampler];return{node:c.target.node,times:accessor(s.input),q:accessor(s.output)};})}));clips.forEach(c=>c.duration=Math.max(...c.tracks.map(t=>t.times[t.times.length-1])));
+function pose(clip,time){const c=clips[clip],t=time%c.duration,out=new Map();for(const track of c.tracks){let k=0;while(k<track.times.length-2&&track.times[k+1]<=t)k++;let f=(t-track.times[k])/(track.times[k+1]-track.times[k]),a=Array.from(track.q.subarray(k*4,k*4+4)),b=Array.from(track.q.subarray((k+1)*4,(k+2)*4));let d=dot(a,b),sign=d<0?-1:1;d=Math.min(1,Math.max(-1,d*sign));let angle=Math.acos(d),w1=d>.9995?1-f:Math.sin((1-f)*angle)/Math.sin(angle),w2=d>.9995?f:Math.sin(f*angle)/Math.sin(angle);out.set(track.node,unit(a.map((x,i)=>x*w1+sign*b[i]*w2)));}return out;}
+function part(p){gl.bindBuffer(gl.ARRAY_BUFFER,p.pos);gl.vertexAttribPointer(pos,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,p.norm);gl.vertexAttribPointer(norm,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,p.ix);gl.uniform4fv(uColor,p.color);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_SHORT,0);}
+let clip=0,time=0,last=0,paused=false,turn=false,yaw=-15;
+const slider=document.querySelector('#angle');function setYaw(v){yaw=v;slider.value=v;document.querySelector('#degrees').textContent=Math.round(v)+'°';}setYaw(-15);
+slider.addEventListener('input',()=>setYaw(+slider.value));
+document.querySelectorAll('[data-yaw]').forEach(b=>b.addEventListener('click',()=>setYaw(+b.dataset.yaw)));
+document.querySelectorAll('[data-clip]').forEach(b=>b.addEventListener('click',()=>{clip=+b.dataset.clip;time=0;document.querySelectorAll('[data-clip]').forEach(x=>x.setAttribute('aria-pressed',x===b));}));
+document.querySelector('#pause').onclick=function(){paused=!paused;this.textContent=paused?'Weiter':'Pause';this.setAttribute('aria-pressed',paused);};
+document.querySelector('#turn').onclick=function(){turn=!turn;this.setAttribute('aria-pressed',turn);};
+function frame(now){const delta=last?Math.min((now-last)/1000,.1):0;last=now;if(!paused)time+=delta;if(turn&&!paused)setYaw((yaw+delta*45+180)%360-180);resize();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(uMvp,false,vp);gl.uniformMatrix4fv(uWorld,false,I());ground.forEach(part);const q=pose(clip,time),root=quat([0,Math.sin(yaw*Math.PI/360),0,Math.cos(yaw*Math.PI/360)]);function draw(i,parent){const node=g.nodes[i],m=quat(q.get(i)||[0,0,0,1]);m.set(node.translation,12);const world=mul(parent,m);gl.uniformMatrix4fv(uMvp,false,mul(vp,world));gl.uniformMatrix4fv(uWorld,false,world);if(node.mesh!==undefined)meshes[node.mesh].forEach(part);(node.children||[]).forEach(j=>draw(j,world));}g.scenes[g.scene].nodes.forEach(i=>draw(i,root));requestAnimationFrame(frame);}
+document.addEventListener('visibilitychange',()=>{last=0;});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();error.textContent='Grafikkontext unterbrochen. Bitte die Vorschau neu laden.';});
+requestAnimationFrame(frame);
+</script></html>

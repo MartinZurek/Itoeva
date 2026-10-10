@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fennec_3d_open">3D-Fennec testen</string>
+    <string name="fennec_3d_caption">Fennec · 3D-Prototyp · mit dem Regler drehen</string>
+    <string name="fennec_3d_rotate">Fennec drehen</string>
+    <string name="fennec_3d_idle">Stehen</string>
+    <string name="fennec_3d_walk">Gehen</string>
+    <string name="fennec_3d_run">Laufen</string>
+    <string name="fennec_3d_pause">Pause</string>
+    <string name="fennec_3d_resume">Weiter</string>
+    <string name="fennec_3d_back">Zurück</string>
+    <string name="fennec_3d_error">3D-Test konnte nicht starten: %1$s</string>
+</resources>

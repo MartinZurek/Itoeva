@@ -5,6 +5,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <application>
+        <activity android:name="com.notime.glyphsim.prototype.Fennec3DActivity"
+            android:exported="false" android:screenOrientation="landscape" />
         <activity android:name="com.notime.glyphsim.ui.MainActivity"
             android:screenOrientation="landscape"
             tools:replace="android:screenOrientation" />
