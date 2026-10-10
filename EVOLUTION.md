@@ -669,6 +669,39 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-10 - Gezeichnete Ruhe und Bewegungsuebergaenge (living-atlases-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt sechs neue 4x8-Atlanten nach seinen
+  GitHub-Identitaetsreferenzen, korrigiert Fennecs seitlichen Mantelzipfel und
+  verlangt anschliessend die Produktionsbereinigung und Integration ins Spiel.
+- **FACT / Entscheidung:** 192 neue Zeichnungen als separate 128px-Zusatzstreifen.
+  Vierteilige Frontatmung/seitliche Gewichtsverlagerung, Start/Stopp, Wendung,
+  Landen und kurze Gewohnheiten verwenden diese Bilder im aktiven Game.
+  Bestehende 138 Gang-/Aktionsrollen bleiben erhalten, statt durch die
+  unvollstaendige Bewegungsabdeckung des neuen 32er-Bogens ersetzt zu werden.
+- **TESTED BEHAVIOR:** 4x8-Zellen mit 26px-Raendern, gemeinsamer Palette,
+  binarem Alpha, festen Atemkontakten und unveraendertem Weltmassstab. Sitzbilder
+  von Fennec/Puffling/Wyrmling werden anhand einer eigenen Stand-/Sitzquelle
+  korrigiert. Start/Stopp/Landung folgen lokalen Wechseln; Gang, Schlaf und
+  laufende Handlungen behalten Vorrang. Stimmung kommt aus dem bestehenden
+  Snapshot, nicht aus einer neuen Hunger- oder Strafmechanik.
+- **Betroffen:** `CreatureSprites`, `AvatarSpriteView`, eine Mood-Anbindung in
+  `DockScreen`, Zusatzassets und reproduzierbarer Export unter
+  `tools/character-art`. Kein Room-Schema, Preference-Key, Reminderabschluss,
+  XP, Agentenentscheidungsweg oder Bewegungskollision wird geaendert.
+- **Migration/Ruecksetzung:** Keine Migration. Feature-Commit zuruecknehmen;
+  alte Assetnamen und 138 Rollen bleiben vorhanden und unveraendert. Fehlende
+  Zusatzboegen fallen bereits zur Laufzeit auf die bestehende Darstellung zurueck.
+  Basis dieser Evolution: `3b3da11`.
+- **UNVERIFIED / Grenzen:** Telefonabnahme und Android-Kompilierung stehen aus;
+  lokaler Gradle-Download scheitert am Netzwerk. Einzelne generierte Posen sind
+  noch Dreiviertel statt streng frontal. Gloops fehlerhafte Ruecken-Wendepose
+  wird nicht aktiv verwendet. Quellenqualitaet und Laufzeitgrenzen sind in
+  `tools/character-art/source/living-atlas-prompts.md` ehrlich dokumentiert.
+- **Pruefung / naechster Schritt:** 997 reine Kotlin-Tests und der Node-Assetcheck
+  gruen. CI prueft Android; danach Start/Stopp, Landung, Licht, Moebelsitzen und
+  Figurengroesse am Telefon ansehen. Keine neue `OPEN DECISION` aufgeloest.
+
 ### 2026-10-07 - Gemeinsame Landschaft und folgende Kamera (continuous-world-v1)
 
 - **DOCUMENTED INTENT:** Martin moechte die alten Orte und Karte erneuern, kleinere Orte zu

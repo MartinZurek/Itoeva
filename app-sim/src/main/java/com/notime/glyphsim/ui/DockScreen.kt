@@ -5861,6 +5861,7 @@ fun DockScreen(
         }
 
         avatar?.takeIf { !avatarHidden }?.let { current ->
+            val visualMood by rememberAvatarMood(current.species, (gameElapsed / 30000L).toInt())
             val feedActionLabel = stringResource(R.string.a11y_feed_action)
             // "wartet aufs Fuettern" stimmt nur, solange tatsaechlich eine Erinnerung offen ist -
             // im Play-Modus idlet der Avatar die meiste Zeit ohne eine (siehe occurrenceId).
@@ -5903,6 +5904,7 @@ fun DockScreen(
                 shadeSide = avatarFacing,
                 gameDirection = if (gameMode) gameFacing else null,
                 gameMoving = if (gameMode) avatarWalking else null,
+                gameMood = if (gameMode && !current.fed && current.occurrenceId == null) visualMood else null,
                 gameTempo = if (gameMode && !gameActing) gameMovement.tempo else 1f,
                 gameGaitMs = if (gameMode && !gameActing) gameMovement.gaitMs.toLong() else null,
                 gameRunBlend = if (gameMode && !gameActing) gameMovement.runBlend else null,
