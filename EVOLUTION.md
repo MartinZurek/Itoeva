@@ -648,6 +648,49 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
 
 ## Evolution History – dauerhaft zu dokumentierende Änderungen und Erkenntnisse
 
+### 2026-10-10 – Puppeneindruck im 3D-Fennec-Prototyp reduzieren
+
+- **DOCUMENTED INTENT:** Martin findet die erste 3D-Fassung puppenhaft.
+- **FACT / Umsetzung:** Kontinuierliche Schaedel-/Wangen-/Schnauzenoberflaeche
+  statt angesetzter Kugeln, schmalere Koerperform, Fellspitzen, gefaltete
+  unregelmaessige Cape und leicht asymmetrische Ruhehaltung. Perlen-Saum und
+  dicker Kragen entfallen. Gemalte Fell-/Stoff-/Ledertexturen ueber echte UVs
+  im GLB; identisch in Kotlin, WebGL und Vorschau. 31.600 Dreiecke, 1,46 MiB GLB
+  einschliesslich Textur. Native Dekodierung mit halber Texturkantenlaenge.
+- **TESTED BEHAVIOR:** Zweite Fassung isoliert uebersetzt, 12 lokale JUnit-
+  Pruefungen einschliesslich UV-/JPEG-Invarianten; glTF ohne Fehler/Warnungen,
+  erwarteter NPOT-Informationshinweis. Browserbedienung und wirkliche gerenderte
+  Geometrie kontrolliert. Die Erstfassung `c312d034` hat Verify-CI bestanden.
+- **UNVERIFIED:** Zweite Android-CI separat, keine Telefonmessung. Weiterhin
+  starre Teilmeshes an Gelenken und vereinfachte Referenzaehnlichkeit;
+  kein weiches Haut-Skinning, keine Produktions- oder Stilabnahme behauptet.
+- **Bereiche/Ruecksetzung:** Fortsetzung im Prototyp-PR #356; Generator,
+  Materialatlas, GLB-Leser/Renderer, Vorschau und Tests. Auf `c312d034`
+  ruecksetzbar, keine Aenderung an Welt, Saves, Reminder oder Engine-Wahl.
+
+### 2026-10-10 – Echter 3D-Fennec als begrenzter Kotlin-Prototyp
+
+- **DOCUMENTED INTENT:** Martin beauftragt den empfohlenen einzelnen Modelltest
+  mit fester 2,5D-Kamera, um das fehlende Volumen der Figuren zu pruefen.
+- **FACT / Entscheidung:** Eigene Game-Testansicht ab Startbildschirm, echte
+  Mesh-Geometrie/Normalen/Tiefenpruefung statt Bitmapnetz. OpenGL ES 2 direkt in
+  Kotlin, ohne neue Produktionsabhaengigkeit. glTF-Modell mit 24.996 Dreiecken,
+  16 Knoten, 0,52 MiB und drei Gelenkanimationen. Identisches GLB in der lokalen
+  HTML-Vorschau. Modell nicht beim normalen Spielstart laden.
+- **TESTED BEHAVIOR:** Khronos-Validator ohne Fehler/Warnungen/Hinweise;
+  Activity/Renderer/Leser isoliert uebersetzt; 11 lokale Modell-/Quaternion-
+  Pruefungen bestanden (Modelltests mit Datei als Bytequelle). Echte GLB-Geometrie
+  und Animation mit Mesa-Tiefenpuffer gerendert und visuell kontrolliert.
+  Bedienelemente und mobile Breite der HTML-Vorschau in Chromium/WebGL geprueft,
+  ohne JavaScript- oder GL-Fehler.
+- **UNVERIFIED:** Vollstaendiger Android-Bau und Telefonabnahme separat;
+  kein gemessener Speicherverbrauch oder Startzeitvorteil. Starre Teilmeshes an
+  Gelenken, kein gewichtetes Haut-Rig/Foot-IK. Der gemalte Referenzstil und die
+  Gesichtsaehnlichkeit sind vereinfacht. Godot-Import/-Vergleich noch offen.
+- **Bereiche/Ruecksetzung:** Getrennter Prototyp, Game-Menue/-Manifest, GLB,
+  Generator, Vorschau und Tests; auf `346d6dbf` aus PR #355. Keine Save-, Skillbaum-,
+  Reminder-, Workflow- oder Engine-Migration. Details: `docs/fennec-3d/README.md`.
+
 ### 2026-10-10 – Vordergrundteich und Schwimmen entfernen
 
 - **DOCUMENTED INTENT:** Martin will wegen langsamen Ladens und Speicherbedarf
