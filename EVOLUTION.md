@@ -705,6 +705,10 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   Erwartung von 138 statt jetzt 170 Bildern. Der Bildlader-Test erwartet die
   Zusatzrollen und prueft alle 192 neuen Bilder pixelgleich auf Android.
   Finale Emulator-/Lint-/R8-Ergebnisse stehen im PR #353.
+- **Review-Korrektur:** Der neue Renderer nutzt jetzt exakt den frisch geladenen
+  Stimmungssnapshot von `startAvatarIdleLoop`, insbesondere nach erfolgreichem
+  Fuettern. Der separate 30-Sekunden-Cache entfällt; eine alte Hungrig-/Traurig-Pose
+  kann die bestehende Ruheanimation damit nicht mehr ueberleben.
 
 ### 2026-10-07 - Gemeinsame Landschaft und folgende Kamera (continuous-world-v1)
 
