@@ -15,7 +15,7 @@ internal object GameLightingCatalog {
     val rooms = mapOf(
         Place.LIVING to Room(Window(53f, 39f, 114f, 113f, 199f, 247f),
             listOf(Lamp(160f, 109f, 167f, switched = true), Lamp(443f, 101f, 166f))),
-        Place.BEDROOM to Room(Window(121f, 47f, 180f, 99f, 186f, 240f),
+        Place.BEDROOM to Room(Window(127f, 47f, 212f, 103f, 186f, 230f),
             listOf(Lamp(72f, 112f, 174f), Lamp(366f, 62f, 179f))),
         Place.BATH to Room(Window(326f, 43f, 386f, 113f, 213f, 246f),
             listOf(Lamp(156f, 70f, 194f), Lamp(428f, 69f, 199f))),
@@ -31,9 +31,9 @@ internal object GameLightingCatalog {
             listOf(Lamp(151f, 50f, 204f), Lamp(357f, 49f, 211f))),
         Place.CAFE to Room(Window(240f, 41f, 295f, 115f, 214f, 250f),
             listOf(Lamp(207f, 44f, 214f), Lamp(427f, 45f, 220f))),
-        Place.WORK to Room(Window(461f, 55f, 479f, 140f, 359f, 248f),
+        Place.WORK to Room(Window(349f, 51f, 413f, 121f, 359f, 230f),
             listOf(Lamp(310f, 46f, 215f, 175f))),
         Place.ARCADE to Room(Window(195f, 47f, 249f, 113f, 154f, 246f),
             listOf(Lamp(166f, 44f, 203f), Lamp(281f, 40f, 203f), Lamp(390f, 41f, 210f)))
-    ).mapValues { (_,room) -> room.copy(window=Window(84f,48f,145f,88f,190f,242f)) }
+    )
 }

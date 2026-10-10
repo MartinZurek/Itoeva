@@ -343,7 +343,7 @@ object GameRoomArt {
                 clipping=null
             }
             if(id.endsWith("-bed")) {
-                val blanket=body.faces.first { it.shade==2 && it.points.minOf { pt->pt.second }==top-46f }
+                val blanket=body.faces.last { it.shade==2 }
                 clipping=blanket.points
                 rect(x0+12,top-28,(x1-x0)*.38f,32f,clay)
                 for(i in 0..5) {

@@ -82,7 +82,7 @@ fun GameSceneView(
         val live = roomLayers?.takeIf { it.base != null && it.atlas != null }
         val strip = if (live == null) layers?.strip else null
         val frame = if (strip != null) Math.floorMod(phase, layers?.frames ?: 1) else 0
-        if (com.notime.glyphsim.matrix.GameRoomSpace.enabled(scene)) paintRoomSpace(scene,fit,1f,clock)
+        if (com.notime.glyphsim.matrix.GameRoomSpace.enabled(scene)) paintRoomSpace(scene,fit,visible,clock,image)
         else drawImage(
             image = live?.base ?: strip ?: image,
             srcOffset = IntOffset(frame * GameScenes.IMAGE_W, 0),
@@ -95,12 +95,12 @@ fun GameSceneView(
             alpha = visible,
             filterQuality = if (scene.place in com.notime.glyphsim.matrix.GameInteriorCatalog.scenes) FilterQuality.Low else FilterQuality.None
         )
-        if (live != null) {
+        if (live != null && !com.notime.glyphsim.matrix.GameRoomSpace.enabled(scene)) {
             roomParts(scene, live, environment, fit, visible, false)
             roomShore(scene, live, environment, fit, visible)
             roomContacts(scene, environment, fit, visible)
         }
-        if (!com.notime.glyphsim.matrix.GameRoomSpace.enabled(scene)) paintPaintedMotion(scene, image, fit, clock, visible,weather=weather)
+        paintPaintedMotion(scene, image, fit, clock, visible,weather=weather)
         // Die Illustration bleibt die Materialbasis. Licht und Schatten werden dagegen in
         // denselben Bildkoordinaten wie Laufweg und Avatar pro Bildtakt berechnet.
         val dark = GameSceneLighting.darkness(scene, minuteOfDay)

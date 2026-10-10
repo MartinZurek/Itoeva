@@ -34,7 +34,7 @@ object GameFurniture {
                 leg(186f, 468f, 8f, 501f), leg(345f, 468f, 8f, 501f))))
         scene.asset.startsWith("interiors/") -> when (scene.place) {
             PlayScene.Place.LIVING -> listOf(
-                Piece("living-sofa", 180f, 292f, 138f, 164f, 161f, 167f, listOf(
+                Piece("living-sofa", 180f, 300f, 138f, 164f, 144f, 168f, listOf(
                     polygon(170f to 128f,181f to 114f,207f to 112f,231f to 114f,
                         249f to 112f,280f to 114f,293f to 123f,302f to 126f,
                         307f to 137f,303f to 162f,251f to 166f,244f to 162f,
@@ -45,7 +45,7 @@ object GameFurniture {
                         172f to 154f,167f to 152f),
                     leg(173f, 154f, 6f, 171f), leg(211f, 155f, 6f, 171f))))
             PlayScene.Place.BEDROOM -> listOf(
-                Piece("bedroom-bed", 111f, 275f, 145f, 179f, 173f, 182f, listOf(
+                Piece("bedroom-bed", 104f, 284f, 145f, 179f, 137f, 182f, listOf(
                     polygon(106f to 145f,129f to 128f,196f to 130f,261f to 145f,
                         275f to 161f,271f to 177f,112f to 177f))))
             PlayScene.Place.KITCHEN -> listOf(
@@ -66,7 +66,11 @@ object GameFurniture {
 
     private fun body(id: String, left: Float, right: Float, top: Float, ground: Float,
         seatY: Float? = null, stations: Set<PlayScene.Station> = emptySet(), back: Float = ground - 8f): Piece {
-        val contours = if (seatY != null) listOf(
+        val chair = seatY != null && (id.contains("chair") && !id.contains("armchair") || id.contains("stool") || id.contains("bench"))
+        val contours = if (chair) listOf(
+            polygon(left to top,right to top,right to seatY!!+3f,left to seatY+3f),
+            leg(left+3f,seatY+2f,4f,ground),leg(right-7f,seatY+2f,4f,ground))
+            else if (seatY != null) listOf(
             polygon(left - 3f to top, right + 3f to top, right + 5f to seatY + 6f,
                 right - 2f to ground, left + 2f to ground, left - 5f to seatY + 6f))
             else listOf(polygon(left to top, right to top, right to ground, left to ground))
@@ -74,7 +78,7 @@ object GameFurniture {
             seatY?.let { Seat((left + right) / 2f, it, stations) })
     }
     private fun table(id: String, left: Float, right: Float, top: Float, ground: Float): Piece =
-        Piece(id, left, right, top, ground, ground - 10f, ground + 3f, listOf(
+        Piece(id, left, right, top, ground, ground - 28f, ground + 3f, listOf(
             polygon(left - 3f to top, right + 3f to top, right + 4f to top + 6f,
                 left - 3f to top + 6f), leg(left + 6f, top + 6f, 6f, ground),
             leg(right - 10f, top + 6f, 6f, ground)))
@@ -88,7 +92,7 @@ object GameFurniture {
             when (piece.id) {
                 "living-sofa" -> piece.copy(seat = Seat(245f, 138f, setOf(PlayScene.Station.SEAT)))
                 "world-PARK-seat" -> piece.copy(seat = Seat(270f, 459f, setOf(PlayScene.Station.BENCH)))
-                "bedroom-bed" -> piece.copy(seat = Seat(198f, 145f, setOf(PlayScene.Station.BED)))
+                "bedroom-bed" -> piece.copy(seat = Seat(167f, 145f, setOf(PlayScene.Station.BED)))
                 else -> piece
             }
         }
@@ -110,12 +114,12 @@ object GameFurniture {
         if (!scene.asset.startsWith("interiors/")) return original
         val extra = when (scene.place) {
             PlayScene.Place.LIVING -> listOf(
-                body("living-bookcase", 334f, 404f, 71f, 161f),
+                body("living-bookcase", 340f, 408f, 48f, 163f),
                 table("living-side-table", 137f, 174f, 145f, 165f))
             PlayScene.Place.BEDROOM -> listOf(
-                body("bedroom-wardrobe", 294f, 331f, 59f, 156f),
-                body("bedroom-dresser", 403f, 445f, 111f, 174f),
-                body("bedroom-footbench", 189f, 282f, 175f, 205f, 180f, setOf(S.SEAT)),
+                body("bedroom-wardrobe", 233f, 299f, 58f, 156f),
+                body("bedroom-dresser", 382f, 432f, 113f, 170f),
+                body("bedroom-footbench", 184f, 285f, 148f, 182f, 155f, setOf(S.SEAT)),
                 table("bedroom-nightstand", 63f, 105f, 133f, 170f))
             PlayScene.Place.KITCHEN -> listOf(
                 body("kitchen-counter", 84f, 270f, 121f, 182f),
@@ -170,7 +174,7 @@ object GameFurniture {
                 body("arcade-stool", 310f, 335f, 161f, 212f, 165f, setOf(S.SEAT)))
             else -> emptyList()
         }
-        return (original + extra).map(GameRoomSpace::reshape)
+        return (original + extra)
     }
 
 }

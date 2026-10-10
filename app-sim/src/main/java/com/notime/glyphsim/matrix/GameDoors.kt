@@ -31,15 +31,15 @@ object GameDoors {
         }
         return when(from) {
             Place.LIVING -> when(to) {
-                Place.BEDROOM -> GameScenes.Box(201f,40f,232f,116f)
-                Place.NOOK -> GameScenes.Box(275f,40f,305f,116f)
-                Place.KITCHEN -> GameScenes.Box(446f,58f,477f,183f)
-                else -> GameScenes.Box(5f,39f,30f,183f)
+                Place.BEDROOM -> GameScenes.Box(192f,60f,236f,156f)
+                Place.NOOK -> GameScenes.Box(286f,60f,331f,156f)
+                Place.KITCHEN -> GameScenes.Box(451f,48f,478f,159f)
+                else -> GameScenes.Box(8f,45f,30f,158f)
             }
             Place.BEDROOM -> when(to) {
-                Place.BATH -> GameScenes.Box(337f,40f,372f,116f)
-                Place.LIVING -> GameScenes.Box(437f,38f,470f,173f)
-                else -> GameScenes.Box(7f,42f,40f,175f)
+                Place.BATH -> GameScenes.Box(326f,53f,376f,154f)
+                Place.LIVING -> GameScenes.Box(453f,44f,478f,180f)
+                else -> GameScenes.Box(9f,48f,45f,177f)
             }
             Place.KITCHEN -> GameScenes.Box(8f,43f,43f,198f)
             else -> GameScenes.Box(10f,49f,46f,198f)

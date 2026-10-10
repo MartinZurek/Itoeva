@@ -648,6 +648,30 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
 
 ## Evolution History – dauerhaft zu dokumentierende Änderungen und Erkenntnisse
 
+### 2026-10-10 – Warme Originalmalerei und detailliertere unsichtbare Laufkarte
+
+- **DOCUMENTED INTENT:** Martin will warme Hobbit-artige Innenraeume passend zur
+  Aussenwelt, weniger leeren Vorderboden und klare Lauf-/Moebel-/Wassergrenzen.
+- **FACT / Ursache:** Die warmen Innenraumassets waren vorhanden, der produktive
+  Zeichenweg ersetzte sie durch prozedurale Pixelraeume. Alle elf Orte zeichnen
+  wieder ihre Originalmalerei. Kamera und Vorderboden sind kompakter; Kontakte,
+  Silhouetten, Fenster und Tueren lesen die Bildpositionen.
+- **FACT / Bewegung:** `GameWalkingMap` teilt vermessene Bodenprofile und Sperr-/
+  Graspolygone. Bewegungsweg, Anlauf und Einstiegsposition lesen diese Karte.
+  Moebel pruefen den ganzen Schritt analytisch. Wasser aktiviert sofort Schwimmen,
+  Gras reagiert auf echte Kontakte und verdeckt die Pfoten teilweise.
+- **Pruefvertrag:** Bestehende Tuer-/Bruecken-/Nahttests sowie gezielte Sperrinsel-,
+  schmale-Moebel-, Wasser-, Gras- und Kameratests; native Bilduebergabe-Pruefung.
+  Reproduzierbare Asset-/Koordinatenvorschauen sind keine APK-Aufnahmen.
+- **TESTED BEHAVIOR:** 1.049 lokale reine Kotlin-Tests bestanden; warme Innenraum-
+  und Laufkarten-Vorschau mit Originalassets visuell geprueft.
+- **Betroffene Bereiche:** Game-Zeichnung, Kamera, Bodenkontakte und vorhandener
+  Bewegungsmotor. Keine Speicherformat-, Workflow-, Abhaengigkeits-, XP- oder
+  Reminder-Aenderung. Ruecksetzung: diesen Schnitt auf `8865522` zuruecknehmen.
+- **UNVERIFIED:** Handvermessene Karte ist keine automatische Pixelphysik;
+  Telefonwirkung/Bildrate und Uferdetails bleiben abzunehmen. Kein Merge/APK-Auftrag.
+  `docs/itoeva2-painted-interiors-walking-map.md` beschreibt Umsetzung und Grenzen.
+
 ### 2026-10-10 – Gezeichnete Schwimmphasen, Pixelwasser und elf Raum-Konzepttafeln
 
 - **DOCUMENTED INTENT:** Martin will zuerst einzelne gemalte Innenraumstudien im

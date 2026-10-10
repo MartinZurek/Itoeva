@@ -122,6 +122,14 @@ internal fun DrawScope.roomContacts(scene: GameScenes.Scene, state: GameEnvironm
                                 Size(if (c.impact > 0f) 2f else 1f, 2f), alpha = fade * (1f - seconds / .75f))
                         }
                     }
+                } else if (foreground && c.material == GameEnvironment.Material.GRASS) {
+                    // Halme legen sich um den echten Fusskontakt und richten sich wieder auf.
+                    repeat(7) { i ->
+                        val baseX=c.x+(i-3)*1.7f
+                        val bend=(if(c.dx<0f) -1f else 1f)*(1f-seconds/1.2f).coerceIn(0f,1f)*5f
+                        drawLine(Color(if(i%2==0) 0xFF657F46 else 0xFFA6B46A),Offset(baseX,c.y+2f),
+                            Offset(baseX+bend,c.y-5f-i%3),1.15f,alpha=fade*.8f)
+                    }
                 } else if (!foreground) {
                     when (c.material) {
                         GameEnvironment.Material.MUD, GameEnvironment.Material.SAND, GameEnvironment.Material.SNOW -> {

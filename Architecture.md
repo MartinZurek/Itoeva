@@ -636,16 +636,18 @@ Pruefvertrag, Scan aller 28 Orte und Telefon-Abnahme: docs/itoeva2-world-physics
 
 ### Game-Raumkoerper und Medienwiedergabe (09.10.2026)
 
-`GameRoomSpace` zeichnet die elf Innenraeume als Boden-/Wandprojektion und einzelne
-Moebelkoerper. `GameFurniture` bleibt Quelle von Grundriss, Sitz-/Stand-/Landekante;
-Konturen der gezeichneten Koerper werden auch fuer Verdeckung und Licht gelesen.
-`GameRoomArt` uebersetzt die Konzeptfarben/-materialien in deterministische Pixelgruppen
-auf diesen Koerpern. `GameSpatialRoomView` rastert einmal je Raum auf 480x270;
-Materialdekore sind auf ihre Moebelflaechen begrenzt. Tuerblaetter teilen dieselbe
-Holzpalette; nur ihr projizierter Oeffnungswinkel aendert sich. Vorhaenge und
-Ortslicht werden weiter darueber animiert. Die alten gemalten Raum-PNGs werden
-nicht als flacher Hintergrund geladen. Die 2.5D-Kamera
-behaelt ihren Blickwinkel, mit mehr Boden und kleinerem Figurenmassstab.
+Die elf Innenraeume zeichnen ihre warmen Original-PNGs; `GameRoomArt` und dessen
+Rasterung bleiben ein Fallback. `GameFurniture` ist Quelle von bildgebundenem
+Grundriss, Sitz-/Stand-/Landekante und Silhouetten fuer Verdeckung/Licht. Keine
+Umformung in prozedurale Raumkoerper verschiebt die Kontakte gegen die Malerei.
+Tuerbewegung liest den gemalten Ausschnitt, Vorhaenge/Pflanzen und Ortslicht bleiben
+animiert. Die Innenraumkamera vergroessert um 1,12 und schneidet leeren Vorderboden ab.
+`GameWalkingMap` teilt unsichtbare Bodenprofile/Sperr-/Graspolygone zwischen
+`GameTerrain`, `GameSurfaces` und Kontaktzeichnung. Der Anlauf benutzt Korridorknoten
+und Sperrinsel-Ecken; Bodenpfade werden durchlaufen, Moebel analytisch entlang des
+Schritts geprueft. Vorhandene Bruecken-, Ufer- und Stegmasken bleiben Grundlage.
+Wasser aktiviert sofort Schwimmen, Gras reagiert auf abklingende Fusskontakte und
+verdeckt die Pfoten. Details: `docs/itoeva2-painted-interiors-walking-map.md`.
 
 Rechte Padbefehle liegen bis zum naechsten Motorbild vor und werden nach dem
 Positionsabgleich in `GameTerrain.tick` verbraucht. `PlayMusic` erstellt den

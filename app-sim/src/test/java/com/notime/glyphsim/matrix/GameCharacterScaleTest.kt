@@ -112,7 +112,7 @@ class GameCharacterScaleTest {
         for (place in listOf(Place.KITCHEN,Place.CAFE)) {
             val scene=GameWorld.scene(place)!!; val spot=scene.spots.first { it.station==PlayScene.Station.TABLE }
             val pos=GameScenes.posAt(scene,spot.standX,spot.standY)
-            val crown=spot.standY-GameScenes.avatarHeight(scene,pos)
+            val crown=spot.standY-GameCharacterScale.visibleHeight(scene,pos,AvatarSpecies.FENNEC)
             assertTrue(crown < GameFurniture.pieces(scene).single { it.id == "${place.name.lowercase()}-table" }.top)
         }
     }

@@ -120,7 +120,8 @@ object GameRoomSpace {
         return Body(piece,when {metal->Material.METAL;bed->Material.LINEN;soft->Material.UPHOLSTERY;else->Material.WOOD},faces)
     }
 
-    fun contours(piece: GameFurniture.Piece) = body(piece).faces.map { it.points }
+    // Die originale Malerei ist wieder die Kulisse; Masken lesen deren vermessene Silhouetten.
+    fun contours(piece: GameFurniture.Piece) = piece.contours
     fun bodies(scene: GameScenes.Scene): List<Body> = GameFurniture.pieces(scene)
         .sortedBy { it.front }.map(::body)
 }
