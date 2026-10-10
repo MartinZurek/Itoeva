@@ -3,7 +3,9 @@ extends CharacterBody3D
 const WALK_SPEED := 2.0
 const RUN_SPEED := 3.8
 const GRAVITY := 14.0
-const PIXEL_SIZE := 0.012
+# Native Referenz: 65..108 Bildpixel Koerperhoehe, 640px hohe Kulisse.
+# Bei 35 Grad Kamera entspricht .020 etwa 87px Koerperhoehe in der Malerei.
+const PIXEL_SIZE := 0.020
 var touch_vector := Vector2.ZERO
 var touch_sprint := false
 var jump_requested := false
@@ -17,10 +19,10 @@ var jump_clock := -1.0
 func _ready() -> void:
 	var collider := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
-	capsule.radius = 0.16
-	capsule.height = 0.72
+	capsule.radius = 0.22
+	capsule.height = 1.35
 	collider.shape = capsule
-	collider.position.y = 0.36
+	collider.position.y = 0.675
 	add_child(collider)
 	sprite = Sprite3D.new()
 	sprite.name = "OriginalPaintedFennec"
@@ -42,7 +44,7 @@ func _ready() -> void:
 	add_child(sprite)
 	shadow = MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(0.85, 0.46)
+	plane.size = Vector2(1.15, 0.62)
 	shadow.mesh = plane
 	var material := ShaderMaterial.new()
 	material.shader = load("res://shaders/contact_shadow.gdshader")

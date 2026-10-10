@@ -38,7 +38,9 @@ Abschnitt öffnen:
 gemalten Aussenbereich in eine begehbare 3D-Buehne mit der vorhandenen 2D-Figur.
 Es ist ein separat startbarer Grafik-/Steuerungsversuch, kein Ersatz fuer die
 Android-Runtime. Keine Verbindung zu Room, Remindern, Living-Agent-Persistenz oder
-Gradle. Start, Originalasset-Nachweis, Tests und Grenzen stehen in dessen README.
+Gradle. Das Android-Exportpreset liefert eine separate ARM64-Debug-App mit Paket
+`com.itoeva.godot.hd2d`; Schluessel und lokale SDK-Pfade liegen ausserhalb des Projekts.
+Start, Originalasset-Nachweis, Tests und Grenzen stehen in dessen README.
 
 Drei Gradle-Module, ein gemeinsamer Kern:
 

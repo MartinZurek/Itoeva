@@ -9,7 +9,24 @@ Basis: `main` auf `124186c77f20954321008b0bf373a1527562f11a`.
 In **Godot 4.5.1** `project.godot` importieren und mit F6/F5 starten.
 Die benoetigten Bilder liegen bereits im Projekt; Python wird zum Spielen nicht gebraucht.
 Desktop: `godot --path prototypes/godot-hd2d` aus dem Repository.
-Der Compatibility-Renderer funktioniert ohne Vulkan; Android ist das spaetere Testziel.
+Der Compatibility-Renderer funktioniert ohne Vulkan. Die Test-APK unterstuetzt
+ARM64-Geraete ab Android 7 und startet als separate App **Itoeva Godot**.
+
+## Android-APK v0.1.2
+
+Godot 4.5.1 mit Android-Exportvorlagen, Java 17 und Android SDK Build-Tools 35.0.1
+verwenden. Java-/SDK-Pfade und den eigenen Debug-Keystore in den Editor-Einstellungen
+eintragen; keine Schluessel ins Repository kopieren.
+
+```bash
+godot --headless --path prototypes/godot-hd2d --export-debug Android /absoluter/pfad/Itoeva_Godot_HD2D_v0.1.2.apk
+```
+
+Das Exportpreset baut eine signierte Debug-APK mit Paket `com.itoeva.godot.hd2d`,
+Version 0.1.2 / Code 2, ARM64, Querformat und ohne Internetberechtigung.
+Tests, Vorschauen und Capture-Dateien werden ausgeschlossen. Die ausgelieferte
+APK ist 31.024.552 Bytes gross; ZIP-Integritaet und APK-Signatur v2/v3 sind geprueft.
+Ein Start auf einem Android-Telefon ist noch nicht geprueft.
 
 | Eingabe | Wirkung |
 |---|---|
@@ -31,6 +48,9 @@ Der Compatibility-Renderer funktioniert ohne Vulkan; Android ist das spaetere Te
   Zeile in einen 12x12-Atlas umgepackt. 1536px statt 17664px Breite vermeiden mobile
   Texturlimits. Fussanker 126, Richtungen und Rollen aus `CreatureSprites.Rich`.
   Naechste-Nachbar-Filter, aufrechte 2D-Karte (`Sprite3D`), keine 3D-Figur und kein Rig.
+  Pixelmassstab 0.020 beruecksichtigt die 35-Grad-Kamera: die Kopf-/Fuss-Spanne
+  entspricht rund 87 Bildpixeln in der nativen 640px-Kulisse, innerhalb ihrer
+  65..108px-Tiefenskalierung. Kollisionskoerper und Bodenschatten sind angepasst.
 - Echter `CharacterBody3D`, begehbarer Boden, Kartenraender, Bank und Lampensockel;
   Bank kann als erhoehte Standflaeche genutzt werden. Schatten folgt der Standflaeche.
 - Sanfte orthografische Folge-Kamera, Zoom und begrenzter Schwenk. Die Original-
@@ -48,8 +68,9 @@ godot --headless --path prototypes/godot-hd2d --script res://tests/smoke.gd
 godot --path prototypes/godot-hd2d --script res://tests/capture.gd
 ```
 
-`smoke.gd` prueft mit echter Godot-Physik Boden, Bewegung, Bank, Sprung/Landung,
-Standflaechenschatten, Kartenraender, Kamerasicht an beiden Raendern bei kleinem Zoom,
+`smoke.gd` prueft in 43 Checks den projizierten Figurenmassstab und mit echter Godot-Physik Boden, Bewegung, Bank, Sprung/Landung,
+Standflaechenschatten, Kartenraender und die ganze Spritekarte an beiden Raendern
+bei beiden Zoomgrenzen, drei Schwenkwinkeln und vorderem/hinterem Laufstreifen,
 Lichtwechsel sowie zwei gleichzeitig eingespeiste ScreenTouch-Ereignisse.
 `capture.gd` schreibt echte Godot-Renderings nach `captures/` (nicht eingecheckt).
 Die ausgewaehlten Renderings stehen in `preview/`. Sie sind Desktop-Aufnahmen mit
@@ -67,7 +88,7 @@ der Originalmalerei bleiben eingebrannt; Bankverdeckung und ihr Sitzanker sind
 naeherungsweise, eine allgemeine Tiefenmaske fuer jedes Blatt/Moebel fehlt noch.
 Blatt-/Wasseranimation, Innenraeume, Tueren, Bewohner, Living-Agent-System, Kampfsystem
 und Android-Spielstaende sind nicht angebunden. Die Android-App wird durch diesen
-Prototyp nicht umgestellt; kein APK-Export und keine Telefonmessung sind erfolgt.
+Prototyp nicht umgestellt; eine separate Debug-APK ist exportiert, eine Telefonmessung fehlt.
 
 Zuerst diesen Ausschnitt in Godot bzw. auf dem Telefon visuell abnehmen. Danach
 Bank-/Baum-Silhouetten einzeln auf Tiefenkarten legen und den Eingang zum Haus

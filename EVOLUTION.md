@@ -669,6 +669,33 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-10 - Godot-Test-APK und passender Fennec-Massstab (godot-painted-hd2d-apk-v012)
+
+- **DOCUMENTED INTENT:** Martin fordert eine APK und die erneute Pruefung von
+  Fennecs Groesse in der vorhandenen gemalten Kulisse.
+- **Beobachteter Fehler / Korrektur:** Der erste Sprite-Massstab 0.012 liess die
+  Figur neben der Bank zu klein wirken. 0.020 beruecksichtigt die Verkuerzung
+  einer aufrechten Karte durch die 35-Grad-Kamera: 83 Quellpixel Kopf/Fuss ergeben
+  rund 87 projizierte Pixel in der 640px-Referenzwelt, innerhalb der nativen
+  65..108px-Tiefenskalierung. Capsule und Bodenschatten wachsen passend mit.
+  Die 138 Zeichnungen und das Figurendesign bleiben pixel-identisch. Seitliche
+  Laufgrenzen reservieren Platz fuer die ganze Figur; die Kamerahoehe wird bei
+  Schwenk am vorderen Weg durch den projizierten Fussanker begrenzt.
+- **FACT / APK:** Godot-4.5.1-Debug-Export, ARM64 ab API 24, Target API 35,
+  Version 0.1.2 / Code 2, Paket `com.itoeva.godot.hd2d`, eigene App Itoeva Godot.
+  Keine Internetberechtigung; Vorschauen, Tests und Captures ausgeschlossen.
+  Debug-Signierung ausserhalb des Repositorys, keine Aenderung an nativen
+  Gradle-/Signing-/Persistenzvertraegen.
+- **TESTED BEHAVIOR:** Originalasset-Vergleich, 43 Godot-Laufzeitchecks inklusive
+  projizierter Koerperhoehe und aller Spritekartenecken in 24 Rand-/Zoom-/Schwenk-/
+  Tiefenkombinationen; aktuelle echte Desktop-Renderings visuell geprueft.
+  APK exportiert, ZIP-Integritaet, ARM64-Bibliotheken, Manifest und v2/v3-Signatur
+  geprueft. Groesse 31.024.552 Bytes. Zweites CODE-Review gemaess Repositoryregel.
+- **UNVERIFIED / Grenze:** Android-Start, GPU-Verhalten und Leistung auf einem
+  echten Telefon sind noch nicht gemessen. Die bekannte Relief-/Verdeckungsgrenze
+  des Prototyps bleibt bestehen. Ruecksetzen durch Revert dieser isolierten
+  Prototype-Aenderungen; keine Datenmigration.
+
 ### 2026-10-10 - Gemalter Godot-Ausschnitt mit originaler 2D-Figur (godot-painted-hd2d-v1)
 
 - **DOCUMENTED INTENT / ausdruecklicher Nutzerauftrag:** Martin moechte erneut

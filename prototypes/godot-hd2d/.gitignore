@@ -1,3 +1,5 @@
 .godot/
 *.tmp
 captures/
+preview/*.import
+*.apk

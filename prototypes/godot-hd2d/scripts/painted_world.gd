@@ -1,6 +1,7 @@
 extends Node3D
 
 const WORLD_WIDTH := 30.0
+const EDGE_WALL_X := 14.0
 const IMAGE_HEIGHT := 10.0
 const PITCH := 35.0
 const PATH_BACK_V := 0.76
@@ -122,8 +123,9 @@ func _make_collisions() -> void:
 	_box("Ground", Vector3(0, -0.15, (back + front) / 2.0), Vector3(30, 0.3, front - back))
 	_box("BackBoundary", Vector3(0, 2, back - 0.12), Vector3(30, 4, 0.24))
 	_box("FrontBoundary", Vector3(0, 2, front + 0.12), Vector3(30, 4, 0.24))
-	_box("LeftBoundary", Vector3(-15, 2, 0), Vector3(0.24, 4, 4))
-	_box("RightBoundary", Vector3(15, 2, 0), Vector3(0.24, 4, 4))
+	# Randabstand fuer die gesamte 2D-Karte, auch bei Zoom und Schwenk.
+	_box("LeftBoundary", Vector3(-EDGE_WALL_X, 2, 0), Vector3(0.24, 4, 4))
+	_box("RightBoundary", Vector3(EDGE_WALL_X, 2, 0), Vector3(0.24, 4, 4))
 	# Anker aus der gemalten Parkbank; Sitzhoehe passend zur Spritegroesse.
 	_box("ParkBench", Vector3(-3.15, 0.48, back + 0.30), Vector3(2.25, 0.96, 0.46))
 	_box("LampBase", Vector3(-7.85, 0.45, back + 0.12), Vector3(0.30, 0.9, 0.38))
@@ -185,8 +187,15 @@ func _update_camera(delta: float) -> void:
 	var limit := maxf(0.0, WORLD_WIDTH * 0.5 - half_width + 0.2)
 	# Der untere Bildrand bleibt auch beim Zoom/Schwenken unterhalb des Viewports.
 	var screen_center := camera.size * 0.5 - 1.35 + absf(sin(deg_to_rad(yaw))) * half_width * sin(deg_to_rad(PITCH))
-	var target := Vector3(clampf(actor.position.x, -limit, limit), screen_center / cos(deg_to_rad(PITCH)), 0)
+	var target_x := clampf(actor.position.x, -limit, limit)
+	# Schwenk am vorderen Rand darf die Fuesse nicht unter den Bildschirm druecken.
+	var foot_up := actor.position.y * cos(deg_to_rad(PITCH)) - sin(deg_to_rad(PITCH)) * (sin(deg_to_rad(yaw)) * (actor.position.x - target_x) + cos(deg_to_rad(yaw)) * actor.position.z)
+	screen_center = minf(screen_center, foot_up + camera.size * 0.5 - 0.25)
+	var target := Vector3(target_x, screen_center / cos(deg_to_rad(PITCH)), 0)
 	camera_anchor = camera_anchor.lerp(target, 1.0 - exp(-delta * 4.5))
+	# Auch waehrend des Kamera-Nachlaufs die untere Figurenkante freihalten.
+	var live_foot_up := actor.position.y * cos(deg_to_rad(PITCH)) - sin(deg_to_rad(PITCH)) * (sin(deg_to_rad(yaw)) * (actor.position.x - camera_anchor.x) + cos(deg_to_rad(yaw)) * actor.position.z)
+	camera_anchor.y = minf(camera_anchor.y, (live_foot_up + camera.size * 0.5 - 0.25) / cos(deg_to_rad(PITCH)))
 	var offset := Vector3(0, sin(deg_to_rad(PITCH)) * 20, cos(deg_to_rad(PITCH)) * 20).rotated(Vector3.UP, deg_to_rad(yaw))
 	camera.position = camera_anchor + offset
 	camera.look_at(camera_anchor)
