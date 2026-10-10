@@ -693,14 +693,18 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   alte Assetnamen und 138 Rollen bleiben vorhanden und unveraendert. Fehlende
   Zusatzboegen fallen bereits zur Laufzeit auf die bestehende Darstellung zurueck.
   Basis dieser Evolution: `3b3da11`.
-- **UNVERIFIED / Grenzen:** Telefonabnahme und Android-Kompilierung stehen aus;
-  lokaler Gradle-Download scheitert am Netzwerk. Einzelne generierte Posen sind
+- **UNVERIFIED / Grenzen:** Telefonabnahme steht aus; Android-Kompilierung ist
+  in Verify #882 bestaetigt. Lokaler Gradle-Download scheitert am Netzwerk. Einzelne generierte Posen sind
   noch Dreiviertel statt streng frontal. Gloops fehlerhafte Ruecken-Wendepose
   wird nicht aktiv verwendet. Quellenqualitaet und Laufzeitgrenzen sind in
   `tools/character-art/source/living-atlas-prompts.md` ehrlich dokumentiert.
 - **Pruefung / naechster Schritt:** 997 reine Kotlin-Tests und der Node-Assetcheck
   gruen. CI prueft Android; danach Start/Stopp, Landung, Licht, Moebelsitzen und
   Figurengroesse am Telefon ansehen. Keine neue `OPEN DECISION` aufgeloest.
+- **CI-Korrektur:** API 35 besteht; API 26 findet in 105 Tests nur die alte
+  Erwartung von 138 statt jetzt 170 Bildern. Der Bildlader-Test erwartet die
+  Zusatzrollen und prueft alle 192 neuen Bilder pixelgleich auf Android.
+  Finale Emulator-/Lint-/R8-Ergebnisse stehen im PR #353.
 
 ### 2026-10-07 - Gemeinsame Landschaft und folgende Kamera (continuous-world-v1)
 
