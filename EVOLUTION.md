@@ -669,6 +669,41 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-10 - Gemalter Godot-Ausschnitt mit originaler 2D-Figur (godot-painted-hd2d-v1)
+
+- **DOCUMENTED INTENT / ausdruecklicher Nutzerauftrag:** Martin moechte erneut
+  einen begrenzten Godot-Versuch im HD-2D-Stil: 3D-Welt, gemalte vorhandene Kulisse,
+  vorhandene 2D-Figur. Keine Umgestaltung in animierte 3D-Figuren. Dies ergaenzt
+  die fruehere Entscheidung, den nativen Weltumbau ohne Godot fortzufuehren;
+  die Android-Welt wird damit nicht automatisch migriert.
+- **FACT:** Separates Godot-4.5.1-Projekt unter `prototypes/godot-hd2d`, Basis
+  `124186c77f20954321008b0bf373a1527562f11a`. Originalpanorama Strasse/Park/Wiese/Wald
+  auf Relief, Boden und Steinkante; Original-Fennec als aufrechte 2D-Karte.
+  Kulisse byte-identisch, alle 138 Figurenframes pixel-identisch, lediglich
+  12x12-Atlas statt einer 17664px-Zeile fuer kleinere GPU-Texturlimits.
+- **Aenderung im Prototyp:** Physische Bewegung, gerichteter Gang/Lauf/Sprung,
+  Boden-/Bank-/Randkollisionen, Standflaechenschatten, begrenzte Folge-Kamera,
+  Zoom, kleiner Schwenk und Abendlicht. Zwei Daumen werden getrennt verarbeitet.
+  Gemaltes Licht bleibt Teil der Originalkulisse statt einer vollen PBR-Neubeleuchtung.
+- **TESTED BEHAVIOR:** Godot importiert und startet ohne Scriptfehler. Laufzeittest
+  prueft Bewegung, Bankblockade/-landung, Sprung, Rueckkehr zum Boden, Bodenschatten
+  auf der Bank, Grenzen, Kamerasicht an beiden Kartenenden und Lichtwechsel.
+  Touchtests speisen viewport-lokale ScreenTouch-/Drag-Ereignisse fuer Joystick
+  und einen zweiten Finger ein. Echte Desktop-OpenGL-Renderings visuell geprueft.
+  Zweiter Agent prueft CODE gemaess Repositoryregel; Kamera-, Multitouch- und
+  Schattenbefunde sind korrigiert und mit Laufzeitchecks ergaenzt.
+- **UNVERIFIED / Grenzen:** Keine APK und keine Android-GPU-/Telefonmessung.
+  Schmaler Laufstreifen, Relief statt frei drehbarer Landschaft; statische
+  Blatt-/Wassermalerei, naeherungsweise Bankverdeckung. Innenraeume, Tueren,
+  Bewohner, Kampf und Living Agent sind noch nicht angebunden. Eine komplette
+  Laufzeitmigration ist durch diesen Prototyp nicht vorweggenommen.
+- **Geschuetzt / Migration:** Keine Aenderung an Android-Spielcode, Figurendesign,
+  Agentenzielen, Reminder-Semantik, Balancing, Progression, Room oder Spielstaenden.
+  Keine Datenmigration. Ruecksetzen durch Revert des Prototype-PR oder Entfernen
+  des isolierten Projektordners; der native Client bleibt startbar.
+- **Naechster Schritt:** Stilabnahme des echten Godot-Ausschnitts, danach gezielte
+  Tiefenmasken fuer Bank/Baeume und eine Verbindung zu einem gemalten Innenraum.
+
 ### 2026-10-10 - Zusammenpassende Figuren beim Animationswechsel (living-atlases-v2)
 
 - **DOCUMENTED INTENT:** Martin meldet nach PR #353, dass die Veraenderungen
