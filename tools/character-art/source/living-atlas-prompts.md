@@ -11,7 +11,10 @@ Die bestehenden Ensemble-/Mobility-Prompts bleiben die Stilvorlage.
 
 `*-living-atlas.png`: genau 512x1024, vier Spalten, acht Zeilen,
 128px-Zellen, mindestens 26px transparenter Rand pro Zellenseite,
-63 gemeinsame opake Farben plus Transparenz. Kein Artwork wird an festen
+Farbwerte ausschliesslich aus dem vorhandenen Spielbogen derselben Figur.
+`*-living-master.png`: 1024x2048, 256px-Zellen, mindestens 52px Rand;
+diese hoeher aufgeloesten Quellen speisen den Spieleexport ohne Vergroesserung.
+Kein Artwork wird an festen
 Rohbild-Zellengrenzen abgeschnitten: erst 32 vollstaendige Komponenten erkennen,
 danach mit EINEM Massstab pro Charakter registrieren. Sitzkorrekturen werden
 an der daneben gezeichneten Standanatomie kalibriert, nicht an der Zellhoehe.
@@ -32,8 +35,8 @@ node tools/character-art/test_living_atlases.js
 
 Nur ein erneuter Rohbildimport braucht `--import RAW_DIRECTORY` mit sechs PNGs.
 Die zusaetzliche anatomische Sitzquelle kann dabei mit
-`--posture POSTURE_PNG` angegeben werden. Die abgenommenen 4x8-Atlanten
-sind die vollstaendige, direkt reproduzierbare Importquelle im Repository.
+`--posture POSTURE_PNG` angegeben werden. Die eingecheckten 4x8-Master
+sind die vollstaendige, direkt reproduzierbare Exportquelle im Repository.
 
 ## Laufzeit und Abnahme
 
@@ -159,3 +162,37 @@ ROW1 FENNEC corrected reference1: orange cream fox enormous upright ears amber e
 ROW2 PUFFLING reference2: round cream cloud fluffy creature blue-grey tufts tiny blue feet sage hood leaf clasp brown satchel. c1 standing supported by tiny short springy legs under fleece; c2 lowering with short legs folding; c3 FULLY SEATED two tiny blue feet forward puffy arms resting, same ROUND HEAD/HOOD SIZE, support legs folded so overall25% lower; c4 same seated with tiny foot/hand fidget. No boots/long legs or squashed face, eyes OPEN.
 ROW3 WYRMLING reference3: slim jade dragon cream throat/belly rusty copper wings/fingers shortcurved horns rustycrest long tapered rust-spiked tail copper shoulder strap amber pendant creamscarf. c1 upright TWO hind feet straight support legs; c2 halfway lowering pelvis as hind knees fold; c3 FULLY SEATED pelvis grounded folded hind legs claws forward forepaws rest, exactsame HEAD/HORNS SIZE and wings folded, overall30% lower than c1; c4 same seated posture small claw/tail fidget. No flight, eyesOPEN.
 The key requirement is standing vs seated HEIGHT DIFFERENCE by joint articulation with IDENTICAL HEAD SCALE within each row. Do not make 12 equally tall figures.
+
+
+## Kohärenz-Korrektur nach Nutzerfeedback, v2
+
+Der v1-Export war als Übergang zwischen altem Gang und neuem Stand nicht ausreichend konsistent.
+Die dort genannte eigene 63-Farben-Palette und das Rückvergrößern der kleinen Quelle sind ersetzt:
+Die sechs `*-living-master.png` sind 1024 x 2048, 4 x 8 Zellen à 256px mit mindestens 52px Rand.
+Sie sind die reproduzierbaren Spiel-Exportquellen. Die `*-living-atlas.png` bleiben 512 x 1024
+für die 128px-Zellvorschau. Das Spiel nutzt 4096 x 128, 32 Bilder, aus dem höher aufgelösten Master.
+Farbwerte stammen direkt aus `app-sim/src/main/assets/creatures/{species}.png`; kein zweites Farbsystem.
+
+Regeneration: `node tools/character-art/living_atlases.js`.
+Prüfung: `node tools/character-art/test_living_atlases.js`.
+Vergleich inkl. Gang/Blinzeln/Landung: `python tools/character-art/preview_living_coherence.py`.
+Die Vorschau zeigt echte exportierte Bildrollen, keine APK-Aufnahme und keinen Nachweis einer perfekten Anatomie.
+
+Die Korrekturen entstanden mit integriertem ImageGen. Identitätsreferenzen sind die tatsächlichen
+128px-Spielbilder: seitlicher Stand, Front, Rücken, zwei Gangphasen, Dreiviertelansicht. Die erste
+Fennec-Korrektur allein passte noch nicht; gewählt ist die anschließende Proportionskorrektur.
+Wyrmlings neue Turn-Zeichnungen 9/10 kamen vertauscht zurück und werden beim Import getauscht.
+Nur Pufflings Sitzbild braucht weiter die bestehende separate Sitzkorrektur; Fennec/Wyrmling nutzen
+jetzt ihre eigenen neuen Sitzzeichnungen. Die alten Gang- und Aktionsbilder sind unverändert.
+
+### Fennec: Identitätskorrektur (erster Versuch)
+
+undefined
+
+### Fennec: gewählte Proportionskorrektur
+
+undefined
+
+### Wyrmling: gewählte Identitäts-/Proportionskorrektur
+
+undefined

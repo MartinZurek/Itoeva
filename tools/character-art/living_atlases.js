@@ -64,7 +64,7 @@ function crop(im,x,y,w,h) {
 
 function trim(im) { const b=bounds(im);return crop(im,b.x0,b.y0,b.width,b.height); }
 
-async function place(art,factor,baseline,axis=64,contact=false) {
+async function place(art,factor,baseline,axis=64,contact=false,cell=FRAME) {
   const width=Math.max(1,Math.round(art.width*factor)),height=Math.max(1,Math.round(art.height*factor));
   const data=await sharp(art.data,{raw:{width:art.width,height:art.height,channels:4}})
     .resize(width,height,{kernel:'nearest'}).raw().toBuffer();
@@ -75,26 +75,47 @@ async function place(art,factor,baseline,axis=64,contact=false) {
     if(max>=0)cx=(min+max)/2;
   }
   // Breite Fluegel haben Vorrang vor einer idealen Achse; nie am Bildrand abschneiden.
-  const dx=Math.max(2,Math.min(126-width,Math.round(axis-cx))),dy=baseline-height+1;
-  if(dx<2 || dx+width>126 || dy<2 || baseline>125)throw Error('Pose passt nicht ins Spielraster');
-  const out=Buffer.alloc(FRAME*FRAME*4);
-  for(let y=0;y<height;y++)data.copy(out,((y+dy)*FRAME+dx)*4,y*width*4,(y+1)*width*4);
-  return {data:out,width:FRAME,height:FRAME};
+  const dx=Math.max(2,Math.min(cell-2-width,Math.round(axis-cx))),dy=baseline-height+1;
+  if(dx<2 || dx+width>cell-2 || dy<2 || baseline>cell-3)throw Error('Pose passt nicht ins Spielraster');
+  const out=Buffer.alloc(cell*cell*4);
+  for(let y=0;y<height;y++)data.copy(out,((y+dy)*cell+dx)*4,y*width*4,(y+1)*width*4);
+  return {data:out,width:cell,height:cell};
 }
 
 function join(frames,columns) {
-  const width=columns*FRAME,height=frames.length/columns*FRAME,data=Buffer.alloc(width*height*4);
+  const cell=frames[0].width;
+  const width=columns*cell,height=frames.length/columns*cell,data=Buffer.alloc(width*height*4);
   frames.forEach((fr,i)=>{
-    const x=i%columns*FRAME,y=Math.floor(i/columns)*FRAME;
-    for(let j=0;j<FRAME;j++)fr.data.copy(data,((y+j)*width+x)*4,j*FRAME*4,(j+1)*FRAME*4);
+    const x=i%columns*cell,y=Math.floor(i/columns)*cell;
+    for(let j=0;j<cell;j++)fr.data.copy(data,((y+j)*width+x)*4,j*cell*4,(j+1)*cell*4);
   });
   return {data,width,height};
 }
 
-async function save(im,file) {
+function paletteOf(im) {
+  const colors=new Map();
+  for(let p=0;p<im.data.length;p+=4)if(im.data[p+3]){
+    const key=im.data.readUIntBE(p,3);colors.set(key,[im.data[p],im.data[p+1],im.data[p+2]]);
+  }
+  return [...colors.values()];
+}
+
+async function save(im,file,canonicalPalette) {
+  if(canonicalPalette) {
+    // Dieselben Farbwerte wie Gang/Blinzeln/Handlungen, statt einer zweiten 63-Farben-Palette.
+    const mapped=new Map();
+    for(let p=0;p<im.data.length;p+=4)if(im.data[p+3]){
+      const key=im.data.readUIntBE(p,3);let rgb=mapped.get(key);
+      if(!rgb){const r=im.data[p],g=im.data[p+1],b=im.data[p+2];let best=Infinity;
+        for(const col of canonicalPalette){const d=(r-col[0])**2+(g-col[1])**2+(b-col[2])**2;if(d<best){best=d;rgb=col;}}
+        mapped.set(key,rgb);
+      }
+      im.data[p]=rgb[0];im.data[p+1]=rgb[1];im.data[p+2]=rgb[2];
+    }
+  }
   const colors=new Set();
   for(let p=0;p<im.data.length;p+=4)if(im.data[p+3])colors.add(im.data.readUIntBE(p,3));
-  if(colors.size>63) {
+  if(!canonicalPalette && colors.size>63) {
     const hist=new Map();
     for(let p=0;p<im.data.length;p+=4)if(im.data[p+3]){
       const r=im.data[p],g=im.data[p+1],b=im.data[p+2],key=(r>>4)*256+(g>>4)*16+(b>>4);
@@ -128,14 +149,18 @@ async function save(im,file) {
   fs.writeFileSync(file,PNG.sync.write(im,{colorType:6,filterType:4,deflateLevel:9}));
 }
 
-async function build(rawDirectory,postureFile) {
+async function build(rawDirectory,postureFile,options={}) {
   const postures=postureFile?figures(postureFile,12):null;
-  const manifest={version:1,frame:128,columns:4,rows:8,gutter:26,ground:125,species:{}};
+  const manifest={version:2,frame:128,columns:4,rows:8,gutter:26,ground:125,masterCell:256,palette:'existing-game',species:{}};
   for(const name of NAMES) {
     const source=path.join(SOURCE,`${name}-living-atlas.png`);
+    const master=path.join(SOURCE,`${name}-living-master.png`);
+    const old=PNG.sync.read(fs.readFileSync(path.join(ASSETS,`${name}.png`)));
+    const palette=paletteOf(old);
     if(rawDirectory) {
-      const art=figures(path.join(rawDirectory,`${name}.png`));
-      if(postures && ['fennec','puffling','wyrmling'].includes(name)) {
+      let art=figures(path.join(rawDirectory,`${name}.png`));
+      if(options.order?.[name])art=options.order[name].map(i=>art[i]);
+      if(postures && (options.postureNames||['fennec','puffling','wyrmling']).includes(name)) {
         const row=['fennec','puffling','wyrmling'].indexOf(name)*4;
         const seated=postures[row+3],factor=art[4].height/postures[row].height;
         const width=Math.round(seated.width*factor),height=Math.round(seated.height*factor);
@@ -144,12 +169,14 @@ async function build(rawDirectory,postureFile) {
       }
       const factor=74/Math.max(...art.map(a=>Math.max(a.width,a.height)));
       const packed=await Promise.all(art.map(a=>place(a,factor,101)));
-      await save(join(packed,4),source);
+      await save(join(packed,4),source,palette);
+      // Die kleine 4x8-Vorschau ist kein Export-Master: Rueckvergroessern verlor Gesichtsdetails.
+      const masterFactor=152/Math.max(...art.map(a=>Math.max(a.width,a.height)));
+      await save(join(await Promise.all(art.map(a=>place(a,masterFactor,203,127.5,false,256))),4),master,palette);
     }
-    const packed=PNG.sync.read(fs.readFileSync(source));
-    if(packed.width!==512 || packed.height!==1024)throw Error('Atlas muss exakt 512 x 1024 sein');
-    const art=Array.from({length:32},(_,i)=>trim(crop(packed,i%4*128,Math.floor(i/4)*128,128,128)));
-    const old=PNG.sync.read(fs.readFileSync(path.join(ASSETS,`${name}.png`)));
+    const packed=PNG.sync.read(fs.readFileSync(master));
+    if(packed.width!==1024 || packed.height!==2048)throw Error('Master muss exakt 1024 x 2048 sein');
+    const art=Array.from({length:32},(_,i)=>trim(crop(packed,i%4*256,Math.floor(i/4)*256,256,256)));
     const stand=crop(old,0,0,128,128),oldHeight=bounds(stand).height;
     const factor=Math.min(oldHeight/art[4].height,112/Math.max(...art.map(a=>a.width)),122/Math.max(...art.map(a=>a.height)));
     let supportMin=128,supportMax=-1;
@@ -166,9 +193,9 @@ async function build(rawDirectory,postureFile) {
     // bleibt unveraendert; die untersten zwei Kontaktzeilen werden registriert.
     for(const start of [0,4])for(let i=start+1;i<start+4;i++)
       frames[start].data.copy(frames[i].data,124*128*4,124*128*4);
-    await save(join(frames,32),path.join(ASSETS,`${name}-living.png`));
+    await save(join(frames,32),path.join(ASSETS,`${name}-living.png`),palette);
     const nativeHeight=bounds(frames[4]).height;
-    manifest.species[name]={oldHeight,nativeHeight,renderScale:Number((oldHeight/nativeHeight).toFixed(6))};
+    manifest.species[name]={oldHeight,nativeHeight,renderScale:Number((oldHeight/nativeHeight).toFixed(6)),samplingFactor:Number(factor.toFixed(6))};
     console.log(name,manifest.species[name]);
   }
   fs.writeFileSync(path.join(SOURCE,'living-atlas-manifest.json'),JSON.stringify(manifest,null,2)+'\n');
