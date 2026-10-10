@@ -669,6 +669,48 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-10 - Ganze gemalte Welt, Innenraeume und Aktionen in Godot (godot-painted-world-v020)
+
+- **DOCUMENTED INTENT:** Martin erweitert den Godot-Auftrag auf die gesamte vorhandene
+  Karte, Innenraeume, alle Figuren, das Anfangsmenue und bessere Bewegung. Rueckfrage
+  klaert "Spruchmenue" als Sprung/Aktionen. Das originale gemalte Design bleibt verbindlich.
+- **FACT:** Sieben verbundene Panoramen, sechs Original-Uebergaenge, 17 Aussenorte,
+  elf Innenraeume und 22 gerichtete Tueren sind in der separaten Godot-Buehne spielbar.
+  Der Adapter exportiert die nativen Welt-/Raum-/Moebel-/Massstabsanker; 51 Innenkoerper,
+  acht Aussen-Sitzflaechen und die native Pixelkiste liefern Kollision und Verdeckung.
+  Alle sechs Spezies verwenden je 170 pixel-identische Rich-/Living-Zeichnungen.
+  Das Startmenue nutzt das originale Wohnzimmerbild, Wesenwahl und Leitsaetze.
+- **Produktentscheidung:** Godot-InputMap und CharacterBody3D statt externer Steuerungs-
+  Plugins. Zwei unabhaengige Finger, konfigurierbarer Analogstick, stetiges Tempo,
+  Beschleunigen/Bremsen, wegabhaengige Laufzyklen, Richtung, Start/Stopp, Rolle,
+  Sprungpuffer, Landen und gemalte Sitzanker. Raumgrenzen reservieren Figurenbreite;
+  die erreichbaren Tueranker folgen dieser Begrenzung auch fuer grosse Wesen.
+- **Persistenz/Migration:** Eigene atomare Datei user://painted_world_v2.json fuer
+  Einstellungen und Standort je Spezies. Keine Verbindung zu Room, nativen GameAdventure-
+  Snapshots, Remindern, App 1 oder Stream. Parkbewohner sind Darstellung mit Leitsatz,
+  keine erfundenen Agentenerinnerungen, Besitzuebergaben oder LAS-Migration.
+- **TESTED BEHAVIOR:** 76 Funktionschecks; 66 Raum/Spezies-Framingkombinationen mit
+  echten opaken Spritegrenzen; 132 echte Spezies/Tuerpfade; urspruenglicher Ausschnitt-
+  Smoke im Software-OpenGL-Lauf mit 44 Checks. Alle ohne Fehler. 25 Originaldateien
+  byte-identisch, 6x170 Frames pixel-identisch. Desktop-Renderings von Menue, Park,
+  Bruecke, Wohnzimmer, Kueche und Einstellungen visuell geprueft. Zweites CODE-Review
+  fand Preload-, Sitz-, Framing- und Tuerfehler; Korrekturen sind nachgeprueft.
+- **FACT / APK:** Godot 4.5.1, Version 0.2.0 / Code 3, ARM64, Minimum API 24 / Target 35, Querformat,
+  ohne Internetberechtigung. Eigene App Itoeva Godot Welt, Paket
+  com.itoeva.godot.hd2d.world fuer parallele Installation zur frueheren Test-App.
+  78.119.773 Bytes; ZIP, JSON-Katalog, Exportausschluesse, ARM64, 16-KiB-Ausrichtung
+  und APK-Signaturen v2/v3 geprueft. Signierschluessel ausserhalb des Repositorys.
+- **UNVERIFIED / Grenzen:** Telefonstart, FPS, thermisches Verhalten und GPU/Speicher
+  sind nicht gemessen. Gerichtete Reliefbuehne und angenaeherte Konturverdeckung;
+  mehrere Originalraeume sind 480x270. Ortslicht, Stoff/Wasserbewegung, komplette
+  Musikaufloesung, Begegnungs-/Besitzsystem und native Spielstaende sind nicht portiert.
+  Die fruehere Aussage "Innenraeume/Tueren/Bewohner nicht angebunden" gilt jetzt
+  nur noch fuer die urspruengliche Ausschnittszene, nicht fuer full_world.tscn.
+- **Ruecksetzen / Uebergabe:** Isolierten Erweiterungscommit revertieren; alte Godot-
+  Szene bleibt vorhanden, native Daten bleiben lesbar. README nennt Start/Export,
+  Pruefscripte und Grenzen. Naechster Schritt ist Martins APK-Abnahme auf dem Telefon,
+  danach gezielte Tiefenmasken und beauftragte Spielsysteme.
+
 ### 2026-10-10 - Godot-Test-APK und passender Fennec-Massstab (godot-painted-hd2d-apk-v012)
 
 - **DOCUMENTED INTENT:** Martin fordert eine APK und die erneute Pruefung von

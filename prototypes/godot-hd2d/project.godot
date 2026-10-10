@@ -3,7 +3,8 @@ config_version=5
 
 [application]
 config/name="Itoeva – Gemalte Welt in Godot"
-run/main_scene="res://scenes/painted_world.tscn"
+run/main_scene="res://scenes/full_world.tscn"
+config/quit_on_go_back=false
 config/features=PackedStringArray("4.5", "GL Compatibility")
 
 [display]
