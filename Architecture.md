@@ -585,3 +585,23 @@ Spielerbegegnungen, keine autonomen Kandidaten. V1 wird erhalten und migriert; a
 V2 nicht, deshalb muss ein Rueckbau den V2-Reader behalten. Room, App 1, Stream und Reminder
 behalten ihre bestehenden Pfade. Pruef- und Ruecksetzvertrag:
 docs/itoeva2-world-polish-and-encounters.md.
+
+### Game: Physik und Asset-Vorbereitung (09.10.2026)
+
+GameTerrain begrenzt den bestehenden GameMovement-Motor auf den gemalten Boden und aktiviert
+im Game-Client durchlaufene Sprungkollision. GameWater teilt Ufer/Steg-/Felsmaterial,
+einmalig vermessene Wasserausschnitte und die Schwimmpose von Spieler/Bewohnern. Kontakte
+folgen wirklicher Bewegung. GameDoors verbindet gemalte Oeffnung, Treffer, Anlauf und
+420/320-ms-Tuerbewegung; gemeinsame Flurtueren verwenden eine Auswahl oberhalb der Touchsteuerung.
+Bewegte Tuerblaetter teilen mit GameAtmosphere die tatsaechlich sichtbare Bildquelle samt
+Naht-Offset; das verdeckte Regionsbild wird an deckenden Anschluessen nicht eingesetzt.
+
+GameAssetPlan/Loader laden die 24 Welt-/Anschluss-/Innenbilder und sechs Figuren-Sheets vor
+dem ersten sichtbaren Spielrahmen ausserhalb des UI-Threads. GameLoadingScreen ist deckend;
+der erste Kamerarahmen entsteht unabhaengig von Menuepausen. Zusaetzliches Bodenlicht folgt
+in 32-Zeilen-Bloecken im Stand. Fertige Kopien ersetzen unveraenderte sichtbare Bitmaps;
+Rohreferenzen werden schrittweise freigegeben, fertige Bilder nutzen einen weichen Cache.
+GameBreath ist nur lokale Spielausdauer ohne Persistenz/Agentenbedarf/XP-Wirkung. Ortswechsel
+haben kein neues Asset-IO; die Laufpause wird nie an den Ladefortschritt gekoppelt.
+V2 liest alte Positionen unveraendert, der aktive Client begrenzt sie auf den legalen Boden.
+Pruefvertrag, Scan aller 28 Orte und Telefon-Abnahme: docs/itoeva2-world-physics-and-loading.md.

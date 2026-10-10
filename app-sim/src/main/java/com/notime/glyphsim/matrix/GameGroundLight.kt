@@ -29,22 +29,28 @@ object GameGroundLight {
         GameWorld.seams.firstOrNull { it.asset == asset }?.let { return Geometry(it.x-480f,960f,640f,null) }
         return null
     }
+    private data class Section(val origin: Float,val scene: GameScenes.Scene,val pieces: List<GameFurniture.Piece>)
+    private val sections by lazy { GameWorld.places.map { place ->
+        val scene=GameWorld.scene(place)!!;Section(GameWorld.origin(place),scene,GameFurniture.pieces(scene))
+    } }
+    private val interiorPieces by lazy { GameInteriorCatalog.scenes.values.associateWith { GameFurniture.pieces(it) } }
     fun floor(asset: String, u: Float, v: Float): Boolean {
         val geometry = geometry(asset) ?: return false
         val y = v * geometry.height
         if (geometry.interior != null) {
             val scene = geometry.interior; val x = u * geometry.width
             if (y < maxOf(scene.farY, 193f) || y > 265f) return false
-            return GameFurniture.pieces(scene).none { piece -> y <= piece.ground && x in piece.left-5f..piece.right+5f && piece.contours.any { GameWorldShadows.contains(it,x,y) } }
+            return interiorPieces.getValue(scene).none { piece -> y <= piece.ground && x in piece.left-5f..piece.right+5f && piece.contours.any { GameWorldShadows.contains(it,x,y) } }
         }
         // Der Vordergrund, Felswaende, Stämme und Wasser werden nicht als Boden aufgezogen.
         if (y !in 520f..604f) return false
         val x = geometry.start + u * geometry.width
-        val place = GameWorld.places.lastOrNull { GameWorld.origin(it) <= x } ?: return false
-        if (place == PlayScene.Place.GROTTO) return false
-        val scene = GameWorld.scene(place)!!
-        if (GameWorld.material(scene,x-GameWorld.origin(place),y) == GameEnvironment.Material.WATER) return false
-        return GameFurniture.pieces(scene).none { p -> p.contours.any { GameWorldShadows.contains(it,x-GameWorld.origin(place),y) } }
+        val section=sections.lastOrNull { it.origin<=x } ?: return false
+        val scene=section.scene
+        if(scene.place==PlayScene.Place.GROTTO) return false
+        val local=x-section.origin
+        if(GameWorld.material(scene,local,y)==GameEnvironment.Material.WATER) return false
+        return section.pieces.none { p -> p.contours.any { GameWorldShadows.contains(it,local,y) } }
     }
     /** Eingabe ist ein kleines, gleichmaessig gesampeltes Lichtfeld, keine Kopie des Vollbildes. */
     fun estimate(asset: String, sample: (Float,Float) -> Int): Field {

@@ -1,15 +1,9 @@
 package com.notime.glyphsim.ui
 
 import android.graphics.BitmapFactory
-import android.graphics.Bitmap
-import com.notime.glyphsim.matrix.GameGroundLight
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.getValue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -27,47 +21,6 @@ import com.notime.glyphsim.matrix.PlayControl
 import com.notime.glyphsim.matrix.PlayScene
 import kotlin.math.sin
 import kotlin.math.roundToInt
-
-/**
- * Laedt das gemalte Bild eines Ortes (siehe [GameScenes]) - einmal je Ort. `null`, wenn es in
- * dieser Variante keines gibt: Die Bilder liegen nur in der Spiel-Variante.
- */
-@Composable
-internal fun rememberGameSceneImages(enabled: Boolean): Map<String, ImageBitmap?> {
-    val assets = LocalContext.current.assets
-    val images by produceState<Map<String, ImageBitmap?>>(emptyMap(), assets, enabled) {
-        value = withContext(Dispatchers.Default) {
-        if (!enabled) emptyMap() else
-            (GameWorld.regions.map { it.asset } + GameWorld.seams.map { it.asset } + com.notime.glyphsim.matrix.GameInteriorCatalog.scenes.values.map { it.asset })
-                .distinct().associateWith { asset -> runCatching {
-                    assets.open(asset).use { BitmapFactory.decodeStream(it) }?.let { source ->
-                        val field = GameGroundLight.estimate(asset) { u,v ->
-                            source.getPixel((u * source.width).toInt().coerceAtMost(source.width-1),
-                                (v * source.height).toInt().coerceAtMost(source.height-1))
-                        }
-                        val bitmap = if (source.isMutable) source else source.copy(Bitmap.Config.ARGB_8888, true)
-                        // Nur kleine Zeilenpuffer; pro Bildtakt findet keine Pixelverarbeitung statt.
-                        val row = IntArray(bitmap.width)
-                        for (y in 0 until bitmap.height) {
-                            val v = (y+.5f)/bitmap.height
-                            if (v < .71f || v > .99f) continue
-                            bitmap.getPixels(row,0,bitmap.width,0,y,bitmap.width,1)
-                            for (x in row.indices) {
-                                val u=(x+.5f)/bitmap.width
-                                val gain=field.gain(u,v)
-                                if (kotlin.math.abs(gain-1f) > .002f && GameGroundLight.floor(asset,u,v))
-                                    row[x]=GameGroundLight.apply(row[x],gain)
-                            }
-                            bitmap.setPixels(row,0,bitmap.width,0,y,bitmap.width,1)
-                        }
-                        if (source !== bitmap) source.recycle()
-                        bitmap.asImageBitmap()
-                    }
-                }.getOrNull() }
-        }
-    }
-    return images
-}
 
 /**
  * Die Bewegungs- und Lichtebenen eines Ortes (siehe `tools/world-art/animate.py`):

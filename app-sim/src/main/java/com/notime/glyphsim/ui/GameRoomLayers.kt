@@ -97,7 +97,7 @@ internal fun DrawScope.roomParts(scene: GameScenes.Scene, layers: GameRoomLayers
 internal fun DrawScope.roomContacts(scene: GameScenes.Scene, state: GameEnvironment.State,
     fit: GameScenes.Fit, alpha: Float, foreground: Boolean = false) {
     withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
-        clipRect(0f, 0f, 480f, 270f) {
+        clipRect(0f, 0f, if (GameWorld.isWorld(scene)) GameWorld.region(scene.place)!!.section else 480f, GameWorld.height(scene)) {
             state.contacts.filter { it.place == scene.place }.forEach { c ->
                 val age = (state.clock - c.born).coerceAtLeast(0L)
                 val seconds = age / 1000f

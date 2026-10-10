@@ -51,11 +51,12 @@ object GameAdventure {
     fun safePosition(place: Place, requested: PlayControl.Pos, surfaces: List<GameMovement.Surface>? = null): PlayControl.Pos {
         val x = requested.x.takeIf { it.isFinite() }?.coerceIn(.025f, .975f) ?: .5f
         val d = requested.depth.takeIf { it.isFinite() }?.coerceIn(.025f, .975f) ?: .65f
-        val pos = PlayControl.Pos(x, d)
+        val scene = GameWorld.scene(place)
+        val pos = scene?.let { GameTerrain.clamp(it,PlayControl.Pos(x,d)) } ?: PlayControl.Pos(x,d)
         val obstacles = surfaces ?: GameWorld.scene(place)?.let { GameSurfaces.painted(it) }.orEmpty()
         if (obstacles.none { it.contains(pos) && it.heightAt(pos) > 1f }) return pos
         return (1..19).flatMap { ix -> (1..19).map { iy -> PlayControl.Pos(ix / 20f, iy / 20f) } }
-            .filter { p -> obstacles.none { it.contains(p) && it.heightAt(p) > 1f } }
+            .filter { p -> (scene == null || GameTerrain.valid(scene,p)) && obstacles.none { it.contains(p) && it.heightAt(p) > 1f } }
             .minByOrNull { p -> (p.x - x) * (p.x - x) + (p.depth - d) * (p.depth - d) * .0625f }
             ?: PlayControl.Pos(.5f, .95f)
     }
@@ -174,7 +175,7 @@ object GameAdventure {
         val met = values(lines[8]).filter { id -> LivingResidents.all.any { it.profileId == id } }.toSet()
         val migratedSocial = if (version == 1) GameEncounters.legacyKnowledge(met,
             (480L + elapsed / MILLIS_PER_MINUTE).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), place) else social
-        return State(place, safePosition(place, PlayControl.Pos(xy[0], xy[1])), PlayControl.Dir.valueOf(lines[3]),
+        return State(place, PlayControl.Pos(xy[0].coerceIn(.025f,.975f),xy[1].coerceIn(.025f,.975f)), PlayControl.Dir.valueOf(lines[3]),
             PlayBackpack.decode(lines[4]), elapsed, values(lines[6]), lines[7].split(',').filter { it.isNotEmpty() }.map { Event.valueOf(it) }.distinct(),
             met, lights[0], lights[1],
             lines[10].split(',').filter { it.isNotEmpty() }.map { Carried.valueOf(it) }, migratedSocial, goods)

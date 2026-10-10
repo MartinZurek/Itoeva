@@ -175,6 +175,7 @@ internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos,
                     GameSceneLighting.sources(scene, minute, lampOn, tvOn, (clock / 200L).toInt()), seat?.lift ?: 0f),
                 gameWind = GameAtmosphere.figureBend(scene, species, 0f, clock,
                     GameWorld.origin(scene.place) + x, weather),
+                gameSwim = GameWater.swim(scene,renderPos,seat?.lift ?: 0f,actor.facing,actor.moving,clock,species),
                 gameFabric = GameFabric.Pose(species,
                     if (GameWorld.isWorld(scene) && scene.place != PlayScene.Place.GROTTO)
                         GameAtmosphere.wind(GameWorld.origin(scene.place) + x, clock, weather) else .12f,
@@ -312,5 +313,17 @@ internal fun GameResidentTalkPanel(title: String, dialogue: String, items: List<
             GameActionButton(if (german) "Gemeinsam Wegweiser bauen · 1 übergebenes Holz" else "Build waymarks together · 1 given wood",
                 onWaymark, Modifier.padding(top = 8.dp))
         GameActionButton(if (german) "Weg ansehen" else "Show route", onRoute, Modifier.padding(top = 12.dp))
+    }
+}
+
+/** Mehrere Raeume hinter derselben gemalten Tuer bleiben ohne erfundene Wanddurchgaenge erreichbar. */
+@Composable
+internal fun GameDoorChoicePanel(passages: List<GameWorld.Passage>, german: Boolean,
+    onSelect: (GameWorld.Passage)->Unit, onClose: ()->Unit) {
+    androidx.activity.compose.BackHandler(onBack=onClose)
+    GameWorldPanel(if(german) "Durch den Flur" else "Through the hallway",onClose) {
+        passages.forEach { passage ->
+            GameActionButton(com.notime.glyphsim.stream.FennecWorld.name(passage.to,german),{ onSelect(passage) },Modifier.fillMaxWidth())
+        }
     }
 }

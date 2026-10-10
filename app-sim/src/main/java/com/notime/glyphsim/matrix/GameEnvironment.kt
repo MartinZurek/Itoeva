@@ -55,13 +55,15 @@ object GameEnvironment {
         var foot = next.foot
         fun contact(x: Float, y: Float, support: String?, height: Float, impact: Float) {
             val m = material(x, y, support)
-            contacts += Contact(scene.place, x, y - height, m, next.clock, lifetime(m), foot++ % 2,
+            val waterRise=if(m==Material.WATER) GameCharacterScale.waterRise(scene,GameScenes.posAt(scene,x,y)) else 0f
+            contacts += Contact(scene.place, x, y - height - waterRise, m, next.clock, lifetime(m), foot++ % 2,
                 if (distance > 0f) dx / distance else 0f,
                 if (distance > 0f) dy / distance else 1f, impact)
         }
         // Auch eine gepufferte Sprungkette hat genau einen Kontakt zwischen beiden Boegen.
         val landed = before.action == GameMovement.Action.JUMP && before.arc != null &&
-            (after.action != GameMovement.Action.JUMP || after.elapsed < before.elapsed)
+            (after.action != GameMovement.Action.JUMP || (after.elapsed < before.elapsed &&
+                after.pos == before.arc.to && after.height <= before.arc.toHeight + .1f))
         if (landed) {
             val arc = before.arc!!
             val (x, y) = GameScenes.feet(scene, arc.to)
@@ -90,6 +92,26 @@ object GameEnvironment {
         }
         return next.copy(remainder = (next.remainder + distance) % stride,
             contacts = contacts.takeLast(MAX_CONTACTS), foot = foot)
+    }
+
+    /** Bewohner hinterlassen Kontakt nur nach einem echten Wegschritt, nie beim Einblenden.
+     * Gemeinsame Uhr und begrenzte Liste; dieser Leser startet keinen zweiten Simulationslauf. */
+    fun residentContacts(state: State,scene: GameScenes.Scene,before: Map<String,GameResidents.Actor>,
+        after: Map<String,GameResidents.Actor>,clock: Long,dt: Long): State {
+        if(clock/350L == (clock-dt.coerceIn(0L,50L)).coerceAtLeast(0L)/350L) return state
+        val traces=after.mapNotNull { (id,actor) ->
+            val previous=before[id] ?: return@mapNotNull null
+            if(!actor.moving || actor.seat!=null || previous.pos == actor.pos) return@mapNotNull null
+            val a=GameScenes.feet(scene,previous.pos); val b=GameScenes.feet(scene,actor.pos)
+            val dx=b.first-a.first; val dy=b.second-a.second
+            val distance=sqrt(dx*dx+dy*dy)
+            if(distance<=.001f || distance>35f) return@mapNotNull null
+            val material=GameWorld.material(scene,b.first,b.second) ?: return@mapNotNull null
+            val waterRise=if(material==Material.WATER) GameCharacterScale.waterRise(scene,actor.pos) else 0f
+            Contact(scene.place,b.first,b.second-waterRise,material,state.clock,lifetime(material),
+                ((clock/350L+actor.snapshot.species.ordinal)%2L).toInt(),dx/distance,dy/distance)
+        }
+        return state.copy(contacts=(state.contacts+traces).takeLast(MAX_CONTACTS))
     }
 
     /** Gemeinsame Zeitbasis, aber jede Baumkrone und jede Welle hat eine eigene Phase. */

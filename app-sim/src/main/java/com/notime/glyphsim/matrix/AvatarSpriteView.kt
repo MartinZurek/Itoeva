@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -102,6 +104,7 @@ fun AvatarSpriteView(
     gameLight: GameSceneLighting.CharacterLight? = null,
     gameWind: Float = 0f,
     gameFabric: GameFabric.Pose? = null,
+    gameSwim: GameWater.Swim? = null,
     gameMood: AvatarMood? = null
 ) {
     // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
@@ -155,7 +158,7 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn, gait, living, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind, gameFabric, gameMood)
+                gameDirection, gameMoving, turn, gait, living, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind, gameFabric, gameSwim, gameMood)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide, gameLight)
         }
@@ -180,7 +183,7 @@ internal object CreatureSheets {
                 try {
                     require(frameSize in setOf(CreatureSprites.FRAME, CreatureSprites.Rich.FRAME) && bitmap.width % frameSize == 0)
                     val frames = List(bitmap.width / frameSize) { index ->
-                        Bitmap.createBitmap(bitmap, index * frameSize, 0, frameSize, frameSize).asImageBitmap()
+                        Bitmap.createBitmap(bitmap, index * frameSize, 0, frameSize, frameSize).also { it.prepareToDraw() }.asImageBitmap()
                     }
                     // Ein fehlender/alter Zusatzbogen darf den funktionierenden Gang nicht abschalten.
                     val extra = if (frameSize == CreatureSprites.Rich.FRAME && frames.size == CreatureSprites.Rich.FRAME_COUNT) {
@@ -190,7 +193,7 @@ internal object CreatureSheets {
                             try {
                                 require(addition.height == frameSize && addition.width == frameSize * CreatureSprites.Living.COUNT)
                                 List(CreatureSprites.Living.COUNT) { index ->
-                                    Bitmap.createBitmap(addition, index * frameSize, 0, frameSize, frameSize).asImageBitmap()
+                                    Bitmap.createBitmap(addition, index * frameSize, 0, frameSize, frameSize).also { it.prepareToDraw() }.asImageBitmap()
                                 }
                             } finally { addition.recycle() }
                         }.getOrDefault(emptyList())
@@ -223,15 +226,17 @@ private fun DrawScope.drawCreature(
     gameFilters: List<ColorFilter>?,
     gameWind: Float,
     gameFabric: GameFabric.Pose?,
+    gameSwim: GameWater.Swim?,
     gameMood: AvatarMood?
 ) {
     val rich = sheet.frameSize == CreatureSprites.Rich.FRAME
     val frameSize = sheet.frameSize
     val feet = if (rich) CreatureSprites.Rich.FEET else CreatureSprites.FEET
     val look = if (rich) {
-        CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, gameMoving, turn,
-            gameGaitMs ?: gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs), motionCue, gameTempo, gameRunBlend,
-            living = living.takeIf { gameDirection != null && sheet.frames.size == CreatureSprites.Living.TOTAL },
+        CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, if (gameSwim != null) false else gameMoving, turn,
+            gameGaitMs ?: gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs), GameWater.motion(gameSwim,motionCue), gameTempo, gameRunBlend,
+            // Beim Schwimmen keine Ruhe-/Uebergangsposen an Land.
+            living = living.takeIf { gameSwim == null && gameDirection != null && sheet.frames.size == CreatureSprites.Living.TOTAL },
             livingMood = gameMood)
     } else {
         CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
@@ -285,8 +290,17 @@ private fun DrawScope.drawCreature(
         }
     }
     scale(scaleX = if (look.mirrored) -1f else 1f, scaleY = 1f, pivot = Offset(size.width / 2f, size.height / 2f)) {
-        look.blendFrame?.let { paint(it, 1f - look.blend) }
-        paint(look.frame, if (look.blendFrame == null) 1f else look.blend)
+        fun body() {
+            look.blendFrame?.let { paint(it, 1f - look.blend) }
+            paint(look.frame, if (look.blendFrame == null) 1f else look.blend)
+        }
+        if (gameSwim == null) body() else {
+            // Die Drehung um Brusthoehe haelt den Kopf ueber der gemeinsamen Wasserlinie.
+            withTransform({ translate(0f,(gameSwim.bob-gameSwim.buoyancy)*drawn/128f) }) {
+                rotate(gameSwim.angle * if (look.mirrored) -1f else 1f,
+                    Offset(size.width/2f,feetY-drawn*.40f)) { body() }
+            }
+        }
     }
 }
 

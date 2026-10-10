@@ -8,13 +8,13 @@ object GameSurfaces {
     /** Eine niedrige Entdeckerkiste im freien vorderen Parkbereich. Bild und Kollision teilen die Masse. */
     fun crate(scene: GameScenes.Scene): Crate? {
         if (scene.place != PlayScene.Place.PARK) return null
-        val center = PlayControl.Pos(0.72f, 0.75f)
+        val center = PlayControl.Pos(0.72f, 0.58f)
         val (x, ground) = GameScenes.feet(scene, center)
         val left = x - 19f
         val right = x + 19f
         val p0 = GameScenes.posAt(scene, left, ground)
         val p1 = GameScenes.posAt(scene, right, ground)
-        return Crate(GameMovement.Surface("park-crate", p0.x, p1.x, 0.62f, 0.87f, 20f, scene.nearY - scene.farY, 0.75f),
+        return Crate(GameMovement.Surface("park-crate", p0.x, p1.x, 0.51f, 0.64f, 20f, scene.nearY - scene.farY, 0.58f),
             left, right, ground - 20f, ground)
     }
 
@@ -60,7 +60,7 @@ object GameSurfaces {
     /** Kurzer Sichtbarkeitsweg um die vorhandenen Kollisionsrechtecke zum angewaehlten Platz. */
     fun approach(scene: GameScenes.Scene, from: PlayControl.Pos, target: PlayControl.Pos, dt: Long): PlayControl.Pos {
         val obstacles = painted(scene).filterNot { it.contains(from) }
-        if (obstacles.isEmpty()) return GameScenes.approach(from, target, dt)
+        if (obstacles.isEmpty()) return GameTerrain.clamp(scene,GameScenes.approach(from, target, dt))
         fun clear(a: PlayControl.Pos, b: PlayControl.Pos): Boolean = obstacles.none { s ->
             var lo = 0f
             var hi = 1f
@@ -77,18 +77,19 @@ object GameSurfaces {
         fun along(waypoint: PlayControl.Pos): PlayControl.Pos {
             val dx = waypoint.x - from.x
             val dy = waypoint.depth - from.depth
-            val seconds = dt.coerceIn(0L, 50L) / 1000f
+            val seconds = dt.coerceIn(0L, 50L) / 1000f * GameWater.drag(scene,from)
             val tx = if (kotlin.math.abs(dx) < .00001f) 1f else seconds * PlayControl.SPEED_X / kotlin.math.abs(dx)
             val ty = if (kotlin.math.abs(dy) < .00001f) 1f else seconds * PlayControl.SPEED_DEPTH * .5f / kotlin.math.abs(dy)
             val t = minOf(1f, tx, ty)
-            return if (t == 1f) waypoint else PlayControl.Pos(from.x + dx * t, from.depth + dy * t)
+            val next=if (t == 1f) waypoint else PlayControl.Pos(from.x + dx * t, from.depth + dy * t)
+            return GameTerrain.clamp(scene,next)
         }
         if (clear(from, target)) return along(target)
         val nodes = mutableListOf(from, target)
         obstacles.forEach { s ->
             for (x in listOf(s.x0 - .012f, s.x1 + .012f)) {
                 for (d in listOf(s.d0 - .04f, s.d1 + .04f)) {
-                    if (x in 0f..1f && d in 0f..1f) {
+                    if (x in 0f..1f && d in 0f..1f && GameTerrain.valid(scene, PlayControl.Pos(x,d))) {
                         val p = PlayControl.Pos(x, d)
                         if (obstacles.none { it.contains(p) }) nodes += p
                     }

@@ -109,7 +109,7 @@ object GameMovement {
 
     fun tick(state: State, input: PlayControl.Stick, dtMs: Long, surfaces: List<Surface> = emptyList(),
         exitDelayMs: Long = PlayControl.EXIT_PUSH_MS, immediateExits: Set<PlayControl.Dir> = emptySet(), horizontalScale: Float = 1f,
-        maxStepHeight: Float = 52f): Result {
+        maxStepHeight: Float = 52f, sweptJumpCollision: Boolean = false): Result {
         val dt = dtMs.coerceIn(0L, 50L)
         if (dt == 0L) return Result(state)
         val elapsed = state.elapsed + dt
@@ -119,6 +119,23 @@ object GameMovement {
                 val t = (elapsed.toFloat() / arc.duration).coerceIn(0f, 1f)
                 val flight = if (arc.apex > 0f) ((t - 0.15f) / 0.70f).coerceIn(0f, 1f) else t
                 val pos = PlayControl.Pos(lerp(arc.from.x, arc.to.x, flight), lerp(arc.from.depth, arc.to.depth, flight))
+                if (sweptJumpCollision && arc.apex > 0f) {
+                    val nextHeight=lerp(arc.fromHeight,arc.toHeight,flight)+4f*flight*(1f-flight)*arc.apex
+                    // Auch der Flugweg hat Kontakt: ein hohes Hindernis darf nicht durchsprungen werden.
+                    val blocked=(1..12).firstOrNull { sample ->
+                        val f=sample/12f
+                        val p=PlayControl.Pos(lerp(state.pos.x,pos.x,f),lerp(state.pos.depth,pos.depth,f))
+                        val h=lerp(state.height,nextHeight,f)
+                        surfaces.any { it.id != arc.surface && it.id != state.support &&
+                            it.contains(p) && it.heightAt(p)>h+1f }
+                    }
+                    if(blocked!=null) {
+                        val f=(blocked-1)/12f
+                        val stop=PlayControl.Pos(lerp(state.pos.x,pos.x,f),lerp(state.pos.depth,pos.depth,f))
+                        return Result(state.copy(pos=stop,elapsed=0L,support=null,queuedJumpMs=0L,
+                            arc=Arc(stop,stop,state.height,0f,null,330L,0f)))
+                    }
+                }
                 if (t == 1f) {
                     val landed = state.copy(pos = pos, height = arc.toHeight, support = arc.surface,
                         action = null, arc = null, elapsed = 0L, queuedJumpMs = 0L)
