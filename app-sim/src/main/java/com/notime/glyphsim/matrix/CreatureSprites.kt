@@ -351,10 +351,10 @@ object CreatureSprites {
 
         // Der Export behaelt die alte Standhoehe auch bei breiten Fluegeln/Schweifen.
         fun scaleFor(species: AvatarSpecies): Float = when (species) {
-            AvatarSpecies.FENNEC -> 1.048077f
+            AvatarSpecies.FENNEC -> 1f
             AvatarSpecies.GLOOP -> 1f
             AvatarSpecies.PUFFLING -> 1f
-            AvatarSpecies.WYRMLING -> 1.160494f
+            AvatarSpecies.WYRMLING -> 1.032967f
             AvatarSpecies.STARLET -> 1f
             AvatarSpecies.HOOTLET -> 1f
         }
