@@ -55,8 +55,7 @@ object GameEnvironment {
         var foot = next.foot
         fun contact(x: Float, y: Float, support: String?, height: Float, impact: Float) {
             val m = material(x, y, support)
-            val waterRise=if(m==Material.WATER) GameCharacterScale.waterRise(scene,GameScenes.posAt(scene,x,y)) else 0f
-            contacts += Contact(scene.place, x, y - height - waterRise, m, next.clock, lifetime(m), foot++ % 2,
+            contacts += Contact(scene.place, x, y - height, m, next.clock, lifetime(m), foot++ % 2,
                 if (distance > 0f) dx / distance else 0f,
                 if (distance > 0f) dy / distance else 1f, impact)
         }
@@ -120,8 +119,7 @@ object GameEnvironment {
             val distance=sqrt(dx*dx+dy*dy)
             if(distance<=.001f || distance>35f) return@mapNotNull null
             val material=GameWorld.material(scene,b.first,b.second) ?: return@mapNotNull null
-            val waterRise=if(material==Material.WATER) GameCharacterScale.waterRise(scene,actor.pos) else 0f
-            Contact(scene.place,b.first,b.second-waterRise,material,state.clock,lifetime(material),
+            Contact(scene.place,b.first,b.second,material,state.clock,lifetime(material),
                 ((clock/350L+actor.snapshot.species.ordinal)%2L).toInt(),dx/distance,dy/distance)
         }
         return state.copy(contacts=(state.contacts+traces).takeLast(MAX_CONTACTS))

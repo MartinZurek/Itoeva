@@ -175,7 +175,6 @@ internal fun GameResidentSprites(scene: GameScenes.Scene, host: PlayControl.Pos,
                     GameSceneLighting.sources(scene, minute, lampOn, tvOn, (clock / 200L).toInt()), seat?.lift ?: 0f),
                 gameWind = GameAtmosphere.figureBend(scene, species, 0f, clock,
                     GameWorld.origin(scene.place) + x, weather),
-                gameSwim = GameWater.swim(scene,renderPos,seat?.lift ?: 0f,actor.facing,actor.moving,clock,species),
                 gameFabric = GameFabric.Pose(species,
                     if (GameWorld.isWorld(scene) && scene.place != PlayScene.Place.GROTTO)
                         GameAtmosphere.wind(GameWorld.origin(scene.place) + x, clock, weather) else .12f,

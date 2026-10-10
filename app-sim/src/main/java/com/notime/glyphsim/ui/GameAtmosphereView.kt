@@ -67,20 +67,6 @@ internal fun DrawScope.paintAtmosphere(scene: GameScenes.Scene, fit: GameScenes.
     val origin = GameWorld.origin(scene.place)
     val day = GameSceneLighting.daylight(minute)
     withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
-        if (foreground && scene.asset == "world/coast.png") repeat(24) { i ->
-            val x = (i + .5f) * span / 24f
-            val shore = GameWorld.shoreY(origin + x)
-            val y = shore + 12f + (i % 4) * 22f
-            if (GameWorld.material(scene, x, y) != GameEnvironment.Material.WATER) return@repeat
-            val phase = clock / 1600f + (origin + x) / 45f
-            val crest = sin(phase)
-            val width = 10f + (i % 5) * 4f
-            val shine = (.025f + day * .12f) * (.3f + .7f * kotlin.math.abs(crest)) * alpha
-            drawLine(Color(0xFFE0EADB).copy(alpha = shine), Offset(x - width / 2f + crest * 2f, y),
-                Offset(x + width / 2f + crest * 2f, y + sin(phase + 1f)), 1.1f)
-            if (foreground && i % 6 == 0) drawOval(Color(0xFFABC9C9).copy(alpha = shine * .5f),
-                Offset(x - 15f, y - 1f), Size(30f, 4f), style = Stroke(.7f))
-        }
         val mist = GameAtmosphere.mist(scene.place, minute, clock) * alpha
         if (foreground && mist > 0f) {
             val drift = sin(clock / 12000f + origin / 1900f) * 20f

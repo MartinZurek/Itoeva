@@ -64,7 +64,6 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
             val sectionFit = GameCamera.fit(camera, section, size.width, size.height)
             val span = GameWorld.region(place)!!.section
             if (sectionFit.left + span * sectionFit.scale < 0f || sectionFit.left > size.width) continue
-            paintWater(section, images, sectionFit, clock, fade)
             paintPaintedMotion(section, image, sectionFit, clock, fade, images,weather,environment)
             paintAtmosphere(section, sectionFit, clock, minute, fade, false,weather)
         }

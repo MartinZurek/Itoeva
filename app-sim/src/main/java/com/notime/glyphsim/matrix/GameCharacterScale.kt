@@ -45,7 +45,4 @@ object GameCharacterScale {
             x + (ref.right / 128f - .5f) * drawn + 3f, y + 4f)
     }
 
-    /** Wasser bedeckt dieselbe Bodenhoehe fuer alle Wesen, unabhaengig von ihren Ohren. */
-    fun waterRise(scene: GameScenes.Scene, pos: PlayControl.Pos): Float =
-        GameScenes.avatarHeight(scene, pos) * GameWorld.wetness(scene, pos)
 }

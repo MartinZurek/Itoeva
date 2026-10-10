@@ -29,12 +29,6 @@ private object GameImageCache {
 private fun loadGameImage(assets: AssetManager,path: String): CachedGameImage {
     GameImageCache.get(path)?.let { return it }
     val bitmap=assets.open(path).use { BitmapFactory.decodeStream(it) } ?: error("Bild fehlt: $path")
-    if(path in setOf("world/coast.png","world/coast-path.png")) {
-        val small=Bitmap.createScaledBitmap(bitmap,480,160,false)
-        val pixels=IntArray(480*160);small.getPixels(pixels,0,480,0,0,480,160)
-        GameWater.measure(path) { u,v -> pixels[(v*160).toInt().coerceAtMost(159)*480+(u*480).toInt().coerceAtMost(479)] }
-        if(small!==bitmap) small.recycle()
-    }
     val small=Bitmap.createScaledBitmap(bitmap,96,32,false)
     val pixels=IntArray(96*32);small.getPixels(pixels,0,96,0,0,96,32)
     val field=GameGroundLight.estimate(path) { u,v -> pixels[(v*32).toInt().coerceAtMost(31)*96+(u*96).toInt().coerceAtMost(95)] }
@@ -84,8 +78,6 @@ internal fun rememberGameAssets(enabled: Boolean,place: PlayScene.Place,idle: Bo
         for(species in AvatarSpecies.entries) {
             val sheet=withContext(Dispatchers.Default) { CreatureSheets.get(context,species) }
             if(sheet==null) missing+=CreatureSprites.assetFor(species)
-            val swimming=withContext(Dispatchers.Default) { CreatureSheets.swimming(context,species) }
-            if(swimming==null) missing+="creatures/${species.name.lowercase()}-swim.png"
             value=GameAssets(images,++loaded,total,false,missing.toList())
             yield()
         }
