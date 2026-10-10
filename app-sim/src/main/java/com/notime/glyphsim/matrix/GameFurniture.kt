@@ -13,8 +13,12 @@ object GameFurniture {
             return GameMovement.Surface(id, GameScenes.posAt(scene, left, ground).x,
                 GameScenes.posAt(scene, right, ground).x,
                 GameScenes.posAt(scene, left, back).depth, GameScenes.posAt(scene, right, front).depth,
-                GameScenes.feet(scene, center).second - top, scene.nearY - scene.farY, center.depth)
+                GameScenes.feet(scene, center).second - top,
+                if(GameRoomSpace.enabled(scene)) 0f else scene.nearY-scene.farY, center.depth)
         }
+        /** Eine raeumliche Oberflaeche folgt der Tiefe, statt alle Fuesse auf eine Bildzeile zu ziehen. */
+        fun projectedTop(scene: GameScenes.Scene, pos: PlayControl.Pos): Float = top +
+            if(GameRoomSpace.enabled(scene)) GameScenes.feet(scene,pos).second-ground else 0f
         fun hides(feetY: Float, support: String?) = support != id && feetY < front
     }
 
@@ -109,9 +113,9 @@ object GameFurniture {
                 body("living-bookcase", 334f, 404f, 71f, 161f),
                 table("living-side-table", 137f, 174f, 145f, 165f))
             PlayScene.Place.BEDROOM -> listOf(
-                body("bedroom-wardrobe", 233f, 292f, 59f, 153f),
-                body("bedroom-dresser", 383f, 425f, 111f, 171f),
-                body("bedroom-footbench", 189f, 282f, 150f, 180f, 155f, setOf(S.SEAT)),
+                body("bedroom-wardrobe", 294f, 331f, 59f, 156f),
+                body("bedroom-dresser", 403f, 445f, 111f, 174f),
+                body("bedroom-footbench", 189f, 282f, 175f, 205f, 180f, setOf(S.SEAT)),
                 table("bedroom-nightstand", 63f, 105f, 133f, 170f))
             PlayScene.Place.KITCHEN -> listOf(
                 body("kitchen-counter", 84f, 270f, 121f, 182f),
@@ -166,7 +170,7 @@ object GameFurniture {
                 body("arcade-stool", 310f, 335f, 161f, 212f, 165f, setOf(S.SEAT)))
             else -> emptyList()
         }
-        return original + extra
+        return (original + extra).map(GameRoomSpace::reshape)
     }
 
 }

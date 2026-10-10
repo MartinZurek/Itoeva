@@ -72,7 +72,8 @@ import kotlin.math.sin
  * - **Nicht ueber fremdem Ton**, und ausdruecklich **ohne Audio-Focus** anzufordern. Wer Focus
  *   greift, pausiert die Wiedergabe des Nutzers; ein Spielmodus, der den Podcast anhaelt, ist
  *   kaputt.
- * - **Nicht bei stumm gestelltem Geraet.**
+ * - **Medienlautstaerke null bleibt still.** Im Game blockiert der Klingelmodus die
+ *   ausdruecklich eingeschaltete Musik nicht; App 1 und Stream behalten die Klingelsperre.
  * - **Nur solange der Spielmodus zu sehen ist** - der Aufrufer haelt an (siehe `DockScreen`).
  *
  * **Die Abweichung: nachts wird nicht gesperrt.** [PlaySound] schweigt nachts, weil ein Ton dort
@@ -298,8 +299,13 @@ object PlayMusic {
      * faellig ist, damit der Aufrufer genau dann wieder fragt; `null` heisst, es gibt keinen
      * eigenen Termin.
      */
-    fun apply(context: Context, musicContext: MusicContext): Long? {
+    internal fun deviceSilent(gameMode: Boolean, ringerSilent: Boolean, mediaVolume: Int?): Boolean =
+        mediaVolume == 0 || (!gameMode && ringerSilent)
+
+    fun apply(context: Context, musicContext: MusicContext, gameMode: Boolean = false): Long? {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        // Ein ausgefallener Decoder darf seine gemerkte Rolle nicht fuer laufende Musik halten.
+        if (player != null && !isPlaying()) stop()
         val wanted = decide(
             enabled = isEnabled(context),
             context = musicContext,
@@ -311,13 +317,16 @@ object PlayMusic {
             // Der eigene Player zaehlt nicht als fremder Ton, sonst hielte sich die Musik
             // beim naechsten Abgleich selbst fuer eine Stoerung und schaltete sich ab.
             otherAudioActive = player == null && audio?.isMusicActive == true,
-            deviceSilent = audio?.ringerMode == AudioManager.RINGER_MODE_SILENT ||
-                audio?.ringerMode == AudioManager.RINGER_MODE_VIBRATE
+            deviceSilent = deviceSilent(gameMode,
+                audio?.ringerMode == AudioManager.RINGER_MODE_SILENT ||
+                    audio?.ringerMode == AudioManager.RINGER_MODE_VIBRATE,
+                audio?.getStreamVolume(AudioManager.STREAM_MUSIC))
         )
 
         if (wanted == null) {
             stop()
-            return null
+            // Medienregler oder fremde Wiedergabe koennen sich ohne Szenenwechsel aendern.
+            return if (isEnabled(context)) 2_000L else null
         }
         val varianten = availableVariants(context, wanted)
         val fest = fixedVariant(wanted, musicContext)
@@ -363,8 +372,14 @@ object PlayMusic {
             ?: PlayMusicRotation.pickVariant(varianten, current = null, lastHeardAt = heardIn(wanted))
             ?: return null
         switchTo(context, wanted, start, rollenwechsel = true)
-        return null
+        return if (player == null) 2_000L else null
     }
+
+    /** create bereitet bereits vor; Medienattribute muessen davor gesetzt sein (API 21+). */
+    internal fun createScorePlayer(context: Context, res: Int): MediaPlayer? =
+        MediaPlayer.create(context, res, AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build(), 0)
 
     /**
      * Wechselt auf eine andere Rolle und ueberblendet den bisherigen Score.
@@ -385,16 +400,7 @@ object PlayMusic {
         val fadeMs = fadeOverrideMs
             ?: PlayMusicTransition.fadeMs(playingRole, role, variantOnly = !rollenwechsel)
         runCatching {
-            val next = MediaPlayer.create(context, res)?.apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        // MEDIA/MUSIC statt SONIFICATION wie bei PlaySound: Das hier ist keine
-                        // Rueckmeldung auf eine Handlung, sondern laufende Musik - sie gehoert
-                        // an den Medienregler, den der Nutzer dafuer benutzt.
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
+            val next = createScorePlayer(context, res)?.apply {
                 isLooping = true
                 setVolume(0f, 0f)
                 start()
@@ -472,7 +478,10 @@ object PlayMusic {
      * [PlayAmbienceSound]): Laeuft keine Musik, weil der Nutzer sie ausgeschaltet hat, fremder Ton
      * laeuft oder das Geraet stumm ist, schweigt auch der Ort.
      */
-    fun isPlaying(): Boolean = player != null
+    internal fun decoderPlaying(candidate: MediaPlayer?): Boolean =
+        runCatching { candidate?.isPlaying == true }.getOrDefault(false)
+
+    fun isPlaying(): Boolean = decoderPlaying(player)
 
     /**
      * Plant, wann das gerade gestartete Stueck [forPlayer] in seinen naechsten Durchlauf
@@ -562,13 +571,7 @@ object PlayMusic {
             MusicRole.CHARACTER_THEME.variantResource(MusicRole.characterThemeVariant(guest))
         )
         val next = runCatching {
-            MediaPlayer.create(context, res)?.apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
+            createScorePlayer(context, res)?.apply {
                 setVolume(0f, 0f)
                 start()
             }

@@ -176,4 +176,22 @@ class GameTouchTest {
         compose.runOnIdle { assertEquals(GameMovement.Action.JUMP, movement.action) }
     }
 
+    @Test fun rechterTippBleibtBisZumNaechstenMotorbildErhalten() {
+        val scene=GameWorld.scene(PlayScene.Place.PARK)!!
+        val surfaces=GameSurfaces.painted(scene)
+        var request by mutableStateOf<Pair<GameMovement.Command,PlayControl.Stick>?>(null)
+        compose.setContent { GameTouch({stick=it},{command,direction->request=command to (direction ?: stick)},
+            {},{},enabled=enabled.value) }
+        compose.onNodeWithTag("game-action-pad",useUnmergedTree=true).performTouchInput { click() }
+        compose.runOnIdle {
+            assertEquals(GameMovement.Command.JUMP,request!!.first)
+            // Der Orts-/Positionsabgleich darf einen gerade angetippten Befehl nicht verwerfen.
+            var movement=GameMovement.State(pos=PlayControl.Pos(.5f,.6f))
+            movement=GameTerrain.tick(scene,AvatarSpecies.FENNEC,movement,stick,16L,surfaces,request).state
+            request=null
+            repeat(20) { movement=GameTerrain.tick(scene,AvatarSpecies.FENNEC,movement,stick,16L,surfaces).state }
+            assertTrue(movement.height>20f)
+        }
+    }
+
 }

@@ -1,5 +1,21 @@
 # character-art – die sechs Wesen in feiner Pixel-Art
 
+## Game-Statur und Stoffnachlauf (09.10.2026)
+
+Die Originalboegen bleiben erhalten. Im Game zeichnet ein zusammenhaengendes
+Texturnetz individuelle Statur-/Koerpergewichte und gedaempften Stoffnachlauf.
+Die neue [Bewegungsvorschau](game-motion-preview.gif) liest die produktiven
+Kotlin-Netze, ist aber eine Softwarevorschau und keine APK-Aufnahme.
+Gehen, Rennen und Schwimmzuege werden getrennt gezeigt. Die
+[Raumvorschau](room-space-preview.png) zeigt produktive 2.5D-Moebelkoerper
+und den kleineren Figurenmassstab; ebenfalls keine APK-Aufnahme.
+Die [Konzeptstil-Fortsetzung](room-concept-preview.png) und
+[alle elf Innenorte](room-concept-all-preview.png) rastert die produktiven
+Pixelprimitive aus `GameRoomArt`; [Vorher/Nachher](room-concept-comparison.png)
+vergleicht sie mit den bisherigen Raumkoerpern. Keine APK-Aufnahmen.
+Details, Regeneration, Tests und Telefon-Pruefplan:
+[`docs/itoeva2-character-motion.md`](../../docs/itoeva2-character-motion.md).
+
 Neuentwurf der Figuren nach den Charakterstudien vom 04.10.
 (`docs/concept-art/character-art-studies/`, PR #326). Bewusst **keine Uebersetzung** der
 bisherigen 16x19-Zellen-Figuren, sondern neu gezeichnet: 64 x 64 Pixel je Figur.
@@ -428,3 +444,14 @@ sind auch nach Wiederherstellung des unterbrochenen Uploads erneut gruen. Lokale
 vorhandene AGP-Plugin 8.13.1 nicht abrufen; Android-Build und Telefon-Sichtpruefung
 bleiben offen. Schneller gerichteter Lauf nutzt Gehphasen; Rolle bleibt eine
 gedrehte kompakte Zeichnung. Keine Steuerungs-, Reminder- oder Spielstandaenderung.
+
+## Gezeichnetes Schwimmen (10.10.2026)
+
+`swimming.py` importiert sechs neue Boegen mit 12 Posen (4 Phasen, 3 Ansichten).
+`source/swim-manifest.json` beschreibt Quellen/Prompts. Die WebP-Quellen sind
+verlustfrei, die Runtime-Boegen bleiben PNG. Ein Skalierungsfaktor je Wesen
+und Kopfanker; keine phaseweise Stauchung und kein generierter Rumpfpuls.
+256-Pixel-Rahmen mit 64-Pixel-Rand fuer ausladende Glieder.
+`SwimmingPreview.kt` exportiert produktive Kotlin-Bildrollen, Masken, Wellen
+und Massstab; `swimming_preview.py` zeichnet die Sichtpruefung. Kein APK-Video.
+Details und Grenzen: `docs/itoeva2-swimming-water.md`.

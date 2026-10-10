@@ -6,6 +6,35 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GamePhysicsTest {
+    @Test fun `Schwimmbogen zeigt vier Zugphasen aus jeder Blickrichtung`() {
+        for ((dir,row) in listOf(PlayControl.Dir.LEFT to 0, PlayControl.Dir.RIGHT to 0,
+                PlayControl.Dir.DOWN to 1, PlayControl.Dir.UP to 2)) {
+            assertEquals((row*4 until row*4+4).toList(),
+                listOf(0f,.25f,.5f,.75f).map { GameWater.swimFrame(it,dir) })
+            assertEquals(row*4,GameWater.swimFrame(1f,dir))
+        }
+    }
+    @Test fun `Wellenkaemme sind gerastert zeitabhaengig und endlich`() {
+        val before=(0..60).map { GameWater.crest(it,48,0) }
+        val after=(0..60).map { GameWater.crest(it,48,1000) }
+        assertTrue(before.zip(after).count { (a,b) -> a != b }>40)
+        for (wave in before+after) {
+            assertEquals(0f,wave.x%2f,0f); assertEquals(0f,wave.y%2f,0f)
+            assertTrue(wave.width in 4f..18f); assertTrue(wave.light in 0f.. .30f)
+        }
+    }
+    @Test fun `Ein UI Sprung wird nach dem Positionsabgleich im Motorbild ausgefuehrt`() {
+        val scene=GameWorld.scene(PlayScene.Place.PARK)!!
+        val surfaces=GameSurfaces.painted(scene)
+        val pos=PlayControl.Pos(.5f,.6f)
+        var state=GameTerrain.tick(scene,AvatarSpecies.FENNEC,GameMovement.State(pos=pos),PlayControl.Stick(),16L,
+            surfaces,GameMovement.Command.JUMP to PlayControl.Stick()).state
+        assertEquals(GameMovement.Action.JUMP,state.action)
+        repeat(20) { state=GameTerrain.tick(scene,AvatarSpecies.FENNEC,state,PlayControl.Stick(),16L,surfaces).state }
+        assertTrue(state.height>20f)
+        repeat(30) { state=GameTerrain.tick(scene,AvatarSpecies.FENNEC,state,PlayControl.Stick(),16L,surfaces).state }
+        assertNull(state.action)
+    }
     @Test fun `Alle Tuerblaetter lesen das sichtbare Anschlussbild und einen gueltigen Ausschnitt`() {
         for(passage in Place.entries.flatMap { GameWorld.passages(it) }.filter { it.door }) {
             val sample=GameDoors.sample(passage)!!
@@ -81,9 +110,9 @@ class GamePhysicsTest {
         val scene=GameWorld.scene(Place.BEACH)!!;val pos=PlayControl.Pos(.5f,.9f)
         val first=GameWater.swim(scene,pos,0f,PlayControl.Dir.RIGHT,true,100)!!
         val next=GameWater.swim(scene,pos,0f,PlayControl.Dir.RIGHT,true,600)!!
-        assertEquals(CreatureSprites.Motion.REACH,first.cue.motion)
+        assertEquals(CreatureSprites.Motion.SWIM,first.cue.motion)
         assertNotEquals(first.stroke,next.stroke);assertNotEquals(first.bob,next.bob)
-        assertTrue(first.angle>20f)
+        assertTrue(first.angle in 5f..12f)
         assertNotNull(GameWater.swim(scene,pos,0f,PlayControl.Dir.DOWN,false,100))
         assertNull(GameWater.swim(scene,pos,10f,PlayControl.Dir.DOWN,true,100))
         assertNull(GameWater.swim(GameWorld.scene(Place.PARK)!!,pos,0f,PlayControl.Dir.DOWN,true,100))

@@ -648,6 +648,133 @@ formulieren, aber keine offene Option als bereits beschlossene Richtung darstell
 
 ## Evolution History – dauerhaft zu dokumentierende Änderungen und Erkenntnisse
 
+### 2026-10-10 – Gezeichnete Schwimmphasen, Pixelwasser und elf Raum-Konzepttafeln
+
+- **DOCUMENTED INTENT:** Martin will zuerst einzelne gemalte Innenraumstudien im
+  bisherigen Landschaftsstil. Weiterhin gemeldetes Schwimmen als aufblasende
+  Boje und Wasser als animierte Flaeche sollen sichtbar korrigiert werden.
+- **FACT / Entscheidung:** Sechs separate Schwimmboegen zeichnen echte Pfoten-,
+  Fluegel- und Sternspitzenphasen; Schwimm-Mesh bleibt volumenkonstant. Ein
+  gemeinsamer Massstab je Wesen und Kopfanker ersetzen keine Glieder durch
+  Rumpfverformung. Unterwasserteile bleiben schwach blau lesbar. Wasser bekommt
+  Pixelkaemme, Licht-/Schattenhaenge, Uferschaum und bewegungsabhaengige Spur.
+  Feste vermessene Wasser-/Landmaske und bestehender Motor bleiben Grundlage.
+- **FACT / Musik-Review:** Recovery prueft jetzt den echten MediaPlayer-Zustand
+  mit Fehlerbehandlung statt nur eine nicht-null Referenz. Native Wiedergabe-
+  pruefung umfasst vorbereitet/laufend/gestoppt/freigegeben. Bestehender
+  30-Sekunden-Abgleich und Medien-/Rollenregeln bleiben erhalten.
+- **FACT / Referenzen:** Elf neue Innenraum-Konzepttafeln mit eigenen
+  Architekturen, Moebelstudien und Tag-/Nachtbildern. Noch keine neue
+  Raumgeometrie aus diesen Tafeln; sie dienen Martins gewuenschter Orientierung.
+- **TESTED BEHAVIOR:** 1.043 reine Kotlin-Tests gruen. Neue gerichtete
+  Schwimmbildrollen, konstante Rumpfkoordinaten und Pixelwellen getestet; echte
+  Boegen an produktiver Wasserlinie als Softwarevorschau geprueft. Native
+  Asset-/Cachepruefung ergaenzt. Vorheriger API-26-Raumtest scheiterte an einer
+  zu schmalen Holz-Messlinie; flaechige strengere Materialpruefung korrigiert.
+- **Betroffene Bereiche:** Game-Sprite-/Wasserzeichnung, Vorlader, sechs
+  Asset-Ergaenzungen, Referenzkunst, Offline-Vorschau und zugehoerige Tests.
+  Keine Migration, Reminder-, LAS-, XP-, Musik- oder Eingabesemantikaenderung.
+- **Ruecksetzung:** Diesen Schnitt als Ganzes auf `fd91325` zuruecknehmen.
+- **UNVERIFIED / Naechster Schritt:** Neue Android-CI im PR #351 verfolgen;
+  Telefonabnahme fuer Schwimmlesbarkeit, Wasserwirkung, Speicher und Bildrate.
+  Vier Phasen sind stilisiertes Spiel, keine physikalische Simulation. Kein
+  Merge/APK-Auftrag. Details: `docs/itoeva2-swimming-water.md`.
+
+### 2026-10-09 – Individuelle Statur und kontinuierlicher Stoffnachlauf (character-motion-v2)
+
+- **DOCUMENTED INTENT:** Martin moechte waehrend des separaten APK-Baus aus PR #350
+  die Hauptfiguren lebendiger und weniger rudimentaer sehen: steifer Fennec-Mantel,
+  zu runde Statur insbesondere Puffling und harte gezeichnete Konturen.
+- **FACT / Entscheidung:** Ein zusammenhaengendes Game-Texturnetz ersetzt die
+  einzeln abgetasteten Stoffkacheln. Subpixel-Bewegungen bleiben erhalten.
+  Analytisch gedaempfter Nachlauf reagiert auf Start/Stopp und Wind; verschiedene
+  Materialgewichte unterscheiden Mantel, Kapuze, Federumhang und Blattkleidung.
+  Pufflings Taille wird maximal 13 Prozent schmaler, Hootlets 5,5 Prozent,
+  Fennecs/Wyrmlings 3,5 Prozent. Kopf, Kapuze und untere sechs Quellzeilen bleiben
+  fest. Gloops Volumenwelle und Starlets Form sind eigenstaendig. Schlaf und Rolle
+  bekommen keine aufrechte Staturverformung. Bilineare Bitmapfilterung mildert
+  Skalierungskanten; eingemalte Konturen werden nicht als neu gezeichnet behauptet.
+- **TESTED BEHAVIOR:** Neun neue reine Kotlin-Tests pruefen bildratenunabhaengigen
+  Nachlauf, Ausschwingen, Hintergrundpause, Kopf-/Fussanker, kompakte Posen,
+  individuelle Statur, Subpixelbewegung und positive Dreiecksflaechen bei
+  Extremboeen. Ein dabei entdecktes Netz-Falten wurde durch begrenzte Auslenkung
+  und breitere Stoffbefestigung korrigiert. Gezielte Regressionen: 67 Tests gruen.
+  Finaler Gesamtlauf: 1.024 reine Kotlin-Tests gruen. Android-CI im PR.
+- **Betroffene Bereiche:** `:app-sim` Game-Spritezeichnung, einmalige
+  Quellbildgrenzen im vorhandenen Cache, Offline-Pruef-/Vorschauwerkzeuge und
+  Uebergabe. Keine neuen Assets, Datenmodelle, Preference-Schluessel, Texte,
+  Reminder-, LAS-, XP-, Musik- oder Eingaberegeln. Keine Migration.
+- **Ruecksetzung:** Diesen Charaktercommit als Ganzes ruecknehmen auf die Basis
+  `431bd178` aus PR #350. Keine Spielstand-Rueckmigration oder Assetreparatur.
+- **UNVERIFIED / Naechster Schritt:** Android-Bitmappruefung und Kompilierung
+  ueber CI; danach Sicht-/GPU-/Bildratenpruefung auf Martins Telefon. Die
+  Vorschau liest die produktiven Kotlin-Netze, rendert sie jedoch in Software;
+  sie ist keine APK-Aufnahme. Eingemalte Anatomiefehler und bisherige
+  Front-/Ruecklauf-/Rollgrenzen werden durch Stoffphysik nicht neu gezeichnet.
+  Keine neue `OPEN DECISION`, kein Merge-/APK-Auftrag in diesem Schnitt.
+
+### 2026-10-09 – Gangarten, Raumkoerper und Game-Medienstart (game-motion-space-v3)
+
+- **DOCUMENTED INTENT:** Martin beauftragt PR-Upload, glaubwuerdiges Rennen statt
+  schnellerem Gehen, Starlet-Bodenkontakt, plausible Mantel-/Laub-/Wasserbewegung,
+  Musik trotz Music on, sichtbaren Sprung vom rechten Pad und begehbare raeumliche
+  Innenorte mit passendem Figurenmassstab statt flacher Bilder (PR #351 auf #350).
+- **FACT / Entscheidung:** Der bestehende Motor bleibt Quelle der Bewegung.
+  Hoeheres Tempo verlaengert Schritte; Rennnetz hat Belastung/Abdruck/Flugphase.
+  Freie Fussspitzen und Kontakte lesen denselben Takt. `SWIM` verwendet neutrale
+  Ansichten mit Armzug/Rueckholen, Beinschlag und kleiner Neigung statt Superman-
+  Greifpose. Wasser und Laub zeichnen stetige Netze mit festen Ufer-/Wurzelkanten.
+  Das rechte Pad puffert den Befehl bis zum Motorbild nach Positionsabgleich.
+- **FACT / Raeume:** Elf Innenorte werden in 2.5D aus Raum- und Moebelkoerpern
+  gezeichnet; gleiche Geometrie fuer Kollision, Sitzen, Landen und Verdeckung.
+  Freier Boden, kleinere Figur, kein Innen-Nahzoom; Bett/Tische erhalten Tiefe.
+  Der alte Aussenhuetten-Grundriss bleibt bestehen. Keine frei drehbare 3D-Welt.
+- **FACT / Musik:** Medienattribute vor Vorbereitung des Android-Players;
+  ausgefallener Decoder wird neu gestartet. Aktivierte Musik folgt im Game dem
+  Medienregler, nicht stummem Klingeln. Musik-Aus/Fremdton und bisherige App-1-/
+  Stream-Klingelsperre bleiben wirksam. Kein Systemlautstaerke-/Focus-Eingriff.
+- **TESTED BEHAVIOR / Pruefstand:** 1.039 reine Tests im erweiterten Gesamtlauf;
+  finale Resultate/Android-CI im PR. Native Tests fuer Pointerbefehl bis zum
+  Sprungmotor, echte Raum-Canvaszeichnung, alle sechs Spritearten und ausgelieferten
+  Musikdecoder. Softwarevorschauen lesen produktive Kotlin-Netze/Raumkoerper.
+- **Betroffene Bereiche:** Game-Darstellung, Motoradapter, Innenkatalog/Kamera,
+  Medienplayer, Regressionen und Dokumentation. Keine Reminder-, LAS-, XP-,
+  Progressions-, Speicherschema-, Build-/Workflow-/Abhaengigkeitsaenderungen.
+- **Ruecksetzung:** PR-Commits auf #350 (`431bd178`) ruecknehmen; keine Migration.
+- **UNVERIFIED / Naechster Schritt:** Der exakte Handyfehler des Pads ist noch
+  nicht reproduziert; Pointer-/Motor-Test ist kein voller DockScreen-Test.
+  Telefonabnahme von Musiklautsprecher, Gang-/Schwimmwirkung, Raumstil und GPU-
+  Bildrate bleibt erforderlich. Keine Behauptung einer APK-Aufnahme/Hoerabnahme;
+  keine neue OPEN DECISION. Martin baut separat, kein Merge-/APK-Auftrag hier.
+
+### 2026-10-09 – Konzeptstil auf begehbaren Raumkoerpern (room-concept-pixels-v4)
+
+- **DOCUMENTED INTENT:** Martin verlangt fuer die Innenraeume den bestehenden
+  Konzept-Art-Stil; die vorherige Forderung nach raeumlichen, begehbaren Zimmern
+  mit glaubwuerdigen Moebelkontakten gilt weiter. Fortsetzung von PR #351.
+- **FACT / Produktentscheidung:** Cozy-Home-/Park-Lake-Home-Farbwelt wird in
+  Pixelgruppen fuer warme Holzwaende/-balken, Bogenfenster, Pflanzen, Textilien,
+  Teppiche und Lampen uebersetzt. Die vorhandenen elf Orte behalten ihre Geometrie.
+  Polster-/Kissenkanten und offene Wannenform werden zugleich Zeichen- und
+  Verdeckungskontur. Kein Rueckbau zu einer eingemalten Zimmer-Hintergrundflaeche.
+- **FACT / Architektur:** GameRoomArt liefert deterministische Materialprimitive,
+  auf sichtbare Moebelflaechen begrenzt. Android rastert einmal je Raum auf
+  480x270 ohne Bitmapfilter; Vorhaenge, Ortslicht und Tuerbewegung bleiben dynamisch.
+  Vorher-/Nachher-/Gesamtvorschau lesen dieselben Primitive in Software.
+- **TESTED BEHAVIOR:** 1.041 reine Tests bestanden; nach visueller Verfeinerung
+  acht Raumtests erneut gruen. Vorlagen sowie drei Beispielraeume und alle elf
+  Orte visuell geprueft. Native Canvas-Regression auf alle elf Orte erweitert.
+- **Betroffene Bereiche:** Nur Game-Raumdarstellung, gemeinsame Moebelkonturen,
+  Vorschauwerkzeuge und Dokumentation. Keine neue Mechanik, Persistenz, Preference,
+  Reminder-/LAS-/XP-/Progressions-, App-1-/Stream- oder Infrastrukturveraenderung.
+- **Ruecksetzung:** Nur diesen v4-Commit auf fba7a969 ruecknehmen; keine Migration.
+  Vorherige Musik-/Gang-/Schwimm-/Touchkorrekturen bleiben dann erhalten.
+- **UNVERIFIED / Naechster Schritt:** Android-CI im PR; lokaler Gradle-Start wegen
+  fehlendem Wrapper-JAR blockiert. Telefonstil, schmale Pixelnaehte, Wannenrand,
+  Landungen, Sofaverdeckung, Tueroeffnung und erste Raumwechsel-/GPU-Leistung
+  pruefen. Vorschauen enthalten keine Laufzeit-Lichtlagen und sind keine APK-
+  Aufnahmen. Keine neue OPEN DECISION, kein Merge-/APK-Auftrag in diesem Schnitt.
+
 Für jede angenommene Evolution müssen mindestens folgende Informationen dauerhaft auffindbar
 sein:
 

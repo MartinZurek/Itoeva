@@ -35,5 +35,5 @@ internal object GameLightingCatalog {
             listOf(Lamp(310f, 46f, 215f, 175f))),
         Place.ARCADE to Room(Window(195f, 47f, 249f, 113f, 154f, 246f),
             listOf(Lamp(166f, 44f, 203f), Lamp(281f, 40f, 203f), Lamp(390f, 41f, 210f)))
-    )
+    ).mapValues { (_,room) -> room.copy(window=Window(84f,48f,145f,88f,190f,242f)) }
 }

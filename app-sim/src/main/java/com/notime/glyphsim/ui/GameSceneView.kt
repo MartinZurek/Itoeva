@@ -66,10 +66,11 @@ fun GameSceneView(
     environment: GameEnvironment.State = GameEnvironment.State(),
     camera: GameCamera.State? = null,
     images: Map<String, ImageBitmap?> = emptyMap(),
-    clock: Long = 0L
+    clock: Long = 0L,
+    weather: com.notime.glyphsim.matrix.PlayWeather = com.notime.glyphsim.matrix.PlayWeather.CLEAR
 ) {
     if (GameWorld.isWorld(scene) && camera != null) {
-        GameWorldView(scene, images, camera, minuteOfDay, lampOn, phase, environment, avatarPos, fade, modifier, clock)
+        GameWorldView(scene, images, camera, minuteOfDay, lampOn, phase, environment, avatarPos, fade, modifier, clock,weather)
         return
     }
     Canvas(modifier = modifier) {
@@ -81,7 +82,8 @@ fun GameSceneView(
         val live = roomLayers?.takeIf { it.base != null && it.atlas != null }
         val strip = if (live == null) layers?.strip else null
         val frame = if (strip != null) Math.floorMod(phase, layers?.frames ?: 1) else 0
-        drawImage(
+        if (com.notime.glyphsim.matrix.GameRoomSpace.enabled(scene)) paintRoomSpace(scene,fit,1f,clock)
+        else drawImage(
             image = live?.base ?: strip ?: image,
             srcOffset = IntOffset(frame * GameScenes.IMAGE_W, 0),
             srcSize = if (live == null && strip == null) IntSize(image.width, image.height) else IntSize(GameScenes.IMAGE_W, GameScenes.IMAGE_H),
@@ -98,7 +100,7 @@ fun GameSceneView(
             roomShore(scene, live, environment, fit, visible)
             roomContacts(scene, environment, fit, visible)
         }
-        paintPaintedMotion(scene, image, fit, clock, visible)
+        if (!com.notime.glyphsim.matrix.GameRoomSpace.enabled(scene)) paintPaintedMotion(scene, image, fit, clock, visible,weather=weather)
         // Die Illustration bleibt die Materialbasis. Licht und Schatten werden dagegen in
         // denselben Bildkoordinaten wie Laufweg und Avatar pro Bildtakt berechnet.
         val dark = GameSceneLighting.darkness(scene, minuteOfDay)
@@ -123,5 +125,6 @@ fun GameSceneView(
             )
         }
         paintSceneLights(scene, lights, fit, clock, visible)
+        if(com.notime.glyphsim.matrix.GameRoomSpace.enabled(scene)) drawRect(Color.Black.copy(alpha=1f-visible))
     }
 }

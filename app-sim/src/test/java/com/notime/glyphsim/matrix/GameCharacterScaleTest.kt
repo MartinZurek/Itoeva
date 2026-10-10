@@ -77,7 +77,7 @@ class GameCharacterScaleTest {
                 val surface = GameSurfaces.painted(scene).single { it.id == piece.id }
                 for (d in listOf(surface.d0,surface.anchorDepth,surface.d1)) {
                     val pos = Pos((surface.x0+surface.x1)/2f,d)
-                    assertEquals(piece.top,GameScenes.feet(scene,pos).second-surface.heightAt(pos),.001f)
+                    assertEquals(piece.projectedTop(scene,pos),GameScenes.feet(scene,pos).second-surface.heightAt(pos),.001f)
                 }
                 assertTrue(piece.hides(piece.front-1f,null))
                 assertFalse(piece.hides(piece.front,null))
@@ -104,7 +104,7 @@ class GameCharacterScaleTest {
             var state=jump
             repeat(14) { state=GameMovement.tick(state,PlayControl.Stick(),50L,listOf(surface),maxStepHeight=GameCharacterScale.MAX_STEP_HEIGHT).state }
             assertEquals(surface.id,state.support)
-            assertEquals(GameFurniture.pieces(scene).single { it.id == "${place.name.lowercase()}-table" }.top,GameScenes.feet(scene,state.pos).second-state.height,.001f)
+            assertEquals(GameFurniture.pieces(scene).single { it.id == "${place.name.lowercase()}-table" }.projectedTop(scene,state.pos),GameScenes.feet(scene,state.pos).second-state.height,.001f)
         }
     }
 

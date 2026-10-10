@@ -460,6 +460,33 @@ bei jeder neuen Analyse erneut entdeckt werden müssen.
 
 ### Individuelle feine Charakteranimationen (06.10.2026)
 
+Ergaenzung 10.10.: Das beanstandete SWIM-Netz wird durch sechs eigene
+Schwimmboegen ersetzt (vier gezeichnete Zugphasen, drei Ansichten, 256er Rahmen
+mit 64 Pixeln Kopfanker-Rand). Im Schwimmen bleibt das Mesh identisch; vorhandene
+Gang-/Stoffnetze gelten weiter an Land. `CreatureSheets.swimming` haelt die
+zwoelf kleinen GPU-Texturen je Wesen separat, etwa 18 MiB zusaetzlich fuer sechs
+Wesen. Der Game-Vorlader laedt beide Boegen je Wesen vor Game-ready.
+Unterwasserteile zeichnen eine schwache blaue Lage an derselben Wasserlinie.
+`GameWater.crest` berechnet Pixelkaemme in Weltkoordinaten; Licht-/Schattenhang,
+Uferschaum und bewegungsabhaengige Spur ergaenzen die feste Wassermaske.
+Details/Pruefung: `docs/itoeva2-swimming-water.md`. Elf neue gemalte Raumtafeln
+sind Gestaltungsreferenzen, noch keine neue Runtime-Raumgeometrie.
+
+Ergaenzung 09.10.: Im aktiven Game rendert `GameCharacterPainter` dieselben
+Einzelbilder als 24x32-Texturnetz. `GameCharacterMotion` berechnet Statur,
+Stoffnachlauf und kleine materialabhaengige Koerperbewegungen rein in Kotlin.
+Ein analytischer zweistufiger Daempfer reagiert auf Gangtempo und lokale
+Windrichtung. Eigene Lauf-Stauchung/Flugphase und Schwimmzuege ergaenzen die
+Originalposen; der Motor koppelt Schrittlaenge und Fusskontakte an denselben Takt.
+Die gemeinsame Bewegungstaktung, Originalbilder, ruhende Fussanker und
+Aktionsrollen bleiben die Quellen. Vorder-/Rueckansicht haben eigene
+Stoffgewichte; Schlaf und Rolle behalten ihre kompakte Zeichnung.
+Netz- und Farbarrays sowie Paint werden pro Figur wiederverwendet. Die oberen
+Alpha-Grenzen werden je Einzelbild einmal beim Laden ermittelt; keine
+Bitmap-Kopie pro Bild und kein zweiter Texturcache. Vertexfarben interpolieren
+das vorhandene Ortslicht, Bitmapfilterung mildert die harten Skalierungskanten.
+App-1-/Stream-Zeichnung verwendet weiter den bisherigen Zeichenweg.
+
 Alle sechs `CreatureSprites`-Boegen verwenden 138 Rollen zu 128 x 128. Fennec
 bleibt in `rich_sheets.py`, die fuenf weiteren Wesen entstehen mit
 `ensemble_motion.py` aus eigenen Zeichnungen und vorhandener Puppet-Interpolation.
@@ -605,3 +632,24 @@ GameBreath ist nur lokale Spielausdauer ohne Persistenz/Agentenbedarf/XP-Wirkung
 haben kein neues Asset-IO; die Laufpause wird nie an den Ladefortschritt gekoppelt.
 V2 liest alte Positionen unveraendert, der aktive Client begrenzt sie auf den legalen Boden.
 Pruefvertrag, Scan aller 28 Orte und Telefon-Abnahme: docs/itoeva2-world-physics-and-loading.md.
+
+
+### Game-Raumkoerper und Medienwiedergabe (09.10.2026)
+
+`GameRoomSpace` zeichnet die elf Innenraeume als Boden-/Wandprojektion und einzelne
+Moebelkoerper. `GameFurniture` bleibt Quelle von Grundriss, Sitz-/Stand-/Landekante;
+Konturen der gezeichneten Koerper werden auch fuer Verdeckung und Licht gelesen.
+`GameRoomArt` uebersetzt die Konzeptfarben/-materialien in deterministische Pixelgruppen
+auf diesen Koerpern. `GameSpatialRoomView` rastert einmal je Raum auf 480x270;
+Materialdekore sind auf ihre Moebelflaechen begrenzt. Tuerblaetter teilen dieselbe
+Holzpalette; nur ihr projizierter Oeffnungswinkel aendert sich. Vorhaenge und
+Ortslicht werden weiter darueber animiert. Die alten gemalten Raum-PNGs werden
+nicht als flacher Hintergrund geladen. Die 2.5D-Kamera
+behaelt ihren Blickwinkel, mit mehr Boden und kleinerem Figurenmassstab.
+
+Rechte Padbefehle liegen bis zum naechsten Motorbild vor und werden nach dem
+Positionsabgleich in `GameTerrain.tick` verbraucht. `PlayMusic` erstellt den
+nativen Player mit Medienattributen vor der Vorbereitung; Game-Musik folgt der
+Medienlautstaerke statt der Klingelsperre. Bestehende Musik-Aus-/Fremdton-Regeln
+sowie App-1-/Stream-Sperren bleiben bestehen. Details und Pruefgrenzen stehen in
+`docs/itoeva2-character-motion.md`.

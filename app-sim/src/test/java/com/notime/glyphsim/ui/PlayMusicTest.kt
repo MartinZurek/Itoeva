@@ -85,6 +85,23 @@ class PlayMusicTest {
         assertNull(decide(deviceSilent = true))
     }
 
+    @Test fun `Game Musik folgt dem Medienregler statt dem Klingelmodus`() {
+        assertFalse(PlayMusic.deviceSilent(gameMode = true, ringerSilent = true, mediaVolume = 5))
+        assertEquals(MusicRole.HOME_EVENING, decide(deviceSilent =
+            PlayMusic.deviceSilent(gameMode = true, ringerSilent = true, mediaVolume = 5)))
+        assertTrue(PlayMusic.deviceSilent(gameMode = true, ringerSilent = false, mediaVolume = 0))
+        assertTrue(PlayMusic.deviceSilent(gameMode = true, ringerSilent = true, mediaVolume = 0))
+        assertNull(decide(enabled = false, deviceSilent = false))
+        assertNull(decide(otherAudioActive = true, deviceSilent = false))
+    }
+
+    @Test fun `App und Stream behalten ihre bisherige Klingelsperre`() {
+        assertTrue(PlayMusic.deviceSilent(gameMode = false, ringerSilent = true, mediaVolume = 5))
+        assertFalse(PlayMusic.deviceSilent(gameMode = false, ringerSilent = false, mediaVolume = 5))
+        assertTrue(PlayMusic.deviceSilent(gameMode = false, ringerSilent = false, mediaVolume = 0))
+        assertFalse(PlayMusic.deviceSilent(gameMode = true, ringerSilent = true, mediaVolume = null))
+    }
+
     // ================= Das OB trifft das WAS =================
 
     /**

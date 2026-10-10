@@ -51,6 +51,10 @@ object GameMovement {
     }
     data class Result(val state: State, val exit: PlayControl.Dir? = null)
 
+    /** Hoeheres Tempo verlaengert auch den Schritt, statt den Takt proportional zu beschleunigen. */
+    fun cadence(tempo: Float): Float = if (!tempo.isFinite()) 0f else
+        if (tempo <= 1f) tempo.coerceAtLeast(0f) else 1f + (tempo.coerceAtMost(2.5f) - 1f) * .42f
+
     private fun vector(dir: PlayControl.Dir) = PlayControl.Stick(dir.dx.toFloat(), dir.dy.toFloat())
     private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
     private fun distance(a: PlayControl.Pos, b: PlayControl.Pos): Float {
@@ -176,7 +180,7 @@ object GameMovement {
         val supportHeight = surfaces.firstOrNull { it.id == state.support }?.heightAt(pos) ?: state.height
         val next = state.copy(pos = pos, height = supportHeight, velocity = if (actual) velocity else PlayControl.Stick(),
             facing = velocity.direction(state.facing) ?: state.facing,
-            gaitMs = if (actual) state.gaitMs + dt * PlayControl.tempo(velocity.strength) else state.gaitMs,
+            gaitMs = if (actual) state.gaitMs + dt * cadence(tempo) else state.gaitMs,
             elapsed = 0L, running = running, runBlend = runBlend)
         return Result(fallIfNeeded(next, surfaces), step.exit.takeIf { pos == step.pos })
     }

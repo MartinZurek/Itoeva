@@ -19,7 +19,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitmap?>, camera: GameCamera.State,
     minute: Int, lampOn: Boolean, phase: Int, environment: GameEnvironment.State,
-    pos: PlayControl.Pos, fade: Float, modifier: Modifier, clock: Long) {
+    pos: PlayControl.Pos, fade: Float, modifier: Modifier, clock: Long, weather: PlayWeather = PlayWeather.CLEAR) {
     Canvas(modifier) {
         val local = GameCamera.fit(camera, scene, size.width, size.height)
         val fit = local.copy(left = local.left - GameWorld.origin(scene.place) * local.scale)
@@ -65,8 +65,8 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
             val span = GameWorld.region(place)!!.section
             if (sectionFit.left + span * sectionFit.scale < 0f || sectionFit.left > size.width) continue
             paintWater(section, images, sectionFit, clock, fade)
-            paintPaintedMotion(section, image, sectionFit, clock, fade, images)
-            paintAtmosphere(section, sectionFit, clock, minute, fade, false)
+            paintPaintedMotion(section, image, sectionFit, clock, fade, images,weather)
+            paintAtmosphere(section, sectionFit, clock, minute, fade, false,weather)
         }
         val dark = GameSceneLighting.darkness(scene, minute)
         // Die Hoehle bleibt dunkel, auch wenn der aktive Ortsname noch Lager ist.
@@ -104,7 +104,7 @@ internal fun GameWorldView(scene: GameScenes.Scene, images: Map<String,ImageBitm
 @Composable
 internal fun GameWorldForeground(scene: GameScenes.Scene, camera: GameCamera.State,
     environments: Map<PlayScene.Place, GameEnvironment.State>, clock: Long, minute: Int,
-    fade: Float, modifier: Modifier) {
+    fade: Float, modifier: Modifier, weather: PlayWeather = PlayWeather.CLEAR) {
     Canvas(modifier) {
         val local = GameCamera.fit(camera, scene, size.width, size.height)
         val dark = GameSceneLighting.darkness(scene, minute)
@@ -113,7 +113,7 @@ internal fun GameWorldForeground(scene: GameScenes.Scene, camera: GameCamera.Sta
             val sectionFit = GameCamera.fit(camera, section, size.width, size.height)
             val span = GameWorld.region(place)!!.section
             if (sectionFit.left + span * sectionFit.scale < 0f || sectionFit.left > size.width) continue
-            paintAtmosphere(section, sectionFit, clock, minute, fade, true)
+            paintAtmosphere(section, sectionFit, clock, minute, fade, true,weather)
         }
         environments.filterKeys { it in GameWorld.visiblePlaces(scene) }.forEach { (place, state) ->
             roomContacts(GameWorld.scene(place)!!, state, GameCamera.fit(camera, GameWorld.scene(place)!!,

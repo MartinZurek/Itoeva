@@ -4,6 +4,26 @@ import kotlin.math.sin
 
 /** Ufer in Bildkoordinaten; Stege und Felsen bleiben starre Gegenstaende. */
 object GameWater {
+    /** Weltfeste Pixelwellen: der Kamm wandert, seine Lichtstaerke folgt dem Hang. */
+    data class Crest(val x: Float, val y: Float, val width: Float, val light: Float)
+    fun crest(column: Int, row: Int, clock: Long): Crest {
+        val depth = ((row * 12f - 390f) / 220f).coerceIn(0f, 1f)
+        val phase = clock / 1000.0
+        val seed = Math.floorMod(column * 73 + row * 37, 101) / 101f
+        val travel = phase * (1.8f + depth * 2.5f)
+        val x = (column * 32f + seed * 18f + sin(row * 1.7f + phase * .7f) * 3f).toFloat()
+        val y = (row * 12f + (travel + seed * 12f) % 12f).toFloat()
+        val pulse = (.5f + .5f * sin(phase * 1.1f + column * 2.1f + row * .8f)).toFloat()
+        return Crest(kotlin.math.floor(x / 2f) * 2f, kotlin.math.floor(y / 2f) * 2f,
+            4f + kotlin.math.floor((4f + depth * 10f) * pulse / 2f) * 2f,
+            (.08f + pulse * .22f) * (.4f + depth * .6f))
+    }
+    /** Vier gezeichnete Zugphasen je Ansicht; Koerpervolumen ist keine Animation. */
+    fun swimFrame(stroke: Float, dir: PlayControl.Dir?): Int {
+        val phase = if (stroke.isFinite()) Math.floorMod((stroke * 4f).toInt(), 4) else 0
+        val row = when (dir) { PlayControl.Dir.UP -> 2; PlayControl.Dir.DOWN -> 1; else -> 0 }
+        return row * 4 + phase
+    }
     data class Run(val x0: Int, val x1: Int, val y: Int)
     private val masks = java.util.concurrent.ConcurrentHashMap<String, List<Run>>()
     private val shore = listOf(0f to 525f, 180f to 493f, 350f to 510f, 550f to 490f,
@@ -68,7 +88,7 @@ object GameWater {
 
     data class Swim(val stroke: Float, val bob: Float, val angle: Float, val moving: Boolean,
         val buoyancy: Float = if(moving) 28f else 22f) {
-        val cue get() = CreatureSprites.MotionCue(CreatureSprites.Motion.REACH, stroke)
+        val cue get() = CreatureSprites.MotionCue(CreatureSprites.Motion.SWIM, stroke)
     }
     /** Kein Laufzyklus unter Wasser: Ausstrecken, Zug, Zurueckholen und ruhiges Wassertreten. */
     fun swim(scene: GameScenes.Scene, pos: PlayControl.Pos, lift: Float, dir: PlayControl.Dir,
@@ -76,7 +96,7 @@ object GameWater {
         val wet = GameWorld.wetness(scene,pos)
         if (wet < .20f || lift > 0f) return null
         val phase = (clock % if(moving) 900L else 1500L).toFloat() / if(moving) 900f else 1500f
-        val tilt = if(moving) 32f else 5f
+        val tilt = if(moving) 9f else 3f
         val angle = when(dir) { PlayControl.Dir.LEFT -> -tilt; PlayControl.Dir.RIGHT -> tilt; else -> sin(phase*6.283f)*4f }
         val rise = when(species) { AvatarSpecies.WYRMLING -> 14f; AvatarSpecies.STARLET -> 22f; else -> 28f }
         return Swim(phase, sin(phase*6.283f)*1.6f, angle, moving, if(moving) rise else rise*.79f)

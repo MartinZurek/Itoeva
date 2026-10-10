@@ -77,6 +77,19 @@ object GameEnvironment {
             return next.copy(remainder = 0f)
         }
         if (distance < 0.001f) return next
+        val gaitDelta=after.gaitMs-before.gaitMs
+        if(after.moving && gaitDelta>0.0 && gaitDelta<=200.0) {
+            val first=kotlin.math.floor(before.gaitMs/380.0).toLong()+1L
+            val last=kotlin.math.floor(after.gaitMs/380.0).toLong()
+            for(step in first..last) {
+                val t=((step*380.0-before.gaitMs)/gaitDelta).toFloat().coerceIn(0f,1f)
+                val side=if(foot%2==0) -1f else 1f
+                val width=GameScenes.avatarHeight(scene,after.pos)*.035f
+                contact(ax+dx*t-dy/distance*width*side,ay+dy*t+dx/distance*width*side,
+                    after.support,after.height,0f)
+            }
+            return next.copy(remainder=0f,contacts=contacts.takeLast(MAX_CONTACTS),foot=foot)
+        }
         val stride = (GameScenes.avatarHeight(scene, after.pos) * 0.18f).coerceIn(7f, 14f)
         var at = stride - next.remainder
         while (at <= distance) {

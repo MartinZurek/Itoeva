@@ -1,5 +1,41 @@
 # Uebergabe
 
+## Aktuell: Innenraum-Konzepttafeln und gezeichnetes Schwimmen (10.10.2026)
+
+Elf neue gemalte Tafeln stehen in `docs/concept-art/interior-studies-v1/README.md`.
+Martin will diese zuerst zur Orientierung; noch keine neue Raumgeometrie daraus.
+Sechs Schwimmboegen ersetzen den beanstandeten Rumpf-/Boje-Puls. Wasser hat
+Pixelkaemme, Uferschaum, bewegungsabhaengige Spur und schwach sichtbare blaue
+Unterwasserteile. Tests, Regeneration, Referenzen und offene Geraetepruefung in
+[`docs/itoeva2-swimming-water.md`](docs/itoeva2-swimming-water.md). PR #351.
+
+
+## Aktuell: Konzeptstil in allen elf Innenorten (09.10.2026)
+
+PR #351 wird auf Claudes Eingabefix `fba7a969` weitergefuehrt. Der neue Schnitt
+uebertraegt die Cozy-Home-Studien in gemeinsame Pixelgruppen fuer Waende, Holz,
+Bogenfenster, Textilien, Pflanzen und Moebel. Raeumliche Kontakte/Verdeckung
+bleiben erhalten; Wanne und weiche Polster verwenden neue gemeinsame Konturen.
+[`Vorher/Nachher`](tools/character-art/room-concept-comparison.png),
+[`Alle Innenorte`](tools/character-art/room-concept-all-preview.png), Regeneration,
+Pruefstand und offene Telefonabnahme im letzten Abschnitt von
+[`docs/itoeva2-character-motion.md`](docs/itoeva2-character-motion.md).
+Keine APK gebaut, keine Workflow-/Buildaenderung, kein Merge.
+
+## Aktuell: Charaktere, Lauf-/Schwimmbewegung, Raeume und Musik (09.10.2026)
+
+Martins Auftrag waehrend des separaten APK-Baus aus PR #350 steht in
+[`docs/itoeva2-character-motion.md`](docs/itoeva2-character-motion.md).
+Branch `codex/character-silhouettes-and-cloth` baut auf `431bd178` auf. Die
+Game-Darstellung verwendet ein zusammenhaengendes Texturnetz mit Stoffnachlauf
+und eigenen Koerpergewichten. Originalassets und die anderen Darstellungsmodi
+bleiben erhalten. PR [#351](https://github.com/MartinZurek/Itoeva/pull/351) ist
+auf #350 gestapelt. Die Fortsetzung umfasst eigentliche Lauf-/Schwimmbewegung,
+rechter Sprung als gepufferter Motorbefehl, elf raeumliche Innenorte statt
+Hintergrundbildern und Medienplayer-/Klingelsperrenkorrektur fuer Game-Musik.
+Vorschauen, Tests und genaue ungepruefte Telefonpunkte stehen im Dokument.
+Die separat aus #350 gebaute APK enthaelt #351 noch nicht.
+
 ## Aktuell: Bedienung und Brueckenweg (09.10.2026)
 
 Martins Telefonfeedback zu rechtem Pad, Shop-Tueren, Brueckenboden und Wasser wird

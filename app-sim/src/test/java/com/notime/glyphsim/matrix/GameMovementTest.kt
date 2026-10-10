@@ -5,6 +5,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GameMovementTest {
+    @Test fun `Hoehere Geschwindigkeit kommt auch aus laengerem Schritt statt nur schnellerem Takt`() {
+        assertEquals(1f,GameMovement.cadence(1f),0f)
+        assertTrue(GameMovement.cadence(2.5f) in 1.5f..1.7f)
+        assertTrue(2.5f/GameMovement.cadence(2.5f)>1.5f)
+        assertEquals(0f,GameMovement.cadence(Float.NaN),0f)
+    }
     private val right = PlayControl.Stick(1f, 0f)
     private val neutral = PlayControl.Stick()
     private val box = GameMovement.Surface("box", 0.5f, 0.65f, 0.3f, 0.6f, 20f)
