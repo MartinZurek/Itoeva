@@ -1,0 +1,198 @@
+# Godot-HD2D-Prototyp (prototypes/godot-hd2d, PR #357) als eigene Android-APK nach Drive.
+#
+# Laeuft bei jedem Push auf claude/godot-hd2d-apk, der den Prototyp oder diese Datei aendert. Die APK
+# hat eine eigene applicationId (com.notime.glyphminderwatch.godotproto) und installiert sich
+# NEBEN Tama und Itoeva 2 - sie ersetzt nichts.
+#
+# Kein Android-Gradle-Bau: Godot packt die fertige Vorlage aus den Export-Templates und
+# signiert sie mit apksigner aus dem vorinstallierten Android-SDK des Runners.
+#
+# Signiert wird mit demselben Debug-Schluessel wie die anderen APKs (Secret
+# DEBUG_KEYSTORE_BASE64, nur gelesen), damit spaetere Prototyp-Staende sich als Update
+# installieren lassen. Fehlt das Secret, entsteht ein Wegwerf-Schluessel - dann muss die App
+# vor jedem neuen Stand deinstalliert werden.
+#
+# Drive: Die Datei Itoeva-Godot-Prototyp.apk liegt im selben Ordner wie Itoeva2-debug.apk.
+# Ist sie dem Service-Konto (noch) nicht als Bearbeiter freigegeben, scheitert nur der
+# Upload mit einem Hinweis; die APK liegt dann trotzdem als Artefakt dieses Laufs bereit.
+name: Godot APK
+
+on:
+  push:
+    branches: [claude/godot-hd2d-apk]
+    paths:
+      - 'prototypes/godot-hd2d/**'
+      - '.github/workflows/godot-apk.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: godot-apk
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: '4.5.1'
+  PROJECT: prototypes/godot-hd2d
+
+jobs:
+  apk:
+    name: Godot-APK bauen und nach Drive legen
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Godot und Export-Templates (Cache)
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+
+      - name: Godot und Export-Templates laden
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot && cd ~/godot
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && rm godot.zip
+          curl -fsSL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q templates.tpz && rm templates.tpz
+          # Nur die Android-Vorlagen behalten - der Rest kostet Cache-Platz.
+          find templates -type f ! -name 'android_*' ! -name 'version.txt' -delete
+          ls -la templates
+
+      - name: Godot einrichten
+        run: |
+          set -euo pipefail
+          tdir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$tdir"
+          cp -r ~/godot/templates/. "$tdir/"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          ls "$sdk/build-tools" | tail -3
+          mkdir -p ~/.config/godot
+          for f in editor_settings-4.tres editor_settings-4.5.tres; do
+            {
+              echo '[gd_resource type="EditorSettings" format=3]'
+              echo
+              echo '[resource]'
+              echo "export/android/android_sdk_path = \"$sdk\""
+              echo "export/android/java_sdk_path = \"$JAVA_HOME\""
+            } > ~/.config/godot/$f
+          done
+
+      - name: Debug-Schluessel
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail   # kein -x: Schluesselmaterial gehoert nicht ins Log
+          umask 077
+          ks="$RUNNER_TEMP/debug.keystore"
+          if [ -n "${DEBUG_KEYSTORE_BASE64}" ]; then
+            printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$ks"
+            echo "Hinterlegter Debug-Schluessel wird benutzt."
+          else
+            echo "::warning::DEBUG_KEYSTORE_BASE64 fehlt - Wegwerf-Schluessel, kein Update-Pfad."
+            keytool -genkeypair -keystore "$ks" -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US" >/dev/null
+          fi
+          {
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$ks"
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey"
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android"
+          } >> "$GITHUB_ENV"
+
+      - name: Version bestimmen
+        id: version
+        run: |
+          set -euo pipefail
+          # Wie in deliver-apk.yml aus der Uhrzeit: jeder neue Stand ist hoeher als der vorige.
+          code=$(( $(date +%s) / 60 ))
+          sha="$(git rev-parse --short HEAD)"
+          sed -i "s/^version\/code=.*/version\/code=${code}/" $PROJECT/export_presets.cfg
+          sed -i "s/^version\/name=.*/version\/name=\"0.1.2.${code}-${sha}\"/" $PROJECT/export_presets.cfg
+          echo "name=0.1.${code}" >> "$GITHUB_OUTPUT"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Importieren und exportieren
+        run: |
+          set -euo pipefail
+          cd "$PROJECT"
+          mkdir -p build
+          "$GODOT" --headless --path . --import 2>&1 | tail -5 || true
+          "$GODOT" --headless --path . --export-debug "Android" "$PWD/build/itoeva-godot.apk" 2>&1 | tee build/export.log | tail -40
+          if [ ! -s build/itoeva-godot.apk ]; then
+            echo "::error::Godot hat keine APK erzeugt - siehe Log oben."
+            exit 1
+          fi
+          # Fehlerzeilen als Anmerkung, damit sie ohne Log-Download sichtbar sind
+          { grep -E -A1 "ERROR" build/export.log || true; } | head -12 | while IFS= read -r line; do
+            echo "::warning::export: ${line}"
+          done
+          ls -la build/itoeva-godot.apk
+          sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          bt="$(ls -d "$sdk"/build-tools/* | sort -V | tail -1)"
+          "$bt/apksigner" verify --print-certs build/itoeva-godot.apk | grep -E "SHA-256|Signer" || true
+
+      - name: Schluesselreste entfernen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/debug.keystore"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: itoeva-godot-${{ steps.version.outputs.name }}
+          path: ${{ env.PROJECT }}/build/itoeva-godot.apk
+          retention-days: 14
+
+      - name: Nach Drive legen
+        env:
+          SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          FILE_ID: ${{ vars.GDRIVE_GODOT_APK_FILE_ID || '1p-xQgiEceSq0l9TxBvxiYUZ-UqQoSLNn' }}
+          VERSION: ${{ steps.version.outputs.name }}
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SA_JSON}" ]; then
+            echo "::notice::GDRIVE_SA_JSON fehlt - APK nur als Artefakt."
+            exit 0
+          fi
+          umask 077
+          TMP="$(mktemp -d)"
+          trap 'rm -rf "$TMP"' EXIT
+          printf '%s' "$SA_JSON" > "$TMP/sa.json"
+          JWT="$(sh runner/gdrive-jwt.sh "$TMP/sa.json" https://www.googleapis.com/auth/drive)"
+          ANTWORT="$(curl --fail-with-body -sS -X POST https://oauth2.googleapis.com/token \
+                       --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
+                       --data-urlencode "assertion=${JWT}")"
+          TOKEN="$(printf '%s' "$ANTWORT" | jq -r '.access_token // empty')"
+          [ -n "$TOKEN" ] || { echo "::error::Kein access_token."; exit 1; }
+          echo "::add-mask::$TOKEN"
+          code=$(curl -sS -o "$TMP/resp.json" -w '%{http_code}' -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @"$PROJECT/build/itoeva-godot.apk" \
+            "https://www.googleapis.com/upload/drive/v3/files/${FILE_ID}?uploadType=media&supportsAllDrives=true")
+          if [ "$code" != "200" ]; then
+            echo "::warning::Drive-Upload scheiterte (HTTP $code). Ist Itoeva-Godot-Prototyp.apk dem"
+            echo "::warning::Service-Konto als Bearbeiter freigegeben? Die APK liegt als Artefakt bereit."
+            jq -r '.error.message // empty' "$TMP/resp.json" || true
+            exit 0
+          fi
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"description\":\"Itoeva Godot HD-2D (PR 357) ${VERSION} (${SHA}), applicationId com.itoeva.godot.hd2d, gebaut von godot-apk.yml, Lauf ${GITHUB_RUN_ID}\"}" \
+            "https://www.googleapis.com/drive/v3/files/${FILE_ID}?supportsAllDrives=true" \
+            -o /dev/null
+          echo "Godot-APK in Drive aktualisiert: ${VERSION} (${SHA})"
