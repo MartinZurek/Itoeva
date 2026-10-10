@@ -7,7 +7,8 @@ class GameRoomSpaceTest {
     @Test fun `Alle Innenraeume haben begehbare Tiefe statt eines schmalen Bildstreifens`() {
         for(scene in GameInteriorCatalog.scenes.values) {
             assertTrue(GameRoomSpace.enabled(scene))
-            assertTrue(scene.nearY-scene.farY>=130f)
+            assertTrue(scene.nearY-scene.farY>=100f)
+            assertTrue(scene.nearY<=236f)
             for(species in AvatarSpecies.entries) {
                 assertTrue(GameCharacterScale.visibleHeight(scene,PlayControl.Pos(.5f,.5f),species)<100f)
             }
@@ -21,13 +22,13 @@ class GameRoomSpaceTest {
                 val surface=GameSurfaces.painted(scene).single { it.id==body.piece.id }
                 val center=PlayControl.Pos((surface.x0+surface.x1)/2f,surface.anchorDepth)
                 assertEquals(body.piece.top,GameScenes.feet(scene,center).second-surface.heightAt(center),.001f)
-                assertEquals(body.faces.map { it.points },GameRoomSpace.contours(body.piece))
+                assertEquals(body.piece.contours,GameRoomSpace.contours(body.piece))
                 assertTrue(body.faces.all { it.points.size>=4 && it.points.all { p -> p.first.isFinite() && p.second.isFinite() } })
             }
         }
     }
 
-    @Test fun `Hinter dem Sofa ist ein echter freier Weg mit richtiger Verdeckung`() {
+    @Test fun `Die gemalte Rueckwand wird kein unsichtbarer Weg hinter dem Sofa`() {
         val scene=GameWorld.scene(PlayScene.Place.LIVING)!!
         val sofa=GameFurniture.pieces(scene).single { it.id=="living-sofa" }
         val behind=GameScenes.posAt(scene,245f,130f)
@@ -36,7 +37,8 @@ class GameRoomSpaceTest {
         val inFront=GameScenes.posAt(scene,245f,190f)
         assertFalse(sofa.hides(GameScenes.feet(scene,inFront).second,null))
         val left=GameScenes.posAt(scene,150f,130f)
-        assertNotEquals(left,GameSurfaces.approach(scene,left,behind,50L))
+        assertFalse(GameTerrain.valid(scene,left))
+        assertFalse(GameTerrain.valid(scene,behind))
         assertFalse(sofa.hides(130f,sofa.id))
     }
 
@@ -79,11 +81,9 @@ class GameRoomSpaceTest {
     @Test fun `Die Badezimmertuer steht frei statt vor einem Schrankkoerper`() {
         val scene=GameWorld.scene(PlayScene.Place.BEDROOM)!!
         val door=GameDoors.aperture(scene.place,PlayScene.Place.BATH)
-        for(body in GameRoomSpace.bodies(scene)) {
-            if(body.piece.left<door.x1 && body.piece.right>door.x0) {
-                assertTrue(body.piece.id,body.faces.flatMap { it.points }.minOf { it.second }>door.y1)
-            }
-        }
+        val access=GameScenes.posAt(scene,330f,door.y1+12f)
+        assertTrue(GameTerrain.valid(scene,access))
+        assertFalse(GameSurfaces.painted(scene).any { it.contains(access) })
     }
     @Test fun `Konzeptlagen bleiben deterministisch und an den Raum gebunden`() {
         for(scene in GameInteriorCatalog.scenes.values) {
@@ -105,7 +105,7 @@ class GameRoomSpaceTest {
         val sofa=GameRoomSpace.bodies(scene).single { it.piece.id=="living-sofa" }
         val back=sofa.faces.single { it.shade==0 }
         assertEquals(8,back.points.size)
-        assertTrue(GameRoomSpace.contours(sofa.piece).contains(back.points))
+        assertTrue(GameRoomSpace.contours(sofa.piece).first().size>8)
         assertTrue(GameRoomArt.marks(scene).any { it.points==back.points && it.clip==null })
     }
 

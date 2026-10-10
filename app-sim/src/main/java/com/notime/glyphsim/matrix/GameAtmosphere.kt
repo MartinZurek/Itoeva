@@ -34,6 +34,36 @@ object GameAtmosphere {
             else bend(patch,row,clock,origin,weather)
         return dx.coerceIn(-1.5f,1.5f)*edge
     }
+    /** Nur tatsaechlich betretene Grasränder reagieren; Fusskontakte klingen weich wieder ab. */
+    fun vegetationOffset(scene: GameScenes.Scene,patch: Patch,x: Float,y: Float,state: GameEnvironment.State?): Float {
+        if(state==null || patch.hanging || patch.water) return 0f
+        var bend=0f
+        for(c in state.contacts) {
+            if(c.place!=scene.place || c.material!=GameEnvironment.Material.GRASS) continue
+            val age=(state.clock-c.born).coerceAtLeast(0L)/1200f
+            if(age>=1f) continue
+            val reach=(1f-kotlin.math.hypot(x-c.x,y-c.y)/24f).coerceIn(0f,1f)
+            val tip=((patch.y+patch.h-y)/patch.h).coerceIn(0f,1f)
+            val direction=if(kotlin.math.abs(c.dx)>.1f) c.dx else if(c.foot==0) -1f else 1f
+            bend+=direction*5f*reach*tip*(1f-age)*(1f-age)
+        }
+        fun smooth(value: Float)=value.coerceIn(0f,1f).let { it*it*(3f-2f*it) }
+        val edge=smooth((x-patch.x+3f)/3f)*smooth((patch.x+patch.w+3f-x)/3f)*
+            smooth((y-patch.y+3f)/3f)*smooth((patch.y+patch.h+3f-y)/3f)
+        return bend.coerceIn(-5f,5f)*edge
+    }
+    fun vegetationPatches(scene: GameScenes.Scene): List<Patch> {
+        val region=GameWorld.region(scene.place) ?: return emptyList()
+        val offset=GameWorld.origin(scene.place)-GameWorld.regionOrigin(region)
+        return GameWalkingMap.areas[scene.asset].orEmpty().filter { it.material==GameEnvironment.Material.GRASS }
+            .mapIndexedNotNull { index,area ->
+                val left=area.points.minOf { it.first };val right=area.points.maxOf { it.first }
+                if(right<offset || left>=offset+region.section) null else {
+                    val top=area.points.minOf { it.second }-12f;val bottom=area.points.maxOf { it.second }
+                    Patch(left-offset,top,right-left,bottom-top,90+index)
+                }
+            }
+    }
     fun figureBend(scene: GameScenes.Scene, species: AvatarSpecies, v: Float, clock: Long,
         worldX: Float, weather: PlayWeather): Float {
         if (!GameWorld.isWorld(scene) || scene.place == Place.GROTTO) return 0f

@@ -102,12 +102,25 @@ object GameMovement {
 
     /** Flaechen sind feste Gegenstaende am Boden. An ihrer Kante bleibt Bewegung tangential moeglich. */
     private fun collide(from: PlayControl.Pos, to: PlayControl.Pos, height: Float, surfaces: List<Surface>, support: String?): PlayControl.Pos {
-        fun blocked(pos: PlayControl.Pos) = surfaces.any { it.id != support && it.heightAt(pos) > height + 1f && it.contains(pos) }
-        if (!blocked(to)) return to
+        fun clear(end: PlayControl.Pos) = surfaces.none { surface ->
+            if(surface.id==support) return@none false
+            var enter=0f;var leave=1f
+            fun cut(origin: Float,delta: Float,low: Float,high: Float): Boolean {
+                if(kotlin.math.abs(delta)<.000001f) return origin in low..high
+                val a=(low-origin)/delta;val b=(high-origin)/delta
+                enter=maxOf(enter,minOf(a,b));leave=minOf(leave,maxOf(a,b))
+                return enter<=leave
+            }
+            if(!cut(from.x,end.x-from.x,surface.x0,surface.x1) ||
+                !cut(from.depth,end.depth-from.depth,surface.d0,surface.d1)) return@none false
+            fun at(t: Float)=PlayControl.Pos(lerp(from.x,end.x,t),lerp(from.depth,end.depth,t))
+            maxOf(surface.heightAt(at(enter)),surface.heightAt(at(leave)))>height+1f
+        }
+        if (clear(to)) return to
         val horizontal = to.copy(depth = from.depth, pushMs = 0L)
-        if (!blocked(horizontal)) return horizontal
+        if (clear(horizontal)) return horizontal
         val vertical = to.copy(x = from.x, pushMs = 0L)
-        if (!blocked(vertical)) return vertical
+        if (clear(vertical)) return vertical
         return from.copy(pushMs = 0L)
     }
 

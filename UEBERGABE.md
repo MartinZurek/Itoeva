@@ -1,5 +1,16 @@
 # Uebergabe
 
+## Aktuell: Originalmalerei im Innenraum und Laufkarte (10.10.2026)
+
+Martins anschliessender Auftrag uebertraegt den warmen gemalten Stil tatsaechlich
+in den Zeichenweg aller elf Innenorte und reduziert den leeren Vorderboden.
+Branch `codex/painted-interiors-walking-map` baut auf PR #351 (`8865522`) auf.
+Unsichtbare Bodenprofile/Sperrpolygone, ganze Bewegungsschritte gegen Moebel,
+sofortiges Schwimmen und abklingende Gras-/Pfotenreaktion sind umgesetzt.
+Regeneration, Bilder und Pruefgrenzen:
+[`Umsetzung/Laufkarte`](docs/itoeva2-painted-interiors-walking-map.md).
+Vorhandene andere Arbeitszweige wurden nicht ueberschrieben; kein Merge/APK-Auftrag.
+
 ## Aktuell: Innenraum-Konzepttafeln und gezeichnetes Schwimmen (10.10.2026)
 
 Elf neue gemalte Tafeln stehen in `docs/concept-art/interior-studies-v1/README.md`.

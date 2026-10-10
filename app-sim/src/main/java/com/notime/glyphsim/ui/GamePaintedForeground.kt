@@ -31,8 +31,23 @@ internal fun Modifier.gameCharacterOcclusion(scene: GameScenes.Scene?, pos: Play
                 close()
             }
         }
+        if (support==null && lift<=0f && GameWorld.material(scene,GameScenes.feet(scene,pos).first,feetY)==GameEnvironment.Material.GRASS) {
+            val (fx,fy)=GameScenes.feet(scene,pos)
+            // Bodennahe Halme verdecken die Pfoten; der Koerper bleibt vor den niedrigen Pflanzen.
+            val x0=fx-12f;val x1=fx+12f
+            val points=buildList {
+                add(x0 to fy+3f)
+                for(i in 0..12) add(x0+i*(x1-x0)/12f to fy-3f-(i%3)*1.5f)
+                add(x1 to fy+3f)
+            }
+            points.forEachIndexed { i,(x,y) ->
+                val (sx,sy)=fit.toScreen(x,y)
+                if(i==0) contours.moveTo(sx-offset.x,sy-offset.y) else contours.lineTo(sx-offset.x,sy-offset.y)
+            }
+            contours.close()
+        }
         fun paint() {
-            if (pieces.isEmpty()) drawContent()
+            if (contours.isEmpty) drawContent()
             else clipPath(contours, ClipOp.Difference) { this@drawWithContent.drawContent() }
         }
         if (rise <= 0f) paint()

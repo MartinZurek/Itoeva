@@ -29,10 +29,10 @@ private val motionTextures=java.util.WeakHashMap<ImageBitmap,MutableMap<List<Int
 /** Kleine Ausschnitte werden einmal gecacht und als zusammenhaengende Netze verformt. */
 internal fun DrawScope.paintPaintedMotion(scene: GameScenes.Scene, image: ImageBitmap,
     fit: GameScenes.Fit, clock: Long, alpha: Float, images: Map<String, ImageBitmap?> = emptyMap(),
-    weather: PlayWeather = PlayWeather.CLEAR) {
+    weather: PlayWeather = PlayWeather.CLEAR, environment: GameEnvironment.State? = null) {
     if(alpha < .995f) return
     withTransform({ translate(fit.left, fit.top); scale(fit.scale, fit.scale, Offset.Zero) }) {
-        for (patch in GameAtmosphere.patches(scene)) {
+        for (patch in GameAtmosphere.patches(scene)+GameAtmosphere.vegetationPatches(scene)) {
             val sample=GameAtmosphere.sample(scene,patch) ?: continue
             val source=if(sample.asset==scene.asset) image else images[sample.asset] ?: continue
             val sx=source.width/sample.width; val sy=source.height/sample.height
@@ -48,7 +48,8 @@ internal fun DrawScope.paintPaintedMotion(scene: GameScenes.Scene, image: ImageB
             for(row in 0..16) for(column in 0..8) {
                 val x=(x0+(x1-x0)*column/8f)/sx-sample.offset
                 val y=(y0+(y1-y0)*row/16f)/sy
-                texture.vertices[i++]=x+GameAtmosphere.motionOffset(patch,x,y,clock,GameWorld.origin(scene.place),weather)
+                texture.vertices[i++]=x+GameAtmosphere.motionOffset(patch,x,y,clock,GameWorld.origin(scene.place),weather)+
+                    GameAtmosphere.vegetationOffset(scene,patch,x,y,environment)
                 texture.vertices[i++]=y
             }
             texture.paint.alpha=(alpha.coerceIn(0f,1f)*255f).roundToInt()

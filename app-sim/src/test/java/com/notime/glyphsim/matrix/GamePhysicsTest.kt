@@ -6,6 +6,71 @@ import org.junit.Test
 import kotlin.math.abs
 
 class GamePhysicsTest {
+    @Test fun `Sperrinsel wird auch zwischen zwei legalen Endpunkten erkannt`() {
+        val scene=GameWorld.scene(Place.PARK)!!
+        val from=GameScenes.posAt(scene,230f,550f)
+        val to=GameScenes.posAt(scene,330f,550f)
+        assertTrue(GameTerrain.valid(scene,from));assertTrue(GameTerrain.valid(scene,to))
+        assertFalse(GameWalkingMap.clear(scene,from,to))
+        val stopped=GameTerrain.resolve(scene,from,to)
+        assertTrue(GameTerrain.valid(scene,stopped))
+        assertTrue(GameWalkingMap.clear(scene,from,stopped))
+        assertNotEquals(to,stopped)
+    }
+    @Test fun `Anlauf umgeht die Felsinsel ohne durch sie hindurchzugehen`() {
+        val scene=GameWorld.scene(Place.PARK)!!
+        var pos=GameScenes.posAt(scene,230f,550f)
+        val target=GameScenes.posAt(scene,390f,550f)
+        repeat(300) {
+            val next=GameSurfaces.approach(scene,pos,target,50)
+            assertTrue(GameWalkingMap.clear(scene,pos,next));pos=next
+        }
+        assertEquals(target,pos)
+    }
+    @Test fun `Rennen kann kein schmales Moebel durchqueren`() {
+        val from=PlayControl.Pos(.4f,.5f)
+        val thin=GameMovement.Surface("thin-bench",.4003f,.4006f,.4f,.6f,30f)
+        val next=GameMovement.tick(GameMovement.State(pos=from),PlayControl.Stick(1f,0f),50,listOf(thin)).state
+        assertTrue(next.pos.x<thin.x0);assertNull(next.support)
+    }
+    @Test fun `Wasser beginnt sofort mit Schwimmen statt einem aufrechten Laufschritt`() {
+        val scene=GameWorld.scene(Place.BEACH)!!
+        val x=240f;val shore=GameWater.shoreY(GameWorld.origin(scene.place)+x)
+        val land=GameScenes.posAt(scene,x,shore-.5f)
+        val water=GameScenes.posAt(scene,x,shore+.5f)
+        assertEquals(0f,GameWorld.wetness(scene,land),0f)
+        assertTrue(GameWorld.wetness(scene,water)>=.20f)
+        assertNotNull(GameWater.swim(scene,water,0f,PlayControl.Dir.RIGHT,true,0))
+        val resting=GameTerrain.command(scene,GameMovement.State(pos=water),GameMovement.Command.REST,
+            PlayControl.Stick(),emptyList())
+        assertNull(resting.action)
+    }
+    @Test fun `Nur vermessenes Gras reagiert und federt nach dem Schritt zurueck`() {
+        val scene=GameWorld.scene(Place.PARK)!!
+        val x=100f;val y=515f
+        assertEquals(GameEnvironment.Material.GRASS,GameWorld.material(scene,x,y))
+        assertNotEquals(GameEnvironment.Material.GRASS,GameWorld.material(scene,250f,y))
+        val patch=GameAtmosphere.vegetationPatches(scene).first()
+        val contact=GameEnvironment.Contact(scene.place,x,y,GameEnvironment.Material.GRASS,0,1200,0,1f,0f)
+        val fresh=GameEnvironment.State(clock=0,contacts=listOf(contact))
+        val bent=GameAtmosphere.vegetationOffset(scene,patch,x,y-4f,fresh)
+        assertTrue(bent>0f)
+        assertTrue(GameAtmosphere.vegetationOffset(scene,patch,x,y-4f,fresh.copy(clock=600))<bent)
+        assertEquals(0f,GameAtmosphere.vegetationOffset(scene,patch,x,y-4f,fresh.copy(clock=1200)),0f)
+        assertEquals(0f,GameAtmosphere.vegetationOffset(scene,patch,patch.x-4f,y,fresh),0f)
+        assertEquals(0f,GameAtmosphere.vegetationOffset(scene,patch,x,y-4f,
+            fresh.copy(contacts=listOf(contact.copy(material=GameEnvironment.Material.STONE)))),0f)
+    }
+    @Test fun `Kompakter Innenraumblick schneidet leeren Vorderboden ab`() {
+        val scene=GameWorld.scene(Place.LIVING)!!;val pos=PlayControl.Pos(.5f,.6f)
+        val camera=GameCamera.tick(GameCamera.State(),scene,pos,PlayControl.Stick(),640f,360f,0)
+        val fit=GameCamera.fit(camera,scene,640f,360f)
+        assertTrue(fit.toScreen(240f,260f).second>360f)
+        assertTrue(fit.toScreen(240f,180f).second in 0f..360f)
+        assertTrue(GameTerrain.valid(scene,GameScenes.posAt(scene,240f,220f)))
+        assertFalse(GameTerrain.valid(scene,PlayControl.Pos(.5f,1.05f)))
+        assertFalse(GameTerrain.valid(scene,GameScenes.posAt(scene,240f,130f)))
+    }
     @Test fun `Schwimmbogen zeigt vier Zugphasen aus jeder Blickrichtung`() {
         for ((dir,row) in listOf(PlayControl.Dir.LEFT to 0, PlayControl.Dir.RIGHT to 0,
                 PlayControl.Dir.DOWN to 1, PlayControl.Dir.UP to 2)) {

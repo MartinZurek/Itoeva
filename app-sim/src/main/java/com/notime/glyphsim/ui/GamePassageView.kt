@@ -40,11 +40,8 @@ internal fun GamePassageView(scene: GameScenes.Scene, camera: GameCamera.State, 
                     val active=door?.takeIf { it.passage.from==passage.from &&
                         GameDoors.aperture(it.passage.from,it.passage.to)==aperture }
                     val opening=GameDoors.opening(active,active?.passage ?: passage,clock)
-                    if(GameRoomSpace.enabled(section)) {
-                        paintRoomDoor(aperture,fit,opening,fade)
-                    }
                     val sample=if(opening>0f) GameDoors.sample(passage) else null
-                    if(opening>0f && sample!=null && !GameRoomSpace.enabled(section)) {
+                    if(opening>0f && sample!=null) {
                         val (ax,ay)=fit.toScreen(aperture.x0,aperture.y0)
                         val width=(aperture.x1-aperture.x0)*scale
                         val height=(aperture.y1-aperture.y0)*scale

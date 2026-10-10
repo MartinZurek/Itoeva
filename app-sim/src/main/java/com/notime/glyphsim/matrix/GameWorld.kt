@@ -188,27 +188,12 @@ object GameWorld {
     }
     /** Ufer und trockene Stege folgen den Koordinaten des neuen Kuestenbildes. */
     fun shoreY(worldX: Float) = GameWater.shoreY(worldX)
-    fun material(scene: GameScenes.Scene, x: Float, y: Float): GameEnvironment.Material? {
-        if (!isWorld(scene)) return if (scene.place in GameInteriorCatalog.scenes) GameEnvironment.Material.WOOD else null
-        if (scene.asset == "world/coast.png") {
-            val wx = origin(scene.place) + x
-            if (GameWater.contains(scene,x,y)) return GameEnvironment.Material.WATER
-            return when (scene.place) {
-                Place.POND, Place.BEACH -> GameEnvironment.Material.SAND
-                Place.SWAMP -> GameEnvironment.Material.MUD
-                else -> GameEnvironment.Material.GRASS
-            }
-        }
-        return when (scene.place) {
-            Place.CITY, Place.STREET, Place.GROTTO, Place.COAST_PATH -> GameEnvironment.Material.STONE
-            Place.CAMP -> GameEnvironment.Material.GRASS
-            else -> GameEnvironment.Material.GRASS
-        }
-    }
+    fun material(scene: GameScenes.Scene, x: Float, y: Float): GameEnvironment.Material? =
+        if (GameWater.contains(scene,x,y)) GameEnvironment.Material.WATER else GameWalkingMap.material(scene,x,y)
     fun wetness(scene: GameScenes.Scene, pos: Pos): Float {
         val (x,y) = GameScenes.feet(scene,pos)
         return if (material(scene,x,y) == GameEnvironment.Material.WATER)
-            ((y-shoreY(origin(scene.place)+x))/170f).coerceIn(0f,.72f) else 0f
+            (.21f+(y-shoreY(origin(scene.place)+x)).coerceAtLeast(0f)/210f).coerceIn(.21f,.72f) else 0f
     }
     private fun mapX(worldX: Float) = .055f + .89f * worldX / totalWidth
     val mapPositions: Map<Place, Pair<Float, Float>> = buildMap {

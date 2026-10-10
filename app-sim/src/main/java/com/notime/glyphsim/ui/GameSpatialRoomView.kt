@@ -50,13 +50,15 @@ private object RoomPixels {
     }
 }
 
-/** Raeumliche Pixelkulisse: einzelne Moebel behalten ihre gemeinsamen Kontakt-/Verdeckungskanten. */
-internal fun DrawScope.paintRoomSpace(scene: GameScenes.Scene, fit: GameScenes.Fit, alpha: Float, clock: Long = 0L) {
+/** Originalmalerei mit gemeinsamen Kontakt-/Verdeckungskanten; Pixelkulisse nur als Fallback. */
+internal fun DrawScope.paintRoomSpace(scene: GameScenes.Scene, fit: GameScenes.Fit, alpha: Float, clock: Long = 0L, image: ImageBitmap? = null) {
     withTransform({translate(fit.left,fit.top);scale(fit.scale,fit.scale,Offset.Zero)}) {
-        drawImage(RoomPixels.image(scene),IntOffset.Zero,IntSize(480,270),IntOffset.Zero,IntSize(480,270),alpha=alpha,filterQuality=FilterQuality.None)
+        val base=image ?: RoomPixels.image(scene)
+        drawImage(base,IntOffset.Zero,IntSize(base.width,base.height),IntOffset.Zero,IntSize(480,270),alpha=alpha,
+            filterQuality=if(image!=null) FilterQuality.Low else FilterQuality.None)
         // Nur die Vorhaenge bewegen sich ueber dem statischen Materialbild. Gleiche Pixelgroesse wie Moebel.
         val cloth=Color(0xFFD8C39C)
-        for(x in listOf(76f,146f)) repeat(11) { row ->
+        if (image == null) for(x in listOf(76f,146f)) repeat(11) { row ->
             val dx=GameFabric.hangingOffset(row/11f,.5f,.10f,clock,scene.place.ordinal)
             val fold=if(row%3==0) Color(0xFFC3AD87) else cloth
             drawRect(fold,Offset(x+dx,45f+row*4f),Size(6f,4f),alpha=alpha)

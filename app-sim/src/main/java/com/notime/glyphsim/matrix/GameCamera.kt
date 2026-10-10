@@ -26,7 +26,7 @@ object GameCamera {
         val close = if (fresh || !old.close) interest < 42f else interest < 72f
         val water = GameWorld.wetness(scene, pos)
         val zoomTarget = if (world) when { water > .05f -> 1.55f + water * .65f; close -> 1.85f; input.strength > .80f -> 1.40f; else -> 1.55f }
-            else 1.0f
+            else 1.12f
         val dt = dtMs.coerceIn(0L, 100L) / 1000f
         fun ease(a: Float, b: Float, seconds: Float) = a + (b - a) * (1f - exp(-dt / seconds))
         val zoom = if (fresh) zoomTarget else ease(old.zoom, zoomTarget, .65f)
@@ -36,7 +36,9 @@ object GameCamera {
         val lookTarget = input.x * if (world) 48f else 14f
         val look = if (fresh) 0f else ease(old.look, lookTarget, .30f)
         val tx = (fx + look).coerceIn(halfW, width(scene) - halfW)
-        val ty = (fy - screenH / scale * (.24f + water * .12f)).coerceIn(halfH, height(scene) - halfH)
+        val desiredY = if (world) fy - screenH / scale * (.24f + water * .12f)
+            else 122f + (pos.depth - .5f) * 8f
+        val ty = desiredY.coerceIn(halfH, height(scene) - halfH)
         val x = if (fresh) tx else ease(old.x, tx, .18f).coerceIn(halfW, width(scene) - halfW)
         val y = if (fresh) ty else ease(old.y, ty, .24f).coerceIn(halfH, height(scene) - halfH)
         return State(key(scene), x, y, zoom, look, close)

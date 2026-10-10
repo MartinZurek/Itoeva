@@ -60,7 +60,7 @@ object GameSurfaces {
     /** Kurzer Sichtbarkeitsweg um die vorhandenen Kollisionsrechtecke zum angewaehlten Platz. */
     fun approach(scene: GameScenes.Scene, from: PlayControl.Pos, target: PlayControl.Pos, dt: Long): PlayControl.Pos {
         val obstacles = painted(scene).filterNot { it.contains(from) }
-        if (obstacles.isEmpty()) return GameTerrain.clamp(scene,GameScenes.approach(from, target, dt))
+        if (obstacles.isEmpty() && GameWalkingMap.clear(scene,from,GameTerrain.clamp(scene,target))) return GameTerrain.resolve(scene,from,GameScenes.approach(from, target, dt))
         fun clear(a: PlayControl.Pos, b: PlayControl.Pos): Boolean = obstacles.none { s ->
             var lo = 0f
             var hi = 1f
@@ -73,7 +73,7 @@ object GameSurfaces {
                 return lo <= hi
             }
             cut(a.x, b.x - a.x, s.x0, s.x1) && cut(a.depth, b.depth - a.depth, s.d0, s.d1)
-        }
+        } && GameWalkingMap.clear(scene,a,b)
         fun along(waypoint: PlayControl.Pos): PlayControl.Pos {
             val dx = waypoint.x - from.x
             val dy = waypoint.depth - from.depth
@@ -82,10 +82,19 @@ object GameSurfaces {
             val ty = if (kotlin.math.abs(dy) < .00001f) 1f else seconds * PlayControl.SPEED_DEPTH * .5f / kotlin.math.abs(dy)
             val t = minOf(1f, tx, ty)
             val next=if (t == 1f) waypoint else PlayControl.Pos(from.x + dx * t, from.depth + dy * t)
-            return GameTerrain.clamp(scene,next)
+            return GameTerrain.resolve(scene,from,next)
         }
         if (clear(from, target)) return along(target)
         val nodes = mutableListOf(from, target)
+        nodes += GameWalkingMap.corners(scene)
+        if (GameWorld.isWorld(scene)) {
+            for(i in 0..20) {
+                val x=i/20f;val band=GameTerrain.band(scene,x)
+                val full=GameScenes.floorBand(scene,x)
+                val d=((band.first+band.second)/2f-full.first)/(full.second-full.first)
+                nodes += PlayControl.Pos(x,d)
+            }
+        }
         obstacles.forEach { s ->
             for (x in listOf(s.x0 - .012f, s.x1 + .012f)) {
                 for (d in listOf(s.d0 - .04f, s.d1 + .04f)) {

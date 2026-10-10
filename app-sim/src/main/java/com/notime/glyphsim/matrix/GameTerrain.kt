@@ -7,13 +7,26 @@ import kotlin.math.abs
 object GameTerrain {
     fun band(scene: GameScenes.Scene, x: Float): Pair<Float,Float> {
         val projected = GameScenes.floorBand(scene,x)
-        if (!GameWorld.isWorld(scene)) return projected
+        if (!GameWorld.isWorld(scene)) {
+            if (!GameRoomSpace.enabled(scene)) return projected
+            var back = when(scene.place) {
+                PlayScene.Place.LIVING -> 153f
+                PlayScene.Place.BEDROOM -> 155f
+                else -> 165f
+            }
+            for (door in GameWorld.passages(scene.place).filter { it.door }) {
+                val anchor=GameScenes.feet(scene,door.pos)
+                if(abs(x-door.pos.x)<.08f) back=minOf(back,anchor.second)
+            }
+            return back to scene.nearY
+        }
         if (scene.place == PlayScene.Place.COAST_PATH) {
             val t = ((minOf(x,1f-x))/.12f).coerceIn(0f,1f)
             // Der gemalte Brueckenbogen ist schon vermessen, nur die Randwege sind schmaler.
             return (495f*(1-t)+projected.first*t) to (562f*(1-t)+projected.second*t)
         }
-        var back=495f; var front=562f
+        val measured=GameWalkingMap.band(scene,x)
+        var back=measured?.first ?: 495f; var front=measured?.second ?: 562f
         if (scene.asset == "world/coast.png") { back=450f; front=615f }
         // Die letzte Wasserstrecke wird vor der trockenen Anschlussnaht zum Ufer.
         val wx=GameWorld.origin(scene.place)+x*GameWorld.region(scene.place)!!.section
@@ -31,13 +44,36 @@ object GameTerrain {
     fun clamp(scene: GameScenes.Scene, requested: PlayControl.Pos): PlayControl.Pos {
         val x=requested.x.coerceIn(0f,1f)
         val full=GameScenes.floorBand(scene,x); val legal=band(scene,x)
-        return requested.copy(x=x, depth=requested.depth.coerceIn(
+        val bounded=requested.copy(x=x, depth=requested.depth.coerceIn(
             ((legal.first-full.first)/(full.second-full.first)).coerceIn(0f,1f),
             ((legal.second-full.first)/(full.second-full.first)).coerceIn(0f,1f)))
+        if (!GameWalkingMap.blocked(scene,bounded)) return bounded
+        // Beim Laden einmal auf die naechste freie Stelle setzen, nie beim laufenden Schritt teleportieren.
+        return (1..40).flatMap { radius -> listOf(
+            bounded.copy(x=(bounded.x-radius*.0025f).coerceIn(0f,1f)),
+            bounded.copy(x=(bounded.x+radius*.0025f).coerceIn(0f,1f)),
+            bounded.copy(depth=(bounded.depth-radius*.01f).coerceIn(0f,1f)),
+            bounded.copy(depth=(bounded.depth+radius*.01f).coerceIn(0f,1f))) }
+            .firstOrNull { !GameWalkingMap.blocked(scene,it) && floorValid(scene,it) } ?: bounded
     }
     fun valid(scene: GameScenes.Scene, p: PlayControl.Pos): Boolean {
-        val c=clamp(scene,p)
-        return abs(c.x-p.x)<.00001f && abs(c.depth-p.depth)<.00001f
+        return floorValid(scene,p) && !GameWalkingMap.blocked(scene,p)
+    }
+    private fun floorValid(scene: GameScenes.Scene,p: PlayControl.Pos): Boolean {
+        if (!p.x.isFinite() || !p.depth.isFinite() || p.x !in 0f..1f || p.depth !in 0f..1f) return false
+        val feet=GameScenes.feet(scene,p);val bounds=band(scene,p.x)
+        return feet.second >= bounds.first-.001f && feet.second <= bounds.second+.001f
+    }
+    fun resolve(scene: GameScenes.Scene,from: PlayControl.Pos,to: PlayControl.Pos): PlayControl.Pos {
+        val safe=clamp(scene,to)
+        // Die Profilkante darf gleiten; Sperrinseln muessen auf dem gesamten Weg respektiert werden.
+        fun clear(p: PlayControl.Pos) = GameWalkingMap.clear(scene,from,p)
+        if (clear(safe)) return safe
+        val horizontal=clamp(scene,to.copy(depth=from.depth,pushMs=0L))
+        if (clear(horizontal)) return horizontal
+        val vertical=clamp(scene,to.copy(x=from.x,pushMs=0L))
+        if (clear(vertical)) return vertical
+        return from.copy(pushMs=0L)
     }
     fun command(scene: GameScenes.Scene,state: GameMovement.State,command: GameMovement.Command,
         input: PlayControl.Stick,surfaces: List<GameMovement.Surface>): GameMovement.State {
@@ -58,7 +94,7 @@ object GameTerrain {
             maxStepHeight=GameCharacterScale.MAX_STEP_HEIGHT,sweptJumpCollision=true)
         var next=result.state
         if (next.support == null) {
-            val p=clamp(scene,next.pos)
+            val p=resolve(scene,clamp(scene,state.pos),next.pos)
             next=next.copy(pos=p, arc=next.arc?.let { it.copy(to=clamp(scene,it.to)) })
         }
         if (!GameWorld.isWorld(scene)) {
