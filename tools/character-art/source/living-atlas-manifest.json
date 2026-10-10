@@ -1,40 +1,48 @@
 {
-  "version": 1,
+  "version": 2,
   "frame": 128,
   "columns": 4,
   "rows": 8,
   "gutter": 26,
   "ground": 125,
+  "masterCell": 256,
+  "palette": "existing-game",
   "species": {
     "fennec": {
       "oldHeight": 109,
-      "nativeHeight": 104,
-      "renderScale": 1.048077
+      "nativeHeight": 109,
+      "renderScale": 1,
+      "samplingFactor": 0.756944
     },
     "gloop": {
       "oldHeight": 70,
       "nativeHeight": 70,
-      "renderScale": 1
+      "renderScale": 1,
+      "samplingFactor": 0.636364
     },
     "puffling": {
       "oldHeight": 65,
       "nativeHeight": 65,
-      "renderScale": 1
+      "renderScale": 1,
+      "samplingFactor": 0.585586
     },
     "wyrmling": {
       "oldHeight": 94,
-      "nativeHeight": 81,
-      "renderScale": 1.160494
+      "nativeHeight": 91,
+      "renderScale": 1.032967,
+      "samplingFactor": 0.736842
     },
     "starlet": {
       "oldHeight": 82,
       "nativeHeight": 82,
-      "renderScale": 1
+      "renderScale": 1,
+      "samplingFactor": 0.607407
     },
     "hootlet": {
       "oldHeight": 65,
       "nativeHeight": 65,
-      "renderScale": 1
+      "renderScale": 1,
+      "samplingFactor": 0.555556
     }
   }
 }
