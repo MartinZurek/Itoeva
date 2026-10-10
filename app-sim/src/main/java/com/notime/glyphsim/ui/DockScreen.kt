@@ -650,6 +650,7 @@ fun DockScreen(
         var avatarSettling by remember { mutableStateOf(false) }
         var clockAnimJob by remember { mutableStateOf<Job?>(null) }
         var avatarIdleJob by remember { mutableStateOf<Job?>(null) }
+        var avatarIdleMood by remember { mutableStateOf<Pair<AvatarSpecies, AvatarMood>?>(null) }
         // Rein optische Verschiebung waehrend langer Erinnerungen (Burn-in-Schutz, siehe unten) -
         // bewusst getrennt von clockOffset, damit die gespeicherte Nutzerposition unberuehrt bleibt.
         var driftOffset by remember { mutableStateOf(Offset.Zero) }
@@ -1456,6 +1457,8 @@ fun DockScreen(
         }
 
         fun startAvatarIdleLoop(species: AvatarSpecies, mood: AvatarMood) {
+            // Dieselbe frisch geladene Stimmung fuer Raster und Zusatzzeichnungen, auch nach Fuettern.
+            avatarIdleMood = species to mood
             avatarIdleJob?.cancel()
             creatureMotionOwner = null
             creatureMotionCue = null
@@ -5884,6 +5887,7 @@ fun DockScreen(
         }
 
         avatar?.takeIf { !avatarHidden && (!gameMode || gameImagesReady) }?.let { current ->
+            val visualMood = avatarIdleMood?.takeIf { it.first == current.species }?.second
             val feedActionLabel = stringResource(R.string.a11y_feed_action)
             // "wartet aufs Fuettern" stimmt nur, solange tatsaechlich eine Erinnerung offen ist -
             // im Play-Modus idlet der Avatar die meiste Zeit ohne eine (siehe occurrenceId).
@@ -5926,6 +5930,7 @@ fun DockScreen(
                 shadeSide = avatarFacing,
                 gameDirection = if (gameMode) gameFacing else null,
                 gameMoving = if (gameMode) avatarWalking else null,
+                gameMood = if (gameMode && !current.fed && current.occurrenceId == null) visualMood else null,
                 gameTempo = if (gameMode && !gameActing) gameMovement.tempo else 1f,
                 gameGaitMs = if (gameMode && !gameActing) gameMovement.gaitMs.toLong() else null,
                 gameSwim = if (gameMode && !current.fed && gameSeat == null) GameWorld.scene(gameRenderedPlace)?.let {

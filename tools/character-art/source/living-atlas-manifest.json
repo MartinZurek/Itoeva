@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "frame": 128,
+  "columns": 4,
+  "rows": 8,
+  "gutter": 26,
+  "ground": 125,
+  "species": {
+    "fennec": {
+      "oldHeight": 109,
+      "nativeHeight": 104,
+      "renderScale": 1.048077
+    },
+    "gloop": {
+      "oldHeight": 70,
+      "nativeHeight": 70,
+      "renderScale": 1
+    },
+    "puffling": {
+      "oldHeight": 65,
+      "nativeHeight": 65,
+      "renderScale": 1
+    },
+    "wyrmling": {
+      "oldHeight": 94,
+      "nativeHeight": 81,
+      "renderScale": 1.160494
+    },
+    "starlet": {
+      "oldHeight": 82,
+      "nativeHeight": 82,
+      "renderScale": 1
+    },
+    "hootlet": {
+      "oldHeight": 65,
+      "nativeHeight": 65,
+      "renderScale": 1
+    }
+  }
+}

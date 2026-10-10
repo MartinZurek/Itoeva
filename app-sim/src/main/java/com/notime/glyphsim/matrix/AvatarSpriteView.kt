@@ -104,7 +104,8 @@ fun AvatarSpriteView(
     gameLight: GameSceneLighting.CharacterLight? = null,
     gameWind: Float = 0f,
     gameFabric: GameFabric.Pose? = null,
-    gameSwim: GameWater.Swim? = null
+    gameSwim: GameWater.Swim? = null,
+    gameMood: AvatarMood? = null
 ) {
     // **Die Wesen in feiner Pixel-Art** (siehe [CreatureSprites]): Gibt es fuer die Kreatur einen
     // Bogen, wird statt der groben Zellen das passende Bild daraus gezeichnet. Die grobe Pose
@@ -114,6 +115,7 @@ fun AvatarSpriteView(
     // Drehungen brauchen ein Gedaechtnis fuer die letzte Blickrichtung (nur feine Boegen).
     val turn = remember(species) { CreatureSprites.Turn() }
     val gait = remember(species) { CreatureSprites.GaitClock() }
+    val living = remember(species) { CreatureSprites.LivingMotion() }
     val tick by produceState(0L, sheet != null) {
         if (sheet == null) return@produceState
         while (true) {
@@ -156,7 +158,7 @@ fun AvatarSpriteView(
     ) {
         if (sheet != null && species != null) {
             drawCreature(sheet, frame, brightnessScale, species, shadeSide, tick + species.ordinal * 731L,
-                gameDirection, gameMoving, turn, gait, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind, gameFabric, gameSwim)
+                gameDirection, gameMoving, turn, gait, living, motionCue, gameTempo, gameGaitMs, gameRunBlend, gameFilters, gameWind, gameFabric, gameSwim, gameMood)
         } else {
             drawSprite(frame, brightnessScale, species, shadeSide, gameLight)
         }
@@ -180,9 +182,23 @@ internal object CreatureSheets {
                 if (bitmap.width == frameSize) return@runCatching Sheet(frameSize, listOf(bitmap.asImageBitmap()))
                 try {
                     require(frameSize in setOf(CreatureSprites.FRAME, CreatureSprites.Rich.FRAME) && bitmap.width % frameSize == 0)
-                    Sheet(frameSize, List(bitmap.width / frameSize) { index ->
+                    val frames = List(bitmap.width / frameSize) { index ->
                         Bitmap.createBitmap(bitmap, index * frameSize, 0, frameSize, frameSize).also { it.prepareToDraw() }.asImageBitmap()
-                    })
+                    }
+                    // Ein fehlender/alter Zusatzbogen darf den funktionierenden Gang nicht abschalten.
+                    val extra = if (frameSize == CreatureSprites.Rich.FRAME && frames.size == CreatureSprites.Rich.FRAME_COUNT) {
+                        runCatching {
+                            val addition = context.assets.open(CreatureSprites.Living.assetFor(species))
+                                .use { BitmapFactory.decodeStream(it) } ?: return@runCatching emptyList<ImageBitmap>()
+                            try {
+                                require(addition.height == frameSize && addition.width == frameSize * CreatureSprites.Living.COUNT)
+                                List(CreatureSprites.Living.COUNT) { index ->
+                                    Bitmap.createBitmap(addition, index * frameSize, 0, frameSize, frameSize).also { it.prepareToDraw() }.asImageBitmap()
+                                }
+                            } finally { addition.recycle() }
+                        }.getOrDefault(emptyList())
+                    } else emptyList()
+                    Sheet(frameSize, frames + extra)
                 } finally {
                     bitmap.recycle()
                 }
@@ -202,6 +218,7 @@ private fun DrawScope.drawCreature(
     gameMoving: Boolean?,
     turn: CreatureSprites.Turn,
     gait: CreatureSprites.GaitClock,
+    living: CreatureSprites.LivingMotion,
     motionCue: CreatureSprites.MotionCue?,
     gameTempo: Float,
     gameGaitMs: Long?,
@@ -209,19 +226,24 @@ private fun DrawScope.drawCreature(
     gameFilters: List<ColorFilter>?,
     gameWind: Float,
     gameFabric: GameFabric.Pose?,
-    gameSwim: GameWater.Swim?
+    gameSwim: GameWater.Swim?,
+    gameMood: AvatarMood?
 ) {
     val rich = sheet.frameSize == CreatureSprites.Rich.FRAME
     val frameSize = sheet.frameSize
     val feet = if (rich) CreatureSprites.Rich.FEET else CreatureSprites.FEET
     val look = if (rich) {
         CreatureSprites.lookRich(frame, species, shadeSide, timeMs, gameDirection, if (gameSwim != null) false else gameMoving, turn,
-            gameGaitMs ?: gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs), GameWater.motion(gameSwim,motionCue), gameTempo, gameRunBlend)
+            gameGaitMs ?: gait.update(gameMoving ?: (shadeSide != AvatarShading.Side.NONE), timeMs), GameWater.motion(gameSwim,motionCue), gameTempo, gameRunBlend,
+            // Beim Schwimmen keine Ruhe-/Uebergangsposen an Land.
+            living = living.takeIf { gameSwim == null && gameDirection != null && sheet.frames.size == CreatureSprites.Living.TOTAL },
+            livingMood = gameMood)
     } else {
         CreatureSprites.look(frame, species, shadeSide, timeMs, gameDirection, gameMoving)
     }
     val cell = size.width / AvatarGeometry.SIZE
-    val drawn = size.width * (if (rich) CreatureSprites.Rich.scaleFor(species) else CreatureSprites.SCALE)
+    val livingScale = if (look.frame >= CreatureSprites.Living.FIRST) CreatureSprites.Living.scaleFor(species) else 1f
+    val drawn = size.width * (if (rich) CreatureSprites.Rich.scaleFor(species) else CreatureSprites.SCALE) * livingScale
     // Die Fuesse stehen dort, wo die grobe Figur aufsetzt (siehe AvatarFooting) - angehoben um
     // so viel, wie die grobe Pose gerade abhebt.
     val feetY = (AvatarBodies.forSpecies(species).groundRow() + 1 - look.liftCells) * cell
