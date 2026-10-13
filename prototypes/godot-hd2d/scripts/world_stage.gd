@@ -1,22 +1,31 @@
 extends Node3D
 
 const Catalog = preload("res://scripts/world_catalog.gd")
+const Ambience = preload("res://scripts/painted_ambience.gd")
 var place := "OUTDOOR"
 var textures: Dictionary = {}
 var materials: Array[StandardMaterial3D] = []
+var painted_materials: Array[ShaderMaterial] = []
 var chunks: Array[Node3D] = []
 var doors: Array[Dictionary] = []
 var furniture: Array[Dictionary] = []
 var width := 210.0
 var native_height := 640.0
-var zoom_min := 6.8
-var zoom_max := 9.2
-var default_zoom := 7.6
-var base_pixel_size := 0.020
+var zoom_min := 8.2
+var zoom_max := 10.2
+var default_zoom := 8.8
+var base_pixel_size := 0.0145
+var body_pixel_size := 0.0115
 var jump_height := 1.7
 var dusk := false
 var building := false
 var horizontal_padding := 2.35
+var occlusion_pieces: Array[Dictionary] = []
+var occlusion_maps: Dictionary = {}
+var natural_edges: Array[MeshInstance3D] = []
+var draw_bands: Dictionary = {}
+var pickups: Array[Dictionary] = []
+var collected: Array = []
 
 func fit_character(pixel_size: float) -> void:
 	if place == "OUTDOOR":
@@ -32,7 +41,7 @@ func fit_character(pixel_size: float) -> void:
 	for door in doors:
 		var raw := Catalog.position_for(door.from, door.at)
 		door.position = safe_position(raw)
-		door.label.position = door.position + Vector3.UP * 2.0
+		door.marker_position = raw + Vector3.UP * 1.5
 
 func build() -> void:
 	building = true
@@ -53,21 +62,38 @@ func build() -> void:
 			if not Catalog.region_for(outdoor_place).is_empty():
 				for door in Catalog.doors_for(outdoor_place):
 					_add_door(door)
+		for piece in Catalog.geometry().outdoor_furniture:
+			var region := Catalog.region_for(piece.region)
+			var traced: Dictionary = piece.duplicate(true)
+			traced["place"] = region.places[0]
+			_add_piece(traced, region.asset, float(region.origin), float(region.width), 1920.0, 640.0)
+		for contour in Catalog.geometry().outdoor_occluders:
+			var region := Catalog.region_for(contour.place)
+			occlusion_pieces.append({"piece": contour, "asset": region.asset,
+				"origin": region.origin, "span": region.width,
+				"reference_width": 1920.0, "reference_height": 640.0})
+		# Nur die Kiste ist ein wirklich hinzugefuegtes Motiv, keine Kulissenkopie.
 		for piece in Catalog.data().world_pieces:
-			var region := Catalog.region_for(piece.place)
-			var span: float = float(region.width) / region.places.size()
-			_add_piece(piece, region.asset, float(region.origin) + region.places.find(piece.place) * span, span, 480.0, 640.0)
+			if piece.id == "park-crate":
+				var region := Catalog.region_for(piece.place)
+				var span: float = float(region.width) / region.places.size()
+				_add_piece(piece, region.asset, float(region.origin) + region.places.find(piece.place) * span, span, 480.0, 640.0)
+		_add_pickup("park-pebbles", "PARK", Vector2(0.78, 0.70))
+		var forest_position := safe_position(Catalog.position_for("FOREST", Vector2(.52,.64)))
+		doors.append({"from":"FOREST","to":"FOREST_TRAIL","at":Vector2(.52,.64),"arrival":Vector2(.10,.5),"position":forest_position,"marker_position":forest_position+Vector3.UP})
 	else:
 		var room: Dictionary = Catalog.data().interiors[place]
 		width = Catalog.IMAGE_HEIGHT * 16.0 / 9.0
 		native_height = 270.0
-		zoom_min = 9.2
-		zoom_max = 11.0
-		default_zoom = 10.0
+		zoom_min = 10.4
+		zoom_max = 11.8
+		default_zoom = 11.0
 		# Gegenstaende und Figuren behalten das native lokale Raumverhaeltnis.
-		var body_px := lerpf(room.height[0], room.height[1], 0.55)
-		base_pixel_size = body_px / 270.0 * Catalog.IMAGE_HEIGHT / cos(deg_to_rad(Catalog.PITCH)) / 83.0
-		jump_height = 78.0 / 270.0 * Catalog.IMAGE_HEIGHT / cos(deg_to_rad(Catalog.PITCH)) + 0.15
+		# Innen und aussen bleibt die sichtbare Referenzfigur bei Standardzoom gleich.
+		base_pixel_size = 0.0145 * default_zoom / 8.8
+		body_pixel_size = 0.0115 * 10.0 / 7.6
+		# Ein Raumeintritt vergroessert weder den Sprung noch seine Bildschirmhoehe.
+		jump_height = 1.7 * default_zoom / 8.8
 		var region := {"asset": room.asset, "origin": -width * 0.5, "width": width,
 			"places": [place], "room_band": room.band}
 		var chunk := Node3D.new()
@@ -81,6 +107,76 @@ func build() -> void:
 		for door in Catalog.doors_for(place):
 			_add_door(door)
 	building = false
+	_build_occlusion_maps()
+	_build_natural_edges()
+
+func _add_pickup(id: String, location: String, at: Vector2) -> void:
+	if id in collected: return
+	var art := Sprite3D.new()
+	art.texture = load("res://assets/world/path-stones.png")
+	art.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	art.shaded = false
+	art.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	art.pixel_size = 0.0004
+	var bounds := art.texture.get_image().get_used_rect()
+	art.offset.y = float(bounds.end.y) - art.texture.get_height() * 0.5
+	art.position = safe_position(Catalog.position_for(location, at), 0.22) + Vector3.UP * 0.01
+	add_child(art)
+	pickups.append({"id": id, "position": art.position, "art": art})
+
+func _build_natural_edges() -> void:
+	if place != "OUTDOOR":
+		return
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var serial := 0
+	for edge in Catalog.geometry().natural_edges:
+		var region := Catalog.region_for(edge.region)
+		var x := float(region.origin) + float(edge.u[0]) * 30.0
+		var end := float(region.origin) + float(edge.u[1]) * 30.0
+		while x < end:
+			var limits := _limits_at(x)
+			var side := int(edge.side)
+			var z := Catalog.image_z(limits[side]) + (-0.10 if side == 0 else 0.10)
+			# Einzelne kleine Steine sitzen ausserhalb der begehbaren Flaeche.
+			var span := 0.23 + 0.08 * sin(float(serial) * 2.1)
+			var rise := span * 0.40
+			for corner in [Vector2(0, 0), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0), Vector2(0, 1), Vector2(1, 1)]:
+				surface.set_uv(corner)
+				surface.add_vertex(Vector3(x + (corner.x - 0.5) * span, (1.0 - corner.y) * rise + 0.008, z))
+			serial += 1
+			x += float(edge.spacing) * (1.0 + 0.16 * sin(float(serial)))
+	var material := _material("res://assets/world/path-stones.png", true)
+	material.render_priority = 2
+	var mesh := _mesh("NatuerlicheSteinraender", surface, material, self)
+	natural_edges.append(mesh)
+	for rail in Catalog.geometry().railings:
+		var region := Catalog.region_for(rail.region)
+		var first := float(region.origin) + float(rail.u[0]) * 30.0
+		var last := float(region.origin) + float(rail.u[1]) * 30.0
+		var sections := ceili((last - first) / float(rail.spacing))
+		var previous := Vector3.ZERO
+		for i in range(sections + 1):
+			var x := lerpf(first, last, float(i) / sections)
+			var z := Catalog.image_z(_limits_at(x)[int(rail.side)]) - 0.07
+			var top := Vector3(x, float(rail.height), z)
+			_wood_piece("Stegpfosten", top * Vector3(1, 0.5, 1), Vector3(0.055, float(rail.height), 0.06))
+			if i > 0:
+				_wood_piece("Steggelaender", (previous + top) * 0.5, Vector3(top.x - previous.x + 0.04, 0.045, 0.055))
+			previous = top
+
+func _wood_piece(label: String, center: Vector3, dimensions: Vector3) -> void:
+	var mesh := MeshInstance3D.new()
+	mesh.name = label
+	var box := BoxMesh.new()
+	box.size = dimensions
+	mesh.mesh = box
+	var material := ShaderMaterial.new()
+	material.shader = load("res://shaders/painted_wood.gdshader")
+	mesh.material_override = material
+	mesh.position = center
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mesh)
 
 func _material(asset: String, transparent: bool = false) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -95,9 +191,17 @@ func _material(asset: String, transparent: bool = false) -> StandardMaterial3D:
 	return material
 
 func _band(region: Dictionary, x: float, dry: bool = false) -> Vector2:
-	if region.has("room_band"):
-		return Vector2(region.room_band[0], region.room_band[1])
-	return Catalog.band(region, x, dry)
+	if dry:
+		return Catalog.room_band(place, x) if region.has("room_band") else Catalog.band(region, x, true)
+	# Ein Gitter verwendet dieselbe Bildspalte tausendfach. Nur ihre erste
+	# Auswertung muss das Profil nachzeichnen; Physikwerte werden nicht gerundet.
+	var asset: String = region.asset
+	if not draw_bands.has(asset):
+		draw_bands[asset] = {}
+	var columns: Dictionary = draw_bands[asset]
+	if not columns.has(x):
+		columns[x] = Vector2(region.room_band[0], region.room_band[1]) if region.has("room_band") else Catalog.band(region, x)
+	return columns[x]
 
 func _point(region: Dictionary, uv: Vector2, ground: bool) -> Vector3:
 	var x: float = region.origin + uv.x * region.width
@@ -118,7 +222,7 @@ func _mesh(label: String, surface: SurfaceTool, material: Material, parent: Node
 	return mesh
 
 func _make_panorama(region: Dictionary, parent: Node3D) -> void:
-	var material := _material(region.asset)
+	var material := _painted_material(region.asset)
 	for ground in [false, true]:
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -156,9 +260,14 @@ func _make_path(region: Dictionary, parent: Node3D) -> void:
 	var samples: Array[float] = []
 	for i in range(97):
 		samples.append(i / 96.0)
-	if region.places[0] == "COAST_PATH":
-		for anchor in Catalog.data().coast_path_band:
+	if place == "OUTDOOR":
+		for anchor in Catalog.geometry().paths[region.places[0]]:
 			samples.append(float(anchor[0]))
+		for i in Catalog.geometry().seams.size():
+			for anchor in Catalog.geometry().seams[i]:
+				var u: float = ((i + 1) * 30.0 - 7.5 + float(anchor[0]) * 15.0 - float(region.origin)) / float(region.width)
+				if u > 0 and u < 1:
+					samples.append(u)
 	samples.sort()
 	for i in range(samples.size() - 1):
 		var u0 := samples[i]
@@ -169,6 +278,12 @@ func _make_path(region: Dictionary, parent: Node3D) -> void:
 		var band1 := _band(region, u1, true)
 		var x0: float = region.origin + u0 * region.width
 		var x1: float = region.origin + u1 * region.width
+		if place != "OUTDOOR":
+			# Der native Raum ist ein Trapez; die Seitenwaende folgen seinen Grenzen.
+			var midpoint := (u0 + u1) * 0.5 * 480.0
+			var limits := Catalog.room_limits(place, (band0.x + band1.x) * 0.5)
+			if midpoint < limits.x or midpoint > limits.y:
+				continue
 		var back0 := Vector3(x0, 0, Catalog.image_z(band0.x, native_height))
 		var back1 := Vector3(x1, 0, Catalog.image_z(band1.x, native_height))
 		var front0 := Vector3(x0, 0, Catalog.image_z(band0.y, native_height))
@@ -178,6 +293,19 @@ func _make_path(region: Dictionary, parent: Node3D) -> void:
 		_quad(edge_vertices, front1, front0, front0 + Vector3.UP * 8, front1 + Vector3.UP * 8)
 	_collision("WalkableBand", floor_vertices, parent)
 	_collision("PaintedBoundaries", edge_vertices, parent)
+	if place != "OUTDOOR":
+		var walls := PackedVector3Array()
+		var room: Dictionary = Catalog.data().interiors[place]
+		for side in [0, 1]:
+			var previous := Vector3.ZERO
+			for i in range(65):
+				var y := lerpf(float(room.band[0]), float(room.band[1]), i / 64.0)
+				var limits := Catalog.room_limits(place, y)
+				var point := Vector3((limits[side] / 480.0 - 0.5) * width, 0, Catalog.image_z(y, native_height))
+				if i > 0:
+					_quad(walls, previous, point, point + Vector3.UP * 10, previous + Vector3.UP * 10)
+				previous = point
+		_collision("RoomSideWalls", walls, parent)
 
 func _make_end_wall(x: float) -> void:
 	var vertices := PackedVector3Array()
@@ -200,7 +328,7 @@ func _connect_bands(left: Dictionary, right: Dictionary) -> void:
 func _make_seam(index: int) -> void:
 	var boundary: float = (index + 1) * 30.0
 	var asset := "res://assets/world/seams/%s.png" % index
-	var material := _material(asset, true)
+	var material := _painted_material(asset, true)
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for ground in [false, true]:
@@ -222,10 +350,9 @@ func _make_seam(index: int) -> void:
 	_mesh("PaintedSeam%s" % index, surface, material, self)
 
 func _add_piece(piece: Dictionary, asset: String, origin_x: float, span: float, reference_width: float, reference_height: float) -> void:
-	var band := Vector2(450, 625) if place == "OUTDOOR" else Vector2(Catalog.data().interiors[place].band[0], Catalog.data().interiors[place].band[1])
-	var ground := clampf(piece.ground, band.x, band.y)
-	var back := Catalog.image_z(clampf(piece.back, band.x, band.y), reference_height)
-	var front := Catalog.image_z(clampf(piece.front, band.x, band.y), reference_height)
+	var ground: float = piece.ground
+	var back := Catalog.image_z(piece.back, reference_height)
+	var front := Catalog.image_z(piece.front, reference_height)
 	var x0: float = origin_x + piece.left / reference_width * span
 	var x1: float = origin_x + piece.right / reference_width * span
 	var height: float = (ground - float(piece.top)) / reference_height * Catalog.IMAGE_HEIGHT / cos(deg_to_rad(Catalog.PITCH))
@@ -238,31 +365,37 @@ func _add_piece(piece: Dictionary, asset: String, origin_x: float, span: float, 
 	shape.shape = box
 	body.add_child(shape)
 	add_child(body)
-	var material := _material(piece.get("paint_asset", asset))
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for contour in piece.contours:
-		var polygon := PackedVector2Array()
-		for p in contour:
-			polygon.append(Vector2(p[0], p[1]))
-		var indices := Geometry2D.triangulate_polygon(polygon)
-		for i in indices:
-			var p := polygon[i]
-			var uv: Vector2
-			if piece.has("paint_asset"):
-				uv = Vector2((p.x - float(piece.left)) / (float(piece.right) - float(piece.left)), (p.y - float(piece.top)) / (float(piece.ground) - float(piece.top)))
-			elif place == "OUTDOOR":
-				var region := Catalog.region_for(piece.place)
-				uv = Vector2((origin_x - float(region.origin) + p.x / reference_width * span) / float(region.width), p.y / reference_height)
-			else:
-				uv = Vector2(p.x / reference_width, p.y / reference_height)
-			surface.set_uv(uv)
-			surface.add_vertex(Vector3(origin_x + p.x / reference_width * span,
-				Catalog.image_y(p.y, front + 0.015, reference_height), front + 0.015))
-	_mesh(piece.id + "PaintedFront", surface, material, self)
+	if piece.has("paint_asset"):
+		var material := _material(piece.paint_asset)
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for contour in piece.contours:
+			var polygon := PackedVector2Array()
+			for p in contour:
+				polygon.append(Vector2(p[0], p[1]))
+			for i in Geometry2D.triangulate_polygon(polygon):
+				var p := polygon[i]
+				surface.set_uv(Vector2((p.x - float(piece.left)) / (float(piece.right) - float(piece.left)),
+					(p.y - float(piece.top)) / (float(piece.ground) - float(piece.top))))
+				surface.add_vertex(Vector3(origin_x + p.x / reference_width * span,
+					Catalog.image_y(p.y, front + 0.015, reference_height), front + 0.015))
+		_mesh(piece.id + "PaintedFront", surface, material, self)
+	else:
+		# Moebel sind bereits vollstaendig im Bild. Eine zweite, rechteckige Kopie
+		# uebermalte bei Kameraschwenks Boden und Figuren. Nur eine Tiefenmaske bleibt.
+		occlusion_pieces.append({"piece": piece, "asset": asset, "origin": origin_x,
+			"span": span, "reference_width": reference_width, "reference_height": reference_height})
 	var item := piece.duplicate(true)
 	item["world_center"] = Vector3((x0 + x1) * 0.5, height, (back + front) * 0.5)
 	item["body"] = body
+	item["approach_position"] = Vector3((x0 + x1) * 0.5, 0.03, front + 0.55)
+	var points := PackedVector3Array()
+	var region: Dictionary = Catalog.data().regions[clampi(int((x0 + x1) * 0.5 / 30.0), 0, 6)].duplicate() if place == "OUTDOOR" else {"asset": asset, "origin": origin_x, "width": span, "room_band": Catalog.data().interiors[place].band}
+	for contour in piece.contours:
+		for p in contour:
+			var uv := Vector2((origin_x + float(p[0]) / reference_width * span - float(region.origin)) / float(region.width), float(p[1]) / reference_height)
+			points.append(_point(region, uv, uv.y >= _band(region, uv.x).x / native_height))
+	item["visual_points"] = points
 	if piece.seat != null:
 		var point: Array = piece.seat.point
 		var z := (back + front) * 0.5
@@ -277,17 +410,7 @@ func _add_door(door: Dictionary) -> void:
 		entry.position.x = clampf(entry.position.x, -width * 0.5 + 2.3, width * 0.5 - 2.3)
 		var room: Dictionary = Catalog.data().interiors[place]
 		entry.position.z = clampf(entry.position.z, Catalog.image_z(room.band[0], 270) + 0.45, Catalog.image_z(room.band[1], 270) - 0.45)
-	var label := Label3D.new()
-	label.text = "↗ " + Catalog.data().labels[door.to]
-	label.font_size = 32
-	label.pixel_size = 0.008
-	label.position = entry.position + Vector3.UP * (1.2 if place == "OUTDOOR" else 2.0)
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = Color(1, 0.88, 0.58, 0.9)
-	label.outline_size = 8
-	label.no_depth_test = true
-	add_child(label)
-	entry["label"] = label
+	entry["marker_position"] = entry.position + Vector3.UP * (1.0 if place == "OUTDOOR" else 1.5)
 	doors.append(entry)
 
 func nearest_door(position: Vector3) -> Dictionary:
@@ -311,7 +434,10 @@ func safe_position(raw: Vector3, radius: float = 0.3) -> Vector3:
 	else:
 		result.x = clampf(result.x, -width * 0.5 + horizontal_padding, width * 0.5 - horizontal_padding)
 		var room: Dictionary = Catalog.data().interiors[place]
-		band = Vector2(room.band[0], room.band[1])
+		band = Catalog.room_band(place, result.x / width + 0.5)
+		var px_y := Catalog.ORIGIN_V * native_height + result.z * sin(deg_to_rad(Catalog.PITCH)) / Catalog.IMAGE_HEIGHT * native_height
+		var sides := Catalog.room_limits(place, px_y)
+		result.x = clampf(result.x, (sides.x / 480.0 - 0.5) * width + radius, (sides.y / 480.0 - 0.5) * width - radius)
 	result.z = clampf(result.z, Catalog.image_z(band.x, native_height) + radius + 0.04, Catalog.image_z(band.y, native_height) - radius - 0.04)
 	result.y = maxf(result.y, 0.03)
 	# Tuereintritt setzt niemanden in die Kollision eines nahen Schrankes.
@@ -327,13 +453,139 @@ func safe_position(raw: Vector3, radius: float = 0.3) -> Vector3:
 				result.x = body.position.x - half.x - radius - 0.08 if result.x < body.position.x else body.position.x + half.x + radius + 0.08
 	if place != "OUTDOOR":
 		result.x = clampf(result.x, -width * 0.5 + horizontal_padding, width * 0.5 - horizontal_padding)
+	if not is_walkable(result, radius):
+		# Auch ueberlappende Moebel und ein alter Spielstand werden auf eine wirklich
+		# freie Bodenstelle gesetzt, statt nach dem letzten Schub im Schrank zu landen.
+		var best := Vector3.ZERO
+		var best_distance := INF
+		var start_x := maxf(2.3 if place == "OUTDOOR" else -width * 0.5 + horizontal_padding, result.x - 8.0)
+		var end_x := minf(width - 2.3 if place == "OUTDOOR" else width * 0.5 - horizontal_padding, result.x + 8.0)
+		for ix in range(81):
+			var x := lerpf(start_x, end_x, ix / 80.0)
+			var limits := _limits_at(x)
+			for iz in range(25):
+				var z := lerpf(Catalog.image_z(limits.x, native_height) + radius + 0.05, Catalog.image_z(limits.y, native_height) - radius - 0.05, iz / 24.0)
+				var point := Vector3(x, 0.03, z)
+				var distance := point.distance_squared_to(raw)
+				if distance < best_distance and is_walkable(point, radius):
+					best = point
+					best_distance = distance
+		if best_distance < INF:
+			result = best
 	return result
+
+func _limits_at(x: float) -> Vector2:
+	if place != "OUTDOOR":
+		return Catalog.room_band(place, x / width + 0.5)
+	var region: Dictionary = Catalog.data().regions[clampi(int(x / 30.0), 0, 6)]
+	return _band(region, (x - float(region.origin)) / 30.0, true)
+
+func is_walkable(point: Vector3, radius: float = 0.0, allow_platforms: bool = false) -> bool:
+	for offset in [Vector2.ZERO, Vector2(radius, 0), Vector2(-radius, 0), Vector2(0, radius), Vector2(0, -radius)]:
+		var x: float = point.x + offset.x
+		var z: float = point.z + offset.y
+		var limits := _limits_at(x)
+		if z < Catalog.image_z(limits.x, native_height) or z > Catalog.image_z(limits.y, native_height):
+			return false
+		if place != "OUTDOOR":
+			var y: float = (Catalog.ORIGIN_V + z * sin(deg_to_rad(Catalog.PITCH)) / Catalog.IMAGE_HEIGHT) * native_height
+			var sides := Catalog.room_limits(place, y)
+			if x < (sides.x / 480.0 - 0.5) * width or x > (sides.y / 480.0 - 0.5) * width:
+				return false
+		elif x < 1.9 or x > width - 1.9:
+			return false
+	for item in furniture:
+		var body: StaticBody3D = item.body
+		var box: BoxShape3D = body.get_child(0).shape
+		if allow_platforms and point.y >= body.position.y + box.size.y * 0.5 - 0.06:
+			continue
+		if absf(point.x - body.position.x) < box.size.x * 0.5 + radius and absf(point.z - body.position.z) < box.size.z * 0.5 + radius:
+			return false
+	return true
+
+func constrain_step(before: Vector3, proposed: Vector3, radius: float) -> Vector3:
+	# Auch ein Sprung, ein Rollenimpuls und hohe Bildzeit duerfen keinen Wegsaum
+	# ueberspringen. Die Bodenprojektion bleibt innerhalb derselben Geometrie.
+	if _segment_walkable(before, proposed, radius):
+		return proposed
+	var horizontal := Vector3(proposed.x, proposed.y, before.z)
+	if _segment_walkable(before, horizontal, radius):
+		return horizontal
+	var depth := Vector3(before.x, proposed.y, proposed.z)
+	if _segment_walkable(before, depth, radius):
+		return depth
+	return Vector3(before.x, proposed.y, before.z)
+
+func _segment_walkable(before: Vector3, after: Vector3, radius: float) -> bool:
+	var samples := maxi(1, ceili(Vector2(after.x - before.x, after.z - before.z).length() / 0.10))
+	for i in range(1, samples + 1):
+		if not is_walkable(before.lerp(after, float(i) / samples), radius, true):
+			return false
+	return true
+
+func _build_occlusion_maps() -> void:
+	for entry in occlusion_pieces:
+		var ref_width := 1920 if place == "OUTDOOR" else 480
+		var ref_height := 640 if place == "OUTDOOR" else 270
+		if not occlusion_maps.has(entry.asset):
+			occlusion_maps[entry.asset] = Image.create(ref_width, ref_height, false, Image.FORMAT_RG8)
+		var mask: Image = occlusion_maps[entry.asset]
+		var region_origin: float = Catalog.region_for(entry.piece.place).get("origin", entry.origin) if place == "OUTDOOR" else entry.origin
+		var region_span := 30.0 if place == "OUTDOOR" else width
+		for contour in entry.piece.contours:
+			var polygon := PackedVector2Array()
+			for p in contour:
+				polygon.append(Vector2((entry.origin - region_origin + float(p[0]) / entry.reference_width * entry.span) / region_span * ref_width, p[1]))
+			var bounds := Rect2(polygon[0], Vector2.ZERO)
+			for p in polygon:
+				bounds = bounds.expand(p)
+			for y in range(maxi(0, int(bounds.position.y)), mini(ref_height, ceili(bounds.end.y))):
+				for x in range(maxi(0, int(bounds.position.x)), mini(ref_width, ceili(bounds.end.x))):
+					if Geometry2D.is_point_in_polygon(Vector2(x + 0.5, y + 0.5), polygon):
+						var front: float = float(entry.piece.front) / ref_height
+						mask.set_pixel(x, y, Color(maxf(front, mask.get_pixel(x, y).r), 1.0, 0, 1))
+	for asset in occlusion_maps.keys():
+		occlusion_maps[asset] = ImageTexture.create_from_image(occlusion_maps[asset])
+
+func actor_occlusion(position: Vector3) -> Dictionary:
+	var region: Dictionary = Catalog.data().regions[clampi(int(position.x / 30.0), 0, 6)] if place == "OUTDOOR" else {}
+	var asset: String = region.asset if place == "OUTDOOR" else Catalog.data().interiors[place].asset
+	return {"mask": occlusion_maps.get(asset), "origin": region.origin if place == "OUTDOOR" else -width * 0.5,
+		"span": 30.0 if place == "OUTDOOR" else width}
 
 func set_dusk(enabled: bool) -> void:
 	dusk = enabled
+	set_time(19.5 if enabled else 12.0)
 	for material in materials:
 		material.albedo_color = Color(0.72, 0.68, 0.78) if enabled and place == "OUTDOOR" else Color.WHITE
 
 func update_visible(player_x: float) -> void:
 	for i in chunks.size():
 		chunks[i].visible = absf(float(i) * 30.0 + 15.0 - player_x) < 58.0
+
+func furniture_screen_rect(item: Dictionary, view: Camera3D) -> Rect2:
+	var bounds := Rect2()
+	var first := true
+	for point in item.visual_points:
+		var screen: Vector2 = view.unproject_position(point)
+		if first:
+			bounds = Rect2(screen, Vector2.ZERO)
+			first = false
+		else: bounds = bounds.expand(screen)
+	return bounds
+
+func _painted_material(asset: String, transparent: bool = false) -> ShaderMaterial:
+	var texture: Texture2D = textures.get(asset, load(asset))
+	var material := Ambience.create_material(asset, texture)
+	material.set_shader_parameter("transparent_piece", transparent)
+	if asset == "res://assets/world/coast.png":
+		material.set_shader_parameter("shore_enabled", true)
+		material.set_shader_parameter("shore_texture", load("res://assets/world/coast-shore-v026.png"))
+	painted_materials.append(material)
+	return material
+
+func set_time(hour: float) -> void:
+	for material in painted_materials: Ambience.set_time(material, hour, place != "OUTDOOR")
+	var daylight := smoothstep(5.8, 8.0, hour) * (1.0 - smoothstep(18.0, 21.0, hour))
+	for material in materials:
+		material.albedo_color = Color(0.32, 0.40, 0.58).lerp(Color.WHITE, daylight) if place == "OUTDOOR" else Color.WHITE

@@ -669,6 +669,39 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-13 - Ausgelieferten Godot-Kartenkampf zusammenfuehren (godot-card-arena-v050)
+
+- **DOCUMENTED INTENT:** Martin beauftragt XP-/Beute-Siegesabschluss, sichtbare
+  Spezialkraefte, Decks und Kristalle je Wesen, neue Wesen und animierte Helfer
+  in der Arena. Am 13.10.2026 um 18:41 Uhr gibt er die Veroeffentlichung dieses
+  geprueften v0.5.0-Standes nach MartinZurek/Itoeva und einen neuen PR frei.
+- **FACT:** Alle Dateien der ausgelieferten v0.2.8, v0.3.0 und v0.4.0 bleiben in
+  v0.5.0 vorhanden; die v0.2.8-Bilder sind byte-identisch. Die 205 Laufzeit-/Exportdateien
+  entsprechen bytegenau der v0.5.0-Auslieferung. PR-359-Vorschauen bleiben erhalten.
+- **Spiel/Charakter/Balancing:** Acht Wesen, 39 Kartendefinitionen, eigene Decks,
+  Kristalle und Kraefte, Minions mit Angriff/LP/Gegenschaden/Schutzprioritaet sowie
+  Mooslyn und Nocti mit eigenen Posen. Siegesabschluss: 120 XP je Wesen, Beute und
+  sichere Welt-Rueckkehr. Werte/Details stehen in docs/godot-spezialkraefte-und-minions-v050.md.
+- **Persistenz/Migration:** Godot card_schema=2 erhaelt XP, Beute, abgeschlossene
+  Kaempfe und gueltige Decks; Ladung/Helferstatus werden mitgesichert. Keine Room-
+  Migration, kein Anschluss an native Reminder oder LAS-Saves.
+- **TESTED BEHAVIOR:** Bereits gepruefter unveraenderter Laufzeitstand: Kartenmodell
+  95, Regeln 15, Spezialregeln 82, Siegesablauf 96, Karten-UI 69, Minion-Touch 24,
+  Waldtest 22.027 Checks; acht volle Kartenkaempfe gewonnen. Aktualisierte
+  Weltpruefung 78, Framing 88, Tuerpfade 176, Geometrie 2.686 und Lichtmasken 225;
+  alle ohne Fehler. Die zwei nachgefuehrten historischen Tests unterscheiden die
+  48er-Atlanten der neuen Wesen von den sechs originalen 170er-Atlanten.
+- **FACT / Auslieferung:** AndroidTest 0.5.0 / Code 15, Godot 4.5.1, ARM64,
+  Paket com.itoeva.godot.hd2d.worldtest. Unveraenderte APK-SHA-256:
+  ae6265cab89a9b5c95d6a805e62577462c510b28e9622274e7da44f0512ab252.
+- **UNVERIFIED:** Telefonstart/GPU/FPS, erneuter APK-Build aus dem PR und CI am
+  neuen Head. Die alte gruene CI von #359 gilt fuer dessen v0.2.0-Head.
+- **Ruecksetzen:** Erweiterungscommit revertieren; vorher Godot-Save sichern.
+  Aelterer Code kann neue Kartendaten nicht verwenden; native Daten bleiben erhalten.
+- **Uebergabe:** docs/godot-merge-v050.md dokumentiert Basis, Hashes und Drive-Dateien.
+  Der neue PR enthaelt #359 und die spaeter ausgelieferten Erweiterungen. main wird
+  in diesem Auftrag nicht gemergt.
+
 ### 2026-10-10 - Ganze gemalte Welt, Innenraeume und Aktionen in Godot (godot-painted-world-v020)
 
 - **DOCUMENTED INTENT:** Martin erweitert den Godot-Auftrag auf die gesamte vorhandene

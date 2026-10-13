@@ -17,16 +17,18 @@ func run() -> void:
 	var bounds := {}
 	for species in Catalog.data().characters:
 		var atlas: Image = app.textures[Catalog.data().characters[species].asset].get_image()
+		var compact: bool = Catalog.data().characters[species].get("compact", false)
+		var columns: int = 8 if compact else 12
+		var cell := Vector2i(181, 181) if compact else Vector2i(128, 128)
 		bounds[species] = {}
-		for frame in [0, 114, 121, 130, 137, 169]:
-			var card := atlas.get_region(Rect2i((frame % 12) * 128, (frame / 12) * 128, 128, 128))
+		for frame in ([0, 7, 11, 26, 29, 31] if compact else [0, 114, 121, 130, 137, 169]):
+			var card := atlas.get_region(Rect2i((frame % columns) * cell.x, (frame / columns) * cell.y, cell.x, cell.y))
 			bounds[species][frame] = card.get_used_rect()
 	for room in Catalog.data().interiors:
 		await app._mount_world(room, Catalog.position_for(room, Vector2(0.5, 0.7)))
 		for species in Catalog.data().characters:
-			app.actor.species = species
-			app.actor.set_world_scale(app.stage.base_pixel_size, app.stage.jump_height)
-			app.stage.fit_character(app.actor.sprite.pixel_size * (1.032967 if species == "wyrmling" else 1.0))
+			app.selected = species
+			await app._mount_world(room, Catalog.position_for(room, Vector2(0.5, 0.7)))
 			var visible := true
 			for side in [-1.0, 1.0]:
 				for depth in [0.05, 0.95]:
@@ -40,12 +42,14 @@ func run() -> void:
 							app.actor.sprite.frame = frame
 							app.actor._update_sprite_scale()
 							var rect: Rect2i = bounds[species][frame]
+							var sprite: Sprite3D = app.actor.sprite
+							var cell := Vector2(sprite.texture.get_width() / float(sprite.hframes), sprite.texture.get_height() / float(sprite.vframes))
 							var camera_right: Vector3 = app.camera.global_basis.x
-							camera_right.y = 0
-							camera_right = camera_right.normalized()
 							for x in [rect.position.x, rect.end.x]:
 								for y in [rect.position.y, rect.end.y]:
-									var point: Vector3 = app.actor.position + camera_right * (float(x) - 64.0) * app.actor.sprite.pixel_size + Vector3.UP * (126.0 - float(y)) * app.actor.sprite.pixel_size
+									var local_x := float(x) - cell.x * 0.5
+									if sprite.flip_h: local_x = -local_x
+									var point: Vector3 = app.actor.position + sprite.position + camera_right * local_x * sprite.pixel_size + app.camera.global_basis.y * (sprite.offset.y + cell.y * 0.5 - float(y)) * sprite.pixel_size
 									var pixel: Vector2 = app.camera.unproject_position(point)
 									if pixel.x < 0 or pixel.x > 1280 or pixel.y < 0 or pixel.y > 720:
 										visible = false

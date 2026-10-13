@@ -1,0 +1,4 @@
+{
+ "mosslyn":{"label":"Mooslyn","top":8,"left":8,"right":120,"relative_height":1.02,"tagline":"Auch im kleinsten Blatt steckt ein Anfang.","asset":"res://assets/characters/mosslyn.png","combat_asset":"res://assets/characters/mosslyn.png","compact":true},
+ "nocti":{"label":"Nocti","top":8,"left":8,"right":120,"relative_height":0.88,"tagline":"Ein Echo findet seinen Weg durch die Nacht.","asset":"res://assets/characters/nocti.png","combat_asset":"res://assets/characters/nocti.png","compact":true}
+}

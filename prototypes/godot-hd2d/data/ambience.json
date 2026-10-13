@@ -1,0 +1,1291 @@
+{
+  "version": 1,
+  "reference": "Handpruefung aller 7 Originalpanoramen sowie 6 Nahtbilder und 11 Innenbilder am 2026-10-11. Alle Punkte/Polygone sind Pixelkoordinaten in size, UV erst zur Laufzeit. Wasser bewusst innerhalb sichtbarer Freiflaechen; Bruecken, Land und Wege ausgespart. Kein Quellbild veraendert.",
+  "assets": {
+    "coast.png": {
+      "size": [
+        2172,
+        724
+      ],
+      "evidence": "POND/BEACH: Hintergrundmeer unter Insel; zwei kleine Wasserfenster unter dem linken Steg. Laternen in Hauswand und am Baum. Neue Sandufertextur ersetzt nur y>.75 mit Fade bis .78, danach keine alte Wasserbewegung.",
+      "water": [
+        [
+          [
+            790,
+            378
+          ],
+          [
+            998,
+            379
+          ],
+          [
+            998,
+            405
+          ],
+          [
+            815,
+            405
+          ]
+        ],
+        [
+          [
+            1270,
+            378
+          ],
+          [
+            1400,
+            381
+          ],
+          [
+            1360,
+            404
+          ],
+          [
+            1255,
+            402
+          ]
+        ],
+        [
+          [
+            15,
+            594
+          ],
+          [
+            139,
+            594
+          ],
+          [
+            153,
+            669
+          ],
+          [
+            12,
+            677
+          ]
+        ],
+        [
+          [
+            493,
+            596
+          ],
+          [
+            628,
+            588
+          ],
+          [
+            705,
+            634
+          ],
+          [
+            649,
+            686
+          ],
+          [
+            477,
+            675
+          ]
+        ]
+      ],
+      "exclude": [
+        [
+          [
+            155,
+            445
+          ],
+          [
+            461,
+            445
+          ],
+          [
+            473,
+            590
+          ],
+          [
+            157,
+            590
+          ]
+        ]
+      ],
+      "audit_water": [
+        [
+          895,
+          390
+        ],
+        [
+          90,
+          625
+        ]
+      ],
+      "audit_dry": [
+        [
+          290,
+          521
+        ],
+        [
+          670,
+          507
+        ],
+        [
+          1050,
+          580
+        ]
+      ],
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            82,
+            322
+          ],
+          "radius": [
+            58,
+            65
+          ],
+          "strength": 0.3
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            194,
+            248
+          ],
+          "radius": [
+            64,
+            68
+          ],
+          "strength": 0.32
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            272,
+            250
+          ],
+          "radius": [
+            64,
+            68
+          ],
+          "strength": 0.32
+        }
+      ]
+    },
+    "coast-path.png": {
+      "size": [
+        2172,
+        724
+      ],
+      "evidence": "COAST_PATH: Ferne blaue Bucht sowie Bachwasser unterhalb des Steinbogens. Steinbruecke/oberer Weg liegen vollstaendig im Ausschluss y425..568.",
+      "water": [
+        [
+          [
+            650,
+            381
+          ],
+          [
+            880,
+            381
+          ],
+          [
+            881,
+            404
+          ],
+          [
+            680,
+            408
+          ]
+        ],
+        [
+          [
+            930,
+            574
+          ],
+          [
+            1010,
+            574
+          ],
+          [
+            1050,
+            624
+          ],
+          [
+            930,
+            674
+          ],
+          [
+            827,
+            699
+          ],
+          [
+            704,
+            677
+          ],
+          [
+            783,
+            627
+          ]
+        ]
+      ],
+      "exclude": [
+        [
+          [
+            804,
+            420
+          ],
+          [
+            1115,
+            420
+          ],
+          [
+            1150,
+            527
+          ],
+          [
+            1080,
+            568
+          ],
+          [
+            845,
+            568
+          ],
+          [
+            804,
+            514
+          ]
+        ]
+      ],
+      "audit_water": [
+        [
+          780,
+          393
+        ],
+        [
+          946,
+          617
+        ]
+      ],
+      "audit_dry": [
+        [
+          934,
+          441
+        ],
+        [
+          977,
+          530
+        ],
+        [
+          1100,
+          467
+        ]
+      ],
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            2085,
+            263
+          ],
+          "radius": [
+            58,
+            65
+          ],
+          "strength": 0.3
+        }
+      ]
+    },
+    "street-park-forest.png": {
+      "size": [
+        2172,
+        724
+      ],
+      "evidence": "STREET: Wandleuchten am Laden und hohe Parklaterne; keine Wasserflaeche.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            13,
+            368
+          ],
+          "radius": [
+            51,
+            61
+          ],
+          "strength": 0.24
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            70,
+            359
+          ],
+          "radius": [
+            53,
+            60
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            215,
+            369
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            329,
+            400
+          ],
+          "radius": [
+            56,
+            68
+          ],
+          "strength": 0.28
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            520,
+            294
+          ],
+          "radius": [
+            79,
+            82
+          ],
+          "strength": 0.36
+        }
+      ]
+    },
+    "uplands.png": {
+      "size": [
+        2172,
+        724
+      ],
+      "evidence": "CITY: Ladenleuchten und hohe Laterne am Mauereingang; restliche Wiese/Berge unbewegt.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            43,
+            381
+          ],
+          "radius": [
+            54,
+            65
+          ],
+          "strength": 0.26
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            158,
+            396
+          ],
+          "radius": [
+            53,
+            63
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            226,
+            412
+          ],
+          "radius": [
+            56,
+            66
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            402,
+            328
+          ],
+          "radius": [
+            72,
+            78
+          ],
+          "strength": 0.36
+        }
+      ]
+    },
+    "village-edge.png": {
+      "size": [
+        2172,
+        724
+      ],
+      "evidence": "Keine nahe gemalte Leuchte und keine freie Wasserflaeche: nur Tagesfarbe, keine erfundenen Effekte.",
+      "lights": []
+    },
+    "mountain-pass.png": {
+      "size": [
+        2172,
+        724
+      ],
+      "evidence": "Keine nahe gemalte Leuchte und keine freie Wasserflaeche: nur Tagesfarbe, keine erfundenen Effekte.",
+      "lights": []
+    },
+    "expedition.png": {
+      "size": [
+        2172,
+        724
+      ],
+      "evidence": "CAMP: Gemaltes Feuer x274..321/y444..505; Zeltlaterne x292/y382 und Haengelaterne x128/y427. Grotte wird nicht als warmes Feuer behandelt.",
+      "lights": [
+        {
+          "kind": "fire",
+          "at": [
+            300,
+            478
+          ],
+          "radius": [
+            115,
+            101
+          ],
+          "strength": 0.5
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            292,
+            382
+          ],
+          "radius": [
+            59,
+            71
+          ],
+          "strength": 0.32
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            127,
+            425
+          ],
+          "radius": [
+            58,
+            68
+          ],
+          "strength": 0.3
+        }
+      ],
+      "flames": [
+        [
+          300,
+          505,
+          88,
+          98
+        ]
+      ]
+    },
+    "living.png": {
+      "size": [
+        1672,
+        941
+      ],
+      "evidence": "Tischlampe [547,374]; Wandleuchten [42,218] und [1467,215], direkt im geprueften 1672x941-Original.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            547,
+            374
+          ],
+          "radius": [
+            116,
+            132
+          ],
+          "strength": 0.39
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            42,
+            218
+          ],
+          "radius": [
+            79,
+            98
+          ],
+          "strength": 0.3
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1467,
+            215
+          ],
+          "radius": [
+            84,
+            98
+          ],
+          "strength": 0.32
+        }
+      ]
+    },
+    "bedroom.png": {
+      "size": [
+        1672,
+        941
+      ],
+      "evidence": "Nachttischlampe [285,362]; Wandleuchten [327,265], [1499,291], [1185,298]. Fenster/Floor bleiben ohne UV-Bewegung.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            285,
+            362
+          ],
+          "radius": [
+            108,
+            128
+          ],
+          "strength": 0.39
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            327,
+            265
+          ],
+          "radius": [
+            77,
+            93
+          ],
+          "strength": 0.29
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1499,
+            291
+          ],
+          "radius": [
+            84,
+            99
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1185,
+            298
+          ],
+          "radius": [
+            59,
+            81
+          ],
+          "strength": 0.26
+        }
+      ]
+    },
+    "kitchen.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Einzige Haengelampe ueber Esstisch [181,55].",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            181,
+            55
+          ],
+          "radius": [
+            31,
+            34
+          ],
+          "strength": 0.31
+        }
+      ]
+    },
+    "nook.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Leselampe neben Sessel [310,126], kleine Wandleuchte [105,86].",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            310,
+            126
+          ],
+          "radius": [
+            33,
+            39
+          ],
+          "strength": 0.36
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            105,
+            86
+          ],
+          "radius": [
+            24,
+            28
+          ],
+          "strength": 0.25
+        }
+      ]
+    },
+    "desk.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Schreibtischlampe [257,91], keine beweglichen Bild-/Fensterteile.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            257,
+            91
+          ],
+          "radius": [
+            31,
+            34
+          ],
+          "strength": 0.31
+        }
+      ]
+    },
+    "bath.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Spiegellampe [160,60] und Wandleuchte [432,82]. Badewanne wird nicht als offene Wasserflaeche geraten.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            160,
+            60
+          ],
+          "radius": [
+            26,
+            31
+          ],
+          "strength": 0.29
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            432,
+            82
+          ],
+          "radius": [
+            25,
+            30
+          ],
+          "strength": 0.29
+        }
+      ]
+    },
+    "shop.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Deckenlampen [167,42]/[378,41] sowie kleine Regal-/Wandleuchten [121,67]/[293,90].",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            167,
+            42
+          ],
+          "radius": [
+            31,
+            34
+          ],
+          "strength": 0.29
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            378,
+            41
+          ],
+          "radius": [
+            31,
+            34
+          ],
+          "strength": 0.29
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            121,
+            67
+          ],
+          "radius": [
+            22,
+            26
+          ],
+          "strength": 0.25
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            293,
+            90
+          ],
+          "radius": [
+            23,
+            27
+          ],
+          "strength": 0.25
+        }
+      ]
+    },
+    "cafe.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Fuenf gemalte Pendelleuchten ueber Gastbereich/Theke.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            161,
+            45
+          ],
+          "radius": [
+            27,
+            30
+          ],
+          "strength": 0.28
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            337,
+            46
+          ],
+          "radius": [
+            26,
+            30
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            374,
+            42
+          ],
+          "radius": [
+            24,
+            29
+          ],
+          "strength": 0.26
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            399,
+            37
+          ],
+          "radius": [
+            24,
+            29
+          ],
+          "strength": 0.26
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            438,
+            29
+          ],
+          "radius": [
+            25,
+            30
+          ],
+          "strength": 0.27
+        }
+      ]
+    },
+    "arcade.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Gemalte Haenge-/Wandleuchten; Automateninhalte bleiben statisch.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            163,
+            39
+          ],
+          "radius": [
+            27,
+            31
+          ],
+          "strength": 0.29
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            280,
+            50
+          ],
+          "radius": [
+            25,
+            29
+          ],
+          "strength": 0.28
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            335,
+            43
+          ],
+          "radius": [
+            26,
+            30
+          ],
+          "strength": 0.29
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            390,
+            43
+          ],
+          "radius": [
+            23,
+            28
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            453,
+            50
+          ],
+          "radius": [
+            23,
+            28
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            180,
+            97
+          ],
+          "radius": [
+            26,
+            30
+          ],
+          "strength": 0.3
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            91,
+            111
+          ],
+          "radius": [
+            23,
+            29
+          ],
+          "strength": 0.27
+        }
+      ]
+    },
+    "work.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Bueropendellampe [335,48], zwei kleine Wandleuchten [115,69]/[263,77].",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            335,
+            48
+          ],
+          "radius": [
+            29,
+            33
+          ],
+          "strength": 0.3
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            115,
+            69
+          ],
+          "radius": [
+            23,
+            28
+          ],
+          "strength": 0.27
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            263,
+            77
+          ],
+          "radius": [
+            23,
+            28
+          ],
+          "strength": 0.27
+        }
+      ]
+    },
+    "craft.png": {
+      "size": [
+        480,
+        270
+      ],
+      "evidence": "Werkbankpendel [362,50].",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            362,
+            50
+          ],
+          "radius": [
+            29,
+            33
+          ],
+          "strength": 0.31
+        }
+      ]
+    },
+    "0.png": {
+      "size": [
+        1536,
+        1024
+      ],
+      "evidence": "Naht0: Dschungelanschluss ohne Leuchte; zwei konservative freie Wasserfenster im Vordergrund, weit unter dem trockenen Weg y700..795.",
+      "water": [
+        [
+          [
+            214,
+            902
+          ],
+          [
+            351,
+            902
+          ],
+          [
+            384,
+            934
+          ],
+          [
+            325,
+            971
+          ],
+          [
+            222,
+            957
+          ]
+        ],
+        [
+          [
+            865,
+            936
+          ],
+          [
+            918,
+            936
+          ],
+          [
+            927,
+            967
+          ],
+          [
+            868,
+            970
+          ]
+        ]
+      ],
+      "audit_water": [
+        [
+          280,
+          930
+        ],
+        [
+          890,
+          951
+        ]
+      ],
+      "audit_dry": [
+        [
+          765,
+          745
+        ],
+        [
+          635,
+          634
+        ],
+        [
+          655,
+          930
+        ]
+      ],
+      "lights": []
+    },
+    "1.png": {
+      "size": [
+        1536,
+        1024
+      ],
+      "evidence": "Naht1: Ladenfront mit sieben sichtbaren warmen Wand-/Fensterleuchten, ohne Wasser.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            641,
+            395
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            834,
+            513
+          ],
+          "radius": [
+            42,
+            52
+          ],
+          "strength": 0.25
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            914,
+            506
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1121,
+            516
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1187,
+            554
+          ],
+          "radius": [
+            40,
+            50
+          ],
+          "strength": 0.24
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1283,
+            564
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1401,
+            557
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        }
+      ]
+    },
+    "2.png": {
+      "size": [
+        1536,
+        1024
+      ],
+      "evidence": "Naht2: Baumstamm/Waldlichtung, keine nahe Leuchte und kein freies Wasserfenster.",
+      "lights": []
+    },
+    "3.png": {
+      "size": [
+        1536,
+        1024
+      ],
+      "evidence": "Naht3: Laden-/Cafe-Wandleuchten und hohe Laterne [1340,456], keine Wasserflaeche.",
+      "lights": [
+        {
+          "kind": "lamp",
+          "at": [
+            821,
+            543
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1002,
+            546
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1097,
+            579
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1228,
+            578
+          ],
+          "radius": [
+            55,
+            66
+          ],
+          "strength": 0.31
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1340,
+            456
+          ],
+          "radius": [
+            78,
+            87
+          ],
+          "strength": 0.37
+        }
+      ]
+    },
+    "4.png": {
+      "size": [
+        1536,
+        1024
+      ],
+      "evidence": "Naht4: Berg-/Maueranschluss ohne Leuchte und ohne freie Wasserflaeche.",
+      "lights": []
+    },
+    "5.png": {
+      "size": [
+        1536,
+        1024
+      ],
+      "evidence": "Naht5: Sichtbares Zelt mit gemaltem Lagerfeuer [1200,685], Zeltlaterne [1183,543], Haengelaterne [932,604].",
+      "lights": [
+        {
+          "kind": "fire",
+          "at": [
+            1200,
+            685
+          ],
+          "radius": [
+            124,
+            116
+          ],
+          "strength": 0.5
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            1183,
+            543
+          ],
+          "radius": [
+            61,
+            78
+          ],
+          "strength": 0.33
+        },
+        {
+          "kind": "lamp",
+          "at": [
+            932,
+            604
+          ],
+          "radius": [
+            62,
+            76
+          ],
+          "strength": 0.3
+        }
+      ],
+      "flames": [
+        [
+          1200,
+          713,
+          107,
+          108
+        ]
+      ]
+    }
+  }
+}

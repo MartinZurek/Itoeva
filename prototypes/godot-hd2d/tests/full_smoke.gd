@@ -26,21 +26,29 @@ func run() -> void:
 	DirAccess.remove_absolute(app.save_path)
 	root.add_child(app)
 	await frames(5)
-	check(app.paused and app.portrait_cards.size() == 6, "Startmenue zeigt alle sechs Originalwesen")
+	check(app.paused and app.portrait_cards.size() == 8, "Startmenue zeigt sechs Originalwesen, Mooslyn und Nocti")
 	var labels: Dictionary = Catalog.data().labels
-	check(labels.size() == 28 and Catalog.data().regions.size() == 7, "Vollstaendiger Katalog: 28 Orte und sieben Aussenpanoramen")
+	check(labels.size() == 36 and Catalog.data().regions.size() == 7, "Katalog: 28 Originalorte, sieben Waldorte und Waldpfadlabel")
 	check(app.music_on == false and not app.music.playing, "Musik bleibt beim ersten Start aus")
-	for i in range(600):
-		if not app.loading_world:
-			break
-		await frames(1)
-	check(not app.loading_world and app.ready_count == 30, "Alle Welt- und Figurenbilder sind vor dem Spielen vorbereitet")
+	var loading_deadline := Time.get_ticks_msec() + 30000
+	while app.loading_world and Time.get_ticks_msec() < loading_deadline:
+		OS.delay_msec(1)
+		await process_frame
+	var textures_ready: bool = not app.loading_world and app.ready_count == app.textures.size() and app.ready_count >= 46
+	for species in Catalog.data().characters:
+		textures_ready = textures_ready and app.textures.has(Catalog.data().characters[species].asset)
+	for asset in ["card-art-v050.png", "spirit-animation-v050.png", "nachtwurz-atlas.png"]:
+		textures_ready = textures_ready and app.textures.has("res://assets/combat/" + asset)
+	check(textures_ready, "Welt, acht Figuren und Kartenbilder sind vor dem Spielen vorbereitet")
+	if app.loading_world:
+		quit(1)
+		return
 	app.selected = "fennec"
 	await app.start_game()
 	await frames(20)
 	check(app.world_ready and app.actor.is_on_floor(), "Spiel startet mit 3D-Bodenkontakt")
-	check(app.stage.chunks.size() == 7 and app.actors.size() == 6, "Alle Panoramen und sechs sichtbare Wesen sind integriert")
-	check(app.stage.doors.size() == 5, "Aussenwelt bietet Haus, Laden, Arbeit, Cafe und Spielhalle")
+	check(app.stage.chunks.size() == 7 and app.actors.size() == 8, "Alle Panoramen und acht sichtbare Wesen sind integriert")
+	check(app.stage.doors.size() == 6, "Aussenwelt bietet fuenf Gebaeude und den Waldabzweig")
 	var actor: CharacterBody3D = app.actor
 	# Freie Sportflaeche: die Parkbewohner duerfen diesen Tempotest nicht blockieren.
 	actor.position = Catalog.position_for("SPORT", Vector2(0.3, 0.60))
@@ -71,7 +79,7 @@ func run() -> void:
 	await frames(40)
 	actor.request_action("sit")
 	await frames(30)
-	check(actor.state == "sit" and actor.sprite.frame == 169, "Sitzen verwendet die korrigierte Original-Sitzpose")
+	check(actor.state == "sit" and actor.sprite.frame == 93, "Sitzen verwendet die korrigierte Original-Sitzpose")
 	actor.facing = Vector2.DOWN
 	actor._update_frame(false)
 	check(actor.sprite.frame == 103, "Front-Sitzen bleibt in der nativen Frontpose")
@@ -95,7 +103,9 @@ func run() -> void:
 	var second := InputEventScreenTouch.new()
 	second.index = 1
 	second.pressed = true
-	second.position = hud.actions[0].button.get_global_rect().get_center()
+	second.position = hud.action_center()
+	root.push_input(second, true)
+	second.pressed = false
 	root.push_input(second, true)
 	await frames(15)
 	check(actor.position.y > 0.3 and actor.touch_vector.x > 0.7, "Rechter Daumen springt bei gehaltenem linken Joystick")
@@ -108,7 +118,7 @@ func run() -> void:
 	# Profile der trockenen Bruecke: ein Sprint muss ihrer Kruemmung folgen koennen.
 	var bridge: Dictionary = Catalog.region_for("COAST_PATH")
 	var middle := Catalog.band(bridge, 0.43, true)
-	check(middle == Vector2(408, 449), "Bachbruecke verwendet das native Hoehenprofil")
+	check(middle == Vector2(369, 386), "Bachbruecke folgt dem engeren Weg hinter der gezeichneten Brüstung")
 	actor.position = Vector3(30.0 + 0.43 * 30.0, 0.03, Catalog.image_z((middle.x + middle.y) / 2.0))
 	actor.velocity = Vector3.ZERO
 	await frames(30)
@@ -153,9 +163,12 @@ func run() -> void:
 		app._resume()
 		await frames(15)
 		var reference: Dictionary = Catalog.data().characters[species]
-		var expected: float = app.stage.base_pixel_size * 109.0 * float(reference.relative_height)
-		var visible: float = app.actor.sprite.pixel_size * (126.0 - float(reference.top))
-		check(absf(expected - visible) < 0.2 and app.actor.sprite.texture.get_size() == Vector2(1536, 1920), "Native Koerpergroesse und mobiler 170er-Atlas: " + species)
+		var expected: float = app.stage.base_pixel_size * 109.0 * Catalog.relative_height(species)
+		var compact: bool = reference.get("compact", false)
+		var reference_pixels: float = app.actor.frame_bounds[0].size.y if compact else 126.0 - float(reference.top)
+		var visible: float = app.actor.sprite.pixel_size * reference_pixels
+		var expected_atlas := Vector2(1448, 1086) if compact else Vector2(1536, 1920)
+		check(absf(expected - visible) < 0.2 and app.actor.sprite.texture.get_size() == expected_atlas, "Koerpergroesse und passender Welt-/Kampfatlas: " + species)
 	check(app.stage.furniture.size() == 4, "Wohnzimmer enthaelt Sofa, Teetisch, Beistelltisch und Buchregal")
 	var sofa: Dictionary
 	for item in app.stage.furniture:
@@ -185,7 +198,7 @@ func run() -> void:
 	Input.action_press("roll")
 	await frames(4)
 	Input.action_release("roll")
-	check(not app.actor.mounted and app.actor.state == "roll", "Rolle verlaesst den Sitz mit genau einer Aktion")
+	check(not app.actor.mounted and app.actor.state == ("twirl" if app.actor.species == "hootlet" else "roll"), "Artgerechte Schwungaktion verlaesst den Sitz genau einmal")
 	await frames(45)
 	app.sensitivity = 1.3
 	app.fixed_stick = true
