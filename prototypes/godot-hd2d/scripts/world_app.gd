@@ -785,7 +785,7 @@ func _process(delta: float) -> void:
 		var practice: Button = hud.get_node("BattlePractice")
 		practice.visible = current_place()=="SHADOW_CLEARING" and forest_encounter.model.phase=="done"
 		var darkness: float=Forest.region_at(actor.position.x).darkness
-		actor.painted_material.set_shader_parameter("scene_light",Color.WHITE.lerp(Color(.33,.43,.58),darkness*.8) if not stage.carried_light else Color(1.0,.88,.70))
+		actor.painted_material.set_shader_parameter("scene_light",Color.WHITE.lerp(Color(.33,.43,.58),darkness*.8))
 	_update_residents(delta)
 	clock_tick += delta
 	if clock_tick > 0.5:

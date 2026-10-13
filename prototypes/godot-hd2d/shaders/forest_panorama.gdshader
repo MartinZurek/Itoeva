@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never;
 #include "res://shaders/water_flow.gdshaderinc"
 #include "res://shaders/flame_flipbook.gdshaderinc"
+#include "res://shaders/firelight.gdshaderinc"
 uniform sampler2D painted_texture : source_color, filter_linear_mipmap, repeat_disable;
 uniform sampler2D water_mask : filter_linear, repeat_disable;
 uniform vec3 path_tint : source_color = vec3(1.0);
@@ -43,8 +44,11 @@ void fragment() {
 	for(int i=0;i<4;i++) {
 		if(i>=flame_count) {break;}
 		vec2 d=(UV-flames[i].xy)/vec2(0.12,0.24);
-		float pool=exp(-dot(d,d)*2.2);
-		ink+=vec3(0.48,0.23,0.07)*pool*torch_gain*light_gain*(0.88+0.07*sin(clock*5.7+float(i)*3.0)+0.05*sin(clock*9.1));
+		float pool=firelight_pool(d);
+		float pulse=firelight_flicker(clock,origin+float(i)*1.9);
+		vec3 surface=texture(painted_texture,atlas_origin+UV*atlas_scale).rgb;
+		ink+=vec3(0.58,0.28,0.085)*pool*torch_gain*light_gain*pulse*(0.5+surface*0.7);
+		ink+=vec3(0.55,0.27,0.07)*exp(-dot(d,d)*75.0)*torch_gain*light_gain*pulse;
 	}
 	if(carried_light) {
 		vec2 d=vec2(world_point.x-player.x,(world_point.y-player.y)*0.819152-(world_point.z-player.z)*0.573576-0.5);
@@ -58,7 +62,9 @@ void fragment() {
   vec2 local_uv=vec2((UV.x-f.x)/.067+.5,(UV.y-(f.y-height))/height);
   if(local_uv.x>0.0 && local_uv.x<1.0 && local_uv.y>0.0 && local_uv.y<1.0) {
    vec4 flame=painted_flame(local_uv,clock+float(i)*1.9+origin);
-   ink=mix(ink,flame.rgb*1.2,flame.a*torch_gain*(1.0-smoothstep(f.y-.025,f.y-.013,UV.y)));
+   float base_mask=1.0-smoothstep(f.y-.025,f.y-.013,UV.y);
+   ink=mix(ink,flame.rgb*1.08,flame.a*torch_gain*base_mask);
+   ink+=vec3(1.0,0.42,0.055)*firelight_embers(local_uv,clock,origin+float(i)*1.9)*torch_gain*base_mask*0.65;
   }
  }
  ALBEDO=ink;

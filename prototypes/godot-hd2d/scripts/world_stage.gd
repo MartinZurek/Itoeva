@@ -26,6 +26,8 @@ var natural_edges: Array[MeshInstance3D] = []
 var draw_bands: Dictionary = {}
 var pickups: Array[Dictionary] = []
 var collected: Array = []
+var local_light_sources: Array[Dictionary] = []
+var light_hour := 12.0
 
 func fit_character(pixel_size: float) -> void:
 	if place == "OUTDOOR":
@@ -223,6 +225,7 @@ func _mesh(label: String, surface: SurfaceTool, material: Material, parent: Node
 
 func _make_panorama(region: Dictionary, parent: Node3D) -> void:
 	var material := _painted_material(region.asset)
+	_register_painted_lights(region)
 	for ground in [false, true]:
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -329,6 +332,18 @@ func _make_seam(index: int) -> void:
 	var boundary: float = (index + 1) * 30.0
 	var asset := "res://assets/world/seams/%s.png" % index
 	var material := _painted_material(asset, true)
+	var entry: Dictionary = Ambience.data().assets.get(asset.get_file(), {})
+	var dimensions: Array = entry.get("size", [1086,724])
+	for light_index in entry.get("lights", []).size():
+		var source: Dictionary = entry.lights[light_index]
+		var uv := Vector2(float(source.at[0])/dimensions[0],float(source.at[1])/dimensions[1])
+		var x := boundary-7.5+uv.x*15.0
+		var region: Dictionary = Catalog.data().regions[index if x<boundary else index+1]
+		var base_uv := Vector2((x-float(region.origin))/float(region.width),uv.y)
+		local_light_sources.append({"position":_point(region,base_uv,uv.y>=_band(region,base_uv.x).x/640.0),
+			"radius":Vector2(float(source.radius[0])/dimensions[0]*15.0,float(source.radius[1])/dimensions[1]*10.0),
+			"strength":float(source.get("strength",.3)),"fire":source.kind=="fire",
+			"seed":float(light_index)*1.73+uv.x*13.0+uv.y*7.0,"arena":false})
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for ground in [false, true]:
@@ -585,7 +600,53 @@ func _painted_material(asset: String, transparent: bool = false) -> ShaderMateri
 	return material
 
 func set_time(hour: float) -> void:
+	light_hour = hour
 	for material in painted_materials: Ambience.set_time(material, hour, place != "OUTDOOR")
 	var daylight := smoothstep(5.8, 8.0, hour) * (1.0 - smoothstep(18.0, 21.0, hour))
 	for material in materials:
 		material.albedo_color = Color(0.32, 0.40, 0.58).lerp(Color.WHITE, daylight) if place == "OUTDOOR" else Color.WHITE
+
+func _register_painted_lights(region: Dictionary) -> void:
+	var entry: Dictionary = Ambience.data().assets.get(String(region.asset).get_file(), {})
+	var size: Array = entry.get("size", [2172, 724])
+	for index in entry.get("lights", []).size():
+		var source: Dictionary = entry.lights[index]
+		var uv := Vector2(float(source.at[0])/size[0], float(source.at[1])/size[1])
+		var anchor := _point(region, uv, uv.y >= _band(region,uv.x).x/native_height)
+		local_light_sources.append({"position":anchor,
+			"radius":Vector2(float(source.radius[0])/size[0]*float(region.width),float(source.radius[1])/size[1]*10.0),
+			"strength":float(source.get("strength",0.3)), "fire":source.kind=="fire",
+			"seed":float(index)*1.73+uv.x*13.0+uv.y*7.0, "arena":false})
+
+func apply_actor_light(material: ShaderMaterial, point: Vector3) -> void:
+	var sources: Array[Dictionary] = []
+	var center := Vector2(point.x, .819152*point.y-.573576*point.z+.75)
+	for source in local_light_sources:
+		if source.get("forest",false) and float(source.get("gain",0.0))<=0.0: continue
+		var position: Vector3 = source.position
+		var projected := Vector2(position.x,.819152*position.y-.573576*position.z)
+		var distance: Vector2 = (center-projected)/source.radius
+		if distance.length_squared()<2.0:
+			var candidate := source.duplicate()
+			candidate["projected"] = projected
+			candidate["distance"] = distance.length_squared()
+			sources.append(candidate)
+	sources.sort_custom(func(a,b): return a.distance < b.distance)
+	var points := PackedVector4Array()
+	var colors := PackedVector4Array()
+	var phases := PackedVector4Array()
+	var daylight := smoothstep(5.8,8.0,light_hour)*(1.0-smoothstep(18.0,21.0,light_hour))
+	for index in 4:
+		if index>=sources.size():
+			points.append(Vector4.ZERO); colors.append(Vector4.ZERO); phases.append(Vector4.ZERO)
+			continue
+		var source: Dictionary = sources[index]
+		var gain := lerpf(.95,.36,daylight) if source.fire else lerpf(.82,.04,daylight)
+		if source.get("forest",false): gain = float(source.get("gain",1.0))
+		points.append(Vector4(source.projected.x,source.projected.y,source.radius.x,source.radius.y))
+		colors.append(Vector4(1.0,.54,.18,float(source.strength)*gain))
+		phases.append(Vector4(float(source.seed),1.0 if source.fire else 0.0,0.0,0.0))
+	material.set_shader_parameter("local_light_count",mini(sources.size(),4))
+	material.set_shader_parameter("local_light_points",points)
+	material.set_shader_parameter("local_light_colors",colors)
+	material.set_shader_parameter("local_light_phases",phases)

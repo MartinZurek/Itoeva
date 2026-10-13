@@ -293,3 +293,9 @@ Zweifingerbedienung, Temperatur/FPS und Speicher), danach einzelne Tiefenmasken
 und gewuenschte Spielsysteme an diese Buehne anbinden.
 Ruecksetzen durch Revert dieses isolierten Erweiterungscommits; der fruehere
 Godot-Ausschnitt und alle nativen Android-Daten bleiben erhalten.
+
+## Feuer-/Lichtverbesserung vor dem nächsten APK-Build
+
+Eigene Flammen, lokale Glutfunken, weicher Lichtabfall, quellenabhängiges
+Figurenlicht und Glas-/Messinglaterne sind vorbereitet.
+[Prüfung und tatsächlicher Übergabestand](../../docs/godot-firelight-polish.md).

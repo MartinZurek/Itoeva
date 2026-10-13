@@ -6882,3 +6882,16 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Grenze einer vollständigen physikalischen Kulissensimulation.
 - **Übergabe:** docs/itoeva2-world-polish-and-encounters.md; preview_polish.kt/.sh samt
   Kontur-/Sitz-/Schattenbildern und Bewegungsvideo. Basis nach #346: be25d5d503c62007fdae71c653255ac3adb4a605.
+
+### 2026-10-14 – Feuer und lokale Figurenbeleuchtung (Godot firelight)
+
+- **DOCUMENTED INTENT:** Martin verlangt Feuer-/Lichtqualität nach Resonance-Referenz vor der APK.
+- **FACT:** Eigene Flammen, Glutfunken, weicher Lichtkern, maximal vier lokale Quellen pro Figur.
+  Arena- und Laternenabschaltung betreffen auch Figuren; Traglaterne mit Glas/Messing/Docht.
+- **TESTED BEHAVIOR:** Vor Umgebungsausfall 25 echte GL-Checks grün, relevante Regressionen
+  inklusive 22.027 Wald- und 441 Kartenchecks. Spielaufnahmen visuell geprüft.
+- **UNVERIFIED:** Abschließende GL-Wiederholung und wiederhergestellter Remote-SHA,
+  gemeinsame APK mit 40 Karten, Telefon/GPU. Keine vollständige Möbel-Schattenphysik.
+- **Migration/Rücksetzung:** Keine neue Lichtpersistenz; Lichtcommit getrennt rücknehmbar.
+- **Übergabe:** docs/godot-firelight-polish.md dokumentiert Wiederherstellung,
+  fehlende Umgebung, Integration mit 2ca28b5, Manifestabgleich und nächste Buildschritte.
