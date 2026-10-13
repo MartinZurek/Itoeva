@@ -1,0 +1,242 @@
+# Vorlage: claude/godot-hd2d-apk; expliziter Build-Auftrag vom 13.10.2026.
+# AndroidTest und DEBUG_KEYSTORE_BASE64; ersetzt die freigegebene Drive-Zieldatei.
+name: Godot Test APK 0.5.0
+
+on:
+  push:
+    branches: [codex/godot-card-arena-v050]
+    paths:
+      - 'prototypes/godot-hd2d/**'
+      - 'docs/godot-v050-runtime-manifest.json'
+      - '.github/workflows/godot-apk.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: godot-test-apk-v050
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: '4.5.1'
+  PROJECT: prototypes/godot-hd2d
+  APK_NAME: Itoeva_Godot_Test_v0.5.0.apk
+  FILE_ID: 148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX
+
+jobs:
+  apk:
+    name: Godot testen, AndroidTest bauen und nach Drive legen
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Laufzeitdateien gegen v0.5.0-Manifest pruefen
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          project = pathlib.Path(os.environ['PROJECT'])
+          manifest = json.loads(pathlib.Path('docs/godot-v050-runtime-manifest.json').read_text())
+          assert manifest['sha256'] == 'd7b854b204cf3d99954c210cf6b8593d12d5998b22bde6709a03401a63c2a1de'
+          assert len(manifest['files']) == 205
+          for item in manifest['files']:
+              data = (project / item['path']).read_bytes()
+              assert len(data) == item['bytes'], item['path']
+              assert hashlib.sha256(data).hexdigest() == item['sha256'], item['path']
+          print('205 Laufzeit-/Exportdateien stimmen bytegenau mit v0.5.0 ueberein.')
+          PY
+
+      - name: Godot und Export-Templates (Cache)
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+
+      - name: Godot und Export-Templates laden
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot
+          cd ~/godot
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl --retry 3 -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -qo godot.zip
+          rm godot.zip
+          curl --retry 3 -fsSL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -qo templates.tpz
+          rm templates.tpz
+          find templates -type f ! -name 'android_*' ! -name 'version.txt' -delete
+
+      - name: Godot einrichten
+        run: |
+          set -euo pipefail
+          tdir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$tdir" ~/.config/godot
+          cp -r ~/godot/templates/. "$tdir/"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          for f in editor_settings-4.tres editor_settings-4.5.tres; do
+            {
+              echo '[gd_resource type="EditorSettings" format=3]'
+              echo
+              echo '[resource]'
+              echo "export/android/android_sdk_path = \"$sdk\""
+              echo "export/android/java_sdk_path = \"$JAVA_HOME\""
+            } > "$HOME/.config/godot/$f"
+          done
+
+      - name: Godot importieren und Regressionen pruefen
+        run: |
+          set -euo pipefail
+          mkdir -p "$PROJECT/build"
+          timeout 600 "$GODOT" --headless --editor --path "$PROJECT" --import --quit \
+            2>&1 | tee "$PROJECT/build/import.log"
+          for test in card_model card_rules special_rules victory_flow card_ui minion_ui \
+                      forest_trail card_playthrough full_smoke full_framing full_doors; do
+            timeout 300 "$GODOT" --headless --fixed-fps 60 --path "$PROJECT" \
+              --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
+          done
+
+      - name: Hinterlegten Debug-Schluessel einrichten
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          [ -n "$DEBUG_KEYSTORE_BASE64" ] || { echo '::error::DEBUG_KEYSTORE_BASE64 fehlt.'; exit 1; }
+          umask 077
+          ks="$RUNNER_TEMP/godot-test-debug.keystore"
+          printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$ks"
+          {
+            echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$ks"
+            echo 'GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey'
+            echo 'GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android'
+          } >> "$GITHUB_ENV"
+
+      - name: AndroidTest exportieren und APK pruefen
+        run: |
+          set -euo pipefail
+          apk="$GITHUB_WORKSPACE/$PROJECT/build/$APK_NAME"
+          "$GODOT" --headless --path "$PROJECT" --export-debug AndroidTest "$apk" \
+            2>&1 | tee "$PROJECT/build/export.log"
+          test -s "$apk"
+          unzip -tq "$apk"
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          bt="$(find "$sdk/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          "$bt/apksigner" verify --verbose --print-certs "$apk" | tee "$PROJECT/build/signature.txt"
+          "$bt/aapt" dump badging "$apk" > "$PROJECT/build/package.txt"
+          grep "^package: name='com.itoeva.godot.hd2d.worldtest' versionCode='15' versionName='0.5.0'" "$PROJECT/build/package.txt"
+          grep "^native-code: 'arm64-v8a'$" "$PROJECT/build/package.txt"
+          if grep -q "android.permission.INTERNET" "$PROJECT/build/package.txt"; then
+            echo '::error::Unerwartete Internetberechtigung.'
+            exit 1
+          fi
+          (cd "$PROJECT/build" && sha256sum "$APK_NAME" > "$APK_NAME.sha256")
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          apk = pathlib.Path(os.environ['PROJECT']) / 'build' / os.environ['APK_NAME']
+          data = apk.read_bytes()
+          report = dict(commit=os.environ['GITHUB_SHA'], run_id=os.environ['GITHUB_RUN_ID'],
+                        file_id=os.environ['FILE_ID'], bytes=len(data),
+                        sha256=hashlib.sha256(data).hexdigest(), md5=hashlib.md5(data).hexdigest(),
+                        package='com.itoeva.godot.hd2d.worldtest', version='0.5.0', version_code=15)
+          apk.with_name('build-report.json').write_text(json.dumps(report, indent=2) + '\n')
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Schluesselreste entfernen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/godot-test-debug.keystore"
+
+      - name: Gepruefte APK als Artefakt sichern
+        uses: actions/upload-artifact@v4
+        with:
+          name: itoeva-godot-v050-${{ github.sha }}
+          path: |
+            ${{ env.PROJECT }}/build/${{ env.APK_NAME }}
+            ${{ env.PROJECT }}/build/${{ env.APK_NAME }}.sha256
+            ${{ env.PROJECT }}/build/build-report.json
+            ${{ env.PROJECT }}/build/package.txt
+            ${{ env.PROJECT }}/build/signature.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Vollstaendige APK per resumable Upload nach Drive legen
+        env:
+          SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+        run: |
+          set -euo pipefail
+          [ -n "$SA_JSON" ] || { echo '::error::GDRIVE_SA_JSON fehlt; APK liegt als Artefakt bereit.'; exit 1; }
+          umask 077
+          upload_tmp="$(mktemp -d)"
+          trap 'rm -rf "$upload_tmp"' EXIT
+          printf '%s' "$SA_JSON" > "$upload_tmp/sa.json"
+          jwt="$(sh runner/gdrive-jwt.sh "$upload_tmp/sa.json" https://www.googleapis.com/auth/drive)"
+          echo "::add-mask::$jwt"
+          answer="$(curl --fail-with-body -sS -X POST https://oauth2.googleapis.com/token \
+            --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
+            --data-urlencode "assertion=$jwt")"
+          token="$(printf '%s' "$answer" | jq -r '.access_token // empty')"
+          [ -n "$token" ] || { echo '::error::Kein Drive-Zugriffstoken.'; exit 1; }
+          echo "::add-mask::$token"
+          apk="$PROJECT/build/$APK_NAME"
+          bytes="$(stat -c %s "$apk")"
+          description="Itoeva Godot Test 0.5.0; Commit $GITHUB_SHA; Lauf $GITHUB_RUN_ID; SHA-256 $(jq -r .sha256 "$PROJECT/build/build-report.json")"
+          jq -n --arg description "$description" '{description:$description}' > "$upload_tmp/metadata.json"
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer $token" \
+            -H 'Content-Type: application/json; charset=UTF-8' \
+            -H 'X-Upload-Content-Type: application/vnd.android.package-archive' \
+            -H "X-Upload-Content-Length: $bytes" \
+            --data-binary @"$upload_tmp/metadata.json" \
+            -D "$upload_tmp/headers" -o "$upload_tmp/session.json" \
+            "https://www.googleapis.com/upload/drive/v3/files/$FILE_ID?uploadType=resumable&supportsAllDrives=true"
+          session="$(awk 'tolower($1)=="location:" {gsub("\r", "", $2); print $2}' "$upload_tmp/headers")"
+          [ -n "$session" ] || { echo '::error::Drive lieferte keine Upload-Sitzung.'; exit 1; }
+          echo "::add-mask::$session"
+          curl --fail-with-body -sS -X PUT \
+            -H 'Content-Type: application/vnd.android.package-archive' \
+            -H "Content-Length: $bytes" \
+            -H "Content-Range: bytes 0-$((bytes - 1))/$bytes" \
+            --data-binary @"$apk" "$session" -o "$upload_tmp/completed.json"
+          curl --fail-with-body -sS \
+            -H "Authorization: Bearer $token" \
+            "https://www.googleapis.com/drive/v3/files/$FILE_ID?supportsAllDrives=true&fields=id,name,size,md5Checksum,sha256Checksum,webViewLink" \
+            -o "$PROJECT/build/drive-result.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          build = pathlib.Path(os.environ['PROJECT']) / 'build'
+          local = json.loads((build / 'build-report.json').read_text())
+          remote = json.loads((build / 'drive-result.json').read_text())
+          assert remote['id'] == os.environ['FILE_ID'], remote
+          assert remote['name'] == os.environ['APK_NAME'], remote
+          assert int(remote['size']) == local['bytes'], remote
+          assert remote['md5Checksum'] == local['md5'], remote
+          if remote.get('sha256Checksum'):
+              assert remote['sha256Checksum'] == local['sha256'], remote
+          summary = (f"APK 0.5.0 / Code 15\n\nCommit: `{local['commit']}`\n\n"
+                     f"Groesse: {local['bytes']} Bytes\n\nSHA-256: `{local['sha256']}`\n\n"
+                     f"Drive: {remote.get('webViewLink', remote['id'])}\n")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write(summary)
+          print(summary)
+          PY
+
+      - name: Build- und Upload-Protokolle sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-v050-protokolle-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.PROJECT }}/build/*.log
+            ${{ env.PROJECT }}/build/*.json
+            ${{ env.PROJECT }}/build/*.txt
+          if-no-files-found: ignore
+          retention-days: 14

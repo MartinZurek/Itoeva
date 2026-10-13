@@ -103,3 +103,28 @@ Der vorbereitete Stand passt konfliktfrei zur oben genannten main-Basis. Das ist
 keine Zusage fuer eine inzwischen geaenderte main-Version. Der normale native
 Deliver-APK-Workflow baut keine Godot-Test-APK; zum manuellen Godot-Bau das Preset
 **AndroidTest** verwenden. Die private Testsignatur separat bereitstellen.
+
+## GitHub-Actions-Build fuer v0.5.0 (13.10.2026)
+
+Auf Martins ausdruecklichen Auftrag liegt `.github/workflows/godot-apk.yml`
+im Branch `codex/godot-card-arena-v050`. Vorlage ist der gleichnamige Workflow
+aus `claude/godot-hd2d-apk`. Pushs mit Aenderungen am Godot-Projekt oder Workflow
+starten den Build; `workflow_dispatch` bleibt fuer manuelle Wiederholungen vorhanden.
+
+- Godot und Exportvorlagen: 4.5.1; Preset **AndroidTest**, 0.5.0 / Code 15.
+- Erforderliche Secrets: `DEBUG_KEYSTORE_BASE64` (Alias `androiddebugkey`,
+  Debug-Passwort `android`) und `GDRIVE_SA_JSON`. Fehlende Secrets brechen ab.
+- Alle 205 Manifestdateien werden vor dem Import bytegenau geprueft.
+- Regressionen: card_model, card_rules, special_rules, victory_flow, card_ui,
+  minion_ui, forest_trail, card_playthrough, full_smoke, full_framing, full_doors.
+- Nach dem Export: ZIP-Integritaet, APK-Signatur, Testpaketkennung, Version und
+  ARM64; keine Internetberechtigung. APK, SHA-256 und Pruefdaten als Artefakt.
+- Drive: `uploadType=resumable`, Aktualisierung der bestehenden Datei
+  `148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX` mit einer vollstaendigen APK.
+  Groesse und MD5 werden nach dem Upload zurueckgelesen; SHA-256 ebenfalls,
+  soweit von Drive geliefert. Uploadfehler lassen den Lauf fehlschlagen.
+- Der Laufbericht nennt Commit, Bytegroesse, SHA-256 und Drive-Link.
+
+YAML, Bash-Schritte und eingebetteter Python-Code sind lokal auf Syntax geprueft.
+Dies ist keine Zusage eines erfolgreichen Actions-Laufs oder Telefonstarts;
+den konkreten Laufstatus und die Auslieferungsdatei separat pruefen.
