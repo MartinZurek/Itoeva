@@ -6,6 +6,7 @@ const ForestStage = preload("res://scripts/forest_stage.gd")
 const Forest = preload("res://scripts/forest_catalog.gd")
 const Encounter = preload("res://scripts/card_encounter.gd")
 const DeckEditor = preload("res://scripts/deck_editor.gd")
+const Cards = preload("res://scripts/card_catalog.gd")
 var forest_encounter: Node
 
 const Actor = preload("res://scripts/character_actor.gd")
@@ -336,6 +337,7 @@ func _preload_world() -> void:
 	pending.append("res://assets/combat/card-art-v050.png")
 	pending.append("res://assets/combat/spirits-v050.png")
 	pending.append("res://assets/combat/spirit-animation-v050.png")
+	for i in range(1,5):pending.append("res://assets/combat/helpers-v060-%s.png" % i)
 	for i in range(6):
 		pending.append("res://assets/world/seams/%s.png" % i)
 	for entry in Catalog.data().interiors.values():
@@ -824,6 +826,12 @@ func _load_save() -> void:
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string(save_path))
 		if parsed is Dictionary:
 			save_data = parsed
+	var stored_decks = save_data.get("card_decks", {})
+	if stored_decks is Dictionary:
+		for species in stored_decks:
+			if Catalog.data().characters.has(species) and stored_decks[species] is Array:
+				stored_decks[species] = Cards.upgrade(species, stored_decks[species])
+		save_data["card_decks"] = stored_decks
 	var settings: Dictionary = save_data.get("settings", {})
 	selected = settings.get("species", "fennec")
 	if not Catalog.data().characters.has(selected):

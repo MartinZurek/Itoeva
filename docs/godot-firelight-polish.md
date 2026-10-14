@@ -1,58 +1,56 @@
-# Godot – Feuer und lokale Figurenbeleuchtung, Übergabe 14.10.2026
+# Godot 0.6.0 – Feuer und lokale Lichtquellen
 
-Martins Auftrag: vor der nächsten APK Feuer und Licht nach der visuellen Referenz
-Final Fantasy Resonance verbessern, passend zur eigenen gemalten Welt.
-Offizielle Referenz: https://blog.playstation.com/2026/09/03/final-fantasy-resonance-ps5-demo-available-today-sephiroth-revealed/
+Martins Zusatzauftrag vom 14.10.2026: Vor dem APK-Build Feuer und Licht nach
+der visuellen Referenz Final Fantasy Resonance verbessern. Die offizielle
+Square-Enix-Präsentation beschreibt HD-2D und filmische Pixelgestaltung:
+https://blog.playstation.com/2026/09/03/final-fantasy-resonance-ps5-demo-available-today-sephiroth-revealed/
 
-## Implementierte Darstellung
+## Umsetzung
 
-Verankerte Flammenspitzen, eigene Flackerrhythmen und vier lokale Glutfunken.
-Dichter heller Kern und begrenzter weicher Lichtabfall erhalten Pinselstrukturen.
-Alle 64 katalogisierten Quellen der Welt, Anschlussbilder und Innenräume sowie
+Die eigenen gemalten Feuerbilder behalten ihre Identität. Verankerte
+Flammenspitzen bewegen sich, vier sparsame Glutfunken steigen lokal auf.
+Jede Feuerstelle hat einen eigenen Rhythmus; Flamme, Kulisse und Figur
+teilen denselben Takt. Lampen bleiben ruhig. Ein dichter heller Kern und
+weicher begrenzter Lichtabfall erhalten Pinselstriche. Tageslicht reduziert
+künstliches Licht wie bisher.
+
+Alle 64 Quellen der Originalpanoramen, Anschlussbilder und Innenräume sowie
 Wald-Fackeln liefern Lichtanker für Figuren. Höchstens vier nahe Quellen
-wirken gleichzeitig; die zugewandte Seite erhält mehr warmes Licht.
-Ausgeschaltete Quellen werden vor der Auswahl entfernt. Arena-Fackeln verlieren
-auch ihr Figurenlicht beim Erlöschen. Die Traglaterne besitzt Glas, vier
-Messingstreben, offenen Bügel und einen animierten Docht.
+beleuchten eine Figur gleichzeitig. Der zugewandte Rand erhält mehr warmes
+Licht. Blickrichtung, Sprite-Alpha und Möbelverdeckung bleiben unabhängig.
+Ausgeschaltete Quellen werden vor der Auswahl entfernt. Arena-Fackeln
+verlieren beim Erlöschen auch ihre Wirkung auf Figuren.
 
-## Belegte Prüfung vor dem Umgebungsausfall
+Die Traglaterne hat durchscheinendes Glas, vier Messingstreben, einen offenen
+Bügel und einen animierten Docht. Sie erhellt einen lokalen Bereich im dunklen
+Wald. Ohne Traglicht bleibt die Figur entsprechend der Waldregion abgedunkelt;
+die vorherige pauschale warme Aufhellung des ganzen Wesens entfällt.
 
-Auf lokalem 40-Karten-Stand 2ca28b5 wurden in Godot 4.5.1 folgende Prüfungen
-ausgeführt: ambience_render 9, forest_render 7, firelight_render 9 Checks grün.
-Echte Aufnahmen von Lager, Wohnzimmer, Fackelpfad und Laterne an/aus visuell geprüft.
-Regressionen: forest_trail 22.027, ambience_coordinates 225, gestures_paths 143,
-expanded_cards 441, combat_spectacle 26, full_smoke 78 Checks, alle grün.
+## Prüfung
 
-Danach wurden Anschlusslichtanker, Ausschluss abgeschalteter Quellen und
-Laternenposition ergänzt; die abschließende GL-Wiederholung war beim Ausfall
-noch nicht vollständig zurückgelesen. Die neuen Aufnahmen wurden geprüft.
+Godot 4.5.1, echter Software-OpenGL-Renderer: Ambience 9, Wald 7 und neue
+Figurenlicht-Prüfung 9 Checks ohne Fehler. Die neue Prüfung misst die
+quellenzugewandte Lichtseite, Flackern, transparente Silhouette, Überbelichtung,
+pixelgleiche Rückkehr ohne Quellen sowie Arena- und Laternenabschaltung.
+Echte Spielaufnahmen von Lager, Wohnzimmer, Fackelpfad und Traglaterne an/aus
+wurden visuell geprüft. Keine Concept Art als Spielaufnahme ausgegeben.
 
-## Tatsächlicher Veröffentlichungsstand
+Regressionen: Wald 22.027; Ambience-Koordinaten 225; Gesten/Wege 143;
+40-Karten-Erweiterung 441; Kampfspektakel 26; vollständiger Smoke 78 Checks,
+alle ohne Fehler. Der APK-Workflow prüft zusätzlich die Karten-/Türregressionen
+und rendert die Helfer sowie Feuer-/Lichtprüfungen vor dem Android-Export.
 
-Die Ausführungsumgebung wurde während der Veröffentlichung unavailable.
-Dieser Entwurf sichert den Lichtschritt über die GitHub-Verbindung auf Basis
-e4983fe / codex/godot-card-arena-v050. Die Änderungen wurden aus den sichtbaren
-Patchschritten und dem veröffentlichten Ausgangscode wiederhergestellt.
-Der wiederhergestellte Remote-Commit konnte mangels Umgebung noch nicht erneut
-ausgeführt werden. Keine Behauptung eines abschließend getesteten Remote-SHA.
+## Grenzen und Übergabe
 
-Der lokale 40-Karten-/Helferstand 2ca28b5 wird durch diesen Entwurf nicht ersetzt.
-Seine vollständige Veröffentlichung und die gemeinsame neue APK stehen aus.
-Workflow und Manifest bleiben hier unverändert; dieser Branch startet keine APK.
+Stilisierte Beleuchtung gemalter Reliefkulissen, keine Rekonstruktion von
+Final Fantasys proprietärer Grafiktechnik. Kulissenschatten sind weiterhin
+Teil der Bilder; neue physikalische Schatten für sämtliche Möbel sind nicht
+enthalten. Android-GPU/FPS und Telefonstart bleiben Geräteabnahme.
 
-## Konkrete Fortsetzung
-
-1. Ausführungsumgebung wieder verbinden; lokalen Stand 2ca28b5 wiederfinden.
-2. Nur diesen Lichtcommit darauf übernehmen. EVOLUTION/README zusammenführen.
-3. Godot importieren, ambience_coordinates, forest_trail, gestures_paths,
-   expanded_cards, combat_spectacle und full_smoke wiederholen.
-4. Mit echtem OpenGL ambience_render, forest_render, firelight_render und
-   firelight_capture ausführen; Spielaufnahmen prüfen.
-5. Laufzeitmanifest mit shaders/firelight.gdshaderinc ergänzen (215 Dateien
-   im gemeinsamen 0.6.0-Stand) und Hash im bestehenden APK-Workflow aktualisieren.
-6. Gemeinsamen Branch veröffentlichen; dann AndroidTest 0.6.0/Code16 mit
-   DEBUG_KEYSTORE_BASE64 bauen und resumable in Drive-Datei
-   148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX liefern. Lauf und Paketdaten prüfen.
-
-Keine Licht-Spielstandmigration. Gemalte Kulissenschatten bleiben; keine
-vollständige neue Möbel-Schattenphysik. Android-GPU/FPS und Telefonstart offen.
+Basis: 2ca28b5 (40-Karten-/Helferstand), davor e4983fe (0.5.0-Build).
+Der integrierte Branch codex/godot-firelight-polish enthält Karten und Licht.
+Runtime-Manifest: 215 Dateien. AndroidTest bleibt 0.6.0/Code 16 mit vorhandenem
+DEBUG_KEYSTORE_BASE64 und derselben Drive-Datei-ID. Erst der geprüfte finale
+Branch-Push startet den neuen Build. Native Daten und Godot-Spielstände
+ändern sich durch diesen Lichtschritt nicht. Nur den Lichtcommit zurücknehmen,
+um die bisherige Darstellung mit 40-Karten-Stand wiederherzustellen.
