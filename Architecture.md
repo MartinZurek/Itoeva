@@ -32,7 +32,7 @@ Abschnitt öffnen:
 
 ## Module
 
-### Separater Godot-Spielprototyp (13.10.2026, v0.6.0)
+### Separater Godot-Spielprototyp (14.10.2026, v0.6.1)
 
 `prototypes/godot-hd2d/` uebertraegt auf ausdruecklichen Nutzerauftrag alle 28
 gemalten Orte und sechs originale 2D-Wesen in begehbare 3D-Reliefbuehnen.
@@ -45,10 +45,12 @@ Es ist ein separat startbarer Grafik-/Steuerungsversuch, kein Ersatz fuer die
 Android-Runtime. Keine Verbindung zu Room, Remindern, Living-Agent-Persistenz oder
 Gradle. Das Android-Exportpreset liefert eine separate ARM64-Debug-App mit Paket
 `com.itoeva.godot.hd2d.world`; Schluessel und lokale SDK-Pfade liegen ausserhalb des Projekts.
-Der aktuelle Testexport ist AndroidTest 0.6.0 / Code 16 mit Paket
+Der aktuelle Testexport ist AndroidTest 0.6.1 / Code 17 mit Paket
 `com.itoeva.godot.hd2d.worldtest`; das historische Preset Android bleibt getrennt.
 CardEncounter steuert den Kartenkampf, CardBattle berechnet Decks/Kristalle und
-Helfer, CardView zeigt animierte Arenaminions. Acht Wesen sind waehlbar: Die sechs
+Helfer, CardView zeigt animierte Arenaminions. BattleFeedback leitet sichtbare Bereitschaft
+und Ziele aus dem Modell ab; CrystalMeter zeigt Vorrat/Kosten. BattleAudio mischt
+Welt-/Kampfmusik und sechs Effektstimmen unabhängig von der Weltpause. Acht Wesen sind waehlbar: Die sechs
 Originalwesen verwenden CharacterActor, Mooslyn und Nocti CompactActor.
 Der Siegesabschluss speichert XP/Beute einmal und fuehrt zur gemalten Welt zurueck.
 Native Kotlin-Module, Reminder, Room, LAS und Signier-Infrastruktur bleiben erhalten.

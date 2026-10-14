@@ -1,3 +1,9 @@
+## Aktuell: 0.6.1 – Kampfklang und erkennbare Aktionen
+
+Kampfmusik trotz Weltpause, 17 eigene kurze Effekte, getrennte Tonregler.
+Kristallsteine, spielbare Kartenränder, legale Zielringe sowie sichtbarer Schlaf-,
+Bereitschafts- und Erschöpfungszustand. [Bedienung und Prüfstand](../../docs/godot-kampfklang-und-lesbarkeit-v061.md).
+
 # Aktueller Stand v0.6.0
 
 40 Karten je Deck, 89 Definitionen und 16 neue individuelle Helfer mit 96

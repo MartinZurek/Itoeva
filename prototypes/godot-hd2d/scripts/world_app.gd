@@ -45,6 +45,10 @@ var camera_lead := 0.0
 var dusk := false
 var sensitivity := 1.0
 var fixed_stick := false
+var battle_music_on := true
+var effects_on := true
+var effects_volume := 0.55
+var battle_audio: Node
 var music_on := false
 var music_volume := 0.35
 var save_data: Dictionary = {}
@@ -88,6 +92,9 @@ func _ready() -> void:
 		if music_on and not paused:
 			music.play())
 	add_child(music)
+	battle_audio=load("res://scripts/battle_audio.gd").new()
+	battle_audio.app=self
+	add_child(battle_audio)
 	show_menu()
 	_preload_world()
 
@@ -287,10 +294,12 @@ func show_deck() -> void:
 func show_settings() -> void:
 	_pause(true)
 	var column := _panel("Einstellungen")
-	column.add_child(_button("Musik: an" if music_on else "Musik: aus", func():
+	var audio_row:=HBoxContainer.new();column.add_child(audio_row)
+	audio_row.add_child(_button("Weltmusik: an" if music_on else "Weltmusik: aus", func():
 		music_on = not music_on
 		_save_preferences()
 		show_settings()))
+	audio_row.add_child(_button("Kampfklang", show_audio_settings))
 	var volume_row := HBoxContainer.new()
 	volume_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_child(volume_row)
@@ -836,6 +845,9 @@ func _load_save() -> void:
 	selected = settings.get("species", "fennec")
 	if not Catalog.data().characters.has(selected):
 		selected = "fennec"
+	battle_music_on = bool(settings.get("battle_music_on", true))
+	effects_on = bool(settings.get("effects_on", true))
+	effects_volume = clampf(float(settings.get("effects_volume", .55)),0,1)
 	music_on = bool(settings.get("music_on", false))
 	music_volume = clampf(float(settings.get("music_volume", 0.35)), 0, 1)
 	sensitivity = clampf(float(settings.get("sensitivity", 1.0)), 0.7, 1.5)
@@ -844,6 +856,7 @@ func _load_save() -> void:
 
 func _save_preferences() -> void:
 	save_data["settings"] = {"species": selected, "music_on": music_on, "music_volume": music_volume,
+		"battle_music_on":battle_music_on,"effects_on":effects_on,"effects_volume":effects_volume,
 		"sensitivity": sensitivity, "fixed_stick": fixed_stick, "dusk": dusk}
 	_write_save()
 	_update_music()
@@ -868,6 +881,7 @@ func _write_save() -> void:
 		push_error("Lokaler Spielstand konnte nicht ersetzt werden")
 
 func _update_music() -> void:
+	if is_instance_valid(battle_audio): return
 	if not is_instance_valid(music):
 		return
 	music.volume_db = linear_to_db(maxf(music_volume, 0.001))
@@ -1015,3 +1029,25 @@ func retreat_forest() -> void:
 	await _mount_world("FOREST_TRAIL",Forest.position_for(0,.15))
 	_resume()
 	_save_progress()
+
+func show_audio_settings() -> void:
+	var in_battle: bool=is_instance_valid(forest_encounter) and forest_encounter.active()
+	if in_battle: forest_encounter.suspend()
+	_pause(true)
+	var column := _panel("Kampfklang")
+	column.add_child(_button("Kampfmusik: an" if battle_music_on else "Kampfmusik: aus", func():
+		battle_music_on=not battle_music_on;_save_preferences();show_audio_settings()))
+	column.add_child(_button("Spielsounds: an" if effects_on else "Spielsounds: aus", func():
+		effects_on=not effects_on;_save_preferences();show_audio_settings()))
+	for is_music in [true,false]:
+		var row:=HBoxContainer.new();column.add_child(row)
+		row.add_child(_button("Leiser",_audio_volume.bind(is_music,-.1)))
+		row.add_child(_label(("Musik" if is_music else "Effekte")+" %s %%" % roundi((music_volume if is_music else effects_volume)*100),18))
+		row.add_child(_button("Lauter",_audio_volume.bind(is_music,.1)))
+	column.add_child(_label("Kristallklang · Elementmagie · Treffer · Zugwechsel",16))
+	column.add_child(_button("Zum Kampf" if in_battle else "Zurück",_resume if in_battle else show_settings))
+
+func _audio_volume(is_music: bool, amount: float) -> void:
+	if is_music: music_volume=clampf(music_volume+amount,0,1)
+	else: effects_volume=clampf(effects_volume+amount,0,1)
+	_save_preferences();show_audio_settings()

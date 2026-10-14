@@ -46,6 +46,8 @@ func _begin_turn(owner: int) -> void:
  state.cap=mini(10,maxi(1,round));state.crystals=state.cap;state.power=false;state.turns+=1
  for unit in board:
   if unit.owner==owner:
+   unit.spent=false
+   unit.skipped=int(unit.get("frozen",0))>0
    unit.ready=int(unit.get("frozen",0))==0
    unit.frozen=maxi(0,int(unit.get("frozen",0))-1)
    unit.hp=mini(int(unit.max_hp),int(unit.hp)+int(unit.get("regen",0)))
@@ -85,7 +87,7 @@ func _add_minion(owner: int,id: String,extra: Dictionary={}) -> int:
   "attack":card.get("attack",3),"hp":card.get("health",6),"max_hp":card.get("health",6),
   "ready":card.get("ready",false),"taunt":card.get("taunt",false),"row":card.get("row",-1),"species":card.get("species",""),
   "form":card.get("form",""),"evasion":card.get("evasion",false),"frozen":0,
-  "from_deck":extra.is_empty(),"shield":card.get("shield",0),"regen":card.get("regen",0),"death_draw":card.get("death_draw",0),"lifesteal":card.get("lifesteal",false)}
+  "skipped":false,"spent":false,"from_deck":extra.is_empty(),"shield":card.get("shield",0),"regen":card.get("regen",0),"death_draw":card.get("death_draw",0),"lifesteal":card.get("lifesteal",false)}
  board.append(unit);next_uid+=1
  _draw_cards(owner,int(card.get("draw_on_summon",0)))
  return int(unit.uid)
@@ -357,7 +359,7 @@ func can_attack(uid: int,target: String="") -> bool:
 func attack_minion(uid: int,target: String="enemy") -> bool:
  if not can_attack(uid,target):return false
  var previous:=_before()
- var unit:=find_unit(uid);unit.ready=false
+ var unit:=find_unit(uid);unit.ready=false;unit.spent=true
  var name: String=unit.name
  var effects: Array[Dictionary]=[]
  var extra: Dictionary={"attacker_uid":uid,"target_code":target,"element":"physical","source":-1}
@@ -470,7 +472,7 @@ func enemy_act() -> bool:
  for unit in units(2):
   if phase!="battle":break
   if not unit.ready:continue
-  unit.ready=false
+  unit.ready=false;unit.spent=true
   var targets:=legal_targets(2)
   if targets.is_empty():break
   unit_attacks.append({"uid":unit.uid,"target_code":targets[0]})
@@ -561,7 +563,7 @@ func restore(saved: Dictionary) -> void:
    if species not in SPECIES and species!="enemy":species=""
    board.append({"uid":uid,"owner":owner,"id":str(raw.get("id","cat")),"name":str(raw.get("name","Helfer")).substr(0,30),
     "attack":clampi(int(raw.get("attack",0)),0,30),"hp":hp,"max_hp":clampi(int(raw.get("max_hp",hp)),hp,40),
-    "ready":bool(raw.get("ready",false)),"taunt":bool(raw.get("taunt",false)),
+    "skipped":bool(raw.get("skipped",false)),"spent":bool(raw.get("spent",false)),"ready":bool(raw.get("ready",false)),"taunt":bool(raw.get("taunt",false)),
     "row":clampi(int(raw.get("row",-1)),-1,3),"species":species,
     "form":str(raw.get("form","")) if str(raw.get("form","")) in Cards.HELPER_FORMS else str(Cards.get_card(str(raw.get("id",""))).get("form","")),
     "evasion":bool(raw.get("evasion",false)),"frozen":clampi(int(raw.get("frozen",0)),0,1),
