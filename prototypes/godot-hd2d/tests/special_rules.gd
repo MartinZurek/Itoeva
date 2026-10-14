@@ -30,7 +30,7 @@ func run() -> void:
   check(resumed.enemy_health==hp and resumed.board==board and not resumed.can_act("special"),"Spezialeffekt nach Laden genau einmal "+species)
   resumed.phase="defeat";resumed.retry()
   check(resumed.special_charges==[0,0] and resumed.special_used==[false,false],"Wiederholung setzt Spezialzustand zurück "+species)
-  var deck: Array=Cards.starter(species);deck[-1]=Cards.ULTIMATES[species]
+  var deck: Array=Cards.starter(species);deck[0]=Cards.ULTIMATES[species]
   check(not Cards.valid(species,deck),"Spezialkarte höchstens einmal im Deck "+species)
  var b=fresh("puffling");b.special_charges[0]=5;b.act("special");b.acknowledge_animation()
  check(b.units(0).size()==2 and b.units(0)[0].ready and b.units(0)[1].ready,"Sturmfalken sofort bereit")

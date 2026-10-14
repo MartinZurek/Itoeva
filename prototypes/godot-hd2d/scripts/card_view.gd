@@ -142,10 +142,10 @@ func _card_face(button: Button,card: Dictionary) -> void:
  art.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;art.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
  art.position=Vector2(12,37);art.size=Vector2(172,63)
  art.mouse_filter=Control.MOUSE_FILTER_IGNORE;button.add_child(art)
- var description:=_child_label(button,card.text,Rect2(12,103,172,43),14)
+ var description:=_child_label(button,card.text,Rect2(12,100,172,48),13)
  description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
- description.size=Vector2(172,43)
- _child_label(button,Art.kind_label(card),Rect2(12,146,172,20),10,Art.accent(card))
+ description.size=Vector2(172,48)
+ _child_label(button,Art.kind_label(card),Rect2(12,150,172,16),10,Art.accent(card))
 
 func _card_texture(card: Dictionary) -> Texture2D:
  return Art.texture(card)
@@ -168,8 +168,8 @@ func _legacy_card_texture(card: Dictionary) -> Texture2D:
 func _pick_card(index: int) -> void:
  if _locked() or not model.can_play(index):return
  var card: Dictionary=Cards.get_card(model.decks[model.cursor].hand[index])
- if card.kind=="damage":
-  selected_card=index;selected_unit=-1;hint_message="Ziel wählen: "+card.name
+ if card.kind=="damage" or card.has("target"):
+  selected_card=index;selected_unit=-1;hint_message=("Eigenen Helfer wählen: " if card.get("target","")=="ally_unit" else "Gegnerhelfer wählen: " if card.get("target","")=="enemy_unit" else "Ziel wählen: ")+card.name
   input_cooldown=.18;build_commands();refresh()
  else:encounter._card_play(index,"enemy")
 
@@ -178,6 +178,8 @@ func _pick_unit(uid: int) -> void:
  var unit: Dictionary=model.find_unit(uid)
  if unit.is_empty():return
  inspected_unit=uid;_refresh_unit_info()
+ if selected_card>=0:
+  _choose_target("u:"+str(uid));return
  if unit.owner==2:_choose_target("u:"+str(uid));return
  if model.can_attack(uid):
   selected_unit=uid;selected_card=-1;hint_message="Angriffsziel für "+str(unit.name)+" wählen."
@@ -187,6 +189,7 @@ func _choose_target(target: String) -> void:
  if _locked():return
  if selected_card>=0:
   if model.can_play(selected_card,target):encounter._card_play(selected_card,target)
+  else:hint_message="Dieses Ziel passt nicht zur Karte.";refresh()
  elif selected_unit>=0:
   if model.can_attack(selected_unit,target):encounter._unit_attack(selected_unit,target)
   else:hint_message="Schutzhelfer zuerst angreifen.";refresh()
@@ -225,7 +228,7 @@ func refresh() -> void:
   status_labels[i].text=" / ".join(marks)
  var state: Dictionary=model.decks[model.cursor]
  crystal_label.text="Kristalle: %s / %s" % [state.crystals,state.cap]
- hand_label.text="%s · Hand %s / 5 · Deck %s" % [model.actor_name(),state.hand.size(),state.draw.size()]
+ hand_label.text="%s · Hand %s / 5 · Deck %s · Ablage %s" % [model.actor_name(),state.hand.size(),state.draw.size(),state.discard.size()]
  queue_label.text="Superkraft: bereits genutzt" if state.power else "Superkraft: einmal pro eigenem Zug"
  status.text=model.message if model.playback_pending else hint_message if not hint_message.is_empty() else "Karte spielen · Helfer antippen · Zug beenden"
  for button in buttons:
@@ -250,6 +253,9 @@ func _refresh_unit_info() -> void:
  unit_info_stats.text="Angriff %s  ·  Verteidigung / LP %s / %s" % [unit.attack,unit.hp,unit.max_hp]
  var marks: Array[String]=[]
  if unit.taunt:marks.append("Schutz (zuerst)")
+ if int(unit.get("shield",0))>0:marks.append("Schild %s" % unit.shield)
+ if unit.get("lifesteal",false):marks.append("Lebensraub")
+ if int(unit.get("regen",0))>0:marks.append("Regeneration %s" % unit.regen)
  if unit.get("evasion",false):marks.append("1× Ausweichen")
  if int(unit.get("frozen",0))>0:marks.append("Eingefroren")
  marks.append("Bereit" if unit.ready else "Nicht bereit")
@@ -305,10 +311,12 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
  var idle_phase:=int(clock*1.7+int(unit.uid)*.7)%2
  var attack_phase:=clampi(int(clampf(event_time/model.animation_duration(),0,1)*4),0,3)
  if unit.get("form","") in Cards.HELPER_FORMS:
-  var frame:=3 if hit else 2 if attacking else idle_phase
+  var action: String="hit" if hit else "attack" if attacking else "idle"
+  var progress: float=clampf((event_time-model.impact_time())/.45,0,1) if hit else clampf(event_time/model.animation_duration(),0,1)
+  var frame:=Art.animation_frame(unit.form,clock+float(unit.uid)*.37,action,progress)
   var art:=Art.form_texture(unit.form,frame);texture=art.atlas;region=art.region;reference_height=Art.form_height(unit.form)
  elif int(unit.row)>=0:
-  var frame:=3 if hit else attack_phase if attacking else 0 if idle_phase==0 else 3
+  var frame:=3 if hit else attack_phase if attacking else 0
   var r: Array=animal_data.regions[int(unit.row)][frame]
   texture=animal_texture;region=Rect2(r[0],r[1],r[2],r[3]);reference_height=float(animal_data.regions[int(unit.row)][0][3])
  else:
@@ -319,6 +327,8 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
    texture=load(data.asset)
    var r: Array=data.regions[10 if hit else attack_phase if attacking else 12+idle_phase]
    region=Rect2(r[0],r[1],r[2],r[3]);reference_height=float(data.reference_height)
+ var style: String=Art.movement_style(unit.form) if unit.get("form","") in Cards.HELPER_FORMS else "pounce"
+ if style=="flier" and not attacking:foot.y-=2.5+sin(clock*2.4+int(unit.uid))*1.7
  var scale_factor: float=(94.0 if unit.get("form","")=="ancient" else 78.0)/reference_height
  var dimensions:=region.size*scale_factor
  var contact:=PackedVector2Array()
@@ -333,6 +343,9 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
   draw_polyline(contact+PackedVector2Array([contact[0]]),Color("f8e6a0"),2,true)
   _word("%s / %s" % [unit.attack,unit.hp],foot+Vector2(-24,34),16,Color("f4dfab"))
  if unit.ready and int(unit.owner)==model.cursor:_word("↑",foot+Vector2(-4,-75),17,Color("a6e9c2"))
+ if int(unit.get("shield",0))>0:
+  draw_arc(foot-Vector2(0,35),44,-.4,PI+.4,32,Color(.8,.7,.4,.52),2,true)
+  _word(str(unit.shield),foot+Vector2(30,13),12,Color("ebd29f"))
  if unit.get("evasion",false):draw_arc(foot-Vector2(0,32),50,-.4,PI+.4,36,Color(.7,.6,.9,.38),2,true)
  if int(unit.get("frozen",0))>0:_word("STILL",foot+Vector2(-18,-77),12,Color("a8bdea"))
 
@@ -366,8 +379,10 @@ func _effects() -> void:
   if not attacker.is_empty():
    var start:=_unit_position(uid,true)
    var target:=_target_point(event.get("target_code","enemy"))+Vector2(0,40)
-   var p:=sin(clampf(event_time/model.animation_duration(),0,1)*PI)
-   _draw_unit(attacker,start.lerp(target,p)-Vector2(0,sin(p*PI)*28),true)
+   var p:=smoothstep(.12,model.impact_time(),event_time) if event_time<=model.impact_time() else 1.0-smoothstep(model.impact_time()+.10,model.animation_duration(),event_time)
+   var style: String=Art.movement_style(attacker.form) if attacker.get("form","") in Cards.HELPER_FORMS else "pounce"
+   var lift: float=28.0 if style=="flier" else 2.0 if style in ["guard","crawler"] else 14.0
+   _draw_unit(attacker,start.lerp(target,p)-Vector2(0,sin(p*PI)*lift),true)
  elif visual=="card_spell":
   var target:=_target_point(event.get("target_code","enemy"))
   var p:=smoothstep(.1,impact,event_time)

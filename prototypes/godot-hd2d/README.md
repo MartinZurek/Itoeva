@@ -1,4 +1,18 @@
-# Aktueller Stand v0.5.0
+# Aktueller Stand v0.6.0
+
+40 Karten je Deck, 89 Definitionen und 16 neue individuelle Helfer mit 96
+gezeichneten Animationsposen. Zielkarten auf eigene oder gegnerische Helfer,
+Schild, Rückruf, Wiederbelebung, Regeneration und Lebensraub erweitern die
+Kombinationen. Der Deckeditor zeigt Filter und Kostenverteilung.
+Kleine gespeicherte Decks werden aufgefüllt; laufende Kämpfe bleiben erhalten.
+AndroidTest: **0.6.0 / Code 16**, bestehende Paketkennung und GitHub-Debug-Signatur.
+[Bedienung, Regeln, Migration und Prüfungen](../../docs/godot-kartenspiel-v060.md).
+
+```bash
+godot --headless --path prototypes/godot-hd2d --export-debug AndroidTest /absoluter/pfad/Itoeva_Godot_Test_v0.6.0.apk
+```
+
+## Vorheriger Stand v0.5.0
 
 Acht Wesen, eigene Spezialkräfte, 39 Kartendefinitionen und animierte Arenaminions.
 Minion antippen: Werte sehen und bei Bereitschaft Angreifer wählen. Gegnerischen
@@ -293,3 +307,9 @@ Zweifingerbedienung, Temperatur/FPS und Speicher), danach einzelne Tiefenmasken
 und gewuenschte Spielsysteme an diese Buehne anbinden.
 Ruecksetzen durch Revert dieses isolierten Erweiterungscommits; der fruehere
 Godot-Ausschnitt und alle nativen Android-Daten bleiben erhalten.
+
+## Feuer-/Lichtabnahme vor dem 0.6.0-Build
+
+Eigene Flammen, lokale Glutfunken, weicher Lichtabfall und quellenabhängiges
+Figurenlicht sind nach der Resonance-Referenz überarbeitet.
+[Umsetzung und Prüfstand](../../docs/godot-firelight-polish.md).

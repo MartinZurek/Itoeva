@@ -5,6 +5,7 @@ const BOARD_LIMIT := 3
 const HAND_LIMIT := 5
 var decks: Array[Dictionary]=[]
 var board: Array[Dictionary]=[]
+var fallen: Array[Array]=[[],[],[]]
 var source_decks: Dictionary={}
 var next_uid:=1
 var pending_advance:=false
@@ -20,13 +21,13 @@ func _init() -> void:
 
 func prepare(custom: Dictionary) -> void:
  source_decks=custom.duplicate(true)
- decks.clear();board.clear();next_uid=1;pending_advance=false
+ decks.clear();board.clear();fallen=[[],[],[]];next_uid=1;pending_advance=false
  special_charges=[0,0];special_used=[false,false]
  for owner in 3:
   var species: String="enemy" if owner==2 else str(party[owner].species)
   var entries: Array=custom.get(species,[])
   var ids: Array[String]=Cards.starter(species)
-  if owner<2 and Cards.valid(species,entries):ids.assign(entries)
+  if owner<2:ids=Cards.upgrade(species,entries)
   for i in range(ids.size()-1,0,-1):
    var j:=rng.randi_range(0,i);var value:=ids[i];ids[i]=ids[j];ids[j]=value
   decks.append({"species":species,"draw":ids,"hand":[],"discard":[],"cap":1,"crystals":1,"power":false,"turns":0})
@@ -47,6 +48,7 @@ func _begin_turn(owner: int) -> void:
   if unit.owner==owner:
    unit.ready=int(unit.get("frozen",0))==0
    unit.frozen=maxi(0,int(unit.get("frozen",0))-1)
+   unit.hp=mini(int(unit.max_hp),int(unit.hp)+int(unit.get("regen",0)))
  _draw_cards(owner,1)
 
 func advance_intro(delta: float) -> bool:
@@ -82,13 +84,21 @@ func _add_minion(owner: int,id: String,extra: Dictionary={}) -> int:
  var unit: Dictionary={"uid":next_uid,"owner":owner,"id":id,"name":card.name,
   "attack":card.get("attack",3),"hp":card.get("health",6),"max_hp":card.get("health",6),
   "ready":card.get("ready",false),"taunt":card.get("taunt",false),"row":card.get("row",-1),"species":card.get("species",""),
-  "form":card.get("form",""),"evasion":card.get("evasion",false),"frozen":0}
+  "form":card.get("form",""),"evasion":card.get("evasion",false),"frozen":0,
+  "from_deck":extra.is_empty(),"shield":card.get("shield",0),"regen":card.get("regen",0),"death_draw":card.get("death_draw",0),"lifesteal":card.get("lifesteal",false)}
  board.append(unit);next_uid+=1
+ _draw_cards(owner,int(card.get("draw_on_summon",0)))
  return int(unit.uid)
 
 func _remove_dead() -> void:
  for i in range(board.size()-1,-1,-1):
-  if board[i].hp<=0:board.remove_at(i)
+  if board[i].hp<=0:
+   var unit: Dictionary=board[i]
+   board.remove_at(i)
+   if unit.get("from_deck",false) and unit.id in Cards.available(str(decks[int(unit.owner)].species)):
+    fallen[int(unit.owner)].append(str(unit.id))
+   if unit.get("from_deck",false):decks[int(unit.owner)].discard.append(str(unit.id))
+   _draw_cards(int(unit.owner),int(unit.get("death_draw",0)))
 
 func legal_targets(owner: int,spell: bool=false) -> Array[String]:
  var guards: Array[String]=[]
@@ -119,10 +129,16 @@ func special_card(owner: int=-1) -> Dictionary:
  return Cards.get_card(Cards.ULTIMATES[party[index].species])
 
 func _hurt_unit(unit: Dictionary,amount: int,effects: Array,protected: int=-1) -> void:
- var dodged: bool=bool(unit.get("evasion",false))
- if dodged:unit.evasion=false
- else:unit.hp=maxi(0,int(unit.hp)-amount)
- effects.append({"target":3,"unit":unit.uid,"amount":0 if dodged else amount,"kind":"evade" if dodged else "damage","protected":protected})
+ if bool(unit.get("evasion",false)):
+  unit.evasion=false
+  effects.append({"target":3,"unit":unit.uid,"amount":0,"kind":"evade","protected":protected})
+  return
+ var absorbed:=mini(amount,int(unit.get("shield",0)))
+ unit.shield=int(unit.get("shield",0))-absorbed
+ if absorbed>0:effects.append({"target":3,"unit":unit.uid,"amount":absorbed,"kind":"shield","protected":protected})
+ var actual:=mini(int(unit.hp),maxi(0,amount-absorbed))
+ unit.hp-=actual
+ if actual>0:effects.append({"target":3,"unit":unit.uid,"amount":actual,"kind":"damage","protected":protected})
 
 func _event(title: String,visual: String,effects: Array,previous: Dictionary,extra: Dictionary={}) -> void:
  last_event=previous.duplicate(true)
@@ -133,7 +149,8 @@ func _event(title: String,visual: String,effects: Array,previous: Dictionary,ext
 
 func _damage_target(owner: int,target: String,amount: int,effects: Array) -> void:
  if target=="enemy":
-  enemy_health=maxi(0,enemy_health-amount);effects.append({"target":2,"amount":amount,"kind":"damage"})
+  var actual:=mini(enemy_health,amount)
+  enemy_health-=actual;effects.append({"target":2,"amount":actual,"kind":"damage"})
   if enemy_health==0:phase="victory"
  elif target.begins_with("h:"):
   var index:=int(target.substr(2))
@@ -153,18 +170,45 @@ func _receive_hit(target: int,damage: int,effects: Array[Dictionary]) -> int:
    return 0
  return super._receive_hit(target,damage,effects)
 
+func card_targets(owner: int,card: Dictionary) -> Array[String]:
+ var result: Array[String]=[]
+ if card.get("target","")=="ally_unit":
+  for unit in units(owner):
+   if card.kind=="recall" and (unit.id not in Cards.available(str(decks[owner].species)) or decks[owner].hand.size()>HAND_LIMIT):continue
+   if card.kind=="mend" and unit.hp>=unit.max_hp and not card.has("shield") and not card.has("draw"):continue
+   result.append("u:"+str(unit.uid))
+  return result
+ if card.get("target","")=="enemy_unit":
+  for code in legal_targets(owner,true):
+   if code.begins_with("u:"):result.append(code)
+  return result
+ if card.kind=="damage":return legal_targets(owner,true)
+ return result
+
 func can_play(index: int,target: String="") -> bool:
  if phase!="battle" or cursor==2 or playback_pending or party[cursor].hp<=0:return false
  var state: Dictionary=decks[cursor]
  if index<0 or index>=state.hand.size():return false
  var card: Dictionary=Cards.get_card(state.hand[index])
  if state.crystals<card.cost:return false
+ if card.has("target"):
+  var choices:=card_targets(cursor,card)
+  return not choices.is_empty() and (target.is_empty() or target in choices)
  if card.kind=="minion":return units(cursor).size()<BOARD_LIMIT
  if card.kind=="damage":return target.is_empty() or target in legal_targets(cursor,true)
  if card.kind=="heal":return party[cursor].hp<party[cursor].max_hp
  if card.kind=="draw":return not state.draw.is_empty()
  if card.kind=="barrier":return party[cursor].barrier<BARRIER_HP
  if card.kind=="special":return _can_special(card.effect,cursor)
+ if card.kind=="team_buff":return not units(cursor).is_empty()
+ if card.kind=="volley":return not units(2).is_empty()
+ if card.kind=="energy":return state.crystals<state.cap
+ if card.kind=="revive":return units(cursor).size()<BOARD_LIMIT and not fallen[cursor].is_empty()
+ if card.kind=="party_heal":
+  for member in party:
+   if member.hp>0 and (member.hp<member.max_hp or member.bind>0 or member.silence>0 or (card.has("barrier") and member.barrier<BARRIER_HP)):return true
+  return false
+ if card.kind=="weaken":return enemy_weaken<int(card.value) or card.has("draw") or card.has("heal_party")
  return false
 
 func _can_special(effect: String,owner: int) -> bool:
@@ -225,27 +269,70 @@ func _resolve_special(owner: int,key: String,effects: Array) -> Dictionary:
     extra.summoned_uids.append(_add_minion(owner,"special_mirror",{"name":"Spiegelgeist","attack":4,"health":8,"species":"nocti","form":"mirror","evasion":true}))
  return extra
 
+func _buff_unit(unit: Dictionary,card: Dictionary,effects: Array) -> void:
+ unit.attack=mini(30,int(unit.attack)+int(card.get("value",0)))
+ var growth:=mini(int(card.get("health",0)),40-int(unit.max_hp))
+ unit.max_hp+=growth;unit.hp=mini(int(unit.max_hp),int(unit.hp)+growth)
+ unit.shield=mini(20,int(unit.get("shield",0))+int(card.get("shield",0)))
+ if card.get("evasion",false):unit.evasion=true
+ if card.get("ready",false):unit.ready=true;unit.frozen=0
+ effects.append({"target":3,"unit":unit.uid,"amount":growth,"kind":"buff"})
+
 func _resolve_card(owner: int,id: String,target: String,effects: Array) -> Dictionary:
  var card: Dictionary=Cards.get_card(id)
  var extra: Dictionary={"card":id,"element":card.element,"target_code":target}
+ if card.kind in ["heal","party_heal","barrier","draw","energy","team_buff"]:extra.target_code="h:"+str(owner)
  match card.kind:
   "minion":extra["unit_uid"]=_add_minion(owner,id)
-  "damage":
-   _damage_target(owner,target,int(card.value),effects)
-   if owner<2 and card.has("heal_self"):
-    var healed:=mini(int(card.heal_self),int(party[owner].max_hp)-int(party[owner].hp))
-    party[owner].hp+=healed;effects.append({"target":owner,"amount":healed,"kind":"heal"})
+  "damage":_damage_target(owner,target,int(card.value)+int(card.get("per_helper",0))*units(owner).size(),effects)
   "barrier":
    var gained:=mini(int(card.value),BARRIER_HP-int(party[owner].barrier))
    party[owner].barrier+=gained;effects.append({"target":owner,"amount":gained,"kind":"barrier"})
   "heal":
    if owner==2:enemy_health=mini(BOSS_HP,enemy_health+int(card.value))
-   else:
-    var healed:=mini(int(card.value),int(party[owner].max_hp)-int(party[owner].hp))
-    party[owner].hp+=healed;effects.append({"target":owner,"amount":healed,"kind":"heal"})
+   else:_heal_owner(owner,int(card.value),effects)
   "draw":_draw_cards(owner,int(card.value))
   "special":extra.merge(_resolve_special(owner,card.effect,effects),true)
+  "buff":_buff_unit(find_unit(int(target.substr(2))),card,effects)
+  "mend":
+   var unit:=find_unit(int(target.substr(2)))
+   var gained:=mini(int(card.value),int(unit.max_hp)-int(unit.hp))
+   unit.hp+=gained;unit.shield=mini(20,int(unit.get("shield",0))+int(card.get("shield",0)))
+   effects.append({"target":3,"unit":unit.uid,"amount":gained,"kind":"heal"})
+  "freeze":
+   var unit:=find_unit(int(target.substr(2)))
+   unit.frozen=1;unit.ready=false
+   _damage_target(owner,target,int(card.value),effects)
+  "recall":
+   var unit:=find_unit(int(target.substr(2)))
+   decks[owner].hand.append(str(unit.id))
+   board.erase(unit)
+   extra["recalled_uid"]=int(unit.uid)
+  "team_buff":
+   for unit in units(owner):_buff_unit(unit,card,effects)
+  "volley":
+   for unit in units(2).duplicate():_damage_target(owner,"u:"+str(unit.uid),int(card.value),effects)
+  "energy":decks[owner].crystals=mini(int(decks[owner].cap),int(decks[owner].crystals)+int(card.value))
+  "revive":
+   var returning: String=fallen[owner].pop_back()
+   decks[owner].discard.erase(returning)
+   extra["unit_uid"]=_add_minion(owner,returning)
+  "party_heal":
+   _heal_party(int(card.value),effects)
+   if card.has("barrier"):_party_barrier(int(card.barrier),effects)
+   if card.get("cleanse",false):
+    for member in party:member.bind=0;member.silence=0
+  "weaken":enemy_weaken=maxi(enemy_weaken,int(card.value))
+ if owner<2 and card.has("heal_self"):_heal_owner(owner,int(card.heal_self),effects)
+ if card.has("heal_party"):_heal_party(int(card.heal_party),effects)
+ if card.has("draw"):_draw_cards(owner,int(card.draw))
  return extra
+
+func _heal_owner(owner: int,amount: int,effects: Array) -> void:
+ if owner>1 or party[owner].hp<=0:return
+ var healed:=mini(amount,int(party[owner].max_hp)-int(party[owner].hp))
+ party[owner].hp+=healed
+ if healed>0:effects.append({"target":owner,"amount":healed,"kind":"heal"})
 
 func play_card(index: int,target: String="enemy") -> bool:
  if not can_play(index,target):return false
@@ -253,12 +340,13 @@ func play_card(index: int,target: String="enemy") -> bool:
  var state: Dictionary=decks[cursor]
  var id: String=state.hand[index]
  var card: Dictionary=Cards.get_card(id)
- state.hand.remove_at(index);state.crystals-=int(card.cost);state.discard.append(id)
+ state.hand.remove_at(index);state.crystals-=int(card.cost)
+ if card.kind!="minion":state.discard.append(id)
  var effects: Array[Dictionary]=[]
  var extra:=_resolve_card(cursor,id,target,effects)
  _gain_charge(cursor)
  if card.kind=="special":extra.merge({"duration":2.8,"impact":1.1},true)
- _event(card.name,"special_"+card.effect if card.kind=="special" else "card_summon" if card.kind=="minion" else "card_spell",effects,previous,extra)
+ _event(card.name,"special_"+card.effect if card.kind=="special" else "card_summon" if card.kind in ["minion","revive"] else "card_spell",effects,previous,extra)
  return true
 
 func can_attack(uid: int,target: String="") -> bool:
@@ -277,7 +365,13 @@ func attack_minion(uid: int,target: String="enemy") -> bool:
   var defender:=find_unit(int(target.substr(2)))
   var counter:=int(defender.attack)
   _hurt_unit(unit,counter,effects)
+ var dealt_start:=effects.size()
  _damage_target(cursor,target,int(unit.attack),effects)
+ if unit.get("lifesteal",false):
+  var restored:=0
+  for i in range(dealt_start,effects.size()):
+   if effects[i].kind=="damage":restored+=int(effects[i].amount)
+  _heal_owner(cursor,restored,effects)
  _gain_charge(cursor)
  _event(name+" greift an","card_attack",effects,previous,extra)
  return true
@@ -365,7 +459,8 @@ func enemy_act() -> bool:
   var card:=Cards.get_card(id)
   if card.cost>state.crystals or (card.kind=="minion" and units(2).size()>=BOARD_LIMIT):continue
   var target: String=legal_targets(2,true).back()
-  state.hand.remove_at(i);state.crystals-=int(card.cost);state.discard.append(id)
+  state.hand.remove_at(i);state.crystals-=int(card.cost)
+  if card.kind!="minion":state.discard.append(id)
   var extra:=_resolve_card(2,id,target,effects)
   previous["enemy_card"]=extra
   break
@@ -408,7 +503,7 @@ func _reset_fight() -> void:
 
 func snapshot() -> Dictionary:
  var saved:=super.snapshot()
- saved["card_schema"]=2;saved["card_decks"]=decks.duplicate(true);saved["board"]=board.duplicate(true)
+ saved["card_schema"]=3;saved["fallen"]=fallen.duplicate(true);saved["card_decks"]=decks.duplicate(true);saved["board"]=board.duplicate(true)
  saved["special_charges"]=special_charges.duplicate();saved["special_used"]=special_used.duplicate()
  saved["source_decks"]=source_decks.duplicate(true);saved["next_uid"]=next_uid;saved["pending_advance"]=pending_advance
  return saved
@@ -445,6 +540,13 @@ func restore(saved: Dictionary) -> void:
    decks[owner].crystals=clampi(int(entry.get("crystals",1)),0,int(decks[owner].cap))
    decks[owner].power=bool(entry.get("power",false))
    decks[owner].turns=maxi(0,int(entry.get("turns",0)))
+ fallen=[[],[],[]]
+ var graves=saved.get("fallen",[])
+ if graves is Array and graves.size()==3:
+  for owner in 3:
+   if not graves[owner] is Array:continue
+   for id in graves[owner]:
+    if id is String and id in Cards.available(str(decks[owner].species)) and Cards.get_card(id).kind=="minion" and fallen[owner].size()<Cards.MAX_DECK:fallen[owner].append(id)
  board=[]
  var entries=saved.get("board",[])
  if entries is Array:
@@ -461,8 +563,14 @@ func restore(saved: Dictionary) -> void:
     "attack":clampi(int(raw.get("attack",0)),0,30),"hp":hp,"max_hp":clampi(int(raw.get("max_hp",hp)),hp,40),
     "ready":bool(raw.get("ready",false)),"taunt":bool(raw.get("taunt",false)),
     "row":clampi(int(raw.get("row",-1)),-1,3),"species":species,
-    "form":str(raw.get("form","")) if str(raw.get("form","")) in Cards.HELPER_FORMS else "",
-    "evasion":bool(raw.get("evasion",false)),"frozen":clampi(int(raw.get("frozen",0)),0,1)})
+    "form":str(raw.get("form","")) if str(raw.get("form","")) in Cards.HELPER_FORMS else str(Cards.get_card(str(raw.get("id",""))).get("form","")),
+    "evasion":bool(raw.get("evasion",false)),"frozen":clampi(int(raw.get("frozen",0)),0,1),
+    "from_deck":bool(raw.get("from_deck",str(raw.get("id","")) in Cards.available(str(decks[owner].species)))),
+    "shield":clampi(int(raw.get("shield",0)),0,20),"regen":clampi(int(raw.get("regen",0)),0,5),
+    "death_draw":clampi(int(raw.get("death_draw",0)),0,2),"lifesteal":bool(raw.get("lifesteal",false))})
+ if int(saved.get("card_schema",0))<3:
+  for unit in board:
+   if unit.from_deck:decks[int(unit.owner)].discard.erase(str(unit.id))
  next_uid=maxi(1,int(saved.get("next_uid",1)))
  for unit in board:next_uid=maxi(next_uid,int(unit.uid)+1)
  pending_advance=bool(saved.get("pending_advance",false)) and playback_pending

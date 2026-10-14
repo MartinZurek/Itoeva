@@ -165,6 +165,9 @@ func _add_flames(region: Dictionary, parent: Node3D) -> void:
 		var flame: Array=region.flames[i]
 		var uv := Vector2(flame[0],flame[1])
 		var anchor := _point(region,uv,uv.y>=_band(region,uv.x).x/640.0)
+		local_light_sources.append({"position":anchor+Vector3.UP*float(flame[2])*7.0,
+			"radius":Vector2(2.64,2.4),"strength":.55,"fire":true,"forest":true,"gain":1.0,
+			"seed":float(region.origin)+i*1.9,"arena":region.id=="SHADOW_CLEARING"})
 		var size := Vector2(.62,float(flame[2])*10.0)
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -201,6 +204,8 @@ func _build_demon() -> void:
 func set_arena_lights(value: float) -> void:
 	arena_lights=clampf(value,0,1)
 	forest_materials.SHADOW_CLEARING.set_shader_parameter("torch_gain",arena_lights)
+	for source in local_light_sources:
+		if source.arena: source["gain"] = arena_lights
 	for entry in torch_materials:
 		if entry.arena: entry.material.set_shader_parameter("gain",0.0)
 
@@ -210,13 +215,18 @@ func set_demon(reveal: float, hit: float = 0.0) -> void:
 	demon_material.set_shader_parameter("hit",clampf(hit,0,1))
 
 func update_player(point: Vector3) -> void:
-	lantern.position=point+Vector3(.35,.63,.06)
+	lantern.position=point+Vector3(.54,.73,.06)
 	lantern.visible=carried_light and float(Forest.region_at(point.x).darkness)>.18
+	for source in local_light_sources:
+		if source.get("lantern",false):
+			source["position"] = lantern.position
+			source["gain"] = 1.0 if lantern.visible else 0.0
 	for material in forest_materials.values():
 		material.set_shader_parameter("player",point)
 		material.set_shader_parameter("carried_light",carried_light)
 
 func set_time(hour: float) -> void:
+	light_hour = hour
 	var daylight := smoothstep(5.8,8.0,hour)*(1.0-smoothstep(18.0,21.0,hour))
 	for material in forest_materials.values(): material.set_shader_parameter("time_tint",Color(.38,.46,.62).lerp(Color.WHITE,daylight))
 
@@ -224,17 +234,50 @@ func _build_lantern() -> void:
 	lantern=Node3D.new()
 	lantern.name="Traglaterne"
 	add_child(lantern)
-	for entry in [[Vector3.ZERO,Vector3(.15,.19,.12),Color("f8ba5c")],[Vector3(0,.12,0),Vector3(.19,.035,.15),Color("3f2e24")],[Vector3(0,-.12,0),Vector3(.19,.035,.15),Color("3f2e24")],[Vector3(0,.19,0),Vector3(.025,.12,.025),Color("514132")]]:
-		var mesh:=MeshInstance3D.new()
-		var box:=BoxMesh.new()
-		box.size=entry[1]
-		mesh.mesh=box
-		mesh.position=entry[0]
-		var material:=StandardMaterial3D.new()
-		material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.albedo_color=entry[2]
-		mesh.material_override=material
+	local_light_sources.append({"position":Vector3.ZERO,"radius":Vector2(2.9,2.2),
+		"strength":.65,"fire":false,"forest":true,"gain":0.0,"seed":0.0,"arena":false,"lantern":true})
+	# Kleine Messinglaterne: durchscheinendes Glas, separater Docht und offener Buegel.
+	for entry in [[Vector3.ZERO,Vector3(.15,.19,.12),Color("ffcb79")],
+		[Vector3(0,.12,0),Vector3(.19,.035,.15),Color("70513a")],
+		[Vector3(0,-.12,0),Vector3(.19,.035,.15),Color("70513a")]]:
+		var mesh := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = entry[1]
+		mesh.mesh = box
+		mesh.position = entry[0]
+		var material := StandardMaterial3D.new()
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		material.albedo_color = entry[2]
+		if entry[0] == Vector3.ZERO:
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			material.albedo_color.a = .34
+		mesh.material_override = material
 		lantern.add_child(mesh)
+	for x in [-.075,.075]:
+		for z in [-.06,.06]:
+			var post := MeshInstance3D.new()
+			var rod := CylinderMesh.new()
+			rod.top_radius = .008; rod.bottom_radius = .008; rod.height = .22
+			post.mesh = rod; post.position = Vector3(x,0,z)
+			var brass := StandardMaterial3D.new()
+			brass.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			brass.albedo_color = Color("70513a")
+			post.material_override = brass; lantern.add_child(post)
+	var handle := MeshInstance3D.new()
+	var ring := TorusMesh.new()
+	ring.inner_radius = .048; ring.outer_radius = .060
+	handle.mesh = ring; handle.rotation_degrees.x = 90; handle.position.y = .18
+	handle.material_override = lantern.get_child(1).material_override
+	lantern.add_child(handle)
+	var wick := MeshInstance3D.new()
+	var card := QuadMesh.new()
+	card.size = Vector2(.08,.15)
+	wick.mesh = card; wick.rotation_degrees.x = -35
+	var glow := ShaderMaterial.new()
+	glow.shader = load("res://shaders/living_flame.gdshader")
+	glow.set_shader_parameter("flame_atlas",load("res://assets/combat/flame-atlas.png"))
+	glow.render_priority = 5
+	wick.material_override = glow; lantern.add_child(wick)
 
 func _build_bridge_mask() -> void:
 	# Vorderes Gelaender und seine Pfosten verdecken die Figur nur hinter der Brüstung.

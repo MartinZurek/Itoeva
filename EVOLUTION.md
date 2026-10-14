@@ -669,6 +669,38 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-13 - 40-Karten-Decks und originale Helfer (godot-forty-card-helpers-v060)
+
+- **DOCUMENTED INTENT:** Martin nimmt die funktionierende 0.5.0 ab und fordert
+  40 Karten je Deck, abwechslungsreiche Interaktionen und individuelle, zum
+  Charakterstil passende Helferanimationen. Inspiration durch Fantasy-Kartenspiele,
+  bei eigenständigen Figuren und Texten.
+- **FACT / Produktentscheidung:** Genau 40 Karten je Wesen, normale Definitionen
+  höchstens zweimal, Spezialkarte einmal. 89 Definitionen, 30 Wahlmöglichkeiten je
+  Klasse, 21 unterschiedliche Definitionen im Startdeck. Brett- und Handgröße bleiben.
+  Zielwahl, Verstärkung, Schild, Rückruf, Wiederbelebung, Gruppenwerkzeuge,
+  Regeneration, Kartenziehen und tatsächlicher Lebensraub sind kombiniert nutzbar.
+- **Charakter/Darstellung:** 16 originale Helfer, sechs Zeichnungen je Identität;
+  96 Posen. Eigene Ruhe-/Angriffs-/Reaktionssequenzen und Bewegungswege für Flieger,
+  Kriecher, Wächter und Springende; bereits vorhandene Waldtiere/Geister erhalten.
+- **Persistenz/Migration:** card_schema=3 speichert neue Helferzustände und gefallene
+  Karten. Alte Deckauswahl wird legal auf 40 ergänzt. Aktive Alt-Kämpfe behalten
+  Karten und Zug; Brett-/Ablage-Doppelzählung aus schema=2 wird bereinigt.
+  Rückruf/Wiederbelebung erhalten Kartenanzahl. Keine native Room-/LAS-Migration.
+- **TESTED BEHAVIOR:** 441 neue Modell-/Kunstprüfungen und 8 neue Touchprüfungen;
+  vorhandene Karten-, Spezial- und UI-Regressionsprüfungen, acht komplette
+  Kartenkämpfe gewonnen. Deckeditor und Arenen mit allen neuen Helfern sowie
+  Angriff in echtem Software-OpenGL gerendert und geprüft.
+- **Build/Auslieferung:** Separates AndroidTest-Paket 0.6.0 / Code 16;
+  DEBUG_KEYSTORE_BASE64, 214-Dateien-Manifest und resumable Upload in die bereits
+  freigegebene Drive-Datei. Workflow ist auf den neuen Arbeitsbranch begrenzt.
+- **UNVERIFIED:** Konkreter Actions-Abschluss vor Veröffentlichung; Android-GPU/FPS,
+  Telefonstart und längerer Animationseindruck bleiben der Geräteabnahme vorbehalten.
+- **Rücksetzen/Übergabe:** Erweiterungscommit revertieren; Godot-Save vorher sichern,
+  da ältere Software neue Kartendefinitionen nicht versteht. Native Spielstände
+  bleiben unberührt. docs/godot-kartenspiel-v060.md enthält Regeln und Übergabe;
+  main wird in diesem Auftrag nicht direkt verändert.
+
 ### 2026-10-13 - Ausgelieferten Godot-Kartenkampf zusammenfuehren (godot-card-arena-v050)
 
 - **DOCUMENTED INTENT:** Martin beauftragt XP-/Beute-Siegesabschluss, sichtbare
@@ -6882,3 +6914,21 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Grenze einer vollständigen physikalischen Kulissensimulation.
 - **Übergabe:** docs/itoeva2-world-polish-and-encounters.md; preview_polish.kt/.sh samt
   Kontur-/Sitz-/Schattenbildern und Bewegungsvideo. Basis nach #346: be25d5d503c62007fdae71c653255ac3adb4a605.
+
+### 2026-10-14 – Gemaltes Feuer und lokale Figurenbeleuchtung (Godot firelight)
+
+- **DOCUMENTED INTENT:** Martin verlangt vor dem APK-Build Feuer-/Lichtqualität
+  nach visueller Referenz Final Fantasy Resonance, passend zur eigenen gemalten Welt.
+- **FACT:** Flammenspitzen, lokale Glutfunken, weicher Kern und unabhängiges
+  Flackern verbessern die eigenen Atlanten. 64 Quellen in Welt, Anschlüssen
+  und Innenräumen sowie Waldfeuer beleuchten nahe Figuren (höchstens vier).
+  Lichtseite folgt der Quellenposition. Glas-/Messinglaterne mit animiertem Docht.
+- **TESTED BEHAVIOR:** 25 echte GL-Checks und sechs relevante Regressionen
+  ohne Fehler, darunter 22.027 Wald- und 441 Kartenchecks. Spielaufnahmen geprüft.
+- **UNVERIFIED:** Telefon/GPU/FPS und neue APK-Auslieferung vor Actions-Build.
+  Gemalte Kulissenschatten bleiben; keine vollständige Möbel-Schattenphysik.
+- **Migration/Rücksetzung:** Keine Licht-Spielstandmigration oder native Datenänderung.
+  Nur Lichtcommit zurücknehmen, um 40-Karten-Stand beizubehalten.
+- **Übergabe:** docs/godot-firelight-polish.md; integrierter Branch
+  codex/godot-firelight-polish, erneuertes 215-Dateien-Manifest. APK erst nach
+  abgeschlossener Prüfung dieses Stands; Paket/Version/Signatur unverändert.

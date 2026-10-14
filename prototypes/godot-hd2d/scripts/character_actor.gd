@@ -198,6 +198,8 @@ func _update_occlusion() -> void:
 		return
 	painted_material.set_shader_parameter("foot", Vector3(global_position.x, global_position.y, seat_occlusion_z) if mounted else global_position)
 	var stage = get_parent().get("stage")
+	if is_instance_valid(stage) and stage.has_method("apply_actor_light"):
+		stage.apply_actor_light(painted_material, global_position)
 	if is_instance_valid(stage) and stage.has_method("actor_occlusion"):
 		var data: Dictionary = stage.actor_occlusion(global_position)
 		painted_material.set_shader_parameter("has_mask", data.mask != null)
