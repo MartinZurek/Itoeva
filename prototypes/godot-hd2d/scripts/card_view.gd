@@ -1,4 +1,6 @@
 extends "res://scripts/battle_view.gd"
+const Feedback=preload("res://scripts/battle_feedback.gd")
+var crystal_meter: Control
 const Cards=preload("res://scripts/card_catalog.gd")
 const Art=preload("res://scripts/card_assets.gd")
 const Detail=preload("res://scripts/card_detail.gd")
@@ -25,8 +27,12 @@ func _build() -> void:
  animal_texture=load(animal_data.asset)
  layout=Control.new();layout.size=Vector2(1280,720);layout.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(layout)
  _panel(Rect2(20,16,1240,56))
- _label("SCHATTENWALD  /  Karten & Kristalle",Rect2(38,26,670,32),22,GOLD)
- turn_label=_label("",Rect2(755,28,350,30),19)
+ _label("SCHATTENWALD · KARTEN",Rect2(38,26,330,32),20,GOLD)
+ turn_label=_label("",Rect2(755,28,190,30),16)
+ crystal_meter=load("res://scripts/crystal_meter.gd").new()
+ crystal_meter.position=Vector2(380,20);crystal_meter.size=Vector2(340,46)
+ crystal_meter.mouse_filter=Control.MOUSE_FILTER_IGNORE;layout.add_child(crystal_meter)
+ _button("Ton",Rect2(958,25,80,38),encounter.app.show_audio_settings)
  var menu:=_button("Menü",Rect2(1152,25,88,38),encounter.app.show_menu)
  menu.set_meta("battle_action","menu")
  var inspect:=_button("Karten",Rect2(1052,25,88,38),_show_hand)
@@ -106,6 +112,7 @@ func build_commands() -> void:
   var b:=_action("",Rect2(20+i*208,535,196,166),_pick_card.bind(i),"card")
   b.set_meta("hand_index",i);b.tooltip_text=card.name+" · "+str(card.cost)+" Kristalle\n"+card.text
   b.clip_contents=true
+  b.set_meta("card_id",str(state.hand[i]))
   var box:=_box(Color("1d2d3b"));box.border_color=Art.accent(card);box.set_border_width_all(2 if card.get("rare",false) or selected_card==i else 1)
   if selected_card==i:box.bg_color=Color("3b554f")
   b.add_theme_stylebox_override("normal",box)
@@ -135,6 +142,10 @@ func _child_label(parent: Control,text: String,rect: Rect2,font_size: int,color:
  return label
 
 func _card_face(button: Button,card: Dictionary) -> void:
+ var jewel:=Panel.new();jewel.position=Vector2(5,3);jewel.size=Vector2(39,36)
+ jewel.mouse_filter=Control.MOUSE_FILTER_IGNORE
+ var gem:=_box(Color("245267"));gem.border_color=Color("9ee5f3");gem.set_border_width_all(2)
+ jewel.add_theme_stylebox_override("panel",gem);button.add_child(jewel)
  var cost:=_child_label(button,str(card.cost),Rect2(10,1,31,40),24,Color("9bdef1"))
  cost.set_meta("card_field","cost")
  _child_label(button,card.name,Rect2(43,9,145,24),15,Art.accent(card))
@@ -169,6 +180,7 @@ func _pick_card(index: int) -> void:
  if _locked() or not model.can_play(index):return
  var card: Dictionary=Cards.get_card(model.decks[model.cursor].hand[index])
  if card.kind=="damage" or card.has("target"):
+  encounter.app.battle_audio.cue("select")
   selected_card=index;selected_unit=-1;hint_message=("Eigenen Helfer wählen: " if card.get("target","")=="ally_unit" else "Gegnerhelfer wählen: " if card.get("target","")=="enemy_unit" else "Ziel wählen: ")+card.name
   input_cooldown=.18;build_commands();refresh()
  else:encounter._card_play(index,"enemy")
@@ -182,6 +194,7 @@ func _pick_unit(uid: int) -> void:
   _choose_target("u:"+str(uid));return
  if unit.owner==2:_choose_target("u:"+str(uid));return
  if model.can_attack(uid):
+  encounter.app.battle_audio.cue("select")
   selected_unit=uid;selected_card=-1;hint_message="Angriffsziel für "+str(unit.name)+" wählen."
   input_cooldown=.18;refresh()
 
@@ -189,13 +202,14 @@ func _choose_target(target: String) -> void:
  if _locked():return
  if selected_card>=0:
   if model.can_play(selected_card,target):encounter._card_play(selected_card,target)
-  else:hint_message="Dieses Ziel passt nicht zur Karte.";refresh()
+  else:hint_message="Dieses Ziel passt nicht zur Karte.";encounter.app.battle_audio.cue("error");refresh()
  elif selected_unit>=0:
   if model.can_attack(selected_unit,target):encounter._unit_attack(selected_unit,target)
-  else:hint_message="Schutzhelfer zuerst angreifen.";refresh()
+  else:hint_message="Schutzhelfer zuerst angreifen.";encounter.app.battle_audio.cue("error");refresh()
 
 func _cancel() -> void:
  if _locked():return
+ encounter.app.battle_audio.cue("select")
  selected_card=-1;selected_unit=-1;inspected_unit=-1;hint_message="";build_commands();refresh()
 
 func _power(action: String) -> void:
@@ -227,16 +241,20 @@ func refresh() -> void:
   if states[i].silence>0:marks.append("Verstummt")
   status_labels[i].text=" / ".join(marks)
  var state: Dictionary=model.decks[model.cursor]
- crystal_label.text="Kristalle: %s / %s" % [state.crystals,state.cap]
+ var cost: int=Cards.get_card(state.hand[selected_card]).cost if selected_card>=0 and selected_card<state.hand.size() else 0
+ crystal_meter.update_value(int(state.crystals),int(state.cap),cost)
+ crystal_label.text="%s / %s KRISTALLE" % [state.crystals,state.cap]
  hand_label.text="%s · Hand %s / 5 · Deck %s · Ablage %s" % [model.actor_name(),state.hand.size(),state.draw.size(),state.discard.size()]
  queue_label.text="Superkraft: bereits genutzt" if state.power else "Superkraft: einmal pro eigenem Zug"
- status.text=model.message if model.playback_pending else hint_message if not hint_message.is_empty() else "Karte spielen · Helfer antippen · Zug beenden"
+ status.text=model.message if model.playback_pending else hint_message if not hint_message.is_empty() else _available_hint()
  for button in buttons:
   var action: String=button.get_meta("battle_action","")
   if model.phase in ["victory","defeat"]:button.disabled=model.playback_pending
   elif action=="card":button.disabled=_locked() or not model.can_play(int(button.get_meta("hand_index",-1)))
   elif action in ["skill","support","special","break_free","flee","end_turn"]:button.disabled=_locked() or not model.can_act(action)
   else:button.disabled=_locked()
+  if action=="card":_card_affordance(button)
+  elif action in ["skill","support","special","break_free"]:_power_affordance(button)
 
 func _refresh_unit_info() -> void:
  if not is_instance_valid(unit_info):return
@@ -258,7 +276,8 @@ func _refresh_unit_info() -> void:
  if int(unit.get("regen",0))>0:marks.append("Regeneration %s" % unit.regen)
  if unit.get("evasion",false):marks.append("1× Ausweichen")
  if int(unit.get("frozen",0))>0:marks.append("Eingefroren")
- marks.append("Bereit" if unit.ready else "Nicht bereit")
+ marks.append(Feedback.state_text(Feedback.unit_state(model,unit)))
+ if Feedback.unit_state(model,unit)=="sleeping":marks.append("ab nächstem eigenen Zug")
  unit_info_state.text=" · ".join(marks)
 
 func _position(index: int) -> Vector2:
@@ -274,7 +293,7 @@ func _unit_position(uid: int,previous: bool=false) -> Vector2:
  for unit in entries:
   var owner:=int(unit.owner);var slot:=indices[owner];indices[owner]+=1
   if int(unit.uid)!=uid:continue
-  return Vector2(887+slot*133,451) if owner==2 else Vector2(415+slot*135,360 if owner==0 else 461)
+  return Vector2(887+slot*133,451) if owner==2 else Vector2(415+slot*135,348 if owner==0 else 461)
  return Vector2(415,360)
 
 func _fighter(index: int) -> void:
@@ -290,6 +309,7 @@ func _draw() -> void:
  super._draw()
  if results_shown:return
  draw_set_transform(margin,0,Vector2.ONE*fit)
+ _draw_targets()
  for unit in _visible_board():
   if event.get("visual","")=="card_attack" and event_time>=0 and event_time<model.animation_duration() and int(event.get("attacker_uid",-1))==int(unit.uid):continue
   var enemy_attacking:=false
@@ -308,12 +328,14 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
  if event_time>=model.impact_time() and event_time<model.impact_time()+.45:
   for effect in event.get("effects",[]):
    if int(effect.target)==3 and int(effect.get("unit",-1))==int(unit.uid) and effect.kind=="damage":hit=true
- var idle_phase:=int(clock*1.7+int(unit.uid)*.7)%2
+ var feedback_state:=Feedback.unit_state(model,unit)
+ var sleeping: bool=feedback_state=="sleeping"
+ var idle_phase:=0 if sleeping else int(clock*1.7+int(unit.uid)*.7)%2
  var attack_phase:=clampi(int(clampf(event_time/model.animation_duration(),0,1)*4),0,3)
  if unit.get("form","") in Cards.HELPER_FORMS:
   var action: String="hit" if hit else "attack" if attacking else "idle"
   var progress: float=clampf((event_time-model.impact_time())/.45,0,1) if hit else clampf(event_time/model.animation_duration(),0,1)
-  var frame:=Art.animation_frame(unit.form,clock+float(unit.uid)*.37,action,progress)
+  var frame:=Art.animation_frame(unit.form,0.0 if sleeping else clock+float(unit.uid)*.37,action,progress)
   var art:=Art.form_texture(unit.form,frame);texture=art.atlas;region=art.region;reference_height=Art.form_height(unit.form)
  elif int(unit.row)>=0:
   var frame:=3 if hit else attack_phase if attacking else 0
@@ -328,21 +350,22 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
    var r: Array=data.regions[10 if hit else attack_phase if attacking else 12+idle_phase]
    region=Rect2(r[0],r[1],r[2],r[3]);reference_height=float(data.reference_height)
  var style: String=Art.movement_style(unit.form) if unit.get("form","") in Cards.HELPER_FORMS else "pounce"
- if style=="flier" and not attacking:foot.y-=2.5+sin(clock*2.4+int(unit.uid))*1.7
+ if sleeping and not attacking:foot.y+=sin(clock*.9+int(unit.uid))*.7
+ if style=="flier" and not attacking and not sleeping:foot.y-=2.5+sin(clock*2.4+int(unit.uid))*1.7
  var scale_factor: float=(94.0 if unit.get("form","")=="ancient" else 78.0)/reference_height
  var dimensions:=region.size*scale_factor
  var contact:=PackedVector2Array()
  for i in 32:
   var a:=i*TAU/32;contact.append(foot+Vector2(cos(a)*31,sin(a)*7))
  draw_colored_polygon(contact,Color(0,0,0,.34))
- draw_texture_rect_region(texture,Rect2(foot-Vector2(dimensions.x*.5,dimensions.y),dimensions),region,Color("ffd2b8") if hit else Color.WHITE)
+ draw_texture_rect_region(texture,Rect2(foot-Vector2(dimensions.x*.5,dimensions.y),dimensions),region,Color("ffd2b8") if hit else Color("b8c5d4") if sleeping else Color("d6c4c9") if feedback_state=="spent" else Color.WHITE)
  var health_color:=Color("d8ba7b") if unit.taunt else Color("b38292") if int(unit.owner)==2 else Color("85bbab")
  draw_rect(Rect2(foot+Vector2(-29,9),Vector2(58,4)),Color(.03,.07,.09,.85))
  draw_rect(Rect2(foot+Vector2(-29,9),Vector2(58*clampf(float(unit.hp)/float(unit.max_hp),0,1),4)),health_color)
  if int(unit.uid)==selected_unit or int(unit.uid)==inspected_unit:
   draw_polyline(contact+PackedVector2Array([contact[0]]),Color("f8e6a0"),2,true)
   _word("%s / %s" % [unit.attack,unit.hp],foot+Vector2(-24,34),16,Color("f4dfab"))
- if unit.ready and int(unit.owner)==model.cursor:_word("↑",foot+Vector2(-4,-75),17,Color("a6e9c2"))
+ _unit_affordance(unit,foot,feedback_state,attacking)
  if int(unit.get("shield",0))>0:
   draw_arc(foot-Vector2(0,35),44,-.4,PI+.4,32,Color(.8,.7,.4,.52),2,true)
   _word(str(unit.shield),foot+Vector2(30,13),12,Color("ebd29f"))
@@ -408,3 +431,81 @@ func _unit_numbers() -> void:
  if event_time>=impact and event_time<impact+1:
   for effect in event.get("effects",[]):
    if int(effect.target)==3:_word("Ausweichen" if effect.kind=="evade" else str(effect.amount),_unit_position(int(effect.unit),true)-Vector2(8,80+(event_time-impact)*22),20,Color("cfc1ef") if effect.kind=="evade" else Color("ffe5c9"))
+
+func _available_hint() -> String:
+ if model.cursor==2:return "Nachtwurz ist am Zug"
+ var cards:=0;var ready:=0;var powers:=0
+ for i in model.decks[model.cursor].hand.size():
+  if model.can_play(i):cards+=1
+ for unit in model.units(model.cursor):
+  if model.can_attack(int(unit.uid)):ready+=1
+ for action in ["skill","support","special","break_free"]:
+  if model.can_act(action):powers+=1
+ return "%s Karten · %s Helfer · %s Kräfte bereit" % [cards,ready,powers] if cards+ready+powers>0 else "Keine freie Aktion · Zug beenden"
+
+func _card_affordance(button: Button) -> void:
+ var index:=int(button.get_meta("hand_index",-1))
+ var playable: bool=not button.disabled
+ var selected: bool=index==selected_card
+ var key:=str(playable)+str(selected)
+ if button.get_meta("affordance","")==key:return
+ button.set_meta("affordance",key);button.set_meta("playable",playable)
+ var card: Dictionary=Cards.get_card(str(button.get_meta("card_id","")))
+ var color:=Color("9cf2c6") if playable else Color("4b5e6b")
+ if selected:color=Color("ffe49b")
+ var box:=_box(Color("263e43") if playable else Color("14212f"))
+ box.border_color=color;box.set_border_width_all(3 if playable or selected else 1)
+ box.shadow_color=Color(color,.32 if playable else 0.0);box.shadow_size=5 if playable else 0
+ button.add_theme_stylebox_override("normal",box);button.add_theme_stylebox_override("disabled",box)
+ var hover:=box.duplicate();hover.bg_color=Color("38575b")
+ button.add_theme_stylebox_override("hover",hover);button.add_theme_stylebox_override("pressed",hover)
+ button.modulate=Color.WHITE if playable else Color(.66,.70,.77,1)
+
+func _draw_targets() -> void:
+ if _locked():return
+ var choices:=Feedback.targets(model,selected_card,selected_unit)
+ for code in choices:
+  var at:=_target_point(code)
+  var r:=64.0 if code=="enemy" else 45.0
+  draw_arc(at,r,0,TAU,48,Color(.95,.86,.52,.85),3,true)
+  draw_arc(at,r+5,clock*.8,clock*.8+PI*.7,24,Color(.95,.86,.52,.5),2,true)
+  if code=="enemy":_word("ZIEL WÄHLEN",at+Vector2(-51,-r-12),14,Color("ffe8a8"))
+
+func _unit_affordance(unit: Dictionary, foot: Vector2, state: String, attacking: bool) -> void:
+ if attacking:return
+ var color:=Color("a4bdd5")
+ var label: String="Schläft"
+ match state:
+  "ready":
+   color=Color("a4f0c4");label="Bereit"
+   var ring:=PackedVector2Array()
+   for i in 41:
+    var a:=i*TAU/40;ring.append(foot+Vector2(cos(a)*44,sin(a)*10))
+   draw_polyline(ring,Color(color,.25+.10*sin(clock*2)),7,true)
+   draw_polyline(ring,color,1.8,true)
+   # Zwei gekreuzte Klingen statt einer kaum sichtbaren Pfeilspitze.
+   var at:=foot+Vector2(42,-46)
+   for side in [-1,1]:
+    draw_line(at+Vector2(-7,side*8),at+Vector2(7,-side*8),color,2.5,true)
+  "waiting":label="Nächster Zug";color=Color("cfbf93")
+  "spent":label="Erschöpft";color=Color("a6a4b2")
+  "frozen":label="Festgehalten";color=Color("b4c8f2")
+  "sleeping":
+   for i in 3:
+    var rise:=fposmod(clock*.6+i*.31,1.0)
+    _word("z" if i<2 else "Z",foot+Vector2(29+rise*10,-55-rise*30),12+i*2,Color(color,1-rise*.65))
+ _word(label,foot+Vector2(-32,28),12,color)
+ # Angriff und Lebenspunkte bleiben auch ohne vorheriges Antippen lesbar.
+ draw_circle(foot+Vector2(-42,-3),12,Color("4d4031"))
+ draw_circle(foot+Vector2(42,-3),12,Color("432b38"))
+ _word(str(unit.attack),foot+Vector2(-47,2),13,Color("ffe5a4"))
+ _word(str(unit.hp),foot+Vector2(37,2),13,Color("ffd6db"))
+
+func _power_affordance(button: Button) -> void:
+ var key:=str(button.disabled)
+ if button.get_meta("affordance","")==key:return
+ button.set_meta("affordance",key)
+ var box:=_box(Color("244139") if not button.disabled else Color("162433"))
+ box.border_color=Color("9edab6") if not button.disabled else Color("495763")
+ box.set_border_width_all(2 if not button.disabled else 1)
+ button.add_theme_stylebox_override("normal",box);button.add_theme_stylebox_override("disabled",box)

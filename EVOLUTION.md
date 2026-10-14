@@ -6932,3 +6932,22 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Übergabe:** docs/godot-firelight-polish.md; integrierter Branch
   codex/godot-firelight-polish, erneuertes 215-Dateien-Manifest. APK erst nach
   abgeschlossener Prüfung dieses Stands; Paket/Version/Signatur unverändert.
+
+### 2026-10-14 – Kampfklang und sichtbare Spielbereitschaft (Godot 0.6.1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt Spielsounds/Musik nach FF-/Hearthstone-
+  Referenzen sowie sichtbare Kristalle, spielbare Karten und schlafende/bereite Helfer.
+- **FACT:** Eigenständiger Kampf-Musikkanal löst die bisher stumme Weltpause.
+  Vorhandener Itoeva-Titel Continue?, 17 eigene erzeugte Effekte, sechs Effektstimmen,
+  Trefferzeitpunkt, kurze Musikabsenkung, Musiküberblendung und getrennte Einstellungen.
+  Kristallsteine, legale Kartenränder/Zielringe, Schlafzeichen und Bereitschaftsring
+  sowie dauerhafte Angriff-/LP-Werte lesen den bestehenden CardBattle-Zustand.
+- **TESTED BEHAVIOR:** Neue Integrations-/Audioprüfungen und vorhandene Karten-/Touch-
+  Regressionen lokal grün; echte GL-Bilder geprüft. Pegel/Fades aller 17 PCM-Effekte geprüft.
+- **Migration/Rücksetzung:** spent/skipped sind optionale Anzeigefelder in bestehenden
+  Helfer-Snapshots; Kampfregeln bleiben gleich. Neue Einstellungen nur im Godot-Spielstand.
+  Reiner Rückbau der Darstellung/Audioanbindung erhält Decks, Kampf und native Daten.
+- **UNVERIFIED:** Telefon-Klang, Bluetooth-Unterbrechungen und GPU/FPS am Gerät;
+  keine Behauptung eines menschlichen Hörtests der neuen Effekte.
+- **Übergabe:** docs/godot-kampfklang-und-lesbarkeit-v061.md; Branch
+  codex/godot-battle-audio-readability; AndroidTest 0.6.1/Code17.

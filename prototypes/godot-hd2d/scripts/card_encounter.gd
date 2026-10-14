@@ -87,6 +87,7 @@ func _play_event() -> void:
  busy = model.animation_duration()
  visual_clock = 0.0
  view.play_event()
+ app.battle_audio.begin_event(model.last_event)
 
 func _apply_visuals() -> void:
  app.stage.set_arena_lights(1.0 if model.phase == "unseen" else 1.0-smoothstep(0.0,.6,model.intro_time) if model.phase == "intro" else 0.0)
