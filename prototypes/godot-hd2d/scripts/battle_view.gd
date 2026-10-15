@@ -2,6 +2,7 @@ extends Control
 
 # Fixed design coordinates, uniformly fitted on phones; native buttons retain hit rectangles.
 const Catalog = preload("res://scripts/world_catalog.gd")
+const Forest = preload("res://scripts/forest_catalog.gd")
 const Spectacle = preload("res://scripts/battle_effects.gd")
 const GOLD := Color("dfc68e")
 const INK := Color("101b2c")
@@ -41,6 +42,10 @@ var spectacle = Spectacle.new()
 var status_labels: Array[Label] = []
 var result_time := 0.0
 var experience_labels: Array[Label] = []
+var experience_bars: Array[Control] = []
+var reward_rows: Array[Control] = []
+var reward_icons: Array[Control] = []
+var gained_labels: Array[Label] = []
 const REACTIONS := {
  "fennec":"Wir haben den Weg gemeinsam freigemacht.",
  "starlet":"Ein kleiner Lichtfunke reicht manchmal aus.",
@@ -222,14 +227,19 @@ func _show_results() -> void:
   var member: Dictionary = model.result.members[i]
   var y: float = 234.0 + i * 66.0
   _label(member.name,Rect2(664,y,210,32),23)
-  _label("+%s XP" % member.gained,Rect2(1030,y,174,32),25,GOLD)
-  experience_labels.append(_label("",Rect2(664,y+31,535,27),17,Color("b9cbd6")))
+  gained_labels.append(_label("+0 XP",Rect2(1030,y,174,32),25,GOLD))
+  experience_labels.append(_label("",Rect2(664,y+29,535,25),16,Color("b9cbd6")))
+  var bar:=_bar(Rect2(664,y+55,535,5),Color("ddc48c"))
+  bar.max_value=maxf(1,member.gained);bar.value=0;experience_bars.append(bar)
  _label("GEFUNDENE GEGENSTÄNDE",Rect2(664,386,535,28),17,Color("a9cabc"))
  for i in model.result.get("items",[]).size():
   var item: Dictionary = model.result.items[i]
   var total := int(model.inventory.get(item.id,0))
-  _label("%s × %s" % [item.count,item.name],Rect2(664,426+i*43,340,34),23)
-  _label("Vorrat: %s" % total,Rect2(1040,431+i*43,166,29),17,Color("b9cbd6"))
+  var icon: Control=load("res://scripts/reward_emblem.gd").new()
+  icon.kind=item.id;icon.position=Vector2(662,426+i*43);icon.size=Vector2(38,38)
+  layout.add_child(icon);reward_icons.append(icon)
+  reward_rows.append(_label("%s × %s" % [item.count,item.name],Rect2(704,426+i*43,300,34),23))
+  reward_rows.append(_label("Vorrat: %s → %s" % [total-int(item.count),total],Rect2(1014,431+i*43,200,29),16,Color("b9cbd6")))
  _label("Heiltränke bleiben in deinem Vorrat erhalten.",Rect2(664,538,535,30),16,Color("b9cbd6"))
  _panel(Rect2(48,494,560,171))
  var lead: Dictionary = model.party[0]
@@ -239,11 +249,35 @@ func _show_results() -> void:
  _label("Der tiefe Wald wartet auf euch.",Rect2(72,626,510,27),16,Color("b9cbd6"))
  _update_results()
 
+func result_progress(index: int) -> float:
+ return smoothstep(.35+index*.25,1.8+index*.25,result_time)
+
 func _update_results() -> void:
  for i in experience_labels.size():
   var member: Dictionary = model.result.members[i]
-  var total := int(lerpf(float(member.before),float(member.total),clampf(result_time/1.1,0,1)))
-  experience_labels[i].text = "Gesamt: %s XP" % total
+  var progress:=result_progress(i)
+  var total:=int(round(lerpf(float(member.before),float(member.total),progress)))
+  experience_labels[i].text="%s → %s XP   ·   Gesamt: %s XP" % [member.before,member.total,total]
+  gained_labels[i].text="+%s XP" % (total-int(member.before))
+  experience_bars[i].value=total-int(member.before)
+ for i in reward_rows.size():
+  var row:=i/2
+  var reveal:=smoothstep(2.15+row*.40,2.5+row*.40,result_time)
+  reward_rows[i].modulate.a=reveal
+  reward_rows[i].position.y=(426.0 if i%2==0 else 431.0)+row*43.0+(1.0-reveal)*15.0
+ for i in reward_icons.size():
+  var reveal:=smoothstep(2.15+i*.40,2.5+i*.40,result_time)
+  reward_icons[i].modulate.a=reveal
+  reward_icons[i].position.y=426+i*43+(1-reveal)*15
+
+func victory_pose(index: int) -> Dictionary:
+ var species: String=model.party[index].species
+ var t:=maxf(0,result_time-float(index)*.22)
+ var greeting:=smoothstep(0,.35,t)
+ var hop:=sin(clampf((t-.35)/.7,0,1)*PI)* (16.0 if species in ["fennec","puffling","wyrmling"] else 7.0)
+ var floaty:=species in ["starlet","hootlet","nocti"]
+ return {"frame":14,"lift":greeting*4.0+hop+(sin(t*2.0)*4.0 if floaty else sin(t*1.4)*1.0),
+  "lean":sin(t*1.5)*(.035 if species=="gloop" else .012)}
 
 func choose(page: String) -> void:
  if input_cooldown > 0 or model.playback_pending or model.cursor == 2 or model.phase != "battle": return
@@ -325,6 +359,7 @@ func _draw() -> void:
  draw_rect(Rect2(Vector2.ZERO,size),Color(.012,.028,.065,.24))
  draw_set_transform(margin,0,Vector2.ONE*fit)
  _arena_fire()
+ if results_shown:_victory_sparkles()
  var impact: bool = model.playback_pending and event_time >= model.impact_time() and event_time < model.impact_time()+.26
  shake = Vector2(sin(event_time*89.0)*3.5,cos(event_time*72.0)*1.8) if impact and event.get("element","") in ["physical","shadow"] else Vector2.ZERO
  for i in range(42):
@@ -348,9 +383,9 @@ func _demon_rect(frame: int) -> Rect2:
  return Rect2((frame%4)*328.0,rows[frame/4],328.0,rows[frame/4+1]-rows[frame/4])
 
 func _fighter(index: int) -> void:
- var foot := _position(index)+shake
+ var foot := (Vector2(225,410) if index==0 else Vector2(440,410)) + shake if results_shown else _position(index)+shake
  if results_shown and index < 2 and model.party[index].hp > 0:
-  foot.y += sin(result_time * 2.2 + index) * 2.0
+  foot.y -= float(victory_pose(index).lift)
  var source: int = int(event.get("source",-1))
  var active_event: bool = not results_shown and event_time >= 0.0 and event_time < model.animation_duration()-.1
  var casting: bool = active_event and source == index
@@ -398,7 +433,12 @@ func _fighter(index: int) -> void:
   var tint := Color("eee1c4")
   if hit: tint = Color("ffd4bd")
   if member.hp == 0: tint = Color(.49,.48,.56,.65)
-  draw_texture_rect_region(allies[index],Rect2(foot-Vector2(dimension.x*.5,dimension.y),dimension),source_rect,tint)
+  if results_shown and member.hp>0:
+   var pose:=victory_pose(index)
+   draw_set_transform(margin+foot*fit,float(pose.lean),Vector2.ONE*fit)
+   draw_texture_rect_region(allies[index],Rect2(Vector2(-dimension.x*.5,-dimension.y),dimension),source_rect,tint)
+   draw_set_transform(margin,0,Vector2.ONE*fit)
+  else:draw_texture_rect_region(allies[index],Rect2(foot-Vector2(dimension.x*.5,dimension.y),dimension),source_rect,tint)
   if member.evasion:
    draw_texture_rect_region(allies[index],Rect2(foot-Vector2(dimension.x*.5+35,dimension.y),dimension),source_rect,Color(.6,.75,.85,.15))
   if member.haste:
@@ -492,13 +532,15 @@ func _arena_fire() -> void:
  if model.phase != "intro": return
  var gain := 1.0-smoothstep(0.0,.6,model.intro_time)
  for i in 3:
-  var uv: Vector2 = [Vector2(.16,.468),Vector2(.674,.468),Vector2(.94,.615)][i]
+  var flame: Array=Forest.data().segments[5].flames[i]
+  var uv:=Vector2(flame[0],flame[1])
   var base := uv*Vector2(1280,720)
   if gain > 0.0:
    var frame := int(clock*12+i*4)%16
    var source := Rect2(Vector2(frame%4,frame/4)*Vector2(319.5,307.5),Vector2(319.5,307.5))
    draw_circle(base,75,Color(.8,.38,.12,gain*.07))
-   draw_texture_rect_region(flames,Rect2(base-Vector2(40,78),Vector2(80,80)),source,Color(1,1,1,gain))
+   var height: float=flame[2]*1.4*720
+   draw_texture_rect_region(flames,Rect2(base-Vector2(height*.325,height),Vector2(height*.65,height)),source,Color(1,1,1,gain))
   var smoke := maxf(0,1.0-model.intro_time/2.0)
   for j in 4:
    draw_circle(base+Vector2(sin(clock*2+j)*8,-14-j*13-model.intro_time*10),8+j*3,Color(.38,.4,.44,smoke*.035))
@@ -545,3 +587,10 @@ func _species_effects(t: float, element: String, source: Vector2, target: Vector
   for i in 2:
    var at := _position(i)-Vector2(0,47)
    draw_arc(at,40+p*20,0,TAU,36,Color(color,alpha*.6),3,true)
+
+func _victory_sparkles() -> void:
+ for i in 22:
+  var rise:=fposmod(result_time*.16+i*.137,1.0)
+  var at:=Vector2(80+fposmod(i*97.7,500),470-rise*310)
+  var fade:=sin(rise*PI)*.48
+  draw_circle(at,1.2+i%3*.55,Color(GOLD,fade))

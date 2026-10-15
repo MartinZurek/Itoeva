@@ -43,6 +43,9 @@ var run_blend := 0.0
 var twirl_facing := Vector2.RIGHT
 var hover := 0.0
 var pending_sit := false
+var glow_energy := 0.0
+var aura: MeshInstance3D
+var aura_material: ShaderMaterial
 
 func mount_seat(anchor: Vector3, exit_position: Vector3) -> void:
 	seat_exit = exit_position
@@ -100,6 +103,13 @@ func _ready() -> void:
 	sprite.material_override = painted_material
 	sprite.offset = Vector2(0, 62)
 	add_child(sprite)
+	if species=="starlet":
+		aura=MeshInstance3D.new()
+		var quad:=QuadMesh.new();quad.size=Vector2(1,1);aura.mesh=quad
+		aura_material=ShaderMaterial.new();aura_material.shader=load("res://shaders/star_aura.gdshader")
+		aura_material.render_priority=9;aura.material_override=aura_material
+		aura.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(aura)
 	shadow = MeshInstance3D.new()
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(1.15, 0.62)
@@ -192,12 +202,31 @@ func visual_screen_rect(camera: Camera3D) -> Rect2:
 func set_draw_order(order: int) -> void:
 	painted_material.render_priority = order
 	sprite.render_priority = order
+	if is_instance_valid(aura_material):aura_material.render_priority=order-1
+
+func light_center() -> Vector3:
+	var camera:=get_viewport().get_camera_3d()
+	var up:=camera.global_basis.y if camera else Vector3.UP
+	var right:=camera.global_basis.x if camera else Vector3.RIGHT
+	var center:=Vector2(frame_bounds[sprite.frame].get_center())
+	var x: float=(center.x-64.0)*sprite.pixel_size*(-1.0 if sprite.flip_h else 1.0)
+	return global_position+sprite.position+right*x+up*(126.0-center.y)*sprite.pixel_size
 
 func _update_occlusion() -> void:
 	if not is_instance_valid(painted_material) or not is_inside_tree():
 		return
 	painted_material.set_shader_parameter("foot", Vector3(global_position.x, global_position.y, seat_occlusion_z) if mounted else global_position)
 	var stage = get_parent().get("stage")
+	if species=="starlet" and is_instance_valid(stage):
+		var target: float=stage.darkness_at(global_position)
+		glow_energy=move_toward(glow_energy,target,get_process_delta_time()*1.2)
+		painted_material.set_shader_parameter("self_glow",glow_energy)
+		if is_instance_valid(aura):
+			var height:=frame_bounds[sprite.frame].size.y*sprite.pixel_size
+			aura.position=light_center()-global_position
+			aura.scale=Vector3.ONE*height*1.9
+			aura_material.set_shader_parameter("energy",glow_energy)
+		stage.update_character_light(self,glow_energy)
 	if is_instance_valid(stage) and stage.has_method("apply_actor_light"):
 		stage.apply_actor_light(painted_material, global_position)
 	if is_instance_valid(stage) and stage.has_method("actor_occlusion"):

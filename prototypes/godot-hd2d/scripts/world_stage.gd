@@ -650,3 +650,14 @@ func apply_actor_light(material: ShaderMaterial, point: Vector3) -> void:
 	material.set_shader_parameter("local_light_points",points)
 	material.set_shader_parameter("local_light_colors",colors)
 	material.set_shader_parameter("local_light_phases",phases)
+
+func darkness_at(point: Vector3) -> float:
+	var daylight:=smoothstep(5.8,8.0,light_hour)*(1.0-smoothstep(18.0,21.0,light_hour))
+	return (1.0-daylight)*(.6 if place!="OUTDOOR" else 1.0)
+
+func update_character_light(actor: Node3D, energy: float) -> void:
+	if not actor.player_controlled:return
+	var center: Vector3=actor.light_center()
+	for material in painted_materials:
+		material.set_shader_parameter("carried_position",center)
+		material.set_shader_parameter("carried_gain",energy)

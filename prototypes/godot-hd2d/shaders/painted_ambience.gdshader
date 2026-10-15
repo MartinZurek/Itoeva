@@ -20,6 +20,10 @@ uniform bool shore_enabled = false;
 uniform sampler2D shore_texture : source_color, filter_linear_mipmap, repeat_disable;
 // Ein optionaler fester Zeitpunkt macht Renderregressionen reproduzierbar.
 uniform float animation_time = -1.0;
+uniform vec3 carried_position = vec3(-100.0);
+uniform float carried_gain = 0.0;
+varying vec3 world_point;
+void vertex() { world_point=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; }
 
 void fragment() {
 	float clock = animation_time >= 0.0 ? animation_time : TIME;
@@ -61,6 +65,9 @@ void fragment() {
    ink+=vec3(1.0,0.42,0.055)*firelight_embers(local_uv,clock,float(i)*1.7)*0.65;
   }
  }
+ vec2 delta=vec2(world_point.x-carried_position.x,.819152*(world_point.y-carried_position.y)-.573576*(world_point.z-carried_position.z));
+ float aura=exp(-dot(delta/vec2(2.9,2.3),delta/vec2(2.9,2.3))*1.8)*carried_gain;
+ ink+=paint.rgb*vec3(1.0,.82,.42)*aura;
  ALBEDO = ink;
 	ALPHA = paint.a * (transparent_piece ? COLOR.a : 1.0);
 }

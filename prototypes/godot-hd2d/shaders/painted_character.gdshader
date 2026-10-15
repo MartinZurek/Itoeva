@@ -14,6 +14,7 @@ uniform vec4 local_light_points[4];
 uniform vec4 local_light_colors[4];
 uniform vec4 local_light_phases[4];
 uniform float animation_time = -1.0;
+uniform float self_glow = 0.0;
 varying vec3 world_point;
 
 void vertex() {
@@ -47,5 +48,6 @@ void fragment() {
 	 illumination+=local_light_colors[i].rgb*local_light_colors[i].w*firelight_pool(distance)*pulse*side;
 	}
 	ALBEDO = paint.rgb * scene_light + min(illumination,vec3(.38))*(.28+paint.rgb*.60);
+	ALBEDO = mix(ALBEDO,paint.rgb*vec3(1.0,.98,.90),self_glow*(.98+.02*sin(clock*1.7)));
 	ALPHA = paint.a;
 }

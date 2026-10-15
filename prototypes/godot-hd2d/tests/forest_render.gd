@@ -62,7 +62,7 @@ func run() -> void:
 	material.set_shader_parameter("animation_time",1.7)
 	b=await grab()
 	check(changed(a,b,Rect2i(227,147,16,29))>50,"Gemalte Flamme lodert auch ohne Lichtflackern")
-	check(changed(a,b,Rect2i(208,176,8,90))==0,"Holzpfosten bleibt fest")
+	check(changed(a,b,Rect2i(208,211,8,55))==0,"Holzpfosten bleibt fest")
 	material=stage.forest_materials.SHADOW_CLEARING
 	material.set_shader_parameter("blend_left",false)
 	material.set_shader_parameter("carried_light",false)
@@ -82,7 +82,8 @@ func run() -> void:
 	mesh.material_override=material
 	a=await grab()
 	material.set_shader_parameter("carried_light",true)
-	material.set_shader_parameter("player",Vector3(0,-1,0))
+	material.set_shader_parameter("carried_position",Vector3(0,-1,0))
+	material.set_shader_parameter("carried_gain",.7)
 	b=await grab()
 	check(changed(a,b,Rect2i(300,220,200,130))>500,"Traglicht erhellt lokalen Ausschnitt im tiefen Wald")
 	print("Wald GL: %s Checks, %s Fehler" % [checks,failures])

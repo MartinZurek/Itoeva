@@ -1,3 +1,11 @@
+## Aktuell: 0.6.2 – Eigenlicht und lebendiger Sieg
+
+Kartenansicht schliesst wieder zum erhaltenen Deck. Starlet leuchtet selbst je nach
+Dunkelheit; Laternen und nachgemessene Feuer folgen ihren echten Quellen.
+Nachtwurz faellt erst nach Treffer und LP-Abzug. Jubelposen, originales Siegsthema,
+zaehlende XP und gestaffelte Beute beleben das Ergebnis.
+[Umsetzung und Pruefung](../../docs/godot-polish-v062.md).
+
 ## Aktuell: 0.6.1 – Kampfklang und erkennbare Aktionen
 
 Kampfmusik trotz Weltpause, 17 eigene kurze Effekte, getrennte Tonregler.
