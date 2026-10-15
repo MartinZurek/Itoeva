@@ -25,6 +25,7 @@ var ui: Control
 var canvas: CanvasLayer
 var game_theme: Theme
 var menu_buttons: Array[Button] = []
+var deck_editor: RefCounted
 var portrait_cards: Array[Dictionary] = []
 var status_label: Label
 var tagline_label: Label
@@ -285,11 +286,12 @@ func _select_species(species: String) -> void:
 		tagline_label.text = Catalog.data().characters[selected].tagline
 
 func show_deck() -> void:
-	var editor = DeckEditor.new()
-	editor.app = self
-	editor.species = selected
-	editor.open()
-	# Die Schaltflächen halten den Editor bis zum nächsten Bildschirm am Leben.
+	# Signal-Callables halten RefCounted nicht am Leben. Die Detailseite hatte
+	# nach dem Freigeben des Editors einen Schliessen-Knopf ohne Verbindung.
+	deck_editor = DeckEditor.new()
+	deck_editor.app = self
+	deck_editor.species = selected
+	deck_editor.open()
 
 func show_settings() -> void:
 	_pause(true)
@@ -477,6 +479,7 @@ func _mount_world(next_room: String, position: Vector3) -> void:
 		add_child(forest_encounter)
 		var lamp_button:=Button.new()
 		lamp_button.text="Traglicht: an"
+		lamp_button.visible=actor.species!="starlet"
 		lamp_button.position=Vector2(28,92)
 		lamp_button.custom_minimum_size=Vector2(160,44)
 		hud.add_child(lamp_button)

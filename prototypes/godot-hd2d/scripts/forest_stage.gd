@@ -11,6 +11,8 @@ var bridge_mask: Texture2D
 var bench_mask: Texture2D
 var demon: MeshInstance3D
 var demon_material: ShaderMaterial
+var lantern_clock:=0.0
+var lantern_wick: ShaderMaterial
 
 func build() -> void:
 	place = "FOREST_TRAIL"
@@ -165,7 +167,7 @@ func _add_flames(region: Dictionary, parent: Node3D) -> void:
 		var flame: Array=region.flames[i]
 		var uv := Vector2(flame[0],flame[1])
 		var anchor := _point(region,uv,uv.y>=_band(region,uv.x).x/640.0)
-		local_light_sources.append({"position":anchor+Vector3.UP*float(flame[2])*7.0,
+		local_light_sources.append({"position":anchor+Vector3.UP*float(flame[2])*3.0,
 			"radius":Vector2(2.64,2.4),"strength":.55,"fire":true,"forest":true,"gain":1.0,
 			"seed":float(region.origin)+i*1.9,"arena":region.id=="SHADOW_CLEARING"})
 		var size := Vector2(.62,float(flame[2])*10.0)
@@ -214,16 +216,46 @@ func set_demon(reveal: float, hit: float = 0.0) -> void:
 	demon_material.set_shader_parameter("reveal",clampf(reveal,0,1))
 	demon_material.set_shader_parameter("hit",clampf(hit,0,1))
 
+func darkness_at(point: Vector3) -> float:
+	return maxf(float(Forest.region_at(point.x).darkness),super.darkness_at(point))
+
+func update_character_light(actor: Node3D, energy: float) -> void:
+	if actor.player_controlled:update_player(actor.global_position)
+
 func update_player(point: Vector3) -> void:
-	lantern.position=point+Vector3(.54,.73,.06)
-	lantern.visible=carried_light and float(Forest.region_at(point.x).darkness)>.18
+	var actor=get_parent().get("actor")
+	var star: bool=is_instance_valid(actor) and actor.species=="starlet"
+	var center:=point+Vector3(.54,.73,.06)
+	var energy:=darkness_at(point) if carried_light else 0.0
+	if is_instance_valid(actor):
+		var height: float=actor.frame_bounds[actor.sprite.frame].size.y*actor.sprite.pixel_size
+		var camera:=get_viewport().get_camera_3d()
+		var right:=camera.global_basis.x if camera else Vector3.RIGHT
+		var up:=camera.global_basis.y if camera else Vector3.UP
+		var side: float=-1.0 if actor.sprite.flip_h else 1.0
+		var moving: float=clampf(actor.actual_speed/2.0,0,1)
+		center=point+actor.sprite.position+up*height*.45+right*height*.29*side
+		lantern.rotation.z=sin(lantern_clock*3.0)*.055*moving
+		center+=up*sin(actor.gait*TAU)*.018*moving
+		if star:
+			center=actor.light_center()
+			energy=actor.glow_energy
+	lantern.position=center
+	lantern.visible=not star and carried_light and energy>.18
+	lantern_wick.set_shader_parameter("gain",.85+.15*sin(lantern_clock*2.3))
 	for source in local_light_sources:
 		if source.get("lantern",false):
-			source["position"] = lantern.position
-			source["gain"] = 1.0 if lantern.visible else 0.0
+			source["position"]=center
+			source["gain"]=energy if star or lantern.visible else 0.0
 	for material in forest_materials.values():
 		material.set_shader_parameter("player",point)
-		material.set_shader_parameter("carried_light",carried_light)
+		material.set_shader_parameter("carried_light",star or carried_light)
+		material.set_shader_parameter("carried_position",center)
+		material.set_shader_parameter("carried_gain",energy if star or lantern.visible else 0.0)
+		material.set_shader_parameter("carried_color",Color("ffe5a0") if star else Color("ffbd72"))
+
+func _process(delta: float) -> void:
+	lantern_clock+=delta
 
 func set_time(hour: float) -> void:
 	light_hour = hour
@@ -233,6 +265,7 @@ func set_time(hour: float) -> void:
 func _build_lantern() -> void:
 	lantern=Node3D.new()
 	lantern.name="Traglaterne"
+	lantern.scale=Vector3.ONE*1.3
 	add_child(lantern)
 	local_light_sources.append({"position":Vector3.ZERO,"radius":Vector2(2.9,2.2),
 		"strength":.65,"fire":false,"forest":true,"gain":0.0,"seed":0.0,"arena":false,"lantern":true})
@@ -277,7 +310,16 @@ func _build_lantern() -> void:
 	glow.shader = load("res://shaders/living_flame.gdshader")
 	glow.set_shader_parameter("flame_atlas",load("res://assets/combat/flame-atlas.png"))
 	glow.render_priority = 5
+	lantern_wick=glow
 	wick.material_override = glow; lantern.add_child(wick)
+	var halo:=MeshInstance3D.new()
+	var halo_quad:=QuadMesh.new();halo_quad.size=Vector2(.72,.72);halo.mesh=halo_quad
+	var halo_material:=ShaderMaterial.new()
+	halo_material.shader=load("res://shaders/star_aura.gdshader")
+	halo_material.set_shader_parameter("energy",1.0)
+	halo_material.render_priority=4;halo.material_override=halo_material
+	halo.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	lantern.add_child(halo)
 
 func _build_bridge_mask() -> void:
 	# Vorderes Gelaender und seine Pfosten verdecken die Figur nur hinter der Brüstung.

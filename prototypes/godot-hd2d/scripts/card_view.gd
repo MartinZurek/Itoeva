@@ -296,14 +296,31 @@ func _unit_position(uid: int,previous: bool=false) -> Vector2:
   return Vector2(887+slot*133,451) if owner==2 else Vector2(415+slot*135,348 if owner==0 else 461)
  return Vector2(415,360)
 
+func enemy_visual_state() -> String:
+ if model.phase=="victory" and (not model.playback_pending or event_time>=model.impact_time()+.40):return "fall"
+ if event_time>=model.impact_time() and event_time<model.impact_time()+.40:
+  for effect in event.get("effects",[]):
+   if int(effect.target)==2 and effect.kind in ["damage","weak","blocked"]:return "hit"
+ if event_time>=0 and event_time<model.animation_duration() and int(event.get("source",-1))==2:return "cast"
+ return "idle"
+
 func _fighter(index: int) -> void:
  if index!=2:super._fighter(index);return
- var frame:=int(clock*5.5)%4
- if event_time>=0 and event_time<model.animation_duration() and int(event.get("source",-1))==2:frame=8+mini(3,int(event_time/model.animation_duration()*4))
- if model.phase=="victory":frame=15
+ var state:=enemy_visual_state()
+ var frame:=0
+ var fall:=0.0
+ if state=="cast":frame=8+mini(3,int(event_time/model.animation_duration()*4))
+ elif state=="hit":frame=12
+ elif state=="fall":
+  fall=clampf((event_time-model.impact_time()-.40)/maxf(.2,model.animation_duration()-model.impact_time()-.50),0,1)
+  frame=13+mini(2,int(fall*3))
  var region:=_demon_rect(frame)
  var height:=190*region.size.y/304
- draw_texture_rect_region(demon,Rect2(_position(2)-Vector2(103,height),Vector2(205,height)),region)
+ # Eine feste Ruhezeichnung mit langsamer Gewichtsverlagerung behaelt die Identitaet.
+ var foot:=_position(2)+Vector2(sin(clock*.65)*1.2,-sin(clock*1.1)*1.1) if state=="idle" else _position(2)
+ var tint:=Color("ffdfca") if state=="hit" else Color.WHITE
+ if state=="fall":tint.a=1.0-smoothstep(.65,1.0,fall)*.8
+ draw_texture_rect_region(demon,Rect2(foot-Vector2(103,height),Vector2(205,height)),region,tint)
 
 func _draw() -> void:
  super._draw()

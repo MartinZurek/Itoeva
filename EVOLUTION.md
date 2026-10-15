@@ -669,6 +669,34 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-15 - Eigenlicht und nachvollziehbarer Kampfabschluss (godot-polish-v062)
+
+- **DOCUMENTED INTENT:** Martin bestaetigt APK 0.6.1 als Basis. Kartenansicht
+  schliesst nicht; Lichtquellen/Feuer sind versetzt, Starlet braucht Eigenlicht
+  statt Laterne; Sieg soll Jubel, Musik und dynamische echte Werte/Beute zeigen.
+  Gegner darf erst nach dem letzten Treffer fallen und soll ruhiger warten.
+- **FACT / Produktentscheidung:** Starke Editorreferenz mit erhaltenem Entwurf;
+  Starlets Licht folgt Tageszeit und Wald-Dunkelheit. Gemeinsame Weltanker fuer
+  Figur, Laterne, Flamme und Schein. Neun Feuerkoerbe neu vermessen. Ruhige
+  Gegnerzeichnung; Treffer und LP-Abbau liegen vor dem Zusammenbruch.
+- **Darstellung/Audio:** Gezeichnete Jubelpose mit zeitversetzten Sprung-/Schwebe-
+  bewegungen, XP-Uebergang aus dem echten Ergebnisbeleg, gestaffelte Fundstuecke.
+  Originales 12-Sekunden-Siegsthema; Musikwechsel erst nach der finalen Animation.
+  Kein schneller Wechsel unpassender Ruhezeichnungen und keine Fremdspielmusik.
+- **Persistenz/Balancing:** Keine neuen Savefelder, keine Migration. Regeln,
+  Belohnungsmenge und atomare Einmalvergabe unveraendert; Ergebnis zeigt nur die
+  bereits gespeicherten Vorher-/Nachherwerte. Native App, Room und LAS unberuehrt.
+- **TESTED BEHAVIOR:** Reproduktion des verlorenen Schliessen-Callbacks und danach
+  36 neue Touch-/Ablaufchecks, 96 Sieges-, 29 Audio- und 25 GL-Lichtchecks gruen.
+  Ausgewaehlte echte Software-OpenGL-Phasen visuell kontrolliert. Vollstaendige
+  Regressionen, Build- und Auslieferungsstand stehen im PR und im verlinkten Bericht.
+- **UNVERIFIED:** Android-GPU/FPS, Telefon-Klang und Handanker in allen Posen.
+  Reine Bilder sind kein Beleg fuer diese Geraeteeigenschaften.
+- **Ruecksetzen/naechster Schritt:** Isolierten Commit revertieren; beim APK-
+  Downgrade lokalen Godot-Stand sichern. 0.6.2 / Code 18 mit bestehender Signatur
+  und bekanntem Drive-Ziel bauen; danach am Telefon abnehmen. Keine neue
+  Grundsatzentscheidung. Details: docs/godot-polish-v062.md.
+
 ### 2026-10-13 - 40-Karten-Decks und originale Helfer (godot-forty-card-helpers-v060)
 
 - **DOCUMENTED INTENT:** Martin nimmt die funktionierende 0.5.0 ab und fordert

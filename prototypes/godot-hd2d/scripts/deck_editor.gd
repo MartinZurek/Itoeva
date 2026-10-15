@@ -7,6 +7,8 @@ var app: Node3D
 var species: String="fennec"
 var draft: Array=[]
 var filter_kind: String="Alle"
+var scroll_offset := 0
+var scroll: ScrollContainer
 
 func open() -> void:
  draft=app.save_data.get("card_decks",{}).get(species,Cards.starter(species)).duplicate()
@@ -35,7 +37,7 @@ func render() -> void:
  for kind in ["Alle","Helfer","Zauber","Spezial"]:
   var option: Button=app._button(kind,_filter.bind(kind));option.custom_minimum_size=Vector2(120,36)
   option.disabled=kind==filter_kind;filters.add_child(option)
- var scroll:=ScrollContainer.new();scroll.custom_minimum_size=Vector2(1000,350)
+ scroll=ScrollContainer.new();scroll.custom_minimum_size=Vector2(1000,350)
  scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;column.add_child(scroll)
  var list:=VBoxContainer.new();list.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  list.add_theme_constant_override("separation",5);scroll.add_child(list)
@@ -65,8 +67,10 @@ func render() -> void:
  controls.add_child(app._button("Auf 40 auffüllen",func():draft=Cards.upgrade(species,draft);render()))
  controls.add_child(app._button("Startdeck",func():draft=Cards.starter(species);render()))
  controls.add_child(app._button("Abbrechen",app.show_menu))
+ scroll.set_deferred("scroll_vertical",scroll_offset)
 
 func preview(id: String) -> void:
+ scroll_offset=scroll.scroll_vertical
  var column: VBoxContainer=app._panel("%s · Kartenkunde" % Catalog.data().characters[species].label)
  var detail=Detail.new();detail.app=app;detail.card=Cards.get_card(id);detail.close_callback=render
  detail.custom_minimum_size=Vector2(600,309);column.add_child(detail)
@@ -77,4 +81,4 @@ func commit() -> void:
  app.save_data.card_decks[species]=draft.duplicate();app._write_save();app.show_menu()
 
 func _filter(kind: String) -> void:
- filter_kind=kind;render()
+ filter_kind=kind;scroll_offset=0;render()

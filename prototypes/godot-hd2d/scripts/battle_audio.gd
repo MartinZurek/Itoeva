@@ -2,6 +2,9 @@ extends Node
 # Ein Pool begrenzt Effekte; die Weltpause ist im Kartenkampf keine Audiopause.
 var app: Node
 var arena: AudioStreamPlayer
+var battle_theme: AudioStreamOggVorbis
+var victory_theme: AudioStreamOggVorbis
+var music_mode: String="battle"
 var voices: Array[AudioStreamPlayer] = []
 var sounds: Dictionary = {}
 var blend := 0.0
@@ -20,7 +23,9 @@ func _ready() -> void:
 	for key in KEYS: sounds[key]=load("res://assets/audio/"+key+".wav")
 	arena=AudioStreamPlayer.new()
 	var stream: AudioStreamOggVorbis=load("res://assets/music/battle-arena.ogg").duplicate()
-	stream.loop=true;arena.stream=stream;add_child(arena)
+	stream.loop=true;battle_theme=stream;arena.stream=stream;add_child(arena)
+	victory_theme=load("res://assets/music/victory-theme.ogg").duplicate()
+	victory_theme.loop=true
 	for i in 6:
 		var voice:=AudioStreamPlayer.new();add_child(voice);voices.append(voice)
 	app.music.stream=app.music.stream.duplicate()
@@ -60,6 +65,10 @@ func _process(delta: float) -> void:
 		for voice in voices:voice.stop()
 	else:
 		var model=encounter.model
+		var desired: String="victory" if model.phase=="victory" and not model.playback_pending else "battle"
+		if desired!=music_mode:
+			music_mode=desired;arena.stop()
+			arena.stream=victory_theme if desired=="victory" else battle_theme
 		if event_clock>=0:
 			event_clock+=delta
 			if not impact_played and event_clock>=float(event.get("impact",.7)):
