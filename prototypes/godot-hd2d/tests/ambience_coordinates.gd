@@ -15,6 +15,7 @@ func run():
  for key in data.assets:
   var entry=data.assets[key]
   var path="res://assets/"+("world/seams/" if key in ["0.png","1.png","2.png","3.png","4.png","5.png"] else "world/" if entry.size[0]==2172 else "interiors/")+key
+  path=str(entry.get("asset",path))
   var texture=load(path)
   check(texture!=null,"Originaltextur vorhanden "+key)
   var mat=Ambience.create_material(path,texture)

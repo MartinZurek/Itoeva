@@ -9,8 +9,10 @@ static var geometry_cache: Dictionary = {}
 static func geometry() -> Dictionary:
 	if geometry_cache.is_empty():
 		geometry_cache = JSON.parse_string(FileAccess.get_file_as_string("res://data/visual_geometry.json"))
-	for place in ["SUN_GLADE", "MIST_WATCH"]:
-		geometry_cache.room_backs[place] = [[0,199,220],[1,199,220]]
+	for place in data().interiors:
+		var room: Dictionary = data().interiors[place]
+		if room.get("outdoor", false):
+			geometry_cache.room_backs[place] = [[0,room.band[0],room.band[1]],[1,room.band[0],room.band[1]]]
 	return geometry_cache
 
 static func profile(points: Array, x: float) -> Vector2:

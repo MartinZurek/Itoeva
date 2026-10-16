@@ -1,7 +1,8 @@
 {
   "labels": {
     "SUN_GLADE": "Sonnenhain",
-    "MIST_WATCH": "Nebelwacht"
+    "MIST_WATCH": "Nebelwacht",
+    "MILL_BROOK": "Mühlenbach"
   },
   "interiors": {
     "SUN_GLADE": {
@@ -24,6 +25,21 @@
       "band": [
         199,
         220
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "MILL_BROOK": {
+      "asset": "res://assets/expansion/mill-brook.png",
+      "band": [
+        189,
+        217
       ],
       "limits": [
         18,
@@ -57,6 +73,18 @@
       ],
       "b_pos": [
         0.82,
+        0.6
+      ]
+    },
+    {
+      "a": "SUN_GLADE",
+      "b": "MILL_BROOK",
+      "a_pos": [
+        0.24,
+        0.65
+      ],
+      "b_pos": [
+        0.84,
         0.6
       ]
     }

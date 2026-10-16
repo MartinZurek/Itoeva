@@ -329,13 +329,22 @@ func _build_lantern() -> void:
 func _build_bridge_mask() -> void:
 	# Vorderes Gelaender und seine Pfosten verdecken die Figur nur hinter der Brüstung.
 	var image:=Image.create(836,470,false,Image.FORMAT_RG8)
-	var contours: Array=[[[.362,.441],[.650,.477],[.650,.490],[.362,.455]],[[.362,.484],[.650,.520],[.650,.531],[.362,.496]],[[.359,.404],[.374,.401],[.374,.546],[.359,.550]],[[.465,.430],[.479,.429],[.479,.545],[.465,.546]],[[.644,.440],[.658,.438],[.658,.570],[.644,.572]]]
+	var contours: Array=[
+		[[.427,.421],[.647,.455],[.647,.469],[.427,.437]],
+		[[.427,.460],[.647,.500],[.647,.514],[.427,.475]],
+		[[.419,.405],[.438,.405],[.438,.525],[.419,.525]],
+		[[.520,.428],[.537,.429],[.537,.548],[.520,.548]],
+		[[.635,.443],[.653,.443],[.653,.573],[.635,.573]],
+		[[.714,.491],[.732,.494],[.732,.581],[.714,.581]]]
 	for contour in contours:
 		var polygon:=PackedVector2Array()
 		for p in contour: polygon.append(Vector2(p[0]*836.0,p[1]*470.0))
-		for y in range(185,272):
-			for x in range(297,552):
-				if Geometry2D.is_point_in_polygon(Vector2(x+.5,y+.5),polygon): image.set_pixel(x,y,Color(.57,1,0,1))
+		for y in range(185,277):
+			for x in range(345,616):
+				if Geometry2D.is_point_in_polygon(Vector2(x+.5,y+.5),polygon):
+					# Die geneigte Brücke braucht je Bildspalte die tatsächliche Vorderkante.
+					var front := lerpf(.525,.573,clampf((float(x)/836.0-.427)/.220,0,1))
+					image.set_pixel(x,y,Color(front,1,0,1))
 	bridge_mask=ImageTexture.create_from_image(image)
 
 func set_arena_smoke(value: float) -> void:

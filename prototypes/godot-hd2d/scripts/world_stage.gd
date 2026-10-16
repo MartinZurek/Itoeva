@@ -115,8 +115,8 @@ func build() -> void:
 	elif place == "MIST_WATCH":
 		_add_forest_branch(6, .87, Vector2(.18,.55))
 	building = false
-	_build_occlusion_maps()
 	_build_natural_edges()
+	_build_occlusion_maps()
 
 func _add_pickup(id: String, location: String, at: Vector2) -> void:
 	if id in collected: return
@@ -185,6 +185,19 @@ func _wood_piece(label: String, center: Vector3, dimensions: Vector3) -> void:
 	mesh.position = center
 	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mesh)
+	_register_rail_mask(center, dimensions)
+
+func _register_rail_mask(center: Vector3, dimensions: Vector3) -> void:
+	var region: Dictionary = Catalog.data().regions[clampi(int(center.x / 30.0), 0, 6)]
+	var contour: Array = []
+	for p in [Vector2(-1,1),Vector2(1,1),Vector2(1,-1),Vector2(-1,-1)]:
+		var x: float = center.x + p.x * dimensions.x * .5
+		var y: float = center.y + p.y * dimensions.y * .5
+		contour.append([(x - float(region.origin)) / 30.0 * 1920.0,
+			(Catalog.ORIGIN_V - (cos(deg_to_rad(Catalog.PITCH))*y-sin(deg_to_rad(Catalog.PITCH))*center.z)/Catalog.IMAGE_HEIGHT)*640.0])
+	var front := (Catalog.ORIGIN_V + sin(deg_to_rad(Catalog.PITCH))*(center.z+dimensions.z*.5)/Catalog.IMAGE_HEIGHT)*640.0
+	occlusion_pieces.append({"piece":{"place":region.places[0],"front":front,"contours":[contour]},
+		"asset":region.asset,"origin":region.origin,"span":30.0,"reference_width":1920.0,"reference_height":640.0})
 
 func _material(asset: String, transparent: bool = false) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

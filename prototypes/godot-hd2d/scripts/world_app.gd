@@ -344,7 +344,7 @@ func show_settings() -> void:
 
 func _preload_world() -> void:
 	pending.append("res://assets/world/path-stones.png")
-	for asset in ["citizens","enemies","world-atlas"]: pending.append("res://assets/expansion/"+asset+".png")
+	for asset in ["citizens","enemies","world-atlas","miro-packed","mill-brook"]: pending.append("res://assets/expansion/"+asset+".png")
 	for region in Catalog.data().regions:
 		pending.append(region.asset)
 	for region in Forest.data().segments: pending.append(region.asset)

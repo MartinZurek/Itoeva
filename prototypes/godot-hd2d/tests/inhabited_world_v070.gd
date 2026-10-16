@@ -15,7 +15,7 @@ func frames(count: int=12) -> void:
  for i in count:await physics_frame
 func run() -> void:
  check(Catalog.data().characters.size()==8,"Neue Bewohner werden nicht als spielbare Figuren angeboten")
- check(Residents.data().size()==11,"Acht alte und drei neue Einwohner")
+ check(Residents.data().size()==12,"Acht alte und vier neue Einwohner")
  for hour in range(24):
   var places: Dictionary={}
   for id in Residents.data():
@@ -46,7 +46,7 @@ func run() -> void:
  app.world_clock.utc_offset=0
  await app.start_game()
  var visited_ids: Dictionary={}
- for room in ["OUTDOOR","CRAFT","NOOK","SUN_GLADE","FOREST_TRAIL"]:
+ for room in ["OUTDOOR","CRAFT","NOOK","SUN_GLADE","MILL_BROOK","FOREST_TRAIL"]:
   await app._mount_world(room,Forest.position_for(1,.2) if room=="FOREST_TRAIL" else Catalog.position_for("STREET" if room=="OUTDOOR" else room,Vector2(.25,.65)))
   app._resume();await frames(30)
   for resident in app.actors:
@@ -65,7 +65,7 @@ func run() -> void:
    app._show_conversation("nella",citizen.get_meta("appointment"));await process_frame
    check(app.paused and app.dialog_open,"Neue Bewohner führen Dialoge")
    app._resume()
- check(visited_ids.size()==10,"Alle anderen Figuren über ihre Aufenthaltsorte auffindbar")
+ check(visited_ids.size()==11,"Alle anderen Figuren über ihre Aufenthaltsorte auffindbar")
  # Both forest branch entries use their matching return segment, not the forest entrance.
  for branch in [{"segment":1,"to":"SUN_GLADE"},{"segment":6,"to":"MIST_WATCH"}]:
   await app._mount_world("FOREST_TRAIL",Forest.position_for(branch.segment,.76 if branch.segment==1 else .87))
@@ -115,10 +115,10 @@ func run() -> void:
  await app._mount_world("MIST_WATCH",Catalog.position_for("MIST_WATCH",Vector2(.5,.6)));app._resume();await frames()
  app.show_map();await frames()
  var map: Control=app.ui.get_child(0)
- check(map.nodes.size()==20 and map.chips.size()==20,"Illustrierte Karte besitzt bedienbare Ortsmarker")
+ check(map.nodes.size()==21 and map.chips.size()==21,"Illustrierte Karte besitzt bedienbare Ortsmarker")
  var represented: Array=[]
  for node in map.nodes:represented.append_array(node.places)
- check(represented.size()==37,"Alle 37 Orte sind im Atlas vertreten")
+ check(represented.size()==38,"Alle 38 Orte sind im Atlas vertreten")
  map._select("MIST_WATCH")
  check(map.detail.text.contains("keine Brücke") and map.detail.text.contains("Sonnenhain") and map.detail.text.contains("Tiefer Wald"),"Atlas zeigt zusammenlaufende Wege und gesperrte künftige Grenze")
  check(not Catalog.data().interiors.has("DEMON_WORLD"),"Dämonenwelt erhält keinen vorzeitigen Zugang")

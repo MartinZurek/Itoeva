@@ -25,14 +25,16 @@ func _ready() -> void:
  painted_material.set_shader_parameter("atlas",sprite.texture);sprite.material_override=painted_material
  sprite.offset=Vector2(0,cell_size.y*.5-2);add_child(sprite)
  shadow=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(1.15,.62);shadow.mesh=plane
- var material:=ShaderMaterial.new();material.shader=load("res://shaders/contact_shadow.gdshader")
+ var material:=ShaderMaterial.new();material.shader=load("res://shaders/contact_shadow.gdshader");material.render_priority=2
  shadow.material_override=material;shadow.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
  get_parent().add_child.call_deferred(shadow)
  set_world_scale(base_pixel_size,jump_height,body_pixel_size);_update_frame(false)
 
 func _update_sprite_scale() -> void:
  sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1,float(frame_bounds[0].size.y))
- sprite.position=Vector3.UP*hover;_update_occlusion()
+ sprite.position=Vector3.UP*hover
+ sprite.offset.y=cell_size.y*.5-2.0 if mounted else float(frame_bounds[sprite.frame].end.y)-cell_size.y*.5
+ _update_occlusion()
 
 func rest_frame() -> int:
  return 2 if facing.y<0 and absf(facing.y)>absf(facing.x) else 1 if absf(facing.y)>absf(facing.x) else 0
@@ -59,6 +61,6 @@ func visual_screen_rect(camera: Camera3D) -> Rect2:
   for y in [bounds.position.y,bounds.end.y]:
    var local_x:=float(x)-cell_size.x*.5
    if sprite.flip_h:local_x=-local_x
-   var point:=global_position+sprite.position+camera.global_basis.x*local_x*sprite.pixel_size+camera.global_basis.y*(cell_size.y-2-float(y))*sprite.pixel_size
+   var point:=global_position+sprite.position+camera.global_basis.x*local_x*sprite.pixel_size+camera.global_basis.y*(cell_size.y*.5+sprite.offset.y-float(y))*sprite.pixel_size
    var screen:=camera.unproject_position(point);minimum=minimum.min(screen);maximum=maximum.max(screen)
  return Rect2(minimum,maximum-minimum)

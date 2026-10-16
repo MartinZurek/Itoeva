@@ -38,10 +38,11 @@ func _ready() -> void:
   _node("SHADOW_CLEARING","Nachtlichtung",Vector2(.72,.15),["SHADOW_CLEARING"]),
   _node("SHADOW_DEPTHS","Tiefer Wald",Vector2(.82,.28),["SHADOW_DEPTHS"]),
   _node("SUN_GLADE","Sonnenhain",Vector2(.12,.43),["SUN_GLADE"]),
-  _node("MIST_WATCH","Nebelwacht",Vector2(.70,.41),["MIST_WATCH"])]
+  _node("MIST_WATCH","Nebelwacht",Vector2(.70,.41),["MIST_WATCH"]),
+  _node("MILL_BROOK","Mühlenbach",Vector2(.12,.59),["MILL_BROOK"])]
  # A continuous outdoor route, seven forest sections, then two converging branches.
  links=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],
-  [5,11],[11,12],[12,13],[13,14],[14,15],[15,16],[16,17],[5,18],[12,18],[18,19],[17,19]]
+  [5,11],[11,12],[12,13],[13,14],[14,15],[15,16],[16,17],[5,18],[12,18],[18,19],[17,19],[18,20]]
  heading=Label.new();heading.text="ITOЕVA  ·  Atlas der bekannten Wege";heading.add_theme_font_size_override("font_size",27);add_child(heading)
  close=Button.new();close.text="Zurück zur Welt";close.pressed.connect(app._resume);add_child(close)
  app.menu_buttons.append(close)
@@ -99,6 +100,7 @@ func _select(id: String) -> void:
    inhabitants+=1;lines.append(str(Residents.data()[resident].name)+" · "+str(Residents.data()[resident].role))
  if inhabitants==0:lines.append("Zurzeit keine Bewohner hier.")
  if id in ["SHADOW_GATE","SHADOW_BROOK","SHADOW_CLEARING","SHADOW_DEPTHS"]:lines.append("\n[color=#e5b3a1]Dunkelwald: keine Bewohner. Vorsicht vor Gegnern.[/color]")
+ if id=="MILL_BROOK":lines.append("\nEin heller Bachweg an der alten Wassermühle. Miro wartet tagsüber das Wasserrad.")
  if id=="SUN_GLADE":lines.append("\nEin heller Birkenhain mit Kräutern und alten Grenzsteinen. Dornmotten bewachen den Weg.")
  if id=="MIST_WATCH":lines.append("\nDie Waldwege treffen an der alten Grenzwacht zusammen. Dahinter liegt die Schlucht zur Dämonenwelt.\n\n[color=#eac886]Künftige Route: noch keine Brücke, kein Übergang.[/color]")
  detail.text="\n".join(lines)
