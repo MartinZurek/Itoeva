@@ -20,7 +20,7 @@ func run() -> void:
 	root.add_child(app)
 	while app.loading_world: await process_frame
 	await app.start_game()
-	check(app.stage.doors.size()==6,"Originalwelt plus Waldabzweig")
+	check(app.stage.doors.size()==7,"Originalwelt plus Wald- und Sonnenhainabzweig")
 	var door: Dictionary
 	for entry in app.stage.doors:
 		if entry.to=="FOREST_TRAIL": door=entry

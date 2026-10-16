@@ -11,12 +11,15 @@ var visual_clock := 0.0
 var baseline := Vector3.ZERO
 var view: Control
 var enemy_delay := .5
+var encounter_room := "FOREST_TRAIL"
+var automatic_trigger := true
 
 func _ready() -> void:
  model.configure(app.actor.species)
  model.prepare(app.save_data.get("card_decks",{}))
  model.restore(app.save_data.get("forest_encounters",{}).get(app.actor.species,{}))
  if model.phase == "unseen": model.prepare(app.save_data.get("card_decks",{}))
+ _restore_progress()
  _apply_visuals()
 
 func active() -> bool:
@@ -24,6 +27,7 @@ func active() -> bool:
 
 func persist() -> void:
  if not app.save_data.has("forest_encounters"): app.save_data["forest_encounters"] = {}
+ _persist_progress()
  app.save_data.forest_encounters[app.actor.species] = model.snapshot()
  app._save_progress()
 
@@ -52,8 +56,8 @@ func resume() -> bool:
  return true
 
 func _process(delta: float) -> void:
- if not app.world_ready or app.switching or app.room != "FOREST_TRAIL": return
- if model.phase == "unseen" and not app.paused and app.actor.position.x >= float(Forest.data().encounter.trigger_x):
+ if not app.world_ready or app.switching or app.room != encounter_room: return
+ if automatic_trigger and model.phase == "unseen" and not app.paused and app.actor.position.x >= float(Forest.data().encounter.trigger_x) and app.actor.position.x < 120.0:
   model.begin()
   resume()
   persist()
@@ -160,3 +164,21 @@ func _retreat_now() -> void:
  model.retreat()
  persist()
  app.retreat_forest()
+
+func _restore_progress() -> void:
+ if not app.save_data.has("battle_progress"):app.save_data["battle_progress"]={}
+ var records: Dictionary=app.save_data.battle_progress
+ if not records.has(app.actor.species):
+  # v0.6.x stored the same progress exclusively in the existing boss snapshot.
+  var legacy: Dictionary=app.save_data.get("forest_encounters",{}).get(app.actor.species,{})
+  records[app.actor.species]={"experience":legacy.get("experience",{}).duplicate(true),
+   "inventory":legacy.get("inventory",{"potion":0,"moon_shard":0}).duplicate(true),"victories":int(legacy.get("victories",0))}
+ var progress: Dictionary=records[app.actor.species]
+ model.experience=progress.experience.duplicate(true)
+ model.inventory=progress.inventory.duplicate(true)
+ model.victories=int(progress.victories)
+
+func _persist_progress() -> void:
+ if not app.save_data.has("battle_progress"):app.save_data["battle_progress"]={}
+ app.save_data.battle_progress[app.actor.species]={"experience":model.experience.duplicate(true),
+  "inventory":model.inventory.duplicate(true),"victories":model.victories}

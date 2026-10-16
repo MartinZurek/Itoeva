@@ -1,0 +1,64 @@
+{
+  "labels": {
+    "SUN_GLADE": "Sonnenhain",
+    "MIST_WATCH": "Nebelwacht"
+  },
+  "interiors": {
+    "SUN_GLADE": {
+      "asset": "res://assets/expansion/sun-glade.png",
+      "band": [
+        199,
+        220
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "MIST_WATCH": {
+      "asset": "res://assets/expansion/mist-watch.png",
+      "band": [
+        199,
+        220
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    }
+  },
+  "doors": [
+    {
+      "a": "FOREST",
+      "b": "SUN_GLADE",
+      "a_pos": [
+        0.8,
+        0.6
+      ],
+      "b_pos": [
+        0.15,
+        0.5
+      ]
+    },
+    {
+      "a": "SUN_GLADE",
+      "b": "MIST_WATCH",
+      "a_pos": [
+        0.86,
+        0.5
+      ],
+      "b_pos": [
+        0.82,
+        0.6
+      ]
+    }
+  ]
+}

@@ -131,7 +131,7 @@ func _build() -> void:
  var menu := _button("Menü",Rect2(1152,25,88,38),encounter.app.show_menu)
  menu.set_meta("battle_action","menu")
  _panel(Rect2(775,86,465,79))
- enemy_label = _label("NACHTWURZ",Rect2(794,92,395,27),21,GOLD)
+ enemy_label = _label(model.enemy_name.to_upper(),Rect2(794,92,395,27),21,GOLD)
  enemy_bar = _bar(Rect2(794,125,421,8),Color("ba717d"))
  enemy_bar.max_value = model.MAX_ENEMY_HP
  intent = _label("",Rect2(794,137,421,24),16,Color("c5bfdb"))
@@ -221,7 +221,7 @@ func _show_results() -> void:
  var menu := _button("Menü",Rect2(1100,41,112,42),encounter.app.show_menu)
  menu.set_meta("battle_action","menu")
  _panel(Rect2(640,124,592,461))
- _label("NACHTWURZ BESIEGT",Rect2(664,141,535,36),24,GOLD)
+ _label(model.enemy_name.to_upper()+" BESIEGT",Rect2(664,141,535,36),24,GOLD)
  _label("ERFAHRUNG",Rect2(664,195,535,27),17,Color("a9cabc"))
  for i in model.result.get("members",[]).size():
   var member: Dictionary = model.result.members[i]
@@ -246,7 +246,7 @@ func _show_results() -> void:
  _label(lead.name+" und "+model.party[1].name,Rect2(72,510,510,35),23,GOLD)
  var reaction := _label(REACTIONS.get(lead.species,"Der Weg ist wieder frei."),Rect2(72,552,510,75),22)
  reaction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
- _label("Der tiefe Wald wartet auf euch.",Rect2(72,626,510,27),16,Color("b9cbd6"))
+ _label("Weitere Wege warten auf euch." if model.get("enemy_id")!=null and model.enemy_id!="" else "Der tiefe Wald wartet auf euch.",Rect2(72,626,510,27),16,Color("b9cbd6"))
  _update_results()
 
 func result_progress(index: int) -> float:

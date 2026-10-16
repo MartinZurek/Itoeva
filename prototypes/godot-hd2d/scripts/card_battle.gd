@@ -10,13 +10,15 @@ var source_decks: Dictionary={}
 var next_uid:=1
 var pending_advance:=false
 var enemy_max_hp:=BOSS_HP
+var enemy_id := ""
+var enemy_profile: Dictionary = {}
 const SPECIAL_CHARGES := 5
 var special_charges: Array[int] = [0,0]
 var special_used: Array[bool] = [false,false]
 
 func _init() -> void:
  super()
- enemy_health=BOSS_HP
+ enemy_health=enemy_max_hp
  prepare({})
 
 func prepare(custom: Dictionary) -> void:
@@ -291,7 +293,7 @@ func _resolve_card(owner: int,id: String,target: String,effects: Array) -> Dicti
    var gained:=mini(int(card.value),BARRIER_HP-int(party[owner].barrier))
    party[owner].barrier+=gained;effects.append({"target":owner,"amount":gained,"kind":"barrier"})
   "heal":
-   if owner==2:enemy_health=mini(BOSS_HP,enemy_health+int(card.value))
+   if owner==2:enemy_health=mini(enemy_max_hp,enemy_health+int(card.value))
    else:_heal_owner(owner,int(card.value),effects)
   "draw":_draw_cards(owner,int(card.value))
   "special":extra.merge(_resolve_special(owner,card.effect,effects),true)
@@ -452,6 +454,7 @@ func act(action: String,target: int=-1) -> bool:
 
 func enemy_act() -> bool:
  if phase!="battle" or cursor!=2 or playback_pending:return false
+ if not enemy_profile.is_empty():return _regional_enemy_act()
  var previous:=_before()
  var state: Dictionary=decks[2]
  var effects: Array[Dictionary]=[]
@@ -499,7 +502,7 @@ func acknowledge_animation() -> void:
 
 func _reset_fight() -> void:
  super._reset_fight()
- enemy_health=BOSS_HP
+ enemy_health=enemy_max_hp
  prepare(source_decks)
  _begin_turn(0)
 
@@ -518,12 +521,12 @@ func restore(saved: Dictionary) -> void:
   special_used[i]=bool(used[i]) if used is Array and used.size()==2 else false
  if not saved.has("card_schema"):
   prepare(source_decks)
-  if phase in ["unseen","intro"] and turn==0:enemy_health=BOSS_HP
+  if phase in ["unseen","intro"] and turn==0:enemy_health=enemy_max_hp
   if phase=="battle":
    for state in decks:state.cap=mini(10,maxi(1,round));state.crystals=state.cap
    _begin_turn(cursor)
   return
- enemy_health=clampi(int(saved.get("enemy_health",BOSS_HP)),0,BOSS_HP)
+ enemy_health=clampi(int(saved.get("enemy_health",enemy_max_hp)),0,enemy_max_hp)
  var custom=saved.get("source_decks",{})
  if custom is Dictionary:source_decks=custom.duplicate(true)
  var states=saved.get("card_decks",[])
@@ -577,3 +580,57 @@ func restore(saved: Dictionary) -> void:
  for unit in board:next_uid=maxi(next_uid,int(unit.uid)+1)
  pending_advance=bool(saved.get("pending_advance",false)) and playback_pending
  if phase=="battle" and cursor<2 and party[cursor].hp<=0 and not playback_pending:_advance_actor()
+
+func configure_enemy(id: String, profile: Dictionary) -> void:
+ enemy_id=id;enemy_profile=profile.duplicate(true)
+ enemy_name=str(profile.name);enemy_max_hp=int(profile.hp);enemy_health=enemy_max_hp
+
+func begin() -> void:
+ super.begin()
+ if not enemy_profile.is_empty():message=enemy_name+" erscheint. "+str(enemy_profile.description)
+
+func enemy_intent() -> String:
+ if enemy_profile.is_empty():return super.enemy_intent()
+ if enemy_stagger>0:return "Wanken · nächster Zug entfällt"
+ match enemy_profile.kind:
+  "moth":return "Pollenwirbel · beide"+(" · Verstummen" if round%3==0 else "")
+  "hound":return "Glutsprung · 22 Schaden" if round%3==0 else "Aschenbiss · 14 Schaden"
+  "guardian":return "Rindenerneuerung · 16 Heilung" if round%3==0 and enemy_burn==0 else "Wurzelschlag · 18 Schaden"
+ return "Angriff"
+
+func _regional_enemy_act() -> bool:
+ var previous:=_before()
+ var effects: Array[Dictionary]=[]
+ var title:=enemy_intent()
+ var visual: String={"moth":"wind","hound":"fire","guardian":"nature"}[enemy_profile.kind]
+ if enemy_stagger>0:
+  enemy_stagger-=1
+ elif enemy_profile.kind=="guardian" and round%3==0 and enemy_burn==0:
+  var healed:=mini(16,enemy_max_hp-enemy_health);enemy_health+=healed
+  effects.append({"target":2,"amount":healed,"kind":"heal"})
+ else:
+  var targets: Array[int]=[]
+  if enemy_profile.kind=="moth":
+   for i in 2:
+    if party[i].hp>0:targets.append(i)
+  else:
+   var target: int=(round-1)%2
+   if party[target].hp<=0:target=1-target
+   targets.append(target)
+  for target in targets:
+   var damage: int=9 if enemy_profile.kind=="moth" else 18 if enemy_profile.kind=="guardian" else 22 if round%3==0 else 14
+   if enemy_weaken>0:damage=int(ceil(damage*.65))
+   if party[target].guard:damage=int(ceil(damage*.35))
+   var bypassed:=_receive_hit(target,damage,effects)
+   if enemy_profile.kind=="moth" and round%3==0 and bypassed>0 and party[target].hp>0:
+    party[target].silence=1;effects.append({"target":target,"amount":1,"kind":"silence"})
+  if party[0].hp<=0 and party[1].hp<=0:phase="defeat"
+ if enemy_burn>0:
+  enemy_burn-=1
+  var burn:=mini(6,enemy_health);enemy_health-=burn
+  effects.append({"target":2,"amount":burn,"kind":"burn"})
+  if enemy_health==0 and phase!="defeat":phase="victory"
+ if enemy_weaken>0:enemy_weaken-=1
+ _event(enemy_name+" · "+title,visual,effects,previous,{"element":visual})
+ pending_advance=true
+ return true

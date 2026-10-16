@@ -6979,3 +6979,23 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   keine Behauptung eines menschlichen Hörtests der neuen Effekte.
 - **Übergabe:** docs/godot-kampfklang-und-lesbarkeit-v061.md; Branch
   codex/godot-battle-audio-readability; AndroidTest 0.6.1/Code17.
+
+
+### 2026-10-15 – Bewohner, Waldzweige und illustrierter Atlas (Godot 0.7.0)
+
+- **DOCUMENTED INTENT:** Martin beauftragt verteilte Bewohner im hellen Weltteil,
+  eigene Rollen/Tätigkeiten, neue NPCs/Gegner aus Concept Art, weitere Waldwege
+  und eine gezeichnete Karte; die Dämonenwelt-Brücke ausdrücklich noch nicht bauen.
+- **FACT:** Elf Bewohner, drei neue NPCs mit eigenen Geh-/Arbeitsposen, drei Gegner
+  mit eigenen Regeln, Sonnenhain/Nebelwacht und illustrierter Atlas für 37 Orte.
+  Kein Dunkelwald-Aufenthalt für Bewohner und kein vorzeitiger Schluchtübergang.
+- **Migration:** Gemeinsamer Welt-/Karten-Aufenthaltssnapshot; Kampf-Fortschritt je
+  Leitfigur mit Übernahme alter Nachtwurz-XP/Vorräte. Regionale Kampfzustände und
+  Quittungen bleiben getrennt. Kein nativer LAS-/Room-/Reminder-Umbau.
+- **TESTED BEHAVIOR:** Neue Integration623/0, Vollspiel82/0, Türmatrix208/0;
+  Karten-/Wald-/Licht-/Klangtests und echte GL-Aufnahmen. Zweite Codeprüfung samt
+  Korrektur und Nachprüfung von Standort-, Belohnungs- und Deck-Konsistenz.
+- **UNVERIFIED/Rücksetzung:** Geräte-GPU/FPS und menschliche APK-Abnahme offen.
+  Vor Rückbau sichern: 0.6.2 liest neue regionale Gewinne nicht vollständig.
+- **Übergabe:** docs/godot-belebte-welt-v070.md; AndroidTest 0.7.0/Code19,
+  codex/godot-inhabited-world-v070. Menschlicher Merge bleibt gesondert.

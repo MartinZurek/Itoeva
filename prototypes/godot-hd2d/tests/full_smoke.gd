@@ -28,7 +28,7 @@ func run() -> void:
 	await frames(5)
 	check(app.paused and app.portrait_cards.size() == 8, "Startmenue zeigt sechs Originalwesen, Mooslyn und Nocti")
 	var labels: Dictionary = Catalog.data().labels
-	check(labels.size() == 36 and Catalog.data().regions.size() == 7, "Katalog: 28 Originalorte, sieben Waldorte und Waldpfadlabel")
+	check(labels.size() == 38 and Catalog.data().regions.size() == 7, "Katalog: 28 Originalorte, sieben Waldorte, zwei Erweiterungen und Waldpfadlabel")
 	check(app.music_on == false and not app.music.playing, "Musik bleibt beim ersten Start aus")
 	var loading_deadline := Time.get_ticks_msec() + 30000
 	while app.loading_world and Time.get_ticks_msec() < loading_deadline:
@@ -47,8 +47,8 @@ func run() -> void:
 	await app.start_game()
 	await frames(20)
 	check(app.world_ready and app.actor.is_on_floor(), "Spiel startet mit 3D-Bodenkontakt")
-	check(app.stage.chunks.size() == 7 and app.actors.size() == 8, "Alle Panoramen und acht sichtbare Wesen sind integriert")
-	check(app.stage.doors.size() == 6, "Aussenwelt bietet fuenf Gebaeude und den Waldabzweig")
+	check(app.stage.chunks.size() == 7 and app.actor in app.actors and app.actors.size() < 8, "Alle Panoramen bleiben integriert; Bewohner verteilen sich auf unterschiedliche Szenen")
+	check(app.stage.doors.size() == 7, "Aussenwelt bietet fuenf Gebaeude, Waldabzweig und Sonnenhain")
 	var actor: CharacterBody3D = app.actor
 	# Freie Sportflaeche: die Parkbewohner duerfen diesen Tempotest nicht blockieren.
 	actor.position = Catalog.position_for("SPORT", Vector2(0.3, 0.60))
@@ -88,6 +88,10 @@ func run() -> void:
 	check(actor.sprite.frame == 110, "Ruecken-Sitzen bleibt in der nativen Rueckenpose")
 	actor.request_action("sit")
 	await frames(3)
+	# Freier Bergpass: Ein naher Bewohner darf die Kontexttaste nicht in Sprechen aendern.
+	actor.position = app.stage.safe_position(Catalog.position_for("MOUNTAIN_PASS", Vector2(.5,.65)))
+	actor.velocity = Vector3.ZERO
+	await frames(15)
 	# Die zwei Daumen werden durch echte viewport-lokale ScreenTouch-Ereignisse getestet.
 	var hud: Control = app.hud
 	var touch := InputEventScreenTouch.new()
