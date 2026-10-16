@@ -6999,3 +6999,24 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   Vor Rückbau sichern: 0.6.2 liest neue regionale Gewinne nicht vollständig.
 - **Übergabe:** docs/godot-belebte-welt-v070.md; AndroidTest 0.7.0/Code19,
   codex/godot-inhabited-world-v070. Menschlicher Merge bleibt gesondert.
+
+### 2026-10-16 – Mühlenbach, Miro und korrekte Überdeckungen (nach Godot 0.7.0)
+
+- **DOCUMENTED INTENT:** Martin beauftragt die Umsetzung/Erweiterung vorhandener
+  Concept Art und Landschaften mit neuen Bewohnern sowie die Prüfung von Schatten,
+  eingesunkenen Figuren und falschen Überdeckungen insbesondere an Brückengeländern.
+- **FACT:** Neuer heller Mühlenbach am Sonnenhain und Mühlenwart Miro mit eigener
+  Grafik, Geh-/Arbeitsposen, Tagesplan, Dialog und Weltkartenmarker. Bestehende
+  Landschaften/Bewohner bleiben Basis; Dämonenwelt-Schlucht weiterhin ohne Übergang.
+- **Darstellung:** Vordere Schattenbach-Geländerkonturen neu nachgezeichnet,
+  zusätzliche räumliche Holzgeländer in Tiefenmasken aufgenommen, Alpha-Fußanker
+  mit festen Sitzankern und kompaktatlasgerechtem Lichtzentrum; Kontaktschatten
+  mit Körpermaß, Kontaktkern und Höhenabschwächung. Keine Spielstandmigration.
+- **TESTED BEHAVIOR:** Neue Tiefen-/Landschaftsprüfung259/0 und zwei echte
+  OpenGL-Pixelvergleiche; weitere Regressionen siehe Übergabe. Unabhängige zweite
+  Prüfung fand einen Sitzoffset-Befund, der behoben und unabhängig nachgeprüft wurde.
+- **UNVERIFIED:** Android-Geräteabnahme/GPU/FPS und neue APK-Auslieferung offen.
+  Die ausgelieferte APK 0.7.0 bleibt hiervon getrennt; kein Releaseworkflow-Umbau.
+- **Übergabe:** docs/godot-landschaft-und-tiefe-v071.md, Branch
+  codex/godot-landscape-depth-v071. Vor APK das zum neuen Commit passende Manifest
+  und die Version in den bestehenden freigegebenen Lieferweg übernehmen.

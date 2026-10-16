@@ -20,9 +20,9 @@ static func position_for(entry: Dictionary) -> Vector3:
  return Catalog.position_for(entry.place, uv)
 static func portrait(id: String) -> AtlasTexture:
  if int(data()[id].row) < 0: return Catalog.portrait(id)
- var rows: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/citizens_atlas.json"))
+ var rows: Array = JSON.parse_string(FileAccess.get_file_as_string(data()[id].get("atlas", "res://data/citizens_atlas.json")))
  var b: Array = rows[int(data()[id].row)][0]
  var atlas := AtlasTexture.new()
- atlas.atlas = load("res://assets/expansion/citizens.png")
+ atlas.atlas = load(data()[id].get("asset", "res://assets/expansion/citizens.png"))
  atlas.region = Rect2(b[0],b[1],b[2],b[3])
  return atlas

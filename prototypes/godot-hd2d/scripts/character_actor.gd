@@ -116,6 +116,7 @@ func _ready() -> void:
 	shadow.mesh = plane
 	var material := ShaderMaterial.new()
 	material.shader = load("res://shaders/contact_shadow.gdshader")
+	material.render_priority = 2
 	shadow.material_override = material
 	shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	get_parent().add_child.call_deferred(shadow)
@@ -141,6 +142,7 @@ func _update_sprite_scale() -> void:
 	# Ein fester Faktor pro ganzer Folge: keine pulsierenden Gesichter pro Bild.
 	sprite.pixel_size = base_pixel_size * size_factor * float(pose_scales.get(sprite.frame, 1.0))
 	sprite.position = Vector3.UP * hover
+	sprite.offset.y = 62.0 if mounted else float(frame_bounds[sprite.frame].end.y) - 64.0
 	_update_occlusion()
 
 func _median(values: Array[float]) -> float:
@@ -193,7 +195,7 @@ func visual_screen_rect(camera: Camera3D) -> Rect2:
 		for y in [bounds.position.y, bounds.end.y]:
 			var local_x := float(x) - 64.0
 			if sprite.flip_h: local_x = -local_x
-			var point := global_position + sprite.position + camera.global_basis.x * local_x * sprite.pixel_size + camera.global_basis.y * (126.0 - float(y)) * sprite.pixel_size
+			var point := global_position + sprite.position + camera.global_basis.x * local_x * sprite.pixel_size + camera.global_basis.y * (64.0 + sprite.offset.y - float(y)) * sprite.pixel_size
 			var screen := camera.unproject_position(point)
 			minimum = minimum.min(screen)
 			maximum = maximum.max(screen)
@@ -209,8 +211,9 @@ func light_center() -> Vector3:
 	var up:=camera.global_basis.y if camera else Vector3.UP
 	var right:=camera.global_basis.x if camera else Vector3.RIGHT
 	var center:=Vector2(frame_bounds[sprite.frame].get_center())
-	var x: float=(center.x-64.0)*sprite.pixel_size*(-1.0 if sprite.flip_h else 1.0)
-	return global_position+sprite.position+right*x+up*(126.0-center.y)*sprite.pixel_size
+	var cell := sprite.texture.get_size() / Vector2(sprite.hframes, sprite.vframes)
+	var x: float=(center.x-cell.x*.5)*sprite.pixel_size*(-1.0 if sprite.flip_h else 1.0)
+	return global_position+sprite.position+right*x+up*(cell.y*.5+sprite.offset.y-center.y)*sprite.pixel_size
 
 func _update_occlusion() -> void:
 	if not is_instance_valid(painted_material) or not is_inside_tree():
@@ -478,8 +481,10 @@ func _update_shadow() -> void:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	shadow.visible = not hit.is_empty()
 	if not hit.is_empty():
-		shadow.global_position = hit.position + Vector3.UP * 0.008
-		var scale_factor := base_pixel_size / 0.020 * clampf(1.0 - (global_position.y - hit.position.y) * 0.22, 0.4, 1.0)
+		shadow.global_position = hit.position + Vector3.UP * 0.018
+		var height_above := maxf(0.0, global_position.y - hit.position.y + hover)
+		var scale_factor := body_pixel_size / 0.020 * Catalog.relative_height(species) * lerpf(1.0, 1.35, clampf(height_above / 2.0, 0, 1))
+		shadow.material_override.set_shader_parameter("opacity", lerpf(0.34, 0.08, clampf(height_above / 2.0, 0, 1)))
 		shadow.scale = Vector3.ONE * scale_factor
 
 func _exit_tree() -> void:
