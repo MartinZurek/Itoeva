@@ -7020,3 +7020,21 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **Übergabe:** docs/godot-landschaft-und-tiefe-v071.md, Branch
   codex/godot-landscape-depth-v071. Vor APK das zum neuen Commit passende Manifest
   und die Version in den bestehenden freigegebenen Lieferweg übernehmen.
+
+### 2026-10-16 – Dämonenvorhut und APK 0.8.0
+
+- **DOCUMENTED INTENT:** Vor dem beauftragten APK-Bau Grafik prüfen, zwei neue
+  Figuren mit eigenen Kampffähigkeiten ergänzen und Dämonen-Endboss-Concept-Art
+  vorbereiten. Reihenfolge Dämonen, Artefakte, Maschinen.
+- **FACT:** Glutwicht und Siegelweber stehen als Dämonenvorhut an der Nebelwacht.
+  Vorbereitete Glut wird durch Wasser/Wanken, das Siegel durch Ankerzerstörung/
+  Wanken beantwortet; Schutz und Status folgen bestehenden Kampfregeln. Sechs
+  eigene Posen je Gegner. Weltgegner erhalten Bodenschatten und Kulissenmasken.
+- **ENTWURF:** Vharok ist eigene Concept Art mit Drei-Siegel-/Glutkern-/Sturm-
+  Phasenidee, noch kein spielbarer Endboss. Artefakt-/Maschinenwelt unverändert.
+- **TESTED BEHAVIOR:** 89 neue Regel-/Weltchecks, Renderkontrolle aller acht Helden
+  und beider Gegner; bestehende Regressionen im Build erneut. Rituale überstehen
+  Save/Resume ohne Doppelwirkung und werden bei Neustart zurückgesetzt.
+- **UNVERIFIED:** Telefon-FPS/GPU und menschliche APK-Abnahme stehen aus.
+- **Übergabe:** docs/godot-daemonenvorhut-v080.md, AndroidTest 0.8.0/Code20,
+  neuer Runtime-Manifest und bestehender signierter Build-/Drive-Lieferweg.

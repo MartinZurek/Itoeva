@@ -1,26 +1,26 @@
 # Vorlage: claude/godot-hd2d-apk; expliziter Build-Auftrag vom 13.10.2026.
 # AndroidTest und DEBUG_KEYSTORE_BASE64; ersetzt die freigegebene Drive-Zieldatei.
-name: Godot Test APK 0.7.0
+name: Godot Test APK 0.8.0
 
 on:
   push:
-    branches: [codex/godot-inhabited-world-v070]
+    branches: [codex/godot-demon-v080]
     paths:
       - 'prototypes/godot-hd2d/**'
-      - 'docs/godot-v070-runtime-manifest.json'
+      - 'docs/godot-v080-runtime-manifest.json'
       - '.github/workflows/godot-apk.yml'
   workflow_dispatch:
 
 permissions: {}
 
 concurrency:
-  group: godot-test-apk-v070
+  group: godot-test-apk-v080
   cancel-in-progress: false
 
 env:
   GODOT_VERSION: '4.5.1'
   PROJECT: prototypes/godot-hd2d
-  APK_NAME: Itoeva_Godot_Test_v0.7.0.apk
+  APK_NAME: Itoeva_Godot_Test_v0.8.0.apk
   FILE_ID: 148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX
 
 jobs:
@@ -38,21 +38,21 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Laufzeitdateien gegen 0.7.0-Manifest pruefen
+      - name: Laufzeitdateien gegen 0.8.0-Manifest pruefen
         run: |
           python3 - <<'PY'
           import hashlib, json, os, pathlib
           project = pathlib.Path(os.environ['PROJECT'])
-          manifest = json.loads(pathlib.Path('docs/godot-v070-runtime-manifest.json').read_text())
-          assert manifest['sha256'] == '7dfa229da7c22d18dea074dc04b5f5c8412f82a4e3f0516acda72cf5765baaaa'
+          manifest = json.loads(pathlib.Path('docs/godot-v080-runtime-manifest.json').read_text())
+          assert manifest['sha256'] == 'a0ba123ffc7997351ad9649b82f15c8b25c8a787d5a02b2aa0d3643d29291c24'
           canonical = ''.join(item['path'] + '\0' + item['sha256'] + '\n' for item in manifest['files']).encode()
           assert hashlib.sha256(canonical).hexdigest() == manifest['sha256']
-          assert len(manifest['files']) == 292
+          assert len(manifest['files']) == 302
           for item in manifest['files']:
               data = (project / item['path']).read_bytes()
               assert len(data) == item['bytes'], item['path']
               assert hashlib.sha256(data).hexdigest() == item['sha256'], item['path']
-          print('292 Laufzeit-/Exportdateien stimmen bytegenau mit v0.7.0 ueberein.')
+          print('302 Laufzeit-/Exportdateien stimmen bytegenau mit v0.8.0 ueberein.')
           PY
 
       - name: Godot und Export-Templates (Cache)
@@ -102,7 +102,7 @@ jobs:
           timeout 600 "$GODOT" --headless --editor --path "$PROJECT" --import --quit \
             2>&1 | tee "$PROJECT/build/import.log"
           for test in card_model card_rules special_rules victory_flow card_ui minion_ui \
-                      forest_trail card_playthrough full_smoke full_framing full_doors expanded_cards expanded_card_ui ambience_coordinates battle_feedback_audio polish_v062 inhabited_world_v070; do
+                      forest_trail card_playthrough full_smoke full_framing full_doors expanded_cards expanded_card_ui ambience_coordinates battle_feedback_audio polish_v062 inhabited_world_v070 landscape_depth_v071 demons_v080; do
             timeout 300 "$GODOT" --headless --fixed-fps 60 --path "$PROJECT" \
               --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
             ! grep -qE "SCRIPT ERROR|Parse Error|Compile Error" "$PROJECT/build/${test}.log"
@@ -117,7 +117,7 @@ jobs:
       - name: Feuer und Figurenlicht visuell pruefen
         run: |
           set -euo pipefail
-          for test in ambience_render forest_render firelight_render firelight_capture battle_feedback_capture polish_capture_v062 inhabited_capture_v070; do
+          for test in ambience_render forest_render firelight_render firelight_capture battle_feedback_capture polish_capture_v062 inhabited_capture_v070 depth_capture_v071 demon_capture_v080; do
             timeout 300 xvfb-run -a "$GODOT" --audio-driver Dummy --rendering-driver opengl3 --fixed-fps 60 --path "$PROJECT" \
               --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
             ! grep -qE "SCRIPT ERROR|Parse Error|Compile Error" "$PROJECT/build/${test}.log"
@@ -150,7 +150,7 @@ jobs:
           bt="$(find "$sdk/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
           "$bt/apksigner" verify --verbose --print-certs "$apk" | tee "$PROJECT/build/signature.txt"
           "$bt/aapt" dump badging "$apk" > "$PROJECT/build/package.txt"
-          grep "^package: name='com.itoeva.godot.hd2d.worldtest' versionCode='19' versionName='0.7.0'" "$PROJECT/build/package.txt"
+          grep "^package: name='com.itoeva.godot.hd2d.worldtest' versionCode='20' versionName='0.8.0'" "$PROJECT/build/package.txt"
           grep "^native-code: 'arm64-v8a'$" "$PROJECT/build/package.txt"
           if grep -q "android.permission.INTERNET" "$PROJECT/build/package.txt"; then
             echo '::error::Unerwartete Internetberechtigung.'
@@ -164,7 +164,7 @@ jobs:
           report = dict(commit=os.environ['GITHUB_SHA'], run_id=os.environ['GITHUB_RUN_ID'],
                         file_id=os.environ['FILE_ID'], bytes=len(data),
                         sha256=hashlib.sha256(data).hexdigest(), md5=hashlib.md5(data).hexdigest(),
-                        package='com.itoeva.godot.hd2d.worldtest', version='0.7.0', version_code=19)
+                        package='com.itoeva.godot.hd2d.worldtest', version='0.8.0', version_code=20)
           apk.with_name('build-report.json').write_text(json.dumps(report, indent=2) + '\n')
           print(json.dumps(report, indent=2))
           PY
@@ -176,7 +176,7 @@ jobs:
       - name: Gepruefte APK als Artefakt sichern
         uses: actions/upload-artifact@v4
         with:
-          name: itoeva-godot-v070-${{ github.sha }}
+          name: itoeva-godot-v080-${{ github.sha }}
           path: |
             ${{ env.PROJECT }}/build/${{ env.APK_NAME }}
             ${{ env.PROJECT }}/build/${{ env.APK_NAME }}.sha256
@@ -206,7 +206,7 @@ jobs:
           echo "::add-mask::$token"
           apk="$PROJECT/build/$APK_NAME"
           bytes="$(stat -c %s "$apk")"
-          description="Itoeva Godot Test 0.7.0; Commit $GITHUB_SHA; Lauf $GITHUB_RUN_ID; SHA-256 $(jq -r .sha256 "$PROJECT/build/build-report.json")"
+          description="Itoeva Godot Test 0.8.0; Commit $GITHUB_SHA; Lauf $GITHUB_RUN_ID; SHA-256 $(jq -r .sha256 "$PROJECT/build/build-report.json")"
           jq -n --arg description "$description" --arg name "$APK_NAME" '{description:$description,name:$name}' > "$upload_tmp/metadata.json"
           curl --fail-with-body -sS -X PATCH \
             -H "Authorization: Bearer $token" \
@@ -239,7 +239,7 @@ jobs:
           assert remote['md5Checksum'] == local['md5'], remote
           if remote.get('sha256Checksum'):
               assert remote['sha256Checksum'] == local['sha256'], remote
-          summary = (f"APK 0.7.0 / Code 19\n\nCommit: `{local['commit']}`\n\n"
+          summary = (f"APK 0.8.0 / Code 20\n\nCommit: `{local['commit']}`\n\n"
                      f"Groesse: {local['bytes']} Bytes\n\nSHA-256: `{local['sha256']}`\n\n"
                      f"Drive: {remote.get('webViewLink', remote['id'])}\n")
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
@@ -251,11 +251,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: godot-v070-protokolle-${{ github.run_id }}-${{ github.run_attempt }}
+          name: godot-v080-protokolle-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ env.PROJECT }}/build/*.log
             ${{ env.PROJECT }}/build/*.json
             ${{ env.PROJECT }}/build/*.txt
+            ${{ env.PROJECT }}/captures/v080-*.png
+            ${{ env.PROJECT }}/captures/v071-*.png
             ${{ env.PROJECT }}/captures/v070-*.png
             ${{ env.PROJECT }}/captures/firelight-*.png
           if-no-files-found: ignore

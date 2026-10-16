@@ -344,7 +344,7 @@ func show_settings() -> void:
 
 func _preload_world() -> void:
 	pending.append("res://assets/world/path-stones.png")
-	for asset in ["citizens","enemies","world-atlas","miro-packed","mill-brook"]: pending.append("res://assets/expansion/"+asset+".png")
+	for asset in ["citizens","enemies","world-atlas","miro-packed","mill-brook","glut-imp","seal-weaver"]: pending.append("res://assets/expansion/"+asset+".png")
 	for region in Catalog.data().regions:
 		pending.append(region.asset)
 	for region in Forest.data().segments: pending.append(region.asset)
@@ -796,6 +796,7 @@ func _process(delta: float) -> void:
 		var darkness: float=Forest.region_at(actor.position.x).darkness
 		actor.painted_material.set_shader_parameter("scene_light",Color.WHITE.lerp(Color(.33,.43,.58),darkness*.8))
 	_update_residents(delta)
+	_update_regional_art()
 	clock_tick += delta
 	if clock_tick > 0.5:
 		clock_tick = 0.0
@@ -1059,11 +1060,23 @@ func _mount_regional_enemies() -> void:
 		var point: Vector3=stage.safe_position(Catalog.position_for(room,Vector2(profile.uv[0],profile.uv[1])))
 		var art:=Sprite3D.new();art.texture=Enemies.texture(id);art.billboard=BaseMaterial3D.BILLBOARD_ENABLED
 		art.shaded=false;art.alpha_cut=SpriteBase3D.ALPHA_CUT_DISCARD;art.alpha_scissor_threshold=.12
-		art.pixel_size=stage.base_pixel_size*109.0*1.1/art.texture.get_height()
+		art.pixel_size=stage.base_pixel_size*109.0*float(profile.get("height",1.1))/art.texture.get_height()
 		art.offset.y=art.texture.get_height()*.5;art.position=point
 		if id=="thorn_moth":art.position.y+=.85
+		var material:=ShaderMaterial.new();material.shader=load("res://shaders/painted_character.gdshader")
+		material.render_priority=10;material.set_shader_parameter("atlas",art.texture);material.set_shader_parameter("foot",point)
+		art.material_override=material
+		var mask: Dictionary=stage.actor_occlusion(point)
+		material.set_shader_parameter("has_mask",mask.mask!=null)
+		if mask.mask!=null:material.set_shader_parameter("furniture_mask",mask.mask)
+		material.set_shader_parameter("scene_origin",mask.origin);material.set_shader_parameter("scene_span",mask.span)
 		stage.add_child(art)
-		regional_markers.append({"id":id,"position":point,"art":art})
+		var shadow:=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(1,.55);shadow.mesh=plane
+		var contact:=ShaderMaterial.new();contact.shader=load("res://shaders/contact_shadow.gdshader");contact.render_priority=2
+		contact.set_shader_parameter("opacity",.18 if id=="thorn_moth" else .34)
+		shadow.material_override=contact;shadow.position=Vector3(point.x,.018,point.z)
+		shadow.scale=Vector3.ONE*stage.body_pixel_size/.020*float(profile.get("height",1.1));stage.add_child(shadow)
+		regional_markers.append({"id":id,"position":point,"art":art,"pose":0,"material":material,"shadow":shadow})
 	# Restore a suspended regional encounter after reopening the saved location.
 	for marker in regional_markers:
 		var saved: Dictionary=save_data.get("forest_encounters",{}).get(actor.species+":"+marker.id,{})
@@ -1124,3 +1137,14 @@ func _refresh_residents() -> void:
 		actors.append(resident)
 	for creature in actors:
 		creature.sprite.modulate=_character_tint()
+
+
+func _update_regional_art() -> void:
+	for marker in regional_markers:
+		if not is_instance_valid(marker.art):continue
+		stage.apply_actor_light(marker.material,marker.position)
+		var pose:=5 if fmod(game_clock+float(marker.position.x),8.0)>6.5 else 0
+		if pose!=marker.pose:
+			marker.pose=pose;marker.art.texture=Enemies.texture(marker.id,pose)
+			marker.art.offset.y=marker.art.texture.get_height()*.5
+			marker.material.set_shader_parameter("atlas",marker.art.texture)

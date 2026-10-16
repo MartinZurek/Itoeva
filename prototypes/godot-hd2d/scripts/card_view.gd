@@ -541,10 +541,16 @@ func _regional_fighter() -> void:
  elif state=="hit":pose=3;foot.x+=sin(event_time*45)*5
  elif state=="fall":pose=4
  elif model.enemy_profile.kind=="moth":foot.y-=sin(clock*3)*7
+ if state=="idle":
+  if model.demon_charge:pose=1
+  elif model.seal_pending:pose=5
  var enemies=load("res://scripts/regional_enemies.gd")
  var region: Rect2=enemies.region(model.enemy_id,pose)
- var texture: Texture2D=load("res://assets/expansion/enemies.png")
+ var texture: Texture2D=load(enemies.asset(model.enemy_id))
  var scale_factor: float=190.0/enemies.region(model.enemy_id,0).size.y
  var dimensions: Vector2=region.size*scale_factor
  var tint:=Color("ffd6bd") if state=="hit" else Color.WHITE
+ if model.demon_charge or model.seal_pending:
+  var pulse:=.55+.15*sin(clock*2.5)
+  draw_arc(foot-Vector2(0,70),82,0,TAU,48,Color(1.0,.35,.12,pulse) if model.demon_charge else Color(.74,.32,.88,pulse),2,true)
  draw_texture_rect_region(texture,Rect2(foot-Vector2(dimensions.x*.5,dimensions.y),dimensions),region,tint)

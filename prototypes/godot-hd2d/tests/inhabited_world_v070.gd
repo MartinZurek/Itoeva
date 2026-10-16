@@ -83,7 +83,7 @@ func run() -> void:
   check(app.room=="FOREST_TRAIL" and Forest.region_at(app.actor.position.x).id==("GREENWOOD" if branch.segment==1 else "SHADOW_DEPTHS"),"Rückweg landet am richtigen Waldabschnitt")
  await app._mount_world("MIST_WATCH",Catalog.position_for("MIST_WATCH",Vector2(.5,.6)))
  app._resume();await frames()
- check(app.regional_markers.size()==2,"Zwei unterschiedliche Gegner an der Nebelwacht")
+ check(app.regional_markers.size()==4,"Vier unterschiedliche Gegner an der Nebelwacht")
  app._show_enemy("ash_hound");await process_frame
  app.menu_buttons[0].pressed.emit();await frames()
  check(app.forest_encounter.model.enemy_name=="Aschenläufer" and app.paused,"Regionaler Kampf startet über sichtbare Aktion")
