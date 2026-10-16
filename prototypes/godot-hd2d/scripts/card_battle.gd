@@ -12,6 +12,8 @@ var pending_advance:=false
 var enemy_max_hp:=BOSS_HP
 var enemy_id := ""
 var enemy_profile: Dictionary = {}
+var demon_charge := false
+var seal_pending := false
 const SPECIAL_CHARGES := 5
 var special_charges: Array[int] = [0,0]
 var special_used: Array[bool] = [false,false]
@@ -25,6 +27,7 @@ func prepare(custom: Dictionary) -> void:
  source_decks=custom.duplicate(true)
  decks.clear();board.clear();fallen=[[],[],[]];next_uid=1;pending_advance=false
  special_charges=[0,0];special_used=[false,false]
+ demon_charge=false;seal_pending=false
  for owner in 3:
   var species: String="enemy" if owner==2 else str(party[owner].species)
   var entries: Array=custom.get(species,[])
@@ -57,6 +60,7 @@ func _begin_turn(owner: int) -> void:
 
 func advance_intro(delta: float) -> bool:
  if not super.advance_intro(delta):return false
+ if not enemy_profile.is_empty():message=enemy_name+" · "+str(enemy_profile.description)
  if decks[cursor].turns==0:_begin_turn(cursor)
  return true
 
@@ -348,6 +352,7 @@ func play_card(index: int,target: String="enemy") -> bool:
  if card.kind!="minion":state.discard.append(id)
  var effects: Array[Dictionary]=[]
  var extra:=_resolve_card(cursor,id,target,effects)
+ _counter_demon(str(card.element),effects)
  _gain_charge(cursor)
  if card.kind=="special":extra.merge({"duration":2.8,"impact":1.1},true)
  _event(card.name,"special_"+card.effect if card.kind=="special" else "card_summon" if card.kind in ["minion","revive"] else "card_spell",effects,previous,extra)
@@ -396,6 +401,7 @@ func act(action: String,target: int=-1) -> bool:
   var previous:=_before();var card:=special_card();var effects: Array[Dictionary]=[]
   var extra:=_resolve_special(cursor,card.effect,effects)
   extra.merge({"element":card.element,"duration":2.8,"impact":1.1},true)
+  _counter_demon(str(card.element),effects)
   special_charges[cursor]=0;special_used[cursor]=true
   _event("Spezialkraft · "+str(card.name),"special_"+str(card.effect),effects,previous,extra)
   return true
@@ -450,6 +456,7 @@ func act(action: String,target: int=-1) -> bool:
   if action in ["skill","support","light","break_free"]:decks[owner].power=true
   if action in ["skill","support","light"]:_gain_charge(owner)
   last_event["before_board"]=previous_board
+  _counter_demon(str(last_event.get("element","")),last_event.effects)
  return accepted
 
 func enemy_act() -> bool:
@@ -508,6 +515,7 @@ func _reset_fight() -> void:
 
 func snapshot() -> Dictionary:
  var saved:=super.snapshot()
+ saved["demon_charge"]=demon_charge;saved["seal_pending"]=seal_pending
  saved["card_schema"]=3;saved["fallen"]=fallen.duplicate(true);saved["card_decks"]=decks.duplicate(true);saved["board"]=board.duplicate(true)
  saved["special_charges"]=special_charges.duplicate();saved["special_used"]=special_used.duplicate()
  saved["source_decks"]=source_decks.duplicate(true);saved["next_uid"]=next_uid;saved["pending_advance"]=pending_advance
@@ -515,6 +523,7 @@ func snapshot() -> Dictionary:
 
 func restore(saved: Dictionary) -> void:
  super.restore(saved)
+ demon_charge=bool(saved.get("demon_charge",false));seal_pending=bool(saved.get("seal_pending",false))
  for i in 2:
   var charges=saved.get("special_charges",[0,0]);var used=saved.get("special_used",[false,false])
   special_charges[i]=clampi(int(charges[i]),0,SPECIAL_CHARGES) if charges is Array and charges.size()==2 else 0
@@ -595,10 +604,13 @@ func enemy_intent() -> String:
  match enemy_profile.kind:
   "moth":return "Pollenwirbel · beide"+(" · Verstummen" if round%3==0 else "")
   "hound":return "Glutsprung · 22 Schaden" if round%3==0 else "Aschenbiss · 14 Schaden"
+  "imp":return "Glutwurf · 24 → "+str(party[(round-1)%2 if party[(round-1)%2].hp>0 else 1-(round-1)%2].name)+" · Wasser löscht" if demon_charge else "Glut sammeln · Feuerwurf vorbereiten"
+  "weaver":return "Siegel · Anker zerstören oder schützen" if seal_pending and not _seal_anchor().is_empty() else "Siegel gebrochen · 12 Rückstoß" if seal_pending else "Siegelanker · Ritual vorbereiten"
   "guardian":return "Rindenerneuerung · 16 Heilung" if round%3==0 and enemy_burn==0 else "Wurzelschlag · 18 Schaden"
  return "Angriff"
 
 func _regional_enemy_act() -> bool:
+ if enemy_profile.kind in ["imp","weaver"]:return _demon_enemy_act()
  var previous:=_before()
  var effects: Array[Dictionary]=[]
  var title:=enemy_intent()
@@ -632,5 +644,66 @@ func _regional_enemy_act() -> bool:
   if enemy_health==0 and phase!="defeat":phase="victory"
  if enemy_weaken>0:enemy_weaken-=1
  _event(enemy_name+" · "+title,visual,effects,previous,{"element":visual})
+ pending_advance=true
+ return true
+
+
+func _counter_demon(element: String,effects: Array) -> void:
+ if enemy_profile.get("kind","")=="imp" and demon_charge and element=="water":
+  demon_charge=false
+  effects.append({"target":2,"amount":0,"kind":"release"})
+  message+=" · Glut gelöscht"
+
+func _seal_anchor() -> Dictionary:
+ for unit in units(2):
+  if unit.id=="seal_anchor":return unit
+ return {}
+
+func _break_seal() -> void:
+ var anchor:=_seal_anchor()
+ if not anchor.is_empty():board.erase(anchor)
+ seal_pending=false
+
+func _demon_enemy_act() -> bool:
+ var previous:=_before()
+ var effects: Array[Dictionary]=[]
+ var title:=enemy_intent()
+ var element: String="fire" if enemy_profile.kind=="imp" else "shadow"
+ var target: int=(round-1)%2
+ if party[target].hp<=0:target=1-target
+ if enemy_stagger>0:
+  enemy_stagger-=1;demon_charge=false;_break_seal()
+  title="Ritual unterbrochen · Zug entfällt"
+ elif enemy_profile.kind=="imp":
+  if demon_charge:
+   var damage:=24
+   if enemy_weaken>0:damage=int(ceil(damage*.65))
+   if party[target].guard:damage=int(ceil(damage*.35))
+   _receive_hit(target,damage,effects)
+   demon_charge=false
+  else:demon_charge=true
+ elif not seal_pending:
+  _add_minion(2,"seal_anchor",{"name":"Siegelanker","attack":0,"health":10,"taunt":true,"species":"enemy","form":"night_guard"})
+  seal_pending=true
+ elif _seal_anchor().is_empty():
+  _damage_target(0,"enemy",12,effects);seal_pending=false
+ else:
+  for i in 2:
+   if party[i].hp<=0:continue
+   var damage:=10
+   if enemy_weaken>0:damage=int(ceil(damage*.65))
+   if party[i].guard:damage=int(ceil(damage*.35))
+   var penetrated:=_receive_hit(i,damage,effects)
+   if penetrated>0 and party[i].hp>0:
+    party[i].silence=1;effects.append({"target":i,"amount":1,"kind":"silence"})
+  _break_seal()
+ if party[0].hp<=0 and party[1].hp<=0:phase="defeat"
+ if enemy_burn>0:
+  enemy_burn-=1
+  var damage:=mini(6,enemy_health);enemy_health-=damage
+  effects.append({"target":2,"amount":damage,"kind":"burn"})
+  if enemy_health==0 and phase!="defeat":phase="victory"
+ if enemy_weaken>0:enemy_weaken-=1
+ _event(enemy_name+" · "+title,"card_spell",effects,previous,{"element":element,"duration":2.0,"impact":.85,"target_code":"h:"+str(target)})
  pending_advance=true
  return true
