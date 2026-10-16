@@ -32,6 +32,11 @@ func build() -> void:
 	doors.append({"from": "FOREST_TRAIL", "to": "FOREST", "at": Vector2(0.10,0.5),
 		"arrival": Vector2(Forest.data().entrance.at[0],Forest.data().entrance.at[1]),
 		"position": position, "marker_position": position+Vector3.UP})
+	for branch in [{"index":1,"u":.76,"to":"SUN_GLADE","arrival":Vector2(.50,.55)},
+		{"index":6,"u":.87,"to":"MIST_WATCH","arrival":Vector2(.18,.55)}]:
+		var point:=safe_position(Forest.position_for(branch.index,branch.u,.55))
+		doors.append({"from":"FOREST_TRAIL","to":branch.to,"at":Vector2(branch.u,.55),
+			"arrival":branch.arrival,"position":point,"marker_position":point+Vector3.UP})
 	_build_demon()
 	_build_lantern()
 	_build_bridge_mask()

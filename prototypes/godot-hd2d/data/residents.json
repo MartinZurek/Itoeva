@@ -1,0 +1,651 @@
+{
+  "fennec": {
+    "name": "Fennec",
+    "role": "Wegekundiger Bote",
+    "about": "Ich verbinde Küste, Dorf und Wald mit kleinen Botengängen.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "LIVING",
+        "uv": [
+          0.3,
+          0.78
+        ],
+        "activity": "Ich ruhe mich zu Hause aus.",
+        "reach": 0.35
+      },
+      {
+        "hour": 7,
+        "place": "STREET",
+        "uv": [
+          0.35,
+          0.66
+        ],
+        "activity": "Ich bin auf meinem morgendlichen Botenweg.",
+        "reach": 1
+      },
+      {
+        "hour": 10,
+        "place": "COAST_PATH",
+        "uv": [
+          0.75,
+          0.66
+        ],
+        "activity": "Ich gehe die Küstenroute ab.",
+        "reach": 2.4
+      },
+      {
+        "hour": 18,
+        "place": "CAFE",
+        "uv": [
+          0.65,
+          0.78
+        ],
+        "activity": "Ich gönne mir eine Pause im Café.",
+        "reach": 0.5
+      },
+      {
+        "hour": 22,
+        "place": "LIVING",
+        "uv": [
+          0.3,
+          0.78
+        ],
+        "activity": "Ich bin für heute zu Hause.",
+        "reach": 0.35
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "gloop": {
+    "name": "Gloop",
+    "role": "Hüter der Wasserstellen",
+    "about": "Ich achte auf die Quellen und die kleinen Uferbewohner.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "BATH",
+        "uv": [
+          0.7,
+          0.78
+        ],
+        "activity": "Ich halte mich bei meiner Wasserstelle im Haus auf.",
+        "reach": 0.3
+      },
+      {
+        "hour": 7,
+        "place": "POND",
+        "uv": [
+          0.65,
+          0.6
+        ],
+        "activity": "Ich schaue nach dem Teichufer.",
+        "reach": 0.7
+      },
+      {
+        "hour": 10,
+        "place": "BEACH",
+        "uv": [
+          0.55,
+          0.6
+        ],
+        "activity": "Ich gehe am hellen Strand entlang.",
+        "reach": 1
+      },
+      {
+        "hour": 18,
+        "place": "POND",
+        "uv": [
+          0.65,
+          0.6
+        ],
+        "activity": "Ich bleibe noch am Teich.",
+        "reach": 0.7
+      },
+      {
+        "hour": 22,
+        "place": "BATH",
+        "uv": [
+          0.7,
+          0.78
+        ],
+        "activity": "Ich ziehe mich ins Haus zurück.",
+        "reach": 0.3
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "puffling": {
+    "name": "Puffling",
+    "role": "Windläuferin",
+    "about": "Ich erkunde offene Wege und halte mich mit Bewegung fit.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "BEDROOM",
+        "uv": [
+          0.72,
+          0.8
+        ],
+        "activity": "Ich mache eine ruhige Pause im Schlafzimmer.",
+        "reach": 0.35
+      },
+      {
+        "hour": 7,
+        "place": "MEADOW",
+        "uv": [
+          0.3,
+          0.65
+        ],
+        "activity": "Ich gehe über die Morgenwiese.",
+        "reach": 0.8
+      },
+      {
+        "hour": 10,
+        "place": "SPORT",
+        "uv": [
+          0.4,
+          0.65
+        ],
+        "activity": "Ich trainiere auf dem offenen Sportweg.",
+        "reach": 1
+      },
+      {
+        "hour": 18,
+        "place": "VILLAGE_EDGE",
+        "uv": [
+          0.25,
+          0.65
+        ],
+        "activity": "Ich laufe am Dorfrand aus.",
+        "reach": 1.8
+      },
+      {
+        "hour": 22,
+        "place": "BEDROOM",
+        "uv": [
+          0.72,
+          0.8
+        ],
+        "activity": "Ich bin wieder zu Hause.",
+        "reach": 0.35
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "wyrmling": {
+    "name": "Wyrmling",
+    "role": "Funkenhandwerker",
+    "about": "Ich mag Werkzeuge, warme Steine und sorgfältige Handarbeit.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "CRAFT",
+        "uv": [
+          0.28,
+          0.8
+        ],
+        "activity": "Ich mache in der Werkstatt Feierabend.",
+        "reach": 0.45
+      },
+      {
+        "hour": 7,
+        "place": "VILLAGE_EDGE",
+        "uv": [
+          0.7,
+          0.65
+        ],
+        "activity": "Ich bin auf dem Weg durch das Dorf.",
+        "reach": 1.5
+      },
+      {
+        "hour": 10,
+        "place": "CRAFT",
+        "uv": [
+          0.28,
+          0.8
+        ],
+        "activity": "Ich bin an meinem Werkplatz.",
+        "reach": 0.45
+      },
+      {
+        "hour": 18,
+        "place": "SHOP",
+        "uv": [
+          0.65,
+          0.8
+        ],
+        "activity": "Ich schaue im Laden nach Material.",
+        "reach": 0.5
+      },
+      {
+        "hour": 22,
+        "place": "CRAFT",
+        "uv": [
+          0.28,
+          0.8
+        ],
+        "activity": "Ich bleibe heute in meiner Werkstatt.",
+        "reach": 0.45
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "starlet": {
+    "name": "Starlet",
+    "role": "Lichtkundlerin",
+    "about": "Mein eigenes Leuchten hilft mir, die Wege im Dämmerlicht zu lesen.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "NOOK",
+        "uv": [
+          0.72,
+          0.8
+        ],
+        "activity": "Ich ruhe in der Leseecke.",
+        "reach": 0.3
+      },
+      {
+        "hour": 7,
+        "place": "PARK",
+        "uv": [
+          0.5,
+          0.6
+        ],
+        "activity": "Ich gehe durch den hellen Park.",
+        "reach": 1
+      },
+      {
+        "hour": 10,
+        "place": "PLAINS",
+        "uv": [
+          0.5,
+          0.65
+        ],
+        "activity": "Ich beobachte das Licht über der Ebene.",
+        "reach": 1
+      },
+      {
+        "hour": 18,
+        "place": "STREET",
+        "uv": [
+          0.7,
+          0.65
+        ],
+        "activity": "Ich begleite den Abendweg mit meinem Leuchten.",
+        "reach": 1
+      },
+      {
+        "hour": 22,
+        "place": "NOOK",
+        "uv": [
+          0.72,
+          0.8
+        ],
+        "activity": "Ich ziehe mich in die Leseecke zurück.",
+        "reach": 0.3
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "hootlet": {
+    "name": "Hootlet",
+    "role": "Chronist",
+    "about": "Ich sammle Ortsgeschichten und lese über die alten Grenzsteine.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "DESK",
+        "uv": [
+          0.28,
+          0.8
+        ],
+        "activity": "Ich verbringe die ruhigen Stunden am Schreibtisch.",
+        "reach": 0.3
+      },
+      {
+        "hour": 7,
+        "place": "CAFE",
+        "uv": [
+          0.3,
+          0.8
+        ],
+        "activity": "Ich lege eine Lesepause im Café ein.",
+        "reach": 0.4
+      },
+      {
+        "hour": 10,
+        "place": "NOOK",
+        "uv": [
+          0.3,
+          0.8
+        ],
+        "activity": "Ich halte mich bei den Büchern auf.",
+        "reach": 0.3
+      },
+      {
+        "hour": 18,
+        "place": "CITY",
+        "uv": [
+          0.65,
+          0.65
+        ],
+        "activity": "Ich gehe über den Marktplatz.",
+        "reach": 1
+      },
+      {
+        "hour": 22,
+        "place": "DESK",
+        "uv": [
+          0.28,
+          0.8
+        ],
+        "activity": "Ich bin wieder an meinem Schreibtisch.",
+        "reach": 0.3
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "mosslyn": {
+    "name": "Mooslyn",
+    "role": "Saatenhüterin",
+    "about": "Ich kenne die hellen Waldböden und die Pflanzen am Weg.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "KITCHEN",
+        "uv": [
+          0.75,
+          0.78
+        ],
+        "activity": "Ich bin für die Nacht im Haus.",
+        "reach": 0.35
+      },
+      {
+        "hour": 7,
+        "place": "FOREST_ENTRANCE",
+        "uv": [
+          0.42,
+          0.55
+        ],
+        "activity": "Ich gehe den hellen Waldsaum entlang.",
+        "reach": 1.4
+      },
+      {
+        "hour": 10,
+        "place": "GREENWOOD",
+        "uv": [
+          0.43,
+          0.55
+        ],
+        "activity": "Ich schaue nach den Pflanzen im grünen Wald.",
+        "reach": 2
+      },
+      {
+        "hour": 18,
+        "place": "MEADOW",
+        "uv": [
+          0.75,
+          0.65
+        ],
+        "activity": "Ich gehe über die Abendwiese heim.",
+        "reach": 0.7
+      },
+      {
+        "hour": 22,
+        "place": "KITCHEN",
+        "uv": [
+          0.75,
+          0.78
+        ],
+        "activity": "Ich bin wieder zu Hause.",
+        "reach": 0.35
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "nocti": {
+    "name": "Nocti",
+    "role": "Lauscher am Dorfrand",
+    "about": "Ich höre gern auf Wind und Echos. In den Dunkelwald gehe ich nicht.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "LIVING",
+        "uv": [
+          0.72,
+          0.78
+        ],
+        "activity": "Ich halte Nachtwache im sicheren Haus.",
+        "reach": 0.4
+      },
+      {
+        "hour": 7,
+        "place": "BEDROOM",
+        "uv": [
+          0.3,
+          0.8
+        ],
+        "activity": "Ich mache nach meiner Wache Pause.",
+        "reach": 0.3
+      },
+      {
+        "hour": 10,
+        "place": "VILLAGE_EDGE",
+        "uv": [
+          0.52,
+          0.65
+        ],
+        "activity": "Ich lausche den Geräuschen am hellen Dorfrand.",
+        "reach": 1.8
+      },
+      {
+        "hour": 18,
+        "place": "FOREST",
+        "uv": [
+          0.4,
+          0.65
+        ],
+        "activity": "Ich bleibe am hellen Waldrand.",
+        "reach": 0.7
+      },
+      {
+        "hour": 22,
+        "place": "LIVING",
+        "uv": [
+          0.72,
+          0.78
+        ],
+        "activity": "Ich bleibe heute im sicheren Haus.",
+        "reach": 0.4
+      }
+    ],
+    "row": -1,
+    "height": 0.94
+  },
+  "nella": {
+    "name": "Nella",
+    "role": "Kartenzeichnerin",
+    "about": "Ich zeichne Flussläufe und neue Waldwege. Bei der Nebelwacht endet unsere bekannte Welt: Eine Brücke gibt es dort noch nicht.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "DESK",
+        "uv": [
+          0.7,
+          0.8
+        ],
+        "activity": "Ich halte mich bei meinen Karten im Schreibzimmer auf.",
+        "reach": 0.3
+      },
+      {
+        "hour": 7,
+        "place": "COAST_PATH",
+        "uv": [
+          0.82,
+          0.65
+        ],
+        "activity": "Ich gehe meine Küstenskizzen am Weg durch.",
+        "reach": 1.3
+      },
+      {
+        "hour": 10,
+        "place": "SUN_GLADE",
+        "uv": [
+          0.36,
+          0.55
+        ],
+        "activity": "Ich studiere meine Karte des Sonnenhains.",
+        "reach": 0.8
+      },
+      {
+        "hour": 18,
+        "place": "CAFE",
+        "uv": [
+          0.5,
+          0.8
+        ],
+        "activity": "Ich lege mit meinen Karten eine Pause ein.",
+        "reach": 0.4
+      },
+      {
+        "hour": 22,
+        "place": "DESK",
+        "uv": [
+          0.7,
+          0.8
+        ],
+        "activity": "Ich bin zurück im Schreibzimmer.",
+        "reach": 0.3
+      }
+    ],
+    "row": 0,
+    "height": 0.94
+  },
+  "brumm": {
+    "name": "Brumm",
+    "role": "Dorfbäcker",
+    "about": "Ich bringe Brot vom Haus zum Markt. Mein Korb ist nie weit weg.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "KITCHEN",
+        "uv": [
+          0.32,
+          0.8
+        ],
+        "activity": "Ich bleibe bei meinem Backplatz in der Küche.",
+        "reach": 0.35
+      },
+      {
+        "hour": 7,
+        "place": "SHOP",
+        "uv": [
+          0.32,
+          0.8
+        ],
+        "activity": "Ich biete Brot im Dorfladen an.",
+        "reach": 0.4
+      },
+      {
+        "hour": 10,
+        "place": "CITY",
+        "uv": [
+          0.25,
+          0.65
+        ],
+        "activity": "Ich biete Brot auf dem Markt an.",
+        "reach": 1
+      },
+      {
+        "hour": 18,
+        "place": "STREET",
+        "uv": [
+          0.2,
+          0.65
+        ],
+        "activity": "Ich bin mit meinem Korb auf dem Heimweg.",
+        "reach": 0.8
+      },
+      {
+        "hour": 22,
+        "place": "KITCHEN",
+        "uv": [
+          0.32,
+          0.8
+        ],
+        "activity": "Ich bin zurück in der Küche.",
+        "reach": 0.35
+      }
+    ],
+    "row": 1,
+    "height": 1.06
+  },
+  "tilla": {
+    "name": "Tilla",
+    "role": "Kräuterkundige",
+    "about": "Ich suche Blätter, ohne die kleinen Pflanzen auszureißen. Der Sonnenhain ist mein liebster Ort.",
+    "schedule": [
+      {
+        "hour": 0,
+        "place": "WORK",
+        "uv": [
+          0.68,
+          0.8
+        ],
+        "activity": "Ich ruhe bei meiner Kräutertasche im Arbeitsraum.",
+        "reach": 0.35
+      },
+      {
+        "hour": 7,
+        "place": "GREENWOOD",
+        "uv": [
+          0.7,
+          0.55
+        ],
+        "activity": "Ich untersuche Kräuter am hellen Waldweg.",
+        "reach": 1.3
+      },
+      {
+        "hour": 10,
+        "place": "SUN_GLADE",
+        "uv": [
+          0.68,
+          0.55
+        ],
+        "activity": "Ich schaue mir die Blätter im Sonnenhain an.",
+        "reach": 0.8
+      },
+      {
+        "hour": 18,
+        "place": "PARK",
+        "uv": [
+          0.28,
+          0.65
+        ],
+        "activity": "Ich bin auf dem Weg zurück ins Dorf.",
+        "reach": 0.7
+      },
+      {
+        "hour": 22,
+        "place": "WORK",
+        "uv": [
+          0.68,
+          0.8
+        ],
+        "activity": "Ich bin wieder im Arbeitsraum.",
+        "reach": 0.35
+      }
+    ],
+    "row": 2,
+    "height": 0.94
+  }
+}

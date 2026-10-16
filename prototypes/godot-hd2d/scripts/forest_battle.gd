@@ -13,6 +13,7 @@ const STATS := {
  "mosslyn": [86,26,"Mooslyn","Rankenstoß","nature"],
  "nocti": [66,30,"Nocti","Echoruf","moon"]
 }
+var enemy_name := "Nachtwurz"
 var phase := "unseen"
 var intro_time := 0.0
 var enemy_health := MAX_ENEMY_HP
@@ -92,7 +93,7 @@ func claim_victory() -> bool:
  result = {"members":members,"items":[{"id":"potion","name":"Heiltrank","count":1},
   {"id":"moon_shard","name":"Mondsplitter","count":1}],"victory":victories}
  rewards_claimed = true
- message = "Nachtwurz ist besiegt. Die Gruppe sammelt ihre Fundstücke."
+ message = enemy_name + " ist besiegt. Die Gruppe sammelt ihre Fundstücke."
  return true
 
 func finish_victory() -> bool:
@@ -131,7 +132,7 @@ func current() -> String:
  return "enemy" if cursor == 2 else str(party[cursor].species)
 
 func actor_name() -> String:
- return "Nachtwurz" if cursor == 2 else str(party[cursor].name)
+ return enemy_name if cursor == 2 else str(party[cursor].name)
 
 func enemy_intent() -> String:
  if enemy_stagger>0: return "Wanken · nächster Zug entfällt"
@@ -144,7 +145,7 @@ func upcoming(count: int = 5) -> Array[String]:
  var index := cursor
  for i in range(count * 3):
   if index == 2 or party[index].hp > 0:
-   result.append("Nachtwurz" if index == 2 else str(party[index].name))
+   result.append(enemy_name if index == 2 else str(party[index].name))
   if result.size() == count: break
   index = (index + 1) % 3
  return result

@@ -90,6 +90,8 @@ func build() -> void:
 		zoom_min = 10.4
 		zoom_max = 11.8
 		default_zoom = 11.0
+		if room.get("outdoor",false):
+			default_zoom=10.0;zoom_min=9.0;zoom_max=10.0
 		# Gegenstaende und Figuren behalten das native lokale Raumverhaeltnis.
 		# Innen und aussen bleibt die sichtbare Referenzfigur bei Standardzoom gleich.
 		base_pixel_size = 0.0145 * default_zoom / 8.8
@@ -108,6 +110,10 @@ func build() -> void:
 			_add_piece(piece, room.asset, -width * 0.5, width, 480.0, 270.0)
 		for door in Catalog.doors_for(place):
 			_add_door(door)
+	if place == "SUN_GLADE":
+		_add_forest_branch(1, .76, Vector2(.50,.55))
+	elif place == "MIST_WATCH":
+		_add_forest_branch(6, .87, Vector2(.18,.55))
 	building = false
 	_build_occlusion_maps()
 	_build_natural_edges()
@@ -601,7 +607,7 @@ func _painted_material(asset: String, transparent: bool = false) -> ShaderMateri
 
 func set_time(hour: float) -> void:
 	light_hour = hour
-	for material in painted_materials: Ambience.set_time(material, hour, place != "OUTDOOR")
+	for material in painted_materials: Ambience.set_time(material, hour, place != "OUTDOOR" and not Catalog.data().interiors[place].get("outdoor",false))
 	var daylight := smoothstep(5.8, 8.0, hour) * (1.0 - smoothstep(18.0, 21.0, hour))
 	for material in materials:
 		material.albedo_color = Color(0.32, 0.40, 0.58).lerp(Color.WHITE, daylight) if place == "OUTDOOR" else Color.WHITE
@@ -661,3 +667,8 @@ func update_character_light(actor: Node3D, energy: float) -> void:
 	for material in painted_materials:
 		material.set_shader_parameter("carried_position",center)
 		material.set_shader_parameter("carried_gain",energy)
+
+func _add_forest_branch(index: int, u: float, at: Vector2) -> void:
+	var point:=safe_position(Catalog.position_for(place,at))
+	doors.append({"from":place,"to":"FOREST_TRAIL","at":at,"arrival":Vector2(u,.55),
+		"forest_index":index,"position":point,"marker_position":point+Vector3.UP})

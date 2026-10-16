@@ -9,6 +9,8 @@ static var geometry_cache: Dictionary = {}
 static func geometry() -> Dictionary:
 	if geometry_cache.is_empty():
 		geometry_cache = JSON.parse_string(FileAccess.get_file_as_string("res://data/visual_geometry.json"))
+	for place in ["SUN_GLADE", "MIST_WATCH"]:
+		geometry_cache.room_backs[place] = [[0,199,220],[1,199,220]]
 	return geometry_cache
 
 static func profile(points: Array, x: float) -> Vector2:
@@ -22,6 +24,8 @@ static func profile(points: Array, x: float) -> Vector2:
 	return Vector2(last[1], last[2] if last.size() > 2 else 256.0)
 
 static func relative_height(species: String) -> float:
+	if not data().characters.has(species):
+		return float(JSON.parse_string(FileAccess.get_file_as_string("res://data/residents.json"))[species].height)
 	return float(geometry().character_height.get(species, data().characters[species].relative_height))
 
 static func data() -> Dictionary:
@@ -29,6 +33,10 @@ static func data() -> Dictionary:
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://data/world_catalog.json"))
 		assert(parsed is Dictionary, "Weltkatalog fehlt oder ist ungueltig")
 		cache = parsed
+		var expansion: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/world_expansion.json"))
+		cache.interiors.merge(expansion.interiors)
+		cache.labels.merge(expansion.labels)
+		cache.doors.append_array(expansion.doors)
 		cache.characters.merge(JSON.parse_string(FileAccess.get_file_as_string("res://data/new_characters.json")),true)
 	return cache
 

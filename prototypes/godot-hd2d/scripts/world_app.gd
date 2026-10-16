@@ -11,6 +11,13 @@ var forest_encounter: Node
 
 const Actor = preload("res://scripts/character_actor.gd")
 const CompactActor = preload("res://scripts/compact_actor.gd")
+const Residents = preload("res://scripts/world_residents.gd")
+const CitizenActor = preload("res://scripts/citizen_actor.gd")
+const Enemies = preload("res://scripts/regional_enemies.gd")
+const RegionalEncounter = preload("res://scripts/regional_encounter.gd")
+var regional_markers: Array[Dictionary] = []
+var resident_appointments: Dictionary = {}
+const WorldMap = preload("res://scripts/illustrated_map.gd")
 const Hud = preload("res://scripts/adventure_hud.gd")
 const Clock = preload("res://scripts/world_clock.gd")
 const InteractionPath = preload("res://scripts/interaction_path.gd")
@@ -337,6 +344,7 @@ func show_settings() -> void:
 
 func _preload_world() -> void:
 	pending.append("res://assets/world/path-stones.png")
+	for asset in ["citizens","enemies","world-atlas"]: pending.append("res://assets/expansion/"+asset+".png")
 	for region in Catalog.data().regions:
 		pending.append(region.asset)
 	for region in Forest.data().segments: pending.append(region.asset)
@@ -408,6 +416,7 @@ func _mount_world(next_room: String, position: Vector3) -> void:
 		forest_encounter.suspend()
 		forest_encounter.queue_free()
 		forest_encounter=null
+	regional_markers.clear()
 	switching = true
 	_pause(true)
 	for creature in actors:
@@ -436,25 +445,7 @@ func _mount_world(next_room: String, position: Vector3) -> void:
 	stage.fit_character(actor.sprite.pixel_size * 1.18)
 	actor.position = stage.safe_position(position, actor.collider.shape.radius)
 	actors.append(actor)
-	if room == "OUTDOOR":
-		# Alle anderen Originalwesen sind sichtbar; noch keine LAS-Entscheidungsmigration.
-		var anchors := {"fennec": Vector3(72, 0.03, 0.2), "gloop": Vector3(68, 0.03, 0.2),
-			"puffling": Vector3(75, 0.03, -0.1), "wyrmling": Vector3(78, 0.03, 0.5),
-			"starlet": Vector3(80, 0.03, -0.3), "hootlet": Vector3(70, 0.03, 0.4),
-			"mosslyn": Vector3(82,0.03,.2), "nocti": Vector3(66,0.03,-.2)}
-		for species in Catalog.data().characters:
-			if species == selected:
-				continue
-			var resident = CompactActor.new() if Catalog.data().characters[species].get("compact",false) else Actor.new()
-			resident.species = species
-			resident.metrics = character_metrics
-			resident.player_controlled = false
-			resident.enabled = false
-			add_child(resident)
-			resident.set_world_scale(stage.base_pixel_size, stage.jump_height, stage.body_pixel_size)
-			resident.position = stage.safe_position(anchors[species], resident.collider.shape.radius)
-			resident.set_meta("anchor", resident.position)
-			actors.append(resident)
+	_refresh_residents()
 	for creature in actors:
 		creature.sprite.modulate = _character_tint()
 	zoom = stage.default_zoom
@@ -496,6 +487,7 @@ func _mount_world(next_room: String, position: Vector3) -> void:
 		practice.visible=false
 		practice.pressed.connect(func(): forest_encounter.replay())
 		hud.actions.append({"button":practice,"callback":func(): practice.pressed.emit()})
+	_mount_regional_enemies()
 
 func _resume() -> void:
 	dialog_open = false
@@ -526,7 +518,13 @@ func interaction_targets() -> Array[Dictionary]:
 		var distance := Vector2(creature.position.x - actor.position.x, creature.position.z - actor.position.z).length()
 		targets.append({"kind": "talk", "id": creature.species, "position": creature.position,
 			"approach": stage.safe_position(creature.position + (actor.position - creature.position).normalized() * 1.45, actor.collider.shape.radius),
-			"label": "Sprechen", "ready": grounded and distance < 2.6 and _conversation_clear(creature), "distance": distance, "creature": creature})
+			"label": Residents.data()[creature.species].name + " · Sprechen", "ready": grounded and distance < 2.6 and _conversation_clear(creature), "distance": distance, "creature": creature})
+	for marker in regional_markers:
+		var distance: float=Vector2(actor.position.x-marker.position.x,actor.position.z-marker.position.z).length()
+		targets.append({"kind":"encounter","id":marker.id,"position":marker.position+Vector3.UP,
+			"approach":stage.safe_position(marker.position+Vector3.LEFT*1.5,actor.collider.shape.radius),
+			"label":Enemies.data()[marker.id].name+" · Beobachten","ready":grounded and distance<3.0,
+			"distance":distance})
 	for item in stage.furniture:
 		if item.seat == null and not item.id.ends_with("bookcase"): continue
 		var approach: Vector3 = stage.safe_position(item.approach_position, actor.collider.shape.radius)
@@ -597,16 +595,18 @@ func interact_with(kind: String, id: String) -> void:
 			var arrival: Vector2 = door.arrival
 			arrival = Vector2(clampf(arrival.x, 0.06, 0.94), clampf(arrival.y, 0.12, 0.88))
 			_save_progress()
-			await _mount_world("OUTDOOR" if not Catalog.region_for(door.to).is_empty() else door.to, Forest.position_for(0,.10) if door.to=="FOREST_TRAIL" else Catalog.position_for(door.to, arrival))
+			await _mount_world("OUTDOOR" if not Catalog.region_for(door.to).is_empty() else door.to, Forest.position_for(int(door.get("forest_index",0)),arrival.x,arrival.y) if door.to=="FOREST_TRAIL" else Catalog.position_for(door.to, arrival))
 			_resume()
 			_save_progress()
+		elif kind == "encounter":
+			_show_enemy(id)
 		elif kind == "talk":
 			var creature: CharacterBody3D = target.creature
 			var difference := actor.position - creature.position
 			creature.facing = Vector2(signf(difference.x), 0) if absf(difference.x) > absf(difference.z) else Vector2(0, signf(difference.z))
 			actor.facing = -creature.facing
 			creature.set_meta("rest_until", game_clock + 3.5)
-			_show_conversation(creature.species)
+			_show_conversation(creature.species, creature.get_meta("appointment",{}))
 		elif kind in ["seat", "read", "sleep"]:
 			hud.reset_touch()
 			if target.seat.seat != null:
@@ -634,19 +634,12 @@ func show_map() -> void:
 	if not world_ready:
 		return
 	_pause(true)
-	var column := _panel("Meine Welt · " + Catalog.data().labels[current_place()])
-	var discovered: Array = save_data.get("discovered", [])
-	column.add_child(_label("Entdeckt: %s / 35 Orte · Fundstücke: %s" % [discovered.size(), save_data.get("collected", []).size()], 16))
-	column.add_child(_label("● Hier · ✓ Besucht · ○ Noch zu entdecken", 15))
-	for region in Catalog.data().regions:
-		var names := PackedStringArray()
-		for place in region.places:
-			var name: String = Catalog.data().labels[place]
-			names.append(("● " if place == current_place() else "✓ " if place in discovered else "○ ") + name)
-		column.add_child(_label("  →  ".join(names), 18))
-	column.add_child(_label("Waldpfad: Waldsaum → Grüner Wald → Letzte Fackeln\nSchattenwald → Schattenbach → Lichtung → Tiefer Wald",16))
-	column.add_child(_label("Haus: Wohnzimmer · Schlafzimmer · Bad · Schreibzimmer\nKüche · Werkstatt · Leseecke\nStraße: Laden · Marktplatz: Café · Arbeit · Spielhalle", 16))
-	column.add_child(_button("Zurück zur Welt", _resume))
+	_refresh_residents()
+	_new_ui()
+	var atlas := WorldMap.new()
+	atlas.app=self
+	atlas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ui.add_child(atlas)
 
 func current_place() -> String:
 	return stage.location_at(actor.position.x) if room=="FOREST_TRAIL" else Catalog.place_at(actor.position.x) if room == "OUTDOOR" else room
@@ -704,8 +697,10 @@ func _stroll_resident(creature: CharacterBody3D, index: int, delta: float) -> vo
 	var patrol: Dictionary = creature.get_meta("patrol", {})
 	if patrol.is_empty():
 		var anchor: Vector3 = creature.get_meta("anchor")
-		var reach := 3.8 + float(index % 3) * 0.6
-		patrol = {"left": maxf(2.4, anchor.x - reach), "right": minf(stage.width - 2.4, anchor.x + reach),
+		var reach := float(creature.get_meta("reach",1.0))
+		var lower_bound: float = 2.4 if room in ["OUTDOOR","FOREST_TRAIL"] else -stage.width*.5+stage.horizontal_padding+.2
+		var upper_bound: float = stage.width-2.4 if room in ["OUTDOOR","FOREST_TRAIL"] else stage.width*.5-stage.horizontal_padding-.2
+		patrol = {"left": maxf(lower_bound, anchor.x - reach), "right": minf(upper_bound, anchor.x + reach),
 			"direction": 1.0 if index % 2 == 0 else -1.0, "wait_until": 0.0,
 			"last_x": creature.position.x, "stalled": 0.0}
 		creature.set_meta("patrol", patrol)
@@ -720,7 +715,7 @@ func _stroll_resident(creature: CharacterBody3D, index: int, delta: float) -> vo
 	var end: float = patrol.right if direction > 0 else patrol.left
 	if absf(end - creature.position.x) < 0.22:
 		patrol.direction = -direction
-		patrol.wait_until = game_clock + 0.65 + float(index % 3) * 0.20
+		patrol.wait_until = game_clock + 3.5 + float(index % 3) * 1.6
 		patrol.stalled = 0.0
 		creature.npc_vector = Vector2.ZERO
 		return
@@ -919,12 +914,14 @@ func _apply_world_time() -> void:
 
 func _finish_reading() -> void:
 	world_clock.advance_hours(2.0)
+	_refresh_residents()
 	_apply_world_time()
 	_resume()
 	_notice("Ein Kapitel später · " + clock_label())
 
 func _finish_sleeping() -> void:
 	world_clock.sleep_until_morning()
+	_refresh_residents()
 	_apply_world_time()
 	_resume()
 	_notice("Guten Morgen · " + clock_label())
@@ -941,26 +938,26 @@ func _show_activity(title: String, text: String, action: String, callback: Calla
 	column.add_child(_button(action, callback))
 	column.add_child(_button("Zurück zur Welt", _resume))
 
-func _show_conversation(species: String) -> void:
+func _show_conversation(species: String, appointment: Dictionary = {}) -> void:
 	_pause(true)
 	dialog_open = true
-	var character: Dictionary = Catalog.data().characters[species]
-	var column := _panel(character.label)
+	var character: Dictionary = Residents.data()[species]
+	var column := _panel(character.name + " · " + character.role)
 	column.custom_minimum_size.x = 560
 	var portrait := TextureRect.new()
-	var atlas := Catalog.portrait(species)
+	var atlas := Residents.portrait(species)
 	portrait.texture = atlas
 	portrait.custom_minimum_size = Vector2(120, 116)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(portrait)
-	var text := _label(character.tagline, 22)
+	var text := _label(character.about, 22)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.custom_minimum_size = Vector2(500, 62)
 	column.add_child(text)
-	column.add_child(_button("Was können wir entdecken?", func():
-		text.text = _exploration_reply(species)
+	column.add_child(_button("Was tust du gerade?", func():
+		text.text = str(appointment.get("activity","Ich mache eine Pause.")) + "\nHier: " + str(Catalog.data().labels.get(appointment.get("place",""),"unser Weg"))
 		menu_buttons[0].disabled = true))
 	column.add_child(_button("Bis später", _resume))
 
@@ -1054,3 +1051,76 @@ func _audio_volume(is_music: bool, amount: float) -> void:
 	if is_music: music_volume=clampf(music_volume+amount,0,1)
 	else: effects_volume=clampf(effects_volume+amount,0,1)
 	_save_preferences();show_audio_settings()
+
+func _mount_regional_enemies() -> void:
+	for id in Enemies.data():
+		var profile: Dictionary=Enemies.data()[id]
+		if profile.place!=room:continue
+		var point: Vector3=stage.safe_position(Catalog.position_for(room,Vector2(profile.uv[0],profile.uv[1])))
+		var art:=Sprite3D.new();art.texture=Enemies.texture(id);art.billboard=BaseMaterial3D.BILLBOARD_ENABLED
+		art.shaded=false;art.alpha_cut=SpriteBase3D.ALPHA_CUT_DISCARD;art.alpha_scissor_threshold=.12
+		art.pixel_size=stage.base_pixel_size*109.0*1.1/art.texture.get_height()
+		art.offset.y=art.texture.get_height()*.5;art.position=point
+		if id=="thorn_moth":art.position.y+=.85
+		stage.add_child(art)
+		regional_markers.append({"id":id,"position":point,"art":art})
+	# Restore a suspended regional encounter after reopening the saved location.
+	for marker in regional_markers:
+		var saved: Dictionary=save_data.get("forest_encounters",{}).get(actor.species+":"+marker.id,{})
+		if saved.get("phase","") in ["intro","battle","victory","defeat","retreat"]:
+			_select_regional_encounter(marker.id)
+			break
+
+func _select_regional_encounter(id: String) -> void:
+	if is_instance_valid(forest_encounter):
+		forest_encounter.suspend();remove_child(forest_encounter);forest_encounter.queue_free()
+	forest_encounter=RegionalEncounter.new();forest_encounter.app=self;forest_encounter.enemy_id=id
+	add_child(forest_encounter)
+
+func _show_enemy(id: String) -> void:
+	_pause(true)
+	var profile: Dictionary=Enemies.data()[id]
+	var column:=_panel(profile.name+" · "+str(profile.hp)+" LP")
+	var portrait:=TextureRect.new();portrait.texture=Enemies.texture(id)
+	portrait.custom_minimum_size=Vector2(160,170);portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	column.add_child(portrait)
+	var description:=_label(profile.description,20);description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;description.custom_minimum_size=Vector2(540,100);column.add_child(description)
+	column.add_child(_button("Kartenkampf beginnen",func():
+		_select_regional_encounter(id)
+		if forest_encounter.model.phase=="done":
+			forest_encounter.model.source_decks=save_data.get("card_decks",{}).duplicate(true)
+			forest_encounter.model.replay()
+		elif forest_encounter.model.phase=="unseen":forest_encounter.model.begin()
+		forest_encounter.persist();forest_encounter.resume()))
+	column.add_child(_button("Weiter erkunden",_resume))
+
+func _refresh_residents() -> void:
+	# One appointment snapshot drives both the living scene and the atlas.
+	cancel_approach()
+	for creature in actors.duplicate():
+		if creature != actor:
+			actors.erase(creature)
+			remove_child(creature)
+			creature.queue_free()
+	resident_appointments.clear()
+	for id in Residents.data():
+		resident_appointments[id]=Residents.appointment(id,world_clock.current_hour())
+	for id in Residents.data():
+		if id == selected: continue
+		var appointment: Dictionary = resident_appointments[id]
+		if Residents.room_for(appointment.place) != room: continue
+		var definition: Dictionary = Residents.data()[id]
+		var resident = CitizenActor.new() if int(definition.row)>=0 else CompactActor.new() if Catalog.data().characters[id].get("compact",false) else Actor.new()
+		resident.species=id
+		resident.metrics=character_metrics
+		resident.player_controlled=false
+		resident.enabled=false
+		add_child(resident)
+		resident.set_world_scale(stage.base_pixel_size,stage.jump_height,stage.body_pixel_size)
+		resident.position=stage.safe_position(Residents.position_for(appointment),resident.collider.shape.radius)
+		resident.set_meta("anchor",resident.position)
+		resident.set_meta("appointment",appointment)
+		resident.set_meta("reach",float(appointment.reach))
+		actors.append(resident)
+	for creature in actors:
+		creature.sprite.modulate=_character_tint()

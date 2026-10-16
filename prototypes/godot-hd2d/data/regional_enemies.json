@@ -1,0 +1,38 @@
+{
+  "thorn_moth": {
+    "name": "Dornmotte",
+    "row": 0,
+    "hp": 100,
+    "place": "SUN_GLADE",
+    "uv": [
+      0.52,
+      0.58
+    ],
+    "kind": "moth",
+    "description": "Pollenwirbel trifft beide. Alle drei Runden kann der Staub verstummen lassen. Ein Lichtschirm hält ihn ab."
+  },
+  "ash_hound": {
+    "name": "Aschenläufer",
+    "row": 1,
+    "hp": 150,
+    "place": "MIST_WATCH",
+    "uv": [
+      0.35,
+      0.54
+    ],
+    "kind": "hound",
+    "description": "Ein schneller Aschenbiss trifft ein Ziel. Jeder dritte Zug wird zum stärkeren Glutsprung."
+  },
+  "bark_guardian": {
+    "name": "Rindenwächter",
+    "row": 2,
+    "hp": 190,
+    "place": "MIST_WATCH",
+    "uv": [
+      0.65,
+      0.54
+    ],
+    "kind": "guardian",
+    "description": "Wurzelschlag trifft ein Ziel. Alle drei Runden heilt sich der Wächter; Brennen unterbricht seine Rindenerneuerung."
+  }
+}

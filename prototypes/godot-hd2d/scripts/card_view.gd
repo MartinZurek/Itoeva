@@ -27,7 +27,7 @@ func _build() -> void:
  animal_texture=load(animal_data.asset)
  layout=Control.new();layout.size=Vector2(1280,720);layout.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(layout)
  _panel(Rect2(20,16,1240,56))
- _label("SCHATTENWALD · KARTEN",Rect2(38,26,330,32),20,GOLD)
+ _label((encounter.app.Catalog.data().labels[encounter.app.room].to_upper() if model.enemy_id!="" else "SCHATTENWALD")+" · KARTEN",Rect2(38,26,330,32),20,GOLD)
  turn_label=_label("",Rect2(755,28,190,30),16)
  crystal_meter=load("res://scripts/crystal_meter.gd").new()
  crystal_meter.position=Vector2(380,20);crystal_meter.size=Vector2(340,46)
@@ -228,7 +228,7 @@ func refresh() -> void:
  turn_label.text="Runde %s · %s" % [model.round,model.actor_name()]
  var before: bool=model.playback_pending and event_time>=0 and event_time<model.impact_time()
  var enemy_hp: int=int(model.last_event.get("before_enemy",model.enemy_health)) if before else model.enemy_health
- enemy_label.text="NACHTWURZ   %s / %s LP" % [enemy_hp,model.enemy_max_hp];enemy_bar.value=enemy_hp
+ enemy_label.text="%s   %s / %s LP" % [model.enemy_name.to_upper(),enemy_hp,model.enemy_max_hp];enemy_bar.value=enemy_hp
  intent.text=model.enemy_intent()
  var states: Array=displayed_states()
  for i in 2:
@@ -266,7 +266,7 @@ func _refresh_unit_info() -> void:
  var shown: bool=not unit.is_empty() and not results_shown
  unit_info.visible=shown;unit_info_name.visible=shown;unit_info_stats.visible=shown;unit_info_state.visible=shown
  if not shown:return
- var owner: String="Nachtwurz" if int(unit.owner)==2 else str(model.party[int(unit.owner)].name)
+ var owner: String=model.enemy_name if int(unit.owner)==2 else str(model.party[int(unit.owner)].name)
  unit_info_name.text=str(unit.name)+" · "+owner
  unit_info_stats.text="Angriff %s  ·  Verteidigung / LP %s / %s" % [unit.attack,unit.hp,unit.max_hp]
  var marks: Array[String]=[]
@@ -306,6 +306,9 @@ func enemy_visual_state() -> String:
 
 func _fighter(index: int) -> void:
  if index!=2:super._fighter(index);return
+ if model.enemy_id!="":
+  _regional_fighter()
+  return
  var state:=enemy_visual_state()
  var frame:=0
  var fall:=0.0
@@ -450,7 +453,7 @@ func _unit_numbers() -> void:
    if int(effect.target)==3:_word("Ausweichen" if effect.kind=="evade" else str(effect.amount),_unit_position(int(effect.unit),true)-Vector2(8,80+(event_time-impact)*22),20,Color("cfc1ef") if effect.kind=="evade" else Color("ffe5c9"))
 
 func _available_hint() -> String:
- if model.cursor==2:return "Nachtwurz ist am Zug"
+ if model.cursor==2:return model.enemy_name+" ist am Zug"
  var cards:=0;var ready:=0;var powers:=0
  for i in model.decks[model.cursor].hand.size():
   if model.can_play(i):cards+=1
@@ -526,3 +529,22 @@ func _power_affordance(button: Button) -> void:
  box.border_color=Color("9edab6") if not button.disabled else Color("495763")
  box.set_border_width_all(2 if not button.disabled else 1)
  button.add_theme_stylebox_override("normal",box);button.add_theme_stylebox_override("disabled",box)
+
+func _regional_fighter() -> void:
+ var state:=enemy_visual_state()
+ var pose:=0
+ var foot:=_position(2)
+ if state=="cast":
+  pose=1 if event_time<model.impact_time() else 2
+  var progress:=clampf(event_time/model.animation_duration(),0,1)
+  foot.x-=sin(progress*PI)*34
+ elif state=="hit":pose=3;foot.x+=sin(event_time*45)*5
+ elif state=="fall":pose=4
+ elif model.enemy_profile.kind=="moth":foot.y-=sin(clock*3)*7
+ var enemies=load("res://scripts/regional_enemies.gd")
+ var region: Rect2=enemies.region(model.enemy_id,pose)
+ var texture: Texture2D=load("res://assets/expansion/enemies.png")
+ var scale_factor: float=190.0/enemies.region(model.enemy_id,0).size.y
+ var dimensions: Vector2=region.size*scale_factor
+ var tint:=Color("ffd6bd") if state=="hit" else Color.WHITE
+ draw_texture_rect_region(texture,Rect2(foot-Vector2(dimensions.x*.5,dimensions.y),dimensions),region,tint)
