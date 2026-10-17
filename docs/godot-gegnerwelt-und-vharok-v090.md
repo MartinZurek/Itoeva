@@ -47,3 +47,5 @@ Promptset der Landschaften: detailreiche gemalte16:9-HD2D-Miniaturwelt, durchgeh
 AndroidTest0.9.0/Code21, bestehendes Paket `com.itoeva.godot.hd2d.worldtest`, ARM64. Das Runtime-Manifest dokumentiert den tatsächlichen Quellstand; der bestehende signierte APK-/Drive-Weg prüft Paketversion, Signatur, Dateigröße und Remote-Prüfsumme. Build-/Auslieferungsstatus ist im zugehörigen PR nachzulesen, nicht aus diesem Dokument als abgeschlossen abzuleiten.
 
 Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene Scheren und Körbe bleiben frei von der Statusanzeige. Neue Korrekturen ersetzen ältere laufende0.9.0-Testbauten, damit nur der aktuelle Stand ausgeliefert wird.
+
+- **Lichtdaten-Korrektur:** Die beiden Erweiterungsbilder tragen explizite Assetpfade in den Lichtdaten. Die allgemeine Koordinaten-/Maskenprüfung erfasst sie damit ebenfalls und bricht bei fehlenden Texturen sofort mit einem Prüffehler ab.

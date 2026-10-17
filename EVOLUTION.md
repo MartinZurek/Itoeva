@@ -7060,3 +7060,5 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
   AndroidTest Code21 im bestehenden signierten Build-/Drive-Weg.
 
 Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene Scheren und Körbe bleiben frei von der Statusanzeige. Neue Korrekturen ersetzen ältere laufende0.9.0-Testbauten, damit nur der aktuelle Stand ausgeliefert wird.
+
+- **Lichtdaten-Korrektur:** Die beiden Erweiterungsbilder tragen explizite Assetpfade in den Lichtdaten. Die allgemeine Koordinaten-/Maskenprüfung erfasst sie damit ebenfalls und bricht bei fehlenden Texturen sofort mit einem Prüffehler ab.

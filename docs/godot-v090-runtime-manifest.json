@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "canonical": "path+NUL+sha256+LF; sorted by path",
-  "sha256": "3cacd21af3da349641cd34ca865a47ab3de2e0d3f44b94047f3f8705f5c7761e",
+  "sha256": "b0b42ca85e19b1cee143071a0cc1a53bb89d16ebb4c1f63ca4e7e32be03f6de8",
   "files": [
     {
       "path": "assets/audio/attack.wav",
@@ -975,8 +975,8 @@
     },
     {
       "path": "data/ambience.json",
-      "sha256": "04297ad7f711356cb09102d5139b394900a23614e2ae1d07b177e27892d45285",
-      "bytes": 25925
+      "sha256": "a57287263945e8a4247db2d06d5a1b272896154da91e647d4d1428025f5d7c07",
+      "bytes": 26037
     },
     {
       "path": "data/battle_audio.json",
