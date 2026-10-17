@@ -15,6 +15,17 @@ in `README.md`. Die historischen P1-Befunde unten sind damit für den aktuellen 
 behoben; sie bleiben als Begründung erhalten. Frühere Git-Versionen enthalten weiterhin
 die damals veröffentlichten Daten. Monats-/Besitzvertrag, Kampf und Engine bleiben offen.
 
+**Weiterer Folgestand – Katalogvertrag v1:** `KATALOGVERTRAG.md` und der reine Referenzleser
+`katalog.py` definieren das engineunabhängige Format. Der Export trägt `schema_version: 1`;
+44 Python-Tests prüfen unter anderem Altbestandübernahme, unbekannte Felder/Versionen,
+ruhende Karten, Monatskonsistenz und unveränderte Identitäten. Vor Schreibbeginn werden
+Kataloge vollständig validiert; alle 616 Karten behalten ihre Werte. Der konkrete
+Monats-/Besitzvertrag ist durch Martins Wahl **A** entschieden: erworbene Monatsausgaben
+mit damaligen Werten, Form und Glanz erhalten. `edition.py` sichert diesen Erhalt und die
+Snapshot-Wiederherstellung mit erfundenen Daten ab; es gibt keine App-Sammlung und keine
+Kampf-/Engineentscheidung. Die nachstehenden historischen Aussagen über die damals fehlende
+Formatversion sind durch diesen technischen Schritt für neue Ausgaben überholt.
+
 ## Entscheidung: Teil 2 jetzt zurückstellen
 
 **Kein Einbau in die Kotlin/Compose-Spielvariante zum jetzigen Zeitpunkt.** Die Schmiede

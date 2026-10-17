@@ -669,6 +669,71 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-17 - Erworbene Monatsausgaben erhalten (card-edition-a-v1)
+
+- **DOCUMENTED INTENT / Produktentscheidung:** Auf die konkrete Auswahlfrage zu
+  `KATALOGVERTRAG.md` wählt Martin ausdrücklich **A: Erworbene Monatsausgaben mit
+  damaligen Werten, Form und Glanz dauerhaft erhalten**. Damit ist dieser zuvor offene
+  Teil des Besitzvertrags entschieden; B (laufende Monatswerte) ist nicht gewählt.
+- **TESTED BEHAVIOR:** Reine Modelle `KatalogSnapshot` und `ErworbeneAusgabe` unter
+  `tools/card-forge/edition.py` bewahren validierte, bereinigte Snapshot-Bytes und deren
+  SHA256-Referenz. Ein Novemberkatalog kann eine erworbene mythische Oktoberausgabe
+  weder zur gewöhnlichen Jungform zurückstufen noch ihren Glanz oder ihre Werte ändern.
+  Ruhen entfernt keinen bereits gewährten Erwerb. Wiederherstellung aus der separat
+  erhaltenen Snapshot-Datei reproduziert die Ausgabe einschließlich ihrer Referenz.
+- **Betroffen:** Referenzmodelle, sieben neue synthetische Editionstests, Katalogvertrag,
+  README und Prüf-/Itoeva-2-Status. Keine App-Runtime, kein Room-/Preference-Schema,
+  keine automatische Kartenvergabe, keine Preis- oder Kampfänderung.
+- **Nutzerwirkung / Grenzen:** Der dauerhafte Erhalt ist als Ziel verbindlich, aber noch
+  keine eingebaute Sammlung im Spiel. Historischer Aktivstatus ist keine Kampfzulassung.
+  Ein Hash ohne aufbewahrte Snapshot-Daten reicht nicht zur Wiederherstellung.
+- **Tests:** Insgesamt 44 Python-Tests erfolgreich; Galerie-Script-Test erfolgreich.
+  Gradle-Test/Kompilierung erneut erfolgreich mit 64 unveränderten Tasks aus dem Cache.
+  Kein Geräte-, App-Sammlungs- oder Partientest.
+- **Migration / Rücksetzung:** Keine App-Migration, nur Referenzdaten mit erfundenem
+  Snapshot-Dateitest. Technische Rücknahme des Prototyps widerruft Martins Produktentscheidung
+  nicht; erworbene Ausgaben dürfen später nicht stillschweigend auf Monatswerte umgestellt werden.
+- **Weiterhin OPEN DECISION / nächster Schritt:** Freigabe und Korrekturen einer Edition,
+  erneuter Erwerb derselben Ausgabe und Kampfzulässigkeit konkretisieren. Kampf, Engine,
+  Gruppe, Raster und Bezahlung bleiben offen. Frühere Aussagen, Monats-/Besitzprinzip sei
+  insgesamt offen, sind durch diese ausdrückliche Wahl für genau Variante A überholt.
+
+### 2026-10-17 - Engineunabhängiger Katalogvertrag (card-catalog-v1)
+
+- **Ausgangsproblem / DOCUMENTED INTENT:** Der Nutzer beauftragt nach der Exportabsicherung
+  den nächsten Schritt. Dem öffentlichen Katalog fehlten Formatversion und ein prüfbarer
+  Lesevertrag. Datenmonat, ruhende Karten und ein möglicher späterer Besitz waren nicht
+  ausreichend voneinander getrennt.
+- **Technische Entscheidung / TESTED BEHAVIOR:** `schema_version: 1`, UTF-8/LF-Export,
+  reine unveränderliche Referenzmodelle und Leser in `tools/card-forge/katalog.py`.
+  Unbekannte Zusatzfelder werden ignoriert und nicht erneut exportiert; fehlende/falsche
+  Pflichtfelder, doppelte IDs/Namen/JSON-Schlüssel und unbekannte Versionen werden
+  abgewiesen. Ruhende Karten behalten ihren letzten Auswertungsmonat. Der Generator
+  validiert vor jedem Schreiben und übernimmt das alte unversionierte Format ausdrücklich.
+- **Betroffen:** Schmiede, öffentliche JSON-/Galeriedatei, lokale JSON-Zeilenendregel,
+  erfundene Fixture, Vertragstests, `KATALOGVERTRAG.md`, README und Prüf-/Itoeva-2-Status.
+  Alle 616 bestehenden Karten behalten IDs, Namen und Spiel-/Darstellungswerte.
+  Keine Runtime-, Kotlin-/Compose-, Preference-, Room-, Preis- oder Kampfänderung.
+- **Produktabgrenzung:** Der Vertrag stellte drei Varianten konkret zur Wahl; Martins
+  anschließende ausdrückliche Entscheidung für A steht im Eintrag `card-edition-a-v1`.
+  Die Datenformatversion allein führt keine Sammlung und keine Kampfsemantik ein.
+- **Tests:** 44 Python-Tests mit erfundenen Eingaben und bereinigten Artefakten; darunter
+  explizite Altbestandübernahme, Abbruch inkompatibler Kataloge vor Dateiveränderung,
+  Typ-/Versions-/Monatsfehler, vollständige ruhende Karten und getrennte Monatsmodelle.
+  Galerie-Scripttest erfolgreich; Gradle-Test/Kompilierung erneut erfolgreich, 64 Tasks
+  unverändert aus dem Cache des vorherigen erfolgreichen Laufs mit 1.415 Unit-Tests.
+- **UNVERIFIED / Grenzen:** Kein Leser in einer Spiele-Engine, keine persistierte Sammlung,
+  keine Partien- oder Browserlayoutabnahme. Der Datei-SHA256 bezieht sich auf genaue Bytes,
+  nicht auf semantisch gleiches neu serialisiertes JSON; Hash allein bewahrt keinen Snapshot.
+- **Migration / Rücksetzung:** Expliziter Übergang nur für unversionierte Katalogdateien,
+  keine App-Migration. Bei technischer Rücknahme die öffentliche Exportabsicherung
+  beibehalten; neue Katalog-Metadaten dürfen vom alten Galerie-Script ignoriert werden.
+  Unbekannte Zukunftsversionen werden niemals auf v1 zurückgesetzt.
+- **Nächster Schritt:** Nach dem abgeschlossenen Zweimonatsnachweis für A Freigaben,
+  Korrekturen und Duplikate konkretisieren. Kampfregeln und Engine bleiben eigene
+  Entscheidungen. Dieser Schritt ersetzt die früheren Aussagen, es gebe
+  noch keine Katalogversion; die Formatversion allein entscheidet keine Besitz- oder Kampfregel.
+
 ### 2026-10-17 - Öffentliche Kartenexporte und Register absichern (card-forge-export-v1)
 
 - **Ausgangsproblem / DOCUMENTED INTENT:** Nach der Prüfung beauftragt der Nutzer den

@@ -13,14 +13,19 @@ die Tests; ein Einbau in `game` wird vorerst zurückgestellt. Die im Prüfstand 
 Faktorquintile und Firmenkennungen sind im Folgeschritt aus den aktuellen öffentlichen
 Ausgaben entfernt. Register und Katalog werden vor dem Schreiben gegeneinander geprüft;
 fehlende oder widersprüchliche Zuordnungen führen zum Abbruch. Namen, IDs und Spielwerte
-der 616 Karten bleiben erhalten. Monatsänderungen können weiterhin Formen und Seltenheit
-zurückstufen; diese Produktfrage bleibt offen.
+der 616 Karten bleiben erhalten. Im aktuellen Monatskatalog können sich Formen und
+Seltenheit weiterhin ändern; erworbene Ausgaben werden davon gemäß Variante A getrennt.
 
-Die Exportabsicherung ist mit erfundenen Eingaben und den bereinigten Artefakten getestet.
-Nächster Schritt ist ein Vorschlag für einen engineunabhängigen, versionierten
-Katalogvertrag, einschließlich der ausdrücklich zu entscheidenden Monats-/Besitzregeln.
-Erst danach folgt ein begrenzter Regelversuch. Kampf, Gruppe, Raster, Engine,
-Sammlungsbesitz und Bezahlung bleiben
+Die Exportabsicherung und der technische [Katalogvertrag v1](tools/card-forge/KATALOGVERTRAG.md)
+sind mit erfundenen Eingaben und den bereinigten Artefakten getestet. Der öffentliche
+Katalog trägt `schema_version: 1`; ein engineunabhängiger Referenzleser prüft Version,
+Monate und Pflichtfelder und lädt auch ruhende Karten. Alle 616 Karten behalten ihre Werte.
+Martin hat **Variante A** ausdrücklich gewählt: Erworbene Monatsausgaben behalten ihre
+damaligen Werte, Form und Glanz dauerhaft. Die engineunabhängigen Referenzmodelle
+`KatalogSnapshot` und `ErworbeneAusgabe` sichern den Erhalt im Zweimonatslauf und nach
+Snapshot-Wiederherstellung ab. Noch keine App-Sammlung oder automatische Kartenvergabe.
+Freigabe/Korrekturen, Duplikate und spätere Kampfzulässigkeit bleiben offen. Kampf,
+Gruppe, Raster, Engine und Bezahlung bleiben
 `OPEN DECISION`. Kartenbuch, Spiel-Assets und Beschwörungsanimationen sind nicht eingebaut.
 Die bestehenden Preise bleiben unverändert; konkrete Preiskandidaten stehen im Prüfbericht.
 

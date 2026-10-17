@@ -1,0 +1,2 @@
+# Dateireferenzen muessen unter Windows und Unix dieselben UTF-8-Bytes sehen.
+out/*.json text eol=lf

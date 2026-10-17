@@ -1,0 +1,26 @@
+{
+ "schema_version": 1,
+ "monat": "2026-10",
+ "anzahl": 2,
+ "karten": [
+  {
+   "id": "K0001", "name": "Testfunke", "art": "Glühwürmchen", "form": "Jungform",
+   "titel": "auf Wanderschaft", "volk": "Leuchtfeuer", "wesen": "FENNEC",
+   "farbe": "Glutorange", "hex": "#e0683a", "rolle": "Wächter", "reihe": "vorn",
+   "seltenheit": "Ungewöhnlich", "kosten": 2, "angriff": 1, "leben": 3,
+   "merkmale": [],
+   "faehigkeit": {"name": "Schutzlicht", "x": 1, "text": "Schutzlicht 1: rein erfundene Testkarte."},
+   "gabe": null, "glanz": false, "wertpunkte": 5, "status": "aktiv", "monat": "2026-10"
+  },
+  {
+   "id": "K0002", "name": "Testlaterne", "art": "Leuchtfeuer-Hüter", "form": "Urform",
+   "titel": "auf Wanderschaft", "volk": "Leuchtfeuer", "wesen": "FENNEC",
+   "farbe": "Glutorange", "hex": "#e0683a", "rolle": "Wächter", "reihe": "vorn",
+   "seltenheit": "Mythisch", "kosten": 5, "angriff": 2, "leben": 4,
+   "merkmale": ["Wächter"],
+   "faehigkeit": {"name": "Schutzlicht", "x": 1, "text": "Schutzlicht 1: rein erfundene Testkarte."},
+   "gabe": {"name": "Ewiges Feuer", "text": "Rein erfundener Testeffekt ohne Kampfsemantik."},
+   "glanz": true, "wertpunkte": 11, "status": "ruhend", "monat": "2026-09"
+  }
+ ]
+}

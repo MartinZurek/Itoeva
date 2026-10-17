@@ -29,6 +29,8 @@ import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from katalog import KARTENFELDER, SCHEMA_VERSION, katalog_aus_daten, katalog_json, lese_katalog
+
 HIER = Path(__file__).resolve().parent
 
 SPALTEN = {
@@ -48,11 +50,7 @@ SPALTEN = {
 FAKTOREN = ("quality", "lowvola", "momentum", "value", "composite", "size")
 
 # Unbekannte interne Felder duerfen auch aus alten, ruhenden Karten nicht ins Repo gelangen.
-OEFFENTLICHE_KARTENFELDER = (
-    "id", "name", "art", "form", "titel", "volk", "wesen", "farbe", "hex", "rolle", "reihe",
-    "seltenheit", "kosten", "angriff", "leben", "merkmale", "faehigkeit", "gabe", "glanz",
-    "wertpunkte", "status", "monat",
-)
+OEFFENTLICHE_KARTENFELDER = KARTENFELDER
 
 
 # --------------------------------------------------------------------------- Einlesen
@@ -119,9 +117,11 @@ def lade_vorher_und_register(aus: Path, privat: Path) -> tuple[dict, dict]:
         anderer_bestand = (aus / "galerie.html").exists() or any(aus.glob("monatswandel-*.md"))
         if anderer_bestand and not (aus / "karten.json").exists():
             raise ValueError("Kartenkatalog fehlt trotz vorhandener Ausgaben; Sicherung pruefen.")
-        vorher = lade_json(aus / "karten.json", {"karten": []})
-        if not isinstance(vorher, dict) or not isinstance(vorher.get("karten"), list):
-            raise ValueError("Vorhandener Kartenkatalog ist unlesbar.")
+        if (aus / "karten.json").exists():
+            # Nur das bekannte alte Format wird explizit angehoben, keine unbekannte Version.
+            vorher = lese_katalog((aus / "karten.json").read_bytes(), erlaube_altbestand=True).als_dict()
+        else:
+            vorher = {"karten": []}
         register = lade_json(privat / "register.json", None)
         if register is None:
             if (aus / "karten.json").exists() or anderer_bestand:
@@ -158,11 +158,6 @@ def lade_vorher_und_register(aus: Path, privat: Path) -> tuple[dict, dict]:
                     or k.get("name") != nach_id[k["id"]]):
                 raise ValueError("Privates Register passt nicht zum vorhandenen Kartenkatalog.")
             gesehen.add(k["id"])
-            # Auch spaeter ueberschriebene aktive Altkarten muessen vor Schreibbeginn lesbar sein.
-            try:
-                oeffentliche_karte(k)
-            except (KeyError, TypeError) as exc:
-                raise ValueError("Vorhandener Kartenkatalog enthaelt unlesbare Karten.") from exc
         return vorher, register
     except (json.JSONDecodeError, UnicodeError) as exc:
         raise ValueError("Kartenkatalog oder privates Register ist unlesbar; Sicherung pruefen.") from exc
@@ -177,7 +172,8 @@ def oeffentliche_karte(karte: dict) -> dict:
 
 
 def galerie_daten(karten: list[dict], monat: str, regeln: dict) -> dict:
-    return {"monat": monat, "karten": [oeffentliche_karte(k) for k in karten],
+    return {"schema_version": SCHEMA_VERSION, "monat": monat,
+            "karten": [oeffentliche_karte(k) for k in karten],
             "wesen": {w: {f: v[f] for f in ("farbe", "hex", "warum")}
                       for w, v in regeln["wesen"].items() if not w.startswith("_")},
             "voelker": {v["volk"]: {"wesen": v["wesen"], "bild": v["bild"]}
@@ -506,6 +502,9 @@ def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_fir
             karten[kid] = ruhend
 
     liste = [oeffentliche_karte(karten[k]) for k in sorted(karten)]
+    katalog = katalog_aus_daten({"schema_version": SCHEMA_VERSION, "monat": monat,
+                               "anzahl": len(liste), "karten": liste})
+    json_text = katalog_json(katalog)
     daten_galerie = galerie_daten(liste, monat, regeln)
     html = galerie_html(daten_galerie)
     private_html = None
@@ -532,8 +531,7 @@ def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_fir
     privat.mkdir(parents=True, exist_ok=True)
     aus.mkdir(parents=True, exist_ok=True)
     schreibe_atomar(privat / "register.json", json.dumps(register, ensure_ascii=False, indent=1))
-    schreibe_atomar(aus / "karten.json", json.dumps({"monat": monat, "anzahl": len(liste), "karten": liste},
-                                                  ensure_ascii=False, indent=1))
+    schreibe_atomar(aus / "karten.json", json_text)
     schreibe_atomar(privat / f"uebersicht-{monat}.csv", csv_text.getvalue(), encoding="utf-8-sig")
     schreibe_atomar(aus / f"monatswandel-{monat}.md", "\n".join(wandel) + "\n")
 

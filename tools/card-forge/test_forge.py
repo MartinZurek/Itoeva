@@ -266,6 +266,40 @@ class KartenTest(unittest.TestCase):
             self.schmiede(zeilen, "2026-11")
         self.assertEqual(vorher, self.stand())
 
+    def test_legacy_katalog_wird_ohne_identitaetswechsel_versioniert(self):
+        zeilen = erfundene_zeilen(2, self.rnd)
+        alt = self.schmiede(zeilen, "2026-10")
+        pfad = self.tmp / "out" / "karten.json"
+        d = json.loads(pfad.read_text(encoding="utf-8"))
+        del d["schema_version"]
+        pfad.write_text(json.dumps(d), encoding="utf-8")
+        neu = self.schmiede(zeilen, "2026-10")
+        self.assertEqual(alt, neu)
+        self.assertEqual(json.loads(pfad.read_text(encoding="utf-8"))["schema_version"], 1)
+
+    def test_inkompatibler_katalog_wird_nicht_ueberschrieben(self):
+        zeilen = erfundene_zeilen(2, self.rnd)
+        self.schmiede(zeilen, "2026-10")
+        pfad = self.tmp / "out" / "karten.json"
+        original = json.loads(pfad.read_text(encoding="utf-8"))
+        for fall in ("zukunft", "anzahl", "pflichtfeld", "doppelfelder"):
+            with self.subTest(fall=fall):
+                d = json.loads(json.dumps(original))
+                if fall == "zukunft":
+                    d["schema_version"] = 2
+                elif fall == "anzahl":
+                    d["anzahl"] = 1
+                elif fall == "pflichtfeld":
+                    del d["karten"][0]["leben"]
+                text = json.dumps(d)
+                if fall == "doppelfelder":
+                    text = text.replace('"schema_version": 1', '"schema_version": 1, "schema_version": 1')
+                pfad.write_text(text, encoding="utf-8")
+                vorher = self.stand()
+                with self.assertRaises(ValueError):
+                    self.schmiede(zeilen, "2026-11")
+                self.assertEqual(vorher, self.stand())
+
     def test_abgebrochener_registeraustausch_erhaelt_alle_dateien(self):
         zeilen = erfundene_zeilen(2, self.rnd)
         self.schmiede(zeilen, "2026-10")
@@ -322,11 +356,14 @@ class KartenTest(unittest.TestCase):
     def test_eingecheckte_ausgaben_enthalten_nur_oeffentliche_kartendaten(self):
         out = HIER / "out"
         daten = json.loads((out / "karten.json").read_text(encoding="utf-8"))
+        self.assertEqual(set(daten), {"schema_version", "monat", "anzahl", "karten"})
         html = (out / "galerie.html").read_text(encoding="utf-8")
         eingebettet, _ = json.JSONDecoder().raw_decode(html.split("const D = ", 1)[1])
         self.assertEqual(daten["anzahl"], len(daten["karten"]))
         self.assertEqual(eingebettet["karten"], daten["karten"])
         self.assertEqual(eingebettet["monat"], daten["monat"])
+        self.assertEqual(daten["schema_version"], 1)
+        self.assertEqual(eingebettet["schema_version"], daten["schema_version"])
         self.assertNotIn("firmen", eingebettet)
         self.assertNotIn("faktoren", eingebettet)
         for k in daten["karten"]:

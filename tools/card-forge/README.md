@@ -11,7 +11,14 @@ Die Schmiede legt nur die Daten an, die ein solches Spiel braucht.
 
 Die kritische Bewertung und die zurückgestellte Spieleintegration stehen in
 [`PRUEFUNG.md`](PRUEFUNG.md). Der Folgeschritt sichert zunächst Exporte und Kartenidentitäten;
-Kampfregeln, Preise und Sammlungsbesitz werden dadurch nicht entschieden.
+Kampfregeln und Preise werden dadurch nicht entschieden. Die anschließende ausdrückliche
+Besitzentscheidung für Variante A steht im Katalogvertrag.
+
+Der technische [Katalogvertrag v1](KATALOGVERTRAG.md) ist implementiert: `schema_version`
+im Export, reiner Referenzleser in `katalog.py`, typisierte unveränderliche Modelle und
+Validierung vor jedem Schreiben. Für erworbene Monatsausgaben hat Martin Variante A gewählt:
+damalige Werte, Form und Glanz bleiben erhalten. `edition.py` und seine Zweimonatstests
+sichern dies als engineunabhängiges Referenzmodell ab; eine App-Sammlung ist noch nicht eingebaut.
 
 ## Die Übersetzung
 
@@ -78,9 +85,10 @@ Was über Monate gilt:
   Das Register aus einer passenden **privaten** Sicherung wiederherstellen; nicht leer neu anlegen.
 - **Werte wandern** mit den Daten. Das Monatszeichen (*im Aufwind*, *unerschütterlich* …) zeigt den
   stärksten Faktor des Monats.
-- **Monatsänderungen:** Formen können mit Size auf- und absteigen. Auch Werte, Seltenheit und
-  Glanz sind veränderlich. Wie erworbene Formen und Editionen erhalten bleiben, ist
-  **OPEN DECISION**, kein bereits eingebauter Sammlungsvertrag.
+- **Monatsänderungen:** Im aktuellen Katalog können Formen mit Size auf- und absteigen;
+  auch Werte, Seltenheit und Glanz ändern sich. Für eine **erworbene Ausgabe** gilt dagegen
+  die am 17.10. gewählte Variante A: damalige Werte, Form und Glanz erhalten. Der
+  Referenznachweis ist implementiert, eine App-Sammlung noch nicht.
 - **Nichts geht verloren.** Fällt eine Firma aus den Daten, *ruht* ihre Karte mit den letzten
   Werten im Katalog. Kommt sie zurück, erwacht sie mit derselben ID und demselben Namen wieder.
 - **Neue Industrie oder neuer Sektor** bricht den Lauf mit Hinweis ab. Dann einen Eintrag in
@@ -92,6 +100,9 @@ Was über Monate gilt:
 |---|---|---|
 | `rules.json` | alle Stellschrauben: Faktor-Tabellen, Punktpreise, Völker, 67 Arten, Booster | ja |
 | `forge.py` | reine Mechanik, nur Standardbibliothek + openpyxl | ja |
+| `katalog.py`, `KATALOGVERTRAG.md` | Referenzleser/-export, Formatregeln und beschlossene Variante A | ja |
+| `edition.py`, `test_edition.py` | Referenzmodelle und synthetischer Erhalt erworbener Monatsausgaben | ja |
+| `fixtures/katalog-v1.json`, `test_katalog.py` | handgeschriebene erfundene Karten und Vertragstests | ja |
 | `test_forge.py` | Kurve, Monotonie, Folgemonat mit Wegfall/Neuzugang, keine Firmendaten im Ausgang | ja |
 | `test_galerie.cjs` | echtes Galerie-Script mit DOM-Stubs: Details ohne Rohfaktoren und sichere private Zusatzansicht | ja |
 | `galerie_vorlage.html` | Kartengalerie, die `forge.py` mit Daten füllt | ja |
@@ -132,6 +143,8 @@ Tests (Python benötigt `openpyxl`; der zusätzliche Script-Test nur Node.js):
 
 ```text
 python tools/card-forge/test_forge.py
+python -m unittest discover -s tools/card-forge -p "test_*.py" -v
+python tools/card-forge/katalog.py tools/card-forge/out/karten.json
 node tools/card-forge/test_galerie.cjs
 ```
 
@@ -139,3 +152,10 @@ Die Python-Tests verwenden ausschließlich erfundene Eingabezeilen und prüfen a
 eingecheckten öffentlichen Artefakte. Der Node-Test führt alle 616 vorhandenen
 Kartendetails und die optionale private Ansicht aus; Layout und echte Browserbedienung
 werden durch DOM-Stubs nicht geprüft.
+
+`katalog.py` liest und prüft ausschließlich die angegebene öffentliche Datei, meldet
+Version, Monat, Kartenanzahl und ihren bytegenauen SHA-256. Es ändert keine Dateien und
+benötigt kein `openpyxl`. Unversionierte Altbestände übernimmt nur der ausdrücklich dafür
+aufgerufene Importpfad; unbekannte Versionen oder defekte Kataloge überschreibt die
+Schmiede nicht. Weitere Details zu Pflichtfeldern, ruhenden Karten und Referenzen stehen
+in `KATALOGVERTRAG.md`.
