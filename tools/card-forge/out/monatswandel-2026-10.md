@@ -14,10 +14,10 @@ Karten neben der Kurve (>0,5 Punkte): 0
 | Seltenheit | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | Ø |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Gewöhnlich | 16 | 25 | 39 | 26 | 9 | 8 | 1 |  |  |  | 3.1 |
-| Ungewöhnlich |  | 10 | 18 | 36 | 22 | 16 | 14 | 1 | 6 |  | 4.7 |
-| Selten |  | 3 | 9 | 23 | 37 | 17 | 12 | 14 | 7 |  | 5.5 |
-| Episch |  |  | 3 | 8 | 18 | 31 | 27 | 24 | 8 | 5 | 6.6 |
-| Mythisch |  |  |  |  | 3 | 10 | 22 | 32 | 19 | 37 | 8.3 |
+| Ungewöhnlich |  | 10 | 20 | 34 | 22 | 16 | 14 | 1 | 6 |  | 4.7 |
+| Selten |  | 3 | 9 | 24 | 36 | 17 | 14 | 13 | 6 |  | 5.5 |
+| Episch |  |  | 3 | 8 | 19 | 34 | 25 | 20 | 11 | 4 | 6.6 |
+| Mythisch |  |  |  |  | 3 | 11 | 23 | 31 | 17 | 38 | 8.3 |
 
 **Heimvölker je Wesen**
 
@@ -25,10 +25,10 @@ Karten neben der Kurve (>0,5 Punkte): 0
 |---|---|---|---|---|---|---|
 | Puffling | Werkvolk | 101 | 5.5 | 3.9 | 5.6 | 14 |
 | Starlet | Erntevolk, Kräutervolk | 96 | 5.3 | 3.3 | 5.4 | 26 |
-| Wyrmling | Hortbrut | 101 | 5.5 | 3.3 | 4.8 | 22 |
+| Wyrmling | Hortbrut, Paktvolk | 101 | 5.3 | 3.4 | 4.8 | 22 |
 | Fennec | Bauvolk, Erzvolk, Leuchtfeuer | 108 | 5.2 | 4.0 | 4.5 | 9 |
-| Gloop | Gauklervolk, Irrlichter, Moorglut | 115 | 5.7 | 4.2 | 4.9 | 21 |
-| Hootlet | Glimmerwerk | 95 | 6.8 | 4.2 | 6.1 | 31 |
+| Gloop | Gauklervolk, Irrlichter, Moorglut | 110 | 5.6 | 4.3 | 4.9 | 19 |
+| Hootlet | Artefakte, Glimmerwerk | 100 | 6.9 | 4.2 | 6.0 | 33 |
 
 **Merkmale**: Flackernd 124, Ungestüm 124, Wächter 124, Knospend 124, Schnäppchen 123, Wachstum 122
 **Rollen**: Wächter 186, Helfer 170, Schütze 142, Stürmer 118

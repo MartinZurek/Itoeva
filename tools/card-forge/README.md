@@ -19,7 +19,7 @@ Die Schmiede legt nur die Daten an, die ein solches Spiel braucht.
 | Low Vola | **Temperament** | Q1 *Wächter* (muss zuerst angegriffen werden), Q4 *Flackernd*, Q5 *Ungestüm* (greift sofort an, schwankt) |
 | Size | **Seltenheit** | Q1 Gewöhnlich, Q2 Ungewöhnlich, Q3 Selten, Q4 Episch, Q5 **Mythisch** |
 | Composite | **Glanz** | Q1 schimmert (Holo), rein kosmetisch |
-| Sektor | **Volk** | 11 Völker, je einem der sechs Wesen als Heimvolk zugeordnet |
+| Sektor | **Volk** | 13 Völker, je einem der sechs Wesen als Heimvolk zugeordnet (zwei davon aus Industrien gebildet, siehe unten) |
 | Industrie | **Art + Rolle** | 67 Arten in drei Formen (Jung, Reif, Ur), Rolle Wächter/Stürmer/Schütze/Helfer |
 
 Quintil 0 (fehlender Wert) wird als neutrales Q3 behandelt. Mehrere Aktiengattungen einer Firma
@@ -43,13 +43,15 @@ Seltenheit); Mythische zusätzlich eine **Gabe**. Das macht sie teurer, nicht ef
 |---|---|---|
 | Puffling | Werkvolk (Industrials) | Bote mit Werkbank |
 | Starlet | Kräutervolk (Health Care), Erntevolk (Consumer Staples) | zieht Pflanzen groß |
-| Wyrmling | Hortbrut (Financials) | Drache mit Nest voller Gesammeltem |
+| Wyrmling | Hortbrut (Banken, Versicherer, Finanzdienste), **Paktvolk** (Dämonen: Capital Markets, Consumer Finance) | Drache mit Nest voller Gesammeltem; Dämonen aus der Glut seiner Esse, die Pakte schließen |
 | Fennec | Leuchtfeuer (Utilities), Bauvolk (Real Estate), Erzvolk (Materials) | Leuchtfeuer, Bau, gräbt |
 | Gloop | Gauklervolk (Cons. Discretionary), Irrlichter (Comm. Services), Moorglut (Energy) | Sumpf, Backstube, Chaos |
-| Hootlet | Glimmerwerk (Information Technology) | Sternwarte, Mechanik |
+| Hootlet | Glimmerwerk (Halbleiter, Hardware, Elektronik), **Artefakte** (KI-Volk: Software, IT-Services, Interactive Media) | Sternwarte: Mechanik und beseelte Werkzeuge, die zu denken begonnen haben |
 
 Heimvolk ist eine Affinität (+1 Leben), keine Sperre: **alle Wesen können alle Karten spielen.**
-Die Pools sind bewusst ähnlich groß (95–115 Karten).
+Die Pools sind bewusst ähnlich groß (96–110 Karten). Eine Art kann per `"volk"` in `rules.json` einem anderen Volk als ihrem Sektor zugeordnet werden; so entstehen Dämonen und Artefakte.
+
+**Namen** entstehen aus dem Klang des Volkes in drei Bauformen, häufen gleiche Endungen nicht und prüfen eine Sperrliste (`rules.json` → `namen.sperre`, z. B. keine Anklänge wie „-dolf“). Ein vergebener Name bleibt für immer.
 
 ## Monatlicher Lauf
 

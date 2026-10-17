@@ -217,16 +217,16 @@
     "Information Technology": {
       "volk": "Glimmerwerk",
       "wesen": "HOOTLET",
-      "bild": "Konstrukte und Artefakte aus Hootlets Sternwarte: Uhrwerke, Funkenkäfer, Runenautomaten.",
+      "bild": "Konstrukte aus Hootlets Sternwarte: Uhrwerke, Funkenkäfer, Messinggolems - Technik aus Metall und Funken.",
       "faehigkeit": {
         "name": "Aufrüsten",
         "punkte_pro_x": 1.0,
-        "text": "Aufrüsten {x}: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +{x} Angriff."
+        "text": "Aufrüsten {x}: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +{x} Angriff."
       },
       "gabe": {
         "name": "Sternennetz",
         "punkte": 2,
-        "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+        "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
       },
       "anfaenge": [
         "Vex",
@@ -234,15 +234,21 @@
         "Zel",
         "Lum",
         "Tek",
-        "Syn",
         "Rho",
         "Qua",
         "Vol",
-        "Ix",
         "Tor",
         "Kal",
         "Nev",
-        "Ost"
+        "Ost",
+        "Brix",
+        "Cog",
+        "Mek",
+        "Dyn",
+        "Fer",
+        "Gal",
+        "Kron",
+        "Pix"
       ],
       "endungen": [
         "tron",
@@ -256,7 +262,13 @@
         "yn",
         "ra",
         "ex",
-        "iv"
+        "iv",
+        "ock",
+        "ett",
+        "um",
+        "anz",
+        "ik",
+        "or"
       ]
     },
     "Communication Services": {
@@ -280,14 +292,18 @@
         "Fey",
         "Sha",
         "Li",
-        "Vae",
         "Mir",
-        "Eo",
         "Nyx",
         "Ul",
         "Sel",
         "Yl",
-        "Oon"
+        "Oon",
+        "Ce",
+        "Fio",
+        "Lu",
+        "Rhe",
+        "Ti",
+        "Esm"
       ],
       "endungen": [
         "wen",
@@ -297,11 +313,17 @@
         "ith",
         "ys",
         "mi",
-        "ia",
         "lo",
         "ne",
         "rin",
-        "va"
+        "va",
+        "dra",
+        "sil",
+        "ny",
+        "bel",
+        "ri",
+        "the",
+        "ka"
       ]
     },
     "Consumer Discretionary": {
@@ -329,10 +351,16 @@
         "Bo",
         "Kip",
         "Mux",
-        "Ola",
         "Dib",
         "Tut",
-        "Wim"
+        "Wim",
+        "Fle",
+        "Gig",
+        "Hop",
+        "Jib",
+        "Nok",
+        "Tri",
+        "Wup"
       ],
       "endungen": [
         "po",
@@ -346,7 +374,13 @@
         "pel",
         "zo",
         "ri",
-        "ka"
+        "ka",
+        "dle",
+        "mo",
+        "tz",
+        "sel",
+        "bert",
+        "ny"
       ]
     },
     "Energy": {
@@ -377,7 +411,13 @@
         "Ma",
         "Esh",
         "Gor",
-        "Ul"
+        "Ul",
+        "Bra",
+        "Fu",
+        "Sul",
+        "Tor",
+        "Ig",
+        "Lav"
       ],
       "endungen": [
         "gor",
@@ -391,7 +431,13 @@
         "mar",
         "zar",
         "un",
-        "ga"
+        "ga",
+        "sch",
+        "rim",
+        "oon",
+        "vo",
+        "ax",
+        "is"
       ]
     },
     "Financials": {
@@ -418,11 +464,17 @@
         "Va",
         "Kre",
         "Bal",
-        "Ix",
         "Mun",
         "Gol",
         "Ser",
-        "Tal"
+        "Tal",
+        "Fyr",
+        "Hel",
+        "Kor",
+        "Ny",
+        "Sig",
+        "Ves",
+        "Ym"
       ],
       "endungen": [
         "ax",
@@ -436,7 +488,13 @@
         "rim",
         "an",
         "is",
-        "ath"
+        "ath",
+        "enor",
+        "gar",
+        "il",
+        "ys",
+        "vald",
+        "ul"
       ]
     },
     "Industrials": {
@@ -464,10 +522,16 @@
         "Pek",
         "Stav",
         "Nib",
-        "Ard",
         "Bolt",
         "Fen",
-        "Mott"
+        "Mott",
+        "Kurt",
+        "Lud",
+        "Rap",
+        "Seb",
+        "Wol",
+        "Henk",
+        "Jo"
       ],
       "endungen": [
         "bert",
@@ -481,7 +545,13 @@
         "el",
         "mund",
         "rich",
-        "olf"
+        "ke",
+        "win",
+        "hard",
+        "mar",
+        "pel",
+        "da",
+        "fried"
       ]
     },
     "Health Care": {
@@ -501,18 +571,24 @@
       "anfaenge": [
         "Mira",
         "Lin",
-        "Ael",
         "Sel",
         "Fen",
         "Tia",
         "Ro",
         "Ilo",
         "Va",
-        "Nae",
         "Hel",
         "Sy",
         "Ama",
-        "Eri"
+        "Eri",
+        "Bel",
+        "Cyr",
+        "Eli",
+        "Ivy",
+        "Lora",
+        "Myr",
+        "Oda",
+        "Sa"
       ],
       "endungen": [
         "wen",
@@ -526,7 +602,13 @@
         "nis",
         "ne",
         "thea",
-        "ve"
+        "ve",
+        "lia",
+        "rin",
+        "bell",
+        "dis",
+        "ny",
+        "ra"
       ]
     },
     "Consumer Staples": {
@@ -557,7 +639,13 @@
         "Bet",
         "Hal",
         "Gun",
-        "Wil"
+        "Wil",
+        "Ap",
+        "Dot",
+        "Emm",
+        "Gre",
+        "Lu",
+        "Pet"
       ],
       "endungen": [
         "mo",
@@ -571,7 +659,13 @@
         "pa",
         "lin",
         "ka",
-        "fried"
+        "ti",
+        "chen",
+        "ba",
+        "tje",
+        "do",
+        "ra",
+        "win"
       ]
     },
     "Utilities": {
@@ -594,7 +688,6 @@
         "Oro",
         "Sol",
         "Ven",
-        "Ard",
         "Il",
         "Bre",
         "Tan",
@@ -602,7 +695,14 @@
         "Eon",
         "Fla",
         "Lan",
-        "Pyr"
+        "Pyr",
+        "Aur",
+        "Fae",
+        "Hel",
+        "Ign",
+        "Lam",
+        "Ste",
+        "Zen"
       ],
       "endungen": [
         "a",
@@ -616,7 +716,13 @@
         "el",
         "ara",
         "um",
-        "ix"
+        "ix",
+        "ida",
+        "ent",
+        "ola",
+        "eth",
+        "ys",
+        "ane"
       ]
     },
     "Real Estate": {
@@ -647,7 +753,13 @@
         "Ost",
         "Gru",
         "Hem",
-        "Sto"
+        "Sto",
+        "Bro",
+        "Fal",
+        "Gis",
+        "Ker",
+        "Nor",
+        "Wen"
       ],
       "endungen": [
         "ric",
@@ -656,12 +768,18 @@
         "ger",
         "mund",
         "bert",
-        "olf",
         "win",
         "dach",
         "hold",
         "lin",
-        "rik"
+        "rik",
+        "bald",
+        "fried",
+        "mar",
+        "ger",
+        "stein",
+        "hard",
+        "wig"
       ]
     },
     "Materials": {
@@ -692,7 +810,13 @@
         "Ob",
         "Gar",
         "Krag",
-        "Mal"
+        "Mal",
+        "Ber",
+        "Flin",
+        "Gra",
+        "Kob",
+        "Sla",
+        "Tal"
       ],
       "endungen": [
         "din",
@@ -706,12 +830,132 @@
         "ak",
         "thar",
         "orn",
-        "gal"
+        "gal",
+        "ith",
+        "ul",
+        "ek",
+        "ion",
+        "ras",
+        "it"
       ]
+    },
+    "Paktvolk": {
+      "volk": "Paktvolk",
+      "wesen": "WYRMLING",
+      "bild": "Dämonen aus der Glut unter Wyrmlings Esse. Sie handeln mit Pakten: Kraft jetzt, bezahlt wird später.",
+      "anfaenge": [
+        "Baz",
+        "Mal",
+        "Zor",
+        "Xar",
+        "Bel",
+        "Mor",
+        "Kaz",
+        "Vra",
+        "Sab",
+        "Ner",
+        "Ash",
+        "Gri",
+        "Thal",
+        "Asm",
+        "Dag",
+        "Ish",
+        "Lil",
+        "Ozz",
+        "Raz",
+        "Vel"
+      ],
+      "endungen": [
+        "oth",
+        "iel",
+        "ax",
+        "ur",
+        "azar",
+        "ghul",
+        "ith",
+        "on",
+        "eph",
+        "ak",
+        "eus",
+        "imon",
+        "ael",
+        "orn",
+        "yx",
+        "ebub",
+        "ira",
+        "esh"
+      ],
+      "faehigkeit": {
+        "name": "Blutpakt",
+        "punkte_pro_x": 1.0,
+        "text": "Blutpakt {x}: Beim Beschwören fügst du einem anderen eigenen Wesen {x} Schaden zu und ziehst {x} Karte(n)."
+      },
+      "gabe": {
+        "name": "Höllenpforte",
+        "punkte": 2,
+        "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
+      }
+    },
+    "Artefakte": {
+      "volk": "Artefakte",
+      "wesen": "HOOTLET",
+      "bild": "Beseelte Artefakte aus Hootlets Sternwarte: Werkzeuge, Spiegel und Automaten, die zu denken begonnen haben. Itoevas KI-Volk.",
+      "anfaenge": [
+        "Ada",
+        "Neo",
+        "Ori",
+        "Qui",
+        "Syl",
+        "Cor",
+        "Vir",
+        "Eli",
+        "Hex",
+        "Io",
+        "Nim",
+        "Zen",
+        "Aster",
+        "Bit",
+        "Cal",
+        "Dex",
+        "Kai",
+        "Lyra",
+        "Mno",
+        "Tess"
+      ],
+      "endungen": [
+        "ra",
+        "x",
+        "on",
+        "is",
+        "ia",
+        "os",
+        "ex",
+        "ai",
+        "um",
+        "el",
+        "yx",
+        "o",
+        "ene",
+        "ion",
+        "ette",
+        "us",
+        "ika",
+        "e"
+      ],
+      "faehigkeit": {
+        "name": "Lernen",
+        "punkte_pro_x": 1.5,
+        "text": "Lernen {x}: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens {x}-mal)."
+      },
+      "gabe": {
+        "name": "Erwachen",
+        "punkte": 2,
+        "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
+      }
     }
   },
   "arten": {
-    "_hinweis": "Je Industrie: Rolle und drei Formen [Jungform (Gewöhnlich/Ungewöhnlich), Reife Form (Selten/Episch), Urform (Mythisch)]. Steigt ein Unternehmen in der Größe auf, entwickelt sich das Wesen in die nächste Form.",
+    "_hinweis": "Je Industrie: Rolle und drei Formen [Jungform (Gewöhnlich/Ungewöhnlich), Reife Form (Selten/Episch), Urform (Mythisch)]. Steigt ein Unternehmen in der Größe auf, entwickelt sich das Wesen in die nächste Form. Optional 'volk': legt die Art in ein anderes Volk als ihr Sektor (Dämonen, Artefakte).",
     "Communications Equipment": {
       "rolle": "Schütze",
       "formen": [
@@ -730,6 +974,7 @@
     },
     "IT Services": {
       "rolle": "Helfer",
+      "volk": "Artefakte",
       "formen": [
         "Schaltkobold",
         "Netzweber",
@@ -746,10 +991,11 @@
     },
     "Software": {
       "rolle": "Schütze",
+      "volk": "Artefakte",
       "formen": [
         "Glyphengeist",
-        "Runenautomat",
-        "Codex-Titan"
+        "Denkender Foliant",
+        "Orakel-Konstrukt"
       ]
     },
     "Technology Hardware, Storage & Peripherals": {
@@ -778,9 +1024,10 @@
     },
     "Interactive Media & Services": {
       "rolle": "Schütze",
+      "volk": "Artefakte",
       "formen": [
         "Spiegelmotte",
-        "Spiegelgeist",
+        "Sprechender Spiegel",
         "Tausendauge"
       ]
     },
@@ -890,18 +1137,20 @@
     },
     "Capital Markets": {
       "rolle": "Schütze",
+      "volk": "Paktvolk",
       "formen": [
-        "Tauschmarder",
-        "Wechselbalg",
-        "Marktdrache"
+        "Paktwichtel",
+        "Vertragsdämon",
+        "Marktfürst"
       ]
     },
     "Consumer Finance": {
       "rolle": "Stürmer",
+      "volk": "Paktvolk",
       "formen": [
-        "Pfandwichtel",
-        "Pfandgreif",
-        "Großgreif"
+        "Pfandteufel",
+        "Schuldendämon",
+        "Schuldenfürst"
       ]
     },
     "Financial Services": {
@@ -1256,5 +1505,47 @@
     "lowvola": "in sich ruhend",
     "value": "genügsam",
     "neutral": "auf Wanderschaft"
+  },
+  "namen": {
+    "_hinweis": "Gesperrte Wortteile in erfundenen Namen (klein geschrieben, Teilstring-Treffer).",
+    "sperre": [
+      "adolf",
+      "dolf",
+      "hitl",
+      "nazi",
+      "ss ",
+      "sieg",
+      "heil",
+      "fuhr",
+      "führ",
+      "reich",
+      "arsch",
+      "fick",
+      "kack",
+      "schei",
+      "hure",
+      "nigg",
+      "neger",
+      "kot",
+      "pups",
+      "furz",
+      "sau",
+      "penis",
+      "titt",
+      "porn",
+      "sex",
+      "nutt",
+      "wichs",
+      "jud",
+      "isis",
+      "satan",
+      "luzif",
+      "jesus",
+      "allah",
+      "bubi",
+      "dumm",
+      "doof",
+      "blöd"
+    ]
   }
 }

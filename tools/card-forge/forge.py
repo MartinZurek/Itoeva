@@ -21,6 +21,7 @@ import csv
 import hashlib
 import json
 import math
+import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -116,36 +117,67 @@ def saat(text: str) -> int:
 VERBOTEN = {"puffling", "starlet", "wyrmling", "fennec", "gloop", "hootlet"}
 
 
-def erfinde_namen(schluessel: str, volk: dict, mythisch: bool, vergeben: set[str]) -> str:
-    """Anfang + Endung aus dem Klang des Volkes; Mythische bekommen eine Silbe mehr.
+VOKALE = "aeiouyäöü"
 
-    Der Name hängt nur am Datenschlüssel, nicht an den Werten - er bleibt also über alle
-    Monate gleich. Reichen zwei Teile nicht mehr (Volk voll), wird auf drei ausgewichen.
+
+def _fuge(teile: list[str]) -> str | None:
+    """Setzt Teile zusammen; None, wenn es an einer Fuge holpert ("Oro"+"ar")."""
+    name = teile[0]
+    for t in teile[1:]:
+        if name[-1].lower() == t[0]:
+            t = t[1:]  # "Lux"+"xa" -> "Luxa", keine Doppelbuchstaben an der Fuge
+        if not t or (name[-1].lower() in VOKALE and t[0] in VOKALE):
+            return None
+        name += t
+    return name
+
+
+def erfinde_namen(schluessel: str, volk: dict, mythisch: bool, vergeben: set[str],
+                  nutzung: Counter, sperre: list[str]) -> tuple[str, list[str]]:
+    """Name aus dem Klang des Volkes. Hängt nur am Datenschlüssel, bleibt also über alle Monate.
+
+    Drei Bauformen für Abwechslung: Anfang+Endung ("Galgor"), Anfang+Bindevokal+Endung
+    ("Bramaber"), Anfang+Anfang+Endung ("Vexkalon", Mythische bevorzugt). Aus mehreren
+    gültigen Kandidaten gewinnt der, dessen Teile im Volk bisher am seltensten vorkommen -
+    so häufen sich keine gleichen Endungen. `sperre` verhindert ungewollte Anklänge.
     """
     anf, end = volk["anfaenge"], volk["endungen"]
-    for versuch in range(2000):
+    kandidaten = []
+    for versuch in range(4000):
         s = saat(f"{schluessel}#{versuch}")
-        drei = mythisch or versuch >= 200
-        teile = [anf[s % len(anf)]]
-        if drei:
-            mitte = anf[(s >> 16) % len(anf)].lower()
-            if mitte == teile[0].lower():
+        a, e = anf[s % len(anf)], end[(s >> 32) % len(end)]
+        form = (s >> 64) % 10
+        if mythisch or versuch >= 1500:
+            form = 9 if mythisch and form < 7 else form
+        if form >= 8:
+            b = anf[(s >> 16) % len(anf)]
+            if b == a:
                 continue
-            teile.append(mitte)
-        teile.append(end[(s >> 32) % len(end)])
-        name, holprig = teile[0], False
-        for t in teile[1:]:
-            if name[-1].lower() == t[0]:
-                t = t[1:]  # "Lux"+"xa" -> "Luxa", keine Doppelbuchstaben an der Fuge
-            if not t or (name[-1].lower() in "aeiouy" and t[0] in "aeiouy"):
-                holprig = True  # "Oro"+"ar" -> "Oroar" klingt nach Versehen
-            name += t
-        if holprig:
+            teile = [a, b.lower(), e]
+        elif form >= 5 and a[-1] not in VOKALE and e[0] not in VOKALE:
+            teile = [a, "aeiou"[(s >> 80) % 5] if a[-1] != "r" else "i", e]
+        else:
+            teile = [a, e]
+        name = _fuge(teile)
+        if name is None:
             continue
-        if (4 <= len(name) <= 11 and name.lower() not in vergeben
-                and name.lower() not in VERBOTEN and not any(c * 3 in name.lower() for c in "abcdefghijklmnopqrstuvwxyz")):
-            return name
-    raise RuntimeError(f"Kein freier Name für {schluessel}")
+        klein = name.lower()
+        if (not 4 <= len(name) <= 11 or klein in vergeben or klein in VERBOTEN
+                or any(w in klein for w in sperre)
+                or any(c * 3 in klein for c in "abcdefghijklmnopqrstuvwxyz")
+                or re.search(r"[^aeiouyäöü]{3,}", klein.replace("sch", "s").replace("ch", "c").replace("ck", "k"))
+                or (len(teile) == 3 and len(name) > 10)):
+            continue
+        last = sum(nutzung[(volk["volk"], t.lower())] for t in (teile[0], teile[-1]))
+        kandidaten.append((last, versuch, name, teile))
+        if len(kandidaten) >= 6:
+            break
+    if not kandidaten:
+        raise RuntimeError(f"Kein freier Name für {schluessel}")
+    _, _, name, teile = min(kandidaten)
+    for t in (teile[0], teile[-1]):
+        nutzung[(volk["volk"], t.lower())] += 1
+    return name, teile
 
 
 # --------------------------------------------------------------------------- Übersetzung
@@ -168,8 +200,8 @@ def monatstitel(d: dict, regeln: dict) -> str:
 def baue_karte(d: dict, eintrag: dict, regeln: dict) -> dict:
     kurve = regeln["kurve"]
     fak = regeln["faktoren"]
-    volk = regeln["voelker"][d["sektor"]]
     art = regeln["arten"][d["industrie"]]
+    volk = regeln["voelker"][art.get("volk", d["sektor"])]
     rolle = regeln["rollen"][art["rolle"]]
     selten = regeln["seltenheit"][q(d["size"])]
 
@@ -316,6 +348,9 @@ def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_fir
     aus.mkdir(parents=True, exist_ok=True)
     register = lade_json(privat / "register.json", {"naechste_nummer": 1, "eintraege": {}})
     vergeben = {e["eigenname"].lower() for e in register["eintraege"].values()}
+    nutzung = Counter((e.get("volk"), t.lower()) for e in register["eintraege"].values()
+                      for t in (e.get("teile") or [])[:1] + (e.get("teile") or [])[-1:])
+    sperre = [w.lower() for w in regeln.get("namen", {}).get("sperre", [])]
 
     karten, gesehen, uebersicht = {}, set(), []
     # Feste Reihenfolge -> neue Nummern und Namen sind reproduzierbar
@@ -323,12 +358,14 @@ def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_fir
         schluessel = finde_im_register(d, register)
         if schluessel is None:
             schluessel = d["isin"] or d["id"]
-            volk = regeln["voelker"][d["sektor"]]
-            name = erfinde_namen(schluessel, volk, q(d["size"]) == "5", vergeben)
+            volk = regeln["voelker"][regeln["arten"][d["industrie"]].get("volk", d["sektor"])]
+            name, teile = erfinde_namen(schluessel, volk, q(d["size"]) == "5", vergeben, nutzung, sperre)
             vergeben.add(name.lower())
             register["eintraege"][schluessel] = {
                 "karte_id": f"K{register['naechste_nummer']:04d}",
                 "eigenname": name,
+                "teile": teile,
+                "volk": volk["volk"],
                 "erstellt": monat,
                 "aliase": [],
             }

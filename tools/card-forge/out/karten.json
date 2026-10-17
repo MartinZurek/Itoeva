@@ -4,7 +4,7 @@
  "karten": [
   {
    "id": "K0001",
-   "name": "Velash",
+   "name": "Galavrim",
    "art": "Bohrwurm",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -43,11 +43,11 @@
   },
   {
    "id": "K0002",
-   "name": "Ostron",
+   "name": "Calbitex",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -78,7 +78,7 @@
   },
   {
    "id": "K0003",
-   "name": "Orax",
+   "name": "Golenor",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -117,7 +117,7 @@
   },
   {
    "id": "K0004",
-   "name": "Serion",
+   "name": "Sargar",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "genügsam",
@@ -151,7 +151,7 @@
   },
   {
    "id": "K0005",
-   "name": "Azga",
+   "name": "Bruga",
    "art": "Moorflämmchen",
    "form": "Jungform",
    "titel": "genügsam",
@@ -186,7 +186,7 @@
   },
   {
    "id": "K0006",
-   "name": "Turdorgrim",
+   "name": "Flinbasion",
    "art": "Erzdrache",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -227,7 +227,7 @@
   },
   {
    "id": "K0007",
-   "name": "Garorn",
+   "name": "Slabor",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -262,7 +262,7 @@
   },
   {
    "id": "K0008",
-   "name": "Brake",
+   "name": "Lumildo",
    "art": "Kornspeicher-Dachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -300,7 +300,7 @@
   },
   {
    "id": "K0009",
-   "name": "Venis",
+   "name": "Flaluxeth",
    "art": "Flämmling",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -334,7 +334,7 @@
   },
   {
    "id": "K0010",
-   "name": "Bramolf",
+   "name": "Bramwig",
    "art": "Biberjunges",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -369,7 +369,7 @@
   },
   {
    "id": "K0011",
-   "name": "Feyne",
+   "name": "Tiny",
    "art": "Rufschnecke",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -408,7 +408,7 @@
   },
   {
    "id": "K0012",
-   "name": "Golbalek",
+   "name": "Serkoril",
    "art": "Hortdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -449,7 +449,7 @@
   },
   {
    "id": "K0013",
-   "name": "Thoran",
+   "name": "Talax",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -488,7 +488,7 @@
   },
   {
    "id": "K0014",
-   "name": "Kragdin",
+   "name": "Kragith",
    "art": "Erzgolem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -526,7 +526,7 @@
   },
   {
    "id": "K0015",
-   "name": "Ardel",
+   "name": "Stavmar",
    "art": "Sturmfalke",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -560,27 +560,27 @@
   },
   {
    "id": "K0016",
-   "name": "Auros",
-   "art": "Wechselbalg",
+   "name": "Thalesh",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 7,
+   "kosten": 6,
    "angriff": 7,
    "leben": 3,
    "merkmale": [
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -592,13 +592,13 @@
     "size": 4,
     "composite": 5
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0017",
-   "name": "Luxyn",
+   "name": "Calida",
    "art": "Windfohlen",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -632,27 +632,27 @@
   },
   {
    "id": "K0018",
-   "name": "Krek",
-   "art": "Wechselbalg",
+   "name": "Xarith",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 7,
+   "kosten": 6,
    "angriff": 2,
    "leben": 8,
    "merkmale": [
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": true,
@@ -664,13 +664,13 @@
     "size": 4,
     "composite": 1
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0019",
-   "name": "Stavolf",
+   "name": "Renuko",
    "art": "Sturmfalke",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -705,7 +705,7 @@
   },
   {
    "id": "K0020",
-   "name": "Grunok",
+   "name": "Dorek",
    "art": "Schalenkrebs",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -737,11 +737,11 @@
   },
   {
    "id": "K0021",
-   "name": "Vexal",
+   "name": "Virika",
    "art": "Schaltkobold",
    "form": "Jungform",
    "titel": "in sich ruhend",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -769,7 +769,7 @@
   },
   {
    "id": "K0022",
-   "name": "Drundra",
+   "name": "Lavax",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -808,7 +808,7 @@
   },
   {
    "id": "K0023",
-   "name": "Golis",
+   "name": "Kresarys",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -846,7 +846,7 @@
   },
   {
    "id": "K0024",
-   "name": "Mottdur",
+   "name": "Rapock",
    "art": "Karrenochse",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -884,7 +884,7 @@
   },
   {
    "id": "K0025",
-   "name": "Madrungor",
+   "name": "Bramorug",
    "art": "Moorglut-Drache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -923,7 +923,7 @@
   },
   {
    "id": "K0026",
-   "name": "Boltel",
+   "name": "Nibmund",
    "art": "Karrenochse",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -961,7 +961,7 @@
   },
   {
    "id": "K0027",
-   "name": "Rumwick",
+   "name": "Zazri",
    "art": "Packesel",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -996,7 +996,7 @@
   },
   {
    "id": "K0028",
-   "name": "Lanion",
+   "name": "Lanent",
    "art": "Brunnenwicht",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -1030,7 +1030,7 @@
   },
   {
    "id": "K0029",
-   "name": "Nevon",
+   "name": "Vextekra",
    "art": "Messinggolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1051,7 +1051,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -1069,7 +1069,7 @@
   },
   {
    "id": "K0030",
-   "name": "Drunul",
+   "name": "Suligvo",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1107,11 +1107,11 @@
   },
   {
    "id": "K0031",
-   "name": "Ostal",
-   "art": "Runenautomat",
+   "name": "Iora",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -1125,9 +1125,9 @@
     "Flackernd"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -1139,17 +1139,17 @@
     "size": 3,
     "composite": 3
    },
-   "wertpunkte": 11.0,
+   "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0032",
-   "name": "Syntron",
+   "name": "Coris",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -1180,7 +1180,7 @@
   },
   {
    "id": "K0033",
-   "name": "Timster",
+   "name": "Trister",
    "art": "Basarschlange",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1219,7 +1219,7 @@
   },
   {
    "id": "K0034",
-   "name": "Pekber",
+   "name": "Pekpel",
    "art": "Fleißwichtel",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -1253,7 +1253,7 @@
   },
   {
    "id": "K0035",
-   "name": "Ardix",
+   "name": "Lamane",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -1287,7 +1287,7 @@
   },
   {
    "id": "K0036",
-   "name": "Wilna",
+   "name": "Milna",
    "art": "Vorratshamster",
    "form": "Jungform",
    "titel": "genügsam",
@@ -1321,7 +1321,7 @@
   },
   {
    "id": "K0037",
-   "name": "Azdrundra",
+   "name": "Kazash",
    "art": "Moorglut-Drache",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -1362,7 +1362,7 @@
   },
   {
    "id": "K0038",
-   "name": "Balath",
+   "name": "Vagolan",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1400,7 +1400,7 @@
   },
   {
    "id": "K0039",
-   "name": "Grundum",
+   "name": "Zindin",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -1439,7 +1439,7 @@
   },
   {
    "id": "K0040",
-   "name": "Halin",
+   "name": "Brorik",
    "art": "Häuschenschnecke",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -1471,7 +1471,7 @@
   },
   {
    "id": "K0041",
-   "name": "Eonix",
+   "name": "Solhelion",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1510,7 +1510,7 @@
   },
   {
    "id": "K0042",
-   "name": "Dordin",
+   "name": "Kobuzit",
    "art": "Erzgolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1549,7 +1549,7 @@
   },
   {
    "id": "K0043",
-   "name": "Bramwig",
+   "name": "Grofried",
    "art": "Fleißwichtel",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -1583,7 +1583,7 @@
   },
   {
    "id": "K0044",
-   "name": "Bomko",
+   "name": "Lonokpo",
    "art": "Seidenraupe",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -1615,7 +1615,7 @@
   },
   {
    "id": "K0045",
-   "name": "Serek",
+   "name": "Korsigath",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1654,7 +1654,7 @@
   },
   {
    "id": "K0046",
-   "name": "Ilor",
+   "name": "Eonyn",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -1693,11 +1693,11 @@
   },
   {
    "id": "K0047",
-   "name": "Balis",
-   "art": "Tauschmarder",
+   "name": "Lilira",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -1727,7 +1727,7 @@
   },
   {
    "id": "K0048",
-   "name": "Seris",
+   "name": "Vesis",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "genügsam",
@@ -1761,7 +1761,7 @@
   },
   {
    "id": "K0049",
-   "name": "Velek",
+   "name": "Velul",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1797,7 +1797,7 @@
   },
   {
    "id": "K0050",
-   "name": "Golath",
+   "name": "Munul",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -1836,7 +1836,7 @@
   },
   {
    "id": "K0051",
-   "name": "Feldum",
+   "name": "Berdum",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -1871,7 +1871,7 @@
   },
   {
    "id": "K0052",
-   "name": "Galul",
+   "name": "Othazar",
    "art": "Moorflämmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -1905,7 +1905,7 @@
   },
   {
    "id": "K0053",
-   "name": "Kragorn",
+   "name": "Slaras",
    "art": "Erzgolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1943,7 +1943,7 @@
   },
   {
    "id": "K0054",
-   "name": "Honke",
+   "name": "Gunra",
    "art": "Kornspeicher-Dachs",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -1981,7 +1981,7 @@
   },
   {
    "id": "K0055",
-   "name": "Gardin",
+   "name": "Rokul",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -2015,7 +2015,7 @@
   },
   {
    "id": "K0056",
-   "name": "Turok",
+   "name": "Obith",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -2054,7 +2054,7 @@
   },
   {
    "id": "K0057",
-   "name": "Pipo",
+   "name": "Botz",
    "art": "Radwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -2089,7 +2089,7 @@
   },
   {
    "id": "K0058",
-   "name": "Gilius",
+   "name": "Aurivald",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -2128,7 +2128,7 @@
   },
   {
    "id": "K0059",
-   "name": "Wilmo",
+   "name": "Dotchen",
    "art": "Vorratshamster",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -2163,7 +2163,7 @@
   },
   {
    "id": "K0060",
-   "name": "Thoros",
+   "name": "Seroth",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -2201,7 +2201,7 @@
   },
   {
    "id": "K0061",
-   "name": "Magal",
+   "name": "Quargal",
    "art": "Alchemistenmolch",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -2240,11 +2240,11 @@
   },
   {
    "id": "K0062",
-   "name": "Kalex",
+   "name": "Zenai",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "genügsam",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -2275,7 +2275,7 @@
   },
   {
    "id": "K0063",
-   "name": "Zindin",
+   "name": "Felbernar",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -2313,7 +2313,7 @@
   },
   {
    "id": "K0064",
-   "name": "Othzar",
+   "name": "Moridra",
    "art": "Moorflämmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -2351,7 +2351,7 @@
   },
   {
    "id": "K0065",
-   "name": "Talek",
+   "name": "Fyrdur",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -2390,7 +2390,7 @@
   },
   {
    "id": "K0066",
-   "name": "Peklin",
+   "name": "Fenlin",
    "art": "Fleißwichtel",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -2422,7 +2422,7 @@
   },
   {
    "id": "K0067",
-   "name": "Pipri",
+   "name": "Tutedle",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -2458,7 +2458,7 @@
   },
   {
    "id": "K0068",
-   "name": "Liwen",
+   "name": "Nyxasil",
    "art": "Windharfen-Sylphe",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -2497,7 +2497,7 @@
   },
   {
    "id": "K0069",
-   "name": "Sersarion",
+   "name": "Aursigius",
    "art": "Hortdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -2538,7 +2538,7 @@
   },
   {
    "id": "K0070",
-   "name": "Korna",
+   "name": "Petabert",
    "art": "Kornwichtel",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -2573,32 +2573,32 @@
   },
   {
    "id": "K0071",
-   "name": "Kalvexiv",
+   "name": "Lyrahexos",
    "art": "Großer Datenweber",
    "form": "Urform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Helfer",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 9,
-   "angriff": 3,
+   "kosten": 10,
+   "angriff": 4,
    "leben": 8,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -2609,13 +2609,13 @@
     "size": 5,
     "composite": 5
    },
-   "wertpunkte": 19.0,
+   "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0072",
-   "name": "Feno",
+   "name": "Kurtoda",
    "art": "Biberjunges",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -2686,7 +2686,7 @@
   },
   {
    "id": "K0074",
-   "name": "Brugor",
+   "name": "Toroon",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -2724,7 +2724,7 @@
   },
   {
    "id": "K0075",
-   "name": "Kolwig",
+   "name": "Wolke",
    "art": "Lastkäfer",
    "form": "Jungform",
    "titel": "genügsam",
@@ -2758,11 +2758,11 @@
   },
   {
    "id": "K0076",
-   "name": "Baldur",
-   "art": "Tauschmarder",
+   "name": "Kazon",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "in sich ruhend",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -2792,7 +2792,7 @@
   },
   {
    "id": "K0077",
-   "name": "Othug",
+   "name": "Gorug",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -2831,7 +2831,7 @@
   },
   {
    "id": "K0078",
-   "name": "Grundin",
+   "name": "Basethar",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -2870,7 +2870,7 @@
   },
   {
    "id": "K0079",
-   "name": "Ulwen",
+   "name": "Lumi",
    "art": "Rufschnecke",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -2909,7 +2909,7 @@
   },
   {
    "id": "K0080",
-   "name": "Mottko",
+   "name": "Kolo",
    "art": "Ratgeber-Kröte",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -2947,7 +2947,7 @@
   },
   {
    "id": "K0081",
-   "name": "Nibdur",
+   "name": "Jodur",
    "art": "Handelsameise",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -2979,7 +2979,7 @@
   },
   {
    "id": "K0082",
-   "name": "Baldrakath",
+   "name": "Nykorek",
    "art": "Hortdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -3020,7 +3020,7 @@
   },
   {
    "id": "K0083",
-   "name": "Ulmar",
+   "name": "Drunrak",
    "art": "Moorflämmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -3056,7 +3056,7 @@
   },
   {
    "id": "K0084",
-   "name": "Bramdur",
+   "name": "Boltock",
    "art": "Biberjunges",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -3092,7 +3092,7 @@
   },
   {
    "id": "K0085",
-   "name": "Bramko",
+   "name": "Tokhard",
    "art": "Hausgeist",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -3131,7 +3131,7 @@
   },
   {
    "id": "K0086",
-   "name": "Losel",
+   "name": "Rigunmo",
    "art": "Vorratshamster",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -3170,7 +3170,7 @@
   },
   {
    "id": "K0087",
-   "name": "Garnar",
+   "name": "Talrak",
    "art": "Erzgolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -3209,7 +3209,7 @@
   },
   {
    "id": "K0088",
-   "name": "Brun",
+   "name": "Azlavzar",
    "art": "Moorflämmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -3241,7 +3241,7 @@
   },
   {
    "id": "K0089",
-   "name": "Sertalar",
+   "name": "Gilsigar",
    "art": "Bergschildkröte",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -3283,7 +3283,7 @@
   },
   {
    "id": "K0090",
-   "name": "Muxix",
+   "name": "Rumka",
    "art": "Truhenmimik",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -3322,7 +3322,7 @@
   },
   {
    "id": "K0091",
-   "name": "Rike",
+   "name": "Grekorka",
    "art": "Kornwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -3358,7 +3358,7 @@
   },
   {
    "id": "K0092",
-   "name": "Garzit",
+   "name": "Magal",
    "art": "Steingolem",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -3396,7 +3396,7 @@
   },
   {
    "id": "K0093",
-   "name": "Naedra",
+   "name": "Erilia",
    "art": "Elixierschnecke",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -3432,7 +3432,7 @@
   },
   {
    "id": "K0094",
-   "name": "Zindum",
+   "name": "Grunizit",
    "art": "Steingolem",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -3468,7 +3468,7 @@
   },
   {
    "id": "K0095",
-   "name": "Rokthar",
+   "name": "Malothar",
    "art": "Schalenkrebs",
    "form": "Jungform",
    "titel": "genügsam",
@@ -3507,7 +3507,7 @@
   },
   {
    "id": "K0096",
-   "name": "Ostix",
+   "name": "Dynox",
    "art": "Messinggolem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -3525,7 +3525,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -3543,7 +3543,7 @@
   },
   {
    "id": "K0097",
-   "name": "Obkragal",
+   "name": "Garkobrak",
    "art": "Elixierwyrm",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -3585,32 +3585,32 @@
   },
   {
    "id": "K0098",
-   "name": "Torhox",
+   "name": "Hexcalia",
    "art": "Großer Datenweber",
    "form": "Urform",
    "titel": "genügsam",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Helfer",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 5,
-   "angriff": 1,
+   "kosten": 6,
+   "angriff": 2,
    "leben": 6,
    "merkmale": [
     "Flackernd",
     "Schnäppchen"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -3621,13 +3621,13 @@
     "size": 5,
     "composite": 2
    },
-   "wertpunkte": 11.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0099",
-   "name": "Ardkolmund",
+   "name": "Kolsebrich",
    "art": "Donnerwyvern",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -3668,7 +3668,7 @@
   },
   {
    "id": "K0100",
-   "name": "Serar",
+   "name": "Drakdur",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -3704,7 +3704,7 @@
   },
   {
    "id": "K0101",
-   "name": "Stavbert",
+   "name": "Henkobert",
    "art": "Ziegelmolch",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -3736,7 +3736,7 @@
   },
   {
    "id": "K0102",
-   "name": "Aelne",
+   "name": "Ilora",
    "art": "Verbandsmotte",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -3772,7 +3772,7 @@
   },
   {
    "id": "K0103",
-   "name": "Dublin",
+   "name": "Grober",
    "art": "Mörtelgolem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -3810,7 +3810,7 @@
   },
   {
    "id": "K0104",
-   "name": "Kalix",
+   "name": "Cogix",
    "art": "Panzerautomat",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -3831,7 +3831,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -3849,7 +3849,7 @@
   },
   {
    "id": "K0105",
-   "name": "Gilos",
+   "name": "Helos",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -3885,7 +3885,7 @@
   },
   {
    "id": "K0106",
-   "name": "Dubert",
+   "name": "Dubel",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -3917,7 +3917,7 @@
   },
   {
    "id": "K0107",
-   "name": "Vamala",
+   "name": "Helmirala",
    "art": "Mondmottenkönigin",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -3958,7 +3958,7 @@
   },
   {
    "id": "K0108",
-   "name": "Dibpel",
+   "name": "Wupuwick",
    "art": "Kuchenkobold",
    "form": "Jungform",
    "titel": "genügsam",
@@ -3996,7 +3996,7 @@
   },
   {
    "id": "K0109",
-   "name": "Tokel",
+   "name": "Sebehard",
    "art": "Mörtelgolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -4034,7 +4034,7 @@
   },
   {
    "id": "K0110",
-   "name": "Pipli",
+   "name": "Hopmo",
    "art": "Radwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -4069,7 +4069,7 @@
   },
   {
    "id": "K0111",
-   "name": "Quardum",
+   "name": "Gragrim",
    "art": "Schalenkrebs",
    "form": "Jungform",
    "titel": "genügsam",
@@ -4103,7 +4103,7 @@
   },
   {
    "id": "K0112",
-   "name": "Kirex",
+   "name": "Galik",
    "art": "Funkenkäfer",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -4124,7 +4124,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -4142,7 +4142,7 @@
   },
   {
    "id": "K0113",
-   "name": "Bramlin",
+   "name": "Hamo",
    "art": "Sturmfalke",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -4181,7 +4181,7 @@
   },
   {
    "id": "K0114",
-   "name": "Olari",
+   "name": "Piprumzo",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -4219,7 +4219,7 @@
   },
   {
    "id": "K0115",
-   "name": "Grunbor",
+   "name": "Basbor",
    "art": "Säureschnecke",
    "form": "Jungform",
    "titel": "genügsam",
@@ -4257,7 +4257,7 @@
   },
   {
    "id": "K0116",
-   "name": "Kira",
+   "name": "Pixon",
    "art": "Siliziumspinne",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -4277,7 +4277,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -4295,7 +4295,7 @@
   },
   {
    "id": "K0117",
-   "name": "Stavwig",
+   "name": "Rapwin",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "genügsam",
@@ -4330,7 +4330,7 @@
   },
   {
    "id": "K0118",
-   "name": "Bomri",
+   "name": "Fizuwick",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -4368,7 +4368,7 @@
   },
   {
    "id": "K0119",
-   "name": "Rhora",
+   "name": "Neval",
    "art": "Zahnradmaus",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -4388,7 +4388,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -4406,7 +4406,7 @@
   },
   {
    "id": "K0120",
-   "name": "Talis",
+   "name": "Fyris",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -4444,7 +4444,7 @@
   },
   {
    "id": "K0121",
-   "name": "Nyxlilis",
+   "name": "Esmariva",
    "art": "Urrufer",
    "form": "Urform",
    "titel": "genügsam",
@@ -4485,7 +4485,7 @@
   },
   {
    "id": "K0122",
-   "name": "Ylwen",
+   "name": "Miriwen",
    "art": "Echoturm-Geist",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -4524,7 +4524,7 @@
   },
   {
    "id": "K0123",
-   "name": "Ilosysa",
+   "name": "Myreribell",
    "art": "Mondmottenkönigin",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -4563,7 +4563,7 @@
   },
   {
    "id": "K0124",
-   "name": "Symiranis",
+   "name": "Rofenrin",
    "art": "Myzelherz",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -4602,31 +4602,31 @@
   },
   {
    "id": "K0125",
-   "name": "Torzelar",
-   "art": "Codex-Titan",
+   "name": "Mnotessia",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 6,
+   "kosten": 7,
    "angriff": 3,
-   "leben": 6,
+   "leben": 7,
    "merkmale": [
     "Flackernd"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
    "herkunft": {
@@ -4637,13 +4637,13 @@
     "size": 5,
     "composite": 1
    },
-   "wertpunkte": 13.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0126",
-   "name": "Boltock",
+   "name": "Dublin",
    "art": "Biberjunges",
    "form": "Jungform",
    "titel": "genügsam",
@@ -4677,7 +4677,7 @@
   },
   {
    "id": "K0127",
-   "name": "Synlumiv",
+   "name": "Fergalek",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -4698,11 +4698,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -4719,7 +4719,7 @@
   },
   {
    "id": "K0128",
-   "name": "Aurim",
+   "name": "Balurim",
    "art": "Kristallzähler",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -4754,7 +4754,7 @@
   },
   {
    "id": "K0129",
-   "name": "Sylie",
+   "name": "Cyriwyn",
    "art": "Linsenlibelle",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -4790,7 +4790,7 @@
   },
   {
    "id": "K0130",
-   "name": "Timzo",
+   "name": "Nokny",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -4829,7 +4829,7 @@
   },
   {
    "id": "K0131",
-   "name": "Obdum",
+   "name": "Zinak",
    "art": "Alchemistenmolch",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -4867,7 +4867,7 @@
   },
   {
    "id": "K0132",
-   "name": "Venor",
+   "name": "Helara",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -4902,7 +4902,7 @@
   },
   {
    "id": "K0133",
-   "name": "Auris",
+   "name": "Talvald",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -4940,7 +4940,7 @@
   },
   {
    "id": "K0134",
-   "name": "Naeve",
+   "name": "Save",
    "art": "Pilzalchemist",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -4979,31 +4979,31 @@
   },
   {
    "id": "K0135",
-   "name": "Ulshava",
+   "name": "Kaimnos",
    "art": "Tausendauge",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Irrlichter",
-   "wesen": "GLOOP",
-   "farbe": "Moorviolett",
-   "hex": "#8a62b8",
+   "volk": "Artefakte",
+   "wesen": "HOOTLET",
+   "farbe": "Sternblau",
+   "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
    "kosten": 10,
-   "angriff": 6,
+   "angriff": 7,
    "leben": 7,
    "merkmale": [
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Widerhall",
+    "name": "Lernen",
     "x": 2,
-    "text": "Widerhall 2: Beim Beschwören ziehst du 2 Karte(n)."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Tausend Stimmen",
-    "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
    "herkunft": {
@@ -5020,7 +5020,7 @@
   },
   {
    "id": "K0136",
-   "name": "Tanyn",
+   "name": "Venola",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -5055,7 +5055,7 @@
   },
   {
    "id": "K0137",
-   "name": "Milridel",
+   "name": "Milwildel",
    "art": "Qualmriese",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -5097,7 +5097,7 @@
   },
   {
    "id": "K0138",
-   "name": "Zazmuxwick",
+   "name": "Fletutbel",
    "art": "Basardrache",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -5138,7 +5138,7 @@
   },
   {
    "id": "K0139",
-   "name": "Pyren",
+   "name": "Tansolum",
    "art": "Röhrenwurm",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -5177,7 +5177,7 @@
   },
   {
    "id": "K0140",
-   "name": "Tana",
+   "name": "Pyra",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -5216,29 +5216,29 @@
   },
   {
    "id": "K0141",
-   "name": "Vadrakath",
-   "art": "Großgreif",
+   "name": "Veldagur",
+   "art": "Schuldenfürst",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Stürmer",
    "reihe": "vorn",
    "seltenheit": "Mythisch",
-   "kosten": 8,
+   "kosten": 7,
    "angriff": 6,
    "leben": 5,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": true,
    "herkunft": {
@@ -5249,13 +5249,13 @@
     "size": 5,
     "composite": 1
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0142",
-   "name": "Drakax",
+   "name": "Kreserenor",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -5293,7 +5293,7 @@
   },
   {
    "id": "K0143",
-   "name": "Tordach",
+   "name": "Torwenhold",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -5329,7 +5329,7 @@
   },
   {
    "id": "K0144",
-   "name": "Ilyn",
+   "name": "Ilor",
    "art": "Quellkrebs",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -5367,7 +5367,7 @@
   },
   {
    "id": "K0145",
-   "name": "Ilowen",
+   "name": "Fenwen",
    "art": "Heilerdachs",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -5403,11 +5403,11 @@
   },
   {
    "id": "K0146",
-   "name": "Ixos",
-   "art": "Wechselbalg",
+   "name": "Ishiel",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -5415,15 +5415,15 @@
    "reihe": "hinten",
    "seltenheit": "Selten",
    "kosten": 5,
-   "angriff": 3,
+   "angriff": 4,
    "leben": 6,
    "merkmale": [
     "Schnäppchen"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": true,
@@ -5441,7 +5441,7 @@
   },
   {
    "id": "K0147",
-   "name": "Grolf",
+   "name": "Ludmund",
    "art": "Blitzmarder",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -5480,7 +5480,7 @@
   },
   {
    "id": "K0148",
-   "name": "Tiamadra",
+   "name": "Odamara",
    "art": "Myzelherz",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -5519,7 +5519,7 @@
   },
   {
    "id": "K0149",
-   "name": "Voltekar",
+   "name": "Quazelum",
    "art": "Uhrwerk-Koloss",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -5540,11 +5540,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -5561,7 +5561,7 @@
   },
   {
    "id": "K0150",
-   "name": "Teknevis",
+   "name": "Brixtekett",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -5581,11 +5581,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -5602,7 +5602,7 @@
   },
   {
    "id": "K0151",
-   "name": "Balos",
+   "name": "Golgar",
    "art": "Brückenwicht",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -5636,7 +5636,7 @@
   },
   {
    "id": "K0152",
-   "name": "Vara",
+   "name": "Amane",
    "art": "Heilerdachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -5675,7 +5675,7 @@
   },
   {
    "id": "K0153",
-   "name": "Oroth",
+   "name": "Baloth",
    "art": "Zinswyrm",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -5714,7 +5714,7 @@
   },
   {
    "id": "K0154",
-   "name": "Lumzelyn",
+   "name": "Kirtekyn",
    "art": "Eiserner Hüter",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -5734,11 +5734,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -5755,7 +5755,7 @@
   },
   {
    "id": "K0155",
-   "name": "Nevtorar",
+   "name": "Tekor",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -5776,11 +5776,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -5797,11 +5797,11 @@
   },
   {
    "id": "K0156",
-   "name": "Lumzelex",
-   "art": "Codex-Titan",
+   "name": "Bitiox",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -5810,19 +5810,19 @@
    "seltenheit": "Mythisch",
    "kosten": 10,
    "angriff": 6,
-   "leben": 7,
+   "leben": 6,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
    "herkunft": {
@@ -5839,7 +5839,7 @@
   },
   {
    "id": "K0157",
-   "name": "Loke",
+   "name": "Lopa",
    "art": "Erntegolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -5877,11 +5877,11 @@
   },
   {
    "id": "K0158",
-   "name": "Sarim",
-   "art": "Wechselbalg",
+   "name": "Ozzax",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "genügsam",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -5890,14 +5890,14 @@
    "seltenheit": "Selten",
    "kosten": 5,
    "angriff": 3,
-   "leben": 4,
+   "leben": 5,
    "merkmale": [
     "Ungestüm"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -5915,7 +5915,7 @@
   },
   {
    "id": "K0159",
-   "name": "Kalkira",
+   "name": "Kronock",
    "art": "Antennen-Koloss",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -5936,11 +5936,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -5957,7 +5957,7 @@
   },
   {
    "id": "K0160",
-   "name": "Torek",
+   "name": "Tekex",
    "art": "Funkenkäfer",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -5978,7 +5978,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -5996,11 +5996,11 @@
   },
   {
    "id": "K0161",
-   "name": "Tekix",
+   "name": "Asteryx",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -6014,9 +6014,9 @@
     "Ungestüm"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -6028,13 +6028,13 @@
     "size": 2,
     "composite": 5
    },
-   "wertpunkte": 9.0,
+   "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0162",
-   "name": "Venix",
+   "name": "Luxix",
    "art": "Kesselgeist",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -6073,11 +6073,11 @@
   },
   {
    "id": "K0163",
-   "name": "Ostiv",
-   "art": "Runenautomat",
+   "name": "Dexex",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -6086,15 +6086,15 @@
    "seltenheit": "Episch",
    "kosten": 7,
    "angriff": 4,
-   "leben": 8,
+   "leben": 7,
    "merkmale": [
     "Flackernd",
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": null,
    "glanz": true,
@@ -6112,7 +6112,7 @@
   },
   {
    "id": "K0164",
-   "name": "Fenbert",
+   "name": "Sebda",
    "art": "Ratgeber-Kröte",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -6150,7 +6150,7 @@
   },
   {
    "id": "K0165",
-   "name": "Tutbo",
+   "name": "Lobert",
    "art": "Basarelster",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -6188,7 +6188,7 @@
   },
   {
    "id": "K0166",
-   "name": "Wurwald",
+   "name": "Belwald",
    "art": "Bauhase",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -6227,7 +6227,7 @@
   },
   {
    "id": "K0167",
-   "name": "Roknar",
+   "name": "Kobok",
    "art": "Schalenkrebs",
    "form": "Jungform",
    "titel": "genügsam",
@@ -6261,7 +6261,7 @@
   },
   {
    "id": "K0168",
-   "name": "Dubrich",
+   "name": "Mottel",
    "art": "Greifenreiter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -6300,7 +6300,7 @@
   },
   {
    "id": "K0169",
-   "name": "Rukzar",
+   "name": "Skolavo",
    "art": "Bohrwurm",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -6338,7 +6338,7 @@
   },
   {
    "id": "K0170",
-   "name": "Quarthar",
+   "name": "Granar",
    "art": "Schalenkrebs",
    "form": "Jungform",
    "titel": "genügsam",
@@ -6370,7 +6370,7 @@
   },
   {
    "id": "K0171",
-   "name": "Drakgolrim",
+   "name": "Sigbalrim",
    "art": "Hortdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -6409,25 +6409,25 @@
   },
   {
    "id": "K0172",
-   "name": "Drakion",
-   "art": "Wechselbalg",
+   "name": "Dageph",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 6,
+   "kosten": 5,
    "angriff": 5,
    "leben": 4,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -6439,13 +6439,13 @@
     "size": 4,
     "composite": 2
    },
-   "wertpunkte": 13.0,
+   "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0173",
-   "name": "Ilomi",
+   "name": "Elilie",
    "art": "Mondmotte",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -6483,7 +6483,7 @@
   },
   {
    "id": "K0174",
-   "name": "Krerim",
+   "name": "Thoril",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -6522,7 +6522,7 @@
   },
   {
    "id": "K0175",
-   "name": "Ordrakan",
+   "name": "Drakhelek",
    "art": "Ur-Zinswyrm",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -6563,7 +6563,7 @@
   },
   {
    "id": "K0176",
-   "name": "Kipo",
+   "name": "Triko",
    "art": "Krämerelster",
    "form": "Jungform",
    "titel": "genügsam",
@@ -6598,7 +6598,7 @@
   },
   {
    "id": "K0177",
-   "name": "Helve",
+   "name": "Selebell",
    "art": "Sporling",
    "form": "Jungform",
    "titel": "genügsam",
@@ -6636,31 +6636,31 @@
   },
   {
    "id": "K0178",
-   "name": "Serorius",
-   "art": "Marktdrache",
+   "name": "Sabdagorn",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 8,
+   "kosten": 7,
    "angriff": 4,
    "leben": 7,
    "merkmale": [
     "Flackernd"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
    "herkunft": {
@@ -6671,35 +6671,35 @@
     "size": 5,
     "composite": 2
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0179",
-   "name": "Talorax",
-   "art": "Marktdrache",
+   "name": "Morael",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "auf Wanderschaft",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 7,
+   "kosten": 6,
    "angriff": 3,
    "leben": 6,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
    "herkunft": {
@@ -6710,13 +6710,13 @@
     "size": 5,
     "composite": 4
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0180",
-   "name": "Groko",
+   "name": "Pekimar",
    "art": "Blitzmarder",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -6755,7 +6755,7 @@
   },
   {
    "id": "K0181",
-   "name": "Fendubock",
+   "name": "Hamfenber",
    "art": "Himmelsgreif",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -6797,7 +6797,7 @@
   },
   {
    "id": "K0182",
-   "name": "Diblobel",
+   "name": "Wimjibri",
    "art": "Festmahl-Riese",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -6838,7 +6838,7 @@
   },
   {
    "id": "K0183",
-   "name": "Naelinis",
+   "name": "Sycyrnis",
    "art": "Mondmottenkönigin",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -6879,7 +6879,7 @@
   },
   {
    "id": "K0184",
-   "name": "Ilonaedra",
+   "name": "Romyrny",
    "art": "Heildryade",
    "form": "Urform",
    "titel": "genügsam",
@@ -6920,7 +6920,7 @@
   },
   {
    "id": "K0185",
-   "name": "Pekmund",
+   "name": "Wolpel",
    "art": "Tintenwicht",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -6956,7 +6956,7 @@
   },
   {
    "id": "K0186",
-   "name": "Quakira",
+   "name": "Mekronis",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -6977,11 +6977,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -6998,7 +6998,7 @@
   },
   {
    "id": "K0187",
-   "name": "Munis",
+   "name": "Gilion",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -7034,7 +7034,7 @@
   },
   {
    "id": "K0188",
-   "name": "Dubko",
+   "name": "Henko",
    "art": "Ziegelmolch",
    "form": "Jungform",
    "titel": "genügsam",
@@ -7068,7 +7068,7 @@
   },
   {
    "id": "K0189",
-   "name": "Bomzo",
+   "name": "Nokosel",
    "art": "Krämerelster",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -7107,28 +7107,28 @@
   },
   {
    "id": "K0190",
-   "name": "Munath",
-   "art": "Wechselbalg",
+   "name": "Razimon",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Selten",
-   "kosten": 9,
+   "kosten": 8,
    "angriff": 7,
-   "leben": 8,
+   "leben": 7,
    "merkmale": [
     "Wächter",
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": true,
@@ -7140,13 +7140,13 @@
     "size": 3,
     "composite": 1
    },
-   "wertpunkte": 19.0,
+   "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0191",
-   "name": "Wurmund",
+   "name": "Stomund",
    "art": "Turmschnecke",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -7184,7 +7184,7 @@
   },
   {
    "id": "K0192",
-   "name": "Lumix",
+   "name": "Voltorar",
    "art": "Zahnradmaus",
    "form": "Jungform",
    "titel": "genügsam",
@@ -7218,7 +7218,7 @@
   },
   {
    "id": "K0193",
-   "name": "Kagrim",
+   "name": "Talion",
    "art": "Säureschnecke",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -7257,7 +7257,7 @@
   },
   {
    "id": "K0194",
-   "name": "Stavel",
+   "name": "Boltokrich",
    "art": "Botentaube",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -7295,7 +7295,7 @@
   },
   {
    "id": "K0195",
-   "name": "Aeldra",
+   "name": "Tiadra",
    "art": "Heilerdachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -7333,11 +7333,11 @@
   },
   {
    "id": "K0196",
-   "name": "Orsardur",
-   "art": "Marktdrache",
+   "name": "Malbelak",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -7345,20 +7345,20 @@
    "reihe": "hinten",
    "seltenheit": "Mythisch",
    "kosten": 10,
-   "angriff": 7,
-   "leben": 6,
+   "angriff": 8,
+   "leben": 7,
    "merkmale": [
     "Wächter",
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": true,
    "herkunft": {
@@ -7375,7 +7375,7 @@
   },
   {
    "id": "K0197",
-   "name": "Calyn",
+   "name": "Calia",
    "art": "Brunnenwicht",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -7414,7 +7414,7 @@
   },
   {
    "id": "K0198",
-   "name": "Stavrich",
+   "name": "Nibwig",
    "art": "Karrenochse",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -7453,7 +7453,7 @@
   },
   {
    "id": "K0199",
-   "name": "Mirawyn",
+   "name": "Mirami",
    "art": "Heilerdachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -7492,7 +7492,7 @@
   },
   {
    "id": "K0200",
-   "name": "Morun",
+   "name": "Eshek",
    "art": "Moorflämmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -7530,11 +7530,11 @@
   },
   {
    "id": "K0201",
-   "name": "Kirtron",
-   "art": "Runenautomat",
+   "name": "Tessel",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -7543,15 +7543,15 @@
    "seltenheit": "Episch",
    "kosten": 8,
    "angriff": 4,
-   "leben": 9,
+   "leben": 8,
    "merkmale": [
     "Flackernd",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -7569,18 +7569,18 @@
   },
   {
    "id": "K0202",
-   "name": "Aurtalis",
-   "art": "Großgreif",
+   "name": "Belsabyx",
+   "art": "Schuldenfürst",
    "form": "Urform",
    "titel": "genügsam",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Stürmer",
    "reihe": "vorn",
    "seltenheit": "Mythisch",
-   "kosten": 6,
+   "kosten": 5,
    "angriff": 4,
    "leben": 3,
    "merkmale": [
@@ -7588,13 +7588,13 @@
     "Schnäppchen"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
    "herkunft": {
@@ -7605,13 +7605,13 @@
     "size": 5,
     "composite": 4
    },
-   "wertpunkte": 13.0,
+   "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0203",
-   "name": "Tiawen",
+   "name": "Ivylia",
    "art": "Heilerdachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -7649,7 +7649,7 @@
   },
   {
    "id": "K0204",
-   "name": "Boltdur",
+   "name": "Boltefried",
    "art": "Ziegelmolch",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -7683,11 +7683,11 @@
   },
   {
    "id": "K0205",
-   "name": "Drakdur",
-   "art": "Tauschmarder",
+   "name": "Nerebub",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -7717,7 +7717,7 @@
   },
   {
    "id": "K0206",
-   "name": "Mottlin",
+   "name": "Stavrich",
    "art": "Mörtelgolem",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -7753,7 +7753,7 @@
   },
   {
    "id": "K0207",
-   "name": "Zazwick",
+   "name": "Hopipel",
    "art": "Basarelster",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -7792,7 +7792,7 @@
   },
   {
    "id": "K0208",
-   "name": "Tapa",
+   "name": "Betsel",
    "art": "Vorratshamster",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -7830,7 +7830,7 @@
   },
   {
    "id": "K0209",
-   "name": "Stavbramolf",
+   "name": "Tokfenpel",
    "art": "Dampftitan",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -7872,7 +7872,7 @@
   },
   {
    "id": "K0210",
-   "name": "Naelie",
+   "name": "Vawyn",
    "art": "Kräuterigel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -7907,7 +7907,7 @@
   },
   {
    "id": "K0211",
-   "name": "Eonion",
+   "name": "Ignaurar",
    "art": "Brunnenwicht",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -7946,7 +7946,7 @@
   },
   {
    "id": "K0212",
-   "name": "Aririn",
+   "name": "Ulri",
    "art": "Heroldsrabe",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -7985,7 +7985,7 @@
   },
   {
    "id": "K0213",
-   "name": "Gorak",
+   "name": "Ulun",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -8021,7 +8021,7 @@
   },
   {
    "id": "K0214",
-   "name": "Galgor",
+   "name": "Torisch",
    "art": "Moorflämmchen",
    "form": "Jungform",
    "titel": "genügsam",
@@ -8060,7 +8060,7 @@
   },
   {
    "id": "K0215",
-   "name": "Gorothun",
+   "name": "Ruksulis",
    "art": "Moorglut-Drache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -8099,7 +8099,7 @@
   },
   {
    "id": "K0216",
-   "name": "Fizka",
+   "name": "Bomuster",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -8138,7 +8138,7 @@
   },
   {
    "id": "K0217",
-   "name": "Brasel",
+   "name": "Wilelin",
    "art": "Waschbärchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -8176,7 +8176,7 @@
   },
   {
    "id": "K0218",
-   "name": "Kirar",
+   "name": "Ostett",
    "art": "Signalturm-Golem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -8197,7 +8197,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -8215,7 +8215,7 @@
   },
   {
    "id": "K0219",
-   "name": "Drakan",
+   "name": "Thoran",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -8254,7 +8254,7 @@
   },
   {
    "id": "K0220",
-   "name": "Torvextron",
+   "name": "Vexzelanz",
    "art": "Antennen-Koloss",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -8272,11 +8272,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -8293,7 +8293,7 @@
   },
   {
    "id": "K0221",
-   "name": "Hamdur",
+   "name": "Bramuber",
    "art": "Hausgeist",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -8332,7 +8332,7 @@
   },
   {
    "id": "K0222",
-   "name": "Aurordur",
+   "name": "Balaurys",
    "art": "Hortdrache",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -8371,7 +8371,7 @@
   },
   {
    "id": "K0223",
-   "name": "Ixath",
+   "name": "Seros",
    "art": "Münzkäfer",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -8409,7 +8409,7 @@
   },
   {
    "id": "K0224",
-   "name": "Halfried",
+   "name": "Wiluwin",
    "art": "Waschbärchen",
    "form": "Jungform",
    "titel": "genügsam",
@@ -8443,28 +8443,28 @@
   },
   {
    "id": "K0225",
-   "name": "Kalar",
+   "name": "Nimette",
    "art": "Netzweber",
    "form": "Reife Form",
    "titel": "im Aufwind",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Helfer",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 8,
+   "kosten": 9,
    "angriff": 6,
-   "leben": 5,
+   "leben": 6,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -8476,13 +8476,13 @@
     "size": 4,
     "composite": 5
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0226",
-   "name": "Tahalwig",
+   "name": "Simbeti",
    "art": "Urquell",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -8524,11 +8524,11 @@
   },
   {
    "id": "K0227",
-   "name": "Ostex",
+   "name": "Neoviryx",
    "art": "Netzweber",
    "form": "Reife Form",
    "titel": "genügsam",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -8542,9 +8542,9 @@
     "Schnäppchen"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -8556,13 +8556,13 @@
     "size": 3,
     "composite": 2
    },
-   "wertpunkte": 7.0,
+   "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0228",
-   "name": "Ixiv",
+   "name": "Zelex",
    "art": "Messinggolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -8583,7 +8583,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -8601,18 +8601,18 @@
   },
   {
    "id": "K0229",
-   "name": "Balan",
-   "art": "Wechselbalg",
+   "name": "Grivelebub",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 8,
+   "kosten": 7,
    "angriff": 3,
    "leben": 6,
    "merkmale": [
@@ -8620,9 +8620,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -8634,13 +8634,13 @@
     "size": 4,
     "composite": 5
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0230",
-   "name": "Wilke",
+   "name": "Honli",
    "art": "Waschbär",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -8678,7 +8678,7 @@
   },
   {
    "id": "K0231",
-   "name": "Fenolf",
+   "name": "Johamo",
    "art": "Baubiber",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -8717,7 +8717,7 @@
   },
   {
    "id": "K0232",
-   "name": "Nyxmirva",
+   "name": "Ylmira",
    "art": "Urrufer",
    "form": "Urform",
    "titel": "genügsam",
@@ -8758,7 +8758,7 @@
   },
   {
    "id": "K0233",
-   "name": "Kabrumar",
+   "name": "Fubramar",
    "art": "Moorglut-Drache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -8797,7 +8797,7 @@
   },
   {
    "id": "K0234",
-   "name": "Pyryn",
+   "name": "Aura",
    "art": "Röhrenwurm",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -8835,7 +8835,7 @@
   },
   {
    "id": "K0235",
-   "name": "Pali",
+   "name": "Korba",
    "art": "Brunnenfrosch",
    "form": "Jungform",
    "titel": "genügsam",
@@ -8873,7 +8873,7 @@
   },
   {
    "id": "K0236",
-   "name": "Luxcalor",
+   "name": "Faeluxen",
    "art": "Leuchtfeuer-Hüter",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -8915,7 +8915,7 @@
   },
   {
    "id": "K0237",
-   "name": "Amami",
+   "name": "Ilone",
    "art": "Verbandsmotte",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -8949,7 +8949,7 @@
   },
   {
    "id": "K0238",
-   "name": "Kolbert",
+   "name": "Jobert",
    "art": "Hausgeist",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -8987,11 +8987,11 @@
   },
   {
    "id": "K0239",
-   "name": "Zeltron",
+   "name": "Astero",
    "art": "Netzweber",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -9006,9 +9006,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -9020,13 +9020,13 @@
     "size": 3,
     "composite": 5
    },
-   "wertpunkte": 13.0,
+   "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0240",
-   "name": "Nevtekra",
+   "name": "Kalkiris",
    "art": "Uhrwerk-Koloss",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -9047,11 +9047,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -9068,7 +9068,7 @@
   },
   {
    "id": "K0241",
-   "name": "Kredur",
+   "name": "Korion",
    "art": "Kristallzähler",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -9106,7 +9106,7 @@
   },
   {
    "id": "K0242",
-   "name": "Rokrak",
+   "name": "Turek",
    "art": "Alchemistenmolch",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -9142,7 +9142,7 @@
   },
   {
    "id": "K0243",
-   "name": "Honloke",
+   "name": "Riwilke",
    "art": "Speicherbär",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -9184,7 +9184,7 @@
   },
   {
    "id": "K0244",
-   "name": "Burhold",
+   "name": "Ostibald",
    "art": "Häuschenschnecke",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -9219,11 +9219,11 @@
   },
   {
    "id": "K0245",
-   "name": "Quakalyn",
-   "art": "Codex-Titan",
+   "name": "Zenbiton",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -9232,19 +9232,19 @@
    "seltenheit": "Mythisch",
    "kosten": 10,
    "angriff": 7,
-   "leben": 6,
+   "leben": 5,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -9261,7 +9261,7 @@
   },
   {
    "id": "K0246",
-   "name": "Molin",
+   "name": "Buric",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -9297,7 +9297,7 @@
   },
   {
    "id": "K0247",
-   "name": "Stavdur",
+   "name": "Pekodur",
    "art": "Dampfgolem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -9333,7 +9333,7 @@
   },
   {
    "id": "K0248",
-   "name": "Niblin",
+   "name": "Ludbert",
    "art": "Sturmfalke",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -9371,7 +9371,7 @@
   },
   {
    "id": "K0249",
-   "name": "Timpo",
+   "name": "Timiko",
    "art": "Truhenmimik",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -9410,7 +9410,7 @@
   },
   {
    "id": "K0250",
-   "name": "Arda",
+   "name": "Eonum",
    "art": "Röhrenwurm",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -9448,7 +9448,7 @@
   },
   {
    "id": "K0251",
-   "name": "Fenaelthea",
+   "name": "Lincyrwyn",
    "art": "Kristalllibelle",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -9489,7 +9489,7 @@
   },
   {
    "id": "K0252",
-   "name": "Fizli",
+   "name": "Wupsel",
    "art": "Kuchenkobold",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -9525,11 +9525,11 @@
   },
   {
    "id": "K0253",
-   "name": "Tekis",
-   "art": "Runenautomat",
+   "name": "Sylnimene",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -9544,9 +9544,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -9558,13 +9558,13 @@
     "size": 3,
     "composite": 5
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0254",
-   "name": "Wimzo",
+   "name": "Dibny",
    "art": "Seidenraupe",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -9598,7 +9598,7 @@
   },
   {
    "id": "K0255",
-   "name": "Stavpekrich",
+   "name": "Nibramlin",
    "art": "Dampftitan",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -9639,7 +9639,7 @@
   },
   {
    "id": "K0256",
-   "name": "Quanevix",
+   "name": "Rhomekanz",
    "art": "Eiserner Hüter",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -9660,11 +9660,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -9681,7 +9681,7 @@
   },
   {
    "id": "K0257",
-   "name": "Pekel",
+   "name": "Wolel",
    "art": "Wolkenkranich",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -9720,7 +9720,7 @@
   },
   {
    "id": "K0258",
-   "name": "Morzar",
+   "name": "Morsch",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -9759,7 +9759,7 @@
   },
   {
    "id": "K0259",
-   "name": "Ilosa",
+   "name": "Erinis",
    "art": "Verbandsmotte",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -9798,7 +9798,7 @@
   },
   {
    "id": "K0260",
-   "name": "Azul",
+   "name": "Galrim",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -9836,7 +9836,7 @@
   },
   {
    "id": "K0261",
-   "name": "Olabel",
+   "name": "Zazuzo",
    "art": "Krämerelster",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -9870,7 +9870,7 @@
   },
   {
    "id": "K0262",
-   "name": "Gruwin",
+   "name": "Weno",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -9908,7 +9908,7 @@
   },
   {
    "id": "K0263",
-   "name": "Oonmirin",
+   "name": "Ellylis",
    "art": "Traumspiegel",
    "form": "Urform",
    "titel": "genügsam",
@@ -9947,7 +9947,7 @@
   },
   {
    "id": "K0264",
-   "name": "Tafried",
+   "name": "Gretje",
    "art": "Vorratshamster",
    "form": "Jungform",
    "titel": "genügsam",
@@ -9986,7 +9986,7 @@
   },
   {
    "id": "K0265",
-   "name": "Honsel",
+   "name": "Apba",
    "art": "Vorratshamster",
    "form": "Jungform",
    "titel": "genügsam",
@@ -10024,7 +10024,7 @@
   },
   {
    "id": "K0266",
-   "name": "Calara",
+   "name": "Laneth",
    "art": "Röhrenwurm",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10062,7 +10062,7 @@
   },
   {
    "id": "K0267",
-   "name": "Rumko",
+   "name": "Jibeli",
    "art": "Kuchenkobold",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -10094,7 +10094,7 @@
   },
   {
    "id": "K0268",
-   "name": "Timbel",
+   "name": "Dibebo",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -10133,7 +10133,7 @@
   },
   {
    "id": "K0269",
-   "name": "Hamock",
+   "name": "Rendur",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -10169,7 +10169,7 @@
   },
   {
    "id": "K0270",
-   "name": "Quarbor",
+   "name": "Karas",
    "art": "Säureschnecke",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -10207,7 +10207,7 @@
   },
   {
    "id": "K0271",
-   "name": "Bompel",
+   "name": "Flewimix",
    "art": "Kuchenkobold",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -10241,7 +10241,7 @@
   },
   {
    "id": "K0272",
-   "name": "Solanor",
+   "name": "Orolanys",
    "art": "Leuchtfeuer-Hüter",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -10283,7 +10283,7 @@
   },
   {
    "id": "K0273",
-   "name": "Felok",
+   "name": "Felul",
    "art": "Säureschnecke",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -10315,7 +10315,7 @@
   },
   {
    "id": "K0274",
-   "name": "Drunrak",
+   "name": "Igoon",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -10353,7 +10353,7 @@
   },
   {
    "id": "K0275",
-   "name": "Othmar",
+   "name": "Drunoon",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10391,7 +10391,7 @@
   },
   {
    "id": "K0276",
-   "name": "Muxri",
+   "name": "Kipzazix",
    "art": "Basarschlange",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10429,7 +10429,7 @@
   },
   {
    "id": "K0277",
-   "name": "Eowen",
+   "name": "Arith",
    "art": "Heroldsrabe",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10468,7 +10468,7 @@
   },
   {
    "id": "K0278",
-   "name": "Turdin",
+   "name": "Malrokdin",
    "art": "Alchemistenmolch",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -10507,7 +10507,7 @@
   },
   {
    "id": "K0279",
-   "name": "Ilara",
+   "name": "Venia",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -10543,7 +10543,7 @@
   },
   {
    "id": "K0280",
-   "name": "Rola",
+   "name": "Elivalie",
    "art": "Mondmotte",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10581,7 +10581,7 @@
   },
   {
    "id": "K0281",
-   "name": "Wilis",
+   "name": "Cene",
    "art": "Maskentänzer",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -10620,7 +10620,7 @@
   },
   {
    "id": "K0282",
-   "name": "Fenlin",
+   "name": "Rapowin",
    "art": "Baubiber",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10658,7 +10658,7 @@
   },
   {
    "id": "K0283",
-   "name": "Stavber",
+   "name": "Tokahard",
    "art": "Blitzmarder",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10694,7 +10694,7 @@
   },
   {
    "id": "K0284",
-   "name": "Tekiv",
+   "name": "Lumock",
    "art": "Funkenkäfer",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -10729,7 +10729,7 @@
   },
   {
    "id": "K0285",
-   "name": "Solion",
+   "name": "Helent",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10768,7 +10768,7 @@
   },
   {
    "id": "K0286",
-   "name": "Bramund",
+   "name": "Fenda",
    "art": "Tintenwicht",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -10806,7 +10806,7 @@
   },
   {
    "id": "K0287",
-   "name": "Belrik",
+   "name": "Falbert",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -10844,7 +10844,7 @@
   },
   {
    "id": "K0288",
-   "name": "Golos",
+   "name": "Ymath",
    "art": "Kristallzähler",
    "form": "Jungform",
    "titel": "genügsam",
@@ -10879,7 +10879,7 @@
   },
   {
    "id": "K0289",
-   "name": "Toro",
+   "name": "Stohard",
    "art": "Bauhase",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -10918,7 +10918,7 @@
   },
   {
    "id": "K0290",
-   "name": "Sarath",
+   "name": "Oris",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -10950,7 +10950,7 @@
   },
   {
    "id": "K0291",
-   "name": "Stowald",
+   "name": "Gislin",
    "art": "Bauhase",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -10985,7 +10985,7 @@
   },
   {
    "id": "K0292",
-   "name": "Luxar",
+   "name": "Ignane",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -11023,7 +11023,7 @@
   },
   {
    "id": "K0293",
-   "name": "Flara",
+   "name": "Lamel",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -11059,7 +11059,7 @@
   },
   {
    "id": "K0294",
-   "name": "Tanel",
+   "name": "Stel",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -11097,7 +11097,7 @@
   },
   {
    "id": "K0295",
-   "name": "Pipbel",
+   "name": "Muxka",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -11136,7 +11136,7 @@
   },
   {
    "id": "K0296",
-   "name": "Tokrich",
+   "name": "Kurtoko",
    "art": "Botentaube",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -11172,7 +11172,7 @@
   },
   {
    "id": "K0297",
-   "name": "Karic",
+   "name": "Kafried",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -11210,7 +11210,7 @@
   },
   {
    "id": "K0298",
-   "name": "Azbruga",
+   "name": "Madra",
    "art": "Moorglut-Drache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -11249,32 +11249,32 @@
   },
   {
    "id": "K0299",
-   "name": "Wimirne",
+   "name": "Quicoris",
    "art": "Tausendauge",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Irrlichter",
-   "wesen": "GLOOP",
-   "farbe": "Moorviolett",
-   "hex": "#8a62b8",
+   "volk": "Artefakte",
+   "wesen": "HOOTLET",
+   "farbe": "Sternblau",
+   "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
    "kosten": 9,
    "angriff": 4,
-   "leben": 8,
+   "leben": 9,
    "merkmale": [
     "Flackernd",
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Widerhall",
+    "name": "Lernen",
     "x": 2,
-    "text": "Widerhall 2: Beim Beschwören ziehst du 2 Karte(n)."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Tausend Stimmen",
-    "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
    "herkunft": {
@@ -11291,11 +11291,11 @@
   },
   {
    "id": "K0300",
-   "name": "Nevra",
+   "name": "Vire",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -11310,9 +11310,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -11324,13 +11324,13 @@
     "size": 2,
     "composite": 2
    },
-   "wertpunkte": 19.0,
+   "wertpunkte": 19.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0301",
-   "name": "Mottrich",
+   "name": "Mottemund",
    "art": "Ameisenkarawane",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -11368,7 +11368,7 @@
   },
   {
    "id": "K0302",
-   "name": "Nibock",
+   "name": "Ludofried",
    "art": "Luftschiffwal",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -11406,7 +11406,7 @@
   },
   {
    "id": "K0303",
-   "name": "Renwig",
+   "name": "Renoke",
    "art": "Ameisenkarawane",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -11442,7 +11442,7 @@
   },
   {
    "id": "K0304",
-   "name": "Synal",
+   "name": "Torex",
    "art": "Funkfalter",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -11476,7 +11476,7 @@
   },
   {
    "id": "K0305",
-   "name": "Aurdur",
+   "name": "Vesfyrax",
    "art": "Kristallzähler",
    "form": "Jungform",
    "titel": "genügsam",
@@ -11514,7 +11514,7 @@
   },
   {
    "id": "K0306",
-   "name": "Serim",
+   "name": "Nygar",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "genügsam",
@@ -11548,7 +11548,7 @@
   },
   {
    "id": "K0307",
-   "name": "Talath",
+   "name": "Munos",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -11584,7 +11584,7 @@
   },
   {
    "id": "K0308",
-   "name": "Drakius",
+   "name": "Sigek",
    "art": "Münzkäfer",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -11622,7 +11622,7 @@
   },
   {
    "id": "K0309",
-   "name": "Voliv",
+   "name": "Kroniv",
    "art": "Funkenkäfer",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -11642,7 +11642,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": true,
@@ -11660,7 +11660,7 @@
   },
   {
    "id": "K0310",
-   "name": "Munoth",
+   "name": "Sigar",
    "art": "Zinswyrm",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -11698,7 +11698,7 @@
   },
   {
    "id": "K0311",
-   "name": "Calis",
+   "name": "Ilpyris",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -11736,7 +11736,7 @@
   },
   {
    "id": "K0312",
-   "name": "Pipko",
+   "name": "Tutfizmo",
    "art": "Sturmross",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -11775,11 +11775,11 @@
   },
   {
    "id": "K0313",
-   "name": "Quatron",
-   "art": "Runenautomat",
+   "name": "Dexion",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -11788,15 +11788,15 @@
    "seltenheit": "Episch",
    "kosten": 8,
    "angriff": 4,
-   "leben": 9,
+   "leben": 8,
    "merkmale": [
     "Flackernd",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": null,
    "glanz": true,
@@ -11814,7 +11814,7 @@
   },
   {
    "id": "K0314",
-   "name": "Hamolf",
+   "name": "Renwig",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -11846,7 +11846,7 @@
   },
   {
    "id": "K0315",
-   "name": "Vaene",
+   "name": "Lidra",
    "art": "Plapperkrähe",
    "form": "Jungform",
    "titel": "genügsam",
@@ -11884,7 +11884,7 @@
   },
   {
    "id": "K0316",
-   "name": "Grunzit",
+   "name": "Grunit",
    "art": "Erzgolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -11922,7 +11922,7 @@
   },
   {
    "id": "K0317",
-   "name": "Fenra",
+   "name": "Cyrsyrin",
    "art": "Mondmotte",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -11958,7 +11958,7 @@
   },
   {
    "id": "K0318",
-   "name": "Serius",
+   "name": "Saran",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -11994,7 +11994,7 @@
   },
   {
    "id": "K0319",
-   "name": "Hemo",
+   "name": "Norfalo",
    "art": "Grottenwurm",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -12028,11 +12028,11 @@
   },
   {
    "id": "K0320",
-   "name": "Synra",
+   "name": "Bitra",
    "art": "Schaltkobold",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -12062,7 +12062,7 @@
   },
   {
    "id": "K0321",
-   "name": "Tokolbert",
+   "name": "Dubfenwin",
    "art": "Donnerwyvern",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -12104,7 +12104,7 @@
   },
   {
    "id": "K0322",
-   "name": "Boltolf",
+   "name": "Fenock",
    "art": "Greifenreiter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -12142,7 +12142,7 @@
   },
   {
    "id": "K0323",
-   "name": "Hampekwig",
+   "name": "Stavtokmar",
    "art": "Himmelsgreif",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -12183,7 +12183,7 @@
   },
   {
    "id": "K0324",
-   "name": "Ridel",
+   "name": "Taba",
    "art": "Kornwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -12221,7 +12221,7 @@
   },
   {
    "id": "K0325",
-   "name": "Lopo",
+   "name": "Pipo",
    "art": "Sturmross",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -12260,7 +12260,7 @@
   },
   {
    "id": "K0326",
-   "name": "Pipel",
+   "name": "Wimupel",
    "art": "Kistenkobold",
    "form": "Jungform",
    "titel": "genügsam",
@@ -12294,7 +12294,7 @@
   },
   {
    "id": "K0327",
-   "name": "Mirarothea",
+   "name": "Selithea",
    "art": "Myzelherz",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -12333,7 +12333,7 @@
   },
   {
    "id": "K0328",
-   "name": "Ixrim",
+   "name": "Draksarim",
    "art": "Kristallzähler",
    "form": "Jungform",
    "titel": "genügsam",
@@ -12372,11 +12372,11 @@
   },
   {
    "id": "K0329",
-   "name": "Synon",
+   "name": "Corai",
    "art": "Schaltkobold",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -12406,29 +12406,29 @@
   },
   {
    "id": "K0330",
-   "name": "Serbalius",
-   "art": "Marktdrache",
+   "name": "Baznerazar",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 7,
+   "kosten": 6,
    "angriff": 6,
    "leben": 3,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
    "herkunft": {
@@ -12439,13 +12439,13 @@
     "size": 5,
     "composite": 5
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0331",
-   "name": "Nibwig",
+   "name": "Bramawin",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -12479,7 +12479,7 @@
   },
   {
    "id": "K0332",
-   "name": "Dubock",
+   "name": "Grock",
    "art": "Ameisenkarawane",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -12517,7 +12517,7 @@
   },
   {
    "id": "K0333",
-   "name": "Fenamalie",
+   "name": "Tiadis",
    "art": "Heilerhirsch",
    "form": "Urform",
    "titel": "genügsam",
@@ -12556,7 +12556,7 @@
   },
   {
    "id": "K0334",
-   "name": "Ixix",
+   "name": "Ostix",
    "art": "Blechkrabbe",
    "form": "Jungform",
    "titel": "genügsam",
@@ -12591,7 +12591,7 @@
   },
   {
    "id": "K0335",
-   "name": "Gorash",
+   "name": "Sulash",
    "art": "Bohrwurm",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -12630,7 +12630,7 @@
   },
   {
    "id": "K0336",
-   "name": "Talion",
+   "name": "Helil",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -12669,7 +12669,7 @@
   },
   {
    "id": "K0337",
-   "name": "Halo",
+   "name": "Wurhalwin",
    "art": "Zufluchtsigel",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -12703,7 +12703,7 @@
   },
   {
    "id": "K0338",
-   "name": "Tokolf",
+   "name": "Mottifried",
    "art": "Greifenreiter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -12741,7 +12741,7 @@
   },
   {
    "id": "K0339",
-   "name": "Aurath",
+   "name": "Golbalul",
    "art": "Kristallzähler",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -12773,7 +12773,7 @@
   },
   {
    "id": "K0340",
-   "name": "Take",
+   "name": "Haliti",
    "art": "Erntegolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -12809,7 +12809,7 @@
   },
   {
    "id": "K0341",
-   "name": "Nevix",
+   "name": "Cogora",
    "art": "Blechkrabbe",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -12830,7 +12830,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -12848,7 +12848,7 @@
   },
   {
    "id": "K0342",
-   "name": "Tutka",
+   "name": "Jibli",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -12886,7 +12886,7 @@
   },
   {
    "id": "K0343",
-   "name": "Ronis",
+   "name": "Lorasa",
    "art": "Verbandsmotte",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -12920,7 +12920,7 @@
   },
   {
    "id": "K0344",
-   "name": "Zaztutix",
+   "name": "Gigiko",
    "art": "Goldelster",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -12959,7 +12959,7 @@
   },
   {
    "id": "K0345",
-   "name": "Hamgrock",
+   "name": "Tokludke",
    "art": "Werkhydra",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -13000,7 +13000,7 @@
   },
   {
    "id": "K0346",
-   "name": "Ripa",
+   "name": "Dotje",
    "art": "Kornwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -13034,7 +13034,7 @@
   },
   {
    "id": "K0347",
-   "name": "Dubolf",
+   "name": "Hamber",
    "art": "Greifenreiter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -13072,7 +13072,7 @@
   },
   {
    "id": "K0348",
-   "name": "Ardmund",
+   "name": "Henkopel",
    "art": "Funkenmolch",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -13110,11 +13110,11 @@
   },
   {
    "id": "K0349",
-   "name": "Lumek",
+   "name": "Mnox",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -13144,7 +13144,7 @@
   },
   {
    "id": "K0350",
-   "name": "Naemi",
+   "name": "Beluve",
    "art": "Kräuterigel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -13182,7 +13182,7 @@
   },
   {
    "id": "K0351",
-   "name": "Boltbert",
+   "name": "Sebpel",
    "art": "Lastkäfer",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -13220,7 +13220,7 @@
   },
   {
    "id": "K0352",
-   "name": "Thorim",
+   "name": "Heloth",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -13258,7 +13258,7 @@
   },
   {
    "id": "K0353",
-   "name": "Lozo",
+   "name": "Bomkipo",
    "art": "Kuchenkobold",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -13293,7 +13293,7 @@
   },
   {
    "id": "K0354",
-   "name": "Tokbert",
+   "name": "Rapseblin",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -13325,7 +13325,7 @@
   },
   {
    "id": "K0355",
-   "name": "Linwen",
+   "name": "Syra",
    "art": "Mondmotte",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -13364,7 +13364,7 @@
   },
   {
    "id": "K0356",
-   "name": "Kolko",
+   "name": "Kurterich",
    "art": "Dampfgolem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -13402,7 +13402,7 @@
   },
   {
    "id": "K0357",
-   "name": "Amathea",
+   "name": "Vami",
    "art": "Tautropfengeist",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -13441,7 +13441,7 @@
   },
   {
    "id": "K0358",
-   "name": "Sythea",
+   "name": "Feny",
    "art": "Sporling",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -13475,7 +13475,7 @@
   },
   {
    "id": "K0359",
-   "name": "Nibmund",
+   "name": "Grodur",
    "art": "Dampfgolem",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -13513,7 +13513,7 @@
   },
   {
    "id": "K0360",
-   "name": "Vala",
+   "name": "Miradra",
    "art": "Pilzalchemist",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -13552,7 +13552,7 @@
   },
   {
    "id": "K0361",
-   "name": "Tiathea",
+   "name": "Helenis",
    "art": "Verbandsmotte",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -13587,7 +13587,7 @@
   },
   {
    "id": "K0362",
-   "name": "Ostlumra",
+   "name": "Kirtorum",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -13608,11 +13608,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -13629,18 +13629,18 @@
   },
   {
    "id": "K0363",
-   "name": "Kreseris",
-   "art": "Marktdrache",
+   "name": "Morzorira",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 10,
+   "kosten": 9,
    "angriff": 6,
    "leben": 8,
    "merkmale": [
@@ -13648,13 +13648,13 @@
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": true,
    "herkunft": {
@@ -13665,33 +13665,33 @@
     "size": 5,
     "composite": 1
    },
-   "wertpunkte": 21.0,
+   "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0364",
-   "name": "Sarek",
-   "art": "Wechselbalg",
+   "name": "Vrabazax",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "in sich ruhend",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 7,
+   "kosten": 6,
    "angriff": 4,
    "leben": 6,
    "merkmale": [
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -13703,17 +13703,17 @@
     "size": 4,
     "composite": 3
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0365",
-   "name": "Kaltekix",
+   "name": "Corbitum",
    "art": "Großer Datenweber",
    "form": "Urform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -13722,16 +13722,16 @@
    "seltenheit": "Mythisch",
    "kosten": 7,
    "angriff": 4,
-   "leben": 7,
+   "leben": 6,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -13748,7 +13748,7 @@
   },
   {
    "id": "K0366",
-   "name": "Gardum",
+   "name": "Grarokorn",
    "art": "Säureschnecke",
    "form": "Jungform",
    "titel": "genügsam",
@@ -13780,7 +13780,7 @@
   },
   {
    "id": "K0367",
-   "name": "Kragak",
+   "name": "Berak",
    "art": "Schalenkrebs",
    "form": "Jungform",
    "titel": "genügsam",
@@ -13818,31 +13818,31 @@
   },
   {
    "id": "K0368",
-   "name": "Volkalyn",
-   "art": "Codex-Titan",
+   "name": "Adadexus",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 7,
+   "kosten": 8,
    "angriff": 4,
-   "leben": 7,
+   "leben": 8,
    "merkmale": [
     "Flackernd"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -13853,13 +13853,13 @@
     "size": 5,
     "composite": 2
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0369",
-   "name": "Erihelra",
+   "name": "Linmiradis",
    "art": "Mondmottenkönigin",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -13900,7 +13900,7 @@
   },
   {
    "id": "K0370",
-   "name": "Grumund",
+   "name": "Keriwin",
    "art": "Bauhase",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -13935,7 +13935,7 @@
   },
   {
    "id": "K0371",
-   "name": "Kiryn",
+   "name": "Nevox",
    "art": "Blechkrabbe",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -13970,7 +13970,7 @@
   },
   {
    "id": "K0372",
-   "name": "Fene",
+   "name": "Linala",
    "art": "Tautropfengeist",
    "form": "Jungform",
    "titel": "genügsam",
@@ -14008,7 +14008,7 @@
   },
   {
    "id": "K0373",
-   "name": "Belwald",
+   "name": "Moger",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -14046,7 +14046,7 @@
   },
   {
    "id": "K0374",
-   "name": "Goloran",
+   "name": "Kretalys",
    "art": "Hortdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -14085,7 +14085,7 @@
   },
   {
    "id": "K0375",
-   "name": "Synix",
+   "name": "Pixcogix",
    "art": "Zahnradmaus",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -14105,7 +14105,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": true,
@@ -14123,7 +14123,7 @@
   },
   {
    "id": "K0376",
-   "name": "Hamlin",
+   "name": "Bolto",
    "art": "Tintenwicht",
    "form": "Jungform",
    "titel": "genügsam",
@@ -14155,7 +14155,7 @@
   },
   {
    "id": "K0377",
-   "name": "Heltiadra",
+   "name": "Myrselia",
    "art": "Heildryade",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -14196,7 +14196,7 @@
   },
   {
    "id": "K0378",
-   "name": "Quavolek",
+   "name": "Zelutron",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -14217,11 +14217,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -14238,18 +14238,18 @@
   },
   {
    "id": "K0379",
-   "name": "Orath",
-   "art": "Wechselbalg",
+   "name": "Ashesh",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 7,
+   "kosten": 6,
    "angriff": 4,
    "leben": 4,
    "merkmale": [
@@ -14257,9 +14257,9 @@
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -14271,13 +14271,13 @@
     "size": 4,
     "composite": 5
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0380",
-   "name": "Rimo",
+   "name": "Frobert",
    "art": "Duftdryade",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -14313,7 +14313,7 @@
   },
   {
    "id": "K0381",
-   "name": "Rina",
+   "name": "Petalin",
    "art": "Quellnymphe",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -14349,7 +14349,7 @@
   },
   {
    "id": "K0382",
-   "name": "Thoris",
+   "name": "Thorius",
    "art": "Münzkäfer",
    "form": "Jungform",
    "titel": "genügsam",
@@ -14387,7 +14387,7 @@
   },
   {
    "id": "K0383",
-   "name": "Vexra",
+   "name": "Feral",
    "art": "Messinggolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -14408,7 +14408,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -14426,7 +14426,7 @@
   },
   {
    "id": "K0384",
-   "name": "Betli",
+   "name": "Brabert",
    "art": "Waschbär",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -14465,7 +14465,7 @@
   },
   {
    "id": "K0385",
-   "name": "Storik",
+   "name": "Doristein",
    "art": "Einsiedlerkrebs",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -14499,7 +14499,7 @@
   },
   {
    "id": "K0386",
-   "name": "Gorun",
+   "name": "Azax",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -14537,7 +14537,7 @@
   },
   {
    "id": "K0387",
-   "name": "Gunfried",
+   "name": "Milwig",
    "art": "Kornwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -14575,7 +14575,7 @@
   },
   {
    "id": "K0388",
-   "name": "Rifried",
+   "name": "Haluwin",
    "art": "Kornspeicher-Dachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -14613,27 +14613,27 @@
   },
   {
    "id": "K0389",
-   "name": "Ixdur",
-   "art": "Tauschmarder",
+   "name": "Zorazar",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Ungewöhnlich",
-   "kosten": 4,
+   "kosten": 3,
    "angriff": 3,
-   "leben": 4,
+   "leben": 3,
    "merkmale": [
     "Flackernd"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -14645,13 +14645,13 @@
     "size": 2,
     "composite": 5
    },
-   "wertpunkte": 9.0,
+   "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0390",
-   "name": "Toko",
+   "name": "Jowig",
    "art": "Greifenreiter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -14687,7 +14687,7 @@
   },
   {
    "id": "K0391",
-   "name": "Amalie",
+   "name": "Lorara",
    "art": "Kräuterigel",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -14723,7 +14723,7 @@
   },
   {
    "id": "K0392",
-   "name": "Zeltora",
+   "name": "Quaferon",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -14744,11 +14744,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -14765,7 +14765,7 @@
   },
   {
    "id": "K0393",
-   "name": "Zazri",
+   "name": "Timuny",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -14803,7 +14803,7 @@
   },
   {
    "id": "K0394",
-   "name": "Halke",
+   "name": "Lohonke",
    "art": "Duftdryade",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -14841,7 +14841,7 @@
   },
   {
    "id": "K0395",
-   "name": "Hamwig",
+   "name": "Henkemund",
    "art": "Tintenwicht",
    "form": "Jungform",
    "titel": "genügsam",
@@ -14879,7 +14879,7 @@
   },
   {
    "id": "K0396",
-   "name": "Muxbo",
+   "name": "Bobel",
    "art": "Möbelmimik",
    "form": "Jungform",
    "titel": "genügsam",
@@ -14918,7 +14918,7 @@
   },
   {
    "id": "K0397",
-   "name": "Bramrich",
+   "name": "Bramda",
    "art": "Ziegelmolch",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -14952,7 +14952,7 @@
   },
   {
    "id": "K0398",
-   "name": "Ulrin",
+   "name": "Shathe",
    "art": "Gauklerirrlicht",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -14990,7 +14990,7 @@
   },
   {
    "id": "K0399",
-   "name": "Varola",
+   "name": "Tiawen",
    "art": "Heildryade",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -15032,7 +15032,7 @@
   },
   {
    "id": "K0400",
-   "name": "Nyxlo",
+   "name": "Seluka",
    "art": "Maskentänzer",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -15071,7 +15071,7 @@
   },
   {
    "id": "K0401",
-   "name": "Renbramo",
+   "name": "Kolhenko",
    "art": "Himmelsgreif",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -15110,7 +15110,7 @@
   },
   {
    "id": "K0402",
-   "name": "Baloth",
+   "name": "Talsaroth",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -15148,7 +15148,7 @@
   },
   {
    "id": "K0403",
-   "name": "Lomuxli",
+   "name": "Pipmuxbert",
    "art": "Goldelster",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -15187,7 +15187,7 @@
   },
   {
    "id": "K0404",
-   "name": "Wimwick",
+   "name": "Hopotz",
    "art": "Seidenraupe",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -15225,7 +15225,7 @@
   },
   {
    "id": "K0405",
-   "name": "Kalon",
+   "name": "Kaliv",
    "art": "Signalturm-Golem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -15246,7 +15246,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -15264,7 +15264,7 @@
   },
   {
    "id": "K0406",
-   "name": "Drakos",
+   "name": "Ymvald",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -15300,27 +15300,27 @@
   },
   {
    "id": "K0407",
-   "name": "Ixar",
-   "art": "Wechselbalg",
+   "name": "Asmimon",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Selten",
-   "kosten": 8,
+   "kosten": 7,
    "angriff": 4,
-   "leben": 9,
+   "leben": 8,
    "merkmale": [
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -15332,13 +15332,13 @@
     "size": 3,
     "composite": 2
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0408",
-   "name": "Rukun",
+   "name": "Brumar",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -15377,7 +15377,7 @@
   },
   {
    "id": "K0409",
-   "name": "Drakath",
+   "name": "Ymul",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -15415,7 +15415,7 @@
   },
   {
    "id": "K0410",
-   "name": "Sardur",
+   "name": "Gilvald",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -15453,7 +15453,7 @@
   },
   {
    "id": "K0411",
-   "name": "Olabo",
+   "name": "Zazbel",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -15491,7 +15491,7 @@
   },
   {
    "id": "K0412",
-   "name": "Quardin",
+   "name": "Magdin",
    "art": "Steingolem",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -15529,7 +15529,7 @@
   },
   {
    "id": "K0413",
-   "name": "Vexox",
+   "name": "Lumor",
    "art": "Siliziumspinne",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -15550,7 +15550,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -15568,7 +15568,7 @@
   },
   {
    "id": "K0414",
-   "name": "Gromund",
+   "name": "Peko",
    "art": "Ziegelmolch",
    "form": "Jungform",
    "titel": "genügsam",
@@ -15602,7 +15602,7 @@
   },
   {
    "id": "K0415",
-   "name": "Sarorion",
+   "name": "Sighelion",
    "art": "Ur-Zinswyrm",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -15644,7 +15644,7 @@
   },
   {
    "id": "K0416",
-   "name": "Simo",
+   "name": "Honchen",
    "art": "Kornwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -15676,7 +15676,7 @@
   },
   {
    "id": "K0417",
-   "name": "Loboko",
+   "name": "Dibhopix",
    "art": "Festmahl-Riese",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -15718,7 +15718,7 @@
   },
   {
    "id": "K0418",
-   "name": "Ilovawyn",
+   "name": "Linodathea",
    "art": "Heilerhirsch",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -15757,7 +15757,7 @@
   },
   {
    "id": "K0419",
-   "name": "Bomli",
+   "name": "Muxsel",
    "art": "Basarschlange",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -15795,7 +15795,7 @@
   },
   {
    "id": "K0420",
-   "name": "Fenhelsa",
+   "name": "Helorasa",
    "art": "Heildryade",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -15834,7 +15834,7 @@
   },
   {
    "id": "K0421",
-   "name": "Drakoth",
+   "name": "Vesax",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -15872,7 +15872,7 @@
   },
   {
    "id": "K0422",
-   "name": "Amane",
+   "name": "Mirathea",
    "art": "Tautropfengeist",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -15910,11 +15910,11 @@
   },
   {
    "id": "K0423",
-   "name": "Quazelon",
-   "art": "Codex-Titan",
+   "name": "Elihexel",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -15923,18 +15923,18 @@
    "seltenheit": "Mythisch",
    "kosten": 10,
    "angriff": 6,
-   "leben": 9,
+   "leben": 8,
    "merkmale": [
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
    "herkunft": {
@@ -15951,11 +15951,11 @@
   },
   {
    "id": "K0424",
-   "name": "Volal",
-   "art": "Runenautomat",
+   "name": "Orika",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "im Aufwind",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -15970,9 +15970,9 @@
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -15984,13 +15984,13 @@
     "size": 3,
     "composite": 5
    },
-   "wertpunkte": 13.0,
+   "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0425",
-   "name": "Vexek",
+   "name": "Lumar",
    "art": "Siliziumspinne",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -16011,7 +16011,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -16029,7 +16029,7 @@
   },
   {
    "id": "K0426",
-   "name": "Zeltekek",
+   "name": "Mekcogyn",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -16050,11 +16050,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -16071,7 +16071,7 @@
   },
   {
    "id": "K0427",
-   "name": "Ostlin",
+   "name": "Halmund",
    "art": "Bauhase",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -16106,7 +16106,7 @@
   },
   {
    "id": "K0428",
-   "name": "Frofried",
+   "name": "Wildel",
    "art": "Erntegolem",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -16144,11 +16144,11 @@
   },
   {
    "id": "K0429",
-   "name": "Nevtron",
+   "name": "Hexvire",
    "art": "Schaltkobold",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -16163,9 +16163,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -16177,13 +16177,13 @@
     "size": 2,
     "composite": 5
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0430",
-   "name": "Nevex",
+   "name": "Nevik",
    "art": "Siliziumspinne",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -16204,7 +16204,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -16222,7 +16222,7 @@
   },
   {
    "id": "K0431",
-   "name": "Pasel",
+   "name": "Apsel",
    "art": "Quellnymphe",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -16260,27 +16260,27 @@
   },
   {
    "id": "K0432",
-   "name": "Ixius",
-   "art": "Wechselbalg",
+   "name": "Moreus",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 8,
+   "kosten": 7,
    "angriff": 5,
    "leben": 7,
    "merkmale": [
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": true,
@@ -16292,35 +16292,35 @@
     "size": 4,
     "composite": 1
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0433",
-   "name": "Balthorath",
-   "art": "Marktdrache",
+   "name": "Velozzak",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 7,
+   "kosten": 6,
    "angriff": 6,
    "leben": 3,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
    "herkunft": {
@@ -16331,13 +16331,13 @@
     "size": 5,
     "composite": 4
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0434",
-   "name": "Kaltron",
+   "name": "Galox",
    "art": "Signalturm-Golem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -16358,7 +16358,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": null,
    "glanz": true,
@@ -16376,7 +16376,7 @@
   },
   {
    "id": "K0435",
-   "name": "Tanen",
+   "name": "Aurix",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -16414,7 +16414,7 @@
   },
   {
    "id": "K0436",
-   "name": "Boka",
+   "name": "Rumpel",
    "art": "Möbelmimik",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -16446,27 +16446,27 @@
   },
   {
    "id": "K0437",
-   "name": "Balrim",
-   "art": "Wechselbalg",
+   "name": "Belxareph",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Selten",
-   "kosten": 8,
+   "kosten": 7,
    "angriff": 7,
-   "leben": 7,
+   "leben": 6,
    "merkmale": [
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -16478,13 +16478,13 @@
     "size": 3,
     "composite": 2
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0438",
-   "name": "Mirathea",
+   "name": "Belrony",
    "art": "Sporling",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -16523,7 +16523,7 @@
   },
   {
    "id": "K0439",
-   "name": "Nevis",
+   "name": "Brixiv",
    "art": "Blechkrabbe",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -16544,7 +16544,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": true,
@@ -16562,7 +16562,7 @@
   },
   {
    "id": "K0440",
-   "name": "Ylaririn",
+   "name": "Feyline",
    "art": "Traumspiegel",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -16604,7 +16604,7 @@
   },
   {
    "id": "K0441",
-   "name": "Erithea",
+   "name": "Amami",
    "art": "Sporling",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -16638,7 +16638,7 @@
   },
   {
    "id": "K0442",
-   "name": "Obgrunorn",
+   "name": "Kragrokak",
    "art": "Erzdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -16679,7 +16679,7 @@
   },
   {
    "id": "K0443",
-   "name": "Nyxel",
+   "name": "Shalo",
    "art": "Plapperkrähe",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -16711,7 +16711,7 @@
   },
   {
    "id": "K0444",
-   "name": "Venlanix",
+   "name": "Flacalola",
    "art": "Leuchtfeuer-Hüter",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -16752,7 +16752,7 @@
   },
   {
    "id": "K0445",
-   "name": "Tutster",
+   "name": "Kipister",
    "art": "Seidenspinnerin",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -16790,7 +16790,7 @@
   },
   {
    "id": "K0446",
-   "name": "Venara",
+   "name": "Sten",
    "art": "Brunnenwicht",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -16829,7 +16829,7 @@
   },
   {
    "id": "K0447",
-   "name": "Kololf",
+   "name": "Wolhard",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -16864,7 +16864,7 @@
   },
   {
    "id": "K0448",
-   "name": "Ardolf",
+   "name": "Ludmar",
    "art": "Karrenochse",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -16903,11 +16903,11 @@
   },
   {
    "id": "K0449",
-   "name": "Saris",
-   "art": "Tauschmarder",
+   "name": "Nerorn",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "genügsam",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -16915,13 +16915,13 @@
    "reihe": "hinten",
    "seltenheit": "Ungewöhnlich",
    "kosten": 4,
-   "angriff": 3,
+   "angriff": 4,
    "leben": 4,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -16939,7 +16939,7 @@
   },
   {
    "id": "K0450",
-   "name": "Dubrenrich",
+   "name": "Sebnibmund",
    "art": "Himmelsgreif",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -16978,11 +16978,11 @@
   },
   {
    "id": "K0451",
-   "name": "Synis",
+   "name": "Hexon",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "genügsam",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -17012,7 +17012,7 @@
   },
   {
    "id": "K0452",
-   "name": "Basrak",
+   "name": "Flinok",
    "art": "Erzgolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -17048,7 +17048,7 @@
   },
   {
    "id": "K0453",
-   "name": "Nevkalyn",
+   "name": "Kircogek",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -17069,11 +17069,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -17090,7 +17090,7 @@
   },
   {
    "id": "K0454",
-   "name": "Olaka",
+   "name": "Hoprumli",
    "art": "Basarelster",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -17129,7 +17129,7 @@
   },
   {
    "id": "K0455",
-   "name": "Azar",
+   "name": "Furak",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -17167,11 +17167,11 @@
   },
   {
    "id": "K0456",
-   "name": "Ixek",
+   "name": "Iotessia",
    "art": "Schaltkobold",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -17201,7 +17201,7 @@
   },
   {
    "id": "K0457",
-   "name": "Renmund",
+   "name": "Fenober",
    "art": "Karrenochse",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -17240,7 +17240,7 @@
   },
   {
    "id": "K0458",
-   "name": "Oonva",
+   "name": "Rhelo",
    "art": "Plapperkrähe",
    "form": "Jungform",
    "titel": "genügsam",
@@ -17279,7 +17279,7 @@
   },
   {
    "id": "K0459",
-   "name": "Tektron",
+   "name": "Tekitron",
    "art": "Funkenkäfer",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -17299,7 +17299,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -17317,7 +17317,7 @@
   },
   {
    "id": "K0460",
-   "name": "Uldra",
+   "name": "Gortoris",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -17355,11 +17355,11 @@
   },
   {
    "id": "K0461",
-   "name": "Kalsynix",
-   "art": "Codex-Titan",
+   "name": "Nimis",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "im Aufwind",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -17368,19 +17368,19 @@
    "seltenheit": "Mythisch",
    "kosten": 10,
    "angriff": 6,
-   "leben": 7,
+   "leben": 6,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -17397,7 +17397,7 @@
   },
   {
    "id": "K0462",
-   "name": "Renrich",
+   "name": "Ludke",
    "art": "Dampfgolem",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -17435,7 +17435,7 @@
   },
   {
    "id": "K0463",
-   "name": "Eonor",
+   "name": "Zenane",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -17473,7 +17473,7 @@
   },
   {
    "id": "K0464",
-   "name": "Gilion",
+   "name": "Sarius",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -17509,7 +17509,7 @@
   },
   {
    "id": "K0465",
-   "name": "Zinak",
+   "name": "Dordum",
    "art": "Säureschnecke",
    "form": "Jungform",
    "titel": "genügsam",
@@ -17547,7 +17547,7 @@
   },
   {
    "id": "K0466",
-   "name": "Venia",
+   "name": "Solar",
    "art": "Glühwürmchen",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -17586,11 +17586,11 @@
   },
   {
    "id": "K0467",
-   "name": "Ixis",
+   "name": "Sylene",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -17620,7 +17620,7 @@
   },
   {
    "id": "K0468",
-   "name": "Pekdur",
+   "name": "Stavbert",
    "art": "Dampfgolem",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -17656,7 +17656,7 @@
   },
   {
    "id": "K0469",
-   "name": "Basdum",
+   "name": "Quarek",
    "art": "Schalenkrebs",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -17692,11 +17692,11 @@
   },
   {
    "id": "K0470",
-   "name": "Ixkalis",
-   "art": "Codex-Titan",
+   "name": "Elihexai",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -17704,20 +17704,20 @@
    "reihe": "hinten",
    "seltenheit": "Mythisch",
    "kosten": 10,
-   "angriff": 6,
+   "angriff": 5,
    "leben": 7,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -17734,32 +17734,32 @@
   },
   {
    "id": "K0471",
-   "name": "Vexixek",
-   "art": "Codex-Titan",
+   "name": "Zenastero",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 9,
-   "angriff": 4,
+   "kosten": 10,
+   "angriff": 5,
    "leben": 9,
    "merkmale": [
     "Flackernd",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -17770,13 +17770,13 @@
     "size": 5,
     "composite": 3
    },
-   "wertpunkte": 19.0,
+   "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0472",
-   "name": "Gropeklin",
+   "name": "Sebjoda",
    "art": "Dampftitan",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -17817,7 +17817,7 @@
   },
   {
    "id": "K0473",
-   "name": "Tokber",
+   "name": "Dubuke",
    "art": "Ratgeber-Kröte",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -17853,7 +17853,7 @@
   },
   {
    "id": "K0474",
-   "name": "Sarax",
+   "name": "Sarenor",
    "art": "Zinswyrm",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -17892,7 +17892,7 @@
   },
   {
    "id": "K0475",
-   "name": "Fropadel",
+   "name": "Tapara",
    "art": "Urquell",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -17933,7 +17933,7 @@
   },
   {
    "id": "K0476",
-   "name": "Synaewen",
+   "name": "Rorin",
    "art": "Heildryade",
    "form": "Urform",
    "titel": "genügsam",
@@ -17974,7 +17974,7 @@
   },
   {
    "id": "K0477",
-   "name": "Takorli",
+   "name": "Korpetmo",
    "art": "Qualmriese",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -18013,7 +18013,7 @@
   },
   {
    "id": "K0478",
-   "name": "Rukmar",
+   "name": "Rukimar",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -18051,7 +18051,7 @@
   },
   {
    "id": "K0479",
-   "name": "Thordur",
+   "name": "Helodur",
    "art": "Münzkäfer",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -18085,14 +18085,14 @@
   },
   {
    "id": "K0480",
-   "name": "Lirin",
+   "name": "Kaiviron",
    "art": "Spiegelmotte",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Irrlichter",
-   "wesen": "GLOOP",
-   "farbe": "Moorviolett",
-   "hex": "#8a62b8",
+   "volk": "Artefakte",
+   "wesen": "HOOTLET",
+   "farbe": "Sternblau",
+   "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Gewöhnlich",
@@ -18119,27 +18119,27 @@
   },
   {
    "id": "K0481",
-   "name": "Thorath",
-   "art": "Tauschmarder",
+   "name": "Zoroth",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Ungewöhnlich",
-   "kosten": 4,
+   "kosten": 3,
    "angriff": 1,
-   "leben": 6,
+   "leben": 5,
    "merkmale": [
     "Schnäppchen"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": true,
@@ -18151,13 +18151,13 @@
     "size": 2,
     "composite": 1
    },
-   "wertpunkte": 9.0,
+   "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0482",
-   "name": "Gilrim",
+   "name": "Sarath",
    "art": "Panzerchen",
    "form": "Jungform",
    "titel": "genügsam",
@@ -18195,7 +18195,7 @@
   },
   {
    "id": "K0483",
-   "name": "Frokormo",
+   "name": "Gundotje",
    "art": "Großwaschbär",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -18236,7 +18236,7 @@
   },
   {
    "id": "K0484",
-   "name": "Sarmunoth",
+   "name": "Orserax",
    "art": "Bergschildkröte",
    "form": "Urform",
    "titel": "genügsam",
@@ -18277,7 +18277,7 @@
   },
   {
    "id": "K0485",
-   "name": "Lamhemric",
+   "name": "Egawig",
    "art": "Tunnelkönig",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -18318,7 +18318,7 @@
   },
   {
    "id": "K0486",
-   "name": "Serax",
+   "name": "Koran",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -18356,7 +18356,7 @@
   },
   {
    "id": "K0487",
-   "name": "Luxix",
+   "name": "Luxia",
    "art": "Röhrenwurm",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -18394,7 +18394,7 @@
   },
   {
    "id": "K0488",
-   "name": "Lamo",
+   "name": "Lamrik",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -18432,7 +18432,7 @@
   },
   {
    "id": "K0489",
-   "name": "Muxbel",
+   "name": "Fizubo",
    "art": "Möbelmimik",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -18471,7 +18471,7 @@
   },
   {
    "id": "K0490",
-   "name": "Lumtron",
+   "name": "Pixal",
    "art": "Blechkrabbe",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -18492,7 +18492,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -18510,7 +18510,7 @@
   },
   {
    "id": "K0491",
-   "name": "Volra",
+   "name": "Rhotekik",
    "art": "Funkenkäfer",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -18531,7 +18531,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -18549,7 +18549,7 @@
   },
   {
    "id": "K0492",
-   "name": "Tortekal",
+   "name": "Dynkalar",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -18570,11 +18570,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
    "herkunft": {
@@ -18591,7 +18591,7 @@
   },
   {
    "id": "K0493",
-   "name": "Nibrich",
+   "name": "Dubludel",
    "art": "Baubiber",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -18630,7 +18630,7 @@
   },
   {
    "id": "K0494",
-   "name": "Fenlie",
+   "name": "Selie",
    "art": "Kräuterigel",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -18666,7 +18666,7 @@
   },
   {
    "id": "K0495",
-   "name": "Quarak",
+   "name": "Basorn",
    "art": "Säureschnecke",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -18698,11 +18698,11 @@
   },
   {
    "id": "K0496",
-   "name": "Sarion",
-   "art": "Tauschmarder",
+   "name": "Dagael",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "genügsam",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -18711,14 +18711,14 @@
    "seltenheit": "Ungewöhnlich",
    "kosten": 4,
    "angriff": 3,
-   "leben": 4,
+   "leben": 5,
    "merkmale": [
     "Schnäppchen"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -18736,7 +18736,7 @@
   },
   {
    "id": "K0497",
-   "name": "Renpekolf",
+   "name": "Nibhamwin",
    "art": "Himmelsgreif",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -18777,7 +18777,7 @@
   },
   {
    "id": "K0498",
-   "name": "Torolf",
+   "name": "Browald",
    "art": "Hallenkrabbe",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -18816,28 +18816,28 @@
   },
   {
    "id": "K0499",
-   "name": "Arimi",
+   "name": "Sylum",
    "art": "Spiegelmotte",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Irrlichter",
-   "wesen": "GLOOP",
-   "farbe": "Moorviolett",
-   "hex": "#8a62b8",
+   "volk": "Artefakte",
+   "wesen": "HOOTLET",
+   "farbe": "Sternblau",
+   "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Ungewöhnlich",
    "kosten": 9,
-   "angriff": 5,
+   "angriff": 6,
    "leben": 8,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Widerhall",
+    "name": "Lernen",
     "x": 1,
-    "text": "Widerhall 1: Beim Beschwören ziehst du 1 Karte(n)."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -18849,13 +18849,13 @@
     "size": 2,
     "composite": 2
    },
-   "wertpunkte": 19.0,
+   "wertpunkte": 19.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0500",
-   "name": "Lamund",
+   "name": "Modach",
    "art": "Einsiedlerkrebs",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -18890,7 +18890,7 @@
   },
   {
    "id": "K0501",
-   "name": "Selsa",
+   "name": "Cyrive",
    "art": "Pilzalchemist",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -18926,7 +18926,7 @@
   },
   {
    "id": "K0502",
-   "name": "Varim",
+   "name": "Golil",
    "art": "Münzkäfer",
    "form": "Jungform",
    "titel": "genügsam",
@@ -18964,7 +18964,7 @@
   },
   {
    "id": "K0503",
-   "name": "Kragok",
+   "name": "Rokit",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -18996,7 +18996,7 @@
   },
   {
    "id": "K0504",
-   "name": "Dubdur",
+   "name": "Hamel",
    "art": "Hausgeist",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -19035,7 +19035,7 @@
   },
   {
    "id": "K0505",
-   "name": "Rone",
+   "name": "Beldis",
    "art": "Mondmotte",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -19071,7 +19071,7 @@
   },
   {
    "id": "K0506",
-   "name": "Fenwyn",
+   "name": "Fenila",
    "art": "Sporling",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -19110,7 +19110,7 @@
   },
   {
    "id": "K0507",
-   "name": "Fizpel",
+   "name": "Nokazo",
    "art": "Rennschnecke",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -19149,18 +19149,18 @@
   },
   {
    "id": "K0508",
-   "name": "Aurax",
-   "art": "Wechselbalg",
+   "name": "Malughul",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 10,
+   "kosten": 9,
    "angriff": 5,
    "leben": 8,
    "merkmale": [
@@ -19168,9 +19168,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -19182,13 +19182,13 @@
     "size": 4,
     "composite": 4
    },
-   "wertpunkte": 21.0,
+   "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0509",
-   "name": "Selia",
+   "name": "Feybel",
    "art": "Maskentänzer",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -19227,7 +19227,7 @@
   },
   {
    "id": "K0510",
-   "name": "Drakek",
+   "name": "Korek",
    "art": "Zinswyrm",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -19266,7 +19266,7 @@
   },
   {
    "id": "K0511",
-   "name": "Motto",
+   "name": "Tokdubock",
    "art": "Greifenreiter",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -19305,7 +19305,7 @@
   },
   {
    "id": "K0512",
-   "name": "Kolo",
+   "name": "Dubwig",
    "art": "Blitzmarder",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -19343,7 +19343,7 @@
   },
   {
    "id": "K0513",
-   "name": "Ardbert",
+   "name": "Henkimar",
    "art": "Fleißwichtel",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -19381,11 +19381,11 @@
   },
   {
    "id": "K0514",
-   "name": "Tekra",
-   "art": "Runenautomat",
+   "name": "Tessos",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "in sich ruhend",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -19397,9 +19397,9 @@
    "leben": 4,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -19411,13 +19411,13 @@
     "size": 3,
     "composite": 4
    },
-   "wertpunkte": 7.0,
+   "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0515",
-   "name": "Tutri",
+   "name": "Gigri",
    "art": "Basarelster",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -19455,31 +19455,31 @@
   },
   {
    "id": "K0516",
-   "name": "Munbalath",
-   "art": "Marktdrache",
+   "name": "Lilozziel",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 9,
+   "kosten": 8,
    "angriff": 5,
    "leben": 7,
    "merkmale": [
     "Knospend"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
    "herkunft": {
@@ -19490,13 +19490,13 @@
     "size": 5,
     "composite": 3
    },
-   "wertpunkte": 19.0,
+   "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0517",
-   "name": "Stodach",
+   "name": "Gruhold",
    "art": "Grottenwurm",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -19532,7 +19532,7 @@
   },
   {
    "id": "K0518",
-   "name": "Pekolf",
+   "name": "Fenke",
    "art": "Tintenwicht",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -19564,31 +19564,31 @@
   },
   {
    "id": "K0519",
-   "name": "Volkiron",
-   "art": "Codex-Titan",
+   "name": "Bitsylette",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 6,
-   "angriff": 3,
+   "kosten": 7,
+   "angriff": 4,
    "leben": 6,
    "merkmale": [
     "Flackernd"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -19599,17 +19599,17 @@
     "size": 5,
     "composite": 3
    },
-   "wertpunkte": 13.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0520",
-   "name": "Tortron",
+   "name": "Calum",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -19624,9 +19624,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -19638,35 +19638,35 @@
     "size": 2,
     "composite": 5
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0521",
-   "name": "Kretalos",
-   "art": "Marktdrache",
+   "name": "Asmoreus",
+   "art": "Marktfürst",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Mythisch",
-   "kosten": 8,
+   "kosten": 7,
    "angriff": 5,
    "leben": 6,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 2,
-    "text": "Zins 2: Zu Beginn deiner nächsten 2 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 2: Beim Beschwören fügst du einem anderen eigenen Wesen 2 Schaden zu und ziehst 2 Karte(n)."
    },
    "gabe": {
-    "name": "Schatzkammer",
-    "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+    "name": "Höllenpforte",
+    "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
    "herkunft": {
@@ -19677,13 +19677,13 @@
     "size": 5,
     "composite": 2
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0522",
-   "name": "Luxel",
+   "name": "Pyrys",
    "art": "Röhrenwurm",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -19722,11 +19722,11 @@
   },
   {
    "id": "K0523",
-   "name": "Tekixek",
-   "art": "Codex-Titan",
+   "name": "Adabite",
+   "art": "Orakel-Konstrukt",
    "form": "Urform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -19734,20 +19734,20 @@
    "reihe": "hinten",
    "seltenheit": "Mythisch",
    "kosten": 10,
-   "angriff": 4,
+   "angriff": 3,
    "leben": 9,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": {
-    "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "name": "Erwachen",
+    "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
    "herkunft": {
@@ -19764,7 +19764,7 @@
   },
   {
    "id": "K0524",
-   "name": "Garthar",
+   "name": "Garmalzit",
    "art": "Alchemistenmolch",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -19802,7 +19802,7 @@
   },
   {
    "id": "K0525",
-   "name": "Lamwald",
+   "name": "Hemar",
    "art": "Hallenkrabbe",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -19840,7 +19840,7 @@
   },
   {
    "id": "K0526",
-   "name": "Grolin",
+   "name": "Mottapel",
    "art": "Kolbenkäfer",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -19878,14 +19878,14 @@
   },
   {
    "id": "K0527",
-   "name": "Wilo",
+   "name": "Orinimon",
    "art": "Spiegelmotte",
    "form": "Jungform",
    "titel": "genügsam",
-   "volk": "Irrlichter",
-   "wesen": "GLOOP",
-   "farbe": "Moorviolett",
-   "hex": "#8a62b8",
+   "volk": "Artefakte",
+   "wesen": "HOOTLET",
+   "farbe": "Sternblau",
+   "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Gewöhnlich",
@@ -19912,11 +19912,11 @@
   },
   {
    "id": "K0528",
-   "name": "Torox",
+   "name": "Asterix",
    "art": "Netzweber",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -19924,16 +19924,16 @@
    "reihe": "hinten",
    "seltenheit": "Episch",
    "kosten": 8,
-   "angriff": 5,
+   "angriff": 4,
    "leben": 6,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -19951,11 +19951,11 @@
   },
   {
    "id": "K0529",
-   "name": "Golax",
-   "art": "Pfandwichtel",
+   "name": "Ozzur",
+   "art": "Pfandteufel",
    "form": "Jungform",
    "titel": "im Aufwind",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -19963,16 +19963,16 @@
    "reihe": "vorn",
    "seltenheit": "Ungewöhnlich",
    "kosten": 7,
-   "angriff": 6,
+   "angriff": 7,
    "leben": 3,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -19990,7 +19990,7 @@
   },
   {
    "id": "K0530",
-   "name": "Aelwyn",
+   "name": "Sywen",
    "art": "Verbandsmotte",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -20022,7 +20022,7 @@
   },
   {
    "id": "K0531",
-   "name": "Pyrila",
+   "name": "Tanvenent",
    "art": "Leuchtfeuer-Hüter",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -20064,7 +20064,7 @@
   },
   {
    "id": "K0532",
-   "name": "Saros",
+   "name": "Munar",
    "art": "Zinswyrm",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -20102,7 +20102,7 @@
   },
   {
    "id": "K0533",
-   "name": "Wimtutwick",
+   "name": "Tutdibwick",
    "art": "Festmahl-Riese",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -20143,25 +20143,25 @@
   },
   {
    "id": "K0534",
-   "name": "Munius",
-   "art": "Wechselbalg",
+   "name": "Dagyx",
+   "art": "Vertragsdämon",
    "form": "Reife Form",
    "titel": "genügsam",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Selten",
-   "kosten": 5,
+   "kosten": 4,
    "angriff": 4,
-   "leben": 5,
+   "leben": 4,
    "merkmale": [],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -20173,13 +20173,13 @@
     "size": 3,
     "composite": 3
    },
-   "wertpunkte": 11.0,
+   "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0535",
-   "name": "Grungal",
+   "name": "Obagal",
    "art": "Erzmaulwurf",
    "form": "Jungform",
    "titel": "genügsam",
@@ -20217,7 +20217,7 @@
   },
   {
    "id": "K0536",
-   "name": "Selsynis",
+   "name": "Myrlinrin",
    "art": "Mondmottenkönigin",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -20259,7 +20259,7 @@
   },
   {
    "id": "K0537",
-   "name": "Eger",
+   "name": "Faliger",
    "art": "Bauhase",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -20294,7 +20294,7 @@
   },
   {
    "id": "K0538",
-   "name": "Lumyn",
+   "name": "Cogra",
    "art": "Blechkrabbe",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -20328,28 +20328,28 @@
   },
   {
    "id": "K0539",
-   "name": "Kiriv",
-   "art": "Runenautomat",
+   "name": "Neox",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "im Aufwind",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
    "rolle": "Schütze",
    "reihe": "hinten",
    "seltenheit": "Episch",
-   "kosten": 8,
-   "angriff": 6,
+   "kosten": 9,
+   "angriff": 7,
    "leben": 5,
    "merkmale": [
     "Ungestüm",
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Lernen 2: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 2-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -20361,17 +20361,17 @@
     "size": 4,
     "composite": 5
    },
-   "wertpunkte": 17.0,
+   "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0540",
-   "name": "Taldur",
-   "art": "Pfandwichtel",
+   "name": "Kazael",
+   "art": "Pfandteufel",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -20380,15 +20380,15 @@
    "seltenheit": "Ungewöhnlich",
    "kosten": 5,
    "angriff": 4,
-   "leben": 5,
+   "leben": 6,
    "merkmale": [
     "Flackernd",
     "Schnäppchen"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": true,
@@ -20406,7 +20406,7 @@
   },
   {
    "id": "K0541",
-   "name": "Honli",
+   "name": "Emmopa",
    "art": "Kornspeicher-Dachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -20444,7 +20444,7 @@
   },
   {
    "id": "K0542",
-   "name": "Lobomko",
+   "name": "Trizazbert",
    "art": "Goldelster",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -20486,7 +20486,7 @@
   },
   {
    "id": "K0543",
-   "name": "Ellmirys",
+   "name": "Lulmi",
    "art": "Himmelsrufer",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -20525,7 +20525,7 @@
   },
   {
    "id": "K0544",
-   "name": "Oonwen",
+   "name": "Oonmirlis",
    "art": "Maskentänzer",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -20563,7 +20563,7 @@
   },
   {
    "id": "K0545",
-   "name": "Muxwick",
+   "name": "Kipwimo",
    "art": "Seidenraupe",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -20601,7 +20601,7 @@
   },
   {
    "id": "K0546",
-   "name": "Gunsel",
+   "name": "Luli",
    "art": "Kornspeicher-Dachs",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -20640,7 +20640,7 @@
   },
   {
    "id": "K0547",
-   "name": "Othash",
+   "name": "Igtorun",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -20678,7 +20678,7 @@
   },
   {
    "id": "K0548",
-   "name": "Kalis",
+   "name": "Toryn",
    "art": "Messinggolem",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -20698,7 +20698,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -20716,7 +20716,7 @@
   },
   {
    "id": "K0549",
-   "name": "Rhon",
+   "name": "Vexra",
    "art": "Siliziumspinne",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -20737,7 +20737,7 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Aufrüsten 1: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +1 Angriff."
    },
    "gabe": null,
    "glanz": false,
@@ -20755,7 +20755,7 @@
   },
   {
    "id": "K0550",
-   "name": "Dibrumka",
+   "name": "Wupdibsel",
    "art": "Donnerross",
    "form": "Urform",
    "titel": "auf Wanderschaft",
@@ -20797,7 +20797,7 @@
   },
   {
    "id": "K0551",
-   "name": "Tekquara",
+   "name": "Zelmekis",
    "art": "Siliziumdrache",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -20818,11 +20818,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -20839,7 +20839,7 @@
   },
   {
    "id": "K0552",
-   "name": "Gorgor",
+   "name": "Lavek",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -20878,7 +20878,7 @@
   },
   {
    "id": "K0553",
-   "name": "Grorich",
+   "name": "Nibfendur",
    "art": "Sturmfalke",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -20910,7 +20910,7 @@
   },
   {
    "id": "K0554",
-   "name": "Line",
+   "name": "Oonel",
    "art": "Plapperkrähe",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -20944,7 +20944,7 @@
   },
   {
    "id": "K0555",
-   "name": "Syfenra",
+   "name": "Erivyne",
    "art": "Kristalllibelle",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -20985,7 +20985,7 @@
   },
   {
    "id": "K0556",
-   "name": "Renel",
+   "name": "Reno",
    "art": "Vielhand-Golem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -21021,7 +21021,7 @@
   },
   {
    "id": "K0557",
-   "name": "Golek",
+   "name": "Vath",
    "art": "Kristallzähler",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -21056,7 +21056,7 @@
   },
   {
    "id": "K0558",
-   "name": "Tutpo",
+   "name": "Dibert",
    "art": "Krämerelster",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -21092,11 +21092,11 @@
   },
   {
    "id": "K0559",
-   "name": "Drakis",
-   "art": "Tauschmarder",
+   "name": "Xaresh",
+   "art": "Paktwichtel",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Hortbrut",
+   "volk": "Paktvolk",
    "wesen": "WYRMLING",
    "farbe": "Gold",
    "hex": "#d4b32c",
@@ -21105,14 +21105,14 @@
    "seltenheit": "Ungewöhnlich",
    "kosten": 7,
    "angriff": 3,
-   "leben": 8,
+   "leben": 9,
    "merkmale": [
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Zins",
+    "name": "Blutpakt",
     "x": 1,
-    "text": "Zins 1: Zu Beginn deiner nächsten 1 Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+    "text": "Blutpakt 1: Beim Beschwören fügst du einem anderen eigenen Wesen 1 Schaden zu und ziehst 1 Karte(n)."
    },
    "gabe": null,
    "glanz": false,
@@ -21130,7 +21130,7 @@
   },
   {
    "id": "K0560",
-   "name": "Renlin",
+   "name": "Wolwin",
    "art": "Greifenreiter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -21168,7 +21168,7 @@
   },
   {
    "id": "K0561",
-   "name": "Ardko",
+   "name": "Sebwolbert",
    "art": "Tintenwicht",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -21202,7 +21202,7 @@
   },
   {
    "id": "K0562",
-   "name": "Balius",
+   "name": "Varim",
    "art": "Schildkrötenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -21241,11 +21241,11 @@
   },
   {
    "id": "K0563",
-   "name": "Lumis",
+   "name": "Tessai",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -21275,7 +21275,7 @@
   },
   {
    "id": "K0564",
-   "name": "Thorek",
+   "name": "Munis",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -21313,11 +21313,11 @@
   },
   {
    "id": "K0565",
-   "name": "Tekyn",
+   "name": "Kaivirette",
    "art": "Schaltkobold",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -21331,9 +21331,9 @@
     "Ungestüm"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -21345,17 +21345,17 @@
     "size": 2,
     "composite": 5
    },
-   "wertpunkte": 9.0,
+   "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0566",
-   "name": "Toryn",
+   "name": "Quis",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -21386,7 +21386,7 @@
   },
   {
    "id": "K0567",
-   "name": "Mili",
+   "name": "Honpa",
    "art": "Kornwichtel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -21424,7 +21424,7 @@
   },
   {
    "id": "K0568",
-   "name": "Lamhold",
+   "name": "Hemastein",
    "art": "Bauhase",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -21459,7 +21459,7 @@
   },
   {
    "id": "K0569",
-   "name": "Thorion",
+   "name": "Fyrymgar",
    "art": "Hortechse",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -21497,7 +21497,7 @@
   },
   {
    "id": "K0570",
-   "name": "Pekoldur",
+   "name": "Kolrenwig",
    "art": "Karawanenmammut",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -21538,7 +21538,7 @@
   },
   {
    "id": "K0571",
-   "name": "Fizri",
+   "name": "Jibzo",
    "art": "Krämerelster",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -21576,7 +21576,7 @@
   },
   {
    "id": "K0572",
-   "name": "Kolstavolf",
+   "name": "Kolnibmar",
    "art": "Karawanenmammut",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -21617,7 +21617,7 @@
   },
   {
    "id": "K0573",
-   "name": "Kolrich",
+   "name": "Joludlin",
    "art": "Wolkenkranich",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -21656,7 +21656,7 @@
   },
   {
    "id": "K0574",
-   "name": "Renolf",
+   "name": "Rapdur",
    "art": "Luftschiffwal",
    "form": "Reife Form",
    "titel": "genügsam",
@@ -21694,7 +21694,7 @@
   },
   {
    "id": "K0575",
-   "name": "Dubo",
+   "name": "Grohard",
    "art": "Ameisenkarawane",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -21732,7 +21732,7 @@
   },
   {
    "id": "K0576",
-   "name": "Erine",
+   "name": "Erihelne",
    "art": "Sporling",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -21771,7 +21771,7 @@
   },
   {
    "id": "K0577",
-   "name": "Rovathea",
+   "name": "Odafenis",
    "art": "Heilerhirsch",
    "form": "Urform",
    "titel": "genügsam",
@@ -21813,7 +21813,7 @@
   },
   {
    "id": "K0578",
-   "name": "Eriwyn",
+   "name": "Amadis",
    "art": "Kräuterigel",
    "form": "Jungform",
    "titel": "genügsam",
@@ -21848,7 +21848,7 @@
   },
   {
    "id": "K0579",
-   "name": "Rukek",
+   "name": "Skosch",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -21887,7 +21887,7 @@
   },
   {
    "id": "K0580",
-   "name": "Tiave",
+   "name": "Ivyla",
    "art": "Sternmoos-Golem",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -21926,7 +21926,7 @@
   },
   {
    "id": "K0581",
-   "name": "Gruhold",
+   "name": "Gisbert",
    "art": "Herbergsdachs",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -21965,7 +21965,7 @@
   },
   {
    "id": "K0582",
-   "name": "Ardrich",
+   "name": "Boltarich",
    "art": "Fleißwichtel",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -22001,11 +22001,11 @@
   },
   {
    "id": "K0583",
-   "name": "Lumon",
+   "name": "Virsylion",
    "art": "Schaltkobold",
    "form": "Jungform",
    "titel": "in sich ruhend",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -22019,9 +22019,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -22033,13 +22033,13 @@
     "size": 2,
     "composite": 3
    },
-   "wertpunkte": 13.0,
+   "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0584",
-   "name": "Vaelilis",
+   "name": "Fiolusil",
    "art": "Urrufer",
    "form": "Urform",
    "titel": "genügsam",
@@ -22080,7 +22080,7 @@
   },
   {
    "id": "K0585",
-   "name": "Bramel",
+   "name": "Henkafried",
    "art": "Tintenwicht",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -22118,7 +22118,7 @@
   },
   {
    "id": "K0586",
-   "name": "Aelinis",
+   "name": "Amaloradra",
    "art": "Myzelherz",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -22159,7 +22159,7 @@
   },
   {
    "id": "K0587",
-   "name": "Tokmottdur",
+   "name": "Pekalin",
    "art": "Donnerwyvern",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -22201,7 +22201,7 @@
   },
   {
    "id": "K0588",
-   "name": "Lamolf",
+   "name": "Belmar",
    "art": "Grottenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -22240,7 +22240,7 @@
   },
   {
    "id": "K0589",
-   "name": "Ixbalrim",
+   "name": "Krethorion",
    "art": "Ur-Zinswyrm",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -22282,7 +22282,7 @@
   },
   {
    "id": "K0590",
-   "name": "Solen",
+   "name": "Kyhelum",
    "art": "Windmühlen-Golem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -22321,7 +22321,7 @@
   },
   {
    "id": "K0591",
-   "name": "Obor",
+   "name": "Turith",
    "art": "Steingolem",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -22359,7 +22359,7 @@
   },
   {
    "id": "K0592",
-   "name": "Kawald",
+   "name": "Gruwig",
    "art": "Wurzelhauswicht",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -22394,7 +22394,7 @@
   },
   {
    "id": "K0593",
-   "name": "Solum",
+   "name": "Lanion",
    "art": "Röhrenwurm",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -22433,7 +22433,7 @@
   },
   {
    "id": "K0594",
-   "name": "Grock",
+   "name": "Rapida",
    "art": "Dampfgolem",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -22471,7 +22471,7 @@
   },
   {
    "id": "K0595",
-   "name": "Rihalna",
+   "name": "Haldotdo",
    "art": "Speicherbär",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -22513,7 +22513,7 @@
   },
   {
    "id": "K0596",
-   "name": "Ylne",
+   "name": "Ulel",
    "art": "Maskentänzer",
    "form": "Reife Form",
    "titel": "auf Wanderschaft",
@@ -22552,7 +22552,7 @@
   },
   {
    "id": "K0597",
-   "name": "Stavko",
+   "name": "Stavofried",
    "art": "Hausgeist",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -22591,7 +22591,7 @@
   },
   {
    "id": "K0598",
-   "name": "Seldra",
+   "name": "Odabell",
    "art": "Linsenlibelle",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -22630,7 +22630,7 @@
   },
   {
    "id": "K0599",
-   "name": "Dubel",
+   "name": "Mottiko",
    "art": "Handelsameise",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -22662,7 +22662,7 @@
   },
   {
    "id": "K0600",
-   "name": "Balixion",
+   "name": "Orkordur",
    "art": "Hortdrache",
    "form": "Urform",
    "titel": "im Aufwind",
@@ -22701,7 +22701,7 @@
   },
   {
    "id": "K0601",
-   "name": "Egstolf",
+   "name": "Egruwin",
    "art": "Herbergsbär",
    "form": "Urform",
    "titel": "in sich ruhend",
@@ -22743,7 +22743,7 @@
   },
   {
    "id": "K0602",
-   "name": "Miranis",
+   "name": "Belsa",
    "art": "Tautropfengeist",
    "form": "Jungform",
    "titel": "unerschütterlich",
@@ -22778,7 +22778,7 @@
   },
   {
    "id": "K0603",
-   "name": "Ostzelix",
+   "name": "Volnevanz",
    "art": "Eiserner Hüter",
    "form": "Urform",
    "titel": "unerschütterlich",
@@ -22799,11 +22799,11 @@
    "faehigkeit": {
     "name": "Aufrüsten",
     "x": 2,
-    "text": "Aufrüsten 2: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +2 Angriff."
+    "text": "Aufrüsten 2: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +2 Angriff."
    },
    "gabe": {
     "name": "Sternennetz",
-    "text": "Sternennetz: Deine anderen Glimmerwerk-Wesen haben +1 Angriff."
+    "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
    "herkunft": {
@@ -22820,7 +22820,7 @@
   },
   {
    "id": "K0604",
-   "name": "Osthold",
+   "name": "Halelin",
    "art": "Grottenwurm",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -22854,7 +22854,7 @@
   },
   {
    "id": "K0605",
-   "name": "Gorga",
+   "name": "Sulega",
    "art": "Sumpfsalamander",
    "form": "Reife Form",
    "titel": "im Aufwind",
@@ -22893,7 +22893,7 @@
   },
   {
    "id": "K0606",
-   "name": "Timka",
+   "name": "Tridle",
    "art": "Krämerelster",
    "form": "Jungform",
    "titel": "im Aufwind",
@@ -22931,11 +22931,11 @@
   },
   {
    "id": "K0607",
-   "name": "Synox",
-   "art": "Runenautomat",
+   "name": "Cornimene",
+   "art": "Denkender Foliant",
    "form": "Reife Form",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -22949,9 +22949,9 @@
     "Flackernd"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -22963,13 +22963,13 @@
     "size": 3,
     "composite": 3
    },
-   "wertpunkte": 9.0,
+   "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0608",
-   "name": "Eonar",
+   "name": "Helor",
    "art": "Laternenwächter",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -23008,7 +23008,7 @@
   },
   {
    "id": "K0609",
-   "name": "Peko",
+   "name": "Hamtokel",
    "art": "Dampfgolem",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -23044,7 +23044,7 @@
   },
   {
    "id": "K0610",
-   "name": "Wimka",
+   "name": "Bomika",
    "art": "Gasthaus-Troll",
    "form": "Reife Form",
    "titel": "in sich ruhend",
@@ -23083,7 +23083,7 @@
   },
   {
    "id": "K0611",
-   "name": "Volar",
+   "name": "Kalock",
    "art": "Zahnradmaus",
    "form": "Jungform",
    "titel": "genügsam",
@@ -23117,7 +23117,7 @@
   },
   {
    "id": "K0612",
-   "name": "Stoger",
+   "name": "Nordach",
    "art": "Häuschenschnecke",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
@@ -23152,7 +23152,7 @@
   },
   {
    "id": "K0613",
-   "name": "Helsa",
+   "name": "Ilohelie",
    "art": "Verbandsmotte",
    "form": "Jungform",
    "titel": "in sich ruhend",
@@ -23184,7 +23184,7 @@
   },
   {
    "id": "K0614",
-   "name": "Tiane",
+   "name": "Ivymi",
    "art": "Trankdryade",
    "form": "Reife Form",
    "titel": "unerschütterlich",
@@ -23220,11 +23220,11 @@
   },
   {
    "id": "K0615",
-   "name": "Synyn",
+   "name": "Asterus",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "auf Wanderschaft",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -23239,9 +23239,9 @@
     "Wachstum"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -23253,17 +23253,17 @@
     "size": 2,
     "composite": 5
    },
-   "wertpunkte": 15.0,
+   "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
   },
   {
    "id": "K0616",
-   "name": "Nevek",
+   "name": "Nimyx",
    "art": "Glyphengeist",
    "form": "Jungform",
    "titel": "unerschütterlich",
-   "volk": "Glimmerwerk",
+   "volk": "Artefakte",
    "wesen": "HOOTLET",
    "farbe": "Sternblau",
    "hex": "#4f86c6",
@@ -23277,9 +23277,9 @@
     "Ungestüm"
    ],
    "faehigkeit": {
-    "name": "Aufrüsten",
+    "name": "Lernen",
     "x": 1,
-    "text": "Aufrüsten 1: Beschwörst du danach ein weiteres Glimmerwerk-Wesen, erhält dieses einmalig +1 Angriff."
+    "text": "Lernen 1: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens 1-mal)."
    },
    "gabe": null,
    "glanz": false,
@@ -23291,7 +23291,7 @@
     "size": 2,
     "composite": 2
    },
-   "wertpunkte": 11.0,
+   "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
   }

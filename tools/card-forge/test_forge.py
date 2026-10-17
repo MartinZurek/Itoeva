@@ -142,6 +142,21 @@ class KartenTest(unittest.TestCase):
         self.assertNotIn("Firma ", text)
         self.assertNotIn("XX0", text)
 
+    def test_namen_ohne_gesperrte_anklaenge_und_eindeutig(self):
+        karten = self.schmiede(erfundene_zeilen(400, self.rnd), "2026-10")
+        sperre = REGELN["namen"]["sperre"]
+        namen = [k["name"].lower() for k in karten]
+        self.assertEqual(len(namen), len(set(namen)))
+        for n in namen:
+            self.assertFalse([w for w in sperre if w in n], n)
+
+    def test_daemonen_und_artefakte_eigene_voelker(self):
+        self.assertEqual(REGELN["arten"]["Capital Markets"]["volk"], "Paktvolk")
+        self.assertEqual(REGELN["arten"]["Software"]["volk"], "Artefakte")
+        for art in REGELN["arten"].values():
+            if isinstance(art, dict) and "volk" in art:
+                self.assertIn(art["volk"], REGELN["voelker"])
+
     def test_zwillinge_werden_ein_wesen(self):
         z = erfundene_zeilen(2, self.rnd)
         z[1][15] = z[0][15]  # gleicher Firmenname, andere Gattung
