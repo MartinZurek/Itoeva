@@ -54,6 +54,10 @@ Welt-/Kampfmusik und sechs Effektstimmen unabhängig von der Weltpause. Acht Wes
 Originalwesen verwenden CharacterActor, Mooslyn und Nocti CompactActor.
 Der Siegesabschluss speichert XP/Beute einmal und fuehrt zur gemalten Welt zurueck.
 Native Kotlin-Module, Reminder, Room, LAS und Signier-Infrastruktur bleiben erhalten.
+Seit0.10.0 liefern `battle_motion.gd` reine Darstellungswege und `battle_pawn.gd`
+einen begrenzten Canvas-Pool für einzelne gemalte Figuren mit eigenem Lichtmaterial.
+Standplatz, Körperhöhe und Bodenschatten bleiben getrennt; CardBattle löst Schaden
+weiterhin einmal auf. Details: `docs/godot-kampfbewegung-und-licht-v0100.md`.
 Start, Originalasset-Nachweis, Tests und Grenzen stehen in dessen README und
 `docs/godot-merge-v050.md`. 40er-Decks, Helferzustände und die 96 neuen
 Animationsposen sind in `docs/godot-kartenspiel-v060.md` dokumentiert.

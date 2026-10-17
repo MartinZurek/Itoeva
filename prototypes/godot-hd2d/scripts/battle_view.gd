@@ -4,6 +4,11 @@ extends Control
 const Catalog = preload("res://scripts/world_catalog.gd")
 const Forest = preload("res://scripts/forest_catalog.gd")
 const Spectacle = preload("res://scripts/battle_effects.gd")
+const Motion = preload("res://scripts/battle_motion.gd")
+const Pawn = preload("res://scripts/battle_pawn.gd")
+var pawn_layer: Node2D
+var pawn_pool: Array[Node2D] = []
+var pawn_cursor := 0
 const GOLD := Color("dfc68e")
 const INK := Color("101b2c")
 const TEXT := Color("f6ecd4")
@@ -68,6 +73,7 @@ func _ready() -> void:
  for member in model.party:
   allies.append(load(atlas_data[member.species].asset))
  _build()
+ _setup_pawns()
  resized.connect(_fit)
  _fit()
  refresh()
@@ -352,12 +358,14 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
  if background == null: return
+ _begin_pawns()
  var duration: float = model.animation_duration()
  var cinematic := event_time >= 0 and event_time < duration and not results_shown
  var pad := sin(clampf(event_time/duration,0,1)*PI)*10.0 if cinematic else 0.0
- draw_texture_rect(background,Rect2(Vector2(-pad,-pad),size+Vector2.ONE*pad*2),false,Color(.53,.64,.78))
- draw_rect(Rect2(Vector2.ZERO,size),Color(.012,.028,.065,.24))
+ draw_texture_rect(background,Rect2(Vector2(-pad,-pad),size+Vector2.ONE*pad*2),false,Color(.66,.72,.81))
+ draw_rect(Rect2(Vector2.ZERO,size),Color(.012,.028,.065,.15))
  draw_set_transform(margin,0,Vector2.ONE*fit)
+ _arena_ground()
  _arena_fire()
  if results_shown:_victory_sparkles()
  var impact: bool = model.playback_pending and event_time >= model.impact_time() and event_time < model.impact_time()+.26
@@ -393,12 +401,13 @@ func _fighter(index: int) -> void:
  if active_event and event_time > model.impact_time() and event_time < model.impact_time()+.48:
   for effect in event.get("effects",[]):
    if int(effect.target) == index and effect.kind in ["damage","weak","blocked"]: hit = true
- if casting and event.element == "physical": foot.x += sin(clampf(event_time/1.3,0,1)*PI)*170.0
- if casting and index == 2 and event.element == "shadow" and event.title != "Nebelwoge": foot.x -= sin(clampf(event_time/1.3,0,1)*PI)*150.0
- if hit: foot.x += sin(event_time*55)*4.0
- draw_set_transform(margin+(foot+Vector2(0,3))*fit,0,Vector2(fit,fit*.25))
- draw_circle(Vector2.ZERO,58 if index == 2 else 37,Color(0,0,0,.32))
- draw_set_transform(margin,0,Vector2.ONE*fit)
+ var motion:=Motion.rest(foot,clock,index,index<2 and model.party[index].species in ["starlet","hootlet","nocti"])
+ if casting and event.get("element","")=="physical":
+  motion=Motion.attack(foot,_position(0 if index==2 else 2),event_time,model.impact_time(),model.animation_duration(),"guard",0,32.0)
+ if hit:motion=Motion.hit(foot,event_time,model.impact_time(),-1 if index<2 else 1)
+ if results_shown:motion=Motion.rest(foot,clock,index)
+ foot=motion.foot
+ _ground_shadow(motion.ground,Vector2(58,14) if index==2 else Vector2(37,10),motion.lift)
  if index == 2:
   var frame := int(clock*5.5)%4
   if casting:
@@ -412,7 +421,7 @@ func _fighter(index: int) -> void:
   if hit: tint = Color(1.55,1.25,1.12)
   if model.phase == "intro": tint.a = smoothstep(.6,2.6,model.intro_time)
   if model.phase == "victory" and event_time > model.impact_time()+.4: tint.a = maxf(.12,1.0-(event_time-model.impact_time()-.4)*.8)
-  draw_texture_rect_region(demon,Rect2(foot-Vector2(width*.5,height),Vector2(width,height)),region,tint)
+  _paint_pawn(demon,region,Vector2(width,height),motion,tint)
  else:
   var member: Dictionary = model.party[index]
   var frame := 12
@@ -433,12 +442,8 @@ func _fighter(index: int) -> void:
   var tint := Color("eee1c4")
   if hit: tint = Color("ffd4bd")
   if member.hp == 0: tint = Color(.49,.48,.56,.65)
-  if results_shown and member.hp>0:
-   var pose:=victory_pose(index)
-   draw_set_transform(margin+foot*fit,float(pose.lean),Vector2.ONE*fit)
-   draw_texture_rect_region(allies[index],Rect2(Vector2(-dimension.x*.5,-dimension.y),dimension),source_rect,tint)
-   draw_set_transform(margin,0,Vector2.ONE*fit)
-  else:draw_texture_rect_region(allies[index],Rect2(foot-Vector2(dimension.x*.5,dimension.y),dimension),source_rect,tint)
+  if results_shown and member.hp>0:motion.lean=float(victory_pose(index).lean)
+  _paint_pawn(allies[index],source_rect,dimension,motion,tint)
   if member.evasion:
    draw_texture_rect_region(allies[index],Rect2(foot-Vector2(dimension.x*.5+35,dimension.y),dimension),source_rect,Color(.6,.75,.85,.15))
   if member.haste:
@@ -446,7 +451,7 @@ func _fighter(index: int) -> void:
   if member.guard:
    draw_arc(foot-Vector2(0,height*.45),height*.55,-1.25,1.25,30,Color(.53,.78,1,.6),3,true)
   if index == model.cursor and not model.playback_pending and model.phase == "battle":
-   var p := foot-Vector2(0,height+20+sin(clock*3)*3)
+   var p := foot+Vector2(-dimension.x*.5-14,-height*.32+sin(clock*3)*2)
    draw_colored_polygon(PackedVector2Array([p+Vector2(-8,-6),p+Vector2(8,-6),p+Vector2(0,5)]),GOLD)
 
 func _word(text: String, point: Vector2, font_size: int, color: Color) -> void:
@@ -594,3 +599,72 @@ func _victory_sparkles() -> void:
   var at:=Vector2(80+fposmod(i*97.7,500),470-rise*310)
   var fade:=sin(rise*PI)*.48
   draw_circle(at,1.2+i%3*.55,Color(GOLD,fade))
+
+func _setup_pawns() -> void:
+ pawn_layer=Node2D.new();pawn_layer.name="GemalteKampffiguren";pawn_layer.y_sort_enabled=true
+ add_child(pawn_layer);move_child(pawn_layer,0)
+ # Drei Hauptfiguren plus neun Helfer; vier Reserveplätze für Übergänge.
+ for i in 16:
+  var pawn:=Pawn.new();pawn.visible=false;pawn_layer.add_child(pawn);pawn_pool.append(pawn)
+
+func _begin_pawns() -> void:
+ pawn_cursor=0
+ if not is_instance_valid(pawn_layer):return
+ pawn_layer.position=margin;pawn_layer.scale=Vector2.ONE*fit
+ for pawn in pawn_pool:pawn.visible=false
+
+func _paint_pawn(texture: Texture2D, region: Rect2, dimensions: Vector2, motion: Dictionary, tint: Color=Color.WHITE, left: bool=false) -> void:
+ if pawn_cursor>=pawn_pool.size():return
+ var pawn: Node2D=pawn_pool[pawn_cursor];pawn_cursor+=1
+ pawn.position=motion.foot;pawn.rotation=float(motion.lean)
+ var breathing:=sin(clock*1.7+pawn_cursor*.8)*.004 if not motion.travel else 0.0
+ pawn.scale=Vector2(1.0-breathing*.4,1.0+breathing)
+ pawn.present(texture,region,dimensions,tint,left,_pawn_light(motion.ground))
+
+func _pawn_light(foot: Vector2) -> Dictionary:
+ var warm: bool=model.get("enemy_profile")!=null and model.enemy_profile.get("kind","") in ["imp","carrier","boss"]
+ var result: Dictionary={"ambient":Color(.97,.93,.90) if warm else Color(.93,.96,1.0),"key_color":Color("ffd5a1") if warm else Color("f7e9c9"),"key_gain":.12,"pulse_color":Color.WHITE,"pulse_gain":0.0}
+ if event_time<0 or event_time>=model.animation_duration() or results_shown:return result
+ var color: Color={"fire":Color("ffac6a"),"water":Color("91daf0"),"light":Color("ffe5a3"),"moon":Color("c4afff"),"nature":Color("b5dda3"),"guard":Color("b5dcff"),"shadow":Color("b5a1e8")}.get(event.get("element",""),Color("ffe1b9"))
+ var impact: float=model.impact_time()
+ var pulse:=maxf(0.0,1.0-absf(event_time-impact)/.25)
+ var proximity:=0.0
+ for target in _effect_points():proximity=maxf(proximity,maxf(0.0,1.0-foot.distance_to(target)/220.0))
+ result.pulse_color=color;result.pulse_gain=pulse*.18*proximity
+ return result
+
+func _effect_points() -> Array[Vector2]:
+ var points: Array[Vector2]=[]
+ for effect in event.get("effects",[]):
+  if effect.kind not in ["damage","blocked","barrier_hit","shield","evade"]:continue
+  if int(effect.target)==3 and has_method("_visual_unit_position"):points.append(call("_visual_unit_position",int(effect.get("unit",-1))))
+  elif int(effect.target)==3 and has_method("_unit_position"):points.append(call("_unit_position",int(effect.get("unit",-1)),true))
+  elif int(effect.target) in [0,1,2]:points.append(_position(int(effect.target)))
+ return points
+
+func _effect_ground() -> Vector2:
+ var points:=_effect_points()
+ return points[0] if not points.is_empty() else _position(clampi(int(event.get("source",0)),0,2))
+
+func _ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
+ var points:=PackedVector2Array()
+ for i in 40:
+  var angle:=i*TAU/40;points.append(center+Vector2(cos(angle)*radii.x,sin(angle)*radii.y))
+ draw_colored_polygon(points,color)
+
+func _ground_shadow(ground: Vector2, radii: Vector2, lift: float=0.0, gain: float=1.0) -> void:
+ var opacity:=lerpf(.32,.13,clampf(lift/25.0,0,1))*gain
+ for ring in range(5,0,-1):
+  var spread:=1.0+ring*.14+lift*.008
+  _ellipse(ground+Vector2(7+lift*.25,3),radii*Vector2(spread,spread*.8),Color(.025,.025,.035,opacity*.055))
+ _ellipse(ground,radii*Vector2(.66,.55),Color(.025,.02,.025,opacity*.48))
+
+func _arena_ground() -> void:
+ # Ruhige Standflächen statt frei schwebender Figuren vor dem Landschaftsbild.
+ for index in [0,1,2]:
+  var foot:=_position(index)
+  _ellipse(foot+Vector2(0,7),Vector2(74 if index==2 else 58,17),Color(.10,.13,.13,.10))
+  var line:=PackedVector2Array()
+  for i in 29:
+   var a:=i*PI/28;line.append(foot+Vector2(cos(a)*(74 if index==2 else 58),sin(a)*17+5))
+  draw_polyline(line,Color(.74,.67,.49,.19),1.2,true)

@@ -95,6 +95,6 @@ Rückbau genügt ein Revert dieses Branches; die Speicherschlüssel bleiben iden
 
 ![Aschenstieg mit Glutwicht und Schlackenträger](previews/godot-roaming-ash-ascent.jpg)
 
-GitHub-Stand: Der Quellcode-Upload wurde von der automatischen Freigabeprüfung
-wegen fehlender ausdrücklicher Zustimmung blockiert. Der geprüfte Branch ist
-lokal committet; eine erneute Übertragung wartet auf Martins Zustimmung.
+GitHub-Stand: Martin hat den Upload am 17.10.2026 ausdrücklich freigegeben.
+Der identische geprüfte Quellbaum ist in PR368 gesichert; der frühere
+Freigabeblock ist damit erledigt.

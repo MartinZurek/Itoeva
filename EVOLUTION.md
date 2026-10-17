@@ -7084,3 +7084,25 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   APK behauptet, kein Eingriff in Release-/Signierungsinfrastruktur.
 - **ÜBERGABE:** docs/godot-gegnerreviere-und-hangsteuerung.md, Branch
   codex/godot-roaming-and-slopes, auf PR366/AndroidTest0.9.0 aufgebaut.
+
+### 2026-10-17 – Kampfbewegung, feste Standplätze und Figurenlicht 0.10.0
+
+- **DOCUMENTED INTENT:** Martin gibt den GitHub-Upload frei, beauftragt flüssigere
+  logische Kampfbewegung, Abgrenzung, Licht und Schatten; anschließend explizit APK.
+- **FACT:** Stabile Helferplätze, begrenzte gekrümmte Hin-/Rückwege und getrennte
+  Kontaktpunkte; Original-Laufzeichnungen während Bewegung, Kampfpose am Kontakt.
+  Gefallene Helfer bleiben für den kurzen Fallablauf am Ort, auch bei Gegentreffern.
+- **DARSTELLUNG:** Fußgetrennte weiche Schatten, einzelne Canvas-Figurenmaterialien,
+  mildes Umgebungs-/Seitenlicht und lokales Trefferlicht. Zahlen und Licht folgen
+  dem tatsächlich bewegten Angreifer. UI bleibt getrennt; Originalart erhalten.
+- **ZEITEN:** Neue Helferangriffe2,7s/Kontakt1,25s; gespeicherte Ereignisse behalten
+  ihre Zeiten. Schadensauflösung, Werte, Beute und Speicherschlüssel unverändert.
+- **TESTED BEHAVIOR:**115 neue Checks; acht vollständige Kartenkämpfe; Karten-/
+  Helfer-/Klang-/Sieg-/Bossregressionen und66 echte GL-Zeitbilder. Historischer
+  Mooslyn-Befund in turn_battle.gd im unveränderten Ausgangsstand reproduziert.
+- **APK-AUFTRAG:** AndroidTest0.10.0/Code22;327-Dateien-Manifest, vorhandener
+  signierter GitHub-/Drive-Weg einschließlich Zertifikatabdruckkontrolle. Kein
+  Signaturschlüssel-/Konto-/Berechtigungsumbau. Lieferergebnis im zugehörigen PR.
+- **UNVERIFIED:** Android-GPU/FPS und menschliche Telefonabnahme bleiben offen.
+- **ÜBERGABE:** docs/godot-kampfbewegung-und-licht-v0100.md; Branch
+  codex/godot-combat-motion-light, gestapelt auf PR368; kein Merge auf main.
