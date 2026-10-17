@@ -550,6 +550,32 @@ func constrain_step(before: Vector3, proposed: Vector3, radius: float) -> Vector
 		return depth
 	return Vector3(before.x, proposed.y, before.z)
 
+func guide_motion(point: Vector3, motion: Vector3, delta: float, radius: float) -> Vector3:
+	# Gemalte Steigungen liegen in der X/Z-Ebene. An ihrem Rand muss ein
+	# seitlicher Daumen dem Weg folgen, statt immer gegen die Uferwand zu drücken.
+	if place != "OUTDOOR" and place != "FOREST_TRAIL" and not Catalog.data().interiors[place].get("outdoor", false):
+		return motion
+	var planar := Vector2(motion.x, motion.z)
+	if absf(planar.x) < 0.05 or absf(planar.y) > absf(planar.x) * 0.75:
+		return motion
+	var travel := maxf(planar.length() * delta, 0.10)
+	var ahead := point + Vector3(planar.x, 0, planar.y).normalized() * travel
+	if _segment_walkable(point, ahead, radius + 0.015):
+		return motion
+	var band := _limits_at(point.x)
+	var next := _limits_at(point.x + signf(planar.x) * 0.15)
+	var fraction := clampf(inverse_lerp(Catalog.image_z(band.x, native_height), Catalog.image_z(band.y, native_height), point.z), 0, 1)
+	var rise := Catalog.image_z(lerpf(next.x, next.y, fraction), native_height) - Catalog.image_z(lerpf(band.x, band.y, fraction), native_height)
+	var tangent := Vector2(signf(planar.x) * 0.15, rise).normalized()
+	if tangent.dot(planar.normalized()) < 0.3 or absf(rise) < 0.0001:
+		return motion
+	var guided := Vector3(tangent.x, 0, tangent.y) * planar.length()
+	# Nur derselbe zusammenhängende, freie Weg ist erlaubt; keine Abkürzung
+	# über Wasser, Möbel oder über das Ende der Karte.
+	if _segment_walkable(point, point + guided.normalized() * travel, radius):
+		return Vector3(guided.x, motion.y, guided.z)
+	return motion
+
 func _segment_walkable(before: Vector3, after: Vector3, radius: float) -> bool:
 	var samples := maxi(1, ceili(Vector2(after.x - before.x, after.z - before.z).length() / 0.10))
 	for i in range(1, samples + 1):

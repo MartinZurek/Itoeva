@@ -65,11 +65,13 @@ func run() -> void:
  while app.loading_world:await process_frame
  await app.start_game();await app._mount_world("MIST_WATCH",Catalog.position_for("MIST_WATCH",Vector2(.5,.6)));app._resume()
  for i in 20:await physics_frame
- check(app.regional_markers.size()==4,"Dämonenvorhut an Nebelwacht sichtbar")
+ check(app.regional_markers.size()==2,"Nebelwacht enthält nur Aschenläufer und Siegelweber")
  for marker in app.regional_markers:
   check(app.stage.is_walkable(marker.position,.1),"Gegner steht auf begehbarem Boden")
   check(marker.material.render_priority==10 and is_instance_valid(marker.shadow),"Gegner besitzt Überdeckung und Kontaktschatten")
  for id in ["glut_imp","seal_weaver"]:
+  var place: String=Enemies.data()[id].place
+  await app._mount_world(place,Catalog.position_for(place,Vector2(.5,.6)));app._resume()
   app._show_enemy(id);await process_frame;app.menu_buttons[0].pressed.emit()
   for i in 3:await process_frame
   check(app.forest_encounter.model.enemy_id==id and app.paused,"Gegner über echte Aktion erreichbar")

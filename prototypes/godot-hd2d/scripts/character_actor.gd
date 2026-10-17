@@ -385,8 +385,10 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 	var before := global_position
-	move_and_slide()
 	var stage = get_parent().get("stage")
+	if is_instance_valid(stage) and stage.has_method("guide_motion"):
+		velocity = stage.guide_motion(before, velocity, delta, collider.shape.radius)
+	move_and_slide()
 	if is_instance_valid(stage) and stage.has_method("constrain_step"):
 		var confined: Vector3 = stage.constrain_step(before, global_position, collider.shape.radius)
 		if not is_equal_approx(confined.x, position.x):
