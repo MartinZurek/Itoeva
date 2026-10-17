@@ -13,6 +13,7 @@ const Actor = preload("res://scripts/character_actor.gd")
 const CompactActor = preload("res://scripts/compact_actor.gd")
 const Residents = preload("res://scripts/world_residents.gd")
 const CitizenActor = preload("res://scripts/citizen_actor.gd")
+const EnemyLife = preload("res://scripts/enemy_life.gd")
 const Enemies = preload("res://scripts/regional_enemies.gd")
 const RegionalEncounter = preload("res://scripts/regional_encounter.gd")
 var regional_markers: Array[Dictionary] = []
@@ -344,7 +345,7 @@ func show_settings() -> void:
 
 func _preload_world() -> void:
 	pending.append("res://assets/world/path-stones.png")
-	for asset in ["citizens","enemies","world-atlas","miro-packed","mill-brook","glut-imp","seal-weaver"]: pending.append("res://assets/expansion/"+asset+".png")
+	for asset in ["citizens","enemies","world-atlas","miro-packed","mill-brook","glut-imp","seal-weaver","tide-crab","resin-beetle","cinder-carrier","vharok","ash-ascent","seal-court"]: pending.append("res://assets/expansion/"+asset+".png")
 	for region in Catalog.data().regions:
 		pending.append(region.asset)
 	for region in Forest.data().segments: pending.append(region.asset)
@@ -520,6 +521,7 @@ func interaction_targets() -> Array[Dictionary]:
 			"approach": stage.safe_position(creature.position + (actor.position - creature.position).normalized() * 1.45, actor.collider.shape.radius),
 			"label": Residents.data()[creature.species].name + " · Sprechen", "ready": grounded and distance < 2.6 and _conversation_clear(creature), "distance": distance, "creature": creature})
 	for marker in regional_markers:
+		if marker.get("defeated",false):continue
 		var distance: float=Vector2(actor.position.x-marker.position.x,actor.position.z-marker.position.z).length()
 		targets.append({"kind":"encounter","id":marker.id,"position":marker.position+Vector3.UP,
 			"approach":stage.safe_position(marker.position+Vector3.LEFT*1.5,actor.collider.shape.radius),
@@ -1056,8 +1058,8 @@ func _audio_volume(is_music: bool, amount: float) -> void:
 func _mount_regional_enemies() -> void:
 	for id in Enemies.data():
 		var profile: Dictionary=Enemies.data()[id]
-		if profile.place!=room:continue
-		var point: Vector3=stage.safe_position(Catalog.position_for(room,Vector2(profile.uv[0],profile.uv[1])))
+		if ("OUTDOOR" if not Catalog.region_for(profile.place).is_empty() else profile.place)!=room:continue
+		var point: Vector3=stage.safe_position(Catalog.position_for(profile.place,Vector2(profile.uv[0],profile.uv[1])))
 		var art:=Sprite3D.new();art.texture=Enemies.texture(id);art.billboard=BaseMaterial3D.BILLBOARD_ENABLED
 		art.shaded=false;art.alpha_cut=SpriteBase3D.ALPHA_CUT_DISCARD;art.alpha_scissor_threshold=.12
 		art.pixel_size=stage.base_pixel_size*109.0*float(profile.get("height",1.1))/art.texture.get_height()
@@ -1097,6 +1099,9 @@ func _show_enemy(id: String) -> void:
 	var portrait:=TextureRect.new();portrait.texture=Enemies.texture(id)
 	portrait.custom_minimum_size=Vector2(160,170);portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	column.add_child(portrait)
+	var purpose:=_label(str(profile.get("purpose",""))+"\n"+str(profile.get("work","")),18);purpose.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;purpose.custom_minimum_size=Vector2(540,70);column.add_child(purpose)
+	var difficulty: String={"crab":"Einstieg","beetle":"Aufbau","carrier":"Fortgeschritten","boss":"Boss"}.get(profile.kind,"Regional")
+	var reward:=_label(difficulty+" · "+("360 EP je Held · 3 Mondsplitter" if profile.kind=="boss" else "120 EP je Held · 1 Mondsplitter")+" · 1 Heiltrank",16);column.add_child(reward)
 	var description:=_label(profile.description,20);description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;description.custom_minimum_size=Vector2(540,100);column.add_child(description)
 	column.add_child(_button("Kartenkampf beginnen",func():
 		_select_regional_encounter(id)
@@ -1142,8 +1147,27 @@ func _refresh_residents() -> void:
 func _update_regional_art() -> void:
 	for marker in regional_markers:
 		if not is_instance_valid(marker.art):continue
+		var profile: Dictionary=Enemies.data()[marker.id]
+		var saved: Dictionary=save_data.get("forest_encounters",{}).get(actor.species+":"+marker.id,{})
+		marker.defeated=saved.get("phase","")=="done"
+		marker.art.visible=not marker.defeated;marker.shadow.visible=not marker.defeated
+		if marker.defeated:continue
+		var life:=EnemyLife.sample(profile,game_clock+float(hash(marker.id)%100))
+		var close: bool=actor.position.distance_to(marker.position)<2.5
+		if not close:
+			var goal: Vector3=stage.safe_position(Catalog.position_for(profile.place,life.uv),.1)
+			var at: Vector3=stage.safe_position(marker.position.move_toward(goal,1.2*get_process_delta_time()),.1)
+			if absf(at.x-marker.position.x)>.001:marker.art.flip_h=at.x>marker.position.x
+			marker.position=at;marker.art.position=at+Vector3.UP*(.85 if marker.id=="thorn_moth" else 0.0)
+			marker.shadow.position=Vector3(at.x,.018,at.z)
+		marker.activity=life.activity if not close else "Beobachtet vorsichtig deinen Schritt"
+		marker.material.set_shader_parameter("foot",marker.position)
+		var mask: Dictionary=stage.actor_occlusion(marker.position)
+		marker.material.set_shader_parameter("has_mask",mask.mask!=null)
+		if mask.mask!=null:marker.material.set_shader_parameter("furniture_mask",mask.mask)
+		marker.material.set_shader_parameter("scene_origin",mask.origin);marker.material.set_shader_parameter("scene_span",mask.span)
 		stage.apply_actor_light(marker.material,marker.position)
-		var pose:=5 if fmod(game_clock+float(marker.position.x),8.0)>6.5 else 0
+		var pose: int=0 if close else int(life.pose)
 		if pose!=marker.pose:
 			marker.pose=pose;marker.art.texture=Enemies.texture(marker.id,pose)
 			marker.art.offset.y=marker.art.texture.get_height()*.5

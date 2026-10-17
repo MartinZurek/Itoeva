@@ -255,9 +255,11 @@ func act(action: String, target: int = -1) -> bool:
      effects.append({"target":source,"amount":BARRIER_HP,"kind":"barrier"})
      visual="star_barrier";duration=2.4;impact=.9
     "wyrmling":
-     enemy_health = maxi(0,enemy_health-10)
+     var support_damage:=_modify_enemy_damage(10)
+     enemy_health = maxi(0,enemy_health-support_damage)
+     _after_enemy_damage()
      enemy_burn = 3
-     effects.append({"target":2,"amount":10,"kind":"damage"})
+     effects.append({"target":2,"amount":support_damage,"kind":"damage"})
      if enemy_health == 0: phase="victory"
     "gloop":
      for i in party.size():
@@ -300,7 +302,9 @@ func act(action: String, target: int = -1) -> bool:
    element = "flee"
    phase = "retreat"
  if damage > 0:
+  damage=_modify_enemy_damage(damage)
   enemy_health = maxi(0,enemy_health - damage)
+  _after_enemy_damage()
   actor.limit = mini(100,actor.limit + 12)
   effects.append({"target":2,"amount":damage,"kind":"weak" if element == "light" else "damage"})
   if enemy_health == 0: phase = "victory"
@@ -482,3 +486,7 @@ func support_skill() -> Dictionary:
 func limit_name() -> String:
  var names := {"fennec":"Waldchor","starlet":"Nova","wyrmling":"Sonnenatem","gloop":"Lebensquell","puffling":"Sturmkreis","hootlet":"Mondfinsternis","mosslyn":"Urwaldherz","nocti":"Nachtspiegel"}
  return str(names[party[cursor].species]) if cursor < 2 else ""
+
+# Regionale Begegnungen können Rüstung anwenden, bevor Schaden begrenzt wird.
+func _modify_enemy_damage(amount: int) -> int:return amount
+func _after_enemy_damage() -> void:pass

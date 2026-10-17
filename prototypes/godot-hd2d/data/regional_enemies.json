@@ -9,7 +9,15 @@
       0.58
     ],
     "kind": "moth",
-    "description": "Pollenwirbel trifft beide. Alle drei Runden kann der Staub verstummen lassen. Ein Lichtschirm hält ihn ab."
+    "description": "Pollenwirbel trifft beide. Alle drei Runden kann der Staub verstummen lassen. Ein Lichtschirm hält ihn ab.",
+    "purpose": "Sammelt Blütenstaub für die Nachtblüten des Sonnenhains.",
+    "travel": "Sucht reife Blüten",
+    "work": "Sortiert Blütenstaub",
+    "patrol": [
+      0.46,
+      0.6
+    ],
+    "period": 14
   },
   "ash_hound": {
     "name": "Aschenläufer",
@@ -21,7 +29,15 @@
       0.54
     ],
     "kind": "hound",
-    "description": "Ein schneller Aschenbiss trifft ein Ziel. Jeder dritte Zug wird zum stärkeren Glutsprung."
+    "description": "Ein schneller Aschenbiss trifft ein Ziel. Jeder dritte Zug wird zum stärkeren Glutsprung.",
+    "purpose": "Markiert den alten Grenzweg und sucht fremde Glutspuren.",
+    "travel": "Prüft die Grenzspur",
+    "work": "Wittert am Grenzstein",
+    "patrol": [
+      0.27,
+      0.44
+    ],
+    "period": 14
   },
   "bark_guardian": {
     "name": "Rindenwächter",
@@ -33,7 +49,15 @@
       0.54
     ],
     "kind": "guardian",
-    "description": "Wurzelschlag trifft ein Ziel. Alle drei Runden heilt sich der Wächter; Brennen unterbricht seine Rindenerneuerung."
+    "description": "Wurzelschlag trifft ein Ziel. Alle drei Runden heilt sich der Wächter; Brennen unterbricht seine Rindenerneuerung.",
+    "purpose": "Bewacht die jungen Wurzeln an der Nebelwacht.",
+    "travel": "Prüft die Wurzelgrenze",
+    "work": "Pflegt junge Wurzeln",
+    "patrol": [
+      0.61,
+      0.71
+    ],
+    "period": 14
   },
   "glut_imp": {
     "name": "Glutwicht",
@@ -48,7 +72,15 @@
     "asset": "res://assets/expansion/glut-imp.png",
     "atlas": "glut-imp.png",
     "height": 0.86,
-    "description": "Sammelt Glut, dann folgt ein Feuerwurf für 24 Schaden. Wasser oder Wanken löschen die Ladung. Schwächen, Schutzhelfer und Lichtschirme mindern den Angriff."
+    "description": "Sammelt Glut, dann folgt ein Feuerwurf für 24 Schaden. Wasser oder Wanken löschen die Ladung. Schwächen, Schutzhelfer und Lichtschirme mindern den Angriff.",
+    "purpose": "Hält die Signalfeuer der dämonischen Vorhut am Brennen.",
+    "travel": "Sucht erloschene Glut",
+    "work": "Sortiert Glut für das Signalfeuer",
+    "patrol": [
+      0.12,
+      0.22
+    ],
+    "period": 14
   },
   "seal_weaver": {
     "name": "Siegelweber",
@@ -63,6 +95,146 @@
     "asset": "res://assets/expansion/seal-weaver.png",
     "atlas": "seal-weaver.png",
     "height": 1.13,
-    "description": "Beschwört einen Siegelanker (0 Angriff / 10 LP). Überlebt er bis zum nächsten Gegnerzug, trifft ein Siegel beide Helden für 10 Schaden und verstummt ungeschützte Ziele. Zerstöre den Anker: 12 Rückstoßschaden am Weber. Wanken bricht das Ritual ebenfalls."
+    "description": "Beschwört einen Siegelanker (0 Angriff / 10 LP). Überlebt er bis zum nächsten Gegnerzug, trifft ein Siegel beide Helden für 10 Schaden und verstummt ungeschützte Ziele. Zerstöre den Anker: 12 Rückstoßschaden am Weber. Wanken bricht das Ritual ebenfalls.",
+    "purpose": "Erneuert Warnsiegel gegen Eindringlinge am Grenzweg.",
+    "travel": "Prüft die Siegelreihe",
+    "work": "Knüpft ein Warnsiegel",
+    "patrol": [
+      0.78,
+      0.89
+    ],
+    "period": 14
+  },
+  "tide_crab": {
+    "name": "Tangkrabbler",
+    "row": 0,
+    "hp": 120,
+    "place": "POND",
+    "uv": [
+      0.36,
+      0.7
+    ],
+    "kind": "crab",
+    "height": 0.7,
+    "patrol": [
+      0.3,
+      0.42
+    ],
+    "period": 14,
+    "purpose": "Sammelt Muscheln und Treibholz für seinen Unterschlupf am Küstensteg.",
+    "travel": "Sucht angespülte Muscheln",
+    "work": "Sortiert Muscheln und Treibholz",
+    "description": "Geschlossener Panzer mindert jeden Treffer um 4. Nach dem angekündigten Zangenschlag (14) öffnet sich der Panzer.",
+    "asset": "res://assets/expansion/tide-crab.png",
+    "atlas": "tide-crab.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      2,
+      1
+    ]
+  },
+  "resin_beetle": {
+    "name": "Harzsammler",
+    "row": 0,
+    "hp": 130,
+    "place": "MILL_BROOK",
+    "uv": [
+      0.72,
+      0.6
+    ],
+    "kind": "beetle",
+    "height": 0.8,
+    "patrol": [
+      0.65,
+      0.81
+    ],
+    "period": 14,
+    "purpose": "Sammelt gefallene Harztropfen und versorgt damit junge Bäume am Mühlenbach.",
+    "travel": "Sucht gefallene Harztropfen",
+    "work": "Sortiert Harz für die jungen Bäume",
+    "description": "Harzsammeln heilt 12 LP; Brennen verhindert die Heilung. Der folgende Harzwurf trifft für 10 und bindet nur bei durchdrungenem Schutz.",
+    "asset": "res://assets/expansion/resin-beetle.png",
+    "atlas": "resin-beetle.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      2,
+      1
+    ]
+  },
+  "cinder_carrier": {
+    "name": "Schlackenträger",
+    "row": 0,
+    "hp": 185,
+    "place": "ASH_ASCENT",
+    "uv": [
+      0.45,
+      0.6
+    ],
+    "kind": "carrier",
+    "height": 1.2,
+    "patrol": [
+      0.28,
+      0.66
+    ],
+    "period": 14,
+    "purpose": "Bringt Brennstoff vom alten Depot zu den Feuern des Siegelhofs.",
+    "travel": "Trägt Schlacke zum Siegelhof",
+    "work": "Prüft und sichert seinen Brennstoffkorb",
+    "description": "Lädt Schlacke, dann folgt ein Schlag für 22. Wasser löscht die Ladung; Wanken bricht sie ab.",
+    "asset": "res://assets/expansion/cinder-carrier.png",
+    "atlas": "cinder-carrier.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      2,
+      1
+    ]
+  },
+  "vharok": {
+    "name": "Vharok · Aschenpförtner",
+    "row": 0,
+    "hp": 270,
+    "place": "SEAL_COURT",
+    "uv": [
+      0.7,
+      0.6
+    ],
+    "kind": "boss",
+    "height": 2.0,
+    "patrol": [
+      0.67,
+      0.72
+    ],
+    "period": 18,
+    "purpose": "Bewacht das versiegelte Grenztor und hält die drei Schutzsiegel in Ordnung.",
+    "travel": "Prüft den inneren Siegelkreis",
+    "work": "Erneuert die Torbindung",
+    "description": "Drei Siegel mit je 10 LP schützen Vharok: nur 25 % Schaden dringen durch. Zerstöre sie: zwei Gegnerzüge lang erleidet sein Kern 150 %. Ab 90 LP kündigt er Aschensturm (18 auf beide) an; nutze Schutz und Unterbrechung.",
+    "asset": "res://assets/expansion/vharok.png",
+    "atlas": "vharok.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      1,
+      1,
+      2,
+      3,
+      1,
+      0
+    ]
   }
 }

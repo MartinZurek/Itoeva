@@ -5,6 +5,7 @@ const Cards=preload("res://scripts/card_catalog.gd")
 const Art=preload("res://scripts/card_assets.gd")
 const Detail=preload("res://scripts/card_detail.gd")
 const SpecialFX=preload("res://scripts/special_effects.gd")
+const EcologyFX=preload("res://scripts/ecology_effects.gd")
 var special_fx=SpecialFX.new()
 var selected_card: int=-1
 var selected_unit: int=-1
@@ -27,7 +28,7 @@ func _build() -> void:
  animal_texture=load(animal_data.asset)
  layout=Control.new();layout.size=Vector2(1280,720);layout.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(layout)
  _panel(Rect2(20,16,1240,56))
- _label((encounter.app.Catalog.data().labels[encounter.app.room].to_upper() if model.enemy_id!="" else "SCHATTENWALD")+" · KARTEN",Rect2(38,26,330,32),20,GOLD)
+ _label((encounter.app.Catalog.data().labels[model.enemy_profile.place].to_upper() if model.enemy_id!="" else "SCHATTENWALD")+" · KARTEN",Rect2(38,26,330,32),20,GOLD)
  turn_label=_label("",Rect2(755,28,190,30),16)
  crystal_meter=load("res://scripts/crystal_meter.gd").new()
  crystal_meter.position=Vector2(380,20);crystal_meter.size=Vector2(340,46)
@@ -43,7 +44,7 @@ func _build() -> void:
   hp_labels.append(_label("",Rect2(x,93,335,27),18))
   status_labels.append(_label("",Rect2(x,124,335,22),13,Color("bcd5df")))
  _panel(Rect2(845,86,395,76))
- enemy_label=_label("",Rect2(862,94,360,25),19,GOLD)
+ enemy_label=_label("",Rect2(862,94,360,25),16 if model.enemy_profile.get("kind","")=="boss" else 19,GOLD)
  enemy_bar=_bar(Rect2(862,124,360,7),Color("ba717d"));enemy_bar.max_value=model.enemy_max_hp
  intent=_label("",Rect2(862,137,360,22),12,Color("c5bfdb"))
  crystal_label=_label("",Rect2(22,317,305,26),18,Color("9bdef1"))
@@ -281,7 +282,7 @@ func _refresh_unit_info() -> void:
  unit_info_state.text=" · ".join(marks)
 
 func _position(index: int) -> Vector2:
- return Vector2(1110,350) if index==2 else Vector2(125,306) if index==0 else Vector2(263,306)
+ return Vector2(1110,420 if model.enemy_profile.get("kind","")=="boss" else 350) if index==2 else Vector2(125,306) if index==0 else Vector2(263,306)
 
 func _visible_board() -> Array:
  if model.playback_pending and event_time>=0 and event_time<model.impact_time():return model.last_event.get("before_board",model.board)
@@ -341,6 +342,8 @@ func _draw() -> void:
  draw_set_transform(Vector2.ZERO)
 
 func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
+ if str(unit.id).begins_with("vharok_seal_") or unit.id=="seal_anchor":
+  _draw_seal(unit,foot);return
  var texture: Texture2D
  var region: Rect2
  var reference_height: float=70
@@ -399,6 +402,8 @@ func _target_point(code: String) -> Vector2:
 
 func _effects() -> void:
  var visual: String=event.get("visual","")
+ if visual=="ecology":
+  EcologyFX.draw(self,event_time,event);_effect_numbers(event_time,Color("f1d8b0"));_unit_numbers();return
  if visual.begins_with("special_"):
   special_fx.draw(self,event_time,event);_effect_numbers(event_time,Color("e4dfb9"));_unit_numbers();return
  if not visual.begins_with("card_"):
@@ -493,9 +498,11 @@ func _draw_targets() -> void:
 
 func _unit_affordance(unit: Dictionary, foot: Vector2, state: String, attacking: bool) -> void:
  if attacking:return
+ if str(unit.id).begins_with("vharok_seal_") or unit.id=="seal_anchor":state="ritual"
  var color:=Color("a4bdd5")
  var label: String="Schläft"
  match state:
+  "ritual":label="Siegel aktiv";color=Color("ebc789")
   "ready":
    color=Color("a4f0c4");label="Bereit"
    var ring:=PackedVector2Array()
@@ -547,10 +554,18 @@ func _regional_fighter() -> void:
  var enemies=load("res://scripts/regional_enemies.gd")
  var region: Rect2=enemies.region(model.enemy_id,pose)
  var texture: Texture2D=load(enemies.asset(model.enemy_id))
- var scale_factor: float=190.0/enemies.region(model.enemy_id,0).size.y
+ var scale_factor: float=(250.0 if model.enemy_profile.kind=="boss" else 190.0)/enemies.region(model.enemy_id,0).size.y
  var dimensions: Vector2=region.size*scale_factor
  var tint:=Color("ffd6bd") if state=="hit" else Color.WHITE
  if model.demon_charge or model.seal_pending:
   var pulse:=.55+.15*sin(clock*2.5)
   draw_arc(foot-Vector2(0,70),82,0,TAU,48,Color(1.0,.35,.12,pulse) if model.demon_charge else Color(.74,.32,.88,pulse),2,true)
  draw_texture_rect_region(texture,Rect2(foot-Vector2(dimensions.x*.5,dimensions.y),dimensions),region,tint)
+
+func _draw_seal(unit: Dictionary,foot: Vector2) -> void:
+ var at:=foot-Vector2(0,40)
+ draw_circle(at,35,Color("30253d"))
+ draw_arc(at,32,0,TAU,48,Color("e2ba79"),3,true)
+ draw_arc(at,39,clock*.8,clock*.8+PI*1.4,40,Color("b78ce0"),2,true)
+ draw_colored_polygon(PackedVector2Array([at+Vector2(0,-26),at+Vector2(17,0),at+Vector2(0,26),at+Vector2(-17,0)]),Color("bd7a42"))
+ _unit_affordance(unit,foot,"ritual",false)

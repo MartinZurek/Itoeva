@@ -31,7 +31,7 @@ func _ready() -> void:
 	app.music.stream=app.music.stream.duplicate()
 	app.music.stream.loop=true
 
-func cue(key: String, pan: float=0.0) -> void:
+func cue(key: String, pan: float=0.0, gain: float=1.0) -> void:
 	if not app.effects_on or not sounds.has(key):return
 	var now:=Time.get_ticks_msec()
 	if now-int(cooldowns.get(key,-1000))<65:return
@@ -40,7 +40,7 @@ func cue(key: String, pan: float=0.0) -> void:
 	for candidate in voices:
 		if not candidate.playing:voice=candidate;break
 	voice.stop();voice.stream=sounds[key]
-	voice.volume_db=linear_to_db(maxf(.001,app.effects_volume))
+	voice.volume_db=linear_to_db(maxf(.001,app.effects_volume*clampf(gain,0,1)))
 	voice.pitch_scale=1.0+clampf(pan,-1,1)*.025
 	voice.play();played.append(key)
 	if played.size()>64:played.pop_front()
@@ -48,7 +48,9 @@ func cue(key: String, pan: float=0.0) -> void:
 func begin_event(next: Dictionary) -> void:
 	event=next.duplicate(true);event_clock=0;impact_played=false
 	var visual: String=event.get("visual","")
-	if visual=="card_summon":cue("summon")
+	if visual=="ecology":
+		if event.get("ecology_action","") in ["warning","prepare"]:cue("moon" if event.get("ecology_kind","")=="boss" else "crystal",0,.4)
+	elif visual=="card_summon":cue("summon")
 	elif visual=="card_attack":cue("attack")
 	elif visual!="pass":cue("select")
 	if event.has("before_crystals"):
@@ -66,6 +68,7 @@ func _process(delta: float) -> void:
 	else:
 		var model=encounter.model
 		var desired: String="victory" if model.phase=="victory" and not model.playback_pending else "battle"
+		arena.pitch_scale=move_toward(arena.pitch_scale,.96 if model.enemy_profile.get("kind","")=="boss" and desired=="battle" else 1.0,delta*.08)
 		if desired!=music_mode:
 			music_mode=desired;arena.stop()
 			arena.stream=victory_theme if desired=="victory" else battle_theme
@@ -73,11 +76,8 @@ func _process(delta: float) -> void:
 			event_clock+=delta
 			if not impact_played and event_clock>=float(event.get("impact",.7)):
 				impact_played=true
-				var element: String=event.get("element","physical")
-				var key: String=element if element in ["nature","fire","water","wind","light","moon","heal"] else "impact"
-				for effect in event.get("effects",[]):
-					if effect.kind in ["barrier_hit","barrier_break","barrier"]:key="shield";break
-				cue(key,float(event.get("source",0))-.5);duck=.24
+				var key:=impact_key(event)
+				if key!="":cue(key,float(event.get("source",0))-.5,.75 if event.get("visual","")=="ecology" else 1.0);duck=.24
 			if event_clock>float(event.get("duration",1.45)):event_clock=-1
 		if last_phase!=model.phase:
 			if model.phase in ["victory","defeat"]:
@@ -101,3 +101,18 @@ func _mix(player: AudioStreamPlayer, gain: float) -> void:
 		if not player.playing:player.play()
 		player.stream_paused=false
 	else:player.stream_paused=true
+
+# Ein Vorbereitungszug besitzt keinen erfundenen Trefferklang.
+static func impact_key(next: Dictionary) -> String:
+	var visual: String=next.get("visual","")
+	var element: String=next.get("element","physical")
+	var key: String=element if element in ["nature","fire","water","wind","light","moon","heal"] else "impact"
+	if visual=="ecology":
+		var actual:=false
+		for effect in next.get("effects",[]):
+			if int(effect.get("amount",0))>0 and effect.kind in ["damage","heal","shield","barrier_hit","barrier_break"]:actual=true
+		if not actual:return ""
+	for effect in next.get("effects",[]):
+		if effect.kind in ["barrier_hit","barrier_break","barrier","shield"]:return "shield"
+		if effect.kind=="heal":key="heal"
+	return key

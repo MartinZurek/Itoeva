@@ -2,7 +2,9 @@
   "labels": {
     "SUN_GLADE": "Sonnenhain",
     "MIST_WATCH": "Nebelwacht",
-    "MILL_BROOK": "Mühlenbach"
+    "MILL_BROOK": "Mühlenbach",
+    "ASH_ASCENT": "Aschenstieg",
+    "SEAL_COURT": "Siegelhof"
   },
   "interiors": {
     "SUN_GLADE": {
@@ -49,6 +51,36 @@
       ],
       "pieces": [],
       "outdoor": true
+    },
+    "ASH_ASCENT": {
+      "asset": "res://assets/expansion/ash-ascent.png",
+      "band": [
+        189,
+        201
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "SEAL_COURT": {
+      "asset": "res://assets/expansion/seal-court.png",
+      "band": [
+        184,
+        202
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
     }
   },
   "doors": [
@@ -85,6 +117,30 @@
       ],
       "b_pos": [
         0.84,
+        0.6
+      ]
+    },
+    {
+      "a": "MIST_WATCH",
+      "b": "ASH_ASCENT",
+      "a_pos": [
+        0.92,
+        0.6
+      ],
+      "b_pos": [
+        0.1,
+        0.6
+      ]
+    },
+    {
+      "a": "ASH_ASCENT",
+      "b": "SEAL_COURT",
+      "a_pos": [
+        0.92,
+        0.6
+      ],
+      "b_pos": [
+        0.1,
         0.6
       ]
     }
