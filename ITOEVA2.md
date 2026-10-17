@@ -5,6 +5,20 @@ Entschieden am 03.10.2026: Weg vom Erinnerungsspiel, hin zu einem Spiel, das man
 Vorhaben, Reisen), aber ohne Erinnerungen und ohne Uhr. Fernziel: ein Fantasy-Strategiespiel im
 Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 
+## Kartenschmiede: Prüfung vor Integration (17.10.2026)
+
+Die Prüfung auf Basis von `claude/kartenschmiede` steht in
+[tools/card-forge/PRUEFUNG.md](tools/card-forge/PRUEFUNG.md). Die Datenarithmetik besteht
+die Tests; ein Einbau in `game` wird vorerst zurückgestellt. Öffentliche Exporte enthalten
+noch Faktorquintile und Firmenkennungen im Monatsbericht; ein fehlendes privates Register
+kann Karten-IDs neu vergeben. Monatsänderungen können Formen und Seltenheit zurückstufen.
+
+Nächster Schritt ist ein begrenzter Export-Sicherungs-PR mit ausschließlich erfundenen
+Testdaten, danach ein engineunabhängiger, versionierter Katalogvertrag und ein kleiner
+Regelversuch. Kampf, Gruppe, Raster, Engine, Sammlungsbesitz und Bezahlung bleiben
+`OPEN DECISION`. Kartenbuch, Spiel-Assets und Beschwörungsanimationen sind nicht eingebaut.
+Die bestehenden Preise bleiben unverändert; konkrete Preiskandidaten stehen im Prüfbericht.
+
 ## Aufbau
 
 - **Itoeva 1** ist eingefroren im Branch `itoeva-1` (Stand nach PR #322: Erinnerungsspiel,

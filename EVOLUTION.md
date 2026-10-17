@@ -669,6 +669,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-17 - Kartenschmiede geprüft, Integration zurückgestellt (card-forge-review-v1)
+
+- **Ausgangsproblem / DOCUMENTED INTENT:** Der Nutzer beauftragt eine kritische Prüfung
+  der Kartenschmiede vor einer möglichen Kartenbuch-/Beschwörungsintegration in Itoeva 2.
+  Basis ist `claude/kartenschmiede`, `bf914ce1816c28e3fa892528dd333c77a4054d9d`.
+- **FACT / TESTED BEHAVIOR:** Acht Schmiedetests bestehen mit erfundenen Daten. Der
+  zusätzliche Durchlauf aller 209.375 Kombinationen der fünf spielwertrelevanten
+  Quintile über 67 Arten hält die vorhandene Kurventoleranz ein (maximal 0,5 Punkte).
+  Das belegt keine Partienbalance. Öffentliche Ausgaben enthalten Faktorquintile und
+  Firmenkennungen; mit synthetischen Daten sind außerdem Formrückstufung beim Monatswechsel
+  und Wiedervergabe alter Karten-IDs bei fehlendem Register reproduziert.
+- **Entscheidung:** Teil 2 gemäß der im Auftrag vorgesehenen Ausstiegsklausel zurückstellen.
+  Der Prüfbericht enthält konkrete, noch nicht angewandte Änderungen an Regelpreisen und
+  Effekttexten. Ein sofortiges Compose-Kartenbuch mit 13 Beschwörungsvorlagen würde
+  ungeklärte Inhalte und Darstellungskosten vor Kampf-/Engineentscheidung festschreiben.
+  Ein engineunabhängiger Vertrag und Regelversuch sind die empfohlene Alternative;
+  damit ist weder Godot noch eine andere Engine ausgewählt.
+- **Betroffen:** `tools/card-forge/PRUEFUNG.md`, Statusabschnitt in `ITOEVA2.md` und
+  dieser Eintrag. Keine Änderung an Modulen, öffentlichen App-Texten, Preference-Schlüsseln,
+  Datenmodellen, Exporten, Regelwerten oder der Runtime; kein neuer Besitzvertrag.
+- **Nutzerwirkung / geschützt:** Keine Laufzeitänderung an Reminder, Game Loop,
+  Charakteren, Progression oder Balance. Die Grenzen sanft statt strafend, kein
+  dauerhafter Sammlungsverlust und keine stillschweigende Bezahlfreigabe bleiben bestehen.
+- **Migration / Rücksetzung:** Keine Migration. Rücknahme dieses reinen Dokumentations-
+  Commits entfernt nur Bericht und Statushinweis; der Diff enthält keine Zustandsänderung.
+- **Tests / UNVERIFIED:** `:app-sim:testDebugUnitTest` mit 1.415 Tests erfolgreich,
+  `:app-sim:compileGameKotlin` erfolgreich; `git diff --check` sauber. Ausführungsdetails
+  stehen in `tools/card-forge/PRUEFUNG.md`. Partien, Telefonabnahme und Animationen sind ungeprüft.
+  Bestehende öffentliche Exporte sind durch diesen Bericht noch nicht bereinigt.
+- **Nächster Schritt:** Export-Sicherungs-PR: öffentliche Feldliste, Bereinigung aller
+  Ausgabetypen, Schutz vor Registerverlust und Regressionstests mit erfundenen Daten.
+  Danach versionierter Katalogvertrag samt ausdrücklicher Monats-/Besitzentscheidung.
+  Kampf, Raster, Gruppe, Kampfklassen, Engine und Bezahlung bleiben `OPEN DECISION`.
+
 ### 2026-10-10 - Zusammenpassende Figuren beim Animationswechsel (living-atlases-v2)
 
 - **DOCUMENTED INTENT:** Martin meldet nach PR #353, dass die Veraenderungen
