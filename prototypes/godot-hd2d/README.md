@@ -1,3 +1,11 @@
+## 0.10.0 – Kampfbewegung, feste Standplätze und Figurenlicht
+
+Gekrümmte Angriffs-/Rückwege, vorhandene Laufposen, stabile Helferplätze und
+Fallabläufe; weiche Bodenschatten und örtliches Licht. Enthält außerdem PR368
+mit getrennten Gegnerrevieren und Hangführung. AndroidTest0.10.0 / Code22.
+[Umsetzung, Prüfungen und Bauauftrag](../../docs/godot-kampfbewegung-und-licht-v0100.md).
+APK-Bau-/Auslieferungsstatus steht im zugehörigen PR und GitHub-Lauf.
+
 ## Quellstand nach 0.9.0 – getrennte Gegnerreviere und Hangführung
 
 Weniger Gegner pro Ort, längere Arbeitswege auch in die Bildtiefe und eine

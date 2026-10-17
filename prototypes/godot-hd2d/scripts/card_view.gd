@@ -1,5 +1,6 @@
 extends "res://scripts/battle_view.gd"
 const Feedback=preload("res://scripts/battle_feedback.gd")
+var formation_slots: Dictionary = {}
 var crystal_meter: Control
 const Cards=preload("res://scripts/card_catalog.gd")
 const Art=preload("res://scripts/card_assets.gd")
@@ -286,14 +287,38 @@ func _position(index: int) -> Vector2:
 
 func _visible_board() -> Array:
  if model.playback_pending and event_time>=0 and event_time<model.impact_time():return model.last_event.get("before_board",model.board)
- return model.board
+ var visible: Array=model.board.duplicate()
+ if model.playback_pending and event_time>=model.impact_time() and event_time<model.animation_duration():
+  for before in event.get("before_board",[]):
+   if model.find_unit(int(before.uid)).is_empty():
+    var fallen: Dictionary=before.duplicate(true);fallen["_fallen"]=true;fallen.hp=0;visible.append(fallen)
+ return visible
 
 func _unit_position(uid: int,previous: bool=false) -> Vector2:
  var entries: Array=model.last_event.get("before_board",model.board) if previous else model.board
- var indices: Array[int]=[0,0,0]
+ if model.playback_pending:
+  var found:=false
+  for unit in entries:
+   if int(unit.uid)==uid:found=true;break
+  if not found:entries=model.last_event.get("before_board",model.board)
+ var retained: Array=entries.duplicate()
+ retained.append_array(model.board)
+ if model.playback_pending:retained.append_array(model.last_event.get("before_board",[]))
+ for key in formation_slots.keys():
+  var found:=false
+  for unit in retained:
+   if int(unit.uid)==int(key):found=true;break
+  if not found:formation_slots.erase(key)
  for unit in entries:
-  var owner:=int(unit.owner);var slot:=indices[owner];indices[owner]+=1
+  var owner:=int(unit.owner)
+  if not formation_slots.has(int(unit.uid)):
+   var used: Array=[]
+   for value in formation_slots.values():
+    if int(value.owner)==owner:used.append(int(value.slot))
+   for slot in 3:
+    if slot not in used:formation_slots[int(unit.uid)]={"owner":owner,"slot":slot};break
   if int(unit.uid)!=uid:continue
+  var slot: int=formation_slots.get(uid,{"slot":0}).slot
   return Vector2(887+slot*133,451) if owner==2 else Vector2(415+slot*135,348 if owner==0 else 461)
  return Vector2(415,360)
 
@@ -321,10 +346,14 @@ func _fighter(index: int) -> void:
  var region:=_demon_rect(frame)
  var height:=190*region.size.y/304
  # Eine feste Ruhezeichnung mit langsamer Gewichtsverlagerung behaelt die Identitaet.
- var foot:=_position(2)+Vector2(sin(clock*.65)*1.2,-sin(clock*1.1)*1.1) if state=="idle" else _position(2)
+ var motion:=Motion.rest(_position(2),clock,2)
+ if state=="cast":motion=Motion.attack(_position(2),_position(0),event_time,model.impact_time(),model.animation_duration(),"guard",0,28)
+ elif state=="hit":motion=Motion.hit(_position(2),event_time,model.impact_time())
+ _ground_shadow(motion.ground,Vector2(49,12),motion.lift)
+ var foot: Vector2=motion.foot
  var tint:=Color("ffdfca") if state=="hit" else Color.WHITE
  if state=="fall":tint.a=1.0-smoothstep(.65,1.0,fall)*.8
- draw_texture_rect_region(demon,Rect2(foot-Vector2(103,height),Vector2(205,height)),region,tint)
+ _paint_pawn(demon,region,Vector2(205,height),motion,tint)
 
 func _draw() -> void:
  super._draw()
@@ -341,7 +370,7 @@ func _draw() -> void:
   _draw_unit(unit,_unit_position(int(unit.uid),model.playback_pending and event_time<model.impact_time()))
  draw_set_transform(Vector2.ZERO)
 
-func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
+func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false,motion: Dictionary={}) -> void:
  if str(unit.id).begins_with("vharok_seal_") or unit.id=="seal_anchor":
   _draw_seal(unit,foot);return
  var texture: Texture2D
@@ -354,14 +383,16 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
  var feedback_state:=Feedback.unit_state(model,unit)
  var sleeping: bool=feedback_state=="sleeping"
  var idle_phase:=0 if sleeping else int(clock*1.7+int(unit.uid)*.7)%2
- var attack_phase:=clampi(int(clampf(event_time/model.animation_duration(),0,1)*4),0,3)
+ if motion.is_empty():motion=Motion.rest(foot,clock,int(unit.uid))
+ var attack_phase:=clampi(int(clampf((event_time-model.impact_time()+.20)/.40,0,1)*4),0,3)
+ var in_transit: bool=attacking and motion.travel
  if unit.get("form","") in Cards.HELPER_FORMS:
-  var action: String="hit" if hit else "attack" if attacking else "idle"
-  var progress: float=clampf((event_time-model.impact_time())/.45,0,1) if hit else clampf(event_time/model.animation_duration(),0,1)
-  var frame:=Art.animation_frame(unit.form,0.0 if sleeping else clock+float(unit.uid)*.37,action,progress)
+  var action: String="hit" if hit else "attack" if attacking and not in_transit else "idle"
+  var progress: float=clampf((event_time-model.impact_time())/.45,0,1) if hit else clampf((event_time-model.impact_time()+.20)/.40,0,1)
+  var frame:=Art.animation_frame(unit.form,0.0 if sleeping else float(motion.stride)*.32 if in_transit else clock+float(unit.uid)*.37,action,progress)
   var art:=Art.form_texture(unit.form,frame);texture=art.atlas;region=art.region;reference_height=Art.form_height(unit.form)
  elif int(unit.row)>=0:
-  var frame:=3 if hit else attack_phase if attacking else 0
+  var frame:=3 if hit else (int(motion.stride*4)%2 if in_transit else attack_phase) if attacking else 0
   var r: Array=animal_data.regions[int(unit.row)][frame]
   texture=animal_texture;region=Rect2(r[0],r[1],r[2],r[3]);reference_height=float(animal_data.regions[int(unit.row)][0][3])
  else:
@@ -370,18 +401,28 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false) -> void:
   else:
    var data: Dictionary=atlas_data.get(species,atlas_data.fennec)
    texture=load(data.asset)
-   var r: Array=data.regions[10 if hit else attack_phase if attacking else 12+idle_phase]
+   var r: Array=data.regions[15 if unit.get("_fallen",false) else 10 if hit else attack_phase if attacking and not in_transit else 12]
    region=Rect2(r[0],r[1],r[2],r[3]);reference_height=float(data.reference_height)
  var style: String=Art.movement_style(unit.form) if unit.get("form","") in Cards.HELPER_FORMS else "pounce"
- if sleeping and not attacking:foot.y+=sin(clock*.9+int(unit.uid))*.7
- if style=="flier" and not attacking and not sleeping:foot.y-=2.5+sin(clock*2.4+int(unit.uid))*1.7
+ if not attacking:motion=Motion.rest(foot,clock,int(unit.uid),style=="flier" and not sleeping)
+ if hit and not attacking:motion=Motion.hit(foot,event_time,model.impact_time(),1 if int(unit.owner)==2 else -1)
+ foot=motion.foot
  var scale_factor: float=(94.0 if unit.get("form","")=="ancient" else 78.0)/reference_height
  var dimensions:=region.size*scale_factor
+ var left: bool=(int(unit.owner)==2) != (attacking and motion.travel and motion.returning)
+ if in_transit and unit.species!="" and unit.species!="enemy":
+  var art:=_travel_art(str(unit.species),motion)
+  if not art.is_empty():texture=art.texture;region=art.region;dimensions=art.dimensions
+ var color:=Color("ffd2b8") if hit else Color.WHITE if attacking else Color("b8c5d4") if sleeping else Color("d6c4c9") if feedback_state=="spent" else Color.WHITE
+ if unit.get("_fallen",false):
+  var fall:=smoothstep(model.impact_time()+.05,model.animation_duration()-.08,event_time)
+  color.a=1.0-fall;motion.lean=(.20 if int(unit.owner)<2 else -.20)*fall
+ _ground_shadow(motion.ground,Vector2(31,7),motion.lift,color.a)
  var contact:=PackedVector2Array()
  for i in 32:
-  var a:=i*TAU/32;contact.append(foot+Vector2(cos(a)*31,sin(a)*7))
- draw_colored_polygon(contact,Color(0,0,0,.34))
- draw_texture_rect_region(texture,Rect2(foot-Vector2(dimensions.x*.5,dimensions.y),dimensions),region,Color("ffd2b8") if hit else Color("b8c5d4") if sleeping else Color("d6c4c9") if feedback_state=="spent" else Color.WHITE)
+  var a:=i*TAU/32;contact.append(motion.ground+Vector2(cos(a)*31,sin(a)*7))
+ _paint_pawn(texture,region,dimensions,motion,color,left)
+ if unit.get("_fallen",false):return
  var health_color:=Color("d8ba7b") if unit.taunt else Color("b38292") if int(unit.owner)==2 else Color("85bbab")
  draw_rect(Rect2(foot+Vector2(-29,9),Vector2(58,4)),Color(.03,.07,.09,.85))
  draw_rect(Rect2(foot+Vector2(-29,9),Vector2(58*clampf(float(unit.hp)/float(unit.max_hp),0,1),4)),health_color)
@@ -403,9 +444,9 @@ func _target_point(code: String) -> Vector2:
 func _effects() -> void:
  var visual: String=event.get("visual","")
  if visual=="ecology":
-  EcologyFX.draw(self,event_time,event);_effect_numbers(event_time,Color("f1d8b0"));_unit_numbers();return
+  EcologyFX.draw(self,event_time,event);_enemy_units_effects();_effect_numbers(event_time,Color("f1d8b0"));_unit_numbers();return
  if visual.begins_with("special_"):
-  special_fx.draw(self,event_time,event);_effect_numbers(event_time,Color("e4dfb9"));_unit_numbers();return
+  special_fx.draw(self,event_time,event);_enemy_units_effects();_effect_numbers(event_time,Color("e4dfb9"));_unit_numbers();return
  if not visual.begins_with("card_"):
   super._effects()
   _enemy_units_effects()
@@ -425,37 +466,33 @@ func _effects() -> void:
   for entry in event.get("before_board",[]):
    if int(entry.uid)==uid:attacker=entry;break
   if not attacker.is_empty():
-   var start:=_unit_position(uid,true)
-   var target:=_target_point(event.get("target_code","enemy"))+Vector2(0,40)
-   var p:=smoothstep(.12,model.impact_time(),event_time) if event_time<=model.impact_time() else 1.0-smoothstep(model.impact_time()+.10,model.animation_duration(),event_time)
-   var style: String=Art.movement_style(attacker.form) if attacker.get("form","") in Cards.HELPER_FORMS else "pounce"
-   var lift: float=28.0 if style=="flier" else 2.0 if style in ["guard","crawler"] else 14.0
-   _draw_unit(attacker,start.lerp(target,p)-Vector2(0,sin(p*PI)*lift),true)
+   var motion:=_attack_motion(attacker,str(event.get("target_code","enemy")))
+   _draw_unit(attacker,motion.foot,true,motion)
  elif visual=="card_spell":
   var target:=_target_point(event.get("target_code","enemy"))
   var p:=smoothstep(.1,impact,event_time)
   var at:=source.lerp(target,p)-Vector2(0,sin(p*PI)*45)
   spectacle.star(self,at,12,Color("ffe6a7"),clock)
   if event_time>=impact:spectacle.burst(self,target,Color("ffe6a7"),1-smoothstep(impact,impact+.7,event_time),22+(event_time-impact)*65)
+ _enemy_units_effects()
  _effect_numbers(event_time,Color("d4eab7"))
  _unit_numbers()
 
 func _enemy_units_effects() -> void:
+ var lane:=0
  for swing in event.get("unit_attacks",[]):
   var uid:=int(swing.uid);var attacker: Dictionary={}
   for old in event.get("before_board",[]):
    if int(old.uid)==uid:attacker=old;break
   if attacker.is_empty():continue
-  var start:=_unit_position(uid,true)
-  var target:=_target_point(str(swing.target_code))+Vector2(0,40)
-  var p:=sin(clampf(event_time/model.animation_duration(),0,1)*PI)
-  _draw_unit(attacker,start.lerp(target,p)-Vector2(0,sin(p*PI)*25),true)
+  var motion:=_attack_motion(attacker,str(swing.target_code),lane-1)
+  _draw_unit(attacker,motion.foot,true,motion);lane+=1
 
 func _unit_numbers() -> void:
  var impact: float=event.get("impact",.7)
  if event_time>=impact and event_time<impact+1:
   for effect in event.get("effects",[]):
-   if int(effect.target)==3:_word("Ausweichen" if effect.kind=="evade" else str(effect.amount),_unit_position(int(effect.unit),true)-Vector2(8,80+(event_time-impact)*22),20,Color("cfc1ef") if effect.kind=="evade" else Color("ffe5c9"))
+   if int(effect.target)==3:_word("Ausweichen" if effect.kind=="evade" else str(effect.amount),_visual_unit_position(int(effect.unit))-Vector2(8,80+(event_time-impact)*22),20,Color("cfc1ef") if effect.kind=="evade" else Color("ffe5c9"))
 
 func _available_hint() -> String:
  if model.cursor==2:return model.enemy_name+" ist am Zug"
@@ -540,14 +577,15 @@ func _power_affordance(button: Button) -> void:
 func _regional_fighter() -> void:
  var state:=enemy_visual_state()
  var pose:=0
- var foot:=_position(2)
+ var motion:=Motion.rest(_position(2),clock,2,model.enemy_profile.kind=="moth")
  if state=="cast":
   pose=1 if event_time<model.impact_time() else 2
-  var progress:=clampf(event_time/model.animation_duration(),0,1)
-  foot.x-=sin(progress*PI)*34
- elif state=="hit":pose=3;foot.x+=sin(event_time*45)*5
+  if event.get("ecology_action","") not in ["warning","charge","collect","seals"]:
+   motion=Motion.attack(_position(2),_effect_ground(),event_time,model.impact_time(),model.animation_duration(),"guard",0,28)
+ elif state=="hit":pose=3;motion=Motion.hit(_position(2),event_time,model.impact_time())
  elif state=="fall":pose=4
- elif model.enemy_profile.kind=="moth":foot.y-=sin(clock*3)*7
+ var foot: Vector2=motion.foot
+ _ground_shadow(motion.ground,Vector2(62,14) if model.enemy_profile.kind=="boss" else Vector2(39,10),motion.lift)
  if state=="idle":
   if model.demon_charge:pose=1
   elif model.seal_pending:pose=5
@@ -559,7 +597,7 @@ func _regional_fighter() -> void:
  if model.demon_charge or model.seal_pending:
   var pulse:=.55+.15*sin(clock*2.5)
   draw_arc(foot-Vector2(0,70),82,0,TAU,48,Color(1.0,.35,.12,pulse) if model.demon_charge else Color(.74,.32,.88,pulse),2,true)
- draw_texture_rect_region(texture,Rect2(foot-Vector2(dimensions.x*.5,dimensions.y),dimensions),region,tint)
+ _paint_pawn(texture,region,dimensions,motion,tint)
 
 func _draw_seal(unit: Dictionary,foot: Vector2) -> void:
  var at:=foot-Vector2(0,40)
@@ -576,3 +614,47 @@ func _regional_dimensions(pose: int) -> Vector2:
  if model.enemy_profile.get("ecology_atlas",false):
   for frame in 7:reference_height=maxf(reference_height,enemies.region(model.enemy_id,frame).size.y)
  return enemies.region(model.enemy_id,pose).size*(250.0 if model.enemy_profile.kind=="boss" else 190.0)/reference_height
+
+func _attack_motion(unit: Dictionary,target_code: String,lane: int=0) -> Dictionary:
+ var home:=_unit_position(int(unit.uid),true)
+ var target:=_target_point(target_code)+Vector2(0,40)
+ var style: String=Art.movement_style(str(unit.form)) if unit.get("form","") in Cards.HELPER_FORMS else "pounce"
+ var motion:=Motion.attack(home,target,event_time,model.impact_time(),model.animation_duration(),style,lane)
+ if model.playback_pending and event_time>=model.impact_time() and model.find_unit(int(unit.uid)).is_empty():
+  # Ein im Gegentreffer gefallener Angreifer läuft nicht als Geist nach Hause.
+  motion=Motion.attack(home,target,model.impact_time(),model.impact_time(),model.animation_duration(),style,lane)
+  unit["_fallen"]=true
+ return motion
+
+func _travel_art(species: String,motion: Dictionary) -> Dictionary:
+ if not is_instance_valid(encounter) or not encounter.app.character_metrics.has(species):return {}
+ var compact: bool=Catalog.data().characters[species].get("compact",false)
+ var frame:=3+posmod(int(motion.stride*4),4) if compact else 9+posmod(int(motion.stride*8),8)
+ var texture: Texture2D=load(Catalog.data().characters[species].asset)
+ var columns:=8 if compact else 12
+ var cell:=Vector2(texture.get_width()/float(columns),texture.get_height()/float(6 if compact else 15))
+ var bounds: Rect2i=encounter.app.character_metrics[species].bounds[frame]
+ var reference: Rect2i=encounter.app.character_metrics[species].bounds[0 if compact else 142]
+ return {"texture":texture,"region":Rect2(Vector2(frame%columns,frame/columns)*cell+Vector2(bounds.position),Vector2(bounds.size)),"dimensions":Vector2(bounds.size)*78.0/maxf(1,reference.size.y)}
+
+func _arena_ground() -> void:
+ super._arena_ground()
+ for owner in 3:
+  for slot in 3:
+   var foot:=Vector2(887+slot*133,451) if owner==2 else Vector2(415+slot*135,348 if owner==0 else 461)
+   _ellipse(foot+Vector2(0,4),Vector2(42,12),Color(.75,.65,.45,.045))
+   draw_arc(foot,35,.15,PI-.15,24,Color(.67,.73,.66,.13),1,true)
+
+func _visual_unit_position(uid: int) -> Vector2:
+ if event_time<0 or event_time>=model.animation_duration():return _unit_position(uid,true)
+ var attacker: Dictionary={}
+ for unit in event.get("before_board",[]):
+  if int(unit.uid)==uid:attacker=unit;break
+ if not attacker.is_empty():
+  if event.get("visual","")=="card_attack" and int(event.get("attacker_uid",-1))==uid:
+   return _attack_motion(attacker,str(event.get("target_code","enemy"))).foot
+  var lane:=0
+  for swing in event.get("unit_attacks",[]):
+   if int(swing.uid)==uid:return _attack_motion(attacker,str(swing.target_code),lane-1).foot
+   lane+=1
+ return _unit_position(uid,true)

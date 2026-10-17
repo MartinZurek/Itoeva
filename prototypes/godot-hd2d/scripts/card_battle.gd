@@ -374,7 +374,7 @@ func attack_minion(uid: int,target: String="enemy") -> bool:
  var unit:=find_unit(uid);unit.ready=false;unit.spent=true
  var name: String=unit.name
  var effects: Array[Dictionary]=[]
- var extra: Dictionary={"attacker_uid":uid,"target_code":target,"element":"physical","source":-1}
+ var extra: Dictionary={"attacker_uid":uid,"target_code":target,"element":"physical","source":-1,"duration":2.7,"impact":1.25}
  if target.begins_with("u:"):
   var defender:=find_unit(int(target.substr(2)))
   var counter:=int(defender.attack)
