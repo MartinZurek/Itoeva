@@ -221,11 +221,61 @@ jobs:
           session="$(awk 'tolower($1)=="location:" {gsub("\r", "", $2); print $2}' "$upload_tmp/headers")"
           [ -n "$session" ] || { echo '::error::Drive lieferte keine Upload-Sitzung.'; exit 1; }
           echo "::add-mask::$session"
-          curl --fail-with-body -sS -X PUT \
-            -H 'Content-Type: application/vnd.android.package-archive' \
-            -H "Content-Length: $bytes" \
-            -H "Content-Range: bytes 0-$((bytes - 1))/$bytes" \
-            --data-binary @"$apk" "$session" -o "$upload_tmp/completed.json"
+          SESSION_URL="$session" ACCESS_TOKEN="$token" python3 - <<'PY'
+          import os, pathlib, json, urllib.request, urllib.error, time
+          apk = pathlib.Path(os.environ['PROJECT']) / 'build' / os.environ['APK_NAME']
+          size = apk.stat().st_size
+          headers = {'Authorization': 'Bearer ' + os.environ['ACCESS_TOKEN'],
+                     'Content-Type': 'application/vnd.android.package-archive'}
+          def request(body, content_range):
+              h = dict(headers)
+              h['Content-Length'] = str(len(body))
+              h['Content-Range'] = content_range
+              req = urllib.request.Request(os.environ['SESSION_URL'], data=body, headers=h, method='PUT')
+              try:
+                  with urllib.request.urlopen(req, timeout=45) as response:
+                      return response.status, response.headers, response.read()
+              except urllib.error.HTTPError as error:
+                  if error.code == 308:
+                      return error.code, error.headers, b''
+                  raise
+          offset = 0
+          attempts = 0
+          with apk.open('rb') as source:
+              while offset < size:
+                  source.seek(offset)
+                  chunk = source.read(8 * 1024 * 1024)
+                  end = offset + len(chunk) - 1
+                  try:
+                      status, h, body = request(chunk, f'bytes {offset}-{end}/{size}')
+                  except (urllib.error.URLError, TimeoutError, OSError):
+                      attempts += 1
+                      if attempts > 5:
+                          raise
+                      print('Uebertragung unterbrochen; bestaetigten Offset abfragen.', flush=True)
+                      time.sleep(2)
+                      try:
+                          status, h, body = request(b'', f'bytes */{size}')
+                      except (urllib.error.URLError, TimeoutError, OSError):
+                          continue
+                  if status in (200, 201):
+                      assert json.loads(body)['id'] == os.environ['FILE_ID']
+                      offset = size
+                  elif status == 308:
+                      received = h.get('Range', '')
+                      next_offset = int(received.rsplit('-', 1)[1]) + 1 if received else 0
+                      assert 0 <= next_offset <= size
+                      if next_offset > offset:
+                          attempts = 0
+                      else:
+                          attempts += 1
+                          if attempts > 5:
+                              raise RuntimeError('Keine bestaetigte Upload-Fortsetzung')
+                      offset = next_offset
+                  else:
+                      raise RuntimeError('Unerwarteter Uploadstatus ' + str(status))
+                  print(f'Bestaetigte Bytes: {offset}/{size}', flush=True)
+          PY
           curl --fail-with-body -sS \
             -H "Authorization: Bearer $token" \
             "https://www.googleapis.com/drive/v3/files/$FILE_ID?supportsAllDrives=true&fields=id,name,size,md5Checksum,sha256Checksum,webViewLink" \

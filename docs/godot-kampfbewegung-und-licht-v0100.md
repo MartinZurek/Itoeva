@@ -82,6 +82,16 @@ freigegebene Drive-Zieldatei bleibt im selben Ordner und erhält den neuen Namen
 Ein erfolgreicher Build und Remote-Prüfsummenabgleich sind für die Auslieferung
 maßgeblich; dieses Dokument allein behauptet keinen abgeschlossenen Export.
 
+Der erste Bau 39051509392 zeigte einen zeitabhängigen Fehler im alten Weltsmoke:
+Seine feste Grenze von sieben Außenbewohnern passt abends nicht zum bestehenden
+Zwölf-Bewohner-Tagesplan. Die Prüfung gleicht nun jeden tatsächlich geladenen
+Bewohner mit dem Aufenthaltsplan ab, prüft Vollständigkeit und Eindeutigkeit sowie
+mindestens fünf verschiedene Aufenthaltsorte. Der Spiel-Tagesplan bleibt gleich.
+Die APK-Übertragung übernimmt die bereits für 0.9.0 bewährten 8-MiB-Teilstücke mit
+serverbestätigter Fortsetzung bei Verbindungsfehlern; Signatur und Ziel bleiben gleich.
+Normale Übertragung und Teilannahme mit HTTP502 und anschließender Fortsetzung
+wurden simuliert und bytegenau geprüft; YAML, Bash und eingebettetes Python validiert.
+
 ![Bewegung mit vorhandenen Laufzeichnungen](previews/godot-combat-v0100-travel.jpg)
 
 ![Kontakt und örtliches Trefferlicht](previews/godot-combat-v0100-impact.jpg)

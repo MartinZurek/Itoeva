@@ -1,6 +1,7 @@
 extends SceneTree
 
 const Catalog = preload("res://scripts/world_catalog.gd")
+const Residents = preload("res://scripts/world_residents.gd")
 var failures := 0
 var checks := 0
 
@@ -47,7 +48,22 @@ func run() -> void:
 	await app.start_game()
 	await frames(20)
 	check(app.world_ready and app.actor.is_on_floor(), "Spiel startet mit 3D-Bodenkontakt")
-	check(app.stage.chunks.size() == 7 and app.actor in app.actors and app.actors.size() < 8, "Alle Panoramen bleiben integriert; Bewohner verteilen sich auf unterschiedliche Szenen")
+	# Abends duerfen mehr als sieben Bewohner draussen sein. Entscheidend sind
+	# ihre Tagesplaene, keine vom Bauzeitpunkt abhaengige feste Figurenanzahl.
+	var expected_residents := {}
+	var resident_places := {}
+	for id in app.resident_appointments:
+		var appointment: Dictionary = app.resident_appointments[id]
+		resident_places[appointment.place] = true
+		if id != app.selected and Residents.room_for(appointment.place) == app.room:
+			expected_residents[id] = true
+	var actual_residents := {}
+	var residents_valid: bool = app.actor in app.actors
+	for resident in app.actors:
+		if resident == app.actor: continue
+		residents_valid = residents_valid and expected_residents.has(resident.species) and not actual_residents.has(resident.species)
+		actual_residents[resident.species] = true
+	check(app.stage.chunks.size() == 7 and residents_valid and actual_residents.size() == expected_residents.size() and resident_places.size() >= 5, "Alle Panoramen bleiben integriert; Bewohner entsprechen ihrem Tagesplan an mindestens fuenf Orten")
 	check(app.stage.doors.size() == 7, "Aussenwelt bietet fuenf Gebaeude, Waldabzweig und Sonnenhain")
 	var actor: CharacterBody3D = app.actor
 	# Freie Sportflaeche: die Parkbewohner duerfen diesen Tempotest nicht blockieren.
