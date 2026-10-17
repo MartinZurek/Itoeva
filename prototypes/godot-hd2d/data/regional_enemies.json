@@ -109,16 +109,16 @@
     "name": "Tangkrabbler",
     "row": 0,
     "hp": 120,
-    "place": "POND",
+    "place": "BEACH",
     "uv": [
-      0.36,
+      0.2,
       0.7
     ],
     "kind": "crab",
     "height": 0.7,
     "patrol": [
-      0.3,
-      0.42
+      0.08,
+      0.3
     ],
     "period": 14,
     "purpose": "Sammelt Muscheln und Treibholz für seinen Unterschlupf am Küstensteg.",
@@ -223,7 +223,7 @@
     "purpose": "Bewacht das versiegelte Grenztor und hält die drei Schutzsiegel in Ordnung.",
     "travel": "Prüft den inneren Siegelkreis",
     "work": "Erneuert die Torbindung",
-    "description": "Drei Siegel mit je 10 LP schützen Vharok: nur 25 % Schaden dringen durch. Zerstöre sie: zwei Gegnerzüge lang erleidet sein Kern 150 %. Ab 90 LP kündigt er Aschensturm (18 auf beide) an; nutze Schutz und Unterbrechung.",
+    "description": "Drei Siegel (je 10 LP) schützen den Kern: 25 % Schaden. Ohne Siegel: zwei Gegnerzüge lang 150 %. Ab 90 LP folgt nach Warnung ein Sturm mit 42 Schaden auf beide. Wanken unterbricht; danach zwei Züge Standfestigkeit.",
     "asset": "res://assets/expansion/vharok.png",
     "atlas": "vharok.png",
     "ecology_atlas": true,

@@ -226,7 +226,7 @@ func refresh() -> void:
   for button in buttons:button.disabled=model.playback_pending or encounter.busy>0 or input_cooldown>0 or encounter.suspended
   return
  _refresh_unit_info()
- turn_label.text="Runde %s · %s" % [model.round,model.actor_name()]
+ turn_label.text="Runde %s · %s" % [model.round,model.actor_name().split("·")[0].strip_edges()]
  var before: bool=model.playback_pending and event_time>=0 and event_time<model.impact_time()
  var enemy_hp: int=int(model.last_event.get("before_enemy",model.enemy_health)) if before else model.enemy_health
  enemy_label.text="%s   %s / %s LP" % [model.enemy_name.to_upper(),enemy_hp,model.enemy_max_hp];enemy_bar.value=enemy_hp

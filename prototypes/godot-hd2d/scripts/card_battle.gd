@@ -531,7 +531,7 @@ func restore(saved: Dictionary) -> void:
  super.restore(saved)
  if saved.get("ecology_state",{}) is Dictionary and not saved.get("ecology_state",{}).is_empty():
   ecology_state=saved.ecology_state.duplicate(true)
-  for key in ["step","phase","core_turns"]:ecology_state[key]=int(ecology_state.get(key,0))
+  for key in ["step","phase","core_turns","resolve"]:ecology_state[key]=int(ecology_state.get(key,0))
   for key in ["open","fuel"]:ecology_state[key]=bool(ecology_state.get(key,false))
  demon_charge=bool(saved.get("demon_charge",false));seal_pending=bool(saved.get("seal_pending",false))
  for i in 2:
@@ -609,7 +609,7 @@ func begin() -> void:
  if not enemy_profile.is_empty():message=enemy_name+" erscheint. "+str(enemy_profile.description)
 
 func enemy_intent() -> String:
- if Ecology.handles(self):return Ecology.intent(self)
+ if Ecology.handles(self):return ("Standfest · " if int(ecology_state.get("resolve",0))>0 else "")+Ecology.intent(self)
  if enemy_profile.is_empty():return super.enemy_intent()
  if enemy_stagger>0:return "Wanken · nächster Zug entfällt"
  match enemy_profile.kind:

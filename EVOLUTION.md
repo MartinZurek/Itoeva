@@ -7038,3 +7038,23 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **UNVERIFIED:** Telefon-FPS/GPU und menschliche APK-Abnahme stehen aus.
 - **Übergabe:** docs/godot-daemonenvorhut-v080.md, AndroidTest 0.8.0/Code20,
   neuer Runtime-Manifest und bestehender signierter Build-/Drive-Lieferweg.
+
+### 2026-10-17 – Belebte Gegnerreviere und Vharoks Siegelhof 0.9.0
+
+- **DOCUMENTED INTENT:** Neue Gegner mit nachvollziehbaren Aufgaben, Bosskampf,
+  verbundene Landschaften und Prüfung von Kampfeinstieg, Balance, dynamischen
+  Effekten, Licht, Klang und APK-Auslieferung gemäß ausdrücklichem Nutzerauftrag.
+- **FACT:** Tangkrabbler, Harzsammler, Schlackenträger und Vharok integrieren eigene
+  Posen/Regeln. Neun Arten besitzen Arbeitsreviere. Aschenstieg und Siegelhof
+  schließen an Nebelwacht an; kein Schluchtübergang und keine Maschinenwelt.
+  Vharok270 LP, drei Siegel, Kernfenster, angekündigter Sturm42 und begrenzte
+  Standfestigkeit. Bossbeute360 EP/3 Splitter gegenüber120/1 bei normalen Gegnern.
+- **DARSTELLUNG:** Ereignisgebundene Zielpunkte, unterschiedliche zurückhaltende
+  Effekte, vorbereitende leise Klänge, lokale Feuerbeleuchtung, bewegte Schatten
+  und Masken. Treffertexte aus dem überdeckten Kopfbereich versetzt.
+- **TESTED BEHAVIOR:**1057 neue Checks,128 vollständige Testkämpfe,256 Türpfade;
+  OpenGL-Zeitfolgen und Tag/Nachtbilder. Regressionen und Export im Lieferweg erneut.
+- **UNVERIFIED:** Menschliche Spielbalance/Hörabnahme und Android-GPU/FPS bleiben
+  offen. Kein Anspruch auf Hearthstone-/Magic-Produktreife durch Prototypprüfungen.
+- **ÜBERGABE:** docs/godot-gegnerwelt-und-vharok-v090.md, Runtime-Manifest0.9.0,
+  AndroidTest Code21 im bestehenden signierten Build-/Drive-Weg.

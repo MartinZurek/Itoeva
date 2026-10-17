@@ -1095,14 +1095,14 @@ func _select_regional_encounter(id: String) -> void:
 func _show_enemy(id: String) -> void:
 	_pause(true)
 	var profile: Dictionary=Enemies.data()[id]
-	var column:=_panel(profile.name+" · "+str(profile.hp)+" LP")
+	var column:=_panel(profile.name+" · "+str(int(profile.hp))+" LP")
 	var portrait:=TextureRect.new();portrait.texture=Enemies.texture(id)
 	portrait.custom_minimum_size=Vector2(160,170);portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	column.add_child(portrait)
 	var purpose:=_label(str(profile.get("purpose",""))+"\n"+str(profile.get("work","")),18);purpose.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;purpose.custom_minimum_size=Vector2(540,70);column.add_child(purpose)
 	var difficulty: String={"crab":"Einstieg","beetle":"Aufbau","carrier":"Fortgeschritten","boss":"Boss"}.get(profile.kind,"Regional")
 	var reward:=_label(difficulty+" · "+("360 EP je Held · 3 Mondsplitter" if profile.kind=="boss" else "120 EP je Held · 1 Mondsplitter")+" · 1 Heiltrank",16);column.add_child(reward)
-	var description:=_label(profile.description,20);description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;description.custom_minimum_size=Vector2(540,100);column.add_child(description)
+	var description:=_label(profile.description,18 if profile.kind=="boss" else 20);description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;description.custom_minimum_size=Vector2(540,100);column.add_child(description)
 	column.add_child(_button("Kartenkampf beginnen",func():
 		_select_regional_encounter(id)
 		if forest_encounter.model.phase=="done":
@@ -1153,11 +1153,13 @@ func _update_regional_art() -> void:
 		marker.art.visible=not marker.defeated;marker.shadow.visible=not marker.defeated
 		if marker.defeated:continue
 		var life:=EnemyLife.sample(profile,game_clock+float(hash(marker.id)%100))
+		var walking:=false
 		var close: bool=actor.position.distance_to(marker.position)<2.5
 		if not close:
 			var goal: Vector3=stage.safe_position(Catalog.position_for(profile.place,life.uv),.1)
 			var at: Vector3=stage.safe_position(marker.position.move_toward(goal,1.2*get_process_delta_time()),.1)
 			if absf(at.x-marker.position.x)>.001:marker.art.flip_h=at.x>marker.position.x
+			walking=at.distance_to(marker.position)>.001
 			marker.position=at;marker.art.position=at+Vector3.UP*(.85 if marker.id=="thorn_moth" else 0.0)
 			marker.shadow.position=Vector3(at.x,.018,at.z)
 		marker.activity=life.activity if not close else "Beobachtet vorsichtig deinen Schritt"
@@ -1167,7 +1169,7 @@ func _update_regional_art() -> void:
 		if mask.mask!=null:marker.material.set_shader_parameter("furniture_mask",mask.mask)
 		marker.material.set_shader_parameter("scene_origin",mask.origin);marker.material.set_shader_parameter("scene_span",mask.span)
 		stage.apply_actor_light(marker.material,marker.position)
-		var pose: int=0 if close else int(life.pose)
+		var pose: int=0 if close else (6 if int(game_clock*3)%2==0 else 0) if walking else int(life.pose)
 		if pose!=marker.pose:
 			marker.pose=pose;marker.art.texture=Enemies.texture(marker.id,pose)
 			marker.art.offset.y=marker.art.texture.get_height()*.5

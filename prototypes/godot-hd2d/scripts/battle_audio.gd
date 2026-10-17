@@ -68,7 +68,6 @@ func _process(delta: float) -> void:
 	else:
 		var model=encounter.model
 		var desired: String="victory" if model.phase=="victory" and not model.playback_pending else "battle"
-		arena.pitch_scale=move_toward(arena.pitch_scale,.96 if model.enemy_profile.get("kind","")=="boss" and desired=="battle" else 1.0,delta*.08)
 		if desired!=music_mode:
 			music_mode=desired;arena.stop()
 			arena.stream=victory_theme if desired=="victory" else battle_theme

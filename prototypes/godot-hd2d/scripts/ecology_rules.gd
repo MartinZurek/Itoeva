@@ -2,7 +2,7 @@ extends RefCounted
 static func handles(b) -> bool:return b.enemy_profile.get("kind","") in ["crab","beetle","carrier","boss"]
 static func setup(b) -> void:
  if not handles(b):return
- b.ecology_state={"step":0,"open":false,"fuel":false,"phase":1,"core_turns":0}
+ b.ecology_state={"step":0,"open":false,"fuel":false,"phase":1,"core_turns":0,"resolve":0}
  if b.enemy_profile.kind=="boss":_seals(b,3)
 static func _seals(b,count: int) -> void:
  for i in count:b._add_minion(2,"vharok_seal_"+str(i),{"name":["Glutsiegel","Kettensiegel","Aschensiegel"][i],"attack":0,"health":10,"taunt":true,"species":"enemy"})
@@ -38,9 +38,11 @@ static func intent(b) -> String:
    match int(b.ecology_state.phase):
     1:return "I · %s Siegel · Kern 25 %% · Hieb 8"%seal_count(b)
     2:return "II · Kern offen · Schaden 150 % · Hieb 10"
-    3:return ["III · Aschensturm vorbereiten · schützt euch!","Aschensturm · 18 auf beide","Erschöpfung · Hieb 8"][step%3]
+    3:return ["III · Aschensturm vorbereiten · schützt euch!","Aschensturm · 42 auf beide","Erschöpfung · Hieb 8"][step%3]
  return "Beobachtet die Gruppe"
 static func counter(b,element: String,effects: Array) -> void:
+ if b.enemy_profile.get("kind","")=="boss" and int(b.ecology_state.get("resolve",0))>0 and b.enemy_stagger>0:
+  b.enemy_stagger=0;effects.append({"target":2,"amount":0,"kind":"blocked"})
  if b.enemy_profile.get("kind","")=="carrier" and element=="water" and b.ecology_state.get("fuel",false):
   b.ecology_state.fuel=false;effects.append({"target":2,"amount":0,"kind":"release"})
 static func _hit(b,target: int,amount: int,effects: Array[Dictionary]) -> int:
@@ -49,11 +51,14 @@ static func _hit(b,target: int,amount: int,effects: Array[Dictionary]) -> int:
  return b._receive_hit(target,amount,effects)
 static func act(b) -> bool:
  var previous: Dictionary=b._before();var effects: Array[Dictionary]=[];var title:=intent(b)
+ var was_resolute:=int(b.ecology_state.get("resolve",0))>0
  var step:=int(b.ecology_state.step);var action: String="prepare";var target: int=(b.round-1)%2
  if b.party[target].hp<=0:target=1-target
  if b.enemy_stagger>0:
   b.enemy_stagger-=1;b.ecology_state.fuel=false;action="interrupt"
-  if b.enemy_profile.kind=="boss" and int(b.ecology_state.phase)==3:b.ecology_state.step=-1
+  if b.enemy_profile.kind=="boss":
+   b.ecology_state.resolve=2
+   if int(b.ecology_state.phase)==3:b.ecology_state.step=-1
  else:
   match b.enemy_profile.kind:
    "crab":
@@ -81,9 +86,10 @@ static func act(b) -> bool:
       if step%3==1:
        action="storm"
        for i in 2:
-        if b.party[i].hp>0:_hit(b,i,18,effects)
+        if b.party[i].hp>0:_hit(b,i,42,effects)
       elif step%3==2:_hit(b,target,8,effects);action="chain"
       else:action="warning"
+ if was_resolute:b.ecology_state.resolve=maxi(0,int(b.ecology_state.resolve)-1)
  b.ecology_state.step+=1
  if b.party[0].hp<=0 and b.party[1].hp<=0:b.phase="defeat"
  if b.enemy_burn>0:
