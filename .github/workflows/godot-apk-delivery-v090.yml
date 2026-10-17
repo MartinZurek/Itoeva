@@ -1,0 +1,135 @@
+name: Gepruefte Godot APK 0.9.0 nachliefern
+on:
+  push:
+    branches: [codex/godot-apk-delivery-v090]
+    paths: ['.github/workflows/godot-apk-delivery-v090.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: godot-test-apk-v090
+  cancel-in-progress: true
+env:
+  APK_NAME: Itoeva_Godot_Test_v0.9.0.apk
+  FILE_ID: 148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bereits geprueftes, signiertes Artefakt laden
+        uses: actions/download-artifact@v4
+        with:
+          name: itoeva-godot-v090-da608c141a69d77442a7ef6fe66e36b8aee8dc59
+          run-id: 39020500282
+          github-token: ${{ github.token }}
+          path: delivery
+      - name: Herkunft, Paket und Bytes vor Nachlieferung pruefen
+        run: |
+          python3 - <<'PY'
+          import pathlib,hashlib,json
+          p=pathlib.Path('delivery');d=(p/'Itoeva_Godot_Test_v0.9.0.apk').read_bytes()
+          report=json.loads((p/'build-report.json').read_text())
+          assert report['commit']=='da608c141a69d77442a7ef6fe66e36b8aee8dc59'
+          assert len(d)==report['bytes']==153846029
+          assert hashlib.sha256(d).hexdigest()==report['sha256']=='aaede525ab655be715b631ba883c1244bd0e1892e61a666db439078617d02201'
+          assert hashlib.md5(d).hexdigest()==report['md5']=='91ceb276f2d5405f756dd1a585b99cb1'
+          assert "versionCode='21' versionName='0.9.0'" in (p/'package.txt').read_text()
+          assert '30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc' in (p/'signature.txt').read_text()
+          print(json.dumps(report,indent=2))
+          PY
+      - name: In bestaetigten 8-MiB-Abschnitten nach Drive liefern
+        env:
+          SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+        run: |
+          set -euo pipefail
+          umask 077
+          upload_tmp="$(mktemp -d)"
+          trap 'rm -rf "$upload_tmp"' EXIT
+          printf '%s' "$SA_JSON" > "$upload_tmp/sa.json"
+          jwt="$(sh runner/gdrive-jwt.sh "$upload_tmp/sa.json" https://www.googleapis.com/auth/drive)"
+          echo "::add-mask::$jwt"
+          curl --retry 3 --retry-all-errors --retry-delay 2 --fail-with-body -sS \
+            -X POST https://oauth2.googleapis.com/token \
+            --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
+            --data-urlencode "assertion=$jwt" > "$upload_tmp/token.json"
+          token="$(jq -r '.access_token // empty' "$upload_tmp/token.json")"
+          [ -n "$token" ]
+          echo "::add-mask::$token"
+          jq -n --arg name "$APK_NAME" \
+            --arg description 'Itoeva Godot 0.9.0; Quellstand da608c141a69d77442a7ef6fe66e36b8aee8dc59; SHA-256 aaede525ab655be715b631ba883c1244bd0e1892e61a666db439078617d02201' \
+            '{name:$name,description:$description}' > "$upload_tmp/metadata.json"
+          curl --retry 3 --retry-all-errors --retry-delay 2 --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer $token" \
+            -H 'Content-Type: application/json; charset=UTF-8' \
+            -H 'X-Upload-Content-Type: application/vnd.android.package-archive' \
+            -H 'X-Upload-Content-Length: 153846029' \
+            --data-binary @"$upload_tmp/metadata.json" \
+            -D "$upload_tmp/headers" -o "$upload_tmp/session.json" \
+            "https://www.googleapis.com/upload/drive/v3/files/$FILE_ID?uploadType=resumable&supportsAllDrives=true"
+          session="$(awk 'tolower($1)=="location:" {gsub("\r", "", $2); print $2}' "$upload_tmp/headers")"
+          [ -n "$session" ]
+          echo "::add-mask::$session"
+          SESSION_URL="$session" ACCESS_TOKEN="$token" python3 - <<'PY'
+          import os,pathlib,json,urllib.request,urllib.error,time
+          apk=pathlib.Path('delivery')/os.environ['APK_NAME'];size=apk.stat().st_size
+          headers={'Authorization':'Bearer '+os.environ['ACCESS_TOKEN'],'Content-Type':'application/vnd.android.package-archive'}
+          def request(body,content_range):
+              h=dict(headers);h['Content-Length']=str(len(body));h['Content-Range']=content_range
+              req=urllib.request.Request(os.environ['SESSION_URL'],data=body,headers=h,method='PUT')
+              try:
+                  with urllib.request.urlopen(req,timeout=45) as response:
+                      return response.status,response.headers,response.read()
+              except urllib.error.HTTPError as error:
+                  if error.code==308:return error.code,error.headers,b''
+                  raise
+          offset=0;attempts=0
+          with apk.open('rb') as source:
+              while offset<size:
+                  source.seek(offset);chunk=source.read(8*1024*1024);end=offset+len(chunk)-1
+                  try:
+                      status,h,body=request(chunk,f'bytes {offset}-{end}/{size}')
+                  except (urllib.error.URLError,TimeoutError,OSError) as error:
+                      attempts+=1
+                      if attempts>5:raise
+                      print('Uebertragung unterbrochen; bestaetigten Offset abfragen.',flush=True)
+                      time.sleep(2)
+                      try:status,h,body=request(b'',f'bytes */{size}')
+                      except (urllib.error.URLError,TimeoutError,OSError):continue
+                  if status in (200,201):
+                      assert json.loads(body)['id']==os.environ['FILE_ID'];offset=size
+                  elif status==308:
+                      received=h.get('Range','');next_offset=int(received.rsplit('-',1)[1])+1 if received else 0
+                      assert 0<=next_offset<=size
+                      if next_offset>offset:attempts=0
+                      else:
+                          attempts+=1
+                          if attempts>5:raise RuntimeError('Keine bestaetigte Upload-Fortsetzung')
+                      offset=next_offset
+                  else:raise RuntimeError('Unerwarteter Uploadstatus '+str(status))
+                  print(f'Bestaetigte Bytes: {offset}/{size}',flush=True)
+          req=urllib.request.Request('https://www.googleapis.com/drive/v3/files/'+os.environ['FILE_ID']+'?supportsAllDrives=true&fields=id,name,size,md5Checksum,sha256Checksum,webViewLink',headers={'Authorization':headers['Authorization']})
+          with urllib.request.urlopen(req,timeout=45) as response:remote=json.load(response)
+          local=json.loads(pathlib.Path('delivery/build-report.json').read_text())
+          assert remote['id']==os.environ['FILE_ID'] and remote['name']==os.environ['APK_NAME']
+          assert int(remote['size'])==local['bytes']==153846029
+          assert remote['md5Checksum']==local['md5']=='91ceb276f2d5405f756dd1a585b99cb1'
+          if remote.get('sha256Checksum'):assert remote['sha256Checksum']==local['sha256']
+          pathlib.Path('delivery/drive-result.json').write_text(json.dumps(remote,indent=2))
+          print(json.dumps(remote,indent=2))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('APK 0.9.0 / Code21 vollstaendig ausgeliefert.\n\nSHA-256: `'+local['sha256']+'`\n\n'+remote.get('webViewLink',remote['id'])+'\n')
+          PY
+      - name: Liefernachweis sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-v090-liefernachweis-${{ github.run_id }}
+          path: |
+            delivery/build-report.json
+            delivery/drive-result.json
+            delivery/package.txt
+            delivery/signature.txt
+          retention-days: 14
