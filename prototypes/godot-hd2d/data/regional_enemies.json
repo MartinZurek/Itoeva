@@ -5,8 +5,8 @@
     "hp": 100,
     "place": "SUN_GLADE",
     "uv": [
-      0.52,
-      0.58
+      0.48,
+      0.56
     ],
     "kind": "moth",
     "description": "Pollenwirbel trifft beide. Alle drei Runden kann der Staub verstummen lassen. Ein Lichtschirm hält ihn ab.",
@@ -14,10 +14,24 @@
     "travel": "Sucht reife Blüten",
     "work": "Sortiert Blütenstaub",
     "patrol": [
-      0.46,
-      0.6
+      0.19,
+      0.79
     ],
-    "period": 14
+    "period": 30,
+    "route": [
+      [
+        0.19,
+        0.56
+      ],
+      [
+        0.49,
+        0.4
+      ],
+      [
+        0.79,
+        0.64
+      ]
+    ]
   },
   "ash_hound": {
     "name": "Aschenläufer",
@@ -25,8 +39,8 @@
     "hp": 150,
     "place": "MIST_WATCH",
     "uv": [
-      0.35,
-      0.54
+      0.28,
+      0.43
     ],
     "kind": "hound",
     "description": "Ein schneller Aschenbiss trifft ein Ziel. Jeder dritte Zug wird zum stärkeren Glutsprung.",
@@ -34,53 +48,95 @@
     "travel": "Prüft die Grenzspur",
     "work": "Wittert am Grenzstein",
     "patrol": [
-      0.27,
-      0.44
+      0.15,
+      0.43
     ],
-    "period": 14
+    "period": 24,
+    "route": [
+      [
+        0.15,
+        0.43
+      ],
+      [
+        0.29,
+        0.27
+      ],
+      [
+        0.43,
+        0.51
+      ]
+    ]
   },
   "bark_guardian": {
     "name": "Rindenwächter",
     "row": 2,
     "hp": 190,
-    "place": "MIST_WATCH",
+    "place": "MILL_BROOK",
     "uv": [
-      0.65,
-      0.54
+      0.31,
+      0.62
     ],
     "kind": "guardian",
     "description": "Wurzelschlag trifft ein Ziel. Alle drei Runden heilt sich der Wächter; Brennen unterbricht seine Rindenerneuerung.",
-    "purpose": "Bewacht die jungen Wurzeln an der Nebelwacht.",
+    "purpose": "Versorgt junge Wurzeln am Mühlenbach und bewacht den äußeren Hain.",
     "travel": "Prüft die Wurzelgrenze",
     "work": "Pflegt junge Wurzeln",
     "patrol": [
-      0.61,
-      0.71
+      0.17,
+      0.46
     ],
-    "period": 14
+    "period": 28,
+    "route": [
+      [
+        0.17,
+        0.62
+      ],
+      [
+        0.315,
+        0.46
+      ],
+      [
+        0.46,
+        0.7
+      ]
+    ]
   },
   "glut_imp": {
     "name": "Glutwicht",
     "row": 0,
     "hp": 145,
-    "place": "MIST_WATCH",
+    "place": "ASH_ASCENT",
     "uv": [
-      0.16,
-      0.68
+      0.28,
+      0.62
     ],
     "kind": "imp",
     "asset": "res://assets/expansion/glut-imp.png",
     "atlas": "glut-imp.png",
     "height": 0.86,
     "description": "Sammelt Glut, dann folgt ein Feuerwurf für 24 Schaden. Wasser oder Wanken löschen die Ladung. Schwächen, Schutzhelfer und Lichtschirme mindern den Angriff.",
-    "purpose": "Hält die Signalfeuer der dämonischen Vorhut am Brennen.",
+    "purpose": "Hält die Signalfeuer am unteren Aschenstieg am Brennen.",
     "travel": "Sucht erloschene Glut",
     "work": "Sortiert Glut für das Signalfeuer",
     "patrol": [
-      0.12,
-      0.22
+      0.16,
+      0.4
     ],
-    "period": 14
+    "period": 26,
+    "route": [
+      [
+        0.16,
+        0.62
+      ],
+      [
+        0.28,
+        0.46
+      ],
+      [
+        0.4,
+        0.7
+      ]
+    ]
   },
   "seal_weaver": {
     "name": "Siegelweber",
@@ -88,8 +144,8 @@
     "hp": 175,
     "place": "MIST_WATCH",
     "uv": [
-      0.84,
-      0.68
+      0.74,
+      0.7
     ],
     "kind": "weaver",
     "asset": "res://assets/expansion/seal-weaver.png",
@@ -100,10 +156,24 @@
     "travel": "Prüft die Siegelreihe",
     "work": "Knüpft ein Warnsiegel",
     "patrol": [
-      0.78,
-      0.89
+      0.62,
+      0.85
     ],
-    "period": 14
+    "period": 31,
+    "route": [
+      [
+        0.62,
+        0.7
+      ],
+      [
+        0.735,
+        0.54
+      ],
+      [
+        0.85,
+        0.78
+      ]
+    ]
   },
   "tide_crab": {
     "name": "Tangkrabbler",
@@ -120,7 +190,7 @@
       0.08,
       0.3
     ],
-    "period": 14,
+    "period": 23,
     "purpose": "Sammelt Muscheln und Treibholz für seinen Unterschlupf am Küstensteg.",
     "travel": "Sucht angespülte Muscheln",
     "work": "Sortiert Muscheln und Treibholz",
@@ -136,6 +206,20 @@
       5,
       2,
       1
+    ],
+    "route": [
+      [
+        0.08,
+        0.7
+      ],
+      [
+        0.18,
+        0.45
+      ],
+      [
+        0.3,
+        0.65
+      ]
     ]
   },
   "resin_beetle": {
@@ -144,16 +228,16 @@
     "hp": 130,
     "place": "MILL_BROOK",
     "uv": [
-      0.72,
+      0.73,
       0.6
     ],
     "kind": "beetle",
     "height": 0.8,
     "patrol": [
-      0.65,
-      0.81
+      0.61,
+      0.83
     ],
-    "period": 14,
+    "period": 27,
     "purpose": "Sammelt gefallene Harztropfen und versorgt damit junge Bäume am Mühlenbach.",
     "travel": "Sucht gefallene Harztropfen",
     "work": "Sortiert Harz für die jungen Bäume",
@@ -169,6 +253,20 @@
       5,
       2,
       1
+    ],
+    "route": [
+      [
+        0.61,
+        0.6
+      ],
+      [
+        0.72,
+        0.44
+      ],
+      [
+        0.83,
+        0.68
+      ]
     ]
   },
   "cinder_carrier": {
@@ -177,16 +275,16 @@
     "hp": 185,
     "place": "ASH_ASCENT",
     "uv": [
-      0.45,
-      0.6
+      0.7,
+      0.55
     ],
     "kind": "carrier",
     "height": 1.2,
     "patrol": [
-      0.28,
-      0.66
+      0.55,
+      0.84
     ],
-    "period": 14,
+    "period": 32,
     "purpose": "Bringt Brennstoff vom alten Depot zu den Feuern des Siegelhofs.",
     "travel": "Trägt Schlacke zum Siegelhof",
     "work": "Prüft und sichert seinen Brennstoffkorb",
@@ -202,6 +300,20 @@
       5,
       2,
       1
+    ],
+    "route": [
+      [
+        0.55,
+        0.55
+      ],
+      [
+        0.695,
+        0.39
+      ],
+      [
+        0.84,
+        0.63
+      ]
     ]
   },
   "vharok": {

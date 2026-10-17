@@ -409,6 +409,17 @@ func start_game() -> void:
 	var position := Catalog.position_for("PARK", Vector2(0.48, 0.6))
 	if saved.get("position") is Array and saved.position.size() == 3:
 		position = Vector3(float(saved.position[0]), 0.03, float(saved.position[2]))
+	# Nach einer Revierverlegung bleibt ein laufender Kampf fortsetzbar. Siege,
+	# Beute und Decks behalten ihren unveränderten Speicherschlüssel.
+	for id in Enemies.data():
+		var encounter: Dictionary = save_data.get("forest_encounters", {}).get(selected + ":" + id, {})
+		if encounter.get("phase", "") not in ["intro", "battle", "victory", "defeat"]: continue
+		var profile: Dictionary = Enemies.data()[id]
+		var encounter_room: String = "OUTDOOR" if not Catalog.region_for(profile.place).is_empty() else profile.place
+		if start_room != encounter_room:
+			start_room = encounter_room
+			position = Catalog.position_for(profile.place, Vector2(profile.uv[0], profile.uv[1]))
+		break
 	await _mount_world(start_room, position)
 	_resume()
 
@@ -1078,7 +1089,8 @@ func _mount_regional_enemies() -> void:
 		contact.set_shader_parameter("opacity",.18 if id=="thorn_moth" else .34)
 		shadow.material_override=contact;shadow.position=Vector3(point.x,.018,point.z)
 		shadow.scale=Vector3.ONE*stage.body_pixel_size/.020*float(profile.get("height",1.1));stage.add_child(shadow)
-		regional_markers.append({"id":id,"position":point,"art":art,"pose":0,"material":material,"shadow":shadow})
+		regional_markers.append({"id":id,"position":point,"art":art,"pose":0,"material":material,"shadow":shadow,
+			"life_clock":float(posmod(hash(id),100)),"route":PackedVector3Array(),"route_goal":Vector3.INF})
 	# Restore a suspended regional encounter after reopening the saved location.
 	for marker in regional_markers:
 		var saved: Dictionary=save_data.get("forest_encounters",{}).get(actor.species+":"+marker.id,{})
@@ -1152,17 +1164,32 @@ func _update_regional_art() -> void:
 		marker.defeated=saved.get("phase","")=="done"
 		marker.art.visible=not marker.defeated;marker.shadow.visible=not marker.defeated
 		if marker.defeated:continue
-		var life:=EnemyLife.sample(profile,game_clock+float(hash(marker.id)%100))
 		var walking:=false
-		var close: bool=actor.position.distance_to(marker.position)<2.5
+		var close: bool=Vector2(actor.position.x-marker.position.x,actor.position.z-marker.position.z).length()<1.5
+		if not close:marker.life_clock+=get_process_delta_time()
+		var life:=EnemyLife.sample(profile,marker.life_clock)
 		if not close:
 			var goal: Vector3=stage.safe_position(Catalog.position_for(profile.place,life.uv),.1)
-			var at: Vector3=stage.safe_position(marker.position.move_toward(goal,1.2*get_process_delta_time()),.1)
+			# Auch Gegner folgen dem geprüften trockenen Weg. Das direkte Klemmen
+			# einer Geraden konnte an gekrümmten Ufern seitlich versetzen.
+			if goal.distance_to(marker.route_goal)>.20 or marker.route.is_empty():
+				marker.route=InteractionPath.find_path(stage,marker.position,goal,.1)
+				marker.route_goal=goal
+			var at: Vector3=marker.position
+			var budget:=1.2*get_process_delta_time()
+			while not marker.route.is_empty() and budget>0:
+				var waypoint: Vector3=marker.route[0]
+				var next:=at.move_toward(waypoint,budget)
+				if not InteractionPath.clear_segment(stage,at,next,.1):
+					marker.route=PackedVector3Array();break
+				budget-=at.distance_to(next);at=next
+				if at.distance_to(waypoint)<.001:marker.route.remove_at(0)
+				else:break
 			if absf(at.x-marker.position.x)>.001:marker.art.flip_h=at.x>marker.position.x
 			walking=at.distance_to(marker.position)>.001
 			marker.position=at;marker.art.position=at+Vector3.UP*(.85 if marker.id=="thorn_moth" else 0.0)
 			marker.shadow.position=Vector3(at.x,.018,at.z)
-		marker.activity=life.activity if not close else "Beobachtet vorsichtig deinen Schritt"
+		marker.activity=(str(profile.travel) if walking else life.activity) if not close else "Beobachtet vorsichtig deinen Schritt"
 		marker.material.set_shader_parameter("foot",marker.position)
 		var mask: Dictionary=stage.actor_occlusion(marker.position)
 		marker.material.set_shader_parameter("has_mask",mask.mask!=null)

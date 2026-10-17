@@ -1,3 +1,10 @@
+## Quellstand nach 0.9.0 – getrennte Gegnerreviere und Hangführung
+
+Weniger Gegner pro Ort, längere Arbeitswege auch in die Bildtiefe und eine
+Wegführung für seitliches Laufen an Steigungen. Bestehende Kämpfe und Siege
+bleiben fortsetzbar. [Umsetzung und Prüfung](../../docs/godot-gegnerreviere-und-hangsteuerung.md).
+Dieser Quellstand ist noch keine neue APK-Auslieferung.
+
 ## Aktuell: 0.6.2 – Eigenlicht und lebendiger Sieg
 
 Kartenansicht schliesst wieder zum erhaltenen Deck. Starlet leuchtet selbst je nach

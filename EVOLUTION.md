@@ -7062,3 +7062,25 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene Scheren und Körbe bleiben frei von der Statusanzeige. Neue Korrekturen ersetzen ältere laufende0.9.0-Testbauten, damit nur der aktuelle Stand ausgeliefert wird.
 
 - **Lichtdaten-Korrektur:** Die beiden Erweiterungsbilder tragen explizite Assetpfade in den Lichtdaten. Die allgemeine Koordinaten-/Maskenprüfung erfasst sie damit ebenfalls und bricht bei fehlenden Texturen sofort mit einem Prüffehler ab.
+
+### 2026-10-17 – Getrennte Gegnerreviere und leichteres Laufen an Anhöhen
+
+- **DOCUMENTED INTENT:** Martin beauftragt weiteren Weltausbau mit mehr Raum
+  zwischen Gegnern und die Korrektur mühsamer Bewegung an höheren Wegen/Anhöhen.
+- **FACT:** Rindenwächter zieht von Nebelwacht an den Mühlenbach, Glutwicht an
+  den Aschenstieg. Die drei Orte enthalten je zwei getrennte Reviere. Normale
+  Gegner verwenden längere mehrdimensionale Arbeitswege und gemeinsame Nähepausen
+  von Bewegung/Tätigkeitsuhr. Geprüfte Interaktionspfade ersetzen Randversetzungen.
+- **STEUERUNG:** Seitliche Bewegung folgt bei drohendem Kontakt mit schrägem
+  Wegrand der lokalen Wegsteigung. Bestehende Fuß-/Segmentgrenzen, Tempo und
+  vertikale Sprung-/Rollbewegung bleiben Grundlage.
+- **KOMPATIBILITÄT:** Unveränderte Gegner-/Beuteschlüssel; ein alter laufender
+  Kampf wird beim Start am aktuellen Revier fortgesetzt. Normale Standorte bleiben.
+- **TESTED BEHAVIOR:** Neue Lauf-/Revier-/Speicherprüfungen, bestehende Gegner-,
+  Bewohner-, Gesten- und Türregressionen; Ergebnisse im PR. Echter GL-Bildabgleich
+  von Nebelwacht, Mühlenbach, Aschenstieg und Steigung. Identischer Fennec-Hanglauf
+  benötigt 160 statt 186 Physiktakte mit rein seitlicher Eingabe.
+- **UNVERIFIED:** Telefon-GPU/FPS und manuelle Daumenabnahme offen. Keine neue
+  APK behauptet, kein Eingriff in Release-/Signierungsinfrastruktur.
+- **ÜBERGABE:** docs/godot-gegnerreviere-und-hangsteuerung.md, Branch
+  codex/godot-roaming-and-slopes, auf PR366/AndroidTest0.9.0 aufgebaut.

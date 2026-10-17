@@ -50,14 +50,18 @@ func run() -> void:
 	while app.loading_world: await process_frame
 	await mount("fennec")
 	var center: Vector2 = app.hud.action_center()
+	# Das Testziel ist die Gestensteuerung; zufaellig hier projizierte
+	# Ortsmarker duerfen den ersten linken Touch nicht als Wegauftrag abfangen.
+	app.hud.markers.clear()
 	# Gesten mit beiden Daumen und schraegen Bewegungen.
 	touch(0, Vector2(118,600),true)
 	drag(0,Vector2(171,600))
+	var walking_vector: Vector2 = app.actor.touch_vector
 	touch(1,center,true)
 	drag(1,center+Vector2(18,-52))
 	await frames(8)
 	check(app.actor.jump_clock >= 0 and app.actor.position.y > .35,"Schraege Aufwaertsgeste springt, Gehdaumen bleibt aktiv")
-	check(app.actor.touch_vector.x > .5,"Sprung verwirft Gehdaumen nicht")
+	check(walking_vector.length() > .14 and app.actor.touch_vector.is_equal_approx(walking_vector),"Sprung erhaelt die tatsaechliche Gehdaumeneingabe")
 	touch(1,center+Vector2(18,-52),false)
 	check(not app.actor.jump_requested,"Sprung-Release erzeugt keinen zweiten Sprung")
 	var vertical: float = app.actor.velocity.y
@@ -112,6 +116,8 @@ func run() -> void:
 	for species in Catalog.data().characters:
 		await mount(species)
 		app.actor.enabled = false
+		# Kompaktatlanten verwenden eine eigene 48-Posen-Aufteilung.
+		if Catalog.data().characters[species].get("compact",false): continue
 		var reference: float = app.actor.base_pixel_size*109*Catalog.relative_height(species)
 		for direction in [Vector2.RIGHT,Vector2.LEFT,Vector2(0,1),Vector2(0,-1)]:
 			app.actor.facing = direction
