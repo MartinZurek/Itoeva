@@ -1351,6 +1351,128 @@
           677.52
         ]
       ]
+    },
+    "ash-ascent.png": {
+      "size": [
+        1672,
+        941
+      ],
+      "evidence": "Feuerschalen im Quellbild von Hand verortet; Wege bleiben trocken, Leuchten bleibt klein und lokal.",
+      "water": [],
+      "exclude": [],
+      "audit_water": [],
+      "audit_dry": [
+        [
+          836,
+          686
+        ]
+      ],
+      "lights": [
+        {
+          "kind": "fire",
+          "at": [
+            1479,
+            562
+          ],
+          "radius": [
+            100,
+            122
+          ],
+          "strength": 0.24
+        },
+        {
+          "kind": "fire",
+          "at": [
+            1600,
+            564
+          ],
+          "radius": [
+            100,
+            122
+          ],
+          "strength": 0.24
+        }
+      ],
+      "asset": "res://assets/expansion/ash-ascent.png"
+    },
+    "seal-court.png": {
+      "size": [
+        1672,
+        941
+      ],
+      "evidence": "Feuerschalen im Quellbild von Hand verortet; Wege bleiben trocken, Leuchten bleibt klein und lokal.",
+      "water": [],
+      "exclude": [],
+      "audit_water": [],
+      "audit_dry": [
+        [
+          836,
+          686
+        ]
+      ],
+      "lights": [
+        {
+          "kind": "fire",
+          "at": [
+            38,
+            453
+          ],
+          "radius": [
+            100,
+            122
+          ],
+          "strength": 0.24
+        },
+        {
+          "kind": "fire",
+          "at": [
+            605,
+            453
+          ],
+          "radius": [
+            100,
+            122
+          ],
+          "strength": 0.24
+        },
+        {
+          "kind": "fire",
+          "at": [
+            1034,
+            452
+          ],
+          "radius": [
+            100,
+            122
+          ],
+          "strength": 0.24
+        },
+        {
+          "kind": "fire",
+          "at": [
+            1287,
+            450
+          ],
+          "radius": [
+            100,
+            122
+          ],
+          "strength": 0.24
+        },
+        {
+          "kind": "fire",
+          "at": [
+            1628,
+            453
+          ],
+          "radius": [
+            100,
+            122
+          ],
+          "strength": 0.24
+        }
+      ],
+      "asset": "res://assets/expansion/seal-court.png"
     }
   }
 }

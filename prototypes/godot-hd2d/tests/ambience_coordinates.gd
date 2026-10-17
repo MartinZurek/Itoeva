@@ -18,6 +18,7 @@ func run():
   path=str(entry.get("asset",path))
   var texture=load(path)
   check(texture!=null,"Originaltextur vorhanden "+key)
+  if texture==null:continue
   var mat=Ambience.create_material(path,texture)
   check(mat.get_shader_parameter("light_count")==entry.get("lights",[]).size(),"Alle Lampen "+key)
   for light in entry.get("lights",[]):

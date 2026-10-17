@@ -511,7 +511,7 @@ func _effect_numbers(t: float, color: Color) -> void:
   if int(effect.amount)==0 and effect.kind in ["heal","mp"]: continue
   var offset := int(offsets.get(target_index,0))
   offsets[target_index] = offset+1
-  var point := _position(target_index)-Vector2(30,154+(t-impact)*28+offset*28)
+  var point := _position(target_index)-Vector2(50,82+(t-impact)*18)+Vector2(0,offset*25)
   var text := str(effect.amount)
   var tint := Color("fff2d9")
   match effect.kind:
@@ -522,11 +522,11 @@ func _effect_numbers(t: float, color: Color) -> void:
    "burn": text+=" · BRENNEN"
    "barrier": text="+%s SCHUTZ" % effect.amount;tint=Color("addef5")
    "barrier_hit": text="SCHUTZ −%s" % effect.amount;tint=Color("addef5")
-   "barrier_break": text="BARRIERE BRICHT";tint=Color("addef5")
+   "barrier_break": text="SCHUTZ −%s" % effect.amount;tint=Color("addef5")
    "silence": text="VERSTUMMT";tint=Color("d3b6e5")
    "bind": text="GEFESSELT";tint=Color("d3b6e5")
    "release": text="BEFREIT";tint=Color("cbe3ab")
-  _word(text,point,22 if effect.kind in ["barrier_hit","barrier_break","silence","bind","release"] else 27,tint)
+  _word(text,point,18 if effect.kind in ["barrier_hit","barrier_break","silence","bind","release"] else 24,tint)
 
 func _arena_fire() -> void:
  if model.phase != "intro": return

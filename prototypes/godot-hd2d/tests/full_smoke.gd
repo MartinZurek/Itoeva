@@ -28,7 +28,7 @@ func run() -> void:
 	await frames(5)
 	check(app.paused and app.portrait_cards.size() == 8, "Startmenue zeigt sechs Originalwesen, Mooslyn und Nocti")
 	var labels: Dictionary = Catalog.data().labels
-	check(labels.size() == 39 and Catalog.data().regions.size() == 7, "Katalog: 28 Originalorte, sieben Waldorte, drei Erweiterungen und Waldpfadlabel")
+	check(labels.size() == 41 and Catalog.data().regions.size() == 7, "Katalog: 28 Originalorte, sieben Waldorte, fünf Erweiterungen und Waldpfadlabel")
 	check(app.music_on == false and not app.music.playing, "Musik bleibt beim ersten Start aus")
 	var loading_deadline := Time.get_ticks_msec() + 30000
 	while app.loading_world and Time.get_ticks_msec() < loading_deadline:

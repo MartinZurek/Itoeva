@@ -1,4 +1,6 @@
 extends "res://scripts/forest_battle.gd"
+const Ecology=preload("res://scripts/ecology_rules.gd")
+var ecology_state: Dictionary={}
 const Cards=preload("res://scripts/card_catalog.gd")
 const BOSS_HP := 220
 const BOARD_LIMIT := 3
@@ -27,7 +29,7 @@ func prepare(custom: Dictionary) -> void:
  source_decks=custom.duplicate(true)
  decks.clear();board.clear();fallen=[[],[],[]];next_uid=1;pending_advance=false
  special_charges=[0,0];special_used=[false,false]
- demon_charge=false;seal_pending=false
+ demon_charge=false;seal_pending=false;ecology_state={}
  for owner in 3:
   var species: String="enemy" if owner==2 else str(party[owner].species)
   var entries: Array=custom.get(species,[])
@@ -37,6 +39,7 @@ func prepare(custom: Dictionary) -> void:
    var j:=rng.randi_range(0,i);var value:=ids[i];ids[i]=ids[j];ids[j]=value
   decks.append({"species":species,"draw":ids,"hand":[],"discard":[],"cap":1,"crystals":1,"power":false,"turns":0})
   _draw_cards(owner,3)
+ Ecology.setup(self)
 
 func _draw_cards(owner: int,count: int) -> void:
  var state: Dictionary=decks[owner]
@@ -157,6 +160,7 @@ func _event(title: String,visual: String,effects: Array,previous: Dictionary,ext
 
 func _damage_target(owner: int,target: String,amount: int,effects: Array) -> void:
  if target=="enemy":
+  amount=Ecology.damage(self,amount)
   var actual:=mini(enemy_health,amount)
   enemy_health-=actual;effects.append({"target":2,"amount":actual,"kind":"damage"})
   if enemy_health==0:phase="victory"
@@ -169,6 +173,7 @@ func _damage_target(owner: int,target: String,amount: int,effects: Array) -> voi
   if unit.is_empty():return
   _hurt_unit(unit,amount,effects)
  _remove_dead()
+ Ecology.after_damage(self)
 
 func _receive_hit(target: int,damage: int,effects: Array[Dictionary]) -> int:
  for unit in board:
@@ -515,6 +520,7 @@ func _reset_fight() -> void:
 
 func snapshot() -> Dictionary:
  var saved:=super.snapshot()
+ saved["ecology_state"]=ecology_state.duplicate(true)
  saved["demon_charge"]=demon_charge;saved["seal_pending"]=seal_pending
  saved["card_schema"]=3;saved["fallen"]=fallen.duplicate(true);saved["card_decks"]=decks.duplicate(true);saved["board"]=board.duplicate(true)
  saved["special_charges"]=special_charges.duplicate();saved["special_used"]=special_used.duplicate()
@@ -523,6 +529,10 @@ func snapshot() -> Dictionary:
 
 func restore(saved: Dictionary) -> void:
  super.restore(saved)
+ if saved.get("ecology_state",{}) is Dictionary and not saved.get("ecology_state",{}).is_empty():
+  ecology_state=saved.ecology_state.duplicate(true)
+  for key in ["step","phase","core_turns","resolve"]:ecology_state[key]=int(ecology_state.get(key,0))
+  for key in ["open","fuel"]:ecology_state[key]=bool(ecology_state.get(key,false))
  demon_charge=bool(saved.get("demon_charge",false));seal_pending=bool(saved.get("seal_pending",false))
  for i in 2:
   var charges=saved.get("special_charges",[0,0]);var used=saved.get("special_used",[false,false])
@@ -599,6 +609,7 @@ func begin() -> void:
  if not enemy_profile.is_empty():message=enemy_name+" erscheint. "+str(enemy_profile.description)
 
 func enemy_intent() -> String:
+ if Ecology.handles(self):return ("Standfest · " if int(ecology_state.get("resolve",0))>0 else "")+Ecology.intent(self)
  if enemy_profile.is_empty():return super.enemy_intent()
  if enemy_stagger>0:return "Wanken · nächster Zug entfällt"
  match enemy_profile.kind:
@@ -610,6 +621,7 @@ func enemy_intent() -> String:
  return "Angriff"
 
 func _regional_enemy_act() -> bool:
+ if Ecology.handles(self):return Ecology.act(self)
  if enemy_profile.kind in ["imp","weaver"]:return _demon_enemy_act()
  var previous:=_before()
  var effects: Array[Dictionary]=[]
@@ -649,6 +661,7 @@ func _regional_enemy_act() -> bool:
 
 
 func _counter_demon(element: String,effects: Array) -> void:
+ Ecology.counter(self,element,effects)
  if enemy_profile.get("kind","")=="imp" and demon_charge and element=="water":
   demon_charge=false
   effects.append({"target":2,"amount":0,"kind":"release"})
@@ -707,3 +720,17 @@ func _demon_enemy_act() -> bool:
  _event(enemy_name+" · "+title,"card_spell",effects,previous,{"element":element,"duration":2.0,"impact":.85,"target_code":"h:"+str(target)})
  pending_advance=true
  return true
+
+func _modify_enemy_damage(amount: int) -> int:return Ecology.damage(self,amount)
+func _after_enemy_damage() -> void:Ecology.after_damage(self)
+
+func claim_victory() -> bool:
+ var claimed:=super.claim_victory()
+ if claimed and enemy_profile.get("kind","")=="boss":
+  for member in result.members:
+   experience[member.species]=int(experience[member.species])+240
+   member.gained+=240;member.total=experience[member.species]
+  inventory.moon_shard=int(inventory.get("moon_shard",0))+2
+  for item in result.items:
+   if item.id=="moon_shard":item.count+=2
+ return claimed

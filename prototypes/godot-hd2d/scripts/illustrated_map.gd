@@ -2,6 +2,7 @@ extends Control
 # Decorative terrain is painted; every route and clickable marker follows game data.
 const Catalog = preload("res://scripts/world_catalog.gd")
 const Residents = preload("res://scripts/world_residents.gd")
+const Enemies=preload("res://scripts/regional_enemies.gd")
 var app: Node3D
 var background: Texture2D
 var nodes: Array[Dictionary] = []
@@ -39,10 +40,12 @@ func _ready() -> void:
   _node("SHADOW_DEPTHS","Tiefer Wald",Vector2(.82,.28),["SHADOW_DEPTHS"]),
   _node("SUN_GLADE","Sonnenhain",Vector2(.12,.43),["SUN_GLADE"]),
   _node("MIST_WATCH","Nebelwacht",Vector2(.70,.41),["MIST_WATCH"]),
-  _node("MILL_BROOK","Mühlenbach",Vector2(.12,.59),["MILL_BROOK"])]
+  _node("MILL_BROOK","Mühlenbach",Vector2(.12,.59),["MILL_BROOK"]),
+  _node("ASH_ASCENT","Aschenstieg",Vector2(.73,.53),["ASH_ASCENT"]),
+  _node("SEAL_COURT","Siegelhof",Vector2(.70,.63),["SEAL_COURT"])]
  # A continuous outdoor route, seven forest sections, then two converging branches.
  links=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],
-  [5,11],[11,12],[12,13],[13,14],[14,15],[15,16],[16,17],[5,18],[12,18],[18,19],[17,19],[18,20]]
+  [5,11],[11,12],[12,13],[13,14],[14,15],[15,16],[16,17],[5,18],[12,18],[18,19],[17,19],[18,20],[19,21],[21,22]]
  heading=Label.new();heading.text="ITOЕVA  ·  Atlas der bekannten Wege";heading.add_theme_font_size_override("font_size",27);add_child(heading)
  close=Button.new();close.text="Zurück zur Welt";close.pressed.connect(app._resume);add_child(close)
  app.menu_buttons.append(close)
@@ -102,7 +105,12 @@ func _select(id: String) -> void:
  if id in ["SHADOW_GATE","SHADOW_BROOK","SHADOW_CLEARING","SHADOW_DEPTHS"]:lines.append("\n[color=#e5b3a1]Dunkelwald: keine Bewohner. Vorsicht vor Gegnern.[/color]")
  if id=="MILL_BROOK":lines.append("\nEin heller Bachweg an der alten Wassermühle. Miro wartet tagsüber das Wasserrad.")
  if id=="SUN_GLADE":lines.append("\nEin heller Birkenhain mit Kräutern und alten Grenzsteinen. Dornmotten bewachen den Weg.")
- if id=="MIST_WATCH":lines.append("\nDie Waldwege treffen an der alten Grenzwacht zusammen. Dahinter liegt die Schlucht zur Dämonenwelt.\n\n[color=#eac886]Künftige Route: noch keine Brücke, kein Übergang.[/color]")
+ if id=="MIST_WATCH":lines.append("\nDie Waldwege treffen an der alten Grenzwacht zusammen. Der Versorgungsweg führt am Hang zum Aschenstieg und zum Siegelhof. Die Schlucht wird nicht überquert.")
+ if id=="ASH_ASCENT":lines.append("\nAlter Versorgungsweg zwischen Nebelwacht und Siegelhof. Schlackenträger beliefern die Grenzfeuer.")
+ if id=="SEAL_COURT":lines.append("\nVharok bewacht das versiegelte Grenztor. Das Tor zur weiteren Dämonenwelt bleibt geschlossen.")
+ lines.append("\n[color=#eac886]Wesen und Aufgaben[/color]")
+ for enemy in Enemies.data().values():
+  if enemy.place in node.places:lines.append(str(enemy.name)+" · "+str(enemy.get("purpose","")))
  detail.text="\n".join(lines)
  for i in chips.size():chips[i].modulate=Color("ffe7a1") if nodes[i].id==id else Color.WHITE
  queue_redraw()
@@ -126,4 +134,4 @@ func _draw() -> void:
   draw_circle(point,7,Color("3b352c"))
   draw_circle(point,4,Color("bce9cc") if current else Color("e7bd6e") if visited else Color("eee5d3"))
   if current:draw_arc(point,11+sin(clock*3)*1.5,0,TAU,40,Color("fff5c4"),2,true)
- # No route crosses the ravine; the future continuation is explicitly unbuilt.
+ # Der Versorgungsweg folgt dem Hang; keine Route überquert die Schlucht.
