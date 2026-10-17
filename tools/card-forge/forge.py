@@ -19,10 +19,13 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import io
 import json
 import math
+import os
 import re
 import sys
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -44,6 +47,13 @@ SPALTEN = {
 }
 FAKTOREN = ("quality", "lowvola", "momentum", "value", "composite", "size")
 
+# Unbekannte interne Felder duerfen auch aus alten, ruhenden Karten nicht ins Repo gelangen.
+OEFFENTLICHE_KARTENFELDER = (
+    "id", "name", "art", "form", "titel", "volk", "wesen", "farbe", "hex", "rolle", "reihe",
+    "seltenheit", "kosten", "angriff", "leben", "merkmale", "faehigkeit", "gabe", "glanz",
+    "wertpunkte", "status", "monat",
+)
+
 
 # --------------------------------------------------------------------------- Einlesen
 
@@ -51,25 +61,28 @@ def lies_tabelle(pfad: Path) -> list[dict]:
     import openpyxl
 
     wb = openpyxl.load_workbook(pfad, read_only=True, data_only=True)
-    ws = wb.worksheets[0]
-    zeilen = ws.iter_rows(values_only=True)
-    kopf = [str(k).strip() if k is not None else "" for k in next(zeilen)]
-    fehlend = [s for s in SPALTEN.values() if s not in kopf]
-    if fehlend:
-        sys.exit(f"Spalten fehlen in {pfad.name}: {', '.join(fehlend)}")
-    idx = {k: kopf.index(s) for k, s in SPALTEN.items()}
-    daten = []
-    for z in zeilen:
-        if z is None or z[idx["id"]] in (None, ""):
-            continue
-        d = {k: z[i] for k, i in idx.items()}
-        for k in ("id", "isin", "name", "sektor", "industrie"):
-            d[k] = str(d[k]).strip() if d[k] not in (None, "") else ""
-        for k in FAKTOREN:
-            d[k] = int(d[k] or 0)
-        d["size_rang"] = float(d["size_rang"] or 0)
-        daten.append(d)
-    return daten
+    try:
+        ws = wb.worksheets[0]
+        zeilen = ws.iter_rows(values_only=True)
+        kopf = [str(k).strip() if k is not None else "" for k in next(zeilen, ())]
+        fehlend = [s for s in SPALTEN.values() if s not in kopf]
+        if fehlend:
+            raise ValueError("Erforderliche Tabellenspalten fehlen.")
+        idx = {k: kopf.index(s) for k, s in SPALTEN.items()}
+        daten = []
+        for z in zeilen:
+            if z is None or z[idx["id"]] in (None, ""):
+                continue
+            d = {k: z[i] for k, i in idx.items()}
+            for k in ("id", "isin", "name", "sektor", "industrie"):
+                d[k] = str(d[k]).strip() if d[k] not in (None, "") else ""
+            for k in FAKTOREN:
+                d[k] = int(d[k] or 0)
+            d["size_rang"] = float(d["size_rang"] or 0)
+            daten.append(d)
+        return daten
+    finally:
+        wb.close()
 
 
 def vollstaendigkeit(d: dict) -> tuple:
@@ -80,15 +93,17 @@ def entdopple(daten: list[dict]) -> tuple[list[dict], list[tuple[str, list[str]]
     """Mehrere Aktiengattungen derselben Firma (z. B. GOOG/GOOGL) werden ein Wesen."""
     nach_name = defaultdict(list)
     for d in daten:
-        nach_name[d["name"]].append(d)
+        # Fehlende Namen sind kein Beleg, dass verschiedene Identitaeten dieselbe Firma sind.
+        gruppe = ("name", d["name"]) if d["name"] else ("id", d["isin"] or d["id"])
+        nach_name[gruppe].append(d)
     eins, zwillinge = [], []
-    for name, gruppe in nach_name.items():
+    for gruppe in nach_name.values():
         gruppe.sort(key=vollstaendigkeit, reverse=True)
         haupt = dict(gruppe[0])
         haupt["aliase"] = [g["id"] for g in gruppe[1:]] + [g["isin"] for g in gruppe[1:] if g["isin"]]
         eins.append(haupt)
         if len(gruppe) > 1:
-            zwillinge.append((name, [g["id"] for g in gruppe]))
+            zwillinge.append((haupt["name"], [g["id"] for g in gruppe]))
     return eins, zwillinge
 
 
@@ -96,6 +111,98 @@ def entdopple(daten: list[dict]) -> tuple[list[dict], list[tuple[str, list[str]]
 
 def lade_json(pfad: Path, standard):
     return json.loads(pfad.read_text(encoding="utf-8")) if pfad.exists() else standard
+
+
+def lade_vorher_und_register(aus: Path, privat: Path) -> tuple[dict, dict]:
+    """Bei Verlust/Verwechslung des privaten Gedaechtnisses niemals IDs neu belegen."""
+    try:
+        anderer_bestand = (aus / "galerie.html").exists() or any(aus.glob("monatswandel-*.md"))
+        if anderer_bestand and not (aus / "karten.json").exists():
+            raise ValueError("Kartenkatalog fehlt trotz vorhandener Ausgaben; Sicherung pruefen.")
+        vorher = lade_json(aus / "karten.json", {"karten": []})
+        if not isinstance(vorher, dict) or not isinstance(vorher.get("karten"), list):
+            raise ValueError("Vorhandener Kartenkatalog ist unlesbar.")
+        register = lade_json(privat / "register.json", None)
+        if register is None:
+            if (aus / "karten.json").exists() or anderer_bestand:
+                raise ValueError("Privates Register fehlt: aus privater Sicherung wiederherstellen.")
+            register = {"naechste_nummer": 1, "eintraege": {}}
+        if not isinstance(register, dict) or not isinstance(register.get("eintraege"), dict):
+            raise ValueError("Privates Register ist ungueltig.")
+        nummer = register.get("naechste_nummer")
+        if type(nummer) is not int or nummer < 1:
+            raise ValueError("Register-Zaehler ist ungueltig.")
+        nach_id, namen, identitaeten = {}, set(), {}
+        for schluessel, e in register["eintraege"].items():
+            if (not schluessel or not isinstance(e, dict)
+                    or not isinstance(e.get("karte_id"), str)
+                    or not re.fullmatch(r"K[0-9]{4,}", e["karte_id"])
+                    or not isinstance(e.get("eigenname"), str) or not e["eigenname"]
+                    or not isinstance(e.get("aliase"), list)
+                    or not all(isinstance(a, str) for a in e["aliase"])):
+                raise ValueError("Privates Register enthaelt ungueltige Eintraege.")
+            kid, name = e["karte_id"], e["eigenname"]
+            if kid in nach_id or name.casefold() in namen or not 1 <= int(kid[1:]) < nummer:
+                raise ValueError("Register-IDs, Namen oder Zaehler sind widerspruechlich.")
+            nach_id[kid] = name
+            namen.add(name.casefold())
+            for identitaet in (schluessel, *e["aliase"]):
+                if identitaet:
+                    if identitaet in identitaeten and identitaeten[identitaet] != kid:
+                        raise ValueError("Register enthaelt mehrdeutige Identitaeten oder Aliase.")
+                    identitaeten[identitaet] = kid
+        gesehen = set()
+        for k in vorher["karten"]:
+            if (not isinstance(k, dict) or not isinstance(k.get("id"), str)
+                    or k["id"] in gesehen or k["id"] not in nach_id
+                    or k.get("name") != nach_id[k["id"]]):
+                raise ValueError("Privates Register passt nicht zum vorhandenen Kartenkatalog.")
+            gesehen.add(k["id"])
+            # Auch spaeter ueberschriebene aktive Altkarten muessen vor Schreibbeginn lesbar sein.
+            try:
+                oeffentliche_karte(k)
+            except (KeyError, TypeError) as exc:
+                raise ValueError("Vorhandener Kartenkatalog enthaelt unlesbare Karten.") from exc
+        return vorher, register
+    except (json.JSONDecodeError, UnicodeError) as exc:
+        raise ValueError("Kartenkatalog oder privates Register ist unlesbar; Sicherung pruefen.") from exc
+
+
+def oeffentliche_karte(karte: dict) -> dict:
+    public = {feld: karte[feld] for feld in OEFFENTLICHE_KARTENFELDER}
+    for feld, erlaubt in (("faehigkeit", ("name", "x", "text")), ("gabe", ("name", "text"))):
+        if public[feld] is not None:
+            public[feld] = {k: public[feld][k] for k in erlaubt}
+    return public
+
+
+def galerie_daten(karten: list[dict], monat: str, regeln: dict) -> dict:
+    return {"monat": monat, "karten": [oeffentliche_karte(k) for k in karten],
+            "wesen": {w: {f: v[f] for f in ("farbe", "hex", "warum")}
+                      for w, v in regeln["wesen"].items() if not w.startswith("_")},
+            "voelker": {v["volk"]: {"wesen": v["wesen"], "bild": v["bild"]}
+                        for v in regeln["voelker"].values()}}
+
+
+def galerie_html(daten: dict) -> str:
+    # Private Firmennamen koennen HTML enthalten; JSON darf den Scriptblock nicht schliessen.
+    inhalt = json.dumps(daten, ensure_ascii=False).replace("<", "\\u003c")
+    return (HIER / "galerie_vorlage.html").read_text(encoding="utf-8").replace("/*__DATEN__*/null", inhalt)
+
+
+def schreibe_atomar(pfad: Path, text: str, encoding: str = "utf-8") -> None:
+    # Ein Abbruch darf insbesondere das einzige private Register nicht halb ueberschreiben.
+    tmp = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding=encoding, newline="", dir=pfad.parent, delete=False) as f:
+            tmp = Path(f.name)
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, pfad)
+    finally:
+        if tmp is not None:
+            tmp.unlink(missing_ok=True)
 
 
 def finde_im_register(d: dict, register: dict) -> str | None:
@@ -335,8 +442,17 @@ def balancebericht(karten: list[dict], regeln: dict) -> list[str]:
 # --------------------------------------------------------------------------- Hauptlauf
 
 def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_firmen: bool) -> dict:
+    if privat.resolve().is_relative_to(aus.resolve()) or aus.resolve().is_relative_to(privat.resolve()):
+        raise ValueError("Private und oeffentliche Ausgabe muessen getrennte Verzeichnisse sein.")
+    if eingabe.resolve().is_relative_to(aus.resolve()):
+        raise ValueError("Die private Eingabetabelle darf nicht im oeffentlichen Ausgabeordner liegen.")
+    if not re.fullmatch(r"[0-9]{4}-(0[1-9]|1[0-2])", monat):
+        raise ValueError("Monat muss das Format JJJJ-MM haben.")
+    vorher_daten, register = lade_vorher_und_register(aus, privat)
     regeln = lade_json(HIER / "rules.json", None)
     roh = lies_tabelle(eingabe)
+    if not roh:
+        raise ValueError("Keine Datenzeilen: bestehender Katalog bleibt unveraendert.")
     daten, zwillinge = entdopple(roh)
 
     unbekannt = sorted({d["sektor"] for d in daten if d["sektor"] not in regeln["voelker"]}
@@ -344,15 +460,12 @@ def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_fir
     if unbekannt:
         sys.exit("Neue Sektoren/Industrien - bitte in rules.json eintragen: " + "; ".join(unbekannt))
 
-    privat.mkdir(parents=True, exist_ok=True)
-    aus.mkdir(parents=True, exist_ok=True)
-    register = lade_json(privat / "register.json", {"naechste_nummer": 1, "eintraege": {}})
     vergeben = {e["eigenname"].lower() for e in register["eintraege"].values()}
     nutzung = Counter((e.get("volk"), t.lower()) for e in register["eintraege"].values()
                       for t in (e.get("teile") or [])[:1] + (e.get("teile") or [])[-1:])
     sperre = [w.lower() for w in regeln.get("namen", {}).get("sperre", [])]
 
-    karten, gesehen, uebersicht = {}, set(), []
+    karten, uebersicht = {}, []
     # Feste Reihenfolge -> neue Nummern und Namen sind reproduzierbar
     for d in sorted(daten, key=lambda d: (d["isin"] or d["id"])):
         schluessel = finde_im_register(d, register)
@@ -375,31 +488,32 @@ def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_fir
         e["zuletzt"] = monat
         k = baue_karte(d, e, regeln)
         k["monat"] = monat
+        if k["id"] in karten:
+            raise ValueError("Mehrere Datenzeilen beanspruchen dieselbe Kartenidentitaet.")
         karten[k["id"]] = k
-        gesehen.add(schluessel)
         uebersicht.append({"karte": k["id"], "firma": d["name"], "id": d["id"], "isin": d["isin"],
                            "sektor": d["sektor"], "industrie": d["industrie"], "wesen": f"{k['name']} – {k['art']}",
                            "seltenheit": k["seltenheit"], "kosten": k["kosten"], "angriff": k["angriff"],
                            "leben": k["leben"]})
 
     # Vormonat: nichts geht verloren. Fehlt eine Firma, ruht ihre Karte mit den letzten Werten.
-    vorher_pfad = aus / "karten.json"
-    vorher = {k["id"]: k for k in lade_json(vorher_pfad, {"karten": []})["karten"]}
-    vorher_monat = lade_json(vorher_pfad, {}).get("monat")
+    vorher = {k["id"]: k for k in vorher_daten["karten"]}
+    vorher_monat = vorher_daten.get("monat")
     for kid, alt in vorher.items():
         if kid not in karten:
             ruhend = dict(alt)
             ruhend["status"] = "ruhend"
             karten[kid] = ruhend
 
-    liste = [karten[k] for k in sorted(karten)]
-    (aus / "karten.json").write_text(json.dumps({"monat": monat, "anzahl": len(liste), "karten": liste},
-                                                ensure_ascii=False, indent=1), encoding="utf-8")
-    (privat / "register.json").write_text(json.dumps(register, ensure_ascii=False, indent=1), encoding="utf-8")
-    with open(privat / f"uebersicht-{monat}.csv", "w", newline="", encoding="utf-8-sig") as f:
-        w = csv.DictWriter(f, fieldnames=list(uebersicht[0]), delimiter=";")
-        w.writeheader()
-        w.writerows(sorted(uebersicht, key=lambda r: r["karte"]))
+    liste = [oeffentliche_karte(karten[k]) for k in sorted(karten)]
+    daten_galerie = galerie_daten(liste, monat, regeln)
+    html = galerie_html(daten_galerie)
+    private_html = None
+    if galerie_mit_firmen:
+        private_daten = dict(daten_galerie)
+        private_daten["firmen"] = {r["karte"]: r["firma"] for r in uebersicht}
+        private_daten["faktoren"] = {kid: k["herkunft"] for kid, k in karten.items() if "herkunft" in k}
+        private_html = galerie_html(private_daten)
 
     wandel = [f"# Monatswandel {monat}", ""]
     if vorher_monat and vorher_monat != monat:
@@ -407,23 +521,27 @@ def schmiede(eingabe: Path, monat: str, privat: Path, aus: Path, galerie_mit_fir
     else:
         wandel += ["Erste Schmiede dieses Monats - kein Vormonat zum Vergleich."]
     if zwillinge:
-        wandel += ["", "Zusammengelegte Aktiengattungen (ein Wesen je Firma): "
-                   + "; ".join(f"{', '.join(ids)}" for _, ids in zwillinge)]
+        wandel += ["", f"Zusammengelegte Gruppen: {len(zwillinge)} (ein Wesen je Firma)."]
     wandel += ["", "## Balance", ""] + balancebericht(liste, regeln)
-    (aus / f"monatswandel-{monat}.md").write_text("\n".join(wandel) + "\n", encoding="utf-8")
+    csv_text = io.StringIO(newline="")
+    w = csv.DictWriter(csv_text, fieldnames=list(uebersicht[0]), delimiter=";")
+    w.writeheader()
+    w.writerows(sorted(uebersicht, key=lambda r: r["karte"]))
 
-    vorlage = HIER / "galerie_vorlage.html"
-    if vorlage.exists():
-        daten_galerie = {"monat": monat, "karten": liste, "wesen": regeln["wesen"], "voelker": {
-            v["volk"]: {"wesen": v["wesen"], "bild": v["bild"]} for v in regeln["voelker"].values()}}
-        if galerie_mit_firmen:  # Firmennamen nur in der privaten Galerie
-            daten_galerie["firmen"] = {r["karte"]: r["firma"] for r in uebersicht}
-        html = vorlage.read_text(encoding="utf-8").replace(
-            "/*__DATEN__*/null", json.dumps(daten_galerie, ensure_ascii=False))
-        ziel = (privat if galerie_mit_firmen else aus) / "galerie.html"
-        ziel.write_text(html, encoding="utf-8")
+    # Erst nach Validierung und vollstaendigem Aufbau aller Ausgaben beginnt das Schreiben.
+    privat.mkdir(parents=True, exist_ok=True)
+    aus.mkdir(parents=True, exist_ok=True)
+    schreibe_atomar(privat / "register.json", json.dumps(register, ensure_ascii=False, indent=1))
+    schreibe_atomar(aus / "karten.json", json.dumps({"monat": monat, "anzahl": len(liste), "karten": liste},
+                                                  ensure_ascii=False, indent=1))
+    schreibe_atomar(privat / f"uebersicht-{monat}.csv", csv_text.getvalue(), encoding="utf-8-sig")
+    schreibe_atomar(aus / f"monatswandel-{monat}.md", "\n".join(wandel) + "\n")
 
-    return {"karten": liste, "zwillinge": zwillinge}
+    schreibe_atomar(aus / "galerie.html", html)
+    if private_html is not None:
+        schreibe_atomar(privat / "galerie.html", private_html)
+
+    return {"karten": liste, "zusammengelegte_gruppen": len(zwillinge)}
 
 
 def main() -> None:
@@ -435,7 +553,10 @@ def main() -> None:
     p.add_argument("--galerie-mit-firmen", action="store_true",
                    help="Galerie mit Firmennamen nach --privat schreiben (zur eigenen Kontrolle)")
     a = p.parse_args()
-    ergebnis = schmiede(a.eingabe, a.monat, a.privat, a.aus, a.galerie_mit_firmen)
+    try:
+        ergebnis = schmiede(a.eingabe, a.monat, a.privat, a.aus, a.galerie_mit_firmen)
+    except ValueError as exc:
+        p.exit(2, f"Schmiede abgebrochen: {exc}\n")
     print(f"{len(ergebnis['karten'])} Karten geschmiedet -> {a.aus / 'karten.json'}")
     print(f"Bericht: {a.aus / f'monatswandel-{a.monat}.md'}")
 

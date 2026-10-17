@@ -9,13 +9,18 @@ Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 
 Die Prüfung auf Basis von `claude/kartenschmiede` steht in
 [tools/card-forge/PRUEFUNG.md](tools/card-forge/PRUEFUNG.md). Die Datenarithmetik besteht
-die Tests; ein Einbau in `game` wird vorerst zurückgestellt. Öffentliche Exporte enthalten
-noch Faktorquintile und Firmenkennungen im Monatsbericht; ein fehlendes privates Register
-kann Karten-IDs neu vergeben. Monatsänderungen können Formen und Seltenheit zurückstufen.
+die Tests; ein Einbau in `game` wird vorerst zurückgestellt. Die im Prüfstand gefundenen
+Faktorquintile und Firmenkennungen sind im Folgeschritt aus den aktuellen öffentlichen
+Ausgaben entfernt. Register und Katalog werden vor dem Schreiben gegeneinander geprüft;
+fehlende oder widersprüchliche Zuordnungen führen zum Abbruch. Namen, IDs und Spielwerte
+der 616 Karten bleiben erhalten. Monatsänderungen können weiterhin Formen und Seltenheit
+zurückstufen; diese Produktfrage bleibt offen.
 
-Nächster Schritt ist ein begrenzter Export-Sicherungs-PR mit ausschließlich erfundenen
-Testdaten, danach ein engineunabhängiger, versionierter Katalogvertrag und ein kleiner
-Regelversuch. Kampf, Gruppe, Raster, Engine, Sammlungsbesitz und Bezahlung bleiben
+Die Exportabsicherung ist mit erfundenen Eingaben und den bereinigten Artefakten getestet.
+Nächster Schritt ist ein Vorschlag für einen engineunabhängigen, versionierten
+Katalogvertrag, einschließlich der ausdrücklich zu entscheidenden Monats-/Besitzregeln.
+Erst danach folgt ein begrenzter Regelversuch. Kampf, Gruppe, Raster, Engine,
+Sammlungsbesitz und Bezahlung bleiben
 `OPEN DECISION`. Kartenbuch, Spiel-Assets und Beschwörungsanimationen sind nicht eingebaut.
 Die bestehenden Preise bleiben unverändert; konkrete Preiskandidaten stehen im Prüfbericht.
 

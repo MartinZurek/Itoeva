@@ -669,6 +669,43 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-17 - Öffentliche Kartenexporte und Register absichern (card-forge-export-v1)
+
+- **Ausgangsproblem / DOCUMENTED INTENT:** Nach der Prüfung beauftragt der Nutzer den
+  nächsten Schritt. Rohquintile und Kennungen gelangten in öffentliche Dateien; ohne
+  privates Register konnten bestehende Karten-IDs neu vergeben werden.
+- **Änderung / TESTED BEHAVIOR:** Öffentliche Kartenfelder und verschachtelte Effekte
+  werden ausdrücklich erlaubt; das gilt auch für ruhende Altkarten. JSON, HTML und
+  Monatsbericht enthalten keine ursprünglichen Faktorobjekte oder Kennungslisten mehr.
+  Die private Zusatzgalerie bleibt separat, maskiert Firmennamen als HTML-Text und
+  aktualisiert zusätzlich die öffentliche Galerie. Die 616 bestehenden Karten behalten
+  sämtliche Spiel-/Darstellungswerte, Namen und IDs.
+- **Identitätsschutz:** Fehlendes, unlesbares, veraltetes oder widersprüchliches Register,
+  fehlender Katalog neben alten Ausgaben, doppelte Datenidentitäten und leere Eingaben
+  brechen vor dem Schreiben ab. Leere Firmennamen führen nicht mehr zur Zusammenlegung
+  verschiedener Identitäten. Register und Ausgaben werden einzeln atomar ersetzt;
+  Wiederholung nach Abbruch zwischen Register und Katalog erhält vergebene Identitäten.
+- **Betroffen:** `tools/card-forge/forge.py`, Galerievorlage, öffentliche Oktober-Ausgaben,
+  Python-/Galerietests, README und Prüfstatus in `PRUEFUNG.md`/`ITOEVA2.md`.
+  Keine Kotlin-/Compose-, Preference-, Room-, Kampf- oder Preisänderung.
+- **Tests:** 21 Python-Tests mit erfundenen Eingaben, darunter Exportlecks aller Dateitypen,
+  verschachtelte/ruhende Zusatzfelder, Registerfehler ohne Dateiveränderung, Wiedererwachen
+  und Wiederholung nach Schreibabbruch. Node-Script-Test für 616 Kartendetails und private
+  Zusatzansicht mit DOM-Stubs. Gradle-Test/Kompilierung erneut erfolgreich, 64 Tasks
+  unverändert gegenüber dem vorherigen erfolgreichen Lauf mit 1.415 Unit-Tests.
+- **UNVERIFIED / Grenzen:** Keine Browser-Layout-/Telefonabnahme, kein Partientest.
+  Einzeldateien sind atomar, die Dateigruppe nicht; parallele Läufe sind nicht unterstützt.
+  Frühere veröffentlichte Git-Versionen bleiben unverändert. Abgeleitete Spielwerte sind
+  keine Zusage vollständiger Anonymität. Private Register-Sicherungen bleiben erforderlich.
+- **Migration / Rücksetzung:** Keine App-Migration. Öffentliche Exporte sind ohne private
+  Daten neu aufgebaut. Ein Code-Revert würde die Exportlecks wieder ermöglichen und darf
+  daher keine alten Ausgaben zurückveröffentlichen; bereinigten Katalog behalten.
+- **Nächster Schritt / OPEN DECISION:** Versionierten engineunabhängigen Katalogvertrag
+  vorschlagen; Monatseditionen und Besitz ausdrücklich entscheiden. Die zurückgestellte
+  Spieleintegration, Kampf, Engine und Bezahlung bleiben unverändert offen. Die früheren
+  Aussagen über aktuelle Exportlecks im Eintrag `card-forge-review-v1` beziehen sich auf
+  dessen geprüfte Basis und sind durch diesen Folgeschritt für aktuelle Ausgaben überholt.
+
 ### 2026-10-17 - Kartenschmiede geprüft, Integration zurückgestellt (card-forge-review-v1)
 
 - **Ausgangsproblem / DOCUMENTED INTENT:** Der Nutzer beauftragt eine kritische Prüfung

@@ -4,6 +4,17 @@ Geprüfte Basis: `claude/kartenschmiede`, Commit
 `bf914ce1816c28e3fa892528dd333c77a4054d9d`. Arbeitsbranch: `codex/karten-beschwoerung`.
 Auftrag: `CODEX_AUFTRAG.md`, Teil 1; Abschlussdokumentation gemäß Nutzerauftrag.
 
+**Folgestand – Exportabsicherung (17.10.2026):** Die nachstehende Prüfung beschreibt die
+oben genannte ursprüngliche Basis. Im Branch `codex/card-forge-export-schutz` sind die
+öffentlichen Faktorobjekte und Kennungslisten entfernt, die Galerie bereinigt und
+Registerverlust/-widersprüche vor dem Schreiben abgesichert. Die 616 Karten behalten
+IDs, Namen und Spielwerte. 21 Python-Tests sowie der Galerie-Script-Test bestehen;
+Gradle-Test/Kompilierung wurden erneut erfolgreich geprüft (64 Tasks unverändert).
+Der Script-Test verwendet DOM-Stubs, keinen Browser. Details und Betriebsgrenzen stehen
+in `README.md`. Die historischen P1-Befunde unten sind damit für den aktuellen Stand
+behoben; sie bleiben als Begründung erhalten. Frühere Git-Versionen enthalten weiterhin
+die damals veröffentlichten Daten. Monats-/Besitzvertrag, Kampf und Engine bleiben offen.
+
 ## Entscheidung: Teil 2 jetzt zurückstellen
 
 **Kein Einbau in die Kotlin/Compose-Spielvariante zum jetzigen Zeitpunkt.** Die Schmiede

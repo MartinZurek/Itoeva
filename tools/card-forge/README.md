@@ -9,6 +9,10 @@ Stand: Vorschlag vom 17.10.2026. Kampfregeln, Kartenspiel-Oberfläche und Booste
 **OPEN DECISION** (siehe `docs/itoeva2-worldbuilding.md`: Kampfklassen sind noch nicht entschieden).
 Die Schmiede legt nur die Daten an, die ein solches Spiel braucht.
 
+Die kritische Bewertung und die zurückgestellte Spieleintegration stehen in
+[`PRUEFUNG.md`](PRUEFUNG.md). Der Folgeschritt sichert zunächst Exporte und Kartenidentitäten;
+Kampfregeln, Preise und Sammlungsbesitz werden dadurch nicht entschieden.
+
 ## Die Übersetzung
 
 | Faktor | wird zu | Regel |
@@ -27,12 +31,12 @@ Quintil 0 (fehlender Wert) wird als neutrales Q3 behandelt. Mehrere Aktiengattun
 
 ### Balance: jede Karte liegt auf der Kurve
 
-Wie der Vanilla-Test aus Hearthstone: Eine Karte mit K Kristallen hat genau **2K + 1 Wertpunkte**.
+Wie beim Vanilla-Test ist **2K + 1 Wertpunkte** das Budget für eine Karte mit K Kristallen.
 Angriff und Leben zählen je 1, Merkmale und Fähigkeiten haben einen Punktpreis (`rules.json`).
 Die Schmiede rechnet aus den Faktoren Rohwerte, bestimmt daraus die Kosten (Value verschiebt),
-und skaliert Angriff und Leben dann so, dass die Summe exakt passt. Das Verhältnis Angriff:Leben
-bleibt das der Daten. Eine Firma mit starkem Momentum bleibt also angriffslastig, wird aber nie
-billiger als ihre Kraft. Gleich effiziente Karten, verschieden geformt.
+und skaliert Angriff und Leben auf dieses Budget. Durch die Rundung auf ganze Körperwerte
+sind bis zu 0,5 Punkte Abweichung möglich. Das Verhältnis Angriff:Leben orientiert sich an den
+Daten. Das ist ein rechnerischer Vergleich, kein Nachweis gleicher Effizienz im Kampf.
 
 Seltenere Karten bekommen mehr Wertpunkte und eine Volksfähigkeit (Stufe X wächst mit der
 Seltenheit); Mythische zusätzlich eine **Gabe**. Das macht sie teurer, nicht effizienter.
@@ -60,19 +64,25 @@ Die Pools sind bewusst ähnlich groß (96–110 Karten). Eine Art kann per `"vol
 3. `out/monatswandel-2026-11.md` lesen: wer erwacht ist, wer sich entwickelt hat, wer ruht,
    plus Balancebericht (Kristallkurve je Seltenheit, Pools je Wesen).
 4. Optional `--galerie-mit-firmen` schreibt eine Galerie mit Firmennamen nach `private/`.
+   Sie enthält zusätzlich die Faktorübersicht aktiver Karten. Die öffentliche Galerie wird
+   trotzdem jedes Mal mit dem aktuellen, bereinigten Katalog geschrieben.
 
 Was über Monate gilt:
 
 - **Name und Karten-Id bleiben.** Sie hängen am Datenschlüssel (ISIN, sonst Ticker; Zweitgattungen
   als Alias) und stehen in `private/register.json`. Diese Datei ist das Gedächtnis der Schmiede,
   sie muss von Monat zu Monat erhalten bleiben (z. B. in Drive sichern).
+  Fehlt sie bei vorhandenen Ausgaben, ist sie unlesbar oder widerspricht sie den alten
+  Karten-IDs/Namen, bricht der Lauf **vor dem Schreiben** ab. Auch ein fehlender Katalog
+  neben alten Berichten/Galerien sowie ein zurückgesetzter ID-Zähler führen zum Abbruch.
+  Das Register aus einer passenden **privaten** Sicherung wiederherstellen; nicht leer neu anlegen.
 - **Werte wandern** mit den Daten. Das Monatszeichen (*im Aufwind*, *unerschütterlich* …) zeigt den
   stärksten Faktor des Monats.
-- **Entwicklung statt Austausch:** Steigt eine Firma in der Größe auf, wächst das Wesen in die
-  nächste Form (Funkenkäfer → Siliziumspinne → Siliziumdrache).
+- **Monatsänderungen:** Formen können mit Size auf- und absteigen. Auch Werte, Seltenheit und
+  Glanz sind veränderlich. Wie erworbene Formen und Editionen erhalten bleiben, ist
+  **OPEN DECISION**, kein bereits eingebauter Sammlungsvertrag.
 - **Nichts geht verloren.** Fällt eine Firma aus den Daten, *ruht* ihre Karte mit den letzten
-  Werten und bleibt in jeder Sammlung. Kommt sie zurück, erwacht sie wieder. (Vision: sanft statt
-  strafend.)
+  Werten im Katalog. Kommt sie zurück, erwacht sie mit derselben ID und demselben Namen wieder.
 - **Neue Industrie oder neuer Sektor** bricht den Lauf mit Hinweis ab. Dann einen Eintrag in
   `rules.json` ergänzen.
 
@@ -83,11 +93,49 @@ Was über Monate gilt:
 | `rules.json` | alle Stellschrauben: Faktor-Tabellen, Punktpreise, Völker, 67 Arten, Booster | ja |
 | `forge.py` | reine Mechanik, nur Standardbibliothek + openpyxl | ja |
 | `test_forge.py` | Kurve, Monotonie, Folgemonat mit Wegfall/Neuzugang, keine Firmendaten im Ausgang | ja |
+| `test_galerie.cjs` | echtes Galerie-Script mit DOM-Stubs: Details ohne Rohfaktoren und sichere private Zusatzansicht | ja |
 | `galerie_vorlage.html` | Kartengalerie, die `forge.py` mit Daten füllt | ja |
-| `out/karten.json` | öffentliche Kartendaten ohne Firmen und ISINs | ja |
+| `out/karten.json` | öffentliche Spielwerte ohne Firmen, Kennungen oder originale Faktorquintile | ja |
 | `private/` | Excel, Register, Firmenübersicht, Galerie mit Firmen | **nein** (`.gitignore`) |
 
 Das Repository ist öffentlich. Die Faktordaten und die Zuordnung Firma → Karte bleiben deshalb
 in `private/`.
 
-Tests: `python tools/card-forge/test_forge.py`
+## Grenze der öffentlichen Ausgabe
+
+`OEFFENTLICHE_KARTENFELDER` in `forge.py` erlaubt nur Spiel- und Darstellungsfelder.
+Auch `faehigkeit` und `gabe` haben feste Feldlisten. Sie gelten erneut für alte, ruhende
+Karten; unbekannte interne Zusatzfelder werden verworfen. Öffentliche JSON- und
+HTML-Ausgabe enthalten weder `herkunft` noch eine Firma-Karte-Zuordnung. Der öffentliche
+Monatsbericht nennt bei zusammengelegten Gattungen nur noch die Anzahl der Gruppen.
+Spielwerte sind weiterhin aus den Eingabedaten abgeleitet; die Bereinigung verspricht
+keine vollständige Nicht-Rückführbarkeit der Spielwerte.
+
+Private und öffentliche Ausgabepfade dürfen sich nicht überlappen; die Eingabetabelle darf
+nicht im öffentlichen Ausgabeordner liegen. Leere Eingaben brechen ab, bevor alle Karten
+versehentlich ruhend werden. Gleichnamige Firmen werden weiterhin zusammengefasst;
+**leere** Namen sind dagegen kein Grund, verschiedene Identitäten zusammenzufassen.
+
+Die Dateien werden einzeln atomar ersetzt, das Register zuerst. Scheitert danach eine
+öffentliche Ausgabe, kann der Lauf mit denselben Daten und demselben Monat wiederholt
+werden; bereits vergebene Identitäten bleiben im Register erhalten. Die Dateigruppe ist
+keine gemeinsame Transaktion; parallele Schmiedeläufe auf denselben Pfaden sind nicht
+unterstützt. Das private Register bleibt sicherungsbedürftig.
+
+Die eingecheckten Oktober-Ausgaben wurden ohne neue Faktoreingabe bereinigt: 616 IDs,
+Namen und Spielwerte bleiben gleich. Rohquintile und Kennungslisten wurden entfernt und
+die Galerie aus dem bereinigten Bestand neu aufgebaut. Bereits veröffentlichte frühere
+Git-Versionen werden dadurch nicht gelöscht; eine Historienumschreibung ist nicht Teil
+dieses Schritts.
+
+Tests (Python benötigt `openpyxl`; der zusätzliche Script-Test nur Node.js):
+
+```text
+python tools/card-forge/test_forge.py
+node tools/card-forge/test_galerie.cjs
+```
+
+Die Python-Tests verwenden ausschließlich erfundene Eingabezeilen und prüfen auch die
+eingecheckten öffentlichen Artefakte. Der Node-Test führt alle 616 vorhandenen
+Kartendetails und die optionale private Ansicht aus; Layout und echte Browserbedienung
+werden durch DOM-Stubs nicht geprüft.
