@@ -28,6 +28,12 @@ func run() -> void:
    var rect:=Rect2i(Enemies.region(id,pose));var crop:=im.get_region(rect)
    check(rect.size.x>100 and crop.get_used_rect().size.y>100,id+" vollständige Pose")
   check(im.get_pixel(0,0).a<.01,id+" echte Transparenz")
+  var view=load("res://scripts/card_view.gd").new();view.model=fresh(id)
+  for pose in 7:
+   var dimensions: Vector2=view._regional_dimensions(pose)
+   var top: float=view._position(2).y-dimensions.y
+   check(top>=165 and view._position(2).x+dimensions.x*.5<=1260,id+" echte Rendermaße aller Posen bleiben außerhalb der UI")
+  view.free()
   var b=fresh(id);enemy(b)
   var saved: Dictionary=JSON.parse_string(JSON.stringify(b.snapshot()))
   var other=fresh(id);other.restore(saved)

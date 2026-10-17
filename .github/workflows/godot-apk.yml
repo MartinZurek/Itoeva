@@ -15,7 +15,8 @@ permissions: {}
 
 concurrency:
   group: godot-test-apk-v090
-  cancel-in-progress: false
+  # Neuere Korrekturen ersetzen veraltete Testbauten vor der Drive-Auslieferung.
+  cancel-in-progress: true
 
 env:
   GODOT_VERSION: '4.5.1'
@@ -44,7 +45,7 @@ jobs:
           import hashlib, json, os, pathlib
           project = pathlib.Path(os.environ['PROJECT'])
           manifest = json.loads(pathlib.Path('docs/godot-v090-runtime-manifest.json').read_text())
-          assert manifest['sha256'] == '4abb33bb773705fe371bb8098b9108502bfd573e7ae06df980d54e93959df3b8'
+          assert manifest['sha256'] == '3cacd21af3da349641cd34ca865a47ab3de2e0d3f44b94047f3f8705f5c7761e'
           canonical = ''.join(item['path'] + '\0' + item['sha256'] + '\n' for item in manifest['files']).encode()
           assert hashlib.sha256(canonical).hexdigest() == manifest['sha256']
           assert len(manifest['files']) == 321

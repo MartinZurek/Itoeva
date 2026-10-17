@@ -282,7 +282,7 @@ func _refresh_unit_info() -> void:
  unit_info_state.text=" · ".join(marks)
 
 func _position(index: int) -> Vector2:
- return Vector2(1110,420 if model.enemy_profile.get("kind","")=="boss" else 350) if index==2 else Vector2(125,306) if index==0 else Vector2(263,306)
+ return Vector2(1110,420 if model.enemy_profile.get("kind","")=="boss" else 360 if model.enemy_profile.get("ecology_atlas",false) else 350) if index==2 else Vector2(125,306) if index==0 else Vector2(263,306)
 
 func _visible_board() -> Array:
  if model.playback_pending and event_time>=0 and event_time<model.impact_time():return model.last_event.get("before_board",model.board)
@@ -554,8 +554,7 @@ func _regional_fighter() -> void:
  var enemies=load("res://scripts/regional_enemies.gd")
  var region: Rect2=enemies.region(model.enemy_id,pose)
  var texture: Texture2D=load(enemies.asset(model.enemy_id))
- var scale_factor: float=(250.0 if model.enemy_profile.kind=="boss" else 190.0)/enemies.region(model.enemy_id,0).size.y
- var dimensions: Vector2=region.size*scale_factor
+ var dimensions:=_regional_dimensions(pose)
  var tint:=Color("ffd6bd") if state=="hit" else Color.WHITE
  if model.demon_charge or model.seal_pending:
   var pulse:=.55+.15*sin(clock*2.5)
@@ -569,3 +568,11 @@ func _draw_seal(unit: Dictionary,foot: Vector2) -> void:
  draw_arc(at,39,clock*.8,clock*.8+PI*1.4,40,Color("b78ce0"),2,true)
  draw_colored_polygon(PackedVector2Array([at+Vector2(0,-26),at+Vector2(17,0),at+Vector2(0,26),at+Vector2(-17,0)]),Color("bd7a42"))
  _unit_affordance(unit,foot,"ritual",false)
+
+# Auch erhobene Scheren und Körbe bleiben unterhalb des Statusfelds sichtbar.
+func _regional_dimensions(pose: int) -> Vector2:
+ var enemies=load("res://scripts/regional_enemies.gd")
+ var reference_height: float=enemies.region(model.enemy_id,0).size.y
+ if model.enemy_profile.get("ecology_atlas",false):
+  for frame in 7:reference_height=maxf(reference_height,enemies.region(model.enemy_id,frame).size.y)
+ return enemies.region(model.enemy_id,pose).size*(250.0 if model.enemy_profile.kind=="boss" else 190.0)/reference_height

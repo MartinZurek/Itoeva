@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "canonical": "path+NUL+sha256+LF; sorted by path",
-  "sha256": "4abb33bb773705fe371bb8098b9108502bfd573e7ae06df980d54e93959df3b8",
+  "sha256": "3cacd21af3da349641cd34ca865a47ab3de2e0d3f44b94047f3f8705f5c7761e",
   "files": [
     {
       "path": "assets/audio/attack.wav",
@@ -1220,8 +1220,8 @@
     },
     {
       "path": "scripts/card_view.gd",
-      "sha256": "52d6083f7a2fad66971e088e7a9feb8350ce6f8fd7acf278e78ed1ed1dc136e2",
-      "bytes": 30683
+      "sha256": "200c6ac634da1dd636f6e3e3e19880d709ef201e269c2965e2407f85cabbabfd",
+      "bytes": 31143
     },
     {
       "path": "scripts/card_view.gd.uid",

@@ -33,7 +33,7 @@ Vorbereitung und Sturmwarnung verwenden vorhandene dezente Kristall-/Mondklänge
 
 ## Prüfung und praktische Grenzen
 
-- `ecology_boss_v090`:1057 Checks,0 Fehler: Reviere, Posen, Rüstung, Kernfenster, Sturm, Standfestigkeit, Konter, Beute, JSON-Spielstand, Neustart, echte Kampfeinstiege, verschwundener besiegter Boss, Bewegung ohne Teleport, lokale Lichtquellen.
+- `ecology_boss_v090`:1085 Checks,0 Fehler: Reviere, Posen, Rüstung, Kernfenster, Sturm, Standfestigkeit, Konter, Beute, JSON-Spielstand, Neustart, echte Kampfeinstiege, verschwundener besiegter Boss, Bewegung ohne Teleport, lokale Lichtquellen.
 - `ecology_playthrough_v090`:128/128 Siege mit acht Helden, vier Gegnern und vier Kartenreihenfolgen. Normale Gegner dauern3–5 Runden, Vharok5–9 Runden. Das ist eine feste sinnvolle Teststrategie, keine Aussage über alle Spielstile oder jede Kombination.
 - Türenmatrix:256 Pfade mit allen acht Spezies bestanden. Bestehende Karten-, Spezialkraft-, Einwohner-, Tiefen-, Audio- und Rauchtests im APK-Workflow erneut.
 - OpenGL-Aufnahmen: vier Reviere, Nachtlicht, Beobachten/Kampf, Aufladen/Angriff, Kernöffnung, Sturmwarnung/-wirkung, Sieg und Atlas. Linux/Mesa-Rendering, keine Behauptung über geprüfte Telefon-FPS, Adreno/Mali oder menschliche Hörabnahme.
@@ -45,3 +45,5 @@ Bilder und ihre Importdaten liegen in `prototypes/godot-hd2d/assets/expansion/`:
 Promptset der Landschaften: detailreiche gemalte16:9-HD2D-Miniaturwelt, durchgehender freier Steinweg bei70–81% Bildhöhe; Hintergrundarchitektur darüber, Vordergrund unter86%; Aschenstieg mit Birken/Grenzturm/Schlackendepot am diesseitigen Schluchthang; Siegelhof mit geschlossenem Basalt-Bronzetor, drei leeren Ritualsockeln und kleinen Feuerschalen. Keine Figuren, Schrift oder Benutzeroberfläche. Wegband und Lichtquellen anschließend anhand des tatsächlichen Bildes vermessen.
 
 AndroidTest0.9.0/Code21, bestehendes Paket `com.itoeva.godot.hd2d.worldtest`, ARM64. Das Runtime-Manifest dokumentiert den tatsächlichen Quellstand; der bestehende signierte APK-/Drive-Weg prüft Paketversion, Signatur, Dateigröße und Remote-Prüfsumme. Build-/Auslieferungsstatus ist im zugehörigen PR nachzulesen, nicht aus diesem Dokument als abgeschlossen abzuleiten.
+
+Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene Scheren und Körbe bleiben frei von der Statusanzeige. Neue Korrekturen ersetzen ältere laufende0.9.0-Testbauten, damit nur der aktuelle Stand ausgeliefert wird.

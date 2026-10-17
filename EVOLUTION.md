@@ -5646,7 +5646,7 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 
 - **Version / Evidenzklasse:** Protokoll bleibt 0.5. Aenderung ausschliesslich an der
   Erzeugungspipeline und ihren Tests; kein Anwendungscode, keine Audiodatei angefasst.
-- **BEOBACHTET:** Der erste Erzeugungslauf nach dem Freigabe-Gate (Lauf 34031057429) starb nach
+- **BEOBACHTET:** Der erste Erzeugungslauf nach dem Freigabe-Gate (Lauf 34031085429) starb nach
   sieben Sekunden am ersten Schritt `Validate track without model download` mit
   `ModuleNotFoundError: No module named 'numpy'`.
 - **URSACHE:** Das Gate wurde in `generate_music.py` auf Modulebene importiert. Der Trockenlauf
@@ -7052,9 +7052,11 @@ Menge daneben waere eine Kopie, die auseinanderlaeuft.
 - **DARSTELLUNG:** Ereignisgebundene Zielpunkte, unterschiedliche zurückhaltende
   Effekte, vorbereitende leise Klänge, lokale Feuerbeleuchtung, bewegte Schatten
   und Masken. Treffertexte aus dem überdeckten Kopfbereich versetzt.
-- **TESTED BEHAVIOR:**1057 neue Checks,128 vollständige Testkämpfe,256 Türpfade;
+- **TESTED BEHAVIOR:**1085 neue Checks,128 vollständige Testkämpfe,256 Türpfade;
   OpenGL-Zeitfolgen und Tag/Nachtbilder. Regressionen und Export im Lieferweg erneut.
 - **UNVERIFIED:** Menschliche Spielbalance/Hörabnahme und Android-GPU/FPS bleiben
   offen. Kein Anspruch auf Hearthstone-/Magic-Produktreife durch Prototypprüfungen.
 - **ÜBERGABE:** docs/godot-gegnerwelt-und-vharok-v090.md, Runtime-Manifest0.9.0,
   AndroidTest Code21 im bestehenden signierten Build-/Drive-Weg.
+
+Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene Scheren und Körbe bleiben frei von der Statusanzeige. Neue Korrekturen ersetzen ältere laufende0.9.0-Testbauten, damit nur der aktuelle Stand ausgeliefert wird.

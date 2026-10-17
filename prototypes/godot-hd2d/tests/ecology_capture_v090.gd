@@ -12,7 +12,7 @@ func grab(label: String) -> void:
 func effect(enc,label: String) -> void:
  enc.model.cursor=2;enc.model.playback_pending=false;enc.model.enemy_act();enc._play_event();enc.persist()
  enc.suspended=true;enc.set_process(false);enc.view.set_process(false)
- for i in 10:
+ for i in ([4] if "--poses" in OS.get_cmdline_user_args() else range(10)):
   enc.view.event_time=i*.2;enc.view.clock=i*.2;enc.view.refresh();await grab(label+"-"+str(i))
  enc.model.acknowledge_animation();enc.view.event_time=-1;enc.view.build_commands();enc.view.refresh()
 func run() -> void:
