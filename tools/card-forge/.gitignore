@@ -1,0 +1,3 @@
+# Faktordaten, Register (Firma -> Karte) und Galerie mit Firmennamen bleiben privat.
+private/
+__pycache__/

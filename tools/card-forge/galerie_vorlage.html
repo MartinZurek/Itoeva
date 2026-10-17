@@ -1,0 +1,212 @@
+<title>Itoeva Kartengalerie</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: Sternwarten-Kartei - kompakter Legendenstreifen, Filterleiste, dichtes Kartenraster, Detailblatt. */
+:root{
+  --bg:#eceaf3; --surface:#f8f7fc; --ink:#24213a; --muted:#625d7c; --line:#d3cfe2;
+  --accent:#4f86c6; --card:#fffdf7; --shadow:rgba(36,33,58,.10);
+  --r1:#8b8799; --r2:#4f9a78; --r3:#3f78c4; --r4:#8a52c4; --r5:#d9792b;
+  --pixel:"Jersey 10", "Courier New", monospace;
+  --body:"Atkinson Hyperlegible", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14121f; --surface:#1d1a2c; --ink:#ebe8f7; --muted:#a39fbd; --line:#332f48;
+  --accent:#7fb0e8; --card:#221f33; --shadow:rgba(0,0,0,.35);
+  --r1:#a09cb0; --r2:#6cc39c; --r3:#6ea3ea; --r4:#b688ea; --r5:#f0a15a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14121f; --surface:#1d1a2c; --ink:#ebe8f7; --muted:#a39fbd; --line:#332f48;
+  --accent:#7fb0e8; --card:#221f33; --shadow:rgba(0,0,0,.35);
+  --r1:#a09cb0; --r2:#6cc39c; --r3:#6ea3ea; --r4:#b688ea; --r5:#f0a15a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+h1{font-family:var(--pixel);font-weight:400;font-size:clamp(34px,5vw,48px);line-height:1;margin:0;letter-spacing:.5px;text-wrap:balance}
+.sub{color:var(--muted);margin:0}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.legend div{background:var(--surface);padding:10px 12px;display:grid;gap:2px}
+.legend b{font-family:var(--pixel);font-weight:400;font-size:20px;line-height:1}
+.legend span{color:var(--muted);font-size:12.5px}
+.stats{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end}
+.curve{display:flex;gap:4px;align-items:flex-end;height:64px}
+.curve .bar{width:22px;display:grid;justify-items:center;gap:2px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.curve .bar i{display:block;width:100%;background:var(--accent);border-radius:2px 2px 0 0;min-height:1px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums}
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+select,input[type=search]{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:0}
+input[type=search]{flex:1 1 180px}
+label.tog{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.count{color:var(--muted);font-size:13px;margin-left:auto;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;display:grid;grid-template-rows:auto auto 1fr auto;gap:6px;background:var(--card);border-radius:10px;padding:10px;
+  border:2px solid var(--fam);box-shadow:0 1px 0 var(--shadow),0 4px 14px var(--shadow);position:relative;min-width:0}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.card.glanz{border-image:linear-gradient(135deg,var(--fam),#f6d77a,#9be3f0,var(--fam)) 1;border-radius:0}
+.card.ruhend{opacity:.55}
+.top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.cost{font-family:var(--pixel);font-size:24px;line-height:1;width:30px;height:30px;display:grid;place-items:center;background:var(--fam);color:#fff;border-radius:50%;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.gem{width:12px;height:12px;transform:rotate(45deg);background:var(--rar);border:1px solid rgba(0,0,0,.15)}
+.art{display:flex;gap:8px;align-items:center;min-width:0}
+.art canvas{width:48px;height:48px;image-rendering:pixelated;flex:none;background:color-mix(in srgb,var(--fam) 12%,transparent);border-radius:6px}
+.nm{min-width:0}
+.nm strong{display:block;font-family:var(--pixel);font-weight:400;font-size:22px;line-height:1;overflow-wrap:anywhere}
+.nm small{color:var(--muted);font-size:12px;display:block}
+.txt{font-size:12px;color:var(--muted);display:grid;gap:3px;align-content:start}
+.txt em{font-style:normal;color:var(--ink)}
+.bot{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:6px}
+.atk,.hp{font-family:var(--pixel);font-size:22px;line-height:1;display:flex;gap:4px;align-items:center}
+.atk::before{content:"";width:10px;height:10px;background:#c9483a;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.hp::after{content:"";width:10px;height:10px;background:#3fa36b;border-radius:50%}
+.role{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.firm{font-size:11px;color:var(--accent);overflow-wrap:anywhere}
+dialog{border:none;border-radius:12px;padding:0;max-width:min(560px,calc(100vw - 32px));width:100%;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px var(--shadow)}
+dialog::backdrop{background:rgba(20,18,31,.55)}
+.sheet{padding:18px;display:grid;gap:12px}
+.sheet h2{font-family:var(--pixel);font-weight:400;font-size:34px;line-height:1;margin:0}
+.trans{width:100%;border-collapse:collapse;font-size:13px}
+.trans td{padding:5px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.trans td:nth-child(2){font-family:var(--pixel);font-size:18px;text-align:center;width:44px}
+.q{display:inline-flex;gap:2px}.q i{width:8px;height:8px;background:var(--line);display:block}.q i.on{background:var(--accent)}
+.close{justify-self:end;font:inherit;padding:6px 12px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.empty{color:var(--muted);padding:30px 0}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .12s}.card:hover{transform:translateY(-2px)}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Itoeva Kartengalerie</h1>
+    <p class="sub" id="sub"></p>
+  </header>
+
+  <section class="legend" aria-label="So werden Faktoren zu Karten">
+    <div><b>Quality → Leben</b><span>robust gebaute Firmen halten mehr aus</span></div>
+    <div><b>Momentum → Angriff</b><span>Kursschwung wird Schlagkraft</span></div>
+    <div><b>Value → Kristalle</b><span>günstig bewertet = günstig beschworen; teuer = Wachstum</span></div>
+    <div><b>Low Vola → Temperament</b><span>ruhig = Wächter, schwankend = Ungestüm</span></div>
+    <div><b>Size → Seltenheit</b><span>Quintil 5 (die Größten) = Mythisch</span></div>
+    <div><b>Composite → Glanz</b><span>bestes Fünftel schimmert, rein kosmetisch</span></div>
+  </section>
+
+  <section class="stats">
+    <div><div class="role">Kristallkurve</div><div class="curve" id="curve"></div></div>
+    <div style="display:grid;gap:6px;min-width:0"><div class="role">Seltenheit</div><div class="pills" id="rar"></div>
+      <div class="role">Heimvölker der Wesen</div><div class="pills" id="hero"></div></div>
+  </section>
+
+  <div class="filters" role="search">
+    <input type="search" id="q" placeholder="Name, Art oder Volk suchen" aria-label="Suchen">
+    <select id="fw" aria-label="Wesen"></select>
+    <select id="fv" aria-label="Volk"></select>
+    <select id="fr" aria-label="Seltenheit"></select>
+    <select id="fk" aria-label="Kosten"></select>
+    <select id="so" aria-label="Sortierung">
+      <option value="kosten">nach Kristallen</option><option value="seltenheit">nach Seltenheit</option>
+      <option value="angriff">nach Angriff</option><option value="leben">nach Leben</option><option value="name">nach Name</option>
+    </select>
+    <label class="tog" id="firmtog" hidden><input type="checkbox" id="ff"> Firmen zeigen</label>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
+
+<script>
+const D = /*__DATEN__*/null;
+const RAR = ["Gewöhnlich","Ungewöhnlich","Selten","Episch","Mythisch"];
+const RARVAR = {"Gewöhnlich":"--r1","Ungewöhnlich":"--r2","Selten":"--r3","Episch":"--r4","Mythisch":"--r5"};
+const $ = s => document.querySelector(s);
+const K = D.karten;
+const heroes = Object.keys(D.wesen).filter(w => !w.startsWith("_"));
+const cap = s => s.charAt(0) + s.slice(1).toLowerCase();
+
+$("#sub").textContent = `${K.filter(k=>k.status==="aktiv").length} Wesen · Datenstand ${D.monat} · ${Object.keys(D.voelker).length} Völker`;
+
+function opts(el, label, vals){ el.innerHTML = `<option value="">${label}</option>` + vals.map(v=>`<option value="${v}">${v}</option>`).join(""); }
+opts($("#fw"), "Alle Wesen", heroes.map(cap));
+opts($("#fv"), "Alle Völker", Object.keys(D.voelker).sort());
+opts($("#fr"), "Alle Seltenheiten", RAR);
+opts($("#fk"), "Alle Kosten", [1,2,3,4,5,6,7,8,9,10]);
+if (D.firmen) $("#firmtog").hidden = false;
+
+// Kurve und Kennzahlen
+const cc = Array(11).fill(0); K.forEach(k => k.status==="aktiv" && cc[k.kosten]++);
+const mx = Math.max(...cc);
+$("#curve").innerHTML = cc.slice(1).map((n,i)=>`<div class="bar" title="${n} Karten mit ${i+1} Kristallen"><span>${n}</span><i style="height:${Math.round(40*n/mx)}px"></i><span>${i+1}</span></div>`).join("");
+$("#rar").innerHTML = RAR.map(r=>`<span class="pill" style="border-color:var(${RARVAR[r]})">${r} ${K.filter(k=>k.seltenheit===r).length}</span>`).join("");
+$("#hero").innerHTML = heroes.map(h=>{const v=[...new Set(K.filter(k=>k.wesen===h).map(k=>k.volk))].join(", ");
+  return `<span class="pill" style="border-color:${D.wesen[h].hex}" title="${D.wesen[h].warum}">${cap(h)}: ${v}</span>`}).join("");
+
+// Pixel-Sigel: 10x10, gespiegelt, aus der Karten-Id gesät - wie die 16x16-Matrix der Wesen
+function seed(str){let h=2166136261;for(const c of str){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return()=>{h^=h<<13;h^=h>>>17;h^=h<<5;return (h>>>0)/4294967296}}
+const sigil = {};
+function sigel(k){
+  if (sigil[k.id]) return sigil[k.id];
+  const n=10, c=document.createElement("canvas"); c.width=c.height=n;
+  const g=c.getContext("2d"), r=seed(k.id), dens=[.42,.48,.54][["Jungform","Reife Form","Urform"].indexOf(k.form)];
+  for(let y=0;y<n;y++)for(let x=0;x<n/2;x++){ if(r()<dens*(1-Math.abs(y-n/2)/(n*0.9))){
+    g.fillStyle = r()<.18 ? "#ffffff" : k.hex; g.fillRect(x,y,1,1); g.fillRect(n-1-x,y,1,1);}}
+  return sigil[k.id]=c.toDataURL();
+}
+
+function cardHTML(k){
+  const f = k.faehigkeit ? `<em>${k.faehigkeit.name} ${k.faehigkeit.x}</em>` : "";
+  const g = k.gabe ? ` · <em>${k.gabe.name}</em>` : "";
+  const m = k.merkmale.filter(x=>x!=="Schnäppchen").join(" · ");
+  const firm = (D.firmen && $("#ff").checked) ? `<div class="firm">${D.firmen[k.id]||""}</div>` : "";
+  return `<button class="card${k.glanz?" glanz":""}${k.status==="ruhend"?" ruhend":""}" data-id="${k.id}" style="--fam:${k.hex};--rar:var(${RARVAR[k.seltenheit]})" aria-label="${k.name}, ${k.art}, ${k.kosten} Kristalle, ${k.angriff} Angriff, ${k.leben} Leben">
+    <div class="top"><span class="cost">${k.kosten}</span><span class="role">${k.rolle}</span><span class="gem" title="${k.seltenheit}"></span></div>
+    <div class="art"><img alt="" width="48" height="48" style="width:48px;height:48px;image-rendering:pixelated;border-radius:6px;background:color-mix(in srgb,${k.hex} 12%,transparent)" src="${sigel(k)}"><div class="nm"><strong>${k.name}</strong><small>${k.art} · ${k.volk}</small></div></div>
+    <div class="txt">${f}${g}${m?`<span>${m}</span>`:""}${firm}</div>
+    <div class="bot"><span class="atk">${k.angriff}</span><span class="role">${k.status==="ruhend"?"ruht":k.titel}</span><span class="hp">${k.leben}</span></div>
+  </button>`;
+}
+
+function render(){
+  const q=$("#q").value.trim().toLowerCase(), w=$("#fw").value.toUpperCase(), v=$("#fv").value, r=$("#fr").value, c=+$("#fk").value, so=$("#so").value;
+  const showF = D.firmen && $("#ff").checked;
+  let L = K.filter(k => (!w||k.wesen===w) && (!v||k.volk===v) && (!r||k.seltenheit===r) && (!c||k.kosten===c)
+    && (!q || `${k.name} ${k.art} ${k.volk} ${showF?(D.firmen[k.id]||""):""}`.toLowerCase().includes(q)));
+  const key = {kosten:k=>[k.kosten,-RAR.indexOf(k.seltenheit)], seltenheit:k=>[-RAR.indexOf(k.seltenheit),k.kosten], angriff:k=>[-k.angriff,k.kosten], leben:k=>[-k.leben,k.kosten], name:k=>[k.name]}[so];
+  L.sort((a,b)=>{const x=key(a),y=key(b);for(let i=0;i<x.length;i++){if(x[i]<y[i])return -1;if(x[i]>y[i])return 1}return a.name.localeCompare(b.name)});
+  $("#count").textContent = `${L.length} von ${K.length}`;
+  $("#grid").innerHTML = L.length ? L.map(cardHTML).join("") : `<p class="empty">Keine Karte passt zu diesen Filtern.</p>`;
+}
+
+function qbar(n){ const v = n>=1&&n<=5 ? 6-n : 0; return `<span class="q" title="Quintil ${n||"fehlt"}">${[1,2,3,4,5].map(i=>`<i class="${i<=v?"on":""}"></i>`).join("")}</span> Q${n||"–"}`; }
+
+function detail(id){
+  const k = K.find(x=>x.id===id), h=k.herkunft;
+  const rows = [
+    ["Momentum", k.angriff, "Angriff", h.momentum],
+    ["Quality", k.leben, "Leben", h.quality],
+    ["Value", k.kosten, "Kristalle", h.value],
+    ["Low Vola", k.merkmale.find(m=>["Wächter","Flackernd","Ungestüm"].includes(m))||"–", "Temperament", h.lowvola],
+    ["Size", k.seltenheit[0], k.seltenheit + " · " + k.form, h.size],
+    ["Composite", k.glanz?"✦":"–", k.glanz?"Glanz":"kein Glanz", h.composite],
+  ];
+  const regeln = [k.faehigkeit && k.faehigkeit.text, k.gabe && k.gabe.text].filter(Boolean);
+  $("#sheet").innerHTML = `
+    <div class="top" style="--fam:${k.hex}"><span class="cost">${k.kosten}</span><span class="role">${k.id} · ${k.rolle}, Reihe ${k.reihe}</span></div>
+    <h2>${k.name}</h2>
+    <div class="sub">${k.art} aus dem ${k.volk} · Heimvolk von ${cap(k.wesen)} · ${k.titel}${D.firmen&&$("#ff").checked?` · ${D.firmen[k.id]||""}`:""}</div>
+    <p class="sub" style="margin:0">${(D.voelker[k.volk]||{}).bild||""}</p>
+    ${regeln.length?`<div style="display:grid;gap:4px">${regeln.map(t=>`<div>${t}</div>`).join("")}</div>`:""}
+    <div style="overflow-x:auto"><table class="trans"><tbody>${rows.map(r=>`<tr><td>${r[0]}<br>${qbar(r[3])}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table></div>
+    <div class="sub">Wertpunkte ${k.wertpunkte} = 2 × ${k.kosten} Kristalle + 1. Jede Karte liegt genau auf der Kurve.</div>
+    <button class="close" id="cl">Schließen</button>`;
+  $("#dlg").showModal(); $("#cl").onclick=()=>$("#dlg").close();
+}
+
+["q","fw","fv","fr","fk","so","ff"].forEach(i=>$("#"+i).addEventListener("input",render));
+$("#grid").addEventListener("click",e=>{const b=e.target.closest(".card"); if(b) detail(b.dataset.id)});
+$("#dlg").addEventListener("click",e=>{ if(e.target.id==="dlg") $("#dlg").close(); });
+render();
+</script>
