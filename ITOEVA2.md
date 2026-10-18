@@ -32,6 +32,22 @@ Gruppe, Raster, Engine und Bezahlung bleiben
 `OPEN DECISION`. Kartenbuch, Spiel-Assets und Beschwörungsanimationen sind nicht eingebaut.
 Die bestehenden Preise bleiben unverändert; konkrete Preiskandidaten stehen im Prüfbericht.
 
+## Kartenwesen und Spielhelfer als Gestaltungsvorschau (18.10.2026)
+
+`tools/card-forge/out/wesenbuch.html` zeigt jetzt alle fünf Leuchtfeuer-Arten in
+ihren drei Formen als 15 eigenständige Vektorentwürfe. Dazu kommen die 36 vorhandenen
+Leuchtfeuer-Monatskarten mit tatsächlichen Werten und zwei separate Spielhelfer:
+Werkling (1/1, Fließband) sowie Erzsplitter (0/3, Wächter, Kristallherz), jeweils
+aus den bestehenden Regelvorschlägen. Fünf Artenformen haben noch keine Monatskarte
+und erhalten deshalb keine erfundenen Stats. Das Manifest `out/minions.json`
+verknüpft Gestaltungs-IDs, SVGs und vorhandene Karten-IDs. Erneute Erzeugung übernimmt
+gespeicherte Statkorrekturen im aktuellen Katalog; die Besitzentscheidung bleibt gültig.
+
+Dies ist ein engineunabhängiges, offline betrachtbares Entwurfsbuch. Es ersetzt
+nicht das zurückgestellte Kartenbuch im Spielmenü. Beschwörungsanimationen, Video-
+Darsteller, Laufzeit-Minions und die übrigen zwölf Völker sind noch nicht umgesetzt.
+Nächster Schritt ist eine Leuchtfeuer-Beschwörungsvorschau; Kampf und Engine bleiben offen.
+
 ## Aufbau
 
 - **Itoeva 1** ist eingefroren im Branch `itoeva-1` (Stand nach PR #322: Erinnerungsspiel,

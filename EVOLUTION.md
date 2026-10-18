@@ -669,6 +669,40 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-18 - Leuchtfeuer-Kartenwesen und erste Spielhelfer (card-minions-design-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt die Fortsetzung der Karten- und
+  Spielhelfer-Erstellung. Der nächste kleine Schnitt macht die bestehenden Wesen
+  sichtbar, während die begründete Zurückstellung der Game-Integration bestehen bleibt.
+- **FACT / Nutzerwirkung:** 15 unterscheidbare SVG-Entwürfe decken fünf Leuchtfeuer-
+  Arten in drei Formen ab; Werkling und Erzsplitter ergänzen zwei Spielhelfer.
+  Das offline nutzbare Wesenbuch zeigt zusätzlich alle 36 aktuellen Leuchtfeuer-
+  Monatskarten mit zugeordneten Bildern, Suche und Filtern nach Ansicht/Form.
+  Fünf Formen ohne Monatskarte bleiben ausdrücklich Gestaltungsentwürfe ohne Stats.
+- **Produktentscheidung / Balance:** Keine zusätzlichen Monatskarten oder Werte
+  erfunden. Werkling 1/1 und Erzsplitter 0/3 mit Wächter entsprechen den vorhandenen
+  Gaben-Vorschlägen; sie besitzen weder K-Karten-ID noch Kristallkosten. Keine
+  Kampfauflösung, Minion-Vergabe, neue Progression oder Änderung der sechs Avatare.
+  Die Illustrationen sind vorläufige Vektorgestaltung, keine fertigen Pixel-/3D-Assets.
+- **Betroffen:** Nur `tools/card-forge` (Generator, Vorlage, sechs Tests, JSON/HTML,
+  17 SVGs), README und `ITOEVA2.md`. Keine App-/Room-/Preference-/Workflow-Änderung.
+  Das Gestaltungsmanifest ist getrennt vom versionierten Karten-/Besitzvertrag.
+- **TESTED BEHAVIOR:** 57 Python-Tests und bestehender Node-Galerietest erfolgreich.
+  Neue Tests sichern vollständige Art-/Formabdeckung, unveränderten Kartenkatalog,
+  eindeutige Verweise, Helferwerte, Statkorrekturen, HTML-Escaping, eigenständige SVGs
+  und bytegleiche Neugenerierung. Browserprüfung umfasst alle 17 Bilder, 36 Monatskarten,
+  vier Urform-Karten, leere Suche und Wächter-Suche sowie Darstellung auf Desktop-/
+  Mobilbreite ohne seitlichen Überlauf. Gradle-Test und `compileGameKotlin` erfolgreich
+  (64 unveränderte Tasks aus dem Cache des vorherigen Laufs mit 1.415 Unit-Tests).
+- **UNVERIFIED / OPEN DECISION:** Keine Android-Geräteprüfung, Laufzeit-Minions oder
+  Animationen. Kampf, Engine, Gruppen/Raster, Vergabe und Bezahlung bleiben offen.
+  Weitere zwölf Völker benötigen eigene Illustrationen. Nächster Schnitt ist eine
+  Leuchtfeuer-Beschwörungsvorschau mit später austauschbarem Code-/Video-Darsteller.
+- **Migration / Rücksetzung:** Keine Migration; alle 616 Kartenbytes bleiben gleich.
+  Generator, Vorlage, Tests und neue Exporte können gemeinsam entfernt werden;
+  vorhandener Katalog, Galerie und erworbene Snapshots bleiben vollständig lesbar.
+  Die präzisierte Entscheidung zu gezielten Statkorrekturen gilt unverändert weiter.
+
 ### 2026-10-18 - Gezielte Statkorrekturen zulassen (card-stat-correction-v1)
 
 - **DOCUMENTED INTENT / Produktentscheidung:** Martin präzisiert seine Wahl A ausdrücklich:

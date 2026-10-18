@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-labelledby="name">
+<title id="name">Glühwürmchen – Vektorentwurf</title>
+<defs><linearGradient id="material" x2="0.8" y2="1"><stop stop-color="#bd9a75"/><stop offset=".45" stop-color="#755b4e"/><stop offset="1" stop-color="#322d32"/></linearGradient>
+<radialGradient id="feuer"><stop stop-color="#fff7b7"/><stop offset=".5" stop-color="#f5bd68"/><stop offset="1" stop-color="#e0683a"/></radialGradient>
+<filter id="aussparung" x="-20%" y="-20%" width="140%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="rand"/><feFlood flood-color="#101820"/><feComposite in2="rand" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<ellipse cx="240" cy="226" rx="89" ry="11" fill="#080e15" opacity=".8"/>
+<g filter="url(#aussparung)" paint-order="stroke fill"><ellipse cx="208" cy="123" rx="26" ry="14" fill="#accac4" stroke="#e9bb8a" stroke-width="3"/><ellipse cx="270" cy="123" rx="26" ry="14" fill="#accac4" stroke="#e9bb8a" stroke-width="3"/><ellipse cx="240" cy="156" rx="24" ry="34" fill="url(#material)" stroke="#e9bb8a" stroke-width="3"/><ellipse cx="240" cy="174" rx="14" ry="16" fill="url(#feuer)" stroke="#e9bb8a" stroke-width="3"/><path d="M230 124 Q215 92 207 107 M249 124 Q265 92 273 107" fill="none" stroke="#f1c59b" stroke-width="3" stroke-linejoin="round"/><ellipse cx="230" cy="144" rx="4" ry="6" fill="#fff4cc" stroke="#e9bb8a" stroke-width="3"/><ellipse cx="250" cy="144" rx="4" ry="6" fill="#fff4cc" stroke="#e9bb8a" stroke-width="3"/></g>
+</svg>

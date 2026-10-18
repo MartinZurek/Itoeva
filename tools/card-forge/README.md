@@ -24,6 +24,34 @@ sichern dies als engineunabhängiges Referenzmodell ab; eine App-Sammlung ist no
 
 ## Die Übersetzung
 
+### Sichtbare Kartenwesen und Spielhelfer (18.10.2026)
+
+`python tools/card-forge/wesen.py` erzeugt das offline nutzbare
+[`out/wesenbuch.html`](out/wesenbuch.html): 15 Leuchtfeuer-Gestaltungsentwürfe
+(fünf Arten in je drei Formen), 36 vorhandene Leuchtfeuer-Monatskarten mit ihren
+aktuellen Werten sowie die beiden bestehenden Spielhelfer Werkling und Erzsplitter.
+Ansicht, Form und Volltextsuche sind kombinierbar. Die 17 eigenständigen SVGs haben
+eine transparente 480×270-Bildbasis, dunkle Silhouettentrennung und warmes Kantenlicht.
+Es sind Vektorentwürfe, keine fertigen Pixel-, 3D- oder animierten Spielassets.
+
+`out/minions.json` enthält Gestaltungs-IDs, Bildpfade und Verweise auf passende
+Karten-IDs. Die Namen/Formen/Rollen stammen aus `rules.json`. Fünf Formen besitzen
+derzeit keine Monatskarte; sie erhalten keine erfundenen Stats oder Karten-IDs.
+Spielhelfer haben eigene IDs und keine Kristallkosten: Werkling 1/1 aus Fließband,
+Erzsplitter 0/3 mit Wächter aus Kristallherz. Diese bestehenden Regelvorschläge werden
+beschrieben, aber nicht ausgeführt. Das Manifest ist ein Gestaltungsartefakt und
+kein neuer Besitz-/Kampfvertrag oder Ersatz für den geprüften `karten.json`-Reader.
+
+Nach einem neuen Schmiedelauf oder einer gespeicherten Statkorrektur `wesen.py`
+erneut ausführen. Das Wesenbuch liest den aktuellen Katalog, verändert ihn jedoch
+nicht. Erworbene Ausgaben bleiben im bisherigen Referenzmodell getrennt; das Buch
+zeigt den aktuellen Monatskatalog und keine persönliche Sammlung.
+Die Quellen und Exporte dieses Schritts enthalten keine neue Faktoreingabe.
+
+Nächster Schnitt: Leuchtfeuer-Beschwörung anhand dieser Silhouetten als unabhängigen
+Vorschauablauf mit austauschbarem Darsteller (Code/Video) entwickeln. Kampf und
+Engine bleiben offen. Für die übrigen zwölf Völker fehlen noch eigene Illustrationen.
+
 | Faktor | wird zu | Regel |
 |---|---|---|
 | Momentum | **Angriff** | Q1 → 5 … Q5 → 1 (Rohwert) |

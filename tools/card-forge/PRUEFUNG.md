@@ -285,6 +285,16 @@ Gruppe, Fähigkeiten und Klassen bleiben offen. Eine Engine wird hier nicht ausg
 
 ## Gradle und Abschluss
 
+### Fortsetzung am 18.10.: sichtbare Entwürfe
+
+Auf Martins Folgeauftrag zur Karten-/Minion-Erstellung zeigt ein separates,
+engineunabhängiges `out/wesenbuch.html` nun 15 Leuchtfeuer-Formen und zwei bestehende
+Spielhelfer als SVG-Entwürfe. Die 36 aktuellen Leuchtfeuer-Karten sind ihren
+Darstellungen zugeordnet. Alle 616 Kartenbytes und Regeln bleiben unverändert.
+Das ist eine Gestaltungsvorschau, kein Einbau in `game`; die Prüfentscheidung zu
+Kampf und Engine bleibt gültig. Details und nächste Schritte stehen in README und
+`EVOLUTION.md` (`card-minions-design-v1`).
+
 Der erste Gradle-Aufruf fand ohne SDK-Umgebungsvariable keinen SDK-Pfad. Wiederholung
 mit den lokal vorhandenen Installationen (PowerShell):
 
@@ -301,6 +311,8 @@ Fehlschläge oder übersprungenen Tests (JUnit-XML ausgewertet).
 neuen Befunde dieser reinen Dokumentationsänderung.
 
 `ITOEVA2.md` und `EVOLUTION.md` halten die zurückgestellte Integration fest.
-Dieser PR ändert keine Laufzeit, Assets, Faktordaten oder private Zuordnungen.
+Die ursprüngliche Prüfung änderte keine Laufzeit, Assets, Faktordaten oder private
+Zuordnungen; die oben dokumentierten Folgeschritte ergänzen Referenzmodelle und
+separate Gestaltungsentwürfe außerhalb der App.
 Vollständiger Diff, lokale Markdown-Dateilinks, UTF-8 und `git diff --check` geprüft;
 Ziel des PR ist `claude/kartenschmiede`.
