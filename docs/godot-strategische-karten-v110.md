@@ -31,7 +31,7 @@ Der ursprüngliche Faktorkatalog bleibt unverändert; `tools/card-forge/strategy
 
 | Deckvorschlag | Plan | Entscheidung |
 |---|---|---|
-| Tempo | Früher Druck, Kunststück, sofortige Angriffe und Glut | Kristalle für einen zweiten Spielzug innerhalb des Zuges aufheben; Schutzhelfer räumen oder Gegner treffen |
+| Tempo | Früher Druck, Kunststück, sofortige Angriffe und Glut | Kristalle für eine zweite Karte im Zug aufheben; Schutzhelfer räumen oder Gegner treffen |
 | Bollwerk | Schutz, Panzer, Heilung und Lebensaufbau | Angreifen oder für Eingraben stehen bleiben; knappen Brettplatz für Schutz oder Schaden nutzen |
 | Motor | Lernen, Kartenziehen, Zins und Aufrüsten | Motor zuerst ausspielen, danach Auslöser; Handlimit und drei Plätze gegen langfristigen Ertrag abwägen |
 
@@ -76,7 +76,9 @@ Animation wiederhergestellt. Zusätzliche Prüfungen decken Reihenfolge, Aufrüs
 Zinsgrenzen, Aura-Ende, volles Brett, übernommene Fähigkeiten und Einmal-Wiederkehr ab.
 UI-Prüfung umfasst Bilder aller Karten, Filter, Vorschläge, Speicherung, Regelansicht,
 Verbündetenziele und Doppeltouch. Renderprüfung bei 1280×720 mit Mesa/OpenGL:
-Editor, mythische Detailkarte, Kampfaufstellung und Beschwörungsritual; die sichtbaren
+[Editor](images/strategy-deckeditor-v1.png),
+[mythische Detailkarte](images/strategy-mythisch-detail-v1.png), Kampfaufstellung und
+[Beschwörungsritual](images/strategy-mythisch-ritual-v1.png); die sichtbaren
 Helfer werden zusätzlich im echten Zeichenlauf gezählt. Die Testkamera muss nach
 angehaltenem Prozess ausdrücklich neu zeichnen; dies ist keine Kampfregeländerung.
 
