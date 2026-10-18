@@ -7132,3 +7132,19 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **ÜBERGABE:** docs/godot-strategische-karten-v110.md, PR372, Branch
   codex/godot-strategic-cards-v110; auf PR369 aufgebaut. Nächster Schritt sind
   menschliche Decktests; Release-/Signierungsinfrastruktur bleibt unverändert.
+
+### 2026-10-18 – APK-Auftrag0.11.0 und Zins-Speicherkorrektur
+
+- **DOCUMENTED INTENT:** Martin beauftragt nach dem Kartenneubau ausdrücklich die APK.
+- **FACT:** AndroidTest0.11.0/Code23 und488-Dateien-Manifest vorbereitet. Der bestehende
+  signierte GitHub-/Drive-Lieferweg bleibt Grundlage; Paket, Zertifikat und Ziel gleich.
+- **KORREKTUR:** Review zu PR372: Bereits verbuchte Zinsboni können das Grundlimit
+  um zwei Kristalle übersteigen. Restore erhält sie nun samt Ausgaben bis maximal10;
+  ältere Speicherschemas behalten ihre bisherige Begrenzung.
+- **TESTED BEHAVIOR:**3152 Strategieregelchecks/0Fehler einschließlich vier neuer
+  Save-/Ausgaben-/Obergrenzenprüfungen; YAML, Bash, Python und Dateihashes validiert.
+  Vollständige erneute Prüfungen, Export und Upload folgen im bestehenden Baulauf.
+- **UNVERIFIED:** Eine erfolgreiche APK-Auslieferung wird erst durch Buildbericht
+  und Remote-Prüfsummenabgleich belegt; Android-GPU/FPS und menschliche Abnahme offen.
+- **ÜBERGABE:** PR372, docs/godot-strategische-karten-v110.md; Version/Manifest und
+  Kartenprüfungen im bestehenden Bauweg aktualisiert, keine neue Signierinfrastruktur.

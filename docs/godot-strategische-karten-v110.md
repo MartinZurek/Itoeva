@@ -2,7 +2,8 @@
 
 Auftrag: Karten neu bauen und nach Spielspaß und strategischer Tiefe optimieren.
 Basis: Godot-Kampf `6677651` (PR #369). Umsetzung: PR #372, Branch
-`codex/godot-strategic-cards-v110`. Keine neue APK in diesem Auftrag.
+`codex/godot-strategic-cards-v110`. APK-Auftrag vom 18.10.2026: AndroidTest **0.11.0 / Code23** im bestehenden
+signierten GitHub-/Drive-Lieferweg. Export und Auslieferung sind zunächst in Vorbereitung.
 
 ## Spielbare Umsetzung
 
@@ -61,7 +62,7 @@ Die drei früheren MP4-Entwürfe sind weiterhin im Recovery-Branch gesichert.
 
 | Prüfung | Ergebnis |
 |---|---:|
-| `strategy_rules.gd` | 3.148 Checks, 0 Fehler |
+| `strategy_rules.gd` | 3.152 Checks, 0 Fehler |
 | `strategy_ui.gd` headless | 770 Checks, 0 Fehler |
 | `strategy_ui.gd -- --capture` mit echtem OpenGL | 771 Checks, 0 Fehler |
 | Kartenregeln / Kartenmodell / Erweiterung / Spezialregeln | 15 / 95 / 441 / 82 Checks, jeweils 0 Fehler |
@@ -100,13 +101,29 @@ sollten besonders die Drei-Plätze-Entscheidung und den späten Motorertrag prü
 
 ## Grenzen und nächster Schritt
 
-Keine Änderung an Erwerbswirtschaft, Bezahlung, Signierung oder Releaseworkflows.
+Keine Änderung an Erwerbswirtschaft, Bezahlung, Paketkennung, Signierschlüssel oder
+Drive-Ziel. Der bestehende Bauworkflow erhält Version0.11.0, das neue Manifest und
+die zusätzlichen Kartenprüfungen.
 Der Testkatalog ist wie die bisherigen Karten frei zugänglich. Android-Gerät,
 Daumenbedienung, GPU/FPS und Hörabnahme sind ungeprüft. Einzelne bestehende schnelle
 Headless-UI-Läufe melden beim Beenden noch laufende Audioressourcen; der echte
-OpenGL-Lauf bestand. Als Nächstes menschliche Decktests und bei weiterem APK-Auftrag
-Manifest/Version im vorhandenen freigegebenen Lieferweg aktualisieren.
+OpenGL-Lauf bestand. Als Nächstes den beauftragten APK-Bau und den Remote-Prüfsummenabgleich abschließen,
+danach menschliche Decktests.
 
 Reproduktion im Godot-Projekt: `godot --headless --path prototypes/godot-hd2d
 --script tests/strategy_rules.gd`; entsprechend `strategy_ui.gd` und
 `strategy_benchmark.gd`. Für Bilder OpenGL statt headless und `-- --capture` verwenden.
+
+## APK 0.11.0 – Bauauftrag
+
+- AndroidTest0.11.0 / Code23; gleiches Testpaket und gleicher Zertifikatabdruck.
+- Manifest mit488 Laufzeit-/Exportdateien, zusätzlich zur Integritätsprüfung der Quelle.
+- Bisherige Regressionen plus Strategieregeln, UI,180 Deckkämpfe und echte
+  Renderansichten laufen im Build erneut. Die fertige APK muss den Katalog
+  mit616 Helferkarten aus13 Völkern tatsächlich enthalten.
+- Vor dem Bau behobener Review-Befund: Zins-Kristalle oberhalb des Grundlimits
+  bleiben bei Save/Resume erhalten, einschließlich bereits getätigter Ausgaben.
+  Vier neue Checks erhöhen die Strategieregelprüfung auf3152/0. Alte Schemas
+  behalten ihre bisherige Grenze; insgesamt bleiben höchstens zehn Kristalle.
+- Paket, ARM64, Offline-Berechtigungen, Signatur und Drive-Größe/MD5/SHA-256
+  werden wie bisher geprüft. Erst der erfolgreiche Baulauf belegt die Lieferung.

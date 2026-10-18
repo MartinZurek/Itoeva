@@ -601,7 +601,9 @@ func restore(saved: Dictionary) -> void:
     for id in ids:
      if id is String and id in allowed and decks[owner][zone].size()<(HAND_LIMIT if zone=="hand" else Cards.MAX_DECK):decks[owner][zone].append(id)
    decks[owner].cap=clampi(int(entry.get("cap",1)),1,10)
-   decks[owner].crystals=clampi(int(entry.get("crystals",1)),0,int(decks[owner].cap))
+   # Zins kann im laufenden Zug zwei Kristalle ueber das Grundlimit geben.
+   var restore_cap:=mini(10,int(decks[owner].cap)+2) if int(saved.get("card_schema",0))>=4 else int(decks[owner].cap)
+   decks[owner].crystals=clampi(int(entry.get("crystals",1)),0,restore_cap)
    decks[owner].power=bool(entry.get("power",false))
    decks[owner].turns=maxi(0,int(entry.get("turns",0)))
    decks[owner].cards_played=clampi(int(entry.get("cards_played",0)),0,40)

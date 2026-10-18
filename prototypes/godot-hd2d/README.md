@@ -1,3 +1,10 @@
+## 0.11.0 – 616 strategische Helferkarten
+
+13 Völker mit Volksfähigkeiten und Gaben, planbare Kombos, Tempo-/Bollwerk-/Motor-
+Deckvorschläge, Suche und Volksfilter. Mythische Beschwörungsrituale und gespeicherte
+Zinsboni. AndroidTest0.11.0 / Code23; bestehende Paketkennung und Signatur.
+[Umsetzung, Prüfungen und APK-Status](../../docs/godot-strategische-karten-v110.md).
+
 ## 0.10.0 – Kampfbewegung, feste Standplätze und Figurenlicht
 
 Gekrümmte Angriffs-/Rückwege, vorhandene Laufposen, stabile Helferplätze und
