@@ -102,8 +102,8 @@ jobs:
           mkdir -p "$PROJECT/build"
           timeout 600 "$GODOT" --headless --editor --path "$PROJECT" --import --quit \
             2>&1 | tee "$PROJECT/build/import.log"
-          for test in card_model card_rules special_rules victory_flow card_ui minion_ui \
-                      forest_trail card_playthrough full_smoke full_framing full_doors expanded_cards expanded_card_ui ambience_coordinates battle_feedback_audio polish_v062 inhabited_world_v070 landscape_depth_v071 demons_v080 ecology_boss_v090 ecology_playthrough_v090 enemy_roaming roaming_and_slopes combat_motion_light strategy_rules strategy_ui strategy_benchmark; do
+          for test in polish_v062 strategy_rules strategy_ui strategy_benchmark card_model card_rules special_rules victory_flow \
+                      card_ui minion_ui forest_trail card_playthrough full_smoke full_framing full_doors expanded_cards expanded_card_ui ambience_coordinates battle_feedback_audio inhabited_world_v070 landscape_depth_v071 demons_v080 ecology_boss_v090 ecology_playthrough_v090 enemy_roaming roaming_and_slopes combat_motion_light; do
             timeout 300 "$GODOT" --headless --fixed-fps 60 --path "$PROJECT" \
               --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
             ! grep -qE "SCRIPT ERROR|Parse Error|Compile Error" "$PROJECT/build/${test}.log"

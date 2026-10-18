@@ -10,7 +10,13 @@ func frames(n: int) -> void:
  for i in n:await process_frame
 func button(app: Node,text: String) -> Button:
  for b in app.menu_buttons:
-  if is_instance_valid(b) and b.text==text:return b
+  if not is_instance_valid(b) or b.text!=text or not b.is_visible_in_tree():continue
+  # Nach Scrollen nur einen wirklich sichtbaren Treffer antippen.
+  var point: Vector2=b.get_global_rect().get_center();var visible:=true;var parent: Node=b.get_parent()
+  while parent!=null:
+   if parent is Control and parent.clip_contents and not parent.get_global_rect().has_point(point):visible=false;break
+   parent=parent.get_parent()
+  if visible:return b
  return null
 func tap(b: Button) -> void:
  check(b!=null,"Touchziel vorhanden")
@@ -29,7 +35,8 @@ func run() -> void:
  var draft: Array=app.deck_editor.draft.duplicate()
  for i in 3:
   tap(button(app,"Ansehen"));await frames(3)
-  check(button(app,"Schließen").pressed.get_connections().size()==1,"Schliessen behaelt Callback")
+  var close:=button(app,"Schließen")
+  check(close!=null and close.pressed.get_connections().size()==1,"Schliessen behaelt Callback")
   tap(button(app,"Schließen"));await frames(3)
   check(button(app,"Ansehen")!=null,"Detail schliesst zurueck ins Deck")
   check(app.deck_editor.draft==draft,"Ungespeichertes Deck bleibt erhalten")

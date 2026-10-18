@@ -127,3 +127,11 @@ Reproduktion im Godot-Projekt: `godot --headless --path prototypes/godot-hd2d
   behalten ihre bisherige Grenze; insgesamt bleiben höchstens zehn Kristalle.
 - Paket, ARM64, Offline-Berechtigungen, Signatur und Drive-Größe/MD5/SHA-256
   werden wie bisher geprüft. Erst der erfolgreiche Baulauf belegt die Lieferung.
+
+Der erste APK-Lauf39168282907 stoppte im alten `polish_v062.gd`: Nach140Pixel
+Scrollen tippte dessen Knopfsuche den ersten gleichnamigen, inzwischen weggeclippten
+Eintrag. Die Suche prüft jetzt Sichtbarkeit und alle schneidenden Elternflächen;
+eine fehlende Schließen-Schaltfläche erzeugt einen Prüf-Befund statt Nil-Abbruch.
+Der unveränderte Bedienvertrag (dreimal Öffnen/Schließen, Entwurf und Scrollposition
+erhalten) besteht lokal weiterhin mit36/0. Der Build führt diese Prüfung und die
+neuen Strategietests nun zuerst aus; sämtliche bisherigen Prüfungen bleiben erhalten.
