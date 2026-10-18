@@ -126,6 +126,7 @@ const $ = s => document.querySelector(s);
 const K = D.karten;
 const heroes = Object.keys(D.wesen).filter(w => !w.startsWith("_"));
 const cap = s => s.charAt(0) + s.slice(1).toLowerCase();
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 $("#sub").textContent = `${K.filter(k=>k.status==="aktiv").length} Wesen · Datenstand ${D.monat} · ${Object.keys(D.voelker).length} Völker`;
 
@@ -160,7 +161,7 @@ function cardHTML(k){
   const f = k.faehigkeit ? `<em>${k.faehigkeit.name} ${k.faehigkeit.x}</em>` : "";
   const g = k.gabe ? ` · <em>${k.gabe.name}</em>` : "";
   const m = k.merkmale.filter(x=>x!=="Schnäppchen").join(" · ");
-  const firm = (D.firmen && $("#ff").checked) ? `<div class="firm">${D.firmen[k.id]||""}</div>` : "";
+  const firm = (D.firmen && $("#ff").checked) ? `<div class="firm">${esc(D.firmen[k.id]||"")}</div>` : "";
   return `<button class="card${k.glanz?" glanz":""}${k.status==="ruhend"?" ruhend":""}" data-id="${k.id}" style="--fam:${k.hex};--rar:var(${RARVAR[k.seltenheit]})" aria-label="${k.name}, ${k.art}, ${k.kosten} Kristalle, ${k.angriff} Angriff, ${k.leben} Leben">
     <div class="top"><span class="cost">${k.kosten}</span><span class="role">${k.rolle}</span><span class="gem" title="${k.seltenheit}"></span></div>
     <div class="art"><img alt="" width="48" height="48" style="width:48px;height:48px;image-rendering:pixelated;border-radius:6px;background:color-mix(in srgb,${k.hex} 12%,transparent)" src="${sigel(k)}"><div class="nm"><strong>${k.name}</strong><small>${k.art} · ${k.volk}</small></div></div>
@@ -183,24 +184,22 @@ function render(){
 function qbar(n){ const v = n>=1&&n<=5 ? 6-n : 0; return `<span class="q" title="Quintil ${n||"fehlt"}">${[1,2,3,4,5].map(i=>`<i class="${i<=v?"on":""}"></i>`).join("")}</span> Q${n||"–"}`; }
 
 function detail(id){
-  const k = K.find(x=>x.id===id), h=k.herkunft;
+  const k = K.find(x=>x.id===id), h=D.faktoren?.[id];
   const rows = [
-    ["Momentum", k.angriff, "Angriff", h.momentum],
-    ["Quality", k.leben, "Leben", h.quality],
-    ["Value", k.kosten, "Kristalle", h.value],
-    ["Low Vola", k.merkmale.find(m=>["Wächter","Flackernd","Ungestüm"].includes(m))||"–", "Temperament", h.lowvola],
-    ["Size", k.seltenheit[0], k.seltenheit + " · " + k.form, h.size],
-    ["Composite", k.glanz?"✦":"–", k.glanz?"Glanz":"kein Glanz", h.composite],
+    ["Angriff", k.angriff], ["Leben", k.leben], ["Kristalle", k.kosten],
+    ["Temperament", k.merkmale.find(m=>["Wächter","Flackernd","Ungestüm"].includes(m))||"–"],
+    ["Form", k.form], ["Seltenheit", k.seltenheit], ["Glanz", k.glanz?"✦":"–"],
   ];
+  const faktoren = h ? `<div class="sub">Private Faktorübersicht</div><table class="trans"><tbody>${Object.entries(h).map(([f,q])=>`<tr><td>${esc(f)}</td><td>${qbar(q)}</td></tr>`).join("")}</tbody></table>` : "";
   const regeln = [k.faehigkeit && k.faehigkeit.text, k.gabe && k.gabe.text].filter(Boolean);
   $("#sheet").innerHTML = `
     <div class="top" style="--fam:${k.hex}"><span class="cost">${k.kosten}</span><span class="role">${k.id} · ${k.rolle}, Reihe ${k.reihe}</span></div>
     <h2>${k.name}</h2>
-    <div class="sub">${k.art} aus dem ${k.volk} · Heimvolk von ${cap(k.wesen)} · ${k.titel}${D.firmen&&$("#ff").checked?` · ${D.firmen[k.id]||""}`:""}</div>
+    <div class="sub">${k.art} aus dem ${k.volk} · Heimvolk von ${cap(k.wesen)} · ${k.titel}${D.firmen&&$("#ff").checked?` · ${esc(D.firmen[k.id]||"")}`:""}</div>
     <p class="sub" style="margin:0">${(D.voelker[k.volk]||{}).bild||""}</p>
     ${regeln.length?`<div style="display:grid;gap:4px">${regeln.map(t=>`<div>${t}</div>`).join("")}</div>`:""}
-    <div style="overflow-x:auto"><table class="trans"><tbody>${rows.map(r=>`<tr><td>${r[0]}<br>${qbar(r[3])}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table></div>
-    <div class="sub">Wertpunkte ${k.wertpunkte} = 2 × ${k.kosten} Kristalle + 1. Jede Karte liegt genau auf der Kurve.</div>
+    <div style="overflow-x:auto"><table class="trans"><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</tbody></table>${faktoren}</div>
+    <div class="sub">Wertpunkte ${k.wertpunkte}; Budget 2 × ${k.kosten} Kristalle + 1 (Rundung bis 0,5 Punkte).</div>
     <button class="close" id="cl">Schließen</button>`;
   $("#dlg").showModal(); $("#cl").onclick=()=>$("#dlg").close();
 }

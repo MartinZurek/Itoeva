@@ -669,6 +669,247 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-18 - Leuchtfeuer beschwören, Darsteller austauschen (card-summon-preview-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt ausdrücklich den angekündigten nächsten
+  Schritt: Leuchtfeuer-Beschwörungsvorschau mit drei Formstufen, längerer mythischer
+  Sequenz und später austauschbarem Code-/Video-Darsteller.
+- **FACT / Nutzerwirkung:** Alle 15 Leuchtfeuer-Entwürfe und 36 zugehörigen Monatskarten
+  besitzen einen Beschwören-Button. Eine gemeinsame 480×270-Lichtvorlage steigert
+  Kreise, Strahl und Funken nach Form (3,2/4,0/4,8 s); mythische Karten erhalten
+  9,6 s mit zusätzlichen Aufbauphasen. Farbe und Glanz stammen aus der Karte.
+  Wiederholen ersetzt den laufenden Ablauf, Escape/Schließen geben den Fokus zurück.
+- **Produktentscheidung / Grenzen:** Rein visuelle Vorschau ohne Kampfereignis,
+  Erwerb, Stat-/Besitzänderung oder neue Enginefestlegung. Bewegungsarme Ansicht
+  zeigt sofort ein Standbild und berücksichtigt die Systemeinstellung. Verbergen
+  der Seite stoppt den Ablauf. Keine Tonspur, Bildschirmblitze oder Endlosschleife.
+- **Architektur / Betroffen:** `beschwoerung.js` trennt unveränderlichen Plan,
+  Zeitfunktion, Code-/Video-Darsteller und Spieler mit gemeinsamem Promise-/
+  AbortSignal-Vertrag. Lokale Clips können später registriert werden; Fehler
+  führen zu Code, Abbruch niemals. Nach dem Clip bleibt die Kartenillustration.
+  Nur Kartenschmiede, Exporte, Tests, README, `BESCHWOERUNG.md` und `ITOEVA2.md`.
+  Keine Kotlin-/Room-/Preference-/Workflow-Änderung; 616 Kartenbytes unverändert.
+- **TESTED BEHAVIOR:** 58 Python-Tests, 13 neue Node-Ablauftests und bestehender
+  Galerie-Scripttest erfolgreich. Tests prüfen Zeit-/Form-/Mythisch-/Glanzregeln,
+  Bildfehler, bewegungsarme Ansicht, Abbruch während Bildladen/Animation/Video,
+  Videofehler, Fallback und parallele Startversuche ohne verwaiste Frames.
+  Browser: normale/reife/Urform, mythischer Lauf bis Abschluss, Wiederholung,
+  Standbilder aller 15 Formen, Fokus-Rückgabe, Schließen und Escape auf 360-Pixel-
+  Mobilbreite ohne seitlichen Überlauf geprüft; keine Scriptfehler.
+  Gradle-Test und `compileGameKotlin` erfolgreich (64 unveränderte Tasks aus dem
+  Cache des bereits erfolgreichen Laufs mit 1.415 Unit-Tests).
+- **UNVERIFIED / OPEN DECISION:** Kein echter Videoclip/Codec oder Android-GPU-Test.
+  Browserprüfung über localhost; `file:`-Navigation ist im App-Browser gesperrt.
+  Die vollständige Ordnerkopie enthält nur relative Bild-/Scriptverweise.
+  Glanz ist synthetisch geprüft (unter den 36 aktuellen Leuchtfeuer-Karten keine
+  Glanzkarte). Andere Volksvorlagen und Spielhelfer-Animationen fehlen noch.
+  Kampf, Gruppe/Raster, Engine, Vergabe und Bezahlung bleiben offen.
+- **Migration / Rücksetzung:** Keine Migration. Script und Dialog/Buttons aus
+  Vorlage/Generator samt Export entfernen, dann `wesen.py` neu ausführen. Katalog
+  und erworbene Ausgaben bleiben unverändert lesbar. Der frühere Stand „keine
+  Animationen“ gilt weiter für die App, nicht mehr für die Gestaltungsvorschau.
+  Nächster Schnitt: Werkvolk samt Werkling mit demselben Darstellervertrag.
+
+### 2026-10-18 - Leuchtfeuer-Kartenwesen und erste Spielhelfer (card-minions-design-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt die Fortsetzung der Karten- und
+  Spielhelfer-Erstellung. Der nächste kleine Schnitt macht die bestehenden Wesen
+  sichtbar, während die begründete Zurückstellung der Game-Integration bestehen bleibt.
+- **FACT / Nutzerwirkung:** 15 unterscheidbare SVG-Entwürfe decken fünf Leuchtfeuer-
+  Arten in drei Formen ab; Werkling und Erzsplitter ergänzen zwei Spielhelfer.
+  Das offline nutzbare Wesenbuch zeigt zusätzlich alle 36 aktuellen Leuchtfeuer-
+  Monatskarten mit zugeordneten Bildern, Suche und Filtern nach Ansicht/Form.
+  Fünf Formen ohne Monatskarte bleiben ausdrücklich Gestaltungsentwürfe ohne Stats.
+- **Produktentscheidung / Balance:** Keine zusätzlichen Monatskarten oder Werte
+  erfunden. Werkling 1/1 und Erzsplitter 0/3 mit Wächter entsprechen den vorhandenen
+  Gaben-Vorschlägen; sie besitzen weder K-Karten-ID noch Kristallkosten. Keine
+  Kampfauflösung, Minion-Vergabe, neue Progression oder Änderung der sechs Avatare.
+  Die Illustrationen sind vorläufige Vektorgestaltung, keine fertigen Pixel-/3D-Assets.
+- **Betroffen:** Nur `tools/card-forge` (Generator, Vorlage, sechs Tests, JSON/HTML,
+  17 SVGs), README und `ITOEVA2.md`. Keine App-/Room-/Preference-/Workflow-Änderung.
+  Das Gestaltungsmanifest ist getrennt vom versionierten Karten-/Besitzvertrag.
+- **TESTED BEHAVIOR:** 57 Python-Tests und bestehender Node-Galerietest erfolgreich.
+  Neue Tests sichern vollständige Art-/Formabdeckung, unveränderten Kartenkatalog,
+  eindeutige Verweise, Helferwerte, Statkorrekturen, HTML-Escaping, eigenständige SVGs
+  und bytegleiche Neugenerierung. Browserprüfung umfasst alle 17 Bilder, 36 Monatskarten,
+  vier Urform-Karten, leere Suche und Wächter-Suche sowie Darstellung auf Desktop-/
+  Mobilbreite ohne seitlichen Überlauf. Gradle-Test und `compileGameKotlin` erfolgreich
+  (64 unveränderte Tasks aus dem Cache des vorherigen Laufs mit 1.415 Unit-Tests).
+- **UNVERIFIED / OPEN DECISION:** Keine Android-Geräteprüfung, Laufzeit-Minions oder
+  Animationen. Kampf, Engine, Gruppen/Raster, Vergabe und Bezahlung bleiben offen.
+  Weitere zwölf Völker benötigen eigene Illustrationen. Nächster Schnitt ist eine
+  Leuchtfeuer-Beschwörungsvorschau mit später austauschbarem Code-/Video-Darsteller.
+- **Migration / Rücksetzung:** Keine Migration; alle 616 Kartenbytes bleiben gleich.
+  Generator, Vorlage, Tests und neue Exporte können gemeinsam entfernt werden;
+  vorhandener Katalog, Galerie und erworbene Snapshots bleiben vollständig lesbar.
+  Die präzisierte Entscheidung zu gezielten Statkorrekturen gilt unverändert weiter.
+
+### 2026-10-18 - Gezielte Statkorrekturen zulassen (card-stat-correction-v1)
+
+- **DOCUMENTED INTENT / Produktentscheidung:** Martin präzisiert seine Wahl A ausdrücklich:
+  Gezielte Statkorrekturen von ihm gelten auch für erworbene Karten; automatische
+  Monatsänderungen bleiben getrennt. Formen und Glanz bleiben erhalten. Die frühere
+  Aussage, damalige Werte müssten dauerhaft unveränderlich sein, ist damit überholt.
+- **Änderung / TESTED BEHAVIOR:** `statkorrektur.korrigiere_stats` korrigiert Angriff,
+  Leben und/oder Kristallkosten unter derselben Karten-ID. `mit_statkorrektur` überträgt
+  dies auf bereits erworbene Ausgaben. Namen, Darstellung, Effekte und Monatsdaten
+  bleiben gleich. Wertpunkte folgen der Änderung der Körperwerte; andere Stats werden
+  nicht stillschweigend auf die ursprüngliche Kurve skaliert.
+- **Betroffen:** Zwei Referenzoperationen, sieben synthetische Tests, Katalogvertrag,
+  README, Prüfbericht und `ITOEVA2.md`. Keine der 616 veröffentlichten Karten wird ohne
+  vorgegebene Statwerte geändert; keine App-, Room-, Preference- oder Kampfänderung.
+- **Nutzerwirkung / Grenzen:** Bewusste Korrektur ist möglich, Schutz vor automatischer
+  Monatsrückstufung bleibt. Eine neue Snapshot-Referenz bewahrt die korrigierten Werte;
+  die alte Fassung bleibt als Historie lesbar. Der Aufrufer muss das zurückgegebene
+  Modell übernehmen und speichern. Keine automatische Verteilung auf eine App-Sammlung.
+- **Tests:** 51 Python-Tests erfolgreich, einschließlich erworbener und ruhender Karten,
+  Erhalt von Form/Glanz, Wiederherstellung, mehrerer Ausgaben derselben ID,
+  Idempotenz und Ablehnung ungültiger Werte. Galerie-Scripttest erfolgreich; Gradle-Test
+  und `compileGameKotlin` erfolgreich (64 Tasks unverändert aus dem Cache).
+- **Migration / Rücksetzung:** Keine App-Migration oder Datenbestandsänderung. Rücknahme
+  der Referenzoperation entfernt nur die technische Korrekturmöglichkeit; die ausdrücklich
+  präzisierte Produktentscheidung bleibt verbindlich. Archivierte Fassungen nicht löschen.
+- **Weiterhin offen / nächster Schritt:** Korrekturfreigaben und Übernahme in einen künftigen
+  Sammlungsstore sowie Duplikate konkretisieren. Kampf, Engine, Raster, Gruppe und
+  Bezahlung bleiben offen. Dieser Eintrag präzisiert `card-edition-a-v1`, ohne automatische
+  Monatsupdates für erworbene Karten freizugeben.
+
+### 2026-10-17 - Erworbene Monatsausgaben erhalten (card-edition-a-v1)
+
+- **DOCUMENTED INTENT / Produktentscheidung:** Auf die konkrete Auswahlfrage zu
+  `KATALOGVERTRAG.md` wählt Martin ausdrücklich **A: Erworbene Monatsausgaben mit
+  damaligen Werten, Form und Glanz dauerhaft erhalten**. Damit ist dieser zuvor offene
+  Teil des Besitzvertrags entschieden; B (laufende Monatswerte) ist nicht gewählt.
+- **TESTED BEHAVIOR:** Reine Modelle `KatalogSnapshot` und `ErworbeneAusgabe` unter
+  `tools/card-forge/edition.py` bewahren validierte, bereinigte Snapshot-Bytes und deren
+  SHA256-Referenz. Ein Novemberkatalog kann eine erworbene mythische Oktoberausgabe
+  weder zur gewöhnlichen Jungform zurückstufen noch ihren Glanz oder ihre Werte ändern.
+  Ruhen entfernt keinen bereits gewährten Erwerb. Wiederherstellung aus der separat
+  erhaltenen Snapshot-Datei reproduziert die Ausgabe einschließlich ihrer Referenz.
+- **Betroffen:** Referenzmodelle, sieben neue synthetische Editionstests, Katalogvertrag,
+  README und Prüf-/Itoeva-2-Status. Keine App-Runtime, kein Room-/Preference-Schema,
+  keine automatische Kartenvergabe, keine Preis- oder Kampfänderung.
+- **Nutzerwirkung / Grenzen:** Der dauerhafte Erhalt ist als Ziel verbindlich, aber noch
+  keine eingebaute Sammlung im Spiel. Historischer Aktivstatus ist keine Kampfzulassung.
+  Ein Hash ohne aufbewahrte Snapshot-Daten reicht nicht zur Wiederherstellung.
+- **Tests:** Insgesamt 44 Python-Tests erfolgreich; Galerie-Script-Test erfolgreich.
+  Gradle-Test/Kompilierung erneut erfolgreich mit 64 unveränderten Tasks aus dem Cache.
+  Kein Geräte-, App-Sammlungs- oder Partientest.
+- **Migration / Rücksetzung:** Keine App-Migration, nur Referenzdaten mit erfundenem
+  Snapshot-Dateitest. Technische Rücknahme des Prototyps widerruft Martins Produktentscheidung
+  nicht; erworbene Ausgaben dürfen später nicht stillschweigend auf Monatswerte umgestellt werden.
+- **Weiterhin OPEN DECISION / nächster Schritt:** Freigabe und Korrekturen einer Edition,
+  erneuter Erwerb derselben Ausgabe und Kampfzulässigkeit konkretisieren. Kampf, Engine,
+  Gruppe, Raster und Bezahlung bleiben offen. Frühere Aussagen, Monats-/Besitzprinzip sei
+  insgesamt offen, sind durch diese ausdrückliche Wahl für genau Variante A überholt.
+
+### 2026-10-17 - Engineunabhängiger Katalogvertrag (card-catalog-v1)
+
+- **Ausgangsproblem / DOCUMENTED INTENT:** Der Nutzer beauftragt nach der Exportabsicherung
+  den nächsten Schritt. Dem öffentlichen Katalog fehlten Formatversion und ein prüfbarer
+  Lesevertrag. Datenmonat, ruhende Karten und ein möglicher späterer Besitz waren nicht
+  ausreichend voneinander getrennt.
+- **Technische Entscheidung / TESTED BEHAVIOR:** `schema_version: 1`, UTF-8/LF-Export,
+  reine unveränderliche Referenzmodelle und Leser in `tools/card-forge/katalog.py`.
+  Unbekannte Zusatzfelder werden ignoriert und nicht erneut exportiert; fehlende/falsche
+  Pflichtfelder, doppelte IDs/Namen/JSON-Schlüssel und unbekannte Versionen werden
+  abgewiesen. Ruhende Karten behalten ihren letzten Auswertungsmonat. Der Generator
+  validiert vor jedem Schreiben und übernimmt das alte unversionierte Format ausdrücklich.
+- **Betroffen:** Schmiede, öffentliche JSON-/Galeriedatei, lokale JSON-Zeilenendregel,
+  erfundene Fixture, Vertragstests, `KATALOGVERTRAG.md`, README und Prüf-/Itoeva-2-Status.
+  Alle 616 bestehenden Karten behalten IDs, Namen und Spiel-/Darstellungswerte.
+  Keine Runtime-, Kotlin-/Compose-, Preference-, Room-, Preis- oder Kampfänderung.
+- **Produktabgrenzung:** Der Vertrag stellte drei Varianten konkret zur Wahl; Martins
+  anschließende ausdrückliche Entscheidung für A steht im Eintrag `card-edition-a-v1`.
+  Die Datenformatversion allein führt keine Sammlung und keine Kampfsemantik ein.
+- **Tests:** 44 Python-Tests mit erfundenen Eingaben und bereinigten Artefakten; darunter
+  explizite Altbestandübernahme, Abbruch inkompatibler Kataloge vor Dateiveränderung,
+  Typ-/Versions-/Monatsfehler, vollständige ruhende Karten und getrennte Monatsmodelle.
+  Galerie-Scripttest erfolgreich; Gradle-Test/Kompilierung erneut erfolgreich, 64 Tasks
+  unverändert aus dem Cache des vorherigen erfolgreichen Laufs mit 1.415 Unit-Tests.
+- **UNVERIFIED / Grenzen:** Kein Leser in einer Spiele-Engine, keine persistierte Sammlung,
+  keine Partien- oder Browserlayoutabnahme. Der Datei-SHA256 bezieht sich auf genaue Bytes,
+  nicht auf semantisch gleiches neu serialisiertes JSON; Hash allein bewahrt keinen Snapshot.
+- **Migration / Rücksetzung:** Expliziter Übergang nur für unversionierte Katalogdateien,
+  keine App-Migration. Bei technischer Rücknahme die öffentliche Exportabsicherung
+  beibehalten; neue Katalog-Metadaten dürfen vom alten Galerie-Script ignoriert werden.
+  Unbekannte Zukunftsversionen werden niemals auf v1 zurückgesetzt.
+- **Nächster Schritt:** Nach dem abgeschlossenen Zweimonatsnachweis für A Freigaben,
+  Korrekturen und Duplikate konkretisieren. Kampfregeln und Engine bleiben eigene
+  Entscheidungen. Dieser Schritt ersetzt die früheren Aussagen, es gebe
+  noch keine Katalogversion; die Formatversion allein entscheidet keine Besitz- oder Kampfregel.
+
+### 2026-10-17 - Öffentliche Kartenexporte und Register absichern (card-forge-export-v1)
+
+- **Ausgangsproblem / DOCUMENTED INTENT:** Nach der Prüfung beauftragt der Nutzer den
+  nächsten Schritt. Rohquintile und Kennungen gelangten in öffentliche Dateien; ohne
+  privates Register konnten bestehende Karten-IDs neu vergeben werden.
+- **Änderung / TESTED BEHAVIOR:** Öffentliche Kartenfelder und verschachtelte Effekte
+  werden ausdrücklich erlaubt; das gilt auch für ruhende Altkarten. JSON, HTML und
+  Monatsbericht enthalten keine ursprünglichen Faktorobjekte oder Kennungslisten mehr.
+  Die private Zusatzgalerie bleibt separat, maskiert Firmennamen als HTML-Text und
+  aktualisiert zusätzlich die öffentliche Galerie. Die 616 bestehenden Karten behalten
+  sämtliche Spiel-/Darstellungswerte, Namen und IDs.
+- **Identitätsschutz:** Fehlendes, unlesbares, veraltetes oder widersprüchliches Register,
+  fehlender Katalog neben alten Ausgaben, doppelte Datenidentitäten und leere Eingaben
+  brechen vor dem Schreiben ab. Leere Firmennamen führen nicht mehr zur Zusammenlegung
+  verschiedener Identitäten. Register und Ausgaben werden einzeln atomar ersetzt;
+  Wiederholung nach Abbruch zwischen Register und Katalog erhält vergebene Identitäten.
+- **Betroffen:** `tools/card-forge/forge.py`, Galerievorlage, öffentliche Oktober-Ausgaben,
+  Python-/Galerietests, README und Prüfstatus in `PRUEFUNG.md`/`ITOEVA2.md`.
+  Keine Kotlin-/Compose-, Preference-, Room-, Kampf- oder Preisänderung.
+- **Tests:** 21 Python-Tests mit erfundenen Eingaben, darunter Exportlecks aller Dateitypen,
+  verschachtelte/ruhende Zusatzfelder, Registerfehler ohne Dateiveränderung, Wiedererwachen
+  und Wiederholung nach Schreibabbruch. Node-Script-Test für 616 Kartendetails und private
+  Zusatzansicht mit DOM-Stubs. Gradle-Test/Kompilierung erneut erfolgreich, 64 Tasks
+  unverändert gegenüber dem vorherigen erfolgreichen Lauf mit 1.415 Unit-Tests.
+- **UNVERIFIED / Grenzen:** Keine Browser-Layout-/Telefonabnahme, kein Partientest.
+  Einzeldateien sind atomar, die Dateigruppe nicht; parallele Läufe sind nicht unterstützt.
+  Frühere veröffentlichte Git-Versionen bleiben unverändert. Abgeleitete Spielwerte sind
+  keine Zusage vollständiger Anonymität. Private Register-Sicherungen bleiben erforderlich.
+- **Migration / Rücksetzung:** Keine App-Migration. Öffentliche Exporte sind ohne private
+  Daten neu aufgebaut. Ein Code-Revert würde die Exportlecks wieder ermöglichen und darf
+  daher keine alten Ausgaben zurückveröffentlichen; bereinigten Katalog behalten.
+- **Nächster Schritt / OPEN DECISION:** Versionierten engineunabhängigen Katalogvertrag
+  vorschlagen; Monatseditionen und Besitz ausdrücklich entscheiden. Die zurückgestellte
+  Spieleintegration, Kampf, Engine und Bezahlung bleiben unverändert offen. Die früheren
+  Aussagen über aktuelle Exportlecks im Eintrag `card-forge-review-v1` beziehen sich auf
+  dessen geprüfte Basis und sind durch diesen Folgeschritt für aktuelle Ausgaben überholt.
+
+### 2026-10-17 - Kartenschmiede geprüft, Integration zurückgestellt (card-forge-review-v1)
+
+- **Ausgangsproblem / DOCUMENTED INTENT:** Der Nutzer beauftragt eine kritische Prüfung
+  der Kartenschmiede vor einer möglichen Kartenbuch-/Beschwörungsintegration in Itoeva 2.
+  Basis ist `claude/kartenschmiede`, `bf914ce1816c28e3fa892528dd333c77a4054d9d`.
+- **FACT / TESTED BEHAVIOR:** Acht Schmiedetests bestehen mit erfundenen Daten. Der
+  zusätzliche Durchlauf aller 209.375 Kombinationen der fünf spielwertrelevanten
+  Quintile über 67 Arten hält die vorhandene Kurventoleranz ein (maximal 0,5 Punkte).
+  Das belegt keine Partienbalance. Öffentliche Ausgaben enthalten Faktorquintile und
+  Firmenkennungen; mit synthetischen Daten sind außerdem Formrückstufung beim Monatswechsel
+  und Wiedervergabe alter Karten-IDs bei fehlendem Register reproduziert.
+- **Entscheidung:** Teil 2 gemäß der im Auftrag vorgesehenen Ausstiegsklausel zurückstellen.
+  Der Prüfbericht enthält konkrete, noch nicht angewandte Änderungen an Regelpreisen und
+  Effekttexten. Ein sofortiges Compose-Kartenbuch mit 13 Beschwörungsvorlagen würde
+  ungeklärte Inhalte und Darstellungskosten vor Kampf-/Engineentscheidung festschreiben.
+  Ein engineunabhängiger Vertrag und Regelversuch sind die empfohlene Alternative;
+  damit ist weder Godot noch eine andere Engine ausgewählt.
+- **Betroffen:** `tools/card-forge/PRUEFUNG.md`, Statusabschnitt in `ITOEVA2.md` und
+  dieser Eintrag. Keine Änderung an Modulen, öffentlichen App-Texten, Preference-Schlüsseln,
+  Datenmodellen, Exporten, Regelwerten oder der Runtime; kein neuer Besitzvertrag.
+- **Nutzerwirkung / geschützt:** Keine Laufzeitänderung an Reminder, Game Loop,
+  Charakteren, Progression oder Balance. Die Grenzen sanft statt strafend, kein
+  dauerhafter Sammlungsverlust und keine stillschweigende Bezahlfreigabe bleiben bestehen.
+- **Migration / Rücksetzung:** Keine Migration. Rücknahme dieses reinen Dokumentations-
+  Commits entfernt nur Bericht und Statushinweis; der Diff enthält keine Zustandsänderung.
+- **Tests / UNVERIFIED:** `:app-sim:testDebugUnitTest` mit 1.415 Tests erfolgreich,
+  `:app-sim:compileGameKotlin` erfolgreich; `git diff --check` sauber. Ausführungsdetails
+  stehen in `tools/card-forge/PRUEFUNG.md`. Partien, Telefonabnahme und Animationen sind ungeprüft.
+  Bestehende öffentliche Exporte sind durch diesen Bericht noch nicht bereinigt.
+- **Nächster Schritt:** Export-Sicherungs-PR: öffentliche Feldliste, Bereinigung aller
+  Ausgabetypen, Schutz vor Registerverlust und Regressionstests mit erfundenen Daten.
+  Danach versionierter Katalogvertrag samt ausdrücklicher Monats-/Besitzentscheidung.
+  Kampf, Raster, Gruppe, Kampfklassen, Engine und Bezahlung bleiben `OPEN DECISION`.
+
 ### 2026-10-10 - Zusammenpassende Figuren beim Animationswechsel (living-atlases-v2)
 
 - **DOCUMENTED INTENT:** Martin meldet nach PR #353, dass die Veraenderungen

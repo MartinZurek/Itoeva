@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="de"><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Itoeva · Leuchtfeuer & Spielhelfer</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101820;color:#f4e5d0}*{box-sizing:border-box}body{max-width:1320px;margin:auto;padding:40px 24px}header{max-width:760px}h1{font-family:Georgia,serif;font-size:clamp(32px,5vw,58px);font-weight:400;margin:12px 0 18px}h2{font-size:20px}header p{color:#c6c3b9;line-height:1.65}.eyebrow{color:#e5ac79;font-size:12px;text-transform:uppercase;letter-spacing:.1em}nav{display:flex;flex-wrap:wrap;gap:12px;margin:32px 0 24px}label{display:flex;align-items:center;gap:8px}input,select{font:inherit;padding:10px;background:#1b2934;border:1px solid #60717b;border-radius:6px;color:inherit}input{max-width:220px}#anzahl{color:#c6c3b9}main{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:20px}article{overflow:hidden;border:1px solid #52616a;border-radius:14px;background:linear-gradient(150deg,#25323c,#16212b);padding:18px;box-shadow:0 8px 22px #0003}article.glanz{border-color:#eccb78;background:linear-gradient(125deg,#25463f,#343248,#392e24)}article img{width:calc(100% + 36px);height:auto;margin:-8px -18px -12px;background:radial-gradient(ellipse at 50% 66%,#ba764726,transparent 65%)}article h3{font-family:Georgia,serif;font-size:24px;font-weight:400;margin:12px 0}article p{line-height:1.5;font-size:14px}.muted,small{color:#c4c6c2}.stats{display:flex;justify-content:space-between;color:#ffe1a0}article[hidden]{display:none}footer{color:#c6c3b9;padding:32px 0;line-height:1.6}a{color:#f4c28e}
+.beschwoeren{display:block;width:100%;padding:0;border:0;background:transparent;color:#f4c28e;cursor:pointer;font:inherit}.beschwoeren span{font-size:13px}.beschwoeren:focus-visible,button:focus-visible{outline:2px solid #ffe5ac;outline-offset:3px}.beschwoeren:hover span{text-decoration:underline}dialog{width:min(900px,calc(100vw - 24px));max-height:94dvh;overflow:auto;padding:24px;border:1px solid #c69260;border-radius:18px;background:#101820;color:#f4e5d0}dialog::backdrop{background:#050b12db}dialog h2{font-family:Georgia,serif;font-size:28px;margin:0}dialog canvas,dialog video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#101820;border-radius:12px}dialog video[hidden],dialog canvas[hidden]{display:none}.steuerung{display:flex;align-items:center;flex-wrap:wrap;gap:16px}dialog button{font:inherit;background:#293b46;color:#ffe5ac;border:1px solid #8a9b9f;border-radius:6px;padding:10px 16px;cursor:pointer}#phase{min-height:1.5em;color:#edc68c}dialog small{display:block;margin:12px 0}
+</style>
+<header><p class="eyebrow">Itoeva · Werkstatt 01</p><h1>Ein Licht für jeden Weg.</h1>
+<p>Fünf Arten, fünfzehn Formen: Leuchtfeuer hält die Welt warm. Dazu kommen Werkling und Erzsplitter als erste Spielhelfer. Die Vektorillustrationen sind Gestaltungsentwürfe.</p>
+<p>Unter „Monatskarten“ stehen die vorhandenen Leuchtfeuer-Karten mit ihren aktuellen Werten. Formen ohne Monatskarte sind als Artentwurf sichtbar. Spielhelfer folgen den bestehenden Gaben-Vorschlägen; Kampf und Vergabe sind offen.</p></header>
+<nav aria-label="Wesen filtern"><label>Ansicht <select id="typ"><option>Kartenwesen</option><option>Monatskarte</option><option>Spielhelfer</option><option>Alle</option></select></label>
+<label>Form <select id="form"><option>Alle</option><option>Jungform</option><option>Reife Form</option><option>Urform</option></select></label>
+<label>Suche <input id="suche" type="search" placeholder="Name oder Fähigkeit"/></label></nav>
+<p id="anzahl" role="status" aria-live="polite"></p><main><article data-typ="Kartenwesen" data-form="Jungform">
+<p class="eyebrow">Leuchtfeuer · Jungform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Glühwürmchen" data-seltenheit="" data-glanz="false" aria-label="Glühwürmchen beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Glühwürmchen</h3><p>8 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Reife Form">
+<p class="eyebrow">Leuchtfeuer · Reife Form</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Laternenwächter" data-seltenheit="" data-glanz="false" aria-label="Laternenwächter beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Laternenwächter</h3><p>8 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Urform">
+<p class="eyebrow">Leuchtfeuer · Urform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-3.svg" data-name="Leuchtfeuer-Hüter" data-seltenheit="" data-glanz="false" aria-label="Leuchtfeuer-Hüter beschwören"><img src="wesen/leuchtfeuer-licht-3.svg" alt="Leuchtfeuer-Hüter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Leuchtfeuer-Hüter</h3><p>4 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Jungform">
+<p class="eyebrow">Leuchtfeuer · Jungform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-kessel-1.svg" data-name="Flämmling" data-seltenheit="" data-glanz="false" aria-label="Flämmling beschwören"><img src="wesen/leuchtfeuer-kessel-1.svg" alt="Flämmling" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Flämmling</h3><p>1 Karte im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Reife Form">
+<p class="eyebrow">Leuchtfeuer · Reife Form</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-kessel-2.svg" data-name="Kesselgeist" data-seltenheit="" data-glanz="false" aria-label="Kesselgeist beschwören"><img src="wesen/leuchtfeuer-kessel-2.svg" alt="Kesselgeist" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Kesselgeist</h3><p>1 Karte im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Urform">
+<p class="eyebrow">Leuchtfeuer · Urform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-kessel-3.svg" data-name="Kesselriese" data-seltenheit="" data-glanz="false" aria-label="Kesselriese beschwören"><img src="wesen/leuchtfeuer-kessel-3.svg" alt="Kesselriese" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Kesselriese</h3><p>0 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Jungform">
+<p class="eyebrow">Leuchtfeuer · Jungform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-wind-1.svg" data-name="Windfohlen" data-seltenheit="" data-glanz="false" aria-label="Windfohlen beschwören"><img src="wesen/leuchtfeuer-wind-1.svg" alt="Windfohlen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Windfohlen</h3><p>1 Karte im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Reife Form">
+<p class="eyebrow">Leuchtfeuer · Reife Form</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-wind-2.svg" data-name="Windmühlen-Golem" data-seltenheit="" data-glanz="false" aria-label="Windmühlen-Golem beschwören"><img src="wesen/leuchtfeuer-wind-2.svg" alt="Windmühlen-Golem" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Windmühlen-Golem</h3><p>1 Karte im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Urform">
+<p class="eyebrow">Leuchtfeuer · Urform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-wind-3.svg" data-name="Sonnenvogel" data-seltenheit="" data-glanz="false" aria-label="Sonnenvogel beschwören"><img src="wesen/leuchtfeuer-wind-3.svg" alt="Sonnenvogel" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Sonnenvogel</h3><p>0 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Jungform">
+<p class="eyebrow">Leuchtfeuer · Jungform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-1.svg" data-name="Brunnenwicht" data-seltenheit="" data-glanz="false" aria-label="Brunnenwicht beschwören"><img src="wesen/leuchtfeuer-rohr-1.svg" alt="Brunnenwicht" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Brunnenwicht</h3><p>4 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Reife Form">
+<p class="eyebrow">Leuchtfeuer · Reife Form</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Röhrenwurm" data-seltenheit="" data-glanz="false" aria-label="Röhrenwurm beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Röhrenwurm</h3><p>7 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Urform">
+<p class="eyebrow">Leuchtfeuer · Urform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-3.svg" data-name="Großer Röhrenwurm" data-seltenheit="" data-glanz="false" aria-label="Großer Röhrenwurm beschwören"><img src="wesen/leuchtfeuer-rohr-3.svg" alt="Großer Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Großer Röhrenwurm</h3><p>0 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Jungform">
+<p class="eyebrow">Leuchtfeuer · Jungform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-quelle-1.svg" data-name="Quellkrebs" data-seltenheit="" data-glanz="false" aria-label="Quellkrebs beschwören"><img src="wesen/leuchtfeuer-quelle-1.svg" alt="Quellkrebs" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Quellkrebs</h3><p>1 Karte im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Reife Form">
+<p class="eyebrow">Leuchtfeuer · Reife Form</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-quelle-2.svg" data-name="Quelltroll" data-seltenheit="" data-glanz="false" aria-label="Quelltroll beschwören"><img src="wesen/leuchtfeuer-quelle-2.svg" alt="Quelltroll" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Quelltroll</h3><p>0 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Kartenwesen" data-form="Urform">
+<p class="eyebrow">Leuchtfeuer · Urform</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-quelle-3.svg" data-name="Quellenhüter" data-seltenheit="" data-glanz="false" aria-label="Quellenhüter beschwören"><img src="wesen/leuchtfeuer-quelle-3.svg" alt="Quellenhüter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Quellenhüter</h3><p>0 Karten im Katalog</p><p class="muted">Artentwurf · keine zusätzliche Monatskarte</p></article>
+<article data-typ="Spielhelfer" data-form="">
+<p class="eyebrow">Werkvolk · Spielhelfer</p>
+<img src="wesen/werkling.svg" alt="Werkling" width="480" height="270"/>
+<h3>Werkling</h3><p>1 Angriff · 1 Leben</p><p class="muted">Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling.</p></article>
+<article data-typ="Spielhelfer" data-form="">
+<p class="eyebrow">Erzvolk · Spielhelfer</p>
+<img src="wesen/erzsplitter.svg" alt="Erzsplitter" width="480" height="270"/>
+<h3>Erzsplitter</h3><p>0 Angriff · 3 Leben</p><p class="muted">Kristallherz: Stirbt es, bleibt ein Erzsplitter 0/3 mit Wächter zurück.</p></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Gewöhnlich · 4 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-kessel-1.svg" data-name="Flaluxeth" data-seltenheit="Gewöhnlich" data-glanz="false" aria-label="Flaluxeth beschwören"><img src="wesen/leuchtfeuer-kessel-1.svg" alt="Flämmling" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Flaluxeth</h3><p>Flämmling · Jungform</p>
+<p class="stats">6 Angriff <span>2 Leben</span></p>
+<p>Wächter</p><p class="muted"></p>
+<small>K0009 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Gewöhnlich · 3 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-wind-1.svg" data-name="Calida" data-seltenheit="Gewöhnlich" data-glanz="false" aria-label="Calida beschwören"><img src="wesen/leuchtfeuer-wind-1.svg" alt="Windfohlen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Calida</h3><p>Windfohlen · Jungform</p>
+<p class="stats">3 Angriff <span>3 Leben</span></p>
+<p>Knospend</p><p class="muted"></p>
+<small>K0017 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Gewöhnlich · 4 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-1.svg" data-name="Lanent" data-seltenheit="Gewöhnlich" data-glanz="false" aria-label="Lanent beschwören"><img src="wesen/leuchtfeuer-rohr-1.svg" alt="Brunnenwicht" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Lanent</h3><p>Brunnenwicht · Jungform</p>
+<p class="stats">6 Angriff <span>2 Leben</span></p>
+<p>Wächter</p><p class="muted"></p>
+<small>K0028 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Gewöhnlich · 4 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Lamane" data-seltenheit="Gewöhnlich" data-glanz="false" aria-label="Lamane beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Lamane</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">6 Angriff <span>2 Leben</span></p>
+<p>Wächter</p><p class="muted"></p>
+<small>K0035 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Solhelion" data-seltenheit="Selten" data-glanz="false" aria-label="Solhelion beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Solhelion</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0041 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Eonyn" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Eonyn beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Eonyn</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0046 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Gewöhnlich · 4 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Helara" data-seltenheit="Gewöhnlich" data-glanz="false" aria-label="Helara beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Helara</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">5 Angriff <span>2 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted"></p>
+<small>K0132 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Gewöhnlich · 5 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Venola" data-seltenheit="Gewöhnlich" data-glanz="false" aria-label="Venola beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Venola</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">4 Angriff <span>3 Leben</span></p>
+<p>Ungestüm · Wachstum</p><p class="muted"></p>
+<small>K0136 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Tansolum" data-seltenheit="Selten" data-glanz="false" aria-label="Tansolum beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Tansolum</h3><p>Röhrenwurm · Reife Form</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0139 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Episch · 7 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Pyra" data-seltenheit="Episch" data-glanz="false" aria-label="Pyra beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Pyra</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">6 Angriff <span>5 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.</p>
+<small>K0140 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 4 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-quelle-1.svg" data-name="Ilor" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Ilor beschwören"><img src="wesen/leuchtfeuer-quelle-1.svg" alt="Quellkrebs" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Ilor</h3><p>Quellkrebs · Jungform</p>
+<p class="stats">2 Angriff <span>5 Leben</span></p>
+<p>Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0144 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 7 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-kessel-2.svg" data-name="Luxix" data-seltenheit="Selten" data-glanz="false" aria-label="Luxix beschwören"><img src="wesen/leuchtfeuer-kessel-2.svg" alt="Kesselgeist" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Luxix</h3><p>Kesselgeist · Reife Form</p>
+<p class="stats">6 Angriff <span>6 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0162 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-1.svg" data-name="Calia" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Calia beschwören"><img src="wesen/leuchtfeuer-rohr-1.svg" alt="Brunnenwicht" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Calia</h3><p>Brunnenwicht · Jungform</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0197 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-1.svg" data-name="Ignaurar" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Ignaurar beschwören"><img src="wesen/leuchtfeuer-rohr-1.svg" alt="Brunnenwicht" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Ignaurar</h3><p>Brunnenwicht · Jungform</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0211 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 5 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Aura" data-seltenheit="Selten" data-glanz="false" aria-label="Aura beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Aura</h3><p>Röhrenwurm · Reife Form</p>
+<p class="stats">5 Angriff <span>4 Leben</span></p>
+<p>Wächter</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0234 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Urform" class="">
+<p class="eyebrow">Mythisch · 10 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-3.svg" data-name="Faeluxen" data-seltenheit="Mythisch" data-glanz="false" aria-label="Faeluxen beschwören"><img src="wesen/leuchtfeuer-licht-3.svg" alt="Leuchtfeuer-Hüter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Faeluxen</h3><p>Leuchtfeuer-Hüter · Urform</p>
+<p class="stats">4 Angriff <span>8 Leben</span></p>
+<p>Ungestüm · Wachstum</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.<br/>Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück.</p>
+<small>K0236 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 5 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Eonum" data-seltenheit="Selten" data-glanz="false" aria-label="Eonum beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Eonum</h3><p>Röhrenwurm · Reife Form</p>
+<p class="stats">5 Angriff <span>4 Leben</span></p>
+<p>Wächter</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0250 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Episch · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Laneth" data-seltenheit="Episch" data-glanz="false" aria-label="Laneth beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Laneth</h3><p>Röhrenwurm · Reife Form</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.</p>
+<small>K0266 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Urform" class="">
+<p class="eyebrow">Mythisch · 8 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-3.svg" data-name="Orolanys" data-seltenheit="Mythisch" data-glanz="false" aria-label="Orolanys beschwören"><img src="wesen/leuchtfeuer-licht-3.svg" alt="Leuchtfeuer-Hüter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Orolanys</h3><p>Leuchtfeuer-Hüter · Urform</p>
+<p class="stats">4 Angriff <span>6 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.<br/>Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück.</p>
+<small>K0272 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 4 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Venia" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Venia beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Venia</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">4 Angriff <span>4 Leben</span></p>
+<p></p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0279 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 7 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Helent" data-seltenheit="Selten" data-glanz="false" aria-label="Helent beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Helent</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">6 Angriff <span>6 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0285 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 4 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Ignane" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Ignane beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Ignane</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">4 Angriff <span>3 Leben</span></p>
+<p>Wächter</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0292 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 3 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Lamel" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Lamel beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Lamel</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">2 Angriff <span>4 Leben</span></p>
+<p></p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0293 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Episch · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Stel" data-seltenheit="Episch" data-glanz="false" aria-label="Stel beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Stel</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.</p>
+<small>K0294 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 5 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Ilpyris" data-seltenheit="Selten" data-glanz="false" aria-label="Ilpyris beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Ilpyris</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">5 Angriff <span>4 Leben</span></p>
+<p>Wächter</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0311 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 7 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Aurix" data-seltenheit="Selten" data-glanz="false" aria-label="Aurix beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Aurix</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">5 Angriff <span>7 Leben</span></p>
+<p>Ungestüm</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0435 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Urform" class="">
+<p class="eyebrow">Mythisch · 8 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-3.svg" data-name="Flacalola" data-seltenheit="Mythisch" data-glanz="false" aria-label="Flacalola beschwören"><img src="wesen/leuchtfeuer-licht-3.svg" alt="Leuchtfeuer-Hüter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Flacalola</h3><p>Leuchtfeuer-Hüter · Urform</p>
+<p class="stats">4 Angriff <span>7 Leben</span></p>
+<p>Knospend</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.<br/>Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück.</p>
+<small>K0444 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-1.svg" data-name="Sten" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Sten beschwören"><img src="wesen/leuchtfeuer-rohr-1.svg" alt="Brunnenwicht" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Sten</h3><p>Brunnenwicht · Jungform</p>
+<p class="stats">6 Angriff <span>4 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0446 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 5 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Zenane" data-seltenheit="Selten" data-glanz="false" aria-label="Zenane beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Zenane</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">5 Angriff <span>4 Leben</span></p>
+<p>Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0463 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Jungform" class="">
+<p class="eyebrow">Ungewöhnlich · 5 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Jungform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-1.svg" data-name="Solar" data-seltenheit="Ungewöhnlich" data-glanz="false" aria-label="Solar beschwören"><img src="wesen/leuchtfeuer-licht-1.svg" alt="Glühwürmchen" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Solar</h3><p>Glühwürmchen · Jungform</p>
+<p class="stats">5 Angriff <span>3 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0466 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 5 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Luxia" data-seltenheit="Selten" data-glanz="false" aria-label="Luxia beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Luxia</h3><p>Röhrenwurm · Reife Form</p>
+<p class="stats">4 Angriff <span>5 Leben</span></p>
+<p>Wächter</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0487 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Episch · 7 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Pyrys" data-seltenheit="Episch" data-glanz="false" aria-label="Pyrys beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Pyrys</h3><p>Röhrenwurm · Reife Form</p>
+<p class="stats">6 Angriff <span>5 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.</p>
+<small>K0522 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Urform" class="">
+<p class="eyebrow">Mythisch · 8 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Urform" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-3.svg" data-name="Tanvenent" data-seltenheit="Mythisch" data-glanz="false" aria-label="Tanvenent beschwören"><img src="wesen/leuchtfeuer-licht-3.svg" alt="Leuchtfeuer-Hüter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Tanvenent</h3><p>Leuchtfeuer-Hüter · Urform</p>
+<p class="stats">4 Angriff <span>6 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.<br/>Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück.</p>
+<small>K0531 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Episch · 8 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-wind-2.svg" data-name="Kyhelum" data-seltenheit="Episch" data-glanz="false" aria-label="Kyhelum beschwören"><img src="wesen/leuchtfeuer-wind-2.svg" alt="Windmühlen-Golem" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Kyhelum</h3><p>Windmühlen-Golem · Reife Form</p>
+<p class="stats">7 Angriff <span>5 Leben</span></p>
+<p>Ungestüm · Knospend</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.</p>
+<small>K0590 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Selten · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-rohr-2.svg" data-name="Lanion" data-seltenheit="Selten" data-glanz="false" aria-label="Lanion beschwören"><img src="wesen/leuchtfeuer-rohr-2.svg" alt="Röhrenwurm" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Lanion</h3><p>Röhrenwurm · Reife Form</p>
+<p class="stats">5 Angriff <span>5 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 1: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 1 Schaden abfängt.</p>
+<small>K0593 · 2026-10 · aktiv</small></article>
+<article data-typ="Monatskarte" data-form="Reife Form" class="">
+<p class="eyebrow">Episch · 6 Kristalle</p>
+<button type="button" class="beschwoeren" data-volk="Leuchtfeuer" data-form="Reife Form" data-hex="#e0683a" data-bild="wesen/leuchtfeuer-licht-2.svg" data-name="Helor" data-seltenheit="Episch" data-glanz="false" aria-label="Helor beschwören"><img src="wesen/leuchtfeuer-licht-2.svg" alt="Laternenwächter" width="480" height="270"/><span>Beschwören ✧</span></button>
+<h3>Helor</h3><p>Laternenwächter · Reife Form</p>
+<p class="stats">4 Angriff <span>5 Leben</span></p>
+<p>Wächter · Knospend</p><p class="muted">Schutzlicht 2: Beim Beschwören erhält ein eigenes Wesen einen Schild, der 2 Schaden abfängt.</p>
+<small>K0608 · 2026-10 · aktiv</small></article></main>
+<dialog id="beschwoerung" aria-labelledby="beschwoerungsname">
+<h2 id="beschwoerungsname">Leuchtfeuer</h2><small id="sequenz"></small>
+<canvas id="buehne" width="480" height="270" role="img" aria-label="Leuchtfeuer-Beschwörung"></canvas>
+<video id="beschwoerungsvideo" hidden aria-label="Leuchtfeuer-Beschwörung als Video"></video>
+<p id="phase" role="status" aria-live="polite"></p>
+<div class="steuerung"><button id="erneut" type="button">Erneut abspielen</button>
+<label><input id="bewegungsarm" type="checkbox"/> Bewegung reduzieren</label>
+<button id="schliessen" type="button">Schließen</button></div>
+<small>Gestaltungsvorschau · kein Erwerb und keine Kampfaktion. Escape schließt die Vorschau.</small>
+</dialog>
+<footer>480 × 270 Bildbasis · Licht von links oben · dunkle Silhouettentrennung<br/>
+Keine neue Kartenvergabe. Gezielte Statkorrekturen bleiben möglich; Monatsänderungen bleiben getrennt.<br/>
+<a href="minions.json">Gestaltungsdaten</a> · <a href="galerie.html">Gesamter Kartenkatalog</a></footer>
+<script src="beschwoerung.js"></script><script>
+const typ=document.querySelector('#typ'),form=document.querySelector('#form'),suche=document.querySelector('#suche');
+function filtern(){let n=0;const q=suche.value.trim().toLocaleLowerCase('de');document.querySelectorAll('article').forEach(a=>{a.hidden=!( (typ.value==='Alle'||a.dataset.typ===typ.value)&&(form.value==='Alle'||a.dataset.form===form.value)&&a.textContent.toLocaleLowerCase('de').includes(q));if(!a.hidden)n++});document.querySelector('#anzahl').textContent=n+' Einträge';}
+[typ,form,suche].forEach(e=>e.addEventListener('input',filtern));filtern();
+const dialog=document.querySelector('#beschwoerung'),canvas=document.querySelector('#buehne'),video=document.querySelector('#beschwoerungsvideo'),phase=document.querySelector('#phase'),arm=document.querySelector('#bewegungsarm');
+const medien=matchMedia('(prefers-reduced-motion: reduce)');arm.checked=medien.matches;
+// Später lokale Videos je vollständigem Vorlagenschlüssel registrieren. Kein Download beim Öffnen.
+const videos=new Map();
+const spieler=new Beschwoerung.Spieler(new Beschwoerung.CodeDarsteller(canvas),p=>videos.has(p.schluessel)?new Beschwoerung.VideoDarsteller(video,videos.get(p.schluessel)):null);
+let vorlage=null,lauf=0;
+async function abspielen(){const nr=++lauf;canvas.hidden=false;video.hidden=true;phase.textContent='Das Licht sammelt sich …';try{await spieler.spiele(vorlage,{reduziert:arm.checked,phase:text=>{if(nr===lauf)phase.textContent=text;}});if(nr===lauf)phase.textContent=arm.checked?'Standbild · Bewegung reduziert':'Beschwörung abgeschlossen';}catch(fehler){if(nr===lauf&&fehler.name!=='AbortError')phase.textContent='Vorschau nicht verfügbar. Bitte erneut versuchen.';}}
+document.querySelectorAll('.beschwoeren').forEach(button=>button.addEventListener('click',()=>{const d=button.dataset;vorlage=Beschwoerung.plan({...d,glanz:d.glanz==='true'});document.querySelector('#beschwoerungsname').textContent=d.name;document.querySelector('#sequenz').textContent=d.form+' · '+(vorlage.mythisch?'Mythische Sequenz':'Leuchtfeuer')+' · '+(vorlage.dauer/1000).toLocaleString('de')+' s'+(vorlage.glanz?' · Glanz':'');canvas.setAttribute('aria-label','Beschwörung von '+d.name);dialog.showModal();abspielen();}));
+document.querySelector('#erneut').addEventListener('click',abspielen);arm.addEventListener('change',abspielen);
+function stoppen(){lauf++;spieler.stop();}dialog.addEventListener('close',stoppen);dialog.addEventListener('cancel',stoppen);
+document.querySelector('#schliessen').addEventListener('click',()=>dialog.close());
+medien.addEventListener('change',e=>{arm.checked=e.matches;if(dialog.open)abspielen();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&dialog.open){stoppen();phase.textContent='Unterbrochen · erneut abspielen';}});
+</script></html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-labelledby="name">
+<title id="name">Laternenwächter – Vektorentwurf</title>
+<defs><linearGradient id="material" x2="0.8" y2="1"><stop stop-color="#bd9a75"/><stop offset=".45" stop-color="#755b4e"/><stop offset="1" stop-color="#322d32"/></linearGradient>
+<radialGradient id="feuer"><stop stop-color="#fff7b7"/><stop offset=".5" stop-color="#f5bd68"/><stop offset="1" stop-color="#e0683a"/></radialGradient>
+<filter id="aussparung" x="-20%" y="-20%" width="140%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="rand"/><feFlood flood-color="#101820"/><feComposite in2="rand" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<ellipse cx="240" cy="226" rx="89" ry="11" fill="#080e15" opacity=".8"/>
+<g filter="url(#aussparung)" paint-order="stroke fill"><path d="M205 112 L275 112 L284 184 L267 205 L213 205 L196 184 Z" fill="url(#material)" stroke="#f1c59b" stroke-width="3" stroke-linejoin="round"/><path d="M213 119 H267 V175 H213 Z" fill="url(#feuer)" stroke="#f1c59b" stroke-width="3" stroke-linejoin="round"/><path d="M193 111 L240 77 L287 111 Z" fill="url(#material)" stroke="#f1c59b" stroke-width="3" stroke-linejoin="round"/><path d="M227 84 Q215 48 241 51 Q266 53 253 84" fill="none" stroke="#f1c59b" stroke-width="3" stroke-linejoin="round"/><path d="M208 203 L198 224 H220 L225 205 M261 203 L269 224 H291 L276 203" fill="url(#material)" stroke="#f1c59b" stroke-width="3" stroke-linejoin="round"/><ellipse cx="225" cy="148" rx="4" ry="6" fill="#fff4cc" stroke="#e9bb8a" stroke-width="3"/><ellipse cx="255" cy="148" rx="4" ry="6" fill="#fff4cc" stroke="#e9bb8a" stroke-width="3"/></g>
+</svg>

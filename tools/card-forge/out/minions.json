@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "zweck": "Gestaltungsentwürfe und bestehende Regelvorschläge, keine Kampf-Runtime",
+  "wesen": [
+    {
+      "id": "leuchtfeuer-licht-1",
+      "name": "Glühwürmchen",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Jungform",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-licht-1.svg",
+      "karten_ids": [
+        "K0035",
+        "K0046",
+        "K0132",
+        "K0136",
+        "K0279",
+        "K0292",
+        "K0293",
+        "K0466"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-licht-2",
+      "name": "Laternenwächter",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Reife Form",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-licht-2.svg",
+      "karten_ids": [
+        "K0041",
+        "K0140",
+        "K0285",
+        "K0294",
+        "K0311",
+        "K0435",
+        "K0463",
+        "K0608"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-licht-3",
+      "name": "Leuchtfeuer-Hüter",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Urform",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-licht-3.svg",
+      "karten_ids": [
+        "K0236",
+        "K0272",
+        "K0444",
+        "K0531"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-kessel-1",
+      "name": "Flämmling",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Jungform",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-kessel-1.svg",
+      "karten_ids": [
+        "K0009"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-kessel-2",
+      "name": "Kesselgeist",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Reife Form",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-kessel-2.svg",
+      "karten_ids": [
+        "K0162"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-kessel-3",
+      "name": "Kesselriese",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Urform",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-kessel-3.svg",
+      "karten_ids": []
+    },
+    {
+      "id": "leuchtfeuer-wind-1",
+      "name": "Windfohlen",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Jungform",
+      "rolle": "Schütze",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-wind-1.svg",
+      "karten_ids": [
+        "K0017"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-wind-2",
+      "name": "Windmühlen-Golem",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Reife Form",
+      "rolle": "Schütze",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-wind-2.svg",
+      "karten_ids": [
+        "K0590"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-wind-3",
+      "name": "Sonnenvogel",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Urform",
+      "rolle": "Schütze",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-wind-3.svg",
+      "karten_ids": []
+    },
+    {
+      "id": "leuchtfeuer-rohr-1",
+      "name": "Brunnenwicht",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Jungform",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-rohr-1.svg",
+      "karten_ids": [
+        "K0028",
+        "K0197",
+        "K0211",
+        "K0446"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-rohr-2",
+      "name": "Röhrenwurm",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Reife Form",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-rohr-2.svg",
+      "karten_ids": [
+        "K0139",
+        "K0234",
+        "K0250",
+        "K0266",
+        "K0487",
+        "K0522",
+        "K0593"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-rohr-3",
+      "name": "Großer Röhrenwurm",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Urform",
+      "rolle": "Wächter",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-rohr-3.svg",
+      "karten_ids": []
+    },
+    {
+      "id": "leuchtfeuer-quelle-1",
+      "name": "Quellkrebs",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Jungform",
+      "rolle": "Helfer",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-quelle-1.svg",
+      "karten_ids": [
+        "K0144"
+      ]
+    },
+    {
+      "id": "leuchtfeuer-quelle-2",
+      "name": "Quelltroll",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Reife Form",
+      "rolle": "Helfer",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-quelle-2.svg",
+      "karten_ids": []
+    },
+    {
+      "id": "leuchtfeuer-quelle-3",
+      "name": "Quellenhüter",
+      "typ": "Kartenwesen",
+      "volk": "Leuchtfeuer",
+      "form": "Urform",
+      "rolle": "Helfer",
+      "hex": "#e0683a",
+      "bild": "wesen/leuchtfeuer-quelle-3.svg",
+      "karten_ids": []
+    },
+    {
+      "id": "werkling",
+      "name": "Werkling",
+      "typ": "Spielhelfer",
+      "volk": "Werkvolk",
+      "form": null,
+      "rolle": null,
+      "hex": "#d8a65b",
+      "angriff": 1,
+      "leben": 1,
+      "merkmale": [],
+      "quelle": {
+        "gabe": "Fließband",
+        "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
+      },
+      "bild": "wesen/werkling.svg",
+      "karten_ids": []
+    },
+    {
+      "id": "erzsplitter",
+      "name": "Erzsplitter",
+      "typ": "Spielhelfer",
+      "volk": "Erzvolk",
+      "form": null,
+      "rolle": null,
+      "hex": "#83b8b0",
+      "angriff": 0,
+      "leben": 3,
+      "merkmale": [
+        "Wächter"
+      ],
+      "quelle": {
+        "gabe": "Kristallherz",
+        "text": "Kristallherz: Stirbt es, bleibt ein Erzsplitter 0/3 mit Wächter zurück."
+      },
+      "bild": "wesen/erzsplitter.svg",
+      "karten_ids": []
+    }
+  ]
+}

@@ -5,6 +5,52 @@ Entschieden am 03.10.2026: Weg vom Erinnerungsspiel, hin zu einem Spiel, das man
 Vorhaben, Reisen), aber ohne Erinnerungen und ohne Uhr. Fernziel: ein Fantasy-Strategiespiel im
 Geist der neuen Pixel-Art-Final-Fantasy-Teile, in der Welt von Itoeva.
 
+## Kartenschmiede: Prüfung vor Integration (17.10.2026)
+
+Die Prüfung auf Basis von `claude/kartenschmiede` steht in
+[tools/card-forge/PRUEFUNG.md](tools/card-forge/PRUEFUNG.md). Die Datenarithmetik besteht
+die Tests; ein Einbau in `game` wird vorerst zurückgestellt. Die im Prüfstand gefundenen
+Faktorquintile und Firmenkennungen sind im Folgeschritt aus den aktuellen öffentlichen
+Ausgaben entfernt. Register und Katalog werden vor dem Schreiben gegeneinander geprüft;
+fehlende oder widersprüchliche Zuordnungen führen zum Abbruch. Namen, IDs und Spielwerte
+der 616 Karten bleiben erhalten. Im aktuellen Monatskatalog können sich Formen und
+Seltenheit weiterhin ändern; erworbene Ausgaben werden davon gemäß Variante A getrennt.
+
+Die Exportabsicherung und der technische [Katalogvertrag v1](tools/card-forge/KATALOGVERTRAG.md)
+sind mit erfundenen Eingaben und den bereinigten Artefakten getestet. Der öffentliche
+Katalog trägt `schema_version: 1`; ein engineunabhängiger Referenzleser prüft Version,
+Monate und Pflichtfelder und lädt auch ruhende Karten. Alle 616 Karten behalten ihre Werte.
+Martin hat **Variante A präzisiert**: Automatische Monatsänderungen ersetzen keine
+erworbenen Ausgaben. Gezielte Statkorrekturen von Martin dürfen dagegen auch bereits
+erworbene Karten ändern; Form und Glanz bleiben erhalten. `korrigiere_stats` und
+`mit_statkorrektur` ermöglichen dies im engineunabhängigen Referenzmodell.
+Die engineunabhängigen Referenzmodelle
+`KatalogSnapshot` und `ErworbeneAusgabe` sichern den Erhalt im Zweimonatslauf und nach
+Snapshot-Wiederherstellung ab. Noch keine App-Sammlung oder automatische Kartenvergabe.
+Freigabe/Korrekturen, Duplikate und spätere Kampfzulässigkeit bleiben offen. Kampf,
+Gruppe, Raster, Engine und Bezahlung bleiben
+`OPEN DECISION`. Kartenbuch, Spiel-Assets und Beschwörungsanimationen sind nicht eingebaut.
+Die bestehenden Preise bleiben unverändert; konkrete Preiskandidaten stehen im Prüfbericht.
+
+## Kartenwesen und Spielhelfer als Gestaltungsvorschau (18.10.2026)
+
+`tools/card-forge/out/wesenbuch.html` zeigt jetzt alle fünf Leuchtfeuer-Arten in
+ihren drei Formen als 15 eigenständige Vektorentwürfe. Dazu kommen die 36 vorhandenen
+Leuchtfeuer-Monatskarten mit tatsächlichen Werten und zwei separate Spielhelfer:
+Werkling (1/1, Fließband) sowie Erzsplitter (0/3, Wächter, Kristallherz), jeweils
+aus den bestehenden Regelvorschlägen. Fünf Artenformen haben noch keine Monatskarte
+und erhalten deshalb keine erfundenen Stats. Das Manifest `out/minions.json`
+verknüpft Gestaltungs-IDs, SVGs und vorhandene Karten-IDs. Erneute Erzeugung übernimmt
+gespeicherte Statkorrekturen im aktuellen Katalog; die Besitzentscheidung bleibt gültig.
+
+Dies ist ein engineunabhängiges, offline betrachtbares Entwurfsbuch. Es ersetzt
+nicht das zurückgestellte Kartenbuch im Spielmenü. Die inzwischen umgesetzte
+[Leuchtfeuer-Beschwörung](tools/card-forge/BESCHWOERUNG.md) läuft als Browservorschau:
+drei Formstufen, längere mythische Sequenz, Kartenfarbe/Glanz und bewegungsarme
+Standbilder. Code- und Videodarsteller teilen einen Abbruch-/Ablaufvertrag;
+echte Videoclips, Laufzeit-Minions und die übrigen zwölf Völker fehlen noch.
+Nächster Schritt ist Werkvolk samt Werkling; Kampf und Engine bleiben offen.
+
 ## Aufbau
 
 - **Itoeva 1** ist eingefroren im Branch `itoeva-1` (Stand nach PR #322: Erinnerungsspiel,

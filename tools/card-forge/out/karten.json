@@ -1,4 +1,5 @@
 {
+ "schema_version": 1,
  "monat": "2026-10",
  "anzahl": 616,
  "karten": [
@@ -29,14 +30,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -64,14 +57,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -103,14 +88,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 1,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -137,14 +114,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -172,14 +141,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 1,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -213,14 +174,6 @@
     "text": "Kristallherz: Stirbt es, bleibt ein Erzsplitter 0/3 mit Wächter zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -248,14 +201,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 4,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 15,
    "status": "aktiv",
    "monat": "2026-10"
@@ -286,14 +231,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 1,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -320,14 +257,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -355,14 +284,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 4,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -394,14 +315,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -435,14 +348,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -474,14 +379,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 1,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -512,14 +409,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 2,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -546,14 +435,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 3,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -584,14 +465,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 4,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -618,14 +491,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -656,14 +521,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -691,14 +548,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -723,14 +572,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 2,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -755,14 +596,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -794,14 +627,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 19.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -832,14 +657,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -870,14 +687,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 3,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -909,14 +718,6 @@
     "text": "Flächenbrand: Beim Beschwören 1 Schaden an allen gegnerischen Wesen."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -947,14 +748,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -982,14 +775,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 1,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1016,14 +801,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1055,14 +832,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1093,14 +862,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1131,14 +892,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1166,14 +919,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 5,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1205,14 +950,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1239,14 +976,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1273,14 +1002,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1307,14 +1028,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1348,14 +1061,6 @@
     "text": "Flächenbrand: Beim Beschwören 1 Schaden an allen gegnerischen Wesen."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1386,14 +1091,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 1,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1425,14 +1122,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 4,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1457,14 +1146,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1496,14 +1177,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1535,14 +1208,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1569,14 +1234,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1601,14 +1258,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1640,14 +1289,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 1,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1679,14 +1320,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1713,14 +1346,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 1,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1747,14 +1372,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 1,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1783,14 +1400,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 2,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1822,14 +1431,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 1,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1857,14 +1458,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1891,14 +1484,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1929,14 +1514,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 2,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -1967,14 +1544,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2001,14 +1570,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 2,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2040,14 +1601,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2075,14 +1628,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2114,14 +1659,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 1,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2149,14 +1686,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 1,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2187,14 +1716,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2226,14 +1747,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2261,14 +1774,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 1,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2299,14 +1804,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 3,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2337,14 +1834,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2376,14 +1865,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 1,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2408,14 +1889,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2444,14 +1917,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2483,14 +1948,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2524,14 +1981,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2559,14 +2008,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 1,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2601,14 +2042,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2633,14 +2066,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 3,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2672,14 +2097,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 1,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2710,14 +2127,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 1,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2744,14 +2153,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 2,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2778,14 +2179,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2817,14 +2210,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2856,14 +2241,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2895,14 +2272,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 5.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2933,14 +2302,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -2965,14 +2326,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 3,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3006,14 +2359,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3042,14 +2387,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 3,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3078,14 +2415,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 2,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3117,14 +2446,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 4,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3156,14 +2477,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 1,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3195,14 +2508,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3227,14 +2532,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 2,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3269,14 +2566,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 1,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3308,14 +2597,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 4,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3344,14 +2625,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3382,14 +2655,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3418,14 +2683,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3454,14 +2711,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3493,14 +2742,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3529,14 +2770,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3571,14 +2804,6 @@
     "text": "Kristallherz: Stirbt es, bleibt ein Erzsplitter 0/3 mit Wächter zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3613,14 +2838,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3654,14 +2871,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 4,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3690,14 +2899,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3722,14 +2923,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 2,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3758,14 +2951,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3796,14 +2981,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3835,14 +3012,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3871,14 +3040,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3903,14 +3064,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 3,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3944,14 +3097,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 2,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -3982,14 +3127,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4020,14 +3157,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4055,14 +3184,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 1,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4089,14 +3210,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4128,14 +3241,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4167,14 +3272,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4205,14 +3302,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 3,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4243,14 +3332,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 2,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4281,14 +3362,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4316,14 +3389,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4354,14 +3419,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 2,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4392,14 +3449,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 2,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4430,14 +3479,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4471,14 +3512,6 @@
     "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 1,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4510,14 +3543,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4549,14 +3574,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4588,14 +3605,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4629,14 +3638,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4663,14 +3664,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 1,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4705,14 +3698,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4740,14 +3725,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4776,14 +3753,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4815,14 +3784,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4853,14 +3814,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4888,14 +3841,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4926,14 +3871,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 1,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -4965,14 +3902,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 5,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5006,14 +3935,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5041,14 +3962,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5083,14 +3996,6 @@
     "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 1,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5124,14 +4029,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 4,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5163,14 +4060,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5202,14 +4091,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5241,14 +4122,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5279,14 +4152,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5315,14 +4180,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 3,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5353,14 +4210,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5389,14 +4238,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 3,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5427,14 +4268,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 1,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5466,14 +4299,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5505,14 +4330,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5547,14 +4364,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5588,14 +4397,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 5,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5622,14 +4423,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5661,14 +4454,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5700,14 +4485,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5741,14 +4518,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5783,14 +4552,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5825,14 +4586,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5863,14 +4616,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5901,14 +4646,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 2,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5943,14 +4680,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -5982,14 +4711,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6020,14 +4741,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 3,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6059,14 +4772,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6098,14 +4803,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6136,14 +4833,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 2,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6174,14 +4863,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6213,14 +4894,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 4,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6247,14 +4920,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6286,14 +4951,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6324,14 +4981,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 3,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6356,14 +5005,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 2,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6395,14 +5036,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6431,14 +5064,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6469,14 +5094,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 5.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6508,14 +5125,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6549,14 +5158,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 0,
-    "value": 3,
-    "size": 5,
-    "composite": 0
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6584,14 +5185,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 1,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6622,14 +5215,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 2,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6663,14 +5248,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6702,14 +5279,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 3,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6741,14 +5310,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6783,14 +5344,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 5,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6824,14 +5377,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6865,14 +5410,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6906,14 +5443,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 1,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6942,14 +5471,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 2,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -6984,14 +5505,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7020,14 +5533,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7054,14 +5559,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7093,14 +5590,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 4,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7132,14 +5621,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7170,14 +5651,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 3,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7204,14 +5677,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7243,14 +5708,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 1,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7281,14 +5738,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 3,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7319,14 +5768,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 1,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7361,14 +5802,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7400,14 +5833,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7439,14 +5864,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7478,14 +5895,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 1,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7516,14 +5925,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 1,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7555,14 +5956,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7597,14 +5990,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 1,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7635,14 +6020,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 1,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7669,14 +6046,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 2,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7703,14 +6072,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7739,14 +6100,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 3,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7778,14 +6131,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7816,14 +6161,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7858,14 +6195,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 4,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7893,14 +6222,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7932,14 +6253,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -7971,14 +6284,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8007,14 +6312,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 3,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8046,14 +6343,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 1,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8085,14 +6374,6 @@
     "text": "Flächenbrand: Beim Beschwören 1 Schaden an allen gegnerischen Wesen."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8124,14 +6405,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 4,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8162,14 +6435,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 3,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8201,14 +6466,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8240,14 +6497,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8279,14 +6528,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8318,14 +6559,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 5,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8357,14 +6590,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8395,14 +6620,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 2,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8429,14 +6646,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8468,14 +6677,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8510,14 +6711,6 @@
     "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8548,14 +6741,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8587,14 +6772,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8626,14 +6803,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8664,14 +6833,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 2,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8703,14 +6864,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8744,14 +6897,6 @@
     "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8783,14 +6928,6 @@
     "text": "Flächenbrand: Beim Beschwören 1 Schaden an allen gegnerischen Wesen."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8821,14 +6958,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8859,14 +6988,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 5.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8901,14 +7022,6 @@
     "text": "Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8935,14 +7048,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -8973,14 +7078,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9012,14 +7109,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9054,14 +7143,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9092,14 +7173,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 3,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9128,14 +7201,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 3,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9170,14 +7235,6 @@
     "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9205,14 +7262,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9247,14 +7296,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9283,14 +7324,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9319,14 +7352,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 3,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9357,14 +7382,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 5,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9396,14 +7413,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9434,14 +7443,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9475,14 +7476,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9511,14 +7504,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9550,14 +7535,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9584,14 +7561,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 2,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9625,14 +7594,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9667,14 +7628,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 1,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9706,14 +7659,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9745,14 +7690,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 1,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9784,14 +7721,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 4,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9822,14 +7751,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 3,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9856,14 +7777,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 2,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9894,14 +7807,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9933,14 +7838,6 @@
     "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 2,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -9972,14 +7869,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10010,14 +7899,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10048,14 +7929,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10080,14 +7953,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 2,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10119,14 +7984,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10155,14 +8012,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 3,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10193,14 +8042,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10227,14 +8068,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10269,14 +8102,6 @@
     "text": "Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10301,14 +8126,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 2,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10339,14 +8156,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 1,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10377,14 +8186,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10415,14 +8216,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 3,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10454,14 +8247,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10493,14 +8278,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10529,14 +8306,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10567,14 +8336,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 5,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 17.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10606,14 +8367,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10644,14 +8397,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 3,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10680,14 +8425,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 3,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10715,14 +8452,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10754,14 +8483,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10792,14 +8513,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10830,14 +8543,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10865,14 +8570,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10904,14 +8601,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 4,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10936,14 +8625,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -10971,14 +8652,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 5,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11009,14 +8682,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 3,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11045,14 +8710,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11083,14 +8740,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11122,14 +8771,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 1,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11158,14 +8799,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11196,14 +8829,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11235,14 +8860,6 @@
     "text": "Flächenbrand: Beim Beschwören 1 Schaden an allen gegnerischen Wesen."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11277,14 +8894,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11316,14 +8925,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 19.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11354,14 +8955,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11392,14 +8985,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 1,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11428,14 +9013,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 2,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11462,14 +9039,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11500,14 +9069,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 5.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11534,14 +9095,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11570,14 +9123,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11608,14 +9153,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 3,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11646,14 +9183,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 3,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11684,14 +9213,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11722,14 +9243,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11761,14 +9274,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11800,14 +9305,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11832,14 +9329,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 3,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11870,14 +9359,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11908,14 +9389,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 3,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11944,14 +9417,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -11980,14 +9445,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12014,14 +9471,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 2,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12048,14 +9497,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12090,14 +9531,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12128,14 +9561,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12169,14 +9594,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12207,14 +9624,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 5.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12246,14 +9655,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12280,14 +9681,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12319,14 +9712,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12358,14 +9743,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 5.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12392,14 +9769,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 2,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12431,14 +9800,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12465,14 +9826,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 3,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12503,14 +9856,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12542,14 +9887,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12577,14 +9914,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12616,14 +9945,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12655,14 +9976,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 1,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12689,14 +10002,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12727,14 +10032,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12759,14 +10056,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12795,14 +10084,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 3,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12834,14 +10115,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 1,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12872,14 +10145,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 5,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12906,14 +10171,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 3,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12945,14 +10202,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -12986,14 +10235,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 3,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13020,14 +10261,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13058,14 +10291,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13096,14 +10321,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 4,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13130,14 +10347,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13168,14 +10377,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13206,14 +10407,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13244,14 +10437,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 1,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13279,14 +10464,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13311,14 +10488,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13350,14 +10519,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13388,14 +10549,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 3,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13427,14 +10580,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 4,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13461,14 +10606,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 2,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13499,14 +10636,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 4,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13538,14 +10667,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13573,14 +10694,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13615,14 +10728,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13657,14 +10762,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13695,14 +10792,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13734,14 +10823,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13766,14 +10847,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13804,14 +10877,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 2,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 5.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13845,14 +10910,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13886,14 +10943,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 5,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13921,14 +10970,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13956,14 +10997,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -13994,14 +11027,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 2,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 5.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14032,14 +11057,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14071,14 +11088,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14109,14 +11118,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 2,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14141,14 +11142,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14182,14 +11175,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14224,14 +11209,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14263,14 +11240,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14299,14 +11268,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 2,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14335,14 +11296,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 2,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14373,14 +11326,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14412,14 +11357,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14451,14 +11388,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 1,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14485,14 +11414,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14523,14 +11444,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 3,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14561,14 +11474,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 5.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14599,14 +11504,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 1,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14637,14 +11534,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14673,14 +11562,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 3,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14709,14 +11590,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14751,14 +11624,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14789,14 +11654,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14827,14 +11684,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 3,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14865,14 +11714,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14904,14 +11745,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 5.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14938,14 +11771,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -14976,14 +11801,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15018,14 +11835,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15057,14 +11866,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15096,14 +11897,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15134,14 +11927,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 0,
-    "value": 2,
-    "size": 2,
-    "composite": 0
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15173,14 +11958,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15211,14 +11988,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15250,14 +12019,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15286,14 +12047,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 2,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15324,14 +12077,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 5,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15363,14 +12108,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 1,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15401,14 +12138,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 2,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15439,14 +12168,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15477,14 +12198,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15515,14 +12228,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 5,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15554,14 +12259,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15588,14 +12285,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15630,14 +12319,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15662,14 +12343,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15704,14 +12377,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15743,14 +12408,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15781,14 +12438,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 3,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15820,14 +12469,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15858,14 +12499,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 5.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15896,14 +12529,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 5,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15937,14 +12562,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -15976,14 +12593,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 4,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16015,14 +12624,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 4,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16057,14 +12658,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16092,14 +12685,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16130,14 +12715,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 2,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16169,14 +12746,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16208,14 +12777,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16246,14 +12807,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 5,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16284,14 +12837,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16323,14 +12868,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16362,14 +12899,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16400,14 +12929,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 3,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16432,14 +12953,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 1
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16470,14 +12983,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 4,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16509,14 +13014,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16548,14 +13045,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 1,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16590,14 +13079,6 @@
     "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 5,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16624,14 +13105,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 3,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16665,14 +13138,6 @@
     "text": "Kristallherz: Stirbt es, bleibt ein Erzsplitter 0/3 mit Wächter zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16697,14 +13162,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16738,14 +13195,6 @@
     "text": "Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16776,14 +13225,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 3,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16815,14 +13256,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16850,14 +13283,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16889,14 +13314,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16925,14 +13342,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16964,14 +13373,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -16998,14 +13399,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17034,14 +13427,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 2,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17076,14 +13461,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17115,14 +13492,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 5,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17153,14 +13522,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 3,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17187,14 +13548,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 3,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17226,14 +13579,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 5,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17265,14 +13610,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17303,14 +13640,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 3,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17341,14 +13670,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 1,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17383,14 +13704,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17421,14 +13734,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 2,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17459,14 +13764,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 4,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17495,14 +13792,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 2,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17533,14 +13822,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17572,14 +13853,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17606,14 +13879,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 4,
-    "size": 1,
-    "composite": 2
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17642,14 +13907,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 2,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17678,14 +13935,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17720,14 +13969,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17762,14 +14003,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17803,14 +14036,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 4,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17839,14 +14064,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 2,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17878,14 +14095,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 1,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17919,14 +14128,6 @@
     "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 2,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17960,14 +14161,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 1,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -17999,14 +14192,6 @@
     "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18037,14 +14222,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 1,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18071,14 +14248,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18105,14 +14274,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18143,14 +14304,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18181,14 +14334,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 1,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18222,14 +14367,6 @@
     "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18263,14 +14400,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 1,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18304,14 +14433,6 @@
     "text": "Zuflucht: Einmal pro Zug behält ein eigenes Wesen, das sterben würde, stattdessen 1 Leben."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 5,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18342,14 +14463,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 1,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 5.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18380,14 +14493,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 3,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18418,14 +14523,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18457,14 +14554,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 1,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18496,14 +14585,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18535,14 +14616,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 4,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18577,14 +14650,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 1,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18616,14 +14681,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18652,14 +14709,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18684,14 +14733,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18722,14 +14763,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18763,14 +14796,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18802,14 +14827,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18841,14 +14858,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 19.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18876,14 +14885,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18912,14 +14913,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 3,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18950,14 +14943,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 1,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -18982,14 +14967,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19021,14 +14998,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19057,14 +15026,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 3,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19096,14 +15057,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19135,14 +15088,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19174,14 +15119,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19213,14 +15150,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 4,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19252,14 +15181,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19291,14 +15212,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19329,14 +15242,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 4,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19367,14 +15272,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 5,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19403,14 +15300,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 7.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19441,14 +15330,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 1,
-    "value": 4,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19482,14 +15363,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 4,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19518,14 +15391,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 3,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19550,14 +15415,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19591,14 +15448,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 2,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19630,14 +15479,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19669,14 +15510,6 @@
     "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19708,14 +15541,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19750,14 +15575,6 @@
     "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 5,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19788,14 +15605,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19826,14 +15635,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 3,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19864,14 +15665,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19898,14 +15691,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19937,14 +15722,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -19976,14 +15753,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20008,14 +15777,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20050,14 +15811,6 @@
     "text": "Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20088,14 +15841,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 2,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20129,14 +15874,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20165,14 +15902,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20203,14 +15932,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 2,
-    "size": 2,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20245,14 +15966,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 4,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20280,14 +15993,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20314,14 +16019,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 3,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20353,14 +16050,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20392,14 +16081,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 1,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20430,14 +16111,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 1,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20472,14 +16145,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20511,14 +16176,6 @@
     "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 2,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20549,14 +16206,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20587,14 +16236,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 3,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20626,14 +16267,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 1,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20664,14 +16297,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 1,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20702,14 +16327,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 4,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20741,14 +16358,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20783,14 +16392,6 @@
     "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20825,14 +16426,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 4,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20864,14 +16457,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 3,
-    "value": 5,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 19.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20896,14 +16481,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 2,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20930,14 +16507,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 2,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -20971,14 +16540,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21007,14 +16568,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 3,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21042,14 +16595,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 11,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21078,14 +16623,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 3,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21116,14 +16653,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 5,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21154,14 +16683,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 4,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21188,14 +16709,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 3,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21227,14 +16740,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 1,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21261,14 +16766,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21299,14 +16796,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 1,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21337,14 +16826,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21372,14 +16853,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 5,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21410,14 +16883,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 1,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 5.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21445,14 +16910,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 5,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21483,14 +16940,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 1,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21524,14 +16973,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 3,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21562,14 +17003,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 3,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21603,14 +17036,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 3,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21642,14 +17067,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 1,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21680,14 +17097,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 1,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21718,14 +17127,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21757,14 +17158,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 4,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21799,14 +17192,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 5,
-    "value": 1,
-    "size": 5,
-    "composite": 5
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21834,14 +17219,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 4,
-    "momentum": 2,
-    "value": 1,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21873,14 +17250,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 1,
-    "size": 4,
-    "composite": 3
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21912,14 +17281,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 4,
-    "size": 3,
-    "composite": 2
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21951,14 +17312,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 5,
-    "size": 3,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -21987,14 +17340,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 3,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22025,14 +17370,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 4,
-    "value": 5,
-    "size": 2,
-    "composite": 3
-   },
    "wertpunkte": 13.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22066,14 +17403,6 @@
     "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 1,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22104,14 +17433,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 4,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 11.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22145,14 +17466,6 @@
     "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 3,
-    "value": 5,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22187,14 +17500,6 @@
     "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22226,14 +17531,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 1,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 7.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22268,14 +17565,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 5,
-    "composite": 1
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22307,14 +17596,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 1,
-    "value": 4,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 17.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22345,14 +17626,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 4,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22380,14 +17653,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 4,
-    "value": 4,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22419,14 +17684,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22457,14 +17714,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 2,
-    "momentum": 2,
-    "value": 4,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22499,14 +17748,6 @@
     "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 5,
-    "composite": 2
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22538,14 +17779,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 4,
-    "size": 4,
-    "composite": 5
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22577,14 +17810,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 4,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22616,14 +17841,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 5,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22648,14 +17865,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 3,
-    "momentum": 4,
-    "value": 3,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22687,14 +17896,6 @@
     "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 3,
-    "momentum": 2,
-    "value": 2,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22729,14 +17930,6 @@
     "text": "Zuflucht: Einmal pro Zug behält ein eigenes Wesen, das sterben würde, stattdessen 1 Leben."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 5,
-    "size": 5,
-    "composite": 4
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22764,14 +17957,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 3,
-    "value": 5,
-    "size": 1,
-    "composite": 3
-   },
    "wertpunkte": 13,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22806,14 +17991,6 @@
     "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
    },
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 2,
-    "value": 5,
-    "size": 5,
-    "composite": 3
-   },
    "wertpunkte": 21.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22840,14 +18017,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 4,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22879,14 +18048,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 1,
-    "momentum": 1,
-    "value": 5,
-    "size": 4,
-    "composite": 2
-   },
    "wertpunkte": 19.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22917,14 +18078,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 4,
-    "momentum": 1,
-    "value": 3,
-    "size": 2,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22955,14 +18108,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 4,
-    "momentum": 4,
-    "value": 2,
-    "size": 3,
-    "composite": 3
-   },
    "wertpunkte": 9.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -22994,14 +18139,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 1,
-    "momentum": 3,
-    "value": 4,
-    "size": 4,
-    "composite": 4
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23030,14 +18167,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 4,
-    "lowvola": 2,
-    "momentum": 3,
-    "value": 3,
-    "size": 3,
-    "composite": 4
-   },
    "wertpunkte": 9.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23069,14 +18198,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 2,
-    "lowvola": 1,
-    "momentum": 2,
-    "value": 4,
-    "size": 3,
-    "composite": 1
-   },
    "wertpunkte": 15.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23103,14 +18224,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 4
-   },
    "wertpunkte": 7,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23138,14 +18251,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 5,
-    "momentum": 0,
-    "value": 4,
-    "size": 1,
-    "composite": 0
-   },
    "wertpunkte": 9,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23170,14 +18275,6 @@
    "faehigkeit": null,
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 5,
-    "lowvola": 2,
-    "momentum": 5,
-    "value": 2,
-    "size": 1,
-    "composite": 5
-   },
    "wertpunkte": 3,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23206,14 +18303,6 @@
    },
    "gabe": null,
    "glanz": true,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 3,
-    "momentum": 5,
-    "value": 3,
-    "size": 4,
-    "composite": 1
-   },
    "wertpunkte": 13.0,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23245,14 +18334,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 3,
-    "lowvola": 5,
-    "momentum": 4,
-    "value": 5,
-    "size": 2,
-    "composite": 5
-   },
    "wertpunkte": 15.5,
    "status": "aktiv",
    "monat": "2026-10"
@@ -23283,14 +18364,6 @@
    },
    "gabe": null,
    "glanz": false,
-   "herkunft": {
-    "quality": 1,
-    "lowvola": 5,
-    "momentum": 5,
-    "value": 2,
-    "size": 2,
-    "composite": 2
-   },
    "wertpunkte": 11.5,
    "status": "aktiv",
    "monat": "2026-10"

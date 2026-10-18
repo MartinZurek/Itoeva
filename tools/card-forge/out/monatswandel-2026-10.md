@@ -2,7 +2,7 @@
 
 Erste Schmiede dieses Monats - kein Vormonat zum Vergleich.
 
-Zusammengelegte Aktiengattungen (ein Wesen je Firma): GOOGL US Equity, GOOG US Equity; HEI US Equity, HEI/A US Equity; FOX US Equity, FOXA US Equity; CSU CN Equity, 2299955D CN Equity
+Zusammengelegte Gruppen: 4 (ein Wesen je Firma).
 
 ## Balance
 
