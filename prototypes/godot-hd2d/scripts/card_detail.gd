@@ -15,8 +15,10 @@ func _ready() -> void:
  image.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
  image.position=Vector2(22,61);image.size=Vector2(178,170);image.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(image)
  _label("%s Kristalle · %s" % [card.cost,Art.kind_label(card)],Vector2(220,57),Vector2(355,34),15,Art.accent(card))
- var text:=_label(card.get("detail",card.text),Vector2(220,99),Vector2(355,136),18,Color("eee5d0"))
- text.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;text.size=Vector2(355,136)
+ var scroll:=ScrollContainer.new();scroll.position=Vector2(220,99);scroll.size=Vector2(355,136);scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;add_child(scroll)
+ var text:=Label.new();text.text=card.get("detail",card.text);text.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;text.custom_minimum_size=Vector2(330,0);text.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ text.add_theme_font_size_override("font_size",16);text.add_theme_color_override("font_color",Color("eee5d0"));scroll.add_child(text)
+
  if previous_callback.is_valid():_button("←",Vector2(22,248),Vector2(75,43),previous_callback)
  if next_callback.is_valid():_button("→",Vector2(107,248),Vector2(75,43),next_callback)
  _button("Schließen",Vector2(418,248),Vector2(157,43),close_callback)

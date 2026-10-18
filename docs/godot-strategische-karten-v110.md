@@ -1,19 +1,38 @@
-# Strategische Karten – Wiederaufbau 18.10.2026
+# Strategische Karten v1 – Zwischenstand 18.10.2026
 
-Status: Umsetzung läuft. Basis: Godot-Kampf 6677651 (PR #369).
-Auftrag von Martin: Karten neu bauen und nach Spielspaß/strategischer Tiefe optimieren.
+Auftrag von Martin: Karten neu bauen und nach Spielspaß / strategischer Tiefe optimieren.
+Basis: Godot-Kampf `6677651` (PR #369). Alle 616 bestehenden K-IDs werden übernommen.
+Die Quelldaten bleiben unverändert; `strategy_export.py` erzeugt getrennte Laufzeitwerte.
 
-Ziel: 616 bestehende Karten-IDs in den vorhandenen Kampf/Deckeditor integrieren;
-13 Völker mit ausgespielten Effekten, drei Helferplätze pro Figur, Gegenstrategien,
-nutzbare frühe Karten und begrenzte mythische Motoren. Die Quell-Faktordaten bleiben
-unverändert. Spielwerte bekommen eine getrennte, versionierte Laufzeitübersetzung.
-Die bisherige pauschale 2K+1-Kurve ist kein Beleg für Kampf-Balance.
+## Bisher umgesetzt und geprüft
 
-Vorhandene Decks und die bisherigen Zauber bleiben lesbar. Neue Deckvorschläge
-ersetzen bestehende Decks nur nach bewusster Auswahl im Editor. Keine neue
-Kartenbezahlung, Verlustmechanik oder Cloud-Anbindung.
+- Laufzeitkatalog: 616 Helfer, 13 Völker, sechs Merkmale und 26 Volks-/Gabenregeln.
+- Kosten 1–7 statt 1–10, Körperbudget an den vorhandenen Godot-Kampf angepasst.
+- Glück wird zu einem planbaren Reihenfolgebonus. Flackernd gibt einen begrenzten
+  ersten Angriff statt zufälligen Schadensschwankungen. Mythische Karten höchstens 1×.
+- Die drei Plätze pro Figur bleiben; Motoren haben klare Trigger und Obergrenzen.
+- Heimvolk +1 Leben; alle Völker für alle Figuren spielbar. Mosslyn passt zu Garten-
+  und Erntewesen, Nocti zu Artefakten und Irrlichtern.
+- Drei bewusste Deckvorschläge: Tempo, Bollwerk, Motor; jeweils 40 Karten mit Frühspiel.
+- Zug-/Karten-/Lernzähler, Wiederkehr, Wachstum und Schutz werden mitgespeichert.
+- Neue Bilder aus reproduzierbaren Vektorbausteinen plus drei gerettete gemalte Urformen.
+- Editor mit Suche, Volksfilter, Deckfilter und 18 Karten pro Seite; vollständige
+  Regeltexte sind scrollbar. Neue Deckvorschläge ändern nur den ungespeicherten Entwurf.
 
-Arbeitsschritte: Daten/Regeln; Effektkern + Speichern; Bilder/UI; deterministische
-Kampf- und Decktests; Godot-Renderprüfung. Erst tatsächlich ausgeführte Prüfungen
-werden als bestanden dokumentiert. Zwischenstände werden direkt auf diesem
-Branch gesichert; kein direkter Push auf main.
+Godot 4.5.1: 3.139 Strategieregel-Checks und die 15 bestehenden Kartenregel-Checks
+bestanden. Jede der 616 Karten wurde ausgespielt, gespeichert und mit ausstehender
+Animation wiederhergestellt. Die folgenden Punkte sind noch KEINE Abnahme:
+Bildimport/-darstellung, Deckeditor-Berührungstest, komplette Kampfverläufe und
+Deckvergleich stehen für diesen Zwischenstand aus.
+
+## Technische Grenzen
+
+Keine Bezahlung, neue Kartensammlung, neue Cloud, Signier-/Workflow-Änderung oder
+Android-Veröffentlichung. Die bestehende Testfassung stellt den Katalog wie ihre
+bisherigen Karten frei bereit; dieser PR entscheidet keine spätere Erwerbswirtschaft.
+Die Faktorquintile steuern weiterhin die Gestalt der Rohwerte; sie werden nicht
+als Garantie von Spielbalance behandelt. Ein numerisches Budget ersetzt keinen
+menschlichen Spielspaßtest. Bestehende Startdecks werden nicht automatisch ersetzt.
+
+Nächste Schritte: echte UI-/Renderprüfung, deterministische Kämpfe mit mehreren
+Deckstilen, eventuelle Balancingkorrekturen und abschließende Dokumentation.
