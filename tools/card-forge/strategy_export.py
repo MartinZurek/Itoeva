@@ -8,7 +8,7 @@ ROOT=HERE.parents[1]/'prototypes/godot-hd2d'
 PALETTE={'Werkvolk':'#d3b482','Glimmerwerk':'#94bcc6','Artefakte':'#aaa9de','Irrlichter':'#c5b8de','Gauklervolk':'#e2ad86','Moorglut':'#d58e70','Hortbrut':'#d5c383','Paktvolk':'#c49baa','Kräutervolk':'#a6cfa1','Erntevolk':'#d8ce9a','Leuchtfeuer':'#efc18a','Bauvolk':'#b4b99b','Erzvolk':'#9dc7c5'}
 ELEMENT={'Werkvolk':'physical','Glimmerwerk':'light','Artefakte':'moon','Irrlichter':'wind','Gauklervolk':'physical','Moorglut':'fire','Hortbrut':'guard','Paktvolk':'fire','Kräutervolk':'heal','Erntevolk':'nature','Leuchtfeuer':'light','Bauvolk':'nature','Erzvolk':'guard'}
 ABILITY={
- 'Aufrüsten':'Der nächste eigene Glimmerwerk-/Artefakt-Helfer erhält +{v} Angriff, solange dieser Helfer lebt (einmal).',
+ 'Aufrüsten':'Solange dieser Helfer lebt: Der nächste eigene Glimmerwerk-/Artefakt-Helfer erhält dauerhaft +{v} Angriff (einmal).',
  'Widerhall':'Beim Erscheinen: Ziehe {x} Karte(n).',
  'Glück':'Kunststück: Hast du in diesem Zug schon eine andere Karte gespielt, erhält dieser Helfer +{v}/+{v}.',
  'Glut':'Beim Erscheinen: {v} Schaden an einem gewählten Gegner.',
@@ -59,7 +59,8 @@ def convert(c,r):
     details += [TRAIT[t] for t in c['merkmale']]
     if a:details.append(f'{a} {x}: '+ABILITY[a].format(x=x,v=v))
     if g:details.append(g+': '+GIFT[g])
-    details.append('Heimvolk: +1 Leben für '+c['wesen'].title()+'.')
+    extra_affinity = ' oder Mosslyn' if c['volk'] in ('Kräutervolk','Erntevolk') else ' oder Nocti' if c['volk'] in ('Artefakte','Irrlichter') else ''
+    details.append('Heimvolk: +1 Leben für '+c['wesen'].title()+extra_affinity+'.')
     out=dict(id=c['id'],name=c['name'],kind='minion',cost=cost,attack=attack,health=health,
        volk=c['volk'],role=c['rolle'],art=c['art'],form=c['form'],rarity=c['seltenheit'],
        affinity=c['wesen'].lower(),element=ELEMENT[c['volk']],rare=c['seltenheit']=='Mythisch',

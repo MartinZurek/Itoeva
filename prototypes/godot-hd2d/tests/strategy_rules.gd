@@ -20,11 +20,12 @@ func run() -> void:
   for style in ["Tempo","Bollwerk","Motor"]:
    var preset:=Cards.strategic_starter(species,style)
    check(Cards.valid(species,preset),"40 legale Karten: "+species+" "+style)
-   var early:=0;var mythical:=0
+   var early:=0;var mythical:=0;var openers:=0
    for id in preset:
     if Cards.get_card(id).cost<=2:early+=1
+    if Cards.get_card(id).cost==1 and Cards.get_card(id).kind=="minion":openers+=1
     if Cards.get_card(id).get("strategy",false) and Cards.get_card(id).rare:mythical+=1
-   check(early>=10 and mythical==2,"Frühspiel und begrenzte Finisher: "+style)
+   check(early>=10 and mythical==2 and openers>=2,"Frühspiel und begrenzte Finisher: "+style)
  for id in S.ids():
   var c:=Cards.get_card(id)
   check(c.cost>=1 and c.cost<=7 and c.attack>=1 and c.health>=2,"Gültiger Körper "+id)
@@ -66,4 +67,29 @@ func run() -> void:
  check(b.find_unit(second).attack==old_attack+int(combo_card.ability_value),"Kunststück belohnt Reihenfolge statt Münzwurf")
  b=battle();var gear:=b._add_minion(0,pick("gift","Fließband"));b._begin_turn(0)
  check(b.units(0).size()==2 and b.units(0)[1].id=="forge_werkling" and b.units(0)[1].hp==1,"Fließband erzeugt 1/1 ohne Affinitätsbonus")
+ b=battle();var aura:=b._add_minion(0,pick("gift","Volksfest"));var guard:=b._add_minion(0,"forge_erzsplitter")
+ b.find_unit(guard).ready=true
+ check(b.can_attack(guard) and b.unit_attack(b.find_unit(guard))==1,"Aura macht Nullangriff-Helfer kampffähig")
+ b.find_unit(aura).hp=0;b._remove_dead()
+ check(not b.can_attack(guard) and b.unit_attack(b.find_unit(guard))==0,"Aura endet mit dem Geber")
+ b=battle();var engine:=b._add_minion(0,pick("ability","Zins"))
+ b._add_minion(0,pick("ability","Zins"));b._add_minion(0,pick("ability","Zins"));b.round=3;b._begin_turn(0)
+ check(b.decks[0].crystals==5,"Kristallmotoren zusammen höchstens zwei Bonuskristalle")
+ for i in 5:b._begin_turn(0)
+ check(b.decks[0].crystals==3,"Zins läuft aus")
+ b=battle();var board_source:=b._add_minion(0,pick("ability","Aufrüsten"))
+ var recipient: String=""
+ for id in S.ids():
+  if Cards.get_card(id).volk=="Artefakte" and Cards.get_card(id).ability=="":recipient=id;break
+ var upgraded:=b._add_minion(0,recipient);var normal:=b._add_minion(0,recipient)
+ check(b.find_unit(upgraded).attack==b.find_unit(normal).attack+int(b.find_unit(board_source).ability_value),"Aufrüsten verbraucht sich einmal")
+ b=battle();var artist: Dictionary=Cards.get_card(pick("ability","Baukunst"))
+ b.decks[0].hand=[artist.id];b.decks[0].crystals=10
+ check(b.play_card(0) and b.units(0).size()==1,"Helfer ohne Verbündeten als Körper spielbar")
+ b.acknowledge_animation();b._add_minion(0,"cat");b._add_minion(0,"cat");b.decks[0].hand=[artist.id];b.decks[0].crystals=10
+ check(not b.can_play(0),"Volles Brett ist eine echte Begrenzung")
+ b=battle();var lender:=b._add_minion(0,pick("ability","Lernen"));var mimic:=b._add_minion(0,pick("gift","Erwachen"),{},"u:"+str(lender))
+ check(b.find_unit(mimic).ability=="Lernen" and b.find_unit(mimic).learn_left==b.find_unit(lender).learn_left,"Erwachen übernimmt begrenzten Lernmotor")
+ var resumed=Battle.new();resumed.restore(JSON.parse_string(JSON.stringify(b.snapshot())));S.cards_played(b,0);S.cards_played(resumed,0)
+ check(resumed.board==b.board,"Übernommene Fähigkeit läuft nach Save gleich weiter")
  print("Strategiekarten: %s Checks, %s Fehler" % [checks,failures]);quit(1 if failures else 0)

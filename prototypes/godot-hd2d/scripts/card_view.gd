@@ -1,4 +1,5 @@
 extends "res://scripts/battle_view.gd"
+const StrategySummonFX=preload("res://scripts/strategy_summon_fx.gd")
 const Feedback=preload("res://scripts/battle_feedback.gd")
 var formation_slots: Dictionary = {}
 var crystal_meter: Control
@@ -458,10 +459,12 @@ func _effects() -> void:
  var impact: float=event.get("impact",.7)
  if visual=="card_summon":
   var foot:=_unit_position(int(event.get("unit_uid",-1)))
-  var p:=smoothstep(.1,impact,event_time)
-  var at:=source.lerp(foot-Vector2(0,28),p)-Vector2(0,sin(p*PI)*28)
-  spectacle.star(self,at,13,Color("c9e6a1"),clock)
-  spectacle.burst(self,foot-Vector2(0,30),Color("c9e6a1"),1-smoothstep(impact,impact+.6,event_time),15+p*37)
+  if Cards.Strategy.has(str(event.get("card",""))):StrategySummonFX.draw(self,event_time,event,foot,source)
+  else:
+   var p:=smoothstep(.1,impact,event_time)
+   var at:=source.lerp(foot-Vector2(0,28),p)-Vector2(0,sin(p*PI)*28)
+   spectacle.star(self,at,13,Color("c9e6a1"),clock)
+   spectacle.burst(self,foot-Vector2(0,30),Color("c9e6a1"),1-smoothstep(impact,impact+.6,event_time),15+p*37)
  elif visual=="card_attack":
   var uid:=int(event.get("attacker_uid",-1))
   var attacker: Dictionary={}

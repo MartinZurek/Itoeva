@@ -2,7 +2,7 @@ extends RefCounted
 
 static func unit_state(model, unit: Dictionary) -> String:
 	if unit.ready:
-		return "ready" if int(unit.owner)==model.cursor and int(unit.attack)>0 else "waiting"
+		return "ready" if int(unit.owner)==model.cursor and model.unit_attack(unit)>0 else "waiting"
 	if int(unit.get("frozen",0))>0 or unit.get("skipped",false): return "frozen"
 	if unit.get("spent",false): return "spent"
 	return "sleeping"

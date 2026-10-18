@@ -395,13 +395,14 @@ func play_card(index: int,target: String="enemy") -> bool:
  _counter_demon(str(card.element),effects)
  _gain_charge(cursor)
  if card.kind=="special":extra.merge({"duration":2.8,"impact":1.1},true)
+ elif card.get("strategy",false) and card.get("rare",false):extra.merge({"duration":2.6,"impact":1.0},true)
  _event(card.name,"special_"+card.effect if card.kind=="special" else "card_summon" if card.kind in ["minion","revive"] else "card_spell",effects,previous,extra)
  return true
 
 func can_attack(uid: int,target: String="") -> bool:
  if phase!="battle" or cursor==2 or playback_pending:return false
  var unit:=find_unit(uid)
- return not unit.is_empty() and unit.owner==cursor and unit.ready and unit.attack>0 and (target.is_empty() or target in legal_targets(cursor))
+ return not unit.is_empty() and unit.owner==cursor and unit.ready and unit_attack(unit)>0 and (target.is_empty() or target in legal_targets(cursor))
 
 func attack_minion(uid: int,target: String="enemy") -> bool:
  if not can_attack(uid,target):return false

@@ -41,7 +41,7 @@ func run() -> void:
   var unique: Dictionary={}
   for id in deck:unique[id]=true
   check(unique.size()==21 and deck.count(Cards.ULTIMATES[species])==1,"21 verschiedene Karten und eine Spezialkarte: "+species)
-  check(Cards.available(species).size()==30,"30 Deckbauoptionen je Klasse: "+species)
+  check(Cards.available(species).size()==646,"30 bisherige + 616 neue Deckbauoptionen je Klasse: "+species)
   var old: Array=["spark","spark","tea","insight",Cards.SPECIAL[species][0],Cards.SPECIAL[species][0],Cards.ULTIMATES[species]]
   var migrated:=Cards.upgrade(species,old)
   check(Cards.valid(species,migrated) and migrated.count("spark")==2 and migrated.count(Cards.SPECIAL[species][0])==2,"Alte Auswahl bleibt beim Auffuellen erhalten: "+species)

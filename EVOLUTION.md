@@ -7106,3 +7106,29 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:** Android-GPU/FPS und menschliche Telefonabnahme bleiben offen.
 - **ÜBERGABE:** docs/godot-kampfbewegung-und-licht-v0100.md; Branch
   codex/godot-combat-motion-light, gestapelt auf PR368; kein Merge auf main.
+
+### 2026-10-18 – 616 strategische Helferkarten im Godot-Kampf
+
+- **DOCUMENTED INTENT:** Martin beauftragt den Neubau der Karten mit höherem
+  Spielspaß und strategischer Tiefe auf Grundlage der bestehenden Kartenschmiede.
+- **FACT:** Alle 616 K-IDs stehen in Kampf und Deckeditor bereit. Getrennter,
+  deterministischer Laufzeitexport bewahrt den Faktorkatalog. 13 Völker mit je
+  Volksfähigkeit/Gabe, sechs Merkmale, Heimvolkbonus, eigene Bilder und drei
+  bewusst auswählbare 40-Karten-Vorschläge: Tempo, Bollwerk, Motor.
+- **BALANCING:** Kosten 1–7, Körperbudget, planbares Kunststück statt Münzwurf,
+  begrenzter erster Flackerangriff; endlich begrenzte Motoren, drei Plätze,
+  Mythoslimit1. Jeder Vorschlag enthält frühe Ein-Kristall-Helfer. Vorhandene
+  Startdecks und laufende Kämpfe bleiben erhalten; keine automatische Deckersetzung.
+- **DARSTELLUNG:**153 Arten-/Formbilder einschließlich drei geretteter gemalter
+  Urformen. Volksrituale und längerer mythischer Auftritt im Renderer; kein neuer
+  Videofilm behauptet. Regeltexte scrollbar, Filter/Suche/Seitennavigation im Editor.
+- **TESTED BEHAVIOR:**3148 neue Regelchecks;770 UI-Checks/771 mit echtem OpenGL;
+  jede Karte ausgespielt und mit laufender Animation gespeichert/fortgesetzt.
+  180 neue Deckkämpfe ohne Blockade, bestehende136 Durchläufe und Regressionen
+  bestanden. Ergebnisse und Rohdaten siehe Übergabe.
+- **UNVERIFIED:** Menschlicher Spielspaß, langfristige Deckbalance und Android-
+  Bedienung/GPU/FPS. Der Testcontroller gewinnt auch mit alten Decks; keine
+  wissenschaftliche Balancegarantie. Keine neue APK oder Erwerbswirtschaft.
+- **ÜBERGABE:** docs/godot-strategische-karten-v110.md, PR372, Branch
+  codex/godot-strategic-cards-v110; auf PR369 aufgebaut. Nächster Schritt sind
+  menschliche Decktests; Release-/Signierungsinfrastruktur bleibt unverändert.

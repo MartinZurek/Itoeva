@@ -37,6 +37,10 @@ static func preset(species: String,style: String) -> Array[String]:
    else:score+=2 if card.ability in ["Lernen","Widerhall","Zins","Aufrüsten"] else 0
    pool.append({"id":card.id,"score":score})
   pool.sort_custom(func(a,b):return a.score>b.score if a.score!=b.score else a.id<b.id)
+  if bucket==0:
+   for i in pool.size():
+    if int(data().cards[pool[i].id].cost)==1:
+     var opener: Dictionary=pool.pop_at(i);pool.push_front(opener);break
   var count:=5 if bucket<2 else 2
   for i in mini(count,pool.size()):
    result.append(pool[i].id)
