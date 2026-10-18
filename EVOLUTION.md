@@ -669,6 +669,36 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-18 - Gezielte Statkorrekturen zulassen (card-stat-correction-v1)
+
+- **DOCUMENTED INTENT / Produktentscheidung:** Martin präzisiert seine Wahl A ausdrücklich:
+  Gezielte Statkorrekturen von ihm gelten auch für erworbene Karten; automatische
+  Monatsänderungen bleiben getrennt. Formen und Glanz bleiben erhalten. Die frühere
+  Aussage, damalige Werte müssten dauerhaft unveränderlich sein, ist damit überholt.
+- **Änderung / TESTED BEHAVIOR:** `statkorrektur.korrigiere_stats` korrigiert Angriff,
+  Leben und/oder Kristallkosten unter derselben Karten-ID. `mit_statkorrektur` überträgt
+  dies auf bereits erworbene Ausgaben. Namen, Darstellung, Effekte und Monatsdaten
+  bleiben gleich. Wertpunkte folgen der Änderung der Körperwerte; andere Stats werden
+  nicht stillschweigend auf die ursprüngliche Kurve skaliert.
+- **Betroffen:** Zwei Referenzoperationen, sieben synthetische Tests, Katalogvertrag,
+  README, Prüfbericht und `ITOEVA2.md`. Keine der 616 veröffentlichten Karten wird ohne
+  vorgegebene Statwerte geändert; keine App-, Room-, Preference- oder Kampfänderung.
+- **Nutzerwirkung / Grenzen:** Bewusste Korrektur ist möglich, Schutz vor automatischer
+  Monatsrückstufung bleibt. Eine neue Snapshot-Referenz bewahrt die korrigierten Werte;
+  die alte Fassung bleibt als Historie lesbar. Der Aufrufer muss das zurückgegebene
+  Modell übernehmen und speichern. Keine automatische Verteilung auf eine App-Sammlung.
+- **Tests:** 51 Python-Tests erfolgreich, einschließlich erworbener und ruhender Karten,
+  Erhalt von Form/Glanz, Wiederherstellung, mehrerer Ausgaben derselben ID,
+  Idempotenz und Ablehnung ungültiger Werte. Galerie-Scripttest erfolgreich; Gradle-Test
+  und `compileGameKotlin` erfolgreich (64 Tasks unverändert aus dem Cache).
+- **Migration / Rücksetzung:** Keine App-Migration oder Datenbestandsänderung. Rücknahme
+  der Referenzoperation entfernt nur die technische Korrekturmöglichkeit; die ausdrücklich
+  präzisierte Produktentscheidung bleibt verbindlich. Archivierte Fassungen nicht löschen.
+- **Weiterhin offen / nächster Schritt:** Korrekturfreigaben und Übernahme in einen künftigen
+  Sammlungsstore sowie Duplikate konkretisieren. Kampf, Engine, Raster, Gruppe und
+  Bezahlung bleiben offen. Dieser Eintrag präzisiert `card-edition-a-v1`, ohne automatische
+  Monatsupdates für erworbene Karten freizugeben.
+
 ### 2026-10-17 - Erworbene Monatsausgaben erhalten (card-edition-a-v1)
 
 - **DOCUMENTED INTENT / Produktentscheidung:** Auf die konkrete Auswahlfrage zu

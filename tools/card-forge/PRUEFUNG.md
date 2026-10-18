@@ -26,6 +26,14 @@ Snapshot-Wiederherstellung mit erfundenen Daten ab; es gibt keine App-Sammlung u
 Kampf-/Engineentscheidung. Die nachstehenden historischen Aussagen über die damals fehlende
 Formatversion sind durch diesen technischen Schritt für neue Ausgaben überholt.
 
+**Präzisierung – gezielte Statkorrekturen (18.10.2026):** Martin erlaubt ausdrücklich,
+Angriff, Leben und Kristallkosten erstellter und erworbener Karten gezielt zu ändern.
+Automatische Monatsänderungen bleiben getrennt; Form und Glanz bleiben erhalten.
+`statkorrektur.py` und `ErworbeneAusgabe.mit_statkorrektur` setzen das im Referenzmodell um.
+51 Python-Tests bestehen, einschließlich Korrektur, Wiederherstellung, Idempotenz und
+Schutz korrigierter Ausgaben vor automatischem Monatswechsel. Die frühere Aussage,
+damalige Werte müssten immer unveränderlich bleiben, ist damit ausdrücklich präzisiert.
+
 ## Entscheidung: Teil 2 jetzt zurückstellen
 
 **Kein Einbau in die Kotlin/Compose-Spielvariante zum jetzigen Zeitpunkt.** Die Schmiede

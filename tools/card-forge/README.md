@@ -17,7 +17,9 @@ Besitzentscheidung für Variante A steht im Katalogvertrag.
 Der technische [Katalogvertrag v1](KATALOGVERTRAG.md) ist implementiert: `schema_version`
 im Export, reiner Referenzleser in `katalog.py`, typisierte unveränderliche Modelle und
 Validierung vor jedem Schreiben. Für erworbene Monatsausgaben hat Martin Variante A gewählt:
-damalige Werte, Form und Glanz bleiben erhalten. `edition.py` und seine Zweimonatstests
+Monatswechsel ändern erworbene Ausgaben nicht automatisch; **gezielte Statkorrekturen
+von Martin gelten auch für erworbene Karten**, während Form und Glanz erhalten bleiben.
+`edition.py` und seine Zweimonatstests
 sichern dies als engineunabhängiges Referenzmodell ab; eine App-Sammlung ist noch nicht eingebaut.
 
 ## Die Übersetzung
@@ -87,7 +89,8 @@ Was über Monate gilt:
   stärksten Faktor des Monats.
 - **Monatsänderungen:** Im aktuellen Katalog können Formen mit Size auf- und absteigen;
   auch Werte, Seltenheit und Glanz ändern sich. Für eine **erworbene Ausgabe** gilt dagegen
-  die am 17.10. gewählte Variante A: damalige Werte, Form und Glanz erhalten. Der
+  die präzisierte Variante A: vor automatischen Monatsänderungen geschützt, aber gezielt
+  in Angriff, Leben und Kristallkosten korrigierbar; Form und Glanz bleiben erhalten. Der
   Referenznachweis ist implementiert, eine App-Sammlung noch nicht.
 - **Nichts geht verloren.** Fällt eine Firma aus den Daten, *ruht* ihre Karte mit den letzten
   Werten im Katalog. Kommt sie zurück, erwacht sie mit derselben ID und demselben Namen wieder.
@@ -102,6 +105,7 @@ Was über Monate gilt:
 | `forge.py` | reine Mechanik, nur Standardbibliothek + openpyxl | ja |
 | `katalog.py`, `KATALOGVERTRAG.md` | Referenzleser/-export, Formatregeln und beschlossene Variante A | ja |
 | `edition.py`, `test_edition.py` | Referenzmodelle und synthetischer Erhalt erworbener Monatsausgaben | ja |
+| `statkorrektur.py`, `test_statkorrektur.py` | gezielte Änderung erstellter und erworbener Karten ohne Verlust von Form und Glanz | ja |
 | `fixtures/katalog-v1.json`, `test_katalog.py` | handgeschriebene erfundene Karten und Vertragstests | ja |
 | `test_forge.py` | Kurve, Monotonie, Folgemonat mit Wegfall/Neuzugang, keine Firmendaten im Ausgang | ja |
 | `test_galerie.cjs` | echtes Galerie-Script mit DOM-Stubs: Details ohne Rohfaktoren und sichere private Zusatzansicht | ja |

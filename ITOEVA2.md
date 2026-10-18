@@ -20,8 +20,11 @@ Die Exportabsicherung und der technische [Katalogvertrag v1](tools/card-forge/KA
 sind mit erfundenen Eingaben und den bereinigten Artefakten getestet. Der öffentliche
 Katalog trägt `schema_version: 1`; ein engineunabhängiger Referenzleser prüft Version,
 Monate und Pflichtfelder und lädt auch ruhende Karten. Alle 616 Karten behalten ihre Werte.
-Martin hat **Variante A** ausdrücklich gewählt: Erworbene Monatsausgaben behalten ihre
-damaligen Werte, Form und Glanz dauerhaft. Die engineunabhängigen Referenzmodelle
+Martin hat **Variante A präzisiert**: Automatische Monatsänderungen ersetzen keine
+erworbenen Ausgaben. Gezielte Statkorrekturen von Martin dürfen dagegen auch bereits
+erworbene Karten ändern; Form und Glanz bleiben erhalten. `korrigiere_stats` und
+`mit_statkorrektur` ermöglichen dies im engineunabhängigen Referenzmodell.
+Die engineunabhängigen Referenzmodelle
 `KatalogSnapshot` und `ErworbeneAusgabe` sichern den Erhalt im Zweimonatslauf und nach
 Snapshot-Wiederherstellung ab. Noch keine App-Sammlung oder automatische Kartenvergabe.
 Freigabe/Korrekturen, Duplikate und spätere Kampfzulässigkeit bleiben offen. Kampf,
