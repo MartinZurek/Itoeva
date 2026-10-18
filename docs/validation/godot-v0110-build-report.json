@@ -1,0 +1,18 @@
+{
+  "commit": "a4c199cf0f83ac82d7206736c49c00ae1c2e12bf",
+  "run_id": "39169406271",
+  "file_id": "148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX",
+  "bytes": 162059141,
+  "sha256": "883d961ae2dca070fd069eb86750032657d180cccd0cdccf4ad45953580bce70",
+  "md5": "e1f14ae492952a54b5c514e893acd67c",
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "version": "0.11.0",
+  "version_code": 23,
+  "card_count": 616,
+  "certificate_sha256": "30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc",
+  "drive_url": "https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk",
+  "run_url": "https://github.com/MartinZurek/Itoeva/actions/runs/39169406271",
+  "run_conclusion": "success",
+  "drive_size_verified": true,
+  "drive_checksum_verified_by_workflow": true
+}

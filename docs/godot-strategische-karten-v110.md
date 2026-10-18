@@ -3,7 +3,7 @@
 Auftrag: Karten neu bauen und nach Spielspaß und strategischer Tiefe optimieren.
 Basis: Godot-Kampf `6677651` (PR #369). Umsetzung: PR #372, Branch
 `codex/godot-strategic-cards-v110`. APK-Auftrag vom 18.10.2026: AndroidTest **0.11.0 / Code23** im bestehenden
-signierten GitHub-/Drive-Lieferweg. Export und Auslieferung sind zunächst in Vorbereitung.
+signierten GitHub-/Drive-Lieferweg. Export und Auslieferung sind abgeschlossen: Lauf39169406271 bestand einschließlich Signatur und Remote-Prüfsummenabgleich.
 
 ## Spielbare Umsetzung
 
@@ -107,8 +107,7 @@ die zusätzlichen Kartenprüfungen.
 Der Testkatalog ist wie die bisherigen Karten frei zugänglich. Android-Gerät,
 Daumenbedienung, GPU/FPS und Hörabnahme sind ungeprüft. Einzelne bestehende schnelle
 Headless-UI-Läufe melden beim Beenden noch laufende Audioressourcen; der echte
-OpenGL-Lauf bestand. Als Nächstes den beauftragten APK-Bau und den Remote-Prüfsummenabgleich abschließen,
-danach menschliche Decktests.
+OpenGL-Lauf bestand. APK-Bau und Remote-Prüfsummenabgleich sind abgeschlossen; als Nächstes menschliche Decktests.
 
 Reproduktion im Godot-Projekt: `godot --headless --path prototypes/godot-hd2d
 --script tests/strategy_rules.gd`; entsprechend `strategy_ui.gd` und
@@ -135,3 +134,24 @@ eine fehlende Schließen-Schaltfläche erzeugt einen Prüf-Befund statt Nil-Abbr
 Der unveränderte Bedienvertrag (dreimal Öffnen/Schließen, Entwurf und Scrollposition
 erhalten) besteht lokal weiterhin mit36/0. Der Build führt diese Prüfung und die
 neuen Strategietests nun zuerst aus; sämtliche bisherigen Prüfungen bleiben erhalten.
+
+## Auslieferung abgeschlossen
+
+[Signierter Baulauf39169406271](https://github.com/MartinZurek/Itoeva/actions/runs/39169406271)
+und GitHub Verify für den APK-Quellcommit sind erfolgreich. Alle27 Spielprüfungen
+und die Renderprüfungen einschließlich771 Strategie-UI-Checks bestanden.
+
+- Datei: `Itoeva_Godot_Test_v0.11.0.apk`, AndroidTest0.11.0 / Code23.
+- APK-Quellcommit: `a4c199cf0f83ac82d7206736c49c00ae1c2e12bf`.
+- Größe: 162059141Bytes.
+- SHA-256: `883d961ae2dca070fd069eb86750032657d180cccd0cdccf4ad45953580bce70`.
+- Bestehendes Testzertifikat: `30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc`.
+- Die APK enthält nach der Exportprüfung tatsächlich616 Helferkarten aus13 Völkern.
+- [Drive-Download](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk): bestehende Datei und Ordner beibehalten,
+  Name und Größe nach dem Upload nochmals über die Drive-Anbindung bestätigt.
+  Der Bauworkflow bestätigt zusätzlich MD5/SHA-256 gegen die hochgeladenen Bytes.
+- [Maschinenlesbarer Liefernachweis](validation/godot-v0110-build-report.json).
+
+Auf dem Telefon als Update von0.10.0 installierbar; menschliche Bedienungs-,
+GPU-/FPS- und Hörabnahme bleiben offen. Neue Decks über Menü → Deck bauen →
+Tempo/Bollwerk/Motor wählen und speichern; die Auswahl gilt für den nächsten Kampf.
