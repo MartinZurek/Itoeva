@@ -1,4 +1,5 @@
 extends RefCounted
+const Strategy=preload("res://scripts/strategy_cards.gd")
 const MIN_DECK := 40
 const MAX_DECK := 40
 const CARDS := {
@@ -108,7 +109,9 @@ const VISUAL_FORMS := {"lightling":"lightling","star_guard":"star_guard","emberl
 
 static func available(species: String) -> Array[String]:
  var result: Array[String]=[]
- if species!="enemy":result.assign(COMMON)
+ if species!="enemy":
+  result.assign(COMMON)
+  result.append_array(Strategy.ids())
  result.append_array(SPECIAL.get(species,SPECIAL.fennec))
  if CLASS_EXTRA.has(species):result.append_array(CLASS_EXTRA[species])
  if ULTIMATES.has(species):result.append(ULTIMATES[species])
@@ -132,7 +135,7 @@ static func starter(species: String) -> Array[String]:
  return result
 
 static func copy_limit(species: String,id: String) -> int:
- return 4 if species=="enemy" else 1 if CARDS.get(id,{}).get("rare",false) else 2
+ return 4 if species=="enemy" else 1 if get_card(id).get("rare",false) else 2
 
 static func valid(species: String,entries: Array) -> bool:
  if species=="enemy":
@@ -160,7 +163,10 @@ static func upgrade(species: String,entries: Array) -> Array[String]:
  return result
 
 static func get_card(id: String) -> Dictionary:
- var result: Dictionary=CARDS.get(id,{}).duplicate(true)
+ var result: Dictionary=Strategy.get_card(id) if Strategy.has(id) else CARDS.get(id,{}).duplicate(true)
  result["id"]=id
  if VISUAL_FORMS.has(id):result["form"]=VISUAL_FORMS[id]
  return result
+
+static func strategic_starter(species: String,style: String) -> Array[String]:
+ return Strategy.preset(species,style)

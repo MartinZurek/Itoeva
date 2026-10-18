@@ -1,0 +1,1551 @@
+{
+  "_hinweis": "Übersetzungsregeln Faktordaten -> Itoeva-Karten. Alles hier ist Stellschraube; forge.py enthält keine Spielwerte. Quintil 1 = bestes Fünftel, 5 = schlechtestes (Size: 5 = größtes Unternehmen). Quintil 0 = fehlender Wert, wird als 3 (neutral) behandelt.",
+  "kurve": {
+    "_hinweis": "Vanilla-Test wie in Hearthstone: Eine Karte mit Kosten K hat genau 2K+1 Wertpunkte. Jede Karte wird exakt auf diese Kurve gelegt.",
+    "punkte_pro_kristall": 2,
+    "grundpunkte": 1,
+    "min_kosten": 1,
+    "max_kosten": 10,
+    "min_angriff": 1,
+    "min_leben": 1
+  },
+  "faktoren": {
+    "momentum_angriff": {
+      "_hinweis": "Momentum-Quintil -> Roh-Angriff",
+      "1": 5,
+      "2": 4,
+      "3": 3,
+      "4": 2,
+      "5": 1
+    },
+    "quality_leben": {
+      "_hinweis": "Quality-Quintil -> Roh-Leben",
+      "1": 6,
+      "2": 5,
+      "3": 4,
+      "4": 3,
+      "5": 2
+    },
+    "value_kurve": {
+      "_hinweis": "Value verschiebt das Wesen auf der Kristallkurve (Kristalle vor dem Runden). Q1 = günstiger, schlanker Frühspieler; Q5 = teuer, Kraft wächst teils erst nach.",
+      "1": {
+        "verschiebung": -1.0,
+        "merkmal": "Schnäppchen"
+      },
+      "2": {
+        "verschiebung": -0.5,
+        "merkmal": null
+      },
+      "3": {
+        "verschiebung": 0.0,
+        "merkmal": null
+      },
+      "4": {
+        "verschiebung": 0.5,
+        "merkmal": "Knospend"
+      },
+      "5": {
+        "verschiebung": 1.0,
+        "merkmal": "Wachstum"
+      }
+    },
+    "lowvola_wesen": {
+      "_hinweis": "Low-Vola -> Temperament. Ruhige Werte schützen, schwankende stürmen.",
+      "1": "Wächter",
+      "2": null,
+      "3": null,
+      "4": "Flackernd",
+      "5": "Ungestüm"
+    },
+    "composite_glanz": {
+      "_hinweis": "Composite-Quintil 1 -> rein kosmetischer Glanz (Holo) für diesen Monat. Kein Spielwert.",
+      "1": true
+    }
+  },
+  "merkmale": {
+    "Wächter": {
+      "punkte": 1,
+      "text": "Wächter: Gegner müssen zuerst dieses Wesen angreifen."
+    },
+    "Flackernd": {
+      "punkte": 0,
+      "text": "Flackernd: Angriff schwankt bei jedem Schlag um 1 nach oben oder unten."
+    },
+    "Ungestüm": {
+      "punkte": 2,
+      "text": "Ungestüm: Kann sofort angreifen. Angriff schwankt bei jedem Schlag um bis zu 2."
+    },
+    "Schnäppchen": {
+      "punkte": 0,
+      "text": "Schnäppchen: günstig zu beschwören."
+    },
+    "Knospend": {
+      "punkte": 1,
+      "text": "Knospend: Zu Beginn deines nächsten Zuges +1 Angriff."
+    },
+    "Wachstum": {
+      "punkte": 2,
+      "text": "Wachstum: Zu Beginn deiner nächsten zwei Züge jeweils +1/+1."
+    },
+    "Heimvolk": {
+      "punkte": 0,
+      "text": "Heimvolk: Spielt das passende Wesen diese Karte, erhält sie +1 Leben."
+    }
+  },
+  "seltenheit": {
+    "_hinweis": "Size-Quintil -> Seltenheit. Je größer das Unternehmen, desto seltener. bonus = zusätzliche Wertpunkte (nach Rolle verteilt), stufe = Fähigkeitsstufe X.",
+    "1": {
+      "name": "Gewöhnlich",
+      "bonus": 0,
+      "stufe": 0,
+      "form": 0
+    },
+    "2": {
+      "name": "Ungewöhnlich",
+      "bonus": 1,
+      "stufe": 1,
+      "form": 0
+    },
+    "3": {
+      "name": "Selten",
+      "bonus": 2,
+      "stufe": 1,
+      "form": 1
+    },
+    "4": {
+      "name": "Episch",
+      "bonus": 2,
+      "stufe": 2,
+      "form": 1
+    },
+    "5": {
+      "name": "Mythisch",
+      "bonus": 3,
+      "stufe": 2,
+      "form": 2,
+      "gabe": true
+    },
+    "uralt_optional": {
+      "_hinweis": "Optional (aus): die N größten nach Size-Rang werden 'Uralt' - höchstens 1 Exemplar pro Deck. Benutzt den Rang statt nur das Quintil.",
+      "aktiv": false,
+      "anzahl": 10
+    }
+  },
+  "booster": {
+    "_hinweis": "Vorschlag Kartenpaket (5 Karten). Packs werden in der Welt verdient - Bezahlung ist OPEN DECISION und laut Vision ohne Verlustmechanik.",
+    "karten": 5,
+    "plaetze": [
+      {
+        "anzahl": 3,
+        "seltenheit": {
+          "Gewöhnlich": 1.0
+        }
+      },
+      {
+        "anzahl": 1,
+        "seltenheit": {
+          "Ungewöhnlich": 1.0
+        }
+      },
+      {
+        "anzahl": 1,
+        "seltenheit": {
+          "Selten": 0.72,
+          "Episch": 0.22,
+          "Mythisch": 0.06
+        }
+      }
+    ]
+  },
+  "rollen": {
+    "_hinweis": "Rolle der Industrie verteilt den Seltenheitsbonus (Anteil Angriff) und bestimmt die Reihe im Kampf.",
+    "Wächter": {
+      "anteil_angriff": 0.0,
+      "reihe": "vorn",
+      "text": "steht vorn, hält aus"
+    },
+    "Stürmer": {
+      "anteil_angriff": 0.75,
+      "reihe": "vorn",
+      "text": "Nahkampf, schlägt hart zu"
+    },
+    "Schütze": {
+      "anteil_angriff": 0.6,
+      "reihe": "hinten",
+      "text": "Fernkampf aus der zweiten Reihe"
+    },
+    "Helfer": {
+      "anteil_angriff": 0.25,
+      "reihe": "hinten",
+      "text": "stärkt und versorgt die anderen"
+    }
+  },
+  "wesen": {
+    "_hinweis": "Die sechs spielbaren Wesen. Jedes hat Heimvölker (Affinität, keine Sperre - alle können alle Karten spielen).",
+    "PUFFLING": {
+      "farbe": "Bernstein",
+      "hex": "#d99a3a",
+      "warum": "Bote mit Werkbank - baut und liefert"
+    },
+    "STARLET": {
+      "farbe": "Wiesengrün",
+      "hex": "#6fae5a",
+      "warum": "zieht Pflanzen groß - Ernte und Heilkraut"
+    },
+    "WYRMLING": {
+      "farbe": "Gold",
+      "hex": "#d4b32c",
+      "warum": "Drache mit Nest voller Gesammeltem - der Hort"
+    },
+    "FENNEC": {
+      "farbe": "Glutorange",
+      "hex": "#e0683a",
+      "warum": "hält das Leuchtfeuer, lebt im Bau, gräbt"
+    },
+    "GLOOP": {
+      "farbe": "Moorviolett",
+      "hex": "#8a62b8",
+      "warum": "Sumpf, Backstube, charmantes Chaos - Irrlichter und Jahrmarkt"
+    },
+    "HOOTLET": {
+      "farbe": "Sternblau",
+      "hex": "#4f86c6",
+      "warum": "Sternwarte - Mechanik, Messinstrumente, Beobachtung"
+    }
+  },
+  "voelker": {
+    "Information Technology": {
+      "volk": "Glimmerwerk",
+      "wesen": "HOOTLET",
+      "bild": "Konstrukte aus Hootlets Sternwarte: Uhrwerke, Funkenkäfer, Messinggolems - Technik aus Metall und Funken.",
+      "faehigkeit": {
+        "name": "Aufrüsten",
+        "punkte_pro_x": 1.0,
+        "text": "Aufrüsten {x}: Beschwörst du danach ein Glimmerwerk- oder Artefakt-Wesen, erhält dieses einmalig +{x} Angriff."
+      },
+      "gabe": {
+        "name": "Sternennetz",
+        "punkte": 2,
+        "text": "Sternennetz: Deine anderen Glimmerwerk- und Artefakt-Wesen haben +1 Angriff."
+      },
+      "anfaenge": [
+        "Vex",
+        "Kir",
+        "Zel",
+        "Lum",
+        "Tek",
+        "Rho",
+        "Qua",
+        "Vol",
+        "Tor",
+        "Kal",
+        "Nev",
+        "Ost",
+        "Brix",
+        "Cog",
+        "Mek",
+        "Dyn",
+        "Fer",
+        "Gal",
+        "Kron",
+        "Pix"
+      ],
+      "endungen": [
+        "tron",
+        "ix",
+        "ar",
+        "on",
+        "ek",
+        "is",
+        "al",
+        "ox",
+        "yn",
+        "ra",
+        "ex",
+        "iv",
+        "ock",
+        "ett",
+        "um",
+        "anz",
+        "ik",
+        "or"
+      ]
+    },
+    "Communication Services": {
+      "volk": "Irrlichter",
+      "wesen": "GLOOP",
+      "bild": "Rufer, Spiegelgeister und Windharfen-Sylphen aus dem Sumpfnebel - sie tragen Botschaften.",
+      "faehigkeit": {
+        "name": "Widerhall",
+        "punkte_pro_x": 2.0,
+        "text": "Widerhall {x}: Beim Beschwören ziehst du {x} Karte(n)."
+      },
+      "gabe": {
+        "name": "Tausend Stimmen",
+        "punkte": 2,
+        "text": "Tausend Stimmen: Jedes Mal, wenn du eine Karte ziehst, erhält dieses Wesen +1 Angriff."
+      },
+      "anfaenge": [
+        "Wi",
+        "Ell",
+        "Ari",
+        "Fey",
+        "Sha",
+        "Li",
+        "Mir",
+        "Nyx",
+        "Ul",
+        "Sel",
+        "Yl",
+        "Oon",
+        "Ce",
+        "Fio",
+        "Lu",
+        "Rhe",
+        "Ti",
+        "Esm"
+      ],
+      "endungen": [
+        "wen",
+        "lis",
+        "ra",
+        "el",
+        "ith",
+        "ys",
+        "mi",
+        "lo",
+        "ne",
+        "rin",
+        "va",
+        "dra",
+        "sil",
+        "ny",
+        "bel",
+        "ri",
+        "the",
+        "ka"
+      ]
+    },
+    "Consumer Discretionary": {
+      "volk": "Gauklervolk",
+      "wesen": "GLOOP",
+      "bild": "Jahrmarkt, Basar, Gasthaus und Spielhalle: Mimiks, Elstern, Festmahl-Riesen.",
+      "faehigkeit": {
+        "name": "Glück",
+        "punkte_pro_x": 1.0,
+        "text": "Glück {x}: Beim Beschwören eine Münze werfen - bei Kopf +{x}/+{x}."
+      },
+      "gabe": {
+        "name": "Volksfest",
+        "punkte": 2,
+        "text": "Volksfest: Deine anderen Wesen haben +1 Angriff, solange dieses lebt."
+      },
+      "anfaenge": [
+        "Pip",
+        "Bom",
+        "Zaz",
+        "Lo",
+        "Tim",
+        "Fiz",
+        "Rum",
+        "Bo",
+        "Kip",
+        "Mux",
+        "Dib",
+        "Tut",
+        "Wim",
+        "Fle",
+        "Gig",
+        "Hop",
+        "Jib",
+        "Nok",
+        "Tri",
+        "Wup"
+      ],
+      "endungen": [
+        "po",
+        "bel",
+        "ix",
+        "li",
+        "wick",
+        "ster",
+        "ko",
+        "bo",
+        "pel",
+        "zo",
+        "ri",
+        "ka",
+        "dle",
+        "mo",
+        "tz",
+        "sel",
+        "bert",
+        "ny"
+      ]
+    },
+    "Energy": {
+      "volk": "Moorglut",
+      "wesen": "GLOOP",
+      "bild": "Flämmchen, Sumpfsalamander und Bohrwürmer - Feuer, das aus dem Moor aufsteigt.",
+      "faehigkeit": {
+        "name": "Glut",
+        "punkte_pro_x": 1.5,
+        "text": "Glut {x}: Beim Beschwören {x} Schaden an einem beliebigen Ziel."
+      },
+      "gabe": {
+        "name": "Flächenbrand",
+        "punkte": 3,
+        "text": "Flächenbrand: Beim Beschwören 1 Schaden an allen gegnerischen Wesen."
+      },
+      "anfaenge": [
+        "Mor",
+        "Gal",
+        "Bru",
+        "Sko",
+        "Oth",
+        "Ka",
+        "Drun",
+        "Vel",
+        "Az",
+        "Ruk",
+        "Ma",
+        "Esh",
+        "Gor",
+        "Ul",
+        "Bra",
+        "Fu",
+        "Sul",
+        "Tor",
+        "Ig",
+        "Lav"
+      ],
+      "endungen": [
+        "gor",
+        "ash",
+        "rak",
+        "ul",
+        "oth",
+        "dra",
+        "ug",
+        "ek",
+        "mar",
+        "zar",
+        "un",
+        "ga",
+        "sch",
+        "rim",
+        "oon",
+        "vo",
+        "ax",
+        "is"
+      ]
+    },
+    "Financials": {
+      "volk": "Hortbrut",
+      "wesen": "WYRMLING",
+      "bild": "Drachen, Echsen, Greife und Schildkröten, die Kristalle horten und vermehren.",
+      "faehigkeit": {
+        "name": "Zins",
+        "punkte_pro_x": 2.0,
+        "text": "Zins {x}: Zu Beginn deiner nächsten {x} Züge erhältst du je 1 zusätzlichen Kristall, solange dieses Wesen lebt."
+      },
+      "gabe": {
+        "name": "Schatzkammer",
+        "punkte": 2,
+        "text": "Schatzkammer: Am Ende deines Zuges +1 Leben für jeden ungenutzten Kristall (höchstens +3)."
+      },
+      "anfaenge": [
+        "Aur",
+        "Drak",
+        "Or",
+        "Sar",
+        "Gil",
+        "Thor",
+        "Va",
+        "Kre",
+        "Bal",
+        "Mun",
+        "Gol",
+        "Ser",
+        "Tal",
+        "Fyr",
+        "Hel",
+        "Kor",
+        "Ny",
+        "Sig",
+        "Ves",
+        "Ym"
+      ],
+      "endungen": [
+        "ax",
+        "oth",
+        "ion",
+        "ar",
+        "ius",
+        "os",
+        "ek",
+        "dur",
+        "rim",
+        "an",
+        "is",
+        "ath",
+        "enor",
+        "gar",
+        "il",
+        "ys",
+        "vald",
+        "ul"
+      ]
+    },
+    "Industrials": {
+      "volk": "Werkvolk",
+      "wesen": "PUFFLING",
+      "bild": "Lastkäfer, Dampfgolems, Baubiber und Botentauben - die, die bauen und liefern.",
+      "faehigkeit": {
+        "name": "Baukunst",
+        "punkte_pro_x": 1.0,
+        "text": "Baukunst {x}: Beim Beschwören erhält ein anderes eigenes Wesen +{x} Leben."
+      },
+      "gabe": {
+        "name": "Fließband",
+        "punkte": 3,
+        "text": "Fließband: Zu Beginn deines Zuges beschwörst du einen 1/1-Werkling."
+      },
+      "anfaenge": [
+        "Bram",
+        "Kol",
+        "Dub",
+        "Ren",
+        "Tok",
+        "Ham",
+        "Gro",
+        "Pek",
+        "Stav",
+        "Nib",
+        "Bolt",
+        "Fen",
+        "Mott",
+        "Kurt",
+        "Lud",
+        "Rap",
+        "Seb",
+        "Wol",
+        "Henk",
+        "Jo"
+      ],
+      "endungen": [
+        "bert",
+        "ock",
+        "o",
+        "ber",
+        "lin",
+        "wig",
+        "ko",
+        "dur",
+        "el",
+        "mund",
+        "rich",
+        "ke",
+        "win",
+        "hard",
+        "mar",
+        "pel",
+        "da",
+        "fried"
+      ]
+    },
+    "Health Care": {
+      "volk": "Kräutervolk",
+      "wesen": "STARLET",
+      "bild": "Sporlinge, Mondmotten, Heilerhirsche und Dryaden aus Starlets Garten.",
+      "faehigkeit": {
+        "name": "Heilung",
+        "punkte_pro_x": 1.5,
+        "text": "Heilung {x}: Zu Beginn deines Zuges heilt es ein eigenes Wesen um {x}."
+      },
+      "gabe": {
+        "name": "Wiedererblühen",
+        "punkte": 2,
+        "text": "Wiedererblühen: Stirbt es zum ersten Mal, kehrt es mit 1 Leben zurück."
+      },
+      "anfaenge": [
+        "Mira",
+        "Lin",
+        "Sel",
+        "Fen",
+        "Tia",
+        "Ro",
+        "Ilo",
+        "Va",
+        "Hel",
+        "Sy",
+        "Ama",
+        "Eri",
+        "Bel",
+        "Cyr",
+        "Eli",
+        "Ivy",
+        "Lora",
+        "Myr",
+        "Oda",
+        "Sa"
+      ],
+      "endungen": [
+        "wen",
+        "lie",
+        "sa",
+        "ra",
+        "wyn",
+        "mi",
+        "dra",
+        "la",
+        "nis",
+        "ne",
+        "thea",
+        "ve",
+        "lia",
+        "rin",
+        "bell",
+        "dis",
+        "ny",
+        "ra"
+      ]
+    },
+    "Consumer Staples": {
+      "volk": "Erntevolk",
+      "wesen": "STARLET",
+      "bild": "Vorratshamster, Kornwichtel, Waschbären und Quellnymphen - verlässliche Helfer im Alltag.",
+      "faehigkeit": {
+        "name": "Nähren",
+        "punkte_pro_x": 1.5,
+        "text": "Nähren {x}: Beim Beschwören erhalten alle anderen eigenen Wesen +{x} Leben."
+      },
+      "gabe": {
+        "name": "Sauerteig",
+        "punkte": 3,
+        "text": "Sauerteig: Zu Beginn deines Zuges erhalten alle deine Wesen +1 Leben."
+      },
+      "anfaenge": [
+        "Kor",
+        "Mil",
+        "Bra",
+        "Ta",
+        "Hon",
+        "Ri",
+        "Pa",
+        "Lo",
+        "Sim",
+        "Fro",
+        "Bet",
+        "Hal",
+        "Gun",
+        "Wil",
+        "Ap",
+        "Dot",
+        "Emm",
+        "Gre",
+        "Lu",
+        "Pet"
+      ],
+      "endungen": [
+        "mo",
+        "li",
+        "bert",
+        "na",
+        "ke",
+        "del",
+        "wig",
+        "sel",
+        "pa",
+        "lin",
+        "ka",
+        "ti",
+        "chen",
+        "ba",
+        "tje",
+        "do",
+        "ra",
+        "win"
+      ]
+    },
+    "Utilities": {
+      "volk": "Leuchtfeuer",
+      "wesen": "FENNEC",
+      "bild": "Glühwürmchen, Laternenwächter und Kesselgeister - sie halten das Licht am Brennen.",
+      "faehigkeit": {
+        "name": "Schutzlicht",
+        "punkte_pro_x": 1.0,
+        "text": "Schutzlicht {x}: Beim Beschwören erhält ein eigenes Wesen einen Schild, der {x} Schaden abfängt."
+      },
+      "gabe": {
+        "name": "Ewiges Feuer",
+        "punkte": 3,
+        "text": "Ewiges Feuer: Am Ende deines Zuges erhalten alle deine Wesen 1 Leben zurück."
+      },
+      "anfaenge": [
+        "Lux",
+        "Cal",
+        "Oro",
+        "Sol",
+        "Ven",
+        "Il",
+        "Bre",
+        "Tan",
+        "Ky",
+        "Eon",
+        "Fla",
+        "Lan",
+        "Pyr",
+        "Aur",
+        "Fae",
+        "Hel",
+        "Ign",
+        "Lam",
+        "Ste",
+        "Zen"
+      ],
+      "endungen": [
+        "a",
+        "ion",
+        "ar",
+        "is",
+        "en",
+        "ia",
+        "or",
+        "yn",
+        "el",
+        "ara",
+        "um",
+        "ix",
+        "ida",
+        "ent",
+        "ola",
+        "eth",
+        "ys",
+        "ane"
+      ]
+    },
+    "Real Estate": {
+      "volk": "Bauvolk",
+      "wesen": "FENNEC",
+      "bild": "Wurzelhäuser, Baudachse, Turmschnecken und Grottenwürmer - wer wohnt, bleibt.",
+      "faehigkeit": {
+        "name": "Eingraben",
+        "punkte_pro_x": 1.0,
+        "text": "Eingraben {x}: Am Ende deines Zuges +{x} Leben, wenn es in diesem Zug nicht angegriffen hat."
+      },
+      "gabe": {
+        "name": "Zuflucht",
+        "punkte": 3,
+        "text": "Zuflucht: Einmal pro Zug behält ein eigenes Wesen, das sterben würde, stattdessen 1 Leben."
+      },
+      "anfaenge": [
+        "Dor",
+        "Bur",
+        "Hal",
+        "Mo",
+        "Eg",
+        "Wur",
+        "Lam",
+        "Tor",
+        "Ka",
+        "Bel",
+        "Ost",
+        "Gru",
+        "Hem",
+        "Sto",
+        "Bro",
+        "Fal",
+        "Gis",
+        "Ker",
+        "Nor",
+        "Wen"
+      ],
+      "endungen": [
+        "ric",
+        "wald",
+        "o",
+        "ger",
+        "mund",
+        "bert",
+        "win",
+        "dach",
+        "hold",
+        "lin",
+        "rik",
+        "bald",
+        "fried",
+        "mar",
+        "ger",
+        "stein",
+        "hard",
+        "wig"
+      ]
+    },
+    "Materials": {
+      "volk": "Erzvolk",
+      "wesen": "FENNEC",
+      "bild": "Erzmaulwürfe, Steingolems und Alchemistenmolche aus der Tiefe, in die Fennec gräbt.",
+      "faehigkeit": {
+        "name": "Panzer",
+        "punkte_pro_x": 2.0,
+        "text": "Panzer {x}: Erleidet pro Treffer {x} Schaden weniger (mindestens 1)."
+      },
+      "gabe": {
+        "name": "Kristallherz",
+        "punkte": 2,
+        "text": "Kristallherz: Stirbt es, bleibt ein Erzsplitter 0/3 mit Wächter zurück."
+      },
+      "anfaenge": [
+        "Grun",
+        "Ka",
+        "Dor",
+        "Mag",
+        "Bas",
+        "Rok",
+        "Fel",
+        "Quar",
+        "Zin",
+        "Tur",
+        "Ob",
+        "Gar",
+        "Krag",
+        "Mal",
+        "Ber",
+        "Flin",
+        "Gra",
+        "Kob",
+        "Sla",
+        "Tal"
+      ],
+      "endungen": [
+        "din",
+        "rak",
+        "ok",
+        "grim",
+        "bor",
+        "zit",
+        "dum",
+        "nar",
+        "ak",
+        "thar",
+        "orn",
+        "gal",
+        "ith",
+        "ul",
+        "ek",
+        "ion",
+        "ras",
+        "it"
+      ]
+    },
+    "Paktvolk": {
+      "volk": "Paktvolk",
+      "wesen": "WYRMLING",
+      "bild": "Dämonen aus der Glut unter Wyrmlings Esse. Sie handeln mit Pakten: Kraft jetzt, bezahlt wird später.",
+      "anfaenge": [
+        "Baz",
+        "Mal",
+        "Zor",
+        "Xar",
+        "Bel",
+        "Mor",
+        "Kaz",
+        "Vra",
+        "Sab",
+        "Ner",
+        "Ash",
+        "Gri",
+        "Thal",
+        "Asm",
+        "Dag",
+        "Ish",
+        "Lil",
+        "Ozz",
+        "Raz",
+        "Vel"
+      ],
+      "endungen": [
+        "oth",
+        "iel",
+        "ax",
+        "ur",
+        "azar",
+        "ghul",
+        "ith",
+        "on",
+        "eph",
+        "ak",
+        "eus",
+        "imon",
+        "ael",
+        "orn",
+        "yx",
+        "ebub",
+        "ira",
+        "esh"
+      ],
+      "faehigkeit": {
+        "name": "Blutpakt",
+        "punkte_pro_x": 1.0,
+        "text": "Blutpakt {x}: Beim Beschwören fügst du einem anderen eigenen Wesen {x} Schaden zu und ziehst {x} Karte(n)."
+      },
+      "gabe": {
+        "name": "Höllenpforte",
+        "punkte": 2,
+        "text": "Höllenpforte: Jedes Mal, wenn ein anderes eigenes Wesen stirbt, erhält dieses +1/+1."
+      }
+    },
+    "Artefakte": {
+      "volk": "Artefakte",
+      "wesen": "HOOTLET",
+      "bild": "Beseelte Artefakte aus Hootlets Sternwarte: Werkzeuge, Spiegel und Automaten, die zu denken begonnen haben. Itoevas KI-Volk.",
+      "anfaenge": [
+        "Ada",
+        "Neo",
+        "Ori",
+        "Qui",
+        "Syl",
+        "Cor",
+        "Vir",
+        "Eli",
+        "Hex",
+        "Io",
+        "Nim",
+        "Zen",
+        "Aster",
+        "Bit",
+        "Cal",
+        "Dex",
+        "Kai",
+        "Lyra",
+        "Mno",
+        "Tess"
+      ],
+      "endungen": [
+        "ra",
+        "x",
+        "on",
+        "is",
+        "ia",
+        "os",
+        "ex",
+        "ai",
+        "um",
+        "el",
+        "yx",
+        "o",
+        "ene",
+        "ion",
+        "ette",
+        "us",
+        "ika",
+        "e"
+      ],
+      "faehigkeit": {
+        "name": "Lernen",
+        "punkte_pro_x": 1.5,
+        "text": "Lernen {x}: Jedes Mal, wenn du eine andere Karte spielst, erhält es +1 Angriff (höchstens {x}-mal)."
+      },
+      "gabe": {
+        "name": "Erwachen",
+        "punkte": 2,
+        "text": "Erwachen: Beim Beschwören übernimmt es die Fähigkeit eines anderen eigenen Wesens."
+      }
+    }
+  },
+  "arten": {
+    "_hinweis": "Je Industrie: Rolle und drei Formen [Jungform (Gewöhnlich/Ungewöhnlich), Reife Form (Selten/Episch), Urform (Mythisch)]. Steigt ein Unternehmen in der Größe auf, entwickelt sich das Wesen in die nächste Form. Optional 'volk': legt die Art in ein anderes Volk als ihr Sektor (Dämonen, Artefakte).",
+    "Communications Equipment": {
+      "rolle": "Schütze",
+      "formen": [
+        "Funkfalter",
+        "Signalturm-Golem",
+        "Antennen-Koloss"
+      ]
+    },
+    "Electronic Equipment, Instruments & Components": {
+      "rolle": "Wächter",
+      "formen": [
+        "Zahnradmaus",
+        "Messinggolem",
+        "Uhrwerk-Koloss"
+      ]
+    },
+    "IT Services": {
+      "rolle": "Helfer",
+      "volk": "Artefakte",
+      "formen": [
+        "Schaltkobold",
+        "Netzweber",
+        "Großer Datenweber"
+      ]
+    },
+    "Semiconductors & Semiconductor Equipment": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Funkenkäfer",
+        "Siliziumspinne",
+        "Siliziumdrache"
+      ]
+    },
+    "Software": {
+      "rolle": "Schütze",
+      "volk": "Artefakte",
+      "formen": [
+        "Glyphengeist",
+        "Denkender Foliant",
+        "Orakel-Konstrukt"
+      ]
+    },
+    "Technology Hardware, Storage & Peripherals": {
+      "rolle": "Wächter",
+      "formen": [
+        "Blechkrabbe",
+        "Panzerautomat",
+        "Eiserner Hüter"
+      ]
+    },
+    "Diversified Telecommunication Services": {
+      "rolle": "Helfer",
+      "formen": [
+        "Rufschnecke",
+        "Echoturm-Geist",
+        "Urrufer"
+      ]
+    },
+    "Entertainment": {
+      "rolle": "Schütze",
+      "formen": [
+        "Gauklerirrlicht",
+        "Maskentänzer",
+        "Traumspiegel"
+      ]
+    },
+    "Interactive Media & Services": {
+      "rolle": "Schütze",
+      "volk": "Artefakte",
+      "formen": [
+        "Spiegelmotte",
+        "Sprechender Spiegel",
+        "Tausendauge"
+      ]
+    },
+    "Media": {
+      "rolle": "Helfer",
+      "formen": [
+        "Plapperkrähe",
+        "Heroldsrabe",
+        "Chronikrabe"
+      ]
+    },
+    "Wireless Telecommunication Services": {
+      "rolle": "Helfer",
+      "formen": [
+        "Windharfen-Sylphe",
+        "Sturmsylphe",
+        "Himmelsrufer"
+      ]
+    },
+    "Automobile Components": {
+      "rolle": "Wächter",
+      "formen": [
+        "Radwichtel",
+        "Zahnradbock",
+        "Achsenriese"
+      ]
+    },
+    "Automobiles": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Rennschnecke",
+        "Sturmross",
+        "Donnerross"
+      ]
+    },
+    "Broadline Retail": {
+      "rolle": "Helfer",
+      "formen": [
+        "Packesel",
+        "Basarschlange",
+        "Basardrache"
+      ]
+    },
+    "Distributors": {
+      "rolle": "Wächter",
+      "formen": [
+        "Kistenkobold",
+        "Lagerbär",
+        "Speicherkoloss"
+      ]
+    },
+    "Hotels, Restaurants & Leisure": {
+      "rolle": "Helfer",
+      "formen": [
+        "Kuchenkobold",
+        "Gasthaus-Troll",
+        "Festmahl-Riese"
+      ]
+    },
+    "Household Durables": {
+      "rolle": "Wächter",
+      "formen": [
+        "Möbelmimik",
+        "Truhenmimik",
+        "Großmimik"
+      ]
+    },
+    "Specialty Retail": {
+      "rolle": "Schütze",
+      "formen": [
+        "Krämerelster",
+        "Basarelster",
+        "Goldelster"
+      ]
+    },
+    "Textiles, Apparel & Luxury Goods": {
+      "rolle": "Helfer",
+      "formen": [
+        "Seidenraupe",
+        "Seidenspinnerin",
+        "Goldweberin"
+      ]
+    },
+    "Energy Equipment & Services": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Bohrkäfer",
+        "Bohrwurm",
+        "Tiefenwurm"
+      ]
+    },
+    "Oil, Gas & Consumable Fuels": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Moorflämmchen",
+        "Sumpfsalamander",
+        "Moorglut-Drache"
+      ]
+    },
+    "Banks": {
+      "rolle": "Wächter",
+      "formen": [
+        "Münzkäfer",
+        "Hortechse",
+        "Hortdrache"
+      ]
+    },
+    "Capital Markets": {
+      "rolle": "Schütze",
+      "volk": "Paktvolk",
+      "formen": [
+        "Paktwichtel",
+        "Vertragsdämon",
+        "Marktfürst"
+      ]
+    },
+    "Consumer Finance": {
+      "rolle": "Stürmer",
+      "volk": "Paktvolk",
+      "formen": [
+        "Pfandteufel",
+        "Schuldendämon",
+        "Schuldenfürst"
+      ]
+    },
+    "Financial Services": {
+      "rolle": "Helfer",
+      "formen": [
+        "Kristallzähler",
+        "Zinswyrm",
+        "Ur-Zinswyrm"
+      ]
+    },
+    "Insurance": {
+      "rolle": "Wächter",
+      "formen": [
+        "Panzerchen",
+        "Schildkrötenwächter",
+        "Bergschildkröte"
+      ]
+    },
+    "Mortgage Real Estate Investment Trusts (REITs)": {
+      "rolle": "Wächter",
+      "formen": [
+        "Brückenwicht",
+        "Brückentroll",
+        "Großer Brückentroll"
+      ]
+    },
+    "Aerospace & Defense": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Sturmfalke",
+        "Greifenreiter",
+        "Himmelsgreif"
+      ]
+    },
+    "Air Freight & Logistics": {
+      "rolle": "Helfer",
+      "formen": [
+        "Botentaube",
+        "Luftschiffwal",
+        "Wolkenwal"
+      ]
+    },
+    "Building Products": {
+      "rolle": "Wächter",
+      "formen": [
+        "Ziegelmolch",
+        "Mörtelgolem",
+        "Burgmauer-Golem"
+      ]
+    },
+    "Commercial Services & Supplies": {
+      "rolle": "Helfer",
+      "formen": [
+        "Fleißwichtel",
+        "Hausgeist",
+        "Hüter der Hallen"
+      ]
+    },
+    "Construction & Engineering": {
+      "rolle": "Wächter",
+      "formen": [
+        "Biberjunges",
+        "Baubiber",
+        "Dammbaumeister"
+      ]
+    },
+    "Electrical Equipment": {
+      "rolle": "Schütze",
+      "formen": [
+        "Funkenmolch",
+        "Blitzmarder",
+        "Donnerwyvern"
+      ]
+    },
+    "Ground Transportation": {
+      "rolle": "Wächter",
+      "formen": [
+        "Lastkäfer",
+        "Karrenochse",
+        "Karawanenmammut"
+      ]
+    },
+    "Industrial Conglomerates": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Vielhand-Wicht",
+        "Vielhand-Golem",
+        "Werkhydra"
+      ]
+    },
+    "Machinery": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Kolbenkäfer",
+        "Dampfgolem",
+        "Dampftitan"
+      ]
+    },
+    "Passenger Airlines": {
+      "rolle": "Schütze",
+      "formen": [
+        "Reisemöwe",
+        "Wolkenkranich",
+        "Zugkranich"
+      ]
+    },
+    "Professional Services": {
+      "rolle": "Helfer",
+      "formen": [
+        "Tintenwicht",
+        "Ratgeber-Kröte",
+        "Weise Kröte"
+      ]
+    },
+    "Trading Companies & Distributors": {
+      "rolle": "Helfer",
+      "formen": [
+        "Handelsameise",
+        "Ameisenkarawane",
+        "Ameisenkönigin"
+      ]
+    },
+    "Biotechnology": {
+      "rolle": "Schütze",
+      "formen": [
+        "Sporling",
+        "Pilzalchemist",
+        "Myzelherz"
+      ]
+    },
+    "Health Care Equipment & Supplies": {
+      "rolle": "Helfer",
+      "formen": [
+        "Verbandsmotte",
+        "Mondmotte",
+        "Mondmottenkönigin"
+      ]
+    },
+    "Health Care Providers & Services": {
+      "rolle": "Helfer",
+      "formen": [
+        "Kräuterigel",
+        "Heilerdachs",
+        "Heilerhirsch"
+      ]
+    },
+    "Health Care Technology": {
+      "rolle": "Helfer",
+      "formen": [
+        "Lichtmoos",
+        "Sternmoos-Golem",
+        "Sternmoos-Hüter"
+      ]
+    },
+    "Life Sciences Tools & Services": {
+      "rolle": "Schütze",
+      "formen": [
+        "Tautropfengeist",
+        "Linsenlibelle",
+        "Kristalllibelle"
+      ]
+    },
+    "Pharmaceuticals": {
+      "rolle": "Helfer",
+      "formen": [
+        "Elixierschnecke",
+        "Trankdryade",
+        "Heildryade"
+      ]
+    },
+    "Beverages": {
+      "rolle": "Helfer",
+      "formen": [
+        "Brunnenfrosch",
+        "Quellnymphe",
+        "Urquell"
+      ]
+    },
+    "Consumer Staples Distribution & Retail": {
+      "rolle": "Wächter",
+      "formen": [
+        "Vorratshamster",
+        "Kornspeicher-Dachs",
+        "Speicherbär"
+      ]
+    },
+    "Food Products": {
+      "rolle": "Helfer",
+      "formen": [
+        "Kornwichtel",
+        "Erntegolem",
+        "Ährenriese"
+      ]
+    },
+    "Household Products": {
+      "rolle": "Helfer",
+      "formen": [
+        "Waschbärchen",
+        "Waschbär",
+        "Großwaschbär"
+      ]
+    },
+    "Personal Care Products": {
+      "rolle": "Helfer",
+      "formen": [
+        "Blütenfee",
+        "Duftdryade",
+        "Rosenkönigin"
+      ]
+    },
+    "Tobacco": {
+      "rolle": "Schütze",
+      "formen": [
+        "Rauchkrautwicht",
+        "Pfeifenkraut-Ent",
+        "Qualmriese"
+      ]
+    },
+    "Electric Utilities": {
+      "rolle": "Wächter",
+      "formen": [
+        "Glühwürmchen",
+        "Laternenwächter",
+        "Leuchtfeuer-Hüter"
+      ]
+    },
+    "Gas Utilities": {
+      "rolle": "Wächter",
+      "formen": [
+        "Flämmling",
+        "Kesselgeist",
+        "Kesselriese"
+      ]
+    },
+    "Independent Power and Renewable Electricity Producers": {
+      "rolle": "Schütze",
+      "formen": [
+        "Windfohlen",
+        "Windmühlen-Golem",
+        "Sonnenvogel"
+      ]
+    },
+    "Multi-Utilities": {
+      "rolle": "Wächter",
+      "formen": [
+        "Brunnenwicht",
+        "Röhrenwurm",
+        "Großer Röhrenwurm"
+      ]
+    },
+    "Water Utilities": {
+      "rolle": "Helfer",
+      "formen": [
+        "Quellkrebs",
+        "Quelltroll",
+        "Quellenhüter"
+      ]
+    },
+    "Diversified REITs": {
+      "rolle": "Wächter",
+      "formen": [
+        "Wurzelhauswicht",
+        "Baumhaus-Ent",
+        "Uralter Ent"
+      ]
+    },
+    "Health Care REITs": {
+      "rolle": "Wächter",
+      "formen": [
+        "Zufluchtsigel",
+        "Herbergsdachs",
+        "Herbergsbär"
+      ]
+    },
+    "Industrial REITs": {
+      "rolle": "Wächter",
+      "formen": [
+        "Lagermaulwurf",
+        "Hallenmaulwurf",
+        "Tunnelkönig"
+      ]
+    },
+    "Real Estate Management & Development": {
+      "rolle": "Wächter",
+      "formen": [
+        "Häuschenschnecke",
+        "Turmschnecke",
+        "Wandelburg"
+      ]
+    },
+    "Residential REITs": {
+      "rolle": "Helfer",
+      "formen": [
+        "Bauhase",
+        "Bauhasen-Älteste",
+        "Wurzelburg"
+      ]
+    },
+    "Retail REITs": {
+      "rolle": "Wächter",
+      "formen": [
+        "Einsiedlerkrebs",
+        "Hallenkrabbe",
+        "Markthallen-Koloss"
+      ]
+    },
+    "Specialized REITs": {
+      "rolle": "Wächter",
+      "formen": [
+        "Grottenwurm",
+        "Grottenwächter",
+        "Grottenhüter"
+      ]
+    },
+    "Chemicals": {
+      "rolle": "Schütze",
+      "formen": [
+        "Säureschnecke",
+        "Alchemistenmolch",
+        "Elixierwyrm"
+      ]
+    },
+    "Construction Materials": {
+      "rolle": "Wächter",
+      "formen": [
+        "Kieselwicht",
+        "Steingolem",
+        "Bergkoloss"
+      ]
+    },
+    "Containers & Packaging": {
+      "rolle": "Wächter",
+      "formen": [
+        "Schalenkrebs",
+        "Truhenkrebs",
+        "Schalenriese"
+      ]
+    },
+    "Metals & Mining": {
+      "rolle": "Stürmer",
+      "formen": [
+        "Erzmaulwurf",
+        "Erzgolem",
+        "Erzdrache"
+      ]
+    }
+  },
+  "titel": {
+    "_hinweis": "Monatszeichen aus dem stärksten Faktor des Monats - wechselt mit den Daten, Eigenname und Art bleiben.",
+    "momentum": "im Aufwind",
+    "quality": "unerschütterlich",
+    "lowvola": "in sich ruhend",
+    "value": "genügsam",
+    "neutral": "auf Wanderschaft"
+  },
+  "namen": {
+    "_hinweis": "Gesperrte Wortteile in erfundenen Namen (klein geschrieben, Teilstring-Treffer).",
+    "sperre": [
+      "adolf",
+      "dolf",
+      "hitl",
+      "nazi",
+      "ss ",
+      "sieg",
+      "heil",
+      "fuhr",
+      "führ",
+      "reich",
+      "arsch",
+      "fick",
+      "kack",
+      "schei",
+      "hure",
+      "nigg",
+      "neger",
+      "kot",
+      "pups",
+      "furz",
+      "sau",
+      "penis",
+      "titt",
+      "porn",
+      "sex",
+      "nutt",
+      "wichs",
+      "jud",
+      "isis",
+      "satan",
+      "luzif",
+      "jesus",
+      "allah",
+      "bubi",
+      "dumm",
+      "doof",
+      "blöd"
+    ]
+  }
+}

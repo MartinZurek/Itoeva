@@ -1,4 +1,5 @@
 extends "res://scripts/battle_view.gd"
+const StrategySummonFX=preload("res://scripts/strategy_summon_fx.gd")
 const Feedback=preload("res://scripts/battle_feedback.gd")
 var formation_slots: Dictionary = {}
 var crystal_meter: Control
@@ -112,7 +113,7 @@ func build_commands() -> void:
  for i in state.hand.size():
   var card: Dictionary=Cards.get_card(state.hand[i])
   var b:=_action("",Rect2(20+i*208,535,196,166),_pick_card.bind(i),"card")
-  b.set_meta("hand_index",i);b.tooltip_text=card.name+" · "+str(card.cost)+" Kristalle\n"+card.text
+  b.set_meta("hand_index",i);b.tooltip_text=card.name+" · "+str(card.cost)+" Kristalle\n"+card.get("detail",card.text)
   b.clip_contents=true
   b.set_meta("card_id",str(state.hand[i]))
   var box:=_box(Color("1d2d3b"));box.border_color=Art.accent(card);box.set_border_width_all(2 if card.get("rare",false) or selected_card==i else 1)
@@ -181,9 +182,9 @@ func _legacy_card_texture(card: Dictionary) -> Texture2D:
 func _pick_card(index: int) -> void:
  if _locked() or not model.can_play(index):return
  var card: Dictionary=Cards.get_card(model.decks[model.cursor].hand[index])
- if card.kind=="damage" or card.has("target"):
+ if card.kind=="damage" or card.has("target") or (card.has("strategy_target") and not model.card_targets(model.cursor,card).is_empty()):
   encounter.app.battle_audio.cue("select")
-  selected_card=index;selected_unit=-1;hint_message=("Eigenen Helfer wählen: " if card.get("target","")=="ally_unit" else "Gegnerhelfer wählen: " if card.get("target","")=="enemy_unit" else "Ziel wählen: ")+card.name
+  selected_card=index;selected_unit=-1;hint_message=("Eigenen Helfer wählen: " if card.get("target","")=="ally_unit" or card.get("strategy_target","")=="ally" else "Gegnerhelfer wählen: " if card.get("target","")=="enemy_unit" else "Ziel wählen: ")+card.name
   input_cooldown=.18;build_commands();refresh()
  else:encounter._card_play(index,"enemy")
 
@@ -270,7 +271,7 @@ func _refresh_unit_info() -> void:
  if not shown:return
  var owner: String=model.enemy_name if int(unit.owner)==2 else str(model.party[int(unit.owner)].name)
  unit_info_name.text=str(unit.name)+" · "+owner
- unit_info_stats.text="Angriff %s  ·  Verteidigung / LP %s / %s" % [unit.attack,unit.hp,unit.max_hp]
+ unit_info_stats.text="Angriff %s  ·  Verteidigung / LP %s / %s" % [model.unit_attack(unit),unit.hp,unit.max_hp]
  var marks: Array[String]=[]
  if unit.taunt:marks.append("Schutz (zuerst)")
  if int(unit.get("shield",0))>0:marks.append("Schild %s" % unit.shield)
@@ -386,7 +387,9 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false,motion: Dic
  if motion.is_empty():motion=Motion.rest(foot,clock,int(unit.uid))
  var attack_phase:=clampi(int(clampf((event_time-model.impact_time()+.20)/.40,0,1)*4),0,3)
  var in_transit: bool=attacking and motion.travel
- if unit.get("form","") in Cards.HELPER_FORMS:
+ if Cards.Strategy.has(str(unit.id)):
+  var art:=Art.texture(Cards.get_card(str(unit.id)));texture=art.atlas;region=art.region;reference_height=region.size.y
+ elif unit.get("form","") in Cards.HELPER_FORMS:
   var action: String="hit" if hit else "attack" if attacking and not in_transit else "idle"
   var progress: float=clampf((event_time-model.impact_time())/.45,0,1) if hit else clampf((event_time-model.impact_time()+.20)/.40,0,1)
   var frame:=Art.animation_frame(unit.form,0.0 if sleeping else float(motion.stride)*.32 if in_transit else clock+float(unit.uid)*.37,action,progress)
@@ -410,7 +413,7 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false,motion: Dic
  var scale_factor: float=(94.0 if unit.get("form","")=="ancient" else 78.0)/reference_height
  var dimensions:=region.size*scale_factor
  var left: bool=(int(unit.owner)==2) != (attacking and motion.travel and motion.returning)
- if in_transit and unit.species!="" and unit.species!="enemy":
+ if in_transit and unit.species!="" and unit.species!="enemy" and not Cards.Strategy.has(str(unit.id)):
   var art:=_travel_art(str(unit.species),motion)
   if not art.is_empty():texture=art.texture;region=art.region;dimensions=art.dimensions
  var color:=Color("ffd2b8") if hit else Color.WHITE if attacking else Color("b8c5d4") if sleeping else Color("d6c4c9") if feedback_state=="spent" else Color.WHITE
@@ -428,7 +431,7 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false,motion: Dic
  draw_rect(Rect2(foot+Vector2(-29,9),Vector2(58*clampf(float(unit.hp)/float(unit.max_hp),0,1),4)),health_color)
  if int(unit.uid)==selected_unit or int(unit.uid)==inspected_unit:
   draw_polyline(contact+PackedVector2Array([contact[0]]),Color("f8e6a0"),2,true)
-  _word("%s / %s" % [unit.attack,unit.hp],foot+Vector2(-24,34),16,Color("f4dfab"))
+  _word("%s / %s" % [model.unit_attack(unit),unit.hp],foot+Vector2(-24,34),16,Color("f4dfab"))
  _unit_affordance(unit,foot,feedback_state,attacking)
  if int(unit.get("shield",0))>0:
   draw_arc(foot-Vector2(0,35),44,-.4,PI+.4,32,Color(.8,.7,.4,.52),2,true)
@@ -456,10 +459,12 @@ func _effects() -> void:
  var impact: float=event.get("impact",.7)
  if visual=="card_summon":
   var foot:=_unit_position(int(event.get("unit_uid",-1)))
-  var p:=smoothstep(.1,impact,event_time)
-  var at:=source.lerp(foot-Vector2(0,28),p)-Vector2(0,sin(p*PI)*28)
-  spectacle.star(self,at,13,Color("c9e6a1"),clock)
-  spectacle.burst(self,foot-Vector2(0,30),Color("c9e6a1"),1-smoothstep(impact,impact+.6,event_time),15+p*37)
+  if Cards.Strategy.has(str(event.get("card",""))):StrategySummonFX.draw(self,event_time,event,foot,source)
+  else:
+   var p:=smoothstep(.1,impact,event_time)
+   var at:=source.lerp(foot-Vector2(0,28),p)-Vector2(0,sin(p*PI)*28)
+   spectacle.star(self,at,13,Color("c9e6a1"),clock)
+   spectacle.burst(self,foot-Vector2(0,30),Color("c9e6a1"),1-smoothstep(impact,impact+.6,event_time),15+p*37)
  elif visual=="card_attack":
   var uid:=int(event.get("attacker_uid",-1))
   var attacker: Dictionary={}
@@ -562,7 +567,7 @@ func _unit_affordance(unit: Dictionary, foot: Vector2, state: String, attacking:
  # Angriff und Lebenspunkte bleiben auch ohne vorheriges Antippen lesbar.
  draw_circle(foot+Vector2(-42,-3),12,Color("4d4031"))
  draw_circle(foot+Vector2(42,-3),12,Color("432b38"))
- _word(str(unit.attack),foot+Vector2(-47,2),13,Color("ffe5a4"))
+ _word(str(model.unit_attack(unit)),foot+Vector2(-47,2),13,Color("ffe5a4"))
  _word(str(unit.hp),foot+Vector2(37,2),13,Color("ffd6db"))
 
 func _power_affordance(button: Button) -> void:

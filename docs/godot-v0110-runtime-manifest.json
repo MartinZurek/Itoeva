@@ -1,0 +1,2447 @@
+{
+  "schema": 2,
+  "canonical": "path+NUL+sha256+LF; sorted by path",
+  "sha256": "f4bb116dd0cc25042c3b46a074de7a31210ecaf52f33e79fadf4c01a716f64e0",
+  "files": [
+    {
+      "path": "assets/audio/attack.wav",
+      "bytes": 49436,
+      "sha256": "aa87a74fefa9bff88068a05650c3314b80e877e4e2697a2bf6e66a3bc6e65f70"
+    },
+    {
+      "path": "assets/audio/attack.wav.import",
+      "bytes": 489,
+      "sha256": "5f48e6a8c2075637b4857b73663a1c377111029455127a772914f58f87a4602c"
+    },
+    {
+      "path": "assets/audio/crystal.wav",
+      "bytes": 84716,
+      "sha256": "1e7b0496103e6b9652ec685b360c41cf88e4bfba71ec1cf1833855f369ffa358"
+    },
+    {
+      "path": "assets/audio/crystal.wav.import",
+      "bytes": 492,
+      "sha256": "e45afd625ab1a3df395f4717fc6bf93f6ac1df04ccf110420ead64fe3e3846b3"
+    },
+    {
+      "path": "assets/audio/defeat.wav",
+      "bytes": 264644,
+      "sha256": "f290c66ac6e08bfcc4d78571ac596cffe13a81e172f258b94d656c316da729f8"
+    },
+    {
+      "path": "assets/audio/defeat.wav.import",
+      "bytes": 488,
+      "sha256": "bd7bf4295b06b268d0249cedc0f3182b26dcce0fee115c85e74fe4813cb01f54"
+    },
+    {
+      "path": "assets/audio/error.wav",
+      "bytes": 38852,
+      "sha256": "c941bf7805afc6ac5bdc5073865ffa5600fa8cad544271b8679ec6e6358c61d3"
+    },
+    {
+      "path": "assets/audio/error.wav.import",
+      "bytes": 486,
+      "sha256": "01df9ecdbd97b4d96b3dd1ca2d74f53a15793c06859cd5d4958755334e1c2c61"
+    },
+    {
+      "path": "assets/audio/fire.wav",
+      "bytes": 114704,
+      "sha256": "d5010895b701e2dbbceee3dfedf40f8f665e9bb2be4fce8bf51954b3ab6ea3aa"
+    },
+    {
+      "path": "assets/audio/fire.wav.import",
+      "bytes": 483,
+      "sha256": "79b8c77ceeb08b99019535603f1f12cf596fd666a1e844246489fd74f8b3f82e"
+    },
+    {
+      "path": "assets/audio/heal.wav",
+      "bytes": 141164,
+      "sha256": "bf3e3e9dae20ecd28d5f8df650dd5a19439bc8da33425d109d5a39ccb05103ab"
+    },
+    {
+      "path": "assets/audio/heal.wav.import",
+      "bytes": 483,
+      "sha256": "d1f6f784761660aa34df7fb9476a3f7a10139cdc0920a2e76e28c4c0498f659c"
+    },
+    {
+      "path": "assets/audio/impact.wav",
+      "bytes": 56492,
+      "sha256": "91213696b5e8b039be9991dcd5dfcde3d79a6d93c22d3ffebb5289ab00411b90"
+    },
+    {
+      "path": "assets/audio/impact.wav.import",
+      "bytes": 489,
+      "sha256": "787ba122614865b5f640f15f36405d8e62ada72ddbddc6f432a9de177846b72a"
+    },
+    {
+      "path": "assets/audio/light.wav",
+      "bytes": 149984,
+      "sha256": "4024fae61edf65bfd8f686e92febc68f83b902f1f08a25e30b5dbb4e4e6a3281"
+    },
+    {
+      "path": "assets/audio/light.wav.import",
+      "bytes": 486,
+      "sha256": "ae6dcc61a36c52450f59a0e6dd49571c449ab8b52925ea60eb5554794cf74818"
+    },
+    {
+      "path": "assets/audio/moon.wav",
+      "bytes": 158804,
+      "sha256": "fb077ed82e0dc610aaea3f81b89ad756e71333a0e7e908112e83b75d242ab325"
+    },
+    {
+      "path": "assets/audio/moon.wav.import",
+      "bytes": 483,
+      "sha256": "a64238c6fb7e259e0f62d9b71fdcb33de610a4be841a20d6f4457c10cb835615"
+    },
+    {
+      "path": "assets/audio/nature.wav",
+      "bytes": 105884,
+      "sha256": "fce93177af88d50725f2772c772026b7196a4ed63aa030db92c284465f9af3ca"
+    },
+    {
+      "path": "assets/audio/nature.wav.import",
+      "bytes": 489,
+      "sha256": "1c52c5ad73c90176cc56c63e2238fab43c612b1beeacf442d7979dacf95ba920"
+    },
+    {
+      "path": "assets/audio/select.wav",
+      "bytes": 31796,
+      "sha256": "04a9ef54ac7a6193e5a3d4a0190d885f9c9115cb7eda03486266973165f18700"
+    },
+    {
+      "path": "assets/audio/select.wav.import",
+      "bytes": 488,
+      "sha256": "f9adfb46cbe1662796f2cdd02595a04c142f6e8a42db481db7968bbc5b87ed39"
+    },
+    {
+      "path": "assets/audio/shield.wav",
+      "bytes": 114704,
+      "sha256": "fc21c2379f95c66d70e563f4950bba2b4a4ceb85305533cdbd0744e7e4408230"
+    },
+    {
+      "path": "assets/audio/shield.wav.import",
+      "bytes": 488,
+      "sha256": "301afd00c858b837cce14f04ed96466f9b25e879f59ef2e5ceb1fdcf61f67c9c"
+    },
+    {
+      "path": "assets/audio/summon.wav",
+      "bytes": 127052,
+      "sha256": "7c7b5d74d5823752cb8adc2a0a341696bb7ed27a4d954d3fa32623f1833279d0"
+    },
+    {
+      "path": "assets/audio/summon.wav.import",
+      "bytes": 489,
+      "sha256": "8e1903250281f8e296572e974d78d45382c04a32ecf9f45cefdd8b184c5f8942"
+    },
+    {
+      "path": "assets/audio/turn.wav",
+      "bytes": 114704,
+      "sha256": "c2ad481f22733eccdd3bbbc1091430737100abf55b397c92c5e5b681eaaa9f81"
+    },
+    {
+      "path": "assets/audio/turn.wav.import",
+      "bytes": 483,
+      "sha256": "6028698b22fbe7793716e2b9afc64bb3177f73880e8ab6cad57f3a8502f3c5dc"
+    },
+    {
+      "path": "assets/audio/victory.wav",
+      "bytes": 317564,
+      "sha256": "450ee40e574379187ed1eb4b5cb76f0bc2d4cfc96f92281bed96d089043fda6e"
+    },
+    {
+      "path": "assets/audio/victory.wav.import",
+      "bytes": 492,
+      "sha256": "155da795500919ba6a4fa24e8faa19f267501449b3d49353fe7a288c905d674d"
+    },
+    {
+      "path": "assets/audio/water.wav",
+      "bytes": 123524,
+      "sha256": "29451fcb35f7483fe00bbbad4e8741bf332565e5db30f9954a03eab404c31f66"
+    },
+    {
+      "path": "assets/audio/water.wav.import",
+      "bytes": 486,
+      "sha256": "9f2f626107c349d558149da9e0bcb5ca7224a0c924c2c71c4283ba1c22bb9a60"
+    },
+    {
+      "path": "assets/audio/wind.wav",
+      "bytes": 105884,
+      "sha256": "2a20d869dc232a86e425324743967c08e75ce01e4059cf8f9273e73833647b3d"
+    },
+    {
+      "path": "assets/audio/wind.wav.import",
+      "bytes": 483,
+      "sha256": "f1cb1e9b955647c6661252fd4751c6ba841498f4abab50342a10efd8906674a0"
+    },
+    {
+      "path": "assets/cards/artefakte-denkender-foliant.svg",
+      "bytes": 2398,
+      "sha256": "76e650c5d1e31877eae147a6a19f436570ada2e6dcb28bdea6bec3ef148722f2"
+    },
+    {
+      "path": "assets/cards/artefakte-glyphengeist.svg",
+      "bytes": 2246,
+      "sha256": "19afeb389ac5c56973b73b2316c57afe260f0c91c74ac2c30dad1f664ee9b662"
+    },
+    {
+      "path": "assets/cards/artefakte-groer-datenweber.svg",
+      "bytes": 4097,
+      "sha256": "c9b6b1b9841592f28fb6de5071f5c1e8cd7f9e8153d52c05a92582b5827264f7"
+    },
+    {
+      "path": "assets/cards/artefakte-netzweber.svg",
+      "bytes": 1952,
+      "sha256": "77572fd8f37d64e1783f1ab1d1ed752437844e9a090c6e1a5dc8878f86cb3be9"
+    },
+    {
+      "path": "assets/cards/artefakte-orakel-konstrukt.svg",
+      "bytes": 4095,
+      "sha256": "14ea121a4fcb693ed24b77f8280f56827256ed3b5a8bd1a7a0f80c2df77a5068"
+    },
+    {
+      "path": "assets/cards/artefakte-schaltkobold.svg",
+      "bytes": 1808,
+      "sha256": "9ee191ba803ad094cfd7a57b410d17ad393e4a02e7f441a9d982f5345b8102bc"
+    },
+    {
+      "path": "assets/cards/artefakte-spiegelmotte.svg",
+      "bytes": 1960,
+      "sha256": "657e4c2e7740d03a47c206f8d08b1422ea789d77649967c21b6b4d02b5685671"
+    },
+    {
+      "path": "assets/cards/artefakte-tausendauge.svg",
+      "bytes": 3653,
+      "sha256": "818e7614033a7309e30bb4fa46dd66b3fa5c881fe384c5b10d47acb524ee465e"
+    },
+    {
+      "path": "assets/cards/bauvolk-bauhase.svg",
+      "bytes": 1879,
+      "sha256": "d6069116a856e6c8db359b231e1c8cbd479e05ba7f1390b97eb3d53bc4580b1c"
+    },
+    {
+      "path": "assets/cards/bauvolk-einsiedlerkrebs.svg",
+      "bytes": 2177,
+      "sha256": "65fffc5b7aa7c2c3c4bfa3bf4c13780f5453fae589c03829ce6ff33dd327ade2"
+    },
+    {
+      "path": "assets/cards/bauvolk-grottenwachter.svg",
+      "bytes": 1959,
+      "sha256": "564009f005f2495651cc600482f87744c75655205dc117a3fc0e3e779a7fa0ab"
+    },
+    {
+      "path": "assets/cards/bauvolk-grottenwurm.svg",
+      "bytes": 1466,
+      "sha256": "a82e0789641ddfd58a287c090863a175b9b23a7dc5589cdb9ab9c5c33f81afc5"
+    },
+    {
+      "path": "assets/cards/bauvolk-hallenkrabbe.svg",
+      "bytes": 2321,
+      "sha256": "08e0164ec43a28219c7c6e4e53ae42f4fc01d5492e390cf6cca058ac05d8a1c3"
+    },
+    {
+      "path": "assets/cards/bauvolk-hauschenschnecke.svg",
+      "bytes": 1638,
+      "sha256": "c642de502a843bdc7e86e298a37a2598c7358be232b6177e777b871d4d0520d8"
+    },
+    {
+      "path": "assets/cards/bauvolk-herbergsbar.svg",
+      "bytes": 3725,
+      "sha256": "ed76bcbce99f97406d9f7f6cb466438ef9f64222525d4f5404b8d3dbaaf5f238"
+    },
+    {
+      "path": "assets/cards/bauvolk-herbergsdachs.svg",
+      "bytes": 2189,
+      "sha256": "8e4a42677835aa390825b4943adfb9528f71497b001d9f2b997013a4bedfc6bc"
+    },
+    {
+      "path": "assets/cards/bauvolk-tunnelkonig.svg",
+      "bytes": 3653,
+      "sha256": "3efe02b5205c810799ae68c9a3e5bc8f1862a8b27ae1f910f08d3c523d568f09"
+    },
+    {
+      "path": "assets/cards/bauvolk-turmschnecke.svg",
+      "bytes": 1780,
+      "sha256": "1647d294bf9acb47f8720a74711acef42a079899a02160faa53a9f9022511c09"
+    },
+    {
+      "path": "assets/cards/bauvolk-wurzelhauswicht.svg",
+      "bytes": 1802,
+      "sha256": "c6ee0fa333bf2e3e0aa7768970d6490fa3f004b7359fd6d7ea1df506619090d9"
+    },
+    {
+      "path": "assets/cards/bauvolk-zufluchtsigel.svg",
+      "bytes": 1880,
+      "sha256": "5507d1672360c06d7840f1b4509a7e399a5f97980f51b134a775852ff91bee37"
+    },
+    {
+      "path": "assets/cards/erntevolk-brunnenfrosch.svg",
+      "bytes": 1810,
+      "sha256": "bd0e7969453e3307ad3369519d0c47bfc62c47adf621c113d54b766c2d0b10d8"
+    },
+    {
+      "path": "assets/cards/erntevolk-duftdryade.svg",
+      "bytes": 1944,
+      "sha256": "9b9f95c0c209d2b52575658e35f04aaa54675b3c7890b0b99bfb3a9ed2935a84"
+    },
+    {
+      "path": "assets/cards/erntevolk-erntegolem.svg",
+      "bytes": 1953,
+      "sha256": "f9a91a1928d440a12445576d27eb875c6247c98b132b7be221928f4448e57bbd"
+    },
+    {
+      "path": "assets/cards/erntevolk-growaschbar.svg",
+      "bytes": 3887,
+      "sha256": "2a683b2bf11560ed63c8650a3aa827c42dee5cb791a3c5a30c84cf6912019539"
+    },
+    {
+      "path": "assets/cards/erntevolk-kornspeicher-dachs.svg",
+      "bytes": 2193,
+      "sha256": "dab7e08a9718c6f22b71ac92ab24b9180d6d1c6bae286a8fd987dedcbac2fb9f"
+    },
+    {
+      "path": "assets/cards/erntevolk-kornwichtel.svg",
+      "bytes": 1808,
+      "sha256": "57079f50405aed68eb3417ada7cda43e1f4b78b930d6d44cf1ea5852f49ca147"
+    },
+    {
+      "path": "assets/cards/erntevolk-qualmriese.svg",
+      "bytes": 3652,
+      "sha256": "65a2b8b79a35fe979e8e8475633375be5f79d565d6f421dda16511db83f85a8b"
+    },
+    {
+      "path": "assets/cards/erntevolk-quellnymphe.svg",
+      "bytes": 1707,
+      "sha256": "7e6422fac4bef72c9175f0806a9cb9c320a26594d07cc279ac413ea366886e96"
+    },
+    {
+      "path": "assets/cards/erntevolk-speicherbar.svg",
+      "bytes": 3724,
+      "sha256": "e6b1faf2a73dfc84986286bbd840426272770fcd071c81ac2433aa664a18808c"
+    },
+    {
+      "path": "assets/cards/erntevolk-urquell.svg",
+      "bytes": 3401,
+      "sha256": "2c30a754dc1b7eff98f5c0c018cf6bffe1b208c3245059b733bfe1ca739cb624"
+    },
+    {
+      "path": "assets/cards/erntevolk-vorratshamster.svg",
+      "bytes": 1881,
+      "sha256": "b5acb1d5acd27532af258e3bdd6924c8552c34933c44d4633d40a90b971871db"
+    },
+    {
+      "path": "assets/cards/erntevolk-waschbar.svg",
+      "bytes": 2185,
+      "sha256": "fed6f4713477e64744c9f86e02f61e809cf6530f9c5cfea0c2ed4e5c48971f28"
+    },
+    {
+      "path": "assets/cards/erntevolk-waschbarchen.svg",
+      "bytes": 2041,
+      "sha256": "c9a31434beb85a6966d04c7f7e85584b83e3f07277c669b6bc00a0b382380183"
+    },
+    {
+      "path": "assets/cards/erzvolk-alchemistenmolch.svg",
+      "bytes": 1618,
+      "sha256": "877ab8d5d4ea4f65cde3e38269595add2b1612c2177d5b05e275e280401a4a1b"
+    },
+    {
+      "path": "assets/cards/erzvolk-elixierwyrm.svg",
+      "bytes": 3311,
+      "sha256": "5626ccdc5e6ac234b3ba127bd435b6ffe437acacde062cfd9e7aab88db3086f7"
+    },
+    {
+      "path": "assets/cards/erzvolk-erzdrache.svg",
+      "bytes": 4073,
+      "sha256": "25a5c75e10c6ff85a7fcce993fa1334ac02fd8d1f812a33b47b71c43899fc30f"
+    },
+    {
+      "path": "assets/cards/erzvolk-erzgolem.svg",
+      "bytes": 1952,
+      "sha256": "862a223cfb9d0d7b46124c5da130ad170269723279cd7cef47879386bf2d1272"
+    },
+    {
+      "path": "assets/cards/erzvolk-erzmaulwurf.svg",
+      "bytes": 1879,
+      "sha256": "7f8d04c3d1145200fb15d0bc98fdc1ca84a9681b14886097f54f8b2e9d5dbed6"
+    },
+    {
+      "path": "assets/cards/erzvolk-saureschnecke.svg",
+      "bytes": 1635,
+      "sha256": "28b9dbabf260319d2af070d5d333b96a033aa1190319192252346a2647b281e0"
+    },
+    {
+      "path": "assets/cards/erzvolk-schalenkrebs.svg",
+      "bytes": 2174,
+      "sha256": "28a566d140748658a41fab02ce144d600c40d43dc06721895ce9ac8a0c569446"
+    },
+    {
+      "path": "assets/cards/erzvolk-steingolem.svg",
+      "bytes": 1953,
+      "sha256": "b9a1e4777e2bba3cbc2320c911a382c1110a89d4fe75c5f3844f7f654406197e"
+    },
+    {
+      "path": "assets/cards/forge_erzsplitter.svg",
+      "bytes": 1808,
+      "sha256": "66f8916af63ad7fbb638ba215064adfe734dd70a6a8048d56d8467364f022c85"
+    },
+    {
+      "path": "assets/cards/forge_werkling.svg",
+      "bytes": 1805,
+      "sha256": "7e42340aed24a8897dfe4b28462e1a865efe506ae84e226e0106051d244a08fb"
+    },
+    {
+      "path": "assets/cards/gauklervolk-basardrache.svg",
+      "bytes": 4074,
+      "sha256": "b3ab0fdebce8a81f68c247234739978bc004191efc5f0d0dc3fe98ef812a306b"
+    },
+    {
+      "path": "assets/cards/gauklervolk-basarelster.svg",
+      "bytes": 2242,
+      "sha256": "042f593bfbe78e0e4e50e3b67d0667e7eb16db711a4bc794cd7d8f38407c2d1c"
+    },
+    {
+      "path": "assets/cards/gauklervolk-basarschlange.svg",
+      "bytes": 1615,
+      "sha256": "5d7166813d723bab98b4c17ae216b82ca970f842a775b7b3b8c0c20b778e6ee9"
+    },
+    {
+      "path": "assets/cards/gauklervolk-donnerross.svg",
+      "bytes": 3722,
+      "sha256": "5912693e6c7a01a76e20690353eec3ae99e8f65516b90821e2cef8398b4858ab"
+    },
+    {
+      "path": "assets/cards/gauklervolk-festmahl-riese.svg",
+      "bytes": 3656,
+      "sha256": "7fb0b355789de486606a4c96ac48c41af4e7fd25b985f2fd79ad0cb2c33124a3"
+    },
+    {
+      "path": "assets/cards/gauklervolk-gasthaus-troll.svg",
+      "bytes": 2230,
+      "sha256": "f3a61afe7f7c055f1bd7024e836eda55a472cade27ca2c595ab824623cb543af"
+    },
+    {
+      "path": "assets/cards/gauklervolk-goldelster.svg",
+      "bytes": 3938,
+      "sha256": "9e939e84f76cf3a3686c934c4a383b9c27b1804570e4350f4ddff5b6c4439447"
+    },
+    {
+      "path": "assets/cards/gauklervolk-kistenkobold.svg",
+      "bytes": 1809,
+      "sha256": "8acaea68be2503e3bb6f9f5f546b3683787acfd67e063dfa28a6a7c642b31ddb"
+    },
+    {
+      "path": "assets/cards/gauklervolk-kramerelster.svg",
+      "bytes": 2097,
+      "sha256": "43dd01a741ca073e61687ead37e9a49ddd9e125cfabe3c1600559b792085cb08"
+    },
+    {
+      "path": "assets/cards/gauklervolk-kuchenkobold.svg",
+      "bytes": 1809,
+      "sha256": "15786a83ba5d1ce4a3fb60ce2258cd3d65fda4e527ac7c8a546c10f5cbf9c396"
+    },
+    {
+      "path": "assets/cards/gauklervolk-mobelmimik.svg",
+      "bytes": 1807,
+      "sha256": "9c3e72e2c744552bb7c33e5d3a7a042ebaa6ed054a6388b44a948eb69e75b7fd"
+    },
+    {
+      "path": "assets/cards/gauklervolk-packesel.svg",
+      "bytes": 1805,
+      "sha256": "32f2ae7a128332c9674efbdd047325dc47ec3c293748778c78e91f80f3d0a6df"
+    },
+    {
+      "path": "assets/cards/gauklervolk-radwichtel.svg",
+      "bytes": 1806,
+      "sha256": "5cee0ae227fc15ae81f96bfa803a11aaf8544a23e5cf1e2fe63c2c4a4b5a204c"
+    },
+    {
+      "path": "assets/cards/gauklervolk-rennschnecke.svg",
+      "bytes": 1632,
+      "sha256": "dfeb301fb02c367b83b0f238aa8aa3d13bc20c8165c33946ad839d9b9b34e19e"
+    },
+    {
+      "path": "assets/cards/gauklervolk-seidenraupe.svg",
+      "bytes": 1808,
+      "sha256": "8ded0d7afe9a533b20f81078462d195d4ef76349afb923e87d04eacea4929b76"
+    },
+    {
+      "path": "assets/cards/gauklervolk-seidenspinnerin.svg",
+      "bytes": 2534,
+      "sha256": "3826b0160778efa593aeb5bf378755bde7f005f4e259a25b6398a1d1472d9515"
+    },
+    {
+      "path": "assets/cards/gauklervolk-sturmross.svg",
+      "bytes": 2224,
+      "sha256": "0cad1710726eca27092eabbf84e974bf93ff973d1035e4aadda204bec185ef4f"
+    },
+    {
+      "path": "assets/cards/gauklervolk-truhenmimik.svg",
+      "bytes": 1954,
+      "sha256": "5987af8ef10b12b33d47db37b356324df809d658f990c2a740f5ccddb5125566"
+    },
+    {
+      "path": "assets/cards/gemalt-hortdrache.png",
+      "bytes": 2862965,
+      "sha256": "6cd215e712005fc6c93489515834d84dbbeb6c5a65fe2c3df7336933a323a67c"
+    },
+    {
+      "path": "assets/cards/gemalt-leuchtfeuer-hueter.png",
+      "bytes": 2062870,
+      "sha256": "28d82476bf056e24dbdfe1c30b0d5a8d98a7cc0e111fadb3c50762df058b73a4"
+    },
+    {
+      "path": "assets/cards/gemalt-orakel-konstrukt.png",
+      "bytes": 2750246,
+      "sha256": "b05f4367253fa7d7b1fae897ab63afe1d8e12a95a87fe9a5e3aa0f29bf0a2a95"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-antennen-koloss.svg",
+      "bytes": 3655,
+      "sha256": "a33dbd854de43fd484404a8b3bab46d433bd0ec795b9348aa7f93d716189296e"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-blechkrabbe.svg",
+      "bytes": 2173,
+      "sha256": "7362d89fddeadd45cd7ff3e5b77785a4ae603cf1475dead43e5ebc05205cc6ce"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-eiserner-huter.svg",
+      "bytes": 3656,
+      "sha256": "3a322edac71250deb2ac301082ff9a379ad487b828a72792b6902494505c8cfc"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-funkenkafer.svg",
+      "bytes": 2174,
+      "sha256": "2e23ec2adfa7fb94809b053680e13d4f2f8a3224a553a33ffc47c0cce0e3e195"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-funkfalter.svg",
+      "bytes": 1958,
+      "sha256": "d077af8d9e67b4c868b71e1b815dc511dcb2c441fb174d4c74b5a08c8ce0d71d"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-messinggolem.svg",
+      "bytes": 1955,
+      "sha256": "d2c688a21d85d36fb0ece727cf84d8b1362c7200522385848fb7f1c045a18abc"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-panzerautomat.svg",
+      "bytes": 1956,
+      "sha256": "96123c7872fc23af2eece0a07bc29059d1b2a2ded4b735c43b04ad6020ef2cae"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-signalturm-golem.svg",
+      "bytes": 2231,
+      "sha256": "ea88f067b0bc8ee345e77825b9c2da2ecbcb0781ebbdfdb0940b12c927e2a292"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-siliziumdrache.svg",
+      "bytes": 4077,
+      "sha256": "c12c3551ce0eb6287c5da4f2fd7a048f09529e21fb1ca7f7c96effb407b43af6"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-siliziumspinne.svg",
+      "bytes": 2532,
+      "sha256": "307fd3b8e2ec7bce08f6799adedeeb8c400dbee79e37d2817f89fde72572582a"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-uhrwerk-koloss.svg",
+      "bytes": 3655,
+      "sha256": "1f23fc384708896749f2b2918faf783c0379171137b0ad8587ddcd7170d78642"
+    },
+    {
+      "path": "assets/cards/glimmerwerk-zahnradmaus.svg",
+      "bytes": 1879,
+      "sha256": "534e1d4c9415ae865578086041ff9dd9ddd06d8c350e32e14d922d670633d990"
+    },
+    {
+      "path": "assets/cards/hortbrut-bergschildkrote.svg",
+      "bytes": 3812,
+      "sha256": "bc0d4c86135fb05e8b621d2f121ada6eaca06c89d8dfa84f2a09ace8a3c50859"
+    },
+    {
+      "path": "assets/cards/hortbrut-bruckenwicht.svg",
+      "bytes": 1809,
+      "sha256": "68afc375010a28a5d9fa0f5db41db550cf8ac757f8e1a61eea0b1a5097f1dd4c"
+    },
+    {
+      "path": "assets/cards/hortbrut-hortdrache.svg",
+      "bytes": 4073,
+      "sha256": "5c9bc5118d14c339df62889cae7c17cd8220e1dcb4bb603da341742c934ec378"
+    },
+    {
+      "path": "assets/cards/hortbrut-hortechse.svg",
+      "bytes": 1953,
+      "sha256": "c864ea0ce88d8bdbd55ab2656090795d525e170486e2651be2d83f09748e245b"
+    },
+    {
+      "path": "assets/cards/hortbrut-kristallzahler.svg",
+      "bytes": 1812,
+      "sha256": "3420e281ec461f64dfcdd640e0ddbef89d3500226618fbfccbfd3e68c8ce6902"
+    },
+    {
+      "path": "assets/cards/hortbrut-munzkafer.svg",
+      "bytes": 2172,
+      "sha256": "fd5a103585e66e2ea6efa02331fcd88a47ded99c548cc2c8c9df25b733456b11"
+    },
+    {
+      "path": "assets/cards/hortbrut-panzerchen.svg",
+      "bytes": 1961,
+      "sha256": "0f275333c3cb25a2cf3c3abfca87aa8a8f3249dd8062a8b5a54e191dd07de31d"
+    },
+    {
+      "path": "assets/cards/hortbrut-schildkrotenwachter.svg",
+      "bytes": 2119,
+      "sha256": "140aa3499a632caa8ce996e43b88be3a17c8c1a3f26a19df38e8877500812251"
+    },
+    {
+      "path": "assets/cards/hortbrut-ur-zinswyrm.svg",
+      "bytes": 3310,
+      "sha256": "4a93c5cdf552901ef4c98e1f3c038454f31c9172ab0c5aa7e9996fb18b3115ed"
+    },
+    {
+      "path": "assets/cards/hortbrut-zinswyrm.svg",
+      "bytes": 1610,
+      "sha256": "905d88169b3d5328596e95f54cd0cbd9051dc980415eaf7b39dd3929336ccdc3"
+    },
+    {
+      "path": "assets/cards/irrlichter-echoturm-geist.svg",
+      "bytes": 2229,
+      "sha256": "6788dec4b5f3cf0c5caab58802675fa91743b459dd67bd4e92f643397165c794"
+    },
+    {
+      "path": "assets/cards/irrlichter-gauklerirrlicht.svg",
+      "bytes": 1564,
+      "sha256": "e51e1d503b2f982807f9580bc6ec0fa94b0fef19b083476e2f79465ae2277b5a"
+    },
+    {
+      "path": "assets/cards/irrlichter-heroldsrabe.svg",
+      "bytes": 2242,
+      "sha256": "1bcd792e3c2332fcdd52acc269324671f31de406362852296485b15c652c85e7"
+    },
+    {
+      "path": "assets/cards/irrlichter-himmelsrufer.svg",
+      "bytes": 3653,
+      "sha256": "3ac2feb68ddd06ee636d8af50ea6fb87b9cec540af7e6bdf9cd9435363fd718f"
+    },
+    {
+      "path": "assets/cards/irrlichter-maskentanzer.svg",
+      "bytes": 1946,
+      "sha256": "a718f8919848a493567aba223007bf1f3bd23d4ec0e5c89228028b950c7b9e5c"
+    },
+    {
+      "path": "assets/cards/irrlichter-plapperkrahe.svg",
+      "bytes": 2096,
+      "sha256": "3a48465190b452107f366cd5f66c1848242af35f6122579866387365e131e07c"
+    },
+    {
+      "path": "assets/cards/irrlichter-rufschnecke.svg",
+      "bytes": 1632,
+      "sha256": "c9ffcb9f48ea935e0d1ef803a266d12e68d4457f4bd3a8a8d9af0f6070b90eb1"
+    },
+    {
+      "path": "assets/cards/irrlichter-traumspiegel.svg",
+      "bytes": 4091,
+      "sha256": "9b73c718b09976a96d1e90e7d466009c7957becceb47bc0b02e1da31e6991517"
+    },
+    {
+      "path": "assets/cards/irrlichter-urrufer.svg",
+      "bytes": 3649,
+      "sha256": "94d814f047f54f0058716dfdeab533264ea10e98723c156cf6a5e30bf74c4e1f"
+    },
+    {
+      "path": "assets/cards/irrlichter-windharfen-sylphe.svg",
+      "bytes": 1566,
+      "sha256": "f44ba8aa145b17010b67afca5304fa5187fff52035078b981e1faa1d8266a016"
+    },
+    {
+      "path": "assets/cards/krautervolk-elixierschnecke.svg",
+      "bytes": 1635,
+      "sha256": "94041fe5e38d899ae3874e6327255c069c7c6d1e6b780f3a227525f376141bc9"
+    },
+    {
+      "path": "assets/cards/krautervolk-heildryade.svg",
+      "bytes": 3642,
+      "sha256": "15dd416225a69306a54d21d9437305d93f8c5f474a81cefe23dd21fcb2cc5d4b"
+    },
+    {
+      "path": "assets/cards/krautervolk-heilerdachs.svg",
+      "bytes": 2186,
+      "sha256": "2bb4242f12ebd2f1f839a88614802d2c127fb23a93de86ba800d42258f385fb7"
+    },
+    {
+      "path": "assets/cards/krautervolk-heilerhirsch.svg",
+      "bytes": 3724,
+      "sha256": "5be58aa479278886c643bb069fa1332799fc824cffb2bdfcf5e2c73798897714"
+    },
+    {
+      "path": "assets/cards/krautervolk-krauterigel.svg",
+      "bytes": 1879,
+      "sha256": "d012086c3d93135f1ed5bb4f790de04206112f1cf24f18e9ab571ba5c332aafb"
+    },
+    {
+      "path": "assets/cards/krautervolk-kristalllibelle.svg",
+      "bytes": 3808,
+      "sha256": "d31c5dd6cfef93403d704673032508346292b83ce295246341d796e6fd7b64bf"
+    },
+    {
+      "path": "assets/cards/krautervolk-linsenlibelle.svg",
+      "bytes": 2107,
+      "sha256": "14b791103d52cd4b712f2bcc7b725f36ccc4aea1011aaa8b676093f4823a0834"
+    },
+    {
+      "path": "assets/cards/krautervolk-mondmotte.svg",
+      "bytes": 2103,
+      "sha256": "51f405387e8634df924031d364223eadb43c9ef1116e00e83c3738100eb71724"
+    },
+    {
+      "path": "assets/cards/krautervolk-mondmottenkonigin.svg",
+      "bytes": 3811,
+      "sha256": "e6657511e6e7077a6b8cbf5017914b74fc1268199732c401d7cde0ddb14d4c58"
+    },
+    {
+      "path": "assets/cards/krautervolk-myzelherz.svg",
+      "bytes": 3717,
+      "sha256": "8203ec43416a2f8d4bc3f081839a7b5a0d860ea099e0b447ac98630790f96e9c"
+    },
+    {
+      "path": "assets/cards/krautervolk-pilzalchemist.svg",
+      "bytes": 2024,
+      "sha256": "3e7fa7924a16786ea1fa9d6ef6b6fb30c672459bf8c402b813085a52d82ee91a"
+    },
+    {
+      "path": "assets/cards/krautervolk-sporling.svg",
+      "bytes": 1872,
+      "sha256": "4da0c2054ba585cfe5d10c1bc34a28f310b1e53cc8e5e67d550925c38f3f55b5"
+    },
+    {
+      "path": "assets/cards/krautervolk-sternmoos-golem.svg",
+      "bytes": 1949,
+      "sha256": "831a8ae60dd9e85fd5cfeba56aea1ff48e54e584aa98d16bacefe3dc90dc1a2b"
+    },
+    {
+      "path": "assets/cards/krautervolk-tautropfengeist.svg",
+      "bytes": 1564,
+      "sha256": "9abbd7b9085249bb62b87b90de0f20988ed20cfc00b23735a2ca3b7a177e6722"
+    },
+    {
+      "path": "assets/cards/krautervolk-trankdryade.svg",
+      "bytes": 1945,
+      "sha256": "9b90edbdf07f84675d0c69a7594e22c4c4bcdbf4d731ab1141f059944cb49f5d"
+    },
+    {
+      "path": "assets/cards/krautervolk-verbandsmotte.svg",
+      "bytes": 1960,
+      "sha256": "163de5845ffc58f60bb1f024ef6c2d07ee7f4fbe2ee43adc901312316b1668d0"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-brunnenwicht.svg",
+      "bytes": 1809,
+      "sha256": "a91e7efc978c64eea2a1e0a4dc8b160e0be628394bb3357104e099582be5ae90"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-flammling.svg",
+      "bytes": 1559,
+      "sha256": "7a085e09617b7e23cbdd980bf460c9b6f039ecf3f9c2b0b5aa19ec9d0ccb5139"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-gluhwurmchen.svg",
+      "bytes": 1811,
+      "sha256": "c84297fa027bf3a1dcdaac939ad97e821003c27e81dd98d66d3382ac3b2d0c3f"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-kesselgeist.svg",
+      "bytes": 1707,
+      "sha256": "fa22de7bb2fc895f87a53aa436802359c52cc8bf40f2d6db36267d78bc3feca1"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-laternenwachter.svg",
+      "bytes": 1959,
+      "sha256": "f11d443b717265f70319723ecf8c4945991c9d35dc20cd7ba88f84d490f53181"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-leuchtfeuer-huter.svg",
+      "bytes": 3659,
+      "sha256": "b205c83d6e1f6f59eae1be1d730df7ccc369edf1737fcfb64e0426314122807b"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-quellkrebs.svg",
+      "bytes": 2172,
+      "sha256": "8a947735afa500d6ac1be96b0f4de44a9ad207f63dd49296f18059cd0f841604"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-rohrenwurm.svg",
+      "bytes": 1614,
+      "sha256": "cba82a7a4a2ae1d3aab3973e6344021c4e9fb229c3b10e8bb03e0323b49f9d5f"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-windfohlen.svg",
+      "bytes": 1877,
+      "sha256": "883db5852c805e0743a959580b6f59e486cea2b360c0b9dbed10349e7129cbcf"
+    },
+    {
+      "path": "assets/cards/leuchtfeuer-windmuhlen-golem.svg",
+      "bytes": 1961,
+      "sha256": "aef13778feac779707d9e0595bfedcedd27354f1bebba9a6a00bda23a9d3c49c"
+    },
+    {
+      "path": "assets/cards/moorglut-bohrwurm.svg",
+      "bytes": 1610,
+      "sha256": "9a56f17a80bae02f5287917d0330d603c3f35d4965ca60cc01fac827ff2112a4"
+    },
+    {
+      "path": "assets/cards/moorglut-moorflammchen.svg",
+      "bytes": 1563,
+      "sha256": "86750441b2e1e3095a04830a0b784b21fd3238d4da2f81fd300e4b72fef391f0"
+    },
+    {
+      "path": "assets/cards/moorglut-moorglut-drache.svg",
+      "bytes": 4079,
+      "sha256": "9d9281dff66f784b9aef1ddda450a46d3fbab7a81ba866884e0f8683472ce69e"
+    },
+    {
+      "path": "assets/cards/moorglut-sumpfsalamander.svg",
+      "bytes": 1617,
+      "sha256": "7bdad5f27c990f7d225b8e6e5b2fb331798d744eee110fbd4c0b2a33725fa754"
+    },
+    {
+      "path": "assets/cards/paktvolk-marktfurst.svg",
+      "bytes": 3681,
+      "sha256": "be7ebebb3a6bea7fae076c4179acd5588b548d058eaab9b7fff346379023e1c4"
+    },
+    {
+      "path": "assets/cards/paktvolk-paktwichtel.svg",
+      "bytes": 1837,
+      "sha256": "2665958fdd642c00723398d4b6a2f792a3acb47063edd0e6adcef5f359ba020d"
+    },
+    {
+      "path": "assets/cards/paktvolk-pfandteufel.svg",
+      "bytes": 1837,
+      "sha256": "0238399b434097cb0c3cc86f3517d1aad41e5681081b0663d554f4c1595d0c91"
+    },
+    {
+      "path": "assets/cards/paktvolk-schuldenfurst.svg",
+      "bytes": 3684,
+      "sha256": "ff2fc3d06f3c2337426190c4ba3278b1b24cbeec6e943fc67c5b08953fb1ebfd"
+    },
+    {
+      "path": "assets/cards/paktvolk-vertragsdamon.svg",
+      "bytes": 1986,
+      "sha256": "8dab440722eeb6c580e1c07ec05ef9b719d4e652152606f8b7f135bafd7a5c6a"
+    },
+    {
+      "path": "assets/cards/werkvolk-ameisenkarawane.svg",
+      "bytes": 2324,
+      "sha256": "364b1a44aee3af5f720abd451f2dc7d56a3c21b47ed63e5f7cb6ff8c8dbc1bde"
+    },
+    {
+      "path": "assets/cards/werkvolk-baubiber.svg",
+      "bytes": 2022,
+      "sha256": "8e88b87465e488825822f58e1564a207a120e0424573a761974c28ad0e43db3e"
+    },
+    {
+      "path": "assets/cards/werkvolk-biberjunges.svg",
+      "bytes": 1878,
+      "sha256": "5da13a54196b882bae85d7b6a266cb61f29492d7473b94f3d90302024f6e426a"
+    },
+    {
+      "path": "assets/cards/werkvolk-blitzmarder.svg",
+      "bytes": 2026,
+      "sha256": "255741c5971ac5cecaa6723b29b97ff0e5a74b63bfe4cd444fbc6bf4937d806b"
+    },
+    {
+      "path": "assets/cards/werkvolk-botentaube.svg",
+      "bytes": 2094,
+      "sha256": "6403e0298ca08570bfdf9db8a7294aae3b36a25391026ccd874654e3831c8b5b"
+    },
+    {
+      "path": "assets/cards/werkvolk-dampfgolem.svg",
+      "bytes": 1953,
+      "sha256": "140727c305901e893437ca4505321d5094260857373c1b28d520323074174181"
+    },
+    {
+      "path": "assets/cards/werkvolk-dampftitan.svg",
+      "bytes": 3651,
+      "sha256": "14b77eade619336de4bb6c6cfa7a0bdc378f91a7e7c730fa37dee06e8099e3d9"
+    },
+    {
+      "path": "assets/cards/werkvolk-donnerwyvern.svg",
+      "bytes": 4074,
+      "sha256": "c73a11076792e64edd82c4b430eab6c672667c02779834b9c3f4918fad33ba81"
+    },
+    {
+      "path": "assets/cards/werkvolk-fleiwichtel.svg",
+      "bytes": 1810,
+      "sha256": "3077c4fb0a806da6eade99be06691566eedfc1120fd970cce0943a1146487d84"
+    },
+    {
+      "path": "assets/cards/werkvolk-funkenmolch.svg",
+      "bytes": 1466,
+      "sha256": "0ef51305d8063a1312e34072591e5dea4d91e5baed7105fa9d8b69a2f30dcaa4"
+    },
+    {
+      "path": "assets/cards/werkvolk-greifenreiter.svg",
+      "bytes": 2379,
+      "sha256": "f0a6c11375cf8fc4def7e29f254aa894c106041ec5e3a193dc6b15a279b3a094"
+    },
+    {
+      "path": "assets/cards/werkvolk-handelsameise.svg",
+      "bytes": 2175,
+      "sha256": "2564cd9fb614a5b7003abccda9a344cb5a3eeda895760a1169d43669dbe074ac"
+    },
+    {
+      "path": "assets/cards/werkvolk-hausgeist.svg",
+      "bytes": 2224,
+      "sha256": "212f1db23a2dba822f7b5fe95239ac58d50575b4113baa1ba5a53303febd3676"
+    },
+    {
+      "path": "assets/cards/werkvolk-himmelsgreif.svg",
+      "bytes": 4076,
+      "sha256": "53c56d99ec6be9d8ebefda5d1acbf52e994dd66f767eca6bf77099947e322d20"
+    },
+    {
+      "path": "assets/cards/werkvolk-karawanenmammut.svg",
+      "bytes": 3727,
+      "sha256": "d2cfec517c7eb8aea68fb0dbc4d4753e80b4e21db9b1066f92c2e675e037dea2"
+    },
+    {
+      "path": "assets/cards/werkvolk-karrenochse.svg",
+      "bytes": 2026,
+      "sha256": "68eca075f3936dbef5ca8ad634c85cfd7fde3f57189f29f9dabbb17c6b375fe3"
+    },
+    {
+      "path": "assets/cards/werkvolk-kolbenkafer.svg",
+      "bytes": 2174,
+      "sha256": "ca1abf415d7d910b833e75ae47c5ea3f764149077d61058f965119bf4e5d8ffe"
+    },
+    {
+      "path": "assets/cards/werkvolk-lastkafer.svg",
+      "bytes": 2171,
+      "sha256": "b6462179dcb09be72089188779fc0e748084fa51ba8509e0b5df37d55a625ea6"
+    },
+    {
+      "path": "assets/cards/werkvolk-luftschiffwal.svg",
+      "bytes": 1956,
+      "sha256": "87d17a7dca003d62665fc4cd2c4f907dd66e206de651a719e4497b79ea8a3e84"
+    },
+    {
+      "path": "assets/cards/werkvolk-mortelgolem.svg",
+      "bytes": 1956,
+      "sha256": "7c468feae2a47a96a168fb01a8c74b1ad14b76a0bf34db7a1dee28830fe5a2e4"
+    },
+    {
+      "path": "assets/cards/werkvolk-ratgeber-krote.svg",
+      "bytes": 1958,
+      "sha256": "2a8e02a0d1d846c462be13330c8fa7032f7424a0e0609acf83e5b4fe6aceafdd"
+    },
+    {
+      "path": "assets/cards/werkvolk-sturmfalke.svg",
+      "bytes": 2094,
+      "sha256": "bc07b1bc86a1ad611ba887221b39384bbb65fcb3775b2e72fb2b26a02d4e247f"
+    },
+    {
+      "path": "assets/cards/werkvolk-tintenwicht.svg",
+      "bytes": 1808,
+      "sha256": "54a5b0e9fdf8b1987ce1c93ab71e8d6957f0bc93dec035abf40acc8fc1a49986"
+    },
+    {
+      "path": "assets/cards/werkvolk-vielhand-golem.svg",
+      "bytes": 1957,
+      "sha256": "a7789605f446c0c39961ccc1205dcfd7d918acf30a42847de98a8f6e9b9b4698"
+    },
+    {
+      "path": "assets/cards/werkvolk-werkhydra.svg",
+      "bytes": 4073,
+      "sha256": "1b328fd260b447c7fb50ddb60e4cdf7c03ad62becdc5d89b7f023b516c5c9eb3"
+    },
+    {
+      "path": "assets/cards/werkvolk-wolkenkranich.svg",
+      "bytes": 2243,
+      "sha256": "700ed80f83d454890d9eb41f31b19fd1c2799b597f44e7597735280ca36eb061"
+    },
+    {
+      "path": "assets/cards/werkvolk-ziegelmolch.svg",
+      "bytes": 1466,
+      "sha256": "044758f6224072e6f81fd9cc16c4ca9c10c560b4dccf9279512fa101a242e032"
+    },
+    {
+      "path": "assets/characters/fennec.png",
+      "bytes": 1415859,
+      "sha256": "c55bd63efa7491317cc50a80ba27247151467772c1c57fd02a897dd7319a3790"
+    },
+    {
+      "path": "assets/characters/fennec.png.import",
+      "bytes": 939,
+      "sha256": "8c645181760a7ca824fa676f18334a3d4e299bd0a0053bf4c0e6ea01c79a4b61"
+    },
+    {
+      "path": "assets/characters/gloop.png",
+      "bytes": 1006207,
+      "sha256": "bb5bfae5e852e60967cac9c85b50b63c3742ea7e430adbc08df4315bab66daa7"
+    },
+    {
+      "path": "assets/characters/gloop.png.import",
+      "bytes": 936,
+      "sha256": "7a378cc192c6986538b9fbb124da8f06d7085ff167b2a141f6435c49b223da54"
+    },
+    {
+      "path": "assets/characters/hootlet.png",
+      "bytes": 1034734,
+      "sha256": "a106bd7e4808bac2b1a2d85f5dc4d55d354a9f04e437345856ff27f12a9f1b3e"
+    },
+    {
+      "path": "assets/characters/hootlet.png.import",
+      "bytes": 943,
+      "sha256": "6d5b574bdde37f1e3486a1e3ab7562d32c3182a119b3c5f62a9f9d8dc90a462d"
+    },
+    {
+      "path": "assets/characters/mosslyn.png",
+      "bytes": 2574214,
+      "sha256": "94c7cd31d05cef113a57474c6ac5ae7d8e3070a140f34ff267884daee152b21c"
+    },
+    {
+      "path": "assets/characters/mosslyn.png.import",
+      "bytes": 943,
+      "sha256": "7147997ceb56936dec83b992c3783373af66b9d4c0e0f9f52b83c18534353182"
+    },
+    {
+      "path": "assets/characters/nocti.png",
+      "bytes": 2705715,
+      "sha256": "aa1a8ae0120df0939640ebe0c6c686e532d1a4fcf2a39e96dc453ea832158b1e"
+    },
+    {
+      "path": "assets/characters/nocti.png.import",
+      "bytes": 937,
+      "sha256": "cf9df0fbe347360b5842d580a5d459d4393efed661ae90baf78dfa28a0e58a2b"
+    },
+    {
+      "path": "assets/characters/puffling.png",
+      "bytes": 948401,
+      "sha256": "538c96c97d37764e4b2a5da2109a2ae0c73c07db8e40b1aea69059f9a489de58"
+    },
+    {
+      "path": "assets/characters/puffling.png.import",
+      "bytes": 945,
+      "sha256": "a4d7bca1857c1c26f964fb7d9aa8c02e9437ce5027fd564f13a2ef47dc6db11a"
+    },
+    {
+      "path": "assets/characters/starlet.png",
+      "bytes": 904609,
+      "sha256": "ca2c704a69f5a17702a4cfffe9ac169e25ace82c0b3494a875dbf1bb08e2e50f"
+    },
+    {
+      "path": "assets/characters/starlet.png.import",
+      "bytes": 943,
+      "sha256": "ae33dbc8dab2c379babad4ff2cc486af0e6ba92c42b84acbbf364c1e2c205f0d"
+    },
+    {
+      "path": "assets/characters/wyrmling.png",
+      "bytes": 1271220,
+      "sha256": "9b7f8c03d9bfc7ab615afdc636d0985f85d37ed9cf3c43706c3c3e3d7191ffa6"
+    },
+    {
+      "path": "assets/characters/wyrmling.png.import",
+      "bytes": 946,
+      "sha256": "4d298e3485771a4c49992f86037604f3a0c8b3f53db621db4d85051009e2cd6c"
+    },
+    {
+      "path": "assets/combat/card-art-v050.png",
+      "bytes": 3613045,
+      "sha256": "fad84f71ff806b19e21af90d41d214bc30ab0f4b52a3ec60bdcbd7747a132292"
+    },
+    {
+      "path": "assets/combat/card-art-v050.png.import",
+      "bytes": 957,
+      "sha256": "f2e65d1ed2e90a7cf63fdb7115bd7d128f6dcd87ef22bba31762d6baaf535105"
+    },
+    {
+      "path": "assets/combat/fennec-combat.png",
+      "bytes": 1935622,
+      "sha256": "a23bc3229a788f436d899be683febd703e995e991ea8f236c52f2d4a71b49195"
+    },
+    {
+      "path": "assets/combat/fennec-combat.png.import",
+      "bytes": 958,
+      "sha256": "42d9c14c02de57f67e4d85074b36d7a5b0dd7441df22a6e3858ab1c71970ae10"
+    },
+    {
+      "path": "assets/combat/flame-atlas.png",
+      "bytes": 1167041,
+      "sha256": "04f33d958310653f76ac1d4453460b17d2c19638f69b1202a3c7a5b707b52dc6"
+    },
+    {
+      "path": "assets/combat/flame-atlas.png.import",
+      "bytes": 951,
+      "sha256": "c05607ee1d186c4513cc825b23f66ea7e0a2f4fbbc212ea89e5db36158831bc2"
+    },
+    {
+      "path": "assets/combat/gloop-combat.png",
+      "bytes": 2529051,
+      "sha256": "57d27abb741eb0f8314bf17f3da84405b50deabbf97a16d0dfe61979ea63f4ad"
+    },
+    {
+      "path": "assets/combat/gloop-combat.png.import",
+      "bytes": 955,
+      "sha256": "b82e9dff06e4a4166e6c6122d78a088d2df0d6bd511e54be6a45a7a4a71c3574"
+    },
+    {
+      "path": "assets/combat/helpers-v060-1.png",
+      "bytes": 3152453,
+      "sha256": "0a88acee07d9be744a189faf8adedb2c51a68e902c6fc2d651d9ec17e1d6aeb6"
+    },
+    {
+      "path": "assets/combat/helpers-v060-1.png.import",
+      "bytes": 960,
+      "sha256": "815bc13df2c5cf1dfe0d49d6cbb89e03d7f8cfc448dc6fc99c06aa2782e4d537"
+    },
+    {
+      "path": "assets/combat/helpers-v060-2.png",
+      "bytes": 3246463,
+      "sha256": "4e73e16b8bec6fbfb3b200d64249917da0a2dc2c68e2c937fbd0d920430248e8"
+    },
+    {
+      "path": "assets/combat/helpers-v060-2.png.import",
+      "bytes": 960,
+      "sha256": "b47129d3ce20eb74136dc90d083c1451d66269b780dba3ec7e911f65934390c9"
+    },
+    {
+      "path": "assets/combat/helpers-v060-3.png",
+      "bytes": 3114693,
+      "sha256": "6d801f8f30016151b9dca48a49b4c6f7f72f885ba6669317f015739abc9f0b10"
+    },
+    {
+      "path": "assets/combat/helpers-v060-3.png.import",
+      "bytes": 960,
+      "sha256": "f8cfa427d2aa1690dbfd952e47c062b3be9c937c75aa51e1ffada7a77ccf533c"
+    },
+    {
+      "path": "assets/combat/helpers-v060-4.png",
+      "bytes": 3248678,
+      "sha256": "2c1f1d71597fcbbf742808e0ab68f807ecb646b8169d7c670575c0697e6c2a44"
+    },
+    {
+      "path": "assets/combat/helpers-v060-4.png.import",
+      "bytes": 960,
+      "sha256": "3cced39cf1019d6bbfaea75d7ea6b55fd9d092fbaaea8c7d88e00946ee2fb994"
+    },
+    {
+      "path": "assets/combat/hootlet-combat.png",
+      "bytes": 2655046,
+      "sha256": "68683300e02d88e04ff05f43fb0b0aedcb59729fd7d5dadaf1c88daa793ea9da"
+    },
+    {
+      "path": "assets/combat/hootlet-combat.png.import",
+      "bytes": 961,
+      "sha256": "5e25e0fafdbb575fe5a98fd7e2d015b470b6a95c03f02018b1acd139a9d522c7"
+    },
+    {
+      "path": "assets/combat/nachtwurz-atlas.png",
+      "bytes": 2350587,
+      "sha256": "97753633b8867086023e8116a88157dffa4643e43267de0f37315f6db32771d2"
+    },
+    {
+      "path": "assets/combat/nachtwurz-atlas.png.import",
+      "bytes": 963,
+      "sha256": "c553e82767bd344f35b562bfad750939947f79fc4057bdea6517ed41876e833a"
+    },
+    {
+      "path": "assets/combat/puffling-combat.png",
+      "bytes": 1645977,
+      "sha256": "e8b811b427b207fde09a33f1dbdd3f18d0dcfab4ddb02383ff2d542ca5e53627"
+    },
+    {
+      "path": "assets/combat/puffling-combat.png.import",
+      "bytes": 964,
+      "sha256": "e7d73e3618c2608c27acbc55452aacd6c7630ce5f12105c854fcdd661cdea277"
+    },
+    {
+      "path": "assets/combat/spirit-animation-v050.png",
+      "bytes": 2482429,
+      "sha256": "49fe700522d5c2013e10be7b38d189306ec47ddea6fbbd3f18f3e59fe08233a2"
+    },
+    {
+      "path": "assets/combat/spirit-animation-v050.png.import",
+      "bytes": 980,
+      "sha256": "51b0b7fd6ce13136c3dcfc5267f6e479c8fbf199805f670b5887f0598b365601"
+    },
+    {
+      "path": "assets/combat/spirits-v050.png",
+      "bytes": 2802236,
+      "sha256": "bcb7c7187b8fca6df5ce8513e125c2bb2cae53a3a0eba3769275b8310fc81438"
+    },
+    {
+      "path": "assets/combat/spirits-v050.png.import",
+      "bytes": 954,
+      "sha256": "b7c07e17ab032a473d213b86f1e019e242953537cdb974c7c14c31939ded1df6"
+    },
+    {
+      "path": "assets/combat/starlet-combat.png",
+      "bytes": 1526047,
+      "sha256": "3a1854068b5e42f9620049acbe407b3ddccc95862b82d6ab216c3275f082b5c4"
+    },
+    {
+      "path": "assets/combat/starlet-combat.png.import",
+      "bytes": 961,
+      "sha256": "36e35ac0f7f78b4c9835123e29e17585d14237f64ef8914487476bfe698fa0aa"
+    },
+    {
+      "path": "assets/combat/wildlife-summons.png",
+      "bytes": 1672567,
+      "sha256": "f21e97c13bd6bcd055447d5fa30c26eebd74dbe47b6d12e4548991175882ba1a"
+    },
+    {
+      "path": "assets/combat/wildlife-summons.png.import",
+      "bytes": 965,
+      "sha256": "cfa4a774c163b83891c3f509c4cf7004d3761f086c5ec44e8e2cccf878ca4a51"
+    },
+    {
+      "path": "assets/combat/wyrmling-combat.png",
+      "bytes": 1973061,
+      "sha256": "3a9b2f7322a887f59c3f6b75c6f659baab7dca454cbb6f544e7ceaf995ad962e"
+    },
+    {
+      "path": "assets/combat/wyrmling-combat.png.import",
+      "bytes": 964,
+      "sha256": "de3b11bdd7a91754fd4d5c6cc7d66f8be542318e6f3f464db5b4f8097cb5bbc0"
+    },
+    {
+      "path": "assets/expansion/ash-ascent.png",
+      "bytes": 3251807,
+      "sha256": "37937b6f13dd58483dca40386098fb1b39b5e54cdff4e5a3c0f70e500a64b208"
+    },
+    {
+      "path": "assets/expansion/ash-ascent.png.import",
+      "bytes": 950,
+      "sha256": "be3ea3d4aee07a0c9f493ad1f624fcc8f30154cc7f31cb83a349c560690ef248"
+    },
+    {
+      "path": "assets/expansion/cinder-carrier.png",
+      "bytes": 2614884,
+      "sha256": "8602f0a721353ec99dcc19b33c0127caeddcc4a49f8cabd0b912919d1622bc17"
+    },
+    {
+      "path": "assets/expansion/cinder-carrier.png.import",
+      "bytes": 963,
+      "sha256": "4f0dce3988b3b03dfcf9cd5f05a62d3fc505ab18081cee91021b37e3205f714a"
+    },
+    {
+      "path": "assets/expansion/citizens.png",
+      "bytes": 3114636,
+      "sha256": "45866ded30de1e0a707eb8626fcea3a62cb8129e5c0bf34e9f786ec87ac7e13a"
+    },
+    {
+      "path": "assets/expansion/citizens.png.import",
+      "bytes": 945,
+      "sha256": "d840783daa1ca3f70ed3c73e4fdd8c95f18a8fd5beeb271ffe40cf5d5bb5f670"
+    },
+    {
+      "path": "assets/expansion/concepts.png",
+      "bytes": 3726999,
+      "sha256": "59c885875b877781818553aa08ae5beaf6520fedbbd37cb991d58cd8f95bbb41"
+    },
+    {
+      "path": "assets/expansion/concepts.png.import",
+      "bytes": 944,
+      "sha256": "5b8d61d4efce22073ed7ce7e66cd9c6ca3d6778c035cd53f6eeec517f4f93904"
+    },
+    {
+      "path": "assets/expansion/enemies.png",
+      "bytes": 3048346,
+      "sha256": "50ef563abab2e96543847e74a8107e0c6928d7151fe39759af47ad2c9147dd5d"
+    },
+    {
+      "path": "assets/expansion/enemies.png.import",
+      "bytes": 942,
+      "sha256": "4e68719ac9945db4a0af9d43f4c5ec1932e10dac1f251b56ac9a7cf99d6fc97f"
+    },
+    {
+      "path": "assets/expansion/glut-imp.png",
+      "bytes": 1204514,
+      "sha256": "54f2da69cd9a056ea5f489483833f77e33e9f44c92daff50ba7e9b47b75b3549"
+    },
+    {
+      "path": "assets/expansion/glut-imp.png.import",
+      "bytes": 945,
+      "sha256": "e114d8178a1a67089bf2bf46c9ab806b14df1e0b6c17ef2fe06ced6bb63a77e4"
+    },
+    {
+      "path": "assets/expansion/mill-brook.png",
+      "bytes": 4158704,
+      "sha256": "3ab6d6072d850e8bfe314ad094cc2adea93288e6c4cad8d5f1d35426b27afdfd"
+    },
+    {
+      "path": "assets/expansion/mill-brook.png.import",
+      "bytes": 950,
+      "sha256": "5a24c41c6d31efd5b5016164246197d46955f73691824ea2fdb560c882d20319"
+    },
+    {
+      "path": "assets/expansion/miro-packed.png",
+      "bytes": 1006561,
+      "sha256": "f827000038280b731d0a9958fbd930d57eda322fb1b2f4632b946c2e180d4acb"
+    },
+    {
+      "path": "assets/expansion/miro-packed.png.import",
+      "bytes": 953,
+      "sha256": "3323dc7d8033217d9c40e12f0765db003b0a139499356415b56ba9cc27019bac"
+    },
+    {
+      "path": "assets/expansion/mist-watch.png",
+      "bytes": 3823061,
+      "sha256": "2e8b6c0352502b04d30cfd98b8f319bc5abf8ca8a45694e3b069cdaf638e5e54"
+    },
+    {
+      "path": "assets/expansion/mist-watch.png.import",
+      "bytes": 950,
+      "sha256": "e7307c825176911b9e795e67ab48d2d66860da944af87ddeaf80d623acd802f9"
+    },
+    {
+      "path": "assets/expansion/resin-beetle.png",
+      "bytes": 2095854,
+      "sha256": "530f8678c5cad9ad6e35ee88ec86cd7f84725d5f97bae64e0fa3bdf2ab84a9cb"
+    },
+    {
+      "path": "assets/expansion/resin-beetle.png.import",
+      "bytes": 957,
+      "sha256": "17d866ca09fa05ac3408f8269240c03f868d89bf073499c9b6331e3271525e38"
+    },
+    {
+      "path": "assets/expansion/seal-court.png",
+      "bytes": 2860233,
+      "sha256": "73682767e55c6a5edb4b938c1f7119d23f8030e83e052a9e843db89d115f984d"
+    },
+    {
+      "path": "assets/expansion/seal-court.png.import",
+      "bytes": 951,
+      "sha256": "44128c71887b8dc705913bc09183208e8b85e6ca7503e9eb2237ec67a49b1e88"
+    },
+    {
+      "path": "assets/expansion/seal-weaver.png",
+      "bytes": 1680315,
+      "sha256": "8fa87be0c32e3efccb9dbfe7b0b08bf2cbf8547998d6ac5eaee7df914211d6ac"
+    },
+    {
+      "path": "assets/expansion/seal-weaver.png.import",
+      "bytes": 954,
+      "sha256": "c0f9e80bd90111cd12683eba69d7d208782719791e0f713dd9d573dc5cea6c4e"
+    },
+    {
+      "path": "assets/expansion/sun-glade.png",
+      "bytes": 4177691,
+      "sha256": "0734eb2a833da650b21776b8f136e01fdecab921b2046fe0d24097fe3d4b5233"
+    },
+    {
+      "path": "assets/expansion/sun-glade.png.import",
+      "bytes": 947,
+      "sha256": "74ab9b954d5b38745d19dfc3320be8c5429c34f3cc488da134a444722ba1f6be"
+    },
+    {
+      "path": "assets/expansion/tide-crab.png",
+      "bytes": 2285122,
+      "sha256": "6d25954423ee391d3900163d608d16348bdb1507eef0d05c5df96bfe3c2fe0a3"
+    },
+    {
+      "path": "assets/expansion/tide-crab.png.import",
+      "bytes": 948,
+      "sha256": "7e9df43e28f696e48422711dfd7b5905b53fff8934a486d93b03b24dbc771bfa"
+    },
+    {
+      "path": "assets/expansion/vharok.png",
+      "bytes": 2460512,
+      "sha256": "241298e78f293dc7000e28d9e9392a4e9af92e48284f30fa72e29719eebd059e"
+    },
+    {
+      "path": "assets/expansion/vharok.png.import",
+      "bytes": 939,
+      "sha256": "1df4a62741bf259a6aa4f9bb6325da472583520bd768acffcea423176a8ddae1"
+    },
+    {
+      "path": "assets/expansion/world-atlas.png",
+      "bytes": 4160477,
+      "sha256": "0ddfdfb1d3c4c0f637b9511173f6b38e7753b7b9fb12cf9b4971bcf9ac365e9f"
+    },
+    {
+      "path": "assets/expansion/world-atlas.png.import",
+      "bytes": 953,
+      "sha256": "3b7346ce3c2e56128cbfc7650549484ffb9655614c498b3b7bfe48ee109a4dd4"
+    },
+    {
+      "path": "assets/fennec-atlas.png",
+      "bytes": 1056934,
+      "sha256": "76ac4ecca84e307dafc061e49948c4d602e71bc1f8ade9bd14c766bff3e9e83f"
+    },
+    {
+      "path": "assets/fennec-atlas.png.import",
+      "bytes": 947,
+      "sha256": "8c40a1f11854c100abffef905d18be86880b6d430dd2fdb26e29564a7c948b5c"
+    },
+    {
+      "path": "assets/forest/arena.png",
+      "bytes": 2794755,
+      "sha256": "2d00c869afd1cefbdcd7c03476e43b3a8c5f042aa866726f2a8f8ec9d433d528"
+    },
+    {
+      "path": "assets/forest/arena.png.import",
+      "bytes": 933,
+      "sha256": "ca92847b245d72dc7e930efcdbff6039c1c66ec0f452291136c6ebf57f58740a"
+    },
+    {
+      "path": "assets/forest/brook.png",
+      "bytes": 2981348,
+      "sha256": "7c6612b15451c8c83ae4a10d6858a2c4932b753db7bbc0f0b69fb62e0ef78ea7"
+    },
+    {
+      "path": "assets/forest/brook.png.import",
+      "bytes": 933,
+      "sha256": "3b45e1e89292747bdf858e45ebbd20399abfb294ecd34ae693dc655368a343ed"
+    },
+    {
+      "path": "assets/forest/depths.png",
+      "bytes": 2398158,
+      "sha256": "490d9c432f3240485a81fc570694fd266e2a285dcf8e0e342ec2e2cba20e7cd6"
+    },
+    {
+      "path": "assets/forest/depths.png.import",
+      "bytes": 936,
+      "sha256": "36d468754ad03c39432983de7f7b99632e1f09c762d033a38d550a5b43385732"
+    },
+    {
+      "path": "assets/forest/entrance.png",
+      "bytes": 3459142,
+      "sha256": "eedbc18a586533d28430ceb6e4e4e035c83f5728bce678d8b4b3dae0a8df68a1"
+    },
+    {
+      "path": "assets/forest/entrance.png.import",
+      "bytes": 942,
+      "sha256": "4da4e6084acfdfbfd6d4ccef1e00fb11d24fbd627388a3496018eba2277a54f3"
+    },
+    {
+      "path": "assets/forest/greenwood.png",
+      "bytes": 3675858,
+      "sha256": "823e7326d6e38b5fb4ace6d3102ae3f8b660a517fce795a9441af2f39d0eb9f7"
+    },
+    {
+      "path": "assets/forest/greenwood.png.import",
+      "bytes": 945,
+      "sha256": "945baa06722badcbbf9a0b240e04ed77a722a79e14d0c91ec542a0e1eb48c082"
+    },
+    {
+      "path": "assets/forest/last-torches.png",
+      "bytes": 2599135,
+      "sha256": "dd0911e743a5383468ade04c75d8698e8c7dc7307c6f876ff36b96ef830b0624"
+    },
+    {
+      "path": "assets/forest/last-torches.png.import",
+      "bytes": 954,
+      "sha256": "ccdf5d4e0108c556a5b21274428f59f5914988c096261925c95405ad84502205"
+    },
+    {
+      "path": "assets/forest/shadow-demon.png",
+      "bytes": 1403938,
+      "sha256": "34d7c481ae6b83b9754c2cc9ed2e47e442f546ee870adfc0c8e6dee8e8fd4476"
+    },
+    {
+      "path": "assets/forest/shadow-demon.png.import",
+      "bytes": 954,
+      "sha256": "8f5e279af4e9339ca0a38c58baa1fd662afd5e4ed1928f656824945d729aebc4"
+    },
+    {
+      "path": "assets/forest/shadow-gate.png",
+      "bytes": 2787946,
+      "sha256": "31143688c9f0d1c250d449511ca2bfe1f50c5dd207623acf38811b3f4118d8d8"
+    },
+    {
+      "path": "assets/forest/shadow-gate.png.import",
+      "bytes": 950,
+      "sha256": "45f8fa38d01e17ed514c65d1189161bb8912749d2303f3266e07be454b06f403"
+    },
+    {
+      "path": "assets/interiors/arcade.png",
+      "bytes": 249751,
+      "sha256": "1da2a52586eeef283e5a17ce17d898bf12a28b5dec7cf4014d28826f7fcdc3e4"
+    },
+    {
+      "path": "assets/interiors/arcade.png.import",
+      "bytes": 939,
+      "sha256": "c963535bfe8dbcb02b5a5157ac52b1def00ff930722360060db858e91a50140c"
+    },
+    {
+      "path": "assets/interiors/bath.png",
+      "bytes": 260038,
+      "sha256": "01eca5276de02585334679d39ce2b46b431f75400464162d44afccaa1fe78c21"
+    },
+    {
+      "path": "assets/interiors/bath.png.import",
+      "bytes": 933,
+      "sha256": "dcd9a03338e663ecb61df87ce39d1b484ff883c9a29c5c0bcc958b654e095b18"
+    },
+    {
+      "path": "assets/interiors/bedroom.png",
+      "bytes": 2619287,
+      "sha256": "f0daf4bfb6e745f9f4d70f6899fded81fc1614f48f1110b62364b67daf6f4e7d"
+    },
+    {
+      "path": "assets/interiors/bedroom.png.import",
+      "bytes": 942,
+      "sha256": "66d57bf65940e80b7dad6b71127eccbbfb95ceac74111af006d166c4be11bd9f"
+    },
+    {
+      "path": "assets/interiors/cafe.png",
+      "bytes": 260262,
+      "sha256": "ccc9039b45c9ef7e1843b44c9c80b2998bf67ad267b83c5a694f1dd2ee0d33b1"
+    },
+    {
+      "path": "assets/interiors/cafe.png.import",
+      "bytes": 933,
+      "sha256": "6f2de48ecf9df1211ca90cd5515c6751f78882c463859345beb16c9b3ea1d7fc"
+    },
+    {
+      "path": "assets/interiors/craft.png",
+      "bytes": 252341,
+      "sha256": "2fb563c8d8f3ef8126e98325a207bdf2144e71b0d85b6e058124311fd6cbb43a"
+    },
+    {
+      "path": "assets/interiors/craft.png.import",
+      "bytes": 935,
+      "sha256": "25f36453715140e8a7c8dce1a83c8aae7dbe7abf8228cf141008e7000e414014"
+    },
+    {
+      "path": "assets/interiors/desk.png",
+      "bytes": 246349,
+      "sha256": "4884a9b844a6ea4fb6de5859709e89f79a6c92c894c3466d00f13cc8092c14b4"
+    },
+    {
+      "path": "assets/interiors/desk.png.import",
+      "bytes": 933,
+      "sha256": "ae03058aa90f0f943b454a291a7f4c55623cf9bac43c3b3f3898d6faf3bde7e8"
+    },
+    {
+      "path": "assets/interiors/kitchen.png",
+      "bytes": 251494,
+      "sha256": "c6cc97d16892f26db326eea71f2cdb10d181b4e76c372944382c473465fa0876"
+    },
+    {
+      "path": "assets/interiors/kitchen.png.import",
+      "bytes": 941,
+      "sha256": "d27689b26dc37b4c0845ba29f563d94a5362feb62b8306ca9139eff0cd664a50"
+    },
+    {
+      "path": "assets/interiors/living.png",
+      "bytes": 2695362,
+      "sha256": "b36b68143a3d71d90ddf9beed07ec3ebf3f73bbe3b499caaa3208336e2416eec"
+    },
+    {
+      "path": "assets/interiors/living.png.import",
+      "bytes": 939,
+      "sha256": "b7dd0c1b9785bc63beafd9c98da99976bd45640b6cfab31d5e24c674f8886b03"
+    },
+    {
+      "path": "assets/interiors/nook.png",
+      "bytes": 250172,
+      "sha256": "a178b0c0d19047f2b7cf7ab34fd63ce5c7271636ad4d846bfb620e006b257139"
+    },
+    {
+      "path": "assets/interiors/nook.png.import",
+      "bytes": 933,
+      "sha256": "b6607ff3e6d522aa93f65b2acc972a9c1178498e34f9a1c95463fa0fbd812d75"
+    },
+    {
+      "path": "assets/interiors/shop.png",
+      "bytes": 257022,
+      "sha256": "55f9e7245a40af884209a29c6c0f4861e1a9632830d7a3de594aafee7ddbab36"
+    },
+    {
+      "path": "assets/interiors/shop.png.import",
+      "bytes": 933,
+      "sha256": "fe264eb61fb4e89a5c21dbb61062cae6d7968bed6bf9b30680bb57be62daaf86"
+    },
+    {
+      "path": "assets/interiors/work.png",
+      "bytes": 236914,
+      "sha256": "acbf695c693d474e594d3fec155983063c1b942268f2160216a09cec09b90a79"
+    },
+    {
+      "path": "assets/interiors/work.png.import",
+      "bytes": 932,
+      "sha256": "0092a19637b8d4fa48750c5c8a7bb0abfb2ab0d915bec91dfba82dea8d655a42"
+    },
+    {
+      "path": "assets/music/battle-arena.ogg",
+      "bytes": 1396188,
+      "sha256": "5195116a2166ac201b10afc3ea88413f3b2de84947e4b6f8614647b21005db73"
+    },
+    {
+      "path": "assets/music/battle-arena.ogg.import",
+      "bytes": 404,
+      "sha256": "58585c0d989fba1070279f3bdcade3de23428616e1e058d9fb7e4d2983a26df8"
+    },
+    {
+      "path": "assets/music/theme.ogg",
+      "bytes": 1277831,
+      "sha256": "ed04ee08d24b395cbaad72834807fd3cac888d0633d9bab0a5eb0ce336190338"
+    },
+    {
+      "path": "assets/music/theme.ogg.import",
+      "bytes": 384,
+      "sha256": "623ceb61c8bb89f0ff841d597d3e43413b548ffdbcff565b1ceddf423df66da1"
+    },
+    {
+      "path": "assets/music/victory-theme.ogg",
+      "bytes": 124387,
+      "sha256": "8c40048eb9831015caacb2e68332f7c99436b188a7c9f1973932b156be0bc470"
+    },
+    {
+      "path": "assets/music/victory-theme.ogg.import",
+      "bytes": 408,
+      "sha256": "05d71d0bffef8691ec20d6509c745cc1b5b410a9a7681a0dfd015c18b29b2495"
+    },
+    {
+      "path": "assets/street-park-forest.png",
+      "bytes": 3804958,
+      "sha256": "02cebed7a00c737006b04f1c0d27222052acdb40b0f2832e753b2895fbe6b7cb"
+    },
+    {
+      "path": "assets/street-park-forest.png.import",
+      "bytes": 965,
+      "sha256": "337a49f9b79dfd06ce1c91e67a58e704694444bce12e866556b2ac0a7360a724"
+    },
+    {
+      "path": "assets/world/coast-path.png",
+      "bytes": 4060400,
+      "sha256": "2fa43f24dcc4bc64f778f9098d6b00aadda2411899515707a5db848d4be1697d"
+    },
+    {
+      "path": "assets/world/coast-path.png.import",
+      "bytes": 947,
+      "sha256": "e4a7e0f292605b5290bd324bf5615284e31be28bfb7db6a2df77c2f0af6adfa0"
+    },
+    {
+      "path": "assets/world/coast-shore-v026.png",
+      "bytes": 3533306,
+      "sha256": "29ab25a2fa7e91c117fa4b1e110e28a1405c8a04c780d790ae496f1394838647"
+    },
+    {
+      "path": "assets/world/coast-shore-v026.png.import",
+      "bytes": 964,
+      "sha256": "4b62f016b024639270c60e5942bc595c061b565d69832bd132f2a76c95540653"
+    },
+    {
+      "path": "assets/world/coast.png",
+      "bytes": 3712204,
+      "sha256": "16f984ccdf648b1080fe7784eea9998f17cadf93726294ddd355e6011b575bbd"
+    },
+    {
+      "path": "assets/world/coast.png.import",
+      "bytes": 932,
+      "sha256": "66a9a55fc164984787c47529649bcda99fdfba3844f4391ae7e334c378b61e85"
+    },
+    {
+      "path": "assets/world/expedition.png",
+      "bytes": 3827614,
+      "sha256": "f095a96e5e543a439ea689b8118f6af08bccd8c10eba576288014db0a776ded8"
+    },
+    {
+      "path": "assets/world/expedition.png.import",
+      "bytes": 947,
+      "sha256": "9758c967d0e4c45a875cc59cab1131adb6e18fc99aacbb0b071aaa1ec1ee5570"
+    },
+    {
+      "path": "assets/world/mountain-pass.png",
+      "bytes": 3857098,
+      "sha256": "d120a4fb7ffd7a87c7c476bbd56265bd6fc61cd2166f9f781327083155322f68"
+    },
+    {
+      "path": "assets/world/mountain-pass.png.import",
+      "bytes": 956,
+      "sha256": "d531114cb0712ecfed7646b99f648ded6263a728e746d7dedf909635516a05b9"
+    },
+    {
+      "path": "assets/world/park-crate.png",
+      "bytes": 246,
+      "sha256": "7faeac133cb1a99502b3c915f0bbe671d7a77c0f5aaf978deef3418cbd7cca2c"
+    },
+    {
+      "path": "assets/world/park-crate.png.import",
+      "bytes": 946,
+      "sha256": "275e79804a365f09b6387794a643d631d52b5d27ae8d6aab03495446c4db94cf"
+    },
+    {
+      "path": "assets/world/path-stones.png",
+      "bytes": 864278,
+      "sha256": "8df3a30da033901f2ef04469d76091a02ada240d9832215efe654625a40ae2dc"
+    },
+    {
+      "path": "assets/world/path-stones.png.import",
+      "bytes": 949,
+      "sha256": "6c896bd47eba8cff029c461eb65b454fe45c8b99429b05bd557ccfef2af3961a"
+    },
+    {
+      "path": "assets/world/seams/0.png",
+      "bytes": 3659517,
+      "sha256": "86f91863428a13bd513499c735b40106ba55b7ca5ef87d981c3cbc9dbe9e5608"
+    },
+    {
+      "path": "assets/world/seams/0.png.import",
+      "bytes": 926,
+      "sha256": "f521d9a2e96c729ca52217132b60c6240132382f07e709fabdf607a9fb7981b1"
+    },
+    {
+      "path": "assets/world/seams/1.png",
+      "bytes": 3511203,
+      "sha256": "84604027d4eeb553bec34b1c3d747f35c5d39d5fde6de0ceb082be9309519bbb"
+    },
+    {
+      "path": "assets/world/seams/1.png.import",
+      "bytes": 926,
+      "sha256": "bfd62bfa9382b009e299a92cff4787e3d7bdacaea329cd5426c85643e7f5e152"
+    },
+    {
+      "path": "assets/world/seams/2.png",
+      "bytes": 3563591,
+      "sha256": "7f0438ecc32aa70a8319fa4aa7a7615b7731701ae35746f6010cea55aba08d49"
+    },
+    {
+      "path": "assets/world/seams/2.png.import",
+      "bytes": 926,
+      "sha256": "9578cc1972c7c42dc85c99475b93dcff19c10910192ef203dbf51cbc13fdc8d4"
+    },
+    {
+      "path": "assets/world/seams/3.png",
+      "bytes": 3443901,
+      "sha256": "e2bebbbcc039e8285543a113578d7b6aaeb8082b6d673a55104bb74d8e4f537d"
+    },
+    {
+      "path": "assets/world/seams/3.png.import",
+      "bytes": 926,
+      "sha256": "f1a408985b02c88a9531881807ba12b1b326cbdfeba04c86241a1006f0886bb1"
+    },
+    {
+      "path": "assets/world/seams/4.png",
+      "bytes": 3303271,
+      "sha256": "a4d2ca046485718523aaea3725137e42fc7c7fade2f68ff3a7414c3675503e73"
+    },
+    {
+      "path": "assets/world/seams/4.png.import",
+      "bytes": 926,
+      "sha256": "d5e3d0ea9adf7615bd78fea00b55d19824e7d8fbadc0244f9d3eabc40f16fc7b"
+    },
+    {
+      "path": "assets/world/seams/5.png",
+      "bytes": 3503244,
+      "sha256": "4cbc4f62e8bef24fcfcc9d8eaae1c94f6b5a4287655de53b77115eedee73a8b6"
+    },
+    {
+      "path": "assets/world/seams/5.png.import",
+      "bytes": 926,
+      "sha256": "b2df3d4809d6586e9480e47a534ab543b19792e08009b6f549cb053f3d06ffa4"
+    },
+    {
+      "path": "assets/world/street-park-forest.png",
+      "bytes": 3804958,
+      "sha256": "02cebed7a00c737006b04f1c0d27222052acdb40b0f2832e753b2895fbe6b7cb"
+    },
+    {
+      "path": "assets/world/street-park-forest.png.import",
+      "bytes": 971,
+      "sha256": "b5dbe7adcf1b6e393c4f871db620ee7a508a0027568cfa2a1c426fa2b4a7cf68"
+    },
+    {
+      "path": "assets/world/uplands.png",
+      "bytes": 3686257,
+      "sha256": "e0711b8d9b709aa5989e0b26980fa4ff98883bb788366c3646cd9b1d0edd7c87"
+    },
+    {
+      "path": "assets/world/uplands.png.import",
+      "bytes": 938,
+      "sha256": "70caf017ccc8c3fc9930224ae0be343a508f39f35266d7b41a0190a01b9f2c3b"
+    },
+    {
+      "path": "assets/world/village-edge.png",
+      "bytes": 3846150,
+      "sha256": "04cec0f94c42eff900331cd0b25927e2851489489e9edfde01d1643ba851b2a7"
+    },
+    {
+      "path": "assets/world/village-edge.png.import",
+      "bytes": 953,
+      "sha256": "e6fd9d8f87f48a7d5dfe2a391bef993202325d135384556a252d2edad1f99aa0"
+    },
+    {
+      "path": "data/ambience.json",
+      "bytes": 26037,
+      "sha256": "a57287263945e8a4247db2d06d5a1b272896154da91e647d4d1428025f5d7c07"
+    },
+    {
+      "path": "data/battle_audio.json",
+      "bytes": 3061,
+      "sha256": "f7f08088173fc46ae96298a0a5dcc658b5b7f36d0bea0eeab831e5f361fe2095"
+    },
+    {
+      "path": "data/citizens_atlas.json",
+      "bytes": 396,
+      "sha256": "627bf23d10c279253794957f43af62dedb279a1bb1ef31b245d9337c47f1ccd6"
+    },
+    {
+      "path": "data/combat_atlases.json",
+      "bytes": 7259,
+      "sha256": "9c6d1f9b1b6326895faace2ec8310848adddda02357b64c8639bf290cdc89869"
+    },
+    {
+      "path": "data/compact_bounds.json",
+      "bytes": 1817,
+      "sha256": "440ee179d292e7bc414101489f3c39e3bc84c687f3ef15854ed751794abe3c73"
+    },
+    {
+      "path": "data/demons_atlas.json",
+      "bytes": 722,
+      "sha256": "3fbf98cadb764441e90bd4b039388767f9e9696f9f0707d8921d2c38e555ae19"
+    },
+    {
+      "path": "data/ecology_atlas.json",
+      "bytes": 1333,
+      "sha256": "e46857b9cd98ad9df00f5630e31de30d88d8f08b70a6b590e18ff5ea682c0a9e"
+    },
+    {
+      "path": "data/enemies_atlas.json",
+      "bytes": 399,
+      "sha256": "889c9c044d38f34ab7c4e83b118fc4b42b4524ac57c1b97a0fb46f00876d6af4"
+    },
+    {
+      "path": "data/forest_trail.json",
+      "bytes": 7513,
+      "sha256": "51aa07c0920bd115151683c4d4a90efee9d2353ae56c02323dcac332c1586194"
+    },
+    {
+      "path": "data/helper_animations_v060.json",
+      "bytes": 15647,
+      "sha256": "31bb10163b4da08e812a4868f8f3400a032c38f4a71c379131876a07db99e7ff"
+    },
+    {
+      "path": "data/miro_atlas.json",
+      "bytes": 137,
+      "sha256": "fcd7d40119588110075a500d7d81872a5efabe7b56e8757a1e8091af6e8dbd67"
+    },
+    {
+      "path": "data/new_characters.json",
+      "bytes": 502,
+      "sha256": "3fb648c77aa96112617041b9d13256adbaa6d10a0d9492af003239bde97220a3"
+    },
+    {
+      "path": "data/new_combat_atlases.json",
+      "bytes": 901,
+      "sha256": "57fec8b6db01c40ef0bcc898b292a1deb32b592f39fc17233535e2d9e55313f5"
+    },
+    {
+      "path": "data/regional_enemies.json",
+      "bytes": 7423,
+      "sha256": "36f7b324fddc9dd9886f8d959267074078227a47ec38a3032cc9457146c04c17"
+    },
+    {
+      "path": "data/residents.json",
+      "bytes": 14643,
+      "sha256": "ab898cc3abb08f05b47f5eb8241c66052b060aa99ee2e56f848a601e1a025f80"
+    },
+    {
+      "path": "data/spirit_animations.json",
+      "bytes": 1054,
+      "sha256": "81820d910da60a8fa0482b6d6d00e69323bbb34b3c53942552829dbae63e4d26"
+    },
+    {
+      "path": "data/spirit_atlas.json",
+      "bytes": 331,
+      "sha256": "ab7b7fcb6eb98b603cd1f45bd8f72ee6fd85e64351641afbb3e694077191049d"
+    },
+    {
+      "path": "data/strategy_cards.json",
+      "bytes": 704687,
+      "sha256": "c8ab7794193774c15e9cdd2f4cec7cc74d6df95548b50352c6fc3234f8cf4847"
+    },
+    {
+      "path": "data/visual_geometry.json",
+      "bytes": 5930,
+      "sha256": "e3e8a92456e65ee6611229354f0a5a2d34d58fa24f7588052889a8157cf807cf"
+    },
+    {
+      "path": "data/wildlife_atlas.json",
+      "bytes": 1272,
+      "sha256": "b75626a389c3a2041f0160cc8aecea7b6dc0e41abf22592010947fd200a2c8ce"
+    },
+    {
+      "path": "data/world_catalog.json",
+      "bytes": 65279,
+      "sha256": "4e69c74827f3f84708321700ceaabb7716712bbffdafe06073046903f529118f"
+    },
+    {
+      "path": "data/world_expansion.json",
+      "bytes": 2293,
+      "sha256": "8125270788a0f64974d866f36621611df526b7ad9c46acd1227e7c860f8bd838"
+    },
+    {
+      "path": "export_presets.cfg",
+      "bytes": 1881,
+      "sha256": "a577ae5f8e6ba7c64a1753f79f5523fb922523609e2916366cfd825c385cbd4c"
+    },
+    {
+      "path": "project.godot",
+      "bytes": 798,
+      "sha256": "c32efc05a09651fd93c0302d3e7f9bfa382747a9e25218207c381eeca634cf5d"
+    },
+    {
+      "path": "scenes/full_world.tscn",
+      "bytes": 166,
+      "sha256": "70cb371522fa52e204a3656c0d53497373547d24fcfd187e0303010269855a42"
+    },
+    {
+      "path": "scenes/painted_world.tscn",
+      "bytes": 475,
+      "sha256": "c26f0249fa09180fa8558824a2017d6a53ae179b8d48c6ff52268fa996e20ae0"
+    },
+    {
+      "path": "scripts/adventure_hud.gd",
+      "bytes": 14716,
+      "sha256": "c4f70ca00adeafb3d12271a8e1a95d87b10d1644d5bd48ac9dd18dd2cf25d963"
+    },
+    {
+      "path": "scripts/adventure_hud.gd.uid",
+      "bytes": 20,
+      "sha256": "29116e62fd149e204633f3e0a2617fea54dc9ff4bb5b20f89c0d7c1e672b419d"
+    },
+    {
+      "path": "scripts/battle_audio.gd",
+      "bytes": 5016,
+      "sha256": "11163ad929dc46febf2ede2ae31bfa659667aac58dd87392c20408191c365a08"
+    },
+    {
+      "path": "scripts/battle_audio.gd.uid",
+      "bytes": 20,
+      "sha256": "926c57b622d110f706fd3ec4348a9c200db9f995ef5f6c90789888f4c455e50d"
+    },
+    {
+      "path": "scripts/battle_effects.gd",
+      "bytes": 9619,
+      "sha256": "f057e707b4d60a0f02e976cd34bae3a5076f418d760fb156360bb6a8b26599f0"
+    },
+    {
+      "path": "scripts/battle_effects.gd.uid",
+      "bytes": 20,
+      "sha256": "945277e1eec38054e2d6035caa827055f4ebb504e7e1cdba39746b589b275473"
+    },
+    {
+      "path": "scripts/battle_feedback.gd",
+      "bytes": 984,
+      "sha256": "3730a233efa4afe3a6aceab686f4e4cebf5ea9bff8bca17ad5a60ae1298b90ea"
+    },
+    {
+      "path": "scripts/battle_feedback.gd.uid",
+      "bytes": 20,
+      "sha256": "cd08dd977633a9635e9f9e99f3ee1e2c3188cd8f3b8ecffeb266e04e4efc9da3"
+    },
+    {
+      "path": "scripts/battle_meter.gd",
+      "bytes": 679,
+      "sha256": "54c5a1570bf5cc7be64399771a29c230d95231b0fdfb520a851b5e8257befe09"
+    },
+    {
+      "path": "scripts/battle_meter.gd.uid",
+      "bytes": 20,
+      "sha256": "c2f3ae5dec927582b22df328691cb8439b0b440e30b533ade371946929ac8d59"
+    },
+    {
+      "path": "scripts/battle_motion.gd",
+      "bytes": 2916,
+      "sha256": "f6f5eedb9977cf57e73aed58b0bdfd272d8faa16a4096d99aba36a6ce9ef0e81"
+    },
+    {
+      "path": "scripts/battle_motion.gd.uid",
+      "bytes": 20,
+      "sha256": "ae455ab9d4c1043963e8b524b13b178b0da8504eb61fd7aa3bd1e99366d82770"
+    },
+    {
+      "path": "scripts/battle_pawn.gd",
+      "bytes": 1162,
+      "sha256": "0037915cd0d7a03cbec4fa204a167bd858eba4417279440be689051c9173ac7c"
+    },
+    {
+      "path": "scripts/battle_pawn.gd.uid",
+      "bytes": 20,
+      "sha256": "ca29a6a07aa42c269191b9339b903e4cfa598bbbdefafdbb2bd9a8f2f558414e"
+    },
+    {
+      "path": "scripts/battle_view.gd",
+      "bytes": 32570,
+      "sha256": "f97811e81c5be828a66e131b39af9c3475d8ab500a29d6e102216a91e410b48c"
+    },
+    {
+      "path": "scripts/battle_view.gd.uid",
+      "bytes": 20,
+      "sha256": "35e6b0c71d43f6f26e7b3af3f51d4eb937ef895d977dc3e005ab820aae1d455f"
+    },
+    {
+      "path": "scripts/card_assets.gd",
+      "bytes": 4671,
+      "sha256": "3f838cd850a5437616e8b018c499445fe9a573022fea4201b1c70b5260b667ce"
+    },
+    {
+      "path": "scripts/card_assets.gd.uid",
+      "bytes": 20,
+      "sha256": "84e9c4e7cbedb2359a32fbef26bf5717f0d78caf7c41af441827027d8288e0e2"
+    },
+    {
+      "path": "scripts/card_battle.gd",
+      "bytes": 36924,
+      "sha256": "48a07b5487085d5aeb000003e730ddf8f04a061c5c8941efe1091e1f1ad31d86"
+    },
+    {
+      "path": "scripts/card_battle.gd.uid",
+      "bytes": 20,
+      "sha256": "22d302d646807055d0cbf904de13e740b94b0adec6f14a9bacd679b40daf493a"
+    },
+    {
+      "path": "scripts/card_catalog.gd",
+      "bytes": 21169,
+      "sha256": "82755815254b07a28078127b730c1c4fc7c846aac267194a1682be33f89eafe2"
+    },
+    {
+      "path": "scripts/card_catalog.gd.uid",
+      "bytes": 20,
+      "sha256": "7b8b396e1d47d9202d2e5f95dc980c35971942e1966a06e0f939edbff0099c29"
+    },
+    {
+      "path": "scripts/card_detail.gd",
+      "bytes": 2584,
+      "sha256": "069aad7b5b167d08e576b5c34b400b729e339a46707137334485e94271957a74"
+    },
+    {
+      "path": "scripts/card_detail.gd.uid",
+      "bytes": 20,
+      "sha256": "8ce9e1c81b41b4e934115b214d930636bf46b24bc0e3f840bcd83279a7cf952a"
+    },
+    {
+      "path": "scripts/card_effects.gd",
+      "bytes": 9972,
+      "sha256": "9fbc0e1b594e07254fca5be71876cbc9c8dae6b59380715fb4970c3583b3be61"
+    },
+    {
+      "path": "scripts/card_effects.gd.uid",
+      "bytes": 20,
+      "sha256": "f1357ad126698f2487f0c0bdc88bb0051d99f50f9ffc6eff4416c602ee126b00"
+    },
+    {
+      "path": "scripts/card_encounter.gd",
+      "bytes": 6348,
+      "sha256": "820af3135eda240c9f3ca746f24bb9b6c50e2da4fe66e1e29e3dd9b2fc26696c"
+    },
+    {
+      "path": "scripts/card_encounter.gd.uid",
+      "bytes": 19,
+      "sha256": "31333e89bf6d57cf51e8ac8f11ff74394d8fd968c72d125db8679d80bd8a0afb"
+    },
+    {
+      "path": "scripts/card_view.gd",
+      "bytes": 36372,
+      "sha256": "53535fcdfa35a3fefec7b76a73e873ffe754a9fead80a3e973f7b19e909c9cab"
+    },
+    {
+      "path": "scripts/card_view.gd.uid",
+      "bytes": 19,
+      "sha256": "1bdfe145cc0a58098d7460185ee2143a4a7e97adf3fbf121634383f25591c27a"
+    },
+    {
+      "path": "scripts/character_actor.gd",
+      "bytes": 19833,
+      "sha256": "f8ebfe2a98f4274d0a9b0fb1f64948a42e2f089c4d722433f09724e4f3506791"
+    },
+    {
+      "path": "scripts/character_actor.gd.uid",
+      "bytes": 20,
+      "sha256": "0a851c8dbc8e4d19231d76a6e8b7151d9c80a3a4044b1e37bc8285fa8f0d54da"
+    },
+    {
+      "path": "scripts/citizen_actor.gd",
+      "bytes": 2689,
+      "sha256": "d9a37c07443b1298de3d2a31b9f3439dd16865f4d9c4fbab3e992972629e5adb"
+    },
+    {
+      "path": "scripts/citizen_actor.gd.uid",
+      "bytes": 20,
+      "sha256": "b3275cb78fedeb2503b2f4d59416c83fa1f43f9c5e43bdb0d2d4889a894c2fd2"
+    },
+    {
+      "path": "scripts/compact_actor.gd",
+      "bytes": 3908,
+      "sha256": "66b1bdfdc046a6b24ffde652ae50887d69ef8fe016a49455a9c7a9ccff574811"
+    },
+    {
+      "path": "scripts/compact_actor.gd.uid",
+      "bytes": 20,
+      "sha256": "801bfd40e911161e654a7b7690dd240d95f22e6276797f66c8b42aca2a4fe32f"
+    },
+    {
+      "path": "scripts/crystal_meter.gd",
+      "bytes": 1316,
+      "sha256": "32aab9e57cc8b01960a289a1ffb94901f08c39c5183bb84f6876dcfa07a5f4d2"
+    },
+    {
+      "path": "scripts/crystal_meter.gd.uid",
+      "bytes": 20,
+      "sha256": "7393da79699099b08c5ecd6923bbb93c1b1000ce8cfb718a5a144e22d50f358d"
+    },
+    {
+      "path": "scripts/deck_editor.gd",
+      "bytes": 8012,
+      "sha256": "9f28cd09d8bcd8231935c262ff6e7fd79c492db80dc65e90176997add40ffe1f"
+    },
+    {
+      "path": "scripts/deck_editor.gd.uid",
+      "bytes": 19,
+      "sha256": "98792012f5a1fc8f0ea129610f6fd92cfab3bb0c87a9a1aac4e746cd3ede4fb1"
+    },
+    {
+      "path": "scripts/ecology_effects.gd",
+      "bytes": 2386,
+      "sha256": "c798f24dc475920ac95c96c91f9edcf36b6215070e47643ece99759e07a734cc"
+    },
+    {
+      "path": "scripts/ecology_effects.gd.uid",
+      "bytes": 20,
+      "sha256": "5a11610520fd268b36c679ed455556d8ac8a9a2209a8a772cbd4648a13f1c9b9"
+    },
+    {
+      "path": "scripts/ecology_rules.gd",
+      "bytes": 5669,
+      "sha256": "9a41dcab2748e89854d3073c6240e2ded4e16c54201fe096172f78da3ec0026e"
+    },
+    {
+      "path": "scripts/ecology_rules.gd.uid",
+      "bytes": 19,
+      "sha256": "d46ac158e07dee11d3a2d8dab14c3f7acb7e5c8be6e5597a1bebe457d332c83d"
+    },
+    {
+      "path": "scripts/enemy_life.gd",
+      "bytes": 1400,
+      "sha256": "12340ca07e25196e67b4ac9f33a39f8c8adc0c64d0642f3e78c5834343cd9bd8"
+    },
+    {
+      "path": "scripts/enemy_life.gd.uid",
+      "bytes": 20,
+      "sha256": "4acea247d607815fc2520f2abcba68a3eb06c2fb3d6e8060c804b5cf3dd1f68f"
+    },
+    {
+      "path": "scripts/fennec.gd",
+      "bytes": 4748,
+      "sha256": "931451fcd8d4cf79cb5482f646913f612019df2bf76eb97bc9ec5cc0b1953c7b"
+    },
+    {
+      "path": "scripts/fennec.gd.uid",
+      "bytes": 20,
+      "sha256": "2d1ebc3cacdee002d6c6b8157ce7e8032104a0a9d9aee1bb6c9bbe42705d9eb7"
+    },
+    {
+      "path": "scripts/forest_battle.gd",
+      "bytes": 19746,
+      "sha256": "eb0e4397f6f9e831a9d9741fccb989aa826e78945cb2c26543b0b8af3c86a4b1"
+    },
+    {
+      "path": "scripts/forest_battle.gd.uid",
+      "bytes": 20,
+      "sha256": "796a3e0e90bb1b9b0afcb1444577150a10a135f8e4503c58343a653329233d88"
+    },
+    {
+      "path": "scripts/forest_catalog.gd",
+      "bytes": 1441,
+      "sha256": "da63da4737cdd90d6e836da3f118ccd385f6069b1483e0525191292c5f6ca142"
+    },
+    {
+      "path": "scripts/forest_catalog.gd.uid",
+      "bytes": 19,
+      "sha256": "0f7e55b3fd258e16fa1ff921ac40ea58d3043ee895d17bdcffe39956f1265d2f"
+    },
+    {
+      "path": "scripts/forest_encounter.gd",
+      "bytes": 4351,
+      "sha256": "e2ffa93b17a93c30f482fb4059ec15ec1805ff7fd8108c7b474e8ee66a605642"
+    },
+    {
+      "path": "scripts/forest_encounter.gd.uid",
+      "bytes": 20,
+      "sha256": "6b2b2caf9e1a4b67f896c24130b00e0e36b41dd25d378f8f5dc39e24312bdca0"
+    },
+    {
+      "path": "scripts/forest_stage.gd",
+      "bytes": 19054,
+      "sha256": "6bf23f8bc66bc4add2bb67c4abbf848ff0719ee0e8863506b4fbd2889ecfb109"
+    },
+    {
+      "path": "scripts/forest_stage.gd.uid",
+      "bytes": 20,
+      "sha256": "68c2ee468aca9132cabf2de2f6363d97a365582b2bb98099f7c07f4b346b9eea"
+    },
+    {
+      "path": "scripts/illustrated_map.gd",
+      "bytes": 8475,
+      "sha256": "4ae0292b38cdba798b83d397129c836da02a217933f24f7ec49ad565455648ae"
+    },
+    {
+      "path": "scripts/illustrated_map.gd.uid",
+      "bytes": 20,
+      "sha256": "c5613c775157358a8dd1c3d1f20435a62ea3d3c3a91f184b543bd9f74a62af35"
+    },
+    {
+      "path": "scripts/interaction_path.gd",
+      "bytes": 5256,
+      "sha256": "4be6fd690ad052665e7e7f5e687ee89df0651ad53e391d370c6dd04f2587877f"
+    },
+    {
+      "path": "scripts/interaction_path.gd.uid",
+      "bytes": 20,
+      "sha256": "4e257cc09300e6137533b212b3a16f8137096a2a6682813f0a2019dd01f544d1"
+    },
+    {
+      "path": "scripts/painted_ambience.gd",
+      "bytes": 4875,
+      "sha256": "216095ca26d438aaec1a4e8be4b7ca7ed436e037dc59fadd7519d5f50ea177cc"
+    },
+    {
+      "path": "scripts/painted_ambience.gd.uid",
+      "bytes": 20,
+      "sha256": "c8481530a97a2266040569f8ce6eba4981fbefd8d65791685da64b1b18cb69ee"
+    },
+    {
+      "path": "scripts/painted_world.gd",
+      "bytes": 8713,
+      "sha256": "094f8b3218275396e81e4726c4cfe5adcfc982e635b79c8a0e882ab26d65b3c3"
+    },
+    {
+      "path": "scripts/painted_world.gd.uid",
+      "bytes": 20,
+      "sha256": "9c53b502f4cbfb64ed368a07d76c5e5fa7efb875c1587c7073172a8641e23964"
+    },
+    {
+      "path": "scripts/regional_encounter.gd",
+      "bytes": 1871,
+      "sha256": "d2df0731775e98b77c6332d35a1f23a70bdf4a01ae40da4db57750a201ba4f8f"
+    },
+    {
+      "path": "scripts/regional_encounter.gd.uid",
+      "bytes": 19,
+      "sha256": "72e2b750926a57b82b57a2542a920fe4591ed7397f3183cd02bd8f7be26a277a"
+    },
+    {
+      "path": "scripts/regional_enemies.gd",
+      "bytes": 1462,
+      "sha256": "0e565597809486add8369bd2359668957f6a87e5cfd4f007f474650df1826c5e"
+    },
+    {
+      "path": "scripts/regional_enemies.gd.uid",
+      "bytes": 20,
+      "sha256": "e582f7d2334b92a77b376f39d4434113514035c24b28ff444bdcd17f94accfec"
+    },
+    {
+      "path": "scripts/reward_emblem.gd",
+      "bytes": 1060,
+      "sha256": "875815f32b69b24074752baa9454aa197c4d2c941183f33af59b3b8af0d62042"
+    },
+    {
+      "path": "scripts/reward_emblem.gd.uid",
+      "bytes": 20,
+      "sha256": "9c3397a5299c1e5a8b43f7f93112c00dc7904ef1cd6a035bd780f4ff4456fb95"
+    },
+    {
+      "path": "scripts/special_effects.gd",
+      "bytes": 5234,
+      "sha256": "cbad7ce482f826e79ac4bc5639f827cd6f1190a969a760f4f319320e92d61099"
+    },
+    {
+      "path": "scripts/special_effects.gd.uid",
+      "bytes": 19,
+      "sha256": "2ec86021cf21bfec7df604791cd6a5d43a370323e1631689059ce517a97c2b6c"
+    },
+    {
+      "path": "scripts/strategy_cards.gd",
+      "bytes": 9633,
+      "sha256": "30693920c79103b4b31c79dbc5089f371620e4b5dc457ccfd85dfeade188f26b"
+    },
+    {
+      "path": "scripts/strategy_summon_fx.gd",
+      "bytes": 1807,
+      "sha256": "bb2cd2e2275a89071128a925f67b8bda7e35407dbb42c79aa21465216f8b3699"
+    },
+    {
+      "path": "scripts/touch_hud.gd",
+      "bytes": 3419,
+      "sha256": "bd19690accedf3d972b5405c603661be502c2f95bb7ee164182ed20c398e1fdf"
+    },
+    {
+      "path": "scripts/touch_hud.gd.uid",
+      "bytes": 20,
+      "sha256": "35b1fd6762d6157295993f34d5cf997b023a043f5b3b6885a761a49542e7edfd"
+    },
+    {
+      "path": "scripts/world_app.gd",
+      "bytes": 55303,
+      "sha256": "aeeb217141bf4aa83bc532e6d9ad91bfad52a70363857b6803c1f57a1db67e45"
+    },
+    {
+      "path": "scripts/world_app.gd.uid",
+      "bytes": 20,
+      "sha256": "70e8f205dc2d720b42114b40170efbdbb13314ae558a35fd6f47f304f7e468a6"
+    },
+    {
+      "path": "scripts/world_catalog.gd",
+      "bytes": 6001,
+      "sha256": "b5245e1f0b8a35784781944af6ae1407afcd25945d199022cdd4eb336185700a"
+    },
+    {
+      "path": "scripts/world_catalog.gd.uid",
+      "bytes": 20,
+      "sha256": "2865a32be8aa20f17149bdd647c97ae7f6a68cac5d2ad542b397ad402490b471"
+    },
+    {
+      "path": "scripts/world_clock.gd",
+      "bytes": 2775,
+      "sha256": "88f273b6cf9588b3a5eafc420148a57a54093a14a74c2cca1133d1078cf404ec"
+    },
+    {
+      "path": "scripts/world_clock.gd.uid",
+      "bytes": 20,
+      "sha256": "f41c0ccd8fac656b1edd91fed49d8a88cb186da1aef6a288928987c01d89d828"
+    },
+    {
+      "path": "scripts/world_residents.gd",
+      "bytes": 1482,
+      "sha256": "456346e7dbc273e7758760ab5fffbd1282cf1e63f2d92148ed4480e38ed8ac12"
+    },
+    {
+      "path": "scripts/world_residents.gd.uid",
+      "bytes": 19,
+      "sha256": "f06243bba5e497cf018a814772486a4b8a633a11f9227015ef8d4b69e23a348d"
+    },
+    {
+      "path": "scripts/world_stage.gd",
+      "bytes": 34704,
+      "sha256": "3616bc4f54de941cc0d8294ea9e916334465f74271b2a92b001e258998654760"
+    },
+    {
+      "path": "scripts/world_stage.gd.uid",
+      "bytes": 20,
+      "sha256": "e27f63b0b0366a528015cfe188541a7ef3785a8a35fc6f6d797aff8e69467c48"
+    },
+    {
+      "path": "shaders/battle_portrait.gdshader",
+      "bytes": 1098,
+      "sha256": "43bdbd6d82aa115a58378ab117c95ce0140ae550737375664e29305568d3f2b3"
+    },
+    {
+      "path": "shaders/battle_portrait.gdshader.uid",
+      "bytes": 19,
+      "sha256": "5691abd467aa8fdf89a3db63ca197f99bf358c43d3b2ccab49e847501dd7764b"
+    },
+    {
+      "path": "shaders/contact_shadow.gdshader",
+      "bytes": 354,
+      "sha256": "921e6a7f010cee887df072337e8c61330957d8a56704a806feda815c47e6c882"
+    },
+    {
+      "path": "shaders/contact_shadow.gdshader.uid",
+      "bytes": 19,
+      "sha256": "717b315b32a8579b54d32f4d75757edc40238b199d1250e8a33f23663dc87ecc"
+    },
+    {
+      "path": "shaders/firelight.gdshaderinc",
+      "bytes": 816,
+      "sha256": "f8e67001a0edf4bc8fb8a1f2e739d44088480b392404c93a7d3f4c14c598a263"
+    },
+    {
+      "path": "shaders/firelight.gdshaderinc.uid",
+      "bytes": 20,
+      "sha256": "58b610dead78ecb3e24fc52b27fa47971b02d848840fc84efe8775ef237cc339"
+    },
+    {
+      "path": "shaders/flame_flipbook.gdshaderinc",
+      "bytes": 773,
+      "sha256": "22e06aec7205c9439816b01bec393f4a362bab1d378f35b294bce30e5db7a031"
+    },
+    {
+      "path": "shaders/flame_flipbook.gdshaderinc.uid",
+      "bytes": 20,
+      "sha256": "0060a3eb1f69a772c12319eff03abc17c9a987d7decfc4505a68523b28323d76"
+    },
+    {
+      "path": "shaders/forest_panorama.gdshader",
+      "bytes": 3751,
+      "sha256": "c900593d997b8de5e0ff3cd1ecdfccae454cf03aa9ea75f628204a19967f0c03"
+    },
+    {
+      "path": "shaders/forest_panorama.gdshader.uid",
+      "bytes": 20,
+      "sha256": "a005fc33114835d971ca3c144a83b4c45bdf53b76244b15737822fc48101c7a4"
+    },
+    {
+      "path": "shaders/living_flame.gdshader",
+      "bytes": 755,
+      "sha256": "cd007161601f3b77e12ecff0248dd5651d5ee87607fb990aa2de50d376ef6aaa"
+    },
+    {
+      "path": "shaders/living_flame.gdshader.uid",
+      "bytes": 20,
+      "sha256": "ad7fb2d3d31a875be95c03e62675a76f8b95c87270d0c987864b975b36333c9e"
+    },
+    {
+      "path": "shaders/painted_ambience.gdshader",
+      "bytes": 3406,
+      "sha256": "461b17bd2fb75334a14cfc0f909f2ffa9fb288c67fc23175b9e16f03a27192a7"
+    },
+    {
+      "path": "shaders/painted_ambience.gdshader.uid",
+      "bytes": 20,
+      "sha256": "33807afe2222fb2a43c3bfd65fbb871f1b94f3554786cfff5f66f3d567103f37"
+    },
+    {
+      "path": "shaders/painted_character.gdshader",
+      "bytes": 2377,
+      "sha256": "92222bc5150dc003124cc48150680a0d5c707a656ccded5d4cc42884fe70ba4e"
+    },
+    {
+      "path": "shaders/painted_character.gdshader.uid",
+      "bytes": 20,
+      "sha256": "d687d5182c74069fe9804542d0529dd773f2e0626c6db4269d7ef133b3133917"
+    },
+    {
+      "path": "shaders/painted_wood.gdshader",
+      "bytes": 380,
+      "sha256": "58a1ba4f179f99121f10836761c56bf219eea9eeaf275d7ce5b7e5d8e7413f0e"
+    },
+    {
+      "path": "shaders/painted_wood.gdshader.uid",
+      "bytes": 19,
+      "sha256": "a462fc044bd34b95012196398cad0dcb24c732cfa2be2c803a2c7ec5fbb40d52"
+    },
+    {
+      "path": "shaders/shadow_demon.gdshader",
+      "bytes": 547,
+      "sha256": "57a7588f42828d8a971a1bd5d35bf2814910981cfc4cbe5d34bb294d3c23c0b8"
+    },
+    {
+      "path": "shaders/shadow_demon.gdshader.uid",
+      "bytes": 20,
+      "sha256": "68cb1c21e90204b4ccd1e8821f78fb99ca667cc5e1641565d216b10a2db13c13"
+    },
+    {
+      "path": "shaders/star_aura.gdshader",
+      "bytes": 601,
+      "sha256": "fadf75a206bbefcfb270e76da2f71859940590ad48acf23f36d03c59d352360e"
+    },
+    {
+      "path": "shaders/star_aura.gdshader.uid",
+      "bytes": 19,
+      "sha256": "b554a3d6b57207f8871db7c61bd136fc3332cbdab5fc865d88ee38b8fcc0a09a"
+    },
+    {
+      "path": "shaders/water_flow.gdshaderinc",
+      "bytes": 1046,
+      "sha256": "3182b3ffc415e180b02fbb6fff20f478961499f8fbde4cdab8a8cdec61ecdcc0"
+    },
+    {
+      "path": "shaders/water_flow.gdshaderinc.uid",
+      "bytes": 20,
+      "sha256": "0168e05e9db4f831c4f7f03ef44124e461b2ab8007e0cb528c084dda92e6c9bf"
+    }
+  ]
+}

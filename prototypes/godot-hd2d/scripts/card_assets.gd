@@ -6,7 +6,7 @@ static var spirits: Dictionary={}
 static var wildlife: Dictionary={}
 static var helpers: Dictionary={}
 
-static func accent(card: Dictionary) -> Color:return Color(COLORS.get(card.get("class","all"),"8ab9ca"))
+static func accent(card: Dictionary) -> Color:return Color(str(card.hex)) if card.get("strategy",false) else Color(COLORS.get(card.get("class","all"),"8ab9ca"))
 
 static func form_info(form: String) -> Dictionary:
  if helpers.is_empty():helpers=JSON.parse_string(FileAccess.get_file_as_string("res://data/helper_animations_v060.json"))
@@ -34,6 +34,8 @@ static func movement_style(form: String) -> String:return str(form_info(form).st
 
 static func texture(card: Dictionary) -> AtlasTexture:
  var atlas:=AtlasTexture.new()
+ if card.get("strategy",false):
+  atlas.atlas=load(str(card.art_asset));atlas.region=Rect2(Vector2.ZERO,atlas.atlas.get_size());return atlas
  if card.get("form","")!="":return form_texture(card.form)
  if ART.has(card.id):
   atlas.atlas=load("res://assets/combat/card-art-v050.png")
@@ -58,4 +60,5 @@ static func texture(card: Dictionary) -> AtlasTexture:
  var r: Array=info.regions[12];atlas.atlas=load(info.asset);atlas.region=Rect2(r[0],r[1],r[2],r[3]);return atlas
 
 static func kind_label(card: Dictionary) -> String:
+ if card.get("strategy",false):return str(card.get("volk",""))+" · "+("MYTHISCH · 1×" if card.get("rare",false) else str(card.get("rarity","HELFER")))
  return "SPEZIAL · EINMAL IM DECK" if card.get("rare",false) else "HELFER · SCHUTZ" if card.get("taunt",false) else "HELFER" if card.kind=="minion" else "ZAUBER"
