@@ -295,6 +295,12 @@ Das ist eine Gestaltungsvorschau, kein Einbau in `game`; die Prüfentscheidung z
 Kampf und Engine bleibt gültig. Details und nächste Schritte stehen in README und
 `EVOLUTION.md` (`card-minions-design-v1`).
 
+Die anschließend beauftragte Leuchtfeuer-Beschwörungsvorschau läuft ebenfalls
+nur im Wesenbuch: drei Formstufen, 9,6 Sekunden für Mythische, Kartenfarbe/Glanz,
+bewegungsarme Standbilder und austauschbare Code-/Video-Darsteller. Vertrag und
+Grenzen stehen in `BESCHWOERUNG.md`; echte Videos oder App-Animationen sind noch
+nicht enthalten. Das ändert keine Kampf-/Engineentscheidung und keine Kartenwerte.
+
 Der erste Gradle-Aufruf fand ohne SDK-Umgebungsvariable keinen SDK-Pfad. Wiederholung
 mit den lokal vorhandenen Installationen (PowerShell):
 

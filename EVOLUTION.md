@@ -669,6 +669,47 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-18 - Leuchtfeuer beschwören, Darsteller austauschen (card-summon-preview-v1)
+
+- **DOCUMENTED INTENT:** Martin beauftragt ausdrücklich den angekündigten nächsten
+  Schritt: Leuchtfeuer-Beschwörungsvorschau mit drei Formstufen, längerer mythischer
+  Sequenz und später austauschbarem Code-/Video-Darsteller.
+- **FACT / Nutzerwirkung:** Alle 15 Leuchtfeuer-Entwürfe und 36 zugehörigen Monatskarten
+  besitzen einen Beschwören-Button. Eine gemeinsame 480×270-Lichtvorlage steigert
+  Kreise, Strahl und Funken nach Form (3,2/4,0/4,8 s); mythische Karten erhalten
+  9,6 s mit zusätzlichen Aufbauphasen. Farbe und Glanz stammen aus der Karte.
+  Wiederholen ersetzt den laufenden Ablauf, Escape/Schließen geben den Fokus zurück.
+- **Produktentscheidung / Grenzen:** Rein visuelle Vorschau ohne Kampfereignis,
+  Erwerb, Stat-/Besitzänderung oder neue Enginefestlegung. Bewegungsarme Ansicht
+  zeigt sofort ein Standbild und berücksichtigt die Systemeinstellung. Verbergen
+  der Seite stoppt den Ablauf. Keine Tonspur, Bildschirmblitze oder Endlosschleife.
+- **Architektur / Betroffen:** `beschwoerung.js` trennt unveränderlichen Plan,
+  Zeitfunktion, Code-/Video-Darsteller und Spieler mit gemeinsamem Promise-/
+  AbortSignal-Vertrag. Lokale Clips können später registriert werden; Fehler
+  führen zu Code, Abbruch niemals. Nach dem Clip bleibt die Kartenillustration.
+  Nur Kartenschmiede, Exporte, Tests, README, `BESCHWOERUNG.md` und `ITOEVA2.md`.
+  Keine Kotlin-/Room-/Preference-/Workflow-Änderung; 616 Kartenbytes unverändert.
+- **TESTED BEHAVIOR:** 58 Python-Tests, 13 neue Node-Ablauftests und bestehender
+  Galerie-Scripttest erfolgreich. Tests prüfen Zeit-/Form-/Mythisch-/Glanzregeln,
+  Bildfehler, bewegungsarme Ansicht, Abbruch während Bildladen/Animation/Video,
+  Videofehler, Fallback und parallele Startversuche ohne verwaiste Frames.
+  Browser: normale/reife/Urform, mythischer Lauf bis Abschluss, Wiederholung,
+  Standbilder aller 15 Formen, Fokus-Rückgabe, Schließen und Escape auf 360-Pixel-
+  Mobilbreite ohne seitlichen Überlauf geprüft; keine Scriptfehler.
+  Gradle-Test und `compileGameKotlin` erfolgreich (64 unveränderte Tasks aus dem
+  Cache des bereits erfolgreichen Laufs mit 1.415 Unit-Tests).
+- **UNVERIFIED / OPEN DECISION:** Kein echter Videoclip/Codec oder Android-GPU-Test.
+  Browserprüfung über localhost; `file:`-Navigation ist im App-Browser gesperrt.
+  Die vollständige Ordnerkopie enthält nur relative Bild-/Scriptverweise.
+  Glanz ist synthetisch geprüft (unter den 36 aktuellen Leuchtfeuer-Karten keine
+  Glanzkarte). Andere Volksvorlagen und Spielhelfer-Animationen fehlen noch.
+  Kampf, Gruppe/Raster, Engine, Vergabe und Bezahlung bleiben offen.
+- **Migration / Rücksetzung:** Keine Migration. Script und Dialog/Buttons aus
+  Vorlage/Generator samt Export entfernen, dann `wesen.py` neu ausführen. Katalog
+  und erworbene Ausgaben bleiben unverändert lesbar. Der frühere Stand „keine
+  Animationen“ gilt weiter für die App, nicht mehr für die Gestaltungsvorschau.
+  Nächster Schnitt: Werkvolk samt Werkling mit demselben Darstellervertrag.
+
 ### 2026-10-18 - Leuchtfeuer-Kartenwesen und erste Spielhelfer (card-minions-design-v1)
 
 - **DOCUMENTED INTENT:** Martin beauftragt die Fortsetzung der Karten- und

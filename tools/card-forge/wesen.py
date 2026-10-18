@@ -169,6 +169,20 @@ def bild(wesen: dict) -> str:
 
 
 def buch(wesen: list[dict], karten: list[dict]) -> str:
+    def illustration(w, karte=None):
+        img = f'<img src="wesen/{w["id"]}.svg" alt="{escape(w["name"])}" width="480" height="270"/>'
+        if w["typ"] == "Spielhelfer":
+            return img
+        daten = dict(volk=w["volk"], form=w["form"], hex=w["hex"],
+                     bild=f'wesen/{w["id"]}.svg', name=w["name"], seltenheit="", glanz="false")
+        if karte:
+            daten.update(name=karte["name"], hex=karte["hex"], seltenheit=karte["seltenheit"],
+                         glanz=str(karte["glanz"]).lower())
+        attrs = ' '.join(f'data-{k}="{escape(v, quote=True)}"' for k, v in daten.items())
+        return (f'<button type="button" class="beschwoeren" {attrs} '
+                f'aria-label="{escape(daten["name"], quote=True)} beschwören">{img}'
+                '<span>Beschwören ✧</span></button>')
+
     felder = []
     for w in wesen:
         verbunden = [k for k in karten if (k["art"], k["form"]) == (w["name"], w["form"])]
@@ -178,7 +192,7 @@ def buch(wesen: list[dict], karten: list[dict]) -> str:
         quelle = w.get("quelle", {}).get("text", "Artentwurf · keine zusätzliche Monatskarte")
         felder.append(f'''<article data-typ="{w['typ']}" data-form="{w['form'] or ''}">
 <p class="eyebrow">{escape(w['volk'])} · {w['form'] or 'Spielhelfer'}</p>
-<img src="wesen/{w['id']}.svg" alt="{escape(w['name'])}" width="480" height="270"/>
+{illustration(w)}
 <h3>{escape(w['name'])}</h3><p>{werte}</p><p class="muted">{escape(quelle)}</p></article>''')
     for k in karten:
         w = next(w for w in wesen if (w["name"], w["form"]) == (k["art"], k["form"]))
@@ -186,7 +200,7 @@ def buch(wesen: list[dict], karten: list[dict]) -> str:
         merkmale = ' · '.join(map(escape, k["merkmale"]))
         felder.append(f'''<article data-typ="Monatskarte" data-form="{k['form']}" class="{'glanz' if k['glanz'] else ''}">
 <p class="eyebrow">{escape(k['seltenheit'])} · {k['kosten']} Kristalle</p>
-<img src="wesen/{w['id']}.svg" alt="{escape(k['art'])}" width="480" height="270"/>
+{illustration(w, k)}
 <h3>{escape(k['name'])}</h3><p>{escape(k['art'])} · {k['form']}</p>
 <p class="stats">{k['angriff']} Angriff <span>{k['leben']} Leben</span></p>
 <p>{merkmale}</p><p class="muted">{'<br/>'.join(texte)}</p>
@@ -215,6 +229,8 @@ def erzeugen(ziel: Path = HIER / "out") -> None:
         zweck="Gestaltungsentwürfe und bestehende Regelvorschläge, keine Kampf-Runtime",
         wesen=oeffentlich), ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     (ziel / "wesenbuch.html").write_text(buch(wesen, karten), encoding="utf-8", newline="\n")
+    (ziel / "beschwoerung.js").write_text((HIER / "beschwoerung.js").read_text(
+        encoding="utf-8"), encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

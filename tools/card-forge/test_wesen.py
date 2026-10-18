@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+from html.parser import HTMLParser
 from pathlib import Path
 
 from katalog import lese_katalog
@@ -62,6 +63,24 @@ class WesenTest(unittest.TestCase):
         self.assertNotIn('<script>alert', html)
         self.assertNotIn('<img src=x', html)
         self.assertIn('&lt;script&gt;', html)
+
+    def test_beschwoerungsbuttons_uebernehmen_aktuelle_form_farbe_und_glanz(self):
+        buttons = []
+        class Parser(HTMLParser):
+            def handle_starttag(self, tag, attrs):
+                d = dict(attrs)
+                if tag == 'button' and d.get('class') == 'beschwoeren':
+                    buttons.append(d)
+        Parser().feed(buch(self.wesen, self.karten))
+        self.assertEqual(len(buttons), 15 + len(self.karten))
+        for karte in self.karten:
+            d = next(b for b in buttons if b['data-name'] == karte['name'])
+            self.assertEqual(d['data-form'], karte['form'])
+            self.assertEqual(d['data-hex'], karte['hex'])
+            self.assertEqual(d['data-glanz'], str(karte['glanz']).lower())
+            self.assertEqual(d['data-seltenheit'], karte['seltenheit'])
+            self.assertTrue((HIER / 'out' / d['data-bild']).is_file())
+        self.assertFalse(any(b['data-name'] in {'Werkling', 'Erzsplitter'} for b in buttons))
 
     def test_svg_sind_eigenstaendig_und_ohne_aktive_inhalte(self):
         ns = '{http://www.w3.org/2000/svg}'

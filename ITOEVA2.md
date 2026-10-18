@@ -44,9 +44,12 @@ verknüpft Gestaltungs-IDs, SVGs und vorhandene Karten-IDs. Erneute Erzeugung ü
 gespeicherte Statkorrekturen im aktuellen Katalog; die Besitzentscheidung bleibt gültig.
 
 Dies ist ein engineunabhängiges, offline betrachtbares Entwurfsbuch. Es ersetzt
-nicht das zurückgestellte Kartenbuch im Spielmenü. Beschwörungsanimationen, Video-
-Darsteller, Laufzeit-Minions und die übrigen zwölf Völker sind noch nicht umgesetzt.
-Nächster Schritt ist eine Leuchtfeuer-Beschwörungsvorschau; Kampf und Engine bleiben offen.
+nicht das zurückgestellte Kartenbuch im Spielmenü. Die inzwischen umgesetzte
+[Leuchtfeuer-Beschwörung](tools/card-forge/BESCHWOERUNG.md) läuft als Browservorschau:
+drei Formstufen, längere mythische Sequenz, Kartenfarbe/Glanz und bewegungsarme
+Standbilder. Code- und Videodarsteller teilen einen Abbruch-/Ablaufvertrag;
+echte Videoclips, Laufzeit-Minions und die übrigen zwölf Völker fehlen noch.
+Nächster Schritt ist Werkvolk samt Werkling; Kampf und Engine bleiben offen.
 
 ## Aufbau
 

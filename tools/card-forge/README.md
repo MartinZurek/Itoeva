@@ -48,9 +48,15 @@ nicht. Erworbene Ausgaben bleiben im bisherigen Referenzmodell getrennt; das Buc
 zeigt den aktuellen Monatskatalog und keine persönliche Sammlung.
 Die Quellen und Exporte dieses Schritts enthalten keine neue Faktoreingabe.
 
-Nächster Schnitt: Leuchtfeuer-Beschwörung anhand dieser Silhouetten als unabhängigen
-Vorschauablauf mit austauschbarem Darsteller (Code/Video) entwickeln. Kampf und
-Engine bleiben offen. Für die übrigen zwölf Völker fehlen noch eigene Illustrationen.
+Die [Leuchtfeuer-Beschwörungsvorschau](BESCHWOERUNG.md) ist jetzt im Wesenbuch
+abspielbar: 3,2/4,0/4,8 Sekunden nach Form, 9,6 Sekunden für mythische Karten,
+Lichtfarbe nach Karte und Glanzpunkte. Wiederholen, Escape/Schließen und bewegungsarme
+Standbilder sind implementiert. Der austauschbare Code-/Video-Darsteller fällt
+bei Videofehlern auf Code zurück; echte Clips sind noch nicht enthalten.
+`wesen.py` kopiert das benötigte Script mit in `out/`, sodass die Vorschau auch
+als lokaler Ordner ohne Server funktioniert. Keine Spieleintegration.
+Nächster Schnitt: Werkvolk samt Werkling als weitere Volksvorlage. Kampf und Engine
+bleiben offen. Für die übrigen zwölf Völker fehlen noch eigene Illustrationen.
 
 | Faktor | wird zu | Regel |
 |---|---|---|
@@ -178,6 +184,7 @@ python tools/card-forge/test_forge.py
 python -m unittest discover -s tools/card-forge -p "test_*.py" -v
 python tools/card-forge/katalog.py tools/card-forge/out/karten.json
 node tools/card-forge/test_galerie.cjs
+node --test tools/card-forge/test_beschwoerung.cjs
 ```
 
 Die Python-Tests verwenden ausschließlich erfundene Eingabezeilen und prüfen auch die
