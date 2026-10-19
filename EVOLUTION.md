@@ -7161,7 +7161,9 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Profile, Standorte, Decks und Kampfschlüssel werden nicht gelöscht/umgebucht.
 - **TESTED BEHAVIOR:** Auswahl, Profilbestand, gerichtete Bewegung, Sprint/Landung
   und Helferidentität werden in character_polish.gd geprüft. Abschließende
-  Ergebnisse nach Wiederherstellung der Arbeitsumgebung im PR373.
+  Ergebnisse nach Wiederherstellung: 1073 Figurenchecks auch OpenGL, 88 Welt-,
+  690 Bewohner-, 115 Bewegungs-/Licht-, 3152 Karten- und 24 Touchchecks bestanden.
+  Der ältere Bewohnertest meldet beim Beenden zwei noch verwendete Ressourcen.
 - **UNVERIFIED:** Telefon-FPS/GPU und menschliche Animationsabnahme; keine neue APK.
 - **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md; PR373 auf dem
   unveränderten Kartenstand0.11.0. Release-/Signierinfrastruktur bleibt erhalten.

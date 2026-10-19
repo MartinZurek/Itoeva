@@ -45,7 +45,10 @@ der Shader begrenzt CompactActor-Zellen auf diese Konturen. Kein Neuzeichnen dur
 `tests/character_polish.gd` prüft vier Startfiguren, Erhalt alter Profile,
 Dialoge/Tagespläne, alle acht Identitäten, Blickrichtungen/Gangphasen, Starlits Aura,
 Noctis tatsächlichen Sprint samt Landung sowie die Helferdarstellung einschließlich
-aller 616 Strategiekarten. Weitere Ergebnisse stehen im PR.
+aller 616 Strategiekarten. Nach Wiederherstellung: 1.073 Figurenchecks (auch Mesa/OpenGL), 88 Vollweltchecks,
+690 Bewohnerchecks, 115 Bewegungs-/Lichtchecks, 3.152 Kartenchecks und 24 Touchchecks
+jeweils ohne Prüffehler. Der ältere Bewohnertest meldet beim Beenden zwei noch
+verwendete Ressourcen; seine 690 fachlichen Checks bestehen.
 
 Vor der Unterbrechung wurden 1.073 Checks auch unter echtem Mesa/OpenGL bestanden und
 79 Spielbilder geprüft. Nach dem Zurücksetzen der temporären Umgebung wurden der Code
