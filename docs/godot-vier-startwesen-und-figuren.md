@@ -58,3 +58,11 @@ Keine Änderung an Version, Paket, Signatur, Workflow oder Drive-Auslieferung.
 
 Rückbau: den gesamten Figuren-/Auswahl-PR zurücknehmen. Die alten PNGs und alten
 Spielstandschlüssel sind erhalten. Keine native Room-/LAS-/Reminder-Migration.
+
+## APK-Auftrag 0.12.0
+
+Martin beauftragt am 19.10.2026 ausdrücklich die APK. AndroidTest 0.12.0/Code24,
+Paket und bestehendes Testzertifikat bleiben gleich. Der vorhandene Build-/Drive-Weg
+prüft das neue Runtime-Manifest, Figurenregressionen und tatsächlich enthaltene
+Grafikressourcen und ersetzt dieselbe freigegebene Download-Datei. Ein erfolgreicher
+Baulauf samt Signatur-/Remote-Prüfsummenabgleich ist für die Auslieferung maßgeblich.

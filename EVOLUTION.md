@@ -7167,3 +7167,15 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:** Telefon-FPS/GPU und menschliche Animationsabnahme; keine neue APK.
 - **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md; PR373 auf dem
   unveränderten Kartenstand0.11.0. Release-/Signierinfrastruktur bleibt erhalten.
+
+### 2026-10-19 – APK-Auftrag 0.12.0 für vier Startwesen
+
+- **DOCUMENTED INTENT:** Martin verlangt nach dem Figuren-PR ausdrücklich die APK.
+- **FACT:** AndroidTest0.12.0/Code24, neues Runtime-Manifest mit505 Dateien und
+  bestehender signierter GitHub-/Drive-Lieferweg vorbereitet. Figurenregressionen
+  und Prüfung der neuen Grafikressourcen im tatsächlichen Export ergänzt.
+- **TESTED BEHAVIOR:** YAML/Python/Shell und Hashmanifest lokal geprüft; vollständige
+  Regressionen, OpenGL und Signaturprüfung im Baulauf. Liefernachweis folgt im PR373.
+- **UNVERIFIED:** Lieferung vor erfolgreichem Export/Upload; Telefon-FPS/GPU und
+  menschliche Animationsabnahme bleiben offen. Keine Änderung von Schlüssel/Konto.
+- **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md, AndroidTest0.12.0, PR373.
