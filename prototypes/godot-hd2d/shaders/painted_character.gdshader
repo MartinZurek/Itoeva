@@ -3,6 +3,7 @@ render_mode unshaded, cull_disabled, depth_test_disabled, depth_draw_never;
 #include "res://shaders/firelight.gdshaderinc"
 
 uniform sampler2D atlas : source_color, filter_linear, repeat_disable;
+uniform vec4 frame_clip = vec4(0.0, 0.0, 1.0, 1.0);
 uniform sampler2D furniture_mask : filter_nearest, repeat_disable;
 uniform bool has_mask = false;
 uniform vec3 foot;
@@ -25,6 +26,7 @@ void vertex() {
 }
 
 void fragment() {
+	if (any(lessThan(UV, frame_clip.xy)) || any(greaterThan(UV, frame_clip.xy + frame_clip.zw))) { discard; }
 	vec4 paint = texture(atlas, UV) * COLOR;
 	if (paint.a < 0.12) { discard; }
 	if (has_mask) {

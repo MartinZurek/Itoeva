@@ -1,0 +1,25 @@
+{
+  "commit": "edf10da3df1852485e5e7b811dc979dc6fb26ed9",
+  "run_id": 39284869914,
+  "job_id": 118167863169,
+  "file_id": "148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX",
+  "filename": "Itoeva_Godot_Test_v0.12.0.apk",
+  "bytes": 176142974,
+  "sha256": "54b384beeb4e3b0dd56366b45a7ff92707897dfd8704f01c8cb37ea36de6320a",
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "version": "0.12.0",
+  "version_code": 24,
+  "certificate_sha256": "30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc",
+  "starter_species": [
+    "mosslyn",
+    "nocti",
+    "starlet",
+    "wyrmling"
+  ],
+  "card_count": 616,
+  "workflow_conclusion": "success",
+  "signature_verified": true,
+  "remote_size_and_checksum_verified": true,
+  "drive_url": "https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk",
+  "source": "Erfolgreiche Schritte und Abschlussbericht aus GitHub-Job118167863169"
+}

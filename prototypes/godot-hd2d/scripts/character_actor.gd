@@ -103,13 +103,7 @@ func _ready() -> void:
 	sprite.material_override = painted_material
 	sprite.offset = Vector2(0, 62)
 	add_child(sprite)
-	if species=="starlet":
-		aura=MeshInstance3D.new()
-		var quad:=QuadMesh.new();quad.size=Vector2(1,1);aura.mesh=quad
-		aura_material=ShaderMaterial.new();aura_material.shader=load("res://shaders/star_aura.gdshader")
-		aura_material.render_priority=9;aura.material_override=aura_material
-		aura.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(aura)
+	_setup_aura()
 	shadow = MeshInstance3D.new()
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(1.15, 0.62)
@@ -122,6 +116,19 @@ func _ready() -> void:
 	get_parent().add_child.call_deferred(shadow)
 	set_world_scale(base_pixel_size, jump_height, body_pixel_size)
 	_update_frame(false)
+
+func _setup_aura() -> void:
+	if species != "starlet": return
+	aura = MeshInstance3D.new()
+	var quad := QuadMesh.new()
+	quad.size = Vector2.ONE
+	aura.mesh = quad
+	aura_material = ShaderMaterial.new()
+	aura_material.shader = load("res://shaders/star_aura.gdshader")
+	aura_material.render_priority = 9
+	aura.material_override = aura_material
+	aura.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(aura)
 
 func set_world_scale(pixel_size: float, leap: float, footprint: float = -1.0) -> void:
 	base_pixel_size = pixel_size
@@ -422,7 +429,7 @@ func _physics_process(delta: float) -> void:
 	# Ein Zyklus entspricht einer zur Zeichnung passenden Strecke, nicht der Wanduhr.
 	if moving:
 		gait += distance / ((3.3 if running else 1.7) * maxf(body_pixel_size / 0.020, 0.5))
-	hover = move_toward(hover, (0.13 + 0.035 * sin(gait * TAU)) if species == "hootlet" and moving and running and is_on_floor() else 0.0, delta * 1.0)
+	hover = move_toward(hover, _hover_target(moving), delta * 1.6)
 	if jump_clock >= 0.0:
 		jump_clock += delta
 		if is_on_floor():
@@ -430,6 +437,9 @@ func _physics_process(delta: float) -> void:
 			recovery_clock = 0.0
 	_update_frame(moving)
 	_update_shadow()
+
+func _hover_target(moving: bool) -> float:
+	return (0.13 + 0.035 * sin(gait * TAU)) if species == "hootlet" and moving and running and is_on_floor() else 0.0
 
 func _update_frame(moving: bool) -> void:
 	var depth := absf(facing.y) > absf(facing.x)

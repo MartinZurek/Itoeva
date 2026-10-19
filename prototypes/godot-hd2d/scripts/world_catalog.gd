@@ -1,5 +1,6 @@
 extends RefCounted
 
+const STARTERS := ["mosslyn", "nocti", "starlet", "wyrmling"]
 const PITCH := 35.0
 const IMAGE_HEIGHT := 10.0
 const ORIGIN_V := 0.84

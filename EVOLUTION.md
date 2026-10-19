@@ -7148,3 +7148,34 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   und Remote-Prüfsummenabgleich belegt; Android-GPU/FPS und menschliche Abnahme offen.
 - **ÜBERGABE:** PR372, docs/godot-strategische-karten-v110.md; Version/Manifest und
   Kartenprüfungen im bestehenden Bauweg aktualisiert, keine neue Signierinfrastruktur.
+
+### 2026-10-19 – Vier Startwesen, Figurenqualität und Helferidentität
+
+- **DOCUMENTED INTENT:** Martin beschränkt die Startauswahl auf Mooslyn, Nocti,
+  Starlet und Wyrmling; übrige Wesen bleiben ansprechbare Bewohner. Designs
+  verbessern, Mooslyn sprinten und Nocti im schnellen Modus fliegen lassen.
+- **FACT:** Sechs neue Welt-/Kampfatlanten, zwei gerichtete Lauf-/Flugatlanten,
+  erhaltene Bewohnerpläne und Dialoge, Starlits Eigenleuchten im CompactActor.
+  Form-/Tierhelfer werden beim Angriff nicht länger zum Herkunftshelden.
+- **MIGRATION:** Nur ungültige Startauswahl fällt auf Mooslyn zurück; alte
+  Profile, Standorte, Decks und Kampfschlüssel werden nicht gelöscht/umgebucht.
+- **TESTED BEHAVIOR:** Auswahl, Profilbestand, gerichtete Bewegung, Sprint/Landung
+  und Helferidentität werden in character_polish.gd geprüft. Abschließende
+  Ergebnisse nach Wiederherstellung: 1073 Figurenchecks auch OpenGL, 88 Welt-,
+  690 Bewohner-, 115 Bewegungs-/Licht-, 3152 Karten- und 24 Touchchecks bestanden.
+  Der ältere Bewohnertest meldet beim Beenden zwei noch verwendete Ressourcen.
+- **UNVERIFIED:** Telefon-FPS/GPU und menschliche Animationsabnahme; keine neue APK.
+- **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md; PR373 auf dem
+  unveränderten Kartenstand0.11.0. Release-/Signierinfrastruktur bleibt erhalten.
+
+### 2026-10-19 – APK-Auftrag 0.12.0 für vier Startwesen
+
+- **DOCUMENTED INTENT:** Martin verlangt nach dem Figuren-PR ausdrücklich die APK.
+- **FACT:** AndroidTest0.12.0/Code24, neues Runtime-Manifest mit505 Dateien und
+  bestehender signierter GitHub-/Drive-Lieferweg vorbereitet. Figurenregressionen
+  und Prüfung der neuen Grafikressourcen im tatsächlichen Export ergänzt.
+- **TESTED BEHAVIOR:** YAML/Python/Shell und Hashmanifest lokal geprüft; vollständige
+  Regressionen, OpenGL und Signaturprüfung im Baulauf. Liefernachweis folgt im PR373.
+- **UNVERIFIED:** Lieferung vor erfolgreichem Export/Upload; Telefon-FPS/GPU und
+  menschliche Animationsabnahme bleiben offen. Keine Änderung von Schlüssel/Konto.
+- **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md, AndroidTest0.12.0, PR373.

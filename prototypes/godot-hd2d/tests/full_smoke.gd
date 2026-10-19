@@ -27,7 +27,7 @@ func run() -> void:
 	DirAccess.remove_absolute(app.save_path)
 	root.add_child(app)
 	await frames(5)
-	check(app.paused and app.portrait_cards.size() == 8, "Startmenue zeigt sechs Originalwesen, Mooslyn und Nocti")
+	check(app.paused and app.portrait_cards.size() == 4, "Startmenue zeigt nur die vier Startwesen")
 	var labels: Dictionary = Catalog.data().labels
 	check(labels.size() == 41 and Catalog.data().regions.size() == 7, "Katalog: 28 Originalorte, sieben Waldorte, fünf Erweiterungen und Waldpfadlabel")
 	check(app.music_on == false and not app.music.playing, "Musik bleibt beim ersten Start aus")
@@ -44,7 +44,7 @@ func run() -> void:
 	if app.loading_world:
 		quit(1)
 		return
-	app.selected = "fennec"
+	app.selected = "mosslyn"
 	await app.start_game()
 	await frames(20)
 	check(app.world_ready and app.actor.is_on_floor(), "Spiel startet mit 3D-Bodenkontakt")
@@ -80,10 +80,10 @@ func run() -> void:
 	await frames(45)
 	var run_speed: float = actor.actual_speed
 	check(walk_speed < jog_speed and jog_speed < run_speed and run_speed > 4.0, "Analogtempo steigt stetig von Gehen ueber Joggen zu Rennen")
-	check(actor.running and actor.sprite.frame >= 114 and actor.sprite.frame <= 121, "Sprint nutzt den vorhandenen gezeichneten Laufbogen")
+	check(actor.running and actor.run_sheet and actor.sprite.texture.resource_path.ends_with("mosslyn-run.png"), "Sprint nutzt den vorhandenen gezeichneten Laufbogen")
 	actor.touch_vector = Vector2.ZERO
 	await frames(30)
-	check(actor.actual_speed < 0.01 and actor.sprite.frame >= 138, "Anhalten endet in der vorhandenen lebendigen Ruhepose")
+	check(actor.actual_speed < 0.01 and actor.sprite.frame == actor.rest_frame(), "Anhalten endet in der vorhandenen lebendigen Ruhepose")
 	actor.request_action("jump")
 	await frames(15)
 	check(actor.position.y > 0.5 and actor.jump_clock >= 0, "Sprung nutzt echte Physik und gezeichnete Sprungphasen")
@@ -91,17 +91,17 @@ func run() -> void:
 	check(actor.is_on_floor() and actor.jump_clock < 0, "Sprung landet sicher auf dem Boden")
 	actor.request_action("roll")
 	await frames(10)
-	check(actor.state == "roll" and actor.sprite.frame >= 130 and actor.sprite.frame <= 137, "Rolle ist eine echte Aktion mit dem bestehenden Rollzyklus")
+	check(actor.state == "roll" and actor.sprite.frame in [26,27,28,29], "Rolle ist eine echte Aktion mit dem bestehenden Rollzyklus")
 	await frames(40)
 	actor.request_action("sit")
 	await frames(30)
-	check(actor.state == "sit" and actor.sprite.frame == 93, "Sitzen verwendet die korrigierte Original-Sitzpose")
+	check(actor.state == "sit" and actor.sprite.frame == 15, "Sitzen verwendet die korrigierte Original-Sitzpose")
 	actor.facing = Vector2.DOWN
 	actor._update_frame(false)
-	check(actor.sprite.frame == 103, "Front-Sitzen bleibt in der nativen Frontpose")
+	check(actor.sprite.frame == 24, "Front-Sitzen bleibt in der nativen Frontpose")
 	actor.facing = Vector2.UP
 	actor._update_frame(false)
-	check(actor.sprite.frame == 110, "Ruecken-Sitzen bleibt in der nativen Rueckenpose")
+	check(actor.sprite.frame == 25, "Ruecken-Sitzen bleibt in der nativen Rueckenpose")
 	actor.request_action("sit")
 	await frames(3)
 	# Freier Bergpass: Ein naher Bewohner darf die Kontexttaste nicht in Sprechen aendern.
