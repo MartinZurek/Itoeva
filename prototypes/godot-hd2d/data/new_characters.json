@@ -1,4 +1,92 @@
 {
- "mosslyn":{"label":"Mooslyn","top":8,"left":8,"right":120,"relative_height":1.02,"tagline":"Auch im kleinsten Blatt steckt ein Anfang.","asset":"res://assets/characters/mosslyn.png","combat_asset":"res://assets/characters/mosslyn.png","compact":true},
- "nocti":{"label":"Nocti","top":8,"left":8,"right":120,"relative_height":0.88,"tagline":"Ein Echo findet seinen Weg durch die Nacht.","asset":"res://assets/characters/nocti.png","combat_asset":"res://assets/characters/nocti.png","compact":true}
+  "mosslyn": {
+    "label": "Mooslyn",
+    "top": 8,
+    "left": 8,
+    "right": 120,
+    "relative_height": 1.02,
+    "tagline": "Auch im kleinsten Blatt steckt ein Anfang.",
+    "asset": "res://assets/characters/mosslyn.png",
+    "combat_asset": "res://assets/characters/mosslyn.png",
+    "compact": true,
+    "run_asset": "res://assets/characters/mosslyn-run.png"
+  },
+  "nocti": {
+    "label": "Nocti",
+    "top": 8,
+    "left": 8,
+    "right": 120,
+    "relative_height": 0.88,
+    "tagline": "Ein Echo findet seinen Weg durch die Nacht.",
+    "asset": "res://assets/characters/nocti.png",
+    "combat_asset": "res://assets/characters/nocti.png",
+    "compact": true,
+    "run_asset": "res://assets/characters/nocti-flight.png"
+  },
+  "starlet": {
+    "label": "Starlet",
+    "top": 44,
+    "left": 23,
+    "right": 105,
+    "relative_height": 0.9,
+    "tagline": "Du musst heute nicht perfekt sein.",
+    "asset": "res://assets/characters/starlet-v2.png",
+    "combat_asset": "res://assets/characters/starlet-v2.png",
+    "compact": true
+  },
+  "wyrmling": {
+    "label": "Wyrmling",
+    "top": 32,
+    "left": 9,
+    "right": 119,
+    "relative_height": 1.19,
+    "tagline": "Los geht's. Nur ein kleiner Schritt.",
+    "asset": "res://assets/characters/wyrmling-v2.png",
+    "combat_asset": "res://assets/characters/wyrmling-v2.png",
+    "compact": true
+  },
+  "fennec": {
+    "label": "Fennec",
+    "top": 17,
+    "left": 7,
+    "right": 113,
+    "relative_height": 1.0,
+    "tagline": "Ich passe auf deine Gewohnheiten auf.",
+    "asset": "res://assets/characters/fennec-v2.png",
+    "combat_asset": "res://assets/characters/fennec-v2.png",
+    "compact": true
+  },
+  "gloop": {
+    "label": "Gloop",
+    "top": 56,
+    "left": 23,
+    "right": 107,
+    "relative_height": 0.91,
+    "tagline": "Alles darf auch langsam gehen.",
+    "asset": "res://assets/characters/gloop-v2.png",
+    "combat_asset": "res://assets/characters/gloop-v2.png",
+    "compact": true
+  },
+  "puffling": {
+    "label": "Puffling",
+    "top": 61,
+    "left": 25,
+    "right": 105,
+    "relative_height": 0.93,
+    "tagline": "Kleine Schritte bringen dich weiter.",
+    "asset": "res://assets/characters/puffling-v2.png",
+    "combat_asset": "res://assets/characters/puffling-v2.png",
+    "compact": true
+  },
+  "hootlet": {
+    "label": "Hootlet",
+    "top": 61,
+    "left": 28,
+    "right": 101,
+    "relative_height": 0.86,
+    "tagline": "Ruhe bringt Klarheit.",
+    "asset": "res://assets/characters/hootlet-v2.png",
+    "combat_asset": "res://assets/characters/hootlet-v2.png",
+    "compact": true
+  }
 }

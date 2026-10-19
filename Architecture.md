@@ -50,8 +50,10 @@ Der aktuelle Testexport ist AndroidTest 0.6.1 / Code 17 mit Paket
 CardEncounter steuert den Kartenkampf, CardBattle berechnet Decks/Kristalle und
 Helfer, CardView zeigt animierte Arenaminions. BattleFeedback leitet sichtbare Bereitschaft
 und Ziele aus dem Modell ab; CrystalMeter zeigt Vorrat/Kosten. BattleAudio mischt
-Welt-/Kampfmusik und sechs Effektstimmen unabhängig von der Weltpause. Acht Wesen sind waehlbar: Die sechs
-Originalwesen verwenden CharacterActor, Mooslyn und Nocti CompactActor.
+Welt-/Kampfmusik und sechs Effektstimmen unabhängig von der Weltpause. Vier Wesen sind als Startfigur waehlbar: Mooslyn, Nocti, Starlet und Wyrmling.
+Alle acht Spezies bleiben im Katalog und verwenden die gemalten CompactActor-Atlanten;
+Fennec, Gloop, Puffling und Hootlet bleiben Bewohner mit Tagesplan/Dialog.
+Gerichtete Lauf-/Flugatlanten ergaenzen Mooslyn und Nocti.
 Der Siegesabschluss speichert XP/Beute einmal und fuehrt zur gemalten Welt zurueck.
 Native Kotlin-Module, Reminder, Room, LAS und Signier-Infrastruktur bleiben erhalten.
 Seit0.10.0 liefern `battle_motion.gd` reine Darstellungswege und `battle_pawn.gd`

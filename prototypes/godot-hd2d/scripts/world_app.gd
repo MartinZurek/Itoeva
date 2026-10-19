@@ -37,7 +37,7 @@ var deck_editor: RefCounted
 var portrait_cards: Array[Dictionary] = []
 var status_label: Label
 var tagline_label: Label
-var selected := "fennec"
+var selected := "mosslyn"
 var room := "OUTDOOR"
 var paused := true
 var world_ready := false
@@ -247,7 +247,7 @@ func show_menu() -> void:
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	column.add_child(grid)
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		var reference: Dictionary = Catalog.data().characters[species]
 		var card := _button("", func(): _select_species(species))
 		card.custom_minimum_size = Vector2(160, 156)
@@ -284,9 +284,10 @@ func show_menu() -> void:
 	column.add_child(status_label)
 	_select_species(selected)
 	if world_ready:
-		status_label.text = "35 Orte · 8 Wesen · Links bewegen, rechts handeln"
+		status_label.text = "4 Startwesen · Lebendige Welt · Links bewegen, rechts handeln"
 
 func _select_species(species: String) -> void:
+	if species not in Catalog.STARTERS: return
 	selected = species
 	for card in portrait_cards:
 		card.button.modulate = Color("ffdf9c") if card.species == selected else Color.WHITE
@@ -364,6 +365,7 @@ func _preload_world() -> void:
 		if entry.asset not in pending:pending.append(entry.asset)
 	for entry in Catalog.data().characters.values():
 		if entry.asset not in pending:pending.append(entry.asset)
+		if entry.has("run_asset") and entry.run_asset not in pending:pending.append(entry.run_asset)
 	for asset in pending:
 		var error := ResourceLoader.load_threaded_request(asset, "Texture2D")
 		if error != OK:
@@ -391,7 +393,7 @@ func _poll_loading() -> void:
 	if ready_count == pending.size():
 		loading_world = false
 		if is_instance_valid(status_label):
-			status_label.text = "Bereit · 35 Orte · 8 Wesen"
+			status_label.text = "Bereit · 4 Startwesen · Lebendige Welt"
 
 func start_game() -> void:
 	if loading_world or switching:
@@ -854,9 +856,9 @@ func _load_save() -> void:
 				stored_decks[species] = Cards.upgrade(species, stored_decks[species])
 		save_data["card_decks"] = stored_decks
 	var settings: Dictionary = save_data.get("settings", {})
-	selected = settings.get("species", "fennec")
-	if not Catalog.data().characters.has(selected):
-		selected = "fennec"
+	selected = settings.get("species", "mosslyn")
+	if selected not in Catalog.STARTERS:
+		selected = "mosslyn"
 	battle_music_on = bool(settings.get("battle_music_on", true))
 	effects_on = bool(settings.get("effects_on", true))
 	effects_volume = clampf(float(settings.get("effects_volume", .55)),0,1)

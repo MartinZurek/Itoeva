@@ -1,6 +1,13 @@
 extends "res://scripts/character_actor.gd"
 # Neue gemalte Figuren verwenden 32 Weltposen und 16 Kampfposen im Originalatlas.
 var cell_size:=Vector2i(181,181)
+var world_texture: Texture2D
+var run_texture: Texture2D
+var world_bounds: Array[Rect2i] = []
+var run_bounds: Array[Rect2i] = []
+var reference_height := 1.0
+var run_reference_height := 1.0
+var run_sheet := false
 
 func _ready() -> void:
  collision_layer=2;collision_mask=1
@@ -9,12 +16,21 @@ func _ready() -> void:
  collider.shape=capsule;collider.position.y=capsule.height*.5;add_child(collider)
  sprite=Sprite3D.new();sprite.name="OriginalPainted"+species.capitalize()
  sprite.texture=load(Catalog.data().characters[species].asset)
+ world_texture=sprite.texture
  cell_size=Vector2i(sprite.texture.get_width()/8,sprite.texture.get_height()/6)
  if metrics.has(species):frame_bounds.assign(metrics[species].bounds)
  else:
   var bounds: Array=JSON.parse_string(FileAccess.get_file_as_string("res://data/compact_bounds.json"))[species]
   for b in bounds:frame_bounds.append(Rect2i(b[0],b[1],b[2],b[3]))
   metrics[species]={"bounds":frame_bounds.duplicate(),"scales":{}}
+ world_bounds.assign(frame_bounds)
+ reference_height=float(world_bounds[0].size.y)
+ var definition: Dictionary=Catalog.data().characters[species]
+ if definition.has("run_asset"):
+  run_texture=load(definition.run_asset)
+  var run_data: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_runs.json"))[species]
+  for b in run_data.bounds:run_bounds.append(Rect2i(b[0],b[1],b[2],b[3]))
+  run_reference_height=float(run_data.reference_height)
  sprite.hframes=8;sprite.vframes=6
  sprite.billboard=BaseMaterial3D.BILLBOARD_ENABLED
  sprite.alpha_cut=SpriteBase3D.ALPHA_CUT_DISCARD;sprite.alpha_scissor_threshold=.12
@@ -24,6 +40,7 @@ func _ready() -> void:
  painted_material.shader=load("res://shaders/painted_character.gdshader")
  painted_material.set_shader_parameter("atlas",sprite.texture);sprite.material_override=painted_material
  sprite.offset=Vector2(0,cell_size.y*.5-2);add_child(sprite)
+ _setup_aura()
  shadow=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(1.15,.62);shadow.mesh=plane
  var material:=ShaderMaterial.new();material.shader=load("res://shaders/contact_shadow.gdshader");material.render_priority=2
  shadow.material_override=material;shadow.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -31,9 +48,14 @@ func _ready() -> void:
  set_world_scale(base_pixel_size,jump_height,body_pixel_size);_update_frame(false)
 
 func _update_sprite_scale() -> void:
- sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1,float(frame_bounds[0].size.y))
+ sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1,run_reference_height if run_sheet else reference_height)
  sprite.position=Vector3.UP*hover
  sprite.offset.y=cell_size.y*.5-2.0 if mounted else float(frame_bounds[sprite.frame].end.y)-cell_size.y*.5
+ # Kleine getrennte Nachbarfragmente gehören nicht zur aktuellen Zeichnung.
+ var bounds:=frame_bounds[sprite.frame]
+ var origin:=Vector2(sprite.frame%8,sprite.frame/8)*Vector2(cell_size)+Vector2(bounds.position)
+ var texture_size:=sprite.texture.get_size()
+ painted_material.set_shader_parameter("frame_clip",Vector4(origin.x/texture_size.x,origin.y/texture_size.y,bounds.size.x/texture_size.x,bounds.size.y/texture_size.y))
  _update_occlusion()
 
 func rest_frame() -> int:
@@ -41,8 +63,13 @@ func rest_frame() -> int:
 
 func _update_frame(moving: bool) -> void:
  var depth:=absf(facing.y)>absf(facing.x)
+ var flight: bool=species=="nocti" and hover>.06 and state=="idle" and jump_clock<0
+ var use_run: bool=run_texture!=null and state=="idle" and jump_clock<0 and ((moving and running and run_blend>=.5) or flight)
+ _use_run_sheet(use_run)
  sprite.flip_h=not depth and facing.x<0
- if jump_clock>=0:
+ if use_run:
+  sprite.frame=run_frame(gait,clock,facing)
+ elif jump_clock>=0:
   var duration:=2*sqrt(2*jump_height/GRAVITY)
   var phase:=clampi(int(jump_clock/maxf(.1,duration)*6),0,5)
   sprite.frame=[11,12,13,13,14,0][phase] if not depth else (16 if facing.y>0 else 20)+phase%4
@@ -50,10 +77,33 @@ func _update_frame(moving: bool) -> void:
  elif state=="sit":sprite.frame=15 if not depth else 24 if facing.y>0 else 25
  elif moving:
   var phase:=int(gait*4)%4
-  sprite.frame=(16 if facing.y>0 else 20)+phase if depth else [8,7,9,7][phase] if running else 3+phase
+  sprite.frame=(16 if facing.y>0 else 20)+phase if depth else 7+phase if running and run_blend>=.5 else 3+phase
  elif recovery_clock<.16:sprite.frame=14 if not depth else rest_frame()
  else:sprite.frame=rest_frame()
  _update_sprite_scale()
+
+func _use_run_sheet(value: bool) -> void:
+ if value==run_sheet:return
+ run_sheet=value
+ sprite.frame=0
+ sprite.texture=run_texture if value else world_texture
+ sprite.hframes=8;sprite.vframes=3 if value else 6
+ cell_size=Vector2i(sprite.texture.get_width()/8,sprite.texture.get_height()/sprite.vframes)
+ frame_bounds.assign(run_bounds if value else world_bounds)
+ painted_material.set_shader_parameter("atlas",sprite.texture)
+
+func run_frame(stride: float, time: float, direction: Vector2) -> int:
+ var row:=0 if absf(direction.x)>=absf(direction.y) else 1 if direction.y>0 else 2
+ var phase:=posmod(int((time*3.2 if species=="nocti" else stride)*8),8)
+ # Die abgewandte Zeichnung würde die seitliche Blickrichtung unterbrechen.
+ if species=="mosslyn" and row==0:phase=[0,1,3,4,5,6,7,1][phase]
+ return row*8+phase
+
+func _hover_target(moving: bool) -> float:
+ if state!="idle" or jump_clock>=0 or not is_on_floor():return 0.0
+ if species=="nocti" and moving and running:return .48+.025*sin(clock*TAU*3.2)
+ if species=="mosslyn" and moving and running:return maxf(0,sin(gait*TAU*2))*.065
+ return super._hover_target(moving)
 
 func visual_screen_rect(camera: Camera3D) -> Rect2:
  var bounds:=frame_bounds[sprite.frame];var minimum:=Vector2(INF,INF);var maximum:=Vector2(-INF,-INF)

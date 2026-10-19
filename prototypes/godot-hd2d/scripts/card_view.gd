@@ -413,8 +413,8 @@ func _draw_unit(unit: Dictionary,foot: Vector2,attacking: bool=false,motion: Dic
  var scale_factor: float=(94.0 if unit.get("form","")=="ancient" else 78.0)/reference_height
  var dimensions:=region.size*scale_factor
  var left: bool=(int(unit.owner)==2) != (attacking and motion.travel and motion.returning)
- if in_transit and unit.species!="" and unit.species!="enemy" and not Cards.Strategy.has(str(unit.id)):
-  var art:=_travel_art(str(unit.species),motion)
+ if in_transit:
+  var art:=_unit_travel_art(unit,motion)
   if not art.is_empty():texture=art.texture;region=art.region;dimensions=art.dimensions
  var color:=Color("ffd2b8") if hit else Color.WHITE if attacking else Color("b8c5d4") if sleeping else Color("d6c4c9") if feedback_state=="spent" else Color.WHITE
  if unit.get("_fallen",false):
@@ -631,10 +631,17 @@ func _attack_motion(unit: Dictionary,target_code: String,lane: int=0) -> Diction
   unit["_fallen"]=true
  return motion
 
+# Herkunftsspezies ist eine Regelzuordnung, kein Ersatz für die eigene Helfergrafik.
+func _uses_species_art(unit: Dictionary) -> bool:
+ return not Cards.Strategy.has(str(unit.id)) and str(unit.get("form", "")) not in Cards.HELPER_FORMS and int(unit.get("row", -1)) < 0 and Catalog.data().characters.has(str(unit.get("species", "")))
+
+func _unit_travel_art(unit: Dictionary,motion: Dictionary) -> Dictionary:
+ return _travel_art(str(unit.species),motion) if _uses_species_art(unit) else {}
+
 func _travel_art(species: String,motion: Dictionary) -> Dictionary:
  if not is_instance_valid(encounter) or not encounter.app.character_metrics.has(species):return {}
  var compact: bool=Catalog.data().characters[species].get("compact",false)
- var frame:=3+posmod(int(motion.stride*4),4) if compact else 9+posmod(int(motion.stride*8),8)
+ var frame:=7+posmod(int(motion.stride*4),4) if compact else 9+posmod(int(motion.stride*8),8)
  var texture: Texture2D=load(Catalog.data().characters[species].asset)
  var columns:=8 if compact else 12
  var cell:=Vector2(texture.get_width()/float(columns),texture.get_height()/float(6 if compact else 15))

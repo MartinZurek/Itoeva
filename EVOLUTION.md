@@ -7148,3 +7148,20 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   und Remote-Prüfsummenabgleich belegt; Android-GPU/FPS und menschliche Abnahme offen.
 - **ÜBERGABE:** PR372, docs/godot-strategische-karten-v110.md; Version/Manifest und
   Kartenprüfungen im bestehenden Bauweg aktualisiert, keine neue Signierinfrastruktur.
+
+### 2026-10-19 – Vier Startwesen, Figurenqualität und Helferidentität
+
+- **DOCUMENTED INTENT:** Martin beschränkt die Startauswahl auf Mooslyn, Nocti,
+  Starlet und Wyrmling; übrige Wesen bleiben ansprechbare Bewohner. Designs
+  verbessern, Mooslyn sprinten und Nocti im schnellen Modus fliegen lassen.
+- **FACT:** Sechs neue Welt-/Kampfatlanten, zwei gerichtete Lauf-/Flugatlanten,
+  erhaltene Bewohnerpläne und Dialoge, Starlits Eigenleuchten im CompactActor.
+  Form-/Tierhelfer werden beim Angriff nicht länger zum Herkunftshelden.
+- **MIGRATION:** Nur ungültige Startauswahl fällt auf Mooslyn zurück; alte
+  Profile, Standorte, Decks und Kampfschlüssel werden nicht gelöscht/umgebucht.
+- **TESTED BEHAVIOR:** Auswahl, Profilbestand, gerichtete Bewegung, Sprint/Landung
+  und Helferidentität werden in character_polish.gd geprüft. Abschließende
+  Ergebnisse nach Wiederherstellung der Arbeitsumgebung im PR373.
+- **UNVERIFIED:** Telefon-FPS/GPU und menschliche Animationsabnahme; keine neue APK.
+- **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md; PR373 auf dem
+  unveränderten Kartenstand0.11.0. Release-/Signierinfrastruktur bleibt erhalten.
