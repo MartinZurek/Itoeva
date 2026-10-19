@@ -35,6 +35,9 @@ def main():
   characters[species]=dict(original[species],asset='res://'+asset,combat_asset='res://'+asset,compact=True)
   bounds[species]=local
   combat[species]={'asset':'res://'+asset,'regions':absolute[32:48],'reference_height':local[0][3]}
+  # Die ruhige Weltpose hat einen vollständig enthaltenen Schwanz-/Flügelrand.
+  combat[species]['regions'][12]=absolute[0]
+  combat[species]['regions'][13]=absolute[0]
  runs={}
  for species,suffix in [('mosslyn','run'),('nocti','flight')]:
   asset=f'assets/characters/{species}-{suffix}.png';local,_=regions(ROOT/asset,8,3)

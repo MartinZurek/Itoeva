@@ -13,7 +13,7 @@ func run() -> void:
  DirAccess.remove_absolute(app.save_path);root.add_child(app)
  while app.loading_world:await process_frame
  await grab("menu")
- for species in Catalog.data().characters:
+ for species in ([] if "--battle-only" in OS.get_cmdline_user_args() else Catalog.data().characters):
   app.selected=species;await app._mount_world("OUTDOOR",Catalog.position_for("PARK",Vector2(.5,.65)))
   app._resume();app._pause(true);app.stage.set_time(12);app.zoom=5.7;app._update_camera(10)
   app.actor.facing=Vector2.RIGHT;app.actor.recovery_clock=1;app.actor._update_frame(false)
@@ -41,4 +41,4 @@ func run() -> void:
   for time in [.3,.65,1.25,1.85,2.5]:
    view.event_time=time;view.refresh();view.queue_redraw();await grab("helper-"+entry[0]+"-"+str(time))
   model.acknowledge_animation()
- app.queue_free();await process_frame;DirAccess.remove_absolute("user://godot-tests/character-polish-capture.json");print("79 OpenGL-Spielbilder gespeichert");quit()
+ app.queue_free();await process_frame;DirAccess.remove_absolute("user://godot-tests/character-polish-capture.json");print("OpenGL-Spielbilder gespeichert");quit()
