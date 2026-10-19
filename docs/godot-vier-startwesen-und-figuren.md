@@ -53,8 +53,8 @@ verwendete Ressourcen; seine 690 fachlichen Checks bestehen.
 Vor der Unterbrechung wurden 1.073 Checks auch unter echtem Mesa/OpenGL bestanden und
 79 Spielbilder geprüft. Nach dem Zurücksetzen der temporären Umgebung wurden der Code
 wiederhergestellt und die Prüfungen erneut ausgeführt; maßgeblich ist der abschließende
-PR-Bericht. Telefon-FPS, menschliche Animationsabnahme und neue APK bleiben offen.
-Keine Änderung an Version, Paket, Signatur, Workflow oder Drive-Auslieferung.
+PR-Bericht. Telefon-FPS und menschliche Animationsabnahme bleiben offen. APK-Auslieferung siehe unten.
+Die Figurenüberarbeitung selbst ändert Paket und Signatur nicht; der nachfolgende APK-Auftrag aktualisiert Version und Buildkonfiguration.
 
 Rückbau: den gesamten Figuren-/Auswahl-PR zurücknehmen. Die alten PNGs und alten
 Spielstandschlüssel sind erhalten. Keine native Room-/LAS-/Reminder-Migration.
@@ -66,3 +66,19 @@ Paket und bestehendes Testzertifikat bleiben gleich. Der vorhandene Build-/Drive
 prüft das neue Runtime-Manifest, Figurenregressionen und tatsächlich enthaltene
 Grafikressourcen und ersetzt dieselbe freigegebene Download-Datei. Ein erfolgreicher
 Baulauf samt Signatur-/Remote-Prüfsummenabgleich ist für die Auslieferung maßgeblich.
+
+## Auslieferung abgeschlossen
+
+[Baulauf39284869914](https://github.com/MartinZurek/Itoeva/actions/runs/39284869914)
+ist erfolgreich abgeschlossen. Vollständige Regressionen, OpenGL-Aufnahmen,
+Export, Signaturprüfung und Remote-Prüfsummenabgleich bestanden.
+
+- APK: `Itoeva_Godot_Test_v0.12.0.apk`, AndroidTest0.12.0/Code24.
+- Quellcommit: `edf10da3df1852485e5e7b811dc979dc6fb26ed9`.
+- Größe:176142974 Bytes; SHA-256:`54b384beeb4e3b0dd56366b45a7ff92707897dfd8704f01c8cb37ea36de6320a`.
+- Bestehendes Testzertifikat und Paket erhalten; als Update zur bisherigen Test-APK installierbar.
+- [Drive-Download](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk): dieselbe Datei im bisherigen Ordner aktualisiert.
+- [Liefernachweis](validation/godot-v0120-build-report.json).
+
+Die GitHub-Warteschlange ist für diesen Bau überwunden. Menschliche Telefon-/FPS-
+und Animationsabnahme bleiben offen; die Auslieferung ist vollständig bestätigt.
