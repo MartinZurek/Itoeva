@@ -59,3 +59,11 @@ Bauweg prüft Runtime-Hashes, Regressionen, OpenGL, exportierte Gehfolgen/Masken
 Paket/Signatur und Remote-Prüfsummen. Liefernachweis nach erfolgreichem Upload ergänzen.
 Rückbau: diesen Bewegungs-PR zurücknehmen. Vorherige Grafiken/Spielstandschlüssel bleiben
 vorhanden. Branch ist auf dem ausgelieferten Figurenstand aufgebaut, kein Merge ins ältere main.
+
+## Erneute Prüfung abgeschlossen
+
+Nach Wiederherstellung erneut362 Ausdauerprüfungen,1073 Figurenchecks,88 Vollwelt-,
+128 Framing- und25 Hangprüfungen bestanden. Erneut1984 Kontur-/Ankerprüfungen unter
+echtem Mesa/OpenGL ohne Fehler. Neues Runtime-Manifest:525 Dateien,
+SHA-256 `1ce46d30e8763e5a068825c7034416bbedbb3cf85362a0de92f587840c2fd005`.
+YAML, alle eingebetteten Python-Skripte und Bash-Blöcke des APK-Lieferwegs validiert.

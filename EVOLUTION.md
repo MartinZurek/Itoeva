@@ -7200,3 +7200,13 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **ÜBERGABE:** docs/godot-ausdauer-und-bewegung-v0130.md; Branch
   codex/godot-stamina-motion-fix auf dem ausgelieferten Figurenstand. Nächster Schritt:
   erneute Spiel-/OpenGL-Prüfung und bestehender signierter APK-Lieferweg.
+
+### 2026-10-20 – Wiederherstellung geprüft und Test-APK0.13.0 vorbereitet
+
+- **FACT:**362 Ausdauer-,1073 Figuren-,88 Vollwelt-,128 Framing-,25 Hang-
+  und1984 echte OpenGL-Kontur-/Ankerprüfungen nach Wiederherstellung erneut grün.
+- **FACT:**AndroidTest0.13.0/Code25 und525-Dateien-Manifest vorbereitet. Der
+  bestehende signierte Bau-/Drive-Weg prüft zusätzlich Gehfolgen und ID-Masken.
+- **UNVERIFIED:**APK-Auslieferung erst nach erfolgreichem Export, Signatur- und
+  Remote-Prüfsummenabgleich; Telefon-GPU/FPS und menschliche Animationsabnahme offen.
+- **ÜBERGABE:**PR374, docs/godot-ausdauer-und-bewegung-v0130.md.
