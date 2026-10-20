@@ -50,8 +50,26 @@ bis zum Prozessende gehalten; keine funktionalen Fehler.
 PR375: https://github.com/MartinZurek/Itoeva/pull/375
 APK-Baulauf: https://github.com/MartinZurek/Itoeva/actions/runs/39425272411
 Laufzeit-Commit: `d7bf81cbe6dfb39a57a03b3ba3683a6c585f9855`.
-Test-APK0.13.1/Code26 wird über den bestehenden signierten GitHub-/Drive-Weg
-gebaut; Schlüssel, Paket und Drive-Ziel bleiben gleich. Noch nicht ausgeliefert.
+Test-APK0.13.1/Code26 wurde über den bestehenden signierten GitHub-/Drive-Weg
+erfolgreich gebaut und ausgeliefert. Vollständige Spielregressionen, OpenGL,
+Export, Version, bestehendes Zertifikat und Remote-Prüfsummenabgleich bestanden.
+Schlüssel, Paket und Drive-Ziel bleiben gleich; als Update zu0.13.0 installierbar.
 Das 525-Dateien-Manifest hat SHA-256
 `295e375dfba8330c99d75271ad45fb46cc28083791ccf8a6a3b58682505724e6`.
 Telefon-Touchgefühl und menschliche Abnahme der neuen Wege bleiben offen.
+
+## Liefernachweis
+
+- Download: https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk
+- Datei: `Itoeva_Godot_Test_v0.13.1.apk`,191730312 Bytes.
+- SHA-256: `8f6eb60d2a5f4a2e87094ec32e2719de90887dfd5f9bdcb8b112431cc8c54132`.
+- Paket: `com.itoeva.godot.hd2d.worldtest`,Code26,ARM64.
+- Zertifikat-SHA-256: `30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc`.
+- Bericht: `docs/validation/godot-v0131-build-report.json`.
+- GitHub-APK-Artefakt12265654172; Prüfprotokolle12266073418,14 Tage aufbewahrt.
+- Allgemeiner Verify-Lauf39425565075: API26/API35 und Release-Torwächter bestanden;
+  Gradle-Tests/Lint/R8 zum Dokumentationskopf liefen bei dieser Eintragung noch.
+
+Keine Zusammenführung ins ältere `main`. Nächster Schritt:0.13.1 über0.13.0
+installieren und Waldeingang, Sonnenhain, Nebelwacht und Aschenstieg auf dem
+Telefon abgehen; Schild antippen und jeden Abzweig auch zurück benutzen.
