@@ -1,6 +1,7 @@
 extends Node3D
 
 const Catalog = preload("res://scripts/world_catalog.gd")
+const Forest = preload("res://scripts/forest_catalog.gd")
 const Ambience = preload("res://scripts/painted_ambience.gd")
 var place := "OUTDOOR"
 var textures: Dictionary = {}
@@ -42,8 +43,8 @@ func fit_character(pixel_size: float) -> void:
 	_make_end_wall(width * 0.5 - horizontal_padding + 0.4)
 	for door in doors:
 		var raw := Catalog.position_for(door.from, door.at)
-		door.position = safe_position(raw)
-		door.marker_position = raw + Vector3.UP * 1.5
+		door.position = safe_position(raw, 0.0) if door.has("route_direction") else safe_position(raw)
+		door.marker_position = door.position + Vector3.UP * (1.8 if door.has("route_direction") else 1.5)
 
 func build() -> void:
 	building = true
@@ -81,8 +82,8 @@ func build() -> void:
 				var span: float = float(region.width) / region.places.size()
 				_add_piece(piece, region.asset, float(region.origin) + region.places.find(piece.place) * span, span, 480.0, 640.0)
 		_add_pickup("park-pebbles", "PARK", Vector2(0.78, 0.70))
-		var forest_position := safe_position(Catalog.position_for("FOREST", Vector2(.52,.64)))
-		doors.append({"from":"FOREST","to":"FOREST_TRAIL","at":Vector2(.52,.64),"arrival":Vector2(.10,.5),"position":forest_position,"marker_position":forest_position+Vector3.UP})
+		for door in Forest.doors_for("FOREST"):
+			_add_door(door)
 	else:
 		var room: Dictionary = Catalog.data().interiors[place]
 		width = Catalog.IMAGE_HEIGHT * 16.0 / 9.0
@@ -110,10 +111,9 @@ func build() -> void:
 			_add_piece(piece, room.asset, -width * 0.5, width, 480.0, 270.0)
 		for door in Catalog.doors_for(place):
 			_add_door(door)
-	if place == "SUN_GLADE":
-		_add_forest_branch(1, .76, Vector2(.50,.55))
-	elif place == "MIST_WATCH":
-		_add_forest_branch(6, .87, Vector2(.18,.55))
+	if place != "OUTDOOR":
+		for door in Forest.doors_for(place):
+			_add_door(door)
 	building = false
 	_build_natural_edges()
 	_build_occlusion_maps()
@@ -444,7 +444,9 @@ func _add_door(door: Dictionary) -> void:
 		entry.position.x = clampf(entry.position.x, -width * 0.5 + 2.3, width * 0.5 - 2.3)
 		var room: Dictionary = Catalog.data().interiors[place]
 		entry.position.z = clampf(entry.position.z, Catalog.image_z(room.band[0], 270) + 0.45, Catalog.image_z(room.band[1], 270) - 0.45)
-	entry["marker_position"] = entry.position + Vector3.UP * (1.0 if place == "OUTDOOR" else 1.5)
+	if entry.has("route_direction"):
+		entry.position = safe_position(entry.position, 0.0)
+	entry["marker_position"] = entry.position + Vector3.UP * (1.8 if entry.has("route_direction") else 1.0 if place == "OUTDOOR" else 1.5)
 	doors.append(entry)
 
 func nearest_door(position: Vector3) -> Dictionary:
@@ -706,8 +708,3 @@ func update_character_light(actor: Node3D, energy: float) -> void:
 	for material in painted_materials:
 		material.set_shader_parameter("carried_position",center)
 		material.set_shader_parameter("carried_gain",energy)
-
-func _add_forest_branch(index: int, u: float, at: Vector2) -> void:
-	var point:=safe_position(Catalog.position_for(place,at))
-	doors.append({"from":place,"to":"FOREST_TRAIL","at":at,"arrival":Vector2(u,.55),
-		"forest_index":index,"position":point,"marker_position":point+Vector3.UP})

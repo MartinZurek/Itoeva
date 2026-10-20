@@ -7233,3 +7233,33 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**Menschliche Bewegungs-/Tempoabnahme und Telefon-GPU/FPS.
 - **ÜBERGABE:**PR374, docs/validation/godot-v0130-build-report.json und
   docs/godot-ausdauer-und-bewegung-v0130.md. Kein Merge ins ältere main.
+
+### 2026-10-20 – Sichtbare und nachvollziehbare Streckenanschlüsse
+
+- **DOCUMENTED INTENT:** Martin meldet versteckte, unlogische Streckenanschlüsse
+  und möchte den Waldeingang weiter rechts am sichtbaren Wegverlauf.
+- **FACT:** Waldeingang von Orts-UV(0.52,0.64) nach(0.90,0.55) versetzt.
+  Feste, vollständig antippbare Wegschilder; getrennte Abzweige und linksseitige
+  Rückwege an Nebelwacht/Aschenstieg. Alle acht Verbindungspaare bleiben erhalten.
+  Waldendpunkte stammen für beide Reiserichtungen aus demselben Datenbestand.
+- **TESTED BEHAVIOR:**181 Strecken-/Schildchecks,256 bestehende Türpfade und363
+  Ausdauer-/Bewegungschecks bestanden. Alle sieben OpenGL-Ansichten visuell geprüft.
+  Test-APK0.13.1/Code26 im bestehenden signierten Bauweg gestartet; Liefernachweis folgt.
+- **UNVERIFIED:** Telefon-Touchgefühl, menschliche Wegeabnahme und neue APK.
+- **ÜBERGABE:** docs/godot-sichtbare-streckenanschluesse.md, Branch
+  codex/godot-visible-route-connections, PR375 auf dem ausgelieferten Stand0.13.0.
+
+### 2026-10-20 – Test-APK0.13.1 mit korrigierten Strecken ausgeliefert
+
+- **FACT:**Baulauf39425272411 zu Commitd7bf81cbe6dfb39a57a03b3ba3683a6c585f9855
+  erfolgreich: vollständige Godot-Regressionen, OpenGL, Export, Signaturprüfung,
+  Paket26/0.13.1 und Remote-Prüfsummenabgleich bestanden.
+- **FACT:**191730312 Bytes; SHA-256
+  `8f6eb60d2a5f4a2e87094ec32e2719de90887dfd5f9bdcb8b112431cc8c54132`.
+  Bestehende Drive-Datei aktualisiert, als Update zu0.13.0 installierbar.
+- **TESTED BEHAVIOR:**181 Strecken-/Schildchecks,256 Türpfade,22027 Waldchecks,
+  363 Ausdauerchecks,1073 Figurenchecks und1984 OpenGL-Konturchecks bestanden.
+- **UNVERIFIED:**Menschliche Wegeabnahme und Telefon-GPU/FPS. Allgemeiner Verify-
+  Lauf39425565075 hatte API26/API35 abgeschlossen; Gradle-Prüfung lief noch.
+- **ÜBERGABE:**PR375, docs/godot-sichtbare-streckenanschluesse.md und
+  docs/validation/godot-v0131-build-report.json. Kein Merge ins ältere main.
