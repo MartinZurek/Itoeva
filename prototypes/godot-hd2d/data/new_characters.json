@@ -9,7 +9,8 @@
     "asset": "res://assets/characters/mosslyn.png",
     "combat_asset": "res://assets/characters/mosslyn.png",
     "compact": true,
-    "run_asset": "res://assets/characters/mosslyn-run.png"
+    "run_asset": "res://assets/characters/mosslyn-run.png",
+    "walk_asset": "res://assets/characters/mosslyn-walk.png"
   },
   "nocti": {
     "label": "Nocti",
@@ -21,7 +22,8 @@
     "asset": "res://assets/characters/nocti.png",
     "combat_asset": "res://assets/characters/nocti.png",
     "compact": true,
-    "run_asset": "res://assets/characters/nocti-flight.png"
+    "run_asset": "res://assets/characters/nocti-flight.png",
+    "walk_asset": "res://assets/characters/nocti-walk.png"
   },
   "starlet": {
     "label": "Starlet",
@@ -32,7 +34,8 @@
     "tagline": "Du musst heute nicht perfekt sein.",
     "asset": "res://assets/characters/starlet-v2.png",
     "combat_asset": "res://assets/characters/starlet-v2.png",
-    "compact": true
+    "compact": true,
+    "walk_asset": "res://assets/characters/starlet-walk.png"
   },
   "wyrmling": {
     "label": "Wyrmling",
@@ -43,7 +46,8 @@
     "tagline": "Los geht's. Nur ein kleiner Schritt.",
     "asset": "res://assets/characters/wyrmling-v2.png",
     "combat_asset": "res://assets/characters/wyrmling-v2.png",
-    "compact": true
+    "compact": true,
+    "walk_asset": "res://assets/characters/wyrmling-walk.png"
   },
   "fennec": {
     "label": "Fennec",
@@ -54,7 +58,8 @@
     "tagline": "Ich passe auf deine Gewohnheiten auf.",
     "asset": "res://assets/characters/fennec-v2.png",
     "combat_asset": "res://assets/characters/fennec-v2.png",
-    "compact": true
+    "compact": true,
+    "walk_asset": "res://assets/characters/fennec-walk.png"
   },
   "gloop": {
     "label": "Gloop",
@@ -65,7 +70,8 @@
     "tagline": "Alles darf auch langsam gehen.",
     "asset": "res://assets/characters/gloop-v2.png",
     "combat_asset": "res://assets/characters/gloop-v2.png",
-    "compact": true
+    "compact": true,
+    "walk_asset": "res://assets/characters/gloop-walk.png"
   },
   "puffling": {
     "label": "Puffling",
@@ -76,7 +82,8 @@
     "tagline": "Kleine Schritte bringen dich weiter.",
     "asset": "res://assets/characters/puffling-v2.png",
     "combat_asset": "res://assets/characters/puffling-v2.png",
-    "compact": true
+    "compact": true,
+    "walk_asset": "res://assets/characters/puffling-walk.png"
   },
   "hootlet": {
     "label": "Hootlet",
@@ -87,6 +94,7 @@
     "tagline": "Ruhe bringt Klarheit.",
     "asset": "res://assets/characters/hootlet-v2.png",
     "combat_asset": "res://assets/characters/hootlet-v2.png",
-    "compact": true
+    "compact": true,
+    "walk_asset": "res://assets/characters/hootlet-walk.png"
   }
 }

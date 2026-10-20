@@ -7179,3 +7179,57 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:** Lieferung vor erfolgreichem Export/Upload; Telefon-FPS/GPU und
   menschliche Animationsabnahme bleiben offen. Keine Änderung von Schlüssel/Konto.
 - **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md, AndroidTest0.12.0, PR373.
+
+### 2026-10-20 – Ausdauer und vollständige Gehzyklen im Godot-Spiel
+
+- **DOCUMENTED INTENT:** Martin verlangt langsameren, begrenzten Sprint, Ausdauerbalken,
+  Erholung beim Gehen/Stehen/Sitzen/Bank sowie vollständige und flüssigere Bewegungen
+  aller acht Wesen, besonders Nocti, Starlet und Wyrmling.
+- **FACT:** Sprint3,3 statt4,6;100 Punkte/16 pro Sprintsekunde, Wiederfreigabe ab30.
+  Erholung7/12/25/50 pro Sekunde; Rollen kosten14. Menü/Kampf pausieren den Vorrat,
+  Türen erhalten ihn. Bewohner und dauerhafter Fortschritt bleiben unabhängig.
+- **DARSTELLUNG:** Acht neue gerichtete Achtphasen-Gehatlanten; vollständige Konturen,
+  angepasste Sprite-Geometrie/UVs und technische ID-Masken erhalten überstehende
+  Körperteile und getrennte Pfoten. Nocti landet bei leerer Ausdauer.
+- **TESTED BEHAVIOR:** Vor Umgebungsreset362 Ausdauer-,1984 OpenGL-Kontur-,1073 Figuren-,
+  88 Vollwelt-,128 Raum-/Spezies-,271 Tiefen-,115 Bewegungs-/Licht-,690 Bewohner-,25 Hang-
+  und36 Darstellungsprüfungen bestanden. Acht PNGs mit identischen Git-Hashes gesichert;
+  Wiederherstellung und erneute Prüfung dokumentiert. Synthetische Regression besteht.
+- **UNVERIFIED:** Telefon-FPS/GPU, menschliche Animationsabnahme und neue APK-Auslieferung.
+  Einige Tests halten beim Prozessende bekannte Katalogressourcen.
+- **ÜBERGABE:** docs/godot-ausdauer-und-bewegung-v0130.md; Branch
+  codex/godot-stamina-motion-fix auf dem ausgelieferten Figurenstand. Nächster Schritt:
+  erneute Spiel-/OpenGL-Prüfung und bestehender signierter APK-Lieferweg.
+
+### 2026-10-20 – Wiederherstellung geprüft und Test-APK0.13.0 vorbereitet
+
+- **FACT:**362 Ausdauer-,1073 Figuren-,88 Vollwelt-,128 Framing-,25 Hang-
+  und1984 echte OpenGL-Kontur-/Ankerprüfungen nach Wiederherstellung erneut grün.
+- **FACT:**AndroidTest0.13.0/Code25 und525-Dateien-Manifest vorbereitet. Der
+  bestehende signierte Bau-/Drive-Weg prüft zusätzlich Gehfolgen und ID-Masken.
+- **UNVERIFIED:**APK-Auslieferung erst nach erfolgreichem Export, Signatur- und
+  Remote-Prüfsummenabgleich; Telefon-GPU/FPS und menschliche Animationsabnahme offen.
+- **ÜBERGABE:**PR374, docs/godot-ausdauer-und-bewegung-v0130.md.
+
+### 2026-10-20 – Sitzwechsel beendet Noctis Flug sauber
+
+- **FACT:**Sitzanker setzt Flughöhe, Laufblendung und tatsächliches Tempo zurück.
+  Möbel-Beckenversatz verwendet nach dem Posenwechsel die Sitz-Pixelgröße, nicht
+  die Größe des vorangegangenen Lauf-/Flugatlas.
+- **TESTED BEHAVIOR:**Zusätzliche Prüfung der echten Parkbankaktion aus einer
+  Flugpose;363 Ausdauer-/Bewegungschecks. Runtime-Manifest entsprechend erneuert.
+- **ÜBERGABE:**PR374; bestehender APK-Bau wird durch den korrigierten Stand ersetzt.
+
+### 2026-10-20 – Test-APK0.13.0 erfolgreich ausgeliefert
+
+- **FACT:**Baulauf39416241818 zum Commitcb979eb9db398b88c3303c06932c044b5c1f07f4
+  erfolgreich: vollständige Regressionen, OpenGL, Export, bestehende Signatur,
+  Paketversion25/0.13.0 und Remote-Prüfsummenabgleich bestanden.
+- **FACT:**191726216 Bytes; SHA-256
+  `3f47b5aac735a7d61f4705eb4b71ee999b7030e09936e490b1de461c69277719`.
+  Vorhandene Drive-Datei aktualisiert; Update zur bisherigen Testversion möglich.
+- **TESTED BEHAVIOR:**363 Ausdauer-/Bewegungschecks auch lokal mit echtem OpenGL,
+  1984 Kontur-/Ankerchecks, vollständige Spieltests sowie allgemeine Projektprüfung grün.
+- **UNVERIFIED:**Menschliche Bewegungs-/Tempoabnahme und Telefon-GPU/FPS.
+- **ÜBERGABE:**PR374, docs/validation/godot-v0130-build-report.json und
+  docs/godot-ausdauer-und-bewegung-v0130.md. Kein Merge ins ältere main.

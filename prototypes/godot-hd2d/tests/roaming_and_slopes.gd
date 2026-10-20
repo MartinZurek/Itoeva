@@ -23,6 +23,7 @@ func run() -> void:
   var limits: Vector2 = app.stage._limits_at(pair[0])
   app.actor.position = app.stage.safe_position(Vector3(pair[0],.03,Catalog.image_z((limits.x+limits.y)*.5)),app.actor.collider.shape.radius)
   app.actor.stop_input(); await frames(8)
+  app.actor.stamina.value=100;app.actor.stamina.exhausted=false
   var sign_x: float = signf(pair[1]-pair[0]); var dry := true; var elapsed := 0
   for i in 650:
    app.actor.touch_vector = Vector2(sign_x*.8,0)
@@ -34,7 +35,7 @@ func run() -> void:
   check(dry,"Hang hält Fuß auf trockenem Boden: "+str(pair))
   check(sign_x*(app.actor.position.x-float(pair[1])) >= -.15,"Seitlicher Daumen erreicht Hangziel: %s / %s"%[pair,app.actor.position])
   app.actor.stop_input()
-  if pair == [13.3,20.5]:check(elapsed <= 175,"Steigung bremst den seitlichen Daumen nicht aus (alter Stand: 186 Takte)")
+  if pair == [13.3,20.5]:check(elapsed <= 240,"Steigung bleibt mit gedrosseltem Sprint erreichbar")
  # Auch beide kompakten Figuren und alle ursprünglichen Wesen benutzen dieselbe Hangführung.
  for species in Catalog.data().characters:
   app.selected=species
@@ -44,8 +45,9 @@ func run() -> void:
   var limits: Vector2=app.stage._limits_at(13.3)
   app.actor.position=app.stage.safe_position(Vector3(13.3,.03,Catalog.image_z((limits.x+limits.y)*.5)),app.actor.collider.shape.radius)
   app.actor.stop_input();await frames(8)
+  app.actor.stamina.value=100;app.actor.stamina.exhausted=false
   var dry:=true
-  for tick in 210:
+  for tick in 240:
    app.actor.touch_vector=Vector2(.8,0);await physics_frame
    dry=dry and app.stage.is_walkable(app.actor.position,app.actor.collider.shape.radius,true)
    if app.actor.position.x>=20.35:break

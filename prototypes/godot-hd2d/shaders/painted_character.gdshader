@@ -4,6 +4,12 @@ render_mode unshaded, cull_disabled, depth_test_disabled, depth_draw_never;
 
 uniform sampler2D atlas : source_color, filter_linear, repeat_disable;
 uniform vec4 frame_clip = vec4(0.0, 0.0, 1.0, 1.0);
+uniform bool has_pose_region = false;
+uniform vec4 pose_cell;
+uniform vec4 pose_region;
+uniform vec4 pose_geometry = vec4(1.0, 1.0, 0.0, 0.0);
+uniform sampler2D pose_mask : filter_nearest, repeat_disable;
+uniform float pose_id = 0.0;
 uniform sampler2D furniture_mask : filter_nearest, repeat_disable;
 uniform bool has_mask = false;
 uniform vec3 foot;
@@ -17,8 +23,15 @@ uniform vec4 local_light_phases[4];
 uniform float animation_time = -1.0;
 uniform float self_glow = 0.0;
 varying vec3 world_point;
+varying vec2 paint_uv;
 
 void vertex() {
+	// Geometrie und UVs folgen dem vollständigen Motiv statt dem starren Raster.
+	paint_uv = UV;
+	if (has_pose_region) {
+		VERTEX.xy = VERTEX.xy * pose_geometry.xy + pose_geometry.zw;
+		paint_uv = pose_region.xy + (UV - pose_cell.xy) / pose_cell.zw * pose_region.zw;
+	}
 	// Volles Billboard erhaelt den gezeichneten Aspekt bei der geneigten Kamera.
 	mat4 facing = mat4(INV_VIEW_MATRIX[0], INV_VIEW_MATRIX[1], INV_VIEW_MATRIX[2], MODEL_MATRIX[3]);
 	MODELVIEW_MATRIX = VIEW_MATRIX * facing;
@@ -26,8 +39,9 @@ void vertex() {
 }
 
 void fragment() {
-	if (any(lessThan(UV, frame_clip.xy)) || any(greaterThan(UV, frame_clip.xy + frame_clip.zw))) { discard; }
-	vec4 paint = texture(atlas, UV) * COLOR;
+	if (any(lessThan(paint_uv, frame_clip.xy)) || any(greaterThan(paint_uv, frame_clip.xy + frame_clip.zw))) { discard; }
+	if (has_pose_region && abs(texture(pose_mask, paint_uv).r - pose_id) > 0.0019) { discard; }
+	vec4 paint = texture(atlas, paint_uv) * COLOR;
 	if (paint.a < 0.12) { discard; }
 	if (has_mask) {
 		vec2 art_uv = vec2((world_point.x - scene_origin) / scene_span,
