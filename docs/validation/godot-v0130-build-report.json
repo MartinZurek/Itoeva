@@ -1,0 +1,29 @@
+{
+  "commit": "cb979eb9db398b88c3303c06932c044b5c1f07f4",
+  "run_id": "39416241818",
+  "file_id": "148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX",
+  "bytes": 191726216,
+  "sha256": "3f47b5aac735a7d61f4705eb4b71ee999b7030e09936e490b1de461c69277719",
+  "md5": "34a854bfaec901b0c0270279f947fcc7",
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "version": "0.13.0",
+  "version_code": 25,
+  "card_count": 616,
+  "starter_species": [
+    "mosslyn",
+    "nocti",
+    "starlet",
+    "wyrmling"
+  ],
+  "apk_name": "Itoeva_Godot_Test_v0.13.0.apk",
+  "workflow_url": "https://github.com/MartinZurek/Itoeva/actions/runs/39416241818",
+  "workflow_conclusion": "success",
+  "signature_verified": true,
+  "signing_certificate_sha256": "30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc",
+  "abi": "arm64-v8a",
+  "remote_size_and_md5_verified": true,
+  "download_url": "https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk",
+  "runtime_manifest_sha256": "1e44053fcf622e151e66903f3c50db697c9db262a33d1e3c6c5a5c5a27f26583",
+  "artifact_id": 12263550873,
+  "logs_artifact_id": 12262956762
+}

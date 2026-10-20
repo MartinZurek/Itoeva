@@ -71,3 +71,20 @@ YAML, alle eingebetteten Python-Skripte und Bash-Blöcke des APK-Lieferwegs vali
 Sitzkorrektur: Ein echter Sitz beendet Noctis Flughöhe und verwendet vor dem
 Beckenversatz die Pixelgröße der Sitzzeichnung. Zusätzlicher Regressionstest;
 Ausdauerprüfung nun363 Checks.
+
+## Auslieferung abgeschlossen
+
+[Baulauf39416241818](https://github.com/MartinZurek/Itoeva/actions/runs/39416241818)
+ist erfolgreich abgeschlossen. Vollständige Spielregressionen, OpenGL-Konturen und
+Weltbilder, Android-Export, Signatur-/Paketprüfung und Remote-Prüfsummenabgleich bestanden.
+Die allgemeine Projektprüfung ist ebenfalls grün.
+
+- APK: `Itoeva_Godot_Test_v0.13.0.apk`, AndroidTest0.13.0/Code25.
+- Quellcommit: `cb979eb9db398b88c3303c06932c044b5c1f07f4`.
+- Größe:191726216 Bytes; SHA-256:`3f47b5aac735a7d61f4705eb4b71ee999b7030e09936e490b1de461c69277719`.
+- Bestehendes Testzertifikat und Paket erhalten, als Update zur vorhandenen Test-APK installierbar.
+- [APK herunterladen](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk): bisherige Download-Datei aktualisiert.
+- [Liefernachweis](validation/godot-v0130-build-report.json).
+
+Die temporäre Unterbrechung ist behoben, sämtliche Änderungen sind im PR374 gesichert.
+Telefon-FPS/GPU und menschliche Animationsabnahme bleiben der nächste reale Test.

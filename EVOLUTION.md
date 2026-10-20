@@ -7219,3 +7219,17 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **TESTED BEHAVIOR:**Zusätzliche Prüfung der echten Parkbankaktion aus einer
   Flugpose;363 Ausdauer-/Bewegungschecks. Runtime-Manifest entsprechend erneuert.
 - **ÜBERGABE:**PR374; bestehender APK-Bau wird durch den korrigierten Stand ersetzt.
+
+### 2026-10-20 – Test-APK0.13.0 erfolgreich ausgeliefert
+
+- **FACT:**Baulauf39416241818 zum Commitcb979eb9db398b88c3303c06932c044b5c1f07f4
+  erfolgreich: vollständige Regressionen, OpenGL, Export, bestehende Signatur,
+  Paketversion25/0.13.0 und Remote-Prüfsummenabgleich bestanden.
+- **FACT:**191726216 Bytes; SHA-256
+  `3f47b5aac735a7d61f4705eb4b71ee999b7030e09936e490b1de461c69277719`.
+  Vorhandene Drive-Datei aktualisiert; Update zur bisherigen Testversion möglich.
+- **TESTED BEHAVIOR:**363 Ausdauer-/Bewegungschecks auch lokal mit echtem OpenGL,
+  1984 Kontur-/Ankerchecks, vollständige Spieltests sowie allgemeine Projektprüfung grün.
+- **UNVERIFIED:**Menschliche Bewegungs-/Tempoabnahme und Telefon-GPU/FPS.
+- **ÜBERGABE:**PR374, docs/validation/godot-v0130-build-report.json und
+  docs/godot-ausdauer-und-bewegung-v0130.md. Kein Merge ins ältere main.
