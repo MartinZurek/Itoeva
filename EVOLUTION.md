@@ -7242,9 +7242,9 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Feste, vollständig antippbare Wegschilder; getrennte Abzweige und linksseitige
   Rückwege an Nebelwacht/Aschenstieg. Alle acht Verbindungspaare bleiben erhalten.
   Waldendpunkte stammen für beide Reiserichtungen aus demselben Datenbestand.
-- **TESTED BEHAVIOR:** Korrigierte OpenGL-Ansichten am Waldrand, Sonnenhain und
-  Nebelwacht visuell geprüft. Automatische Tür-/Wald-/Schildprüfungen laufen;
-  endgültige Ergebnisse werden vor Fertigmeldung dokumentiert.
+- **TESTED BEHAVIOR:**181 Strecken-/Schildchecks,256 bestehende Türpfade und363
+  Ausdauer-/Bewegungschecks bestanden. Alle sieben OpenGL-Ansichten visuell geprüft.
+  Test-APK0.13.1/Code26 im bestehenden signierten Bauweg gestartet; Liefernachweis folgt.
 - **UNVERIFIED:** Telefon-Touchgefühl, menschliche Wegeabnahme und neue APK.
 - **ÜBERGABE:** docs/godot-sichtbare-streckenanschluesse.md, Branch
-  codex/godot-visible-route-connections auf dem ausgelieferten Stand0.13.0.
+  codex/godot-visible-route-connections, PR375 auf dem ausgelieferten Stand0.13.0.

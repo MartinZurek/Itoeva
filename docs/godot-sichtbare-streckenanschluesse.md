@@ -42,7 +42,14 @@ allen sechs angeschlossenen Außenorten.
 
 `route_capture.gd` rendert Waldrand, Waldsaum und die fünf Erweiterungsorte
 mit echtem OpenGL. Sichtprüfung der ersten korrigierten Ansichten bestanden.
-Die vollständigen Prüfergebnisse und der PR-Link werden nach Abschluss ergänzt.
+181 neue Streckenprüfungen,256 bestehende Spezies-/Türpfade und363
+Ausdauer-/Bewegungschecks bestanden. Alle sieben korrigierten OpenGL-Ansichten
+visuell geprüft. Katalogressourcen bleiben bei diesen bestehenden Tests teilweise
+bis zum Prozessende gehalten; keine funktionalen Fehler.
+
+PR375: https://github.com/MartinZurek/Itoeva/pull/375
+APK-Baulauf: https://github.com/MartinZurek/Itoeva/actions/runs/39425272411
+Laufzeit-Commit: `d7bf81cbe6dfb39a57a03b3ba3683a6c585f9855`.
 Test-APK0.13.1/Code26 wird über den bestehenden signierten GitHub-/Drive-Weg
 gebaut; Schlüssel, Paket und Drive-Ziel bleiben gleich. Noch nicht ausgeliefert.
 Das 525-Dateien-Manifest hat SHA-256
