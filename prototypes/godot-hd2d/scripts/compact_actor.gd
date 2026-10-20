@@ -3,11 +3,29 @@ extends "res://scripts/character_actor.gd"
 var cell_size:=Vector2i(181,181)
 var world_texture: Texture2D
 var run_texture: Texture2D
+var walk_texture: Texture2D
 var world_bounds: Array[Rect2i] = []
 var run_bounds: Array[Rect2i] = []
+var walk_bounds: Array[Rect2i] = []
 var reference_height := 1.0
 var run_reference_height := 1.0
+var walk_reference_height := 1.0
 var run_sheet := false
+var walk_sheet := false
+static var pose_masks: Dictionary = {}
+var mask_textures: Dictionary = {}
+
+func _pose_mask() -> Dictionary:
+ if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
+ var path:=sprite.texture.resource_path
+ var data: Dictionary=pose_masks[path]
+ if not metrics.has("pose_masks"):metrics["pose_masks"]={}
+ mask_textures=metrics.pose_masks
+ if not mask_textures.has(path):
+  var raw:=Marshalls.base64_to_raw(data.deflate).decompress(int(data.width)*int(data.height),FileAccess.COMPRESSION_DEFLATE)
+  var mask:=Image.create_from_data(int(data.width),int(data.height),false,Image.FORMAT_R8,raw)
+  mask_textures[path]=ImageTexture.create_from_image(mask)
+ return {"texture":mask_textures[path],"id":float(data.ids[sprite.frame])/255.0}
 
 func _ready() -> void:
  collision_layer=2;collision_mask=1
@@ -26,6 +44,11 @@ func _ready() -> void:
  world_bounds.assign(frame_bounds)
  reference_height=float(world_bounds[0].size.y)
  var definition: Dictionary=Catalog.data().characters[species]
+ if definition.has("walk_asset"):
+  walk_texture=load(definition.walk_asset)
+  var walk_data: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_walks.json"))[species]
+  for b in walk_data.bounds:walk_bounds.append(Rect2i(b[0],b[1],b[2],b[3]))
+  walk_reference_height=float(walk_data.reference_height)
  if definition.has("run_asset"):
   run_texture=load(definition.run_asset)
   var run_data: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_runs.json"))[species]
@@ -36,6 +59,7 @@ func _ready() -> void:
  sprite.alpha_cut=SpriteBase3D.ALPHA_CUT_DISCARD;sprite.alpha_scissor_threshold=.12
  sprite.texture_filter=BaseMaterial3D.TEXTURE_FILTER_LINEAR;sprite.shaded=false
  sprite.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ sprite.extra_cull_margin=2.0
  painted_material=ShaderMaterial.new();painted_material.render_priority=10
  painted_material.shader=load("res://shaders/painted_character.gdshader")
  painted_material.set_shader_parameter("atlas",sprite.texture);sprite.material_override=painted_material
@@ -48,14 +72,25 @@ func _ready() -> void:
  set_world_scale(base_pixel_size,jump_height,body_pixel_size);_update_frame(false)
 
 func _update_sprite_scale() -> void:
- sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1,run_reference_height if run_sheet else reference_height)
+ var height:=run_reference_height if run_sheet else walk_reference_height if walk_sheet else reference_height
+ sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1,height)
  sprite.position=Vector3.UP*hover
  sprite.offset.y=cell_size.y*.5-2.0 if mounted else float(frame_bounds[sprite.frame].end.y)-cell_size.y*.5
- # Kleine getrennte Nachbarfragmente gehören nicht zur aktuellen Zeichnung.
+ # Vollständige Konturen erhalten auch überstehende Schweife und Schals.
  var bounds:=frame_bounds[sprite.frame]
  var origin:=Vector2(sprite.frame%8,sprite.frame/8)*Vector2(cell_size)+Vector2(bounds.position)
  var texture_size:=sprite.texture.get_size()
  painted_material.set_shader_parameter("frame_clip",Vector4(origin.x/texture_size.x,origin.y/texture_size.y,bounds.size.x/texture_size.x,bounds.size.y/texture_size.y))
+ var cell_origin:=Vector2(sprite.frame%8,sprite.frame/8)*Vector2(cell_size)
+ var ratio:=Vector2(bounds.size)/Vector2(cell_size)
+ var shift:=Vector2((bounds.get_center().x-cell_size.x*.5)*(-1.0 if sprite.flip_h else 1.0),(1.0-ratio.y)*sprite.offset.y+cell_size.y*.5-bounds.get_center().y)*sprite.pixel_size
+ painted_material.set_shader_parameter("has_pose_region",true)
+ painted_material.set_shader_parameter("pose_cell",Vector4(cell_origin.x/texture_size.x,cell_origin.y/texture_size.y,cell_size.x/texture_size.x,cell_size.y/texture_size.y))
+ painted_material.set_shader_parameter("pose_region",painted_material.get_shader_parameter("frame_clip"))
+ painted_material.set_shader_parameter("pose_geometry",Vector4(ratio.x,ratio.y,shift.x,shift.y))
+ var mask:=_pose_mask()
+ painted_material.set_shader_parameter("pose_mask",mask.texture)
+ painted_material.set_shader_parameter("pose_id",mask.id)
  _update_occlusion()
 
 func rest_frame() -> int:
@@ -65,10 +100,13 @@ func _update_frame(moving: bool) -> void:
  var depth:=absf(facing.y)>absf(facing.x)
  var flight: bool=species=="nocti" and hover>.06 and state=="idle" and jump_clock<0
  var use_run: bool=run_texture!=null and state=="idle" and jump_clock<0 and ((moving and running and run_blend>=.5) or flight)
- _use_run_sheet(use_run)
+ var use_walk: bool=walk_texture!=null and moving and state=="idle" and jump_clock<0 and not use_run
+ _use_motion_sheet(use_run,use_walk)
  sprite.flip_h=not depth and facing.x<0
  if use_run:
   sprite.frame=run_frame(gait,clock,facing)
+ elif use_walk:
+  sprite.frame=walk_frame(gait,facing)
  elif jump_clock>=0:
   var duration:=2*sqrt(2*jump_height/GRAVITY)
   var phase:=clampi(int(jump_clock/maxf(.1,duration)*6),0,5)
@@ -82,15 +120,19 @@ func _update_frame(moving: bool) -> void:
  else:sprite.frame=rest_frame()
  _update_sprite_scale()
 
-func _use_run_sheet(value: bool) -> void:
- if value==run_sheet:return
- run_sheet=value
+func _use_motion_sheet(sprint: bool, walk: bool) -> void:
+ if sprint==run_sheet and walk==walk_sheet:return
+ run_sheet=sprint;walk_sheet=walk
  sprite.frame=0
- sprite.texture=run_texture if value else world_texture
- sprite.hframes=8;sprite.vframes=3 if value else 6
+ sprite.texture=run_texture if sprint else walk_texture if walk else world_texture
+ sprite.hframes=8;sprite.vframes=3 if sprint or walk else 6
  cell_size=Vector2i(sprite.texture.get_width()/8,sprite.texture.get_height()/sprite.vframes)
- frame_bounds.assign(run_bounds if value else world_bounds)
+ frame_bounds.assign(run_bounds if sprint else walk_bounds if walk else world_bounds)
  painted_material.set_shader_parameter("atlas",sprite.texture)
+
+func walk_frame(stride: float, direction: Vector2) -> int:
+ var row:=0 if absf(direction.x)>=absf(direction.y) else 1 if direction.y>0 else 2
+ return row*8+posmod(int(stride*8),8)
 
 func run_frame(stride: float, time: float, direction: Vector2) -> int:
  var row:=0 if absf(direction.x)>=absf(direction.y) else 1 if direction.y>0 else 2

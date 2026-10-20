@@ -26,6 +26,7 @@ const SAVE_PATH := "user://painted_world_v2.json"
 var save_path := SAVE_PATH
 var stage: Node3D
 var actor: CharacterBody3D
+var exploration_stamina = preload("res://scripts/movement_stamina.gd").new()
 var actors: Array[CharacterBody3D] = []
 var camera: Camera3D
 var hud: Control
@@ -366,6 +367,7 @@ func _preload_world() -> void:
 	for entry in Catalog.data().characters.values():
 		if entry.asset not in pending:pending.append(entry.asset)
 		if entry.has("run_asset") and entry.run_asset not in pending:pending.append(entry.run_asset)
+		if entry.has("walk_asset") and entry.walk_asset not in pending:pending.append(entry.walk_asset)
 	for asset in pending:
 		var error := ResourceLoader.load_threaded_request(asset, "Texture2D")
 		if error != OK:
@@ -452,6 +454,8 @@ func _mount_world(next_room: String, position: Vector3) -> void:
 	_apply_world_time()
 	actor = CompactActor.new() if Catalog.data().characters[selected].get("compact",false) else Actor.new()
 	actor.species = selected
+	# Türwechsel baut die Figur neu auf, aber füllt den Sprintvorrat nicht.
+	actor.stamina = exploration_stamina
 	actor.metrics = character_metrics
 	actor.enabled = false
 	add_child(actor)

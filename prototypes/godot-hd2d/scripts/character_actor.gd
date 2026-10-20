@@ -3,8 +3,10 @@ extends CharacterBody3D
 const Catalog = preload("res://scripts/world_catalog.gd")
 const GRAVITY := 14.0
 const WALK_SPEED := 2.0
-const RUN_SPEED := 4.6
+const RUN_SPEED := 3.3
 const ROLL_SECONDS := 0.46
+const Stamina = preload("res://scripts/movement_stamina.gd")
+var stamina = Stamina.new()
 var species := "fennec"
 var player_controlled := true
 var enabled := true
@@ -258,6 +260,7 @@ func request_action(action: String) -> bool:
 		return true
 	elif action == "roll" and species == "hootlet":
 		if state == "twirl": return false
+		if player_controlled and not stamina.spend(14.0): return false
 		if mounted:
 			mounted = false
 			position = seat_exit
@@ -272,6 +275,7 @@ func request_action(action: String) -> bool:
 		return true
 	elif action == "roll" and (is_on_floor() or mounted):
 		if state == "roll": return false
+		if player_controlled and not stamina.spend(14.0): return false
 		state = "roll"
 		state_clock = 0.0
 		roll_direction = _world_direction(facing).normalized()
@@ -332,6 +336,7 @@ func _physics_process(delta: float) -> void:
 		request_action("roll")
 	if mounted:
 		if state == "sit" and magnitude <= 0.12 and not jump_requested:
+			if player_controlled: stamina.advance(delta, 0.0, false, true, true)
 			_update_frame(false)
 			_update_shadow()
 			return
@@ -351,6 +356,8 @@ func _physics_process(delta: float) -> void:
 		speed = lerpf(WALK_SPEED, RUN_SPEED, smoothstep(0.64, 1.0, magnitude))
 	if player_controlled and Input.is_action_pressed("sprint"):
 		speed = RUN_SPEED * magnitude
+	if player_controlled and not stamina.allows_sprint():
+		speed = minf(speed, WALK_SPEED)
 	if state == "sit":
 		speed = 0.0
 	if pending_sit:
@@ -415,7 +422,7 @@ func _physics_process(delta: float) -> void:
 	# Hysterese verhindert hektischen Rollenwechsel genau an der Jogging-Schwelle.
 	if running and actual_speed < 2.3:
 		running = false
-	elif not running and actual_speed > 3.05:
+	elif not running and actual_speed > 2.65:
 		running = true
 	run_blend = move_toward(run_blend, 1.0 if running else 0.0, delta / 0.16)
 	if moving and input.length() > 0.06 and state not in ["roll", "twirl"]:
@@ -429,6 +436,9 @@ func _physics_process(delta: float) -> void:
 	# Ein Zyklus entspricht einer zur Zeichnung passenden Strecke, nicht der Wanduhr.
 	if moving:
 		gait += distance / ((3.3 if running else 1.7) * maxf(body_pixel_size / 0.020, 0.5))
+	if player_controlled:
+		var effort := clampf((actual_speed - WALK_SPEED) / (RUN_SPEED - WALK_SPEED), 0.0, 1.0) if state == "idle" else 0.0
+		stamina.advance(delta, effort, moving, state == "sit", false)
 	hover = move_toward(hover, _hover_target(moving), delta * 1.6)
 	if jump_clock >= 0.0:
 		jump_clock += delta

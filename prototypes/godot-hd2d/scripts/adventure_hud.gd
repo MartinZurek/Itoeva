@@ -24,6 +24,8 @@ var markers: Array[Dictionary] = []
 var route_markers: Array[Dictionary] = []
 var caption: Label
 var hint: Label
+var stamina_bar: ProgressBar
+var stamina_label: Label
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -42,6 +44,30 @@ func _ready() -> void:
 	hint.add_theme_color_override("font_outline_color", Color(0.08, 0.10, 0.08, 0.9))
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(hint)
+	stamina_label = Label.new()
+	stamina_label.position = Vector2(28, 86)
+	stamina_label.add_theme_font_size_override("font_size", 15)
+	stamina_label.add_theme_constant_override("outline_size", 4)
+	stamina_label.add_theme_color_override("font_outline_color", Color(0.08, 0.10, 0.08, 0.9))
+	stamina_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(stamina_label)
+	stamina_bar = ProgressBar.new()
+	stamina_bar.position = Vector2(28, 112)
+	stamina_bar.size = Vector2(204, 12)
+	stamina_bar.max_value = 100
+	stamina_bar.show_percentage = false
+	stamina_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var background := StyleBoxFlat.new()
+	background.bg_color = Color("263b3be6")
+	background.set_corner_radius_all(6)
+	background.border_color = Color("bcd7cb")
+	background.set_border_width_all(1)
+	stamina_bar.add_theme_stylebox_override("background", background)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color("92d2b0")
+	fill.set_corner_radius_all(5)
+	stamina_bar.add_theme_stylebox_override("fill", fill)
+	add_child(stamina_bar)
 	_top_button("Menü", Vector2(-154, 22), func(): app.show_menu())
 	_top_button("Karte", Vector2(-292, 22), func(): app.show_map())
 	resized.connect(reset_touch)
@@ -86,6 +112,13 @@ func _process(delta: float) -> void:
 		action_elapsed += delta
 		if action_elapsed >= HOLD_SECONDS:
 			_fire_action("sit")
+	stamina_bar.value = actor.stamina.value
+	stamina_label.text = "Ausdauer · %.0f %%" % actor.stamina.value
+	if actor.state == "sit":
+		stamina_label.text += " · " + ("Sitzpause ++" if actor.mounted else "Sitzpause +")
+	elif actor.stamina.exhausted:
+		stamina_label.text += " · kurz durchatmen"
+	stamina_bar.get_theme_stylebox("fill").bg_color = Color("e4bc80") if actor.stamina.exhausted else Color("92d2b0")
 	_update_markers()
 	queue_redraw()
 
@@ -112,7 +145,7 @@ func _fire_action(action: String) -> void:
 	# Abgelehnte Gesten duerfen beim Loslassen keine andere Aktion ausloesen.
 	if not actor.request_action(action):
 		action_fired = true
-		app._notice("Rollen ist nach der Landung wieder möglich.")
+		app._notice("Kurz ausruhen, dann klappt die Rolle wieder." if actor.stamina.exhausted or actor.stamina.value < 14 else "Rollen ist nach der Landung wieder möglich.")
 		return
 	action_fired = true
 	if action == "sit":

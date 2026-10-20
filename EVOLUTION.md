@@ -7179,3 +7179,24 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:** Lieferung vor erfolgreichem Export/Upload; Telefon-FPS/GPU und
   menschliche Animationsabnahme bleiben offen. Keine Änderung von Schlüssel/Konto.
 - **ÜBERGABE:** docs/godot-vier-startwesen-und-figuren.md, AndroidTest0.12.0, PR373.
+
+### 2026-10-20 – Ausdauer und vollständige Gehzyklen im Godot-Spiel
+
+- **DOCUMENTED INTENT:** Martin verlangt langsameren, begrenzten Sprint, Ausdauerbalken,
+  Erholung beim Gehen/Stehen/Sitzen/Bank sowie vollständige und flüssigere Bewegungen
+  aller acht Wesen, besonders Nocti, Starlet und Wyrmling.
+- **FACT:** Sprint3,3 statt4,6;100 Punkte/16 pro Sprintsekunde, Wiederfreigabe ab30.
+  Erholung7/12/25/50 pro Sekunde; Rollen kosten14. Menü/Kampf pausieren den Vorrat,
+  Türen erhalten ihn. Bewohner und dauerhafter Fortschritt bleiben unabhängig.
+- **DARSTELLUNG:** Acht neue gerichtete Achtphasen-Gehatlanten; vollständige Konturen,
+  angepasste Sprite-Geometrie/UVs und technische ID-Masken erhalten überstehende
+  Körperteile und getrennte Pfoten. Nocti landet bei leerer Ausdauer.
+- **TESTED BEHAVIOR:** Vor Umgebungsreset362 Ausdauer-,1984 OpenGL-Kontur-,1073 Figuren-,
+  88 Vollwelt-,128 Raum-/Spezies-,271 Tiefen-,115 Bewegungs-/Licht-,690 Bewohner-,25 Hang-
+  und36 Darstellungsprüfungen bestanden. Acht PNGs mit identischen Git-Hashes gesichert;
+  Wiederherstellung und erneute Prüfung dokumentiert. Synthetische Regression besteht.
+- **UNVERIFIED:** Telefon-FPS/GPU, menschliche Animationsabnahme und neue APK-Auslieferung.
+  Einige Tests halten beim Prozessende bekannte Katalogressourcen.
+- **ÜBERGABE:** docs/godot-ausdauer-und-bewegung-v0130.md; Branch
+  codex/godot-stamina-motion-fix auf dem ausgelieferten Figurenstand. Nächster Schritt:
+  erneute Spiel-/OpenGL-Prüfung und bestehender signierter APK-Lieferweg.

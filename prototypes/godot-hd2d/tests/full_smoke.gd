@@ -79,7 +79,7 @@ func run() -> void:
 	actor.touch_vector = Vector2(1, 0)
 	await frames(45)
 	var run_speed: float = actor.actual_speed
-	check(walk_speed < jog_speed and jog_speed < run_speed and run_speed > 4.0, "Analogtempo steigt stetig von Gehen ueber Joggen zu Rennen")
+	check(walk_speed < jog_speed and jog_speed < run_speed and run_speed > 3.1 and run_speed <= 3.31, "Analogtempo steigt stetig von Gehen ueber Joggen zu Rennen")
 	check(actor.running and actor.run_sheet and actor.sprite.texture.resource_path.ends_with("mosslyn-run.png"), "Sprint nutzt den vorhandenen gezeichneten Laufbogen")
 	actor.touch_vector = Vector2.ZERO
 	await frames(30)
