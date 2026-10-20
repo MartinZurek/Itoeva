@@ -119,4 +119,12 @@ static func doors_for(place: String) -> Array[Dictionary]:
 			result.append({"from": place, "to": door.b, "at": Vector2(door.a_pos[0], door.a_pos[1]), "arrival": Vector2(door.b_pos[0], door.b_pos[1])})
 		elif place == door.b:
 			result.append({"from": place, "to": door.a, "at": Vector2(door.b_pos[0], door.b_pos[1]), "arrival": Vector2(door.a_pos[0], door.a_pos[1])})
+	for entry in result:
+		if is_outdoor(entry.from) and is_outdoor(entry.to):
+			entry["route_direction"] = "LEFT" if entry.at.x < .35 else "RIGHT" if entry.at.x > .65 else "UP"
+			# Der Sonnenhain ist ein Seitenweg, keine Umkehr entlang der Hauptstrasse.
+			if entry.from == "FOREST": entry.route_direction = "UP"
 	return result
+
+static func is_outdoor(place: String) -> bool:
+	return not region_for(place).is_empty() or data().interiors.get(place, {}).get("outdoor", false)

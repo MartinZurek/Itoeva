@@ -7233,3 +7233,18 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**Menschliche Bewegungs-/Tempoabnahme und Telefon-GPU/FPS.
 - **ÜBERGABE:**PR374, docs/validation/godot-v0130-build-report.json und
   docs/godot-ausdauer-und-bewegung-v0130.md. Kein Merge ins ältere main.
+
+### 2026-10-20 – Sichtbare und nachvollziehbare Streckenanschlüsse
+
+- **DOCUMENTED INTENT:** Martin meldet versteckte, unlogische Streckenanschlüsse
+  und möchte den Waldeingang weiter rechts am sichtbaren Wegverlauf.
+- **FACT:** Waldeingang von Orts-UV(0.52,0.64) nach(0.90,0.55) versetzt.
+  Feste, vollständig antippbare Wegschilder; getrennte Abzweige und linksseitige
+  Rückwege an Nebelwacht/Aschenstieg. Alle acht Verbindungspaare bleiben erhalten.
+  Waldendpunkte stammen für beide Reiserichtungen aus demselben Datenbestand.
+- **TESTED BEHAVIOR:** Korrigierte OpenGL-Ansichten am Waldrand, Sonnenhain und
+  Nebelwacht visuell geprüft. Automatische Tür-/Wald-/Schildprüfungen laufen;
+  endgültige Ergebnisse werden vor Fertigmeldung dokumentiert.
+- **UNVERIFIED:** Telefon-Touchgefühl, menschliche Wegeabnahme und neue APK.
+- **ÜBERGABE:** docs/godot-sichtbare-streckenanschluesse.md, Branch
+  codex/godot-visible-route-connections auf dem ausgelieferten Stand0.13.0.

@@ -529,7 +529,7 @@ func interaction_targets() -> Array[Dictionary]:
 		var distance := Vector2(door.position.x - actor.position.x, door.position.z - actor.position.z).length()
 		targets.append({"kind": "door", "id": door.from + ":" + door.to, "position": door.marker_position,
 			"approach": stage.safe_position(door.position, actor.collider.shape.radius),
-			"label": Catalog.data().labels[door.to], "ready": grounded and distance < (1.35 if room == "OUTDOOR" else 2.2), "distance": distance, "door": door})
+			"label": door.get("label", Catalog.data().labels[door.to]), "ready": grounded and distance < (1.35 if room == "OUTDOOR" else 2.2), "distance": distance, "door": door})
 	for creature in actors:
 		if creature == actor:
 			continue

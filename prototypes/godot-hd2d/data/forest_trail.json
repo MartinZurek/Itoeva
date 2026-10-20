@@ -326,12 +326,12 @@
   "entrance": {
     "from_place": "FOREST",
     "at": [
-      0.52,
-      0.64
+      0.9,
+      0.55
     ],
     "arrival": [
-      0.08,
-      0.55
+      0.1,
+      0.5
     ]
   },
   "encounter": {
@@ -530,5 +530,33 @@
         0.357
       ]
     ]
+  ],
+  "branches": [
+    {
+      "index": 1,
+      "at": [
+        0.76,
+        0.55
+      ],
+      "to": "SUN_GLADE",
+      "arrival": [
+        0.57,
+        0.55
+      ],
+      "label": "Grüner Wald"
+    },
+    {
+      "index": 6,
+      "at": [
+        0.87,
+        0.55
+      ],
+      "to": "MIST_WATCH",
+      "arrival": [
+        0.4,
+        0.55
+      ],
+      "label": "Schattenwald"
+    }
   ]
 }

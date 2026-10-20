@@ -166,7 +166,7 @@ func _release_action(canceled: bool) -> void:
 
 func _tap_marker(point: Vector2) -> bool:
 	for marker in markers:
-		if point.distance_to(marker.screen) < 33.0:
+		if marker.get("sign_rect", Rect2()).has_point(point) or point.distance_to(marker.screen) < 33.0:
 			app.request_interaction(marker.kind, marker.id)
 			return true
 	# Bei kleinem Telefonbild reicht auch ein Tipp auf die sichtbare Figur.
@@ -273,6 +273,11 @@ func _update_markers() -> void:
 		var marker: Dictionary = target.duplicate()
 		marker["screen"] = point
 		marker["body_rect"] = body_rect
+		if target.kind == "door" and target.door.has("route_direction"):
+			var label_width := ThemeDB.fallback_font.get_string_size(target.label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+			var extent := Vector2(label_width + 60.0, 38.0)
+			var center := Vector2(clampf(point.x, extent.x * .5 + 18.0, size.x - extent.x * .5 - 18.0), point.y)
+			marker["sign_rect"] = Rect2(center - extent * .5, extent)
 		markers.append(marker)
 	if app.room not in ["OUTDOOR","FOREST_TRAIL"]:
 		return
@@ -340,6 +345,9 @@ func _draw() -> void:
 			draw_colored_polygon(PackedVector2Array([p + Vector2(-7, 10), p + Vector2(-6, 18), p + Vector2(1, 10)]), Color(0.07, 0.12, 0.11, color.a * 0.9))
 			for dx in [-8, 0, 8]:
 				draw_circle(p + Vector2(dx, 0), 1.8, color)
+		elif marker.has("sign_rect"):
+			_draw_route_sign(marker)
+			continue
 		elif marker.kind == "door":
 			draw_circle(p, 20, Color(0.07, 0.12, 0.11, 0.38))
 			var arrow := PackedVector2Array([p + Vector2(-9, 3), p + Vector2(0, -6), p + Vector2(9, 3)])
@@ -378,3 +386,31 @@ func _bubble_style(alpha: float) -> StyleBoxFlat:
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(8)
 	return style
+
+func _draw_route_sign(marker: Dictionary) -> void:
+	var board: Rect2 = marker.sign_rect
+	var center := board.get_center()
+	var direction: String = marker.door.route_direction
+	var ink := Color(1.0, .94, .76)
+	# Feste Wegschilder unterscheiden Abzweige von den mitwandernden Randpfeilen.
+	# Der Pfosten endet am wirklichen Zugang, auch bei seitlich eingeruecktem Text.
+	var foot: Vector2 = app.camera.unproject_position(marker.door.position)
+	draw_line(Vector2(marker.screen.x, board.end.y), foot - Vector2(0, 5), Color(.12, .09, .05, .9), 5.0, true)
+	draw_line(Vector2(marker.screen.x, board.end.y), foot - Vector2(0, 5), Color(.65, .47, .26, .9), 2.0, true)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(.13, .16, .11, .96)
+	style.border_color = Color(.77, .65, .41)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	draw_style_box(style, board)
+	var arrow := Vector2(board.position.x + 20.0 if direction == "LEFT" else board.end.x - 20.0, center.y)
+	var points := PackedVector2Array()
+	if direction == "UP":
+		points = PackedVector2Array([arrow + Vector2(-6,3), arrow + Vector2(0,-4), arrow + Vector2(6,3)])
+	else:
+		var dx := -1.0 if direction == "LEFT" else 1.0
+		points = PackedVector2Array([arrow + Vector2(-4*dx,-6), arrow + Vector2(4*dx,0), arrow + Vector2(-4*dx,6)])
+	draw_polyline(points, ink, 2.5, true)
+	_draw_label(marker.label, center + Vector2(12 if direction == "LEFT" else -12, 5), 16, ink)
+	if marker.ready:
+		draw_circle(foot - Vector2(0, 3), 4.0, Color(.73, .96, .70))
