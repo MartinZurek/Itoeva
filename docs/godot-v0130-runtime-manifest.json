@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "canonical": "path+NUL+sha256+LF; sorted by path",
-  "sha256": "1ce46d30e8763e5a068825c7034416bbedbb3cf85362a0de92f587840c2fd005",
+  "sha256": "1e44053fcf622e151e66903f3c50db697c9db262a33d1e3c6c5a5c5a27f26583",
   "files": [
     {
       "path": "assets/audio/attack.wav",
@@ -2220,8 +2220,8 @@
     },
     {
       "path": "scripts/character_actor.gd",
-      "bytes": 20559,
-      "sha256": "565552510ca90b90f13e583ba201d7fd13e93200047ee74c6522ca6274972fff"
+      "bytes": 20706,
+      "sha256": "6c51c3d53732c3b8603bf3b26d571e9cd22438cbff4aac2641f57428fdb0a6f3"
     },
     {
       "path": "scripts/character_actor.gd.uid",
@@ -2460,8 +2460,8 @@
     },
     {
       "path": "scripts/world_app.gd",
-      "bytes": 55736,
-      "sha256": "3ce78c2b56f3c2f3f0b4b44a654e1199e7b9c76bd4660ea422152504f7f0307a"
+      "bytes": 55855,
+      "sha256": "8f42b70daf12bfec6ca94271e3a449627389ae31c65ca0cdcb432f1b43335442"
     },
     {
       "path": "scripts/world_app.gd.uid",

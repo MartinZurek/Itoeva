@@ -65,5 +65,9 @@ vorhanden. Branch ist auf dem ausgelieferten Figurenstand aufgebaut, kein Merge 
 Nach Wiederherstellung erneut362 Ausdauerprüfungen,1073 Figurenchecks,88 Vollwelt-,
 128 Framing- und25 Hangprüfungen bestanden. Erneut1984 Kontur-/Ankerprüfungen unter
 echtem Mesa/OpenGL ohne Fehler. Neues Runtime-Manifest:525 Dateien,
-SHA-256 `1ce46d30e8763e5a068825c7034416bbedbb3cf85362a0de92f587840c2fd005`.
+SHA-256 `1e44053fcf622e151e66903f3c50db697c9db262a33d1e3c6c5a5c5a27f26583`.
 YAML, alle eingebetteten Python-Skripte und Bash-Blöcke des APK-Lieferwegs validiert.
+
+Sitzkorrektur: Ein echter Sitz beendet Noctis Flughöhe und verwendet vor dem
+Beckenversatz die Pixelgröße der Sitzzeichnung. Zusätzlicher Regressionstest;
+Ausdauerprüfung nun363 Checks.

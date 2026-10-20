@@ -59,8 +59,11 @@ func run() -> void:
   if item.id=="park-bench":bench=item
  check(not bench.is_empty(),"Parkbank besitzt echten Sitzanker")
  app.actor.state="idle"; app.actor.position=app.stage.safe_position(bench.approach_position,app.actor.collider.shape.radius)
- await frames(12);await app.interact_with("seat","park-bench")
+ await frames(12)
+ app.actor.hover=.48;app.actor.running=true;app.actor.run_blend=1;app.actor._update_frame(true)
+ await app.interact_with("seat","park-bench")
  check(app.actor.mounted and app.actor.get_meta("mounted_seat","")=="park-bench","Echte Bankaktion setzt Sitz und Tiefenanker")
+ check(app.actor.hover==0 and app.actor.actual_speed==0 and not app.actor.run_sheet and not app.actor.walk_sheet,"Banksitz beendet Flug und verwendet die Sitzzeichnung")
  energy.value=20;await frames(60)
  check(app.actor.mounted and energy.value>=69.5 and energy.value<=70.5,"Banksitzen regeneriert 50/Sekunde")
  app._pause(true);before=energy.value;await frames(90)

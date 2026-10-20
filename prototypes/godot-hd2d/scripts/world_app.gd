@@ -630,7 +630,10 @@ func interact_with(kind: String, id: String) -> void:
 			hud.reset_touch()
 			if target.seat.seat != null:
 				var pelvis: float=target.seat.get("seat_offsets",{}).get(actor.species,0.0)
-				actor.mount_seat(target.seat.seat_position-Vector3.UP*actor.sprite.pixel_size*pelvis, actor.position)
+				actor.mount_seat(target.seat.seat_position, actor.position)
+				# Lauf-/Flugatlanten haben andere Pixelgrößen als die Sitzzeichnung.
+				actor._update_frame(false)
+				actor.position.y -= actor.sprite.pixel_size*pelvis
 				actor.set_meta("mounted_seat",target.seat.id)
 				var body: StaticBody3D = target.seat.body
 				actor.seat_occlusion_z = body.position.z + body.get_child(0).shape.size.z * 0.5 + 0.08

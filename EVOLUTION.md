@@ -7210,3 +7210,12 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**APK-Auslieferung erst nach erfolgreichem Export, Signatur- und
   Remote-Prüfsummenabgleich; Telefon-GPU/FPS und menschliche Animationsabnahme offen.
 - **ÜBERGABE:**PR374, docs/godot-ausdauer-und-bewegung-v0130.md.
+
+### 2026-10-20 – Sitzwechsel beendet Noctis Flug sauber
+
+- **FACT:**Sitzanker setzt Flughöhe, Laufblendung und tatsächliches Tempo zurück.
+  Möbel-Beckenversatz verwendet nach dem Posenwechsel die Sitz-Pixelgröße, nicht
+  die Größe des vorangegangenen Lauf-/Flugatlas.
+- **TESTED BEHAVIOR:**Zusätzliche Prüfung der echten Parkbankaktion aus einer
+  Flugpose;363 Ausdauer-/Bewegungschecks. Runtime-Manifest entsprechend erneuert.
+- **ÜBERGABE:**PR374; bestehender APK-Bau wird durch den korrigierten Stand ersetzt.

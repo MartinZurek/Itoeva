@@ -54,6 +54,11 @@ func mount_seat(anchor: Vector3, exit_position: Vector3) -> void:
 	position = anchor
 	velocity = Vector3.ZERO
 	mounted = true
+	# Der Sitz ist ein neuer fester Anker; Flug und Lauf dürfen nicht fortwirken.
+	hover = 0.0
+	actual_speed = 0.0
+	running = false
+	run_blend = 0.0
 	seat_occlusion_z = anchor.z
 	state = "sit"
 	state_clock = 0.0
