@@ -7278,3 +7278,18 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Abnahme und neue APK. Keine Änderung von Tempo, Kartenregeln oder Speicherformat.
 - **ÜBERGABE:**docs/godot-dynamik-und-budget.md; Arbeitsbranch
   codex/godot-focused-environment-budget auf PR375/Testfassung0.13.1.
+
+### 2026-10-21 – Dynamik-/Budgetprüfung und Test-APK0.14.0 vorbereitet
+
+- **TESTED BEHAVIOR:**Vier-Spieler-Matrizen128 Türpfade/64 Raumfälle/11023 Waldchecks,
+  109 Strecken-,195 Ausdauer- und869 Figuren-/Helferchecks bestanden. Bewohner690
+  unverändert geprüft.24 Dynamik-/Masken-OpenGL-Prüfungen und Bildvergleich grün.
+- **FACT:**Kontrollierte Desktop-Messung nach Wiederherstellung, je drei Starts:
+  Start bis Spiel2411→1934ms, Weltaufbau803→459ms, Texturspeicher529→462MB;
+  Bildzeiten je Ansicht20–32% geringer. Keine PNG-Auflösung reduziert.
+- **KORREKTUR:**Spezieshelfer bereiten ihre Konturen ohne vorherigen Weltbesuch vor;
+  der reduzierte Spielertestumfang hat diese bestehende Cache-Abhängigkeit sichtbar gemacht.
+- **FACT:**AndroidTest0.14.0/Code27 und aktuelles Runtime-Manifest vorbereitet;
+  bestehender signierter Lieferweg, vollständige erneute CI-Prüfung folgt.
+- **UNVERIFIED:**Telefon-Leistung, menschliche Dynamikabnahme und APK-Lieferung.
+- **ÜBERGABE:**PR376, docs/godot-dynamik-und-budget.md und zugehörige Messdaten.
