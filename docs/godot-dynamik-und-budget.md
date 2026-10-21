@@ -69,10 +69,18 @@ und2 Tiefen-OpenGL-Prüfungen. Der Masken-Rebuild-/Hashvergleich ist bestanden.
 Bekannte Meldungen über beim Testprozessende noch gehaltene Katalogressourcen
 bestehen weiter; keine funktionalen Fehler in diesen Prüfungen.
 
-Test-APK0.14.0/Code27 wird über den bestehenden signierten GitHub-/Drive-Weg
-vorbereitet. Schlüssel, Paket und Drive-Ziel bleiben gleich. Vollständige erneute
-CI-Prüfung und Liefernachweis stehen noch aus. Telefon-Touchgefühl, GPU/FPS und
-menschliche Abnahme der Dynamik bleiben offen.
+Test-APK0.14.0/Code27 ist ausgeliefert: Baulauf39603771878, Job119234617541,
+Quellcommit955be67999ee2b2a4ba55cde19427fb6d971621c. Sämtliche Godot-Spieltests,
+OpenGL-Aufnahmen und1088 Bewegungskonturchecks bestanden. Paket, Version,616 Karten,
+vier Startwesen, Exportinventar und bestehendes Signierzertifikat sind geprüft.
+Die vollständig hochgeladene Drive-Datei stimmt in Größe und Prüfsummen überein.
+191734829 Bytes; SHA-256 `edfe94928fe079cda65bf14f44f58dc6f35910726eb35e62249e92943079f0dc`.
+Liefernachweis: `docs/validation/godot-v0140-build-report.json`.
+
+[APK0.14.0 herunterladen](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk).
+Paket und Zertifikat entsprechen0.13.1; als Update installierbar.
+APK-Artefakt12347403237, Prüfprotokolle12347752677 (14 Tage aufbewahrt).
+Telefon-Touchgefühl, GPU/FPS und menschliche Abnahme der Dynamik bleiben offen.
 
 Masken nach Konturänderungen neu erzeugen: `python3 tools/bake_environment_masks.py`
 im Godot-Projekt. `tests/test_environment_masks.py` vergleicht Konturen, komprimierte

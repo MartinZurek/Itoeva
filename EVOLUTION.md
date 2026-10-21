@@ -7293,3 +7293,17 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   bestehender signierter Lieferweg, vollständige erneute CI-Prüfung folgt.
 - **UNVERIFIED:**Telefon-Leistung, menschliche Dynamikabnahme und APK-Lieferung.
 - **ÜBERGABE:**PR376, docs/godot-dynamik-und-budget.md und zugehörige Messdaten.
+
+### 2026-10-21 – Test-APK0.14.0 mit Landschaftsdynamik ausgeliefert
+
+- **FACT:**Baulauf39603771878/Job119234617541 zu Quellcommit955be67999ee2b2a4ba55cde19427fb6d971621c
+  erfolgreich: vollständige Godot-Regressionen, OpenGL, Export, Signatur und
+  Remote-Prüfsummenabgleich bestanden. Paket27/0.14.0,616 Karten und vier Startwesen.
+- **TESTED BEHAVIOR:**1088 OpenGL-Bewegungskonturchecks für die vier Spielerfiguren,
+  24 örtliche Dynamikchecks sowie bestehende Bewohner-/Helferprüfungen bestanden.
+- **FACT:**191734829 Bytes; SHA-256
+  `edfe94928fe079cda65bf14f44f58dc6f35910726eb35e62249e92943079f0dc`.
+  Bestehende Drive-Datei aktualisiert, mit unverändertem Zertifikat als Update installierbar.
+- **UNVERIFIED:**Telefon-GPU/FPS, Touchgefühl und menschliche Dynamikabnahme.
+- **ÜBERGABE:**PR376, docs/godot-dynamik-und-budget.md und
+  docs/validation/godot-v0140-build-report.json. Kein Merge ins ältere main.
