@@ -38,7 +38,7 @@ func run() -> void:
    for sprint in [false,true]:
     actor.running=sprint;actor.run_blend=1.0 if sprint else 0.0
     actor.hover=.48 if sprint and species=="nocti" else 0.0
-    check(actor._stride_length()>0.0,"Schrittlaenge folgt dem sichtbaren Fussweg: "+species)
+    check(actor._stride_length()>=2.15,"Lesbarer Takt auch fuer kleine Wesen: "+species)
     var first: Image
     var head:=Rect2i()
     var details:={}

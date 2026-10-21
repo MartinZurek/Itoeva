@@ -46,7 +46,7 @@ jobs:
           import hashlib, json, os, pathlib
           project = pathlib.Path(os.environ['PROJECT'])
           manifest = json.loads(pathlib.Path('docs/godot-v0142-runtime-manifest.json').read_text())
-          assert manifest['sha256'] == 'a4092302ec54dab0ef8022a423554698a138557366a5673de8eb5f6ac9bd1c3b'
+          assert manifest['sha256'] == '644237d42433c93bea32949dead5e072348059c90b8eaac3edc37cbd2d35e7ac'
           canonical = ''.join(item['path'] + '\0' + item['sha256'] + '\n' for item in manifest['files']).encode()
           assert hashlib.sha256(canonical).hexdigest() == manifest['sha256']
           assert len(manifest['files']) == 540

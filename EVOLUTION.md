@@ -7360,3 +7360,18 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Pruefung setzt ungueltige Atlasnummern voraus und ist gesondert dokumentiert.
 - **UEBERGABE:**codex/godot-planted-steps auf PR377; AndroidTest0.14.2/Code29
   vorbereitet, bestehender Signier-/Drive-Weg, keine Verschmelzung ins aeltere main.
+
+### 2026-10-21 – Lesbaren Schritttakt im Weltmassstab erhalten
+
+- **FACT:**Der abschliessende Massstabsabgleich fand bei kleinen Wesen trotz
+  sauberer Teilbewegungen bis zu4-5 volle Gehzyklen je Sekunde. Die geometrische
+  Fusswegskalierung allein ist deshalb keine geeignete sichtbare Taktvorgabe.
+- **KORREKTUR:**Die ruhige Mindestzyklusstrecke2,15/2,8 aus0.14.1 bleibt erhalten;
+  der Fortschritt folgt der Strecke. Die Fuesse zeigen geordnete Stand-/Schwungphasen,
+  sind bei dieser stilisierten Darstellung aber nicht exakt weltfest verankert.
+- **TESTED BEHAVIOR:**Vorherige Geometrie-/Spielpruefungen bestanden. Aktive
+  Render- und Ausdauerpruefung werden mit dem finalen Takt erneut ausgefuehrt;
+  die neue Ausdauerpruefung begrenzt die Gehfrequenz aller vier Spieler explizit.
+- **UNVERIFIED:**Baulieferung und menschliche Telefonabnahme bis zum Nachweis.
+- **UEBERGABE:**PR378/codex/godot-planted-steps,0.14.2/Code29. Der neuere
+  Baulauf ersetzt vor Lieferung den ueberholten Zwischenstand.

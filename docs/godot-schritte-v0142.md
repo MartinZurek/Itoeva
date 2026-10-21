@@ -16,7 +16,11 @@ Originalbilder werden nicht bearbeitet. Fennec, Gloop, Puffling und Hootlet blei
 Bewohner; die vier Spielerauswahlen bleiben Mooslyn, Nocti, Starlit und Wyrmling.
 
 - Fuer normale Fuesse gibt es Stand- und Rueckfuehrungsphase mit stetigem Aufsetzen.
-  Schrittweite und Fortschritt teilen die zurueckgelegte Weltstrecke und Bildskalierung.
+  Der Fortschritt folgt der zurueckgelegten Strecke. Die lesbare Mindestzyklus-
+  strecke2,15/2,8 bleibt von0.14.1 erhalten. Ein letzter Weltmassstabsabgleich fand
+  sonst4-5 Zyklen/Sekunde fuer kleine Wesen; dies wurde vor Lieferung verhindert.
+  Damit ist der Fusskontakt stilisiert: Die Sohlen haften nicht exakt in Welt-
+  koordinaten. Die mathematische Kontaktpruefung gilt fuer den Zeichenmassstab.
   Der Fuss selbst bleibt ein unverformter Ausschnitt; die Verbindung zur Huefte biegt.
 - Wyrmlings Seitenansicht hat vier getrennte Pfoten mit versetztem Schritt, beim
   Joggen diagonal gepaart. Keine unbewegte hintere oder vordere zusaetzliche Pfote.
@@ -44,7 +48,7 @@ der mathematische Standfuss-Nachweis der normalen Beine ist keine Messung ihrer
 Sternspitzen. Die umfassenden aktiven Renderpruefungen konzentrieren sich auf die
 vier Spieler; alle acht Wesen wurden in je drei Ansichten als Bildfolgen geprueft.
 
-Lokal bestanden: 2352 aktive OpenGL-, 1088 unveraenderte Kontur-, 84 Vollwelt-, 869 Figuren-/Helfer-, 200 Ausdauer-/Anzeige- und 115
+Lokal bestanden vor dem abschliessenden Taktabgleich: 2352 aktive OpenGL-, 1088 unveraenderte Kontur-, 84 Vollwelt-, 869 Figuren-/Helfer-, 200 Ausdauer-/Anzeige- und 115
 Kampfbewegungs-/Lichtchecks. Die unveraenderten Konturen werden weiterhin separat
 mit abgeschalteter Schrittsteuerung geprueft. Die aktive Renderpruefung verwendet
 im finalen Lauf das tatsaechliche Geh-/Sprinttempo und 24 Bilder je Sekunde,

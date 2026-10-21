@@ -219,10 +219,11 @@ func walk_frame(stride: float, direction: Vector2) -> int:
 func _stride_length() -> float:
  if step_rigs.has(species) and is_instance_valid(sprite):
   var amplitude: float=float(step_rigs[species].half_stride)
-  # Zurueckgelegte Strecke und Fussweg teilen denselben Massstab; kein
-  # Zeittakt, der beim Langsamgehen weiterstrampelt oder an Waenden laeuft.
+  # Die Kameragroesse darf kleine Wesen nicht mit 4-5 Zyklen/Sekunde
+  # strampeln lassen. Der lesbare Takt aus0.14.1 bleibt die Untergrenze;
+  # der Fortschritt folgt weiterhin der Strecke und steht an Hindernissen still.
   var pixels:=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1.0,walk_reference_height)
-  return StepGait.stride(amplitude,pixels,run_blend)
+  return maxf(lerpf(2.15,2.8,run_blend),StepGait.stride(amplitude,pixels,run_blend))
  return super._stride_length()
 
 func run_frame(stride: float, time: float, direction: Vector2) -> int:
