@@ -7263,3 +7263,47 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Lauf39425565075 hatte API26/API35 abgeschlossen; Gradle-Prüfung lief noch.
 - **ÜBERGABE:**PR375, docs/godot-sichtbare-streckenanschluesse.md und
   docs/validation/godot-v0131-build-report.json. Kein Merge ins ältere main.
+
+### 2026-10-21 – Vier Spielerfiguren und gezielte Landschaftsdynamik
+
+- **DOCUMENTED INTENT:**Martin möchte umfangreiche Spielerprüfungen auf die vier
+  auswählbaren Wesen begrenzen und sichtbare Dynamik gegen unsichtbaren Detailaufwand
+  abwägen: ruhiges Wasser, teilweise bewegte Wolken, weniger Laden/Rechenaufwand.
+- **FACT:**Spielermatrizen folgen Catalog.STARTERS; NPC-/Helfer-Daten bleiben erhalten.
+  Geometrie75264 statt230784 Punkte; vorberechnete RG-Konturen, örtlich begrenzte
+  Shaderarbeit und getrennte opake/transparente Bildpfade. Landschaftspixel bleiben.
+- **TESTED BEHAVIOR:**Erste Desktop-Messungen zeigen geringere Render-/Aufbauzeiten;
+  kein Ladezeitgewinn behauptet. Nach Umgebungsreset rekonstruiert, Endprüfung offen.
+- **UNVERIFIED:**Abschließende Regressionen, Telefon-FPS/GPU, menschliche visuelle
+  Abnahme und neue APK. Keine Änderung von Tempo, Kartenregeln oder Speicherformat.
+- **ÜBERGABE:**docs/godot-dynamik-und-budget.md; Arbeitsbranch
+  codex/godot-focused-environment-budget auf PR375/Testfassung0.13.1.
+
+### 2026-10-21 – Dynamik-/Budgetprüfung und Test-APK0.14.0 vorbereitet
+
+- **TESTED BEHAVIOR:**Vier-Spieler-Matrizen128 Türpfade/64 Raumfälle/11023 Waldchecks,
+  109 Strecken-,195 Ausdauer- und869 Figuren-/Helferchecks bestanden. Bewohner690
+  unverändert geprüft.24 Dynamik-/Masken-OpenGL-Prüfungen und Bildvergleich grün.
+- **FACT:**Kontrollierte Desktop-Messung nach Wiederherstellung, je drei Starts:
+  Start bis Spiel2411→1934ms, Weltaufbau803→459ms, Texturspeicher529→462MB;
+  Bildzeiten je Ansicht20–32% geringer. Keine PNG-Auflösung reduziert.
+- **KORREKTUR:**Spezieshelfer bereiten ihre Konturen ohne vorherigen Weltbesuch vor;
+  der reduzierte Spielertestumfang hat diese bestehende Cache-Abhängigkeit sichtbar gemacht.
+- **FACT:**AndroidTest0.14.0/Code27 und aktuelles Runtime-Manifest vorbereitet;
+  bestehender signierter Lieferweg, vollständige erneute CI-Prüfung folgt.
+- **UNVERIFIED:**Telefon-Leistung, menschliche Dynamikabnahme und APK-Lieferung.
+- **ÜBERGABE:**PR376, docs/godot-dynamik-und-budget.md und zugehörige Messdaten.
+
+### 2026-10-21 – Test-APK0.14.0 mit Landschaftsdynamik ausgeliefert
+
+- **FACT:**Baulauf39603771878/Job119234617541 zu Quellcommit955be67999ee2b2a4ba55cde19427fb6d971621c
+  erfolgreich: vollständige Godot-Regressionen, OpenGL, Export, Signatur und
+  Remote-Prüfsummenabgleich bestanden. Paket27/0.14.0,616 Karten und vier Startwesen.
+- **TESTED BEHAVIOR:**1088 OpenGL-Bewegungskonturchecks für die vier Spielerfiguren,
+  24 örtliche Dynamikchecks sowie bestehende Bewohner-/Helferprüfungen bestanden.
+- **FACT:**191734829 Bytes; SHA-256
+  `edfe94928fe079cda65bf14f44f58dc6f35910726eb35e62249e92943079f0dc`.
+  Bestehende Drive-Datei aktualisiert, mit unverändertem Zertifikat als Update installierbar.
+- **UNVERIFIED:**Telefon-GPU/FPS, Touchgefühl und menschliche Dynamikabnahme.
+- **ÜBERGABE:**PR376, docs/godot-dynamik-und-budget.md und
+  docs/validation/godot-v0140-build-report.json. Kein Merge ins ältere main.

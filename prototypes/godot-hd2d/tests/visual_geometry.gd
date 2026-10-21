@@ -76,7 +76,7 @@ func run() -> void:
 		app.yaw = 8
 		app._update_camera(10)
 		check(app.yaw == 0, "Innenraum behält die gezeichnete Blickachse: " + room)
-		for species in Catalog.data().characters:
+		for species in Catalog.STARTERS:
 			app.actor.species = species
 			app.actor.set_world_scale(app.stage.base_pixel_size, app.stage.jump_height)
 			app.stage.fit_character(app.actor.sprite.pixel_size)

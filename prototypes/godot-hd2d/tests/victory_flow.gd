@@ -26,7 +26,7 @@ func run() -> void:
  root.add_child(app)
  while app.loading_world: await process_frame
  await app.start_game()
- for species in app.Catalog.data().characters:
+ for species in app.Catalog.STARTERS:
   app.selected = species; app.save_data["forest_encounters"] = {}
   await app._mount_world("FOREST_TRAIL",Forest.position_for(5,.44))
   var enc: Node = app.forest_encounter

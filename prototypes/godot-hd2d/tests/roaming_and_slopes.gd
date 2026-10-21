@@ -37,7 +37,7 @@ func run() -> void:
   app.actor.stop_input()
   if pair == [13.3,20.5]:check(elapsed <= 240,"Steigung bleibt mit gedrosseltem Sprint erreichbar")
  # Auch beide kompakten Figuren und alle ursprünglichen Wesen benutzen dieselbe Hangführung.
- for species in Catalog.data().characters:
+ for species in Catalog.STARTERS:
   app.selected=species
   await app._mount_world("OUTDOOR",Catalog.position_for("SWAMP",Vector2(.2,.5)));app._resume()
   for resident in app.actors:

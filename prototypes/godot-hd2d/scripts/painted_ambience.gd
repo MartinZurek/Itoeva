@@ -1,6 +1,8 @@
 extends RefCounted
 
-const SHADER = preload("res://shaders/painted_ambience.gdshader")
+const SHADER = preload("res://shaders/painted_opaque.gdshader")
+const TRANSPARENT_SHADER = preload("res://shaders/painted_ambience.gdshader")
+const Masks = preload("res://scripts/environment_masks.gd")
 const MAX_LIGHTS := 16
 static var catalogue: Dictionary = {}
 static var masks: Dictionary = {}
@@ -12,9 +14,9 @@ static func data() -> Dictionary:
 		catalogue = parsed
 	return catalogue
 
-static func create_material(asset: String, texture: Texture2D) -> ShaderMaterial:
+static func create_material(asset: String, texture: Texture2D, transparent: bool = false) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
-	material.shader = SHADER
+	material.shader = TRANSPARENT_SHADER if transparent else SHADER
 	material.set_shader_parameter("painted_texture", texture)
 	material.set_shader_parameter("flame_atlas",load("res://assets/combat/flame-atlas.png"))
 	var entry: Dictionary = data().assets.get(asset.get_file(), {})
@@ -22,6 +24,8 @@ static func create_material(asset: String, texture: Texture2D) -> ShaderMaterial
 	var source_size := Vector2(dimensions[0], dimensions[1])
 	material.set_shader_parameter("source_size", source_size)
 	material.set_shader_parameter("water_mask", _water_mask(asset.get_file(), entry, source_size))
+	material.set_shader_parameter("has_water", not entry.get("water", []).is_empty())
+	material.set_shader_parameter("has_clouds", not entry.get("clouds", []).is_empty())
 	var positions := PackedVector4Array()
 	var strengths := PackedVector4Array()
 	var lights: Array = entry.get("lights", [])
@@ -77,25 +81,6 @@ static func _polygon(points: Array) -> PackedVector2Array:
 static func _water_mask(key: String, entry: Dictionary, source_size: Vector2) -> Texture2D:
 	if masks.has(key):
 		return masks[key]
-	# Die Maske entsteht einmal aus konservativen Originalbild-Konturen.
-	# Keine Farbheuristik verwechselt Holz, Himmel oder blaue Moebel mit Wasser.
-	var image := Image.create(384, 128, false, Image.FORMAT_R8)
-	image.fill(Color.BLACK)
-	var wet: Array[PackedVector2Array] = []
-	var dry: Array[PackedVector2Array] = []
-	for polygon in entry.get("water", []): wet.append(_polygon(polygon))
-	for polygon in entry.get("exclude", []): dry.append(_polygon(polygon))
-	if not wet.is_empty():
-		for y in image.get_height():
-			for x in image.get_width():
-				var point := Vector2((x + 0.5) / image.get_width(), (y + 0.5) / image.get_height()) * source_size
-				var covered := false
-				for polygon in wet:
-					if Geometry2D.is_point_in_polygon(point, polygon): covered = true; break
-				if not covered: continue
-				for polygon in dry:
-					if Geometry2D.is_point_in_polygon(point, polygon): covered = false; break
-				if covered: image.set_pixel(x, y, Color.WHITE)
-	var texture := ImageTexture.create_from_image(image)
+	var texture := Masks.texture_for(key)
 	masks[key] = texture
 	return texture

@@ -1,3 +1,7 @@
+// Sehr langsamer Versatz nur innerhalb weich begrenzter Wolkenfenster.
+vec2 cloud_drift(float t) {
+ return vec2(sin(t*.045)*.0032,sin(t*.031)*.00055);
+}
 float water_hash(vec2 p) {return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float water_noise(vec2 p) {
  vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.0-2.0*f);
@@ -6,7 +10,8 @@ float water_noise(vec2 p) {
 vec2 water_flow_offset(vec2 uv,float t,float wet) {
  vec2 p=uv*vec2(96.0,64.0)+vec2(t*.18,-t*.85);
  float a=water_noise(p);float b=water_noise(p*1.9+vec2(-t*.25,t*.32));
- return vec2(a-.5,b-.5)*.0028*wet*wet;
+ float wind=.90+.10*sin(t*.19);
+ return vec2(a-.5,b-.5)*.0028*wet*wet*wind;
 }
 vec3 water_surface(vec3 paint,vec2 uv,float t,float wet) {
  vec2 p=uv*vec2(68.0,42.0)+vec2(t*.25,-t*.95);

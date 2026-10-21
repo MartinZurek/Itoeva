@@ -21,7 +21,7 @@ func run() -> void:
    var box:=Rect2i(Enemies.region(id,pose));var alpha:=im.get_region(box).get_used_rect()
    check(alpha.size.x>100 and alpha.size.y>100,"Sechs vollständige eigene Posen")
    check(im.get_pixel(0,0).a<.01,"Echte Transparenz")
-  for species in Battle.SPECIES:
+  for species in Catalog.STARTERS:
    b=fresh(id,species);check(b.can_act("skill") and b.act("skill"),"Eigene Heldenkraft gegen Dämon: "+species)
    b.acknowledge_animation();check(b.party[0].hp>0,"Heldenkraft lässt Gruppe intakt")
  var b=fresh("glut_imp");var hp: int=b.party[0].hp

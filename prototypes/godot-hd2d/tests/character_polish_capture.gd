@@ -13,7 +13,7 @@ func run() -> void:
  DirAccess.remove_absolute(app.save_path);root.add_child(app)
  while app.loading_world:await process_frame
  await grab("menu")
- for species in ([] if "--battle-only" in OS.get_cmdline_user_args() else Catalog.data().characters):
+ for species in ([] if "--battle-only" in OS.get_cmdline_user_args() else Catalog.STARTERS):
   app.selected=species;await app._mount_world("OUTDOOR",Catalog.position_for("PARK",Vector2(.5,.65)))
   app._resume();app._pause(true);app.stage.set_time(12);app.zoom=5.7;app._update_camera(10)
   app.actor.facing=Vector2.RIGHT;app.actor.recovery_clock=1;app.actor._update_frame(false)

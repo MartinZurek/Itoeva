@@ -1,4 +1,5 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const Battle = preload("res://scripts/forest_battle.gd")
 var checks := 0
 var failures := 0
@@ -13,7 +14,7 @@ func start(species: String = "fennec") -> RefCounted:
  b.advance_intro(3.2)
  return b
 func run() -> void:
- for species in Battle.SPECIES:
+ for species in Catalog.STARTERS:
   var b = start(species)
   check(b.party.size()==2 and b.party[0].species==species,"Leader and companion "+species)
   var cost: int = b.party[0].mp
@@ -90,7 +91,7 @@ func run() -> void:
  check(migrated.enemy_health==68 and migrated.party[0].hp==41,"v027 ongoing HP migrated proportionally")
  b = start(); b.restore({"schema":2,"phase":"bogus","enemy_health":999,"cursor":99,"party":[{"hp":-2,"mp":999},{}],"last_event":[]})
  check(b.phase=="unseen" and b.enemy_health==136 and b.party[0].hp==0 and b.party[0].mp==24,"Malformed save fields clamped")
- for species in Battle.SPECIES:
+ for species in Catalog.STARTERS:
   var q = start(species)
   q.party[0].hp=35;q.party[1].hp=30
   var mp: int=q.party[0].mp
@@ -112,7 +113,7 @@ func run() -> void:
    "wyrmling": check(q.enemy_burn==2 and q.last_event.effects[-1].kind=="burn","DOT consumes one duration")
    "puffling": check(not q.party[1].haste and q.party[0].haste,"Haste consumed by attacking member only")
    "hootlet": check(q.party[0].hp==h-12 and q.enemy_weaken==2,"Weakness reduces actual damage")
- for species in Battle.SPECIES:
+ for species in Catalog.STARTERS:
   var winner = start(species)
   winner.party[1].hp = 0
   winner.enemy_health = 1

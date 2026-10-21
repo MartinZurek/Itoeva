@@ -43,7 +43,7 @@ func run() -> void:
   var entry:=Residents.appointment("miro",hour)
   check(entry.place in ["CRAFT","MILL_BROOK","SUN_GLADE"],"Miro bleibt im hellen Weltteil")
  # Alle vorhandenen Figuren: echte Bildunterkante, verschiedene Gangarten/Ansichten.
- for species in Catalog.data().characters:
+ for species in Catalog.STARTERS:
   app.selected=species
   await app._mount_world("MILL_BROOK",Catalog.position_for("MILL_BROOK",Vector2(.56,.6)))
   app._resume();await frames(15);app._pause(true)

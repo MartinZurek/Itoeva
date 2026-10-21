@@ -1,0 +1,248 @@
+{
+  "method": "Godot4.5.1 OpenGL/Mesa llvmpipe,1280x720; drei getrennte Prozessstarts je Fassung, Bildzeitmedian aus3x8 Frames pro Ansicht. Kein Telefon-Benchmark. Nach Wiederherstellung neu gemessen.",
+  "baseline_commit": "f4dda4a33e1945275d660e9b5fac5f0ea36d00cc",
+  "baseline_runs": [
+    {
+      "first_world_ms": 803.128,
+      "outdoor_vertices": 230784,
+      "preloaded_pixels": 103402448,
+      "preloaded_textures": 74,
+      "ready_ms": 1606.78,
+      "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "scenes": [
+        {
+          "frame_ms_median": 31.23225,
+          "id": "coast",
+          "mount_ms": 0.001,
+          "vertices": 230784
+        },
+        {
+          "frame_ms_median": 41.278375,
+          "id": "park",
+          "mount_ms": 0.01,
+          "vertices": 230784
+        },
+        {
+          "frame_ms_median": 43.27475,
+          "id": "forest",
+          "mount_ms": 0.01,
+          "vertices": 230784
+        },
+        {
+          "frame_ms_median": 37.071375,
+          "id": "clouds",
+          "mount_ms": 0.009,
+          "vertices": 230784
+        },
+        {
+          "frame_ms_median": 30.622125,
+          "id": "mill",
+          "mount_ms": 71.566,
+          "vertices": 23040
+        },
+        {
+          "frame_ms_median": 35.44925,
+          "id": "brook",
+          "mount_ms": 1847.929,
+          "vertices": 230454
+        }
+      ],
+      "texture_memory_bytes": 529225364
+    },
+    {
+      "first_world_ms": 825.586,
+      "outdoor_vertices": 230784,
+      "preloaded_pixels": 103402448,
+      "preloaded_textures": 74,
+      "ready_ms": 1694.35,
+      "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "scenes": [],
+      "texture_memory_bytes": 529225364
+    },
+    {
+      "first_world_ms": 766.591,
+      "outdoor_vertices": 230784,
+      "preloaded_pixels": 103402448,
+      "preloaded_textures": 74,
+      "ready_ms": 1644.547,
+      "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "scenes": [],
+      "texture_memory_bytes": 529225364
+    }
+  ],
+  "after_runs": [
+    {
+      "first_world_ms": 486.697,
+      "outdoor_vertices": 75264,
+      "preloaded_pixels": 90817964,
+      "preloaded_textures": 66,
+      "ready_ms": 1528.598,
+      "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "scenes": [
+        {
+          "frame_ms_median": 22.152375,
+          "id": "coast",
+          "mount_ms": 0.001,
+          "vertices": 75264
+        },
+        {
+          "frame_ms_median": 28.043125,
+          "id": "park",
+          "mount_ms": 0.01,
+          "vertices": 75264
+        },
+        {
+          "frame_ms_median": 32.119,
+          "id": "forest",
+          "mount_ms": 0.01,
+          "vertices": 75264
+        },
+        {
+          "frame_ms_median": 26.557,
+          "id": "clouds",
+          "mount_ms": 0.011,
+          "vertices": 75264
+        },
+        {
+          "frame_ms_median": 21.419125,
+          "id": "mill",
+          "mount_ms": 34.554,
+          "vertices": 7488
+        },
+        {
+          "frame_ms_median": 28.49975,
+          "id": "brook",
+          "mount_ms": 711.214,
+          "vertices": 80550
+        }
+      ],
+      "texture_memory_bytes": 462122520
+    },
+    {
+      "first_world_ms": 426.723,
+      "outdoor_vertices": 75264,
+      "preloaded_pixels": 90817964,
+      "preloaded_textures": 66,
+      "ready_ms": 1507.208,
+      "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "scenes": [],
+      "texture_memory_bytes": 462122520
+    },
+    {
+      "first_world_ms": 458.506,
+      "outdoor_vertices": 75264,
+      "preloaded_pixels": 90817964,
+      "preloaded_textures": 66,
+      "ready_ms": 1451.763,
+      "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "scenes": [],
+      "texture_memory_bytes": 462122520
+    }
+  ],
+  "medians": {
+    "ready_ms": {
+      "before": 1644.547,
+      "after": 1507.208,
+      "reduction_percent": 8.35
+    },
+    "first_world_ms": {
+      "before": 803.128,
+      "after": 458.506,
+      "reduction_percent": 42.91
+    },
+    "texture_memory_bytes": {
+      "before": 529225364,
+      "after": 462122520,
+      "reduction_percent": 12.68
+    },
+    "outdoor_vertices": {
+      "before": 230784,
+      "after": 75264,
+      "reduction_percent": 67.39
+    },
+    "preloaded_textures": {
+      "before": 74,
+      "after": 66,
+      "reduction_percent": 10.81
+    },
+    "start_to_play_ms": {
+      "before": 2411.138,
+      "after": 1933.931,
+      "reduction_percent": 19.79
+    }
+  },
+  "image_comparison": [
+    {
+      "scene": "coast",
+      "mean_absolute_8bit": 0.0677,
+      "pixels_over_8_levels_percent": 0.2834,
+      "psnr_db": 46.75
+    },
+    {
+      "scene": "coast-yaw",
+      "mean_absolute_8bit": 0.0677,
+      "pixels_over_8_levels_percent": 0.2834,
+      "psnr_db": 46.75
+    },
+    {
+      "scene": "park",
+      "mean_absolute_8bit": 0.026,
+      "pixels_over_8_levels_percent": 0.0318,
+      "psnr_db": 43.24
+    },
+    {
+      "scene": "park-yaw",
+      "mean_absolute_8bit": 0.026,
+      "pixels_over_8_levels_percent": 0.0318,
+      "psnr_db": 43.24
+    },
+    {
+      "scene": "forest",
+      "mean_absolute_8bit": 0.0004,
+      "pixels_over_8_levels_percent": 0.0,
+      "psnr_db": 81.66
+    },
+    {
+      "scene": "forest-yaw",
+      "mean_absolute_8bit": 0.0004,
+      "pixels_over_8_levels_percent": 0.0,
+      "psnr_db": 81.66
+    },
+    {
+      "scene": "clouds",
+      "mean_absolute_8bit": 0.0005,
+      "pixels_over_8_levels_percent": 0.0,
+      "psnr_db": 81.3
+    },
+    {
+      "scene": "clouds-yaw",
+      "mean_absolute_8bit": 0.0005,
+      "pixels_over_8_levels_percent": 0.0,
+      "psnr_db": 81.3
+    },
+    {
+      "scene": "mill",
+      "mean_absolute_8bit": 0.0645,
+      "pixels_over_8_levels_percent": 0.0767,
+      "psnr_db": 54.23
+    },
+    {
+      "scene": "mill-yaw",
+      "mean_absolute_8bit": 0.0645,
+      "pixels_over_8_levels_percent": 0.0767,
+      "psnr_db": 54.23
+    },
+    {
+      "scene": "brook",
+      "mean_absolute_8bit": 0.1169,
+      "pixels_over_8_levels_percent": 0.0449,
+      "psnr_db": 53.64
+    },
+    {
+      "scene": "brook-yaw",
+      "mean_absolute_8bit": 0.1169,
+      "pixels_over_8_levels_percent": 0.0449,
+      "psnr_db": 53.64
+    }
+  ]
+}

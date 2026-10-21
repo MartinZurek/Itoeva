@@ -36,11 +36,10 @@ func run() -> void:
 		OS.delay_msec(1)
 		await process_frame
 	var textures_ready: bool = not app.loading_world and app.ready_count == app.textures.size() and app.ready_count >= 46
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		textures_ready = textures_ready and app.textures.has(Catalog.data().characters[species].asset)
-	for asset in ["card-art-v050.png", "spirit-animation-v050.png", "nachtwurz-atlas.png"]:
-		textures_ready = textures_ready and app.textures.has("res://assets/combat/" + asset)
-	check(textures_ready, "Welt, acht Figuren und Kartenbilder sind vor dem Spielen vorbereitet")
+	textures_ready = textures_ready and not app.textures.has("res://assets/combat/card-art-v050.png")
+	check(textures_ready, "Welt und vier Startfiguren vorbereitet; Kampfatlanten werden bei Bedarf geladen")
 	if app.loading_world:
 		quit(1)
 		return
@@ -177,7 +176,7 @@ func run() -> void:
 			await app.interact()
 			await frames(12)
 			check(app.current_place() == destination and app.actor.touch_vector == Vector2.ZERO and app.actor.is_on_floor(), "Tuer und sicherer Gegenanker: " + source + " → " + destination)
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		app.selected = species
 		await app._mount_world("LIVING", Catalog.position_for("LIVING", Vector2(0.78, 0.78)))
 		app._resume()

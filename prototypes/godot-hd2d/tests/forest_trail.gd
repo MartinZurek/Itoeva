@@ -30,7 +30,7 @@ func run() -> void:
 	await frames(15)
 	check(app.room=="FOREST_TRAIL" and app.actor.is_on_floor(),"Waldtuer und sicherer Bodenkontakt")
 	check(app.stage.chunks.size()==7,"Sieben zusammenhaengende Waldabschnitte")
-	for species in app.Catalog.data().characters:
+	for species in app.Catalog.STARTERS:
 		app.selected=species
 		await app._mount_world("FOREST_TRAIL",Forest.position_for(0,.15))
 		app._resume()

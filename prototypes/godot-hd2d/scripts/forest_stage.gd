@@ -1,6 +1,7 @@
 extends "res://scripts/world_stage.gd"
 
 var forest_materials: Dictionary = {}
+var water_masks: Dictionary = {}
 var seam_chunks: Array[Node3D] = []
 var torch_materials: Array[Dictionary] = []
 var arena_lights := 1.0
@@ -146,21 +147,9 @@ func _painted_material(asset: String, _transparent: bool = false) -> ShaderMater
 	return material
 
 func _water_mask(brook: bool) -> Texture2D:
-	var image := Image.create(416,235,false,Image.FORMAT_R8)
-	if brook:
-		for contour in Forest.data().water:
-			var polygon := PackedVector2Array()
-			for p in contour: polygon.append(Vector2(p[0]*416,p[1]*235))
-			for y in range(235):
-				for x in range(416):
-					if Geometry2D.is_point_in_polygon(Vector2(x+.5,y+.5),polygon): image.set_pixel(x,y,Color.WHITE)
-		for contour in Forest.data().get("water_exclude",[]):
-			var polygon := PackedVector2Array()
-			for p in contour: polygon.append(Vector2(p[0]*416,p[1]*235))
-			for y in range(235):
-				for x in range(416):
-					if Geometry2D.is_point_in_polygon(Vector2(x+.5,y+.5),polygon): image.set_pixel(x,y,Color.BLACK)
-	return ImageTexture.create_from_image(image)
+	if not water_masks.has(brook):
+		water_masks[brook] = Ambience.Masks.texture_for("forest:SHADOW_BROOK" if brook else "")
+	return water_masks[brook]
 
 func _add_flames(region: Dictionary, parent: Node3D) -> void:
 	for i in region.flames.size():
@@ -397,7 +386,7 @@ func _build_seams() -> void:
 		for ground in [false,true]:
 			var surface:=SurfaceTool.new()
 			surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-			var rows:=8 if ground else 24
+			var rows:=1 if ground else 12
 			for row in rows:
 				for col in 60:
 					for corner in [Vector2(0,0),Vector2(1,1),Vector2(1,0),Vector2(0,0),Vector2(0,1),Vector2(1,1)]:

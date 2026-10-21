@@ -38,7 +38,7 @@ func run() -> void:
 	await mount("CAMP")
 	await capture("camp-night")
 	hour(12)
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		app.selected = species
 		await mount("LIVING")
 		app.request_interaction("seat","living-sofa")

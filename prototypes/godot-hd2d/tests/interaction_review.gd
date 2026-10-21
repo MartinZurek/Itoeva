@@ -74,7 +74,7 @@ func run() -> void:
 	await frames(2)
 	check(not app.paused and not app.dialog_open, "Raw Android touch closes dialogue")
 	# A seated start must navigate from the saved floor exit, not through its chair.
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		app.selected = species
 		await app._mount_world("LIVING", Catalog.position_for("LIVING", Vector2(.5, .75)))
 		app._resume()

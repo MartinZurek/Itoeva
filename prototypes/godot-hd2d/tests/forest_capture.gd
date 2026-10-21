@@ -31,7 +31,7 @@ func run() -> void:
 		app._update_camera(10.0)
 		app.stage.update_player(app.actor.position)
 		await capture("forest-seam-%s" % i)
-	for species in app.Catalog.data().characters:
+	for species in app.Catalog.STARTERS:
 		app.selected=species
 		await app._mount_world("FOREST_TRAIL",Forest.position_for(3,.295))
 		app._resume()

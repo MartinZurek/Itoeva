@@ -1,0 +1,18 @@
+{
+  "commit": "955be67999ee2b2a4ba55cde19427fb6d971621c",
+  "run_id": "39603771878",
+  "file_id": "148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX",
+  "bytes": 191734829,
+  "sha256": "edfe94928fe079cda65bf14f44f58dc6f35910726eb35e62249e92943079f0dc",
+  "md5": "f0b16cb882352dbac837c4e1349f1932",
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "version": "0.14.0",
+  "version_code": 27,
+  "card_count": 616,
+  "starter_species": [
+    "mosslyn",
+    "nocti",
+    "starlet",
+    "wyrmling"
+  ]
+}

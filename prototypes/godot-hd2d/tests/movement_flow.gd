@@ -113,7 +113,7 @@ func run() -> void:
 	await frames(18)
 	check(app.actor.actual_speed < .01,"Loslassen bremst schnell und ohne Gleiten")
 	# Pro Ansicht gleich hohe Ruhefigur; je Folge konstanter Faktor.
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		await mount(species)
 		app.actor.enabled = false
 		# Kompaktatlanten verwenden eine eigene 48-Posen-Aufteilung.

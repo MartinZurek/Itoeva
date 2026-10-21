@@ -639,7 +639,15 @@ func _unit_travel_art(unit: Dictionary,motion: Dictionary) -> Dictionary:
  return _travel_art(str(unit.species),motion) if _uses_species_art(unit) else {}
 
 func _travel_art(species: String,motion: Dictionary) -> Dictionary:
- if not is_instance_valid(encounter) or not encounter.app.character_metrics.has(species):return {}
+ if not is_instance_valid(encounter):return {}
+ if not encounter.app.character_metrics.has(species):
+  if not Catalog.data().characters.get(species,{}).get("compact",false):return {}
+  # Ein Helfer kann erscheinen, bevor seine Spezies erstmals als Bewohner
+  # besucht wurde. Seine eigene Kontur darf davon nicht abhaengen.
+  var raw: Array=JSON.parse_string(FileAccess.get_file_as_string("res://data/compact_bounds.json"))[species]
+  var bounds: Array[Rect2i]=[]
+  for b in raw:bounds.append(Rect2i(b[0],b[1],b[2],b[3]))
+  encounter.app.character_metrics[species]={"bounds":bounds,"scales":{}}
  var compact: bool=Catalog.data().characters[species].get("compact",false)
  var frame:=7+posmod(int(motion.stride*4),4) if compact else 9+posmod(int(motion.stride*8),8)
  var texture: Texture2D=load(Catalog.data().characters[species].asset)
