@@ -12,16 +12,22 @@ uniform sampler2D pose_mask : filter_nearest, repeat_disable;
 uniform float pose_id = 0.0;
 uniform int gait_mode = 0;
 uniform vec2 gait_reference;
-uniform vec2 gait_offset;
-uniform vec4 gait_window;
 uniform float gait_reference_id = 0.0;
-uniform float gait_body_bob = 0.0;
-uniform sampler2D gait_flow : filter_linear, repeat_disable;
-uniform vec2 gait_flow_cell;
-uniform float gait_fraction = 0.0;
-uniform vec2 gait_next;
-uniform vec2 gait_next_offset;
-uniform float gait_next_id = 0.0;
+uniform sampler2D step_mask : filter_linear, repeat_disable;
+uniform int step_row = 0;
+uniform int step_leg_count = 2;
+uniform vec2 step_hip_2;
+uniform vec2 step_hip_3;
+uniform vec2 step_foot_2;
+uniform vec2 step_foot_3;
+uniform vec2 step_offset_2;
+uniform vec2 step_offset_3;
+uniform vec2 step_hip_0;
+uniform vec2 step_hip_1;
+uniform vec2 step_foot_0;
+uniform vec2 step_foot_1;
+uniform vec2 step_offset_0;
+uniform vec2 step_offset_1;
 uniform sampler2D furniture_mask : filter_nearest, repeat_disable;
 uniform bool has_mask = false;
 uniform vec3 foot;
@@ -56,30 +62,96 @@ vec4 own_pose(vec2 uv, float id) {
 	return texture(atlas, uv);
 }
 
+vec4 step_weights(vec2 p) {
+ if (any(lessThan(p, vec2(0.0))) || any(greaterThan(p, vec2(256.0)))) { return vec4(0.0); }
+ return texture(step_mask, (p + vec2(0.0, float(step_row)*256.0)) / vec2(256.0,768.0));
+}
+
+vec2 step_source(vec2 p, vec2 hip, vec2 foot_point, vec2 offset) {
+ // Unterhalb des Sprunggelenks bleibt der Fuss ein starrer Ausschnitt.
+ // Nur die Verbindung zur Huefte folgt der Gewichtsverlagerung.
+ float start=hip.y;
+ float span=max(24.0,foot_point.y-8.0-start);
+ float low=min(p.y,p.y-offset.y);
+ float high=max(p.y,p.y-offset.y);
+ // Monotone Umkehrung statt instabiler Iteration: auch eine kurze Sternspitze
+ // darf sich beim grossen Hoehenversatz nicht vom Koerper abtrennen.
+ for (int i=0; i<14; i++) {
+  float mid=(low+high)*.5;
+  float value=mid+offset.y*smoothstep(start,start+span,mid);
+  if (value<p.y) { low=mid; } else { high=mid; }
+ }
+ float y=(low+high)*.5;
+ float weight=smoothstep(start,start+span,y);
+ return vec2(p.x-offset.x*weight,y);
+}
+
+vec2 ray_source(vec2 p,vec2 hip,float angle) {
+ vec2 source=p;
+ for (int i=0;i<7;i++) {
+  float a=-angle*smoothstep(hip.y,hip.y+28.0,source.y);
+  source=hip+mat2(vec2(cos(a),sin(a)),vec2(-sin(a),cos(a)))*(p-hip);
+ }
+ return source;
+}
+
+vec4 step_paint(vec2 local, vec2 dimensions) {
+ if (gait_mode==4) {
+  // Ein stetiges Feld auf EINER Zeichnung vermeidet ausgeschnittene Schulter-
+  // oder Fluegelrisse. Breite technische Saeume halten Kopf und Ohren ruhig.
+  vec2 weights=step_weights(local).rg;
+  float flap=(local.x-step_hip_0.x)*sin(step_offset_0.x)*weights.r
+    +(local.x-step_hip_1.x)*sin(step_offset_1.x)*weights.g;
+  return own_pose(gait_reference+(local-vec2(0.0,flap))/dimensions,gait_reference_id);
+ }
+ float first_joint=min(step_hip_0.y,step_hip_1.y);
+ if (step_leg_count==4) { first_joint=min(first_joint,min(step_hip_2.y,step_hip_3.y)); }
+ // Der grosse ruhige Kopfbereich braucht weder Beinmasken noch deren Umkehrung.
+ if (gait_mode!=4 && local.y<first_joint) {
+  return own_pose(gait_reference+local/dimensions,gait_reference_id);
+ }
+ vec2 a_uv;
+ vec2 b_uv;
+ if (gait_mode==5) {
+  a_uv=ray_source(local,step_hip_0,step_offset_0.x);
+  b_uv=ray_source(local,step_hip_1,step_offset_1.x);
+ } else {
+  a_uv=step_source(local,step_hip_0,step_foot_0,step_offset_0);
+  b_uv=step_source(local,step_hip_1,step_foot_1,step_offset_1);
+ }
+ vec4 weights=step_weights(local);
+ vec4 body=own_pose(gait_reference+local/dimensions,gait_reference_id);
+ vec4 a=own_pose(gait_reference+a_uv/dimensions,gait_reference_id);
+ vec4 b=own_pose(gait_reference+b_uv/dimensions,gait_reference_id);
+ body.a*=1.0-clamp(weights.x+weights.y+(step_leg_count==4 ? weights.z+weights.w : 0.0),0.0,1.0);
+ a.a*=step_weights(a_uv).r;
+ b.a*=step_weights(b_uv).g;
+ // Zusammengehoerige Teildeckungen addieren sich am Gelenk zum Original;
+ // ohne die halbdeckenden Saeume mehrfach uebereinanderzulegen.
+ float coverage=body.a+a.a+b.a;
+ vec3 premult=body.rgb*body.a+a.rgb*a.a+b.rgb*b.a;
+ if (step_leg_count==4) {
+  vec2 c_uv=step_source(local,step_hip_2,step_foot_2,step_offset_2);
+  vec2 d_uv=step_source(local,step_hip_3,step_foot_3,step_offset_3);
+  vec4 c=own_pose(gait_reference+c_uv/dimensions,gait_reference_id);
+  vec4 d=own_pose(gait_reference+d_uv/dimensions,gait_reference_id);
+  c.a*=step_weights(c_uv).b;
+  d.a*=step_weights(d_uv).a;
+  coverage+=c.a+d.a;
+  premult+=c.rgb*c.a+d.rgb*d.a;
+ }
+ return vec4(premult/max(coverage,0.0001),min(1.0,coverage));
+}
+
 void fragment() {
 	if (any(lessThan(paint_uv, frame_clip.xy)) || any(greaterThan(paint_uv, frame_clip.xy + frame_clip.zw))) { discard; }
 	vec4 paint;
-	if (gait_mode > 0) {
-		vec2 dimensions = vec2(textureSize(atlas, 0));
-		vec2 local = (paint_uv - pose_cell.xy) * dimensions;
-		float feather = gait_mode == 2 ? 16.0 : 7.0;
-		vec2 low = smoothstep(gait_window.xy, gait_window.xy + vec2(feather), local);
-		vec2 high = 1.0 - smoothstep(gait_window.xy + gait_window.zw - vec2(feather), gait_window.xy + gait_window.zw, local);
-		float moving = low.x * low.y * high.x * high.y;
-		if (gait_mode == 2) { moving = 1.0 - moving; }
-		vec4 body = own_pose(gait_reference + (local + vec2(0.0, gait_body_bob)) / dimensions, gait_reference_id);
-		vec2 flow_uv = clamp(local / (pose_cell.zw * dimensions), vec2(0.5 / 64.0), vec2(63.5 / 64.0));
-		vec4 flow = (texture(gait_flow, gait_flow_cell + flow_uv / vec2(8.0, 3.0)) * 255.0 - 128.0) / 4.0;
-		vec4 a = own_pose(paint_uv + gait_offset - flow.rg * gait_fraction / dimensions, pose_id);
-		vec4 b = own_pose(gait_next + local / dimensions + gait_next_offset - flow.ba * (1.0 - gait_fraction) / dimensions, gait_next_id);
-		float limb_alpha = mix(a.a, b.a, gait_fraction);
-		vec4 limbs = vec4(mix(a.rgb * a.a, b.rgb * b.a, gait_fraction) / max(limb_alpha, 0.0001), limb_alpha);
-		// Vormultiplizierte Deckung vermeidet dunkle oder doppelte Konturen am Ansatz.
-		float alpha = mix(body.a, limbs.a, moving);
-		paint = vec4(mix(body.rgb * body.a, limbs.rgb * limbs.a, moving) / max(alpha, 0.0001), alpha);
-	} else {
-		paint = own_pose(paint_uv, pose_id);
-	}
+ if (gait_mode == 3 || gait_mode == 4 || gait_mode == 5) {
+  vec2 dimensions=vec2(textureSize(atlas,0));
+  paint=step_paint((paint_uv-pose_cell.xy)*dimensions,dimensions);
+ } else {
+  paint=own_pose(paint_uv,pose_id);
+ }
 	paint *= COLOR;
 	if (paint.a < 0.12) { discard; }
 	if (has_mask) {

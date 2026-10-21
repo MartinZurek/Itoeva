@@ -7340,3 +7340,23 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Freigabe allein aus Kontur-/Zwischenphasenpruefungen abgeleitet.
 - **UEBERGABE:**PR377, docs/godot-ruhige-bewegung-v0141.md und
   docs/validation/godot-v0141-build-report.json. Kein Merge ins aeltere main.
+
+### 2026-10-21 – Zusammenhaengende Schritte statt verformter Laufbilder
+
+- **DOCUMENTED INTENT:**Martin meldet erneut schlecht erkennbare Fussbewegungen
+  seit der Vierer-Auswahl. Alle bisherigen Figuren pruefen, Starlit auf Sternspitzen.
+- **FACT:**Keine vertauschte Auswahl-ID gefunden. Die neuen unabhaengigen
+  Atlaszeichnungen und ihre optische Flussinterpolation ersetzen keinen Laufzyklus.
+- **KORREKTUR:**Feste Zeichnung je Ansicht fuer alle acht Spezies, getrennte
+  Stand-/Schwungphasen, vier Wyrmling-Pfoten und eigenstaendig drehende Sternspitzen.
+  Noctis Fluegelansatz bleibt zusammenhaengend. Keine Aenderung der Spielerwahl,
+  Geschwindigkeiten, Ausdauerwirtschaft, Lichtlogik oder gespeicherter Fortschritte.
+- **TESTED BEHAVIOR:**Kontaktmathematik und technische Maskenpruefung bestanden;
+  lokale Figuren-/Helfer-, Ausdauer- und Kampf-/Lichtpruefungen gruen. Die finale
+  aktive OpenGL-Pruefung verwendet reale Bewegungsgeschwindigkeiten; Ergebnisse
+  und Grenzen werden in docs/godot-schritte-v0142.md festgehalten.
+- **UNVERIFIED:**APK-Lieferung bis zum erfolgreichen Workflow samt Remote-Abgleich;
+  Telefon-FPS/GPU und menschliche Bewegungsabnahme. Eine alte Hootlet-Luftwende-
+  Pruefung setzt ungueltige Atlasnummern voraus und ist gesondert dokumentiert.
+- **UEBERGABE:**codex/godot-planted-steps auf PR377; AndroidTest0.14.2/Code29
+  vorbereitet, bestehender Signier-/Drive-Weg, keine Verschmelzung ins aeltere main.

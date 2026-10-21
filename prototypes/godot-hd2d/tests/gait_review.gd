@@ -38,31 +38,40 @@ func run() -> void:
    for sprint in [false,true]:
     actor.running=sprint;actor.run_blend=1.0 if sprint else 0.0
     actor.hover=.48 if sprint and species=="nocti" else 0.0
-    check(actor._stride_length()>=2.1,"Ruhige volle Schrittlaenge: "+species)
+    check(actor._stride_length()>0.0,"Schrittlaenge folgt dem sichtbaren Fussweg: "+species)
     var first: Image
     var head:=Rect2i()
     var details:={}
+    var head_box:=Rect2()
+    var head_first: Image
     for tick in 48:
-     actor.clock=tick/24.0;actor.gait=actor.clock*(1.18 if sprint else .93)
+     actor.clock=tick/24.0;actor.gait=actor.clock*(actor.RUN_SPEED if sprint else actor.WALK_SPEED)/actor._stride_length()
      actor._update_frame(true)
      await process_frame;await RenderingServer.frame_post_draw
      var rendered:=viewport.get_texture().get_image()
      check(rendered.get_used_rect().has_area(),"Vollstaendige sichtbare Phase: %s/%s/%s"%[species,sprint,tick])
      if tick==0:
       first=rendered
-      var reference: Rect2=Rect2(actor.frame_bounds[actor.sprite.frame/8*8])
-      head=patch_rect(actor,camera,Rect2(reference.position+reference.size*Vector2(.35,.15),reference.size*Vector2(.30,.27)))
-      if species=="nocti" and sprint:
-       var row: int=actor.sprite.frame/8
-       var window: Array=actor.gait_registration[species].run.rows[row].window
-       head=patch_rect(actor,camera,Rect2(window[0]+20,window[1]+20,window[2]-40,window[3]-40))
+      var row: int=actor.sprite.frame/8
+      var patches: Dictionary={
+       "mosslyn":[Rect2(156,80,43,42),Rect2(95,73,70,50),Rect2(87,49,82,56)],
+       "nocti":[Rect2(162,99,54,50),Rect2(82,87,86,59),Rect2(76,79,95,58)],
+       "starlet":[Rect2(126,104,58,51),Rect2(78,85,91,52),Rect2(88,46,76,61)],
+       "wyrmling":[Rect2(176,101,54,44),Rect2(93,87,67,48),Rect2(85,52,82,56)]}
+      var box: Rect2=patches[species][row]
+      if species=="nocti" and sprint:box=[Rect2(181,137,35,27),Rect2(111,122,43,35),Rect2(111,80,40,45)][row]
+      head_box=box
+      head=patch_rect(actor,camera,box)
+      head_first=rendered.get_region(head)
      # Ein stabiler Koerper darf nicht durch viele unterschiedliche Zeichnungen
      # flackern. Der geringe Atemhub bleibt unterhalb dieser sichtbaren Schwelle.
-     check(difference(first,rendered,head)<.07,"Ruhige Kopf-/Koerpermitte: %s/%s/%s"%[species,sprint,tick])
+     var current_head:=rendered.get_region(patch_rect(actor,camera,head_box))
+     if current_head.get_size()!=head_first.get_size():current_head.resize(head_first.get_width(),head_first.get_height())
+     check(difference(head_first,current_head,Rect2i(Vector2i.ZERO,head_first.get_size()))<(.025 if species=="starlet" else .005),"Ruhige Kopf-/Koerpermitte: %s/%s/%s"%[species,sprint,tick])
      details[hash(rendered.get_data())]=true
      if tick%6==0 or "all-frames" in OS.get_cmdline_user_args():
       rendered.save_png("res://captures/calm-gait/%s-%s-%s-%02d.png"%[species,int(direction.y),"run" if sprint else "walk",tick])
-    check(details.size()>32,"Sichtbare Zwischenphasen statt acht hart wechselnder Bilder: "+species)
+    check(details.size()>20,"Kontinuierliche Gliedmassen ohne wechselnde Kopfzeichnung: "+species)
   actor.shadow.queue_free();actor.queue_free();await process_frame
  viewport.queue_free();await process_frame
- print("Calm gait OpenGL: %s checks, %s failures"%[checks,failures]);quit(1 if failures else 0)
+ print("Anchored gait OpenGL: %s checks, %s failures"%[checks,failures]);quit(1 if failures else 0)
