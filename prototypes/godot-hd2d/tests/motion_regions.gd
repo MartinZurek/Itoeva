@@ -16,7 +16,9 @@ func run() -> void:
  camera.position=Vector3(0,1.25,7);world.add_child(camera);camera.current=true
  DirAccess.make_dir_recursive_absolute("res://captures/motion-regions")
  for species in Catalog.STARTERS:
-  var actor=Actor.new();actor.species=species;actor.enabled=false;world.add_child(actor)
+  # Hier werden die unveraenderten Atlas-Konturen geprueft. Die zusammengesetzten
+  # kontinuierlichen Gaenge haben ihre eigene aktive Renderpruefung gait_review.
+  var actor=Actor.new();actor.species=species;actor.enabled=false;actor.registered_gait=false;world.add_child(actor)
   await process_frame;actor.shadow.visible=false
   for mode in ["world","walk","run"]:
    if mode=="run" and actor.run_texture==null:continue

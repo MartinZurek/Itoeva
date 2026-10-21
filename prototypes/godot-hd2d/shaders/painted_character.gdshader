@@ -10,6 +10,18 @@ uniform vec4 pose_region;
 uniform vec4 pose_geometry = vec4(1.0, 1.0, 0.0, 0.0);
 uniform sampler2D pose_mask : filter_nearest, repeat_disable;
 uniform float pose_id = 0.0;
+uniform int gait_mode = 0;
+uniform vec2 gait_reference;
+uniform vec2 gait_offset;
+uniform vec4 gait_window;
+uniform float gait_reference_id = 0.0;
+uniform float gait_body_bob = 0.0;
+uniform sampler2D gait_flow : filter_linear, repeat_disable;
+uniform vec2 gait_flow_cell;
+uniform float gait_fraction = 0.0;
+uniform vec2 gait_next;
+uniform vec2 gait_next_offset;
+uniform float gait_next_id = 0.0;
 uniform sampler2D furniture_mask : filter_nearest, repeat_disable;
 uniform bool has_mask = false;
 uniform vec3 foot;
@@ -38,10 +50,37 @@ void vertex() {
 	world_point = (facing * vec4(VERTEX, 1.0)).xyz;
 }
 
+vec4 own_pose(vec2 uv, float id) {
+	if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) { return vec4(0.0); }
+	if (has_pose_region && abs(texture(pose_mask, uv).r - id) > 0.0019) { return vec4(0.0); }
+	return texture(atlas, uv);
+}
+
 void fragment() {
 	if (any(lessThan(paint_uv, frame_clip.xy)) || any(greaterThan(paint_uv, frame_clip.xy + frame_clip.zw))) { discard; }
-	if (has_pose_region && abs(texture(pose_mask, paint_uv).r - pose_id) > 0.0019) { discard; }
-	vec4 paint = texture(atlas, paint_uv) * COLOR;
+	vec4 paint;
+	if (gait_mode > 0) {
+		vec2 dimensions = vec2(textureSize(atlas, 0));
+		vec2 local = (paint_uv - pose_cell.xy) * dimensions;
+		float feather = gait_mode == 2 ? 16.0 : 7.0;
+		vec2 low = smoothstep(gait_window.xy, gait_window.xy + vec2(feather), local);
+		vec2 high = 1.0 - smoothstep(gait_window.xy + gait_window.zw - vec2(feather), gait_window.xy + gait_window.zw, local);
+		float moving = low.x * low.y * high.x * high.y;
+		if (gait_mode == 2) { moving = 1.0 - moving; }
+		vec4 body = own_pose(gait_reference + (local + vec2(0.0, gait_body_bob)) / dimensions, gait_reference_id);
+		vec2 flow_uv = clamp(local / (pose_cell.zw * dimensions), vec2(0.5 / 64.0), vec2(63.5 / 64.0));
+		vec4 flow = (texture(gait_flow, gait_flow_cell + flow_uv / vec2(8.0, 3.0)) * 255.0 - 128.0) / 4.0;
+		vec4 a = own_pose(paint_uv + gait_offset - flow.rg * gait_fraction / dimensions, pose_id);
+		vec4 b = own_pose(gait_next + local / dimensions + gait_next_offset - flow.ba * (1.0 - gait_fraction) / dimensions, gait_next_id);
+		float limb_alpha = mix(a.a, b.a, gait_fraction);
+		vec4 limbs = vec4(mix(a.rgb * a.a, b.rgb * b.a, gait_fraction) / max(limb_alpha, 0.0001), limb_alpha);
+		// Vormultiplizierte Deckung vermeidet dunkle oder doppelte Konturen am Ansatz.
+		float alpha = mix(body.a, limbs.a, moving);
+		paint = vec4(mix(body.rgb * body.a, limbs.rgb * limbs.a, moving) / max(alpha, 0.0001), alpha);
+	} else {
+		paint = own_pose(paint_uv, pose_id);
+	}
+	paint *= COLOR;
 	if (paint.a < 0.12) { discard; }
 	if (has_mask) {
 		vec2 art_uv = vec2((world_point.x - scene_origin) / scene_span,

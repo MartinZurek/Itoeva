@@ -20,7 +20,7 @@ func run() -> void:
    app.actor.running=mode=="run";app.actor.run_blend=1.0 if mode=="run" else 0.0
    app.actor.hover=.48 if mode=="run" and species=="nocti" else 0.0;app.actor.facing=Vector2.RIGHT
    for phase in ([2,5] if species in Catalog.STARTERS else [2]):
-    app.actor.clock=(phase+.1)/(8*3.2);app.actor.gait=(phase+.1)/8
+    app.actor.clock=(phase+.1)/(8*app.actor.FLIGHT_CYCLES);app.actor.gait=(phase+.1)/8
     app.actor._update_frame(true);app.actor._update_shadow();await grab(species+"-"+mode+"-"+str(phase))
  app.selected="nocti";await app._mount_world("OUTDOOR",Catalog.position_for("STREET",Vector2(.55,.65)));app._resume()
  for creature in app.actors:creature.enabled=false

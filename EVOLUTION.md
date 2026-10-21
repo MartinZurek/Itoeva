@@ -7307,3 +7307,36 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**Telefon-GPU/FPS, Touchgefühl und menschliche Dynamikabnahme.
 - **ÜBERGABE:**PR376, docs/godot-dynamik-und-budget.md und
   docs/validation/godot-v0140-build-report.json. Kein Merge ins ältere main.
+
+### 2026-10-21 – Zappelnde Bewegung korrigieren, Ausdaueranzeige zuruecknehmen
+
+- **DOCUMENTED INTENT:**Martin lehnt die Bewegung aus0.14.0 als zappelnd/schlechter ab
+  und verlangt eine viel dezentere, weniger gruene Ausdaueranzeige.
+- **KORREKTUR:**Fruehere Konturtests belegen keine natuerliche Bewegung. Konsistente
+  Kopf-/Koerperzeichnung, registrierte Stuetzbein-/Fluegelphasen mit vorbereiteten
+  Zwischenfeldern; ruhigerer Takt und kein zusaetzlicher Mooslyn-Sprunghub.
+- **FACT:**Ausdaueranzeige132×4, graubeige und transparent; blendet bei vollem Vorrat
+  aus. Geschwindigkeit, Ausdauerregeln und persistente Spielstaende bleiben erhalten.
+- **TESTED BEHAVIOR:**200 Ausdauer-/Anzeige- und869 Figuren-/Helferchecks bestanden.
+  Technische Daten-/Quellhashpruefung,2352 aktive Bewegungs-OpenGL- und1088 unveraenderte
+  Konturchecks bestanden.64 Raum-/Spieler-,84 Vollwelt- und115 Bewegungs-/Lichtchecks gruen.
+- **UNVERIFIED:**Abschliessende Regression, neue APK, Telefon-Leistung und menschliche
+  Bewegungsabnahme. Keine Behauptung visueller Freigabe allein aus Testzahlen.
+- **UEBERGABE:**docs/godot-ruhige-bewegung-v0141.md, Branch codex/godot-calm-gait
+  auf PR376/Testfassung0.14.0. APK-Code28 vorbereitet, bisheriger Lieferweg bleibt.
+
+### 2026-10-21 – Bewegungsfassung0.14.1 als Test-APK ausgeliefert
+
+- **FACT:**Baulauf39633090907/Job119336217261 zum Quellcommit89612e3715d10312348e8e0ca2d97a5d22b2f7fc
+  erfolgreich: vollstaendige Godot-Spieltests, OpenGL, Export, Signatur und
+  Remote-Pruefsummenabgleich. AndroidTest0.14.1/Code28, bestehendes Update-Zertifikat.
+- **TESTED BEHAVIOR:**200 Ausdauer-/Anzeige-,869 Figuren-/Helfer-,2352 aktive
+  Bewegungs-OpenGL- und1088 Originalkonturchecks gruen. Allgemeiner Verify-Lauf
+  39633097207 einschliesslich API26/API35 und Gradle/Lint/R8 bestanden.
+- **FACT:**192796278 Bytes; SHA-256
+  `79cfd2840889746199b1550d198566e3a0136b1a87eebceed3a3b92181f059dd`.
+  Bestehende Drive-Datei vollstaendig ersetzt; achtsekundige Bewegungsvorschau erstellt.
+- **UNVERIFIED:**Telefon-GPU/FPS und menschliche Bewegungsabnahme. Keine visuelle
+  Freigabe allein aus Kontur-/Zwischenphasenpruefungen abgeleitet.
+- **UEBERGABE:**PR377, docs/godot-ruhige-bewegung-v0141.md und
+  docs/validation/godot-v0141-build-report.json. Kein Merge ins aeltere main.
