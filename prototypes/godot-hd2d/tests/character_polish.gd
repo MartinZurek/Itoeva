@@ -72,6 +72,7 @@ func run() -> void:
  for row in 4:
   check(view._unit_travel_art({"id":"power_animal","form":"","row":row,"species":"fennec"},motion).is_empty(),"Wildruf-Tier wird nicht Fennec: "+str(row))
  for species in Catalog.data().characters:
+  app.character_metrics.erase(species)
   var art: Dictionary=view._unit_travel_art({"id":"companion","form":"","row":-1,"species":species},motion)
   check(not art.is_empty() and art.texture.resource_path==Catalog.data().characters[species].asset,"Spezieshelfer verwendet eigene Identität: "+species)
  for id in Cards.Strategy.ids():
