@@ -121,7 +121,7 @@ func run() -> void:
 			var point: Vector3 = app.stage._point(region, Vector2(u, (band.x + band.y) * .5 / 640), true)
 			check(is_zero_approx(point.y), "Brueckenzeichnung liegt auf der wirklichen Bodenebene: %s %s" % [place, u])
 	check(app.stage.find_child("BegehbareWegkanten", true, false) == null, "Keine goldene Liniengeometrie mehr")
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		app.selected = species
 		await app._mount_world("OUTDOOR", Catalog.position_for("PARK", Vector2(.5, .6)))
 		app._resume()

@@ -351,15 +351,9 @@ func _preload_world() -> void:
 	for region in Catalog.data().regions:
 		pending.append(region.asset)
 	for region in Forest.data().segments: pending.append(region.asset)
-	pending.append("res://assets/combat/nachtwurz-atlas.png")
+	# Kampfgrafiken erst fuer Begegnungen laden, statt sie waehrend eines
+	# Spaziergangs dauerhaft im Texturspeicher zu halten.
 	pending.append("res://assets/combat/flame-atlas.png")
-	for id in Catalog.data().characters:
-		var combat_asset: String=Catalog.data().characters[id].get("combat_asset","res://assets/combat/"+id+"-combat.png")
-		if combat_asset not in pending:pending.append(combat_asset)
-	pending.append("res://assets/combat/card-art-v050.png")
-	pending.append("res://assets/combat/spirits-v050.png")
-	pending.append("res://assets/combat/spirit-animation-v050.png")
-	for i in range(1,5):pending.append("res://assets/combat/helpers-v060-%s.png" % i)
 	for i in range(6):
 		pending.append("res://assets/world/seams/%s.png" % i)
 	for entry in Catalog.data().interiors.values():

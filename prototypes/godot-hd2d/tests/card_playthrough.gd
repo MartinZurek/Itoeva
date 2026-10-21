@@ -1,10 +1,11 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const Battle=preload("res://scripts/card_battle.gd")
 const Cards=preload("res://scripts/card_catalog.gd")
 var wins:=0
 func _initialize() -> void:call_deferred("run")
 func run() -> void:
- for species in Battle.SPECIES:
+ for species in Catalog.STARTERS:
   var b=Battle.new();b.configure(species);b.set_random_seed(777);b.prepare({});b.begin();b.advance_intro(3.2)
   for step in 300:
    if b.phase!="battle":break
@@ -27,5 +28,5 @@ func run() -> void:
    if b.phase=="battle":b.act("end_turn");b.acknowledge_animation()
   print(species,": ",b.phase," · Runde ",b.round," · LP ",b.party[0].hp," / ",b.party[1].hp)
   if b.phase=="victory" and b.experience.get(species,0)==120:wins+=1
- print("Vollständige Kartenkämpfe: %s / %s gewonnen" % [wins,Battle.SPECIES.size()])
- quit(0 if wins==Battle.SPECIES.size() else 1)
+ print("Vollständige Kartenkämpfe: %s / %s gewonnen" % [wins,Catalog.STARTERS.size()])
+ quit(0 if wins==Catalog.STARTERS.size() else 1)

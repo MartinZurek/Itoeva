@@ -1,4 +1,5 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const Battle=preload("res://scripts/card_battle.gd")
 const Cards=preload("res://scripts/card_catalog.gd")
 const Art=preload("res://scripts/card_assets.gd")
@@ -35,7 +36,7 @@ func roundtrip(b):
 
 func run() -> void:
  check(Cards.CARDS.size()==89,"89 unterschiedliche Kartendefinitionen")
- for species in Battle.SPECIES:
+ for species in Catalog.STARTERS:
   var deck:=Cards.starter(species)
   check(deck.size()==40 and Cards.valid(species,deck),"40 Karten je Wesen: "+species)
   var unique: Dictionary={}

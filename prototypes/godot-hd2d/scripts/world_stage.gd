@@ -248,7 +248,7 @@ func _make_panorama(region: Dictionary, parent: Node3D) -> void:
 	for ground in [false, true]:
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var rows := 8 if ground else 32
+		var rows := 1 if ground else 12
 		for row in rows:
 			for col in 96:
 				for corner in [Vector2(0, 0), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0), Vector2(0, 1), Vector2(1, 1)]:
@@ -366,7 +366,8 @@ func _make_seam(index: int) -> void:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for ground in [false, true]:
-		for row in (8 if ground else 32):
+		var rows := 1 if ground else 12
+		for row in rows:
 			for col in 48:
 				for corner in [Vector2(0, 0), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0), Vector2(0, 1), Vector2(1, 1)]:
 					var u: float = (col + corner.x) / 48.0
@@ -374,7 +375,7 @@ func _make_seam(index: int) -> void:
 					var region: Dictionary = Catalog.data().regions[index if x < boundary else index + 1]
 					var base_u: float = (x - region.origin) / region.width
 					var band := _band(region, base_u)
-					var v := lerpf(band.x / 640.0, 1.0, (row + corner.y) / 8.0) if ground else lerpf(0, band.x / 640.0, (row + corner.y) / 32.0)
+					var v := lerpf(band.x / 640.0, 1.0, (row + corner.y) / float(rows)) if ground else lerpf(0, band.x / 640.0, (row + corner.y) / float(rows))
 					var alpha := smoothstep(0.0, 2.0, 7.5 - absf(x - boundary))
 					surface.set_color(Color(1, 1, 1, alpha))
 					surface.set_uv(Vector2(u, v))
@@ -638,7 +639,7 @@ func furniture_screen_rect(item: Dictionary, view: Camera3D) -> Rect2:
 
 func _painted_material(asset: String, transparent: bool = false) -> ShaderMaterial:
 	var texture: Texture2D = textures.get(asset, load(asset))
-	var material := Ambience.create_material(asset, texture)
+	var material := Ambience.create_material(asset, texture, transparent)
 	material.set_shader_parameter("transparent_piece", transparent)
 	if asset == "res://assets/world/coast.png":
 		material.set_shader_parameter("shore_enabled", true)

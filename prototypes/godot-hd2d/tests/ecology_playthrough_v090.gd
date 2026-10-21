@@ -1,4 +1,5 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const Battle=preload("res://scripts/card_battle.gd")
 const Enemies=preload("res://scripts/regional_enemies.gd")
 var wins:=0
@@ -6,7 +7,7 @@ var failures:=0
 func _initialize() -> void:call_deferred("run")
 func run() -> void:
  for id in ["tide_crab","resin_beetle","cinder_carrier","vharok"]:
-  for species in Battle.SPECIES:
+  for species in Catalog.STARTERS:
    for seed_value in [55,777,991,2026]:
     var b=Battle.new();b.configure(species);b.configure_enemy(id,Enemies.data()[id]);b.set_random_seed(seed_value);b.prepare({});b.begin();b.advance_intro(3.2)
     for step in 400:

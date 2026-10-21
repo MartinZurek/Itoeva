@@ -34,7 +34,7 @@ func run() -> void:
 	while app.loading_world:
 		await process_frame
 	for room in Catalog.data().interiors:
-		for species in Catalog.data().characters:
+		for species in Catalog.STARTERS:
 			app.selected = species
 			await app._mount_world(room, Catalog.position_for(room, Vector2(0.53, 0.60)))
 			app._resume()

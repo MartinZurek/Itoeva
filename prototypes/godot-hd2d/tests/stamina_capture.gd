@@ -11,7 +11,7 @@ func run() -> void:
  app=load("res://scenes/full_world.tscn").instantiate();app.save_path="user://godot-tests/stamina-capture.json"
  DirAccess.remove_absolute(app.save_path);root.add_child(app)
  while app.loading_world:await process_frame
- for species in Catalog.data().characters:
+ for species in Catalog.STARTERS:
   app.selected=species;await app._mount_world("OUTDOOR",Catalog.position_for("SPORT",Vector2(.45,.65)))
   app._resume();app.stage.set_time(12);app.zoom=5.7;app._update_camera(10)
   for creature in app.actors:creature.enabled=false

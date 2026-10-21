@@ -1,4 +1,5 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const Battle=preload("res://scripts/card_battle.gd")
 const Cards=preload("res://scripts/card_catalog.gd")
 const S=preload("res://scripts/strategy_cards.gd")
@@ -16,7 +17,7 @@ func pick(key: String,value: String) -> String:
  return ""
 func run() -> void:
  check(S.ids().size()==616,"616 Karten verfügbar")
- for species in ["fennec","starlet","wyrmling","gloop","puffling","hootlet","mosslyn","nocti"]:
+ for species in Catalog.STARTERS:
   for style in ["Tempo","Bollwerk","Motor"]:
    var preset:=Cards.strategic_starter(species,style)
    check(Cards.valid(species,preset),"40 legale Karten: "+species+" "+style)

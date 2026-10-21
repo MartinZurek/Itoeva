@@ -1,4 +1,5 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const Battle=preload("res://scripts/card_battle.gd")
 const Cards=preload("res://scripts/card_catalog.gd")
 var checks:=0
@@ -10,7 +11,7 @@ func check(ok: bool,label: String) -> void:
 func fresh(species: String):
  var b=Battle.new();b.configure(species);b.prepare({});b.begin();b.advance_intro(3.2);return b
 func run() -> void:
- for species in Battle.SPECIES:
+ for species in Catalog.STARTERS:
   var b=fresh(species)
   check(not b.can_act("special"),"Spezialkraft beginnt ungeladen "+species)
   b.act("skill");b.acknowledge_animation()

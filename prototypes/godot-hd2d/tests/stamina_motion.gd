@@ -73,7 +73,7 @@ func run() -> void:
  app._resume();await frames(2)
  check(app.hud.stamina_bar.visible and app.hud.stamina_label.text.begins_with("Ausdauer"),"Sichtbarer Balken mit Prozentwert")
  app._pause(true)
- for species in Catalog.data().characters:
+ for species in Catalog.STARTERS:
   app.selected=species;await app._mount_world("LIVING",Catalog.position_for("LIVING",Vector2(.7,.7)))
   var actor=app.actor;actor.jump_clock=-1;actor.state="idle"
   check(actor.walk_texture!=null,"Neue Gehfolge geladen: "+species)

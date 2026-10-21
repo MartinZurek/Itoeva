@@ -59,7 +59,7 @@ func run():
  var ripple:Image=await grab()
  check(changed(coast,ripple,Rect2i(270,132,84,13))>5,"Hintergrundmeer bewegt sich sichtbar")
  check(changed(coast,ripple,Rect2i(65,170,82,19))==0,"Gemalter Holzsteg bleibt unbewegt")
- check(changed(coast,ripple,Rect2i(0,0,768,60))==0,"Himmel bleibt unbewegt")
+ check(changed(coast,ripple,Rect2i(0,0,768,40))==0,"Blauer Himmel ausserhalb der Wolkenmaske bleibt unbewegt")
  mat=Ambience.create_material("res://assets/world/expedition.png",load("res://assets/world/expedition.png"))
  Ambience.set_time(mat,23,false)
  mat.set_shader_parameter("animation_time",0.0)

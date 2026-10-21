@@ -30,7 +30,7 @@ func run() -> void:
  var residents=load("res://scripts/world_residents.gd")
  for species in ["fennec","gloop","puffling","hootlet"]:
   check(residents.data().has(species) and not residents.data()[species].schedule.is_empty() and residents.data()[species].about!="","Bewohner behält Dialog/Tagesplan: "+species)
- for species in Catalog.data().characters:
+ for species in Catalog.STARTERS:
   app.selected=species;await app._mount_world("OUTDOOR",Catalog.position_for("SPORT",Vector2(.4,.65)))
   var actor=app.actor;actor.enabled=false;actor.jump_clock=-1;actor.recovery_clock=1;actor.state="idle"
   check(actor.sprite.texture.resource_path==Catalog.data().characters[species].asset,"Welt nutzt richtige Identität: "+species)

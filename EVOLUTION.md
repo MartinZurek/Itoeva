@@ -7263,3 +7263,18 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Lauf39425565075 hatte API26/API35 abgeschlossen; Gradle-Prüfung lief noch.
 - **ÜBERGABE:**PR375, docs/godot-sichtbare-streckenanschluesse.md und
   docs/validation/godot-v0131-build-report.json. Kein Merge ins ältere main.
+
+### 2026-10-21 – Vier Spielerfiguren und gezielte Landschaftsdynamik
+
+- **DOCUMENTED INTENT:**Martin möchte umfangreiche Spielerprüfungen auf die vier
+  auswählbaren Wesen begrenzen und sichtbare Dynamik gegen unsichtbaren Detailaufwand
+  abwägen: ruhiges Wasser, teilweise bewegte Wolken, weniger Laden/Rechenaufwand.
+- **FACT:**Spielermatrizen folgen Catalog.STARTERS; NPC-/Helfer-Daten bleiben erhalten.
+  Geometrie75264 statt230784 Punkte; vorberechnete RG-Konturen, örtlich begrenzte
+  Shaderarbeit und getrennte opake/transparente Bildpfade. Landschaftspixel bleiben.
+- **TESTED BEHAVIOR:**Erste Desktop-Messungen zeigen geringere Render-/Aufbauzeiten;
+  kein Ladezeitgewinn behauptet. Nach Umgebungsreset rekonstruiert, Endprüfung offen.
+- **UNVERIFIED:**Abschließende Regressionen, Telefon-FPS/GPU, menschliche visuelle
+  Abnahme und neue APK. Keine Änderung von Tempo, Kartenregeln oder Speicherformat.
+- **ÜBERGABE:**docs/godot-dynamik-und-budget.md; Arbeitsbranch
+  codex/godot-focused-environment-budget auf PR375/Testfassung0.13.1.

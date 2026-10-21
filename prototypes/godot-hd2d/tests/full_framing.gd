@@ -16,7 +16,7 @@ func run() -> void:
 		await process_frame
 	var bounds := {}
 	var complete: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/compact_bounds.json"))
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		var atlas: Image = app.textures[Catalog.data().characters[species].asset].get_image()
 		var compact: bool = Catalog.data().characters[species].get("compact", false)
 		var columns: int = 8 if compact else 12
@@ -28,7 +28,7 @@ func run() -> void:
 			bounds[species][frame] = Rect2i(b[0],b[1],b[2],b[3]) if compact else card.get_used_rect()
 	for room in Catalog.data().interiors:
 		await app._mount_world(room, Catalog.position_for(room, Vector2(0.5, 0.7)))
-		for species in Catalog.data().characters:
+		for species in Catalog.STARTERS:
 			app.selected = species
 			await app._mount_world(room, Catalog.position_for(room, Vector2(0.5, 0.7)))
 			var visible := true

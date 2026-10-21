@@ -18,7 +18,7 @@ func run() -> void:
 	root.add_child(app)
 	while app.loading_world:
 		await process_frame
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		app.selected = species
 		for pair in Catalog.data().doors:
 			for source in [pair.a, pair.b]:

@@ -1,4 +1,5 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const Battle=preload("res://scripts/card_battle.gd")
 const Cards=preload("res://scripts/card_catalog.gd")
 var checks:=0
@@ -8,7 +9,7 @@ func check(ok: bool,label: String) -> void:
  checks+=1
  if not ok:failures+=1;push_error(label)
 func run() -> void:
- for species in Battle.SPECIES:
+ for species in Catalog.STARTERS:
   var b=Battle.new();b.configure(species);b.prepare({});b.begin();b.advance_intro(3.2)
   check(b.decks[0].species==species and Cards.valid(species,Cards.starter(species)),"Eigenes gültiges Deck "+species)
   check(b.decks[0].cap==1 and b.decks[0].crystals==1 and b.decks[0].hand.size()==4,"Erster Zug mit Kristall und Karte")

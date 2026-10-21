@@ -34,7 +34,7 @@ func run() -> void:
 	check(Catalog.position_for("FOREST", entrance.at).x > Catalog.position_for("FOREST", Vector2(.52,.64)).x + 2.5, "Waldeingang liegt deutlich weiter rechts")
 	var links: Array = [{"to":"FOREST", "index":0}]
 	links.append_array(Forest.data().branches)
-	for species in Catalog.data().characters:
+	for species in Catalog.STARTERS:
 		app.selected = species
 		for link in links:
 			await app._mount_world("FOREST_TRAIL", Forest.position_for(link.index, .5))

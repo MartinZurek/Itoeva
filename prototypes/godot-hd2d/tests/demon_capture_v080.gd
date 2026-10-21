@@ -23,7 +23,7 @@ func run() -> void:
   enc.suspended=true;enc.view.event_time=1.05;await grab(id+"-cast")
   enc.model.acknowledge_animation();enc.view.event_time=-1;enc.view.build_commands();enc.view.refresh();await grab(id+"-prepared")
   enc.suspended=false;enc._retreat_now()
- for species in Catalog.data().characters:
+ for species in Catalog.STARTERS:
   app.selected=species;await app._mount_world("MILL_BROOK",Catalog.position_for("MILL_BROOK",Vector2(.55,.6)));app._resume()
   for i in 20:await physics_frame
   app._pause(true);app._update_camera(10);await grab("hero-"+str(species))

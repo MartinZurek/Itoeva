@@ -15,7 +15,7 @@ func run() -> void:
  var camera:=Camera3D.new();camera.projection=Camera3D.PROJECTION_ORTHOGONAL;camera.size=6.0
  camera.position=Vector3(0,1.25,7);world.add_child(camera);camera.current=true
  DirAccess.make_dir_recursive_absolute("res://captures/motion-regions")
- for species in Catalog.data().characters:
+ for species in Catalog.STARTERS:
   var actor=Actor.new();actor.species=species;actor.enabled=false;world.add_child(actor)
   await process_frame;actor.shadow.visible=false
   for mode in ["world","walk","run"]:

@@ -1,4 +1,5 @@
 extends SceneTree
+const Catalog=preload("res://scripts/world_catalog.gd")
 const B=preload("res://scripts/card_battle.gd")
 const C=preload("res://scripts/card_catalog.gd")
 const E=preload("res://scripts/regional_enemies.gd")
@@ -44,7 +45,7 @@ func player_step(b) -> bool:
  if b.can_act("support"):return b.act("support")
  return b.act("end_turn")
 func run() -> void:
- for species in ["fennec","starlet","hootlet"]:
+ for species in Catalog.STARTERS:
   for style in ["Startdeck","Tempo","Bollwerk","Motor"]:
    for enemy in ["night","thorn_moth","bark_guardian","seal_weaver","vharok"]:
     for seed in [11,29,73]:
