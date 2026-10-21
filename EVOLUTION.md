@@ -7375,3 +7375,19 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**Baulieferung und menschliche Telefonabnahme bis zum Nachweis.
 - **UEBERGABE:**PR378/codex/godot-planted-steps,0.14.2/Code29. Der neuere
   Baulauf ersetzt vor Lieferung den ueberholten Zwischenstand.
+
+### 2026-10-21 – Laufkorrektur0.14.2 erfolgreich ausgeliefert
+
+- **FACT:**Baulauf39685621858/Job119519011559 zum Quellcommit
+  0e81c0598cb7b60c0edb2f0298ee593cd296b0ab erfolgreich. AndroidTest0.14.2/Code29,
+  unveraendertes Signierzertifikat und Paket, vollstaendiger Drive-Upload;
+  Remote-Groesse und MD5 stimmen.192874327 Bytes, SHA-256
+  3e31dd6ff6320dec4bb5a260e791bc464bd921d42ec07d21631f0de07a7bca02.
+- **TESTED BEHAVIOR:**Saemtliche Godot-Spiel-/Renderpruefungen und Exportkontrollen
+  gruen, darunter2352 aktive Gang-,1088 Originalkontur- und204 Ausdauer-/Taktchecks.
+  Allgemeiner Verify-Lauf39685630646 ebenfalls erfolgreich.12-Sekunden-Vorschau
+  mit vier Spielern aus drei Richtungen und zwei Tempi dauerhaft gesichert.
+- **UNVERIFIED:**Menschliche Bewegungsabnahme und Telefon-GPU/FPS. Stilisierte
+  Schritte, keine Behauptung exakt weltfester Sohlen oder abschliessender Optikfreigabe.
+- **UEBERGABE:**PR378, docs/godot-schritte-v0142.md sowie
+  docs/validation/godot-v0142-build-report.json. Kein Merge ins aeltere main.

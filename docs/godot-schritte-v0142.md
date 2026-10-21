@@ -67,3 +67,25 @@ Branch `codex/godot-planted-steps`, auf PR377/0.14.1 aufgebaut. AndroidTest
 Vorbereitung und Liefererfolg sind getrennte Zustaende: erst der erfolgreiche
 Baulauf samt Remote-Pruefsummenabgleich belegt eine ausgelieferte APK.
 Telefon-GPU/FPS, Daumensteuerung und Martins menschliche Bewegungsabnahme sind offen.
+
+## Lieferung abgeschlossen
+
+Test-APK0.14.2/Code29 ist erfolgreich gebaut, signiert und vollstaendig am
+[bisherigen Downloadziel](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk)
+abgelegt. Paketkennung und Zertifikat erlauben das Update zur0.14.1.
+
+- Quellcommit: `0e81c0598cb7b60c0edb2f0298ee593cd296b0ab`.
+- [Baulauf39685621858](https://github.com/MartinZurek/Itoeva/actions/runs/39685621858),
+  Job119519011559: alle Godot-Regressions-/Render-, Export-, Signatur- und Uploadschritte erfolgreich.
+- 192874327 Bytes; SHA-256 `3e31dd6ff6320dec4bb5a260e791bc464bd921d42ec07d21631f0de07a7bca02`.
+- Remote-Groesse und MD5 entsprechen der vollstaendigen lokalen Datei.
+- APK-Artefakt12387057782, Pruefprotokolle12386358982;14 Tage Aufbewahrung.
+- Allgemeiner Verify-Lauf39685630646 ebenfalls erfolgreich.
+- Finale aktive OpenGL-Pruefung2352/0; Originalkonturen1088/0; Ausdauer/Takt204/0.
+- Zwoelfsekundige Vorschau mit24 Bildern/Sekunde, allen vier Spielern, drei
+  Richtungen sowie Gehen/Joggen/Flug fertig und dauerhaft als MP4 gesichert.
+
+Liefernachweis: `docs/validation/godot-v0142-build-report.json`.
+Die fruehere Zwischenfassung wurde vor Lieferung abgebrochen. Kein Merge in main.
+Weiterhin offen: Martins menschliche Bewegungsabnahme und Telefon-GPU/FPS.
+Die stilisierten Sohlen sind nicht exakt in Weltkoordinaten verankert.

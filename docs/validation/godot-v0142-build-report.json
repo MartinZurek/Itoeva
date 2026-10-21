@@ -1,0 +1,31 @@
+{
+  "commit": "0e81c0598cb7b60c0edb2f0298ee593cd296b0ab",
+  "run_id": "39685621858",
+  "file_id": "148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX",
+  "bytes": 192874327,
+  "sha256": "3e31dd6ff6320dec4bb5a260e791bc464bd921d42ec07d21631f0de07a7bca02",
+  "md5": "8eb7ec5a77d737c22ab53cf263548b7c",
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "version": "0.14.2",
+  "version_code": 29,
+  "card_count": 616,
+  "starter_species": [
+    "mosslyn",
+    "nocti",
+    "starlet",
+    "wyrmling"
+  ],
+  "workflow_url": "https://github.com/MartinZurek/Itoeva/actions/runs/39685621858",
+  "job_id": 119519011559,
+  "workflow_conclusion": "success",
+  "remote_size_verified": true,
+  "remote_md5_verified": true,
+  "verify_run_id": 39685630646,
+  "verify_conclusion": "success",
+  "human_motion_approval": false,
+  "phone_gpu_fps_verified": false,
+  "apk_artifact_id": 12387057782,
+  "logs_artifact_id": 12386358982,
+  "certificate_sha256": "30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc",
+  "preview_file": "Itoeva_Laufbewegungen_0142.mp4"
+}
