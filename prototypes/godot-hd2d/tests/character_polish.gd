@@ -49,7 +49,8 @@ func run() -> void:
     running_frames[actor.sprite.frame]=true
     check(actor.frame_bounds[actor.sprite.frame].has_area(),"Laufphase besitzt Alphakontur: "+species)
    check(running_frames.size()>=7,"Eigener Sprintzyklus: "+species)
-   actor.running=false;actor.run_blend=0;actor.hover=0;actor._update_frame(false)
+   actor.running=false;actor.run_blend=0;actor.hover=0
+   for settle in 12:actor._update_frame(false)
    check(actor.sprite.frame==rest and not actor.run_sheet,"Anhalten stellt dieselbe Figur wieder her: "+species)
   if species=="starlet":check(is_instance_valid(actor.aura),"Starlits Eigenleuchten bleibt erhalten")
   if species=="nocti":

@@ -2,8 +2,8 @@ extends CharacterBody3D
 
 const Catalog = preload("res://scripts/world_catalog.gd")
 const GRAVITY := 14.0
-const WALK_SPEED := 2.0
-const RUN_SPEED := 3.3
+const WALK_SPEED := 2.35
+const RUN_SPEED := 3.85
 const ROLL_SECONDS := 0.46
 const Stamina = preload("res://scripts/movement_stamina.gd")
 var stamina = Stamina.new()
@@ -425,9 +425,9 @@ func _physics_process(delta: float) -> void:
 		stop_input()
 		moving = false
 	# Hysterese verhindert hektischen Rollenwechsel genau an der Jogging-Schwelle.
-	if running and actual_speed < 2.3:
+	if running and actual_speed < WALK_SPEED + .12:
 		running = false
-	elif not running and actual_speed > 2.65:
+	elif not running and actual_speed > WALK_SPEED + .55:
 		running = true
 	run_blend = move_toward(run_blend, 1.0 if running else 0.0, delta / 0.16)
 	if moving and input.length() > 0.06 and state not in ["roll", "twirl"]:

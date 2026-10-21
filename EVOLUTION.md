@@ -669,6 +669,34 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-22 - Ganzkoerper statt festem Oberkoerper (godot-full-body-v0150)
+
+- **DOCUMENTED INTENT:** Martin verwirft0.14.2 als fussbewegte Stickeranimation.
+  Fennec vor der Viererauswahl ist Qualitaetsreferenz; Tempo soll sich erholen,
+  Starlit schweben/huepfen statt auf Sternspitzen laufen. Vier Spieler vertieft pruefen.
+- **FACT / Ursache:** PR378 haelt die Koerperzeichnung bewusst fest; die bisherige
+  aktive Renderpruefung verlangte fast unveraenderte Kopfbereiche. Referenzbilder
+ 9–16 aus Fennecs Atlas am PR372-Stand wurden betrachtet. Die starre Oberkoerper-
+  vorgabe ist ueberholt, nicht durch neue gruene Konturtests bestaetigt.
+- **Produktentscheidung:** Zusammenhaengendes Hautnetz mit Hueft-/Kniegelenken,
+  Rumpf/gegenbewegtem Kopf, Schultern/Ellbogen und nachlaufenden Teilen fuer die
+  vier Spieler. Starlit erhaelt Ganzkoerper-Huepfboegen samt Schatten. Keine neue
+  Auswahl oder Geschichte. Welt-/Schritttempo wird zwischen0.14.2 und altem
+  Sprint eingeordnet, mit weichem Auslauf. Kein Bildmorphing und kein blosses
+  Verschieben ausgeschnittener Fuesse. Original-PNGs bleiben erhalten.
+- **Module/Persistenz:** Godot-Figuren, Shader, technische Gelenkgewichte und
+  Bewegungspruefungen. Kein Savefeld, keine Migration, unveraenderte Ausdauer-
+  mengen und Sitzregeneration. Native App, Room und LAS bleiben unberuehrt.
+- **TESTED BEHAVIOR:** Ausdauer-/Figuren-/Kampf-/Vollweltchecks sowie technische
+  Gewichte und echte OpenGL-Folgen. Aktive Pruefung erwartet Bewegung auch im
+  Oberkoerper; Originalkonturen bleiben separat geprueft. Vollstaendige Zahlen,
+  Build und Lieferbeleg stehen in docs/godot-ganzkoerperbewegung-v0150.md und PR.
+- **UNVERIFIED:** Menschliche Animationsabnahme, Telefon-GPU/FPS. Kontakte sind
+  stilisiert und nicht exakt weltfest. Keine verdeckten Seiten neu gezeichnet.
+- **Ruecksetzen/naechster Schritt:** Isolierten Commit revertieren; vor APK-
+  Downgrade lokalen Stand sichern.0.15.0/Code30 ueber den bestehenden Lieferweg
+  bauen und Martins visuelle Abnahme am Telefon einholen. Keine OPEN DECISION.
+
 ### 2026-10-15 - Eigenlicht und nachvollziehbarer Kampfabschluss (godot-polish-v062)
 
 - **DOCUMENTED INTENT:** Martin bestaetigt APK 0.6.1 als Basis. Kartenansicht

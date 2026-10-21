@@ -40,13 +40,22 @@ uniform vec4 local_light_colors[4];
 uniform vec4 local_light_phases[4];
 uniform float animation_time = -1.0;
 uniform float self_glow = 0.0;
+#include "res://shaders/full_body.gdshaderinc"
 varying vec3 world_point;
 varying vec2 paint_uv;
 
 void vertex() {
 	// Geometrie und UVs folgen dem vollständigen Motiv statt dem starren Raster.
+	skin_surface=COLOR.r<.5 ? 1.0 : 0.0;
 	paint_uv = UV;
-	if (has_pose_region) {
+	if(skin_surface>.5) {
+	 vec2 source=vec2(VERTEX.x+128.0,128.0-VERTEX.y);
+	 vec2 posed=skin_point(source);
+	 paint_uv=gait_reference+source/vec2(textureSize(atlas,0));
+	 VERTEX.xy=vec2((posed.x-128.0)*rig_flip,128.0+rig_ground_offset-posed.y)*rig_pixel_size;
+	 COLOR=vec4(1.0);
+	}
+	if (has_pose_region && skin_surface<.5) {
 		VERTEX.xy = VERTEX.xy * pose_geometry.xy + pose_geometry.zw;
 		paint_uv = pose_region.xy + (UV - pose_cell.xy) / pose_cell.zw * pose_region.zw;
 	}
@@ -144,9 +153,12 @@ vec4 step_paint(vec2 local, vec2 dimensions) {
 }
 
 void fragment() {
-	if (any(lessThan(paint_uv, frame_clip.xy)) || any(greaterThan(paint_uv, frame_clip.xy + frame_clip.zw))) { discard; }
+	if(rig_active && skin_surface<.5) {discard;}
+	if (skin_surface<.5 && (any(lessThan(paint_uv, frame_clip.xy)) || any(greaterThan(paint_uv, frame_clip.xy + frame_clip.zw)))) { discard; }
 	vec4 paint;
- if (gait_mode == 3 || gait_mode == 4 || gait_mode == 5) {
+ if(skin_surface>.5) {
+  paint=own_pose(paint_uv,gait_reference_id);
+ } else if (gait_mode == 3 || gait_mode == 4 || gait_mode == 5) {
   vec2 dimensions=vec2(textureSize(atlas,0));
   paint=step_paint((paint_uv-pose_cell.xy)*dimensions,dimensions);
  } else {

@@ -78,8 +78,8 @@ func run() -> void:
 	actor.touch_vector = Vector2(1, 0)
 	await frames(45)
 	var run_speed: float = actor.actual_speed
-	check(walk_speed < jog_speed and jog_speed < run_speed and run_speed > 3.1 and run_speed <= 3.31, "Analogtempo steigt stetig von Gehen ueber Joggen zu Rennen")
-	check(actor.running and actor.run_blend > .99 and actor.walk_sheet and actor.painted_material.get_shader_parameter("gait_mode") == 3, "Sprint verwendet bei echtem Lauftempo den zusammenhaengenden Pfotenschritt")
+	check(walk_speed < jog_speed and jog_speed < run_speed and run_speed > 3.6 and run_speed <= 3.86, "Analogtempo steigt stetig von Gehen ueber Joggen zu Rennen")
+	check(actor.running and actor.run_blend > .99 and actor.walk_sheet and actor.skin_mesh.visible and actor.painted_material.get_shader_parameter("rig_active"), "Sprint verwendet bei echtem Lauftempo die Ganzkoerperbewegung")
 	actor.touch_vector = Vector2.ZERO
 	await frames(30)
 	check(actor.actual_speed < 0.01 and actor.sprite.frame == actor.rest_frame(), "Anhalten endet in der vorhandenen lebendigen Ruhepose")
