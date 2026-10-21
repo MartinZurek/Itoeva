@@ -7340,3 +7340,54 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Freigabe allein aus Kontur-/Zwischenphasenpruefungen abgeleitet.
 - **UEBERGABE:**PR377, docs/godot-ruhige-bewegung-v0141.md und
   docs/validation/godot-v0141-build-report.json. Kein Merge ins aeltere main.
+
+### 2026-10-21 – Zusammenhaengende Schritte statt verformter Laufbilder
+
+- **DOCUMENTED INTENT:**Martin meldet erneut schlecht erkennbare Fussbewegungen
+  seit der Vierer-Auswahl. Alle bisherigen Figuren pruefen, Starlit auf Sternspitzen.
+- **FACT:**Keine vertauschte Auswahl-ID gefunden. Die neuen unabhaengigen
+  Atlaszeichnungen und ihre optische Flussinterpolation ersetzen keinen Laufzyklus.
+- **KORREKTUR:**Feste Zeichnung je Ansicht fuer alle acht Spezies, getrennte
+  Stand-/Schwungphasen, vier Wyrmling-Pfoten und eigenstaendig drehende Sternspitzen.
+  Noctis Fluegelansatz bleibt zusammenhaengend. Keine Aenderung der Spielerwahl,
+  Geschwindigkeiten, Ausdauerwirtschaft, Lichtlogik oder gespeicherter Fortschritte.
+- **TESTED BEHAVIOR:**Kontaktmathematik und technische Maskenpruefung bestanden;
+  lokale Figuren-/Helfer-, Ausdauer- und Kampf-/Lichtpruefungen gruen. Die finale
+  aktive OpenGL-Pruefung verwendet reale Bewegungsgeschwindigkeiten; Ergebnisse
+  und Grenzen werden in docs/godot-schritte-v0142.md festgehalten.
+- **UNVERIFIED:**APK-Lieferung bis zum erfolgreichen Workflow samt Remote-Abgleich;
+  Telefon-FPS/GPU und menschliche Bewegungsabnahme. Eine alte Hootlet-Luftwende-
+  Pruefung setzt ungueltige Atlasnummern voraus und ist gesondert dokumentiert.
+- **UEBERGABE:**codex/godot-planted-steps auf PR377; AndroidTest0.14.2/Code29
+  vorbereitet, bestehender Signier-/Drive-Weg, keine Verschmelzung ins aeltere main.
+
+### 2026-10-21 – Lesbaren Schritttakt im Weltmassstab erhalten
+
+- **FACT:**Der abschliessende Massstabsabgleich fand bei kleinen Wesen trotz
+  sauberer Teilbewegungen bis zu4-5 volle Gehzyklen je Sekunde. Die geometrische
+  Fusswegskalierung allein ist deshalb keine geeignete sichtbare Taktvorgabe.
+- **KORREKTUR:**Die ruhige Mindestzyklusstrecke2,15/2,8 aus0.14.1 bleibt erhalten;
+  der Fortschritt folgt der Strecke. Die Fuesse zeigen geordnete Stand-/Schwungphasen,
+  sind bei dieser stilisierten Darstellung aber nicht exakt weltfest verankert.
+- **TESTED BEHAVIOR:**Vorherige Geometrie-/Spielpruefungen bestanden. Aktive
+  Render- und Ausdauerpruefung werden mit dem finalen Takt erneut ausgefuehrt;
+  die neue Ausdauerpruefung begrenzt die Gehfrequenz aller vier Spieler explizit.
+- **UNVERIFIED:**Baulieferung und menschliche Telefonabnahme bis zum Nachweis.
+- **UEBERGABE:**PR378/codex/godot-planted-steps,0.14.2/Code29. Der neuere
+  Baulauf ersetzt vor Lieferung den ueberholten Zwischenstand.
+
+### 2026-10-21 – Laufkorrektur0.14.2 erfolgreich ausgeliefert
+
+- **FACT:**Baulauf39685621858/Job119519011559 zum Quellcommit
+  0e81c0598cb7b60c0edb2f0298ee593cd296b0ab erfolgreich. AndroidTest0.14.2/Code29,
+  unveraendertes Signierzertifikat und Paket, vollstaendiger Drive-Upload;
+  Remote-Groesse und MD5 stimmen.192874327 Bytes, SHA-256
+  3e31dd6ff6320dec4bb5a260e791bc464bd921d42ec07d21631f0de07a7bca02.
+- **TESTED BEHAVIOR:**Saemtliche Godot-Spiel-/Renderpruefungen und Exportkontrollen
+  gruen, darunter2352 aktive Gang-,1088 Originalkontur- und204 Ausdauer-/Taktchecks.
+  Allgemeiner Verify-Lauf39685630646 ebenfalls erfolgreich.12-Sekunden-Vorschau
+  mit vier Spielern aus drei Richtungen und zwei Tempi dauerhaft gesichert.
+- **UNVERIFIED:**Menschliche Bewegungsabnahme und Telefon-GPU/FPS. Stilisierte
+  Schritte, keine Behauptung exakt weltfester Sohlen oder abschliessender Optikfreigabe.
+- **UEBERGABE:**PR378, docs/godot-schritte-v0142.md sowie
+  docs/validation/godot-v0142-build-report.json. Kein Merge ins aeltere main.

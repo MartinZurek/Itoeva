@@ -1,5 +1,8 @@
 extends "res://scripts/character_actor.gd"
 const FLIGHT_CYCLES := 1.8
+const StepGait = preload("res://scripts/step_gait.gd")
+static var step_rigs: Dictionary = {}
+static var step_masks: Dictionary = {}
 # Neue gemalte Figuren verwenden 32 Weltposen und 16 Kampfposen im Originalatlas.
 var cell_size:=Vector2i(181,181)
 var world_texture: Texture2D
@@ -14,8 +17,6 @@ var walk_reference_height := 1.0
 var run_sheet := false
 var walk_sheet := false
 static var pose_masks: Dictionary = {}
-static var gait_registration: Dictionary = {}
-static var gait_flows: Dictionary = {}
 var mask_textures: Dictionary = {}
 var displayed_bounds := Rect2i()
 var registered_gait := true
@@ -33,7 +34,7 @@ func _pose_mask() -> Dictionary:
  return {"texture":mask_textures[path],"id":float(data.ids[sprite.frame])/255.0}
 
 func _ready() -> void:
- if gait_registration.is_empty():gait_registration=JSON.parse_string(FileAccess.get_file_as_string("res://data/gait_registration.json"))
+ if step_rigs.is_empty():step_rigs=JSON.parse_string(FileAccess.get_file_as_string("res://data/step_rigs.json"))
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
  collision_layer=2;collision_mask=1
  collider=CollisionShape3D.new()
@@ -85,45 +86,69 @@ func _update_sprite_scale() -> void:
  # Vollständige Konturen erhalten auch überstehende Schweife und Schals.
  var bounds:=frame_bounds[sprite.frame]
  var ground:=bounds.end.y
- var registration: Dictionary=gait_registration.get(species,{}).get("run" if run_sheet else "walk" if walk_sheet else "",{})
- if not registered_gait:registration={}
  painted_material.set_shader_parameter("gait_mode",0)
- if not registration.is_empty():
+ if registered_gait and walk_sheet and step_rigs.has(species):
+  var row:=sprite.frame/8
+  var rig: Dictionary=step_rigs[species]
+  var profile: Dictionary=rig.rows[row]
+  var reference:=frame_bounds[row*8]
+  var amplitude: float=float(rig.half_stride)
+  # Alle Phasen verwenden dieselbe Zeichnung und dieselbe Geometrie. Gesicht,
+  # Schweif und Schal koennen daher nicht mehr zwischen Atlasbildern zerfliessen.
+  bounds=reference.grow(int(ceil(amplitude))+8)
+  ground=int(profile.ground)
+  var key:=species
+  if not step_masks.has(key):
+   var raw:=Marshalls.base64_to_raw(rig.mask).decompress(256*768*4,FileAccess.COMPRESSION_DEFLATE)
+   step_masks[key]=ImageTexture.create_from_image(Image.create_from_data(256,768,false,Image.FORMAT_RGBA8,raw))
+  var texture_size:=sprite.texture.get_size()
+  painted_material.set_shader_parameter("gait_mode",3)
+  painted_material.set_shader_parameter("gait_reference",Vector2(0,row*256)/texture_size)
+  painted_material.set_shader_parameter("gait_reference_id",float(pose_masks[sprite.texture.resource_path].ids[row*8])/255.0)
+  painted_material.set_shader_parameter("step_mask",step_masks[key])
+  painted_material.set_shader_parameter("step_row",row)
+  var depth:=0.0 if row==0 else .573576 if row==1 else -.573576
+  var lowest_ray: float=-INF
+  if species=="starlet":painted_material.set_shader_parameter("gait_mode",5)
+  painted_material.set_shader_parameter("step_leg_count",profile.feet.size())
+  for leg in profile.feet.size():
+   var foot:=Vector2(profile.feet[leg][0],profile.feet[leg][1])
+   var hip:=Vector2(profile.hips[leg][0],profile.hips[leg][1])
+   var phase: float=lerpf([0.0,.5,.75,.25][leg],[0.0,.5,.5,0.0][leg],run_blend) if profile.feet.size()==4 else leg*.5
+   var step:=StepGait.sample(gait+phase,amplitude,run_blend,depth)
+   var offset: Vector2=step.offset+Vector2(hip.x-foot.x,ground-foot.y)
+   if species=="starlet":
+    # Sternspitzen bleiben dreieckige, drehende Strahlen. Eine menschliche
+    # Bein-Scherung zog sie besonders frontal zu langen gelben Saeulen.
+    var ray:=foot-hip
+    var target:=ray+Vector2(step.travel*(1.0 if row==0 else .55),step.offset.y)
+    var turn:=wrapf(target.angle()-ray.angle(),-PI,PI)
+    var angle:=turn/sqrt(1.0+pow(turn/.55,2.0))
+    lowest_ray=maxf(lowest_ray,hip.y+ray.rotated(angle).y)
+    offset=Vector2(angle,0)
+   painted_material.set_shader_parameter("step_hip_"+str(leg),hip)
+   painted_material.set_shader_parameter("step_foot_"+str(leg),foot)
+   painted_material.set_shader_parameter("step_offset_"+str(leg),offset)
+  if species=="starlet":sprite.position.y=hover+(lowest_ray-ground)*sprite.pixel_size
+ elif registered_gait and run_sheet and species=="nocti":
   var row:=sprite.frame/8
   var reference:=frame_bounds[row*8]
-  var profile: Dictionary=registration.rows[row]
-  var raw: Array=profile.offsets[sprite.frame%8]
-  var offset:=Vector2i(raw[0],raw[1])
-  var cycle: float=clock*FLIGHT_CYCLES if species=="nocti" and run_sheet else gait
-  var phase:=posmod(int(cycle*8),8)
-  var next: int=profile.sequence[(phase+1)%8]
-  var next_raw: Array=profile.offsets[next]
-  var next_offset:=Vector2i(next_raw[0],next_raw[1])
-  var next_bounds:=frame_bounds[row*8+next]
-  # Oberkoerper und Gesicht bleiben dieselbe Zeichnung. Nur die registrierten
-  # Stuetzbeine bzw. Noctis aeussere Fluegel wechseln durch die Phasen.
-  bounds=reference.merge(Rect2i(bounds.position-offset,bounds.size)).merge(Rect2i(next_bounds.position-next_offset,next_bounds.size)).grow(3)
+  var flight: Dictionary=step_rigs.nocti.flight
+  bounds=reference.grow(32)
   ground=reference.end.y
-  var origin:=Vector2(0,row*cell_size.y)
-  var window: Array=profile.window
-  painted_material.set_shader_parameter("gait_mode",int(profile.mode))
-  painted_material.set_shader_parameter("gait_reference",origin/sprite.texture.get_size())
-  painted_material.set_shader_parameter("gait_offset",Vector2(offset)/sprite.texture.get_size())
-  var key:=sprite.texture.resource_path
-  if not gait_flows.has(key):
-   var record: Dictionary=JSON.parse_string(FileAccess.get_file_as_string(registration.flow_asset))
-   var raw_flow:=Marshalls.base64_to_raw(record.deflate).decompress(int(record.width)*int(record.height)*4,FileAccess.COMPRESSION_DEFLATE)
-   gait_flows[key]=ImageTexture.create_from_image(Image.create_from_data(int(record.width),int(record.height),false,Image.FORMAT_RGBA8,raw_flow))
-  painted_material.set_shader_parameter("gait_flow",gait_flows[key])
-  painted_material.set_shader_parameter("gait_flow_cell",Vector2(phase,row)/Vector2(8,3))
-  painted_material.set_shader_parameter("gait_fraction",fposmod(cycle*8,1.0))
-  painted_material.set_shader_parameter("gait_next",Vector2(next*cell_size.x,row*cell_size.y)/sprite.texture.get_size())
-  painted_material.set_shader_parameter("gait_next_offset",Vector2(next_offset)/sprite.texture.get_size())
-  painted_material.set_shader_parameter("gait_next_id",float(pose_masks[key].ids[row*8+next])/255.0)
-  painted_material.set_shader_parameter("gait_window",Vector4(window[0],window[1],window[2],window[3]))
+  if not step_masks.has("flight"):
+   var raw:=Marshalls.base64_to_raw(flight.mask).decompress(256*768*4,FileAccess.COMPRESSION_DEFLATE)
+   step_masks.flight=ImageTexture.create_from_image(Image.create_from_data(256,768,false,Image.FORMAT_RGBA8,raw))
+  painted_material.set_shader_parameter("gait_mode",4)
+  painted_material.set_shader_parameter("step_mask",step_masks.flight)
+  painted_material.set_shader_parameter("step_row",row)
+  painted_material.set_shader_parameter("gait_reference",Vector2(0,row*256)/sprite.texture.get_size())
   painted_material.set_shader_parameter("gait_reference_id",float(pose_masks[sprite.texture.resource_path].ids[row*8])/255.0)
-  var bob: float=(1.0-cos(gait*TAU*2.0))*.45 if profile.mode==1 else 0.0
-  painted_material.set_shader_parameter("gait_body_bob",bob)
+  painted_material.set_shader_parameter("step_leg_count",2)
+  for wing in 2:
+   var point: Array=flight.pivots[row][wing]
+   painted_material.set_shader_parameter("step_hip_"+str(wing),Vector2(point[0],point[1]))
+   painted_material.set_shader_parameter("step_offset_"+str(wing),Vector2(sin(clock*TAU*FLIGHT_CYCLES)*.20*(1.0 if wing==0 else -1.0),0))
  displayed_bounds=bounds
  sprite.offset.y=cell_size.y*.5-2.0 if mounted else float(ground)-cell_size.y*.5
  var origin:=Vector2(sprite.frame%8,sprite.frame/8)*Vector2(cell_size)+Vector2(bounds.position)
@@ -145,7 +170,7 @@ func rest_frame() -> int:
  return 2 if facing.y<0 and absf(facing.y)>absf(facing.x) else 1 if absf(facing.y)>absf(facing.x) else 0
 
 func light_center() -> Vector3:
- var bounds:=frame_bounds[sprite.frame/8*8] if registered_gait and (walk_sheet or run_sheet) and species in Catalog.STARTERS else frame_bounds[sprite.frame]
+ var bounds:=frame_bounds[sprite.frame/8*8] if registered_gait and (walk_sheet or run_sheet) and step_rigs.has(species) else frame_bounds[sprite.frame]
  var camera:=get_viewport().get_camera_3d()
  var up:=camera.global_basis.y if camera else Vector3.UP
  var right:=camera.global_basis.x if camera else Vector3.RIGHT
@@ -156,7 +181,7 @@ func light_center() -> Vector3:
 func _update_frame(moving: bool) -> void:
  var depth:=absf(facing.y)>absf(facing.x)
  var flight: bool=species=="nocti" and hover>.06 and state=="idle" and jump_clock<0
- var use_run: bool=run_texture!=null and state=="idle" and jump_clock<0 and ((moving and running and run_blend>=.5) or flight)
+ var use_run: bool=species=="nocti" and run_texture!=null and state=="idle" and jump_clock<0 and ((moving and running and run_blend>=.5) or flight)
  var use_walk: bool=walk_texture!=null and moving and state=="idle" and jump_clock<0 and not use_run
  _use_motion_sheet(use_run,use_walk)
  sprite.flip_h=not depth and facing.x<0
@@ -192,9 +217,14 @@ func walk_frame(stride: float, direction: Vector2) -> int:
  return row*8+posmod(int(stride*8),8)
 
 func _stride_length() -> float:
- # Die Welt-/Kameraskalierung darf kleine Wesen nicht mit vier Schritten pro
- # Sekunde strampeln lassen. Ein voller Zyklus enthaelt beide Stuetzbeine.
- return lerpf(2.15,2.8,run_blend) if species in Catalog.STARTERS else super._stride_length()
+ if step_rigs.has(species) and is_instance_valid(sprite):
+  var amplitude: float=float(step_rigs[species].half_stride)
+  # Die Kameragroesse darf kleine Wesen nicht mit 4-5 Zyklen/Sekunde
+  # strampeln lassen. Der lesbare Takt aus0.14.1 bleibt die Untergrenze;
+  # der Fortschritt folgt weiterhin der Strecke und steht an Hindernissen still.
+  var pixels:=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1.0,walk_reference_height)
+  return maxf(lerpf(2.15,2.8,run_blend),StepGait.stride(amplitude,pixels,run_blend))
+ return super._stride_length()
 
 func run_frame(stride: float, time: float, direction: Vector2) -> int:
  var row:=0 if absf(direction.x)>=absf(direction.y) else 1 if direction.y>0 else 2

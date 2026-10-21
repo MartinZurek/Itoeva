@@ -79,7 +79,7 @@ func run() -> void:
 	await frames(45)
 	var run_speed: float = actor.actual_speed
 	check(walk_speed < jog_speed and jog_speed < run_speed and run_speed > 3.1 and run_speed <= 3.31, "Analogtempo steigt stetig von Gehen ueber Joggen zu Rennen")
-	check(actor.running and actor.run_sheet and actor.sprite.texture.resource_path.ends_with("mosslyn-run.png"), "Sprint nutzt den vorhandenen gezeichneten Laufbogen")
+	check(actor.running and actor.run_blend > .99 and actor.walk_sheet and actor.painted_material.get_shader_parameter("gait_mode") == 3, "Sprint verwendet bei echtem Lauftempo den zusammenhaengenden Pfotenschritt")
 	actor.touch_vector = Vector2.ZERO
 	await frames(30)
 	check(actor.actual_speed < 0.01 and actor.sprite.frame == actor.rest_frame(), "Anhalten endet in der vorhandenen lebendigen Ruhepose")

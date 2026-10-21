@@ -86,6 +86,7 @@ func run() -> void:
   app.selected=species;await app._mount_world("LIVING",Catalog.position_for("LIVING",Vector2(.7,.7)))
   var actor=app.actor;actor.jump_clock=-1;actor.state="idle"
   check(actor.walk_texture!=null,"Neue Gehfolge geladen: "+species)
+  check(actor.WALK_SPEED/actor._stride_length()<=.94,"Keine hektischen Mini-Schritte: "+species)
   for direction in [Vector2.RIGHT,Vector2.LEFT,Vector2.DOWN,Vector2.UP]:
    actor.facing=direction;actor.running=false;actor.run_blend=0
    var poses:={}
