@@ -39,7 +39,7 @@ Koerpermitte:2352 aktive OpenGL-Pruefungen bestanden. Die alte Konturmatrix prue
 unveraenderte Originalzeichnungen separat:1088 Checks bestanden. Echte Weltbilder
 der neuen Ausdaueranzeige und aller vier Figuren aufgenommen. Fruehe Prueffehler
 wegen einer zu grossen Kopf-Messflaeche im Flug wurden korrigiert. Die vollstaendige
-erneute CI-Pruefung und neue APK-Lieferung stehen noch aus.
+erneute CI-Pruefung und APK-Lieferung sind inzwischen abgeschlossen, siehe unten.
 
 Reproduktion der technischen Metadaten: `tools/prepare_gait_registration.py`
 (Entwickler: NumPy, SciPy, Pillow, opencv-python-headless). Farbzeichnungen werden
@@ -48,3 +48,22 @@ nicht bearbeitet. Laufzeit und CI brauchen diese Entwicklerbibliotheken nicht.
 Branch `codex/godot-calm-gait` auf dem ausgelieferten0.14.0-Stand/PR376.
 AndroidTest0.14.1/Code28 nutzt den bisherigen signierten GitHub-/Drive-Weg.
 Telefon-GPU/FPS und menschliche Bewegungsabnahme bleiben offen.
+
+## Ausgeliefert am21.10.2026
+
+[APK0.14.1 herunterladen](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk).
+AndroidTest0.14.1/Code28 ist als Update zu0.14.0 installierbar; Paket und
+Signierzertifikat bleiben gleich. Vollstaendiger Upload und Remote-Pruefsummen
+stimmen mit dem lokalen APK ueberein.
+
+- Quellcommit: `89612e3715d10312348e8e0ca2d97a5d22b2f7fc`.
+- [Baulauf39633090907](https://github.com/MartinZurek/Itoeva/actions/runs/39633090907), Job119336217261 erfolgreich.
+- 192796278 Bytes; SHA-256 `79cfd2840889746199b1550d198566e3a0136b1a87eebceed3a3b92181f059dd`.
+- APK-Artefakt12359814658, Pruefprotokolle12360992759 (14 Tage).
+- Liefernachweis: `docs/validation/godot-v0141-build-report.json`.
+- Allgemeiner Verify-Lauf39633097207 inklusive API26/API35 und Gradle/Lint/R8 gruen.
+
+Eine achtsekundige Vorschau aus tatsaechlichen24-Hz-OpenGL-Aufnahmen zeigt alle
+vier Figuren beim Gehen und danach beim Joggen/Flug. Die dargestellten
+Zwischenphasen sind dieselbe Laufzeit wie im APK. Technische Pruefungen und die
+Bildfolge ersetzen weiterhin nicht Martins menschliche Bewegungsabnahme am Telefon.
