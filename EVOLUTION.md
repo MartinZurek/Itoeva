@@ -7307,3 +7307,20 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**Telefon-GPU/FPS, Touchgefühl und menschliche Dynamikabnahme.
 - **ÜBERGABE:**PR376, docs/godot-dynamik-und-budget.md und
   docs/validation/godot-v0140-build-report.json. Kein Merge ins ältere main.
+
+### 2026-10-21 – Zappelnde Bewegung korrigieren, Ausdaueranzeige zuruecknehmen
+
+- **DOCUMENTED INTENT:**Martin lehnt die Bewegung aus0.14.0 als zappelnd/schlechter ab
+  und verlangt eine viel dezentere, weniger gruene Ausdaueranzeige.
+- **KORREKTUR:**Fruehere Konturtests belegen keine natuerliche Bewegung. Konsistente
+  Kopf-/Koerperzeichnung, registrierte Stuetzbein-/Fluegelphasen mit vorbereiteten
+  Zwischenfeldern; ruhigerer Takt und kein zusaetzlicher Mooslyn-Sprunghub.
+- **FACT:**Ausdaueranzeige132×4, graubeige und transparent; blendet bei vollem Vorrat
+  aus. Geschwindigkeit, Ausdauerregeln und persistente Spielstaende bleiben erhalten.
+- **TESTED BEHAVIOR:**200 Ausdauer-/Anzeige- und869 Figuren-/Helferchecks bestanden.
+  Technische Daten-/Quellhashpruefung,2352 aktive Bewegungs-OpenGL- und1088 unveraenderte
+  Konturchecks bestanden.64 Raum-/Spieler-,84 Vollwelt- und115 Bewegungs-/Lichtchecks gruen.
+- **UNVERIFIED:**Abschliessende Regression, neue APK, Telefon-Leistung und menschliche
+  Bewegungsabnahme. Keine Behauptung visueller Freigabe allein aus Testzahlen.
+- **UEBERGABE:**docs/godot-ruhige-bewegung-v0141.md, Branch codex/godot-calm-gait
+  auf PR376/Testfassung0.14.0. APK-Code28 vorbereitet, bisheriger Lieferweg bleibt.

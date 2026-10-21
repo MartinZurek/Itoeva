@@ -440,7 +440,7 @@ func _physics_process(delta: float) -> void:
 		previous_moving = moving
 	# Ein Zyklus entspricht einer zur Zeichnung passenden Strecke, nicht der Wanduhr.
 	if moving:
-		gait += distance / ((3.3 if running else 1.7) * maxf(body_pixel_size / 0.020, 0.5))
+		gait += distance / _stride_length()
 	if player_controlled:
 		var effort := clampf((actual_speed - WALK_SPEED) / (RUN_SPEED - WALK_SPEED), 0.0, 1.0) if state == "idle" else 0.0
 		stamina.advance(delta, effort, moving, state == "sit", false)
@@ -452,6 +452,9 @@ func _physics_process(delta: float) -> void:
 			recovery_clock = 0.0
 	_update_frame(moving)
 	_update_shadow()
+
+func _stride_length() -> float:
+	return (3.3 if running else 1.7) * maxf(body_pixel_size / 0.020, 0.5)
 
 func _hover_target(moving: bool) -> float:
 	return (0.13 + 0.035 * sin(gait * TAU)) if species == "hootlet" and moving and running and is_on_floor() else 0.0

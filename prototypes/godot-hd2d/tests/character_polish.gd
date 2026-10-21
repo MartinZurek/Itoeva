@@ -45,7 +45,7 @@ func run() -> void:
    actor.running=true;actor.run_blend=1
    var running_frames:={}
    for phase in 8:
-    actor.gait=(phase+.1)/8;actor.clock=(phase+.1)/(8*3.2);actor._update_frame(true)
+    actor.gait=(phase+.1)/8;actor.clock=(phase+.1)/(8*actor.FLIGHT_CYCLES);actor._update_frame(true)
     running_frames[actor.sprite.frame]=true
     check(actor.frame_bounds[actor.sprite.frame].has_area(),"Laufphase besitzt Alphakontur: "+species)
    check(running_frames.size()>=7,"Eigener Sprintzyklus: "+species)

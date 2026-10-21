@@ -71,7 +71,16 @@ func run() -> void:
  await app._mount_world("LIVING",Catalog.position_for("LIVING",Vector2(.7,.7)))
  check(app.actor.stamina==energy and is_equal_approx(energy.value,before),"Türwechsel setzt Vorrat nicht zurück")
  app._resume();await frames(2)
- check(app.hud.stamina_bar.visible and app.hud.stamina_label.text.begins_with("Ausdauer"),"Sichtbarer Balken mit Prozentwert")
+ check(app.hud.stamina_bar.visible and app.hud.stamina_label.text.begins_with("Ausdauer"),"Dezenter Balken bleibt bei verbrauchter Ausdauer lesbar")
+ check(app.hud.stamina_bar.size.y<=4 and app.hud.stamina_bar.size.x<=132,"Kleine Ausdaueranzeige statt grossem Leuchtbalken")
+ check(not app.hud.stamina_label.text.contains("%"),"Keine staendig wechselnde Prozentzahl")
+ energy.value=100;energy.exhausted=false;app.actor.running=false;app.actor.stop_input()
+ await frames(90)
+ check(app.hud.stamina_bar.modulate.a<.01,"Volle Ausdauer blendet die Anzeige aus")
+ energy.value=45;await frames(25)
+ check(app.hud.stamina_bar.modulate.a>.2 and app.hud.stamina_bar.modulate.a<=.76,"Verbrauch blendet den dezenten Balken ein")
+ var fill: Color=app.hud.stamina_bar.get_theme_stylebox("fill").bg_color
+ check(absf(fill.g-fill.r)<.04 and fill.a<.7,"Zurueckhaltender neutraler Ton ohne leuchtendes Gruen")
  app._pause(true)
  for species in Catalog.STARTERS:
   app.selected=species;await app._mount_world("LIVING",Catalog.position_for("LIVING",Vector2(.7,.7)))
