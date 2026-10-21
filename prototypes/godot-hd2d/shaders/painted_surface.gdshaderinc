@@ -33,7 +33,7 @@ void fragment() {
 	vec2 uv = UV;
 	// Trockene Flaechen brauchen weder Rauschen noch Wasserreflexe.
 	if (water > .001) { uv += water_flow_offset(UV,clock,water)*.6; }
-	if (mask.g > .001) { uv += cloud_drift(clock) * mask.g; }
+	if (has_clouds && mask.g > .001) { uv += cloud_drift(clock) * mask.g; }
 	uv = clamp(uv,vec2(0.0),vec2(1.0));
 	vec4 paint = texture(painted_texture, uv);
 	if (shore_enabled && shore > 0.0) {
