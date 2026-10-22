@@ -355,14 +355,17 @@ func _physics_process(delta: float) -> void:
 		state_clock = 0.0
 	var direction := _world_direction(input)
 	var analog := touch_vector.length() > 0.14 or not player_controlled or not Input.get_connected_joypads().is_empty()
+	# Die Tempokorrektur gilt dem Spieler; Bewohner behalten ihren bisherigen Wegtakt.
+	var walk_speed := WALK_SPEED if player_controlled else 2.0
+	var run_speed := RUN_SPEED if player_controlled else 3.3
 	# Aussenring und Tastensprint erreichen dasselbe Tempo; der Zwischenbereich bleibt stetig.
-	var speed := lerpf(0.0, WALK_SPEED, minf(magnitude / 0.64, 1.0))
+	var speed := lerpf(0.0, walk_speed, minf(magnitude / 0.64, 1.0))
 	if magnitude > 0.64 and analog and player_controlled:
-		speed = lerpf(WALK_SPEED, RUN_SPEED, smoothstep(0.64, 1.0, magnitude))
+		speed = lerpf(walk_speed, run_speed, smoothstep(0.64, 1.0, magnitude))
 	if player_controlled and Input.is_action_pressed("sprint"):
-		speed = RUN_SPEED * magnitude
+		speed = run_speed * magnitude
 	if player_controlled and not stamina.allows_sprint():
-		speed = minf(speed, WALK_SPEED)
+		speed = minf(speed, walk_speed)
 	if state == "sit":
 		speed = 0.0
 	if pending_sit:
@@ -425,9 +428,9 @@ func _physics_process(delta: float) -> void:
 		stop_input()
 		moving = false
 	# Hysterese verhindert hektischen Rollenwechsel genau an der Jogging-Schwelle.
-	if running and actual_speed < WALK_SPEED + .12:
+	if running and actual_speed < walk_speed + .12:
 		running = false
-	elif not running and actual_speed > WALK_SPEED + .55:
+	elif not running and actual_speed > walk_speed + .55:
 		running = true
 	run_blend = move_toward(run_blend, 1.0 if running else 0.0, delta / 0.16)
 	if moving and input.length() > 0.06 and state not in ["roll", "twirl"]:
@@ -442,7 +445,7 @@ func _physics_process(delta: float) -> void:
 	if moving:
 		gait += distance / _stride_length()
 	if player_controlled:
-		var effort := clampf((actual_speed - WALK_SPEED) / (RUN_SPEED - WALK_SPEED), 0.0, 1.0) if state == "idle" else 0.0
+		var effort := clampf((actual_speed - walk_speed) / (run_speed - walk_speed), 0.0, 1.0) if state == "idle" else 0.0
 		stamina.advance(delta, effort, moving, state == "sit", false)
 	hover = move_toward(hover, _hover_target(moving), delta * 1.6)
 	if jump_clock >= 0.0:

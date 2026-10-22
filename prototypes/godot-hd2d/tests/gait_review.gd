@@ -63,6 +63,13 @@ func run() -> void:
     else:
      check((max_root-min_root).length()>5,"Becken bewegt sich statt festem Stickerkoerper: "+species)
      check((max_head-min_head).length()>4,"Kopf folgt dem ganzen Koerper: "+species)
+  var visible_objects:=RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)
+  actor.position.x=40
+  await process_frame;await process_frame;await RenderingServer.frame_post_draw
+  var hidden_objects:=RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)
+  check(hidden_objects<visible_objects,"Entfernte Hautnetze werden vor dem Rendern ausgeblendet: "+species)
+  actor.position.x=0
+  await process_frame;await RenderingServer.frame_post_draw
   actor.body_weight=1;actor._update_frame(false)
   check(actor.body_weight<1,"Weicher Auslauf beim Anhalten")
   actor.state="sit";actor._update_frame(false)

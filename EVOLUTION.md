@@ -691,6 +691,10 @@ verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit
   Gewichte und echte OpenGL-Folgen. Aktive Pruefung erwartet Bewegung auch im
   Oberkoerper; Originalkonturen bleiben separat geprueft. Vollstaendige Zahlen,
   Build und Lieferbeleg stehen in docs/godot-ganzkoerperbewegung-v0150.md und PR.
+- **Nachpruefung:** Die Tempoanhebung ist auf Spieler begrenzt; Bewohner behalten
+  ihr vorheriges Tempo. Ein massstabsgerechter CPU-Begrenzungskasten verhindert
+  unnoetige Hautnetz-Arbeit ausserhalb des Kamerabildes. Der unveraenderte
+  Bewohnertest besteht nach der Korrektur wieder.
 - **UNVERIFIED:** Menschliche Animationsabnahme, Telefon-GPU/FPS. Kontakte sind
   stilisiert und nicht exakt weltfest. Keine verdeckten Seiten neu gezeichnet.
 - **Ruecksetzen/naechster Schritt:** Isolierten Commit revertieren; vor APK-

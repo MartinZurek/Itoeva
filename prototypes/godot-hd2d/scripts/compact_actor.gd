@@ -82,7 +82,7 @@ func _ready() -> void:
  skin_mesh=MeshInstance3D.new();skin_mesh.name="ArticulatedPaintedBody"
  skin_mesh.material_override=painted_material
  skin_mesh.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
- skin_mesh.extra_cull_margin=3.0;skin_mesh.visible=false;sprite.add_child(skin_mesh)
+ skin_mesh.extra_cull_margin=0.0;skin_mesh.visible=false;sprite.add_child(skin_mesh)
  _setup_aura()
  shadow=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(1.15,.62);shadow.mesh=plane
  var material:=ShaderMaterial.new();material.shader=load("res://shaders/contact_shadow.gdshader");material.render_priority=2
@@ -196,6 +196,13 @@ func _update_body_skin(ground: int) -> void:
   body_masks[key]=ImageTexture.create_from_image(Image.create_from_data(256,768,false,Image.FORMAT_RGBA8,raw))
  var reference:=frame_bounds[row*8]
  skin_mesh.mesh=FullBody.surface(reference.grow(2))
+ # Vertex-Shader skalieren erst nach der CPU-Sichtbarkeitspruefung. Der rohe
+ # Pixelkasten waere sonst hunderte Weltmeter breit; der Saum deckt Gelenke
+ # und jede Billboard-Drehung im tatsaechlichen Weltmassstab ab.
+ var extent:=maxf(absf(reference.position.x-128.0),absf(reference.end.x-128.0))
+ extent=maxf(extent,maxf(absf(ground-reference.position.y),absf(ground-reference.end.y)))
+ var reach: float=(extent+64.0)*sprite.pixel_size
+ skin_mesh.custom_aabb=AABB(Vector3.ONE*-reach,Vector3.ONE*(2.0*reach))
  var cycle:=clock*FLIGHT_CYCLES if flight else gait
  body_pose=FullBody.sample(species,row,cycle,run_blend,step_rigs[species].rows[row],profile,flight)
  body_pose.offset*=body_weight

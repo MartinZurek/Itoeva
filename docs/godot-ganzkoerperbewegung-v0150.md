@@ -41,7 +41,8 @@ bewegliche Fuesse unter einem festgehaltenen Oberkoerper.
   elastische Kompression und verzogener Schal begleiten den Bogen. Der
   Schatten folgt der sichtbaren Hoehe; der physische Sprungknopf bleibt echt.
 
-Gehen2,0→2,35; Sprint3,3→3,85 statt frueher4,6. Die Laufhysterese liegt
+Gehen2,0→2,35; Sprint3,3→3,85 statt frueher4,6. Die Tempokorrektur gilt ausschliesslich dem Spieler; Bewohner behalten2,0/3,3
+und damit ihren bisherigen Spaziergangstakt. Die Laufhysterese liegt
 relativ zum neuen Gehtempo, damit Erschoepfung nicht in einer Laufpose haengen
 bleibt. Die Schrittstrecke1,75/2,15 ergibt bei Volltempo etwa1,34/1,79
 Zyklen/Sekunde. Der Rhythmus bleibt streckenabhaengig und stoppt an Hindernissen.
@@ -81,3 +82,18 @@ belegen; vorbereitete Versionsnummern bedeuten noch keine fertige APK.
 
 Kein Save-Schemawechsel. Zum Ruecksetzen den isolierten Aenderungscommit
 revertieren; fuer ein APK-Downgrade den lokalen Godot-Stand vorher sichern.
+
+## Nachpruefung nach erstem vollstaendigen Baulauf
+
+Der erste Baulauf39693465912 stoppte vor dem Export am Bewohnertest: Das neue
+Spielertempo wurde durch die gemeinsame Basisklasse auch fuer Nella verwendet.
+Die Tempoableitung trennt jetzt Spieler und Bewohner. Der unveraenderte
+Bewohnertest besteht lokal wieder mit690/0; Ausdauer204/0 bleibt erfolgreich.
+Die allgemeine Projektpruefung39693485456 war bereits erfolgreich.
+
+Reviewbefund zur Sichtbarkeit: Das Hautnetz speichert Rohpixel; ein reines
+Skalieren im Vertex-Shader laesst seinen CPU-Begrenzungskasten viel zu gross.
+Ein zum aktuellen Pixelmassstab passender, konservativer `custom_aabb` umfasst
+jetzt Gelenkausschlaege und Billboard-Drehungen. Die aktive OpenGL-Pruefung
+kontrolliert zusaetzlich die sinkende Zahl eingereichter Objekte, wenn ein Wesen
+weit ausserhalb des Kamerabildes steht. Keine Telefon-FPS aus dieser Pruefung abgeleitet.
