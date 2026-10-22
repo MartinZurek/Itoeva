@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "commit": "42d6ff7fb3f0447ff78193bc957763069c54d2ee",
+  "run_id": "39749041384",
+  "file_id": "148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX",
+  "bytes": 193005716,
+  "sha256": "2276e3ce7d82f194f4995616f8a0ed6355c758eeb2be418721daf6e2ebdf6faa",
+  "md5": "02f831649e92e872c1d82ef68313a352",
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "version": "0.15.0",
+  "version_code": 30,
+  "card_count": 616,
+  "starter_species": [
+    "mosslyn",
+    "nocti",
+    "starlet",
+    "wyrmling"
+  ],
+  "workflow_run_id": 39749041384,
+  "workflow_job_id": 119724660278,
+  "workflow_url": "https://github.com/MartinZurek/Itoeva/actions/runs/39749041384",
+  "workflow_conclusion": "success",
+  "remote_size_and_md5_match": true,
+  "certificate_sha256": "30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc",
+  "runtime_manifest_sha256": "38dd91982914a36863273b1fbb908d9386eafb04f1ba0e503b1770efad381f23",
+  "verify_run_id": 39749047189,
+  "verify_conclusion": "success",
+  "local_and_runtime_checks": {
+    "full_body_opengl": 3540,
+    "original_contours": 1088,
+    "residents": 690,
+    "stamina": 204,
+    "characters_helpers": 869,
+    "combat_motion_light": 115,
+    "full_world": 84,
+    "python_rigs": 4
+  },
+  "phone_visual_acceptance": "open",
+  "phone_gpu_fps": "unmeasured"
+}

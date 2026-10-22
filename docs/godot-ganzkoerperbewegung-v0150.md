@@ -97,3 +97,24 @@ Ein zum aktuellen Pixelmassstab passender, konservativer `custom_aabb` umfasst
 jetzt Gelenkausschlaege und Billboard-Drehungen. Die aktive OpenGL-Pruefung
 kontrolliert zusaetzlich die sinkende Zahl eingereichter Objekte, wenn ein Wesen
 weit ausserhalb des Kamerabildes steht. Keine Telefon-FPS aus dieser Pruefung abgeleitet.
+
+## Lieferung abgeschlossen
+
+Test-APK0.15.0/Code30 ist fertig, signiert und vollstaendig am
+[bisherigen Downloadziel](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk)
+abgelegt. Paketkennung und bisheriges Zertifikat erlauben das Update zu0.14.2.
+
+- Quellcommit: `42d6ff7fb3f0447ff78193bc957763069c54d2ee`.
+- [Baulauf39749041384](https://github.com/MartinZurek/Itoeva/actions/runs/39749041384),
+  Job119724660278: Spielregressionen, Renderansichten, Export, Signatur und Upload erfolgreich.
+- 193005716 Bytes; SHA-256 `2276e3ce7d82f194f4995616f8a0ed6355c758eeb2be418721daf6e2ebdf6faa`.
+- Remote-Groesse und MD5 stimmen mit der vollstaendigen lokalen APK ueberein.
+- 3540 aktive OpenGL-Bewegungs-/Ausblendchecks und1088 Originalkonturchecks bestanden.
+- Die allgemeine Projektpruefung39749047189 einschliesslich Gradle/Lint/R8,
+  API26 und API35 ist ebenfalls erfolgreich.
+- Zwoelfsekundiges Video mit vier Spielern, drei Ansichten und24Bildern/Sekunde
+  erstellt, vollstaendig dekodiert und dauerhaft gesichert.
+
+Liefernachweis: `docs/validation/godot-v0150-build-report.json`.
+Der zuerst abgebrochene Baulauf lieferte keine Zwischen-APK aus. Kein Merge in main.
+Weiterhin offen: Martins menschliche Bewegungsabnahme und Telefon-GPU/FPS.
