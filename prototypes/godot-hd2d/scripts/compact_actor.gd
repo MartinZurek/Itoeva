@@ -1,5 +1,11 @@
 extends "res://scripts/character_actor.gd"
 const FLIGHT_CYCLES := 1.8
+const FullBody = preload("res://scripts/full_body_gait.gd")
+static var body_rigs: Dictionary = {}
+static var body_masks: Dictionary = {}
+var skin_mesh: MeshInstance3D
+var body_pose: Dictionary = {}
+var body_weight := 0.0
 const StepGait = preload("res://scripts/step_gait.gd")
 static var step_rigs: Dictionary = {}
 static var step_masks: Dictionary = {}
@@ -34,6 +40,7 @@ func _pose_mask() -> Dictionary:
  return {"texture":mask_textures[path],"id":float(data.ids[sprite.frame])/255.0}
 
 func _ready() -> void:
+ if body_rigs.is_empty():body_rigs=JSON.parse_string(FileAccess.get_file_as_string("res://data/body_rigs.json"))
  if step_rigs.is_empty():step_rigs=JSON.parse_string(FileAccess.get_file_as_string("res://data/step_rigs.json"))
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
  collision_layer=2;collision_mask=1
@@ -72,6 +79,10 @@ func _ready() -> void:
  painted_material.shader=load("res://shaders/painted_character.gdshader")
  painted_material.set_shader_parameter("atlas",sprite.texture);sprite.material_override=painted_material
  sprite.offset=Vector2(0,cell_size.y*.5-2);add_child(sprite)
+ skin_mesh=MeshInstance3D.new();skin_mesh.name="ArticulatedPaintedBody"
+ skin_mesh.material_override=painted_material
+ skin_mesh.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ skin_mesh.extra_cull_margin=0.0;skin_mesh.visible=false;sprite.add_child(skin_mesh)
  _setup_aura()
  shadow=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(1.15,.62);shadow.mesh=plane
  var material:=ShaderMaterial.new();material.shader=load("res://shaders/contact_shadow.gdshader");material.render_priority=2
@@ -149,6 +160,7 @@ func _update_sprite_scale() -> void:
    var point: Array=flight.pivots[row][wing]
    painted_material.set_shader_parameter("step_hip_"+str(wing),Vector2(point[0],point[1]))
    painted_material.set_shader_parameter("step_offset_"+str(wing),Vector2(sin(clock*TAU*FLIGHT_CYCLES)*.20*(1.0 if wing==0 else -1.0),0))
+ _update_body_skin(ground)
  displayed_bounds=bounds
  sprite.offset.y=cell_size.y*.5-2.0 if mounted else float(ground)-cell_size.y*.5
  var origin:=Vector2(sprite.frame%8,sprite.frame/8)*Vector2(cell_size)+Vector2(bounds.position)
@@ -166,6 +178,76 @@ func _update_sprite_scale() -> void:
  painted_material.set_shader_parameter("pose_id",mask.id)
  _update_occlusion()
 
+
+func _update_body_skin(ground: int) -> void:
+ var active: bool=registered_gait and body_rigs.has(species) and (walk_sheet or run_sheet and species=="nocti")
+ painted_material.set_shader_parameter("rig_active",active)
+ if not is_instance_valid(skin_mesh):return
+ skin_mesh.visible=active
+ body_pose={}
+ if not active:return
+ var row:=sprite.frame/8
+ var flight: bool=run_sheet and species=="nocti"
+ var key:=species+"-flight" if flight else species
+ var rig: Dictionary=body_rigs[key]
+ var profile: Dictionary=rig.rows[row]
+ if not body_masks.has(key):
+  var raw:=Marshalls.base64_to_raw(rig.mask).decompress(256*768*4,FileAccess.COMPRESSION_DEFLATE)
+  body_masks[key]=ImageTexture.create_from_image(Image.create_from_data(256,768,false,Image.FORMAT_RGBA8,raw))
+ var reference:=frame_bounds[row*8]
+ skin_mesh.mesh=FullBody.surface(reference.grow(2))
+ # Vertex-Shader skalieren erst nach der CPU-Sichtbarkeitspruefung. Der rohe
+ # Pixelkasten waere sonst hunderte Weltmeter breit; der Saum deckt Gelenke
+ # und jede Billboard-Drehung im tatsaechlichen Weltmassstab ab.
+ var extent:=maxf(absf(reference.position.x-128.0),absf(reference.end.x-128.0))
+ extent=maxf(extent,maxf(absf(ground-reference.position.y),absf(ground-reference.end.y)))
+ var reach: float=(extent+64.0)*sprite.pixel_size
+ skin_mesh.custom_aabb=AABB(Vector3.ONE*-reach,Vector3.ONE*(2.0*reach))
+ var cycle:=clock*FLIGHT_CYCLES if flight else gait
+ body_pose=FullBody.sample(species,row,cycle,run_blend,step_rigs[species].rows[row],profile,flight)
+ body_pose.offset*=body_weight
+ body_pose.angle*=body_weight
+ for field in ["head_angle","ear_angle","secondary","arms","forearms","squash"]:body_pose[field]*=body_weight
+ for leg in body_pose.hips.size():
+  for pair in [["upper","hips"],["lower","knees"],["toes","feet"]]:
+   var pose: Vector4=body_pose[pair[0]][leg]
+   var rest: Vector2=body_pose[pair[1]][leg]
+   body_pose[pair[0]][leg]=Vector4(pose.x*body_weight,lerpf(rest.x,pose.y,body_weight),lerpf(rest.y,pose.z,body_weight),lerpf(1.0,pose.w,body_weight))
+ sprite.position.y=hover+float(body_pose.lift)*sprite.pixel_size*body_weight
+ painted_material.set_shader_parameter("rig_mask",body_masks[key])
+ painted_material.set_shader_parameter("rig_pixel_size",sprite.pixel_size)
+ painted_material.set_shader_parameter("rig_ground_offset",float(ground)-128.0)
+ painted_material.set_shader_parameter("rig_flip",-1.0 if sprite.flip_h else 1.0)
+ painted_material.set_shader_parameter("rig_star",species=="starlet")
+ painted_material.set_shader_parameter("rig_root",body_pose.root)
+ painted_material.set_shader_parameter("rig_offset",body_pose.offset)
+ painted_material.set_shader_parameter("rig_angle",body_pose.angle)
+ painted_material.set_shader_parameter("rig_neck",FullBody.point(profile.neck))
+ painted_material.set_shader_parameter("rig_head_angle",body_pose.head_angle)
+ painted_material.set_shader_parameter("rig_ear_angle",body_pose.ear_angle)
+ painted_material.set_shader_parameter("rig_squash",body_pose.squash)
+ painted_material.set_shader_parameter("rig_tail",FullBody.point(profile.tail))
+ painted_material.set_shader_parameter("rig_cape",FullBody.point(profile.cape))
+ painted_material.set_shader_parameter("rig_secondary",body_pose.secondary)
+ painted_material.set_shader_parameter("rig_arms",body_pose.arms)
+ painted_material.set_shader_parameter("rig_forearms",body_pose.forearms)
+ painted_material.set_shader_parameter("rig_elbows",PackedVector2Array([FullBody.point(profile.elbows[0]),FullBody.point(profile.elbows[1])]))
+ painted_material.set_shader_parameter("rig_shoulders",PackedVector2Array([FullBody.point(profile.shoulders[0]),FullBody.point(profile.shoulders[1])]))
+ painted_material.set_shader_parameter("step_leg_count",0 if flight or species=="starlet" else body_pose.feet.size())
+ if not flight and species!="starlet":
+  for pair in [["rig_hips","hips"],["rig_knees","knees"],["rig_feet","feet"],["rig_upper","upper"],["rig_lower","lower"],["rig_toes","toes"]]:
+   var values=body_pose[pair[1]].duplicate()
+   while values.size()<4:values.append(Vector2.ZERO if pair[1] in ["hips","knees","feet"] else Vector4.ZERO)
+   painted_material.set_shader_parameter(pair[0],values)
+
+func _update_shadow() -> void:
+ var physical_hover:=hover
+ # Der Schatten reagiert auf Starlits sichtbaren Huepfbogen, ohne die
+ # Bodenkollision oder den Sprungknopf in einen zweiten Physikpfad umzulenken.
+ if species=="starlet" and not body_pose.is_empty():hover=sprite.position.y
+ super._update_shadow()
+ hover=physical_hover
+
 func rest_frame() -> int:
  return 2 if facing.y<0 and absf(facing.y)>absf(facing.x) else 1 if absf(facing.y)>absf(facing.x) else 0
 
@@ -179,10 +261,11 @@ func light_center() -> Vector3:
  return global_position+sprite.position+right*x+up*(cell_size.y*.5+sprite.offset.y-center.y)*sprite.pixel_size
 
 func _update_frame(moving: bool) -> void:
+ body_weight=move_toward(body_weight,1.0 if moving else 0.0,get_physics_process_delta_time()*8.0)
  var depth:=absf(facing.y)>absf(facing.x)
  var flight: bool=species=="nocti" and hover>.06 and state=="idle" and jump_clock<0
  var use_run: bool=species=="nocti" and run_texture!=null and state=="idle" and jump_clock<0 and ((moving and running and run_blend>=.5) or flight)
- var use_walk: bool=walk_texture!=null and moving and state=="idle" and jump_clock<0 and not use_run
+ var use_walk: bool=walk_texture!=null and (moving or body_rigs.has(species) and body_weight>.001) and state=="idle" and jump_clock<0 and not use_run
  _use_motion_sheet(use_run,use_walk)
  sprite.flip_h=not depth and facing.x<0
  if use_run:
@@ -217,6 +300,7 @@ func walk_frame(stride: float, direction: Vector2) -> int:
  return row*8+posmod(int(stride*8),8)
 
 func _stride_length() -> float:
+ if body_rigs.has(species):return lerpf(1.75,2.15,run_blend)
  if step_rigs.has(species) and is_instance_valid(sprite):
   var amplitude: float=float(step_rigs[species].half_stride)
   # Die Kameragroesse darf kleine Wesen nicht mit 4-5 Zyklen/Sekunde

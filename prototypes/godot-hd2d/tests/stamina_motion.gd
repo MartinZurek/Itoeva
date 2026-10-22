@@ -45,9 +45,9 @@ func run() -> void:
   if app.actor.stamina.exhausted and first_exhaustion<0:first_exhaustion=i
   # Derselbe freie Messort verhindert eine vorzeitige Pause durch Wandkontakt.
   app.actor.position.x=spawn.x;app.actor.position.z=spawn.z
- check(fastest>3.1 and fastest<=3.31,"Echter Sprint auf 3,3 statt 4,6 begrenzt")
+ check(fastest>3.6 and fastest<=3.86,"Sprint erholt sich auf 3,85 zwischen altem 4,6 und zu langsamem 3,3")
  check(first_exhaustion>=365 and first_exhaustion<=395,"Dauerstick leert nach gut sechs Sekunden")
- check(app.actor.actual_speed<=2.01 and not app.actor.running,"Bei Erschöpfung bleibt nur Gehtempo")
+ check(app.actor.actual_speed<=2.36 and not app.actor.running,"Bei Erschöpfung bleibt nur Gehtempo")
  check(app.actor.hover<.01 and not app.actor.run_sheet,"Nocti landet bei Erschöpfung")
  app.actor.stop_input();await frames(2)
  app.actor.request_action("sit");var before: float=app.actor.stamina.value
@@ -86,7 +86,7 @@ func run() -> void:
   app.selected=species;await app._mount_world("LIVING",Catalog.position_for("LIVING",Vector2(.7,.7)))
   var actor=app.actor;actor.jump_clock=-1;actor.state="idle"
   check(actor.walk_texture!=null,"Neue Gehfolge geladen: "+species)
-  check(actor.WALK_SPEED/actor._stride_length()<=.94,"Keine hektischen Mini-Schritte: "+species)
+  check(actor.WALK_SPEED/actor._stride_length()>1.2 and actor.WALK_SPEED/actor._stride_length()<1.5,"Wieder dynamischer, aber lesbarer Schritttakt: "+species)
   for direction in [Vector2.RIGHT,Vector2.LEFT,Vector2.DOWN,Vector2.UP]:
    actor.facing=direction;actor.running=false;actor.run_blend=0
    var poses:={}
@@ -94,7 +94,7 @@ func run() -> void:
     actor.gait=(phase+.1)/8.0;actor._update_frame(true);poses[actor.sprite.frame]=true
     check(actor.walk_sheet and actor.sprite.flip_h==(direction==Vector2.LEFT),"Gehansicht/Spiegelung: %s/%s"%[species,direction])
    check(poses.size()==8,"Acht Gehphasen ohne Ruhebild: %s/%s"%[species,direction])
-   actor._update_frame(false)
+   for settle in 12:actor._update_frame(false)
    check(not actor.walk_sheet and actor.sprite.frame==actor.rest_frame(),"Anhalten stellt Ruhezeichnung wieder her")
   actor.stamina.value=10;actor.player_controlled=false;actor.enabled=true;actor.npc_vector=Vector2(.5,0)
   await frames(30)
