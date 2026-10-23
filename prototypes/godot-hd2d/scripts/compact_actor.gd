@@ -31,6 +31,7 @@ var painted_cycle_mode := "walk"
 var painted_cycles: Dictionary = {}
 var painted_cycle_textures: Dictionary = {}
 var painted_cycle_masks: Dictionary = {}
+var painted_x_offset := 0.0
 
 func _pose_mask() -> Dictionary:
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
@@ -106,6 +107,7 @@ func _update_sprite_scale() -> void:
  if painted_cycle_active:
   _update_painted_cycle_geometry()
   return
+ painted_x_offset=0.0
  var height:=run_reference_height if run_sheet else walk_reference_height if walk_sheet else reference_height
  sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1,height)
  sprite.position=Vector3.UP*hover
@@ -273,6 +275,7 @@ func light_center() -> Vector3:
  var right:=camera.global_basis.x if camera else Vector3.RIGHT
  var center:=Vector2(bounds.get_center())
  var x: float=(center.x-cell_size.x*.5)*sprite.pixel_size*(-1.0 if sprite.flip_h else 1.0)
+ x+=painted_x_offset
  return global_position+sprite.position+right*x+up*(cell_size.y*.5+sprite.offset.y-center.y)*sprite.pixel_size
 
 func _update_frame(moving: bool) -> void:
@@ -335,8 +338,20 @@ func _use_painted_cycle(mode: String) -> void:
 
 func _update_painted_cycle_geometry() -> void:
  var data: Dictionary=painted_cycles[painted_cycle_mode]
- # Ein einziger Massstab je Folge: keine Bild-fuer-Bild-Streckung der Figur.
- sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/float(data.reference_height)
+ # Die gemalten Phasen haben unterschiedlich grosse Koepfe. Eine feste
+ # Atlas-Skalierung liess das ganze Wesen im Zyklus wachsen/schrumpfen.
+ # Gesicht/Ohr werden gegen die Standzeichnung registriert; nur einheitlich
+ # skalieren, damit Kniebeugung und das Seitenverhaeltnis erhalten bleiben.
+ var registration: Dictionary=data.size_registration
+ var frame_registration: Dictionary=registration.frames[sprite.frame]
+ var head_span: float=float(frame_registration.span)
+ sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_span)/float(registration.reference_body_height)/head_span
+ # Die Quellposen wandern auch innerhalb ihrer Zellen. Dieselbe Kopfmitte
+ # bindet die ganze Zeichnung an den Spieler, ohne Gliedmassen zu verziehen.
+ var region: Array=frame_registration.region
+ var center_x: float=float(region[0])+float(region[2])*.5
+ var target_center: float=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_center_offset)/float(registration.reference_body_height)
+ painted_x_offset=(target_center-(center_x-cell_size.x*.5)*sprite.pixel_size)*(-1.0 if sprite.flip_h else 1.0)
  sprite.position=Vector3.UP*hover
  displayed_bounds=frame_bounds[sprite.frame]
  sprite.offset=Vector2(0,float(displayed_bounds.end.y)-cell_size.y*.5)
@@ -350,6 +365,7 @@ func _update_painted_cycle_geometry() -> void:
  var dimensions:=sprite.texture.get_size()
  var ratio:=Vector2(displayed_bounds.size)/Vector2(cell_size)
  var shift:=Vector2((displayed_bounds.get_center().x-cell_size.x*.5)*(-1.0 if sprite.flip_h else 1.0),(1.0-ratio.y)*sprite.offset.y+cell_size.y*.5-displayed_bounds.get_center().y)*sprite.pixel_size
+ shift.x+=painted_x_offset
  painted_material.set_shader_parameter("frame_clip",Vector4(origin.x/dimensions.x,origin.y/dimensions.y,displayed_bounds.size.x/dimensions.x,displayed_bounds.size.y/dimensions.y))
  painted_material.set_shader_parameter("has_pose_region",true)
  painted_material.set_shader_parameter("pose_cell",Vector4(cell_origin.x/dimensions.x,cell_origin.y/dimensions.y,cell_size.x/dimensions.x,cell_size.y/dimensions.y))
@@ -392,6 +408,6 @@ func visual_screen_rect(camera: Camera3D) -> Rect2:
   for y in [bounds.position.y,bounds.end.y]:
    var local_x:=float(x)-cell_size.x*.5
    if sprite.flip_h:local_x=-local_x
-   var point:=global_position+sprite.position+camera.global_basis.x*local_x*sprite.pixel_size+camera.global_basis.y*(cell_size.y*.5+sprite.offset.y-float(y))*sprite.pixel_size
+   var point:=global_position+sprite.position+camera.global_basis.x*(local_x*sprite.pixel_size+painted_x_offset)+camera.global_basis.y*(cell_size.y*.5+sprite.offset.y-float(y))*sprite.pixel_size
    var screen:=camera.unproject_position(point);minimum=minimum.min(screen);maximum=maximum.max(screen)
  return Rect2(minimum,maximum-minimum)

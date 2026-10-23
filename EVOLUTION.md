@@ -669,6 +669,26 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-23 - Mooslyns gemalte Phasen auf dieselbe Groesse registrieren
+
+- **DOCUMENTED INTENT:** Martin meldet beim Telefontest von0.15.1 wechselnde
+  Figurengroessen und nicht zusammenpassende Uebergaenge der28Phasen.
+- **FACT:** Fester Massstab pro Atlas korrigiert keine unterschiedlich grossen
+  Zeichnungen. Sprintkonturen199-239Pixel; registrierte Kopf-Groessenspanne
+  rund15,5Prozent; ausserdem seitlich verschobene Quellposen.
+- **KORREKTUR:** Uniforme Groessenregistrierung aller56Seitenbilder an derselben
+  Gesicht-/Ohrreferenz der Standzeichnung sowie horizontaler Bildanker. Keine
+  anisotrope Streckung, kein neues Hautnetz; gebeugte Beine bleiben gebeugt.
+- **Module/Persistenz:** compact_actor, Atlas-Messdaten, Offline-Registrierung,
+  Bild-/Godot-Regressionen; kein Save-, Tempo- oder Ausdauerwechsel.
+- **TESTED BEHAVIOR:** Python2Tests, Charakter869/0, Ausdauer204/0; echte
+  OpenGL-Phasenaufnahmen und allgemeine Gangpruefung3442/0 erfolgreich.
+- **UNVERIFIED:** Telefonabnahme und GPU/FPS; Restabweichungen der gemalten
+  Anatomie werden durch eine einheitliche Skalierung nicht neu gezeichnet.
+- **UEBERGABE:** codex/mooslyn-size-consistency-0152,
+  docs/godot-mooslyn-size-v0152.md. APK0.15.2/Code32 vorbereitet; Lieferung
+  erst nach erfolgreichem Build/Remote-Abgleich. Kein Merge in main.
+
 ### 2026-10-23 - Gemalte Mooslyn-Seitenfolgen (mosslyn-painted-28)
 
 - **DOCUMENTED INTENT:** 28 Geh-/Sprintposen in 7x4, stabile Proportionen,

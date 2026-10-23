@@ -25,16 +25,22 @@ func run() -> void:
   actor.running=sprint;actor.run_blend=1.0 if sprint else 0.0
   for direction in [Vector2.RIGHT,Vector2.LEFT]:
    actor.facing=direction;actor.state="idle";actor.jump_clock=-1
-   var frames:={};var pixel_size:=0.0
+   var frames:={}
+   var expected_head: float=actor.base_pixel_size*109.0*actor.Catalog.relative_height("mosslyn")*100.64/181.0
    for tick in 28:
     actor.gait=(tick+.1)/28.0;actor._update_frame(true)
     frames[actor.sprite.frame]=true
-    if tick==0:pixel_size=actor.sprite.pixel_size
     check(actor.painted_cycle_active,"Gemalte Folge aktiv")
     check(actor.sprite.hframes==7 and actor.sprite.vframes==4,"7x4 Raster")
     check(actor.sprite.frame==tick,"Chronologische Phase")
     check(actor.sprite.flip_h==(direction.x<0),"Ganzes Bild samt Umhang gespiegelt")
-    check(is_equal_approx(pixel_size,actor.sprite.pixel_size),"Keine Skalierung zwischen Phasen")
+    var registration: Dictionary=actor.painted_cycles[actor.painted_cycle_mode].size_registration
+    var rendered_head: float=float(registration.frames[tick].span)*actor.sprite.pixel_size
+    check(absf(rendered_head-expected_head)<.001,"Gleiche anatomische Groesse in allen Geh-/Sprintphasen und beiden Richtungen")
+    var head_region: Array=registration.frames[tick].region
+    var head_x: float=(float(head_region[0])+float(head_region[2])*.5-actor.cell_size.x*.5)*actor.sprite.pixel_size*(-1.0 if direction.x<0 else 1.0)+actor.painted_x_offset
+    var expected_x: float=actor.base_pixel_size*109.0*actor.Catalog.relative_height("mosslyn")*float(registration.reference_center_offset)/181.0*(-1.0 if direction.x<0 else 1.0)
+    check(absf(head_x-expected_x)<.001,"Kein seitlicher Positionssprung durch verschobene Quellzellen")
     check(not actor.skin_mesh.visible and not actor.painted_material.get_shader_parameter("rig_active"),"Kein zweites verformendes Hautnetz")
     check(actor.painted_cycle_mode==("run" if sprint else "walk"),"Gehen und Sprint getrennt")
     check(actor.visual_screen_rect(camera).has_area(),"Begrenzung folgt neuem Raster")
@@ -58,6 +64,11 @@ func run() -> void:
    check(not actor.painted_cycle_active and actor.sprite.texture==actor.world_texture,"Springen stellt Originalatlas wieder her")
    actor.jump_clock=-1;actor._update_frame(true);actor.body_weight=0;actor._update_frame(false)
    check(not actor.painted_cycle_active and actor.sprite.texture==actor.world_texture,"Anhalten stellt Standpose wieder her")
+   check(is_zero_approx(actor.painted_x_offset),"Standzeichnung erhaelt keinen alten Seitenversatz")
+   check(absf(actor.sprite.pixel_size*100.64-expected_head)<.001,"Stand und Bewegung verwenden dieselbe Kopf-Groessenreferenz")
+   if render:
+    await process_frame;await RenderingServer.frame_post_draw
+    viewport.get_texture().get_image().save_png("res://captures/mosslyn-painted/idle-%s.png"%["right" if direction.x>0 else "left"])
  actor.shadow.queue_free();viewport.queue_free();await process_frame
  print("Mooslyn painted cycles: %s checks, %s failures"%[checks,failures])
  quit(1 if failures else 0)
