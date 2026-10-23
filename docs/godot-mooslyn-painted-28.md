@@ -87,3 +87,17 @@ ueber den verbundenen GitHub-Zugang. AndroidTest wird als 0.15.1 / Code31
 mit dem bestehenden Paket, Signaturschluessel und Drive-Ziel gebaut. Der bestehende
 Workflow wird fuer diesen Branch und das aktualisierte Dateimanifest angepasst.
 Eine erfolgreiche APK-Lieferung wird erst nach Build- und Uploadpruefung bestaetigt.
+
+## APK-Nachpruefung am 23.10.2026
+
+Der erste APK-Lauf 39992809845 brach vor Export und Upload an einer veralteten
+Erwartung in `tests/full_smoke.gd` ab: Mooslyns seitlicher Sprint sollte noch
+`walk_sheet` und das sichtbare Hautnetz verwenden. Die gemalte Folge schaltet
+beides absichtlich ab. Der Vollwelttest prueft nun stattdessen den aktiven
+Sprintfolgen-Pfad, den vorgesehenen 7x4-Atlas und das deaktivierte Rig.
+Keine Laufzeitdateien oder Manifestwerte wurden dabei geaendert.
+
+Der neue APK-Lauf 40006276249 prueft Commit `d8844e7` mit allen bisherigen
+Regressionen und Renderpruefungen vor Export, Signierung und Drive-Upload.
+Zum Zeitpunkt dieses Eintrags laeuft er; eine erfolgreiche Lieferung ist noch
+nicht bestaetigt. Telefonabnahme bleibt offen.
