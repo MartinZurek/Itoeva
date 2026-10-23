@@ -50,7 +50,7 @@ Zeichnungen haben weiterhin leichte Form-/Groessenabweichungen (Gehhoehen
 unterschiedlich gemalte Anatomie nicht reparieren. Laufrhythmus und exakte
 Sohlenhaftung sind keine aus den Tests abgeleiteten Qualitaetszusagen.
 Menschliche Animationsabnahme und Android-Geraetepruefung bleiben offen.
-Eine neue APK wurde fuer diesen Auftrag nicht erzeugt.
+Die erfolgreiche APK-Lieferung0.15.1 ist unten im Liefernachweis dokumentiert.
 
 Ruecksetzen: den isolierten Aenderungscommit revertieren; alte Originalbilder,
 Metadaten und Rig-Pfade sind weiterhin vorhanden. Keine Nutzerdatenmigration.
@@ -99,5 +99,18 @@ Keine Laufzeitdateien oder Manifestwerte wurden dabei geaendert.
 
 Der neue APK-Lauf 40006276249 prueft Commit `d8844e7` mit allen bisherigen
 Regressionen und Renderpruefungen vor Export, Signierung und Drive-Upload.
-Zum Zeitpunkt dieses Eintrags laeuft er; eine erfolgreiche Lieferung ist noch
-nicht bestaetigt. Telefonabnahme bleibt offen.
+Der Lauf ist erfolgreich abgeschlossen; Export, Signatur und vollstaendiger
+Drive-Upload mit Remote-Pruefsummenabgleich sind bestaetigt. Telefonabnahme bleibt offen.
+
+### Liefernachweis
+
+- APK: `Itoeva_Godot_Test_v0.15.1.apk`, Version0.15.1 / Code31.
+- Quellcommit: `d8844e7c030e9dadaa038cbea8eeb71bbb0fcbdf`.
+- [Erfolgreicher Build40006276249](https://github.com/MartinZurek/Itoeva/actions/runs/40006276249).
+- [APK in Drive](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk), 196655781 Bytes; Dateiname und Groesse zusaetzlich per Drive-Connector rueckgelesen.
+- SHA-256: `4041cdb074ff983fed4d1b8c2402c10a70772e414427e5783b75dde16e93ee9d`.
+- MD5: `e0339d5e1fce5150ae8ebe5e2c427947`.
+- Bestehendes Paket und Zertifikat bestaetigt; 28-Phasen-Geh-/Sprintatlanten und Metadaten im APK geprueft.
+- Mooslyn-OpenGL1144/0, allgemeine Gangpruefung3442/0, Originalkonturen1088/0; saemtliche Spiel- und Renderpruefungen im APK-Workflow bestanden.
+- Die Korrektur betrifft ausschliesslich die veraltete Testerwartung; kein Laufzeit- oder Manifestwechsel gegenueber dem gemalten Stand.
+
