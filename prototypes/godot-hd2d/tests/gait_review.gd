@@ -35,7 +35,10 @@ func run() -> void:
      # Die gemalten Seitenphasen werden nicht mehr durch ein Hautnetz ersetzt.
      # Richtungs-/Zustandswechsel prueft zusaetzlich mosslyn_painted_cycles.gd.
      var painted_frames:={}
-     for tick in 48:
+     # Acht Sekunden bei24Hz decken auch den langsameren gemalten Bogen ab.
+     var atlas_fps: float=cadence*28.0*Actor.PAINTED_GAIT_RATE
+     check(atlas_fps>9.3 and atlas_fps<12.7,"Gemalte Gliedmassen passen zum Weltfortschritt")
+     for tick in 192:
       actor.clock=tick/24.0;actor.gait=actor.clock*cadence;actor._update_frame(true)
       await process_frame;await RenderingServer.frame_post_draw
       var image:=viewport.get_texture().get_image()

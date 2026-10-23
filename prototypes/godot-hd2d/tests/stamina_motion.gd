@@ -91,7 +91,8 @@ func run() -> void:
    actor.facing=direction;actor.running=false;actor.run_blend=0
    var poses:={}
    for phase in 8:
-    actor.gait=(phase+.1)/8.0;actor._update_frame(true);poses[actor.sprite.frame]=true
+    var painted_side: bool=species=="mosslyn" and absf(direction.x)>absf(direction.y)
+    actor.gait=(phase+.1)/8.0*(4.0 if painted_side else 1.0);actor._update_frame(true);poses[actor.sprite.frame]=true
     check(actor.walk_sheet and actor.sprite.flip_h==(direction==Vector2.LEFT),"Gehansicht/Spiegelung: %s/%s"%[species,direction])
    check(poses.size()==8,"Acht Gehphasen ohne Ruhebild: %s/%s"%[species,direction])
    for settle in 12:actor._update_frame(false)

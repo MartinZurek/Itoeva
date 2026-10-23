@@ -1,5 +1,6 @@
 extends "res://scripts/character_actor.gd"
 const FLIGHT_CYCLES := 1.8
+const PAINTED_GAIT_RATE := 0.25
 const FullBody = preload("res://scripts/full_body_gait.gd")
 static var body_rigs: Dictionary = {}
 static var body_masks: Dictionary = {}
@@ -332,7 +333,9 @@ func _use_painted_cycle(mode: String) -> void:
   painted_material.set_shader_parameter("atlas",sprite.texture)
  painted_cycle_active=true;painted_cycle_mode=mode
  walk_sheet=mode=="walk";run_sheet=mode=="run"
- sprite.frame=posmod(int(floor(gait*int(data.frames))),int(data.frames))
+ # Nur den gemalten Bogen verlangsamen. gait folgt weiter der wirklich
+ # zurueckgelegten Strecke; Weltgeschwindigkeit und andere Ansichten bleiben.
+ sprite.frame=posmod(int(floor(gait*PAINTED_GAIT_RATE*int(data.frames))),int(data.frames))
  sprite.flip_h=facing.x<0
  _update_painted_cycle_geometry()
 
