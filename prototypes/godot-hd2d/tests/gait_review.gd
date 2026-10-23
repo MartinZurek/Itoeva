@@ -31,6 +31,22 @@ func run() -> void:
     actor.hover=.48 if sprint and species=="nocti" else 0.0
     var cadence: float=(actor.RUN_SPEED if sprint else actor.WALK_SPEED)/actor._stride_length()
     check(cadence>1.2 and cadence<2.0,"Dynamischer, lesbarer Geh-/Joggingtakt: "+species)
+    if species=="mosslyn" and direction==Vector2.RIGHT:
+     # Die gemalten Seitenphasen werden nicht mehr durch ein Hautnetz ersetzt.
+     # Richtungs-/Zustandswechsel prueft zusaetzlich mosslyn_painted_cycles.gd.
+     var painted_frames:={}
+     for tick in 48:
+      actor.clock=tick/24.0;actor.gait=actor.clock*cadence;actor._update_frame(true)
+      await process_frame;await RenderingServer.frame_post_draw
+      var image:=viewport.get_texture().get_image()
+      var visible:=image.get_used_rect()
+      check(visible.has_area() and visible.position.x>8 and visible.end.x<504 and visible.position.y>8 and visible.end.y<504,"Gemalte Mooslyn-Kontur vollstaendig")
+      check(actor.painted_cycle_active and not actor.skin_mesh.visible,"Einzelbilder ohne zweite Verformung")
+      painted_frames[actor.sprite.frame]=true
+      if tick%6==0 or "all-frames" in OS.get_cmdline_user_args():
+       image.save_png("res://captures/calm-gait/%s-0-%s-%02d.png"%[species,"run" if sprint else "walk",tick])
+     check(painted_frames.size()>=24,"Gemalte Folge schreitet streckenabhaengig fort")
+     continue
     var first: Image
     var previous: Image
     var hashes:={}

@@ -26,6 +26,11 @@ static var pose_masks: Dictionary = {}
 var mask_textures: Dictionary = {}
 var displayed_bounds := Rect2i()
 var registered_gait := true
+var painted_cycle_active := false
+var painted_cycle_mode := "walk"
+var painted_cycles: Dictionary = {}
+var painted_cycle_textures: Dictionary = {}
+var painted_cycle_masks: Dictionary = {}
 
 func _pose_mask() -> Dictionary:
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
@@ -40,6 +45,13 @@ func _pose_mask() -> Dictionary:
  return {"texture":mask_textures[path],"id":float(data.ids[sprite.frame])/255.0}
 
 func _ready() -> void:
+ if species=="mosslyn":
+  painted_cycles=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_painted_cycles.json"))
+  for mode in painted_cycles:
+   var cycle: Dictionary=painted_cycles[mode]
+   painted_cycle_textures[mode]=load(cycle.asset)
+   var raw:=Marshalls.base64_to_raw(cycle.mask_deflate).decompress(int(cycle.width)*int(cycle.height),FileAccess.COMPRESSION_DEFLATE)
+   painted_cycle_masks[mode]=ImageTexture.create_from_image(Image.create_from_data(int(cycle.width),int(cycle.height),false,Image.FORMAT_R8,raw))
  if body_rigs.is_empty():body_rigs=JSON.parse_string(FileAccess.get_file_as_string("res://data/body_rigs.json"))
  if step_rigs.is_empty():step_rigs=JSON.parse_string(FileAccess.get_file_as_string("res://data/step_rigs.json"))
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
@@ -91,6 +103,9 @@ func _ready() -> void:
  set_world_scale(base_pixel_size,jump_height,body_pixel_size);_update_frame(false)
 
 func _update_sprite_scale() -> void:
+ if painted_cycle_active:
+  _update_painted_cycle_geometry()
+  return
  var height:=run_reference_height if run_sheet else walk_reference_height if walk_sheet else reference_height
  sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/maxf(1,height)
  sprite.position=Vector3.UP*hover
@@ -252,7 +267,7 @@ func rest_frame() -> int:
  return 2 if facing.y<0 and absf(facing.y)>absf(facing.x) else 1 if absf(facing.y)>absf(facing.x) else 0
 
 func light_center() -> Vector3:
- var bounds:=frame_bounds[sprite.frame/8*8] if registered_gait and (walk_sheet or run_sheet) and step_rigs.has(species) else frame_bounds[sprite.frame]
+ var bounds:=frame_bounds[sprite.frame/8*8] if not painted_cycle_active and registered_gait and (walk_sheet or run_sheet) and step_rigs.has(species) else frame_bounds[sprite.frame]
  var camera:=get_viewport().get_camera_3d()
  var up:=camera.global_basis.y if camera else Vector3.UP
  var right:=camera.global_basis.x if camera else Vector3.RIGHT
@@ -261,8 +276,14 @@ func light_center() -> Vector3:
  return global_position+sprite.position+right*x+up*(cell_size.y*.5+sprite.offset.y-center.y)*sprite.pixel_size
 
 func _update_frame(moving: bool) -> void:
+ if painted_cycle_active and not moving:body_weight=0.0
  body_weight=move_toward(body_weight,1.0 if moving else 0.0,get_physics_process_delta_time()*8.0)
  var depth:=absf(facing.y)>absf(facing.x)
+ # Die Seitenbilder enthalten bereits die ganze Bewegung. Ein zweites Hautnetz
+ # wuerde Beine und Tasche erneut verziehen. Tiefenansichten behalten ihr Rig.
+ if not painted_cycles.is_empty() and moving and not depth and state=="idle" and jump_clock<0:
+  _use_painted_cycle("run" if running and run_blend>=.5 else "walk")
+  return
  var flight: bool=species=="nocti" and hover>.06 and state=="idle" and jump_clock<0
  var use_run: bool=species=="nocti" and run_texture!=null and state=="idle" and jump_clock<0 and ((moving and running and run_blend>=.5) or flight)
  var use_walk: bool=walk_texture!=null and (moving or body_rigs.has(species) and body_weight>.001) and state=="idle" and jump_clock<0 and not use_run
@@ -286,7 +307,8 @@ func _update_frame(moving: bool) -> void:
  _update_sprite_scale()
 
 func _use_motion_sheet(sprint: bool, walk: bool) -> void:
- if sprint==run_sheet and walk==walk_sheet:return
+ if sprint==run_sheet and walk==walk_sheet and not painted_cycle_active:return
+ painted_cycle_active=false
  run_sheet=sprint;walk_sheet=walk
  sprite.frame=0
  sprite.texture=run_texture if sprint else walk_texture if walk else world_texture
@@ -294,6 +316,48 @@ func _use_motion_sheet(sprint: bool, walk: bool) -> void:
  cell_size=Vector2i(sprite.texture.get_width()/8,sprite.texture.get_height()/sprite.vframes)
  frame_bounds.assign(run_bounds if sprint else walk_bounds if walk else world_bounds)
  painted_material.set_shader_parameter("atlas",sprite.texture)
+
+func _use_painted_cycle(mode: String) -> void:
+ var data: Dictionary=painted_cycles[mode]
+ if not painted_cycle_active or painted_cycle_mode!=mode:
+  sprite.frame=0
+  sprite.texture=painted_cycle_textures[mode]
+  sprite.hframes=int(data.columns);sprite.vframes=int(data.rows)
+  cell_size=Vector2i(int(data.cell),int(data.cell))
+  frame_bounds.clear()
+  for b in data.bounds:frame_bounds.append(Rect2i(b[0],b[1],b[2],b[3]))
+  painted_material.set_shader_parameter("atlas",sprite.texture)
+ painted_cycle_active=true;painted_cycle_mode=mode
+ walk_sheet=mode=="walk";run_sheet=mode=="run"
+ sprite.frame=posmod(int(floor(gait*int(data.frames))),int(data.frames))
+ sprite.flip_h=facing.x<0
+ _update_painted_cycle_geometry()
+
+func _update_painted_cycle_geometry() -> void:
+ var data: Dictionary=painted_cycles[painted_cycle_mode]
+ # Ein einziger Massstab je Folge: keine Bild-fuer-Bild-Streckung der Figur.
+ sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/float(data.reference_height)
+ sprite.position=Vector3.UP*hover
+ displayed_bounds=frame_bounds[sprite.frame]
+ sprite.offset=Vector2(0,float(displayed_bounds.end.y)-cell_size.y*.5)
+ skin_mesh.visible=false;body_pose={}
+ painted_material.set_shader_parameter("rig_active",false)
+ painted_material.set_shader_parameter("gait_mode",0)
+ # Ganze Alphakomponenten statt Rasterkacheln: Umhangspitzen duerfen in die
+ # Nachbarzelle ragen, aber niemals als fremdes Fragment mitgezeichnet werden.
+ var cell_origin:=Vector2(sprite.frame%sprite.hframes,sprite.frame/sprite.hframes)*Vector2(cell_size)
+ var origin:=cell_origin+Vector2(displayed_bounds.position)
+ var dimensions:=sprite.texture.get_size()
+ var ratio:=Vector2(displayed_bounds.size)/Vector2(cell_size)
+ var shift:=Vector2((displayed_bounds.get_center().x-cell_size.x*.5)*(-1.0 if sprite.flip_h else 1.0),(1.0-ratio.y)*sprite.offset.y+cell_size.y*.5-displayed_bounds.get_center().y)*sprite.pixel_size
+ painted_material.set_shader_parameter("frame_clip",Vector4(origin.x/dimensions.x,origin.y/dimensions.y,displayed_bounds.size.x/dimensions.x,displayed_bounds.size.y/dimensions.y))
+ painted_material.set_shader_parameter("has_pose_region",true)
+ painted_material.set_shader_parameter("pose_cell",Vector4(cell_origin.x/dimensions.x,cell_origin.y/dimensions.y,cell_size.x/dimensions.x,cell_size.y/dimensions.y))
+ painted_material.set_shader_parameter("pose_region",painted_material.get_shader_parameter("frame_clip"))
+ painted_material.set_shader_parameter("pose_geometry",Vector4(ratio.x,ratio.y,shift.x,shift.y))
+ painted_material.set_shader_parameter("pose_mask",painted_cycle_masks[painted_cycle_mode])
+ painted_material.set_shader_parameter("pose_id",float(sprite.frame+1)/255.0)
+ _update_occlusion()
 
 func walk_frame(stride: float, direction: Vector2) -> int:
  var row:=0 if absf(direction.x)>=absf(direction.y) else 1 if direction.y>0 else 2

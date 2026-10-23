@@ -669,6 +669,25 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-23 - Gemalte Mooslyn-Seitenfolgen (mosslyn-painted-28)
+
+- **DOCUMENTED INTENT:** 28 Geh-/Sprintposen in 7x4, stabile Proportionen,
+  sichtbarer Arm neben Tasche, beim Sprint Atemmund und nachlaufender Umhang.
+- **FACT:** Der 0.15.0-Pfad verformt eine Referenzzeichnung ueber ein Hautnetz.
+  Neue Seitenfolgen werden stattdessen als ganze gezeichnete Bilder abgespielt;
+  konstante Skalierung pro Folge und Spiegelung der gesamten Figur.
+- **Produktentscheidung:** Nur Mooslyns Seitenbewegung ersetzen. Keine falschen
+  Tiefenansichten aus Profilbildern; andere Aktionen/Charaktere unveraendert.
+- **Module/Persistenz:** Godot compact_actor, zwei PNGs, Atlasmetadaten und Tests.
+  Kein Savefeld, keine Migration, keine Balance-/Geschwindigkeitsaenderung.
+- **TESTED BEHAVIOR:** Headless 1032 Animations-, 869 Charakter- und 204
+  Ausdauerchecks ohne Fehler; Asset-Vertrag mit Python bestanden.
+  Zusaetzlich 1144 OpenGL-Checks fuer beide Folgen und Richtungen ohne Fehler.
+- **UNVERIFIED:** Endgueltige menschliche Bewegungsabnahme/Telefon-GPU; gemalte
+  Proportionsabweichungen bleiben eine Grenze. Keine neue APK behauptet.
+- **Ruecksetzweg:** Isolierten Commit revertieren; Originalatlanten/Rigs bleiben.
+  Details und aktueller Renderstand: `docs/godot-mooslyn-painted-28.md`.
+
 ### 2026-10-22 - Ganzkoerper statt festem Oberkoerper (godot-full-body-v0150)
 
 - **DOCUMENTED INTENT:** Martin verwirft0.14.2 als fussbewegte Stickeranimation.
