@@ -79,7 +79,10 @@ func run() -> void:
 	await frames(45)
 	var run_speed: float = actor.actual_speed
 	check(walk_speed < jog_speed and jog_speed < run_speed and run_speed > 3.6 and run_speed <= 3.86, "Analogtempo steigt stetig von Gehen ueber Joggen zu Rennen")
-	check(actor.running and actor.run_blend > .99 and actor.walk_sheet and actor.skin_mesh.visible and actor.painted_material.get_shader_parameter("rig_active"), "Sprint verwendet bei echtem Lauftempo die Ganzkoerperbewegung")
+	# Mooslyns gemalte Seitenfolge ersetzt hier das absichtlich deaktivierte Hautnetz.
+	check(actor.running and actor.run_blend > .99 and actor.painted_cycle_active and actor.painted_cycle_mode == "run" and actor.run_sheet, "Sprint verwendet bei echtem Lauftempo die gemalte Mooslyn-Folge")
+	check(actor.sprite.texture == actor.painted_cycle_textures["run"] and actor.sprite.hframes == 7 and actor.sprite.vframes == 4, "Sprint verwendet den vorgesehenen 28-Phasen-Atlas")
+	check(not actor.skin_mesh.visible and not actor.painted_material.get_shader_parameter("rig_active"), "Gemalter Sprint bleibt ohne zusaetzliche Netzverformung")
 	actor.touch_vector = Vector2.ZERO
 	await frames(30)
 	check(actor.actual_speed < 0.01 and actor.sprite.frame == actor.rest_frame(), "Anhalten endet in der vorhandenen lebendigen Ruhepose")
