@@ -1,28 +1,28 @@
 # Bestehender Godot-APK-Lieferweg aus Martins Auftrag vom19.10.2026;
 # Ganzkoerperbewegung und Starlits Schwebe-Huepfen aus Martins Auftrag vom22.10.2026.
 # AndroidTest und DEBUG_KEYSTORE_BASE64; ersetzt die freigegebene Drive-Zieldatei.
-name: Godot Test APK 0.15.3
+name: Godot Test APK 0.15.4
 
 on:
   push:
-    branches: [codex/mooslyn-distance-cadence-0153]
+    branches: [codex/mooslyn-projection-rig]
     paths:
       - 'prototypes/godot-hd2d/**'
-      - 'docs/godot-v0153-runtime-manifest.json'
+      - 'docs/godot-v0154-runtime-manifest.json'
       - '.github/workflows/godot-apk.yml'
   workflow_dispatch:
 
 permissions: {}
 
 concurrency:
-  group: godot-test-apk-v0153
+  group: godot-test-apk-v0154
   # Neuere Korrekturen ersetzen veraltete Testbauten vor der Drive-Auslieferung.
   cancel-in-progress: true
 
 env:
   GODOT_VERSION: '4.5.1'
   PROJECT: prototypes/godot-hd2d
-  APK_NAME: Itoeva_Godot_Test_v0.15.3.apk
+  APK_NAME: Itoeva_Godot_Test_v0.15.4.apk
   FILE_ID: 148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX
 
 jobs:
@@ -40,16 +40,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Laufzeitdateien gegen 0.15.3-Manifest pruefen
+      - name: Laufzeitdateien gegen 0.15.4-Manifest pruefen
         run: |
           python3 - <<'PY'
           import hashlib, json, os, pathlib
           project = pathlib.Path(os.environ['PROJECT'])
-          manifest = json.loads(pathlib.Path('docs/godot-v0153-runtime-manifest.json').read_text())
-          assert manifest['sha256'] == '571e8bb825750b95212469f8937c74ced94f4ddf2fcad365e5987fea38a9acf3'
+          manifest = json.loads(pathlib.Path('docs/godot-v0154-runtime-manifest.json').read_text())
+          assert manifest['sha256'] == '9aa7f6f3750d9005faa30375067efd1bda91fd62e06e75596efed4a2f216ff97'
           canonical = ''.join(item['path'] + '\0' + item['sha256'] + '\n' for item in manifest['files']).encode()
           assert hashlib.sha256(canonical).hexdigest() == manifest['sha256']
-          assert len(manifest['files']) == 549
+          assert len(manifest['files']) == 558
           for item in manifest['files']:
               data = (project / item['path']).read_bytes()
               assert len(data) == item['bytes'], item['path']
@@ -66,7 +66,7 @@ jobs:
               raw = zlib.decompress(base64.b64decode(entry['deflate']))
               assert len(raw) == entry['width'] * entry['height'] * 2 == entry['bytes']
               assert hashlib.sha256(raw).hexdigest() == entry['sha256']
-          print('549 Laufzeit-/Exportdateien und29 Dynamikmasken stimmen bytegenau mit v0.15.3 ueberein.')
+          print('558 Laufzeit-/Exportdateien und29 Dynamikmasken stimmen bytegenau mit v0.15.4 ueberein.')
           PY
 
       - name: Gemalte Mooslyn-Phasen pruefen
@@ -126,7 +126,7 @@ jobs:
           mkdir -p "$PROJECT/build"
           timeout 600 "$GODOT" --headless --editor --path "$PROJECT" --import --quit \
             2>&1 | tee "$PROJECT/build/import.log"
-          for test in step_contacts route_connections stamina_motion character_polish polish_v062 strategy_rules strategy_ui strategy_benchmark card_model card_rules special_rules victory_flow \
+          for test in mosslyn_volume mosslyn_volume_world step_contacts route_connections stamina_motion character_polish polish_v062 strategy_rules strategy_ui strategy_benchmark card_model card_rules special_rules victory_flow \
                       card_ui minion_ui forest_trail card_playthrough full_smoke full_framing full_doors expanded_cards expanded_card_ui ambience_coordinates battle_feedback_audio inhabited_world_v070 landscape_depth_v071 demons_v080 ecology_boss_v090 ecology_playthrough_v090 enemy_roaming roaming_and_slopes combat_motion_light; do
             timeout 300 "$GODOT" --headless --fixed-fps 60 --path "$PROJECT" \
               --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
@@ -142,7 +142,7 @@ jobs:
       - name: Feuer und Figurenlicht visuell pruefen
         run: |
           set -euo pipefail
-          for test in mosslyn_painted_cycles gait_review environment_render ambience_render forest_render firelight_render firelight_capture battle_feedback_capture polish_capture_v062 inhabited_capture_v070 depth_capture_v071 demon_capture_v080 ecology_capture_v090 combat_motion_capture character_polish_capture motion_regions stamina_capture route_capture; do
+          for test in mosslyn_volume mosslyn_volume_world mosslyn_painted_cycles gait_review environment_render ambience_render forest_render firelight_render firelight_capture battle_feedback_capture polish_capture_v062 inhabited_capture_v070 depth_capture_v071 demon_capture_v080 ecology_capture_v090 combat_motion_capture character_polish_capture motion_regions stamina_capture route_capture; do
             timeout 300 xvfb-run -a "$GODOT" --audio-driver Dummy --rendering-driver opengl3 --fixed-fps 60 --path "$PROJECT" \
               --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
             ! grep -qE "SCRIPT ERROR|Parse Error|Compile Error" "$PROJECT/build/${test}.log"
@@ -183,7 +183,7 @@ jobs:
           "$bt/apksigner" verify --verbose --print-certs "$apk" | tee "$PROJECT/build/signature.txt"
           grep -F '30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc' "$PROJECT/build/signature.txt"
           "$bt/aapt" dump badging "$apk" > "$PROJECT/build/package.txt"
-          grep "^package: name='com.itoeva.godot.hd2d.worldtest' versionCode='33' versionName='0.15.3'" "$PROJECT/build/package.txt"
+          grep "^package: name='com.itoeva.godot.hd2d.worldtest' versionCode='34' versionName='0.15.4'" "$PROJECT/build/package.txt"
           grep "^native-code: 'arm64-v8a'$" "$PROJECT/build/package.txt"
           if grep -q "android.permission.INTERNET" "$PROJECT/build/package.txt"; then
             echo '::error::Unerwartete Internetberechtigung.'
@@ -233,13 +233,15 @@ jobs:
               assert len(body_path) == 1
               assert set(json.loads(archive.read(body_path[0]))) == {'mosslyn','nocti','starlet','wyrmling','nocti-flight'}
               assert any('full_body' in name and 'gdshaderinc' in name for name in names)
+              assert any('original-rig.glb' in name for name in names), '3D-Modell fehlt'
+              assert any('mosslyn_volume' in name for name in names), '3D-Steuerung fehlt'
           assert len(catalog["cards"]) == 616
           assert len({card["volk"] for card in catalog["cards"].values()}) == 13
           assert all(card["kind"] == "minion" for card in catalog["cards"].values())
           report = dict(commit=os.environ['GITHUB_SHA'], run_id=os.environ['GITHUB_RUN_ID'],
                         file_id=os.environ['FILE_ID'], bytes=len(data),
                         sha256=hashlib.sha256(data).hexdigest(), md5=hashlib.md5(data).hexdigest(),
-                        package='com.itoeva.godot.hd2d.worldtest', version='0.15.3', version_code=33, card_count=len(catalog['cards']), starter_species=['mosslyn','nocti','starlet','wyrmling'])
+                        package='com.itoeva.godot.hd2d.worldtest', version='0.15.4', version_code=34, card_count=len(catalog['cards']), starter_species=['mosslyn','nocti','starlet','wyrmling'])
           apk.with_name('build-report.json').write_text(json.dumps(report, indent=2) + '\n')
           print(json.dumps(report, indent=2))
           PY
@@ -251,7 +253,7 @@ jobs:
       - name: Gepruefte APK als Artefakt sichern
         uses: actions/upload-artifact@v4
         with:
-          name: itoeva-godot-v0153-${{ github.sha }}
+          name: itoeva-godot-v0154-${{ github.sha }}
           path: |
             ${{ env.PROJECT }}/build/${{ env.APK_NAME }}
             ${{ env.PROJECT }}/build/${{ env.APK_NAME }}.sha256
@@ -281,7 +283,7 @@ jobs:
           echo "::add-mask::$token"
           apk="$PROJECT/build/$APK_NAME"
           bytes="$(stat -c %s "$apk")"
-          description="Itoeva Godot Test 0.15.3; Commit $GITHUB_SHA; Lauf $GITHUB_RUN_ID; SHA-256 $(jq -r .sha256 "$PROJECT/build/build-report.json")"
+          description="Itoeva Godot Test 0.15.4; Commit $GITHUB_SHA; Lauf $GITHUB_RUN_ID; SHA-256 $(jq -r .sha256 "$PROJECT/build/build-report.json")"
           jq -n --arg description "$description" --arg name "$APK_NAME" '{description:$description,name:$name}' > "$upload_tmp/metadata.json"
           curl --fail-with-body -sS -X PATCH \
             -H "Authorization: Bearer $token" \
@@ -364,7 +366,7 @@ jobs:
           assert remote['md5Checksum'] == local['md5'], remote
           if remote.get('sha256Checksum'):
               assert remote['sha256Checksum'] == local['sha256'], remote
-          summary = (f"APK 0.15.3 / Code 33\n\nCommit: `{local['commit']}`\n\n"
+          summary = (f"APK 0.15.4 / Code 34\n\nCommit: `{local['commit']}`\n\n"
                      f"Groesse: {local['bytes']} Bytes\n\nSHA-256: `{local['sha256']}`\n\n"
                      f"Drive: {remote.get('webViewLink', remote['id'])}\n")
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
@@ -376,7 +378,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: godot-v0153-protokolle-${{ github.run_id }}-${{ github.run_attempt }}
+          name: godot-v0154-protokolle-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ env.PROJECT }}/build/*.log
             ${{ env.PROJECT }}/build/*.json

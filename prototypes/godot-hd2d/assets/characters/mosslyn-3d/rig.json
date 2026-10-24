@@ -1,0 +1,86 @@
+{
+  "vertices": 14120,
+  "triangles": 28584,
+  "bones": [
+    "body",
+    "head",
+    "cape",
+    "bag",
+    "arm",
+    "rear_hip",
+    "rear_knee",
+    "rear_foot",
+    "front_hip",
+    "front_knee",
+    "front_foot",
+    "tail"
+  ],
+  "source_sha256": "f3af3f8128cf7a387da09937fb1da782c96ad7b318d61dd0fa64effe894f9c09",
+  "original_sha256": "280662c275f1c4d503b26b67f63cde2852b5cda6a3e108293a203c83622a2e65",
+  "rigged": true,
+  "free_view_ready": false,
+  "anchors": [
+    [
+      110.0,
+      140.0
+    ],
+    [
+      117.0,
+      91.0
+    ],
+    [
+      105.0,
+      101.0
+    ],
+    [
+      99.0,
+      129.0
+    ],
+    [
+      116.0,
+      111.0
+    ],
+    [
+      96.0,
+      144.0
+    ],
+    [
+      82.0,
+      162.0
+    ],
+    [
+      76.0,
+      179.0
+    ],
+    [
+      125.0,
+      144.0
+    ],
+    [
+      121.0,
+      163.0
+    ],
+    [
+      131.0,
+      179.0
+    ],
+    [
+      62.0,
+      146.0
+    ]
+  ],
+  "parents": [
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    5,
+    6,
+    0,
+    8,
+    9,
+    0
+  ]
+}
