@@ -38,14 +38,15 @@ func run() -> void:
    actor.facing=direction;actor.running=false;actor.run_blend=0;actor.hover=0;actor._update_frame(false)
    var rest: int=actor.sprite.frame
    check(rest in [0,1,2],"Gerichtete Ruhe: "+species)
+   var cycle_span: float=4.0 if species=="mosslyn" and absf(direction.x)>absf(direction.y) else 1.0
    var walking:={}
    for phase in 8:
-    actor.gait=(phase+.1)/8;actor._update_frame(true);walking[actor.sprite.frame]=true
+    actor.gait=cycle_span*(phase+.1)/8;actor._update_frame(true);walking[actor.sprite.frame]=true
    check(walking.size()==8 and actor.walk_sheet,"Acht Gehphasen: "+species)
    actor.running=true;actor.run_blend=1
    var running_frames:={}
    for phase in 8:
-    actor.gait=(phase+.1)/8;actor.clock=(phase+.1)/(8*actor.FLIGHT_CYCLES);actor._update_frame(true)
+    actor.gait=cycle_span*(phase+.1)/8;actor.clock=(phase+.1)/(8*actor.FLIGHT_CYCLES);actor._update_frame(true)
     running_frames[actor.sprite.frame]=true
     check(actor.frame_bounds[actor.sprite.frame].has_area(),"Laufphase besitzt Alphakontur: "+species)
    check(running_frames.size()>=7,"Eigener Sprintzyklus: "+species)

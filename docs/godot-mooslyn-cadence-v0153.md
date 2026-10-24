@@ -42,3 +42,14 @@ Testfassungen. Neues549-Dateien-Manifest; alle Regressionen und Renderpruefungen
 bleiben vor Export/Upload vorgeschaltet. Lieferung erst nach erfolgreichem
 Build und Remote-Pruefsummenabgleich als abgeschlossen bestaetigen.
 Isolierten Korrekturcommit zuruecknehmen; keine Save-Migration notwendig.
+
+## Nachpruefung des ersten APK-Laufs
+
+Lauf40036116987 brach vor APK-Export/Upload ab. Die character_polish-Pruefung
+entnahm weiterhin acht Phasen aus dem alten, viermal kuerzeren Zeitfenster und
+sah bei Mooslyns seitlichem Gehen deshalb mehrfach dasselbe Bild. Die204
+Ausdauerchecks waren bereits erfolgreich; character_polish meldete zwei
+Fehler bei869Checks. Test und zugehoerige Kontrollaufnahmen tasten jetzt den
+vollen langsameren Bogen ab. Die Acht-Phasen-/Sprint-/Konturpruefungen bleiben
+erhalten. Keine Laufzeit-, Manifest-, Geschwindigkeits- oder Ausdaueraenderung.
+Erneuter vollstaendiger APK-Prueflauf erforderlich; Drive blieb bis dahin0.15.2.
