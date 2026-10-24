@@ -53,3 +53,15 @@ Fehler bei869Checks. Test und zugehoerige Kontrollaufnahmen tasten jetzt den
 vollen langsameren Bogen ab. Die Acht-Phasen-/Sprint-/Konturpruefungen bleiben
 erhalten. Keine Laufzeit-, Manifest-, Geschwindigkeits- oder Ausdaueraenderung.
 Erneuter vollstaendiger APK-Prueflauf erforderlich; Drive blieb bis dahin0.15.2.
+
+## APK erfolgreich ausgeliefert
+
+- AndroidTest0.15.3/Code33, Commit `970acb4af3d719647f8112d71981ca05195180dd`.
+- Build40072212324 erfolgreich: https://github.com/MartinZurek/Itoeva/actions/runs/40072212324
+- Charakterpruefung869/0, Mooslyn-OpenGL1276/0 und allgemeine OpenGL-Gangpruefung4020/0; saemtliche Spiel-/Render-, Export- und Signaturpruefungen bestanden.
+- Vollstaendiger Drive-Upload und Remote-Groessen-/Pruefsummenabgleich erfolgreich; Dateiname und Groesse zusaetzlich per Connector rueckgelesen.
+- Datei `Itoeva_Godot_Test_v0.15.3.apk`, 196659877Bytes.
+- SHA-256: `d91d790d3448cc7714790c3956c920b1549ca7c464b530586faa9fb895e03972`.
+- MD5: `721c15b39fd0fa859bc3ebf88aaeffdc`.
+- Download: https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view?usp=drivesdk
+- Offen: Martins Taktabnahme am Telefon und Telefon-GPU/FPS. Kein Merge in main.
