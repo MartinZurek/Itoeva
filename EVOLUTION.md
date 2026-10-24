@@ -669,6 +669,28 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-24 - Mooslin-Originalvolumen als zuschaltbarer Seitenprototyp (A2)
+
+- **DOCUMENTED INTENT:** A1 originalgetreu als bewegbare Figur einbauen;
+  Kopf/Geweih/Fell erhalten, keine puppenhafte Ersatzfigur.
+- **FACT:** Originalvolumen auf 28584 Dreiecke verdichtet und mit 12 glTF-Gelenken
+  gewichtet. Seitliches Stehen/Gehen ist in compact_actor integriert, mit derselben
+  Steuerung, Kollision, Schatten-, Licht- und Vordergrundmaske.
+- **Entscheidung:** Schalter zunaechst aus; Tiefenansichten/Sprint/Sonderaktionen
+  bleiben gezeichnet. Keine stillschweigende Behauptung einer fertigen 3D-Figur.
+- **Persistenz:** settings.mosslyn_volume im vorhandenen Godot-JSON; fehlend=false,
+  keine Migration, keine Reminder-/Progressions-/Balanceaenderung. Ausschalten
+  stellt alten Pfad wieder her; isolierter Commit revertierbar, Restschluessel harmlos.
+- **TESTED BEHAVIOR:** Import, 12 Gelenke, IK-Kette, beide Seiten, Sonderaktionen,
+  Spielwelteinbau und echter Einstellungsschalter lokal in Godot 4.5.1 geprueft;
+  398 OpenGL-Rigchecks und 13 Weltchecks ohne Assertionsfehler. Bestehende
+  Charakter-/Ausdauer-/Mooslyn-Pruefungen bleiben erfolgreich.
+- **UNVERIFIED/Grenzen:** Hueftgeometrie noch nicht sauber getrennt;
+  Weltfussverriegelung fehlt, Bodengleiten moeglich. Kein Telefon-/Android-Test,
+  keine APK. Erst Geometrie und Kontakt verbessern, dann Standardaktivierung.
+- **UEBERGABE:** docs/godot-mooslyn-projection-rig-a2.md und
+  tools/mosslyn-3d/README.md; Branch codex/mooslyn-projection-rig basiert auf f47e08f.
+
 ### 2026-10-24 - Mooslyns Gliedmassen an den Weltfortschritt anpassen
 
 - **DOCUMENTED INTENT:** Martin findet den ersten Eindruck von0.15.2 gut,
