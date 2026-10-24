@@ -25,7 +25,7 @@ func run() -> void:
  app.show_settings()
  var toggle: Button
  for button in buttons(app.ui):
-  if button.text == "Mooslyn 3D: aus": toggle = button
+  if button.text == "Charaktere 3D: aus": toggle = button
  check(is_instance_valid(toggle),"Schalter in echten Einstellungen")
  if is_instance_valid(toggle): toggle.pressed.emit()
  await process_frame
@@ -61,7 +61,7 @@ func run() -> void:
   root.get_texture().get_image().save_png("res://captures/mosslyn-volume/world.png")
  app.show_settings()
  for button in buttons(app.ui):
-  if button.text=="Mooslyn 3D: an":button.pressed.emit();break
+  if button.text=="Charaktere 3D: an":button.pressed.emit();break
  await process_frame
  check(not app.actor.volume_enabled and not app.actor.volume.visible and app.actor.sprite.visible,"Ausschalten funktioniert im laufenden Spiel")
  # Die kleine Saveerweiterung braucht keine Migration und bleibt abschaltbar.
