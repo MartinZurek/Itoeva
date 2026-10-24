@@ -21,8 +21,9 @@ func run() -> void:
   if species in ["nocti","mosslyn"]:
    for direction in [Vector2.RIGHT,Vector2.DOWN,Vector2.UP]:
     app.actor.facing=direction;app.actor.running=true;app.actor.run_blend=1;app.actor.hover=.48 if species=="nocti" else 0
+    var cycle_span: float=4.0 if species=="mosslyn" and absf(direction.x)>absf(direction.y) else 1.0
     for phase in 8:
-     app.actor.clock=(phase+.1)/(8*3.2);app.actor.gait=(phase+.1)/8
+     app.actor.clock=(phase+.1)/(8*3.2);app.actor.gait=cycle_span*(phase+.1)/8
      app.actor._update_frame(true);app.actor._update_shadow()
      await grab(species+"-run-"+str(int(direction.y))+"-"+str(phase))
   if species=="starlet":

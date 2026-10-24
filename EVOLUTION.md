@@ -669,6 +669,25 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-24 - Mooslyns Gliedmassen an den Weltfortschritt anpassen
+
+- **DOCUMENTED INTENT:** Martin findet den ersten Eindruck von0.15.2 gut,
+  meldet aber zu schnelle Gliedmassen; Links-/Rechtsgeschwindigkeit soll bleiben.
+- **FACT:** gait folgt bereits der echten Strecke. Der28-Bilder-Bogen wurde
+  mit rund37,6Geh- bzw.50,1Sprintbildern pro Sekunde durchlaufen.
+- **KORREKTUR:** Nur die gemalten Seitenfolgen mit25Prozent Phasenrate abspielen;
+  rund9,4/12,5Quellbilder pro Sekunde bei unveraendertem Weltfortschritt.
+  Basisphase, Bilder, Groessenregistrierung und horizontaler Bildanker bleiben.
+- **Module/Persistenz:** compact_actor und gezielte Phasen-/Renderpruefungen;
+  character_actor bytegleich, keine Aenderung an Tempo/Ausdauer/Saves.
+- **TESTED BEHAVIOR:** Godot1164Atlas-/Groessen-/Zustandschecks erfolgreich;
+  gleiche Strecke bei30/60/120Hz, kein Phasenfortschritt ohne neue Strecke.
+  Allgemeine Spiel-/OpenGL-Pruefungen folgen im APK-Workflow.
+- **UNVERIFIED:** Menschliche Taktabnahme auf dem Telefon und GPU/FPS.
+- **UEBERGABE:** codex/mooslyn-distance-cadence-0153,
+  docs/godot-mooslyn-cadence-v0153.md. APK0.15.3/Code33 vorbereitet;
+  Auslieferung erst nach erfolgreichem Build/Remote-Abgleich bestaetigen.
+
 ### 2026-10-23 - Mooslyns gemalte Phasen auf dieselbe Groesse registrieren
 
 - **DOCUMENTED INTENT:** Martin meldet beim Telefontest von0.15.1 wechselnde
