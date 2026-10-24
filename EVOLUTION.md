@@ -669,6 +669,24 @@ sein:
 Die Historie darf nicht zu einer bloßen Commit-Liste werden. Sie soll erklären, warum sich Itoeva
 verändert hat, welche Identität dabei geschützt wurde und welche Unsicherheit weiterhin besteht.
 
+### 2026-10-24 - A3: Originalvolumen fuer Nocti, Starlit und Wyrmling
+
+- **DOCUMENTED INTENT:** Mooslyn-3D als visuellen Massstab auf die weiteren drei
+  Spieler uebertragen; Starlit huepft/schwebt ohne Laufbeine.
+- **FACT:** Zwoelf geschlossene Originalprojektions-GLBs mit Skelett, drei
+  Ansichten pro Spieler und Noctis Flugform. Starlit besitzt nur Koerper-/Schalrig.
+- **Entscheidung:** vorhandene Ganzkoerperposen und Weltvertraege weiterverwenden;
+  keine neue Zeichnung, kein zweiter Kollisions-/Schwerkraftpfad.
+- **Persistenz/Rueckweg:** bestehendes settings.mosslyn_volume bleibt erhalten,
+  UI heisst Charaktere 3D. Standard weiter aus; Abschalten/Revert stellt A2 wieder
+  her. Keine Migration und keine Reminder-/Balance-/Progressionsaenderung.
+- **TESTED BEHAVIOR:** Generatorpruefungen; Godot 4.5.1 Headless 5658/0,
+  OpenGL 5706/0, echter Welteinbau 22/0. Mooslyn 334/0 + Welt 13/0,
+  Charaktere 869/0, Ausdauer 204/0, Spiel-Smoke 86/0.
+- **UNVERIFIED:** physisches Android-Geraet, Nutzerabnahme, schlupffreie Pfoten.
+  Freie Kamera und 3D-Sonderaktionen fehlen; Pfotenuebergaenge noch verformbar.
+- **UEBERGABE:** docs/godot-companions-volume-a3.md; tools/companions-3d/README.md.
+
 ### 2026-10-24 - Mooslin-Originalvolumen als zuschaltbarer Seitenprototyp (A2)
 
 - **DOCUMENTED INTENT:** A1 originalgetreu als bewegbare Figur einbauen;

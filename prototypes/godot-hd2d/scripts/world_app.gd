@@ -343,7 +343,7 @@ func show_settings() -> void:
 	column.add_child(view_row)
 	view_row.add_child(_button("Ansicht näher", func(): adjust_zoom(-0.5)))
 	view_row.add_child(_button("Ansicht weiter", func(): adjust_zoom(0.5)))
-	view_row.add_child(_button("Mooslyn 3D: an" if mosslyn_volume else "Mooslyn 3D: aus", func():
+	view_row.add_child(_button("Charaktere 3D: an" if mosslyn_volume else "Charaktere 3D: aus", func():
 		mosslyn_volume = not mosslyn_volume
 		if is_instance_valid(actor) and actor.has_method("set_volume_enabled"):
 			actor.set_volume_enabled(mosslyn_volume)

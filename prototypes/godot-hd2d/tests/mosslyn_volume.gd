@@ -60,6 +60,6 @@ func run() -> void:
  actor.jump_clock=-1;actor.set_volume_enabled(false);actor._update_frame(true)
  check(actor.sprite.visible and not actor.volume.visible and actor.painted_cycle_active,"Schalter stellt bisherigen Pfad wieder her")
  var other=Actor.new();other.species="nocti";other.enabled=false;world.add_child(other)
- other.set_volume_enabled(true);check(not other.volume_enabled and not is_instance_valid(other.volume),"Andere Spieler bleiben unveraendert")
+ other.set_volume_enabled(true);check(other.volume_enabled and is_instance_valid(other.volume),"Weitere Spieler nutzen Originalvolumen")
  other.shadow.queue_free();actor.shadow.queue_free();viewport.queue_free();await process_frame
  print("Mooslyn volume: %d checks, %d failures"%[checks,failures]);quit(1 if failures else 0)
