@@ -1,0 +1,33 @@
+{
+  "approved_by": "Martin Zurek",
+  "approved_date": "2026-10-25",
+  "characters": 4,
+  "image_boards": 4,
+  "kind": "visual_design_references_not_implemented_3d_models",
+  "files": [
+    {
+      "file": "Moosling_Bewegungsentwurf.png",
+      "bytes": 2016516,
+      "sha256": "f1ea908d0113f9e17c88cce758b81545c0b550ee3ae78f1defd5ceab87e1305a",
+      "role": "approved_reference"
+    },
+    {
+      "file": "Nocti_3D_Entwurf.png",
+      "bytes": 2201599,
+      "sha256": "f1320d98ec2681812f56d8214d4e02c55bf0c00e6b47b255c9770493f3e82ac1",
+      "role": "approved_reference"
+    },
+    {
+      "file": "Starlight_3D_Entwurf_FREIGEGEBEN.png",
+      "bytes": 1840075,
+      "sha256": "5e2a6d9b00c563bc622791bd8a9d00cccadbcac1c738844da13cc34455462652",
+      "role": "approved_reference"
+    },
+    {
+      "file": "Wyrmling_3D_Entwurf.png",
+      "bytes": 2071494,
+      "sha256": "26c0839e9ef0cb080e93ac567f2f7fea089820e2a9b987c031520f0abe54b88c",
+      "role": "approved_reference"
+    }
+  ]
+}
