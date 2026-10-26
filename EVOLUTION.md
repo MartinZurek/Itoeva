@@ -7521,3 +7521,20 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Schritte, keine Behauptung exakt weltfester Sohlen oder abschliessender Optikfreigabe.
 - **UEBERGABE:**PR378, docs/godot-schritte-v0142.md sowie
   docs/validation/godot-v0142-build-report.json. Kein Merge ins aeltere main.
+
+
+### 2026-10-25 – Savespot A4 fuer freigegebene raeumliche Charaktere
+
+- **DOCUMENTED INTENT:** Martin gibt vier genaue Gestaltungsreferenzen frei,
+  beauftragt echte 3D-Modelle und bittet um einen Savespot fuer den Folgechat.
+- **FACT:** Alle vier Referenz-PNGs visuell geprueft und SHA-256 bestaetigt.
+  Isolierter Moosling-Versuch in tools/moosling-spatial mit Blender/GLB,
+  20 Knochen, zweibeinigem Gehen und vierbeinigem Lauf. Kein APK-Einbau.
+- **TESTED BEHAVIOR:** Godot4.5.1 importiert Mesh/Skin/Clips; technische
+  Import-/Skalierungspruefung erfolgreich. Erweiterte Kontaktpruefung:
+  4566 Checks,14 Fehler; max. Standfussversatz0,018259 Modellmeter.
+- **UNVERIFIED:** Die genehmigte gestalterische Qualitaet ist NICHT erreicht.
+  Gesicht/Fell/Ohren/Geweih weiter angleichen; Exportkontakt und Weltmassstab
+  korrigieren. Andere drei Figuren noch nicht neu gebaut; Android ungeprueft.
+- **UEBERGABE:** docs/ITOEVA_3D_SAVESPOT_20261025.md, Branch
+  codex/moosling-spatial-rig-20261025. Letzte bestaetigte APK bleibt0.15.5.

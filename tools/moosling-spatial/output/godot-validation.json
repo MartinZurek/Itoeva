@@ -1,0 +1,23 @@
+{
+  "checks": 4566,
+  "engine": "4.5.1-stable (official)",
+  "failures": [
+    "walk/hind-1/1 Standfussversatz 0.008343",
+    "walk/hind1/1 Standfussversatz 0.008357",
+    "walk/hind-1/2 Standfussversatz 0.001234",
+    "walk/hind1/2 Standfussversatz 0.001256",
+    "walk/hind-1/24 Standhoehenfehler 0.005153",
+    "walk/hind-1/25 Standfussversatz 0.005643",
+    "run/fore-1/1 Standfussversatz 0.018252",
+    "run/fore1/1 Standfussversatz 0.018259",
+    "run/fore-1/2 Standfussversatz 0.002711",
+    "run/fore1/2 Standfussversatz 0.002715",
+    "run/hind-1/19 Standhoehenfehler 0.003369",
+    "run/hind-1/20 Standfussversatz 0.009206",
+    "run/hind-1/34 Standfussversatz 0.001124",
+    "run/fore-1/45 Standfussversatz 0.002129"
+  ],
+  "max_contact_height_error_model_m": 0.00515300512313843,
+  "max_stance_slip_model_m": 0.0182587265968323,
+  "scope": "GLB-Import, Animation, Skalierung und Standfuesse im Modellmassstab; keine Android-/Weltabnahme"
+}

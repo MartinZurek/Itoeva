@@ -1,0 +1,6 @@
+.godot/
+output/*-frames/
+output/walk/
+output/run/
+output/*.blend1
+__pycache__/
