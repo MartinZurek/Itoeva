@@ -1,0 +1,14 @@
+{
+  "status": "work_in_progress_not_apk_approved",
+  "reference_sha256": "f1ea908d0113f9e17c88cce758b81545c0b550ee3ae78f1defd5ceab87e1305a",
+  "bones": 20,
+  "mesh_objects": 165,
+  "polygons": 54743,
+  "contact_samples": 296,
+  "max_reach_fraction": 0.9806793405647662,
+  "limits": [
+    "Materialdetail und Silhouette muessen visuell weiter an die Referenz angenaehert werden.",
+    "Modellmetermassstab noch nicht mit Weltgeschwindigkeit kalibriert.",
+    "Keine Android- oder Godot-Integration in diesem Arbeitsstand."
+  ]
+}
