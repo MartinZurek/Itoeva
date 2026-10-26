@@ -1,0 +1,33 @@
+{
+  "version": "0.15.7",
+  "version_code": 37,
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "commit": "3c00a643aa42e2c5de1aabebd1a64ad2053dcc15",
+  "run_id": 40417640717,
+  "run_url": "https://github.com/MartinZurek/Itoeva/actions/runs/40417640717",
+  "conclusion": "success",
+  "file": "Itoeva_Godot_Test_v0.15.7.apk",
+  "bytes": 200475949,
+  "sha256": "77f5be50effd6d53f345f3fb68113e3f4c7c10acc453f1ea4c28dccb68962528",
+  "signer_sha256": "30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc",
+  "drive_url": "https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view",
+  "upload_size_and_checksum_verified": true,
+  "apk_artifact_id": 12696211588,
+  "protocol_artifact_id": 12697660640,
+  "motion_feature": "itoeva_motion_m3",
+  "checks": [
+    "608 source files and 29 environment masks",
+    "Python asset, metadata, contact, rig tests",
+    "Godot regression and OpenGL render suites",
+    "APK M3 metadata, pixel atlases, compiled export feature",
+    "APK signature, package, version, arm64 ABI, no internet permission",
+    "Drive size and checksum comparison"
+  ],
+  "phone_verified": false,
+  "open_issues": [
+    "M2 walking contacts and full stride",
+    "four independent gallop pressure points",
+    "drawn turns and front/back views",
+    "existing shutdown resource leaks"
+  ]
+}

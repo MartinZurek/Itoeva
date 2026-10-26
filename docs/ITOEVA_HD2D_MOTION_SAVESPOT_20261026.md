@@ -15,7 +15,14 @@ bytegenau geprüft. Der Build prüft zusätzlich die M3-Metadaten, alle vier
 Pixelatlanten und das Aktivierungsmerkmal in der tatsächlich exportierten APK.
 Workflow ausschließlich für den Lieferbranch aktiviert; Tests, Signatur,
 Paketversion und Drive-Prüfsumme müssen erfolgreich sein, bevor geliefert wird.
-Build-Ergebnis bei diesem Vorbereitungsschritt noch ausstehend.
+**Ergebnis:** [Build 40417640717](https://github.com/MartinZurek/Itoeva/actions/runs/40417640717)
+erfolgreich. APK aus Commit `3c00a64`, 200475949 Bytes; Signatur und
+M3-Paketinhalt geprüft, Drive-Dateigröße und Prüfsummen stimmen überein.
+[APK herunterladen](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view).
+SHA-256: `77f5be50effd6d53f345f3fb68113e3f4c7c10acc453f1ea4c28dccb68962528`.
+Nachweis: `docs/validation/motion-m3-20261026/apk-v0157-build.json`.
+Kein Telefontest und kein Merge. Die nachstehenden M1–M3-Abschnitte dokumentieren
+den historischen Stand vor der APK-Freigabe; die aktuelle Test-APK aktiviert M3.
 
 ## Aktuell M3: Vierbeiner-Galopp und Gangwechsel
 
