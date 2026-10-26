@@ -7537,3 +7537,17 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**Neue Gangzyklen (vollstaendiges Gehen, Mooslyn-Sprint auf vier Pfoten,
   weitere Figuren) stehen noch aus.
 - **UEBERGABE:**Bewegungsarbeit auf Basis von claude/hd2d-pixel-sprites fortsetzen.
+
+### 2026-10-26 – Mooslyn: erster gemalter Galoppentwurf gesichert
+
+- **FACT:**Neuer Branch codex/hd2d-motion-phases-20261026 ab claude/hd2d-pixel-sprites
+  (cb1c2b5). Keine Übernahme des veralteten Motion-Branches, keine 3D-Aufräumarbeit.
+- **CHANGE:**Achtphasiger gemalter Galoppentwurf, Pixelpass, feste Zellen und
+  aus dem Original abgeleitete Bounds/Alphamasken. Offline-Kopfregistrierung statt
+  wechselnder Laufzeitskalierung vorbereitet. Noch nicht als Standard eingebunden.
+- **TESTED BEHAVIOR:**Zwei Python-Prüfungen für Alphabesitz, Bounds, feste
+  Bodenlinie und lesbare Pixelfassung erfolgreich.
+- **UNVERIFIED:**Kunstqualität, vollständige Kontaktfolge, Welt-Schrittlänge,
+  Gehzyklus und Übergänge. Keine APK gebaut oder freigegeben.
+- **UEBERGABE:**tools/motion-art/README.md; separates Vorschau-Laufzeitmanifest.
+  Nächster Schnitt: echte Weltvorschau mit bewusst markierten offenen Punkten.
