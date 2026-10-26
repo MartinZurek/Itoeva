@@ -27,6 +27,9 @@ Bei Widersprüchen gilt [`EVOLUTION.md`](EVOLUTION.md).
 - Commit und Pull Request müssen Zweck, betroffene Bereiche, ausgeführte Tests, ungeprüfte Punkte
   und den konkreten nächsten Schritt verständlich festhalten.
 - `OPEN DECISION`-Punkte nicht durch Annahmen auflösen.
+- Spielfiguren sind 2D-Sprites im HD-2D-Stil. Keine 3D-Figurenmodelle, Projektionsvolumen,
+  GLB-Rigs oder Blender-Figuren bauen; Entscheidung und Arbeitsweg in
+  [`docs/hd2d-sprites-statt-3d.md`](docs/hd2d-sprites-statt-3d.md).
 - Vor jedem Push den vollständigen Diff prüfen.
 
 Die ausführlichen Regeln, Schutzbereiche und Auswahlhinweise stehen ausschließlich in den oben

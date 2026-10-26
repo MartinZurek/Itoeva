@@ -23,34 +23,14 @@ in [manifest.json](manifest.json).
 4. [Nocti – 3D-Entwurf](Nocti_3D_Entwurf.png): Gehen, Abheben und tiefer Flug;
    kompakte Originalproportionen, grosse Ohren und violette Fledermausfluegel.
 
-## Umsetzung und erteilte Freigabe
+## Verwendung seit 26.10.2026: nur als 2D-Gestaltungsvorlage
 
-Aussehen, Gesicht, Proportionen, Materialfarben, Fell/Schuppen, Kleidung und
-Schmuck so nah wie moeglich an diesen Bildern halten. Moosling ist der Massstab.
-Natuerliche Ganzkoerperbewegung, stabile Groesse und feste Standpfoten; kein
-hektisches Beinkrabbeln oder gummiartige Verformungen. Schrittfrequenz an den
-wirklichen Weltfortschritt koppeln, das bewaehrte Fortbewegungstempo erhalten.
+Die Dateinamen enthalten noch „3D“, weil sie ursprünglich für Figurenmodelle gedacht
+waren. Dieser Weg ist verworfen (siehe [`docs/hd2d-sprites-statt-3d.md`](../hd2d-sprites-statt-3d.md)).
+Die Bilder bleiben die verbindliche **Gestaltungs- und Bewegungsvorlage für 2D-Sprites**:
+Aussehen, Gesicht, Proportionen, Materialfarben, Fell/Schuppen, Kleidung und Schmuck so nah
+wie möglich an diesen Bildern. Moosling ist der Maßstab. Natürliche Ganzkörperbewegung,
+stabile Größe und feste Standpfoten; kein hektisches Beinkrabbeln, keine gummiartigen
+Verformungen. Schrittfrequenz an den wirklichen Weltfortschritt koppeln.
 
-Martin hat Modellierung, Texturen, Rigging, Animation, Codeaenderungen auf eigenem
-Branch, Push, Entwurfs-PR und nach bestandenen Pruefungen eine neue signierte
-Test-APK ueber den bestehenden Actions-/Drive-Weg freigegeben. Echte Modellrender
-und kurze Bewegungsclips vor dem naechsten APK-Einbau zur Qualitaetskontrolle zeigen.
-Die Bilderfreigabe erlaubt nicht, Konzeptbilder als fertig gebaute Modelle auszugeben.
-
-## Technischer Einstieg
-
-Repository: MartinZurek/Itoeva; Godot-Projekt `prototypes/godot-hd2d`.
-Letzter hier bestaetigter Lieferstand: APK 0.15.5 / Code 35,
-Commit `66dd18814c7fb6d157e6f581c4cbdc47391ec48d`,
-Branch `codex/companions-original-volume`, PR #383.
-
-Vor Beginn aktuelle Remote-Staende vergleichen und AGENTS.md lesen.
-Bestehende Dokumentation: `docs/godot-companions-volume-a3.md`,
-`docs/godot-mooslyn-projection-rig-a2.md`, `tools/mosslyn-3d/` und
-`tools/companions-3d/`.
-
-Die bisherigen Prototypen sind ansichtsgebundene Originalprojektions-Volumen,
-keine fertig frei betrachtbaren Figuren. In 0.15.5 ist die 3D-Option standardmaessig
-aus; Moosling faellt beim Sprint auf die alte zweibeinige Bildfolge zurueck.
-Diese Grenzen beim Fortsetzen bewusst beheben und die neue Darstellung klar
-zugaenglich machen. Keine neue APK allein zum Hochladen dieser Referenzbilder bauen.
+Keine 3D-Modelle, Projektionsvolumen, GLB-Rigs oder Blender-Figuren daraus bauen.

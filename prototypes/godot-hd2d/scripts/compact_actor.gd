@@ -1,6 +1,4 @@
 extends "res://scripts/character_actor.gd"
-var volume_enabled := false
-var volume: Node3D
 
 const FLIGHT_CYCLES := 1.8
 const PAINTED_GAIT_RATE := 0.25
@@ -283,7 +281,6 @@ func light_center() -> Vector3:
  return global_position+sprite.position+right*x+up*(cell_size.y*.5+sprite.offset.y-center.y)*sprite.pixel_size
 
 func _update_frame(moving: bool) -> void:
- if _update_volume(moving): return
  if painted_cycle_active and not moving:body_weight=0.0
  body_weight=move_toward(body_weight,1.0 if moving else 0.0,get_physics_process_delta_time()*8.0)
  var depth:=absf(facing.y)>absf(facing.x)
@@ -410,7 +407,6 @@ func _hover_target(moving: bool) -> float:
  return super._hover_target(moving)
 
 func visual_screen_rect(camera: Camera3D) -> Rect2:
- if is_instance_valid(volume) and volume.visible: return volume.screen_rect(camera)
  var bounds:=displayed_bounds;var minimum:=Vector2(INF,INF);var maximum:=Vector2(-INF,-INF)
  for x in [bounds.position.x,bounds.end.x]:
   for y in [bounds.position.y,bounds.end.y]:
@@ -419,69 +415,3 @@ func visual_screen_rect(camera: Camera3D) -> Rect2:
    var point:=global_position+sprite.position+camera.global_basis.x*(local_x*sprite.pixel_size+painted_x_offset)+camera.global_basis.y*(cell_size.y*.5+sprite.offset.y-float(y))*sprite.pixel_size
    var screen:=camera.unproject_position(point);minimum=minimum.min(screen);maximum=maximum.max(screen)
  return Rect2(minimum,maximum-minimum)
-
-func set_volume_enabled(value: bool) -> void:
- volume_enabled = value and species in ["mosslyn", "nocti", "starlet", "wyrmling"]
- _update_frame(previous_moving)
-
-func _update_volume(moving: bool) -> bool:
- if species != "mosslyn": return _update_companion_volume(moving)
- var supported := volume_enabled and species == "mosslyn" and absf(facing.x) >= absf(facing.y) and state == "idle" and jump_clock < 0.0 and not running and not mounted and recovery_clock >= .16
- if not supported:
-  if is_instance_valid(volume): volume.visible = false
-  sprite.visible = true
-  return false
- if not is_instance_valid(volume):
-  volume = load("res://scripts/mosslyn_volume.gd").new()
-  volume.name = "MooslynOriginalVolume"
-  add_child(volume)
- # Originalatlas und ein fester Massstab sichern Kopf/Geweih und Lichtanker.
- _use_motion_sheet(false, false)
- sprite.frame = 0
- sprite.flip_h = facing.x < 0.0
- _update_sprite_scale()
- sprite.visible = false
- skin_mesh.visible = false
- volume.visible = true
- volume.position = Vector3.UP * hover
- volume.align_to_camera(get_viewport().get_camera_3d(), sprite.pixel_size, sprite.flip_h)
- volume.pose(gait, moving, get_physics_process_delta_time())
- # Die Welt liefert denselben Tiefenmasken- und Lichtvertrag fuer beide Pfade.
- for key in ["foot","scene_light","has_mask","furniture_mask","scene_origin","scene_span","local_light_count","local_light_points","local_light_colors","local_light_phases","animation_time"]:
-  var value = painted_material.get_shader_parameter(key)
-  if value != null: volume.material.set_shader_parameter(key, value)
- volume.material.render_priority = painted_material.render_priority
- return true
-
-func _update_companion_volume(moving: bool) -> bool:
- var supported := volume_enabled and species in ["nocti", "starlet", "wyrmling"] and state == "idle" and jump_clock < 0.0 and not mounted and recovery_clock >= .16
- if not supported:
-  if is_instance_valid(volume): volume.visible = false
-  sprite.visible = true
-  return false
- if not is_instance_valid(volume):
-  volume = load("res://scripts/companion_volume.gd").new()
-  volume.species = species
-  volume.name = "OriginalCompanionVolume"
-  add_child(volume)
- body_weight = move_toward(body_weight,1.0 if moving else 0.0,get_physics_process_delta_time()*5.0)
- var flight: bool = species == "nocti" and (hover > .06 or moving and running and run_blend >= .5)
- var row := 0 if absf(facing.x) >= absf(facing.y) else 1 if facing.y > 0 else 2
- _use_motion_sheet(flight,not flight)
- sprite.frame = row*8
- sprite.flip_h = row == 0 and facing.x < 0
- _update_sprite_scale()
- volume.select_view(row,flight)
- var key := species+"-flight" if flight else species
- volume.apply_pose(body_pose,body_rigs[key].rows[row],float(step_rigs[species].rows[row].ground))
- volume.motion_weight = body_weight
- volume.position = sprite.position
- volume.align_to_camera(get_viewport().get_camera_3d(),sprite.pixel_size,sprite.flip_h)
- volume.visible = true
- sprite.visible = false
- skin_mesh.visible = false
- for key_name in ["foot","scene_light","has_mask","furniture_mask","scene_origin","scene_span","local_light_count","local_light_points","local_light_colors","local_light_phases","animation_time","self_glow"]:
-  var value = painted_material.get_shader_parameter(key_name)
-  if value != null: volume.material.set_shader_parameter(key_name,value)
- volume.material.render_priority = painted_material.render_priority
- return true

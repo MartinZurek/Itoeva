@@ -7521,3 +7521,19 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Schritte, keine Behauptung exakt weltfester Sohlen oder abschliessender Optikfreigabe.
 - **UEBERGABE:**PR378, docs/godot-schritte-v0142.md sowie
   docs/validation/godot-v0142-build-report.json. Kein Merge ins aeltere main.
+
+### 2026-10-26 – HD-2D-Pixelfiguren 0.15.6; 3D-Figurenweg beendet
+
+- **DECISION (Martin):**Spielfiguren bleiben 2D-Sprites im HD-2D-Stil (Octopath Traveler,
+  Final Fantasy Resonance). 3D-Figurenmodelle (A2/A3-Projektionsvolumen, A4-Mesh) verworfen.
+  Begruendung und Arbeitsweg: docs/hd2d-sprites-statt-3d.md.
+- **FACT:**Test-APK 0.15.6/Code36 aus Branch claude/hd2d-pixel-sprites, Lauf40318055503
+  erfolgreich, Drive-Upload geprueft. 205037635 Bytes, SHA-256
+  9a8db2b9bce30a54362fb7ab33ab20982954c7efa4545e78be8d91e816c5cf76. Pixelfassungen der vier
+  Spielfiguren in assets/characters/pixel/ (tools/pixel-pass), Originale unveraendert.
+- **CHANGE:**3D-Code, -Assets, -Tests, -Werkzeuge, A2/A3-Dokumente und die Einstellung
+  „Charaktere 3D“ entfernt. Workflow startet nicht mehr automatisch bei Push.
+- **TESTED BEHAVIOR:**Siehe Commit-Nachricht des Aufraeumcommits.
+- **UNVERIFIED:**Neue Gangzyklen (vollstaendiges Gehen, Mooslyn-Sprint auf vier Pfoten,
+  weitere Figuren) stehen noch aus.
+- **UEBERGABE:**Bewegungsarbeit auf Basis von claude/hd2d-pixel-sprites fortsetzen.

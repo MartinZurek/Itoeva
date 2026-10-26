@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "canonical": "path+NUL+sha256+LF; sorted by path",
- "sha256": "09c2a83a755064e7cdd39bd6f328362c90972b0ab3da16501630d7f1a724af4b",
+ "sha256": "7150b550974a81a2a9ddcdee7f88a311b289fc6fb21afccf9d5fbfa1ff35c9fa",
  "files": [
   {
    "path": "assets/audio/attack.wav",
@@ -1054,31 +1054,6 @@
    "sha256": "6d5b574bdde37f1e3486a1e3ab7562d32c3182a119b3c5f62a9f9d8dc90a462d"
   },
   {
-   "path": "assets/characters/mosslyn-3d/original-rig.glb",
-   "bytes": 1171964,
-   "sha256": "084fa030a340e7bf6e39a1ec46a575958b9673844784c66756f0aef680994fbc"
-  },
-  {
-   "path": "assets/characters/mosslyn-3d/original-rig.glb.import",
-   "bytes": 1070,
-   "sha256": "77ba9033c54e626ee8e0690e566a7fde713c85159c1753dd1955ea11c9991ac9"
-  },
-  {
-   "path": "assets/characters/mosslyn-3d/original-rig_0.png",
-   "bytes": 34341,
-   "sha256": "83a06ea880cdfd544009b5997fce75438ee382a029f94682d877e78b6495dc45"
-  },
-  {
-   "path": "assets/characters/mosslyn-3d/original-rig_0.png.import",
-   "bytes": 1040,
-   "sha256": "4740d3a859d3b75ae121411da844896ab3ef991eb5234d3bbb38efb8fa38e0ac"
-  },
-  {
-   "path": "assets/characters/mosslyn-3d/rig.json",
-   "bytes": 1031,
-   "sha256": "37838cdfefcc88d8f7ed3bb2a102cd2afea970913f34d6d521c5b1cce7d19f98"
-  },
-  {
    "path": "assets/characters/mosslyn-run-28.png",
    "bytes": 2403802,
    "sha256": "e1e3e02971a414bce3a72ed87f7ea01d193c9c62aad38b2bc3ff546c6445c95d"
@@ -1127,126 +1102,6 @@
    "path": "assets/characters/mosslyn.png.import",
    "bytes": 943,
    "sha256": "7147997ceb56936dec83b992c3783373af66b9d4c0e0f9f52b83c18534353182"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-0.glb",
-   "bytes": 1368928,
-   "sha256": "6193edb1b9a6aa2c27bbabf0efdaeba7df4de43776ebbd79229a067416f1245b"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-0.glb.import",
-   "bytes": 1050,
-   "sha256": "a164b7acbaa7e19fc72e51d9faf074b693bdcfbd196992e85bc0940de63736d6"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-0_0.png",
-   "bytes": 71322,
-   "sha256": "c069307ae80204d03de092e816edc81b12ed90fe98d6adfc061920318db63bb3"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-0_0.png.import",
-   "bytes": 1021,
-   "sha256": "ed9685911b68cd9a66265af6f473c48ac83f0727ecaa09127e16cf5b8db9fe55"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-1.glb",
-   "bytes": 1445556,
-   "sha256": "07c570e47f9d5dc749f364dd59d100c9c2ad49804021d18187b622b1a0cef7fd"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-1.glb.import",
-   "bytes": 1051,
-   "sha256": "f3162813144ff90693181020ccbd622a2ff4519a13748a10c4d7c696e68fb5d3"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-1_0.png",
-   "bytes": 75168,
-   "sha256": "2f1ef0a2de1a92d49920894e4ba3c538178a5488257456e8ac8a740756fb2b40"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-1_0.png.import",
-   "bytes": 1021,
-   "sha256": "5a9aa991a22db532b70160cfbd00bb187f000c2bedf31e646723ebc03d1e7d05"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-2.glb",
-   "bytes": 1348168,
-   "sha256": "5c9cb9edab761ce3d9975e569c0941424c82c1723eba6aa0b27c9c2bf596eae0"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-2.glb.import",
-   "bytes": 1051,
-   "sha256": "b2c4593299303231c16c6bbac1c2028ac031dd0fed139fa755579cb6671cd8fb"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-2_0.png",
-   "bytes": 66404,
-   "sha256": "782eba81f4682ba78c00e9e93b75b140db0999c4e0c0ed7cfda17ecb79d9716a"
-  },
-  {
-   "path": "assets/characters/nocti-3d/view-2_0.png.import",
-   "bytes": 1021,
-   "sha256": "9d5565d43acd517e5d6c4c51819a47dc9c34da083bf9a56cd41785e0ee07bf64"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-0.glb",
-   "bytes": 1177948,
-   "sha256": "30b00e6ce5fb70b2e46cad451f631b3bcad2c23207f0765c2147cfe7693b6fe7"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-0.glb.import",
-   "bytes": 1058,
-   "sha256": "fc0c97fd50f5b0f2db0b469bb09aba289d7a9be01ea5edfa0b406ef6cd2506d8"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-0_0.png",
-   "bytes": 63902,
-   "sha256": "f9f4975737d364aebce2d74f787761ebb36c57056610e701319c1ca6a16e3255"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-0_0.png.import",
-   "bytes": 1027,
-   "sha256": "66ccb60c0d13230ba3876a9bbd85f99176a2fcc839ba268e3256fcc14c2cdf50"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-1.glb",
-   "bytes": 1169412,
-   "sha256": "d114e6b3da226c7ca9e6d40873942a3de0d10c608e5026935298b5bf942a946f"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-1.glb.import",
-   "bytes": 1057,
-   "sha256": "039c20ecb0badd0c7165231fb9e1a307dee53268ebfe63de7ed9c36febe3f4c2"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-1_0.png",
-   "bytes": 63898,
-   "sha256": "00da96ba596e874399ce5af489c5d558e1e56407d0cf461fbb68339bd3005383"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-1_0.png.import",
-   "bytes": 1027,
-   "sha256": "f4e563100cfedd55d338df8b6aa01a5e6b8abce9ac38c338b0b605e38d92a6a6"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-2.glb",
-   "bytes": 1090328,
-   "sha256": "d08308911b275a137e88d052b941ae616e5829f46ad57ab3d39a33e80836ca52"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-2.glb.import",
-   "bytes": 1057,
-   "sha256": "cb16539445e33aa5f31e8dac1bb9125a1f9b15bf07af352b54289b039ead1737"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-2_0.png",
-   "bytes": 58711,
-   "sha256": "bb841344d88aaed87d42aadfd673719caeddb74144aff71d7c7f216106bb5de5"
-  },
-  {
-   "path": "assets/characters/nocti-flight-3d/view-2_0.png.import",
-   "bytes": 1028,
-   "sha256": "4686f6177e25adcdde2613fdc218dd13f7e7609abaaa40f2b421b8d25a76e94b"
   },
   {
    "path": "assets/characters/nocti-flight.png",
@@ -1449,66 +1304,6 @@
    "sha256": "a4d7bca1857c1c26f964fb7d9aa8c02e9437ce5027fd564f13a2ef47dc6db11a"
   },
   {
-   "path": "assets/characters/starlet-3d/view-0.glb",
-   "bytes": 941584,
-   "sha256": "0bd6bd6f7a97e0d19a39d839a357d6d112347f2ce586ba9927f39640179bf359"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-0.glb.import",
-   "bytes": 1053,
-   "sha256": "493bbd4aacc71f884413d798e1328d44ff33bc06ac00cbcd5ddb2e2cc76e98fc"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-0_0.png",
-   "bytes": 50834,
-   "sha256": "47798498b226908722296f8fb9d24c9e41d4efa9c7aa6f04b936b3113754dbad"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-0_0.png.import",
-   "bytes": 1023,
-   "sha256": "ac12deed4533d7aab05cd5fa30c868dedbcf51a99d1774cb337f086d94f9c09e"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-1.glb",
-   "bytes": 1036328,
-   "sha256": "f4ffec88cb075c46006a275151ecd72fb2ee3c5c02c403067a8ca5cb0f7b525b"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-1.glb.import",
-   "bytes": 1053,
-   "sha256": "b7e9c10a92ff5dc50dff2ded1d63cb32a9b86afbe0f7ed5a131a88059093ac21"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-1_0.png",
-   "bytes": 55335,
-   "sha256": "9ef8a21bf0056a0f647f0a4b0760617265988616ca1912479aa14a954e752dc3"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-1_0.png.import",
-   "bytes": 1022,
-   "sha256": "c534e89c4fe8f351927e7f623db62fa5784fcb927c0e8f71d04796f32a6584a4"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-2.glb",
-   "bytes": 1079312,
-   "sha256": "bcb9ca219b5f0d9d7988b897c5b8d5155e38d0ba6a8b401f15e46bd766420599"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-2.glb.import",
-   "bytes": 1053,
-   "sha256": "c65214de5dac956a6e2d9cdf09e0a0560524e5f6e9501bdc92f551987a95409e"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-2_0.png",
-   "bytes": 56731,
-   "sha256": "96618ce29457a00d3c52888fae2bc566270e0f540cb572e3f71ade39a8e1644f"
-  },
-  {
-   "path": "assets/characters/starlet-3d/view-2_0.png.import",
-   "bytes": 1022,
-   "sha256": "855f5dc00787dd6518b735eb528234844cc0f5363125355e8466dce3d3514040"
-  },
-  {
    "path": "assets/characters/starlet-v2.png",
    "bytes": 2171175,
    "sha256": "6eb0627f9deed0790efb2402f168ea5614a68121c8d2801bb4dc96ac6ac9fa80"
@@ -1537,66 +1332,6 @@
    "path": "assets/characters/starlet.png.import",
    "bytes": 943,
    "sha256": "ae33dbc8dab2c379babad4ff2cc486af0e6ba92c42b84acbbf364c1e2c205f0d"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-0.glb",
-   "bytes": 1079568,
-   "sha256": "1ceddea6812224b5efcee46535822f85abfbd0d0dc5f91dbad61b7786cd19dea"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-0.glb.import",
-   "bytes": 1054,
-   "sha256": "cadcdc2a6095b7d5c7afcfe8eb4c18d8d75cf21cb4bc84f7ba4f492a4f9cfc8b"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-0_0.png",
-   "bytes": 60128,
-   "sha256": "ab1137b3ac1f3b7887bc120a293170b47e07a62339adcd861f6df0fe7b6270f9"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-0_0.png.import",
-   "bytes": 1023,
-   "sha256": "5d7115a50fa9f020dd8081a16b5f2a01feb2354d833ca4fcbca9f19e5f877b0c"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-1.glb",
-   "bytes": 866132,
-   "sha256": "37bbae7cc3676eef0ae7bbcd38c75635653b2a15f784ed1c85047413f43003db"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-1.glb.import",
-   "bytes": 1054,
-   "sha256": "577a3d82384f873d660bc6f3bea94a7f4254165f34352c88d94b808ea6582ac7"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-1_0.png",
-   "bytes": 49266,
-   "sha256": "d19e8a00ddbce1ff87c70b83b89f62536597e692c33c8121494a3e0352afad2d"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-1_0.png.import",
-   "bytes": 1023,
-   "sha256": "f49fb2d7a02cb69976ab123494f3958f9a24aca9b3f8f754711975da58cfe85f"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-2.glb",
-   "bytes": 882908,
-   "sha256": "f902c6beb3d1842b6fa2784259453c193d54cc1aa1a5d92d0ed68e9ab7f1f9b1"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-2.glb.import",
-   "bytes": 1054,
-   "sha256": "d3453c2d38c8f464f4aa0d527cf79ea22daa5c01006a39d5d218c2d73093d530"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-2_0.png",
-   "bytes": 49170,
-   "sha256": "64776a0a71aed263eaacfe089a98979c8f75a9e464f0333ca02615f4680b2eab"
-  },
-  {
-   "path": "assets/characters/wyrmling-3d/view-2_0.png.import",
-   "bytes": 1024,
-   "sha256": "241d7cca5107e1935cd2b4f98a994a6011c1e4a50d219ae4039f2fd65baaedc8"
   },
   {
    "path": "assets/characters/wyrmling-v2.png",
@@ -2394,11 +2129,6 @@
    "sha256": "82c2fbc7bcfe70243588fe82a4a8a176603eec3e1961edff131764dd9e387ab1"
   },
   {
-   "path": "data/companion_volumes.json",
-   "bytes": 5428,
-   "sha256": "1ddb01333fd0fa9425ca8b011b7ebb89bdbc05e3b202f2015214af34bb5d40d8"
-  },
-  {
    "path": "data/demons_atlas.json",
    "bytes": 722,
    "sha256": "3fbf98cadb764441e90bd4b039388767f9e9696f9f0707d8921d2c38e555ae19"
@@ -2725,23 +2455,13 @@
   },
   {
    "path": "scripts/compact_actor.gd",
-   "bytes": 28990,
-   "sha256": "0b4d566a5b791fffa0732f5a03eccd6934389df67f9e2bfc8c017965f615a5da"
+   "bytes": 25407,
+   "sha256": "a593f85338ac72b6c25bdab95c4f87eb0ffe5b1f526c31a56cb3256170fed1ec"
   },
   {
    "path": "scripts/compact_actor.gd.uid",
    "bytes": 20,
    "sha256": "801bfd40e911161e654a7b7690dd240d95f22e6276797f66c8b42aca2a4fe32f"
-  },
-  {
-   "path": "scripts/companion_volume.gd",
-   "bytes": 3054,
-   "sha256": "b918d14b5def215e219057cc4eac6e05bdfaea29b0e1eb036d9d13209c2972e8"
-  },
-  {
-   "path": "scripts/companion_volume.gd.uid",
-   "bytes": 20,
-   "sha256": "6e39a6283b5cac2e0ca8e875cd660eb080ca48ad0aa6734b2c9c20ba87f99dfe"
   },
   {
    "path": "scripts/crystal_meter.gd",
@@ -2884,16 +2604,6 @@
    "sha256": "4e257cc09300e6137533b212b3a16f8137096a2a6682813f0a2019dd01f544d1"
   },
   {
-   "path": "scripts/mosslyn_volume.gd",
-   "bytes": 4281,
-   "sha256": "fea24d44dcc7c42d80cd84f38db2e2bc00140a02a8d4159b46dfc20cd2a3aa93"
-  },
-  {
-   "path": "scripts/mosslyn_volume.gd.uid",
-   "bytes": 20,
-   "sha256": "2cf380cb85039b1af081ea239653ba3e82eaf2a0ae3e6e4130b11ceea47f3d41"
-  },
-  {
    "path": "scripts/movement_stamina.gd",
    "bytes": 1123,
    "sha256": "08e6d4f365479317aff9401bbd7626c8e7ce88c928867158064a4c39fde6835f"
@@ -2995,8 +2705,8 @@
   },
   {
    "path": "scripts/world_app.gd",
-   "bytes": 55951,
-   "sha256": "7be3a92297b5c88107ee84d19d00c19758a14efd64f6fae3b38bdf351f98b987"
+   "bytes": 55463,
+   "sha256": "7549eb9b1202bb92092a9abf4f6df381fa7b4c1a7dbbe0d1510b7f50be9945bf"
   },
   {
    "path": "scripts/world_app.gd.uid",
@@ -3107,16 +2817,6 @@
    "path": "shaders/living_flame.gdshader.uid",
    "bytes": 20,
    "sha256": "ad7fb2d3d31a875be95c03e62675a76f8b95c87270d0c987864b975b36333c9e"
-  },
-  {
-   "path": "shaders/mosslyn_volume.gdshader",
-   "bytes": 2195,
-   "sha256": "864d31193915b806846186914da771d0e51e648c77324c5e3074e688e806afc7"
-  },
-  {
-   "path": "shaders/mosslyn_volume.gdshader.uid",
-   "bytes": 20,
-   "sha256": "c58af9ef5550b3913075936e0ea3127ea5bc792dfcb2bf434645e55712333b3d"
   },
   {
    "path": "shaders/painted_ambience.gdshader",

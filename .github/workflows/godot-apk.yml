@@ -4,13 +4,9 @@
 # 0.15.6: HD-2D-Pixelfassung der vier Spielfiguren (Martins Auftrag vom 26.10.2026).
 name: Godot Test APK 0.15.6
 
+# Kein automatischer Bau bei Push: Test-APKs erst nach Martins Freigabe der Vorschauen.
+# Fuer eine Lieferung hier den Liefer-Branch eintragen oder den Lauf manuell starten.
 on:
-  push:
-    branches: [claude/hd2d-pixel-sprites]
-    paths:
-      - 'prototypes/godot-hd2d/**'
-      - 'docs/godot-v0156-runtime-manifest.json'
-      - '.github/workflows/godot-apk.yml'
   workflow_dispatch:
 
 permissions: {}
@@ -47,10 +43,10 @@ jobs:
           import hashlib, json, os, pathlib
           project = pathlib.Path(os.environ['PROJECT'])
           manifest = json.loads(pathlib.Path('docs/godot-v0156-runtime-manifest.json').read_text())
-          assert manifest['sha256'] == '09c2a83a755064e7cdd39bd6f328362c90972b0ab3da16501630d7f1a724af4b'
+          assert manifest['sha256'] == '7150b550974a81a2a9ddcdee7f88a311b289fc6fb21afccf9d5fbfa1ff35c9fa'
           canonical = ''.join(item['path'] + '\0' + item['sha256'] + '\n' for item in manifest['files']).encode()
           assert hashlib.sha256(canonical).hexdigest() == manifest['sha256']
-          assert len(manifest['files']) == 637
+          assert len(manifest['files']) == 577
           for item in manifest['files']:
               data = (project / item['path']).read_bytes()
               assert len(data) == item['bytes'], item['path']
@@ -67,7 +63,7 @@ jobs:
               raw = zlib.decompress(base64.b64decode(entry['deflate']))
               assert len(raw) == entry['width'] * entry['height'] * 2 == entry['bytes']
               assert hashlib.sha256(raw).hexdigest() == entry['sha256']
-          print('637 Laufzeit-/Exportdateien (inkl. 28 Pixelfassungen) und 29 Dynamikmasken stimmen bytegenau mit v0.15.6 ueberein.')
+          print('577 Laufzeit-/Exportdateien (inkl. 28 Pixelfassungen, ohne 3D-Figuren) und 29 Dynamikmasken stimmen bytegenau mit v0.15.6 ueberein.')
           PY
 
       - name: Gemalte Mooslyn-Phasen pruefen
@@ -127,7 +123,7 @@ jobs:
           mkdir -p "$PROJECT/build"
           timeout 600 "$GODOT" --headless --editor --path "$PROJECT" --import --quit \
             2>&1 | tee "$PROJECT/build/import.log"
-          for test in companion_volume companion_volume_world mosslyn_volume mosslyn_volume_world step_contacts route_connections stamina_motion character_polish polish_v062 strategy_rules strategy_ui strategy_benchmark card_model card_rules special_rules victory_flow \
+          for test in step_contacts route_connections stamina_motion character_polish polish_v062 strategy_rules strategy_ui strategy_benchmark card_model card_rules special_rules victory_flow \
                       card_ui minion_ui forest_trail card_playthrough full_smoke full_framing full_doors expanded_cards expanded_card_ui ambience_coordinates battle_feedback_audio inhabited_world_v070 landscape_depth_v071 demons_v080 ecology_boss_v090 ecology_playthrough_v090 enemy_roaming roaming_and_slopes combat_motion_light; do
             timeout 300 "$GODOT" --headless --fixed-fps 60 --path "$PROJECT" \
               --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
@@ -143,7 +139,7 @@ jobs:
       - name: Feuer und Figurenlicht visuell pruefen
         run: |
           set -euo pipefail
-          for test in companion_volume companion_volume_world mosslyn_volume mosslyn_volume_world mosslyn_painted_cycles gait_review environment_render ambience_render forest_render firelight_render firelight_capture battle_feedback_capture polish_capture_v062 inhabited_capture_v070 depth_capture_v071 demon_capture_v080 ecology_capture_v090 combat_motion_capture character_polish_capture motion_regions stamina_capture route_capture; do
+          for test in mosslyn_painted_cycles gait_review environment_render ambience_render forest_render firelight_render firelight_capture battle_feedback_capture polish_capture_v062 inhabited_capture_v070 depth_capture_v071 demon_capture_v080 ecology_capture_v090 combat_motion_capture character_polish_capture motion_regions stamina_capture route_capture; do
             timeout 300 xvfb-run -a "$GODOT" --audio-driver Dummy --rendering-driver opengl3 --fixed-fps 60 --path "$PROJECT" \
               --script "res://tests/${test}.gd" 2>&1 | tee "$PROJECT/build/${test}.log"
             ! grep -qE "SCRIPT ERROR|Parse Error|Compile Error" "$PROJECT/build/${test}.log"
@@ -236,11 +232,7 @@ jobs:
               assert len(body_path) == 1
               assert set(json.loads(archive.read(body_path[0]))) == {'mosslyn','nocti','starlet','wyrmling','nocti-flight'}
               assert any('full_body' in name and 'gdshaderinc' in name for name in names)
-              assert any('original-rig.glb' in name for name in names), '3D-Modell fehlt'
-              assert any('mosslyn_volume' in name for name in names), '3D-Steuerung fehlt'
-              assert any('companion_volume' in name for name in names), 'Weitere 3D-Figuren fehlen'
-              for species in ['nocti','starlet','wyrmling','nocti-flight']:
-                  assert any(species+'-3d/view-0' in name for name in names), species
+              assert not any('-3d/' in name or 'mosslyn_volume' in name or 'companion_volume' in name for name in names), '3D-Figurenreste im APK'
           assert len(catalog["cards"]) == 616
           assert len({card["volk"] for card in catalog["cards"].values()}) == 13
           assert all(card["kind"] == "minion" for card in catalog["cards"].values())

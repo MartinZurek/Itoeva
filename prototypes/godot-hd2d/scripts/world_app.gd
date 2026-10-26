@@ -55,7 +55,6 @@ var camera_lead := 0.0
 var dusk := false
 var sensitivity := 1.0
 var fixed_stick := false
-var mosslyn_volume := false
 var battle_music_on := true
 var effects_on := true
 var effects_volume := 0.55
@@ -343,12 +342,6 @@ func show_settings() -> void:
 	column.add_child(view_row)
 	view_row.add_child(_button("Ansicht näher", func(): adjust_zoom(-0.5)))
 	view_row.add_child(_button("Ansicht weiter", func(): adjust_zoom(0.5)))
-	view_row.add_child(_button("Charaktere 3D: an" if mosslyn_volume else "Charaktere 3D: aus", func():
-		mosslyn_volume = not mosslyn_volume
-		if is_instance_valid(actor) and actor.has_method("set_volume_enabled"):
-			actor.set_volume_enabled(mosslyn_volume)
-		_save_preferences()
-		show_settings()))
 	column.add_child(_label("WASD / Stick · Shift rennen · Leertaste springen\nR Rolle · C Sitzen · E Interaktion · M Karte\nQ/F schwenken · Z/X zoomen · Esc Menü", 16))
 	column.add_child(_button("Zurück", show_menu))
 
@@ -455,7 +448,6 @@ func _mount_world(next_room: String, position: Vector3) -> void:
 	_apply_world_time()
 	actor = CompactActor.new() if Catalog.data().characters[selected].get("compact",false) else Actor.new()
 	actor.species = selected
-	if actor is CompactActor: actor.volume_enabled = mosslyn_volume
 	# Türwechsel baut die Figur neu auf, aber füllt den Sprintvorrat nicht.
 	actor.stamina = exploration_stamina
 	actor.metrics = character_metrics
@@ -875,13 +867,12 @@ func _load_save() -> void:
 	music_volume = clampf(float(settings.get("music_volume", 0.35)), 0, 1)
 	sensitivity = clampf(float(settings.get("sensitivity", 1.0)), 0.7, 1.5)
 	fixed_stick = bool(settings.get("fixed_stick", false))
-	mosslyn_volume = bool(settings.get("mosslyn_volume", false))
 	dusk = false
 
 func _save_preferences() -> void:
 	save_data["settings"] = {"species": selected, "music_on": music_on, "music_volume": music_volume,
 		"battle_music_on":battle_music_on,"effects_on":effects_on,"effects_volume":effects_volume,
-		"sensitivity": sensitivity, "fixed_stick": fixed_stick, "dusk": dusk, "mosslyn_volume": mosslyn_volume}
+		"sensitivity": sensitivity, "fixed_stick": fixed_stick, "dusk": dusk}
 	_write_save()
 	_update_music()
 
