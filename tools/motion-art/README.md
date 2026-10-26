@@ -1,5 +1,8 @@
 # Mooslyn: gemalte Bewegungsentwürfe, 26.10.2026
 
+**Aktuell: M3 mit zehn Galoppphasen und gezeichneten Gangwechseln**, siehe den
+gleichnamigen Abschnitt am Ende. M1/M2 darunter dokumentieren die Vorgeschichte.
+
 Basis: `claude/hd2d-pixel-sprites`, Commit `cb1c2b5`.
 Arbeitsbranch: `codex/hd2d-motion-phases-20261026`.
 
@@ -14,7 +17,7 @@ freigegebenen Moosling-Vorlage. `mosslyn-gallop-8.json` hält die gemessenen
 Gesichtsregionen und die vorläufig annotierten Flugabstände fest.
 
 ```bash
-python3 tools/motion-art/prepare_cycle.py tools/motion-art/mosslyn-gallop-8.json tools/motion-art/mosslyn-walk-m2.json
+python3 tools/motion-art/prepare_cycle.py tools/motion-art/mosslyn-walk-m3.json tools/motion-art/mosslyn-gallop-m3.json tools/motion-art/mosslyn-lower-m3.json tools/motion-art/mosslyn-rise-m3.json
 python3 tools/pixel-pass/pixel_pass.py prototypes/godot-hd2d/assets/characters --species mosslyn
 python3 -m unittest discover -s prototypes/godot-hd2d/tests -p test_authored_cycles.py
 ```
@@ -148,3 +151,73 @@ Boden zeichnen, vollständigen Standweg und Abrollen weiter ausarbeiten, dann
 erst belastbare Phasendauern ableiten und wieder aufnehmen. Galopp,
 Verbindungsphasen, Wenden und Tiefenansichten sind weiterhin offen. Kein
 Weiterreichen dieses ungeprüften Maßstabs an andere Figuren und keine APK.
+
+## Aktuell M3: zehn Galoppphasen und gezeichnete Gangwechsel
+
+M3 setzt M2 am selben Branch fort. Martin beauftragte zusätzlich den
+Vierbeiner-Galopp und seine Übergänge und ließ ausdrücklich die Wahl einer kurzen
+Testanimation statt einer APK. Gewählt wurde die echte Spielaufnahme.
+
+- `mosslyn-gallop-m3.json`: zehn gemalte Phasen. Acht neue Grundphasen, gezielte
+  Korrektur des Hinterbeinabstoßes und zwei zusätzliche gezeichnete Stützphasen.
+  Vorderstütze, Sammeln/Hinterstütze, Abstoß, Streckflug und Landungsanflug.
+- `mosslyn-lower-m3.json` / `mosslyn-rise-m3.json`: jeweils vier Verbindungsposen.
+  Neu gezeichnete Zwischenhaltungen, Endposen exakt aus Geh-/Galoppquellen.
+  Dazu kann `prepare_cycle.py` einzelne Alphakomponenten aus weiteren Originalen
+  übernehmen. Kein Bildmorphing, keine Gliedmaßen- oder Gesichtsdehnung.
+- `mosslyn-walk-m3.json`: die M2-Gehzeichnungen unverändert, nur separate
+  M3-Atlanten für die gemeinsame Palette und Pixeldichte. M1/M2 bleiben erhalten.
+  Die bekannten Gehkontaktfehler aus M2 gelten weiter.
+- Alle vier Folgen teilen Kopfregistrierung42,5px, Referenzhöhe208,046px,
+  Bodenlinie300 und feste320er-Zellen. Der zuvor größere Galopp-Kopf wird
+  nicht durch wechselnde Laufzeitskalierung ausgeglichen.
+- Pixelpass für diese vier Atlanten gemeinsam mit `--reference-height 221`:
+  dieselbe Palette und Pixeldichte auch beim abgesenkten Körper. Die Endpunkte
+  sind im gemalten Original **und** in der Pixelfassung bytegleich als Kacheln.
+- `authored_motion_transition.gd` wechselt die Darstellung über nominell0,28s.
+  Beim langsamer Weitergehen erst die passende Vorderstütze erreichen. Direktes
+  Stoppen richtet auch ohne Wegfortschritt auf. Umkehr eines kurzen Impulses
+  nimmt die entsprechende Gegenhaltung, statt an einer Endpose neu anzufangen.
+  Sprung, Sitzen, Rollen und Tiefenbewegung brechen die Folge ab.
+- Galopp-Zyklus240px (ca.1,86Welt,2,07Hz bei3,85Welt/s). Dauergewichte aus den
+  sichtbaren Stütz-Sohlenwegen, Mindestdauer ca.1/30s; verbleibende Zeit auf
+  freie beziehungsweise ungeprüfte Wechselphasen verteilt. Sichtbare Stützen
+  sind keine vier einzeln verifizierten Druckpunkte. Restabweichungen sind im
+  Kontaktbericht ausgewiesen; **kein Nachweis vollständig schlupffreier Pfoten**.
+- Spieltempo, Geh-Takt, Kollisions-/Ausdauerlogik und Standarddarstellung bleiben.
+  M3 ausschließlich mit `MOTION_DRAFT=1`. Keine Version/Workflow geändert, kein
+  Merge und keine APK.
+
+Originalgenerierungen und genaue Prompts liegen in `sources/`. Eine verworfene
+achtphasige Zwischenaufnahme wurde durch die zehnphasige Endaufnahme ersetzt.
+Die Aufnahmedateien unter `docs/validation/motion-m3-20261026/` sind333 echte
+Weltbilder bei30fps,11,1s: Gehen, Galopp, zurück zum Gehen, beide Richtungen,
+erneuter Galopp und direktes Loslassen. `CLEAN_VIEW=1` blendet ausschließlich
+die HUD-Ebene für die Bewegungsbeurteilung aus. Der Detailfilm ist ein fester,
+dreifach vergrößerter Ausschnitt derselben Bilder ohne zeitliche Interpolation.
+
+```bash
+# Nach dem prepare_cycle-Aufruf oben: nur die vier M3-Atlanten neu pixeln.
+M3_PIXEL_DIR=$(mktemp -d)
+cp prototypes/godot-hd2d/assets/characters/mosslyn-{walk,gallop,lower,rise}-m3.png "$M3_PIXEL_DIR/"
+python3 tools/pixel-pass/pixel_pass.py "$M3_PIXEL_DIR" --species mosslyn --reference-height 221
+cp "$M3_PIXEL_DIR"/pixel/*.png prototypes/godot-hd2d/assets/characters/pixel/
+cp "$M3_PIXEL_DIR"/pixel/pixel_pass.json tools/motion-art/mosslyn-m3-pixelpass.json
+
+# Godot mit OpenGL und echter Anzeige, bei Bedarf über Xvfb:
+MOTION_DRAFT=1 MOTION_CHAIN=1 CLEAN_VIEW=1 TAG=m3-final godot --path prototypes/godot-hd2d --fixed-fps 30 --rendering-method gl_compatibility --script preview_pixel/play_capture.gd
+python3 tools/motion-art/review_m3_capture.py prototypes/godot-hd2d/captures/play_m3-final docs/validation/motion-m3-20261026
+python3 tools/motion-art/measure_annotated_contacts.py tools/motion-art/mosslyn-gallop-m3.json
+```
+
+Prüfungen:272 zyklische Godot-Checks,126 Zustandswechsel-Checks,160 Actor-
+Integrationschecks,1276 bestehende Mooslyn-Checks unter OpenGL und acht
+Python-Tests grün. Die echte Aufnahme erreicht sämtliche zehn Galoppphasen
+und vier Phasen beider Übergänge jeweils rechts/links bei konstantem Maßstab.
+Die bekannten ObjectDB-/Ressourcenlecks beim Beenden des Weltlaufs bestehen.
+Das ist keine vollständige erneute CI- oder Telefonabnahme.
+
+Weiter offen: M2-Gehkontaktwechsel und vollständige Gehschrittlänge, vier
+einzeln belastbare Galopp-Druckpunkte, neu gezeichnete Wendefolgen sowie
+Front-/Rückansichten. Weitere Figuren wurden nicht umgestellt. Keine solche
+offene Arbeit allein aus dem Vorhandensein dieser Vorschau als erledigt ansehen.

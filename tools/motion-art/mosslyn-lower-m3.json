@@ -1,0 +1,60 @@
+{
+  "source": "tools/motion-art/sources/mosslyn-transitions-m3.png",
+  "source_row_height": 512,
+  "mode": "lower",
+  "asset": "res://assets/characters/mosslyn-lower-m3.png",
+  "cell": 320,
+  "columns": 4,
+  "head_width": 42.5,
+  "head_center_x": 211.7097701149425,
+  "ground": 300,
+  "reference_height": 208.04597701149416,
+  "cycle_distance_pixels": 285,
+  "review": "M3-Verbindung: Endposen stammen exakt aus Geh-/Galoppquelle; Zwischenposen neu gemalt, keine Bilddehnung.",
+  "frames": [
+    {
+      "head_region": [
+        276,
+        151,
+        87,
+        77
+      ],
+      "source": "tools/motion-art/sources/mosslyn-walk-m2.png",
+      "source_frame_index": 0
+    },
+    {
+      "head_region": [
+        649,
+        207,
+        82,
+        73
+      ],
+      "correlation": 0.806161642074585
+    },
+    {
+      "head_region": [
+        683,
+        693,
+        86,
+        76
+      ],
+      "correlation": 0.8595519661903381
+    },
+    {
+      "head_region": [
+        680,
+        252,
+        80,
+        71
+      ],
+      "source": "tools/motion-art/sources/mosslyn-gallop-m3.png",
+      "source_frame_index": 1
+    }
+  ],
+  "source_frame_indices": [
+    0,
+    1,
+    5,
+    3
+  ]
+}

@@ -44,15 +44,22 @@ def measure(annotation):
                               ground_gap=gap, contact=abs(gap) <= 3, box=box)
         contacts.append(feet)
     intervals = []
-    for i, side in enumerate(["near"] * 4 + ["far"] * 4):
+    legs = data.get("contact_legs", ["near"] * 4 + ["far"] * 4)
+    if len(legs) != len(contacts):
+        raise ValueError("Kontaktintervalle und Phasenzahl widersprechen sich")
+    weights = spec.get("phase_weights", [1] * len(contacts))
+    for i, side in enumerate(legs):
         j = (i + 1) % len(contacts)
-        a, b = contacts[i][side], contacts[j][side]
-        valid = a["contact"] and b["contact"]
+        a, b = (contacts[i][side], contacts[j][side]) if side else (None, None)
+        valid = side is not None and a["contact"] and b["contact"]
         travel = a["sole_x"] - b["sole_x"] if valid else None
         intervals.append(dict(start=i, end=j, leg=side, both_endpoints_contact=valid,
                               travel_pixels=travel,
-                              uniform_phase_world_travel_pixels=spec["cycle_distance_pixels"] / 8,
-                              uniform_phase_slip_pixels=(spec["cycle_distance_pixels"] / 8 - travel)
+                              uniform_phase_world_travel_pixels=spec["cycle_distance_pixels"] / len(contacts),
+                              assigned_phase_world_travel_pixels=spec["cycle_distance_pixels"] * weights[i] / sum(weights),
+                              support_midpoint_residual_pixels=(spec["cycle_distance_pixels"] * weights[i] / sum(weights) - travel)
+                              if valid else None,
+                              uniform_phase_slip_pixels=(spec["cycle_distance_pixels"] / len(contacts) - travel)
                               if valid else None))
     complete = all(i["both_endpoints_contact"] for i in intervals)
     total = sum(i["travel_pixels"] for i in intervals if i["travel_pixels"] is not None)
@@ -60,6 +67,8 @@ def measure(annotation):
     characters = json.loads((PROJECT / "data/new_characters.json").read_text())
     height = geometry["character_height"].get("mosslyn", characters["mosslyn"]["relative_height"])
     pixel_size = .0145 * 109 * height / spec["reference_height"]
+    speed = data.get("speed_world_per_second", 2.35)
+    seconds = spec["cycle_distance_pixels"] * pixel_size / speed
     return dict(method="anatomically-annotated-visible-sole-midpoints",
                 pressure_points_verified=False, runtime_slip_verified=False,
                 atlas_sha256=spec["sha256"], painted_source_sha256=spec["source_sha256"],
@@ -67,11 +76,13 @@ def measure(annotation):
                 observed_travel_pixels=total,
                 estimated_cycle_pixels=total if complete else None,
                 preview_cycle_pixels=spec["cycle_distance_pixels"],
-                preview_cycle_seconds=spec["cycle_distance_pixels"] * pixel_size / 2.35,
-                preview_phase_seconds=spec["cycle_distance_pixels"] * pixel_size / 2.35 / 8,
+                speed_world_per_second=speed, preview_cycle_seconds=seconds,
+                preview_phase_seconds=seconds / len(contacts),
+                assigned_phase_seconds=[seconds * w / sum(weights) for w in weights],
                 limitation="Manuell zugeordnete Pfoten, Sohlenmitten statt Druckpunkten. "
                            "Kontakt nur an diskreten Posen; Abrollen dazwischen ungeprüft. "
-                           "Fehlende Endpunktkontakte bleiben null; kein Ersatz durch das Gegenbein.")
+                           "Fehlende Endpunktkontakte bleiben null; kein Ersatz durch das Gegenbein. "
+                           + data.get("limitation", ""))
 
 
 if __name__ == "__main__":

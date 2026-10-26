@@ -20,19 +20,23 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECT = ROOT / "prototypes/godot-hd2d"
 
 
+def load_source(path, row_height):
+    rgba = np.array(Image.open(path).convert("RGBA"))
+    labels, _ = ndimage.label(rgba[:, :, 3] >= 32)
+    components = [(ident, box) for ident, box in enumerate(ndimage.find_objects(labels), 1)
+                  if box and np.count_nonzero(labels[box] == ident) > 2000]
+    components.sort(key=lambda item: (
+        (item[1][0].start + item[1][0].stop) // (2 * row_height), item[1][1].start))
+    return rgba, labels, components
+
+
 def prepare(annotation):
     spec = json.loads(annotation.read_text())
     source = ROOT / spec["source"]
-    rgba = np.array(Image.open(source).convert("RGBA"))
-    labels, _ = ndimage.label(rgba[:, :, 3] >= 32)
-    components = []
-    for ident, box in enumerate(ndimage.find_objects(labels), 1):
-        if box and np.count_nonzero(labels[box] == ident) > 2000:
-            components.append((ident, box))
-    # Reihenfolge nach Zellenmitte, nicht nach oberstem Geweihpixel.
-    components.sort(key=lambda item: (
-        (item[1][0].start + item[1][0].stop) // (2 * spec["source_row_height"]),
-        item[1][1].start))
+    rgba, labels, components = load_source(source, spec["source_row_height"])
+    sources = {spec["source"]: (rgba, labels, components)}
+    if "source_frame_indices" in spec:
+        components = [components[i] for i in spec["source_frame_indices"]]
     if len(components) != len(spec["frames"]):
         raise ValueError("Phasenanzahl und getrennte Alphakomponenten widersprechen sich")
     cell, columns = spec["cell"], spec["columns"]
@@ -41,6 +45,12 @@ def prepare(annotation):
     mask = np.zeros((cell * rows, cell * columns), dtype=np.uint8)
     bounds, registrations = [], []
     for index, ((ident, box), frame) in enumerate(zip(components, spec["frames"])):
+        frame_source = frame.get("source", spec["source"])
+        if frame_source not in sources:
+            sources[frame_source] = load_source(ROOT / frame_source, frame.get("source_row_height", spec["source_row_height"]))
+        own_rgba, own_labels, own_components = sources[frame_source]
+        if "source_frame_index" in frame:
+            ident, box = own_components[frame["source_frame_index"]]
         x, y, w, h = frame["head_region"]
         scale = spec["head_width"] / w
         # Eine einheitliche Transformation je ganzer Zeichnung, nie Gliedmaßen-
@@ -48,8 +58,8 @@ def prepare(annotation):
         dx = spec["head_center_x"] - (x + w / 2) * scale
         ground = box[0].stop + frame.get("air_gap", 0)
         dy = spec["ground"] - ground * scale
-        own = rgba.copy()
-        own[labels != ident] = 0
+        own = own_rgba.copy()
+        own[own_labels != ident] = 0
         tile = cv2.warpAffine(own, np.float32([[scale, 0, dx], [0, scale, dy]]),
                               (cell, cell), flags=cv2.INTER_LANCZOS4)
         tile[tile[:, :, 3] < 8] = 0
@@ -62,6 +72,8 @@ def prepare(annotation):
         atlas.paste(Image.fromarray(tile), (px, py))
         mask[py:py+cell, px:px+cell][alpha] = index + 1
         registrations.append(dict(scale=scale, offset=[dx, dy], head_region=[x,y,w,h]))
+        if "source" in frame:
+            registrations[-1].update(source=frame_source, source_frame_index=frame["source_frame_index"])
     path = PROJECT / spec["asset"].removeprefix("res://")
     atlas.save(path)
     result = {key: spec[key] for key in ("asset", "cell", "columns", "ground", "reference_height", "cycle_distance_pixels")}
@@ -71,6 +83,16 @@ def prepare(annotation):
                   source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
                   mask_deflate=base64.b64encode(zlib.compress(mask.tobytes(), 9)).decode(),
                   normalization=registrations, review=spec["review"])
+    if len(sources) > 1:
+        result["painted_sources_sha256"] = {
+            name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in sources}
+    if "entry_phase" in spec:
+        result["entry_phase"] = spec["entry_phase"]
+    if "phase_weights" in spec:
+        weights = spec["phase_weights"]
+        if len(weights) != len(components) or min(weights) <= 0:
+            raise ValueError("Jede gemalte Phase braucht eine positive Dauer")
+        result["phase_weights"] = weights
     return spec["mode"], result
 
 

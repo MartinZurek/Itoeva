@@ -7597,3 +7597,32 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UEBERGABE:**tools/motion-art/README.md und M2-Nachtrag im Savespot.
   Nächster Schnitt bleibt Gehen: Kontaktwechsel schließen, Standweg verlängern,
   dann erst Phasendauern koppeln. Keine neue Richtungsentscheidung nötig.
+
+### 2026-10-26 – Mooslyn M3: Vierbeiner-Galopp und gezeichnete Gangwechsel
+
+- **CHANGE:**Zehn neue Galoppzeichnungen inklusive zusätzlicher Hinterstützen,
+  vier Absenk- und vier Aufrichtphasen. Originalquellen, Prompts und aus dem
+  Original erzeugte Masken/Registrierung. Gemeinsame Palette und Pixeldichte;
+  gleicher fester Maßstab statt des zuvor größeren Galopp-Kopfes. Endkacheln
+  passen im Original und im Pixelpass exakt zu den erreichten Zyklen.
+- **CHANGE:**Darstellungssteuerung wartet beim langsamer Weitergehen auf die
+  passende Vorderstütze. Direktes Stoppen richtet ohne Wegfortschritt auf,
+  kurze Sprintimpulse kehren um. Sprung/Sitzen/Rollen/Tiefe haben Vorrang.
+  Alles ausschließlich mit MOTION_DRAFT=1; Standarddarstellung unverändert.
+- **FACT:**Galoppstrecke 240 px, ca. 1,86 Welt/Zyklus beziehungsweise 2,07 Hz.
+  Sichtbare Stütz-Sohlenwege für Phasendauern verwendet, Mindestdauer ungefähr
+  ein Aufnahmebild bei 30 fps. Übrige Zeit auf freie/ungeprüfte Wechselphasen
+  verteilt. Kein Nachweis vier einzelner Druckpunkte oder schlupffreier Pfoten.
+  Gehzeichnungen und Geh-Takt aus M2 sowie Spieltempo unverändert.
+- **TESTED BEHAVIOR:**272 Zyklus-, 126 Übergangs-, 160 Actor-Checks und 1276
+  bestehende Mooslyn-Checks unter OpenGL; acht Python-Tests grün. Echte
+  333-Bilder-Aufnahme (11,1 s), alle zehn Galopp- und vier Verbindungsphasen
+  jeweils rechts/links. Gleicher Pixelmaßstab während der gesamten Kette.
+  Detailfilm ist nur ein vergrößerter Ausschnitt ohne zeitliche Interpolation.
+- **UNVERIFIED:**Bekannte M2-Gehkontaktfehler und vollständige Gehschrittlänge,
+  einzelne Galopp-Druckpunkte, neue Wendefolgen und Tiefenansichten. Weitere
+  Figuren nicht umgestellt. Bekannte Ressourcenlecks am Ende des Weltlaufs
+  bestehen. Keine APK, kein Merge, keine Version-/Workflowänderung.
+- **UEBERGABE:**M3-Abschnitt in tools/motion-art/README.md und Savespot; neue
+  Vorschauen in docs/validation/motion-m3-20261026. Benutzer erlaubte APK oder
+  Testanimation; geliefert wird die echte Spielaufnahme mit Detailausschnitt.

@@ -21,23 +21,26 @@ func run() -> void:
   var data: Dictionary=actor.painted_cycles[mode]
   var pixels: float=actor.base_pixel_size*109.0*actor.Catalog.relative_height("mosslyn")/float(data.reference_height)
   for direction in [Vector2.LEFT,Vector2.RIGHT]:
+   # Dieser Test prüft die fertigen Zyklen; die zeitlichen Gangwechsel haben
+   # eigene Integrationsprüfungen und dürfen hier keine Phase verdecken.
+   actor.authored_transition.reset(mode)
    actor.facing=direction
    var seen:={}
-   for tick in 8:
-    actor.gait=(tick+.1)/8.0;actor._update_frame(true)
+   for tick in int(data.frames):
+    actor.gait=actor._painted_phase_start(data,tick)+.001;actor._update_frame(true)
     seen[actor.sprite.frame]=true
-    check(actor.sprite.frame==tick,"Acht Originalphasen in Reihenfolge")
-    check(actor.sprite.hframes==4 and actor.sprite.vframes==2,"Festes 4x2-Raster")
+    check(actor.sprite.frame==tick,"Originalphasen in Reihenfolge")
+    check(actor.sprite.hframes==int(data.columns) and actor.sprite.vframes==int(data.rows),"Festes Quellraster")
     check(is_equal_approx(actor.sprite.pixel_size,pixels),"Ein Maßstab für alle Phasen")
     check(is_equal_approx(actor.sprite.offset.y,float(data.ground)-actor.cell_size.y*.5),"Bodenanker bleibt auch in der Flugphase fest")
     check(actor.sprite.flip_h==(direction.x<0),"Gesamte Zeichnung wird gespiegelt")
     check(not actor.skin_mesh.visible,"Gemalte Phasen ohne zweite Verformung")
     check(is_equal_approx(actor._stride_length(),float(data.cycle_distance_pixels)*pixels),"Strecke wird aus der Originalzeichnung abgeleitet")
-   check(seen.size()==8,"Alle Phasen erreichbar")
+   check(seen.size()==int(data.frames),"Alle Phasen erreichbar")
    var saved: float=actor.gait
    for tick in 60:
     actor.clock+=1.0/60.0;actor._update_frame(true)
-   check(actor.gait==saved and actor.sprite.frame==7,"Ohne Wegfortschritt keine neue Phase")
+   check(actor.gait==saved and actor.sprite.frame==int(data.frames)-1,"Ohne Wegfortschritt keine neue Phase")
    actor.facing=Vector2.DOWN;actor._update_frame(true)
    check(not actor.painted_cycle_active,"Frontansicht verlässt Seitenatlas")
    actor.facing=direction;actor._update_frame(true)

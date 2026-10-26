@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "canonical": "path+NUL+sha256+LF; sorted by path",
- "sha256": "523eeab02cbe691de4db2475f1e79687c19107d72ebb95c365e99886baab063f",
+ "sha256": "b9ebb45ae621356bbb8893339405ddd6a2f0df00b6dc6768a6109d6ffd400a0c",
  "files": [
   {
    "path": "assets/audio/attack.wav",
@@ -1064,6 +1064,36 @@
    "sha256": "4df054d9540c74c296e36bb105d4e668d510de82ccc639c8013ed49be794bafa"
   },
   {
+   "path": "assets/characters/mosslyn-gallop-m3.png",
+   "bytes": 534825,
+   "sha256": "7a195bbaa5d21f80ca705816d3c48a502c82ad456a845076434f564b7da4be80"
+  },
+  {
+   "path": "assets/characters/mosslyn-gallop-m3.png.import",
+   "bytes": 972,
+   "sha256": "4bfa53705f0377fafe85bab250d5b3686ebdc2567fc96cd63eb5419edf5b49fa"
+  },
+  {
+   "path": "assets/characters/mosslyn-lower-m3.png",
+   "bytes": 216347,
+   "sha256": "a372e56d1fa1d2aa650ca9d25a4f5e089f843c48bc21b4f1942254674ca9cfc6"
+  },
+  {
+   "path": "assets/characters/mosslyn-lower-m3.png.import",
+   "bytes": 970,
+   "sha256": "df033ecb7adc26e5857e8860732266efbc6ad0788f384f6cce15e701f17fd2bb"
+  },
+  {
+   "path": "assets/characters/mosslyn-rise-m3.png",
+   "bytes": 215721,
+   "sha256": "2b04d171f13082650480e87b7a87f8cfa345fb77e70887e734dda21357e8992a"
+  },
+  {
+   "path": "assets/characters/mosslyn-rise-m3.png.import",
+   "bytes": 967,
+   "sha256": "20938499981e2e7fc187fac06b946b5d692a41b8f542075b20e6b992184c0cd0"
+  },
+  {
    "path": "assets/characters/mosslyn-run-28.png",
    "bytes": 2403802,
    "sha256": "e1e3e02971a414bce3a72ed87f7ea01d193c9c62aad38b2bc3ff546c6445c95d"
@@ -1112,6 +1142,16 @@
    "path": "assets/characters/mosslyn-walk-m2.png.import",
    "bytes": 967,
    "sha256": "4229fcb41b680c9accde54353bd3f3900bfe4cd52b7678516c5580be2f2e9b5b"
+  },
+  {
+   "path": "assets/characters/mosslyn-walk-m3.png",
+   "bytes": 411319,
+   "sha256": "10cd8e5580cf7b4e8917672d3b86c900536ced09f7199aa8745754361e53496c"
+  },
+  {
+   "path": "assets/characters/mosslyn-walk-m3.png.import",
+   "bytes": 967,
+   "sha256": "2daff4be1c3fa92a66eeb34cc00994822e0185a8c34f19481459a65cdf75bb18"
   },
   {
    "path": "assets/characters/mosslyn-walk.png",
@@ -1174,6 +1214,36 @@
    "sha256": "c0f9ad2c050cb6bb42092785ca4f6dc8822b77f5a6a0c779b7b5ba28196c00ea"
   },
   {
+   "path": "assets/characters/pixel/mosslyn-gallop-m3.png",
+   "bytes": 44269,
+   "sha256": "3c89d09f7622e7e37d5db9b8456b6c634659bd495d28b9131ec0af40acfaea92"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-gallop-m3.png.import",
+   "bytes": 979,
+   "sha256": "edfcc1a20e915a82f69f9040d8d19b0002d56eacb01df26dbc09ab0880244b27"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-lower-m3.png",
+   "bytes": 18158,
+   "sha256": "c84b9fd233479480de5aefd4c80415c3d2cad398b7df20906b455230b0ae1513"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-lower-m3.png.import",
+   "bytes": 976,
+   "sha256": "46cb48ae592fd7865524308d3010ac2612076804fbc9c308a2eea6c0793e562c"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-rise-m3.png",
+   "bytes": 18044,
+   "sha256": "ea367c1b1653aae16215a9090c1b2d7ffca647625191596357c6c9c89bc35148"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-rise-m3.png.import",
+   "bytes": 972,
+   "sha256": "82989edf4fd420e879d6131cd147aa9c5909ee0a747fec50493e6f4ab0161554"
+  },
+  {
    "path": "assets/characters/pixel/mosslyn-run-28.png",
    "bytes": 120202,
    "sha256": "726fdee59cc0fc8a28ca4e40326bb95df3b144eba88f014b245eaeba2b05b940"
@@ -1222,6 +1292,16 @@
    "path": "assets/characters/pixel/mosslyn-walk-m2.png.import",
    "bytes": 973,
    "sha256": "c41d1cf9374ff11a3533f85a97a2f1b7f47b4ca1e67d2021d1d1e6806d8991d8"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-walk-m3.png",
+   "bytes": 34132,
+   "sha256": "0ce2193ff7857088c4883441f94e4054ab2a5cc369d26c348047293180c5a118"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-walk-m3.png.import",
+   "bytes": 972,
+   "sha256": "d02686097bbc102aa71f6e616312b0fb730374c7996fb17994e92bfd9d326f6b"
   },
   {
    "path": "assets/characters/pixel/mosslyn-walk.png",
@@ -2260,8 +2340,8 @@
   },
   {
    "path": "data/mosslyn_authored_cycles.json",
-   "bytes": 25693,
-   "sha256": "577ca846a9fa0e7b11f918a3800101aa777fb20cd8bb01711aaf2b0f66335190"
+   "bytes": 44422,
+   "sha256": "9bd9be85758d6af5a0899c7245c13b685afb944a213a7b6ccd331847a91a888e"
   },
   {
    "path": "data/mosslyn_painted_cycles.json",
@@ -2335,8 +2415,8 @@
   },
   {
    "path": "preview_pixel/play_capture.gd",
-   "bytes": 3041,
-   "sha256": "6c4c5c74a07eb0e4ff18f4c37a5778c149a9be2dff07392ad4d2f49d831668ca"
+   "bytes": 4246,
+   "sha256": "82aaeef71fc20b1380de937531a27c4edaf5d28c552cce0d71ef76b1075df239"
   },
   {
    "path": "project.godot",
@@ -2362,6 +2442,11 @@
    "path": "scripts/adventure_hud.gd.uid",
    "bytes": 20,
    "sha256": "29116e62fd149e204633f3e0a2617fea54dc9ff4bb5b20f89c0d7c1e672b419d"
+  },
+  {
+   "path": "scripts/authored_motion_transition.gd",
+   "bytes": 1701,
+   "sha256": "bf1cc7d8a2ba5931c65479ec5c1d800eafd9431643e3e8182f3db65aa2ecbf0e"
   },
   {
    "path": "scripts/battle_audio.gd",
@@ -2525,8 +2610,8 @@
   },
   {
    "path": "scripts/compact_actor.gd",
-   "bytes": 26504,
-   "sha256": "bb226614909506131e8576b28b3025ad0e7e1f5a07a1fc3a8f2165f5b3a81916"
+   "bytes": 28420,
+   "sha256": "7271ed52f0d78573e176499581f6bb6b3e7e2d3eda31ad36c6fbd42e985e7f01"
   },
   {
    "path": "scripts/compact_actor.gd.uid",

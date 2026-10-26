@@ -34,6 +34,8 @@ var painted_cycles: Dictionary = {}
 var painted_cycle_textures: Dictionary = {}
 var painted_cycle_masks: Dictionary = {}
 var painted_x_offset := 0.0
+const AuthoredTransition = preload("res://scripts/authored_motion_transition.gd")
+var authored_transition = AuthoredTransition.new()
 
 func _pose_mask() -> Dictionary:
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
@@ -288,6 +290,23 @@ func _update_frame(moving: bool) -> void:
  if painted_cycle_active and not moving:body_weight=0.0
  body_weight=move_toward(body_weight,1.0 if moving else 0.0,get_physics_process_delta_time()*8.0)
  var depth:=absf(facing.y)>absf(facing.x)
+ # Die gezeichneten Verbindungsposen brauchen auch beim Auslaufen Zeit zum
+ # Aufrichten. Sie werden nur mit den expliziten Entwurfsdaten geladen.
+ if painted_cycles.has("lower") and painted_cycles.has("rise"):
+  if not depth and state=="idle" and jump_clock<0:
+   var run_data: Dictionary=painted_cycles.run
+   var exit_contact:=_painted_phase(run_data,gait)==int(run_data.get("entry_phase",0))
+   var next: Dictionary=authored_transition.advance(get_physics_process_delta_time(),running and run_blend>=.5,moving,exit_contact)
+   if next.mode!="":
+    if next.entered:
+     var entry: Dictionary=painted_cycles[next.mode]
+     gait=floor(gait)+_painted_phase_start(entry,int(entry.get("entry_phase",0)))
+    _use_painted_cycle(next.mode,int(next.phase))
+    return
+  else:
+   # Sprung, Sitzen, Rollen und Tiefenansichten haben Vorrang; kein späteres
+   # Wiederaufleben einer durch die Aktion unterbrochenen Absenkung.
+   authored_transition.reset("run" if running and run_blend>=.5 else "walk")
  # Die Seitenbilder enthalten bereits die ganze Bewegung. Ein zweites Hautnetz
  # wuerde Beine und Tasche erneut verziehen. Tiefenansichten behalten ihr Rig.
  if not painted_cycles.is_empty() and moving and not depth and state=="idle" and jump_clock<0:
@@ -326,7 +345,7 @@ func _use_motion_sheet(sprint: bool, walk: bool) -> void:
  frame_bounds.assign(run_bounds if sprint else walk_bounds if walk else world_bounds)
  painted_material.set_shader_parameter("atlas",pixel_art(sprite.texture))
 
-func _use_painted_cycle(mode: String) -> void:
+func _use_painted_cycle(mode: String, authored_frame: int = -1) -> void:
  var data: Dictionary=painted_cycles[mode]
  if not painted_cycle_active or painted_cycle_mode!=mode:
   sprite.frame=0
@@ -341,9 +360,32 @@ func _use_painted_cycle(mode: String) -> void:
  # Nur den gemalten Bogen verlangsamen. gait folgt weiter der wirklich
  # zurueckgelegten Strecke; Weltgeschwindigkeit und andere Ansichten bleiben.
  var rate:=1.0 if data.get("fixed_geometry",false) else PAINTED_GAIT_RATE
- sprite.frame=posmod(int(floor(gait*rate*int(data.frames))),int(data.frames))
+ sprite.frame=authored_frame if authored_frame>=0 else _painted_phase(data,gait*rate)
  sprite.flip_h=facing.x<0
  _update_painted_cycle_geometry()
+
+func _painted_phase(data: Dictionary, cycle: float) -> int:
+ if not data.has("phase_weights"):
+  return posmod(int(floor(cycle*int(data.frames))),int(data.frames))
+ var weights: Array=data.phase_weights
+ var total:=0.0
+ for weight in weights:total+=float(weight)
+ var distance:=fposmod(cycle,1.0)*total
+ var end:=0.0
+ for phase in weights.size():
+  end+=float(weights[phase])
+  if distance<end:return phase
+ return weights.size()-1
+
+func _painted_phase_start(data: Dictionary, phase: int) -> float:
+ if not data.has("phase_weights"):return float(phase)/float(data.frames)
+ var before:=0.0
+ var total:=0.0
+ for i in data.phase_weights.size():
+  var weight:=float(data.phase_weights[i])
+  total+=weight
+  if i<phase:before+=weight
+ return before/total
 
 func _update_painted_cycle_geometry() -> void:
  var data: Dictionary=painted_cycles[painted_cycle_mode]

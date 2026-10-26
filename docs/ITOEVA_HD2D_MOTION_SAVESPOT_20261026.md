@@ -1,6 +1,44 @@
-# Itoeva – HD-2D-Bewegungen, Savespot M1 (26.10.2026)
+# Itoeva – HD-2D-Bewegungen, Savespot M3 (M1/M2 erhalten, 26.10.2026)
 
-## Aktuelle Fortsetzung M2 am selben Branch
+## Aktuell M3: Vierbeiner-Galopp und Gangwechsel
+
+Fortsetzung auf `codex/hd2d-motion-phases-20261026`, PR #385, ab dem gesicherten
+M2-Commit `715b72c`. Benutzerauftrag: Galopp und Übergänge implementieren,
+beurteilen und wahlweise als APK oder kurze Testanimation zeigen. Gewählt ist
+die Testanimation. Die frühere Taktentscheidung für das Gehen bleibt bestehen.
+
+- Zehn neue gemalte Galoppphasen, davon zwei zusätzliche Hinterstützphasen,
+  sowie vier gezeichnete Absenk- und vier Aufrichtphasen eingebunden.
+  Bilderzeugung, Quellen, Prompts, Registrierung, Masken und Pixelpass gesichert.
+- Gleicher fester Maßstab für Gehen, Galopp und Verbindungen; identische
+  Endkacheln im Original und in der Pixelfassung. Keine zweite Verformung.
+  M3-Gehzeichnungen selbst entsprechen M2, separate Dateien für die gemeinsame
+  Palette und Pixeldichte. M1/M2-Dateien erhalten.
+- Neue Übergangssteuerung: vor dem langsamer Weitergehen passende Vorderstütze
+  abwarten; direktes Stoppen richtet auch ohne Wegfortschritt auf. Abgebrochener
+  Sprintimpuls kehrt um; Sprung, Sitzen, Rollen und Tiefenansichten brechen ab.
+- `tools/motion-art/README.md`, Abschnitt „Aktuell M3“, enthält Dateizuweisung,
+  Wiederholungsbefehle und Grenzen. Das neue Messverfahren kann die sichtbaren
+  Stützen sowie absichtlich freie Phasen auswerten. Es behauptet keine vier
+  separat vermessenen Druckpunkte.
+- `docs/validation/motion-m3-20261026/`: Pixelbogen, echte 333-Bilder-Weltaufnahme
+  (11,1 s), daraus vergrößerter Detailfilm sowie Aufnahme-/Kontaktberichte.
+  Alle zehn Galoppphasen und vier Phasen jedes Übergangs rechts/links erreicht.
+  `CLEAN_VIEW=1` versteckt nur die HUD-Ebene; Bewegung kommt aus echter Steuerung.
+- Geh-Takt weiter ca. 1,066 Hz, Spieltempo ca. 2,35/3,85 Welt/s. Galopp ca.
+  2,07 Hz mit gewichteten Phasendauern. Keine geänderte Physik oder Ausdauer.
+- Tests: 272 Zyklus-, 126 Übergangs- und 160 Actor-Checks, 1276 bestehende
+  Mooslyn-Checks unter OpenGL sowie acht Python-Tests grün. Gleicher Maßstab
+  in der tatsächlichen Aufnahme geprüft. Bekannte Lecks beim Beenden bestehen.
+- Standarddarstellung unverändert; M3 nur mit `MOTION_DRAFT=1`. Kein Merge,
+  keine Version/Workflow geändert und keine APK erstellt.
+
+**Offen:** M2-Gehkontaktwechsel und vollständige Gehschrittlänge, vier einzeln
+belastbare Galopp-Druckpunkte, Wendefolgen und Front-/Rückansichten. Kein
+Schlupffreiheitsnachweis. Die Vorschau behebt diese übrigen Punkte nicht.
+Weitere Figuren erst nach Mooslyns vollständiger Qualitätsprüfung umstellen.
+
+## Historischer Nachtrag M2 am selben Branch
 
 M1 bleibt unten als historischer Ausgangspunkt dokumentiert. Der neuere
 Prüfentwurf heißt `mosslyn-walk-m2`; Befehle und Details stehen in
