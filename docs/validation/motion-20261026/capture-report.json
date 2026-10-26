@@ -1,0 +1,99 @@
+{
+  "frames": 390,
+  "fps": 30,
+  "draft": "1",
+  "segments": {
+    "Gehen rechts": {
+      "speed": 2.35427856445312,
+      "cycle_distance": 2.20841256629834,
+      "cycles_per_second": 1.0660501576475248,
+      "source_frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "scale_min": 0.00774881616234779,
+      "scale_max": 0.00774881616234779,
+      "atlases": [
+        "res://assets/characters/mosslyn-walk-8.png"
+      ]
+    },
+    "Sprint rechts": {
+      "speed": 3.84979248046875,
+      "cycle_distance": 1.53230610165746,
+      "cycles_per_second": 2.512417379467796,
+      "source_frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "scale_min": 0.00832775048911572,
+      "scale_max": 0.00832775048911572,
+      "atlases": [
+        "res://assets/characters/mosslyn-gallop-8.png"
+      ]
+    },
+    "Gehen links": {
+      "speed": 2.35427856445312,
+      "cycle_distance": 2.20841256629834,
+      "cycles_per_second": 1.0660501576475248,
+      "source_frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "scale_min": 0.00774881616234779,
+      "scale_max": 0.00774881616234779,
+      "atlases": [
+        "res://assets/characters/mosslyn-walk-8.png"
+      ]
+    },
+    "Hinten alt": {
+      "speed": 0.0,
+      "cycle_distance": 2.20841256629834,
+      "cycles_per_second": 0.0,
+      "source_frames": [
+        2,
+        17,
+        18
+      ],
+      "scale_min": 0.00683097448199987,
+      "scale_max": 0.00890668481588364,
+      "atlases": [
+        "res://assets/characters/mosslyn-walk.png",
+        "res://assets/characters/mosslyn.png"
+      ]
+    },
+    "Vorne alt": {
+      "speed": 0.0,
+      "cycle_distance": 2.20841256629834,
+      "cycles_per_second": 0.0,
+      "source_frames": [
+        1,
+        12,
+        13
+      ],
+      "scale_min": 0.00683097448199987,
+      "scale_max": 0.00890668481588364,
+      "atlases": [
+        "res://assets/characters/mosslyn-walk.png",
+        "res://assets/characters/mosslyn.png"
+      ]
+    }
+  }
+}

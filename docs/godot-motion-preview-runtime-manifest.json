@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "canonical": "path+NUL+sha256+LF; sorted by path",
- "sha256": "7c27a8a344fe12316b8d097830a5da64b6beb4c7b371256ba16a2eb81bf7d43a",
+ "sha256": "10caf4c3626e9ea5090656d62a0823ad073d06cf8da69882ae225f750846e2c8",
  "files": [
   {
    "path": "assets/audio/attack.wav",
@@ -1055,8 +1055,13 @@
   },
   {
    "path": "assets/characters/mosslyn-gallop-8.png",
-   "bytes": 392081,
-   "sha256": "e19e34c1019215be2f8d73b053483456d8ac53335aab34fe717f6b1c24e6a8d2"
+   "bytes": 395575,
+   "sha256": "7f4f731c8502148e7da793563a9f59457bb037b1830519a403d23798e911e23d"
+  },
+  {
+   "path": "assets/characters/mosslyn-gallop-8.png.import",
+   "bytes": 970,
+   "sha256": "4df054d9540c74c296e36bb105d4e668d510de82ccc639c8013ed49be794bafa"
   },
   {
    "path": "assets/characters/mosslyn-run-28.png",
@@ -1087,6 +1092,16 @@
    "path": "assets/characters/mosslyn-walk-28.png.import",
    "bytes": 966,
    "sha256": "953dbf9672381e863a8a0c9934c54835535d2f98001b8328b915eac17b84a1c9"
+  },
+  {
+   "path": "assets/characters/mosslyn-walk-8.png",
+   "bytes": 416757,
+   "sha256": "9a702b380c79a897a530e00bc560d16e14bc49e77af36e5e648e39d3c0a31322"
+  },
+  {
+   "path": "assets/characters/mosslyn-walk-8.png.import",
+   "bytes": 963,
+   "sha256": "3cdcbf4059e40c352bfa520d33202281c93649843f5a1302efa9f4a0afa054ba"
   },
   {
    "path": "assets/characters/mosslyn-walk.png",
@@ -1140,8 +1155,13 @@
   },
   {
    "path": "assets/characters/pixel/mosslyn-gallop-8.png",
-   "bytes": 44996,
-   "sha256": "b830594f4b6596f011be04b6609a3e3fc57fb580426e0d13b53e743dd20a9882"
+   "bytes": 48002,
+   "sha256": "25218a6f3f58f3da80e9bbafeedbb637aa3edde14b0b84b2f82018dbbb8cdefd"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-gallop-8.png.import",
+   "bytes": 976,
+   "sha256": "c0f9ad2c050cb6bb42092785ca4f6dc8822b77f5a6a0c779b7b5ba28196c00ea"
   },
   {
    "path": "assets/characters/pixel/mosslyn-run-28.png",
@@ -1172,6 +1192,16 @@
    "path": "assets/characters/pixel/mosslyn-walk-28.png.import",
    "bytes": 973,
    "sha256": "a7311597532c0e7249c47e883fbd7f2b6ce917a9df9fa8c8506d042d5c98da06"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-walk-8.png",
+   "bytes": 33385,
+   "sha256": "b6aea7cbaa7bdc60cc08495345a0f23c01af1d9feea916739445224dc99bd65a"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-walk-8.png.import",
+   "bytes": 969,
+   "sha256": "e45e2299d4166d436972f9a3ba252c377fecda7e6381619136236aaa026e5e8c"
   },
   {
    "path": "assets/characters/pixel/mosslyn-walk.png",
@@ -2210,8 +2240,8 @@
   },
   {
    "path": "data/mosslyn_authored_cycles.json",
-   "bytes": 11814,
-   "sha256": "dd8a3aa817e86e30dd0a671d64535ae4bf35ccdb3cecfdefff54556855c222e1"
+   "bytes": 25706,
+   "sha256": "92e47ed09168bd078b0d0a0b925402073001d374ca82076b31270c5e978e3932"
   },
   {
    "path": "data/mosslyn_painted_cycles.json",
@@ -2282,6 +2312,11 @@
    "path": "export_presets.cfg",
    "bytes": 1937,
    "sha256": "c5de0c491d6fc6c5f74abae386efc4be320c428d2f6c5f9c5353957f1f48adf7"
+  },
+  {
+   "path": "preview_pixel/play_capture.gd",
+   "bytes": 2744,
+   "sha256": "13c0c23f8f2dc12b4582059805a2d2cab5d964fe21e5efc50fa39b49b91e97ef"
   },
   {
    "path": "project.godot",
@@ -2470,8 +2505,8 @@
   },
   {
    "path": "scripts/compact_actor.gd",
-   "bytes": 25407,
-   "sha256": "a593f85338ac72b6c25bdab95c4f87eb0ffe5b1f526c31a56cb3256170fed1ec"
+   "bytes": 26504,
+   "sha256": "bb226614909506131e8576b28b3025ad0e7e1f5a07a1fc3a8f2165f5b3a81916"
   },
   {
    "path": "scripts/compact_actor.gd.uid",

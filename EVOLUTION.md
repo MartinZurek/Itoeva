@@ -7551,3 +7551,25 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Gehzyklus und Übergänge. Keine APK gebaut oder freigegeben.
 - **UEBERGABE:**tools/motion-art/README.md; separates Vorschau-Laufzeitmanifest.
   Nächster Schnitt: echte Weltvorschau mit bewusst markierten offenen Punkten.
+
+### 2026-10-26 – Mooslyn: isolierte Seitenvorschau mit fester Geometrie
+
+- **CHANGE:**MOTION_DRAFT=1 aktiviert ausschließlich für Mooslyn acht neue Geh-
+  und acht Galoppphasen. Offline registrierte Zeichnungen, feste 320er-Zellen,
+  festes Pixelmaß und feste Bodenlinie; keine zweite Hautverformung. Normale
+  App bleibt beim abgenommenen Stand. Laufzeitmanifest separat nachgeführt.
+- **TESTED BEHAVIOR:**244 neue Godot-Prüfungen,1164 bestehende Mooslyn-Prüfungen,
+  zwei neue und zwei bestehende Python-Assettests grün. Echte 390-Bilder-Aufnahme;
+  Seitenclip9,4s und Pixelbogen unter docs/validation/motion-20261026.
+- **FACT:**Gehen1,0661Hz bei2,3543Welt/s, Galopp2,5124Hz bei3,8498Welt/s.
+  Geometrieskalierung innerhalb beider Folgen konstant. Distanzparameter vorläufig,
+  keine Behauptung nachgewiesen schlupffreier Pfoten.
+- **UNVERIFIED:**Eindeutigkeit des Gegenbeins, konstante Kontaktgeschwindigkeit,
+  Front/Rücken, gezeichnete Übergänge und Wenden, weitere Figuren und Telefon.
+  Frontgenerierung wegen wandernder Tasche verworfen. Alte Tiefenansichten
+  im Außen-Prüfablauf durch korrekte Kollisionen teilweise blockiert; kein Nachweis
+  verbesserter Tiefenbewegung. Basis und Entwurf melden beim Ende bestehende
+  ObjectDB-/Ressourcenlecks. Keine APK, keine Versions-/Workflowänderung.
+- **UEBERGABE:**tools/motion-art/README.md. Nächster Schritt: Kontaktpfoten
+  vollständig annotieren, Schrittstrecke/Phasendauern prüfen und Gegenbein
+  nachbessern; dann erst Front/Rücken und Übergänge.

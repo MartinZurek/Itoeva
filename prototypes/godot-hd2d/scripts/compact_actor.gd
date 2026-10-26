@@ -50,6 +50,10 @@ func _pose_mask() -> Dictionary:
 func _ready() -> void:
  if species=="mosslyn":
   painted_cycles=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_painted_cycles.json"))
+  # Ungeprüfte Zeichnungen ausschließlich in der expliziten Weltvorschau zeigen.
+  if OS.get_environment("MOTION_DRAFT")=="1":
+   var drafts: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_authored_cycles.json"))
+   for mode in drafts:painted_cycles[mode]=drafts[mode]
   for mode in painted_cycles:
    var cycle: Dictionary=painted_cycles[mode]
    painted_cycle_textures[mode]=load(cycle.asset)
@@ -336,7 +340,8 @@ func _use_painted_cycle(mode: String) -> void:
  walk_sheet=mode=="walk";run_sheet=mode=="run"
  # Nur den gemalten Bogen verlangsamen. gait folgt weiter der wirklich
  # zurueckgelegten Strecke; Weltgeschwindigkeit und andere Ansichten bleiben.
- sprite.frame=posmod(int(floor(gait*PAINTED_GAIT_RATE*int(data.frames))),int(data.frames))
+ var rate:=1.0 if data.get("fixed_geometry",false) else PAINTED_GAIT_RATE
+ sprite.frame=posmod(int(floor(gait*rate*int(data.frames))),int(data.frames))
  sprite.flip_h=facing.x<0
  _update_painted_cycle_geometry()
 
@@ -346,19 +351,26 @@ func _update_painted_cycle_geometry() -> void:
  # Atlas-Skalierung liess das ganze Wesen im Zyklus wachsen/schrumpfen.
  # Gesicht/Ohr werden gegen die Standzeichnung registriert; nur einheitlich
  # skalieren, damit Kniebeugung und das Seitenverhaeltnis erhalten bleiben.
- var registration: Dictionary=data.size_registration
- var frame_registration: Dictionary=registration.frames[sprite.frame]
- var head_span: float=float(frame_registration.span)
- sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_span)/float(registration.reference_body_height)/head_span
+ if data.get("fixed_geometry",false):
+  # Die Quellzeichnungen sind bereits offline registriert. Ein fester Faktor
+  # erhält die Körperbewegung und verhindert laufzeitbedingtes Gesichtspulsieren.
+  sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/float(data.reference_height)
+  painted_x_offset=0.0
+ else:
+  var registration: Dictionary=data.size_registration
+  var frame_registration: Dictionary=registration.frames[sprite.frame]
+  var head_span: float=float(frame_registration.span)
+  sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_span)/float(registration.reference_body_height)/head_span
  # Die Quellposen wandern auch innerhalb ihrer Zellen. Dieselbe Kopfmitte
  # bindet die ganze Zeichnung an den Spieler, ohne Gliedmassen zu verziehen.
- var region: Array=frame_registration.region
- var center_x: float=float(region[0])+float(region[2])*.5
- var target_center: float=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_center_offset)/float(registration.reference_body_height)
- painted_x_offset=(target_center-(center_x-cell_size.x*.5)*sprite.pixel_size)*(-1.0 if sprite.flip_h else 1.0)
+  var region: Array=frame_registration.region
+  var center_x: float=float(region[0])+float(region[2])*.5
+  var target_center: float=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_center_offset)/float(registration.reference_body_height)
+  painted_x_offset=(target_center-(center_x-cell_size.x*.5)*sprite.pixel_size)*(-1.0 if sprite.flip_h else 1.0)
  sprite.position=Vector3.UP*hover
  displayed_bounds=frame_bounds[sprite.frame]
- sprite.offset=Vector2(0,float(displayed_bounds.end.y)-cell_size.y*.5)
+ var ground:=float(data.ground) if data.get("fixed_geometry",false) else float(displayed_bounds.end.y)
+ sprite.offset=Vector2(0,ground-cell_size.y*.5)
  skin_mesh.visible=false;body_pose={}
  painted_material.set_shader_parameter("rig_active",false)
  painted_material.set_shader_parameter("gait_mode",0)
@@ -384,6 +396,10 @@ func walk_frame(stride: float, direction: Vector2) -> int:
  return row*8+posmod(int(stride*8),8)
 
 func _stride_length() -> float:
+ var mode:="run" if running and run_blend>=.5 else "walk"
+ if painted_cycles.has(mode) and painted_cycles[mode].get("fixed_geometry",false):
+  var data: Dictionary=painted_cycles[mode]
+  return float(data.cycle_distance_pixels)*base_pixel_size*109.0*Catalog.relative_height(species)/float(data.reference_height)
  if body_rigs.has(species):return lerpf(1.75,2.15,run_blend)
  if step_rigs.has(species) and is_instance_valid(sprite):
   var amplitude: float=float(step_rigs[species].half_stride)
