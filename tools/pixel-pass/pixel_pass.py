@@ -33,7 +33,11 @@ def downscale(rgba, w, h):
     col = pm / np.maximum(aa[..., None], 1e-4)
     blur = cv2.GaussianBlur(col, (0, 0), 0.8)
     col = np.clip(col + 0.5 * (col - blur), 0, 1)
-    return (col * 255).astype(np.uint8), aa > 0.5
+    # Duenne Spitzen (Ohren, Fluegel, Blaetter) erhalten: ein Pixel zaehlt, sobald
+    # gut ein Fuenftel seiner Flaeche deckend gemalt ist. So bleibt die Kontur so weit
+    # wie im Original (Silhouetten-/Spiegelpruefung motion_regions).
+    cover = cv2.resize((rgba[..., 3] > 40).astype(np.float32), (w, h), interpolation=cv2.INTER_AREA)
+    return (col * 255).astype(np.uint8), cover > 0.2
 
 
 def clean(idx, cen):

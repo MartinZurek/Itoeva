@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "canonical": "path+NUL+sha256+LF; sorted by path",
- "sha256": "15bddc043cfe8b3f96c245fdf48f963aaf962ad1c65e4ee4061f97216cb22337",
+ "sha256": "09c2a83a755064e7cdd39bd6f328362c90972b0ab3da16501630d7f1a724af4b",
  "files": [
   {
    "path": "assets/audio/attack.wav",
@@ -1280,8 +1280,8 @@
   },
   {
    "path": "assets/characters/pixel/mosslyn-run-28.png",
-   "bytes": 114777,
-   "sha256": "efb9b998e3a9a11df4acf14f8f2fcef23fc11f68772aab496d1ed9cd92c72f59"
+   "bytes": 120202,
+   "sha256": "726fdee59cc0fc8a28ca4e40326bb95df3b144eba88f014b245eaeba2b05b940"
   },
   {
    "path": "assets/characters/pixel/mosslyn-run-28.png.import",
@@ -1290,8 +1290,8 @@
   },
   {
    "path": "assets/characters/pixel/mosslyn-run.png",
-   "bytes": 102319,
-   "sha256": "b23d56f0fb64d59b7b56facd5dabbeb4f377b3810b8bb2f0aa6e9897bfd576e8"
+   "bytes": 106593,
+   "sha256": "333c002ee173cda509a1a34c6e6b36d87327c7448b432f0cea47e45dbd0bf52d"
   },
   {
    "path": "assets/characters/pixel/mosslyn-run.png.import",
@@ -1300,8 +1300,8 @@
   },
   {
    "path": "assets/characters/pixel/mosslyn-walk-28.png",
-   "bytes": 106705,
-   "sha256": "47d9e24d4e384b2d7eabeb36a8f293dd2e25c6326497bd10aece45386fcf38e4"
+   "bytes": 112460,
+   "sha256": "52761327488124cbbf6c54373824a8deb5b5cadb5dba64cfeeb78de60ac1e1cb"
   },
   {
    "path": "assets/characters/pixel/mosslyn-walk-28.png.import",
@@ -1310,8 +1310,8 @@
   },
   {
    "path": "assets/characters/pixel/mosslyn-walk.png",
-   "bytes": 93781,
-   "sha256": "8c7ad460095e60c2263abc191e87411eddb45ebdf50df764b6fc4b6386159c1f"
+   "bytes": 97679,
+   "sha256": "75367f83f56f6b93e1e44fae9cd9917808707fbe61127e0ed5db3799c59ed1b3"
   },
   {
    "path": "assets/characters/pixel/mosslyn-walk.png.import",
@@ -1320,8 +1320,8 @@
   },
   {
    "path": "assets/characters/pixel/mosslyn.png",
-   "bytes": 186290,
-   "sha256": "8b46e2a46c2c32213b0b3e9306806652e17e923433586c10e9ae8e1871791b2d"
+   "bytes": 197305,
+   "sha256": "ca6a14d02277828d848f522a7dd3e22dc3cf03825f21cc5cd6f43ada1b1d4eaa"
   },
   {
    "path": "assets/characters/pixel/mosslyn.png.import",
@@ -1330,8 +1330,8 @@
   },
   {
    "path": "assets/characters/pixel/nocti-flight.png",
-   "bytes": 94777,
-   "sha256": "2673b3f895222fa0afc55b2ee5b2ea94e4119adcc207438bb8e37b338528b7ab"
+   "bytes": 98771,
+   "sha256": "9bff7c192b52b1f9b6d98c854a1e46a573d4fdeec4fb486abfc5db3ec6718b04"
   },
   {
    "path": "assets/characters/pixel/nocti-flight.png.import",
@@ -1340,8 +1340,8 @@
   },
   {
    "path": "assets/characters/pixel/nocti-walk.png",
-   "bytes": 79133,
-   "sha256": "c07050bb03a2c1d8696d6e7332de60d1956e5d834b0eabe07b1ea6eb7c4b5924"
+   "bytes": 82785,
+   "sha256": "67ef0f62c92e2e6e8177084ac4d1b286663e6c84f4f5cb62aed0e393f9bc2708"
   },
   {
    "path": "assets/characters/pixel/nocti-walk.png.import",
@@ -1350,8 +1350,8 @@
   },
   {
    "path": "assets/characters/pixel/nocti.png",
-   "bytes": 165849,
-   "sha256": "310ad7fe2baef9ee64cd5b5f02d026faded1e4461bf9029c58151677d19663b6"
+   "bytes": 174866,
+   "sha256": "d83ab169836f7b5ca74007c66189b2be9e2a53f6d0d895fcc2c443c38f4a6fec"
   },
   {
    "path": "assets/characters/pixel/nocti.png.import",
@@ -1360,8 +1360,8 @@
   },
   {
    "path": "assets/characters/pixel/starlet-v2.png",
-   "bytes": 193761,
-   "sha256": "c206f83e34833b63b850a8f274ba8d5a86a880a80728e54e34640530a0397622"
+   "bytes": 207660,
+   "sha256": "903254e65d02d067e67fe5038e58a914329995e4e1adf23f59a9bdb615175b2b"
   },
   {
    "path": "assets/characters/pixel/starlet-v2.png.import",
@@ -1370,8 +1370,8 @@
   },
   {
    "path": "assets/characters/pixel/starlet-walk.png",
-   "bytes": 81641,
-   "sha256": "a930f367a336420620fc102f444c4a2676c4cb8198bcbbd9985a7bc68f36ed8d"
+   "bytes": 86471,
+   "sha256": "86390414ed26752f9876f73a364f017d9754e58dac7b4818451dfbdb62226c30"
   },
   {
    "path": "assets/characters/pixel/starlet-walk.png.import",
@@ -1380,8 +1380,8 @@
   },
   {
    "path": "assets/characters/pixel/starlet.png",
-   "bytes": 517798,
-   "sha256": "2cbdd722ad8742827ec64a96a60d6971eadedb33dfdd3f1cfca59d74b30829e0"
+   "bytes": 529008,
+   "sha256": "a94e019e89e76c5eeea1a679733b567686376d3a767a0912cdd003a294bb1630"
   },
   {
    "path": "assets/characters/pixel/starlet.png.import",
@@ -1390,8 +1390,8 @@
   },
   {
    "path": "assets/characters/pixel/wyrmling-v2.png",
-   "bytes": 319190,
-   "sha256": "69fd937e34c299d470ba363ce867d49b012ab5bba706f6bad0702a3362b8fa5e"
+   "bytes": 338020,
+   "sha256": "da7467efcce7fa9d923ca42e019c3186eda51c064c7092877a39f1358bc6fc8c"
   },
   {
    "path": "assets/characters/pixel/wyrmling-v2.png.import",
@@ -1400,8 +1400,8 @@
   },
   {
    "path": "assets/characters/pixel/wyrmling-walk.png",
-   "bytes": 134764,
-   "sha256": "23b7012f7d0a39789314c2081fc4c0889cdd4232ef3397f89543c4bc29dce854"
+   "bytes": 138855,
+   "sha256": "494c6225a2d7659d334ee6d4ed37274888e0fe95a16af667ff6e13d9f60131e9"
   },
   {
    "path": "assets/characters/pixel/wyrmling-walk.png.import",
@@ -1410,8 +1410,8 @@
   },
   {
    "path": "assets/characters/pixel/wyrmling.png",
-   "bytes": 821485,
-   "sha256": "7f41e9ab26e2fa2d51f6e640aa443eea8a7084e054c9be1b49e47701cc6686e9"
+   "bytes": 843826,
+   "sha256": "28305e4af5e84036c7689bab45917d4176aa7401ef86ffa92c5925c39304071c"
   },
   {
    "path": "assets/characters/pixel/wyrmling.png.import",
