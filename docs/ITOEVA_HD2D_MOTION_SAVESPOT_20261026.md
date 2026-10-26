@@ -1,5 +1,22 @@
 # Itoeva – HD-2D-Bewegungen, Savespot M3 (M1/M2 erhalten, 26.10.2026)
 
+## APK-Auftrag nach M3-Vorschau (27.10.2026)
+
+Martin hat nach Lieferung von Pixelbogen und echter Testanimation ausdrücklich
+„Bitte APK bauen“ beauftragt. Testbau 0.15.7 / Code 37 auf demselben Branch;
+bestehendes AndroidTest-Paket, bestehender Signierschlüssel und Drive-Lieferweg.
+Exportmerkmal `itoeva_motion_m3` aktiviert M3 auch ohne Desktop-Umgebungsvariable.
+Das Standardpreset Android bleibt unverändert. Keine neue Kunstabnahme:
+Gehkontaktfehler, vollständige Druckpunktprüfung, Wenden und Tiefenansichten
+bleiben offen. Keine Spieltempoänderung, keine anderen Figuren umgestellt.
+
+608 Quelldateien in `docs/godot-v0157-runtime-manifest.json` werden vor Import
+bytegenau geprüft. Der Build prüft zusätzlich die M3-Metadaten, alle vier
+Pixelatlanten und das Aktivierungsmerkmal in der tatsächlich exportierten APK.
+Workflow ausschließlich für den Lieferbranch aktiviert; Tests, Signatur,
+Paketversion und Drive-Prüfsumme müssen erfolgreich sein, bevor geliefert wird.
+Build-Ergebnis bei diesem Vorbereitungsschritt noch ausstehend.
+
 ## Aktuell M3: Vierbeiner-Galopp und Gangwechsel
 
 Fortsetzung auf `codex/hd2d-motion-phases-20261026`, PR #385, ab dem gesicherten

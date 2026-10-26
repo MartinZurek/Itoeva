@@ -52,8 +52,8 @@ func _pose_mask() -> Dictionary:
 func _ready() -> void:
  if species=="mosslyn":
   painted_cycles=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_painted_cycles.json"))
-  # Ungeprüfte Zeichnungen ausschließlich in der expliziten Weltvorschau zeigen.
-  if OS.get_environment("MOTION_DRAFT")=="1":
+  # M3 nur in der expliziten Vorschau oder Martins freigegebener Test-APK zeigen.
+  if OS.get_environment("MOTION_DRAFT")=="1" or OS.has_feature("itoeva_motion_m3"):
    var drafts: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_authored_cycles.json"))
    for mode in drafts:painted_cycles[mode]=drafts[mode]
   for mode in painted_cycles:
