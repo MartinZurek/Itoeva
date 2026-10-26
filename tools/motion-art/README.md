@@ -70,3 +70,26 @@ Bildquelle: eingebautes Imagegen, verbindliche Moosling-Bildvorlage plus explizi
 Gangphasen und für das Gehen eine Poseführung. Keine 3D-Modelle. Die beiden
 verwendeten gemalten Quellen stehen unverändert in `sources/`, die normalisierten
 Atlanten in `prototypes/godot-hd2d/assets/characters/`.
+
+## Offene Taktentscheidung vor der nächsten Bewegungskorrektur
+
+`python3 tools/motion-art/measure_walk_contacts.py` misst den sichtbaren
+Sohlenumriss im gemalten Original. Ergebnis in `contact-estimate.json` neben
+dem Video: Nahbeinstand 91px, Fernbeinstand101px, zusammen etwa192px pro
+Zyklus statt der bislang angenommenen285px. Im Außenmaßstab sind das etwa
+1,488 statt2,208Welteinheiten. Sohlenmitten sind nur eine Näherung für echte
+Druckpunkte; die Differenz ist dennoch deutlich. Der letzte Phasenwechsel hat
+gar keinen erkennbaren Standpfotenrückweg, andere Intervalle16–44px.
+
+Bei unverändert2,35Welt/s erfordert die geschätzte gezeichnete Strecke etwa
+1,58Gehzyklen/s statt des aktuellen Entwurfstakts1,06Hz. Gemäß Martins
+Auftrag vor der Umstellung entscheiden lassen:
+
+1. Höheren Geh-Takt verwenden (ca.1,58Hz), Kontaktphasen entsprechend gewichten
+   und die fehlerhafte Abschlussphase nachzeichnen.
+2. Den ruhigeren Takt erhalten und die gezeichnete Schrittlänge um etwa48Prozent
+   vergrößern; anschließend Kontaktphasen und Gegenbein erneut prüfen.
+
+Spieltempo nicht pauschal senken. Der bisherige Entwurf bleibt ausschließlich
+in MOTION_DRAFT=1 sichtbar; keine vorweggenommene Taktentscheidung. Die Front-
+und Rückansicht sowie weitere Wesen hängen am noch zu bestätigenden Maßstab.
