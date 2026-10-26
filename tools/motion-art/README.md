@@ -71,7 +71,7 @@ Gangphasen und für das Gehen eine Poseführung. Keine 3D-Modelle. Die beiden
 verwendeten gemalten Quellen stehen unverändert in `sources/`, die normalisierten
 Atlanten in `prototypes/godot-hd2d/assets/characters/`.
 
-## Offene Taktentscheidung vor der nächsten Bewegungskorrektur
+## Kontaktmessung und inzwischen bestätigte Taktentscheidung
 
 `python3 tools/motion-art/measure_walk_contacts.py` misst den sichtbaren
 Sohlenumriss im gemalten Original. Ergebnis in `contact-estimate.json` neben
@@ -82,14 +82,18 @@ Druckpunkte; die Differenz ist dennoch deutlich. Der letzte Phasenwechsel hat
 gar keinen erkennbaren Standpfotenrückweg, andere Intervalle16–44px.
 
 Bei unverändert2,35Welt/s erfordert die geschätzte gezeichnete Strecke etwa
-1,58Gehzyklen/s statt des aktuellen Entwurfstakts1,06Hz. Gemäß Martins
-Auftrag vor der Umstellung entscheiden lassen:
+1,58Gehzyklen/s statt des aktuellen Entwurfstakts1,06Hz. Die folgenden beiden
+Möglichkeiten wurden Martin vorgelegt:
 
 1. Höheren Geh-Takt verwenden (ca.1,58Hz), Kontaktphasen entsprechend gewichten
    und die fehlerhafte Abschlussphase nachzeichnen.
 2. Den ruhigeren Takt erhalten und die gezeichnete Schrittlänge um etwa48Prozent
    vergrößern; anschließend Kontaktphasen und Gegenbein erneut prüfen.
 
-Spieltempo nicht pauschal senken. Der bisherige Entwurf bleibt ausschließlich
-in MOTION_DRAFT=1 sichtbar; keine vorweggenommene Taktentscheidung. Die Front-
-und Rückansicht sowie weitere Wesen hängen am noch zu bestätigenden Maßstab.
+**Martin hat Möglichkeit2 bestätigt:** ruhigen Geh-Takt erhalten und die
+gezeichneten Schritte verlängern. Hüfte, Abrollen und Abstoß mitzeichnen statt
+Beine nur zu spreizen oder Bilder zu dehnen. Etwa48Prozent ist eine vorläufige
+Messgröße, keine starre Anatomievorgabe. Spieltempo nicht pauschal senken.
+Nicht erneut nach dieser Entscheidung fragen. Der Entwurf bleibt bis zur
+Korrektur nur in MOTION_DRAFT=1 sichtbar. Vollständige Übergabe:
+`docs/ITOEVA_HD2D_MOTION_SAVESPOT_20261026.md` (SavespotM1).
