@@ -49,6 +49,14 @@ var glow_energy := 0.0
 var aura: MeshInstance3D
 var aura_material: ShaderMaterial
 
+# HD-2D-Pixelfassung: gleiche Atlasgeometrie, nur die Farbpixel kommen aus
+# assets/characters/pixel/. Raster, Konturen, Anker und Masken bleiben am Original.
+static func pixel_art(texture: Texture2D) -> Texture2D:
+	if texture == null or texture.resource_path == "":
+		return texture
+	var pixel_path := texture.resource_path.replace("/characters/", "/characters/pixel/")
+	return load(pixel_path) if ResourceLoader.exists(pixel_path) else texture
+
 func mount_seat(anchor: Vector3, exit_position: Vector3) -> void:
 	seat_exit = exit_position
 	position = anchor
@@ -106,7 +114,7 @@ func _ready() -> void:
 	# Gezeichnete Vordergruende schneiden nur ueber die gemeinsame Tiefenmaske aus.
 	painted_material.render_priority = 10
 	painted_material.shader = load("res://shaders/painted_character.gdshader")
-	painted_material.set_shader_parameter("atlas", sprite.texture)
+	painted_material.set_shader_parameter("atlas", pixel_art(sprite.texture))
 	sprite.material_override = painted_material
 	sprite.offset = Vector2(0, 62)
 	add_child(sprite)

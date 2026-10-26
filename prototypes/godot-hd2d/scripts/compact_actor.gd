@@ -94,7 +94,7 @@ func _ready() -> void:
  sprite.extra_cull_margin=2.0
  painted_material=ShaderMaterial.new();painted_material.render_priority=10
  painted_material.shader=load("res://shaders/painted_character.gdshader")
- painted_material.set_shader_parameter("atlas",sprite.texture);sprite.material_override=painted_material
+ painted_material.set_shader_parameter("atlas",pixel_art(sprite.texture));sprite.material_override=painted_material
  sprite.offset=Vector2(0,cell_size.y*.5-2);add_child(sprite)
  skin_mesh=MeshInstance3D.new();skin_mesh.name="ArticulatedPaintedBody"
  skin_mesh.material_override=painted_material
@@ -323,7 +323,7 @@ func _use_motion_sheet(sprint: bool, walk: bool) -> void:
  sprite.hframes=8;sprite.vframes=3 if sprint or walk else 6
  cell_size=Vector2i(sprite.texture.get_width()/8,sprite.texture.get_height()/sprite.vframes)
  frame_bounds.assign(run_bounds if sprint else walk_bounds if walk else world_bounds)
- painted_material.set_shader_parameter("atlas",sprite.texture)
+ painted_material.set_shader_parameter("atlas",pixel_art(sprite.texture))
 
 func _use_painted_cycle(mode: String) -> void:
  var data: Dictionary=painted_cycles[mode]
@@ -334,7 +334,7 @@ func _use_painted_cycle(mode: String) -> void:
   cell_size=Vector2i(int(data.cell),int(data.cell))
   frame_bounds.clear()
   for b in data.bounds:frame_bounds.append(Rect2i(b[0],b[1],b[2],b[3]))
-  painted_material.set_shader_parameter("atlas",sprite.texture)
+  painted_material.set_shader_parameter("atlas",pixel_art(sprite.texture))
  painted_cycle_active=true;painted_cycle_mode=mode
  walk_sheet=mode=="walk";run_sheet=mode=="run"
  # Nur den gemalten Bogen verlangsamen. gait folgt weiter der wirklich

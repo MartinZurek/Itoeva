@@ -1,6 +1,7 @@
 """HD-2D-Pixelpass fuer die gemalten Figuren-Atlanten (Octopath/FF-Resonance-Stil).
 
-Jede Atlasdatei bleibt in Groesse und Raster unveraendert: Die Figur wird auf eine
+Die gemalten Originale bleiben unveraendert; die Pixelfassung entsteht in
+<ordner>/pixel/ mit gleicher Groesse und gleichem Raster: Die Figur wird auf eine
 feste Pixeldichte verkleinert, auf eine gemeinsame Palette je Figur reduziert,
 von Einzelpixeln bereinigt, mit einer selektiven dunklen Kontur versehen und
 anschliessend blockweise (naechster Nachbar) auf die Originalgroesse gebracht.
@@ -85,7 +86,9 @@ def process_species(folder, sp, art_height, report):
         img[edge, :3] = (img[edge, :3].astype(float) * 0.45).astype(np.uint8)
         H, W = rgba.shape[:2]
         big = np.array(Image.fromarray(img).resize((W, H), Image.NEAREST))
-        Image.fromarray(big).save(f, optimize=True)
+        out = os.path.join(os.path.dirname(f), 'pixel', os.path.basename(f))
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        Image.fromarray(big).save(out, optimize=True)
         report[os.path.basename(f)] = {'scale': round(s, 4), 'art_size': list(img.shape[1::-1])}
 
 
@@ -99,4 +102,4 @@ if __name__ == '__main__':
     for sp in args.species:
         process_species(args.folder, sp, args.art_height, report['files'])
         print('ok', sp)
-    json.dump(report, open(os.path.join(args.folder, 'pixel_pass.json'), 'w'), indent=1)
+    json.dump(report, open(os.path.join(args.folder, 'pixel', 'pixel_pass.json'), 'w'), indent=1)
