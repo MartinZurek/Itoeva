@@ -2,7 +2,7 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, depth_test_disabled, depth_draw_never;
 #include "res://shaders/firelight.gdshaderinc"
 
-uniform sampler2D atlas : source_color, filter_linear, repeat_disable;
+uniform sampler2D atlas : source_color, filter_nearest, repeat_disable;
 uniform vec4 frame_clip = vec4(0.0, 0.0, 1.0, 1.0);
 uniform bool has_pose_region = false;
 uniform vec4 pose_cell;

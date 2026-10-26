@@ -1,0 +1,104 @@
+{
+ "art_height_mosslyn": 56.0,
+ "palette_colors": 44,
+ "files": {
+  "mosslyn-run-28.png": {
+   "scale": 0.2467,
+   "art_size": [
+    409,
+    234
+   ]
+  },
+  "mosslyn-run.png": {
+   "scale": 0.2383,
+   "art_size": [
+    488,
+    183
+   ]
+  },
+  "mosslyn-walk-28.png": {
+   "scale": 0.2456,
+   "art_size": [
+    407,
+    233
+   ]
+  },
+  "mosslyn-walk.png": {
+   "scale": 0.2373,
+   "art_size": [
+    486,
+    182
+   ]
+  },
+  "mosslyn.png": {
+   "scale": 0.3294,
+   "art_size": [
+    477,
+    358
+   ]
+  },
+  "nocti-flight.png": {
+   "scale": 0.249,
+   "art_size": [
+    510,
+    191
+   ]
+  },
+  "nocti-walk.png": {
+   "scale": 0.1948,
+   "art_size": [
+    399,
+    150
+   ]
+  },
+  "nocti.png": {
+   "scale": 0.2928,
+   "art_size": [
+    424,
+    318
+   ]
+  },
+  "starlet-v2.png": {
+   "scale": 0.366,
+   "art_size": [
+    530,
+    397
+   ]
+  },
+  "starlet-walk.png": {
+   "scale": 0.2508,
+   "art_size": [
+    514,
+    193
+   ]
+  },
+  "starlet.png": {
+   "scale": 0.61,
+   "art_size": [
+    937,
+    1171
+   ]
+  },
+  "wyrmling-v2.png": {
+   "scale": 0.484,
+   "art_size": [
+    701,
+    526
+   ]
+  },
+  "wyrmling-walk.png": {
+   "scale": 0.3316,
+   "art_size": [
+    679,
+    255
+   ]
+  },
+  "wyrmling.png": {
+   "scale": 0.7101,
+   "art_size": [
+    1091,
+    1363
+   ]
+  }
+ }
+}

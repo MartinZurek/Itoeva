@@ -98,7 +98,7 @@ func _ready() -> void:
 	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 	sprite.alpha_scissor_threshold = 0.12
-	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	sprite.shaded = false
 	sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	painted_material = ShaderMaterial.new()
