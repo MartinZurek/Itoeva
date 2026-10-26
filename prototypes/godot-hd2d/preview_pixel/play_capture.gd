@@ -31,6 +31,11 @@ func run() -> void:
 	# Ablauf: (Sekunden, Stick-Vektor)
 	var plan := [[0.6, Vector2.ZERO], [3.0, Vector2(0.70, 0)], [2.6, Vector2(1.0, 0)], [0.5, Vector2.ZERO],
 		[2.2, Vector2(-0.70, 0)], [0.5, Vector2.ZERO], [1.4, Vector2(0, -0.70)], [1.4, Vector2(0, 0.70)], [0.8, Vector2.ZERO]]
+	# Gehen separat beurteilen, damit ein unveränderter Sprint den Eindruck
+	# der gerade nachgezeichneten Standphasen nicht überlagert.
+	if env("WALK_ONLY", "0") == "1":
+		plan = [[0.4, Vector2.ZERO], [3.0, Vector2(0.70, 0)], [0.4, Vector2.ZERO],
+			[3.0, Vector2(-0.70, 0)], [0.4, Vector2.ZERO]]
 	# Für volle Tiefenschritte einen breiten echten Innenraum verwenden. Auf dem
 	# schmalen Außenweg beenden die korrekten Kollisionen die Bewegung vorzeitig.
 	if env("DEPTH_ONLY", "0") == "1":

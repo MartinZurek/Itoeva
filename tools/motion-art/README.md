@@ -14,7 +14,7 @@ freigegebenen Moosling-Vorlage. `mosslyn-gallop-8.json` hält die gemessenen
 Gesichtsregionen und die vorläufig annotierten Flugabstände fest.
 
 ```bash
-python3 tools/motion-art/prepare_cycle.py tools/motion-art/mosslyn-gallop-8.json tools/motion-art/mosslyn-walk-8.json
+python3 tools/motion-art/prepare_cycle.py tools/motion-art/mosslyn-gallop-8.json tools/motion-art/mosslyn-walk-m2.json
 python3 tools/pixel-pass/pixel_pass.py prototypes/godot-hd2d/assets/characters --species mosslyn
 python3 -m unittest discover -s prototypes/godot-hd2d/tests -p test_authored_cycles.py
 ```
@@ -97,3 +97,54 @@ Messgröße, keine starre Anatomievorgabe. Spieltempo nicht pauschal senken.
 Nicht erneut nach dieser Entscheidung fragen. Der Entwurf bleibt bis zur
 Korrektur nur in MOTION_DRAFT=1 sichtbar. Vollständige Übergabe:
 `docs/ITOEVA_HD2D_MOTION_SAVESPOT_20261026.md` (SavespotM1).
+
+## Fortsetzung M2: Beinwechsel nachgezeichnet, Kontaktprüfung offen
+
+`mosslyn-walk-m2.json` und `sources/mosslyn-walk-m2.png` sind der aktuelle
+Geh-Prüfentwurf. Der M1-Bogen bleibt unverändert erhalten; nur MOTION_DRAFT=1
+verwendet den M2-Gehbogen. Der Galopp wurde nicht verändert.
+
+Bildweg: eingebautes Imagegen mit freigegebener 2D-Vorlage und separater
+Poseführung; zwei gezielte Bildkorrekturen (Schattenfell/Abstoß, hintere Pfote).
+Die letzte Generierung ist unverändert als Quelle gespeichert. Prompts und
+Poseführung liegen daneben. Danach Registrierung der ganzen Zeichnungen und
+Pixelpass; keine Gliedmaßenverformung. Zwei falsche automatische Kopf-Treffer
+wurden durch manuelle Annotation gleicher Gesichtsmerkmale ersetzt.
+
+```bash
+python3 tools/motion-art/measure_annotated_contacts.py tools/motion-art/mosslyn-walk-m2.json
+python3 -m unittest discover -s tools/motion-art -p test_annotated_contacts.py
+```
+
+Die Rechtecke `frames[].feet` benennen Nah- und Fernpfote im normalisierten
+gemalten Original, nicht in der Pixelfassung. Die Messung prüft die unterste
+Alphakontur pro benannter Pfote. Über drei Pixel Bodenabstand gelten nicht als
+Kontakt. Ein fehlender Kontakt wird **nicht** durch das Gegenbein ersetzt.
+`measure_walk_contacts.py` ist nur noch die historische M1-Messung und weist
+einen anderen Atlas ausdrücklich zurück.
+
+Offen: Nahpfote in Phase 5 noch fünf Pixel über dem Boden; damit fehlt ein
+gesicherter Kontaktabschnitt (Phase 4→5). Sieben beobachtbare Abschnitte ergeben
+zusammen 203,5px, der ungeprüfte Sohlenweg des achten wäre 29,5px. Auch deren
+Summe 233px wäre nur rund 21% länger als die alte 192px-Schätzung und noch
+unter der für den ruhigen Takt angesetzten Strecke 285px. Das ist ausdrücklich
+kein vollständiger Kontakt- oder Schlupfnachweis. Die beobachtbaren Wege liegen
+zwischen 6,5 und 50px pro Phase. Phasendauern deshalb noch nicht scheinpräzise
+aus dem lückenhaften Kontaktweg abgeleitet; der Takt bleibt unverändert.
+
+Unter `docs/validation/motion-m2-20261026/` liegen Pixelbogen, 7,2s echte
+Spielaufnahme sowie Kontakt- und Aufnahmebericht. Aufnahme mit `WALK_ONLY=1`
+zusätzlich zu `MOTION_DRAFT=1`; alle acht Phasen rechts/links erreicht.
+Gemessen 2,3543Welt/s und ca.1,066Hz; gleicher Pixelmaßstab über die Folge,
+Bildhaltezeiten bei 30fps überwiegend 0,100/0,133s. 244 Godot-Entwurfschecks,
+1276 bestehende Mooslyn-Checks unter OpenGL sowie sechs Python-Checks grün.
+Die eigentliche Weltaufnahme meldet weiterhin die bereits bekannten Lecks
+beim Beenden. Ein frischer vollständiger Editor-Import stürzte in dieser
+Umgebung im Vulkan-Initialisierungspfad ab; die zwei neuen Atlanten wurden
+separat importiert, die echte Aufnahme und Renderprüfung liefen mit OpenGL.
+
+Nächster Schritt bleibt Mooslyns **Gehen**: Kontaktwechsel zu Phase 5 auf dem
+Boden zeichnen, vollständigen Standweg und Abrollen weiter ausarbeiten, dann
+erst belastbare Phasendauern ableiten und wieder aufnehmen. Galopp,
+Verbindungsphasen, Wenden und Tiefenansichten sind weiterhin offen. Kein
+Weiterreichen dieses ungeprüften Maßstabs an andere Figuren und keine APK.

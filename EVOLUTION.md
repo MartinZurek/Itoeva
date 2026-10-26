@@ -7573,3 +7573,27 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UEBERGABE:**tools/motion-art/README.md. Nächster Schritt: Kontaktpfoten
   vollständig annotieren, Schrittstrecke/Phasendauern prüfen und Gegenbein
   nachbessern; dann erst Front/Rücken und Übergänge.
+
+### 2026-10-26 – Mooslyn M2: gemalter Beinwechsel und benannte Kontaktpfoten
+
+- **CHANGE:**Acht seitliche Gehphasen nachgezeichnet, Poseführung und gezielte
+  Bildkorrekturen per eingebautem Imagegen. Beide Beinhälften und Gegenarme
+  deutlicher unterscheidbar. Neue Quelle, Registrierung, Pixelpass und Masken;
+  M1 bleibt erhalten. Nur MOTION_DRAFT=1 zeigt M2; Galopp unverändert.
+- **FACT:**Neue Messung ordnet Pfoten anatomisch zu und ersetzt schwebende
+  Pfoten nicht durch das Gegenbein. Nahpfote Phase5 noch5px über Boden;
+  sieben messbare Abschnitte zusammen203,5px, Wege6,5–50px. Einschließlich des
+  ungeprüften achten Wegs wären es233px statt285px. Keine Schlupffreiheit.
+- **TESTED BEHAVIOR:**244 Godot-Entwurfschecks,1276 bestehende Mooslyn-Checks
+  unter OpenGL, sechs Python-Checks grün. Echte216-Bilder-Aufnahme (7,2s),
+  alle acht Phasen rechts/links, konstanter Maßstab. Tempo ca.2,3543Welt/s,
+  Takt1,066Hz; beides unverändert. Phasenhaltezeiten überwiegend0,100/0,133s.
+- **UNVERIFIED:**Vollständiger Kontaktwechsel und Druckpunkte, gleichmäßige
+  Standpfotengeschwindigkeit, ausreichende Schrittlänge. Phasendauern noch nicht
+  aus unvollständigen Kontakten abgeleitet. Galopp, Übergänge, Wenden,
+  Tiefenansichten und weitere Figuren offen. Bekannte Lecks beim Beenden der
+  Weltaufnahme bestehen. Vollimport im Editor stürzte hier im Vulkan-Pfad ab;
+  isolierter Atlasimport und echte OpenGL-Aufnahme erfolgreich. Keine APK.
+- **UEBERGABE:**tools/motion-art/README.md und M2-Nachtrag im Savespot.
+  Nächster Schnitt bleibt Gehen: Kontaktwechsel schließen, Standweg verlängern,
+  dann erst Phasendauern koppeln. Keine neue Richtungsentscheidung nötig.

@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "canonical": "path+NUL+sha256+LF; sorted by path",
- "sha256": "10caf4c3626e9ea5090656d62a0823ad073d06cf8da69882ae225f750846e2c8",
+ "sha256": "523eeab02cbe691de4db2475f1e79687c19107d72ebb95c365e99886baab063f",
  "files": [
   {
    "path": "assets/audio/attack.wav",
@@ -1104,6 +1104,16 @@
    "sha256": "3cdcbf4059e40c352bfa520d33202281c93649843f5a1302efa9f4a0afa054ba"
   },
   {
+   "path": "assets/characters/mosslyn-walk-m2.png",
+   "bytes": 411319,
+   "sha256": "10cd8e5580cf7b4e8917672d3b86c900536ced09f7199aa8745754361e53496c"
+  },
+  {
+   "path": "assets/characters/mosslyn-walk-m2.png.import",
+   "bytes": 967,
+   "sha256": "4229fcb41b680c9accde54353bd3f3900bfe4cd52b7678516c5580be2f2e9b5b"
+  },
+  {
    "path": "assets/characters/mosslyn-walk.png",
    "bytes": 2537877,
    "sha256": "c7e258d2f8c248aa60d85ee09fa6813a1de38ba4a80e7d0307f484b6a4fe46d8"
@@ -1202,6 +1212,16 @@
    "path": "assets/characters/pixel/mosslyn-walk-8.png.import",
    "bytes": 969,
    "sha256": "e45e2299d4166d436972f9a3ba252c377fecda7e6381619136236aaa026e5e8c"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-walk-m2.png",
+   "bytes": 34127,
+   "sha256": "f676d4f412efa5bab9d05a9c70c109dc238460d0492cf03ff107ce2b7e658a8b"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-walk-m2.png.import",
+   "bytes": 973,
+   "sha256": "c41d1cf9374ff11a3533f85a97a2f1b7f47b4ca1e67d2021d1d1e6806d8991d8"
   },
   {
    "path": "assets/characters/pixel/mosslyn-walk.png",
@@ -2240,8 +2260,8 @@
   },
   {
    "path": "data/mosslyn_authored_cycles.json",
-   "bytes": 25706,
-   "sha256": "92e47ed09168bd078b0d0a0b925402073001d374ca82076b31270c5e978e3932"
+   "bytes": 25693,
+   "sha256": "577ca846a9fa0e7b11f918a3800101aa777fb20cd8bb01711aaf2b0f66335190"
   },
   {
    "path": "data/mosslyn_painted_cycles.json",
@@ -2315,8 +2335,8 @@
   },
   {
    "path": "preview_pixel/play_capture.gd",
-   "bytes": 2744,
-   "sha256": "13c0c23f8f2dc12b4582059805a2d2cab5d964fe21e5efc50fa39b49b91e97ef"
+   "bytes": 3041,
+   "sha256": "6c4c5c74a07eb0e4ff18f4c37a5778c149a9be2dff07392ad4d2f49d831668ca"
   },
   {
    "path": "project.godot",

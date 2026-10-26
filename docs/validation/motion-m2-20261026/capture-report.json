@@ -1,0 +1,321 @@
+{
+  "source": "preview_pixel/play_capture.gd",
+  "fps": 30,
+  "frame_count": 216,
+  "seconds": 7.2,
+  "draft": "1",
+  "segments": [
+    {
+      "direction": "right",
+      "moving_frames": 87,
+      "mean_speed_world_per_second": 2.354283826104522,
+      "pixel_size_range": [
+        0.00774881616234779,
+        0.00774881616234779
+      ],
+      "stride_world_range": [
+        2.20841256629834,
+        2.20841256629834
+      ],
+      "seen_phases": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "mean_cycles_per_second": 1.0660525401966376,
+      "phase_hold_runs": [
+        {
+          "phase": 0,
+          "seconds": 0.03333333333333333,
+          "frames": 1
+        },
+        {
+          "phase": 1,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 2,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 3,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 4,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 5,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 6,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 7,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 0,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 1,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 2,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 3,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 4,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 5,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 6,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 7,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 0,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 1,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 2,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 3,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 4,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 5,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 6,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 7,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 0,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 1,
+          "seconds": 0.03333333333333333,
+          "frames": 1
+        }
+      ]
+    },
+    {
+      "direction": "left",
+      "moving_frames": 87,
+      "mean_speed_world_per_second": 2.3542785644531206,
+      "pixel_size_range": [
+        0.00774881616234779,
+        0.00774881616234779
+      ],
+      "stride_world_range": [
+        2.20841256629834,
+        2.20841256629834
+      ],
+      "seen_phases": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "mean_cycles_per_second": 1.0660501576475245,
+      "phase_hold_runs": [
+        {
+          "phase": 2,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 3,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 4,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 5,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 6,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 7,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 0,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 1,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 2,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 3,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 4,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 5,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 6,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 7,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 0,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 1,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 2,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 3,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 4,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 5,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 6,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 7,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 0,
+          "seconds": 0.13333333333333333,
+          "frames": 4
+        },
+        {
+          "phase": 1,
+          "seconds": 0.1,
+          "frames": 3
+        },
+        {
+          "phase": 2,
+          "seconds": 0.1,
+          "frames": 3
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Keine Messung echter Druckpunkte oder schlupffreier Pfoten.",
+    "M2 bleibt Entwurf mit ungleichen Standpfotenwegen und angehobener hinterer Pfote beim Kontaktwechsel.",
+    "Keine neuen Galopp-, Front-, Ruecken- oder Uebergangsphasen in diesem Clip."
+  ]
+}

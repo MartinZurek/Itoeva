@@ -15,6 +15,9 @@ PROJECT = Path(__file__).resolve().parents[2] / "prototypes/godot-hd2d"
 
 def measure():
     spec = json.loads((PROJECT / "data/mosslyn_authored_cycles.json").read_text())["walk"]
+    if not spec["asset"].endswith("/mosslyn-walk-8.png"):
+        raise ValueError("Diese historische M1-Zuordnung passt nicht zum aktiven Atlas. "
+                         "Für M2 measure_annotated_contacts.py mit mosslyn-walk-m2.json verwenden.")
     image = np.array(Image.open(PROJECT / spec["asset"].removeprefix("res://")))
     cell, ground = spec["cell"], spec["ground"]
     soles = []

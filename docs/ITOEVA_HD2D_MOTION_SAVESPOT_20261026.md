@@ -1,5 +1,42 @@
 # Itoeva – HD-2D-Bewegungen, Savespot M1 (26.10.2026)
 
+## Aktuelle Fortsetzung M2 am selben Branch
+
+M1 bleibt unten als historischer Ausgangspunkt dokumentiert. Der neuere
+Prüfentwurf heißt `mosslyn-walk-m2`; Befehle und Details stehen in
+`tools/motion-art/README.md`, Abschnitt „Fortsetzung M2“.
+
+- Acht Gehphasen neu gemalt, Beinwechsel und gegengleiche Arme besser
+  unterscheidbar; Originalquelle, Poseführung, Prompts, Kopf-/Pfotenannotation,
+  Pixelpass und aus dem gemalten Original erzeugte Metadaten gesichert.
+- Nur `MOTION_DRAFT=1` verwendet M2. M1-Assets und Standarddarstellung erhalten;
+  Galopp unverändert. Kein Merge, keine APK, keine Workflow-/Versionsänderung.
+- Pixelbogen, echte 216-Bilder-Spielaufnahme (7,2s) und Berichte unter
+  `docs/validation/motion-m2-20261026/`. `WALK_ONLY=1` beschränkt den vorhandenen
+  Aufnahmeablauf auf Gehen rechts/links. Alle acht Phasen in beiden Richtungen.
+- Gemessen: ca.2,3543Welt/s,1,066Hz, konstanter Pixelmaßstab0,0077488162;
+  Bildhaltezeiten überwiegend0,100/0,133s bei30fps. Keine Tempoänderung.
+- **Weiterhin nicht fertig:** Nahpfote in Phase5 noch5px über Boden, deshalb
+  kein belegter Kontaktweg Phase4→5. Sieben messbare Abschnitte zusammen203,5px;
+  Wege6,5–50px pro Phase. Einschließlich des ungeprüften Abschnitts wären es
+  233px statt285px. Kein Nachweis eines vollständigen oder schlupffreien Gangs.
+  Phasen nicht aus diesem unvollständigen Datensatz zeitlich „repariert“.
+- Neue Messung `measure_annotated_contacts.py` benennt die anatomische Pfote
+  explizit und lässt fehlende Kontakte leer. Die alte M1-Zuordnung darf M2
+  nicht auswerten. Zwei Regressionstests verhindern den Ersatz durch Gegenbein.
+- Tests:244 Godot-Entwurfschecks,1276 bestehende Mooslyn-Checks unter OpenGL,
+  sechs Python-Prüfungen grün. Die Weltaufnahme meldet die bekannten
+  ObjectDB-/Ressourcenlecks beim Ende weiterhin. Vollimport des Editors stürzte
+  hier im Vulkan-Initialisierungspfad ab; isolierter Atlasimport erfolgreich,
+  echte Weltaufnahme und Renderprüfung unter OpenGL erfolgreich.
+- **Als Nächstes weiter am Gehen:** Kontaktwechsel zu Phase5 zeichnerisch
+  schließen, längeren vollständigen Standweg/Abrollen ausarbeiten und erst nach
+  vollständiger Kontaktprüfung Phasendauern koppeln. Dann Galopp, Übergänge,
+  Wenden und vorne/hinten. Weitere Figuren erst anschließend.
+
+Die bestätigte Entscheidung gilt unverändert: ruhiger Takt, längere natürliche
+Schritte, gleiches Spieltempo. Keine neue Richtungsfrage und keine 3D-Arbeit.
+
 ## Verbindlicher Einstieg
 
 Repository `MartinZurek/Itoeva`, Arbeitsbranch
