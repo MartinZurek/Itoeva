@@ -1,0 +1,42 @@
+{
+  "reference_height": 130,
+  "cell": 448,
+  "art_height": 56,
+  "files": {
+    "nocti-land-m4.png": {
+      "scale": 0.3705,
+      "art_size": [
+        664,
+        166
+      ]
+    },
+    "nocti-rest-m4.png": {
+      "scale": 0.3705,
+      "art_size": [
+        664,
+        166
+      ]
+    },
+    "nocti-run-m4.png": {
+      "scale": 0.3705,
+      "art_size": [
+        664,
+        332
+      ]
+    },
+    "nocti-takeoff-m4.png": {
+      "scale": 0.3705,
+      "art_size": [
+        664,
+        166
+      ]
+    },
+    "nocti-walk-m4.png": {
+      "scale": 0.3705,
+      "art_size": [
+        664,
+        332
+      ]
+    }
+  }
+}

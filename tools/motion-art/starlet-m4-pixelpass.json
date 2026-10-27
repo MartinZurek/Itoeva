@@ -1,0 +1,28 @@
+{
+  "reference_height": 150,
+  "cell": 448,
+  "art_height": 56,
+  "files": {
+    "starlet-rest-m4.png": {
+      "scale": 0.3304,
+      "art_size": [
+        592,
+        148
+      ]
+    },
+    "starlet-run-m4.png": {
+      "scale": 0.3304,
+      "art_size": [
+        592,
+        296
+      ]
+    },
+    "starlet-walk-m4.png": {
+      "scale": 0.3304,
+      "art_size": [
+        592,
+        296
+      ]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "canonical": "path+NUL+sha256+LF; sorted by path",
- "sha256": "11951a26cd332924af2dfc6792e82810d61075b96311eab8de07e9ab0acaef46",
+ "sha256": "6d4f92584c993cf561e8dad73c440c0479e4fb278b46b8d311a21bdee5bd5379",
  "files": [
   {
    "path": "assets/audio/attack.wav",
@@ -1074,6 +1074,16 @@
    "sha256": "4bfa53705f0377fafe85bab250d5b3686ebdc2567fc96cd63eb5419edf5b49fa"
   },
   {
+   "path": "assets/characters/mosslyn-gallop-m4.png",
+   "bytes": 350411,
+   "sha256": "3ea75dc82393225ea68b988c163a48b71a22ec628832b6524735e24ac457e9dd"
+  },
+  {
+   "path": "assets/characters/mosslyn-gallop-m4.png.import",
+   "bytes": 972,
+   "sha256": "ac5b54054de5b82606fc32ea626d5a5bb5c5fc94f5fb111a1576475de44a3ed7"
+  },
+  {
    "path": "assets/characters/mosslyn-lower-m3.png",
    "bytes": 216347,
    "sha256": "a372e56d1fa1d2aa650ca9d25a4f5e089f843c48bc21b4f1942254674ca9cfc6"
@@ -1084,6 +1094,26 @@
    "sha256": "df033ecb7adc26e5857e8860732266efbc6ad0788f384f6cce15e701f17fd2bb"
   },
   {
+   "path": "assets/characters/mosslyn-lower-m4.png",
+   "bytes": 144724,
+   "sha256": "1ce712a8f91dd9b72ed83dce9cca1e3c4f21bdad42f66979c2e15fc9b353f2e4"
+  },
+  {
+   "path": "assets/characters/mosslyn-lower-m4.png.import",
+   "bytes": 970,
+   "sha256": "a33213f698e0e40cd95775ea52e23231b1c550e2e96381e52b1fedd7585eae64"
+  },
+  {
+   "path": "assets/characters/mosslyn-rest-m4.png",
+   "bytes": 38708,
+   "sha256": "32c49c139a19c5be682cfbf9a231df766f14854551d0c7bd2e53f46e2a762bd8"
+  },
+  {
+   "path": "assets/characters/mosslyn-rest-m4.png.import",
+   "bytes": 967,
+   "sha256": "cd2f34110029cf4d6545a3a098ab7912cbd31f7722e854277eabe91f4a40e25a"
+  },
+  {
    "path": "assets/characters/mosslyn-rise-m3.png",
    "bytes": 215721,
    "sha256": "2b04d171f13082650480e87b7a87f8cfa345fb77e70887e734dda21357e8992a"
@@ -1092,6 +1122,16 @@
    "path": "assets/characters/mosslyn-rise-m3.png.import",
    "bytes": 967,
    "sha256": "20938499981e2e7fc187fac06b946b5d692a41b8f542075b20e6b992184c0cd0"
+  },
+  {
+   "path": "assets/characters/mosslyn-rise-m4.png",
+   "bytes": 144711,
+   "sha256": "6097e5ebb5f1468766fe7e055b644d82f7f4f6f32cff4dbab5a6bd07b9f3ec46"
+  },
+  {
+   "path": "assets/characters/mosslyn-rise-m4.png.import",
+   "bytes": 967,
+   "sha256": "11c821739cf9b8484202eb139e9ee335f5500ec9bf403dfb341779b3f2e0ef01"
   },
   {
    "path": "assets/characters/mosslyn-run-28.png",
@@ -1154,6 +1194,16 @@
    "sha256": "2daff4be1c3fa92a66eeb34cc00994822e0185a8c34f19481459a65cdf75bb18"
   },
   {
+   "path": "assets/characters/mosslyn-walk-m4.png",
+   "bytes": 260324,
+   "sha256": "1b3148b463d564e5cc12a39fa1c4d2dbd7f9aaa898c004b38311d7a9a1c70e06"
+  },
+  {
+   "path": "assets/characters/mosslyn-walk-m4.png.import",
+   "bytes": 967,
+   "sha256": "8deb5543635f10bd73b51d1049dd2d05996261619561f08427be2b1ad9f4d45e"
+  },
+  {
    "path": "assets/characters/mosslyn-walk.png",
    "bytes": 2537877,
    "sha256": "c7e258d2f8c248aa60d85ee09fa6813a1de38ba4a80e7d0307f484b6a4fe46d8"
@@ -1182,6 +1232,56 @@
    "path": "assets/characters/nocti-flight.png.import",
    "bytes": 958,
    "sha256": "b043adb092436e8aa6ac1c14ac2aab77c9520f95d8f7332d0f827e67fa9f9115"
+  },
+  {
+   "path": "assets/characters/nocti-land-m4.png",
+   "bytes": 166444,
+   "sha256": "76d44d851136468b32aebf4d0be066951edea202a48d1e9b3b043e77e349d394"
+  },
+  {
+   "path": "assets/characters/nocti-land-m4.png.import",
+   "bytes": 961,
+   "sha256": "18b4ec49265b6a9ac69133d133a4451e40c8a829fc96f552cbac9b0999a18df0"
+  },
+  {
+   "path": "assets/characters/nocti-rest-m4.png",
+   "bytes": 40661,
+   "sha256": "3b7f06313cca5419eb6c085ccf0ca85d64300007414071eee292755426c72a84"
+  },
+  {
+   "path": "assets/characters/nocti-rest-m4.png.import",
+   "bytes": 960,
+   "sha256": "f825a60e0fa0e31f15a118eda719f173762a308f9a1eecbcf07d81f0e483a10e"
+  },
+  {
+   "path": "assets/characters/nocti-run-m4.png",
+   "bytes": 319271,
+   "sha256": "463cf8c470656d8948b737902a6fd72a234d72ebed694227f0636bff9d86904d"
+  },
+  {
+   "path": "assets/characters/nocti-run-m4.png.import",
+   "bytes": 957,
+   "sha256": "081763bfd71ac498eb8aef4b8851095bf11f96ef7988599f1e1e01f6d87f08a3"
+  },
+  {
+   "path": "assets/characters/nocti-takeoff-m4.png",
+   "bytes": 163845,
+   "sha256": "a3d9c28855dabd0f58e8037f938f94009cb20da6e9f4b98ad23fbce35c07a8e6"
+  },
+  {
+   "path": "assets/characters/nocti-takeoff-m4.png.import",
+   "bytes": 970,
+   "sha256": "840e84347dd658c5de35537a26f8de029ac9916a954104a5aa269cd4171f1d86"
+  },
+  {
+   "path": "assets/characters/nocti-walk-m4.png",
+   "bytes": 319271,
+   "sha256": "463cf8c470656d8948b737902a6fd72a234d72ebed694227f0636bff9d86904d"
+  },
+  {
+   "path": "assets/characters/nocti-walk-m4.png.import",
+   "bytes": 960,
+   "sha256": "0e207abf543fb657be1dd586e1c4fd612f3f5c5b8b273ebd95154bbbef6ef482"
   },
   {
    "path": "assets/characters/nocti-walk.png",
@@ -1224,6 +1324,16 @@
    "sha256": "edfcc1a20e915a82f69f9040d8d19b0002d56eacb01df26dbc09ab0880244b27"
   },
   {
+   "path": "assets/characters/pixel/mosslyn-gallop-m4.png",
+   "bytes": 43000,
+   "sha256": "008360ad97124be9ef0f44e0f095232e1d5a4ff62a6ad186f1f69ab853c9190c"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-gallop-m4.png.import",
+   "bytes": 979,
+   "sha256": "5191a6ee69de70ea20eda3e1bb0fffe8dc816ef08bf00c0649b4036ecadba44b"
+  },
+  {
    "path": "assets/characters/pixel/mosslyn-lower-m3.png",
    "bytes": 18158,
    "sha256": "c84b9fd233479480de5aefd4c80415c3d2cad398b7df20906b455230b0ae1513"
@@ -1234,6 +1344,26 @@
    "sha256": "46cb48ae592fd7865524308d3010ac2612076804fbc9c308a2eea6c0793e562c"
   },
   {
+   "path": "assets/characters/pixel/mosslyn-lower-m4.png",
+   "bytes": 18326,
+   "sha256": "9a1d591928fc5ef7e3dab6a992de593453d77e51a51504db685290ee8232b892"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-lower-m4.png.import",
+   "bytes": 976,
+   "sha256": "5f3807a31aac9c8954eaff62134b5387345da24588ab836b5b09e9af56733427"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-rest-m4.png",
+   "bytes": 6525,
+   "sha256": "98c9370a7ca0ba7eb516dc4d24c82fc8709c839a051833fe9a4b82a7e8a39a0f"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-rest-m4.png.import",
+   "bytes": 973,
+   "sha256": "a6776bdd4715c89c1b8ff1758744e799d6a53c70215ad938642c783f25ec101d"
+  },
+  {
    "path": "assets/characters/pixel/mosslyn-rise-m3.png",
    "bytes": 18044,
    "sha256": "ea367c1b1653aae16215a9090c1b2d7ffca647625191596357c6c9c89bc35148"
@@ -1242,6 +1372,16 @@
    "path": "assets/characters/pixel/mosslyn-rise-m3.png.import",
    "bytes": 972,
    "sha256": "82989edf4fd420e879d6131cd147aa9c5909ee0a747fec50493e6f4ab0161554"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-rise-m4.png",
+   "bytes": 18362,
+   "sha256": "2bb1ce52e8f00abf70409867178850fc85ca7fd5bc50099614006185c66f08c6"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-rise-m4.png.import",
+   "bytes": 973,
+   "sha256": "cb03c82b3643432307047f6201137e2ceba4355d74aea510ebf2027a58018c63"
   },
   {
    "path": "assets/characters/pixel/mosslyn-run-28.png",
@@ -1304,6 +1444,16 @@
    "sha256": "d02686097bbc102aa71f6e616312b0fb730374c7996fb17994e92bfd9d326f6b"
   },
   {
+   "path": "assets/characters/pixel/mosslyn-walk-m4.png",
+   "bytes": 33760,
+   "sha256": "2855e10742c72334ba68f96aaf5bfd6f40e4e66b628ab0955439ce287af5bf99"
+  },
+  {
+   "path": "assets/characters/pixel/mosslyn-walk-m4.png.import",
+   "bytes": 973,
+   "sha256": "7dcb68b956b3a9c91d74bde66fbb7bfb212c46c3126a1afd11e671c2d25dfc13"
+  },
+  {
    "path": "assets/characters/pixel/mosslyn-walk.png",
    "bytes": 97679,
    "sha256": "75367f83f56f6b93e1e44fae9cd9917808707fbe61127e0ed5db3799c59ed1b3"
@@ -1334,6 +1484,56 @@
    "sha256": "8316c25e129341228b8a53668d5013c2831271351e17306206e8a23364dea011"
   },
   {
+   "path": "assets/characters/pixel/nocti-land-m4.png",
+   "bytes": 25629,
+   "sha256": "41732e68a8e35a3332f447d40fde3fcdd513dbe94135488017704f9c44a242a2"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-land-m4.png.import",
+   "bytes": 966,
+   "sha256": "9e17bcf5e537f115a3172f4c656dd4b3e49c4d3c397c6a080e9c4537d3006508"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-rest-m4.png",
+   "bytes": 8358,
+   "sha256": "5228a1238d1801fb5a4f7d39f972441c6ab129eaa8cd2d9b0d9fde1408fa1be9"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-rest-m4.png.import",
+   "bytes": 967,
+   "sha256": "d208316c90ce80304a3d78114b2b5e44a663e58dfc7764f847afc83b40a9ce10"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-run-m4.png",
+   "bytes": 46340,
+   "sha256": "3e34932a08139c58bf0e5e78cc1b9ea0074a46cd4d07886ad8174936943bb122"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-run-m4.png.import",
+   "bytes": 964,
+   "sha256": "cccbdcc14d1b69fd601ba327f8b975f8635aab4297c85fa1c3cf408ee308f37a"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-takeoff-m4.png",
+   "bytes": 25333,
+   "sha256": "7b83ff31e10b6510e41746ab46554f4bbeb9eaa97b49a33a15dddf51973d7996"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-takeoff-m4.png.import",
+   "bytes": 976,
+   "sha256": "e29cd4e18f15bf1db0b6aa7d5cd41b87891cfa5685c730933719a9949cb58f01"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-walk-m4.png",
+   "bytes": 46340,
+   "sha256": "3e34932a08139c58bf0e5e78cc1b9ea0074a46cd4d07886ad8174936943bb122"
+  },
+  {
+   "path": "assets/characters/pixel/nocti-walk-m4.png.import",
+   "bytes": 966,
+   "sha256": "6cd75892c2244e05714ea61502713842c84583c33a4757a24210daa01d0924bb"
+  },
+  {
    "path": "assets/characters/pixel/nocti-walk.png",
    "bytes": 82785,
    "sha256": "67ef0f62c92e2e6e8177084ac4d1b286663e6c84f4f5cb62aed0e393f9bc2708"
@@ -1354,6 +1554,26 @@
    "sha256": "5491cd99431ab40e48c58b9b80d363b134dfede04d3663c6c078026e8480b57f"
   },
   {
+   "path": "assets/characters/pixel/starlet-rest-m4.png",
+   "bytes": 8624,
+   "sha256": "1077791843d7aff6e28302641e71a5542d4a66e0b0b365bfa6766acc56e546eb"
+  },
+  {
+   "path": "assets/characters/pixel/starlet-rest-m4.png.import",
+   "bytes": 973,
+   "sha256": "f552472e0cdf6f9f5f664c501558623657b6b5cd7f717cf8035fb219b07983e6"
+  },
+  {
+   "path": "assets/characters/pixel/starlet-run-m4.png",
+   "bytes": 46548,
+   "sha256": "2abd1a2b0d779685e91155f1f082ecf0fa89226bd57c7752c742c5bb51bdd289"
+  },
+  {
+   "path": "assets/characters/pixel/starlet-run-m4.png.import",
+   "bytes": 970,
+   "sha256": "842498b996e0c981f8e633811fc048edddfc92c62bab5dc8759f4c4add98117c"
+  },
+  {
    "path": "assets/characters/pixel/starlet-v2.png",
    "bytes": 207660,
    "sha256": "903254e65d02d067e67fe5038e58a914329995e4e1adf23f59a9bdb615175b2b"
@@ -1362,6 +1582,16 @@
    "path": "assets/characters/pixel/starlet-v2.png.import",
    "bytes": 957,
    "sha256": "748a7ccdc6abfb293aa3d1eb9b10ca2a9be150d424742f2a0fda205a16e6a40f"
+  },
+  {
+   "path": "assets/characters/pixel/starlet-walk-m4.png",
+   "bytes": 43985,
+   "sha256": "afd90261222578fc67cd94921414487cd0f2b402438cf1adfecfac0e39fad039"
+  },
+  {
+   "path": "assets/characters/pixel/starlet-walk-m4.png.import",
+   "bytes": 973,
+   "sha256": "f5d74fadb29d35f61fb823bfd54b07061b3bcb6bd071614b6a82941c273e6816"
   },
   {
    "path": "assets/characters/pixel/starlet-walk.png",
@@ -1384,6 +1614,26 @@
    "sha256": "f26eec3be34b56e243873f8eb0bce8c60a2414b9d590f8d95efb0f87bedb9cc8"
   },
   {
+   "path": "assets/characters/pixel/wyrmling-rest-m4.png",
+   "bytes": 13427,
+   "sha256": "11b3f576329f35680a7cccf0df3020169b6c98adcecf59638ca201332106bbdd"
+  },
+  {
+   "path": "assets/characters/pixel/wyrmling-rest-m4.png.import",
+   "bytes": 976,
+   "sha256": "064134e098af5c708a03efdf09e1bef8ff50db16a02d102c1f4886f394ddba1b"
+  },
+  {
+   "path": "assets/characters/pixel/wyrmling-run-m4.png",
+   "bytes": 73550,
+   "sha256": "f44c3bf6ade135358de0d93eae726314afb33d2020dec9559c7e603424bc4779"
+  },
+  {
+   "path": "assets/characters/pixel/wyrmling-run-m4.png.import",
+   "bytes": 972,
+   "sha256": "4296b08a762fccc9921d4481c6c6da0622a63b7a728d687665158942a5c28e44"
+  },
+  {
    "path": "assets/characters/pixel/wyrmling-v2.png",
    "bytes": 338020,
    "sha256": "da7467efcce7fa9d923ca42e019c3186eda51c064c7092877a39f1358bc6fc8c"
@@ -1392,6 +1642,16 @@
    "path": "assets/characters/pixel/wyrmling-v2.png.import",
    "bytes": 960,
    "sha256": "37abebc3bdd133a1a640a203f82d3b2cfc2ab4d3697520c0bb4d8e484e751029"
+  },
+  {
+   "path": "assets/characters/pixel/wyrmling-walk-m4.png",
+   "bytes": 75098,
+   "sha256": "22fa99f2e404e4ffe56ca434b3d3c955f224b83df60f28b43d9a264473e2ac53"
+  },
+  {
+   "path": "assets/characters/pixel/wyrmling-walk-m4.png.import",
+   "bytes": 976,
+   "sha256": "a9f030ff7ee1bfd92d0acc84389252f156ce9bc843ad499d608c3d413fbd20d1"
   },
   {
    "path": "assets/characters/pixel/wyrmling-walk.png",
@@ -1444,6 +1704,26 @@
    "sha256": "a4d7bca1857c1c26f964fb7d9aa8c02e9437ce5027fd564f13a2ef47dc6db11a"
   },
   {
+   "path": "assets/characters/starlet-rest-m4.png",
+   "bytes": 50985,
+   "sha256": "7504b749400787b82d2eb23b8382e1fbb5b0fbb821ba397ae5ac059928c38b20"
+  },
+  {
+   "path": "assets/characters/starlet-rest-m4.png.import",
+   "bytes": 967,
+   "sha256": "f0dcaaf1cab44c91c7fb04b0609cd9ca85d5c474e2a5ef6e4583018893378a91"
+  },
+  {
+   "path": "assets/characters/starlet-run-m4.png",
+   "bytes": 382407,
+   "sha256": "cbc090ad8c6e3071bc0887331e643e4f34eb3739e9acedb3f776b77f17eb1888"
+  },
+  {
+   "path": "assets/characters/starlet-run-m4.png.import",
+   "bytes": 964,
+   "sha256": "6715d35a6e09be26927cb3dd4832fdf0e7edb25065c506828400b24f5c4dfced"
+  },
+  {
    "path": "assets/characters/starlet-v2.png",
    "bytes": 2171175,
    "sha256": "6eb0627f9deed0790efb2402f168ea5614a68121c8d2801bb4dc96ac6ac9fa80"
@@ -1452,6 +1732,16 @@
    "path": "assets/characters/starlet-v2.png.import",
    "bytes": 951,
    "sha256": "4d792bd30e22a63bdfe54858c62e0002f1ac9ef30a080699708cf0bd6db19a28"
+  },
+  {
+   "path": "assets/characters/starlet-walk-m4.png",
+   "bytes": 363901,
+   "sha256": "c9e2e59e2f9b7339ac035b7dbd666e3fab402152db25ef999cbafa6cb4693897"
+  },
+  {
+   "path": "assets/characters/starlet-walk-m4.png.import",
+   "bytes": 966,
+   "sha256": "a962f48872ab0e245b8a3df7fefd01a5cd58e657c62d8cba122c9dcaef3b9b84"
   },
   {
    "path": "assets/characters/starlet-walk.png",
@@ -1474,6 +1764,26 @@
    "sha256": "ae33dbc8dab2c379babad4ff2cc486af0e6ba92c42b84acbbf364c1e2c205f0d"
   },
   {
+   "path": "assets/characters/wyrmling-rest-m4.png",
+   "bytes": 40499,
+   "sha256": "f68f89585f2081c7adfd52da70e48b3dce752e3c2fd7ba6063406934edac7f5d"
+  },
+  {
+   "path": "assets/characters/wyrmling-rest-m4.png.import",
+   "bytes": 970,
+   "sha256": "38404b1199ac503d0406051c460184969ff7f439c3b482a1ec00796f88fddac8"
+  },
+  {
+   "path": "assets/characters/wyrmling-run-m4.png",
+   "bytes": 276577,
+   "sha256": "943def69e69b9a06a7e9fffbc1c05aa2c2b3aa9ab7c4626b28ba9283772fc3b4"
+  },
+  {
+   "path": "assets/characters/wyrmling-run-m4.png.import",
+   "bytes": 967,
+   "sha256": "d984afcb8e4eac05e6ec23a60cbef95c83f22e9e6146c1a41c52f1cec10fca6b"
+  },
+  {
    "path": "assets/characters/wyrmling-v2.png",
    "bytes": 2308272,
    "sha256": "17c1bad0b09cb4fee6ee08b40fe9704ef33cc6a179c8d7e3040ce15f4c3953f1"
@@ -1482,6 +1792,16 @@
    "path": "assets/characters/wyrmling-v2.png.import",
    "bytes": 955,
    "sha256": "b2684293475663fe4324d327fc59c92bbfa826851e70dc1b1c55d6d59d0da000"
+  },
+  {
+   "path": "assets/characters/wyrmling-walk-m4.png",
+   "bytes": 285696,
+   "sha256": "5a1ebf528e4a083fc1bf01bdc3d970310368894584407c7a377ab88c701933ee"
+  },
+  {
+   "path": "assets/characters/wyrmling-walk-m4.png.import",
+   "bytes": 970,
+   "sha256": "72eb71e922e8a31562e8f37f95f3e3af105edb9988e3f4b07f294aed9195a82d"
   },
   {
    "path": "assets/characters/wyrmling-walk.png",
@@ -2344,6 +2664,11 @@
    "sha256": "9bd9be85758d6af5a0899c7245c13b685afb944a213a7b6ccd331847a91a888e"
   },
   {
+   "path": "data/mosslyn_m4_cycles.json",
+   "bytes": 37978,
+   "sha256": "7c3888e5896e93f49f3c727558242b1a55fe6b9f3e98871e6cc299b1ccc2022b"
+  },
+  {
    "path": "data/mosslyn_painted_cycles.json",
    "bytes": 101224,
    "sha256": "1f307d3ebecf087a45a8b9eb955515cee93472d45d21f9c9469ae6234030cc20"
@@ -2357,6 +2682,11 @@
    "path": "data/new_combat_atlases.json",
    "bytes": 9683,
    "sha256": "1afa9320a13a3b99f7a9642b57ba3dafee62affa584faead90bad9b8d59b79b6"
+  },
+  {
+   "path": "data/nocti_authored_cycles.json",
+   "bytes": 39520,
+   "sha256": "f5bd32b546fe8fc6d8ad9c794a0313887d3e2a3529b9d11f36e015bd7b2b2ddd"
   },
   {
    "path": "data/regional_enemies.json",
@@ -2377,6 +2707,11 @@
    "path": "data/spirit_atlas.json",
    "bytes": 331,
    "sha256": "ab7b7fcb6eb98b603cd1f45bd8f72ee6fd85e64351641afbb3e694077191049d"
+  },
+  {
+   "path": "data/starlet_authored_cycles.json",
+   "bytes": 25038,
+   "sha256": "5bc9c480e5b25866d35ace93977b9999282ce5a5c834e6a16b3db5dd46701877"
   },
   {
    "path": "data/step_rigs.json",
@@ -2407,6 +2742,11 @@
    "path": "data/world_expansion.json",
    "bytes": 2302,
    "sha256": "42ad5c4fefcca66f1f68edf576ee6d5ca79541b69a7848bc1b5ebcd9790517c0"
+  },
+  {
+   "path": "data/wyrmling_authored_cycles.json",
+   "bytes": 26226,
+   "sha256": "2428ca727826c35c80b1eea23e31738437e2851b2f32df279058c5a707e88b16"
   },
   {
    "path": "export_presets.cfg",
@@ -2442,6 +2782,16 @@
    "path": "scripts/adventure_hud.gd.uid",
    "bytes": 20,
    "sha256": "29116e62fd149e204633f3e0a2617fea54dc9ff4bb5b20f89c0d7c1e672b419d"
+  },
+  {
+   "path": "scripts/authored_locomotion.gd",
+   "bytes": 2169,
+   "sha256": "9302b5f928ce4ec9013ab0bf1c58af31e2928e0192ab7052f4e4f8ad70c5166f"
+  },
+  {
+   "path": "scripts/authored_locomotion.gd.uid",
+   "bytes": 20,
+   "sha256": "7089c7dfa6b4c225c085cab8fa5df0b487424cb09ad84ec811453f8686f8ee8b"
   },
   {
    "path": "scripts/authored_motion_transition.gd",
@@ -2610,8 +2960,8 @@
   },
   {
    "path": "scripts/compact_actor.gd",
-   "bytes": 28457,
-   "sha256": "e81ccaae3bd2792ce23b1b8382c9e4492d1a88f632021386a7eb0c5c0c259a44"
+   "bytes": 29885,
+   "sha256": "f15ccca76b40cf02a3c824326e1abc0bb478b3be50acc46d1243890d2d3cac5b"
   },
   {
    "path": "scripts/compact_actor.gd.uid",

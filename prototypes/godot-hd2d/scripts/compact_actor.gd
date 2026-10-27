@@ -34,8 +34,12 @@ var painted_cycles: Dictionary = {}
 var painted_cycle_textures: Dictionary = {}
 var painted_cycle_masks: Dictionary = {}
 var painted_x_offset := 0.0
+const AuthoredLocomotion = preload("res://scripts/authored_locomotion.gd")
 const AuthoredTransition = preload("res://scripts/authored_motion_transition.gd")
 var authored_transition = AuthoredTransition.new()
+var authored_locomotion = AuthoredLocomotion.new()
+var authored_m4 := false
+var authored_lift := 0.0
 
 func _pose_mask() -> Dictionary:
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
@@ -56,6 +60,12 @@ func _ready() -> void:
   if OS.get_environment("MOTION_DRAFT")=="1" or OS.has_feature("itoeva_motion_m3"):
    var drafts: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_authored_cycles.json"))
    for mode in drafts:painted_cycles[mode]=drafts[mode]
+ if OS.get_environment("MOTION_M4")=="1" or OS.has_feature("itoeva_motion_m4"):
+  var m4_path:="res://data/mosslyn_m4_cycles.json" if species=="mosslyn" else "res://data/"+species+"_authored_cycles.json"
+  if FileAccess.file_exists(m4_path):
+   authored_m4=true
+   painted_cycles=JSON.parse_string(FileAccess.get_file_as_string(m4_path))
+ if not painted_cycles.is_empty():
   for mode in painted_cycles:
    var cycle: Dictionary=painted_cycles[mode]
    painted_cycle_textures[mode]=load(cycle.asset)
@@ -269,7 +279,9 @@ func _update_shadow() -> void:
  var physical_hover:=hover
  # Der Schatten reagiert auf Starlits sichtbaren Huepfbogen, ohne die
  # Bodenkollision oder den Sprungknopf in einen zweiten Physikpfad umzulenken.
- if species=="starlet" and not body_pose.is_empty():hover=sprite.position.y
+ if authored_m4 and painted_cycle_active:
+  hover+=authored_lift*sprite.pixel_size if species=="nocti" else maxf(0.0,float(painted_cycles[painted_cycle_mode].ground)-float(displayed_bounds.end.y))*sprite.pixel_size
+ elif species=="starlet" and not body_pose.is_empty():hover=sprite.position.y
  super._update_shadow()
  hover=physical_hover
 
@@ -290,6 +302,13 @@ func _update_frame(moving: bool) -> void:
  if painted_cycle_active and not moving:body_weight=0.0
  body_weight=move_toward(body_weight,1.0 if moving else 0.0,get_physics_process_delta_time()*8.0)
  var depth:=absf(facing.y)>absf(facing.x)
+ if authored_m4 and species!="mosslyn":
+  if not depth and state=="idle" and jump_clock<0:
+   var next: Dictionary=authored_locomotion.advance(get_physics_process_delta_time(),moving,running and run_blend>=.5,actual_speed,_stride_length(),painted_cycles,species=="nocti")
+   authored_lift=float(next.lift)
+   _use_painted_cycle(next.mode,int(next.phase))
+   return
+  authored_locomotion.reset();authored_lift=0.0
  # Die gezeichneten Verbindungsposen brauchen auch beim Auslaufen Zeit zum
  # Aufrichten. Sie werden nur mit den expliziten Entwurfsdaten geladen.
  if painted_cycles.has("lower") and painted_cycles.has("rise"):
@@ -307,6 +326,9 @@ func _update_frame(moving: bool) -> void:
    # Sprung, Sitzen, Rollen und Tiefenansichten haben Vorrang; kein späteres
    # Wiederaufleben einer durch die Aktion unterbrochenen Absenkung.
    authored_transition.reset("run" if running and run_blend>=.5 else "walk")
+ if authored_m4 and painted_cycles.has("rest") and not moving and not depth and state=="idle" and jump_clock<0:
+  _use_painted_cycle("rest",0)
+  return
  # Die Seitenbilder enthalten bereits die ganze Bewegung. Ein zweites Hautnetz
  # wuerde Beine und Tasche erneut verziehen. Tiefenansichten behalten ihr Rig.
  if not painted_cycles.is_empty() and moving and not depth and state=="idle" and jump_clock<0:
@@ -460,6 +482,7 @@ func run_frame(stride: float, time: float, direction: Vector2) -> int:
  return row*8+phase
 
 func _hover_target(moving: bool) -> float:
+ if authored_m4 and species in ["nocti","starlet"] and absf(facing.x)>=absf(facing.y):return 0.0
  if state!="idle" or jump_clock>=0 or not is_on_floor():return 0.0
  if species=="nocti" and moving and running:return .48+.012*sin(clock*TAU*FLIGHT_CYCLES)
  return super._hover_target(moving)

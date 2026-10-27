@@ -52,12 +52,16 @@ def prepare(annotation):
         if "source_frame_index" in frame:
             ident, box = own_components[frame["source_frame_index"]]
         x, y, w, h = frame["head_region"]
-        scale = spec["head_width"] / w
+        scale = frame.get("head_width", spec["head_width"]) / w
         # Eine einheitliche Transformation je ganzer Zeichnung, nie Gliedmaßen-
         # oder Gesichtsverformung. Dieselbe Geometrie wird danach eingefroren.
         dx = spec["head_center_x"] - (x + w / 2) * scale
         ground = box[0].stop + frame.get("air_gap", 0)
         dy = spec["ground"] - ground * scale
+        # Im Flug ist die Kopfmitte der stabile Rumpfanker. Die unterste
+        # Flügelspitze darf weder den Körper anheben noch auf den Boden ziehen.
+        if "head_center_y" in frame:
+            dy = frame["head_center_y"] - (y + h / 2) * scale
         own = own_rgba.copy()
         own[own_labels != ident] = 0
         tile = cv2.warpAffine(own, np.float32([[scale, 0, dx], [0, scale, dy]]),
@@ -99,6 +103,7 @@ def prepare(annotation):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("annotations", nargs="+", type=Path)
+    parser.add_argument("--output", type=Path, default=PROJECT / "data/mosslyn_authored_cycles.json")
     args = parser.parse_args()
     data = dict(prepare(path) for path in args.annotations)
-    (PROJECT / "data/mosslyn_authored_cycles.json").write_text(json.dumps(data, indent=2) + "\n")
+    args.output.write_text(json.dumps(data, indent=2) + "\n")

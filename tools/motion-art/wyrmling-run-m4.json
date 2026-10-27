@@ -1,0 +1,122 @@
+{
+  "source": "tools/motion-art/sources/wyrmling-motion-m4.png",
+  "source_row_height": 256,
+  "mode": "run",
+  "asset": "res://assets/characters/wyrmling-run-m4.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 12,
+  "head_center_x": 280,
+  "ground": 300,
+  "reference_height": 118,
+  "cycle_distance_pixels": 220,
+  "source_frame_indices": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "frames": [
+    {
+      "head_region": [
+        307,
+        595,
+        23,
+        19
+      ],
+      "correlation": 0.8696204423904419,
+      "source_frame_index": 8,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        698,
+        586,
+        24,
+        18
+      ],
+      "correlation": 0.934918999671936,
+      "source_frame_index": 9,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        1106,
+        578,
+        25,
+        18
+      ],
+      "correlation": 0.959801197052002,
+      "source_frame_index": 10,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        1472,
+        582,
+        23,
+        18
+      ],
+      "correlation": 0.8713928461074829,
+      "source_frame_index": 11,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        338,
+        826,
+        24,
+        18
+      ],
+      "correlation": 0.9092608690261841,
+      "source_frame_index": 12,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        757,
+        821,
+        24,
+        17
+      ],
+      "correlation": 0.904380738735199,
+      "source_frame_index": 13,
+      "air_gap": 18,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        1079,
+        826,
+        24,
+        17
+      ],
+      "correlation": 0.9513022303581238,
+      "source_frame_index": 14,
+      "air_gap": 12,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        1456,
+        832,
+        23,
+        17
+      ],
+      "correlation": 0.9416226744651794,
+      "source_frame_index": 15,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    }
+  ],
+  "review": "M4-Prüffassung: gemalte Originalphasen, feste Gesichtsregistrierung; keine Behauptung vollständig geprüfter Pfoten-/Druckpunktwege."
+}

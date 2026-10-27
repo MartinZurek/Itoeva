@@ -1,0 +1,30 @@
+{
+  "source": "tools/motion-art/sources/starlet-motion-m4.png",
+  "source_row_height": 256,
+  "mode": "rest",
+  "asset": "res://assets/characters/starlet-rest-m4.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 150,
+  "head_center_x": 280,
+  "ground": 300,
+  "reference_height": 150,
+  "cycle_distance_pixels": 330,
+  "source_frame_indices": [
+    0
+  ],
+  "frames": [
+    {
+      "head_region": [
+        88,
+        20,
+        216,
+        216
+      ],
+      "correlation": 0.9999998211860657,
+      "source_frame_index": 0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    }
+  ],
+  "review": "M4-Prüffassung: gemalte Originalphasen, feste Gesichtsregistrierung; keine Behauptung vollständig geprüfter Pfoten-/Druckpunktwege."
+}

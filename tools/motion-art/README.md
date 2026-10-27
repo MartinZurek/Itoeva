@@ -221,3 +221,43 @@ Weiter offen: M2-Gehkontaktwechsel und vollständige Gehschrittlänge, vier
 einzeln belastbare Galopp-Druckpunkte, neu gezeichnete Wendefolgen sowie
 Front-/Rückansichten. Weitere Figuren wurden nicht umgestellt. Keine solche
 offene Arbeit allein aus dem Vorhandensein dieser Vorschau als erledigt ansehen.
+
+## M4: Größenabgleich und weitere Spielfiguren (27.10.2026)
+
+Martin meldet einen Größenwechsel beim Gehen/Galopp und beauftragt danach
+Nocti, Starlight und Wyrmling im gleichen gemalten Arbeitsweg. Die bisherige
+Wartebedingung auf Mooslyns vollständige Kontaktabnahme ist durch diesen
+konkreten Folgeauftrag überholt; die offenen Kontaktprüfungen bleiben offen.
+
+M4 ist separat mit `MOTION_M4=1` aktiviert. Die ausgelieferte APK 0.15.7 und
+M3-Dateien bleiben als Vergleich erhalten. Neue Quellen/Prompts unter `sources/`,
+Annotationen `*-m4.json`, Masken/Metadaten in `data/*_cycles.json`.
+
+- Mooslyn: voller gezeichneter Galopprumpf, neue Zwischenzeichnungen; die
+  Nahiris dient als gemeinsames Größenmerkmal. Ruhe hält dieselbe gezeichnete
+  Kontaktpose wie der Gehbeginn (noch keine neue entspannte Ruheanimation).
+  Übergangsenden sind einschließlich Pixelpass identisch; Aufrichten kehrt die
+  beiden passenden gemalten Zwischenhaltungen um. Takt bleibt durch Umrechnung
+  der Pixel-Zyklusstrecke auf den neuen Offline-Maßstab wie M3.
+- Nocti: vier Abhebe-, acht Flug- und vier Landephasen, Füße im Flug angezogen.
+  Flügelschlag folgt der Zeit, langsamer/schneller Flug teilt dieselben Bilder.
+  Flugregistrierung an der Kopfmitte, nicht der untersten Flügelspitze.
+- Starlight (`starlet`): acht langsame und acht schnellere Hüpf-/Schwebephasen,
+  keine Beine. Registriert wird die Höhe des goldenen Sternkörpers, nicht das
+  wechselnde Auge. Über 65% der Zyklusdauer liegen in den freien Phasen.
+  Bei Loslassen wird der Hüpfer darstellerisch beendet, ohne weiteren Weltweg.
+- Wyrmling: acht Geh- und acht Laufphasen auf vier Beinen, Schwanz/Flügel
+  mitgezeichnet. Geschwindigkeit wechselt nur an der gemeinsamen Kontaktphase.
+- `prepare_cycle.py --output ...` erzeugt weitere Metadatendateien ohne M3 zu
+  überschreiben. Optionale Kopf-Y-Registrierung hält Noctis Flugrumpf ruhig.
+- Pixelpass zusätzlich `--cell-size 320` (Mooslyn) bzw. `448` (andere), damit
+  identische Anschlusszeichnungen nicht durch Rundung im Atlasraster wandern.
+  Gemeinsame Palette und fester Pixelmaßstab pro Figur; Parameter in
+  `*-m4-pixelpass.json`. Original-Metadaten beziehen sich weiter auf Gemaltes.
+
+Dieser Quell-/Integrationscheckpoint ist **noch keine optische Abnahme**.
+Vier Python-Assettests bestanden. Die neue Zustandsprüfung benötigt zusätzlich
+fehlerfreie Texturimporte und echte Aufnahmen. Vorder-/Rückansichten verwenden
+noch die vorhandenen Bildbögen. Einzelne anatomisch belegte Pfotendruckpunkte,
+Standwege/Schlupf und Kontaktgewichte der neuen Gallopbilder sind noch zu prüfen.
+Kein APK-Bau und keine Behauptung schlupffreier Bewegung.

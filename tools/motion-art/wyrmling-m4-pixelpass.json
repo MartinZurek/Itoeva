@@ -1,0 +1,28 @@
+{
+  "reference_height": 118,
+  "cell": 448,
+  "art_height": 56,
+  "files": {
+    "wyrmling-rest-m4.png": {
+      "scale": 0.5536,
+      "art_size": [
+        992,
+        248
+      ]
+    },
+    "wyrmling-run-m4.png": {
+      "scale": 0.5536,
+      "art_size": [
+        992,
+        496
+      ]
+    },
+    "wyrmling-walk-m4.png": {
+      "scale": 0.5536,
+      "art_size": [
+        992,
+        496
+      ]
+    }
+  }
+}

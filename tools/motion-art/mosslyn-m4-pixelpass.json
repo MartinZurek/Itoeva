@@ -1,0 +1,42 @@
+{
+  "reference_height": 170,
+  "cell": 320,
+  "art_height": 56,
+  "files": {
+    "mosslyn-gallop-m4.png": {
+      "scale": 0.3281,
+      "art_size": [
+        420,
+        315
+      ]
+    },
+    "mosslyn-lower-m4.png": {
+      "scale": 0.3281,
+      "art_size": [
+        420,
+        105
+      ]
+    },
+    "mosslyn-rest-m4.png": {
+      "scale": 0.3281,
+      "art_size": [
+        420,
+        105
+      ]
+    },
+    "mosslyn-rise-m4.png": {
+      "scale": 0.3281,
+      "art_size": [
+        420,
+        105
+      ]
+    },
+    "mosslyn-walk-m4.png": {
+      "scale": 0.3281,
+      "art_size": [
+        420,
+        210
+      ]
+    }
+  }
+}

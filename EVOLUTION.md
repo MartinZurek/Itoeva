@@ -7626,3 +7626,23 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UEBERGABE:**M3-Abschnitt in tools/motion-art/README.md und Savespot; neue
   Vorschauen in docs/validation/motion-m3-20261026. Benutzer erlaubte APK oder
   Testanimation; geliefert wird die echte Spielaufnahme mit Detailausschnitt.
+
+### 2026-10-27 – M4-Entwurf: Größenabgleich, Flug und Sternhüpfen
+
+- **AUFTRAG:** Martin meldet Größenwechsel zwischen Mooslyns Gehen/Galopp,
+  akzeptiert die übrige Qualität und beauftragt weitere Figuren im selben
+  Bildgenerierungs-/Pixelpass-Prozess. Nocti fliegt, Starlight hüpft/schwebt.
+- **CHANGE:** Neue gemalte Quellen und Originalmasken; gemeinsame Irisreferenz
+  bei Tierfiguren, goldener Sternkörper bei Starlight. Feste Raster/Anker,
+  ganzzahliger Pixel-Zellpass und identische gezeichnete Verbindungsenden.
+  M3 bleibt erhalten, M4 nur `MOTION_M4=1`, keine Gameplay-Tempoänderung.
+- **CHANGE:** Noctis zeitlicher Flug mit Abheben/Landen, Starlights Auslaufen
+  bis zur Landung, Kontaktphasenwechsel bei Wyrmling. Keine zweite Verformung
+  der neuen Seitenzeichnungen. Vorhandene Tiefenansichten bleiben zunächst.
+- **TESTED BEHAVIOR:** Vier Python-Assettests einschließlich Originalmasken,
+  gleicher Maßstabsreferenz und bytegleicher Pixel-Anschlusskacheln bestanden.
+- **UNVERIFIED:** Quellcheckpoint vor echter M4-Spiel-/Renderabnahme. Neue
+  Pfotenwege, Druckpunkte und Phasengewichte noch nicht belastbar geprüft;
+  keine Schlupffreiheit. Mooslyns Ruhe hält vorerst eine Gehkontaktpose.
+- **UEBERGABE:** M4 in tools/motion-art/README.md; zuerst Texturimporte,
+  Zustandsprüfungen und echte Weltaufnahmen abschließen. Keine neue APK.
