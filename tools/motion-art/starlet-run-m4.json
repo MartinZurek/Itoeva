@@ -1,0 +1,132 @@
+{
+  "source": "tools/motion-art/sources/starlet-motion-m4.png",
+  "source_row_height": 256,
+  "mode": "run",
+  "asset": "res://assets/characters/starlet-run-m4.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 150,
+  "head_center_x": 280,
+  "ground": 300,
+  "reference_height": 150,
+  "cycle_distance_pixels": 440,
+  "source_frame_indices": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "frames": [
+    {
+      "head_region": [
+        82,
+        526,
+        220,
+        220
+      ],
+      "correlation": 0.9751022458076477,
+      "source_frame_index": 8,
+      "air_gap": 0.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    },
+    {
+      "head_region": [
+        474,
+        544,
+        201,
+        201
+      ],
+      "correlation": 0.9233967065811157,
+      "source_frame_index": 9,
+      "air_gap": 0.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    },
+    {
+      "head_region": [
+        842,
+        533,
+        217,
+        217
+      ],
+      "correlation": 0.8565196990966797,
+      "source_frame_index": 10,
+      "air_gap": 15.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    },
+    {
+      "head_region": [
+        1256,
+        517,
+        215,
+        215
+      ],
+      "correlation": 0.9222943782806396,
+      "source_frame_index": 11,
+      "air_gap": 45.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    },
+    {
+      "head_region": [
+        96,
+        762,
+        210,
+        210
+      ],
+      "correlation": 0.9233540892601013,
+      "source_frame_index": 12,
+      "air_gap": 65.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    },
+    {
+      "head_region": [
+        504,
+        772,
+        203,
+        203
+      ],
+      "correlation": 0.8835638761520386,
+      "source_frame_index": 13,
+      "air_gap": 50.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    },
+    {
+      "head_region": [
+        861,
+        784,
+        202,
+        202
+      ],
+      "correlation": 0.9370489120483398,
+      "source_frame_index": 14,
+      "air_gap": 15.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    },
+    {
+      "head_region": [
+        1249,
+        781,
+        209,
+        209
+      ],
+      "correlation": 0.9231430292129517,
+      "source_frame_index": 15,
+      "air_gap": 0.0,
+      "annotation": "Goldener Sternkörper: gleiche Höhe statt wechselnder Irisgröße. Schal und Sternspitzen bleiben vollständig erhalten."
+    }
+  ],
+  "review": "M4-Prüffassung: gemalte Originalphasen, feste Gesichtsregistrierung; keine Behauptung vollständig geprüfter Pfoten-/Druckpunktwege.",
+  "phase_weights": [
+    0.12,
+    0.09,
+    0.1,
+    0.18,
+    0.22,
+    0.16,
+    0.06,
+    0.07
+  ]
+}

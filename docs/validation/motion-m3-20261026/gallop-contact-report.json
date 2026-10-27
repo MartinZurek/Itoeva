@@ -1,0 +1,381 @@
+{
+  "method": "anatomically-annotated-visible-sole-midpoints",
+  "pressure_points_verified": false,
+  "runtime_slip_verified": false,
+  "atlas_sha256": "7a195bbaa5d21f80ca705816d3c48a502c82ad456a845076434f564b7da4be80",
+  "painted_source_sha256": "ba13c10fcc696c2eb668297116e7a10e7db350c85a9983f43dd0b15af696ad03",
+  "contacts": [
+    {
+      "fore_support": {
+        "sole_x": 224.5,
+        "ground_gap": 1,
+        "contact": true,
+        "box": [
+          205,
+          270,
+          43,
+          31
+        ]
+      },
+      "hind_support": {
+        "sole_x": 82.5,
+        "ground_gap": 30,
+        "contact": false,
+        "box": [
+          50,
+          225,
+          58,
+          55
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 191.5,
+        "ground_gap": 1,
+        "contact": true,
+        "box": [
+          164,
+          270,
+          55,
+          31
+        ]
+      },
+      "hind_support": {
+        "sole_x": 142.0,
+        "ground_gap": 4,
+        "contact": false,
+        "box": [
+          102,
+          260,
+          57,
+          41
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 180.5,
+        "ground_gap": 1,
+        "contact": true,
+        "box": [
+          164,
+          268,
+          32,
+          33
+        ]
+      },
+      "hind_support": {
+        "sole_x": 120.0,
+        "ground_gap": 8,
+        "contact": false,
+        "box": [
+          95,
+          250,
+          55,
+          48
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 189.5,
+        "ground_gap": 22,
+        "contact": false,
+        "box": [
+          180,
+          245,
+          46,
+          48
+        ]
+      },
+      "hind_support": {
+        "sole_x": 130.5,
+        "ground_gap": 1,
+        "contact": true,
+        "box": [
+          104,
+          277,
+          55,
+          24
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 196.5,
+        "ground_gap": 14,
+        "contact": false,
+        "box": [
+          184,
+          240,
+          53,
+          55
+        ]
+      },
+      "hind_support": {
+        "sole_x": 72.5,
+        "ground_gap": 1,
+        "contact": true,
+        "box": [
+          44,
+          278,
+          56,
+          23
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 220.0,
+        "ground_gap": 14,
+        "contact": false,
+        "box": [
+          190,
+          235,
+          58,
+          55
+        ]
+      },
+      "hind_support": {
+        "sole_x": 59.5,
+        "ground_gap": 1,
+        "contact": true,
+        "box": [
+          30,
+          275,
+          60,
+          26
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 224.5,
+        "ground_gap": 31,
+        "contact": false,
+        "box": [
+          195,
+          215,
+          49,
+          55
+        ]
+      },
+      "hind_support": {
+        "sole_x": 55.0,
+        "ground_gap": 1,
+        "contact": true,
+        "box": [
+          25,
+          275,
+          65,
+          26
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 216.5,
+        "ground_gap": 26,
+        "contact": false,
+        "box": [
+          195,
+          225,
+          58,
+          60
+        ]
+      },
+      "hind_support": {
+        "sole_x": 43.5,
+        "ground_gap": 42,
+        "contact": false,
+        "box": [
+          15,
+          205,
+          65,
+          70
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 199.5,
+        "ground_gap": 15,
+        "contact": false,
+        "box": [
+          185,
+          250,
+          40,
+          45
+        ]
+      },
+      "hind_support": {
+        "sole_x": 102.0,
+        "ground_gap": 46,
+        "contact": false,
+        "box": [
+          50,
+          212,
+          65,
+          67
+        ]
+      }
+    },
+    {
+      "fore_support": {
+        "sole_x": 220.0,
+        "ground_gap": 7,
+        "contact": false,
+        "box": [
+          198,
+          268,
+          50,
+          31
+        ]
+      },
+      "hind_support": {
+        "sole_x": 122.5,
+        "ground_gap": 15,
+        "contact": false,
+        "box": [
+          68,
+          235,
+          65,
+          60
+        ]
+      }
+    }
+  ],
+  "intervals": [
+    {
+      "start": 0,
+      "end": 1,
+      "leg": "fore_support",
+      "both_endpoints_contact": true,
+      "travel_pixels": 33.0,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 33.0,
+      "support_midpoint_residual_pixels": 0.0,
+      "uniform_phase_slip_pixels": -9.0
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "leg": "fore_support",
+      "both_endpoints_contact": true,
+      "travel_pixels": 11.0,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 16.6,
+      "support_midpoint_residual_pixels": 5.600000000000001,
+      "uniform_phase_slip_pixels": 13.0
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "leg": null,
+      "both_endpoints_contact": false,
+      "travel_pixels": null,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 19.839999999999996,
+      "support_midpoint_residual_pixels": null,
+      "uniform_phase_slip_pixels": null
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "leg": "hind_support",
+      "both_endpoints_contact": true,
+      "travel_pixels": 58.0,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 58.0,
+      "support_midpoint_residual_pixels": 0.0,
+      "uniform_phase_slip_pixels": -34.0
+    },
+    {
+      "start": 4,
+      "end": 5,
+      "leg": "hind_support",
+      "both_endpoints_contact": true,
+      "travel_pixels": 13.0,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 16.6,
+      "support_midpoint_residual_pixels": 3.6000000000000014,
+      "uniform_phase_slip_pixels": 11.0
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "leg": "hind_support",
+      "both_endpoints_contact": true,
+      "travel_pixels": 4.5,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 16.6,
+      "support_midpoint_residual_pixels": 12.100000000000001,
+      "uniform_phase_slip_pixels": 19.5
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "leg": null,
+      "both_endpoints_contact": false,
+      "travel_pixels": null,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 19.839999999999996,
+      "support_midpoint_residual_pixels": null,
+      "uniform_phase_slip_pixels": null
+    },
+    {
+      "start": 7,
+      "end": 8,
+      "leg": null,
+      "both_endpoints_contact": false,
+      "travel_pixels": null,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 19.839999999999996,
+      "support_midpoint_residual_pixels": null,
+      "uniform_phase_slip_pixels": null
+    },
+    {
+      "start": 8,
+      "end": 9,
+      "leg": null,
+      "both_endpoints_contact": false,
+      "travel_pixels": null,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 19.839999999999996,
+      "support_midpoint_residual_pixels": null,
+      "uniform_phase_slip_pixels": null
+    },
+    {
+      "start": 9,
+      "end": 0,
+      "leg": null,
+      "both_endpoints_contact": false,
+      "travel_pixels": null,
+      "uniform_phase_world_travel_pixels": 24.0,
+      "assigned_phase_world_travel_pixels": 19.839999999999996,
+      "support_midpoint_residual_pixels": null,
+      "uniform_phase_slip_pixels": null
+    }
+  ],
+  "complete_contact_coverage": false,
+  "observed_travel_pixels": 119.5,
+  "estimated_cycle_pixels": null,
+  "preview_cycle_pixels": 240,
+  "speed_world_per_second": 3.85,
+  "preview_cycle_seconds": 0.4830430767023035,
+  "preview_phase_seconds": 0.04830430767023035,
+  "assigned_phase_seconds": [
+    0.06641842304656673,
+    0.03341047947190933,
+    0.03993156100739041,
+    0.11673541020305668,
+    0.03341047947190933,
+    0.03341047947190933,
+    0.03993156100739041,
+    0.03993156100739041,
+    0.03993156100739041,
+    0.03993156100739041
+  ],
+  "limitation": "Manuell zugeordnete Pfoten, Sohlenmitten statt Druckpunkten. Kontakt nur an diskreten Posen; Abrollen dazwischen ungeprüft. Fehlende Endpunktkontakte bleiben null; kein Ersatz durch das Gegenbein. Galopp: sichtbarer Sohlenumriss der Vorder-/Hinterstütze, überlappende Nah-/Fernpfoten nicht als vier unabhängig gemessene Druckpunkte ausgegeben. Freie Phasen ohne Standpfotenschätzung."
+}

@@ -1,0 +1,88 @@
+{
+  "source": "tools/motion-art/sources/mosslyn-gallop-8.png",
+  "source_row_height": 512,
+  "mode": "run",
+  "asset": "res://assets/characters/mosslyn-gallop-8.png",
+  "cell": 320,
+  "columns": 4,
+  "head_width": 47.5,
+  "head_center_x": 202.45,
+  "ground": 300,
+  "reference_height": 193.58288770053474,
+  "cycle_distance_pixels": 184,
+  "review": "Entwurf: Fu\u00dffolge und Kopfdetails noch nicht abgenommen; Schrittl\u00e4nge vorl\u00e4ufig aus erstem Vorderpfotenkontakt gesch\u00e4tzt.",
+  "frames": [
+    {
+      "head_region": [
+        300,
+        200,
+        95,
+        95
+      ],
+      "air_gap": 0
+    },
+    {
+      "head_region": [
+        661,
+        201,
+        97,
+        97
+      ],
+      "air_gap": 0
+    },
+    {
+      "head_region": [
+        1046,
+        199,
+        94,
+        94
+      ],
+      "air_gap": 0
+    },
+    {
+      "head_region": [
+        1394,
+        187,
+        93,
+        93
+      ],
+      "air_gap": 0
+    },
+    {
+      "head_region": [
+        331,
+        673,
+        92,
+        92
+      ],
+      "air_gap": 50
+    },
+    {
+      "head_region": [
+        694,
+        676,
+        90,
+        90
+      ],
+      "air_gap": 25
+    },
+    {
+      "head_region": [
+        1049,
+        673,
+        94,
+        94
+      ],
+      "air_gap": 0
+    },
+    {
+      "head_region": [
+        1417,
+        647,
+        90,
+        90
+      ],
+      "air_gap": 50
+    }
+  ]
+}

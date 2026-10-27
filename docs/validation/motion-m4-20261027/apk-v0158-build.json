@@ -1,0 +1,36 @@
+{
+  "version": "0.15.8",
+  "version_code": 38,
+  "package": "com.itoeva.godot.hd2d.worldtest",
+  "commit": "ab037b22cacdbb14db5db511e8b52f2f24401369",
+  "run_id": 40461886675,
+  "run_url": "https://github.com/MartinZurek/Itoeva/actions/runs/40461886675",
+  "conclusion": "success",
+  "file": "Itoeva_Godot_Test_v0.15.8.apk",
+  "bytes": 203641691,
+  "sha256": "28b64667f1e01e1592f93a7179fa8cb49927f4ac86ff5ee09b81b1ee60d14cd3",
+  "signer_sha256": "30dbcf9daa7c26e4f76a1c2da674ee8b5e732186a058081e2dabd34eb82d58dc",
+  "drive_url": "https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view",
+  "upload_size_and_checksum_verified": true,
+  "apk_artifact_id": 12714399971,
+  "protocol_artifact_id": 12715710108,
+  "motion_feature": "itoeva_motion_m4",
+  "phone_verified": false,
+  "capture_media_persisted": false,
+  "capture_media_note": "Spielaufnahmen im Chat gezeigt und geprüft; separater Upload beim Sitzungswechsel unterbrochen, aus gesicherten Quellen/Skripten reproduzierbar.",
+  "checks": [
+    "678 source files and 29 masks",
+    "M3/M4 Python assets and contact tests",
+    "1798 M4 state/texture checks plus Godot regression suites",
+    "OpenGL render checks",
+    "APK exported M4 metadata and all pixel atlases",
+    "Existing signature, package/version/ABI and no internet permission",
+    "Drive size and checksum"
+  ],
+  "open_issues": [
+    "walking contacts and complete pressure-point/slip proof",
+    "new depth and turn art",
+    "Mooslyn rest currently holds a walk contact pose",
+    "existing shutdown resource leaks"
+  ]
+}

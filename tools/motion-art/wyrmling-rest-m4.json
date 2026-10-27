@@ -1,0 +1,30 @@
+{
+  "source": "tools/motion-art/sources/wyrmling-motion-m4.png",
+  "source_row_height": 256,
+  "mode": "rest",
+  "asset": "res://assets/characters/wyrmling-rest-m4.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 12,
+  "head_center_x": 280,
+  "ground": 300,
+  "reference_height": 118,
+  "cycle_distance_pixels": 220,
+  "source_frame_indices": [
+    7
+  ],
+  "frames": [
+    {
+      "head_region": [
+        1457,
+        322,
+        24,
+        17
+      ],
+      "correlation": 0.9495131373405457,
+      "source_frame_index": 7,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    }
+  ],
+  "review": "M4-Prüffassung: gemalte Originalphasen, feste Gesichtsregistrierung; keine Behauptung vollständig geprüfter Pfoten-/Druckpunktwege."
+}

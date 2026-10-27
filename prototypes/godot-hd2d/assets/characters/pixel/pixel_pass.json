@@ -99,6 +99,20 @@
     1091,
     1363
    ]
+  },
+  "mosslyn-gallop-8.png": {
+   "scale": 0.3457,
+   "art_size": [
+    442,
+    221
+   ]
+  },
+  "mosslyn-walk-8.png": {
+   "scale": 0.2557,
+   "art_size": [
+    327,
+    164
+   ]
   }
  }
 }

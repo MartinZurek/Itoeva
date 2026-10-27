@@ -1,0 +1,30 @@
+{
+  "source": "tools/motion-art/sources/nocti-motion-m4.png",
+  "source_row_height": 256,
+  "mode": "rest",
+  "asset": "res://assets/characters/nocti-rest-m4.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 14,
+  "head_center_x": 280,
+  "ground": 300,
+  "reference_height": 130,
+  "cycle_distance_pixels": 330,
+  "source_frame_indices": [
+    0
+  ],
+  "frames": [
+    {
+      "head_region": [
+        284,
+        151,
+        25,
+        21
+      ],
+      "correlation": 0.9999995827674866,
+      "source_frame_index": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    }
+  ],
+  "review": "M4-Prüffassung: gemalte Originalphasen, feste Gesichtsregistrierung; keine Behauptung vollständig geprüfter Pfoten-/Druckpunktwege."
+}

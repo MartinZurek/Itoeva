@@ -1,0 +1,36 @@
+{
+  "method": "visible-sole-midpoint-estimate",
+  "pressure_points_verified": false,
+  "source_sha256": "9a702b380c79a897a530e00bc560d16e14bc49e77af36e5e648e39d3c0a31322",
+  "near_stance_x": [
+    224.0,
+    208.0,
+    174.5,
+    140.5,
+    133.0
+  ],
+  "far_stance_x": [
+    229.5,
+    210.5,
+    172.5,
+    128.5,
+    128.5
+  ],
+  "phase_travel_pixels": [
+    16.0,
+    33.5,
+    34.0,
+    7.5,
+    19.0,
+    38.0,
+    44.0,
+    0.0
+  ],
+  "estimated_cycle_pixels": 192.0,
+  "estimated_cycle_world": 1.4877726762430947,
+  "preview_cycle_world": 2.208412566298344,
+  "speed_world_per_second": 2.35,
+  "estimated_required_cycles_per_second": 1.5795423840785887,
+  "preview_cycles_per_second": 1.0641127640108385,
+  "limitation": "Sohlenmitten statt Druckpunkten; Phase7→0 hat keinen sichtbaren Rückweg. Phasenabstände und Gegenbein bleiben nachzubessern."
+}

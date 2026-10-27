@@ -1,0 +1,88 @@
+{
+  "source": "tools/motion-art/sources/mosslyn-walk-8.png",
+  "source_row_height": 512,
+  "mode": "walk",
+  "asset": "res://assets/characters/mosslyn-walk-8.png",
+  "cell": 320,
+  "columns": 4,
+  "head_width": 42.5,
+  "head_center_x": 211.7097701149425,
+  "ground": 300,
+  "reference_height": 208.04597701149416,
+  "cycle_distance_pixels": 285,
+  "review": "Entwurf: Gegenbein und Bodenkontakte noch nicht abgenommen. 285 Pixel/Zyklus vorl\u00e4ufig aus der Standpfotenbewegung gesch\u00e4tzt; nicht schlupffrei.",
+  "frames": [
+    {
+      "head_region": [
+        245,
+        155,
+        85,
+        75
+      ],
+      "correlation": 0.9999992847442627
+    },
+    {
+      "head_region": [
+        622,
+        152,
+        87,
+        77
+      ],
+      "correlation": 0.9467469453811646
+    },
+    {
+      "head_region": [
+        977,
+        152,
+        86,
+        76
+      ],
+      "correlation": 0.9579334259033203
+    },
+    {
+      "head_region": [
+        1392,
+        153,
+        84,
+        74
+      ],
+      "correlation": 0.9650117754936218
+    },
+    {
+      "head_region": [
+        240,
+        642,
+        83,
+        74
+      ],
+      "correlation": 0.9615570902824402
+    },
+    {
+      "head_region": [
+        622,
+        641,
+        84,
+        74
+      ],
+      "correlation": 0.9460712671279907
+    },
+    {
+      "head_region": [
+        979,
+        641,
+        84,
+        74
+      ],
+      "correlation": 0.945206880569458
+    },
+    {
+      "head_region": [
+        1391,
+        638,
+        84,
+        74
+      ],
+      "correlation": 0.968816339969635
+    }
+  ]
+}

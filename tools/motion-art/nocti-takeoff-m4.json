@@ -1,0 +1,68 @@
+{
+  "source": "tools/motion-art/sources/nocti-motion-m4.png",
+  "source_row_height": 256,
+  "mode": "takeoff",
+  "asset": "res://assets/characters/nocti-takeoff-m4.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 14,
+  "head_center_x": 280,
+  "ground": 300,
+  "reference_height": 130,
+  "cycle_distance_pixels": 330,
+  "source_frame_indices": [
+    0,
+    1,
+    2,
+    4
+  ],
+  "frames": [
+    {
+      "head_region": [
+        284,
+        151,
+        25,
+        21
+      ],
+      "correlation": 0.9999995827674866,
+      "source_frame_index": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        653,
+        179,
+        24,
+        20
+      ],
+      "correlation": 0.9379640221595764,
+      "source_frame_index": 1,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        1046,
+        163,
+        24,
+        21
+      ],
+      "correlation": 0.958238422870636,
+      "source_frame_index": 2,
+      "air_gap": 18,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        287,
+        406,
+        24,
+        19
+      ],
+      "correlation": 0.9571922421455383,
+      "source_frame_index": 4,
+      "head_center_y": 185,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    }
+  ],
+  "review": "M4-Prüffassung: gemalte Originalphasen, feste Gesichtsregistrierung; keine Behauptung vollständig geprüfter Pfoten-/Druckpunktwege."
+}

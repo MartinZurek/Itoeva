@@ -7537,3 +7537,129 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:**Neue Gangzyklen (vollstaendiges Gehen, Mooslyn-Sprint auf vier Pfoten,
   weitere Figuren) stehen noch aus.
 - **UEBERGABE:**Bewegungsarbeit auf Basis von claude/hd2d-pixel-sprites fortsetzen.
+
+### 2026-10-26 – Mooslyn: erster gemalter Galoppentwurf gesichert
+
+- **FACT:**Neuer Branch codex/hd2d-motion-phases-20261026 ab claude/hd2d-pixel-sprites
+  (cb1c2b5). Keine Übernahme des veralteten Motion-Branches, keine 3D-Aufräumarbeit.
+- **CHANGE:**Achtphasiger gemalter Galoppentwurf, Pixelpass, feste Zellen und
+  aus dem Original abgeleitete Bounds/Alphamasken. Offline-Kopfregistrierung statt
+  wechselnder Laufzeitskalierung vorbereitet. Noch nicht als Standard eingebunden.
+- **TESTED BEHAVIOR:**Zwei Python-Prüfungen für Alphabesitz, Bounds, feste
+  Bodenlinie und lesbare Pixelfassung erfolgreich.
+- **UNVERIFIED:**Kunstqualität, vollständige Kontaktfolge, Welt-Schrittlänge,
+  Gehzyklus und Übergänge. Keine APK gebaut oder freigegeben.
+- **UEBERGABE:**tools/motion-art/README.md; separates Vorschau-Laufzeitmanifest.
+  Nächster Schnitt: echte Weltvorschau mit bewusst markierten offenen Punkten.
+
+### 2026-10-26 – Mooslyn: isolierte Seitenvorschau mit fester Geometrie
+
+- **CHANGE:**MOTION_DRAFT=1 aktiviert ausschließlich für Mooslyn acht neue Geh-
+  und acht Galoppphasen. Offline registrierte Zeichnungen, feste 320er-Zellen,
+  festes Pixelmaß und feste Bodenlinie; keine zweite Hautverformung. Normale
+  App bleibt beim abgenommenen Stand. Laufzeitmanifest separat nachgeführt.
+- **TESTED BEHAVIOR:**244 neue Godot-Prüfungen,1164 bestehende Mooslyn-Prüfungen,
+  zwei neue und zwei bestehende Python-Assettests grün. Echte 390-Bilder-Aufnahme;
+  Seitenclip9,4s und Pixelbogen unter docs/validation/motion-20261026.
+- **FACT:**Gehen1,0661Hz bei2,3543Welt/s, Galopp2,5124Hz bei3,8498Welt/s.
+  Geometrieskalierung innerhalb beider Folgen konstant. Distanzparameter vorläufig,
+  keine Behauptung nachgewiesen schlupffreier Pfoten.
+- **UNVERIFIED:**Eindeutigkeit des Gegenbeins, konstante Kontaktgeschwindigkeit,
+  Front/Rücken, gezeichnete Übergänge und Wenden, weitere Figuren und Telefon.
+  Frontgenerierung wegen wandernder Tasche verworfen. Alte Tiefenansichten
+  im Außen-Prüfablauf durch korrekte Kollisionen teilweise blockiert; kein Nachweis
+  verbesserter Tiefenbewegung. Basis und Entwurf melden beim Ende bestehende
+  ObjectDB-/Ressourcenlecks. Keine APK, keine Versions-/Workflowänderung.
+- **UEBERGABE:**tools/motion-art/README.md. Nächster Schritt: Kontaktpfoten
+  vollständig annotieren, Schrittstrecke/Phasendauern prüfen und Gegenbein
+  nachbessern; dann erst Front/Rücken und Übergänge.
+
+### 2026-10-26 – Mooslyn M2: gemalter Beinwechsel und benannte Kontaktpfoten
+
+- **CHANGE:**Acht seitliche Gehphasen nachgezeichnet, Poseführung und gezielte
+  Bildkorrekturen per eingebautem Imagegen. Beide Beinhälften und Gegenarme
+  deutlicher unterscheidbar. Neue Quelle, Registrierung, Pixelpass und Masken;
+  M1 bleibt erhalten. Nur MOTION_DRAFT=1 zeigt M2; Galopp unverändert.
+- **FACT:**Neue Messung ordnet Pfoten anatomisch zu und ersetzt schwebende
+  Pfoten nicht durch das Gegenbein. Nahpfote Phase5 noch5px über Boden;
+  sieben messbare Abschnitte zusammen203,5px, Wege6,5–50px. Einschließlich des
+  ungeprüften achten Wegs wären es233px statt285px. Keine Schlupffreiheit.
+- **TESTED BEHAVIOR:**244 Godot-Entwurfschecks,1276 bestehende Mooslyn-Checks
+  unter OpenGL, sechs Python-Checks grün. Echte216-Bilder-Aufnahme (7,2s),
+  alle acht Phasen rechts/links, konstanter Maßstab. Tempo ca.2,3543Welt/s,
+  Takt1,066Hz; beides unverändert. Phasenhaltezeiten überwiegend0,100/0,133s.
+- **UNVERIFIED:**Vollständiger Kontaktwechsel und Druckpunkte, gleichmäßige
+  Standpfotengeschwindigkeit, ausreichende Schrittlänge. Phasendauern noch nicht
+  aus unvollständigen Kontakten abgeleitet. Galopp, Übergänge, Wenden,
+  Tiefenansichten und weitere Figuren offen. Bekannte Lecks beim Beenden der
+  Weltaufnahme bestehen. Vollimport im Editor stürzte hier im Vulkan-Pfad ab;
+  isolierter Atlasimport und echte OpenGL-Aufnahme erfolgreich. Keine APK.
+- **UEBERGABE:**tools/motion-art/README.md und M2-Nachtrag im Savespot.
+  Nächster Schnitt bleibt Gehen: Kontaktwechsel schließen, Standweg verlängern,
+  dann erst Phasendauern koppeln. Keine neue Richtungsentscheidung nötig.
+
+### 2026-10-26 – Mooslyn M3: Vierbeiner-Galopp und gezeichnete Gangwechsel
+
+- **CHANGE:**Zehn neue Galoppzeichnungen inklusive zusätzlicher Hinterstützen,
+  vier Absenk- und vier Aufrichtphasen. Originalquellen, Prompts und aus dem
+  Original erzeugte Masken/Registrierung. Gemeinsame Palette und Pixeldichte;
+  gleicher fester Maßstab statt des zuvor größeren Galopp-Kopfes. Endkacheln
+  passen im Original und im Pixelpass exakt zu den erreichten Zyklen.
+- **CHANGE:**Darstellungssteuerung wartet beim langsamer Weitergehen auf die
+  passende Vorderstütze. Direktes Stoppen richtet ohne Wegfortschritt auf,
+  kurze Sprintimpulse kehren um. Sprung/Sitzen/Rollen/Tiefe haben Vorrang.
+  Alles ausschließlich mit MOTION_DRAFT=1; Standarddarstellung unverändert.
+- **FACT:**Galoppstrecke 240 px, ca. 1,86 Welt/Zyklus beziehungsweise 2,07 Hz.
+  Sichtbare Stütz-Sohlenwege für Phasendauern verwendet, Mindestdauer ungefähr
+  ein Aufnahmebild bei 30 fps. Übrige Zeit auf freie/ungeprüfte Wechselphasen
+  verteilt. Kein Nachweis vier einzelner Druckpunkte oder schlupffreier Pfoten.
+  Gehzeichnungen und Geh-Takt aus M2 sowie Spieltempo unverändert.
+- **TESTED BEHAVIOR:**272 Zyklus-, 126 Übergangs-, 160 Actor-Checks und 1276
+  bestehende Mooslyn-Checks unter OpenGL; acht Python-Tests grün. Echte
+  333-Bilder-Aufnahme (11,1 s), alle zehn Galopp- und vier Verbindungsphasen
+  jeweils rechts/links. Gleicher Pixelmaßstab während der gesamten Kette.
+  Detailfilm ist nur ein vergrößerter Ausschnitt ohne zeitliche Interpolation.
+- **UNVERIFIED:**Bekannte M2-Gehkontaktfehler und vollständige Gehschrittlänge,
+  einzelne Galopp-Druckpunkte, neue Wendefolgen und Tiefenansichten. Weitere
+  Figuren nicht umgestellt. Bekannte Ressourcenlecks am Ende des Weltlaufs
+  bestehen. Keine APK, kein Merge, keine Version-/Workflowänderung.
+- **UEBERGABE:**M3-Abschnitt in tools/motion-art/README.md und Savespot; neue
+  Vorschauen in docs/validation/motion-m3-20261026. Benutzer erlaubte APK oder
+  Testanimation; geliefert wird die echte Spielaufnahme mit Detailausschnitt.
+
+### 2026-10-27 – M4-Entwurf: Größenabgleich, Flug und Sternhüpfen
+
+- **AUFTRAG:** Martin meldet Größenwechsel zwischen Mooslyns Gehen/Galopp,
+  akzeptiert die übrige Qualität und beauftragt weitere Figuren im selben
+  Bildgenerierungs-/Pixelpass-Prozess. Nocti fliegt, Starlight hüpft/schwebt.
+- **CHANGE:** Neue gemalte Quellen und Originalmasken; gemeinsame Irisreferenz
+  bei Tierfiguren, goldener Sternkörper bei Starlight. Feste Raster/Anker,
+  ganzzahliger Pixel-Zellpass und identische gezeichnete Verbindungsenden.
+  M3 bleibt erhalten, M4 nur `MOTION_M4=1`, keine Gameplay-Tempoänderung.
+- **CHANGE:** Noctis zeitlicher Flug mit Abheben/Landen, Starlights Auslaufen
+  bis zur Landung, Kontaktphasenwechsel bei Wyrmling. Keine zweite Verformung
+  der neuen Seitenzeichnungen. Vorhandene Tiefenansichten bleiben zunächst.
+- **TESTED BEHAVIOR:** Vier Python-Assettests einschließlich Originalmasken,
+  gleicher Maßstabsreferenz und bytegleicher Pixel-Anschlusskacheln bestanden.
+- **UNVERIFIED:** Quellcheckpoint vor echter M4-Spiel-/Renderabnahme. Neue
+  Pfotenwege, Druckpunkte und Phasengewichte noch nicht belastbar geprüft;
+  keine Schlupffreiheit. Mooslyns Ruhe hält vorerst eine Gehkontaktpose.
+- **UEBERGABE:** M4 in tools/motion-art/README.md; zuerst Texturimporte,
+  Zustandsprüfungen und echte Weltaufnahmen abschließen. Keine neue APK.
+
+### 2026-10-27 – M4-Weltprüfung und freigegebener Android-Testbau 0.15.8
+
+- **FACT:** Quellcheckpoint `4ceba58` fortgesetzt. Martin beauftragt ausdrücklich
+  die APK. Neue16-/10-Phasen-Seitenbilder im echten Spiel aufgenommen; pro Figur
+  429 Bilder/14,3s bei30fps, alle Geh-/Laufphasen rechts und links erreicht.
+- **TESTED BEHAVIOR:** Gleicher Pixelmaßstab einschließlich Ruhe je Figur,
+  Mooslyns Geh-Takt1,066Hz und Galopp2,070Hz bei unverändertem Spieltempo.
+  Nocti hebt ab und landet mit allen vier Verbindungsphasen; Starlight landet
+  nach Loslassen zu Ende. Vier Assettests,1798 Zustandschecks und zwei bestehende
+  Kontaktprüfungen bestanden. Pixelbögen, Filme, Quellen und Berichte gesichert.
+- **CHANGE:** AndroidTest0.15.8/Code38 mit M4-Exportmerkmal; bestehendes Paket,
+  Keystore und Drive-Datei.678 Dateistände vor Import gepinnt, M4-Daten und
+  alle Pixelatlanten werden im tatsächlichen APK geprüft. Build noch ausstehend.
+- **UNVERIFIED:** Kein Telefon-Abnahmetest, keine vollständigen Druckpunkt-/
+  Schlupfnachweise. Vorhandene Tiefenbilder und ungemalte Wenden bleiben.
+  Mooslyns Ruhe hält eine Gehkontaktpose; bekannte Ressourcenlecks bestehen.

@@ -1,0 +1,43 @@
+{
+  "source": "tools/motion-art/sources/mosslyn-walk-m2.png",
+  "source_row_height": 512,
+  "mode": "rest",
+  "asset": "res://assets/characters/mosslyn-rest-m4.png",
+  "cell": 320,
+  "columns": 4,
+  "head_width": 15,
+  "head_center_x": 208,
+  "ground": 300,
+  "reference_height": 168,
+  "cycle_distance_pixels": 230.1414364640885,
+  "review": "M4: gleiche Gehzeichnungen; kanonischer Körpermaßstab mit Ruhe, Galopp und Übergängen.",
+  "frames": [
+    {
+      "head_region": [
+        289,
+        173,
+        40,
+        34
+      ],
+      "feet": {
+        "near": [
+          201,
+          277,
+          39,
+          24
+        ],
+        "far": [
+          94,
+          278,
+          30,
+          23
+        ]
+      },
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen.",
+      "source_frame_index": 0
+    }
+  ],
+  "source_frame_indices": [
+    0
+  ]
+}

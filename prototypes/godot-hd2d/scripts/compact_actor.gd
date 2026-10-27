@@ -34,6 +34,12 @@ var painted_cycles: Dictionary = {}
 var painted_cycle_textures: Dictionary = {}
 var painted_cycle_masks: Dictionary = {}
 var painted_x_offset := 0.0
+const AuthoredLocomotion = preload("res://scripts/authored_locomotion.gd")
+const AuthoredTransition = preload("res://scripts/authored_motion_transition.gd")
+var authored_transition = AuthoredTransition.new()
+var authored_locomotion = AuthoredLocomotion.new()
+var authored_m4 := false
+var authored_lift := 0.0
 
 func _pose_mask() -> Dictionary:
  if pose_masks.is_empty():pose_masks=JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
@@ -50,6 +56,16 @@ func _pose_mask() -> Dictionary:
 func _ready() -> void:
  if species=="mosslyn":
   painted_cycles=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_painted_cycles.json"))
+  # M3 nur in der expliziten Vorschau oder Martins freigegebener Test-APK zeigen.
+  if OS.get_environment("MOTION_DRAFT")=="1" or OS.has_feature("itoeva_motion_m3"):
+   var drafts: Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_authored_cycles.json"))
+   for mode in drafts:painted_cycles[mode]=drafts[mode]
+ if OS.get_environment("MOTION_M4")=="1" or OS.has_feature("itoeva_motion_m4"):
+  var m4_path:="res://data/mosslyn_m4_cycles.json" if species=="mosslyn" else "res://data/"+species+"_authored_cycles.json"
+  if FileAccess.file_exists(m4_path):
+   authored_m4=true
+   painted_cycles=JSON.parse_string(FileAccess.get_file_as_string(m4_path))
+ if not painted_cycles.is_empty():
   for mode in painted_cycles:
    var cycle: Dictionary=painted_cycles[mode]
    painted_cycle_textures[mode]=load(cycle.asset)
@@ -263,7 +279,9 @@ func _update_shadow() -> void:
  var physical_hover:=hover
  # Der Schatten reagiert auf Starlits sichtbaren Huepfbogen, ohne die
  # Bodenkollision oder den Sprungknopf in einen zweiten Physikpfad umzulenken.
- if species=="starlet" and not body_pose.is_empty():hover=sprite.position.y
+ if authored_m4 and painted_cycle_active:
+  hover+=authored_lift*sprite.pixel_size if species=="nocti" else maxf(0.0,float(painted_cycles[painted_cycle_mode].ground)-float(displayed_bounds.end.y))*sprite.pixel_size
+ elif species=="starlet" and not body_pose.is_empty():hover=sprite.position.y
  super._update_shadow()
  hover=physical_hover
 
@@ -284,6 +302,33 @@ func _update_frame(moving: bool) -> void:
  if painted_cycle_active and not moving:body_weight=0.0
  body_weight=move_toward(body_weight,1.0 if moving else 0.0,get_physics_process_delta_time()*8.0)
  var depth:=absf(facing.y)>absf(facing.x)
+ if authored_m4 and species!="mosslyn":
+  if not depth and state=="idle" and jump_clock<0:
+   var next: Dictionary=authored_locomotion.advance(get_physics_process_delta_time(),moving,running and run_blend>=.5,actual_speed,_stride_length(),painted_cycles,species=="nocti")
+   authored_lift=float(next.lift)
+   _use_painted_cycle(next.mode,int(next.phase))
+   return
+  authored_locomotion.reset();authored_lift=0.0
+ # Die gezeichneten Verbindungsposen brauchen auch beim Auslaufen Zeit zum
+ # Aufrichten. Sie werden nur mit den expliziten Entwurfsdaten geladen.
+ if painted_cycles.has("lower") and painted_cycles.has("rise"):
+  if not depth and state=="idle" and jump_clock<0:
+   var run_data: Dictionary=painted_cycles.run
+   var exit_contact:=_painted_phase(run_data,gait)==int(run_data.get("entry_phase",0))
+   var next: Dictionary=authored_transition.advance(get_physics_process_delta_time(),running and run_blend>=.5,moving,exit_contact)
+   if next.mode!="":
+    if next.entered:
+     var entry: Dictionary=painted_cycles[next.mode]
+     gait=floor(gait)+_painted_phase_start(entry,int(entry.get("entry_phase",0)))
+    _use_painted_cycle(next.mode,int(next.phase))
+    return
+  else:
+   # Sprung, Sitzen, Rollen und Tiefenansichten haben Vorrang; kein späteres
+   # Wiederaufleben einer durch die Aktion unterbrochenen Absenkung.
+   authored_transition.reset("run" if running and run_blend>=.5 else "walk")
+ if authored_m4 and painted_cycles.has("rest") and not moving and not depth and state=="idle" and jump_clock<0:
+  _use_painted_cycle("rest",0)
+  return
  # Die Seitenbilder enthalten bereits die ganze Bewegung. Ein zweites Hautnetz
  # wuerde Beine und Tasche erneut verziehen. Tiefenansichten behalten ihr Rig.
  if not painted_cycles.is_empty() and moving and not depth and state=="idle" and jump_clock<0:
@@ -322,7 +367,7 @@ func _use_motion_sheet(sprint: bool, walk: bool) -> void:
  frame_bounds.assign(run_bounds if sprint else walk_bounds if walk else world_bounds)
  painted_material.set_shader_parameter("atlas",pixel_art(sprite.texture))
 
-func _use_painted_cycle(mode: String) -> void:
+func _use_painted_cycle(mode: String, authored_frame: int = -1) -> void:
  var data: Dictionary=painted_cycles[mode]
  if not painted_cycle_active or painted_cycle_mode!=mode:
   sprite.frame=0
@@ -336,9 +381,33 @@ func _use_painted_cycle(mode: String) -> void:
  walk_sheet=mode=="walk";run_sheet=mode=="run"
  # Nur den gemalten Bogen verlangsamen. gait folgt weiter der wirklich
  # zurueckgelegten Strecke; Weltgeschwindigkeit und andere Ansichten bleiben.
- sprite.frame=posmod(int(floor(gait*PAINTED_GAIT_RATE*int(data.frames))),int(data.frames))
+ var rate:=1.0 if data.get("fixed_geometry",false) else PAINTED_GAIT_RATE
+ sprite.frame=authored_frame if authored_frame>=0 else _painted_phase(data,gait*rate)
  sprite.flip_h=facing.x<0
  _update_painted_cycle_geometry()
+
+func _painted_phase(data: Dictionary, cycle: float) -> int:
+ if not data.has("phase_weights"):
+  return posmod(int(floor(cycle*int(data.frames))),int(data.frames))
+ var weights: Array=data.phase_weights
+ var total:=0.0
+ for weight in weights:total+=float(weight)
+ var distance:=fposmod(cycle,1.0)*total
+ var end:=0.0
+ for phase in weights.size():
+  end+=float(weights[phase])
+  if distance<end:return phase
+ return weights.size()-1
+
+func _painted_phase_start(data: Dictionary, phase: int) -> float:
+ if not data.has("phase_weights"):return float(phase)/float(data.frames)
+ var before:=0.0
+ var total:=0.0
+ for i in data.phase_weights.size():
+  var weight:=float(data.phase_weights[i])
+  total+=weight
+  if i<phase:before+=weight
+ return before/total
 
 func _update_painted_cycle_geometry() -> void:
  var data: Dictionary=painted_cycles[painted_cycle_mode]
@@ -346,19 +415,26 @@ func _update_painted_cycle_geometry() -> void:
  # Atlas-Skalierung liess das ganze Wesen im Zyklus wachsen/schrumpfen.
  # Gesicht/Ohr werden gegen die Standzeichnung registriert; nur einheitlich
  # skalieren, damit Kniebeugung und das Seitenverhaeltnis erhalten bleiben.
- var registration: Dictionary=data.size_registration
- var frame_registration: Dictionary=registration.frames[sprite.frame]
- var head_span: float=float(frame_registration.span)
- sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_span)/float(registration.reference_body_height)/head_span
+ if data.get("fixed_geometry",false):
+  # Die Quellzeichnungen sind bereits offline registriert. Ein fester Faktor
+  # erhält die Körperbewegung und verhindert laufzeitbedingtes Gesichtspulsieren.
+  sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)/float(data.reference_height)
+  painted_x_offset=0.0
+ else:
+  var registration: Dictionary=data.size_registration
+  var frame_registration: Dictionary=registration.frames[sprite.frame]
+  var head_span: float=float(frame_registration.span)
+  sprite.pixel_size=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_span)/float(registration.reference_body_height)/head_span
  # Die Quellposen wandern auch innerhalb ihrer Zellen. Dieselbe Kopfmitte
  # bindet die ganze Zeichnung an den Spieler, ohne Gliedmassen zu verziehen.
- var region: Array=frame_registration.region
- var center_x: float=float(region[0])+float(region[2])*.5
- var target_center: float=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_center_offset)/float(registration.reference_body_height)
- painted_x_offset=(target_center-(center_x-cell_size.x*.5)*sprite.pixel_size)*(-1.0 if sprite.flip_h else 1.0)
+  var region: Array=frame_registration.region
+  var center_x: float=float(region[0])+float(region[2])*.5
+  var target_center: float=base_pixel_size*109.0*Catalog.relative_height(species)*float(registration.reference_center_offset)/float(registration.reference_body_height)
+  painted_x_offset=(target_center-(center_x-cell_size.x*.5)*sprite.pixel_size)*(-1.0 if sprite.flip_h else 1.0)
  sprite.position=Vector3.UP*hover
  displayed_bounds=frame_bounds[sprite.frame]
- sprite.offset=Vector2(0,float(displayed_bounds.end.y)-cell_size.y*.5)
+ var ground:=float(data.ground) if data.get("fixed_geometry",false) else float(displayed_bounds.end.y)
+ sprite.offset=Vector2(0,ground-cell_size.y*.5)
  skin_mesh.visible=false;body_pose={}
  painted_material.set_shader_parameter("rig_active",false)
  painted_material.set_shader_parameter("gait_mode",0)
@@ -384,6 +460,10 @@ func walk_frame(stride: float, direction: Vector2) -> int:
  return row*8+posmod(int(stride*8),8)
 
 func _stride_length() -> float:
+ var mode:="run" if running and run_blend>=.5 else "walk"
+ if painted_cycles.has(mode) and painted_cycles[mode].get("fixed_geometry",false):
+  var data: Dictionary=painted_cycles[mode]
+  return float(data.cycle_distance_pixels)*base_pixel_size*109.0*Catalog.relative_height(species)/float(data.reference_height)
  if body_rigs.has(species):return lerpf(1.75,2.15,run_blend)
  if step_rigs.has(species) and is_instance_valid(sprite):
   var amplitude: float=float(step_rigs[species].half_stride)
@@ -402,6 +482,8 @@ func run_frame(stride: float, time: float, direction: Vector2) -> int:
  return row*8+phase
 
 func _hover_target(moving: bool) -> float:
+ if authored_m4 and species in ["nocti","starlet"] and absf(facing.x)>=absf(facing.y):return 0.0
+ if authored_m4 and species=="nocti" and state=="idle" and jump_clock<0 and is_on_floor():return .48 if moving else 0.0
  if state!="idle" or jump_clock>=0 or not is_on_floor():return 0.0
  if species=="nocti" and moving and running:return .48+.012*sin(clock*TAU*FLIGHT_CYCLES)
  return super._hover_target(moving)

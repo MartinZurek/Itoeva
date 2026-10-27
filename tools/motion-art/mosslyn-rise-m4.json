@@ -1,0 +1,86 @@
+{
+  "source": "tools/motion-art/sources/mosslyn-transitions-m4.png",
+  "source_row_height": 640,
+  "mode": "rise",
+  "asset": "res://assets/characters/mosslyn-rise-m4.png",
+  "cell": 320,
+  "columns": 4,
+  "head_width": 15,
+  "head_center_x": 208,
+  "ground": 300,
+  "reference_height": 168,
+  "cycle_distance_pixels": 230.1414364640885,
+  "review": "M4: gleiche Gehzeichnungen; kanonischer Körpermaßstab mit Ruhe, Galopp und Übergängen.",
+  "frames": [
+    {
+      "head_region": [
+        539,
+        252,
+        29,
+        22
+      ],
+      "correlation": 0.8321154117584229,
+      "air_gap": 0,
+      "source": "tools/motion-art/sources/mosslyn-gallop-m4.png",
+      "source_row_height": 427,
+      "source_frame_index": 1,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        828,
+        418,
+        32,
+        27
+      ],
+      "correlation": 0.8622099161148071,
+      "source_frame_index": 2,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen.",
+      "source": "tools/motion-art/sources/mosslyn-transitions-m4.png"
+    },
+    {
+      "head_region": [
+        496,
+        351,
+        32,
+        28
+      ],
+      "correlation": 0.8602050542831421,
+      "source_frame_index": 1,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen.",
+      "source": "tools/motion-art/sources/mosslyn-transitions-m4.png"
+    },
+    {
+      "head_region": [
+        289,
+        173,
+        40,
+        34
+      ],
+      "feet": {
+        "near": [
+          201,
+          277,
+          39,
+          24
+        ],
+        "far": [
+          94,
+          278,
+          30,
+          23
+        ]
+      },
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen.",
+      "source": "tools/motion-art/sources/mosslyn-walk-m2.png",
+      "source_row_height": 512,
+      "source_frame_index": 0
+    }
+  ],
+  "source_frame_indices": [
+    4,
+    5,
+    6,
+    0
+  ]
+}

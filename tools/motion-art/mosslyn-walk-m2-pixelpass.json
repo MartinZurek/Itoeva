@@ -1,0 +1,13 @@
+{
+ "art_height_mosslyn": 56.0,
+ "palette_colors": 44,
+ "files": {
+  "mosslyn-walk-m2.png": {
+   "scale": 0.2534,
+   "art_size": [
+    324,
+    162
+   ]
+  }
+ }
+}

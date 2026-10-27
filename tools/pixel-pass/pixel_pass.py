@@ -59,14 +59,24 @@ def clean(idx, cen):
     return idx
 
 
-def process_species(folder, sp, art_height, report):
+def process_species(folder, sp, art_height, report, reference_height=None, cell_size=None):
     files = sorted(f for f in glob.glob(os.path.join(folder, sp + '*.png')))
     target = art_height * SPECIES[sp] / SPECIES['mosslyn']
+    if cell_size:
+        cv2.setRNGSeed(0)
     small = []
     for f in files:
         rgba = np.array(Image.open(f).convert('RGBA'))
         H, W = rgba.shape[:2]
-        s = target / figure_height(rgba[..., 3])
+        # Registrierte Gangfolgen teilen einen Körpermaßstab. Ein abgesenkter
+        # Vierbeiner darf deshalb nicht feiner gepixelt werden als sein Gehbild.
+        s = target / (reference_height or figure_height(rgba[..., 3]))
+        # Ganzzahlige Zellraster erhalten identische Anschlusskacheln auch
+        # dann, wenn diese in unterschiedlichen Atlaszeilen/-spalten liegen.
+        if cell_size:
+            if W % cell_size or H % cell_size:
+                raise ValueError("Atlas und Pixelpass-Zellraster widersprechen sich")
+            s = max(1, round(cell_size * s)) / cell_size
         w, h = max(1, round(W * s)), max(1, round(H * s))
         col, m = downscale(rgba, w, h)
         small.append((f, rgba, col, m, s))
@@ -101,9 +111,15 @@ if __name__ == '__main__':
     ap.add_argument('folder')
     ap.add_argument('--art-height', type=float, default=56.0)
     ap.add_argument('--species', nargs='*', default=list(SPECIES))
+    ap.add_argument('--reference-height', type=float, default=None)
+    ap.add_argument('--cell-size', type=int, default=None)
     args = ap.parse_args()
+    if args.reference_height is not None and args.reference_height <= 0:
+        ap.error('--reference-height muss positiv sein')
     report = {'art_height_mosslyn': args.art_height, 'palette_colors': NCOL, 'files': {}}
+    if args.reference_height is not None:
+        report['reference_height'] = args.reference_height
     for sp in args.species:
-        process_species(args.folder, sp, args.art_height, report['files'])
+        process_species(args.folder, sp, args.art_height, report['files'], args.reference_height, args.cell_size)
         print('ok', sp)
     json.dump(report, open(os.path.join(args.folder, 'pixel', 'pixel_pass.json'), 'w'), indent=1)

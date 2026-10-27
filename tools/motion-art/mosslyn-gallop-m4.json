@@ -1,0 +1,127 @@
+{
+  "source": "tools/motion-art/sources/mosslyn-gallop-m4.png",
+  "source_row_height": 427,
+  "mode": "run",
+  "asset": "res://assets/characters/mosslyn-gallop-m4.png",
+  "cell": 320,
+  "columns": 4,
+  "head_width": 15,
+  "head_center_x": 208,
+  "ground": 300,
+  "reference_height": 168,
+  "cycle_distance_pixels": 193.80331491712715,
+  "review": "M4: gleiche Gehzeichnungen; kanonischer Körpermaßstab mit Ruhe, Galopp und Übergängen.",
+  "frames": [
+    {
+      "head_region": [
+        242,
+        249,
+        29,
+        25
+      ],
+      "correlation": 1.0,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        539,
+        252,
+        29,
+        22
+      ],
+      "correlation": 0.8321154117584229,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        846,
+        256,
+        30,
+        25
+      ],
+      "correlation": 0.7969989776611328,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        1147,
+        254,
+        29,
+        26
+      ],
+      "correlation": 0.8619855046272278,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        249,
+        600,
+        31,
+        26
+      ],
+      "correlation": 0.8341980576515198,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        563,
+        613,
+        31,
+        25
+      ],
+      "correlation": 0.84896320104599,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        860,
+        608,
+        30,
+        26
+      ],
+      "correlation": 0.8063846230506897,
+      "air_gap": 18,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        1171,
+        607,
+        31,
+        26
+      ],
+      "correlation": 0.8510655164718628,
+      "air_gap": 10,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        262,
+        969,
+        30,
+        25
+      ],
+      "correlation": 0.8301917910575867,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    },
+    {
+      "head_region": [
+        559,
+        970,
+        30,
+        25
+      ],
+      "correlation": 0.8441658020019531,
+      "air_gap": 0,
+      "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
+    }
+  ],
+  "entry_phase": 1
+}
