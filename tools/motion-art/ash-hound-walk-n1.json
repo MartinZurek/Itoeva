@@ -1,0 +1,98 @@
+{
+  "source": "tools/motion-art/sources/ash-hound-motion-n1.png",
+  "source_row_height": 341,
+  "mode": "walk",
+  "asset": "res://assets/npc_motion/ash-hound-walk-n1.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 15,
+  "head_center_x": 110,
+  "ground": 360,
+  "reference_height": 185,
+  "cycle_distance_pixels": 180,
+  "source_frame_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "frames": [
+    {
+      "head_region": [
+        43,
+        142,
+        19,
+        16
+      ],
+      "correlation": 1.0
+    },
+    {
+      "head_region": [
+        422,
+        141,
+        20,
+        17
+      ],
+      "correlation": 0.9261775612831116
+    },
+    {
+      "head_region": [
+        815,
+        145,
+        19,
+        16
+      ],
+      "correlation": 0.9084028005599976
+    },
+    {
+      "head_region": [
+        1204,
+        142,
+        19,
+        16
+      ],
+      "correlation": 0.8914294838905334
+    },
+    {
+      "head_region": [
+        41,
+        486,
+        20,
+        17
+      ],
+      "correlation": 0.929083526134491
+    },
+    {
+      "head_region": [
+        428,
+        497,
+        20,
+        17
+      ],
+      "correlation": 0.8731324672698975
+    },
+    {
+      "head_region": [
+        810,
+        491,
+        18,
+        15
+      ],
+      "correlation": 0.8883574604988098
+    },
+    {
+      "head_region": [
+        1195,
+        494,
+        18,
+        15
+      ],
+      "correlation": 0.8936058282852173
+    }
+  ],
+  "review": "N1: Originalzeichnungen mit Irisregistrierung. Vierbeiniger Gehentwurf; Kontaktwege und Ruhe\u00fcbergang im Spiel pr\u00fcfen, keine Schlupffreiheit behauptet."
+}

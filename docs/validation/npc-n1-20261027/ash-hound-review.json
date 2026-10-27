@@ -1,0 +1,51 @@
+{
+  "id": "ash_hound",
+  "fps": 30,
+  "frames": 360,
+  "seconds": 12,
+  "walk_coverage": {
+    "left": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "right": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "rest_coverage": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "fixed_pixel_size": 0.0126207005232573,
+  "fixed_offset_y": 136.0,
+  "stationary_during_rest": true,
+  "film_sha256": "89a6c0098897e2ad3aa09609bdf02516d0bf51f7bda30709244a8fe8bfe787f2",
+  "tested": {
+    "locomotion_checks": 54,
+    "roaming_regression_checks": 47,
+    "main_character_regression_checks": 1798,
+    "python_asset_tests": 1,
+    "failures": 0
+  },
+  "limitations": [
+    "Keine neuen Tiefen- oder Wendeposen.",
+    "Pfoten-Druckpunkte und Schlupffreiheit nicht vollständig nachgewiesen.",
+    "Ruhewechsel ohne zusätzliche gezeichnete Verbindungsfolge.",
+    "Kein Telefontest, keine neue APK."
+  ]
+}

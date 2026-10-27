@@ -7663,3 +7663,23 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:** Kein Telefon-Abnahmetest, keine vollständigen Druckpunkt-/
   Schlupfnachweise. Vorhandene Tiefenbilder und ungemalte Wenden bleiben.
   Mooslyns Ruhe hält eine Gehkontaktpose; bekannte Ressourcenlecks bestehen.
+
+### 2026-10-27 – N1: Nebenfigurenauftrag und gezeichneter Aschenläufer
+
+- **AUFTRAG:** Martin akzeptiert die vier Hauptfiguren aus APK 0.15.8 und
+  beauftragt Nebenfiguren/Gegner mit gleicher Bewegungsqualität, lesbarer Größe
+  und Einzelabsicherung je Figur. Einstieg im neuen Branch von M4-Stand 85705a9.
+- **CHANGE:** Aschenläufer erhält acht eigene Vierbeiner-Gehzeichnungen und vier
+  Standzeichnungen. Gesicherte Bildgenerierungsquelle, uniforme Irisregistrierung,
+  gemeinsamer fester Körpermaßstab/Bodenanker und HD-2D-Pixelpass. Neue Darstellung
+  folgt dem echten Revierweg, ohne eigene Weg-/Geschwindigkeitssimulation.
+- **TESTED BEHAVIOR:** 54 neue Godot-Checks, Python-Quell-/Atlasprüfung und
+  bestehender Reviertest mit 47 Checks ohne Fehler. Neue Seitenbilder in echter
+  OpenGL-Weltaufnahme; Abschlussbericht im N1-Savespot.
+- **UNVERIFIED:** Pfoten-Druckpunkte/Schlupffreiheit, neue Tiefen-/Wendeposen,
+  gezeichnete Übergänge aus allen Gehphasen und Android-Geräteprüfung offen.
+  Die Angriffszeichnungen bleiben bisheriger Stand. Keine neue APK.
+- **UEBERGABE:** docs/ITOEVA_NPC_MOTION_SAVESPOT_20261027.md mit Figurenliste,
+  Reproduktion und nächstem Einzelcheckpoint Dornmotte. GitHub-Push von der
+  automatischen Freigabeprüfung blockiert; erst explizite Freigabe einholen,
+  nicht über einen anderen Übertragungsweg umgehen.
